@@ -430,7 +430,7 @@
     </div>
 
     <!-- App Carte Wallet (visible sur /fidelity/:slug) -->
-    <div id="fidelity-app" class="hidden">
+    <div id="fidelity-app" class="hidden fidelity-page">
       <header class="header">
         <div class="header-inner">
           <a href="/" class="logo">Fidpass</a>
@@ -438,43 +438,18 @@
       </header>
       <main class="main">
         <section class="hero">
-          <div class="hero-badge">Apple Wallet</div>
-          <h1 class="hero-title">Ta carte de fidélité<br /><span class="hero-title-accent">dans ta poche</span></h1>
-          <p class="hero-subtitle">Un double-clic sur le bouton latéral de ton iPhone : ta carte s’affiche.</p>
+          <h1 class="fidelity-title" id="fidelity-title">Carte de fidélité</h1>
+          <p class="fidelity-subtitle" id="fidelity-subtitle">Renseigne ton nom et ton email, puis ajoute la carte à ton iPhone.</p>
         </section>
         <section class="card-section">
           <form class="card-form" id="card-form" novalidate>
-            <p class="card-form-label">Pour recevoir ta carte</p>
-            <input type="text" id="input-name" class="input" placeholder="Ton prénom ou nom" autocomplete="name" required />
-            <input type="email" id="input-email" class="input" placeholder="ton@email.com" autocomplete="email" required />
-            <button type="submit" class="btn btn-primary" id="btn-submit">Créer ma carte</button>
+            <input type="text" id="input-name" class="fidelity-input" placeholder="Ton prénom ou nom" autocomplete="name" required />
+            <input type="email" id="input-email" class="fidelity-input" placeholder="ton@email.com" autocomplete="email" required />
+            <button type="submit" class="fidelity-btn" id="btn-submit"><span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Ajouter à Apple Wallet</button>
+            <p id="fidelity-error" class="fidelity-error hidden"></p>
           </form>
-          <div class="wallet-block hidden" id="wallet-block">
-            <p class="wallet-label">Ta carte est prête</p>
-            <button type="button" class="btn btn-wallet" id="btn-add-wallet">
-              <span class="btn-wallet-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M18 4H6C4.9 4 4 4.9 4 6v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H6V6h12v14z"/>
-                  <path d="M12 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                </svg>
-              </span>
-              Ajouter à Apple Wallet
-            </button>
-            <p class="wallet-hint">Puis double-clic sur le bouton latéral pour ouvrir la carte dans Wallet.</p>
-          </div>
-        </section>
-        <section class="steps">
-          <h2 class="steps-title">En trois secondes</h2>
-          <ol class="steps-list">
-            <li><span class="steps-num">1</span><span>Renseigne ton nom et ton email</span></li>
-            <li><span class="steps-num">2</span><span>Clique sur « Ajouter à Apple Wallet »</span></li>
-            <li><span class="steps-num">3</span><span>Présente ta carte en caisse (double-clic bouton latéral)</span></li>
-          </ol>
         </section>
       </main>
-      <footer class="footer">
-        <p>Points cumulés à chaque achat. Carte digitale uniquement. <a href="/" style="color: var(--accent);">Fidpass</a></p>
-      </footer>
     </div>
 
     <!-- Dashboard restaurateur (visible sur /dashboard?slug=xxx&token=xxx) -->

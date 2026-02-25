@@ -1006,13 +1006,12 @@ function getPolitiqueConfidentialiteHtml() {
 // ——— App Carte (uniquement sur /fidelity/:slug) ———
 
 const form = document.getElementById("card-form");
-const walletBlock = document.getElementById("wallet-block");
 const inputName = document.getElementById("input-name");
 const inputEmail = document.getElementById("input-email");
 const btnSubmit = document.getElementById("btn-submit");
-const btnAddWallet = document.getElementById("btn-add-wallet");
-const heroTitle = document.querySelector("#fidelity-app .hero-title");
-const heroSubtitle = document.querySelector("#fidelity-app .hero-subtitle");
+const fidelityErrorEl = document.getElementById("fidelity-error");
+const fidelityTitleEl = document.getElementById("fidelity-title");
+const fidelitySubtitleEl = document.getElementById("fidelity-subtitle");
 const pageLogo = document.querySelector("#fidelity-app .header .logo");
 
 function getSlugFromPath() {
@@ -1057,28 +1056,26 @@ async function createMember(slug, name, email) {
   return res.json();
 }
 
-function showWalletBlock(memberId) {
-  if (form) form.classList.add("hidden");
-  if (walletBlock) {
-    walletBlock.classList.remove("hidden");
-    btnAddWallet.dataset.memberId = memberId;
-  }
+function redirectToPass(slug, memberId) {
+  const template = getTemplateFromUrl();
+  const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/pass?template=${encodeURIComponent(template)}`;
+  window.location.href = url;
 }
 
 function showError(message) {
-  if (!form) return;
-  const existing = form.querySelector(".error-message");
-  if (existing) existing.remove();
-  const p = document.createElement("p");
-  p.className = "error-message";
-  p.textContent = message;
-  form.appendChild(p);
+  if (!fidelityErrorEl) return;
+  fidelityErrorEl.textContent = message || "";
+  fidelityErrorEl.classList.toggle("hidden", !message);
 }
 
 function setLoading(loading) {
   if (btnSubmit) {
     btnSubmit.disabled = loading;
-    btnSubmit.textContent = loading ? "Création…" : "Créer ma carte";
+    if (loading) {
+      btnSubmit.innerHTML = "Préparation…";
+    } else {
+      btnSubmit.innerHTML = '<span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Ajouter à Apple Wallet';
+    }
   }
 }
 
@@ -1088,10 +1085,13 @@ function setPageBusiness(business) {
   const displayName = etablissement || business?.name;
   if (displayName && pageLogo) pageLogo.textContent = displayName;
   const orgName = etablissement || business?.organizationName;
-  if (heroSubtitle) {
-    heroSubtitle.textContent = orgName
-      ? `Carte de fidélité ${orgName}. Un double-clic sur le bouton latéral de ton iPhone : ta carte s'affiche.`
-      : "Un double-clic sur le bouton latéral de ton iPhone : ta carte s'affiche.";
+  if (fidelityTitleEl) {
+    fidelityTitleEl.textContent = orgName ? `Carte de fidélité ${orgName}` : "Carte de fidélité";
+  }
+  if (fidelitySubtitleEl) {
+    fidelitySubtitleEl.textContent = orgName
+      ? `Renseigne ton nom et ton email, puis ajoute la carte ${orgName} à ton iPhone.`
+      : "Renseigne ton nom et ton email, puis ajoute la carte à ton iPhone.";
   }
 }
 
@@ -1155,7 +1155,7 @@ function runFidelityApp(slug) {
         const data = await createMember(s, name, email);
         const memberId = data.memberId || data.member?.id;
         if (!memberId) throw new Error("Réponse serveur invalide");
-        showWalletBlock(memberId);
+        redirectToPass(s, memberId);
       } catch (err) {
         const isNetworkError = err.message === "Failed to fetch" || err.name === "TypeError";
         showError(
@@ -1169,16 +1169,6 @@ function runFidelityApp(slug) {
     });
   }
 
-  if (btnAddWallet) {
-    btnAddWallet.addEventListener("click", () => {
-      const s = getSlugFromPath();
-      const memberId = btnAddWallet.dataset.memberId;
-      if (!s || !memberId) return;
-      const template = getTemplateFromUrl();
-      const url = `${API_BASE}/api/businesses/${encodeURIComponent(s)}/members/${encodeURIComponent(memberId)}/pass?template=${encodeURIComponent(template)}`;
-      window.location.href = url;
-    });
-  }
 }
 
 // Landing hero : redirection vers page choix de templates
