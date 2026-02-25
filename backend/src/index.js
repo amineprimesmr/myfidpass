@@ -8,6 +8,7 @@ import { optionalAuth } from "./middleware/auth.js";
 import membersRouter from "./routes/members.js";
 import businessesRouter from "./routes/businesses.js";
 import authRouter from "./routes/auth.js";
+import devRouter from "./routes/dev.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -31,6 +32,7 @@ app.use(optionalAuth);
 app.use("/api/auth", authRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
+app.use("/api/dev", devRouter);
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });

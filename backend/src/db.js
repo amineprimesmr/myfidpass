@@ -407,4 +407,14 @@ export function createOrUpdateSubscription({ userId, stripeCustomerId, stripeSub
 }
 
 export { PLANS };
+
+/** Supprime toutes les données (comptes, cartes, membres, transactions, abonnements). Pour usage dev / reset. */
+export function resetAllData() {
+  db.exec("DELETE FROM transactions");
+  db.exec("DELETE FROM members");
+  db.exec("DELETE FROM businesses");
+  db.exec("DELETE FROM subscriptions");
+  db.exec("DELETE FROM users");
+}
+
 export default db;
