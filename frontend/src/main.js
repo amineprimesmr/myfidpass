@@ -206,7 +206,7 @@ function initAuthPage(initialTab) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (registerError) {
-          registerError.textContent = data.error || "Erreur lors de l'inscription";
+          registerError.textContent = data.error || `Erreur serveur (${res.status}). Réessayez ou testez sur myfidpass.fr si vous êtes en local.`;
           registerError.classList.remove("hidden");
         }
         return;
@@ -215,7 +215,7 @@ function initAuthPage(initialTab) {
       window.location.replace("/app");
     } catch (err) {
       if (registerError) {
-        registerError.textContent = "Erreur réseau. Réessayez.";
+        registerError.textContent = "Impossible de joindre l'API. En local : démarrez le backend (port 3001). Sinon testez sur myfidpass.fr.";
         registerError.classList.remove("hidden");
       }
     }

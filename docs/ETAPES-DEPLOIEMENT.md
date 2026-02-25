@@ -108,18 +108,22 @@ Une fois les étapes 1, 3 et 4 faites (et 2 si tu veux les passes Wallet), le lo
 
 ## Mettre à jour le logiciel (voir les derniers changements sur myfidpass.fr)
 
-Quand tu modifies le code (connexion restaurateur, dashboard, etc.), pour que **myfidpass.fr** affiche la nouvelle version :
+**En résumé : tu n’as pas à modifier les Variables sur Railway à chaque changement de code.**  
+Les Variables (comme `JWT_SECRET`) se configurent **une fois**. Ensuite, à chaque modification du code, il suffit de **pousser sur GitHub** : Vercel et Railway redéploient tout seuls.
 
-1. **Pousser le code sur GitHub**
-   - Dans le dossier du projet : `git add .` puis `git commit -m "Connexion restaurateur, redirection /app"` puis `git push`.
-   - Si le projet n’est pas encore un repo Git : `git init`, puis connecte-le à ton repo (ex. `amineprimesmr/myfidpass`) et pousse.
+1. **À faire une seule fois (config Railway)**
+   - Sur **Railway** → ton service **fidpass-api** → onglet **Variables**.
+   - Clique sur **+ New Variable**.
+   - Nom : `JWT_SECRET`  
+   - Valeur : une chaîne aléatoire (dans un terminal : `openssl rand -hex 32`, puis copie le résultat).
+   - Enregistre. Sans cette variable, l’inscription / connexion peuvent échouer en prod.
 
-2. **Déploiement automatique**
-   - **Vercel** (frontend) : dès qu’un push est fait sur la branche connectée, un nouveau build est lancé. Attends 1 à 2 minutes.
-   - **Railway** (API) : idem si le projet est lié au même repo. Un nouveau déploiement se lance après le push.
+2. **À chaque changement de code (habituel)**
+   - Dans le dossier du projet : `git add .` puis `git commit -m "Description du changement"` puis `git push`.
+   - **Aucune action sur Railway ou Vercel** : le push déclenche le déploiement automatique (Vercel pour le site, Railway pour l’API). Attends 1 à 2 minutes.
 
-3. **Variable JWT (si pas encore faite)**
-   - Sur **Railway** → ton projet → **Variables** : ajoute `JWT_SECRET` avec une valeur aléatoire longue (ex. `openssl rand -hex 32` dans un terminal). Sans ça, la connexion / inscription peuvent échouer en prod.
+3. **Voir les changements**
+   - Ouvre **https://myfidpass.fr** (pas localhost) et fais un rafraîchissement forcé : **Cmd + Shift + R** (Mac) ou **Ctrl + Shift + R** (Windows).
 
-4. **Voir les changements sur le site**
-   - Ouvre **https://myfidpass.fr** et fais un **rafraîchissement forcé** : `Cmd + Shift + R` (Mac) ou `Ctrl + Shift + R` (Windows), ou ouvre le site en navigation privée pour éviter le cache.
+**Pourquoi « Erreur lors de l’inscription » en local (localhost) ?**  
+En local, le frontend appelle l’API via le proxy (port 3001). Si le backend ne tourne pas sur le port 3001, la requête échoue. Pour tester l’inscription et la connexion, utilise directement **https://myfidpass.fr** (après avoir ajouté `JWT_SECRET` sur Railway).
