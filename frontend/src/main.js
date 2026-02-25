@@ -1,3 +1,5 @@
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+
 const API_BASE = typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL : "";
 const AUTH_TOKEN_KEY = "fidpass_token";
 
@@ -406,6 +408,171 @@ function initAppDashboard(slug) {
       });
     });
   }
+
+  // ——— Scanner (caméra) ———
+  const scannerViewport = document.getElementById("app-scanner-viewport");
+  const scannerPlaceholder = document.getElementById("app-scanner-placeholder");
+  const scannerResult = document.getElementById("app-scanner-result");
+  const scannerResultName = document.getElementById("app-scanner-result-name");
+  const scannerResultPoints = document.getElementById("app-scanner-result-points");
+  const scannerOneVisit = document.getElementById("app-scanner-one-visit");
+  const scannerAmount = document.getElementById("app-scanner-amount");
+  const scannerAddPoints = document.getElementById("app-scanner-add-points");
+  const scannerResume = document.getElementById("app-scanner-resume");
+  const scannerResultMessage = document.getElementById("app-scanner-result-message");
+  const scannerError = document.getElementById("app-scanner-error");
+
+  let scannerInstance = null;
+  let scannerCurrentMemberId = null;
+  let scannerCurrentMember = null;
+  let scannerVisitOnly = false;
+
+  function setScannerError(msg) {
+    if (scannerError) {
+      scannerError.textContent = msg || "";
+      scannerError.classList.toggle("hidden", !msg);
+    }
+  }
+
+  function showScannerResult(member) {
+    scannerCurrentMemberId = member.id;
+    scannerCurrentMember = member;
+    if (scannerResultName) scannerResultName.textContent = member.name || member.email || "Client";
+    if (scannerResultPoints) scannerResultPoints.textContent = `${member.points ?? 0} point(s)`;
+    if (scannerResult) scannerResult.classList.remove("hidden");
+    document.getElementById("app-scanner-card")?.classList.add("app-scanner-has-result");
+    if (scannerResultMessage) { scannerResultMessage.classList.add("hidden"); scannerResultMessage.textContent = ""; }
+    if (scannerAmount) scannerAmount.value = "";
+    scannerVisitOnly = false;
+  }
+
+  function hideScannerResult() {
+    scannerCurrentMemberId = null;
+    scannerCurrentMember = null;
+    if (scannerResult) scannerResult.classList.add("hidden");
+    document.getElementById("app-scanner-card")?.classList.remove("app-scanner-has-result");
+    if (scannerResultMessage) { scannerResultMessage.classList.add("hidden"); scannerResultMessage.textContent = ""; }
+  }
+
+  async function startScanner() {
+    if (scannerInstance) return;
+    if (!scannerViewport) return;
+    setScannerError("");
+    if (scannerPlaceholder) scannerPlaceholder.classList.add("hidden");
+    scannerViewport.classList.add("app-scanner-scanning");
+
+    const config = { formatsToSupport: [Html5QrcodeSupportedFormats.PDF_417] };
+    scannerInstance = new Html5Qrcode("app-scanner-viewport", config);
+    const cameraConfig = { facingMode: "environment" };
+    const scanConfig = { fps: 8, qrbox: { width: 260, height: 100 } };
+
+    scannerInstance.start(cameraConfig, scanConfig, async (decodedText) => {
+      if (scannerCurrentMemberId) return;
+      const instance = scannerInstance;
+      try {
+        if (instance) await instance.stop();
+      } catch (_) {}
+      scannerInstance = null;
+      scannerViewport?.classList.remove("app-scanner-scanning");
+      if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
+
+      const memberId = decodedText.trim();
+      try {
+        const res = await api("/members/" + encodeURIComponent(memberId));
+        if (res.status === 404) {
+          setScannerError("Membre introuvable (carte d'un autre commerce ou ID invalide).");
+          startScanner();
+          return;
+        }
+        if (!res.ok) {
+          setScannerError("Erreur serveur. Réessayez.");
+          startScanner();
+          return;
+        }
+        const member = await res.json();
+        showScannerResult(member);
+      } catch (_) {
+        setScannerError("Erreur réseau. Réessayez.");
+        startScanner();
+      }
+    }, () => {}).catch((err) => {
+      scannerInstance = null;
+      scannerViewport.classList.remove("app-scanner-scanning");
+      if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
+      setScannerError(err && err.message ? err.message : "Impossible d'accéder à la caméra. Vérifiez les permissions.");
+    });
+  }
+
+  function stopScanner() {
+    hideScannerResult();
+    setScannerError("");
+    if (!scannerInstance) return;
+    scannerInstance.stop().then(() => {
+      scannerInstance = null;
+      scannerViewport?.classList.remove("app-scanner-scanning");
+      if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
+    }).catch(() => {
+      scannerInstance = null;
+      scannerViewport?.classList.remove("app-scanner-scanning");
+      if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
+    });
+  }
+
+  scannerResume?.addEventListener("click", () => {
+    hideScannerResult();
+    setScannerError("");
+    startScanner();
+  });
+
+  scannerOneVisit?.addEventListener("click", () => { scannerVisitOnly = true; if (scannerAmount) scannerAmount.value = ""; });
+  scannerAmount?.addEventListener("input", () => { scannerVisitOnly = false; });
+
+  scannerAddPoints?.addEventListener("click", async () => {
+    if (!scannerCurrentMemberId) return;
+    const body = scannerVisitOnly ? { visit: true } : { amount_eur: parseFloat(scannerAmount?.value) || 0 };
+    if (!scannerVisitOnly && !body.amount_eur) {
+      if (scannerResultMessage) {
+        scannerResultMessage.textContent = "Indiquez un montant (€) ou cliquez sur « 1 passage ».";
+        scannerResultMessage.classList.remove("hidden");
+      }
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(scannerCurrentMemberId)}/points`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (scannerResultMessage) {
+          scannerResultMessage.textContent = data.error || "Erreur";
+          scannerResultMessage.classList.remove("hidden");
+        }
+        return;
+      }
+      if (scannerResultMessage) {
+        scannerResultMessage.textContent = `${data.points} point(s) ajouté(s). Total : ${data.points} pts.`;
+        scannerResultMessage.classList.remove("hidden");
+      }
+      if (scannerResultPoints) scannerResultPoints.textContent = `${data.points} point(s)`;
+      scannerCurrentMember = scannerCurrentMember ? { ...scannerCurrentMember, points: data.points } : null;
+      await refresh();
+    } catch (_) {
+      if (scannerResultMessage) {
+        scannerResultMessage.textContent = "Erreur réseau.";
+        scannerResultMessage.classList.remove("hidden");
+      }
+    }
+  });
+
+  document.querySelectorAll("#app-app .app-sidebar-link[data-section]").forEach((link) => {
+    link.addEventListener("click", () => {
+      const id = link.getAttribute("data-section");
+      if (id === "scanner") startScanner();
+      else stopScanner();
+    });
+  });
 
   let allMembers = [];
   let selectedMemberId = null;

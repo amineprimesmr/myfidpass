@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "html5-qrcode": "^2.3.8"
   }
 }

@@ -95,6 +95,10 @@
             <span class="app-sidebar-icon" aria-hidden="true">🔗</span>
             Partager
           </a>
+          <a href="#scanner" class="app-sidebar-link" data-section="scanner">
+            <span class="app-sidebar-icon" aria-hidden="true">📷</span>
+            Scanner carte
+          </a>
           <a href="#caisse" class="app-sidebar-link" data-section="caisse">
             <span class="app-sidebar-icon" aria-hidden="true">➕</span>
             Caisse rapide
@@ -156,6 +160,34 @@
               <div class="app-qr-wrap">
                 <img id="app-share-qr" class="app-qr-img" src="" alt="QR code vers la page carte" />
               </div>
+            </div>
+          </section>
+
+          <section id="scanner" class="app-section app-section-scanner">
+            <h2 class="app-section-title">Scanner la carte client</h2>
+            <p class="app-section-desc">Cadrez le code-barres de la carte (Apple Wallet ou écran du client). Dès qu’un client est reconnu, ajoutez les points en un clic.</p>
+            <div class="app-card app-scanner-card" id="app-scanner-card">
+              <div id="app-scanner-viewport" class="app-scanner-viewport">
+                <div id="app-scanner-placeholder" class="app-scanner-placeholder">
+                  <p>Vue caméra</p>
+                  <p class="app-scanner-hint">Autorisez l’accès à la caméra pour scanner.</p>
+                </div>
+              </div>
+              <div id="app-scanner-result" class="app-scanner-result hidden">
+                <p class="app-scanner-result-title">Client reconnu</p>
+                <p class="app-scanner-result-member" id="app-scanner-result-name"></p>
+                <p class="app-scanner-result-points" id="app-scanner-result-points"></p>
+                <div class="app-scanner-actions">
+                  <button type="button" id="app-scanner-one-visit" class="app-btn app-btn-primary">1 passage</button>
+                  <div class="app-scanner-amount-row">
+                    <input type="number" id="app-scanner-amount" class="app-input app-input-amount" placeholder="Montant (€)" min="0" step="0.01" />
+                    <button type="button" id="app-scanner-add-points" class="app-btn app-btn-primary">Ajouter les points</button>
+                  </div>
+                  <button type="button" id="app-scanner-resume" class="app-btn app-btn-secondary">Scanner un autre</button>
+                </div>
+                <p id="app-scanner-result-message" class="app-message hidden"></p>
+              </div>
+              <p id="app-scanner-error" class="app-message app-message-error hidden"></p>
             </div>
           </section>
 

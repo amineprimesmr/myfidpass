@@ -384,6 +384,96 @@
 .app-message.success { color: var(--app-accent); }
 .app-message.error { color: #f87171; }
 
+/* Scanner (caméra) */
+.app-scanner-card {
+  overflow: hidden;
+}
+
+.app-scanner-viewport {
+  position: relative;
+  min-height: 280px;
+  background: var(--app-bg);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-scanner-placeholder {
+  text-align: center;
+  color: var(--app-text-muted);
+  padding: 1.5rem;
+}
+
+.app-scanner-placeholder p { margin: 0.5rem 0; }
+.app-scanner-hint { font-size: 0.9rem; }
+
+.app-scanner-viewport.app-scanner-scanning .app-scanner-placeholder {
+  display: none;
+}
+
+.app-scanner-card.app-scanner-has-result .app-scanner-viewport {
+  display: none;
+}
+
+.app-scanner-viewport video,
+.app-scanner-viewport canvas {
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.app-scanner-result {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: var(--app-bg);
+  border-radius: 12px;
+  border: 1px solid var(--app-border);
+}
+
+.app-scanner-result-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.app-scanner-result-member {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.app-scanner-result-points {
+  font-size: 1rem;
+  color: var(--app-accent);
+  margin: 0 0 1rem;
+}
+
+.app-scanner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.app-scanner-amount-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.app-scanner-amount-row .app-input-amount {
+  max-width: 120px;
+  margin-bottom: 0;
+}
+
+#app-scanner-error {
+  margin-top: 0.75rem;
+}
+
 /* Partager (lien + QR code) */
 .app-share-card .app-step-label + .app-step-label { margin-top: 1.5rem; }
 
