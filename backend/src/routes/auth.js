@@ -31,9 +31,12 @@ router.post("/register", async (req, res) => {
       passwordHash,
       name: name ? String(name).trim() : null,
     });
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "30d" });
-    const businesses = getBusinessesByUserId(user.id);
-    res.status(201).json({
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+  const businesses = getBusinessesByUserId(user.id);
+  if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+    console.warn("JWT_SECRET non défini en production : définir la variable sur Railway pour une connexion stable.");
+  }
+  res.status(201).json({
       user: { id: user.id, email: user.email, name: user.name },
       token,
       businesses,
@@ -62,7 +65,7 @@ router.post("/login", async (req, res) => {
   if (!ok) {
     return res.status(401).json({ error: "Email ou mot de passe incorrect" });
   }
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "30d" });
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
   const businesses = getBusinessesByUserId(user.id);
   res.json({
     user: { id: user.id, email: user.email, name: user.name },
@@ -74,8 +77,13 @@ router.post("/login", async (req, res) => {
 /**
  * GET /api/auth/me
  * Requiert Authorization: Bearer <token>. Retourne l'utilisateur courant et ses commerces.
+ * En 401 : body.code = "expired" | "invalid" | "user_not_found" pour message côté client.
  */
-router.get("/me", requireAuth, (req, res) => {
+router.get("/me", (req, res, next) => {
+  if (!req.user) {
+    const code = req.authError || "invalid";
+    return res.status(401).json({ error: "Session invalide ou expirée", code });
+  }
   const businesses = getBusinessesByUserId(req.user.id);
   res.json({
     user: { id: req.user.id, email: req.user.email, name: req.user.name },

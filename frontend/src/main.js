@@ -151,6 +151,19 @@ function initAuthPage(initialTab) {
   tabRegister?.addEventListener("click", () => showTab("register"));
   showTab(initialTab === "register" ? "register" : "login");
 
+  const params = new URLSearchParams(window.location.search);
+  const sessionCode = params.get("session");
+  if (sessionCode === "expired" && loginError) {
+    loginError.textContent = "Votre session a expiré. Reconnectez-vous avec votre email et mot de passe.";
+    loginError.classList.remove("hidden");
+  } else if (sessionCode === "user_not_found" && loginError) {
+    loginError.textContent = "Votre compte n’est plus reconnu (serveur réinitialisé). Recréez un compte avec le même email si besoin.";
+    loginError.classList.remove("hidden");
+  }
+  if (sessionCode) {
+    history.replaceState(null, "", window.location.pathname + "?redirect=" + (params.get("redirect") || "/app"));
+  }
+
   document.getElementById("auth-login-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("auth-login-email")?.value?.trim();
@@ -166,14 +179,18 @@ function initAuthPage(initialTab) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (loginError) {
-          loginError.textContent = data.error || "Erreur de connexion";
+          let msg = data.error || "Erreur de connexion";
+          if (res.status === 401) {
+            msg += " Si vous aviez déjà un compte et que la connexion ne marche plus, l’hébergeur a peut‑être été réinitialisé : vous pouvez recréer un compte avec le même email.";
+          }
+          loginError.textContent = msg;
           loginError.classList.remove("hidden");
         }
         return;
       }
       setAuthToken(data.token);
-      const params = new URLSearchParams(window.location.search);
-      const redirect = params.get("redirect") || "/app";
+      const redirectParams = new URLSearchParams(window.location.search);
+      const redirect = redirectParams.get("redirect") || "/app";
       window.location.replace(redirect);
     } catch (err) {
       if (loginError) {
@@ -238,8 +255,10 @@ function initAppPage() {
     try {
       const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
       if (res.status === 401) {
+        const body = await res.json().catch(() => ({}));
         clearAuthToken();
-        window.location.replace("/login?redirect=/app");
+        const code = body.code || "invalid";
+        window.location.replace("/login?redirect=/app&session=" + code);
         return;
       }
       if (!res.ok) return;

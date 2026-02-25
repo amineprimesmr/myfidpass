@@ -5,7 +5,8 @@ import { dirname, join } from "path";
 import { randomUUID } from "crypto";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dataDir = join(__dirname, "..", "data");
+// DATA_DIR permet de pointer vers un volume persistant (ex. Railway: DATA_DIR=/data)
+const dataDir = process.env.DATA_DIR || join(__dirname, "..", "data");
 if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 const dbPath = join(dataDir, "fidelity.db");
 

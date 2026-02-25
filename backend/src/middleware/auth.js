@@ -5,11 +5,12 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
 
 /**
  * Vérifie le JWT (header Authorization: Bearer <token>) et attache req.user.
- * Ne renvoie pas 401 si token absent (pour routes optionnellement authentifiées).
+ * En cas d'échec, req.authError = "expired" | "invalid" pour permettre des messages clairs.
  */
 export function optionalAuth(req, res, next) {
   const authHeader = req.get("Authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  req.authError = null;
   if (!token) {
     req.user = null;
     return next();
@@ -18,8 +19,10 @@ export function optionalAuth(req, res, next) {
     const payload = jwt.verify(token, JWT_SECRET);
     const user = getUserById(payload.userId);
     req.user = user || null;
-  } catch {
+    if (!user) req.authError = "user_not_found";
+  } catch (err) {
     req.user = null;
+    req.authError = err.name === "TokenExpiredError" ? "expired" : "invalid";
   }
   next();
 }

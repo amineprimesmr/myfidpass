@@ -26,6 +26,24 @@ Suis ces étapes **dans l’ordre**. À la fin, la création de carte sur myfidp
 
    *(Ne mets pas les certificats pour l’instant si tu ne les as pas en variables ; on peut les ajouter après.)*
 
+6b. **Pourquoi je suis déconnecté à chaque fois ? Pourquoi je dois recréer un compte ?**  
+   Sur Railway, tout ce que l’API enregistre (comptes, commerces) est stocké dans un **fichier** sur le serveur. Par défaut, ce fichier est **supprimé à chaque redéploiement**. Donc : tu te connectes → tout va bien → plus tard (ou après un déploiement) le fichier a été effacé → ton compte n’existe plus → la connexion ne marche plus et tu dois recréer un compte.  
+   **Solution** : ajouter un **volume** (un espace de stockage qui ne s’efface pas). Comme ça, le fichier qui contient les comptes est conservé.
+
+   **Comment ajouter le volume sur Railway :**
+   1. Ouvre ton projet sur **railway.app** (la page avec ton service **fidpass-api**).
+   2. **Méthode A** : appuie sur **Ctrl+K** (Windows) ou **Cmd+K** (Mac), tape **« volume »**, puis choisis **« Add Volume »** ou **« Create Volume »**.
+   3. **Méthode B** : **clic droit** sur la zone du projet (le fond, pas sur une carte), et dans le menu cherche **« Volume »** ou **« Add Volume »**.
+   4. Quand on te demande à quel **service** l’attacher : choisis **fidpass-api**.
+   5. Quand on te demande le **mount path** (ou « chemin de montage ») : écris **`/data`** (exactement ça, sans espace).
+   6. Enregistre / crée le volume.
+   7. Va dans **Variables** (ton service fidpass-api) et ajoute une variable : **Nom** = **`DATA_DIR`**, **Valeur** = **`/data`**.
+   8. Redéploie le service (ou pousse un commit pour déclencher un déploiement).
+
+   Après ça, les comptes et la connexion resteront stables même après des redéploiements.
+
+   *Si tu ne trouves pas « Volume » : regarde aussi dans le **+** ou **New** sur la page du projet, ou dans les **Settings** de ton service, section stockage / persistance. L’option peut s’appeler « Volume » ou « Persistent Storage ».*
+
 7. Onglet **Settings** → section **Networking** ou **Domains** :
    - Clique sur **« Generate Domain »** ou **« Add custom domain »**.
    - Note l’URL générée (ex. `fidpass-api-production-xxxx.up.railway.app`). Tu en auras besoin à l’étape 3.
