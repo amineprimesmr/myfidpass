@@ -24,17 +24,31 @@ function createDefaultIconBuffer() {
 }
 
 function loadCertificates() {
+  const signerKeyPassphrase = process.env.SIGNER_KEY_PASSPHRASE || undefined;
+
+  // Option 1 : certificats en variables d'environnement (recommandé en prod, ex. Railway)
+  const wwdrPem = process.env.WWDR_PEM;
+  const signerCertPem = process.env.SIGNER_CERT_PEM;
+  const signerKeyPem = process.env.SIGNER_KEY_PEM;
+  if (wwdrPem && signerCertPem && signerKeyPem) {
+    return {
+      wwdr: Buffer.from(wwdrPem, "utf8"),
+      signerCert: Buffer.from(signerCertPem, "utf8"),
+      signerKey: Buffer.from(signerKeyPem, "utf8"),
+      ...(signerKeyPassphrase && { signerKeyPassphrase }),
+    };
+  }
+
+  // Option 2 : fichiers dans backend/certs/
   const wwdrPath = join(certsDir, "wwdr.pem");
   const signerCertPath = join(certsDir, "signerCert.pem");
   const signerKeyPath = join(certsDir, "signerKey.pem");
 
   if (!existsSync(wwdrPath) || !existsSync(signerCertPath) || !existsSync(signerKeyPath)) {
     throw new Error(
-      "Certificats manquants. Place wwdr.pem, signerCert.pem et signerKey.pem dans backend/certs/. Voir docs/APPLE-WALLET-SETUP.md"
+      "Certificats manquants. Soit définis les variables WWDR_PEM, SIGNER_CERT_PEM et SIGNER_KEY_PEM (contenu complet des .pem), soit place wwdr.pem, signerCert.pem et signerKey.pem dans backend/certs/. Voir docs/APPLE-WALLET-SETUP.md"
     );
   }
-
-  const signerKeyPassphrase = process.env.SIGNER_KEY_PASSPHRASE || undefined;
 
   return {
     wwdr: readFileSync(wwdrPath),

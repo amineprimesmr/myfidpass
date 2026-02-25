@@ -95,6 +95,18 @@ Place **wwdr.pem** dans `backend/certs/`.
 
 Ne commite **jamais** `signerKey.pem` (ni le `.p12`) dans Git. Le dossier `certs/` est dans `.gitignore`.
 
+### 5.1 Production (Railway) : variables d'environnement
+
+En production, les fichiers `.pem` ne sont pas dans le repo (`.gitignore`). Tu peux passer le **contenu complet** de chaque fichier en variable d'environnement sur Railway :
+
+| Variable Railway | Contenu |
+|------------------|--------|
+| `WWDR_PEM` | Contenu **entier** du fichier `wwdr.pem` (copier-coller, y compris les lignes `-----BEGIN CERTIFICATE-----` et `-----END CERTIFICATE-----`) |
+| `SIGNER_CERT_PEM` | Contenu **entier** de `signerCert.pem` |
+| `SIGNER_KEY_PEM` | Contenu **entier** de `signerKey.pem` |
+
+**Comment faire :** sur ton Mac, ouvre chaque fichier dans `backend/certs/` avec un éditeur de texte, sélectionne tout (Cmd+A), copie (Cmd+C), puis sur Railway → ton service → **Variables** → **+ New Variable** → colle le contenu dans la valeur. Répète pour les 3 variables. Redéploie le service après avoir tout ajouté.
+
 ---
 
 ## 6. Variables d’environnement (`backend/.env`)

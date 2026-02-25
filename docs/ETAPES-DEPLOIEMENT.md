@@ -55,17 +55,17 @@ Suis ces étapes **dans l’ordre**. À la fin, la création de carte sur myfidp
 
 ## Étape 2 — Certificats Apple Wallet sur Railway
 
-Sans les certificats, la génération de la carte Wallet ne marchera pas. Deux possibilités :
+Sans les certificats, l'erreur « Impossible de générer la carte » s'affiche. Il faut ajouter les 3 certificats en **variables d'environnement** sur Railway :
 
-**Option A — Fichiers dans le repo (déconseillé en repo public)**  
-- Garde les fichiers dans `backend/certs/` (signerCert.pem, signerKey.pem, wwdr.pem) et assure-toi qu’ils sont bien versionnés (ou envoie-les uniquement en repo **privé**). Au déploiement, ils seront sur le serveur.
+1. **Sur ton Mac**, génère les 3 fichiers `.pem` en suivant **docs/APPLE-WALLET-SETUP.md** (sections 3 et 4). Ils doivent être dans `backend/certs/` : `wwdr.pem`, `signerCert.pem`, `signerKey.pem`.
+2. **Sur Railway** → ton service **fidpass-api** → **Variables** → **+ New Variable**.
+3. Crée **3 variables** (nom = exactement celui-ci, valeur = **tout** le contenu du fichier, copier-coller) :
+   - **`WWDR_PEM`** → contenu de `backend/certs/wwdr.pem`
+   - **`SIGNER_CERT_PEM`** → contenu de `backend/certs/signerCert.pem`
+   - **`SIGNER_KEY_PEM`** → contenu de `backend/certs/signerKey.pem`
+4. **Redéploie** le service (ou pousse un commit) pour que les variables soient prises en compte.
 
-**Option B — Variables d’environnement (recommandé)**  
-- Sur Railway, dans **Variables**, ajoute par exemple :
-  - Une variable dont la **valeur** est le **contenu entier** du fichier (copier-coller du .pem).  
-  - Il faudrait alors adapter le code backend pour lire les certs depuis ces variables au démarrage et les écrire dans `backend/certs/`. Si tu ne l’as pas fait, utilise l’option A avec un repo **privé** et les 3 fichiers dans `backend/certs/`.
-
-Pour l’instant tu peux **ignorer** si tu veux juste que « Créer ma carte » enregistre le commerce ; la **téléchargement du .pkpass** ne marchera qu’une fois les certificats en place.
+Après ça, le téléchargement du .pkpass (ajout à Apple Wallet) fonctionnera.
 
 ---
 

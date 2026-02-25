@@ -1,0 +1,18 @@
+---
+description: Déploiement systématique en production (projet dev uniquement en prod)
+alwaysApply: true
+---
+
+# Déploiement production
+
+Ce projet (Fidpass) est développé **uniquement en production**. Il n’y a pas d’environnement de dev/staging dédié.
+
+## Règle
+
+Après toute modification du code qui impacte l’application (frontend, backend, config, scripts) :
+
+1. **Exécuter le déploiement** : `npm run deploy`
+2. Le script fait : `git add -A` → commit → `git push origin main` → déclenche le déploiement (Vercel/Railway).
+3. Ne pas oublier de déployer : c’est la seule façon de voir les changements en ligne (myfidpass.fr).
+
+Tu peux proposer ou exécuter `npm run deploy` à la fin d’une session de modifications si des fichiers ont été changés.
