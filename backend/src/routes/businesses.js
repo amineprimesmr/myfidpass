@@ -4,10 +4,15 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import {
   getBusinessBySlug,
+  getBusinessByDashboardToken,
   createBusiness,
   createMember,
   getMemberForBusiness,
   addPoints,
+  createTransaction,
+  getDashboardStats,
+  getMembersForBusiness,
+  getTransactionsForBusiness,
   ensureDefaultBusiness,
 } from "../db.js";
 import { generatePass } from "../pass.js";
@@ -17,6 +22,71 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const businessAssetsDir = join(__dirname, "..", "assets", "businesses");
 
 const router = Router();
+
+/** Middleware : vérifie le token dashboard (query ?token= ou header X-Dashboard-Token) et attache la business. */
+function requireDashboardToken(req, res, next) {
+  const token = req.query.token || req.get("X-Dashboard-Token");
+  const business = getBusinessByDashboardToken(token);
+  if (!business) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  req.business = business;
+  next();
+}
+
+/**
+ * GET /api/businesses/:slug/dashboard/stats
+ * Stats pour le tableau de bord (nécessite token).
+ */
+router.get("/:slug/dashboard/stats", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const token = req.query.token || req.get("X-Dashboard-Token");
+  const byToken = getBusinessByDashboardToken(token);
+  if (!byToken || byToken.id !== business.id) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const stats = getDashboardStats(business.id);
+  res.json({ ...stats, businessName: business.organization_name });
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/members
+ * Liste des membres avec recherche et pagination (nécessite token).
+ */
+router.get("/:slug/dashboard/members", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const token = req.query.token || req.get("X-Dashboard-Token");
+  const byToken = getBusinessByDashboardToken(token);
+  if (!byToken || byToken.id !== business.id) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const search = req.query.search ?? "";
+  const limit = Math.min(Number(req.query.limit) || 50, 100);
+  const offset = Number(req.query.offset) || 0;
+  const result = getMembersForBusiness(business.id, { search, limit, offset });
+  res.json(result);
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/transactions
+ * Historique des transactions (nécessite token).
+ */
+router.get("/:slug/dashboard/transactions", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const token = req.query.token || req.get("X-Dashboard-Token");
+  const byToken = getBusinessByDashboardToken(token);
+  if (!byToken || byToken.id !== business.id) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const limit = Math.min(Number(req.query.limit) || 30, 100);
+  const offset = Number(req.query.offset) || 0;
+  const memberId = req.query.memberId || null;
+  const result = getTransactionsForBusiness(business.id, { limit, offset, memberId });
+  res.json(result);
+});
 
 /**
  * GET /api/businesses/:slug
@@ -96,7 +166,7 @@ router.get("/:slug/members/:memberId", (req, res) => {
 
 /**
  * POST /api/businesses/:slug/members/:memberId/points
- * Ajouter des points (caisse).
+ * Ajouter des points (caisse). Body: { points } ou { amount_eur } ou { visit: true }, ou combinaison.
  */
 router.post("/:slug/members/:memberId/points", (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -105,12 +175,37 @@ router.post("/:slug/members/:memberId/points", (req, res) => {
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
-  const points = Number(req.body?.points);
-  if (!Number.isInteger(points) || points < 0) {
-    return res.status(400).json({ error: "points doit être un entier positif" });
+  const pointsDirect = Number(req.body?.points);
+  const amountEur = Number(req.body?.amount_eur);
+  const visit = req.body?.visit === true;
+  const perEuro = Number(business.points_per_euro) || 1;
+  const perVisit = Number(business.points_per_visit) || 0;
+
+  let points = 0;
+  if (Number.isInteger(pointsDirect) && pointsDirect > 0) {
+    points += pointsDirect;
+  }
+  if (!Number.isNaN(amountEur) && amountEur > 0) {
+    points += Math.floor(amountEur * perEuro);
+  }
+  if (visit && perVisit > 0) {
+    points += perVisit;
+  }
+
+  if (points <= 0) {
+    return res.status(400).json({
+      error: "Indiquez points, amount_eur (montant en €), ou visit: true (1 passage). Règles: " + perEuro + " pt/€, " + perVisit + " pt/passage.",
+    });
   }
 
   const updated = addPoints(member.id, points);
+  createTransaction({
+    businessId: business.id,
+    memberId: member.id,
+    type: "points_add",
+    points,
+    metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit } : undefined,
+  });
   res.json({ id: updated.id, points: updated.points });
 });
 
@@ -196,6 +291,9 @@ router.post("/", (req, res) => {
       }
     }
 
+    const baseUrl = process.env.FRONTEND_URL || "https://myfidpass.fr";
+    const dashboardUrl = `${baseUrl.replace(/\/$/, "")}/dashboard?slug=${business.slug}&token=${business.dashboard_token}`;
+
     res.status(201).json({
       id: business.id,
       name: business.name,
@@ -203,6 +301,8 @@ router.post("/", (req, res) => {
       organizationName: business.organization_name,
       link: `/fidelity/${business.slug}`,
       assetsPath: `backend/assets/businesses/${business.id}/`,
+      dashboardUrl,
+      dashboardToken: business.dashboard_token,
     });
   } catch (e) {
     console.error(e);

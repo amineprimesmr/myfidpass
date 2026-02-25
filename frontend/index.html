@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/landing.css" />
+    <link rel="stylesheet" href="/src/dashboard.css" />
   </head>
   <body>
     <!-- Landing Fidpass (visible sur /) -->
@@ -309,6 +310,66 @@
       <footer class="footer">
         <p>Points cumulés à chaque achat. Carte digitale uniquement. <a href="/" style="color: var(--accent);">Fidpass</a></p>
       </footer>
+    </div>
+
+    <!-- Dashboard restaurateur (visible sur /dashboard?slug=xxx&token=xxx) -->
+    <div id="dashboard-app" class="hidden">
+      <header class="dashboard-header">
+        <div class="dashboard-header-inner">
+          <a href="/" class="dashboard-logo">Fidpass</a>
+          <span class="dashboard-title" id="dashboard-business-name">Tableau de bord</span>
+          <a href="/" class="dashboard-back">Retour au site</a>
+        </div>
+      </header>
+      <main class="dashboard-main">
+        <div id="dashboard-error" class="dashboard-error hidden">
+          <p>Lien invalide ou expiré. Utilisez le lien reçu lors de la création de votre carte.</p>
+          <a href="/" class="landing-btn landing-btn-secondary">Retour à l'accueil</a>
+        </div>
+        <div id="dashboard-content" class="dashboard-content hidden">
+          <section class="dashboard-stats">
+            <div class="dashboard-stat"><span class="dashboard-stat-value" id="stat-members">0</span><span class="dashboard-stat-label">Membres</span></div>
+            <div class="dashboard-stat"><span class="dashboard-stat-value" id="stat-points">0</span><span class="dashboard-stat-label">Points ce mois</span></div>
+            <div class="dashboard-stat"><span class="dashboard-stat-value" id="stat-transactions">0</span><span class="dashboard-stat-label">Opérations ce mois</span></div>
+          </section>
+
+          <section class="dashboard-section">
+            <h2 class="dashboard-section-title">Caisse rapide</h2>
+            <p class="dashboard-hint">Recherchez un client, puis ajoutez des points (montant en € ou 1 passage).</p>
+            <div class="dashboard-caisse">
+              <input type="text" id="dashboard-member-search" class="dashboard-input" placeholder="Nom ou email du client..." autocomplete="off" />
+              <div id="dashboard-member-list" class="dashboard-member-list hidden"></div>
+              <div class="dashboard-caisse-row">
+                <input type="number" id="dashboard-amount" class="dashboard-input dashboard-input-amount" placeholder="Montant (€)" min="0" step="0.01" />
+                <button type="button" id="dashboard-one-visit" class="landing-btn landing-btn-secondary">1 passage</button>
+                <button type="button" id="dashboard-add-points" class="landing-btn landing-btn-primary" disabled>Ajouter les points</button>
+              </div>
+              <p id="dashboard-caisse-message" class="dashboard-message hidden"></p>
+            </div>
+          </section>
+
+          <section class="dashboard-section">
+            <h2 class="dashboard-section-title">Membres</h2>
+            <input type="text" id="dashboard-members-search" class="dashboard-input dashboard-search" placeholder="Rechercher par nom ou email..." />
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead><tr><th>Nom</th><th>Email</th><th>Points</th><th>Dernière visite</th></tr></thead>
+                <tbody id="dashboard-members-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="dashboard-section">
+            <h2 class="dashboard-section-title">Dernières opérations</h2>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead><tr><th>Client</th><th>Type</th><th>Points</th><th>Date</th></tr></thead>
+                <tbody id="dashboard-transactions-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
 
     <script type="module" src="/src/main.js"></script>

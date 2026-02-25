@@ -2,14 +2,16 @@ const API_BASE = typeof import.meta.env?.VITE_API_URL === "string" ? import.meta
 
 const landingEl = document.getElementById("landing");
 const fidelityAppEl = document.getElementById("fidelity-app");
+const dashboardAppEl = document.getElementById("dashboard-app");
 
 /**
- * Route : / → landing, /creer-ma-carte → choix template, /fidelity/:slug → app carte, /mentions-legales | /politique-confidentialite → landing légale
+ * Route : / → landing, /dashboard → tableau de bord, /creer-ma-carte → créateur, /fidelity/:slug → app carte, etc.
  */
 function getRoute() {
   const path = window.location.pathname.replace(/\/$/, "");
   const match = path.match(/^\/fidelity\/([^/]+)$/);
   if (match) return { type: "fidelity", slug: match[1] };
+  if (path === "/dashboard") return { type: "dashboard" };
   if (path === "/creer-ma-carte") return { type: "templates" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
@@ -20,11 +22,22 @@ function initRouting() {
   const route = getRoute();
   if (route.type === "fidelity") {
     landingEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     fidelityAppEl.classList.remove("hidden");
     return route.slug;
   }
+  if (route.type === "dashboard") {
+    fidelityAppEl.classList.add("hidden");
+    landingEl.classList.add("hidden");
+    if (dashboardAppEl) {
+      dashboardAppEl.classList.remove("hidden");
+      initDashboardPage();
+    }
+    return null;
+  }
   landingEl.classList.remove("hidden");
   fidelityAppEl.classList.add("hidden");
+  if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
   const landingMain = document.getElementById("landing-main");
   const landingLegal = document.getElementById("landing-legal");
   const landingTemplates = document.getElementById("landing-templates");
@@ -265,7 +278,8 @@ function initBuilderPage() {
       };
       if (logoDataUrl) body.logoBase64 = logoDataUrl;
 
-      const res = await fetch(`${API_BASE}/api/businesses`, {
+      const apiUrl = `${API_BASE}/api/businesses`;
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -273,7 +287,10 @@ function initBuilderPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Erreur lors de la création");
+        const msg = data.error || `Erreur ${res.status} lors de la création`;
+        if (res.status === 409) throw new Error("Ce lien est déjà pris. Choisissez un autre « lien » (slug) pour votre établissement.");
+        if (res.status === 400) throw new Error(data.error || "Vérifiez le nom et le lien de l'établissement.");
+        throw new Error(msg);
       }
 
       const data = await res.json();
@@ -290,7 +307,11 @@ function initBuilderPage() {
         localStorage.removeItem(BUILDER_DRAFT_KEY);
       } catch (_) {}
     } catch (err) {
-      alert(err.message || "Une erreur est survenue. Réessayez.");
+      const isNetwork = err.message === "Failed to fetch" || err.name === "TypeError";
+      const message = isNetwork
+        ? "Impossible de joindre le serveur. En production, l’API doit être déployée (ex. api.myfidpass.fr) et la variable VITE_API_URL doit être définie sur Vercel. Voir docs/PRODUCTION.md"
+        : (err.message || "Une erreur est survenue. Réessayez.");
+      alert(message);
     } finally {
       btnSubmit.disabled = false;
       btnSubmit.textContent = "Créer ma carte et obtenir mon lien";
@@ -304,6 +325,223 @@ function initBuilderPage() {
       setTimeout(() => (btnCopyLink.textContent = "Copier"), 2000);
     });
   });
+
+  if (data.dashboardUrl) {
+    successBlock.querySelectorAll('a[href*="dashboard"]').forEach((el) => el.remove());
+    const dashboardLink = document.createElement("a");
+    dashboardLink.href = data.dashboardUrl;
+    dashboardLink.className = "landing-btn landing-btn-secondary";
+    dashboardLink.style.marginTop = "1rem";
+    dashboardLink.style.display = "inline-block";
+    dashboardLink.textContent = "Ouvrir le tableau de bord";
+    successBlock.appendChild(dashboardLink);
+  }
+}
+
+function initDashboardPage() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get("slug");
+  const token = params.get("token");
+  const errorEl = document.getElementById("dashboard-error");
+  const contentEl = document.getElementById("dashboard-content");
+
+  if (!slug || !token) {
+    if (errorEl) errorEl.classList.remove("hidden");
+    if (contentEl) contentEl.classList.add("hidden");
+    return;
+  }
+  if (errorEl) errorEl.classList.add("hidden");
+  if (contentEl) contentEl.classList.remove("hidden");
+
+  const api = (path, opts = {}) => {
+    const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${path}?token=${encodeURIComponent(token)}`;
+    return fetch(url, { ...opts });
+  };
+
+  let allMembers = [];
+  let selectedMemberId = null;
+  let addPointsVisitOnly = false;
+
+  const statMembers = document.getElementById("stat-members");
+  const statPoints = document.getElementById("stat-points");
+  const statTransactions = document.getElementById("stat-transactions");
+  const businessNameEl = document.getElementById("dashboard-business-name");
+  const memberSearchInput = document.getElementById("dashboard-member-search");
+  const memberListEl = document.getElementById("dashboard-member-list");
+  const amountInput = document.getElementById("dashboard-amount");
+  const oneVisitBtn = document.getElementById("dashboard-one-visit");
+  const addPointsBtn = document.getElementById("dashboard-add-points");
+  const caisseMessage = document.getElementById("dashboard-caisse-message");
+  const membersSearchInput = document.getElementById("dashboard-members-search");
+  const membersTbody = document.getElementById("dashboard-members-tbody");
+  const transactionsTbody = document.getElementById("dashboard-transactions-tbody");
+
+  function showCaisseMessage(text, isError = false) {
+    caisseMessage.textContent = text;
+    caisseMessage.classList.remove("hidden", "success", "error");
+    caisseMessage.classList.add(isError ? "error" : "success");
+  }
+
+  async function loadStats() {
+    const res = await api("/dashboard/stats");
+    if (res.status === 401) throw new Error("Unauthorized");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (statMembers) statMembers.textContent = data.membersCount ?? 0;
+    if (statPoints) statPoints.textContent = data.pointsThisMonth ?? 0;
+    if (statTransactions) statTransactions.textContent = data.transactionsThisMonth ?? 0;
+    if (businessNameEl) businessNameEl.textContent = data.businessName || slug;
+  }
+
+  async function loadMembers(search = "") {
+    const q = search ? `&search=${encodeURIComponent(search)}` : "";
+    const res = await api(`/dashboard/members?limit=100${q}`);
+    if (!res.ok) return { members: [], total: 0 };
+    return res.json();
+  }
+
+  async function loadTransactions() {
+    const res = await api("/dashboard/transactions?limit=20");
+    if (!res.ok) return { transactions: [], total: 0 };
+    return res.json();
+  }
+
+  function renderMembers(members) {
+    if (!membersTbody) return;
+    membersTbody.innerHTML = members
+      .map(
+        (m) =>
+          `<tr>
+            <td>${escapeHtml(m.name)}</td>
+            <td>${escapeHtml(m.email)}</td>
+            <td>${m.points}</td>
+            <td>${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</td>
+          </tr>`
+      )
+      .join("") || "<tr><td colspan='4'>Aucun membre</td></tr>";
+  }
+
+  function renderTransactions(transactions) {
+    if (!transactionsTbody) return;
+    transactionsTbody.innerHTML = transactions
+      .map(
+        (t) =>
+          `<tr>
+            <td>${escapeHtml(t.member_name)}</td>
+            <td>${t.type === "points_add" ? "Points ajoutés" : t.type}</td>
+            <td>+${t.points}</td>
+            <td>${formatDate(t.created_at)}</td>
+          </tr>`
+      )
+      .join("") || "<tr><td colspan='4'>Aucune opération</td></tr>";
+  }
+
+  function escapeHtml(s) {
+    const div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  async function refresh() {
+    try {
+      await loadStats();
+    } catch (e) {
+      if (e.message === "Unauthorized") {
+        if (errorEl) errorEl.classList.remove("hidden");
+        if (contentEl) contentEl.classList.add("hidden");
+      }
+      return;
+    }
+    const membersData = await loadMembers(membersSearchInput?.value || "");
+    allMembers = membersData.members || [];
+    renderMembers(allMembers);
+    const txData = await loadTransactions();
+    renderTransactions(txData.transactions || []);
+  }
+
+  memberSearchInput?.addEventListener("input", async () => {
+    const q = memberSearchInput.value.trim();
+    if (q.length < 2) {
+      memberListEl.classList.add("hidden");
+      memberListEl.innerHTML = "";
+      selectedMemberId = null;
+      addPointsBtn.disabled = true;
+      return;
+    }
+    const data = await loadMembers(q);
+    const members = data.members || [];
+    memberListEl.innerHTML = members
+      .map(
+        (m) =>
+          `<div class="dashboard-member-item" data-id="${m.id}">${escapeHtml(m.name)} — ${escapeHtml(m.email)} (${m.points} pts)</div>`
+      )
+      .join("");
+    memberListEl.classList.remove("hidden");
+    memberListEl.querySelectorAll(".dashboard-member-item").forEach((el) => {
+      el.addEventListener("click", () => {
+        selectedMemberId = el.dataset.id;
+        const m = members.find((x) => x.id === selectedMemberId);
+        memberSearchInput.value = m ? `${m.name} (${m.email})` : "";
+        memberListEl.classList.add("hidden");
+        addPointsBtn.disabled = false;
+      });
+    });
+  });
+
+  oneVisitBtn?.addEventListener("click", () => {
+    addPointsVisitOnly = true;
+    amountInput.value = "";
+  });
+
+  amountInput?.addEventListener("input", () => {
+    addPointsVisitOnly = false;
+  });
+
+  addPointsBtn?.addEventListener("click", async () => {
+    if (!selectedMemberId) return;
+    addPointsBtn.disabled = true;
+    caisseMessage.classList.add("hidden");
+    try {
+      const body = addPointsVisitOnly ? { visit: true } : { amount_eur: parseFloat(amountInput.value) || 0 };
+      if (!addPointsVisitOnly && !body.amount_eur) {
+        showCaisseMessage("Indiquez un montant (€) ou cliquez sur « 1 passage ».", true);
+        addPointsBtn.disabled = false;
+        return;
+      }
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(selectedMemberId)}/points`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showCaisseMessage(data.error || "Erreur", true);
+        addPointsBtn.disabled = false;
+        return;
+      }
+      showCaisseMessage(`${data.points} point(s) ajouté(s). Total : ${data.points} pts.`);
+      amountInput.value = "";
+      selectedMemberId = null;
+      memberSearchInput.value = "";
+      addPointsVisitOnly = false;
+      await refresh();
+    } catch (e) {
+      showCaisseMessage("Erreur réseau.", true);
+    }
+    addPointsBtn.disabled = false;
+  });
+
+  membersSearchInput?.addEventListener("input", () => {
+    const q = membersSearchInput.value.trim();
+    loadMembers(q).then((data) => renderMembers(data.members || []));
+  });
+
+  refresh();
 }
 
 function getMentionsLegalesHtml() {

@@ -36,8 +36,24 @@ db.exec(`
     FOREIGN KEY (business_id) REFERENCES businesses(id)
   );
 
+  CREATE TABLE IF NOT EXISTS transactions (
+    id TEXT PRIMARY KEY,
+    business_id TEXT NOT NULL,
+    member_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    points INTEGER NOT NULL,
+    metadata TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (business_id) REFERENCES businesses(id),
+    FOREIGN KEY (member_id) REFERENCES members(id)
+  );
+
   CREATE UNIQUE INDEX IF NOT EXISTS idx_businesses_slug ON businesses(slug);
   CREATE INDEX IF NOT EXISTS idx_members_email ON members(email);
+  CREATE INDEX IF NOT EXISTS idx_members_business_id ON members(business_id);
+  CREATE INDEX IF NOT EXISTS idx_transactions_business ON transactions(business_id);
+  CREATE INDEX IF NOT EXISTS idx_transactions_member ON transactions(member_id);
+  CREATE INDEX IF NOT EXISTS idx_transactions_created ON transactions(created_at);
 `);
 
 // Migration : ajouter business_id si ancienne base
@@ -47,10 +63,27 @@ if (!hasBusinessId) {
 }
 // Migration : couleurs personnalisées sur businesses
 const bizCols = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
-for (const col of ["background_color", "foreground_color", "label_color"]) {
+for (const col of ["background_color", "foreground_color", "label_color", "points_per_euro", "points_per_visit", "dashboard_token"]) {
   if (!bizCols.includes(col)) {
     db.exec(`ALTER TABLE businesses ADD COLUMN ${col} TEXT`);
   }
+}
+// points_per_euro / points_per_visit : numériques stockés en TEXT pour simplicité migration
+const bizCols2 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+if (bizCols2.includes("points_per_euro")) {
+  try {
+    db.exec(`UPDATE businesses SET points_per_euro = '1' WHERE points_per_euro IS NULL`);
+  } catch (_) {}
+}
+if (bizCols2.includes("points_per_visit")) {
+  try {
+    db.exec(`UPDATE businesses SET points_per_visit = '1' WHERE points_per_visit IS NULL`);
+  } catch (_) {}
+}
+// Migration : last_visit_at sur members
+const memCols = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name);
+if (!memCols.includes("last_visit_at")) {
+  db.exec("ALTER TABLE members ADD COLUMN last_visit_at TEXT");
 }
 // Garantir que la business "demo" existe (migration, avant que getBusinessBySlug soit défini)
 function ensureDemoBusiness() {
@@ -90,6 +123,10 @@ export function getBusinessById(id) {
   return row || null;
 }
 
+function generateToken() {
+  return randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "").slice(0, 16);
+}
+
 export function createBusiness({
   id,
   name,
@@ -100,11 +137,17 @@ export function createBusiness({
   backgroundColor,
   foregroundColor,
   labelColor,
+  pointsPerEuro,
+  pointsPerVisit,
+  dashboardToken,
 }) {
   const bid = id || randomUUID();
+  const token = dashboardToken || generateToken();
+  const perEuro = pointsPerEuro != null ? String(pointsPerEuro) : "1";
+  const perVisit = pointsPerVisit != null ? String(pointsPerVisit) : "1";
   db.prepare(
-    `INSERT INTO businesses (id, name, slug, organization_name, back_terms, back_contact, background_color, foreground_color, label_color)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO businesses (id, name, slug, organization_name, back_terms, back_contact, background_color, foreground_color, label_color, points_per_euro, points_per_visit, dashboard_token)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     bid,
     name,
@@ -114,7 +157,10 @@ export function createBusiness({
     backContact || null,
     backgroundColor || null,
     foregroundColor || null,
-    labelColor || null
+    labelColor || null,
+    perEuro,
+    perVisit,
+    token
   );
   return getBusinessById(bid);
 }
@@ -138,9 +184,85 @@ export function getMemberForBusiness(memberId, businessId) {
 }
 
 export function addPoints(id, points) {
-  const stmt = db.prepare("UPDATE members SET points = points + ? WHERE id = ?");
+  const stmt = db.prepare("UPDATE members SET points = points + ?, last_visit_at = datetime('now') WHERE id = ?");
   stmt.run(points, id);
   return getMember(id);
+}
+
+export function getBusinessByDashboardToken(token) {
+  if (!token) return null;
+  const row = db.prepare("SELECT * FROM businesses WHERE dashboard_token = ?").get(token);
+  return row || null;
+}
+
+export function createTransaction({ id, businessId, memberId, type, points, metadata }) {
+  const tid = id || randomUUID();
+  db.prepare(
+    `INSERT INTO transactions (id, business_id, member_id, type, points, metadata, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+  ).run(tid, businessId, memberId, type, points, metadata ? JSON.stringify(metadata) : null);
+  return db.prepare("SELECT * FROM transactions WHERE id = ?").get(tid);
+}
+
+export function getDashboardStats(businessId) {
+  const now = new Date().toISOString().slice(0, 7);
+  const membersCount = db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ?").get(businessId);
+  const pointsThisMonth = db.prepare(
+    `SELECT COALESCE(SUM(points), 0) as total FROM transactions WHERE business_id = ? AND type = 'points_add' AND strftime('%Y-%m', created_at) = ?`
+  ).get(businessId, now);
+  const transactionsCount = db.prepare(
+    `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND strftime('%Y-%m', created_at) = ?`
+  ).get(businessId, now);
+  return {
+    membersCount: membersCount?.n ?? 0,
+    pointsThisMonth: pointsThisMonth?.total ?? 0,
+    transactionsThisMonth: transactionsCount?.n ?? 0,
+  };
+}
+
+export function getMembersForBusiness(businessId, { search = "", limit = 50, offset = 0 } = {}) {
+  const q = search.trim() ? "%" + search.trim().replace(/%/g, "") + "%" : null;
+  let stmt;
+  let countStmt;
+  if (q) {
+    stmt = db.prepare(
+      `SELECT id, name, email, points, created_at, last_visit_at FROM members WHERE business_id = ? AND (name LIKE ? OR email LIKE ?) ORDER BY COALESCE(last_visit_at, '') DESC, created_at DESC LIMIT ? OFFSET ?`
+    );
+    countStmt = db.prepare(
+      "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (name LIKE ? OR email LIKE ?)"
+    );
+  } else {
+    stmt = db.prepare(
+      `SELECT id, name, email, points, created_at, last_visit_at FROM members WHERE business_id = ? ORDER BY COALESCE(last_visit_at, '') DESC, created_at DESC LIMIT ? OFFSET ?`
+    );
+    countStmt = db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ?");
+  }
+  const rows = q ? stmt.all(businessId, q, q, limit, offset) : stmt.all(businessId, limit, offset);
+  const total = q ? countStmt.get(businessId, q, q)?.n : countStmt.get(businessId)?.n;
+  return { members: rows, total: total ?? 0 };
+}
+
+export function getTransactionsForBusiness(businessId, { limit = 30, offset = 0, memberId = null } = {}) {
+  let stmt;
+  let countStmt;
+  if (memberId) {
+    stmt = db.prepare(
+      `SELECT t.id, t.member_id, t.type, t.points, t.metadata, t.created_at, m.name as member_name, m.email as member_email
+       FROM transactions t JOIN members m ON t.member_id = m.id
+       WHERE t.business_id = ? AND t.member_id = ? ORDER BY t.created_at DESC LIMIT ? OFFSET ?`
+    );
+    countStmt = db.prepare("SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND member_id = ?");
+  } else {
+    stmt = db.prepare(
+      `SELECT t.id, t.member_id, t.type, t.points, t.metadata, t.created_at, m.name as member_name, m.email as member_email
+       FROM transactions t JOIN members m ON t.member_id = m.id
+       WHERE t.business_id = ? ORDER BY t.created_at DESC LIMIT ? OFFSET ?`
+    );
+    countStmt = db.prepare("SELECT COUNT(*) as n FROM transactions WHERE business_id = ?");
+  }
+  const rows = memberId ? stmt.all(businessId, memberId, limit, offset) : stmt.all(businessId, limit, offset);
+  const total = memberId ? countStmt.get(businessId, memberId)?.n : countStmt.get(businessId)?.n;
+  return { transactions: rows, total: total ?? 0 };
 }
 
 export function getLevel(points) {
@@ -171,5 +293,15 @@ export function ensureDefaultBusiness() {
 }
 
 ensureDefaultBusiness();
+
+// Générer dashboard_token pour les businesses qui n'en ont pas (après ensureDemoBusiness)
+const bizColsFinal = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+if (bizColsFinal.includes("dashboard_token")) {
+  const needToken = db.prepare("SELECT id FROM businesses WHERE dashboard_token IS NULL OR dashboard_token = ''").all();
+  for (const row of needToken) {
+    const token = randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "").slice(0, 16);
+    db.prepare("UPDATE businesses SET dashboard_token = ? WHERE id = ?").run(token, row.id);
+  }
+}
 
 export default db;

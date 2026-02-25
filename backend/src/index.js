@@ -15,9 +15,12 @@ const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const app = express();
-// En dev, accepter toute origine (localhost ou IP du Mac pour test iPhone)
-const corsOrigin = process.env.NODE_ENV === "production" ? FRONTEND_URL : true;
-app.use(cors({ origin: corsOrigin, credentials: true }));
+// CORS : en prod accepter le site + www ; en dev toute origine (pour test iPhone en local)
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? [FRONTEND_URL, FRONTEND_URL.replace(/\/$/, ""), "https://myfidpass.fr", "https://www.myfidpass.fr"].filter(Boolean)
+    : true;
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
 app.use("/api/members", membersRouter);
