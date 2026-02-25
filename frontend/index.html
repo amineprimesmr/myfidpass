@@ -52,6 +52,33 @@
       </div>
     </div>
 
+    <!-- Choisir une offre (visible sur /choisir-offre, compte requis) -->
+    <div id="offers-app" class="hidden offers-page">
+      <header class="offers-header">
+        <a href="/" class="offers-logo">Fidpass</a>
+        <a href="/app" class="offers-back">← Mon espace</a>
+      </header>
+      <main class="offers-main">
+        <h1 class="offers-title">Choisissez votre offre</h1>
+        <p class="offers-subtitle">Accédez à votre espace et créez vos cartes fidélité Apple Wallet.</p>
+        <div class="offers-grid" id="offers-grid">
+          <article class="offers-card offers-card-featured">
+            <h2 class="offers-card-title">Starter</h2>
+            <p class="offers-card-desc">1 carte de fidélité, tableau de bord, QR code illimité.</p>
+            <p class="offers-card-price"><span class="offers-card-amount">9 €</span> / mois</p>
+            <a href="/app" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Accéder à mon espace</a>
+          </article>
+          <article class="offers-card">
+            <h2 class="offers-card-title">Pro</h2>
+            <p class="offers-card-desc">Jusqu'à 5 cartes, idéal pour plusieurs établissements.</p>
+            <p class="offers-card-price"><span class="offers-card-amount">19 €</span> / mois</p>
+            <button type="button" class="landing-btn landing-btn-secondary landing-btn-block" disabled>Bientôt disponible</button>
+          </article>
+        </div>
+        <p class="offers-footer"><a href="/app">J'ai déjà un abonnement → aller à mon espace</a></p>
+      </main>
+    </div>
+
     <!-- App connectée (visible sur /app) -->
     <div id="app-app" class="hidden">
       <aside class="app-sidebar" id="app-sidebar">
@@ -189,7 +216,7 @@
             <a href="#faq">FAQ</a>
             <a href="#contact">Contact</a>
             <a href="/login" class="landing-nav-login">Connexion</a>
-            <a href="/creer-ma-carte" class="landing-cta">Obtenir ma carte</a>
+            <a href="/login?redirect=%2Fcreer-ma-carte" class="landing-cta">Obtenir ma carte</a>
           </nav>
         </div>
       </header>
@@ -253,7 +280,7 @@
                 <li>Points, niveaux, code-barres pour la caisse</li>
                 <li>Instantané — aucun envoi physique</li>
               </ul>
-              <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-block">Obtenir ma carte</a>
+              <a href="/login?redirect=%2Fcreer-ma-carte" class="landing-btn landing-btn-primary landing-btn-block">Obtenir ma carte</a>
             </div>
           </div>
         </section>
@@ -288,7 +315,7 @@
         <section id="contact" class="landing-cta-block">
           <h2 class="landing-section-title">Prêt à fidéliser ?</h2>
           <p>Obtenez votre carte fidélité Apple Wallet en quelques clics.</p>
-          <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
+          <a href="/login?redirect=%2Fcreer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
         </section>
 
         <footer class="landing-footer">

@@ -14,7 +14,9 @@ import {
   getMembersForBusiness,
   getTransactionsForBusiness,
   ensureDefaultBusiness,
+  canCreateBusiness,
 } from "../db.js";
+import { requireAuth } from "../middleware/auth.js";
 import { generatePass } from "../pass.js";
 import { randomUUID } from "crypto";
 
@@ -235,10 +237,10 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
 });
 
 /**
- * POST /api/businesses (création d'une entreprise — à sécuriser en prod)
+ * POST /api/businesses (création d'une entreprise — compte et abonnement requis)
  * Body: { name, slug, organizationName?, backTerms?, backContact?, backgroundColor?, foregroundColor?, labelColor?, logoBase64? }
  */
-router.post("/", (req, res) => {
+router.post("/", requireAuth, (req, res) => {
   const {
     name,
     slug,
@@ -253,6 +255,12 @@ router.post("/", (req, res) => {
   if (!name || !slug) {
     return res.status(400).json({ error: "name et slug requis" });
   }
+  if (!canCreateBusiness(req.user.id)) {
+    return res.status(403).json({
+      error: "Abonnement requis ou limite de cartes atteinte",
+      code: "subscription_required",
+    });
+  }
   const normalizedSlug = String(slug).trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
   if (!normalizedSlug) return res.status(400).json({ error: "slug invalide" });
 
@@ -260,7 +268,7 @@ router.post("/", (req, res) => {
     return res.status(409).json({ error: "Une entreprise avec ce slug existe déjà" });
   }
 
-  const userId = req.user ? req.user.id : null;
+  const userId = req.user.id;
 
   try {
     const business = createBusiness({

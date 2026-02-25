@@ -2,6 +2,8 @@
 
 Suis ces étapes **dans l’ordre**. À la fin, la création de carte sur myfidpass.fr fonctionnera.
 
+> **Connexion qui ne tient pas ?** Les comptes sont stockés dans un fichier. Sur Railway, sans **volume** + variable **`DATA_DIR=/data`**, ce fichier est supprimé à chaque redéploiement → tu perds ton compte. Voir **étape 6b** et **[docs/CONNEXION-ET-DONNEES.md](CONNEXION-ET-DONNEES.md)**.
+
 ---
 
 ## Étape 1 — Déployer l’API sur Railway

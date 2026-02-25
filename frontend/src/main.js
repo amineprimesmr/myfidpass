@@ -6,6 +6,7 @@ const fidelityAppEl = document.getElementById("fidelity-app");
 const dashboardAppEl = document.getElementById("dashboard-app");
 const authAppEl = document.getElementById("auth-app");
 const appAppEl = document.getElementById("app-app");
+const offersAppEl = document.getElementById("offers-app");
 
 function getAuthToken() {
   try {
@@ -44,6 +45,7 @@ function getRoute() {
   if (path === "/login") return { type: "auth", tab: "login" };
   if (path === "/register") return { type: "auth", tab: "register" };
   if (path === "/creer-ma-carte") return { type: "templates" };
+  if (path === "/choisir-offre") return { type: "offers" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
   return { type: "landing" };
@@ -57,6 +59,7 @@ function initRouting() {
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
     fidelityAppEl.classList.remove("hidden");
     return route.slug;
   }
@@ -70,6 +73,7 @@ function initRouting() {
     fidelityAppEl.classList.add("hidden");
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.remove("hidden");
     initAppPage();
     return null;
@@ -80,6 +84,7 @@ function initRouting() {
     fidelityAppEl.classList.add("hidden");
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.remove("hidden");
     initAuthPage(route.tab || "login");
     return null;
@@ -90,6 +95,7 @@ function initRouting() {
     landingEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
     if (dashboardAppEl) {
       dashboardAppEl.classList.remove("hidden");
       initDashboardPage();
@@ -102,17 +108,39 @@ function initRouting() {
   if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
   if (authAppEl) authAppEl.classList.add("hidden");
   if (appAppEl) appAppEl.classList.add("hidden");
+  if (offersAppEl) offersAppEl.classList.add("hidden");
   const landingMain = document.getElementById("landing-main");
   const landingLegal = document.getElementById("landing-legal");
   const landingTemplates = document.getElementById("landing-templates");
   const legalContent = document.getElementById("landing-legal-content");
 
   if (route.type === "templates") {
+    if (!getAuthToken()) {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = "/creer-ma-carte" + (params.toString() ? "?" + params.toString() : "");
+      window.location.replace("/login?redirect=" + encodeURIComponent(redirect));
+      return null;
+    }
     if (landingMain) landingMain.classList.add("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
     if (landingTemplates) {
       landingTemplates.classList.remove("hidden");
       initBuilderPage();
+    }
+  } else if (route.type === "offers") {
+    if (!getAuthToken()) {
+      window.location.replace("/login?redirect=/choisir-offre");
+      return null;
+    }
+    landingEl.classList.add("hidden");
+    fidelityAppEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
+    const offersEl = document.getElementById("offers-app");
+    if (offersEl) {
+      offersEl.classList.remove("hidden");
+      initOffersPage();
     }
   } else if (route.type === "legal" && landingMain && landingLegal && legalContent) {
     landingMain.classList.add("hidden");
@@ -263,6 +291,10 @@ function initAppPage() {
       }
       if (!res.ok) return;
       const data = await res.json();
+      if (!data.hasActiveSubscription) {
+        window.location.replace("/choisir-offre");
+        return;
+      }
       const user = data.user;
       const businesses = data.businesses || [];
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
@@ -714,6 +746,10 @@ function initBuilderPage() {
         const data = await res.json().catch(() => ({}));
         const msg = data.error || `Erreur ${res.status} lors de la création`;
         if (res.status === 409) throw new Error("Ce lien est déjà pris. Choisissez un autre « lien » (slug) pour votre établissement.");
+        if (res.status === 403 && (data.code === "subscription_required" || data.error?.includes("Abonnement"))) {
+          window.location.replace("/choisir-offre");
+          return;
+        }
         if (res.status === 400) throw new Error(data.error || "Vérifiez le nom et le lien de l'établissement.");
         throw new Error(msg);
       }
@@ -771,6 +807,21 @@ function initBuilderPage() {
     appLink.textContent = "Accéder à mon espace";
     successBlock.appendChild(appLink);
   }
+}
+
+function initOffersPage() {
+  (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hasActiveSubscription) {
+          window.location.replace("/app");
+          return;
+        }
+      }
+    } catch (_) {}
+  })();
 }
 
 function initDashboardPage() {
@@ -1178,10 +1229,10 @@ if (landingHeroForm) {
     e.preventDefault();
     const input = document.getElementById("landing-etablissement");
     const name = input?.value?.trim();
-    const url = name
+    const redirect = name
       ? `/creer-ma-carte?etablissement=${encodeURIComponent(name)}`
       : "/creer-ma-carte";
-    window.location.href = url;
+    window.location.href = "/login?redirect=" + encodeURIComponent(redirect);
   });
 }
 

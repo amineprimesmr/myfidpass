@@ -468,3 +468,39 @@
   .app-caisse-row { flex-direction: column; align-items: stretch; }
   .app-input-amount { max-width: none; }
 }
+
+/* Page Choisir une offre (/choisir-offre) */
+.offers-page {
+  font-family: "Outfit", system-ui, sans-serif;
+  background: var(--app-bg, #0c0c0c);
+  color: var(--app-text, #fafafa);
+  min-height: 100vh;
+}
+.offers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--app-border, #262626);
+  max-width: 720px;
+  margin: 0 auto;
+}
+.offers-logo { font-weight: 800; font-size: 1.25rem; color: inherit; text-decoration: none; }
+.offers-back { color: var(--app-accent, #0a7c42); text-decoration: none; font-size: 0.95rem; }
+.offers-main { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+.offers-title { font-size: 1.75rem; font-weight: 800; margin: 0 0 0.5rem; }
+.offers-subtitle { color: var(--app-text-muted, #a3a3a3); margin: 0 0 2rem; }
+.offers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+.offers-card {
+  background: var(--app-surface, #141414);
+  border: 1px solid var(--app-border, #262626);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+.offers-card-featured { border-color: var(--app-accent, #0a7c42); box-shadow: 0 0 0 1px var(--app-accent); }
+.offers-card-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 0.5rem; }
+.offers-card-desc { color: var(--app-text-muted); font-size: 0.9rem; margin: 0 0 1rem; line-height: 1.4; }
+.offers-card-price { margin: 0 0 1rem; font-size: 1rem; }
+.offers-card-amount { font-size: 1.5rem; font-weight: 800; }
+.offers-footer { margin-top: 2rem; text-align: center; }
+.offers-footer a { color: var(--app-accent); text-decoration: none; }

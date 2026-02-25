@@ -1,7 +1,14 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { createUser, getUserByEmail, getBusinessesByUserId } from "../db.js";
+import {
+  createUser,
+  getUserByEmail,
+  getBusinessesByUserId,
+  getSubscriptionByUserId,
+  createOrUpdateSubscription,
+  hasActiveSubscription,
+} from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -31,8 +38,9 @@ router.post("/register", async (req, res) => {
       passwordHash,
       name: name ? String(name).trim() : null,
     });
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
-  const businesses = getBusinessesByUserId(user.id);
+    createOrUpdateSubscription({ userId: user.id, planId: "starter", status: "active" });
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const businesses = getBusinessesByUserId(user.id);
   if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
     console.warn("JWT_SECRET non défini en production : définir la variable sur Railway pour une connexion stable.");
   }
@@ -65,6 +73,9 @@ router.post("/login", async (req, res) => {
   if (!ok) {
     return res.status(401).json({ error: "Email ou mot de passe incorrect" });
   }
+  if (!getSubscriptionByUserId(user.id)) {
+    createOrUpdateSubscription({ userId: user.id, planId: "starter", status: "active" });
+  }
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
   const businesses = getBusinessesByUserId(user.id);
   res.json({
@@ -84,10 +95,16 @@ router.get("/me", (req, res, next) => {
     const code = req.authError || "invalid";
     return res.status(401).json({ error: "Session invalide ou expirée", code });
   }
+  if (!getSubscriptionByUserId(req.user.id)) {
+    createOrUpdateSubscription({ userId: req.user.id, planId: "starter", status: "active" });
+  }
   const businesses = getBusinessesByUserId(req.user.id);
+  const subscription = getSubscriptionByUserId(req.user.id);
   res.json({
     user: { id: req.user.id, email: req.user.email, name: req.user.name },
     businesses,
+    subscription: subscription ? { status: subscription.status, planId: subscription.plan_id } : null,
+    hasActiveSubscription: hasActiveSubscription(req.user.id),
   });
 });
 
