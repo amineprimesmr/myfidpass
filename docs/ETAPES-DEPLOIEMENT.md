@@ -55,15 +55,18 @@ Suis ces étapes **dans l’ordre**. À la fin, la création de carte sur myfidp
 
 ## Étape 2 — Certificats Apple Wallet sur Railway
 
-Sans les certificats, l'erreur « Impossible de générer la carte » s'affiche. Il faut ajouter les 3 certificats en **variables d'environnement** sur Railway :
+Sans les certificats, l'erreur « Impossible de générer la carte » s'affiche. Méthode **recommandée (base64)** pour éviter les soucis de retours à la ligne sur Railway :
 
-1. **Sur ton Mac**, génère les 3 fichiers `.pem` en suivant **docs/APPLE-WALLET-SETUP.md** (sections 3 et 4). Ils doivent être dans `backend/certs/` : `wwdr.pem`, `signerCert.pem`, `signerKey.pem`.
-2. **Sur Railway** → ton service **fidpass-api** → **Variables** → **+ New Variable**.
-3. Crée **3 variables** (nom = exactement celui-ci, valeur = **tout** le contenu du fichier, copier-coller) :
-   - **`WWDR_PEM`** → contenu de `backend/certs/wwdr.pem`
-   - **`SIGNER_CERT_PEM`** → contenu de `backend/certs/signerCert.pem`
-   - **`SIGNER_KEY_PEM`** → contenu de `backend/certs/signerKey.pem`
-4. **Redéploie** le service (ou pousse un commit) pour que les variables soient prises en compte.
+1. **Sur ton Mac**, dans le projet, lance en terminal :  
+   `sh scripts/print-cert-base64.sh`
+2. Le script affiche 3 longues chaînes (une par certificat). **Copie chaque valeur** (sans le nom de la variable ni les espaces avant/après).
+3. **Sur Railway** → ton service **fidpass-api** → **Variables**.
+4. **Supprime** les anciennes variables `WWDR_PEM`, `SIGNER_CERT_PEM`, `SIGNER_KEY_PEM` si elles existent (elles peuvent ne pas passer correctement).
+5. **Ajoute 3 variables** avec **+ New Variable** :
+   - **`WWDR_PEM_BASE64`** → colle la 1re chaîne affichée par le script
+   - **`SIGNER_CERT_PEM_BASE64`** → colle la 2e chaîne
+   - **`SIGNER_KEY_PEM_BASE64`** → colle la 3e chaîne
+6. **Redéploie** le service (bouton Redeploy ou un push).
 
 Après ça, le téléchargement du .pkpass (ajout à Apple Wallet) fonctionnera.
 

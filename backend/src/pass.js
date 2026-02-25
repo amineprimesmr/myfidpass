@@ -26,15 +26,28 @@ function createDefaultIconBuffer() {
 function loadCertificates() {
   const signerKeyPassphrase = process.env.SIGNER_KEY_PASSPHRASE || undefined;
 
-  // Option 1 : certificats en variables d'environnement (recommandé en prod, ex. Railway)
-  const wwdrPem = process.env.WWDR_PEM;
-  const signerCertPem = process.env.SIGNER_CERT_PEM;
-  const signerKeyPem = process.env.SIGNER_KEY_PEM;
-  if (wwdrPem && signerCertPem && signerKeyPem) {
+  // Option 1a : certificats en PEM (variables d'environnement)
+  const wwdrPem = process.env.WWDR_PEM?.trim();
+  const signerCertPem = process.env.SIGNER_CERT_PEM?.trim();
+  const signerKeyPem = process.env.SIGNER_KEY_PEM?.trim();
+  if (wwdrPem && signerCertPem && signerKeyPem && wwdrPem.includes("BEGIN")) {
     return {
       wwdr: Buffer.from(wwdrPem, "utf8"),
       signerCert: Buffer.from(signerCertPem, "utf8"),
       signerKey: Buffer.from(signerKeyPem, "utf8"),
+      ...(signerKeyPassphrase && { signerKeyPassphrase }),
+    };
+  }
+
+  // Option 1b : certificats en base64 (une ligne, évite les soucis de retours à la ligne sur Railway)
+  const wwdrB64 = process.env.WWDR_PEM_BASE64?.trim();
+  const signerCertB64 = process.env.SIGNER_CERT_PEM_BASE64?.trim();
+  const signerKeyB64 = process.env.SIGNER_KEY_PEM_BASE64?.trim();
+  if (wwdrB64 && signerCertB64 && signerKeyB64) {
+    return {
+      wwdr: Buffer.from(wwdrB64, "base64"),
+      signerCert: Buffer.from(signerCertB64, "base64"),
+      signerKey: Buffer.from(signerKeyB64, "base64"),
       ...(signerKeyPassphrase && { signerKeyPassphrase }),
     };
   }
@@ -46,7 +59,7 @@ function loadCertificates() {
 
   if (!existsSync(wwdrPath) || !existsSync(signerCertPath) || !existsSync(signerKeyPath)) {
     throw new Error(
-      "Certificats manquants. Soit définis les variables WWDR_PEM, SIGNER_CERT_PEM et SIGNER_KEY_PEM (contenu complet des .pem), soit place wwdr.pem, signerCert.pem et signerKey.pem dans backend/certs/. Voir docs/APPLE-WALLET-SETUP.md"
+      "Certificats manquants. Railway → Variables : ajoute WWDR_PEM_BASE64, SIGNER_CERT_PEM_BASE64, SIGNER_KEY_PEM_BASE64 (voir scripts/print-cert-base64.sh). Puis redéploie."
     );
   }
 
