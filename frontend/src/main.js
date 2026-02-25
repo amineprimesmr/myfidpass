@@ -115,12 +115,6 @@ function initRouting() {
   const legalContent = document.getElementById("landing-legal-content");
 
   if (route.type === "templates") {
-    if (!getAuthToken()) {
-      const params = new URLSearchParams(window.location.search);
-      const redirect = "/creer-ma-carte" + (params.toString() ? "?" + params.toString() : "");
-      window.location.replace("/login?redirect=" + encodeURIComponent(redirect));
-      return null;
-    }
     if (landingMain) landingMain.classList.add("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
     if (landingTemplates) {
@@ -568,8 +562,23 @@ function initBuilderPage() {
   const btnCopyLink = document.getElementById("builder-copy-link");
   const successQrImg = document.getElementById("builder-success-qr");
   const successPageLink = document.getElementById("builder-success-page-link");
+  const builderAccountSection = document.getElementById("builder-account-section");
+  const builderLoggedIn = document.getElementById("builder-logged-in");
+  const builderAccountEmail = document.getElementById("builder-account-email");
+  const builderAccountPassword = document.getElementById("builder-account-password");
+  const builderAccountName = document.getElementById("builder-account-name");
 
   let logoDataUrl = "";
+
+  if (getAuthToken()) {
+    if (builderAccountSection) builderAccountSection.classList.add("hidden");
+    if (builderLoggedIn) builderLoggedIn.classList.remove("hidden");
+    if (btnSubmit) btnSubmit.textContent = "Créer ma carte et obtenir mon lien";
+  } else {
+    if (builderAccountSection) builderAccountSection.classList.remove("hidden");
+    if (builderLoggedIn) builderLoggedIn.classList.add("hidden");
+    if (btnSubmit) btnSubmit.textContent = "Créer ma carte et mon compte";
+  }
 
   const state = {
     name: etablissementFromUrl || "",
@@ -718,6 +727,38 @@ function initBuilderPage() {
     if (!slug) {
       inputSlug.focus();
       return;
+    }
+
+    let token = getAuthToken();
+    if (!token) {
+      const email = builderAccountEmail?.value?.trim();
+      const password = builderAccountPassword?.value;
+      const accountName = builderAccountName?.value?.trim();
+      if (!email) {
+        builderAccountEmail?.focus();
+        return;
+      }
+      if (!password || String(password).length < 8) {
+        builderAccountPassword?.focus();
+        return;
+      }
+      try {
+        const regRes = await fetch(`${API_BASE}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, name: accountName || undefined }),
+        });
+        const regData = await regRes.json().catch(() => ({}));
+        if (!regRes.ok) {
+          alert(regData.error || "Erreur lors de la création du compte.");
+          return;
+        }
+        setAuthToken(regData.token);
+        token = regData.token;
+      } catch (e) {
+        alert("Impossible de créer le compte. Vérifiez votre connexion.");
+        return;
+      }
     }
 
     btnSubmit.disabled = true;
@@ -1229,10 +1270,10 @@ if (landingHeroForm) {
     e.preventDefault();
     const input = document.getElementById("landing-etablissement");
     const name = input?.value?.trim();
-    const redirect = name
+    const url = name
       ? `/creer-ma-carte?etablissement=${encodeURIComponent(name)}`
       : "/creer-ma-carte";
-    window.location.href = "/login?redirect=" + encodeURIComponent(redirect);
+    window.location.href = url;
   });
 }
 

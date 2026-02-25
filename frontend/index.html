@@ -216,7 +216,7 @@
             <a href="#faq">FAQ</a>
             <a href="#contact">Contact</a>
             <a href="/login" class="landing-nav-login">Connexion</a>
-            <a href="/login?redirect=%2Fcreer-ma-carte" class="landing-cta">Obtenir ma carte</a>
+            <a href="/creer-ma-carte" class="landing-cta">Obtenir ma carte</a>
           </nav>
         </div>
       </header>
@@ -280,7 +280,7 @@
                 <li>Points, niveaux, code-barres pour la caisse</li>
                 <li>Instantané — aucun envoi physique</li>
               </ul>
-              <a href="/login?redirect=%2Fcreer-ma-carte" class="landing-btn landing-btn-primary landing-btn-block">Obtenir ma carte</a>
+              <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-block">Obtenir ma carte</a>
             </div>
           </div>
         </section>
@@ -315,7 +315,7 @@
         <section id="contact" class="landing-cta-block">
           <h2 class="landing-section-title">Prêt à fidéliser ?</h2>
           <p>Obtenez votre carte fidélité Apple Wallet en quelques clics.</p>
-          <a href="/login?redirect=%2Fcreer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
+          <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
         </section>
 
         <footer class="landing-footer">
@@ -434,8 +434,20 @@
                   <label class="builder-label">Contact</label>
                   <input type="text" id="builder-back-contact" class="builder-input" placeholder="contact@votrecommerce.fr" />
                 </section>
-
-                <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Créer ma carte et obtenir mon lien</button>
+                <section class="builder-section builder-account-section" id="builder-account-section">
+                  <h2 class="builder-section-title">Votre compte</h2>
+                  <p class="builder-hint">Créez un compte pour enregistrer votre carte et accéder à votre tableau de bord.</p>
+                  <label class="builder-label">Email</label>
+                  <input type="email" id="builder-account-email" class="builder-input" placeholder="vous@exemple.fr" autocomplete="email" />
+                  <label class="builder-label">Mot de passe (8 caractères minimum)</label>
+                  <input type="password" id="builder-account-password" class="builder-input" placeholder="••••••••" autocomplete="new-password" minlength="8" />
+                  <label class="builder-label">Votre nom (optionnel)</label>
+                  <input type="text" id="builder-account-name" class="builder-input" placeholder="Prénom ou nom du gérant" autocomplete="name" />
+                </section>
+                <div class="builder-logged-in hidden" id="builder-logged-in">
+                  <p class="builder-hint">Connecté. Votre carte sera enregistrée sur votre compte.</p>
+                </div>
+                <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Créer ma carte et mon compte</button>
               </div>
             </div>
           </div>
