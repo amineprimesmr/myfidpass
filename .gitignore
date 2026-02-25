@@ -22,3 +22,6 @@ backend/certs/*.pem
 backend/certs/*.p12
 backend/certs/*.cer
 backend/data/*.db
+
+# Valeurs pour Railway (ne pas commiter)
+railway-secrets/
