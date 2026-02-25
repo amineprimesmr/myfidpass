@@ -4,8 +4,10 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 
+import { optionalAuth } from "./middleware/auth.js";
 import membersRouter from "./routes/members.js";
 import businessesRouter from "./routes/businesses.js";
+import authRouter from "./routes/auth.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -23,6 +25,10 @@ const allowedOrigins =
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
+// Parse JWT si présent (Authorization: Bearer) pour toutes les routes
+app.use(optionalAuth);
+
+app.use("/api/auth", authRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
 

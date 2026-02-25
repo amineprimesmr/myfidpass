@@ -23,27 +23,24 @@ const businessAssetsDir = join(__dirname, "..", "assets", "businesses");
 
 const router = Router();
 
-/** Middleware : vérifie le token dashboard (query ?token= ou header X-Dashboard-Token) et attache la business. */
-function requireDashboardToken(req, res, next) {
+/** Vérifie l'accès au dashboard : token valide pour ce commerce OU utilisateur connecté propriétaire. */
+function canAccessDashboard(business, req) {
+  if (!business) return false;
   const token = req.query.token || req.get("X-Dashboard-Token");
-  const business = getBusinessByDashboardToken(token);
-  if (!business) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
-  req.business = business;
-  next();
+  const byToken = getBusinessByDashboardToken(token);
+  if (byToken && byToken.id === business.id) return true;
+  if (req.user && business.user_id === req.user.id) return true;
+  return false;
 }
 
 /**
  * GET /api/businesses/:slug/dashboard/stats
- * Stats pour le tableau de bord (nécessite token).
+ * Stats pour le tableau de bord (token OU JWT propriétaire).
  */
 router.get("/:slug/dashboard/stats", (req, res, next) => {
   const business = getBusinessBySlug(req.params.slug);
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  const token = req.query.token || req.get("X-Dashboard-Token");
-  const byToken = getBusinessByDashboardToken(token);
-  if (!byToken || byToken.id !== business.id) {
+  if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
   const stats = getDashboardStats(business.id);
@@ -52,14 +49,12 @@ router.get("/:slug/dashboard/stats", (req, res, next) => {
 
 /**
  * GET /api/businesses/:slug/dashboard/members
- * Liste des membres avec recherche et pagination (nécessite token).
+ * Liste des membres (token OU JWT propriétaire).
  */
 router.get("/:slug/dashboard/members", (req, res, next) => {
   const business = getBusinessBySlug(req.params.slug);
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  const token = req.query.token || req.get("X-Dashboard-Token");
-  const byToken = getBusinessByDashboardToken(token);
-  if (!byToken || byToken.id !== business.id) {
+  if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
   const search = req.query.search ?? "";
@@ -71,14 +66,12 @@ router.get("/:slug/dashboard/members", (req, res, next) => {
 
 /**
  * GET /api/businesses/:slug/dashboard/transactions
- * Historique des transactions (nécessite token).
+ * Historique des transactions (token OU JWT propriétaire).
  */
 router.get("/:slug/dashboard/transactions", (req, res, next) => {
   const business = getBusinessBySlug(req.params.slug);
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  const token = req.query.token || req.get("X-Dashboard-Token");
-  const byToken = getBusinessByDashboardToken(token);
-  if (!byToken || byToken.id !== business.id) {
+  if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
   const limit = Math.min(Number(req.query.limit) || 30, 100);
@@ -166,11 +159,14 @@ router.get("/:slug/members/:memberId", (req, res) => {
 
 /**
  * POST /api/businesses/:slug/members/:memberId/points
- * Ajouter des points (caisse). Body: { points } ou { amount_eur } ou { visit: true }, ou combinaison.
+ * Ajouter des points (caisse). Nécessite token ou JWT propriétaire.
  */
 router.post("/:slug/members/:memberId/points", (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Accès non autorisé" });
+  }
 
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
@@ -264,6 +260,8 @@ router.post("/", (req, res) => {
     return res.status(409).json({ error: "Une entreprise avec ce slug existe déjà" });
   }
 
+  const userId = req.user ? req.user.id : null;
+
   try {
     const business = createBusiness({
       name: name.trim(),
@@ -274,6 +272,7 @@ router.post("/", (req, res) => {
       backgroundColor: normalizeHex(backgroundColor),
       foregroundColor: normalizeHex(foregroundColor),
       labelColor: normalizeHex(labelColor),
+      userId,
     });
     const dir = join(businessAssetsDir, business.id);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });

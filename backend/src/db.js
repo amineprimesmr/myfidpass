@@ -54,6 +54,15 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_transactions_business ON transactions(business_id);
   CREATE INDEX IF NOT EXISTS idx_transactions_member ON transactions(member_id);
   CREATE INDEX IF NOT EXISTS idx_transactions_created ON transactions(created_at);
+
+  CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    name TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
 `);
 
 // Migration : ajouter business_id si ancienne base
@@ -84,6 +93,14 @@ if (bizCols2.includes("points_per_visit")) {
 const memCols = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name);
 if (!memCols.includes("last_visit_at")) {
   db.exec("ALTER TABLE members ADD COLUMN last_visit_at TEXT");
+}
+// Migration : user_id sur businesses (propriétaire du commerce)
+const bizColsUser = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+if (!bizColsUser.includes("user_id")) {
+  db.exec("ALTER TABLE businesses ADD COLUMN user_id TEXT REFERENCES users(id)");
+  try {
+    db.exec("CREATE INDEX IF NOT EXISTS idx_businesses_user_id ON businesses(user_id)");
+  } catch (_) {}
 }
 // Garantir que la business "demo" existe (migration, avant que getBusinessBySlug soit défini)
 function ensureDemoBusiness() {
@@ -118,6 +135,30 @@ export function getBusinessBySlug(slug) {
   return row || null;
 }
 
+export function createUser({ id: uid, email, passwordHash, name }) {
+  const id = uid || randomUUID();
+  db.prepare(
+    "INSERT INTO users (id, email, password_hash, name) VALUES (?, ?, ?, ?)"
+  ).run(id, email, passwordHash, name || null);
+  return getUserById(id);
+}
+
+export function getUserByEmail(email) {
+  const row = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+  return row || null;
+}
+
+export function getUserById(id) {
+  const row = db.prepare("SELECT * FROM users WHERE id = ?").get(id);
+  return row || null;
+}
+
+export function getBusinessesByUserId(userId) {
+  return db.prepare(
+    "SELECT id, name, slug, organization_name, created_at, dashboard_token FROM businesses WHERE user_id = ? ORDER BY created_at DESC"
+  ).all(userId);
+}
+
 export function getBusinessById(id) {
   const row = db.prepare("SELECT * FROM businesses WHERE id = ?").get(id);
   return row || null;
@@ -140,14 +181,15 @@ export function createBusiness({
   pointsPerEuro,
   pointsPerVisit,
   dashboardToken,
+  userId,
 }) {
   const bid = id || randomUUID();
   const token = dashboardToken || generateToken();
   const perEuro = pointsPerEuro != null ? String(pointsPerEuro) : "1";
   const perVisit = pointsPerVisit != null ? String(pointsPerVisit) : "1";
   db.prepare(
-    `INSERT INTO businesses (id, name, slug, organization_name, back_terms, back_contact, background_color, foreground_color, label_color, points_per_euro, points_per_visit, dashboard_token)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO businesses (id, name, slug, organization_name, back_terms, back_contact, background_color, foreground_color, label_color, points_per_euro, points_per_visit, dashboard_token, user_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     bid,
     name,
@@ -160,7 +202,8 @@ export function createBusiness({
     labelColor || null,
     perEuro,
     perVisit,
-    token
+    token,
+    userId || null
   );
   return getBusinessById(bid);
 }

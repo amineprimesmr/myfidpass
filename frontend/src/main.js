@@ -1,17 +1,48 @@
 const API_BASE = typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL : "";
+const AUTH_TOKEN_KEY = "fidpass_token";
 
 const landingEl = document.getElementById("landing");
 const fidelityAppEl = document.getElementById("fidelity-app");
 const dashboardAppEl = document.getElementById("dashboard-app");
+const authAppEl = document.getElementById("auth-app");
+const appAppEl = document.getElementById("app-app");
+
+function getAuthToken() {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+  } catch (_) {
+    return null;
+  }
+}
+
+function setAuthToken(token) {
+  try {
+    if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+    else localStorage.removeItem(AUTH_TOKEN_KEY);
+  } catch (_) {}
+}
+
+function clearAuthToken() {
+  setAuthToken(null);
+}
+
+function getAuthHeaders() {
+  const token = getAuthToken();
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
 
 /**
- * Route : / → landing, /dashboard → tableau de bord, /creer-ma-carte → créateur, /fidelity/:slug → app carte, etc.
+ * Route : / → landing, /dashboard → tableau de bord, /app → espace connecté, /login, /register, etc.
  */
 function getRoute() {
   const path = window.location.pathname.replace(/\/$/, "");
   const match = path.match(/^\/fidelity\/([^/]+)$/);
   if (match) return { type: "fidelity", slug: match[1] };
   if (path === "/dashboard") return { type: "dashboard" };
+  if (path === "/app") return { type: "app" };
+  if (path === "/login") return { type: "auth", tab: "login" };
+  if (path === "/register") return { type: "auth", tab: "register" };
   if (path === "/creer-ma-carte") return { type: "templates" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
@@ -20,24 +51,57 @@ function getRoute() {
 
 function initRouting() {
   const route = getRoute();
+
   if (route.type === "fidelity") {
     landingEl.classList.add("hidden");
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
     fidelityAppEl.classList.remove("hidden");
     return route.slug;
   }
+
+  if (route.type === "app") {
+    if (!getAuthToken()) {
+      window.location.replace("/login?redirect=/app");
+      return null;
+    }
+    landingEl.classList.add("hidden");
+    fidelityAppEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.remove("hidden");
+    initAppPage();
+    return null;
+  }
+
+  if (route.type === "auth") {
+    landingEl.classList.add("hidden");
+    fidelityAppEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.remove("hidden");
+    initAuthPage(route.tab || "login");
+    return null;
+  }
+
   if (route.type === "dashboard") {
     fidelityAppEl.classList.add("hidden");
     landingEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
     if (dashboardAppEl) {
       dashboardAppEl.classList.remove("hidden");
       initDashboardPage();
     }
     return null;
   }
+
   landingEl.classList.remove("hidden");
   fidelityAppEl.classList.add("hidden");
   if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+  if (authAppEl) authAppEl.classList.add("hidden");
+  if (appAppEl) appAppEl.classList.add("hidden");
   const landingMain = document.getElementById("landing-main");
   const landingLegal = document.getElementById("landing-legal");
   const landingTemplates = document.getElementById("landing-templates");
@@ -61,6 +125,312 @@ function initRouting() {
     if (landingTemplates) landingTemplates.classList.add("hidden");
   }
   return null;
+}
+
+function initAuthPage(initialTab) {
+  const tabLogin = document.querySelector('#auth-tabs [data-tab="login"]');
+  const tabRegister = document.querySelector('#auth-tabs [data-tab="register"]');
+  const formLogin = document.getElementById("auth-form-login");
+  const formRegister = document.getElementById("auth-form-register");
+  const loginError = document.getElementById("auth-login-error");
+  const registerError = document.getElementById("auth-register-error");
+
+  function showTab(tab) {
+    const isLogin = tab === "login";
+    if (tabLogin) tabLogin.classList.toggle("active", isLogin);
+    if (tabRegister) tabRegister.classList.toggle("active", !isLogin);
+    if (formLogin) formLogin.classList.toggle("hidden", !isLogin);
+    if (formRegister) formRegister.classList.toggle("hidden", isLogin);
+    if (loginError) { loginError.classList.add("hidden"); loginError.textContent = ""; }
+    if (registerError) { registerError.classList.add("hidden"); registerError.textContent = ""; }
+    const path = isLogin ? "/login" : "/register";
+    if (window.location.pathname !== path) history.replaceState(null, "", path);
+  }
+
+  tabLogin?.addEventListener("click", () => showTab("login"));
+  tabRegister?.addEventListener("click", () => showTab("register"));
+  showTab(initialTab === "register" ? "register" : "login");
+
+  document.getElementById("auth-login-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("auth-login-email")?.value?.trim();
+    const password = document.getElementById("auth-login-password")?.value;
+    if (!email || !password) return;
+    if (loginError) { loginError.classList.add("hidden"); loginError.textContent = ""; }
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (loginError) {
+          loginError.textContent = data.error || "Erreur de connexion";
+          loginError.classList.remove("hidden");
+        }
+        return;
+      }
+      setAuthToken(data.token);
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect") || "/app";
+      window.location.replace(redirect);
+    } catch (err) {
+      if (loginError) {
+        loginError.textContent = "Erreur réseau. Réessayez.";
+        loginError.classList.remove("hidden");
+      }
+    }
+  });
+
+  document.getElementById("auth-register-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("auth-register-name")?.value?.trim();
+    const email = document.getElementById("auth-register-email")?.value?.trim();
+    const password = document.getElementById("auth-register-password")?.value;
+    if (!email || !password) return;
+    if (password.length < 8) {
+      if (registerError) {
+        registerError.textContent = "Le mot de passe doit faire au moins 8 caractères.";
+        registerError.classList.remove("hidden");
+      }
+      return;
+    }
+    if (registerError) { registerError.classList.add("hidden"); registerError.textContent = ""; }
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name: name || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (registerError) {
+          registerError.textContent = data.error || "Erreur lors de l'inscription";
+          registerError.classList.remove("hidden");
+        }
+        return;
+      }
+      setAuthToken(data.token);
+      window.location.replace("/app");
+    } catch (err) {
+      if (registerError) {
+        registerError.textContent = "Erreur réseau. Réessayez.";
+        registerError.classList.remove("hidden");
+      }
+    }
+  });
+}
+
+function initAppPage() {
+  const emptyEl = document.getElementById("app-empty");
+  const contentEl = document.getElementById("app-dashboard-content");
+  const businessNameEl = document.getElementById("app-business-name");
+  const userEmailEl = document.getElementById("app-user-email");
+  const logoutBtn = document.getElementById("app-logout");
+
+  logoutBtn?.addEventListener("click", () => {
+    clearAuthToken();
+    window.location.replace("/");
+  });
+
+  (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
+      if (res.status === 401) {
+        clearAuthToken();
+        window.location.replace("/login?redirect=/app");
+        return;
+      }
+      if (!res.ok) return;
+      const data = await res.json();
+      const user = data.user;
+      const businesses = data.businesses || [];
+      if (userEmailEl) userEmailEl.textContent = user?.email || "";
+
+      if (businesses.length === 0) {
+        if (emptyEl) emptyEl.classList.remove("hidden");
+        if (contentEl) contentEl.classList.add("hidden");
+        if (businessNameEl) businessNameEl.textContent = "Mon espace";
+        return;
+      }
+      if (emptyEl) emptyEl.classList.add("hidden");
+      if (contentEl) contentEl.classList.remove("hidden");
+      const business = businesses[0];
+      if (businessNameEl) businessNameEl.textContent = business.organization_name || business.name || business.slug;
+      initAppDashboard(business.slug);
+    } catch (_) {
+      if (emptyEl) emptyEl.classList.remove("hidden");
+      if (contentEl) contentEl.classList.add("hidden");
+    }
+  })();
+}
+
+function initAppDashboard(slug) {
+  const api = (path, opts = {}) => {
+    const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${path}`;
+    return fetch(url, { ...opts, headers: { ...opts.headers, ...getAuthHeaders() } });
+  };
+
+  const statMembers = document.getElementById("app-stat-members");
+  const statPoints = document.getElementById("app-stat-points");
+  const statTransactions = document.getElementById("app-stat-transactions");
+  const memberSearchInput = document.getElementById("app-member-search");
+  const memberListEl = document.getElementById("app-member-list");
+  const amountInput = document.getElementById("app-amount");
+  const oneVisitBtn = document.getElementById("app-one-visit");
+  const addPointsBtn = document.getElementById("app-add-points");
+  const caisseMessage = document.getElementById("app-caisse-message");
+  const membersSearchInput = document.getElementById("app-members-search");
+  const membersTbody = document.getElementById("app-members-tbody");
+  const transactionsTbody = document.getElementById("app-transactions-tbody");
+
+  let allMembers = [];
+  let selectedMemberId = null;
+  let addPointsVisitOnly = false;
+
+  function showCaisseMessage(text, isError = false) {
+    if (!caisseMessage) return;
+    caisseMessage.textContent = text;
+    caisseMessage.classList.remove("hidden", "success", "error");
+    caisseMessage.classList.add(isError ? "error" : "success");
+  }
+
+  function escapeHtml(s) {
+    const div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  async function loadStats() {
+    const res = await api("/dashboard/stats");
+    if (res.status === 401) throw new Error("Unauthorized");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (statMembers) statMembers.textContent = data.membersCount ?? 0;
+    if (statPoints) statPoints.textContent = data.pointsThisMonth ?? 0;
+    if (statTransactions) statTransactions.textContent = data.transactionsThisMonth ?? 0;
+  }
+
+  async function loadMembers(search = "") {
+    const q = search ? `&search=${encodeURIComponent(search)}` : "";
+    const res = await api(`/dashboard/members?limit=100${q}`);
+    if (!res.ok) return { members: [], total: 0 };
+    return res.json();
+  }
+
+  async function loadTransactions() {
+    const res = await api("/dashboard/transactions?limit=20");
+    if (!res.ok) return { transactions: [], total: 0 };
+    return res.json();
+  }
+
+  function renderMembers(members) {
+    if (!membersTbody) return;
+    membersTbody.innerHTML = (members || [])
+      .map((m) =>
+        `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.email)}</td><td>${m.points}</td><td>${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</td></tr>`
+      )
+      .join("") || "<tr><td colspan='4'>Aucun membre</td></tr>";
+  }
+
+  function renderTransactions(transactions) {
+    if (!transactionsTbody) return;
+    transactionsTbody.innerHTML = (transactions || [])
+      .map((t) =>
+        `<tr><td>${escapeHtml(t.member_name)}</td><td>${t.type === "points_add" ? "Points ajoutés" : t.type}</td><td>+${t.points}</td><td>${formatDate(t.created_at)}</td></tr>`
+      )
+      .join("") || "<tr><td colspan='4'>Aucune opération</td></tr>";
+  }
+
+  async function refresh() {
+    try {
+      await loadStats();
+    } catch (_) { return; }
+    const membersData = await loadMembers(membersSearchInput?.value || "");
+    allMembers = membersData.members || [];
+    renderMembers(allMembers);
+    const txData = await loadTransactions();
+    renderTransactions(txData.transactions || []);
+  }
+
+  memberSearchInput?.addEventListener("input", async () => {
+    const q = memberSearchInput.value.trim();
+    if (q.length < 2) {
+      memberListEl?.classList.add("hidden");
+      if (memberListEl) memberListEl.innerHTML = "";
+      selectedMemberId = null;
+      if (addPointsBtn) addPointsBtn.disabled = true;
+      return;
+    }
+    const data = await loadMembers(q);
+    const members = data.members || [];
+    if (!memberListEl) return;
+    memberListEl.innerHTML = members
+      .map((m) => `<div class="dashboard-member-item" data-id="${m.id}">${escapeHtml(m.name)} — ${escapeHtml(m.email)} (${m.points} pts)</div>`)
+      .join("");
+    memberListEl.classList.remove("hidden");
+    memberListEl.querySelectorAll(".dashboard-member-item").forEach((el) => {
+      el.addEventListener("click", () => {
+        selectedMemberId = el.dataset.id;
+        const m = members.find((x) => x.id === selectedMemberId);
+        memberSearchInput.value = m ? `${m.name} (${m.email})` : "";
+        memberListEl.classList.add("hidden");
+        if (addPointsBtn) addPointsBtn.disabled = false;
+      });
+    });
+  });
+
+  oneVisitBtn?.addEventListener("click", () => {
+    addPointsVisitOnly = true;
+    if (amountInput) amountInput.value = "";
+  });
+  amountInput?.addEventListener("input", () => { addPointsVisitOnly = false; });
+
+  addPointsBtn?.addEventListener("click", async () => {
+    if (!selectedMemberId) return;
+    addPointsBtn.disabled = true;
+    caisseMessage?.classList.add("hidden");
+    try {
+      const body = addPointsVisitOnly ? { visit: true } : { amount_eur: parseFloat(amountInput?.value) || 0 };
+      if (!addPointsVisitOnly && !body.amount_eur) {
+        showCaisseMessage("Indiquez un montant (€) ou cliquez sur « 1 passage ».", true);
+        addPointsBtn.disabled = false;
+        return;
+      }
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(selectedMemberId)}/points`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showCaisseMessage(data.error || "Erreur", true);
+        addPointsBtn.disabled = false;
+        return;
+      }
+      showCaisseMessage(`${data.points} point(s) ajouté(s). Total : ${data.points} pts.`);
+      if (amountInput) amountInput.value = "";
+      selectedMemberId = null;
+      if (memberSearchInput) memberSearchInput.value = "";
+      addPointsVisitOnly = false;
+      await refresh();
+    } catch (_) {
+      showCaisseMessage("Erreur réseau.", true);
+    }
+    addPointsBtn.disabled = false;
+  });
+
+  membersSearchInput?.addEventListener("input", () => {
+    const q = membersSearchInput.value.trim();
+    loadMembers(q).then((data) => renderMembers(data.members || []));
+  });
+
+  refresh();
 }
 
 /** Fallback template (pass sans couleurs business) */
@@ -281,7 +651,7 @@ function initBuilderPage() {
       const apiUrl = `${API_BASE}/api/businesses`;
       const res = await fetch(apiUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(body),
       });
 
@@ -335,6 +705,16 @@ function initBuilderPage() {
     dashboardLink.style.display = "inline-block";
     dashboardLink.textContent = "Ouvrir le tableau de bord";
     successBlock.appendChild(dashboardLink);
+  }
+  if (getAuthToken()) {
+    const appLink = document.createElement("a");
+    appLink.href = "/app";
+    appLink.className = "landing-btn landing-btn-primary";
+    appLink.style.marginTop = "0.5rem";
+    appLink.style.display = "inline-block";
+    appLink.style.marginLeft = "0.5rem";
+    appLink.textContent = "Accéder à mon espace";
+    successBlock.appendChild(appLink);
   }
 }
 
@@ -672,6 +1052,26 @@ function showSlugError(message) {
 }
 
 function initFidelityApp(slug) {
+  // Si le visiteur est le propriétaire du commerce, le renvoyer vers son espace (pas la page client).
+  const token = getAuthToken();
+  if (token) {
+    fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() })
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => {
+        const businesses = data.businesses || [];
+        if (businesses.some((b) => b.slug === slug)) {
+          window.location.replace("/app");
+          return;
+        }
+        runFidelityApp(slug);
+      })
+      .catch(() => runFidelityApp(slug));
+    return;
+  }
+  runFidelityApp(slug);
+}
+
+function runFidelityApp(slug) {
   fetchBusiness(slug)
     .then((business) => {
       ensureFidelityPath(slug);

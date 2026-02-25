@@ -1,0 +1,95 @@
+import { Router } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { createUser, getUserByEmail, getBusinessesByUserId } from "../db.js";
+import { requireAuth } from "../middleware/auth.js";
+
+const router = Router();
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+const SALT_ROUNDS = 10;
+
+/**
+ * POST /api/auth/register
+ * Body: { email, password, name? }
+ */
+router.post("/register", async (req, res) => {
+  const { email, password, name } = req.body || {};
+  const emailNorm = String(email || "").trim().toLowerCase();
+  if (!emailNorm) {
+    return res.status(400).json({ error: "Email requis" });
+  }
+  if (!password || String(password).length < 8) {
+    return res.status(400).json({ error: "Mot de passe requis (8 caractères minimum)" });
+  }
+  if (getUserByEmail(emailNorm)) {
+    return res.status(409).json({ error: "Un compte existe déjà avec cet email" });
+  }
+  try {
+    const passwordHash = await bcrypt.hash(String(password), SALT_ROUNDS);
+    const user = createUser({
+      email: emailNorm,
+      passwordHash,
+      name: name ? String(name).trim() : null,
+    });
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "30d" });
+    const businesses = getBusinessesByUserId(user.id);
+    res.status(201).json({
+      user: { id: user.id, email: user.email, name: user.name },
+      token,
+      businesses,
+    });
+  } catch (e) {
+    console.error("Register error:", e);
+    res.status(500).json({ error: "Erreur lors de la création du compte" });
+  }
+});
+
+/**
+ * POST /api/auth/login
+ * Body: { email, password }
+ */
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body || {};
+  const emailNorm = String(email || "").trim().toLowerCase();
+  if (!emailNorm || !password) {
+    return res.status(400).json({ error: "Email et mot de passe requis" });
+  }
+  const user = getUserByEmail(emailNorm);
+  if (!user) {
+    return res.status(401).json({ error: "Email ou mot de passe incorrect" });
+  }
+  const ok = await bcrypt.compare(String(password), user.password_hash);
+  if (!ok) {
+    return res.status(401).json({ error: "Email ou mot de passe incorrect" });
+  }
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "30d" });
+  const businesses = getBusinessesByUserId(user.id);
+  res.json({
+    user: { id: user.id, email: user.email, name: user.name },
+    token,
+    businesses,
+  });
+});
+
+/**
+ * GET /api/auth/me
+ * Requiert Authorization: Bearer <token>. Retourne l'utilisateur courant et ses commerces.
+ */
+router.get("/me", requireAuth, (req, res) => {
+  const businesses = getBusinessesByUserId(req.user.id);
+  res.json({
+    user: { id: req.user.id, email: req.user.email, name: req.user.name },
+    businesses,
+  });
+});
+
+/**
+ * GET /api/me/businesses
+ * Alias pour garder une API cohérente (liste des commerces de l'utilisateur).
+ */
+router.get("/me/businesses", requireAuth, (req, res) => {
+  const businesses = getBusinessesByUserId(req.user.id);
+  res.json({ businesses });
+});
+
+export default router;

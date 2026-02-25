@@ -12,8 +12,107 @@
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/landing.css" />
     <link rel="stylesheet" href="/src/dashboard.css" />
+    <link rel="stylesheet" href="/src/auth.css" />
   </head>
   <body>
+    <!-- Auth : connexion / inscription (visible sur /login, /register) -->
+    <div id="auth-app" class="hidden">
+      <div class="auth-container">
+        <a href="/" class="auth-logo">Fidpass</a>
+        <div id="auth-tabs" class="auth-tabs">
+          <button type="button" class="auth-tab active" data-tab="login">Connexion</button>
+          <button type="button" class="auth-tab" data-tab="register">Créer un compte</button>
+        </div>
+        <div id="auth-form-login" class="auth-form-block">
+          <h1 class="auth-title">Connexion</h1>
+          <form id="auth-login-form" class="auth-form">
+            <label class="auth-label">Email</label>
+            <input type="email" id="auth-login-email" class="auth-input" placeholder="vous@exemple.fr" required autocomplete="email" />
+            <label class="auth-label">Mot de passe</label>
+            <input type="password" id="auth-login-password" class="auth-input" placeholder="••••••••" required autocomplete="current-password" />
+            <p id="auth-login-error" class="auth-error hidden"></p>
+            <button type="submit" class="landing-btn landing-btn-primary landing-btn-block">Se connecter</button>
+          </form>
+        </div>
+        <div id="auth-form-register" class="auth-form-block hidden">
+          <h1 class="auth-title">Créer un compte</h1>
+          <form id="auth-register-form" class="auth-form">
+            <label class="auth-label">Nom (optionnel)</label>
+            <input type="text" id="auth-register-name" class="auth-input" placeholder="Votre nom ou établissement" autocomplete="name" />
+            <label class="auth-label">Email</label>
+            <input type="email" id="auth-register-email" class="auth-input" placeholder="vous@exemple.fr" required autocomplete="email" />
+            <label class="auth-label">Mot de passe (8 caractères min.)</label>
+            <input type="password" id="auth-register-password" class="auth-input" placeholder="••••••••" required autocomplete="new-password" minlength="8" />
+            <p id="auth-register-error" class="auth-error hidden"></p>
+            <button type="submit" class="landing-btn landing-btn-primary landing-btn-block">Créer mon compte</button>
+          </form>
+        </div>
+        <p class="auth-footer"><a href="/">← Retour à l'accueil</a></p>
+      </div>
+    </div>
+
+    <!-- App connectée (visible sur /app) -->
+    <div id="app-app" class="hidden">
+      <header class="dashboard-header">
+        <div class="dashboard-header-inner">
+          <a href="/" class="dashboard-logo">Fidpass</a>
+          <span class="dashboard-title" id="app-business-name">Mon espace</span>
+          <div class="dashboard-header-actions">
+            <a href="/creer-ma-carte" class="dashboard-header-link">Créer une carte</a>
+            <span class="dashboard-header-user" id="app-user-email"></span>
+            <button type="button" id="app-logout" class="landing-btn landing-btn-secondary landing-btn-sm">Déconnexion</button>
+          </div>
+        </div>
+      </header>
+      <main class="dashboard-main">
+        <div id="app-empty" class="app-empty hidden">
+          <h2 class="app-empty-title">Aucune carte pour l'instant</h2>
+          <p class="app-empty-text">Créez votre première carte de fidélité pour commencer.</p>
+          <a href="/creer-ma-carte" class="landing-btn landing-btn-primary">Créer ma première carte</a>
+        </div>
+        <div id="app-dashboard-content" class="dashboard-content hidden">
+          <section class="dashboard-stats">
+            <div class="dashboard-stat"><span class="dashboard-stat-value" id="app-stat-members">0</span><span class="dashboard-stat-label">Membres</span></div>
+            <div class="dashboard-stat"><span class="dashboard-stat-value" id="app-stat-points">0</span><span class="dashboard-stat-label">Points ce mois</span></div>
+            <div class="dashboard-stat"><span class="dashboard-stat-value" id="app-stat-transactions">0</span><span class="dashboard-stat-label">Opérations ce mois</span></div>
+          </section>
+          <section class="dashboard-section">
+            <h2 class="dashboard-section-title">Caisse rapide</h2>
+            <p class="dashboard-hint">Recherchez un client, puis ajoutez des points (montant en € ou 1 passage).</p>
+            <div class="dashboard-caisse">
+              <input type="text" id="app-member-search" class="dashboard-input" placeholder="Nom ou email du client..." autocomplete="off" />
+              <div id="app-member-list" class="dashboard-member-list hidden"></div>
+              <div class="dashboard-caisse-row">
+                <input type="number" id="app-amount" class="dashboard-input dashboard-input-amount" placeholder="Montant (€)" min="0" step="0.01" />
+                <button type="button" id="app-one-visit" class="landing-btn landing-btn-secondary">1 passage</button>
+                <button type="button" id="app-add-points" class="landing-btn landing-btn-primary" disabled>Ajouter les points</button>
+              </div>
+              <p id="app-caisse-message" class="dashboard-message hidden"></p>
+            </div>
+          </section>
+          <section class="dashboard-section">
+            <h2 class="dashboard-section-title">Membres</h2>
+            <input type="text" id="app-members-search" class="dashboard-input dashboard-search" placeholder="Rechercher par nom ou email..." />
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead><tr><th>Nom</th><th>Email</th><th>Points</th><th>Dernière visite</th></tr></thead>
+                <tbody id="app-members-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="dashboard-section">
+            <h2 class="dashboard-section-title">Dernières opérations</h2>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead><tr><th>Client</th><th>Type</th><th>Points</th><th>Date</th></tr></thead>
+                <tbody id="app-transactions-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
     <!-- Landing Fidpass (visible sur /) -->
     <div id="landing">
       <header class="landing-header">
@@ -24,6 +123,7 @@
             <a href="#produit">Offre</a>
             <a href="#faq">FAQ</a>
             <a href="#contact">Contact</a>
+            <a href="/login" class="landing-nav-login">Connexion</a>
             <a href="/creer-ma-carte" class="landing-cta">Obtenir ma carte</a>
           </nav>
         </div>

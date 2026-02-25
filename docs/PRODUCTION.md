@@ -12,7 +12,7 @@ En production, le **frontend** (myfidpass.fr) et l’**API** (backend Node) sont
 - Déployer le **backend** (Railway, Render, etc.) et exposer l’URL (ex. `https://api.myfidpass.fr`).
 - Sur **Vercel** (projet Fidpass) : **Settings → Environment Variables** → ajouter **`VITE_API_URL`** = `https://api.myfidpass.fr` (sans slash final).
 - Redéployer le frontend (nouveau build avec cette variable).
-- Sur le backend : définir **`FRONTEND_URL`** = `https://myfidpass.fr` et **`NODE_ENV`** = `production` (pour CORS et logs).
+- Sur le backend : définir **`FRONTEND_URL`** = `https://myfidpass.fr`, **`NODE_ENV`** = `production` et **`JWT_SECRET`** (chaîne aléatoire forte pour signer les tokens de connexion restaurateur).
 
 Après ça, le bouton « Créer ma carte » enverra bien la requête à l’API et la création pourra réussir.
 
@@ -36,7 +36,8 @@ Le backend ne sert **que** l’API (pas les pages du site). Le site est servi pa
 
 - **Moteur** : **SQLite** (fichier `backend/data/fidelity.db`).
 - **Contenu** :
-  - **businesses** : commerces (nom, slug, couleurs, token dashboard, règles de points, etc.).
+  - **users** : comptes restaurateurs (email, mot de passe hashé, nom). Un user peut posséder plusieurs **businesses**.
+  - **businesses** : commerces (nom, slug, couleurs, token dashboard, règles de points, **user_id** optionnel pour lier au compte).
   - **members** : clients finaux (nom, email, points, last_visit_at, liés à un business).
   - **transactions** : historique des ajouts de points et remises.
 - **Emplacement** : sur la machine qui exécute le backend (ex. disque persistant Railway/Render).
