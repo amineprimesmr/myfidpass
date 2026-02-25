@@ -258,12 +258,30 @@ function initAppPage() {
       if (contentEl) contentEl.classList.remove("hidden");
       const business = businesses[0];
       if (businessNameEl) businessNameEl.textContent = business.organization_name || business.name || business.slug;
+      initAppSidebar();
       initAppDashboard(business.slug);
     } catch (_) {
       if (emptyEl) emptyEl.classList.remove("hidden");
       if (contentEl) contentEl.classList.add("hidden");
     }
   })();
+}
+
+function initAppSidebar() {
+  const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
+  const main = document.querySelector("#app-app .app-main");
+  links.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = link.getAttribute("data-section");
+      const section = document.getElementById(id);
+      if (section && main) {
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+        links.forEach((l) => l.classList.remove("app-sidebar-link-active"));
+        link.classList.add("app-sidebar-link-active");
+      }
+    });
+  });
 }
 
 function initAppDashboard(slug) {
@@ -371,10 +389,10 @@ function initAppDashboard(slug) {
     const members = data.members || [];
     if (!memberListEl) return;
     memberListEl.innerHTML = members
-      .map((m) => `<div class="dashboard-member-item" data-id="${m.id}">${escapeHtml(m.name)} — ${escapeHtml(m.email)} (${m.points} pts)</div>`)
+      .map((m) => `<div class="app-member-item" data-id="${m.id}">${escapeHtml(m.name)} — ${escapeHtml(m.email)} (${m.points} pts)</div>`)
       .join("");
     memberListEl.classList.remove("hidden");
-    memberListEl.querySelectorAll(".dashboard-member-item").forEach((el) => {
+    memberListEl.querySelectorAll(".app-member-item").forEach((el) => {
       el.addEventListener("click", () => {
         selectedMemberId = el.dataset.id;
         const m = members.find((x) => x.id === selectedMemberId);

@@ -127,3 +127,15 @@ Les Variables (comme `JWT_SECRET`) se configurent **une fois**. Ensuite, à chaq
 
 **Pourquoi « Erreur lors de l’inscription » en local (localhost) ?**  
 En local, le frontend appelle l’API via le proxy (port 3001). Si le backend ne tourne pas sur le port 3001, la requête échoue. Pour tester l’inscription et la connexion, utilise directement **https://myfidpass.fr** (après avoir ajouté `JWT_SECRET` sur Railway).
+
+**Pourquoi la prod affiche encore l’ancienne version (pas de « Connexion », etc.) ?**  
+Si dans Vercel la **Source** du déploiement affiche toujours **« 19f5848 Initial commit »**, c’est que le projet Vercel est connecté à **un autre dépôt** que celui où tu pushes (ton code est sur `amineprimesmr/myfidpass`, Vercel déploie peut‑être `amineprimesmr/fidpass` ou un autre repo).
+
+**Solution — connecter Vercel au bon dépôt :**
+1. **Vercel** → projet **fidpass** → **Settings** (menu gauche) → **Git**.
+2. Regarde la section **Connected Git Repository** : quel repo est indiqué ? (ex. `amineprimesmr/fidpass`).
+3. Si ce n’est **pas** `amineprimesmr/myfidpass` :
+   - Clique sur **Disconnect** pour découdre le repo actuel.
+   - Puis **Connect Git Repository** → choisis **GitHub** → **Import** le repo **amineprimesmr/myfidpass** (celui où tu fais `git push`).
+   - Branche de production : **main**. Enregistre.
+4. Un nouveau déploiement se lancera automatiquement depuis le **dernier commit** de `main` (avec Connexion, espace /app, etc.). Attends **Ready**, puis ouvre **myfidpass.fr** et fais **Cmd + Shift + R**.

@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/src/landing.css" />
     <link rel="stylesheet" href="/src/dashboard.css" />
     <link rel="stylesheet" href="/src/auth.css" />
+    <link rel="stylesheet" href="/src/app.css" />
   </head>
   <body>
     <!-- Auth : connexion / inscription (visible sur /login, /register) -->
@@ -53,60 +54,104 @@
 
     <!-- App connectée (visible sur /app) -->
     <div id="app-app" class="hidden">
-      <header class="dashboard-header">
-        <div class="dashboard-header-inner">
-          <a href="/" class="dashboard-logo">Fidpass</a>
-          <span class="dashboard-title" id="app-business-name">Mon espace</span>
-          <div class="dashboard-header-actions">
-            <a href="/creer-ma-carte" class="dashboard-header-link">Créer une carte</a>
-            <span class="dashboard-header-user" id="app-user-email"></span>
-            <button type="button" id="app-logout" class="landing-btn landing-btn-secondary landing-btn-sm">Déconnexion</button>
+      <aside class="app-sidebar" id="app-sidebar">
+        <div class="app-sidebar-brand">
+          <a href="/" class="app-sidebar-logo">Fidpass</a>
+          <p class="app-sidebar-business" id="app-business-name">Mon espace</p>
+        </div>
+        <nav class="app-sidebar-nav" aria-label="Navigation principale">
+          <a href="#vue-ensemble" class="app-sidebar-link app-sidebar-link-active" data-section="vue-ensemble">
+            <span class="app-sidebar-icon" aria-hidden="true">📊</span>
+            Vue d'ensemble
+          </a>
+          <a href="#caisse" class="app-sidebar-link" data-section="caisse">
+            <span class="app-sidebar-icon" aria-hidden="true">➕</span>
+            Caisse rapide
+          </a>
+          <a href="#membres" class="app-sidebar-link" data-section="membres">
+            <span class="app-sidebar-icon" aria-hidden="true">👥</span>
+            Membres
+          </a>
+          <a href="#historique" class="app-sidebar-link" data-section="historique">
+            <span class="app-sidebar-icon" aria-hidden="true">📋</span>
+            Historique
+          </a>
+        </nav>
+        <div class="app-sidebar-footer">
+          <a href="/creer-ma-carte" class="app-sidebar-link app-sidebar-link-cta">Créer une carte</a>
+          <p class="app-sidebar-user" id="app-user-email"></p>
+          <button type="button" id="app-logout" class="app-sidebar-logout">Déconnexion</button>
+        </div>
+      </aside>
+      <main class="app-main">
+        <div id="app-empty" class="app-empty hidden">
+          <div class="app-empty-card">
+            <h1 class="app-empty-title">Aucune carte pour l'instant</h1>
+            <p class="app-empty-text">Créez votre première carte de fidélité Apple Wallet. Vous pourrez ensuite enregistrer les passages et voir vos clients ici.</p>
+            <a href="/creer-ma-carte" class="app-btn app-btn-primary app-empty-cta">Créer ma première carte</a>
           </div>
         </div>
-      </header>
-      <main class="dashboard-main">
-        <div id="app-empty" class="app-empty hidden">
-          <h2 class="app-empty-title">Aucune carte pour l'instant</h2>
-          <p class="app-empty-text">Créez votre première carte de fidélité pour commencer.</p>
-          <a href="/creer-ma-carte" class="landing-btn landing-btn-primary">Créer ma première carte</a>
-        </div>
-        <div id="app-dashboard-content" class="dashboard-content hidden">
-          <section class="dashboard-stats">
-            <div class="dashboard-stat"><span class="dashboard-stat-value" id="app-stat-members">0</span><span class="dashboard-stat-label">Membres</span></div>
-            <div class="dashboard-stat"><span class="dashboard-stat-value" id="app-stat-points">0</span><span class="dashboard-stat-label">Points ce mois</span></div>
-            <div class="dashboard-stat"><span class="dashboard-stat-value" id="app-stat-transactions">0</span><span class="dashboard-stat-label">Opérations ce mois</span></div>
-          </section>
-          <section class="dashboard-section">
-            <h2 class="dashboard-section-title">Caisse rapide</h2>
-            <p class="dashboard-hint">Recherchez un client, puis ajoutez des points (montant en € ou 1 passage).</p>
-            <div class="dashboard-caisse">
-              <input type="text" id="app-member-search" class="dashboard-input" placeholder="Nom ou email du client..." autocomplete="off" />
-              <div id="app-member-list" class="dashboard-member-list hidden"></div>
-              <div class="dashboard-caisse-row">
-                <input type="number" id="app-amount" class="dashboard-input dashboard-input-amount" placeholder="Montant (€)" min="0" step="0.01" />
-                <button type="button" id="app-one-visit" class="landing-btn landing-btn-secondary">1 passage</button>
-                <button type="button" id="app-add-points" class="landing-btn landing-btn-primary" disabled>Ajouter les points</button>
+        <div id="app-dashboard-content" class="app-content hidden">
+          <section id="vue-ensemble" class="app-section app-section-overview">
+            <h1 class="app-section-title">Vue d'ensemble</h1>
+            <p class="app-section-desc">Vos chiffres du mois en un coup d'œil.</p>
+            <div class="app-stats">
+              <div class="app-stat">
+                <span class="app-stat-value" id="app-stat-members">0</span>
+                <span class="app-stat-label">Membres inscrits</span>
               </div>
-              <p id="app-caisse-message" class="dashboard-message hidden"></p>
+              <div class="app-stat">
+                <span class="app-stat-value" id="app-stat-points">0</span>
+                <span class="app-stat-label">Points distribués ce mois</span>
+              </div>
+              <div class="app-stat">
+                <span class="app-stat-value" id="app-stat-transactions">0</span>
+                <span class="app-stat-label">Opérations ce mois</span>
+              </div>
             </div>
           </section>
-          <section class="dashboard-section">
-            <h2 class="dashboard-section-title">Membres</h2>
-            <input type="text" id="app-members-search" class="dashboard-input dashboard-search" placeholder="Rechercher par nom ou email..." />
-            <div class="dashboard-table-wrap">
-              <table class="dashboard-table">
-                <thead><tr><th>Nom</th><th>Email</th><th>Points</th><th>Dernière visite</th></tr></thead>
-                <tbody id="app-members-tbody"></tbody>
-              </table>
+
+          <section id="caisse" class="app-section app-section-caisse">
+            <h2 class="app-section-title">Caisse rapide</h2>
+            <p class="app-section-desc">Enregistrer un achat ou un passage : cherchez le client, saisissez le montant ou « 1 passage », puis validez.</p>
+            <div class="app-card">
+              <p class="app-step-label">1. Rechercher le client</p>
+              <input type="text" id="app-member-search" class="app-input" placeholder="Nom ou email du client..." autocomplete="off" />
+              <div id="app-member-list" class="app-member-list hidden"></div>
+              <p class="app-step-label">2. Montant ou passage</p>
+              <div class="app-caisse-row">
+                <input type="number" id="app-amount" class="app-input app-input-amount" placeholder="Montant (€)" min="0" step="0.01" aria-label="Montant en euros" />
+                <button type="button" id="app-one-visit" class="app-btn app-btn-secondary">1 passage</button>
+                <button type="button" id="app-add-points" class="app-btn app-btn-primary" disabled>Ajouter les points</button>
+              </div>
+              <p id="app-caisse-message" class="app-message hidden"></p>
             </div>
           </section>
-          <section class="dashboard-section">
-            <h2 class="dashboard-section-title">Dernières opérations</h2>
-            <div class="dashboard-table-wrap">
-              <table class="dashboard-table">
-                <thead><tr><th>Client</th><th>Type</th><th>Points</th><th>Date</th></tr></thead>
-                <tbody id="app-transactions-tbody"></tbody>
-              </table>
+
+          <section id="membres" class="app-section">
+            <h2 class="app-section-title">Membres</h2>
+            <p class="app-section-desc">Liste des clients qui ont ajouté votre carte à leur iPhone.</p>
+            <div class="app-card">
+              <input type="text" id="app-members-search" class="app-input app-search" placeholder="Rechercher par nom ou email..." aria-label="Rechercher un membre" />
+              <div class="app-table-wrap">
+                <table class="app-table">
+                  <thead><tr><th>Nom</th><th>Email</th><th>Points</th><th>Dernière visite</th></tr></thead>
+                  <tbody id="app-members-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="historique" class="app-section">
+            <h2 class="app-section-title">Historique</h2>
+            <p class="app-section-desc">Derniers points ajoutés (achats ou passages enregistrés).</p>
+            <div class="app-card">
+              <div class="app-table-wrap">
+                <table class="app-table">
+                  <thead><tr><th>Client</th><th>Type</th><th>Points</th><th>Date</th></tr></thead>
+                  <tbody id="app-transactions-tbody"></tbody>
+                </table>
+              </div>
             </div>
           </section>
         </div>
