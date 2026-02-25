@@ -1,0 +1,24 @@
+# Render — déploiement du backend (API Fidpass)
+# One-click deploy : connecte le repo puis Render détecte ce fichier.
+
+services:
+  - type: web
+    name: fidpass-api
+    runtime: node
+    rootDir: backend
+
+    buildCommand: npm install
+    startCommand: node src/index.js
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: https://myfidpass.fr
+      # Ajoute dans le dashboard : PASS_TYPE_ID, TEAM_ID, ORGANIZATION_NAME
+      # et les certificats si tu uses des variables (voir docs/DEPLOIEMENT.md)
+
+    # Optionnel : disque persistant pour data/ et certs/
+    # disk:
+    #   name: fidpass-data
+    #   mountPath: /opt/render/project/src/backend/data

@@ -1,0 +1,2 @@
+# Un dossier par entreprise : backend/assets/businesses/<business-id>/
+# Fichiers optionnels : logo.png, icon.png, strip.png (voir assets/README.md pour les tailles)

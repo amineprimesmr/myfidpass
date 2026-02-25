@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Fidpass — Carte de fidélité Apple Wallet pour votre commerce. Fidélisez vos clients en 3 secondes. Sans carte en plastique." />
+    <meta name="theme-color" content="#0a7c42" />
+    <title>Fidpass — Carte fidélité Apple Wallet pour les commerces</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/landing.css" />
+  </head>
+  <body>
+    <!-- Landing Fidpass (visible sur /) -->
+    <div id="landing">
+      <header class="landing-header">
+        <div class="landing-header-inner">
+          <a href="/" class="landing-logo">Fidpass</a>
+          <nav class="landing-nav">
+            <a href="#comment-ca-marche">Comment ça marche</a>
+            <a href="#produit">Offre</a>
+            <a href="#faq">FAQ</a>
+            <a href="#contact">Contact</a>
+            <a href="/creer-ma-carte" class="landing-cta">Obtenir ma carte</a>
+          </nav>
+        </div>
+      </header>
+
+      <main id="landing-main" class="landing-main">
+        <section class="landing-hero">
+          <p class="landing-hero-badge">Carte fidélité digitale</p>
+          <h1 class="landing-hero-title">Le meilleur moyen de <strong>fidéliser vos clients</strong></h1>
+          <p class="landing-hero-subtitle">Carte de fidélité dans <strong>Apple Wallet</strong>. Un double-clic sur le bouton de l’iPhone : la carte s’affiche. Zéro carte en plastique.</p>
+          <form id="landing-hero-form" class="landing-hero-form">
+            <input type="text" id="landing-etablissement" class="landing-hero-input" placeholder="Nom de votre établissement" autocomplete="organization" />
+            <div class="landing-hero-cta">
+              <button type="submit" class="landing-btn landing-btn-primary">Créer ma carte — Gratuit</button>
+              <a href="#comment-ca-marche" class="landing-btn landing-btn-secondary">Comment ça marche</a>
+            </div>
+          </form>
+          <p class="landing-hero-stats">★ Adopté par des commerces en France</p>
+        </section>
+
+        <section class="landing-value">
+          <h2 class="landing-section-title">Obtenez une carte fidélité en <strong>3 secondes</strong></h2>
+          <p class="landing-section-subtitle">Vos clients scannent un QR ou ouvrent un lien, ajoutent la carte à leur iPhone. C’est tout.</p>
+        </section>
+
+        <section id="comment-ca-marche" class="landing-steps">
+          <h2 class="landing-section-title">Comment ça marche</h2>
+          <ol class="landing-steps-list">
+            <li>
+              <span class="landing-steps-num">1</span>
+              <div>
+                <h3>Nous créons votre carte</h3>
+                <p>Vous nous donnez le nom de votre commerce. Nous générons votre carte fidélité et votre lien unique (ou QR code).</p>
+              </div>
+            </li>
+            <li>
+              <span class="landing-steps-num">2</span>
+              <div>
+                <h3>Vous diffusez le lien</h3>
+                <p>Affichage en caisse, sur votre vitrine, ou en fin de commande. Vos clients cliquent ou scannent.</p>
+              </div>
+            </li>
+            <li>
+              <span class="landing-steps-num">3</span>
+              <div>
+                <h3>Ils l’ajoutent sur leur iPhone</h3>
+                <p>Un clic sur « Ajouter à Apple Wallet ». La carte est dans le téléphone. Ils la présentent en caisse (double-clic sur le bouton latéral).</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section id="produit" class="landing-product">
+          <h2 class="landing-section-title">Carte fidélité Apple Wallet</h2>
+          <p class="landing-section-subtitle">Doublez la fidélité de vos clients. Paiement unique, pas d’abonnement.</p>
+          <div class="landing-product-card">
+            <div class="landing-product-content">
+              <h3>Carte fidélité Fidpass</h3>
+              <ul>
+                <li>Lien unique + QR code pour votre commerce</li>
+                <li>Carte aux couleurs de votre marque dans Apple Wallet</li>
+                <li>Points, niveaux, code-barres pour la caisse</li>
+                <li>Instantané — aucun envoi physique</li>
+              </ul>
+              <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-block">Obtenir ma carte</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="landing-guarantee">
+          <h2 class="landing-section-title">Garantie satisfait ou remboursé 30 jours</h2>
+          <p>Si la carte ne correspond pas à vos attentes, nous vous remboursons. Sans condition.</p>
+        </section>
+
+        <section id="faq" class="landing-faq">
+          <h2 class="landing-section-title">Questions fréquentes</h2>
+          <div class="landing-faq-list">
+            <details class="landing-faq-item">
+              <summary>Les clients ont-ils besoin d’un iPhone ?</summary>
+              <p>La carte est au format Apple Wallet (iPhone et Apple Watch). Les utilisateurs Android peuvent garder le lien en favori pour afficher un écran avec leur code.</p>
+            </details>
+            <details class="landing-faq-item">
+              <summary>Comment mes clients ajoutent la carte ?</summary>
+              <p>Ils ouvrent le lien que vous leur donnez (ou scannent le QR), renseignent nom et email, puis cliquent sur « Ajouter à Apple Wallet ». La carte s’ajoute en quelques secondes.</p>
+            </details>
+            <details class="landing-faq-item">
+              <summary>C’est instantané ?</summary>
+              <p>Oui. Dès que votre carte est configurée, vous recevez un lien. Vous n’avez rien à imprimer ni à livrer : tout est digital.</p>
+            </details>
+            <details class="landing-faq-item">
+              <summary>Puis-je avoir plusieurs commerces ?</summary>
+              <p>Oui. Chaque commerce a son propre lien et sa propre carte. Idéal pour les franchises ou les enseignes à plusieurs points de vente.</p>
+            </details>
+          </div>
+        </section>
+
+        <section id="contact" class="landing-cta-block">
+          <h2 class="landing-section-title">Prêt à fidéliser ?</h2>
+          <p>Obtenez votre carte fidélité Apple Wallet en quelques clics.</p>
+          <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
+        </section>
+
+        <footer class="landing-footer">
+          <div class="landing-footer-inner">
+            <div class="landing-footer-brand">Fidpass</div>
+            <nav class="landing-footer-links">
+              <a href="#comment-ca-marche">Comment ça marche</a>
+              <a href="#produit">Offre</a>
+              <a href="#faq">FAQ</a>
+              <a href="/mentions-legales">Mentions légales</a>
+              <a href="/politique-confidentialite">Politique de confidentialité</a>
+              <a href="#contact">Contact</a>
+            </nav>
+            <p class="landing-footer-legal">Fidpass est indépendant et n’est pas affilié à Apple. Nos cartes utilisent Apple Wallet pour une expérience native sur iPhone.</p>
+            <p class="landing-footer-copy">© 2026 Fidpass. Tous droits réservés.</p>
+          </div>
+        </footer>
+      </main>
+
+      <main id="landing-legal" class="landing-legal hidden">
+        <div class="landing-legal-inner">
+          <a href="/" class="landing-btn landing-btn-secondary" style="margin-bottom: 1.5rem;">← Retour</a>
+          <div id="landing-legal-content"></div>
+        </div>
+      </main>
+
+      <!-- Page créateur de carte (1 template personnalisable) -->
+      <main id="landing-templates" class="landing-builder hidden">
+        <div class="builder-inner">
+          <a href="/" class="builder-back">← Retour à l'accueil</a>
+          <div class="builder-steps">
+            <span class="builder-step active">1. Personnalisez</span>
+            <span class="builder-step-sep">→</span>
+            <span class="builder-step" id="builder-step-2">2. Enregistrez</span>
+            <span class="builder-step-sep">→</span>
+            <span class="builder-step" id="builder-step-3">3. Partagez</span>
+          </div>
+
+          <div id="builder-form-block" class="builder-form-block">
+            <h1 class="builder-title">À quoi ressemblera votre carte</h1>
+            <p class="builder-subtitle">Modifiez les couleurs, le texte et ajoutez votre logo. La prévisualisation se met à jour en direct.</p>
+
+            <div class="builder-layout">
+              <div class="builder-preview-wrap">
+                <div class="builder-preview-card" id="builder-preview-card">
+                  <div class="builder-preview-header" id="builder-preview-header">
+                    <img class="builder-preview-logo" id="builder-preview-logo" src="" alt="" />
+                    <span class="builder-preview-org" id="builder-preview-org">Nom du commerce</span>
+                  </div>
+                  <div class="builder-preview-body" id="builder-preview-body">
+                    <div class="builder-preview-primary">
+                      <span class="builder-preview-points" id="builder-preview-points">0 pts</span>
+                      <span class="builder-preview-points-label">Points</span>
+                    </div>
+                    <div class="builder-preview-secondary">
+                      <span class="builder-preview-label">Niveau</span>
+                      <span class="builder-preview-value" id="builder-preview-level">Débutant</span>
+                    </div>
+                    <div class="builder-preview-aux">
+                      <span class="builder-preview-label">Membre</span>
+                      <span class="builder-preview-value">Marie D.</span>
+                    </div>
+                  </div>
+                  <div class="builder-preview-barcode"></div>
+                </div>
+                <p class="builder-preview-hint">Aperçu. La carte réelle s’affichera dans Apple Wallet.</p>
+              </div>
+
+              <div class="builder-fields">
+                <section class="builder-section">
+                  <h2 class="builder-section-title">Identité</h2>
+                  <label class="builder-label">Nom de l’établissement</label>
+                  <input type="text" id="builder-name" class="builder-input" placeholder="ex. Café NBK" autocomplete="organization" />
+                  <label class="builder-label">Votre lien (modifiable)</label>
+                  <input type="text" id="builder-slug" class="builder-input builder-input-slug" placeholder="cafe-nbk" />
+                  <p class="builder-hint">Vos clients iront sur : …/fidelity/<strong id="builder-slug-preview">votre-lien</strong></p>
+                </section>
+
+                <section class="builder-section">
+                  <h2 class="builder-section-title">Couleurs</h2>
+                  <div class="builder-colors">
+                    <div class="builder-color-row">
+                      <label class="builder-label">Fond</label>
+                      <input type="color" id="builder-bg" class="builder-color-input" value="#0a7c42" />
+                      <input type="text" id="builder-bg-hex" class="builder-input builder-input-hex" value="#0a7c42" maxlength="7" />
+                    </div>
+                    <div class="builder-color-row">
+                      <label class="builder-label">Texte</label>
+                      <input type="color" id="builder-fg" class="builder-color-input" value="#ffffff" />
+                      <input type="text" id="builder-fg-hex" class="builder-input builder-input-hex" value="#ffffff" maxlength="7" />
+                    </div>
+                    <div class="builder-color-row">
+                      <label class="builder-label">Labels</label>
+                      <input type="color" id="builder-label" class="builder-color-input" value="#e8f5e9" />
+                      <input type="text" id="builder-label-hex" class="builder-input builder-input-hex" value="#e8f5e9" maxlength="7" />
+                    </div>
+                  </div>
+                </section>
+
+                <section class="builder-section">
+                  <h2 class="builder-section-title">Logo</h2>
+                  <p class="builder-hint">Recommandé : 320×100 px (PNG ou JPG). Affiché en haut de la carte.</p>
+                  <div class="builder-logo-zone">
+                    <input type="file" id="builder-logo" class="builder-file" accept="image/png,image/jpeg,image/jpg" />
+                    <label for="builder-logo" class="builder-logo-label">
+                      <span class="builder-logo-placeholder" id="builder-logo-placeholder">+ Ajouter un logo</span>
+                      <img id="builder-logo-preview" class="builder-logo-preview hidden" alt="" />
+                    </label>
+                  </div>
+                </section>
+
+                <section class="builder-section">
+                  <h2 class="builder-section-title">Dos de la carte (optionnel)</h2>
+                  <label class="builder-label">Conditions</label>
+                  <textarea id="builder-back-terms" class="builder-textarea" placeholder="ex. 1 point = 1 € de réduction. Valable en magasin." rows="2"></textarea>
+                  <label class="builder-label">Contact</label>
+                  <input type="text" id="builder-back-contact" class="builder-input" placeholder="contact@votrecommerce.fr" />
+                </section>
+
+                <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Créer ma carte et obtenir mon lien</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="builder-success-block" class="builder-success-block hidden">
+            <div class="builder-success-icon">✓</div>
+            <h2 class="builder-success-title">Votre carte est prête</h2>
+            <p class="builder-success-text">Partagez ce lien à vos clients pour qu’ils ajoutent la carte à leur iPhone.</p>
+            <div class="builder-success-link-wrap">
+              <input type="text" id="builder-success-link" class="builder-success-link-input" readonly />
+              <button type="button" id="builder-copy-link" class="landing-btn landing-btn-secondary">Copier</button>
+            </div>
+            <p class="builder-success-qr-label">QR code à imprimer et afficher en caisse</p>
+            <img id="builder-success-qr" class="builder-success-qr" src="" alt="QR code" />
+            <a href="#" id="builder-success-page-link" class="landing-btn landing-btn-primary">Voir la page carte</a>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- App Carte Wallet (visible sur /fidelity/:slug) -->
+    <div id="fidelity-app" class="hidden">
+      <header class="header">
+        <div class="header-inner">
+          <a href="/" class="logo">Fidpass</a>
+        </div>
+      </header>
+      <main class="main">
+        <section class="hero">
+          <div class="hero-badge">Apple Wallet</div>
+          <h1 class="hero-title">Ta carte de fidélité<br /><span class="hero-title-accent">dans ta poche</span></h1>
+          <p class="hero-subtitle">Un double-clic sur le bouton latéral de ton iPhone : ta carte s’affiche.</p>
+        </section>
+        <section class="card-section">
+          <form class="card-form" id="card-form" novalidate>
+            <p class="card-form-label">Pour recevoir ta carte</p>
+            <input type="text" id="input-name" class="input" placeholder="Ton prénom ou nom" autocomplete="name" required />
+            <input type="email" id="input-email" class="input" placeholder="ton@email.com" autocomplete="email" required />
+            <button type="submit" class="btn btn-primary" id="btn-submit">Créer ma carte</button>
+          </form>
+          <div class="wallet-block hidden" id="wallet-block">
+            <p class="wallet-label">Ta carte est prête</p>
+            <button type="button" class="btn btn-wallet" id="btn-add-wallet">
+              <span class="btn-wallet-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18 4H6C4.9 4 4 4.9 4 6v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H6V6h12v14z"/>
+                  <path d="M12 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </span>
+              Ajouter à Apple Wallet
+            </button>
+            <p class="wallet-hint">Puis double-clic sur le bouton latéral pour ouvrir la carte dans Wallet.</p>
+          </div>
+        </section>
+        <section class="steps">
+          <h2 class="steps-title">En trois secondes</h2>
+          <ol class="steps-list">
+            <li><span class="steps-num">1</span><span>Renseigne ton nom et ton email</span></li>
+            <li><span class="steps-num">2</span><span>Clique sur « Ajouter à Apple Wallet »</span></li>
+            <li><span class="steps-num">3</span><span>Présente ta carte en caisse (double-clic bouton latéral)</span></li>
+          </ol>
+        </section>
+      </main>
+      <footer class="footer">
+        <p>Points cumulés à chaque achat. Carte digitale uniquement. <a href="/" style="color: var(--accent);">Fidpass</a></p>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

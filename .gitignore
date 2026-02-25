@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+frontend/dist/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Backend (déjà dans backend/.gitignore, rappel ici)
+backend/.env
+backend/certs/*.pem
+backend/certs/*.p12
+backend/certs/*.cer
+backend/data/*.db
