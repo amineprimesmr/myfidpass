@@ -303,6 +303,24 @@ function initAppDashboard(slug) {
   const membersTbody = document.getElementById("app-members-tbody");
   const transactionsTbody = document.getElementById("app-transactions-tbody");
 
+  const shareLinkEl = document.getElementById("app-share-link");
+  const shareQrEl = document.getElementById("app-share-qr");
+  const shareCopyBtn = document.getElementById("app-share-copy");
+
+  const fullShareLink = (typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "") + "/fidelity/" + slug;
+  if (shareLinkEl) shareLinkEl.value = fullShareLink;
+  if (shareQrEl) shareQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(fullShareLink);
+  if (shareCopyBtn) {
+    shareCopyBtn.addEventListener("click", () => {
+      if (!shareLinkEl) return;
+      shareLinkEl.select();
+      navigator.clipboard.writeText(shareLinkEl.value).then(() => {
+        shareCopyBtn.textContent = "Copié !";
+        setTimeout(() => { shareCopyBtn.textContent = "Copier"; }, 2000);
+      });
+    });
+  }
+
   let allMembers = [];
   let selectedMemberId = null;
   let addPointsVisitOnly = false;

@@ -118,12 +118,13 @@ Les Variables (comme `JWT_SECRET`) se configurent **une fois**. Ensuite, à chaq
    - Valeur : une chaîne aléatoire (dans un terminal : `openssl rand -hex 32`, puis copie le résultat).
    - Enregistre. Sans cette variable, l’inscription / connexion peuvent échouer en prod.
 
-2. **À chaque changement de code (habituel)**
-   - Dans le dossier du projet : `git add .` puis `git commit -m "Description du changement"` puis `git push`.
-   - **Aucune action sur Railway ou Vercel** : le push déclenche le déploiement automatique (Vercel pour le site, Railway pour l’API). Attends 1 à 2 minutes.
+2. **À chaque changement de code — pour voir les changements systématiquement**
+   - Dans le dossier du projet, lance une seule commande :
+   - **`npm run deploy`**
+   - Elle enregistre tous les fichiers modifiés, crée un commit et pousse sur GitHub. Vercel et Railway redéploient automatiquement. Aucune action à faire sur Railway ou Vercel.
 
 3. **Voir les changements**
-   - Ouvre **https://myfidpass.fr** (pas localhost) et fais un rafraîchissement forcé : **Cmd + Shift + R** (Mac) ou **Ctrl + Shift + R** (Windows).
+   - Attends **1 à 2 minutes**, puis ouvre **https://myfidpass.fr** et fais **Cmd + Shift + R** (Mac) ou **Ctrl + Shift + R** (Windows) pour vider le cache.
 
 **Pourquoi « Erreur lors de l’inscription » en local (localhost) ?**  
 En local, le frontend appelle l’API via le proxy (port 3001). Si le backend ne tourne pas sur le port 3001, la requête échoue. Pour tester l’inscription et la connexion, utilise directement **https://myfidpass.fr** (après avoir ajouté `JWT_SECRET` sur Railway).

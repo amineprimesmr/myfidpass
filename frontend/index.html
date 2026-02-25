@@ -64,6 +64,10 @@
             <span class="app-sidebar-icon" aria-hidden="true">📊</span>
             Vue d'ensemble
           </a>
+          <a href="#partager" class="app-sidebar-link" data-section="partager">
+            <span class="app-sidebar-icon" aria-hidden="true">🔗</span>
+            Partager
+          </a>
           <a href="#caisse" class="app-sidebar-link" data-section="caisse">
             <span class="app-sidebar-icon" aria-hidden="true">➕</span>
             Caisse rapide
@@ -107,6 +111,22 @@
               <div class="app-stat">
                 <span class="app-stat-value" id="app-stat-transactions">0</span>
                 <span class="app-stat-label">Opérations ce mois</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="partager" class="app-section">
+            <h2 class="app-section-title">Partager votre carte</h2>
+            <p class="app-section-desc">Partagez ce lien ou le QR code à vos clients pour qu'ils ajoutent la carte à leur iPhone (en caisse, sur votre vitrine ou en fin de commande).</p>
+            <div class="app-card app-share-card">
+              <p class="app-step-label">Lien à partager</p>
+              <div class="app-share-row">
+                <input type="text" id="app-share-link" class="app-input app-share-input" readonly aria-label="Lien de la page carte" />
+                <button type="button" id="app-share-copy" class="app-btn app-btn-primary">Copier</button>
+              </div>
+              <p class="app-step-label">QR code à afficher ou imprimer</p>
+              <div class="app-qr-wrap">
+                <img id="app-share-qr" class="app-qr-img" src="" alt="QR code vers la page carte" />
               </div>
             </div>
           </section>

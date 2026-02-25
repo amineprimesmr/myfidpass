@@ -366,6 +366,32 @@
 .app-message.success { color: var(--app-accent); }
 .app-message.error { color: #f87171; }
 
+/* Partager (lien + QR code) */
+.app-share-card .app-step-label + .app-step-label { margin-top: 1.5rem; }
+
+.app-share-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.app-share-input { flex: 1; min-width: 200px; }
+
+.app-qr-wrap {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.app-qr-img {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+
 /* Tables */
 .app-table-wrap {
   overflow-x: auto;
