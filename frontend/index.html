@@ -16,12 +16,6 @@
     <link rel="stylesheet" href="/src/app.css" />
   </head>
   <body>
-    <!-- Bannière média (vidéo hero.mp4 prioritaire, image hero.jpg en repli) -->
-    <div class="site-banner-media" id="site-banner-media">
-      <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" onerror="this.style.display='none'">
-      <video class="site-banner-media-video" src="/assets/banner/hero.mp4" autoplay muted loop playsinline preload="auto" onloadeddata="var i=document.getElementById('site-banner-media').querySelector('.site-banner-media-img'); if(i) i.style.display='none';">
-      </video>
-    </div>
     <!-- Bannière promo (toutes les pages) -->
     <div class="site-banner">
       <p class="site-banner-text">Essayez Fidpass GRATUITEMENT aujourd'hui <a href="/creer-ma-carte" class="site-banner-link">Rejoindre</a></p>
@@ -285,6 +279,13 @@
           </nav>
         </div>
       </header>
+
+      <!-- Vidéo bannière (juste sous le menu) -->
+      <div class="site-banner-media" id="site-banner-media">
+        <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" onerror="this.style.display='none'">
+        <video class="site-banner-media-video" src="/assets/banner/hero.mp4" autoplay muted loop playsinline preload="auto" onloadeddata="var i=document.getElementById('site-banner-media').querySelector('.site-banner-media-img'); if(i) i.style.display='none';">
+        </video>
+      </div>
 
       <main id="landing-main" class="landing-main">
         <section class="landing-hero">
