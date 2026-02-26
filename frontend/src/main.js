@@ -139,7 +139,16 @@ function initRouting() {
   if (route.type === "templates") {
     if (landingEl) landingEl.classList.add("builder-visible");
     const bannerMedia = document.getElementById("site-banner-media");
+    const siteBanner = document.querySelector(".site-banner");
+    const landingHeader = document.getElementById("landing-header");
+    const builderHeader = document.getElementById("builder-header");
     if (bannerMedia) bannerMedia.classList.add("hidden");
+    if (siteBanner) siteBanner.classList.add("hidden");
+    if (landingHeader) landingHeader.classList.add("hidden");
+    if (builderHeader) {
+      builderHeader.classList.remove("hidden");
+      builderHeader.setAttribute("aria-hidden", "false");
+    }
     if (landingMain) landingMain.classList.add("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
     if (landingTemplates) {
@@ -170,7 +179,16 @@ function initRouting() {
   } else {
     if (landingEl) landingEl.classList.remove("builder-visible");
     const bannerMedia = document.getElementById("site-banner-media");
+    const siteBanner = document.querySelector(".site-banner");
+    const landingHeader = document.getElementById("landing-header");
+    const builderHeader = document.getElementById("builder-header");
     if (bannerMedia) bannerMedia.classList.remove("hidden");
+    if (siteBanner) siteBanner.classList.remove("hidden");
+    if (landingHeader) landingHeader.classList.remove("hidden");
+    if (builderHeader) {
+      builderHeader.classList.add("hidden");
+      builderHeader.setAttribute("aria-hidden", "true");
+    }
     if (landingMain) landingMain.classList.remove("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
     if (landingTemplates) landingTemplates.classList.add("hidden");
@@ -1047,6 +1065,8 @@ function slugify(text) {
 function initBuilderPage() {
 
   const btnSubmit = document.getElementById("builder-submit");
+  const cartBadge = document.getElementById("builder-header-cart-badge");
+  if (cartBadge) cartBadge.textContent = "1";
 
   const state = { selectedTemplateId: "classic" };
 
@@ -1861,7 +1881,16 @@ function showBuilderInPlace(queryString) {
   if (!landingTemplates || !landingMain) return;
   if (landingEl) landingEl.classList.add("builder-visible");
   const bannerMedia = document.getElementById("site-banner-media");
+  const siteBanner = document.querySelector(".site-banner");
+  const landingHeader = document.getElementById("landing-header");
+  const builderHeader = document.getElementById("builder-header");
   if (bannerMedia) bannerMedia.classList.add("hidden");
+  if (siteBanner) siteBanner.classList.add("hidden");
+  if (landingHeader) landingHeader.classList.add("hidden");
+  if (builderHeader) {
+    builderHeader.classList.remove("hidden");
+    builderHeader.setAttribute("aria-hidden", "false");
+  }
   landingMain.classList.add("hidden");
   if (document.getElementById("landing-legal")) document.getElementById("landing-legal").classList.add("hidden");
   landingTemplates.classList.remove("hidden");
@@ -1873,7 +1902,16 @@ function showBuilderInPlace(queryString) {
 function showLandingMainInPlace() {
   if (landingEl) landingEl.classList.remove("builder-visible");
   const bannerMedia = document.getElementById("site-banner-media");
+  const siteBanner = document.querySelector(".site-banner");
+  const landingHeader = document.getElementById("landing-header");
+  const builderHeader = document.getElementById("builder-header");
   if (bannerMedia) bannerMedia.classList.remove("hidden");
+  if (siteBanner) siteBanner.classList.remove("hidden");
+  if (landingHeader) landingHeader.classList.remove("hidden");
+  if (builderHeader) {
+    builderHeader.classList.add("hidden");
+    builderHeader.setAttribute("aria-hidden", "true");
+  }
   if (landingMain) landingMain.classList.remove("hidden");
   if (document.getElementById("landing-legal")) document.getElementById("landing-legal").classList.add("hidden");
   if (landingTemplates) landingTemplates.classList.add("hidden");

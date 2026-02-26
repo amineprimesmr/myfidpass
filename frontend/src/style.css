@@ -66,6 +66,24 @@ body {
 #landing.builder-visible .site-banner-media {
   display: none !important;
 }
+#landing.builder-visible .site-banner {
+  display: none !important;
+}
+#landing.builder-visible #landing-header {
+  display: none !important;
+}
+#landing.builder-visible .landing-menu-overlay {
+  display: none !important;
+}
+#landing.builder-visible #builder-header.hidden {
+  display: flex !important;
+}
+#landing #builder-header {
+  display: none;
+}
+#landing #builder-header:not(.hidden) {
+  display: flex;
+}
 
 /* Bannière promo */
 .site-banner {
