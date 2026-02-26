@@ -94,6 +94,61 @@
       </main>
     </div>
 
+    <!-- Checkout (style WHOOP) : après panier, création compte puis paiement -->
+    <div id="checkout-app" class="hidden checkout-shell">
+      <header class="checkout-header">
+        <div class="checkout-header-inner">
+          <a href="/" class="checkout-logo"><img src="/assets/logo.png" alt="Fidpass" class="landing-logo-img"></a>
+          <span class="checkout-badge">🔒 CHECKOUT</span>
+        </div>
+      </header>
+      <div class="checkout-order-bar" id="checkout-order-bar">
+        <button type="button" class="checkout-order-toggle" id="checkout-order-toggle" aria-expanded="false">
+          <span class="checkout-order-chevron">›</span>
+          <span>DÉTAILS DE LA COMMANDE</span>
+        </button>
+      </div>
+      <main class="checkout-main">
+        <h1 class="checkout-title">REJOINDRE FIDPASS</h1>
+
+        <div class="checkout-steps">
+          <section class="checkout-step checkout-step-open" id="checkout-step-1" data-step="1">
+            <h2 class="checkout-step-title">1. SAISIR VOTRE ADRESSE E-MAIL</h2>
+            <div class="checkout-step-content">
+              <input type="email" id="checkout-email" class="checkout-input" placeholder="Votre adresse e-mail" autocomplete="email" />
+              <button type="button" id="checkout-next-1" class="checkout-btn-next">SUIVANT</button>
+            </div>
+          </section>
+          <section class="checkout-step" id="checkout-step-2" data-step="2">
+            <h2 class="checkout-step-title">2. CRÉER VOTRE MOT DE PASSE</h2>
+            <div class="checkout-step-content">
+              <label class="checkout-label">Mot de passe (8 caractères minimum)</label>
+              <input type="password" id="checkout-password" class="checkout-input" placeholder="••••••••" autocomplete="new-password" minlength="8" />
+              <label class="checkout-label">Votre nom (optionnel)</label>
+              <input type="text" id="checkout-name" class="checkout-input" placeholder="Prénom ou nom du gérant" autocomplete="name" />
+              <button type="button" id="checkout-next-2" class="checkout-btn-next">SUIVANT</button>
+            </div>
+          </section>
+          <section class="checkout-step" id="checkout-step-3" data-step="3">
+            <h2 class="checkout-step-title">3. ENTRER LE MODE DE PAIEMENT</h2>
+            <div class="checkout-step-content">
+              <p class="checkout-step-desc">Vous serez redirigé vers notre partenaire de paiement sécurisé.</p>
+              <button type="button" id="checkout-payment" class="checkout-btn-payment">PAYER — 49 €/mois (7 jours gratuits)</button>
+              <p id="checkout-error" class="checkout-error hidden"></p>
+            </div>
+          </section>
+        </div>
+      </main>
+      <footer class="checkout-footer">
+        <a href="/" class="checkout-footer-logo">Fidpass</a>
+        <p class="checkout-footer-copy">© 2026 Fidpass</p>
+        <nav class="checkout-footer-links">
+          <a href="/mentions-legales">Mentions légales</a>
+          <a href="/politique-confidentialite">Politique de confidentialité</a>
+        </nav>
+      </footer>
+    </div>
+
     <!-- App connectée : même shell (header noir, fond clair) -->
     <div id="app-app" class="hidden app-unified-shell">
       <header class="landing-header app-header-bar">
@@ -153,8 +208,16 @@
         <div id="app-empty" class="app-empty hidden">
           <div class="app-empty-card">
             <h1 class="app-empty-title">Aucune carte pour l'instant</h1>
-            <p class="app-empty-text">Créez votre première carte de fidélité (Apple Wallet et Google Wallet). Vous pourrez ensuite enregistrer les passages et voir vos clients ici.</p>
-            <a href="/creer-ma-carte" class="app-btn app-btn-primary app-empty-cta">Créer ma première carte</a>
+            <p class="app-empty-text">Créez votre première carte de fidélité (Apple Wallet et Google Wallet). Nom et lien sont modifiables plus tard dans « Personnaliser la carte ».</p>
+            <form id="app-empty-create-form" class="app-empty-form">
+              <label class="app-label">Nom de l'établissement</label>
+              <input type="text" id="app-empty-name" class="app-input" placeholder="ex. Café NBK" autocomplete="organization" required />
+              <label class="app-label">Votre lien (pour la page carte et le QR)</label>
+              <input type="text" id="app-empty-slug" class="app-input app-input-slug" placeholder="cafe-nbk" />
+              <p class="app-hint">Vos clients iront sur : …/fidelity/<strong id="app-empty-slug-preview">votre-lien</strong></p>
+              <button type="submit" class="app-btn app-btn-primary app-empty-cta">Créer ma carte</button>
+              <p id="app-empty-create-error" class="app-message error hidden"></p>
+            </form>
           </div>
         </div>
         <div id="app-dashboard-content" class="app-content hidden">
@@ -559,27 +622,6 @@
             </div>
 
             <div class="builder-fields builder-fields-compact">
-                <section class="builder-section">
-                  <h2 class="builder-section-title">Identité</h2>
-                  <label class="builder-label">Nom de l’établissement</label>
-                  <input type="text" id="builder-name" class="builder-input" placeholder="ex. Café NBK" autocomplete="organization" />
-                  <label class="builder-label">Votre lien (modifiable)</label>
-                  <input type="text" id="builder-slug" class="builder-input builder-input-slug" placeholder="cafe-nbk" />
-                  <p class="builder-hint">Vos clients iront sur : …/fidelity/<strong id="builder-slug-preview">votre-lien</strong></p>
-                </section>
-                <section class="builder-section builder-account-section" id="builder-account-section">
-                  <h2 class="builder-section-title">Votre compte</h2>
-                  <p class="builder-hint">Créez un compte pour enregistrer votre carte et accéder à votre tableau de bord.</p>
-                  <label class="builder-label">Email</label>
-                  <input type="email" id="builder-account-email" class="builder-input" placeholder="vous@exemple.fr" autocomplete="email" />
-                  <label class="builder-label">Mot de passe (8 caractères minimum)</label>
-                  <input type="password" id="builder-account-password" class="builder-input" placeholder="••••••••" autocomplete="new-password" minlength="8" />
-                  <label class="builder-label">Votre nom (optionnel)</label>
-                  <input type="text" id="builder-account-name" class="builder-input" placeholder="Prénom ou nom du gérant" autocomplete="name" />
-                </section>
-                <div class="builder-logged-in hidden" id="builder-logged-in">
-                  <p class="builder-hint">Connecté. Votre carte sera enregistrée sur votre compte.</p>
-                </div>
                 <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Voir le récapitulatif</button>
               </div>
           </div>

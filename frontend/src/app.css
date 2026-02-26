@@ -697,6 +697,19 @@
   margin: 0 0 1.5rem;
 }
 
+.app-empty-form {
+  text-align: left;
+  margin-top: 1rem;
+}
+.app-empty-form .app-input { margin-bottom: 1rem; }
+.app-empty-form .app-label { margin-bottom: 0.35rem; }
+.app-hint {
+  font-size: 0.85rem;
+  color: var(--app-text-muted);
+  margin: -0.5rem 0 1rem;
+}
+.app-empty-form .app-message { margin-top: 0.75rem; }
+
 .app-empty-cta {
   display: inline-block;
   padding: 0.85rem 1.5rem;

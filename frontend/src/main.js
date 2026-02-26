@@ -9,6 +9,7 @@ const dashboardAppEl = document.getElementById("dashboard-app");
 const authAppEl = document.getElementById("auth-app");
 const appAppEl = document.getElementById("app-app");
 const offersAppEl = document.getElementById("offers-app");
+const checkoutAppEl = document.getElementById("checkout-app");
 
 function getAuthToken() {
   try {
@@ -48,6 +49,7 @@ function getRoute() {
   if (path === "/register") return { type: "auth", tab: "register" };
   if (path === "/creer-ma-carte") return { type: "templates" };
   if (path === "/choisir-offre") return { type: "offers" };
+  if (path === "/checkout") return { type: "checkout" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
   return { type: "landing" };
@@ -62,6 +64,7 @@ function initRouting() {
     if (authAppEl) authAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
     if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
     fidelityAppEl.classList.remove("hidden");
     return route.slug;
   }
@@ -76,6 +79,7 @@ function initRouting() {
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.add("hidden");
     if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.remove("hidden");
     initAppPage();
     return null;
@@ -87,8 +91,21 @@ function initRouting() {
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
     if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.remove("hidden");
     initAuthPage(route.tab || "login");
+    return null;
+  }
+
+  if (route.type === "checkout") {
+    landingEl.classList.add("hidden");
+    fidelityAppEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.remove("hidden");
+    initCheckoutPage();
     return null;
   }
 
@@ -98,6 +115,7 @@ function initRouting() {
     if (authAppEl) authAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
     if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
     if (dashboardAppEl) {
       dashboardAppEl.classList.remove("hidden");
       initDashboardPage();
@@ -111,6 +129,7 @@ function initRouting() {
   if (authAppEl) authAppEl.classList.add("hidden");
   if (appAppEl) appAppEl.classList.add("hidden");
   if (offersAppEl) offersAppEl.classList.add("hidden");
+  if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
   const landingMain = document.getElementById("landing-main");
   const landingLegal = document.getElementById("landing-legal");
   const landingTemplates = document.getElementById("landing-templates");
@@ -133,6 +152,7 @@ function initRouting() {
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
     const offersEl = document.getElementById("offers-app");
     if (offersEl) {
       offersEl.classList.remove("hidden");
@@ -355,6 +375,87 @@ function initAppPage() {
       if (contentEl) contentEl.classList.add("hidden");
     }
   })();
+
+  const emptyForm = document.getElementById("app-empty-create-form");
+  const emptyName = document.getElementById("app-empty-name");
+  const emptySlug = document.getElementById("app-empty-slug");
+  const emptySlugPreview = document.getElementById("app-empty-slug-preview");
+  const emptyCreateError = document.getElementById("app-empty-create-error");
+
+  function updateEmptySlugPreview() {
+    const s = slugify(emptySlug?.value || emptyName?.value || "");
+    if (emptySlugPreview) emptySlugPreview.textContent = s || "votre-lien";
+  }
+  emptyName?.addEventListener("input", () => {
+    if (!emptySlug?.dataset.manual) {
+      const s = slugify(emptyName?.value || "");
+      if (emptySlug) emptySlug.value = s;
+      updateEmptySlugPreview();
+    }
+  });
+  emptySlug?.addEventListener("input", () => {
+    if (emptySlug) emptySlug.dataset.manual = "1";
+    updateEmptySlugPreview();
+  });
+
+  emptyForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = emptyName?.value?.trim();
+    const slugRaw = emptySlug?.value?.trim() || slugify(name || "");
+    const slug = slugify(slugRaw) || slugify(name || "") || "ma-carte";
+    if (!name) {
+      if (emptyCreateError) {
+        emptyCreateError.textContent = "Saisissez le nom de l'établissement.";
+        emptyCreateError.classList.remove("hidden");
+      }
+      return;
+    }
+    if (emptyCreateError) emptyCreateError.classList.add("hidden");
+    const tpl = CARD_TEMPLATES.find((t) => t.id === "classic") || CARD_TEMPLATES[0];
+    try {
+      const res = await fetch(`${API_BASE}/api/businesses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          name,
+          slug,
+          organizationName: name,
+          backgroundColor: tpl.bg,
+          foregroundColor: tpl.fg,
+          labelColor: tpl.label,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 409) {
+          if (emptyCreateError) {
+            emptyCreateError.textContent = "Ce lien est déjà pris. Choisissez un autre lien.";
+            emptyCreateError.classList.remove("hidden");
+          }
+          return;
+        }
+        if (res.status === 403 && (data.code === "subscription_required")) {
+          window.location.replace("/choisir-offre");
+          return;
+        }
+        if (emptyCreateError) {
+          emptyCreateError.textContent = data.error || "Erreur lors de la création.";
+          emptyCreateError.classList.remove("hidden");
+        }
+        return;
+      }
+      if (emptyEl) emptyEl.classList.add("hidden");
+      if (contentEl) contentEl.classList.remove("hidden");
+      if (businessNameEl) businessNameEl.textContent = data.organization_name || data.name || data.slug;
+      initAppSidebar();
+      initAppDashboard(data.slug);
+    } catch (err) {
+      if (emptyCreateError) {
+        emptyCreateError.textContent = "Erreur réseau. Réessayez.";
+        emptyCreateError.classList.remove("hidden");
+      }
+    }
+  });
 }
 
 function initAppSidebar() {
@@ -937,48 +1038,16 @@ function slugify(text) {
 }
 
 function initBuilderPage() {
-  const params = new URLSearchParams(window.location.search);
-  const etablissementFromUrl = params.get("etablissement") || "";
 
-  const formBlock = document.getElementById("builder-form-block");
-  const successBlock = document.getElementById("builder-success-block");
-  const inputName = document.getElementById("builder-name");
-  const inputSlug = document.getElementById("builder-slug");
-  const slugPreview = document.getElementById("builder-slug-preview");
   const btnSubmit = document.getElementById("builder-submit");
-  const successLinkInput = document.getElementById("builder-success-link");
-  const btnCopyLink = document.getElementById("builder-copy-link");
-  const successQrImg = document.getElementById("builder-success-qr");
-  const successPageLink = document.getElementById("builder-success-page-link");
-  const builderAccountSection = document.getElementById("builder-account-section");
-  const builderLoggedIn = document.getElementById("builder-logged-in");
-  const builderAccountEmail = document.getElementById("builder-account-email");
-  const builderAccountPassword = document.getElementById("builder-account-password");
-  const builderAccountName = document.getElementById("builder-account-name");
 
-  if (getAuthToken()) {
-    if (builderAccountSection) builderAccountSection.classList.add("hidden");
-    if (builderLoggedIn) builderLoggedIn.classList.remove("hidden");
-    if (btnSubmit) btnSubmit.textContent = "Créer ma carte et obtenir mon lien";
-  } else {
-    if (builderAccountSection) builderAccountSection.classList.remove("hidden");
-    if (builderLoggedIn) builderLoggedIn.classList.add("hidden");
-    if (btnSubmit) btnSubmit.textContent = "Créer ma carte et mon compte";
-  }
-
-  const state = {
-    name: etablissementFromUrl || "",
-    slug: slugify(etablissementFromUrl) || "ma-carte",
-    selectedTemplateId: "classic",
-  };
+  const state = { selectedTemplateId: "classic" };
 
   function loadDraft() {
     try {
       const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
       if (raw) {
         const d = JSON.parse(raw);
-        if (d.name !== undefined) state.name = d.name;
-        if (d.slug !== undefined) state.slug = d.slug;
         if (d.selectedTemplateId && CARD_TEMPLATES.some((t) => t.id === d.selectedTemplateId)) state.selectedTemplateId = d.selectedTemplateId;
       }
     } catch (_) {}
@@ -986,14 +1055,8 @@ function initBuilderPage() {
 
   function saveDraft() {
     try {
-      localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify({ name: state.name, slug: state.slug, selectedTemplateId: state.selectedTemplateId }));
+      localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify({ selectedTemplateId: state.selectedTemplateId }));
     } catch (_) {}
-  }
-
-  function syncInputsFromState() {
-    if (inputName) inputName.value = state.name;
-    if (inputSlug) inputSlug.value = state.slug;
-    if (slugPreview) slugPreview.textContent = state.slug || "votre-lien";
   }
 
   function setTemplateSelection(templateId) {
@@ -1013,29 +1076,10 @@ function initBuilderPage() {
   });
 
   loadDraft();
-  if (etablissementFromUrl && !state.name) state.name = etablissementFromUrl;
-  if (etablissementFromUrl && state.slug === "ma-carte") state.slug = slugify(etablissementFromUrl);
-  syncInputsFromState();
   setTemplateSelection(state.selectedTemplateId);
 
   document.querySelectorAll(".builder-template-card").forEach((btn) => {
     btn.addEventListener("click", () => setTemplateSelection(btn.getAttribute("data-template")));
-  });
-
-  inputName?.addEventListener("input", () => {
-    state.name = inputName.value.trim();
-    if (!inputSlug?.dataset.manual) state.slug = slugify(state.name) || "ma-carte";
-    if (inputSlug) inputSlug.value = state.slug;
-    if (slugPreview) slugPreview.textContent = state.slug || "votre-lien";
-    saveDraft();
-  });
-
-  inputSlug?.addEventListener("input", () => {
-    if (inputSlug) inputSlug.dataset.manual = "1";
-    state.slug = slugify(inputSlug?.value || "") || "ma-carte";
-    if (inputSlug) inputSlug.value = state.slug;
-    if (slugPreview) slugPreview.textContent = state.slug;
-    saveDraft();
   });
 
   const cartOverlay = document.getElementById("cart-overlay");
@@ -1045,28 +1089,6 @@ function initBuilderPage() {
   const cartContinue = document.getElementById("cart-continue");
 
   function openCart() {
-    const name = state.name.trim();
-    if (!name) {
-      inputName?.focus();
-      return;
-    }
-    const slug = state.slug || slugify(name);
-    if (!slug) {
-      inputSlug?.focus();
-      return;
-    }
-    if (!getAuthToken()) {
-      const email = builderAccountEmail?.value?.trim();
-      const password = builderAccountPassword?.value;
-      if (!email) {
-        builderAccountEmail?.focus();
-        return;
-      }
-      if (!password || String(password).length < 8) {
-        builderAccountPassword?.focus();
-        return;
-      }
-    }
     if (cartOverlay) {
       cartOverlay.classList.remove("hidden");
       cartOverlay.classList.add("is-open");
@@ -1091,126 +1113,132 @@ function initBuilderPage() {
     closeCart();
   });
 
-  async function submitFromCart() {
-    const name = state.name.trim();
-    const slug = state.slug || slugify(name);
-    if (!name || !slug) return;
 
-    let token = getAuthToken();
-    if (!token) {
-      const email = builderAccountEmail?.value?.trim();
-      const password = builderAccountPassword?.value;
-      const accountName = builderAccountName?.value?.trim();
-      if (!email || !password || String(password).length < 8) return;
-      try {
-        const regRes = await fetch(`${API_BASE}/api/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, name: accountName || undefined }),
-        });
-        const regData = await regRes.json().catch(() => ({}));
-        if (!regRes.ok) {
-          alert(regData.error || "Erreur lors de la création du compte.");
-          return;
-        }
-        setAuthToken(regData.token);
-        token = regData.token;
-      } catch (e) {
-        alert("Impossible de créer le compte. Vérifiez votre connexion.");
-        return;
-      }
-    }
+  cartContinue?.addEventListener("click", () => {
+    closeCart();
+    window.location.replace("/checkout");
+  });
+}
 
-    if (cartContinue) {
-      cartContinue.disabled = true;
-      cartContinue.textContent = "Création…";
-    }
-    const tpl = CARD_TEMPLATES.find((t) => t.id === state.selectedTemplateId) || CARD_TEMPLATES[0];
-    try {
-      const body = {
-        name,
-        slug,
-        organizationName: name,
-        backgroundColor: tpl.bg,
-        foregroundColor: tpl.fg,
-        labelColor: tpl.label,
-      };
-
-      const res = await fetch(`${API_BASE}/api/businesses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        const msg = data.error || `Erreur ${res.status} lors de la création`;
-        if (res.status === 409) throw new Error("Ce lien est déjà pris. Choisissez un autre « lien » (slug) pour votre établissement.");
-        if (res.status === 403 && (data.code === "subscription_required" || data.error?.includes("Abonnement"))) {
-          window.location.replace("/choisir-offre");
-          return;
-        }
-        if (res.status === 400) throw new Error(data.error || "Vérifiez le nom et le lien de l'établissement.");
-        throw new Error(msg);
-      }
-
-      const data = await res.json();
-      const fidelityPath = `/fidelity/${data.slug}`;
-      const fullLink = window.location.origin.replace(/\/$/, "") + fidelityPath;
-
-      closeCart();
-      formBlock.classList.add("hidden");
-      successBlock.classList.remove("hidden");
-      successLinkInput.value = fullLink;
-      successPageLink.href = fidelityPath;
-      successQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullLink)}`;
-
-      try {
-        localStorage.removeItem(BUILDER_DRAFT_KEY);
-      } catch (_) {}
-    } catch (err) {
-      const isNetwork = err.message === "Failed to fetch" || err.name === "TypeError";
-      const message = isNetwork
-        ? "Impossible de joindre le serveur. En production, l’API doit être déployée (ex. api.myfidpass.fr) et la variable VITE_API_URL doit être définie sur Vercel. Voir docs/PRODUCTION.md"
-        : (err.message || "Une erreur est survenue. Réessayez.");
-      alert(message);
-    } finally {
-      if (cartContinue) {
-        cartContinue.disabled = false;
-        cartContinue.textContent = "CONTINUER";
-      }
-    }
-  }
-
-  cartContinue?.addEventListener("click", () => submitFromCart());
-
-  btnCopyLink.addEventListener("click", () => {
-    successLinkInput.select();
-    navigator.clipboard.writeText(successLinkInput.value).then(() => {
-      btnCopyLink.textContent = "Copié !";
-      setTimeout(() => (btnCopyLink.textContent = "Copier"), 2000);
-    });
+function initCheckoutPage() {
+  const orderBar = document.getElementById("checkout-order-bar");
+  const orderToggle = document.getElementById("checkout-order-toggle");
+  orderToggle?.addEventListener("click", () => {
+    const expanded = orderBar?.getAttribute("aria-expanded") === "true";
+    orderBar?.setAttribute("aria-expanded", !expanded);
   });
 
-  if (data.dashboardUrl) {
-    successBlock.querySelectorAll('a[href*="dashboard"]').forEach((el) => el.remove());
-    const dashboardLink = document.createElement("a");
-    dashboardLink.href = data.dashboardUrl;
-    dashboardLink.className = "landing-btn landing-btn-secondary";
-    dashboardLink.style.marginTop = "1rem";
-    dashboardLink.style.display = "inline-block";
-    dashboardLink.textContent = "Ouvrir le tableau de bord";
-    successBlock.appendChild(dashboardLink);
+  const step1 = document.getElementById("checkout-step-1");
+  const step2 = document.getElementById("checkout-step-2");
+  const step3 = document.getElementById("checkout-step-3");
+  const emailInput = document.getElementById("checkout-email");
+  const passwordInput = document.getElementById("checkout-password");
+  const nameInput = document.getElementById("checkout-name");
+  const next1 = document.getElementById("checkout-next-1");
+  const next2 = document.getElementById("checkout-next-2");
+  const paymentBtn = document.getElementById("checkout-payment");
+  const errorEl = document.getElementById("checkout-error");
+
+  function showStep(stepNum) {
+    [step1, step2, step3].forEach((el, i) => {
+      if (el) el.classList.toggle("checkout-step-open", i + 1 === stepNum);
+    });
   }
+
   if (getAuthToken()) {
-    const appLink = document.createElement("a");
-    appLink.href = "/app";
-    appLink.className = "landing-btn landing-btn-primary";
-    appLink.style.marginTop = "0.5rem";
-    appLink.style.display = "inline-block";
-    appLink.style.marginLeft = "0.5rem";
-    appLink.textContent = "Accéder à mon espace";
-    successBlock.appendChild(appLink);
+    showStep(3);
+    document.getElementById("checkout-payment")?.focus();
+  }
+  function showError(msg) {
+    if (errorEl) {
+      errorEl.textContent = msg || "";
+      errorEl.classList.toggle("hidden", !msg);
+    }
+  }
+
+  next1?.addEventListener("click", () => {
+    const email = emailInput?.value?.trim();
+    if (!email) {
+      emailInput?.focus();
+      showError("Saisissez votre adresse e-mail.");
+      return;
+    }
+    showError("");
+    showStep(2);
+    passwordInput?.focus();
+  });
+
+  next2?.addEventListener("click", async () => {
+    const email = emailInput?.value?.trim();
+    const password = passwordInput?.value;
+    const name = nameInput?.value?.trim();
+    if (!password || String(password).length < 8) {
+      passwordInput?.focus();
+      showError("Le mot de passe doit faire au moins 8 caractères.");
+      return;
+    }
+    showError("");
+    if (next2) {
+      next2.disabled = true;
+      next2.textContent = "Création du compte…";
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name: name || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showError(data.error || "Erreur lors de la création du compte.");
+        if (next2) { next2.disabled = false; next2.textContent = "SUIVANT"; }
+        return;
+      }
+      setAuthToken(data.token);
+      showStep(3);
+      if (paymentBtn) paymentBtn.focus();
+    } catch (e) {
+      showError("Impossible de créer le compte. Vérifiez votre connexion.");
+    } finally {
+      if (next2) {
+        next2.disabled = false;
+        next2.textContent = "SUIVANT";
+      }
+    }
+  });
+
+  paymentBtn?.addEventListener("click", () => initCheckoutPayment());
+
+  function initCheckoutPayment() {
+    showError("");
+    if (paymentBtn) {
+      paymentBtn.disabled = true;
+      paymentBtn.textContent = "Redirection…";
+    }
+    fetch(`${API_BASE}/api/payment/create-checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify({ planId: "starter" }),
+    })
+      .then((res) => res.json().catch(() => ({})))
+      .then((data) => {
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+        showError(data.error || "Impossible de créer la session de paiement.");
+        if (paymentBtn) {
+          paymentBtn.disabled = false;
+          paymentBtn.textContent = "PAYER — 49 €/mois (7 jours gratuits)";
+        }
+      })
+      .catch(() => {
+        showError("Erreur réseau. Réessayez.");
+        if (paymentBtn) {
+          paymentBtn.disabled = false;
+          paymentBtn.textContent = "PAYER — 49 €/mois (7 jours gratuits)";
+        }
+      });
   }
 }
 
