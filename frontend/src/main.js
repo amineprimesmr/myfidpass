@@ -1363,7 +1363,7 @@ function getPolitiqueConfidentialiteHtml() {
     <h2>Données collectées</h2>
     <p>Lors de la création d’une carte fidélité (nom, adresse email), ces informations sont utilisées uniquement pour générer et associer la carte à votre appareil. Nous ne les revendons pas à des tiers.</p>
     <h2>Utilisation</h2>
-    <p>Les données servent à la gestion de votre carte dans Apple Wallet et à l’identification en caisse. Le commerce partenaire peut consulter les informations liées à votre carte pour son programme de fidélité.</p>
+    <p>Les données servent à la gestion de votre carte (Apple Wallet ou Google Wallet) et à l’identification en caisse. Le commerce partenaire peut consulter les informations liées à votre carte pour son programme de fidélité.</p>
     <h2>Vos droits</h2>
     <p>Vous pouvez demander l’accès, la rectification ou la suppression de vos données en nous contactant à contact@fidpass.fr.</p>
     <p><a href="/">Retour à l’accueil</a></p>
@@ -1465,8 +1465,8 @@ function setPageBusiness(business) {
   }
   if (fidelitySubtitleEl) {
     fidelitySubtitleEl.textContent = orgName
-      ? `Renseigne ton nom et ton email, puis ajoute la carte ${orgName} à ton téléphone (iPhone ou Android).`
-      : "Renseigne ton nom et ton email, puis ajoute la carte à ton téléphone (iPhone ou Android).";
+      ? `Renseigne ton nom et ton email, puis ajoute la carte ${orgName} à ton téléphone.`
+      : "Renseigne ton nom et ton email, puis ajoute la carte à ton téléphone.";
   }
 }
 
@@ -1506,7 +1506,7 @@ function showFidelitySuccess(slug, memberId) {
           if (fidelityGoogleErrorEl) {
             fidelityGoogleErrorEl.textContent =
               data.code === "google_wallet_unavailable"
-                ? "Google Wallet n’est pas configuré pour ce site. Utilise Apple Wallet ou reviens plus tard."
+                ? "Google Wallet n’est pas configuré pour ce site. Utilisez Apple Wallet ou réessayez plus tard."
                 : data.error || "Impossible d’ouvrir Google Wallet.";
             fidelityGoogleErrorEl.classList.remove("hidden");
           }
