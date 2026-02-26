@@ -38,8 +38,8 @@ body {
   max-height: 50vh;
   overflow: hidden;
   background: #0d0d0d;
-  display: none;
   position: relative;
+  display: block;
 }
 
 .site-banner-media-img,
