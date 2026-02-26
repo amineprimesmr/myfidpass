@@ -1631,6 +1631,7 @@ function initPlacesAutocomplete() {
       const autocomplete = new google.maps.places.Autocomplete(input, {
         types: ["establishment"],
         fields: ["name", "formatted_address", "place_id"],
+        componentRestrictions: { country: "fr" },
       });
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
@@ -1646,9 +1647,7 @@ function initPlacesAutocomplete() {
 }
 
 const googlePlacesApiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
-const googlePlacesEnabled = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_ENABLED : "";
-const placesDisabled = googlePlacesEnabled === "false" || googlePlacesEnabled === "0";
-if (googlePlacesApiKey && !placesDisabled) {
+if (googlePlacesApiKey) {
   window.__fidpassPlacesReady = () => {
     initPlacesAutocomplete();
   };

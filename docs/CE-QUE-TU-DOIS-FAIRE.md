@@ -25,16 +25,20 @@ Là, c’est pour que quand on tape dans « Nom de votre établissement », des 
 
 1. Va sur [Google Cloud Console](https://console.cloud.google.com/).
 2. Crée un projet (ou choisis un projet existant).
-3. Active deux APIs : **Maps JavaScript API** et **Places API** (menu « APIs & Services » → « Library », cherche chacune et clique sur « Enable »).
-4. Crée une clé API : **APIs & Services** → **Credentials** → **Create credentials** → **API key**. Copie la clé.
-5. (Recommandé) Restreins la clé : clique sur la clé → **Application restrictions** → **HTTP referrers** → ajoute `https://myfidpass.fr/*` et `http://localhost:*`.
-6. Sur **Vercel** : **Settings → Environment Variables** → **Name** = `VITE_GOOGLE_PLACES_API_KEY`, **Value** = la clé copiée. Puis **redéployer** le site.
+3. **Active la facturation** (obligatoire) : menu **☰** → **Facturation** (Billing) → lie un compte de facturation au projet. Sans ça, l’API Places refuse les requêtes (icônes d’erreur). Google offre un crédit mensuel gratuit ; tu ne seras pas débité tant que tu restes dans les quotas.
+4. Active deux APIs : **Maps JavaScript API** et **Places API** (menu « APIs & Services » → « Library », cherche chacune et clique sur « Enable »).
+5. Crée une clé API : **APIs & Services** → **Credentials** → **Create credentials** → **API key**. Copie la clé.
+6. Restreins la clé : **Référents HTTP** = `https://myfidpass.fr/*` et `http://localhost:*` ; **Restrictions d’API** = cocher au minimum **Maps JavaScript API** et **Places API**.
+7. Sur **Vercel** : **Settings → Environment Variables** → **Name** = `VITE_GOOGLE_PLACES_API_KEY`, **Value** = la clé. Puis **redéployer** le site.
 
 Après redéploiement, les suggestions d’entreprises s’afficheront quand on tape dans le champ.
 
 ### Si tu vois des icônes d’erreur (⚠️) ou que les suggestions ne s’affichent pas
 
 La clé Google est refusée au moment de la recherche. À vérifier **dans l’ordre** :
+
+0. **Facturation Google (cause la plus fréquente)**  
+   Menu **☰** → **Facturation** (Billing). Le projet **myfidpass** doit avoir un **compte de facturation lié**. Sans ça, Places API renvoie toujours une erreur. Tu peux associer une carte ; Google offre un crédit gratuit mensuel et ne débite que si tu dépasses les quotas.
 
 1. **Redéploiement Vercel**  
    Après avoir ajouté ou modifié `VITE_GOOGLE_PLACES_API_KEY`, va dans **Deployments** → **…** sur le dernier déploiement → **Redeploy**. Sans ça, le build n’a pas la clé.
@@ -53,9 +57,7 @@ La clé Google est refusée au moment de la recherche. À vérifier **dans l’o
 
 Pour déboguer : ouvre la console du navigateur (F12 → Console) sur myfidpass.fr. Si tu vois un message `[Fidpass] Google Places: ...`, il indique si le script ne charge pas ou si la clé est refusée.
 
-**Facturation Google Cloud :** les APIs Maps/Places exigent qu’un **compte de facturation** soit lié au projet (même pour utiliser le quota gratuit). Sans ça, les requêtes échouent. Dans la console Google Cloud : **Facturation** → associer un compte de facturation au projet « myfidpass ». Tu ne seras pas débité tant que tu restes dans le quota gratuit.
-
-**Désactiver la recherche Google (plus d’icônes d’erreur) :** sur Vercel, ajoute la variable **`VITE_GOOGLE_PLACES_ENABLED`** = **`false`**, puis redéploie. Le champ redevient un simple champ texte, sans autocomplete et sans icônes. Tu peux garder ta clé ; pour réactiver plus tard, supprime cette variable ou mets `true` et redéploie.
+Si tu préfères enlever la recherche Google : supprime la variable `VITE_GOOGLE_PLACES_API_KEY` sur Vercel et redéploie. Le champ redeviendra un simple champ texte sans icônes d’erreur.
 
 ---
 
