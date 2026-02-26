@@ -1,3 +1,4 @@
 # Outils nécessaires pour compiler better-sqlite3 (node-gyp) sur Railway
+# "..." = garder les paquets par défaut (Node.js) et ajouter les suivants
 [phases.setup]
-nixPkgs = ["python3", "gcc", "gnumake"]
+nixPkgs = ["...", "python3", "gcc", "gnumake"]
