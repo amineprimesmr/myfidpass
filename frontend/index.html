@@ -156,7 +156,10 @@
               <h2 class="checkout-step-title">3. ENTRER LE MODE DE PAIEMENT</h2>
               <div class="checkout-step-content">
                 <p class="checkout-step-desc">Vous serez redirigé vers notre partenaire de paiement sécurisé.</p>
-                <button type="button" id="checkout-payment" class="checkout-btn-payment">PAYER — 49 €/mois (7 jours gratuits)</button>
+                <button type="button" id="checkout-payment" class="checkout-btn-payment">
+                  <span class="checkout-btn-payment-main">Commencer pour 0 €</span>
+                  <span class="checkout-btn-payment-sub">7 jours gratuits · puis 49 €/mois</span>
+                </button>
                 <p id="checkout-error" class="checkout-error hidden"></p>
                 <p class="checkout-dev-bypass-wrap">
                   <button type="button" id="checkout-dev-bypass-btn" class="checkout-dev-bypass-btn" title="Temporaire : simuler un paiement sans Stripe">🔧 Mode dev : passer le paiement</button>
@@ -175,10 +178,14 @@
                   <span class="checkout-order-item-icon" aria-hidden="true">📱</span>
                   <div class="checkout-order-item-content">
                     <span class="checkout-order-item-name">Carte de fidélité</span>
-                    <span class="checkout-order-item-desc">49 €/mois sans engagement · Essai gratuit 7 jours</span>
+                    <span class="checkout-order-item-desc">7 jours gratuits · puis 49 €/mois sans engagement</span>
                     <span class="checkout-order-item-qty">Qté : 1</span>
                   </div>
-                  <span class="checkout-order-item-price">49 €<span class="checkout-order-period">/mois</span></span>
+                  <span class="checkout-order-item-price">
+                    <span class="checkout-order-item-price-main">0 €</span>
+                    <span class="checkout-order-item-price-sub">7 jours gratuits</span>
+                    <span class="checkout-order-item-price-then">puis 49 €/mois</span>
+                  </span>
                 </li>
               </ul>
             </section>
@@ -228,11 +235,12 @@
               </ul>
             </section>
             <div class="checkout-order-summary">
-              <div class="checkout-order-summary-row">
-                <span class="checkout-order-summary-label">Sous-total</span>
-                <span class="checkout-order-summary-value">49,00 € <span class="checkout-order-period">/ mois</span></span>
+              <div class="checkout-order-summary-row checkout-order-summary-start">
+                <span class="checkout-order-summary-label">Commencer pour</span>
+                <span class="checkout-order-summary-value checkout-order-summary-value-zero">0 €</span>
               </div>
-              <p class="checkout-order-trial">7 jours gratuits, puis 49 €/mois. Sans engagement.</p>
+              <p class="checkout-order-trial checkout-order-trial-main">7 jours gratuits</p>
+              <p class="checkout-order-trial checkout-order-trial-then">puis 49 €/mois. Sans engagement.</p>
             </div>
             <button type="button" id="checkout-mobile-continue" class="checkout-mobile-only checkout-order-cta">CONTINUER</button>
           </div>

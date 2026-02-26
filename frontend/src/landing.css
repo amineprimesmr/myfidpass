@@ -2211,7 +2211,7 @@ body.page-checkout .site-banner { display: none !important; }
   color: #666;
   margin: 0 0 1rem;
 }
-/* Bouton PAYER noir, CTA principal */
+/* Bouton PAYER : Commencer pour 0 € en gros, 7 jours gratuits en sous-texte */
 .checkout-btn-payment {
   width: 100%;
   padding: 1rem 1.5rem;
@@ -2224,6 +2224,19 @@ body.page-checkout .site-banner { display: none !important; }
   letter-spacing: 0.03em;
   cursor: pointer;
   font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.checkout-btn-payment-main {
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+.checkout-btn-payment-sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.9;
 }
 .checkout-btn-payment:hover { background: #333; }
 .checkout-btn-payment:disabled { opacity: 0.7; cursor: not-allowed; }
@@ -2286,7 +2299,28 @@ body.page-checkout .site-banner { display: none !important; }
 .checkout-order-item-name { font-weight: 600; display: block; color: #1a1a1a; }
 .checkout-order-item-desc { font-size: 0.75rem; color: #666; }
 .checkout-order-item-qty { font-size: 0.7rem; color: #888; }
-.checkout-order-item-price { font-weight: 700; white-space: nowrap; color: #1a1a1a; }
+.checkout-order-item-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+.checkout-order-item-price-main {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.checkout-order-item-price-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #15803d;
+}
+.checkout-order-item-price-then {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #666;
+}
 .checkout-order-period { font-weight: 500; font-size: 0.85em; color: #666; }
 .checkout-order-item-free { font-size: 0.8rem; color: #15803d; font-weight: 600; }
 .checkout-order-list-included .checkout-order-item { padding: 0.4rem 0; }
@@ -2306,6 +2340,24 @@ body.page-checkout .site-banner { display: none !important; }
 }
 .checkout-order-summary-label { color: #333; }
 .checkout-order-summary-value { color: #1a1a1a; }
+.checkout-order-summary-value-zero {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+.checkout-order-summary-start .checkout-order-summary-label {
+  font-weight: 600;
+}
+.checkout-order-trial-main {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #15803d;
+  margin: 0.25rem 0 0;
+}
+.checkout-order-trial-then {
+  font-size: 0.7rem;
+  color: #666;
+  margin: 0.15rem 0 0;
+}
 .checkout-order-trial {
   font-size: 0.75rem;
   color: #666;
