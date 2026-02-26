@@ -1,0 +1,3 @@
+# Outils nécessaires pour compiler better-sqlite3 (node-gyp) sur Railway
+[phases.setup]
+nixPkgs = ["python3", "gcc", "gnumake"]
