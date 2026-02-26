@@ -1047,19 +1047,22 @@
 
 @media (max-width: 899px) {
   .builder-step-1-block {
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
   .builder-step-1-sticky {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    position: sticky;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+    width: 100%;
     padding: 1rem 1.25rem;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
     background: #fff;
     border-top: 1px solid var(--landing-border);
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
@@ -1067,6 +1070,7 @@
     transform: translateY(0);
     transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.35s ease;
     animation: builderStickyIn 0.4s ease forwards;
+    box-sizing: border-box;
   }
   .builder-step-1-sticky .builder-sticky-change {
     display: inline-flex;

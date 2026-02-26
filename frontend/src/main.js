@@ -74,27 +74,25 @@ function getRoute() {
   return { type: "landing" };
 }
 
-/** Met à jour l’affichage des étapes dans le header parcours (1, 2, 3). Utilisé par le builder et par la page checkout. */
+/** Met à jour l’affichage des étapes dans le header parcours (1=accueil, 2=créateur, 3=checkout). Aucun verrou : on peut toujours naviguer. */
 function setBuilderHeaderStep(activeStep) {
   const headerSteps = document.querySelectorAll(".builder-header-step");
   headerSteps.forEach((el) => {
     const n = parseInt(el.getAttribute("data-step"), 10);
-    const isActive = n === activeStep;
-    const isLocked = n > activeStep;
-    el.classList.toggle("builder-header-step-active", isActive);
-    el.classList.toggle("builder-header-step-locked", isLocked);
-    el.setAttribute("aria-current", isActive ? "step" : null);
-    el.disabled = isLocked;
+    el.classList.toggle("builder-header-step-active", n === activeStep);
+    el.classList.remove("builder-header-step-locked");
+    el.setAttribute("aria-current", n === activeStep ? "step" : null);
+    el.disabled = false;
   });
 }
 
-/** Clics sur le header parcours quand on est sur la page checkout (étape 3) : retour aux étapes 1 ou 2. */
+/** Clics sur le header parcours quand on est sur la page checkout (étape 3). */
 function attachBuilderHeaderNavForCheckout() {
   document.querySelectorAll(".builder-header-step").forEach((btn) => {
     const n = parseInt(btn.getAttribute("data-step"), 10);
-    if (n >= 3) return;
     btn.onclick = () => {
-      const url = n === 2 ? "/creer-ma-carte?step=2" : "/creer-ma-carte";
+      if (n === 3) return;
+      const url = n === 1 ? "/" : n === 2 ? "/creer-ma-carte" : "/creer-ma-carte";
       history.pushState({}, "", url);
       initRouting();
     };
@@ -1145,9 +1143,7 @@ function initBuilderPage() {
   const step2Block = document.getElementById("builder-step-2-block");
   const headerSteps = document.querySelectorAll(".builder-header-step");
 
-  function updateHeaderSteps() {
-    setBuilderHeaderStep(state.currentStep);
-  }
+  /* Header parcours : sur /creer-ma-carte on est toujours à l’étape 2 (créateur). Récap = même étape. */
 
   function showBlock(block) {
     if (!block) return;
@@ -1179,7 +1175,6 @@ function initBuilderPage() {
       hideBlock(currentBlock);
       showBlock(targetBlock);
       state.currentStep = stepNum;
-      updateHeaderSteps();
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
@@ -1187,7 +1182,6 @@ function initBuilderPage() {
       showBlock(targetBlock);
       hideBlock(currentBlock);
       state.currentStep = stepNum;
-      updateHeaderSteps();
       return;
     }
 
@@ -1205,12 +1199,18 @@ function initBuilderPage() {
       step2Block.setAttribute("aria-hidden", "false");
     }
   }
-  updateHeaderSteps();
+  setBuilderHeaderStep(2);
 
   headerSteps.forEach((btn) => {
     btn.addEventListener("click", () => {
       const n = parseInt(btn.getAttribute("data-step"), 10);
-      if (n <= state.currentStep) goToStep(n);
+      if (n === 1) {
+        history.pushState({}, "", "/");
+        initRouting();
+      } else if (n === 3) {
+        history.pushState({}, "", "/checkout");
+        initRouting();
+      }
     });
   });
 
@@ -1335,7 +1335,7 @@ function initBuilderPage() {
     goToStep(2);
   });
 
-  /* Barre sticky mobile (étape 1) : CTA = même action que Voir le récapitulatif, Changer = scroll vers les modèles */
+  /* Barre sticky mobile (étape 2 créateur) : CTA = Continuer (vers récap puis checkout), Changer = scroll vers les modèles */
   const stickyCta = document.getElementById("builder-sticky-cta");
   const stickyChange = document.getElementById("builder-sticky-change");
   const templatesEl = document.getElementById("builder-templates");
@@ -1417,10 +1417,13 @@ function initCheckoutPage() {
     e.preventDefault();
     if (!isMobile() || !checkoutMain) return;
     const current = parseInt(checkoutMain.getAttribute("data-mobile-step") || "0", 10);
-    if (current <= 0) return;
+    if (current <= 1) {
+      history.pushState({}, "", "/creer-ma-carte");
+      initRouting();
+      return;
+    }
     const prev = current - 1;
     setMobileStep(prev);
-    if (prev === 0) return;
     if (prev === 1) emailInput?.focus();
     if (prev === 2) passwordInput?.focus();
   });
