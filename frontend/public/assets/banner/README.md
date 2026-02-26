@@ -8,13 +8,12 @@ Dépose ton fichier dans ce dossier (`frontend/public/assets/banner/`) avec **ex
 
 | Fichier       | Usage                    |
 |---------------|--------------------------|
-| **hero.jpg**  | Bannière image (ou .png, .webp) |
-| **hero.mp4**  | Bannière vidéo (lecture auto, muet, en boucle) |
+| **hero.mp4**  | Bannière vidéo (prioritaire, lecture auto, muet, boucle) |
+| **hero.jpg**  | Bannière image (fallback si pas de vidéo ; ou .png, .webp) |
 
-- **Image** : renomme ton fichier en `hero.jpg` (ou `hero.png` / `hero.webp`) et place-le ici.  
-  Formats conseillés : JPG ou WebP. Largeur recommandée : 1920px ou plus.
-- **Vidéo** : renomme en `hero.mp4` et place-le ici.  
-  Si les deux (image + vidéo) sont présents, la **vidéo** est utilisée en priorité.
+- **Vidéo** : dépose ta vidéo ici sous le nom **`hero.mp4`**. Elle s’affiche en priorité (autoplay, muet, en boucle).
+- **Image** : optionnel, renomme en `hero.jpg` (ou .png / .webp) comme repli ou bannière statique.  
+  Si `hero.mp4` est présent, c’est toujours la vidéo qui est utilisée.
 
 ## Après avoir ajouté le fichier
 
