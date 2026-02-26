@@ -47,6 +47,16 @@
   letter-spacing: -0.02em;
   color: #fff;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.landing-logo-img {
+  height: 36px;
+  width: auto;
+  max-height: 40px;
+  object-fit: contain;
+  vertical-align: middle;
 }
 
 .landing-nav {
