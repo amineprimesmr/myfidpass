@@ -99,12 +99,15 @@
       <header class="checkout-header">
         <div class="checkout-header-inner">
           <a href="/" class="checkout-logo"><img src="/assets/logo.png" alt="Fidpass" class="landing-logo-img"></a>
-          <span class="checkout-badge">🔒 CHECKOUT</span>
         </div>
       </header>
       <main class="checkout-main">
         <div class="checkout-main-left">
-          <h1 class="checkout-title">REJOINDRE FIDPASS</h1>
+          <div class="checkout-title-row">
+            <a href="#" id="checkout-mobile-back" class="checkout-mobile-only checkout-mobile-back" aria-label="Retour">← Retour</a>
+            <h1 class="checkout-title">REJOINDRE FIDPASS</h1>
+            <span class="checkout-badge">CHECKOUT</span>
+          </div>
           <div class="checkout-steps">
             <section class="checkout-step checkout-step-open" id="checkout-step-1" data-step="1">
               <h2 class="checkout-step-title">1. SAISIR VOTRE ADRESSE E-MAIL</h2>
@@ -202,6 +205,7 @@
               </div>
               <p class="checkout-order-trial">7 jours gratuits, puis 49 €/mois. Sans engagement.</p>
             </div>
+            <button type="button" id="checkout-mobile-continue" class="checkout-mobile-only checkout-order-cta">CONTINUER</button>
           </div>
         </aside>
       </main>

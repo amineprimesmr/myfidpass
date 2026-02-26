@@ -57,6 +57,7 @@ function getRoute() {
 
 function initRouting() {
   const route = getRoute();
+  document.body.classList.toggle("page-checkout", route.type === "checkout");
 
   if (route.type === "fidelity") {
     landingEl.classList.add("hidden");
@@ -1123,6 +1124,7 @@ function initBuilderPage() {
 }
 
 function initCheckoutPage() {
+  const checkoutMain = document.querySelector(".checkout-main");
   const step1 = document.getElementById("checkout-step-1");
   const step2 = document.getElementById("checkout-step-2");
   const step3 = document.getElementById("checkout-step-3");
@@ -1133,6 +1135,10 @@ function initCheckoutPage() {
   const next2 = document.getElementById("checkout-next-2");
   const paymentBtn = document.getElementById("checkout-payment");
   const errorEl = document.getElementById("checkout-error");
+  const mobileContinueBtn = document.getElementById("checkout-mobile-continue");
+  const mobileBackLink = document.getElementById("checkout-mobile-back");
+
+  const isMobile = () => window.matchMedia("(max-width: 899px)").matches;
 
   function showStep(stepNum) {
     [step1, step2, step3].forEach((el, i) => {
@@ -1140,10 +1146,48 @@ function initCheckoutPage() {
     });
   }
 
+  function setMobileStep(step) {
+    if (!checkoutMain) return;
+    checkoutMain.setAttribute("data-mobile-step", String(step));
+    if (step >= 1) showStep(step);
+    window.scrollTo(0, 0);
+  }
+
   if (getAuthToken()) {
     showStep(3);
+    if (isMobile()) setMobileStep(3);
     document.getElementById("checkout-payment")?.focus();
+  } else if (isMobile()) {
+    setMobileStep(0);
   }
+
+  window.addEventListener("resize", () => {
+    if (!checkoutMain) return;
+    if (isMobile()) {
+      if (!checkoutMain.getAttribute("data-mobile-step")) setMobileStep(0);
+    } else {
+      checkoutMain.removeAttribute("data-mobile-step");
+    }
+  });
+
+  mobileContinueBtn?.addEventListener("click", () => {
+    if (!isMobile()) return;
+    setMobileStep(1);
+    emailInput?.focus();
+  });
+
+  mobileBackLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (!isMobile() || !checkoutMain) return;
+    const current = parseInt(checkoutMain.getAttribute("data-mobile-step") || "0", 10);
+    if (current <= 0) return;
+    const prev = current - 1;
+    setMobileStep(prev);
+    if (prev === 0) return;
+    if (prev === 1) emailInput?.focus();
+    if (prev === 2) passwordInput?.focus();
+  });
+
   function showError(msg) {
     if (errorEl) {
       errorEl.textContent = msg || "";
@@ -1160,6 +1204,7 @@ function initCheckoutPage() {
     }
     showError("");
     showStep(2);
+    if (isMobile()) setMobileStep(2);
     passwordInput?.focus();
   });
 
@@ -1191,6 +1236,7 @@ function initCheckoutPage() {
       }
       setAuthToken(data.token);
       showStep(3);
+      if (isMobile()) setMobileStep(3);
       if (paymentBtn) paymentBtn.focus();
     } catch (e) {
       showError("Impossible de créer le compte. Vérifiez votre connexion.");
