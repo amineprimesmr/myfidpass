@@ -62,6 +62,11 @@ body {
   object-fit: cover;
 }
 
+/* Cacher la bannière vidéo globale quand on est sur la page builder (vidéo uniquement dans l’étape 1) */
+#landing.builder-visible .site-banner-media {
+  display: none !important;
+}
+
 /* Bannière promo */
 .site-banner {
   background: #4a53ff;

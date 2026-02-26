@@ -137,6 +137,7 @@ function initRouting() {
   const legalContent = document.getElementById("landing-legal-content");
 
   if (route.type === "templates") {
+    if (landingEl) landingEl.classList.add("builder-visible");
     if (landingMain) landingMain.classList.add("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
     if (landingTemplates) {
@@ -165,6 +166,7 @@ function initRouting() {
     landingLegal.classList.remove("hidden");
     legalContent.innerHTML = route.page === "mentions" ? getMentionsLegalesHtml() : getPolitiqueConfidentialiteHtml();
   } else {
+    if (landingEl) landingEl.classList.remove("builder-visible");
     if (landingMain) landingMain.classList.remove("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
     if (landingTemplates) landingTemplates.classList.add("hidden");
@@ -1060,6 +1062,23 @@ function initBuilderPage() {
     } catch (_) {}
   }
 
+  const sliderEl = document.getElementById("builder-wallet-slider");
+  const dotsContainer = document.getElementById("builder-phone-dots");
+  const templateIds = CARD_TEMPLATES.map((t) => t.id);
+
+  function getTemplateIndex(templateId) {
+    const i = templateIds.indexOf(templateId);
+    return i >= 0 ? i : 0;
+  }
+
+  function setSliderPosition(index) {
+    if (sliderEl) sliderEl.style.transform = `translateX(-${index * 100}%)`;
+    dotsContainer?.querySelectorAll(".builder-phone-dot").forEach((dot, i) => {
+      dot.classList.toggle("active", i === index);
+      dot.setAttribute("aria-current", i === index ? "true" : null);
+    });
+  }
+
   function setTemplateSelection(templateId) {
     state.selectedTemplateId = templateId;
     document.querySelectorAll(".builder-template-card").forEach((btn) => {
@@ -1067,6 +1086,7 @@ function initBuilderPage() {
       btn.classList.toggle("builder-template-selected", isSelected);
       btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
     });
+    setSliderPosition(getTemplateIndex(templateId));
     saveDraft();
   }
 
@@ -1082,6 +1102,38 @@ function initBuilderPage() {
   document.querySelectorAll(".builder-template-card").forEach((btn) => {
     btn.addEventListener("click", () => setTemplateSelection(btn.getAttribute("data-template")));
   });
+
+  dotsContainer?.querySelectorAll(".builder-phone-dot").forEach((dot) => {
+    dot.addEventListener("click", () => {
+      const index = parseInt(dot.getAttribute("data-index"), 10);
+      if (!Number.isNaN(index) && CARD_TEMPLATES[index]) setTemplateSelection(CARD_TEMPLATES[index].id);
+    });
+  });
+
+  /* Swipe / glissement sur le mockup iPhone (touch + souris) */
+  const phoneMockup = document.getElementById("builder-phone-mockup");
+  if (phoneMockup && sliderEl) {
+    let startX = 0;
+    let dragStarted = false;
+    function handleStart(clientX) {
+      startX = clientX;
+      dragStarted = true;
+    }
+    function handleEnd(clientX) {
+      if (!dragStarted) return;
+      const diff = startX - clientX;
+      const threshold = 40;
+      const idx = getTemplateIndex(state.selectedTemplateId);
+      if (diff > threshold && idx < CARD_TEMPLATES.length - 1) setTemplateSelection(CARD_TEMPLATES[idx + 1].id);
+      else if (diff < -threshold && idx > 0) setTemplateSelection(CARD_TEMPLATES[idx - 1].id);
+      dragStarted = false;
+      startX = 0;
+    }
+    phoneMockup.addEventListener("touchstart", (e) => { handleStart(e.changedTouches?.[0]?.clientX ?? 0); }, { passive: true });
+    phoneMockup.addEventListener("touchend", (e) => { handleEnd(e.changedTouches?.[0]?.clientX ?? 0); }, { passive: true });
+    phoneMockup.addEventListener("mousedown", (e) => { handleStart(e.clientX); });
+    window.addEventListener("mouseup", (e) => { handleEnd(e.clientX); });
+  }
 
   const cartOverlay = document.getElementById("cart-overlay");
   const cartClose = document.getElementById("cart-close");
@@ -1803,6 +1855,7 @@ const landingTemplates = document.getElementById("landing-templates");
 
 function showBuilderInPlace(queryString) {
   if (!landingTemplates || !landingMain) return;
+  if (landingEl) landingEl.classList.add("builder-visible");
   landingMain.classList.add("hidden");
   if (document.getElementById("landing-legal")) document.getElementById("landing-legal").classList.add("hidden");
   landingTemplates.classList.remove("hidden");
@@ -1812,6 +1865,7 @@ function showBuilderInPlace(queryString) {
 }
 
 function showLandingMainInPlace() {
+  if (landingEl) landingEl.classList.remove("builder-visible");
   if (landingMain) landingMain.classList.remove("hidden");
   if (document.getElementById("landing-legal")) document.getElementById("landing-legal").classList.add("hidden");
   if (landingTemplates) landingTemplates.classList.add("hidden");

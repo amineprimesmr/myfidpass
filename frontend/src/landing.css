@@ -732,6 +732,175 @@
   opacity: 0.5;
 }
 
+/* Blocs par étape */
+.builder-step-block {
+  display: block;
+}
+.builder-step-block.hidden {
+  display: none !important;
+}
+
+/* Étape 1 : vidéo uniquement ici */
+.builder-step-1-media {
+  width: 100%;
+  min-height: 200px;
+  max-height: 38vh;
+  overflow: hidden;
+  background: #0d0d0d;
+  border-radius: 0 0 12px 12px;
+  margin: 0 0 1.5rem;
+  position: relative;
+}
+.builder-step-1-media-img,
+.builder-step-1-media-video {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  max-height: 38vh;
+  object-fit: cover;
+  display: block;
+}
+.builder-step-1-media-video {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.builder-step-1-content {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* Mockup iPhone + slider cartes wallet */
+.builder-phone-mockup {
+  margin: 0 auto 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.builder-phone-frame {
+  width: min(280px, 85vw);
+  aspect-ratio: 9 / 19.5;
+  max-height: 520px;
+  background: linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-radius: 2.25rem;
+  padding: 12px;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.35),
+    0 0 0 3px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+.builder-phone-notch {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 24px;
+  background: #0a0a0a;
+  border-radius: 0 0 14px 14px;
+  z-index: 2;
+}
+.builder-phone-screen {
+  width: 100%;
+  height: 100%;
+  background: #1c1c1e;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  position: relative;
+}
+.builder-wallet-slider {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+.builder-wallet-card {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  padding-top: 2rem;
+  box-sizing: border-box;
+  min-height: 0;
+}
+.builder-wallet-card-header {
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px 10px 0 0;
+  font-weight: 700;
+  font-size: clamp(0.7rem, 2.2vw, 0.8rem);
+  color: #fff;
+  flex-shrink: 0;
+}
+.builder-wallet-card-body {
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+  border-radius: 0 0 10px 10px;
+  color: #fff;
+}
+.builder-wallet-card-pts {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  font-weight: 800;
+}
+.builder-wallet-card-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+.builder-wallet-card-barcode {
+  height: 24px;
+  margin-top: auto;
+  flex-shrink: 0;
+  background: repeating-linear-gradient(90deg, #000 0, #000 2px, transparent 2px, transparent 4px);
+  border-radius: 4px;
+}
+/* Thèmes des cartes dans le mockup */
+.builder-wallet-card-classic .builder-wallet-card-header,
+.builder-wallet-card-classic .builder-wallet-card-body { background: #0a7c42; color: #fff; }
+.builder-wallet-card-classic .builder-wallet-card-label { color: #e8f5e9; }
+.builder-wallet-card-bold .builder-wallet-card-header,
+.builder-wallet-card-bold .builder-wallet-card-body { background: #c41e3a; color: #fff; }
+.builder-wallet-card-bold .builder-wallet-card-label { color: #ffd700; }
+.builder-wallet-card-elegant .builder-wallet-card-header,
+.builder-wallet-card-elegant .builder-wallet-card-body { background: #8b7355; color: #fff; }
+.builder-wallet-card-elegant .builder-wallet-card-label { color: #f5f0e6; }
+
+.builder-phone-dots {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+.builder-phone-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--landing-border);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.builder-phone-dot:hover {
+  background: var(--landing-muted);
+}
+.builder-phone-dot.active,
+.builder-phone-dot[aria-current="true"] {
+  background: var(--landing-accent);
+  transform: scale(1.2);
+}
+
 .builder-title {
   font-size: clamp(1.4rem, 3vw, 1.75rem);
   font-weight: 800;

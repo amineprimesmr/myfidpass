@@ -637,64 +637,110 @@
         </div>
       </main>
 
-      <!-- Page créateur de carte : 3 modèles, identité, compte. Personnalisation (couleurs, logo) dans l'app après paiement. -->
+      <!-- Page créateur de carte : étape 1 = vidéo + iPhone mockup + modèles ; étape 2+ sans vidéo. -->
       <main id="landing-templates" class="landing-builder hidden">
         <div class="builder-inner">
           <a href="/" class="builder-back">← Retour à l'accueil</a>
           <div class="builder-steps">
-            <span class="builder-step active">1. Choisissez un modèle</span>
+            <span class="builder-step active" data-step="1">1. Choisissez un modèle</span>
             <span class="builder-step-sep">→</span>
-            <span class="builder-step" id="builder-step-2">2. Créez votre carte</span>
+            <span class="builder-step" id="builder-step-2" data-step="2">2. Créez votre carte</span>
             <span class="builder-step-sep">→</span>
             <span class="builder-step" id="builder-step-3">3. Votre panier</span>
             <span class="builder-step-sep">→</span>
             <span class="builder-step" id="builder-step-4">4. Partagez</span>
           </div>
 
-          <div id="builder-form-block" class="builder-form-block">
-            <h1 class="builder-title">À quoi ressemblera votre carte</h1>
-            <p class="builder-subtitle">Choisissez un modèle ci-dessous. Vous pourrez personnaliser les couleurs et le logo après le paiement dans votre espace.</p>
-
-            <div class="builder-templates" id="builder-templates">
-              <button type="button" class="builder-template-card builder-template-selected" id="builder-template-classic" data-template="classic" aria-pressed="true">
-                <span class="builder-template-name">Classique</span>
-                <div class="builder-template-preview builder-template-preview-classic">
-                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                  <div class="builder-template-preview-body">
-                    <span class="builder-template-preview-pts">0 pts</span>
-                    <span class="builder-template-preview-label">Points</span>
-                  </div>
-                  <div class="builder-template-preview-barcode"></div>
-                </div>
-              </button>
-              <button type="button" class="builder-template-card" id="builder-template-bold" data-template="bold" aria-pressed="false">
-                <span class="builder-template-name">Moderne</span>
-                <div class="builder-template-preview builder-template-preview-bold">
-                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                  <div class="builder-template-preview-body">
-                    <span class="builder-template-preview-pts">0 pts</span>
-                    <span class="builder-template-preview-label">Points</span>
-                  </div>
-                  <div class="builder-template-preview-barcode"></div>
-                </div>
-              </button>
-              <button type="button" class="builder-template-card" id="builder-template-elegant" data-template="elegant" aria-pressed="false">
-                <span class="builder-template-name">Élégant</span>
-                <div class="builder-template-preview builder-template-preview-elegant">
-                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                  <div class="builder-template-preview-body">
-                    <span class="builder-template-preview-pts">0 pts</span>
-                    <span class="builder-template-preview-label">Points</span>
-                  </div>
-                  <div class="builder-template-preview-barcode"></div>
-                </div>
-              </button>
+          <!-- Étape 1 uniquement : vidéo + mockup iPhone + choix du modèle -->
+          <div id="builder-step-1-block" class="builder-step-block builder-step-1-block">
+            <div class="builder-step-1-media" aria-hidden="false">
+              <img src="/assets/banner/hero.jpg" alt="" class="builder-step-1-media-img" onerror="this.style.display='none'">
+              <video class="builder-step-1-media-video" src="/assets/banner/hero.mp4" autoplay muted loop playsinline preload="auto" onloadeddata="var i=this.parentElement.querySelector('.builder-step-1-media-img'); if(i) i.style.display='none';"></video>
             </div>
-
-            <div class="builder-fields builder-fields-compact">
+            <div class="builder-step-1-content">
+              <h1 class="builder-title">À quoi ressemblera votre carte</h1>
+              <p class="builder-subtitle">Glissez les cartes dans l’aperçu ou choisissez un modèle ci-dessous. Personnalisation des couleurs et du logo après paiement.</p>
+              <div class="builder-phone-mockup" id="builder-phone-mockup">
+                <div class="builder-phone-frame">
+                  <div class="builder-phone-notch"></div>
+                  <div class="builder-phone-screen">
+                    <div class="builder-wallet-slider" id="builder-wallet-slider">
+                      <div class="builder-wallet-card builder-wallet-card-classic" data-template="classic">
+                        <div class="builder-wallet-card-header"><span>Votre commerce</span></div>
+                        <div class="builder-wallet-card-body">
+                          <span class="builder-wallet-card-pts">0 pts</span>
+                          <span class="builder-wallet-card-label">Points</span>
+                        </div>
+                        <div class="builder-wallet-card-barcode"></div>
+                      </div>
+                      <div class="builder-wallet-card builder-wallet-card-bold" data-template="bold">
+                        <div class="builder-wallet-card-header"><span>Votre commerce</span></div>
+                        <div class="builder-wallet-card-body">
+                          <span class="builder-wallet-card-pts">0 pts</span>
+                          <span class="builder-wallet-card-label">Points</span>
+                        </div>
+                        <div class="builder-wallet-card-barcode"></div>
+                      </div>
+                      <div class="builder-wallet-card builder-wallet-card-elegant" data-template="elegant">
+                        <div class="builder-wallet-card-header"><span>Votre commerce</span></div>
+                        <div class="builder-wallet-card-body">
+                          <span class="builder-wallet-card-pts">0 pts</span>
+                          <span class="builder-wallet-card-label">Points</span>
+                        </div>
+                        <div class="builder-wallet-card-barcode"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="builder-phone-dots" id="builder-phone-dots" aria-label="Choisir le modèle">
+                  <button type="button" class="builder-phone-dot active" data-index="0" aria-label="Classique" aria-current="true"></button>
+                  <button type="button" class="builder-phone-dot" data-index="1" aria-label="Moderne"></button>
+                  <button type="button" class="builder-phone-dot" data-index="2" aria-label="Élégant"></button>
+                </div>
+              </div>
+              <div class="builder-templates" id="builder-templates">
+                <button type="button" class="builder-template-card builder-template-selected" id="builder-template-classic" data-template="classic" aria-pressed="true">
+                  <span class="builder-template-name">Classique</span>
+                  <div class="builder-template-preview builder-template-preview-classic">
+                    <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                    <div class="builder-template-preview-body">
+                      <span class="builder-template-preview-pts">0 pts</span>
+                      <span class="builder-template-preview-label">Points</span>
+                    </div>
+                    <div class="builder-template-preview-barcode"></div>
+                  </div>
+                </button>
+                <button type="button" class="builder-template-card" id="builder-template-bold" data-template="bold" aria-pressed="false">
+                  <span class="builder-template-name">Moderne</span>
+                  <div class="builder-template-preview builder-template-preview-bold">
+                    <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                    <div class="builder-template-preview-body">
+                      <span class="builder-template-preview-pts">0 pts</span>
+                      <span class="builder-template-preview-label">Points</span>
+                    </div>
+                    <div class="builder-template-preview-barcode"></div>
+                  </div>
+                </button>
+                <button type="button" class="builder-template-card" id="builder-template-elegant" data-template="elegant" aria-pressed="false">
+                  <span class="builder-template-name">Élégant</span>
+                  <div class="builder-template-preview builder-template-preview-elegant">
+                    <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                    <div class="builder-template-preview-body">
+                      <span class="builder-template-preview-pts">0 pts</span>
+                      <span class="builder-template-preview-label">Points</span>
+                    </div>
+                    <div class="builder-template-preview-barcode"></div>
+                  </div>
+                </button>
+              </div>
+              <div class="builder-fields builder-fields-compact">
                 <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Voir le récapitulatif</button>
               </div>
+            </div>
           </div>
+
+          <!-- Étape 2 : Créez votre carte (sans vidéo, UX épurée) — réservé pour formulaire identité si besoin plus tard -->
+          <div id="builder-form-block" class="builder-form-block builder-step-block builder-step-2-block hidden" aria-hidden="true"></div>
 
           <!-- Drawer Votre panier (style WHOOP) — affiché après clic "Voir le récapitulatif" -->
           <div id="cart-overlay" class="cart-overlay hidden" aria-hidden="true">
