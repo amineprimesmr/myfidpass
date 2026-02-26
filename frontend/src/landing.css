@@ -1032,6 +1032,11 @@
     padding: 2rem 0 3rem;
   }
 
+  .landing-hero-subtitle {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
   .landing-steps-list li {
     flex-direction: column;
     align-items: flex-start;
