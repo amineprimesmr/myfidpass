@@ -1096,7 +1096,84 @@ function initBuilderPage() {
   const cartBadge = document.getElementById("builder-header-cart-badge");
   if (cartBadge) cartBadge.textContent = "1";
 
-  const state = { selectedTemplateId: "classic" };
+  const state = { selectedTemplateId: "classic", currentStep: 1 };
+  const step1Block = document.getElementById("builder-step-1-block");
+  const step2Block = document.getElementById("builder-step-2-block");
+  const headerSteps = document.querySelectorAll(".builder-header-step");
+  const BUILDER_STEP_IDS = ["builder-step-1-block", "builder-step-2-block"];
+
+  function updateHeaderSteps() {
+    const step = state.currentStep;
+    headerSteps.forEach((el) => {
+      const n = parseInt(el.getAttribute("data-step"), 10);
+      const isActive = n === step;
+      const isLocked = n > step;
+      el.classList.toggle("builder-header-step-active", isActive);
+      el.classList.toggle("builder-header-step-locked", isLocked);
+      el.setAttribute("aria-current", isActive ? "step" : null);
+      el.disabled = isLocked;
+    });
+  }
+
+  function showBlock(block) {
+    if (!block) return;
+    block.classList.remove("hidden");
+    block.setAttribute("aria-hidden", "false");
+    block.classList.add("builder-step-in");
+    const onInEnd = () => {
+      block.removeEventListener("animationend", onInEnd);
+      block.classList.remove("builder-step-in");
+    };
+    block.addEventListener("animationend", onInEnd);
+  }
+
+  function hideBlock(block) {
+    if (!block) return;
+    block.classList.add("hidden");
+    block.setAttribute("aria-hidden", "true");
+  }
+
+  function goToStep(stepNum) {
+    if (stepNum < 1 || stepNum > 2) return;
+    const targetBlock = stepNum === 1 ? step1Block : step2Block;
+    const currentBlock = stepNum === 1 ? step2Block : step1Block;
+    if (!targetBlock || !currentBlock) return;
+
+    const onOutEnd = () => {
+      currentBlock.removeEventListener("animationend", onOutEnd);
+      currentBlock.classList.remove("builder-step-out");
+      hideBlock(currentBlock);
+      showBlock(targetBlock);
+      state.currentStep = stepNum;
+      updateHeaderSteps();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    if (currentBlock.classList.contains("hidden")) {
+      showBlock(targetBlock);
+      hideBlock(currentBlock);
+      state.currentStep = stepNum;
+      updateHeaderSteps();
+      return;
+    }
+
+    currentBlock.classList.add("builder-step-out");
+    currentBlock.addEventListener("animationend", onOutEnd);
+  }
+
+  updateHeaderSteps();
+
+  headerSteps.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const n = parseInt(btn.getAttribute("data-step"), 10);
+      if (n <= state.currentStep) goToStep(n);
+    });
+  });
+
+  document.getElementById("builder-recap-back")?.addEventListener("click", () => goToStep(1));
+  document.getElementById("builder-step-2-continue")?.addEventListener("click", () => {
+    window.location.replace("/checkout");
+  });
 
   function loadDraft() {
     try {
@@ -1210,7 +1287,8 @@ function initBuilderPage() {
   }
 
   btnSubmit?.addEventListener("click", () => {
-    window.location.replace("/checkout");
+    state.currentStep = 2;
+    goToStep(2);
   });
 
   cartClose?.addEventListener("click", closeCart);
@@ -1219,8 +1297,6 @@ function initBuilderPage() {
     e.preventDefault();
     closeCart();
   });
-
-
   cartContinue?.addEventListener("click", () => {
     closeCart();
     window.location.replace("/checkout");
