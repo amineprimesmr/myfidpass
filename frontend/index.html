@@ -18,8 +18,8 @@
   <body>
     <!-- Bannière média (image ou vidéo) : dépose hero.jpg ou hero.mp4 dans public/assets/banner/ -->
     <div class="site-banner-media" id="site-banner-media" style="display: none">
-      <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" onerror="this.style.display='none'" onload="document.getElementById('site-banner-media').style.display=''">
-      <video class="site-banner-media-video" src="/assets/banner/hero.mp4" autoplay muted loop playsinline preload="auto" onloadeddata="var m=document.getElementById('site-banner-media'); m.style.display=''; var img=m.querySelector('.site-banner-media-img'); if(img) img.style.display='none'" onerror="this.style.display='none'">
+      <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" onerror="this.style.display='none'" onload="var m=document.getElementById('site-banner-media'); if(m) m.style.display='';">
+      <video class="site-banner-media-video" src="/assets/banner/hero.mp4" autoplay muted loop playsinline preload="auto" onloadeddata="var m=document.getElementById('site-banner-media'); if(m){ m.style.display=''; var i=m.querySelector('.site-banner-media-img'); if(i) i.style.display='none'; }" onerror="this.style.display='none'">
       </video>
     </div>
     <!-- Bannière promo (toutes les pages) -->
