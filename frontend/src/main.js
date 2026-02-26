@@ -1104,7 +1104,9 @@ function initBuilderPage() {
     }
   }
 
-  btnSubmit?.addEventListener("click", () => openCart());
+  btnSubmit?.addEventListener("click", () => {
+    window.location.replace("/checkout");
+  });
 
   cartClose?.addEventListener("click", closeCart);
   cartBackdrop?.addEventListener("click", closeCart);
@@ -1121,13 +1123,6 @@ function initBuilderPage() {
 }
 
 function initCheckoutPage() {
-  const orderBar = document.getElementById("checkout-order-bar");
-  const orderToggle = document.getElementById("checkout-order-toggle");
-  orderToggle?.addEventListener("click", () => {
-    const expanded = orderBar?.getAttribute("aria-expanded") === "true";
-    orderBar?.setAttribute("aria-expanded", !expanded);
-  });
-
   const step1 = document.getElementById("checkout-step-1");
   const step2 = document.getElementById("checkout-step-2");
   const step3 = document.getElementById("checkout-step-3");

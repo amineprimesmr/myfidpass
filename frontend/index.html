@@ -94,7 +94,7 @@
       </main>
     </div>
 
-    <!-- Checkout (style WHOOP) : après panier, création compte puis paiement -->
+    <!-- Checkout (style WHOOP) : 2 colonnes = étapes à gauche, panier à droite -->
     <div id="checkout-app" class="hidden checkout-shell">
       <header class="checkout-header">
         <div class="checkout-header-inner">
@@ -102,42 +102,108 @@
           <span class="checkout-badge">🔒 CHECKOUT</span>
         </div>
       </header>
-      <div class="checkout-order-bar" id="checkout-order-bar">
-        <button type="button" class="checkout-order-toggle" id="checkout-order-toggle" aria-expanded="false">
-          <span class="checkout-order-chevron">›</span>
-          <span>DÉTAILS DE LA COMMANDE</span>
-        </button>
-      </div>
       <main class="checkout-main">
-        <h1 class="checkout-title">REJOINDRE FIDPASS</h1>
-
-        <div class="checkout-steps">
-          <section class="checkout-step checkout-step-open" id="checkout-step-1" data-step="1">
-            <h2 class="checkout-step-title">1. SAISIR VOTRE ADRESSE E-MAIL</h2>
-            <div class="checkout-step-content">
-              <input type="email" id="checkout-email" class="checkout-input" placeholder="Votre adresse e-mail" autocomplete="email" />
-              <button type="button" id="checkout-next-1" class="checkout-btn-next">SUIVANT</button>
-            </div>
-          </section>
-          <section class="checkout-step" id="checkout-step-2" data-step="2">
-            <h2 class="checkout-step-title">2. CRÉER VOTRE MOT DE PASSE</h2>
-            <div class="checkout-step-content">
-              <label class="checkout-label">Mot de passe (8 caractères minimum)</label>
-              <input type="password" id="checkout-password" class="checkout-input" placeholder="••••••••" autocomplete="new-password" minlength="8" />
-              <label class="checkout-label">Votre nom (optionnel)</label>
-              <input type="text" id="checkout-name" class="checkout-input" placeholder="Prénom ou nom du gérant" autocomplete="name" />
-              <button type="button" id="checkout-next-2" class="checkout-btn-next">SUIVANT</button>
-            </div>
-          </section>
-          <section class="checkout-step" id="checkout-step-3" data-step="3">
-            <h2 class="checkout-step-title">3. ENTRER LE MODE DE PAIEMENT</h2>
-            <div class="checkout-step-content">
-              <p class="checkout-step-desc">Vous serez redirigé vers notre partenaire de paiement sécurisé.</p>
-              <button type="button" id="checkout-payment" class="checkout-btn-payment">PAYER — 49 €/mois (7 jours gratuits)</button>
-              <p id="checkout-error" class="checkout-error hidden"></p>
-            </div>
-          </section>
+        <div class="checkout-main-left">
+          <h1 class="checkout-title">REJOINDRE FIDPASS</h1>
+          <div class="checkout-steps">
+            <section class="checkout-step checkout-step-open" id="checkout-step-1" data-step="1">
+              <h2 class="checkout-step-title">1. SAISIR VOTRE ADRESSE E-MAIL</h2>
+              <div class="checkout-step-content">
+                <input type="email" id="checkout-email" class="checkout-input" placeholder="Votre adresse e-mail" autocomplete="email" />
+                <button type="button" id="checkout-next-1" class="checkout-btn-next">SUIVANT</button>
+              </div>
+            </section>
+            <section class="checkout-step" id="checkout-step-2" data-step="2">
+              <h2 class="checkout-step-title">2. CRÉER VOTRE MOT DE PASSE</h2>
+              <div class="checkout-step-content">
+                <label class="checkout-label">Mot de passe (8 caractères minimum)</label>
+                <input type="password" id="checkout-password" class="checkout-input" placeholder="••••••••" autocomplete="new-password" minlength="8" />
+                <label class="checkout-label">Votre nom (optionnel)</label>
+                <input type="text" id="checkout-name" class="checkout-input" placeholder="Prénom ou nom du gérant" autocomplete="name" />
+                <button type="button" id="checkout-next-2" class="checkout-btn-next">SUIVANT</button>
+              </div>
+            </section>
+            <section class="checkout-step" id="checkout-step-3" data-step="3">
+              <h2 class="checkout-step-title">3. ENTRER LE MODE DE PAIEMENT</h2>
+              <div class="checkout-step-content">
+                <p class="checkout-step-desc">Vous serez redirigé vers notre partenaire de paiement sécurisé.</p>
+                <button type="button" id="checkout-payment" class="checkout-btn-payment">PAYER — 49 €/mois (7 jours gratuits)</button>
+                <p id="checkout-error" class="checkout-error hidden"></p>
+              </div>
+            </section>
+          </div>
         </div>
+        <aside class="checkout-main-right" aria-label="Détails de la commande">
+          <div class="checkout-order-card">
+            <h2 class="checkout-order-title">DÉTAILS DE LA COMMANDE</h2>
+            <section class="checkout-order-section">
+              <h3 class="checkout-order-section-title">Votre offre Fidpass</h3>
+              <ul class="checkout-order-list">
+                <li class="checkout-order-item">
+                  <span class="checkout-order-item-icon" aria-hidden="true">📱</span>
+                  <div class="checkout-order-item-content">
+                    <span class="checkout-order-item-name">Carte de fidélité</span>
+                    <span class="checkout-order-item-desc">49 €/mois sans engagement · Essai gratuit 7 jours</span>
+                    <span class="checkout-order-item-qty">Qté : 1</span>
+                  </div>
+                  <span class="checkout-order-item-price">49 €<span class="checkout-order-period">/mois</span></span>
+                </li>
+              </ul>
+            </section>
+            <section class="checkout-order-section">
+              <h3 class="checkout-order-section-title">Inclus dans votre offre</h3>
+              <ul class="checkout-order-list checkout-order-list-included">
+                <li class="checkout-order-item">
+                  <span class="checkout-order-item-icon" aria-hidden="true">🖥️</span>
+                  <div class="checkout-order-item-content">
+                    <span class="checkout-order-item-name">Accès logiciel</span>
+                    <span class="checkout-order-item-desc">Tableau de bord complet en ligne</span>
+                  </div>
+                  <span class="checkout-order-item-free">Offert</span>
+                </li>
+                <li class="checkout-order-item">
+                  <span class="checkout-order-item-icon" aria-hidden="true">📲</span>
+                  <div class="checkout-order-item-content">
+                    <span class="checkout-order-item-name">Application Myfidpass</span>
+                    <span class="checkout-order-item-desc">Gérez vos clients depuis partout</span>
+                  </div>
+                  <span class="checkout-order-item-free">Offert</span>
+                </li>
+                <li class="checkout-order-item">
+                  <span class="checkout-order-item-icon" aria-hidden="true">👥</span>
+                  <div class="checkout-order-item-content">
+                    <span class="checkout-order-item-name">Données clients</span>
+                    <span class="checkout-order-item-desc">Historique des passages et points</span>
+                  </div>
+                  <span class="checkout-order-item-free">Offert</span>
+                </li>
+                <li class="checkout-order-item">
+                  <span class="checkout-order-item-icon" aria-hidden="true">📊</span>
+                  <div class="checkout-order-item-content">
+                    <span class="checkout-order-item-name">Statistiques et rapports</span>
+                    <span class="checkout-order-item-desc">Suivez la fidélisation en temps réel</span>
+                  </div>
+                  <span class="checkout-order-item-free">Offert</span>
+                </li>
+                <li class="checkout-order-item">
+                  <span class="checkout-order-item-icon" aria-hidden="true">✓</span>
+                  <div class="checkout-order-item-content">
+                    <span class="checkout-order-item-name">Sans engagement</span>
+                    <span class="checkout-order-item-desc">Résiliez quand vous voulez</span>
+                  </div>
+                  <span class="checkout-order-item-free">Offert</span>
+                </li>
+              </ul>
+            </section>
+            <div class="checkout-order-summary">
+              <div class="checkout-order-summary-row">
+                <span class="checkout-order-summary-label">Sous-total</span>
+                <span class="checkout-order-summary-value">49,00 € <span class="checkout-order-period">/ mois</span></span>
+              </div>
+              <p class="checkout-order-trial">7 jours gratuits, puis 49 €/mois. Sans engagement.</p>
+            </div>
+          </div>
+        </aside>
       </main>
       <footer class="checkout-footer">
         <a href="/" class="checkout-footer-logo">Fidpass</a>
