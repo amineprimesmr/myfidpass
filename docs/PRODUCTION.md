@@ -12,11 +12,11 @@ En production, le **frontend** (myfidpass.fr) et l’**API** (backend Node) sont
 - Déployer le **backend** (Railway, Render, etc.) et exposer l’URL (ex. `https://api.myfidpass.fr`).
 - Sur **Vercel** (projet Fidpass) : **Settings → Environment Variables** → ajouter **`VITE_API_URL`** = `https://api.myfidpass.fr` (sans slash final).
 - Redéployer le frontend (nouveau build avec cette variable).
-
-**Optionnel — recherche d’entreprise Google :** pour activer l’autocomplétion « Nom de votre établissement » (suggestions d’entreprises pendant la saisie), ajouter sur Vercel **`VITE_GOOGLE_PLACES_API_KEY`** avec une clé API Google Cloud (APIs « Maps JavaScript API » et « Places API » activées, restriction par référent HTTP recommandée). Sans cette variable, le champ reste une saisie libre.
 - Sur le backend : définir **`FRONTEND_URL`** = `https://myfidpass.fr`, **`NODE_ENV`** = `production` et **`JWT_SECRET`** (chaîne aléatoire forte pour signer les tokens de connexion restaurateur).
 
 Après ça, le bouton « Créer ma carte » enverra bien la requête à l’API et la création pourra réussir.
+
+**Optionnel — recherche d’entreprise Google :** voir le guide [Recherche Google (autocomplete)](#recherche-google-autocomplete) plus bas.
 
 ---
 
@@ -83,6 +83,25 @@ Pour **scaler fort** (plusieurs instances API, haute dispo) :
 - Ajouter **rate limiting** et **cache** si besoin.
 
 Pour l’accueil de « tout le monde » au début (nombre raisonnable de commerces et de clients), l’architecture actuelle est **adaptée** si le backend est bien déployé et configuré.
+
+---
+
+## Recherche Google (autocomplete)
+
+**C’est optionnel.** Sans clé Google, le champ « Nom de votre établissement » est un simple champ texte.
+
+Pour avoir les **suggestions d’entreprises** quand on tape (comme sur les exemples avec « powered by Google ») :
+
+1. Va sur [Google Cloud Console](https://console.cloud.google.com/).
+2. Crée un projet ou sélectionne un projet existant.
+3. **Activer deux APIs** : dans le menu **APIs & Services → Library**, cherche et active :
+   - **Maps JavaScript API**
+   - **Places API**
+4. **Créer une clé API** : **APIs & Services → Credentials → Create credentials → API key**. Copie la clé.
+5. (Recommandé) **Restreindre la clé** : dans Credentials, clique sur la clé → **Application restrictions** → **HTTP referrers** → ajoute par exemple `https://myfidpass.fr/*` et `http://localhost:*`.
+6. Sur **Vercel** : **Settings → Environment Variables** → ajoute **Name** = `VITE_GOOGLE_PLACES_API_KEY`, **Value** = la clé. Puis **redéploie** le frontend.
+
+Après redéploiement, l’autocomplétion s’affichera sur le champ établissement (page d’accueil et page « Créer ma carte »).
 
 ---
 
