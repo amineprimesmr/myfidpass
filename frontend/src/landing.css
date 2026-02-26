@@ -723,13 +723,13 @@
   background: #fff;
   border-bottom: 1px solid #333;
   padding: 0.75rem 1.25rem;
+  padding-right: 1.25rem;
 }
 .builder-header-inner {
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
 }
 .builder-header-logo {
@@ -766,7 +766,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  flex: 0 0 auto;
+  flex: 1;
+}
+.builder-header-cart-wrap {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 .builder-header-step {
   width: 32px;
@@ -785,9 +789,6 @@
 .builder-header-step-active {
   background: #000;
   color: #fff;
-}
-.builder-header-cart-wrap {
-  flex-shrink: 0;
 }
 .builder-header-cart {
   position: relative;
@@ -873,6 +874,22 @@
   margin: 0 auto;
 }
 
+/* Titre + sous-titre au-dessus des deux colonnes */
+.builder-step-1-heading {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.builder-step-1-heading .builder-title {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+.builder-step-1-heading .builder-subtitle {
+  margin-bottom: 0;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .builder-step-1-left {
   flex-shrink: 0;
 }
@@ -882,6 +899,9 @@
 
 /* Desktop : iPhone à gauche, designs à droite — organisation harmonieuse */
 @media (min-width: 900px) {
+  .builder-step-1-heading {
+    margin-bottom: 2.5rem;
+  }
   .builder-step-1-content {
     display: flex;
     flex-direction: row;
@@ -899,18 +919,12 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding-top: 0.25rem;
-  }
-  .builder-step-1-right .builder-title {
-    margin-top: 0;
-    text-align: left;
-  }
-  .builder-step-1-right .builder-subtitle {
-    text-align: left;
+    padding-top: 0;
   }
   .builder-step-1-right .builder-choose-label {
     text-align: left;
-    margin-top: 1.25rem;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
   }
   .builder-step-1-right .builder-phone-dots {
     justify-content: flex-start;
@@ -922,6 +936,29 @@
   .builder-step-1-right .builder-fields {
     margin-top: auto;
   }
+}
+
+/* Bouton style CONTINUER (WHOOP) : noir, blanc, majuscules */
+.builder-btn-continuer,
+.landing-btn.builder-btn-continuer {
+  display: block;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  font-family: inherit;
+}
+.builder-btn-continuer:hover {
+  background: #333;
+  color: #fff;
 }
 
 /* Mockup iPhone : image en fond, carte visible par-dessus */
