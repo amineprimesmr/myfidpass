@@ -462,6 +462,26 @@
   font-size: 0.9rem;
   color: var(--landing-muted);
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.landing-hero-trustpilot-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  color: #00b67a;
+}
+.landing-hero-star {
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: middle;
+}
+.landing-hero-trustpilot-text {
+  font-weight: 600;
+  color: var(--landing-text);
 }
 
 /* Sections communes */
