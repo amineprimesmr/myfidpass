@@ -20,6 +20,29 @@
     <div class="site-banner">
       <p class="site-banner-text">Essayez Fidpass GRATUITEMENT aujourd'hui <a href="/creer-ma-carte" class="site-banner-link">Rejoindre</a></p>
     </div>
+    <!-- Header parcours (étapes 1–2–3) : visible sur /creer-ma-carte et /checkout -->
+    <header class="builder-header hidden" id="builder-header" aria-hidden="true">
+      <div class="builder-header-inner">
+        <a href="/" class="builder-header-logo" aria-label="Fidpass">
+          <img src="/assets/logodark.png" alt="" class="builder-header-logo-img" onerror="this.style.display='none'; this.closest('.builder-header-logo')?.classList.add('show-fallback');">
+          <span class="builder-header-logo-fallback" aria-hidden="true">Fidpass</span>
+        </a>
+        <nav class="builder-header-steps" aria-label="Étapes du parcours">
+          <button type="button" class="builder-header-step builder-header-step-active" data-step="1" aria-current="step" aria-label="Étape 1">1</button>
+          <button type="button" class="builder-header-step" data-step="2" aria-label="Étape 2">2</button>
+          <button type="button" class="builder-header-step" data-step="3" aria-label="Étape 3">3</button>
+        </nav>
+        <div class="builder-header-cart-wrap">
+          <a href="/checkout" class="builder-header-cart" aria-label="Panier">
+            <svg class="builder-header-cart-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            <span class="builder-header-cart-badge" id="builder-header-cart-badge">0</span>
+          </a>
+        </div>
+      </div>
+    </header>
     <!-- Auth : même shell que landing (header noir, fond clair) -->
     <div id="auth-app" class="hidden unified-shell">
       <header class="landing-header">
@@ -488,31 +511,6 @@
             <a href="#contact">Contact</a>
           </nav>
           <a href="/creer-ma-carte" class="landing-cta landing-cta-desk">Obtenir ma carte</a>
-        </div>
-      </header>
-
-      <!-- Header page builder (style WHOOP : logo + étapes numérotées + panier) — visible uniquement sur /creer-ma-carte -->
-      <header class="builder-header hidden" id="builder-header" aria-hidden="true">
-        <div class="builder-header-inner">
-          <a href="/" class="builder-header-logo" aria-label="Fidpass">
-            <img src="/assets/logodark.png" alt="" class="builder-header-logo-img" onerror="this.style.display='none'; this.closest('.builder-header-logo')?.classList.add('show-fallback');">
-            <span class="builder-header-logo-fallback" aria-hidden="true">Fidpass</span>
-          </a>
-          <nav class="builder-header-steps" aria-label="Étapes">
-            <button type="button" class="builder-header-step builder-header-step-active" data-step="1" aria-current="step" aria-label="Étape 1">1</button>
-            <button type="button" class="builder-header-step" data-step="2" aria-label="Étape 2">2</button>
-            <button type="button" class="builder-header-step" data-step="3" aria-label="Étape 3">3</button>
-            <button type="button" class="builder-header-step" data-step="4" aria-label="Étape 4">4</button>
-          </nav>
-          <div class="builder-header-cart-wrap">
-            <a href="/checkout" class="builder-header-cart" aria-label="Panier">
-              <svg class="builder-header-cart-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-              </svg>
-              <span class="builder-header-cart-badge" id="builder-header-cart-badge">0</span>
-            </a>
-          </div>
         </div>
       </header>
 

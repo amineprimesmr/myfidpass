@@ -2076,6 +2076,11 @@
 /* Cacher la bannière promo sur la page checkout (comme WHOOP, page épurée) */
 body.page-checkout .site-banner { display: none !important; }
 
+/* Quand le header parcours (étapes 1-2-3) est affiché sur checkout, masquer l’ancien header checkout */
+.checkout-shell.checkout-with-builder-header .checkout-header {
+  display: none !important;
+}
+
 /* Header blanc avec bordure, comme WHOOP */
 .checkout-header {
   background: #fff;

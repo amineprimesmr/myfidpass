@@ -78,10 +78,10 @@ body {
 #landing.builder-visible #builder-header.hidden {
   display: flex !important;
 }
-#landing #builder-header {
+#builder-header {
   display: none;
 }
-#landing #builder-header:not(.hidden) {
+#builder-header:not(.hidden) {
   display: flex;
 }
 

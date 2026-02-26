@@ -74,12 +74,42 @@ function getRoute() {
   return { type: "landing" };
 }
 
+/** Met à jour l’affichage des étapes dans le header parcours (1, 2, 3). Utilisé par le builder et par la page checkout. */
+function setBuilderHeaderStep(activeStep) {
+  const headerSteps = document.querySelectorAll(".builder-header-step");
+  headerSteps.forEach((el) => {
+    const n = parseInt(el.getAttribute("data-step"), 10);
+    const isActive = n === activeStep;
+    const isLocked = n > activeStep;
+    el.classList.toggle("builder-header-step-active", isActive);
+    el.classList.toggle("builder-header-step-locked", isLocked);
+    el.setAttribute("aria-current", isActive ? "step" : null);
+    el.disabled = isLocked;
+  });
+}
+
+/** Clics sur le header parcours quand on est sur la page checkout (étape 3) : retour aux étapes 1 ou 2. */
+function attachBuilderHeaderNavForCheckout() {
+  document.querySelectorAll(".builder-header-step").forEach((btn) => {
+    const n = parseInt(btn.getAttribute("data-step"), 10);
+    if (n >= 3) return;
+    btn.onclick = () => {
+      const url = n === 2 ? "/creer-ma-carte?step=2" : "/creer-ma-carte";
+      history.pushState({}, "", url);
+      initRouting();
+    };
+  });
+}
+
 function initRouting() {
   const route = getRoute();
   document.body.classList.toggle("page-checkout", route.type === "checkout");
 
+  const builderHeader = document.getElementById("builder-header");
+
   if (route.type === "fidelity") {
     landingEl.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
@@ -95,6 +125,7 @@ function initRouting() {
       return null;
     }
     landingEl.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
     fidelityAppEl.classList.add("hidden");
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (authAppEl) authAppEl.classList.add("hidden");
@@ -107,6 +138,7 @@ function initRouting() {
 
   if (route.type === "auth") {
     landingEl.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
     fidelityAppEl.classList.add("hidden");
     if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
@@ -124,7 +156,16 @@ function initRouting() {
     if (authAppEl) authAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
     if (offersAppEl) offersAppEl.classList.add("hidden");
-    if (checkoutAppEl) checkoutAppEl.classList.remove("hidden");
+    if (checkoutAppEl) {
+      checkoutAppEl.classList.remove("hidden");
+      checkoutAppEl.classList.add("checkout-with-builder-header");
+    }
+    if (builderHeader) {
+      builderHeader.classList.remove("hidden");
+      builderHeader.setAttribute("aria-hidden", "false");
+      setBuilderHeaderStep(3);
+      attachBuilderHeaderNavForCheckout();
+    }
     initCheckoutPage();
     return null;
   }
@@ -132,6 +173,7 @@ function initRouting() {
   if (route.type === "dashboard") {
     fidelityAppEl.classList.add("hidden");
     landingEl.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
     if (authAppEl) authAppEl.classList.add("hidden");
     if (appAppEl) appAppEl.classList.add("hidden");
     if (offersAppEl) offersAppEl.classList.add("hidden");
@@ -149,7 +191,10 @@ function initRouting() {
   if (authAppEl) authAppEl.classList.add("hidden");
   if (appAppEl) appAppEl.classList.add("hidden");
   if (offersAppEl) offersAppEl.classList.add("hidden");
-  if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
+  if (checkoutAppEl) {
+    checkoutAppEl.classList.add("hidden");
+    checkoutAppEl.classList.remove("checkout-with-builder-header");
+  }
   const landingMain = document.getElementById("landing-main");
   const landingLegal = document.getElementById("landing-legal");
   const landingTemplates = document.getElementById("landing-templates");
@@ -160,7 +205,6 @@ function initRouting() {
     const bannerMedia = document.getElementById("site-banner-media");
     const siteBanner = document.querySelector(".site-banner");
     const landingHeader = document.getElementById("landing-header");
-    const builderHeader = document.getElementById("builder-header");
     if (bannerMedia) bannerMedia.classList.add("hidden");
     if (siteBanner) siteBanner.classList.add("hidden");
     if (landingHeader) landingHeader.classList.add("hidden");
@@ -1100,19 +1144,9 @@ function initBuilderPage() {
   const step1Block = document.getElementById("builder-step-1-block");
   const step2Block = document.getElementById("builder-step-2-block");
   const headerSteps = document.querySelectorAll(".builder-header-step");
-  const BUILDER_STEP_IDS = ["builder-step-1-block", "builder-step-2-block"];
 
   function updateHeaderSteps() {
-    const step = state.currentStep;
-    headerSteps.forEach((el) => {
-      const n = parseInt(el.getAttribute("data-step"), 10);
-      const isActive = n === step;
-      const isLocked = n > step;
-      el.classList.toggle("builder-header-step-active", isActive);
-      el.classList.toggle("builder-header-step-locked", isLocked);
-      el.setAttribute("aria-current", isActive ? "step" : null);
-      el.disabled = isLocked;
-    });
+    setBuilderHeaderStep(state.currentStep);
   }
 
   function showBlock(block) {
@@ -1161,6 +1195,16 @@ function initBuilderPage() {
     currentBlock.addEventListener("animationend", onOutEnd);
   }
 
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("step") === "2") {
+    state.currentStep = 2;
+    if (step1Block && step2Block) {
+      step1Block.classList.add("hidden");
+      step1Block.setAttribute("aria-hidden", "true");
+      step2Block.classList.remove("hidden");
+      step2Block.setAttribute("aria-hidden", "false");
+    }
+  }
   updateHeaderSteps();
 
   headerSteps.forEach((btn) => {
