@@ -859,9 +859,9 @@
   margin: 0 auto;
 }
 
-/* Mockup iPhone : image + écran dynamique + templates par-dessus */
+/* Mockup iPhone : image en fond, carte visible par-dessus */
 .builder-phone-mockup {
-  margin: 0 auto 2rem;
+  margin: 0 auto 0;
   position: relative;
   width: min(280px, 85vw);
   max-width: 320px;
@@ -880,7 +880,7 @@
   height: 100%;
   object-fit: contain;
   pointer-events: none;
-  z-index: 2;
+  z-index: 1;
 }
 .builder-phone-screen {
   position: absolute;
@@ -891,28 +891,17 @@
   background: #1c1c1e;
   border-radius: 11% / 7%;
   overflow: hidden;
-  z-index: 1;
+  z-index: 2;
 }
-.builder-phone-overlay {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 1rem;
-  width: 110%;
-  max-width: 340px;
-  z-index: 4;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 0.5rem 0.5rem;
-  background: linear-gradient(to top, rgba(250,250,250,0.98) 60%, transparent);
-  border-radius: 12px 12px 0 0;
-  pointer-events: none;
+.builder-choose-label {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--landing-text);
+  text-align: center;
 }
-.builder-phone-overlay .builder-phone-dots,
-.builder-phone-overlay .builder-templates {
-  pointer-events: auto;
+.builder-phone-dots {
+  margin-bottom: 1rem;
 }
 .builder-wallet-slider {
   display: flex;
@@ -1046,12 +1035,13 @@
   margin: 0 0 1.5rem;
 }
 
-/* Grille des 3 modèles de carte */
+/* Grille des 3 modèles de carte (en dessous de l’iPhone) */
 .builder-templates {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-top: 0;
+  margin-bottom: 2.5rem;
 }
 
 @media (max-width: 700px) {

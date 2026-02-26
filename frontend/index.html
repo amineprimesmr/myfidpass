@@ -684,6 +684,7 @@
               <p class="builder-subtitle">Glissez les cartes dans l’aperçu ou choisissez un modèle ci-dessous. Personnalisation des couleurs et du logo après paiement.</p>
               <div class="builder-phone-mockup" id="builder-phone-mockup">
                 <div class="builder-phone-frame">
+                  <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="this.style.display='none'" loading="lazy">
                   <div class="builder-phone-screen">
                     <div class="builder-wallet-slider" id="builder-wallet-slider">
                       <div class="builder-wallet-card builder-wallet-card-classic" data-template="classic">
@@ -712,15 +713,15 @@
                       </div>
                     </div>
                   </div>
-                  <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="this.style.display='none'" loading="lazy">
                 </div>
-                <div class="builder-phone-overlay">
-                  <div class="builder-phone-dots" id="builder-phone-dots" aria-label="Choisir le modèle">
-                    <button type="button" class="builder-phone-dot active" data-index="0" aria-label="Classique" aria-current="true"></button>
-                    <button type="button" class="builder-phone-dot" data-index="1" aria-label="Moderne"></button>
-                    <button type="button" class="builder-phone-dot" data-index="2" aria-label="Élégant"></button>
-                  </div>
-                  <div class="builder-templates" id="builder-templates">
+              </div>
+              <p class="builder-choose-label">Choisissez un modèle</p>
+              <div class="builder-phone-dots" id="builder-phone-dots" aria-label="Choisir le modèle">
+                <button type="button" class="builder-phone-dot active" data-index="0" aria-label="Classique" aria-current="true"></button>
+                <button type="button" class="builder-phone-dot" data-index="1" aria-label="Moderne"></button>
+                <button type="button" class="builder-phone-dot" data-index="2" aria-label="Élégant"></button>
+              </div>
+              <div class="builder-templates" id="builder-templates">
                 <button type="button" class="builder-template-card builder-template-selected" id="builder-template-classic" data-template="classic" aria-pressed="true">
                   <span class="builder-template-name">Classique</span>
                   <div class="builder-template-preview builder-template-preview-classic">
@@ -754,8 +755,6 @@
                     <div class="builder-template-preview-barcode"></div>
                   </div>
                 </button>
-              </div>
-                </div>
               </div>
               <div class="builder-fields builder-fields-compact">
                 <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Voir le récapitulatif</button>
