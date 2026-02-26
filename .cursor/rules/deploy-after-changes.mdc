@@ -1,0 +1,14 @@
+---
+description: Déployer en production après chaque modification du projet
+alwaysApply: true
+---
+
+# Déploiement après modifications
+
+Après toute modification du code ou des contenus du projet Fidpass (frontend, backend, HTML, CSS, JS, docs, config) :
+
+1. **Exécuter le déploiement** : `npm run deploy` (à la racine du projet).
+2. Le script fait `git add -A`, commit « Deploy: mise à jour YYYY-MM-DD », puis `git push origin main`, ce qui déclenche Vercel (front) et Railway (back).
+3. Ne pas oublier cette étape : l’utilisateur attend que les changements soient en ligne sur myfidpass.fr.
+
+Exception : si l’utilisateur demande explicitement de ne pas déployer, ou si les changements sont uniquement des brouillons / fichiers temporaires.

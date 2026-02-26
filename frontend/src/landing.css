@@ -22,13 +22,13 @@
   display: none !important;
 }
 
-/* Header */
+/* Header (fond noir) */
 .landing-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--landing-surface);
-  border-bottom: 1px solid var(--landing-border);
+  background: #000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1rem 1.5rem;
 }
 
@@ -45,7 +45,7 @@
   font-weight: 800;
   font-size: 1.5rem;
   letter-spacing: -0.02em;
-  color: var(--landing-text);
+  color: #fff;
   text-decoration: none;
 }
 
@@ -57,14 +57,14 @@
 }
 
 .landing-nav a {
-  color: var(--landing-muted);
+  color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
 }
 
 .landing-nav a:hover {
-  color: var(--landing-text);
+  color: #fff;
 }
 
 .landing-cta {
