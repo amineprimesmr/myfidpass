@@ -1627,15 +1627,19 @@ function initPlacesAutocomplete() {
   const initInput = (id) => {
     const input = document.getElementById(id);
     if (!input || input.dataset.placesInit) return;
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      types: ["establishment"],
-      fields: ["name", "formatted_address", "place_id"],
-    });
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (place.name) input.value = place.name;
-    });
-    input.dataset.placesInit = "1";
+    try {
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        types: ["establishment"],
+        fields: ["name", "formatted_address", "place_id"],
+      });
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.name) input.value = place.name;
+      });
+      input.dataset.placesInit = "1";
+    } catch (e) {
+      // Clé invalide ou API non activée : on laisse le champ en saisie libre (pas d'autocomplete)
+    }
   };
   initInput("landing-etablissement");
   initInput("builder-name");

@@ -32,6 +32,18 @@ Là, c’est pour que quand on tape dans « Nom de votre établissement », des 
 
 Après redéploiement, les suggestions d’entreprises s’afficheront quand on tape dans le champ.
 
+### Si tu vois des icônes d’erreur (⚠️) dans le champ quand tu tapes
+
+Ça veut dire que la clé Google est refusée au moment de la recherche. À vérifier :
+
+1. **APIs activées** : dans Google Cloud → API et services → activer **Maps JavaScript API** et **Places API**.
+2. **Restriction de la clé** : dans Clés et identifiants → ta clé → « Référents HTTP » avec au moins :
+   - `https://myfidpass.fr/*`
+   - `http://localhost:*`
+3. **Variable Vercel** : le nom doit être exactement **`VITE_GOOGLE_PLACES_API_KEY`** (avec **VITE_** au début). Après l’avoir ajoutée ou modifiée, **redéployer** le site (sinon le build ne voit pas la clé).
+
+Si tu préfères enlever la recherche Google : supprime la variable `VITE_GOOGLE_PLACES_API_KEY` sur Vercel et redéploie. Le champ redeviendra un simple champ texte sans icônes d’erreur.
+
 ---
 
 ## 3. Checklist rapide
