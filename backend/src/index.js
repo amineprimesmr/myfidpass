@@ -10,6 +10,7 @@ import businessesRouter from "./routes/businesses.js";
 import authRouter from "./routes/auth.js";
 import devRouter from "./routes/dev.js";
 import placePhotoRouter from "./routes/place-photo.js";
+import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -25,6 +26,11 @@ const allowedOrigins =
     ? [FRONTEND_URL, FRONTEND_URL.replace(/\/$/, ""), "https://myfidpass.fr", "https://www.myfidpass.fr"].filter(Boolean)
     : true;
 app.use(cors({ origin: allowedOrigins, credentials: true }));
+
+// Webhook Stripe doit recevoir le body brut (pour vérification de signature)
+app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
+app.post("/api/payment/webhook", paymentWebhookHandler);
+
 app.use(express.json({ limit: "100kb" }));
 
 // Parse JWT si présent (Authorization: Bearer) pour toutes les routes
@@ -33,6 +39,7 @@ app.use(optionalAuth);
 app.use("/api/auth", authRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
+app.use("/api/payment", paymentRouter);
 app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
 

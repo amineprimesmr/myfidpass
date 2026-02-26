@@ -59,6 +59,8 @@ Pour l’instant il n’y a **pas** d’interface pour « voir toute la base » 
 - **Certificats Apple Wallet** présents sur le serveur (ou chargés via variables d’env).
 - **HTTPS** partout (Vercel et hébergeur backend le gèrent en général).
 
+**Paiement Stripe (abonnement)** : un guide pas à pas est dans **[docs/STRIPE-SETUP.md](STRIPE-SETUP.md)**. Une fois Stripe configuré (produit + prix, clés, webhook), les utilisateurs peuvent payer l’offre Starter depuis « Choisir une offre ».
+
 **À améliorer pour une prod « parfaite » :**
 
 - **Auth** : le dashboard est protégé par un lien secret (token dans l’URL). Pour plus de sécurité, ajouter une vraie connexion (email/mot de passe ou magic link) plus tard.

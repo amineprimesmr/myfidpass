@@ -1,19 +1,11 @@
-/* Auth (login / register) — même univers visuel que la landing (fond blanc) */
+/* Auth — dans le shell unifié (header noir + fond landing) */
 #auth-app {
-  --auth-bg: #f8f9fa;
+  --auth-bg: #fafafa;
   --auth-surface: #fff;
-  --auth-border: #e0e0e0;
+  --auth-border: #e5e5e5;
   --auth-text: #1a1a1a;
-  --auth-muted: #555;
+  --auth-muted: #6b7280;
   --auth-accent: #0a7c42;
-  font-family: "Outfit", system-ui, sans-serif;
-  min-height: 100vh;
-  background: var(--auth-bg);
-  color: var(--auth-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
 }
 
 .auth-container {

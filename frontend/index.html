@@ -20,10 +20,20 @@
     <div class="site-banner">
       <p class="site-banner-text">Essayez Fidpass GRATUITEMENT aujourd'hui <a href="/creer-ma-carte" class="site-banner-link">Rejoindre</a></p>
     </div>
-    <!-- Auth : connexion / inscription (visible sur /login, /register) -->
-    <div id="auth-app" class="hidden">
+    <!-- Auth : même shell que landing (header noir, fond clair) -->
+    <div id="auth-app" class="hidden unified-shell">
+      <header class="landing-header">
+        <div class="landing-header-inner">
+          <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Fidpass" class="landing-logo-img"></a>
+          <nav class="landing-nav landing-nav-desk">
+            <a href="/creer-ma-carte">Créer ma carte</a>
+            <a href="/" class="landing-nav-login">Accueil</a>
+          </nav>
+          <a href="/creer-ma-carte" class="landing-cta landing-cta-desk">Obtenir ma carte</a>
+        </div>
+      </header>
+      <main class="unified-main auth-main">
       <div class="auth-container">
-        <a href="/" class="auth-logo">Fidpass</a>
         <div id="auth-tabs" class="auth-tabs">
           <button type="button" class="auth-tab active" data-tab="login">Connexion</button>
           <button type="button" class="auth-tab" data-tab="register">Créer un compte</button>
@@ -54,37 +64,49 @@
         </div>
         <p class="auth-footer"><a href="/">← Retour à l'accueil</a></p>
       </div>
+      </main>
     </div>
 
-    <!-- Choisir une offre (visible sur /choisir-offre, compte requis) -->
-    <div id="offers-app" class="hidden offers-page">
-      <header class="offers-header">
-        <a href="/" class="offers-logo">Fidpass</a>
-        <a href="/app" class="offers-back">← Mon espace</a>
+    <!-- Choisir une offre : même shell (header noir, fond clair) -->
+    <div id="offers-app" class="hidden unified-shell">
+      <header class="landing-header">
+        <div class="landing-header-inner">
+          <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Fidpass" class="landing-logo-img"></a>
+          <nav class="landing-nav landing-nav-desk">
+            <a href="/app">Mon espace</a>
+            <a href="/" class="landing-nav-login">Accueil</a>
+          </nav>
+          <a href="/app" class="landing-cta landing-cta-desk">Mon espace</a>
+        </div>
       </header>
-      <main class="offers-main">
+      <main class="unified-main offers-main">
         <h1 class="offers-title">Choisissez votre offre</h1>
         <p class="offers-subtitle">Accédez à votre espace et créez vos cartes fidélité (Apple Wallet et Google Wallet).</p>
         <div class="offers-grid" id="offers-grid">
           <article class="offers-card offers-card-featured">
-            <h2 class="offers-card-title">Starter</h2>
-            <p class="offers-card-desc">1 carte de fidélité, tableau de bord, QR code illimité.</p>
-            <p class="offers-card-price"><span class="offers-card-amount">9 €</span> / mois</p>
-            <a href="/app" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Accéder à mon espace</a>
-          </article>
-          <article class="offers-card">
-            <h2 class="offers-card-title">Pro</h2>
-            <p class="offers-card-desc">Jusqu'à 5 cartes, idéal pour plusieurs établissements.</p>
-            <p class="offers-card-price"><span class="offers-card-amount">19 €</span> / mois</p>
-            <button type="button" class="landing-btn landing-btn-secondary landing-btn-block" disabled>Bientôt disponible</button>
+            <h2 class="offers-card-title">Fidpass</h2>
+            <p class="offers-card-desc">Carte de fidélité, tableau de bord, accès logiciel, application Myfidpass. Sans engagement, 7 jours gratuits.</p>
+            <p class="offers-card-price"><span class="offers-card-amount">49 €</span> / mois</p>
+            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Choisir — 49 €/mois</button>
           </article>
         </div>
         <p class="offers-footer"><a href="/app">J'ai déjà un abonnement → aller à mon espace</a></p>
       </main>
     </div>
 
-    <!-- App connectée (visible sur /app) -->
-    <div id="app-app" class="hidden">
+    <!-- App connectée : même shell (header noir, fond clair) -->
+    <div id="app-app" class="hidden app-unified-shell">
+      <header class="landing-header app-header-bar">
+        <div class="landing-header-inner">
+          <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Fidpass" class="landing-logo-img"></a>
+          <nav class="landing-nav landing-nav-desk">
+            <a href="/">Accueil</a>
+            <a href="/creer-ma-carte">Créer une carte</a>
+            <span class="app-header-user" id="app-header-email"></span>
+          </nav>
+          <a href="/app" class="landing-cta landing-cta-desk">Mon espace</a>
+        </div>
+      </header>
       <aside class="app-sidebar" id="app-sidebar">
         <div class="app-sidebar-brand">
           <a href="/" class="app-sidebar-logo">Fidpass</a>
@@ -351,13 +373,11 @@
         </div>
       </div>
 
-      <!-- Vidéo bannière : avance au scroll (effet scroll-linked) -->
-      <div class="site-banner-scroll-wrap" id="site-banner-scroll-wrap">
-        <div class="site-banner-media site-banner-media-sticky" id="site-banner-media">
-          <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" id="site-banner-media-img" onerror="this.style.display='none'">
-          <video class="site-banner-media-video" id="site-banner-video" src="/assets/banner/hero.mp4" muted playsinline preload="auto" data-scroll-video>
-          </video>
-        </div>
+      <!-- Vidéo bannière (juste sous le menu) -->
+      <div class="site-banner-media" id="site-banner-media">
+        <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" onerror="this.style.display='none'">
+        <video class="site-banner-media-video" src="/assets/banner/hero.mp4" autoplay muted loop playsinline preload="auto" onloadeddata="var i=document.getElementById('site-banner-media').querySelector('.site-banner-media-img'); if(i) i.style.display='none';">
+        </video>
       </div>
 
       <main id="landing-main" class="landing-main">
@@ -493,7 +513,9 @@
             <span class="builder-step-sep">→</span>
             <span class="builder-step" id="builder-step-2">2. Créez votre carte</span>
             <span class="builder-step-sep">→</span>
-            <span class="builder-step" id="builder-step-3">3. Partagez</span>
+            <span class="builder-step" id="builder-step-3">3. Votre panier</span>
+            <span class="builder-step-sep">→</span>
+            <span class="builder-step" id="builder-step-4">4. Partagez</span>
           </div>
 
           <div id="builder-form-block" class="builder-form-block">
@@ -558,8 +580,105 @@
                 <div class="builder-logged-in hidden" id="builder-logged-in">
                   <p class="builder-hint">Connecté. Votre carte sera enregistrée sur votre compte.</p>
                 </div>
-                <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Créer ma carte et mon compte</button>
+                <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Voir le récapitulatif</button>
               </div>
+          </div>
+
+          <!-- Drawer Votre panier (style WHOOP) — affiché après clic "Voir le récapitulatif" -->
+          <div id="cart-overlay" class="cart-overlay hidden" aria-hidden="true">
+            <div class="cart-backdrop" id="cart-backdrop"></div>
+            <aside id="cart-drawer" class="cart-drawer" role="dialog" aria-labelledby="cart-title" aria-modal="true">
+              <header class="cart-header">
+                <h2 id="cart-title" class="cart-title">VOTRE PANIER</h2>
+                <button type="button" class="cart-close" id="cart-close" aria-label="Fermer le panier">×</button>
+              </header>
+              <div class="cart-body">
+                <section class="cart-section">
+                  <h3 class="cart-section-title">Votre offre Fidpass</h3>
+                  <p class="cart-section-edit"><a href="#" id="cart-edit-offer">Modifier l'abonnement</a></p>
+                  <ul class="cart-list">
+                    <li class="cart-item">
+                      <span class="cart-item-icon" aria-hidden="true">📱</span>
+                      <div class="cart-item-content">
+                        <span class="cart-item-name">Carte de fidélité</span>
+                        <span class="cart-item-desc">49 €/mois sans engagement · Essai gratuit 7 jours</span>
+                        <span class="cart-item-qty">Qté : 1</span>
+                      </div>
+                      <span class="cart-item-price">49 €<span class="cart-item-period">/mois</span></span>
+                    </li>
+                  </ul>
+                </section>
+                <section class="cart-section">
+                  <h3 class="cart-section-title">Inclus dans votre offre</h3>
+                  <ul class="cart-list cart-list-included">
+                    <li class="cart-item">
+                      <span class="cart-item-icon" aria-hidden="true">🖥️</span>
+                      <div class="cart-item-content">
+                        <span class="cart-item-name">Accès logiciel</span>
+                        <span class="cart-item-desc">Tableau de bord complet en ligne</span>
+                      </div>
+                      <span class="cart-item-price cart-item-free">Offert</span>
+                    </li>
+                    <li class="cart-item">
+                      <span class="cart-item-icon" aria-hidden="true">📲</span>
+                      <div class="cart-item-content">
+                        <span class="cart-item-name">Application Myfidpass</span>
+                        <span class="cart-item-desc">Gérez vos clients depuis partout</span>
+                      </div>
+                      <span class="cart-item-price cart-item-free">Offert</span>
+                    </li>
+                    <li class="cart-item">
+                      <span class="cart-item-icon" aria-hidden="true">👥</span>
+                      <div class="cart-item-content">
+                        <span class="cart-item-name">Données clients</span>
+                        <span class="cart-item-desc">Historique des passages et points</span>
+                      </div>
+                      <span class="cart-item-price cart-item-free">Offert</span>
+                    </li>
+                    <li class="cart-item">
+                      <span class="cart-item-icon" aria-hidden="true">🔔</span>
+                      <div class="cart-item-content">
+                        <span class="cart-item-name">Notifications push</span>
+                        <span class="cart-item-desc">Alertes et rappels personnalisables</span>
+                      </div>
+                      <span class="cart-item-price cart-item-free">Offert</span>
+                    </li>
+                    <li class="cart-item">
+                      <span class="cart-item-icon" aria-hidden="true">🎁</span>
+                      <div class="cart-item-content">
+                        <span class="cart-item-name">Offres et remises</span>
+                        <span class="cart-item-desc">Créez des campagnes pour vos clients</span>
+                      </div>
+                      <span class="cart-item-price cart-item-free">Offert</span>
+                    </li>
+                    <li class="cart-item">
+                      <span class="cart-item-icon" aria-hidden="true">📊</span>
+                      <div class="cart-item-content">
+                        <span class="cart-item-name">Statistiques et rapports</span>
+                        <span class="cart-item-desc">Suivez la fidélisation en temps réel</span>
+                      </div>
+                      <span class="cart-item-price cart-item-free">Offert</span>
+                    </li>
+                    <li class="cart-item">
+                      <span class="cart-item-icon" aria-hidden="true">✓</span>
+                      <div class="cart-item-content">
+                        <span class="cart-item-name">Sans engagement</span>
+                        <span class="cart-item-desc">Résiliez quand vous voulez</span>
+                      </div>
+                      <span class="cart-item-price cart-item-free">Offert</span>
+                    </li>
+                  </ul>
+                </section>
+              </div>
+              <footer class="cart-footer">
+                <div class="cart-summary">
+                  <span class="cart-summary-label">Sous-total</span>
+                  <span class="cart-summary-value">49,00 € <span class="cart-summary-period">/ mois</span></span>
+                </div>
+                <p class="cart-trial">7 jours gratuits, puis 49 €/mois. Sans engagement.</p>
+                <button type="button" id="cart-continue" class="cart-cta">CONTINUER</button>
+              </footer>
+            </aside>
           </div>
 
           <div id="builder-success-block" class="builder-success-block hidden">

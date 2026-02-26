@@ -335,6 +335,8 @@ function initAppPage() {
       const user = data.user;
       const businesses = data.businesses || [];
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
+      const headerEmail = document.getElementById("app-header-email");
+      if (headerEmail) headerEmail.textContent = user?.email || "";
 
       if (businesses.length === 0) {
         if (emptyEl) emptyEl.classList.remove("hidden");
@@ -1004,6 +1006,12 @@ function initBuilderPage() {
     saveDraft();
   }
 
+  document.querySelector(".builder-back")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (typeof showLandingMainInPlace === "function") showLandingMainInPlace();
+    else window.location.href = "/";
+  });
+
   loadDraft();
   if (etablissementFromUrl && !state.name) state.name = etablissementFromUrl;
   if (etablissementFromUrl && state.slug === "ma-carte") state.slug = slugify(etablissementFromUrl);
@@ -1030,7 +1038,13 @@ function initBuilderPage() {
     saveDraft();
   });
 
-  btnSubmit?.addEventListener("click", async () => {
+  const cartOverlay = document.getElementById("cart-overlay");
+  const cartClose = document.getElementById("cart-close");
+  const cartBackdrop = document.getElementById("cart-backdrop");
+  const cartEditOffer = document.getElementById("cart-edit-offer");
+  const cartContinue = document.getElementById("cart-continue");
+
+  function openCart() {
     const name = state.name.trim();
     if (!name) {
       inputName?.focus();
@@ -1041,12 +1055,9 @@ function initBuilderPage() {
       inputSlug?.focus();
       return;
     }
-
-    let token = getAuthToken();
-    if (!token) {
+    if (!getAuthToken()) {
       const email = builderAccountEmail?.value?.trim();
       const password = builderAccountPassword?.value;
-      const accountName = builderAccountName?.value?.trim();
       if (!email) {
         builderAccountEmail?.focus();
         return;
@@ -1055,6 +1066,42 @@ function initBuilderPage() {
         builderAccountPassword?.focus();
         return;
       }
+    }
+    if (cartOverlay) {
+      cartOverlay.classList.remove("hidden");
+      cartOverlay.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+  }
+
+  function closeCart() {
+    if (cartOverlay) {
+      cartOverlay.classList.remove("is-open");
+      cartOverlay.classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+  }
+
+  btnSubmit?.addEventListener("click", () => openCart());
+
+  cartClose?.addEventListener("click", closeCart);
+  cartBackdrop?.addEventListener("click", closeCart);
+  cartEditOffer?.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeCart();
+  });
+
+  async function submitFromCart() {
+    const name = state.name.trim();
+    const slug = state.slug || slugify(name);
+    if (!name || !slug) return;
+
+    let token = getAuthToken();
+    if (!token) {
+      const email = builderAccountEmail?.value?.trim();
+      const password = builderAccountPassword?.value;
+      const accountName = builderAccountName?.value?.trim();
+      if (!email || !password || String(password).length < 8) return;
       try {
         const regRes = await fetch(`${API_BASE}/api/auth/register`, {
           method: "POST",
@@ -1074,8 +1121,10 @@ function initBuilderPage() {
       }
     }
 
-    btnSubmit.disabled = true;
-    btnSubmit.textContent = "Création…";
+    if (cartContinue) {
+      cartContinue.disabled = true;
+      cartContinue.textContent = "Création…";
+    }
     const tpl = CARD_TEMPLATES.find((t) => t.id === state.selectedTemplateId) || CARD_TEMPLATES[0];
     try {
       const body = {
@@ -1087,8 +1136,7 @@ function initBuilderPage() {
         labelColor: tpl.label,
       };
 
-      const apiUrl = `${API_BASE}/api/businesses`;
-      const res = await fetch(apiUrl, {
+      const res = await fetch(`${API_BASE}/api/businesses`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(body),
@@ -1110,6 +1158,7 @@ function initBuilderPage() {
       const fidelityPath = `/fidelity/${data.slug}`;
       const fullLink = window.location.origin.replace(/\/$/, "") + fidelityPath;
 
+      closeCart();
       formBlock.classList.add("hidden");
       successBlock.classList.remove("hidden");
       successLinkInput.value = fullLink;
@@ -1126,10 +1175,14 @@ function initBuilderPage() {
         : (err.message || "Une erreur est survenue. Réessayez.");
       alert(message);
     } finally {
-      btnSubmit.disabled = false;
-      btnSubmit.textContent = "Créer ma carte et obtenir mon lien";
+      if (cartContinue) {
+        cartContinue.disabled = false;
+        cartContinue.textContent = "CONTINUER";
+      }
     }
-  });
+  }
+
+  cartContinue?.addEventListener("click", () => submitFromCart());
 
   btnCopyLink.addEventListener("click", () => {
     successLinkInput.select();
@@ -1174,6 +1227,37 @@ function initOffersPage() {
       }
     } catch (_) {}
   })();
+
+  const btnStarter = document.getElementById("offers-btn-starter");
+  if (btnStarter) {
+    btnStarter.addEventListener("click", async () => {
+      btnStarter.disabled = true;
+      btnStarter.textContent = "Redirection…";
+      try {
+        const res = await fetch(`${API_BASE}/api/payment/create-checkout-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ planId: "starter" }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.url) {
+          window.location.href = data.url;
+          return;
+        }
+        if (res.status === 503 && (data.code === "stripe_not_configured" || data.error?.includes("configuré"))) {
+          window.location.replace("/app");
+          return;
+        }
+        alert(data.error || "Impossible de créer la session de paiement. Vous pouvez accéder à l'espace directement.");
+        window.location.replace("/app");
+      } catch (_) {
+        alert("Erreur réseau. Vous pouvez accéder à l'espace directement.");
+        window.location.replace("/app");
+      }
+      btnStarter.disabled = false;
+      btnStarter.textContent = "Choisir — 49 €/mois";
+    });
+  }
 }
 
 function initDashboardPage() {
@@ -1643,8 +1727,28 @@ function runFidelityApp(slug) {
 
 }
 
-// Landing hero : redirection vers page choix de templates
+// Parcours unifié : transition accueil → créateur sans rechargement (même page, même UX)
 const landingHeroForm = document.getElementById("landing-hero-form");
+const landingMain = document.getElementById("landing-main");
+const landingTemplates = document.getElementById("landing-templates");
+
+function showBuilderInPlace(queryString) {
+  if (!landingTemplates || !landingMain) return;
+  landingMain.classList.add("hidden");
+  if (document.getElementById("landing-legal")) document.getElementById("landing-legal").classList.add("hidden");
+  landingTemplates.classList.remove("hidden");
+  const url = "/creer-ma-carte" + (queryString || "");
+  history.pushState({ step: "builder" }, "", url);
+  initBuilderPage();
+}
+
+function showLandingMainInPlace() {
+  if (landingMain) landingMain.classList.remove("hidden");
+  if (document.getElementById("landing-legal")) document.getElementById("landing-legal").classList.add("hidden");
+  if (landingTemplates) landingTemplates.classList.add("hidden");
+  history.replaceState(null, "", "/");
+}
+
 if (landingHeroForm) {
   landingHeroForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -1652,12 +1756,23 @@ if (landingHeroForm) {
     const placeIdInput = document.getElementById("landing-place-id");
     const name = input?.value?.trim();
     const placeId = placeIdInput?.value?.trim();
-    let url = "/creer-ma-carte";
-    if (name) url += `?etablissement=${encodeURIComponent(name)}`;
-    if (placeId) url += (name ? "&" : "?") + `place_id=${encodeURIComponent(placeId)}`;
-    window.location.href = url;
+    let qs = "";
+    if (name) qs += `?etablissement=${encodeURIComponent(name)}`;
+    if (placeId) qs += (qs ? "&" : "?") + `place_id=${encodeURIComponent(placeId)}`;
+    showBuilderInPlace(qs);
   });
 }
+
+window.addEventListener("popstate", () => {
+  const path = window.location.pathname.replace(/\/$/, "");
+  if (path === "/creer-ma-carte" && landingEl && !landingEl.classList.contains("hidden")) {
+    showBuilderInPlace(window.location.search);
+    return;
+  }
+  if (path === "/" && landingEl && !landingEl.classList.contains("hidden")) {
+    showLandingMainInPlace();
+  }
+});
 
 // Autocomplete Google Places (recherche d'entreprise) — optionnel si VITE_GOOGLE_PLACES_API_KEY est défini
 function initPlacesAutocomplete() {
@@ -1749,64 +1864,6 @@ if (landingMenuToggle && landingMenuOverlay) {
   });
 }
 
-/**
- * Vidéo hero : avance au scroll (scroll-linked video).
- * La vidéo reste fixe pendant qu’on scroll dans la zone bannière, la position de lecture suit le scroll.
- */
-function initScrollVideo() {
-  const wrap = document.getElementById("site-banner-scroll-wrap");
-  const video = document.getElementById("site-banner-video");
-  const fallbackImg = document.getElementById("site-banner-media-img");
-  const landingMain = document.getElementById("landing-main");
-  const landingEl = document.getElementById("landing");
-
-  if (!video || !wrap) return;
-
-  video.muted = true;
-  video.playsInline = true;
-
-  video.addEventListener("loadeddata", () => {
-    if (fallbackImg) fallbackImg.style.display = "none";
-  });
-
-  let ticking = false;
-  function updateVideoTime() {
-    if (!landingEl || landingEl.classList.contains("hidden")) return;
-    if (!landingMain || landingMain.classList.contains("hidden")) return;
-    if (!video.duration || !isFinite(video.duration)) return;
-
-    const rect = wrap.getBoundingClientRect();
-    const wrapTop = rect.top + window.scrollY;
-    const wrapHeight = wrap.offsetHeight;
-    const viewportHeight = window.innerHeight;
-    const scrollRange = Math.max(0, wrapHeight - viewportHeight);
-    if (scrollRange <= 0) {
-      video.currentTime = 0;
-      return;
-    }
-    const scrollY = window.scrollY;
-    const progress = (scrollY - wrapTop) / scrollRange;
-    const t = Math.max(0, Math.min(1, progress)) * video.duration;
-    video.currentTime = t;
-    ticking = false;
-  }
-
-  function onScroll() {
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(updateVideoTime);
-    }
-  }
-
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll, { passive: true });
-  video.addEventListener("loadedmetadata", () => {
-    updateVideoTime();
-  });
-  if (video.readyState >= 1) updateVideoTime();
-}
-
 // Bootstrap
 const slug = initRouting();
 if (slug) initFidelityApp(slug);
-if (document.getElementById("site-banner-scroll-wrap")) initScrollVideo();
