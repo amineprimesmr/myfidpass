@@ -483,6 +483,7 @@
                   <h2 class="builder-section-title">Identité</h2>
                   <label class="builder-label">Nom de l’établissement</label>
                   <input type="text" id="builder-name" class="builder-input" placeholder="Exemple : Starbucks, New-York 1" autocomplete="organization" />
+                  <p class="builder-helper builder-helper-tip">Tapez le nom de votre commerce puis <strong>cliquez sur une suggestion</strong> dans la liste pour appliquer automatiquement les couleurs.</p>
                   <p class="builder-helper">*Vous ne trouvez pas votre entreprise ? Pas d'inquiétude. Saisissez le nom de votre entreprise, la ville et le code postal.</p>
                   <label class="builder-label">Votre lien (modifiable)</label>
                   <input type="text" id="builder-slug" class="builder-input builder-input-slug" placeholder="cafe-nbk" />
@@ -492,6 +493,7 @@
                 <section class="builder-section" id="builder-section-colors">
                   <h2 class="builder-section-title">Couleurs</h2>
                   <p class="builder-colors-from-place hidden" id="builder-colors-from-place">Couleurs suggérées d'après votre établissement.</p>
+                  <p class="builder-colors-failed hidden" id="builder-colors-failed">Couleurs automatiques indisponibles. Choisissez les couleurs ci-dessous (et vérifiez que <strong>GOOGLE_PLACES_API_KEY</strong> est défini sur le backend Railway).</p>
                   <div class="builder-colors">
                     <div class="builder-color-row">
                       <label class="builder-label">Fond</label>

@@ -933,6 +933,8 @@ function initBuilderPage() {
 
   function applyColorsFromPlace(placeId) {
     const msgEl = document.getElementById("builder-colors-from-place");
+    const failedEl = document.getElementById("builder-colors-failed");
+    if (failedEl) failedEl.classList.add("hidden");
     function tryApplyWithImage(src) {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -950,9 +952,14 @@ function initBuilderPage() {
           updatePreview();
           saveDraft();
           if (msgEl) msgEl.classList.remove("hidden");
-        } catch (_) {}
+          if (failedEl) failedEl.classList.add("hidden");
+        } catch (_) {
+          if (failedEl) failedEl.classList.remove("hidden");
+        }
       };
-      img.onerror = () => {};
+      img.onerror = () => {
+        if (failedEl) failedEl.classList.remove("hidden");
+      };
       img.src = src;
     }
     // En prod : proxy backend (évite CORS / canvas tainted)
