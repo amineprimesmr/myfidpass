@@ -944,15 +944,38 @@ function initBuilderPage() {
           const palette = cf.getPalette(img, 3);
           if (!palette || palette.length < 2) return;
           const hexes = palette.map(([r, g, b]) => ({ hex: rgbToHex(r, g, b), l: luminance(r, g, b) }));
-          hexes.sort((a, b) => a.l - b.l);
-          state.backgroundColor = hexes[0].hex;
-          state.foregroundColor = "#ffffff";
-          state.labelColor = hexes[hexes.length - 1].l > 0.6 ? hexes[hexes.length - 1].hex : "#e8f5e9";
+          // Couleur dominante (première du palette) = fond ; texte contrasté ; label = plus claire
+          const dominant = hexes[0];
+          state.backgroundColor = dominant.hex;
+          state.foregroundColor = dominant.l < 0.5 ? "#ffffff" : "#1a1a1a";
+          const lightest = hexes.reduce((a, b) => (a.l > b.l ? a : b));
+          state.labelColor = lightest.l > 0.5 ? lightest.hex : "#e8f5e9";
           syncInputsFromState();
           updatePreview();
           saveDraft();
           if (msgEl) msgEl.classList.remove("hidden");
           if (failedEl) failedEl.classList.add("hidden");
+          // Logo suggéré : même photo recadrée au format carte (320×100)
+          try {
+            const c = document.createElement("canvas");
+            c.width = 320;
+            c.height = 100;
+            const ctx = c.getContext("2d");
+            const scale = Math.max(c.width / img.naturalWidth, c.height / img.naturalHeight);
+            const srcW = c.width / scale;
+            const srcH = c.height / scale;
+            const srcX = (img.naturalWidth - srcW) / 2;
+            const srcY = (img.naturalHeight - srcH) / 2;
+            ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, c.width, c.height);
+            logoDataUrl = c.toDataURL("image/png");
+            logoPreviewImg.src = logoDataUrl;
+            logoPreviewImg.classList.remove("hidden");
+            logoPlaceholder.classList.add("hidden");
+            if (previewLogo) {
+              previewLogo.src = logoDataUrl;
+              previewLogo.classList.add("visible");
+            }
+          } catch (_) {}
         } catch (_) {
           if (failedEl) failedEl.classList.remove("hidden");
         }
@@ -1005,10 +1028,11 @@ function initBuilderPage() {
           const palette = cf.getPalette(img, 3);
           if (!palette || palette.length < 2) return;
           const hexes = palette.map(([r, g, b]) => ({ hex: rgbToHex(r, g, b), l: luminance(r, g, b) }));
-          hexes.sort((a, b) => a.l - b.l);
-          state.backgroundColor = hexes[0].hex;
-          state.foregroundColor = "#ffffff";
-          state.labelColor = hexes[hexes.length - 1].l > 0.6 ? hexes[hexes.length - 1].hex : "#e8f5e9";
+          const dominant = hexes[0];
+          state.backgroundColor = dominant.hex;
+          state.foregroundColor = dominant.l < 0.5 ? "#ffffff" : "#1a1a1a";
+          const lightest = hexes.reduce((a, b) => (a.l > b.l ? a : b));
+          state.labelColor = lightest.l > 0.5 ? lightest.hex : "#e8f5e9";
           syncInputsFromState();
           updatePreview();
           saveDraft();
