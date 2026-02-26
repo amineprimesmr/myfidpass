@@ -2041,14 +2041,7 @@ if (landingHeroForm) {
 }
 
 window.addEventListener("popstate", () => {
-  const path = window.location.pathname.replace(/\/$/, "");
-  if (path === "/creer-ma-carte" && landingEl && !landingEl.classList.contains("hidden")) {
-    showBuilderInPlace(window.location.search);
-    return;
-  }
-  if (path === "/" && landingEl && !landingEl.classList.contains("hidden")) {
-    showLandingMainInPlace();
-  }
+  initRouting();
 });
 
 // Autocomplete Google Places (recherche d'entreprise) — optionnel si VITE_GOOGLE_PLACES_API_KEY est défini
