@@ -138,6 +138,8 @@ function initRouting() {
 
   if (route.type === "templates") {
     if (landingEl) landingEl.classList.add("builder-visible");
+    const bannerMedia = document.getElementById("site-banner-media");
+    if (bannerMedia) bannerMedia.classList.add("hidden");
     if (landingMain) landingMain.classList.add("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
     if (landingTemplates) {
@@ -167,6 +169,8 @@ function initRouting() {
     legalContent.innerHTML = route.page === "mentions" ? getMentionsLegalesHtml() : getPolitiqueConfidentialiteHtml();
   } else {
     if (landingEl) landingEl.classList.remove("builder-visible");
+    const bannerMedia = document.getElementById("site-banner-media");
+    if (bannerMedia) bannerMedia.classList.remove("hidden");
     if (landingMain) landingMain.classList.remove("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
     if (landingTemplates) landingTemplates.classList.add("hidden");
@@ -1856,6 +1860,8 @@ const landingTemplates = document.getElementById("landing-templates");
 function showBuilderInPlace(queryString) {
   if (!landingTemplates || !landingMain) return;
   if (landingEl) landingEl.classList.add("builder-visible");
+  const bannerMedia = document.getElementById("site-banner-media");
+  if (bannerMedia) bannerMedia.classList.add("hidden");
   landingMain.classList.add("hidden");
   if (document.getElementById("landing-legal")) document.getElementById("landing-legal").classList.add("hidden");
   landingTemplates.classList.remove("hidden");
@@ -1866,6 +1872,8 @@ function showBuilderInPlace(queryString) {
 
 function showLandingMainInPlace() {
   if (landingEl) landingEl.classList.remove("builder-visible");
+  const bannerMedia = document.getElementById("site-banner-media");
+  if (bannerMedia) bannerMedia.classList.remove("hidden");
   if (landingMain) landingMain.classList.remove("hidden");
   if (document.getElementById("landing-legal")) document.getElementById("landing-legal").classList.add("hidden");
   if (landingTemplates) landingTemplates.classList.add("hidden");
