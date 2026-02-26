@@ -1,4 +1,5 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import ColorThief from "colorthief";
 
 const API_BASE = typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL : "";
 const AUTH_TOKEN_KEY = "fidpass_token";
@@ -923,11 +924,62 @@ function initBuilderPage() {
     inputBackContact.value = state.backContact;
   }
 
+  function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, "0")).join("");
+  }
+  function luminance(r, g, b) {
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  }
+
+  function applyColorsFromPlace(placeId) {
+    const apiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
+    if (!apiKey) return;
+    const msgEl = document.getElementById("builder-colors-from-place");
+    fetch(
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=name,photos&key=${apiKey}`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.status !== "OK" || !data.result?.photos?.length) return;
+        const ref = data.result.photos[0].photo_reference;
+        const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${encodeURIComponent(ref)}&key=${apiKey}`;
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            const cf = new ColorThief();
+            const palette = cf.getPalette(img, 3);
+            if (!palette || palette.length < 2) return;
+            const hexes = palette.map(([r, g, b]) => ({ hex: rgbToHex(r, g, b), l: luminance(r, g, b) }));
+            hexes.sort((a, b) => a.l - b.l);
+            state.backgroundColor = hexes[0].hex;
+            state.foregroundColor = "#ffffff";
+            state.labelColor = hexes[hexes.length - 1].l > 0.6 ? hexes[hexes.length - 1].hex : "#e8f5e9";
+            syncInputsFromState();
+            updatePreview();
+            saveDraft();
+            if (msgEl) {
+              msgEl.classList.remove("hidden");
+            }
+          } catch (_) {}
+        };
+        img.onerror = () => {};
+        img.src = photoUrl;
+      })
+      .catch(() => {});
+  }
+
   loadDraft();
   if (etablissementFromUrl && !state.name) state.name = etablissementFromUrl;
   if (etablissementFromUrl && state.slug === "ma-carte") state.slug = slugify(etablissementFromUrl);
   syncInputsFromState();
   updatePreview();
+
+  const placeIdFromUrl = params.get("place_id") || "";
+  if (placeIdFromUrl) applyColorsFromPlace(placeIdFromUrl);
+  document.addEventListener("fidpass-place-selected", (e) => {
+    if (e.detail?.place_id) applyColorsFromPlace(e.detail.place_id);
+  });
 
   inputName.addEventListener("input", () => {
     state.name = inputName.value.trim();
@@ -1613,10 +1665,12 @@ if (landingHeroForm) {
   landingHeroForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const input = document.getElementById("landing-etablissement");
+    const placeIdInput = document.getElementById("landing-place-id");
     const name = input?.value?.trim();
-    const url = name
-      ? `/creer-ma-carte?etablissement=${encodeURIComponent(name)}`
-      : "/creer-ma-carte";
+    const placeId = placeIdInput?.value?.trim();
+    let url = "/creer-ma-carte";
+    if (name) url += `?etablissement=${encodeURIComponent(name)}`;
+    if (placeId) url += (name ? "&" : "?") + `place_id=${encodeURIComponent(placeId)}`;
     window.location.href = url;
   });
 }
@@ -1641,6 +1695,13 @@ function initPlacesAutocomplete() {
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
         if (place.name) input.value = place.name;
+        if (id === "landing-etablissement") {
+          const hidden = document.getElementById("landing-place-id");
+          if (hidden) hidden.value = place.place_id || "";
+        }
+        if (id === "builder-name" && place.place_id) {
+          document.dispatchEvent(new CustomEvent("fidpass-place-selected", { detail: { place_id: place.place_id, name: place.name } }));
+        }
       });
       input.dataset.placesInit = "1";
     } catch (e) {

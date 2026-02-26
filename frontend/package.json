@@ -11,6 +11,7 @@
     "vite": "^5.4.10"
   },
   "dependencies": {
+    "colorthief": "^2.6.0",
     "html5-qrcode": "^2.3.8"
   }
 }

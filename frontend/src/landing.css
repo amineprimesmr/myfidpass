@@ -910,6 +910,13 @@
   margin: 0.25rem 0 0.75rem;
 }
 
+.builder-colors-from-place {
+  font-size: 0.85rem;
+  color: var(--landing-accent);
+  margin: 0 0 0.5rem;
+  font-weight: 500;
+}
+
 .builder-logo-zone {
   margin: 0.5rem 0;
 }

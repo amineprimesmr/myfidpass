@@ -317,6 +317,7 @@
           <h1 class="landing-hero-title">Le meilleur moyen de <strong>fidéliser vos clients</strong></h1>
           <p class="landing-hero-subtitle">Transformez vos visiteurs en clients fidèles grâce à des récompenses attrayantes qui les inciteront à revenir.</p>
           <form id="landing-hero-form" class="landing-hero-form">
+            <input type="hidden" id="landing-place-id" name="place_id" value="" />
             <div class="landing-hero-input-wrap">
               <img src="/assets/googlelogo.png" alt="Google" class="landing-hero-google-logo" width="32" height="32" />
               <input type="text" id="landing-etablissement" class="landing-hero-input" placeholder="Nom de votre établissement" autocomplete="organization" />
@@ -488,8 +489,9 @@
                   <p class="builder-hint">Vos clients iront sur : …/fidelity/<strong id="builder-slug-preview">votre-lien</strong></p>
                 </section>
 
-                <section class="builder-section">
+                <section class="builder-section" id="builder-section-colors">
                   <h2 class="builder-section-title">Couleurs</h2>
+                  <p class="builder-colors-from-place hidden" id="builder-colors-from-place">Couleurs suggérées d'après votre établissement.</p>
                   <div class="builder-colors">
                     <div class="builder-color-row">
                       <label class="builder-label">Fond</label>
