@@ -358,8 +358,8 @@
 
 .landing-hero-google-logo {
   flex-shrink: 0;
-  height: 28px;
-  width: auto;
+  height: 32px;
+  width: 32px;
   object-fit: contain;
 }
 
