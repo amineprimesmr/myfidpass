@@ -991,9 +991,6 @@ function initBuilderPage() {
 
   const placeIdFromUrl = params.get("place_id") || "";
   if (placeIdFromUrl) applyColorsFromPlace(placeIdFromUrl);
-  document.addEventListener("fidpass-place-selected", (e) => {
-    if (e.detail?.place_id) applyColorsFromPlace(e.detail.place_id);
-  });
 
   inputName.addEventListener("input", () => {
     state.name = inputName.value.trim();
@@ -1713,9 +1710,6 @@ function initPlacesAutocomplete() {
           const hidden = document.getElementById("landing-place-id");
           if (hidden) hidden.value = place.place_id || "";
         }
-        if (id === "builder-name" && place.place_id) {
-          document.dispatchEvent(new CustomEvent("fidpass-place-selected", { detail: { place_id: place.place_id, name: place.name } }));
-        }
       });
       input.dataset.placesInit = "1";
     } catch (e) {
@@ -1723,7 +1717,7 @@ function initPlacesAutocomplete() {
     }
   };
   initInput("landing-etablissement");
-  initInput("builder-name");
+  // Pas d’autocomplete sur la page « Créer ma carte » : on utilise uniquement la recherche de la page d’accueil
 }
 
 const googlePlacesApiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";

@@ -917,6 +917,17 @@
   font-weight: 500;
 }
 
+.builder-helper-tip {
+  color: var(--landing-accent);
+  font-weight: 500;
+}
+
+.builder-colors-failed {
+  font-size: 0.8rem;
+  color: var(--landing-muted);
+  margin: 0 0 0.5rem;
+}
+
 .builder-logo-zone {
   margin: 0.5rem 0;
 }
