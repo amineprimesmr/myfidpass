@@ -30,10 +30,29 @@ function clearAuthToken() {
   setAuthToken(null);
 }
 
+const DEV_BYPASS_PAYMENT_KEY = "fidpass_dev_paid";
+
+function isDevBypassPayment() {
+  try {
+    return localStorage.getItem(DEV_BYPASS_PAYMENT_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function setDevBypassPayment(on) {
+  try {
+    if (on) localStorage.setItem(DEV_BYPASS_PAYMENT_KEY, "1");
+    else localStorage.removeItem(DEV_BYPASS_PAYMENT_KEY);
+  } catch (_) {}
+}
+
 function getAuthHeaders() {
   const token = getAuthToken();
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (isDevBypassPayment()) headers["X-Dev-Bypass-Payment"] = "1";
+  return headers;
 }
 
 /**
@@ -373,7 +392,8 @@ function initAppPage() {
       }
       if (!res.ok) return;
       const data = await res.json();
-      if (!data.hasActiveSubscription) {
+      const hasSubscription = data.hasActiveSubscription || isDevBypassPayment();
+      if (!hasSubscription) {
         window.location.replace("/choisir-offre");
         return;
       }
@@ -1326,6 +1346,14 @@ function initCheckoutPage() {
 
   paymentBtn?.addEventListener("click", () => initCheckoutPayment());
 
+  const checkoutDevBypassBtn = document.getElementById("checkout-dev-bypass-btn");
+  if (checkoutDevBypassBtn) {
+    checkoutDevBypassBtn.addEventListener("click", () => {
+      setDevBypassPayment(true);
+      window.location.replace("/app");
+    });
+  }
+
   function initCheckoutPayment() {
     showError("");
     if (paymentBtn) {
@@ -1365,13 +1393,22 @@ function initOffersPage() {
       const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
-        if (data.hasActiveSubscription) {
+        if (data.hasActiveSubscription || isDevBypassPayment()) {
           window.location.replace("/app");
           return;
         }
       }
     } catch (_) {}
   })();
+
+  const devBypassWrap = document.getElementById("offers-dev-bypass-wrap");
+  const devBypassBtn = document.getElementById("offers-dev-bypass-btn");
+  if (devBypassBtn) {
+    devBypassBtn.addEventListener("click", () => {
+      setDevBypassPayment(true);
+      window.location.replace("/app");
+    });
+  }
 
   const btnStarter = document.getElementById("offers-btn-starter");
   if (btnStarter) {

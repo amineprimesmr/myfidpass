@@ -16,6 +16,8 @@ En production, le **frontend** (myfidpass.fr) et l’**API** (backend Node) sont
 
 Après ça, le bouton « Créer ma carte » enverra bien la requête à l’API et la création pourra réussir.
 
+**Mode dev temporaire (contourner le paiement) :** sur les pages « Choisir une offre » et « Checkout », un bouton **« Mode dev : passer le paiement »** permet de simuler un paiement (localStorage + en-tête `X-Dev-Bypass-Payment`). Pour que la création de carte fonctionne avec ce mode, définir sur le backend (ex. Railway) la variable **`DEV_BYPASS_PAYMENT`** = `true`. À retirer ou désactiver en production réelle.
+
 **Optionnel — recherche d’entreprise Google :** voir le guide [Recherche Google (autocomplete)](#recherche-google-autocomplete) plus bas.
 
 ---

@@ -91,6 +91,9 @@
           </article>
         </div>
         <p class="offers-footer"><a href="/app">J'ai déjà un abonnement → aller à mon espace</a></p>
+        <p id="offers-dev-bypass-wrap" class="offers-dev-bypass-wrap">
+          <button type="button" id="offers-dev-bypass-btn" class="offers-dev-bypass-btn" title="Temporaire : simuler un paiement pour tester l’app sans Stripe">Mode dev : passer le paiement</button>
+        </p>
       </main>
     </div>
 
@@ -132,6 +135,9 @@
                 <p class="checkout-step-desc">Vous serez redirigé vers notre partenaire de paiement sécurisé.</p>
                 <button type="button" id="checkout-payment" class="checkout-btn-payment">PAYER — 49 €/mois (7 jours gratuits)</button>
                 <p id="checkout-error" class="checkout-error hidden"></p>
+                <p class="checkout-dev-bypass-wrap">
+                  <button type="button" id="checkout-dev-bypass-btn" class="checkout-dev-bypass-btn" title="Temporaire : simuler un paiement">Mode dev : passer le paiement</button>
+                </p>
               </div>
             </section>
           </div>

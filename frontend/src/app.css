@@ -755,3 +755,15 @@
 #offers-app.unified-shell .offers-card-amount { font-size: 1.5rem; font-weight: 800; }
 #offers-app.unified-shell .offers-footer { margin-top: 2rem; text-align: center; }
 #offers-app.unified-shell .offers-footer a { color: #0a7c42; text-decoration: none; }
+.offers-dev-bypass-wrap { margin-top: 1.5rem; text-align: center; }
+.offers-dev-bypass-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+}
+.offers-dev-bypass-btn:hover { color: #4a53ff; }

@@ -1927,6 +1927,18 @@ body.page-checkout .site-banner { display: none !important; }
   font-size: 0.875rem;
   color: #b91c1c;
 }
+.checkout-dev-bypass-wrap { margin-top: 1rem; }
+.checkout-dev-bypass-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+}
+.checkout-dev-bypass-btn:hover { color: #333; }
 
 /* Panier droit : carte blanche sur fond gris */
 .checkout-order-card {

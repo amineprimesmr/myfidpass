@@ -301,7 +301,9 @@ router.post("/", requireAuth, (req, res) => {
   if (!name || !slug) {
     return res.status(400).json({ error: "name et slug requis" });
   }
-  if (!canCreateBusiness(req.user.id)) {
+  const devBypass =
+    process.env.DEV_BYPASS_PAYMENT === "true" && req.get("X-Dev-Bypass-Payment") === "1";
+  if (!devBypass && !canCreateBusiness(req.user.id)) {
     return res.status(403).json({
       error: "Abonnement requis ou limite de cartes atteinte",
       code: "subscription_required",
