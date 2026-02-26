@@ -24,6 +24,14 @@ router.get("/", async (req, res) => {
     const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=photos&key=${GOOGLE_PLACES_API_KEY}`;
     const detailsRes = await fetch(detailsUrl);
     const details = await detailsRes.json();
+    if (details.status === "REQUEST_DENIED" || details.status === "OVER_QUERY_LIMIT") {
+      res.status(403).json({
+        error: "Clé Google refusée côté serveur.",
+        code: details.status,
+        hint: "Utilisez une clé avec restriction « Aucune » (ou « Adresses IP ») pour le backend. La clé « Référents HTTP » ne fonctionne que depuis le navigateur.",
+      });
+      return;
+    }
     if (details.status !== "OK" || !details.result?.photos?.length) {
       res.status(404).json({ error: "Aucune photo pour ce lieu" });
       return;

@@ -67,6 +67,6 @@ Si tu préfères enlever la recherche Google : supprime la variable `VITE_GOOGLE
 - [ ] Sur Vercel : variable **VITE_API_URL** = cette URL. Puis redéploiement.
 - [ ] Test : sur myfidpass.fr, cliquer « Créer ma carte », remplir et créer → pas d’erreur.
 - [ ] (Optionnel) Variable **VITE_GOOGLE_PLACES_API_KEY** sur Vercel si tu veux les suggestions d’entreprises.
-- [ ] (Optionnel) Variable **GOOGLE_PLACES_API_KEY** sur le **backend** (Railway) pour que les couleurs de la carte se suggèrent automatiquement à partir de la photo du lieu (même clé que sur Vercel).
+- [ ] (Optionnel) Variable **GOOGLE_PLACES_API_KEY** sur le **backend** (Railway) pour les couleurs auto. **Important :** la clé utilisée sur le backend ne doit **pas** être limitée aux « Référents HTTP » (sinon Google refuse les appels venant du serveur). Dans Google Cloud → ta clé backend → Restriction des applications : choisir **« Aucune »**. Tu peux créer une **deuxième clé** dédiée au backend (restriction « Aucune ») et garder la première (Référents HTTP) pour Vercel.
 
 Si tout ça est coché, tu es bon.

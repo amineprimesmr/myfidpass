@@ -968,16 +968,25 @@ function initBuilderPage() {
     if (API_BASE) {
       const photoUrl = `${API_BASE}/api/place-photo?place_id=${encodeURIComponent(placeId)}`;
       fetch(photoUrl)
-        .then((r) => {
+        .then(async (r) => {
           if (!r.ok) {
-            if (failedEl) failedEl.classList.remove("hidden");
-            return;
+            let hint = "";
+            try {
+              const body = await r.json();
+              if (body.hint) hint = body.hint;
+              else if (body.error) hint = body.error;
+            } catch (_) {}
+            if (failedEl) {
+              failedEl.classList.remove("hidden");
+              if (hint) failedEl.innerHTML = hint.replace(/\.$/, "") + ". <br><strong>Choisissez les couleurs ci-dessous</strong> si besoin.";
+            }
+            return null;
           }
           return r.blob();
         })
         .then((blob) => {
           if (blob && blob.type.startsWith("image/")) tryApplyWithImageBlob(blob);
-          else if (failedEl) failedEl.classList.remove("hidden");
+          else if (failedEl && !failedEl.innerHTML) failedEl.classList.remove("hidden");
         })
         .catch(() => {
           if (failedEl) failedEl.classList.remove("hidden");
