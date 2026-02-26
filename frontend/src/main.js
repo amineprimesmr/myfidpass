@@ -480,6 +480,14 @@ function initAppPage() {
           return;
         }
         if (res.status === 403 && (data.code === "subscription_required")) {
+          if (isDevBypassPayment()) {
+            if (emptyCreateError) {
+              emptyCreateError.textContent =
+                "Mode dev actif ici, mais le backend doit avoir la variable DEV_BYPASS_PAYMENT=true (sur Railway) pour autoriser la création sans abonnement.";
+              emptyCreateError.classList.remove("hidden");
+            }
+            return;
+          }
           window.location.replace("/choisir-offre");
           return;
         }
