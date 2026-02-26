@@ -268,17 +268,42 @@
     <div id="landing">
       <header class="landing-header">
         <div class="landing-header-inner">
+          <button type="button" class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+            <span class="landing-menu-toggle-bar"></span>
+            <span class="landing-menu-toggle-bar"></span>
+            <span class="landing-menu-toggle-bar"></span>
+          </button>
           <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Fidpass" class="landing-logo-img"></a>
-          <nav class="landing-nav">
+          <nav class="landing-nav landing-nav-desk">
             <a href="#comment-ca-marche">Comment ça marche</a>
             <a href="#produit">Offre</a>
             <a href="#faq">FAQ</a>
             <a href="#contact">Contact</a>
             <a href="/login" class="landing-nav-login">Connexion</a>
           </nav>
-          <a href="/creer-ma-carte" class="landing-cta">Obtenir ma carte</a>
+          <a href="/creer-ma-carte" class="landing-cta landing-cta-desk">Obtenir ma carte</a>
         </div>
       </header>
+
+      <!-- Menu mobile (drawer style WHOOP) -->
+      <div class="landing-menu-overlay" id="landing-menu-overlay" aria-hidden="true">
+        <div class="landing-menu-drawer">
+          <div class="landing-menu-drawer-header">
+            <button type="button" class="landing-menu-close" id="landing-menu-close" aria-label="Fermer le menu">
+              <span aria-hidden="true">×</span>
+            </button>
+            <a href="/" class="landing-menu-drawer-logo"><img src="/assets/logo.png" alt="Fidpass" class="landing-logo-img"></a>
+          </div>
+          <nav class="landing-menu-drawer-nav">
+            <a href="#comment-ca-marche">Comment ça marche</a>
+            <a href="#produit">Offre</a>
+            <a href="#faq">FAQ</a>
+            <a href="#contact">Contact</a>
+            <a href="/login">Connexion</a>
+            <a href="/creer-ma-carte" class="landing-menu-drawer-cta">Obtenir ma carte</a>
+          </nav>
+        </div>
+      </div>
 
       <!-- Vidéo bannière (juste sous le menu) -->
       <div class="site-banner-media" id="site-banner-media">

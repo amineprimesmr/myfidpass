@@ -1621,6 +1621,44 @@ if (landingHeroForm) {
   });
 }
 
+// Menu mobile landing (drawer style WHOOP)
+const landingMenuToggle = document.getElementById("landing-menu-toggle");
+const landingMenuOverlay = document.getElementById("landing-menu-overlay");
+const landingMenuClose = document.getElementById("landing-menu-close");
+
+function closeLandingMenu() {
+  if (landingMenuOverlay) {
+    landingMenuOverlay.classList.remove("is-open");
+    landingMenuOverlay.setAttribute("aria-hidden", "true");
+  }
+  if (landingMenuToggle) landingMenuToggle.setAttribute("aria-expanded", "false");
+  document.body.style.overflow = "";
+}
+
+function openLandingMenu() {
+  if (landingMenuOverlay) {
+    landingMenuOverlay.classList.add("is-open");
+    landingMenuOverlay.setAttribute("aria-hidden", "false");
+  }
+  if (landingMenuToggle) landingMenuToggle.setAttribute("aria-expanded", "true");
+  document.body.style.overflow = "hidden";
+}
+
+if (landingMenuToggle && landingMenuOverlay) {
+  landingMenuToggle.addEventListener("click", () => {
+    const open = landingMenuOverlay.classList.contains("is-open");
+    if (open) closeLandingMenu();
+    else openLandingMenu();
+  });
+  landingMenuClose?.addEventListener("click", closeLandingMenu);
+  landingMenuOverlay.addEventListener("click", (e) => {
+    if (e.target === landingMenuOverlay) closeLandingMenu();
+  });
+  landingMenuOverlay.querySelectorAll(".landing-menu-drawer-nav a").forEach((a) => {
+    a.addEventListener("click", closeLandingMenu);
+  });
+}
+
 // Bootstrap
 const slug = initRouting();
 if (slug) initFidelityApp(slug);
