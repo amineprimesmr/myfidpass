@@ -935,9 +935,9 @@ function initBuilderPage() {
     const msgEl = document.getElementById("builder-colors-from-place");
     const failedEl = document.getElementById("builder-colors-failed");
     if (failedEl) failedEl.classList.add("hidden");
-    function tryApplyWithImage(src) {
+    function tryApplyWithImageBlob(blob) {
+      const url = URL.createObjectURL(blob);
       const img = new Image();
-      img.crossOrigin = "anonymous";
       img.onload = () => {
         try {
           const cf = new ColorThief();
@@ -956,20 +956,63 @@ function initBuilderPage() {
         } catch (_) {
           if (failedEl) failedEl.classList.remove("hidden");
         }
+        URL.revokeObjectURL(url);
+      };
+      img.onerror = () => {
+        if (failedEl) failedEl.classList.remove("hidden");
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+    // En prod : fetch via backend puis extraction depuis le blob (évite CORS / canvas tainted)
+    if (API_BASE) {
+      const photoUrl = `${API_BASE}/api/place-photo?place_id=${encodeURIComponent(placeId)}`;
+      fetch(photoUrl)
+        .then((r) => {
+          if (!r.ok) {
+            if (failedEl) failedEl.classList.remove("hidden");
+            return;
+          }
+          return r.blob();
+        })
+        .then((blob) => {
+          if (blob && blob.type.startsWith("image/")) tryApplyWithImageBlob(blob);
+          else if (failedEl) failedEl.classList.remove("hidden");
+        })
+        .catch(() => {
+          if (failedEl) failedEl.classList.remove("hidden");
+        });
+      return;
+    }
+    // En local sans backend : appel direct Google (peut échouer à cause du CORS)
+    const apiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
+    if (!apiKey) return;
+    function tryApplyWithImageUrl(src) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const cf = new ColorThief();
+          const palette = cf.getPalette(img, 3);
+          if (!palette || palette.length < 2) return;
+          const hexes = palette.map(([r, g, b]) => ({ hex: rgbToHex(r, g, b), l: luminance(r, g, b) }));
+          hexes.sort((a, b) => a.l - b.l);
+          state.backgroundColor = hexes[0].hex;
+          state.foregroundColor = "#ffffff";
+          state.labelColor = hexes[hexes.length - 1].l > 0.6 ? hexes[hexes.length - 1].hex : "#e8f5e9";
+          syncInputsFromState();
+          updatePreview();
+          saveDraft();
+          if (msgEl) msgEl.classList.remove("hidden");
+        } catch (_) {
+          if (failedEl) failedEl.classList.remove("hidden");
+        }
       };
       img.onerror = () => {
         if (failedEl) failedEl.classList.remove("hidden");
       };
       img.src = src;
     }
-    // En prod : proxy backend (évite CORS / canvas tainted)
-    if (API_BASE) {
-      tryApplyWithImage(`${API_BASE}/api/place-photo?place_id=${encodeURIComponent(placeId)}`);
-      return;
-    }
-    // En local sans backend : appel direct Google (peut échouer à cause du CORS)
-    const apiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
-    if (!apiKey) return;
     fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=photos&key=${apiKey}`
     )
@@ -978,7 +1021,7 @@ function initBuilderPage() {
         if (data.status !== "OK" || !data.result?.photos?.length) return;
         const ref = data.result.photos[0].photo_reference;
         const directPhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${encodeURIComponent(ref)}&key=${apiKey}`;
-        tryApplyWithImage(directPhotoUrl);
+        tryApplyWithImageUrl(directPhotoUrl);
       })
       .catch(() => {});
   }
