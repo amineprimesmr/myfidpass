@@ -733,15 +733,33 @@
   gap: 1rem;
 }
 .builder-header-logo {
-  font-weight: 800;
-  font-size: 1.25rem;
-  color: #000;
-  text-decoration: none;
-  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+  text-decoration: none;
+  color: #000;
+  line-height: 1;
 }
 .builder-header-logo:hover {
   color: #333;
+}
+.builder-header-logo-img {
+  display: block;
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+.builder-header-logo-fallback {
+  display: none;
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+.builder-header-logo.show-fallback .builder-header-logo-fallback {
+  display: inline;
+}
+.builder-header-logo.show-fallback .builder-header-logo-img {
+  display: none;
 }
 .builder-header-steps {
   display: flex;
@@ -776,6 +794,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 32px;
   color: #000;
   text-decoration: none;
   padding: 0.25rem;
@@ -812,6 +832,11 @@
   margin: 0 auto;
   padding: 1rem 1.5rem 3rem;
 }
+@media (min-width: 900px) {
+  .landing-builder {
+    max-width: 1024px;
+  }
+}
 
 .builder-inner {
   position: relative;
@@ -846,6 +871,57 @@
 .builder-step-1-content {
   max-width: 560px;
   margin: 0 auto;
+}
+
+.builder-step-1-left {
+  flex-shrink: 0;
+}
+.builder-step-1-right {
+  min-width: 0;
+}
+
+/* Desktop : iPhone à gauche, designs à droite — organisation harmonieuse */
+@media (min-width: 900px) {
+  .builder-step-1-content {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: clamp(2rem, 4vw, 3.5rem);
+    max-width: 100%;
+    margin: 0;
+  }
+  .builder-step-1-left {
+    flex: 0 0 auto;
+    width: min(320px, 38%);
+  }
+  .builder-step-1-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 0.25rem;
+  }
+  .builder-step-1-right .builder-title {
+    margin-top: 0;
+    text-align: left;
+  }
+  .builder-step-1-right .builder-subtitle {
+    text-align: left;
+  }
+  .builder-step-1-right .builder-choose-label {
+    text-align: left;
+    margin-top: 1.25rem;
+  }
+  .builder-step-1-right .builder-phone-dots {
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+  }
+  .builder-step-1-right .builder-templates {
+    margin-bottom: 1.5rem;
+  }
+  .builder-step-1-right .builder-fields {
+    margin-top: auto;
+  }
 }
 
 /* Mockup iPhone : image en fond, carte visible par-dessus */
