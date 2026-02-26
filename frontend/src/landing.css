@@ -933,15 +933,16 @@
   min-height: 0;
 }
 .builder-wallet-card-header {
-  padding: 0.5rem 0.6rem;
+  padding: 0.55rem 0.7rem;
   border-radius: 10px 10px 0 0;
   font-weight: 700;
-  font-size: clamp(0.7rem, 2.2vw, 0.8rem);
+  font-size: clamp(0.68rem, 2.2vw, 0.78rem);
+  letter-spacing: 0.02em;
   color: #fff;
   flex-shrink: 0;
 }
 .builder-wallet-card-body {
-  padding: 0.6rem;
+  padding: 0.7rem 0.6rem 0.9rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -953,31 +954,59 @@
   color: #fff;
 }
 .builder-wallet-card-pts {
-  font-size: clamp(1rem, 3vw, 1.25rem);
+  font-size: clamp(1.1rem, 3.2vw, 1.35rem);
   font-weight: 800;
+  letter-spacing: -0.02em;
 }
 .builder-wallet-card-label {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   text-transform: uppercase;
-  opacity: 0.95;
+  letter-spacing: 0.1em;
+  opacity: 0.92;
 }
 .builder-wallet-card-barcode {
-  height: 24px;
+  height: 28px;
   margin-top: auto;
   flex-shrink: 0;
-  background: repeating-linear-gradient(90deg, #000 0, #000 2px, transparent 2px, transparent 4px);
-  border-radius: 4px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.35rem;
 }
-/* Thèmes des cartes dans le mockup */
-.builder-wallet-card-classic .builder-wallet-card-header,
-.builder-wallet-card-classic .builder-wallet-card-body { background: #0a7c42; color: #fff; }
-.builder-wallet-card-classic .builder-wallet-card-label { color: #e8f5e9; }
-.builder-wallet-card-bold .builder-wallet-card-header,
-.builder-wallet-card-bold .builder-wallet-card-body { background: #c41e3a; color: #fff; }
-.builder-wallet-card-bold .builder-wallet-card-label { color: #ffd700; }
-.builder-wallet-card-elegant .builder-wallet-card-header,
-.builder-wallet-card-elegant .builder-wallet-card-body { background: #8b7355; color: #fff; }
-.builder-wallet-card-elegant .builder-wallet-card-label { color: #f5f0e6; }
+.builder-wallet-card-barcode::after {
+  content: "";
+  display: block;
+  width: 88%;
+  height: 18px;
+  background: repeating-linear-gradient(90deg, #1a1a1a 0, #1a1a1a 1.2px, transparent 1.2px, transparent 3px);
+  border-radius: 2px;
+}
+/* Thèmes des cartes dans le mockup (style Wallet réaliste) */
+.builder-wallet-card-classic .builder-wallet-card-header {
+  background: linear-gradient(165deg, #0d8a4e 0%, #0a7c42 100%);
+}
+.builder-wallet-card-classic .builder-wallet-card-body {
+  background: linear-gradient(180deg, #0b8d50 0%, #0a7c42 100%);
+  color: #fff;
+}
+.builder-wallet-card-classic .builder-wallet-card-label { color: rgba(255,255,255,0.9); }
+.builder-wallet-card-bold .builder-wallet-card-header {
+  background: linear-gradient(165deg, #d42d4a 0%, #b91c38 100%);
+}
+.builder-wallet-card-bold .builder-wallet-card-body {
+  background: linear-gradient(180deg, #c41e3a 0%, #a01830 100%);
+  color: #fff;
+}
+.builder-wallet-card-bold .builder-wallet-card-label { color: rgba(255,255,255,0.92); }
+.builder-wallet-card-elegant .builder-wallet-card-header {
+  background: linear-gradient(165deg, #9a8268 0%, #7d6852 100%);
+}
+.builder-wallet-card-elegant .builder-wallet-card-body {
+  background: linear-gradient(180deg, #8b7355 0%, #6f5c45 100%);
+  color: #fff;
+}
+.builder-wallet-card-elegant .builder-wallet-card-label { color: rgba(255,255,255,0.9); }
 
 .builder-phone-dots {
   display: flex;
@@ -1063,73 +1092,101 @@
   color: var(--landing-text);
 }
 
+/* Aperçus type carte Wallet (Apple / Google) */
 .builder-template-preview {
   width: 100%;
   max-width: 200px;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 .builder-template-preview-header {
-  padding: 0.5rem 0.75rem;
-  min-height: 36px;
+  padding: 0.6rem 0.85rem;
+  min-height: 40px;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .builder-template-preview-org {
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
 }
 
 .builder-template-preview-body {
-  padding: 0.5rem 0.75rem;
+  padding: 0.85rem 0.85rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.25rem;
 }
 
 .builder-template-preview-pts {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .builder-template-preview-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   text-transform: uppercase;
-  opacity: 0.9;
+  letter-spacing: 0.12em;
+  opacity: 0.92;
 }
 
 .builder-template-preview-barcode {
-  height: 28px;
-  background: repeating-linear-gradient(90deg, #000 0, #000 2px, transparent 2px, transparent 4px);
+  height: 36px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+.builder-template-preview-barcode::after {
+  content: "";
+  display: block;
+  width: 92%;
+  max-width: 160px;
+  height: 22px;
+  background: repeating-linear-gradient(90deg, #1a1a1a 0, #1a1a1a 1.5px, transparent 1.5px, transparent 3.5px);
+  border-radius: 2px;
 }
 
-/* Classique : vert */
-.builder-template-preview-classic .builder-template-preview-header,
+/* Classique : vert type Apple Wallet */
+.builder-template-preview-classic .builder-template-preview-header {
+  background: linear-gradient(165deg, #0d8a4e 0%, #0a7c42 100%);
+  color: #fff;
+}
 .builder-template-preview-classic .builder-template-preview-body {
-  background: #0a7c42;
+  background: linear-gradient(180deg, #0b8d50 0%, #0a7c42 100%);
   color: #fff;
 }
-.builder-template-preview-classic .builder-template-preview-label { color: #e8f5e9; }
+.builder-template-preview-classic .builder-template-preview-label { color: rgba(255,255,255,0.9); }
 
-/* Moderne : rouge */
-.builder-template-preview-bold .builder-template-preview-header,
+/* Moderne : rouge premium */
+.builder-template-preview-bold .builder-template-preview-header {
+  background: linear-gradient(165deg, #d42d4a 0%, #b91c38 100%);
+  color: #fff;
+}
 .builder-template-preview-bold .builder-template-preview-body {
-  background: #c41e3a;
+  background: linear-gradient(180deg, #c41e3a 0%, #a01830 100%);
   color: #fff;
 }
-.builder-template-preview-bold .builder-template-preview-label { color: #ffd700; }
+.builder-template-preview-bold .builder-template-preview-label { color: rgba(255,255,255,0.92); }
 
-/* Élégant : beige / marron */
-.builder-template-preview-elegant .builder-template-preview-header,
-.builder-template-preview-elegant .builder-template-preview-body {
-  background: #8b7355;
+/* Élégant : taupe / or */
+.builder-template-preview-elegant .builder-template-preview-header {
+  background: linear-gradient(165deg, #9a8268 0%, #7d6852 100%);
   color: #fff;
 }
-.builder-template-preview-elegant .builder-template-preview-label { color: #f5f0e6; }
+.builder-template-preview-elegant .builder-template-preview-body {
+  background: linear-gradient(180deg, #8b7355 0%, #6f5c45 100%);
+  color: #fff;
+}
+.builder-template-preview-elegant .builder-template-preview-label { color: rgba(255,255,255,0.9); }
 
 .builder-fields-compact {
   max-width: 420px;
