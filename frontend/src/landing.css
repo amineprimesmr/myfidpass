@@ -738,6 +738,7 @@
   color: #000;
   text-decoration: none;
   letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 .builder-header-logo:hover {
   color: #333;
@@ -809,23 +810,11 @@
 .landing-builder {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 1rem 1.5rem 3rem;
 }
 
 .builder-inner {
   position: relative;
-}
-
-.builder-back {
-  display: inline-block;
-  margin-bottom: 1.5rem;
-  color: var(--landing-muted);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.builder-back:hover {
-  color: var(--landing-accent);
 }
 
 .builder-steps {
