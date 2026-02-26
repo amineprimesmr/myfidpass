@@ -677,7 +677,6 @@
               <p class="builder-subtitle">Glissez les cartes dans l’aperçu ou choisissez un modèle ci-dessous. Personnalisation des couleurs et du logo après paiement.</p>
               <div class="builder-phone-mockup" id="builder-phone-mockup">
                 <div class="builder-phone-frame">
-                  <div class="builder-phone-notch"></div>
                   <div class="builder-phone-screen">
                     <div class="builder-wallet-slider" id="builder-wallet-slider">
                       <div class="builder-wallet-card builder-wallet-card-classic" data-template="classic">
@@ -706,6 +705,20 @@
                       </div>
                     </div>
                   </div>
+                  <svg class="builder-phone-frame-svg" viewBox="0 0 280 577" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="iphone-frame-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3a3a3c"/>
+                        <stop offset="50%" style="stop-color:#1c1c1e"/>
+                        <stop offset="100%" style="stop-color:#3a3a3c"/>
+                      </linearGradient>
+                      <filter id="iphone-shadow" x="-30%" y="-10%" width="160%" height="120%">
+                        <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000" flood-opacity="0.5"/>
+                      </filter>
+                    </defs>
+                    <path fill-rule="evenodd" d="M47 0h186c26 0 47 21 47 47v483c0 26-21 47-47 47H47C21 577 0 556 0 530V47C0 21 21 0 47 0zm0 52h186c18 0 33 15 33 33v407c0 18-15 33-33 33H47c-18 0-33-15-33-33V85c0-18 15-33 33-33z" fill="url(#iphone-frame-gradient)" filter="url(#iphone-shadow)"/>
+                    <ellipse cx="140" cy="38" rx="62" ry="17" fill="#0a0a0a"/>
+                  </svg>
                 </div>
                 <div class="builder-phone-dots" id="builder-phone-dots" aria-label="Choisir le modèle">
                   <button type="button" class="builder-phone-dot active" data-index="0" aria-label="Classique" aria-current="true"></button>
