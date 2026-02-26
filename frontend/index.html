@@ -16,6 +16,13 @@
     <link rel="stylesheet" href="/src/app.css" />
   </head>
   <body>
+    <!-- Bannière média (image ou vidéo) : dépose hero.jpg ou hero.mp4 dans public/assets/banner/ -->
+    <div class="site-banner-media" id="site-banner-media" style="display: none">
+      <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" onerror="this.style.display='none'" onload="document.getElementById('site-banner-media').style.display=''">
+      <video class="site-banner-media-video" autoplay muted loop playsinline onloadeddata="document.getElementById('site-banner-media').style.display=''; this.parentElement.querySelector('.site-banner-media-img').style.display='none'" onerror="this.style.display='none'">
+        <source src="/assets/banner/hero.mp4" type="video/mp4">
+      </video>
+    </div>
     <!-- Bannière promo (toutes les pages) -->
     <div class="site-banner">
       <p class="site-banner-text">Essayez Fidpass GRATUITEMENT aujourd'hui <a href="/creer-ma-carte" class="site-banner-link">Rejoindre</a></p>
