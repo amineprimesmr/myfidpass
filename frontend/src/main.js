@@ -1,5 +1,4 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
-import ColorThief from "colorthief";
 
 const API_BASE = typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL : "";
 const AUTH_TOKEN_KEY = "fidpass_token";
@@ -410,6 +409,132 @@ function initAppDashboard(slug) {
     });
   }
 
+  // ——— Personnaliser la carte ———
+  const personnaliserOrg = document.getElementById("app-personnaliser-org");
+  const personnaliserBg = document.getElementById("app-personnaliser-bg");
+  const personnaliserBgHex = document.getElementById("app-personnaliser-bg-hex");
+  const personnaliserFg = document.getElementById("app-personnaliser-fg");
+  const personnaliserFgHex = document.getElementById("app-personnaliser-fg-hex");
+  const personnaliserLabel = document.getElementById("app-personnaliser-label");
+  const personnaliserLabelHex = document.getElementById("app-personnaliser-label-hex");
+  const personnaliserLogo = document.getElementById("app-personnaliser-logo");
+  const personnaliserLogoPlaceholder = document.getElementById("app-personnaliser-logo-placeholder");
+  const personnaliserLogoPreview = document.getElementById("app-personnaliser-logo-preview");
+  const personnaliserBackTerms = document.getElementById("app-personnaliser-back-terms");
+  const personnaliserBackContact = document.getElementById("app-personnaliser-back-contact");
+  const personnaliserMessage = document.getElementById("app-personnaliser-message");
+  const personnaliserSave = document.getElementById("app-personnaliser-save");
+  let personnaliserLogoDataUrl = "";
+
+  function showPersonnaliserMessage(text, isError = false) {
+    if (!personnaliserMessage) return;
+    personnaliserMessage.textContent = text;
+    personnaliserMessage.classList.remove("hidden", "success", "error");
+    personnaliserMessage.classList.add(isError ? "error" : "success");
+  }
+  function bindPersonnaliserColor(colorEl, hexEl) {
+    if (!colorEl || !hexEl) return;
+    colorEl.addEventListener("input", () => {
+      hexEl.value = colorEl.value;
+    });
+    hexEl.addEventListener("input", () => {
+      const v = hexEl.value.trim();
+      if (/^#[0-9A-Fa-f]{6}$/.test(v) || /^[0-9A-Fa-f]{6}$/.test(v)) {
+        colorEl.value = v.startsWith("#") ? v : "#" + v;
+      }
+    });
+  }
+  bindPersonnaliserColor(personnaliserBg, personnaliserBgHex);
+  bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
+  bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
+
+  api("/dashboard/settings")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!data) return;
+      if (personnaliserOrg) personnaliserOrg.value = data.organizationName || "";
+      const bg = data.backgroundColor || "#0a7c42";
+      const fg = data.foregroundColor || "#ffffff";
+      const label = data.labelColor || "#e8f5e9";
+      if (personnaliserBg) personnaliserBg.value = bg;
+      if (personnaliserBgHex) personnaliserBgHex.value = bg;
+      if (personnaliserFg) personnaliserFg.value = fg;
+      if (personnaliserFgHex) personnaliserFgHex.value = fg;
+      if (personnaliserLabel) personnaliserLabel.value = label;
+      if (personnaliserLabelHex) personnaliserLabelHex.value = label;
+      if (personnaliserBackTerms) personnaliserBackTerms.value = data.backTerms || "";
+      if (personnaliserBackContact) personnaliserBackContact.value = data.backContact || "";
+    })
+    .catch(() => {});
+
+  if (personnaliserLogo) {
+    personnaliserLogo.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = () => {
+        personnaliserLogoDataUrl = r.result;
+        if (personnaliserLogoPreview) {
+          personnaliserLogoPreview.src = personnaliserLogoDataUrl;
+          personnaliserLogoPreview.classList.remove("hidden");
+        }
+        if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+      };
+      r.readAsDataURL(file);
+    });
+  }
+
+  if (personnaliserSave) {
+    personnaliserSave.addEventListener("click", async () => {
+      const organizationName = personnaliserOrg?.value?.trim() || "";
+      const backgroundColor = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
+      const foregroundColor = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
+      const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#e8f5e9";
+      const backTerms = personnaliserBackTerms?.value?.trim() || "";
+      const backContact = personnaliserBackContact?.value?.trim() || "";
+      const toHex = (v) => {
+        const s = (v || "").trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(s)) return s;
+        if (/^[0-9A-Fa-f]{6}$/.test(s)) return "#" + s;
+        return undefined;
+      };
+      const body = {
+        organizationName: organizationName || undefined,
+        backgroundColor: toHex(backgroundColor),
+        foregroundColor: toHex(foregroundColor),
+        labelColor: toHex(labelColor),
+        backTerms: backTerms || undefined,
+        backContact: backContact || undefined,
+      };
+      if (personnaliserLogoDataUrl) body.logoBase64 = personnaliserLogoDataUrl;
+      personnaliserSave.disabled = true;
+      showPersonnaliserMessage("");
+      try {
+        const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          showPersonnaliserMessage("Modifications enregistrées.");
+          personnaliserLogoDataUrl = "";
+          if (personnaliserLogo) personnaliserLogo.value = "";
+          if (personnaliserLogoPreview) {
+            personnaliserLogoPreview.src = "";
+            personnaliserLogoPreview.classList.add("hidden");
+          }
+          if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
+        } else {
+          showPersonnaliserMessage(data.error || "Erreur lors de l’enregistrement.", true);
+        }
+      } catch (_) {
+        showPersonnaliserMessage("Erreur réseau.", true);
+      }
+      personnaliserSave.disabled = false;
+    });
+  }
+
   // ——— Scanner (caméra) ———
   const scannerViewport = document.getElementById("app-scanner-viewport");
   const scannerPlaceholder = document.getElementById("app-scanner-placeholder");
@@ -790,8 +915,12 @@ function initAppDashboard(slug) {
   refresh();
 }
 
-/** Fallback template (pass sans couleurs business) */
-const CARD_TEMPLATES = [{ id: "classic", name: "Classique", bg: "#0a7c42", fg: "#ffffff", label: "#e8f5e9" }];
+/** Modèles de carte (couleurs par défaut ; personnalisation dans l'app après paiement) */
+const CARD_TEMPLATES = [
+  { id: "classic", name: "Classique", bg: "#0a7c42", fg: "#ffffff", label: "#e8f5e9" },
+  { id: "bold", name: "Moderne", bg: "#c41e3a", fg: "#ffffff", label: "#ffd700" },
+  { id: "elegant", name: "Élégant", bg: "#8b7355", fg: "#ffffff", label: "#f5f0e6" },
+];
 
 const BUILDER_DRAFT_KEY = "fidpass_builder_draft";
 
@@ -811,28 +940,9 @@ function initBuilderPage() {
 
   const formBlock = document.getElementById("builder-form-block");
   const successBlock = document.getElementById("builder-success-block");
-  const previewCard = document.getElementById("builder-preview-card");
-  const previewHeader = document.getElementById("builder-preview-header");
-  const previewBody = document.getElementById("builder-preview-body");
-  const previewOrg = document.getElementById("builder-preview-org");
-  const previewLogo = document.getElementById("builder-preview-logo");
-  const previewPoints = document.getElementById("builder-preview-points");
-  const previewLevel = document.getElementById("builder-preview-level");
-
   const inputName = document.getElementById("builder-name");
   const inputSlug = document.getElementById("builder-slug");
   const slugPreview = document.getElementById("builder-slug-preview");
-  const inputBg = document.getElementById("builder-bg");
-  const inputBgHex = document.getElementById("builder-bg-hex");
-  const inputFg = document.getElementById("builder-fg");
-  const inputFgHex = document.getElementById("builder-fg-hex");
-  const inputLabel = document.getElementById("builder-label");
-  const inputLabelHex = document.getElementById("builder-label-hex");
-  const inputLogo = document.getElementById("builder-logo");
-  const logoPlaceholder = document.getElementById("builder-logo-placeholder");
-  const logoPreviewImg = document.getElementById("builder-logo-preview");
-  const inputBackTerms = document.getElementById("builder-back-terms");
-  const inputBackContact = document.getElementById("builder-back-contact");
   const btnSubmit = document.getElementById("builder-submit");
   const successLinkInput = document.getElementById("builder-success-link");
   const btnCopyLink = document.getElementById("builder-copy-link");
@@ -843,8 +953,6 @@ function initBuilderPage() {
   const builderAccountEmail = document.getElementById("builder-account-email");
   const builderAccountPassword = document.getElementById("builder-account-password");
   const builderAccountName = document.getElementById("builder-account-name");
-
-  let logoDataUrl = "";
 
   if (getAuthToken()) {
     if (builderAccountSection) builderAccountSection.classList.add("hidden");
@@ -859,11 +967,7 @@ function initBuilderPage() {
   const state = {
     name: etablissementFromUrl || "",
     slug: slugify(etablissementFromUrl) || "ma-carte",
-    backgroundColor: "#0a7c42",
-    foregroundColor: "#ffffff",
-    labelColor: "#e8f5e9",
-    backTerms: "",
-    backContact: "",
+    selectedTemplateId: "classic",
   };
 
   function loadDraft() {
@@ -873,273 +977,68 @@ function initBuilderPage() {
         const d = JSON.parse(raw);
         if (d.name !== undefined) state.name = d.name;
         if (d.slug !== undefined) state.slug = d.slug;
-        if (d.backgroundColor !== undefined) state.backgroundColor = d.backgroundColor;
-        if (d.foregroundColor !== undefined) state.foregroundColor = d.foregroundColor;
-        if (d.labelColor !== undefined) state.labelColor = d.labelColor;
-        if (d.backTerms !== undefined) state.backTerms = d.backTerms;
-        if (d.backContact !== undefined) state.backContact = d.backContact;
+        if (d.selectedTemplateId && CARD_TEMPLATES.some((t) => t.id === d.selectedTemplateId)) state.selectedTemplateId = d.selectedTemplateId;
       }
     } catch (_) {}
   }
 
   function saveDraft() {
     try {
-      localStorage.setItem(
-        BUILDER_DRAFT_KEY,
-        JSON.stringify({
-          name: state.name,
-          slug: state.slug,
-          backgroundColor: state.backgroundColor,
-          foregroundColor: state.foregroundColor,
-          labelColor: state.labelColor,
-          backTerms: state.backTerms,
-          backContact: state.backContact,
-        })
-      );
+      localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify({ name: state.name, slug: state.slug, selectedTemplateId: state.selectedTemplateId }));
     } catch (_) {}
   }
 
-  function updatePreview() {
-    previewOrg.textContent = state.name || "Nom du commerce";
-    previewHeader.style.backgroundColor = state.backgroundColor;
-    previewHeader.style.color = state.foregroundColor;
-    previewBody.style.backgroundColor = state.backgroundColor;
-    previewBody.style.color = state.foregroundColor;
-    previewCard.querySelectorAll(".builder-preview-label").forEach((el) => {
-      el.style.color = state.labelColor;
-    });
+  function syncInputsFromState() {
+    if (inputName) inputName.value = state.name;
+    if (inputSlug) inputSlug.value = state.slug;
     if (slugPreview) slugPreview.textContent = state.slug || "votre-lien";
   }
 
-  function syncInputsFromState() {
-    inputName.value = state.name;
-    inputSlug.value = state.slug;
-    inputBg.value = state.backgroundColor;
-    inputBgHex.value = state.backgroundColor;
-    inputFg.value = state.foregroundColor;
-    inputFgHex.value = state.foregroundColor;
-    inputLabel.value = state.labelColor;
-    inputLabelHex.value = state.labelColor;
-    inputBackTerms.value = state.backTerms;
-    inputBackContact.value = state.backContact;
-  }
-
-  function rgbToHex(r, g, b) {
-    return "#" + [r, g, b].map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, "0")).join("");
-  }
-  function luminance(r, g, b) {
-    return 0.299 * r + 0.587 * g + 0.114 * b;
-  }
-
-  function applyColorsFromPlace(placeId) {
-    const msgEl = document.getElementById("builder-colors-from-place");
-    const failedEl = document.getElementById("builder-colors-failed");
-    if (failedEl) failedEl.classList.add("hidden");
-    function tryApplyWithImageBlob(blob) {
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const cf = new ColorThief();
-          const palette = cf.getPalette(img, 3);
-          if (!palette || palette.length < 2) return;
-          const hexes = palette.map(([r, g, b]) => ({ hex: rgbToHex(r, g, b), l: luminance(r, g, b) }));
-          // Couleur dominante (première du palette) = fond ; texte contrasté ; label = plus claire
-          const dominant = hexes[0];
-          state.backgroundColor = dominant.hex;
-          state.foregroundColor = dominant.l < 0.5 ? "#ffffff" : "#1a1a1a";
-          const lightest = hexes.reduce((a, b) => (a.l > b.l ? a : b));
-          state.labelColor = lightest.l > 0.5 ? lightest.hex : "#e8f5e9";
-          syncInputsFromState();
-          updatePreview();
-          saveDraft();
-          if (msgEl) msgEl.classList.remove("hidden");
-          if (failedEl) failedEl.classList.add("hidden");
-          // Logo suggéré : même photo recadrée au format carte (320×100)
-          try {
-            const c = document.createElement("canvas");
-            c.width = 320;
-            c.height = 100;
-            const ctx = c.getContext("2d");
-            const scale = Math.max(c.width / img.naturalWidth, c.height / img.naturalHeight);
-            const srcW = c.width / scale;
-            const srcH = c.height / scale;
-            const srcX = (img.naturalWidth - srcW) / 2;
-            const srcY = (img.naturalHeight - srcH) / 2;
-            ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, c.width, c.height);
-            logoDataUrl = c.toDataURL("image/png");
-            logoPreviewImg.src = logoDataUrl;
-            logoPreviewImg.classList.remove("hidden");
-            logoPlaceholder.classList.add("hidden");
-            if (previewLogo) {
-              previewLogo.src = logoDataUrl;
-              previewLogo.classList.add("visible");
-            }
-          } catch (_) {}
-        } catch (_) {
-          if (failedEl) failedEl.classList.remove("hidden");
-        }
-        URL.revokeObjectURL(url);
-      };
-      img.onerror = () => {
-        if (failedEl) failedEl.classList.remove("hidden");
-        URL.revokeObjectURL(url);
-      };
-      img.src = url;
-    }
-    // En prod : fetch via backend puis extraction depuis le blob (évite CORS / canvas tainted)
-    if (API_BASE) {
-      const photoUrl = `${API_BASE}/api/place-photo?place_id=${encodeURIComponent(placeId)}`;
-      fetch(photoUrl)
-        .then(async (r) => {
-          if (!r.ok) {
-            let hint = "";
-            try {
-              const body = await r.json();
-              if (body.hint) hint = body.hint;
-              else if (body.error) hint = body.error;
-            } catch (_) {}
-            if (failedEl) {
-              failedEl.classList.remove("hidden");
-              if (hint) failedEl.innerHTML = hint.replace(/\.$/, "") + ". <br><strong>Choisissez les couleurs ci-dessous</strong> si besoin.";
-            }
-            return null;
-          }
-          return r.blob();
-        })
-        .then((blob) => {
-          if (blob && blob.type.startsWith("image/")) tryApplyWithImageBlob(blob);
-          else if (failedEl && !failedEl.innerHTML) failedEl.classList.remove("hidden");
-        })
-        .catch(() => {
-          if (failedEl) failedEl.classList.remove("hidden");
-        });
-      return;
-    }
-    // En local sans backend : appel direct Google (peut échouer à cause du CORS)
-    const apiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
-    if (!apiKey) return;
-    function tryApplyWithImageUrl(src) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        try {
-          const cf = new ColorThief();
-          const palette = cf.getPalette(img, 3);
-          if (!palette || palette.length < 2) return;
-          const hexes = palette.map(([r, g, b]) => ({ hex: rgbToHex(r, g, b), l: luminance(r, g, b) }));
-          const dominant = hexes[0];
-          state.backgroundColor = dominant.hex;
-          state.foregroundColor = dominant.l < 0.5 ? "#ffffff" : "#1a1a1a";
-          const lightest = hexes.reduce((a, b) => (a.l > b.l ? a : b));
-          state.labelColor = lightest.l > 0.5 ? lightest.hex : "#e8f5e9";
-          syncInputsFromState();
-          updatePreview();
-          saveDraft();
-          if (msgEl) msgEl.classList.remove("hidden");
-        } catch (_) {
-          if (failedEl) failedEl.classList.remove("hidden");
-        }
-      };
-      img.onerror = () => {
-        if (failedEl) failedEl.classList.remove("hidden");
-      };
-      img.src = src;
-    }
-    fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=photos&key=${apiKey}`
-    )
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.status !== "OK" || !data.result?.photos?.length) return;
-        const ref = data.result.photos[0].photo_reference;
-        const directPhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${encodeURIComponent(ref)}&key=${apiKey}`;
-        tryApplyWithImageUrl(directPhotoUrl);
-      })
-      .catch(() => {});
+  function setTemplateSelection(templateId) {
+    state.selectedTemplateId = templateId;
+    document.querySelectorAll(".builder-template-card").forEach((btn) => {
+      const isSelected = btn.getAttribute("data-template") === templateId;
+      btn.classList.toggle("builder-template-selected", isSelected);
+      btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+    });
+    saveDraft();
   }
 
   loadDraft();
   if (etablissementFromUrl && !state.name) state.name = etablissementFromUrl;
   if (etablissementFromUrl && state.slug === "ma-carte") state.slug = slugify(etablissementFromUrl);
   syncInputsFromState();
-  updatePreview();
+  setTemplateSelection(state.selectedTemplateId);
 
-  const placeIdFromUrl = params.get("place_id") || "";
-  if (placeIdFromUrl) applyColorsFromPlace(placeIdFromUrl);
+  document.querySelectorAll(".builder-template-card").forEach((btn) => {
+    btn.addEventListener("click", () => setTemplateSelection(btn.getAttribute("data-template")));
+  });
 
-  inputName.addEventListener("input", () => {
+  inputName?.addEventListener("input", () => {
     state.name = inputName.value.trim();
-    if (!inputSlug.dataset.manual) state.slug = slugify(state.name) || "ma-carte";
-    inputSlug.value = state.slug;
-    updatePreview();
+    if (!inputSlug?.dataset.manual) state.slug = slugify(state.name) || "ma-carte";
+    if (inputSlug) inputSlug.value = state.slug;
+    if (slugPreview) slugPreview.textContent = state.slug || "votre-lien";
     saveDraft();
   });
 
-  inputSlug.addEventListener("input", () => {
-    inputSlug.dataset.manual = "1";
-    state.slug = slugify(inputSlug.value) || "ma-carte";
-    inputSlug.value = state.slug;
+  inputSlug?.addEventListener("input", () => {
+    if (inputSlug) inputSlug.dataset.manual = "1";
+    state.slug = slugify(inputSlug?.value || "") || "ma-carte";
+    if (inputSlug) inputSlug.value = state.slug;
     if (slugPreview) slugPreview.textContent = state.slug;
     saveDraft();
   });
 
-  function bindColor(inputColor, inputHex, key) {
-    inputColor.addEventListener("input", () => {
-      state[key] = inputColor.value;
-      inputHex.value = state[key];
-      updatePreview();
-      saveDraft();
-    });
-    inputHex.addEventListener("input", () => {
-      const v = inputHex.value.trim();
-      if (/^#[0-9A-Fa-f]{6}$/.test(v) || /^[0-9A-Fa-f]{6}$/.test(v)) {
-        state[key] = v.startsWith("#") ? v : `#${v}`;
-        inputColor.value = state[key];
-        updatePreview();
-        saveDraft();
-      }
-    });
-  }
-  bindColor(inputBg, inputBgHex, "backgroundColor");
-  bindColor(inputFg, inputFgHex, "foregroundColor");
-  bindColor(inputLabel, inputLabelHex, "labelColor");
-
-  inputLogo.addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const r = new FileReader();
-    r.onload = () => {
-      logoDataUrl = r.result;
-      logoPreviewImg.src = logoDataUrl;
-      logoPreviewImg.classList.remove("hidden");
-      logoPlaceholder.classList.add("hidden");
-      if (previewLogo) {
-        previewLogo.src = logoDataUrl;
-        previewLogo.classList.add("visible");
-      }
-    };
-    r.readAsDataURL(file);
-  });
-
-  inputBackTerms.addEventListener("input", () => {
-    state.backTerms = inputBackTerms.value.trim();
-    saveDraft();
-  });
-  inputBackContact.addEventListener("input", () => {
-    state.backContact = inputBackContact.value.trim();
-    saveDraft();
-  });
-
-  btnSubmit.addEventListener("click", async () => {
+  btnSubmit?.addEventListener("click", async () => {
     const name = state.name.trim();
     if (!name) {
-      inputName.focus();
+      inputName?.focus();
       return;
     }
     const slug = state.slug || slugify(name);
     if (!slug) {
-      inputSlug.focus();
+      inputSlug?.focus();
       return;
     }
 
@@ -1177,18 +1076,16 @@ function initBuilderPage() {
 
     btnSubmit.disabled = true;
     btnSubmit.textContent = "Création…";
+    const tpl = CARD_TEMPLATES.find((t) => t.id === state.selectedTemplateId) || CARD_TEMPLATES[0];
     try {
       const body = {
         name,
         slug,
         organizationName: name,
-        backgroundColor: state.backgroundColor,
-        foregroundColor: state.foregroundColor,
-        labelColor: state.labelColor,
-        backTerms: state.backTerms || undefined,
-        backContact: state.backContact || undefined,
+        backgroundColor: tpl.bg,
+        foregroundColor: tpl.fg,
+        labelColor: tpl.label,
       };
-      if (logoDataUrl) body.logoBase64 = logoDataUrl;
 
       const apiUrl = `${API_BASE}/api/businesses`;
       const res = await fetch(apiUrl, {

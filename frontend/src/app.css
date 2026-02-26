@@ -308,6 +308,28 @@
 
 .app-input-amount { max-width: 140px; }
 
+/* Personnaliser la carte */
+.app-personnaliser-card .app-step-label { margin-top: 1rem; display: block; }
+.app-personnaliser-card .app-step-label:first-child { margin-top: 0; }
+.app-personnaliser-colors { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.5rem; }
+.app-color-row { display: flex; align-items: center; gap: 0.5rem; }
+.app-color-row .app-label { margin: 0; margin-right: 0.25rem; font-size: 0.85rem; min-width: 3rem; }
+.app-color-input { width: 40px; height: 36px; padding: 2px; border: 1px solid var(--app-border); border-radius: 8px; cursor: pointer; }
+.app-input-hex { max-width: 90px; margin-bottom: 0; }
+.app-personnaliser-logo { margin-bottom: 0.5rem; }
+.app-file { position: absolute; opacity: 0; width: 0; height: 0; }
+.app-logo-label { display: inline-flex; align-items: center; justify-content: center; min-height: 80px; padding: 1rem; border: 2px dashed var(--app-border); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: var(--app-text-muted); }
+.app-logo-label:hover { border-color: var(--app-accent); }
+.app-logo-preview { max-width: 200px; max-height: 60px; object-fit: contain; }
+.app-logo-preview.hidden { display: none; }
+.app-textarea { width: 100%; max-width: 360px; padding: 0.75rem 1rem; font-family: inherit; font-size: 1rem; color: var(--app-text); background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 10px; margin-bottom: 0.5rem; box-sizing: border-box; resize: vertical; min-height: 80px; }
+.app-personnaliser-message { margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; }
+.app-personnaliser-message.success { background: #e8f5e9; color: #2e7d32; }
+.app-personnaliser-message.error { background: #ffebee; color: #c62828; }
+.app-personnaliser-message.hidden { display: none; }
+.app-personnaliser-card .app-btn { margin-top: 0.5rem; }
+.app-label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--app-text-muted); margin-bottom: 0.25rem; }
+
 .app-caisse-row {
   display: flex;
   flex-wrap: wrap;

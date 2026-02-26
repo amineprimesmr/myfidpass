@@ -6,6 +6,7 @@ import {
   getBusinessBySlug,
   getBusinessByDashboardToken,
   createBusiness,
+  updateBusiness,
   createMember,
   getMemberForBusiness,
   addPoints,
@@ -35,6 +36,26 @@ function canAccessDashboard(business, req) {
   if (req.user && business.user_id === req.user.id) return true;
   return false;
 }
+
+/**
+ * GET /api/businesses/:slug/dashboard/settings
+ * Paramètres de personnalisation (couleurs, dos, nom) — token ou JWT propriétaire.
+ */
+router.get("/:slug/dashboard/settings", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  res.json({
+    organizationName: business.organization_name,
+    backgroundColor: business.background_color ?? undefined,
+    foregroundColor: business.foreground_color ?? undefined,
+    labelColor: business.label_color ?? undefined,
+    backTerms: business.back_terms ?? undefined,
+    backContact: business.back_contact ?? undefined,
+  });
+});
 
 /**
  * GET /api/businesses/:slug/dashboard/stats
@@ -349,5 +370,60 @@ function normalizeHex(value) {
   if (/^[0-9A-Fa-f]{6}$/.test(v)) return `#${v}`;
   return null;
 }
+
+/**
+ * PATCH /api/businesses/:slug — Mise à jour design (couleurs, dos, logo) — token ou JWT propriétaire.
+ * Body: { organizationName?, backTerms?, backContact?, backgroundColor?, foregroundColor?, labelColor?, logoBase64? }
+ */
+router.patch("/:slug", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const {
+    organizationName,
+    backTerms,
+    backContact,
+    backgroundColor,
+    foregroundColor,
+    labelColor,
+    logoBase64,
+  } = req.body || {};
+  const updates = {};
+  if (organizationName !== undefined) updates.organization_name = organizationName ? String(organizationName).trim() : null;
+  if (backTerms !== undefined) updates.back_terms = backTerms ? String(backTerms).trim() : null;
+  if (backContact !== undefined) updates.back_contact = backContact ? String(backContact).trim() : null;
+  if (backgroundColor !== undefined) updates.background_color = normalizeHex(backgroundColor);
+  if (foregroundColor !== undefined) updates.foreground_color = normalizeHex(foregroundColor);
+  if (labelColor !== undefined) updates.label_color = normalizeHex(labelColor);
+  const updated = updateBusiness(business.id, updates);
+  if (!updated) return res.status(500).json({ error: "Erreur mise à jour" });
+
+  const dir = join(businessAssetsDir, business.id);
+  if (logoBase64 && typeof logoBase64 === "string") {
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, "");
+    try {
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > 0 && buf.length < 5 * 1024 * 1024) {
+        writeFileSync(join(dir, "logo.png"), buf);
+        writeFileSync(join(dir, "logo@2x.png"), buf);
+      }
+    } catch (err) {
+      console.warn("Logo save failed:", err.message);
+    }
+  }
+
+  res.json({
+    id: updated.id,
+    name: updated.name,
+    slug: updated.slug,
+    organizationName: updated.organization_name,
+    backgroundColor: updated.background_color ?? undefined,
+    foregroundColor: updated.foreground_color ?? undefined,
+    labelColor: updated.label_color ?? undefined,
+  });
+});
 
 export default router;

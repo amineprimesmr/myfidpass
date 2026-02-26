@@ -115,6 +115,10 @@
             <span class="app-sidebar-icon" aria-hidden="true">📋</span>
             Historique
           </a>
+          <a href="#personnaliser" class="app-sidebar-link" data-section="personnaliser">
+            <span class="app-sidebar-icon" aria-hidden="true">🎨</span>
+            Personnaliser la carte
+          </a>
         </nav>
         <div class="app-sidebar-footer">
           <a href="/creer-ma-carte" class="app-sidebar-link app-sidebar-link-cta">Créer une carte</a>
@@ -258,6 +262,48 @@
                   <tbody id="app-transactions-tbody"></tbody>
                 </table>
               </div>
+            </div>
+          </section>
+
+          <section id="personnaliser" class="app-section">
+            <h2 class="app-section-title">Personnaliser la carte</h2>
+            <p class="app-section-desc">Modifiez les couleurs, le logo et le dos de la carte. Les changements s’appliquent aux nouvelles cartes ajoutées par vos clients.</p>
+            <div class="app-card app-personnaliser-card">
+              <p class="app-step-label">Nom affiché sur la carte</p>
+              <input type="text" id="app-personnaliser-org" class="app-input" placeholder="Nom du commerce" />
+              <p class="app-step-label">Couleurs</p>
+              <div class="app-personnaliser-colors">
+                <div class="app-color-row">
+                  <label class="app-label">Fond</label>
+                  <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#0a7c42" />
+                  <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#0a7c42" maxlength="7" />
+                </div>
+                <div class="app-color-row">
+                  <label class="app-label">Texte</label>
+                  <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#ffffff" />
+                  <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
+                </div>
+                <div class="app-color-row">
+                  <label class="app-label">Labels</label>
+                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#e8f5e9" />
+                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#e8f5e9" maxlength="7" />
+                </div>
+              </div>
+              <p class="app-step-label">Logo (recommandé 320×100 px)</p>
+              <div class="app-personnaliser-logo">
+                <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" />
+                <label for="app-personnaliser-logo" class="app-logo-label">
+                  <span id="app-personnaliser-logo-placeholder">+ Changer le logo</span>
+                  <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
+                </label>
+              </div>
+              <p class="app-step-label">Dos de la carte (optionnel)</p>
+              <label class="app-label">Conditions</label>
+              <textarea id="app-personnaliser-back-terms" class="app-textarea" placeholder="ex. 1 point = 1 € de réduction" rows="2"></textarea>
+              <label class="app-label">Contact</label>
+              <input type="text" id="app-personnaliser-back-contact" class="app-input" placeholder="contact@votrecommerce.fr" />
+              <div id="app-personnaliser-message" class="app-personnaliser-message hidden"></div>
+              <button type="button" id="app-personnaliser-save" class="app-btn app-btn-primary">Enregistrer les modifications</button>
             </div>
           </section>
         </div>
@@ -436,100 +482,66 @@
         </div>
       </main>
 
-      <!-- Page créateur de carte (1 template personnalisable) -->
+      <!-- Page créateur de carte : 3 modèles, identité, compte. Personnalisation (couleurs, logo) dans l'app après paiement. -->
       <main id="landing-templates" class="landing-builder hidden">
         <div class="builder-inner">
           <a href="/" class="builder-back">← Retour à l'accueil</a>
           <div class="builder-steps">
-            <span class="builder-step active">1. Personnalisez</span>
+            <span class="builder-step active">1. Choisissez un modèle</span>
             <span class="builder-step-sep">→</span>
-            <span class="builder-step" id="builder-step-2">2. Enregistrez</span>
+            <span class="builder-step" id="builder-step-2">2. Créez votre carte</span>
             <span class="builder-step-sep">→</span>
             <span class="builder-step" id="builder-step-3">3. Partagez</span>
           </div>
 
           <div id="builder-form-block" class="builder-form-block">
             <h1 class="builder-title">À quoi ressemblera votre carte</h1>
-            <p class="builder-subtitle">Modifiez les couleurs, le texte et ajoutez votre logo. La prévisualisation se met à jour en direct.</p>
+            <p class="builder-subtitle">Choisissez un modèle ci-dessous. Vous pourrez personnaliser les couleurs et le logo après le paiement dans votre espace.</p>
 
-            <div class="builder-layout">
-              <div class="builder-preview-wrap">
-                <div class="builder-preview-card" id="builder-preview-card">
-                  <div class="builder-preview-header" id="builder-preview-header">
-                    <img class="builder-preview-logo" id="builder-preview-logo" src="" alt="" />
-                    <span class="builder-preview-org" id="builder-preview-org">Nom du commerce</span>
+            <div class="builder-templates" id="builder-templates">
+              <button type="button" class="builder-template-card builder-template-selected" id="builder-template-classic" data-template="classic" aria-pressed="true">
+                <span class="builder-template-name">Classique</span>
+                <div class="builder-template-preview builder-template-preview-classic">
+                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                  <div class="builder-template-preview-body">
+                    <span class="builder-template-preview-pts">0 pts</span>
+                    <span class="builder-template-preview-label">Points</span>
                   </div>
-                  <div class="builder-preview-body" id="builder-preview-body">
-                    <div class="builder-preview-primary">
-                      <span class="builder-preview-points" id="builder-preview-points">0 pts</span>
-                      <span class="builder-preview-points-label">Points</span>
-                    </div>
-                    <div class="builder-preview-secondary">
-                      <span class="builder-preview-label">Niveau</span>
-                      <span class="builder-preview-value" id="builder-preview-level">Débutant</span>
-                    </div>
-                    <div class="builder-preview-aux">
-                      <span class="builder-preview-label">Membre</span>
-                      <span class="builder-preview-value">Marie D.</span>
-                    </div>
-                  </div>
-                  <div class="builder-preview-barcode"></div>
+                  <div class="builder-template-preview-barcode"></div>
                 </div>
-                <p class="builder-preview-hint">Aperçu. La carte réelle s’affichera dans Apple Wallet ou Google Wallet.</p>
-              </div>
+              </button>
+              <button type="button" class="builder-template-card" id="builder-template-bold" data-template="bold" aria-pressed="false">
+                <span class="builder-template-name">Moderne</span>
+                <div class="builder-template-preview builder-template-preview-bold">
+                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                  <div class="builder-template-preview-body">
+                    <span class="builder-template-preview-pts">0 pts</span>
+                    <span class="builder-template-preview-label">Points</span>
+                  </div>
+                  <div class="builder-template-preview-barcode"></div>
+                </div>
+              </button>
+              <button type="button" class="builder-template-card" id="builder-template-elegant" data-template="elegant" aria-pressed="false">
+                <span class="builder-template-name">Élégant</span>
+                <div class="builder-template-preview builder-template-preview-elegant">
+                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                  <div class="builder-template-preview-body">
+                    <span class="builder-template-preview-pts">0 pts</span>
+                    <span class="builder-template-preview-label">Points</span>
+                  </div>
+                  <div class="builder-template-preview-barcode"></div>
+                </div>
+              </button>
+            </div>
 
-              <div class="builder-fields">
+            <div class="builder-fields builder-fields-compact">
                 <section class="builder-section">
                   <h2 class="builder-section-title">Identité</h2>
                   <label class="builder-label">Nom de l’établissement</label>
                   <input type="text" id="builder-name" class="builder-input" placeholder="ex. Café NBK" autocomplete="organization" />
-                  <p class="builder-helper">Utilisez la recherche sur la page d'accueil pour trouver votre commerce : les couleurs de la carte se rempliront automatiquement.</p>
                   <label class="builder-label">Votre lien (modifiable)</label>
                   <input type="text" id="builder-slug" class="builder-input builder-input-slug" placeholder="cafe-nbk" />
                   <p class="builder-hint">Vos clients iront sur : …/fidelity/<strong id="builder-slug-preview">votre-lien</strong></p>
-                </section>
-
-                <section class="builder-section" id="builder-section-colors">
-                  <h2 class="builder-section-title">Couleurs</h2>
-                  <p class="builder-colors-from-place hidden" id="builder-colors-from-place">Couleurs suggérées d'après votre établissement.</p>
-                  <p class="builder-colors-failed hidden" id="builder-colors-failed">Couleurs automatiques indisponibles. Choisissez les couleurs ci-dessous (et vérifiez que <strong>GOOGLE_PLACES_API_KEY</strong> est défini sur le backend Railway).</p>
-                  <div class="builder-colors">
-                    <div class="builder-color-row">
-                      <label class="builder-label">Fond</label>
-                      <input type="color" id="builder-bg" class="builder-color-input" value="#0a7c42" />
-                      <input type="text" id="builder-bg-hex" class="builder-input builder-input-hex" value="#0a7c42" maxlength="7" />
-                    </div>
-                    <div class="builder-color-row">
-                      <label class="builder-label">Texte</label>
-                      <input type="color" id="builder-fg" class="builder-color-input" value="#ffffff" />
-                      <input type="text" id="builder-fg-hex" class="builder-input builder-input-hex" value="#ffffff" maxlength="7" />
-                    </div>
-                    <div class="builder-color-row">
-                      <label class="builder-label">Labels</label>
-                      <input type="color" id="builder-label" class="builder-color-input" value="#e8f5e9" />
-                      <input type="text" id="builder-label-hex" class="builder-input builder-input-hex" value="#e8f5e9" maxlength="7" />
-                    </div>
-                  </div>
-                </section>
-
-                <section class="builder-section">
-                  <h2 class="builder-section-title">Logo</h2>
-                  <p class="builder-hint">Recommandé : 320×100 px (PNG ou JPG). Affiché en haut de la carte.</p>
-                  <div class="builder-logo-zone">
-                    <input type="file" id="builder-logo" class="builder-file" accept="image/png,image/jpeg,image/jpg" />
-                    <label for="builder-logo" class="builder-logo-label">
-                      <span class="builder-logo-placeholder" id="builder-logo-placeholder">+ Ajouter un logo</span>
-                      <img id="builder-logo-preview" class="builder-logo-preview hidden" alt="" />
-                    </label>
-                  </div>
-                </section>
-
-                <section class="builder-section">
-                  <h2 class="builder-section-title">Dos de la carte (optionnel)</h2>
-                  <label class="builder-label">Conditions</label>
-                  <textarea id="builder-back-terms" class="builder-textarea" placeholder="ex. 1 point = 1 € de réduction. Valable en magasin." rows="2"></textarea>
-                  <label class="builder-label">Contact</label>
-                  <input type="text" id="builder-back-contact" class="builder-input" placeholder="contact@votrecommerce.fr" />
                 </section>
                 <section class="builder-section builder-account-section" id="builder-account-section">
                   <h2 class="builder-section-title">Votre compte</h2>
@@ -546,7 +558,6 @@
                 </div>
                 <button type="button" id="builder-submit" class="landing-btn landing-btn-primary landing-btn-block landing-btn-large">Créer ma carte et mon compte</button>
               </div>
-            </div>
           </div>
 
           <div id="builder-success-block" class="builder-success-block hidden">

@@ -725,6 +725,124 @@
   margin: 0 0 1.5rem;
 }
 
+/* Grille des 3 modèles de carte */
+.builder-templates {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 700px) {
+  .builder-templates {
+    grid-template-columns: 1fr;
+  }
+}
+
+.builder-template-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--landing-surface);
+  border: 2px solid var(--landing-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  text-align: center;
+}
+
+.builder-template-card:hover {
+  border-color: var(--landing-accent);
+  box-shadow: 0 4px 12px rgba(74, 83, 255, 0.15);
+}
+
+.builder-template-card.builder-template-selected,
+.builder-template-card[aria-pressed="true"] {
+  border-color: var(--landing-accent);
+  box-shadow: 0 0 0 2px var(--landing-accent);
+}
+
+.builder-template-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--landing-text);
+}
+
+.builder-template-preview {
+  width: 100%;
+  max-width: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.builder-template-preview-header {
+  padding: 0.5rem 0.75rem;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.builder-template-preview-org {
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.builder-template-preview-body {
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.builder-template-preview-pts {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.builder-template-preview-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.builder-template-preview-barcode {
+  height: 28px;
+  background: repeating-linear-gradient(90deg, #000 0, #000 2px, transparent 2px, transparent 4px);
+}
+
+/* Classique : vert */
+.builder-template-preview-classic .builder-template-preview-header,
+.builder-template-preview-classic .builder-template-preview-body {
+  background: #0a7c42;
+  color: #fff;
+}
+.builder-template-preview-classic .builder-template-preview-label { color: #e8f5e9; }
+
+/* Moderne : rouge */
+.builder-template-preview-bold .builder-template-preview-header,
+.builder-template-preview-bold .builder-template-preview-body {
+  background: #c41e3a;
+  color: #fff;
+}
+.builder-template-preview-bold .builder-template-preview-label { color: #ffd700; }
+
+/* Élégant : beige / marron */
+.builder-template-preview-elegant .builder-template-preview-header,
+.builder-template-preview-elegant .builder-template-preview-body {
+  background: #8b7355;
+  color: #fff;
+}
+.builder-template-preview-elegant .builder-template-preview-label { color: #f5f0e6; }
+
+.builder-fields-compact {
+  max-width: 420px;
+}
+
 .builder-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;

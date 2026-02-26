@@ -222,6 +222,32 @@ export function createBusiness({
   return getBusinessById(bid);
 }
 
+export function updateBusiness(businessId, updates) {
+  const b = getBusinessById(businessId);
+  if (!b) return null;
+  const allowed = [
+    "organization_name",
+    "back_terms",
+    "back_contact",
+    "background_color",
+    "foreground_color",
+    "label_color",
+  ];
+  const setClauses = [];
+  const values = [];
+  for (const [key, value] of Object.entries(updates)) {
+    const col = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
+    if (allowed.includes(col) && value !== undefined) {
+      setClauses.push(`${col} = ?`);
+      values.push(value === null || value === "" ? null : String(value).trim());
+    }
+  }
+  if (setClauses.length === 0) return b;
+  values.push(businessId);
+  db.prepare(`UPDATE businesses SET ${setClauses.join(", ")} WHERE id = ?`).run(...values);
+  return getBusinessById(businessId);
+}
+
 export function createMember({ id, businessId, email, name }) {
   const mid = id || randomUUID();
   db.prepare(
