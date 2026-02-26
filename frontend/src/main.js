@@ -1749,6 +1749,64 @@ if (landingMenuToggle && landingMenuOverlay) {
   });
 }
 
+/**
+ * Vidéo hero : avance au scroll (scroll-linked video).
+ * La vidéo reste fixe pendant qu’on scroll dans la zone bannière, la position de lecture suit le scroll.
+ */
+function initScrollVideo() {
+  const wrap = document.getElementById("site-banner-scroll-wrap");
+  const video = document.getElementById("site-banner-video");
+  const fallbackImg = document.getElementById("site-banner-media-img");
+  const landingMain = document.getElementById("landing-main");
+  const landingEl = document.getElementById("landing");
+
+  if (!video || !wrap) return;
+
+  video.muted = true;
+  video.playsInline = true;
+
+  video.addEventListener("loadeddata", () => {
+    if (fallbackImg) fallbackImg.style.display = "none";
+  });
+
+  let ticking = false;
+  function updateVideoTime() {
+    if (!landingEl || landingEl.classList.contains("hidden")) return;
+    if (!landingMain || landingMain.classList.contains("hidden")) return;
+    if (!video.duration || !isFinite(video.duration)) return;
+
+    const rect = wrap.getBoundingClientRect();
+    const wrapTop = rect.top + window.scrollY;
+    const wrapHeight = wrap.offsetHeight;
+    const viewportHeight = window.innerHeight;
+    const scrollRange = Math.max(0, wrapHeight - viewportHeight);
+    if (scrollRange <= 0) {
+      video.currentTime = 0;
+      return;
+    }
+    const scrollY = window.scrollY;
+    const progress = (scrollY - wrapTop) / scrollRange;
+    const t = Math.max(0, Math.min(1, progress)) * video.duration;
+    video.currentTime = t;
+    ticking = false;
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(updateVideoTime);
+    }
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  video.addEventListener("loadedmetadata", () => {
+    updateVideoTime();
+  });
+  if (video.readyState >= 1) updateVideoTime();
+}
+
 // Bootstrap
 const slug = initRouting();
 if (slug) initFidelityApp(slug);
+if (document.getElementById("site-banner-scroll-wrap")) initScrollVideo();

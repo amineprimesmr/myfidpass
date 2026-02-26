@@ -351,11 +351,13 @@
         </div>
       </div>
 
-      <!-- Vidéo bannière (juste sous le menu) -->
-      <div class="site-banner-media" id="site-banner-media">
-        <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" onerror="this.style.display='none'">
-        <video class="site-banner-media-video" src="/assets/banner/hero.mp4" autoplay muted loop playsinline preload="auto" onloadeddata="var i=document.getElementById('site-banner-media').querySelector('.site-banner-media-img'); if(i) i.style.display='none';">
-        </video>
+      <!-- Vidéo bannière : avance au scroll (effet scroll-linked) -->
+      <div class="site-banner-scroll-wrap" id="site-banner-scroll-wrap">
+        <div class="site-banner-media site-banner-media-sticky" id="site-banner-media">
+          <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" id="site-banner-media-img" onerror="this.style.display='none'">
+          <video class="site-banner-media-video" id="site-banner-video" src="/assets/banner/hero.mp4" muted playsinline preload="auto" data-scroll-video>
+          </video>
+        </div>
       </div>
 
       <main id="landing-main" class="landing-main">
