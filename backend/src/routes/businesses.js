@@ -18,6 +18,7 @@ import {
 } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { generatePass } from "../pass.js";
+import { getGoogleWalletSaveUrl } from "../google-wallet.js";
 import { randomUUID } from "crypto";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -156,6 +157,7 @@ router.get("/:slug/members/:memberId", (req, res) => {
     email: member.email,
     name: member.name,
     points: member.points,
+    last_visit_at: member.last_visit_at || null,
   });
 });
 
@@ -234,6 +236,29 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
       detail: err.message,
     });
   }
+});
+
+/**
+ * GET /api/businesses/:slug/members/:memberId/google-wallet-url
+ * Retourne l'URL "Add to Google Wallet" pour ce membre (Android).
+ * 200 { url } ou 503 si Google Wallet non configuré.
+ */
+router.get("/:slug/members/:memberId/google-wallet-url", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+
+  const member = getMemberForBusiness(req.params.memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+
+  const frontendOrigin = req.get("Origin") || req.get("Referer")?.replace(/\/[^/]*$/, "") || process.env.FRONTEND_URL;
+  const result = getGoogleWalletSaveUrl(member, business, frontendOrigin);
+  if (!result) {
+    return res.status(503).json({
+      error: "Google Wallet non configuré",
+      code: "google_wallet_unavailable",
+    });
+  }
+  res.json(result);
 });
 
 /**

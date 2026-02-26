@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Fidpass — Carte de fidélité Apple Wallet pour votre commerce. Fidélisez vos clients en 3 secondes. Sans carte en plastique." />
+    <meta name="description" content="Fidpass — Carte de fidélité Apple Wallet et Google Wallet pour votre commerce. Fidélisez vos clients en 3 secondes. iPhone et Android. Sans carte en plastique." />
     <meta name="theme-color" content="#0a7c42" />
-    <title>Fidpass — Carte fidélité Apple Wallet pour les commerces</title>
+    <title>Fidpass — Carte fidélité Apple Wallet & Google Wallet pour les commerces</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -165,7 +165,7 @@
 
           <section id="scanner" class="app-section app-section-scanner">
             <h2 class="app-section-title">Scanner la carte client</h2>
-            <p class="app-section-desc">Cadrez le code-barres de la carte (Apple Wallet ou écran du client). Dès qu’un client est reconnu, ajoutez les points en un clic.</p>
+            <p class="app-section-desc">Cadrez le code-barres de la carte (Apple Wallet ou écran du client). Reconnaissance immédiate du client et ajout des points en un clic.</p>
             <div class="app-card app-scanner-card" id="app-scanner-card">
               <div id="app-scanner-viewport" class="app-scanner-viewport">
                 <div id="app-scanner-placeholder" class="app-scanner-placeholder">
@@ -173,10 +173,33 @@
                   <p class="app-scanner-hint">Autorisez l’accès à la caméra pour scanner.</p>
                 </div>
               </div>
-              <div id="app-scanner-result" class="app-scanner-result hidden">
-                <p class="app-scanner-result-title">Client reconnu</p>
-                <p class="app-scanner-result-member" id="app-scanner-result-name"></p>
-                <p class="app-scanner-result-points" id="app-scanner-result-points"></p>
+              <!-- État : vérification en cours -->
+              <div id="app-scanner-verifying" class="app-scanner-state app-scanner-verifying hidden" aria-live="polite" aria-atomic="true">
+                <div class="app-scanner-state-icon app-scanner-spinner" aria-hidden="true"></div>
+                <p class="app-scanner-state-title">Vérification du code…</p>
+                <p class="app-scanner-state-desc">Nous vérifions que la carte correspond à un client de votre commerce.</p>
+              </div>
+              <!-- État : rejet (mauvais code / autre commerce) -->
+              <div id="app-scanner-reject" class="app-scanner-state app-scanner-reject hidden" aria-live="assertive" aria-atomic="true">
+                <div class="app-scanner-state-icon app-scanner-icon-reject" aria-hidden="true">✕</div>
+                <p class="app-scanner-state-title">Code non reconnu</p>
+                <p id="app-scanner-reject-message" class="app-scanner-state-desc">Ce code-barres ne correspond pas à un client de votre commerce.</p>
+                <button type="button" id="app-scanner-retry" class="app-btn app-btn-primary">Réessayer</button>
+              </div>
+              <!-- État : succès (client trouvé) -->
+              <div id="app-scanner-result" class="app-scanner-state app-scanner-result hidden" aria-live="polite" aria-atomic="true">
+                <div class="app-scanner-state-icon app-scanner-icon-ok" aria-hidden="true">✓</div>
+                <p class="app-scanner-result-label">Client reconnu</p>
+                <div class="app-scanner-client-card">
+                  <p class="app-scanner-client-name" id="app-scanner-result-name"></p>
+                  <p class="app-scanner-client-email" id="app-scanner-result-email"></p>
+                  <p class="app-scanner-client-points" id="app-scanner-result-points"></p>
+                  <p class="app-scanner-client-last-visit" id="app-scanner-result-last-visit"></p>
+                  <div class="app-scanner-history" id="app-scanner-history">
+                    <p class="app-scanner-history-title">Dernières opérations</p>
+                    <ul class="app-scanner-history-list" id="app-scanner-history-list"></ul>
+                  </div>
+                </div>
                 <div class="app-scanner-actions">
                   <button type="button" id="app-scanner-one-visit" class="app-btn app-btn-primary">1 passage</button>
                   <div class="app-scanner-amount-row">
@@ -187,7 +210,6 @@
                 </div>
                 <p id="app-scanner-result-message" class="app-message hidden"></p>
               </div>
-              <p id="app-scanner-error" class="app-message app-message-error hidden"></p>
             </div>
           </section>
 
@@ -517,9 +539,19 @@
           <form class="card-form" id="card-form" novalidate>
             <input type="text" id="input-name" class="fidelity-input" placeholder="Ton prénom ou nom" autocomplete="name" required />
             <input type="email" id="input-email" class="fidelity-input" placeholder="ton@email.com" autocomplete="email" required />
-            <button type="submit" class="fidelity-btn" id="btn-submit"><span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Ajouter à Apple Wallet</button>
+            <button type="submit" class="fidelity-btn" id="btn-submit"><span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Créer ma carte</button>
             <p id="fidelity-error" class="fidelity-error hidden"></p>
           </form>
+          <div id="fidelity-success" class="fidelity-success hidden">
+            <p class="fidelity-success-title">Ta carte est prête</p>
+            <p class="fidelity-success-desc">Ajoute-la à ton téléphone :</p>
+            <div class="fidelity-wallet-buttons">
+              <a href="#" id="btn-apple-wallet" class="fidelity-btn fidelity-btn-apple"><span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Apple Wallet</a>
+              <a href="#" id="btn-google-wallet" class="fidelity-btn fidelity-btn-google"><span class="fidelity-btn-icon fidelity-btn-google-icon" aria-hidden="true">G</span> Google Wallet</a>
+            </div>
+            <p id="fidelity-google-error" class="fidelity-error hidden"></p>
+            <button type="button" id="btn-another-card" class="fidelity-link-btn">Créer une autre carte</button>
+          </div>
         </section>
       </main>
     </div>

@@ -412,8 +412,8 @@
   display: none;
 }
 
-.app-scanner-card.app-scanner-has-result .app-scanner-viewport {
-  display: none;
+.app-scanner-viewport.hidden {
+  display: none !important;
 }
 
 .app-scanner-viewport video,
@@ -422,33 +422,147 @@
   border-radius: 12px;
 }
 
-.app-scanner-result {
+/* États communs (vérification, rejet, succès) */
+.app-scanner-state {
   margin-top: 1rem;
-  padding: 1.25rem;
+  padding: 1.5rem;
   background: var(--app-bg);
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--app-border);
+  text-align: center;
 }
 
-.app-scanner-result-title {
+.app-scanner-state-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.app-scanner-spinner {
+  border: 3px solid var(--app-border);
+  border-top-color: var(--app-accent);
+  animation: app-scanner-spin 0.8s linear infinite;
+}
+
+@keyframes app-scanner-spin {
+  to { transform: rotate(360deg); }
+}
+
+.app-scanner-state-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  color: var(--app-text);
+}
+
+.app-scanner-state-desc {
+  font-size: 0.95rem;
+  color: var(--app-text-muted);
+  margin: 0 0 1.25rem;
+  line-height: 1.45;
+}
+
+/* Rejet */
+.app-scanner-reject .app-scanner-state-icon {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border: 2px solid rgba(248, 113, 113, 0.4);
+}
+
+.app-scanner-reject .app-scanner-state-title {
+  color: #fca5a5;
+}
+
+.app-scanner-reject .app-btn {
+  min-width: 140px;
+}
+
+/* Succès (client reconnu) */
+.app-scanner-result .app-scanner-state-icon {
+  background: rgba(10, 124, 66, 0.2);
+  color: var(--app-accent);
+  border: 2px solid var(--app-accent);
+}
+
+.app-scanner-result-label {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--app-text-muted);
-  margin: 0 0 0.5rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
 }
 
-.app-scanner-result-member {
-  font-size: 1.2rem;
+.app-scanner-client-card {
+  text-align: left;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.app-scanner-client-name {
+  font-size: 1.35rem;
   font-weight: 700;
   margin: 0 0 0.25rem;
+  color: var(--app-text);
 }
 
-.app-scanner-result-points {
-  font-size: 1rem;
+.app-scanner-client-email {
+  font-size: 0.9rem;
+  color: var(--app-text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.app-scanner-client-points {
+  font-size: 1.5rem;
+  font-weight: 800;
   color: var(--app-accent);
-  margin: 0 0 1rem;
+  margin: 0 0 0.35rem;
+}
+
+.app-scanner-client-last-visit {
+  font-size: 0.85rem;
+  color: var(--app-text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.app-scanner-history-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.5rem;
+}
+
+.app-scanner-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--app-text);
+}
+
+.app-scanner-history-list li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.app-scanner-history-list li:last-child {
+  border-bottom: none;
+}
+
+.app-scanner-history-empty {
+  color: var(--app-text-muted);
+  font-style: italic;
 }
 
 .app-scanner-actions {
@@ -468,10 +582,6 @@
 .app-scanner-amount-row .app-input-amount {
   max-width: 120px;
   margin-bottom: 0;
-}
-
-#app-scanner-error {
-  margin-top: 0.75rem;
 }
 
 /* Partager (lien + QR code) */

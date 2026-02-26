@@ -412,53 +412,115 @@ function initAppDashboard(slug) {
   // ——— Scanner (caméra) ———
   const scannerViewport = document.getElementById("app-scanner-viewport");
   const scannerPlaceholder = document.getElementById("app-scanner-placeholder");
+  const scannerVerifying = document.getElementById("app-scanner-verifying");
+  const scannerReject = document.getElementById("app-scanner-reject");
+  const scannerRejectMessage = document.getElementById("app-scanner-reject-message");
+  const scannerRetryBtn = document.getElementById("app-scanner-retry");
   const scannerResult = document.getElementById("app-scanner-result");
   const scannerResultName = document.getElementById("app-scanner-result-name");
+  const scannerResultEmail = document.getElementById("app-scanner-result-email");
   const scannerResultPoints = document.getElementById("app-scanner-result-points");
+  const scannerResultLastVisit = document.getElementById("app-scanner-result-last-visit");
+  const scannerHistoryList = document.getElementById("app-scanner-history-list");
   const scannerOneVisit = document.getElementById("app-scanner-one-visit");
   const scannerAmount = document.getElementById("app-scanner-amount");
   const scannerAddPoints = document.getElementById("app-scanner-add-points");
   const scannerResume = document.getElementById("app-scanner-resume");
   const scannerResultMessage = document.getElementById("app-scanner-result-message");
-  const scannerError = document.getElementById("app-scanner-error");
+  const scannerCard = document.getElementById("app-scanner-card");
 
   let scannerInstance = null;
   let scannerCurrentMemberId = null;
   let scannerCurrentMember = null;
   let scannerVisitOnly = false;
 
-  function setScannerError(msg) {
-    if (scannerError) {
-      scannerError.textContent = msg || "";
-      scannerError.classList.toggle("hidden", !msg);
-    }
+  function hideAllScannerStates() {
+    if (scannerVerifying) scannerVerifying.classList.add("hidden");
+    if (scannerReject) scannerReject.classList.add("hidden");
+    if (scannerResult) scannerResult.classList.add("hidden");
+    scannerCard?.classList.remove("app-scanner-has-overlay");
   }
 
-  function showScannerResult(member) {
+  function showScannerVerifying() {
+    hideAllScannerStates();
+    if (scannerViewport) scannerViewport.classList.add("hidden");
+    if (scannerVerifying) scannerVerifying.classList.remove("hidden");
+    scannerCard?.classList.add("app-scanner-has-overlay");
+  }
+
+  function showScannerReject(message) {
+    hideAllScannerStates();
+    if (scannerViewport) scannerViewport.classList.add("hidden");
+    if (scannerReject) scannerReject.classList.remove("hidden");
+    if (scannerRejectMessage) scannerRejectMessage.textContent = message || "Ce code-barres ne correspond pas à un client de votre commerce.";
+    scannerCard?.classList.add("app-scanner-has-overlay");
+  }
+
+  async function showScannerResult(member) {
     scannerCurrentMemberId = member.id;
     scannerCurrentMember = member;
-    if (scannerResultName) scannerResultName.textContent = member.name || member.email || "Client";
-    if (scannerResultPoints) scannerResultPoints.textContent = `${member.points ?? 0} point(s)`;
+    hideAllScannerStates();
+    if (scannerViewport) scannerViewport.classList.add("hidden");
     if (scannerResult) scannerResult.classList.remove("hidden");
-    document.getElementById("app-scanner-card")?.classList.add("app-scanner-has-result");
+    scannerCard?.classList.add("app-scanner-has-overlay");
+
+    const displayName = member.name?.trim() || member.email || "Client";
+    if (scannerResultName) scannerResultName.textContent = displayName;
+    if (scannerResultEmail) {
+      scannerResultEmail.textContent = member.email || "";
+      scannerResultEmail.classList.toggle("hidden", !member.email);
+    }
+    if (scannerResultPoints) scannerResultPoints.textContent = `${member.points ?? 0} point(s)`;
+    if (scannerResultLastVisit) {
+      if (member.last_visit_at) {
+        scannerResultLastVisit.textContent = "Dernière visite : " + formatDate(member.last_visit_at);
+        scannerResultLastVisit.classList.remove("hidden");
+      } else {
+        scannerResultLastVisit.textContent = "";
+        scannerResultLastVisit.classList.add("hidden");
+      }
+    }
     if (scannerResultMessage) { scannerResultMessage.classList.add("hidden"); scannerResultMessage.textContent = ""; }
     if (scannerAmount) scannerAmount.value = "";
     scannerVisitOnly = false;
+
+    if (scannerHistoryList) {
+      scannerHistoryList.innerHTML = "";
+      try {
+        const txRes = await api("/dashboard/transactions?limit=5&memberId=" + encodeURIComponent(member.id));
+        if (txRes.ok) {
+          const { transactions } = await txRes.json();
+          if (transactions?.length) {
+            transactions.forEach((t) => {
+              const li = document.createElement("li");
+              li.textContent = `+${t.points} pt${t.points > 1 ? "s" : ""} — ${formatDate(t.created_at)}`;
+              scannerHistoryList.appendChild(li);
+            });
+          } else {
+            const li = document.createElement("li");
+            li.className = "app-scanner-history-empty";
+            li.textContent = "Aucune opération pour l’instant.";
+            scannerHistoryList.appendChild(li);
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   function hideScannerResult() {
     scannerCurrentMemberId = null;
     scannerCurrentMember = null;
-    if (scannerResult) scannerResult.classList.add("hidden");
-    document.getElementById("app-scanner-card")?.classList.remove("app-scanner-has-result");
+    hideAllScannerStates();
+    if (scannerViewport) scannerViewport.classList.remove("hidden");
     if (scannerResultMessage) { scannerResultMessage.classList.add("hidden"); scannerResultMessage.textContent = ""; }
   }
 
   async function startScanner() {
     if (scannerInstance) return;
     if (!scannerViewport) return;
-    setScannerError("");
-    if (scannerPlaceholder) scannerPlaceholder.classList.add("hidden");
+    hideAllScannerStates();
+    scannerViewport.classList.remove("hidden");
+    if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
     scannerViewport.classList.add("app-scanner-scanning");
 
     const config = { formatsToSupport: [Html5QrcodeSupportedFormats.PDF_417] };
@@ -474,38 +536,36 @@ function initAppDashboard(slug) {
       } catch (_) {}
       scannerInstance = null;
       scannerViewport?.classList.remove("app-scanner-scanning");
-      if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
+      if (scannerPlaceholder) scannerPlaceholder.classList.add("hidden");
 
+      showScannerVerifying();
       const memberId = decodedText.trim();
       try {
         const res = await api("/members/" + encodeURIComponent(memberId));
         if (res.status === 404) {
-          setScannerError("Membre introuvable (carte d'un autre commerce ou ID invalide).");
-          startScanner();
+          showScannerReject("Ce code-barres ne correspond pas à un client de votre commerce. (Carte d’un autre établissement ou code invalide.)");
           return;
         }
         if (!res.ok) {
-          setScannerError("Erreur serveur. Réessayez.");
-          startScanner();
+          showScannerReject("Erreur serveur. Réessayez dans un instant.");
           return;
         }
         const member = await res.json();
-        showScannerResult(member);
+        await showScannerResult(member);
       } catch (_) {
-        setScannerError("Erreur réseau. Réessayez.");
-        startScanner();
+        showScannerReject("Impossible de vérifier le code. Vérifiez votre connexion et réessayez.");
       }
     }, () => {}).catch((err) => {
       scannerInstance = null;
       scannerViewport.classList.remove("app-scanner-scanning");
       if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
-      setScannerError(err && err.message ? err.message : "Impossible d'accéder à la caméra. Vérifiez les permissions.");
+      showScannerReject(err?.message || "Impossible d’accéder à la caméra. Vérifiez les permissions du navigateur.");
     });
   }
 
   function stopScanner() {
     hideScannerResult();
-    setScannerError("");
+    if (scannerViewport) scannerViewport.classList.remove("hidden");
     if (!scannerInstance) return;
     scannerInstance.stop().then(() => {
       scannerInstance = null;
@@ -518,9 +578,16 @@ function initAppDashboard(slug) {
     });
   }
 
+  scannerRetryBtn?.addEventListener("click", () => {
+    hideAllScannerStates();
+    if (scannerViewport) scannerViewport.classList.remove("hidden");
+    scannerCard?.classList.remove("app-scanner-has-overlay");
+    startScanner();
+  });
+
   scannerResume?.addEventListener("click", () => {
     hideScannerResult();
-    setScannerError("");
+    if (scannerViewport) scannerViewport.classList.remove("hidden");
     startScanner();
   });
 
@@ -1310,6 +1377,11 @@ const inputName = document.getElementById("input-name");
 const inputEmail = document.getElementById("input-email");
 const btnSubmit = document.getElementById("btn-submit");
 const fidelityErrorEl = document.getElementById("fidelity-error");
+const fidelitySuccessEl = document.getElementById("fidelity-success");
+const btnAppleWallet = document.getElementById("btn-apple-wallet");
+const btnGoogleWallet = document.getElementById("btn-google-wallet");
+const fidelityGoogleErrorEl = document.getElementById("fidelity-google-error");
+const btnAnotherCard = document.getElementById("btn-another-card");
 const fidelityTitleEl = document.getElementById("fidelity-title");
 const fidelitySubtitleEl = document.getElementById("fidelity-subtitle");
 const pageLogo = document.querySelector("#fidelity-app .header .logo");
@@ -1356,10 +1428,13 @@ async function createMember(slug, name, email) {
   return res.json();
 }
 
-function redirectToPass(slug, memberId) {
+function getPassUrl(slug, memberId) {
   const template = getTemplateFromUrl();
-  const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/pass?template=${encodeURIComponent(template)}`;
-  window.location.href = url;
+  return `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/pass?template=${encodeURIComponent(template)}`;
+}
+
+function redirectToPass(slug, memberId) {
+  window.location.href = getPassUrl(slug, memberId);
 }
 
 function showError(message) {
@@ -1372,9 +1447,9 @@ function setLoading(loading) {
   if (btnSubmit) {
     btnSubmit.disabled = loading;
     if (loading) {
-      btnSubmit.innerHTML = "Préparation…";
+      btnSubmit.innerHTML = "Création…";
     } else {
-      btnSubmit.innerHTML = '<span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Ajouter à Apple Wallet';
+      btnSubmit.innerHTML = '<span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Créer ma carte';
     }
   }
 }
@@ -1390,8 +1465,69 @@ function setPageBusiness(business) {
   }
   if (fidelitySubtitleEl) {
     fidelitySubtitleEl.textContent = orgName
-      ? `Renseigne ton nom et ton email, puis ajoute la carte ${orgName} à ton iPhone.`
-      : "Renseigne ton nom et ton email, puis ajoute la carte à ton iPhone.";
+      ? `Renseigne ton nom et ton email, puis ajoute la carte ${orgName} à ton téléphone (iPhone ou Android).`
+      : "Renseigne ton nom et ton email, puis ajoute la carte à ton téléphone (iPhone ou Android).";
+  }
+}
+
+function showFidelitySuccess(slug, memberId) {
+  if (form) form.classList.add("hidden");
+  if (fidelitySuccessEl) {
+    fidelitySuccessEl.classList.remove("hidden");
+    if (fidelityGoogleErrorEl) {
+      fidelityGoogleErrorEl.classList.add("hidden");
+      fidelityGoogleErrorEl.textContent = "";
+    }
+  }
+  const passUrl = getPassUrl(slug, memberId);
+  if (btnAppleWallet) {
+    btnAppleWallet.href = passUrl;
+    btnAppleWallet.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = passUrl;
+    };
+  }
+  if (btnGoogleWallet) {
+    btnGoogleWallet.href = "#";
+    btnGoogleWallet.onclick = async (e) => {
+      e.preventDefault();
+      if (fidelityGoogleErrorEl) {
+        fidelityGoogleErrorEl.classList.add("hidden");
+        fidelityGoogleErrorEl.textContent = "";
+      }
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/google-wallet-url`
+        );
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.url) {
+          window.open(data.url, "_blank", "noopener,noreferrer");
+        } else {
+          if (fidelityGoogleErrorEl) {
+            fidelityGoogleErrorEl.textContent =
+              data.code === "google_wallet_unavailable"
+                ? "Google Wallet n’est pas configuré pour ce site. Utilise Apple Wallet ou reviens plus tard."
+                : data.error || "Impossible d’ouvrir Google Wallet.";
+            fidelityGoogleErrorEl.classList.remove("hidden");
+          }
+        }
+      } catch (_) {
+        if (fidelityGoogleErrorEl) {
+          fidelityGoogleErrorEl.textContent = "Erreur réseau. Réessaie.";
+          fidelityGoogleErrorEl.classList.remove("hidden");
+        }
+      }
+    };
+  }
+  if (btnAnotherCard) {
+    btnAnotherCard.onclick = () => {
+      if (fidelitySuccessEl) fidelitySuccessEl.classList.add("hidden");
+      if (form) form.classList.remove("hidden");
+      if (fidelityGoogleErrorEl) {
+        fidelityGoogleErrorEl.classList.add("hidden");
+        fidelityGoogleErrorEl.textContent = "";
+      }
+    };
   }
 }
 
@@ -1455,7 +1591,7 @@ function runFidelityApp(slug) {
         const data = await createMember(s, name, email);
         const memberId = data.memberId || data.member?.id;
         if (!memberId) throw new Error("Réponse serveur invalide");
-        redirectToPass(s, memberId);
+        showFidelitySuccess(s, memberId);
       } catch (err) {
         const isNetworkError = err.message === "Failed to fetch" || err.name === "TypeError";
         showError(

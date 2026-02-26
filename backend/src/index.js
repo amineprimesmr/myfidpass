@@ -24,7 +24,7 @@ const allowedOrigins =
     ? [FRONTEND_URL, FRONTEND_URL.replace(/\/$/, ""), "https://myfidpass.fr", "https://www.myfidpass.fr"].filter(Boolean)
     : true;
 app.use(cors({ origin: allowedOrigins, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
 
 // Parse JWT si présent (Authorization: Bearer) pour toutes les routes
 app.use(optionalAuth);
