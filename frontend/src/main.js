@@ -1628,10 +1628,15 @@ function initPlacesAutocomplete() {
     const input = document.getElementById(id);
     if (!input || input.dataset.placesInit) return;
     try {
+      const frBounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(41.0, -5.5),
+        new google.maps.LatLng(51.2, 9.6)
+      );
       const autocomplete = new google.maps.places.Autocomplete(input, {
         types: ["establishment"],
         fields: ["name", "formatted_address", "place_id"],
-        componentRestrictions: { country: "fr" },
+        bounds: frBounds,
+        strictBounds: false,
       });
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
