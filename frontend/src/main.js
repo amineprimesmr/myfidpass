@@ -1138,67 +1138,9 @@ function initBuilderPage() {
   const cartBadge = document.getElementById("builder-header-cart-badge");
   if (cartBadge) cartBadge.textContent = "1";
 
-  const state = { selectedTemplateId: "classic", currentStep: 1 };
-  const step1Block = document.getElementById("builder-step-1-block");
-  const step2Block = document.getElementById("builder-step-2-block");
+  const state = { selectedTemplateId: "classic" };
   const headerSteps = document.querySelectorAll(".builder-header-step");
 
-  /* Header parcours : sur /creer-ma-carte on est toujours à l’étape 2 (créateur). Récap = même étape. */
-
-  function showBlock(block) {
-    if (!block) return;
-    block.classList.remove("hidden");
-    block.setAttribute("aria-hidden", "false");
-    block.classList.add("builder-step-in");
-    const onInEnd = () => {
-      block.removeEventListener("animationend", onInEnd);
-      block.classList.remove("builder-step-in");
-    };
-    block.addEventListener("animationend", onInEnd);
-  }
-
-  function hideBlock(block) {
-    if (!block) return;
-    block.classList.add("hidden");
-    block.setAttribute("aria-hidden", "true");
-  }
-
-  function goToStep(stepNum) {
-    if (stepNum < 1 || stepNum > 2) return;
-    const targetBlock = stepNum === 1 ? step1Block : step2Block;
-    const currentBlock = stepNum === 1 ? step2Block : step1Block;
-    if (!targetBlock || !currentBlock) return;
-
-    const onOutEnd = () => {
-      currentBlock.removeEventListener("animationend", onOutEnd);
-      currentBlock.classList.remove("builder-step-out");
-      hideBlock(currentBlock);
-      showBlock(targetBlock);
-      state.currentStep = stepNum;
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
-    if (currentBlock.classList.contains("hidden")) {
-      showBlock(targetBlock);
-      hideBlock(currentBlock);
-      state.currentStep = stepNum;
-      return;
-    }
-
-    currentBlock.classList.add("builder-step-out");
-    currentBlock.addEventListener("animationend", onOutEnd);
-  }
-
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("step") === "2") {
-    state.currentStep = 2;
-    if (step1Block && step2Block) {
-      step1Block.classList.add("hidden");
-      step1Block.setAttribute("aria-hidden", "true");
-      step2Block.classList.remove("hidden");
-      step2Block.setAttribute("aria-hidden", "false");
-    }
-  }
   setBuilderHeaderStep(2);
 
   headerSteps.forEach((btn) => {
@@ -1212,11 +1154,6 @@ function initBuilderPage() {
         initRouting();
       }
     });
-  });
-
-  document.getElementById("builder-recap-back")?.addEventListener("click", () => goToStep(1));
-  document.getElementById("builder-step-2-continue")?.addEventListener("click", () => {
-    window.location.replace("/checkout");
   });
 
   function loadDraft() {
@@ -1314,14 +1251,6 @@ function initBuilderPage() {
   const cartEditOffer = document.getElementById("cart-edit-offer");
   const cartContinue = document.getElementById("cart-continue");
 
-  function openCart() {
-    if (cartOverlay) {
-      cartOverlay.classList.remove("hidden");
-      cartOverlay.classList.add("is-open");
-      document.body.style.overflow = "hidden";
-    }
-  }
-
   function closeCart() {
     if (cartOverlay) {
       cartOverlay.classList.remove("is-open");
@@ -1330,20 +1259,18 @@ function initBuilderPage() {
     }
   }
 
-  btnSubmit?.addEventListener("click", () => {
-    state.currentStep = 2;
-    goToStep(2);
-  });
+  function goToCheckout() {
+    history.pushState({}, "", "/checkout");
+    initRouting();
+  }
 
-  /* Barre sticky mobile (étape 2 créateur) : CTA = Continuer (vers récap puis checkout), Changer = scroll vers les modèles */
+  btnSubmit?.addEventListener("click", goToCheckout);
+
   const stickyCta = document.getElementById("builder-sticky-cta");
   const stickyChange = document.getElementById("builder-sticky-change");
   const templatesEl = document.getElementById("builder-templates");
 
-  stickyCta?.addEventListener("click", () => {
-    state.currentStep = 2;
-    goToStep(2);
-  });
+  stickyCta?.addEventListener("click", goToCheckout);
   stickyChange?.addEventListener("click", () => {
     templatesEl?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
