@@ -28,6 +28,8 @@ Suis ces étapes **dans l’ordre**. À la fin, la création de carte sur myfidp
 
    *(Ne mets pas les certificats pour l’instant si tu ne les as pas en variables ; on peut les ajouter après.)*
 
+   **Mode test (créer une carte sans payer) :** pour tester sans Stripe, ajoute une variable : **Nom** = **`DEV_BYPASS_PAYMENT`**, **Valeur** = **`true`**. Ensuite utilise le bouton « Mode dev : passer le paiement » sur la page Checkout ou Choisir une offre, puis crée ta carte depuis Mon espace. Pense à retirer cette variable (ou la mettre à `false`) en production réelle.
+
 6b. **Pourquoi je suis déconnecté à chaque fois ? Pourquoi je dois recréer un compte ?**  
    Sur Railway, tout ce que l’API enregistre (comptes, commerces) est stocké dans un **fichier** sur le serveur. Par défaut, ce fichier est **supprimé à chaque redéploiement**. Donc : tu te connectes → tout va bien → plus tard (ou après un déploiement) le fichier a été effacé → ton compte n’existe plus → la connexion ne marche plus et tu dois recréer un compte.  
    **Solution** : ajouter un **volume** (un espace de stockage qui ne s’efface pas). Comme ça, le fichier qui contient les comptes est conservé.

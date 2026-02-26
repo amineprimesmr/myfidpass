@@ -482,8 +482,8 @@ function initAppPage() {
         if (res.status === 403 && (data.code === "subscription_required")) {
           if (isDevBypassPayment()) {
             if (emptyCreateError) {
-              emptyCreateError.textContent =
-                "Mode dev actif ici, mais le backend doit avoir la variable DEV_BYPASS_PAYMENT=true (sur Railway) pour autoriser la création sans abonnement.";
+              emptyCreateError.innerHTML =
+                "Mode dev actif ici. Pour autoriser la création sans paiement : <strong>Railway</strong> → ton projet → service backend → <strong>Variables</strong> → <strong>+ New Variable</strong> → Nom = <code>DEV_BYPASS_PAYMENT</code>, Valeur = <code>true</code> → enregistre puis <strong>Redeploy</strong> le service. Voir docs/ETAPES-DEPLOIEMENT.md (mode dev).";
               emptyCreateError.classList.remove("hidden");
             }
             return;
