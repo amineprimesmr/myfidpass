@@ -9,6 +9,7 @@ import membersRouter from "./routes/members.js";
 import businessesRouter from "./routes/businesses.js";
 import authRouter from "./routes/auth.js";
 import devRouter from "./routes/dev.js";
+import placePhotoRouter from "./routes/place-photo.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +34,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
 app.use("/api/dev", devRouter);
+app.use("/api/place-photo", placePhotoRouter);
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });

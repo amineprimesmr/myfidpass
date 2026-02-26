@@ -932,39 +932,46 @@ function initBuilderPage() {
   }
 
   function applyColorsFromPlace(placeId) {
+    const msgEl = document.getElementById("builder-colors-from-place");
+    function tryApplyWithImage(src) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const cf = new ColorThief();
+          const palette = cf.getPalette(img, 3);
+          if (!palette || palette.length < 2) return;
+          const hexes = palette.map(([r, g, b]) => ({ hex: rgbToHex(r, g, b), l: luminance(r, g, b) }));
+          hexes.sort((a, b) => a.l - b.l);
+          state.backgroundColor = hexes[0].hex;
+          state.foregroundColor = "#ffffff";
+          state.labelColor = hexes[hexes.length - 1].l > 0.6 ? hexes[hexes.length - 1].hex : "#e8f5e9";
+          syncInputsFromState();
+          updatePreview();
+          saveDraft();
+          if (msgEl) msgEl.classList.remove("hidden");
+        } catch (_) {}
+      };
+      img.onerror = () => {};
+      img.src = src;
+    }
+    // En prod : proxy backend (évite CORS / canvas tainted)
+    if (API_BASE) {
+      tryApplyWithImage(`${API_BASE}/api/place-photo?place_id=${encodeURIComponent(placeId)}`);
+      return;
+    }
+    // En local sans backend : appel direct Google (peut échouer à cause du CORS)
     const apiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
     if (!apiKey) return;
-    const msgEl = document.getElementById("builder-colors-from-place");
     fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=name,photos&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=photos&key=${apiKey}`
     )
       .then((r) => r.json())
       .then((data) => {
         if (data.status !== "OK" || !data.result?.photos?.length) return;
         const ref = data.result.photos[0].photo_reference;
-        const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${encodeURIComponent(ref)}&key=${apiKey}`;
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          try {
-            const cf = new ColorThief();
-            const palette = cf.getPalette(img, 3);
-            if (!palette || palette.length < 2) return;
-            const hexes = palette.map(([r, g, b]) => ({ hex: rgbToHex(r, g, b), l: luminance(r, g, b) }));
-            hexes.sort((a, b) => a.l - b.l);
-            state.backgroundColor = hexes[0].hex;
-            state.foregroundColor = "#ffffff";
-            state.labelColor = hexes[hexes.length - 1].l > 0.6 ? hexes[hexes.length - 1].hex : "#e8f5e9";
-            syncInputsFromState();
-            updatePreview();
-            saveDraft();
-            if (msgEl) {
-              msgEl.classList.remove("hidden");
-            }
-          } catch (_) {}
-        };
-        img.onerror = () => {};
-        img.src = photoUrl;
+        const directPhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${encodeURIComponent(ref)}&key=${apiKey}`;
+        tryApplyWithImage(directPhotoUrl);
       })
       .catch(() => {});
   }

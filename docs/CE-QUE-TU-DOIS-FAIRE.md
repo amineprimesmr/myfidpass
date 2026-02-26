@@ -67,5 +67,6 @@ Si tu préfères enlever la recherche Google : supprime la variable `VITE_GOOGLE
 - [ ] Sur Vercel : variable **VITE_API_URL** = cette URL. Puis redéploiement.
 - [ ] Test : sur myfidpass.fr, cliquer « Créer ma carte », remplir et créer → pas d’erreur.
 - [ ] (Optionnel) Variable **VITE_GOOGLE_PLACES_API_KEY** sur Vercel si tu veux les suggestions d’entreprises.
+- [ ] (Optionnel) Variable **GOOGLE_PLACES_API_KEY** sur le **backend** (Railway) pour que les couleurs de la carte se suggèrent automatiquement à partir de la photo du lieu (même clé que sur Vercel).
 
 Si tout ça est coché, tu es bon.
