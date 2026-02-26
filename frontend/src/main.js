@@ -1647,11 +1647,19 @@ function initPlacesAutocomplete() {
 
 const googlePlacesApiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
 if (googlePlacesApiKey) {
-  window.__fidpassPlacesReady = initPlacesAutocomplete;
+  window.__fidpassPlacesReady = () => {
+    initPlacesAutocomplete();
+  };
+  window.__fidpassPlacesError = (err) => {
+    console.warn("[Fidpass] Google Places: chargement refusé. Vérifiez la clé, les APIs activées (Maps JavaScript API + Places API) et les restrictions (référents + APIs autorisées).", err);
+  };
   const script = document.createElement("script");
   script.src = `https://maps.googleapis.com/maps/api/js?key=${googlePlacesApiKey}&libraries=places&callback=__fidpassPlacesReady`;
   script.async = true;
   script.defer = true;
+  script.onerror = () => {
+    console.warn("[Fidpass] Google Places: script non chargé. Vérifiez VITE_GOOGLE_PLACES_API_KEY et les restrictions de la clé (référents HTTP).");
+  };
   document.head.appendChild(script);
 }
 
