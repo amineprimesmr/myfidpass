@@ -380,6 +380,16 @@
   margin-bottom: 0;
 }
 
+.landing-hero-helper {
+  font-size: 0.8rem;
+  color: var(--landing-muted);
+  margin: 0.5rem 0 0;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0.5rem;
+}
+
 .landing-btn {
   display: inline-flex;
   align-items: center;
@@ -892,6 +902,12 @@
   font-size: 0.8rem;
   color: var(--landing-muted);
   margin: 0.25rem 0 0;
+}
+
+.builder-helper {
+  font-size: 0.8rem;
+  color: var(--landing-muted);
+  margin: 0.25rem 0 0.75rem;
 }
 
 .builder-logo-zone {

@@ -1621,6 +1621,36 @@ if (landingHeroForm) {
   });
 }
 
+// Autocomplete Google Places (recherche d'entreprise) — optionnel si VITE_GOOGLE_PLACES_API_KEY est défini
+function initPlacesAutocomplete() {
+  if (typeof google === "undefined" || !google.maps?.places) return;
+  const initInput = (id) => {
+    const input = document.getElementById(id);
+    if (!input || input.dataset.placesInit) return;
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ["establishment"],
+      fields: ["name", "formatted_address", "place_id"],
+    });
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (place.name) input.value = place.name;
+    });
+    input.dataset.placesInit = "1";
+  };
+  initInput("landing-etablissement");
+  initInput("builder-name");
+}
+
+const googlePlacesApiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
+if (googlePlacesApiKey) {
+  window.__fidpassPlacesReady = initPlacesAutocomplete;
+  const script = document.createElement("script");
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${googlePlacesApiKey}&libraries=places&callback=__fidpassPlacesReady`;
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+}
+
 // Menu mobile landing (drawer style WHOOP)
 const landingMenuToggle = document.getElementById("landing-menu-toggle");
 const landingMenuOverlay = document.getElementById("landing-menu-overlay");

@@ -12,6 +12,8 @@ En production, le **frontend** (myfidpass.fr) et l’**API** (backend Node) sont
 - Déployer le **backend** (Railway, Render, etc.) et exposer l’URL (ex. `https://api.myfidpass.fr`).
 - Sur **Vercel** (projet Fidpass) : **Settings → Environment Variables** → ajouter **`VITE_API_URL`** = `https://api.myfidpass.fr` (sans slash final).
 - Redéployer le frontend (nouveau build avec cette variable).
+
+**Optionnel — recherche d’entreprise Google :** pour activer l’autocomplétion « Nom de votre établissement » (suggestions d’entreprises pendant la saisie), ajouter sur Vercel **`VITE_GOOGLE_PLACES_API_KEY`** avec une clé API Google Cloud (APIs « Maps JavaScript API » et « Places API » activées, restriction par référent HTTP recommandée). Sans cette variable, le champ reste une saisie libre.
 - Sur le backend : définir **`FRONTEND_URL`** = `https://myfidpass.fr`, **`NODE_ENV`** = `production` et **`JWT_SECRET`** (chaîne aléatoire forte pour signer les tokens de connexion restaurateur).
 
 Après ça, le bouton « Créer ma carte » enverra bien la requête à l’API et la création pourra réussir.
