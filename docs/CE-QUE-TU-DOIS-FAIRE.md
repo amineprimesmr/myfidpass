@@ -53,7 +53,9 @@ La clé Google est refusée au moment de la recherche. À vérifier **dans l’o
 
 Pour déboguer : ouvre la console du navigateur (F12 → Console) sur myfidpass.fr. Si tu vois un message `[Fidpass] Google Places: ...`, il indique si le script ne charge pas ou si la clé est refusée.
 
-Si tu préfères enlever la recherche Google : supprime la variable `VITE_GOOGLE_PLACES_API_KEY` sur Vercel et redéploie. Le champ redeviendra un simple champ texte sans icônes d’erreur.
+**Facturation Google Cloud :** les APIs Maps/Places exigent qu’un **compte de facturation** soit lié au projet (même pour utiliser le quota gratuit). Sans ça, les requêtes échouent. Dans la console Google Cloud : **Facturation** → associer un compte de facturation au projet « myfidpass ». Tu ne seras pas débité tant que tu restes dans le quota gratuit.
+
+**Désactiver la recherche Google (plus d’icônes d’erreur) :** sur Vercel, ajoute la variable **`VITE_GOOGLE_PLACES_ENABLED`** = **`false`**, puis redéploie. Le champ redevient un simple champ texte, sans autocomplete et sans icônes. Tu peux garder ta clé ; pour réactiver plus tard, supprime cette variable ou mets `true` et redéploie.
 
 ---
 

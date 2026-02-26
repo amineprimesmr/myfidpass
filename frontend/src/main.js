@@ -1646,7 +1646,9 @@ function initPlacesAutocomplete() {
 }
 
 const googlePlacesApiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
-if (googlePlacesApiKey) {
+const googlePlacesEnabled = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_ENABLED : "";
+const placesDisabled = googlePlacesEnabled === "false" || googlePlacesEnabled === "0";
+if (googlePlacesApiKey && !placesDisabled) {
   window.__fidpassPlacesReady = () => {
     initPlacesAutocomplete();
   };
