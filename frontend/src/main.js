@@ -1291,6 +1291,19 @@ function initBuilderPage() {
     goToStep(2);
   });
 
+  /* Barre sticky mobile (étape 1) : CTA = même action que Voir le récapitulatif, Changer = scroll vers les modèles */
+  const stickyCta = document.getElementById("builder-sticky-cta");
+  const stickyChange = document.getElementById("builder-sticky-change");
+  const templatesEl = document.getElementById("builder-templates");
+
+  stickyCta?.addEventListener("click", () => {
+    state.currentStep = 2;
+    goToStep(2);
+  });
+  stickyChange?.addEventListener("click", () => {
+    templatesEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
   cartClose?.addEventListener("click", closeCart);
   cartBackdrop?.addEventListener("click", closeCart);
   cartEditOffer?.addEventListener("click", (e) => {

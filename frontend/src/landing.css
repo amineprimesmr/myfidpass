@@ -1040,6 +1040,101 @@
   }
 }
 
+/* Barre sticky mobile (étape 1) — Changer + CTA, style WHOOP */
+.builder-step-1-sticky {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .builder-step-1-block {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .builder-step-1-sticky {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem 1.25rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+    border-top: 1px solid var(--landing-border);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    z-index: 50;
+    transform: translateY(0);
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.35s ease;
+    animation: builderStickyIn 0.4s ease forwards;
+  }
+  .builder-step-1-sticky .builder-sticky-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--landing-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  .builder-step-1-sticky .builder-sticky-change:hover {
+    color: var(--landing-accent);
+  }
+  .builder-step-1-sticky .builder-sticky-change-chevron {
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+  .builder-step-1-sticky .builder-sticky-cta {
+    flex: 1;
+    max-width: 220px;
+    padding: 1rem 1.25rem;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .builder-step-1-sticky .builder-sticky-cta:hover {
+    background: #333;
+  }
+  .builder-step-1-sticky .builder-sticky-cta:active {
+    transform: scale(0.98);
+  }
+  /* Masquer le bouton inline sur mobile (remplacé par la sticky) */
+  .builder-step-1-right .builder-fields.builder-fields-compact {
+    display: none;
+  }
+  .builder-step-1-block .builder-step-1-content {
+    padding-bottom: 1rem;
+  }
+}
+
+@keyframes builderStickyIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Bouton style CONTINUER (WHOOP) : noir, blanc, majuscules */
 .builder-btn-continuer,
 .landing-btn.builder-btn-continuer {
