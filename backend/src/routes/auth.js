@@ -6,7 +6,6 @@ import {
   getUserByEmail,
   getBusinessesByUserId,
   getSubscriptionByUserId,
-  createOrUpdateSubscription,
   hasActiveSubscription,
 } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -38,7 +37,6 @@ router.post("/register", async (req, res) => {
       passwordHash,
       name: name ? String(name).trim() : null,
     });
-    createOrUpdateSubscription({ userId: user.id, planId: "starter", status: "active" });
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
   if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
@@ -73,9 +71,6 @@ router.post("/login", async (req, res) => {
   if (!ok) {
     return res.status(401).json({ error: "Email ou mot de passe incorrect" });
   }
-  if (!getSubscriptionByUserId(user.id)) {
-    createOrUpdateSubscription({ userId: user.id, planId: "starter", status: "active" });
-  }
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
   const businesses = getBusinessesByUserId(user.id);
   res.json({
@@ -94,9 +89,6 @@ router.get("/me", (req, res, next) => {
   if (!req.user) {
     const code = req.authError || "invalid";
     return res.status(401).json({ error: "Session invalide ou expirée", code });
-  }
-  if (!getSubscriptionByUserId(req.user.id)) {
-    createOrUpdateSubscription({ userId: req.user.id, planId: "starter", status: "active" });
   }
   const businesses = getBusinessesByUserId(req.user.id);
   const subscription = getSubscriptionByUserId(req.user.id);
