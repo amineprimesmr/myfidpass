@@ -25,3 +25,4 @@ backend/data/*.db
 
 # Valeurs pour Railway (ne pas commiter)
 railway-secrets/
+backend/railway-vapid-keys.txt
