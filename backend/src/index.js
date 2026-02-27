@@ -12,8 +12,33 @@ import devRouter from "./routes/dev.js";
 import placePhotoRouter from "./routes/place-photo.js";
 import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
 import passesRouter from "./routes/passes.js";
+import { generatePass } from "./pass.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const SECTOR_TEMPLATES = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"];
+const LEGACY_TEMPLATE_MAP = { classic: "classic", bold: "modern", elegant: "warm" };
+
+async function handlePassDemo(req, res) {
+  const templateParam = (req.query.template || "fastfood-points").toLowerCase();
+  let template = LEGACY_TEMPLATE_MAP[templateParam] || "classic";
+  let format = "points";
+  const sector = SECTOR_TEMPLATES.find((s) => templateParam === `${s}-points` || templateParam === `${s}-tampons`);
+  if (sector) {
+    template = sector;
+    format = templateParam.endsWith("-tampons") ? "tampons" : "points";
+  }
+  const member = { id: `demo-${templateParam}-${Date.now()}`, name: "Démo", points: 0 };
+  try {
+    const buffer = await generatePass(member, null, { template, format });
+    res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+    res.setHeader("Content-Disposition", `inline; filename="fidelity-demo-${templateParam}.pkpass"`);
+    res.send(buffer);
+  } catch (err) {
+    console.error("Génération pass démo:", err);
+    res.status(500).json({ error: "Impossible de générer la carte de démo.", detail: err.message });
+  }
+}
 
 dotenv.config({ path: join(__dirname, "..", ".env") });
 
@@ -45,6 +70,9 @@ app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
 app.use("/api/passes", passesRouter);
 app.use("/passes", passesRouter);
+
+app.get("/api/passes/demo", handlePassDemo);
+app.get("/passes/demo", handlePassDemo);
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });
