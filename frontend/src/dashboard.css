@@ -148,6 +148,16 @@
   color: #5d4037;
   line-height: 1.4;
 }
+.dashboard-notifications-curl {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  background: #f5f5f5;
+  border-radius: 6px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
 
 .dashboard-input {
   width: 100%;

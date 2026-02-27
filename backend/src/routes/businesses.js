@@ -24,7 +24,7 @@ import {
 import { sendWebPush } from "../notifications.js";
 import { sendPassKitUpdate } from "../apns.js";
 import { requireAuth } from "../middleware/auth.js";
-import { generatePass } from "../pass.js";
+import { generatePass, getPassAuthenticationToken } from "../pass.js";
 import { getGoogleWalletSaveUrl } from "../google-wallet.js";
 import { randomUUID } from "crypto";
 
@@ -268,6 +268,18 @@ router.get("/:slug/notifications/stats", (req, res) => {
   const subscriptionsCount = webSubscriptions.length + passKitTokens.length;
   const passKitUrlConfigured = !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
   const noDeviceButConfigured = subscriptionsCount === 0 && !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
+  let testPasskitCurl = null;
+  if (noDeviceButConfigured) {
+    const members = getMembersForBusiness(business.id, { limit: 1 });
+    const member = members[0];
+    if (member) {
+      const baseUrl = (process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
+      const passTypeId = process.env.PASS_TYPE_ID || "pass.com.example.fidelity";
+      const token = getPassAuthenticationToken(member.id);
+      const url = `${baseUrl}/api/v1/devices/test-device-123/registrations/${encodeURIComponent(passTypeId)}/${encodeURIComponent(member.id)}`;
+      testPasskitCurl = `curl -X POST "${url}" -H "Authorization: ApplePass ${token}" -H "Content-Type: application/json" -d '{"pushToken":"test"}' -w "\\nHTTP %{http_code}"`;
+    }
+  }
   res.json({
     subscriptionsCount,
     webPushCount: webSubscriptions.length,
@@ -280,6 +292,38 @@ router.get("/:slug/notifications/stats", (req, res) => {
     helpWhenNoDevice: noDeviceButConfigured
       ? "1) Supprime la carte du Wallet sur ton iPhone. 2) Ouvre le lien de ta carte (copié dans « Partager ») en navigation privée. 3) Clique « Apple Wallet » pour télécharger un pass neuf. 4) Ajoute la carte au Wallet. 5) Attends 30 secondes puis rafraîchis cette page."
       : null,
+    testPasskitCurl: testPasskitCurl || undefined,
+  });
+});
+
+/**
+ * GET /api/businesses/:slug/notifications/test-passkit
+ * Retourne une commande curl pour tester si l'API d'enregistrement PassKit répond (diagnostic).
+ */
+router.get("/:slug/notifications/test-passkit", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const members = getMembersForBusiness(business.id, { limit: 1 });
+  const member = members[0];
+  if (!member) {
+    return res.json({
+      ok: false,
+      message: "Aucun membre pour ce commerce. Créez d'abord une carte (page fidélité) puis réessayez.",
+    });
+  }
+  const baseUrl = (process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
+  const passTypeId = process.env.PASS_TYPE_ID || "pass.com.example.fidelity";
+  const token = getPassAuthenticationToken(member.id);
+  const url = `${baseUrl}/api/v1/devices/test-device-123/registrations/${encodeURIComponent(passTypeId)}/${encodeURIComponent(member.id)}`;
+  const curl = `curl -X POST "${url}" -H "Authorization: ApplePass ${token}" -H "Content-Type: application/json" -d '{"pushToken":"test"}' -w "\\nHTTP %{http_code}"`;
+  res.json({
+    ok: true,
+    message: "Exécute cette commande dans un terminal. Si tu obtiens HTTP 201, l'API d'enregistrement fonctionne (le problème vient alors de l'iPhone ou du réseau). Si tu obtiens 401/404/500 ou une erreur de connexion, le souci est côté serveur.",
+    curl,
+    memberId: member.id,
   });
 });
 

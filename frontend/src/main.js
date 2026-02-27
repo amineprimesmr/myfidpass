@@ -1596,7 +1596,12 @@ function initAppDashboard(slug) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const passKitOk = data.passKitUrlConfigured === true;
         if (total === 0 && data.helpWhenNoDevice) {
-          diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+          let html = `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+          if (data.testPasskitCurl) {
+            const curlEscaped = data.testPasskitCurl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            html += `<p class="app-notifications-diagnostic-text" style="margin-top: 0.75rem;"><strong>Test diagnostic :</strong> exécute cette commande dans un terminal (sur ton ordi). Si tu obtiens <code>HTTP 201</code>, l'API fonctionne et le blocage vient de l'iPhone ou du réseau.</p><pre class="app-notifications-curl">${curlEscaped}</pre>`;
+          }
+          diagEl.innerHTML = html;
           diagEl.classList.remove("hidden");
         } else if (total === 0 && !passKitOk && data.diagnostic) {
           diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="app-notifications-diagnostic-text">${data.diagnostic}</p>`;
@@ -2340,7 +2345,12 @@ function initDashboardPage() {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const passKitOk = data.passKitUrlConfigured === true;
         if (total === 0 && data.helpWhenNoDevice) {
-          diagEl.innerHTML = `<p class="dashboard-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="dashboard-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+          let html = `<p class="dashboard-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="dashboard-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+          if (data.testPasskitCurl) {
+            const curlEscaped = data.testPasskitCurl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            html += `<p class="dashboard-notifications-diagnostic-text" style="margin-top: 0.75rem;"><strong>Test diagnostic :</strong> exécute cette commande dans un terminal (sur ton ordi). Si tu obtiens <code>HTTP 201</code>, l'API fonctionne et le blocage vient de l'iPhone ou du réseau.</p><pre class="dashboard-notifications-curl">${curlEscaped}</pre>`;
+          }
+          diagEl.innerHTML = html;
           diagEl.classList.remove("hidden");
         } else if (total === 0 && !passKitOk && data.diagnostic) {
           diagEl.innerHTML = `<p class="dashboard-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="dashboard-notifications-diagnostic-text">${data.diagnostic}</p>`;

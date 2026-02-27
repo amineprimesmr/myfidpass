@@ -344,6 +344,7 @@ body.page-app .site-banner { display: none !important; }
 .app-notifications-diagnostic.hidden { display: none; }
 .app-notifications-diagnostic-title { font-weight: 600; margin: 0 0 0.5rem; color: #e65100; }
 .app-notifications-diagnostic-text { margin: 0; font-size: 0.9rem; color: #5d4037; line-height: 1.4; }
+.app-notifications-curl { margin: 0.5rem 0 0; padding: 0.75rem; font-size: 0.8rem; background: #f5f5f5; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
 .app-personnaliser-message { margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; }
 .app-personnaliser-message.success { background: #e8f5e9; color: #2e7d32; }
 .app-personnaliser-message.error { background: #ffebee; color: #c62828; }
