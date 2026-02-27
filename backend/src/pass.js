@@ -36,6 +36,7 @@ function createStripBuffer(templateKey) {
   const w = 750;
   const h = 288;
   const png = new PNG({ width: w, height: h });
+  png.data = Buffer.alloc(w * h * 4);
   for (let y = 0; y < h; y++) {
     const t = y / h;
     const lighten = 1 - t * 0.35;
@@ -132,7 +133,9 @@ function buildBuffers(businessId, options = {}) {
   }
   const templateKey = options.template;
   if (!buffers["strip.png"] && templateKey && PASS_TEMPLATES[templateKey]) {
-    buffers["strip.png"] = createStripBuffer(templateKey);
+    const stripBuffer = createStripBuffer(templateKey);
+    buffers["strip.png"] = stripBuffer;
+    buffers["strip@2x.png"] = stripBuffer;
   }
   return buffers;
 }
