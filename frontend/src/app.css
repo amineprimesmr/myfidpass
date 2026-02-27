@@ -827,14 +827,14 @@ body.page-app .site-banner { display: none !important; }
 .app-personnaliser-live-preview-wrap { margin-bottom: 1.5rem; }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 
-/* Aperçu fidèle à la carte Apple Wallet — proportions réelles (312×164 pt) */
+/* Aperçu aux proportions réelles Apple Wallet : 375×123 pt (strip 3:1) + zone corps ≈ 375×173 pt total */
 .app-wallet-preview-card {
   --wallet-bg: #0a7c42;
   --wallet-fg: #ffffff;
   --wallet-label: #e8f5e9;
-  width: 312px;
+  width: 320px;
   max-width: 100%;
-  aspect-ratio: 312 / 164;
+  aspect-ratio: 375 / 173;
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.1);
@@ -843,8 +843,9 @@ body.page-app .site-banner { display: none !important; }
   flex-direction: column;
 }
 .app-wallet-preview-strip {
-  height: 35%;
-  min-height: 50px;
+  /* Strip Apple Wallet = 375×123 pt → ~71 % de la hauteur totale (123/173) */
+  height: 71%;
+  min-height: 48px;
   flex-shrink: 0;
   background: var(--wallet-bg);
   transition: background 0.2s;
@@ -853,7 +854,7 @@ body.page-app .site-banner { display: none !important; }
   flex: 1;
   min-height: 0;
   background: var(--wallet-bg);
-  padding: 0.5rem 0.75rem 0.6rem;
+  padding: 0.35rem 0.6rem 0.4rem;
   color: var(--wallet-fg);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   transition: background 0.2s, color 0.2s;
@@ -864,19 +865,19 @@ body.page-app .site-banner { display: none !important; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.35rem;
-  margin-bottom: 0.35rem;
-  min-height: 28px;
+  gap: 0.25rem;
+  margin-bottom: 0.2rem;
+  min-height: 22px;
 }
 .app-wallet-preview-logo-wrap {
   flex-shrink: 0;
-  width: 40px;
-  height: 28px;
+  width: 32px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 5px;
+  border-radius: 4px;
   background: rgba(255,255,255,0.15);
 }
 .app-wallet-preview-logo {
@@ -885,7 +886,7 @@ body.page-app .site-banner { display: none !important; }
   object-fit: contain;
 }
 .app-wallet-preview-logo-fallback {
-  font-size: 0.6rem;
+  font-size: 0.5rem;
   font-weight: 700;
   opacity: 0.9;
   text-transform: uppercase;
@@ -893,7 +894,7 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-wallet-preview-logo-wrap:has(.app-wallet-preview-logo:not(.hidden)) .app-wallet-preview-logo-fallback { display: none; }
 .app-wallet-preview-org {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-align: right;
@@ -905,7 +906,7 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-wallet-preview-value-wrap {
   text-align: center;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -913,27 +914,27 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-wallet-preview-value {
   display: block;
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 .app-wallet-preview-label {
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--wallet-label);
   opacity: 0.95;
-  margin-top: 0.1rem;
+  margin-top: 0.05rem;
   display: block;
   transition: color 0.2s;
 }
 .app-wallet-preview-barcode {
-  height: 28px;
+  height: 20px;
   flex-shrink: 0;
   background: rgba(0,0,0,0.25);
-  border-radius: 4px;
-  margin-top: 0.2rem;
+  border-radius: 3px;
+  margin-top: 0.15rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -941,14 +942,14 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-barcode::after {
   content: "";
   width: 85%;
-  max-width: 140px;
-  height: 18px;
+  max-width: 110px;
+  height: 12px;
   background: repeating-linear-gradient(90deg, #fff 0, #fff 1.5px, transparent 1.5px, transparent 3.5px);
   border-radius: 2px;
   opacity: 0.9;
 }
-.app-personnaliser-preview-org { font-size: 0.85rem; font-weight: 600; opacity: 0.95; }
-.app-personnaliser-preview-value { font-size: 1.25rem; font-weight: 800; }
+.app-personnaliser-preview-org { font-size: 0.75rem; font-weight: 600; opacity: 0.95; }
+.app-personnaliser-preview-value { font-size: 1.1rem; font-weight: 800; }
 
 /* Intégration caisse / borne */
 .app-integration-auth-text { font-size: 0.95rem; color: var(--app-text-muted); margin: 0 0 1rem; line-height: 1.5; }
