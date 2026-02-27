@@ -16,11 +16,13 @@ import {
   getMembersForBusiness,
   getTransactionsForBusiness,
   getWebPushSubscriptionsByBusiness,
+  getPassKitPushTokensForBusiness,
   logNotification,
   ensureDefaultBusiness,
   canCreateBusiness,
 } from "../db.js";
 import { sendWebPush } from "../notifications.js";
+import { sendPassKitUpdate } from "../apns.js";
 import { requireAuth } from "../middleware/auth.js";
 import { generatePass } from "../pass.js";
 import { getGoogleWalletSaveUrl } from "../google-wallet.js";
@@ -183,8 +185,8 @@ router.get("/:slug/dashboard/transactions/export", (req, res, next) => {
 
 /**
  * POST /api/businesses/:slug/notifications/send
- * Envoie une notification push à tous les membres ayant activé les notifications (Web Push).
- * Body: { title?, message (requis), sendToAll?: true }
+ * Envoie une notification à tous les membres : Web Push (navigateur) + APNs (Apple Wallet).
+ * Body: { title?, message (requis) }
  * Auth: token ou JWT.
  */
 router.post("/:slug/notifications/send", async (req, res) => {
@@ -198,33 +200,54 @@ router.post("/:slug/notifications/send", async (req, res) => {
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
   }
-  const subscriptions = getWebPushSubscriptionsByBusiness(business.id);
-  if (subscriptions.length === 0) {
+  const webSubscriptions = getWebPushSubscriptionsByBusiness(business.id);
+  const passKitTokens = getPassKitPushTokensForBusiness(business.id);
+  const totalDevices = webSubscriptions.length + passKitTokens.length;
+  if (totalDevices === 0) {
     return res.json({
       ok: true,
       sent: 0,
-      message: "Aucun appareil enregistré pour l'instant. Les clients qui ajoutent la carte reçoivent une demande d'autorisation pour les notifications.",
+      sentWebPush: 0,
+      sentPassKit: 0,
+      message: "Aucun appareil enregistré. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
   const payload = { title: (title || business.organization_name || "Fidpass").trim(), body };
-  let sent = 0;
+  let sentWebPush = 0;
+  let sentPassKit = 0;
   const errors = [];
-  for (const sub of subscriptions) {
+  for (const sub of webSubscriptions) {
     try {
       await sendWebPush(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         payload
       );
-      sent++;
+      sentWebPush++;
       logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body, type: "web_push" });
     } catch (err) {
-      errors.push({ memberId: sub.member_id, error: err.message || String(err) });
+      errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
     }
   }
+  for (const row of passKitTokens) {
+    try {
+      const result = await sendPassKitUpdate(row.push_token);
+      if (result.sent) {
+        sentPassKit++;
+        logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body, type: "passkit" });
+      } else if (result.error) {
+        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+      }
+    } catch (err) {
+      errors.push({ type: "passkit", memberId: row.serial_number, error: err.message || String(err) });
+    }
+  }
+  const sent = sentWebPush + sentPassKit;
   res.json({
     ok: true,
     sent,
-    total: subscriptions.length,
+    sentWebPush,
+    sentPassKit,
+    total: totalDevices,
     failed: errors.length,
     errors: errors.length > 0 ? errors : undefined,
   });
@@ -232,7 +255,7 @@ router.post("/:slug/notifications/send", async (req, res) => {
 
 /**
  * GET /api/businesses/:slug/notifications/stats
- * Nombre d'abonnés aux notifications (pour affichage dans l'UI).
+ * Nombre d'appareils pouvant recevoir les notifications (Web Push + Apple Wallet).
  */
 router.get("/:slug/notifications/stats", (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -240,9 +263,15 @@ router.get("/:slug/notifications/stats", (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const subscriptions = getWebPushSubscriptionsByBusiness(business.id);
-  const uniqueMembers = new Set(subscriptions.map((s) => s.member_id)).size;
-  res.json({ subscriptionsCount: subscriptions.length, membersWithNotifications: uniqueMembers });
+  const webSubscriptions = getWebPushSubscriptionsByBusiness(business.id);
+  const passKitTokens = getPassKitPushTokensForBusiness(business.id);
+  const subscriptionsCount = webSubscriptions.length + passKitTokens.length;
+  res.json({
+    subscriptionsCount,
+    webPushCount: webSubscriptions.length,
+    passKitCount: passKitTokens.length,
+    membersWithNotifications: new Set(webSubscriptions.map((s) => s.member_id)).size + new Set(passKitTokens.map((p) => p.serial_number)).size,
+  });
 });
 
 /**

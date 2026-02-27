@@ -1580,9 +1580,15 @@ function initAppDashboard(slug) {
       if (!res.ok) return;
       const data = await res.json();
       const el = document.getElementById("app-notifications-stats");
-      if (el) el.textContent = data.subscriptionsCount != null
-        ? `${data.subscriptionsCount} appareil(s) peuvent recevoir les notifications.`
-        : "";
+      if (el) {
+        const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
+        const web = data.webPushCount != null ? data.webPushCount : 0;
+        const wallet = data.passKitCount != null ? data.passKitCount : 0;
+        if (total === 0) el.textContent = "Aucun appareil enregistré pour l'instant.";
+        else if (wallet > 0 && web > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
+        else if (wallet > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
+        else el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+      }
     } catch (_) {}
   }
 
@@ -1608,7 +1614,13 @@ function initAppDashboard(slug) {
       if (feedbackEl) {
         feedbackEl.classList.remove("hidden");
         if (res.ok) {
-          feedbackEl.textContent = data.sent != null ? `Notification envoyée à ${data.sent} appareil(s).` : (data.message || "Envoyé.");
+          const sent = data.sent != null ? data.sent : 0;
+          const wp = data.sentWebPush != null ? data.sentWebPush : 0;
+          const pk = data.sentPassKit != null ? data.sentPassKit : 0;
+          if (sent === 0) feedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
+          else if (pk > 0 && wp > 0) feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).`;
+          else if (pk > 0) feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s) (Apple Wallet).`;
+          else feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s).`;
           feedbackEl.classList.remove("error"); feedbackEl.classList.add("success");
         } else {
           feedbackEl.textContent = data.error || "Erreur";
@@ -2297,9 +2309,15 @@ function initDashboardPage() {
       if (!res.ok) return;
       const data = await res.json();
       const el = document.getElementById("dashboard-notifications-stats");
-      if (el) el.textContent = data.subscriptionsCount != null
-        ? `${data.subscriptionsCount} appareil(s) peuvent recevoir les notifications.`
-        : "";
+      if (el) {
+        const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
+        const web = data.webPushCount != null ? data.webPushCount : 0;
+        const wallet = data.passKitCount != null ? data.passKitCount : 0;
+        if (total === 0) el.textContent = "Aucun appareil enregistré pour l'instant.";
+        else if (wallet > 0 && web > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
+        else if (wallet > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
+        else el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+      }
     } catch (_) {}
   }
 
@@ -2325,7 +2343,13 @@ function initDashboardPage() {
       if (feedbackEl) {
         feedbackEl.classList.remove("hidden");
         if (res.ok) {
-          feedbackEl.textContent = data.sent != null ? `Notification envoyée à ${data.sent} appareil(s).` : (data.message || "Envoyé.");
+          const sent = data.sent != null ? data.sent : 0;
+          const wp = data.sentWebPush != null ? data.sentWebPush : 0;
+          const pk = data.sentPassKit != null ? data.sentPassKit : 0;
+          if (sent === 0) feedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
+          else if (pk > 0 && wp > 0) feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).`;
+          else if (pk > 0) feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s) (Apple Wallet).`;
+          else feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s).`;
           feedbackEl.classList.remove("error"); feedbackEl.classList.add("success");
         } else {
           feedbackEl.textContent = data.error || "Erreur";

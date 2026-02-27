@@ -8,6 +8,7 @@
     "generate-vapid-keys": "web-push generate-vapid-keys"
   },
   "dependencies": {
+    "apn": "^2.2.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^11.6.0",
     "cors": "^2.8.5",

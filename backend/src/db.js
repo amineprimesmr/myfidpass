@@ -400,6 +400,17 @@ export function getPushTokensForMember(serialNumber) {
   return rows.map((r) => r.push_token).filter(Boolean);
 }
 
+/** Tous les tokens PassKit (Apple Wallet) pour les membres d'un commerce — pour envoi notifications APNs. */
+export function getPassKitPushTokensForBusiness(businessId) {
+  const rows = db.prepare(
+    `SELECT pr.push_token, pr.serial_number
+     FROM pass_registrations pr
+     INNER JOIN members m ON m.id = pr.serial_number
+     WHERE m.business_id = ? AND pr.push_token IS NOT NULL AND pr.push_token != ''`
+  ).all(businessId);
+  return rows;
+}
+
 export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier, serialNumber) {
   db.prepare(
     "DELETE FROM pass_registrations WHERE device_library_identifier = ? AND pass_type_identifier = ? AND serial_number = ?"
