@@ -1113,11 +1113,23 @@ function initAppDashboard(slug) {
   refresh();
 }
 
-/** Modèles de carte (couleurs par défaut ; personnalisation dans l'app après paiement) */
+/** Modèles de carte par secteur (Points + Tampons) + styles libres. */
 const CARD_TEMPLATES = [
-  { id: "classic", name: "Classique", bg: "#0a7c42", fg: "#ffffff", label: "#e8f5e9" },
-  { id: "bold", name: "Moderne", bg: "#c41e3a", fg: "#ffffff", label: "#ffd700" },
-  { id: "elegant", name: "Élégant", bg: "#8b7355", fg: "#ffffff", label: "#f5f0e6" },
+  { id: "fastfood-points", name: "Points (Fast food)", format: "points", design: "fastfood", bg: "#c41e3a", fg: "#ffffff", label: "#ffd54f" },
+  { id: "fastfood-tampons", name: "Tampons (Fast food)", format: "tampons", design: "fastfood", bg: "#c41e3a", fg: "#ffffff", label: "#ffd54f" },
+  { id: "beauty-points", name: "Points (Beauté)", format: "points", design: "beauty", bg: "#b76e79", fg: "#ffffff", label: "#fce4ec" },
+  { id: "beauty-tampons", name: "Tampons (Beauté)", format: "tampons", design: "beauty", bg: "#b76e79", fg: "#ffffff", label: "#fce4ec" },
+  { id: "coiffure-points", name: "Points (Coiffure)", format: "points", design: "coiffure", bg: "#5c4a6a", fg: "#ffffff", label: "#d1c4e0" },
+  { id: "coiffure-tampons", name: "Tampons (Coiffure)", format: "tampons", design: "coiffure", bg: "#5c4a6a", fg: "#ffffff", label: "#d1c4e0" },
+  { id: "boulangerie-points", name: "Points (Boulangerie)", format: "points", design: "boulangerie", bg: "#b8860b", fg: "#ffffff", label: "#fff8e1" },
+  { id: "boulangerie-tampons", name: "Tampons (Boulangerie)", format: "tampons", design: "boulangerie", bg: "#b8860b", fg: "#ffffff", label: "#fff8e1" },
+  { id: "boucherie-points", name: "Points (Boucherie)", format: "points", design: "boucherie", bg: "#6d2c3e", fg: "#ffffff", label: "#ffcdd2" },
+  { id: "boucherie-tampons", name: "Tampons (Boucherie)", format: "tampons", design: "boucherie", bg: "#6d2c3e", fg: "#ffffff", label: "#ffcdd2" },
+  { id: "cafe-points", name: "Points (Café)", format: "points", design: "cafe", bg: "#5d4e37", fg: "#ffffff", label: "#d7ccc8" },
+  { id: "cafe-tampons", name: "Tampons (Café)", format: "tampons", design: "cafe", bg: "#5d4e37", fg: "#ffffff", label: "#d7ccc8" },
+  { id: "classic", name: "Classique", format: "points", bg: "#0a7c42", fg: "#ffffff", label: "#e8f5e9" },
+  { id: "bold", name: "Moderne", format: "points", bg: "#1a237e", fg: "#ffffff", label: "#c5cae9" },
+  { id: "elegant", name: "Élégant", format: "points", bg: "#8b7355", fg: "#ffffff", label: "#f5f0e6" },
 ];
 
 const BUILDER_DRAFT_KEY = "fidpass_builder_draft";
@@ -1138,7 +1150,7 @@ function initBuilderPage() {
   const cartBadge = document.getElementById("builder-header-cart-badge");
   if (cartBadge) cartBadge.textContent = "1";
 
-  const state = { selectedTemplateId: "classic" };
+  const state = { selectedTemplateId: "fastfood-points" };
   const headerSteps = document.querySelectorAll(".builder-header-step");
 
   setBuilderHeaderStep(2);
@@ -1176,6 +1188,18 @@ function initBuilderPage() {
   const dotsContainer = document.getElementById("builder-phone-dots");
   const templateIds = CARD_TEMPLATES.map((t) => t.id);
 
+  if (dotsContainer) {
+    dotsContainer.innerHTML = "";
+    CARD_TEMPLATES.forEach((t, i) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "builder-phone-dot";
+      dot.setAttribute("data-index", String(i));
+      dot.setAttribute("aria-label", t.name);
+      dotsContainer.appendChild(dot);
+    });
+  }
+
   function getTemplateIndex(templateId) {
     const i = templateIds.indexOf(templateId);
     return i >= 0 ? i : 0;
@@ -1198,6 +1222,22 @@ function initBuilderPage() {
     });
     setSliderPosition(getTemplateIndex(templateId));
     saveDraft();
+    updateDemoQR(templateId);
+    const selectedCard = document.querySelector(`.builder-template-card[data-template="${templateId}"]`);
+    selectedCard?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  }
+
+  function updateDemoQR(templateId) {
+    const qrEl = document.getElementById("builder-demo-qr");
+    const nameEl = document.getElementById("builder-demo-template-name");
+    const tpl = CARD_TEMPLATES.find((t) => t.id === templateId);
+    if (tpl && nameEl) nameEl.textContent = tpl.name;
+    if (!qrEl) return;
+    const base = API_BASE.replace(/\/$/, "");
+    const url = `${base}/api/passes/demo?template=${encodeURIComponent(templateId)}`;
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    qrEl.src = qrSrc;
+    qrEl.alt = `QR code pour ajouter la carte ${tpl?.name ?? templateId} à Apple Wallet`;
   }
 
   document.querySelector(".builder-back")?.addEventListener("click", (e) => {

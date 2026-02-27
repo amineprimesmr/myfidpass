@@ -1196,13 +1196,13 @@
 }
 .builder-wallet-card-classic .builder-wallet-card-label { color: rgba(255,255,255,0.9); }
 .builder-wallet-card-bold .builder-wallet-card-header {
-  background: linear-gradient(165deg, #d42d4a 0%, #b91c38 100%);
+  background: linear-gradient(165deg, #24308a 0%, #1a237e 100%);
 }
 .builder-wallet-card-bold .builder-wallet-card-body {
-  background: linear-gradient(180deg, #c41e3a 0%, #a01830 100%);
+  background: linear-gradient(180deg, #1e2a7a 0%, #151c5c 100%);
   color: #fff;
 }
-.builder-wallet-card-bold .builder-wallet-card-label { color: rgba(255,255,255,0.92); }
+.builder-wallet-card-bold .builder-wallet-card-label { color: #c5cae9; }
 .builder-wallet-card-elegant .builder-wallet-card-header {
   background: linear-gradient(165deg, #9a8268 0%, #7d6852 100%);
 }
@@ -1212,21 +1212,135 @@
 }
 .builder-wallet-card-elegant .builder-wallet-card-label { color: rgba(255,255,255,0.9); }
 
+/* Fast food & restauration : rouge vif, jaune accent */
+.builder-wallet-card-fastfood-points .builder-wallet-card-header {
+  background: linear-gradient(165deg, #e02d4a 0%, #c41e3a 50%, #a01830 100%);
+}
+.builder-wallet-card-fastfood-points .builder-wallet-card-body {
+  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
+  color: #fff;
+}
+.builder-wallet-card-fastfood-points .builder-wallet-card-label { color: #ffd54f; }
+
+.builder-wallet-card-fastfood-tampons .builder-wallet-card-header {
+  background: linear-gradient(165deg, #e02d4a 0%, #c41e3a 50%, #a01830 100%);
+}
+.builder-wallet-card-fastfood-tampons .builder-wallet-card-body {
+  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
+  color: #fff;
+}
+.builder-wallet-card-fastfood-tampons .builder-wallet-card-label { color: #ffd54f; }
+.builder-wallet-card-stamps {
+  font-size: clamp(0.85rem, 2.4vw, 1rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.builder-wallet-card-stamps-row {
+  display: flex;
+  gap: 2px;
+  margin: 0.15rem 0;
+}
+.builder-wallet-card-stamps-row .stamp {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  flex-shrink: 0;
+}
+.builder-wallet-card-stamps-row .stamp.filled {
+  background: #ffd54f;
+}
+
+/* Beauté : rose poudré */
+.builder-wallet-card-beauty-points .builder-wallet-card-header,
+.builder-wallet-card-beauty-tampons .builder-wallet-card-header {
+  background: linear-gradient(165deg, #c98a94 0%, #b76e79 50%, #9a5a64 100%);
+}
+.builder-wallet-card-beauty-points .builder-wallet-card-body,
+.builder-wallet-card-beauty-tampons .builder-wallet-card-body {
+  background: linear-gradient(180deg, #be7a84 0%, #b76e79 50%, #8e5059 100%);
+  color: #fff;
+}
+.builder-wallet-card-beauty-points .builder-wallet-card-label,
+.builder-wallet-card-beauty-tampons .builder-wallet-card-label { color: #fce4ec; }
+
+/* Coiffure : violet élégant */
+.builder-wallet-card-coiffure-points .builder-wallet-card-header,
+.builder-wallet-card-coiffure-tampons .builder-wallet-card-header {
+  background: linear-gradient(165deg, #6d5a7a 0%, #5c4a6a 50%, #4a3d56 100%);
+}
+.builder-wallet-card-coiffure-points .builder-wallet-card-body,
+.builder-wallet-card-coiffure-tampons .builder-wallet-card-body {
+  background: linear-gradient(180deg, #635270 0%, #5c4a6a 50%, #42384d 100%);
+  color: #fff;
+}
+.builder-wallet-card-coiffure-points .builder-wallet-card-label,
+.builder-wallet-card-coiffure-tampons .builder-wallet-card-label { color: #d1c4e0; }
+
+/* Boulangerie : or / blé */
+.builder-wallet-card-boulangerie-points .builder-wallet-card-header,
+.builder-wallet-card-boulangerie-tampons .builder-wallet-card-header {
+  background: linear-gradient(165deg, #c99a1a 0%, #b8860b 50%, #9a7209 100%);
+}
+.builder-wallet-card-boulangerie-points .builder-wallet-card-body,
+.builder-wallet-card-boulangerie-tampons .builder-wallet-card-body {
+  background: linear-gradient(180deg, #bd8f0c 0%, #b8860b 50%, #8a6408 100%);
+  color: #fff;
+}
+.builder-wallet-card-boulangerie-points .builder-wallet-card-label,
+.builder-wallet-card-boulangerie-tampons .builder-wallet-card-label { color: #fff8e1; }
+
+/* Boucherie : bordeaux */
+.builder-wallet-card-boucherie-points .builder-wallet-card-header,
+.builder-wallet-card-boucherie-tampons .builder-wallet-card-header {
+  background: linear-gradient(165deg, #7e3346 0%, #6d2c3e 50%, #5a2433 100%);
+}
+.builder-wallet-card-boucherie-points .builder-wallet-card-body,
+.builder-wallet-card-boucherie-tampons .builder-wallet-card-body {
+  background: linear-gradient(180deg, #732a3c 0%, #6d2c3e 50%, #4e1f2b 100%);
+  color: #fff;
+}
+.builder-wallet-card-boucherie-points .builder-wallet-card-label,
+.builder-wallet-card-boucherie-tampons .builder-wallet-card-label { color: #ffcdd2; }
+
+/* Café : marron café */
+.builder-wallet-card-cafe-points .builder-wallet-card-header,
+.builder-wallet-card-cafe-tampons .builder-wallet-card-header {
+  background: linear-gradient(165deg, #6d5d47 0%, #5d4e37 50%, #4a3f2d 100%);
+}
+.builder-wallet-card-cafe-points .builder-wallet-card-body,
+.builder-wallet-card-cafe-tampons .builder-wallet-card-body {
+  background: linear-gradient(180deg, #63543e 0%, #5d4e37 50%, #3d3325 100%);
+  color: #fff;
+}
+.builder-wallet-card-cafe-points .builder-wallet-card-label,
+.builder-wallet-card-cafe-tampons .builder-wallet-card-label { color: #d7ccc8; }
+
 .builder-phone-dots {
   display: flex;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
   align-items: center;
   justify-content: center;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.25rem 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.builder-phone-dots::-webkit-scrollbar {
+  display: none;
 }
 .builder-phone-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--landing-border);
   border: none;
   padding: 0;
   cursor: pointer;
   transition: background 0.2s, transform 0.2s;
+  flex-shrink: 0;
 }
 .builder-phone-dot:hover {
   background: var(--landing-muted);
@@ -1234,7 +1348,7 @@
 .builder-phone-dot.active,
 .builder-phone-dot[aria-current="true"] {
   background: var(--landing-accent);
-  transform: scale(1.2);
+  transform: scale(1.35);
 }
 
 .builder-title {
@@ -1257,6 +1371,21 @@
   gap: 1rem;
   margin-top: 0;
   margin-bottom: 2.5rem;
+}
+
+.builder-templates-section-title {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--landing-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.5rem;
+  padding-top: 1rem;
+}
+.builder-templates-section-title:first-child {
+  margin-top: 0;
+  padding-top: 0;
 }
 
 @media (max-width: 700px) {
@@ -1371,16 +1500,16 @@
 }
 .builder-template-preview-classic .builder-template-preview-label { color: rgba(255,255,255,0.9); }
 
-/* Moderne : rouge premium */
+/* Moderne : bleu indigo */
 .builder-template-preview-bold .builder-template-preview-header {
-  background: linear-gradient(165deg, #d42d4a 0%, #b91c38 100%);
+  background: linear-gradient(165deg, #24308a 0%, #1a237e 100%);
   color: #fff;
 }
 .builder-template-preview-bold .builder-template-preview-body {
-  background: linear-gradient(180deg, #c41e3a 0%, #a01830 100%);
+  background: linear-gradient(180deg, #1e2a7a 0%, #151c5c 100%);
   color: #fff;
 }
-.builder-template-preview-bold .builder-template-preview-label { color: rgba(255,255,255,0.92); }
+.builder-template-preview-bold .builder-template-preview-label { color: #c5cae9; }
 
 /* Élégant : taupe / or */
 .builder-template-preview-elegant .builder-template-preview-header {
@@ -1392,6 +1521,161 @@
   color: #fff;
 }
 .builder-template-preview-elegant .builder-template-preview-label { color: rgba(255,255,255,0.9); }
+
+/* Fast food : points */
+.builder-template-preview-fastfood-points .builder-template-preview-header {
+  background: linear-gradient(165deg, #e02d4a 0%, #c41e3a 50%, #a01830 100%);
+  color: #fff;
+}
+.builder-template-preview-fastfood-points .builder-template-preview-body {
+  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
+  color: #fff;
+}
+.builder-template-preview-fastfood-points .builder-template-preview-label { color: #ffd54f; }
+
+/* Fast food : tampons */
+.builder-template-preview-fastfood-tampons .builder-template-preview-header {
+  background: linear-gradient(165deg, #e02d4a 0%, #c41e3a 50%, #a01830 100%);
+  color: #fff;
+}
+.builder-template-preview-fastfood-tampons .builder-template-preview-body {
+  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
+  color: #fff;
+}
+.builder-template-preview-fastfood-tampons .builder-template-preview-label { color: #ffd54f; }
+.builder-template-preview-stamps {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.builder-template-preview-stamps-row {
+  display: flex;
+  gap: 3px;
+  margin: 0.2rem 0;
+}
+.builder-template-preview-stamps-row .stamp {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  flex-shrink: 0;
+}
+.builder-template-preview-stamps-row .stamp.filled {
+  background: #ffd54f;
+}
+
+/* Beauté */
+.builder-template-preview-beauty-points .builder-template-preview-header,
+.builder-template-preview-beauty-tampons .builder-template-preview-header {
+  background: linear-gradient(165deg, #c98a94 0%, #b76e79 50%, #9a5a64 100%);
+  color: #fff;
+}
+.builder-template-preview-beauty-points .builder-template-preview-body,
+.builder-template-preview-beauty-tampons .builder-template-preview-body {
+  background: linear-gradient(180deg, #be7a84 0%, #b76e79 50%, #8e5059 100%);
+  color: #fff;
+}
+.builder-template-preview-beauty-points .builder-template-preview-label,
+.builder-template-preview-beauty-tampons .builder-template-preview-label { color: #fce4ec; }
+
+/* Coiffure */
+.builder-template-preview-coiffure-points .builder-template-preview-header,
+.builder-template-preview-coiffure-tampons .builder-template-preview-header {
+  background: linear-gradient(165deg, #6d5a7a 0%, #5c4a6a 50%, #4a3d56 100%);
+  color: #fff;
+}
+.builder-template-preview-coiffure-points .builder-template-preview-body,
+.builder-template-preview-coiffure-tampons .builder-template-preview-body {
+  background: linear-gradient(180deg, #635270 0%, #5c4a6a 50%, #42384d 100%);
+  color: #fff;
+}
+.builder-template-preview-coiffure-points .builder-template-preview-label,
+.builder-template-preview-coiffure-tampons .builder-template-preview-label { color: #d1c4e0; }
+
+/* Boulangerie */
+.builder-template-preview-boulangerie-points .builder-template-preview-header,
+.builder-template-preview-boulangerie-tampons .builder-template-preview-header {
+  background: linear-gradient(165deg, #c99a1a 0%, #b8860b 50%, #9a7209 100%);
+  color: #fff;
+}
+.builder-template-preview-boulangerie-points .builder-template-preview-body,
+.builder-template-preview-boulangerie-tampons .builder-template-preview-body {
+  background: linear-gradient(180deg, #bd8f0c 0%, #b8860b 50%, #8a6408 100%);
+  color: #fff;
+}
+.builder-template-preview-boulangerie-points .builder-template-preview-label,
+.builder-template-preview-boulangerie-tampons .builder-template-preview-label { color: #fff8e1; }
+
+/* Boucherie */
+.builder-template-preview-boucherie-points .builder-template-preview-header,
+.builder-template-preview-boucherie-tampons .builder-template-preview-header {
+  background: linear-gradient(165deg, #7e3346 0%, #6d2c3e 50%, #5a2433 100%);
+  color: #fff;
+}
+.builder-template-preview-boucherie-points .builder-template-preview-body,
+.builder-template-preview-boucherie-tampons .builder-template-preview-body {
+  background: linear-gradient(180deg, #732a3c 0%, #6d2c3e 50%, #4e1f2b 100%);
+  color: #fff;
+}
+.builder-template-preview-boucherie-points .builder-template-preview-label,
+.builder-template-preview-boucherie-tampons .builder-template-preview-label { color: #ffcdd2; }
+
+/* Café */
+.builder-template-preview-cafe-points .builder-template-preview-header,
+.builder-template-preview-cafe-tampons .builder-template-preview-header {
+  background: linear-gradient(165deg, #6d5d47 0%, #5d4e37 50%, #4a3f2d 100%);
+  color: #fff;
+}
+.builder-template-preview-cafe-points .builder-template-preview-body,
+.builder-template-preview-cafe-tampons .builder-template-preview-body {
+  background: linear-gradient(180deg, #63543e 0%, #5d4e37 50%, #3d3325 100%);
+  color: #fff;
+}
+.builder-template-preview-cafe-points .builder-template-preview-label,
+.builder-template-preview-cafe-tampons .builder-template-preview-label { color: #d7ccc8; }
+
+/* Section Tester sur iPhone (QR code démo) */
+.builder-demo-wallet {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  border-radius: 16px;
+  text-align: center;
+}
+.builder-demo-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--landing-text);
+  margin: 0 0 0.5rem;
+}
+.builder-demo-desc {
+  font-size: 0.9rem;
+  color: var(--landing-muted);
+  margin: 0 0 1rem;
+}
+.builder-demo-qr-wrap {
+  display: inline-flex;
+  padding: 12px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 0.75rem;
+}
+.builder-demo-qr {
+  display: block;
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+}
+.builder-demo-hint {
+  font-size: 0.85rem;
+  color: var(--landing-muted);
+  margin: 0;
+}
+.builder-demo-hint strong {
+  color: var(--landing-text);
+}
 
 .builder-fields-compact {
   max-width: 420px;

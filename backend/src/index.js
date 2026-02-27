@@ -11,6 +11,7 @@ import authRouter from "./routes/auth.js";
 import devRouter from "./routes/dev.js";
 import placePhotoRouter from "./routes/place-photo.js";
 import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
+import passesRouter from "./routes/passes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -42,6 +43,7 @@ app.use("/api/businesses", businessesRouter);
 app.use("/api/payment", paymentRouter);
 app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
+app.use("/api/passes", passesRouter);
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });

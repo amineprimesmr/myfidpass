@@ -109,13 +109,19 @@ const PASS_TEMPLATES = {
   modern: { backgroundColor: "#1a237e", foregroundColor: "#ffffff", labelColor: "#c5cae9" },
   dark: { backgroundColor: "#212121", foregroundColor: "#ffffff", labelColor: "#b0b0b0" },
   warm: { backgroundColor: "#bf360c", foregroundColor: "#ffffff", labelColor: "#ffccbc" },
+  fastfood: { backgroundColor: "#c41e3a", foregroundColor: "#ffffff", labelColor: "#ffd54f" },
+  beauty: { backgroundColor: "#b76e79", foregroundColor: "#ffffff", labelColor: "#fce4ec" },
+  coiffure: { backgroundColor: "#5c4a6a", foregroundColor: "#ffffff", labelColor: "#d1c4e0" },
+  boulangerie: { backgroundColor: "#b8860b", foregroundColor: "#ffffff", labelColor: "#fff8e1" },
+  boucherie: { backgroundColor: "#6d2c3e", foregroundColor: "#ffffff", labelColor: "#ffcdd2" },
+  cafe: { backgroundColor: "#5d4e37", foregroundColor: "#ffffff", labelColor: "#d7ccc8" },
 };
 
 /**
  * Génère un fichier .pkpass (buffer) pour un membre d'une entreprise.
  * @param {Object} member - { id, name, points }
  * @param {Object} business - { id, organization_name, back_terms, back_contact } (optionnel pour rétrocompat)
- * @param {Object} options - { template } id du template (classic, modern, dark, warm)
+ * @param {Object} options - { template, format } template = classic|fastfood|..., format = points|tampons
  * @returns {Promise<Buffer>}
  */
 export async function generatePass(member, business = null, options = {}) {
@@ -131,8 +137,14 @@ export async function generatePass(member, business = null, options = {}) {
   const buffers = buildBuffers(business?.id);
 
   const level = getLevel(member.points);
+  const format = options.format || "points";
+  const stampMax = options.stampMax ?? 10;
+  const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
   // Couleurs : priorité aux couleurs enregistrées sur la business, sinon template
+  const templateKey = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template)
+  ? options.template
+  : options.template;
   const customColors =
     business?.background_color || business?.foreground_color || business?.label_color
       ? {
@@ -140,7 +152,7 @@ export async function generatePass(member, business = null, options = {}) {
           foregroundColor: business.foreground_color || PASS_TEMPLATES.classic.foregroundColor,
           labelColor: business.label_color || PASS_TEMPLATES.classic.labelColor,
         }
-      : PASS_TEMPLATES[options.template] || PASS_TEMPLATES.classic;
+      : PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
 
   const pass = new PKPass(
     buffers,
@@ -149,7 +161,9 @@ export async function generatePass(member, business = null, options = {}) {
       passTypeIdentifier: passTypeId,
       teamIdentifier: teamId,
       organizationName,
-      description: `Carte de fidélité ${organizationName} — ${member.points} pts`,
+      description: format === "tampons"
+        ? `Carte fidélité ${organizationName} — ${stamps}/${stampMax} tampons`
+        : `Carte de fidélité ${organizationName} — ${member.points} pts`,
       serialNumber: member.id,
       ...customColors,
     }
@@ -157,24 +171,36 @@ export async function generatePass(member, business = null, options = {}) {
 
   pass.type = "storeCard";
 
-  pass.primaryFields.push({
-    key: "points",
-    label: "Points",
-    value: member.points,
-    textAlignment: "PKTextAlignmentCenter",
-  });
-
-  pass.secondaryFields.push({
-    key: "level",
-    label: "Niveau",
-    value: level,
-  });
-
-  pass.auxiliaryFields.push({
-    key: "member",
-    label: "Membre",
-    value: member.name,
-  });
+  if (format === "tampons") {
+    pass.primaryFields.push({
+      key: "stamps",
+      label: "Tampons",
+      value: `${stamps} / ${stampMax}`,
+      textAlignment: "PKTextAlignmentCenter",
+    });
+    pass.secondaryFields.push({
+      key: "member",
+      label: "Membre",
+      value: member.name,
+    });
+  } else {
+    pass.primaryFields.push({
+      key: "points",
+      label: "Points",
+      value: member.points,
+      textAlignment: "PKTextAlignmentCenter",
+    });
+    pass.secondaryFields.push({
+      key: "level",
+      label: "Niveau",
+      value: level,
+    });
+    pass.auxiliaryFields.push({
+      key: "member",
+      label: "Membre",
+      value: member.name,
+    });
+  }
 
   pass.setBarcodes({
     message: member.id,
