@@ -281,6 +281,7 @@ router.get("/:slug/notifications/stats", (req, res) => {
   }
   res.json({
     subscriptionsCount,
+    membersCount: membersCount ?? 0,
     webPushCount: webSubscriptions.length,
     passKitCount: passKitTokens.length,
     membersWithNotifications: new Set(webSubscriptions.map((s) => s.member_id)).size + new Set(passKitTokens.map((p) => p.serial_number)).size,

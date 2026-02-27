@@ -1585,12 +1585,36 @@ function initAppDashboard(slug) {
       const diagEl = document.getElementById("app-notifications-diagnostic");
       if (el) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
+        const membersCount = data.membersCount != null ? data.membersCount : 0;
         const web = data.webPushCount != null ? data.webPushCount : 0;
         const wallet = data.passKitCount != null ? data.passKitCount : 0;
-        if (total === 0) el.textContent = "Aucun appareil enregistré pour l'instant.";
-        else if (wallet > 0 && web > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
-        else if (wallet > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
-        else el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+        if (membersCount > 0 && total === 0) {
+          el.textContent = `Tu as ${membersCount} membre(s). Aucun appareil enregistré pour les notifications push pour l'instant — les membres qui ajoutent la carte au Wallet peuvent en recevoir.`;
+        } else if (total === 0) {
+          el.textContent = "Aucun appareil enregistré pour l'instant.";
+        } else if (membersCount > 0) {
+          el.textContent = `Tu as ${membersCount} membre(s). ${total} appareil(s) peuvent recevoir les notifications.`;
+        } else if (wallet > 0 && web > 0) {
+          el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
+        } else if (wallet > 0) {
+          el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
+        } else {
+          el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+        }
+      }
+      const membersSummaryEl = document.getElementById("app-members-notifications-summary");
+      if (membersSummaryEl) {
+        const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
+        const membersCount = data.membersCount != null ? data.membersCount : 0;
+        if (membersCount > 0 || total > 0) {
+          membersSummaryEl.innerHTML = total > 0
+            ? `<strong>Notifications :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#notifications" class="app-link-inline">Envoyer une notification →</a>`
+            : `<strong>Notifications :</strong> tu as ${membersCount} membre(s), mais 0 appareil enregistré pour les push (l'iPhone doit s'enregistrer quand le client ajoute la carte au Wallet). <a href="#notifications" class="app-link-inline">Voir les notifications et le diagnostic →</a>`;
+          membersSummaryEl.classList.remove("hidden");
+        } else {
+          membersSummaryEl.classList.add("hidden");
+          membersSummaryEl.innerHTML = "";
+        }
       }
       if (diagEl) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
@@ -2365,18 +2389,29 @@ function initDashboardPage() {
       const diagEl = document.getElementById("dashboard-notifications-diagnostic");
       if (el) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
+        const membersCount = data.membersCount != null ? data.membersCount : 0;
         const web = data.webPushCount != null ? data.webPushCount : 0;
         const wallet = data.passKitCount != null ? data.passKitCount : 0;
-        if (total === 0) el.textContent = "Aucun appareil enregistré pour l'instant.";
-        else if (wallet > 0 && web > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
-        else if (wallet > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
-        else el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+        if (membersCount > 0 && total === 0) {
+          el.textContent = `Tu as ${membersCount} membre(s). Aucun appareil enregistré pour les notifications push pour l'instant.`;
+        } else if (total === 0) {
+          el.textContent = "Aucun appareil enregistré pour l'instant.";
+        } else if (membersCount > 0) {
+          el.textContent = `Tu as ${membersCount} membre(s). ${total} appareil(s) peuvent recevoir les notifications.`;
+        } else if (wallet > 0 && web > 0) {
+          el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
+        } else if (wallet > 0) {
+          el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
+        } else {
+          el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+        }
       }
       if (diagEl) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const passKitOk = data.passKitUrlConfigured === true;
         if (total === 0 && data.helpWhenNoDevice) {
-          let html = `<p class="dashboard-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="dashboard-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+          let html = data.membersVsDevicesExplanation ? `<p class="dashboard-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="dashboard-notifications-diagnostic-text">${data.membersVsDevicesExplanation}</p>` : "";
+          html += `<p class="dashboard-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="dashboard-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
           if (data.testPasskitCurl) {
             const curlEscaped = data.testPasskitCurl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             html += `<p class="dashboard-notifications-diagnostic-text" style="margin-top: 0.75rem;"><strong>Test diagnostic :</strong> exécute cette commande dans un terminal (sur ton ordi). Si tu obtiens <code>HTTP 201</code>, l'API fonctionne et le blocage vient de l'iPhone ou du réseau.</p><pre class="dashboard-notifications-curl">${curlEscaped}</pre>`;

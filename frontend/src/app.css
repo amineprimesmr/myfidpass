@@ -342,6 +342,10 @@ body.page-app .site-banner { display: none !important; }
 .app-notifications-stats { font-size: 0.9rem; color: var(--app-text-muted); margin: 0 0 0.5rem; }
 .app-notifications-diagnostic { background: #fff8e1; border: 1px solid #ffc107; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
 .app-notifications-diagnostic.hidden { display: none; }
+.app-members-notifications-summary { font-size: 0.9rem; color: var(--app-text-muted); margin-bottom: 1rem; padding: 0.75rem 1rem; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 8px; }
+.app-members-notifications-summary.hidden { display: none; }
+.app-link-inline { color: var(--app-accent, #0a7c42); text-decoration: underline; }
+.app-link-inline:hover { text-decoration: none; }
 .app-notifications-diagnostic-title { font-weight: 600; margin: 0 0 0.5rem; color: #e65100; }
 .app-notifications-diagnostic-text { margin: 0; font-size: 0.9rem; color: #5d4037; line-height: 1.4; }
 .app-notifications-curl { margin: 0.5rem 0 0; padding: 0.75rem; font-size: 0.8rem; background: #f5f5f5; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
