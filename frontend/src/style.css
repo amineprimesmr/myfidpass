@@ -438,6 +438,40 @@ body {
   font-size: 1.1em;
 }
 
+.fidelity-notifications-block {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #eee;
+}
+
+.fidelity-notifications-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.fidelity-btn-secondary {
+  background: #555;
+  color: #fff;
+}
+
+.fidelity-btn-secondary:hover:not(:disabled) {
+  background: #444;
+}
+
+.fidelity-notifications-status {
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0;
+}
+
+.fidelity-notifications-status.success {
+  color: var(--accent, #0a7c42);
+}
+
+.fidelity-notifications-status.error {
+  color: #c00;
+}
+
 .fidelity-link-btn {
   display: block;
   width: 100%;

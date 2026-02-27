@@ -104,6 +104,31 @@
   margin: 0 0 1rem;
 }
 
+.dashboard-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--dash-muted);
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-notifications-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 480px;
+}
+
+.dashboard-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.dashboard-notifications-stats {
+  font-size: 0.9rem;
+  color: var(--dash-muted);
+  margin: 0;
+}
+
 .dashboard-input {
   width: 100%;
   max-width: 320px;

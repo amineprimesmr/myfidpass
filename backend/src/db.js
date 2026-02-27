@@ -91,6 +91,32 @@ db.exec(`
     PRIMARY KEY (device_library_identifier, pass_type_identifier, serial_number)
   );
   CREATE INDEX IF NOT EXISTS idx_pass_reg_serial ON pass_registrations(serial_number);
+
+  CREATE TABLE IF NOT EXISTS web_push_subscriptions (
+    id TEXT PRIMARY KEY,
+    business_id TEXT NOT NULL,
+    member_id TEXT NOT NULL,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (business_id) REFERENCES businesses(id),
+    FOREIGN KEY (member_id) REFERENCES members(id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_web_push_business ON web_push_subscriptions(business_id);
+  CREATE INDEX IF NOT EXISTS idx_web_push_member ON web_push_subscriptions(member_id);
+
+  CREATE TABLE IF NOT EXISTS notification_log (
+    id TEXT PRIMARY KEY,
+    business_id TEXT NOT NULL,
+    member_id TEXT,
+    title TEXT,
+    body TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'web_push',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (business_id) REFERENCES businesses(id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_notification_log_business ON notification_log(business_id);
 `);
 
 // Migration : ajouter business_id si ancienne base
@@ -378,6 +404,40 @@ export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier
   db.prepare(
     "DELETE FROM pass_registrations WHERE device_library_identifier = ? AND pass_type_identifier = ? AND serial_number = ?"
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber);
+}
+
+// ——— Web Push (notifications navigateur / PWA) ———
+export function saveWebPushSubscription({ businessId, memberId, endpoint, p256dh, auth }) {
+  const id = randomUUID();
+  const now = new Date().toISOString();
+  db.prepare(
+    `INSERT OR REPLACE INTO web_push_subscriptions (id, business_id, member_id, endpoint, p256dh, auth, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, businessId, memberId, endpoint, p256dh, auth, now);
+  return id;
+}
+
+export function getWebPushSubscriptionsByBusiness(businessId) {
+  return db.prepare(
+    "SELECT id, member_id, endpoint, p256dh, auth FROM web_push_subscriptions WHERE business_id = ?"
+  ).all(businessId);
+}
+
+export function getWebPushSubscriptionsByMemberIds(businessId, memberIds) {
+  if (!memberIds?.length) return [];
+  const placeholders = memberIds.map(() => "?").join(",");
+  return db.prepare(
+    `SELECT id, member_id, endpoint, p256dh, auth FROM web_push_subscriptions WHERE business_id = ? AND member_id IN (${placeholders})`
+  ).all(businessId, ...memberIds);
+}
+
+export function logNotification({ businessId, memberId, title, body, type = "web_push" }) {
+  const id = randomUUID();
+  const now = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO notification_log (id, business_id, member_id, title, body, type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, businessId, memberId || null, title || null, body, type, now);
+  return id;
 }
 
 const MEMBER_ORDER = { last_visit: "COALESCE(last_visit_at, '') DESC", points: "points DESC", name: "name ASC", created: "created_at DESC" };

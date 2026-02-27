@@ -339,6 +339,7 @@ body.page-app .site-banner { display: none !important; }
 .app-logo-preview { max-width: 200px; max-height: 60px; object-fit: contain; }
 .app-logo-preview.hidden { display: none; }
 .app-textarea { width: 100%; max-width: 360px; padding: 0.75rem 1rem; font-family: inherit; font-size: 1rem; color: var(--app-text); background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 10px; margin-bottom: 0.5rem; box-sizing: border-box; resize: vertical; min-height: 80px; }
+.app-notifications-stats { font-size: 0.9rem; color: var(--app-text-muted); margin: 0 0 0.5rem; }
 .app-personnaliser-message { margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; }
 .app-personnaliser-message.success { background: #e8f5e9; color: #2e7d32; }
 .app-personnaliser-message.error { background: #ffebee; color: #c62828; }

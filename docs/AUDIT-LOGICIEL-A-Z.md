@@ -93,7 +93,7 @@ Deux causes possibles :
 
 ### 4.3 Évolutions possibles
 
-- [ ] **Notifications push** (déjà préparé côté PassKit) : envoyer des mises à jour de pass aux appareils enregistrés.
+- [x] **Notifications push** : Web Push implémenté (section « Notifications » dans le dashboard, bouton « Activer les notifications » sur la page fidélité après inscription). En production, définir `VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY` (générer avec `npx web-push generate-vapid-keys`).
 - [ ] **Multi-commerces** : aujourd’hui l’app suppose souvent “un commerce par utilisateur” ; affiner si besoin (liste de commerces, choix du commerce actif).
 - [ ] **Logos / assets** : au-delà d’un certain volume, passer à un stockage objet (S3, etc.) + URL au lieu de BLOB/base64 en base.
 - [ ] **Monitoring** : logs structurés, alertes (erreurs 5xx, santé DB), tableau de bord simple (optionnel).
@@ -110,6 +110,7 @@ Deux causes possibles :
 | **Auth** | JWT (login/register) + token dashboard (lien magique) ; token dashboard persisté en `sessionStorage` par slug. |
 | **Logo** | Enregistré en base (`businesses.logo_base64`), servi par `GET /api/businesses/:slug/logo`, utilisé dans les passes. |
 | **Persistance** | **Indispensable en prod** : volume Railway + `DATA_DIR=/data`. |
+| **Notifications push** | Web Push (VAPID). En prod : `VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY` dans les variables d'environnement du backend. |
 
 ---
 

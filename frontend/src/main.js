@@ -571,7 +571,7 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["vue-ensemble", "partager", "scanner", "caisse", "membres", "historique", "personnaliser", "integration"];
+const APP_SECTION_IDS = ["vue-ensemble", "partager", "scanner", "caisse", "membres", "historique", "personnaliser", "integration", "notifications"];
 
 function showAppSection(sectionId) {
   const id = APP_SECTION_IDS.includes(sectionId) ? sectionId : "vue-ensemble";
@@ -1574,7 +1574,60 @@ function initAppDashboard(slug) {
 
   window.addEventListener("app-members-refresh", () => refresh());
 
+  async function loadAppNotificationStats() {
+    try {
+      const res = await api("/notifications/stats");
+      if (!res.ok) return;
+      const data = await res.json();
+      const el = document.getElementById("app-notifications-stats");
+      if (el) el.textContent = data.membersWithNotifications != null
+        ? `${data.membersWithNotifications} membre(s) ont activé les notifications.`
+        : "";
+    } catch (_) {}
+  }
+
+  document.getElementById("app-notif-send")?.addEventListener("click", async () => {
+    const titleEl = document.getElementById("app-notif-title");
+    const messageEl = document.getElementById("app-notif-message");
+    const feedbackEl = document.getElementById("app-notif-feedback");
+    const btn = document.getElementById("app-notif-send");
+    const message = messageEl?.value?.trim();
+    if (!message) {
+      if (feedbackEl) { feedbackEl.textContent = "Saisissez un message."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+      return;
+    }
+    if (btn) btn.disabled = true;
+    if (feedbackEl) feedbackEl.classList.add("hidden");
+    try {
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
+        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (feedbackEl) {
+        feedbackEl.classList.remove("hidden");
+        if (res.ok) {
+          feedbackEl.textContent = data.sent != null ? `Notification envoyée à ${data.sent} appareil(s).` : (data.message || "Envoyé.");
+          feedbackEl.classList.remove("error"); feedbackEl.classList.add("success");
+        } else {
+          feedbackEl.textContent = data.error || "Erreur";
+          feedbackEl.classList.add("error");
+        }
+      }
+      if (res.ok) loadAppNotificationStats();
+    } catch (e) {
+      if (feedbackEl) { feedbackEl.textContent = "Erreur réseau."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+    }
+    if (btn) btn.disabled = false;
+  });
+
+  window.addEventListener("app-section-change", (e) => {
+    if (e.detail?.sectionId === "notifications") loadAppNotificationStats();
+  }, { once: false });
+
   refresh();
+  loadAppNotificationStats();
 }
 
 /** Modèles de carte par secteur (Points + Tampons) + styles libres. */
@@ -2238,7 +2291,56 @@ function initDashboardPage() {
     loadMembers(q).then((data) => renderMembers(data.members || []));
   });
 
+  async function loadNotificationStats() {
+    try {
+      const res = await api("/notifications/stats");
+      if (!res.ok) return;
+      const data = await res.json();
+      const el = document.getElementById("dashboard-notifications-stats");
+      if (el) el.textContent = data.membersWithNotifications != null
+        ? `${data.membersWithNotifications} membre(s) ont activé les notifications.`
+        : "";
+    } catch (_) {}
+  }
+
+  document.getElementById("dashboard-notif-send")?.addEventListener("click", async () => {
+    const titleEl = document.getElementById("dashboard-notif-title");
+    const messageEl = document.getElementById("dashboard-notif-message");
+    const feedbackEl = document.getElementById("dashboard-notif-feedback");
+    const btn = document.getElementById("dashboard-notif-send");
+    const message = messageEl?.value?.trim();
+    if (!message) {
+      if (feedbackEl) { feedbackEl.textContent = "Saisissez un message."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+      return;
+    }
+    if (btn) btn.disabled = true;
+    if (feedbackEl) feedbackEl.classList.add("hidden");
+    try {
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send?token=${encodeURIComponent(token)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (feedbackEl) {
+        feedbackEl.classList.remove("hidden");
+        if (res.ok) {
+          feedbackEl.textContent = data.sent != null ? `Notification envoyée à ${data.sent} appareil(s).` : (data.message || "Envoyé.");
+          feedbackEl.classList.remove("error"); feedbackEl.classList.add("success");
+        } else {
+          feedbackEl.textContent = data.error || "Erreur";
+          feedbackEl.classList.add("error");
+        }
+      }
+      if (res.ok) loadNotificationStats();
+    } catch (e) {
+      if (feedbackEl) { feedbackEl.textContent = "Erreur réseau."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+    }
+    if (btn) btn.disabled = false;
+  });
+
   refresh();
+  loadNotificationStats();
 }
 
 function getMentionsLegalesHtml() {
@@ -2424,6 +2526,88 @@ function showFidelitySuccess(slug, memberId) {
       }
     };
   }
+
+  const btnEnableNotifications = document.getElementById("btn-enable-notifications");
+  const notificationsStatusEl = document.getElementById("fidelity-notifications-status");
+  if (btnEnableNotifications && notificationsStatusEl) {
+    btnEnableNotifications.onclick = async () => {
+      if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+        notificationsStatusEl.textContent = "Les notifications ne sont pas supportées sur ce navigateur.";
+        notificationsStatusEl.classList.remove("hidden");
+        return;
+      }
+      if (Notification.permission === "denied") {
+        notificationsStatusEl.textContent = "Les notifications ont été bloquées. Autorisez-les dans les paramètres du navigateur.";
+        notificationsStatusEl.classList.remove("hidden");
+        return;
+      }
+      btnEnableNotifications.disabled = true;
+      notificationsStatusEl.textContent = "Activation…";
+      notificationsStatusEl.classList.remove("hidden");
+      try {
+        let permission = Notification.permission;
+        if (permission === "default") permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          notificationsStatusEl.textContent = "Permission refusée.";
+          btnEnableNotifications.disabled = false;
+          return;
+        }
+        const vapidRes = await fetch(`${API_BASE}/api/web-push/vapid-public`);
+        if (!vapidRes.ok) throw new Error("Service notifications indisponible");
+        const { publicKey } = await vapidRes.json();
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+        const subJson = sub.toJSON ? sub.toJSON() : {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: arrayBufferToBase64(sub.getKey("p256dh")),
+            auth: arrayBufferToBase64(sub.getKey("auth")),
+          },
+        };
+        const res = await fetch(`${API_BASE}/api/web-push/subscribe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            slug,
+            memberId,
+            subscription: { endpoint: subJson.endpoint, keys: { p256dh: subJson.keys.p256dh, auth: subJson.keys.auth } },
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || "Erreur lors de l'abonnement");
+        }
+        notificationsStatusEl.textContent = "Notifications activées. Vous recevrez les offres et actualités.";
+        notificationsStatusEl.classList.remove("error");
+        notificationsStatusEl.classList.add("success");
+        btnEnableNotifications.textContent = "Notifications activées";
+      } catch (err) {
+        notificationsStatusEl.textContent = err.message || "Erreur lors de l'activation.";
+        notificationsStatusEl.classList.add("error");
+        btnEnableNotifications.disabled = false;
+      }
+    };
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  const output = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) output[i] = rawData.charCodeAt(i);
+  return output;
+}
+
+function arrayBufferToBase64(buffer) {
+  if (!buffer) return "";
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function showSlugError(message) {
@@ -2458,6 +2642,9 @@ function initFidelityApp(slug) {
 }
 
 function runFidelityApp(slug) {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }
   fetchBusiness(slug)
     .then((business) => {
       ensureFidelityPath(slug);

@@ -15,9 +15,12 @@ import {
   getDashboardEvolution,
   getMembersForBusiness,
   getTransactionsForBusiness,
+  getWebPushSubscriptionsByBusiness,
+  logNotification,
   ensureDefaultBusiness,
   canCreateBusiness,
 } from "../db.js";
+import { sendWebPush } from "../notifications.js";
 import { requireAuth } from "../middleware/auth.js";
 import { generatePass } from "../pass.js";
 import { getGoogleWalletSaveUrl } from "../google-wallet.js";
@@ -176,6 +179,70 @@ router.get("/:slug/dashboard/transactions/export", (req, res, next) => {
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="transactions-${business.slug}.csv"`);
   res.send("\uFEFF" + csv);
+});
+
+/**
+ * POST /api/businesses/:slug/notifications/send
+ * Envoie une notification push à tous les membres ayant activé les notifications (Web Push).
+ * Body: { title?, message (requis), sendToAll?: true }
+ * Auth: token ou JWT.
+ */
+router.post("/:slug/notifications/send", async (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const { title, message } = req.body || {};
+  const body = (message || "").trim();
+  if (!body) {
+    return res.status(400).json({ error: "Le message est obligatoire" });
+  }
+  const subscriptions = getWebPushSubscriptionsByBusiness(business.id);
+  if (subscriptions.length === 0) {
+    return res.json({
+      ok: true,
+      sent: 0,
+      message: "Aucun membre n'a activé les notifications. Les clients doivent cliquer sur « Activer les notifications » sur la page de la carte.",
+    });
+  }
+  const payload = { title: (title || business.organization_name || "Fidpass").trim(), body };
+  let sent = 0;
+  const errors = [];
+  for (const sub of subscriptions) {
+    try {
+      await sendWebPush(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        payload
+      );
+      sent++;
+      logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body, type: "web_push" });
+    } catch (err) {
+      errors.push({ memberId: sub.member_id, error: err.message || String(err) });
+    }
+  }
+  res.json({
+    ok: true,
+    sent,
+    total: subscriptions.length,
+    failed: errors.length,
+    errors: errors.length > 0 ? errors : undefined,
+  });
+});
+
+/**
+ * GET /api/businesses/:slug/notifications/stats
+ * Nombre d'abonnés aux notifications (pour affichage dans l'UI).
+ */
+router.get("/:slug/notifications/stats", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const subscriptions = getWebPushSubscriptionsByBusiness(business.id);
+  const uniqueMembers = new Set(subscriptions.map((s) => s.member_id)).size;
+  res.json({ subscriptionsCount: subscriptions.length, membersWithNotifications: uniqueMembers });
 });
 
 /**

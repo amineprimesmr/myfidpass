@@ -296,6 +296,10 @@
             <span class="app-sidebar-icon" aria-hidden="true">🔌</span>
             Intégration caisse / borne
           </a>
+          <a href="#notifications" class="app-sidebar-link" data-section="notifications">
+            <span class="app-sidebar-icon" aria-hidden="true">🔔</span>
+            Notifications
+          </a>
         </nav>
         <div class="app-sidebar-footer">
           <p class="app-sidebar-user" id="app-user-email"></p>
@@ -605,6 +609,19 @@
               <pre id="app-integration-curl" class="app-integration-curl"></pre>
               <button type="button" id="app-integration-copy-curl" class="app-btn app-btn-secondary">Copier l'exemple cURL</button>
               <p class="app-integration-doc-link"><a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md" target="_blank" rel="noopener">Documentation complète (format code-barres, lookup, exemples JS/Python, erreurs)</a></p>
+            </div>
+          </section>
+          <section id="notifications" class="app-section">
+            <h2 class="app-section-title">Notifications push</h2>
+            <p class="app-section-desc">Envoyez une notification à tous les membres qui ont activé les alertes sur la page de votre carte (ex. : « Aujourd'hui les points valent double ! »).</p>
+            <div class="app-card">
+              <label class="app-label" for="app-notif-title">Titre (optionnel)</label>
+              <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />
+              <label class="app-label" for="app-notif-message">Message</label>
+              <textarea id="app-notif-message" class="app-input app-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3" required></textarea>
+              <p id="app-notifications-stats" class="app-notifications-stats"></p>
+              <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer la notification</button>
+              <p id="app-notif-feedback" class="app-message hidden"></p>
             </div>
           </section>
         </div>
@@ -1336,6 +1353,11 @@ X-Dashboard-Token: TOKEN
               <a href="#" id="btn-google-wallet" class="fidelity-btn fidelity-btn-google"><span class="fidelity-btn-icon fidelity-btn-google-icon" aria-hidden="true">G</span> Google Wallet</a>
             </div>
             <p id="fidelity-google-error" class="fidelity-error hidden"></p>
+            <div id="fidelity-notifications-block" class="fidelity-notifications-block">
+              <p class="fidelity-notifications-desc">Recevez les offres et actualités par notification sur ton téléphone.</p>
+              <button type="button" id="btn-enable-notifications" class="fidelity-btn fidelity-btn-secondary">Activer les notifications</button>
+              <p id="fidelity-notifications-status" class="fidelity-notifications-status hidden"></p>
+            </div>
             <button type="button" id="btn-another-card" class="fidelity-link-btn">Créer une autre carte</button>
           </div>
         </section>
@@ -1396,6 +1418,20 @@ X-Dashboard-Token: TOKEN
                 <thead><tr><th>Client</th><th>Type</th><th>Points</th><th>Date</th></tr></thead>
                 <tbody id="dashboard-transactions-tbody"></tbody>
               </table>
+            </div>
+          </section>
+
+          <section class="dashboard-section dashboard-section-notifications">
+            <h2 class="dashboard-section-title">Notifications push</h2>
+            <p class="dashboard-hint">Envoyez une notification à tous les membres qui ont activé les alertes (sur la page de la carte). Ex. : « Aujourd’hui les points valent double ! »</p>
+            <div class="dashboard-notifications-form">
+              <label class="dashboard-label" for="dashboard-notif-title">Titre (optionnel)</label>
+              <input type="text" id="dashboard-notif-title" class="dashboard-input" placeholder="ex. Offre du jour" />
+              <label class="dashboard-label" for="dashboard-notif-message">Message</label>
+              <textarea id="dashboard-notif-message" class="dashboard-input dashboard-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3" required></textarea>
+              <p id="dashboard-notifications-stats" class="dashboard-notifications-stats"></p>
+              <button type="button" id="dashboard-notif-send" class="landing-btn landing-btn-primary">Envoyer la notification</button>
+              <p id="dashboard-notif-feedback" class="dashboard-message hidden"></p>
             </div>
           </section>
         </div>
