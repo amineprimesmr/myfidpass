@@ -10,6 +10,11 @@ import { generatePass } from "../pass.js";
 
 const router = Router();
 
+/** GET / — permet de vérifier que /v1 est bien joignable (ex. https://api.myfidpass.fr/v1) */
+router.get("/", (req, res) => {
+  res.json({ ok: true, service: "PassKit Web Service", message: "Les iPhones enregistrent les passes via POST /v1/devices/..." });
+});
+
 function parseApplePassAuth(req) {
   const auth = req.get("Authorization");
   if (!auth || !auth.startsWith("ApplePass ")) return null;
@@ -29,6 +34,7 @@ function verifyToken(serialNumber, token) {
  */
 router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, res) => {
   const { deviceId, passTypeId, serialNumber } = req.params;
+  console.log("[PassKit] Requête d'enregistrement reçue:", { deviceId: deviceId?.slice(0, 8) + "...", passTypeId, serialNumber: serialNumber?.slice(0, 8) + "..." });
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) {
     console.warn("[PassKit] Enregistrement refusé: token invalide ou manquant pour serialNumber", serialNumber?.slice(0, 8) + "...");
