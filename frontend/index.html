@@ -458,7 +458,7 @@
             <p class="app-section-desc">Liste des clients qui ont ajouté votre carte à leur téléphone.</p>
             <div class="app-card">
               <div class="app-members-toolbar">
-                <input type="text" id="app-members-search" class="app-input app-search" placeholder="Rechercher par nom ou email..." aria-label="Rechercher un membre" />
+              <input type="text" id="app-members-search" class="app-input app-search" placeholder="Rechercher par nom ou email..." aria-label="Rechercher un membre" />
                 <select id="app-members-filter" class="app-select" aria-label="Filtrer">
                   <option value="">Tous les membres</option>
                   <option value="inactive30">Inactifs depuis 30 j</option>
@@ -521,11 +521,24 @@
             <h2 class="app-section-title">Personnaliser la carte</h2>
             <p class="app-section-desc">Modifiez les couleurs, le logo et le dos de la carte. Les changements s’appliquent aux nouvelles cartes ajoutées par vos clients.</p>
             <div class="app-personnaliser-live-preview-wrap">
-              <p class="app-step-label">Aperçu</p>
-              <div id="app-personnaliser-preview" class="app-personnaliser-preview">
-                <div class="app-personnaliser-preview-card" id="app-personnaliser-preview-card">
-                  <span class="app-personnaliser-preview-org" id="app-personnaliser-preview-org">Votre commerce</span>
-                  <span class="app-personnaliser-preview-value">42 pts</span>
+              <p class="app-step-label">Aperçu — comme dans Apple Wallet</p>
+              <div id="app-personnaliser-preview" class="app-personnaliser-preview app-wallet-preview" role="img" aria-label="Aperçu de la carte fidélité">
+                <div class="app-wallet-preview-card" id="app-personnaliser-preview-card">
+                  <div class="app-wallet-preview-strip" id="app-wallet-preview-strip"></div>
+                  <div class="app-wallet-preview-body">
+                    <div class="app-wallet-preview-top">
+                      <div class="app-wallet-preview-logo-wrap">
+                        <img id="app-wallet-preview-logo" class="app-wallet-preview-logo hidden" alt="" />
+                        <span id="app-wallet-preview-logo-fallback" class="app-wallet-preview-logo-fallback">Logo</span>
+                      </div>
+                      <span class="app-wallet-preview-org" id="app-personnaliser-preview-org">Votre commerce</span>
+                    </div>
+                    <div class="app-wallet-preview-value-wrap">
+                      <span class="app-wallet-preview-value" id="app-wallet-preview-value">42 pts</span>
+                      <span class="app-wallet-preview-label" id="app-wallet-preview-label">Points</span>
+                    </div>
+                    <div class="app-wallet-preview-barcode" aria-hidden="true"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -808,7 +821,7 @@ X-Dashboard-Token: TOKEN
           </section>
 
           <p id="integration-page-slug-hint" class="integration-slug-hint hidden"></p>
-        </div>
+          </div>
       </main>
 
       <!-- Page créateur de carte : étape 1 = vidéo + iPhone mockup + modèles ; étape 2+ sans vidéo. -->

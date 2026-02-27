@@ -759,18 +759,58 @@ function initAppDashboard(slug) {
   bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
   bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
 
+  function hexToRgb(hex) {
+    const n = parseInt(hex.replace(/^#/, ""), 16);
+    return n >= 0 ? { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff } : null;
+  }
+  function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map((x) => Math.round(Math.max(0, Math.min(255, x))).toString(16).padStart(2, "0")).join("");
+  }
+  function lightenHex(hex, factor) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+    return rgbToHex(rgb.r + (255 - rgb.r) * (1 - 1 / factor), rgb.g + (255 - rgb.g) * (1 - 1 / factor), rgb.b + (255 - rgb.b) * (1 - 1 / factor));
+  }
+  function darkenHex(hex, factor) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+    return rgbToHex(rgb.r / factor, rgb.g / factor, rgb.b / factor);
+  }
   function updatePersonnaliserPreview() {
     const card = document.getElementById("app-personnaliser-preview-card");
+    const stripEl = document.getElementById("app-wallet-preview-strip");
     const orgEl = document.getElementById("app-personnaliser-preview-org");
+    const valueEl = document.getElementById("app-wallet-preview-value");
+    const labelEl = document.getElementById("app-wallet-preview-label");
     if (!card || !orgEl) return;
     const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
     const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
-    card.style.background = bg;
-    card.style.color = fg;
+    const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#e8f5e9";
+    card.style.setProperty("--wallet-bg", bg);
+    card.style.setProperty("--wallet-fg", fg);
+    card.style.setProperty("--wallet-label", labelColor);
+    if (stripEl) {
+      stripEl.style.background = `linear-gradient(165deg, ${lightenHex(bg, 1.2)} 0%, ${bg} 50%, ${darkenHex(bg, 1.15)} 100%)`;
+    }
+    const bodyEl = card?.querySelector(".app-wallet-preview-body");
+    if (bodyEl) {
+      bodyEl.style.background = `linear-gradient(180deg, ${lightenHex(bg, 1.08)} 0%, ${bg} 100%)`;
+      bodyEl.style.color = fg;
+    }
     orgEl.textContent = personnaliserOrg?.value?.trim() || "Votre commerce";
+    if (valueEl) valueEl.textContent = "42 pts";
+    if (labelEl) labelEl.textContent = "Points";
+    const walletLogo = document.getElementById("app-wallet-preview-logo");
+    if (walletLogo && personnaliserLogoDataUrl) {
+      walletLogo.src = personnaliserLogoDataUrl;
+      walletLogo.classList.remove("hidden");
+    } else if (walletLogo) {
+      walletLogo.removeAttribute("src");
+      walletLogo.classList.add("hidden");
+    }
   }
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
 
   api("/dashboard/settings")
     .then((r) => (r.ok ? r.json() : null))
@@ -804,6 +844,7 @@ function initAppDashboard(slug) {
           personnaliserLogoPreview.classList.remove("hidden");
         }
         if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+        updatePersonnaliserPreview();
       };
       r.readAsDataURL(file);
     });
