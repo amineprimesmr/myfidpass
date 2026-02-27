@@ -180,6 +180,14 @@ export async function generatePass(member, business = null, options = {}) {
     business?.organization_name || options.organizationName || process.env.ORGANIZATION_NAME || "Carte fidélité";
   const certificates = loadCertificates();
   const buffers = buildBuffers(business?.id, options);
+  if (business?.logo_base64) {
+    const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "");
+    const logoBuf = Buffer.from(base64Data, "base64");
+    if (logoBuf.length > 0) {
+      buffers["logo.png"] = logoBuf;
+      buffers["logo@2x.png"] = logoBuf;
+    }
+  }
 
   const level = getLevel(member.points);
   const format = options.format || "points";

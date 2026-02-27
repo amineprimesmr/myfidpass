@@ -96,7 +96,7 @@ if (!hasBusinessId) {
 }
 // Migration : couleurs personnalisées sur businesses
 const bizCols = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
-for (const col of ["background_color", "foreground_color", "label_color", "points_per_euro", "points_per_visit", "dashboard_token"]) {
+for (const col of ["background_color", "foreground_color", "label_color", "points_per_euro", "points_per_visit", "dashboard_token", "logo_base64"]) {
   if (!bizCols.includes(col)) {
     db.exec(`ALTER TABLE businesses ADD COLUMN ${col} TEXT`);
   }
@@ -242,6 +242,7 @@ export function updateBusiness(businessId, updates) {
     "background_color",
     "foreground_color",
     "label_color",
+    "logo_base64",
   ];
   const setClauses = [];
   const values = [];
@@ -249,7 +250,7 @@ export function updateBusiness(businessId, updates) {
     const col = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
     if (allowed.includes(col) && value !== undefined) {
       setClauses.push(`${col} = ?`);
-      values.push(value === null || value === "" ? null : String(value).trim());
+      values.push(value === null || value === "" ? null : col === "logo_base64" ? String(value) : String(value).trim());
     }
   }
   if (setClauses.length === 0) return b;

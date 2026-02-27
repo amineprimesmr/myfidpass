@@ -265,6 +265,29 @@ router.post("/:slug/integration/scan", (req, res) => {
 });
 
 /**
+ * GET /api/businesses/:slug/logo
+ * Logo du commerce (pour affichage dans le dashboard). Token ou JWT requis.
+ */
+router.get("/:slug/logo", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  if (business.logo_base64) {
+    const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(base64Data, "base64");
+    if (buf.length > 0) {
+      const isPng = business.logo_base64.includes("image/png");
+      res.setHeader("Content-Type", isPng ? "image/png" : "image/jpeg");
+      res.setHeader("Cache-Control", "private, max-age=3600");
+      return res.send(buf);
+    }
+  }
+  return res.status(404).send();
+});
+
+/**
  * GET /api/businesses/:slug
  * Infos publiques d'une entreprise (pour la page d'inscription).
  */
@@ -558,23 +581,17 @@ router.patch("/:slug", (req, res) => {
   if (backgroundColor !== undefined) updates.background_color = normalizeHex(backgroundColor);
   if (foregroundColor !== undefined) updates.foreground_color = normalizeHex(foregroundColor);
   if (labelColor !== undefined) updates.label_color = normalizeHex(labelColor);
+  if (logoBase64 !== undefined && logoBase64 !== null && typeof logoBase64 === "string") {
+    const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(base64Data, "base64");
+    if (buf.length === 0 || buf.length > 4 * 1024 * 1024) {
+      return res.status(400).json({ error: "Logo invalide ou trop volumineux (max 4 Mo)." });
+    }
+    updates.logo_base64 = logoBase64;
+  }
+
   const updated = updateBusiness(business.id, updates);
   if (!updated) return res.status(500).json({ error: "Erreur mise à jour" });
-
-  const dir = join(businessAssetsDir, business.id);
-  if (logoBase64 && typeof logoBase64 === "string") {
-    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, "");
-    try {
-      const buf = Buffer.from(base64Data, "base64");
-      if (buf.length > 0 && buf.length < 5 * 1024 * 1024) {
-        writeFileSync(join(dir, "logo.png"), buf);
-        writeFileSync(join(dir, "logo@2x.png"), buf);
-      }
-    } catch (err) {
-      console.warn("Logo save failed:", err.message);
-    }
-  }
 
   res.json({
     id: updated.id,

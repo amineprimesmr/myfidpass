@@ -866,6 +866,23 @@ function initAppDashboard(slug) {
       if (personnaliserLabel) personnaliserLabel.value = label;
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
       updatePersonnaliserPreview();
+      api("/logo")
+        .then((r) => (r.ok ? r.blob() : null))
+        .then((blob) => {
+          if (blob && personnaliserLogoPreview) {
+            const url = URL.createObjectURL(blob);
+            personnaliserLogoPreview.src = url;
+            personnaliserLogoPreview.classList.remove("hidden");
+            if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+            const walletLogo = document.getElementById("app-wallet-preview-logo");
+            if (walletLogo) {
+              walletLogo.src = url;
+              walletLogo.classList.remove("hidden");
+            }
+            updatePersonnaliserPreview();
+          }
+        })
+        .catch(() => {});
     })
     .catch(() => {});
 
@@ -923,11 +940,32 @@ function initAppDashboard(slug) {
           showPersonnaliserMessage("Modifications enregistrées.");
           personnaliserLogoDataUrl = "";
           if (personnaliserLogo) personnaliserLogo.value = "";
-          if (personnaliserLogoPreview) {
-            personnaliserLogoPreview.src = "";
-            personnaliserLogoPreview.classList.add("hidden");
+          if (body.logoBase64) {
+            api("/logo")
+              .then((r) => (r.ok ? r.blob() : null))
+              .then((blob) => {
+                if (blob && personnaliserLogoPreview) {
+                  const url = URL.createObjectURL(blob);
+                  personnaliserLogoPreview.src = url;
+                  personnaliserLogoPreview.classList.remove("hidden");
+                  if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+                  const walletLogo = document.getElementById("app-wallet-preview-logo");
+                  if (walletLogo) {
+                    walletLogo.src = url;
+                    walletLogo.classList.remove("hidden");
+                  }
+                  updatePersonnaliserPreview();
+                }
+              })
+              .catch(() => {});
+          } else {
+            if (personnaliserLogoPreview) {
+              personnaliserLogoPreview.src = "";
+              personnaliserLogoPreview.classList.add("hidden");
+            }
+            if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
+            updatePersonnaliserPreview();
           }
-          if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
         } else {
           let errMsg = data.error || "Erreur lors de l'enregistrement.";
           if (res.status === 401) errMsg = "Accès refusé. Utilisez le lien reçu par e-mail pour ouvrir cette page (il contient le token), ou déconnectez-vous puis reconnectez-vous.";
