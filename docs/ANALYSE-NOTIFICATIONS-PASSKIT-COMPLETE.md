@@ -152,9 +152,9 @@ On ne peut pas, depuis le code ou les logs, **forcer** l’iPhone à appeler not
    - Réglages → Wallet et Apple Pay / Portefeuille : s’assurer qu’aucune option ne désactive les mises à jour.  
    - Réglages → Notifications : vérifier Wallet si l’entrée existe.
 
-2. **Réseau**  
+2. **Réseau et diagnostic logs**  
    - Refaire un test en **4G uniquement** (WiFi désactivé), puis en **WiFi uniquement**, après avoir supprimé le pass et ré-ajouté un **nouveau** pass (bouton « Apple Wallet » sur la page fidélité).  
-   - Regarder les logs Railway **au moment précis** où tu ajoutes le pass (recherche « Requête d'enregistrement »).
+   - Dans les logs Railway, **au moment où tu ajoutes le pass** : chercher **« [PassKit] Requête reçue »** (toute requête vers /api/v1 est loguée). Si tu vois une ligne avec POST /devices/... et un User-Agent type iOS, l’iPhone nous contacte ; si tu ne vois rien du tout, la requête ne part pas ou est bloquée avant d’atteindre notre serveur.
 
 3. **Certificats**  
    - Vérifier que le certificat du **Pass Type ID** est valide et non expiré sur le portail Apple Developer.  

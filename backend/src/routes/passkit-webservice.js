@@ -10,6 +10,14 @@ import { generatePass } from "../pass.js";
 
 const router = Router();
 
+/** Log toute requête entrante sur /api/v1 pour voir si l'iPhone nous contacte (diagnostic). */
+router.use((req, res, next) => {
+  if (process.env.NODE_ENV === "production") {
+    console.log("[PassKit] Requête reçue:", req.method, req.path, "User-Agent:", (req.get("User-Agent") || "").slice(0, 60));
+  }
+  next();
+});
+
 /** GET / — permet de vérifier que /api/v1 est bien joignable (ex. https://api.myfidpass.fr/api/v1) */
 router.get("/", (req, res) => {
   res.json({ ok: true, service: "PassKit Web Service", message: "Les iPhones enregistrent les passes via POST /api/v1/devices/..." });
