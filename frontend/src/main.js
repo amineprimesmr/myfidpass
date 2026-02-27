@@ -1580,8 +1580,8 @@ function initAppDashboard(slug) {
       if (!res.ok) return;
       const data = await res.json();
       const el = document.getElementById("app-notifications-stats");
-      if (el) el.textContent = data.membersWithNotifications != null
-        ? `${data.membersWithNotifications} membre(s) ont activé les notifications.`
+      if (el) el.textContent = data.subscriptionsCount != null
+        ? `${data.subscriptionsCount} appareil(s) peuvent recevoir les notifications.`
         : "";
     } catch (_) {}
   }
@@ -2297,8 +2297,8 @@ function initDashboardPage() {
       if (!res.ok) return;
       const data = await res.json();
       const el = document.getElementById("dashboard-notifications-stats");
-      if (el) el.textContent = data.membersWithNotifications != null
-        ? `${data.membersWithNotifications} membre(s) ont activé les notifications.`
+      if (el) el.textContent = data.subscriptionsCount != null
+        ? `${data.subscriptionsCount} appareil(s) peuvent recevoir les notifications.`
         : "";
     } catch (_) {}
   }
@@ -2529,67 +2529,97 @@ function showFidelitySuccess(slug, memberId) {
 
   const btnEnableNotifications = document.getElementById("btn-enable-notifications");
   const notificationsStatusEl = document.getElementById("fidelity-notifications-status");
-  if (btnEnableNotifications && notificationsStatusEl) {
-    btnEnableNotifications.onclick = async () => {
-      if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+  const notificationsBlock = document.getElementById("fidelity-notifications-block");
+
+  async function trySubscribeToPush() {
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      if (notificationsStatusEl) {
         notificationsStatusEl.textContent = "Les notifications ne sont pas supportées sur ce navigateur.";
         notificationsStatusEl.classList.remove("hidden");
-        return;
       }
-      if (Notification.permission === "denied") {
-        notificationsStatusEl.textContent = "Les notifications ont été bloquées. Autorisez-les dans les paramètres du navigateur.";
-        notificationsStatusEl.classList.remove("hidden");
-        return;
+      return false;
+    }
+    if (Notification.permission === "denied") {
+      if (notificationsStatusEl) {
+        notificationsStatusEl.textContent = "Les notifications ont été bloquées. Autorisez-les dans les paramètres du navigateur pour recevoir les offres.";
+        notificationsStatusEl.classList.remove("hidden", "success");
+        notificationsStatusEl.classList.add("error");
       }
-      btnEnableNotifications.disabled = true;
+      return false;
+    }
+    if (btnEnableNotifications) btnEnableNotifications.disabled = true;
+    if (notificationsStatusEl) {
       notificationsStatusEl.textContent = "Activation…";
-      notificationsStatusEl.classList.remove("hidden");
-      try {
-        let permission = Notification.permission;
-        if (permission === "default") permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          notificationsStatusEl.textContent = "Permission refusée.";
-          btnEnableNotifications.disabled = false;
-          return;
+      notificationsStatusEl.classList.remove("hidden", "error");
+      notificationsStatusEl.classList.add("success");
+    }
+    try {
+      let permission = Notification.permission;
+      if (permission === "default") permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        if (notificationsStatusEl) {
+          notificationsStatusEl.textContent = "Autorisez les notifications pour recevoir les offres et actualités.";
+          notificationsStatusEl.classList.remove("success");
+          notificationsStatusEl.classList.add("error");
         }
-        const vapidRes = await fetch(`${API_BASE}/api/web-push/vapid-public`);
-        if (!vapidRes.ok) throw new Error("Service notifications indisponible");
-        const { publicKey } = await vapidRes.json();
-        const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
-        });
-        const subJson = sub.toJSON ? sub.toJSON() : {
-          endpoint: sub.endpoint,
-          keys: {
-            p256dh: arrayBufferToBase64(sub.getKey("p256dh")),
-            auth: arrayBufferToBase64(sub.getKey("auth")),
-          },
-        };
-        const res = await fetch(`${API_BASE}/api/web-push/subscribe`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            slug,
-            memberId,
-            subscription: { endpoint: subJson.endpoint, keys: { p256dh: subJson.keys.p256dh, auth: subJson.keys.auth } },
-          }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || "Erreur lors de l'abonnement");
-        }
-        notificationsStatusEl.textContent = "Notifications activées. Vous recevrez les offres et actualités.";
+        if (btnEnableNotifications) btnEnableNotifications.disabled = false;
+        return false;
+      }
+      const vapidRes = await fetch(`${API_BASE}/api/web-push/vapid-public`);
+      if (!vapidRes.ok) throw new Error("Service notifications indisponible");
+      const { publicKey } = await vapidRes.json();
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+      const subJson = sub.toJSON ? sub.toJSON() : {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: arrayBufferToBase64(sub.getKey("p256dh")),
+          auth: arrayBufferToBase64(sub.getKey("auth")),
+        },
+      };
+      const res = await fetch(`${API_BASE}/api/web-push/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug,
+          memberId,
+          subscription: { endpoint: subJson.endpoint, keys: { p256dh: subJson.keys.p256dh, auth: subJson.keys.auth } },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Erreur lors de l'abonnement");
+      }
+      if (notificationsStatusEl) {
+        notificationsStatusEl.textContent = "Vous recevrez les offres et actualités par notification.";
         notificationsStatusEl.classList.remove("error");
         notificationsStatusEl.classList.add("success");
-        btnEnableNotifications.textContent = "Notifications activées";
-      } catch (err) {
-        notificationsStatusEl.textContent = err.message || "Erreur lors de l'activation.";
-        notificationsStatusEl.classList.add("error");
-        btnEnableNotifications.disabled = false;
       }
-    };
+      if (btnEnableNotifications) {
+        btnEnableNotifications.textContent = "Notifications activées";
+        btnEnableNotifications.disabled = true;
+      }
+      return true;
+    } catch (err) {
+      if (notificationsStatusEl) {
+        notificationsStatusEl.textContent = err.message || "Erreur. Cliquez sur le bouton pour réessayer.";
+        notificationsStatusEl.classList.remove("success");
+        notificationsStatusEl.classList.add("error");
+      }
+      if (btnEnableNotifications) btnEnableNotifications.disabled = false;
+      return false;
+    }
+  }
+
+  if (btnEnableNotifications) btnEnableNotifications.onclick = () => trySubscribeToPush();
+
+  if (notificationsBlock) {
+    setTimeout(() => {
+      trySubscribeToPush();
+    }, 800);
   }
 }
 

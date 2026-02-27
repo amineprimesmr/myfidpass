@@ -203,7 +203,7 @@ router.post("/:slug/notifications/send", async (req, res) => {
     return res.json({
       ok: true,
       sent: 0,
-      message: "Aucun membre n'a activé les notifications. Les clients doivent cliquer sur « Activer les notifications » sur la page de la carte.",
+      message: "Aucun appareil enregistré pour l'instant. Les clients qui ajoutent la carte reçoivent une demande d'autorisation pour les notifications.",
     });
   }
   const payload = { title: (title || business.organization_name || "Fidpass").trim(), body };
