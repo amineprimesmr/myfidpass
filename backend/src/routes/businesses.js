@@ -269,17 +269,15 @@ router.get("/:slug/notifications/stats", (req, res) => {
   const subscriptionsCount = webSubscriptions.length + passKitTokens.length;
   const passKitUrlConfigured = !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
   const noDeviceButConfigured = subscriptionsCount === 0 && !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
+  const { members: membersList, total: membersCount } = getMembersForBusiness(business.id, { limit: 1 });
+  const member = membersList && membersList[0];
   let testPasskitCurl = null;
-  if (noDeviceButConfigured) {
-    const { members: membersList } = getMembersForBusiness(business.id, { limit: 1 });
-    const member = membersList && membersList[0];
-    if (member) {
+  if (noDeviceButConfigured && member) {
       const baseUrl = (process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
       const passTypeId = process.env.PASS_TYPE_ID || "pass.com.example.fidelity";
       const token = getPassAuthenticationToken(member.id);
       const url = `${baseUrl}/api/v1/devices/test-device-123/registrations/${encodeURIComponent(passTypeId)}/${encodeURIComponent(member.id)}`;
       testPasskitCurl = `curl -X POST "${url}" -H "Authorization: ApplePass ${token}" -H "Content-Type: application/json" -d '{"pushToken":"test"}' -w "\\nHTTP %{http_code}"`;
-    }
   }
   res.json({
     subscriptionsCount,
@@ -294,6 +292,10 @@ router.get("/:slug/notifications/stats", (req, res) => {
       ? "1) Supprime la carte du Wallet sur ton iPhone. 2) Ouvre le lien de ta carte (copié dans « Partager ») en navigation privée. 3) Clique « Apple Wallet » pour télécharger un pass neuf. 4) Ajoute la carte au Wallet. 5) Attends 30 secondes puis rafraîchis cette page."
       : null,
     testPasskitCurl: testPasskitCurl || undefined,
+    /** Pourquoi "Membres" affiche des gens mais "Notifications" affiche 0 appareil : les membres sont créés par notre site (formulaire). Les appareils sont enregistrés par l'iPhone quand il ajoute le pass au Wallet (Apple appelle notre API). */
+    membersVsDevicesExplanation: membersCount > 0 && subscriptionsCount === 0
+      ? "Les membres apparaissent dès que le client remplit le formulaire (nom, email) et crée sa carte. Les « appareils » pour les notifications sont enregistrés par l’iPhone lui‑même quand le client ajoute le pass au Wallet — c’est Apple qui doit appeler notre serveur. Si cet appel n’arrive pas (réglages iPhone, réseau, certificat), le compteur reste à 0 alors que le membre est bien en base."
+      : null,
   });
 });
 

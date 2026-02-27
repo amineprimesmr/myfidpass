@@ -26,6 +26,21 @@ En parallèle, le site propose aussi les **Web Push** (navigateur) pour Android 
 
 ---
 
+## Pourquoi le membre apparaît dans « Membres » mais pas dans « Notifications » (0 appareil) ?
+
+Ce sont **deux choses différentes** :
+
+| | **Section Membres / Vue d’ensemble** | **Section Notifications (appareils)** |
+|--|--------------------------------------|----------------------------------------|
+| **Source** | Table `members` (base de données) | Table `pass_registrations` (enregistrements PassKit) |
+| **Quand c’est créé** | Dès que le client remplit le formulaire (nom, email) et clique sur « Créer ma carte » | Quand l’**iPhone** appelle notre API au moment où le client **ajoute le pass au Wallet** |
+| **Qui fait l’appel** | **Notre site** (le navigateur envoie une requête à notre API) | **Apple / l’iPhone** (iOS lit l’URL dans le pass et appelle notre serveur) |
+| **On contrôle ?** | Oui : notre backend enregistre le membre tout de suite | Non : on expose l’API, mais c’est l’iPhone qui doit nous appeler |
+
+Donc : le **membre** est bien créé par notre site → il apparaît tout de suite dans « Membres ». L’**appareil** (pour les notifications) n’est enregistré que si l’iPhone contacte notre serveur au moment de l’ajout du pass au Wallet. Si cet appel ne part pas ou n’arrive pas (réglages, réseau, certificat), le compteur « appareils » reste à 0 alors que le membre est déjà en base.
+
+---
+
 ## Pourquoi la commande curl marche mais pas mon vrai iPhone ?
 
 La commande curl s’exécute depuis ton ordinateur : la requête part de ton Mac vers le serveur, qui répond bien (201). Quand tu ajoutes le pass sur l’**iPhone**, c’est l’appareil (ou le réseau opérateur) qui doit appeler la même URL. Si notre serveur ne reçoit rien, le blocage est **entre l’iPhone et nous** : réglages Wallet (mises à jour activées), réseau (4G / WiFi, VPN), ou certificat SSL. Voir `docs/ANALYSE-NOTIFICATIONS-PASSKIT-COMPLETE.md` pour le détail.
