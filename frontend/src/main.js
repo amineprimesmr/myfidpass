@@ -1229,15 +1229,32 @@ function initBuilderPage() {
 
   function updateDemoQR(templateId) {
     const qrEl = document.getElementById("builder-demo-qr");
+    const qrCafeEl = document.getElementById("builder-demo-qr-cafe");
     const nameEl = document.getElementById("builder-demo-template-name");
+    const nameCafeEl = document.getElementById("builder-demo-template-name-cafe");
+    const defaultBlock = document.getElementById("builder-demo-default");
+    const cafeBlock = document.getElementById("builder-demo-cafe-layout");
+    const demoSection = document.getElementById("builder-demo-wallet");
     const tpl = CARD_TEMPLATES.find((t) => t.id === templateId);
+    const isCafe = templateId === "cafe-points" || templateId === "cafe-tampons";
+
     if (tpl && nameEl) nameEl.textContent = tpl.name;
-    if (!qrEl) return;
+    if (tpl && nameCafeEl) nameCafeEl.textContent = tpl.name;
+    if (defaultBlock) defaultBlock.classList.toggle("hidden", isCafe);
+    if (cafeBlock) cafeBlock.classList.toggle("hidden", !isCafe);
+    if (demoSection) demoSection.classList.toggle("builder-demo-wallet--cafe", isCafe);
+
     const base = API_BASE.replace(/\/$/, "");
     const url = `${base}/api/passes/demo?template=${encodeURIComponent(templateId)}`;
-    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
-    qrEl.src = qrSrc;
-    qrEl.alt = `QR code pour ajouter la carte ${tpl?.name ?? templateId} à Apple Wallet`;
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+    if (qrEl) {
+      qrEl.src = qrSrc;
+      qrEl.alt = `QR code pour ajouter la carte ${tpl?.name ?? templateId} à Apple Wallet`;
+    }
+    if (qrCafeEl) {
+      qrCafeEl.src = qrSrc;
+      qrCafeEl.alt = `QR code carte café — ${tpl?.name ?? templateId}`;
+    }
   }
 
   document.querySelector(".builder-back")?.addEventListener("click", (e) => {

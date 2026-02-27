@@ -687,7 +687,7 @@
           <!-- Étape 1 : mockup iPhone + choix du modèle (pas de vidéo sur cette page) -->
           <div id="builder-step-1-block" class="builder-step-block builder-step-1-block">
             <div class="builder-step-1-heading">
-              <h1 class="builder-title">À quoi ressemblera votre carte</h1>
+            <h1 class="builder-title">À quoi ressemblera votre carte</h1>
               <p class="builder-subtitle">Glissez les cartes dans l’aperçu ou choisissez un modèle ci-dessous. Personnalisation des couleurs et du logo après paiement.</p>
             </div>
             <div class="builder-step-1-content">
@@ -785,7 +785,7 @@
                         <div class="builder-wallet-card builder-wallet-card-cafe-points" data-template="cafe-points">
                           <div class="builder-wallet-card-header"><span>Votre commerce</span></div>
                           <div class="builder-wallet-card-body">
-                            <span class="builder-wallet-card-pts">0 pts</span>
+                            <span class="builder-wallet-card-pts builder-wallet-card-pts-cafe"><span class="cafe-emoji">☕</span> 0 pts</span>
                             <span class="builder-wallet-card-label">Points</span>
                           </div>
                           <div class="builder-wallet-card-barcode"></div>
@@ -794,7 +794,7 @@
                           <div class="builder-wallet-card-header"><span>Votre commerce</span></div>
                           <div class="builder-wallet-card-body">
                             <span class="builder-wallet-card-stamps">0 / 10</span>
-                            <span class="builder-wallet-card-stamps-row" aria-hidden="true"><span class="stamp filled"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span></span>
+                            <span class="builder-wallet-card-stamps-row builder-wallet-card-stamps-cups" aria-hidden="true"><span class="stamp stamp-cup filled">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span></span>
                             <span class="builder-wallet-card-label">Tampons</span>
                           </div>
                           <div class="builder-wallet-card-barcode"></div>
@@ -831,7 +831,7 @@
               <div class="builder-step-1-right">
                 <p class="builder-choose-label">Choisissez un modèle</p>
                 <div class="builder-phone-dots" id="builder-phone-dots" aria-label="Choisir le modèle"></div>
-                <div class="builder-templates" id="builder-templates">
+            <div class="builder-templates" id="builder-templates">
                   <p class="builder-templates-section-title">Fast food & restauration</p>
                   <button type="button" class="builder-template-card builder-template-selected" id="builder-template-fastfood-points" data-template="fastfood-points" aria-pressed="true">
                     <span class="builder-template-name">Points</span>
@@ -958,7 +958,7 @@
                     <div class="builder-template-preview builder-template-preview-cafe-points">
                       <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
                       <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
+                        <span class="builder-template-preview-pts"><span class="cafe-emoji">☕</span> 0 pts</span>
                         <span class="builder-template-preview-label">Points</span>
                       </div>
                       <div class="builder-template-preview-barcode"></div>
@@ -970,7 +970,7 @@
                       <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
                       <div class="builder-template-preview-body">
                         <span class="builder-template-preview-stamps">0 / 10</span>
-                        <span class="builder-template-preview-stamps-row" aria-hidden="true"><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span></span>
+                        <span class="builder-template-preview-stamps-row builder-template-preview-stamps-cups" aria-hidden="true"><span class="stamp stamp-cup filled">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span></span>
                         <span class="builder-template-preview-label">Tampons</span>
                       </div>
                       <div class="builder-template-preview-barcode"></div>
@@ -978,48 +978,69 @@
                   </button>
                   <p class="builder-templates-section-title">Autres styles</p>
                   <button type="button" class="builder-template-card" id="builder-template-classic" data-template="classic" aria-pressed="false">
-                    <span class="builder-template-name">Classique</span>
-                    <div class="builder-template-preview builder-template-preview-classic">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <button type="button" class="builder-template-card" id="builder-template-bold" data-template="bold" aria-pressed="false">
-                    <span class="builder-template-name">Moderne</span>
-                    <div class="builder-template-preview builder-template-preview-bold">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <button type="button" class="builder-template-card" id="builder-template-elegant" data-template="elegant" aria-pressed="false">
-                    <span class="builder-template-name">Élégant</span>
-                    <div class="builder-template-preview builder-template-preview-elegant">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                </div>
-                <section class="builder-demo-wallet" id="builder-demo-wallet" aria-labelledby="builder-demo-title">
-                  <h2 class="builder-demo-title" id="builder-demo-title">Tester sur votre iPhone</h2>
-                  <p class="builder-demo-desc">Scannez le QR code avec votre iPhone pour ajouter la carte de démo à Apple Wallet.</p>
-                  <div class="builder-demo-qr-wrap">
-                    <img id="builder-demo-qr" class="builder-demo-qr" src="" alt="" width="200" height="200">
+                <span class="builder-template-name">Classique</span>
+                <div class="builder-template-preview builder-template-preview-classic">
+                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                  <div class="builder-template-preview-body">
+                    <span class="builder-template-preview-pts">0 pts</span>
+                    <span class="builder-template-preview-label">Points</span>
                   </div>
-                  <p class="builder-demo-hint">Modèle actuel : <strong id="builder-demo-template-name">Points (Fast food)</strong></p>
+                  <div class="builder-template-preview-barcode"></div>
+                </div>
+              </button>
+              <button type="button" class="builder-template-card" id="builder-template-bold" data-template="bold" aria-pressed="false">
+                <span class="builder-template-name">Moderne</span>
+                <div class="builder-template-preview builder-template-preview-bold">
+                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                  <div class="builder-template-preview-body">
+                    <span class="builder-template-preview-pts">0 pts</span>
+                    <span class="builder-template-preview-label">Points</span>
+                  </div>
+                  <div class="builder-template-preview-barcode"></div>
+                </div>
+              </button>
+              <button type="button" class="builder-template-card" id="builder-template-elegant" data-template="elegant" aria-pressed="false">
+                <span class="builder-template-name">Élégant</span>
+                <div class="builder-template-preview builder-template-preview-elegant">
+                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
+                  <div class="builder-template-preview-body">
+                    <span class="builder-template-preview-pts">0 pts</span>
+                    <span class="builder-template-preview-label">Points</span>
+                  </div>
+                  <div class="builder-template-preview-barcode"></div>
+                </div>
+              </button>
+            </div>
+                <section class="builder-demo-wallet" id="builder-demo-wallet" aria-labelledby="builder-demo-title">
+                  <div class="builder-demo-default" id="builder-demo-default">
+                    <h2 class="builder-demo-title" id="builder-demo-title">Tester sur votre iPhone</h2>
+                    <p class="builder-demo-desc">Scannez le QR code avec votre iPhone pour ajouter la carte de démo à Apple Wallet.</p>
+                    <div class="builder-demo-qr-wrap">
+                      <img id="builder-demo-qr" class="builder-demo-qr" src="" alt="" width="200" height="200">
+                    </div>
+                    <p class="builder-demo-hint">Modèle actuel : <strong id="builder-demo-template-name">Points (Fast food)</strong></p>
+                  </div>
+                  <div class="builder-demo-cafe-layout hidden" id="builder-demo-cafe-layout">
+                    <h2 class="builder-demo-title">Carte café — Tester</h2>
+                    <div class="builder-demo-cafe-grid">
+                      <div class="builder-demo-cafe-cups">
+                        <p class="builder-demo-cafe-cups-title">Vos tampons</p>
+                        <div class="builder-demo-cafe-cups-row" aria-hidden="true">
+                          <span class="demo-cup filled">☕</span><span class="demo-cup">☕</span><span class="demo-cup">☕</span><span class="demo-cup">☕</span><span class="demo-cup">☕</span><span class="demo-cup">☕</span><span class="demo-cup">☕</span><span class="demo-cup">☕</span><span class="demo-cup">☕</span><span class="demo-cup">☕</span>
+                        </div>
+                        <p class="builder-demo-cafe-cups-hint">1 café collecté · 9 pour en avoir un offert</p>
+                      </div>
+                      <div class="builder-demo-cafe-qr">
+                        <p class="builder-demo-cafe-qr-text">Montrez ce QR code au comptoir pour collecter un tampon&nbsp;!</p>
+                        <div class="builder-demo-qr-wrap builder-demo-cafe-qr-wrap">
+                          <img id="builder-demo-qr-cafe" class="builder-demo-qr" src="" alt="" width="220" height="220">
+                        </div>
+                      </div>
+                    </div>
+                    <p class="builder-demo-hint">Modèle : <strong id="builder-demo-template-name-cafe">Tampons (Café)</strong></p>
+                  </div>
                 </section>
-                <div class="builder-fields builder-fields-compact">
+            <div class="builder-fields builder-fields-compact">
                   <button type="button" id="builder-submit" class="landing-btn builder-btn-continuer">Continuer</button>
                 </div>
               </div>
@@ -1031,7 +1052,7 @@
                 <svg class="builder-sticky-change-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
               </button>
               <button type="button" class="builder-sticky-cta" id="builder-sticky-cta">Continuer</button>
-            </div>
+              </div>
           </div>
 
           <!-- Drawer panier (optionnel) -->

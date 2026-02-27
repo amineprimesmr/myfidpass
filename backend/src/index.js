@@ -19,15 +19,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const SECTOR_TEMPLATES = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"];
 const LEGACY_TEMPLATE_MAP = { classic: "classic", bold: "modern", elegant: "warm" };
 
-const DEMO_ORG_NAMES = {
-  fastfood: "Burger & Co",
-  beauty: "Institut Éclat",
-  coiffure: "Salon Marie",
-  boulangerie: "Au Pain Doré",
-  boucherie: "Boucherie Martin",
-  cafe: "Café des Arts",
-};
-
 async function handlePassDemo(req, res) {
   const templateParam = (req.query.template || "fastfood-points").toLowerCase();
   let template = LEGACY_TEMPLATE_MAP[templateParam] || "classic";
@@ -38,7 +29,7 @@ async function handlePassDemo(req, res) {
     format = templateParam.endsWith("-tampons") ? "tampons" : "points";
   }
   const member = { id: `demo-${templateParam}-${Date.now()}`, name: "Marie Dupont", points: 0 };
-  const organizationName = sector ? DEMO_ORG_NAMES[sector] || "Votre commerce" : "Votre commerce";
+  const organizationName = "Votre logo";
   try {
     const buffer = await generatePass(member, null, { template, format, organizationName });
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
