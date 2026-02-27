@@ -827,57 +827,47 @@ body.page-app .site-banner { display: none !important; }
 .app-personnaliser-live-preview-wrap { margin-bottom: 1.5rem; }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 
-/* Aperçu aux proportions réelles Apple Wallet : 375×123 pt (strip 3:1) + zone corps ≈ 375×173 pt total */
+/* Aperçu fidèle à la carte Apple Wallet — taille réelle (largeur iPhone 375pt) */
 .app-wallet-preview-card {
   --wallet-bg: #0a7c42;
   --wallet-fg: #ffffff;
   --wallet-label: #e8f5e9;
-  width: 320px;
+  width: 375px;
   max-width: 100%;
-  aspect-ratio: 375 / 173;
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.1);
   transition: box-shadow 0.2s;
-  display: flex;
-  flex-direction: column;
 }
 .app-wallet-preview-strip {
-  /* Strip Apple Wallet = 375×123 pt → ~71 % de la hauteur totale (123/173) */
-  height: 71%;
-  min-height: 48px;
-  flex-shrink: 0;
+  height: 72px;
   background: var(--wallet-bg);
   transition: background 0.2s;
 }
 .app-wallet-preview-body {
-  flex: 1;
-  min-height: 0;
   background: var(--wallet-bg);
-  padding: 0.35rem 0.6rem 0.4rem;
+  padding: 0.75rem 1rem 1rem;
   color: var(--wallet-fg);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   transition: background 0.2s, color 0.2s;
-  display: flex;
-  flex-direction: column;
 }
 .app-wallet-preview-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.25rem;
-  margin-bottom: 0.2rem;
-  min-height: 22px;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  min-height: 32px;
 }
 .app-wallet-preview-logo-wrap {
   flex-shrink: 0;
-  width: 32px;
-  height: 22px;
+  width: 48px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 6px;
   background: rgba(255,255,255,0.15);
 }
 .app-wallet-preview-logo {
@@ -886,7 +876,7 @@ body.page-app .site-banner { display: none !important; }
   object-fit: contain;
 }
 .app-wallet-preview-logo-fallback {
-  font-size: 0.5rem;
+  font-size: 0.65rem;
   font-weight: 700;
   opacity: 0.9;
   text-transform: uppercase;
@@ -894,7 +884,7 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-wallet-preview-logo-wrap:has(.app-wallet-preview-logo:not(.hidden)) .app-wallet-preview-logo-fallback { display: none; }
 .app-wallet-preview-org {
-  font-size: 0.6rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-align: right;
@@ -906,50 +896,55 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-wallet-preview-value-wrap {
   text-align: center;
-  margin-bottom: 0.15rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  margin-bottom: 0.5rem;
 }
 .app-wallet-preview-value {
   display: block;
-  font-size: 1.1rem;
+  font-size: 1.75rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 .app-wallet-preview-label {
-  font-size: 0.5rem;
+  font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--wallet-label);
   opacity: 0.95;
-  margin-top: 0.05rem;
+  margin-top: 0.15rem;
   display: block;
   transition: color 0.2s;
 }
-.app-wallet-preview-barcode {
-  height: 20px;
-  flex-shrink: 0;
-  background: rgba(0,0,0,0.25);
-  border-radius: 3px;
-  margin-top: 0.15rem;
+.app-wallet-preview-qr-wrap {
+  margin-top: 0.5rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 0.35rem;
 }
-.app-wallet-preview-barcode::after {
-  content: "";
-  width: 85%;
-  max-width: 110px;
-  height: 12px;
-  background: repeating-linear-gradient(90deg, #fff 0, #fff 1.5px, transparent 1.5px, transparent 3.5px);
-  border-radius: 2px;
+.app-wallet-preview-qr {
+  width: 120px;
+  height: 120px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px;
+  box-sizing: border-box;
+  display: block;
+}
+.app-wallet-preview-qr[src=""],
+.app-wallet-preview-qr:not([src]) {
+  opacity: 0.5;
+  background: rgba(255,255,255,0.2);
+}
+.app-wallet-preview-qr-hint {
+  font-size: 0.6rem;
+  color: var(--wallet-label);
   opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
-.app-personnaliser-preview-org { font-size: 0.75rem; font-weight: 600; opacity: 0.95; }
-.app-personnaliser-preview-value { font-size: 1.1rem; font-weight: 800; }
+.app-personnaliser-preview-org { font-size: 0.85rem; font-weight: 600; opacity: 0.95; }
+.app-personnaliser-preview-value { font-size: 1.25rem; font-weight: 800; }
 
 /* Intégration caisse / borne */
 .app-integration-auth-text { font-size: 0.95rem; color: var(--app-text-muted); margin: 0 0 1rem; line-height: 1.5; }

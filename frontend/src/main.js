@@ -696,6 +696,11 @@ function initAppDashboard(slug) {
   if (integrationPrestataireLinkEl) integrationPrestataireLinkEl.value = prestatairePageUrl;
   const integrationOpenPageEl = document.getElementById("app-integration-open-page");
   if (integrationOpenPageEl) integrationOpenPageEl.href = prestatairePageUrl;
+  const walletPreviewQr = document.getElementById("app-wallet-preview-qr");
+  if (walletPreviewQr && fullShareLink) {
+    walletPreviewQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullShareLink)}`;
+    walletPreviewQr.alt = "QR code — scannez pour ajouter la carte à Apple Wallet";
+  }
   if (integrationCurlEl) {
     integrationCurlEl.textContent = `curl -X POST "${API_BASE || "https://api.myfidpass.fr"}/api/businesses/${slug || "VOTRE_SLUG"}/integration/scan" \\
   -H "Content-Type: application/json" \\
