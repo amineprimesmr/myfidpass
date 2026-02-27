@@ -570,6 +570,16 @@
           <section id="integration" class="app-section">
             <h2 class="app-section-title">Intégration caisse / borne</h2>
             <p class="app-section-desc">Connectez Fidpass à n'importe quelle caisse, borne de commande ou logiciel métier : une seule API, compatible avec tout système qui peut lire un code-barres et envoyer une requête HTTP.</p>
+            <div class="app-card app-integration-how">
+              <h3 class="app-integration-how-title">Comment ça se passe ?</h3>
+              <p>Vous n'avez pas besoin de faire la technique. Transmettez le lien ci-dessous à la personne qui gère votre caisse ou votre borne (votre installateur, le support de votre logiciel, ou votre prestataire). Ils auront toute la documentation pour connecter Fidpass. <strong>Votre prestataire n'a pas besoin de compte Fidpass.</strong> Vous devrez lui communiquer votre <strong>token</strong> (visible dans l'URL de votre tableau de bord lorsque vous y accédez par le lien reçu par email).</p>
+              <p class="app-step-label">Lien à envoyer à votre prestataire</p>
+              <div class="app-share-row">
+                <input type="text" id="app-integration-prestataire-link" class="app-input app-share-input" readonly aria-label="Lien documentation" />
+                <button type="button" id="app-integration-copy-prestataire-link" class="app-btn app-btn-primary">Copier le lien</button>
+              </div>
+              <p class="app-hint"><a href="#" id="app-integration-open-page" target="_blank" rel="noopener">Ouvrir la page dans un nouvel onglet</a> pour voir ce que votre prestataire verra.</p>
+            </div>
             <div class="app-card">
               <p class="app-step-label">URL de base de l'API</p>
               <div class="app-share-row">
@@ -766,6 +776,38 @@
         <div class="landing-legal-inner">
           <a href="/" class="landing-btn landing-btn-secondary" style="margin-bottom: 1.5rem;">← Retour</a>
           <div id="landing-legal-content"></div>
+        </div>
+      </main>
+
+      <main id="landing-integration" class="landing-legal landing-integration-page hidden">
+        <div class="landing-legal-inner">
+          <a href="/" class="landing-btn landing-btn-secondary" style="margin-bottom: 1.5rem;">← Retour</a>
+          <h1 class="integration-page-title">Intégration Fidpass — Caisses et bornes</h1>
+          <p class="integration-page-subtitle">Documentation pour connecter Fidpass à votre logiciel de caisse, borne de commande ou terminal.</p>
+
+          <section class="integration-block integration-block-merchant">
+            <h2>Vous êtes commerçant ?</h2>
+            <p>Vous n'avez pas besoin de faire la technique. Transmettez <strong>cette page</strong> (ou le lien ci-dessous) à la personne qui gère votre caisse ou votre borne : votre installateur, le support de votre logiciel de caisse, ou votre prestataire informatique. Ils disposeront de toute la documentation pour connecter Fidpass à votre système.</p>
+            <p>Vous devrez leur communiquer également votre <strong>token d'accès</strong>, visible dans votre espace Fidpass (section Intégration caisse / borne), ou dans l’URL de votre tableau de bord (<code>?token=...</code>).</p>
+          </section>
+
+          <section class="integration-block">
+            <h2>Pour le prestataire / intégrateur</h2>
+            <p>Fidpass expose une <strong>API REST</strong>. Tout système qui peut lire le code-barres de la carte Fidpass (Wallet ou écran) et envoyer une requête HTTP peut s’intégrer.</p>
+            <p><strong>Code-barres</strong> : la valeur lue est l’identifiant unique du membre (UUID). À envoyer dans l’API sous le nom <code>barcode</code>.</p>
+            <p><strong>Authentification</strong> : header <code>X-Dashboard-Token: VOTRE_TOKEN</code> (token fourni par le commerçant).</p>
+            <p><strong>Endpoint principal (scan + crédit en un appel)</strong> :</p>
+            <pre class="integration-pre">POST {BASE_URL}/api/businesses/{slug}/integration/scan
+Content-Type: application/json
+X-Dashboard-Token: TOKEN
+
+{"barcode": "UUID-DU-MEMBRE", "amount_eur": 12.50}</pre>
+            <p>Remplacer <code>{BASE_URL}</code> par l’URL de l’API Fidpass (fournie par le commerçant), <code>{slug}</code> par l’identifiant du commerce.</p>
+            <p><strong>Documentation complète</strong> (endpoints lookup, erreurs, exemples) : disponible dans l'espace commerçant (section Intégration) ou sur demande. Fichier détaillé : <a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md" target="_blank" rel="noopener">INTEGRATION-API-BORNES-CAISSES.md</a>.</p>
+            <p><strong>Exemple de script</strong> (Node.js) pour tester l’intégration : <a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/examples/fidpass-scan-example.js" target="_blank" rel="noopener">fidpass-scan-example.js</a> (dans <code>docs/examples/</code>).</p>
+          </section>
+
+          <p id="integration-page-slug-hint" class="integration-slug-hint hidden"></p>
         </div>
       </main>
 

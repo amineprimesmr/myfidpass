@@ -2396,6 +2396,19 @@
   margin: 0 0 0.75rem;
 }
 
+/* Page intégration (publique) */
+.landing-integration-page .integration-page-title { font-size: 1.5rem; margin: 0 0 0.5rem; color: #1a1a1a; }
+.landing-integration-page .integration-page-subtitle { color: var(--landing-muted); margin: 0 0 1.5rem; }
+.integration-block { margin-bottom: 2rem; }
+.integration-block h2 { font-size: 1.15rem; margin: 0 0 0.75rem; color: #1a1a1a; }
+.integration-block-merchant { background: #e8f5e9; border-radius: 12px; padding: 1.25rem; }
+.integration-pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-size: 0.85rem; overflow-x: auto; margin: 0.5rem 0 1rem; }
+.integration-slug-hint { font-size: 0.9rem; color: var(--landing-muted); margin-top: 1rem; }
+
+/* App : bloc « Comment ça se passe » */
+.app-integration-how { margin-bottom: 1.5rem; }
+.app-integration-how-title { font-size: 1.1rem; margin: 0 0 0.75rem; }
+
 /* ——— Checkout (style WHOOP : fond clair, cartes grises) ——— */
 .checkout-shell {
   font-family: var(--landing-font, "Outfit", system-ui, sans-serif);

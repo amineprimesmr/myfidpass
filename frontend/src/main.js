@@ -71,6 +71,7 @@ function getRoute() {
   if (path === "/checkout") return { type: "checkout" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
+  if (path === "/integration") return { type: "integration" };
   return { type: "landing" };
 }
 
@@ -236,8 +237,24 @@ function initRouting() {
   } else if (route.type === "legal" && landingMain && landingLegal && legalContent) {
     landingMain.classList.add("hidden");
     if (landingTemplates) landingTemplates.classList.add("hidden");
+    const landingIntegration = document.getElementById("landing-integration");
+    if (landingIntegration) landingIntegration.classList.add("hidden");
     landingLegal.classList.remove("hidden");
     legalContent.innerHTML = route.page === "mentions" ? getMentionsLegalesHtml() : getPolitiqueConfidentialiteHtml();
+  } else if (route.type === "integration") {
+    landingMain?.classList.add("hidden");
+    if (landingTemplates) landingTemplates.classList.add("hidden");
+    landingLegal?.classList.add("hidden");
+    const landingIntegration = document.getElementById("landing-integration");
+    if (landingIntegration) {
+      landingIntegration.classList.remove("hidden");
+      const slugHint = document.getElementById("integration-page-slug-hint");
+      const slug = new URLSearchParams(window.location.search).get("slug");
+      if (slugHint && slug) {
+        slugHint.textContent = "Commerce concerné : " + slug;
+        slugHint.classList.remove("hidden");
+      }
+    }
   } else {
     if (landingEl) landingEl.classList.remove("builder-visible");
     const bannerMedia = document.getElementById("site-banner-media");
@@ -253,6 +270,8 @@ function initRouting() {
     }
     if (landingMain) landingMain.classList.remove("hidden");
     if (landingLegal) landingLegal.classList.add("hidden");
+    const landingIntegration = document.getElementById("landing-integration");
+    if (landingIntegration) landingIntegration.classList.add("hidden");
     if (landingTemplates) landingTemplates.classList.add("hidden");
   }
   return null;
@@ -669,8 +688,14 @@ function initAppDashboard(slug) {
   const integrationBaseUrlEl = document.getElementById("app-integration-base-url");
   const integrationSlugEl = document.getElementById("app-integration-slug");
   const integrationCurlEl = document.getElementById("app-integration-curl");
+  const integrationPrestataireLinkEl = document.getElementById("app-integration-prestataire-link");
+  const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "";
   if (integrationBaseUrlEl) integrationBaseUrlEl.value = API_BASE || "";
   if (integrationSlugEl) integrationSlugEl.value = slug || "";
+  const prestatairePageUrl = `${origin}/integration?slug=${encodeURIComponent(slug || "")}`;
+  if (integrationPrestataireLinkEl) integrationPrestataireLinkEl.value = prestatairePageUrl;
+  const integrationOpenPageEl = document.getElementById("app-integration-open-page");
+  if (integrationOpenPageEl) integrationOpenPageEl.href = prestatairePageUrl;
   if (integrationCurlEl) {
     integrationCurlEl.textContent = `curl -X POST "${API_BASE || "https://api.myfidpass.fr"}/api/businesses/${slug || "VOTRE_SLUG"}/integration/scan" \\
   -H "Content-Type: application/json" \\
@@ -681,6 +706,14 @@ function initAppDashboard(slug) {
     if (!integrationBaseUrlEl) return;
     integrationBaseUrlEl.select();
     navigator.clipboard.writeText(integrationBaseUrlEl.value);
+  });
+  document.getElementById("app-integration-copy-prestataire-link")?.addEventListener("click", () => {
+    if (!integrationPrestataireLinkEl) return;
+    integrationPrestataireLinkEl.select();
+    navigator.clipboard.writeText(integrationPrestataireLinkEl.value).then(() => {
+      const btn = document.getElementById("app-integration-copy-prestataire-link");
+      if (btn) { btn.textContent = "Copié !"; setTimeout(() => { btn.textContent = "Copier le lien"; }, 2000); }
+    });
   });
   document.getElementById("app-integration-copy-curl")?.addEventListener("click", () => {
     if (!integrationCurlEl) return;
