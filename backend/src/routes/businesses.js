@@ -4,6 +4,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import {
   getBusinessBySlug,
+  getBusinessById,
   getBusinessByDashboardToken,
   createBusiness,
   updateBusiness,
@@ -22,6 +23,22 @@ import { requireAuth } from "../middleware/auth.js";
 import { generatePass } from "../pass.js";
 import { getGoogleWalletSaveUrl } from "../google-wallet.js";
 import { randomUUID } from "crypto";
+
+/** Tokens court terme pour l’URL d’aperçu pass (QR) : { token -> { businessId, expiresAt } } */
+const previewPassTokens = new Map();
+const PREVIEW_TOKEN_TTL_MS = 10 * 60 * 1000; // 10 min
+function createPreviewPassToken(businessId) {
+  const token = randomUUID().replace(/-/g, "").slice(0, 24);
+  previewPassTokens.set(token, { businessId, expiresAt: Date.now() + PREVIEW_TOKEN_TTL_MS });
+  setTimeout(() => previewPassTokens.delete(token), PREVIEW_TOKEN_TTL_MS);
+  return token;
+}
+function consumePreviewPassToken(token) {
+  const data = previewPassTokens.get(token);
+  if (!data || Date.now() > data.expiresAt) return null;
+  previewPassTokens.delete(token);
+  return data.businessId;
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const businessAssetsDir = join(__dirname, "..", "assets", "businesses");
@@ -56,6 +73,56 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     backTerms: business.back_terms ?? undefined,
     backContact: business.back_contact ?? undefined,
   });
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/preview-pass-url
+ * Retourne une URL court terme pour télécharger un pass d’aperçu (QR dans Personnaliser).
+ */
+router.get("/:slug/dashboard/preview-pass-url", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Accès non autorisé" });
+  }
+  const t = createPreviewPassToken(business.id);
+  const base = (process.env.API_URL || req.protocol + "://" + req.get("host") || "").replace(/\/$/, "");
+  const url = `${base}/api/businesses/${encodeURIComponent(business.slug)}/dashboard/preview-pass?t=${t}`;
+  res.json({ url });
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/preview-pass?t=TOKEN
+ * Télécharge un .pkpass d’aperçu (membre « Aperçu », 42 pts). Auth par token court terme (t=).
+ */
+router.get("/:slug/dashboard/preview-pass", async (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+
+  const t = req.query.t;
+  if (!t) {
+    return res.status(400).json({ error: "Paramètre t (token) requis. Utilisez le lien fourni par l’espace Personnaliser." });
+  }
+  const businessId = consumePreviewPassToken(t);
+  if (!businessId || businessId !== business.id) {
+    return res.status(401).json({ error: "Lien expiré ou invalide. Rechargez la page Personnaliser pour un nouveau QR." });
+  }
+
+  const previewMember = { id: "preview-" + business.id, name: "Aperçu", points: 42 };
+
+  try {
+    const buffer = await generatePass(previewMember, business, { template: "classic", format: "points" });
+    const filename = `fidelity-${business.slug}-apercu.pkpass`;
+    res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    res.send(buffer);
+  } catch (err) {
+    console.error("Génération pass aperçu:", err);
+    res.status(500).json({
+      error: "Impossible de générer la carte d’aperçu.",
+      detail: err.message,
+    });
+  }
 });
 
 /**
