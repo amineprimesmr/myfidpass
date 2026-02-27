@@ -1,4 +1,6 @@
-/* Interface restaurateur (/app) — même design que landing (header noir, fond clair) */
+/* Interface logiciel (/app) — sans bannière ni menu haut */
+body.page-app .site-banner { display: none !important; }
+
 #app-app {
   --app-bg: #fafafa;
   --app-surface: #fff;
@@ -9,7 +11,6 @@
   --app-accent: #0a7c42;
   --app-accent-hover: #0d9651;
   --app-sidebar-width: 260px;
-  --app-header-height: 56px;
   font-family: "Outfit", system-ui, sans-serif;
   background: var(--app-bg);
   color: var(--app-text);
@@ -18,8 +19,7 @@
   flex-direction: column;
 }
 
-#app-app.app-unified-shell .landing-header.app-header-bar { flex-shrink: 0; }
-#app-app.app-unified-shell .app-main { padding-top: 1.5rem; }
+#app-app .app-main { padding-top: 1.5rem; }
 
 /* Sidebar */
 .app-sidebar {
@@ -30,7 +30,7 @@
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: var(--app-header-height, 56px);
+  top: 0;
   left: 0;
   bottom: 0;
   z-index: 90;
@@ -98,11 +98,6 @@
   border-top: 1px solid var(--app-border);
 }
 
-.app-sidebar-link-cta {
-  color: var(--app-accent);
-  margin-bottom: 0.75rem;
-}
-
 .app-sidebar-user {
   font-size: 0.8rem;
   color: var(--app-text-muted);
@@ -164,8 +159,7 @@
   .app-sidebar-footer { padding: 1rem 0.5rem; }
   .app-sidebar-business,
   .app-sidebar-link span:not(.app-sidebar-icon),
-  .app-sidebar-user,
-  .app-sidebar-link-cta { display: none; }
+  .app-sidebar-user { display: none; }
   .app-sidebar-link {
     justify-content: center;
     padding: 0.85rem;
@@ -213,14 +207,29 @@
   .app-main { margin-left: 0; padding: 1.25rem 1rem; }
 }
 
-/* Sections */
+/* Sections : une page visible à la fois (navigation par vue) */
 .app-content {
   max-width: 900px;
   margin: 0 auto;
 }
 
+#app-dashboard-content .app-section {
+  display: none;
+  margin-bottom: 0;
+  min-height: 60vh;
+}
+
+#app-dashboard-content .app-section.app-section-visible {
+  display: block;
+  animation: app-section-fade 0.2s ease;
+}
+
+@keyframes app-section-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .app-section {
-  margin-bottom: 3.5rem;
   scroll-margin-top: 1rem;
 }
 

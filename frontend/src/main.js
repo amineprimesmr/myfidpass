@@ -102,6 +102,7 @@ function attachBuilderHeaderNavForCheckout() {
 function initRouting() {
   const route = getRoute();
   document.body.classList.toggle("page-checkout", route.type === "checkout");
+  document.body.classList.toggle("page-app", route.type === "app");
 
   const builderHeader = document.getElementById("builder-header");
 
@@ -442,8 +443,6 @@ function initAppPage() {
       const user = data.user;
       const businesses = data.businesses || [];
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
-      const headerEmail = document.getElementById("app-header-email");
-      if (headerEmail) headerEmail.textContent = user?.email || "";
 
       if (businesses.length === 0) {
         if (emptyEl) emptyEl.classList.remove("hidden");
@@ -553,20 +552,42 @@ function initAppPage() {
   });
 }
 
+const APP_SECTION_IDS = ["vue-ensemble", "partager", "scanner", "caisse", "membres", "historique", "personnaliser"];
+
+function showAppSection(sectionId) {
+  const id = APP_SECTION_IDS.includes(sectionId) ? sectionId : "vue-ensemble";
+  const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
+  const content = document.getElementById("app-dashboard-content");
+  if (!content) return;
+  content.querySelectorAll(".app-section").forEach((section) => {
+    section.classList.toggle("app-section-visible", section.id === id);
+  });
+  links.forEach((l) => {
+    l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === id);
+  });
+  const newHash = "#" + id;
+  if (window.location.hash !== newHash) {
+    window.history.replaceState(null, "", window.location.pathname + newHash);
+  }
+  window.dispatchEvent(new CustomEvent("app-section-change", { detail: { sectionId: id } }));
+}
+
 function initAppSidebar() {
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
-  const main = document.querySelector("#app-app .app-main");
   links.forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       const id = link.getAttribute("data-section");
-      const section = document.getElementById(id);
-      if (section && main) {
-        section.scrollIntoView({ behavior: "smooth", block: "start" });
-        links.forEach((l) => l.classList.remove("app-sidebar-link-active"));
-        link.classList.add("app-sidebar-link-active");
+      if (APP_SECTION_IDS.includes(id)) {
+        showAppSection(id);
       }
     });
+  });
+  const hashSection = (window.location.hash || "#vue-ensemble").slice(1);
+  showAppSection(APP_SECTION_IDS.includes(hashSection) ? hashSection : "vue-ensemble");
+  window.addEventListener("hashchange", () => {
+    const section = (window.location.hash || "#vue-ensemble").slice(1);
+    showAppSection(APP_SECTION_IDS.includes(section) ? section : "vue-ensemble");
   });
 }
 
@@ -963,6 +984,11 @@ function initAppDashboard(slug) {
       if (id === "scanner") startScanner();
       else stopScanner();
     });
+  });
+  if ((window.location.hash || "#vue-ensemble").startsWith("#scanner")) startScanner();
+  window.addEventListener("app-section-change", (e) => {
+    if (e.detail?.sectionId === "scanner") startScanner();
+    else stopScanner();
   });
 
   let allMembers = [];
