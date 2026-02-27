@@ -552,7 +552,7 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["vue-ensemble", "partager", "scanner", "caisse", "membres", "historique", "personnaliser"];
+const APP_SECTION_IDS = ["vue-ensemble", "partager", "scanner", "caisse", "membres", "historique", "personnaliser", "integration"];
 
 function showAppSection(sectionId) {
   const id = APP_SECTION_IDS.includes(sectionId) ? sectionId : "vue-ensemble";
@@ -665,6 +665,27 @@ function initAppDashboard(slug) {
   if (sharePageLinkEl) {
     sharePageLinkEl.href = fullShareLink;
   }
+
+  const integrationBaseUrlEl = document.getElementById("app-integration-base-url");
+  const integrationSlugEl = document.getElementById("app-integration-slug");
+  const integrationCurlEl = document.getElementById("app-integration-curl");
+  if (integrationBaseUrlEl) integrationBaseUrlEl.value = API_BASE || "";
+  if (integrationSlugEl) integrationSlugEl.value = slug || "";
+  if (integrationCurlEl) {
+    integrationCurlEl.textContent = `curl -X POST "${API_BASE || "https://api.myfidpass.fr"}/api/businesses/${slug || "VOTRE_SLUG"}/integration/scan" \\
+  -H "Content-Type: application/json" \\
+  -H "X-Dashboard-Token: VOTRE_TOKEN" \\
+  -d '{"barcode":"UUID-DU-MEMBRE","amount_eur":12.50}'`;
+  }
+  document.getElementById("app-integration-copy-base")?.addEventListener("click", () => {
+    if (!integrationBaseUrlEl) return;
+    integrationBaseUrlEl.select();
+    navigator.clipboard.writeText(integrationBaseUrlEl.value);
+  });
+  document.getElementById("app-integration-copy-curl")?.addEventListener("click", () => {
+    if (!integrationCurlEl) return;
+    navigator.clipboard.writeText(integrationCurlEl.textContent);
+  });
 
   // ——— Personnaliser la carte ———
   const personnaliserOrg = document.getElementById("app-personnaliser-org");

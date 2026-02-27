@@ -292,6 +292,10 @@
             <span class="app-sidebar-icon" aria-hidden="true">🎨</span>
             Personnaliser la carte
           </a>
+          <a href="#integration" class="app-sidebar-link" data-section="integration">
+            <span class="app-sidebar-icon" aria-hidden="true">🔌</span>
+            Intégration caisse / borne
+          </a>
         </nav>
         <div class="app-sidebar-footer">
           <p class="app-sidebar-user" id="app-user-email"></p>
@@ -561,6 +565,25 @@
               <input type="text" id="app-personnaliser-back-contact" class="app-input" placeholder="contact@votrecommerce.fr" />
               <div id="app-personnaliser-message" class="app-personnaliser-message hidden"></div>
               <button type="button" id="app-personnaliser-save" class="app-btn app-btn-primary">Enregistrer les modifications</button>
+            </div>
+          </section>
+          <section id="integration" class="app-section">
+            <h2 class="app-section-title">Intégration caisse / borne</h2>
+            <p class="app-section-desc">Connectez Fidpass à n'importe quelle caisse, borne de commande ou logiciel métier : une seule API, compatible avec tout système qui peut lire un code-barres et envoyer une requête HTTP.</p>
+            <div class="app-card">
+              <p class="app-step-label">URL de base de l'API</p>
+              <div class="app-share-row">
+                <input type="text" id="app-integration-base-url" class="app-input app-share-input" readonly aria-label="URL de base API" />
+                <button type="button" id="app-integration-copy-base" class="app-btn app-btn-primary">Copier</button>
+              </div>
+              <p class="app-step-label">Votre identifiant commerce (slug)</p>
+              <input type="text" id="app-integration-slug" class="app-input app-share-input" readonly aria-label="Slug" />
+              <p class="app-step-label">Authentification</p>
+              <p class="app-integration-auth-text">Utilisez le <strong>token du tableau de bord</strong> (présent dans l'URL lorsque vous accédez à cette page par le lien envoyé par email : <code>?token=...</code>). Envoyez-le dans le header <code>X-Dashboard-Token</code>.</p>
+              <p class="app-step-label">Endpoint principal (scan + crédit en un appel)</p>
+              <pre id="app-integration-curl" class="app-integration-curl"></pre>
+              <button type="button" id="app-integration-copy-curl" class="app-btn app-btn-secondary">Copier l'exemple cURL</button>
+              <p class="app-integration-doc-link"><a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md" target="_blank" rel="noopener">Documentation complète (format code-barres, lookup, exemples JS/Python, erreurs)</a></p>
             </div>
           </section>
         </div>

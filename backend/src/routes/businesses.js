@@ -179,6 +179,92 @@ router.get("/:slug/dashboard/transactions/export", (req, res, next) => {
 });
 
 /**
+ * GET /api/businesses/:slug/integration/lookup
+ * Intégration bornes / caisses : consulter un membre à partir du code-barres scanné.
+ * Query: barcode (valeur lue = member id). Auth: token ou JWT.
+ */
+router.get("/:slug/integration/lookup", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token ou authentification requis" });
+  }
+  const barcode = (req.query.barcode || "").trim();
+  if (!barcode) return res.status(400).json({ error: "Paramètre barcode requis" });
+  const member = getMemberForBusiness(barcode, business.id);
+  if (!member) {
+    return res.status(404).json({ error: "Code non reconnu", code: "MEMBER_NOT_FOUND" });
+  }
+  res.json({
+    member: {
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      points: member.points,
+      last_visit_at: member.last_visit_at || null,
+    },
+  });
+});
+
+/**
+ * POST /api/businesses/:slug/integration/scan
+ * Intégration bornes / caisses : un seul appel = scan + crédit de points.
+ * Body: { barcode, amount_eur?, visit?, points? }. Auth: token ou JWT.
+ * Le code-barres Fidpass contient l'identifiant membre (UUID).
+ */
+router.post("/:slug/integration/scan", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token ou authentification requis" });
+  }
+  const barcode = (req.body?.barcode || "").trim();
+  if (!barcode) {
+    return res.status(400).json({ error: "Champ barcode requis", code: "BARCODE_MISSING" });
+  }
+  const member = getMemberForBusiness(barcode, business.id);
+  if (!member) {
+    return res.status(404).json({
+      error: "Code non reconnu pour ce commerce",
+      code: "MEMBER_NOT_FOUND",
+    });
+  }
+  const pointsDirect = Number(req.body?.points);
+  const amountEur = Number(req.body?.amount_eur);
+  const visit = req.body?.visit === true;
+  const perEuro = Number(business.points_per_euro) || 1;
+  const perVisit = Number(business.points_per_visit) || 0;
+  let points = 0;
+  if (Number.isInteger(pointsDirect) && pointsDirect > 0) points += pointsDirect;
+  if (!Number.isNaN(amountEur) && amountEur > 0) points += Math.floor(amountEur * perEuro);
+  if (visit && perVisit > 0) points += perVisit;
+  if (points <= 0) {
+    return res.status(400).json({
+      error: "Indiquez amount_eur, visit: true, ou points. Règles : " + perEuro + " pt/€, " + perVisit + " pt/passage.",
+      code: "NO_POINTS_SPECIFIED",
+    });
+  }
+  const updated = addPoints(member.id, points);
+  createTransaction({
+    businessId: business.id,
+    memberId: member.id,
+    type: "points_add",
+    points,
+    metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit, source: "integration" } : { source: "integration" },
+  });
+  res.json({
+    member: {
+      id: updated.id,
+      name: member.name,
+      email: member.email,
+      points: updated.points,
+    },
+    points_added: points,
+    new_balance: updated.points,
+  });
+});
+
+/**
  * GET /api/businesses/:slug
  * Infos publiques d'une entreprise (pour la page d'inscription).
  */
