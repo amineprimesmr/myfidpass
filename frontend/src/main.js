@@ -744,6 +744,38 @@ function initAppDashboard(slug) {
   const personnaliserSave = document.getElementById("app-personnaliser-save");
   let personnaliserLogoDataUrl = "";
 
+  /** Redimensionne et compresse l'image logo (max 640px largeur, JPEG 0.85) pour éviter dépassement taille requête. */
+  function resizeLogoToDataUrl(file, maxWidth = 640, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        const scale = w > maxWidth ? maxWidth / w : 1;
+        const cw = Math.round(w * scale);
+        const ch = Math.round(h * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, cw, ch);
+        try {
+          const dataUrl = canvas.toDataURL("image/jpeg", quality);
+          resolve(dataUrl);
+        } catch (e) {
+          reject(e);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Image invalide"));
+      };
+      img.src = objectUrl;
+    });
+  }
+
   function showPersonnaliserMessage(text, isError = false) {
     if (!personnaliserMessage) return;
     personnaliserMessage.textContent = text;
@@ -838,20 +870,24 @@ function initAppDashboard(slug) {
     .catch(() => {});
 
   if (personnaliserLogo) {
-    personnaliserLogo.addEventListener("change", (e) => {
+    personnaliserLogo.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      const r = new FileReader();
-      r.onload = () => {
-        personnaliserLogoDataUrl = r.result;
+      if (!file.type.startsWith("image/")) {
+        showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
+        return;
+      }
+      try {
+        personnaliserLogoDataUrl = await resizeLogoToDataUrl(file);
         if (personnaliserLogoPreview) {
           personnaliserLogoPreview.src = personnaliserLogoDataUrl;
           personnaliserLogoPreview.classList.remove("hidden");
         }
         if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
         updatePersonnaliserPreview();
-      };
-      r.readAsDataURL(file);
+      } catch (err) {
+        showPersonnaliserMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG valide.", true);
+      }
     });
   }
 

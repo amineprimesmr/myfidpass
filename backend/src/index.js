@@ -59,7 +59,7 @@ app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
 app.post("/api/payment/webhook", paymentWebhookHandler);
 
-app.use(express.json({ limit: "100kb" }));
+app.use(express.json({ limit: "8mb" }));
 
 // Parse JWT si présent (Authorization: Bearer) pour toutes les routes
 app.use(optionalAuth);
