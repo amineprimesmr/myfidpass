@@ -44,6 +44,7 @@ app.use("/api/payment", paymentRouter);
 app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
 app.use("/api/passes", passesRouter);
+app.use("/passes", passesRouter);
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });
