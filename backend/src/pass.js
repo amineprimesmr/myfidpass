@@ -268,12 +268,17 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  pass.setBarcodes({
+  // QR code uniquement (pas PDF417 ni Code128) — plus simple à scanner en caisse
+  const barcodePayload = {
     message: member.id,
     format: "PKBarcodeFormatQR",
     messageEncoding: "iso-8859-1",
     altText: member.id,
-  });
+  };
+  pass.setBarcodes(barcodePayload);
+  if (process.env.NODE_ENV === "production") {
+    console.log("[PassKit] Barcode format:", barcodePayload.format);
+  }
 
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const backContact = business?.back_contact || "contact@example.com";
