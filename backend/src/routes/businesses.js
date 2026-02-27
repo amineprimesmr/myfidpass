@@ -293,7 +293,10 @@ router.get("/:slug/notifications/stats", (req, res) => {
       ? "1) Supprime la carte du Wallet sur ton iPhone. 2) Ouvre le lien de ta carte (copié dans « Partager ») en navigation privée. 3) Clique « Apple Wallet » pour télécharger un pass neuf. 4) Ajoute la carte au Wallet. 5) Attends 30 secondes puis rafraîchis cette page."
       : null,
     testPasskitCurl: testPasskitCurl || undefined,
-    /** Pourquoi "Membres" affiche des gens mais "Notifications" affiche 0 appareil : les membres sont créés par notre site (formulaire). Les appareils sont enregistrés par l'iPhone quand il ajoute le pass au Wallet (Apple appelle notre API). */
+    paradoxExplanation: membersCount > 0 && subscriptionsCount === 0 && passKitUrlConfigured
+      ? "Si tu as pu scanner la carte du client et lui ajouter des points, sa carte est bien dans son Wallet — mais notre serveur n'a jamais reçu l'appel d'enregistrement de son iPhone. Soit le pass qu'il a ajouté a été généré sans URL d'enregistrement (ancien lien ou cache), soit l'iPhone ou le réseau empêche l'appel. À faire : le client supprime la carte du Wallet, rouvre le lien partagé (depuis « Partager »), clique « Apple Wallet », ajoute la carte à nouveau (pass neuf). Tester en 4G si le WiFi bloque, et vérifier Réglages → Wallet sur l'iPhone."
+      : null,
+    /** Pourquoi "Membres" affiche des gens mais "Notifications" affiche 0 appareil */
     membersVsDevicesExplanation: membersCount > 0 && subscriptionsCount === 0
       ? "Les membres apparaissent dès que le client remplit le formulaire (nom, email) et crée sa carte. Les « appareils » pour les notifications sont enregistrés par l’iPhone lui‑même quand le client ajoute le pass au Wallet — c’est Apple qui doit appeler notre serveur. Si cet appel n’arrive pas (réglages iPhone, réseau, certificat), le compteur reste à 0 alors que le membre est bien en base."
       : null,

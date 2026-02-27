@@ -30,6 +30,24 @@ Tout le blocage vient de cette étape : **entre l’iPhone et notre API, la requ
 
 ---
 
+## 2a. Le paradoxe : « J'ai scanné la carte du client et ajouté des points, donc la carte est dans son Wallet — mais 0 appareil enregistré »
+
+C'est une incohérence apparente mais logique. Si tu as pu **scanner le QR code de la carte** du client et lui **ajouter des points**, alors :
+- La carte **est bien** dans le Wallet du client (sinon il n'aurait pas pu te la montrer à scanner).
+- Le client **a bien** ajouté la carte à son téléphone.
+
+Donc la condition « l'enregistrement se fait quand le client ajoute la carte au Wallet » est remplie. Pourtant notre serveur affiche **0 appareil**. Pourquoi ?
+
+**Deux causes possibles :**
+
+1. **Le pass qu'il a sur son téléphone a été généré sans `webServiceURL`** (ancien déploiement, ancien lien, cache). Au moment où il a ajouté la carte, le fichier `.pkpass` qu'il a téléchargé ne contenait pas l'URL à laquelle l'iPhone doit s'enregistrer. Donc iOS n'a jamais su qu'il devait appeler notre API. → **Solution :** le client **supprime la carte du Wallet**, rouvre le **lien partagé** (depuis « Partager »), clique **« Apple Wallet »** pour télécharger un **pass neuf** (généré avec la config actuelle du serveur), puis ajoute la carte à nouveau. Ensuite vérifier les logs Railway au moment où il l'ajoute.
+
+2. **Le pass contient bien `webServiceURL`** mais **l'iPhone ou le réseau bloque l'appel** (réglages Wallet, pare-feu, certificat SSL, opérateur). La requête ne part pas ou n'arrive jamais à notre serveur. → **Solution :** vérifier Réglages → Wallet sur l'iPhone ; tester en **4G** puis en WiFi ; vérifier que `https://api.myfidpass.fr` s'ouvre sans alerte dans Safari sur l'iPhone.
+
+Pour vérifier que le pass généré **contient** l'URL : télécharger un `.pkpass` depuis le lien partagé, le renommer en `.zip`, ouvrir `pass.json` à l'intérieur et vérifier la présence de `"webServiceURL": "https://api.myfidpass.fr/api/v1"` et `"authenticationToken"`.
+
+---
+
 ## 2b. Pourquoi le curl marche mais pas le vrai iPhone ?
 
 - **Curl** : tu l’exécutes depuis ton Mac. La requête part de ton ordinateur vers `api.myfidpass.fr` → le serveur répond 201, tout va bien.

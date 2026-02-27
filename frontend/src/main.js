@@ -1652,7 +1652,9 @@ function initAppDashboard(slug) {
         const passKitOk = data.passKitUrlConfigured === true;
         if (total === 0 && data.helpWhenNoDevice) {
           let html = "";
-          if (data.membersVsDevicesExplanation) {
+          if (data.paradoxExplanation) {
+            html += `<p class="app-notifications-diagnostic-title">J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?</p><p class="app-notifications-diagnostic-text">${data.paradoxExplanation}</p>`;
+          } else if (data.membersVsDevicesExplanation) {
             html += `<p class="app-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="app-notifications-diagnostic-text">${data.membersVsDevicesExplanation}</p>`;
           }
           html += `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
@@ -1665,8 +1667,10 @@ function initAppDashboard(slug) {
         } else if (total === 0 && !passKitOk && data.diagnostic) {
           diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="app-notifications-diagnostic-text">${data.diagnostic}</p>`;
           diagEl.classList.remove("hidden");
-        } else if (total === 0 && data.membersVsDevicesExplanation) {
-          diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="app-notifications-diagnostic-text">${data.membersVsDevicesExplanation}</p>`;
+        } else if (total === 0 && (data.paradoxExplanation || data.membersVsDevicesExplanation)) {
+          const text = data.paradoxExplanation || data.membersVsDevicesExplanation;
+          const title = data.paradoxExplanation ? "J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?" : "Pourquoi des membres mais « 0 appareil » ?";
+          diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">${title}</p><p class="app-notifications-diagnostic-text">${text}</p>`;
           diagEl.classList.remove("hidden");
         } else {
           diagEl.classList.add("hidden");
@@ -2441,7 +2445,9 @@ function initDashboardPage() {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const passKitOk = data.passKitUrlConfigured === true;
         if (total === 0 && data.helpWhenNoDevice) {
-          let html = data.membersVsDevicesExplanation ? `<p class="dashboard-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="dashboard-notifications-diagnostic-text">${data.membersVsDevicesExplanation}</p>` : "";
+          let html = data.paradoxExplanation
+            ? `<p class="dashboard-notifications-diagnostic-title">J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?</p><p class="dashboard-notifications-diagnostic-text">${data.paradoxExplanation}</p>`
+            : (data.membersVsDevicesExplanation ? `<p class="dashboard-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="dashboard-notifications-diagnostic-text">${data.membersVsDevicesExplanation}</p>` : "");
           html += `<p class="dashboard-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="dashboard-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
           if (data.testPasskitCurl) {
             const curlEscaped = data.testPasskitCurl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
