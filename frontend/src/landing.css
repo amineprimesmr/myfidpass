@@ -1716,7 +1716,6 @@
   color: var(--landing-text);
 }
 
-.builder-demo-default.hidden,
 .builder-demo-cafe-layout.hidden {
   display: none !important;
 }
@@ -1724,6 +1723,9 @@
 /* Bloc démo café : tasses à gauche + QR à droite (style référence) */
 .builder-demo-cafe-layout {
   text-align: left;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--landing-border);
 }
 .builder-demo-cafe-layout .builder-demo-title {
   text-align: center;

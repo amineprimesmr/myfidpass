@@ -1240,7 +1240,6 @@ function initBuilderPage() {
 
     if (tpl && nameEl) nameEl.textContent = tpl.name;
     if (tpl && nameCafeEl) nameCafeEl.textContent = tpl.name;
-    if (defaultBlock) defaultBlock.classList.toggle("hidden", isCafe);
     if (cafeBlock) cafeBlock.classList.toggle("hidden", !isCafe);
     if (demoSection) demoSection.classList.toggle("builder-demo-wallet--cafe", isCafe);
 
