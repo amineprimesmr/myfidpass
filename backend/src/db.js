@@ -417,6 +417,14 @@ export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber);
 }
 
+/** Supprime l'appareil de test (curl) pour un commerce, pour remettre le compteur à 0. */
+export function removeTestPassKitDevices(businessId) {
+  const r = db.prepare(
+    "DELETE FROM pass_registrations WHERE device_library_identifier = 'test-device-123' AND serial_number IN (SELECT id FROM members WHERE business_id = ?)"
+  ).run(businessId);
+  return r.changes;
+}
+
 // ——— Web Push (notifications navigateur / PWA) ———
 export function saveWebPushSubscription({ businessId, memberId, endpoint, p256dh, auth }) {
   const id = randomUUID();

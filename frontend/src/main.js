@@ -1611,8 +1611,23 @@ function initAppDashboard(slug) {
           diagEl.innerHTML = "";
         }
       }
+      const removeTestWrap = document.getElementById("app-notifications-remove-test-wrap");
+      if (removeTestWrap) {
+        const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
+        removeTestWrap.classList.toggle("hidden", total === 0);
+      }
     } catch (_) {}
   }
+
+  document.getElementById("app-notifications-remove-test-btn")?.addEventListener("click", async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/remove-test-device`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
+      });
+      if (res.ok) await loadAppNotificationStats();
+    } catch (_) {}
+  });
 
   document.getElementById("app-notif-send")?.addEventListener("click", async () => {
     const titleEl = document.getElementById("app-notif-title");

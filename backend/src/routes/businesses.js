@@ -17,6 +17,7 @@ import {
   getTransactionsForBusiness,
   getWebPushSubscriptionsByBusiness,
   getPassKitPushTokensForBusiness,
+  removeTestPassKitDevices,
   logNotification,
   ensureDefaultBusiness,
   canCreateBusiness,
@@ -325,6 +326,20 @@ router.get("/:slug/notifications/test-passkit", (req, res) => {
     curl,
     memberId: member.id,
   });
+});
+
+/**
+ * POST /api/businesses/:slug/notifications/remove-test-device
+ * Supprime l'appareil de test (curl) pour ce commerce.
+ */
+router.post("/:slug/notifications/remove-test-device", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const removed = removeTestPassKitDevices(business.id);
+  res.json({ ok: true, removed, message: removed ? "Appareil de test supprimé." : "Aucun appareil de test à supprimer." });
 });
 
 /**
