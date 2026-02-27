@@ -30,6 +30,21 @@ Tout le blocage vient de cette étape : **entre l’iPhone et notre API, la requ
 
 ---
 
+## 2b. Pourquoi le curl marche mais pas le vrai iPhone ?
+
+- **Curl** : tu l’exécutes depuis ton Mac. La requête part de ton ordinateur vers `api.myfidpass.fr` → le serveur répond 201, tout va bien.
+- **iPhone** : quand tu ajoutes le pass au Wallet, c’est **l’iPhone** (ou le réseau opérateur / Apple) qui doit appeler la même URL. Si cette requête est bloquée, différente (réseau, SSL, pare-feu) ou si iOS ne l’envoie pas (réglages Wallet), notre serveur ne reçoit rien.
+
+Donc : **le serveur est bon** (preuve = curl). Le blocage est **entre l’appareil et nous** (réseau, réglages iOS, ou certificat). Voir section 3 pour les pistes.
+
+---
+
+## 2c. « Entreprise alexbarber introuvable » après avoir ajouté la carte
+
+Si tu reviens sur le site et que tu vois « Entreprise « alexbarber » introuvable », c’est souvent un **slug avec une mauvaise casse** (ex. `alexbarber` au lieu de `alexBarber`). Le backend a été mis à jour pour accepter le slug **sans tenir compte de la casse** : `myfidpass.fr/fidelity/alexbarber` et `myfidpass.fr/fidelity/alexBarber` doivent maintenant tous les deux afficher la page de la carte. Pense à rafraîchir après déploiement.
+
+---
+
 ## 3. Causes possibles (par ordre de vraisemblance)
 
 ### A. Paramètres iOS : mises à jour Wallet désactivées

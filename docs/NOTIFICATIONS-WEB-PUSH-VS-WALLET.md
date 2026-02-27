@@ -26,6 +26,18 @@ En parallèle, le site propose aussi les **Web Push** (navigateur) pour Android 
 
 ---
 
+## Pourquoi la commande curl marche mais pas mon vrai iPhone ?
+
+La commande curl s’exécute depuis ton ordinateur : la requête part de ton Mac vers le serveur, qui répond bien (201). Quand tu ajoutes le pass sur l’**iPhone**, c’est l’appareil (ou le réseau opérateur) qui doit appeler la même URL. Si notre serveur ne reçoit rien, le blocage est **entre l’iPhone et nous** : réglages Wallet (mises à jour activées), réseau (4G / WiFi, VPN), ou certificat SSL. Voir `docs/ANALYSE-NOTIFICATIONS-PASSKIT-COMPLETE.md` pour le détail.
+
+---
+
+## « Entreprise xxx introuvable » sur la page fidélité
+
+Si l’URL utilise un slug avec une **casse différente** (ex. `alexbarber` au lieu de `alexBarber`), la page affichait « Entreprise introuvable ». Le site accepte maintenant le slug **sans tenir compte de la casse** : `myfidpass.fr/fidelity/alexbarber` et `myfidpass.fr/fidelity/alexBarber` affichent la même carte.
+
+---
+
 ## Pourquoi « Les notifications ne sont pas supportées sur ce navigateur » ?
 
 Sur **iPhone**, quand le client ouvre la page de la carte dans **Safari** ou **Chrome** :

@@ -185,7 +185,8 @@ try {
 }
 
 export function getBusinessBySlug(slug) {
-  const row = db.prepare("SELECT * FROM businesses WHERE slug = ?").get(slug);
+  if (!slug || typeof slug !== "string") return null;
+  const row = db.prepare("SELECT * FROM businesses WHERE LOWER(TRIM(slug)) = LOWER(TRIM(?))").get(slug);
   return row || null;
 }
 
