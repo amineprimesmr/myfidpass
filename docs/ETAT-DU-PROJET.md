@@ -8,9 +8,9 @@ Bilan de ce qui est **prêt à 100 %** pour un lancement, et pistes d’**améli
 
 | Domaine | Détail |
 |--------|--------|
-| **Carte client** | Apple Wallet (.pkpass) + Google Wallet (lien JWT) ; même code-barres PDF_417 (ID membre) pour les deux. |
+| **Carte client** | Apple Wallet (.pkpass) + Google Wallet (lien JWT) ; QR code (ID membre) pour les deux. |
 | **Page fidélité** | Formulaire nom/email → création membre → choix « Apple Wallet » ou « Google Wallet ». |
-| **Scanner caisse** | Caméra, détection PDF_417, états vérification / succès / rejet, fiche client (nom, points, dernière visite, historique), ajout de points (1 passage ou montant €). |
+| **Scanner caisse** | Caméra, détection QR code, états vérification / succès / rejet, fiche client (nom, points, dernière visite, historique), ajout de points (1 passage ou montant €). |
 | **Espace commerçant (/app)** | Vue d’ensemble, partage lien/QR, caisse rapide (recherche + points), liste membres, historique, déconnexion. |
 | **Auth** | Inscription, connexion, JWT, protection routes /app et /choisir-offre. |
 | **API** | Businesses, members, dashboard (stats, members, transactions), pass Apple, URL Google Wallet, points. |

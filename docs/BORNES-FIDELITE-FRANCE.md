@@ -94,8 +94,8 @@ Donc : pour un commerce avec borne, la fidélité passe en général par un **lo
 
 ## 4. Où se place Fidpass (carte Apple Wallet avec code-barres)
 
-- Fidpass = **carte dans le Wallet** (iPhone) avec **code-barres** (PDF417 ou équivalent) contenant un identifiant membre.  
-- En caisse / borne, il faut **lire ce code-barres** (scan par caméra, lecteur USB/Bluetooth) et **appeler l’API Fidpass** pour identifier le membre et ajouter des points.
+- Fidpass = **carte dans le Wallet** (iPhone / Android) avec **QR code** contenant l’identifiant membre.
+- En caisse / borne, il faut **scanner ce QR code** (caméra, lecteur USB/Bluetooth) et **appeler l’API Fidpass** pour identifier le membre et ajouter des points.
 
 Conséquences pour les commerces qui ont une « borne » :
 

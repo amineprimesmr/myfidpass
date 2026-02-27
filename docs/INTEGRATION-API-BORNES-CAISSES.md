@@ -15,9 +15,9 @@ Donc : **toute caisse, borne, tablette ou logiciel** qui peut faire un appel HTT
 
 ---
 
-## 2. Format du code-barres Fidpass
+## 2. Format du code Fidpass sur la carte
 
-- **Type** : PDF417 (ou équivalent 2D selon affichage).
+- **Type** : **QR code** (Apple Wallet et Google Wallet). La valeur encodée est l’identifiant unique du membre (UUID).
 - **Contenu (message)** : l’**identifiant unique du membre** (UUID), ex. `a1b2c3d4-e5f6-7890-abcd-ef1234567890`.
 - **Encodage** : ISO-8859-1.
 

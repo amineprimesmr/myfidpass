@@ -825,8 +825,8 @@
 
           <section class="integration-block">
             <h2>Pour le prestataire / intégrateur</h2>
-            <p>Fidpass expose une <strong>API REST</strong>. Tout système qui peut lire le code-barres de la carte Fidpass (Wallet ou écran) et envoyer une requête HTTP peut s’intégrer.</p>
-            <p><strong>Code-barres</strong> : la valeur lue est l’identifiant unique du membre (UUID). À envoyer dans l’API sous le nom <code>barcode</code>.</p>
+            <p>Fidpass expose une <strong>API REST</strong>. Tout système qui peut scanner le QR code de la carte Fidpass (Wallet ou écran) et envoyer une requête HTTP peut s’intégrer.</p>
+            <p><strong>QR code</strong> : la valeur lue est l’identifiant unique du membre (UUID). À envoyer dans l’API sous le nom <code>barcode</code>.</p>
             <p><strong>Authentification</strong> : header <code>X-Dashboard-Token: VOTRE_TOKEN</code> (token fourni par le commerçant).</p>
             <p><strong>Endpoint principal (scan + crédit en un appel)</strong> :</p>
             <pre class="integration-pre">POST {BASE_URL}/api/businesses/{slug}/integration/scan

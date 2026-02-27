@@ -61,5 +61,5 @@ Si tu obtiens « Google Wallet n’est pas configuré », vérifie que les deux 
 
 ## Comportement
 
-- **Barcode** : comme pour Apple Wallet, le code-barres de la carte Google Wallet contient l’**ID du membre** (PDF_417). Le **scanner en caisse** (section Scanner de l’app commerçant) fonctionne donc avec les cartes Apple et Google.
+- **Barcode** : comme pour Apple Wallet, la carte Google Wallet affiche un **QR code** contenant l’**ID du membre**. Le **scanner en caisse** (section Scanner de l’app commerçant) fonctionne donc avec les cartes Apple et Google.
 - Si les variables Google ne sont pas définies, le bouton « Google Wallet » reste affiché : au clic, l’API renvoie 503 et un message indique que Google Wallet n’est pas configuré. Les utilisateurs peuvent utiliser uniquement Apple Wallet.

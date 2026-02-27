@@ -72,7 +72,7 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin) {
       balance: { int: Math.max(0, Math.floor(Number(member.points) || 0)) },
     },
     barcode: {
-      type: "PDF_417",
+      type: "QR_CODE",
       value: member.id,
       alternateText: member.id,
     },

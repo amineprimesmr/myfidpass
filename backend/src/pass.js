@@ -270,7 +270,7 @@ export async function generatePass(member, business = null, options = {}) {
 
   pass.setBarcodes({
     message: member.id,
-    format: "PKBarcodeFormatPDF417",
+    format: "PKBarcodeFormatQR",
     messageEncoding: "iso-8859-1",
     altText: member.id,
   });

@@ -1055,7 +1055,7 @@ function initAppDashboard(slug) {
     hideAllScannerStates();
     if (scannerViewport) scannerViewport.classList.add("hidden");
     if (scannerReject) scannerReject.classList.remove("hidden");
-    if (scannerRejectMessage) scannerRejectMessage.textContent = message || "Ce code-barres ne correspond pas à un client de votre commerce.";
+    if (scannerRejectMessage) scannerRejectMessage.textContent = message || "Ce QR code ne correspond pas à un client de votre commerce.";
     scannerCard?.classList.add("app-scanner-has-overlay");
   }
 
@@ -1127,7 +1127,7 @@ function initAppDashboard(slug) {
     if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
     scannerViewport.classList.add("app-scanner-scanning");
 
-    const config = { formatsToSupport: [Html5QrcodeSupportedFormats.PDF_417] };
+    const config = { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.PDF_417] };
     scannerInstance = new Html5Qrcode("app-scanner-viewport", config);
     const cameraConfig = { facingMode: "environment" };
     const scanConfig = { fps: 8, qrbox: { width: 260, height: 100 } };
@@ -1147,7 +1147,7 @@ function initAppDashboard(slug) {
       try {
         const res = await api("/members/" + encodeURIComponent(memberId));
         if (res.status === 404) {
-          showScannerReject("Ce code-barres ne correspond pas à un client de votre commerce. (Carte d’un autre établissement ou code invalide.)");
+          showScannerReject("Ce QR code ne correspond pas à un client de votre commerce. (Carte d’un autre établissement ou code invalide.)");
           return;
         }
         if (!res.ok) {
@@ -1589,7 +1589,7 @@ function initAppDashboard(slug) {
         const web = data.webPushCount != null ? data.webPushCount : 0;
         const wallet = data.passKitCount != null ? data.passKitCount : 0;
         if (membersCount > 0 && total === 0) {
-          el.textContent = `Tu as ${membersCount} membre(s). Aucun appareil enregistré pour les notifications push pour l'instant — les membres qui ajoutent la carte au Wallet peuvent en recevoir.`;
+          el.textContent = `Tu as ${membersCount} membre(s). La carte peut être dans le Wallet ; aucun appareil ne nous a encore envoyé son enregistrement, donc on ne peut pas envoyer de notifications push.`;
         } else if (total === 0) {
           el.textContent = "Aucun appareil enregistré pour l'instant.";
         } else if (membersCount > 0) {
@@ -1609,7 +1609,7 @@ function initAppDashboard(slug) {
         if (membersCount > 0 || total > 0) {
           membersSummaryEl.innerHTML = total > 0
             ? `<strong>Notifications :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#notifications" class="app-link-inline">Envoyer une notification →</a>`
-            : `<strong>Notifications :</strong> tu as ${membersCount} membre(s), mais 0 appareil enregistré pour les push (l'iPhone doit s'enregistrer quand le client ajoute la carte au Wallet). <a href="#notifications" class="app-link-inline">Voir les notifications et le diagnostic →</a>`;
+            : `<strong>Notifications :</strong> tu as ${membersCount} membre(s). La carte peut être bien dans le Wallet, mais <strong>aucun iPhone ne nous a encore envoyé son enregistrement</strong> — donc on ne peut pas envoyer de notifications push. Ce n’est pas que tu n’as pas la carte ; c’est que notre serveur n’a reçu le signal d’aucun appareil. <a href="#notifications" class="app-link-inline">Voir le diagnostic →</a>`;
           membersSummaryEl.classList.remove("hidden");
         } else {
           membersSummaryEl.classList.add("hidden");
@@ -2393,7 +2393,7 @@ function initDashboardPage() {
         const web = data.webPushCount != null ? data.webPushCount : 0;
         const wallet = data.passKitCount != null ? data.passKitCount : 0;
         if (membersCount > 0 && total === 0) {
-          el.textContent = `Tu as ${membersCount} membre(s). Aucun appareil enregistré pour les notifications push pour l'instant.`;
+          el.textContent = `Tu as ${membersCount} membre(s). Aucun appareil ne nous a encore envoyé son enregistrement — on ne peut pas envoyer de notifications push pour l'instant.`;
         } else if (total === 0) {
           el.textContent = "Aucun appareil enregistré pour l'instant.";
         } else if (membersCount > 0) {
