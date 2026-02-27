@@ -611,9 +611,13 @@ function initAppSidebar() {
 }
 
 function initAppDashboard(slug) {
+  const dashboardToken = new URLSearchParams(window.location.search).get("token");
   const api = (path, opts = {}) => {
-    const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${path}`;
-    return fetch(url, { ...opts, headers: { ...opts.headers, ...getAuthHeaders() } });
+    const sep = path.includes("?") ? "&" : "?";
+    const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${path}${dashboardToken ? `${sep}token=${encodeURIComponent(dashboardToken)}` : ""}`;
+    const headers = { ...opts.headers, ...getAuthHeaders() };
+    if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
+    return fetch(url, { ...opts, headers });
   };
 
   const statMembers = document.getElementById("app-stat-members");
@@ -736,8 +740,6 @@ function initAppDashboard(slug) {
   const personnaliserLogo = document.getElementById("app-personnaliser-logo");
   const personnaliserLogoPlaceholder = document.getElementById("app-personnaliser-logo-placeholder");
   const personnaliserLogoPreview = document.getElementById("app-personnaliser-logo-preview");
-  const personnaliserBackTerms = document.getElementById("app-personnaliser-back-terms");
-  const personnaliserBackContact = document.getElementById("app-personnaliser-back-contact");
   const personnaliserMessage = document.getElementById("app-personnaliser-message");
   const personnaliserSave = document.getElementById("app-personnaliser-save");
   let personnaliserLogoDataUrl = "";
@@ -831,8 +833,6 @@ function initAppDashboard(slug) {
       if (personnaliserFgHex) personnaliserFgHex.value = fg;
       if (personnaliserLabel) personnaliserLabel.value = label;
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
-      if (personnaliserBackTerms) personnaliserBackTerms.value = data.backTerms || "";
-      if (personnaliserBackContact) personnaliserBackContact.value = data.backContact || "";
       updatePersonnaliserPreview();
     })
     .catch(() => {});
@@ -861,8 +861,6 @@ function initAppDashboard(slug) {
       const backgroundColor = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
       const foregroundColor = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
       const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#e8f5e9";
-      const backTerms = personnaliserBackTerms?.value?.trim() || "";
-      const backContact = personnaliserBackContact?.value?.trim() || "";
       const toHex = (v) => {
         const s = (v || "").trim();
         if (/^#[0-9A-Fa-f]{6}$/.test(s)) return s;
@@ -874,18 +872,16 @@ function initAppDashboard(slug) {
         backgroundColor: toHex(backgroundColor),
         foregroundColor: toHex(foregroundColor),
         labelColor: toHex(labelColor),
-        backTerms: backTerms || undefined,
-        backContact: backContact || undefined,
       };
       if (personnaliserLogoDataUrl) body.logoBase64 = personnaliserLogoDataUrl;
       personnaliserSave.disabled = true;
       showPersonnaliserMessage("");
+      const dashboardToken = new URLSearchParams(window.location.search).get("token");
+      const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
+      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
       try {
-        const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify(body),
-        });
+        const res = await fetch(url, { method: "PATCH", headers, body: JSON.stringify(body) });
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showPersonnaliserMessage("Modifications enregistrées.");
