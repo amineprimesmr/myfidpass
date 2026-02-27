@@ -270,8 +270,8 @@ router.get("/:slug/notifications/stats", (req, res) => {
   const noDeviceButConfigured = subscriptionsCount === 0 && !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
   let testPasskitCurl = null;
   if (noDeviceButConfigured) {
-    const members = getMembersForBusiness(business.id, { limit: 1 });
-    const member = members[0];
+    const { members: membersList } = getMembersForBusiness(business.id, { limit: 1 });
+    const member = membersList && membersList[0];
     if (member) {
       const baseUrl = (process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
       const passTypeId = process.env.PASS_TYPE_ID || "pass.com.example.fidelity";
@@ -306,8 +306,8 @@ router.get("/:slug/notifications/test-passkit", (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const members = getMembersForBusiness(business.id, { limit: 1 });
-  const member = members[0];
+  const { members: membersList } = getMembersForBusiness(business.id, { limit: 1 });
+  const member = membersList && membersList[0];
   if (!member) {
     return res.json({
       ok: false,
