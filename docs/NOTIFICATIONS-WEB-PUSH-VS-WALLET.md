@@ -1,5 +1,17 @@
 # Notifications : Web Push vs Apple Wallet — explication
 
+## On utilise bien PassKit ?
+
+**Oui.** Fidpass utilise **PassKit** (Apple Wallet) pour les cartes fidélité sur iPhone :
+
+- Génération des fichiers **.pkpass** (carte dans le Wallet).
+- **Web Service URL** dans le pass pour que l’iPhone enregistre l’appareil auprès de notre API.
+- Envoi des notifications **push** aux appareils enregistrés via les serveurs Apple (APNs).
+
+En parallèle, le site propose aussi les **Web Push** (navigateur) pour Android / ordinateur ; sur iPhone, c’est le **Wallet (PassKit)** qui est utilisé pour les notifications.
+
+---
+
 ## Pourquoi « Aucun appareil enregistré » + « Autoriser les notifications » sur iPhone ?
 
 **Ce qui se passe :**

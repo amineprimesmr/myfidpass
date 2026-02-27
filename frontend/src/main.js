@@ -1620,13 +1620,22 @@ function initAppDashboard(slug) {
   }
 
   document.getElementById("app-notifications-remove-test-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("app-notifications-remove-test-btn");
+    const wrap = document.getElementById("app-notifications-remove-test-wrap");
+    if (btn) btn.disabled = true;
     try {
-      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/remove-test-device`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
-      });
-      if (res.ok) await loadAppNotificationStats();
-    } catch (_) {}
+      const res = await api("/notifications/remove-test-device", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        await loadAppNotificationStats();
+        if (wrap) { wrap.textContent = data.message || "Appareil de test supprimé."; wrap.classList.remove("hidden"); }
+      } else {
+        if (wrap) { wrap.textContent = data.error || "Erreur"; wrap.classList.remove("hidden"); }
+      }
+    } catch (_) {
+      if (wrap) { wrap.textContent = "Erreur réseau."; wrap.classList.remove("hidden"); }
+    }
+    if (btn) btn.disabled = false;
   });
 
   document.getElementById("app-notif-send")?.addEventListener("click", async () => {
