@@ -35,12 +35,8 @@ function verifyToken(serialNumber, token) {
   return token === expected;
 }
 
-/**
- * POST /devices/:deviceId/registrations/:passTypeId/:serialNumber
- * Enregistre un device pour recevoir les mises à jour (push) du pass.
- * Body: { "pushToken": "..." }
- */
-router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, res) => {
+/** Handler POST enregistrement device (partagé pour /devices/... et /v1/devices/...). */
+function handleDeviceRegistration(req, res) {
   const { deviceId, passTypeId, serialNumber } = req.params;
   console.log("[PassKit] Requête d'enregistrement reçue:", { deviceId: deviceId?.slice(0, 8) + "...", passTypeId, serialNumber: serialNumber?.slice(0, 8) + "..." });
   const token = parseApplePassAuth(req);
@@ -70,7 +66,10 @@ router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, 
     console.error("PassKit register:", e);
     return res.status(500).json({ error: "Registration failed" });
   }
-});
+}
+
+router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
+router.post("/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
 
 /**
  * GET /passes/:passTypeId/:serialNumber
@@ -97,11 +96,7 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
   }
 });
 
-/**
- * DELETE /devices/:deviceId/registrations/:passTypeId/:serialNumber
- * Désenregistre le device pour ce pass.
- */
-router.delete("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, res) => {
+function handleDeviceUnregister(req, res) {
   const { deviceId, passTypeId, serialNumber } = req.params;
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) {
@@ -113,7 +108,9 @@ router.delete("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req
   } catch (e) {
     return res.status(500).json({ error: "Unregister failed" });
   }
-});
+}
+router.delete("/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceUnregister);
+router.delete("/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceUnregister);
 
 /**
  * POST /log — Apple peut envoyer des erreurs (optionnel).

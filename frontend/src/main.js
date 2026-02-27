@@ -1657,6 +1657,9 @@ function initAppDashboard(slug) {
           } else if (data.membersVsDevicesExplanation) {
             html += `<p class="app-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="app-notifications-diagnostic-text">${data.membersVsDevicesExplanation}</p>`;
           }
+          if (data.dataDirHint) {
+            html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${data.dataDirHint}</p>`;
+          }
           html += `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
           if (data.testPasskitCurl) {
             const curlEscaped = data.testPasskitCurl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -1667,10 +1670,17 @@ function initAppDashboard(slug) {
         } else if (total === 0 && !passKitOk && data.diagnostic) {
           diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="app-notifications-diagnostic-text">${data.diagnostic}</p>`;
           diagEl.classList.remove("hidden");
-        } else if (total === 0 && (data.paradoxExplanation || data.membersVsDevicesExplanation)) {
-          const text = data.paradoxExplanation || data.membersVsDevicesExplanation;
-          const title = data.paradoxExplanation ? "J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?" : "Pourquoi des membres mais « 0 appareil » ?";
-          diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">${title}</p><p class="app-notifications-diagnostic-text">${text}</p>`;
+        } else if (total === 0 && (data.paradoxExplanation || data.membersVsDevicesExplanation || data.dataDirHint)) {
+          let html = "";
+          if (data.paradoxExplanation || data.membersVsDevicesExplanation) {
+            const text = data.paradoxExplanation || data.membersVsDevicesExplanation;
+            const title = data.paradoxExplanation ? "J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?" : "Pourquoi des membres mais « 0 appareil » ?";
+            html += `<p class="app-notifications-diagnostic-title">${title}</p><p class="app-notifications-diagnostic-text">${text}</p>`;
+          }
+          if (data.dataDirHint) {
+            html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${data.dataDirHint}</p>`;
+          }
+          diagEl.innerHTML = html || `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${data.dataDirHint}</p>`;
           diagEl.classList.remove("hidden");
         } else {
           diagEl.classList.add("hidden");

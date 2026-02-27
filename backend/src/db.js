@@ -422,6 +422,12 @@ export function getPassKitRegistrationsCountForBusiness(businessId) {
   return row?.n ?? 0;
 }
 
+/** Total d'enregistrements PassKit (diagnostic au démarrage). */
+export function getPassRegistrationsTotalCount() {
+  const row = db.prepare("SELECT COUNT(*) AS n FROM pass_registrations").get();
+  return row?.n ?? 0;
+}
+
 export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier, serialNumber) {
   db.prepare(
     "DELETE FROM pass_registrations WHERE device_library_identifier = ? AND pass_type_identifier = ? AND serial_number = ?"

@@ -5,7 +5,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 
-import { DATA_DIR_PATH, DB_FILE_PATH } from "./db.js";
+import { DATA_DIR_PATH, DB_FILE_PATH, getPassRegistrationsTotalCount } from "./db.js";
 
 import { optionalAuth } from "./middleware/auth.js";
 import membersRouter from "./routes/members.js";
@@ -102,6 +102,15 @@ function startServer(port) {
   const server = app.listen(p, () => {
     console.log(`Backend fidélité: http://localhost:${server.address().port}`);
     console.log(`  API: /api/businesses/:slug, /api/members`);
+    try {
+      const passRegCount = getPassRegistrationsTotalCount();
+      console.log(`  [PassKit] Au démarrage: DATA_DIR=${process.env.DATA_DIR || "(défaut)"}, pass_registrations=${passRegCount}`);
+      if (passRegCount === 0 && process.env.NODE_ENV === "production") {
+        console.warn("  [PassKit] Si les iPhones envoient des POST mais le dashboard affiche 0: vérifie volume Railway (Mount path=/data) et variable DATA_DIR=/data.");
+      }
+    } catch (e) {
+      console.warn("  [PassKit] Diagnostic démarrage:", e.message);
+    }
   });
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {
