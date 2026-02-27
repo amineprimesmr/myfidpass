@@ -15,10 +15,37 @@ function createDefaultIconBuffer() {
   const png = new PNG({ width: size, height: size });
   png.data = Buffer.alloc(size * size * 4);
   for (let i = 0; i < png.data.length; i += 4) {
-    png.data[i] = 0x6b;     // R
-    png.data[i + 1] = 0x6b; // G
-    png.data[i + 2] = 0x6b; // B
-    png.data[i + 3] = 255;  // A
+    png.data[i] = 0x6b;
+    png.data[i + 1] = 0x6b;
+    png.data[i + 2] = 0x6b;
+    png.data[i + 3] = 255;
+  }
+  return PNG.sync.write(png);
+}
+
+/** Parse une couleur hex (#rrggbb) en { r, g, b }. */
+function hexToRgb(hex) {
+  const n = parseInt(hex.replace(/^#/, ""), 16);
+  return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
+}
+
+/** Génère un strip PNG 750x288 (bannière du pass Wallet) avec dégradé aux couleurs du template. */
+function createStripBuffer(templateKey) {
+  const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
+  const base = hexToRgb(colors.backgroundColor);
+  const w = 750;
+  const h = 288;
+  const png = new PNG({ width: w, height: h });
+  for (let y = 0; y < h; y++) {
+    const t = y / h;
+    const lighten = 1 - t * 0.35;
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      png.data[i] = Math.round(Math.min(255, base.r * lighten));
+      png.data[i + 1] = Math.round(Math.min(255, base.g * lighten));
+      png.data[i + 2] = Math.round(Math.min(255, base.b * lighten));
+      png.data[i + 3] = 255;
+    }
   }
   return PNG.sync.write(png);
 }
@@ -80,9 +107,9 @@ function loadImageFromDir(dir, name) {
 /**
  * Construit les buffers d'images pour un pass.
  * Priorité : dossier de l'entreprise (assets/businesses/:id/) puis dossier global (assets/).
- * Si aucune icône n'est trouvée, on en génère une (obligatoire pour qu'Apple accepte le pass sur iPhone).
+ * Si pas de strip trouvé et options.template = secteur (café, fastfood…), génère un strip aux couleurs du template.
  */
-function buildBuffers(businessId) {
+function buildBuffers(businessId, options = {}) {
   const buffers = {};
   const businessDir = businessId ? join(assetsDir, "businesses", businessId) : null;
   const dirs = businessDir && existsSync(businessDir) ? [businessDir, assetsDir] : [assetsDir];
@@ -102,6 +129,10 @@ function buildBuffers(businessId) {
   }
   if (!buffers["logo.png"] && buffers["icon.png"]) {
     buffers["logo.png"] = buffers["icon.png"];
+  }
+  const templateKey = options.template;
+  if (!buffers["strip.png"] && templateKey && PASS_TEMPLATES[templateKey]) {
+    buffers["strip.png"] = createStripBuffer(templateKey);
   }
   return buffers;
 }
@@ -138,7 +169,7 @@ export async function generatePass(member, business = null, options = {}) {
   const organizationName =
     business?.organization_name || options.organizationName || process.env.ORGANIZATION_NAME || "Carte fidélité";
   const certificates = loadCertificates();
-  const buffers = buildBuffers(business?.id);
+  const buffers = buildBuffers(business?.id, options);
 
   const level = getLevel(member.points);
   const format = options.format || "points";
