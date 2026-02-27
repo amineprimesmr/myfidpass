@@ -223,6 +223,13 @@ export async function generatePass(member, business = null, options = {}) {
     const base = webServiceURL.replace(/\/$/, "");
     passOptions.webServiceURL = `${base}/v1`;
     passOptions.authenticationToken = authToken;
+    if (process.env.NODE_ENV === "production") {
+      console.log("[PassKit] Pass généré avec webServiceURL:", passOptions.webServiceURL, "→ l'iPhone pourra s'enregistrer.");
+    }
+  } else {
+    if (process.env.NODE_ENV === "production") {
+      console.warn("[PassKit] Pass généré SANS webServiceURL → aucun appareil ne pourra s'enregistrer. Définir PASSKIT_WEB_SERVICE_URL sur Railway (ex. https://api.myfidpass.fr).");
+    }
   }
   const pass = new PKPass(buffers, certificates, passOptions);
 

@@ -266,11 +266,16 @@ router.get("/:slug/notifications/stats", (req, res) => {
   const webSubscriptions = getWebPushSubscriptionsByBusiness(business.id);
   const passKitTokens = getPassKitPushTokensForBusiness(business.id);
   const subscriptionsCount = webSubscriptions.length + passKitTokens.length;
+  const passKitUrlConfigured = !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
   res.json({
     subscriptionsCount,
     webPushCount: webSubscriptions.length,
     passKitCount: passKitTokens.length,
     membersWithNotifications: new Set(webSubscriptions.map((s) => s.member_id)).size + new Set(passKitTokens.map((p) => p.serial_number)).size,
+    passKitUrlConfigured,
+    diagnostic: !passKitUrlConfigured
+      ? "PASSKIT_WEB_SERVICE_URL non défini sur le backend. Les passes sont générés sans URL d'enregistrement, donc l'iPhone ne contacte jamais le serveur. Ajoutez sur Railway : PASSKIT_WEB_SERVICE_URL = https://api.myfidpass.fr (sans slash final), puis redéployez. Ensuite, supprimez la carte du Wallet et ré-ajoutez-la depuis le lien partagé."
+      : null,
   });
 });
 

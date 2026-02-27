@@ -1,5 +1,19 @@
 # Notifications : Web Push vs Apple Wallet — explication
 
+## Pourquoi « Aucun appareil enregistré » + « Autoriser les notifications » sur iPhone ?
+
+**Ce qui se passe :**
+
+1. **Tu as des membres** → normal, la création de carte (nom, email) enregistre bien les membres en base.
+2. **Le dashboard affiche « Aucun appareil enregistré »** → ça compte uniquement les appareils qui ont **déjà** envoyé leur jeton au serveur :
+   - **Apple Wallet** : l’iPhone doit appeler notre API au moment où tu ajoutes le pass. Pour ça, le **fichier .pkpass** doit contenir une URL (webServiceURL). Si cette URL n’est pas dans le pass (parce que la variable `PASSKIT_WEB_SERVICE_URL` n’est pas définie sur le backend), l’iPhone **ne nous contacte jamais** → 0 appareil.
+   - **Web Push** : le navigateur doit avoir affiché « Autoriser les notifications » et le client doit avoir accepté ; sur iPhone en Safari/Chrome c’est souvent **non supporté** ou limité.
+3. **Quand tu scannes avec ton iPhone** pour ajouter la carte, tu vois encore « Autoriser les notifications » → c’est le **navigateur** qui demande la permission (Web Push). Sur iPhone ça ne marche souvent pas. **Mais** si le pass avait bien l’URL d’enregistrement, une fois la carte **ajoutée au Wallet**, c’est **Apple** qui enregistrerait l’appareil (sans passer par cette popup). Le problème est donc en amont : **le pass est généré sans URL**, donc même après « Ajouter à Apple Wallet », l’iPhone ne nous appelle pas.
+
+**En résumé :** le message « Autoriser les notifications » sur iPhone est pour la notif **navigateur** (Web Push), peu fiable sur iOS. Pour que ton iPhone compte comme « appareil enregistré », il faut que **le pass contienne l’URL du serveur** → variable **`PASSKIT_WEB_SERVICE_URL`** sur Railway, puis **supprimer la carte du Wallet et la ré-ajouter** (car les anciens passes n’ont pas l’URL).
+
+---
+
 ## Pourquoi « Les notifications ne sont pas supportées sur ce navigateur » ?
 
 Sur **iPhone**, quand le client ouvre la page de la carte dans **Safari** ou **Chrome** :
@@ -46,5 +60,27 @@ Dans Fidpass :
 | **iPhone + carte dans Apple Wallet** | Oui | APNs (mise à jour du pass). Pas besoin d’autorisation navigateur. |
 | **Android / desktop + autorisation navigateur** | Oui | Web Push (après « Autoriser les notifications » sur le site). |
 | **iPhone uniquement dans Safari/Chrome (sans carte Wallet)** | Non / limité | Web Push peu ou pas supporté sur iOS dans ce cas. |
+
+---
+
+## « Aucun appareil enregistré » alors que j'ai ajouté la carte en Apple Wallet
+
+Si tu as bien ajouté la carte au Wallet mais que le dashboard affiche toujours 0 appareil, c'est en général que **le pass a été généré sans URL d'enregistrement**.
+
+Le backend doit avoir la variable d'environnement **`PASSKIT_WEB_SERVICE_URL`** = URL publique de ton API (ex. `https://api.myfidpass.fr`, sans slash final). C'est cette URL qui est inscrite dans le pass ; au moment où l'iPhone ajoute le pass au Wallet, il appelle cette URL pour s'enregistrer. Si la variable n'est pas définie, le pass ne contient pas l'URL et l'iPhone ne contacte jamais le serveur.
+
+**Checklist à faire (dans l’ordre) :**
+
+1. **Railway** → ton projet → service **backend** → **Variables** → ajoute :
+   - **Name** : `PASSKIT_WEB_SERVICE_URL`
+   - **Value** : `https://api.myfidpass.fr` (exactement l’URL publique de ton API, **sans** slash final)
+2. **Redéploie** le backend (bouton Redeploy ou nouveau push sur le dépôt).
+3. **Sur ton iPhone** : supprime la carte du Wallet (carte déjà ajoutée = ancien pass sans URL).
+4. Retourne sur la page de ta carte (myfidpass.fr/fidelity/ton-slug), reclique sur **« Apple Wallet »** et ajoute à nouveau la carte. Ce **nouveau** pass contiendra l’URL ; l’iPhone appellera alors le serveur et s’enregistrera.
+5. Dans le dashboard, section **Notifications**, rafraîchis la page : tu devrais voir au moins **1 appareil (Apple Wallet)**.
+
+Si après ça tu vois encore « Aucun appareil » : ouvre les **logs Railway** (backend). Au moment où tu ajoutes le pass au Wallet, tu devrais voir une ligne du type `[PassKit] Appareil enregistré pour le membre ...`. Si tu vois `[PassKit] Pass généré SANS webServiceURL`, la variable n’est pas prise en compte (vérifier le nom exact et redéployer).
+
+---
 
 Donc : **dès qu’un client a la carte dans Apple Wallet**, il peut recevoir les notifications via Apple (APNs), sans avoir d’app et sans passer par « Autoriser les notifications » dans le navigateur. Le message « Les notifications ne sont pas supportées sur ce navigateur » concerne uniquement les **Web Push** sur ce navigateur (souvent sur iPhone) ; ça n’empêche pas les notifs **Wallet** si la carte est ajoutée au Wallet.

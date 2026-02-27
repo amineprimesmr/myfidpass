@@ -654,6 +654,8 @@ function initAppDashboard(slug) {
 
   const fullShareLink = (typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "") + "/fidelity/" + slug;
   if (shareLinkEl) shareLinkEl.value = fullShareLink;
+  const shareSlugValueEl = document.getElementById("app-share-slug-value");
+  if (shareSlugValueEl) shareSlugValueEl.textContent = slug || "";
   if (shareQrEl) shareQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=" + encodeURIComponent(fullShareLink);
   if (shareCopyBtn) {
     shareCopyBtn.addEventListener("click", () => {
@@ -1580,6 +1582,7 @@ function initAppDashboard(slug) {
       if (!res.ok) return;
       const data = await res.json();
       const el = document.getElementById("app-notifications-stats");
+      const diagEl = document.getElementById("app-notifications-diagnostic");
       if (el) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const web = data.webPushCount != null ? data.webPushCount : 0;
@@ -1588,6 +1591,17 @@ function initAppDashboard(slug) {
         else if (wallet > 0 && web > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
         else if (wallet > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
         else el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+      }
+      if (diagEl) {
+        const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
+        const passKitOk = data.passKitUrlConfigured === true;
+        if (total === 0 && !passKitOk && data.diagnostic) {
+          diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="app-notifications-diagnostic-text">${data.diagnostic}</p>`;
+          diagEl.classList.remove("hidden");
+        } else {
+          diagEl.classList.add("hidden");
+          diagEl.innerHTML = "";
+        }
       }
     } catch (_) {}
   }
@@ -2309,6 +2323,7 @@ function initDashboardPage() {
       if (!res.ok) return;
       const data = await res.json();
       const el = document.getElementById("dashboard-notifications-stats");
+      const diagEl = document.getElementById("dashboard-notifications-diagnostic");
       if (el) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const web = data.webPushCount != null ? data.webPushCount : 0;
@@ -2317,6 +2332,17 @@ function initDashboardPage() {
         else if (wallet > 0 && web > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
         else if (wallet > 0) el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
         else el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+      }
+      if (diagEl) {
+        const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
+        const passKitOk = data.passKitUrlConfigured === true;
+        if (total === 0 && !passKitOk && data.diagnostic) {
+          diagEl.innerHTML = `<p class="dashboard-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="dashboard-notifications-diagnostic-text">${data.diagnostic}</p>`;
+          diagEl.classList.remove("hidden");
+        } else {
+          diagEl.classList.add("hidden");
+          diagEl.innerHTML = "";
+        }
       }
     } catch (_) {}
   }

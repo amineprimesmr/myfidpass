@@ -370,6 +370,7 @@
             <p class="app-section-desc">Partagez ce lien ou le QR code à vos clients pour qu'ils ajoutent la carte à leur téléphone (en caisse, sur votre vitrine ou en fin de commande).</p>
             <div class="app-card app-share-card">
               <p class="app-step-label">Lien à partager</p>
+              <p class="app-hint app-share-slug-hint" id="app-share-slug-hint">Votre lien de carte : …/fidelity/<strong id="app-share-slug-value"></strong> — utilisez exactement ce lien (pas le nom de l'établissement).</p>
               <div class="app-share-row">
                 <input type="text" id="app-share-link" class="app-input app-share-input" readonly aria-label="Lien de la page carte" />
                 <button type="button" id="app-share-copy" class="app-btn app-btn-primary">Copier</button>
@@ -614,6 +615,7 @@
           <section id="notifications" class="app-section">
             <h2 class="app-section-title">Notifications push</h2>
             <p class="app-section-desc">Envoyez une notification à tous les membres : dès qu’un client ajoute la carte, il peut recevoir les alertes sur son téléphone (ex. : « Aujourd'hui les points valent double ! »).</p>
+            <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
             <div class="app-card">
               <label class="app-label" for="app-notif-title">Titre (optionnel)</label>
               <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />
@@ -1355,7 +1357,8 @@ X-Dashboard-Token: TOKEN
             <p id="fidelity-google-error" class="fidelity-error hidden"></p>
             <div id="fidelity-notifications-block" class="fidelity-notifications-block">
               <p class="fidelity-notifications-desc">Tu recevras les offres et actualités par notification sur ton téléphone.</p>
-              <button type="button" id="btn-enable-notifications" class="fidelity-btn fidelity-btn-secondary">Autoriser les notifications</button>
+              <p class="fidelity-notifications-iphone-hint">Sur iPhone : si tu ajoutes la carte à <strong>Apple Wallet</strong>, tu recevras les notifications via Wallet (pas besoin d’autoriser ici).</p>
+              <button type="button" id="btn-enable-notifications" class="fidelity-btn fidelity-btn-secondary">Autoriser les notifications (navigateur)</button>
               <p id="fidelity-notifications-status" class="fidelity-notifications-status hidden"></p>
             </div>
             <button type="button" id="btn-another-card" class="fidelity-link-btn">Créer une autre carte</button>
@@ -1424,6 +1427,7 @@ X-Dashboard-Token: TOKEN
           <section class="dashboard-section dashboard-section-notifications">
             <h2 class="dashboard-section-title">Notifications push</h2>
             <p class="dashboard-hint">Envoyez une notification à tous les membres : dès qu’un client ajoute la carte, il peut recevoir les alertes sur son téléphone. Ex. : « Aujourd’hui les points valent double ! »</p>
+            <div id="dashboard-notifications-diagnostic" class="dashboard-notifications-diagnostic hidden"></div>
             <div class="dashboard-notifications-form">
               <label class="dashboard-label" for="dashboard-notif-title">Titre (optionnel)</label>
               <input type="text" id="dashboard-notif-title" class="dashboard-input" placeholder="ex. Offre du jour" />

@@ -31,10 +31,14 @@ router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, 
   const { deviceId, passTypeId, serialNumber } = req.params;
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) {
+    console.warn("[PassKit] Enregistrement refusé: token invalide ou manquant pour serialNumber", serialNumber?.slice(0, 8) + "...");
     return res.status(401).json({ error: "Unauthorized" });
   }
   const member = getMember(serialNumber);
-  if (!member) return res.status(404).json({ error: "Pass not found" });
+  if (!member) {
+    console.warn("[PassKit] Enregistrement refusé: membre introuvable", serialNumber?.slice(0, 8) + "...");
+    return res.status(404).json({ error: "Pass not found" });
+  }
   const pushToken = req.body?.pushToken || null;
   try {
     registerPassDevice({
@@ -43,6 +47,7 @@ router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, 
       serialNumber,
       pushToken,
     });
+    console.log("[PassKit] Appareil enregistré pour le membre", serialNumber.slice(0, 8) + "...", "pushToken:", pushToken ? "oui" : "non");
     return res.status(201).send();
   } catch (e) {
     console.error("PassKit register:", e);

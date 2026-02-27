@@ -129,6 +129,26 @@
   margin: 0;
 }
 
+.dashboard-notifications-diagnostic {
+  background: #fff8e1;
+  border: 1px solid #ffc107;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.dashboard-notifications-diagnostic.hidden { display: none; }
+.dashboard-notifications-diagnostic-title {
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #e65100;
+}
+.dashboard-notifications-diagnostic-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5d4037;
+  line-height: 1.4;
+}
+
 .dashboard-input {
   width: 100%;
   max-width: 320px;

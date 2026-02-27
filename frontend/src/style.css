@@ -447,7 +447,11 @@ body {
 .fidelity-notifications-desc {
   font-size: 0.9rem;
   color: var(--text-muted);
-  margin: 0 0 0.75rem;
+}
+.fidelity-notifications-iphone-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0.35rem 0 0.75rem;
 }
 
 .fidelity-btn-secondary {
