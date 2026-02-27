@@ -893,10 +893,14 @@ function initAppDashboard(slug) {
           }
           if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
         } else {
-          showPersonnaliserMessage(data.error || "Erreur lors de l’enregistrement.", true);
+          let errMsg = data.error || "Erreur lors de l'enregistrement.";
+          if (res.status === 401) errMsg = "Accès refusé. Utilisez le lien reçu par e-mail pour ouvrir cette page (il contient le token), ou déconnectez-vous puis reconnectez-vous.";
+          else if (res.status === 404) errMsg = "Commerce introuvable.";
+          else if (res.status === 500) errMsg = data.error || "Erreur serveur. Réessayez.";
+          showPersonnaliserMessage(errMsg, true);
         }
       } catch (_) {
-        showPersonnaliserMessage("Erreur réseau.", true);
+        showPersonnaliserMessage("Erreur réseau. Vérifiez votre connexion.", true);
       }
       personnaliserSave.disabled = false;
     });
