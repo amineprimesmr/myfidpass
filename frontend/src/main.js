@@ -2702,22 +2702,7 @@ function showSlugError(message) {
 }
 
 function initFidelityApp(slug) {
-  // Si le visiteur est le propriétaire du commerce, le renvoyer vers son espace (pas la page client).
-  const token = getAuthToken();
-  if (token) {
-    fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() })
-      .then((r) => (r.ok ? r.json() : {}))
-      .then((data) => {
-        const businesses = data.businesses || [];
-        if (businesses.some((b) => b.slug === slug)) {
-          window.location.replace("/app");
-          return;
-        }
-        runFidelityApp(slug);
-      })
-      .catch(() => runFidelityApp(slug));
-    return;
-  }
+  // Toujours afficher la page carte : le commerçant peut tester le parcours client ou partager le lien.
   runFidelityApp(slug);
 }
 
