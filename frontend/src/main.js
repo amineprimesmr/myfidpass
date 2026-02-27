@@ -994,9 +994,14 @@ function initAppDashboard(slug) {
   }
 
   // ——— Scanner (caméra) ———
-  const scannerViewport = document.getElementById("app-scanner-viewport");
-  const scannerPlaceholder = document.getElementById("app-scanner-placeholder");
+  const scannerStart = document.getElementById("app-scanner-start");
   const scannerVerifying = document.getElementById("app-scanner-verifying");
+  const scannerFullscreen = document.getElementById("app-scanner-fullscreen");
+  const scannerFullscreenViewport = document.getElementById("app-scanner-fullscreen-viewport");
+  const scannerFullscreenVerifying = document.getElementById("app-scanner-fullscreen-verifying");
+  const scannerSuccessFlash = document.getElementById("app-scanner-success-flash");
+  const scannerFullscreenReject = document.getElementById("app-scanner-fullscreen-reject");
+  const scannerFullscreenRejectMsg = document.getElementById("app-scanner-fullscreen-reject-msg");
   const scannerReject = document.getElementById("app-scanner-reject");
   const scannerRejectMessage = document.getElementById("app-scanner-reject-message");
   const scannerRetryBtn = document.getElementById("app-scanner-retry");
@@ -1022,13 +1027,22 @@ function initAppDashboard(slug) {
     if (scannerVerifying) scannerVerifying.classList.add("hidden");
     if (scannerReject) scannerReject.classList.add("hidden");
     if (scannerResult) scannerResult.classList.add("hidden");
+    if (scannerStart) scannerStart.classList.remove("hidden");
     scannerCard?.classList.remove("app-scanner-has-overlay");
   }
 
+  function closeFullscreenScanner() {
+    if (scannerFullscreen) { scannerFullscreen.classList.add("hidden"); scannerFullscreen.setAttribute("aria-hidden", "true"); }
+    if (scannerFullscreenVerifying) scannerFullscreenVerifying.classList.add("hidden");
+    if (scannerSuccessFlash) scannerSuccessFlash.classList.add("hidden");
+    if (scannerFullscreenReject) scannerFullscreenReject.classList.add("hidden");
+  }
+
   function showScannerVerifying() {
-    hideAllScannerStates();
-    if (scannerViewport) scannerViewport.classList.add("hidden");
+    if (scannerStart) scannerStart.classList.add("hidden");
     if (scannerVerifying) scannerVerifying.classList.remove("hidden");
+    if (scannerReject) scannerReject.classList.add("hidden");
+    if (scannerResult) scannerResult.classList.add("hidden");
     scannerCard?.classList.add("app-scanner-has-overlay");
   }
 
@@ -1050,10 +1064,20 @@ function initAppDashboard(slug) {
     try { if (navigator.vibrate) navigator.vibrate([50, 50, 50]); } catch (_) {}
   }
 
+  function showFullscreenReject(message) {
+    scannerFeedbackReject();
+    if (scannerFullscreenVerifying) scannerFullscreenVerifying.classList.add("hidden");
+    if (scannerSuccessFlash) scannerSuccessFlash.classList.add("hidden");
+    if (scannerFullscreenReject && scannerFullscreenRejectMsg) {
+      scannerFullscreenRejectMsg.textContent = message || "Ce QR code ne correspond pas à un client de votre commerce.";
+      scannerFullscreenReject.classList.remove("hidden");
+    }
+  }
+
   function showScannerReject(message) {
     scannerFeedbackReject();
+    closeFullscreenScanner();
     hideAllScannerStates();
-    if (scannerViewport) scannerViewport.classList.add("hidden");
     if (scannerReject) scannerReject.classList.remove("hidden");
     if (scannerRejectMessage) scannerRejectMessage.textContent = message || "Ce QR code ne correspond pas à un client de votre commerce.";
     scannerCard?.classList.add("app-scanner-has-overlay");
@@ -1063,9 +1087,13 @@ function initAppDashboard(slug) {
     scannerFeedbackSuccess();
     scannerCurrentMemberId = member.id;
     scannerCurrentMember = member;
+    if (scannerFullscreenVerifying) scannerFullscreenVerifying.classList.add("hidden");
+    if (scannerSuccessFlash) scannerSuccessFlash.classList.remove("hidden");
+    await new Promise((r) => setTimeout(r, 1200));
+    closeFullscreenScanner();
     hideAllScannerStates();
-    if (scannerViewport) scannerViewport.classList.add("hidden");
     if (scannerResult) scannerResult.classList.remove("hidden");
+    if (scannerStart) scannerStart.classList.add("hidden");
     scannerCard?.classList.add("app-scanner-has-overlay");
 
     const displayName = member.name?.trim() || member.email || "Client";
@@ -1115,22 +1143,25 @@ function initAppDashboard(slug) {
     scannerCurrentMemberId = null;
     scannerCurrentMember = null;
     hideAllScannerStates();
-    if (scannerViewport) scannerViewport.classList.remove("hidden");
+    if (scannerStart) scannerStart.classList.remove("hidden");
     if (scannerResultMessage) { scannerResultMessage.classList.add("hidden"); scannerResultMessage.textContent = ""; }
   }
 
-  async function startScanner() {
+  async function startFullscreenScanner() {
     if (scannerInstance) return;
-    if (!scannerViewport) return;
-    hideAllScannerStates();
-    scannerViewport.classList.remove("hidden");
-    if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
-    scannerViewport.classList.add("app-scanner-scanning");
+    if (!scannerFullscreen || !scannerFullscreenViewport) return;
+    scannerFullscreen.classList.remove("hidden");
+    scannerFullscreen.setAttribute("aria-hidden", "false");
+    if (scannerFullscreenVerifying) scannerFullscreenVerifying.classList.add("hidden");
+    if (scannerSuccessFlash) scannerSuccessFlash.classList.add("hidden");
+    if (scannerFullscreenReject) scannerFullscreenReject.classList.add("hidden");
+    scannerFullscreenViewport.innerHTML = "";
 
-    const config = { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.PDF_417] };
-    scannerInstance = new Html5Qrcode("app-scanner-viewport", config);
+    const config = { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] };
+    scannerInstance = new Html5Qrcode("app-scanner-fullscreen-viewport", config);
     const cameraConfig = { facingMode: "environment" };
-    const scanConfig = { fps: 8, qrbox: { width: 260, height: 100 } };
+    const qrboxSize = Math.min(280, Math.min(window.innerWidth, window.innerHeight) * 0.72);
+    const scanConfig = { fps: 15, qrbox: { width: qrboxSize, height: qrboxSize } };
 
     scannerInstance.start(cameraConfig, scanConfig, async (decodedText) => {
       if (scannerCurrentMemberId) return;
@@ -1139,60 +1170,63 @@ function initAppDashboard(slug) {
         if (instance) await instance.stop();
       } catch (_) {}
       scannerInstance = null;
-      scannerViewport?.classList.remove("app-scanner-scanning");
-      if (scannerPlaceholder) scannerPlaceholder.classList.add("hidden");
-
-      showScannerVerifying();
+      if (scannerFullscreenVerifying) scannerFullscreenVerifying.classList.remove("hidden");
+      if (scannerSuccessFlash) scannerSuccessFlash.classList.add("hidden");
+      if (scannerFullscreenReject) scannerFullscreenReject.classList.add("hidden");
       const memberId = decodedText.trim();
       try {
         const res = await api("/members/" + encodeURIComponent(memberId));
         if (res.status === 404) {
-          showScannerReject("Ce QR code ne correspond pas à un client de votre commerce. (Carte d’un autre établissement ou code invalide.)");
+          showFullscreenReject("Ce QR code ne correspond pas à un client de votre commerce.");
           return;
         }
         if (!res.ok) {
-          showScannerReject("Erreur serveur. Réessayez dans un instant.");
+          showFullscreenReject("Erreur serveur. Réessayez dans un instant.");
           return;
         }
         const member = await res.json();
         await showScannerResult(member);
       } catch (_) {
-        showScannerReject("Impossible de vérifier le code. Vérifiez votre connexion et réessayez.");
+        showFullscreenReject("Impossible de vérifier le code. Vérifiez votre connexion et réessayez.");
       }
     }, () => {}).catch((err) => {
       scannerInstance = null;
-      scannerViewport.classList.remove("app-scanner-scanning");
-      if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
+      closeFullscreenScanner();
       showScannerReject(err?.message || "Impossible d’accéder à la caméra. Vérifiez les permissions du navigateur.");
     });
   }
 
-  function stopScanner() {
-    hideScannerResult();
-    if (scannerViewport) scannerViewport.classList.remove("hidden");
-    if (!scannerInstance) return;
-    scannerInstance.stop().then(() => {
-      scannerInstance = null;
-      scannerViewport?.classList.remove("app-scanner-scanning");
-      if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
-    }).catch(() => {
-      scannerInstance = null;
-      scannerViewport?.classList.remove("app-scanner-scanning");
-      if (scannerPlaceholder) scannerPlaceholder.classList.remove("hidden");
-    });
+  function stopFullscreenScanner() {
+    if (scannerInstance) {
+      scannerInstance.stop().then(() => {
+        scannerInstance = null;
+        closeFullscreenScanner();
+      }).catch(() => {
+        scannerInstance = null;
+        closeFullscreenScanner();
+      });
+    } else {
+      closeFullscreenScanner();
+    }
   }
+
+  document.getElementById("app-scanner-launch-btn")?.addEventListener("click", () => startFullscreenScanner());
+  document.getElementById("app-scanner-fullscreen-close")?.addEventListener("click", () => stopFullscreenScanner());
+  document.getElementById("app-scanner-fullscreen-retry")?.addEventListener("click", () => {
+    if (scannerFullscreenReject) scannerFullscreenReject.classList.add("hidden");
+    if (scannerFullscreenViewport) scannerFullscreenViewport.innerHTML = "";
+    startFullscreenScanner();
+  });
 
   scannerRetryBtn?.addEventListener("click", () => {
     hideAllScannerStates();
-    if (scannerViewport) scannerViewport.classList.remove("hidden");
-    scannerCard?.classList.remove("app-scanner-has-overlay");
-    startScanner();
+    if (scannerStart) scannerStart.classList.remove("hidden");
+    startFullscreenScanner();
   });
 
   scannerResume?.addEventListener("click", () => {
     hideScannerResult();
-    if (scannerViewport) scannerViewport.classList.remove("hidden");
-    startScanner();
+    startFullscreenScanner();
   });
 
   scannerOneVisit?.addEventListener("click", () => { scannerVisitOnly = true; if (scannerAmount) scannerAmount.value = ""; });
@@ -1240,14 +1274,11 @@ function initAppDashboard(slug) {
   document.querySelectorAll("#app-app .app-sidebar-link[data-section]").forEach((link) => {
     link.addEventListener("click", () => {
       const id = link.getAttribute("data-section");
-      if (id === "scanner") startScanner();
-      else stopScanner();
+      if (id !== "scanner") stopFullscreenScanner();
     });
   });
-  if ((window.location.hash || "#vue-ensemble").startsWith("#scanner")) startScanner();
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "scanner") startScanner();
-    else stopScanner();
+    if (e.detail?.sectionId !== "scanner") stopFullscreenScanner();
   });
 
   let allMembers = [];

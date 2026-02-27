@@ -391,25 +391,26 @@
 
           <section id="scanner" class="app-section app-section-scanner">
             <h2 class="app-section-title">Scanner la carte client</h2>
-            <p class="app-section-desc">Cadrez le code-barres de la carte (Wallet ou écran du client). Reconnaissance immédiate du client et ajout des points en un clic.</p>
+            <p class="app-section-desc">Scannez le QR code de la carte (Wallet ou écran du client). Reconnaissance immédiate et ajout des points en un clic.</p>
             <div class="app-card app-scanner-card" id="app-scanner-card">
-              <div id="app-scanner-viewport" class="app-scanner-viewport">
-                <div id="app-scanner-placeholder" class="app-scanner-placeholder">
-                  <p>Vue caméra</p>
-                  <p class="app-scanner-hint">Autorisez l’accès à la caméra pour scanner.</p>
-                </div>
+              <div id="app-scanner-start" class="app-scanner-start">
+                <button type="button" id="app-scanner-launch-btn" class="app-btn app-btn-primary app-scanner-launch-btn" aria-label="Ouvrir le scan plein écran">
+                  <span class="app-scanner-launch-icon" aria-hidden="true">📷</span>
+                  <span>Lancer le scan</span>
+                </button>
+                <p class="app-scanner-launch-hint">Ouvre la caméra en plein écran, comme l'appareil photo.</p>
               </div>
               <!-- État : vérification en cours -->
               <div id="app-scanner-verifying" class="app-scanner-state app-scanner-verifying hidden" aria-live="polite" aria-atomic="true">
                 <div class="app-scanner-state-icon app-scanner-spinner" aria-hidden="true"></div>
-                <p class="app-scanner-state-title">Vérification du code…</p>
+                <p class="app-scanner-state-title">Vérification…</p>
                 <p class="app-scanner-state-desc">Nous vérifions que la carte correspond à un client de votre commerce.</p>
               </div>
               <!-- État : rejet (mauvais code / autre commerce) -->
               <div id="app-scanner-reject" class="app-scanner-state app-scanner-reject hidden" aria-live="assertive" aria-atomic="true">
                 <div class="app-scanner-state-icon app-scanner-icon-reject" aria-hidden="true">✕</div>
                 <p class="app-scanner-state-title">Code non reconnu</p>
-                <p id="app-scanner-reject-message" class="app-scanner-state-desc">Ce code-barres ne correspond pas à un client de votre commerce.</p>
+                <p id="app-scanner-reject-message" class="app-scanner-state-desc">Ce QR code ne correspond pas à un client de votre commerce.</p>
                 <button type="button" id="app-scanner-retry" class="app-btn app-btn-primary">Réessayer</button>
               </div>
               <!-- État : succès (client trouvé) -->
@@ -438,6 +439,31 @@
               </div>
             </div>
           </section>
+
+          <!-- Overlay plein écran : caméra type appareil photo -->
+          <div id="app-scanner-fullscreen" class="app-scanner-fullscreen hidden" aria-hidden="true">
+            <div class="app-scanner-fullscreen-header">
+              <span class="app-scanner-fullscreen-title">Scanner la carte</span>
+              <button type="button" id="app-scanner-fullscreen-close" class="app-scanner-fullscreen-close" aria-label="Fermer">×</button>
+            </div>
+            <div id="app-scanner-fullscreen-viewport" class="app-scanner-fullscreen-viewport"></div>
+            <div class="app-scanner-viewfinder" aria-hidden="true">
+              <div class="app-scanner-viewfinder-frame"></div>
+              <p class="app-scanner-viewfinder-hint">Placez le QR code dans le cadre</p>
+            </div>
+            <div id="app-scanner-fullscreen-verifying" class="app-scanner-fullscreen-verifying hidden">
+              <div class="app-scanner-fullscreen-spinner"></div>
+              <p>Vérification…</p>
+            </div>
+            <div id="app-scanner-success-flash" class="app-scanner-success-flash hidden">
+              <div class="app-scanner-success-check">✓</div>
+              <p>Client reconnu</p>
+            </div>
+            <div id="app-scanner-fullscreen-reject" class="app-scanner-fullscreen-reject hidden">
+              <p id="app-scanner-fullscreen-reject-msg"></p>
+              <button type="button" id="app-scanner-fullscreen-retry" class="app-btn app-btn-primary">Réessayer</button>
+            </div>
+          </div>
 
           <section id="caisse" class="app-section app-section-caisse">
             <h2 class="app-section-title">Caisse rapide</h2>
