@@ -100,6 +100,9 @@ function buildBuffers(businessId) {
   if (!buffers["icon.png"]) {
     buffers["icon.png"] = createDefaultIconBuffer();
   }
+  if (!buffers["logo.png"] && buffers["icon.png"]) {
+    buffers["logo.png"] = buffers["icon.png"];
+  }
   return buffers;
 }
 
@@ -132,7 +135,8 @@ export async function generatePass(member, business = null, options = {}) {
     throw new Error("PASS_TYPE_ID et TEAM_ID doivent être définis dans .env");
   }
 
-  const organizationName = business?.organization_name || process.env.ORGANIZATION_NAME || "Carte fidélité";
+  const organizationName =
+    business?.organization_name || options.organizationName || process.env.ORGANIZATION_NAME || "Carte fidélité";
   const certificates = loadCertificates();
   const buffers = buildBuffers(business?.id);
 
@@ -141,10 +145,10 @@ export async function generatePass(member, business = null, options = {}) {
   const stampMax = options.stampMax ?? 10;
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
+  const isSectorTemplate = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template);
+
   // Couleurs : priorité aux couleurs enregistrées sur la business, sinon template
-  const templateKey = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template)
-  ? options.template
-  : options.template;
+  const templateKey = isSectorTemplate ? options.template : options.template;
   const customColors =
     business?.background_color || business?.foreground_color || business?.label_color
       ? {
@@ -171,6 +175,16 @@ export async function generatePass(member, business = null, options = {}) {
 
   pass.type = "storeCard";
 
+  // Design secteur (fast-food, beauté, etc.) : logo/org à gauche, prénom nom client à droite en header, pas de "Niveau"
+  if (isSectorTemplate) {
+    pass.headerFields.push({
+      key: "memberName",
+      label: "",
+      value: member.name,
+      textAlignment: "PKTextAlignmentRight",
+    });
+  }
+
   if (format === "tampons") {
     pass.primaryFields.push({
       key: "stamps",
@@ -178,11 +192,9 @@ export async function generatePass(member, business = null, options = {}) {
       value: `${stamps} / ${stampMax}`,
       textAlignment: "PKTextAlignmentCenter",
     });
-    pass.secondaryFields.push({
-      key: "member",
-      label: "Membre",
-      value: member.name,
-    });
+    if (!isSectorTemplate) {
+      pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
+    }
   } else {
     pass.primaryFields.push({
       key: "points",
@@ -190,16 +202,10 @@ export async function generatePass(member, business = null, options = {}) {
       value: member.points,
       textAlignment: "PKTextAlignmentCenter",
     });
-    pass.secondaryFields.push({
-      key: "level",
-      label: "Niveau",
-      value: level,
-    });
-    pass.auxiliaryFields.push({
-      key: "member",
-      label: "Membre",
-      value: member.name,
-    });
+    if (!isSectorTemplate) {
+      pass.secondaryFields.push({ key: "level", label: "Niveau", value: level });
+      pass.auxiliaryFields.push({ key: "member", label: "Membre", value: member.name });
+    }
   }
 
   pass.setBarcodes({
