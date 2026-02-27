@@ -10,6 +10,10 @@ const dataDir = process.env.DATA_DIR || join(__dirname, "..", "data");
 if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 const dbPath = join(dataDir, "fidelity.db");
 
+/** Exposé pour diagnostic (vérifier que la base est bien sur le volume). */
+export const DATA_DIR_PATH = dataDir;
+export const DB_FILE_PATH = dbPath;
+
 const db = new Database(dbPath);
 
 // Tables : businesses (entreprises / tenants), members (clients finaux)

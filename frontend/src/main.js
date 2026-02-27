@@ -610,8 +610,20 @@ function initAppSidebar() {
   });
 }
 
+const DASHBOARD_TOKEN_STORAGE_KEY = "fidpass_dashboard_token";
+
 function initAppDashboard(slug) {
-  const dashboardToken = new URLSearchParams(window.location.search).get("token");
+  const urlParams = new URLSearchParams(window.location.search);
+  let dashboardToken = urlParams.get("token");
+  if (dashboardToken) {
+    try {
+      sessionStorage.setItem(`${DASHBOARD_TOKEN_STORAGE_KEY}_${slug}`, dashboardToken);
+    } catch (_) {}
+  } else {
+    try {
+      dashboardToken = sessionStorage.getItem(`${DASHBOARD_TOKEN_STORAGE_KEY}_${slug}`);
+    } catch (_) {}
+  }
   const api = (path, opts = {}) => {
     const sep = path.includes("?") ? "&" : "?";
     const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${path}${dashboardToken ? `${sep}token=${encodeURIComponent(dashboardToken)}` : ""}`;
@@ -929,7 +941,6 @@ function initAppDashboard(slug) {
       if (personnaliserLogoDataUrl) body.logoBase64 = personnaliserLogoDataUrl;
       personnaliserSave.disabled = true;
       showPersonnaliserMessage("");
-      const dashboardToken = new URLSearchParams(window.location.search).get("token");
       const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
       const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
       if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;

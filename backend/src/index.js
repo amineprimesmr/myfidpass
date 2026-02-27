@@ -1,8 +1,11 @@
 import express from "express";
 import cors from "cors";
+import { existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+
+import { DATA_DIR_PATH, DB_FILE_PATH } from "./db.js";
 
 import { optionalAuth } from "./middleware/auth.js";
 import membersRouter from "./routes/members.js";
@@ -79,6 +82,17 @@ app.get("/passes/demo", handlePassDemo);
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });
+});
+
+/** Diagnostic : vérifie que DATA_DIR et la base sont bien utilisés (volume persistant). */
+app.get("/api/health/db", (req, res) => {
+  res.json({
+    DATA_DIR: process.env.DATA_DIR ?? "(non défini, défaut backend/data)",
+    dataDirResolved: DATA_DIR_PATH,
+    dbPath: DB_FILE_PATH,
+    dbExists: existsSync(DB_FILE_PATH),
+    hint: "Sur Railway, le volume doit être monté exactement au chemin /data et DATA_DIR=/data.",
+  });
 });
 
 function startServer(port) {
