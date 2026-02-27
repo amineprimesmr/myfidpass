@@ -17,6 +17,7 @@ import {
   getTransactionsForBusiness,
   getWebPushSubscriptionsByBusiness,
   getPassKitPushTokensForBusiness,
+  getPassKitRegistrationsCountForBusiness,
   removeTestPassKitDevices,
   logNotification,
   ensureDefaultBusiness,
@@ -266,7 +267,8 @@ router.get("/:slug/notifications/stats", (req, res) => {
   }
   const webSubscriptions = getWebPushSubscriptionsByBusiness(business.id);
   const passKitTokens = getPassKitPushTokensForBusiness(business.id);
-  const subscriptionsCount = webSubscriptions.length + passKitTokens.length;
+  const passKitRegistrationsCount = getPassKitRegistrationsCountForBusiness(business.id);
+  const subscriptionsCount = webSubscriptions.length + passKitRegistrationsCount;
   const passKitUrlConfigured = !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
   const noDeviceButConfigured = subscriptionsCount === 0 && !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
   const { members: membersList, total: membersCount } = getMembersForBusiness(business.id, { limit: 1 });
@@ -283,7 +285,8 @@ router.get("/:slug/notifications/stats", (req, res) => {
     subscriptionsCount,
     membersCount: membersCount ?? 0,
     webPushCount: webSubscriptions.length,
-    passKitCount: passKitTokens.length,
+    passKitCount: passKitRegistrationsCount,
+    passKitWithTokenCount: passKitTokens.length,
     membersWithNotifications: new Set(webSubscriptions.map((s) => s.member_id)).size + new Set(passKitTokens.map((p) => p.serial_number)).size,
     passKitUrlConfigured,
     diagnostic: !passKitUrlConfigured

@@ -54,6 +54,9 @@ router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, 
     return res.status(404).json({ error: "Pass not found" });
   }
   const pushToken = req.body?.pushToken || null;
+  if (process.env.NODE_ENV === "production") {
+    console.log("[PassKit] POST registration pushToken:", pushToken ? `présent (${String(pushToken).length} car.)` : "absent ou vide");
+  }
   try {
     registerPassDevice({
       deviceLibraryIdentifier: deviceId,

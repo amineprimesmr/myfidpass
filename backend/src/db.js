@@ -412,6 +412,16 @@ export function getPassKitPushTokensForBusiness(businessId) {
   return rows;
 }
 
+/** Nombre d'appareils PassKit enregistrés pour un commerce (avec ou sans token push — pour affichage dashboard). */
+export function getPassKitRegistrationsCountForBusiness(businessId) {
+  const row = db.prepare(
+    `SELECT COUNT(*) AS n FROM pass_registrations pr
+     INNER JOIN members m ON m.id = pr.serial_number
+     WHERE m.business_id = ?`
+  ).get(businessId);
+  return row?.n ?? 0;
+}
+
 export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier, serialNumber) {
   db.prepare(
     "DELETE FROM pass_registrations WHERE device_library_identifier = ? AND pass_type_identifier = ? AND serial_number = ?"
