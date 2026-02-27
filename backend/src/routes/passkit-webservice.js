@@ -1,0 +1,106 @@
+/**
+ * API PassKit Web Service (Apple Wallet) — enregistrement devices et mise à jour des passes.
+ * Routes attendues par Apple : /v1/devices/..., /v1/passes/...
+ * Authentification : header Authorization: ApplePass <authenticationToken>
+ */
+import { Router } from "express";
+import { getMember, getBusinessById, registerPassDevice, getPushTokensForMember, unregisterPassDevice } from "../db.js";
+import { getPassAuthenticationToken } from "../pass.js";
+import { generatePass } from "../pass.js";
+
+const router = Router();
+
+function parseApplePassAuth(req) {
+  const auth = req.get("Authorization");
+  if (!auth || !auth.startsWith("ApplePass ")) return null;
+  return auth.slice(10).trim();
+}
+
+function verifyToken(serialNumber, token) {
+  if (!token || token.length < 16) return false;
+  const expected = getPassAuthenticationToken(serialNumber);
+  return token === expected;
+}
+
+/**
+ * POST /devices/:deviceId/registrations/:passTypeId/:serialNumber
+ * Enregistre un device pour recevoir les mises à jour (push) du pass.
+ * Body: { "pushToken": "..." }
+ */
+router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, res) => {
+  const { deviceId, passTypeId, serialNumber } = req.params;
+  const token = parseApplePassAuth(req);
+  if (!verifyToken(serialNumber, token)) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const member = getMember(serialNumber);
+  if (!member) return res.status(404).json({ error: "Pass not found" });
+  const pushToken = req.body?.pushToken || null;
+  try {
+    registerPassDevice({
+      deviceLibraryIdentifier: deviceId,
+      passTypeIdentifier: passTypeId,
+      serialNumber,
+      pushToken,
+    });
+    return res.status(201).send();
+  } catch (e) {
+    console.error("PassKit register:", e);
+    return res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+/**
+ * GET /passes/:passTypeId/:serialNumber
+ * Retourne le .pkpass à jour (points, tampons, etc.).
+ */
+router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
+  const { passTypeId, serialNumber } = req.params;
+  const token = parseApplePassAuth(req);
+  if (!verifyToken(serialNumber, token)) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const member = getMember(serialNumber);
+  if (!member) return res.status(404).json({ error: "Pass not found" });
+  const business = getBusinessById(member.business_id);
+  if (!business) return res.status(404).json({ error: "Business not found" });
+  try {
+    const buffer = await generatePass(member, business, { template: "classic" });
+    res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+    res.setHeader("Content-Disposition", `inline; filename="pass.pkpass"`);
+    res.send(buffer);
+  } catch (err) {
+    console.error("PassKit get pass:", err);
+    return res.status(500).json({ error: "Failed to generate pass" });
+  }
+});
+
+/**
+ * DELETE /devices/:deviceId/registrations/:passTypeId/:serialNumber
+ * Désenregistre le device pour ce pass.
+ */
+router.delete("/devices/:deviceId/registrations/:passTypeId/:serialNumber", (req, res) => {
+  const { deviceId, passTypeId, serialNumber } = req.params;
+  const token = parseApplePassAuth(req);
+  if (!verifyToken(serialNumber, token)) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    unregisterPassDevice(deviceId, passTypeId, serialNumber);
+    return res.status(200).send();
+  } catch (e) {
+    return res.status(500).json({ error: "Unregister failed" });
+  }
+});
+
+/**
+ * POST /log — Apple peut envoyer des erreurs (optionnel).
+ */
+router.post("/log", (req, res) => {
+  if (req.body?.logs) {
+    console.error("[PassKit log]", req.body.logs);
+  }
+  res.status(200).send();
+});
+
+export default router;

@@ -77,6 +77,16 @@ db.exec(`
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
+
+  CREATE TABLE IF NOT EXISTS pass_registrations (
+    device_library_identifier TEXT NOT NULL,
+    pass_type_identifier TEXT NOT NULL,
+    serial_number TEXT NOT NULL,
+    push_token TEXT,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (device_library_identifier, pass_type_identifier, serial_number)
+  );
+  CREATE INDEX IF NOT EXISTS idx_pass_reg_serial ON pass_registrations(serial_number);
 `);
 
 // Migration : ajouter business_id si ancienne base
@@ -296,56 +306,130 @@ export function getDashboardStats(businessId) {
   const transactionsCount = db.prepare(
     `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND strftime('%Y-%m', created_at) = ?`
   ).get(businessId, now);
+  const newMembers7d = db.prepare(
+    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-7 days')"
+  ).get(businessId);
+  const newMembers30d = db.prepare(
+    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-30 days')"
+  ).get(businessId);
+  const inactive30d = db.prepare(
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))`
+  ).get(businessId);
+  const inactive90d = db.prepare(
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))`
+  ).get(businessId);
+  const pointsAvg = db.prepare(
+    "SELECT COALESCE(ROUND(AVG(points), 0), 0) as avg FROM members WHERE business_id = ?"
+  ).get(businessId);
   return {
     membersCount: membersCount?.n ?? 0,
     pointsThisMonth: pointsThisMonth?.total ?? 0,
     transactionsThisMonth: transactionsCount?.n ?? 0,
+    newMembersLast7Days: newMembers7d?.n ?? 0,
+    newMembersLast30Days: newMembers30d?.n ?? 0,
+    inactiveMembers30Days: inactive30d?.n ?? 0,
+    inactiveMembers90Days: inactive90d?.n ?? 0,
+    pointsAveragePerMember: pointsAvg?.avg ?? 0,
   };
 }
 
-export function getMembersForBusiness(businessId, { search = "", limit = 50, offset = 0 } = {}) {
-  const q = search.trim() ? "%" + search.trim().replace(/%/g, "") + "%" : null;
-  let stmt;
-  let countStmt;
-  if (q) {
-    stmt = db.prepare(
-      `SELECT id, name, email, points, created_at, last_visit_at FROM members WHERE business_id = ? AND (name LIKE ? OR email LIKE ?) ORDER BY COALESCE(last_visit_at, '') DESC, created_at DESC LIMIT ? OFFSET ?`
-    );
-    countStmt = db.prepare(
-      "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (name LIKE ? OR email LIKE ?)"
-    );
-  } else {
-    stmt = db.prepare(
-      `SELECT id, name, email, points, created_at, last_visit_at FROM members WHERE business_id = ? ORDER BY COALESCE(last_visit_at, '') DESC, created_at DESC LIMIT ? OFFSET ?`
-    );
-    countStmt = db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ?");
+/** Évolution hebdo sur les 6 dernières semaines (pour graphique). */
+export function getDashboardEvolution(businessId, weeks = 6) {
+  const rows = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const start = `datetime('now', '-${i + 1} weeks')`;
+    const end = i === 0 ? "datetime('now')" : `datetime('now', '-${i} weeks')`;
+    const op = db.prepare(
+      `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND created_at >= ${start} AND created_at < ${end}`
+    ).get(businessId);
+    const members = db.prepare(
+      `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at < ${end}`
+    ).get(businessId);
+    rows.push({
+      weekIndex: i,
+      operationsCount: op?.n ?? 0,
+      membersCount: members?.n ?? 0,
+    });
   }
-  const rows = q ? stmt.all(businessId, q, q, limit, offset) : stmt.all(businessId, limit, offset);
-  const total = q ? countStmt.get(businessId, q, q)?.n : countStmt.get(businessId)?.n;
-  return { members: rows, total: total ?? 0 };
+  return rows;
 }
 
-export function getTransactionsForBusiness(businessId, { limit = 30, offset = 0, memberId = null } = {}) {
-  let stmt;
-  let countStmt;
-  if (memberId) {
-    stmt = db.prepare(
-      `SELECT t.id, t.member_id, t.type, t.points, t.metadata, t.created_at, m.name as member_name, m.email as member_email
-       FROM transactions t JOIN members m ON t.member_id = m.id
-       WHERE t.business_id = ? AND t.member_id = ? ORDER BY t.created_at DESC LIMIT ? OFFSET ?`
-    );
-    countStmt = db.prepare("SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND member_id = ?");
-  } else {
-    stmt = db.prepare(
-      `SELECT t.id, t.member_id, t.type, t.points, t.metadata, t.created_at, m.name as member_name, m.email as member_email
-       FROM transactions t JOIN members m ON t.member_id = m.id
-       WHERE t.business_id = ? ORDER BY t.created_at DESC LIMIT ? OFFSET ?`
-    );
-    countStmt = db.prepare("SELECT COUNT(*) as n FROM transactions WHERE business_id = ?");
+export function registerPassDevice({ deviceLibraryIdentifier, passTypeIdentifier, serialNumber, pushToken }) {
+  const now = new Date().toISOString();
+  db.prepare(
+    `INSERT OR REPLACE INTO pass_registrations (device_library_identifier, pass_type_identifier, serial_number, push_token, updated_at)
+     VALUES (?, ?, ?, ?, ?)`
+  ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber, pushToken || null, now);
+}
+
+export function getPushTokensForMember(serialNumber) {
+  const rows = db.prepare(
+    "SELECT push_token FROM pass_registrations WHERE serial_number = ? AND push_token IS NOT NULL AND push_token != ''"
+  ).all(serialNumber);
+  return rows.map((r) => r.push_token).filter(Boolean);
+}
+
+export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier, serialNumber) {
+  db.prepare(
+    "DELETE FROM pass_registrations WHERE device_library_identifier = ? AND pass_type_identifier = ? AND serial_number = ?"
+  ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber);
+}
+
+const MEMBER_ORDER = { last_visit: "COALESCE(last_visit_at, '') DESC", points: "points DESC", name: "name ASC", created: "created_at DESC" };
+
+export function getMembersForBusiness(businessId, { search = "", limit = 50, offset = 0, filter = null, sort = "last_visit" } = {}) {
+  const q = search.trim() ? "%" + search.trim().replace(/%/g, "") + "%" : null;
+  const orderBy = MEMBER_ORDER[sort] || MEMBER_ORDER.last_visit;
+  let where = "business_id = ?";
+  const params = [businessId];
+  if (q) {
+    where += " AND (name LIKE ? OR email LIKE ?)";
+    params.push(q, q);
   }
-  const rows = memberId ? stmt.all(businessId, memberId, limit, offset) : stmt.all(businessId, limit, offset);
-  const total = memberId ? countStmt.get(businessId, memberId)?.n : countStmt.get(businessId)?.n;
-  return { transactions: rows, total: total ?? 0 };
+  if (filter === "inactive30") {
+    where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))";
+  } else if (filter === "inactive90") {
+    where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))";
+  } else if (filter === "points50") {
+    where += " AND points >= 50";
+  }
+  const stmt = db.prepare(
+    `SELECT id, name, email, points, created_at, last_visit_at FROM members WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`
+  );
+  const countStmt = db.prepare(`SELECT COUNT(*) as n FROM members WHERE ${where}`);
+  const rows = stmt.all(...params, limit, offset);
+  const total = countStmt.get(...params)?.n ?? 0;
+  return { members: rows, total };
+}
+
+export function getTransactionsForBusiness(businessId, { limit = 30, offset = 0, memberId = null, days = null, type = null } = {}) {
+  let where = "t.business_id = ?";
+  const params = [businessId];
+  if (memberId) {
+    where += " AND t.member_id = ?";
+    params.push(memberId);
+  }
+  if (days === 7 || days === 30 || days === 90) {
+    where += ` AND t.created_at >= datetime('now', '-${days} days')`;
+  }
+  if (type === "visit") {
+    where += " AND t.type = 'points_add' AND (t.metadata LIKE '%\"visit\":true%' OR t.metadata LIKE '%\"visit\": true%')";
+  } else if (type === "points_add") {
+    where += " AND t.type = 'points_add'";
+  }
+  const stmt = db.prepare(
+    `SELECT t.id, t.member_id, t.type, t.points, t.metadata, t.created_at, m.name as member_name, m.email as member_email
+     FROM transactions t JOIN members m ON t.member_id = m.id
+     WHERE ${where} ORDER BY t.created_at DESC LIMIT ? OFFSET ?`
+  );
+  const countStmt = db.prepare(
+    `SELECT COUNT(*) as n FROM transactions t WHERE ${where}`
+  );
+  const countParams = params.slice();
+  params.push(limit, offset);
+  const rows = stmt.all(...params);
+  const total = countStmt.get(...countParams)?.n ?? 0;
+  return { transactions: rows, total };
 }
 
 export function getLevel(points) {

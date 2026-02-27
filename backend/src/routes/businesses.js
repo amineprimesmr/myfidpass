@@ -12,6 +12,7 @@ import {
   addPoints,
   createTransaction,
   getDashboardStats,
+  getDashboardEvolution,
   getMembersForBusiness,
   getTransactionsForBusiness,
   ensureDefaultBusiness,
@@ -73,7 +74,7 @@ router.get("/:slug/dashboard/stats", (req, res, next) => {
 
 /**
  * GET /api/businesses/:slug/dashboard/members
- * Liste des membres (token OU JWT propriétaire).
+ * Liste des membres (token OU JWT propriétaire). Query: search, limit, offset, filter (inactive30|inactive90|points50), sort (last_visit|points|name|created).
  */
 router.get("/:slug/dashboard/members", (req, res, next) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -82,15 +83,17 @@ router.get("/:slug/dashboard/members", (req, res, next) => {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
   const search = req.query.search ?? "";
-  const limit = Math.min(Number(req.query.limit) || 50, 100);
+  const limit = Math.min(Number(req.query.limit) || 50, 200);
   const offset = Number(req.query.offset) || 0;
-  const result = getMembersForBusiness(business.id, { search, limit, offset });
+  const filter = ["inactive30", "inactive90", "points50"].includes(req.query.filter) ? req.query.filter : null;
+  const sort = ["last_visit", "points", "name", "created"].includes(req.query.sort) ? req.query.sort : "last_visit";
+  const result = getMembersForBusiness(business.id, { search, limit, offset, filter, sort });
   res.json(result);
 });
 
 /**
  * GET /api/businesses/:slug/dashboard/transactions
- * Historique des transactions (token OU JWT propriétaire).
+ * Historique des transactions. Query: limit, offset, memberId, days (7|30|90), type (points_add|visit).
  */
 router.get("/:slug/dashboard/transactions", (req, res, next) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -98,11 +101,81 @@ router.get("/:slug/dashboard/transactions", (req, res, next) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const limit = Math.min(Number(req.query.limit) || 30, 100);
+  const limit = Math.min(Number(req.query.limit) || 30, 200);
   const offset = Number(req.query.offset) || 0;
   const memberId = req.query.memberId || null;
-  const result = getTransactionsForBusiness(business.id, { limit, offset, memberId });
+  const days = [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : null;
+  const type = ["points_add", "visit"].includes(req.query.type) ? req.query.type : null;
+  const result = getTransactionsForBusiness(business.id, { limit, offset, memberId, days, type });
   res.json(result);
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/evolution
+ * Données pour graphique (opérations / membres par semaine, 6 semaines).
+ */
+router.get("/:slug/dashboard/evolution", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const weeks = Math.min(Math.max(Number(req.query.weeks) || 6, 4), 12);
+  const evolution = getDashboardEvolution(business.id, weeks);
+  res.json({ evolution });
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/members/export
+ * Export CSV des membres (même filtres que liste).
+ */
+router.get("/:slug/dashboard/members/export", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const search = req.query.search ?? "";
+  const filter = ["inactive30", "inactive90", "points50"].includes(req.query.filter) ? req.query.filter : null;
+  const sort = ["last_visit", "points", "name", "created"].includes(req.query.sort) ? req.query.sort : "last_visit";
+  const { members } = getMembersForBusiness(business.id, { search, limit: 2000, offset: 0, filter, sort });
+  const header = "Nom;Email;Points;Dernière visite;Inscrit le\n";
+  const csv = header + members.map((m) => {
+    const name = (m.name || "").replace(/;/g, ",").replace(/\n/g, " ");
+    const email = (m.email || "").replace(/;/g, ",");
+    const lastVisit = m.last_visit_at ? new Date(m.last_visit_at).toLocaleString("fr-FR") : "";
+    const created = m.created_at ? new Date(m.created_at).toLocaleString("fr-FR") : "";
+    return `${name};${email};${m.points};${lastVisit};${created}`;
+  }).join("\n");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="membres-${business.slug}.csv"`);
+  res.send("\uFEFF" + csv);
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/transactions/export
+ * Export CSV des transactions (même filtres que liste).
+ */
+router.get("/:slug/dashboard/transactions/export", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const days = [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : null;
+  const type = ["points_add", "visit"].includes(req.query.type) ? req.query.type : null;
+  const { transactions } = getTransactionsForBusiness(business.id, { limit: 2000, offset: 0, days, type });
+  const header = "Client;Email;Type;Points;Date\n";
+  const csv = header + transactions.map((t) => {
+    const name = (t.member_name || "").replace(/;/g, ",").replace(/\n/g, " ");
+    const email = (t.member_email || "").replace(/;/g, ",");
+    const typeLabel = t.type === "points_add" ? (t.metadata && (t.metadata.includes("visit") ? "Passage" : "Points")) : t.type;
+    const date = t.created_at ? new Date(t.created_at).toLocaleString("fr-FR") : "";
+    return `${name};${email};${typeLabel};${t.points};${date}`;
+  }).join("\n");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="transactions-${business.slug}.csv"`);
+  res.send("\uFEFF" + csv);
 });
 
 /**

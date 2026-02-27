@@ -12,6 +12,7 @@ import devRouter from "./routes/dev.js";
 import placePhotoRouter from "./routes/place-photo.js";
 import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
 import passesRouter from "./routes/passes.js";
+import passkitWebserviceRouter from "./routes/passkit-webservice.js";
 import { generatePass } from "./pass.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -71,6 +72,7 @@ app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
 app.use("/api/passes", passesRouter);
 app.use("/passes", passesRouter);
+app.use("/v1", passkitWebserviceRouter);
 
 app.get("/api/passes/demo", handlePassDemo);
 app.get("/passes/demo", handlePassDemo);

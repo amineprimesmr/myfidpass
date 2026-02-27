@@ -318,8 +318,9 @@
         <div id="app-dashboard-content" class="app-content hidden">
           <section id="vue-ensemble" class="app-section app-section-overview">
             <h1 class="app-section-title">Vue d'ensemble</h1>
-            <p class="app-section-desc">Vos chiffres du mois en un coup d'œil.</p>
-            <div class="app-stats">
+            <p class="app-section-desc">Vos chiffres du mois et indicateurs clés.</p>
+            <div id="app-overview-alerts" class="app-overview-alerts hidden"></div>
+            <div class="app-stats app-stats-grid">
               <div class="app-stat">
                 <span class="app-stat-value" id="app-stat-members">0</span>
                 <span class="app-stat-label">Membres inscrits</span>
@@ -332,6 +333,27 @@
                 <span class="app-stat-value" id="app-stat-transactions">0</span>
                 <span class="app-stat-label">Opérations ce mois</span>
               </div>
+              <div class="app-stat">
+                <span class="app-stat-value" id="app-stat-new30">0</span>
+                <span class="app-stat-label">Nouveaux (30 j)</span>
+              </div>
+              <div class="app-stat">
+                <span class="app-stat-value" id="app-stat-inactive30">0</span>
+                <span class="app-stat-label">Inactifs 30 j</span>
+              </div>
+              <div class="app-stat">
+                <span class="app-stat-value" id="app-stat-avg-points">0</span>
+                <span class="app-stat-label">Points moy. / membre</span>
+              </div>
+            </div>
+            <div class="app-evolution-wrap">
+              <h3 class="app-evolution-title">Activité (6 dernières semaines)</h3>
+              <div id="app-evolution-chart" class="app-evolution-chart"></div>
+            </div>
+            <div class="app-overview-shortcuts">
+              <a href="#scanner" class="app-shortcut-btn" data-section="scanner">📷 Ouvrir le scanner</a>
+              <button type="button" id="app-overview-copy-link" class="app-shortcut-btn">🔗 Copier le lien partage</button>
+              <a href="#membres" class="app-shortcut-btn app-shortcut-inactifs" data-section="membres">👥 Voir les inactifs 30 j</a>
             </div>
           </section>
 
@@ -344,10 +366,17 @@
                 <input type="text" id="app-share-link" class="app-input app-share-input" readonly aria-label="Lien de la page carte" />
                 <button type="button" id="app-share-copy" class="app-btn app-btn-primary">Copier</button>
               </div>
+              <p class="app-step-label">Texte prêt à envoyer (SMS / WhatsApp)</p>
+              <div class="app-share-row">
+                <input type="text" id="app-share-sms-text" class="app-input app-share-input" readonly aria-label="Texte SMS" />
+                <button type="button" id="app-share-copy-sms" class="app-btn app-btn-primary">Copier le texte</button>
+              </div>
               <p class="app-step-label">QR code à afficher ou imprimer</p>
               <div class="app-qr-wrap">
                 <img id="app-share-qr" class="app-qr-img" src="" alt="QR code vers la page carte" />
+                <button type="button" id="app-share-download-qr" class="app-btn app-btn-secondary app-qr-download">Télécharger le QR (PNG)</button>
               </div>
+              <p class="app-share-page-link"><a id="app-share-page-link" href="" target="_blank" rel="noopener">Voir la page carte →</a></p>
             </div>
           </section>
 
@@ -405,6 +434,8 @@
             <h2 class="app-section-title">Caisse rapide</h2>
             <p class="app-section-desc">Enregistrer un achat ou un passage : cherchez le client, saisissez le montant ou « 1 passage », puis validez.</p>
             <div class="app-card">
+              <p class="app-step-label">Clients récents</p>
+              <div id="app-caisse-recent" class="app-caisse-recent"></div>
               <p class="app-step-label">1. Rechercher le client</p>
               <input type="text" id="app-member-search" class="app-input" placeholder="Nom ou email du client..." autocomplete="off" />
               <div id="app-member-list" class="app-member-list hidden"></div>
@@ -422,12 +453,35 @@
             <h2 class="app-section-title">Membres</h2>
             <p class="app-section-desc">Liste des clients qui ont ajouté votre carte à leur téléphone.</p>
             <div class="app-card">
-              <input type="text" id="app-members-search" class="app-input app-search" placeholder="Rechercher par nom ou email..." aria-label="Rechercher un membre" />
+              <div class="app-members-toolbar">
+                <input type="text" id="app-members-search" class="app-input app-search" placeholder="Rechercher par nom ou email..." aria-label="Rechercher un membre" />
+                <select id="app-members-filter" class="app-select" aria-label="Filtrer">
+                  <option value="">Tous les membres</option>
+                  <option value="inactive30">Inactifs depuis 30 j</option>
+                  <option value="inactive90">Inactifs depuis 90 j</option>
+                  <option value="points50">50 points ou plus</option>
+                </select>
+                <select id="app-members-sort" class="app-select" aria-label="Trier par">
+                  <option value="last_visit">Dernière visite</option>
+                  <option value="points">Points</option>
+                  <option value="name">Nom</option>
+                  <option value="created">Inscrit le</option>
+                </select>
+                <button type="button" id="app-members-export" class="app-btn app-btn-secondary">Exporter CSV</button>
+              </div>
               <div class="app-table-wrap">
-                <table class="app-table">
+                <table class="app-table app-table-members">
                   <thead><tr><th>Nom</th><th>Email</th><th>Points</th><th>Dernière visite</th></tr></thead>
                   <tbody id="app-members-tbody"></tbody>
                 </table>
+              </div>
+            </div>
+            <div id="app-member-detail-modal" class="app-modal hidden" aria-modal="true" role="dialog" aria-labelledby="app-member-detail-title">
+              <div class="app-modal-backdrop"></div>
+              <div class="app-modal-content">
+                <h2 id="app-member-detail-title" class="app-modal-title">Fiche membre</h2>
+                <div id="app-member-detail-body"></div>
+                <button type="button" class="app-modal-close" aria-label="Fermer">×</button>
               </div>
             </div>
           </section>
@@ -436,6 +490,20 @@
             <h2 class="app-section-title">Historique</h2>
             <p class="app-section-desc">Derniers points ajoutés (achats ou passages enregistrés).</p>
             <div class="app-card">
+              <div class="app-histoire-toolbar">
+                <select id="app-transactions-days" class="app-select" aria-label="Période">
+                  <option value="">Toutes les dates</option>
+                  <option value="7">7 derniers jours</option>
+                  <option value="30">30 derniers jours</option>
+                  <option value="90">90 derniers jours</option>
+                </select>
+                <select id="app-transactions-type" class="app-select" aria-label="Type">
+                  <option value="">Tous les types</option>
+                  <option value="points_add">Points ajoutés</option>
+                  <option value="visit">Passage seul</option>
+                </select>
+                <button type="button" id="app-transactions-export" class="app-btn app-btn-secondary">Exporter CSV</button>
+              </div>
               <div class="app-table-wrap">
                 <table class="app-table">
                   <thead><tr><th>Client</th><th>Type</th><th>Points</th><th>Date</th></tr></thead>
@@ -448,6 +516,15 @@
           <section id="personnaliser" class="app-section">
             <h2 class="app-section-title">Personnaliser la carte</h2>
             <p class="app-section-desc">Modifiez les couleurs, le logo et le dos de la carte. Les changements s’appliquent aux nouvelles cartes ajoutées par vos clients.</p>
+            <div class="app-personnaliser-live-preview-wrap">
+              <p class="app-step-label">Aperçu</p>
+              <div id="app-personnaliser-preview" class="app-personnaliser-preview">
+                <div class="app-personnaliser-preview-card" id="app-personnaliser-preview-card">
+                  <span class="app-personnaliser-preview-org" id="app-personnaliser-preview-org">Votre commerce</span>
+                  <span class="app-personnaliser-preview-value">42 pts</span>
+                </div>
+              </div>
+            </div>
             <div class="app-card app-personnaliser-card">
               <p class="app-step-label">Nom affiché sur la carte</p>
               <input type="text" id="app-personnaliser-org" class="app-input" placeholder="Nom du commerce" />

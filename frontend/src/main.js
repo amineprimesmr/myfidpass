@@ -600,6 +600,9 @@ function initAppDashboard(slug) {
   const statMembers = document.getElementById("app-stat-members");
   const statPoints = document.getElementById("app-stat-points");
   const statTransactions = document.getElementById("app-stat-transactions");
+  const statNew30 = document.getElementById("app-stat-new30");
+  const statInactive30 = document.getElementById("app-stat-inactive30");
+  const statAvgPoints = document.getElementById("app-stat-avg-points");
   const memberSearchInput = document.getElementById("app-member-search");
   const memberListEl = document.getElementById("app-member-list");
   const amountInput = document.getElementById("app-amount");
@@ -616,7 +619,7 @@ function initAppDashboard(slug) {
 
   const fullShareLink = (typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "") + "/fidelity/" + slug;
   if (shareLinkEl) shareLinkEl.value = fullShareLink;
-  if (shareQrEl) shareQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(fullShareLink);
+  if (shareQrEl) shareQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=" + encodeURIComponent(fullShareLink);
   if (shareCopyBtn) {
     shareCopyBtn.addEventListener("click", () => {
       if (!shareLinkEl) return;
@@ -626,6 +629,41 @@ function initAppDashboard(slug) {
         setTimeout(() => { shareCopyBtn.textContent = "Copier"; }, 2000);
       });
     });
+  }
+  const shareSmsTextEl = document.getElementById("app-share-sms-text");
+  const shareCopySmsBtn = document.getElementById("app-share-copy-sms");
+  const shareDownloadQrBtn = document.getElementById("app-share-download-qr");
+  const sharePageLinkEl = document.getElementById("app-share-page-link");
+  const smsText = "Ajoutez notre carte fidélité en un clic : " + fullShareLink;
+  if (shareSmsTextEl) shareSmsTextEl.value = smsText;
+  if (shareCopySmsBtn) {
+    shareCopySmsBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(smsText).then(() => {
+        shareCopySmsBtn.textContent = "Copié !";
+        setTimeout(() => { shareCopySmsBtn.textContent = "Copier le texte"; }, 2000);
+      });
+    });
+  }
+  if (shareDownloadQrBtn && shareQrEl) {
+    shareDownloadQrBtn.addEventListener("click", () => {
+      const canvas = document.createElement("canvas");
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const a = document.createElement("a");
+        a.download = "fidpass-qr-" + slug + ".png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      };
+      img.src = shareQrEl.src;
+    });
+  }
+  if (sharePageLinkEl) {
+    sharePageLinkEl.href = fullShareLink;
   }
 
   // ——— Personnaliser la carte ———
@@ -667,6 +705,19 @@ function initAppDashboard(slug) {
   bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
   bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
 
+  function updatePersonnaliserPreview() {
+    const card = document.getElementById("app-personnaliser-preview-card");
+    const orgEl = document.getElementById("app-personnaliser-preview-org");
+    if (!card || !orgEl) return;
+    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
+    const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
+    card.style.background = bg;
+    card.style.color = fg;
+    orgEl.textContent = personnaliserOrg?.value?.trim() || "Votre commerce";
+  }
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+
   api("/dashboard/settings")
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
@@ -683,6 +734,7 @@ function initAppDashboard(slug) {
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
       if (personnaliserBackTerms) personnaliserBackTerms.value = data.backTerms || "";
       if (personnaliserBackContact) personnaliserBackContact.value = data.backContact || "";
+      updatePersonnaliserPreview();
     })
     .catch(() => {});
 
@@ -793,7 +845,26 @@ function initAppDashboard(slug) {
     scannerCard?.classList.add("app-scanner-has-overlay");
   }
 
+  function scannerFeedbackSuccess() {
+    try { if (navigator.vibrate) navigator.vibrate(100); } catch (_) {}
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 800;
+      gain.gain.value = 0.15;
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    } catch (_) {}
+  }
+  function scannerFeedbackReject() {
+    try { if (navigator.vibrate) navigator.vibrate([50, 50, 50]); } catch (_) {}
+  }
+
   function showScannerReject(message) {
+    scannerFeedbackReject();
     hideAllScannerStates();
     if (scannerViewport) scannerViewport.classList.add("hidden");
     if (scannerReject) scannerReject.classList.remove("hidden");
@@ -802,6 +873,7 @@ function initAppDashboard(slug) {
   }
 
   async function showScannerResult(member) {
+    scannerFeedbackSuccess();
     scannerCurrentMemberId = member.id;
     scannerCurrentMember = member;
     hideAllScannerStates();
@@ -994,6 +1066,41 @@ function initAppDashboard(slug) {
   let allMembers = [];
   let selectedMemberId = null;
   let addPointsVisitOnly = false;
+  const CAISSE_RECENT_KEY = `fidpass_caisse_recent_${slug}`;
+  const CAISSE_RECENT_MAX = 10;
+
+  function getCaisseRecent() {
+    try {
+      const raw = localStorage.getItem(CAISSE_RECENT_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) { return []; }
+  }
+  function addToCaisseRecent(member) {
+    if (!member?.id) return;
+    let list = getCaisseRecent().filter((x) => x.id !== member.id);
+    list.unshift({ id: member.id, name: member.name || "Client" });
+    list = list.slice(0, CAISSE_RECENT_MAX);
+    try {
+      localStorage.setItem(CAISSE_RECENT_KEY, JSON.stringify(list));
+    } catch (_) {}
+    renderCaisseRecent();
+  }
+  function renderCaisseRecent() {
+    const container = document.getElementById("app-caisse-recent");
+    if (!container) return;
+    const list = getCaisseRecent();
+    if (list.length === 0) { container.innerHTML = ""; return; }
+    container.innerHTML = list.map((m) => `<button type="button" class="app-caisse-recent-btn" data-id="${escapeHtml(m.id)}">${escapeHtml(m.name)}</button>`).join("");
+    container.querySelectorAll(".app-caisse-recent-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedMemberId = btn.dataset.id;
+        const rec = list.find((x) => x.id === selectedMemberId);
+        if (memberSearchInput) memberSearchInput.value = rec ? `${rec.name}` : "";
+        memberListEl?.classList.add("hidden");
+        if (addPointsBtn) addPointsBtn.disabled = false;
+      });
+    });
+  }
 
   function showCaisseMessage(text, isError = false) {
     if (!caisseMessage) return;
@@ -1015,22 +1122,72 @@ function initAppDashboard(slug) {
   async function loadStats() {
     const res = await api("/dashboard/stats");
     if (res.status === 401) throw new Error("Unauthorized");
-    if (!res.ok) return;
+    if (!res.ok) return null;
     const data = await res.json();
     if (statMembers) statMembers.textContent = data.membersCount ?? 0;
     if (statPoints) statPoints.textContent = data.pointsThisMonth ?? 0;
     if (statTransactions) statTransactions.textContent = data.transactionsThisMonth ?? 0;
+    if (statNew30) statNew30.textContent = data.newMembersLast30Days ?? 0;
+    if (statInactive30) statInactive30.textContent = data.inactiveMembers30Days ?? 0;
+    if (statAvgPoints) statAvgPoints.textContent = data.pointsAveragePerMember ?? 0;
+    return data;
   }
 
-  async function loadMembers(search = "") {
-    const q = search ? `&search=${encodeURIComponent(search)}` : "";
-    const res = await api(`/dashboard/members?limit=100${q}`);
+  async function loadEvolution() {
+    const res = await api("/dashboard/evolution?weeks=6");
+    if (!res.ok) return;
+    const data = await res.json();
+    const chartEl = document.getElementById("app-evolution-chart");
+    if (!chartEl || !data.evolution?.length) return;
+    const maxOp = Math.max(1, ...data.evolution.map((w) => w.operationsCount));
+    chartEl.innerHTML = data.evolution.map((w, i) => {
+      const pct = maxOp > 0 ? (w.operationsCount / maxOp) * 100 : 0;
+      return `<div class="app-evolution-bar" style="height: ${pct}%" title="Sem. ${i + 1}: ${w.operationsCount} op." aria-label="Semaine ${i + 1} ${w.operationsCount} opérations"></div>`;
+    }).join("");
+  }
+
+  function renderOverviewAlerts(stats) {
+    const alertsEl = document.getElementById("app-overview-alerts");
+    if (!alertsEl) return;
+    const parts = [];
+    if ((stats.newMembersLast7Days ?? 0) > 0) parts.push(`${stats.newMembersLast7Days} nouveau(x) membre(s) cette semaine. <a href="#membres">Voir les membres</a>`);
+    if ((stats.inactiveMembers30Days ?? 0) > 0) parts.push(`${stats.inactiveMembers30Days} membre(s) inactif(s) depuis 30 j. <a href="#membres" data-filter="inactive30">Voir les inactifs</a>`);
+    if (parts.length === 0) { alertsEl.classList.add("hidden"); alertsEl.innerHTML = ""; return; }
+    alertsEl.classList.remove("hidden");
+    alertsEl.innerHTML = parts.join(" — ");
+    alertsEl.querySelectorAll("a[href='#membres']").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        showAppSection("membres");
+        if (a.dataset.filter === "inactive30") {
+          const filterEl = document.getElementById("app-members-filter");
+          if (filterEl) filterEl.value = "inactive30";
+          window.dispatchEvent(new CustomEvent("app-members-refresh"));
+        }
+      });
+    });
+  }
+
+  const membersFilterEl = document.getElementById("app-members-filter");
+  const membersSortEl = document.getElementById("app-members-sort");
+  const transactionsDaysEl = document.getElementById("app-transactions-days");
+  const transactionsTypeEl = document.getElementById("app-transactions-type");
+
+  async function loadMembers(search = "", filter = "", sort = "last_visit") {
+    const params = new URLSearchParams({ limit: 100 });
+    if (search) params.set("search", search);
+    if (filter) params.set("filter", filter);
+    if (sort) params.set("sort", sort);
+    const res = await api(`/dashboard/members?${params}`);
     if (!res.ok) return { members: [], total: 0 };
     return res.json();
   }
 
-  async function loadTransactions() {
-    const res = await api("/dashboard/transactions?limit=20");
+  async function loadTransactions(days = "", type = "") {
+    const params = new URLSearchParams({ limit: 50 });
+    if (days) params.set("days", days);
+    if (type) params.set("type", type);
+    const res = await api(`/dashboard/transactions?${params}`);
     if (!res.ok) return { transactions: [], total: 0 };
     return res.json();
   }
@@ -1039,7 +1196,7 @@ function initAppDashboard(slug) {
     if (!membersTbody) return;
     membersTbody.innerHTML = (members || [])
       .map((m) =>
-        `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.email)}</td><td>${m.points}</td><td>${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</td></tr>`
+        `<tr data-member-id="${escapeHtml(m.id)}"><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.email)}</td><td>${m.points}</td><td>${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</td></tr>`
       )
       .join("") || "<tr><td colspan='4'>Aucun membre</td></tr>";
   }
@@ -1055,12 +1212,14 @@ function initAppDashboard(slug) {
 
   async function refresh() {
     try {
-      await loadStats();
+      const stats = await loadStats();
+      if (stats) renderOverviewAlerts(stats);
+      await loadEvolution();
     } catch (_) { return; }
-    const membersData = await loadMembers(membersSearchInput?.value || "");
+    const membersData = await loadMembers(membersSearchInput?.value || "", membersFilterEl?.value || "", membersSortEl?.value || "last_visit");
     allMembers = membersData.members || [];
     renderMembers(allMembers);
-    const txData = await loadTransactions();
+    const txData = await loadTransactions(transactionsDaysEl?.value || "", transactionsTypeEl?.value || "");
     renderTransactions(txData.transactions || []);
   }
 
@@ -1087,9 +1246,11 @@ function initAppDashboard(slug) {
         memberSearchInput.value = m ? `${m.name} (${m.email})` : "";
         memberListEl.classList.add("hidden");
         if (addPointsBtn) addPointsBtn.disabled = false;
+        if (m) addToCaisseRecent(m);
       });
     });
   });
+  renderCaisseRecent();
 
   oneVisitBtn?.addEventListener("click", () => {
     addPointsVisitOnly = true;
@@ -1120,6 +1281,8 @@ function initAppDashboard(slug) {
         return;
       }
       showCaisseMessage(`${data.points} point(s) ajouté(s). Total : ${data.points} pts.`);
+      const addedMember = allMembers.find((m) => m.id === selectedMemberId) || { id: selectedMemberId, name: memberSearchInput?.value || "Client" };
+      addToCaisseRecent(addedMember);
       if (amountInput) amountInput.value = "";
       selectedMemberId = null;
       if (memberSearchInput) memberSearchInput.value = "";
@@ -1133,8 +1296,98 @@ function initAppDashboard(slug) {
 
   membersSearchInput?.addEventListener("input", () => {
     const q = membersSearchInput.value.trim();
-    loadMembers(q).then((data) => renderMembers(data.members || []));
+    const filter = membersFilterEl?.value || "";
+    const sort = membersSortEl?.value || "last_visit";
+    loadMembers(q, filter, sort).then((data) => renderMembers(data.members || []));
   });
+  membersFilterEl?.addEventListener("change", () => refresh());
+  membersSortEl?.addEventListener("change", () => refresh());
+  transactionsDaysEl?.addEventListener("change", () => refresh());
+  transactionsTypeEl?.addEventListener("change", () => refresh());
+
+  const membersExportBtn = document.getElementById("app-members-export");
+  const transactionsExportBtn = document.getElementById("app-transactions-export");
+  if (membersExportBtn) {
+    membersExportBtn.addEventListener("click", async () => {
+      const params = new URLSearchParams();
+      if (membersSearchInput?.value) params.set("search", membersSearchInput.value);
+      if (membersFilterEl?.value) params.set("filter", membersFilterEl.value);
+      if (membersSortEl?.value) params.set("sort", membersSortEl.value);
+      const res = await api(`/dashboard/members/export?${params}`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `membres-${slug}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+  if (transactionsExportBtn) {
+    transactionsExportBtn.addEventListener("click", async () => {
+      const params = new URLSearchParams();
+      if (transactionsDaysEl?.value) params.set("days", transactionsDaysEl.value);
+      if (transactionsTypeEl?.value) params.set("type", transactionsTypeEl.value);
+      const res = await api(`/dashboard/transactions/export?${params}`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `transactions-${slug}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  const overviewCopyLinkBtn = document.getElementById("app-overview-copy-link");
+  if (overviewCopyLinkBtn) {
+    overviewCopyLinkBtn.addEventListener("click", () => {
+      if (!shareLinkEl) return;
+      shareLinkEl.select();
+      navigator.clipboard.writeText(shareLinkEl.value).then(() => {
+        overviewCopyLinkBtn.textContent = "Lien copié !";
+        setTimeout(() => { overviewCopyLinkBtn.textContent = "🔗 Copier le lien partage"; }, 2000);
+      });
+    });
+  }
+
+  const memberDetailModal = document.getElementById("app-member-detail-modal");
+  const memberDetailBody = document.getElementById("app-member-detail-body");
+  const memberDetailClose = memberDetailModal?.querySelector(".app-modal-close");
+  const memberDetailBackdrop = memberDetailModal?.querySelector(".app-modal-backdrop");
+  function openMemberDetail(member) {
+    if (!memberDetailModal || !memberDetailBody) return;
+    memberDetailBody.innerHTML = "<p>Chargement…</p>";
+    memberDetailModal.classList.remove("hidden");
+    api(`/dashboard/transactions?memberId=${encodeURIComponent(member.id)}&limit=20`)
+      .then((r) => (r.ok ? r.json() : { transactions: [] }))
+      .then((data) => {
+        const txList = (data.transactions || []).map((t) => `<li>${t.type === "points_add" ? "Points" : "Opération"} +${t.points} — ${formatDate(t.created_at)}</li>`).join("") || "<li>Aucune opération</li>";
+        memberDetailBody.innerHTML = `
+          <p><strong>${escapeHtml(member.name)}</strong></p>
+          <p>${escapeHtml(member.email)}</p>
+          <p>${member.points} point(s)</p>
+          <p>Dernière visite : ${member.last_visit_at ? formatDate(member.last_visit_at) : "—"}</p>
+          <h3 style="font-size:1rem;margin:0.75rem 0 0.25rem">Historique</h3>
+          <ul class="app-scanner-history-list">${txList}</ul>
+        `;
+      })
+      .catch(() => { memberDetailBody.innerHTML = "<p>Erreur chargement.</p>"; });
+  }
+  function closeMemberDetail() {
+    memberDetailModal?.classList.add("hidden");
+  }
+  memberDetailClose?.addEventListener("click", closeMemberDetail);
+  memberDetailBackdrop?.addEventListener("click", closeMemberDetail);
+  membersTbody?.addEventListener("click", (e) => {
+    const row = e.target.closest("tr[data-member-id]");
+    if (!row) return;
+    const id = row.getAttribute("data-member-id");
+    const member = allMembers.find((m) => m.id === id);
+    if (member) openMemberDetail(member);
+  });
+
+  window.addEventListener("app-members-refresh", () => refresh());
 
   refresh();
 }

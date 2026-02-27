@@ -1,9 +1,16 @@
+import { createHmac } from "crypto";
 import { PKPass } from "passkit-generator";
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { PNG } from "pngjs";
 import { getLevel } from "./db.js";
+
+/** Token d'authentification PassKit (HMAC sur serialNumber) — min 16 caractères requis par Apple. */
+export function getPassAuthenticationToken(serialNumber) {
+  const secret = process.env.PASSKIT_SECRET || "fidpass-default-secret-change-in-production";
+  return createHmac("sha256", secret).update(serialNumber).digest("hex").slice(0, 32);
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const assetsDir = join(__dirname, "..", "assets");
@@ -192,20 +199,24 @@ export async function generatePass(member, business = null, options = {}) {
         }
       : PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
 
-  const pass = new PKPass(
-    buffers,
-    certificates,
-    {
-      passTypeIdentifier: passTypeId,
-      teamIdentifier: teamId,
-      organizationName,
-      description: format === "tampons"
-        ? `Carte fidélité ${organizationName} — ${stamps}/${stampMax} tampons`
-        : `Carte de fidélité ${organizationName} — ${member.points} pts`,
-      serialNumber: member.id,
-      ...customColors,
-    }
-  );
+  const webServiceURL = process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL;
+  const authToken = getPassAuthenticationToken(member.id);
+  const passOptions = {
+    passTypeIdentifier: passTypeId,
+    teamIdentifier: teamId,
+    organizationName,
+    description: format === "tampons"
+      ? `Carte fidélité ${organizationName} — ${stamps}/${stampMax} tampons`
+      : `Carte de fidélité ${organizationName} — ${member.points} pts`,
+    serialNumber: member.id,
+    ...customColors,
+  };
+  if (webServiceURL && business) {
+    const base = webServiceURL.replace(/\/$/, "");
+    passOptions.webServiceURL = `${base}/v1`;
+    passOptions.authenticationToken = authToken;
+  }
+  const pass = new PKPass(buffers, certificates, passOptions);
 
   pass.type = "storeCard";
 

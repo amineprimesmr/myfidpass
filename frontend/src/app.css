@@ -776,3 +776,56 @@ body.page-app .site-banner { display: none !important; }
   font-family: inherit;
 }
 .offers-dev-bypass-btn:hover { color: #4a53ff; }
+
+/* Vue d'ensemble enrichie */
+.app-stats-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.app-overview-alerts { margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 10px; background: #e3f2fd; color: #1565c0; font-size: 0.9rem; }
+.app-overview-alerts a { color: inherit; font-weight: 600; text-decoration: underline; }
+.app-overview-alerts.hidden { display: none; }
+.app-evolution-wrap { margin-top: 2rem; }
+.app-evolution-title { font-size: 1rem; font-weight: 600; color: var(--app-text-muted); margin: 0 0 0.75rem; }
+.app-evolution-chart { display: flex; align-items: flex-end; gap: 0.5rem; height: 120px; padding: 0.5rem 0; }
+.app-evolution-bar { flex: 1; min-width: 24px; background: var(--app-accent); border-radius: 6px 6px 0 0; opacity: 0.85; transition: height 0.2s; }
+.app-overview-shortcuts { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
+.app-shortcut-btn { display: inline-block; padding: 0.6rem 1rem; font-size: 0.9rem; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; color: var(--app-text); text-decoration: none; cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s; }
+.app-shortcut-btn:hover { background: var(--app-surface-hover); border-color: var(--app-accent); }
+.app-shortcut-inactifs { border-color: #ff9800; color: #e65100; }
+.app-shortcut-inactifs:hover { background: #fff3e0; border-color: #e65100; }
+
+/* Partager */
+.app-share-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.app-share-row .app-input { flex: 1; min-width: 200px; margin-bottom: 0; }
+.app-qr-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; margin-top: 0.5rem; }
+.app-qr-download { margin-top: 0.25rem; }
+.app-share-page-link { margin-top: 1rem; font-size: 0.9rem; }
+.app-share-page-link a { color: var(--app-accent); text-decoration: none; }
+.app-share-page-link a:hover { text-decoration: underline; }
+
+/* Caisse récents */
+.app-caisse-recent { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; min-height: 2rem; }
+.app-caisse-recent-btn { padding: 0.4rem 0.75rem; font-size: 0.85rem; background: var(--app-surface-hover); border: 1px solid var(--app-border); border-radius: 8px; cursor: pointer; font-family: inherit; color: var(--app-text); }
+.app-caisse-recent-btn:hover { border-color: var(--app-accent); background: #fff; }
+
+/* Membres toolbar & modal */
+.app-members-toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
+.app-members-toolbar .app-search { flex: 1; min-width: 180px; margin-bottom: 0; }
+.app-select { padding: 0.5rem 0.75rem; font-size: 0.9rem; font-family: inherit; border: 1px solid var(--app-border); border-radius: 8px; background: var(--app-surface); color: var(--app-text); }
+.app-table-members tbody tr { cursor: pointer; }
+.app-table-members tbody tr:hover { background: var(--app-surface-hover); }
+.app-modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box; }
+.app-modal.hidden { display: none; }
+.app-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
+.app-modal-content { position: relative; background: var(--app-surface); border-radius: 14px; padding: 1.5rem; max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+.app-modal-title { font-size: 1.25rem; margin: 0 0 1rem; }
+.app-modal-close { position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; border: none; background: none; font-size: 1.5rem; color: var(--app-text-muted); cursor: pointer; line-height: 1; padding: 0; }
+.app-modal-close:hover { color: var(--app-text); }
+
+/* Historique toolbar */
+.app-histoire-toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
+
+/* Personnaliser aperçu live */
+.app-personnaliser-live-preview-wrap { margin-bottom: 1.5rem; }
+.app-personnaliser-preview { margin-top: 0.5rem; }
+.app-personnaliser-preview-card { max-width: 280px; border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; min-height: 60px; transition: background 0.15s, color 0.15s; }
+.app-personnaliser-preview-org { font-size: 0.85rem; font-weight: 600; opacity: 0.95; }
+.app-personnaliser-preview-value { font-size: 1.25rem; font-weight: 800; }
