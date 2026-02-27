@@ -221,7 +221,7 @@ export async function generatePass(member, business = null, options = {}) {
   };
   if (webServiceURL && business) {
     const base = webServiceURL.replace(/\/$/, "");
-    passOptions.webServiceURL = `${base}/v1`;
+    passOptions.webServiceURL = `${base}/api/v1`;
     passOptions.authenticationToken = authToken;
     if (process.env.NODE_ENV === "production") {
       console.log("[PassKit] Pass généré avec webServiceURL:", passOptions.webServiceURL, "→ l'iPhone pourra s'enregistrer.");

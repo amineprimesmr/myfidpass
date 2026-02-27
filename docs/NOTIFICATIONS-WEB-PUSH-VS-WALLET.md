@@ -79,6 +79,8 @@ Le backend doit avoir la variable d'environnement **`PASSKIT_WEB_SERVICE_URL`** 
 4. Retourne sur la page de ta carte (myfidpass.fr/fidelity/ton-slug), reclique sur **« Apple Wallet »** et ajoute à nouveau la carte. Ce **nouveau** pass contiendra l’URL ; l’iPhone appellera alors le serveur et s’enregistrera.
 5. Dans le dashboard, section **Notifications**, rafraîchis la page : tu devrais voir au moins **1 appareil (Apple Wallet)**.
 
+**Test :** ouvre **https://api.myfidpass.fr/v1** dans un navigateur — tu dois voir un JSON avec `"ok": true`. Si 404, le chemin `/v1` n’est pas exposé.
+
 Si après ça tu vois encore « Aucun appareil » : ouvre les **logs Railway** (backend). Au moment où tu ajoutes le pass au Wallet, tu devrais voir une ligne du type `[PassKit] Appareil enregistré pour le membre ...`. Si tu vois `[PassKit] Pass généré SANS webServiceURL`, la variable n’est pas prise en compte (vérifier le nom exact et redéployer).
 
 ---

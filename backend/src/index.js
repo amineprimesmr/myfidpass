@@ -77,7 +77,7 @@ app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
 app.use("/api/passes", passesRouter);
 app.use("/passes", passesRouter);
-app.use("/v1", passkitWebserviceRouter);
+app.use("/api/v1", passkitWebserviceRouter);
 
 app.get("/api/passes/demo", handlePassDemo);
 app.get("/passes/demo", handlePassDemo);

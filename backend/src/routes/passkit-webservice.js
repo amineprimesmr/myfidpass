@@ -10,9 +10,9 @@ import { generatePass } from "../pass.js";
 
 const router = Router();
 
-/** GET / — permet de vérifier que /v1 est bien joignable (ex. https://api.myfidpass.fr/v1) */
+/** GET / — permet de vérifier que /api/v1 est bien joignable (ex. https://api.myfidpass.fr/api/v1) */
 router.get("/", (req, res) => {
-  res.json({ ok: true, service: "PassKit Web Service", message: "Les iPhones enregistrent les passes via POST /v1/devices/..." });
+  res.json({ ok: true, service: "PassKit Web Service", message: "Les iPhones enregistrent les passes via POST /api/v1/devices/..." });
 });
 
 function parseApplePassAuth(req) {
