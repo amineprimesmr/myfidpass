@@ -1595,7 +1595,10 @@ function initAppDashboard(slug) {
       if (diagEl) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const passKitOk = data.passKitUrlConfigured === true;
-        if (total === 0 && !passKitOk && data.diagnostic) {
+        if (total === 0 && data.helpWhenNoDevice) {
+          diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+          diagEl.classList.remove("hidden");
+        } else if (total === 0 && !passKitOk && data.diagnostic) {
           diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="app-notifications-diagnostic-text">${data.diagnostic}</p>`;
           diagEl.classList.remove("hidden");
         } else {
@@ -2336,7 +2339,10 @@ function initDashboardPage() {
       if (diagEl) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const passKitOk = data.passKitUrlConfigured === true;
-        if (total === 0 && !passKitOk && data.diagnostic) {
+        if (total === 0 && data.helpWhenNoDevice) {
+          diagEl.innerHTML = `<p class="dashboard-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="dashboard-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+          diagEl.classList.remove("hidden");
+        } else if (total === 0 && !passKitOk && data.diagnostic) {
           diagEl.innerHTML = `<p class="dashboard-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="dashboard-notifications-diagnostic-text">${data.diagnostic}</p>`;
           diagEl.classList.remove("hidden");
         } else {
@@ -2477,7 +2483,8 @@ async function createMember(slug, name, email) {
 
 function getPassUrl(slug, memberId) {
   const template = getTemplateFromUrl();
-  return `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/pass?template=${encodeURIComponent(template)}`;
+  const t = Date.now();
+  return `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/pass?template=${encodeURIComponent(template)}&_=${t}`;
 }
 
 function redirectToPass(slug, memberId) {

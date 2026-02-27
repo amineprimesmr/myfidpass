@@ -267,6 +267,7 @@ router.get("/:slug/notifications/stats", (req, res) => {
   const passKitTokens = getPassKitPushTokensForBusiness(business.id);
   const subscriptionsCount = webSubscriptions.length + passKitTokens.length;
   const passKitUrlConfigured = !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
+  const noDeviceButConfigured = subscriptionsCount === 0 && !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
   res.json({
     subscriptionsCount,
     webPushCount: webSubscriptions.length,
@@ -275,6 +276,9 @@ router.get("/:slug/notifications/stats", (req, res) => {
     passKitUrlConfigured,
     diagnostic: !passKitUrlConfigured
       ? "PASSKIT_WEB_SERVICE_URL non défini sur le backend. Les passes sont générés sans URL d'enregistrement, donc l'iPhone ne contacte jamais le serveur. Ajoutez sur Railway : PASSKIT_WEB_SERVICE_URL = https://api.myfidpass.fr (sans slash final), puis redéployez. Ensuite, supprimez la carte du Wallet et ré-ajoutez-la depuis le lien partagé."
+      : null,
+    helpWhenNoDevice: noDeviceButConfigured
+      ? "1) Supprime la carte du Wallet sur ton iPhone. 2) Ouvre le lien de ta carte (copié dans « Partager ») en navigation privée. 3) Clique « Apple Wallet » pour télécharger un pass neuf. 4) Ajoute la carte au Wallet. 5) Attends 30 secondes puis rafraîchis cette page."
       : null,
   });
 });
@@ -530,6 +534,7 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
     const buffer = await generatePass(member, business, { template });
     const filename = `fidelity-${business.slug}-${member.id.slice(0, 8)}.pkpass`;
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     // "inline" permet à Safari sur iOS d'ouvrir le pass directement dans Wallet au lieu de tenter un téléchargement
     res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
     res.send(buffer);
