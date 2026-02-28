@@ -12,8 +12,10 @@ const router = Router();
 
 /** Log toute requête entrante sur /api/v1 pour voir si l'iPhone nous contacte (diagnostic). */
 router.use((req, res, next) => {
-  if (process.env.NODE_ENV === "production") {
-    console.log("[PassKit] Requête reçue:", req.method, req.path, "User-Agent:", (req.get("User-Agent") || "").slice(0, 60));
+  const ua = (req.get("User-Agent") || "").slice(0, 60);
+  console.log("[PassKit] Requête reçue:", req.method, req.path, "User-Agent:", ua);
+  if ((req.method === "GET" || req.method === "HEAD") && req.path.includes("passes")) {
+    console.log("[PassKit] >>> path GET pass (exact):", JSON.stringify(req.path));
   }
   next();
 });
