@@ -439,6 +439,30 @@ export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber);
 }
 
+/**
+ * Liste des serial numbers (passes) mis à jour pour un device — pour GET /v1/devices/:deviceId/registrations/:passTypeId.
+ * Si passesUpdatedSince est fourni, ne retourne que les passes dont last_visit_at > passesUpdatedSince.
+ * @returns { { serialNumbers: string[], lastUpdated: string } }
+ */
+export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
+  const base = db.prepare(
+    `SELECT pr.serial_number, m.last_visit_at
+     FROM pass_registrations pr
+     INNER JOIN members m ON m.id = pr.serial_number
+     WHERE pr.device_library_identifier = ? AND pr.pass_type_identifier = ?`
+  ).all(deviceId, passTypeId);
+  let list = base;
+  if (passesUpdatedSince) {
+    list = base.filter((r) => r.last_visit_at && r.last_visit_at > passesUpdatedSince);
+  }
+  const serialNumbers = list.map((r) => r.serial_number);
+  const lastUpdated =
+    list.length > 0
+      ? list.reduce((max, r) => (r.last_visit_at && r.last_visit_at > max ? r.last_visit_at : max), list[0].last_visit_at || "")
+      : new Date().toISOString().replace("T", " ").slice(0, 19);
+  return { serialNumbers, lastUpdated };
+}
+
 /** Supprime l'appareil de test (curl) pour un commerce, pour remettre le compteur à 0. */
 export function removeTestPassKitDevices(businessId) {
   const r = db.prepare(

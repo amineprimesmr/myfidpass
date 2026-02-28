@@ -4,7 +4,7 @@
  * Authentification : header Authorization: ApplePass <authenticationToken>
  */
 import { Router } from "express";
-import { getMember, getBusinessById, registerPassDevice, getPushTokensForMember, unregisterPassDevice } from "../db.js";
+import { getMember, getBusinessById, registerPassDevice, getPushTokensForMember, unregisterPassDevice, getUpdatedPassSerialNumbersForDevice } from "../db.js";
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
 
@@ -72,6 +72,30 @@ router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", handle
 router.post("/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
 
 /**
+ * GET /v1/devices/:deviceId/registrations/:passTypeId
+ * Liste des passes mis à jour pour ce device (requis par Apple après une push).
+ * Sans cet endpoint, l'iPhone ne sait pas quels passes récupérer → la carte ne se met pas à jour.
+ * Query: passesUpdatedSince (optionnel) = tag de dernière mise à jour.
+ * Réponse: { serialNumbers: string[], lastUpdated: string }
+ */
+function handleGetRegistrations(req, res) {
+  const { deviceId, passTypeId } = req.params;
+  const passesUpdatedSince = req.query.passesUpdatedSince || null;
+  try {
+    const { serialNumbers, lastUpdated } = getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince);
+    if (process.env.NODE_ENV === "production" && serialNumbers.length > 0) {
+      console.log("[PassKit] GET registrations: device", deviceId.slice(0, 8) + "...", "→", serialNumbers.length, "pass(es) à jour, lastUpdated:", lastUpdated);
+    }
+    res.json({ serialNumbers, lastUpdated });
+  } catch (e) {
+    console.error("[PassKit] GET registrations:", e);
+    res.status(500).json({ error: "Server error" });
+  }
+}
+router.get("/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
+router.get("/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
+
+/**
  * GET /passes/:passTypeId/:serialNumber
  * Retourne le .pkpass à jour (points, tampons, etc.).
  */
@@ -85,6 +109,9 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
   if (!member) return res.status(404).json({ error: "Pass not found" });
   const business = getBusinessById(member.business_id);
   if (!business) return res.status(404).json({ error: "Business not found" });
+  if (process.env.NODE_ENV === "production") {
+    console.log("[PassKit] GET pass:", serialNumber.slice(0, 8) + "...", "points=", member.points);
+  }
   try {
     const buffer = await generatePass(member, business, { template: "classic" });
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
