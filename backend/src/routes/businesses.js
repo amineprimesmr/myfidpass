@@ -244,6 +244,7 @@ router.post("/:slug/notifications/send", async (req, res) => {
     }
   }
   const sent = sentWebPush + sentPassKit;
+  const firstError = errors.length > 0 ? errors[0].error : null;
   res.json({
     ok: true,
     sent,
@@ -252,6 +253,10 @@ router.post("/:slug/notifications/send", async (req, res) => {
     total: totalDevices,
     failed: errors.length,
     errors: errors.length > 0 ? errors : undefined,
+    message:
+      sent === 0 && totalDevices > 0 && firstError
+        ? `Aucun appareil n'a reçu la notification. Erreur : ${firstError}`
+        : undefined,
   });
 });
 

@@ -401,24 +401,27 @@ export function getPushTokensForMember(serialNumber) {
   return rows.map((r) => r.push_token).filter(Boolean);
 }
 
-/** Tous les tokens PassKit (Apple Wallet) pour les membres d'un commerce — pour envoi notifications APNs. */
+const TEST_DEVICE_ID = "test-device-123";
+
+/** Tous les tokens PassKit (Apple Wallet) pour les membres d'un commerce — pour envoi notifications APNs. Exclut l'appareil de test (curl). */
 export function getPassKitPushTokensForBusiness(businessId) {
   const rows = db.prepare(
     `SELECT pr.push_token, pr.serial_number
      FROM pass_registrations pr
      INNER JOIN members m ON m.id = pr.serial_number
-     WHERE m.business_id = ? AND pr.push_token IS NOT NULL AND pr.push_token != ''`
-  ).all(businessId);
+     WHERE m.business_id = ? AND pr.push_token IS NOT NULL AND pr.push_token != ''
+       AND pr.device_library_identifier != ?`
+  ).all(businessId, TEST_DEVICE_ID);
   return rows;
 }
 
-/** Nombre d'appareils PassKit enregistrés pour un commerce (avec ou sans token push — pour affichage dashboard). */
+/** Nombre d'appareils PassKit enregistrés pour un commerce (avec ou sans token push, hors appareil de test — pour affichage dashboard). */
 export function getPassKitRegistrationsCountForBusiness(businessId) {
   const row = db.prepare(
     `SELECT COUNT(*) AS n FROM pass_registrations pr
      INNER JOIN members m ON m.id = pr.serial_number
-     WHERE m.business_id = ?`
-  ).get(businessId);
+     WHERE m.business_id = ? AND pr.device_library_identifier != ?`
+  ).get(businessId, TEST_DEVICE_ID);
   return row?.n ?? 0;
 }
 
