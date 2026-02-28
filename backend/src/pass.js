@@ -51,27 +51,41 @@ function hexToRgb(hex) {
   return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
 }
 
-/** Génère un strip PNG 750x246 (bannière du pass Wallet). Dégradé deux tons + reflet discret pour un rendu pro. */
+/** Génère un strip PNG 750x246. Dégradé qui se fond dans le fond (dernières lignes = backgroundColor exact) pour éviter toute ligne de coupure. */
 function createStripBuffer(templateKey) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
   const base = hexToRgb(colors.backgroundColor);
   const w = 750;
   const h = 246;
+  const blendRows = 20;
   const png = new PNG({ width: w, height: h });
   png.data = Buffer.alloc(w * h * 4);
   for (let y = 0; y < h; y++) {
     const t = y / h;
-    // Dégradé vertical : sombre en haut (0.75) → vif au centre → légèrement plus clair en bas (1.05)
-    let lighten = 0.75 + t * 0.55;
-    if (t > 0.5) lighten = 1.05 - (t - 0.5) * 0.2;
-    // Reflet discret vers 20 % du haut : bande plus claire
-    const shine = Math.exp(-((t - 0.2) ** 2) / 0.08) * 0.22;
-    lighten = Math.min(1, lighten + shine);
+    const inBlend = y >= h - blendRows;
+    let lighten;
+    if (inBlend) {
+      const blendT = (y - (h - blendRows)) / blendRows;
+      lighten = 0.92 + blendT * 0.08;
+    } else {
+      lighten = 0.78 + t * 0.2;
+      const shine = Math.exp(-((t - 0.15) ** 2) / 0.06) * 0.18;
+      lighten = Math.min(1, lighten + shine);
+    }
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4;
       png.data[i] = Math.round(Math.min(255, base.r * lighten));
       png.data[i + 1] = Math.round(Math.min(255, base.g * lighten));
       png.data[i + 2] = Math.round(Math.min(255, base.b * lighten));
+      png.data[i + 3] = 255;
+    }
+  }
+  for (let y = h - 3; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      png.data[i] = base.r;
+      png.data[i + 1] = base.g;
+      png.data[i + 2] = base.b;
       png.data[i + 3] = 255;
     }
   }
@@ -173,7 +187,7 @@ const PASS_TEMPLATES = {
   modern: { backgroundColor: "#1a237e", foregroundColor: "#ffffff", labelColor: "#c5cae9" },
   dark: { backgroundColor: "#212121", foregroundColor: "#ffffff", labelColor: "#b0b0b0" },
   warm: { backgroundColor: "#bf360c", foregroundColor: "#ffffff", labelColor: "#ffccbc" },
-  fastfood: { backgroundColor: "#c41e3a", foregroundColor: "#ffffff", labelColor: "#ffd54f" },
+  fastfood: { backgroundColor: "#8B2942", foregroundColor: "#ffffff", labelColor: "#ffd54f" },
   beauty: { backgroundColor: "#b76e79", foregroundColor: "#ffffff", labelColor: "#fce4ec" },
   coiffure: { backgroundColor: "#5c4a6a", foregroundColor: "#ffffff", labelColor: "#d1c4e0" },
   boulangerie: { backgroundColor: "#b8860b", foregroundColor: "#ffffff", labelColor: "#fff8e1" },
