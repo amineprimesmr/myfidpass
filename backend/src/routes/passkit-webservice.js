@@ -112,6 +112,7 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
   const { passTypeId, serialNumber } = req.params;
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) {
+    console.warn("[PassKit] GET pass: 401 Unauthorized — token invalide pour", serialNumber.slice(0, 8) + "... (pass à supprimer et ré-ajouter au Wallet)");
     return res.status(401).json({ error: "Unauthorized" });
   }
   const member = getMember(serialNumber);
@@ -120,18 +121,16 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
   if (!business) return res.status(404).json({ error: "Business not found" });
 
   const lastModified = toLastModifiedHttpDate(member.last_visit_at);
-  // On ne renvoie jamais 304 ici : un décalage d'horloge ou un If-Modified-Since mal interprété
-  // pouvait faire que l'iPhone ne reçoive jamais le pass à jour → la carte ne se mettait pas à jour.
-  // On envoie toujours le pass complet pour que la carte Wallet affiche les bons points.
-
   if (process.env.NODE_ENV === "production") {
-    console.log("[PassKit] GET pass: envoi du pass à jour —", serialNumber.slice(0, 8) + "...", "points=", member.points, "Last-Modified:", lastModified);
+    console.log("[PassKit] >>> PASS ENVOYÉ — serialNumber:", serialNumber.slice(0, 8) + "...", "points:", member.points, "Last-Modified:", lastModified);
   }
   try {
     const buffer = await generatePass(member, business, { template: "classic" });
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Content-Disposition", `inline; filename="pass.pkpass"`);
     res.setHeader("Last-Modified", lastModified);
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
     res.send(buffer);
   } catch (err) {
     console.error("PassKit get pass:", err);

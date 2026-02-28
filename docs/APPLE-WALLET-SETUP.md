@@ -147,6 +147,18 @@ Si le pass est rejeté (« invalid »), vérifie :
 
 ---
 
+## La carte ne se met pas à jour (points n’apparaissent pas)
+
+Si tu ajoutes des points dans l’app mais que la carte dans le Wallet ne se met pas à jour :
+
+1. **Vérifier les logs Railway** après un ajout de points :
+   - Si tu vois **`[PassKit] GET pass: 401 Unauthorized — token invalide`** : le pass dans le Wallet a été généré avec un autre `PASSKIT_SECRET` (ou l’ancien secret). **Supprime la carte du Wallet sur l’iPhone, ré-ajoute-la** (scan du QR ou lien « Ajouter à Apple Wallet »), puis réessaie d’ajouter des points. Ne change pas `PASSKIT_SECRET` une fois que des clients ont déjà ajouté la carte.
+   - Si tu vois **`[PassKit] >>> PASS ENVOYÉ — ... points: X`** avec le **bon** nombre de points : le serveur envoie bien le pass à jour. Si la carte n’affiche toujours pas les points, ouvre la carte dans Wallet, tire pour rafraîchir, ou supprime/ ré-ajoute la carte une fois.
+
+2. **Ne pas modifier `PASSKIT_SECRET`** en production après que des passes ont été distribués : chaque pass contient un jeton dérivé de ce secret ; si tu le changes, les mises à jour (GET pass) renverront 401 et la carte ne se mettra plus à jour.
+
+---
+
 ## Liens utiles
 
 - [Create Wallet identifiers and certificates (Apple)](https://developer.apple.com/help/account/capabilities/create-wallet-identifiers-and-certificates/)
