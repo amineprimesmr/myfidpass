@@ -1808,8 +1808,9 @@ function initBuilderPage() {
   const cartBadge = document.getElementById("builder-header-cart-badge");
   if (cartBadge) cartBadge.textContent = "1";
 
-  const state = { selectedTemplateId: "fastfood-tampons" };
+  const state = { selectedTemplateId: "fastfood-tampons", organizationName: "" };
   const headerSteps = document.querySelectorAll(".builder-header-step");
+  const builderOrgInput = document.getElementById("builder-organization-name");
 
   setBuilderHeaderStep(2);
 
@@ -1832,13 +1833,17 @@ function initBuilderPage() {
       if (raw) {
         const d = JSON.parse(raw);
         if (d.selectedTemplateId && CARD_TEMPLATES.some((t) => t.id === d.selectedTemplateId)) state.selectedTemplateId = d.selectedTemplateId;
+        if (typeof d.organizationName === "string") state.organizationName = d.organizationName.trim();
       }
     } catch (_) {}
   }
 
   function saveDraft() {
     try {
-      localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify({ selectedTemplateId: state.selectedTemplateId }));
+      localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify({
+        selectedTemplateId: state.selectedTemplateId,
+        organizationName: state.organizationName || ""
+      }));
     } catch (_) {}
   }
 
@@ -1923,6 +1928,13 @@ function initBuilderPage() {
   });
 
   loadDraft();
+  if (builderOrgInput) {
+    builderOrgInput.value = state.organizationName || "";
+    builderOrgInput.addEventListener("input", () => {
+      state.organizationName = builderOrgInput.value.trim();
+      saveDraft();
+    });
+  }
   setTemplateSelection(state.selectedTemplateId);
 
   document.querySelectorAll(".builder-template-card").forEach((btn) => {
@@ -2003,7 +2015,51 @@ function initBuilderPage() {
   });
 }
 
+const DESIGN_CATEGORY_LABELS = {
+  fastfood: "Fast food",
+  beauty: "Beauté",
+  coiffure: "Coiffure",
+  boulangerie: "Boulangerie",
+  boucherie: "Boucherie",
+  cafe: "Café"
+};
+
+function getCheckoutDraft() {
+  try {
+    const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    return d?.selectedTemplateId && CARD_TEMPLATES.some((t) => t.id === d.selectedTemplateId) ? d : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function isValidEmail(email) {
+  if (!email || typeof email !== "string") return false;
+  const s = email.trim();
+  if (s.length > 254) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
 function initCheckoutPage() {
+  const draft = getCheckoutDraft();
+  if (!draft) {
+    history.replaceState({}, "", "/creer-ma-carte");
+    initRouting();
+    return;
+  }
+
+  const tpl = CARD_TEMPLATES.find((t) => t.id === draft.selectedTemplateId);
+  const recapCommerce = document.getElementById("checkout-recap-commerce");
+  const recapTemplate = document.getElementById("checkout-recap-template");
+  const recapType = document.getElementById("checkout-recap-type");
+  const recapCategory = document.getElementById("checkout-recap-category");
+  if (recapCommerce) recapCommerce.textContent = draft.organizationName?.trim() || "À définir après inscription";
+  if (recapTemplate) recapTemplate.textContent = tpl?.name ?? draft.selectedTemplateId;
+  if (recapType) recapType.textContent = tpl?.format === "tampons" ? "Tampons" : "Points";
+  if (recapCategory) recapCategory.textContent = tpl?.design ? (DESIGN_CATEGORY_LABELS[tpl.design] || tpl.design) : "—";
+
   const checkoutMain = document.querySelector(".checkout-main");
   const step1 = document.getElementById("checkout-step-1");
   const step2 = document.getElementById("checkout-step-2");
@@ -2015,10 +2071,29 @@ function initCheckoutPage() {
   const next2 = document.getElementById("checkout-next-2");
   const paymentBtn = document.getElementById("checkout-payment");
   const errorEl = document.getElementById("checkout-error");
+  const emailErrorEl = document.getElementById("checkout-email-error");
   const mobileContinueBtn = document.getElementById("checkout-mobile-continue");
   const mobileBackLink = document.getElementById("checkout-mobile-back");
 
   const isMobile = () => window.matchMedia("(max-width: 899px)").matches;
+
+  function setEmailValidationState() {
+    const email = emailInput?.value?.trim() || "";
+    const valid = isValidEmail(email);
+    if (next1) next1.disabled = !valid;
+    if (emailErrorEl) {
+      if (valid || !email) {
+        emailErrorEl.textContent = "";
+        emailErrorEl.classList.add("hidden");
+      } else {
+        emailErrorEl.textContent = "Adresse e-mail invalide (ex. vous@exemple.fr)";
+        emailErrorEl.classList.remove("hidden");
+      }
+    }
+  }
+  emailInput?.addEventListener("input", setEmailValidationState);
+  emailInput?.addEventListener("blur", setEmailValidationState);
+  setEmailValidationState();
 
   function showStep(stepNum) {
     [step1, step2, step3].forEach((el, i) => {
@@ -2085,7 +2160,20 @@ function initCheckoutPage() {
       showError("Saisissez votre adresse e-mail.");
       return;
     }
+    if (!isValidEmail(email)) {
+      emailInput?.focus();
+      showError("Adresse e-mail invalide. Utilisez une adresse valide (ex. vous@exemple.fr).");
+      if (emailErrorEl) {
+        emailErrorEl.textContent = "Adresse e-mail invalide (ex. vous@exemple.fr)";
+        emailErrorEl.classList.remove("hidden");
+      }
+      return;
+    }
     showError("");
+    if (emailErrorEl) {
+      emailErrorEl.textContent = "";
+      emailErrorEl.classList.add("hidden");
+    }
     showStep(2);
     if (isMobile()) setMobileStep(2);
     passwordInput?.focus();

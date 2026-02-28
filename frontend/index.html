@@ -137,10 +137,13 @@
           </div>
           <div class="checkout-steps">
             <section class="checkout-step checkout-step-open" id="checkout-step-1" data-step="1">
-              <h2 class="checkout-step-title">1. SAISIR VOTRE ADRESSE E-MAIL</h2>
+              <h2 class="checkout-step-title">1. CRÉATION DE COMPTE</h2>
+              <p class="checkout-step-subtitle">Saisissez votre adresse e-mail pour continuer.</p>
               <div class="checkout-step-content">
-                <input type="email" id="checkout-email" class="checkout-input" placeholder="Votre adresse e-mail" autocomplete="email" />
-                <button type="button" id="checkout-next-1" class="checkout-btn-next">SUIVANT</button>
+                <label for="checkout-email" class="checkout-label">Adresse e-mail</label>
+                <input type="email" id="checkout-email" class="checkout-input" placeholder="vous@exemple.fr" autocomplete="email" />
+                <p id="checkout-email-error" class="checkout-field-error hidden" role="alert"></p>
+                <button type="button" id="checkout-next-1" class="checkout-btn-next" disabled>SUIVANT</button>
               </div>
             </section>
             <section class="checkout-step" id="checkout-step-2" data-step="2">
@@ -172,6 +175,16 @@
         <aside class="checkout-main-right" aria-label="Détails de la commande">
           <div class="checkout-order-card">
             <h2 class="checkout-order-title">DÉTAILS DE LA COMMANDE</h2>
+            <section class="checkout-order-section checkout-recap-section" id="checkout-recap-section">
+              <h3 class="checkout-order-section-title">Votre sélection</h3>
+              <ul class="checkout-recap-list">
+                <li class="checkout-recap-row"><span class="checkout-recap-label">Commerce</span><span id="checkout-recap-commerce" class="checkout-recap-value">—</span></li>
+                <li class="checkout-recap-row"><span class="checkout-recap-label">Modèle de carte</span><span id="checkout-recap-template" class="checkout-recap-value">—</span></li>
+                <li class="checkout-recap-row"><span class="checkout-recap-label">Type</span><span id="checkout-recap-type" class="checkout-recap-value">—</span></li>
+                <li class="checkout-recap-row"><span class="checkout-recap-label">Catégorie</span><span id="checkout-recap-category" class="checkout-recap-value">—</span></li>
+              </ul>
+              <p class="checkout-recap-edit"><a href="/creer-ma-carte" class="checkout-recap-edit-link">Modifier ma sélection</a></p>
+            </section>
             <section class="checkout-order-section">
               <h3 class="checkout-order-section-title">Votre offre Myfidpass</h3>
               <ul class="checkout-order-list">
@@ -874,6 +887,10 @@ X-Dashboard-Token: TOKEN
             <div class="builder-step-1-heading">
             <h1 class="builder-title">À quoi ressemblera votre carte</h1>
               <p class="builder-subtitle">Glissez les cartes dans l’aperçu ou choisissez un modèle ci-dessous. Personnalisation des couleurs et du logo après paiement.</p>
+              <div class="builder-commerce-name-wrap">
+                <label for="builder-organization-name" class="builder-commerce-name-label">Nom de votre commerce (optionnel)</label>
+                <input type="text" id="builder-organization-name" class="builder-commerce-name-input checkout-input" placeholder="Ex: Café du coin" autocomplete="organization" maxlength="80" />
+              </div>
             </div>
             <div class="builder-step-1-content">
               <div class="builder-step-1-left">

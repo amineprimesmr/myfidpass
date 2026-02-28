@@ -909,6 +909,26 @@
   margin-left: auto;
   margin-right: auto;
 }
+.builder-commerce-name-wrap {
+  margin-top: 1.25rem;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.builder-commerce-name-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: var(--landing-muted);
+}
+.builder-commerce-name-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
 
 .builder-step-1-left {
   flex-shrink: 0;
@@ -2642,6 +2662,8 @@ body.page-checkout .site-banner { display: none !important; }
   margin-top: 0.25rem;
 }
 .checkout-btn-next:hover { background: #c4c4c4; }
+.checkout-btn-next:not(:disabled) { background: #0a7c42; color: #fff; }
+.checkout-btn-next:not(:disabled):hover { background: #096b38; }
 .checkout-btn-next:disabled { opacity: 0.6; cursor: not-allowed; }
 .checkout-step-desc {
   font-size: 0.875rem;
@@ -2721,6 +2743,17 @@ body.page-checkout .site-banner { display: none !important; }
   margin: 0 0 0.5rem;
   color: #555;
 }
+.checkout-recap-section { padding-bottom: 0.75rem; border-bottom: 1px solid #eee; }
+.checkout-recap-list { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; }
+.checkout-recap-row { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.35rem 0; }
+.checkout-recap-label { color: #666; flex-shrink: 0; }
+.checkout-recap-value { font-weight: 500; color: #1a1a1a; text-align: right; }
+.checkout-recap-edit { margin: 0.5rem 0 0; font-size: 0.8rem; }
+.checkout-recap-edit-link { color: #0a7c42; text-decoration: none; }
+.checkout-recap-edit-link:hover { text-decoration: underline; }
+.checkout-step-subtitle { font-size: 0.9rem; color: #555; margin: 0 0 1rem; font-weight: 400; }
+.checkout-field-error { font-size: 0.85rem; color: #b91c1c; margin: 0.35rem 0 0; }
+.checkout-field-error:not(.hidden) + .checkout-btn-next { margin-top: 0.5rem; }
 .checkout-order-list { list-style: none; padding: 0; margin: 0; }
 .checkout-order-item {
   display: flex;
