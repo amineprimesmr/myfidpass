@@ -56,7 +56,7 @@ router.get("/:memberId", (req, res) => {
  * Body: { points: number }
  * Ajoute des points au membre (ex: caisse).
  */
-router.post("/:memberId/points", (req, res) => {
+router.post("/:memberId/points", async (req, res) => {
   const points = Number(req.body?.points);
   if (!Number.isInteger(points) || points < 0) {
     return res.status(400).json({ error: "points doit être un entier positif" });
@@ -69,9 +69,16 @@ router.post("/:memberId/points", (req, res) => {
   const tokens = getPushTokensForMember(member.id);
   if (tokens.length > 0) {
     console.log("[PassKit] Après points (API members): envoi push à", tokens.length, "appareil(s) pour membre", member.id.slice(0, 8) + "...");
-    tokens.forEach((token) => {
-      sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après points:", err?.message));
-    });
+    for (const token of tokens) {
+      const result = await sendPassKitUpdate(token);
+      if (result.sent) {
+        console.log("[PassKit] Push envoyée OK pour membre", member.id.slice(0, 8) + "...");
+      } else {
+        console.warn("[PassKit] Push refusée:", result.error || "inconnu");
+      }
+    }
+  } else {
+    console.log("[PassKit] Aucun appareil enregistré pour ce membre — pas de push.");
   }
   res.json({
     id: member.id,

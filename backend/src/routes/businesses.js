@@ -394,7 +394,7 @@ router.get("/:slug/integration/lookup", (req, res) => {
  * Body: { barcode, amount_eur?, visit?, points? }. Auth: token ou JWT.
  * Le code-barres Fidpass contient l'identifiant membre (UUID).
  */
-router.post("/:slug/integration/scan", (req, res) => {
+router.post("/:slug/integration/scan", async (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
   if (!canAccessDashboard(business, req)) {
@@ -437,9 +437,14 @@ router.post("/:slug/integration/scan", (req, res) => {
   const tokens = getPushTokensForMember(member.id);
   if (tokens.length > 0) {
     console.log("[PassKit] Après scan: envoi push à", tokens.length, "appareil(s) pour membre", member.id.slice(0, 8) + "...");
-    tokens.forEach((token) => {
-      sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après scan:", err?.message));
-    });
+    for (const token of tokens) {
+      const result = await sendPassKitUpdate(token);
+      if (result.sent) {
+        console.log("[PassKit] Push envoyée OK (scan) pour membre", member.id.slice(0, 8) + "...");
+      } else {
+        console.warn("[PassKit] Push refusée (scan):", result.error || "inconnu");
+      }
+    }
   }
   res.json({
     member: {
@@ -557,7 +562,7 @@ router.get("/:slug/members/:memberId", (req, res) => {
  * POST /api/businesses/:slug/members/:memberId/points
  * Ajouter des points (caisse). Nécessite token ou JWT propriétaire.
  */
-router.post("/:slug/members/:memberId/points", (req, res) => {
+router.post("/:slug/members/:memberId/points", async (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
   if (!canAccessDashboard(business, req)) {
@@ -601,9 +606,16 @@ router.post("/:slug/members/:memberId/points", (req, res) => {
   const tokens = getPushTokensForMember(member.id);
   if (tokens.length > 0) {
     console.log("[PassKit] Après points: envoi push à", tokens.length, "appareil(s) pour membre", member.id.slice(0, 8) + "...");
-    tokens.forEach((token) => {
-      sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après points:", err?.message));
-    });
+    for (const token of tokens) {
+      const result = await sendPassKitUpdate(token);
+      if (result.sent) {
+        console.log("[PassKit] Push envoyée OK (points) pour membre", member.id.slice(0, 8) + "...");
+      } else {
+        console.warn("[PassKit] Push refusée (points):", result.error || "inconnu");
+      }
+    }
+  } else {
+    console.log("[PassKit] Aucun appareil enregistré pour ce membre — pas de push après points.");
   }
   res.json({ id: updated.id, points: updated.points });
 });
