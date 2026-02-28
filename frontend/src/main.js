@@ -2423,6 +2423,10 @@ function initCheckoutPage() {
     const email = emailInput?.value?.trim();
     const password = passwordInput?.value;
     const name = nameInput?.value?.trim();
+    if (!email) {
+      showError("Saisissez votre adresse e-mail à l'étape 1.");
+      return;
+    }
     if (!password || String(password).length < 8) {
       passwordInput?.focus();
       showError("Le mot de passe doit faire au moins 8 caractères.");
@@ -2433,16 +2437,19 @@ function initCheckoutPage() {
       next2.disabled = true;
       next2.textContent = "Création du compte…";
     }
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), 20000);
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name: name || undefined }),
+        signal: abortController.signal,
       });
+      clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         showError(data.error || "Erreur lors de la création du compte.");
-        if (next2) { next2.disabled = false; next2.textContent = "SUIVANT"; }
         return;
       }
       setAuthToken(data.token);
@@ -2450,8 +2457,13 @@ function initCheckoutPage() {
       if (isMobile()) setMobileStep(3);
       if (paymentBtn) paymentBtn.focus();
     } catch (e) {
-      showError("Impossible de créer le compte. Vérifiez votre connexion.");
+      if (e.name === "AbortError") {
+        showError("Le serveur met trop de temps à répondre. Vérifiez votre connexion ou réessayez.");
+      } else {
+        showError("Impossible de créer le compte. Vérifiez votre connexion et que l'API est bien accessible.");
+      }
     } finally {
+      clearTimeout(timeoutId);
       if (next2) {
         next2.disabled = false;
         next2.textContent = "SUIVANT";
