@@ -1787,7 +1787,7 @@ const CARD_TEMPLATES = [
   { id: "elegant", name: "Élégant", format: "points", bg: "#8b7355", fg: "#ffffff", label: "#f5f0e6" },
 ];
 
-const BUILDER_DRAFT_KEY = "fidpass_builder_draft";
+const BUILDER_DRAFT_KEY = "fidpass_builder_draft_v2";
 
 function slugify(text) {
   return String(text)
