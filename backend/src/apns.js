@@ -44,10 +44,9 @@ function loadSignerCertAndKey() {
   return null;
 }
 
-/** Écrit cert+key en fichiers temporaires pour node-apn (certaines versions gèrent mal les Buffers). */
+/** Écrit cert+key en fichiers temporaires pour node-apn. Utilise tmpdir() pour éviter soucis de droits sur /data. */
 function writeCredsToTempFiles(creds) {
-  const baseDir = process.env.DATA_DIR || tmpdir();
-  const apnsDir = join(baseDir, "apns-certs");
+  const apnsDir = join(tmpdir(), "fidpass-apns");
   mkdirSync(apnsDir, { recursive: true });
   const certPath = join(apnsDir, "apns-cert.pem");
   const keyPath = join(apnsDir, "apns-key.pem");
@@ -56,8 +55,9 @@ function writeCredsToTempFiles(creds) {
   return { certPath, keyPath, passphrase: creds.passphrase };
 }
 
-let providerInstance = null;
-let providerError = null; // raison si getProvider() a échoué
+// undefined = pas encore initialisé, null = échec, object = OK (pour ne pas retourner null au 1er appel sans avoir essayé)
+let providerInstance = undefined;
+let providerError = null;
 
 /**
  * Retourne la raison pour laquelle APNs n'est pas disponible (pour message d'erreur utilisateur).
@@ -76,6 +76,7 @@ export function getApnsUnavailableReason() {
 }
 
 function getProvider() {
+  // undefined = pas encore tenté ; une fois tenté, providerInstance vaut l'objet (succès) ou null (échec)
   if (providerInstance !== undefined) return providerInstance;
   providerError = null;
   const passTypeId = process.env.PASS_TYPE_ID?.trim();
