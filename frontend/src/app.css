@@ -247,6 +247,13 @@ body.page-app .site-banner { display: none !important; }
   line-height: 1.5;
 }
 
+.app-subsection-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 1.75rem 0 0.75rem;
+  color: var(--app-text);
+}
+
 .app-section-overview { margin-bottom: 2.5rem; }
 
 /* Stats (Vue d'ensemble) */

@@ -571,10 +571,11 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["vue-ensemble", "partager", "scanner", "caisse", "membres", "historique", "personnaliser", "integration", "notifications"];
+const APP_SECTION_IDS = ["vue-ensemble", "scanner", "caisse", "membres", "historique", "personnaliser", "integration", "notifications"];
 
 function showAppSection(sectionId) {
-  const id = APP_SECTION_IDS.includes(sectionId) ? sectionId : "vue-ensemble";
+  const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
+  const id = APP_SECTION_IDS.includes(normalized) ? normalized : "vue-ensemble";
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   const content = document.getElementById("app-dashboard-content");
   if (!content) return;
@@ -603,10 +604,12 @@ function initAppSidebar() {
     });
   });
   const hashSection = (window.location.hash || "#vue-ensemble").slice(1);
-  showAppSection(APP_SECTION_IDS.includes(hashSection) ? hashSection : "vue-ensemble");
+  const sectionToShow = hashSection === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(hashSection) ? hashSection : "vue-ensemble");
+  showAppSection(sectionToShow);
   window.addEventListener("hashchange", () => {
     const section = (window.location.hash || "#vue-ensemble").slice(1);
-    showAppSection(APP_SECTION_IDS.includes(section) ? section : "vue-ensemble");
+    const toShow = section === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(section) ? section : "vue-ensemble");
+    showAppSection(toShow);
   });
 }
 
