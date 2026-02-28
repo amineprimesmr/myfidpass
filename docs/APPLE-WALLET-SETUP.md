@@ -109,7 +109,11 @@ En production, les fichiers `.pem` ne sont pas dans le repo (`.gitignore`). Tu p
 
 ---
 
-### 5.2 Notifications push (APNs)
+### 5.2 URL du service PassKit (`PASSKIT_WEB_SERVICE_URL`)
+
+Sur Railway, définis `PASSKIT_WEB_SERVICE_URL=https://api.myfidpass.fr` (sans slash final, **sans** `/api` ni `/v1`). Le code ajoute `/api` ; Apple ajoute ensuite `/v1/devices/...` et `/v1/passes/...` à cette URL. Si tu mets `/api/v1` dans l’URL, l’iPhone appellera `/api/v1/v1/...` et les mises à jour échoueront.
+
+### 5.3 Notifications push (APNs)
 
 Les notifications push Wallet utilisent **le même certificat** que la signature des passes. Si tu vois « APNs non configuré » : vérifie que `PASS_TYPE_ID`, `SIGNER_CERT_PEM_BASE64` et `SIGNER_KEY_PEM_BASE64` sont bien définis sur Railway.
 

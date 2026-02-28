@@ -20,6 +20,24 @@ router.use((req, res, next) => {
   next();
 });
 
+/** Interception explicite /api/v1/v1/... (passes déjà en circulation avec ancienne webServiceURL) — au cas où les routes nommées ne matchent pas. */
+const V1V1_PASSES_RE = /^\/api\/v1\/v1\/passes\/([^/]+)\/([^/]+)\/?$/;
+const V1V1_DEVICES_REGISTRATIONS_RE = /^\/api\/v1\/v1\/devices\/([^/]+)\/registrations\/([^/]+)$/;
+router.use((req, res, next) => {
+  const p = (req.path || "").split("?")[0];
+  if (req.method === "GET" && V1V1_PASSES_RE.test(p)) {
+    const [, passTypeId, serialNumber] = p.match(V1V1_PASSES_RE);
+    req.params = { ...req.params, passTypeId, serialNumber };
+    return getPassHandler(req, res, next);
+  }
+  if (req.method === "GET" && V1V1_DEVICES_REGISTRATIONS_RE.test(p)) {
+    const [, deviceId, passTypeId] = p.match(V1V1_DEVICES_REGISTRATIONS_RE);
+    req.params = { ...req.params, deviceId, passTypeId };
+    return handleGetRegistrations(req, res, next);
+  }
+  next();
+});
+
 /** GET / — permet de vérifier que /api/v1 est bien joignable (ex. https://api.myfidpass.fr/api/v1) */
 router.get("/", (req, res) => {
   res.json({ ok: true, service: "PassKit Web Service", message: "Les iPhones enregistrent les passes via POST /api/v1/devices/..." });
@@ -224,9 +242,9 @@ router.post("/log", (req, res) => {
   res.status(200).send();
 });
 
-/** Log toute requête GET/HEAD qui n'a matché aucune route (diagnostic). */
+/** Log toute requête GET/HEAD PassKit qui n'a matché aucune route (diagnostic). Ne pas logger /api/businesses/ etc. */
 router.use((req, res, next) => {
-  if (req.method === "GET" || req.method === "HEAD") {
+  if ((req.method === "GET" || req.method === "HEAD") && (req.path.includes("/v1/") || req.path.startsWith("/passes") || req.path.startsWith("/devices/"))) {
     console.log("[PassKit] Aucune route ne correspond à", req.method, req.path);
   }
   next();
