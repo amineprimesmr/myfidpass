@@ -619,6 +619,19 @@ if (bizColsFinal.includes("dashboard_token")) {
   }
 }
 
+// Colonne last_broadcast_message : pour afficher une notif Wallet quand on envoie depuis la section Notifications (PassKit n'affiche que si un champ avec changeMessage change)
+if (!bizColsFinal.includes("last_broadcast_message")) {
+  try {
+    db.prepare("ALTER TABLE businesses ADD COLUMN last_broadcast_message TEXT").run();
+  } catch (_) {}
+}
+
+/** Met à jour le dernier message envoyé à tous (section Notifications). Permet d'afficher une notif sur l'écran de verrouillage Wallet. */
+export function setLastBroadcastMessage(businessId, message) {
+  if (!businessId || message == null) return;
+  db.prepare("UPDATE businesses SET last_broadcast_message = ? WHERE id = ?").run(String(message).trim().slice(0, 500), businessId);
+}
+
 // ——— Abonnements (paiement) ———
 const PLANS = { starter: { max_businesses: 1 }, pro: { max_businesses: 5 } };
 

@@ -21,6 +21,7 @@ import {
   getPushTokensForMember,
   removeTestPassKitDevices,
   logNotification,
+  setLastBroadcastMessage,
   ensureDefaultBusiness,
   canCreateBusiness,
 } from "../db.js";
@@ -216,6 +217,9 @@ router.post("/:slug/notifications/send", async (req, res) => {
     });
   }
   const payload = { title: (title || business.organization_name || "Fidpass").trim(), body };
+  // Mettre à jour le champ "Actualité" du pass pour que la notif Wallet s'affiche (Apple n'affiche que si un champ avec changeMessage change)
+  const broadcastText = payload.title ? `${payload.title}: ${body}` : body;
+  setLastBroadcastMessage(business.id, broadcastText);
   let sentWebPush = 0;
   let sentPassKit = 0;
   const errors = [];

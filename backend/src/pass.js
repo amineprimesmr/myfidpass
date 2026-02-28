@@ -285,7 +285,9 @@ export async function generatePass(member, business = null, options = {}) {
 
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const backContact = business?.back_contact || "contact@example.com";
+  const lastBroadcast = (business?.last_broadcast_message || options?.lastMessage || "").trim() || "—";
   pass.backFields.push(
+    { key: "news", label: "Actualité", value: lastBroadcast, changeMessage: "%@" },
     { key: "terms", label: "Conditions", value: backTerms },
     { key: "contact", label: "Contact", value: backContact }
   );
