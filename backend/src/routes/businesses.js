@@ -18,6 +18,7 @@ import {
   getWebPushSubscriptionsByBusiness,
   getPassKitPushTokensForBusiness,
   getPassKitRegistrationsCountForBusiness,
+  getPushTokensForMember,
   removeTestPassKitDevices,
   logNotification,
   ensureDefaultBusiness,
@@ -433,6 +434,10 @@ router.post("/:slug/integration/scan", (req, res) => {
     points,
     metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit, source: "integration" } : { source: "integration" },
   });
+  const tokens = getPushTokensForMember(member.id);
+  tokens.forEach((token) => {
+    sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après scan:", err?.message));
+  });
   res.json({
     member: {
       id: updated.id,
@@ -589,6 +594,10 @@ router.post("/:slug/members/:memberId/points", (req, res) => {
     type: "points_add",
     points,
     metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit } : undefined,
+  });
+  const tokens = getPushTokensForMember(member.id);
+  tokens.forEach((token) => {
+    sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après points:", err?.message));
   });
   res.json({ id: updated.id, points: updated.points });
 });

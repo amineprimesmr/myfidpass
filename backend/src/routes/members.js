@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { createMember, getMember, addPoints, getBusinessBySlug, getBusinessById } from "../db.js";
+import { createMember, getMember, addPoints, getBusinessBySlug, getBusinessById, getPushTokensForMember } from "../db.js";
 import { generatePass } from "../pass.js";
+import { sendPassKitUpdate } from "../apns.js";
 import { randomUUID } from "crypto";
 
 const router = Router();
@@ -64,6 +65,11 @@ router.post("/:memberId/points", (req, res) => {
   if (!member) {
     return res.status(404).json({ error: "Membre introuvable" });
   }
+  // Envoyer une push APNs pour que l'iPhone mette à jour le pass et affiche "Tu as maintenant X points !"
+  const tokens = getPushTokensForMember(member.id);
+  tokens.forEach((token) => {
+    sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après points:", err?.message));
+  });
   res.json({
     id: member.id,
     points: member.points,

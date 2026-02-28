@@ -394,14 +394,16 @@ export function registerPassDevice({ deviceLibraryIdentifier, passTypeIdentifier
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber, pushToken || null, now);
 }
 
+const TEST_DEVICE_ID = "test-device-123";
+
+/** Tokens push pour un membre (Apple Wallet) — pour envoyer une notif après mise à jour des points. */
 export function getPushTokensForMember(serialNumber) {
   const rows = db.prepare(
-    "SELECT push_token FROM pass_registrations WHERE serial_number = ? AND push_token IS NOT NULL AND push_token != ''"
-  ).all(serialNumber);
+    `SELECT push_token FROM pass_registrations
+     WHERE serial_number = ? AND push_token IS NOT NULL AND push_token != '' AND device_library_identifier != ?`
+  ).all(serialNumber, TEST_DEVICE_ID);
   return rows.map((r) => r.push_token).filter(Boolean);
 }
-
-const TEST_DEVICE_ID = "test-device-123";
 
 /** Tous les tokens PassKit (Apple Wallet) pour les membres d'un commerce — pour envoi notifications APNs. Exclut l'appareil de test (curl). */
 export function getPassKitPushTokensForBusiness(businessId) {
