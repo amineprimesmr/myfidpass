@@ -4,9 +4,10 @@
  * Payload vide : Apple exige un payload vide pour signaler "pass mis à jour".
  */
 import apn from "apn";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { tmpdir } from "os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const certsDir = join(__dirname, "..", "certs");
@@ -41,6 +42,18 @@ function loadSignerCertAndKey() {
     };
   }
   return null;
+}
+
+/** Écrit cert+key en fichiers temporaires pour node-apn (certaines versions gèrent mal les Buffers). */
+function writeCredsToTempFiles(creds) {
+  const baseDir = process.env.DATA_DIR || tmpdir();
+  const apnsDir = join(baseDir, "apns-certs");
+  mkdirSync(apnsDir, { recursive: true });
+  const certPath = join(apnsDir, "apns-cert.pem");
+  const keyPath = join(apnsDir, "apns-key.pem");
+  writeFileSync(certPath, creds.cert, { mode: 0o600 });
+  writeFileSync(keyPath, creds.key, { mode: 0o600 });
+  return { certPath, keyPath, passphrase: creds.passphrase };
 }
 
 let providerInstance = null;
@@ -80,16 +93,25 @@ function getProvider() {
     return null;
   }
   try {
-    console.log("[apns] Chargement certificat (cert=%d octets, key=%d octets)...", creds.cert?.length || 0, creds.key?.length || 0);
+    const certLen = creds.cert?.length || 0;
+    const keyLen = creds.key?.length || 0;
+    console.log("[apns] Chargement certificat (cert=%d octets, key=%d octets)...", certLen, keyLen);
+    if (certLen === 0 || keyLen === 0) {
+      providerError = "Certificat ou clé vide. Vérifie SIGNER_CERT_PEM_BASE64 et SIGNER_KEY_PEM_BASE64 sur Railway.";
+      providerInstance = null;
+      return null;
+    }
+    // node-apn peut mal gérer les Buffers : on écrit en fichiers temporaires et on passe les chemins
+    const { certPath, keyPath, passphrase } = writeCredsToTempFiles(creds);
     providerInstance = new apn.Provider({
-      cert: creds.cert,
-      key: creds.key,
-      passphrase: creds.passphrase,
+      cert: certPath,
+      key: keyPath,
+      passphrase,
       production: process.env.NODE_ENV === "production",
     });
     if (!providerInstance) {
       providerError =
-        "Le fournisseur APNs a retourné null. Vérifie que SIGNER_CERT_PEM_BASE64 / SIGNER_KEY_PEM_BASE64 contiennent bien le certificat Pass Type ID (Portail Apple > Identifiers > Pass Type ID > Certificate).";
+        "Le fournisseur APNs a retourné null. Vérifie que le certificat est bien le certificat Pass Type ID (Portail Apple > Identifiers > Pass Type ID > Certificate).";
       providerInstance = null;
     }
   } catch (err) {
