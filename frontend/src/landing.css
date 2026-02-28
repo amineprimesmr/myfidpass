@@ -2796,6 +2796,23 @@ body.page-checkout .site-banner { display: none !important; }
   border-color: #000;
 }
 .checkout-btn-apple:hover { background: #333; }
+.checkout-btn-social-disabled,
+.checkout-btn-social:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.checkout-btn-social-disabled:hover,
+.checkout-btn-social:disabled:hover { background: #000; }
+.checkout-social-placeholder-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+.checkout-social-placeholder {
+  font-size: 0.8rem;
+  color: #888;
+}
 .checkout-btn-apple-icon {
   width: 18px;
   height: 18px;

@@ -444,8 +444,6 @@ function initAuthPage(initialTab) {
       };
       document.head.appendChild(script);
     }
-  } else {
-    document.getElementById("auth-google-btn")?.classList?.add("hidden");
   }
 
   const authAppleBtn = document.getElementById("auth-apple-btn");
@@ -497,11 +495,18 @@ function initAuthPage(initialTab) {
     authAppleBtn.style.display = "none";
   }
 
-  const authSocialDivider = document.querySelector(".auth-social-divider");
-  const authSocialButtons = document.querySelector(".auth-social-buttons");
-  if (!authGoogleClientId && !authAppleClientId) {
-    authSocialDivider?.classList.add("hidden");
-    authSocialButtons?.classList.add("hidden");
+  // Toujours afficher la section ; boutons actifs seulement si les client IDs sont configurés.
+  if (!authGoogleClientId) {
+    const authGoogleWrap = document.getElementById("auth-google-btn");
+    if (authGoogleWrap && !authGoogleWrap.querySelector("iframe")) {
+      authGoogleWrap.innerHTML = "<span class=\"auth-social-placeholder\">Google (VITE_GOOGLE_CLIENT_ID)</span>";
+      authGoogleWrap.classList.add("auth-social-placeholder-wrap");
+    }
+  }
+  if (!authAppleClientId && authAppleBtn) {
+    authAppleBtn.disabled = true;
+    authAppleBtn.title = "Configurez VITE_APPLE_CLIENT_ID pour activer";
+    authAppleBtn.classList.add("auth-btn-social-disabled");
   }
 }
 
@@ -2316,11 +2321,20 @@ function initCheckoutPage() {
     appleBtn.style.display = "none";
   }
 
+  // Toujours afficher la section « Ou continuer avec » ; les boutons sont actifs seulement si les client IDs sont configurés (Vercel).
   const socialDivider = document.querySelector(".checkout-social-divider");
   const socialButtons = document.querySelector(".checkout-social-buttons");
-  if (!googleClientId && !appleClientId) {
-    socialDivider?.classList.add("hidden");
-    socialButtons?.classList.add("hidden");
+  if (!googleClientId && appleBtn) {
+    const wrap = document.getElementById("checkout-google-btn");
+    if (wrap && !wrap.querySelector("iframe")) {
+      wrap.innerHTML = "<span class=\"checkout-social-placeholder\">Google (configurez VITE_GOOGLE_CLIENT_ID)</span>";
+      wrap.classList.add("checkout-social-placeholder-wrap");
+    }
+  }
+  if (!appleClientId && appleBtn) {
+    appleBtn.disabled = true;
+    appleBtn.title = "Configurez VITE_APPLE_CLIENT_ID sur Vercel pour activer";
+    appleBtn.classList.add("checkout-btn-social-disabled");
   }
 
   function showStep(stepNum) {

@@ -155,6 +155,23 @@
   border-color: #000;
 }
 .auth-btn-apple:hover { background: #333; }
+.auth-btn-social-disabled,
+.auth-btn-social:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.auth-btn-social-disabled:hover,
+.auth-btn-social:disabled:hover { background: #000; }
+.auth-social-placeholder-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+.auth-social-placeholder {
+  font-size: 0.8rem;
+  color: var(--auth-muted);
+}
 .auth-btn-apple-icon {
   width: 18px;
   height: 18px;
