@@ -110,25 +110,27 @@ function toLastModifiedHttpDate(lastVisitAt) {
  */
 router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
   const { passTypeId, serialNumber } = req.params;
-  const token = parseApplePassAuth(req);
-  if (!verifyToken(serialNumber, token)) {
-    console.warn("[PassKit] GET pass: 401 Unauthorized — token invalide pour", serialNumber.slice(0, 8) + "... (pass à supprimer et ré-ajouter au Wallet)");
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  const member = getMember(serialNumber);
-  if (!member) {
-    console.warn("[PassKit] GET pass: 404 — membre introuvable serialNumber=", serialNumber.slice(0, 8) + "...");
-    return res.status(404).json({ error: "Pass not found" });
-  }
-  const business = getBusinessById(member.business_id);
-  if (!business) {
-    console.warn("[PassKit] GET pass: 404 — business introuvable business_id=", member.business_id, "pour membre", serialNumber.slice(0, 8) + "...");
-    return res.status(404).json({ error: "Business not found" });
-  }
-
-  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
-  console.log("[PassKit] >>> PASS ENVOYÉ —", serialNumber.slice(0, 8) + "...", "points:", member.points, "Last-Modified:", lastModified);
+  const shortId = serialNumber ? String(serialNumber).slice(0, 8) + "..." : "?";
+  console.log("[PassKit] GET pass: entrée handler serialNumber=", shortId);
   try {
+    const token = parseApplePassAuth(req);
+    if (!verifyToken(serialNumber, token)) {
+      console.log("[PassKit] GET pass: 401 Unauthorized — token invalide pour", shortId);
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const member = getMember(serialNumber);
+    if (!member) {
+      console.log("[PassKit] GET pass: 404 — membre introuvable serialNumber=", shortId);
+      return res.status(404).json({ error: "Pass not found" });
+    }
+    const business = getBusinessById(member.business_id);
+    if (!business) {
+      console.log("[PassKit] GET pass: 404 — business introuvable business_id=", member.business_id, "pour", shortId);
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+    console.log("[PassKit] >>> PASS ENVOYÉ —", shortId, "points:", member.points, "Last-Modified:", lastModified);
     const buffer = await generatePass(member, business, { template: "classic" });
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Content-Disposition", `inline; filename="pass.pkpass"`);
@@ -137,8 +139,8 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
     res.setHeader("Pragma", "no-cache");
     res.send(buffer);
   } catch (err) {
-    console.error("PassKit get pass:", err);
-    return res.status(500).json({ error: "Failed to generate pass" });
+    console.error("[PassKit] GET pass: erreur", err?.message || err);
+    if (!res.headersSent) res.status(500).json({ error: "Failed to generate pass" });
   }
 });
 
