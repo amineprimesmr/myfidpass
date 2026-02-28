@@ -80,15 +80,23 @@ function getProvider() {
     return null;
   }
   try {
+    console.log("[apns] Chargement certificat (cert=%d octets, key=%d octets)...", creds.cert?.length || 0, creds.key?.length || 0);
     providerInstance = new apn.Provider({
       cert: creds.cert,
       key: creds.key,
       passphrase: creds.passphrase,
       production: process.env.NODE_ENV === "production",
     });
+    if (!providerInstance) {
+      providerError =
+        "Le fournisseur APNs a retourné null. Vérifie que SIGNER_CERT_PEM_BASE64 / SIGNER_KEY_PEM_BASE64 contiennent bien le certificat Pass Type ID (Portail Apple > Identifiers > Pass Type ID > Certificate).";
+      providerInstance = null;
+    }
   } catch (err) {
-    console.warn("[apns] Impossible de créer le provider APNs:", err.message);
-    providerError = `APNs : ${err.message || "erreur à l'initialisation"}. Vérifie que le certificat est bien le certificat Pass Type ID (pas un autre certificat Apple).`;
+    const msg = err?.message || String(err);
+    console.warn("[apns] Impossible de créer le provider APNs:", msg);
+    if (err?.stack) console.warn("[apns] Stack:", err.stack);
+    providerError = `APNs : ${msg}. Utilise le certificat Pass Type ID (même que pour signer les passes), pas un certificat APNs app.`;
     providerInstance = null;
   }
   return providerInstance;
