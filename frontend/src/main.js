@@ -2317,8 +2317,6 @@ function initCheckoutPage() {
       }
     };
     document.head.appendChild(script);
-  } else if (appleBtn) {
-    appleBtn.style.display = "none";
   }
 
   // Toujours afficher la section « Ou continuer avec » ; les boutons sont actifs seulement si les client IDs sont configurés (Vercel).
