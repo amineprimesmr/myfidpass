@@ -116,14 +116,18 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
   const member = getMember(serialNumber);
-  if (!member) return res.status(404).json({ error: "Pass not found" });
+  if (!member) {
+    console.warn("[PassKit] GET pass: 404 — membre introuvable serialNumber=", serialNumber.slice(0, 8) + "...");
+    return res.status(404).json({ error: "Pass not found" });
+  }
   const business = getBusinessById(member.business_id);
-  if (!business) return res.status(404).json({ error: "Business not found" });
+  if (!business) {
+    console.warn("[PassKit] GET pass: 404 — business introuvable business_id=", member.business_id, "pour membre", serialNumber.slice(0, 8) + "...");
+    return res.status(404).json({ error: "Business not found" });
+  }
 
   const lastModified = toLastModifiedHttpDate(member.last_visit_at);
-  if (process.env.NODE_ENV === "production") {
-    console.log("[PassKit] >>> PASS ENVOYÉ — serialNumber:", serialNumber.slice(0, 8) + "...", "points:", member.points, "Last-Modified:", lastModified);
-  }
+  console.log("[PassKit] >>> PASS ENVOYÉ —", serialNumber.slice(0, 8) + "...", "points:", member.points, "Last-Modified:", lastModified);
   try {
     const buffer = await generatePass(member, business, { template: "classic" });
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
