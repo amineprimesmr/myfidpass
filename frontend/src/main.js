@@ -2936,13 +2936,27 @@ function showLandingMainInPlace() {
   history.replaceState(null, "", "/");
 }
 
+function updateLandingCtaState() {
+  const input = document.getElementById("landing-etablissement");
+  const btn = document.getElementById("landing-hero-submit");
+  if (input && btn) btn.disabled = !input.value?.trim();
+}
+
 if (landingHeroForm) {
+  const landingEtablissementInput = document.getElementById("landing-etablissement");
+  if (landingEtablissementInput) {
+    landingEtablissementInput.addEventListener("input", updateLandingCtaState);
+    landingEtablissementInput.addEventListener("change", updateLandingCtaState);
+  }
+  updateLandingCtaState();
+
   landingHeroForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const input = document.getElementById("landing-etablissement");
     const placeIdInput = document.getElementById("landing-place-id");
     const name = input?.value?.trim();
     const placeId = placeIdInput?.value?.trim();
+    if (!name) return;
     let qs = "";
     if (name) qs += `?etablissement=${encodeURIComponent(name)}`;
     if (placeId) qs += (qs ? "&" : "?") + `place_id=${encodeURIComponent(placeId)}`;
