@@ -1,6 +1,9 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
+import { OAuth2Client } from "google-auth-library";
+import jwksClient from "jwks-rsa";
 import {
   createUser,
   getUserByEmail,
@@ -12,7 +15,16 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || ""; // Service ID (bundle id) pour vérifier l'audience
 const SALT_ROUNDS = 10;
+
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
+const appleJwks = jwksClient({
+  jwksUri: "https://appleid.apple.com/auth/keys",
+  cache: true,
+  cacheMaxAge: 600000,
+});
 
 /**
  * POST /api/auth/register
@@ -78,6 +90,100 @@ router.post("/login", async (req, res) => {
     token,
     businesses,
   });
+});
+
+/**
+ * POST /api/auth/google
+ * Body: { idToken } ou { credential } (Google renvoie credential)
+ * Vérifie le token Google, crée ou récupère l'utilisateur, retourne le JWT.
+ */
+router.post("/google", async (req, res) => {
+  const idToken = req.body?.idToken || req.body?.credential;
+  if (!idToken || !GOOGLE_CLIENT_ID || !googleClient) {
+    return res.status(400).json({ error: "Connexion Google non configurée ou token manquant" });
+  }
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: String(idToken),
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const email = (payload?.email || "").trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ error: "Email non fourni par Google" });
+    }
+    let user = getUserByEmail(email);
+    if (!user) {
+      const name = [payload?.given_name, payload?.family_name].filter(Boolean).join(" ").trim() || payload?.name || null;
+      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
+      user = createUser({
+        email,
+        passwordHash: oauthPlaceholder,
+        name: name || null,
+      });
+    }
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const businesses = getBusinessesByUserId(user.id);
+    return res.json({
+      user: { id: user.id, email: user.email, name: user.name },
+      token,
+      businesses,
+    });
+  } catch (e) {
+    console.error("Google auth error:", e);
+    return res.status(401).json({ error: "Token Google invalide ou expiré" });
+  }
+});
+
+/**
+ * POST /api/auth/apple
+ * Body: { idToken, name?, email? } — name/email optionnels (première auth Apple peut les envoyer côté client)
+ * Vérifie le token Apple (JWKS), crée ou récupère l'utilisateur, retourne le JWT.
+ */
+router.post("/apple", async (req, res) => {
+  const { idToken: rawToken, name: bodyName, email: bodyEmail } = req.body || {};
+  if (!rawToken || !APPLE_CLIENT_ID) {
+    return res.status(400).json({ error: "Connexion Apple non configurée ou token manquant" });
+  }
+  const idToken = String(rawToken).trim();
+  try {
+    const decoded = jwt.decode(idToken, { complete: true });
+    const kid = decoded?.header?.kid;
+    if (!kid) {
+      return res.status(401).json({ error: "Token Apple invalide" });
+    }
+    const signingKey = await appleJwks.getSigningKey(kid);
+    const publicKey = signingKey.getPublicKey();
+    const verified = jwt.verify(idToken, publicKey, {
+      algorithms: ["RS256"],
+      audience: APPLE_CLIENT_ID,
+      issuer: "https://appleid.apple.com",
+    });
+    const email = (verified.email || bodyEmail || "").trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ error: "Email non fourni par Apple. Réautorisez l'application pour partager votre email." });
+    }
+    let user = getUserByEmail(email);
+    if (!user) {
+      const name = (bodyName || "").trim() || null;
+      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
+      user = createUser({
+        email,
+        passwordHash: oauthPlaceholder,
+        name,
+      });
+    }
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const businesses = getBusinessesByUserId(user.id);
+    return res.json({
+      user: { id: user.id, email: user.email, name: user.name },
+      token,
+      businesses,
+    });
+  } catch (e) {
+    console.error("Apple auth error:", e);
+    return res.status(401).json({ error: "Token Apple invalide ou expiré" });
+  }
 });
 
 /**

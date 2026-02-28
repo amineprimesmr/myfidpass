@@ -387,6 +387,122 @@ function initAuthPage(initialTab) {
       }
     }
   });
+
+  const authGoogleClientId = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_CLIENT_ID : "";
+  const authAppleClientId = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_APPLE_CLIENT_ID : "";
+
+  function authOAuthError(msg) {
+    const errEl = formRegister?.classList.contains("hidden") ? loginError : registerError;
+    if (errEl) {
+      errEl.textContent = msg || "Connexion impossible.";
+      errEl.classList.remove("hidden");
+    }
+  }
+
+  function authOAuthSuccess(data) {
+    if (!data?.token) return;
+    setAuthToken(data.token);
+    const redirect = new URLSearchParams(window.location.search).get("redirect") || "/app";
+    window.location.replace(redirect);
+  }
+
+  if (authGoogleClientId) {
+    const authGoogleWrap = document.getElementById("auth-google-btn");
+    if (authGoogleWrap && !window.__fidpassAuthGoogleInited) {
+      window.__fidpassAuthGoogleInited = true;
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.onload = () => {
+        if (typeof google !== "undefined" && google.accounts?.id) {
+          google.accounts.id.initialize({
+            client_id: authGoogleClientId,
+            callback: (res) => {
+              if (!res?.credential) return;
+              fetch(`${API_BASE}/api/auth/google`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ credential: res.credential }),
+              })
+                .then((r) => r.json())
+                .then((data) => {
+                  if (data.token) authOAuthSuccess(data);
+                  else authOAuthError(data.error || "Erreur Google");
+                })
+                .catch(() => authOAuthError("Erreur réseau"));
+            },
+          });
+          google.accounts.id.renderButton(authGoogleWrap, {
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            text: "continue_with",
+            width: 280,
+            locale: "fr",
+          });
+        }
+      };
+      document.head.appendChild(script);
+    }
+  } else {
+    document.getElementById("auth-google-btn")?.classList?.add("hidden");
+  }
+
+  const authAppleBtn = document.getElementById("auth-apple-btn");
+  if (authAppleClientId && authAppleBtn && !window.__fidpassAuthAppleInited) {
+    window.__fidpassAuthAppleInited = true;
+    const script = document.createElement("script");
+    script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en/appleid.auth.js";
+    script.async = true;
+    script.onload = () => {
+      if (typeof AppleID !== "undefined") {
+        AppleID.auth.init({
+          clientId: authAppleClientId,
+          scope: "name email",
+          usePopup: true,
+          redirectURI: window.location.origin + "/",
+        });
+        authAppleBtn.addEventListener("click", () => {
+          AppleID.auth.signIn().then(
+            (res) => {
+              const idToken = res?.authorization?.id_token;
+              const user = res?.user;
+              if (!idToken) {
+                authOAuthError("Token Apple manquant");
+                return;
+              }
+              fetch(`${API_BASE}/api/auth/apple`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  idToken,
+                  name: user?.name ? [user.name.firstName, user.name.lastName].filter(Boolean).join(" ") : undefined,
+                  email: user?.email,
+                }),
+              })
+                .then((r) => r.json())
+                .then((data) => {
+                  if (data.token) authOAuthSuccess(data);
+                  else authOAuthError(data.error || "Erreur Apple");
+                })
+                .catch(() => authOAuthError("Erreur réseau"));
+            },
+            (err) => authOAuthError(err?.error || "Connexion Apple annulée")
+          );
+        });
+      }
+    };
+    document.head.appendChild(script);
+  } else if (authAppleBtn) {
+    authAppleBtn.style.display = "none";
+  }
+
+  const authSocialDivider = document.querySelector(".auth-social-divider");
+  const authSocialButtons = document.querySelector(".auth-social-buttons");
+  if (!authGoogleClientId && !authAppleClientId) {
+    authSocialDivider?.classList.add("hidden");
+    authSocialButtons?.classList.add("hidden");
+  }
 }
 
 function initAppPage() {
@@ -2094,6 +2210,118 @@ function initCheckoutPage() {
   emailInput?.addEventListener("input", setEmailValidationState);
   emailInput?.addEventListener("blur", setEmailValidationState);
   setEmailValidationState();
+
+  const googleClientId = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_CLIENT_ID : "";
+  const appleClientId = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_APPLE_CLIENT_ID : "";
+
+  function handleOAuthSuccess(data) {
+    if (data?.token) {
+      setAuthToken(data.token);
+      showStep(3);
+      if (isMobile()) setMobileStep(3);
+      if (paymentBtn) paymentBtn.focus();
+    }
+  }
+
+  function handleOAuthError(msg) {
+    showError(msg || "Connexion impossible. Réessayez.");
+  }
+
+  if (googleClientId) {
+    const googleBtnContainer = document.getElementById("checkout-google-btn");
+    if (googleBtnContainer && !window.__fidpassGoogleInited) {
+      window.__fidpassGoogleInited = true;
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.onload = () => {
+        if (typeof google !== "undefined" && google.accounts?.id) {
+          google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: (res) => {
+              if (!res?.credential) return;
+              fetch(`${API_BASE}/api/auth/google`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ credential: res.credential }),
+              })
+                .then((r) => r.json())
+                .then((data) => {
+                  if (data.token) handleOAuthSuccess(data);
+                  else handleOAuthError(data.error || "Erreur Google");
+                })
+                .catch(() => handleOAuthError("Erreur réseau"));
+            },
+          });
+          google.accounts.id.renderButton(googleBtnContainer, {
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            text: "continue_with",
+            width: 280,
+            locale: "fr",
+          });
+        }
+      };
+      document.head.appendChild(script);
+    }
+  }
+
+  const appleBtn = document.getElementById("checkout-apple-btn");
+  if (appleClientId && appleBtn && !window.__fidpassAppleInited) {
+    window.__fidpassAppleInited = true;
+    const script = document.createElement("script");
+    script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en/appleid.auth.js";
+    script.async = true;
+    script.onload = () => {
+      if (typeof AppleID !== "undefined") {
+        AppleID.auth.init({
+          clientId: appleClientId,
+          scope: "name email",
+          usePopup: true,
+          redirectURI: typeof window !== "undefined" ? window.location.origin + "/" : "",
+        });
+        appleBtn.addEventListener("click", () => {
+          AppleID.auth.signIn().then(
+            (res) => {
+              const idToken = res?.authorization?.id_token;
+              const user = res?.user;
+              if (!idToken) {
+                handleOAuthError("Token Apple manquant");
+                return;
+              }
+              fetch(`${API_BASE}/api/auth/apple`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  idToken,
+                  name: user?.name ? [user.name.firstName, user.name.lastName].filter(Boolean).join(" ") : undefined,
+                  email: user?.email,
+                }),
+              })
+                .then((r) => r.json())
+                .then((data) => {
+                  if (data.token) handleOAuthSuccess(data);
+                  else handleOAuthError(data.error || "Erreur Apple");
+                })
+                .catch(() => handleOAuthError("Erreur réseau"));
+            },
+            (err) => handleOAuthError(err?.error || "Connexion Apple annulée")
+          );
+        });
+      }
+    };
+    document.head.appendChild(script);
+  } else if (appleBtn) {
+    appleBtn.style.display = "none";
+  }
+
+  const socialDivider = document.querySelector(".checkout-social-divider");
+  const socialButtons = document.querySelector(".checkout-social-buttons");
+  if (!googleClientId && !appleClientId) {
+    socialDivider?.classList.add("hidden");
+    socialButtons?.classList.add("hidden");
+  }
 
   function showStep(stepNum) {
     [step1, step2, step3].forEach((el, i) => {
