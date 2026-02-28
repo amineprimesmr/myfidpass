@@ -18,6 +18,7 @@ import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
 import webPushRouter from "./routes/web-push.js";
 import { generatePass } from "./pass.js";
+import { logApnsStatus } from "./apns.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -115,6 +116,7 @@ function startServer(port) {
     } catch (e) {
       console.warn("  [PassKit] Diagnostic démarrage:", e.message);
     }
+    logApnsStatus();
   });
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {

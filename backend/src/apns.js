@@ -124,6 +124,19 @@ export function sendPassKitUpdate(deviceToken) {
   );
 }
 
+/**
+ * À appeler au démarrage pour vérifier si APNs est utilisable. Log le résultat.
+ */
+export function logApnsStatus() {
+  const prov = getProvider();
+  if (prov) {
+    console.log("[apns] Au démarrage: APNs prêt (certificat + PASS_TYPE_ID OK).");
+    return;
+  }
+  const reason = getApnsUnavailableReason();
+  console.warn("[apns] Au démarrage: APNs non disponible —", reason || "inconnu");
+}
+
 /** Ferme la connexion APNs (à appeler au shutdown si besoin). */
 export function shutdownApns() {
   if (providerInstance) {
