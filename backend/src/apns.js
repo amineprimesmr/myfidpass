@@ -44,16 +44,38 @@ function loadSignerCertAndKey() {
 }
 
 let providerInstance = null;
+let providerError = null; // raison si getProvider() a échoué
+
+/**
+ * Retourne la raison pour laquelle APNs n'est pas disponible (pour message d'erreur utilisateur).
+ */
+export function getApnsUnavailableReason() {
+  if (providerInstance) return null;
+  if (providerError) return providerError;
+  if (!process.env.PASS_TYPE_ID?.trim()) {
+    return "PASS_TYPE_ID manquant. Ajoute-le dans les variables d'environnement Railway (ex. pass.com.tonentreprise.fidelity).";
+  }
+  const creds = loadSignerCertAndKey();
+  if (!creds) {
+    return "Certificat signataire Apple manquant. Les notifications Wallet utilisent le même certificat que la signature des passes. Sur Railway, définis SIGNER_CERT_PEM_BASE64 et SIGNER_KEY_PEM_BASE64 (contenu base64 de signerCert.pem et signerKey.pem). Voir docs/APPLE-WALLET-SETUP.md.";
+  }
+  return "APNs non configuré (erreur à l'initialisation).";
+}
 
 function getProvider() {
   if (providerInstance !== undefined) return providerInstance;
+  providerError = null;
   const passTypeId = process.env.PASS_TYPE_ID;
   if (!passTypeId) {
+    providerError =
+      "PASS_TYPE_ID manquant. Ajoute-le dans les variables d'environnement Railway (ex. pass.com.tonentreprise.fidelity).";
     providerInstance = null;
     return null;
   }
   const creds = loadSignerCertAndKey();
   if (!creds) {
+    providerError =
+      "Certificat signataire Apple manquant. Les notifications Wallet utilisent le même certificat que la signature des passes. Sur Railway, définis SIGNER_CERT_PEM_BASE64 et SIGNER_KEY_PEM_BASE64 (contenu base64 de signerCert.pem et signerKey.pem). Voir docs/APPLE-WALLET-SETUP.md.";
     providerInstance = null;
     return null;
   }
@@ -66,6 +88,7 @@ function getProvider() {
     });
   } catch (err) {
     console.warn("[apns] Impossible de créer le provider APNs:", err.message);
+    providerError = `APNs : ${err.message || "erreur à l'initialisation"}. Vérifie que le certificat est bien le certificat Pass Type ID (pas un autre certificat Apple).`;
     providerInstance = null;
   }
   return providerInstance;
@@ -79,7 +102,10 @@ function getProvider() {
  */
 export function sendPassKitUpdate(deviceToken) {
   const prov = getProvider();
-  if (!prov) return Promise.resolve({ sent: false, error: "APNs non configuré" });
+  if (!prov) {
+    const reason = getApnsUnavailableReason();
+    return Promise.resolve({ sent: false, error: reason || "APNs non configuré" });
+  }
   const passTypeId = process.env.PASS_TYPE_ID;
   if (!passTypeId) return Promise.resolve({ sent: false, error: "PASS_TYPE_ID manquant" });
   const note = new apn.Notification();

@@ -109,6 +109,10 @@ En production, les fichiers `.pem` ne sont pas dans le repo (`.gitignore`). Tu p
 
 ---
 
+### 5.2 Notifications push (APNs)
+
+Les notifications push Wallet utilisent **le même certificat** que la signature des passes. Si tu vois « APNs non configuré » : vérifie que `PASS_TYPE_ID`, `SIGNER_CERT_PEM_BASE64` et `SIGNER_KEY_PEM_BASE64` sont bien définis sur Railway.
+
 ## 6. Variables d’environnement (`backend/.env`)
 
 ```env
