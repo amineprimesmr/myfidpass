@@ -22,6 +22,7 @@ import {
   removeTestPassKitDevices,
   logNotification,
   setLastBroadcastMessage,
+  touchMemberLastVisit,
   ensureDefaultBusiness,
   canCreateBusiness,
 } from "../db.js";
@@ -217,9 +218,16 @@ router.post("/:slug/notifications/send", async (req, res) => {
     });
   }
   const payload = { title: (title || business.organization_name || "Fidpass").trim(), body };
-  // Mettre à jour le champ "Actualité" du pass pour que la notif Wallet s'affiche (Apple n'affiche que si un champ avec changeMessage change)
   const broadcastText = payload.title ? `${payload.title}: ${body}` : body;
   setLastBroadcastMessage(business.id, broadcastText);
+  // Montage : même flux que l’ajout de points — toucher last_visit_at de chaque membre Wallet pour que le pass soit « modifié » et que l’iPhone refetch + affiche la notif
+  const touchedMembers = new Set();
+  for (const row of passKitTokens) {
+    if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+      touchMemberLastVisit(row.serial_number);
+      touchedMembers.add(row.serial_number);
+    }
+  }
   let sentWebPush = 0;
   let sentPassKit = 0;
   const errors = [];

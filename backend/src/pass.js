@@ -271,9 +271,9 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  // Champ "Actualité" : en auxiliaire (face avant) pour que la notif écran de verrouillage s'affiche quand on envoie depuis la section Notifications
+  // Actualité en PRIMARY (comme Points) pour que la notif écran de verrouillage s’affiche — même mécanisme que l’ajout de points
   const lastBroadcast = (business?.last_broadcast_message || options?.lastMessage || "").trim() || "—";
-  pass.auxiliaryFields.push({ key: "news", label: "Actualité", value: lastBroadcast, changeMessage: "%@" });
+  pass.primaryFields.push({ key: "news", label: "Actualité", value: lastBroadcast, changeMessage: "%@" });
 
   // QR code uniquement (pas PDF417 ni Code128) — plus simple à scanner en caisse
   const barcodePayload = {

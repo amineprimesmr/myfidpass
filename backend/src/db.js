@@ -314,6 +314,12 @@ export function addPoints(id, points) {
   return getMember(id);
 }
 
+/** Met à jour last_visit_at sans toucher aux points. Utilisé quand on envoie une notif depuis la section Notifications : comme pour l’ajout de points, le pass doit être « modifié » pour que l’iPhone refetch et affiche la notif. */
+export function touchMemberLastVisit(memberId) {
+  if (!memberId) return;
+  db.prepare("UPDATE members SET last_visit_at = datetime('now') WHERE id = ?").run(memberId);
+}
+
 export function getBusinessByDashboardToken(token) {
   if (!token) return null;
   const row = db.prepare("SELECT * FROM businesses WHERE dashboard_token = ?").get(token);
