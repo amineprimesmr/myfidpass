@@ -148,10 +148,6 @@
               <h2 class="checkout-step-title">1. CRÉATION DE COMPTE</h2>
               <p class="checkout-step-subtitle">Saisissez votre adresse e-mail pour continuer.</p>
               <div class="checkout-step-content">
-                <label for="checkout-email" class="checkout-label">Adresse e-mail</label>
-                <input type="email" id="checkout-email" class="checkout-input" placeholder="vous@exemple.fr" autocomplete="email" />
-                <p id="checkout-email-error" class="checkout-field-error hidden" role="alert"></p>
-                <button type="button" id="checkout-next-1" class="checkout-btn-next" disabled>SUIVANT</button>
                 <p class="checkout-social-divider">Ou continuer avec</p>
                 <div class="checkout-social-buttons">
                   <div id="checkout-google-btn" class="checkout-social-btn-wrap"></div>
@@ -160,6 +156,11 @@
                     Apple
                   </button>
                 </div>
+                <p class="checkout-email-divider">Ou avec votre e-mail</p>
+                <label for="checkout-email" class="checkout-label">Adresse e-mail</label>
+                <input type="email" id="checkout-email" class="checkout-input" placeholder="vous@exemple.fr" autocomplete="email" />
+                <p id="checkout-email-error" class="checkout-field-error hidden" role="alert"></p>
+                <button type="button" id="checkout-next-1" class="checkout-btn-next" disabled>SUIVANT</button>
               </div>
             </section>
             <section class="checkout-step" id="checkout-step-2" data-step="2">

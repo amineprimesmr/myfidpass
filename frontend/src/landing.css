@@ -2758,6 +2758,12 @@ body.page-checkout .site-banner { display: none !important; }
   font-size: 0.8rem;
   color: #666;
   text-align: center;
+  margin: 0 0 0.75rem;
+}
+.checkout-email-divider {
+  font-size: 0.8rem;
+  color: #666;
+  text-align: center;
   margin: 1.25rem 0 0.75rem;
 }
 .checkout-social-divider.hidden,
