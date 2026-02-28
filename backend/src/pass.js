@@ -36,12 +36,12 @@ function hexToRgb(hex) {
   return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
 }
 
-/** Génère un strip PNG 750x288 (bannière du pass Wallet) avec dégradé aux couleurs du template. */
+/** Génère un strip PNG 750x246 (bannière du pass Wallet). Dimensions officielles Apple @2x — éviter 750x288 qui provoquait une bande noire. */
 function createStripBuffer(templateKey) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
   const base = hexToRgb(colors.backgroundColor);
   const w = 750;
-  const h = 288;
+  const h = 246;
   const png = new PNG({ width: w, height: h });
   png.data = Buffer.alloc(w * h * 4);
   for (let y = 0; y < h; y++) {

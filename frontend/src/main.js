@@ -1805,7 +1805,7 @@ function initBuilderPage() {
   const cartBadge = document.getElementById("builder-header-cart-badge");
   if (cartBadge) cartBadge.textContent = "1";
 
-  const state = { selectedTemplateId: "fastfood-points" };
+  const state = { selectedTemplateId: "fastfood-tampons" };
   const headerSteps = document.querySelectorAll(".builder-header-step");
 
   setBuilderHeaderStep(2);
