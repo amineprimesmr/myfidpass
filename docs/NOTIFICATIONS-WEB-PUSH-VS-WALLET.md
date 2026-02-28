@@ -8,7 +8,9 @@ D’après la [doc PassKit](https://help.passkit.com/en/articles/4097979-updatin
 - Le champ concerné doit avoir un **`changeMessage`** contenant le placeholder **`%@`**. Apple remplace `%@` par la nouvelle valeur (ex. *« Tu as maintenant 50 points ! »*).
 - **Sans `%@`** dans le message, le pass se met à jour mais **aucune notification** n’est affichée sur l’écran de verrouillage.
 
-Dans Fidpass, les champs **Points** et **Tampons** ont maintenant un `changeMessage` avec `%@`. Quand tu envoies une notification (et que le pass est mis à jour côté serveur), l’iPhone récupère le nouveau pass et Apple affiche ce message. Pour qu’un **message personnalisé** (ex. « Aujourd’hui les points valent double ! ») s’affiche de la même façon, il faudrait mettre à jour un champ du pass avec ce texte et avoir un `changeMessage` avec `%@` sur ce champ.
+Dans Fidpass, les champs **Points** et **Tampons** ont maintenant un `changeMessage` avec `%@`. Quand tu **ajoutes des points** au client (Scanner ou Membres), le serveur envoie une push APNs ; l’iPhone récupère le pass à jour et Apple peut afficher « Tu as maintenant X points ! ».
+
+**Si le client ne reçoit aucune notif sur l’iPhone :** vérifier **Réglages → Notifications → Portefeuille** (Wallet) : les notifications doivent être autorisées. Vérifier aussi que le téléphone n’est pas en mode Ne pas déranger et que les mises à jour du pass sont activées pour la carte.
 
 ---
 

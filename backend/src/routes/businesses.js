@@ -435,9 +435,12 @@ router.post("/:slug/integration/scan", (req, res) => {
     metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit, source: "integration" } : { source: "integration" },
   });
   const tokens = getPushTokensForMember(member.id);
-  tokens.forEach((token) => {
-    sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après scan:", err?.message));
-  });
+  if (tokens.length > 0) {
+    console.log("[PassKit] Après scan: envoi push à", tokens.length, "appareil(s) pour membre", member.id.slice(0, 8) + "...");
+    tokens.forEach((token) => {
+      sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après scan:", err?.message));
+    });
+  }
   res.json({
     member: {
       id: updated.id,
@@ -596,9 +599,12 @@ router.post("/:slug/members/:memberId/points", (req, res) => {
     metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit } : undefined,
   });
   const tokens = getPushTokensForMember(member.id);
-  tokens.forEach((token) => {
-    sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après points:", err?.message));
-  });
+  if (tokens.length > 0) {
+    console.log("[PassKit] Après points: envoi push à", tokens.length, "appareil(s) pour membre", member.id.slice(0, 8) + "...");
+    tokens.forEach((token) => {
+      sendPassKitUpdate(token).catch((err) => console.warn("[PassKit] Push après points:", err?.message));
+    });
+  }
   res.json({ id: updated.id, points: updated.points });
 });
 
