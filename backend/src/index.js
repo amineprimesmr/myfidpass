@@ -69,6 +69,10 @@ app.use(express.json({ limit: "8mb" }));
 // Parse JWT si présent (Authorization: Bearer) pour toutes les routes
 app.use(optionalAuth);
 
+// PassKit en premier à la racine : Apple envoie GET /v1/passes/... et certains proxies laissent le chemin complet
+// → le routeur doit recevoir toutes les requêtes pour matcher /v1/passes/... et /api/v1/passes/...
+app.use(passkitWebserviceRouter);
+
 app.use("/api/auth", authRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
@@ -78,9 +82,6 @@ app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
 app.use("/api/passes", passesRouter);
 app.use("/passes", passesRouter);
-app.use("/api/v1", passkitWebserviceRouter);
-// Railway / proxy peut envoyer GET /v1/passes/... (sans /api) → même routeur PassKit
-app.use("/v1", passkitWebserviceRouter);
 
 app.get("/api/passes/demo", handlePassDemo);
 app.get("/passes/demo", handlePassDemo);
