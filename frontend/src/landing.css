@@ -2753,6 +2753,7 @@ body.page-checkout .site-banner { display: none !important; }
 .checkout-recap-edit-link:hover { text-decoration: underline; }
 .checkout-step-subtitle { font-size: 0.9rem; color: #555; margin: 0 0 1rem; font-weight: 400; }
 .checkout-field-error { font-size: 0.85rem; color: #b91c1c; margin: 0.35rem 0 0; }
+.checkout-oauth-error { margin-bottom: 0.75rem; }
 .checkout-field-error:not(.hidden) + .checkout-btn-next { margin-top: 0.5rem; }
 .checkout-social-divider {
   font-size: 0.8rem;

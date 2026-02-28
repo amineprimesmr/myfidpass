@@ -2193,10 +2193,22 @@ function initCheckoutPage() {
   const paymentBtn = document.getElementById("checkout-payment");
   const errorEl = document.getElementById("checkout-error");
   const emailErrorEl = document.getElementById("checkout-email-error");
+  const oauthErrorEl = document.getElementById("checkout-oauth-error");
   const mobileContinueBtn = document.getElementById("checkout-mobile-continue");
   const mobileBackLink = document.getElementById("checkout-mobile-back");
 
   const isMobile = () => window.matchMedia("(max-width: 899px)").matches;
+
+  function showOAuthError(msg) {
+    if (oauthErrorEl) {
+      oauthErrorEl.textContent = msg || "";
+      oauthErrorEl.classList.toggle("hidden", !msg);
+    }
+    if (errorEl) {
+      errorEl.textContent = msg || "";
+      errorEl.classList.toggle("hidden", !msg);
+    }
+  }
 
   function setEmailValidationState() {
     const email = emailInput?.value?.trim() || "";
@@ -2220,16 +2232,17 @@ function initCheckoutPage() {
   const appleClientId = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_APPLE_CLIENT_ID : "";
 
   function handleOAuthSuccess(data) {
-    if (data?.token) {
-      setAuthToken(data.token);
-      showStep(3);
-      if (isMobile()) setMobileStep(3);
-      if (paymentBtn) paymentBtn.focus();
-    }
+    if (!data?.token) return;
+    showOAuthError("");
+    setAuthToken(data.token);
+    showStep(3);
+    if (isMobile()) setMobileStep(3);
+    step3?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (paymentBtn) paymentBtn.focus();
   }
 
   function handleOAuthError(msg) {
-    showError(msg || "Connexion impossible. Réessayez.");
+    showOAuthError(msg || "Connexion impossible. Réessayez.");
   }
 
   if (googleClientId) {
@@ -2245,17 +2258,23 @@ function initCheckoutPage() {
             client_id: googleClientId,
             callback: (res) => {
               if (!res?.credential) return;
+              showOAuthError("");
               fetch(`${API_BASE}/api/auth/google`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ credential: res.credential }),
               })
-                .then((r) => r.json())
-                .then((data) => {
-                  if (data.token) handleOAuthSuccess(data);
-                  else handleOAuthError(data.error || "Erreur Google");
+                .then((r) => {
+                  return r.json().then((data) => ({ ok: r.ok, status: r.status, data }));
                 })
-                .catch(() => handleOAuthError("Erreur réseau"));
+                .then(({ ok, data }) => {
+                  if (ok && data?.token) {
+                    handleOAuthSuccess(data);
+                  } else {
+                    handleOAuthError(data?.error || "Erreur lors de la connexion Google. Réessayez.");
+                  }
+                })
+                .catch(() => handleOAuthError("Erreur réseau ou API inaccessible. Vérifiez que le backend est en ligne."));
             },
           });
           google.accounts.id.renderButton(googleBtnContainer, {
@@ -2287,6 +2306,7 @@ function initCheckoutPage() {
           redirectURI: typeof window !== "undefined" ? window.location.origin + "/" : "",
         });
         appleBtn.addEventListener("click", () => {
+          showOAuthError("");
           AppleID.auth.signIn().then(
             (res) => {
               const idToken = res?.authorization?.id_token;
@@ -2304,12 +2324,12 @@ function initCheckoutPage() {
                   email: user?.email,
                 }),
               })
-                .then((r) => r.json())
-                .then((data) => {
-                  if (data.token) handleOAuthSuccess(data);
-                  else handleOAuthError(data.error || "Erreur Apple");
+                .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                  if (ok && data?.token) handleOAuthSuccess(data);
+                  else handleOAuthError(data?.error || "Erreur lors de la connexion Apple. Réessayez.");
                 })
-                .catch(() => handleOAuthError("Erreur réseau"));
+                .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."));
             },
             (err) => handleOAuthError(err?.error || "Connexion Apple annulée")
           );
