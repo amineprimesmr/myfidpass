@@ -69,8 +69,38 @@ app.use(express.json({ limit: "8mb" }));
 // Parse JWT si présent (Authorization: Bearer) pour toutes les routes
 app.use(optionalAuth);
 
+// Routes de diagnostic AVANT PassKit pour être sûrs qu’elles répondent (PassKit est monté en premier et reçoit tout)
+app.get("/health", (req, res) => res.json({ ok: true }));
+app.get("/api/health/db", (req, res) => {
+  res.json({
+    DATA_DIR: process.env.DATA_DIR ?? "(non défini, défaut backend/data)",
+    dataDirResolved: DATA_DIR_PATH,
+    dbPath: DB_FILE_PATH,
+    dbExists: existsSync(DB_FILE_PATH),
+    hint: "Sur Railway, le volume doit être monté exactement au chemin /data et DATA_DIR=/data.",
+  });
+});
+app.get("/api/health/passkit", (req, res) => {
+  try {
+    const passRegCount = getPassRegistrationsTotalCount();
+    const dbExists = existsSync(DB_FILE_PATH);
+    res.json({
+      ok: true,
+      DATA_DIR: process.env.DATA_DIR ?? "(non défini)",
+      dbPath: DB_FILE_PATH,
+      dbExists,
+      passRegistrationsCount: passRegCount,
+      message: passRegCount === 0
+        ? "Aucun appareil enregistré. Soit l'iPhone n'a jamais appelé POST /api/v1/devices/..., soit le volume n'est pas persistant (redémarrage = données perdues). Vérifier Railway : volume monté sur /data + variable DATA_DIR=/data."
+        : `${passRegCount} appareil(s) enregistré(s). Les push devraient partir.`,
+      testRegistration: "Pour tester l'API d'enregistrement : utilise la commande curl affichée sur myfidpass.fr/app#notifications. Si tu obtiens HTTP 201, l'API fonctionne.",
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // PassKit en premier à la racine : Apple envoie GET /v1/passes/... et certains proxies laissent le chemin complet
-// → le routeur doit recevoir toutes les requêtes pour matcher /v1/passes/... et /api/v1/passes/...
 app.use(passkitWebserviceRouter);
 
 app.use("/api/auth", authRouter);
@@ -86,41 +116,6 @@ app.use("/passes", passesRouter);
 app.get("/api/passes/demo", handlePassDemo);
 app.get("/passes/demo", handlePassDemo);
 
-app.get("/health", (req, res) => {
-  res.json({ ok: true });
-});
-
-/** Diagnostic : vérifie que DATA_DIR et la base sont bien utilisés (volume persistant). */
-app.get("/api/health/db", (req, res) => {
-  res.json({
-    DATA_DIR: process.env.DATA_DIR ?? "(non défini, défaut backend/data)",
-    dataDirResolved: DATA_DIR_PATH,
-    dbPath: DB_FILE_PATH,
-    dbExists: existsSync(DB_FILE_PATH),
-    hint: "Sur Railway, le volume doit être monté exactement au chemin /data et DATA_DIR=/data.",
-  });
-});
-
-/** Diagnostic PassKit en un coup : persistence + nombre d’appareils enregistrés. Réponse à ouvrir dans le navigateur pour savoir où ça bloque. */
-app.get("/api/health/passkit", (req, res) => {
-  try {
-    const passRegCount = getPassRegistrationsTotalCount();
-    const dbExists = existsSync(DB_FILE_PATH);
-    res.json({
-      ok: true,
-      DATA_DIR: process.env.DATA_DIR ?? "(non défini)",
-      dbPath: DB_FILE_PATH,
-      dbExists,
-      passRegistrationsCount: passRegCount,
-      message: passRegCount === 0
-        ? "Aucun appareil enregistré. Soit l’iPhone n’a jamais appelé POST /api/v1/devices/..., soit le volume n’est pas persistant (redémarrage = données perdues). Vérifier Railway : volume monté sur /data + variable DATA_DIR=/data."
-        : `${passRegCount} appareil(s) enregistré(s). Les push devraient partir.`,
-      testRegistration: "Pour tester l’API d’enregistrement : utilise la commande curl affichée sur myfidpass.fr/app#notifications. Si tu obtiens HTTP 201, l’API fonctionne.",
-    });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
 
 function startServer(port) {
   const p = Number(port) || 3001;
