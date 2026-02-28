@@ -1256,12 +1256,14 @@ function initAppDashboard(slug) {
         }
         return;
       }
+      const added = data.points_added ?? data.points;
+      const total = data.points;
       if (scannerResultMessage) {
-        scannerResultMessage.textContent = `${data.points} point(s) ajouté(s). Total : ${data.points} pts.`;
+        scannerResultMessage.textContent = `${added} point(s) ajouté(s). Total : ${total} pts.`;
         scannerResultMessage.classList.remove("hidden");
       }
-      if (scannerResultPoints) scannerResultPoints.textContent = `${data.points} point(s)`;
-      scannerCurrentMember = scannerCurrentMember ? { ...scannerCurrentMember, points: data.points } : null;
+      if (scannerResultPoints) scannerResultPoints.textContent = `${total} point(s)`;
+      scannerCurrentMember = scannerCurrentMember ? { ...scannerCurrentMember, points: total } : null;
       await refresh();
     } catch (_) {
       if (scannerResultMessage) {
@@ -1498,7 +1500,9 @@ function initAppDashboard(slug) {
         addPointsBtn.disabled = false;
         return;
       }
-      showCaisseMessage(`${data.points} point(s) ajouté(s). Total : ${data.points} pts.`);
+      const added = data.points_added ?? data.points;
+      const total = data.points;
+      showCaisseMessage(`${added} point(s) ajouté(s). Total : ${total} pts.`);
       const addedMember = allMembers.find((m) => m.id === selectedMemberId) || { id: selectedMemberId, name: memberSearchInput?.value || "Client" };
       addToCaisseRecent(addedMember);
       if (amountInput) amountInput.value = "";
@@ -2408,7 +2412,9 @@ function initDashboardPage() {
         addPointsBtn.disabled = false;
         return;
       }
-      showCaisseMessage(`${data.points} point(s) ajouté(s). Total : ${data.points} pts.`);
+      const added = data.points_added ?? data.points;
+      const total = data.points;
+      showCaisseMessage(`${added} point(s) ajouté(s). Total : ${total} pts.`);
       amountInput.value = "";
       selectedMemberId = null;
       memberSearchInput.value = "";

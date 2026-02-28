@@ -152,6 +152,7 @@ Si le pass est rejeté (« invalid »), vérifie :
 Si tu ajoutes des points dans l’app mais que la carte dans le Wallet ne se met pas à jour :
 
 1. **Vérifier les logs Railway** après un ajout de points :
+   - **`[PassKit] Aucun appareil enregistré pour ce membre — pas de push après points.`** : l’iPhone n’a jamais enregistré cette carte auprès du serveur (pas de `pushToken`). Le client doit **supprimer la carte du Wallet**, rouvrir le **lien de partage** (depuis « Partager » sur myfidpass.fr), cliquer « Apple Wallet » et **ré-ajouter la carte**. Vérifier que `PASSKIT_WEB_SERVICE_URL` (ou `API_URL`) est bien défini sur Railway. Tester en 4G si le Wi‑Fi bloque les appels.
    - Si tu vois **`[PassKit] GET pass: 401 Unauthorized — token invalide`** : le pass dans le Wallet a été généré avec un autre `PASSKIT_SECRET` (ou l’ancien secret). **Supprime la carte du Wallet sur l’iPhone, ré-ajoute-la** (scan du QR ou lien « Ajouter à Apple Wallet »), puis réessaie d’ajouter des points. Ne change pas `PASSKIT_SECRET` une fois que des clients ont déjà ajouté la carte.
    - Si tu vois **`[PassKit] >>> PASS ENVOYÉ — ... points: X`** avec le **bon** nombre de points : le serveur envoie bien le pass à jour. Si la carte n’affiche toujours pas les points, ouvre la carte dans Wallet, tire pour rafraîchir, ou supprime/ ré-ajoute la carte une fois.
 

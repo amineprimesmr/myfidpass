@@ -617,7 +617,11 @@ router.post("/:slug/members/:memberId/points", async (req, res) => {
   } else {
     console.log("[PassKit] Aucun appareil enregistré pour ce membre — pas de push après points.");
   }
-  res.json({ id: updated.id, points: updated.points });
+  res.json({
+    id: updated.id,
+    points: updated.points,
+    points_added: points,
+  });
 });
 
 /**

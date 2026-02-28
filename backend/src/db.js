@@ -439,9 +439,19 @@ export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber);
 }
 
+/** Parse une date SQLite ou ISO en timestamp (ms) pour comparaison fiable. */
+function parsePassUpdatedAt(str) {
+  if (!str || typeof str !== "string") return 0;
+  const s = str.trim();
+  const iso = s.replace(" ", "T").replace(/Z?$/, "Z");
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? 0 : t;
+}
+
 /**
  * Liste des serial numbers (passes) mis à jour pour un device — pour GET /v1/devices/:deviceId/registrations/:passTypeId.
  * Si passesUpdatedSince est fourni, ne retourne que les passes dont last_visit_at > passesUpdatedSince.
+ * Comparaison en timestamp pour éviter les erreurs de format (SQLite vs ISO envoyé par Apple).
  * @returns { { serialNumbers: string[], lastUpdated: string } }
  */
 export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
@@ -452,14 +462,22 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
      WHERE pr.device_library_identifier = ? AND pr.pass_type_identifier = ?`
   ).all(deviceId, passTypeId);
   let list = base;
-  if (passesUpdatedSince) {
-    list = base.filter((r) => r.last_visit_at && r.last_visit_at > passesUpdatedSince);
+  if (passesUpdatedSince && String(passesUpdatedSince).trim()) {
+    const sinceTs = parsePassUpdatedAt(String(passesUpdatedSince));
+    list = base.filter((r) => {
+      const ts = parsePassUpdatedAt(r.last_visit_at);
+      return ts > sinceTs;
+    });
   }
   const serialNumbers = list.map((r) => r.serial_number);
-  const lastUpdated =
-    list.length > 0
-      ? list.reduce((max, r) => (r.last_visit_at && r.last_visit_at > max ? r.last_visit_at : max), list[0].last_visit_at || "")
-      : new Date().toISOString().replace("T", " ").slice(0, 19);
+  let lastUpdated = new Date().toISOString().replace("T", " ").slice(0, 19);
+  if (list.length > 0) {
+    const withDate = list.filter((r) => r.last_visit_at).map((r) => ({ ...r, ts: parsePassUpdatedAt(r.last_visit_at) }));
+    if (withDate.length > 0) {
+      const maxRow = withDate.reduce((a, b) => (a.ts >= b.ts ? a : b));
+      lastUpdated = maxRow.last_visit_at;
+    }
+  }
   return { serialNumbers, lastUpdated };
 }
 
