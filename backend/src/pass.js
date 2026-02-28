@@ -16,16 +16,31 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const assetsDir = join(__dirname, "..", "assets");
 const certsDir = join(__dirname, "..", "certs");
 
-/** Génère une icône PNG 29x29 grise (requise par Apple pour que le pass soit valide sur iPhone). */
-function createDefaultIconBuffer() {
+/** Génère une icône PNG 29x29 (requise par Apple). Couleur grise par défaut, ou couleur du template (labelColor) pour un rendu plus pro. */
+function createDefaultIconBuffer(templateKey) {
   const size = 29;
+  const colors = templateKey && PASS_TEMPLATES[templateKey] ? hexToRgb(PASS_TEMPLATES[templateKey].labelColor) : { r: 0x6b, g: 0x6b, b: 0x6b };
   const png = new PNG({ width: size, height: size });
   png.data = Buffer.alloc(size * size * 4);
-  for (let i = 0; i < png.data.length; i += 4) {
-    png.data[i] = 0x6b;
-    png.data[i + 1] = 0x6b;
-    png.data[i + 2] = 0x6b;
-    png.data[i + 3] = 255;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - 2;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const d = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+      const i = (y * size + x) * 4;
+      if (d <= r) {
+        png.data[i] = colors.r;
+        png.data[i + 1] = colors.g;
+        png.data[i + 2] = colors.b;
+        png.data[i + 3] = 255;
+      } else {
+        png.data[i] = 0;
+        png.data[i + 1] = 0;
+        png.data[i + 2] = 0;
+        png.data[i + 3] = 0;
+      }
+    }
   }
   return PNG.sync.write(png);
 }
@@ -36,7 +51,7 @@ function hexToRgb(hex) {
   return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
 }
 
-/** Génère un strip PNG 750x246 (bannière du pass Wallet). Dimensions officielles Apple @2x — éviter 750x288 qui provoquait une bande noire. */
+/** Génère un strip PNG 750x246 (bannière du pass Wallet). Dégradé deux tons + reflet discret pour un rendu pro. */
 function createStripBuffer(templateKey) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
   const base = hexToRgb(colors.backgroundColor);
@@ -46,7 +61,12 @@ function createStripBuffer(templateKey) {
   png.data = Buffer.alloc(w * h * 4);
   for (let y = 0; y < h; y++) {
     const t = y / h;
-    const lighten = 1 - t * 0.35;
+    // Dégradé vertical : sombre en haut (0.75) → vif au centre → légèrement plus clair en bas (1.05)
+    let lighten = 0.75 + t * 0.55;
+    if (t > 0.5) lighten = 1.05 - (t - 0.5) * 0.2;
+    // Reflet discret vers 20 % du haut : bande plus claire
+    const shine = Math.exp(-((t - 0.2) ** 2) / 0.08) * 0.22;
+    lighten = Math.min(1, lighten + shine);
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4;
       png.data[i] = Math.round(Math.min(255, base.r * lighten));
@@ -133,7 +153,7 @@ function buildBuffers(businessId, options = {}) {
   }
 
   if (!buffers["icon.png"]) {
-    buffers["icon.png"] = createDefaultIconBuffer();
+    buffers["icon.png"] = createDefaultIconBuffer(options.template);
   }
   if (!buffers["logo.png"] && buffers["icon.png"]) {
     buffers["logo.png"] = buffers["icon.png"];
