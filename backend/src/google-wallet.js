@@ -50,7 +50,7 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin) {
 
   const loyaltyClass = {
     id: classId,
-    issuerName: "Fidpass",
+    issuerName: "Myfidpass",
     programName,
     reviewStatus: "UNDER_REVIEW",
     programLogo: {

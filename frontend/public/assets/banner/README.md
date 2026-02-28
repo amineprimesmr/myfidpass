@@ -18,7 +18,7 @@ Dépose ton fichier dans ce dossier (`frontend/public/assets/banner/`) avec **ex
 ## Après avoir ajouté le fichier
 
 1. Recharge le site (ou redéploie si tu es en production).
-2. La bannière s’affiche automatiquement en pleine largeur au-dessus de la barre bleue « Essayez Fidpass GRATUITEMENT ».
+2. La bannière s’affiche automatiquement en pleine largeur au-dessus de la barre bleue « Essayez Myfidpass GRATUITEMENT ».
 
 ## Organisation du projet
 

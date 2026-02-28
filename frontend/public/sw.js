@@ -1,6 +1,6 @@
-/* Service Worker Fidpass — notifications push */
+/* Service Worker Myfidpass — notifications push */
 self.addEventListener("push", (event) => {
-  let data = { title: "Fidpass", body: "" };
+  let data = { title: "Myfidpass", body: "" };
   if (event.data) {
     try {
       data = { ...data, ...event.data.json() };
@@ -13,7 +13,7 @@ self.addEventListener("push", (event) => {
     tag: "fidpass-" + Date.now(),
     renotify: true,
   };
-  event.waitUntil(self.registration.showNotification(data.title || "Fidpass", options));
+  event.waitUntil(self.registration.showNotification(data.title || "Myfidpass", options));
 });
 
 self.addEventListener("notificationclick", (event) => {

@@ -217,7 +217,7 @@ router.post("/:slug/notifications/send", async (req, res) => {
       message: "Aucun appareil enregistré. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
-  const payload = { title: (title || business.organization_name || "Fidpass").trim(), body };
+  const payload = { title: (title || business.organization_name || "Myfidpass").trim(), body };
   const broadcastText = payload.title ? `${payload.title}: ${body}` : body;
   setLastBroadcastMessage(business.id, broadcastText);
   // Montage : même flux que l’ajout de points — toucher last_visit_at de chaque membre Wallet pour que le pass soit « modifié » et que l’iPhone refetch + affiche la notif

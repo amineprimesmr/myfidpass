@@ -2531,7 +2531,7 @@ function initDashboardPage() {
 function getMentionsLegalesHtml() {
   return `
     <h1>Mentions légales</h1>
-    <p><strong>Éditeur</strong><br>Fidpass – [Adresse à compléter]</p>
+    <p><strong>Éditeur</strong><br>Myfidpass – [Adresse à compléter]</p>
     <p><strong>Hébergement</strong><br>[Hébergeur à compléter]</p>
     <p><strong>Contact</strong><br>contact@fidpass.fr</p>
     <p>Conformément à la loi « Informatique et Libertés » et au RGPD, vous disposez d’un droit d’accès, de rectification et de suppression de vos données. Voir notre <a href="/politique-confidentialite">Politique de confidentialité</a>.</p>
@@ -2541,7 +2541,7 @@ function getMentionsLegalesHtml() {
 function getPolitiqueConfidentialiteHtml() {
   return `
     <h1>Politique de confidentialité</h1>
-    <p>Fidpass s’engage à protéger vos données personnelles.</p>
+    <p>Myfidpass s’engage à protéger vos données personnelles.</p>
     <h2>Données collectées</h2>
     <p>Lors de la création d’une carte fidélité (nom, adresse email), ces informations sont utilisées uniquement pour générer et associer la carte à votre appareil. Nous ne les revendons pas à des tiers.</p>
     <h2>Utilisation</h2>
@@ -2829,7 +2829,7 @@ function arrayBufferToBase64(buffer) {
 function showSlugError(message) {
   if (!fidelityAppEl) return;
   fidelityAppEl.innerHTML = `
-    <header class="header"><div class="header-inner"><a href="/" class="logo">Fidpass</a></div></header>
+    <header class="header"><div class="header-inner"><a href="/" class="logo">Myfidpass</a></div></header>
     <main class="main" style="text-align: center; padding: 3rem 1.5rem;">
       <p class="error-message" style="font-size: 1.1rem;">${message}</p>
       <p style="color: var(--text-muted); margin-top: 1rem;">Ex. : <a href="/fidelity/demo" style="color: var(--accent);">/fidelity/demo</a></p>
@@ -3008,14 +3008,14 @@ if (googlePlacesApiKey) {
     initPlacesAutocomplete();
   };
   window.__fidpassPlacesError = (err) => {
-    console.warn("[Fidpass] Google Places: chargement refusé. Vérifiez la clé, les APIs activées (Maps JavaScript API + Places API) et les restrictions (référents + APIs autorisées).", err);
+    console.warn("[Myfidpass] Google Places: chargement refusé. Vérifiez la clé, les APIs activées (Maps JavaScript API + Places API) et les restrictions (référents + APIs autorisées).", err);
   };
   const script = document.createElement("script");
   script.src = `https://maps.googleapis.com/maps/api/js?key=${googlePlacesApiKey}&libraries=places&callback=__fidpassPlacesReady`;
   script.async = true;
   script.defer = true;
   script.onerror = () => {
-    console.warn("[Fidpass] Google Places: script non chargé. Vérifiez VITE_GOOGLE_PLACES_API_KEY et les restrictions de la clé (référents HTTP).");
+    console.warn("[Myfidpass] Google Places: script non chargé. Vérifiez VITE_GOOGLE_PLACES_API_KEY et les restrictions de la clé (référents HTTP).");
   };
   document.head.appendChild(script);
 }

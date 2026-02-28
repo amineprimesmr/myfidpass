@@ -31,7 +31,7 @@ export function getVapidPublicKey() {
  */
 export async function sendWebPush(subscription, payload) {
   const payloadStr = JSON.stringify({
-    title: payload.title || "Fidpass",
+    title: payload.title || "Myfidpass",
     body: payload.body,
   });
   await webPush.sendNotification(
