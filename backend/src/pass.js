@@ -251,6 +251,7 @@ export async function generatePass(member, business = null, options = {}) {
       label: "Tampons",
       value: `${stamps} / ${stampMax}`,
       textAlignment: "PKTextAlignmentCenter",
+      changeMessage: "Tampons : %@",
     });
     if (!isSectorTemplate) {
       pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
@@ -261,6 +262,7 @@ export async function generatePass(member, business = null, options = {}) {
       label: "Points",
       value: member.points,
       textAlignment: "PKTextAlignmentCenter",
+      changeMessage: "Tu as maintenant %@ points !",
     });
     if (!isSectorTemplate) {
       pass.secondaryFields.push({ key: "level", label: "Niveau", value: level });

@@ -100,7 +100,11 @@ app.get("/api/health/db", (req, res) => {
 function startServer(port) {
   const p = Number(port) || 3001;
   const server = app.listen(p, () => {
-    console.log(`Backend fidélité: http://localhost:${server.address().port}`);
+    if (process.env.NODE_ENV === "production") {
+      console.log(`Backend fidélité: démarré sur le port ${server.address().port} (prod — l’API est exposée par Railway, pas en localhost).`);
+    } else {
+      console.log(`Backend fidélité: http://localhost:${server.address().port}`);
+    }
     console.log(`  API: /api/businesses/:slug, /api/members`);
     try {
       const passRegCount = getPassRegistrationsTotalCount();
