@@ -153,6 +153,8 @@ Si le pass est rejeté (« invalid »), vérifie :
 
 ## La carte ne se met pas à jour (points n’apparaissent pas)
 
+**Notifications lock screen :** Le guide [Sending Lock Screen Notifications](https://help.passkit.com/en/articles/4097979-sending-lock-screen-notifications) exige que le message contienne **`%@`**. C’est déjà le cas dans Fidpass (`changeMessage: "Tu as maintenant %@ points !"` dans `backend/src/pass.js`). Vérifier aussi : (1) au moins 1 appareil enregistré (page Notifications) ; (2) iPhone : Réglages → Notifications → Wallet activées.
+
 Si tu ajoutes des points dans l’app mais que la carte dans le Wallet ne se met pas à jour :
 
 1. **Vérifier les logs Railway** après un ajout de points :
@@ -162,10 +164,18 @@ Si tu ajoutes des points dans l’app mais que la carte dans le Wallet ne se met
 
 2. **Ne pas modifier `PASSKIT_SECRET`** en production après que des passes ont été distribués : chaque pass contient un jeton dérivé de ce secret ; si tu le changes, les mises à jour (GET pass) renverront 401 et la carte ne se mettra plus à jour.
 
+3. **Troubleshooting (aligné sur [Sending Lock Screen Notifications](https://help.passkit.com/en/articles/4097979-sending-lock-screen-notifications)) :**
+   - Vérifier que la carte est bien **enregistrée** pour les push (voir checklist ci‑dessus).
+   - Vérifier que l’utilisateur a activé les **notifications pour Wallet** dans Réglages iPhone.
+   - Le champ Points du pass contient bien **`%@`** dans le message (déjà le cas dans Fidpass).
+   - En cas d’erreur côté API (routes, 401, 404), consulter les logs Railway.
+
 ---
 
 ## Liens utiles
 
+- [Sending Lock Screen Notifications](https://help.passkit.com/en/articles/4097979-sending-lock-screen-notifications) (PassKit) — exigence `%@`, troubleshooting.
+- [Send a Push Notification to an Individual Pass Holder](https://help.passkit.com/en/articles/7731052-send-a-push-notification-to-an-individual-pass-holder) (PassKit).
 - [Create Wallet identifiers and certificates (Apple)](https://developer.apple.com/help/account/capabilities/create-wallet-identifiers-and-certificates/)
 - [PassKit Package Format Reference](https://developer.apple.com/library/archive/documentation/UserExperience/Reference/PassKit_Bundle/Chapters/Introduction.html)
 - [WWDR intermediate certificates](https://developer.apple.com/help/account/certificates/wwdr-intermediate-certificates/)

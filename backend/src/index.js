@@ -101,6 +101,27 @@ app.get("/api/health/db", (req, res) => {
   });
 });
 
+/** Diagnostic PassKit en un coup : persistence + nombre d’appareils enregistrés. Réponse à ouvrir dans le navigateur pour savoir où ça bloque. */
+app.get("/api/health/passkit", (req, res) => {
+  try {
+    const passRegCount = getPassRegistrationsTotalCount();
+    const dbExists = existsSync(DB_FILE_PATH);
+    res.json({
+      ok: true,
+      DATA_DIR: process.env.DATA_DIR ?? "(non défini)",
+      dbPath: DB_FILE_PATH,
+      dbExists,
+      passRegistrationsCount: passRegCount,
+      message: passRegCount === 0
+        ? "Aucun appareil enregistré. Soit l’iPhone n’a jamais appelé POST /api/v1/devices/..., soit le volume n’est pas persistant (redémarrage = données perdues). Vérifier Railway : volume monté sur /data + variable DATA_DIR=/data."
+        : `${passRegCount} appareil(s) enregistré(s). Les push devraient partir.`,
+      testRegistration: "Pour tester l’API d’enregistrement : utilise la commande curl affichée sur myfidpass.fr/app#notifications. Si tu obtiens HTTP 201, l’API fonctionne.",
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 function startServer(port) {
   const p = Number(port) || 3001;
   const server = app.listen(p, () => {
