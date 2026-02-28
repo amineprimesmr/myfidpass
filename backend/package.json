@@ -5,7 +5,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "generate-vapid-keys": "web-push generate-vapid-keys"
+    "generate-vapid-keys": "web-push generate-vapid-keys",
+    "test:passkit": "bash scripts/test-passkit-get.sh",
+    "seed:passkit-test": "DATA_DIR=./test-data node scripts/seed-passkit-test.js"
   },
   "dependencies": {
     "apn": "^2.2.0",

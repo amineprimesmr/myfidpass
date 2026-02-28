@@ -103,12 +103,11 @@ function toLastModifiedHttpDate(lastVisitAt) {
 }
 
 /**
- * GET /passes/:passTypeId/:serialNumber
+ * GET /passes/:passTypeId/:serialNumber [ou avec slash final]
  * Retourne le .pkpass à jour (points, tampons, etc.).
- * Apple exige Last-Modified pour que l'iPhone considère le pass comme modifié et mette à jour l'affichage.
- * Si-Modified-Since : on renvoie 304 seulement si le pass n'a pas changé depuis.
+ * Certains clients (proxy, iOS) peuvent envoyer un trailing slash → on accepte les deux.
  */
-router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
+const getPassHandler = async (req, res) => {
   const { passTypeId, serialNumber } = req.params;
   const shortId = serialNumber ? String(serialNumber).slice(0, 8) + "..." : "?";
   console.log("[PassKit] GET pass: entrée handler serialNumber=", shortId);
@@ -142,7 +141,8 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
     console.error("[PassKit] GET pass: erreur", err?.message || err);
     if (!res.headersSent) res.status(500).json({ error: "Failed to generate pass" });
   }
-});
+};
+router.get(["/passes/:passTypeId/:serialNumber", "/passes/:passTypeId/:serialNumber/"], getPassHandler);
 
 /** HEAD /passes/:passTypeId/:serialNumber — Apple peut demander les en-têtes sans le corps. */
 router.head("/passes/:passTypeId/:serialNumber", (req, res) => {
@@ -181,6 +181,14 @@ router.post("/log", (req, res) => {
     console.error("[PassKit log]", req.body.logs);
   }
   res.status(200).send();
+});
+
+/** Log toute requête GET/HEAD qui n'a matché aucune route (diagnostic). */
+router.use((req, res, next) => {
+  if (req.method === "GET" || req.method === "HEAD") {
+    console.log("[PassKit] Aucune route ne correspond à", req.method, req.path);
+  }
+  next();
 });
 
 export default router;
