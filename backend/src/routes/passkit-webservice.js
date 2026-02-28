@@ -125,11 +125,20 @@ router.get("/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrat
 router.get("/api/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
 router.get("/api/v1/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
 
-/** Convertit last_visit_at (SQLite) en date HTTP RFC 1123 pour Last-Modified. */
-function toLastModifiedHttpDate(lastVisitAt) {
-  if (!lastVisitAt) return new Date().toUTCString();
-  const iso = String(lastVisitAt).replace(" ", "T") + "Z";
-  return new Date(iso).toUTCString();
+/** Convertit une date SQLite en date HTTP RFC 1123 pour Last-Modified. */
+function toLastModifiedHttpDate(dateStr) {
+  if (!dateStr) return null;
+  const iso = String(dateStr).replace(" ", "T") + "Z";
+  return new Date(iso).getTime();
+}
+
+/** Retourne la date HTTP la plus récente entre last_visit_at (membre) et last_broadcast_at (business), pour que l'iPhone refetch le pass après un envoi depuis la section Notifications. */
+function getPassLastModified(member, business) {
+  const a = toLastModifiedHttpDate(member?.last_visit_at);
+  const b = toLastModifiedHttpDate(business?.last_broadcast_at);
+  const ts = Math.max(a || 0, b || 0);
+  if (ts <= 0) return new Date().toUTCString();
+  return new Date(ts).toUTCString();
 }
 
 /**
@@ -158,7 +167,7 @@ const getPassHandler = async (req, res) => {
       return res.status(404).json({ error: "Business not found" });
     }
 
-    const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+    const lastModified = getPassLastModified(member, business);
     console.log("[PassKit] >>> PASS ENVOYÉ —", shortId, "points:", member.points, "Last-Modified:", lastModified);
     const buffer = await generatePass(member, business, { template: "classic" });
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
@@ -185,7 +194,8 @@ router.head("/passes/:passTypeId/:serialNumber", (req, res) => {
   if (!verifyToken(serialNumber, token)) return res.status(401).end();
   const member = getMember(serialNumber);
   if (!member) return res.status(404).end();
-  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+  const business = getBusinessById(member.business_id);
+  const lastModified = getPassLastModified(member, business);
   res.setHeader("Content-Type", "application/vnd.apple.pkpass");
   res.setHeader("Last-Modified", lastModified);
   res.status(200).end();
@@ -196,7 +206,8 @@ router.head(["/v1/passes/:passTypeId/:serialNumber", "/v1/passes/:passTypeId/:se
   if (!verifyToken(serialNumber, token)) return res.status(401).end();
   const member = getMember(serialNumber);
   if (!member) return res.status(404).end();
-  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+  const business = getBusinessById(member.business_id);
+  const lastModified = getPassLastModified(member, business);
   res.setHeader("Content-Type", "application/vnd.apple.pkpass");
   res.setHeader("Last-Modified", lastModified);
   res.status(200).end();
@@ -207,7 +218,8 @@ router.head(["/api/v1/passes/:passTypeId/:serialNumber", "/api/v1/passes/:passTy
   if (!verifyToken(serialNumber, token)) return res.status(401).end();
   const member = getMember(serialNumber);
   if (!member) return res.status(404).end();
-  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+  const business = getBusinessById(member.business_id);
+  const lastModified = getPassLastModified(member, business);
   res.setHeader("Content-Type", "application/vnd.apple.pkpass");
   res.setHeader("Last-Modified", lastModified);
   res.status(200).end();
@@ -218,7 +230,8 @@ router.head(["/api/v1/v1/passes/:passTypeId/:serialNumber", "/api/v1/v1/passes/:
   if (!verifyToken(serialNumber, token)) return res.status(401).end();
   const member = getMember(serialNumber);
   if (!member) return res.status(404).end();
-  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+  const business = getBusinessById(member.business_id);
+  const lastModified = getPassLastModified(member, business);
   res.setHeader("Content-Type", "application/vnd.apple.pkpass");
   res.setHeader("Last-Modified", lastModified);
   res.status(200).end();

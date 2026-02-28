@@ -625,11 +625,21 @@ if (!bizColsFinal.includes("last_broadcast_message")) {
     db.prepare("ALTER TABLE businesses ADD COLUMN last_broadcast_message TEXT").run();
   } catch (_) {}
 }
+if (!bizColsFinal.includes("last_broadcast_at")) {
+  try {
+    db.prepare("ALTER TABLE businesses ADD COLUMN last_broadcast_at TEXT").run();
+  } catch (_) {}
+}
 
-/** Met à jour le dernier message envoyé à tous (section Notifications). Permet d'afficher une notif sur l'écran de verrouillage Wallet. */
+/** Met à jour le dernier message envoyé à tous (section Notifications). Permet d'afficher une notif sur l'écran de verrouillage Wallet. last_broadcast_at force le pass à être considéré modifié (Last-Modified) pour que l'iPhone refetch. */
 export function setLastBroadcastMessage(businessId, message) {
   if (!businessId || message == null) return;
-  db.prepare("UPDATE businesses SET last_broadcast_message = ? WHERE id = ?").run(String(message).trim().slice(0, 500), businessId);
+  const now = new Date().toISOString().replace("T", " ").slice(0, 19);
+  db.prepare("UPDATE businesses SET last_broadcast_message = ?, last_broadcast_at = ? WHERE id = ?").run(
+    String(message).trim().slice(0, 500),
+    now,
+    businessId
+  );
 }
 
 // ——— Abonnements (paiement) ———
