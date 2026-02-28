@@ -96,6 +96,8 @@ function handleGetRegistrations(req, res) {
 }
 router.get("/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
 router.get("/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
+router.get("/api/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
+router.get("/api/v1/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
 
 /** Convertit last_visit_at (SQLite) en date HTTP RFC 1123 pour Last-Modified. */
 function toLastModifiedHttpDate(lastVisitAt) {
@@ -145,9 +147,10 @@ const getPassHandler = async (req, res) => {
   }
 };
 router.get(["/passes/:passTypeId/:serialNumber", "/passes/:passTypeId/:serialNumber/"], getPassHandler);
-// Certains proxies / Railway envoient le chemin complet au routeur → accepter /v1/passes/... et /api/v1/passes/...
+// Certains proxies / Railway envoient le chemin complet au routeur → accepter /v1/passes/..., /api/v1/passes/..., et /api/v1/v1/... (anciens passes)
 router.get(["/v1/passes/:passTypeId/:serialNumber", "/v1/passes/:passTypeId/:serialNumber/"], getPassHandler);
 router.get(["/api/v1/passes/:passTypeId/:serialNumber", "/api/v1/passes/:passTypeId/:serialNumber/"], getPassHandler);
+router.get(["/api/v1/v1/passes/:passTypeId/:serialNumber", "/api/v1/v1/passes/:passTypeId/:serialNumber/"], getPassHandler);
 
 /** HEAD /passes/:passTypeId/:serialNumber — Apple peut demander les en-têtes sans le corps. */
 router.head("/passes/:passTypeId/:serialNumber", (req, res) => {
@@ -162,6 +165,28 @@ router.head("/passes/:passTypeId/:serialNumber", (req, res) => {
   res.status(200).end();
 });
 router.head(["/v1/passes/:passTypeId/:serialNumber", "/v1/passes/:passTypeId/:serialNumber/"], (req, res) => {
+  const { serialNumber } = req.params;
+  const token = parseApplePassAuth(req);
+  if (!verifyToken(serialNumber, token)) return res.status(401).end();
+  const member = getMember(serialNumber);
+  if (!member) return res.status(404).end();
+  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+  res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+  res.setHeader("Last-Modified", lastModified);
+  res.status(200).end();
+});
+router.head(["/api/v1/passes/:passTypeId/:serialNumber", "/api/v1/passes/:passTypeId/:serialNumber/"], (req, res) => {
+  const { serialNumber } = req.params;
+  const token = parseApplePassAuth(req);
+  if (!verifyToken(serialNumber, token)) return res.status(401).end();
+  const member = getMember(serialNumber);
+  if (!member) return res.status(404).end();
+  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+  res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+  res.setHeader("Last-Modified", lastModified);
+  res.status(200).end();
+});
+router.head(["/api/v1/v1/passes/:passTypeId/:serialNumber", "/api/v1/v1/passes/:passTypeId/:serialNumber/"], (req, res) => {
   const { serialNumber } = req.params;
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) return res.status(401).end();

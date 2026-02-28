@@ -221,7 +221,8 @@ export async function generatePass(member, business = null, options = {}) {
   };
   if (webServiceURL && business) {
     const base = webServiceURL.replace(/\/$/, "");
-    passOptions.webServiceURL = `${base}/api/v1`;
+    // Apple ajoute /v1/devices/... et /v1/passes/... à cette URL → ne pas mettre /v1 ici (sinon on reçoit /api/v1/v1/...)
+    passOptions.webServiceURL = `${base}/api`;
     passOptions.authenticationToken = authToken;
     if (process.env.NODE_ENV === "production") {
       console.log("[PassKit] Pass généré avec webServiceURL:", passOptions.webServiceURL, "→ l'iPhone pourra s'enregistrer.");
