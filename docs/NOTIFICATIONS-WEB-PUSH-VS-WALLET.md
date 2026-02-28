@@ -10,7 +10,12 @@ D’après la [doc PassKit](https://help.passkit.com/en/articles/4097979-updatin
 
 Dans Fidpass, les champs **Points** et **Tampons** ont maintenant un `changeMessage` avec `%@`. Quand tu **ajoutes des points** au client (Scanner ou Membres), le serveur envoie une push APNs ; l’iPhone récupère le pass à jour et Apple peut afficher « Tu as maintenant X points ! ».
 
-**Si le client ne reçoit aucune notif sur l’iPhone :** vérifier **Réglages → Notifications → Portefeuille** (Wallet) : les notifications doivent être autorisées. Vérifier aussi que le téléphone n’est pas en mode Ne pas déranger et que les mises à jour du pass sont activées pour la carte.
+**Si le client ne reçoit aucune notif sur l’iPhone**, vérifier dans cet ordre :
+
+1. **Sur la carte elle-même (dans l’app Portefeuille)** : ouvrir la carte Fidpass → toucher **⋯** (trois points) → **Détails du pass** → activer **« Autoriser les notifications »** et **« Suggérer sur l’écran de verrouillage »** si proposés. C’est souvent ce réglage qui manque.
+2. **Réglages → Notifications → Portefeuille** : autoriser les notifications et **écran de verrouillage**.
+3. **Réglages → Face ID et code** (ou Code) → **Autoriser l’accès quand l’appareil est verrouillé** → activer **Portefeuille**.
+4. Désactiver **Ne pas déranger** / Mode focus pendant le test.
 
 ---
 

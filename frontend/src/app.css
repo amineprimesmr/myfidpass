@@ -340,6 +340,8 @@ body.page-app .site-banner { display: none !important; }
 .app-logo-preview.hidden { display: none; }
 .app-textarea { width: 100%; max-width: 360px; padding: 0.75rem 1rem; font-family: inherit; font-size: 1rem; color: var(--app-text); background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 10px; margin-bottom: 0.5rem; box-sizing: border-box; resize: vertical; min-height: 80px; }
 .app-notifications-wallet-hint { font-size: 0.88rem; color: var(--app-text-muted); margin: 0 0 0.75rem; line-height: 1.4; }
+.app-notifications-iphone-tip { font-size: 0.85rem; background: #e8f5e9; border: 1px solid #81c784; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; line-height: 1.45; color: #2e7d32; }
+.app-notifications-iphone-tip strong { color: #1b5e20; }
 .app-notifications-stats { font-size: 0.9rem; color: var(--app-text-muted); margin: 0 0 0.5rem; }
 .app-notifications-diagnostic { background: #fff8e1; border: 1px solid #ffc107; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
 .app-notifications-diagnostic.hidden { display: none; }
