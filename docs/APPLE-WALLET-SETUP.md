@@ -172,17 +172,39 @@ Si tu ajoutes des points dans l’app mais que la carte dans le Wallet ne se met
 
 ---
 
-## Design du pass : limites Apple Wallet
+## Design du pass : tout ce qu’on peut modifier
 
-La **préview sur le site** (créateur de carte) peut afficher un design riche : grille de tasses café, texte « 1 café collecté — 9 pour en avoir un offert », etc.
+### Ce qu’on peut modifier (et comment)
 
-**Dans Apple Wallet, le pass a une structure fixe imposée par Apple** : bandeau (strip), champs texte (primary, secondary, auxiliary), code-barres. On ne peut **pas** reproduire une grille de 10 icônes ou un layout libre comme sur le web. On peut uniquement :
+| Élément | Modifiable ? | Comment |
+|--------|--------------|--------|
+| **Couleur de fond** | Oui | Template (café, fastfood, etc.) ou couleurs personnalisées du commerce (`background_color`). Ex. rouge type BURGERZ = template fastfood `#c41e3a` ou couleur custom. |
+| **Couleur du texte** | Oui | `foregroundColor` (texte principal), `labelColor` (labels). Par template ou par commerce. |
+| **Bandeau en haut (strip)** | Oui | Image PNG 750×288 px (ou 375×144). Déposée dans `backend/assets/strip.png` (global) ou `backend/assets/businesses/:id/strip.png` (par commerce). Sinon un dégradé aux couleurs du template est généré. Tu peux y mettre logo + nom de marque + slogan (ex. BURGERZ, BEST IN TOWN). |
+| **Logo** | Oui | Logo du commerce (upload dans l’app) ou `backend/assets/logo.png` / `assets/businesses/:id/logo.png`. Affiché à gauche en haut (ex. icône burger jaune). |
+| **Icône (petite)** | Oui | `backend/assets/icon.png` (29×29 ou 58×58). Utilisée par le système (notifications, liste Wallet). |
+| **Nom de l’organisation** | Oui | C’est le nom du commerce (ex. BURGERZ). Affiché par Apple à côté du logo. |
+| **Champs texte** | Oui | Primary (ex. « 5 / 10 » ou « Stamps: 05 »), secondary (ex. « Remaining: 10 » ou slogan), auxiliary (ex. nom du membre, actualité). Libellés et valeurs modifiables dans le code (pass.js) ou via la business. |
+| **QR code** | Oui | Toujours présent ; la valeur encodée = identifiant membre (pour le scan en caisse). Le style (couleurs, coins ronds) est géré par Apple. |
+| **Dos du pass** | Oui | Conditions, contact (back fields). Renseignés par le commerce. |
 
-- **Couleurs** : fond, texte, labels (par template : café, fast-food, etc.).
-- **Images** : logo, icône, bandeau (strip) — une image en haut du pass.
-- **Texte** : libellés et valeurs (ex. « 0 / 10 », « Tampons », « X café collecté — Y pour en avoir un offert »).
+### Ce qu’on ne peut pas faire (limites Apple)
 
-Donc le design Wallet restera plus sobre que la préview. Pour s’en approcher : utiliser un **strip** et un **logo** dédiés (ex. visuel café dans `backend/assets/` ou par commerce dans `assets/businesses/:id/`), et bien renseigner les couleurs du template.
+- **Grille d’icônes** (ex. 8 burgers : 2 remplis, 6 vides). Le pass ne permet que des champs texte et des images strip/logo/icon, pas une grille de petites images positionnées librement.
+- **Position libre** des éléments. Apple impose un layout fixe : strip → header → primary → secondary → auxiliary → code-barres.
+- **Coins ronds du QR** ou forme personnalisée du pass. Rendu géré par le système.
+- **Plusieurs bandeaux ou images au milieu** du pass. Une seule image strip en haut.
+
+### Exemple type « BURGERZ » : ce qu’on peut reproduire
+
+- **Fond rouge** → template fastfood ou `background_color` rouge.
+- **Logo burger jaune** → logo du commerce (upload) ou `logo.png` dans assets.
+- **« BURGERZ » + « BEST IN TOWN »** → soit dans le **strip** (une seule image avec tout le visuel), soit « BURGERZ » = nom du commerce (affiché par Apple), « BEST IN TOWN » = texte dans un champ secondary (à ajouter côté code si tu veux un slogan).
+- **« 020 »** (numéro de carte) → possible en secondary ou auxiliary (ex. 3 derniers chiffres du member.id ou un numéro affiché).
+- **« Stamps: 05 » / « Remaining: 10 »** → on a déjà « 5 / 10 » en primary ; on peut ajouter un champ du type « Restant : 10 » ou « Stamps: 05 » en secondary (libellés/valeurs à adapter dans pass.js).
+- **Grille de 8 burgers (2 remplis, 6 vides)** → **non** : impossible dans un pass Wallet.
+
+En résumé : on peut s’approcher fortement du style BURGERZ (couleurs, strip avec marque + slogan, logo, textes type stamps/remaining), mais pas la grille d’icônes burgers. Pour un rendu « pro », le plus impactant est un **strip personnalisé** (image 750×288 avec BURGERZ + BEST IN TOWN + visuel) et un **logo** burger.
 
 ---
 

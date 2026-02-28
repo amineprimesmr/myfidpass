@@ -154,6 +154,7 @@ const PASS_TEMPLATES = {
   dark: { backgroundColor: "#212121", foregroundColor: "#ffffff", labelColor: "#b0b0b0" },
   warm: { backgroundColor: "#bf360c", foregroundColor: "#ffffff", labelColor: "#ffccbc" },
   fastfood: { backgroundColor: "#c41e3a", foregroundColor: "#ffffff", labelColor: "#ffd54f" },
+  burger: { backgroundColor: "#c41e3a", foregroundColor: "#ffffff", labelColor: "#ffd54f" },
   beauty: { backgroundColor: "#b76e79", foregroundColor: "#ffffff", labelColor: "#fce4ec" },
   coiffure: { backgroundColor: "#5c4a6a", foregroundColor: "#ffffff", labelColor: "#d1c4e0" },
   boulangerie: { backgroundColor: "#b8860b", foregroundColor: "#ffffff", labelColor: "#fff8e1" },
@@ -176,10 +177,19 @@ export async function generatePass(member, business = null, options = {}) {
     throw new Error("PASS_TYPE_ID et TEAM_ID doivent être définis dans .env");
   }
 
+  // Accepter template au format "burger-tampons" ou "fastfood-points" (frontend envoie l’id complet)
+  let template = options.template || "classic";
+  let format = options.format || "points";
+  if (typeof template === "string" && /^[a-z]+-(points|tampons)$/i.test(template)) {
+    const parts = template.split("-");
+    format = parts.pop();
+    template = parts.join("-");
+  }
+
   const organizationName =
     business?.organization_name || options.organizationName || process.env.ORGANIZATION_NAME || "Carte fidélité";
   const certificates = loadCertificates();
-  const buffers = buildBuffers(business?.id, options);
+  const buffers = buildBuffers(business?.id, { ...options, template, format });
   if (business?.logo_base64) {
     const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "");
     const logoBuf = Buffer.from(base64Data, "base64");
@@ -190,14 +200,13 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   const level = getLevel(member.points);
-  const format = options.format || "points";
   const stampMax = options.stampMax ?? 10;
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
-  const isSectorTemplate = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template);
+  const isSectorTemplate = ["fastfood", "burger", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(template);
 
   // Couleurs : priorité aux couleurs enregistrées sur la business, sinon template
-  const templateKey = isSectorTemplate ? options.template : options.template;
+  const templateKey = isSectorTemplate ? template : template;
   const customColors =
     business?.background_color || business?.foreground_color || business?.label_color
       ? {
@@ -254,7 +263,7 @@ export async function generatePass(member, business = null, options = {}) {
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tampons : %@",
     });
-    if (isSectorTemplate && options.template === "cafe") {
+    if (isSectorTemplate && template === "cafe") {
       const rest = stampMax - stamps;
       pass.secondaryFields.push({
         key: "stampHint",
@@ -263,6 +272,20 @@ export async function generatePass(member, business = null, options = {}) {
           ? `${stamps} café collecté — ${rest} pour en avoir un offert`
           : `${stamps} cafés collectés — ${rest} pour en avoir un offert`,
         textAlignment: "PKTextAlignmentCenter",
+      });
+    } else if (isSectorTemplate && template === "burger") {
+      const remaining = stampMax - stamps;
+      pass.secondaryFields.push({
+        key: "stampsCount",
+        label: "",
+        value: `Stamps: ${String(stamps).padStart(2, "0")}`,
+        textAlignment: "PKTextAlignmentLeft",
+      });
+      pass.auxiliaryFields.push({
+        key: "remaining",
+        label: "",
+        value: `Remaining: ${remaining}`,
+        textAlignment: "PKTextAlignmentRight",
       });
     } else if (!isSectorTemplate) {
       pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
