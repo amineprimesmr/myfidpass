@@ -23,6 +23,7 @@ router.use((req, res, next) => {
 /** Interception explicite /api/v1/v1/... (passes déjà en circulation avec ancienne webServiceURL) — au cas où les routes nommées ne matchent pas. */
 const V1V1_PASSES_RE = /^\/api\/v1\/v1\/passes\/([^/]+)\/([^/]+)\/?$/;
 const V1V1_DEVICES_REGISTRATIONS_RE = /^\/api\/v1\/v1\/devices\/([^/]+)\/registrations\/([^/]+)$/;
+const V1V1_DEVICES_REGISTRATIONS_DELETE_RE = /^\/api\/v1\/v1\/devices\/([^/]+)\/registrations\/([^/]+)\/([^/]+)$/;
 router.use((req, res, next) => {
   const p = (req.path || "").split("?")[0];
   if (req.method === "GET" && V1V1_PASSES_RE.test(p)) {
@@ -34,6 +35,11 @@ router.use((req, res, next) => {
     const [, deviceId, passTypeId] = p.match(V1V1_DEVICES_REGISTRATIONS_RE);
     req.params = { ...req.params, deviceId, passTypeId };
     return handleGetRegistrations(req, res, next);
+  }
+  if (req.method === "DELETE" && V1V1_DEVICES_REGISTRATIONS_DELETE_RE.test(p)) {
+    const [, deviceId, passTypeId, serialNumber] = p.match(V1V1_DEVICES_REGISTRATIONS_DELETE_RE);
+    req.params = { ...req.params, deviceId, passTypeId, serialNumber };
+    return handleDeviceUnregister(req, res, next);
   }
   next();
 });
@@ -90,6 +96,8 @@ function handleDeviceRegistration(req, res) {
 
 router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
 router.post("/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
+// Nouveaux passes (webServiceURL = .../api) : l'iPhone envoie POST /api/v1/devices/... — sans cette route l'enregistrement ne serait jamais sauvegardé → "Aucun appareil enregistré"
+router.post("/api/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
 
 /**
  * GET /v1/devices/:deviceId/registrations/:passTypeId
@@ -231,11 +239,19 @@ function handleDeviceUnregister(req, res) {
 }
 router.delete("/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceUnregister);
 router.delete("/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceUnregister);
+router.delete("/api/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceUnregister);
+router.delete("/api/v1/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceUnregister);
 
 /**
  * POST /log — Apple peut envoyer des erreurs (optionnel).
  */
 router.post("/log", (req, res) => {
+  if (req.body?.logs) {
+    console.error("[PassKit log]", req.body.logs);
+  }
+  res.status(200).send();
+});
+router.post("/api/v1/log", (req, res) => {
   if (req.body?.logs) {
     console.error("[PassKit log]", req.body.logs);
   }
