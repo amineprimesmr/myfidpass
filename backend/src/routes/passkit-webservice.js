@@ -95,9 +95,18 @@ function handleGetRegistrations(req, res) {
 router.get("/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
 router.get("/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
 
+/** Convertit last_visit_at (SQLite) en date HTTP RFC 1123 pour Last-Modified. */
+function toLastModifiedHttpDate(lastVisitAt) {
+  if (!lastVisitAt) return new Date().toUTCString();
+  const iso = String(lastVisitAt).replace(" ", "T") + "Z";
+  return new Date(iso).toUTCString();
+}
+
 /**
  * GET /passes/:passTypeId/:serialNumber
  * Retourne le .pkpass à jour (points, tampons, etc.).
+ * Apple exige Last-Modified pour que l'iPhone considère le pass comme modifié et mette à jour l'affichage.
+ * Si-Modified-Since : on renvoie 304 seulement si le pass n'a pas changé depuis.
  */
 router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
   const { passTypeId, serialNumber } = req.params;
@@ -109,13 +118,28 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
   if (!member) return res.status(404).json({ error: "Pass not found" });
   const business = getBusinessById(member.business_id);
   if (!business) return res.status(404).json({ error: "Business not found" });
+
+  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+  const ifModifiedSince = req.get("If-Modified-Since");
+  if (ifModifiedSince) {
+    const since = new Date(ifModifiedSince).getTime();
+    const passTime = member.last_visit_at ? new Date(String(member.last_visit_at).replace(" ", "T") + "Z").getTime() : Date.now();
+    if (!Number.isNaN(since) && passTime <= since) {
+      if (process.env.NODE_ENV === "production") {
+        console.log("[PassKit] GET pass: 304 Not Modified (pass inchangé)", serialNumber.slice(0, 8) + "...");
+      }
+      return res.status(304).setHeader("Last-Modified", lastModified).end();
+    }
+  }
+
   if (process.env.NODE_ENV === "production") {
-    console.log("[PassKit] GET pass:", serialNumber.slice(0, 8) + "...", "points=", member.points);
+    console.log("[PassKit] GET pass:", serialNumber.slice(0, 8) + "...", "points=", member.points, "Last-Modified:", lastModified);
   }
   try {
     const buffer = await generatePass(member, business, { template: "classic" });
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Content-Disposition", `inline; filename="pass.pkpass"`);
+    res.setHeader("Last-Modified", lastModified);
     res.send(buffer);
   } catch (err) {
     console.error("PassKit get pass:", err);
