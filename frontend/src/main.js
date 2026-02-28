@@ -1772,8 +1772,6 @@ function initAppDashboard(slug) {
 const CARD_TEMPLATES = [
   { id: "fastfood-points", name: "Points (Fast food)", format: "points", design: "fastfood", bg: "#c41e3a", fg: "#ffffff", label: "#ffd54f" },
   { id: "fastfood-tampons", name: "Tampons (Fast food)", format: "tampons", design: "fastfood", bg: "#c41e3a", fg: "#ffffff", label: "#ffd54f" },
-  { id: "burger-points", name: "Points (Burger)", format: "points", design: "burger", bg: "#c41e3a", fg: "#ffffff", label: "#ffd54f" },
-  { id: "burger-tampons", name: "Tampons (Burger)", format: "tampons", design: "burger", bg: "#c41e3a", fg: "#ffffff", label: "#ffd54f" },
   { id: "beauty-points", name: "Points (Beauté)", format: "points", design: "beauty", bg: "#b76e79", fg: "#ffffff", label: "#fce4ec" },
   { id: "beauty-tampons", name: "Tampons (Beauté)", format: "tampons", design: "beauty", bg: "#b76e79", fg: "#ffffff", label: "#fce4ec" },
   { id: "coiffure-points", name: "Points (Coiffure)", format: "points", design: "coiffure", bg: "#5c4a6a", fg: "#ffffff", label: "#d1c4e0" },

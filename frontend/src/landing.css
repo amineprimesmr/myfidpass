@@ -1236,28 +1236,6 @@
   color: #fff;
 }
 .builder-wallet-card-fastfood-tampons .builder-wallet-card-label { color: #ffd54f; }
-
-/* Burger (style BURGERZ) : rouge + jaune */
-.builder-wallet-card-burger-points .builder-wallet-card-header {
-  background: linear-gradient(165deg, #e02d4a 0%, #c41e3a 50%, #a01830 100%);
-}
-.builder-wallet-card-burger-points .builder-wallet-card-body {
-  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
-  color: #fff;
-}
-.builder-wallet-card-burger-points .builder-wallet-card-label { color: #ffd54f; }
-.builder-wallet-card-burger-tampons .builder-wallet-card-header {
-  background: linear-gradient(165deg, #e02d4a 0%, #c41e3a 50%, #a01830 100%);
-}
-.builder-wallet-card-burger-tampons .builder-wallet-card-body {
-  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
-  color: #fff;
-}
-.builder-wallet-card-burger-tampons .builder-wallet-card-label { color: #ffd54f; }
-.builder-wallet-card-burger-stamps .stamp { font-size: 0.65rem; }
-.builder-wallet-card-burger-stamps .stamp.filled { opacity: 1; }
-.builder-wallet-card-burger-stamps .stamp:not(.filled) { opacity: 0.4; }
-
 .builder-wallet-card-stamps {
   font-size: clamp(0.85rem, 2.4vw, 1rem);
   font-weight: 800;
@@ -1590,30 +1568,6 @@
   color: #fff;
 }
 .builder-template-preview-fastfood-tampons .builder-template-preview-label { color: #ffd54f; }
-
-/* Burger (style BURGERZ) */
-.builder-template-preview-burger-points .builder-template-preview-header {
-  background: linear-gradient(165deg, #e02d4a 0%, #c41e3a 50%, #a01830 100%);
-  color: #fff;
-}
-.builder-template-preview-burger-points .builder-template-preview-body {
-  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
-  color: #fff;
-}
-.builder-template-preview-burger-points .builder-template-preview-label { color: #ffd54f; }
-.builder-template-preview-burger-tampons .builder-template-preview-header {
-  background: linear-gradient(165deg, #e02d4a 0%, #c41e3a 50%, #a01830 100%);
-  color: #fff;
-}
-.builder-template-preview-burger-tampons .builder-template-preview-body {
-  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
-  color: #fff;
-}
-.builder-template-preview-burger-tampons .builder-template-preview-label { color: #ffd54f; }
-.builder-template-preview-burger-stamps .stamp { font-size: 0.5rem; }
-.builder-template-preview-burger-stamps .stamp.filled { opacity: 1; }
-.builder-template-preview-burger-stamps .stamp:not(.filled) { opacity: 0.4; }
-
 .builder-template-preview-stamps {
   font-size: 1.25rem;
   font-weight: 800;

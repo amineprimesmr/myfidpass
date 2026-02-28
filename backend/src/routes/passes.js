@@ -8,7 +8,7 @@ const router = Router();
  * Génère un .pkpass de démo pour tester l’apparence sur iPhone (Apple Wallet).
  * Pas d’auth requise.
  */
-const SECTOR_TEMPLATES = ["fastfood", "burger", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"];
+const SECTOR_TEMPLATES = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"];
 const LEGACY_MAP = { classic: "classic", bold: "modern", elegant: "warm" };
 
 router.get("/demo", async (req, res) => {
