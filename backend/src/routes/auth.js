@@ -1,9 +1,8 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { randomUUID } from "crypto";
+import { randomUUID, createPublicKey } from "crypto";
 import { OAuth2Client } from "google-auth-library";
-import jwksClient from "jwks-rsa";
 import {
   createUser,
   getUserByEmail,
@@ -20,11 +19,25 @@ const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || ""; // Service ID (bundle
 const SALT_ROUNDS = 10;
 
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
-const appleJwks = jwksClient({
-  jwksUri: "https://appleid.apple.com/auth/keys",
-  cache: true,
-  cacheMaxAge: 600000,
-});
+
+const APPLE_JWKS_URI = "https://appleid.apple.com/auth/keys";
+let appleJwksCache = null;
+let appleJwksCacheTime = 0;
+const APPLE_JWKS_CACHE_MS = 600000;
+
+async function getAppleSigningKeyPem(kid) {
+  if (!appleJwksCache || Date.now() - appleJwksCacheTime > APPLE_JWKS_CACHE_MS) {
+    const res = await fetch(APPLE_JWKS_URI);
+    if (!res.ok) throw new Error("Impossible de récupérer les clés Apple");
+    const body = await res.json();
+    appleJwksCache = body.keys || [];
+    appleJwksCacheTime = Date.now();
+  }
+  const jwk = appleJwksCache.find((k) => k.kid === kid);
+  if (!jwk) throw new Error("Clé Apple introuvable pour kid=" + kid);
+  const key = createPublicKey({ key: jwk, format: "jwk" });
+  return key.export({ type: "spki", format: "pem" });
+}
 
 /**
  * POST /api/auth/register
@@ -152,9 +165,8 @@ router.post("/apple", async (req, res) => {
     if (!kid) {
       return res.status(401).json({ error: "Token Apple invalide" });
     }
-    const signingKey = await appleJwks.getSigningKey(kid);
-    const publicKey = signingKey.getPublicKey();
-    const verified = jwt.verify(idToken, publicKey, {
+    const publicKeyPem = await getAppleSigningKeyPem(kid);
+    const verified = jwt.verify(idToken, publicKeyPem, {
       algorithms: ["RS256"],
       audience: APPLE_CLIENT_ID,
       issuer: "https://appleid.apple.com",
