@@ -78,17 +78,18 @@ export function getApnsUnavailableReason() {
 function getProvider() {
   if (providerInstance !== undefined) return providerInstance;
   providerError = null;
-  const passTypeId = process.env.PASS_TYPE_ID;
+  const passTypeId = process.env.PASS_TYPE_ID?.trim();
+  const creds = loadSignerCertAndKey();
+  console.log("[apns] getProvider: PASS_TYPE_ID=", passTypeId ? "oui" : "NON", "creds=", creds ? "oui" : "NON");
   if (!passTypeId) {
     providerError =
       "PASS_TYPE_ID manquant. Ajoute-le dans les variables d'environnement Railway (ex. pass.com.tonentreprise.fidelity).";
     providerInstance = null;
     return null;
   }
-  const creds = loadSignerCertAndKey();
   if (!creds) {
     providerError =
-      "Certificat signataire Apple manquant. Les notifications Wallet utilisent le même certificat que la signature des passes. Sur Railway, définis SIGNER_CERT_PEM_BASE64 et SIGNER_KEY_PEM_BASE64 (contenu base64 de signerCert.pem et signerKey.pem). Voir docs/APPLE-WALLET-SETUP.md.";
+      "Certificat signataire Apple manquant. Sur Railway: SIGNER_CERT_PEM_BASE64 et SIGNER_KEY_PEM_BASE64 (base64 de signerCert.pem et signerKey.pem). Voir docs/APPLE-WALLET-SETUP.md.";
     providerInstance = null;
     return null;
   }
@@ -154,10 +155,14 @@ export function sendPassKitUpdate(deviceToken) {
   );
 }
 
+/** Marqueur pour vérifier que le bon build est déployé (doit apparaître dans les logs Railway). */
+const APNS_BUILD = "2026-02-28-fichiers";
+
 /**
  * À appeler au démarrage pour vérifier si APNs est utilisable. Log le résultat.
  */
 export function logApnsStatus() {
+  console.log("[apns] Build:", APNS_BUILD, "— diagnostic au démarrage");
   const prov = getProvider();
   if (prov) {
     console.log("[apns] Au démarrage: APNs prêt (certificat + PASS_TYPE_ID OK).");
