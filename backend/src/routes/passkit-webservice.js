@@ -120,20 +120,12 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
   if (!business) return res.status(404).json({ error: "Business not found" });
 
   const lastModified = toLastModifiedHttpDate(member.last_visit_at);
-  const ifModifiedSince = req.get("If-Modified-Since");
-  if (ifModifiedSince) {
-    const since = new Date(ifModifiedSince).getTime();
-    const passTime = member.last_visit_at ? new Date(String(member.last_visit_at).replace(" ", "T") + "Z").getTime() : Date.now();
-    if (!Number.isNaN(since) && passTime <= since) {
-      if (process.env.NODE_ENV === "production") {
-        console.log("[PassKit] GET pass: 304 Not Modified (pass inchangé)", serialNumber.slice(0, 8) + "...");
-      }
-      return res.status(304).setHeader("Last-Modified", lastModified).end();
-    }
-  }
+  // On ne renvoie jamais 304 ici : un décalage d'horloge ou un If-Modified-Since mal interprété
+  // pouvait faire que l'iPhone ne reçoive jamais le pass à jour → la carte ne se mettait pas à jour.
+  // On envoie toujours le pass complet pour que la carte Wallet affiche les bons points.
 
   if (process.env.NODE_ENV === "production") {
-    console.log("[PassKit] GET pass:", serialNumber.slice(0, 8) + "...", "points=", member.points, "Last-Modified:", lastModified);
+    console.log("[PassKit] GET pass: envoi du pass à jour —", serialNumber.slice(0, 8) + "...", "points=", member.points, "Last-Modified:", lastModified);
   }
   try {
     const buffer = await generatePass(member, business, { template: "classic" });
@@ -145,6 +137,19 @@ router.get("/passes/:passTypeId/:serialNumber", async (req, res) => {
     console.error("PassKit get pass:", err);
     return res.status(500).json({ error: "Failed to generate pass" });
   }
+});
+
+/** HEAD /passes/:passTypeId/:serialNumber — Apple peut demander les en-têtes sans le corps. */
+router.head("/passes/:passTypeId/:serialNumber", (req, res) => {
+  const { serialNumber } = req.params;
+  const token = parseApplePassAuth(req);
+  if (!verifyToken(serialNumber, token)) return res.status(401).end();
+  const member = getMember(serialNumber);
+  if (!member) return res.status(404).end();
+  const lastModified = toLastModifiedHttpDate(member.last_visit_at);
+  res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+  res.setHeader("Last-Modified", lastModified);
+  res.status(200).end();
 });
 
 function handleDeviceUnregister(req, res) {
