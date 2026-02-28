@@ -254,7 +254,17 @@ export async function generatePass(member, business = null, options = {}) {
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tampons : %@",
     });
-    if (!isSectorTemplate) {
+    if (isSectorTemplate && options.template === "cafe") {
+      const rest = stampMax - stamps;
+      pass.secondaryFields.push({
+        key: "stampHint",
+        label: "",
+        value: stamps <= 1
+          ? `${stamps} café collecté — ${rest} pour en avoir un offert`
+          : `${stamps} cafés collectés — ${rest} pour en avoir un offert`,
+        textAlignment: "PKTextAlignmentCenter",
+      });
+    } else if (!isSectorTemplate) {
       pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
     }
   } else {

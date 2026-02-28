@@ -172,6 +172,20 @@ Si tu ajoutes des points dans l’app mais que la carte dans le Wallet ne se met
 
 ---
 
+## Design du pass : limites Apple Wallet
+
+La **préview sur le site** (créateur de carte) peut afficher un design riche : grille de tasses café, texte « 1 café collecté — 9 pour en avoir un offert », etc.
+
+**Dans Apple Wallet, le pass a une structure fixe imposée par Apple** : bandeau (strip), champs texte (primary, secondary, auxiliary), code-barres. On ne peut **pas** reproduire une grille de 10 icônes ou un layout libre comme sur le web. On peut uniquement :
+
+- **Couleurs** : fond, texte, labels (par template : café, fast-food, etc.).
+- **Images** : logo, icône, bandeau (strip) — une image en haut du pass.
+- **Texte** : libellés et valeurs (ex. « 0 / 10 », « Tampons », « X café collecté — Y pour en avoir un offert »).
+
+Donc le design Wallet restera plus sobre que la préview. Pour s’en approcher : utiliser un **strip** et un **logo** dédiés (ex. visuel café dans `backend/assets/` ou par commerce dans `assets/businesses/:id/`), et bien renseigner les couleurs du template.
+
+---
+
 ## Liens utiles
 
 - [Sending Lock Screen Notifications](https://help.passkit.com/en/articles/4097979-sending-lock-screen-notifications) (PassKit) — exigence `%@`, troubleshooting.
