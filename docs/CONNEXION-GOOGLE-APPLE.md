@@ -35,7 +35,11 @@ Utilise la **même valeur** de Client ID côté frontend et backend (ex. le mêm
 1. Va sur [Apple Developer](https://developer.apple.com/) → **Certificates, Identifiers & Profiles** → **Identifiers**.
 2. Crée un identifiant de type **Services ID** (ex. `com.tondomaine.myfidpass`).
 3. Active **Sign in with Apple** pour ce Services ID.
-4. Configure les domaines (ex. `myfidpass.fr`) et l’URL de redirection (ex. `https://myfidpass.fr/`).
+4. Configure les domaines et les **Return URLs**. Pour que la connexion Apple marche sur **iPhone/iPad et mobile** (flux redirect), ajoute **toutes** ces URLs dans **Return URLs** :
+   - `https://myfidpass.fr/checkout`
+   - `https://myfidpass.fr/login`
+   - `https://myfidpass.fr/register`
+   (Sans ces URLs, le bouton Apple ne fonctionnera pas sur mobile.)
 5. Le **Services ID** (son identifiant) = valeur de `APPLE_CLIENT_ID`.
 
 **À configurer :**
@@ -76,7 +80,11 @@ Pour myfidpass.fr il faut utiliser le **Services ID**. Si tu mets le Bundle ID d
 1. **Certificates, Identifiers & Profiles** → **Identifiers** → ton **Services ID**.
 2. **Sign in with Apple** → **Configure**.
 3. **Domains and Subdomains** : ajoute `myfidpass.fr` (sans `https://`).
-4. **Return URLs** : ajoute `https://myfidpass.fr/` (avec `https://` et le `/` final).
+4. **Return URLs** : ajoute **chaque** URL suivante (une par ligne ou séparées par des virgules) :
+   - `https://myfidpass.fr/checkout`
+   - `https://myfidpass.fr/login`
+   - `https://myfidpass.fr/register`
+   Sans ces trois URLs, la connexion Apple sur **iPhone et mobile** ne fonctionnera pas (le site utilise un flux par redirection sur mobile).
 
 Sans ça, la popup Apple peut afficher « invalid_request » ou la connexion peut échouer.
 

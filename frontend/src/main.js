@@ -406,6 +406,27 @@ function initAuthPage(initialTab) {
     window.location.replace(redirect);
   }
 
+  // Retour du flux Apple (redirect avec fragment) sur mobile/iOS
+  const authAppleReturn = parseAppleHash();
+  if (authAppleReturn?.id_token && authAppleClientId) {
+    history.replaceState({}, "", window.location.pathname + window.location.search);
+    fetch(`${API_BASE}/api/auth/apple`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idToken: authAppleReturn.id_token,
+        name: authAppleReturn.user?.name ? [authAppleReturn.user.name.firstName, authAppleReturn.user.lastName].filter(Boolean).join(" ") : undefined,
+        email: authAppleReturn.user?.email,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.token) authOAuthSuccess(data);
+        else authOAuthError(data.error || "Erreur connexion Apple.");
+      })
+      .catch(() => authOAuthError("Erreur réseau ou API inaccessible."));
+  }
+
   if (authGoogleClientId) {
     const authGoogleWrap = document.getElementById("auth-google-btn");
     if (authGoogleWrap && !window.__fidpassAuthGoogleInited) {
@@ -449,25 +470,25 @@ function initAuthPage(initialTab) {
   const authAppleBtn = document.getElementById("auth-apple-btn");
   if (authAppleClientId && authAppleBtn && !window.__fidpassAuthAppleInited) {
     window.__fidpassAuthAppleInited = true;
-    const script = document.createElement("script");
-    script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en/appleid.auth.js";
-    script.async = true;
-    script.onload = () => {
-      if (typeof AppleID !== "undefined") {
-        try {
-          AppleID.auth.init({
-            clientId: authAppleClientId,
-            scope: "name email",
-            usePopup: true,
-            redirectURI: window.location.origin + "/",
-          });
-        } catch (e) {
-          console.error("Apple init error:", e);
-        }
-      }
+    const authRedirectUri = window.location.origin + window.location.pathname;
+    const buildAuthAppleRedirectUrl = () => {
+      const state = "auth";
+      const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      return "https://appleid.apple.com/auth/authorize?" + new URLSearchParams({
+        client_id: authAppleClientId,
+        redirect_uri: authRedirectUri,
+        response_type: "id_token code",
+        scope: "name email",
+        response_mode: "fragment",
+        state,
+        nonce,
+      }).toString();
     };
-    document.head.appendChild(script);
     authAppleBtn.addEventListener("click", () => {
+      if (isAppleRedirectDevice()) {
+        window.location.href = buildAuthAppleRedirectUrl();
+        return;
+      }
       if (typeof AppleID === "undefined" || !AppleID.auth) {
         authOAuthError("Connexion Apple non chargée. Rechargez la page ou autorisez les scripts Apple.");
         return;
@@ -501,6 +522,26 @@ function initAuthPage(initialTab) {
           authOAuthError(msg || "Connexion Apple annulée. Réessayez.");
         });
     });
+    if (!isAppleRedirectDevice()) {
+      const script = document.createElement("script");
+      script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en/appleid.auth.js";
+      script.async = true;
+      script.onload = () => {
+        if (typeof AppleID !== "undefined") {
+          try {
+            AppleID.auth.init({
+              clientId: authAppleClientId,
+              scope: "name email",
+              usePopup: true,
+              redirectURI: window.location.origin + "/",
+            });
+          } catch (e) {
+            console.error("Apple init error:", e);
+          }
+        }
+      };
+      document.head.appendChild(script);
+    }
   } else if (authAppleBtn) {
     authAppleBtn.style.display = "none";
   }
@@ -2173,6 +2214,26 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
+function isAppleRedirectDevice() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0 && window.matchMedia("(max-width: 768px)").matches);
+}
+
+function parseAppleHash() {
+  const hash = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
+  if (!hash) return null;
+  const params = new URLSearchParams(hash);
+  const idToken = params.get("id_token");
+  if (!idToken) return null;
+  let user = null;
+  try {
+    const userStr = params.get("user");
+    if (userStr) user = JSON.parse(decodeURIComponent(userStr));
+  } catch (_) {}
+  return { id_token: idToken, state: params.get("state"), user };
+}
+
 function initCheckoutPage() {
   const draft = getCheckoutDraft();
   if (!draft) {
@@ -2255,6 +2316,27 @@ function initCheckoutPage() {
     showOAuthError(msg || "Connexion impossible. Réessayez.");
   }
 
+  // Retour du flux Apple (redirect avec fragment) sur mobile/iOS
+  const appleReturn = parseAppleHash();
+  if (appleReturn?.id_token && appleClientId) {
+    history.replaceState({}, "", window.location.pathname + window.location.search);
+    fetch(`${API_BASE}/api/auth/apple`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idToken: appleReturn.id_token,
+        name: appleReturn.user?.name ? [appleReturn.user.name.firstName, appleReturn.user.lastName].filter(Boolean).join(" ") : undefined,
+        email: appleReturn.user?.email,
+      }),
+    })
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (ok && data?.token) handleOAuthSuccess(data);
+        else handleOAuthError(data?.error || "Erreur connexion Apple.");
+      })
+      .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."));
+  }
+
   if (googleClientId) {
     const googleBtnContainer = document.getElementById("checkout-google-btn");
     if (googleBtnContainer && !window.__fidpassGoogleInited) {
@@ -2304,34 +2386,26 @@ function initCheckoutPage() {
   const appleBtn = document.getElementById("checkout-apple-btn");
   if (appleClientId && appleBtn && !window.__fidpassAppleInited) {
     window.__fidpassAppleInited = true;
-    const script = document.createElement("script");
-    script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en/appleid.auth.js";
-    script.async = true;
-    script.onerror = () => {
-      if (appleBtn && !appleBtn.disabled) {
-        appleBtn.addEventListener("click", () => {
-          handleOAuthError("Le script Apple n’a pas pu se charger. Désactivez le bloqueur de publicités ou réessayez.");
-        }, { once: true });
-      }
+    const redirectUri = typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+    const buildAppleRedirectUrl = () => {
+      const state = "checkout";
+      const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      return "https://appleid.apple.com/auth/authorize?" + new URLSearchParams({
+        client_id: appleClientId,
+        redirect_uri: redirectUri,
+        response_type: "id_token code",
+        scope: "name email",
+        response_mode: "fragment",
+        state,
+        nonce,
+      }).toString();
     };
-    script.onload = () => {
-      if (typeof AppleID !== "undefined") {
-        try {
-          AppleID.auth.init({
-            clientId: appleClientId,
-            scope: "name email",
-            usePopup: true,
-            redirectURI: typeof window !== "undefined" ? window.location.origin + "/" : "",
-          });
-        } catch (e) {
-          console.error("Apple init error:", e);
-        }
-      }
-    };
-    document.head.appendChild(script);
-    // Gestionnaire de clic unique : fonctionne même si le script charge en retard
     appleBtn.addEventListener("click", () => {
       showOAuthError("");
+      if (isAppleRedirectDevice()) {
+        window.location.href = buildAppleRedirectUrl();
+        return;
+      }
       if (typeof AppleID === "undefined" || !AppleID.auth) {
         handleOAuthError("Connexion Apple non chargée. Rechargez la page ou autorisez les scripts (appleid.cdn-apple.com).");
         return;
@@ -2370,6 +2444,31 @@ function initCheckoutPage() {
             handleOAuthError(msg || "Connexion Apple annulée ou erreur. Réessayez.");
         });
     });
+    if (!isAppleRedirectDevice()) {
+      const script = document.createElement("script");
+      script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en/appleid.auth.js";
+      script.async = true;
+      script.onerror = () => {
+        appleBtn.addEventListener("click", () => {
+          handleOAuthError("Le script Apple n’a pas pu se charger. Désactivez le bloqueur de publicités ou réessayez.");
+        }, { once: true });
+      };
+      script.onload = () => {
+        if (typeof AppleID !== "undefined") {
+          try {
+            AppleID.auth.init({
+              clientId: appleClientId,
+              scope: "name email",
+              usePopup: true,
+              redirectURI: typeof window !== "undefined" ? window.location.origin + "/" : "",
+            });
+          } catch (e) {
+            console.error("Apple init error:", e);
+          }
+        }
+      };
+      document.head.appendChild(script);
+    }
   }
 
   // Toujours afficher la section « Ou continuer avec » ; les boutons sont actifs seulement si les client IDs sont configurés (Vercel).
