@@ -194,7 +194,12 @@ router.post("/apple", async (req, res) => {
     });
   } catch (e) {
     console.error("Apple auth error:", e);
-    return res.status(401).json({ error: "Token Apple invalide ou expiré" });
+    const msg = e.message || "";
+    if (msg.includes("audience") || msg.includes("aud"))
+      return res.status(401).json({ error: "Configuration Apple incorrecte : utilisez le Services ID (pas le Bundle ID) pour APPLE_CLIENT_ID sur Railway." });
+    if (msg.includes("expired") || msg.includes("exp"))
+      return res.status(401).json({ error: "Session Apple expirée. Réessayez la connexion." });
+    return res.status(401).json({ error: "Token Apple invalide ou expiré. Vérifiez APPLE_CLIENT_ID (Services ID) sur Railway et la config Apple Developer." });
   }
 });
 

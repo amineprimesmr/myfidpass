@@ -50,3 +50,41 @@ Utilise la **même valeur** de Client ID côté frontend et backend (ex. le mêm
 - **Railway** : le backend recharge les variables au redémarrage.
 
 Ensuite, rafraîchis myfidpass.fr (Cmd+Shift+R) : les boutons Google et Apple deviennent cliquables et fonctionnels.
+
+---
+
+## Dépannage : « La création de compte avec Apple ne fonctionne pas »
+
+### 1. Vérifier les variables
+
+| Où | Variable | Valeur attendue |
+|----|----------|-----------------|
+| **Vercel** | `VITE_APPLE_CLIENT_ID` | Ton **Services ID** Apple (ex. `fr.myfidpass.service`) |
+| **Railway** | `APPLE_CLIENT_ID` | **Exactement le même** Services ID |
+
+Si une des deux manque ou est différente, la connexion Apple échouera.
+
+### 2. Utiliser le Services ID, pas le Bundle ID
+
+- **Services ID** = identifiant pour « Sign in with Apple » sur le **web** (type « Services ID » dans Apple Developer).
+- **Bundle ID** = identifiant d’une app iOS.
+
+Pour myfidpass.fr il faut utiliser le **Services ID**. Si tu mets le Bundle ID dans `APPLE_CLIENT_ID` / `VITE_APPLE_CLIENT_ID`, le backend renverra une erreur du type « utilisez le Services ID ».
+
+### 3. Configurer le domaine et l’URL de retour dans Apple Developer
+
+1. **Certificates, Identifiers & Profiles** → **Identifiers** → ton **Services ID**.
+2. **Sign in with Apple** → **Configure**.
+3. **Domains and Subdomains** : ajoute `myfidpass.fr` (sans `https://`).
+4. **Return URLs** : ajoute `https://myfidpass.fr/` (avec `https://` et le `/` final).
+
+Sans ça, la popup Apple peut afficher « invalid_request » ou la connexion peut échouer.
+
+### 4. Message « Email non fourni par Apple »
+
+Si l’utilisateur choisit de **masquer son e-mail** la première fois, Apple peut ne pas l’envoyer. Il doit réautoriser l’app en partageant l’e-mail, ou utiliser la connexion par e-mail / Google.
+
+### 5. Redéployer après modification des variables
+
+- **Vercel** : redéploi automatique après sauvegarde des variables, ou « Redeploy » manuel.
+- **Railway** : redémarrage du service après modification des variables (souvent automatique).
