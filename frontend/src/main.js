@@ -238,6 +238,7 @@ function initRouting() {
       landingTemplates.classList.remove("hidden");
       initBuilderPage();
     }
+    updateAuthNavLinks();
   } else if (route.type === "offers") {
     if (!getAuthToken()) {
       window.location.replace("/login?redirect=/choisir-offre");
@@ -293,8 +294,25 @@ function initRouting() {
     const landingIntegration = document.getElementById("landing-integration");
     if (landingIntegration) landingIntegration.classList.add("hidden");
     if (landingTemplates) landingTemplates.classList.add("hidden");
+    updateAuthNavLinks();
   }
   return null;
+}
+
+/** Met à jour les liens "Se connecter" / "Mon espace" selon la présence du token (landing + builder). */
+function updateAuthNavLinks() {
+  const isLoggedIn = !!getAuthToken();
+  const label = isLoggedIn ? "Mon espace" : "Se connecter";
+  const landingHref = isLoggedIn ? "/app" : "/login?redirect=/app";
+  document.querySelectorAll(".landing-nav-login-link, .landing-menu-drawer-login").forEach((a) => {
+    a.textContent = label;
+    a.href = landingHref;
+  });
+  const builderLogin = document.getElementById("builder-header-login");
+  if (builderLogin) {
+    builderLogin.textContent = label;
+    builderLogin.href = isLoggedIn ? "/app" : "/login?redirect=/creer-ma-carte";
+  }
 }
 
 function initAuthPage(initialTab) {
@@ -399,7 +417,9 @@ function initAuthPage(initialTab) {
         return;
       }
       setAuthToken(data.token);
-      window.location.replace("/app");
+      const redirectParams = new URLSearchParams(window.location.search);
+      const redirect = redirectParams.get("redirect") || "/app";
+      window.location.replace(redirect);
     } catch (err) {
       if (registerError) {
         registerError.textContent = "Impossible de joindre l'API. En local : démarrez le backend (port 3001). Sinon testez sur myfidpass.fr.";

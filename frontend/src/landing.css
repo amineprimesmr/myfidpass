@@ -739,6 +739,22 @@
   align-items: center;
   gap: 1rem;
 }
+.builder-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-self: start;
+}
+.builder-header-login {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+}
+.builder-header-login:hover {
+  color: #000;
+  text-decoration: underline;
+}
 .builder-header-logo {
   display: flex;
   align-items: center;
@@ -746,7 +762,6 @@
   text-decoration: none;
   color: #000;
   line-height: 1;
-  justify-self: start;
 }
 .builder-header-logo:hover {
   color: #333;
@@ -2811,7 +2826,10 @@ body.page-checkout .site-banner { display: none !important; }
   font-weight: 700;
 }
 .checkout-commerce-context-step2 { margin-bottom: 0.75rem; }
-.checkout-step-subtitle { font-size: 0.9rem; color: #555; margin: 0 0 1rem; font-weight: 400; }
+.checkout-step-subtitle { font-size: 0.9rem; color: #555; margin: 0 0 0.5rem; font-weight: 400; }
+.checkout-have-account { margin: 0 0 1rem; font-size: 0.9rem; }
+.checkout-login-link { color: var(--landing-accent, #2563eb); font-weight: 600; text-decoration: none; }
+.checkout-login-link:hover { text-decoration: underline; }
 .checkout-field-error { font-size: 0.85rem; color: #b91c1c; margin: 0.35rem 0 0; }
 .checkout-oauth-error { margin-bottom: 0.75rem; }
 .checkout-field-error:not(.hidden) + .checkout-btn-next { margin-top: 0.5rem; }

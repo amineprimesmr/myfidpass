@@ -1,21 +1,36 @@
-/* Auth — dans le shell unifié (header noir + fond landing) */
+/* Auth — refonte UX (shell unifié) */
 #auth-app {
-  --auth-bg: #fafafa;
+  --auth-bg: #f4f6f9;
   --auth-surface: #fff;
-  --auth-border: #e5e5e5;
-  --auth-text: #1a1a1a;
-  --auth-muted: #6b7280;
+  --auth-border: #e8ecf1;
+  --auth-text: #1a202c;
+  --auth-muted: #64748b;
   --auth-accent: #0a7c42;
+  --auth-accent-light: rgba(10, 124, 66, 0.12);
+  --auth-radius: 14px;
+  --auth-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .auth-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   background: var(--auth-surface);
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  padding: 2.25rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   border: 1px solid var(--auth-border);
+  animation: auth-card-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .auth-logo {
@@ -26,26 +41,30 @@
   color: var(--auth-text);
   text-decoration: none;
   margin-bottom: 2rem;
+  letter-spacing: -0.02em;
+  transition: color var(--auth-transition);
 }
+.auth-logo:hover { color: var(--auth-accent); }
 
 .auth-tabs {
   display: flex;
   gap: 0;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
   border-bottom: 1px solid var(--auth-border);
 }
 
 .auth-tab {
   flex: 1;
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
   background: none;
   border: none;
   color: var(--auth-muted);
   font: inherit;
   font-weight: 500;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
   margin-bottom: -1px;
+  transition: color var(--auth-transition), border-color var(--auth-transition);
 }
 
 .auth-tab:hover { color: var(--auth-text); }
@@ -53,46 +72,55 @@
 .auth-tab.active {
   color: var(--auth-accent);
   border-bottom-color: var(--auth-accent);
+  font-weight: 600;
 }
 
 .auth-form-block { margin-bottom: 1rem; }
 
 .auth-title {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   margin-bottom: 1.25rem;
+  color: var(--auth-text);
+  letter-spacing: -0.02em;
 }
 
 .auth-form .auth-label {
   display: block;
   font-size: 0.875rem;
+  font-weight: 500;
   color: var(--auth-muted);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.4rem;
 }
 
 .auth-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
   margin-bottom: 1rem;
-  background: #fafafa;
+  background: var(--auth-bg);
   border: 1px solid var(--auth-border);
-  border-radius: 8px;
+  border-radius: var(--auth-radius);
   color: var(--auth-text);
   font: inherit;
   box-sizing: border-box;
+  transition: border-color var(--auth-transition), box-shadow var(--auth-transition);
 }
 
 .auth-input::placeholder { color: var(--auth-muted); }
 
+.auth-input:hover { border-color: #cbd5e1; }
+
 .auth-input:focus {
   outline: none;
   border-color: var(--auth-accent);
+  box-shadow: 0 0 0 3px var(--auth-accent-light);
 }
 
 .auth-error {
-  color: #c62828;
+  color: #dc2626;
   font-size: 0.9rem;
   margin-bottom: 0.75rem;
+  font-weight: 500;
 }
 
 .auth-error.hidden { display: none; }
@@ -138,8 +166,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.7rem 1rem;
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border-radius: var(--auth-radius);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -147,14 +175,16 @@
   border: 1px solid var(--auth-border);
   background: var(--auth-surface);
   color: var(--auth-text);
+  transition: background var(--auth-transition), border-color var(--auth-transition), transform 0.15s ease;
 }
-.auth-btn-social:hover { background: #f5f5f5; }
+.auth-btn-social:hover { background: var(--auth-bg); border-color: #cbd5e1; }
+.auth-btn-social:active { transform: scale(0.98); }
 .auth-btn-apple {
   background: #000;
   color: #fff;
   border-color: #000;
 }
-.auth-btn-apple:hover { background: #333; }
+.auth-btn-apple:hover { background: #1a1a1a; border-color: #1a1a1a; }
 .auth-btn-social-disabled,
 .auth-btn-social:disabled {
   opacity: 0.6;

@@ -20,6 +20,14 @@
 html {
   font-size: 18px;
   -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  #app-app *,
+  #app-app *::before,
+  #app-app *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
 body {

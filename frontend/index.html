@@ -24,10 +24,13 @@
     <!-- Header parcours (étapes 1–2–3) : visible sur /creer-ma-carte et /checkout -->
     <header class="builder-header hidden" id="builder-header" aria-hidden="true">
       <div class="builder-header-inner">
-        <a href="/" class="builder-header-logo" aria-label="Myfidpass">
-          <img src="/assets/logodark.png" alt="" class="builder-header-logo-img" onerror="this.style.display='none'; this.closest('.builder-header-logo')?.classList.add('show-fallback');">
-          <span class="builder-header-logo-fallback" aria-hidden="true">Myfidpass</span>
-        </a>
+        <div class="builder-header-left">
+          <a href="/" class="builder-header-logo" aria-label="Myfidpass">
+            <img src="/assets/logodark.png" alt="" class="builder-header-logo-img" onerror="this.style.display='none'; this.closest('.builder-header-logo')?.classList.add('show-fallback');">
+            <span class="builder-header-logo-fallback" aria-hidden="true">Myfidpass</span>
+          </a>
+          <a href="/login?redirect=/creer-ma-carte" class="builder-header-login" id="builder-header-login">Se connecter</a>
+        </div>
         <nav class="builder-header-steps" aria-label="Étapes du parcours">
           <button type="button" class="builder-header-step builder-header-step-active" data-step="1" aria-current="step" aria-label="Étape 1">1</button>
           <button type="button" class="builder-header-step" data-step="2" aria-label="Étape 2">2</button>
@@ -148,6 +151,7 @@
               <h2 class="checkout-step-title">1. CRÉATION DE COMPTE</h2>
               <p class="checkout-commerce-context">Compte pour <strong id="checkout-commerce-context-name" class="checkout-commerce-context-name">—</strong></p>
               <p class="checkout-step-subtitle">Saisissez votre adresse e-mail pour continuer.</p>
+              <p class="checkout-have-account"><a href="/login?redirect=/checkout" class="checkout-login-link">Déjà un compte ? Se connecter</a></p>
               <p id="checkout-oauth-error" class="checkout-field-error checkout-oauth-error hidden" role="alert"></p>
               <div class="checkout-step-content">
                 <p class="checkout-social-divider">Ou continuer avec</p>
@@ -741,6 +745,7 @@
             <a href="#produit">Offre</a>
             <a href="#faq">FAQ</a>
             <a href="#contact">Contact</a>
+            <a href="/login?redirect=/app" class="landing-nav-login-link">Se connecter</a>
           </nav>
           <a href="/creer-ma-carte" class="landing-cta landing-cta-desk">Obtenir ma carte</a>
         </div>
@@ -760,6 +765,7 @@
             <a href="#produit">Offre</a>
             <a href="#faq">FAQ</a>
             <a href="#contact">Contact</a>
+            <a href="/login?redirect=/app" class="landing-menu-drawer-login">Se connecter</a>
             <a href="/creer-ma-carte" class="landing-menu-drawer-cta">Obtenir ma carte</a>
           </nav>
         </div>
