@@ -117,6 +117,12 @@ db.exec(`
     FOREIGN KEY (business_id) REFERENCES businesses(id)
   );
   CREATE INDEX IF NOT EXISTS idx_notification_log_business ON notification_log(business_id);
+
+  CREATE TABLE IF NOT EXISTS merchant_device_tokens (
+    user_id TEXT PRIMARY KEY REFERENCES users(id),
+    device_token TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
 // Migration : ajouter business_id si ancienne base
@@ -446,6 +452,16 @@ export function registerPassDevice({ deviceLibraryIdentifier, passTypeIdentifier
 }
 
 const TEST_DEVICE_ID = "test-device-123";
+
+/** Enregistre ou met à jour le token APNs de l'app commerçant (iOS) pour un utilisateur. */
+export function upsertMerchantDeviceToken(userId, deviceToken) {
+  if (!userId || !deviceToken || typeof deviceToken !== "string" || !deviceToken.trim()) return;
+  const now = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO merchant_device_tokens (user_id, device_token, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET device_token = excluded.device_token, updated_at = excluded.updated_at`
+  ).run(userId, deviceToken.trim(), now);
+}
 
 /** Tokens push pour un membre (Apple Wallet) — pour envoyer une notif après mise à jour des points. */
 export function getPushTokensForMember(serialNumber) {

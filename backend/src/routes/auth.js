@@ -100,7 +100,7 @@ router.post("/login", async (req, res) => {
   }
   const user = getUserByEmail(emailNorm);
   if (!user) {
-    return res.status(401).json({ error: "Email ou mot de passe incorrect" });
+    return res.status(404).json({ error: "Aucun compte associé à cet email. Créez votre compte sur myfidpass.fr.", code: "NO_ACCOUNT" });
   }
   const ok = await bcrypt.compare(String(password), user.password_hash);
   if (!ok) {
@@ -135,15 +135,9 @@ router.post("/google", async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: "Email non fourni par Google" });
     }
-    let user = getUserByEmail(email);
+    const user = getUserByEmail(email);
     if (!user) {
-      const name = [payload?.given_name, payload?.family_name].filter(Boolean).join(" ").trim() || payload?.name || null;
-      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
-      user = createUser({
-        email,
-        passwordHash: oauthPlaceholder,
-        name: name || null,
-      });
+      return res.status(404).json({ error: "Aucun compte associé. Créez votre compte sur myfidpass.fr.", code: "NO_ACCOUNT" });
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
@@ -185,15 +179,9 @@ router.post("/apple", async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: "Email non fourni par Apple. Réautorisez l'application pour partager votre email." });
     }
-    let user = getUserByEmail(email);
+    const user = getUserByEmail(email);
     if (!user) {
-      const name = (bodyName || "").trim() || null;
-      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
-      user = createUser({
-        email,
-        passwordHash: oauthPlaceholder,
-        name,
-      });
+      return res.status(404).json({ error: "Aucun compte associé. Créez votre compte sur myfidpass.fr.", code: "NO_ACCOUNT" });
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
@@ -301,8 +289,8 @@ router.get("/me", (req, res, next) => {
   res.json({
     user: { id: req.user.id, email: req.user.email, name: req.user.name },
     businesses,
-    subscription: subscription ? { status: subscription.status, planId: subscription.plan_id } : null,
-    hasActiveSubscription: hasActiveSubscription(req.user.id),
+    subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
+    has_active_subscription: hasActiveSubscription(req.user.id),
   });
 });
 

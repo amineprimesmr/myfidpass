@@ -60,19 +60,20 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
+  // snake_case pour l'app iOS (keyDecodingStrategy .convertFromSnakeCase)
   res.json({
-    organizationName: business.organization_name,
-    backgroundColor: business.background_color ?? undefined,
-    foregroundColor: business.foreground_color ?? undefined,
-    labelColor: business.label_color ?? undefined,
-    backTerms: business.back_terms ?? undefined,
-    backContact: business.back_contact ?? undefined,
-    locationLat: business.location_lat != null ? Number(business.location_lat) : undefined,
-    locationLng: business.location_lng != null ? Number(business.location_lng) : undefined,
-    locationRelevantText: business.location_relevant_text ?? undefined,
-    locationRadiusMeters: business.location_radius_meters != null ? Number(business.location_radius_meters) : undefined,
-    locationAddress: business.location_address ?? undefined,
-    requiredStamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
+    organization_name: business.organization_name ?? undefined,
+    background_color: business.background_color ?? undefined,
+    foreground_color: business.foreground_color ?? undefined,
+    label_color: business.label_color ?? undefined,
+    back_terms: business.back_terms ?? undefined,
+    back_contact: business.back_contact ?? undefined,
+    location_lat: business.location_lat != null ? Number(business.location_lat) : undefined,
+    location_lng: business.location_lng != null ? Number(business.location_lng) : undefined,
+    location_relevant_text: business.location_relevant_text ?? undefined,
+    location_radius_meters: business.location_radius_meters != null ? Number(business.location_radius_meters) : undefined,
+    location_address: business.location_address ?? undefined,
+    required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
   });
 });
 
@@ -125,7 +126,15 @@ router.get("/:slug/dashboard/stats", (req, res, next) => {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
   const stats = getDashboardStats(business.id);
-  res.json({ ...stats, businessName: business.organization_name });
+  // snake_case pour l'app iOS (keyDecodingStrategy .convertFromSnakeCase)
+  res.json({
+    members_count: stats.membersCount ?? 0,
+    points_this_month: stats.pointsThisMonth ?? 0,
+    transactions_this_month: stats.transactionsThisMonth ?? 0,
+    new_members_last_7_days: stats.newMembersLast7Days ?? 0,
+    new_members_last_30_days: stats.newMembersLast30Days ?? 0,
+    business_name: business.organization_name ?? undefined,
+  });
 });
 
 /**
@@ -232,6 +241,54 @@ router.get("/:slug/dashboard/transactions/export", (req, res, next) => {
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="transactions-${business.slug}.csv"`);
   res.send("\uFEFF" + csv);
+});
+
+/**
+ * POST /api/businesses/:slug/notify
+ * Alias pour l'app iOS : body { message }. Envoie la notif aux clients (Web Push + PassKit).
+ */
+router.post("/:slug/notify", async (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const message = (req.body?.message ?? "").trim();
+  if (!message) return res.status(400).json({ error: "Le message est obligatoire" });
+  const webSubscriptions = getWebPushSubscriptionsByBusiness(business.id);
+  const passKitTokens = getPassKitPushTokensForBusiness(business.id);
+  const totalDevices = webSubscriptions.length + passKitTokens.length;
+  if (totalDevices === 0) {
+    return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0 });
+  }
+  const payload = { title: (business.organization_name || "Myfidpass").trim(), body: message };
+  setLastBroadcastMessage(business.id, payload.title ? `${payload.title}: ${message}` : message);
+  const touchedMembers = new Set();
+  for (const row of passKitTokens) {
+    if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+      touchMemberLastVisit(row.serial_number);
+      touchedMembers.add(row.serial_number);
+    }
+  }
+  let sentWebPush = 0;
+  let sentPassKit = 0;
+  for (const sub of webSubscriptions) {
+    try {
+      await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+      sentWebPush++;
+      logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body: message, type: "web_push" });
+    } catch (_) {}
+  }
+  for (const row of passKitTokens) {
+    try {
+      const result = await sendPassKitUpdate(row.push_token);
+      if (result.sent) {
+        sentPassKit++;
+        logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body: message, type: "passkit" });
+      }
+    } catch (_) {}
+  }
+  res.status(200).json({ ok: true, sent: sentWebPush + sentPassKit, sentWebPush, sentPassKit });
 });
 
 /**

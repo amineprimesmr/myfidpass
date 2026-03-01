@@ -17,6 +17,7 @@ import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
 import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
 import webPushRouter from "./routes/web-push.js";
+import deviceRouter from "./routes/device.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus } from "./apns.js";
 
@@ -105,6 +106,7 @@ app.get("/api/health/passkit", (req, res) => {
 app.use(passkitWebserviceRouter);
 
 app.use("/api/auth", authRouter);
+app.use("/api/device", deviceRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
 app.use("/api/payment", paymentRouter);
