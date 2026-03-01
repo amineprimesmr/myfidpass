@@ -132,7 +132,7 @@ if (!hasBusinessId) {
 }
 // Migration : couleurs personnalisées sur businesses
 const bizCols = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
-for (const col of ["background_color", "foreground_color", "label_color", "points_per_euro", "points_per_visit", "dashboard_token", "logo_base64"]) {
+for (const col of ["background_color", "foreground_color", "label_color", "points_per_euro", "points_per_visit", "dashboard_token", "logo_base64", "logo_updated_at"]) {
   if (!bizCols.includes(col)) {
     db.exec(`ALTER TABLE businesses ADD COLUMN ${col} TEXT`);
   }
@@ -174,6 +174,11 @@ if (!bizColsUser.includes("user_id")) {
 const bizColsStamps = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
 if (!bizColsStamps.includes("required_stamps")) {
   db.exec("ALTER TABLE businesses ADD COLUMN required_stamps INTEGER");
+}
+// Migration : stamp_emoji (emoji affiché à côté des points/tampons sur le pass — ex. ☕ 🍔 ⭐)
+const bizColsAfter = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+if (!bizColsAfter.includes("stamp_emoji")) {
+  db.exec("ALTER TABLE businesses ADD COLUMN stamp_emoji TEXT");
 }
 // Garantir que la business "demo" existe (migration, avant que getBusinessBySlug soit défini)
 function ensureDemoBusiness() {
@@ -293,12 +298,14 @@ export function updateBusiness(businessId, updates) {
     "foreground_color",
     "label_color",
     "logo_base64",
+    "logo_updated_at",
     "location_lat",
     "location_lng",
     "location_relevant_text",
     "location_radius_meters",
     "location_address",
     "required_stamps",
+    "stamp_emoji",
   ];
   const numericCols = ["location_lat", "location_lng", "location_radius_meters", "required_stamps"];
   const setClauses = [];
@@ -318,6 +325,10 @@ export function updateBusiness(businessId, updates) {
     }
   }
   if (setClauses.length === 0) return b;
+  if (updates.logo_base64 !== undefined) {
+    setClauses.push("logo_updated_at = ?");
+    values.push(new Date().toISOString());
+  }
   values.push(businessId);
   db.prepare(`UPDATE businesses SET ${setClauses.join(", ")} WHERE id = ?`).run(...values);
   return getBusinessById(businessId);
@@ -614,7 +625,8 @@ export function getMembersForBusiness(businessId, { search = "", limit = 50, off
   const countStmt = db.prepare(`SELECT COUNT(*) as n FROM members WHERE ${where}`);
   const rows = stmt.all(...params, limit, offset);
   const total = countStmt.get(...params)?.n ?? 0;
-  return { members: rows, total };
+  const members = rows.map((m) => ({ ...m, category_ids: getCategoryIdsForMember(m.id) }));
+  return { members, total };
 }
 
 export function getTransactionsForBusiness(businessId, { limit = 30, offset = 0, memberId = null, days = null, type = null } = {}) {
@@ -698,6 +710,139 @@ if (!bizColsFinal.includes("last_broadcast_at")) {
   } catch (_) {}
 }
 
+// ——— Catégories de membres (classement par le commerçant, ciblage notifications) ———
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS member_categories (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      color_hex TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (business_id) REFERENCES businesses(id)
+    );
+    CREATE TABLE IF NOT EXISTS member_category_assignments (
+      member_id TEXT NOT NULL,
+      category_id TEXT NOT NULL,
+      PRIMARY KEY (member_id, category_id),
+      FOREIGN KEY (member_id) REFERENCES members(id),
+      FOREIGN KEY (category_id) REFERENCES member_categories(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_member_categories_business ON member_categories(business_id);
+    CREATE INDEX IF NOT EXISTS idx_member_category_assignments_member ON member_category_assignments(member_id);
+    CREATE INDEX IF NOT EXISTS idx_member_category_assignments_category ON member_category_assignments(category_id);
+  `);
+} catch (_) {}
+
+export function getCategoriesForBusiness(businessId) {
+  if (!businessId) return [];
+  return db.prepare(
+    "SELECT id, name, color_hex, sort_order FROM member_categories WHERE business_id = ? ORDER BY sort_order ASC, name ASC"
+  ).all(businessId);
+}
+
+export function createCategory({ id: catId, businessId, name, colorHex, sortOrder = 0 }) {
+  const id = catId || randomUUID();
+  db.prepare(
+    "INSERT INTO member_categories (id, business_id, name, color_hex, sort_order) VALUES (?, ?, ?, ?, ?)"
+  ).run(id, businessId, String(name).trim(), colorHex ? String(colorHex).trim() : null, Number(sortOrder) || 0);
+  return db.prepare("SELECT id, name, color_hex, sort_order FROM member_categories WHERE id = ?").get(id);
+}
+
+export function getCategoryById(categoryId) {
+  if (!categoryId) return null;
+  return db.prepare("SELECT id, business_id, name, color_hex, sort_order FROM member_categories WHERE id = ?").get(categoryId);
+}
+
+export function updateCategory(categoryId, { name, colorHex, sortOrder }) {
+  const cat = getCategoryById(categoryId);
+  if (!cat) return null;
+  const updates = [];
+  const values = [];
+  if (name !== undefined) {
+    updates.push("name = ?");
+    values.push(String(name).trim());
+  }
+  if (colorHex !== undefined) {
+    updates.push("color_hex = ?");
+    values.push(colorHex ? String(colorHex).trim() : null);
+  }
+  if (sortOrder !== undefined) {
+    updates.push("sort_order = ?");
+    values.push(Number(sortOrder) || 0);
+  }
+  if (updates.length === 0) return cat;
+  values.push(categoryId);
+  db.prepare(`UPDATE member_categories SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+  return getCategoryById(categoryId);
+}
+
+export function deleteCategory(categoryId) {
+  if (!categoryId) return false;
+  db.prepare("DELETE FROM member_category_assignments WHERE category_id = ?").run(categoryId);
+  const r = db.prepare("DELETE FROM member_categories WHERE id = ?").run(categoryId);
+  return r.changes > 0;
+}
+
+export function getCategoryIdsForMember(memberId) {
+  if (!memberId) return [];
+  const rows = db.prepare("SELECT category_id FROM member_category_assignments WHERE member_id = ?").all(memberId);
+  return rows.map((r) => r.category_id);
+}
+
+export function setMemberCategories(memberId, categoryIds) {
+  if (!memberId) return;
+  db.prepare("DELETE FROM member_category_assignments WHERE member_id = ?").run(memberId);
+  if (!Array.isArray(categoryIds) || categoryIds.length === 0) return;
+  const stmt = db.prepare("INSERT INTO member_category_assignments (member_id, category_id) VALUES (?, ?)");
+  for (const cid of categoryIds) {
+    if (cid && getCategoryById(cid)) stmt.run(memberId, cid);
+  }
+}
+
+/** Tokens PassKit pour un commerce, optionnellement limités à une liste de member_ids (pour notify par catégorie). */
+export function getPassKitPushTokensForBusinessFiltered(businessId, memberIds = null) {
+  const base = db.prepare(
+    `SELECT pr.push_token, pr.serial_number
+     FROM pass_registrations pr
+     INNER JOIN members m ON m.id = pr.serial_number
+     WHERE m.business_id = ? AND pr.push_token IS NOT NULL AND pr.push_token != ''
+       AND pr.device_library_identifier != ?`
+  );
+  let rows = base.all(businessId, TEST_DEVICE_ID);
+  if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
+    const set = new Set(memberIds);
+    rows = rows.filter((r) => set.has(r.serial_number));
+  }
+  return rows;
+}
+
+/** Web Push subscriptions pour un commerce, optionnellement limitées à une liste de member_ids. */
+export function getWebPushSubscriptionsByBusinessFiltered(businessId, memberIds = null) {
+  let rows = db.prepare(
+    "SELECT id, member_id, endpoint, p256dh, auth FROM web_push_subscriptions WHERE business_id = ?"
+  ).all(businessId);
+  if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
+    const set = new Set(memberIds);
+    rows = rows.filter((r) => set.has(r.member_id));
+  }
+  return rows;
+}
+
+/** IDs des membres ayant au moins une des catégories données (catégories du même business). */
+export function getMemberIdsInCategories(businessId, categoryIds) {
+  if (!businessId || !Array.isArray(categoryIds) || categoryIds.length === 0) return [];
+  const cats = db.prepare(
+    "SELECT id FROM member_categories WHERE business_id = ? AND id IN (" + categoryIds.map(() => "?").join(",") + ")"
+  ).all(businessId, ...categoryIds);
+  const validIds = cats.map((c) => c.id);
+  if (validIds.length === 0) return [];
+  const rows = db.prepare(
+    "SELECT DISTINCT member_id FROM member_category_assignments WHERE category_id IN (" + validIds.map(() => "?").join(",") + ")"
+  ).all(...validIds);
+  return rows.map((r) => r.member_id);
+}
+
 /** Met à jour le dernier message envoyé à tous (section Notifications). Permet d'afficher une notif sur l'écran de verrouillage Wallet. last_broadcast_at force le pass à être considéré modifié (Last-Modified) pour que l'iPhone refetch. */
 export function setLastBroadcastMessage(businessId, message) {
   if (!businessId || message == null) return;
@@ -762,6 +907,8 @@ export function resetAllData() {
   db.exec("DELETE FROM transactions");
   db.exec("DELETE FROM web_push_subscriptions");
   db.exec("DELETE FROM pass_registrations");
+  db.exec("DELETE FROM member_category_assignments");
+  db.exec("DELETE FROM member_categories");
   db.exec("DELETE FROM members");
   db.exec("DELETE FROM businesses");
   db.exec("DELETE FROM subscriptions");

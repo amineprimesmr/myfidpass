@@ -4,7 +4,39 @@ import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { PNG } from "pngjs";
+import sharp from "sharp";
 import { getLevel } from "./db.js";
+
+/** Dimensions Apple pour le logo du pass : logo@2x = 320×100 px, logo = 160×50 px. */
+const LOGO_WIDTH_2X = 320;
+const LOGO_HEIGHT_2X = 100;
+const LOGO_WIDTH_1X = 160;
+const LOGO_HEIGHT_1X = 50;
+
+/**
+ * Redimensionne et convertit en PNG le buffer image (PNG/JPEG) pour respecter les specs Apple.
+ * Retourne { logoPng: Buffer (160×50), logoPng2x: Buffer (320×100) } ou null en cas d'erreur.
+ */
+async function resizeLogoForPass(inputBuffer) {
+  if (!inputBuffer || inputBuffer.length === 0) return null;
+  try {
+    const pipeline = sharp(inputBuffer);
+    const meta = await pipeline.metadata();
+    if (!meta.width || !meta.height) return null;
+    const out2x = await sharp(inputBuffer)
+      .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toBuffer();
+    const out1x = await sharp(inputBuffer)
+      .resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toBuffer();
+    return { logoPng: out1x, logoPng2x: out2x };
+  } catch (err) {
+    console.warn("[PassKit] resizeLogoForPass failed:", err.message);
+    return null;
+  }
+}
 
 /** Token d'authentification PassKit (HMAC sur serialNumber) — min 16 caractères requis par Apple. */
 export function getPassAuthenticationToken(serialNumber) {
@@ -248,35 +280,43 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   const organizationName =
-    business?.organization_name || options.organizationName || process.env.ORGANIZATION_NAME || "Carte fidélité";
+    options.organizationName || business?.organization_name || process.env.ORGANIZATION_NAME || "Carte fidélité";
   const certificates = loadCertificates();
   const buffers = buildBuffers(business?.id, options);
   if (business?.logo_base64) {
     const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "");
     const logoBuf = Buffer.from(base64Data, "base64");
     if (logoBuf.length > 0) {
-      buffers["logo.png"] = logoBuf;
-      buffers["logo@2x.png"] = logoBuf;
+      const resized = await resizeLogoForPass(logoBuf);
+      if (resized) {
+        buffers["logo.png"] = resized.logoPng;
+        buffers["logo@2x.png"] = resized.logoPng2x;
+      } else {
+        buffers["logo.png"] = logoBuf;
+        buffers["logo@2x.png"] = logoBuf;
+      }
     }
   }
 
   const level = getLevel(member.points);
   const format = options.format || "points";
-  const stampMax = options.stampMax ?? 10;
+  const stampMax = options.required_stamps ?? options.stampMax ?? business?.required_stamps ?? 10;
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
   const isSectorTemplate = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template);
 
-  // Couleurs : priorité aux couleurs enregistrées sur la business, sinon template
+  // Couleurs : priorité options (design envoyé par l'app), puis business, puis template
+  const toHex = (v) => (v && String(v).trim()) ? (String(v).startsWith("#") ? v : `#${v}`) : null;
+  const bgHex = toHex(options.backgroundColor ?? options.background_color) ?? toHex(business?.background_color);
+  const fgHex = toHex(options.foregroundColor ?? options.foreground_color) ?? toHex(business?.foreground_color);
+  const labelHex = toHex(options.label_color) ?? toHex(business?.label_color);
   const templateKey = isSectorTemplate ? options.template : options.template;
-  const customColors =
-    business?.background_color || business?.foreground_color || business?.label_color
-      ? {
-          backgroundColor: business.background_color || PASS_TEMPLATES.classic.backgroundColor,
-          foregroundColor: business.foreground_color || PASS_TEMPLATES.classic.foregroundColor,
-          labelColor: business.label_color || PASS_TEMPLATES.classic.labelColor,
-        }
-      : PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
+  const classic = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
+  const customColors = {
+    backgroundColor: bgHex || classic.backgroundColor,
+    foregroundColor: fgHex || classic.foregroundColor,
+    labelColor: labelHex || classic.labelColor,
+  };
 
   const webServiceURL = process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL;
   const authToken = getPassAuthenticationToken(member.id);
@@ -317,11 +357,13 @@ export async function generatePass(member, business = null, options = {}) {
     });
   }
 
+  const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   if (format === "tampons") {
+    const stampValue = stampEmoji ? `${stampEmoji} ${stamps} / ${stampMax}` : `${stamps} / ${stampMax}`;
     pass.primaryFields.push({
       key: "stamps",
       label: "Tampons",
-      value: `${stamps} / ${stampMax}`,
+      value: stampValue,
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tampons : %@",
     });
@@ -349,10 +391,11 @@ export async function generatePass(member, business = null, options = {}) {
       pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
     }
   } else {
+    const pointsValue = stampEmoji ? `${stampEmoji} ${member.points}` : String(member.points);
     pass.primaryFields.push({
       key: "points",
       label: "Points",
-      value: member.points,
+      value: pointsValue,
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tu as maintenant %@ points !",
     });

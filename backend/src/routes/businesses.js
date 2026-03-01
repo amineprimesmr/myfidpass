@@ -27,8 +27,17 @@ import {
   touchMemberLastVisit,
   ensureDefaultBusiness,
   canCreateBusiness,
+  getCategoriesForBusiness,
+  createCategory,
+  getCategoryById,
+  updateCategory,
+  deleteCategory,
+  setMemberCategories,
+  getPassKitPushTokensForBusinessFiltered,
+  getWebPushSubscriptionsByBusinessFiltered,
+  getMemberIdsInCategories,
 } from "../db.js";
-import { sendWebPush } from "../notifications.js";
+import { sendWebPush, getLogoIconDataUrl } from "../notifications.js";
 import { sendPassKitUpdate } from "../apns.js";
 import { requireAuth } from "../middleware/auth.js";
 import { generatePass, getPassAuthenticationToken } from "../pass.js";
@@ -60,6 +69,7 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
+  const apiBase = (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
   // snake_case pour l'app iOS (keyDecodingStrategy .convertFromSnakeCase)
   res.json({
     organization_name: business.organization_name ?? undefined,
@@ -74,6 +84,9 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     location_radius_meters: business.location_radius_meters != null ? Number(business.location_radius_meters) : undefined,
     location_address: business.location_address ?? undefined,
     required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
+    stamp_emoji: business.stamp_emoji ?? undefined,
+    logo_url: business.logo_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/logo` : undefined,
+    logo_updated_at: business.logo_updated_at ?? undefined,
   });
 });
 
@@ -89,7 +102,9 @@ function normalizeHexForPatch(v) {
   if (/^[0-9A-Fa-f]{6}$/.test(s)) return `#${s}`;
   return null;
 }
-router.patch("/:slug/dashboard/settings", (req, res) => {
+const MAX_LOGO_BASE64_BYTES = 4 * 1024 * 1024; // 4 Mo
+
+router.patch("/:slug/dashboard/settings", async (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
   if (!canAccessDashboard(business, req)) {
@@ -100,13 +115,54 @@ router.patch("/:slug/dashboard/settings", (req, res) => {
   const background_color = body.background_color ?? body.backgroundColor;
   const foreground_color = body.foreground_color ?? body.foregroundColor;
   const required_stamps = body.required_stamps ?? body.requiredStamps;
+  const stamp_emoji = body.stamp_emoji ?? body.stampEmoji;
+  const logo_base64 = body.logo_base64 ?? body.logoBase64;
+  const logo_url = (body.logo_url ?? body.logoUrl ?? "").trim();
+  const location_address = body.location_address ?? body.locationAddress;
   const updates = {};
   if (organization_name !== undefined) updates.organization_name = organization_name ? String(organization_name).trim() : null;
+  if (location_address !== undefined) updates.location_address = location_address ? String(location_address).trim() : null;
   if (background_color !== undefined) updates.background_color = normalizeHexForPatch(background_color);
   if (foreground_color !== undefined) updates.foreground_color = normalizeHexForPatch(foreground_color);
   if (required_stamps !== undefined) {
     const n = required_stamps === null || required_stamps === "" ? null : Number(required_stamps);
     updates.required_stamps = Number.isInteger(n) && n >= 0 ? n : null;
+  }
+  if (stamp_emoji !== undefined) {
+    // Un seul emoji ou chaîne courte (ex. "☕" ou "⭐") — stockée telle quelle pour le pass
+    const v = stamp_emoji == null || stamp_emoji === "" ? null : String(stamp_emoji).trim().slice(0, 8);
+    updates.stamp_emoji = v || null;
+  }
+  if (logo_base64 !== undefined) {
+    if (logo_base64 === null || (typeof logo_base64 === "string" && logo_base64.trim() === "")) {
+      updates.logo_base64 = null;
+    } else if (typeof logo_base64 === "string") {
+      const base64Data = String(logo_base64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > MAX_LOGO_BASE64_BYTES) {
+        return res.status(400).json({ error: "Logo trop volumineux (max 4 Mo)." });
+      }
+      if (buf.length > 0) updates.logo_base64 = logo_base64.startsWith("data:") ? logo_base64 : `data:image/png;base64,${base64Data}`;
+      else updates.logo_base64 = null;
+    }
+  }
+  if (logo_url && (logo_url.startsWith("http://") || logo_url.startsWith("https://"))) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const resp = await fetch(logo_url, { signal: controller.signal, headers: { "User-Agent": "MyFidpass-Backend/1" } });
+      clearTimeout(timeout);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const buf = Buffer.from(await resp.arrayBuffer());
+      if (buf.length > MAX_LOGO_BASE64_BYTES) {
+        return res.status(400).json({ error: "Image du logo trop volumineuse (max 4 Mo)." });
+      }
+      const contentType = resp.headers.get("Content-Type") || "image/png";
+      const base64 = buf.toString("base64");
+      updates.logo_base64 = `data:${contentType.split(";")[0]};base64,${base64}`;
+    } catch (e) {
+      return res.status(400).json({ error: "Impossible de récupérer l'image du logo. Vérifiez l'URL." });
+    }
   }
   if (Object.keys(updates).length === 0) {
     return res.status(204).send();
@@ -154,6 +210,89 @@ router.get("/:slug/dashboard/members", (req, res, next) => {
   const sort = ["last_visit", "points", "name", "created"].includes(req.query.sort) ? req.query.sort : "last_visit";
   const result = getMembersForBusiness(business.id, { search, limit, offset, filter, sort });
   res.json(result);
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/categories
+ * Liste des catégories de membres (pour classement et notifications ciblées).
+ */
+router.get("/:slug/dashboard/categories", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const categories = getCategoriesForBusiness(business.id);
+  res.json({ categories });
+});
+
+/**
+ * POST /api/businesses/:slug/dashboard/categories
+ * Créer une catégorie. Body: name, color_hex? (snake_case pour l'app iOS).
+ */
+router.post("/:slug/dashboard/categories", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const name = (req.body?.name ?? "").trim();
+  if (!name) return res.status(400).json({ error: "Le nom est obligatoire" });
+  const colorHex = req.body?.color_hex ?? req.body?.colorHex ?? null;
+  const sortOrder = req.body?.sort_order ?? req.body?.sortOrder ?? 0;
+  const category = createCategory({ businessId: business.id, name, colorHex, sortOrder });
+  res.status(201).json(category);
+});
+
+/**
+ * PATCH /api/businesses/:slug/dashboard/categories/:categoryId
+ */
+router.patch("/:slug/dashboard/categories/:categoryId", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const cat = getCategoryById(req.params.categoryId);
+  if (!cat || cat.business_id !== business.id) return res.status(404).json({ error: "Catégorie introuvable" });
+  const name = req.body?.name != null ? String(req.body.name).trim() : undefined;
+  const colorHex = req.body?.color_hex !== undefined ? (req.body.color_hex ? String(req.body.color_hex).trim() : null) : undefined;
+  const sortOrder = req.body?.sort_order !== undefined ? Number(req.body.sort_order) : undefined;
+  const updated = updateCategory(req.params.categoryId, { name, colorHex, sortOrder });
+  res.json(updated);
+});
+
+/**
+ * DELETE /api/businesses/:slug/dashboard/categories/:categoryId
+ */
+router.delete("/:slug/dashboard/categories/:categoryId", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const cat = getCategoryById(req.params.categoryId);
+  if (!cat || cat.business_id !== business.id) return res.status(404).json({ error: "Catégorie introuvable" });
+  deleteCategory(req.params.categoryId);
+  res.status(204).end();
+});
+
+/**
+ * POST /api/businesses/:slug/dashboard/members/:memberId/categories
+ * Met à jour les catégories d'un membre (liste complète). Body: category_ids (tableau).
+ */
+router.post("/:slug/dashboard/members/:memberId/categories", (req, res, next) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const member = getMemberForBusiness(req.params.memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+  const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids : (req.body?.categoryIds || []);
+  const ids = categoryIds.filter((id) => id && getCategoryById(id)?.business_id === business.id);
+  setMemberCategories(req.params.memberId, ids);
+  res.status(200).json({ ok: true });
 });
 
 /**
@@ -245,7 +384,8 @@ router.get("/:slug/dashboard/transactions/export", (req, res, next) => {
 
 /**
  * POST /api/businesses/:slug/notify
- * Alias pour l'app iOS : body { message }. Envoie la notif aux clients (Web Push + PassKit).
+ * Alias pour l'app iOS : body { message, category_ids? }. Envoie la notif aux clients (Web Push + PassKit).
+ * Si category_ids est fourni et non vide, envoi uniquement aux membres ayant au moins une de ces catégories.
  */
 router.post("/:slug/notify", async (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -255,13 +395,24 @@ router.post("/:slug/notify", async (req, res) => {
   }
   const message = (req.body?.message ?? "").trim();
   if (!message) return res.status(400).json({ error: "Le message est obligatoire" });
-  const webSubscriptions = getWebPushSubscriptionsByBusiness(business.id);
-  const passKitTokens = getPassKitPushTokensForBusiness(business.id);
+  const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids.filter(Boolean) : null;
+  const memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
+  const webSubscriptions = memberIds !== null
+    ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
+    : getWebPushSubscriptionsByBusiness(business.id);
+  const passKitTokens = memberIds !== null
+    ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+    : getPassKitPushTokensForBusiness(business.id);
   const totalDevices = webSubscriptions.length + passKitTokens.length;
   if (totalDevices === 0) {
     return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0 });
   }
-  const payload = { title: (business.organization_name || "Myfidpass").trim(), body: message };
+  const iconDataUrl = await getLogoIconDataUrl(business.logo_base64);
+  const payload = {
+    title: (business.organization_name || "Myfidpass").trim(),
+    body: message,
+    ...(iconDataUrl && { icon: iconDataUrl }),
+  };
   setLastBroadcastMessage(business.id, payload.title ? `${payload.title}: ${message}` : message);
   const touchedMembers = new Set();
   for (const row of passKitTokens) {
@@ -293,8 +444,8 @@ router.post("/:slug/notify", async (req, res) => {
 
 /**
  * POST /api/businesses/:slug/notifications/send
- * Envoie une notification à tous les membres : Web Push (navigateur) + APNs (Apple Wallet).
- * Body: { title?, message (requis) }
+ * Envoie une notification aux membres : Web Push (navigateur) + APNs (Apple Wallet).
+ * Body: { title?, message (requis), category_ids? }. Si category_ids fourni et non vide, ciblage par catégorie.
  * Auth: token ou JWT.
  */
 router.post("/:slug/notifications/send", async (req, res) => {
@@ -303,13 +454,19 @@ router.post("/:slug/notifications/send", async (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const { title, message } = req.body || {};
+  const { title, message, category_ids: reqCategoryIds } = req.body || {};
   const body = (message || "").trim();
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
   }
-  const webSubscriptions = getWebPushSubscriptionsByBusiness(business.id);
-  const passKitTokens = getPassKitPushTokensForBusiness(business.id);
+  const categoryIds = Array.isArray(reqCategoryIds) ? reqCategoryIds.filter(Boolean) : null;
+  const memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
+  const webSubscriptions = memberIds !== null
+    ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
+    : getWebPushSubscriptionsByBusiness(business.id);
+  const passKitTokens = memberIds !== null
+    ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+    : getPassKitPushTokensForBusiness(business.id);
   const totalDevices = webSubscriptions.length + passKitTokens.length;
   if (totalDevices === 0) {
     return res.json({
@@ -320,7 +477,12 @@ router.post("/:slug/notifications/send", async (req, res) => {
       message: "Aucun appareil enregistré. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
-  const payload = { title: (title || business.organization_name || "Myfidpass").trim(), body };
+  const iconDataUrl = await getLogoIconDataUrl(business.logo_base64);
+  const payload = {
+    title: (title || business.organization_name || "Myfidpass").trim(),
+    body,
+    ...(iconDataUrl && { icon: iconDataUrl }),
+  };
   const broadcastText = payload.title ? `${payload.title}: ${body}` : body;
   setLastBroadcastMessage(business.id, broadcastText);
   // Montage : même flux que l’ajout de points — toucher last_visit_at de chaque membre Wallet pour que le pass soit « modifié » et que l’iPhone refetch + affiche la notif
@@ -589,7 +751,9 @@ router.get("/:slug/logo", (req, res) => {
     if (buf.length > 0) {
       const isPng = business.logo_base64.includes("image/png");
       res.setHeader("Content-Type", isPng ? "image/png" : "image/jpeg");
-      res.setHeader("Cache-Control", "private, max-age=3600");
+      // Pas de cache : logo modifiable depuis l'app et le logiciel, toujours afficher la dernière version
+      res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
       return res.send(buf);
     }
   }
@@ -820,9 +984,18 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
   const template = req.query.template || "classic";
+  const opts = { template };
+  if (req.query.organization_name != null) opts.organizationName = req.query.organization_name;
+  if (req.query.background_color != null) opts.background_color = req.query.background_color;
+  if (req.query.foreground_color != null) opts.foreground_color = req.query.foreground_color;
+  if (req.query.stamp_emoji != null) opts.stamp_emoji = req.query.stamp_emoji;
+  if (req.query.required_stamps != null) {
+    const n = parseInt(req.query.required_stamps, 10);
+    if (Number.isInteger(n) && n > 0) opts.required_stamps = n;
+  }
 
   try {
-    const buffer = await generatePass(member, business, { template });
+    const buffer = await generatePass(member, business, opts);
     const filename = `fidelity-${business.slug}-${member.id.slice(0, 8)}.pkpass`;
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");

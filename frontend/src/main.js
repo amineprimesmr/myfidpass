@@ -1110,7 +1110,7 @@ function initAppDashboard(slug) {
       if (personnaliserLocationText && data.locationRelevantText != null) personnaliserLocationText.value = data.locationRelevantText || "";
       if (personnaliserRadius != null && data.locationRadiusMeters != null) personnaliserRadius.value = data.locationRadiusMeters;
       updatePersonnaliserPreview();
-      api("/logo")
+      api("/logo?v=" + Date.now())
         .then((r) => (r.ok ? r.blob() : null))
         .then((blob) => {
           if (blob && personnaliserLogoPreview) {
@@ -1208,7 +1208,7 @@ function initAppDashboard(slug) {
           personnaliserLogoDataUrl = "";
           if (personnaliserLogo) personnaliserLogo.value = "";
           if (body.logoBase64) {
-            api("/logo")
+            api("/logo?v=" + Date.now())
               .then((r) => (r.ok ? r.blob() : null))
               .then((blob) => {
                 if (blob && personnaliserLogoPreview) {
