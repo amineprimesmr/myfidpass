@@ -2373,6 +2373,7 @@ function initCheckoutPage() {
     if (isMobile()) setMobileStep(3);
     document.getElementById("checkout-payment")?.focus();
   } else if (isMobile()) {
+    // Toujours démarrer par le récap (écran 0) sur mobile, jamais directement sur formulaire ou paiement
     setMobileStep(0);
   }
 
@@ -2387,6 +2388,9 @@ function initCheckoutPage() {
 
   mobileContinueBtn?.addEventListener("click", () => {
     if (!isMobile()) return;
+    const current = parseInt(checkoutMain.getAttribute("data-mobile-step") || "0", 10);
+    // Sur mobile : CONTINUER n’avance que depuis l’écran récap (0) vers la création de compte (1)
+    if (current !== 0) return;
     setMobileStep(1);
     emailInput?.focus();
   });

@@ -2506,9 +2506,14 @@ body.page-checkout .site-banner { display: none !important; }
 }
 /* Mobile : une seule « page » visible (panier OU une étape), comme WHOOP */
 .checkout-mobile-only { display: none !important; }
+.checkout-order-cta-hint {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  color: #666;
+}
 .checkout-order-cta {
   width: 100%;
-  margin-top: 1.25rem;
+  margin-top: 0.5rem;
   padding: 1rem 1.5rem;
   background: #1a1a1a;
   color: #fff;
