@@ -485,12 +485,9 @@ function initAuthPage(initialTab) {
       }).toString();
     };
     authAppleBtn.addEventListener("click", () => {
-      if (isAppleRedirectDevice()) {
+      // Sur mobile ou si le script Apple n’a pas chargé : flux par redirection
+      if (isAppleRedirectDevice() || typeof AppleID === "undefined" || !AppleID?.auth) {
         window.location.href = buildAuthAppleRedirectUrl();
-        return;
-      }
-      if (typeof AppleID === "undefined" || !AppleID.auth) {
-        authOAuthError("Connexion Apple non chargée. Rechargez la page ou autorisez les scripts Apple.");
         return;
       }
       AppleID.auth.signIn()
@@ -2402,12 +2399,9 @@ function initCheckoutPage() {
     };
     appleBtn.addEventListener("click", () => {
       showOAuthError("");
-      if (isAppleRedirectDevice()) {
+      // Sur mobile ou si le script Apple n’a pas chargé (bloqueur, etc.) : flux par redirection
+      if (isAppleRedirectDevice() || typeof AppleID === "undefined" || !AppleID?.auth) {
         window.location.href = buildAppleRedirectUrl();
-        return;
-      }
-      if (typeof AppleID === "undefined" || !AppleID.auth) {
-        handleOAuthError("Connexion Apple non chargée. Rechargez la page ou autorisez les scripts (appleid.cdn-apple.com).");
         return;
       }
       AppleID.auth.signIn()
