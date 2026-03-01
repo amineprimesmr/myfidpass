@@ -1035,6 +1035,11 @@ function initAppDashboard(slug) {
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
 
+  const personnaliserLat = document.getElementById("app-personnaliser-lat");
+  const personnaliserLng = document.getElementById("app-personnaliser-lng");
+  const personnaliserLocationText = document.getElementById("app-personnaliser-location-text");
+  const personnaliserRadius = document.getElementById("app-personnaliser-radius");
+
   api("/dashboard/settings")
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
@@ -1049,6 +1054,10 @@ function initAppDashboard(slug) {
       if (personnaliserFgHex) personnaliserFgHex.value = fg;
       if (personnaliserLabel) personnaliserLabel.value = label;
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
+      if (personnaliserLat != null && data.locationLat != null) personnaliserLat.value = data.locationLat;
+      if (personnaliserLng != null && data.locationLng != null) personnaliserLng.value = data.locationLng;
+      if (personnaliserLocationText && data.locationRelevantText != null) personnaliserLocationText.value = data.locationRelevantText || "";
+      if (personnaliserRadius != null && data.locationRadiusMeters != null) personnaliserRadius.value = data.locationRadiusMeters;
       updatePersonnaliserPreview();
       api("/logo")
         .then((r) => (r.ok ? r.blob() : null))
@@ -1111,6 +1120,14 @@ function initAppDashboard(slug) {
         labelColor: toHex(labelColor),
       };
       if (personnaliserLogoDataUrl) body.logoBase64 = personnaliserLogoDataUrl;
+      const latVal = document.getElementById("app-personnaliser-lat")?.value;
+      const lngVal = document.getElementById("app-personnaliser-lng")?.value;
+      const locTextVal = document.getElementById("app-personnaliser-location-text")?.value?.trim();
+      const radiusVal = document.getElementById("app-personnaliser-radius")?.value;
+      if (latVal !== undefined) body.locationLat = latVal === "" ? null : parseFloat(latVal);
+      if (lngVal !== undefined) body.locationLng = lngVal === "" ? null : parseFloat(lngVal);
+      if (locTextVal !== undefined) body.locationRelevantText = locTextVal || undefined;
+      if (radiusVal !== undefined) body.locationRadiusMeters = radiusVal === "" ? undefined : parseInt(radiusVal, 10);
       personnaliserSave.disabled = true;
       showPersonnaliserMessage("");
       const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;

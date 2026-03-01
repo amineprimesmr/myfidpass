@@ -51,6 +51,43 @@ function hexToRgb(hex) {
   return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
 }
 
+/** Rayon terrestre en mètres (approximation WGS84). */
+const EARTH_RADIUS_M = 6371000;
+/** 1 degré de latitude ≈ 111.32 km. */
+const METERS_PER_DEG_LAT = (Math.PI * EARTH_RADIUS_M) / 180;
+
+/**
+ * Génère jusqu'à 10 points de localisation pour le pass : 1 au centre + 9 sur un cercle.
+ * Périmètre large pour que le pass s'affiche dès qu'on approche du commerce.
+ * @param {number} lat - Latitude du commerce
+ * @param {number} lng - Longitude du commerce
+ * @param {number} radiusMeters - Rayon du cercle en mètres (défaut 500 — norme Apple non documentée, on vise large)
+ * @param {string} [relevantText] - Texte affiché à l'écran de verrouillage quand on est proche
+ * @returns {Array<{ latitude: number, longitude: number, relevantText?: string }>}
+ */
+function buildPassLocations(lat, lng, radiusMeters = 500, relevantText) {
+  const latRad = (lat * Math.PI) / 180;
+  const metersPerDegLng = METERS_PER_DEG_LAT * Math.cos(latRad);
+  const dLat = radiusMeters / METERS_PER_DEG_LAT;
+  const dLng = radiusMeters / metersPerDegLng;
+  const points = [];
+  // Point central (le commerce)
+  points.push({ latitude: lat, longitude: lng, ...(relevantText ? { relevantText } : {}) });
+  // 9 points sur le cercle (max 10 au total pour Apple)
+  for (let i = 0; i < 9; i++) {
+    const angle = (i * 360) / 9;
+    const rad = (angle * Math.PI) / 180;
+    const latOffset = dLat * Math.cos(rad);
+    const lngOffset = dLng * Math.sin(rad);
+    points.push({
+      latitude: lat + latOffset,
+      longitude: lng + lngOffset,
+      ...(relevantText ? { relevantText } : {}),
+    });
+  }
+  return points;
+}
+
 /** Génère un strip PNG 750x246. Dégradé qui se fond dans le fond (dernières lignes = backgroundColor exact) pour éviter toute ligne de coupure. */
 function createStripBuffer(templateKey) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
@@ -341,12 +378,39 @@ export async function generatePass(member, business = null, options = {}) {
     console.log("[PassKit] Barcode format:", barcodePayload.format);
   }
 
+  // Localisation : jusqu'à 10 points (centre + cercle) pour afficher le pass à l'écran de verrouillage à l'approche du commerce
+  const locLat = business?.location_lat != null ? Number(business.location_lat) : null;
+  const locLng = business?.location_lng != null ? Number(business.location_lng) : null;
+  if (Number.isFinite(locLat) && Number.isFinite(locLng)) {
+    const radiusM = Math.min(Math.max(Number(business.location_radius_meters) || 500, 100), 2000);
+    const relevantText =
+      (business?.location_relevant_text && String(business.location_relevant_text).trim()) ||
+      `Vous êtes près de ${organizationName}`;
+    const locations = buildPassLocations(locLat, locLng, radiusM, relevantText);
+    pass.setLocations(...locations);
+    if (process.env.NODE_ENV === "production") {
+      console.log("[PassKit] Pass généré avec", locations.length, "emplacements (rayon", radiusM, "m).");
+    }
+  }
+
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const backContact = business?.back_contact || "contact@example.com";
   pass.backFields.push(
     { key: "terms", label: "Conditions", value: backTerms },
     { key: "contact", label: "Contact", value: backContact }
   );
+
+  // Lien au dos du pass : ouvre le site (ou la page du commerce) — cliquable sur iPhone
+  const frontendUrl = (process.env.FRONTEND_URL || process.env.API_URL || "https://myfidpass.fr").replace(/\/$/, "");
+  const backUrl = business?.slug
+    ? `${frontendUrl}/?ref=pass&b=${encodeURIComponent(business.slug)}`
+    : `${frontendUrl}/?ref=pass`;
+  pass.backFields.push({
+    key: "website",
+    label: "Voir en ligne",
+    value: backUrl,
+    dataDetectorTypes: ["PKDataDetectorTypeLink"],
+  });
 
   return pass.getAsBuffer();
 }

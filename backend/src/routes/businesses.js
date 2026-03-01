@@ -65,6 +65,10 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     labelColor: business.label_color ?? undefined,
     backTerms: business.back_terms ?? undefined,
     backContact: business.back_contact ?? undefined,
+    locationLat: business.location_lat != null ? Number(business.location_lat) : undefined,
+    locationLng: business.location_lng != null ? Number(business.location_lng) : undefined,
+    locationRelevantText: business.location_relevant_text ?? undefined,
+    locationRadiusMeters: business.location_radius_meters != null ? Number(business.location_radius_meters) : undefined,
   });
 });
 
@@ -798,6 +802,10 @@ router.patch("/:slug", (req, res) => {
     foregroundColor,
     labelColor,
     logoBase64,
+    locationLat,
+    locationLng,
+    locationRelevantText,
+    locationRadiusMeters,
   } = req.body || {};
   const updates = {};
   if (organizationName !== undefined) updates.organization_name = organizationName ? String(organizationName).trim() : null;
@@ -806,6 +814,10 @@ router.patch("/:slug", (req, res) => {
   if (backgroundColor !== undefined) updates.background_color = normalizeHex(backgroundColor);
   if (foregroundColor !== undefined) updates.foreground_color = normalizeHex(foregroundColor);
   if (labelColor !== undefined) updates.label_color = normalizeHex(labelColor);
+  if (locationLat !== undefined) updates.location_lat = locationLat === null || locationLat === "" ? null : Number(locationLat);
+  if (locationLng !== undefined) updates.location_lng = locationLng === null || locationLng === "" ? null : Number(locationLng);
+  if (locationRelevantText !== undefined) updates.location_relevant_text = locationRelevantText ? String(locationRelevantText).trim() : null;
+  if (locationRadiusMeters !== undefined) updates.location_radius_meters = locationRadiusMeters === null || locationRadiusMeters === "" ? null : Math.min(2000, Math.max(0, Number(locationRadiusMeters) || 500));
   if (logoBase64 !== undefined && logoBase64 !== null && typeof logoBase64 === "string") {
     const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, "");
     const buf = Buffer.from(base64Data, "base64");
@@ -826,6 +838,10 @@ router.patch("/:slug", (req, res) => {
     backgroundColor: updated.background_color ?? undefined,
     foregroundColor: updated.foreground_color ?? undefined,
     labelColor: updated.label_color ?? undefined,
+    locationLat: updated.location_lat != null ? Number(updated.location_lat) : undefined,
+    locationLng: updated.location_lng != null ? Number(updated.location_lng) : undefined,
+    locationRelevantText: updated.location_relevant_text ?? undefined,
+    locationRadiusMeters: updated.location_radius_meters != null ? Number(updated.location_radius_meters) : undefined,
   });
 });
 

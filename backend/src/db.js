@@ -148,6 +148,14 @@ const memCols = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name
 if (!memCols.includes("last_visit_at")) {
   db.exec("ALTER TABLE members ADD COLUMN last_visit_at TEXT");
 }
+// Migration : localisation Apple Wallet sur businesses (affichage pass à l'écran de verrouillage)
+const bizColsLoc = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+for (const col of ["location_lat", "location_lng", "location_relevant_text", "location_radius_meters"]) {
+  if (!bizColsLoc.includes(col)) {
+    const type = col === "location_radius_meters" ? "INTEGER" : col === "location_relevant_text" ? "TEXT" : "REAL";
+    db.exec(`ALTER TABLE businesses ADD COLUMN ${col} ${type}`);
+  }
+}
 // Migration : user_id sur businesses (propriétaire du commerce)
 const bizColsUser = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
 if (!bizColsUser.includes("user_id")) {
@@ -274,14 +282,26 @@ export function updateBusiness(businessId, updates) {
     "foreground_color",
     "label_color",
     "logo_base64",
+    "location_lat",
+    "location_lng",
+    "location_relevant_text",
+    "location_radius_meters",
   ];
+  const numericCols = ["location_lat", "location_lng", "location_radius_meters"];
   const setClauses = [];
   const values = [];
   for (const [key, value] of Object.entries(updates)) {
     const col = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
     if (allowed.includes(col) && value !== undefined) {
       setClauses.push(`${col} = ?`);
-      values.push(value === null || value === "" ? null : col === "logo_base64" ? String(value) : String(value).trim());
+      if (col === "logo_base64") {
+        values.push(value === null || value === "" ? null : String(value));
+      } else if (numericCols.includes(col)) {
+        const n = value === null || value === "" ? null : Number(value);
+        values.push(Number.isFinite(n) ? n : null);
+      } else {
+        values.push(value === null || value === "" ? null : String(value).trim());
+      }
     }
   }
   if (setClauses.length === 0) return b;

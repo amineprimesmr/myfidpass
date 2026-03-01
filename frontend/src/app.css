@@ -340,6 +340,11 @@ body.page-app .site-banner { display: none !important; }
 .app-color-input { width: 40px; height: 36px; padding: 2px; border: 1px solid var(--app-border); border-radius: 8px; cursor: pointer; }
 .app-input-hex { max-width: 90px; margin-bottom: 0; }
 .app-personnaliser-logo { margin-bottom: 0.5rem; }
+.app-location-hint { font-size: 0.88rem; color: var(--app-text-muted); margin: 0 0 0.5rem; line-height: 1.4; }
+.app-personnaliser-location { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
+.app-location-row { display: flex; flex-direction: column; gap: 0.25rem; }
+.app-location-row .app-label { margin: 0; }
+.app-location-row .app-input-number { max-width: 200px; }
 .app-file { position: absolute; opacity: 0; width: 0; height: 0; }
 .app-logo-label { display: inline-flex; align-items: center; justify-content: center; min-height: 80px; padding: 1rem; border: 2px dashed var(--app-border); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: var(--app-text-muted); }
 .app-logo-label:hover { border-color: var(--app-accent); }
