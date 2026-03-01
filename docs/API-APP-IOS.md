@@ -86,9 +86,25 @@ L’app peut reconstituer tout le nécessaire avec les endpoints suivants. Auth 
   "locationLng": number | undefined,
   "locationRelevantText": "string | undefined",
   "locationRadiusMeters": number | undefined,
-  "locationAddress": "string | undefined"
+  "locationAddress": "string | undefined",
+  "requiredStamps": number | undefined
 }
 ```
+
+### 2.2bis Mise à jour des paramètres « Ma Carte » (PATCH)
+
+- **Méthode + chemin** : `PATCH /api/businesses/:slug/dashboard/settings`
+- **Auth** : idem (Bearer ou dashboard token)
+- **Body JSON (snake_case ou camelCase)** :
+```json
+{
+  "organization_name": "string (optionnel)",
+  "background_color": "string hex avec ou sans # (optionnel)",
+  "foreground_color": "string hex avec ou sans # (optionnel)",
+  "required_stamps": number | null
+}
+(optionnel : nombre de tampons pour la carte type tampons)
+- **Réponse** : `200` ou `204` (sans body obligatoire). Met à jour en base les paramètres utilisés par le SaaS et la génération du pass.
 
 ### 2.3 Stats du commerce
 
@@ -207,10 +223,29 @@ Si l’app veut d’abord afficher le client sans ajouter de points :
 | Apple       | POST   | `/api/auth/apple` |
 | Sync user   | GET    | `/api/auth/me` |
 | Sync commerce (paramètres) | GET | `/api/businesses/:slug/dashboard/settings` |
+| Mise à jour design « Ma Carte » | PATCH | `/api/businesses/:slug/dashboard/settings` |
 | Sync stats  | GET    | `/api/businesses/:slug/dashboard/stats` |
 | Sync membres | GET   | `/api/businesses/:slug/dashboard/members` |
 | Sync transactions | GET | `/api/businesses/:slug/dashboard/transactions` |
 | Scan + points | POST  | `/api/businesses/:slug/integration/scan` |
 | Lookup client | GET   | `/api/businesses/:slug/integration/lookup?barcode=...` |
+| Télécharger pass Wallet | GET | `/api/businesses/:slug/members/:memberId/pass?template=classic` |
 
 Tous les chemins sont relatifs à la base **`https://api.myfidpass.fr`**.
+
+---
+
+## 4. Carte Apple Wallet (étape 8)
+
+Le backend génère déjà des passes signés. Pour « Tester dans l'Apple Wallet » dans l’app :
+
+- **GET** `/api/businesses/:slug/members/:memberId/pass?template=classic`
+- **Auth** : Bearer token ou X-Dashboard-Token
+- **Réponse** : fichier `.pkpass` (Content-Type: application/vnd.apple.pkpass)
+
+Il faut un **memberId** (un membre du commerce). L’app peut prendre le premier membre de la liste ou en créer un de test. Le Pass Type ID est déjà configuré côté backend.
+
+## 5. Notifications (étape 9)
+
+- **Clients** : après un scan, le backend envoie déjà la mise à jour PassKit au pass du client (points à jour + message). Rien à ajouter.
+- **App commerçant** : les routes `POST /api/device/register` et `POST /api/businesses/:slug/notify` ne sont pas encore en place. À ajouter si tu veux des push type « Nouveau scan » dans l’app.

@@ -164,6 +164,11 @@ if (!bizColsUser.includes("user_id")) {
     db.exec("CREATE INDEX IF NOT EXISTS idx_businesses_user_id ON businesses(user_id)");
   } catch (_) {}
 }
+// Migration : required_stamps (nombre de tampons pour carte type tampons — app / SaaS)
+const bizColsStamps = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+if (!bizColsStamps.includes("required_stamps")) {
+  db.exec("ALTER TABLE businesses ADD COLUMN required_stamps INTEGER");
+}
 // Garantir que la business "demo" existe (migration, avant que getBusinessBySlug soit défini)
 function ensureDemoBusiness() {
   let b = db.prepare("SELECT * FROM businesses WHERE slug = ?").get("demo");
@@ -287,8 +292,9 @@ export function updateBusiness(businessId, updates) {
     "location_relevant_text",
     "location_radius_meters",
     "location_address",
+    "required_stamps",
   ];
-  const numericCols = ["location_lat", "location_lng", "location_radius_meters"];
+  const numericCols = ["location_lat", "location_lng", "location_radius_meters", "required_stamps"];
   const setClauses = [];
   const values = [];
   for (const [key, value] of Object.entries(updates)) {

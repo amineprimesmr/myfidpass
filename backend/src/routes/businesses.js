@@ -72,7 +72,46 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     locationRelevantText: business.location_relevant_text ?? undefined,
     locationRadiusMeters: business.location_radius_meters != null ? Number(business.location_radius_meters) : undefined,
     locationAddress: business.location_address ?? undefined,
+    requiredStamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
   });
+});
+
+/**
+ * PATCH /api/businesses/:slug/dashboard/settings
+ * Mise à jour des paramètres « Ma Carte » (app / SaaS). Accepte snake_case comme l'app iOS.
+ * Body: organization_name?, background_color?, foreground_color?, required_stamps?
+ * Couleurs en hex avec ou sans #. Réponse 200 (sans body obligatoire) ou 204.
+ */
+function normalizeHexForPatch(v) {
+  if (v == null || v === "") return null;
+  const s = String(v).trim().replace(/^#/, "");
+  if (/^[0-9A-Fa-f]{6}$/.test(s)) return `#${s}`;
+  return null;
+}
+router.patch("/:slug/dashboard/settings", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const body = req.body || {};
+  const organization_name = body.organization_name ?? body.organizationName;
+  const background_color = body.background_color ?? body.backgroundColor;
+  const foreground_color = body.foreground_color ?? body.foregroundColor;
+  const required_stamps = body.required_stamps ?? body.requiredStamps;
+  const updates = {};
+  if (organization_name !== undefined) updates.organization_name = organization_name ? String(organization_name).trim() : null;
+  if (background_color !== undefined) updates.background_color = normalizeHexForPatch(background_color);
+  if (foreground_color !== undefined) updates.foreground_color = normalizeHexForPatch(foreground_color);
+  if (required_stamps !== undefined) {
+    const n = required_stamps === null || required_stamps === "" ? null : Number(required_stamps);
+    updates.required_stamps = Number.isInteger(n) && n >= 0 ? n : null;
+  }
+  if (Object.keys(updates).length === 0) {
+    return res.status(204).send();
+  }
+  updateBusiness(business.id, updates);
+  return res.status(200).send();
 });
 
 /**
