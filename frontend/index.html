@@ -146,6 +146,7 @@
           <div class="checkout-steps">
             <section class="checkout-step checkout-step-open" id="checkout-step-1" data-step="1">
               <h2 class="checkout-step-title">1. CRÉATION DE COMPTE</h2>
+              <p class="checkout-commerce-context">Compte pour <strong id="checkout-commerce-context-name" class="checkout-commerce-context-name">—</strong></p>
               <p class="checkout-step-subtitle">Saisissez votre adresse e-mail pour continuer.</p>
               <p id="checkout-oauth-error" class="checkout-field-error checkout-oauth-error hidden" role="alert"></p>
               <div class="checkout-step-content">
@@ -166,6 +167,7 @@
             </section>
             <section class="checkout-step" id="checkout-step-2" data-step="2">
               <h2 class="checkout-step-title">2. CRÉER VOTRE MOT DE PASSE</h2>
+              <p class="checkout-commerce-context checkout-commerce-context-step2">Pour <strong id="checkout-commerce-context-name-step2" class="checkout-commerce-context-name">—</strong></p>
               <div class="checkout-step-content">
                 <label class="checkout-label">Mot de passe (8 caractères minimum)</label>
                 <input type="password" id="checkout-password" class="checkout-input" placeholder="••••••••" autocomplete="new-password" minlength="8" />
@@ -192,12 +194,14 @@
         </div>
         <aside class="checkout-main-right" aria-label="Détails de la commande">
           <div class="checkout-order-card">
-            <h2 class="checkout-order-title">DÉTAILS DE LA COMMANDE</h2>
+            <h2 class="checkout-order-title">Récapitulatif</h2>
             <section class="checkout-order-section checkout-recap-section" id="checkout-recap-section">
-              <h3 class="checkout-order-section-title">Votre sélection</h3>
+              <div class="checkout-recap-commerce-block">
+                <span class="checkout-recap-commerce-label">Votre établissement</span>
+                <p id="checkout-recap-commerce" class="checkout-recap-commerce-name">—</p>
+              </div>
               <ul class="checkout-recap-list">
-                <li class="checkout-recap-row"><span class="checkout-recap-label">Commerce</span><span id="checkout-recap-commerce" class="checkout-recap-value">—</span></li>
-                <li class="checkout-recap-row"><span class="checkout-recap-label">Modèle de carte</span><span id="checkout-recap-template" class="checkout-recap-value">—</span></li>
+                <li class="checkout-recap-row"><span class="checkout-recap-label">Modèle</span><span id="checkout-recap-template" class="checkout-recap-value">—</span></li>
                 <li class="checkout-recap-row"><span class="checkout-recap-label">Type</span><span id="checkout-recap-type" class="checkout-recap-value">—</span></li>
                 <li class="checkout-recap-row"><span class="checkout-recap-label">Catégorie</span><span id="checkout-recap-category" class="checkout-recap-value">—</span></li>
               </ul>

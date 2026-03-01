@@ -2242,10 +2242,15 @@ function initCheckoutPage() {
   const recapTemplate = document.getElementById("checkout-recap-template");
   const recapType = document.getElementById("checkout-recap-type");
   const recapCategory = document.getElementById("checkout-recap-category");
-  if (recapCommerce) recapCommerce.textContent = draft.organizationName?.trim() || "À définir après inscription";
+  const commerceDisplayName = draft.organizationName?.trim() || "Votre établissement";
+  if (recapCommerce) recapCommerce.textContent = commerceDisplayName;
   if (recapTemplate) recapTemplate.textContent = tpl?.name ?? draft.selectedTemplateId;
   if (recapType) recapType.textContent = tpl?.format === "tampons" ? "Tampons" : "Points";
   if (recapCategory) recapCategory.textContent = tpl?.design ? (DESIGN_CATEGORY_LABELS[tpl.design] || tpl.design) : "—";
+  const contextNameEl = document.getElementById("checkout-commerce-context-name");
+  const contextNameStep2El = document.getElementById("checkout-commerce-context-name-step2");
+  if (contextNameEl) contextNameEl.textContent = commerceDisplayName;
+  if (contextNameStep2El) contextNameStep2El.textContent = commerceDisplayName;
 
   const checkoutMain = document.querySelector(".checkout-main");
   const step1 = document.getElementById("checkout-step-1");
