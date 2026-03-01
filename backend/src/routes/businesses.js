@@ -9,6 +9,8 @@ import {
   updateBusiness,
   createMember,
   getMemberForBusiness,
+  getMemberByEmailForBusiness,
+  updateMember,
   addPoints,
   createTransaction,
   getDashboardStats,
@@ -553,6 +555,75 @@ router.post("/:slug/members", (req, res) => {
     console.error(e);
     res.status(500).json({ error: "Erreur création membre" });
   }
+});
+
+/**
+ * POST /api/businesses/:slug/members/import
+ * Import en masse de membres (base client existante).
+ * Body: { members: [ { email, name, points? } ], onDuplicate?: "skip" | "update" }
+ * Auth: token ou JWT. onDuplicate: "skip" = ignorer, "update" = mettre à jour nom/points (défaut: "skip").
+ */
+router.post("/:slug/members/import", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token ou authentification requis" });
+  }
+  const { members: rawMembers, onDuplicate = "skip" } = req.body || {};
+  if (!Array.isArray(rawMembers) || rawMembers.length === 0) {
+    return res.status(400).json({ error: "Body doit contenir un tableau 'members' non vide (ex: [{ email, name, points? }])" });
+  }
+  const limit = 5000;
+  if (rawMembers.length > limit) {
+    return res.status(400).json({ error: `Maximum ${limit} membres par import. Découpez en plusieurs appels si besoin.` });
+  }
+  const created = [];
+  const updated = [];
+  const skipped = [];
+  const errors = [];
+  for (let i = 0; i < rawMembers.length; i++) {
+    const row = rawMembers[i];
+    const email = (row.email != null ? String(row.email).trim() : "").toLowerCase();
+    const name = row.name != null ? String(row.name).trim() : "";
+    const points = Number.isFinite(Number(row.points)) && Number(row.points) >= 0 ? Number(row.points) : 0;
+    if (!email) {
+      errors.push({ row: i + 1, email: row.email, reason: "email manquant ou vide" });
+      continue;
+    }
+    if (!name) {
+      errors.push({ row: i + 1, email, reason: "name manquant ou vide" });
+      continue;
+    }
+    const existing = getMemberByEmailForBusiness(business.id, email);
+    if (existing) {
+      if (onDuplicate === "update") {
+        updateMember(existing.id, { name, points });
+        updated.push({ email, name, id: existing.id });
+      } else {
+        skipped.push({ email, reason: "déjà existant" });
+      }
+      continue;
+    }
+    try {
+      const member = createMember({
+        businessId: business.id,
+        email,
+        name,
+        points,
+      });
+      created.push({ email, name, id: member.id });
+    } catch (e) {
+      errors.push({ row: i + 1, email, reason: e.message || "Erreur création" });
+    }
+  }
+  res.status(200).json({
+    created: created.length,
+    updated: updated.length,
+    skipped: skipped.length,
+    errors: errors.length,
+    createdIds: created.map((c) => c.id),
+    details: errors.length ? { errors } : undefined,
+  });
 });
 
 /**

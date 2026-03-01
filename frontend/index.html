@@ -496,6 +496,24 @@
           <section id="membres" class="app-section">
             <h2 class="app-section-title">Membres</h2>
             <p class="app-section-desc">Liste des clients qui ont ajouté votre carte à leur téléphone.</p>
+            <div class="app-card app-import-card">
+              <h3 class="app-subsection-title">Importer une base clients</h3>
+              <p class="app-hint">Vous avez déjà une liste de clients (Excel, ancien logiciel) ? Exportez-la en CSV avec les colonnes <strong>email</strong> et <strong>name</strong> (optionnel : <strong>points</strong>).</p>
+              <div class="app-import-row">
+                <input type="file" id="app-members-import-file" class="app-file-input" accept=".csv,text/csv,application/csv" aria-label="Fichier CSV" />
+                <label for="app-members-import-file" class="app-btn app-btn-secondary">Choisir un fichier CSV</label>
+                <span id="app-members-import-filename" class="app-import-filename"></span>
+              </div>
+              <div class="app-import-row">
+                <label for="app-members-import-duplicate" class="app-label">Si un email existe déjà</label>
+                <select id="app-members-import-duplicate" class="app-select">
+                  <option value="skip">Ignorer (ne pas créer)</option>
+                  <option value="update">Mettre à jour nom et points</option>
+                </select>
+              </div>
+              <button type="button" id="app-members-import-btn" class="app-btn app-btn-primary" disabled>Importer les membres</button>
+              <p id="app-members-import-result" class="app-import-result hidden"></p>
+            </div>
             <div id="app-members-notifications-summary" class="app-members-notifications-summary hidden"></div>
             <div class="app-card">
               <div class="app-members-toolbar">

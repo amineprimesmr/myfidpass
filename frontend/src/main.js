@@ -1779,6 +1779,77 @@ function initAppDashboard(slug) {
       URL.revokeObjectURL(a.href);
     });
   }
+
+  const membersImportFile = document.getElementById("app-members-import-file");
+  const membersImportFilename = document.getElementById("app-members-import-filename");
+  const membersImportDuplicate = document.getElementById("app-members-import-duplicate");
+  const membersImportBtn = document.getElementById("app-members-import-btn");
+  const membersImportResult = document.getElementById("app-members-import-result");
+  if (membersImportFile && membersImportBtn) {
+    membersImportFile.addEventListener("change", () => {
+      const file = membersImportFile.files?.[0];
+      if (membersImportFilename) membersImportFilename.textContent = file ? file.name : "";
+      membersImportBtn.disabled = !file;
+    });
+    membersImportBtn.addEventListener("click", async () => {
+      const file = membersImportFile.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter((l) => l.trim());
+      if (lines.length < 2) {
+        if (membersImportResult) { membersImportResult.textContent = "Le fichier doit contenir une ligne d’en-tête et au moins une ligne de données."; membersImportResult.classList.remove("hidden"); membersImportResult.classList.add("error"); }
+        return;
+      }
+      const sep = lines[0].includes(";") ? ";" : ",";
+      const headers = lines[0].split(sep).map((h) => h.trim().toLowerCase().replace(/^[\s"\uFEFF]+|[\s"]+$/g, ""));
+      const emailIdx = headers.findIndex((h) => /e-?mail/.test(h) || h === "email");
+      const nameIdx = headers.findIndex((h) => /^(nom|name|prénom|prenom|client)$/.test(h) || h === "name" || h === "nom");
+      if (emailIdx === -1 || nameIdx === -1) {
+        if (membersImportResult) { membersImportResult.textContent = "Colonnes requises : email (ou E-mail) et name (ou nom, prénom)."; membersImportResult.classList.remove("hidden"); membersImportResult.classList.add("error"); }
+        return;
+      }
+      const pointsIdx = headers.findIndex((h) => /^(points|tampons|solde)$/.test(h));
+      const members = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cells = lines[i].split(sep).map((c) => c.trim().replace(/^"|"$/g, ""));
+        const email = (cells[emailIdx] || "").trim();
+        const name = (cells[nameIdx] || "").trim();
+        if (!email) continue;
+        const points = pointsIdx >= 0 && cells[pointsIdx] !== undefined ? parseInt(cells[pointsIdx], 10) : 0;
+        members.push({ email, name: name || email, points: Number.isNaN(points) ? 0 : Math.max(0, points) });
+      }
+      if (members.length === 0) {
+        if (membersImportResult) { membersImportResult.textContent = "Aucune ligne valide (email requis)."; membersImportResult.classList.remove("hidden"); membersImportResult.classList.add("error"); }
+        return;
+      }
+      membersImportBtn.disabled = true;
+      if (membersImportResult) { membersImportResult.textContent = "Import en cours…"; membersImportResult.classList.remove("hidden", "error"); }
+      try {
+        const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/import`;
+        const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+        if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
+        const res = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ members, onDuplicate: membersImportDuplicate?.value || "skip" }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          const msg = `${data.created ?? 0} créé(s), ${data.updated ?? 0} mis à jour, ${data.skipped ?? 0} ignoré(s), ${data.errors ?? 0} erreur(s).`;
+          if (membersImportResult) { membersImportResult.textContent = msg; membersImportResult.classList.remove("error"); }
+          membersImportFile.value = "";
+          if (membersImportFilename) membersImportFilename.textContent = "";
+          window.dispatchEvent(new Event("app-members-refresh"));
+        } else {
+          if (membersImportResult) { membersImportResult.textContent = data.error || "Erreur lors de l’import."; membersImportResult.classList.add("error"); }
+        }
+      } catch (e) {
+        if (membersImportResult) { membersImportResult.textContent = "Erreur réseau."; membersImportResult.classList.add("error"); }
+      }
+      membersImportBtn.disabled = false;
+    });
+  }
+
   if (transactionsExportBtn) {
     transactionsExportBtn.addEventListener("click", async () => {
       const params = new URLSearchParams();

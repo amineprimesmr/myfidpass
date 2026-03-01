@@ -311,11 +311,12 @@ export function updateBusiness(businessId, updates) {
   return getBusinessById(businessId);
 }
 
-export function createMember({ id, businessId, email, name }) {
+export function createMember({ id, businessId, email, name, points = 0 }) {
   const mid = id || randomUUID();
+  const pts = Number.isFinite(Number(points)) && Number(points) >= 0 ? Number(points) : 0;
   db.prepare(
-    "INSERT INTO members (id, business_id, email, name, points) VALUES (?, ?, ?, ?, 0)"
-  ).run(mid, businessId, email, name);
+    "INSERT INTO members (id, business_id, email, name, points) VALUES (?, ?, ?, ?, ?)"
+  ).run(mid, businessId, email, name, pts);
   return getMember(mid);
 }
 
@@ -327,6 +328,23 @@ export function getMember(id) {
 export function getMemberForBusiness(memberId, businessId) {
   const row = db.prepare("SELECT * FROM members WHERE id = ? AND business_id = ?").get(memberId, businessId);
   return row || null;
+}
+
+/** Membre par email pour un commerce (import / doublons). */
+export function getMemberByEmailForBusiness(businessId, email) {
+  if (!businessId || !email) return null;
+  const norm = String(email).trim().toLowerCase();
+  if (!norm) return null;
+  return db.prepare("SELECT * FROM members WHERE business_id = ? AND LOWER(TRIM(email)) = ?").get(businessId, norm) || null;
+}
+
+/** Met à jour nom et/ou points d'un membre (import doublon = update). */
+export function updateMember(memberId, { name, points }) {
+  const m = getMember(memberId);
+  if (!m) return null;
+  if (name !== undefined) db.prepare("UPDATE members SET name = ? WHERE id = ?").run(String(name).trim(), memberId);
+  if (Number.isFinite(Number(points)) && Number(points) >= 0) db.prepare("UPDATE members SET points = ? WHERE id = ?").run(Number(points), memberId);
+  return getMember(memberId);
 }
 
 export function addPoints(id, points) {

@@ -376,6 +376,16 @@ body.page-app .site-banner { display: none !important; }
 .app-personnaliser-card .app-btn { margin-top: 0.5rem; }
 .app-label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--app-text-muted); margin-bottom: 0.25rem; }
 
+.app-import-card { margin-bottom: 1.5rem; }
+.app-import-card .app-subsection-title { margin-top: 0; }
+.app-import-card .app-hint { margin: 0.5rem 0 1rem; }
+.app-import-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+.app-import-row .app-label { margin: 0 0.5rem 0 0; }
+.app-file-input { width: 0; height: 0; opacity: 0; position: absolute; }
+.app-import-filename { font-size: 0.9rem; color: var(--app-text-muted); }
+.app-import-result { margin-top: 0.75rem; font-size: 0.9rem; }
+.app-import-result.error { color: #c62828; }
+
 .app-caisse-row {
   display: flex;
   flex-wrap: wrap;
