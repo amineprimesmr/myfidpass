@@ -65,6 +65,7 @@ app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
 app.post("/api/payment/webhook", paymentWebhookHandler);
 
 app.use(express.json({ limit: "8mb" }));
+app.use(express.urlencoded({ extended: true, limit: "64kb" }));
 
 // Parse JWT si présent (Authorization: Bearer) pour toutes les routes
 app.use(optionalAuth);

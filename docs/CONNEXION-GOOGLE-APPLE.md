@@ -35,11 +35,9 @@ Utilise la **même valeur** de Client ID côté frontend et backend (ex. le mêm
 1. Va sur [Apple Developer](https://developer.apple.com/) → **Certificates, Identifiers & Profiles** → **Identifiers**.
 2. Crée un identifiant de type **Services ID** (ex. `com.tondomaine.myfidpass`).
 3. Active **Sign in with Apple** pour ce Services ID.
-4. Configure les domaines et les **Return URLs**. Pour que la connexion Apple marche sur **iPhone/iPad et mobile** (flux redirect), ajoute **toutes** ces URLs dans **Return URLs** :
-   - `https://myfidpass.fr/checkout`
-   - `https://myfidpass.fr/login`
-   - `https://myfidpass.fr/register`
-   (Sans ces URLs, le bouton Apple ne fonctionnera pas sur mobile.)
+4. Configure les domaines et les **Return URLs**. Apple impose `response_mode=form_post` quand on demande le nom ou l’email ; le site utilise donc une **seule** URL de retour côté **backend**. Ajoute **exactement** cette URL dans **Return URLs** :
+   - `https://api.myfidpass.fr/api/auth/apple-redirect`
+   (Remplace `api.myfidpass.fr` par l’URL de ton API si différente.)
 5. Le **Services ID** (son identifiant) = valeur de `APPLE_CLIENT_ID`.
 
 **À configurer :**
@@ -80,11 +78,9 @@ Pour myfidpass.fr il faut utiliser le **Services ID**. Si tu mets le Bundle ID d
 1. **Certificates, Identifiers & Profiles** → **Identifiers** → ton **Services ID**.
 2. **Sign in with Apple** → **Configure**.
 3. **Domains and Subdomains** : ajoute `myfidpass.fr` (sans `https://`).
-4. **Return URLs** : ajoute **chaque** URL suivante (une par ligne ou séparées par des virgules) :
-   - `https://myfidpass.fr/checkout`
-   - `https://myfidpass.fr/login`
-   - `https://myfidpass.fr/register`
-   Sans ces trois URLs, la connexion Apple sur **iPhone et mobile** ne fonctionnera pas (le site utilise un flux par redirection sur mobile).
+4. **Return URLs** : ajoute **une seule** URL (celle du backend qui reçoit le POST Apple) :
+   - `https://api.myfidpass.fr/api/auth/apple-redirect`
+   C’est obligatoire : avec le scope « name email », Apple exige `form_post` et envoie le résultat en POST à cette URL.
 
 Sans ça, la popup Apple peut afficher « invalid_request » ou la connexion peut échouer.
 

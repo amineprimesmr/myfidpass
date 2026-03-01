@@ -406,23 +406,21 @@ function initAuthPage(initialTab) {
     window.location.replace(redirect);
   }
 
-  // Retour du flux Apple (redirect avec fragment) sur mobile/iOS
-  const authAppleReturn = parseAppleHash();
-  if (authAppleReturn?.id_token && authAppleClientId) {
-    history.replaceState({}, "", window.location.pathname + window.location.search);
-    fetch(`${API_BASE}/api/auth/apple`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        idToken: authAppleReturn.id_token,
-        name: authAppleReturn.user?.name ? [authAppleReturn.user.name.firstName, authAppleReturn.user.lastName].filter(Boolean).join(" ") : undefined,
-        email: authAppleReturn.user?.email,
-      }),
-    })
+  // Retour du flux Apple (form_post) : backend redirige vers /login?apple_code=xxx
+  const authUrlParams = new URLSearchParams(window.location.search);
+  const authAppleCode = authUrlParams.get("apple_code");
+  const authAppleError = authUrlParams.get("apple_error");
+  if (authAppleError && authAppleClientId) {
+    history.replaceState({}, "", window.location.pathname + (authUrlParams.get("redirect") ? "?redirect=" + encodeURIComponent(authUrlParams.get("redirect")) : ""));
+    authOAuthError(authAppleError === "no_email" ? "Email non fourni par Apple." : "Connexion Apple impossible. Réessayez.");
+  } else if (authAppleCode && authAppleClientId) {
+    const redirectParam = authUrlParams.get("redirect");
+    history.replaceState({}, "", window.location.pathname + (redirectParam ? "?redirect=" + encodeURIComponent(redirectParam) : ""));
+    fetch(`${API_BASE}/api/auth/apple-exchange?code=${encodeURIComponent(authAppleCode)}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.token) authOAuthSuccess(data);
-        else authOAuthError(data.error || "Erreur connexion Apple.");
+        else authOAuthError(data.error || "Session expirée. Réessayez.");
       })
       .catch(() => authOAuthError("Erreur réseau ou API inaccessible."));
   }
@@ -470,7 +468,7 @@ function initAuthPage(initialTab) {
   const authAppleBtn = document.getElementById("auth-apple-btn");
   if (authAppleClientId && authAppleBtn && !window.__fidpassAuthAppleInited) {
     window.__fidpassAuthAppleInited = true;
-    const authRedirectUri = window.location.origin + window.location.pathname;
+    const authRedirectUri = API_BASE + "/api/auth/apple-redirect";
     const buildAuthAppleRedirectUrl = () => {
       const state = "auth";
       const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -479,7 +477,7 @@ function initAuthPage(initialTab) {
         redirect_uri: authRedirectUri,
         response_type: "id_token code",
         scope: "name email",
-        response_mode: "fragment",
+        response_mode: "form_post",
         state,
         nonce,
       }).toString();
@@ -2313,23 +2311,21 @@ function initCheckoutPage() {
     showOAuthError(msg || "Connexion impossible. Réessayez.");
   }
 
-  // Retour du flux Apple (redirect avec fragment) sur mobile/iOS
-  const appleReturn = parseAppleHash();
-  if (appleReturn?.id_token && appleClientId) {
-    history.replaceState({}, "", window.location.pathname + window.location.search);
-    fetch(`${API_BASE}/api/auth/apple`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        idToken: appleReturn.id_token,
-        name: appleReturn.user?.name ? [appleReturn.user.name.firstName, appleReturn.user.lastName].filter(Boolean).join(" ") : undefined,
-        email: appleReturn.user?.email,
-      }),
-    })
+  // Retour du flux Apple (form_post) : backend redirige avec ?apple_code=xxx
+  const urlParams = new URLSearchParams(window.location.search);
+  const appleCode = urlParams.get("apple_code");
+  const appleError = urlParams.get("apple_error");
+  if (appleError && appleClientId) {
+    history.replaceState({}, "", window.location.pathname);
+    const msg = appleError === "no_email" ? "Email non fourni par Apple. Réautorisez pour partager votre email." : "Connexion Apple impossible. Réessayez.";
+    handleOAuthError(msg);
+  } else if (appleCode && appleClientId) {
+    history.replaceState({}, "", window.location.pathname);
+    fetch(`${API_BASE}/api/auth/apple-exchange?code=${encodeURIComponent(appleCode)}`)
       .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
       .then(({ ok, data }) => {
         if (ok && data?.token) handleOAuthSuccess(data);
-        else handleOAuthError(data?.error || "Erreur connexion Apple.");
+        else handleOAuthError(data?.error || "Session expirée. Réessayez.");
       })
       .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."));
   }
@@ -2383,7 +2379,7 @@ function initCheckoutPage() {
   const appleBtn = document.getElementById("checkout-apple-btn");
   if (appleClientId && appleBtn && !window.__fidpassAppleInited) {
     window.__fidpassAppleInited = true;
-    const redirectUri = typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+    const redirectUri = API_BASE + "/api/auth/apple-redirect";
     const buildAppleRedirectUrl = () => {
       const state = "checkout";
       const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -2392,7 +2388,7 @@ function initCheckoutPage() {
         redirect_uri: redirectUri,
         response_type: "id_token code",
         scope: "name email",
-        response_mode: "fragment",
+        response_mode: "form_post",
         state,
         nonce,
       }).toString();

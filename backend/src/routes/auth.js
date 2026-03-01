@@ -16,7 +16,17 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || ""; // Service ID (bundle id) pour vérifier l'audience
+const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
 const SALT_ROUNDS = 10;
+
+const appleOneTimeCodes = new Map();
+const APPLE_CODE_TTL_MS = 5 * 60 * 1000;
+function cleanupAppleCodes() {
+  const now = Date.now();
+  for (const [code, data] of appleOneTimeCodes.entries()) {
+    if (data.expiry < now) appleOneTimeCodes.delete(code);
+  }
+}
 
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
@@ -201,6 +211,79 @@ router.post("/apple", async (req, res) => {
       return res.status(401).json({ error: "Session Apple expirée. Réessayez la connexion." });
     return res.status(401).json({ error: "Token Apple invalide ou expiré. Vérifiez APPLE_CLIENT_ID (Services ID) sur Railway et la config Apple Developer." });
   }
+});
+
+/**
+ * POST /api/auth/apple-redirect
+ * Reçoit le POST d’Apple (form_post) après Sign in with Apple, vérifie le token,
+ * crée un code à usage unique, redirige vers le frontend avec ce code.
+ */
+router.post("/apple-redirect", async (req, res) => {
+  if (!APPLE_CLIENT_ID) {
+    return res.redirect(FRONTEND_URL + "/checkout?apple_error=config");
+  }
+  const idToken = (req.body?.id_token || "").trim();
+  const state = (req.body?.state || "checkout").toLowerCase();
+  let userPayload = null;
+  try {
+    const userStr = req.body?.user;
+    if (userStr && typeof userStr === "string") userPayload = JSON.parse(decodeURIComponent(userStr));
+  } catch (_) {}
+  if (!idToken) {
+    return res.redirect(FRONTEND_URL + (state === "auth" ? "/login" : "/checkout") + "?apple_error=no_token");
+  }
+  try {
+    const decoded = jwt.decode(idToken, { complete: true });
+    const kid = decoded?.header?.kid;
+    if (!kid) return res.redirect(FRONTEND_URL + "/checkout?apple_error=invalid");
+    const publicKeyPem = await getAppleSigningKeyPem(kid);
+    const verified = jwt.verify(idToken, publicKeyPem, {
+      algorithms: ["RS256"],
+      audience: APPLE_CLIENT_ID,
+      issuer: "https://appleid.apple.com",
+    });
+    const email = (verified.email || (userPayload?.email) || "").trim().toLowerCase();
+    if (!email) return res.redirect(FRONTEND_URL + "/checkout?apple_error=no_email");
+    let user = getUserByEmail(email);
+    if (!user) {
+      const name = userPayload?.name
+        ? [userPayload.name.firstName, userPayload.name.lastName].filter(Boolean).join(" ").trim()
+        : null;
+      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
+      user = createUser({ email, passwordHash: oauthPlaceholder, name: name || null });
+    }
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const businesses = getBusinessesByUserId(user.id);
+    const code = randomUUID().slice(0, 16) + Date.now().toString(36);
+    cleanupAppleCodes();
+    appleOneTimeCodes.set(code, {
+      token,
+      user: { id: user.id, email: user.email, name: user.name },
+      businesses,
+      expiry: Date.now() + APPLE_CODE_TTL_MS,
+    });
+    const basePath = state === "auth" ? "/login" : "/checkout";
+    return res.redirect(302, FRONTEND_URL + basePath + "?apple_code=" + encodeURIComponent(code));
+  } catch (e) {
+    console.error("Apple redirect error:", e);
+    return res.redirect(FRONTEND_URL + "/checkout?apple_error=invalid");
+  }
+});
+
+/**
+ * GET /api/auth/apple-exchange?code=xxx
+ * Échange un code à usage unique (renvoyé après apple-redirect) contre le JWT.
+ */
+router.get("/apple-exchange", (req, res) => {
+  const code = req.query?.code;
+  if (!code) return res.status(400).json({ error: "Code manquant" });
+  cleanupAppleCodes();
+  const data = appleOneTimeCodes.get(code);
+  appleOneTimeCodes.delete(code);
+  if (!data || data.expiry < Date.now()) {
+    return res.status(401).json({ error: "Code invalide ou expiré" });
+  }
+  return res.json({ token: data.token, user: data.user, businesses: data.businesses });
 });
 
 /**
