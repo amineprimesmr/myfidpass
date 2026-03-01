@@ -345,6 +345,8 @@ body.page-app .site-banner { display: none !important; }
 .app-location-row { display: flex; flex-direction: column; gap: 0.25rem; }
 .app-location-row .app-label { margin: 0; }
 .app-location-row .app-input-number { max-width: 200px; }
+.app-coords-display { font-size: 0.85rem; color: var(--app-text-muted); margin: 0 0 0.25rem; }
+.app-coords-display.hidden { display: none; }
 .app-file { position: absolute; opacity: 0; width: 0; height: 0; }
 .app-logo-label { display: inline-flex; align-items: center; justify-content: center; min-height: 80px; padding: 1rem; border: 2px dashed var(--app-border); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: var(--app-text-muted); }
 .app-logo-label:hover { border-color: var(--app-accent); }

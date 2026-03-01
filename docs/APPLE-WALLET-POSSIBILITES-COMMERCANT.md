@@ -47,7 +47,7 @@ En résumé : **identification en caisse (QR)**, **mises à jour + notifications
   Max 10 emplacements par pass. Pour plus de magasins, il faut choisir les 10 plus importants ou **mettre à jour le pass** pour changer la liste (ex. selon la zone du client si tu la déduis autrement, ou une liste tournante).
 
 - **Implémenté dans Myfidpass**  
-  Le commerçant renseigne **latitude**, **longitude**, **texte à l’écran de verrouillage** (optionnel) et **rayon en mètres** (100–2000 m, défaut 500) dans « Ma carte » (espace connecté). Le pass est généré avec **10 points** : 1 au centre (commerce) + 9 sur un cercle au rayon choisi, pour un **périmètre large** (Apple ne documente pas de distance exacte par point ; plusieurs points élargissent la zone d’affichage). Les coordonnées se récupèrent sur Google Maps (clic droit sur le lieu → Copier les coordonnées).
+  Le commerçant renseigne l’**adresse du commerce** (ex. « 12 rue de la Paix, 75002 Paris ») dans « Ma carte » (espace connecté). Les **coordonnées sont calculées automatiquement** (géocodage via OpenStreetMap / Nominatim). Il peut aussi saisir un **texte à l’écran de verrouillage** (optionnel) et le **rayon en mètres** (100–2000 m, défaut 500). Le pass est généré avec **10 points** : 1 au centre + 9 sur un cercle au rayon choisi, pour un périmètre large.
 
 ### 3.2 iBeacons (Bluetooth) en magasin
 
@@ -130,7 +130,40 @@ Donc : **pas de localisation**, mais **beaucoup de data fidélité** (scans, poi
 
 ---
 
-## 6. Références utiles
+## 6. Comment tester (locations + back field URL)
+
+### Lien « Voir en ligne » au dos du pass
+
+1. Crée ou récupère une carte (checkout ou espace commerçant).
+2. Ajoute la carte à l’Apple Wallet sur ton iPhone.
+3. Ouvre le pass dans Wallet → **retourne la carte** (icône (i) ou flèche).
+4. Vérifie qu’il y a un champ **« Voir en ligne »** avec un lien.
+5. **Tape dessus** : Safari doit s’ouvrir sur `https://myfidpass.fr/?ref=pass&b=...` (ou ton domaine).
+
+### Affichage du pass à l’approche du commerce (locations)
+
+1. **Renseigner la localisation**  
+   - Connecte-toi à l’**espace commerçant** (myfidpass.fr) → **Ma carte**.  
+   - Dans « Localisation Apple Wallet », saisis l’**adresse du commerce** (ex. « 12 rue de la Paix, 75002 Paris »). Les coordonnées sont calculées automatiquement à l’enregistrement.  
+   - Optionnel : texte type « Vous êtes près de Café Dupont », rayon 500 m (ou 100–2000).  
+   - Clique sur **Enregistrer les modifications**.
+
+2. **Obtenir un pass à jour**  
+   - Soit **nouvelle carte** : passe par le flux checkout / lien de la carte pour ajouter une nouvelle carte à Wallet.  
+   - Soit **carte déjà installée** : envoie une **notification push** depuis le dashboard (ou modifie les points) pour forcer une mise à jour du pass ; au prochain rechargement, le pass contiendra les 10 emplacements.
+
+3. **Tester l’affichage à l’écran de verrouillage**  
+   - Avec ton iPhone (où le pass est installé), **approche-toi du lieu** dont tu as entré les coordonnées (ou d’un point à moins de ~500 m si tu as laissé le rayon par défaut).  
+   - **Verrouille l’écran** (bouton latéral).  
+   - Après quelques secondes / minutes, iOS peut afficher la carte sur l’écran de verrouillage (sans notifier le serveur).  
+   - Si tu es loin du commerce, tu peux **simuler la position** : Xcode → Destination → Simulate Location (sur simulateur), ou sur un appareil réel avec un outil de mock (développement uniquement).
+
+4. **Vérifier en dev (optionnel)**  
+   - En générant un pass côté backend, les logs en production peuvent afficher : `[PassKit] Pass généré avec 10 emplacements (rayon 500 m).`
+
+---
+
+## 7. Références utiles
 
 - [Showing a Pass on the Lock Screen](https://developer.apple.com/documentation/walletpasses/showing-a-pass-on-the-lock-screen) (locations, beacons, relevantDate).
 - [Adding a Web Service to Update Passes](https://developer.apple.com/documentation/walletpasses/adding-a-web-service-to-update-passes) (enregistrement appareil, push, mises à jour).

@@ -69,6 +69,7 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     locationLng: business.location_lng != null ? Number(business.location_lng) : undefined,
     locationRelevantText: business.location_relevant_text ?? undefined,
     locationRadiusMeters: business.location_radius_meters != null ? Number(business.location_radius_meters) : undefined,
+    locationAddress: business.location_address ?? undefined,
   });
 });
 
@@ -806,6 +807,7 @@ router.patch("/:slug", (req, res) => {
     locationLng,
     locationRelevantText,
     locationRadiusMeters,
+    locationAddress,
   } = req.body || {};
   const updates = {};
   if (organizationName !== undefined) updates.organization_name = organizationName ? String(organizationName).trim() : null;
@@ -814,6 +816,7 @@ router.patch("/:slug", (req, res) => {
   if (backgroundColor !== undefined) updates.background_color = normalizeHex(backgroundColor);
   if (foregroundColor !== undefined) updates.foreground_color = normalizeHex(foregroundColor);
   if (labelColor !== undefined) updates.label_color = normalizeHex(labelColor);
+  if (locationAddress !== undefined) updates.location_address = locationAddress ? String(locationAddress).trim() : null;
   if (locationLat !== undefined) updates.location_lat = locationLat === null || locationLat === "" ? null : Number(locationLat);
   if (locationLng !== undefined) updates.location_lng = locationLng === null || locationLng === "" ? null : Number(locationLng);
   if (locationRelevantText !== undefined) updates.location_relevant_text = locationRelevantText ? String(locationRelevantText).trim() : null;
@@ -842,6 +845,7 @@ router.patch("/:slug", (req, res) => {
     locationLng: updated.location_lng != null ? Number(updated.location_lng) : undefined,
     locationRelevantText: updated.location_relevant_text ?? undefined,
     locationRadiusMeters: updated.location_radius_meters != null ? Number(updated.location_radius_meters) : undefined,
+    locationAddress: updated.location_address ?? undefined,
   });
 });
 

@@ -56,6 +56,26 @@ function getAuthHeaders() {
 }
 
 /**
+ * Géocodage d'une adresse via Nominatim (OpenStreetMap). Retourne { lat, lng } ou null.
+ * Respecte la politique d'usage : 1 requête / seconde, User-Agent identifié.
+ */
+async function geocodeAddress(address) {
+  const q = String(address).trim();
+  if (!q) return null;
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
+  const res = await fetch(url, {
+    headers: { Accept: "application/json", "User-Agent": "MyFidpass/1.0 (https://myfidpass.fr)" },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const first = data?.[0];
+  if (!first || first.lat == null || first.lon == null) return null;
+  const lat = parseFloat(first.lat);
+  const lng = parseFloat(first.lon);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+}
+
+/**
  * Route : / → landing, /dashboard → tableau de bord, /app → espace connecté, /login, /register, etc.
  */
 function getRoute() {
@@ -1035,10 +1055,21 @@ function initAppDashboard(slug) {
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
 
-  const personnaliserLat = document.getElementById("app-personnaliser-lat");
-  const personnaliserLng = document.getElementById("app-personnaliser-lng");
+  const personnaliserAddress = document.getElementById("app-personnaliser-address");
+  const personnaliserCoordsDisplay = document.getElementById("app-personnaliser-coords-display");
+  const personnaliserCoordsValue = document.getElementById("app-personnaliser-coords-value");
   const personnaliserLocationText = document.getElementById("app-personnaliser-location-text");
   const personnaliserRadius = document.getElementById("app-personnaliser-radius");
+
+  function updateCoordsDisplay(lat, lng) {
+    if (!personnaliserCoordsDisplay || !personnaliserCoordsValue) return;
+    if (lat != null && lng != null && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
+      personnaliserCoordsValue.textContent = `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+      personnaliserCoordsDisplay.classList.remove("hidden");
+    } else {
+      personnaliserCoordsDisplay.classList.add("hidden");
+    }
+  }
 
   api("/dashboard/settings")
     .then((r) => (r.ok ? r.json() : null))
@@ -1054,8 +1085,8 @@ function initAppDashboard(slug) {
       if (personnaliserFgHex) personnaliserFgHex.value = fg;
       if (personnaliserLabel) personnaliserLabel.value = label;
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
-      if (personnaliserLat != null && data.locationLat != null) personnaliserLat.value = data.locationLat;
-      if (personnaliserLng != null && data.locationLng != null) personnaliserLng.value = data.locationLng;
+      if (personnaliserAddress && data.locationAddress != null) personnaliserAddress.value = data.locationAddress || "";
+      updateCoordsDisplay(data.locationLat, data.locationLng);
       if (personnaliserLocationText && data.locationRelevantText != null) personnaliserLocationText.value = data.locationRelevantText || "";
       if (personnaliserRadius != null && data.locationRadiusMeters != null) personnaliserRadius.value = data.locationRadiusMeters;
       updatePersonnaliserPreview();
@@ -1120,12 +1151,27 @@ function initAppDashboard(slug) {
         labelColor: toHex(labelColor),
       };
       if (personnaliserLogoDataUrl) body.logoBase64 = personnaliserLogoDataUrl;
-      const latVal = document.getElementById("app-personnaliser-lat")?.value;
-      const lngVal = document.getElementById("app-personnaliser-lng")?.value;
+      const addressVal = document.getElementById("app-personnaliser-address")?.value?.trim() || "";
       const locTextVal = document.getElementById("app-personnaliser-location-text")?.value?.trim();
       const radiusVal = document.getElementById("app-personnaliser-radius")?.value;
-      if (latVal !== undefined) body.locationLat = latVal === "" ? null : parseFloat(latVal);
-      if (lngVal !== undefined) body.locationLng = lngVal === "" ? null : parseFloat(lngVal);
+      body.locationAddress = addressVal || null;
+      if (addressVal) {
+        showPersonnaliserMessage("Localisation de l'adresse en cours…", false);
+        try {
+          const coords = await geocodeAddress(addressVal);
+          if (coords) {
+            body.locationLat = coords.lat;
+            body.locationLng = coords.lng;
+          } else {
+            showPersonnaliserMessage("Adresse non trouvée. Vérifiez l'adresse ou réessayez. Les autres modifications seront enregistrées.", true);
+          }
+        } catch (e) {
+          showPersonnaliserMessage("Impossible de localiser l'adresse (réseau). Les autres modifications seront enregistrées.", true);
+        }
+      } else {
+        body.locationLat = null;
+        body.locationLng = null;
+      }
       if (locTextVal !== undefined) body.locationRelevantText = locTextVal || undefined;
       if (radiusVal !== undefined) body.locationRadiusMeters = radiusVal === "" ? undefined : parseInt(radiusVal, 10);
       personnaliserSave.disabled = true;
@@ -1138,6 +1184,7 @@ function initAppDashboard(slug) {
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showPersonnaliserMessage("Modifications enregistrées.");
+          updateCoordsDisplay(data.locationLat, data.locationLng);
           personnaliserLogoDataUrl = "";
           if (personnaliserLogo) personnaliserLogo.value = "";
           if (body.logoBase64) {

@@ -150,9 +150,9 @@ if (!memCols.includes("last_visit_at")) {
 }
 // Migration : localisation Apple Wallet sur businesses (affichage pass à l'écran de verrouillage)
 const bizColsLoc = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
-for (const col of ["location_lat", "location_lng", "location_relevant_text", "location_radius_meters"]) {
+for (const col of ["location_lat", "location_lng", "location_relevant_text", "location_radius_meters", "location_address"]) {
   if (!bizColsLoc.includes(col)) {
-    const type = col === "location_radius_meters" ? "INTEGER" : col === "location_relevant_text" ? "TEXT" : "REAL";
+    const type = col === "location_radius_meters" ? "INTEGER" : col === "location_relevant_text" || col === "location_address" ? "TEXT" : "REAL";
     db.exec(`ALTER TABLE businesses ADD COLUMN ${col} ${type}`);
   }
 }
@@ -286,6 +286,7 @@ export function updateBusiness(businessId, updates) {
     "location_lng",
     "location_relevant_text",
     "location_radius_meters",
+    "location_address",
   ];
   const numericCols = ["location_lat", "location_lng", "location_radius_meters"];
   const setClauses = [];

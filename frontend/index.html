@@ -616,16 +616,13 @@
                 </label>
               </div>
               <p class="app-step-label">Localisation Apple Wallet</p>
-              <p class="app-hint app-location-hint">En renseignant l’adresse de votre commerce, la carte s’affichera sur l’écran de verrouillage des clients à l’approche. Coordonnées : Google Maps → clic droit sur le lieu → « Copier les coordonnées ».</p>
+              <p class="app-hint app-location-hint">Indiquez l’adresse de votre commerce : la carte s’affichera sur l’écran de verrouillage des clients à l’approche. Les coordonnées sont calculées automatiquement.</p>
               <div class="app-personnaliser-location">
                 <div class="app-location-row">
-                  <label class="app-label" for="app-personnaliser-lat">Latitude</label>
-                  <input type="number" id="app-personnaliser-lat" class="app-input app-input-number" placeholder="ex. 48.8566" step="any" min="-90" max="90" />
+                  <label class="app-label" for="app-personnaliser-address">Adresse du commerce</label>
+                  <input type="text" id="app-personnaliser-address" class="app-input" placeholder="ex. 12 rue de la Paix, 75002 Paris" autocomplete="address-line1" />
                 </div>
-                <div class="app-location-row">
-                  <label class="app-label" for="app-personnaliser-lng">Longitude</label>
-                  <input type="number" id="app-personnaliser-lng" class="app-input app-input-number" placeholder="ex. 2.3522" step="any" min="-180" max="180" />
-                </div>
+                <p id="app-personnaliser-coords-display" class="app-coords-display hidden" aria-live="polite">Coordonnées détectées : <span id="app-personnaliser-coords-value"></span></p>
                 <div class="app-location-row">
                   <label class="app-label" for="app-personnaliser-location-text">Texte à l’écran de verrouillage (optionnel)</label>
                   <input type="text" id="app-personnaliser-location-text" class="app-input" placeholder="ex. Vous êtes près de Café Dupont" />
