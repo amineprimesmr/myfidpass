@@ -454,43 +454,53 @@ function initAuthPage(initialTab) {
     script.async = true;
     script.onload = () => {
       if (typeof AppleID !== "undefined") {
-        AppleID.auth.init({
-          clientId: authAppleClientId,
-          scope: "name email",
-          usePopup: true,
-          redirectURI: window.location.origin + "/",
-        });
-        authAppleBtn.addEventListener("click", () => {
-          AppleID.auth.signIn().then(
-            (res) => {
-              const idToken = res?.authorization?.id_token;
-              const user = res?.user;
-              if (!idToken) {
-                authOAuthError("Token Apple manquant");
-                return;
-              }
-              fetch(`${API_BASE}/api/auth/apple`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  idToken,
-                  name: user?.name ? [user.name.firstName, user.name.lastName].filter(Boolean).join(" ") : undefined,
-                  email: user?.email,
-                }),
-              })
-                .then((r) => r.json())
-                .then((data) => {
-                  if (data.token) authOAuthSuccess(data);
-                  else authOAuthError(data.error || "Erreur Apple");
-                })
-                .catch(() => authOAuthError("Erreur réseau"));
-            },
-            (err) => authOAuthError(err?.error || "Connexion Apple annulée")
-          );
-        });
+        try {
+          AppleID.auth.init({
+            clientId: authAppleClientId,
+            scope: "name email",
+            usePopup: true,
+            redirectURI: window.location.origin + "/",
+          });
+        } catch (e) {
+          console.error("Apple init error:", e);
+        }
       }
     };
     document.head.appendChild(script);
+    authAppleBtn.addEventListener("click", () => {
+      if (typeof AppleID === "undefined" || !AppleID.auth) {
+        authOAuthError("Connexion Apple non chargée. Rechargez la page ou autorisez les scripts Apple.");
+        return;
+      }
+      AppleID.auth.signIn()
+        .then((res) => {
+          const idToken = res?.authorization?.id_token;
+          const user = res?.user;
+          if (!idToken) {
+            authOAuthError("Token Apple manquant");
+            return;
+          }
+          fetch(`${API_BASE}/api/auth/apple`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idToken,
+              name: user?.name ? [user.name.firstName, user.name.lastName].filter(Boolean).join(" ") : undefined,
+              email: user?.email,
+            }),
+          })
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.token) authOAuthSuccess(data);
+              else authOAuthError(data.error || "Erreur Apple");
+            })
+            .catch(() => authOAuthError("Erreur réseau"));
+        })
+        .catch((err) => {
+          const msg = err?.error || err?.message || (err && String(err));
+          authOAuthError(msg || "Connexion Apple annulée. Réessayez.");
+        });
+    });
   } else if (authAppleBtn) {
     authAppleBtn.style.display = "none";
   }
@@ -2297,46 +2307,69 @@ function initCheckoutPage() {
     const script = document.createElement("script");
     script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en/appleid.auth.js";
     script.async = true;
+    script.onerror = () => {
+      if (appleBtn && !appleBtn.disabled) {
+        appleBtn.addEventListener("click", () => {
+          handleOAuthError("Le script Apple n’a pas pu se charger. Désactivez le bloqueur de publicités ou réessayez.");
+        }, { once: true });
+      }
+    };
     script.onload = () => {
       if (typeof AppleID !== "undefined") {
-        AppleID.auth.init({
-          clientId: appleClientId,
-          scope: "name email",
-          usePopup: true,
-          redirectURI: typeof window !== "undefined" ? window.location.origin + "/" : "",
-        });
-        appleBtn.addEventListener("click", () => {
-          showOAuthError("");
-          AppleID.auth.signIn().then(
-            (res) => {
-              const idToken = res?.authorization?.id_token;
-              const user = res?.user;
-              if (!idToken) {
-                handleOAuthError("Token Apple manquant");
-                return;
-              }
-              fetch(`${API_BASE}/api/auth/apple`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  idToken,
-                  name: user?.name ? [user.name.firstName, user.name.lastName].filter(Boolean).join(" ") : undefined,
-                  email: user?.email,
-                }),
-              })
-                .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
-                .then(({ ok, data }) => {
-                  if (ok && data?.token) handleOAuthSuccess(data);
-                  else handleOAuthError(data?.error || "Erreur lors de la connexion Apple. Réessayez.");
-                })
-                .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."));
-            },
-            (err) => handleOAuthError(err?.error || "Connexion Apple annulée")
-          );
-        });
+        try {
+          AppleID.auth.init({
+            clientId: appleClientId,
+            scope: "name email",
+            usePopup: true,
+            redirectURI: typeof window !== "undefined" ? window.location.origin + "/" : "",
+          });
+        } catch (e) {
+          console.error("Apple init error:", e);
+        }
       }
     };
     document.head.appendChild(script);
+    // Gestionnaire de clic unique : fonctionne même si le script charge en retard
+    appleBtn.addEventListener("click", () => {
+      showOAuthError("");
+      if (typeof AppleID === "undefined" || !AppleID.auth) {
+        handleOAuthError("Connexion Apple non chargée. Rechargez la page ou autorisez les scripts (appleid.cdn-apple.com).");
+        return;
+      }
+      AppleID.auth.signIn()
+        .then((res) => {
+          const idToken = res?.authorization?.id_token;
+          const user = res?.user;
+          if (!idToken) {
+            handleOAuthError("Token Apple manquant");
+            return;
+          }
+          fetch(`${API_BASE}/api/auth/apple`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idToken,
+              name: user?.name ? [user.name.firstName, user.name.lastName].filter(Boolean).join(" ") : undefined,
+              email: user?.email,
+            }),
+          })
+            .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+            .then(({ ok, data }) => {
+              if (ok && data?.token) handleOAuthSuccess(data);
+              else handleOAuthError(data?.error || "Erreur lors de la connexion Apple. Réessayez.");
+            })
+            .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."));
+        })
+        .catch((err) => {
+          const msg = err?.error || err?.message || (err && String(err));
+          if (msg && (msg.includes("popup") || msg.includes("blocked") || msg.includes("fenêtre")))
+            handleOAuthError("Autorisez les fenêtres pop-up pour ce site puis réessayez.");
+          else if (msg && msg.toLowerCase().includes("invalid"))
+            handleOAuthError("Configuration Apple incorrecte. Vérifiez le Services ID et les domaines dans Apple Developer.");
+          else
+            handleOAuthError(msg || "Connexion Apple annulée ou erreur. Réessayez.");
+        });
+    });
   }
 
   // Toujours afficher la section « Ou continuer avec » ; les boutons sont actifs seulement si les client IDs sont configurés (Vercel).
