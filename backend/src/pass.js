@@ -233,31 +233,50 @@ function createEmptyStampPng(strokeRgb) {
   return PNG.sync.write(png);
 }
 
-// Twemoji PNG pour ☕ (U+2615) — affichage garanti même sans police emoji sur le serveur
-const TWEMOJI_COFFEE_URL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/2615.png";
-let cachedCoffeeEmojiPng = null;
+// Twemoji 72x72 — URLs par codepoint Unicode (ex. ☕ = 2615, 🧋 = 1f9cb)
+const TWEMOJI_BASE = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72";
+const cacheEmojiPng = new Map();
 
-async function fetchCoffeeEmojiPng() {
-  if (cachedCoffeeEmojiPng) return cachedCoffeeEmojiPng;
+/** Retourne le codepoint Twemoji pour un emoji (ex. "☕" → "2615", "🧋" → "1f9cb"). */
+function emojiToTwemojiCodepoint(emoji) {
+  if (!emoji || typeof emoji !== "string") return "2615";
+  const str = String(emoji).trim();
+  if (!str.length) return "2615";
+  const parts = [];
+  for (let i = 0; i < str.length; ) {
+    const cp = str.codePointAt(i);
+    i += cp > 0xffff ? 2 : 1;
+    if (cp === 0xfe0f) continue; // variation selector
+    parts.push(cp.toString(16).toLowerCase());
+  }
+  return parts.length ? parts.join("-") : "2615";
+}
+
+async function fetchEmojiPng(emoji) {
+  const key = emojiToTwemojiCodepoint(emoji);
+  if (cacheEmojiPng.has(key)) return cacheEmojiPng.get(key);
   try {
-    const res = await fetch(TWEMOJI_COFFEE_URL);
+    const url = `${TWEMOJI_BASE}/${key}.png`;
+    const res = await fetch(url);
     if (res.ok) {
       const buf = Buffer.from(await res.arrayBuffer());
-      cachedCoffeeEmojiPng = await sharp(buf).resize(STAMP_SIZE - 16, STAMP_SIZE - 16).png().toBuffer();
-      return cachedCoffeeEmojiPng;
+      const out = await sharp(buf).resize(STAMP_SIZE - 16, STAMP_SIZE - 16).png().toBuffer();
+      cacheEmojiPng.set(key, out);
+      return out;
     }
   } catch (e) {
-    console.warn("[PassKit] fetchCoffeeEmojiPng failed:", e?.message);
+    console.warn("[PassKit] fetchEmojiPng failed:", e?.message);
   }
   return null;
 }
 
-/** Crée un buffer PNG 76×76 : cercle rempli + emoji café au centre (image Twemoji pour rendu fiable). */
-async function createFilledStampWithEmojiPng(hexColor) {
+/** Crée un buffer PNG 76×76 : cercle rempli + emoji au centre (Twemoji). Utilise l’emoji choisi (ex. ☕) ou défaut ☕. */
+async function createFilledStampWithEmojiPng(hexColor, stampEmoji = "☕") {
   const circleRgb = hexToRgb(hexColor || "#5d4e37");
   const circlePng = createFilledStampCirclePng(circleRgb);
+  const emojiChar = (typeof stampEmoji === "string" && stampEmoji.trim()) ? stampEmoji.trim()[0] : "☕";
   try {
-    const emojiBuf = await fetchCoffeeEmojiPng();
+    const emojiBuf = await fetchEmojiPng(emojiChar);
     if (emojiBuf) {
       const padding = 10;
       return await sharp(circlePng)
@@ -305,7 +324,8 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     const filled = i < filledCount;
     let stampBuf;
     if (filled) {
-      stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor);
+      const emojiForStamp = (stampEmoji && String(stampEmoji).trim()) || "☕";
+      stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor, emojiForStamp);
       if (!stampBuf) stampBuf = createFilledStampCirclePng(fillRgb);
     } else {
       stampBuf = createEmptyStampPng(strokeRgb);
