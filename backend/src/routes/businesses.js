@@ -1058,8 +1058,11 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
     res.send(buffer);
   } catch (err) {
     console.error("Génération pass:", err);
+    const isCert = /certificat|wwdr|signer|PASS_TYPE_ID|TEAM_ID/i.test(err.message || "");
     res.status(500).json({
-      error: "Impossible de générer la carte. Vérifiez les certificats (voir docs/APPLE-WALLET-SETUP.md).",
+      error: isCert
+        ? "Impossible de générer la carte. Vérifiez les certificats (voir docs/APPLE-WALLET-SETUP.md)."
+        : `Impossible de générer la carte: ${err.message || "erreur inconnue"}`,
       detail: err.message,
     });
   }

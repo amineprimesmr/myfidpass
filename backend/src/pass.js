@@ -547,7 +547,6 @@ export async function generatePass(member, business = null, options = {}) {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
     organizationName: "Carte fidélité",
-    logoText: "",
     description: format === "tampons"
       ? `Carte fidélité — ${stamps}/${stampMax} tampons`
       : `Carte de fidélité — ${member.points} pts`,
