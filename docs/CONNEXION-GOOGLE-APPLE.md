@@ -22,11 +22,19 @@ Utilise la **même valeur** de Client ID côté frontend et backend (ex. le mêm
 3. **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**.
 4. Type : **Web application**.
 5. Dans **Authorized JavaScript origins** : ajoute `https://myfidpass.fr` (et `http://localhost:5173` en dev).
-6. Crée et copie le **Client ID** (finissant par `.apps.googleusercontent.com`).
+6. Dans **Authorized redirect URIs** : ajoute **obligatoirement** l’URL de callback pour l’**app iOS** :
+   - `https://api.myfidpass.fr/api/auth/google-oauth-callback`
+   (Remplace `api.myfidpass.fr` par l’URL réelle de ton API si différente.)
+7. Crée et copie le **Client ID** et le **Client secret** (pour l’app iOS, le backend échange le code OAuth contre un token).
 
 **À configurer :**
-- **Railway** (backend) : variable `GOOGLE_CLIENT_ID` = ce Client ID.
+- **Railway** (backend) :
+  - `GOOGLE_CLIENT_ID` = ce Client ID (web).
+  - `GOOGLE_CLIENT_SECRET` = le Client secret du même client OAuth (nécessaire pour « Continuer avec Google » dans l’**app iOS**).
+  - `API_URL` = l’URL de base de l’API (ex. `https://api.myfidpass.fr`) pour que le callback OAuth utilise la bonne URL.
 - **Vercel** (frontend) : variable `VITE_GOOGLE_CLIENT_ID` = le même Client ID.
+
+**Comportement :** Le backend crée automatiquement un compte si l’utilisateur se connecte avec Google (ou Apple) et n’a pas encore de compte. Plus besoin de « créer un compte sur myfidpass.fr » avant.
 
 ---
 

@@ -15,6 +15,8 @@ import { requireAuth } from "../middleware/auth.js";
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const GOOGLE_IOS_CLIENT_ID = process.env.GOOGLE_IOS_CLIENT_ID || ""; // Client ID OAuth iOS pour l'app
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ""; // Pour échange code → token (flow OAuth app)
 const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || ""; // Service ID (bundle id) pour vérifier l'audience
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
 const SALT_ROUNDS = 10;
@@ -28,7 +30,9 @@ function cleanupAppleCodes() {
   }
 }
 
-const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
+const googleClient = (GOOGLE_CLIENT_ID || GOOGLE_IOS_CLIENT_ID) ? new OAuth2Client(GOOGLE_CLIENT_ID || GOOGLE_IOS_CLIENT_ID) : null;
+const googleOAuthClient = (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) ? new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET) : null;
+const GOOGLE_AUDIENCES = [GOOGLE_CLIENT_ID, GOOGLE_IOS_CLIENT_ID].filter(Boolean);
 
 const APPLE_JWKS_URI = "https://appleid.apple.com/auth/keys";
 let appleJwksCache = null;
@@ -119,25 +123,28 @@ router.post("/login", async (req, res) => {
  * POST /api/auth/google
  * Body: { idToken } ou { credential } (Google renvoie credential)
  * Vérifie le token Google, crée ou récupère l'utilisateur, retourne le JWT.
+ * Audience : GOOGLE_CLIENT_ID (web) et/ou GOOGLE_IOS_CLIENT_ID (app) selon .env.
  */
 router.post("/google", async (req, res) => {
   const idToken = req.body?.idToken || req.body?.credential;
-  if (!idToken || !GOOGLE_CLIENT_ID || !googleClient) {
+  if (!idToken || GOOGLE_AUDIENCES.length === 0 || !googleClient) {
     return res.status(400).json({ error: "Connexion Google non configurée ou token manquant" });
   }
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken: String(idToken),
-      audience: GOOGLE_CLIENT_ID,
+      audience: GOOGLE_AUDIENCES.length === 1 ? GOOGLE_AUDIENCES[0] : GOOGLE_AUDIENCES,
     });
     const payload = ticket.getPayload();
     const email = (payload?.email || "").trim().toLowerCase();
     if (!email) {
       return res.status(400).json({ error: "Email non fourni par Google" });
     }
-    const user = getUserByEmail(email);
+    let user = getUserByEmail(email);
     if (!user) {
-      return res.status(404).json({ error: "Aucun compte associé. Créez votre compte sur myfidpass.fr.", code: "NO_ACCOUNT" });
+      const name = payload?.name || [payload?.given_name, payload?.family_name].filter(Boolean).join(" ").trim() || null;
+      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
+      user = createUser({ email, passwordHash: oauthPlaceholder, name: name || null });
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
@@ -149,6 +156,61 @@ router.post("/google", async (req, res) => {
   } catch (e) {
     console.error("Google auth error:", e);
     return res.status(401).json({ error: "Token Google invalide ou expiré" });
+  }
+});
+
+/**
+ * GET /api/auth/config
+ * Retourne les infos nécessaires au client (ex: clientId Google pour OAuth).
+ */
+router.get("/config", (_req, res) => {
+  res.json({
+    googleClientId: GOOGLE_CLIENT_ID || null,
+  });
+});
+
+/**
+ * GET /api/auth/google-oauth-callback?code=xxx
+ * Reçoit le redirect OAuth Google (app iOS), échange le code contre un id_token,
+ * crée ou récupère l'utilisateur, redirige vers myfidpass://auth?token=JWT
+ */
+router.get("/google-oauth-callback", async (req, res) => {
+  const code = req.query?.code;
+  const apiBase = (process.env.API_URL || "").replace(/\/$/, "") || `${req.protocol}://${req.get("host") || ""}`;
+  const redirectApp = "myfidpass://auth";
+  if (!code || !googleOAuthClient) {
+    const err = !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET ? "config" : "no_code";
+    return res.redirect(302, `${redirectApp}?error=${err}`);
+  }
+  try {
+    const { tokens } = await googleOAuthClient.getToken({
+      code: String(code),
+      redirect_uri: `${apiBase}/api/auth/google-oauth-callback`,
+    });
+    const idToken = tokens?.id_token;
+    if (!idToken || !googleClient) {
+      return res.redirect(302, `${redirectApp}?error=no_token`);
+    }
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: GOOGLE_AUDIENCES.length === 1 ? GOOGLE_AUDIENCES[0] : GOOGLE_AUDIENCES,
+    });
+    const payload = ticket.getPayload();
+    const email = (payload?.email || "").trim().toLowerCase();
+    if (!email) {
+      return res.redirect(302, `${redirectApp}?error=no_email`);
+    }
+    let user = getUserByEmail(email);
+    if (!user) {
+      const name = payload?.name || [payload?.given_name, payload?.family_name].filter(Boolean).join(" ").trim() || null;
+      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
+      user = createUser({ email, passwordHash: oauthPlaceholder, name: name || null });
+    }
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    return res.redirect(302, `${redirectApp}?token=${encodeURIComponent(token)}`);
+  } catch (e) {
+    console.error("Google OAuth callback error:", e);
+    return res.redirect(302, `${redirectApp}?error=invalid`);
   }
 });
 
