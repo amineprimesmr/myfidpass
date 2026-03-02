@@ -125,20 +125,23 @@ router.get("/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrat
 router.get("/api/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
 router.get("/api/v1/v1/devices/:deviceId/registrations/:passTypeId", handleGetRegistrations);
 
-/** Convertit une date SQLite en date HTTP RFC 1123 pour Last-Modified. */
-function toLastModifiedHttpDate(dateStr) {
+/** Convertit une date (SQLite "YYYY-MM-DD HH:MM:SS" ou ISO "YYYY-MM-DDTHH:MM:SS.sssZ") en timestamp. */
+function toTimestamp(dateStr) {
   if (!dateStr) return null;
-  const iso = String(dateStr).replace(" ", "T") + "Z";
-  return new Date(iso).getTime();
+  const s = String(dateStr).trim();
+  if (!s) return null;
+  const iso = /Z$|\+\d{2}:?\d{2}$/.test(s) ? s : s.replace(" ", "T") + "Z";
+  const t = new Date(iso).getTime();
+  return Number.isFinite(t) ? t : null;
 }
 
 /** Retourne la date HTTP la plus récente (membre, notif, logo) pour que l'iPhone refetch le pass quand points, notif ou logo changent. */
 function getPassLastModified(member, business) {
-  const a = toLastModifiedHttpDate(member?.last_visit_at);
-  const b = toLastModifiedHttpDate(business?.last_broadcast_at);
-  const c = toLastModifiedHttpDate(business?.logo_updated_at);
+  const a = toTimestamp(member?.last_visit_at);
+  const b = toTimestamp(business?.last_broadcast_at);
+  const c = toTimestamp(business?.logo_updated_at);
   const ts = Math.max(a || 0, b || 0, c || 0);
-  if (ts <= 0) return new Date().toUTCString();
+  if (!Number.isFinite(ts) || ts <= 0) return new Date().toUTCString();
   return new Date(ts).toUTCString();
 }
 
