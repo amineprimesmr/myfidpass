@@ -233,46 +233,42 @@ function createEmptyStampPng(strokeRgb) {
   return PNG.sync.write(png);
 }
 
-/** Cercle blanc avec emoji café grisé (case non remplie) — les 10 cases affichent toujours ☕. */
-async function createEmptyStampWithEmojiPng(emoji) {
-  const size = STAMP_SIZE;
-  const char = (emoji || "☕").trim().slice(0, 2);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <circle cx="${size/2}" cy="${size/2}" r="${STAMP_R - 2}" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
-  <text x="${size/2}" y="${size/2 + 4}" font-size="36" text-anchor="middle" dominant-baseline="middle" fill="rgba(150,150,150,0.85)" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${char}</text>
-</svg>`;
+// Twemoji PNG pour ☕ (U+2615) — affichage garanti même sans police emoji sur le serveur
+const TWEMOJI_COFFEE_URL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/2615.png";
+let cachedCoffeeEmojiPng = null;
+
+async function fetchCoffeeEmojiPng() {
+  if (cachedCoffeeEmojiPng) return cachedCoffeeEmojiPng;
   try {
-    return await sharp(Buffer.from(svg))
-      .resize(size, size)
-      .png()
-      .toBuffer();
+    const res = await fetch(TWEMOJI_COFFEE_URL);
+    if (res.ok) {
+      const buf = Buffer.from(await res.arrayBuffer());
+      cachedCoffeeEmojiPng = await sharp(buf).resize(STAMP_SIZE - 16, STAMP_SIZE - 16).png().toBuffer();
+      return cachedCoffeeEmojiPng;
+    }
   } catch (e) {
-    console.warn("[PassKit] createEmptyStampWithEmojiPng failed:", e?.message);
-    return null;
+    console.warn("[PassKit] fetchCoffeeEmojiPng failed:", e?.message);
   }
+  return null;
 }
 
-/** Crée un buffer PNG 76×76 : cercle rempli avec emoji café (ou autre) au centre — SVG rendu via sharp. */
-async function createFilledStampWithEmojiPng(hexColor, emoji) {
-  const size = STAMP_SIZE;
-  const hex = hexColor.replace(/^#/, "");
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  const char = (emoji || "☕").trim().slice(0, 2);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <circle cx="${size/2}" cy="${size/2}" r="${STAMP_R - 2}" fill="rgb(${r},${g},${b})"/>
-  <text x="${size/2}" y="${size/2 + 4}" font-size="38" text-anchor="middle" dominant-baseline="middle" fill="white" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${char}</text>
-</svg>`;
+/** Crée un buffer PNG 76×76 : cercle rempli + emoji café au centre (image Twemoji pour rendu fiable). */
+async function createFilledStampWithEmojiPng(hexColor) {
+  const circleRgb = hexToRgb(hexColor || "#5d4e37");
+  const circlePng = createFilledStampCirclePng(circleRgb);
   try {
-    return await sharp(Buffer.from(svg))
-      .resize(size, size)
-      .png()
-      .toBuffer();
+    const emojiBuf = await fetchCoffeeEmojiPng();
+    if (emojiBuf) {
+      const padding = 10;
+      return await sharp(circlePng)
+        .composite([{ input: emojiBuf, left: padding, top: padding }])
+        .png()
+        .toBuffer();
+    }
   } catch (e) {
-    console.warn("[PassKit] createFilledStampWithEmojiPng failed:", e?.message);
-    return null;
+    console.warn("[PassKit] createFilledStampWithEmojiPng composite failed:", e?.message);
   }
+  return null;
 }
 
 /** Crée un buffer PNG 76×76 : cercle rempli sans emoji (fallback). */
@@ -286,13 +282,13 @@ function createFilledStampCirclePng(fillRgb) {
 }
 
 /**
- * Dessine la grille de 10 tampons : les 10 cases affichent toujours l'emoji café ☕.
- * Remplis = ☕ en couleur dans cercle marron, vides = ☕ grisé dans cercle blanc.
+ * Dessine la grille de tampons (2 lignes × 5) sur le strip : tampons remplis = emoji ☕ dans le cercle, vides = cercle blanc.
+ * Les 10 positions affichent donc l’emoji café pour les collectés (pas des ronds blancs).
  */
 async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.cafe;
   const fillRgb = hexToRgb(colors.backgroundColor);
-  const emoji = (stampEmoji || "☕").trim().slice(0, 2);
+  const strokeRgb = hexToRgb(colors.foregroundColor || "#ffffff");
   const cols = 5;
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
   const row0Y = STAMP_TOP + STAMP_R;
@@ -309,11 +305,10 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     const filled = i < filledCount;
     let stampBuf;
     if (filled) {
-      stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor, emoji);
+      stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor);
       if (!stampBuf) stampBuf = createFilledStampCirclePng(fillRgb);
     } else {
-      stampBuf = await createEmptyStampWithEmojiPng(emoji);
-      if (!stampBuf) stampBuf = createEmptyStampPng(hexToRgb(colors.foregroundColor || "#ffffff"));
+      stampBuf = createEmptyStampPng(strokeRgb);
     }
     composites.push({ input: stampBuf, left, top });
   }
@@ -325,7 +320,7 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
 }
 
 /**
- * Génère un strip 750×246 avec 10 tampons : emoji ☕ pour les remplis, cercle vide pour les restants.
+ * Génère un strip 750×246 avec une grille de tampons : emoji ☕ dans les cercles remplis.
  */
 async function createStripWithStamps(templateKey, filledCount, stampMax, stampEmoji) {
   const stripBuf = createStripBuffer(templateKey);
@@ -484,9 +479,9 @@ export async function generatePass(member, business = null, options = {}) {
   const format = options.format || (useTampons ? "tampons" : "points");
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
-  // Strip : image de fond perso + grille 10 emojis café (☕ remplis, ○ vides), ou dégradé + grille
+  // Strip : image de fond perso + grille tampons (emoji ☕ dans les cercles remplis)
   const stripTemplateKey = options.template || "cafe";
-  const stampEmojiForStrip = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
+  const stripStampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
   if (format === "tampons") {
     let baseStrip;
     if (options.card_background_base64) {
@@ -501,7 +496,7 @@ export async function generatePass(member, business = null, options = {}) {
       }
     }
     if (!baseStrip) baseStrip = createStripBuffer(stripTemplateKey);
-    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stampEmojiForStrip);
+    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stripStampEmoji);
     buffers["strip.png"] = stripWithStamps;
     buffers["strip@2x.png"] = stripWithStamps;
   } else if (options.card_background_base64) {
@@ -538,10 +533,10 @@ export async function generatePass(member, business = null, options = {}) {
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
-    organizationName,
+    organizationName: "Carte fidélité",
     description: format === "tampons"
-      ? `Carte fidélité ${organizationName} — ${stamps}/${stampMax} tampons`
-      : `Carte de fidélité ${organizationName} — ${member.points} pts`,
+      ? `Carte fidélité — ${stamps}/${stampMax} tampons`
+      : `Carte de fidélité — ${member.points} pts`,
     serialNumber: member.id,
     ...customColors,
   };
@@ -574,7 +569,16 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   if (format === "tampons") {
-    // Pas de "☕ 0/10" en texte : les 10 emojis café sur le strip suffisent.
+    // Compteur "0/10" seul (pas d’emoji en doublon : les 10 cercles du strip affichent déjà ☕).
+    // Label "☕" pour avoir l’emoji à côté du nombre côté Wallet (emoji à côté du 0/10, pas sur les cercles).
+    const stampValue = `${stamps} / ${stampMax}`;
+    pass.primaryFields.push({
+      key: "stamps",
+      label: stampEmoji || "Tampons",
+      value: stampValue,
+      textAlignment: "PKTextAlignmentCenter",
+      changeMessage: "Tampons : %@",
+    });
     const rest = stampMax - stamps;
     let stampHint = "";
     const isCafeStyle = options.template === "cafe" || (organizationName && /caf[eé]|coffee/i.test(organizationName)) || stampEmoji === "☕";
@@ -613,9 +617,7 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  // Actualité en PRIMARY (comme Points) pour que la notif écran de verrouillage s’affiche — même mécanisme que l’ajout de points
-  const lastBroadcast = (business?.last_broadcast_message || options?.lastMessage || "").trim() || "—";
-  pass.primaryFields.push({ key: "news", label: "Actualité", value: lastBroadcast, changeMessage: "%@" });
+  // Pas de champ "Actualité" sur le pass (design épuré)
 
   // QR code uniquement (pas PDF417 ni Code128) — plus simple à scanner en caisse
   const barcodePayload = {
