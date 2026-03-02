@@ -267,13 +267,13 @@ function createFilledStampCirclePng(fillRgb) {
 }
 
 /**
- * Dessine la grille de tampons (2 lignes × 5, emoji ☕ pour remplis) sur un strip existant (gradient ou image de fond).
+ * Dessine la grille de tampons (2 lignes × 5) sur un strip : cercles remplis (couleur) ou vides (contour).
+ * Une seule représentation visuelle — pas d'emoji dans les cercles (tampons classiques).
  */
-async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
+async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.cafe;
   const fillRgb = hexToRgb(colors.backgroundColor);
   const strokeRgb = hexToRgb(colors.foregroundColor || "#ffffff");
-  const emoji = (stampEmoji || "☕").trim().slice(0, 2);
   const cols = 5;
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
   const row0Y = STAMP_TOP + STAMP_R;
@@ -288,13 +288,7 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     const left = Math.max(0, cx - STAMP_R);
     const top = Math.max(0, cy - STAMP_R);
     const filled = i < filledCount;
-    let stampBuf;
-    if (filled) {
-      stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor, emoji);
-      if (!stampBuf) stampBuf = createFilledStampCirclePng(fillRgb);
-    } else {
-      stampBuf = createEmptyStampPng(strokeRgb);
-    }
+    const stampBuf = filled ? createFilledStampCirclePng(fillRgb) : createEmptyStampPng(strokeRgb);
     composites.push({ input: stampBuf, left, top });
   }
 
@@ -305,12 +299,11 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
 }
 
 /**
- * Génère un strip 750×246 avec une grille de tampons : emoji (ex. ☕) pour les remplis, cercles vides pour les restants.
- * Base = dégradé aux couleurs du template. Pour image de fond perso, utiliser drawStampsOnStrip(resizedImage, ...).
+ * Génère un strip 750×246 avec une grille de tampons (cercles remplis / vides uniquement).
  */
-async function createStripWithStamps(templateKey, filledCount, stampMax, stampEmoji) {
+async function createStripWithStamps(templateKey, filledCount, stampMax) {
   const stripBuf = createStripBuffer(templateKey);
-  return drawStampsOnStrip(stripBuf, templateKey, filledCount, stampMax, stampEmoji);
+  return drawStampsOnStrip(stripBuf, templateKey, filledCount, stampMax);
 }
 
 function loadCertificates() {
@@ -467,7 +460,6 @@ export async function generatePass(member, business = null, options = {}) {
 
   // Strip : image de fond perso + grille tampons par-dessus, ou strip dégradé + grille (format tampons)
   const stripTemplateKey = options.template || "cafe";
-  const stampEmojiOpt = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
   if (format === "tampons") {
     let baseStrip;
     if (options.card_background_base64) {
@@ -482,7 +474,7 @@ export async function generatePass(member, business = null, options = {}) {
       }
     }
     if (!baseStrip) baseStrip = createStripBuffer(stripTemplateKey);
-    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stampEmojiOpt);
+    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax);
     buffers["strip.png"] = stripWithStamps;
     buffers["strip@2x.png"] = stripWithStamps;
   } else if (options.card_background_base64) {
@@ -555,29 +547,14 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   if (format === "tampons") {
-    const filledChar = stampEmoji || "●";
-    const emptyChar = "○";
-    const arr = Array.from({ length: stampMax }, (_, i) => (i < stamps ? filledChar : emptyChar));
-    const cols = 5;
-    const rows = [];
-    for (let r = 0; r < Math.ceil(stampMax / cols); r++) {
-      rows.push(arr.slice(r * cols, (r + 1) * cols).join(" "));
-    }
-    const visualStamps = rows.join("\n");
-    pass.primaryFields.push({
-      key: "stampVisual",
-      label: "Tampons",
-      value: visualStamps,
-      textAlignment: "PKTextAlignmentCenter",
-      changeMessage: "Tampons : %@",
-    });
-    // "3 / 10" en secondary pour le détail
+    // Une seule grille visuelle (sur le strip). Compteur en primary, pas de doublon ○/●.
     const stampValue = stampEmoji ? `${stampEmoji} ${stamps} / ${stampMax}` : `${stamps} / ${stampMax}`;
-    pass.secondaryFields.push({
+    pass.primaryFields.push({
       key: "stamps",
-      label: "",
+      label: "Tampons",
       value: stampValue,
       textAlignment: "PKTextAlignmentCenter",
+      changeMessage: "Tampons : %@",
     });
     const rest = stampMax - stamps;
     let stampHint = "";
