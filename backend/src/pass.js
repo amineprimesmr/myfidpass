@@ -326,6 +326,9 @@ export async function generatePass(member, business = null, options = {}) {
         buffers["icon.png"] = iconResized.iconPng;
         buffers["icon@2x.png"] = iconResized.iconPng2x;
         buffers["icon@3x.png"] = iconResized.iconPng3x;
+        console.log("[PassKit] Icône notification Wallet générée depuis le logo (29/58/87px)");
+      } else {
+        console.warn("[PassKit] resizeLogoForPassIcon a échoué — icône par défaut utilisée");
       }
     }
   }
