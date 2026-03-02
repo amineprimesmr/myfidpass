@@ -233,8 +233,9 @@ function createEmptyStampPng(strokeRgb) {
   return PNG.sync.write(png);
 }
 
-// Twemoji PNG pour ☕ (U+2615) — affichage garanti même sans police emoji sur le serveur
+// Emoji ☕ : fetch CDN ou fichier base64 intégré (affichage garanti en prod)
 const TWEMOJI_COFFEE_URL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/2615.png";
+const emojiCoffeeB64Path = join(dirname(fileURLToPath(import.meta.url)), "..", "emoji-coffee.b64");
 let cachedCoffeeEmojiPng = null;
 
 async function fetchCoffeeEmojiPng() {
@@ -247,7 +248,19 @@ async function fetchCoffeeEmojiPng() {
       return cachedCoffeeEmojiPng;
     }
   } catch (e) {
-    console.warn("[PassKit] fetchCoffeeEmojiPng failed:", e?.message);
+    console.warn("[PassKit] fetchCoffeeEmojiPng (CDN) failed:", e?.message);
+  }
+  if (existsSync(emojiCoffeeB64Path)) {
+    try {
+      const b64 = readFileSync(emojiCoffeeB64Path, "utf8").trim();
+      const buf = Buffer.from(b64, "base64");
+      if (buf.length > 0) {
+        cachedCoffeeEmojiPng = await sharp(buf).resize(STAMP_SIZE - 16, STAMP_SIZE - 16).png().toBuffer();
+        return cachedCoffeeEmojiPng;
+      }
+    } catch (e) {
+      console.warn("[PassKit] fetchCoffeeEmojiPng (file) failed:", e?.message);
+    }
   }
   return null;
 }
@@ -534,6 +547,7 @@ export async function generatePass(member, business = null, options = {}) {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
     organizationName: "Carte fidélité",
+    logoText: "",
     description: format === "tampons"
       ? `Carte fidélité — ${stamps}/${stampMax} tampons`
       : `Carte de fidélité — ${member.points} pts`,
