@@ -13,6 +13,11 @@ const LOGO_HEIGHT_2X = 100;
 const LOGO_WIDTH_1X = 160;
 const LOGO_HEIGHT_1X = 50;
 
+/** Dimensions Apple pour l’icône du pass (affichée dans les notifications et sur l’écran de verrouillage). */
+const ICON_SIZE_1X = 29;
+const ICON_SIZE_2X = 58;
+const ICON_SIZE_3X = 87;
+
 /**
  * Redimensionne et convertit en PNG le buffer image (PNG/JPEG) pour respecter les specs Apple.
  * Retourne { logoPng: Buffer (160×50), logoPng2x: Buffer (320×100) } ou null en cas d'erreur.
@@ -34,6 +39,27 @@ async function resizeLogoForPass(inputBuffer) {
     return { logoPng: out1x, logoPng2x: out2x };
   } catch (err) {
     console.warn("[PassKit] resizeLogoForPass failed:", err.message);
+    return null;
+  }
+}
+
+/**
+ * Génère les icônes du pass (29×29, 58×58, 87×87) à partir du logo.
+ * C’est cette icône qui s’affiche dans les notifications Wallet sur l’iPhone.
+ * Retourne { iconPng, iconPng2x, iconPng3x } ou null.
+ */
+async function resizeLogoForPassIcon(inputBuffer) {
+  if (!inputBuffer || inputBuffer.length === 0) return null;
+  try {
+    const opts = { fit: "cover", background: { r: 0, g: 0, b: 0, alpha: 0 } };
+    const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
+      sharp(inputBuffer).resize(ICON_SIZE_1X, ICON_SIZE_1X, opts).png().toBuffer(),
+      sharp(inputBuffer).resize(ICON_SIZE_2X, ICON_SIZE_2X, opts).png().toBuffer(),
+      sharp(inputBuffer).resize(ICON_SIZE_3X, ICON_SIZE_3X, opts).png().toBuffer(),
+    ]);
+    return { iconPng, iconPng2x, iconPng3x };
+  } catch (err) {
+    console.warn("[PassKit] resizeLogoForPassIcon failed:", err.message);
     return null;
   }
 }
@@ -294,6 +320,12 @@ export async function generatePass(member, business = null, options = {}) {
       } else {
         buffers["logo.png"] = logoBuf;
         buffers["logo@2x.png"] = logoBuf;
+      }
+      const iconResized = await resizeLogoForPassIcon(logoBuf);
+      if (iconResized) {
+        buffers["icon.png"] = iconResized.iconPng;
+        buffers["icon@2x.png"] = iconResized.iconPng2x;
+        buffers["icon@3x.png"] = iconResized.iconPng3x;
       }
     }
   }

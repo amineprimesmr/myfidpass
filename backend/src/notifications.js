@@ -24,30 +24,39 @@ export function getVapidPublicKey() {
   return VAPID_PUBLIC || null;
 }
 
-/** Taille max de l’icône pour les notifications (carré). Garder petit pour rester sous 4 Ko de payload (limite Web Push). */
-const NOTIFICATION_ICON_SIZE = 64;
+/** Taille de l’icône pour les notifications (carré). Utiliser une URL plutôt qu’une data URL pour rester sous la limite de payload (ex. 4 Ko FCM). */
+export const NOTIFICATION_ICON_SIZE = 96;
 
 /**
- * Produit une data URL d’icône à partir du logo base64 du commerce (redimensionnée).
- * Pour utiliser comme icône de notification (établissement).
+ * Produit le buffer PNG de l’icône notification (logo redimensionné).
+ * Utilisé par l’endpoint GET .../notification-icon et pour la data URL de fallback.
  * @param {string|null|undefined} logoBase64 - data:image/...;base64,... ou null
- * @returns {Promise<string|null>} - data:image/png;base64,... ou null
+ * @returns {Promise<Buffer|null>}
  */
-export async function getLogoIconDataUrl(logoBase64) {
+export async function getLogoIconBuffer(logoBase64) {
   if (!logoBase64 || typeof logoBase64 !== "string") return null;
   const base64Data = String(logoBase64).replace(/^data:image\/\w+;base64,/, "");
   if (!base64Data) return null;
   try {
     const buf = Buffer.from(base64Data, "base64");
     if (buf.length === 0) return null;
-    const small = await sharp(buf)
+    return await sharp(buf)
       .resize(NOTIFICATION_ICON_SIZE, NOTIFICATION_ICON_SIZE, { fit: "cover" })
       .png({ compressionLevel: 9 })
       .toBuffer();
-    return "data:image/png;base64," + small.toString("base64");
   } catch (_) {
     return null;
   }
+}
+
+/**
+ * Produit une data URL d’icône (fallback si on ne peut pas utiliser l’URL).
+ * @param {string|null|undefined} logoBase64
+ * @returns {Promise<string|null>}
+ */
+export async function getLogoIconDataUrl(logoBase64) {
+  const buffer = await getLogoIconBuffer(logoBase64);
+  return buffer ? "data:image/png;base64," + buffer.toString("base64") : null;
 }
 
 /**

@@ -37,7 +37,7 @@ import {
   getWebPushSubscriptionsByBusinessFiltered,
   getMemberIdsInCategories,
 } from "../db.js";
-import { sendWebPush, getLogoIconDataUrl } from "../notifications.js";
+import { sendWebPush, getLogoIconBuffer } from "../notifications.js";
 import { sendPassKitUpdate } from "../apns.js";
 import { requireAuth } from "../middleware/auth.js";
 import { generatePass, getPassAuthenticationToken } from "../pass.js";
@@ -407,11 +407,14 @@ router.post("/:slug/notify", async (req, res) => {
   if (totalDevices === 0) {
     return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0 });
   }
-  const iconDataUrl = await getLogoIconDataUrl(business.logo_base64);
+  const apiBase = (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
+  const iconUrl = business.logo_base64
+    ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/notification-icon`
+    : null;
   const payload = {
     title: (business.organization_name || "Myfidpass").trim(),
     body: message,
-    ...(iconDataUrl && { icon: iconDataUrl }),
+    ...(iconUrl && { icon: iconUrl }),
   };
   setLastBroadcastMessage(business.id, payload.title ? `${payload.title}: ${message}` : message);
   const touchedMembers = new Set();
@@ -477,11 +480,14 @@ router.post("/:slug/notifications/send", async (req, res) => {
       message: "Aucun appareil enregistré. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
-  const iconDataUrl = await getLogoIconDataUrl(business.logo_base64);
+  const apiBase = (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
+  const iconUrl = business.logo_base64
+    ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/notification-icon`
+    : null;
   const payload = {
     title: (title || business.organization_name || "Myfidpass").trim(),
     body,
-    ...(iconDataUrl && { icon: iconDataUrl }),
+    ...(iconUrl && { icon: iconUrl }),
   };
   const broadcastText = payload.title ? `${payload.title}: ${body}` : body;
   setLastBroadcastMessage(business.id, broadcastText);
@@ -733,6 +739,21 @@ router.post("/:slug/integration/scan", async (req, res) => {
     points_added: points,
     new_balance: updated.points,
   });
+});
+
+/**
+ * GET /api/businesses/:slug/notification-icon
+ * Icône publique (96×96 PNG) pour les notifications push. Pas d’auth : le navigateur charge cette URL à l’affichage.
+ * Utiliser cette URL dans le payload push pour éviter les limites de taille (ex. 4 Ko FCM).
+ */
+router.get("/:slug/notification-icon", async (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business || !business.logo_base64) return res.status(404).send();
+  const buffer = await getLogoIconBuffer(business.logo_base64);
+  if (!buffer) return res.status(404).send();
+  res.setHeader("Content-Type", "image/png");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.send(buffer);
 });
 
 /**
