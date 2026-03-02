@@ -301,8 +301,28 @@ function createFilledStampCirclePng(fillRgb) {
   return PNG.sync.write(png);
 }
 
+/** Crée un buffer PNG 76×76 : cercle vide + emoji en filigrane (opacité 0.4) pour que l’emoji soit visible dans les cases vides. */
+async function createEmptyStampWithEmojiPng(strokeRgb, stampEmoji = "☕") {
+  const emptyPng = createEmptyStampPng(strokeRgb);
+  const emojiChar = (typeof stampEmoji === "string" && stampEmoji.trim()) ? stampEmoji.trim()[0] : "☕";
+  try {
+    const emojiBuf = await fetchEmojiPng(emojiChar);
+    if (!emojiBuf) return emptyPng;
+    const { data, info } = await sharp(emojiBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * 0.45);
+    const fadedEmoji = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+    const padding = 4;
+    return await sharp(emptyPng)
+      .composite([{ input: fadedEmoji, left: padding, top: padding }])
+      .png()
+      .toBuffer();
+  } catch (e) {
+    return emptyPng;
+  }
+}
+
 /**
- * Dessine la grille de tampons (2 lignes × 5) sur le strip : tampons remplis = emoji ☕ dans le cercle, vides = cercle blanc.
+ * Dessine la grille de tampons : remplis = emoji plein, vides = cercle blanc + emoji en filigrane.
  * Les 10 positions affichent donc l’emoji café pour les collectés (pas des ronds blancs).
  */
 async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
@@ -324,12 +344,12 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     const top = Math.max(0, cy - STAMP_R);
     const filled = i < filledCount;
     let stampBuf;
+    const emojiForStamp = (stampEmoji && String(stampEmoji).trim()) || "☕";
     if (filled) {
-      const emojiForStamp = (stampEmoji && String(stampEmoji).trim()) || "☕";
       stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor, emojiForStamp);
       if (!stampBuf) stampBuf = createFilledStampCirclePng(fillRgb);
     } else {
-      stampBuf = createEmptyStampPng(strokeRgb);
+      stampBuf = await createEmptyStampWithEmojiPng(strokeRgb, emojiForStamp);
     }
     composites.push({ input: stampBuf, left, top });
   }
@@ -592,12 +612,11 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   if (format === "tampons") {
-    // Compteur "0/10" seul (pas d’emoji en doublon : les 10 cercles du strip affichent déjà ☕).
-    // Label "☕" pour avoir l’emoji à côté du nombre côté Wallet (emoji à côté du 0/10, pas sur les cercles).
-    const stampValue = `${stamps} / ${stampMax}`;
+    const emojiLabel = stampEmoji || "☕";
+    const stampValue = `${emojiLabel} ${stamps} / ${stampMax}`;
     pass.primaryFields.push({
       key: "stamps",
-      label: stampEmoji || "☕",
+      label: "",
       value: stampValue,
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tampons : %@",
