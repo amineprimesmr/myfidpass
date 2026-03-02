@@ -336,8 +336,9 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   const level = getLevel(member.points);
-  const format = options.format || "points";
   const stampMax = options.required_stamps ?? options.stampMax ?? business?.required_stamps ?? 10;
+  const useTampons = options.required_stamps != null || options.stampMax != null || (business?.required_stamps != null && business.required_stamps > 0);
+  const format = options.format || (useTampons ? "tampons" : "points");
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
   const isSectorTemplate = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template);
@@ -404,27 +405,27 @@ export async function generatePass(member, business = null, options = {}) {
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tampons : %@",
     });
-    if (isSectorTemplate) {
-      const rest = stampMax - stamps;
-      let stampHint = "";
-      if (options.template === "cafe") {
-        stampHint = stamps <= 1
-          ? `${stamps} café collecté — ${rest} pour en avoir un offert`
-          : `${stamps} cafés collectés — ${rest} pour en avoir un offert`;
-      } else if (options.template === "fastfood") {
-        stampHint = stamps <= 1
-          ? `${stamps} tampon collecté — ${rest} restants pour une récompense`
-          : `${stamps} tampons collectés — ${rest} restants pour une récompense`;
-      } else {
-        stampHint = `${stamps} / ${stampMax} — ${rest} restants pour une récompense`;
-      }
-      pass.secondaryFields.push({
-        key: "stampHint",
-        label: "",
-        value: stampHint,
-        textAlignment: "PKTextAlignmentCenter",
-      });
-    } else if (!isSectorTemplate) {
+    const rest = stampMax - stamps;
+    let stampHint = "";
+    const isCafeStyle = options.template === "cafe" || (organizationName && /caf[eé]|coffee/i.test(organizationName)) || stampEmoji === "☕";
+    if (isCafeStyle) {
+      stampHint = stamps <= 1
+        ? `${stamps} café collecté — ${rest} pour en avoir un offert`
+        : `${stamps} cafés collectés — ${rest} pour en avoir un offert`;
+    } else if (options.template === "fastfood") {
+      stampHint = stamps <= 1
+        ? `${stamps} tampon collecté — ${rest} restants pour une récompense`
+        : `${stamps} tampons collectés — ${rest} restants pour une récompense`;
+    } else {
+      stampHint = `${stamps} / ${stampMax} — ${rest} restant${rest !== 1 ? "s" : ""} pour une récompense`;
+    }
+    pass.secondaryFields.push({
+      key: "stampHint",
+      label: "",
+      value: stampHint,
+      textAlignment: "PKTextAlignmentCenter",
+    });
+    if (!isSectorTemplate) {
       pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
     }
   } else {

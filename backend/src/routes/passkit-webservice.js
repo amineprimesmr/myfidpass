@@ -177,7 +177,16 @@ const getPassHandler = async (req, res) => {
     const logoBytes = hasLogo ? Buffer.byteLength(Buffer.from(rawB64, "base64")) : 0;
     // Log visible pour diagnostic icône Wallet : filtrer par "LOGO_IN_PASS" dans Railway
     console.log("[PassKit] >>> PASS ENVOYÉ —", shortId, "business:", business.slug || business.id, "points:", member.points, "LOGO_IN_PASS:", hasLogo ? "OUI" : "NON", "logo_bytes:", logoBytes, "Last-Modified:", lastModified);
-    const buffer = await generatePass(member, business, { template: "classic" });
+    const opts = {
+      template: business.required_stamps != null && business.required_stamps > 0 ? "cafe" : "classic",
+      required_stamps: business.required_stamps ?? undefined,
+      stamp_emoji: business.stamp_emoji ?? undefined,
+      organizationName: business.organization_name ?? undefined,
+      background_color: business.background_color ?? undefined,
+      foreground_color: business.foreground_color ?? undefined,
+      label_color: business.label_color ?? undefined,
+    };
+    const buffer = await generatePass(member, business, opts);
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Content-Disposition", `inline; filename="pass.pkpass"`);
     res.setHeader("Last-Modified", lastModified);
