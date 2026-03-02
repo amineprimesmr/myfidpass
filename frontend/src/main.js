@@ -669,6 +669,8 @@ function initAppPage() {
       const user = data.user;
       const businesses = data.businesses || [];
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
+      const mobileProfilEmail = document.getElementById("app-mobile-profil-email");
+      if (mobileProfilEmail) mobileProfilEmail.textContent = user?.email || "";
 
       if (businesses.length === 0) {
         if (emptyEl) emptyEl.classList.remove("hidden");
@@ -778,10 +780,18 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["vue-ensemble", "scanner", "caisse", "membres", "historique", "personnaliser", "integration", "notifications"];
+const APP_SECTION_IDS = ["vue-ensemble", "scanner", "caisse", "membres", "historique", "personnaliser", "integration", "notifications", "profil"];
+
+const APP_MOBILE_TITLES = {
+  "vue-ensemble": "Tableau de bord",
+  "scanner": "Scanner",
+  "personnaliser": "Ma Carte",
+  "profil": "Profil",
+};
 
 function showAppSection(sectionId) {
-  const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
+  let normalized = sectionId === "partager" ? "personnaliser" : sectionId;
+  if (normalized === "profil" && window.matchMedia("(min-width: 769px)").matches) normalized = "vue-ensemble";
   const id = APP_SECTION_IDS.includes(normalized) ? normalized : "vue-ensemble";
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   const content = document.getElementById("app-dashboard-content");
@@ -792,6 +802,11 @@ function showAppSection(sectionId) {
   links.forEach((l) => {
     l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === id);
   });
+  document.querySelectorAll("#app-mobile-tab-bar .app-mobile-tab").forEach((t) => {
+    t.classList.toggle("active", t.getAttribute("data-mobile-tab") === id);
+  });
+  const headerTitle = document.getElementById("app-mobile-header-title");
+  if (headerTitle) headerTitle.textContent = APP_MOBILE_TITLES[id] || "Myfidpass";
   const newHash = "#" + id;
   if (window.location.hash !== newHash) {
     window.history.replaceState(null, "", window.location.pathname + newHash);
@@ -818,6 +833,58 @@ function initAppSidebar() {
     const toShow = section === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(section) ? section : "vue-ensemble");
     showAppSection(toShow);
   });
+  initAppMobile();
+}
+
+function initAppMobile() {
+  const appEl = document.getElementById("app-app");
+  const tabBar = document.getElementById("app-mobile-tab-bar");
+  const headerScanBtn = document.getElementById("app-mobile-scan-btn");
+  const mobileLogout = document.getElementById("app-mobile-logout");
+  const mobileMessageInput = document.getElementById("app-mobile-message-input");
+  const mobileMessageSend = document.getElementById("app-mobile-message-send");
+
+  function setMobileMode(isMobile) {
+    appEl?.classList.toggle("app-mobile", isMobile);
+  }
+  const mq = window.matchMedia("(max-width: 768px)");
+  setMobileMode(mq.matches);
+  mq.addEventListener("change", (e) => setMobileMode(e.matches));
+
+  tabBar?.querySelectorAll(".app-mobile-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const id = tab.getAttribute("data-mobile-tab");
+      if (id && APP_SECTION_IDS.includes(id)) showAppSection(id);
+    });
+  });
+  headerScanBtn?.addEventListener("click", () => showAppSection("scanner"));
+
+  document.querySelectorAll(".app-mobile-profil-item[data-section]").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = item.getAttribute("data-section");
+      if (id) showAppSection(id);
+    });
+  });
+  mobileLogout?.addEventListener("click", () => {
+    clearAuthToken();
+    window.location.replace("/");
+  });
+
+  if (mobileMessageSend && mobileMessageInput) {
+    mobileMessageSend.addEventListener("click", () => {
+      const text = (mobileMessageInput.value || "").trim();
+      if (text) {
+        showAppSection("notifications");
+        const notifMsg = document.getElementById("app-notif-message");
+        if (notifMsg) notifMsg.value = text;
+      }
+    });
+  }
+
+  const profileEmailEl = document.getElementById("app-mobile-profil-email");
+  const userEmailEl = document.getElementById("app-user-email");
+  if (profileEmailEl && userEmailEl) profileEmailEl.textContent = userEmailEl.textContent || "";
 }
 
 const DASHBOARD_TOKEN_STORAGE_KEY = "fidpass_dashboard_token";
@@ -1604,6 +1671,10 @@ function initAppDashboard(slug) {
     if (statNew30) statNew30.textContent = data.newMembersLast30Days ?? 0;
     if (statInactive30) statInactive30.textContent = data.inactiveMembers30Days ?? 0;
     if (statAvgPoints) statAvgPoints.textContent = data.pointsAveragePerMember ?? 0;
+    const mobileStatMembers = document.getElementById("app-mobile-stat-members");
+    const mobileStatScans = document.getElementById("app-mobile-stat-scans");
+    if (mobileStatMembers) mobileStatMembers.textContent = data.membersCount ?? 0;
+    if (mobileStatScans) mobileStatScans.textContent = data.transactionsThisMonth ?? 0;
     return data;
   }
 
@@ -2928,6 +2999,10 @@ function initDashboardPage() {
     if (statPoints) statPoints.textContent = data.pointsThisMonth ?? 0;
     if (statTransactions) statTransactions.textContent = data.transactionsThisMonth ?? 0;
     if (businessNameEl) businessNameEl.textContent = data.businessName || slug;
+    const mobileStatMembers = document.getElementById("app-mobile-stat-members");
+    const mobileStatScans = document.getElementById("app-mobile-stat-scans");
+    if (mobileStatMembers) mobileStatMembers.textContent = data.membersCount ?? 0;
+    if (mobileStatScans) mobileStatScans.textContent = data.transactionsThisMonth ?? 0;
   }
 
   async function loadMembers(search = "") {

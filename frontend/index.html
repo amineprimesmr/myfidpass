@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="/src/dashboard.css" />
     <link rel="stylesheet" href="/src/auth.css" />
     <link rel="stylesheet" href="/src/app.css" />
+    <link rel="stylesheet" href="/src/app-mobile.css" />
   </head>
   <body>
     <!-- Bannière promo (toutes les pages) -->
@@ -344,6 +345,13 @@
           <button type="button" id="app-reset-all" class="app-sidebar-reset" title="Supprime tous les comptes et cartes (dev)">Reset tout (dev)</button>
         </div>
       </aside>
+      <!-- Header mobile (style app) -->
+      <header class="app-mobile-header" id="app-mobile-header" aria-hidden="true">
+        <h1 class="app-mobile-header-title" id="app-mobile-header-title">Tableau de bord</h1>
+        <button type="button" class="app-mobile-header-btn" id="app-mobile-scan-btn" aria-label="Ouvrir le scanner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9"/></svg>
+        </button>
+      </header>
       <main class="app-main">
         <div id="app-empty" class="app-empty hidden">
           <div class="app-empty-card">
@@ -364,6 +372,25 @@
           <section id="vue-ensemble" class="app-section app-section-overview">
             <h1 class="app-section-title">Vue d'ensemble</h1>
             <p class="app-section-desc">Vos chiffres du mois et indicateurs clés.</p>
+            <!-- Hero mobile style app : 2 cartes + message -->
+            <div class="app-mobile-dashboard-hero app-mobile-only" id="app-mobile-dashboard-hero">
+              <div class="app-mobile-dashboard-card" id="app-mobile-card-members">
+                <div class="app-mobile-dashboard-card-icon members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <span class="app-mobile-dashboard-card-value" id="app-mobile-stat-members">0</span>
+                <span class="app-mobile-dashboard-card-label">Cartes actives</span>
+              </div>
+              <div class="app-mobile-dashboard-card" id="app-mobile-card-scans">
+                <div class="app-mobile-dashboard-card-icon scans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+                <span class="app-mobile-dashboard-card-value" id="app-mobile-stat-scans">0</span>
+                <span class="app-mobile-dashboard-card-label">Scans aujourd'hui</span>
+              </div>
+            </div>
+            <div class="app-mobile-message-bar-wrap app-mobile-only" id="app-mobile-message-bar-wrap">
+              <div class="app-mobile-message-bar">
+                <input type="text" id="app-mobile-message-input" placeholder="Message pour tous les membres..." aria-label="Message pour les membres" />
+                <button type="button" class="app-mobile-message-bar-btn" id="app-mobile-message-send" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+              </div>
+            </div>
             <div id="app-overview-alerts" class="app-overview-alerts hidden"></div>
             <div class="app-stats app-stats-grid">
               <div class="app-stat">
@@ -725,8 +752,55 @@
               <p id="app-notif-feedback" class="app-message hidden"></p>
             </div>
           </section>
+          <!-- Section Profil mobile (style app) -->
+          <section id="profil" class="app-section app-section-profil">
+            <h2 class="app-section-title">Profil</h2>
+            <p class="app-section-desc">Mon espace et paramètres.</p>
+            <p class="app-mobile-profil-user" id="app-mobile-profil-email"></p>
+            <ul class="app-mobile-profil-list">
+              <li><a href="#membres" class="app-mobile-profil-item" data-section="membres">
+                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                Tous les membres
+              </a></li>
+              <li><a href="#notifications" class="app-mobile-profil-item" data-section="notifications">
+                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+                Notifications
+              </a></li>
+              <li><a href="#personnaliser" class="app-mobile-profil-item" data-section="personnaliser">
+                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></span>
+                Ma carte
+              </a></li>
+              <li><a href="#integration" class="app-mobile-profil-item" data-section="integration">
+                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+                Intégration
+              </a></li>
+              <li><button type="button" class="app-mobile-profil-item logout" id="app-mobile-logout" style="width:100%;text-align:left;border:none;">
+                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+                Déconnexion
+              </button></li>
+            </ul>
+          </section>
         </div>
       </main>
+      <!-- Barre d'onglets mobile (style app) -->
+      <nav class="app-mobile-tab-bar" id="app-mobile-tab-bar" aria-label="Navigation principale" aria-hidden="true">
+        <button type="button" class="app-mobile-tab active" data-mobile-tab="vue-ensemble" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Tableau de bord
+        </button>
+        <button type="button" class="app-mobile-tab" data-mobile-tab="scanner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Scanner
+        </button>
+        <button type="button" class="app-mobile-tab" data-mobile-tab="personnaliser">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg>
+          Ma Carte
+        </button>
+        <button type="button" class="app-mobile-tab" data-mobile-tab="profil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profil
+        </button>
+      </nav>
     </div>
 
     <!-- Landing Myfidpass (visible sur /) -->

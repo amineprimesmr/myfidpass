@@ -1,0 +1,407 @@
+/* ============================================
+   SaaS mobile — design aligné sur l'app MyFidpass
+   (Tableau de bord, Scanner, Ma Carte, Profil)
+   ============================================ */
+
+/* Variables design app */
+#app-app.app-mobile {
+  --app-primary: #2563EB;
+  --app-primary-dark: #1D4ED8;
+  --app-bg: #F8FAFC;
+  --app-surface: #ffffff;
+  --app-text: #0F172A;
+  --app-text-muted: #64748B;
+  --app-border: #E2E8F0;
+  --app-accent: #2563EB;
+  --app-accent-hover: #1D4ED8;
+  --app-accent-light: rgba(37, 99, 235, 0.12);
+  --app-radius: 14px;
+  --app-radius-lg: 18px;
+  --app-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --app-shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --app-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+/* Breakpoint mobile */
+@media (max-width: 768px) {
+  #app-app.app-mobile .app-sidebar {
+    display: none !important;
+  }
+
+  #app-app.app-mobile .app-main {
+    margin-left: 0;
+    padding: 0;
+    padding-top: 56px; /* header */
+    padding-bottom: 82px; /* tab bar */
+    min-height: 100vh;
+  }
+
+  #app-app.app-mobile .app-content {
+    max-width: none;
+    padding: 0 16px;
+  }
+
+  /* Header mobile — style app */
+  .app-mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 56px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--app-surface);
+    border-bottom: 1px solid var(--app-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: opacity var(--app-transition);
+  }
+
+  .app-mobile-header-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--app-text);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .app-mobile-header-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--app-accent-light);
+    color: var(--app-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background var(--app-transition);
+  }
+  .app-mobile-header-btn:hover {
+    background: rgba(37, 99, 235, 0.2);
+  }
+  .app-mobile-header-btn:active {
+    transform: scale(0.95);
+  }
+  .app-mobile-header-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Barre d'onglets bas — 100% style app */
+  .app-mobile-tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 72px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    background: var(--app-surface);
+    border-top: 1px solid var(--app-border);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 8px;
+  }
+
+  .app-mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 4px;
+    border: none;
+    background: transparent;
+    color: var(--app-text-muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: color var(--app-transition), background var(--app-transition);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app-mobile-tab:hover {
+    color: var(--app-text);
+  }
+  .app-mobile-tab.active {
+    color: var(--app-primary);
+    background: var(--app-accent-light);
+  }
+  .app-mobile-tab svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .app-mobile-tab.active svg {
+    color: var(--app-primary);
+  }
+
+  /* Cartes dashboard style app (Vue d'ensemble) */
+  .app-mobile-dashboard-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .app-mobile-dashboard-card {
+    background: var(--app-surface);
+    border-radius: var(--app-radius);
+    padding: 18px 16px;
+    box-shadow: var(--app-shadow);
+    border: 1px solid var(--app-border);
+    transition: transform var(--app-transition), box-shadow var(--app-transition);
+  }
+  .app-mobile-dashboard-card:active {
+    transform: scale(0.98);
+  }
+
+  .app-mobile-dashboard-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .app-mobile-dashboard-card-icon.members {
+    background: var(--app-accent-light);
+    color: var(--app-primary);
+  }
+  .app-mobile-dashboard-card-icon.scans {
+    background: rgba(245, 158, 11, 0.15);
+    color: #D97706;
+  }
+  .app-mobile-dashboard-card-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  .app-mobile-dashboard-card-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--app-text);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .app-mobile-dashboard-card-label {
+    font-size: 0.8rem;
+    color: var(--app-text-muted);
+    margin-top: 2px;
+  }
+
+  /* Barre message — style app */
+  .app-mobile-message-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--app-surface);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 24px;
+    border: 1px solid var(--app-border);
+    box-shadow: var(--app-shadow);
+    transition: border-color var(--app-transition), box-shadow var(--app-transition);
+  }
+  .app-mobile-message-bar:focus-within {
+    border-color: var(--app-primary);
+    box-shadow: 0 0 0 3px var(--app-accent-light);
+  }
+  .app-mobile-message-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.95rem;
+    color: var(--app-text);
+    font-family: inherit;
+    outline: none;
+  }
+  .app-mobile-message-bar input::placeholder {
+    color: var(--app-text-muted);
+  }
+  .app-mobile-message-bar-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--app-accent-light);
+    color: var(--app-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .app-mobile-message-bar-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Sections : animation d'entrée */
+  #app-app.app-mobile .app-section {
+    animation: app-mobile-section-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  @keyframes app-mobile-section-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  #app-app.app-mobile .app-section-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.02em;
+  }
+  #app-app.app-mobile .app-section-desc {
+    font-size: 0.9rem;
+    margin: 0 0 1.25rem;
+  }
+
+  /* Stats vue d'ensemble : grille compacte */
+  #app-app.app-mobile .app-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  #app-app.app-mobile .app-stat {
+    border-radius: var(--app-radius);
+    padding: 1rem;
+    border-color: var(--app-border);
+  }
+  #app-app.app-mobile .app-stat-value {
+    color: var(--app-primary);
+    font-size: 1.5rem;
+  }
+
+  /* Cartes & boutons */
+  #app-app.app-mobile .app-card {
+    border-radius: var(--app-radius);
+    border-color: var(--app-border);
+    box-shadow: var(--app-shadow);
+  }
+  #app-app.app-mobile .app-btn-primary {
+    background: var(--app-primary);
+  }
+  #app-app.app-mobile .app-btn-primary:hover:not(:disabled) {
+    background: var(--app-primary-dark);
+  }
+
+  /* Section Profil mobile : liste style app */
+  .app-mobile-profil-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .app-mobile-profil-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--app-surface);
+    border-radius: var(--app-radius);
+    margin-bottom: 10px;
+    border: 1px solid var(--app-border);
+    text-decoration: none;
+    color: var(--app-text);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--app-transition), transform 0.15s ease;
+    box-shadow: var(--app-shadow);
+  }
+  .app-mobile-profil-item:hover {
+    background: var(--app-bg);
+  }
+  .app-mobile-profil-item:active {
+    transform: scale(0.99);
+  }
+  .app-mobile-profil-item-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--app-accent-light);
+    color: var(--app-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .app-mobile-profil-item-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  .app-mobile-profil-item.logout .app-mobile-profil-item-icon {
+    background: rgba(239, 68, 68, 0.12);
+    color: #DC2626;
+  }
+  .app-mobile-profil-user {
+    font-size: 0.85rem;
+    color: var(--app-text-muted);
+    padding: 0 18px 16px;
+    margin: 0;
+    word-break: break-all;
+  }
+
+  /* Cacher le hero desktop sur mobile quand on a le hero mobile */
+  #app-app.app-mobile .app-section-overview .app-stats-grid {
+    margin-top: 0;
+  }
+  #app-app.app-mobile .app-evolution-wrap,
+  #app-app.app-mobile .app-overview-shortcuts {
+    margin-top: 1.25rem;
+  }
+}
+
+/* Masquer header/tab bar et blocs hero mobile sur desktop */
+.app-mobile-header,
+.app-mobile-tab-bar,
+.app-mobile-only {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .app-mobile-header,
+  .app-mobile-tab-bar {
+    display: flex !important;
+  }
+  .app-mobile-header { align-items: center; justify-content: space-between; }
+  .app-mobile-tab-bar { justify-content: space-around; }
+  .app-mobile-only {
+    display: block !important;
+  }
+  .app-mobile-dashboard-hero.app-mobile-only {
+    display: grid !important;
+  }
+  .app-mobile-message-bar-wrap.app-mobile-only {
+    display: block !important;
+  }
+}
+@media (min-width: 769px) {
+  .app-mobile-header,
+  .app-mobile-tab-bar,
+  .app-mobile-dashboard-hero,
+  .app-mobile-message-bar-wrap,
+  .app-mobile-only {
+    display: none !important;
+  }
+  #app-app .app-section-profil {
+    display: none !important;
+  }
+}

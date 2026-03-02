@@ -140,11 +140,12 @@ router.post("/google", async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: "Email non fourni par Google" });
     }
-    let user = getUserByEmail(email);
+    const user = getUserByEmail(email);
     if (!user) {
-      const name = payload?.name || [payload?.given_name, payload?.family_name].filter(Boolean).join(" ").trim() || null;
-      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
-      user = createUser({ email, passwordHash: oauthPlaceholder, name: name || null });
+      return res.status(404).json({
+        error: "Aucun compte associé à cet email Google. Créez d'abord votre compte sur myfidpass.fr.",
+        code: "NO_ACCOUNT",
+      });
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
@@ -200,11 +201,9 @@ router.get("/google-oauth-callback", async (req, res) => {
     if (!email) {
       return res.redirect(302, `${redirectApp}?error=no_email`);
     }
-    let user = getUserByEmail(email);
+    const user = getUserByEmail(email);
     if (!user) {
-      const name = payload?.name || [payload?.given_name, payload?.family_name].filter(Boolean).join(" ").trim() || null;
-      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
-      user = createUser({ email, passwordHash: oauthPlaceholder, name: name || null });
+      return res.redirect(302, `${redirectApp}?error=no_account`);
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
     return res.redirect(302, `${redirectApp}?token=${encodeURIComponent(token)}`);
