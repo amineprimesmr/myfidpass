@@ -405,6 +405,16 @@ export async function generatePass(member, business = null, options = {}) {
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tampons : %@",
     });
+    // Ligne visuelle des 10 tampons (comme McDo/Subway) : texte avec symboles remplis/vides
+    const filledChar = stampEmoji || "●";
+    const emptyChar = "○";
+    const visualStamps = Array.from({ length: stampMax }, (_, i) => (i < stamps ? filledChar : emptyChar)).join(" ");
+    pass.secondaryFields.push({
+      key: "stampVisual",
+      label: "",
+      value: visualStamps,
+      textAlignment: "PKTextAlignmentCenter",
+    });
     const rest = stampMax - stamps;
     let stampHint = "";
     const isCafeStyle = options.template === "cafe" || (organizationName && /caf[eé]|coffee/i.test(organizationName)) || stampEmoji === "☕";
