@@ -416,6 +416,28 @@ router.post("/:slug/notify", async (req, res) => {
     body: message,
     ...(iconUrl && { icon: iconUrl }),
   };
+  let sentWebPush = 0;
+  let sentPassKit = 0;
+
+  // Web Push : envoi immédiat
+  for (const sub of webSubscriptions) {
+    try {
+      await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+      sentWebPush++;
+      logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body: message, type: "web_push" });
+    } catch (_) {}
+  }
+
+  // PassKit : double push pour que l’icône de notif soit à jour après changement de logo
+  // 1) Première push → l’iPhone refetch le pass (nouveau logo si changé), sans afficher de notif (message pas encore mis à jour)
+  if (passKitTokens.length > 0) {
+    for (const row of passKitTokens) {
+      try {
+        await sendPassKitUpdate(row.push_token);
+      } catch (_) {}
+    }
+    await new Promise((r) => setTimeout(r, 2500));
+  }
   setLastBroadcastMessage(business.id, payload.title ? `${payload.title}: ${message}` : message);
   const touchedMembers = new Set();
   for (const row of passKitTokens) {
@@ -424,15 +446,7 @@ router.post("/:slug/notify", async (req, res) => {
       touchedMembers.add(row.serial_number);
     }
   }
-  let sentWebPush = 0;
-  let sentPassKit = 0;
-  for (const sub of webSubscriptions) {
-    try {
-      await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
-      sentWebPush++;
-      logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body: message, type: "web_push" });
-    } catch (_) {}
-  }
+  // 2) Deuxième push → l’iPhone refetch le pass (message à jour) et affiche la notif avec la bonne icône
   for (const row of passKitTokens) {
     try {
       const result = await sendPassKitUpdate(row.push_token);
@@ -490,15 +504,6 @@ router.post("/:slug/notifications/send", async (req, res) => {
     ...(iconUrl && { icon: iconUrl }),
   };
   const broadcastText = payload.title ? `${payload.title}: ${body}` : body;
-  setLastBroadcastMessage(business.id, broadcastText);
-  // Montage : même flux que l’ajout de points — toucher last_visit_at de chaque membre Wallet pour que le pass soit « modifié » et que l’iPhone refetch + affiche la notif
-  const touchedMembers = new Set();
-  for (const row of passKitTokens) {
-    if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-      touchMemberLastVisit(row.serial_number);
-      touchedMembers.add(row.serial_number);
-    }
-  }
   let sentWebPush = 0;
   let sentPassKit = 0;
   const errors = [];
@@ -512,6 +517,20 @@ router.post("/:slug/notifications/send", async (req, res) => {
       logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body, type: "web_push" });
     } catch (err) {
       errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
+    }
+  }
+  if (passKitTokens.length > 0) {
+    for (const row of passKitTokens) {
+      try { await sendPassKitUpdate(row.push_token); } catch (_) {}
+    }
+    await new Promise((r) => setTimeout(r, 2500));
+  }
+  setLastBroadcastMessage(business.id, broadcastText);
+  const touchedMembers = new Set();
+  for (const row of passKitTokens) {
+    if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+      touchMemberLastVisit(row.serial_number);
+      touchedMembers.add(row.serial_number);
     }
   }
   for (const row of passKitTokens) {
