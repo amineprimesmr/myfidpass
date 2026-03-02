@@ -233,6 +233,25 @@ function createEmptyStampPng(strokeRgb) {
   return PNG.sync.write(png);
 }
 
+/** Cercle blanc avec emoji café grisé (case non remplie) — les 10 cases affichent toujours ☕. */
+async function createEmptyStampWithEmojiPng(emoji) {
+  const size = STAMP_SIZE;
+  const char = (emoji || "☕").trim().slice(0, 2);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <circle cx="${size/2}" cy="${size/2}" r="${STAMP_R - 2}" fill="white" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <text x="${size/2}" y="${size/2 + 4}" font-size="36" text-anchor="middle" dominant-baseline="middle" fill="rgba(150,150,150,0.85)" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${char}</text>
+</svg>`;
+  try {
+    return await sharp(Buffer.from(svg))
+      .resize(size, size)
+      .png()
+      .toBuffer();
+  } catch (e) {
+    console.warn("[PassKit] createEmptyStampWithEmojiPng failed:", e?.message);
+    return null;
+  }
+}
+
 /** Crée un buffer PNG 76×76 : cercle rempli avec emoji café (ou autre) au centre — SVG rendu via sharp. */
 async function createFilledStampWithEmojiPng(hexColor, emoji) {
   const size = STAMP_SIZE;
@@ -267,13 +286,12 @@ function createFilledStampCirclePng(fillRgb) {
 }
 
 /**
- * Dessine la grille de 10 tampons (2 lignes × 5) sur le strip : remplis = emoji café ☕, vides = cercle blanc.
- * Une seule représentation — pas de texte "0/10" en doublon.
+ * Dessine la grille de 10 tampons : les 10 cases affichent toujours l'emoji café ☕.
+ * Remplis = ☕ en couleur dans cercle marron, vides = ☕ grisé dans cercle blanc.
  */
 async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.cafe;
   const fillRgb = hexToRgb(colors.backgroundColor);
-  const strokeRgb = hexToRgb(colors.foregroundColor || "#ffffff");
   const emoji = (stampEmoji || "☕").trim().slice(0, 2);
   const cols = 5;
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
@@ -294,7 +312,8 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
       stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor, emoji);
       if (!stampBuf) stampBuf = createFilledStampCirclePng(fillRgb);
     } else {
-      stampBuf = createEmptyStampPng(strokeRgb);
+      stampBuf = await createEmptyStampWithEmojiPng(emoji);
+      if (!stampBuf) stampBuf = createEmptyStampPng(hexToRgb(colors.foregroundColor || "#ffffff"));
     }
     composites.push({ input: stampBuf, left, top });
   }
