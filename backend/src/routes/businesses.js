@@ -12,6 +12,8 @@ import {
   getMemberByEmailForBusiness,
   updateMember,
   addPoints,
+  deductPoints,
+  resetMemberPoints,
   createTransaction,
   getDashboardStats,
   getDashboardEvolution,
@@ -794,6 +796,7 @@ router.post("/:slug/integration/scan", async (req, res) => {
   const perEuro = Number(business.points_per_euro) || 1;
   const perVisit = Number(business.points_per_visit) || 0;
   const minAmount = business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : null;
+  const programType = (business.program_type || "").toLowerCase();
   let points = 0;
   if (Number.isInteger(pointsDirect) && pointsDirect > 0) points += pointsDirect;
   if (!Number.isNaN(amountEur) && amountEur > 0) {
@@ -802,10 +805,15 @@ router.post("/:slug/integration/scan", async (req, res) => {
     }
   }
   if (visit && perVisit > 0) points += perVisit;
+  // En mode tampons, « 1 passage » = 1 tampon même si points_per_visit = 0
+  if (visit && programType === "stamps" && points === 0) points = 1;
   if (points <= 0) {
     const minHint = minAmount != null ? ` (achat min. ${minAmount} € pour les points)` : "";
+    const msg = perVisit === 0 && programType !== "stamps"
+      ? `Vos règles sont 0 pt/passage. Indiquez un montant (€) pour créditer des points.${minHint}`
+      : "Indiquez amount_eur, visit: true, ou points. Règles : " + perEuro + " pt/€, " + perVisit + " pt/passage." + minHint;
     return res.status(400).json({
-      error: "Indiquez amount_eur, visit: true, ou points. Règles : " + perEuro + " pt/€, " + perVisit + " pt/passage." + minHint,
+      error: msg,
       code: "NO_POINTS_SPECIFIED",
     });
   }
@@ -1047,6 +1055,7 @@ router.post("/:slug/members/:memberId/points", async (req, res) => {
   const perEuro = Number(business.points_per_euro) || 1;
   const perVisit = Number(business.points_per_visit) || 0;
   const minAmount = business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : null;
+  const programType = (business.program_type || "").toLowerCase();
 
   let points = 0;
   if (Number.isInteger(pointsDirect) && pointsDirect > 0) {
@@ -1060,11 +1069,15 @@ router.post("/:slug/members/:memberId/points", async (req, res) => {
   if (visit && perVisit > 0) {
     points += perVisit;
   }
+  if (visit && programType === "stamps" && points === 0) points = 1;
 
   if (points <= 0) {
     const minHint = minAmount != null ? ` (achat min. ${minAmount} €)` : "";
+    const msg = perVisit === 0 && programType !== "stamps"
+      ? `Vos règles sont 0 pt/passage. Indiquez un montant (€) ou un nombre de points pour créditer.${minHint}`
+      : "Indiquez points, amount_eur (montant en €), ou visit: true (1 passage). Règles: " + perEuro + " pt/€, " + perVisit + " pt/passage." + minHint;
     return res.status(400).json({
-      error: "Indiquez points, amount_eur (montant en €), ou visit: true (1 passage). Règles: " + perEuro + " pt/€, " + perVisit + " pt/passage." + minHint,
+      error: msg,
     });
   }
 
@@ -1094,6 +1107,112 @@ router.post("/:slug/members/:memberId/points", async (req, res) => {
     id: updated.id,
     points: updated.points,
     points_added: points,
+  });
+});
+
+/**
+ * POST /api/businesses/:slug/members/:memberId/redeem
+ * Utiliser une récompense : tampons → remise à 0, ou points → déduction d'un palier.
+ * Body: { type: "stamps" } | { type: "points", points: 100 } | { type: "points", tier_index: 0 }
+ */
+router.post("/:slug/members/:memberId/redeem", async (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Accès non autorisé" });
+  }
+  const member = getMemberForBusiness(req.params.memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+
+  const body = req.body || {};
+  const type = (body.type || "").toLowerCase();
+  const requiredStamps = business.required_stamps != null ? Number(business.required_stamps) : 10;
+
+  if (type === "stamps") {
+    const current = Number(member.points) || 0;
+    if (current < requiredStamps) {
+      return res.status(400).json({
+        error: `Le client n'a pas assez de tampons (${current}/${requiredStamps}). Récompense non utilisable.`,
+        code: "NOT_ENOUGH_STAMPS",
+      });
+    }
+    resetMemberPoints(member.id);
+    createTransaction({
+      businessId: business.id,
+      memberId: member.id,
+      type: "reward_redeem",
+      points: -current,
+      metadata: { subtype: "stamps", required_stamps: requiredStamps },
+    });
+    const tokens = getPushTokensForMember(member.id);
+    for (const token of tokens) {
+      try { await sendPassKitUpdate(token); } catch (_) {}
+    }
+    return res.json({
+      ok: true,
+      type: "stamps",
+      previous_points: current,
+      new_points: 0,
+      message: "Récompense tampons utilisée.",
+    });
+  }
+
+  if (type === "points") {
+    let pointsToDeduct = 0;
+    const pointsParam = body.points != null ? Number(body.points) : null;
+    const tierIndex = body.tier_index != null ? Number(body.tier_index) : null;
+
+    if (Number.isInteger(pointsParam) && pointsParam > 0) {
+      pointsToDeduct = pointsParam;
+    } else if (Number.isInteger(tierIndex) && tierIndex >= 0) {
+      let tiers = business.points_reward_tiers;
+      if (typeof tiers === "string" && tiers.trim()) {
+        try { tiers = JSON.parse(tiers); } catch (_) { tiers = []; }
+      }
+      if (!Array.isArray(tiers) || tierIndex >= tiers.length) {
+        return res.status(400).json({ error: "Palier invalide.", code: "INVALID_TIER" });
+      }
+      const tier = tiers[tierIndex];
+      pointsToDeduct = Number(tier?.points) || 0;
+    }
+    if (pointsToDeduct <= 0) {
+      return res.status(400).json({
+        error: "Indiquez points (nombre à déduire) ou tier_index (palier).",
+        code: "REDEEM_POINTS_OR_TIER",
+      });
+    }
+    const current = Number(member.points) || 0;
+    if (current < pointsToDeduct) {
+      return res.status(400).json({
+        error: `Solde insuffisant (${current} pts). Nécessite ${pointsToDeduct} pts pour ce palier.`,
+        code: "NOT_ENOUGH_POINTS",
+      });
+    }
+    const updated = deductPoints(member.id, pointsToDeduct);
+    createTransaction({
+      businessId: business.id,
+      memberId: member.id,
+      type: "reward_redeem",
+      points: -pointsToDeduct,
+      metadata: { subtype: "points", points_deducted: pointsToDeduct },
+    });
+    const tokens = getPushTokensForMember(member.id);
+    for (const token of tokens) {
+      try { await sendPassKitUpdate(token); } catch (_) {}
+    }
+    return res.json({
+      ok: true,
+      type: "points",
+      points_deducted: pointsToDeduct,
+      previous_points: current,
+      new_points: updated.points,
+      message: "Récompense points utilisée.",
+    });
+  }
+
+  return res.status(400).json({
+    error: 'Body doit contenir type: "stamps" ou type: "points" (avec points ou tier_index).',
+    code: "INVALID_REDEEM_TYPE",
   });
 });
 

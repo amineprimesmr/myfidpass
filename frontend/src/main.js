@@ -1715,9 +1715,74 @@ function initAppDashboard(slug) {
         if (memberSearchInput) memberSearchInput.value = rec ? `${rec.name}` : "";
         memberListEl?.classList.add("hidden");
         if (addPointsBtn) addPointsBtn.disabled = false;
+        updateRedeemButtons();
       });
     });
   }
+
+  const redeemStampsBtn = document.getElementById("app-redeem-stamps");
+  const redeemPointsInput = document.getElementById("app-redeem-points");
+  const redeemPointsBtn = document.getElementById("app-redeem-points-btn");
+  function updateRedeemButtons() {
+    const enabled = !!selectedMemberId;
+    if (redeemStampsBtn) redeemStampsBtn.disabled = !enabled;
+    if (redeemPointsBtn) redeemPointsBtn.disabled = !enabled;
+  }
+  function doRedeem(body) {
+    if (!selectedMemberId) return;
+    const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(selectedMemberId)}/redeem`;
+    const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+    if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
+    return fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+  }
+  redeemStampsBtn?.addEventListener("click", async () => {
+    if (!selectedMemberId) return;
+    redeemStampsBtn.disabled = true;
+    try {
+      const res = await doRedeem({ type: "stamps" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showCaisseMessage(data.error || "Erreur", true);
+        redeemStampsBtn.disabled = false;
+        return;
+      }
+      showCaisseMessage("Récompense tampons utilisée.");
+      selectedMemberId = null;
+      if (addPointsBtn) addPointsBtn.disabled = true;
+      updateRedeemButtons();
+      await refresh();
+    } catch (_) {
+      showCaisseMessage("Erreur réseau.", true);
+    }
+    redeemStampsBtn.disabled = false;
+  });
+  redeemPointsBtn?.addEventListener("click", async () => {
+    if (!selectedMemberId) return;
+    const pts = parseInt(redeemPointsInput?.value || "0", 10);
+    if (!pts || pts <= 0) {
+      showCaisseMessage("Indiquez un nombre de points à déduire.", true);
+      return;
+    }
+    redeemPointsBtn.disabled = true;
+    try {
+      const res = await doRedeem({ type: "points", points: pts });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showCaisseMessage(data.error || "Erreur", true);
+        redeemPointsBtn.disabled = false;
+        return;
+      }
+      showCaisseMessage(`${pts} point(s) déduit(s). Nouveau solde : ${data.new_points ?? "—"} pts.`);
+      if (redeemPointsInput) redeemPointsInput.value = "";
+      selectedMemberId = null;
+      if (addPointsBtn) addPointsBtn.disabled = true;
+      updateRedeemButtons();
+      await refresh();
+    } catch (_) {
+      showCaisseMessage("Erreur réseau.", true);
+    }
+    redeemPointsBtn.disabled = false;
+  });
 
   function showCaisseMessage(text, isError = false) {
     if (!caisseMessage) return;
@@ -1868,6 +1933,7 @@ function initAppDashboard(slug) {
         memberListEl.classList.add("hidden");
         if (addPointsBtn) addPointsBtn.disabled = false;
         if (m) addToCaisseRecent(m);
+        updateRedeemButtons();
       });
     });
   });
@@ -1910,6 +1976,7 @@ function initAppDashboard(slug) {
       selectedMemberId = null;
       if (memberSearchInput) memberSearchInput.value = "";
       addPointsVisitOnly = false;
+      updateRedeemButtons();
       await refresh();
     } catch (_) {
       showCaisseMessage("Erreur réseau.", true);

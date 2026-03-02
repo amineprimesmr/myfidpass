@@ -519,6 +519,12 @@
                 <button type="button" id="app-one-visit" class="app-btn app-btn-secondary">1 passage</button>
                 <button type="button" id="app-add-points" class="app-btn app-btn-primary" disabled>Ajouter les points</button>
               </div>
+              <p class="app-step-label">3. Utiliser une récompense (client sélectionné)</p>
+              <div class="app-caisse-row app-caisse-redeem">
+                <button type="button" id="app-redeem-stamps" class="app-btn app-btn-secondary" disabled title="Remet les tampons à 0">Récompense tampons</button>
+                <input type="number" id="app-redeem-points" class="app-input app-input-amount" placeholder="Points à déduire" min="0" step="1" aria-label="Points à déduire" />
+                <button type="button" id="app-redeem-points-btn" class="app-btn app-btn-primary" disabled>Utiliser points</button>
+              </div>
               <p id="app-caisse-message" class="app-message hidden"></p>
             </div>
           </section>

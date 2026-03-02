@@ -406,6 +406,20 @@ export function addPoints(id, points) {
   return getMember(id);
 }
 
+/** Déduire des points (utilisation d'une récompense). Ne descend pas en dessous de 0. */
+export function deductPoints(id, pointsToDeduct) {
+  const amount = Math.max(0, Math.floor(Number(pointsToDeduct) || 0));
+  if (amount <= 0) return getMember(id);
+  db.prepare("UPDATE members SET points = MAX(0, points - ?), last_visit_at = datetime('now') WHERE id = ?").run(amount, id);
+  return getMember(id);
+}
+
+/** Remet les points (tampons) à 0 — pour utilisation récompense type tampons. */
+export function resetMemberPoints(id) {
+  db.prepare("UPDATE members SET points = 0, last_visit_at = datetime('now') WHERE id = ?").run(id);
+  return getMember(id);
+}
+
 /** Met à jour last_visit_at sans toucher aux points. Utilisé quand on envoie une notif depuis la section Notifications : comme pour l’ajout de points, le pass doit être « modifié » pour que l’iPhone refetch et affiche la notif. */
 export function touchMemberLastVisit(memberId) {
   if (!memberId) return;
