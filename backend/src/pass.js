@@ -476,7 +476,9 @@ export async function generatePass(member, business = null, options = {}) {
   const level = getLevel(member.points);
   const stampMax = options.required_stamps ?? options.stampMax ?? business?.required_stamps ?? 10;
   const useTampons = options.required_stamps != null || options.stampMax != null || (business?.required_stamps != null && business.required_stamps > 0);
-  const format = options.format || (useTampons ? "tampons" : "points");
+  const programType = business?.program_type?.toLowerCase();
+  const explicitFormat = programType === "points" ? "points" : programType === "stamps" ? "tampons" : null;
+  const format = options.format || explicitFormat || (useTampons ? "tampons" : "points");
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
   // Strip : image de fond perso + grille tampons (emoji ☕ dans les cercles remplis)
@@ -580,18 +582,25 @@ export async function generatePass(member, business = null, options = {}) {
       changeMessage: "Tampons : %@",
     });
     const rest = stampMax - stamps;
+    const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim();
     let stampHint = "";
-    const isCafeStyle = options.template === "cafe" || (organizationName && /caf[eé]|coffee/i.test(organizationName)) || stampEmoji === "☕";
-    if (isCafeStyle) {
+    if (rewardLabel) {
       stampHint = stamps <= 1
-        ? `${stamps} café collecté — ${rest} pour en avoir un offert`
-        : `${stamps} cafés collectés — ${rest} pour en avoir un offert`;
-    } else if (options.template === "fastfood") {
-      stampHint = stamps <= 1
-        ? `${stamps} tampon collecté — ${rest} restants pour une récompense`
-        : `${stamps} tampons collectés — ${rest} restants pour une récompense`;
+        ? `${stamps} tampon — ${rest} pour ${rewardLabel}`
+        : `${stamps} tampons — ${rest} pour ${rewardLabel}`;
     } else {
-      stampHint = `${stamps} / ${stampMax} — ${rest} restant${rest !== 1 ? "s" : ""} pour une récompense`;
+      const isCafeStyle = options.template === "cafe" || (organizationName && /caf[eé]|coffee/i.test(organizationName)) || stampEmoji === "☕";
+      if (isCafeStyle) {
+        stampHint = stamps <= 1
+          ? `${stamps} café collecté — ${rest} pour en avoir un offert`
+          : `${stamps} cafés collectés — ${rest} pour en avoir un offert`;
+      } else if (options.template === "fastfood") {
+        stampHint = stamps <= 1
+          ? `${stamps} tampon collecté — ${rest} restants pour une récompense`
+          : `${stamps} tampons collectés — ${rest} restants pour une récompense`;
+      } else {
+        stampHint = `${stamps} / ${stampMax} — ${rest} restant${rest !== 1 ? "s" : ""} pour une récompense`;
+      }
     }
     pass.secondaryFields.push({
       key: "stampHint",

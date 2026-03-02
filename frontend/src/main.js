@@ -1034,6 +1034,28 @@ function initAppDashboard(slug) {
   const personnaliserMessage = document.getElementById("app-personnaliser-message");
   const personnaliserSave = document.getElementById("app-personnaliser-save");
   let personnaliserLogoDataUrl = "";
+  const programTypePoints = document.getElementById("app-program-type-points");
+  const programTypeStamps = document.getElementById("app-program-type-stamps");
+  const rulesPanelPoints = document.getElementById("app-rules-points");
+  const rulesPanelStamps = document.getElementById("app-rules-stamps");
+  const pointsPerEuroEl = document.getElementById("app-points-per-euro");
+  const pointsPerVisitEl = document.getElementById("app-points-per-visit");
+  const pointsMinAmountEl = document.getElementById("app-points-min-amount");
+  const pointsRewardTiersEl = document.getElementById("app-points-reward-tiers");
+  const sectorEl = document.getElementById("app-sector");
+  const sectorStampsEl = document.getElementById("app-sector-stamps");
+  const requiredStampsEl = document.getElementById("app-required-stamps");
+  const stampEmojiEl = document.getElementById("app-stamp-emoji");
+  const stampRewardLabelEl = document.getElementById("app-stamp-reward-label");
+  const expiryMonthsEl = document.getElementById("app-expiry-months");
+
+  function setRulesPanelVisibility() {
+    const isStamps = programTypeStamps && programTypeStamps.checked;
+    if (rulesPanelPoints) rulesPanelPoints.classList.toggle("hidden", !!isStamps);
+    if (rulesPanelStamps) rulesPanelStamps.classList.toggle("hidden", !isStamps);
+  }
+  if (programTypePoints) programTypePoints.addEventListener("change", setRulesPanelVisibility);
+  if (programTypeStamps) programTypeStamps.addEventListener("change", setRulesPanelVisibility);
 
   /** Redimensionne et compresse l'image logo (max 640px largeur, JPEG 0.85) pour éviter dépassement taille requête. */
   function resizeLogoToDataUrl(file, maxWidth = 640, quality = 0.85) {
@@ -1162,20 +1184,44 @@ function initAppDashboard(slug) {
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
       if (!data) return;
-      if (personnaliserOrg) personnaliserOrg.value = data.organizationName || "";
-      const bg = data.backgroundColor || "#0a7c42";
-      const fg = data.foregroundColor || "#ffffff";
-      const label = data.labelColor || "#e8f5e9";
+      const org = data.organization_name ?? data.organizationName ?? "";
+      if (personnaliserOrg) personnaliserOrg.value = org;
+      const bg = data.background_color ?? data.backgroundColor ?? "#0a7c42";
+      const fg = data.foreground_color ?? data.foregroundColor ?? "#ffffff";
+      const label = data.label_color ?? data.labelColor ?? "#e8f5e9";
       if (personnaliserBg) personnaliserBg.value = bg;
       if (personnaliserBgHex) personnaliserBgHex.value = bg;
       if (personnaliserFg) personnaliserFg.value = fg;
       if (personnaliserFgHex) personnaliserFgHex.value = fg;
       if (personnaliserLabel) personnaliserLabel.value = label;
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
-      if (personnaliserAddress && data.locationAddress != null) personnaliserAddress.value = data.locationAddress || "";
-      updateCoordsDisplay(data.locationLat, data.locationLng);
-      if (personnaliserLocationText && data.locationRelevantText != null) personnaliserLocationText.value = data.locationRelevantText || "";
-      if (personnaliserRadius != null && data.locationRadiusMeters != null) personnaliserRadius.value = data.locationRadiusMeters;
+      let programType = (data.program_type ?? data.programType ?? "").toLowerCase();
+      if (programType !== "points" && programType !== "stamps") {
+        programType = (data.required_stamps ?? data.requiredStamps) > 0 ? "stamps" : "points";
+      }
+      if (programType === "stamps" && programTypeStamps) programTypeStamps.checked = true;
+      else if (programTypePoints) programTypePoints.checked = true;
+      setRulesPanelVisibility();
+      if (pointsPerEuroEl != null) pointsPerEuroEl.value = data.points_per_euro ?? data.pointsPerEuro ?? 1;
+      if (pointsPerVisitEl != null) pointsPerVisitEl.value = data.points_per_visit ?? data.pointsPerVisit ?? 0;
+      if (pointsMinAmountEl != null) pointsMinAmountEl.value = data.points_min_amount_eur ?? data.pointsMinAmountEur ?? "";
+      const tiers = data.points_reward_tiers ?? data.pointsRewardTiers;
+      if (pointsRewardTiersEl && Array.isArray(tiers) && tiers.length) {
+        pointsRewardTiersEl.value = tiers.map((t) => (typeof t === "object" && t != null && "points" in t ? `${t.points}:${t.label || ""}` : String(t))).join("\n");
+      } else if (pointsRewardTiersEl && typeof tiers === "string" && tiers.trim()) {
+        pointsRewardTiersEl.value = tiers;
+      }
+      const sectorVal = data.sector ?? "";
+      if (sectorEl) sectorEl.value = sectorVal;
+      if (sectorStampsEl) sectorStampsEl.value = sectorVal;
+      if (requiredStampsEl != null) requiredStampsEl.value = data.required_stamps ?? data.requiredStamps ?? 10;
+      if (stampEmojiEl) stampEmojiEl.value = data.stamp_emoji ?? data.stampEmoji ?? "";
+      if (stampRewardLabelEl) stampRewardLabelEl.value = data.stamp_reward_label ?? data.stampRewardLabel ?? "";
+      if (expiryMonthsEl != null) expiryMonthsEl.value = data.expiry_months ?? data.expiryMonths ?? "";
+      if (personnaliserAddress && (data.location_address ?? data.locationAddress) != null) personnaliserAddress.value = data.location_address ?? data.locationAddress ?? "";
+      updateCoordsDisplay(data.location_lat ?? data.locationLat, data.location_lng ?? data.locationLng);
+      if (personnaliserLocationText && (data.location_relevant_text ?? data.locationRelevantText) != null) personnaliserLocationText.value = data.location_relevant_text ?? data.locationRelevantText ?? "";
+      if (personnaliserRadius != null && (data.location_radius_meters ?? data.locationRadiusMeters) != null) personnaliserRadius.value = data.location_radius_meters ?? data.locationRadiusMeters;
       updatePersonnaliserPreview();
       api("/logo?v=" + Date.now())
         .then((r) => (r.ok ? r.blob() : null))
@@ -1237,6 +1283,36 @@ function initAppDashboard(slug) {
         foregroundColor: toHex(foregroundColor),
         labelColor: toHex(labelColor),
       };
+      const isStamps = programTypeStamps && programTypeStamps.checked;
+      body.programType = isStamps ? "stamps" : "points";
+      if (pointsPerEuroEl) body.pointsPerEuro = parseInt(pointsPerEuroEl.value, 10) || 1;
+      if (pointsPerVisitEl) body.pointsPerVisit = parseInt(pointsPerVisitEl.value, 10) || 0;
+      if (pointsMinAmountEl && pointsMinAmountEl.value.trim() !== "") {
+        const minVal = parseFloat(pointsMinAmountEl.value);
+        if (!Number.isNaN(minVal) && minVal >= 0) body.pointsMinAmountEur = minVal;
+      }
+      if (pointsRewardTiersEl && pointsRewardTiersEl.value.trim()) {
+        const lines = pointsRewardTiersEl.value.split("\n").map((s) => s.trim()).filter(Boolean);
+        const tiers = [];
+        for (const line of lines) {
+          const colon = line.indexOf(":");
+          if (colon >= 0) {
+            const pts = parseInt(line.slice(0, colon).trim(), 10);
+            const label = line.slice(colon + 1).trim();
+            if (!Number.isNaN(pts) && pts >= 0) tiers.push({ points: pts, label });
+          }
+        }
+        if (tiers.length) body.pointsRewardTiers = tiers;
+      }
+      if (requiredStampsEl) body.requiredStamps = parseInt(requiredStampsEl.value, 10) || 10;
+      if (stampEmojiEl) body.stampEmoji = stampEmojiEl.value.trim() || undefined;
+      if (stampRewardLabelEl) body.stampRewardLabel = stampRewardLabelEl.value.trim() || undefined;
+      if (expiryMonthsEl && expiryMonthsEl.value.trim() !== "") {
+        const m = parseInt(expiryMonthsEl.value, 10);
+        if (!Number.isNaN(m) && m >= 0) body.expiryMonths = m;
+      }
+      const sectorVal = (isStamps ? sectorStampsEl : sectorEl)?.value?.trim();
+      if (sectorVal) body.sector = sectorVal;
       if (personnaliserLogoDataUrl) body.logoBase64 = personnaliserLogoDataUrl;
       const addressVal = document.getElementById("app-personnaliser-address")?.value?.trim() || "";
       const locTextVal = document.getElementById("app-personnaliser-location-text")?.value?.trim();

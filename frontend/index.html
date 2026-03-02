@@ -635,6 +635,64 @@
               </div>
             </div>
             <div class="app-card app-personnaliser-card">
+              <h3 class="app-subsection-title">Règles de la carte</h3>
+              <p class="app-hint">Choisissez le type de programme (points ou tampons) et définissez comment les clients gagnent et échangent leurs avantages.</p>
+              <div class="app-rules-type">
+                <label class="app-radio-label"><input type="radio" name="app-program-type" value="points" id="app-program-type-points" /> Points (ex. 1 pt par €, paliers de récompenses)</label>
+                <label class="app-radio-label"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> Tampons (ex. 1 tampon par visite, 10 tampons = 1 café offert)</label>
+              </div>
+              <div id="app-rules-points" class="app-rules-panel hidden">
+                <p class="app-step-label">Attribution des points</p>
+                <div class="app-rules-row">
+                  <label class="app-label">Points par € dépensé</label>
+                  <input type="number" id="app-points-per-euro" class="app-input app-input-number" min="0" step="1" value="1" />
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Points par passage (sans montant)</label>
+                  <input type="number" id="app-points-per-visit" class="app-input app-input-number" min="0" step="1" value="0" />
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Montant minimum (€) pour gagner des points (optionnel)</label>
+                  <input type="number" id="app-points-min-amount" class="app-input app-input-number" min="0" step="0.01" placeholder="Aucun minimum" />
+                </div>
+                <p class="app-step-label">Paliers de récompenses (optionnel)</p>
+                <p class="app-hint">Ex. 100 pts = 5€ de réduction, 200 pts = 10€. Un palier par ligne : "points:label" (ex. 100:5€ de réduction).</p>
+                <textarea id="app-points-reward-tiers" class="app-input app-textarea" rows="4" placeholder="100:5€ de réduction&#10;200:10€ de réduction&#10;500:Menu offert"></textarea>
+                <p class="app-step-label">Secteur d'activité (optionnel, pour présets)</p>
+                <select id="app-sector" class="app-select">
+                  <option value="">— Choisir —</option>
+                  <option value="cafe">Café / Bar</option>
+                  <option value="restaurant">Restaurant</option>
+                  <option value="fastfood">Fast-food</option>
+                  <option value="bakery">Boulangerie</option>
+                  <option value="beauty">Beauté / Coiffure</option>
+                  <option value="retail">Commerce / Retail</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+              <div id="app-rules-stamps" class="app-rules-panel hidden">
+                <p class="app-step-label">Nombre de tampons pour la récompense</p>
+                <input type="number" id="app-required-stamps" class="app-input app-input-number" min="1" max="20" value="10" />
+                <p class="app-step-label">Emoji des tampons (ex. ☕ 🍔 🍕)</p>
+                <input type="text" id="app-stamp-emoji" class="app-input" maxlength="8" placeholder="☕" />
+                <p class="app-step-label">Texte de la récompense (affiché sur la carte)</p>
+                <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. 1 café offert, 1 croissant offert" />
+                <p class="app-step-label">Secteur d'activité (optionnel)</p>
+                <select id="app-sector-stamps" class="app-select">
+                  <option value="">— Choisir —</option>
+                  <option value="cafe">Café / Bar</option>
+                  <option value="restaurant">Restaurant</option>
+                  <option value="fastfood">Fast-food</option>
+                  <option value="bakery">Boulangerie</option>
+                  <option value="beauty">Beauté / Coiffure</option>
+                  <option value="retail">Commerce / Retail</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+              <div class="app-rules-common">
+                <p class="app-step-label">Expiration des points/tampons (mois, optionnel)</p>
+                <input type="number" id="app-expiry-months" class="app-input app-input-number" min="0" placeholder="Jamais" title="0 = pas d'expiration" />
+              </div>
               <p class="app-step-label">Nom affiché sur la carte</p>
               <input type="text" id="app-personnaliser-org" class="app-input" placeholder="Nom du commerce" />
               <p class="app-step-label">Couleurs</p>

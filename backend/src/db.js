@@ -185,6 +185,20 @@ const bizColsBg = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c
 if (!bizColsBg.includes("card_background_base64")) {
   db.exec("ALTER TABLE businesses ADD COLUMN card_background_base64 TEXT");
 }
+// Migration : règles de la carte (type programme, récompenses, seuils)
+const bizColsRules = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+for (const { col, type } of [
+  { col: "program_type", type: "TEXT" },
+  { col: "stamp_reward_label", type: "TEXT" },
+  { col: "points_min_amount_eur", type: "REAL" },
+  { col: "points_reward_tiers", type: "TEXT" },
+  { col: "expiry_months", type: "INTEGER" },
+  { col: "sector", type: "TEXT" },
+]) {
+  if (!bizColsRules.includes(col)) {
+    db.exec(`ALTER TABLE businesses ADD COLUMN ${col} ${type}`);
+  }
+}
 // Garantir que la business "demo" existe (migration, avant que getBusinessBySlug soit défini)
 function ensureDemoBusiness() {
   let b = db.prepare("SELECT * FROM businesses WHERE slug = ?").get("demo");
@@ -312,8 +326,16 @@ export function updateBusiness(businessId, updates) {
     "location_address",
     "required_stamps",
     "stamp_emoji",
+    "points_per_euro",
+    "points_per_visit",
+    "program_type",
+    "stamp_reward_label",
+    "points_min_amount_eur",
+    "points_reward_tiers",
+    "expiry_months",
+    "sector",
   ];
-  const numericCols = ["location_lat", "location_lng", "location_radius_meters", "required_stamps"];
+  const numericCols = ["location_lat", "location_lng", "location_radius_meters", "required_stamps", "points_min_amount_eur", "expiry_months"];
   const setClauses = [];
   const values = [];
   for (const [key, value] of Object.entries(updates)) {
@@ -322,6 +344,8 @@ export function updateBusiness(businessId, updates) {
       setClauses.push(`${col} = ?`);
       if (col === "logo_base64" || col === "card_background_base64") {
         values.push(value === null || value === "" ? null : String(value));
+      } else if (col === "points_reward_tiers") {
+        values.push(value == null || value === "" ? null : (typeof value === "string" ? value : JSON.stringify(value)));
       } else if (numericCols.includes(col)) {
         const n = value === null || value === "" ? null : Number(value);
         values.push(Number.isFinite(n) ? n : null);

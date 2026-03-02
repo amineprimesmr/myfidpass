@@ -71,6 +71,14 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
   }
   const apiBase = (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
   // snake_case pour l'app iOS (keyDecodingStrategy .convertFromSnakeCase)
+  let points_reward_tiers = business.points_reward_tiers;
+  if (typeof points_reward_tiers === "string" && points_reward_tiers.trim()) {
+    try {
+      points_reward_tiers = JSON.parse(points_reward_tiers);
+    } catch (_) {
+      points_reward_tiers = undefined;
+    }
+  }
   res.json({
     organization_name: business.organization_name ?? undefined,
     background_color: business.background_color ?? undefined,
@@ -85,6 +93,14 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     location_address: business.location_address ?? undefined,
     required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
     stamp_emoji: business.stamp_emoji ?? undefined,
+    stamp_reward_label: business.stamp_reward_label ?? undefined,
+    points_per_euro: business.points_per_euro != null ? Number(business.points_per_euro) : undefined,
+    points_per_visit: business.points_per_visit != null ? Number(business.points_per_visit) : undefined,
+    program_type: business.program_type ?? undefined,
+    points_min_amount_eur: business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : undefined,
+    points_reward_tiers: points_reward_tiers ?? undefined,
+    expiry_months: business.expiry_months != null ? Number(business.expiry_months) : undefined,
+    sector: business.sector ?? undefined,
     logo_url: business.logo_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/logo` : undefined,
     logo_updated_at: business.logo_updated_at ?? undefined,
   });
@@ -116,6 +132,14 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const foreground_color = body.foreground_color ?? body.foregroundColor;
   const required_stamps = body.required_stamps ?? body.requiredStamps;
   const stamp_emoji = body.stamp_emoji ?? body.stampEmoji;
+  const stamp_reward_label = body.stamp_reward_label ?? body.stampRewardLabel;
+  const program_type = body.program_type ?? body.programType;
+  const points_per_euro = body.points_per_euro ?? body.pointsPerEuro;
+  const points_per_visit = body.points_per_visit ?? body.pointsPerVisit;
+  const points_min_amount_eur = body.points_min_amount_eur ?? body.pointsMinAmountEur;
+  const points_reward_tiers = body.points_reward_tiers ?? body.pointsRewardTiers;
+  const expiry_months = body.expiry_months ?? body.expiryMonths;
+  const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   const logo_url = (body.logo_url ?? body.logoUrl ?? "").trim();
@@ -125,14 +149,52 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   if (location_address !== undefined) updates.location_address = location_address ? String(location_address).trim() : null;
   if (background_color !== undefined) updates.background_color = normalizeHexForPatch(background_color);
   if (foreground_color !== undefined) updates.foreground_color = normalizeHexForPatch(foreground_color);
+  if (program_type !== undefined) {
+    const v = program_type === null || program_type === "" ? null : String(program_type).trim().toLowerCase();
+    updates.program_type = (v === "points" || v === "stamps") ? v : null;
+  }
+  if (points_per_euro !== undefined) {
+    const n = points_per_euro === null || points_per_euro === "" ? null : Number(points_per_euro);
+    updates.points_per_euro = Number.isFinite(n) && n >= 0 ? String(n) : "1";
+  }
+  if (points_per_visit !== undefined) {
+    const n = points_per_visit === null || points_per_visit === "" ? null : Number(points_per_visit);
+    updates.points_per_visit = Number.isFinite(n) && n >= 0 ? String(n) : "0";
+  }
+  if (points_min_amount_eur !== undefined) {
+    const n = points_min_amount_eur === null || points_min_amount_eur === "" ? null : Number(points_min_amount_eur);
+    updates.points_min_amount_eur = Number.isFinite(n) && n >= 0 ? n : null;
+  }
+  if (points_reward_tiers !== undefined) {
+    if (points_reward_tiers === null || points_reward_tiers === "") {
+      updates.points_reward_tiers = null;
+    } else if (Array.isArray(points_reward_tiers)) {
+      updates.points_reward_tiers = JSON.stringify(points_reward_tiers);
+    } else if (typeof points_reward_tiers === "string") {
+      try {
+        JSON.parse(points_reward_tiers);
+        updates.points_reward_tiers = points_reward_tiers;
+      } catch (_) {
+        updates.points_reward_tiers = null;
+      }
+    }
+  }
+  if (expiry_months !== undefined) {
+    const n = expiry_months === null || expiry_months === "" ? null : Number(expiry_months);
+    updates.expiry_months = Number.isInteger(n) && n >= 0 ? n : null;
+  }
+  if (sector !== undefined) updates.sector = sector ? String(sector).trim().slice(0, 64) : null;
   if (required_stamps !== undefined) {
     const n = required_stamps === null || required_stamps === "" ? null : Number(required_stamps);
     updates.required_stamps = Number.isInteger(n) && n >= 0 ? n : null;
   }
   if (stamp_emoji !== undefined) {
-    // Un seul emoji ou chaîne courte (ex. "☕" ou "⭐") — stockée telle quelle pour le pass
     const v = stamp_emoji == null || stamp_emoji === "" ? null : String(stamp_emoji).trim().slice(0, 8);
     updates.stamp_emoji = v || null;
+  }
+  if (stamp_reward_label !== undefined) {
+    const v = stamp_reward_label == null || stamp_reward_label === "" ? null : String(stamp_reward_label).trim().slice(0, 120);
+    updates.stamp_reward_label = v || null;
   }
   if (logo_base64 !== undefined) {
     if (logo_base64 === null || (typeof logo_base64 === "string" && logo_base64.trim() === "")) {
@@ -731,13 +793,19 @@ router.post("/:slug/integration/scan", async (req, res) => {
   const visit = req.body?.visit === true;
   const perEuro = Number(business.points_per_euro) || 1;
   const perVisit = Number(business.points_per_visit) || 0;
+  const minAmount = business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : null;
   let points = 0;
   if (Number.isInteger(pointsDirect) && pointsDirect > 0) points += pointsDirect;
-  if (!Number.isNaN(amountEur) && amountEur > 0) points += Math.floor(amountEur * perEuro);
+  if (!Number.isNaN(amountEur) && amountEur > 0) {
+    if (minAmount == null || amountEur >= minAmount) {
+      points += Math.floor(amountEur * perEuro);
+    }
+  }
   if (visit && perVisit > 0) points += perVisit;
   if (points <= 0) {
+    const minHint = minAmount != null ? ` (achat min. ${minAmount} € pour les points)` : "";
     return res.status(400).json({
-      error: "Indiquez amount_eur, visit: true, ou points. Règles : " + perEuro + " pt/€, " + perVisit + " pt/passage.",
+      error: "Indiquez amount_eur, visit: true, ou points. Règles : " + perEuro + " pt/€, " + perVisit + " pt/passage." + minHint,
       code: "NO_POINTS_SPECIFIED",
     });
   }
@@ -978,21 +1046,25 @@ router.post("/:slug/members/:memberId/points", async (req, res) => {
   const visit = req.body?.visit === true;
   const perEuro = Number(business.points_per_euro) || 1;
   const perVisit = Number(business.points_per_visit) || 0;
+  const minAmount = business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : null;
 
   let points = 0;
   if (Number.isInteger(pointsDirect) && pointsDirect > 0) {
     points += pointsDirect;
   }
   if (!Number.isNaN(amountEur) && amountEur > 0) {
-    points += Math.floor(amountEur * perEuro);
+    if (minAmount == null || amountEur >= minAmount) {
+      points += Math.floor(amountEur * perEuro);
+    }
   }
   if (visit && perVisit > 0) {
     points += perVisit;
   }
 
   if (points <= 0) {
+    const minHint = minAmount != null ? ` (achat min. ${minAmount} €)` : "";
     return res.status(400).json({
-      error: "Indiquez points, amount_eur (montant en €), ou visit: true (1 passage). Règles: " + perEuro + " pt/€, " + perVisit + " pt/passage.",
+      error: "Indiquez points, amount_eur (montant en €), ou visit: true (1 passage). Règles: " + perEuro + " pt/€, " + perVisit + " pt/passage." + minHint,
     });
   }
 
@@ -1180,8 +1252,8 @@ function normalizeHex(value) {
 }
 
 /**
- * PATCH /api/businesses/:slug — Mise à jour design (couleurs, dos, logo) — token ou JWT propriétaire.
- * Body: { organizationName?, backTerms?, backContact?, backgroundColor?, foregroundColor?, labelColor?, logoBase64? }
+ * PATCH /api/businesses/:slug — Mise à jour design + règles de la carte — token ou JWT propriétaire.
+ * Body: { organizationName?, backTerms?, backContact?, backgroundColor?, ... programType?, pointsPerEuro?, requiredStamps?, stampRewardLabel?, ... }
  */
 router.patch("/:slug", (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -1189,6 +1261,7 @@ router.patch("/:slug", (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
+  const body = req.body || {};
   const {
     organizationName,
     backTerms,
@@ -1202,7 +1275,7 @@ router.patch("/:slug", (req, res) => {
     locationRelevantText,
     locationRadiusMeters,
     locationAddress,
-  } = req.body || {};
+  } = body;
   const updates = {};
   if (organizationName !== undefined) updates.organization_name = organizationName ? String(organizationName).trim() : null;
   if (backTerms !== undefined) updates.back_terms = backTerms ? String(backTerms).trim() : null;
@@ -1222,6 +1295,56 @@ router.patch("/:slug", (req, res) => {
       return res.status(400).json({ error: "Logo invalide ou trop volumineux (max 4 Mo)." });
     }
     updates.logo_base64 = logoBase64;
+  }
+  const programType = body.programType ?? body.program_type;
+  if (programType !== undefined) {
+    const v = programType === null || programType === "" ? null : String(programType).trim().toLowerCase();
+    updates.program_type = (v === "points" || v === "stamps") ? v : null;
+  }
+  const pointsPerEuro = body.pointsPerEuro ?? body.points_per_euro;
+  if (pointsPerEuro !== undefined) {
+    const n = pointsPerEuro === null || pointsPerEuro === "" ? null : Number(pointsPerEuro);
+    updates.points_per_euro = Number.isFinite(n) && n >= 0 ? String(n) : "1";
+  }
+  const pointsPerVisit = body.pointsPerVisit ?? body.points_per_visit;
+  if (pointsPerVisit !== undefined) {
+    const n = pointsPerVisit === null || pointsPerVisit === "" ? null : Number(pointsPerVisit);
+    updates.points_per_visit = Number.isFinite(n) && n >= 0 ? String(n) : "0";
+  }
+  const pointsMinAmountEur = body.pointsMinAmountEur ?? body.points_min_amount_eur;
+  if (pointsMinAmountEur !== undefined) {
+    const n = pointsMinAmountEur === null || pointsMinAmountEur === "" ? null : Number(pointsMinAmountEur);
+    updates.points_min_amount_eur = Number.isFinite(n) && n >= 0 ? n : null;
+  }
+  const pointsRewardTiers = body.pointsRewardTiers ?? body.points_reward_tiers;
+  if (pointsRewardTiers !== undefined) {
+    if (pointsRewardTiers === null || pointsRewardTiers === "") updates.points_reward_tiers = null;
+    else if (Array.isArray(pointsRewardTiers)) updates.points_reward_tiers = JSON.stringify(pointsRewardTiers);
+    else if (typeof pointsRewardTiers === "string") {
+      try { JSON.parse(pointsRewardTiers); updates.points_reward_tiers = pointsRewardTiers; } catch (_) { updates.points_reward_tiers = null; }
+    }
+  }
+  const expiryMonths = body.expiryMonths ?? body.expiry_months;
+  if (expiryMonths !== undefined) {
+    const n = expiryMonths === null || expiryMonths === "" ? null : Number(expiryMonths);
+    updates.expiry_months = Number.isInteger(n) && n >= 0 ? n : null;
+  }
+  const sector = body.sector;
+  if (sector !== undefined) updates.sector = sector ? String(sector).trim().slice(0, 64) : null;
+  const requiredStamps = body.requiredStamps ?? body.required_stamps;
+  if (requiredStamps !== undefined) {
+    const n = requiredStamps === null || requiredStamps === "" ? null : Number(requiredStamps);
+    updates.required_stamps = Number.isInteger(n) && n >= 0 ? n : null;
+  }
+  const stampEmoji = body.stampEmoji ?? body.stamp_emoji;
+  if (stampEmoji !== undefined) {
+    const v = stampEmoji == null || stampEmoji === "" ? null : String(stampEmoji).trim().slice(0, 8);
+    updates.stamp_emoji = v || null;
+  }
+  const stampRewardLabel = body.stampRewardLabel ?? body.stamp_reward_label;
+  if (stampRewardLabel !== undefined) {
+    const v = stampRewardLabel == null || stampRewardLabel === "" ? null : String(stampRewardLabel).trim().slice(0, 120);
+    updates.stamp_reward_label = v || null;
   }
 
   const updated = updateBusiness(business.id, updates);
