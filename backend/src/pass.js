@@ -46,12 +46,14 @@ async function resizeLogoForPass(inputBuffer) {
 /**
  * Génère les icônes du pass (29×29, 58×58, 87×87) à partir du logo.
  * C’est cette icône qui s’affiche dans les notifications Wallet sur l’iPhone.
+ * iOS 18 : fond transparent → rendu incorrect (carré vert / placeholder). On utilise un fond blanc opaque.
  * Retourne { iconPng, iconPng2x, iconPng3x } ou null.
  */
 async function resizeLogoForPassIcon(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
   try {
-    const opts = { fit: "cover", background: { r: 0, g: 0, b: 0, alpha: 0 } };
+    // Fond blanc opaque pour éviter le bug iOS 18 (icône notification non affichée avec fond transparent)
+    const opts = { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } };
     const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
       sharp(inputBuffer).resize(ICON_SIZE_1X, ICON_SIZE_1X, opts).png().toBuffer(),
       sharp(inputBuffer).resize(ICON_SIZE_2X, ICON_SIZE_2X, opts).png().toBuffer(),
