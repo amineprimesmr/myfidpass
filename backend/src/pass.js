@@ -260,7 +260,8 @@ async function fetchEmojiPng(emoji) {
     const res = await fetch(url);
     if (res.ok) {
       const buf = Buffer.from(await res.arrayBuffer());
-      const out = await sharp(buf).resize(STAMP_SIZE - 16, STAMP_SIZE - 16).png().toBuffer();
+      const emojiPx = STAMP_SIZE - 8;
+      const out = await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
       cacheEmojiPng.set(key, out);
       return out;
     }
@@ -278,7 +279,7 @@ async function createFilledStampWithEmojiPng(hexColor, stampEmoji = "☕") {
   try {
     const emojiBuf = await fetchEmojiPng(emojiChar);
     if (emojiBuf) {
-      const padding = 10;
+      const padding = 4;
       return await sharp(circlePng)
         .composite([{ input: emojiBuf, left: padding, top: padding }])
         .png()
@@ -596,7 +597,7 @@ export async function generatePass(member, business = null, options = {}) {
     const stampValue = `${stamps} / ${stampMax}`;
     pass.primaryFields.push({
       key: "stamps",
-      label: stampEmoji || "Tampons",
+      label: stampEmoji || "☕",
       value: stampValue,
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tampons : %@",
