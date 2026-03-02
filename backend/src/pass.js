@@ -193,6 +193,7 @@ function createStripBuffer(templateKey) {
 const STRIP_W = 750;
 const STRIP_H = 246;
 const STAMP_R = 38;
+const STAMP_SIZE = STAMP_R * 2;
 const STAMP_GAP = 14;
 const STAMP_TOP = 90;
 
@@ -220,30 +221,96 @@ function drawCircle(png, cx, cy, r, fillRgb, strokeRgb) {
   }
 }
 
+/** Crée un buffer PNG 76×76 : cercle vide (blanc + bordure). */
+function createEmptyStampPng(strokeRgb) {
+  const size = STAMP_SIZE;
+  const png = new PNG({ width: size, height: size });
+  png.data = Buffer.alloc(size * size * 4);
+  for (let i = 0; i < size * size * 4; i += 4) {
+    png.data[i + 3] = 0;
+  }
+  drawCircle(png, size / 2, size / 2, STAMP_R - 2, { r: 255, g: 255, b: 255 }, strokeRgb);
+  return PNG.sync.write(png);
+}
+
+/** Crée un buffer PNG 76×76 : cercle rempli avec emoji café (ou autre) au centre — SVG rendu via sharp. */
+async function createFilledStampWithEmojiPng(hexColor, emoji) {
+  const size = STAMP_SIZE;
+  const hex = hexColor.replace(/^#/, "");
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  const char = (emoji || "☕").trim().slice(0, 2);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <circle cx="${size/2}" cy="${size/2}" r="${STAMP_R - 2}" fill="rgb(${r},${g},${b})"/>
+  <text x="${size/2}" y="${size/2 + 4}" font-size="38" text-anchor="middle" dominant-baseline="middle" fill="white" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${char}</text>
+</svg>`;
+  try {
+    return await sharp(Buffer.from(svg))
+      .resize(size, size)
+      .png()
+      .toBuffer();
+  } catch (e) {
+    console.warn("[PassKit] createFilledStampWithEmojiPng failed:", e?.message);
+    return null;
+  }
+}
+
+/** Crée un buffer PNG 76×76 : cercle rempli sans emoji (fallback). */
+function createFilledStampCirclePng(fillRgb) {
+  const size = STAMP_SIZE;
+  const png = new PNG({ width: size, height: size });
+  png.data = Buffer.alloc(size * size * 4);
+  for (let i = 0; i < size * size * 4; i += 4) png.data[i + 3] = 0;
+  drawCircle(png, size / 2, size / 2, STAMP_R - 2, fillRgb, null);
+  return PNG.sync.write(png);
+}
+
 /**
- * Génère un strip 750×246 avec une grille de tampons géants (2 lignes × 5).
- * filledCount = nombre de cercles remplis (points du membre), stampMax = total (ex. 10).
+ * Dessine la grille de tampons (2 lignes × 5, emoji ☕ pour remplis) sur un strip existant (gradient ou image de fond).
  */
-function createStripWithStamps(templateKey, filledCount, stampMax) {
-  const stripBuf = createStripBuffer(templateKey);
-  const png = PNG.sync.read(stripBuf);
+async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.cafe;
   const fillRgb = hexToRgb(colors.backgroundColor);
   const strokeRgb = hexToRgb(colors.foregroundColor || "#ffffff");
-  const emptyFill = { r: 255, g: 255, b: 255 };
+  const emoji = (stampEmoji || "☕").trim().slice(0, 2);
   const cols = 5;
-  const startX = (STRIP_W - (cols * (STAMP_R * 2) + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
+  const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
   const row0Y = STAMP_TOP + STAMP_R;
-  const row1Y = row0Y + STAMP_R * 2 + STAMP_GAP;
+  const row1Y = row0Y + STAMP_SIZE + STAMP_GAP;
+
+  const composites = [];
   for (let i = 0; i < Math.min(stampMax, 10); i++) {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const cx = Math.round(startX + col * (STAMP_R * 2 + STAMP_GAP));
+    const cx = Math.round(startX + col * (STAMP_SIZE + STAMP_GAP));
     const cy = row === 0 ? row0Y : row1Y;
+    const left = Math.max(0, cx - STAMP_R);
+    const top = Math.max(0, cy - STAMP_R);
     const filled = i < filledCount;
-    drawCircle(png, cx, cy, STAMP_R, filled ? fillRgb : emptyFill, filled ? null : fillRgb);
+    let stampBuf;
+    if (filled) {
+      stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor, emoji);
+      if (!stampBuf) stampBuf = createFilledStampCirclePng(fillRgb);
+    } else {
+      stampBuf = createEmptyStampPng(strokeRgb);
+    }
+    composites.push({ input: stampBuf, left, top });
   }
-  return PNG.sync.write(png);
+
+  return sharp(baseStripBuf)
+    .composite(composites)
+    .png()
+    .toBuffer();
+}
+
+/**
+ * Génère un strip 750×246 avec une grille de tampons : emoji (ex. ☕) pour les remplis, cercles vides pour les restants.
+ * Base = dégradé aux couleurs du template. Pour image de fond perso, utiliser drawStampsOnStrip(resizedImage, ...).
+ */
+async function createStripWithStamps(templateKey, filledCount, stampMax, stampEmoji) {
+  const stripBuf = createStripBuffer(templateKey);
+  return drawStampsOnStrip(stripBuf, templateKey, filledCount, stampMax, stampEmoji);
 }
 
 function loadCertificates() {
@@ -398,8 +465,27 @@ export async function generatePass(member, business = null, options = {}) {
   const format = options.format || (useTampons ? "tampons" : "points");
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
-  // Strip : image de fond personnalisée OU tampons géants (format tampons)
-  if (options.card_background_base64) {
+  // Strip : image de fond perso + grille tampons par-dessus, ou strip dégradé + grille (format tampons)
+  const stripTemplateKey = options.template || "cafe";
+  const stampEmojiOpt = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
+  if (format === "tampons") {
+    let baseStrip;
+    if (options.card_background_base64) {
+      const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > 0) {
+        try {
+          baseStrip = await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
+        } catch (e) {
+          console.warn("[PassKit] card_background resize failed:", e?.message);
+        }
+      }
+    }
+    if (!baseStrip) baseStrip = createStripBuffer(stripTemplateKey);
+    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stampEmojiOpt);
+    buffers["strip.png"] = stripWithStamps;
+    buffers["strip@2x.png"] = stripWithStamps;
+  } else if (options.card_background_base64) {
     const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
     const buf = Buffer.from(base64Data, "base64");
     if (buf.length > 0) {
@@ -411,11 +497,6 @@ export async function generatePass(member, business = null, options = {}) {
         console.warn("[PassKit] card_background resize failed:", e?.message);
       }
     }
-  } else if (format === "tampons") {
-    const templateKey = options.template || "cafe";
-    const stripWithStamps = createStripWithStamps(templateKey, stamps, stampMax);
-    buffers["strip.png"] = stripWithStamps;
-    buffers["strip@2x.png"] = stripWithStamps;
   }
 
   const isSectorTemplate = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template);
@@ -476,8 +557,13 @@ export async function generatePass(member, business = null, options = {}) {
   if (format === "tampons") {
     const filledChar = stampEmoji || "●";
     const emptyChar = "○";
-    const visualStamps = Array.from({ length: stampMax }, (_, i) => (i < stamps ? filledChar : emptyChar)).join(" ");
-    // Ligne des 10 tampons en PRIMARY pour être bien visible (comme les grandes enseignes)
+    const arr = Array.from({ length: stampMax }, (_, i) => (i < stamps ? filledChar : emptyChar));
+    const cols = 5;
+    const rows = [];
+    for (let r = 0; r < Math.ceil(stampMax / cols); r++) {
+      rows.push(arr.slice(r * cols, (r + 1) * cols).join(" "));
+    }
+    const visualStamps = rows.join("\n");
     pass.primaryFields.push({
       key: "stampVisual",
       label: "Tampons",
