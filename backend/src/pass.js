@@ -233,12 +233,13 @@ function createEmptyStampPng(strokeRgb) {
   return PNG.sync.write(png);
 }
 
-// Twemoji 72x72 — URLs par codepoint Unicode (ex. ☕ = 2615, 🧋 = 1f9cb)
+// Noto Color Emoji (Google) 128px — rendu plus proche des emojis « classiques » que Twemoji
+const NOTO_EMOJI_BASE = "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/128";
 const TWEMOJI_BASE = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72";
 const cacheEmojiPng = new Map();
 
-/** Retourne le codepoint Twemoji pour un emoji (ex. "☕" → "2615", "🧋" → "1f9cb"). */
-function emojiToTwemojiCodepoint(emoji) {
+/** Retourne le codepoint pour un emoji (ex. "☕" → "2615", "🧋" → "1f9cb"). */
+function emojiToCodepoint(emoji) {
   if (!emoji || typeof emoji !== "string") return "2615";
   const str = String(emoji).trim();
   if (!str.length) return "2615";
@@ -246,21 +247,44 @@ function emojiToTwemojiCodepoint(emoji) {
   for (let i = 0; i < str.length; ) {
     const cp = str.codePointAt(i);
     i += cp > 0xffff ? 2 : 1;
-    if (cp === 0xfe0f) continue; // variation selector
+    if (cp === 0xfe0f) continue;
     parts.push(cp.toString(16).toLowerCase());
   }
-  return parts.length ? parts.join("-") : "2615";
+  return parts.length ? parts.join("_") : "2615";
+}
+
+/** URL Noto : emoji_u2615.png (underscore entre codepoints). */
+function notoEmojiUrl(codepoint) {
+  return `${NOTO_EMOJI_BASE}/emoji_u${codepoint}.png`;
+}
+
+/** URL Twemoji : 2615.png. */
+function twemojiUrl(codepoint) {
+  const twemojiPoint = codepoint.replace(/_/g, "-");
+  return `${TWEMOJI_BASE}/${twemojiPoint}.png`;
 }
 
 async function fetchEmojiPng(emoji) {
-  const key = emojiToTwemojiCodepoint(emoji);
+  const key = emojiToCodepoint(emoji);
   if (cacheEmojiPng.has(key)) return cacheEmojiPng.get(key);
+  const emojiPx = STAMP_SIZE - 8;
   try {
-    const url = `${TWEMOJI_BASE}/${key}.png`;
-    const res = await fetch(url);
+    const notoUrl = notoEmojiUrl(key);
+    const res = await fetch(notoUrl);
     if (res.ok) {
       const buf = Buffer.from(await res.arrayBuffer());
-      const emojiPx = STAMP_SIZE - 8;
+      const out = await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
+      cacheEmojiPng.set(key, out);
+      return out;
+    }
+  } catch (e) {
+    // ignore
+  }
+  try {
+    const twUrl = twemojiUrl(key);
+    const res = await fetch(twUrl);
+    if (res.ok) {
+      const buf = Buffer.from(await res.arrayBuffer());
       const out = await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
       cacheEmojiPng.set(key, out);
       return out;
@@ -309,7 +333,7 @@ async function createEmptyStampWithEmojiPng(strokeRgb, stampEmoji = "☕") {
     const emojiBuf = await fetchEmojiPng(emojiChar);
     if (!emojiBuf) return emptyPng;
     const { data, info } = await sharp(emojiBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-    for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * 0.45);
+    for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * 0.6);
     const fadedEmoji = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
     const padding = 4;
     return await sharp(emptyPng)
