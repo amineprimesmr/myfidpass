@@ -132,11 +132,12 @@ function toLastModifiedHttpDate(dateStr) {
   return new Date(iso).getTime();
 }
 
-/** Retourne la date HTTP la plus récente entre last_visit_at (membre) et last_broadcast_at (business), pour que l'iPhone refetch le pass après un envoi depuis la section Notifications. */
+/** Retourne la date HTTP la plus récente (membre, notif, logo) pour que l'iPhone refetch le pass quand points, notif ou logo changent. */
 function getPassLastModified(member, business) {
   const a = toLastModifiedHttpDate(member?.last_visit_at);
   const b = toLastModifiedHttpDate(business?.last_broadcast_at);
-  const ts = Math.max(a || 0, b || 0);
+  const c = toLastModifiedHttpDate(business?.logo_updated_at);
+  const ts = Math.max(a || 0, b || 0, c || 0);
   if (ts <= 0) return new Date().toUTCString();
   return new Date(ts).toUTCString();
 }
