@@ -117,6 +117,7 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const required_stamps = body.required_stamps ?? body.requiredStamps;
   const stamp_emoji = body.stamp_emoji ?? body.stampEmoji;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
+  const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   const logo_url = (body.logo_url ?? body.logoUrl ?? "").trim();
   const location_address = body.location_address ?? body.locationAddress;
   const updates = {};
@@ -144,6 +145,18 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
       }
       if (buf.length > 0) updates.logo_base64 = logo_base64.startsWith("data:") ? logo_base64 : `data:image/png;base64,${base64Data}`;
       else updates.logo_base64 = null;
+    }
+  }
+  if (card_background_base64 !== undefined) {
+    if (card_background_base64 === null || (typeof card_background_base64 === "string" && card_background_base64.trim() === "")) {
+      updates.card_background_base64 = null;
+    } else if (typeof card_background_base64 === "string") {
+      const base64Data = String(card_background_base64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > MAX_LOGO_BASE64_BYTES) {
+        return res.status(400).json({ error: "Image de fond trop volumineuse (max 4 Mo)." });
+      }
+      updates.card_background_base64 = card_background_base64.startsWith("data:") ? card_background_base64 : `data:image/png;base64,${base64Data}`;
     }
   }
   if (logo_url && (logo_url.startsWith("http://") || logo_url.startsWith("https://"))) {
@@ -1033,6 +1046,7 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
     const n = parseInt(req.query.required_stamps, 10);
     if (Number.isInteger(n) && n > 0) opts.required_stamps = n;
   }
+  if (business?.card_background_base64) opts.card_background_base64 = business.card_background_base64;
 
   try {
     const buffer = await generatePass(member, business, opts);

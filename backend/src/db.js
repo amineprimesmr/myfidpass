@@ -180,6 +180,11 @@ const bizColsAfter = db.prepare("PRAGMA table_info(businesses)").all().map((c) =
 if (!bizColsAfter.includes("stamp_emoji")) {
   db.exec("ALTER TABLE businesses ADD COLUMN stamp_emoji TEXT");
 }
+// Migration : image de fond de carte (strip personnalisé pour le pass Wallet)
+const bizColsBg = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+if (!bizColsBg.includes("card_background_base64")) {
+  db.exec("ALTER TABLE businesses ADD COLUMN card_background_base64 TEXT");
+}
 // Garantir que la business "demo" existe (migration, avant que getBusinessBySlug soit défini)
 function ensureDemoBusiness() {
   let b = db.prepare("SELECT * FROM businesses WHERE slug = ?").get("demo");
@@ -299,6 +304,7 @@ export function updateBusiness(businessId, updates) {
     "label_color",
     "logo_base64",
     "logo_updated_at",
+    "card_background_base64",
     "location_lat",
     "location_lng",
     "location_relevant_text",
@@ -314,7 +320,7 @@ export function updateBusiness(businessId, updates) {
     const col = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
     if (allowed.includes(col) && value !== undefined) {
       setClauses.push(`${col} = ?`);
-      if (col === "logo_base64") {
+      if (col === "logo_base64" || col === "card_background_base64") {
         values.push(value === null || value === "" ? null : String(value));
       } else if (numericCols.includes(col)) {
         const n = value === null || value === "" ? null : Number(value);

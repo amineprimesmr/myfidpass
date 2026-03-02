@@ -189,6 +189,63 @@ function createStripBuffer(templateKey) {
   return PNG.sync.write(png);
 }
 
+/** Dimensions strip Apple : 750×246. Tampons en 2 lignes de 5, cercles bien visibles. */
+const STRIP_W = 750;
+const STRIP_H = 246;
+const STAMP_R = 38;
+const STAMP_GAP = 14;
+const STAMP_TOP = 90;
+
+function drawCircle(png, cx, cy, r, fillRgb, strokeRgb) {
+  const w = png.width;
+  const h = png.height;
+  for (let y = Math.max(0, cy - r - 2); y <= Math.min(h - 1, cy + r + 2); y++) {
+    for (let x = Math.max(0, cx - r - 2); x <= Math.min(w - 1, cx + r + 2); x++) {
+      const d = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+      const i = (y * w + x) * 4;
+      if (d <= r + 1) {
+        if (d <= r - 1) {
+          png.data[i] = fillRgb.r;
+          png.data[i + 1] = fillRgb.g;
+          png.data[i + 2] = fillRgb.b;
+          png.data[i + 3] = 255;
+        } else if (strokeRgb) {
+          png.data[i] = strokeRgb.r;
+          png.data[i + 1] = strokeRgb.g;
+          png.data[i + 2] = strokeRgb.b;
+          png.data[i + 3] = 255;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Génère un strip 750×246 avec une grille de tampons géants (2 lignes × 5).
+ * filledCount = nombre de cercles remplis (points du membre), stampMax = total (ex. 10).
+ */
+function createStripWithStamps(templateKey, filledCount, stampMax) {
+  const stripBuf = createStripBuffer(templateKey);
+  const png = PNG.sync.read(stripBuf);
+  const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.cafe;
+  const fillRgb = hexToRgb(colors.backgroundColor);
+  const strokeRgb = hexToRgb(colors.foregroundColor || "#ffffff");
+  const emptyFill = { r: 255, g: 255, b: 255 };
+  const cols = 5;
+  const startX = (STRIP_W - (cols * (STAMP_R * 2) + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
+  const row0Y = STAMP_TOP + STAMP_R;
+  const row1Y = row0Y + STAMP_R * 2 + STAMP_GAP;
+  for (let i = 0; i < Math.min(stampMax, 10); i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const cx = Math.round(startX + col * (STAMP_R * 2 + STAMP_GAP));
+    const cy = row === 0 ? row0Y : row1Y;
+    const filled = i < filledCount;
+    drawCircle(png, cx, cy, STAMP_R, filled ? fillRgb : emptyFill, filled ? null : fillRgb);
+  }
+  return PNG.sync.write(png);
+}
+
 function loadCertificates() {
   const signerKeyPassphrase = process.env.SIGNER_KEY_PASSPHRASE || undefined;
 
@@ -341,6 +398,26 @@ export async function generatePass(member, business = null, options = {}) {
   const format = options.format || (useTampons ? "tampons" : "points");
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
+  // Strip : image de fond personnalisée OU tampons géants (format tampons)
+  if (options.card_background_base64) {
+    const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(base64Data, "base64");
+    if (buf.length > 0) {
+      try {
+        const resized = await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
+        buffers["strip.png"] = resized;
+        buffers["strip@2x.png"] = resized;
+      } catch (e) {
+        console.warn("[PassKit] card_background resize failed:", e?.message);
+      }
+    }
+  } else if (format === "tampons") {
+    const templateKey = options.template || "cafe";
+    const stripWithStamps = createStripWithStamps(templateKey, stamps, stampMax);
+    buffers["strip.png"] = stripWithStamps;
+    buffers["strip@2x.png"] = stripWithStamps;
+  }
+
   const isSectorTemplate = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template);
 
   // Couleurs : priorité options (design envoyé par l'app), puis business, puis template
@@ -397,22 +474,23 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   if (format === "tampons") {
-    const stampValue = stampEmoji ? `${stampEmoji} ${stamps} / ${stampMax}` : `${stamps} / ${stampMax}`;
-    pass.primaryFields.push({
-      key: "stamps",
-      label: "Tampons",
-      value: stampValue,
-      textAlignment: "PKTextAlignmentCenter",
-      changeMessage: "Tampons : %@",
-    });
-    // Ligne visuelle des 10 tampons (comme McDo/Subway) : texte avec symboles remplis/vides
     const filledChar = stampEmoji || "●";
     const emptyChar = "○";
     const visualStamps = Array.from({ length: stampMax }, (_, i) => (i < stamps ? filledChar : emptyChar)).join(" ");
-    pass.secondaryFields.push({
+    // Ligne des 10 tampons en PRIMARY pour être bien visible (comme les grandes enseignes)
+    pass.primaryFields.push({
       key: "stampVisual",
-      label: "",
+      label: "Tampons",
       value: visualStamps,
+      textAlignment: "PKTextAlignmentCenter",
+      changeMessage: "Tampons : %@",
+    });
+    // "3 / 10" en secondary pour le détail
+    const stampValue = stampEmoji ? `${stampEmoji} ${stamps} / ${stampMax}` : `${stamps} / ${stampMax}`;
+    pass.secondaryFields.push({
+      key: "stamps",
+      label: "",
+      value: stampValue,
       textAlignment: "PKTextAlignmentCenter",
     });
     const rest = stampMax - stamps;

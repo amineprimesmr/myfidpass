@@ -185,6 +185,7 @@ const getPassHandler = async (req, res) => {
       background_color: business.background_color ?? undefined,
       foreground_color: business.foreground_color ?? undefined,
       label_color: business.label_color ?? undefined,
+      card_background_base64: business.card_background_base64 ?? undefined,
     };
     const buffer = await generatePass(member, business, opts);
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
