@@ -786,33 +786,29 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  // Au dos du pass (visible quand on tape sur (i) dans Wallet) : récompenses / paliers
+  // Au dos du pass (visible quand on tape sur (i) dans Wallet) : récompenses / paliers — toujours afficher une ligne
   if (format === "points") {
     let tiers = business?.points_reward_tiers;
     if (typeof tiers === "string" && tiers.trim()) {
       try { tiers = JSON.parse(tiers); } catch (_) { tiers = []; }
     }
-    if (Array.isArray(tiers) && tiers.length > 0) {
-      const lines = tiers
-        .filter((t) => t != null && Number.isInteger(Number(t.points)))
-        .map((t) => `${t.points} pts = ${(t.label && String(t.label).trim()) || "Récompense"}`);
-      if (lines.length > 0) {
-        pass.backFields.push({
-          key: "rewards",
-          label: "Récompenses",
-          value: lines.join("\n"),
-        });
-      }
-    }
+    const lines = Array.isArray(tiers)
+      ? tiers
+          .filter((t) => t != null && Number.isInteger(Number(t.points)))
+          .map((t) => `${t.points} pts = ${(t.label && String(t.label).trim()) || "Récompense"}`)
+      : [];
+    pass.backFields.push({
+      key: "rewards",
+      label: "Récompenses",
+      value: lines.length > 0 ? lines.join("\n") : "Paliers définis par le commerce. Demandez en magasin.",
+    });
   } else if (format === "tampons") {
     const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim();
-    if (rewardLabel) {
-      pass.backFields.push({
-        key: "stampReward",
-        label: "Récompense",
-        value: `${stampMax} tampons = ${rewardLabel}`,
-      });
-    }
+    pass.backFields.push({
+      key: "stampReward",
+      label: "Récompense",
+      value: rewardLabel ? `${stampMax} tampons = ${rewardLabel}` : `${stampMax} tampons = 1 offert`,
+    });
   }
 
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
