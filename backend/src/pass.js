@@ -189,13 +189,13 @@ function createStripBuffer(templateKey) {
   return PNG.sync.write(png);
 }
 
-/** Dimensions strip Apple : 750×246. Tampons en 2 lignes de 5, cercles bien visibles. */
+/** Dimensions strip Apple : 750×246. Tampons = icônes seules (sans cercle), grille remontée pour ne pas dépasser. */
 const STRIP_W = 750;
 const STRIP_H = 246;
-const STAMP_R = 38;
+const STAMP_R = 30;
 const STAMP_SIZE = STAMP_R * 2;
-const STAMP_GAP = 14;
-const STAMP_TOP = 90;
+const STAMP_GAP = 10;
+const STAMP_TOP = 72;
 
 function drawCircle(png, cx, cy, r, fillRgb, strokeRgb) {
   const w = png.width;
@@ -294,15 +294,17 @@ function twemojiUrl(codepoint) {
   return `${TWEMOJI_BASE}/${twemojiPoint}.png`;
 }
 
-/** Charge l’icône personnalisée depuis backend/assets/ (ex. iconcafe.png). Taille max pour qualité, fond transparent. */
+/** Charge l’icône personnalisée (ex. backend/assets/iconcafe.png). Pour une bonne qualité, fournir une image 128×128 ou 256×256 px ; on redimensionne d’abord en 128px puis en taille finale. */
 async function loadCustomStampImage(emojiKey, emojiPx) {
   if (emojiKey !== "2615") return null;
   const customPath = join(assetsDir, "iconcafe.png");
   if (!existsSync(customPath)) return null;
   try {
     const buf = readFileSync(customPath);
+    const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
     return await sharp(buf)
-      .resize(emojiPx, emojiPx, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .resize(128, 128, { fit: "contain", background: transparent })
+      .resize(emojiPx, emojiPx, { fit: "contain", background: transparent })
       .png()
       .toBuffer();
   } catch (e) {
@@ -403,18 +405,41 @@ async function createEmptyStampWithEmojiPng(strokeRgb, stampEmoji = "☕") {
   }
 }
 
+/** Crée un buffer tampon = uniquement l’icône centrée sur fond transparent (pas de cercle). */
+async function createStampIconOnlyPng(iconBuf, opacity = 1) {
+  const size = STAMP_SIZE;
+  let input = iconBuf;
+  if (opacity < 1) {
+    const { data, info } = await sharp(iconBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * opacity);
+    input = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+  }
+  const padding = 2;
+  const transparent = await sharp({
+    create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .png()
+    .toBuffer();
+  return sharp(transparent)
+    .composite([{ input, left: padding, top: padding }])
+    .png()
+    .toBuffer();
+}
+
 /**
- * Dessine la grille de tampons : remplis = emoji plein, vides = cercle blanc + emoji en filigrane.
- * Les 10 positions affichent donc l’emoji café pour les collectés (pas des ronds blancs).
+ * Grille de tampons = uniquement les icônes (iconcafe), sans cercle ni 0/8. Grille remontée pour tout afficher.
  */
 async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
-  const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.cafe;
-  const fillRgb = hexToRgb(colors.backgroundColor);
-  const strokeRgb = hexToRgb(colors.foregroundColor || "#ffffff");
   const cols = 5;
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
   const row0Y = STAMP_TOP + STAMP_R;
   const row1Y = row0Y + STAMP_SIZE + STAMP_GAP;
+
+  const emojiForStamp = (stampEmoji && String(stampEmoji).trim()) || "☕";
+  const iconBuf = await fetchEmojiPng(emojiForStamp);
+  if (!iconBuf) {
+    return baseStripBuf;
+  }
 
   const composites = [];
   for (let i = 0; i < Math.min(stampMax, 10); i++) {
@@ -425,14 +450,7 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     const left = Math.max(0, cx - STAMP_R);
     const top = Math.max(0, cy - STAMP_R);
     const filled = i < filledCount;
-    let stampBuf;
-    const emojiForStamp = (stampEmoji && String(stampEmoji).trim()) || "☕";
-    if (filled) {
-      stampBuf = await createFilledStampWithEmojiPng(colors.backgroundColor, emojiForStamp);
-      if (!stampBuf) stampBuf = createFilledStampCirclePng(fillRgb);
-    } else {
-      stampBuf = await createEmptyStampWithEmojiPng(strokeRgb, emojiForStamp);
-    }
+    const stampBuf = await createStampIconOnlyPng(iconBuf, filled ? 1 : 0.75);
     composites.push({ input: stampBuf, left, top });
   }
 
@@ -623,7 +641,7 @@ export async function generatePass(member, business = null, options = {}) {
     if (!baseStrip) baseStrip = createStripBuffer(stripTemplateKey);
     const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stripStampEmoji);
     buffers["strip.png"] = stripWithStamps;
-    buffers["strip@2x.png"] = stripWithStamps;
+    buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
   } else if (options.card_background_base64) {
     const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
     const buf = Buffer.from(base64Data, "base64");
@@ -694,15 +712,6 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   if (format === "tampons") {
-    const emojiLabel = stampEmoji || "☕";
-    const stampValue = `${emojiLabel} ${stamps} / ${stampMax}`;
-    pass.primaryFields.push({
-      key: "stamps",
-      label: "",
-      value: stampValue,
-      textAlignment: "PKTextAlignmentCenter",
-      changeMessage: "Tampons : %@",
-    });
     const rest = stampMax - stamps;
     const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim();
     let stampHint = "";
