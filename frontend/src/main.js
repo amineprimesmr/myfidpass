@@ -1250,44 +1250,59 @@ function initAppDashboard(slug) {
   /** Grille d’icônes (Emoji.family Fluent) pour choisir l’emoji des tampons sans taper. */
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
   if (emojiPickerEl && stampEmojiEl) {
-    fetch("https://www.emoji.family/api/emojis?group=food-drink")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((list) => {
-        if (!Array.isArray(list) || !list.length) return;
-        const EMOJI_FAMILY_PNG = "https://www.emoji.family/api/emojis";
-        const size = 40;
-        list.slice(0, 80).forEach((item) => {
-          const emoji = item.emoji;
-          const hexcode = (item.hexcode || "").replace(/_/g, "-");
-          if (!emoji || !hexcode) return;
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "app-emoji-picker-btn";
-          btn.title = item.annotation || emoji;
-          btn.setAttribute("aria-label", item.annotation || emoji);
+    const FALLBACK_EMOJIS = [
+      { emoji: "☕", hexcode: "2615", annotation: "Café" }, { emoji: "🍕", hexcode: "1f355", annotation: "Pizza" },
+      { emoji: "🍔", hexcode: "1f354", annotation: "Burger" }, { emoji: "🥐", hexcode: "1f950", annotation: "Croissant" },
+      { emoji: "🍩", hexcode: "1f369", annotation: "Donut" }, { emoji: "🧁", hexcode: "1f9c1", annotation: "Cupcake" },
+      { emoji: "🍪", hexcode: "1f36a", annotation: "Cookie" }, { emoji: "🍰", hexcode: "1f370", annotation: "Gâteau" },
+      { emoji: "🥗", hexcode: "1f957", annotation: "Salade" }, { emoji: "🍣", hexcode: "1f363", annotation: "Sushi" },
+      { emoji: "🌮", hexcode: "1f32e", annotation: "Taco" }, { emoji: "🍟", hexcode: "1f35f", annotation: "Frites" },
+      { emoji: "🥤", hexcode: "1f964", annotation: "Boisson" }, { emoji: "⭐", hexcode: "2b50", annotation: "Étoile" },
+      { emoji: "🎁", hexcode: "1f381", annotation: "Cadeau" }, { emoji: "❤️", hexcode: "2764-fe0f", annotation: "Cœur" },
+    ];
+    function renderPicker(list) {
+      if (!Array.isArray(list) || !list.length) return;
+      const pngBase = "https://www.emoji.family/api/emojis";
+      const size = 40;
+      list.slice(0, 80).forEach((item) => {
+        const emoji = item.emoji;
+        const hexcode = (item.hexcode || "").replace(/_/g, "-");
+        if (!emoji) return;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "app-emoji-picker-btn";
+        btn.title = item.annotation || emoji;
+        btn.setAttribute("aria-label", item.annotation || emoji);
+        if (hexcode) {
           const img = document.createElement("img");
-          img.src = `${EMOJI_FAMILY_PNG}/${hexcode}/fluent/png/${size}`;
+          img.src = `${pngBase}/${hexcode}/fluent/png/${size}`;
           img.alt = "";
           img.width = size;
           img.height = size;
           img.loading = "lazy";
+          img.onerror = () => { btn.textContent = emoji; };
           btn.appendChild(img);
-          btn.dataset.emoji = emoji;
-          btn.addEventListener("click", () => {
-            stampEmojiEl.value = emoji;
-            emojiPickerEl.querySelectorAll(".app-emoji-picker-btn").forEach((b) => b.classList.remove("selected"));
-            btn.classList.add("selected");
-            if (typeof updatePersonnaliserPreview === "function") updatePersonnaliserPreview();
-          });
-          emojiPickerEl.appendChild(btn);
+        } else btn.textContent = emoji;
+        btn.dataset.emoji = emoji;
+        btn.addEventListener("click", () => {
+          stampEmojiEl.value = emoji;
+          emojiPickerEl.querySelectorAll(".app-emoji-picker-btn").forEach((b) => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          if (typeof updatePersonnaliserPreview === "function") updatePersonnaliserPreview();
         });
-        const current = (stampEmojiEl.value || "").trim();
-        if (current) {
-          const match = emojiPickerEl.querySelector(`.app-emoji-picker-btn[data-emoji="${current.replace(/"/g, "\\\"")}"]`);
-          if (match) match.classList.add("selected");
-        }
-      })
-      .catch(() => {});
+        emojiPickerEl.appendChild(btn);
+      });
+      const current = (stampEmojiEl.value || "").trim();
+      if (current) {
+        const match = emojiPickerEl.querySelector(`.app-emoji-picker-btn[data-emoji="${current.replace(/"/g, "\\\"")}"]`);
+        if (match) match.classList.add("selected");
+      }
+    }
+    const apiUrl = API_BASE ? `${API_BASE.replace(/\/$/, "")}/api/emojis?group=food-drink` : "https://www.emoji.family/api/emojis?group=food-drink";
+    fetch(apiUrl)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((list) => (Array.isArray(list) && list.length ? renderPicker(list) : renderPicker(FALLBACK_EMOJIS)))
+      .catch(() => renderPicker(FALLBACK_EMOJIS));
   }
 
   if (personnaliserLogo) {

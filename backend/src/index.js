@@ -18,6 +18,7 @@ import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
 import webPushRouter from "./routes/web-push.js";
 import deviceRouter from "./routes/device.js";
+import emojisRouter from "./routes/emojis.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus } from "./apns.js";
 
@@ -113,6 +114,7 @@ app.use("/api/payment", paymentRouter);
 app.use("/api/web-push", webPushRouter);
 app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
+app.use("/api/emojis", emojisRouter);
 app.use("/api/passes", passesRouter);
 app.use("/passes", passesRouter);
 
