@@ -305,13 +305,33 @@ function emojiFamilyUrl(codepoint, size = 128) {
 /** Charge l’icône personnalisée (ex. backend/assets/iconcafe.png). Pour une bonne qualité, fournir une image 128×128 ou 256×256 px ; on redimensionne d’abord en 128px puis en taille finale. */
 const iconsDir = join(assetsDir, "icons");
 
+/** Noms de fichiers alternatifs (cafe.png, pizza.png…) pour assets/icons/. Clé = code emoji. */
+const ICON_ALIASES = {
+  "2615": ["cafe", "iconcafe"],
+  "1f355": ["pizza"],
+  "1f354": ["burger"],
+  "1f32e": ["kebab"],
+  "1f363": ["sushi"],
+  "1f957": ["salade"],
+  "1f950": ["croissant"],
+  "1f356": ["steak"],
+  "1f35e": ["riz"],
+  "1f956": ["baguette"],
+  "1f381": ["giftgold", "giftsilver"],
+  "2705": ["checkvert"],
+};
+
 async function loadCustomStampImage(emojiKey, emojiPx) {
   const baseName = `icon_${emojiKey.replace(/-/g, "_")}.png`;
-  const paths = [
-    join(iconsDir, baseName),
-    join(assetsDir, baseName),
-    ...(emojiKey === "2615" ? [join(iconsDir, "iconcafe.png"), join(assetsDir, "iconcafe.png")] : []),
-  ];
+  const candidates = [baseName];
+  const aliases = ICON_ALIASES[emojiKey];
+  if (aliases) aliases.forEach((a) => candidates.push(`${a}.png`));
+  if (emojiKey === "2615") candidates.push("iconcafe.png");
+  const paths = [];
+  candidates.forEach((name) => {
+    paths.push(join(iconsDir, name));
+    paths.push(join(assetsDir, name));
+  });
   let customPath = null;
   for (const p of paths) {
     if (existsSync(p)) {
