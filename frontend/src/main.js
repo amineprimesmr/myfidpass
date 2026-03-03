@@ -1247,6 +1247,49 @@ function initAppDashboard(slug) {
     })
     .catch(() => {});
 
+  /** Grille d’icônes (Emoji.family Fluent) pour choisir l’emoji des tampons sans taper. */
+  const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
+  if (emojiPickerEl && stampEmojiEl) {
+    fetch("https://www.emoji.family/api/emojis?group=food-drink")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((list) => {
+        if (!Array.isArray(list) || !list.length) return;
+        const EMOJI_FAMILY_PNG = "https://www.emoji.family/api/emojis";
+        const size = 40;
+        list.slice(0, 80).forEach((item) => {
+          const emoji = item.emoji;
+          const hexcode = (item.hexcode || "").replace(/_/g, "-");
+          if (!emoji || !hexcode) return;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "app-emoji-picker-btn";
+          btn.title = item.annotation || emoji;
+          btn.setAttribute("aria-label", item.annotation || emoji);
+          const img = document.createElement("img");
+          img.src = `${EMOJI_FAMILY_PNG}/${hexcode}/fluent/png/${size}`;
+          img.alt = "";
+          img.width = size;
+          img.height = size;
+          img.loading = "lazy";
+          btn.appendChild(img);
+          btn.dataset.emoji = emoji;
+          btn.addEventListener("click", () => {
+            stampEmojiEl.value = emoji;
+            emojiPickerEl.querySelectorAll(".app-emoji-picker-btn").forEach((b) => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            if (typeof updatePersonnaliserPreview === "function") updatePersonnaliserPreview();
+          });
+          emojiPickerEl.appendChild(btn);
+        });
+        const current = (stampEmojiEl.value || "").trim();
+        if (current) {
+          const match = emojiPickerEl.querySelector(`.app-emoji-picker-btn[data-emoji="${current.replace(/"/g, "\\\"")}"]`);
+          if (match) match.classList.add("selected");
+        }
+      })
+      .catch(() => {});
+  }
+
   if (personnaliserLogo) {
     personnaliserLogo.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];

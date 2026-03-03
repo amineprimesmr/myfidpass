@@ -263,7 +263,9 @@ function createEmptyStampOutlinePng(strokeRgb) {
   return PNG.sync.write(png);
 }
 
-// Noto Color Emoji (Google) 128px — rendu plus proche des emojis « classiques » que Twemoji
+// Emoji.family Fluent (style cohérent, PNG) — priorité pour les passes
+const EMOJI_FAMILY_BASE = "https://www.emoji.family/api/emojis";
+// Noto Color Emoji (Google) 128px — fallback
 const NOTO_EMOJI_BASE = "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/128";
 const TWEMOJI_BASE = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72";
 const cacheEmojiPng = new Map();
@@ -294,6 +296,12 @@ function twemojiUrl(codepoint) {
   return `${TWEMOJI_BASE}/${twemojiPoint}.png`;
 }
 
+/** URL Emoji.family Fluent PNG (hexcode sans underscore, ex. 2615 ou 1f355). */
+function emojiFamilyUrl(codepoint, size = 128) {
+  const hex = codepoint.replace(/_/g, "-");
+  return `${EMOJI_FAMILY_BASE}/${hex}/fluent/png/${size}`;
+}
+
 /** Charge l’icône personnalisée (ex. backend/assets/iconcafe.png). Pour une bonne qualité, fournir une image 128×128 ou 256×256 px ; on redimensionne d’abord en 128px puis en taille finale. */
 async function loadCustomStampImage(emojiKey, emojiPx) {
   if (emojiKey !== "2615") return null;
@@ -321,8 +329,17 @@ async function fetchEmojiPng(emoji) {
     cacheEmojiPng.set(key, customBuf);
     return customBuf;
   }
-  if (key === "2615") {
-    return null;
+  try {
+    const efUrl = emojiFamilyUrl(key, 128);
+    const res = await fetch(efUrl);
+    if (res.ok) {
+      const buf = Buffer.from(await res.arrayBuffer());
+      const out = await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
+      cacheEmojiPng.set(key, out);
+      return out;
+    }
+  } catch (e) {
+    // ignore
   }
   try {
     const notoUrl = notoEmojiUrl(key);
