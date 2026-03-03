@@ -1,0 +1,36 @@
+# Icônes personnalisées (tampons / points sur la carte)
+
+Ce dossier contient les **PNG utilisés à la place des emojis** sur les passes (grille de tampons, points).  
+Si un fichier existe ici, il est utilisé en priorité ; sinon le backend utilise l’API Emoji.family ou des fallbacks.
+
+## Nommage
+
+- **`icon_XXXX.png`** — XXXX = code Unicode de l’emoji en minuscules.
+- Exemples : `icon_2615.png` (☕), `icon_1f355.png` (🍕), `icon_1f354.png` (🍔).
+- Pour un emoji à plusieurs codepoints : underscores, ex. `icon_2764_fe0f.png` (❤️). Souvent le code sans `_fe0f` suffit : `icon_2764.png`.
+- Rétrocompat café : `iconcafe.png` ou `icon_2615.png`.
+
+## Format
+
+- **Taille** : 128×128 px ou 256×256 px recommandé.
+- **Fond** : transparent (PNG).
+- **Style** : cohérent entre toutes les icônes (même trait, même rendu).
+
+## Liste des codes utiles (secteurs)
+
+| Fichier | Emoji | Secteur |
+|---------|--------|---------|
+| icon_2615.png | ☕ | Café, bar |
+| icon_1f355.png | 🍕 | Pizza, resto |
+| icon_1f354.png | 🍔 | Fast-food, burger |
+| icon_1f32e.png | 🌮 | Tacos, street food |
+| icon_1f950.png | 🥐 | Boulangerie |
+| icon_1f370.png | 🍰 | Pâtisserie |
+| icon_1f484.png | 💄 | Beauté |
+| icon_2702.png | ✂️ | Coiffure |
+| icon_1f6cd.png | 🛍️ | Commerce, retail |
+| icon_2b50.png | ⭐ | Générique, étoile |
+| icon_2764.png | ❤️ | Cœur, fidélité |
+| icon_1f381.png | 🎁 | Cadeau, récompense |
+
+Liste complète : voir `myfidpass/Docs/ICONES_CARTES_FIDELITE.md` (dans le repo app).

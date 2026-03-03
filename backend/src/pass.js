@@ -303,10 +303,23 @@ function emojiFamilyUrl(codepoint, size = 128) {
 }
 
 /** Charge l’icône personnalisée (ex. backend/assets/iconcafe.png). Pour une bonne qualité, fournir une image 128×128 ou 256×256 px ; on redimensionne d’abord en 128px puis en taille finale. */
+const iconsDir = join(assetsDir, "icons");
+
 async function loadCustomStampImage(emojiKey, emojiPx) {
-  if (emojiKey !== "2615") return null;
-  const customPath = join(assetsDir, "iconcafe.png");
-  if (!existsSync(customPath)) return null;
+  const baseName = `icon_${emojiKey.replace(/-/g, "_")}.png`;
+  const paths = [
+    join(iconsDir, baseName),
+    join(assetsDir, baseName),
+    ...(emojiKey === "2615" ? [join(iconsDir, "iconcafe.png"), join(assetsDir, "iconcafe.png")] : []),
+  ];
+  let customPath = null;
+  for (const p of paths) {
+    if (existsSync(p)) {
+      customPath = p;
+      break;
+    }
+  }
+  if (!customPath) return null;
   try {
     const buf = readFileSync(customPath);
     const transparent = { r: 0, g: 0, b: 0, alpha: 0 };

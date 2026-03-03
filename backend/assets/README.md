@@ -1,9 +1,10 @@
 # Assets pour la carte Apple Wallet (Store Card)
 
-## Deux niveaux
+## Trois niveaux
 
 1. **Dossier global** `backend/assets/` : logo, icon, strip utilisés par défaut pour tous les passes.
-2. **Par entreprise** `backend/assets/businesses/<business-id>/` : logo.png, icon.png, strip.png. Si présents, ils remplacent les globaux pour les passes de cette entreprise. Le `<business-id>` est l’UUID renvoyé à la création de l’entreprise (POST /api/businesses).
+2. **Icônes tampons** `backend/assets/icons/` : PNG personnalisés pour les emojis sur la carte (`icon_2615.png`, `icon_1f355.png`, etc.). Voir `icons/README.md`.
+3. **Par entreprise** `backend/assets/businesses/<business-id>/` : logo.png, icon.png, strip.png. Si présents, ils remplacent les globaux pour les passes de cette entreprise. Le `<business-id>` est l’UUID renvoyé à la création de l’entreprise (POST /api/businesses).
 
 ## Fichiers et dimensions (Apple)
 
