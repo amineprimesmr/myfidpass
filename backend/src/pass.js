@@ -233,6 +233,36 @@ function createEmptyStampPng(strokeRgb) {
   return PNG.sync.write(png);
 }
 
+/** Dessine uniquement le contour du cercle (anneau), pas le remplissage — fond transparent. */
+function drawCircleOutline(png, cx, cy, r, strokeRgb, strokeWidth = 2) {
+  const w = png.width;
+  const h = png.height;
+  const rOut = r + strokeWidth;
+  const rIn = Math.max(0, r - strokeWidth);
+  for (let y = Math.max(0, cy - rOut - 1); y <= Math.min(h - 1, cy + rOut + 1); y++) {
+    for (let x = Math.max(0, cx - rOut - 1); x <= Math.min(w - 1, cx + rOut + 1); x++) {
+      const d = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+      if (d > rIn && d <= rOut && strokeRgb) {
+        const i = (y * w + x) * 4;
+        png.data[i] = strokeRgb.r;
+        png.data[i + 1] = strokeRgb.g;
+        png.data[i + 2] = strokeRgb.b;
+        png.data[i + 3] = 255;
+      }
+    }
+  }
+}
+
+/** Cercle vide : uniquement le contour (fond transparent), pour laisser l’icône PNG bien visible. */
+function createEmptyStampOutlinePng(strokeRgb) {
+  const size = STAMP_SIZE;
+  const png = new PNG({ width: size, height: size });
+  png.data = Buffer.alloc(size * size * 4);
+  for (let i = 0; i < size * size * 4; i += 4) png.data[i + 3] = 0;
+  drawCircleOutline(png, size / 2, size / 2, STAMP_R - 2, strokeRgb, 2);
+  return PNG.sync.write(png);
+}
+
 // Noto Color Emoji (Google) 128px — rendu plus proche des emojis « classiques » que Twemoji
 const NOTO_EMOJI_BASE = "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/128";
 const TWEMOJI_BASE = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72";
@@ -264,14 +294,17 @@ function twemojiUrl(codepoint) {
   return `${TWEMOJI_BASE}/${twemojiPoint}.png`;
 }
 
-/** Charge l’icône personnalisée depuis backend/assets/ (ex. iconcafe.png) si elle existe. Utilisée pour ☕ en priorité. */
+/** Charge l’icône personnalisée depuis backend/assets/ (ex. iconcafe.png). Taille max pour qualité, fond transparent. */
 async function loadCustomStampImage(emojiKey, emojiPx) {
   if (emojiKey !== "2615") return null;
   const customPath = join(assetsDir, "iconcafe.png");
   if (!existsSync(customPath)) return null;
   try {
     const buf = readFileSync(customPath);
-    return await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
+    return await sharp(buf)
+      .resize(emojiPx, emojiPx, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toBuffer();
   } catch (e) {
     return null;
   }
@@ -280,7 +313,7 @@ async function loadCustomStampImage(emojiKey, emojiPx) {
 async function fetchEmojiPng(emoji) {
   const key = emojiToCodepoint(emoji);
   if (cacheEmojiPng.has(key)) return cacheEmojiPng.get(key);
-  const emojiPx = STAMP_SIZE - 8;
+  const emojiPx = key === "2615" ? STAMP_SIZE - 4 : STAMP_SIZE - 8;
   const customBuf = await loadCustomStampImage(key, emojiPx);
   if (customBuf) {
     cacheEmojiPng.set(key, customBuf);
@@ -316,7 +349,7 @@ async function fetchEmojiPng(emoji) {
   return null;
 }
 
-/** Crée un buffer PNG 76×76 : cercle rempli + emoji au centre (Twemoji). Utilise l’emoji choisi (ex. ☕) ou défaut ☕. */
+/** Cercle rempli + icône au centre. Icône café = 72px (qualité), padding 2. */
 async function createFilledStampWithEmojiPng(hexColor, stampEmoji = "☕") {
   const circleRgb = hexToRgb(hexColor || "#5d4e37");
   const circlePng = createFilledStampCirclePng(circleRgb);
@@ -324,7 +357,7 @@ async function createFilledStampWithEmojiPng(hexColor, stampEmoji = "☕") {
   try {
     const emojiBuf = await fetchEmojiPng(emojiChar);
     if (emojiBuf) {
-      const padding = 4;
+      const padding = 2;
       return await sharp(circlePng)
         .composite([{ input: emojiBuf, left: padding, top: padding }])
         .png()
@@ -348,15 +381,19 @@ function createFilledStampCirclePng(fillRgb) {
 
 /** Crée un buffer PNG 76×76 : cercle vide + emoji en filigrane (opacité 0.4) pour que l’emoji soit visible dans les cases vides. */
 async function createEmptyStampWithEmojiPng(strokeRgb, stampEmoji = "☕") {
-  const emptyPng = createEmptyStampPng(strokeRgb);
   const emojiChar = (typeof stampEmoji === "string" && stampEmoji.trim()) ? stampEmoji.trim()[0] : "☕";
+  const isCoffee = emojiToCodepoint(emojiChar) === "2615";
+  const emptyPng = isCoffee
+    ? createEmptyStampOutlinePng(strokeRgb)
+    : createEmptyStampPng(strokeRgb);
   try {
     const emojiBuf = await fetchEmojiPng(emojiChar);
     if (!emojiBuf) return emptyPng;
+    const opacity = isCoffee ? 0.75 : 0.6;
     const { data, info } = await sharp(emojiBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-    for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * 0.6);
+    for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * opacity);
     const fadedEmoji = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
-    const padding = 4;
+    const padding = isCoffee ? 2 : 4;
     return await sharp(emptyPng)
       .composite([{ input: fadedEmoji, left: padding, top: padding }])
       .png()
