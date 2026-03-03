@@ -264,10 +264,28 @@ function twemojiUrl(codepoint) {
   return `${TWEMOJI_BASE}/${twemojiPoint}.png`;
 }
 
+/** Charge l’icône personnalisée depuis backend/assets/ (ex. iconcafe.png) si elle existe. Utilisée pour ☕ en priorité. */
+async function loadCustomStampImage(emojiKey, emojiPx) {
+  if (emojiKey !== "2615") return null;
+  const customPath = join(assetsDir, "iconcafe.png");
+  if (!existsSync(customPath)) return null;
+  try {
+    const buf = readFileSync(customPath);
+    return await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
+  } catch (e) {
+    return null;
+  }
+}
+
 async function fetchEmojiPng(emoji) {
   const key = emojiToCodepoint(emoji);
   if (cacheEmojiPng.has(key)) return cacheEmojiPng.get(key);
   const emojiPx = STAMP_SIZE - 8;
+  const customBuf = await loadCustomStampImage(key, emojiPx);
+  if (customBuf) {
+    cacheEmojiPng.set(key, customBuf);
+    return customBuf;
+  }
   try {
     const notoUrl = notoEmojiUrl(key);
     const res = await fetch(notoUrl);
