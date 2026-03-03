@@ -746,6 +746,12 @@ export async function generatePass(member, business = null, options = {}) {
       value: stampRewardLabel ? `${stampMax} tampons = ${stampRewardLabel}` : `${stampMax} tampons = 1 offert`,
       textAlignment: "PKTextAlignmentCenter",
     });
+    pass.secondaryFields.push({
+      key: "hintBack",
+      label: "",
+      value: "Touchez (i) en bas à droite pour voir le détail (progression, récompense).",
+      textAlignment: "PKTextAlignmentCenter",
+    });
     if (!isSectorTemplate) {
       pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
     }
@@ -769,6 +775,12 @@ export async function generatePass(member, business = null, options = {}) {
       key: "rewardsFront",
       label: "Récompenses",
       value: tierLines.length > 0 ? tierLines.join(" · ") : "Paliers en magasin",
+      textAlignment: "PKTextAlignmentCenter",
+    });
+    pass.secondaryFields.push({
+      key: "hintBack",
+      label: "",
+      value: "Touchez (i) en bas à droite pour voir le détail (progression, récompense).",
       textAlignment: "PKTextAlignmentCenter",
     });
     if (!isSectorTemplate) {
@@ -806,49 +818,66 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  // Au dos du pass (visible quand on tape sur (i) dans Wallet) : récompenses / paliers — toujours afficher une ligne
-  if (format === "points") {
-    let tiers = business?.points_reward_tiers;
-    if (typeof tiers === "string" && tiers.trim()) {
-      try { tiers = JSON.parse(tiers); } catch (_) { tiers = []; }
-    }
-    const lines = Array.isArray(tiers)
-      ? tiers
-          .filter((t) => t != null && Number.isInteger(Number(t.points)))
-          .map((t) => `${t.points} pts = ${(t.label && String(t.label).trim()) || "Récompense"}`)
-      : [];
-    pass.backFields.push({
-      key: "rewards",
-      label: "Récompenses",
-      value: lines.length > 0 ? lines.join("\n") : "Paliers définis par le commerce. Demandez en magasin.",
-    });
-  } else if (format === "tampons") {
-    const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim();
-    pass.backFields.push({
-      key: "stampReward",
-      label: "Récompense",
-      value: rewardLabel ? `${stampMax} tampons = ${rewardLabel}` : `${stampMax} tampons = 1 offert`,
-    });
-  }
-
+  // ─── Dos du pass (visible par le CLIENT quand il tape sur (i) dans le Wallet) ───
+  // Ordre et libellés pensés pour que le client sache : où j'en suis, quelle récompense, combien il manque, conditions.
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const backContact = business?.back_contact || "contact@example.com";
-  pass.backFields.push(
-    { key: "terms", label: "Conditions", value: backTerms },
-    { key: "contact", label: "Contact", value: backContact }
-  );
-
-  // Lien au dos du pass : ouvre le site (ou la page du commerce) — cliquable sur iPhone
   const frontendUrl = (process.env.FRONTEND_URL || process.env.API_URL || "https://myfidpass.fr").replace(/\/$/, "");
   const backUrl = business?.slug
     ? `${frontendUrl}/?ref=pass&b=${encodeURIComponent(business.slug)}`
     : `${frontendUrl}/?ref=pass`;
-  pass.backFields.push({
-    key: "website",
-    label: "Voir en ligne",
-    value: backUrl,
-    dataDetectorTypes: ["PKDataDetectorTypeLink"],
-  });
+
+  if (format === "tampons") {
+    const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
+    const current = stamps ?? 0;
+    const rest = Math.max(0, stampMax - current);
+
+    pass.backFields.push(
+      { key: "progress", label: "Votre progression", value: `${current} / ${stampMax} tampons` },
+      { key: "reward", label: "Récompense", value: `${stampMax} tampons = ${rewardLabel}` },
+      {
+        key: "toUnlock",
+        label: "Pour l'obtenir",
+        value: rest === 0
+          ? "Récompense disponible ! Présentez cette carte en caisse."
+          : rest === 1
+            ? `Il vous manque 1 tampon pour avoir ${rewardLabel}.`
+            : `Il vous manque ${rest} tampons pour avoir ${rewardLabel}.`,
+      },
+      { key: "terms", label: "Conditions", value: backTerms },
+      { key: "contact", label: "Contact", value: backContact },
+      { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
+    );
+  } else {
+    const pts = Math.max(0, Math.floor(Number(member.points) || 0));
+    let tiers = business?.points_reward_tiers;
+    if (typeof tiers === "string" && tiers.trim()) {
+      try { tiers = JSON.parse(tiers); } catch (_) { tiers = []; }
+    }
+    const tierList = Array.isArray(tiers)
+      ? tiers.filter((t) => t != null && Number.isInteger(Number(t.points))).sort((a, b) => Number(a.points) - Number(b.points))
+      : [];
+    const rewardLines = tierList.map((t) => `${t.points} pts = ${(t.label && String(t.label).trim()) || "Récompense"}`);
+    const nextTier = tierList.find((t) => Number(t.points) > pts);
+    const toUnlockText = nextTier
+      ? `Encore ${Number(nextTier.points) - pts} points pour : ${(nextTier.label && String(nextTier.label).trim()) || "récompense"}.`
+      : tierList.length > 0
+        ? "Vous avez assez de points pour une récompense. Présentez cette carte en magasin."
+        : "Consultez le commerce pour les paliers de récompenses.";
+
+    pass.backFields.push(
+      { key: "progress", label: "Votre progression", value: `${pts} points` },
+      {
+        key: "rewards",
+        label: "Récompenses",
+        value: rewardLines.length > 0 ? rewardLines.join("\n") : "Paliers définis par le commerce. Demandez en magasin.",
+      },
+      { key: "toUnlock", label: "Pour l'obtenir", value: toUnlockText },
+      { key: "terms", label: "Conditions", value: backTerms },
+      { key: "contact", label: "Contact", value: backContact },
+      { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
+    );
+  }
 
   return pass.getAsBuffer();
 }
