@@ -743,7 +743,7 @@ export async function generatePass(member, business = null, options = {}) {
     pass.secondaryFields.push({
       key: "stampRewardFront",
       label: "Récompense",
-      value: stampRewardLabel ? `${stampMax} tampons = ${stampRewardLabel}` : `Tapez (i) pour voir la récompense`,
+      value: stampRewardLabel ? `${stampMax} tampons = ${stampRewardLabel}` : `${stampMax} tampons = 1 offert`,
       textAlignment: "PKTextAlignmentCenter",
     });
     if (!isSectorTemplate) {
@@ -768,7 +768,7 @@ export async function generatePass(member, business = null, options = {}) {
     pass.secondaryFields.push({
       key: "rewardsFront",
       label: "Récompenses",
-      value: tierLines.length > 0 ? tierLines.join(" · ") : "Tapez (i) en bas à droite pour les paliers",
+      value: tierLines.length > 0 ? tierLines.join(" · ") : "Paliers en magasin",
       textAlignment: "PKTextAlignmentCenter",
     });
     if (!isSectorTemplate) {
