@@ -286,6 +286,9 @@ async function fetchEmojiPng(emoji) {
     cacheEmojiPng.set(key, customBuf);
     return customBuf;
   }
+  if (key === "2615") {
+    return null;
+  }
   try {
     const notoUrl = notoEmojiUrl(key);
     const res = await fetch(notoUrl);
