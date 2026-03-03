@@ -739,6 +739,13 @@ export async function generatePass(member, business = null, options = {}) {
       value: stampHint,
       textAlignment: "PKTextAlignmentCenter",
     });
+    const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim();
+    pass.secondaryFields.push({
+      key: "stampRewardFront",
+      label: "Récompense",
+      value: stampRewardLabel ? `${stampMax} tampons = ${stampRewardLabel}` : `Tapez (i) pour voir la récompense`,
+      textAlignment: "PKTextAlignmentCenter",
+    });
     if (!isSectorTemplate) {
       pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
     }
@@ -750,6 +757,19 @@ export async function generatePass(member, business = null, options = {}) {
       value: pointsValue,
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tu as maintenant %@ points !",
+    });
+    let tiers = business?.points_reward_tiers;
+    if (typeof tiers === "string" && tiers.trim()) {
+      try { tiers = JSON.parse(tiers); } catch (_) { tiers = []; }
+    }
+    const tierLines = Array.isArray(tiers)
+      ? tiers.filter((t) => t != null && Number.isInteger(Number(t.points))).map((t) => `${t.points} pts = ${(t.label && String(t.label).trim()) || "Récompense"}`)
+      : [];
+    pass.secondaryFields.push({
+      key: "rewardsFront",
+      label: "Récompenses",
+      value: tierLines.length > 0 ? tierLines.join(" · ") : "Tapez (i) en bas à droite pour les paliers",
+      textAlignment: "PKTextAlignmentCenter",
     });
     if (!isSectorTemplate) {
       pass.secondaryFields.push({ key: "level", label: "Niveau", value: level });
