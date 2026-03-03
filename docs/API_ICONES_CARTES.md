@@ -1,61 +1,32 @@
-# API icônes pour les cartes fidélité
+# Icônes des cartes fidélité (tampons / points)
 
-MyFidpass utilise des **icônes emoji** (style cohérent, haute qualité) pour les tampons et points sur les passes Apple Wallet / Google Wallet, sans avoir à importer manuellement des images.
-
----
-
-## Source principale : Emoji.family (Fluent)
-
-- **API** : https://www.emoji.family  
-- **Gratuit**, sans clé, limites raisonnables.
-- **Style** : pack **Fluent** (propre, cohérent).
-- **Format** : PNG, taille paramétrable.
-
-### Utilisation dans le projet
-
-1. **Backend (génération des passes)**  
-   Fichier : `backend/src/pass.js`  
-   - Pour chaque emoji (tampon / points), le backend demande en priorité l’image à Emoji.family :  
-     `GET https://www.emoji.family/api/emojis/{hexcode}/fluent/png/128`  
-   - Si la requête échoue, fallback sur **Noto** (Google) puis **Twemoji** (Twitter).
-
-2. **Frontend (dashboard SaaS)**  
-   - Grille « Choisir une icône » dans **Ma Carte** (règles tampons) :  
-     - Liste : `GET https://www.emoji.family/api/emojis?group=food-drink`  
-     - Miniatures : `GET https://www.emoji.family/api/emojis/{hexcode}/fluent/png/40`  
-   - Au clic, l’emoji est mis dans le champ « Emoji des tampons » et le pass utilise cette valeur.
-
-### Exemples d’URLs (PNG)
-
-- Café 128px : `https://www.emoji.family/api/emojis/2615/fluent/png/128`  
-- Pizza 64px : `https://www.emoji.family/api/emojis/1f355/fluent/png/64`  
-- Burger : `https://www.emoji.family/api/emojis/1f354/fluent/png/128`  
-
-Hexcode = code Unicode en minuscules, sans préfixe (ex. `2615` pour ☕, `1f355` pour 🍕).
+MyFidpass utilise **uniquement des PNG locaux** pour les icônes des tampons et points sur les passes Apple Wallet. Aucune API externe (Emoji.family, Noto, Twemoji, etc.).
 
 ---
 
-## Fallbacks (backend)
+## Où sont les icônes
 
-- **Noto Color Emoji** (Google) :  
-  `https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/128/emoji_u{codepoint}.png`
-- **Twemoji** (Twitter) :  
-  `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/{codepoint}.png`
+- **Backend (génération du pass)** : `backend/assets/icons/`  
+  Les fichiers sont lus au moment de générer le pass. Nommage : `icon_XXXX.png` (code Unicode) ou alias : `cafe.png`, `pizza.png`, `burger.png`, etc. Voir `backend/assets/icons/README.md`.
+
+- **Frontend (grille de choix)** : `frontend/public/assets/icons/`  
+  Les mêmes noms sont servis en `/assets/icons/xxx.png` pour la grille « Choisir une icône » dans Ma Carte (règles tampons).
+
+- **Mapping emoji → fichier** :  
+  Le backend et le frontend utilisent le même mapping (code emoji → nom de fichier). Ex. ☕ → `cafe.png` ou `icon_2615.png`, 🍕 → `pizza.png` ou `icon_1f355.png`.
 
 ---
 
 ## Données stockées
 
-- En base et dans l’API : **un caractère emoji** (ex. `☕`, `🍕`), pas l’URL.
-- Le backend convertit cet emoji en hexcode et appelle Emoji.family (ou les fallbacks) au moment de générer le pass.
+- En base et dans l’API : **un caractère emoji** (ex. `☕`, `🍕`).  
+- À la génération du pass, le backend convertit cet emoji en code (ex. `2615`, `1f355`) et charge le PNG correspondant depuis `backend/assets/icons/` (ou `assets/`). Si aucun fichier n’existe, le tampon n’a pas d’icône (cercle seul ou strip sans icônes).
 
 ---
 
-## Autres options (non utilisées actuellement)
+## Ajouter une icône
 
-- **Fluent Emoji 3D** (jsDelivr) : WebP, style 3D Microsoft.  
-  `https://cdn.jsdelivr.net/npm/@lobehub/fluent-emoji-3d@1.1.0/assets/{hexcode}.webp`
-- **Swiftbite Icons** : API dédiée food, clé sur demande (beta).
-- **Wicked Food** : visuels 3D type « clay », pas d’API d’image documentée.
+1. Ajouter le PNG dans `backend/assets/icons/` (et éventuellement dans `frontend/public/assets/icons/` pour l’aperçu web).
+2. Nom : `icon_XXXX.png` (XXXX = code Unicode de l’emoji) ou ajouter un alias dans `ICON_ALIASES` dans `pass.js` et dans `CUSTOM_ICON_PATHS` dans le frontend.
 
-Pour toute évolution (autre pack, cache, proxy), adapter `pass.js` et le sélecteur dans le frontend.
+Liste des codes et secteurs : voir `myfidpass/Docs/ICONES_CARTES_FIDELITE.md` (repo app).

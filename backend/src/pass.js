@@ -263,13 +263,6 @@ function createEmptyStampOutlinePng(strokeRgb) {
   return PNG.sync.write(png);
 }
 
-// Emoji.family Fluent (style cohérent, PNG) — priorité pour les passes
-const EMOJI_FAMILY_BASE = "https://www.emoji.family/api/emojis";
-// Noto Color Emoji (Google) 128px — fallback
-const NOTO_EMOJI_BASE = "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/128";
-const TWEMOJI_BASE = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72";
-const cacheEmojiPng = new Map();
-
 /** Retourne le codepoint pour un emoji (ex. "☕" → "2615", "🧋" → "1f9cb"). */
 function emojiToCodepoint(emoji) {
   if (!emoji || typeof emoji !== "string") return "2615";
@@ -285,22 +278,6 @@ function emojiToCodepoint(emoji) {
   return parts.length ? parts.join("_") : "2615";
 }
 
-/** URL Noto : emoji_u2615.png (underscore entre codepoints). */
-function notoEmojiUrl(codepoint) {
-  return `${NOTO_EMOJI_BASE}/emoji_u${codepoint}.png`;
-}
-
-/** URL Twemoji : 2615.png. */
-function twemojiUrl(codepoint) {
-  const twemojiPoint = codepoint.replace(/_/g, "-");
-  return `${TWEMOJI_BASE}/${twemojiPoint}.png`;
-}
-
-/** URL Emoji.family Fluent PNG (hexcode sans underscore, ex. 2615 ou 1f355). */
-function emojiFamilyUrl(codepoint, size = 128) {
-  const hex = codepoint.replace(/_/g, "-");
-  return `${EMOJI_FAMILY_BASE}/${hex}/fluent/png/${size}`;
-}
 
 /** Charge l’icône personnalisée (ex. backend/assets/iconcafe.png). Pour une bonne qualité, fournir une image 128×128 ou 256×256 px ; on redimensionne d’abord en 128px puis en taille finale. */
 const iconsDir = join(assetsDir, "icons");
@@ -353,52 +330,11 @@ async function loadCustomStampImage(emojiKey, emojiPx) {
   }
 }
 
+/** Récupère le buffer PNG de l’icône tampon : uniquement depuis assets/icons/ (icon_XXXX.png ou alias). Aucune API externe. */
 async function fetchEmojiPng(emoji) {
   const key = emojiToCodepoint(emoji);
-  if (cacheEmojiPng.has(key)) return cacheEmojiPng.get(key);
   const emojiPx = key === "2615" ? STAMP_SIZE - 4 : STAMP_SIZE - 8;
-  const customBuf = await loadCustomStampImage(key, emojiPx);
-  if (customBuf) {
-    cacheEmojiPng.set(key, customBuf);
-    return customBuf;
-  }
-  try {
-    const efUrl = emojiFamilyUrl(key, 128);
-    const res = await fetch(efUrl);
-    if (res.ok) {
-      const buf = Buffer.from(await res.arrayBuffer());
-      const out = await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
-      cacheEmojiPng.set(key, out);
-      return out;
-    }
-  } catch (e) {
-    // ignore
-  }
-  try {
-    const notoUrl = notoEmojiUrl(key);
-    const res = await fetch(notoUrl);
-    if (res.ok) {
-      const buf = Buffer.from(await res.arrayBuffer());
-      const out = await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
-      cacheEmojiPng.set(key, out);
-      return out;
-    }
-  } catch (e) {
-    // ignore
-  }
-  try {
-    const twUrl = twemojiUrl(key);
-    const res = await fetch(twUrl);
-    if (res.ok) {
-      const buf = Buffer.from(await res.arrayBuffer());
-      const out = await sharp(buf).resize(emojiPx, emojiPx).png().toBuffer();
-      cacheEmojiPng.set(key, out);
-      return out;
-    }
-  } catch (e) {
-    console.warn("[PassKit] fetchEmojiPng failed:", e?.message);
-  }
-  return null;
+  return loadCustomStampImage(key, emojiPx);
 }
 
 /** Cercle rempli + icône au centre. Icône café = 72px (qualité), padding 2. */

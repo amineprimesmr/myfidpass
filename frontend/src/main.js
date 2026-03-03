@@ -1256,7 +1256,7 @@ function initAppDashboard(slug) {
       "1f363": "sushi.png", "1f957": "salade.png", "1f950": "croissant.png", "1f356": "steak.png",
       "1f35e": "riz.png", "1f956": "baguette.png", "1f381": "giftgold.png", "2705": "checkvert.png",
     };
-    const FALLBACK_EMOJIS = [
+    const STAMP_ICONS = [
       { emoji: "☕", hexcode: "2615", annotation: "Café" }, { emoji: "🍕", hexcode: "1f355", annotation: "Pizza" },
       { emoji: "🍔", hexcode: "1f354", annotation: "Burger" }, { emoji: "🥐", hexcode: "1f950", annotation: "Croissant" },
       { emoji: "🥗", hexcode: "1f957", annotation: "Salade" }, { emoji: "🍣", hexcode: "1f363", annotation: "Sushi" },
@@ -1266,9 +1266,8 @@ function initAppDashboard(slug) {
     ];
     function renderPicker(list) {
       if (!Array.isArray(list) || !list.length) return;
-      const pngBase = "https://www.emoji.family/api/emojis";
       const size = 40;
-      (list.slice ? list.slice(0, 80) : list).forEach((item) => {
+      list.forEach((item) => {
         const emoji = item.emoji;
         const hexcode = (item.hexcode || "").replace(/_/g, "-");
         const norm = hexcode ? hexcode.split("-")[0] : "";
@@ -1279,7 +1278,7 @@ function initAppDashboard(slug) {
         btn.title = item.annotation || emoji;
         btn.setAttribute("aria-label", item.annotation || emoji);
         const customFile = CUSTOM_ICON_PATHS[norm];
-        const imgSrc = customFile ? `${ASSETS_ICONS}/${customFile}` : (hexcode ? `${pngBase}/${hexcode}/fluent/png/${size}` : null);
+        const imgSrc = customFile ? `${ASSETS_ICONS}/${customFile}` : null;
         if (imgSrc) {
           const img = document.createElement("img");
           img.src = imgSrc;
@@ -1305,7 +1304,7 @@ function initAppDashboard(slug) {
         if (match) match.classList.add("selected");
       }
     }
-    renderPicker(FALLBACK_EMOJIS);
+    renderPicker(STAMP_ICONS);
   }
 
   if (personnaliserLogo) {

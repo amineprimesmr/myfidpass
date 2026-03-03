@@ -1,7 +1,7 @@
 # Icônes personnalisées (tampons / points sur la carte)
 
 Ce dossier contient les **PNG utilisés à la place des emojis** sur les passes (grille de tampons, points).  
-Si un fichier existe ici, il est utilisé en priorité ; sinon le backend utilise l’API Emoji.family ou des fallbacks.
+Seules les images de ce dossier (et de `assets/` à la racine) sont utilisées pour les tampons sur le pass. Aucune API externe.
 
 ## Nommage
 
