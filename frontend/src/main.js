@@ -1250,32 +1250,39 @@ function initAppDashboard(slug) {
   /** Grille d’icônes (Emoji.family Fluent) pour choisir l’emoji des tampons sans taper. */
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
   if (emojiPickerEl && stampEmojiEl) {
+    const ASSETS_ICONS = "/assets/icons";
+    const CUSTOM_ICON_PATHS = {
+      "2615": "cafe.png", "1f355": "pizza.png", "1f354": "burger.png", "1f32e": "kebab.png",
+      "1f363": "sushi.png", "1f957": "salade.png", "1f950": "croissant.png", "1f356": "steak.png",
+      "1f35e": "riz.png", "1f956": "baguette.png", "1f381": "giftgold.png", "2705": "checkvert.png",
+    };
     const FALLBACK_EMOJIS = [
       { emoji: "☕", hexcode: "2615", annotation: "Café" }, { emoji: "🍕", hexcode: "1f355", annotation: "Pizza" },
       { emoji: "🍔", hexcode: "1f354", annotation: "Burger" }, { emoji: "🥐", hexcode: "1f950", annotation: "Croissant" },
-      { emoji: "🍩", hexcode: "1f369", annotation: "Donut" }, { emoji: "🧁", hexcode: "1f9c1", annotation: "Cupcake" },
-      { emoji: "🍪", hexcode: "1f36a", annotation: "Cookie" }, { emoji: "🍰", hexcode: "1f370", annotation: "Gâteau" },
       { emoji: "🥗", hexcode: "1f957", annotation: "Salade" }, { emoji: "🍣", hexcode: "1f363", annotation: "Sushi" },
-      { emoji: "🌮", hexcode: "1f32e", annotation: "Taco" }, { emoji: "🍟", hexcode: "1f35f", annotation: "Frites" },
-      { emoji: "🥤", hexcode: "1f964", annotation: "Boisson" }, { emoji: "⭐", hexcode: "2b50", annotation: "Étoile" },
-      { emoji: "🎁", hexcode: "1f381", annotation: "Cadeau" }, { emoji: "❤️", hexcode: "2764-fe0f", annotation: "Cœur" },
+      { emoji: "🌮", hexcode: "1f32e", annotation: "Taco" }, { emoji: "🍗", hexcode: "1f356", annotation: "Steak" },
+      { emoji: "🍚", hexcode: "1f35e", annotation: "Riz" }, { emoji: "🥖", hexcode: "1f956", annotation: "Baguette" },
+      { emoji: "🎁", hexcode: "1f381", annotation: "Cadeau" }, { emoji: "✅", hexcode: "2705", annotation: "Validé" },
     ];
     function renderPicker(list) {
       if (!Array.isArray(list) || !list.length) return;
       const pngBase = "https://www.emoji.family/api/emojis";
       const size = 40;
-      list.slice(0, 80).forEach((item) => {
+      (list.slice ? list.slice(0, 80) : list).forEach((item) => {
         const emoji = item.emoji;
         const hexcode = (item.hexcode || "").replace(/_/g, "-");
+        const norm = hexcode ? hexcode.split("-")[0] : "";
         if (!emoji) return;
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "app-emoji-picker-btn";
         btn.title = item.annotation || emoji;
         btn.setAttribute("aria-label", item.annotation || emoji);
-        if (hexcode) {
+        const customFile = CUSTOM_ICON_PATHS[norm];
+        const imgSrc = customFile ? `${ASSETS_ICONS}/${customFile}` : (hexcode ? `${pngBase}/${hexcode}/fluent/png/${size}` : null);
+        if (imgSrc) {
           const img = document.createElement("img");
-          img.src = `${pngBase}/${hexcode}/fluent/png/${size}`;
+          img.src = imgSrc;
           img.alt = "";
           img.width = size;
           img.height = size;
@@ -1298,11 +1305,7 @@ function initAppDashboard(slug) {
         if (match) match.classList.add("selected");
       }
     }
-    const apiUrl = API_BASE ? `${API_BASE.replace(/\/$/, "")}/api/emojis?group=food-drink` : "https://www.emoji.family/api/emojis?group=food-drink";
-    fetch(apiUrl)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((list) => (Array.isArray(list) && list.length ? renderPicker(list) : renderPicker(FALLBACK_EMOJIS)))
-      .catch(() => renderPicker(FALLBACK_EMOJIS));
+    renderPicker(FALLBACK_EMOJIS);
   }
 
   if (personnaliserLogo) {
