@@ -5,10 +5,11 @@ Si un fichier existe ici, il est utilisé en priorité ; sinon le backend utilis
 
 ## Nommage
 
-- **`icon_XXXX.png`** — XXXX = code Unicode de l’emoji en minuscules.
-- Exemples : `icon_2615.png` (☕), `icon_1f355.png` (🍕), `icon_1f354.png` (🍔).
-- Pour un emoji à plusieurs codepoints : underscores, ex. `icon_2764_fe0f.png` (❤️). Souvent le code sans `_fe0f` suffit : `icon_2764.png`.
-- Rétrocompat café : `iconcafe.png` ou `icon_2615.png`.
+Deux façons de nommer (toutes deux reconnues) :
+
+- **Par code Unicode** : `icon_XXXX.png` (ex. `icon_2615.png`, `icon_1f355.png`). Plusieurs codepoints : `icon_2764_fe0f.png` ou `icon_2764.png`.
+- **Noms courts (alias)** : `cafe.png`, `pizza.png`, `burger.png`, `kebab.png`, `sushi.png`, `salade.png`, `croissant.png`, `steak.png`, `riz.png`, `baguette.png`, `giftgold.png`, `giftsilver.png`, `checkvert.png`, `iconcafe.png`.
+- Priorité : `assets/icons/` puis `assets/` à la racine.
 
 ## Format
 
