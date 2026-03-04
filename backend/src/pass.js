@@ -284,19 +284,24 @@ const iconsDir = resolve(assetsDir, "icons");
 const iconsDirFallback = resolve(process.cwd(), "backend", "assets", "icons");
 const STAMP_ICONS_DIR = existsSync(iconsDir) ? iconsDir : (existsSync(iconsDirFallback) ? iconsDirFallback : iconsDir);
 
-function listStampIconFiles() {
+const STAMP_ICONS_RAW = new Map();
+function loadStampIconsAtStartup() {
+  if (!existsSync(STAMP_ICONS_DIR)) return;
   try {
-    if (!existsSync(STAMP_ICONS_DIR)) return [];
-    return readdirSync(STAMP_ICONS_DIR, { withFileTypes: true })
-      .filter((e) => e.isFile() && e.name.toLowerCase().endsWith(".png"))
-      .map((e) => e.name);
-  } catch {
-    return [];
-  }
+    const files = readdirSync(STAMP_ICONS_DIR, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.toLowerCase().endsWith(".png"));
+    for (const e of files) {
+      const name = e.name.replace(/\.png$/i, "");
+      const p = join(STAMP_ICONS_DIR, e.name);
+      try {
+        STAMP_ICONS_RAW.set(name, readFileSync(p));
+      } catch (_) {}
+    }
+  } catch (_) {}
 }
-const STAMP_ICONS_LIST = listStampIconFiles();
+loadStampIconsAtStartup();
 if (process.env.NODE_ENV === "production") {
-  console.log("[PassKit] Icônes tampons:", STAMP_ICONS_DIR, "→", STAMP_ICONS_LIST.length, "fichiers:", STAMP_ICONS_LIST.slice(0, 12).join(", ") + (STAMP_ICONS_LIST.length > 12 ? "…" : ""));
+  console.log("[PassKit] Icônes tampons préchargées:", STAMP_ICONS_DIR, "→", STAMP_ICONS_RAW.size, "fichiers");
 }
 
 const ICON_ALIASES = {
@@ -315,33 +320,29 @@ const ICON_ALIASES = {
 };
 
 async function loadCustomStampImage(emojiKey, emojiPx) {
-  const baseName = `icon_${emojiKey.replace(/-/g, "_")}.png`;
+  const baseName = `icon_${emojiKey.replace(/-/g, "_")}`;
   const candidates = [baseName];
   const aliases = ICON_ALIASES[emojiKey];
-  if (aliases) aliases.forEach((a) => candidates.push(`${a}.png`));
-  if (emojiKey === "2615") candidates.push("iconcafe.png");
-  let customPath = null;
+  if (aliases) aliases.forEach((a) => candidates.push(a));
+  if (emojiKey === "2615") candidates.push("iconcafe");
+  let rawBuf = null;
   for (const name of candidates) {
-    const p = join(STAMP_ICONS_DIR, name);
-    if (existsSync(p)) {
-      customPath = p;
-      break;
-    }
+    rawBuf = STAMP_ICONS_RAW.get(name);
+    if (rawBuf) break;
   }
-  if (!customPath) {
-    console.warn("[PassKit] Aucune icône tampon pour", emojiKey, "dans", STAMP_ICONS_DIR, "— candidats:", candidates.join(", "));
+  if (!rawBuf) {
+    console.warn("[PassKit] Aucune icône préchargée pour", emojiKey, "— candidats:", candidates.join(", "));
     return null;
   }
   try {
-    const buf = readFileSync(customPath);
     const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
-    return await sharp(buf)
+    return await sharp(Buffer.from(rawBuf))
       .resize(128, 128, { fit: "contain", background: transparent })
       .resize(emojiPx, emojiPx, { fit: "contain", background: transparent })
       .png()
       .toBuffer();
   } catch (e) {
-    console.warn("[PassKit] Erreur lecture icône", customPath, e?.message);
+    console.warn("[PassKit] Erreur resize icône", emojiKey, e?.message);
     return null;
   }
 }
