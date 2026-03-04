@@ -347,10 +347,39 @@ async function loadCustomStampImage(emojiKey, emojiPx) {
   }
 }
 
-/** Récupère le buffer PNG de l’icône tampon : uniquement depuis assets/icons/ (icon_XXXX.png ou alias). Aucune API externe. */
-async function fetchEmojiPng(emoji) {
-  const key = emojiToCodepoint(emoji);
-  const emojiPx = key === "2615" ? STAMP_SIZE - 4 : STAMP_SIZE - 8;
+/**
+ * Récupère le buffer PNG de l’icône tampon : uniquement depuis assets/icons/ (fichiers du dossier).
+ * stampEmoji peut être un emoji (☕) ou un nom d’icône (cafe, StampCafe). Aucune API externe.
+ */
+async function fetchEmojiPng(stampEmoji) {
+  const str = (stampEmoji && String(stampEmoji).trim()) || "";
+  const emojiPxDefault = STAMP_SIZE - 8;
+
+  // 1) Si ça ressemble à un nom d’icône (lettres, chiffres, pas d’emoji), lookup direct dans le dossier
+  const directName = str.replace(/\.png$/i, "").replace(/\s/g, "");
+  if (directName.length >= 2 && directName.length <= 32 && !/[^\w\-_]/.test(directName)) {
+    const normalized = directName.replace(/^Stamp/i, "").toLowerCase();
+    const candidates = [directName, normalized];
+    for (const name of candidates) {
+      const buf = STAMP_ICONS_RAW.get(name);
+      if (buf) {
+        try {
+          const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+          return await sharp(Buffer.from(buf))
+            .resize(128, 128, { fit: "contain", background: transparent })
+            .resize(emojiPxDefault, emojiPxDefault, { fit: "contain", background: transparent })
+            .png()
+            .toBuffer();
+        } catch (e) {
+          console.warn("[PassKit] resize icône par nom failed:", name, e?.message);
+        }
+      }
+    }
+  }
+
+  // 2) Lookup par codepoint emoji (ex. ☕ → 2615 → cafe, icon_2615)
+  const key = emojiToCodepoint(str || "☕");
+  const emojiPx = key === "2615" ? STAMP_SIZE - 4 : emojiPxDefault;
   return loadCustomStampImage(key, emojiPx);
 }
 
@@ -761,7 +790,8 @@ export async function generatePass(member, business = null, options = {}) {
       pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
     }
   } else {
-    const pointsValue = stampEmoji ? `${stampEmoji} ${member.points}` : String(member.points);
+    // Affichage points : nombre uniquement (pas d’emoji). Les icônes sont sur le strip (images du dossier assets/icons).
+    const pointsValue = String(member.points);
     pass.primaryFields.push({
       key: "points",
       label: "Points",
