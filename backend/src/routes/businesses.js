@@ -1232,7 +1232,7 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
   if (req.query.organization_name != null) opts.organizationName = req.query.organization_name;
   if (req.query.background_color != null) opts.background_color = req.query.background_color;
   if (req.query.foreground_color != null) opts.foreground_color = req.query.foreground_color;
-  if (req.query.stamp_emoji != null) opts.stamp_emoji = req.query.stamp_emoji;
+  opts.stamp_emoji = req.query.stamp_emoji ?? business.stamp_emoji ?? undefined;
   if (req.query.required_stamps != null) {
     const n = parseInt(req.query.required_stamps, 10);
     if (Number.isInteger(n) && n > 0) opts.required_stamps = n;

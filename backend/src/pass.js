@@ -1,7 +1,7 @@
 import { createHmac } from "crypto";
 import { PKPass } from "passkit-generator";
-import { readFileSync, existsSync } from "fs";
-import { join, dirname } from "path";
+import { readFileSync, readdirSync, existsSync } from "fs";
+import { join, dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { PNG } from "pngjs";
 import sharp from "sharp";
@@ -73,8 +73,8 @@ export function getPassAuthenticationToken(serialNumber) {
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const assetsDir = join(__dirname, "..", "assets");
-const certsDir = join(__dirname, "..", "certs");
+const assetsDir = resolve(__dirname, "..", "assets");
+const certsDir = resolve(__dirname, "..", "certs");
 
 /** Génère une icône PNG 29x29 (requise par Apple). Couleur grise par défaut, ou couleur du template (labelColor) pour un rendu plus pro. */
 function createDefaultIconBuffer(templateKey) {
@@ -280,9 +280,25 @@ function emojiToCodepoint(emoji) {
 
 
 /** Charge l’icône personnalisée (ex. backend/assets/iconcafe.png). Pour une bonne qualité, fournir une image 128×128 ou 256×256 px ; on redimensionne d’abord en 128px puis en taille finale. */
-const iconsDir = join(assetsDir, "icons");
+const iconsDir = resolve(assetsDir, "icons");
+const iconsDirFallback = resolve(process.cwd(), "backend", "assets", "icons");
+const STAMP_ICONS_DIR = existsSync(iconsDir) ? iconsDir : (existsSync(iconsDirFallback) ? iconsDirFallback : iconsDir);
 
-/** Noms de fichiers alternatifs (cafe.png, pizza.png…) pour assets/icons/. Clé = code emoji. */
+function listStampIconFiles() {
+  try {
+    if (!existsSync(STAMP_ICONS_DIR)) return [];
+    return readdirSync(STAMP_ICONS_DIR, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.toLowerCase().endsWith(".png"))
+      .map((e) => e.name);
+  } catch {
+    return [];
+  }
+}
+const STAMP_ICONS_LIST = listStampIconFiles();
+if (process.env.NODE_ENV === "production") {
+  console.log("[PassKit] Icônes tampons:", STAMP_ICONS_DIR, "→", STAMP_ICONS_LIST.length, "fichiers:", STAMP_ICONS_LIST.slice(0, 12).join(", ") + (STAMP_ICONS_LIST.length > 12 ? "…" : ""));
+}
+
 const ICON_ALIASES = {
   "2615": ["cafe", "iconcafe"],
   "1f355": ["pizza"],
@@ -304,19 +320,18 @@ async function loadCustomStampImage(emojiKey, emojiPx) {
   const aliases = ICON_ALIASES[emojiKey];
   if (aliases) aliases.forEach((a) => candidates.push(`${a}.png`));
   if (emojiKey === "2615") candidates.push("iconcafe.png");
-  const paths = [];
-  candidates.forEach((name) => {
-    paths.push(join(iconsDir, name));
-    paths.push(join(assetsDir, name));
-  });
   let customPath = null;
-  for (const p of paths) {
+  for (const name of candidates) {
+    const p = join(STAMP_ICONS_DIR, name);
     if (existsSync(p)) {
       customPath = p;
       break;
     }
   }
-  if (!customPath) return null;
+  if (!customPath) {
+    console.warn("[PassKit] Aucune icône tampon pour", emojiKey, "dans", STAMP_ICONS_DIR, "— candidats:", candidates.join(", "));
+    return null;
+  }
   try {
     const buf = readFileSync(customPath);
     const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
@@ -326,6 +341,7 @@ async function loadCustomStampImage(emojiKey, emojiPx) {
       .png()
       .toBuffer();
   } catch (e) {
+    console.warn("[PassKit] Erreur lecture icône", customPath, e?.message);
     return null;
   }
 }
@@ -424,8 +440,10 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
   const emojiForStamp = (stampEmoji && String(stampEmoji).trim()) || "☕";
   const iconBuf = await fetchEmojiPng(emojiForStamp);
   if (!iconBuf) {
+    if (process.env.NODE_ENV === "production") console.warn("[PassKit] Strip sans icônes (fichier introuvable pour emoji)", emojiToCodepoint(emojiForStamp));
     return baseStripBuf;
   }
+  if (process.env.NODE_ENV === "production") console.log("[PassKit] Strip tampons: emoji", emojiToCodepoint(emojiForStamp), "→ PNG du dossier", STAMP_ICONS_DIR);
 
   const composites = [];
   for (let i = 0; i < Math.min(stampMax, 10); i++) {
