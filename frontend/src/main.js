@@ -2627,6 +2627,19 @@ function initBuilderPage() {
     applySelection();
   }
 
+  function initWalletCardQRCodes() {
+    const base = API_BASE.replace(/\/$/, "");
+    document.querySelectorAll("#builder-wallet-slider .builder-wallet-card").forEach((card) => {
+      const templateId = card.getAttribute("data-template");
+      const img = card.querySelector(".builder-wallet-card-qr-img");
+      if (templateId && img) {
+        const url = `${base}/api/passes/demo?template=${encodeURIComponent(templateId)}`;
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=112&data=${encodeURIComponent(url)}`;
+      }
+    });
+  }
+  initWalletCardQRCodes();
+
   function updateDemoQR(templateId) {
     const qrEl = document.getElementById("builder-demo-qr");
     const nameEl = document.getElementById("builder-demo-template-name");

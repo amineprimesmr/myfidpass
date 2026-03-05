@@ -1323,6 +1323,18 @@
   border-radius: 0 0 8px 8px;
   color: #fff;
 }
+.builder-wallet-card-pts-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+.builder-wallet-card-pts-value {
+  font-size: clamp(1.1rem, 3.2vw, 1.45rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
 .builder-wallet-card-pts {
   font-size: clamp(0.9rem, 2.6vw, 1.1rem);
   font-weight: 800;
@@ -1334,23 +1346,24 @@
   letter-spacing: 0.08em;
   opacity: 0.92;
 }
-.builder-wallet-card-barcode {
-  height: 20px;
+.builder-wallet-card-qr {
   margin-top: auto;
   flex-shrink: 0;
-  background: #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 0.25rem;
+  padding: 0.35rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
 }
-.builder-wallet-card-barcode::after {
-  content: "";
+.builder-wallet-card-qr-img {
   display: block;
-  width: 88%;
-  height: 14px;
-  background: repeating-linear-gradient(90deg, #1a1a1a 0, #1a1a1a 1px, transparent 1px, transparent 2.5px);
-  border-radius: 2px;
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
 }
 /* Thèmes des cartes dans le mockup (style Wallet réaliste) */
 .builder-wallet-card-classic .builder-wallet-card-header {
@@ -1396,25 +1409,32 @@
   color: #fff;
 }
 .builder-wallet-card-fastfood-tampons .builder-wallet-card-label { color: #ffd54f; }
+.builder-wallet-card-fastfood-tampons { --wallet-stamp-fill: #ffd54f; }
 .builder-wallet-card-stamps {
-  font-size: clamp(0.85rem, 2.4vw, 1rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: clamp(0.7rem, 2vw, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0.95;
 }
 .builder-wallet-card-stamps-row {
   display: flex;
-  gap: 2px;
-  margin: 0.15rem 0;
+  gap: 3px;
+  margin: 0.35rem 0 0.2rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .builder-wallet-card-stamps-row .stamp {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.35);
+  border: 1.2px solid rgba(255, 255, 255, 0.7);
+  background: transparent;
   flex-shrink: 0;
 }
 .builder-wallet-card-stamps-row .stamp.filled {
-  background: #ffd54f;
+  background: var(--wallet-stamp-fill, #ffd54f);
+  border-color: var(--wallet-stamp-fill, #ffd54f);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 /* Beauté : rose poudré */
@@ -1429,6 +1449,7 @@
 }
 .builder-wallet-card-beauty-points .builder-wallet-card-label,
 .builder-wallet-card-beauty-tampons .builder-wallet-card-label { color: #fce4ec; }
+.builder-wallet-card-beauty-tampons { --wallet-stamp-fill: #fce4ec; }
 
 /* Coiffure : violet élégant */
 .builder-wallet-card-coiffure-points .builder-wallet-card-header,
@@ -1442,6 +1463,7 @@
 }
 .builder-wallet-card-coiffure-points .builder-wallet-card-label,
 .builder-wallet-card-coiffure-tampons .builder-wallet-card-label { color: #d1c4e0; }
+.builder-wallet-card-coiffure-tampons { --wallet-stamp-fill: #d1c4e0; }
 
 /* Boulangerie : or / blé */
 .builder-wallet-card-boulangerie-points .builder-wallet-card-header,
@@ -1455,6 +1477,7 @@
 }
 .builder-wallet-card-boulangerie-points .builder-wallet-card-label,
 .builder-wallet-card-boulangerie-tampons .builder-wallet-card-label { color: #fff8e1; }
+.builder-wallet-card-boulangerie-tampons { --wallet-stamp-fill: #fff8e1; }
 
 /* Boucherie : bordeaux */
 .builder-wallet-card-boucherie-points .builder-wallet-card-header,
@@ -1468,6 +1491,7 @@
 }
 .builder-wallet-card-boucherie-points .builder-wallet-card-label,
 .builder-wallet-card-boucherie-tampons .builder-wallet-card-label { color: #ffcdd2; }
+.builder-wallet-card-boucherie-tampons { --wallet-stamp-fill: #ffcdd2; }
 
 /* Café : marron café */
 .builder-wallet-card-cafe-points .builder-wallet-card-header,
@@ -1481,6 +1505,7 @@
 }
 .builder-wallet-card-cafe-points .builder-wallet-card-label,
 .builder-wallet-card-cafe-tampons .builder-wallet-card-label { color: #d7ccc8; }
+.builder-wallet-card-cafe-tampons { --wallet-stamp-fill: #d7ccc8; }
 
 .builder-wallet-card-pts-cafe .cafe-emoji {
   display: inline-block;
