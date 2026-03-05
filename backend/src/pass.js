@@ -5,8 +5,6 @@ import { join, dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { PNG } from "pngjs";
 import sharp from "sharp";
-import { getLevel } from "./db.js";
-
 /** Dimensions Apple pour le logo du pass : logo@2x = 320×100 px, logo = 160×50 px. */
 const LOGO_WIDTH_2X = 320;
 const LOGO_HEIGHT_2X = 100;
@@ -171,13 +169,13 @@ function createStripBuffer(templateKey, backgroundColorOverride) {
   return PNG.sync.write(png);
 }
 
-/** Dimensions strip Apple : 750×246. Tampons = icônes seules (sans cercle), grille remontée pour ne pas dépasser. */
+/** Dimensions strip Apple : 750×246. Tampons = icônes seules (sans cercle), grille remontée. Icônes plus grandes pour meilleure lisibilité. */
 const STRIP_W = 750;
 const STRIP_H = 246;
-const STAMP_R = 30;
+const STAMP_R = 42;
 const STAMP_SIZE = STAMP_R * 2;
 const STAMP_GAP = 10;
-const STAMP_TOP = 72;
+const STAMP_TOP = 58;
 
 function drawCircle(png, cx, cy, r, fillRgb, strokeRgb) {
   const w = png.width;
@@ -630,7 +628,6 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  const level = getLevel(member.points);
   const stampMax = options.required_stamps ?? options.stampMax ?? business?.required_stamps ?? 10;
   const useTampons = options.required_stamps != null || options.stampMax != null || (business?.required_stamps != null && business.required_stamps > 0);
   const programType = (options.program_type ?? business?.program_type)?.toLowerCase();
@@ -745,44 +742,11 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   if (format === "tampons") {
-    const rest = stampMax - stamps;
-    const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim();
-    let stampHint = "";
-    if (rewardLabel) {
-      stampHint = stamps <= 1
-        ? `${stamps} tampon — ${rest} pour ${rewardLabel}`
-        : `${stamps} tampons — ${rest} pour ${rewardLabel}`;
-    } else {
-      const isCafeStyle = options.template === "cafe" || (organizationName && /caf[eé]|coffee/i.test(organizationName)) || stampEmoji === "☕";
-      if (isCafeStyle) {
-        stampHint = stamps <= 1
-          ? `${stamps} café collecté — ${rest} pour en avoir un offert`
-          : `${stamps} cafés collectés — ${rest} pour en avoir un offert`;
-      } else if (options.template === "fastfood") {
-        stampHint = stamps <= 1
-          ? `${stamps} tampon collecté — ${rest} restants pour une récompense`
-          : `${stamps} tampons collectés — ${rest} restants pour une récompense`;
-      } else {
-        stampHint = `${stamps} / ${stampMax} — ${rest} restant${rest !== 1 ? "s" : ""} pour une récompense`;
-      }
-    }
-    pass.secondaryFields.push({
-      key: "stampHint",
-      label: "",
-      value: stampHint,
-      textAlignment: "PKTextAlignmentCenter",
-    });
     const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim();
     pass.secondaryFields.push({
       key: "stampRewardFront",
       label: "Récompense",
       value: stampRewardLabel ? `${stampMax} tampons = ${stampRewardLabel}` : `${stampMax} tampons = 1 offert`,
-      textAlignment: "PKTextAlignmentCenter",
-    });
-    pass.secondaryFields.push({
-      key: "hintBack",
-      label: "",
-      value: "Touchez (i) en bas à droite pour voir le détail (progression, récompense).",
       textAlignment: "PKTextAlignmentCenter",
     });
     if (!isSectorTemplate) {
@@ -807,18 +771,11 @@ export async function generatePass(member, business = null, options = {}) {
       : [];
     pass.secondaryFields.push({
       key: "rewardsFront",
-      label: "Récompenses",
+      label: "Récompense",
       value: tierLines.length > 0 ? tierLines.join(" · ") : "Paliers en magasin",
       textAlignment: "PKTextAlignmentCenter",
     });
-    pass.secondaryFields.push({
-      key: "hintBack",
-      label: "",
-      value: "Touchez (i) en bas à droite pour voir le détail (progression, récompense).",
-      textAlignment: "PKTextAlignmentCenter",
-    });
     if (!isSectorTemplate) {
-      pass.secondaryFields.push({ key: "level", label: "Niveau", value: level });
       pass.auxiliaryFields.push({ key: "member", label: "Membre", value: member.name });
     }
   }
