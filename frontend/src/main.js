@@ -1155,12 +1155,14 @@ function initAppDashboard(slug) {
     card.style.setProperty("--wallet-bg", bg);
     card.style.setProperty("--wallet-fg", fg);
     card.style.setProperty("--wallet-label", labelColor);
+    const stripColor = personnaliserStripHex?.value?.trim() || personnaliserStrip?.value || bg;
+    const stripHex = stripColor.startsWith("#") ? stripColor : "#" + stripColor;
     if (stripEl) {
-      stripEl.style.background = `linear-gradient(165deg, ${lightenHex(bg, 1.2)} 0%, ${bg} 50%, ${darkenHex(bg, 1.15)} 100%)`;
+      stripEl.style.background = stripHex;
     }
     const bodyEl = card?.querySelector(".app-wallet-preview-body");
     if (bodyEl) {
-      bodyEl.style.background = `linear-gradient(180deg, ${lightenHex(bg, 1.08)} 0%, ${bg} 100%)`;
+      bodyEl.style.background = bg.startsWith("#") ? bg : "#" + bg;
       bodyEl.style.color = fg;
     }
     orgEl.textContent = personnaliserOrg?.value?.trim() || "Votre commerce";
@@ -1175,8 +1177,8 @@ function initAppDashboard(slug) {
       walletLogo.classList.add("hidden");
     }
   }
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
 
   const personnaliserAddress = document.getElementById("app-personnaliser-address");
   const personnaliserCoordsDisplay = document.getElementById("app-personnaliser-coords-display");
