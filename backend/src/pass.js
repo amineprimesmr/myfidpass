@@ -169,13 +169,13 @@ function createStripBuffer(templateKey, backgroundColorOverride) {
   return PNG.sync.write(png);
 }
 
-/** Dimensions strip Apple : 750×246. Tampons = icônes seules (sans cercle), grille remontée. Icônes plus grandes pour meilleure lisibilité. */
+/** Dimensions strip Apple : 750×246. Tampons = icônes seules (sans cercle). Taille max pour 2 rangées de 5 (diam. 96 px). */
 const STRIP_W = 750;
 const STRIP_H = 246;
-const STAMP_R = 42;
+const STAMP_R = 48;
 const STAMP_SIZE = STAMP_R * 2;
-const STAMP_GAP = 10;
-const STAMP_TOP = 58;
+const STAMP_GAP = 8;
+const STAMP_TOP = 40;
 
 function drawCircle(png, cx, cy, r, fillRgb, strokeRgb) {
   const w = png.width;
@@ -628,8 +628,8 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  const stampMax = options.required_stamps ?? options.stampMax ?? business?.required_stamps ?? 10;
-  const useTampons = options.required_stamps != null || options.stampMax != null || (business?.required_stamps != null && business.required_stamps > 0);
+  const stampMax = 10;
+  const useTampons = options.required_stamps != null || options.stampMax != null || (business?.required_stamps != null && business?.required_stamps > 0);
   const programType = (options.program_type ?? business?.program_type)?.toLowerCase();
   const explicitFormat = programType === "points" ? "points" : programType === "stamps" ? "tampons" : null;
   const format = options.format || explicitFormat || (useTampons ? "tampons" : "points");
@@ -819,21 +819,9 @@ export async function generatePass(member, business = null, options = {}) {
 
   if (format === "tampons") {
     const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
-    const current = stamps ?? 0;
-    const rest = Math.max(0, stampMax - current);
 
     pass.backFields.push(
-      { key: "progress", label: "Votre progression", value: `${current} / ${stampMax} tampons` },
       { key: "reward", label: "Récompense", value: `${stampMax} tampons = ${rewardLabel}` },
-      {
-        key: "toUnlock",
-        label: "Pour l'obtenir",
-        value: rest === 0
-          ? "Récompense disponible ! Présentez cette carte en caisse."
-          : rest === 1
-            ? `Il vous manque 1 tampon pour avoir ${rewardLabel}.`
-            : `Il vous manque ${rest} tampons pour avoir ${rewardLabel}.`,
-      },
       { key: "terms", label: "Conditions", value: backTerms },
       { key: "contact", label: "Contact", value: backContact },
       { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }

@@ -1234,7 +1234,7 @@ function initAppDashboard(slug) {
       const sectorVal = data.sector ?? "";
       if (sectorEl) sectorEl.value = sectorVal;
       if (sectorStampsEl) sectorStampsEl.value = sectorVal;
-      if (requiredStampsEl != null) requiredStampsEl.value = data.required_stamps ?? data.requiredStamps ?? 10;
+      // En mode tampons : toujours 10 (champ supprimé). En mode points on ne modifie pas requiredStamps.
       if (stampEmojiEl) stampEmojiEl.value = data.stamp_emoji ?? data.stampEmoji ?? "";
       if (stampRewardLabelEl) stampRewardLabelEl.value = data.stamp_reward_label ?? data.stampRewardLabel ?? "";
       if (expiryMonthsEl != null) expiryMonthsEl.value = data.expiry_months ?? data.expiryMonths ?? "";
@@ -1434,7 +1434,8 @@ function initAppDashboard(slug) {
         }
         if (tiers.length) body.pointsRewardTiers = tiers;
       }
-      if (requiredStampsEl) body.requiredStamps = parseInt(requiredStampsEl.value, 10) || 10;
+      if (isStamps) body.requiredStamps = 10;
+      else if (requiredStampsEl) body.requiredStamps = parseInt(requiredStampsEl.value, 10) || 10;
       if (stampEmojiEl) body.stampEmoji = stampEmojiEl.value.trim() || undefined;
       if (stampRewardLabelEl) body.stampRewardLabel = stampRewardLabelEl.value.trim() || undefined;
       if (expiryMonthsEl && expiryMonthsEl.value.trim() !== "") {
