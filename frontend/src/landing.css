@@ -1507,11 +1507,11 @@
 .builder-wallet-card-cafe-tampons .builder-wallet-card-label { color: #d7ccc8; }
 .builder-wallet-card-cafe-tampons { --wallet-stamp-fill: #d7ccc8; }
 
-.builder-wallet-card-pts-cafe .cafe-emoji {
+.builder-wallet-card-cafe-points .cafe-emoji {
   display: inline-block;
-  font-size: 0.95em;
-  vertical-align: middle;
-  margin-right: 0.15em;
+  font-size: 0.9em;
+  vertical-align: -0.05em;
+  margin-right: 0.12em;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
 }
 .builder-wallet-card-stamps-cups .stamp-cup {
