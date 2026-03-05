@@ -1455,7 +1455,7 @@
   line-height: 1;
 }
 .builder-wallet-card-stamps-row .stamp.stamp-emoji {
-  font-size: clamp(0.65rem, 2vw, 0.85rem);
+  font-size: clamp(0.9rem, 2.8vw, 1.15rem);
   padding: 0;
 }
 .builder-wallet-card-stamps-row .stamp.stamp-emoji:not(.filled) {
@@ -1545,7 +1545,7 @@
 .builder-wallet-card-cafe-tampons { --wallet-stamp-fill: #d7ccc8; }
 
 .builder-wallet-card-stamps-cups .stamp-cup {
-  font-size: clamp(0.65rem, 2vw, 0.85rem);
+  font-size: clamp(0.9rem, 2.8vw, 1.15rem);
   line-height: 1;
   opacity: 0.45;
   filter: grayscale(0.5);
