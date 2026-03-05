@@ -148,7 +148,7 @@ function buildPassLocations(lat, lng, radiusMeters = 500, relevantText) {
   return points;
 }
 
-/** Génère un strip PNG 750x246. Dégradé qui se fond dans le fond. backgroundColorOverride : couleur choisie par l'utilisateur (ex. quand pas d'image de fond). */
+/** Génère un strip PNG 750x246 en couleur unie (pas de dégradé ni effet sombre). backgroundColorOverride : couleur choisie par l'utilisateur. */
 function createStripBuffer(templateKey, backgroundColorOverride) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
   const hex = backgroundColorOverride && /^#?[0-9A-Fa-f]{6}$/.test(backgroundColorOverride.replace(/^#/, ""))
@@ -157,37 +157,16 @@ function createStripBuffer(templateKey, backgroundColorOverride) {
   const base = hexToRgb(hex);
   const w = 750;
   const h = 246;
-  const blendRows = 20;
   const png = new PNG({ width: w, height: h });
   png.data = Buffer.alloc(w * h * 4);
-  for (let y = 0; y < h; y++) {
-    const t = y / h;
-    const inBlend = y >= h - blendRows;
-    let lighten;
-    if (inBlend) {
-      const blendT = (y - (h - blendRows)) / blendRows;
-      lighten = 0.92 + blendT * 0.08;
-    } else {
-      lighten = 0.78 + t * 0.2;
-      const shine = Math.exp(-((t - 0.15) ** 2) / 0.06) * 0.18;
-      lighten = Math.min(1, lighten + shine);
-    }
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      png.data[i] = Math.round(Math.min(255, base.r * lighten));
-      png.data[i + 1] = Math.round(Math.min(255, base.g * lighten));
-      png.data[i + 2] = Math.round(Math.min(255, base.b * lighten));
-      png.data[i + 3] = 255;
-    }
-  }
-  for (let y = h - 3; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      png.data[i] = base.r;
-      png.data[i + 1] = base.g;
-      png.data[i + 2] = base.b;
-      png.data[i + 3] = 255;
-    }
+  const r = Math.round(base.r);
+  const g = Math.round(base.g);
+  const b = Math.round(base.b);
+  for (let i = 0; i < png.data.length; i += 4) {
+    png.data[i] = r;
+    png.data[i + 1] = g;
+    png.data[i + 2] = b;
+    png.data[i + 3] = 255;
   }
   return PNG.sync.write(png);
 }
