@@ -479,7 +479,25 @@ async function createStampIconOnlyPng(iconBuf, opacity = 1) {
 }
 
 /**
- * Grille de tampons = uniquement les icônes (iconcafe), sans cercle ni 0/8. Grille remontée pour tout afficher.
+ * Retourne un buffer PNG STAMP_SIZE×STAMP_SIZE pour un tampon vide (non débloqué).
+ * Utilise assets/icons/vide.png si présent, sinon null (fallback = icône en filigrane).
+ */
+async function getEmptyStampPng() {
+  const raw = STAMP_ICONS_RAW.get("vide");
+  if (!raw || !Buffer.isBuffer(raw)) return null;
+  try {
+    return await sharp(Buffer.from(raw))
+      .resize(STAMP_SIZE, STAMP_SIZE, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toBuffer();
+  } catch (e) {
+    console.warn("[PassKit] Resize vide.png failed:", e?.message);
+    return null;
+  }
+}
+
+/**
+ * Grille de tampons : tampons débloqués = icône pleine ; tampons non débloqués = vide.png (assets/icons) ou icône en filigrane en fallback.
  */
 async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
   const cols = 5;
@@ -495,6 +513,7 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
   }
   if (process.env.NODE_ENV === "production") console.log("[PassKit] Strip tampons: emoji", emojiToCodepoint(emojiForStamp), "→ PNG du dossier", STAMP_ICONS_DIR);
 
+  let emptyStampBuf = null;
   const composites = [];
   for (let i = 0; i < Math.min(stampMax, 10); i++) {
     const col = i % cols;
@@ -504,7 +523,13 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     const left = Math.max(0, cx - STAMP_R);
     const top = Math.max(0, cy - STAMP_R);
     const filled = i < filledCount;
-    const stampBuf = await createStampIconOnlyPng(iconBuf, filled ? 1 : 0.75);
+    let stampBuf;
+    if (filled) {
+      stampBuf = await createStampIconOnlyPng(iconBuf, 1);
+    } else {
+      if (emptyStampBuf === null) emptyStampBuf = await getEmptyStampPng();
+      stampBuf = emptyStampBuf || (await createStampIconOnlyPng(iconBuf, 0.75));
+    }
     composites.push({ input: stampBuf, left, top });
   }
 

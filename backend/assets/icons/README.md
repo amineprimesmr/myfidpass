@@ -3,6 +3,12 @@
 Ce dossier contient les **PNG utilisés à la place des emojis** sur les passes (grille de tampons, points).  
 Seules les images de ce dossier (et de `assets/` à la racine) sont utilisées pour les tampons sur le pass. Aucune API externe.
 
+## Tampons non débloqués (vide)
+
+- **`vide.png`** : image affichée pour les cases de tampons **pas encore débloquées** sur la carte Wallet.  
+  Si ce fichier est absent, les cases vides utilisent l’icône du tampon en filigrane (opacité réduite).  
+  Recommandé : même taille que les icônes tampons (ex. 128×128 ou 256×256 px), fond transparent.
+
 ## Nommage
 
 Deux façons de nommer (toutes deux reconnues) :
