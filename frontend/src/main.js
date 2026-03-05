@@ -1614,11 +1614,16 @@ function initAppDashboard(slug) {
   const scannerResume = document.getElementById("app-scanner-resume");
   const scannerResultMessage = document.getElementById("app-scanner-result-message");
   const scannerCard = document.getElementById("app-scanner-card");
+  const scannerActionsStamps = document.getElementById("app-scanner-actions-stamps");
+  const scannerActionsPoints = document.getElementById("app-scanner-actions-points");
+  const scannerAddOneStamp = document.getElementById("app-scanner-add-one-stamp");
 
   let scannerInstance = null;
   let scannerCurrentMemberId = null;
   let scannerCurrentMember = null;
   let scannerVisitOnly = false;
+  let scannerProgramType = "points";
+  let scannerRequiredStamps = 10;
 
   function hideAllScannerStates() {
     if (scannerVerifying) scannerVerifying.classList.add("hidden");
@@ -1693,13 +1698,34 @@ function initAppDashboard(slug) {
     if (scannerStart) scannerStart.classList.add("hidden");
     scannerCard?.classList.add("app-scanner-has-overlay");
 
+    try {
+      const settingsRes = await api("/dashboard/settings");
+      if (settingsRes.ok) {
+        const data = await settingsRes.json();
+        let pt = (data.program_type ?? data.programType ?? "").toLowerCase();
+        if (pt !== "points" && pt !== "stamps") {
+          pt = (data.required_stamps ?? data.requiredStamps) > 0 ? "stamps" : "points";
+        }
+        scannerProgramType = pt;
+        scannerRequiredStamps = Math.max(1, parseInt(data.required_stamps ?? data.requiredStamps, 10) || 10);
+      }
+    } catch (_) {}
+
     const displayName = member.name?.trim() || member.email || "Client";
     if (scannerResultName) scannerResultName.textContent = displayName;
     if (scannerResultEmail) {
       scannerResultEmail.textContent = member.email || "";
       scannerResultEmail.classList.toggle("hidden", !member.email);
     }
-    if (scannerResultPoints) scannerResultPoints.textContent = `${member.points ?? 0} point(s)`;
+    const pts = member.points ?? 0;
+    if (scannerResultPoints) {
+      scannerResultPoints.textContent = scannerProgramType === "stamps"
+        ? `${Math.min(pts, scannerRequiredStamps)} / ${scannerRequiredStamps} tampons`
+        : `${pts} point(s)`;
+    }
+    if (scannerActionsStamps) scannerActionsStamps.classList.toggle("hidden", scannerProgramType !== "stamps");
+    if (scannerActionsPoints) scannerActionsPoints.classList.toggle("hidden", scannerProgramType === "stamps");
+
     if (scannerResultLastVisit) {
       if (member.last_visit_at) {
         scannerResultLastVisit.textContent = "Dernière visite : " + formatDate(member.last_visit_at);
@@ -1722,7 +1748,10 @@ function initAppDashboard(slug) {
           if (transactions?.length) {
             transactions.forEach((t) => {
               const li = document.createElement("li");
-              li.textContent = `+${t.points} pt${t.points > 1 ? "s" : ""} — ${formatDate(t.created_at)}`;
+              const label = scannerProgramType === "stamps"
+                ? (t.points === 1 ? "1 tampon" : `+${t.points} tampons`)
+                : `+${t.points} pt${t.points > 1 ? "s" : ""}`;
+              li.textContent = `${label} — ${formatDate(t.created_at)}`;
               scannerHistoryList.appendChild(li);
             });
           } else {
@@ -1829,6 +1858,44 @@ function initAppDashboard(slug) {
   scannerOneVisit?.addEventListener("click", () => { scannerVisitOnly = true; if (scannerAmount) scannerAmount.value = ""; });
   scannerAmount?.addEventListener("input", () => { scannerVisitOnly = false; });
 
+  scannerAddOneStamp?.addEventListener("click", async () => {
+    if (!scannerCurrentMemberId) return;
+    scannerAddOneStamp.disabled = true;
+    try {
+      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(scannerCurrentMemberId)}/points`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ visit: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (scannerResultMessage) {
+          scannerResultMessage.textContent = data.error || "Erreur";
+          scannerResultMessage.classList.remove("hidden");
+        }
+        return;
+      }
+      const total = data.points;
+      if (scannerResultMessage) {
+        scannerResultMessage.textContent = `+1 tampon enregistré. ${Math.min(total, scannerRequiredStamps)} / ${scannerRequiredStamps} tampons.`;
+        scannerResultMessage.classList.remove("hidden");
+      }
+      if (scannerResultPoints) {
+        scannerResultPoints.textContent = `${Math.min(total, scannerRequiredStamps)} / ${scannerRequiredStamps} tampons`;
+      }
+      scannerCurrentMember = scannerCurrentMember ? { ...scannerCurrentMember, points: total } : null;
+      await refresh();
+    } catch (_) {
+      if (scannerResultMessage) {
+        scannerResultMessage.textContent = "Erreur réseau.";
+        scannerResultMessage.classList.remove("hidden");
+      }
+    }
+    scannerAddOneStamp.disabled = false;
+  });
+
   scannerAddPoints?.addEventListener("click", async () => {
     if (!scannerCurrentMemberId) return;
     const body = scannerVisitOnly ? { visit: true } : { amount_eur: parseFloat(scannerAmount?.value) || 0 };
@@ -1858,10 +1925,16 @@ function initAppDashboard(slug) {
       const added = data.points_added ?? data.points;
       const total = data.points;
       if (scannerResultMessage) {
-        scannerResultMessage.textContent = `${added} point(s) ajouté(s). Total : ${total} pts.`;
+        scannerResultMessage.textContent = scannerProgramType === "stamps"
+          ? `+1 tampon enregistré. ${Math.min(total, scannerRequiredStamps)} / ${scannerRequiredStamps} tampons.`
+          : `${added} point(s) ajouté(s). Total : ${total} pts.`;
         scannerResultMessage.classList.remove("hidden");
       }
-      if (scannerResultPoints) scannerResultPoints.textContent = `${total} point(s)`;
+      if (scannerResultPoints) {
+        scannerResultPoints.textContent = scannerProgramType === "stamps"
+          ? `${Math.min(total, scannerRequiredStamps)} / ${scannerRequiredStamps} tampons`
+          : `${total} point(s)`;
+      }
       scannerCurrentMember = scannerCurrentMember ? { ...scannerCurrentMember, points: total } : null;
       await refresh();
     } catch (_) {

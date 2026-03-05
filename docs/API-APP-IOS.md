@@ -87,9 +87,15 @@ L’app peut reconstituer tout le nécessaire avec les endpoints suivants. Auth 
   "locationRelevantText": "string | undefined",
   "locationRadiusMeters": number | undefined,
   "locationAddress": "string | undefined",
-  "requiredStamps": number | undefined
+  "requiredStamps": number | undefined,
+  "programType": "points" | "stamps" | undefined,
+  "pointsPerEuro": number | undefined,
+  "pointsPerVisit": number | undefined
 }
 ```
+- **programType** : `"points"` ou `"stamps"`. À utiliser après un scan pour afficher soit le champ « Montant du panier (€) », soit uniquement « +1 tampon ».
+- **pointsPerEuro** : nombre de points par euro (ex. 1). Utilisé quand on envoie `amount_eur` au scan.
+- **pointsPerVisit** : points ajoutés pour « 1 passage » (optionnel).
 
 ### 2.2bis Mise à jour des paramètres « Ma Carte » (PATCH)
 
@@ -249,3 +255,39 @@ Il faut un **memberId** (un membre du commerce). L’app peut prendre le premier
 
 - **Clients** : après un scan, le backend envoie déjà la mise à jour PassKit au pass du client (points à jour + message). Rien à ajouter.
 - **App commerçant** : les routes `POST /api/device/register` et `POST /api/businesses/:slug/notify` ne sont pas encore en place. À ajouter si tu veux des push type « Nouveau scan » dans l’app.
+
+---
+
+## 6. Scan et animation (Dynamic Island / post-scan)
+
+Après avoir scanné le QR code d’une carte, l’app doit adapter l’UI selon le **type de carte** du commerce (points ou tampons). Les paramètres sont dans **`GET /api/businesses/:slug/dashboard/settings`** : `program_type` (`"points"` | `"stamps"`), `required_stamps`, `points_per_euro`, `points_per_visit`.
+
+### 6.1 Carte en tampons uniquement
+
+- **Comportement** : un scan = **un tampon** ajouté. Aucun montant à saisir.
+- **UI recommandée** : afficher une vue type Dynamic Island (ou modal) **plus grande / étendue** avec :
+  - Nom du client (optionnel, via `GET .../integration/lookup?barcode=xxx` si besoin).
+  - Un seul bouton : **« +1 tampon »** (ou « Valider 1 tampon »).
+- **Appel** : `POST /api/businesses/:slug/integration/scan`  
+  Body : `{ "barcode": "<member_id>", "visit": true }`  
+  Réponse : `{ "member", "points_added": 1, "new_balance" }` (les points = nombre de tampons côté backend).
+
+### 6.2 Carte en points (ex. 1 point = 1 €)
+
+- **Comportement** : le commerçant saisit le **montant du panier (€)** ; les points sont calculés côté backend (ex. `amount_eur × points_per_euro`). Option possible : « 1 passage » = `points_per_visit` points.
+- **UI recommandée** : même idée d’animation / Dynamic Island **plus grande** avec :
+  - Champ **« Montant du panier (€) »** (clavier numérique).
+  - Bouton **« Ajouter les points »** (et éventuellement « 1 passage » si `points_per_visit` > 0).
+- **Appel** : `POST /api/businesses/:slug/integration/scan`  
+  Body : `{ "barcode": "<member_id>", "amount_eur": 25.50 }`  
+  ou `{ "barcode": "<member_id>", "visit": true }` pour 1 passage.  
+  Réponse : `{ "member", "points_added", "new_balance" }`.
+
+### 6.3 Récap
+
+| Type carte | Après le scan | Body envoyé |
+|------------|----------------|-------------|
+| Tampons    | Afficher « +1 tampon », pas de champ montant | `{ "barcode": "...", "visit": true }` |
+| Points     | Afficher « Montant du panier (€) » + valider | `{ "barcode": "...", "amount_eur": X }` ou `{ "barcode": "...", "visit": true }` |
+
+- **Dynamic Island** : prévoir une **vue étendue** (expanded) pour que le montant soit saisissable confortablement en mode points, et une vue simple « +1 tampon » en mode tampons. Le backend ne change pas ; seul l’affichage et le body de l’appel varient selon `program_type` (et éventuellement `required_stamps` pour l’affichage X/Y tampons).

@@ -964,6 +964,25 @@ body.page-app .site-banner { display: none !important; }
   align-items: center;
 }
 
+.app-scanner-actions-stamps,
+.app-scanner-actions-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.app-scanner-actions-stamps.hidden,
+.app-scanner-actions-points.hidden {
+  display: none !important;
+}
+.app-scanner-amount-label {
+  display: block;
+  width: 100%;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary, #555);
+  margin-bottom: 0.25rem;
+}
 .app-scanner-amount-row {
   display: flex;
   flex-wrap: wrap;
