@@ -952,7 +952,141 @@
   min-width: 0;
 }
 
-/* Desktop : iPhone à gauche, designs à droite — organisation harmonieuse */
+/* Nouveau bloc : catégorie + type de carte (Points / Tampons) */
+.builder-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+.builder-option-section {
+  animation: builderOptionEnter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+}
+.builder-option-section-format {
+  animation-delay: 0.1s;
+}
+@keyframes builderOptionEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.builder-option-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--landing-text-muted, #555);
+  margin-bottom: 0.5rem;
+}
+.builder-category-display {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 0.5rem;
+  transition: color 0.2s ease;
+}
+.builder-category-select {
+  width: 100%;
+  max-width: 280px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  border: 1.5px solid var(--landing-border, #ddd);
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.builder-category-select:hover {
+  border-color: #999;
+}
+.builder-category-select:focus {
+  outline: none;
+  border-color: var(--landing-accent, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.builder-format-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.builder-format-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  background: #f8f8f8;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+.builder-format-btn:hover:not(:disabled) {
+  background: #eee;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+.builder-format-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.builder-format-btn-active {
+  background: var(--landing-accent, #2563eb);
+  color: #fff;
+  border-color: var(--landing-accent, #2563eb);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+.builder-format-btn-active:hover:not(:disabled) {
+  background: var(--landing-accent-hover, #1d4ed8);
+  border-color: var(--landing-accent-hover, #1d4ed8);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+.builder-format-icon {
+  font-size: 1.5rem;
+  opacity: 0.9;
+}
+.builder-format-title {
+  font-size: 1rem;
+}
+.builder-format-desc {
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+.builder-format-btn .builder-format-desc {
+  opacity: 0.75;
+}
+.builder-format-btn-active .builder-format-desc {
+  opacity: 0.95;
+}
+.builder-format-hint {
+  font-size: 0.8rem;
+  color: var(--landing-text-muted, #666);
+  margin-top: 0.5rem;
+}
+.builder-format-hint.hidden {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builder-option-section {
+    animation: none;
+  }
+}
+
+/* Desktop : iPhone à gauche, options à droite */
 @media (min-width: 900px) {
   .builder-step-1-heading {
     margin-bottom: 2.5rem;
@@ -976,16 +1110,7 @@
     align-items: stretch;
     padding-top: 0;
   }
-  .builder-step-1-right .builder-choose-label {
-    text-align: left;
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-  }
-  .builder-step-1-right .builder-phone-dots {
-    justify-content: flex-start;
-    margin-bottom: 1rem;
-  }
-  .builder-step-1-right .builder-templates {
+  .builder-step-1-right .builder-options {
     margin-bottom: 1.5rem;
   }
   .builder-step-1-right .builder-fields {

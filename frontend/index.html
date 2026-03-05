@@ -1109,8 +1109,8 @@ X-Dashboard-Token: TOKEN
           <!-- Étape 1 : mockup iPhone + choix du modèle (pas de vidéo sur cette page) -->
           <div id="builder-step-1-block" class="builder-step-block builder-step-1-block">
             <div class="builder-step-1-heading">
-            <h1 class="builder-title">À quoi ressemblera votre carte</h1>
-              <p class="builder-subtitle">Glissez les cartes dans l’aperçu ou choisissez un modèle ci-dessous. Personnalisation des couleurs et du logo après paiement.</p>
+              <h1 class="builder-title">À quoi ressemblera votre carte</h1>
+              <p class="builder-subtitle">Choisissez la catégorie de votre commerce et le type de carte (points ou tampons). L’aperçu se met à jour en direct.</p>
             </div>
             <div class="builder-step-1-content">
               <div class="builder-step-1-left">
@@ -1250,189 +1250,38 @@ X-Dashboard-Token: TOKEN
                   </div>
                 </div>
               </div>
-              <div class="builder-step-1-right">
-                <p class="builder-choose-label">Choisissez un modèle</p>
-                <div class="builder-phone-dots" id="builder-phone-dots" aria-label="Choisir le modèle"></div>
-            <div class="builder-templates" id="builder-templates">
-                  <p class="builder-templates-section-title">Fast food & restauration</p>
-                  <button type="button" class="builder-template-card" id="builder-template-fastfood-points" data-template="fastfood-points" aria-pressed="false">
-                    <span class="builder-template-name">Points</span>
-                    <div class="builder-template-preview builder-template-preview-fastfood-points">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
+              <div class="builder-step-1-right" id="builder-options-wrap">
+                <div class="builder-options">
+                  <section class="builder-option-section builder-option-section-enter" aria-labelledby="builder-category-label">
+                    <label id="builder-category-label" class="builder-option-label">Catégorie de votre commerce</label>
+                    <div class="builder-category-display" id="builder-category-display">Fast food</div>
+                    <select id="builder-category-select" class="builder-category-select" aria-label="Changer la catégorie">
+                      <option value="fastfood">Fast food</option>
+                      <option value="cafe">Café</option>
+                      <option value="boulangerie">Boulangerie</option>
+                      <option value="boucherie">Boucherie</option>
+                      <option value="coiffure">Coiffure</option>
+                      <option value="beauty">Beauté</option>
+                      <option value="classic">Autre</option>
+                    </select>
+                  </section>
+                  <section class="builder-option-section builder-option-section-enter builder-option-section-format" aria-labelledby="builder-format-label">
+                    <label id="builder-format-label" class="builder-option-label">Type de carte</label>
+                    <div class="builder-format-choices">
+                      <button type="button" class="builder-format-btn" id="builder-format-points" data-format="points" aria-pressed="false">
+                        <span class="builder-format-icon" aria-hidden="true">◇</span>
+                        <span class="builder-format-title">Points</span>
+                        <span class="builder-format-desc">1 passage = X points, cumulables</span>
+                      </button>
+                      <button type="button" class="builder-format-btn builder-format-btn-active" id="builder-format-tampons" data-format="tampons" aria-pressed="true">
+                        <span class="builder-format-icon" aria-hidden="true">▣</span>
+                        <span class="builder-format-title">Tampons</span>
+                        <span class="builder-format-desc">N tampons = une récompense offerte</span>
+                      </button>
                     </div>
-                  </button>
-                  <button type="button" class="builder-template-card builder-template-selected" id="builder-template-fastfood-tampons" data-template="fastfood-tampons" aria-pressed="true">
-                    <span class="builder-template-name">Tampons</span>
-                    <div class="builder-template-preview builder-template-preview-fastfood-tampons">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-stamps">0 / 10</span>
-                        <span class="builder-template-preview-stamps-row" aria-hidden="true"><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span></span>
-                        <span class="builder-template-preview-label">Tampons</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <p class="builder-templates-section-title">Beauté</p>
-                  <button type="button" class="builder-template-card" id="builder-template-beauty-points" data-template="beauty-points" aria-pressed="false">
-                    <span class="builder-template-name">Points</span>
-                    <div class="builder-template-preview builder-template-preview-beauty-points">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <button type="button" class="builder-template-card" id="builder-template-beauty-tampons" data-template="beauty-tampons" aria-pressed="false">
-                    <span class="builder-template-name">Tampons</span>
-                    <div class="builder-template-preview builder-template-preview-beauty-tampons">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-stamps">0 / 10</span>
-                        <span class="builder-template-preview-stamps-row" aria-hidden="true"><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span></span>
-                        <span class="builder-template-preview-label">Tampons</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <p class="builder-templates-section-title">Coiffure</p>
-                  <button type="button" class="builder-template-card" id="builder-template-coiffure-points" data-template="coiffure-points" aria-pressed="false">
-                    <span class="builder-template-name">Points</span>
-                    <div class="builder-template-preview builder-template-preview-coiffure-points">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <button type="button" class="builder-template-card" id="builder-template-coiffure-tampons" data-template="coiffure-tampons" aria-pressed="false">
-                    <span class="builder-template-name">Tampons</span>
-                    <div class="builder-template-preview builder-template-preview-coiffure-tampons">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-stamps">0 / 10</span>
-                        <span class="builder-template-preview-stamps-row" aria-hidden="true"><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span></span>
-                        <span class="builder-template-preview-label">Tampons</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <p class="builder-templates-section-title">Boulangerie</p>
-                  <button type="button" class="builder-template-card" id="builder-template-boulangerie-points" data-template="boulangerie-points" aria-pressed="false">
-                    <span class="builder-template-name">Points</span>
-                    <div class="builder-template-preview builder-template-preview-boulangerie-points">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <button type="button" class="builder-template-card" id="builder-template-boulangerie-tampons" data-template="boulangerie-tampons" aria-pressed="false">
-                    <span class="builder-template-name">Tampons</span>
-                    <div class="builder-template-preview builder-template-preview-boulangerie-tampons">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-stamps">0 / 10</span>
-                        <span class="builder-template-preview-stamps-row" aria-hidden="true"><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span></span>
-                        <span class="builder-template-preview-label">Tampons</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <p class="builder-templates-section-title">Boucherie</p>
-                  <button type="button" class="builder-template-card" id="builder-template-boucherie-points" data-template="boucherie-points" aria-pressed="false">
-                    <span class="builder-template-name">Points</span>
-                    <div class="builder-template-preview builder-template-preview-boucherie-points">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts">0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <button type="button" class="builder-template-card" id="builder-template-boucherie-tampons" data-template="boucherie-tampons" aria-pressed="false">
-                    <span class="builder-template-name">Tampons</span>
-                    <div class="builder-template-preview builder-template-preview-boucherie-tampons">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-stamps">0 / 10</span>
-                        <span class="builder-template-preview-stamps-row" aria-hidden="true"><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span><span class="stamp"></span></span>
-                        <span class="builder-template-preview-label">Tampons</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <p class="builder-templates-section-title">Café</p>
-                  <button type="button" class="builder-template-card" id="builder-template-cafe-points" data-template="cafe-points" aria-pressed="false">
-                    <span class="builder-template-name">Points</span>
-                    <div class="builder-template-preview builder-template-preview-cafe-points">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-pts"><span class="cafe-emoji">☕</span> 0 pts</span>
-                        <span class="builder-template-preview-label">Points</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <button type="button" class="builder-template-card" id="builder-template-cafe-tampons" data-template="cafe-tampons" aria-pressed="false">
-                    <span class="builder-template-name">Tampons</span>
-                    <div class="builder-template-preview builder-template-preview-cafe-tampons">
-                      <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                      <div class="builder-template-preview-body">
-                        <span class="builder-template-preview-stamps">0 / 10</span>
-                        <span class="builder-template-preview-stamps-row builder-template-preview-stamps-cups" aria-hidden="true"><span class="stamp stamp-cup filled">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span><span class="stamp stamp-cup">☕</span></span>
-                        <span class="builder-template-preview-label">Tampons</span>
-                      </div>
-                      <div class="builder-template-preview-barcode"></div>
-                    </div>
-                  </button>
-                  <p class="builder-templates-section-title">Autres styles</p>
-                  <button type="button" class="builder-template-card" id="builder-template-classic" data-template="classic" aria-pressed="false">
-                <span class="builder-template-name">Classique</span>
-                <div class="builder-template-preview builder-template-preview-classic">
-                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                  <div class="builder-template-preview-body">
-                    <span class="builder-template-preview-pts">0 pts</span>
-                    <span class="builder-template-preview-label">Points</span>
-                  </div>
-                  <div class="builder-template-preview-barcode"></div>
+                    <p class="builder-format-hint" id="builder-format-hint">Pour « Autre », seul le système en points est disponible.</p>
+                  </section>
                 </div>
-              </button>
-              <button type="button" class="builder-template-card" id="builder-template-bold" data-template="bold" aria-pressed="false">
-                <span class="builder-template-name">Moderne</span>
-                <div class="builder-template-preview builder-template-preview-bold">
-                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                  <div class="builder-template-preview-body">
-                    <span class="builder-template-preview-pts">0 pts</span>
-                    <span class="builder-template-preview-label">Points</span>
-                  </div>
-                  <div class="builder-template-preview-barcode"></div>
-                </div>
-              </button>
-              <button type="button" class="builder-template-card" id="builder-template-elegant" data-template="elegant" aria-pressed="false">
-                <span class="builder-template-name">Élégant</span>
-                <div class="builder-template-preview builder-template-preview-elegant">
-                  <div class="builder-template-preview-header"><span class="builder-template-preview-org">Votre commerce</span></div>
-                  <div class="builder-template-preview-body">
-                    <span class="builder-template-preview-pts">0 pts</span>
-                    <span class="builder-template-preview-label">Points</span>
-                  </div>
-                  <div class="builder-template-preview-barcode"></div>
-                </div>
-              </button>
-            </div>
                 <section class="builder-demo-wallet" id="builder-demo-wallet" aria-labelledby="builder-demo-title">
                   <div class="builder-demo-default" id="builder-demo-default">
                     <h2 class="builder-demo-title" id="builder-demo-title">Tester sur votre iPhone</h2>

@@ -2496,6 +2496,29 @@ function slugify(text) {
     .slice(0, 50) || "ma-carte";
 }
 
+const BUILD_CATEGORY_LABELS = {
+  fastfood: "Fast food",
+  cafe: "Café",
+  boulangerie: "Boulangerie",
+  boucherie: "Boucherie",
+  coiffure: "Coiffure",
+  beauty: "Beauté",
+  classic: "Autre",
+};
+
+function templateIdToCategoryFormat(templateId) {
+  if (!templateId) return { category: "fastfood", format: "tampons" };
+  if (["classic", "bold", "elegant"].includes(templateId)) return { category: "classic", format: "points" };
+  const match = templateId.match(/^(.+)-(points|tampons)$/);
+  if (match) return { category: match[1], format: match[2] };
+  return { category: "fastfood", format: "tampons" };
+}
+
+function getTemplateIdFromCategoryFormat(category, format) {
+  if (category === "classic") return "classic";
+  return `${category}-${format}`;
+}
+
 function initBuilderPage() {
 
   const btnSubmit = document.getElementById("builder-submit");
@@ -2546,24 +2569,16 @@ function initBuilderPage() {
   function updateBuilderPreviewOrgName(name) {
     const display = name && name.trim() ? name.trim() : "Votre commerce";
     document.querySelectorAll("#builder-wallet-slider .builder-wallet-card-header span").forEach((el) => { el.textContent = display; });
-    document.querySelectorAll(".builder-template-preview-org").forEach((el) => { el.textContent = display; });
   }
 
   const sliderEl = document.getElementById("builder-wallet-slider");
   const dotsContainer = document.getElementById("builder-phone-dots");
   const templateIds = CARD_TEMPLATES.map((t) => t.id);
-
-  if (dotsContainer) {
-    dotsContainer.innerHTML = "";
-    CARD_TEMPLATES.forEach((t, i) => {
-      const dot = document.createElement("button");
-      dot.type = "button";
-      dot.className = "builder-phone-dot";
-      dot.setAttribute("data-index", String(i));
-      dot.setAttribute("aria-label", t.name);
-      dotsContainer.appendChild(dot);
-    });
-  }
+  const categorySelect = document.getElementById("builder-category-select");
+  const categoryDisplay = document.getElementById("builder-category-display");
+  const formatPoints = document.getElementById("builder-format-points");
+  const formatTampons = document.getElementById("builder-format-tampons");
+  const formatHint = document.getElementById("builder-format-hint");
 
   function getTemplateIndex(templateId) {
     const i = templateIds.indexOf(templateId);
@@ -2572,24 +2587,42 @@ function initBuilderPage() {
 
   function setSliderPosition(index) {
     if (sliderEl) sliderEl.style.transform = `translateX(-${index * 100}%)`;
-    dotsContainer?.querySelectorAll(".builder-phone-dot").forEach((dot, i) => {
-      dot.classList.toggle("active", i === index);
-      dot.setAttribute("aria-current", i === index ? "true" : null);
-    });
+    if (dotsContainer) {
+      dotsContainer.querySelectorAll(".builder-phone-dot").forEach((dot, i) => {
+        dot.classList.toggle("active", i === index);
+        dot.setAttribute("aria-current", i === index ? "true" : null);
+      });
+    }
+  }
+
+  function applySelection() {
+    const { category, format } = templateIdToCategoryFormat(state.selectedTemplateId);
+    if (categorySelect) {
+      categorySelect.value = category;
+    }
+    if (categoryDisplay) {
+      categoryDisplay.textContent = BUILD_CATEGORY_LABELS[category] || category;
+    }
+    if (formatPoints) {
+      formatPoints.setAttribute("aria-pressed", format === "points" ? "true" : "false");
+      formatPoints.classList.toggle("builder-format-btn-active", format === "points");
+    }
+    if (formatTampons) {
+      formatTampons.setAttribute("aria-pressed", format === "tampons" ? "true" : "false");
+      formatTampons.classList.toggle("builder-format-btn-active", format === "tampons");
+      formatTampons.disabled = category === "classic";
+    }
+    if (formatHint) {
+      formatHint.classList.toggle("hidden", category !== "classic");
+    }
+    setSliderPosition(getTemplateIndex(state.selectedTemplateId));
+    updateDemoQR(state.selectedTemplateId);
+    saveDraft();
   }
 
   function setTemplateSelection(templateId) {
     state.selectedTemplateId = templateId;
-    document.querySelectorAll(".builder-template-card").forEach((btn) => {
-      const isSelected = btn.getAttribute("data-template") === templateId;
-      btn.classList.toggle("builder-template-selected", isSelected);
-      btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
-    });
-    setSliderPosition(getTemplateIndex(templateId));
-    saveDraft();
-    updateDemoQR(templateId);
-    const selectedCard = document.querySelector(`.builder-template-card[data-template="${templateId}"]`);
-    selectedCard?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    applySelection();
   }
 
   function updateDemoQR(templateId) {
@@ -2659,14 +2692,22 @@ function initBuilderPage() {
     })();
   }
 
-  document.querySelectorAll(".builder-template-card").forEach((btn) => {
-    btn.addEventListener("click", () => setTemplateSelection(btn.getAttribute("data-template")));
-  });
+  if (categorySelect) {
+    categorySelect.addEventListener("change", () => {
+      const category = categorySelect.value;
+      const format = category === "classic" ? "points" : templateIdToCategoryFormat(state.selectedTemplateId).format;
+      state.selectedTemplateId = getTemplateIdFromCategoryFormat(category, format);
+      setTemplateSelection(state.selectedTemplateId);
+    });
+  }
 
-  dotsContainer?.querySelectorAll(".builder-phone-dot").forEach((dot) => {
-    dot.addEventListener("click", () => {
-      const index = parseInt(dot.getAttribute("data-index"), 10);
-      if (!Number.isNaN(index) && CARD_TEMPLATES[index]) setTemplateSelection(CARD_TEMPLATES[index].id);
+  [formatPoints, formatTampons].filter(Boolean).forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const format = btn.dataset.format;
+      const category = categorySelect?.value || templateIdToCategoryFormat(state.selectedTemplateId).category;
+      if (category === "classic") return;
+      state.selectedTemplateId = getTemplateIdFromCategoryFormat(category, format);
+      setTemplateSelection(state.selectedTemplateId);
     });
   });
 
@@ -2718,11 +2759,11 @@ function initBuilderPage() {
 
   const stickyCta = document.getElementById("builder-sticky-cta");
   const stickyChange = document.getElementById("builder-sticky-change");
-  const templatesEl = document.getElementById("builder-templates");
+  const optionsWrap = document.getElementById("builder-options-wrap");
 
   stickyCta?.addEventListener("click", goToCheckout);
   stickyChange?.addEventListener("click", () => {
-    templatesEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+    optionsWrap?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   cartClose?.addEventListener("click", closeCart);
