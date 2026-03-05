@@ -1437,6 +1437,32 @@
   border-color: var(--wallet-stamp-fill, #ffd54f);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
+.builder-wallet-card-stamps-row .stamp.stamp-emoji {
+  width: 11px;
+  height: 11px;
+  font-size: 6px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.builder-wallet-card-stamps-row .stamp.stamp-emoji:not(.filled) {
+  background: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.85);
+}
+.builder-wallet-card-stamps-row .stamp.stamp-emoji.filled {
+  color: #1a1a1a;
+}
+.wallet-preview-emoji {
+  display: inline-block;
+  font-size: 0.85em;
+  vertical-align: -0.08em;
+  margin-right: 0.12em;
+}
+.builder-wallet-card-cafe-points .wallet-preview-emoji {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
 
 /* Beauté : rose poudré */
 .builder-wallet-card-beauty-points .builder-wallet-card-header,
@@ -1508,13 +1534,6 @@
 .builder-wallet-card-cafe-tampons .builder-wallet-card-label { color: #d7ccc8; }
 .builder-wallet-card-cafe-tampons { --wallet-stamp-fill: #d7ccc8; }
 
-.builder-wallet-card-cafe-points .cafe-emoji {
-  display: inline-block;
-  font-size: 0.9em;
-  vertical-align: -0.05em;
-  margin-right: 0.12em;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-}
 .builder-wallet-card-stamps-cups .stamp-cup {
   font-size: clamp(0.5rem, 1.6vw, 0.65rem);
   line-height: 1;

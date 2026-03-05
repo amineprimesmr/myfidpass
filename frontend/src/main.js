@@ -2634,7 +2634,7 @@ function initBuilderPage() {
       const img = card.querySelector(".builder-wallet-card-qr-img");
       if (templateId && img) {
         const url = `${base}/api/passes/demo?template=${encodeURIComponent(templateId)}`;
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=112&data=${encodeURIComponent(url)}`;
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=104&data=${encodeURIComponent(url)}`;
       }
     });
   }
