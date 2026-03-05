@@ -995,6 +995,18 @@ body.page-app .site-banner { display: none !important; }
   margin-bottom: 0;
 }
 
+.app-scanner-points-preview {
+  width: 100%;
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent, #0d9488);
+}
+
+.app-scanner-points-preview.hidden {
+  display: none;
+}
+
 /* Partager (lien + QR code) */
 .app-share-card .app-step-label + .app-step-label { margin-top: 1.5rem; }
 

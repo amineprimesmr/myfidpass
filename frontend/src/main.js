@@ -1624,6 +1624,7 @@ function initAppDashboard(slug) {
   let scannerVisitOnly = false;
   let scannerProgramType = "points";
   let scannerRequiredStamps = 10;
+  let scannerPointsPerEuro = 1;
 
   function hideAllScannerStates() {
     if (scannerVerifying) scannerVerifying.classList.add("hidden");
@@ -1708,6 +1709,7 @@ function initAppDashboard(slug) {
         }
         scannerProgramType = pt;
         scannerRequiredStamps = Math.max(1, parseInt(data.required_stamps ?? data.requiredStamps, 10) || 10);
+        scannerPointsPerEuro = data.points_per_euro ?? data.pointsPerEuro ?? 1;
       }
     } catch (_) {}
 
@@ -1737,6 +1739,8 @@ function initAppDashboard(slug) {
     }
     if (scannerResultMessage) { scannerResultMessage.classList.add("hidden"); scannerResultMessage.textContent = ""; }
     if (scannerAmount) scannerAmount.value = "";
+    const pointsPreviewEl = document.getElementById("app-scanner-points-preview");
+    if (pointsPreviewEl) { pointsPreviewEl.classList.add("hidden"); pointsPreviewEl.textContent = ""; }
     scannerVisitOnly = false;
 
     if (scannerHistoryList) {
@@ -1855,8 +1859,22 @@ function initAppDashboard(slug) {
     startFullscreenScanner();
   });
 
-  scannerOneVisit?.addEventListener("click", () => { scannerVisitOnly = true; if (scannerAmount) scannerAmount.value = ""; });
-  scannerAmount?.addEventListener("input", () => { scannerVisitOnly = false; });
+  scannerOneVisit?.addEventListener("click", () => { scannerVisitOnly = true; if (scannerAmount) scannerAmount.value = ""; updateScannerPointsPreview(); });
+  const scannerPointsPreview = document.getElementById("app-scanner-points-preview");
+  function updateScannerPointsPreview() {
+    if (!scannerPointsPreview || scannerProgramType !== "points") return;
+    const raw = (scannerAmount?.value || "").replace(",", ".").trim();
+    const amt = parseFloat(raw);
+    if (!Number.isFinite(amt) || amt <= 0) {
+      scannerPointsPreview.classList.add("hidden");
+      scannerPointsPreview.textContent = "";
+      return;
+    }
+    const pts = Math.floor(amt * scannerPointsPerEuro);
+    scannerPointsPreview.textContent = `= ${pts} point${pts !== 1 ? "s" : ""}`;
+    scannerPointsPreview.classList.remove("hidden");
+  }
+  scannerAmount?.addEventListener("input", () => { scannerVisitOnly = false; updateScannerPointsPreview(); });
 
   scannerAddOneStamp?.addEventListener("click", async () => {
     if (!scannerCurrentMemberId) return;

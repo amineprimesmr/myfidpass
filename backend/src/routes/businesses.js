@@ -757,10 +757,20 @@ router.post("/:slug/notifications/remove-test-device", (req, res) => {
   res.json({ ok: true, removed, message: removed ? "Appareil de test supprimé." : "Aucun appareil de test à supprimer." });
 });
 
+/** Extrait l'ID membre (UUID) du code scanné : brut ou contenu dans une URL. */
+function normalizeBarcodeToMemberId(raw) {
+  const s = (raw || "").trim();
+  if (!s) return null;
+  const uuidMatch = s.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+  if (uuidMatch) return uuidMatch[0];
+  if (/^[0-9a-fA-F-]{36}$/.test(s)) return s;
+  return s;
+}
+
 /**
  * GET /api/businesses/:slug/integration/lookup
  * Intégration bornes / caisses : consulter un membre à partir du code-barres scanné.
- * Query: barcode (valeur lue = member id). Auth: token ou JWT.
+ * Query: barcode (valeur lue = member id ou chaîne contenant l'UUID). Auth: token ou JWT.
  */
 router.get("/:slug/integration/lookup", (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -768,11 +778,15 @@ router.get("/:slug/integration/lookup", (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token ou authentification requis" });
   }
-  const barcode = (req.query.barcode || "").trim();
-  if (!barcode) return res.status(400).json({ error: "Paramètre barcode requis" });
+  const raw = (req.query.barcode || "").trim();
+  if (!raw) return res.status(400).json({ error: "Paramètre barcode requis" });
+  const barcode = normalizeBarcodeToMemberId(raw);
   const member = getMemberForBusiness(barcode, business.id);
   if (!member) {
-    return res.status(404).json({ error: "Code non reconnu", code: "MEMBER_NOT_FOUND" });
+    return res.status(404).json({
+      error: "Code non reconnu pour ce commerce. Scannez le QR affiché sur la carte dans le Wallet du client (pas le lien « Ajouter à Wallet »).",
+      code: "MEMBER_NOT_FOUND",
+    });
   }
   res.json({
     member: {
@@ -797,14 +811,15 @@ router.post("/:slug/integration/scan", async (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token ou authentification requis" });
   }
-  const barcode = (req.body?.barcode || "").trim();
-  if (!barcode) {
+  const raw = (req.body?.barcode || "").trim();
+  if (!raw) {
     return res.status(400).json({ error: "Champ barcode requis", code: "BARCODE_MISSING" });
   }
+  const barcode = normalizeBarcodeToMemberId(raw);
   const member = getMemberForBusiness(barcode, business.id);
   if (!member) {
     return res.status(404).json({
-      error: "Code non reconnu pour ce commerce",
+      error: "Code non reconnu pour ce commerce. Scannez le QR de la carte dans le Wallet du client.",
       code: "MEMBER_NOT_FOUND",
     });
   }
