@@ -1367,19 +1367,31 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-strip-text.hidden { display: none; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap {
   flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  max-height: 80%;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 4px;
-  padding: 2px;
+  overflow: visible;
   box-sizing: border-box;
-  background: rgba(255,255,255,0.95);
+  background: transparent;
+  padding: 0;
 }
-.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo { max-width: 100%; max-height: 100%; object-fit: contain; }
-.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-fallback { font-size: 0.35rem; font-weight: 700; color: #333; }
+.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-fallback {
+  font-size: 0.35rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+}
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap:has(.app-wallet-preview-logo:not(.hidden)) .app-wallet-preview-logo-fallback { display: none; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org {
   flex: 1;
