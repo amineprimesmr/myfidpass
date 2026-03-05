@@ -1539,7 +1539,10 @@ function initAppDashboard(slug) {
       }
       const sectorVal = (isStamps ? sectorStampsEl : sectorEl)?.value?.trim();
       if (sectorVal) body.sector = sectorVal;
-      if (personnaliserLogoDataUrl) body.logoBase64 = personnaliserLogoDataUrl;
+      // N'envoyer le logo que si c'est un data URL (nouvelle image choisie). Une blob URL (logo chargé depuis l'API) ne doit pas être envoyée sinon on écrase le logo en base.
+      if (personnaliserLogoDataUrl && typeof personnaliserLogoDataUrl === "string" && personnaliserLogoDataUrl.startsWith("data:")) {
+        body.logoBase64 = personnaliserLogoDataUrl;
+      }
       if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
       else if (personnaliserCardBgDataUrl) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
       const addressVal = document.getElementById("app-personnaliser-address")?.value?.trim() || "";
@@ -1576,7 +1579,6 @@ function initAppDashboard(slug) {
         if (res.ok) {
           showPersonnaliserMessage("Modifications enregistrées.");
           updateCoordsDisplay(data.locationLat, data.locationLng);
-          personnaliserLogoDataUrl = "";
           if (personnaliserLogo) personnaliserLogo.value = "";
           if (body.cardBackgroundBase64 === "") {
             personnaliserCardBgRemoveRequested = false;
@@ -1606,33 +1608,33 @@ function initAppDashboard(slug) {
             }
             if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
           }
-          if (body.logoBase64) {
-            api("/logo?v=" + Date.now())
-              .then((r) => (r.ok ? r.blob() : null))
-              .then((blob) => {
-                if (blob && personnaliserLogoPreview) {
-                  const url = URL.createObjectURL(blob);
-                  personnaliserLogoDataUrl = url;
-                  personnaliserLogoPreview.src = url;
-                  personnaliserLogoPreview.classList.remove("hidden");
-                  if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
-                  const walletLogo = document.getElementById("app-wallet-preview-logo");
-                  if (walletLogo) {
-                    walletLogo.src = url;
-                    walletLogo.classList.remove("hidden");
-                  }
-                  updatePersonnaliserPreview();
+          // Toujours recharger le logo depuis l'API après enregistrement : garde l'affichage cohérent et met à jour personnaliserLogoDataUrl (blob URL) pour les prochains saves.
+          api("/logo?v=" + Date.now())
+            .then((r) => (r.ok ? r.blob() : null))
+            .then((blob) => {
+              if (blob && personnaliserLogoPreview) {
+                const url = URL.createObjectURL(blob);
+                personnaliserLogoDataUrl = url;
+                personnaliserLogoPreview.src = url;
+                personnaliserLogoPreview.classList.remove("hidden");
+                if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+                const walletLogo = document.getElementById("app-wallet-preview-logo");
+                if (walletLogo) {
+                  walletLogo.src = url;
+                  walletLogo.classList.remove("hidden");
                 }
-              })
-              .catch(() => {});
-          } else {
-            if (personnaliserLogoPreview) {
-              personnaliserLogoPreview.src = "";
-              personnaliserLogoPreview.classList.add("hidden");
-            }
-            if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
-            updatePersonnaliserPreview();
-          }
+                updatePersonnaliserPreview();
+              } else {
+                personnaliserLogoDataUrl = "";
+                if (personnaliserLogoPreview) {
+                  personnaliserLogoPreview.src = "";
+                  personnaliserLogoPreview.classList.add("hidden");
+                }
+                if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
+                updatePersonnaliserPreview();
+              }
+            })
+            .catch(() => { updatePersonnaliserPreview(); });
         } else {
           let errMsg = data.error || "Erreur lors de l'enregistrement.";
           if (res.status === 401) errMsg = "Accès refusé. Utilisez le lien reçu par e-mail pour ouvrir cette page (il contient le token), ou déconnectez-vous puis reconnectez-vous.";
