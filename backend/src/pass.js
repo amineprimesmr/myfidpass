@@ -633,7 +633,7 @@ export async function generatePass(member, business = null, options = {}) {
   const level = getLevel(member.points);
   const stampMax = options.required_stamps ?? options.stampMax ?? business?.required_stamps ?? 10;
   const useTampons = options.required_stamps != null || options.stampMax != null || (business?.required_stamps != null && business.required_stamps > 0);
-  const programType = business?.program_type?.toLowerCase();
+  const programType = (options.program_type ?? business?.program_type)?.toLowerCase();
   const explicitFormat = programType === "points" ? "points" : programType === "stamps" ? "tampons" : null;
   const format = options.format || explicitFormat || (useTampons ? "tampons" : "points");
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;

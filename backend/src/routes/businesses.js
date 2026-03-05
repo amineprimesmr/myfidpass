@@ -1243,6 +1243,8 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
   opts.stripColor = opts.strip_color;
   opts.foreground_color = req.query.foreground_color ?? business?.foreground_color ?? undefined;
   opts.foregroundColor = opts.foreground_color;
+  const programTypeQuery = (req.query.program_type || "").toLowerCase();
+  opts.program_type = programTypeQuery === "points" || programTypeQuery === "stamps" ? programTypeQuery : (business?.program_type ?? undefined);
   opts.stamp_emoji = req.query.stamp_emoji ?? business.stamp_emoji ?? undefined;
   if (req.query.required_stamps != null) {
     const n = parseInt(req.query.required_stamps, 10);

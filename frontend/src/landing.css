@@ -1301,6 +1301,7 @@
   padding-top: 1.25rem;
   box-sizing: border-box;
   min-height: 0;
+  position: relative;
 }
 .builder-wallet-card-header {
   padding: 0.4rem 0.5rem;
@@ -1312,7 +1313,7 @@
   flex-shrink: 0;
 }
 .builder-wallet-card-body {
-  padding: 0.45rem 0.5rem 0.6rem;
+  padding: 0.45rem 0.5rem 2rem 0.6rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1347,22 +1348,22 @@
   opacity: 0.92;
 }
 .builder-wallet-card-qr {
-  margin-top: auto;
-  flex-shrink: 0;
-  display: flex;
+  position: absolute;
+  bottom: 0.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.35rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-  margin-left: 0.25rem;
-  margin-right: 0.25rem;
-  margin-bottom: 0.25rem;
+  padding: 3px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 .builder-wallet-card-qr-img {
   display: block;
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 4px;
 }
 /* Thèmes des cartes dans le mockup (style Wallet réaliste) */
