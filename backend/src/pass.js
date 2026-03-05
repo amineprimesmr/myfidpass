@@ -21,12 +21,20 @@ function escapeSvgText(s) {
     .replace(/"/g, "&quot;");
 }
 
+/** Texte à ne jamais afficher dans le bandeau (placeholder / bug). Remplacé par "Carte fidélité". */
+function sanitizeLogoText(s) {
+  const t = (s && String(s).trim()) || "";
+  if (!t) return "Carte fidélité";
+  if (/^0+$/.test(t) || /^0{8,}$/.test(t)) return "Carte fidélité";
+  return t;
+}
+
 /**
  * Génère le logo du pass sous forme d'image (bandeau couleur + texte) quand strip_display_mode = "text".
  * Retourne { logoPng, logoPng2x } ou null.
  */
 async function createLogoFromText(stripColorHex, text) {
-  const label = (text && String(text).trim()) || "Carte fidélité";
+  const label = sanitizeLogoText(text);
   const hex = stripColorHex && /^#?[0-9A-Fa-f]{6}$/.test(String(stripColorHex).replace(/^#/, ""))
     ? (String(stripColorHex).startsWith("#") ? stripColorHex : `#${stripColorHex}`)
     : "#0a7c42";
@@ -672,7 +680,7 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   const organizationName =
-    options.organizationName || business?.organization_name || process.env.ORGANIZATION_NAME || "Carte fidélité";
+    sanitizeLogoText(options.organizationName || business?.organization_name || process.env.ORGANIZATION_NAME) || "Carte fidélité";
   const certificates = loadCertificates();
   const buffers = buildBuffers(business?.id, options);
 
@@ -687,7 +695,7 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stripDisplayMode = (options.strip_display_mode ?? business?.strip_display_mode ?? "logo").toString().toLowerCase();
   const useTextInStrip = stripDisplayMode === "text";
-  const stripText = (options.strip_text ?? business?.strip_text ?? organizationName).trim() || organizationName;
+  const stripText = sanitizeLogoText((options.strip_text ?? business?.strip_text ?? organizationName).trim() || organizationName);
 
   if (useTextInStrip) {
     const textLogo = await createLogoFromText(stripColorHex, stripText);
@@ -707,7 +715,7 @@ export async function generatePass(member, business = null, options = {}) {
           console.log("[PassKit] Logo commerce injecté dans le pass (160×50 / 320×100)");
         }
       } else {
-        const textFallback = await createLogoFromText(stripColorHex, organizationName);
+        const textFallback = await createLogoFromText(stripColorHex, sanitizeLogoText(organizationName));
         if (textFallback) {
           buffers["logo.png"] = textFallback.logoPng;
           buffers["logo@2x.png"] = textFallback.logoPng2x;
@@ -723,6 +731,13 @@ export async function generatePass(member, business = null, options = {}) {
           console.log("[PassKit] Icône notification Wallet générée depuis le logo (29/58/87px)");
         }
       }
+    }
+  } else if (!useTextInStrip && !buffers["logo.png"]) {
+    // Mode logo mais pas d'image : afficher le nom du commerce en texte pour éviter zone vide ou placeholder.
+    const textLogo = await createLogoFromText(stripColorHex, organizationName);
+    if (textLogo) {
+      buffers["logo.png"] = textLogo.logoPng;
+      buffers["logo@2x.png"] = textLogo.logoPng2x;
     }
   }
 
