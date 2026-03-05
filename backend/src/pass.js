@@ -642,8 +642,13 @@ export async function generatePass(member, business = null, options = {}) {
   const stripTemplateKey = options.template || "cafe";
   const stripStampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
   const toHexStrip = (v) => (v && String(v).trim()) ? (String(v).startsWith("#") ? v : `#${v}`) : null;
-  // Couleur du bandeau (section sans image) : strip_color si défini, sinon background_color
-  const stripColorHex = toHexStrip(options.strip_color ?? options.stripColor) ?? toHexStrip(business?.strip_color) ?? toHexStrip(options.backgroundColor ?? options.background_color) ?? toHexStrip(business?.background_color) ?? (PASS_TEMPLATES[stripTemplateKey] || PASS_TEMPLATES.classic).backgroundColor;
+  // Couleur du bandeau : priorité strip_color, puis background (carte), jamais le vert template si on a une couleur de carte)
+  const stripColorHex =
+    toHexStrip(options.strip_color ?? options.stripColor) ??
+    toHexStrip(options.backgroundColor ?? options.background_color) ??
+    toHexStrip(business?.strip_color) ??
+    toHexStrip(business?.background_color) ??
+    (PASS_TEMPLATES[stripTemplateKey] || PASS_TEMPLATES.classic).backgroundColor;
 
   if (format === "tampons") {
     let baseStrip;

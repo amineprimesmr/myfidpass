@@ -1239,7 +1239,8 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
   if (req.query.organization_name != null) opts.organizationName = req.query.organization_name;
   opts.background_color = req.query.background_color ?? business?.background_color ?? undefined;
   opts.backgroundColor = opts.background_color;
-  opts.strip_color = req.query.strip_color ?? business?.strip_color ?? undefined;
+  const stripFromQuery = (req.query.strip_color ?? "").toString().trim();
+  opts.strip_color = stripFromQuery || opts.background_color || business?.strip_color || undefined;
   opts.stripColor = opts.strip_color;
   opts.foreground_color = req.query.foreground_color ?? business?.foreground_color ?? undefined;
   opts.foregroundColor = opts.foreground_color;
