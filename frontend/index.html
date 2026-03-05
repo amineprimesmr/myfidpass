@@ -630,24 +630,38 @@
             <p class="app-section-desc">Personnalisez les couleurs et le logo, puis partagez le lien ou le QR code à vos clients. Les changements s’appliquent aux nouvelles cartes ajoutées.</p>
             <div class="app-personnaliser-live-preview-wrap">
               <p class="app-step-label">Aperçu — comme dans Apple Wallet</p>
-              <div id="app-personnaliser-preview" class="app-personnaliser-preview app-wallet-preview" role="img" aria-label="Aperçu de la carte fidélité">
-                <div class="app-wallet-preview-card" id="app-personnaliser-preview-card">
-                  <div class="app-wallet-preview-strip" id="app-wallet-preview-strip"><span id="app-wallet-preview-strip-text" class="app-wallet-preview-strip-text hidden"></span></div>
-                  <div class="app-wallet-preview-body">
-                    <div class="app-wallet-preview-top">
-                      <div class="app-wallet-preview-logo-wrap">
-                        <img id="app-wallet-preview-logo" class="app-wallet-preview-logo hidden" alt="" />
-                        <span id="app-wallet-preview-logo-fallback" class="app-wallet-preview-logo-fallback">Logo</span>
+              <div id="app-personnaliser-preview" class="app-personnaliser-preview builder-phone-mockup" role="img" aria-label="Aperçu de la carte fidélité">
+                <div class="builder-phone-frame">
+                  <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="this.style.display='none'" loading="lazy" />
+                  <div class="builder-phone-screen">
+                    <div class="builder-wallet-card app-wallet-preview-dynamic" id="app-personnaliser-preview-card">
+                      <div class="builder-wallet-card-header app-wallet-preview-header" id="app-wallet-preview-strip">
+                        <span id="app-wallet-preview-strip-text" class="app-wallet-preview-strip-text hidden"></span>
+                        <div class="app-wallet-preview-logo-wrap" id="app-personnaliser-header-logo-wrap">
+                          <img id="app-wallet-preview-logo" class="app-wallet-preview-logo hidden" alt="" />
+                          <span id="app-wallet-preview-logo-fallback" class="app-wallet-preview-logo-fallback">Logo</span>
+                        </div>
+                        <span class="app-wallet-preview-org" id="app-personnaliser-preview-org">Votre commerce</span>
                       </div>
-                      <span class="app-wallet-preview-org" id="app-personnaliser-preview-org">Votre commerce</span>
-                    </div>
-                    <div class="app-wallet-preview-value-wrap">
-                      <span class="app-wallet-preview-value" id="app-wallet-preview-value">42 pts</span>
-                      <span class="app-wallet-preview-label" id="app-wallet-preview-label">Points</span>
-                    </div>
-                    <div class="app-wallet-preview-qr-wrap">
-                      <img id="app-wallet-preview-qr" class="app-wallet-preview-qr" src="" alt="QR code — scannez pour ajouter la carte à Apple Wallet" />
-                      <span class="app-wallet-preview-qr-hint">Scannez pour tester</span>
+                      <div class="builder-wallet-card-body app-wallet-preview-body">
+                        <div class="builder-wallet-card-pts-wrap" id="app-preview-pts-wrap">
+                          <span class="builder-wallet-card-pts-value"><span class="wallet-preview-emoji" id="app-preview-pts-emoji" aria-hidden="true">⭐</span> <span id="app-wallet-preview-value">0</span></span>
+                          <span class="builder-wallet-card-label" id="app-wallet-preview-label">points</span>
+                        </div>
+                        <div class="builder-wallet-card-stamps-wrap hidden" id="app-preview-stamps-wrap">
+                          <span class="builder-wallet-card-stamps" id="app-wallet-preview-stamps">0 / 10</span>
+                          <div class="builder-wallet-card-stamps-grid" id="app-preview-stamps-grid" aria-hidden="true">
+                            <div class="builder-wallet-card-stamps-row"></div>
+                            <div class="builder-wallet-card-stamps-row"></div>
+                          </div>
+                          <span class="builder-wallet-card-label">Tampons</span>
+                        </div>
+                        <div class="builder-wallet-card-member">
+                          <span class="builder-wallet-card-member-label">Membre</span>
+                          <span class="builder-wallet-card-member-value">Marie D.</span>
+                        </div>
+                      </div>
+                      <div class="builder-wallet-card-qr"><img class="builder-wallet-card-qr-img" id="app-wallet-preview-qr" src="" alt="QR code — scannez pour ajouter la carte à Apple Wallet" width="64" height="64" /></div>
                     </div>
                   </div>
                 </div>

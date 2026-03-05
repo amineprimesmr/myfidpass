@@ -1159,7 +1159,12 @@ function initAppDashboard(slug) {
     const orgEl = document.getElementById("app-personnaliser-preview-org");
     const valueEl = document.getElementById("app-wallet-preview-value");
     const labelEl = document.getElementById("app-wallet-preview-label");
-    const logoWrap = document.querySelector(".app-wallet-preview-logo-wrap");
+    const logoWrap = document.getElementById("app-personnaliser-header-logo-wrap") || document.querySelector(".app-wallet-preview-logo-wrap");
+    const ptsWrap = document.getElementById("app-preview-pts-wrap");
+    const stampsWrap = document.getElementById("app-preview-stamps-wrap");
+    const stampsValueEl = document.getElementById("app-wallet-preview-stamps");
+    const stampsGridEl = document.getElementById("app-preview-stamps-grid");
+    const ptsEmojiEl = document.getElementById("app-preview-pts-emoji");
     if (!card || !orgEl) return;
     const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
     const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
@@ -1169,17 +1174,35 @@ function initAppDashboard(slug) {
     card.style.setProperty("--wallet-label", labelColor);
     const stripColor = personnaliserStripHex?.value?.trim() || personnaliserStrip?.value || bg;
     const stripHex = stripColor.startsWith("#") ? stripColor : "#" + stripColor;
-    if (stripEl) {
-      stripEl.style.background = stripHex;
-    }
+    if (stripEl) stripEl.style.background = stripHex;
     const bodyEl = card?.querySelector(".app-wallet-preview-body");
     if (bodyEl) {
       bodyEl.style.background = bg.startsWith("#") ? bg : "#" + bg;
       bodyEl.style.color = fg;
     }
     orgEl.textContent = personnaliserOrg?.value?.trim() || "Votre commerce";
-    if (valueEl) valueEl.textContent = "42 pts";
-    if (labelEl) labelEl.textContent = "Points";
+    const isStamps = programTypeStamps && programTypeStamps.checked;
+    const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "☕";
+    const requiredStamps = 10;
+    if (ptsWrap) ptsWrap.classList.toggle("hidden", !!isStamps);
+    if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps);
+    if (valueEl) valueEl.textContent = isStamps ? "" : "0";
+    if (labelEl) labelEl.textContent = isStamps ? "Tampons" : "points";
+    if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
+    if (stampsValueEl) stampsValueEl.textContent = `0 / ${requiredStamps}`;
+    if (stampsGridEl && isStamps) {
+      const rows = stampsGridEl.querySelectorAll(".builder-wallet-card-stamps-row");
+      rows.forEach((row) => {
+        row.innerHTML = "";
+        for (let i = 0; i < 5; i++) {
+          const span = document.createElement("span");
+          span.className = "stamp stamp-emoji";
+          span.setAttribute("aria-hidden", "true");
+          span.textContent = stampEmoji;
+          row.appendChild(span);
+        }
+      });
+    }
     const useStripText = stripDisplayText && stripDisplayText.checked;
     if (stripTextPreview) {
       if (useStripText) {
@@ -1190,26 +1213,29 @@ function initAppDashboard(slug) {
         stripTextPreview.classList.add("hidden");
       }
     }
-    if (logoWrap) {
-      logoWrap.style.display = useStripText ? "none" : "";
-    }
+    if (orgEl) orgEl.classList.toggle("hidden", !!useStripText);
+    if (logoWrap) logoWrap.style.display = useStripText ? "none" : "";
     const walletLogo = document.getElementById("app-wallet-preview-logo");
-    if (walletLogo && personnaliserLogoDataUrl && !useStripText) {
+    const hasLogoUrl = personnaliserLogoDataUrl && personnaliserLogoDataUrl.length > 0;
+    if (walletLogo && hasLogoUrl && !useStripText) {
       walletLogo.src = personnaliserLogoDataUrl;
       walletLogo.classList.remove("hidden");
     } else if (walletLogo) {
       if (useStripText) walletLogo.classList.add("hidden");
-      else {
+      else if (!hasLogoUrl) {
         walletLogo.removeAttribute("src");
         walletLogo.classList.add("hidden");
       }
     }
     const logoFallback = document.getElementById("app-wallet-preview-logo-fallback");
-    if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText);
+    if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText || !!(walletLogo && walletLogo.src && !walletLogo.classList.contains("hidden")));
   }
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [stripDisplayLogo, stripDisplayText].forEach((el) => el?.addEventListener("change", () => { setStripDisplayVisibility(); updatePersonnaliserPreview(); }));
+  [programTypePoints, programTypeStamps, stampEmojiEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+  [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
+  if (stampEmojiEl) stampEmojiEl.addEventListener("input", updatePersonnaliserPreview);
 
   const personnaliserAddress = document.getElementById("app-personnaliser-address");
   const personnaliserCoordsDisplay = document.getElementById("app-personnaliser-coords-display");
@@ -1289,6 +1315,7 @@ function initAppDashboard(slug) {
         .then((blob) => {
           if (blob && personnaliserLogoPreview) {
             const url = URL.createObjectURL(blob);
+            personnaliserLogoDataUrl = url;
             personnaliserLogoPreview.src = url;
             personnaliserLogoPreview.classList.remove("hidden");
             if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
@@ -1585,6 +1612,7 @@ function initAppDashboard(slug) {
               .then((blob) => {
                 if (blob && personnaliserLogoPreview) {
                   const url = URL.createObjectURL(blob);
+                  personnaliserLogoDataUrl = url;
                   personnaliserLogoPreview.src = url;
                   personnaliserLogoPreview.classList.remove("hidden");
                   if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
