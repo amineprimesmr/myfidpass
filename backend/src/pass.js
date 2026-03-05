@@ -58,25 +58,31 @@ const ICON_SIZE_3X = 87;
 
 /**
  * Redimensionne et convertit en PNG le buffer image (PNG/JPEG) pour respecter les specs Apple.
+ * Logo bandeau : 160×50 (1x) et 320×100 (2x). Fond transparent pour que le bandeau couleur soit visible.
  * Retourne { logoPng: Buffer (160×50), logoPng2x: Buffer (320×100) } ou null en cas d'erreur.
  */
 async function resizeLogoForPass(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
+  const opts = { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } };
   try {
-    const pipeline = sharp(inputBuffer);
-    const meta = await pipeline.metadata();
-    if (!meta.width || !meta.height) return null;
     const out2x = await sharp(inputBuffer)
-      .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X, opts)
       .png()
       .toBuffer();
     const out1x = await sharp(inputBuffer)
-      .resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X, opts)
       .png()
       .toBuffer();
     return { logoPng: out1x, logoPng2x: out2x };
   } catch (err) {
     console.warn("[PassKit] resizeLogoForPass failed:", err.message);
+  }
+  try {
+    const out2x = await sharp(inputBuffer).resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X).png().toBuffer();
+    const out1x = await sharp(inputBuffer).resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X).png().toBuffer();
+    return { logoPng: out1x, logoPng2x: out2x };
+  } catch (err2) {
+    console.warn("[PassKit] resizeLogoForPass fallback failed:", err2?.message);
     return null;
   }
 }
@@ -690,25 +696,32 @@ export async function generatePass(member, business = null, options = {}) {
       buffers["logo@2x.png"] = textLogo.logoPng2x;
     }
   } else if (business?.logo_base64) {
-    const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "");
+    const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "").trim();
     const logoBuf = Buffer.from(base64Data, "base64");
     if (logoBuf.length > 0) {
       const resized = await resizeLogoForPass(logoBuf);
       if (resized) {
         buffers["logo.png"] = resized.logoPng;
         buffers["logo@2x.png"] = resized.logoPng2x;
+        if (process.env.NODE_ENV === "production") {
+          console.log("[PassKit] Logo commerce injecté dans le pass (160×50 / 320×100)");
+        }
       } else {
-        buffers["logo.png"] = logoBuf;
-        buffers["logo@2x.png"] = logoBuf;
+        const textFallback = await createLogoFromText(stripColorHex, organizationName);
+        if (textFallback) {
+          buffers["logo.png"] = textFallback.logoPng;
+          buffers["logo@2x.png"] = textFallback.logoPng2x;
+          console.warn("[PassKit] Logo image invalide — bandeau texte (nom commerce) utilisé à la place");
+        }
       }
       const iconResized = await resizeLogoForPassIcon(logoBuf);
       if (iconResized) {
         buffers["icon.png"] = iconResized.iconPng;
         buffers["icon@2x.png"] = iconResized.iconPng2x;
         buffers["icon@3x.png"] = iconResized.iconPng3x;
-        console.log("[PassKit] Icône notification Wallet générée depuis le logo (29/58/87px)");
-      } else {
-        console.warn("[PassKit] resizeLogoForPassIcon a échoué — icône par défaut utilisée");
+        if (process.env.NODE_ENV === "production") {
+          console.log("[PassKit] Icône notification Wallet générée depuis le logo (29/58/87px)");
+        }
       }
     }
   }
