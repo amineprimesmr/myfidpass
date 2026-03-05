@@ -412,7 +412,9 @@ body.page-app .site-banner { display: none !important; }
 .app-coords-display { font-size: 0.85rem; color: var(--app-text-muted); margin: 0 0 0.25rem; }
 .app-coords-display.hidden { display: none; }
 .app-file { position: absolute; opacity: 0; width: 0; height: 0; }
-.app-logo-label { display: inline-flex; align-items: center; justify-content: center; min-height: 80px; padding: 1rem; border: 2px dashed var(--app-border); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: var(--app-text-muted); }
+.app-drop-zone { outline: none; }
+.app-drop-zone.app-drop-zone-active .app-logo-label { border-color: var(--app-accent); background: var(--app-accent-light); }
+.app-logo-label { display: inline-flex; align-items: center; justify-content: center; min-height: 80px; padding: 1rem; border: 2px dashed var(--app-border); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: var(--app-text-muted); transition: border-color 0.15s, background 0.15s; }
 .app-logo-label:hover { border-color: var(--app-accent); }
 .app-logo-preview { max-width: 200px; max-height: 60px; object-fit: contain; }
 .app-logo-preview.hidden { display: none; }

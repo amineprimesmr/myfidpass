@@ -1364,49 +1364,78 @@ function initAppDashboard(slug) {
     renderPicker(STAMP_ICONS);
   }
 
+  async function applyLogoFromFile(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
+      return;
+    }
+    try {
+      personnaliserLogoDataUrl = await resizeLogoToDataUrl(file);
+      if (personnaliserLogoPreview) {
+        personnaliserLogoPreview.src = personnaliserLogoDataUrl;
+        personnaliserLogoPreview.classList.remove("hidden");
+      }
+      if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+      updatePersonnaliserPreview();
+    } catch (err) {
+      showPersonnaliserMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG valide.", true);
+    }
+  }
+
+  async function applyCardBgFromFile(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
+      return;
+    }
+    try {
+      personnaliserCardBgRemoveRequested = false;
+      personnaliserCardBgDataUrl = await resizeLogoToDataUrl(file, 750, 0.85);
+      if (personnaliserCardBgPreview) {
+        personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
+        personnaliserCardBgPreview.classList.remove("hidden");
+      }
+      if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
+      if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+    } catch (err) {
+      showPersonnaliserMessage("Impossible de charger l'image de fond.", true);
+    }
+  }
+
+  function setupImageDropZone(zoneEl, onFile) {
+    if (!zoneEl) return;
+    zoneEl.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zoneEl.classList.add("app-drop-zone-active");
+    });
+    zoneEl.addEventListener("dragleave", (e) => {
+      if (!zoneEl.contains(e.relatedTarget)) zoneEl.classList.remove("app-drop-zone-active");
+    });
+    zoneEl.addEventListener("drop", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zoneEl.classList.remove("app-drop-zone-active");
+      const file = e.dataTransfer?.files?.[0];
+      if (file) onFile(file);
+    });
+  }
+
   if (personnaliserLogo) {
     personnaliserLogo.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
-      if (!file) return;
-      if (!file.type.startsWith("image/")) {
-        showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
-        return;
-      }
-      try {
-        personnaliserLogoDataUrl = await resizeLogoToDataUrl(file);
-        if (personnaliserLogoPreview) {
-          personnaliserLogoPreview.src = personnaliserLogoDataUrl;
-          personnaliserLogoPreview.classList.remove("hidden");
-        }
-        if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
-        updatePersonnaliserPreview();
-      } catch (err) {
-        showPersonnaliserMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG valide.", true);
-      }
+      if (file) await applyLogoFromFile(file);
     });
+    const logoDropZone = document.getElementById("app-logo-drop-zone");
+    setupImageDropZone(logoDropZone, (file) => applyLogoFromFile(file));
   }
 
   if (personnaliserCardBg) {
     personnaliserCardBg.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
-      if (!file) return;
-      if (!file.type.startsWith("image/")) {
-        showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
-        return;
-      }
-      try {
-        personnaliserCardBgRemoveRequested = false;
-        personnaliserCardBgDataUrl = await resizeLogoToDataUrl(file, 750, 0.85);
-        if (personnaliserCardBgPreview) {
-          personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
-          personnaliserCardBgPreview.classList.remove("hidden");
-        }
-        if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
-        if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
-      } catch (err) {
-        showPersonnaliserMessage("Impossible de charger l'image de fond.", true);
-      }
+      if (file) await applyCardBgFromFile(file);
     });
+    const cardBgDropZone = document.getElementById("app-card-bg-drop-zone");
+    setupImageDropZone(cardBgDropZone, (file) => applyCardBgFromFile(file));
   }
   if (personnaliserCardBgRemove) {
     personnaliserCardBgRemove.addEventListener("click", () => {
@@ -1418,7 +1447,7 @@ function initAppDashboard(slug) {
         personnaliserCardBgPreview.classList.add("hidden");
       }
       if (personnaliserCardBgPlaceholder) {
-        personnaliserCardBgPlaceholder.textContent = "+ Choisir une image de fond";
+        personnaliserCardBgPlaceholder.textContent = "+ Choisir une image de fond (glisser une image ou cliquer)";
         personnaliserCardBgPlaceholder.classList.remove("hidden");
       }
       if (hasCardBackgroundFromServer) {
