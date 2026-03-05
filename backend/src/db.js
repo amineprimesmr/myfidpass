@@ -185,6 +185,10 @@ const bizColsBg = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c
 if (!bizColsBg.includes("card_background_base64")) {
   db.exec("ALTER TABLE businesses ADD COLUMN card_background_base64 TEXT");
 }
+const bizColsStrip = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+if (!bizColsStrip.includes("strip_color")) {
+  db.exec("ALTER TABLE businesses ADD COLUMN strip_color TEXT");
+}
 // Migration : règles de la carte (type programme, récompenses, seuils)
 const bizColsRules = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
 for (const { col, type } of [
@@ -319,6 +323,7 @@ export function updateBusiness(businessId, updates) {
     "logo_base64",
     "logo_updated_at",
     "card_background_base64",
+    "strip_color",
     "location_lat",
     "location_lng",
     "location_relevant_text",

@@ -1032,6 +1032,8 @@ function initAppDashboard(slug) {
   const personnaliserFgHex = document.getElementById("app-personnaliser-fg-hex");
   const personnaliserLabel = document.getElementById("app-personnaliser-label");
   const personnaliserLabelHex = document.getElementById("app-personnaliser-label-hex");
+  const personnaliserStrip = document.getElementById("app-personnaliser-strip");
+  const personnaliserStripHex = document.getElementById("app-personnaliser-strip-hex");
   const personnaliserLogo = document.getElementById("app-personnaliser-logo");
   const personnaliserLogoPlaceholder = document.getElementById("app-personnaliser-logo-placeholder");
   const personnaliserLogoPreview = document.getElementById("app-personnaliser-logo-preview");
@@ -1121,6 +1123,7 @@ function initAppDashboard(slug) {
   bindPersonnaliserColor(personnaliserBg, personnaliserBgHex);
   bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
   bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
+  bindPersonnaliserColor(personnaliserStrip, personnaliserStripHex);
 
   function hexToRgb(hex) {
     const n = parseInt(hex.replace(/^#/, ""), 16);
@@ -1206,6 +1209,10 @@ function initAppDashboard(slug) {
       if (personnaliserFgHex) personnaliserFgHex.value = fg;
       if (personnaliserLabel) personnaliserLabel.value = label;
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
+      const stripColor = data.strip_color ?? data.stripColor ?? "";
+      const stripVal = stripColor || bg;
+      if (personnaliserStrip) personnaliserStrip.value = stripVal.startsWith("#") ? stripVal : "#" + stripVal;
+      if (personnaliserStripHex) personnaliserStripHex.value = stripVal.startsWith("#") ? stripVal : "#" + stripVal;
       let programType = (data.program_type ?? data.programType ?? "").toLowerCase();
       if (programType !== "points" && programType !== "stamps") {
         programType = (data.required_stamps ?? data.requiredStamps) > 0 ? "stamps" : "points";
@@ -1396,11 +1403,13 @@ function initAppDashboard(slug) {
         if (/^[0-9A-Fa-f]{6}$/.test(s)) return "#" + s;
         return undefined;
       };
+      const stripColorInput = personnaliserStripHex?.value?.trim() || personnaliserStrip?.value || "";
       const body = {
         organizationName: organizationName || undefined,
         backgroundColor: toHex(backgroundColor),
         foregroundColor: toHex(foregroundColor),
         labelColor: toHex(labelColor),
+        stripColor: stripColorInput ? toHex(stripColorInput) : undefined,
       };
       const isStamps = programTypeStamps && programTypeStamps.checked;
       body.programType = isStamps ? "stamps" : "points";
@@ -2621,13 +2630,34 @@ function initBuilderPage() {
   });
 
   loadDraft();
-  // Priorité au paramètre URL (sélection page d'accueil) sur le brouillon
-  if (etablissementFromUrl && typeof etablissementFromUrl === "string") {
-    state.organizationName = etablissementFromUrl.trim();
+  const placeIdFromUrl = urlParams.get("place_id")?.trim();
+  const hasLandingParams = (etablissementFromUrl && typeof etablissementFromUrl === "string") || placeIdFromUrl;
+
+  function applyInitialState() {
+    if (etablissementFromUrl && typeof etablissementFromUrl === "string") {
+      state.organizationName = etablissementFromUrl.trim();
+    }
     saveDraft();
+    updateBuilderPreviewOrgName(state.organizationName || "Votre commerce");
+    setTemplateSelection(state.selectedTemplateId);
   }
-  updateBuilderPreviewOrgName(state.organizationName || "Votre commerce");
-  setTemplateSelection(state.selectedTemplateId);
+
+  applyInitialState();
+  if (hasLandingParams) {
+    (async () => {
+      try {
+        const qs = new URLSearchParams();
+        if (placeIdFromUrl) qs.set("place_id", placeIdFromUrl);
+        qs.set("name", (state.organizationName || etablissementFromUrl || "").trim());
+        const res = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-category?${qs}`);
+        const data = await res.json().catch(() => ({}));
+        if (data.suggestedTemplateId && CARD_TEMPLATES.some((t) => t.id === data.suggestedTemplateId)) {
+          state.selectedTemplateId = data.suggestedTemplateId;
+          applyInitialState();
+        }
+      } catch (_) {}
+    })();
+  }
 
   document.querySelectorAll(".builder-template-card").forEach((btn) => {
     btn.addEventListener("click", () => setTemplateSelection(btn.getAttribute("data-template")));

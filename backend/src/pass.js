@@ -663,7 +663,8 @@ export async function generatePass(member, business = null, options = {}) {
   const stripTemplateKey = options.template || "cafe";
   const stripStampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
   const toHexStrip = (v) => (v && String(v).trim()) ? (String(v).startsWith("#") ? v : `#${v}`) : null;
-  const stripColorHex = toHexStrip(options.backgroundColor ?? options.background_color) ?? toHexStrip(business?.background_color) ?? (PASS_TEMPLATES[stripTemplateKey] || PASS_TEMPLATES.classic).backgroundColor;
+  // Couleur du bandeau (section sans image) : strip_color si défini, sinon background_color
+  const stripColorHex = toHexStrip(options.strip_color ?? options.stripColor) ?? toHexStrip(business?.strip_color) ?? toHexStrip(options.backgroundColor ?? options.background_color) ?? toHexStrip(business?.background_color) ?? (PASS_TEMPLATES[stripTemplateKey] || PASS_TEMPLATES.classic).backgroundColor;
 
   if (format === "tampons") {
     let baseStrip;
@@ -840,12 +841,11 @@ export async function generatePass(member, business = null, options = {}) {
 
   // Pas de champ "Actualité" sur le pass (design épuré)
 
-  // QR code uniquement (pas PDF417 ni Code128). Pas de texte sous le QR (altText vide).
+  // QR code uniquement. Pas de texte sous le QR : on n'envoie pas altText pour que la clé soit absente du pass.json (iOS n'affiche alors pas d'ID).
   const barcodePayload = {
     message: member.id,
     format: "PKBarcodeFormatQR",
     messageEncoding: "iso-8859-1",
-    altText: "",
   };
   pass.setBarcodes(barcodePayload);
   if (process.env.NODE_ENV === "production") {

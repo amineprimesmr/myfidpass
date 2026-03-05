@@ -106,6 +106,7 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     logo_url: business.logo_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/logo` : undefined,
     logo_updated_at: business.logo_updated_at ?? undefined,
     has_card_background: !!(business.card_background_base64 && String(business.card_background_base64).trim()),
+    strip_color: business.strip_color ?? undefined,
   });
 });
 
@@ -145,6 +146,7 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
+  const strip_color = body.strip_color ?? body.stripColor;
   const logo_url = (body.logo_url ?? body.logoUrl ?? "").trim();
   const location_address = body.location_address ?? body.locationAddress;
   const updates = {};
@@ -223,6 +225,10 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
       }
       updates.card_background_base64 = card_background_base64.startsWith("data:") ? card_background_base64 : `data:image/png;base64,${base64Data}`;
     }
+  }
+  if (strip_color !== undefined) {
+    const v = strip_color === null || strip_color === "" ? null : normalizeHexForPatch(strip_color);
+    updates.strip_color = v || null;
   }
   if (logo_url && (logo_url.startsWith("http://") || logo_url.startsWith("https://"))) {
     try {
@@ -1233,6 +1239,8 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
   if (req.query.organization_name != null) opts.organizationName = req.query.organization_name;
   opts.background_color = req.query.background_color ?? business?.background_color ?? undefined;
   opts.backgroundColor = opts.background_color;
+  opts.strip_color = req.query.strip_color ?? business?.strip_color ?? undefined;
+  opts.stripColor = opts.strip_color;
   opts.foreground_color = req.query.foreground_color ?? business?.foreground_color ?? undefined;
   opts.foregroundColor = opts.foreground_color;
   opts.stamp_emoji = req.query.stamp_emoji ?? business.stamp_emoji ?? undefined;
@@ -1484,6 +1492,10 @@ router.patch("/:slug", (req, res) => {
   if (stampRewardLabel !== undefined) {
     const v = stampRewardLabel == null || stampRewardLabel === "" ? null : String(stampRewardLabel).trim().slice(0, 120);
     updates.stamp_reward_label = v || null;
+  }
+  const stripColor = body.stripColor ?? body.strip_color;
+  if (stripColor !== undefined) {
+    updates.strip_color = stripColor === null || stripColor === "" ? null : normalizeHex(stripColor);
   }
 
   const updated = updateBusiness(business.id, updates);
