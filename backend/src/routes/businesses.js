@@ -105,6 +105,7 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     sector: business.sector ?? undefined,
     logo_url: business.logo_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/logo` : undefined,
     logo_updated_at: business.logo_updated_at ?? undefined,
+    has_card_background: !!(business.card_background_base64 && String(business.card_background_base64).trim()),
   });
 });
 
@@ -1230,8 +1231,10 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
   const template = req.query.template || "classic";
   const opts = { template };
   if (req.query.organization_name != null) opts.organizationName = req.query.organization_name;
-  if (req.query.background_color != null) opts.background_color = req.query.background_color;
-  if (req.query.foreground_color != null) opts.foreground_color = req.query.foreground_color;
+  opts.background_color = req.query.background_color ?? business?.background_color ?? undefined;
+  opts.backgroundColor = opts.background_color;
+  opts.foreground_color = req.query.foreground_color ?? business?.foreground_color ?? undefined;
+  opts.foregroundColor = opts.foreground_color;
   opts.stamp_emoji = req.query.stamp_emoji ?? business.stamp_emoji ?? undefined;
   if (req.query.required_stamps != null) {
     const n = parseInt(req.query.required_stamps, 10);
@@ -1414,6 +1417,23 @@ router.patch("/:slug", (req, res) => {
       return res.status(400).json({ error: "Logo invalide ou trop volumineux (max 4 Mo)." });
     }
     updates.logo_base64 = logoBase64;
+  }
+  const cardBackgroundBase64 = body.card_background_base64 ?? body.cardBackgroundBase64;
+  if (cardBackgroundBase64 !== undefined) {
+    if (cardBackgroundBase64 === null || (typeof cardBackgroundBase64 === "string" && cardBackgroundBase64.trim() === "")) {
+      updates.card_background_base64 = null;
+    } else if (typeof cardBackgroundBase64 === "string") {
+      const base64Data = String(cardBackgroundBase64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > 4 * 1024 * 1024) {
+        return res.status(400).json({ error: "Image de fond trop volumineuse (max 4 Mo)." });
+      }
+      if (buf.length > 0) {
+        updates.card_background_base64 = cardBackgroundBase64.startsWith("data:") ? cardBackgroundBase64 : `data:image/png;base64,${base64Data}`;
+      } else {
+        updates.card_background_base64 = null;
+      }
+    }
   }
   const programType = body.programType ?? body.program_type;
   if (programType !== undefined) {

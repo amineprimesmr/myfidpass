@@ -1038,6 +1038,13 @@ function initAppDashboard(slug) {
   const personnaliserMessage = document.getElementById("app-personnaliser-message");
   const personnaliserSave = document.getElementById("app-personnaliser-save");
   let personnaliserLogoDataUrl = "";
+  const personnaliserCardBg = document.getElementById("app-personnaliser-card-bg");
+  const personnaliserCardBgPlaceholder = document.getElementById("app-personnaliser-card-bg-placeholder");
+  const personnaliserCardBgPreview = document.getElementById("app-personnaliser-card-bg-preview");
+  const personnaliserCardBgRemove = document.getElementById("app-personnaliser-card-bg-remove");
+  let personnaliserCardBgDataUrl = "";
+  let personnaliserCardBgRemoveRequested = false;
+  let hasCardBackgroundFromServer = false;
   const programTypePoints = document.getElementById("app-program-type-points");
   const programTypeStamps = document.getElementById("app-program-type-stamps");
   const rulesPanelPoints = document.getElementById("app-rules-points");
@@ -1226,6 +1233,11 @@ function initAppDashboard(slug) {
       updateCoordsDisplay(data.location_lat ?? data.locationLat, data.location_lng ?? data.locationLng);
       if (personnaliserLocationText && (data.location_relevant_text ?? data.locationRelevantText) != null) personnaliserLocationText.value = data.location_relevant_text ?? data.locationRelevantText ?? "";
       if (personnaliserRadius != null && (data.location_radius_meters ?? data.locationRadiusMeters) != null) personnaliserRadius.value = data.location_radius_meters ?? data.locationRadiusMeters;
+      hasCardBackgroundFromServer = !!(data.has_card_background ?? data.hasCardBackground);
+      if (personnaliserCardBgRemove) {
+        if (hasCardBackgroundFromServer || personnaliserCardBgDataUrl) personnaliserCardBgRemove.classList.remove("hidden");
+        else personnaliserCardBgRemove.classList.add("hidden");
+      }
       updatePersonnaliserPreview();
       api("/logo?v=" + Date.now())
         .then((r) => (r.ok ? r.blob() : null))
@@ -1329,6 +1341,49 @@ function initAppDashboard(slug) {
     });
   }
 
+  if (personnaliserCardBg) {
+    personnaliserCardBg.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
+        return;
+      }
+      try {
+        personnaliserCardBgRemoveRequested = false;
+        personnaliserCardBgDataUrl = await resizeLogoToDataUrl(file, 750, 0.85);
+        if (personnaliserCardBgPreview) {
+          personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
+          personnaliserCardBgPreview.classList.remove("hidden");
+        }
+        if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
+        if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+      } catch (err) {
+        showPersonnaliserMessage("Impossible de charger l'image de fond.", true);
+      }
+    });
+  }
+  if (personnaliserCardBgRemove) {
+    personnaliserCardBgRemove.addEventListener("click", () => {
+      personnaliserCardBgRemoveRequested = true;
+      personnaliserCardBgDataUrl = "";
+      if (personnaliserCardBg) personnaliserCardBg.value = "";
+      if (personnaliserCardBgPreview) {
+        personnaliserCardBgPreview.src = "";
+        personnaliserCardBgPreview.classList.add("hidden");
+      }
+      if (personnaliserCardBgPlaceholder) {
+        personnaliserCardBgPlaceholder.textContent = "+ Choisir une image de fond";
+        personnaliserCardBgPlaceholder.classList.remove("hidden");
+      }
+      if (hasCardBackgroundFromServer) {
+        personnaliserCardBgRemove.classList.remove("hidden");
+      } else {
+        personnaliserCardBgRemove.classList.add("hidden");
+      }
+    });
+  }
+
   if (personnaliserSave) {
     personnaliserSave.addEventListener("click", async () => {
       const organizationName = personnaliserOrg?.value?.trim() || "";
@@ -1378,6 +1433,8 @@ function initAppDashboard(slug) {
       const sectorVal = (isStamps ? sectorStampsEl : sectorEl)?.value?.trim();
       if (sectorVal) body.sector = sectorVal;
       if (personnaliserLogoDataUrl) body.logoBase64 = personnaliserLogoDataUrl;
+      if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
+      else if (personnaliserCardBgDataUrl) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
       const addressVal = document.getElementById("app-personnaliser-address")?.value?.trim() || "";
       const locTextVal = document.getElementById("app-personnaliser-location-text")?.value?.trim();
       const radiusVal = document.getElementById("app-personnaliser-radius")?.value;
@@ -1414,6 +1471,34 @@ function initAppDashboard(slug) {
           updateCoordsDisplay(data.locationLat, data.locationLng);
           personnaliserLogoDataUrl = "";
           if (personnaliserLogo) personnaliserLogo.value = "";
+          if (body.cardBackgroundBase64 === "") {
+            personnaliserCardBgRemoveRequested = false;
+            hasCardBackgroundFromServer = false;
+            personnaliserCardBgDataUrl = "";
+            if (personnaliserCardBg) personnaliserCardBg.value = "";
+            if (personnaliserCardBgPreview) {
+              personnaliserCardBgPreview.src = "";
+              personnaliserCardBgPreview.classList.add("hidden");
+            }
+            if (personnaliserCardBgPlaceholder) {
+              personnaliserCardBgPlaceholder.textContent = "+ Choisir une image de fond";
+              personnaliserCardBgPlaceholder.classList.remove("hidden");
+            }
+            if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.add("hidden");
+          } else if (body.cardBackgroundBase64) {
+            hasCardBackgroundFromServer = true;
+            personnaliserCardBgDataUrl = "";
+            if (personnaliserCardBg) personnaliserCardBg.value = "";
+            if (personnaliserCardBgPreview) {
+              personnaliserCardBgPreview.src = "";
+              personnaliserCardBgPreview.classList.add("hidden");
+            }
+            if (personnaliserCardBgPlaceholder) {
+              personnaliserCardBgPlaceholder.textContent = "Image de fond enregistrée";
+              personnaliserCardBgPlaceholder.classList.remove("hidden");
+            }
+            if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+          }
           if (body.logoBase64) {
             api("/logo?v=" + Date.now())
               .then((r) => (r.ok ? r.blob() : null))

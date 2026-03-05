@@ -148,10 +148,13 @@ function buildPassLocations(lat, lng, radiusMeters = 500, relevantText) {
   return points;
 }
 
-/** Génère un strip PNG 750x246. Dégradé qui se fond dans le fond (dernières lignes = backgroundColor exact) pour éviter toute ligne de coupure. */
-function createStripBuffer(templateKey) {
+/** Génère un strip PNG 750x246. Dégradé qui se fond dans le fond. backgroundColorOverride : couleur choisie par l'utilisateur (ex. quand pas d'image de fond). */
+function createStripBuffer(templateKey, backgroundColorOverride) {
   const colors = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
-  const base = hexToRgb(colors.backgroundColor);
+  const hex = backgroundColorOverride && /^#?[0-9A-Fa-f]{6}$/.test(backgroundColorOverride.replace(/^#/, ""))
+    ? (backgroundColorOverride.startsWith("#") ? backgroundColorOverride : `#${backgroundColorOverride}`)
+    : colors.backgroundColor;
+  const base = hexToRgb(hex);
   const w = 750;
   const h = 246;
   const blendRows = 20;
@@ -656,9 +659,12 @@ export async function generatePass(member, business = null, options = {}) {
   const format = options.format || explicitFormat || (useTampons ? "tampons" : "points");
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
-  // Strip : image de fond perso + grille tampons (emoji ☕ dans les cercles remplis)
+  // Strip : image de fond perso OU couleur de fond choisie (pas de vert par défaut si l'utilisateur a choisi une autre couleur)
   const stripTemplateKey = options.template || "cafe";
   const stripStampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
+  const toHexStrip = (v) => (v && String(v).trim()) ? (String(v).startsWith("#") ? v : `#${v}`) : null;
+  const stripColorHex = toHexStrip(options.backgroundColor ?? options.background_color) ?? toHexStrip(business?.background_color) ?? (PASS_TEMPLATES[stripTemplateKey] || PASS_TEMPLATES.classic).backgroundColor;
+
   if (format === "tampons") {
     let baseStrip;
     if (options.card_background_base64) {
@@ -672,21 +678,29 @@ export async function generatePass(member, business = null, options = {}) {
         }
       }
     }
-    if (!baseStrip) baseStrip = createStripBuffer(stripTemplateKey);
+    if (!baseStrip) baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
     const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stripStampEmoji);
     buffers["strip.png"] = stripWithStamps;
     buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
-  } else if (options.card_background_base64) {
-    const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
-    const buf = Buffer.from(base64Data, "base64");
-    if (buf.length > 0) {
-      try {
-        const resized = await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
-        buffers["strip.png"] = resized;
-        buffers["strip@2x.png"] = resized;
-      } catch (e) {
-        console.warn("[PassKit] card_background resize failed:", e?.message);
+  } else {
+    // Mode points : strip = image de fond perso OU bandeau à la couleur choisie (pas de vert par défaut)
+    if (options.card_background_base64) {
+      const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > 0) {
+        try {
+          const resized = await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
+          buffers["strip.png"] = resized;
+          buffers["strip@2x.png"] = resized;
+        } catch (e) {
+          console.warn("[PassKit] card_background resize failed:", e?.message);
+        }
       }
+    }
+    if (!buffers["strip.png"]) {
+      const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
+      buffers["strip.png"] = stripBuf;
+      buffers["strip@2x.png"] = stripBuf;
     }
   }
 
@@ -826,12 +840,12 @@ export async function generatePass(member, business = null, options = {}) {
 
   // Pas de champ "Actualité" sur le pass (design épuré)
 
-  // QR code uniquement (pas PDF417 ni Code128) — plus simple à scanner en caisse
+  // QR code uniquement (pas PDF417 ni Code128). Pas de texte sous le QR (altText vide).
   const barcodePayload = {
     message: member.id,
     format: "PKBarcodeFormatQR",
     messageEncoding: "iso-8859-1",
-    altText: member.id,
+    altText: "",
   };
   pass.setBarcodes(barcodePayload);
   if (process.env.NODE_ENV === "production") {
