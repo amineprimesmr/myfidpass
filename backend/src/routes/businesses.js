@@ -826,10 +826,10 @@ router.post("/:slug/integration/scan", async (req, res) => {
   // En mode tampons, « 1 passage » = 1 tampon même si points_per_visit = 0
   if (visit && programType === "stamps" && points === 0) points = 1;
   if (points <= 0) {
-    const minHint = minAmount != null ? ` (achat min. ${minAmount} € pour les points)` : "";
+    const minHint = minAmount != null ? ` Achat minimum ${minAmount} € pour gagner des points.` : "";
     const msg = perVisit === 0 && programType !== "stamps"
-      ? `Vos règles sont 0 pt/passage. Indiquez un montant (€) pour créditer des points.${minHint}`
-      : "Indiquez amount_eur, visit: true, ou points. Règles : " + perEuro + " pt/€, " + perVisit + " pt/passage." + minHint;
+      ? `Vos règles : 0 point par passage. Saisissez un montant en € pour créditer des points.${minHint}`
+      : `Saisissez le montant du panier en € ou cliquez sur « 1 passage ». Règles : ${perEuro} pt/€, ${perVisit} pt/passage.${minHint}`;
     return res.status(400).json({
       error: msg,
       code: "NO_POINTS_SPECIFIED",
@@ -1090,10 +1090,10 @@ router.post("/:slug/members/:memberId/points", async (req, res) => {
   if (visit && programType === "stamps" && points === 0) points = 1;
 
   if (points <= 0) {
-    const minHint = minAmount != null ? ` (achat min. ${minAmount} €)` : "";
+    const minHint = minAmount != null ? ` Achat minimum ${minAmount} € pour gagner des points.` : "";
     const msg = perVisit === 0 && programType !== "stamps"
-      ? `Vos règles sont 0 pt/passage. Indiquez un montant (€) ou un nombre de points pour créditer.${minHint}`
-      : "Indiquez points, amount_eur (montant en €), ou visit: true (1 passage). Règles: " + perEuro + " pt/€, " + perVisit + " pt/passage." + minHint;
+      ? `Vos règles : 0 point par passage. Saisissez un montant en € ou un nombre de points pour créditer.${minHint}`
+      : `Saisissez le montant du panier en € ou cliquez sur « 1 passage ». Règles : ${perEuro} pt/€, ${perVisit} pt/passage.${minHint}`;
     return res.status(400).json({
       error: msg,
     });

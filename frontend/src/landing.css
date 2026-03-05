@@ -2794,6 +2794,16 @@ body.page-checkout .site-banner { display: none !important; }
 .checkout-btn-next:not(:disabled) { background: #0a7c42; color: #fff; }
 .checkout-btn-next:not(:disabled):hover { background: #096b38; }
 .checkout-btn-next:disabled { opacity: 0.6; cursor: not-allowed; }
+.checkout-already-logged-in {
+  font-size: 0.9rem;
+  color: #0a7c42;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  background: #e8f5e9;
+  border-radius: 6px;
+}
+.checkout-already-logged-in a { color: #0a7c42; text-decoration: underline; }
+.checkout-already-logged-in a:hover { text-decoration: none; }
 .checkout-step-desc {
   font-size: 0.875rem;
   color: #666;

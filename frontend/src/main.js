@@ -3134,10 +3134,25 @@ function initCheckoutPage() {
   if (getAuthToken()) {
     showStep(3);
     if (isMobile()) setMobileStep(3);
+    const alreadyLoggedInHint = document.getElementById("checkout-already-logged-in-hint");
+    if (alreadyLoggedInHint) alreadyLoggedInHint.classList.remove("hidden");
     document.getElementById("checkout-payment")?.focus();
   } else if (isMobile()) {
     // Toujours démarrer par le récap (écran 0) sur mobile, jamais directement sur formulaire ou paiement
     setMobileStep(0);
+  }
+
+  const checkoutLogoutLink = document.getElementById("checkout-logout-link");
+  if (checkoutLogoutLink) {
+    checkoutLogoutLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      clearAuthToken();
+      const alreadyLoggedInHint = document.getElementById("checkout-already-logged-in-hint");
+      if (alreadyLoggedInHint) alreadyLoggedInHint.classList.add("hidden");
+      showStep(1);
+      if (isMobile() && checkoutMain) setMobileStep(1);
+      if (emailInput) emailInput.focus();
+    });
   }
 
   window.addEventListener("resize", () => {
