@@ -668,7 +668,7 @@ export async function generatePass(member, business = null, options = {}) {
     buffers["strip.png"] = stripWithStamps;
     buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
   } else {
-    // Mode points : strip = image de fond perso OU bandeau à la couleur choisie (pas de vert par défaut)
+    // Mode points : strip = image de fond perso OU bandeau à la couleur choisie (toujours écraser le vert par défaut de buildBuffers)
     if (options.card_background_base64) {
       const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
       const buf = Buffer.from(base64Data, "base64");
@@ -682,7 +682,7 @@ export async function generatePass(member, business = null, options = {}) {
         }
       }
     }
-    if (!buffers["strip.png"]) {
+    if (!buffers["strip.png"] || !options.card_background_base64) {
       const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
       buffers["strip.png"] = stripBuf;
       buffers["strip@2x.png"] = stripBuf;

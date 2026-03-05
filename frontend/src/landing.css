@@ -1313,16 +1313,34 @@
   flex-shrink: 0;
 }
 .builder-wallet-card-body {
-  padding: 0.45rem 0.5rem 2rem 0.6rem;
+  padding: 0.5rem 0.5rem 3rem 0.6rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.2rem;
   flex: 1;
   min-height: 0;
-  justify-content: center;
+  justify-content: flex-start;
   border-radius: 0 0 8px 8px;
   color: #fff;
+}
+.builder-wallet-card-member {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+}
+.builder-wallet-card-member-label {
+  font-size: 0.38rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.75;
+}
+.builder-wallet-card-member-value {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 .builder-wallet-card-pts-wrap {
   display: flex;
@@ -1349,21 +1367,21 @@
 }
 .builder-wallet-card-qr {
   position: absolute;
-  bottom: 0.4rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px;
+  padding: 4px;
   background: #fff;
-  border-radius: 6px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
 }
 .builder-wallet-card-qr-img {
   display: block;
-  width: 52px;
-  height: 52px;
+  width: 64px;
+  height: 64px;
   border-radius: 4px;
 }
 /* Thèmes des cartes dans le mockup (style Wallet réaliste) */
@@ -1417,12 +1435,17 @@
   letter-spacing: 0.02em;
   opacity: 0.95;
 }
+.builder-wallet-card-stamps-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0.25rem 0 0.15rem;
+}
 .builder-wallet-card-stamps-row {
   display: flex;
   gap: 3px;
-  margin: 0.35rem 0 0.2rem;
-  flex-wrap: wrap;
   justify-content: center;
+  flex-wrap: nowrap;
 }
 .builder-wallet-card-stamps-row .stamp {
   width: 8px;
