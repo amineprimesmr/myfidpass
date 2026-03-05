@@ -11,6 +11,46 @@ const LOGO_HEIGHT_2X = 100;
 const LOGO_WIDTH_1X = 160;
 const LOGO_HEIGHT_1X = 50;
 
+/** Échappe le texte pour l'injection dans un SVG (éviter balises et entités). */
+function escapeSvgText(s) {
+  if (s == null || typeof s !== "string") return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Génère le logo du pass sous forme d'image (bandeau couleur + texte) quand strip_display_mode = "text".
+ * Retourne { logoPng, logoPng2x } ou null.
+ */
+async function createLogoFromText(stripColorHex, text) {
+  const label = (text && String(text).trim()) || "Carte fidélité";
+  const hex = stripColorHex && /^#?[0-9A-Fa-f]{6}$/.test(String(stripColorHex).replace(/^#/, ""))
+    ? (String(stripColorHex).startsWith("#") ? stripColorHex : `#${stripColorHex}`)
+    : "#0a7c42";
+  const escaped = escapeSvgText(label);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LOGO_WIDTH_2X}" height="${LOGO_HEIGHT_2X}">
+  <rect width="100%" height="100%" fill="${hex}"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="28" font-family="Arial, Helvetica, sans-serif" font-weight="600">${escaped}</text>
+</svg>`;
+  try {
+    const out2x = await sharp(Buffer.from(svg))
+      .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X)
+      .png()
+      .toBuffer();
+    const out1x = await sharp(Buffer.from(svg))
+      .resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X)
+      .png()
+      .toBuffer();
+    return { logoPng: out1x, logoPng2x: out2x };
+  } catch (err) {
+    console.warn("[PassKit] createLogoFromText failed:", err?.message);
+    return null;
+  }
+}
+
 /** Dimensions Apple pour l’icône du pass (affichée dans les notifications et sur l’écran de verrouillage). */
 const ICON_SIZE_1X = 29;
 const ICON_SIZE_2X = 58;
@@ -604,7 +644,27 @@ export async function generatePass(member, business = null, options = {}) {
     options.organizationName || business?.organization_name || process.env.ORGANIZATION_NAME || "Carte fidélité";
   const certificates = loadCertificates();
   const buffers = buildBuffers(business?.id, options);
-  if (business?.logo_base64) {
+
+  const stripTemplateKey = options.template || "cafe";
+  const toHexStrip = (v) => (v && String(v).trim()) ? (String(v).startsWith("#") ? v : `#${v}`) : null;
+  const stripColorHex =
+    toHexStrip(options.strip_color ?? options.stripColor) ??
+    toHexStrip(options.backgroundColor ?? options.background_color) ??
+    toHexStrip(business?.strip_color) ??
+    toHexStrip(business?.background_color) ??
+    (PASS_TEMPLATES[stripTemplateKey] || PASS_TEMPLATES.classic).backgroundColor;
+
+  const stripDisplayMode = (options.strip_display_mode ?? business?.strip_display_mode ?? "logo").toString().toLowerCase();
+  const useTextInStrip = stripDisplayMode === "text";
+  const stripText = (options.strip_text ?? business?.strip_text ?? organizationName).trim() || organizationName;
+
+  if (useTextInStrip) {
+    const textLogo = await createLogoFromText(stripColorHex, stripText);
+    if (textLogo) {
+      buffers["logo.png"] = textLogo.logoPng;
+      buffers["logo@2x.png"] = textLogo.logoPng2x;
+    }
+  } else if (business?.logo_base64) {
     const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "");
     const logoBuf = Buffer.from(base64Data, "base64");
     if (logoBuf.length > 0) {
@@ -635,17 +695,7 @@ export async function generatePass(member, business = null, options = {}) {
   const format = options.format || explicitFormat || (useTampons ? "tampons" : "points");
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
-  // Strip : image de fond perso OU couleur de fond choisie (pas de vert par défaut si l'utilisateur a choisi une autre couleur)
-  const stripTemplateKey = options.template || "cafe";
   const stripStampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
-  const toHexStrip = (v) => (v && String(v).trim()) ? (String(v).startsWith("#") ? v : `#${v}`) : null;
-  // Couleur du bandeau : priorité strip_color, puis background (carte), jamais le vert template si on a une couleur de carte)
-  const stripColorHex =
-    toHexStrip(options.strip_color ?? options.stripColor) ??
-    toHexStrip(options.backgroundColor ?? options.background_color) ??
-    toHexStrip(business?.strip_color) ??
-    toHexStrip(business?.background_color) ??
-    (PASS_TEMPLATES[stripTemplateKey] || PASS_TEMPLATES.classic).backgroundColor;
 
   if (format === "tampons") {
     let baseStrip;

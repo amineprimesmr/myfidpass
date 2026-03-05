@@ -622,7 +622,7 @@
               <p class="app-step-label">Aperçu — comme dans Apple Wallet</p>
               <div id="app-personnaliser-preview" class="app-personnaliser-preview app-wallet-preview" role="img" aria-label="Aperçu de la carte fidélité">
                 <div class="app-wallet-preview-card" id="app-personnaliser-preview-card">
-                  <div class="app-wallet-preview-strip" id="app-wallet-preview-strip"></div>
+                  <div class="app-wallet-preview-strip" id="app-wallet-preview-strip"><span id="app-wallet-preview-strip-text" class="app-wallet-preview-strip-text hidden"></span></div>
                   <div class="app-wallet-preview-body">
                     <div class="app-wallet-preview-top">
                       <div class="app-wallet-preview-logo-wrap">
@@ -727,6 +727,16 @@
                   <input type="text" id="app-personnaliser-strip-hex" class="app-input app-input-hex" value="#0a7c42" maxlength="7" placeholder="vide = couleur Fond" />
                 </div>
               </div>
+              <p class="app-step-label">En-tête de la carte</p>
+              <div class="app-rules-type">
+                <label class="app-radio-label"><input type="radio" name="app-strip-display" value="logo" id="app-strip-display-logo" checked /> Logo (image)</label>
+                <label class="app-radio-label"><input type="radio" name="app-strip-display" value="text" id="app-strip-display-text" /> Texte à la place du logo</label>
+              </div>
+              <div id="app-strip-text-wrap" class="hidden">
+                <p class="app-step-label">Texte affiché dans le bandeau</p>
+                <input type="text" id="app-strip-text" class="app-input" maxlength="120" placeholder="ex. Mon Commerce" />
+              </div>
+              <div id="app-personnaliser-logo-wrap">
               <p class="app-step-label">Logo (recommandé 320×100 px)</p>
               <div class="app-personnaliser-logo">
                 <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" />
@@ -734,6 +744,7 @@
                   <span id="app-personnaliser-logo-placeholder">+ Changer le logo</span>
                   <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
                 </label>
+              </div>
               </div>
               <p class="app-step-label">Image de fond de carte</p>
               <p class="app-hint">Utilisée comme bandeau sur la carte dans le Wallet (optionnel). Comme dans l’app : ajouter, modifier ou supprimer.</p>

@@ -186,6 +186,8 @@ const getPassHandler = async (req, res) => {
       foreground_color: business.foreground_color ?? undefined,
       label_color: business.label_color ?? undefined,
       strip_color: business.strip_color ?? undefined,
+      strip_display_mode: business.strip_display_mode ?? undefined,
+      strip_text: business.strip_text ?? undefined,
       card_background_base64: business.card_background_base64 ?? undefined,
     };
     const buffer = await generatePass(member, business, opts);

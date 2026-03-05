@@ -107,6 +107,8 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     logo_updated_at: business.logo_updated_at ?? undefined,
     has_card_background: !!(business.card_background_base64 && String(business.card_background_base64).trim()),
     strip_color: business.strip_color ?? undefined,
+    strip_display_mode: business.strip_display_mode ?? "logo",
+    strip_text: business.strip_text ?? undefined,
   });
 });
 
@@ -147,6 +149,8 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   const strip_color = body.strip_color ?? body.stripColor;
+  const strip_display_mode = body.strip_display_mode ?? body.stripDisplayMode;
+  const strip_text = body.strip_text ?? body.stripText;
   const logo_url = (body.logo_url ?? body.logoUrl ?? "").trim();
   const location_address = body.location_address ?? body.locationAddress;
   const updates = {};
@@ -229,6 +233,13 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   if (strip_color !== undefined) {
     const v = strip_color === null || strip_color === "" ? null : normalizeHexForPatch(strip_color);
     updates.strip_color = v || null;
+  }
+  if (strip_display_mode !== undefined) {
+    const v = strip_display_mode === "text" ? "text" : "logo";
+    updates.strip_display_mode = v;
+  }
+  if (strip_text !== undefined) {
+    updates.strip_text = strip_text == null || String(strip_text).trim() === "" ? null : String(strip_text).trim().slice(0, 120);
   }
   if (logo_url && (logo_url.startsWith("http://") || logo_url.startsWith("https://"))) {
     try {
@@ -1252,6 +1263,9 @@ router.get("/:slug/members/:memberId/pass", async (req, res) => {
     if (Number.isInteger(n) && n > 0) opts.required_stamps = n;
   }
   if (business?.card_background_base64) opts.card_background_base64 = business.card_background_base64;
+  const stripDisplayMode = (req.query.strip_display_mode ?? business?.strip_display_mode ?? "logo").toString().toLowerCase();
+  opts.strip_display_mode = stripDisplayMode === "text" ? "text" : "logo";
+  opts.strip_text = req.query.strip_text ?? business?.strip_text ?? undefined;
 
   try {
     const buffer = await generatePass(member, business, opts);

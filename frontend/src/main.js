@@ -1034,6 +1034,11 @@ function initAppDashboard(slug) {
   const personnaliserLabelHex = document.getElementById("app-personnaliser-label-hex");
   const personnaliserStrip = document.getElementById("app-personnaliser-strip");
   const personnaliserStripHex = document.getElementById("app-personnaliser-strip-hex");
+  const stripDisplayLogo = document.getElementById("app-strip-display-logo");
+  const stripDisplayText = document.getElementById("app-strip-display-text");
+  const stripTextWrap = document.getElementById("app-strip-text-wrap");
+  const stripTextEl = document.getElementById("app-strip-text");
+  const personnaliserLogoWrap = document.getElementById("app-personnaliser-logo-wrap");
   const personnaliserLogo = document.getElementById("app-personnaliser-logo");
   const personnaliserLogoPlaceholder = document.getElementById("app-personnaliser-logo-placeholder");
   const personnaliserLogoPreview = document.getElementById("app-personnaliser-logo-preview");
@@ -1142,12 +1147,19 @@ function initAppDashboard(slug) {
     if (!rgb) return hex;
     return rgbToHex(rgb.r / factor, rgb.g / factor, rgb.b / factor);
   }
+  function setStripDisplayVisibility() {
+    const isText = stripDisplayText && stripDisplayText.checked;
+    if (stripTextWrap) stripTextWrap.classList.toggle("hidden", !isText);
+    if (personnaliserLogoWrap) personnaliserLogoWrap.classList.toggle("hidden", !!isText);
+  }
   function updatePersonnaliserPreview() {
     const card = document.getElementById("app-personnaliser-preview-card");
     const stripEl = document.getElementById("app-wallet-preview-strip");
+    const stripTextPreview = document.getElementById("app-wallet-preview-strip-text");
     const orgEl = document.getElementById("app-personnaliser-preview-org");
     const valueEl = document.getElementById("app-wallet-preview-value");
     const labelEl = document.getElementById("app-wallet-preview-label");
+    const logoWrap = document.querySelector(".app-wallet-preview-logo-wrap");
     if (!card || !orgEl) return;
     const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
     const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
@@ -1168,17 +1180,36 @@ function initAppDashboard(slug) {
     orgEl.textContent = personnaliserOrg?.value?.trim() || "Votre commerce";
     if (valueEl) valueEl.textContent = "42 pts";
     if (labelEl) labelEl.textContent = "Points";
+    const useStripText = stripDisplayText && stripDisplayText.checked;
+    if (stripTextPreview) {
+      if (useStripText) {
+        stripTextPreview.textContent = stripTextEl?.value?.trim() || personnaliserOrg?.value?.trim() || "Votre commerce";
+        stripTextPreview.classList.remove("hidden");
+      } else {
+        stripTextPreview.textContent = "";
+        stripTextPreview.classList.add("hidden");
+      }
+    }
+    if (logoWrap) {
+      logoWrap.style.display = useStripText ? "none" : "";
+    }
     const walletLogo = document.getElementById("app-wallet-preview-logo");
-    if (walletLogo && personnaliserLogoDataUrl) {
+    if (walletLogo && personnaliserLogoDataUrl && !useStripText) {
       walletLogo.src = personnaliserLogoDataUrl;
       walletLogo.classList.remove("hidden");
     } else if (walletLogo) {
-      walletLogo.removeAttribute("src");
-      walletLogo.classList.add("hidden");
+      if (useStripText) walletLogo.classList.add("hidden");
+      else {
+        walletLogo.removeAttribute("src");
+        walletLogo.classList.add("hidden");
+      }
     }
+    const logoFallback = document.getElementById("app-wallet-preview-logo-fallback");
+    if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText);
   }
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+  [stripDisplayLogo, stripDisplayText].forEach((el) => el?.addEventListener("change", () => { setStripDisplayVisibility(); updatePersonnaliserPreview(); }));
 
   const personnaliserAddress = document.getElementById("app-personnaliser-address");
   const personnaliserCoordsDisplay = document.getElementById("app-personnaliser-coords-display");
@@ -1215,6 +1246,11 @@ function initAppDashboard(slug) {
       const stripVal = stripColor || bg;
       if (personnaliserStrip) personnaliserStrip.value = stripVal.startsWith("#") ? stripVal : "#" + stripVal;
       if (personnaliserStripHex) personnaliserStripHex.value = stripVal.startsWith("#") ? stripVal : "#" + stripVal;
+      const stripDisplayMode = (data.strip_display_mode ?? data.stripDisplayMode ?? "logo").toLowerCase();
+      if (stripDisplayMode === "text" && stripDisplayText) stripDisplayText.checked = true;
+      else if (stripDisplayLogo) stripDisplayLogo.checked = true;
+      if (stripTextEl) stripTextEl.value = data.strip_text ?? data.stripText ?? "";
+      if (typeof setStripDisplayVisibility === "function") setStripDisplayVisibility();
       let programType = (data.program_type ?? data.programType ?? "").toLowerCase();
       if (programType !== "points" && programType !== "stamps") {
         programType = (data.required_stamps ?? data.requiredStamps) > 0 ? "stamps" : "points";
@@ -1415,6 +1451,9 @@ function initAppDashboard(slug) {
       };
       const isStamps = programTypeStamps && programTypeStamps.checked;
       body.programType = isStamps ? "stamps" : "points";
+      const stripDisplayMode = stripDisplayText && stripDisplayText.checked ? "text" : "logo";
+      body.stripDisplayMode = stripDisplayMode;
+      if (stripDisplayMode === "text" && stripTextEl) body.stripText = stripTextEl.value.trim() || undefined;
       if (pointsPerEuroEl) body.pointsPerEuro = parseInt(pointsPerEuroEl.value, 10) || 1;
       if (pointsPerVisitEl) body.pointsPerVisit = parseInt(pointsPerVisitEl.value, 10) || 0;
       if (pointsMinAmountEl && pointsMinAmountEl.value.trim() !== "") {
