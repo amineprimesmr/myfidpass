@@ -1840,9 +1840,11 @@ function initAppDashboard(slug) {
       return;
     }
     try {
+      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(scannerCurrentMemberId)}/points`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        headers,
         body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
@@ -2156,9 +2158,11 @@ function initAppDashboard(slug) {
         addPointsBtn.disabled = false;
         return;
       }
+      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(selectedMemberId)}/points`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        headers,
         body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
@@ -3550,9 +3554,11 @@ function initDashboardPage() {
         addPointsBtn.disabled = false;
         return;
       }
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["X-Dashboard-Token"] = token;
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(selectedMemberId)}/points`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
