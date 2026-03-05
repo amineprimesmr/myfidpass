@@ -2629,18 +2629,10 @@ function initBuilderPage() {
 
   function updateDemoQR(templateId) {
     const qrEl = document.getElementById("builder-demo-qr");
-    const qrCafeEl = document.getElementById("builder-demo-qr-cafe");
     const nameEl = document.getElementById("builder-demo-template-name");
-    const nameCafeEl = document.getElementById("builder-demo-template-name-cafe");
-    const defaultBlock = document.getElementById("builder-demo-default");
-    const cafeBlock = document.getElementById("builder-demo-cafe-layout");
-    const demoSection = document.getElementById("builder-demo-wallet");
     const tpl = CARD_TEMPLATES.find((t) => t.id === templateId);
-    const isCafe = templateId === "cafe-points" || templateId === "cafe-tampons";
 
     if (tpl && nameEl) nameEl.textContent = tpl.name;
-    if (nameCafeEl) nameCafeEl.textContent = isCafe ? (tpl?.name ?? "") : "Tampons (Café)";
-    if (demoSection) demoSection.classList.toggle("builder-demo-wallet--cafe", isCafe);
 
     const base = API_BASE.replace(/\/$/, "");
     const url = `${base}/api/passes/demo?template=${encodeURIComponent(templateId)}`;
@@ -2648,13 +2640,6 @@ function initBuilderPage() {
     if (qrEl) {
       qrEl.src = qrSrc;
       qrEl.alt = `QR code pour ajouter la carte ${tpl?.name ?? templateId} à Apple Wallet`;
-    }
-    const cafeTemplateId = isCafe ? templateId : "cafe-tampons";
-    const cafeUrl = `${base}/api/passes/demo?template=${encodeURIComponent(cafeTemplateId)}`;
-    const qrCafeSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(cafeUrl)}`;
-    if (qrCafeEl) {
-      qrCafeEl.src = qrCafeSrc;
-      qrCafeEl.alt = "QR code carte café — Tester sur iPhone";
     }
   }
 
