@@ -2752,7 +2752,7 @@ function initBuilderPage() {
   const cartBadge = document.getElementById("builder-header-cart-badge");
   if (cartBadge) cartBadge.textContent = "1";
 
-  const state = { selectedTemplateId: "fastfood-tampons", organizationName: "", logoDataUrl: "" };
+  const state = { selectedTemplateId: "fastfood-tampons", organizationName: "", logoDataUrl: "", brandColors: null };
   const headerSteps = document.querySelectorAll(".builder-header-step");
 
   setBuilderHeaderStep(2);
@@ -2781,6 +2781,7 @@ function initBuilderPage() {
         if (d.selectedTemplateId && CARD_TEMPLATES.some((t) => t.id === d.selectedTemplateId)) state.selectedTemplateId = d.selectedTemplateId;
         if (typeof d.organizationName === "string") state.organizationName = d.organizationName.trim();
         if (typeof d.logoDataUrl === "string" && d.logoDataUrl.startsWith("data:image/")) state.logoDataUrl = d.logoDataUrl;
+        if (d.brandColors && typeof d.brandColors.header === "string" && d.brandColors.body && d.brandColors.label) state.brandColors = d.brandColors;
       }
     } catch (_) {}
   }
@@ -2798,6 +2799,8 @@ function initBuilderPage() {
       else if (existing.logoDataUrl) payload.logoDataUrl = existing.logoDataUrl;
       if (extra.placeId != null) payload.placeId = extra.placeId;
       else if (existing.placeId) payload.placeId = existing.placeId;
+      if (extra.brandColors != null) payload.brandColors = extra.brandColors;
+      else if (existing.brandColors) payload.brandColors = existing.brandColors;
       localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify(payload));
     } catch (_) {}
   }
@@ -2837,6 +2840,83 @@ function initBuilderPage() {
         img.removeAttribute("src");
         img.classList.add("hidden");
         wrap.classList.add("hidden");
+      }
+    });
+    if (hasLogo) applyBrandColorsFromLogo(dataUrl);
+    else clearBuilderBrandColors();
+  }
+
+  function extractDominantColors(dataUrl) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const size = 32;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) { resolve(null); return; }
+          ctx.drawImage(img, 0, 0, size, size);
+          const data = ctx.getImageData(0, 0, size, size).data;
+          let r = 0, g = 0, b = 0, n = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            const a = data[i + 3];
+            if (a < 128) continue;
+            r += data[i];
+            g += data[i + 1];
+            b += data[i + 2];
+            n++;
+          }
+          if (n === 0) { resolve(null); return; }
+          r = Math.round(r / n);
+          g = Math.round(g / n);
+          b = Math.round(b / n);
+          const toHex = (rr, gg, bb) => "#" + [rr, gg, bb].map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, "0")).join("");
+          const header = toHex(r, g, b);
+          const darken = (v, f) => Math.round(v * (1 - f));
+          const bodyR = darken(r, 0.15);
+          const bodyG = darken(g, 0.15);
+          const bodyB = darken(b, 0.15);
+          const body = toHex(bodyR, bodyG, bodyB);
+          const lighten = (v) => Math.min(255, Math.round(v + (255 - v) * 0.4));
+          const label = toHex(lighten(r), lighten(g), lighten(b));
+          resolve({ header, body, label });
+        } catch (_) {
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = dataUrl;
+    });
+  }
+
+  function applyBuilderBrandColors(colors) {
+    const el = document.getElementById("builder-wallet-slider");
+    if (!colors || !el) return;
+    el.classList.add("builder-wallet-slider-branded");
+    el.style.setProperty("--brand-header", colors.header);
+    el.style.setProperty("--brand-body", colors.body);
+    el.style.setProperty("--brand-label", colors.label);
+  }
+
+  function clearBuilderBrandColors() {
+    const el = document.getElementById("builder-wallet-slider");
+    if (el) {
+      el.classList.remove("builder-wallet-slider-branded");
+      el.style.removeProperty("--brand-header");
+      el.style.removeProperty("--brand-body");
+      el.style.removeProperty("--brand-label");
+    }
+  }
+
+  function applyBrandColorsFromLogo(dataUrl) {
+    extractDominantColors(dataUrl).then((colors) => {
+      if (colors) {
+        state.brandColors = colors;
+        applyBuilderBrandColors(colors);
+        saveDraft({ brandColors: colors });
       }
     });
   }
@@ -2942,6 +3022,8 @@ function initBuilderPage() {
     updateBuilderPreviewOrgName(state.organizationName || "Votre commerce");
     setTemplateSelection(state.selectedTemplateId);
     updateBuilderPreviewLogo(state.logoDataUrl);
+    if (state.brandColors) applyBuilderBrandColors(state.brandColors);
+    else if (!state.logoDataUrl) clearBuilderBrandColors();
   }
 
   applyInitialState();

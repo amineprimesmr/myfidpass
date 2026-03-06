@@ -1418,6 +1418,29 @@
   height: 64px;
   border-radius: 4px;
 }
+/* Couleurs marque (dérivées du logo) : override les thèmes template */
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-header {
+  background: var(--brand-header, #0a7c42) !important;
+}
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-body {
+  background: var(--brand-body, #0a7c42) !important;
+  color: #fff;
+}
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-label,
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-pts-value,
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-stamps {
+  color: var(--brand-label, rgba(255,255,255,0.95)) !important;
+}
+.builder-wallet-slider-branded .builder-wallet-card .wallet-preview-emoji {
+  opacity: 0.95;
+}
+.builder-wallet-slider-branded .builder-wallet-card-stamps-row .stamp.stamp-emoji.filled {
+  opacity: 1;
+}
+.builder-wallet-slider-branded .builder-wallet-card-stamps-row .stamp.stamp-emoji:not(.filled) {
+  opacity: 0.45;
+}
+
 /* Thèmes des cartes dans le mockup (style Wallet réaliste) */
 .builder-wallet-card-classic .builder-wallet-card-header {
   background: linear-gradient(165deg, #0d8a4e 0%, #0a7c42 100%);

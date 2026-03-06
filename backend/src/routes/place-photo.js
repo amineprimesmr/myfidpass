@@ -5,10 +5,34 @@ const router = new Router();
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 
 /**
+ * Choisit la photo la plus susceptible d'être un logo : format carré (ratio ~1)
+ * et préférence pour les plus petites (logos souvent en petit format).
+ */
+function pickLogoLikePhoto(photos) {
+  if (!Array.isArray(photos) || photos.length === 0) return null;
+  const withScore = photos
+    .filter((p) => p.photo_reference && p.width > 0 && p.height > 0)
+    .map((p) => {
+      const w = p.width;
+      const h = p.height;
+      const ratio = w / h;
+      const squareness = ratio >= 1 ? h / w : w / h;
+      const maxDim = Math.max(w, h);
+      return {
+        ...p,
+        squareness,
+        maxDim,
+        score: squareness * (1 - Math.min(maxDim, 800) / 2000),
+      };
+    })
+    .sort((a, b) => (b.score !== a.score ? b.score - a.score : a.maxDim - b.maxDim));
+  return withScore[0] || photos[0];
+}
+
+/**
  * GET /api/place-photo?place_id=xxx
- * Récupère la première photo du lieu via Google Place Details + Photo,
- * et la renvoie en image. Permet au frontend d’extraire les couleurs
- * sans CORS (canvas tainted).
+ * Récupère une photo du lieu (priorité : image type logo, format carré)
+ * via Google Place Details + Photo. Renvoie l'image pour affichage et extraction de couleurs.
  */
 router.get("/", async (req, res) => {
   const placeId = req.query.place_id?.trim();
@@ -36,7 +60,8 @@ router.get("/", async (req, res) => {
       res.status(404).json({ error: "Aucune photo pour ce lieu" });
       return;
     }
-    const ref = details.result.photos[0].photo_reference;
+    const chosen = pickLogoLikePhoto(details.result.photos);
+    const ref = chosen.photo_reference;
     const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${encodeURIComponent(ref)}&key=${GOOGLE_PLACES_API_KEY}`;
     const photoRes = await fetch(photoUrl, { redirect: "follow" });
     if (!photoRes.ok) {
