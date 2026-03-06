@@ -1380,6 +1380,8 @@ router.post("/", requireAuth, (req, res) => {
         if (buf.length > 0 && buf.length < 5 * 1024 * 1024) {
           writeFileSync(join(dir, "logo.png"), buf);
           writeFileSync(join(dir, "logo@2x.png"), buf);
+          const stored = logoBase64.startsWith("data:") ? logoBase64 : `data:image/jpeg;base64,${base64Data}`;
+          updateBusiness(business.id, { logo_base64: stored });
         }
       } catch (err) {
         console.warn("Logo save failed:", err.message);

@@ -49,6 +49,15 @@ body {
   position: relative;
   display: block;
 }
+/* Si l'image hero est absente ou en erreur : ne pas afficher de grand bloc noir */
+.site-banner-media.hero-unloaded {
+  min-height: 0;
+  max-height: 0;
+  background: transparent;
+}
+.site-banner-media.hero-unloaded .site-banner-media-img {
+  display: none;
+}
 
 .site-banner-media-img,
 .site-banner-media-video {

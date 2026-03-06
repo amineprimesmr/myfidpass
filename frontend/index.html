@@ -963,9 +963,11 @@
         </div>
       </div>
 
-      <!-- Image bannière hero (juste sous le menu) -->
-      <div class="site-banner-media" id="site-banner-media">
-        <img src="/assets/banner/hero.png" alt="" class="site-banner-media-img" loading="eager" />
+      <!-- Image bannière hero. Déposer hero.jpg ou hero.png dans public/assets/banner/ (voir README). -->
+      <div class="site-banner-media hero-unloaded" id="site-banner-media">
+        <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" loading="eager"
+             onerror="var el=this.closest('.site-banner-media'); if(this.dataset.tried){ if(el) el.classList.add('hero-unloaded'); this.style.display='none'; } else { this.dataset.tried='1'; this.src='/assets/banner/hero.png'; }"
+             onload="this.closest('.site-banner-media')?.classList.remove('hero-unloaded')" />
       </div>
 
       <main id="landing-main" class="landing-main">

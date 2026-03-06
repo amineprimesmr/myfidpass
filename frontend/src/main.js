@@ -716,6 +716,21 @@ function initAppPage() {
     updateEmptySlugPreview();
   });
 
+  (function prefillEmptyFromDraft() {
+    try {
+      const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d.organizationName && emptyName && !emptyName.value?.trim()) {
+        emptyName.value = d.organizationName.trim();
+        if (emptySlug && !emptySlug.dataset.manual) {
+          emptySlug.value = slugify(d.organizationName.trim());
+          updateEmptySlugPreview();
+        }
+      }
+    } catch (_) {}
+  })();
+
   emptyForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = emptyName?.value?.trim();
@@ -729,19 +744,35 @@ function initAppPage() {
       return;
     }
     if (emptyCreateError) emptyCreateError.classList.add("hidden");
-    const tpl = CARD_TEMPLATES.find((t) => t.id === "classic") || CARD_TEMPLATES[0];
+    let tpl = CARD_TEMPLATES.find((t) => t.id === "classic") || CARD_TEMPLATES[0];
+    let logoBase64 = null;
+    try {
+      const draftRaw = localStorage.getItem(BUILDER_DRAFT_KEY);
+      if (draftRaw) {
+        const draft = JSON.parse(draftRaw);
+        if (draft.selectedTemplateId && CARD_TEMPLATES.some((t) => t.id === draft.selectedTemplateId)) {
+          const draftTpl = CARD_TEMPLATES.find((t) => t.id === draft.selectedTemplateId);
+          if (draftTpl) tpl = draftTpl;
+        }
+        if (draft.logoDataUrl && typeof draft.logoDataUrl === "string" && draft.logoDataUrl.startsWith("data:image/")) {
+          logoBase64 = draft.logoDataUrl;
+        }
+      }
+    } catch (_) {}
+    const body = {
+      name,
+      slug,
+      organizationName: name,
+      backgroundColor: tpl.bg,
+      foregroundColor: tpl.fg,
+      labelColor: tpl.label,
+    };
+    if (logoBase64) body.logoBase64 = logoBase64;
     try {
       const res = await fetch(`${API_BASE}/api/businesses`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({
-          name,
-          slug,
-          organizationName: name,
-          backgroundColor: tpl.bg,
-          foregroundColor: tpl.fg,
-          labelColor: tpl.label,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -2753,12 +2784,20 @@ function initBuilderPage() {
     } catch (_) {}
   }
 
-  function saveDraft() {
+  function saveDraft(extra = {}) {
     try {
-      localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify({
+      let existing = {};
+      const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
+      if (raw) try { existing = JSON.parse(raw); } catch (_) {}
+      const payload = {
         selectedTemplateId: state.selectedTemplateId,
         organizationName: state.organizationName || ""
-      }));
+      };
+      if (extra.logoDataUrl != null) payload.logoDataUrl = extra.logoDataUrl;
+      else if (existing.logoDataUrl) payload.logoDataUrl = existing.logoDataUrl;
+      if (extra.placeId != null) payload.placeId = extra.placeId;
+      else if (existing.placeId) payload.placeId = existing.placeId;
+      localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify(payload));
     } catch (_) {}
   }
 
@@ -2883,7 +2922,46 @@ function initBuilderPage() {
           applyInitialState();
         }
       } catch (_) {}
+      if (placeIdFromUrl) {
+        try {
+          const photoRes = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-photo?place_id=${encodeURIComponent(placeIdFromUrl)}`);
+          if (photoRes.ok && photoRes.headers.get("content-type")?.startsWith("image/")) {
+            const blob = await photoRes.blob();
+            const dataUrl = await blobToResizedLogoDataUrl(blob, 320);
+            if (dataUrl) saveDraft({ logoDataUrl: dataUrl, placeId: placeIdFromUrl });
+          }
+        } catch (_) {}
+      }
     })();
+  }
+
+  function blobToResizedLogoDataUrl(blob, maxWidth) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        if (!w || !h) { resolve(null); return; }
+        const scale = maxWidth && w > maxWidth ? maxWidth / w : 1;
+        const cw = Math.round(w * scale);
+        const ch = Math.round(h * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(null); return; }
+        ctx.drawImage(img, 0, 0, cw, ch);
+        try {
+          resolve(canvas.toDataURL("image/jpeg", 0.88));
+        } catch (_) {
+          resolve(null);
+        }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
   }
 
   if (categorySelect) {
