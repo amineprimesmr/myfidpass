@@ -3021,9 +3021,14 @@ function initBuilderPage() {
     saveDraft();
     updateBuilderPreviewOrgName(state.organizationName || "Votre commerce");
     setTemplateSelection(state.selectedTemplateId);
-    updateBuilderPreviewLogo(state.logoDataUrl);
-    if (state.brandColors) applyBuilderBrandColors(state.brandColors);
-    else if (!state.logoDataUrl) clearBuilderBrandColors();
+    if (placeIdFromUrl) {
+      updateBuilderPreviewLogo("");
+      clearBuilderBrandColors();
+    } else {
+      updateBuilderPreviewLogo(state.logoDataUrl);
+      if (state.brandColors) applyBuilderBrandColors(state.brandColors);
+      else if (!state.logoDataUrl) clearBuilderBrandColors();
+    }
   }
 
   applyInitialState();
@@ -3042,10 +3047,10 @@ function initBuilderPage() {
       } catch (_) {}
       if (placeIdFromUrl) {
         try {
-          const photoRes = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-photo?place_id=${encodeURIComponent(placeIdFromUrl)}`);
+          const photoRes = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-photo?place_id=${encodeURIComponent(placeIdFromUrl)}`, { cache: "no-store" });
           if (photoRes.ok && photoRes.headers.get("content-type")?.startsWith("image/")) {
             const blob = await photoRes.blob();
-            const dataUrl = await blobToResizedLogoDataUrl(blob, 320);
+            const dataUrl = await blobToResizedLogoDataUrl(blob, 512);
             if (dataUrl) {
               state.logoDataUrl = dataUrl;
               saveDraft({ logoDataUrl: dataUrl, placeId: placeIdFromUrl });

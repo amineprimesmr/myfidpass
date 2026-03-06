@@ -20,29 +20,83 @@ function domainFromWebsite(website) {
   }
 }
 
-/**
- * Tente de récupérer le logo de la marque via le domaine (Clearbit, puis Google Favicon).
- * Retourne la Response fetch si une image logo est trouvée, sinon null.
- */
-async function fetchLogoByDomain(domain) {
-  if (!domain) return null;
-  const domainsToTry = [domain];
-  if (!domain.startsWith("www.")) domainsToTry.push(`www.${domain}`);
+const CLEARBIT_SIZE = 400;
+const FETCH_HTML_TIMEOUT = 6000;
 
+/** Pour les franchises (ex. mcdonalds.fr), retourne le domaine .com de la marque. */
+function brandComDomain(domain) {
+  if (!domain || domain.endsWith(".com")) return null;
+  const base = domain.split(".")[0];
+  if (!base || base.length < 2) return null;
+  return `${base}.com`;
+}
+
+/** Clearbit Logo en haute résolution. Essaie domain puis brand.com (franchises). */
+async function fetchClearbitLogo(domain) {
+  const domainsToTry = [domain];
+  const com = brandComDomain(domain);
+  if (com && com !== domain) domainsToTry.push(com);
   for (const d of domainsToTry) {
     try {
-      const clearbitUrl = `https://logo.clearbit.com/${d}`;
-      const r = await fetch(clearbitUrl, { redirect: "follow" });
+      const url = `https://logo.clearbit.com/${encodeURIComponent(d)}?size=${CLEARBIT_SIZE}`;
+      const r = await fetch(url, { redirect: "follow" });
       if (r.ok && r.headers.get("content-type")?.startsWith("image/")) return r;
     } catch (_) {}
   }
+  return null;
+}
 
+/** Récupère l'URL og:image du site (souvent logo ou image marque en haute qualité). */
+async function fetchOgImageUrl(websiteUrl) {
+  if (!websiteUrl || typeof websiteUrl !== "string") return null;
+  const url = websiteUrl.trim().startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
   try {
-    const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
-    const r = await fetch(faviconUrl, { redirect: "follow" });
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), FETCH_HTML_TIMEOUT);
+    const r = await fetch(url, {
+      redirect: "follow",
+      signal: ctrl.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; Fidpass/1.0; +https://myfidpass.fr)" },
+    });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    const html = await r.text();
+    const m = html.match(/<meta[^>]+property\s*=\s*["']og:image["'][^>]+content\s*=\s*["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content\s*=\s*["']([^"']+)["'][^>]+property\s*=\s*["']og:image["']/i);
+    if (m && m[1]) {
+      const imgUrl = m[1].trim();
+      if (imgUrl.startsWith("http")) return imgUrl;
+      try {
+        return new URL(imgUrl, url).href;
+      } catch {
+        return null;
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
+async function fetchImageResponse(imageUrl) {
+  if (!imageUrl) return null;
+  try {
+    const r = await fetch(imageUrl, { redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 (compatible; Fidpass/1.0)" } });
     if (r.ok && r.headers.get("content-type")?.startsWith("image/")) return r;
   } catch (_) {}
+  return null;
+}
 
+/**
+ * Logo marque : Clearbit (haute résolution) → og:image du site. Pas de favicon (trop pixelisé).
+ */
+async function fetchLogoByDomain(domain, websiteUrl) {
+  if (!domain) return null;
+  const clearbit = await fetchClearbitLogo(domain);
+  if (clearbit) return clearbit;
+  const ogUrl = await fetchOgImageUrl(websiteUrl);
+  if (ogUrl) {
+    const imgRes = await fetchImageResponse(ogUrl);
+    if (imgRes) return imgRes;
+  }
   return null;
 }
 
@@ -73,8 +127,8 @@ function pickLogoLikePhoto(photos) {
 
 /**
  * GET /api/place-photo?place_id=xxx
- * Priorité 1 : logo de la marque (site web → Clearbit Logo ou Google Favicon).
- * Priorité 2 : photo du lieu Google (image la plus "type logo" : carrée, petite).
+ * Priorité 1 : logo marque (Clearbit 400px, puis og:image du site). Pas de favicon (qualité trop faible).
+ * Priorité 2 : photo du lieu Google (fallback).
  */
 router.get("/", async (req, res) => {
   const placeId = req.query.place_id?.trim();
@@ -107,7 +161,7 @@ router.get("/", async (req, res) => {
     const website = result.website;
     const domain = domainFromWebsite(website);
 
-    const logoRes = domain ? await fetchLogoByDomain(domain) : null;
+    const logoRes = domain ? await fetchLogoByDomain(domain, website) : null;
     if (logoRes) {
       const contentType = logoRes.headers.get("content-type") || "image/png";
       res.setHeader("Content-Type", contentType);
