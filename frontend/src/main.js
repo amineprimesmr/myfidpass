@@ -2752,7 +2752,7 @@ function initBuilderPage() {
   const cartBadge = document.getElementById("builder-header-cart-badge");
   if (cartBadge) cartBadge.textContent = "1";
 
-  const state = { selectedTemplateId: "fastfood-tampons", organizationName: "" };
+  const state = { selectedTemplateId: "fastfood-tampons", organizationName: "", logoDataUrl: "" };
   const headerSteps = document.querySelectorAll(".builder-header-step");
 
   setBuilderHeaderStep(2);
@@ -2780,6 +2780,7 @@ function initBuilderPage() {
         const d = JSON.parse(raw);
         if (d.selectedTemplateId && CARD_TEMPLATES.some((t) => t.id === d.selectedTemplateId)) state.selectedTemplateId = d.selectedTemplateId;
         if (typeof d.organizationName === "string") state.organizationName = d.organizationName.trim();
+        if (typeof d.logoDataUrl === "string" && d.logoDataUrl.startsWith("data:image/")) state.logoDataUrl = d.logoDataUrl;
       }
     } catch (_) {}
   }
@@ -2804,6 +2805,40 @@ function initBuilderPage() {
   function updateBuilderPreviewOrgName(name) {
     const display = name && name.trim() ? name.trim() : "Votre commerce";
     document.querySelectorAll("#builder-wallet-slider .builder-wallet-card-header span").forEach((el) => { el.textContent = display; });
+  }
+
+  function ensureBuilderCardLogoWraps() {
+    const headers = document.querySelectorAll("#builder-wallet-slider .builder-wallet-card-header");
+    headers.forEach((header) => {
+      if (header.querySelector(".builder-wallet-card-logo-wrap")) return;
+      const wrap = document.createElement("div");
+      wrap.className = "builder-wallet-card-logo-wrap";
+      wrap.setAttribute("aria-hidden", "true");
+      const img = document.createElement("img");
+      img.className = "builder-wallet-card-logo";
+      img.alt = "";
+      wrap.appendChild(img);
+      header.insertBefore(wrap, header.firstChild);
+    });
+  }
+
+  function updateBuilderPreviewLogo(dataUrl) {
+    ensureBuilderCardLogoWraps();
+    const wraps = document.querySelectorAll("#builder-wallet-slider .builder-wallet-card-logo-wrap");
+    const hasLogo = typeof dataUrl === "string" && dataUrl.startsWith("data:image/");
+    wraps.forEach((wrap) => {
+      const img = wrap.querySelector(".builder-wallet-card-logo");
+      if (!img) return;
+      if (hasLogo) {
+        img.src = dataUrl;
+        img.classList.remove("hidden");
+        wrap.classList.remove("hidden");
+      } else {
+        img.removeAttribute("src");
+        img.classList.add("hidden");
+        wrap.classList.add("hidden");
+      }
+    });
   }
 
   const sliderEl = document.getElementById("builder-wallet-slider");
@@ -2906,6 +2941,7 @@ function initBuilderPage() {
     saveDraft();
     updateBuilderPreviewOrgName(state.organizationName || "Votre commerce");
     setTemplateSelection(state.selectedTemplateId);
+    updateBuilderPreviewLogo(state.logoDataUrl);
   }
 
   applyInitialState();
@@ -2928,7 +2964,11 @@ function initBuilderPage() {
           if (photoRes.ok && photoRes.headers.get("content-type")?.startsWith("image/")) {
             const blob = await photoRes.blob();
             const dataUrl = await blobToResizedLogoDataUrl(blob, 320);
-            if (dataUrl) saveDraft({ logoDataUrl: dataUrl, placeId: placeIdFromUrl });
+            if (dataUrl) {
+              state.logoDataUrl = dataUrl;
+              saveDraft({ logoDataUrl: dataUrl, placeId: placeIdFromUrl });
+              updateBuilderPreviewLogo(dataUrl);
+            }
           }
         } catch (_) {}
       }
