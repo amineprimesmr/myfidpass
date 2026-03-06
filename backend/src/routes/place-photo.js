@@ -5,6 +5,48 @@ const router = new Router();
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 
 /**
+ * Extrait le domaine (hostname) d'une URL de site web.
+ */
+function domainFromWebsite(website) {
+  if (!website || typeof website !== "string") return null;
+  const s = website.trim();
+  if (!s) return null;
+  try {
+    const url = new URL(s.startsWith("http") ? s : `https://${s}`);
+    const host = url.hostname.replace(/^www\./i, "");
+    return host || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Tente de récupérer le logo de la marque via le domaine (Clearbit, puis Google Favicon).
+ * Retourne la Response fetch si une image logo est trouvée, sinon null.
+ */
+async function fetchLogoByDomain(domain) {
+  if (!domain) return null;
+  const domainsToTry = [domain];
+  if (!domain.startsWith("www.")) domainsToTry.push(`www.${domain}`);
+
+  for (const d of domainsToTry) {
+    try {
+      const clearbitUrl = `https://logo.clearbit.com/${d}`;
+      const r = await fetch(clearbitUrl, { redirect: "follow" });
+      if (r.ok && r.headers.get("content-type")?.startsWith("image/")) return r;
+    } catch (_) {}
+  }
+
+  try {
+    const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+    const r = await fetch(faviconUrl, { redirect: "follow" });
+    if (r.ok && r.headers.get("content-type")?.startsWith("image/")) return r;
+  } catch (_) {}
+
+  return null;
+}
+
+/**
  * Choisit la photo la plus susceptible d'être un logo : format carré (ratio ~1)
  * et préférence pour les plus petites (logos souvent en petit format).
  */
@@ -31,8 +73,8 @@ function pickLogoLikePhoto(photos) {
 
 /**
  * GET /api/place-photo?place_id=xxx
- * Récupère une photo du lieu (priorité : image type logo, format carré)
- * via Google Place Details + Photo. Renvoie l'image pour affichage et extraction de couleurs.
+ * Priorité 1 : logo de la marque (site web → Clearbit Logo ou Google Favicon).
+ * Priorité 2 : photo du lieu Google (image la plus "type logo" : carrée, petite).
  */
 router.get("/", async (req, res) => {
   const placeId = req.query.place_id?.trim();
@@ -45,7 +87,7 @@ router.get("/", async (req, res) => {
     return;
   }
   try {
-    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=photos&key=${GOOGLE_PLACES_API_KEY}`;
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=photos,website&key=${GOOGLE_PLACES_API_KEY}`;
     const detailsRes = await fetch(detailsUrl);
     const details = await detailsRes.json();
     if (details.status === "REQUEST_DENIED" || details.status === "OVER_QUERY_LIMIT") {
@@ -56,11 +98,31 @@ router.get("/", async (req, res) => {
       });
       return;
     }
-    if (details.status !== "OK" || !details.result?.photos?.length) {
+    if (details.status !== "OK") {
+      res.status(404).json({ error: "Lieu non trouvé" });
+      return;
+    }
+
+    const result = details.result;
+    const website = result.website;
+    const domain = domainFromWebsite(website);
+
+    const logoRes = domain ? await fetchLogoByDomain(domain) : null;
+    if (logoRes) {
+      const contentType = logoRes.headers.get("content-type") || "image/png";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "private, max-age=86400");
+      res.setHeader("X-Logo-Source", "brand");
+      Readable.fromWeb(logoRes.body).pipe(res);
+      return;
+    }
+
+    if (!result.photos?.length) {
       res.status(404).json({ error: "Aucune photo pour ce lieu" });
       return;
     }
-    const chosen = pickLogoLikePhoto(details.result.photos);
+
+    const chosen = pickLogoLikePhoto(result.photos);
     const ref = chosen.photo_reference;
     const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${encodeURIComponent(ref)}&key=${GOOGLE_PLACES_API_KEY}`;
     const photoRes = await fetch(photoUrl, { redirect: "follow" });
@@ -71,6 +133,7 @@ router.get("/", async (req, res) => {
     const contentType = photoRes.headers.get("content-type") || "image/jpeg";
     res.setHeader("Content-Type", contentType);
     res.setHeader("Cache-Control", "private, max-age=3600");
+    res.setHeader("X-Logo-Source", "place_photo");
     Readable.fromWeb(photoRes.body).pipe(res);
   } catch (err) {
     console.error("[place-photo]", err);
