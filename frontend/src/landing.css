@@ -484,6 +484,118 @@
   }
 }
 
+/* Bandeau cartes fidélité – défilement horizontal infini */
+.landing-cards-scroll {
+  margin-top: 2.5rem;
+  padding: 1rem 0 2rem;
+  overflow: hidden;
+}
+.landing-cards-scroll-mask {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+.landing-cards-scroll-track {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  width: max-content;
+  animation: landing-cards-scroll 55s linear infinite;
+  will-change: transform;
+}
+.landing-cards-scroll:hover .landing-cards-scroll-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-cards-scroll-track {
+    animation-duration: 120s;
+  }
+}
+@keyframes landing-cards-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.landing-mini-card {
+  flex-shrink: 0;
+  width: 152px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.35s ease;
+  display: flex;
+  flex-direction: column;
+}
+.landing-mini-card:hover {
+  transform: scale(1.04) translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+.landing-mini-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  min-height: 2.2rem;
+}
+.landing-mini-card-header span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.landing-mini-card-emoji {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.landing-mini-card-body {
+  padding: 0.45rem 0.6rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  color: #fff;
+}
+.landing-mini-card-pts {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.landing-mini-card-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.92;
+}
+/* Secteurs – couleurs comme builder */
+.landing-mini-card-fastfood .landing-mini-card-header,
+.landing-mini-card-fastfood .landing-mini-card-body {
+  background: linear-gradient(180deg, #d42d4a 0%, #c41e3a 50%, #9e1630 100%);
+}
+.landing-mini-card-boulangerie .landing-mini-card-header,
+.landing-mini-card-boulangerie .landing-mini-card-body {
+  background: linear-gradient(180deg, #bd8f0c 0%, #b8860b 50%, #8a6408 100%);
+}
+.landing-mini-card-boucherie .landing-mini-card-header,
+.landing-mini-card-boucherie .landing-mini-card-body {
+  background: linear-gradient(180deg, #732a3c 0%, #6d2c3e 50%, #4e1f2b 100%);
+}
+.landing-mini-card-beauty .landing-mini-card-header,
+.landing-mini-card-beauty .landing-mini-card-body {
+  background: linear-gradient(180deg, #be7a84 0%, #b76e79 50%, #8e5059 100%);
+}
+.landing-mini-card-cafe .landing-mini-card-header,
+.landing-mini-card-cafe .landing-mini-card-body {
+  background: linear-gradient(180deg, #63543e 0%, #5d4e37 50%, #3d3325 100%);
+}
+.landing-mini-card-coiffure .landing-mini-card-header,
+.landing-mini-card-coiffure .landing-mini-card-body {
+  background: linear-gradient(180deg, #635270 0%, #5c4a6a 50%, #42384d 100%);
+}
+
 .landing-btn {
   display: inline-flex;
   align-items: center;
