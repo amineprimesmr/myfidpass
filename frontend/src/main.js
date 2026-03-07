@@ -4701,9 +4701,26 @@ function updateLandingCtaState() {
 
 if (landingHeroForm) {
   const landingEtablissementInput = document.getElementById("landing-etablissement");
+  const landingPlaceIdInput = document.getElementById("landing-place-id");
+  const landingHelperEl = document.getElementById("landing-hero-helper");
+  function hideLandingHelper() {
+    if (landingHelperEl) landingHelperEl.classList.remove("is-visible");
+  }
+  function showLandingHelper() {
+    if (landingHelperEl) landingHelperEl.classList.add("is-visible");
+  }
   if (landingEtablissementInput) {
-    landingEtablissementInput.addEventListener("input", updateLandingCtaState);
+    landingEtablissementInput.addEventListener("input", () => {
+      updateLandingCtaState();
+      if (!landingEtablissementInput.value?.trim()) hideLandingHelper();
+    });
     landingEtablissementInput.addEventListener("change", updateLandingCtaState);
+    landingEtablissementInput.addEventListener("focus", hideLandingHelper);
+    landingEtablissementInput.addEventListener("blur", () => {
+      const hasText = (landingEtablissementInput.value?.trim() || "").length >= 2;
+      const noPlaceSelected = !landingPlaceIdInput?.value?.trim();
+      if (hasText && noPlaceSelected) showLandingHelper();
+    });
   }
   updateLandingCtaState();
 
@@ -4748,6 +4765,8 @@ function initPlacesAutocomplete() {
         if (id === "landing-etablissement") {
           const hidden = document.getElementById("landing-place-id");
           if (hidden) hidden.value = place.place_id || "";
+          const helper = document.getElementById("landing-hero-helper");
+          if (helper) helper.classList.remove("is-visible");
         }
       });
       input.dataset.placesInit = "1";

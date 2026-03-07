@@ -407,13 +407,34 @@
 }
 
 .landing-hero-helper {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--landing-muted);
   margin: 0.5rem 0 0;
   max-width: 360px;
   margin-left: auto;
   margin-right: auto;
   margin-top: 0.5rem;
+  overflow: hidden;
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  transition: opacity 0.35s ease, max-height 0.35s ease, margin 0.35s ease;
+}
+.landing-hero-helper.is-visible {
+  opacity: 1;
+  max-height: 4em;
+  margin-top: 0.5rem;
+  animation: landing-helper-in 0.4s ease forwards;
+}
+@keyframes landing-helper-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .landing-btn {
