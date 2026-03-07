@@ -35,7 +35,7 @@ function placeNameToBrandKey(name) {
     .replace(/\s+\d+\s*$/, "")
     .replace(/\s+/g, " ")
     .trim();
-  s = s.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/['']/g, "");
+  s = s.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/['']/g, "").replace(/\u00ae/g, "");
   return s.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
@@ -50,6 +50,7 @@ const FRANCHISE_DOMAINS = {
   briochedoree: ["briochedoree.com", "briochedoree.fr"],
   "burger king": ["burgerking.com", "burgerking.fr"],
   burgerking: ["burgerking.com", "burgerking.fr"],
+  bk: ["burgerking.com", "burgerking.fr"],
   starbucks: ["starbucks.com", "starbucks.fr"],
   subway: ["subway.com", "subway.fr"],
   "quick": ["quick.fr", "quick.com"],
@@ -98,15 +99,22 @@ function brandComDomain(domain) {
   return `${base}.com`;
 }
 
-/** Clearbit Logo en haute résolution. Essaie chaque domaine de la liste. */
+/**
+ * Clearbit Logo : essaie chaque domaine puis sa variante www. (certaines marques ne répondent qu'avec www.)
+ */
 async function fetchClearbitLogoFromDomains(domains) {
+  const toTry = [];
   const seen = new Set();
   for (const d of domains || []) {
-    const domain = (d && typeof d === "string") ? d.replace(/^www\./i, "") : "";
+    const domain = (d && typeof d === "string") ? d.replace(/^www\./i, "").trim() : "";
     if (!domain || seen.has(domain)) continue;
     seen.add(domain);
+    toTry.push(domain);
+    toTry.push(`www.${domain}`);
+  }
+  for (const d of toTry) {
     try {
-      const url = `https://logo.clearbit.com/${encodeURIComponent(domain)}?size=${CLEARBIT_SIZE}`;
+      const url = `https://logo.clearbit.com/${encodeURIComponent(d)}?size=${CLEARBIT_SIZE}`;
       const r = await fetch(url, { redirect: "follow" });
       if (r.ok && r.headers.get("content-type")?.startsWith("image/")) return r;
     } catch (_) {}
@@ -176,7 +184,7 @@ function domainsFromPlaceWebsite(domain) {
 }
 
 /**
- * Logo : priorité 1 = franchise (domaines dérivés du nom), priorité 2 = site du lieu (domain + og:image).
+ * Logo via site du lieu (domain + og:image). Utilisé seulement pour les enseignes non reconnues comme franchise.
  */
 async function fetchLogoByDomain(domain, websiteUrl) {
   const list = domainsFromPlaceWebsite(domain);
@@ -184,6 +192,27 @@ async function fetchLogoByDomain(domain, websiteUrl) {
   if (clearbit) return clearbit;
   if (websiteUrl) {
     const ogUrl = await fetchOgImageUrl(websiteUrl);
+    if (ogUrl) {
+      const imgRes = await fetchImageResponse(ogUrl);
+      if (imgRes) return imgRes;
+    }
+  }
+  return null;
+}
+
+/**
+ * Pour une franchise connue : si Clearbit échoue, on récupère le logo via og:image du site OFFICIEL (ex. https://burgerking.fr).
+ * Garantit le même logo pour tous les établissements de la même marque.
+ */
+async function fetchFranchiseLogoFromOfficialSite(domains) {
+  if (!domains || domains.length === 0) return null;
+  const seen = new Set();
+  for (const d of domains) {
+    const domain = (d && typeof d === "string") ? d.replace(/^www\./i, "").trim() : "";
+    if (!domain || seen.has(domain)) continue;
+    seen.add(domain);
+    const url = `https://${domain}`;
+    const ogUrl = await fetchOgImageUrl(url);
     if (ogUrl) {
       const imgRes = await fetchImageResponse(ogUrl);
       if (imgRes) return imgRes;
@@ -256,16 +285,20 @@ router.get("/", async (req, res) => {
     const domain = domainFromWebsite(website);
 
     const brandDomains = brandDomainsFromPlaceName(placeName);
-    let logoRes = await fetchClearbitLogoFromDomains(brandDomains);
-    if (logoRes) {
-      res.setHeader("Content-Type", logoRes.headers.get("content-type") || "image/png");
-      res.setHeader("Cache-Control", "private, max-age=86400");
-      res.setHeader("X-Logo-Source", "franchise");
-      Readable.fromWeb(logoRes.body).pipe(res);
-      return;
+    if (brandDomains.length > 0) {
+      let logoRes = await fetchClearbitLogoFromDomains(brandDomains);
+      if (!logoRes) logoRes = await fetchFranchiseLogoFromOfficialSite(brandDomains);
+      if (logoRes) {
+        res.setHeader("Content-Type", logoRes.headers.get("content-type") || "image/png");
+        res.setHeader("Cache-Control", "private, max-age=86400");
+        res.setHeader("X-Logo-Source", "franchise");
+        Readable.fromWeb(logoRes.body).pipe(res);
+        return;
+      }
+      // Franchise reconnue mais logo non trouvé : on ne prend pas le site du lieu (chaque magasin pourrait avoir une image différente).
     }
 
-    logoRes = domain ? await fetchLogoByDomain(domain, website) : null;
+    const logoRes = brandDomains.length === 0 && domain ? await fetchLogoByDomain(domain, website) : null;
     if (logoRes) {
       res.setHeader("Content-Type", logoRes.headers.get("content-type") || "image/png");
       res.setHeader("Cache-Control", "private, max-age=86400");
