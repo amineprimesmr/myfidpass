@@ -566,6 +566,24 @@
   100% { transform: translateX(-50%); }
 }
 
+/* Image dans le défilement (ex. G La Dalle) – même largeur visuelle que les mockups */
+.landing-scroll-image {
+  flex-shrink: 0;
+  position: relative;
+  width: min(280px, 38vw);
+  max-width: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.landing-scroll-image-img {
+  width: 100%;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
 /* Mockup iPhone dans le défilement – même structure que page Créer ma carte */
 .landing-scroll-phone {
   flex-shrink: 0;
