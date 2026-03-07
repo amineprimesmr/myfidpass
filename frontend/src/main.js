@@ -2846,6 +2846,7 @@ function initBuilderPage() {
     else clearBuilderBrandColors();
   }
 
+  /** Extrait une couleur principale du logo (couleur la plus présente), pas un mélange. */
   function extractDominantColors(dataUrl) {
     return new Promise((resolve) => {
       const img = new Image();
@@ -2853,35 +2854,50 @@ function initBuilderPage() {
       img.onload = () => {
         try {
           const canvas = document.createElement("canvas");
-          const size = 32;
+          const size = 64;
           canvas.width = size;
           canvas.height = size;
           const ctx = canvas.getContext("2d");
           if (!ctx) { resolve(null); return; }
           ctx.drawImage(img, 0, 0, size, size);
           const data = ctx.getImageData(0, 0, size, size).data;
-          let r = 0, g = 0, b = 0, n = 0;
+          const shift = 4;
+          const bins = 1 << shift;
+          const hist = {};
           for (let i = 0; i < data.length; i += 4) {
             const a = data[i + 3];
-            if (a < 128) continue;
-            r += data[i];
-            g += data[i + 1];
-            b += data[i + 2];
-            n++;
+            if (a < 140) continue;
+            const r = data[i] >> shift;
+            const g = data[i + 1] >> shift;
+            const b = data[i + 2] >> shift;
+            const key = `${r},${g},${b}`;
+            hist[key] = (hist[key] || 0) + 1;
           }
-          if (n === 0) { resolve(null); return; }
-          r = Math.round(r / n);
-          g = Math.round(g / n);
-          b = Math.round(b / n);
+          let bestKey = null;
+          let bestCount = 0;
           const toHex = (rr, gg, bb) => "#" + [rr, gg, bb].map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, "0")).join("");
+          const lum = (r, g, b) => (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          for (const key of Object.keys(hist)) {
+            const [rq, gq, bq] = key.split(",").map(Number);
+            const r = (rq + 0.5) * (256 / bins);
+            const g = (gq + 0.5) * (256 / bins);
+            const b = (bq + 0.5) * (256 / bins);
+            const L = lum(r, g, b);
+            if (L > 0.92 || L < 0.08) continue;
+            if (hist[key] > bestCount) {
+              bestCount = hist[key];
+              bestKey = key;
+            }
+          }
+          if (!bestKey) { resolve(null); return; }
+          const [rq, gq, bq] = bestKey.split(",").map(Number);
+          const r = Math.round((rq + 0.5) * (256 / bins));
+          const g = Math.round((gq + 0.5) * (256 / bins));
+          const b = Math.round((bq + 0.5) * (256 / bins));
           const header = toHex(r, g, b);
           const darken = (v, f) => Math.round(v * (1 - f));
-          const bodyR = darken(r, 0.15);
-          const bodyG = darken(g, 0.15);
-          const bodyB = darken(b, 0.15);
-          const body = toHex(bodyR, bodyG, bodyB);
-          const lighten = (v) => Math.min(255, Math.round(v + (255 - v) * 0.4));
-          const label = toHex(lighten(r), lighten(g), lighten(b));
+          const body = toHex(darken(r, 0.12), darken(g, 0.12), darken(b, 0.12));
+          const label = header;
           resolve({ header, body, label });
         } catch (_) {
           resolve(null);
@@ -2905,14 +2921,13 @@ function initBuilderPage() {
     const el = document.getElementById("builder-wallet-slider");
     if (!colors || !el) return;
     el.classList.add("builder-wallet-slider-branded");
-    const cardColor = colors.header;
-    el.style.setProperty("--brand-header", cardColor);
-    el.style.setProperty("--brand-body", cardColor);
-    const isLight = luminanceFromHex(cardColor) > 0.5;
-    const textColor = isLight ? "#1a1a1a" : "#fff";
-    const labelColor = isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.95)";
-    el.style.setProperty("--brand-fg", textColor);
-    el.style.setProperty("--brand-label", labelColor);
+    const primary = colors.header;
+    const cardBg = colors.body || primary;
+    el.style.setProperty("--brand-header", cardBg);
+    el.style.setProperty("--brand-body", cardBg);
+    const isLight = luminanceFromHex(cardBg) > 0.5;
+    el.style.setProperty("--brand-fg", isLight ? "#1a1a1a" : "#fff");
+    el.style.setProperty("--brand-label", isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.95)");
   }
 
   function clearBuilderBrandColors() {
