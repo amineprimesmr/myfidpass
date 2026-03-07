@@ -128,6 +128,8 @@
   resize: vertical;
 }
 
+.dashboard-notifications-members-vs-devices-hint { font-size: 0.85rem; color: #666; margin: 0 0 0.5rem; }
+.dashboard-notifications-members-vs-devices-hint.hidden { display: none; }
 .dashboard-notifications-stats {
   font-size: 0.9rem;
   color: var(--dash-muted);

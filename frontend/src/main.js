@@ -2646,6 +2646,16 @@ function initAppDashboard(slug) {
         } else {
           el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
         }
+        const hintEl = document.getElementById("app-notifications-members-vs-devices-hint");
+        if (hintEl) {
+          if (membersCount > total && total > 0) {
+            hintEl.textContent = "Seuls les appareils qui ont ajouté la carte au Portefeuille (et nous ont enregistrés) reçoivent les notifs. Si tu ne reçois pas : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.classList.remove("hidden");
+          } else {
+            hintEl.classList.add("hidden");
+            hintEl.textContent = "";
+          }
+        }
       }
       const membersSummaryEl = document.getElementById("app-members-notifications-summary");
       if (membersSummaryEl) {
@@ -2754,9 +2764,19 @@ function initAppDashboard(slug) {
           const wp = data.sentWebPush != null ? data.sentWebPush : 0;
           const pk = data.sentPassKit != null ? data.sentPassKit : 0;
           if (sent === 0) feedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
-          else if (pk > 0 && wp > 0) feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).`;
-          else if (pk > 0) feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s) (Apple Wallet).`;
-          else feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s).`;
+          else {
+            let msg = pk > 0 && wp > 0 ? `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).` : pk > 0 ? `Notification envoyée à ${sent} appareil(s) (Apple Wallet).` : `Notification envoyée à ${sent} appareil(s).`;
+            if (data.failed > 0 && data.errors?.length) msg += ` ${data.failed} échec(s).`;
+            feedbackEl.textContent = msg;
+            const prevTip = feedbackEl.nextElementSibling?.classList?.contains("app-notif-feedback-tip") ? feedbackEl.nextElementSibling : null;
+            if (prevTip) prevTip.remove();
+            if (pk > 0) {
+              const tip = document.createElement("p");
+              tip.className = "app-notif-feedback-tip";
+              tip.textContent = "Si tu ne reçois pas sur ton iPhone : Portefeuille → ta carte → ⋯ → Autoriser les notifications ; Réglages → Notifications → Portefeuille.";
+              feedbackEl.after(tip);
+            }
+          }
           feedbackEl.classList.remove("error"); feedbackEl.classList.add("success");
         } else {
           feedbackEl.textContent = data.error || "Erreur";
@@ -4168,6 +4188,16 @@ function initDashboardPage() {
         } else {
           el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
         }
+        const hintEl = document.getElementById("dashboard-notifications-members-vs-devices-hint");
+        if (hintEl) {
+          if (membersCount > total && total > 0) {
+            hintEl.textContent = "Seuls les appareils qui ont ajouté la carte au Portefeuille (et nous ont enregistrés) reçoivent les notifs. Si tu ne reçois pas : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.classList.remove("hidden");
+          } else {
+            hintEl.classList.add("hidden");
+            hintEl.textContent = "";
+          }
+        }
       }
       if (diagEl) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
@@ -4220,9 +4250,19 @@ function initDashboardPage() {
           const wp = data.sentWebPush != null ? data.sentWebPush : 0;
           const pk = data.sentPassKit != null ? data.sentPassKit : 0;
           if (sent === 0) feedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
-          else if (pk > 0 && wp > 0) feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).`;
-          else if (pk > 0) feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s) (Apple Wallet).`;
-          else feedbackEl.textContent = `Notification envoyée à ${sent} appareil(s).`;
+          else {
+            let msg = pk > 0 && wp > 0 ? `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).` : pk > 0 ? `Notification envoyée à ${sent} appareil(s) (Apple Wallet).` : `Notification envoyée à ${sent} appareil(s).`;
+            if (data.failed > 0 && data.errors?.length) msg += ` ${data.failed} échec(s).`;
+            feedbackEl.textContent = msg;
+            const prevTip = feedbackEl.nextElementSibling?.classList?.contains("dashboard-notif-feedback-tip") ? feedbackEl.nextElementSibling : null;
+            if (prevTip) prevTip.remove();
+            if (pk > 0) {
+              const tip = document.createElement("p");
+              tip.className = "dashboard-notif-feedback-tip";
+              tip.textContent = "Si tu ne reçois pas sur ton iPhone : Portefeuille → ta carte → ⋯ → Autoriser les notifications ; Réglages → Notifications → Portefeuille.";
+              feedbackEl.after(tip);
+            }
+          }
           feedbackEl.classList.remove("error"); feedbackEl.classList.add("success");
         } else {
           feedbackEl.textContent = data.error || "Erreur";
