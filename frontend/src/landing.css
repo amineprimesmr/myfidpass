@@ -513,9 +513,6 @@
   animation: landing-cards-scroll 55s linear infinite;
   will-change: transform;
 }
-.landing-cards-scroll:hover .landing-cards-scroll-track {
-  animation-play-state: paused;
-}
 @media (prefers-reduced-motion: reduce) {
   .landing-cards-scroll-track {
     animation-duration: 120s;
