@@ -4846,6 +4846,24 @@ if (landingMenuToggle && landingMenuOverlay) {
   });
 }
 
+// Révélation au scroll (sections page d'accueil)
+function initLandingReveal() {
+  const els = document.querySelectorAll("[data-reveal]");
+  if (!els.length) return;
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("is-inview");
+        }
+      });
+    },
+    { rootMargin: "0px 0px -60px 0px", threshold: 0.05 }
+  );
+  els.forEach((el) => io.observe(el));
+}
+initLandingReveal();
+
 // Bootstrap
 const slug = initRouting();
 if (slug) initFidelityApp(slug);
