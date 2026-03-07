@@ -3021,7 +3021,7 @@ function initBuilderPage() {
     saveDraft();
     updateBuilderPreviewOrgName(state.organizationName || "Votre commerce");
     setTemplateSelection(state.selectedTemplateId);
-    if (placeIdFromUrl) {
+    if (hasLandingParams) {
       updateBuilderPreviewLogo("");
       clearBuilderBrandColors();
     } else {
@@ -3034,10 +3034,32 @@ function initBuilderPage() {
   applyInitialState();
   if (hasLandingParams) {
     (async () => {
+      let placeId = placeIdFromUrl;
+      const name = (state.organizationName || etablissementFromUrl || "").trim();
+
+      if (!placeId && name) {
+        try {
+          const findRes = await fetch(`${API_BASE.replace(/\/$/, "")}/api/find-place?name=${encodeURIComponent(name)}`, { cache: "no-store" });
+          if (findRes.ok) {
+            const findData = await findRes.json().catch(() => ({}));
+            if (findData.place_id) {
+              placeId = findData.place_id;
+              if (findData.name) state.organizationName = findData.name;
+              const newUrl = new URL(window.location.href);
+              newUrl.searchParams.set("place_id", placeId);
+              if (!newUrl.searchParams.has("etablissement") && name) newUrl.searchParams.set("etablissement", name);
+              history.replaceState(null, "", newUrl.pathname + newUrl.search);
+              saveDraft({ placeId });
+              updateBuilderPreviewOrgName(state.organizationName || name);
+            }
+          }
+        } catch (_) {}
+      }
+
       try {
         const qs = new URLSearchParams();
-        if (placeIdFromUrl) qs.set("place_id", placeIdFromUrl);
-        qs.set("name", (state.organizationName || etablissementFromUrl || "").trim());
+        if (placeId) qs.set("place_id", placeId);
+        qs.set("name", name);
         const res = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-category?${qs}`);
         const data = await res.json().catch(() => ({}));
         if (data.suggestedTemplateId && CARD_TEMPLATES.some((t) => t.id === data.suggestedTemplateId)) {
@@ -3045,15 +3067,16 @@ function initBuilderPage() {
           applyInitialState();
         }
       } catch (_) {}
-      if (placeIdFromUrl) {
+
+      if (placeId) {
         try {
-          const photoRes = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-photo?place_id=${encodeURIComponent(placeIdFromUrl)}`, { cache: "no-store" });
+          const photoRes = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-photo?place_id=${encodeURIComponent(placeId)}`, { cache: "no-store" });
           if (photoRes.ok && photoRes.headers.get("content-type")?.startsWith("image/")) {
             const blob = await photoRes.blob();
             const dataUrl = await blobToResizedLogoDataUrl(blob, 512);
             if (dataUrl) {
               state.logoDataUrl = dataUrl;
-              saveDraft({ logoDataUrl: dataUrl, placeId: placeIdFromUrl });
+              saveDraft({ logoDataUrl: dataUrl, placeId });
               updateBuilderPreviewLogo(dataUrl);
             }
           }

@@ -31,11 +31,12 @@ function brandComDomain(domain) {
   return `${base}.com`;
 }
 
-/** Clearbit Logo en haute résolution. Essaie domain puis brand.com (franchises). */
+/** Clearbit Logo en haute résolution. Essaie domain, www.domain, puis brand.com (franchises). */
 async function fetchClearbitLogo(domain) {
   const domainsToTry = [domain];
+  if (!domain.startsWith("www.")) domainsToTry.push(`www.${domain}`);
   const com = brandComDomain(domain);
-  if (com && com !== domain) domainsToTry.push(com);
+  if (com && !domainsToTry.includes(com)) domainsToTry.push(com);
   for (const d of domainsToTry) {
     try {
       const url = `https://logo.clearbit.com/${encodeURIComponent(d)}?size=${CLEARBIT_SIZE}`;
@@ -46,7 +47,7 @@ async function fetchClearbitLogo(domain) {
   return null;
 }
 
-/** Récupère l'URL og:image du site (souvent logo ou image marque en haute qualité). */
+/** Récupère l'URL og:image ou twitter:image du site (logo / image marque). */
 async function fetchOgImageUrl(websiteUrl) {
   if (!websiteUrl || typeof websiteUrl !== "string") return null;
   const url = websiteUrl.trim().startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
@@ -56,20 +57,32 @@ async function fetchOgImageUrl(websiteUrl) {
     const r = await fetch(url, {
       redirect: "follow",
       signal: ctrl.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; Fidpass/1.0; +https://myfidpass.fr)" },
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
     });
     clearTimeout(t);
     if (!r.ok) return null;
     const html = await r.text();
-    const m = html.match(/<meta[^>]+property\s*=\s*["']og:image["'][^>]+content\s*=\s*["']([^"']+)["']/i)
-      || html.match(/<meta[^>]+content\s*=\s*["']([^"']+)["'][^>]+property\s*=\s*["']og:image["']/i);
-    if (m && m[1]) {
-      const imgUrl = m[1].trim();
-      if (imgUrl.startsWith("http")) return imgUrl;
+    const resolveUrl = (imgUrl) => {
+      const u = imgUrl.trim();
+      if (u.startsWith("http")) return u;
       try {
-        return new URL(imgUrl, url).href;
+        return new URL(u, url).href;
       } catch {
         return null;
+      }
+    };
+    const patterns = [
+      /<meta[^>]+property\s*=\s*["']og:image["'][^>]+content\s*=\s*["']([^"']+)["']/i,
+      /<meta[^>]+content\s*=\s*["']([^"']+)["'][^>]+property\s*=\s*["']og:image["']/i,
+      /<meta[^>]+name\s*=\s*["']og:image["'][^>]+content\s*=\s*["']([^"']+)["']/i,
+      /<meta[^>]+property\s*=\s*["']twitter:image["'][^>]+content\s*=\s*["']([^"']+)["']/i,
+      /<meta[^>]+content\s*=\s*["']([^"']+)["'][^>]+property\s*=\s*["']twitter:image["']/i,
+    ];
+    for (const re of patterns) {
+      const m = html.match(re);
+      if (m && m[1]) {
+        const resolved = resolveUrl(m[1]);
+        if (resolved) return resolved;
       }
     }
   } catch (_) {}
@@ -86,13 +99,15 @@ async function fetchImageResponse(imageUrl) {
 }
 
 /**
- * Logo marque : Clearbit (haute résolution) → og:image du site. Pas de favicon (trop pixelisé).
+ * Logo marque : Clearbit et og:image en parallèle, on prend le premier succès (priorité Clearbit si les deux marchent).
  */
 async function fetchLogoByDomain(domain, websiteUrl) {
   if (!domain) return null;
-  const clearbit = await fetchClearbitLogo(domain);
+  const [clearbit, ogUrl] = await Promise.all([
+    fetchClearbitLogo(domain),
+    websiteUrl ? fetchOgImageUrl(websiteUrl) : Promise.resolve(null),
+  ]);
   if (clearbit) return clearbit;
-  const ogUrl = await fetchOgImageUrl(websiteUrl);
   if (ogUrl) {
     const imgRes = await fetchImageResponse(ogUrl);
     if (imgRes) return imgRes;
