@@ -760,12 +760,12 @@ function initAppPage() {
       }
     } catch (_) {}
     const body = {
-      name,
-      slug,
-      organizationName: name,
-      backgroundColor: tpl.bg,
-      foregroundColor: tpl.fg,
-      labelColor: tpl.label,
+          name,
+          slug,
+          organizationName: name,
+          backgroundColor: tpl.bg,
+          foregroundColor: tpl.fg,
+          labelColor: tpl.label,
     };
     if (logoBase64) body.logoBase64 = logoBase64;
     try {
@@ -1254,10 +1254,10 @@ function initAppDashboard(slug) {
     } else if (walletLogo) {
       if (useStripText) walletLogo.classList.add("hidden");
       else if (!hasLogoUrl) {
-        walletLogo.removeAttribute("src");
-        walletLogo.classList.add("hidden");
-      }
+      walletLogo.removeAttribute("src");
+      walletLogo.classList.add("hidden");
     }
+  }
     const logoFallback = document.getElementById("app-wallet-preview-logo-fallback");
     if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText || !!(walletLogo && walletLogo.src && !walletLogo.classList.contains("hidden")));
   }
@@ -1424,19 +1424,19 @@ function initAppDashboard(slug) {
 
   async function applyLogoFromFile(file) {
     if (!file || !file.type.startsWith("image/")) {
-      showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
-      return;
-    }
-    try {
-      personnaliserLogoDataUrl = await resizeLogoToDataUrl(file);
-      if (personnaliserLogoPreview) {
-        personnaliserLogoPreview.src = personnaliserLogoDataUrl;
-        personnaliserLogoPreview.classList.remove("hidden");
+        showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
+        return;
       }
-      if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
-      updatePersonnaliserPreview();
-    } catch (err) {
-      showPersonnaliserMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG valide.", true);
+      try {
+        personnaliserLogoDataUrl = await resizeLogoToDataUrl(file);
+        if (personnaliserLogoPreview) {
+          personnaliserLogoPreview.src = personnaliserLogoDataUrl;
+          personnaliserLogoPreview.classList.remove("hidden");
+        }
+        if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+        updatePersonnaliserPreview();
+      } catch (err) {
+        showPersonnaliserMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG valide.", true);
     }
   }
 
@@ -1641,29 +1641,29 @@ function initAppDashboard(slug) {
           }
           // Toujours recharger le logo depuis l'API après enregistrement : garde l'affichage cohérent et met à jour personnaliserLogoDataUrl (blob URL) pour les prochains saves.
           api("/logo?v=" + Date.now())
-            .then((r) => (r.ok ? r.blob() : null))
-            .then((blob) => {
-              if (blob && personnaliserLogoPreview) {
-                const url = URL.createObjectURL(blob);
+              .then((r) => (r.ok ? r.blob() : null))
+              .then((blob) => {
+                if (blob && personnaliserLogoPreview) {
+                  const url = URL.createObjectURL(blob);
                 personnaliserLogoDataUrl = url;
-                personnaliserLogoPreview.src = url;
-                personnaliserLogoPreview.classList.remove("hidden");
-                if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
-                const walletLogo = document.getElementById("app-wallet-preview-logo");
-                if (walletLogo) {
-                  walletLogo.src = url;
-                  walletLogo.classList.remove("hidden");
-                }
-                updatePersonnaliserPreview();
-              } else {
+                  personnaliserLogoPreview.src = url;
+                  personnaliserLogoPreview.classList.remove("hidden");
+                  if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+                  const walletLogo = document.getElementById("app-wallet-preview-logo");
+                  if (walletLogo) {
+                    walletLogo.src = url;
+                    walletLogo.classList.remove("hidden");
+                  }
+                  updatePersonnaliserPreview();
+          } else {
                 personnaliserLogoDataUrl = "";
-                if (personnaliserLogoPreview) {
-                  personnaliserLogoPreview.src = "";
-                  personnaliserLogoPreview.classList.add("hidden");
-                }
-                if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
-                updatePersonnaliserPreview();
-              }
+            if (personnaliserLogoPreview) {
+              personnaliserLogoPreview.src = "";
+              personnaliserLogoPreview.classList.add("hidden");
+            }
+            if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
+            updatePersonnaliserPreview();
+          }
             })
             .catch(() => { updatePersonnaliserPreview(); });
         } else {
@@ -3113,7 +3113,7 @@ function initBuilderPage() {
     }
     saveDraft();
     updateBuilderPreviewOrgName(state.organizationName || "Votre commerce");
-    setTemplateSelection(state.selectedTemplateId);
+  setTemplateSelection(state.selectedTemplateId);
     if (hasLandingParams) {
       updateBuilderPreviewLogo("");
       clearBuilderBrandColors();

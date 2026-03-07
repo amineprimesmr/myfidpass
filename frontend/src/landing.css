@@ -19,58 +19,82 @@
   position: relative;
 }
 
-/* Lignes structure : un seul trait, cadres complets, pas de superposition */
+/* Quadrillage intelligent : lignes qui traversent la page, pas de petits cadres */
 #landing {
-  --landing-line: rgba(0, 0, 0, 0.12);
+  --landing-line: rgba(0, 0, 0, 0.14);
 }
-.landing-structure-lines {
+
+/* Grille verticale (4 colonnes) – lignes qui vont du haut en bas */
+.landing-grid-lines {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
 }
-.landing-line-v {
+.landing-grid-v {
   position: absolute;
-  left: 25%;
   top: 0;
   bottom: 0;
   width: 1px;
   background: var(--landing-line);
 }
+.landing-grid-v-1 { left: 25%; }
+.landing-grid-v-2 { left: 50%; }
+.landing-grid-v-3 { left: 75%; }
 
-/* Bloc titre + sous-titre : cadre complet */
+/* Ligne horizontale pleine largeur sous le titre (pas de cadre autour du bloc) */
 .landing-hero-title-wrap {
-  border: 1px solid var(--landing-line);
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  border: none;
+  border-top: 1px solid var(--landing-line);
+  border-bottom: 1px solid var(--landing-line);
   border-radius: 0;
   padding: 1.25rem 1.5rem 1.5rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
   box-sizing: border-box;
 }
-
-/* Formulaire : cadre complet, marge en bas pour ne pas toucher le bloc avantages */
-.landing-hero-form {
-  border: 1px solid var(--landing-line);
-  border-radius: 0;
-  padding: 1.25rem 1.5rem;
+.landing-hero-title-wrap .landing-hero-title,
+.landing-hero-title-wrap .landing-hero-subtitle {
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: 1.25rem;
+}
+
+/* Ligne horizontale pleine largeur sous le formulaire */
+.landing-hero-form-line {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  border: none;
+  border-bottom: 1px solid var(--landing-line);
+  padding-bottom: 1.5rem;
+  margin-bottom: 0;
   box-sizing: border-box;
+}
+.landing-hero-form {
+  border: none;
+  border-radius: 0;
 }
 .landing-hero .landing-btn {
   border-radius: 0;
 }
 
-/* Bloc 3 avantages : cadre complet (4 côtés), lignes jusqu’aux bords, séparateurs internes */
+/* Bloc avantages : uniquement 2 lignes horizontales (haut/bas) + 2 traits verticaux entre les 3 colonnes */
 .landing-hero-benefits-wrap {
   width: 100vw;
   max-width: 100vw;
   margin-left: calc(-50vw + 50%);
   margin-right: calc(-50vw + 50%);
-  border: 1px solid var(--landing-line);
+  border: none;
+  border-top: 1px solid var(--landing-line);
+  border-bottom: 1px solid var(--landing-line);
   border-radius: 0;
   padding: 1rem 0;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
   box-sizing: border-box;
 }
 .landing-hero-benefits-wrap .landing-hero-benefits {
@@ -87,18 +111,26 @@
   border-left: 1px solid var(--landing-line);
 }
 
-/* Trustpilot : cadre complet, marge au-dessus pour séparation */
+/* Trustpilot : 2 lignes horizontales (haut/bas) pleine largeur */
 .landing-hero-stats {
-  border: 1px solid var(--landing-line);
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  border: none;
+  border-top: 1px solid var(--landing-line);
+  border-bottom: 1px solid var(--landing-line);
   border-radius: 0;
   padding: 0.5rem 1rem;
-  display: inline-block;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
+  box-sizing: border-box;
 }
 
-/* Section cartes : cadre complet */
+/* Section cartes : ligne horizontale au-dessus et en dessous (pleine largeur) */
 .landing-cards-scroll {
-  border: 1px solid var(--landing-line);
+  border: none;
+  border-top: 1px solid var(--landing-line);
+  border-bottom: 1px solid var(--landing-line);
   border-radius: 0;
 }
 
@@ -107,7 +139,7 @@
     margin-left: 0;
     width: 100%;
   }
-  .landing-line-v {
+  .landing-grid-v {
     display: none;
   }
 }
