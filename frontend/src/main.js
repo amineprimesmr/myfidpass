@@ -2846,7 +2846,61 @@ function initBuilderPage() {
     else clearBuilderBrandColors();
   }
 
-  /** Extrait une couleur principale du logo (couleur la plus présente), pas un mélange. */
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        default: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+    return [h * 360, s, l];
+  }
+  function hslToRgb(h, s, l) {
+    h /= 360;
+    let r, g, b;
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1 / 3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1 / 3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+  function hue2rgb(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  }
+  /** Rend une couleur fade/gris en couleur vive (même teinte). */
+  function vividifyHex(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return hex;
+    const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+    const [h, s, l] = rgbToHsl(r, g, b);
+    let newS = s, newL = l;
+    if (s < 0.35) newS = Math.max(0.45, s * 1.8);
+    if (l > 0.78) newL = 0.42;
+    else if (l > 0.65) newL = 0.5;
+    else if (l < 0.15) newL = 0.28;
+    const [rr, gg, bb] = hslToRgb(h, Math.min(1, newS), newL);
+    return "#" + [rr, gg, bb].map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, "0")).join("");
+  }
+
+  /** Extrait une couleur principale du logo (couleur la plus présente), pas un mélange. Évite gris et fades. */
   function extractDominantColors(dataUrl) {
     return new Promise((resolve) => {
       const img = new Image();
@@ -2873,32 +2927,40 @@ function initBuilderPage() {
             const key = `${r},${g},${b}`;
             hist[key] = (hist[key] || 0) + 1;
           }
-          let bestKey = null;
-          let bestCount = 0;
           const toHex = (rr, gg, bb) => "#" + [rr, gg, bb].map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, "0")).join("");
           const lum = (r, g, b) => (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-          for (const key of Object.keys(hist)) {
-            const [rq, gq, bq] = key.split(",").map(Number);
-            const r = (rq + 0.5) * (256 / bins);
-            const g = (gq + 0.5) * (256 / bins);
-            const b = (bq + 0.5) * (256 / bins);
-            const L = lum(r, g, b);
-            if (L > 0.92 || L < 0.08) continue;
-            if (hist[key] > bestCount) {
-              bestCount = hist[key];
-              bestKey = key;
-            }
-          }
-          if (!bestKey) { resolve(null); return; }
-          const [rq, gq, bq] = bestKey.split(",").map(Number);
-          const r = Math.round((rq + 0.5) * (256 / bins));
-          const g = Math.round((gq + 0.5) * (256 / bins));
-          const b = Math.round((bq + 0.5) * (256 / bins));
-          const header = toHex(r, g, b);
+          const sat = (r, g, b) => {
+            const R = r / 255, G = g / 255, B = b / 255;
+            const max = Math.max(R, G, B), min = Math.min(R, G, B);
+            return max === 0 ? 0 : (max - min) / max;
+          };
+          const entries = Object.entries(hist)
+            .map(([key, count]) => {
+              const [rq, gq, bq] = key.split(",").map(Number);
+              const r = (rq + 0.5) * (256 / bins);
+              const g = (gq + 0.5) * (256 / bins);
+              const b = (bq + 0.5) * (256 / bins);
+              return { key, count, r, g, b, L: lum(r, g, b), S: sat(r, g, b) };
+            })
+            .filter((e) => e.L <= 0.92 && e.L >= 0.06);
+          entries.sort((a, b) => {
+            const wantA = a.S >= 0.14 ? 1 : 0;
+            const wantB = b.S >= 0.14 ? 1 : 0;
+            if (wantB !== wantA) return wantB - wantA;
+            if (a.S >= 0.14 && b.S >= 0.14) return b.count - a.count;
+            return b.S - a.S || b.count - a.count;
+          });
+          const best = entries[0];
+          if (!best) { resolve(null); return; }
+          let header = toHex(Math.round(best.r), Math.round(best.g), Math.round(best.b));
+          header = vividifyHex(header);
           const darken = (v, f) => Math.round(v * (1 - f));
+          const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(header);
+          const r = m ? parseInt(m[1], 16) : 0;
+          const g = m ? parseInt(m[2], 16) : 0;
+          const b = m ? parseInt(m[3], 16) : 0;
           const body = toHex(darken(r, 0.12), darken(g, 0.12), darken(b, 0.12));
-          const label = header;
-          resolve({ header, body, label });
+          resolve({ header, body, label: header });
         } catch (_) {
           resolve(null);
         }
