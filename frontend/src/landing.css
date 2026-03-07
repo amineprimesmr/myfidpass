@@ -749,7 +749,23 @@
   line-height: 1.6;
 }
 
-/* ========== Alternance clair / sombre + transitions ========== */
+/* ========== Alternance clair / sombre – TOUTE LA SECTION pleine largeur ========== */
+.landing-value,
+.landing-steps,
+.landing-product,
+.landing-guarantee,
+.landing-faq,
+.landing-cta-block,
+.landing-footer {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  box-sizing: border-box;
+  padding-left: max(1.5rem, calc(50vw - 400px));
+  padding-right: max(1.5rem, calc(50vw - 400px));
+}
+
 .landing-section-dark {
   background: #111827;
   color: #f9fafb;
@@ -765,17 +781,25 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* Transition en V entre hero (clair) et value (sombre) */
+/* Transition en V entre hero (clair) et value (sombre) – toute la bande sombre */
 .landing-value {
-  clip-path: polygon(0 24px, 38% 24px, 50% 0, 62% 24px, 100% 24px, 100% 100%, 0 100%);
-  padding: 3.5rem 1.5rem 3rem;
+  clip-path: polygon(0 28px, 38% 28px, 50% 0, 62% 28px, 100% 28px, 100% 100%, 0 100%);
+  padding-top: 3.5rem;
+  padding-bottom: 3rem;
   text-align: center;
 }
 
-/* Steps (clair) */
+/* Steps (clair) – toute la section claire */
 .landing-steps {
-  padding: 3.5rem 0;
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
   background: var(--landing-bg);
+}
+.landing-steps .landing-section-title,
+.landing-steps-list {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .landing-steps-list {
@@ -829,9 +853,17 @@
   line-height: 1.5;
 }
 
-/* Product (sombre) */
+/* Product (sombre) – toute la section */
 .landing-product {
-  padding: 3.5rem 1.5rem;
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
+}
+.landing-product .landing-section-title,
+.landing-product .landing-section-subtitle,
+.landing-product-card {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .landing-section-dark .landing-product-card {
   background: rgba(255, 255, 255, 0.06);
@@ -875,14 +907,18 @@
   margin-bottom: 0.5rem;
 }
 
-/* Guarantee (clair) */
+/* Guarantee (clair) – toute la section */
 .landing-guarantee {
-  padding: 2.5rem 1.5rem;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
   text-align: center;
-  background: var(--landing-surface);
-  border: 1px solid var(--landing-border);
-  border-radius: 16px;
-  margin: 2rem 0;
+  background: var(--landing-bg);
+}
+.landing-guarantee .landing-section-title,
+.landing-guarantee p {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .landing-guarantee p {
@@ -890,9 +926,16 @@
   color: var(--landing-muted);
 }
 
-/* FAQ (sombre) */
+/* FAQ (sombre) – toute la section */
 .landing-faq {
-  padding: 3.5rem 1.5rem;
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
+}
+.landing-faq .landing-section-title,
+.landing-faq-list {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .landing-section-dark .landing-faq-item {
   background: rgba(255, 255, 255, 0.06);
@@ -957,10 +1000,19 @@
   line-height: 1.6;
 }
 
-/* CTA block (clair) */
+/* CTA block (clair) – toute la section */
 .landing-cta-block {
-  padding: 3.5rem 1.5rem;
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
   text-align: center;
+  background: var(--landing-bg);
+}
+.landing-cta-block .landing-section-title,
+.landing-cta-block p,
+.landing-cta-block .landing-btn {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .landing-cta-block .landing-btn-large {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -975,12 +1027,18 @@
   color: var(--landing-muted);
 }
 
-/* Footer (sombre) */
+/* Footer (sombre) – toute la section */
 .landing-footer {
   background: #0f172a;
   border-top: none;
-  padding: 3rem 1.5rem;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
   margin-top: 0;
+}
+.landing-footer-inner {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .landing-section-dark.landing-footer .landing-footer-brand {
   color: #fff;
