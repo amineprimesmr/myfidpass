@@ -2896,8 +2896,9 @@ function initBuilderPage() {
     const el = document.getElementById("builder-wallet-slider");
     if (!colors || !el) return;
     el.classList.add("builder-wallet-slider-branded");
-    el.style.setProperty("--brand-header", colors.header);
-    el.style.setProperty("--brand-body", colors.body);
+    const cardColor = colors.header;
+    el.style.setProperty("--brand-header", cardColor);
+    el.style.setProperty("--brand-body", cardColor);
     el.style.setProperty("--brand-label", colors.label);
   }
 

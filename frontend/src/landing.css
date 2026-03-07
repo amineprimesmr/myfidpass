@@ -1422,11 +1422,9 @@
   border-radius: 4px;
 }
 /* Couleurs marque (dérivées du logo) : override les thèmes template */
-.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-header {
-  background: var(--brand-header, #0a7c42) !important;
-}
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-header,
 .builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-body {
-  background: var(--brand-body, #0a7c42) !important;
+  background: var(--brand-header, #0a7c42) !important;
   color: #fff;
 }
 .builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-label,
