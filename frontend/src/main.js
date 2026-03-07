@@ -3028,11 +3028,12 @@ function initBuilderPage() {
   }
 
   function setSliderPosition(index) {
-    if (sliderEl) sliderEl.style.transform = `translateX(-${(index * 100) / templateIds.length}%)`;
+    const idx = Math.max(0, Math.min(index, templateIds.length - 1));
+    if (sliderEl) sliderEl.style.transform = `translateX(-${idx * 100}%)`;
     if (dotsContainer) {
       dotsContainer.querySelectorAll(".builder-phone-dot").forEach((dot, i) => {
-        dot.classList.toggle("active", i === index);
-        dot.setAttribute("aria-current", i === index ? "true" : null);
+        dot.classList.toggle("active", i === idx);
+        dot.setAttribute("aria-current", i === idx ? "true" : null);
       });
     }
   }
