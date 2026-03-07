@@ -13,8 +13,7 @@ function domainFromWebsite(website) {
   if (!s) return null;
   try {
     const url = new URL(s.startsWith("http") ? s : `https://${s}`);
-    const host = url.hostname.replace(/^www\./i, "");
-    return host || null;
+    return url.hostname.replace(/^www\./i, "") || null;
   } catch {
     return null;
   }
@@ -23,84 +22,33 @@ function domainFromWebsite(website) {
 const CLEARBIT_SIZE = 512;
 const FETCH_HTML_TIMEOUT = 6000;
 
-/**
- * Normalise le nom d'établissement pour en tirer une "clé marque" (sans lieu, sans accents).
- * Ex. "Brioche Dorée - Gare de Lyon" → "brioche doree", "McDonald's Paris 15" → "mcdonalds"
- */
-function placeNameToBrandKey(name) {
-  if (!name || typeof name !== "string") return "";
-  let s = name
-    .replace(/\s*[-–—|]\s*.*$/, "")
-    .replace(/\s+(Gare|Aéroport|Centre commercial|CC)\s+.*$/i, "")
-    .replace(/\s+\d+\s*$/, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  s = s.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/['']/g, "").replace(/\u00ae/g, "");
-  return s.toLowerCase().replace(/\s+/g, " ").trim();
+/** Pour un domaine (ex. boulangeriedupont.fr), retourne le .com en secours. */
+function addComVariant(domain) {
+  if (!domain || domain.endsWith(".com")) return [];
+  const base = domain.split(".")[0];
+  if (!base || base.length < 2) return [];
+  return [`${base}.com`];
 }
 
 /**
- * Domaines officiels des franchises (logo marque unique, haute qualité).
- * Même franchise = même logo quelle que soit la ville.
+ * À partir du nom d'établissement, génère des domaines possibles (slug .com / .fr).
+ * Aucune liste en dur : tout commerce, indépendant ou chaîne, est traité pareil.
+ * Ex. "Café du coin" → cafeducoin.com, cafeducoin.fr
  */
-const FRANCHISE_DOMAINS = {
-  mcdonalds: ["mcdonalds.com", "mcdonalds.fr"],
-  "mc donalds": ["mcdonalds.com", "mcdonalds.fr"],
-  "brioche doree": ["briochedoree.com", "briochedoree.fr"],
-  briochedoree: ["briochedoree.com", "briochedoree.fr"],
-  "burger king": ["burgerking.com", "burgerking.fr"],
-  burgerking: ["burgerking.com", "burgerking.fr"],
-  bk: ["burgerking.com", "burgerking.fr"],
-  starbucks: ["starbucks.com", "starbucks.fr"],
-  subway: ["subway.com", "subway.fr"],
-  "quick": ["quick.fr", "quick.com"],
-  kfc: ["kfc.com", "kfc.fr"],
-  "domino's": ["dominos.com", "dominos.fr"],
-  dominos: ["dominos.com", "dominos.fr"],
-  "pizza hut": ["pizzahut.com", "pizzahut.fr"],
-  pizzahut: ["pizzahut.com", "pizzahut.fr"],
-  "paul": ["paul.fr", "paul.com"],
-  "auberge": ["auberge.fr"],
-  "flunch": ["flunch.fr"],
-  "la croissanterie": ["lacroissanterie.fr"],
-  lacroissanterie: ["lacroissanterie.fr"],
-  "bagelstein": ["bagelstein.fr"],
-  "exki": ["exki.com", "exki.fr"],
-  "pret a manger": ["pret.com", "pret.fr"],
-  pret: ["pret.com", "pret.fr"],
-  "costa coffee": ["costacoffee.com", "costacoffee.fr"],
-  costacoffee: ["costacoffee.com", "costacoffee.fr"],
-  "tim hortons": ["timhortons.com", "timhortons.ca"],
-  timhortons: ["timhortons.com", "timhortons.ca"],
-};
-
-/**
- * À partir du nom d'établissement, retourne une liste de domaines à essayer pour le logo FRANCHISE (priorité).
- * "McDonald's Paris 15" ou "McDonald's Lyon" → même domaines que "McDonald's".
- */
-function brandDomainsFromPlaceName(placeName) {
-  const key = placeNameToBrandKey(placeName);
-  if (!key) return [];
-  const fromMap = FRANCHISE_DOMAINS[key];
-  if (fromMap && fromMap.length) return fromMap;
-  for (const [brandKey, domains] of Object.entries(FRANCHISE_DOMAINS)) {
-    if (key === brandKey || key.startsWith(brandKey + " ") || key.startsWith(brandKey + "-")) return domains;
-  }
-  const slug = key.replace(/\s+/g, "").replace(/['']/g, "");
+function domainsFromPlaceName(placeName) {
+  if (!placeName || typeof placeName !== "string") return [];
+  let s = placeName
+    .replace(/\s*[-–—|]\s*.*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  s = s.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[''®]/g, "");
+  const slug = s.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
   if (slug.length < 2) return [];
   return [`${slug}.com`, `${slug}.fr`];
 }
 
-/** Pour un domaine (ex. mcdonalds.fr), retourne le .com si pertinent. */
-function brandComDomain(domain) {
-  if (!domain || domain.endsWith(".com")) return null;
-  const base = domain.split(".")[0];
-  if (!base || base.length < 2) return null;
-  return `${base}.com`;
-}
-
 /**
- * Clearbit Logo : essaie chaque domaine puis sa variante www. (certaines marques ne répondent qu'avec www.)
+ * Clearbit : essaie chaque domaine puis www.
  */
 async function fetchClearbitLogoFromDomains(domains) {
   const toTry = [];
@@ -122,7 +70,7 @@ async function fetchClearbitLogoFromDomains(domains) {
   return null;
 }
 
-/** Récupère l'URL og:image ou twitter:image du site (logo / image marque). */
+/** og:image ou twitter:image depuis une URL. */
 async function fetchOgImageUrl(websiteUrl) {
   if (!websiteUrl || typeof websiteUrl !== "string") return null;
   const url = websiteUrl.trim().startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
@@ -173,20 +121,21 @@ async function fetchImageResponse(imageUrl) {
   return null;
 }
 
-/** Pour un domaine de site (ex. mcdonalds.fr), liste domain, www.domain, .com. */
+/** Domaines à tenter à partir du site du lieu : domain, www, .com. */
 function domainsFromPlaceWebsite(domain) {
   if (!domain) return [];
   const list = [domain];
   if (!domain.startsWith("www.")) list.push(`www.${domain}`);
-  const com = brandComDomain(domain);
-  if (com && !list.includes(com)) list.push(com);
-  return list;
+  list.push(...addComVariant(domain));
+  return [...new Set(list)];
 }
 
 /**
- * Logo via site du lieu (domain + og:image). Utilisé seulement pour les enseignes non reconnues comme franchise.
+ * Logo à partir du site du lieu (domaine + og:image).
+ * Même domaine = même logo (franchises avec même site officiel = même logo naturellement).
  */
-async function fetchLogoByDomain(domain, websiteUrl) {
+async function fetchLogoFromWebsite(domain, websiteUrl) {
+  if (!domain) return null;
   const list = domainsFromPlaceWebsite(domain);
   const clearbit = await fetchClearbitLogoFromDomains(list);
   if (clearbit) return clearbit;
@@ -200,31 +149,7 @@ async function fetchLogoByDomain(domain, websiteUrl) {
   return null;
 }
 
-/**
- * Pour une franchise connue : si Clearbit échoue, on récupère le logo via og:image du site OFFICIEL (ex. https://burgerking.fr).
- * Garantit le même logo pour tous les établissements de la même marque.
- */
-async function fetchFranchiseLogoFromOfficialSite(domains) {
-  if (!domains || domains.length === 0) return null;
-  const seen = new Set();
-  for (const d of domains) {
-    const domain = (d && typeof d === "string") ? d.replace(/^www\./i, "").trim() : "";
-    if (!domain || seen.has(domain)) continue;
-    seen.add(domain);
-    const url = `https://${domain}`;
-    const ogUrl = await fetchOgImageUrl(url);
-    if (ogUrl) {
-      const imgRes = await fetchImageResponse(ogUrl);
-      if (imgRes) return imgRes;
-    }
-  }
-  return null;
-}
-
-/**
- * Choisit la photo la plus susceptible d'être un logo : format carré (ratio ~1)
- * et préférence pour les plus petites (logos souvent en petit format).
- */
+/** Photo la plus "type logo" (carrée, petite). */
 function pickLogoLikePhoto(photos) {
   if (!Array.isArray(photos) || photos.length === 0) return null;
   const withScore = photos
@@ -232,15 +157,9 @@ function pickLogoLikePhoto(photos) {
     .map((p) => {
       const w = p.width;
       const h = p.height;
-      const ratio = w / h;
-      const squareness = ratio >= 1 ? h / w : w / h;
+      const squareness = (w / h) >= 1 ? h / w : w / h;
       const maxDim = Math.max(w, h);
-      return {
-        ...p,
-        squareness,
-        maxDim,
-        score: squareness * (1 - Math.min(maxDim, 800) / 2000),
-      };
+      return { ...p, squareness, maxDim, score: squareness * (1 - Math.min(maxDim, 800) / 2000) };
     })
     .sort((a, b) => (b.score !== a.score ? b.score - a.score : a.maxDim - b.maxDim));
   return withScore[0] || photos[0];
@@ -248,9 +167,10 @@ function pickLogoLikePhoto(photos) {
 
 /**
  * GET /api/place-photo?place_id=xxx
- * Priorité 1 : logo FRANCHISE (nom établissement → domaines marque → Clearbit 512px). Même enseigne = même logo.
- * Priorité 2 : logo via site du lieu (domaine + og:image).
- * Priorité 3 : photo du lieu Google (fallback).
+ * Universel : aucun nom d'enseigne en dur.
+ * 1) Site du lieu → Clearbit(domaine) + og:image (même site = même logo).
+ * 2) Nom du lieu → Clearbit(slug.com / slug.fr) pour tout commerce.
+ * 3) Photo Google du lieu en secours.
  */
 router.get("/", async (req, res) => {
   const placeId = req.query.place_id?.trim();
@@ -270,7 +190,7 @@ router.get("/", async (req, res) => {
       res.status(403).json({
         error: "Clé Google refusée côté serveur.",
         code: details.status,
-        hint: "Utilisez une clé avec restriction « Aucune » (ou « Adresses IP ») pour le backend. La clé « Référents HTTP » ne fonctionne que depuis le navigateur.",
+        hint: "Utilisez une clé avec restriction « Aucune » (ou « Adresses IP ») pour le backend.",
       });
       return;
     }
@@ -280,25 +200,27 @@ router.get("/", async (req, res) => {
     }
 
     const result = details.result;
-    const placeName = result.name || "";
     const website = result.website;
     const domain = domainFromWebsite(website);
+    const placeName = result.name || "";
 
-    const brandDomains = brandDomainsFromPlaceName(placeName);
-    if (brandDomains.length > 0) {
-      let logoRes = await fetchClearbitLogoFromDomains(brandDomains);
-      if (!logoRes) logoRes = await fetchFranchiseLogoFromOfficialSite(brandDomains);
-      if (logoRes) {
-        res.setHeader("Content-Type", logoRes.headers.get("content-type") || "image/png");
-        res.setHeader("Cache-Control", "private, max-age=86400");
-        res.setHeader("X-Logo-Source", "franchise");
-        Readable.fromWeb(logoRes.body).pipe(res);
-        return;
+    let logoRes = domain ? await fetchLogoFromWebsite(domain, website) : null;
+    if (!logoRes && placeName) {
+      const nameDomains = domainsFromPlaceName(placeName);
+      logoRes = await fetchClearbitLogoFromDomains(nameDomains);
+      if (!logoRes) {
+        for (const d of nameDomains) {
+          const base = d.replace(/^www\./i, "").trim();
+          const url = `https://${base}`;
+          const ogUrl = await fetchOgImageUrl(url);
+          if (ogUrl) {
+            logoRes = await fetchImageResponse(ogUrl);
+            if (logoRes) break;
+          }
+        }
       }
-      // Franchise reconnue mais logo non trouvé : on ne prend pas le site du lieu (chaque magasin pourrait avoir une image différente).
     }
 
-    const logoRes = brandDomains.length === 0 && domain ? await fetchLogoByDomain(domain, website) : null;
     if (logoRes) {
       res.setHeader("Content-Type", logoRes.headers.get("content-type") || "image/png");
       res.setHeader("Cache-Control", "private, max-age=86400");
