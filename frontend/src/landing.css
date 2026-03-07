@@ -19,7 +19,10 @@
   position: relative;
 }
 
-/* Lignes structure (comme ton croquis) : angles carrés, lignes jusqu’aux bords */
+/* Lignes structure : un seul trait, cadres complets, pas de superposition */
+#landing {
+  --landing-line: rgba(0, 0, 0, 0.12);
+}
 .landing-structure-lines {
   position: absolute;
   inset: 0;
@@ -32,46 +35,70 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--landing-line);
 }
 
+/* Bloc titre + sous-titre : cadre complet */
+.landing-hero-title-wrap {
+  border: 1px solid var(--landing-line);
+  border-radius: 0;
+  padding: 1.25rem 1.5rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-sizing: border-box;
+}
+
+/* Formulaire : cadre complet, marge en bas pour ne pas toucher le bloc avantages */
 .landing-hero-form {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--landing-line);
   border-radius: 0;
   padding: 1.25rem 1.5rem;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 1.25rem;
+  box-sizing: border-box;
 }
 .landing-hero .landing-btn {
   border-radius: 0;
 }
+
+/* Bloc 3 avantages : cadre complet (4 côtés), lignes jusqu’aux bords, séparateurs internes */
 .landing-hero-benefits-wrap {
   width: 100vw;
   max-width: 100vw;
   margin-left: calc(-50vw + 50%);
   margin-right: calc(-50vw + 50%);
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--landing-line);
   border-radius: 0;
-  padding: 0.9rem 0;
+  padding: 1rem 0;
+  margin-bottom: 1.25rem;
   box-sizing: border-box;
 }
-.landing-hero-benefits {
+.landing-hero-benefits-wrap .landing-hero-benefits {
   padding: 0 1.25rem;
   max-width: 800px;
   margin: 0 auto;
+  gap: 0;
+}
+.landing-hero-benefits-wrap .landing-hero-benefit {
+  flex: 1;
+  min-width: 0;
 }
 .landing-hero-benefit + .landing-hero-benefit {
-  border-left: 1px solid rgba(0, 0, 0, 0.12);
+  border-left: 1px solid var(--landing-line);
 }
+
+/* Trustpilot : cadre complet, marge au-dessus pour séparation */
 .landing-hero-stats {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--landing-line);
   border-radius: 0;
   padding: 0.5rem 1rem;
   display: inline-block;
+  margin-bottom: 1.25rem;
 }
+
+/* Section cartes : cadre complet */
 .landing-cards-scroll {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--landing-line);
   border-radius: 0;
 }
 
