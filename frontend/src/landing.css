@@ -1124,6 +1124,23 @@
 }
 
 @media (max-width: 899px) {
+  .builder-step-1-content {
+    display: flex;
+    flex-direction: column;
+  }
+  .builder-step-1-right {
+    order: -1;
+  }
+  .builder-options,
+  .builder-option-section,
+  .builder-category-select,
+  .builder-format-choices {
+    display: block;
+    visibility: visible;
+  }
+  .builder-option-section {
+    display: block;
+  }
   .builder-step-1-block {
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }

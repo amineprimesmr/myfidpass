@@ -2951,7 +2951,7 @@ function initBuilderPage() {
   }
 
   function setSliderPosition(index) {
-    if (sliderEl) sliderEl.style.transform = `translateX(-${index * 100}%)`;
+    if (sliderEl) sliderEl.style.transform = `translateX(-${(index * 100) / templateIds.length}%)`;
     if (dotsContainer) {
       dotsContainer.querySelectorAll(".builder-phone-dot").forEach((dot, i) => {
         dot.classList.toggle("active", i === index);
