@@ -2649,7 +2649,10 @@ function initAppDashboard(slug) {
         const hintEl = document.getElementById("app-notifications-members-vs-devices-hint");
         if (hintEl) {
           if (membersCount > total && total > 0) {
-            hintEl.textContent = "Seuls les appareils qui ont ajouté la carte au Portefeuille (et nous ont enregistrés) reçoivent les notifs. Si tu ne reçois pas : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.textContent = "« Envoyer » envoie à tous les appareils enregistrés (" + total + "), pas à tous les " + membersCount + " membres. Seuls les clients qui ont ajouté la carte au Portefeuille reçoivent la notif. Si tu ne reçois pas : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.classList.remove("hidden");
+          } else if (total > 0) {
+            hintEl.textContent = "Si tu ne reçois pas sur ton iPhone : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
             hintEl.classList.remove("hidden");
           } else {
             hintEl.classList.add("hidden");
@@ -2716,6 +2719,39 @@ function initAppDashboard(slug) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         removeTestWrap.classList.toggle("hidden", total === 0);
       }
+      await loadAppNotificationCategories();
+    } catch (_) {}
+  }
+
+  async function loadAppNotificationCategories() {
+    try {
+      const res = await api("/dashboard/categories");
+      if (!res.ok) return;
+      const data = await res.json();
+      const categories = data.categories || [];
+      const wrap = document.getElementById("app-notif-categories-wrap");
+      const listEl = document.getElementById("app-notif-categories-list");
+      const targetAll = document.getElementById("app-notif-target-all");
+      if (!wrap || !listEl) return;
+      if (categories.length === 0) {
+        wrap.classList.add("hidden");
+        return;
+      }
+      wrap.classList.remove("hidden");
+      listEl.innerHTML = categories
+        .map((c) => `<label class="app-checkbox-label"><input type="checkbox" class="app-notif-category-cb" data-id="${escapeHtml(c.id)}" /> ${escapeHtml(c.name)}</label>`)
+        .join("");
+      listEl.querySelectorAll(".app-notif-category-cb").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          if (cb.checked && targetAll) targetAll.checked = false;
+        });
+      });
+      if (targetAll && !targetAll.dataset.notifCatListen) {
+        targetAll.dataset.notifCatListen = "1";
+        targetAll.addEventListener("change", () => {
+          if (targetAll.checked) listEl.querySelectorAll(".app-notif-category-cb").forEach((c) => { c.checked = false; });
+        });
+      }
     } catch (_) {}
   }
 
@@ -2743,18 +2779,24 @@ function initAppDashboard(slug) {
     const messageEl = document.getElementById("app-notif-message");
     const feedbackEl = document.getElementById("app-notif-feedback");
     const btn = document.getElementById("app-notif-send");
+    const targetAll = document.getElementById("app-notif-target-all");
     const message = messageEl?.value?.trim();
     if (!message) {
       if (feedbackEl) { feedbackEl.textContent = "Saisissez un message."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
       return;
     }
+    let categoryIds = undefined;
+    if (!targetAll?.checked) {
+      const checked = document.querySelectorAll(".app-notif-category-cb:checked");
+      if (checked.length > 0) categoryIds = Array.from(checked).map((c) => c.dataset.id).filter(Boolean);
+    }
     if (btn) btn.disabled = true;
     if (feedbackEl) feedbackEl.classList.add("hidden");
     try {
-      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send`, {
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
-        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message }),
+        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}) }),
       });
       const data = await res.json().catch(() => ({}));
       if (feedbackEl) {
@@ -4191,7 +4233,10 @@ function initDashboardPage() {
         const hintEl = document.getElementById("dashboard-notifications-members-vs-devices-hint");
         if (hintEl) {
           if (membersCount > total && total > 0) {
-            hintEl.textContent = "Seuls les appareils qui ont ajouté la carte au Portefeuille (et nous ont enregistrés) reçoivent les notifs. Si tu ne reçois pas : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.textContent = "« Envoyer » envoie à tous les appareils enregistrés (" + total + "), pas à tous les " + membersCount + " membres. Seuls les clients qui ont ajouté la carte au Portefeuille reçoivent la notif. Si tu ne reçois pas : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.classList.remove("hidden");
+          } else if (total > 0) {
+            hintEl.textContent = "Si tu ne reçois pas sur ton iPhone : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
             hintEl.classList.remove("hidden");
           } else {
             hintEl.classList.add("hidden");
@@ -4221,6 +4266,39 @@ function initDashboardPage() {
           diagEl.innerHTML = "";
         }
       }
+      await loadDashboardNotificationCategories();
+    } catch (_) {}
+  }
+
+  async function loadDashboardNotificationCategories() {
+    try {
+      const res = await api("/dashboard/categories");
+      if (!res.ok) return;
+      const data = await res.json();
+      const categories = data.categories || [];
+      const wrap = document.getElementById("dashboard-notif-categories-wrap");
+      const listEl = document.getElementById("dashboard-notif-categories-list");
+      const targetAll = document.getElementById("dashboard-notif-target-all");
+      if (!wrap || !listEl) return;
+      if (categories.length === 0) {
+        wrap.classList.add("hidden");
+        return;
+      }
+      wrap.classList.remove("hidden");
+      listEl.innerHTML = categories
+        .map((c) => `<label class="dashboard-checkbox-label"><input type="checkbox" class="dashboard-notif-category-cb" data-id="${escapeHtml(c.id)}" /> ${escapeHtml(c.name)}</label>`)
+        .join("");
+      listEl.querySelectorAll(".dashboard-notif-category-cb").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          if (cb.checked && targetAll) targetAll.checked = false;
+        });
+      });
+      if (targetAll && !targetAll.dataset.notifCatListen) {
+        targetAll.dataset.notifCatListen = "1";
+        targetAll.addEventListener("change", () => {
+          if (targetAll.checked) listEl.querySelectorAll(".dashboard-notif-category-cb").forEach((c) => { c.checked = false; });
+        });
+      }
     } catch (_) {}
   }
 
@@ -4229,10 +4307,16 @@ function initDashboardPage() {
     const messageEl = document.getElementById("dashboard-notif-message");
     const feedbackEl = document.getElementById("dashboard-notif-feedback");
     const btn = document.getElementById("dashboard-notif-send");
+    const targetAll = document.getElementById("dashboard-notif-target-all");
     const message = messageEl?.value?.trim();
     if (!message) {
       if (feedbackEl) { feedbackEl.textContent = "Saisissez un message."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
       return;
+    }
+    let categoryIds = undefined;
+    if (!targetAll?.checked) {
+      const checked = document.querySelectorAll(".dashboard-notif-category-cb:checked");
+      if (checked.length > 0) categoryIds = Array.from(checked).map((c) => c.dataset.id).filter(Boolean);
     }
     if (btn) btn.disabled = true;
     if (feedbackEl) feedbackEl.classList.add("hidden");
@@ -4240,7 +4324,7 @@ function initDashboardPage() {
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send?token=${encodeURIComponent(token)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message }),
+        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}) }),
       });
       const data = await res.json().catch(() => ({}));
       if (feedbackEl) {

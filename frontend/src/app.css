@@ -432,6 +432,13 @@ body.page-app .site-banner { display: none !important; }
 .app-notifications-stats { font-size: 0.9rem; color: var(--app-text-muted); margin: 0 0 0.5rem; }
 .app-notifications-members-vs-devices-hint { font-size: 0.85rem; color: var(--app-text-muted); margin: 0 0 0.5rem; }
 .app-notifications-members-vs-devices-hint.hidden { display: none; }
+.app-notif-target-wrap { margin: 0.75rem 0; }
+.app-notif-target-wrap .app-label { display: block; margin-bottom: 0.35rem; }
+.app-checkbox-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; cursor: pointer; margin-right: 1rem; }
+.app-notif-categories-wrap { margin-top: 0.5rem; }
+.app-notif-categories-wrap.hidden { display: none; }
+.app-notif-categories-label { display: block; font-size: 0.85rem; color: var(--app-text-muted); margin-bottom: 0.25rem; }
+.app-notif-categories-list { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
 .app-notif-feedback-tip,
 .dashboard-notif-feedback-tip { font-size: 0.85rem; color: var(--app-text-muted); margin: 0.35rem 0 0; font-weight: normal; }
 .app-notifications-diagnostic { background: #fff8e1; border: 1px solid #ffc107; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }

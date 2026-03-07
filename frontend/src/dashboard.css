@@ -128,6 +128,13 @@
   resize: vertical;
 }
 
+.dashboard-notif-target-wrap { margin: 0.75rem 0; }
+.dashboard-notif-target-wrap .dashboard-label { display: block; margin-bottom: 0.35rem; }
+.dashboard-checkbox-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; cursor: pointer; margin-right: 1rem; }
+.dashboard-notif-categories-wrap { margin-top: 0.5rem; }
+.dashboard-notif-categories-wrap.hidden { display: none; }
+.dashboard-notif-categories-label { display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.25rem; }
+.dashboard-notif-categories-list { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
 .dashboard-notifications-members-vs-devices-hint { font-size: 0.85rem; color: #666; margin: 0 0 0.5rem; }
 .dashboard-notifications-members-vs-devices-hint.hidden { display: none; }
 .dashboard-notifications-stats {

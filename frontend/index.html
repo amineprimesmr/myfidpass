@@ -868,6 +868,16 @@
               <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />
               <label class="app-label" for="app-notif-message">Message</label>
               <textarea id="app-notif-message" class="app-input app-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3" required></textarea>
+              <div class="app-notif-target-wrap">
+                <label class="app-label">Envoyer à</label>
+                <label class="app-checkbox-label app-notif-target-all-wrap">
+                  <input type="checkbox" id="app-notif-target-all" class="app-notif-target-all" checked /> Tous les membres
+                </label>
+                <div id="app-notif-categories-wrap" class="app-notif-categories-wrap hidden">
+                  <span class="app-notif-categories-label">Ou à des catégories :</span>
+                  <div id="app-notif-categories-list" class="app-notif-categories-list"></div>
+                </div>
+              </div>
               <p id="app-notifications-stats" class="app-notifications-stats"></p>
               <p id="app-notifications-members-vs-devices-hint" class="app-notifications-members-vs-devices-hint hidden" role="note"></p>
               <p id="app-notifications-remove-test-wrap" class="app-notifications-remove-test hidden"><button type="button" id="app-notifications-remove-test-btn" class="app-link-btn">Supprimer l'appareil de test</button> (remet le compteur à 0)</p>
@@ -1945,6 +1955,16 @@ X-Dashboard-Token: TOKEN
               <input type="text" id="dashboard-notif-title" class="dashboard-input" placeholder="ex. Offre du jour" />
               <label class="dashboard-label" for="dashboard-notif-message">Message</label>
               <textarea id="dashboard-notif-message" class="dashboard-input dashboard-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3" required></textarea>
+              <div class="dashboard-notif-target-wrap">
+                <label class="dashboard-label">Envoyer à</label>
+                <label class="dashboard-checkbox-label dashboard-notif-target-all-wrap">
+                  <input type="checkbox" id="dashboard-notif-target-all" class="dashboard-notif-target-all" checked /> Tous les membres
+                </label>
+                <div id="dashboard-notif-categories-wrap" class="dashboard-notif-categories-wrap hidden">
+                  <span class="dashboard-notif-categories-label">Ou à des catégories :</span>
+                  <div id="dashboard-notif-categories-list" class="dashboard-notif-categories-list"></div>
+                </div>
+              </div>
               <p id="dashboard-notifications-stats" class="dashboard-notifications-stats"></p>
               <p id="dashboard-notifications-members-vs-devices-hint" class="dashboard-notifications-members-vs-devices-hint hidden" role="note"></p>
               <button type="button" id="dashboard-notif-send" class="landing-btn landing-btn-primary">Envoyer la notification</button>
