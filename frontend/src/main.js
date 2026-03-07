@@ -4846,6 +4846,21 @@ if (landingMenuToggle && landingMenuOverlay) {
   });
 }
 
+// Grille style 8lab : glow qui suit le curseur sur la page d'accueil
+const landingGridGlow = document.getElementById("landing-grid-glow");
+const landingGridBg = document.querySelector("#landing .landing-grid-bg");
+if (landingGridGlow && landingGridBg && landingEl) {
+  landingEl.addEventListener("mousemove", (e) => {
+    const rect = landingGridBg.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    landingGridGlow.style.transform = `translate(${x}px, ${y}px)`;
+  });
+  landingEl.addEventListener("mouseleave", () => {
+    landingGridGlow.style.transform = "translate(0, 0)";
+  });
+}
+
 // Bootstrap
 const slug = initRouting();
 if (slug) initFidelityApp(slug);
