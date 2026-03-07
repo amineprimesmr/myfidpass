@@ -511,6 +511,29 @@ async function getEmptyStampPng() {
 }
 
 /**
+ * Pour certains emojis (ex. burger 🍔), une icône "sombre" dédiée pour les tampons pas encore obtenus (ex. darkburger.png).
+ * Retourne un buffer STAMP_SIZE×STAMP_SIZE ou null si pas d’icône dédiée.
+ */
+async function getEmptyStampPngForEmoji(stampEmoji) {
+  const cp = emojiToCodepoint((stampEmoji && String(stampEmoji).trim()) || "");
+  const emptyIconName = cp === "1f354" ? "darkburger" : null;
+  if (!emptyIconName) return null;
+  const raw = STAMP_ICONS_RAW.get(emptyIconName);
+  if (!raw || !Buffer.isBuffer(raw)) return null;
+  try {
+    const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+    const resized = await sharp(Buffer.from(raw))
+      .resize(STAMP_SIZE - 4, STAMP_SIZE - 4, { fit: "contain", background: transparent })
+      .png()
+      .toBuffer();
+    return createStampIconOnlyPng(resized, 1);
+  } catch (e) {
+    console.warn("[PassKit] Resize", emptyIconName, "failed:", e?.message);
+    return null;
+  }
+}
+
+/**
  * Grille de tampons : tampons débloqués = icône pleine ; tampons non débloqués = vide.png (assets/icons) ou icône en filigrane en fallback.
  */
 async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
@@ -528,6 +551,7 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
   if (process.env.NODE_ENV === "production") console.log("[PassKit] Strip tampons: emoji", emojiToCodepoint(emojiForStamp), "→ PNG du dossier", STAMP_ICONS_DIR);
 
   let emptyStampBuf = null;
+  let emptyStampForEmojiBuf = null;
   const composites = [];
   for (let i = 0; i < Math.min(stampMax, 10); i++) {
     const col = i % cols;
@@ -541,8 +565,13 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     if (filled) {
       stampBuf = await createStampIconOnlyPng(iconBuf, 1);
     } else {
-      if (emptyStampBuf === null) emptyStampBuf = await getEmptyStampPng();
-      stampBuf = emptyStampBuf || (await createStampIconOnlyPng(iconBuf, 0.75));
+      if (emptyStampForEmojiBuf === null) emptyStampForEmojiBuf = await getEmptyStampPngForEmoji(emojiForStamp);
+      if (emptyStampForEmojiBuf) {
+        stampBuf = emptyStampForEmojiBuf;
+      } else {
+        if (emptyStampBuf === null) emptyStampBuf = await getEmptyStampPng();
+        stampBuf = emptyStampBuf || (await createStampIconOnlyPng(iconBuf, 0.75));
+      }
     }
     composites.push({ input: stampBuf, left, top });
   }
