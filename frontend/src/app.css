@@ -1176,7 +1176,7 @@ body.page-app .site-banner { display: none !important; }
   cursor: pointer;
   font-family: inherit;
 }
-.offers-dev-bypass-btn:hover { color: #4a53ff; }
+.offers-dev-bypass-btn:hover { color: #2563eb; }
 
 /* Vue d'ensemble enrichie */
 .app-stats-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }

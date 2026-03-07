@@ -6,8 +6,8 @@
   --landing-border: #e5e5e5;
   --landing-text: #1a1a1a;
   --landing-muted: #6b7280;
-  --landing-accent: #4a53ff;
-  --landing-accent-hover: #3d45e6;
+  --landing-accent: #2563eb;
+  --landing-accent-hover: #1d4ed8;
   --landing-font: "Outfit", system-ui, sans-serif;
 }
 
@@ -1481,13 +1481,13 @@
 }
 .builder-wallet-card-classic .builder-wallet-card-label { color: rgba(255,255,255,0.9); }
 .builder-wallet-card-bold .builder-wallet-card-header {
-  background: linear-gradient(165deg, #24308a 0%, #1a237e 100%);
+  background: linear-gradient(165deg, #2563eb 0%, #1d4ed8 100%);
 }
 .builder-wallet-card-bold .builder-wallet-card-body {
-  background: linear-gradient(180deg, #1e2a7a 0%, #151c5c 100%);
+  background: linear-gradient(180deg, #1e40af 0%, #1d4ed8 100%);
   color: #fff;
 }
-.builder-wallet-card-bold .builder-wallet-card-label { color: #c5cae9; }
+.builder-wallet-card-bold .builder-wallet-card-label { color: #bfdbfe; }
 .builder-wallet-card-elegant .builder-wallet-card-header {
   background: linear-gradient(165deg, #9a8268 0%, #7d6852 100%);
 }
@@ -1575,19 +1575,19 @@
 .builder-wallet-card-beauty-tampons .builder-wallet-card-label { color: #fce4ec; }
 .builder-wallet-card-beauty-tampons { --wallet-stamp-fill: #fce4ec; }
 
-/* Coiffure : violet élégant */
+/* Coiffure : bleu (comme l'app MyFidpass) */
 .builder-wallet-card-coiffure-points .builder-wallet-card-header,
 .builder-wallet-card-coiffure-tampons .builder-wallet-card-header {
-  background: linear-gradient(165deg, #6d5a7a 0%, #5c4a6a 50%, #4a3d56 100%);
+  background: linear-gradient(165deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
 }
 .builder-wallet-card-coiffure-points .builder-wallet-card-body,
 .builder-wallet-card-coiffure-tampons .builder-wallet-card-body {
-  background: linear-gradient(180deg, #635270 0%, #5c4a6a 50%, #42384d 100%);
+  background: linear-gradient(180deg, #1e40af 0%, #1d4ed8 50%, #1e3a8a 100%);
   color: #fff;
 }
 .builder-wallet-card-coiffure-points .builder-wallet-card-label,
-.builder-wallet-card-coiffure-tampons .builder-wallet-card-label { color: #d1c4e0; }
-.builder-wallet-card-coiffure-tampons { --wallet-stamp-fill: #d1c4e0; }
+.builder-wallet-card-coiffure-tampons .builder-wallet-card-label { color: #bfdbfe; }
+.builder-wallet-card-coiffure-tampons { --wallet-stamp-fill: #bfdbfe; }
 
 /* Boulangerie : or / blé */
 .builder-wallet-card-boulangerie-points .builder-wallet-card-header,
@@ -1827,16 +1827,16 @@
 }
 .builder-template-preview-classic .builder-template-preview-label { color: rgba(255,255,255,0.9); }
 
-/* Moderne : bleu indigo */
+/* Moderne : bleu (comme l'app MyFidpass) */
 .builder-template-preview-bold .builder-template-preview-header {
-  background: linear-gradient(165deg, #24308a 0%, #1a237e 100%);
+  background: linear-gradient(165deg, #2563eb 0%, #1d4ed8 100%);
   color: #fff;
 }
 .builder-template-preview-bold .builder-template-preview-body {
-  background: linear-gradient(180deg, #1e2a7a 0%, #151c5c 100%);
+  background: linear-gradient(180deg, #1e40af 0%, #1d4ed8 100%);
   color: #fff;
 }
-.builder-template-preview-bold .builder-template-preview-label { color: #c5cae9; }
+.builder-template-preview-bold .builder-template-preview-label { color: #bfdbfe; }
 
 /* Élégant : taupe / or */
 .builder-template-preview-elegant .builder-template-preview-header {
@@ -1905,19 +1905,19 @@
 .builder-template-preview-beauty-points .builder-template-preview-label,
 .builder-template-preview-beauty-tampons .builder-template-preview-label { color: #fce4ec; }
 
-/* Coiffure */
+/* Coiffure : bleu (comme l'app MyFidpass) */
 .builder-template-preview-coiffure-points .builder-template-preview-header,
 .builder-template-preview-coiffure-tampons .builder-template-preview-header {
-  background: linear-gradient(165deg, #6d5a7a 0%, #5c4a6a 50%, #4a3d56 100%);
+  background: linear-gradient(165deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
   color: #fff;
 }
 .builder-template-preview-coiffure-points .builder-template-preview-body,
 .builder-template-preview-coiffure-tampons .builder-template-preview-body {
-  background: linear-gradient(180deg, #635270 0%, #5c4a6a 50%, #42384d 100%);
+  background: linear-gradient(180deg, #1e40af 0%, #1d4ed8 50%, #1e3a8a 100%);
   color: #fff;
 }
 .builder-template-preview-coiffure-points .builder-template-preview-label,
-.builder-template-preview-coiffure-tampons .builder-template-preview-label { color: #d1c4e0; }
+.builder-template-preview-coiffure-tampons .builder-template-preview-label { color: #bfdbfe; }
 
 /* Boulangerie */
 .builder-template-preview-boulangerie-points .builder-template-preview-header,
