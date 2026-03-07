@@ -1269,7 +1269,7 @@
   top: 14%;
   width: 80%;
   height: 70%;
-  background: #1c1c1e;
+  background: #000;
   border-radius: 10% / 6%;
   overflow: hidden;
   z-index: 2;
@@ -1302,6 +1302,8 @@
   box-sizing: border-box;
   min-height: 0;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
 }
 .builder-wallet-card-header {
   padding: 0.28rem 0.4rem;
