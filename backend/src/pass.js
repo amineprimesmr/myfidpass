@@ -977,7 +977,10 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   // ─── Dos du pass (visible par le CLIENT quand il tape sur (i) dans le Wallet) ───
-  // Ordre et libellés pensés pour que le client sache : où j'en suis, quelle récompense, combien il manque, conditions.
+  // Champ "Message" avec changeMessage : quand on envoie une notif depuis la section Notifications, la valeur change
+  // → l'iPhone affiche la notif sur l'écran de verrouillage ("Nouveau message : %@").
+  const lastBroadcast = (business?.last_broadcast_message != null && String(business.last_broadcast_message).trim() !== "")
+    ? String(business.last_broadcast_message).trim().slice(0, 200) : "—";
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const backContact = business?.back_contact || "contact@example.com";
   const frontendUrl = (process.env.FRONTEND_URL || process.env.API_URL || "https://myfidpass.fr").replace(/\/$/, "");
@@ -989,6 +992,7 @@ export async function generatePass(member, business = null, options = {}) {
     const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
 
     pass.backFields.push(
+      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: "Nouveau message : %@" },
       { key: "reward", label: "Récompense", value: `${stampMax} tampons = ${rewardLabel}` },
       { key: "terms", label: "Conditions", value: backTerms },
       { key: "contact", label: "Contact", value: backContact },
@@ -1012,6 +1016,7 @@ export async function generatePass(member, business = null, options = {}) {
         : "Consultez le commerce pour les paliers de récompenses.";
 
     pass.backFields.push(
+      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: "Nouveau message : %@" },
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       {
         key: "rewards",
