@@ -279,6 +279,11 @@
   color: #fff;
   text-decoration: underline;
 }
+.landing-nav a:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.8);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
 
 .landing-cta {
   background: var(--landing-accent) !important;
@@ -290,6 +295,7 @@
   flex-shrink: 0;
   text-decoration: none;
   margin-left: auto;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 @media (min-width: 900px) {
@@ -304,6 +310,11 @@
 .landing-cta:hover {
   background: var(--landing-accent-hover) !important;
   color: #fff !important;
+  transform: translateY(-1px);
+}
+.landing-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.5);
 }
 
 /* Main */
@@ -313,6 +324,38 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
+}
+
+/* Hero – entrée en cascade (fallback si pas GSAP) */
+.landing-hero .landing-hero-title,
+.landing-hero .landing-hero-subtitle,
+.landing-hero .landing-hero-form,
+.landing-hero .landing-hero-benefits,
+.landing-hero .landing-hero-stats {
+  transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.landing-hero:not(.landing-hero-visible) .landing-hero-title,
+.landing-hero:not(.landing-hero-visible) .landing-hero-subtitle,
+.landing-hero:not(.landing-hero-visible) .landing-hero-form,
+.landing-hero:not(.landing-hero-visible) .landing-hero-benefits,
+.landing-hero:not(.landing-hero-visible) .landing-hero-stats {
+  opacity: 0;
+  transform: translateY(24px);
+}
+.landing-hero.landing-hero-visible .landing-hero-title,
+.landing-hero.landing-hero-visible .landing-hero-subtitle,
+.landing-hero.landing-hero-visible .landing-hero-form,
+.landing-hero.landing-hero-visible .landing-hero-benefits,
+.landing-hero.landing-hero-visible .landing-hero-stats {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero .landing-hero-title,
+  .landing-hero .landing-hero-subtitle,
+  .landing-hero .landing-hero-form,
+  .landing-hero .landing-hero-benefits,
+  .landing-hero .landing-hero-stats { transition: none; opacity: 1; transform: none; }
 }
 
 /* Hero */
@@ -662,19 +705,27 @@
   font-weight: 600;
   border-radius: 12px;
   text-decoration: none;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
   cursor: pointer;
   border: 2px solid transparent;
 }
-
+.landing-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.45);
+}
 .landing-btn-primary {
   background: var(--landing-accent);
   color: #fff;
 }
-
 .landing-btn-primary:hover {
   background: var(--landing-accent-hover);
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+}
+.landing-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25);
 }
 
 .landing-btn:disabled {
@@ -900,6 +951,12 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.25s ease;
+}
+.landing-section-dark .landing-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 .landing-section-dark .landing-product-content h3 {
   color: #fff;
@@ -1005,6 +1062,7 @@
   background: var(--landing-surface);
   border: 1px solid var(--landing-border);
   border-radius: 12px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
   overflow: hidden;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -1012,6 +1070,12 @@
   border-color: var(--landing-accent);
 }
 
+.landing-faq-item:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+.landing-section-dark .landing-faq-item:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
 .landing-faq-item summary {
   padding: 1rem 1.25rem;
   font-weight: 600;
@@ -1020,6 +1084,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition: color 0.2s ease;
+}
+.landing-faq-item summary:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--landing-accent);
+  border-radius: 12px;
 }
 
 .landing-faq-item summary::-webkit-details-marker {
@@ -1030,6 +1100,7 @@
   content: "+";
   font-size: 1.25rem;
   color: var(--landing-muted);
+  transition: transform 0.25s ease, color 0.2s ease;
 }
 
 .landing-faq-item[open] summary::after {
@@ -1089,9 +1160,15 @@
 }
 .landing-section-dark.landing-footer .landing-footer-links a {
   color: rgba(255, 255, 255, 0.75);
+  transition: color 0.2s ease;
 }
 .landing-section-dark.landing-footer .landing-footer-links a:hover {
   color: var(--landing-accent);
+}
+.landing-footer-links a:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 .landing-section-dark.landing-footer .landing-footer-legal,
 .landing-section-dark.landing-footer .landing-footer-copy {
@@ -3288,6 +3365,13 @@ body.page-checkout .site-banner { display: none !important; }
   box-sizing: border-box;
   background: #fff;
   color: #1a1a1a;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.checkout-input:focus,
+.checkout-input:focus-visible {
+  outline: none;
+  border-color: #0a7c42;
+  box-shadow: 0 0 0 3px rgba(10, 124, 66, 0.2);
 }
 .checkout-input::placeholder { color: #999; }
 .checkout-label {
@@ -3311,10 +3395,12 @@ body.page-checkout .site-banner { display: none !important; }
   cursor: pointer;
   font-family: inherit;
   margin-top: 0.25rem;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 .checkout-btn-next:hover { background: #c4c4c4; }
 .checkout-btn-next:not(:disabled) { background: #0a7c42; color: #fff; }
-.checkout-btn-next:not(:disabled):hover { background: #096b38; }
+.checkout-btn-next:not(:disabled):hover { background: #096b38; transform: translateY(-1px); }
+.checkout-btn-next:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(10, 124, 66, 0.4); }
 .checkout-btn-next:disabled { opacity: 0.6; cursor: not-allowed; }
 .checkout-already-logged-in {
   font-size: 0.9rem;
@@ -3348,6 +3434,7 @@ body.page-checkout .site-banner { display: none !important; }
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 .checkout-btn-payment-main {
   font-size: 1.1rem;
@@ -3358,7 +3445,8 @@ body.page-checkout .site-banner { display: none !important; }
   font-weight: 500;
   opacity: 0.9;
 }
-.checkout-btn-payment:hover { background: #333; }
+.checkout-btn-payment:hover { background: #333; transform: translateY(-1px); }
+.checkout-btn-payment:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,0.35); }
 .checkout-btn-payment:disabled { opacity: 0.7; cursor: not-allowed; }
 .checkout-error {
   margin-top: 1rem;

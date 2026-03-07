@@ -4846,24 +4846,87 @@ if (landingMenuToggle && landingMenuOverlay) {
   });
 }
 
-// Révélation au scroll (sections page d'accueil)
+// Révélation au scroll + animations (GSAP si dispo, sinon Intersection Observer)
 function initLandingReveal() {
   const els = document.querySelectorAll("[data-reveal]");
   if (!els.length) return;
-  const io = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) {
-          e.target.classList.add("is-inview");
-        }
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReducedMotion) {
+    els.forEach((el) => el.classList.add("is-inview"));
+    return;
+  }
+
+  if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray("[data-reveal]").forEach((section) => {
+      gsap.set(section, { opacity: 1 });
+      const children = section.querySelectorAll(".landing-section-title, .landing-section-subtitle, .landing-tag, .landing-product-card, .landing-steps-list > li, .landing-faq-list .landing-faq-item, .landing-cta-block .landing-btn, .landing-cta-block p");
+      const targets = children.length ? children : [section];
+      gsap.set(targets, { opacity: 0, y: 32 });
+      gsap.to(targets, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        stagger: children.length ? 0.08 : 0,
+        ease: "power3.out",
+        scrollTrigger: { trigger: section, start: "top 85%", end: "top 50%", toggleActions: "play none none none" },
       });
-    },
-    { rootMargin: "0px 0px -60px 0px", threshold: 0.05 }
-  );
-  els.forEach((el) => io.observe(el));
+    });
+  } else {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add("is-inview");
+        });
+      },
+      { rootMargin: "0px 0px -60px 0px", threshold: 0.05 }
+    );
+    els.forEach((el) => io.observe(el));
+  }
 }
-initLandingReveal();
+
+// Hero : entrée en cascade (GSAP ou classe CSS)
+function initLandingHeroAnim() {
+  const hero = document.querySelector(".landing-hero");
+  if (!hero) return;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const items = [
+    hero.querySelector(".landing-hero-title"),
+    hero.querySelector(".landing-hero-subtitle"),
+    hero.querySelector(".landing-hero-form"),
+    hero.querySelector(".landing-hero-benefits"),
+    hero.querySelector(".landing-hero-stats"),
+  ].filter(Boolean);
+
+  if (prefersReducedMotion) {
+    items.forEach((el) => el.classList.add("landing-hero-visible"));
+    return;
+  }
+
+  if (typeof gsap !== "undefined") {
+    gsap.fromTo(
+      items,
+      { opacity: 0, y: 24 },
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, delay: 0.15, ease: "power3.out" }
+    );
+  } else {
+    hero.classList.add("landing-hero-visible");
+  }
+}
+
+function initLandingAnimations() {
+  initLandingReveal();
+  if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
+    initLandingHeroAnim();
+  }
+}
 
 // Bootstrap
 const slug = initRouting();
 if (slug) initFidelityApp(slug);
+
+// Lancer les animations landing quand la landing est affichée
+if (landingEl && !landingEl.classList.contains("hidden")) {
+  initLandingAnimations();
+}
