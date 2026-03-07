@@ -437,6 +437,47 @@
   }
 }
 
+.landing-hero-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem 2rem;
+  margin: 1.5rem auto 1.25rem;
+  max-width: 520px;
+}
+.landing-hero-benefit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.landing-hero-benefit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: var(--landing-accent);
+}
+.landing-hero-benefit-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.landing-hero-benefit-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--landing-muted);
+}
+@media (max-width: 480px) {
+  .landing-hero-benefits {
+    gap: 1rem 1.25rem;
+    margin: 1.25rem auto 1rem;
+  }
+  .landing-hero-benefit-text {
+    font-size: 0.85rem;
+  }
+}
+
 .landing-btn {
   display: inline-flex;
   align-items: center;
