@@ -1286,6 +1286,8 @@
 }
 .builder-wallet-slider {
   display: flex;
+  align-items: center;
+  justify-content: center;
   height: 100%;
   width: 100%;
   transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -1294,7 +1296,8 @@
 .builder-wallet-card {
   flex: 0 0 100%;
   width: 100%;
-  height: 100%;
+  height: 62%;
+  max-height: 62%;
   display: flex;
   flex-direction: column;
   padding: 0.4rem 0.5rem;
