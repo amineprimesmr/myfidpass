@@ -1159,7 +1159,16 @@ function initAppDashboard(slug) {
   bindPersonnaliserColor(personnaliserBg, personnaliserBgHex);
   bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
   bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
-  bindPersonnaliserColor(personnaliserStrip, personnaliserStripHex);
+  function syncStripToBg() {
+    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
+    const hex = bg.startsWith("#") ? bg : "#" + bg;
+    if (personnaliserStrip) personnaliserStrip.value = hex;
+    if (personnaliserStripHex) personnaliserStripHex.value = hex;
+  }
+  personnaliserBg?.addEventListener("input", syncStripToBg);
+  personnaliserBg?.addEventListener("change", syncStripToBg);
+  personnaliserBgHex?.addEventListener("input", syncStripToBg);
+  personnaliserBgHex?.addEventListener("change", syncStripToBg);
 
   function hexToRgb(hex) {
     const n = parseInt(hex.replace(/^#/, ""), 16);
@@ -1200,15 +1209,16 @@ function initAppDashboard(slug) {
     const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
     const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
     const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#e8f5e9";
-    card.style.setProperty("--wallet-bg", bg);
+    const bgHex = bg.startsWith("#") ? bg : "#" + bg;
+    if (personnaliserStrip) personnaliserStrip.value = bgHex;
+    if (personnaliserStripHex) personnaliserStripHex.value = bgHex;
+    card.style.setProperty("--wallet-bg", bgHex);
     card.style.setProperty("--wallet-fg", fg);
     card.style.setProperty("--wallet-label", labelColor);
-    const stripColor = personnaliserStripHex?.value?.trim() || personnaliserStrip?.value || bg;
-    const stripHex = stripColor.startsWith("#") ? stripColor : "#" + stripColor;
-    if (stripEl) stripEl.style.background = stripHex;
+    if (stripEl) stripEl.style.background = bgHex;
     const bodyEl = card?.querySelector(".app-wallet-preview-body");
     if (bodyEl) {
-      bodyEl.style.background = bg.startsWith("#") ? bg : "#" + bg;
+      bodyEl.style.background = bgHex;
       bodyEl.style.color = fg;
     }
     orgEl.textContent = personnaliserOrg?.value?.trim() || "Votre commerce";
@@ -1299,10 +1309,8 @@ function initAppDashboard(slug) {
       if (personnaliserFgHex) personnaliserFgHex.value = fg;
       if (personnaliserLabel) personnaliserLabel.value = label;
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
-      const stripColor = data.strip_color ?? data.stripColor ?? "";
-      const stripVal = stripColor || bg;
-      if (personnaliserStrip) personnaliserStrip.value = stripVal.startsWith("#") ? stripVal : "#" + stripVal;
-      if (personnaliserStripHex) personnaliserStripHex.value = stripVal.startsWith("#") ? stripVal : "#" + stripVal;
+      if (personnaliserStrip) personnaliserStrip.value = bg.startsWith("#") ? bg : "#" + bg;
+      if (personnaliserStripHex) personnaliserStripHex.value = bg.startsWith("#") ? bg : "#" + bg;
       const stripDisplayMode = (data.strip_display_mode ?? data.stripDisplayMode ?? "logo").toLowerCase();
       if (stripDisplayMode === "text" && stripDisplayText) stripDisplayText.checked = true;
       else if (stripDisplayLogo) stripDisplayLogo.checked = true;
@@ -1355,7 +1363,14 @@ function initAppDashboard(slug) {
               walletLogo.src = url;
               walletLogo.classList.remove("hidden");
             }
+            personnaliserLogoPreview.onload = function onLogoLoad() {
+              personnaliserLogoPreview.onload = null;
+              if (typeof extractAndShowLogoColors === "function") extractAndShowLogoColors(url);
+            };
+            if (personnaliserLogoPreview.complete) personnaliserLogoPreview.onload();
             updatePersonnaliserPreview();
+          } else {
+            if (typeof extractAndShowLogoColors === "function") extractAndShowLogoColors(null);
           }
         })
         .catch(() => {});
@@ -1422,6 +1437,77 @@ function initAppDashboard(slug) {
     renderPicker(STAMP_ICONS);
   }
 
+  function getDominantColorsFromImage(imageSource, maxColors = 4) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const size = 40;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve([]); return; }
+        ctx.drawImage(img, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size).data;
+        const bucket = new Map();
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+          if (a < 140) continue;
+          const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          if (lum > 0.92 || lum < 0.06) continue;
+          const kr = Math.round(r / 24) * 24, kg = Math.round(g / 24) * 24, kb = Math.round(b / 24) * 24;
+          const key = `${kr},${kg},${kb}`;
+          bucket.set(key, (bucket.get(key) || 0) + 1);
+        }
+        const sorted = [...bucket.entries()].sort((a, b) => b[1] - a[1]).slice(0, maxColors);
+        const hexes = sorted.map(([k]) => {
+          const [rr, gg, bb] = k.split(",").map(Number);
+          return "#" + [rr, gg, bb].map((x) => Math.min(255, x).toString(16).padStart(2, "0")).join("");
+        });
+        resolve(hexes);
+      };
+      img.onerror = () => resolve([]);
+      img.src = imageSource;
+    });
+  }
+
+  function renderLogoColorSwatches(colors) {
+    const wrap = document.getElementById("app-logo-colors-wrap");
+    const container = document.getElementById("app-logo-colors-swatches");
+    if (!wrap || !container) return;
+    container.innerHTML = "";
+    if (!colors || colors.length === 0) {
+      wrap.classList.add("hidden");
+      return;
+    }
+    colors.forEach((hex) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "app-logo-color-swatch";
+      btn.style.background = hex;
+      btn.title = hex;
+      btn.setAttribute("aria-label", "Appliquer la couleur " + hex);
+      btn.addEventListener("click", () => {
+        const h = hex.startsWith("#") ? hex : "#" + hex;
+        if (personnaliserBg) personnaliserBg.value = h;
+        if (personnaliserBgHex) personnaliserBgHex.value = h;
+        syncStripToBg();
+        updatePersonnaliserPreview();
+      });
+      container.appendChild(btn);
+    });
+    wrap.classList.remove("hidden");
+  }
+
+  function extractAndShowLogoColors(imageSource) {
+    if (!imageSource) {
+      document.getElementById("app-logo-colors-wrap")?.classList.add("hidden");
+      return;
+    }
+    getDominantColorsFromImage(imageSource, 4).then((colors) => renderLogoColorSwatches(colors));
+  }
+
   async function applyLogoFromFile(file) {
     if (!file || !file.type.startsWith("image/")) {
         showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
@@ -1434,6 +1520,7 @@ function initAppDashboard(slug) {
           personnaliserLogoPreview.classList.remove("hidden");
         }
         if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
+        extractAndShowLogoColors(personnaliserLogoDataUrl);
         updatePersonnaliserPreview();
       } catch (err) {
         showPersonnaliserMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG valide.", true);
@@ -1528,13 +1615,12 @@ function initAppDashboard(slug) {
         if (/^[0-9A-Fa-f]{6}$/.test(s)) return "#" + s;
         return undefined;
       };
-      const stripColorInput = personnaliserStripHex?.value?.trim() || personnaliserStrip?.value || "";
       const body = {
         organizationName: organizationName || undefined,
         backgroundColor: toHex(backgroundColor),
         foregroundColor: toHex(foregroundColor),
         labelColor: toHex(labelColor),
-        stripColor: stripColorInput ? toHex(stripColorInput) : undefined,
+        stripColor: toHex(backgroundColor),
       };
       const isStamps = programTypeStamps && programTypeStamps.checked;
       body.programType = isStamps ? "stamps" : "points";

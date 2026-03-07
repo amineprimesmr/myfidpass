@@ -156,7 +156,10 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const updates = {};
   if (organization_name !== undefined) updates.organization_name = organization_name ? String(organization_name).trim() : null;
   if (location_address !== undefined) updates.location_address = location_address ? String(location_address).trim() : null;
-  if (background_color !== undefined) updates.background_color = normalizeHexForPatch(background_color);
+  if (background_color !== undefined) {
+    updates.background_color = normalizeHexForPatch(background_color);
+    updates.strip_color = updates.background_color;
+  }
   if (foreground_color !== undefined) updates.foreground_color = normalizeHexForPatch(foreground_color);
   if (program_type !== undefined) {
     const v = program_type === null || program_type === "" ? null : String(program_type).trim().toLowerCase();
@@ -1444,7 +1447,10 @@ router.patch("/:slug", (req, res) => {
   if (organizationName !== undefined) updates.organization_name = organizationName ? String(organizationName).trim() : null;
   if (backTerms !== undefined) updates.back_terms = backTerms ? String(backTerms).trim() : null;
   if (backContact !== undefined) updates.back_contact = backContact ? String(backContact).trim() : null;
-  if (backgroundColor !== undefined) updates.background_color = normalizeHex(backgroundColor);
+  if (backgroundColor !== undefined) {
+    updates.background_color = normalizeHex(backgroundColor);
+    updates.strip_color = updates.background_color;
+  }
   if (foregroundColor !== undefined) updates.foreground_color = normalizeHex(foregroundColor);
   if (labelColor !== undefined) updates.label_color = normalizeHex(labelColor);
   if (locationAddress !== undefined) updates.location_address = locationAddress ? String(locationAddress).trim() : null;

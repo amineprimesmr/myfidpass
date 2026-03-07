@@ -65,20 +65,40 @@ const ICON_SIZE_2X = 58;
 const ICON_SIZE_3X = 87;
 
 /**
- * Redimensionne et convertit en PNG le buffer image (PNG/JPEG) pour respecter les specs Apple.
- * Logo bandeau : 160×50 (1x) et 320×100 (2x). Fond transparent pour que le bandeau couleur soit visible.
- * Retourne { logoPng: Buffer (160×50), logoPng2x: Buffer (320×100) } ou null en cas d'erreur.
+ * Redimensionne et convertit en PNG le buffer image pour le pass.
+ * Logo plus gros et aligné à gauche : on remplit la hauteur (100px @2x, 50px @1x) et on positionne à gauche.
+ * Sortie : 320×100 (2x) et 160×50 (1x), fond transparent.
  */
 async function resizeLogoForPass(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
-  const opts = { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } };
+  const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
   try {
-    const out2x = await sharp(inputBuffer)
-      .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X, opts)
+    const meta = await sharp(inputBuffer).metadata();
+    const inW = meta.width || 100;
+    const inH = meta.height || 100;
+    const aspect = inW / inH;
+    const h2 = LOGO_HEIGHT_2X;
+    const w2 = Math.min(LOGO_WIDTH_2X, Math.round(h2 * aspect));
+    const h1 = LOGO_HEIGHT_1X;
+    const w1 = Math.min(LOGO_WIDTH_1X, Math.round(h1 * aspect));
+    const logo2x = await sharp(inputBuffer)
+      .resize(w2, h2, { fit: "contain", background: transparent })
       .png()
       .toBuffer();
-    const out1x = await sharp(inputBuffer)
-      .resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X, opts)
+    const logo1x = await sharp(inputBuffer)
+      .resize(w1, h1, { fit: "contain", background: transparent })
+      .png()
+      .toBuffer();
+    const out2x = await sharp({
+      create: { width: LOGO_WIDTH_2X, height: LOGO_HEIGHT_2X, channels: 4, background: transparent },
+    })
+      .composite([{ input: logo2x, left: 0, top: 0 }])
+      .png()
+      .toBuffer();
+    const out1x = await sharp({
+      create: { width: LOGO_WIDTH_1X, height: LOGO_HEIGHT_1X, channels: 4, background: transparent },
+    })
+      .composite([{ input: logo1x, left: 0, top: 0 }])
       .png()
       .toBuffer();
     return { logoPng: out1x, logoPng2x: out2x };
@@ -86,8 +106,14 @@ async function resizeLogoForPass(inputBuffer) {
     console.warn("[PassKit] resizeLogoForPass failed:", err.message);
   }
   try {
-    const out2x = await sharp(inputBuffer).resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X).png().toBuffer();
-    const out1x = await sharp(inputBuffer).resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X).png().toBuffer();
+    const out2x = await sharp(inputBuffer)
+      .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X, { fit: "contain", background: transparent })
+      .png()
+      .toBuffer();
+    const out1x = await sharp(inputBuffer)
+      .resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X, { fit: "contain", background: transparent })
+      .png()
+      .toBuffer();
     return { logoPng: out1x, logoPng2x: out2x };
   } catch (err2) {
     console.warn("[PassKit] resizeLogoForPass fallback failed:", err2?.message);

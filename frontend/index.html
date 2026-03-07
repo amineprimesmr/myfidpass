@@ -745,11 +745,9 @@
                   <input type="color" id="app-personnaliser-label" class="app-color-input" value="#e8f5e9" />
                   <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#e8f5e9" maxlength="7" />
                 </div>
-                <div class="app-color-row">
-                  <label class="app-label">Bandeau (sans image de fond)</label>
-                  <input type="color" id="app-personnaliser-strip" class="app-color-input" value="#0a7c42" />
-                  <input type="text" id="app-personnaliser-strip-hex" class="app-input app-input-hex" value="#0a7c42" maxlength="7" placeholder="vide = couleur Fond" />
-                </div>
+                <p class="app-hint app-personnaliser-strip-hint">Le bandeau (tampons / points) utilise toujours la même couleur que le fond de la carte.</p>
+                <input type="hidden" id="app-personnaliser-strip" value="#0a7c42" />
+                <input type="hidden" id="app-personnaliser-strip-hex" value="#0a7c42" />
               </div>
               <p class="app-step-label">En-tête de la carte</p>
               <div class="app-rules-type">
@@ -768,6 +766,11 @@
                   <span id="app-personnaliser-logo-placeholder">+ Changer le logo (glisser une image ou cliquer)</span>
                   <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
                 </label>
+              </div>
+              <div id="app-logo-colors-wrap" class="app-logo-colors-wrap hidden">
+                <p class="app-step-label">Couleurs du logo</p>
+                <p class="app-hint">Cliquez sur une couleur pour l’appliquer au fond de la carte.</p>
+                <div id="app-logo-colors-swatches" class="app-logo-colors-swatches" role="group" aria-label="Couleurs dominantes du logo"></div>
               </div>
               </div>
               <p class="app-step-label">Image de fond de carte</p>

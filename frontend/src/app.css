@@ -400,6 +400,13 @@ body.page-app .site-banner { display: none !important; }
 .app-color-row .app-label { margin: 0; margin-right: 0.25rem; font-size: 0.85rem; min-width: 3rem; }
 .app-color-input { width: 40px; height: 36px; padding: 2px; border: 1px solid var(--app-border); border-radius: 8px; cursor: pointer; }
 .app-input-hex { max-width: 90px; margin-bottom: 0; }
+.app-personnaliser-strip-hint { font-size: 0.85rem; color: var(--app-text-muted); margin: 0.5rem 0 0; }
+.app-logo-colors-wrap { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--app-border); }
+.app-logo-colors-wrap.hidden { display: none; }
+.app-logo-colors-swatches { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+.app-logo-color-swatch { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--app-border); cursor: pointer; flex-shrink: 0; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.app-logo-color-swatch:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.app-logo-color-swatch:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--app-accent); }
 .app-personnaliser-logo { margin-bottom: 0.5rem; }
 .app-personnaliser-card-bg { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
 .app-personnaliser-card-bg .app-logo-label { min-height: 60px; }
@@ -1345,9 +1352,9 @@ body.page-app .site-banner { display: none !important; }
   color: var(--wallet-fg);
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.5rem;
-  min-height: 2rem;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.25rem;
+  min-height: 2.5rem;
   transition: background 0.2s, color 0.2s;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-body {
@@ -1375,12 +1382,12 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap,
 #app-personnaliser-preview .app-wallet-preview-logo-wrap {
   flex-shrink: 0;
-  width: 2.8rem;
-  height: 2.8rem;
-  max-height: 80%;
+  width: 4.5rem;
+  height: 4.5rem;
+  max-height: 92%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: visible;
   box-sizing: border-box;
   background: transparent !important;
@@ -1388,6 +1395,7 @@ body.page-app .site-banner { display: none !important; }
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  margin-left: 0;
 }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo,
 #app-personnaliser-preview .app-wallet-preview-logo {
@@ -1396,7 +1404,7 @@ body.page-app .site-banner { display: none !important; }
   width: auto;
   height: auto;
   object-fit: contain;
-  object-position: center;
+  object-position: left center;
   display: block;
   background: transparent !important;
 }
