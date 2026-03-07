@@ -376,10 +376,8 @@
 .landing-main {
   position: relative;
   z-index: 1;
-  margin-left: 25%;
-  width: 75%;
-  max-width: none;
-  box-sizing: border-box;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
 }
 
