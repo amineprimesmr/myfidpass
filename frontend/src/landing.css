@@ -530,13 +530,13 @@
 .landing-scroll-phone {
   flex-shrink: 0;
   position: relative;
-  width: min(200px, 28vw);
-  max-width: 220px;
+  width: min(280px, 38vw);
+  max-width: 300px;
 }
 .landing-scroll-phone-frame {
   width: 100%;
   aspect-ratio: 280 / 577;
-  max-height: 380px;
+  max-height: 520px;
   position: relative;
 }
 .landing-scroll-phone-frame-img {
