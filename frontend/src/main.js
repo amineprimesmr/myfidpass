@@ -2892,6 +2892,15 @@ function initBuilderPage() {
     });
   }
 
+  function luminanceFromHex(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return 0.5;
+    const r = parseInt(m[1], 16) / 255;
+    const g = parseInt(m[2], 16) / 255;
+    const b = parseInt(m[3], 16) / 255;
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  }
+
   function applyBuilderBrandColors(colors) {
     const el = document.getElementById("builder-wallet-slider");
     if (!colors || !el) return;
@@ -2899,7 +2908,11 @@ function initBuilderPage() {
     const cardColor = colors.header;
     el.style.setProperty("--brand-header", cardColor);
     el.style.setProperty("--brand-body", cardColor);
-    el.style.setProperty("--brand-label", colors.label);
+    const isLight = luminanceFromHex(cardColor) > 0.5;
+    const textColor = isLight ? "#1a1a1a" : "#fff";
+    const labelColor = isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.95)";
+    el.style.setProperty("--brand-fg", textColor);
+    el.style.setProperty("--brand-label", labelColor);
   }
 
   function clearBuilderBrandColors() {
@@ -2909,6 +2922,7 @@ function initBuilderPage() {
       el.style.removeProperty("--brand-header");
       el.style.removeProperty("--brand-body");
       el.style.removeProperty("--brand-label");
+      el.style.removeProperty("--brand-fg");
     }
   }
 

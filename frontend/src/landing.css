@@ -1425,11 +1425,16 @@
 .builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-header,
 .builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-body {
   background: var(--brand-header, #0a7c42) !important;
-  color: #fff;
+  color: var(--brand-fg, #fff) !important;
+}
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-header span,
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-member-value {
+  color: var(--brand-fg, #fff) !important;
 }
 .builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-label,
 .builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-pts-value,
-.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-stamps {
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-stamps,
+.builder-wallet-slider-branded .builder-wallet-card .builder-wallet-card-member-label {
   color: var(--brand-label, rgba(255,255,255,0.95)) !important;
 }
 .builder-wallet-slider-branded .builder-wallet-card .wallet-preview-emoji {
