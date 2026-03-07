@@ -4710,9 +4710,21 @@ if (landingHeroForm) {
     if (landingHelperEl) landingHelperEl.classList.add("is-visible");
   }
   if (landingEtablissementInput) {
+    let helperDebounce = null;
     landingEtablissementInput.addEventListener("input", () => {
       updateLandingCtaState();
-      if (!landingEtablissementInput.value?.trim()) hideLandingHelper();
+      const text = (landingEtablissementInput.value?.trim() || "");
+      if (text.length === 0) {
+        hideLandingHelper();
+        if (helperDebounce) clearTimeout(helperDebounce);
+        return;
+      }
+      if (helperDebounce) clearTimeout(helperDebounce);
+      helperDebounce = setTimeout(() => {
+        helperDebounce = null;
+        const noPlaceSelected = !landingPlaceIdInput?.value?.trim();
+        if (text.length >= 2 && noPlaceSelected) showLandingHelper();
+      }, 700);
     });
     landingEtablissementInput.addEventListener("change", updateLandingCtaState);
     landingEtablissementInput.addEventListener("focus", hideLandingHelper);
