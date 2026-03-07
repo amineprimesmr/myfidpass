@@ -359,16 +359,14 @@
 }
 
 .landing-hero-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  position: relative;
   margin-bottom: 1rem;
 }
 
 .landing-hero-input {
-  flex: 1;
-  min-width: 0;
-  padding: 0.9rem 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.9rem 1.25rem 0.9rem 3rem;
   font-family: var(--landing-font);
   font-size: 1rem;
   color: var(--landing-text);
@@ -380,10 +378,15 @@
 }
 
 .landing-hero-google-logo {
-  flex-shrink: 0;
-  height: 32px;
-  width: 32px;
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
   object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .landing-hero-input::placeholder {
