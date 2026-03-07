@@ -484,22 +484,29 @@
   }
 }
 
-/* Bandeau cartes fidélité – défilement horizontal infini */
+/* Bandeau cartes fidélité – défilement horizontal infini (mockups iPhone comme page Créer ma carte) */
 .landing-cards-scroll {
   margin-top: 2.5rem;
-  padding: 1rem 0 2rem;
+  padding: 1.5rem 0 2.5rem;
   overflow: hidden;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
 }
 .landing-cards-scroll-mask {
   overflow: hidden;
-  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%);
 }
 .landing-cards-scroll-track {
   display: flex;
   align-items: stretch;
-  gap: 1rem;
+  gap: 1.25rem;
   width: max-content;
+  padding: 0 0.5rem;
   animation: landing-cards-scroll 55s linear infinite;
   will-change: transform;
 }
@@ -515,6 +522,51 @@
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* Mockup iPhone dans le défilement – même structure que page Créer ma carte */
+.landing-scroll-phone {
+  flex-shrink: 0;
+  position: relative;
+  width: min(200px, 28vw);
+  max-width: 220px;
+}
+.landing-scroll-phone-frame {
+  width: 100%;
+  aspect-ratio: 280 / 577;
+  max-height: 380px;
+  position: relative;
+}
+.landing-scroll-phone-frame-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+.landing-scroll-phone-screen {
+  position: absolute;
+  left: 10%;
+  top: 14%;
+  width: 80%;
+  height: 70%;
+  background: #000;
+  border-radius: 10% / 6%;
+  overflow: hidden;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.landing-scroll-phone-screen .landing-mini-card {
+  width: 100%;
+  height: 62%;
+  max-height: 62%;
+  min-height: 0;
+  border-radius: 8px;
+  margin: 0 auto;
+}
 .landing-mini-card {
   flex-shrink: 0;
   width: 152px;
@@ -525,6 +577,10 @@
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.35s ease;
   display: flex;
   flex-direction: column;
+}
+.landing-scroll-phone:hover .landing-mini-card {
+  transform: scale(1.03);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 .landing-mini-card:hover {
   transform: scale(1.04) translateY(-4px);
