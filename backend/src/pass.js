@@ -845,15 +845,20 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   if (format === "tampons") {
-    const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim();
+    const restants = Math.max(0, stampMax - stamps);
     pass.secondaryFields.push({
       key: "stampRewardFront",
-      label: "Récompense",
-      value: stampRewardLabel ? `${stampMax} tampons = ${stampRewardLabel}` : `${stampMax} tampons = 1 offert`,
-      textAlignment: "PKTextAlignmentCenter",
+      label: "",
+      value: `Restants = ${restants}`,
+      textAlignment: "PKTextAlignmentLeft",
     });
     if (!isSectorTemplate) {
-      pass.secondaryFields.push({ key: "member", label: "Membre", value: member.name });
+      pass.secondaryFields.push({
+        key: "member",
+        label: "Membre",
+        value: member.name,
+        textAlignment: "PKTextAlignmentRight",
+      });
     }
   } else {
     // Affichage points : nombre uniquement (pas d’emoji). Les icônes sont sur le strip (images du dossier assets/icons).
@@ -876,10 +881,15 @@ export async function generatePass(member, business = null, options = {}) {
       key: "rewardsFront",
       label: "Récompense",
       value: tierLines.length > 0 ? tierLines.join(" · ") : "Paliers en magasin",
-      textAlignment: "PKTextAlignmentCenter",
+      textAlignment: "PKTextAlignmentLeft",
     });
     if (!isSectorTemplate) {
-      pass.auxiliaryFields.push({ key: "member", label: "Membre", value: member.name });
+      pass.auxiliaryFields.push({
+        key: "member",
+        label: "Membre",
+        value: member.name,
+        textAlignment: "PKTextAlignmentRight",
+      });
     }
   }
 
