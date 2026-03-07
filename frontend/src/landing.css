@@ -1305,12 +1305,12 @@
   box-sizing: border-box;
   min-height: 0;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 8px;
 }
 .builder-wallet-card-header {
   padding: 0.28rem 0.4rem;
-  border-radius: 6px 6px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
   font-weight: 700;
   font-size: clamp(0.58rem, 1.8vw, 0.68rem);
   letter-spacing: 0.02em;
@@ -1363,7 +1363,9 @@
   flex: 1;
   min-height: 0;
   justify-content: flex-start;
-  border-radius: 0 0 6px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
   color: #fff;
 }
 .builder-wallet-card-member {
