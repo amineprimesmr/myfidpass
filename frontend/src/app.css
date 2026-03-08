@@ -1412,8 +1412,8 @@ body.page-app .site-banner { display: none !important; }
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.2rem 0.5rem 0.3rem 0.25rem;
-  min-height: 2.25rem;
+  padding: 0.12rem 0.5rem 0.25rem 0.25rem;
+  min-height: 2rem;
   transition: background 0.2s, color 0.2s;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-body {
@@ -1421,7 +1421,7 @@ body.page-app .site-banner { display: none !important; }
   color: var(--wallet-fg);
   transition: background 0.2s, color 0.2s;
   align-items: stretch;
-  padding: 0.25rem 0.5rem 0.75rem;
+  padding: 0.15rem 0.5rem 0.75rem;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-label { color: var(--wallet-label); }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps { color: var(--wallet-fg); }
