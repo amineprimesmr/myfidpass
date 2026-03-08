@@ -1397,7 +1397,7 @@ body.page-app .site-banner { display: none !important; }
 .app-personnaliser-live-preview-wrap { margin-bottom: 1.5rem; }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 .app-personnaliser-preview.builder-phone-mockup { width: min(280px, 85vw); max-width: 320px; margin-left: auto; margin-right: auto; }
-.app-personnaliser-preview .builder-phone-screen { height: 74%; top: 13%; }
+.app-personnaliser-preview .builder-phone-screen { height: 68%; top: 16%; }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic { height: 100%; max-height: none; min-height: 0; }
 
 /* Carte dynamique (couleurs utilisateur) dans le mockup iPhone */
@@ -1421,7 +1421,7 @@ body.page-app .site-banner { display: none !important; }
   color: var(--wallet-fg);
   transition: background 0.2s, color 0.2s;
   align-items: stretch;
-  padding: 0.4rem 0.5rem 0.5rem;
+  padding: 0.4rem 0.5rem 0.75rem;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-label { color: var(--wallet-label); }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps { color: var(--wallet-fg); }
@@ -1493,17 +1493,18 @@ body.page-app .site-banner { display: none !important; }
 
 /* Points : gauche, gros, moins gras, couleur thème, sans emoji */
 .app-wallet-preview-dynamic .builder-wallet-card-pts-wrap { align-items: flex-start; width: 100%; }
-.app-wallet-preview-dynamic .builder-wallet-card-pts-value {
+.app-wallet-preview-dynamic .builder-wallet-card-pts-value,
+.app-wallet-preview-dynamic .builder-wallet-card-pts-value #app-wallet-preview-value {
   font-size: clamp(1.35rem, 4.5vw, 1.85rem);
-  font-weight: 600;
-  color: var(--wallet-fg);
+  font-weight: 500;
+  color: var(--wallet-fg) !important;
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-pts-wrap .builder-wallet-card-label {
   font-size: 0.5rem;
   letter-spacing: 0.02em;
-  color: var(--wallet-fg);
+  color: var(--wallet-fg) !important;
   opacity: 0.95;
 }
 .app-wallet-preview-dynamic .wallet-preview-emoji { display: none !important; }
@@ -1515,7 +1516,7 @@ body.page-app .site-banner { display: none !important; }
   align-items: flex-end;
   gap: 0.5rem;
   width: 100%;
-  margin-top: 0.35rem;
+  margin-top: 0.55rem;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-reward {
   display: flex;
@@ -1551,6 +1552,7 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic #app-preview-reward-wrap.hidden { display: none !important; }
 
 /* QR dans l’aperçu (réutilise builder-wallet-card-qr) */
+.app-wallet-preview-dynamic .builder-wallet-card-qr { margin-bottom: 0.4rem; }
 .app-wallet-preview-dynamic .builder-wallet-card-qr-img[src=""],
 .app-wallet-preview-dynamic .builder-wallet-card-qr-img:not([src]) { opacity: 0.5; background: rgba(255,255,255,0.2); border-radius: 4px; }
 .app-personnaliser-preview-org { font-size: 0.85rem; font-weight: 600; opacity: 0.95; }
