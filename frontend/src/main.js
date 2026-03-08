@@ -2341,6 +2341,7 @@ function initAppDashboard(slug) {
   const scannerFullscreenReject = document.getElementById("app-scanner-fullscreen-reject");
   const scannerFullscreenRejectMsg = document.getElementById("app-scanner-fullscreen-reject-msg");
   const scannerReject = document.getElementById("app-scanner-reject");
+  const scannerRejectTitle = document.getElementById("app-scanner-reject-title");
   const scannerRejectMessage = document.getElementById("app-scanner-reject-message");
   const scannerRetryBtn = document.getElementById("app-scanner-retry");
   const scannerResult = document.getElementById("app-scanner-result");
@@ -2418,12 +2419,13 @@ function initAppDashboard(slug) {
     }
   }
 
-  function showScannerReject(message) {
+  function showScannerReject(message, isCameraError = false) {
     scannerFeedbackReject();
     closeFullscreenScanner();
     hideAllScannerStates();
     if (scannerReject) scannerReject.classList.remove("hidden");
-    if (scannerRejectMessage) scannerRejectMessage.textContent = message || "Ce QR code ne correspond pas à un client de votre commerce.";
+    if (scannerRejectTitle) scannerRejectTitle.textContent = isCameraError ? "Caméra inaccessible" : "Code non reconnu";
+    if (scannerRejectMessage) scannerRejectMessage.textContent = message || (isCameraError ? "Autorisez la caméra dans les paramètres du navigateur (icône cadenas ou « i » dans la barre d’adresse), puis réessayez. En HTTP la caméra ne fonctionne pas : utilisez https://." : "Ce QR code ne correspond pas à un client de votre commerce.");
     scannerCard?.classList.add("app-scanner-has-overlay");
   }
 
@@ -2527,7 +2529,7 @@ function initAppDashboard(slug) {
     updateRedeemButtons();
   }
 
-  /** Préfère la caméra arrière principale (pas grand angle / ultra-wide) pour le scan. */
+  /** Préfère la caméra arrière sur mobile ; sur PC (webcam) utilise la première caméra disponible. */
   async function getPreferredBackCameraConfig() {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -2545,9 +2547,18 @@ function initAppDashboard(slug) {
           height: { ideal: 720 },
         };
       }
+      /* Sur PC il n’y a souvent pas de caméra "arrière" : utiliser la première caméra (webcam). */
+      if (videoInputs.length > 0 && videoInputs[0].deviceId) {
+        return {
+          deviceId: { exact: videoInputs[0].deviceId },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        };
+      }
     } catch (_) {}
+    /* Dernier recours : "user" (webcam) pour que ça marche sur PC. */
     return {
-      facingMode: "environment",
+      facingMode: "user",
       width: { ideal: 1280 },
       height: { ideal: 720 },
     };
