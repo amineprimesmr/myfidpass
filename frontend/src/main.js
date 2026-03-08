@@ -1074,9 +1074,13 @@ function initAppDashboard(slug) {
     const mapHintEl = document.getElementById("app-perimetre-map-hint");
     if (!mapEl || !addressInput || !radiusSlider || !saveBtn) return;
 
+    const mapboxToken = (typeof import.meta.env !== "undefined" && import.meta.env.VITE_MAPBOX_ACCESS_TOKEN) ? String(import.meta.env.VITE_MAPBOX_ACCESS_TOKEN).trim() : "";
+    const useMapbox = !!(mapboxToken && typeof mapboxgl !== "undefined");
+
     let perimetreMap = null;
     let perimetreMarker = null;
     let perimetreCircle = null;
+    let perimetreMapboxCircleId = null;
     let currentLat = null;
     let currentLng = null;
     let currentRadiusM = 500;
@@ -1085,6 +1089,17 @@ function initAppDashboard(slug) {
     let defaultSuggestionData = null;
 
     const DEFAULT_CENTER = [48.8566, 2.3522];
+    function circleGeoJSON(lat, lng, radiusMeters) {
+      const km = radiusMeters / 1000;
+      const points = [];
+      for (let i = 0; i <= 64; i++) {
+        const angle = (i / 64) * 2 * Math.PI;
+        const latOffset = (km / 111.32) * Math.cos(angle);
+        const lngOffset = (km / (111.32 * Math.cos((lat * Math.PI) / 180))) * Math.sin(angle);
+        points.push([lng + lngOffset, lat + latOffset]);
+      }
+      return { type: "Feature", geometry: { type: "Polygon", coordinates: [points] } };
+    }
     const PHOTON_URL = "https://photon.komoot.io/api/";
     const NOMINATIM_REVERSE = "https://nominatim.openstreetmap.org/reverse";
     const AUTCOMPLETE_DEBOUNCE_MS = 320;
@@ -1136,7 +1151,10 @@ function initAppDashboard(slug) {
       currentRadiusM = m;
       if (radiusValueEl) radiusValueEl.textContent = m + " m";
       if (radiusSlider) radiusSlider.value = String(m);
-      if (perimetreCircle && currentLat != null && currentLng != null) {
+      if (useMapbox && perimetreMap && perimetreMap.getSource("perimetre-circle") && currentLat != null && currentLng != null) {
+        perimetreMap.getSource("perimetre-circle").setData(circleGeoJSON(currentLat, currentLng, m));
+      }
+      if (!useMapbox && perimetreCircle && currentLat != null && currentLng != null) {
         perimetreCircle.setRadius(m);
       }
     }
@@ -1145,7 +1163,14 @@ function initAppDashboard(slug) {
       currentLat = lat;
       currentLng = lng;
       if (addressInput && addressText != null) addressInput.value = addressText;
-      if (perimetreMap) {
+      if (!perimetreMap) return;
+      if (useMapbox) {
+        perimetreMap.flyTo({ center: [lng, lat], zoom: Math.max(14, perimetreMap.getZoom()) });
+        if (perimetreMarker) perimetreMarker.setLngLat([lng, lat]);
+        if (perimetreMap.getSource("perimetre-circle")) {
+          perimetreMap.getSource("perimetre-circle").setData(circleGeoJSON(lat, lng, currentRadiusM));
+        }
+      } else {
         perimetreMap.setView([lat, lng], perimetreMap.getZoom() < 14 ? 14 : perimetreMap.getZoom());
         if (perimetreMarker) perimetreMarker.setLatLng([lat, lng]);
         else if (typeof L !== "undefined") {
@@ -1157,15 +1182,70 @@ function initAppDashboard(slug) {
         else if (typeof L !== "undefined") {
           perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
         }
-        if (mapWrap) mapWrap.classList.add("has-map");
-        if (mapHintEl) mapHintEl.classList.add("hidden");
       }
+      if (mapWrap) mapWrap.classList.add("has-map");
+      if (mapHintEl) mapHintEl.classList.add("hidden");
     }
 
     function initMap(centerLat, centerLng) {
-      if (typeof L === "undefined") return;
       const lat = centerLat != null ? centerLat : DEFAULT_CENTER[0];
       const lng = centerLng != null ? centerLng : DEFAULT_CENTER[1];
+
+      if (useMapbox) {
+        if (perimetreMap) {
+          perimetreMap.flyTo({ center: [lng, lat], zoom: 14 });
+          if (perimetreMarker) perimetreMarker.setLngLat([lng, lat]);
+          if (perimetreMap.getSource("perimetre-circle")) {
+            perimetreMap.getSource("perimetre-circle").setData(circleGeoJSON(lat, lng, currentRadiusM));
+          }
+          if (mapWrap) mapWrap.classList.add("has-map");
+          if (mapHintEl) mapHintEl.classList.add("hidden");
+          return;
+        }
+        mapboxgl.accessToken = mapboxToken;
+        perimetreMap = new mapboxgl.Map({
+          container: mapEl,
+          style: "mapbox://styles/mapbox/dark-v11",
+          center: [lng, lat],
+          zoom: 14,
+        });
+        perimetreMap.addControl(new mapboxgl.NavigationControl(), "top-right");
+        perimetreMarker = new mapboxgl.Marker({ color: "#0a7c42" }).setLngLat([lng, lat]).addTo(perimetreMap);
+        perimetreMap.on("load", () => {
+          perimetreMap.addSource("perimetre-circle", { type: "geojson", data: circleGeoJSON(lat, lng, currentRadiusM) });
+          perimetreMap.addLayer({
+            id: "perimetre-circle-fill",
+            type: "fill",
+            source: "perimetre-circle",
+            paint: { "fill-color": "#0a7c42", "fill-opacity": 0.12 },
+          });
+          perimetreMap.addLayer({
+            id: "perimetre-circle-line",
+            type: "line",
+            source: "perimetre-circle",
+            paint: { "line-color": "#0a7c42", "line-width": 2.5 },
+          });
+        });
+        perimetreMap.on("click", (e) => {
+          const { lng: lng_, lat: lat_ } = e.lngLat;
+          currentLat = lat_;
+          currentLng = lng_;
+          perimetreMarker.setLngLat([lng_, lat_]);
+          if (perimetreMap.getSource("perimetre-circle")) {
+            perimetreMap.getSource("perimetre-circle").setData(circleGeoJSON(lat_, lng_, currentRadiusM));
+          }
+          fetch(`${NOMINATIM_REVERSE}?lat=${lat_}&lon=${lng_}&format=json`).then((r) => r.json()).then((data) => {
+            const addr = data?.address;
+            const parts = [addr?.road, addr?.suburb, addr?.city, addr?.country].filter(Boolean);
+            if (addressInput) addressInput.value = parts.length ? parts.join(", ") : `${lat_.toFixed(5)}, ${lng_.toFixed(5)}`;
+          }).catch(() => { if (addressInput) addressInput.value = `${lat_.toFixed(5)}, ${lng_.toFixed(5)}`; });
+        });
+        if (mapWrap) mapWrap.classList.add("has-map");
+        if (mapHintEl) mapHintEl.classList.add("hidden");
+        return;
+      }
+
+      if (typeof L === "undefined") return;
       if (perimetreMap) {
         perimetreMap.setView([lat, lng], 14);
         const mhtml = `<span class="app-perimetre-marker-pin"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#0a7c42"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
