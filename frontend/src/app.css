@@ -1398,7 +1398,7 @@ body.page-app .site-banner { display: none !important; }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 .app-personnaliser-preview.builder-phone-mockup { width: min(280px, 85vw); max-width: 320px; margin-left: auto; margin-right: auto; }
 .app-personnaliser-preview .builder-phone-screen { height: 74%; top: 13%; }
-.app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic { height: 92%; max-height: none; min-height: 0; }
+.app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic { height: 82%; max-height: none; min-height: 0; }
 
 /* Carte dynamique (couleurs utilisateur) dans le mockup iPhone */
 .app-wallet-preview-dynamic {
