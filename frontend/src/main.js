@@ -1219,17 +1219,11 @@ function initAppDashboard(slug) {
     if (stripEl) stripEl.style.background = bgHex;
     const bodyEl = card?.querySelector(".app-wallet-preview-body");
     const hasCardBgUrl = personnaliserCardBgDataUrl && personnaliserCardBgDataUrl.length > 0;
+    const bandeauEl = document.getElementById("app-preview-bandeau");
     if (bodyEl) {
       bodyEl.style.color = fg;
-      if (hasCardBgUrl) {
-        bodyEl.style.background = "transparent";
-        bodyEl.style.backgroundImage = `url(${personnaliserCardBgDataUrl})`;
-        bodyEl.style.backgroundSize = "cover";
-        bodyEl.style.backgroundPosition = "center";
-      } else {
-        bodyEl.style.background = bgHex;
-        bodyEl.style.backgroundImage = "none";
-      }
+      bodyEl.style.background = bgHex;
+      bodyEl.style.backgroundImage = "none";
     }
     orgEl.textContent = personnaliserOrg?.value?.trim() || "Votre commerce";
     const isStamps = programTypeStamps && programTypeStamps.checked;
@@ -1238,6 +1232,23 @@ function initAppDashboard(slug) {
     const useStripImage = stripDisplayLogo && stripDisplayLogo.checked;
     if (ptsWrap) ptsWrap.classList.toggle("hidden", !!isStamps);
     if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps);
+    if (bandeauEl) {
+      if (isStamps) {
+        bandeauEl.classList.remove("hidden");
+        if (hasCardBgUrl) {
+          bandeauEl.style.background = "transparent";
+          bandeauEl.style.backgroundImage = `url(${personnaliserCardBgDataUrl})`;
+          bandeauEl.style.backgroundSize = "cover";
+          bandeauEl.style.backgroundPosition = "center";
+        } else {
+          bandeauEl.style.background = bgHex;
+          bandeauEl.style.backgroundImage = "none";
+        }
+      } else {
+        bandeauEl.style.backgroundImage = "none";
+        bandeauEl.classList.add("hidden");
+      }
+    }
     const rewardWrap = document.getElementById("app-preview-reward-wrap");
     if (rewardWrap) rewardWrap.classList.toggle("hidden", !!isStamps);
     if (restantsWrap) restantsWrap.classList.toggle("hidden", !isStamps);

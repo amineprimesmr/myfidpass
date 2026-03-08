@@ -1440,6 +1440,17 @@ body.page-app .site-banner { display: none !important; }
   align-items: stretch;
   padding: 0.15rem 0.5rem 0.75rem;
 }
+.app-wallet-preview-dynamic .app-wallet-preview-bandeau {
+  margin: 0 -0.5rem;
+  padding: 0.4rem 0.5rem;
+  min-height: 4.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+}
+.app-wallet-preview-dynamic .app-wallet-preview-bandeau.hidden { display: none !important; }
+.app-wallet-preview-dynamic .app-wallet-preview-bandeau .builder-wallet-card-stamps-wrap { margin: 0; }
 .app-wallet-preview-dynamic .builder-wallet-card-label { color: var(--wallet-label); }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps { color: var(--wallet-fg); }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-emoji:not(.filled) { opacity: 0.45; }
