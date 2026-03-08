@@ -384,7 +384,7 @@
           <section id="vue-ensemble" class="app-section app-section-overview">
             <h1 class="app-section-title">Vue d'ensemble</h1>
             <p class="app-section-desc">Vos chiffres du mois et indicateurs clés.</p>
-            <!-- Hero mobile style app : 2 cartes + message -->
+            <!-- Hero mobile : 2 cartes + message -->
             <div class="app-mobile-dashboard-hero app-mobile-only" id="app-mobile-dashboard-hero">
               <div class="app-mobile-dashboard-card" id="app-mobile-card-members">
                 <div class="app-mobile-dashboard-card-icon members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
@@ -404,36 +404,42 @@
               </div>
             </div>
             <div id="app-overview-alerts" class="app-overview-alerts hidden"></div>
-            <div class="app-stats app-stats-grid">
-              <div class="app-stat">
-                <span class="app-stat-value" id="app-stat-members">0</span>
-                <span class="app-stat-label">Membres inscrits</span>
+            <!-- Bloc principal : 2 KPIs mis en avant -->
+            <div class="app-dashboard-hero">
+              <div class="app-dashboard-hero-card app-dashboard-hero-members">
+                <span class="app-dashboard-hero-value" id="app-stat-members">0</span>
+                <span class="app-dashboard-hero-label">Membres inscrits</span>
               </div>
-              <div class="app-stat">
-                <span class="app-stat-value" id="app-stat-points">0</span>
-                <span class="app-stat-label">Points distribués ce mois</span>
-              </div>
-              <div class="app-stat">
-                <span class="app-stat-value" id="app-stat-transactions">0</span>
-                <span class="app-stat-label">Opérations ce mois</span>
-              </div>
-              <div class="app-stat">
-                <span class="app-stat-value" id="app-stat-new30">0</span>
-                <span class="app-stat-label">Nouveaux (30 j)</span>
-              </div>
-              <div class="app-stat">
-                <span class="app-stat-value" id="app-stat-inactive30">0</span>
-                <span class="app-stat-label">Inactifs 30 j</span>
-              </div>
-              <div class="app-stat">
-                <span class="app-stat-value" id="app-stat-avg-points">0</span>
-                <span class="app-stat-label">Points moy. / membre</span>
+              <div class="app-dashboard-hero-card app-dashboard-hero-ops">
+                <span class="app-dashboard-hero-value" id="app-stat-transactions">0</span>
+                <span class="app-dashboard-hero-label">Opérations ce mois</span>
               </div>
             </div>
+            <!-- Indicateurs secondaires -->
+            <div class="app-dashboard-indicators">
+              <div class="app-dashboard-indicator">
+                <span class="app-dashboard-indicator-value" id="app-stat-points">0</span>
+                <span class="app-dashboard-indicator-label">Points distribués (mois)</span>
+              </div>
+              <div class="app-dashboard-indicator">
+                <span class="app-dashboard-indicator-value" id="app-stat-new30">0</span>
+                <span class="app-dashboard-indicator-label">Nouveaux (30 j)</span>
+              </div>
+              <div class="app-dashboard-indicator">
+                <span class="app-dashboard-indicator-value" id="app-stat-inactive30">0</span>
+                <span class="app-dashboard-indicator-label">Inactifs 30 j</span>
+              </div>
+              <div class="app-dashboard-indicator">
+                <span class="app-dashboard-indicator-value" id="app-stat-avg-points">0</span>
+                <span class="app-dashboard-indicator-label">Points moy. / membre</span>
+              </div>
+            </div>
+            <!-- Graphique d'activité -->
             <div class="app-evolution-wrap">
-              <h3 class="app-evolution-title">Activité (6 dernières semaines)</h3>
-              <div id="app-evolution-chart" class="app-evolution-chart"></div>
+              <h3 class="app-evolution-title">Activité — opérations par semaine (6 sem.)</h3>
+              <div id="app-evolution-chart" class="app-evolution-chart" role="img" aria-label="Graphique des opérations par semaine"></div>
             </div>
+            <!-- Actions rapides -->
             <div class="app-overview-shortcuts">
               <a href="#scanner" class="app-shortcut-btn" data-section="scanner"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span> Ouvrir le scanner</a>
               <button type="button" id="app-overview-copy-link" class="app-shortcut-btn"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span> Copier le lien partage</button>

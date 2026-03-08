@@ -2875,17 +2875,26 @@ function initAppDashboard(slug) {
     const res = await api("/dashboard/stats");
     if (res.status === 401) throw new Error("Unauthorized");
     if (!res.ok) return null;
-    const data = await res.json();
-    if (statMembers) statMembers.textContent = data.membersCount ?? 0;
-    if (statPoints) statPoints.textContent = data.pointsThisMonth ?? 0;
-    if (statTransactions) statTransactions.textContent = data.transactionsThisMonth ?? 0;
-    if (statNew30) statNew30.textContent = data.newMembersLast30Days ?? 0;
-    if (statInactive30) statInactive30.textContent = data.inactiveMembers30Days ?? 0;
-    if (statAvgPoints) statAvgPoints.textContent = data.pointsAveragePerMember ?? 0;
+    const raw = await res.json();
+    const data = {
+      membersCount: raw.members_count ?? raw.membersCount ?? 0,
+      pointsThisMonth: raw.points_this_month ?? raw.pointsThisMonth ?? 0,
+      transactionsThisMonth: raw.transactions_this_month ?? raw.transactionsThisMonth ?? 0,
+      newMembersLast30Days: raw.new_members_last_30_days ?? raw.newMembersLast30Days ?? 0,
+      newMembersLast7Days: raw.new_members_last_7_days ?? raw.newMembersLast7Days ?? 0,
+      inactiveMembers30Days: raw.inactive_members_30_days ?? raw.inactiveMembers30Days ?? 0,
+      pointsAveragePerMember: raw.points_average_per_member ?? raw.pointsAveragePerMember ?? 0,
+    };
+    if (statMembers) statMembers.textContent = data.membersCount;
+    if (statPoints) statPoints.textContent = data.pointsThisMonth;
+    if (statTransactions) statTransactions.textContent = data.transactionsThisMonth;
+    if (statNew30) statNew30.textContent = data.newMembersLast30Days;
+    if (statInactive30) statInactive30.textContent = data.inactiveMembers30Days;
+    if (statAvgPoints) statAvgPoints.textContent = data.pointsAveragePerMember;
     const mobileStatMembers = document.getElementById("app-mobile-stat-members");
     const mobileStatScans = document.getElementById("app-mobile-stat-scans");
-    if (mobileStatMembers) mobileStatMembers.textContent = data.membersCount ?? 0;
-    if (mobileStatScans) mobileStatScans.textContent = data.transactionsThisMonth ?? 0;
+    if (mobileStatMembers) mobileStatMembers.textContent = data.membersCount;
+    if (mobileStatScans) mobileStatScans.textContent = data.transactionsThisMonth;
     return data;
   }
 
@@ -2894,11 +2903,28 @@ function initAppDashboard(slug) {
     if (!res.ok) return;
     const data = await res.json();
     const chartEl = document.getElementById("app-evolution-chart");
-    if (!chartEl || !data.evolution?.length) return;
-    const maxOp = Math.max(1, ...data.evolution.map((w) => w.operationsCount));
-    chartEl.innerHTML = data.evolution.map((w, i) => {
-      const pct = maxOp > 0 ? (w.operationsCount / maxOp) * 100 : 0;
-      return `<div class="app-evolution-bar" style="height: ${pct}%" title="Sem. ${i + 1}: ${w.operationsCount} op." aria-label="Semaine ${i + 1} ${w.operationsCount} opérations"></div>`;
+    const evolution = data.evolution || [];
+    if (!chartEl || !evolution.length) {
+      if (chartEl) chartEl.innerHTML = "<p class=\"app-evolution-empty\">Aucune donnée pour le moment.</p>";
+      return;
+    }
+    const maxOp = Math.max(1, ...evolution.map((w) => w.operationsCount ?? w.operations_count ?? 0));
+    const weekLabels = [];
+    for (let i = evolution.length - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - (i + 1) * 7);
+      weekLabels.push(`S. ${d.getDate()}/${d.getMonth() + 1}`);
+    }
+    chartEl.innerHTML = evolution.map((w, i) => {
+      const op = w.operationsCount ?? w.operations_count ?? 0;
+      const pct = maxOp > 0 ? (op / maxOp) * 100 : 0;
+      const label = weekLabels[i] || `Sem. ${i + 1}`;
+      return `<div class="app-evolution-bar-wrap" title="${label}: ${op} opération(s)">
+        <div class="app-evolution-bar-outer">
+          <div class="app-evolution-bar" style="height: ${pct}%" aria-hidden="true"></div>
+        </div>
+        <span class="app-evolution-bar-label">${label}</span>
+      </div>`;
     }).join("");
   }
 

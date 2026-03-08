@@ -307,6 +307,8 @@ router.get("/:slug/dashboard/stats", (req, res, next) => {
     transactions_this_month: stats.transactionsThisMonth ?? 0,
     new_members_last_7_days: stats.newMembersLast7Days ?? 0,
     new_members_last_30_days: stats.newMembersLast30Days ?? 0,
+    inactive_members_30_days: stats.inactiveMembers30Days ?? 0,
+    points_average_per_member: stats.pointsAveragePerMember ?? 0,
     business_name: business.organization_name ?? undefined,
   });
 });
