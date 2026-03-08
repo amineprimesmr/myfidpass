@@ -815,11 +815,11 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["vue-ensemble", "scanner", "caisse", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "notifications", "profil"];
+const APP_SECTION_IDS = ["vue-ensemble", "caisse", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "notifications", "profil"];
 
 const APP_MOBILE_TITLES = {
   "vue-ensemble": "Tableau de bord",
-  "scanner": "Scanner",
+  "caisse": "Caisse",
   "personnaliser": "Ma Carte",
   "carte-perimetre": "Carte & périmètre",
   "profil": "Profil",
@@ -861,11 +861,13 @@ function initAppSidebar() {
       }
     });
   });
-  const hashSection = (window.location.hash || "#vue-ensemble").slice(1);
+  let hashSection = (window.location.hash || "#vue-ensemble").slice(1);
+  if (hashSection === "scanner") hashSection = "caisse";
   const sectionToShow = hashSection === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(hashSection) ? hashSection : "vue-ensemble");
   showAppSection(sectionToShow);
   window.addEventListener("hashchange", () => {
-    const section = (window.location.hash || "#vue-ensemble").slice(1);
+    let section = (window.location.hash || "#vue-ensemble").slice(1);
+    if (section === "scanner") section = "caisse";
     const toShow = section === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(section) ? section : "vue-ensemble");
     showAppSection(toShow);
   });
@@ -893,7 +895,7 @@ function initAppMobile() {
       if (id && APP_SECTION_IDS.includes(id)) showAppSection(id);
     });
   });
-  headerScanBtn?.addEventListener("click", () => showAppSection("scanner"));
+  headerScanBtn?.addEventListener("click", () => showAppSection("caisse"));
 
   document.querySelectorAll(".app-mobile-profil-item[data-section]").forEach((item) => {
     item.addEventListener("click", (e) => {
@@ -2330,7 +2332,7 @@ function initAppDashboard(slug) {
   }
 
   // ——— Scanner (caméra) ———
-  const scannerStart = document.getElementById("app-scanner-start");
+  const caisseChoose = document.getElementById("app-caisse-choose");
   const scannerVerifying = document.getElementById("app-scanner-verifying");
   const scannerFullscreen = document.getElementById("app-scanner-fullscreen");
   const scannerFullscreenViewport = document.getElementById("app-scanner-fullscreen-viewport");
@@ -2369,7 +2371,7 @@ function initAppDashboard(slug) {
     if (scannerVerifying) scannerVerifying.classList.add("hidden");
     if (scannerReject) scannerReject.classList.add("hidden");
     if (scannerResult) scannerResult.classList.add("hidden");
-    if (scannerStart) scannerStart.classList.remove("hidden");
+    if (caisseChoose) caisseChoose.classList.remove("hidden");
     scannerCard?.classList.remove("app-scanner-has-overlay");
   }
 
@@ -2381,7 +2383,7 @@ function initAppDashboard(slug) {
   }
 
   function showScannerVerifying() {
-    if (scannerStart) scannerStart.classList.add("hidden");
+    if (caisseChoose) caisseChoose.classList.add("hidden");
     if (scannerVerifying) scannerVerifying.classList.remove("hidden");
     if (scannerReject) scannerReject.classList.add("hidden");
     if (scannerResult) scannerResult.classList.add("hidden");
@@ -2435,7 +2437,7 @@ function initAppDashboard(slug) {
     closeFullscreenScanner();
     hideAllScannerStates();
     if (scannerResult) scannerResult.classList.remove("hidden");
-    if (scannerStart) scannerStart.classList.add("hidden");
+    if (caisseChoose) caisseChoose.classList.add("hidden");
     scannerCard?.classList.add("app-scanner-has-overlay");
 
     try {
@@ -2512,14 +2514,17 @@ function initAppDashboard(slug) {
         }
       } catch (_) {}
     }
+    updateRedeemButtons();
   }
 
   function hideScannerResult() {
     scannerCurrentMemberId = null;
     scannerCurrentMember = null;
     hideAllScannerStates();
-    if (scannerStart) scannerStart.classList.remove("hidden");
+    if (caisseChoose) caisseChoose.classList.remove("hidden");
     if (scannerResultMessage) { scannerResultMessage.classList.add("hidden"); scannerResultMessage.textContent = ""; }
+    if (caisseMessage) { caisseMessage.classList.add("hidden"); caisseMessage.textContent = ""; }
+    updateRedeemButtons();
   }
 
   /** Préfère la caméra arrière principale (pas grand angle / ultra-wide) pour le scan. */
@@ -2621,13 +2626,12 @@ function initAppDashboard(slug) {
 
   scannerRetryBtn?.addEventListener("click", () => {
     hideAllScannerStates();
-    if (scannerStart) scannerStart.classList.remove("hidden");
+    if (caisseChoose) caisseChoose.classList.remove("hidden");
     startFullscreenScanner();
   });
 
   scannerResume?.addEventListener("click", () => {
     hideScannerResult();
-    startFullscreenScanner();
   });
 
   scannerOneVisit?.addEventListener("click", () => { scannerVisitOnly = true; if (scannerAmount) scannerAmount.value = ""; updateScannerPointsPreview(); });
@@ -2743,11 +2747,11 @@ function initAppDashboard(slug) {
   document.querySelectorAll("#app-app .app-sidebar-link[data-section]").forEach((link) => {
     link.addEventListener("click", () => {
       const id = link.getAttribute("data-section");
-      if (id !== "scanner") stopFullscreenScanner();
+      if (id !== "caisse") stopFullscreenScanner();
     });
   });
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId !== "scanner") stopFullscreenScanner();
+    if (e.detail?.sectionId !== "caisse") stopFullscreenScanner();
   });
 
   let allMembers = [];
@@ -2779,13 +2783,19 @@ function initAppDashboard(slug) {
     if (list.length === 0) { container.innerHTML = ""; return; }
     container.innerHTML = list.map((m) => `<button type="button" class="app-caisse-recent-btn" data-id="${escapeHtml(m.id)}">${escapeHtml(m.name)}</button>`).join("");
     container.querySelectorAll(".app-caisse-recent-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        selectedMemberId = btn.dataset.id;
-        const rec = list.find((x) => x.id === selectedMemberId);
-        if (memberSearchInput) memberSearchInput.value = rec ? `${rec.name}` : "";
-        memberListEl?.classList.add("hidden");
-        if (addPointsBtn) addPointsBtn.disabled = false;
-        updateRedeemButtons();
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        try {
+          const res = await api("/members/" + encodeURIComponent(id));
+          if (!res.ok) return;
+          const member = await res.json();
+          addToCaisseRecent(member);
+          await showScannerResult(member);
+          if (caisseChoose) caisseChoose.classList.add("hidden");
+          if (scannerResult) scannerResult.classList.remove("hidden");
+          if (scannerCard) scannerCard.classList.add("app-scanner-has-overlay");
+          updateRedeemButtons();
+        } catch (_) {}
       });
     });
   }
@@ -2794,43 +2804,42 @@ function initAppDashboard(slug) {
   const redeemPointsInput = document.getElementById("app-redeem-points");
   const redeemPointsBtn = document.getElementById("app-redeem-points-btn");
   function updateRedeemButtons() {
-    const enabled = !!selectedMemberId;
+    const enabled = !!scannerCurrentMemberId;
     if (redeemStampsBtn) redeemStampsBtn.disabled = !enabled;
     if (redeemPointsBtn) redeemPointsBtn.disabled = !enabled;
   }
   function doRedeem(body) {
-    if (!selectedMemberId) return;
-    const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(selectedMemberId)}/redeem`;
+    if (!scannerCurrentMemberId) return;
+    const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(scannerCurrentMemberId)}/redeem`;
     const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
     if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
     return fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
   }
   redeemStampsBtn?.addEventListener("click", async () => {
-    if (!selectedMemberId) return;
+    if (!scannerCurrentMemberId) return;
     redeemStampsBtn.disabled = true;
     try {
       const res = await doRedeem({ type: "stamps" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        showCaisseMessage(data.error || "Erreur", true);
+        if (scannerResultMessage) { scannerResultMessage.textContent = data.error || "Erreur"; scannerResultMessage.classList.remove("hidden"); }
         redeemStampsBtn.disabled = false;
         return;
       }
-      showCaisseMessage("Récompense tampons utilisée.");
-      selectedMemberId = null;
-      if (addPointsBtn) addPointsBtn.disabled = true;
-      updateRedeemButtons();
+      if (scannerResultMessage) { scannerResultMessage.textContent = "Récompense tampons utilisée."; scannerResultMessage.classList.remove("hidden"); }
+      if (scannerResultPoints) scannerResultPoints.textContent = `0 / ${scannerRequiredStamps} tampons`;
+      scannerCurrentMember = scannerCurrentMember ? { ...scannerCurrentMember, points: 0 } : null;
       await refresh();
     } catch (_) {
-      showCaisseMessage("Erreur réseau.", true);
+      if (scannerResultMessage) { scannerResultMessage.textContent = "Erreur réseau."; scannerResultMessage.classList.remove("hidden"); }
     }
     redeemStampsBtn.disabled = false;
   });
   redeemPointsBtn?.addEventListener("click", async () => {
-    if (!selectedMemberId) return;
+    if (!scannerCurrentMemberId) return;
     const pts = parseInt(redeemPointsInput?.value || "0", 10);
     if (!pts || pts <= 0) {
-      showCaisseMessage("Indiquez un nombre de points à déduire.", true);
+      if (scannerResultMessage) { scannerResultMessage.textContent = "Indiquez un nombre de points à déduire."; scannerResultMessage.classList.remove("hidden"); }
       return;
     }
     redeemPointsBtn.disabled = true;
@@ -2838,18 +2847,18 @@ function initAppDashboard(slug) {
       const res = await doRedeem({ type: "points", points: pts });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        showCaisseMessage(data.error || "Erreur", true);
+        if (scannerResultMessage) { scannerResultMessage.textContent = data.error || "Erreur"; scannerResultMessage.classList.remove("hidden"); }
         redeemPointsBtn.disabled = false;
         return;
       }
-      showCaisseMessage(`${pts} point(s) déduit(s). Nouveau solde : ${data.new_points ?? "—"} pts.`);
+      const newPts = data.new_points ?? 0;
+      if (scannerResultMessage) { scannerResultMessage.textContent = `${pts} point(s) déduit(s). Solde : ${newPts} pts.`; scannerResultMessage.classList.remove("hidden"); }
+      if (scannerResultPoints) scannerResultPoints.textContent = `${newPts} point(s)`;
       if (redeemPointsInput) redeemPointsInput.value = "";
-      selectedMemberId = null;
-      if (addPointsBtn) addPointsBtn.disabled = true;
-      updateRedeemButtons();
+      scannerCurrentMember = scannerCurrentMember ? { ...scannerCurrentMember, points: newPts } : null;
       await refresh();
     } catch (_) {
-      showCaisseMessage("Erreur réseau.", true);
+      if (scannerResultMessage) { scannerResultMessage.textContent = "Erreur réseau."; scannerResultMessage.classList.remove("hidden"); }
     }
     redeemPointsBtn.disabled = false;
   });
@@ -3010,8 +3019,6 @@ function initAppDashboard(slug) {
     if (q.length < 2) {
       memberListEl?.classList.add("hidden");
       if (memberListEl) memberListEl.innerHTML = "";
-      selectedMemberId = null;
-      if (addPointsBtn) addPointsBtn.disabled = true;
       return;
     }
     const data = await loadMembers(q);
@@ -3022,65 +3029,26 @@ function initAppDashboard(slug) {
       .join("");
     memberListEl.classList.remove("hidden");
     memberListEl.querySelectorAll(".app-member-item").forEach((el) => {
-      el.addEventListener("click", () => {
-        selectedMemberId = el.dataset.id;
-        const m = members.find((x) => x.id === selectedMemberId);
-        memberSearchInput.value = m ? `${m.name} (${m.email})` : "";
+      el.addEventListener("click", async () => {
+        const id = el.dataset.id;
+        const m = members.find((x) => x.id === id);
         memberListEl.classList.add("hidden");
-        if (addPointsBtn) addPointsBtn.disabled = false;
-        if (m) addToCaisseRecent(m);
-        updateRedeemButtons();
+        memberSearchInput.value = "";
+        try {
+          const res = await api("/members/" + encodeURIComponent(id));
+          if (!res.ok) return;
+          const member = await res.json();
+          addToCaisseRecent(member);
+          await showScannerResult(member);
+          if (caisseChoose) caisseChoose.classList.add("hidden");
+          if (scannerResult) scannerResult.classList.remove("hidden");
+          if (scannerCard) scannerCard.classList.add("app-scanner-has-overlay");
+          updateRedeemButtons();
+        } catch (_) {}
       });
     });
   });
   renderCaisseRecent();
-
-  oneVisitBtn?.addEventListener("click", () => {
-    addPointsVisitOnly = true;
-    if (amountInput) amountInput.value = "";
-  });
-  amountInput?.addEventListener("input", () => { addPointsVisitOnly = false; });
-
-  addPointsBtn?.addEventListener("click", async () => {
-    if (!selectedMemberId) return;
-    addPointsBtn.disabled = true;
-    caisseMessage?.classList.add("hidden");
-    try {
-      const body = addPointsVisitOnly ? { visit: true } : { amount_eur: parseFloat(amountInput?.value) || 0 };
-      if (!addPointsVisitOnly && !body.amount_eur) {
-        showCaisseMessage("Indiquez un montant (€) ou cliquez sur « 1 passage ».", true);
-        addPointsBtn.disabled = false;
-        return;
-      }
-      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
-      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
-      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(selectedMemberId)}/points`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        showCaisseMessage(data.error || "Erreur", true);
-        addPointsBtn.disabled = false;
-        return;
-      }
-      const added = data.points_added ?? data.points;
-      const total = data.points;
-      showCaisseMessage(`${added} point(s) ajouté(s). Total : ${total} pts.`);
-      const addedMember = allMembers.find((m) => m.id === selectedMemberId) || { id: selectedMemberId, name: memberSearchInput?.value || "Client" };
-      addToCaisseRecent(addedMember);
-      if (amountInput) amountInput.value = "";
-      selectedMemberId = null;
-      if (memberSearchInput) memberSearchInput.value = "";
-      addPointsVisitOnly = false;
-      updateRedeemButtons();
-      await refresh();
-    } catch (_) {
-      showCaisseMessage("Erreur réseau.", true);
-    }
-    addPointsBtn.disabled = false;
-  });
 
   membersSearchInput?.addEventListener("input", () => {
     const q = membersSearchInput.value.trim();

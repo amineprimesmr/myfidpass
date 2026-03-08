@@ -318,13 +318,9 @@
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
             <span class="app-sidebar-link-text">Vue d'ensemble</span>
           </a>
-          <a href="#scanner" class="app-sidebar-link" data-section="scanner">
-            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span>
-            <span class="app-sidebar-link-text">Scanner carte</span>
-          </a>
           <a href="#caisse" class="app-sidebar-link" data-section="caisse">
-            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></span>
-            <span class="app-sidebar-link-text">Caisse rapide</span>
+            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M12 5v14"/><path d="M5 12h14"/></svg></span>
+            <span class="app-sidebar-link-text">Caisse</span>
           </a>
           <a href="#membres" class="app-sidebar-link" data-section="membres">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
@@ -441,21 +437,31 @@
             </div>
             <!-- Actions rapides -->
             <div class="app-overview-shortcuts">
-              <a href="#scanner" class="app-shortcut-btn" data-section="scanner"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span> Ouvrir le scanner</a>
+              <a href="#caisse" class="app-shortcut-btn" data-section="caisse"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span> Ouvrir la caisse</a>
               <button type="button" id="app-overview-copy-link" class="app-shortcut-btn"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span> Copier le lien partage</button>
               <a href="#membres" class="app-shortcut-btn app-shortcut-inactifs" data-section="membres"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Voir les inactifs 30 j</a>
             </div>
           </section>
 
-          <section id="scanner" class="app-section app-section-scanner">
-            <h2 class="app-section-title">Scanner la carte client</h2>
-            <p class="app-section-desc">Scannez le QR code de la carte (Wallet ou écran du client). Reconnaissance immédiate et ajout des points en un clic.</p>
-            <div class="app-card app-scanner-card" id="app-scanner-card">
-              <div id="app-scanner-start" class="app-scanner-start">
-                <button type="button" id="app-scanner-launch-btn" class="app-btn app-btn-primary app-scanner-launch-btn" aria-label="Ouvrir le scan plein écran">
-                  <span class="app-scanner-launch-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span>
-                  <span>Lancer le scan</span>
-                </button>
+          <section id="caisse" class="app-section app-section-caisse app-section-caisse-unified">
+            <h2 class="app-section-title">Caisse</h2>
+            <p class="app-section-desc">Scannez la carte client ou recherchez par nom. Enregistrez le passage ou les points en un clic.</p>
+            <div class="app-card app-scanner-card app-caisse-card" id="app-scanner-card">
+              <!-- État : choisir client (scan ou recherche) -->
+              <div id="app-caisse-choose" class="app-caisse-choose">
+                <div class="app-caisse-scan-hero">
+                  <button type="button" id="app-scanner-launch-btn" class="app-caisse-scan-btn" aria-label="Ouvrir le scan QR">
+                    <span class="app-caisse-scan-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span>
+                    <span class="app-caisse-scan-text">Scanner le QR code</span>
+                  </button>
+                </div>
+                <p class="app-caisse-or">ou</p>
+                <div class="app-caisse-search-wrap">
+                  <label class="app-caisse-search-label">Rechercher un client</label>
+                  <div id="app-caisse-recent" class="app-caisse-recent"></div>
+                  <input type="text" id="app-member-search" class="app-input app-caisse-search-input" placeholder="Nom ou email..." autocomplete="off" aria-label="Rechercher un client" />
+                  <div id="app-member-list" class="app-member-list hidden"></div>
+                </div>
               </div>
               <!-- État : vérification en cours -->
               <div id="app-scanner-verifying" class="app-scanner-state app-scanner-verifying hidden" aria-live="polite" aria-atomic="true">
@@ -463,17 +469,17 @@
                 <p class="app-scanner-state-title">Vérification…</p>
                 <p class="app-scanner-state-desc">Nous vérifions que la carte correspond à un client de votre commerce.</p>
               </div>
-              <!-- État : rejet (mauvais code / autre commerce) -->
+              <!-- État : rejet -->
               <div id="app-scanner-reject" class="app-scanner-state app-scanner-reject hidden" aria-live="assertive" aria-atomic="true">
                 <div class="app-scanner-state-icon app-scanner-icon-reject" aria-hidden="true">✕</div>
                 <p class="app-scanner-state-title">Code non reconnu</p>
                 <p id="app-scanner-reject-message" class="app-scanner-state-desc">Ce QR code ne correspond pas à un client de votre commerce.</p>
                 <button type="button" id="app-scanner-retry" class="app-btn app-btn-primary">Réessayer</button>
               </div>
-              <!-- État : succès (client trouvé) -->
+              <!-- État : client sélectionné (scan ou recherche) -->
               <div id="app-scanner-result" class="app-scanner-state app-scanner-result hidden" aria-live="polite" aria-atomic="true">
                 <div class="app-scanner-state-icon app-scanner-icon-ok" aria-hidden="true">✓</div>
-                <p class="app-scanner-result-label">Client reconnu</p>
+                <p class="app-scanner-result-label">Client sélectionné</p>
                 <div class="app-scanner-client-card">
                   <p class="app-scanner-client-name" id="app-scanner-result-name"></p>
                   <p class="app-scanner-client-email" id="app-scanner-result-email"></p>
@@ -485,11 +491,9 @@
                   </div>
                 </div>
                 <div class="app-scanner-actions">
-                  <!-- Mode tampons : un seul bouton -->
                   <div id="app-scanner-actions-stamps" class="app-scanner-actions-stamps hidden">
                     <button type="button" id="app-scanner-add-one-stamp" class="app-btn app-btn-primary">+1 tampon</button>
                   </div>
-                  <!-- Mode points : montant en gros + 1 passage -->
                   <div id="app-scanner-actions-points" class="app-scanner-actions-points">
                     <button type="button" id="app-scanner-one-visit" class="app-btn app-btn-primary">1 passage</button>
                     <div class="app-scanner-amount-row">
@@ -502,14 +506,18 @@
                       <button type="button" id="app-scanner-add-points" class="app-btn app-btn-primary">Ajouter les points</button>
                     </div>
                   </div>
-                  <button type="button" id="app-scanner-resume" class="app-btn app-btn-secondary">Scanner un autre</button>
+                  <div class="app-caisse-redeem-row">
+                    <button type="button" id="app-redeem-stamps" class="app-btn app-btn-secondary" disabled title="Remet les tampons à 0">Récompense tampons</button>
+                    <input type="number" id="app-redeem-points" class="app-input app-input-amount" placeholder="Points à déduire" min="0" step="1" aria-label="Points à déduire" />
+                    <button type="button" id="app-redeem-points-btn" class="app-btn app-btn-primary" disabled>Utiliser points</button>
+                  </div>
+                  <button type="button" id="app-scanner-resume" class="app-btn app-btn-secondary app-caisse-change-client">Changer de client</button>
                 </div>
                 <p id="app-scanner-result-message" class="app-message hidden"></p>
+                <p id="app-caisse-message" class="app-message hidden" aria-live="polite"></p>
               </div>
             </div>
           </section>
-
-          <!-- Overlay plein écran : caméra type appareil photo -->
           <div id="app-scanner-fullscreen" class="app-scanner-fullscreen hidden" aria-hidden="true">
             <div class="app-scanner-fullscreen-header">
               <span class="app-scanner-fullscreen-title">Scanner la carte</span>
@@ -533,31 +541,6 @@
               <button type="button" id="app-scanner-fullscreen-retry" class="app-btn app-btn-primary">Réessayer</button>
             </div>
           </div>
-
-          <section id="caisse" class="app-section app-section-caisse">
-            <h2 class="app-section-title">Caisse rapide</h2>
-            <p class="app-section-desc">Enregistrer un achat ou un passage : cherchez le client, saisissez le montant ou « 1 passage », puis validez.</p>
-            <div class="app-card">
-              <p class="app-step-label">Clients récents</p>
-              <div id="app-caisse-recent" class="app-caisse-recent"></div>
-              <p class="app-step-label">1. Rechercher le client</p>
-              <input type="text" id="app-member-search" class="app-input" placeholder="Nom ou email du client..." autocomplete="off" />
-              <div id="app-member-list" class="app-member-list hidden"></div>
-              <p class="app-step-label">2. Montant ou passage</p>
-              <div class="app-caisse-row">
-                <input type="number" id="app-amount" class="app-input app-input-amount" placeholder="Montant (€)" min="0" step="0.01" aria-label="Montant en euros" />
-                <button type="button" id="app-one-visit" class="app-btn app-btn-secondary">1 passage</button>
-                <button type="button" id="app-add-points" class="app-btn app-btn-primary" disabled>Ajouter les points</button>
-              </div>
-              <p class="app-step-label">3. Utiliser une récompense (client sélectionné)</p>
-              <div class="app-caisse-row app-caisse-redeem">
-                <button type="button" id="app-redeem-stamps" class="app-btn app-btn-secondary" disabled title="Remet les tampons à 0">Récompense tampons</button>
-                <input type="number" id="app-redeem-points" class="app-input app-input-amount" placeholder="Points à déduire" min="0" step="1" aria-label="Points à déduire" />
-                <button type="button" id="app-redeem-points-btn" class="app-btn app-btn-primary" disabled>Utiliser points</button>
-              </div>
-              <p id="app-caisse-message" class="app-message hidden"></p>
-            </div>
-          </section>
 
           <section id="membres" class="app-section">
             <h2 class="app-section-title">Membres</h2>
@@ -994,7 +977,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Tableau de bord
         </button>
-        <button type="button" class="app-mobile-tab" data-mobile-tab="scanner">
+        <button type="button" class="app-mobile-tab" data-mobile-tab="caisse">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
           Scanner
         </button>
