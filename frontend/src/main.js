@@ -1149,11 +1149,13 @@ function initAppDashboard(slug) {
         perimetreMap.setView([lat, lng], perimetreMap.getZoom() < 14 ? 14 : perimetreMap.getZoom());
         if (perimetreMarker) perimetreMarker.setLatLng([lat, lng]);
         else if (typeof L !== "undefined") {
-          perimetreMarker = L.marker([lat, lng]).addTo(perimetreMap);
+          const mhtml = `<span class="app-perimetre-marker-pin"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#0a7c42"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
+          const micon = L.divIcon({ html: mhtml, className: "app-perimetre-marker-icon", iconSize: [32, 44], iconAnchor: [16, 44] });
+          perimetreMarker = L.marker([lat, lng], { icon: micon }).addTo(perimetreMap);
         }
         if (perimetreCircle) perimetreCircle.setLatLng([lat, lng]).setRadius(currentRadiusM);
         else if (typeof L !== "undefined") {
-          perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.15, weight: 2 }).addTo(perimetreMap);
+          perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
         }
         if (mapWrap) mapWrap.classList.add("has-map");
         if (mapHintEl) mapHintEl.classList.add("hidden");
@@ -1166,19 +1168,29 @@ function initAppDashboard(slug) {
       const lng = centerLng != null ? centerLng : DEFAULT_CENTER[1];
       if (perimetreMap) {
         perimetreMap.setView([lat, lng], 14);
+        const mhtml = `<span class="app-perimetre-marker-pin"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#0a7c42"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
+        const micon = L.divIcon({ html: mhtml, className: "app-perimetre-marker-icon", iconSize: [32, 44], iconAnchor: [16, 44] });
         if (perimetreMarker) perimetreMarker.setLatLng([lat, lng]);
-        else perimetreMarker = L.marker([lat, lng]).addTo(perimetreMap);
+        else perimetreMarker = L.marker([lat, lng], { icon: micon }).addTo(perimetreMap);
         if (perimetreCircle) perimetreCircle.setLatLng([lat, lng]).setRadius(currentRadiusM);
-        else perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.15, weight: 2 }).addTo(perimetreMap);
+        else perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
         perimetreMap.invalidateSize();
         if (mapWrap) mapWrap.classList.add("has-map");
         if (mapHintEl) mapHintEl.classList.add("hidden");
         return;
       }
-      perimetreMap = L.map(mapEl, { center: [lat, lng], zoom: 14, scrollWheelZoom: true });
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(perimetreMap);
-      perimetreMarker = L.marker([lat, lng]).addTo(perimetreMap);
-      perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.15, weight: 2 }).addTo(perimetreMap);
+      perimetreMap = L.map(mapEl, { center: [lat, lng], zoom: 14, scrollWheelZoom: true, zoomControl: false });
+      L.control.zoom({ position: "topright" }).addTo(perimetreMap);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap © CARTO",
+        subdomains: "abcd",
+        maxZoom: 20,
+        maxNativeZoom: 19,
+      }).addTo(perimetreMap);
+      const markerHtml = `<span class="app-perimetre-marker-pin" aria-hidden="true"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#0a7c42"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
+      const markerIcon = L.divIcon({ html: markerHtml, className: "app-perimetre-marker-icon", iconSize: [32, 44], iconAnchor: [16, 44] });
+      perimetreMarker = L.marker([lat, lng], { icon: markerIcon }).addTo(perimetreMap);
+      perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
       perimetreMap.on("click", (e) => {
         currentLat = e.latlng.lat;
         currentLng = e.latlng.lng;

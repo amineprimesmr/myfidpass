@@ -1902,6 +1902,59 @@ body.page-app .site-banner { display: none !important; }
   border-radius: var(--app-radius-md);
   z-index: 0;
 }
+/* Marqueur personnalisé (pin vert) */
+.app-perimetre-marker-icon {
+  background: none !important;
+  border: none !important;
+}
+.app-perimetre-marker-pin {
+  display: block;
+  width: 32px;
+  height: 44px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
+  transition: transform 0.2s ease;
+}
+.app-perimetre-marker-pin svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.leaflet-marker-icon.app-perimetre-marker-icon:hover .app-perimetre-marker-pin {
+  transform: scale(1.08);
+}
+/* Contrôles de zoom — style app */
+.app-perimetre-map-wrap .leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  border-radius: var(--app-radius-sm) !important;
+  overflow: hidden;
+}
+.app-perimetre-map-wrap .leaflet-control-zoom a {
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-size: 18px !important;
+  color: var(--app-text) !important;
+  background: var(--app-surface) !important;
+  border: none !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.app-perimetre-map-wrap .leaflet-control-zoom a:hover {
+  background: var(--app-accent-light) !important;
+  color: var(--app-accent) !important;
+}
+.app-perimetre-map-wrap .leaflet-control-zoom a.leaflet-control-zoom-in {
+  border-bottom: 1px solid var(--app-border) !important;
+}
+.app-perimetre-map-wrap .leaflet-bar a {
+  border-radius: 0 !important;
+}
+.app-perimetre-map-wrap .leaflet-bar a:first-child {
+  border-radius: var(--app-radius-sm) var(--app-radius-sm) 0 0 !important;
+}
+.app-perimetre-map-wrap .leaflet-bar a:last-child {
+  border-radius: 0 0 var(--app-radius-sm) var(--app-radius-sm) !important;
+}
 .app-perimetre-map-hint {
   position: absolute;
   inset: 0;
