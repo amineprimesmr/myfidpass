@@ -1703,3 +1703,156 @@ body.page-app .site-banner { display: none !important; }
 .app-integration-doc-link { margin-top: 1rem; font-size: 0.9rem; }
 .app-integration-doc-link a { color: var(--app-accent); text-decoration: none; }
 .app-integration-doc-link a:hover { text-decoration: underline; }
+
+/* Carte & périmètre */
+.app-section-carte-perimetre .app-carte-perimetre-wrap {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+@media (max-width: 768px) {
+  .app-section-carte-perimetre .app-carte-perimetre-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+.app-carte-perimetre-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.app-carte-perimetre-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--app-shadow-sm);
+  transition: box-shadow 0.25s ease, border-color 0.2s ease;
+}
+.app-carte-perimetre-card:hover {
+  box-shadow: var(--app-shadow-md);
+  border-color: rgba(10, 124, 66, 0.12);
+}
+.app-carte-perimetre-card .app-subsection-title {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.05rem;
+}
+.app-perimetre-address-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.app-perimetre-address-row .app-input {
+  flex: 1;
+  min-width: 180px;
+  margin-bottom: 0;
+}
+.app-perimetre-geoloc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+.app-perimetre-geoloc-icon {
+  display: inline-flex;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.app-perimetre-geoloc-icon svg { width: 100%; height: 100%; }
+.app-perimetre-hint { margin-top: 0.35rem; font-size: 0.85rem; }
+.app-perimetre-radius-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.app-perimetre-radius-slider {
+  flex: 1;
+  min-width: 0;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--app-border);
+  border-radius: 4px;
+  outline: none;
+}
+.app-perimetre-radius-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--app-accent);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(10, 124, 66, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.app-perimetre-radius-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+  box-shadow: 0 3px 10px rgba(10, 124, 66, 0.4);
+}
+.app-perimetre-radius-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: var(--app-accent);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(10, 124, 66, 0.35);
+}
+.app-perimetre-radius-value {
+  font-weight: 700;
+  color: var(--app-accent);
+  min-width: 4rem;
+  font-size: 1rem;
+}
+.app-carte-perimetre-actions .app-btn { width: 100%; }
+.app-perimetre-feedback { margin-top: 0.75rem; }
+.app-carte-perimetre-map-wrap {
+  position: relative;
+  border-radius: var(--app-radius-md);
+  overflow: hidden;
+  box-shadow: var(--app-shadow-md);
+  border: 1px solid var(--app-border);
+  min-height: 320px;
+  background: var(--app-surface-hover);
+}
+.app-perimetre-map {
+  width: 100%;
+  height: 360px;
+  min-height: 280px;
+  border-radius: var(--app-radius-md);
+  z-index: 0;
+}
+.app-perimetre-map-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 1rem;
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+.app-carte-perimetre-map-wrap.has-map .app-perimetre-map-hint {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-card {
+  animation: app-stat-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+}
+.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-card:nth-child(1) { animation-delay: 0.05s; }
+.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-card:nth-child(2) { animation-delay: 0.12s; }
+.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-card:nth-child(3) { animation-delay: 0.19s; }
+.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-card:nth-child(4) { animation-delay: 0.26s; }
+.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap {
+  animation: app-stat-in 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.33s backwards;
+}

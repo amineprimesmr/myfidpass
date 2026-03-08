@@ -815,12 +815,13 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["vue-ensemble", "scanner", "caisse", "membres", "historique", "personnaliser", "integration", "notifications", "profil"];
+const APP_SECTION_IDS = ["vue-ensemble", "scanner", "caisse", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "notifications", "profil"];
 
 const APP_MOBILE_TITLES = {
   "vue-ensemble": "Tableau de bord",
   "scanner": "Scanner",
   "personnaliser": "Ma Carte",
+  "carte-perimetre": "Carte & périmètre",
   "profil": "Profil",
 };
 
@@ -1054,6 +1055,218 @@ function initAppDashboard(slug) {
     if (!integrationCurlEl) return;
     navigator.clipboard.writeText(integrationCurlEl.textContent);
   });
+
+  // ——— Carte & périmètre ———
+  (function initCartePerimetre() {
+    const mapEl = document.getElementById("app-perimetre-map");
+    const addressInput = document.getElementById("app-perimetre-address");
+    const addressHint = document.getElementById("app-perimetre-address-hint");
+    const geolocBtn = document.getElementById("app-perimetre-geoloc");
+    const radiusSlider = document.getElementById("app-perimetre-radius");
+    const radiusValueEl = document.getElementById("app-perimetre-radius-value");
+    const saveBtn = document.getElementById("app-perimetre-save");
+    const saveFeedback = document.getElementById("app-perimetre-save-feedback");
+    const mapWrap = document.querySelector(".app-carte-perimetre-map-wrap");
+    const mapHintEl = document.getElementById("app-perimetre-map-hint");
+    if (!mapEl || !addressInput || !radiusSlider || !saveBtn) return;
+
+    let perimetreMap = null;
+    let perimetreMarker = null;
+    let perimetreCircle = null;
+    let currentLat = null;
+    let currentLng = null;
+    let currentRadiusM = 500;
+
+    const DEFAULT_CENTER = [48.8566, 2.3522];
+    const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+    const NOMINATIM_REVERSE = "https://nominatim.openstreetmap.org/reverse";
+
+    function showSaveFeedback(msg, isError = false) {
+      if (!saveFeedback) return;
+      saveFeedback.textContent = msg;
+      saveFeedback.classList.remove("hidden", "success", "error");
+      if (isError) saveFeedback.classList.add("error"); else saveFeedback.classList.add("success");
+      saveFeedback.classList.remove("hidden");
+    }
+    function showAddressHint(msg, isError = false) {
+      if (!addressHint) return;
+      addressHint.textContent = msg || "";
+      addressHint.classList.toggle("hidden", !msg);
+      addressHint.classList.toggle("error", isError);
+    }
+
+    function updateRadiusUI(m) {
+      currentRadiusM = m;
+      if (radiusValueEl) radiusValueEl.textContent = m + " m";
+      if (radiusSlider) radiusSlider.value = String(m);
+      if (perimetreCircle && currentLat != null && currentLng != null) {
+        perimetreCircle.setRadius(m);
+      }
+    }
+
+    function setCenter(lat, lng, addressText) {
+      currentLat = lat;
+      currentLng = lng;
+      if (addressInput && addressText != null) addressInput.value = addressText;
+      if (perimetreMap) {
+        perimetreMap.setView([lat, lng], perimetreMap.getZoom() < 14 ? 14 : perimetreMap.getZoom());
+        if (perimetreMarker) perimetreMarker.setLatLng([lat, lng]);
+        else if (typeof L !== "undefined") {
+          perimetreMarker = L.marker([lat, lng]).addTo(perimetreMap);
+        }
+        if (perimetreCircle) perimetreCircle.setLatLng([lat, lng]).setRadius(currentRadiusM);
+        else if (typeof L !== "undefined") {
+          perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.15, weight: 2 }).addTo(perimetreMap);
+        }
+        if (mapWrap) mapWrap.classList.add("has-map");
+        if (mapHintEl) mapHintEl.classList.add("hidden");
+      }
+    }
+
+    function initMap(centerLat, centerLng) {
+      if (typeof L === "undefined") return;
+      const lat = centerLat != null ? centerLat : DEFAULT_CENTER[0];
+      const lng = centerLng != null ? centerLng : DEFAULT_CENTER[1];
+      if (perimetreMap) {
+        perimetreMap.setView([lat, lng], 14);
+        if (perimetreMarker) perimetreMarker.setLatLng([lat, lng]);
+        else perimetreMarker = L.marker([lat, lng]).addTo(perimetreMap);
+        if (perimetreCircle) perimetreCircle.setLatLng([lat, lng]).setRadius(currentRadiusM);
+        else perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.15, weight: 2 }).addTo(perimetreMap);
+        perimetreMap.invalidateSize();
+        if (mapWrap) mapWrap.classList.add("has-map");
+        if (mapHintEl) mapHintEl.classList.add("hidden");
+        return;
+      }
+      perimetreMap = L.map(mapEl, { center: [lat, lng], zoom: 14, scrollWheelZoom: true });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(perimetreMap);
+      perimetreMarker = L.marker([lat, lng]).addTo(perimetreMap);
+      perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.15, weight: 2 }).addTo(perimetreMap);
+      perimetreMap.on("click", (e) => {
+        currentLat = e.latlng.lat;
+        currentLng = e.latlng.lng;
+        perimetreMarker.setLatLng(e.latlng);
+        perimetreCircle.setLatLng(e.latlng).setRadius(currentRadiusM);
+        fetch(`${NOMINATIM_REVERSE}?lat=${e.latlng.lat}&lon=${e.latlng.lng}&format=json`).then((r) => r.json()).then((data) => {
+          const addr = data?.address;
+          const parts = [addr?.road, addr?.suburb, addr?.city, addr?.country].filter(Boolean);
+          if (addressInput) addressInput.value = parts.length ? parts.join(", ") : `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+        }).catch(() => { if (addressInput) addressInput.value = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`; });
+      });
+      if (mapWrap) mapWrap.classList.add("has-map");
+      if (mapHintEl) mapHintEl.classList.add("hidden");
+    }
+
+    async function loadPerimetreSettings() {
+      try {
+        const res = await api("/dashboard/settings");
+        if (!res.ok) return;
+        const data = await res.json();
+        const lat = data.location_lat != null ? Number(data.location_lat) : null;
+        const lng = data.location_lng != null ? Number(data.location_lng) : null;
+        const radius = data.location_radius_meters != null ? Math.min(2000, Math.max(100, Number(data.location_radius_meters))) : 500;
+        const address = data.location_address || "";
+        if (addressInput) addressInput.value = address;
+        updateRadiusUI(radius);
+        if (lat != null && lng != null) {
+          currentLat = lat;
+          currentLng = lng;
+          const section = document.getElementById("carte-perimetre");
+          if (section?.classList.contains("app-section-visible")) initMap(lat, lng);
+        }
+      } catch (_) {}
+    }
+
+    addressInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const q = (addressInput.value || "").trim();
+        if (!q) { showAddressHint("Saisissez une adresse.", true); return; }
+        showAddressHint("Recherche…");
+        fetch(`${NOMINATIM_URL}?q=${encodeURIComponent(q)}&format=json&limit=1`, { headers: { "Accept-Language": "fr" } })
+          .then((r) => r.json())
+          .then((arr) => {
+            if (!arr?.length) { showAddressHint("Aucun résultat.", true); return; }
+            const r = arr[0];
+            const lat = parseFloat(r.lat);
+            const lng = parseFloat(r.lon);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) { showAddressHint("Coordonnées invalides.", true); return; }
+            showAddressHint("");
+            const section = document.getElementById("carte-perimetre");
+            if (section?.classList.contains("app-section-visible")) initMap(lat, lng);
+            setCenter(lat, lng, r.display_name || addressInput.value);
+          })
+          .catch(() => { showAddressHint("Erreur de recherche.", true); });
+      }
+    });
+
+    geolocBtn?.addEventListener("click", () => {
+      if (!navigator.geolocation) { showAddressHint("Géolocalisation non supportée.", true); return; }
+      showAddressHint("Localisation…");
+      geolocBtn.disabled = true;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          showAddressHint("");
+          const section = document.getElementById("carte-perimetre");
+          if (section?.classList.contains("app-section-visible")) initMap(lat, lng);
+          setCenter(lat, lng, null);
+          fetch(`${NOMINATIM_REVERSE}?lat=${lat}&lon=${lng}&format=json`).then((r) => r.json()).then((data) => {
+            const addr = data?.address;
+            const parts = [addr?.road, addr?.suburb, addr?.city, addr?.country].filter(Boolean);
+            if (addressInput) addressInput.value = parts.length ? parts.join(", ") : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          }).catch(() => { if (addressInput) addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; });
+          geolocBtn.disabled = false;
+        },
+        () => { showAddressHint("Impossible d’obtenir la position.", true); geolocBtn.disabled = false; },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    });
+
+    radiusSlider.addEventListener("input", () => {
+      const m = Math.min(2000, Math.max(100, parseInt(radiusSlider.value, 10) || 500));
+      updateRadiusUI(m);
+    });
+
+    saveBtn.addEventListener("click", async () => {
+      if (currentLat == null || currentLng == null) {
+        showSaveFeedback("Choisissez d’abord un emplacement (adresse ou Ma position).", true);
+        return;
+      }
+      saveBtn.disabled = true;
+      saveFeedback.classList.add("hidden");
+      try {
+        const res = await api("/dashboard/settings", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location_lat: currentLat,
+            location_lng: currentLng,
+            location_radius_meters: currentRadiusM,
+            location_address: (addressInput?.value || "").trim() || undefined,
+          }),
+        });
+        if (res.ok || res.status === 204) {
+          showSaveFeedback("Périmètre enregistré. Les clients recevront une notification en entrant dans la zone.");
+        } else {
+          const data = await res.json().catch(() => ({}));
+          showSaveFeedback(data.error || "Erreur lors de l’enregistrement.", true);
+        }
+      } catch (_) {
+        showSaveFeedback("Erreur réseau.", true);
+      }
+      saveBtn.disabled = false;
+    });
+
+    window.addEventListener("app-section-change", (e) => {
+      if (e.detail?.sectionId !== "carte-perimetre") return;
+      loadPerimetreSettings();
+      if (currentLat != null && currentLng != null) setTimeout(() => initMap(currentLat, currentLng), 100);
+    });
+
+    if (document.getElementById("carte-perimetre")?.classList.contains("app-section-visible")) loadPerimetreSettings();
+  })();
 
   // ——— Personnaliser la carte ———
   const personnaliserOrg = document.getElementById("app-personnaliser-org");

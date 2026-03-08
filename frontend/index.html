@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/src/auth.css" />
     <link rel="stylesheet" href="/src/app.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   </head>
   <body>
     <!-- Bannière promo (toutes les pages) -->
@@ -336,6 +337,10 @@
           <a href="#personnaliser" class="app-sidebar-link" data-section="personnaliser">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></span>
             <span class="app-sidebar-link-text">Ma carte (partage & QR)</span>
+          </a>
+          <a href="#carte-perimetre" class="app-sidebar-link" data-section="carte-perimetre">
+            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <span class="app-sidebar-link-text">Carte & périmètre</span>
           </a>
           <a href="#integration" class="app-sidebar-link" data-section="integration">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-4"/><path d="M12 18a2 2 0 0 1-2-2V8a2 2 0 0 1 4 0v8a2 2 0 0 1-2 2z"/><path d="M8 6l4-4 4 4"/><path d="M8 6h8"/></svg></span>
@@ -900,6 +905,43 @@
               <p id="app-notifications-remove-test-wrap" class="app-notifications-remove-test hidden"><button type="button" id="app-notifications-remove-test-btn" class="app-link-btn">Supprimer l'appareil de test</button> (remet le compteur à 0)</p>
               <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer la notification</button>
               <p id="app-notif-feedback" class="app-message hidden"></p>
+            </div>
+          </section>
+          <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
+          <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
+            <h2 class="app-section-title">Carte & périmètre</h2>
+            <p class="app-section-desc">Définissez l’emplacement de votre établissement et le rayon dans lequel les clients recevront une notification en y entrant (sur leur téléphone).</p>
+            <div class="app-carte-perimetre-wrap">
+              <div class="app-carte-perimetre-panel">
+                <div class="app-carte-perimetre-card">
+                  <h3 class="app-subsection-title">Emplacement</h3>
+                  <label class="app-label" for="app-perimetre-address">Adresse ou lieu</label>
+                  <div class="app-perimetre-address-row">
+                    <input type="text" id="app-perimetre-address" class="app-input" placeholder="ex. 12 rue de la Paix, Paris" autocomplete="off" />
+                    <button type="button" id="app-perimetre-geoloc" class="app-btn app-btn-secondary app-perimetre-geoloc-btn" aria-label="Ma position actuelle">
+                      <span class="app-perimetre-geoloc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
+                      Ma position
+                    </button>
+                  </div>
+                  <p id="app-perimetre-address-hint" class="app-hint app-perimetre-hint hidden"></p>
+                </div>
+                <div class="app-carte-perimetre-card">
+                  <h3 class="app-subsection-title">Rayon de notification</h3>
+                  <div class="app-perimetre-radius-row">
+                    <input type="range" id="app-perimetre-radius" class="app-perimetre-radius-slider" min="100" max="2000" step="50" value="500" aria-label="Rayon en mètres" />
+                    <span id="app-perimetre-radius-value" class="app-perimetre-radius-value">500 m</span>
+                  </div>
+                  <p class="app-hint">Les membres qui entrent dans ce périmètre recevront une notification (Apple Wallet / Google Wallet).</p>
+                </div>
+                <div class="app-carte-perimetre-card app-carte-perimetre-actions">
+                  <button type="button" id="app-perimetre-save" class="app-btn app-btn-primary">Enregistrer le périmètre</button>
+                  <p id="app-perimetre-save-feedback" class="app-message app-perimetre-feedback hidden"></p>
+                </div>
+              </div>
+              <div class="app-carte-perimetre-map-wrap">
+                <div id="app-perimetre-map" class="app-perimetre-map" aria-label="Carte de l’emplacement"></div>
+                <p id="app-perimetre-map-hint" class="app-perimetre-map-hint">Choisissez une adresse ou utilisez « Ma position » pour afficher la carte.</p>
+              </div>
             </div>
           </section>
           <!-- Section Profil mobile (style app) -->
@@ -1962,6 +2004,7 @@ X-Dashboard-Token: TOKEN
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

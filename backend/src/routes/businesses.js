@@ -153,9 +153,17 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const strip_text = body.strip_text ?? body.stripText;
   const logo_url = (body.logo_url ?? body.logoUrl ?? "").trim();
   const location_address = body.location_address ?? body.locationAddress;
+  const location_lat = body.location_lat ?? body.locationLat;
+  const location_lng = body.location_lng ?? body.locationLng;
+  const location_radius_meters = body.location_radius_meters ?? body.locationRadiusMeters;
+  const location_relevant_text = body.location_relevant_text ?? body.locationRelevantText;
   const updates = {};
   if (organization_name !== undefined) updates.organization_name = organization_name ? String(organization_name).trim() : null;
   if (location_address !== undefined) updates.location_address = location_address ? String(location_address).trim() : null;
+  if (location_lat !== undefined) updates.location_lat = location_lat === null || location_lat === "" ? null : Number(location_lat);
+  if (location_lng !== undefined) updates.location_lng = location_lng === null || location_lng === "" ? null : Number(location_lng);
+  if (location_radius_meters !== undefined) updates.location_radius_meters = location_radius_meters === null || location_radius_meters === "" ? null : Math.min(2000, Math.max(0, Number(location_radius_meters) || 500));
+  if (location_relevant_text !== undefined) updates.location_relevant_text = location_relevant_text ? String(location_relevant_text).trim() : null;
   if (background_color !== undefined) {
     updates.background_color = normalizeHexForPatch(background_color);
     updates.strip_color = updates.background_color;
