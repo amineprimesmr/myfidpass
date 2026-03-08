@@ -1704,35 +1704,39 @@ body.page-app .site-banner { display: none !important; }
 .app-integration-doc-link a { color: var(--app-accent); text-decoration: none; }
 .app-integration-doc-link a:hover { text-decoration: underline; }
 
-/* Carte & périmètre */
+/* Carte & périmètre — map hero, UX soignée */
 .app-section-carte-perimetre .app-carte-perimetre-wrap {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) 1fr;
+  grid-template-columns: minmax(280px, 380px) 1fr;
   gap: 1.5rem;
   align-items: start;
   margin-top: 1rem;
+  grid-template-rows: auto 1fr;
 }
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .app-section-carte-perimetre .app-carte-perimetre-wrap {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
   }
 }
 .app-carte-perimetre-panel {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  position: relative;
+  z-index: 2;
 }
 .app-carte-perimetre-card {
   background: var(--app-surface);
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-md);
   padding: 1.25rem;
-  box-shadow: var(--app-shadow-sm);
-  transition: box-shadow 0.25s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.25s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 .app-carte-perimetre-card:hover {
-  box-shadow: var(--app-shadow-md);
-  border-color: rgba(10, 124, 66, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-color: rgba(10, 124, 66, 0.15);
 }
 .app-carte-perimetre-card .app-subsection-title {
   margin-top: 0;
@@ -1888,19 +1892,37 @@ body.page-app .site-banner { display: none !important; }
 .app-perimetre-feedback { margin-top: 0.75rem; }
 .app-carte-perimetre-map-wrap {
   position: relative;
-  border-radius: var(--app-radius-md);
+  border-radius: var(--app-radius-lg);
   overflow: hidden;
-  box-shadow: var(--app-shadow-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--app-border);
-  min-height: 320px;
+  min-height: 420px;
   background: var(--app-surface-hover);
+  grid-row: 1 / -1;
+  align-self: stretch;
+}
+@media (max-width: 900px) {
+  .app-carte-perimetre-map-wrap {
+    grid-row: auto;
+    min-height: 380px;
+  }
 }
 .app-perimetre-map {
   width: 100%;
-  height: 360px;
-  min-height: 280px;
-  border-radius: var(--app-radius-md);
+  height: 100%;
+  min-height: 520px;
+  border-radius: var(--app-radius-lg);
   z-index: 0;
+}
+@media (min-width: 901px) {
+  .app-perimetre-map {
+    min-height: calc(100vh - 220px);
+  }
+}
+@media (max-width: 900px) {
+  .app-perimetre-map {
+    min-height: 380px;
+  }
 }
 /* Marqueur personnalisé (pin vert) */
 .app-perimetre-marker-icon {

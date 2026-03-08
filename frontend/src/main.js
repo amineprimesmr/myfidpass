@@ -1165,7 +1165,7 @@ function initAppDashboard(slug) {
       if (addressInput && addressText != null) addressInput.value = addressText;
       if (!perimetreMap) return;
       if (useMapbox) {
-        perimetreMap.flyTo({ center: [lng, lat], zoom: Math.max(14, perimetreMap.getZoom()) });
+        perimetreMap.flyTo({ center: [lng, lat], zoom: Math.max(15, perimetreMap.getZoom()), pitch: 55, bearing: -17 });
         if (perimetreMarker) perimetreMarker.setLngLat([lng, lat]);
         if (perimetreMap.getSource("perimetre-circle")) {
           perimetreMap.getSource("perimetre-circle").setData(circleGeoJSON(lat, lng, currentRadiusM));
@@ -1193,7 +1193,7 @@ function initAppDashboard(slug) {
 
       if (useMapbox) {
         if (perimetreMap) {
-          perimetreMap.flyTo({ center: [lng, lat], zoom: 14 });
+          perimetreMap.flyTo({ center: [lng, lat], zoom: 15, pitch: 55, bearing: -17 });
           if (perimetreMarker) perimetreMarker.setLngLat([lng, lat]);
           if (perimetreMap.getSource("perimetre-circle")) {
             perimetreMap.getSource("perimetre-circle").setData(circleGeoJSON(lat, lng, currentRadiusM));
@@ -1207,23 +1207,36 @@ function initAppDashboard(slug) {
           container: mapEl,
           style: "mapbox://styles/mapbox/dark-v11",
           center: [lng, lat],
-          zoom: 14,
+          zoom: 15,
+          pitch: 55,
+          bearing: -17,
         });
-        perimetreMap.addControl(new mapboxgl.NavigationControl(), "top-right");
+        perimetreMap.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
         perimetreMarker = new mapboxgl.Marker({ color: "#0a7c42" }).setLngLat([lng, lat]).addTo(perimetreMap);
         perimetreMap.on("load", () => {
+          try {
+            if (!perimetreMap.getSource("mapbox-dem")) {
+              perimetreMap.addSource("mapbox-dem", {
+                type: "raster-dem",
+                url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+                tileSize: 512,
+                maxzoom: 14,
+              });
+            }
+            perimetreMap.setTerrain({ source: "mapbox-dem", exaggeration: 1.2 });
+          } catch (_) {}
           perimetreMap.addSource("perimetre-circle", { type: "geojson", data: circleGeoJSON(lat, lng, currentRadiusM) });
           perimetreMap.addLayer({
             id: "perimetre-circle-fill",
             type: "fill",
             source: "perimetre-circle",
-            paint: { "fill-color": "#0a7c42", "fill-opacity": 0.12 },
+            paint: { "fill-color": "#0a7c42", "fill-opacity": 0.18 },
           });
           perimetreMap.addLayer({
             id: "perimetre-circle-line",
             type: "line",
             source: "perimetre-circle",
-            paint: { "line-color": "#0a7c42", "line-width": 2.5 },
+            paint: { "line-color": "#0a7c42", "line-width": 3 },
           });
         });
         perimetreMap.on("click", (e) => {
