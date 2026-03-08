@@ -1205,7 +1205,7 @@ function initAppDashboard(slug) {
         mapboxgl.accessToken = mapboxToken;
         perimetreMap = new mapboxgl.Map({
           container: mapEl,
-          style: "mapbox://styles/mapbox/light-v11",
+          style: "mapbox://styles/mapbox/dark-v11",
           center: [lng, lat],
           zoom: 15.2,
           pitch: 52,
@@ -1237,10 +1237,10 @@ function initAppDashboard(slug) {
               type: "fill-extrusion",
               minzoom: 14,
               paint: {
-                "fill-extrusion-color": "#f2f0ed",
+                "fill-extrusion-color": "#3d3d3d",
                 "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.05, ["get", "height"]],
                 "fill-extrusion-base": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.05, ["get", "min_height"]],
-                "fill-extrusion-opacity": 0.96,
+                "fill-extrusion-opacity": 0.9,
               },
             }, labelLayerId);
           }

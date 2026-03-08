@@ -171,7 +171,7 @@ function createDefaultIconBuffer(templateKey) {
         png.data[i] = colors.r;
         png.data[i + 1] = colors.g;
         png.data[i + 2] = colors.b;
-        png.data[i + 3] = 255;
+    png.data[i + 3] = 255;
       } else {
         png.data[i] = 0;
         png.data[i + 1] = 0;
@@ -307,7 +307,7 @@ function drawCircleOutline(png, cx, cy, r, strokeRgb, strokeWidth = 2) {
         png.data[i] = strokeRgb.r;
         png.data[i + 1] = strokeRgb.g;
         png.data[i + 2] = strokeRgb.b;
-        png.data[i + 3] = 255;
+      png.data[i + 3] = 255;
       }
     }
   }
@@ -1021,7 +1021,7 @@ export async function generatePass(member, business = null, options = {}) {
         ? "Vous avez assez de points pour une récompense. Présentez cette carte en magasin."
         : "Consultez le commerce pour les paliers de récompenses.";
 
-    pass.backFields.push(
+  pass.backFields.push(
       { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: "Nouveau message : %@" },
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       {
@@ -1030,10 +1030,10 @@ export async function generatePass(member, business = null, options = {}) {
         value: rewardLines.length > 0 ? rewardLines.join("\n") : "Paliers définis par le commerce. Demandez en magasin.",
       },
       { key: "toUnlock", label: "Pour l'obtenir", value: toUnlockText },
-      { key: "terms", label: "Conditions", value: backTerms },
+    { key: "terms", label: "Conditions", value: backTerms },
       { key: "contact", label: "Contact", value: backContact },
       { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
-    );
+  );
   }
 
   return pass.getAsBuffer();
