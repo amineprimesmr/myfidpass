@@ -306,7 +306,10 @@
     <div id="app-app" class="hidden app-unified-shell">
       <aside class="app-sidebar" id="app-sidebar">
         <div class="app-sidebar-brand">
-          <a href="/" class="app-sidebar-logo">Myfidpass</a>
+          <a href="/" class="app-sidebar-logo" aria-label="Myfidpass">
+            <img src="/assets/logo.png" alt="" class="app-sidebar-logo-img" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+            <span class="app-sidebar-logo-fallback hidden">Myfidpass</span>
+          </a>
           <p class="app-sidebar-business" id="app-business-name">Mon espace</p>
         </div>
         <nav class="app-sidebar-nav" aria-label="Navigation principale">

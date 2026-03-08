@@ -61,12 +61,21 @@ body.page-app .site-banner { display: none !important; }
   font-size: 1.35rem;
   color: var(--app-sidebar-text);
   text-decoration: none;
-  display: block;
+  display: flex;
+  align-items: center;
   letter-spacing: -0.02em;
   transition: color var(--app-transition);
 }
 
 .app-sidebar-logo:hover { color: var(--app-accent); }
+.app-sidebar-logo-img {
+  display: block;
+  max-height: 32px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+.app-sidebar-logo-fallback.hidden { display: none; }
 
 .app-sidebar-business {
   margin: 0.4rem 0 0;
