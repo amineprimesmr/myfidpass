@@ -1202,8 +1202,9 @@ function initAppDashboard(slug) {
     const logoWrap = document.getElementById("app-personnaliser-header-logo-wrap") || document.querySelector(".app-wallet-preview-logo-wrap");
     const ptsWrap = document.getElementById("app-preview-pts-wrap");
     const stampsWrap = document.getElementById("app-preview-stamps-wrap");
-    const stampsValueEl = document.getElementById("app-wallet-preview-stamps");
     const stampsGridEl = document.getElementById("app-preview-stamps-grid");
+    const restantsWrap = document.getElementById("app-preview-restants-wrap");
+    const restantsValueEl = document.getElementById("app-wallet-preview-restants");
     const ptsEmojiEl = document.getElementById("app-preview-pts-emoji");
     if (!card || !orgEl) return;
     const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
@@ -1229,6 +1230,8 @@ function initAppDashboard(slug) {
     if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps);
     const rewardWrap = document.getElementById("app-preview-reward-wrap");
     if (rewardWrap) rewardWrap.classList.toggle("hidden", !!isStamps);
+    if (restantsWrap) restantsWrap.classList.toggle("hidden", !isStamps);
+    if (restantsValueEl && isStamps) restantsValueEl.textContent = "= " + String(requiredStamps);
     const rewardValueEl = document.getElementById("app-wallet-preview-reward");
     if (rewardValueEl && !isStamps) {
       const tiersRaw = pointsRewardTiersEl?.value?.trim() || "";
@@ -1239,17 +1242,29 @@ function initAppDashboard(slug) {
     if (valueEl) valueEl.textContent = isStamps ? "" : "0";
     if (labelEl) labelEl.textContent = isStamps ? "Tampons" : "Points";
     if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
-    if (stampsValueEl) stampsValueEl.textContent = `0 / ${requiredStamps}`;
     if (stampsGridEl && isStamps) {
+      const emojiToIcon = { "☕": "cafe", "🍔": "burger", "🍕": "pizza", "🥐": "croissant", "🥩": "steak", "🍣": "sushi", "🥗": "salade", "🍚": "riz", "🥖": "baguette", "💄": "giftsilver", "✂️": "giftsilver" };
+      const iconName = emojiToIcon[stampEmoji] || "cafe";
+      const filledSrc = "/assets/icons/" + iconName + ".png";
+      const emptySrc = "/assets/icons/vide.png";
+      const filledCount = 0;
       const rows = stampsGridEl.querySelectorAll(".builder-wallet-card-stamps-row");
+      let index = 0;
       rows.forEach((row) => {
         row.innerHTML = "";
         for (let i = 0; i < 5; i++) {
+          const isFilled = index < filledCount;
           const span = document.createElement("span");
-          span.className = "stamp stamp-emoji";
+          span.className = "stamp stamp-img" + (isFilled ? " filled" : "");
           span.setAttribute("aria-hidden", "true");
-          span.textContent = stampEmoji;
+          const img = document.createElement("img");
+          img.src = isFilled ? filledSrc : emptySrc;
+          img.alt = "";
+          img.width = 48;
+          img.height = 48;
+          span.appendChild(img);
           row.appendChild(span);
+          index++;
         }
       });
     }
