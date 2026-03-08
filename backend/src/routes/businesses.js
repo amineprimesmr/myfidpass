@@ -926,6 +926,30 @@ router.get("/:slug/logo", (req, res) => {
 });
 
 /**
+ * GET /api/businesses/:slug/card-background
+ * Image de fond de carte (bandeau) pour l'aperçu personnalisation. Token ou JWT requis.
+ */
+router.get("/:slug/card-background", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  if (business.card_background_base64) {
+    const base64Data = String(business.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(base64Data, "base64");
+    if (buf.length > 0) {
+      const isPng = business.card_background_base64.includes("image/png");
+      res.setHeader("Content-Type", isPng ? "image/png" : "image/jpeg");
+      res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      return res.send(buf);
+    }
+  }
+  return res.status(404).send();
+});
+
+/**
  * GET /api/businesses/:slug
  * Infos publiques d'une entreprise (pour la page d'inscription).
  */

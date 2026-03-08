@@ -1271,9 +1271,10 @@ function initAppDashboard(slug) {
     const useStripText = stripDisplayText && stripDisplayText.checked;
     const stripImg = document.getElementById("app-wallet-preview-strip-img");
     const hasLogoUrl = personnaliserLogoDataUrl && personnaliserLogoDataUrl.length > 0;
+    const hasCardBgUrl = personnaliserCardBgDataUrl && personnaliserCardBgDataUrl.length > 0;
     if (stripImg) {
-      if (useStripImage && hasLogoUrl) {
-        stripImg.src = personnaliserLogoDataUrl;
+      if (!useStripText && hasCardBgUrl) {
+        stripImg.src = personnaliserCardBgDataUrl;
         stripImg.classList.remove("hidden");
       } else {
         stripImg.removeAttribute("src");
@@ -1292,22 +1293,22 @@ function initAppDashboard(slug) {
     if (orgEl) orgEl.classList.toggle("hidden", !!useStripText);
     if (logoWrap) {
       if (useStripText) logoWrap.style.display = "none";
-      else if (useStripImage && hasLogoUrl) logoWrap.style.display = "none";
+      else if (hasCardBgUrl) logoWrap.style.display = "none";
       else logoWrap.style.display = "";
     }
     const walletLogo = document.getElementById("app-wallet-preview-logo");
-    if (walletLogo && hasLogoUrl && !useStripText && !(useStripImage && hasLogoUrl)) {
+    if (walletLogo && hasLogoUrl && !useStripText && !hasCardBgUrl) {
       walletLogo.src = personnaliserLogoDataUrl;
       walletLogo.classList.remove("hidden");
     } else if (walletLogo) {
       if (useStripText) walletLogo.classList.add("hidden");
-      else if (!hasLogoUrl || (useStripImage && hasLogoUrl)) {
+      else if (!hasLogoUrl || hasCardBgUrl) {
         walletLogo.removeAttribute("src");
         walletLogo.classList.add("hidden");
       }
     }
     const logoFallback = document.getElementById("app-wallet-preview-logo-fallback");
-    if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText || !!((walletLogo && walletLogo.src && !walletLogo.classList.contains("hidden")) || (useStripImage && hasLogoUrl)));
+    if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText || !!((walletLogo && walletLogo.src && !walletLogo.classList.contains("hidden")) || hasCardBgUrl));
   }
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
@@ -1386,6 +1387,23 @@ function initAppDashboard(slug) {
       if (personnaliserCardBgRemove) {
         if (hasCardBackgroundFromServer || personnaliserCardBgDataUrl) personnaliserCardBgRemove.classList.remove("hidden");
         else personnaliserCardBgRemove.classList.add("hidden");
+      }
+      if (hasCardBackgroundFromServer) {
+        api("/card-background?v=" + Date.now())
+          .then((r) => (r.ok ? r.blob() : null))
+          .then((blob) => {
+            if (blob) {
+              personnaliserCardBgDataUrl = URL.createObjectURL(blob);
+              if (personnaliserCardBgPreview) {
+                personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
+                personnaliserCardBgPreview.classList.remove("hidden");
+              }
+              if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
+              if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+              updatePersonnaliserPreview();
+            }
+          })
+          .catch(() => {});
       }
       updatePersonnaliserPreview();
       api("/logo?v=" + Date.now())
@@ -1700,7 +1718,7 @@ function initAppDashboard(slug) {
         body.logoBase64 = personnaliserLogoDataUrl;
       }
       if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
-      else if (personnaliserCardBgDataUrl) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
+      else if (personnaliserCardBgDataUrl && typeof personnaliserCardBgDataUrl === "string" && personnaliserCardBgDataUrl.startsWith("data:")) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
       const addressVal = document.getElementById("app-personnaliser-address")?.value?.trim() || "";
       const locTextVal = document.getElementById("app-personnaliser-location-text")?.value?.trim();
       const radiusVal = document.getElementById("app-personnaliser-radius")?.value;
@@ -1754,15 +1772,23 @@ function initAppDashboard(slug) {
             hasCardBackgroundFromServer = true;
             personnaliserCardBgDataUrl = "";
             if (personnaliserCardBg) personnaliserCardBg.value = "";
-            if (personnaliserCardBgPreview) {
-              personnaliserCardBgPreview.src = "";
-              personnaliserCardBgPreview.classList.add("hidden");
-            }
             if (personnaliserCardBgPlaceholder) {
               personnaliserCardBgPlaceholder.textContent = "Image de fond enregistrée";
               personnaliserCardBgPlaceholder.classList.remove("hidden");
             }
             if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+            api("/card-background?v=" + Date.now())
+              .then((r) => (r.ok ? r.blob() : null))
+              .then((blob) => {
+                if (blob && personnaliserCardBgPreview) {
+                  personnaliserCardBgDataUrl = URL.createObjectURL(blob);
+                  personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
+                  personnaliserCardBgPreview.classList.remove("hidden");
+                  if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
+                  updatePersonnaliserPreview();
+                }
+              })
+              .catch(() => {});
           }
           // Toujours recharger le logo depuis l'API après enregistrement : garde l'affichage cohérent et met à jour personnaliserLogoDataUrl (blob URL) pour les prochains saves.
           api("/logo?v=" + Date.now())
