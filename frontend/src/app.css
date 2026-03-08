@@ -1397,8 +1397,8 @@ body.page-app .site-banner { display: none !important; }
 .app-personnaliser-live-preview-wrap { margin-bottom: 1.5rem; }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 .app-personnaliser-preview.builder-phone-mockup { width: min(280px, 85vw); max-width: 320px; margin-left: auto; margin-right: auto; }
-.app-personnaliser-preview .builder-phone-screen { height: 68%; top: 16%; }
-.app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic { height: 100%; max-height: none; min-height: 0; }
+.app-personnaliser-preview .builder-phone-screen { height: 74%; top: 13%; }
+.app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic { height: 92%; max-height: none; min-height: 0; }
 
 /* Carte dynamique (couleurs utilisateur) dans le mockup iPhone */
 .app-wallet-preview-dynamic {
@@ -1497,14 +1497,14 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic .builder-wallet-card-pts-value #app-wallet-preview-value {
   font-size: clamp(1.35rem, 4.5vw, 1.85rem);
   font-weight: 500;
-  color: var(--wallet-fg) !important;
+  color: #ffffff !important;
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-pts-wrap .builder-wallet-card-label {
   font-size: 0.5rem;
   letter-spacing: 0.02em;
-  color: var(--wallet-fg) !important;
+  color: #ffffff !important;
   opacity: 0.95;
 }
 .app-wallet-preview-dynamic .wallet-preview-emoji { display: none !important; }
