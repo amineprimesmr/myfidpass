@@ -1520,7 +1520,7 @@ function initAppDashboard(slug) {
           }),
         });
         if (res.ok || res.status === 204) {
-          showSaveFeedback("Périmètre enregistré. Les clients recevront une notification en entrant dans la zone.");
+          showSaveFeedback("Périmètre enregistré. Les cartes déjà ajoutées (Apple Wallet) seront mises à jour ; les clients recevront une notification en entrant dans la zone.");
         } else {
           const data = await res.json().catch(() => ({}));
           showSaveFeedback(data.error || "Erreur lors de l’enregistrement.", true);

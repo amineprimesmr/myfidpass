@@ -273,7 +273,19 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   if (Object.keys(updates).length === 0) {
     return res.status(204).send();
   }
+  const locationKeys = ["location_lat", "location_lng", "location_radius_meters", "location_relevant_text"];
+  const locationUpdated = locationKeys.some((k) => updates[k] !== undefined);
   updateBusiness(business.id, updates);
+  if (locationUpdated) {
+    const passKitTokens = getPassKitPushTokensForBusiness(business.id);
+    if (passKitTokens.length > 0) {
+      setImmediate(() => {
+        passKitTokens.forEach((row) => {
+          sendPassKitUpdate(row.push_token).catch(() => {});
+        });
+      });
+    }
+  }
   return res.status(200).send();
 });
 
