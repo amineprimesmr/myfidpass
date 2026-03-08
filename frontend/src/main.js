@@ -1205,11 +1205,12 @@ function initAppDashboard(slug) {
         mapboxgl.accessToken = mapboxToken;
         perimetreMap = new mapboxgl.Map({
           container: mapEl,
-          style: "mapbox://styles/mapbox/dark-v11",
+          style: "mapbox://styles/mapbox/light-v11",
           center: [lng, lat],
-          zoom: 15,
-          pitch: 55,
+          zoom: 15.2,
+          pitch: 52,
           bearing: -17,
+          antialias: true,
         });
         perimetreMap.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
         perimetreMarker = new mapboxgl.Marker({ color: "#0a7c42" }).setLngLat([lng, lat]).addTo(perimetreMap);
@@ -1223,14 +1224,32 @@ function initAppDashboard(slug) {
                 maxzoom: 14,
               });
             }
-            perimetreMap.setTerrain({ source: "mapbox-dem", exaggeration: 1.2 });
+            perimetreMap.setTerrain({ source: "mapbox-dem", exaggeration: 1.1 });
           } catch (_) {}
+          const layers = perimetreMap.getStyle().layers;
+          const labelLayerId = layers.find((layer) => layer.type === "symbol" && layer.layout && layer.layout["text-field"])?.id;
+          if (labelLayerId) {
+            perimetreMap.addLayer({
+              id: "add-3d-buildings",
+              source: "composite",
+              "source-layer": "building",
+              filter: ["==", "extrude", "true"],
+              type: "fill-extrusion",
+              minzoom: 14,
+              paint: {
+                "fill-extrusion-color": "#e8e6e3",
+                "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.05, ["get", "height"]],
+                "fill-extrusion-base": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.05, ["get", "min_height"]],
+                "fill-extrusion-opacity": 0.92,
+              },
+            }, labelLayerId);
+          }
           perimetreMap.addSource("perimetre-circle", { type: "geojson", data: circleGeoJSON(lat, lng, currentRadiusM) });
           perimetreMap.addLayer({
             id: "perimetre-circle-fill",
             type: "fill",
             source: "perimetre-circle",
-            paint: { "fill-color": "#0a7c42", "fill-opacity": 0.18 },
+            paint: { "fill-color": "#0a7c42", "fill-opacity": 0.2 },
           });
           perimetreMap.addLayer({
             id: "perimetre-circle-line",
