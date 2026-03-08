@@ -1742,9 +1742,85 @@ body.page-app .site-banner { display: none !important; }
 .app-perimetre-address-row {
   display: flex;
   gap: 0.5rem;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
 }
+.app-perimetre-address-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+.app-perimetre-address-row .app-perimetre-address-input-wrap .app-input {
+  width: 100%;
+  margin-bottom: 0;
+}
+.app-perimetre-suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin: 0;
+  padding: 0.35rem 0;
+  list-style: none;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  box-shadow: var(--app-shadow-lg);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 50;
+  animation: app-perimetre-suggestions-in 0.2s ease;
+}
+.app-perimetre-suggestions.hidden { display: none !important; }
+@keyframes app-perimetre-suggestions-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.app-perimetre-suggestions li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--app-text);
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+.app-perimetre-suggestions li:hover,
+.app-perimetre-suggestions li[aria-selected="true"] {
+  background: var(--app-accent-light);
+  color: var(--app-accent);
+}
+.app-perimetre-suggestions li small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+  margin-top: 0.15rem;
+}
+.app-perimetre-default-suggestion {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(10, 124, 66, 0.06) 0%, rgba(10, 124, 66, 0.02) 100%);
+  border: 1px solid rgba(10, 124, 66, 0.2);
+  border-radius: var(--app-radius-sm);
+}
+.app-perimetre-default-suggestion.hidden { display: none !important; }
+.app-perimetre-default-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--app-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.35rem;
+}
+.app-perimetre-default-address {
+  font-size: 0.95rem;
+  color: var(--app-text);
+  margin: 0 0 0.75rem;
+  line-height: 1.4;
+}
+.app-perimetre-use-default-btn { font-size: 0.9rem; }
 .app-perimetre-address-row .app-input {
   flex: 1;
   min-width: 180px;

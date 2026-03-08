@@ -1061,6 +1061,10 @@ function initAppDashboard(slug) {
     const mapEl = document.getElementById("app-perimetre-map");
     const addressInput = document.getElementById("app-perimetre-address");
     const addressHint = document.getElementById("app-perimetre-address-hint");
+    const suggestionsEl = document.getElementById("app-perimetre-suggestions");
+    const defaultSuggestionEl = document.getElementById("app-perimetre-default-suggestion");
+    const defaultAddressTextEl = document.getElementById("app-perimetre-default-address-text");
+    const useDefaultBtn = document.getElementById("app-perimetre-use-default");
     const geolocBtn = document.getElementById("app-perimetre-geoloc");
     const radiusSlider = document.getElementById("app-perimetre-radius");
     const radiusValueEl = document.getElementById("app-perimetre-radius-value");
@@ -1076,10 +1080,24 @@ function initAppDashboard(slug) {
     let currentLat = null;
     let currentLng = null;
     let currentRadiusM = 500;
+    let autocompleteAbort = null;
+    let autocompleteDebounce = null;
+    let defaultSuggestionData = null;
 
     const DEFAULT_CENTER = [48.8566, 2.3522];
-    const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+    const PHOTON_URL = "https://photon.komoot.io/api/";
     const NOMINATIM_REVERSE = "https://nominatim.openstreetmap.org/reverse";
+    const AUTCOMPLETE_DEBOUNCE_MS = 320;
+    const MIN_QUERY_LENGTH = 2;
+
+    function formatPhotonAddress(props) {
+      if (!props) return "";
+      const name = props.name || "";
+      const street = [props.street, props.housenumber].filter(Boolean).join(" ");
+      const cityPart = [props.postcode, props.city].filter(Boolean).join(" ");
+      const parts = [name || street, cityPart, props.country].filter(Boolean);
+      return parts.join(", ");
+    }
 
     function showSaveFeedback(msg, isError = false) {
       if (!saveFeedback) return;
@@ -1093,6 +1111,25 @@ function initAppDashboard(slug) {
       addressHint.textContent = msg || "";
       addressHint.classList.toggle("hidden", !msg);
       addressHint.classList.toggle("error", isError);
+    }
+
+    function hideSuggestions() {
+      if (suggestionsEl) {
+        suggestionsEl.classList.add("hidden");
+        suggestionsEl.innerHTML = "";
+        addressInput?.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    function applySuggestion(lat, lng, displayAddress) {
+      currentLat = lat;
+      currentLng = lng;
+      if (addressInput) addressInput.value = displayAddress || addressInput.value;
+      hideSuggestions();
+      showAddressHint("");
+      const section = document.getElementById("carte-perimetre");
+      if (section?.classList.contains("app-section-visible")) initMap(lat, lng);
+      setCenter(lat, lng, displayAddress);
     }
 
     function updateRadiusUI(m) {
@@ -1157,6 +1194,54 @@ function initAppDashboard(slug) {
       if (mapHintEl) mapHintEl.classList.add("hidden");
     }
 
+    function fetchPhotonSuggestions(query, callback) {
+      if (autocompleteAbort) autocompleteAbort.abort();
+      autocompleteAbort = new AbortController();
+      const q = encodeURIComponent(query.trim());
+      if (q.length < MIN_QUERY_LENGTH) { callback([]); return; }
+      fetch(`${PHOTON_URL}?q=${q}&limit=6&lang=fr`, { signal: autocompleteAbort.signal })
+        .then((r) => r.json())
+        .then((data) => {
+          const features = data?.features || [];
+          callback(features);
+        })
+        .catch((err) => { if (err.name !== "AbortError") callback([]); });
+    }
+
+    function escapeHtmlPerimetre(s) {
+      if (s == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(s);
+      return div.innerHTML;
+    }
+    function renderSuggestions(features) {
+      if (!suggestionsEl) return;
+      suggestionsEl.innerHTML = "";
+      if (!features.length) { hideSuggestions(); return; }
+      features.forEach((f) => {
+        const coords = f.geometry?.coordinates;
+        if (!coords || coords.length < 2) return;
+        const lng = coords[0];
+        const lat = coords[1];
+        const props = f.properties || {};
+        const main = props.name || [props.street, props.housenumber].filter(Boolean).join(" ") || "Adresse";
+        const sub = [props.postcode, props.city, props.country].filter(Boolean).join(", ");
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", "false");
+        li.setAttribute("data-lat", String(lat));
+        li.setAttribute("data-lng", String(lng));
+        li.setAttribute("data-address", formatPhotonAddress(props));
+        li.innerHTML = sub ? `${escapeHtmlPerimetre(main)}<small>${escapeHtmlPerimetre(sub)}</small>` : escapeHtmlPerimetre(main);
+        li.addEventListener("click", () => {
+          applySuggestion(lat, lng, formatPhotonAddress(props));
+        });
+        suggestionsEl.appendChild(li);
+      });
+      suggestionsEl.classList.remove("hidden");
+      addressInput?.setAttribute("aria-expanded", "true");
+    }
+
     async function loadPerimetreSettings() {
       try {
         const res = await api("/dashboard/settings");
@@ -1166,6 +1251,7 @@ function initAppDashboard(slug) {
         const lng = data.location_lng != null ? Number(data.location_lng) : null;
         const radius = data.location_radius_meters != null ? Math.min(2000, Math.max(100, Number(data.location_radius_meters))) : 500;
         const address = data.location_address || "";
+        const organizationName = (data.organization_name || "").trim();
         if (addressInput) addressInput.value = address;
         updateRadiusUI(radius);
         if (lat != null && lng != null) {
@@ -1173,31 +1259,93 @@ function initAppDashboard(slug) {
           currentLng = lng;
           const section = document.getElementById("carte-perimetre");
           if (section?.classList.contains("app-section-visible")) initMap(lat, lng);
+          if (defaultSuggestionEl) defaultSuggestionEl.classList.add("hidden");
+          defaultSuggestionData = null;
+          return;
         }
+        if (organizationName && organizationName.length >= 2) {
+          const url = `${PHOTON_URL}?q=${encodeURIComponent(organizationName)}&limit=1&lang=fr`;
+          try {
+            const r = await fetch(url);
+            const json = await r.json();
+            const features = json?.features || [];
+            if (features.length > 0) {
+              const f = features[0];
+              const coords = f.geometry?.coordinates;
+              if (coords && coords.length >= 2) {
+                defaultSuggestionData = {
+                  lat: coords[1],
+                  lng: coords[0],
+                  address: formatPhotonAddress(f.properties || {}),
+                };
+                if (defaultAddressTextEl) defaultAddressTextEl.textContent = defaultSuggestionData.address;
+                if (defaultSuggestionEl) defaultSuggestionEl.classList.remove("hidden");
+              }
+            }
+          } catch (_) {}
+        } else if (defaultSuggestionEl) defaultSuggestionEl.classList.add("hidden");
       } catch (_) {}
     }
 
+    addressInput.addEventListener("input", () => {
+      if (autocompleteDebounce) clearTimeout(autocompleteDebounce);
+      const q = (addressInput.value || "").trim();
+      if (q.length < MIN_QUERY_LENGTH) { hideSuggestions(); return; }
+      autocompleteDebounce = setTimeout(() => {
+        fetchPhotonSuggestions(q, (features) => renderSuggestions(features));
+      }, AUTCOMPLETE_DEBOUNCE_MS);
+    });
+
     addressInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
+      if (e.key === "Escape") { hideSuggestions(); return; }
+      const items = suggestionsEl?.querySelectorAll("li[data-lat]") || [];
+      if (e.key === "ArrowDown") {
         e.preventDefault();
-        const q = (addressInput.value || "").trim();
-        if (!q) { showAddressHint("Saisissez une adresse.", true); return; }
-        showAddressHint("Recherche…");
-        fetch(`${NOMINATIM_URL}?q=${encodeURIComponent(q)}&format=json&limit=1`, { headers: { "Accept-Language": "fr" } })
-          .then((r) => r.json())
-          .then((arr) => {
-            if (!arr?.length) { showAddressHint("Aucun résultat.", true); return; }
-            const r = arr[0];
-            const lat = parseFloat(r.lat);
-            const lng = parseFloat(r.lon);
-            if (!Number.isFinite(lat) || !Number.isFinite(lng)) { showAddressHint("Coordonnées invalides.", true); return; }
-            showAddressHint("");
-            const section = document.getElementById("carte-perimetre");
-            if (section?.classList.contains("app-section-visible")) initMap(lat, lng);
-            setCenter(lat, lng, r.display_name || addressInput.value);
-          })
-          .catch(() => { showAddressHint("Erreur de recherche.", true); });
+        const current = suggestionsEl?.querySelector("li[aria-selected='true']");
+        const next = current?.nextElementSibling || items[0];
+        if (next) {
+          items.forEach((el) => el.setAttribute("aria-selected", "false"));
+          next.setAttribute("aria-selected", "true");
+          next.scrollIntoView({ block: "nearest" });
+        }
+        return;
       }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const current = suggestionsEl?.querySelector("li[aria-selected='true']");
+        const prev = current?.previousElementSibling || items[items.length - 1];
+        if (prev) {
+          items.forEach((el) => el.setAttribute("aria-selected", "false"));
+          prev.setAttribute("aria-selected", "true");
+          prev.scrollIntoView({ block: "nearest" });
+        }
+        return;
+      }
+      if (e.key === "Enter") {
+        const selected = suggestionsEl?.querySelector("li[aria-selected='true']") || items[0];
+        if (selected) {
+          e.preventDefault();
+          selected.click();
+        }
+      }
+    });
+
+    addressInput.addEventListener("focus", () => {
+      const q = (addressInput.value || "").trim();
+      if (q.length >= MIN_QUERY_LENGTH) fetchPhotonSuggestions(q, (features) => renderSuggestions(features));
+    });
+
+    document.addEventListener("click", (e) => {
+      if (suggestionsEl && !suggestionsEl.classList.contains("hidden") && !addressInput?.contains(e.target) && !suggestionsEl.contains(e.target)) {
+        hideSuggestions();
+      }
+    });
+
+    useDefaultBtn?.addEventListener("click", () => {
+      if (!defaultSuggestionData) return;
+      applySuggestion(defaultSuggestionData.lat, defaultSuggestionData.lng, defaultSuggestionData.address);
+      if (defaultSuggestionEl) defaultSuggestionEl.classList.add("hidden");
+      defaultSuggestionData = null;
     });
 
     geolocBtn?.addEventListener("click", () => {

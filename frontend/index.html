@@ -917,11 +917,19 @@
                   <h3 class="app-subsection-title">Emplacement</h3>
                   <label class="app-label" for="app-perimetre-address">Adresse ou lieu</label>
                   <div class="app-perimetre-address-row">
-                    <input type="text" id="app-perimetre-address" class="app-input" placeholder="ex. 12 rue de la Paix, Paris" autocomplete="off" />
+                    <div class="app-perimetre-address-input-wrap">
+                      <input type="text" id="app-perimetre-address" class="app-input" placeholder="ex. 12 rue de la Paix, Paris ou nom du commerce" autocomplete="off" aria-autocomplete="list" aria-controls="app-perimetre-suggestions" aria-expanded="false" />
+                      <ul id="app-perimetre-suggestions" class="app-perimetre-suggestions hidden" role="listbox" aria-label="Suggestions d’adresses"></ul>
+                    </div>
                     <button type="button" id="app-perimetre-geoloc" class="app-btn app-btn-secondary app-perimetre-geoloc-btn" aria-label="Ma position actuelle">
                       <span class="app-perimetre-geoloc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
                       Ma position
                     </button>
+                  </div>
+                  <div id="app-perimetre-default-suggestion" class="app-perimetre-default-suggestion hidden" role="region" aria-label="Proposition par défaut">
+                    <p class="app-perimetre-default-label">Proposition selon le nom de votre établissement</p>
+                    <p class="app-perimetre-default-address" id="app-perimetre-default-address-text"></p>
+                    <button type="button" id="app-perimetre-use-default" class="app-btn app-btn-primary app-perimetre-use-default-btn">Utiliser cette adresse</button>
                   </div>
                   <p id="app-perimetre-address-hint" class="app-hint app-perimetre-hint hidden"></p>
                 </div>
