@@ -1397,6 +1397,8 @@ body.page-app .site-banner { display: none !important; }
 .app-personnaliser-live-preview-wrap { margin-bottom: 1.5rem; }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 .app-personnaliser-preview.builder-phone-mockup { width: min(280px, 85vw); max-width: 320px; margin-left: auto; margin-right: auto; }
+.app-personnaliser-preview .builder-phone-screen { height: 74%; top: 13%; }
+.app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic { height: 100%; max-height: none; min-height: 0; }
 
 /* Carte dynamique (couleurs utilisateur) dans le mockup iPhone */
 .app-wallet-preview-dynamic {
@@ -1418,6 +1420,8 @@ body.page-app .site-banner { display: none !important; }
   background: var(--wallet-bg);
   color: var(--wallet-fg);
   transition: background 0.2s, color 0.2s;
+  align-items: stretch;
+  padding: 0.4rem 0.5rem 0.5rem;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-label { color: var(--wallet-label); }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps { color: var(--wallet-fg); }
@@ -1439,9 +1443,9 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap,
 #app-personnaliser-preview .app-wallet-preview-logo-wrap {
   flex-shrink: 0;
-  width: 4.5rem;
-  height: 4.5rem;
-  max-height: 92%;
+  width: 3rem;
+  height: 3rem;
+  max-height: 88%;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -1481,11 +1485,70 @@ body.page-app .site-banner { display: none !important; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org.hidden { display: none; }
+.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org { display: none !important; }
 
 /* Blocs points vs tampons dans l’aperçu */
 .app-wallet-preview-dynamic #app-preview-pts-wrap.hidden { display: none !important; }
 .app-wallet-preview-dynamic #app-preview-stamps-wrap.hidden { display: none !important; }
+
+/* Points : gauche, gros, moins gras, couleur thème, sans emoji */
+.app-wallet-preview-dynamic .builder-wallet-card-pts-wrap { align-items: flex-start; width: 100%; }
+.app-wallet-preview-dynamic .builder-wallet-card-pts-value {
+  font-size: clamp(1.35rem, 4.5vw, 1.85rem);
+  font-weight: 600;
+  color: var(--wallet-fg);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.app-wallet-preview-dynamic .builder-wallet-card-pts-wrap .builder-wallet-card-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.02em;
+  color: var(--wallet-fg);
+  opacity: 0.95;
+}
+.app-wallet-preview-dynamic .wallet-preview-emoji { display: none !important; }
+
+/* Récompense (gauche) + Membre (droite) */
+.app-wallet-preview-dynamic .app-wallet-preview-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+.app-wallet-preview-dynamic .builder-wallet-card-reward {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+}
+.app-wallet-preview-dynamic .builder-wallet-card-reward-label {
+  font-size: 0.38rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--wallet-label);
+  opacity: 0.9;
+}
+.app-wallet-preview-dynamic .builder-wallet-card-reward-value {
+  font-size: 0.5rem;
+  font-weight: 500;
+  color: var(--wallet-fg);
+}
+.app-wallet-preview-dynamic .builder-wallet-card-member { align-items: flex-end; margin-top: 0; }
+.app-wallet-preview-dynamic .builder-wallet-card-member-label {
+  font-size: 0.38rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--wallet-label);
+  opacity: 0.9;
+}
+.app-wallet-preview-dynamic .builder-wallet-card-member-value {
+  font-size: 0.52rem;
+  font-weight: 600;
+  color: var(--wallet-fg);
+}
+.app-wallet-preview-dynamic #app-preview-reward-wrap.hidden { display: none !important; }
 
 /* QR dans l’aperçu (réutilise builder-wallet-card-qr) */
 .app-wallet-preview-dynamic .builder-wallet-card-qr-img[src=""],

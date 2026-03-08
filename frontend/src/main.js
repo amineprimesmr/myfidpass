@@ -1227,8 +1227,17 @@ function initAppDashboard(slug) {
     const requiredStamps = 10;
     if (ptsWrap) ptsWrap.classList.toggle("hidden", !!isStamps);
     if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps);
+    const rewardWrap = document.getElementById("app-preview-reward-wrap");
+    if (rewardWrap) rewardWrap.classList.toggle("hidden", !!isStamps);
+    const rewardValueEl = document.getElementById("app-wallet-preview-reward");
+    if (rewardValueEl && !isStamps) {
+      const tiersRaw = pointsRewardTiersEl?.value?.trim() || "";
+      const firstLine = tiersRaw.split("\n").map((s) => s.trim()).find(Boolean);
+      const raw = firstLine ? (firstLine.replace(/^\d+:\s*/, "").trim()) : "";
+      rewardValueEl.textContent = raw || "Paliers en magasin";
+    }
     if (valueEl) valueEl.textContent = isStamps ? "" : "0";
-    if (labelEl) labelEl.textContent = isStamps ? "Tampons" : "points";
+    if (labelEl) labelEl.textContent = isStamps ? "Tampons" : "Points";
     if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
     if (stampsValueEl) stampsValueEl.textContent = `0 / ${requiredStamps}`;
     if (stampsGridEl && isStamps) {
@@ -1277,6 +1286,7 @@ function initAppDashboard(slug) {
   [programTypePoints, programTypeStamps, stampEmojiEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   if (stampEmojiEl) stampEmojiEl.addEventListener("input", updatePersonnaliserPreview);
+  if (pointsRewardTiersEl) pointsRewardTiersEl.addEventListener("input", updatePersonnaliserPreview);
 
   const personnaliserAddress = document.getElementById("app-personnaliser-address");
   const personnaliserCoordsDisplay = document.getElementById("app-personnaliser-coords-display");
