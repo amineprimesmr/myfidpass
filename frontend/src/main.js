@@ -1919,6 +1919,12 @@ function initAppDashboard(slug) {
     if (pointsPreviewEl) { pointsPreviewEl.classList.add("hidden"); pointsPreviewEl.textContent = ""; }
     scannerVisitOnly = false;
 
+    if (scannerProgramType === "points" && scannerAmount) {
+      setTimeout(() => {
+        scannerAmount.focus();
+      }, 450);
+    }
+
     if (scannerHistoryList) {
       scannerHistoryList.innerHTML = "";
       try {
@@ -1953,6 +1959,32 @@ function initAppDashboard(slug) {
     if (scannerResultMessage) { scannerResultMessage.classList.add("hidden"); scannerResultMessage.textContent = ""; }
   }
 
+  /** Préfère la caméra arrière principale (pas grand angle / ultra-wide) pour le scan. */
+  async function getPreferredBackCameraConfig() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices.filter((d) => d.kind === "videoinput");
+      const backLabels = /back|arrière|environment/i;
+      const ultrawideLabels = /ultra\s*wide|grand\s*angle|0\.5x|wide\s*angle/i;
+      const backCameras = videoInputs.filter((d) => backLabels.test(d.label || ""));
+      const mainBack = backCameras.find((d) => !ultrawideLabels.test(d.label || ""));
+      const fallback = backCameras[0];
+      const chosen = mainBack || fallback;
+      if (chosen?.deviceId) {
+        return {
+          deviceId: { exact: chosen.deviceId },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        };
+      }
+    } catch (_) {}
+    return {
+      facingMode: "environment",
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+    };
+  }
+
   async function startFullscreenScanner() {
     if (scannerInstance) return;
     if (!scannerFullscreen || !scannerFullscreenViewport) return;
@@ -1965,7 +1997,7 @@ function initAppDashboard(slug) {
 
     const config = { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] };
     scannerInstance = new Html5Qrcode("app-scanner-fullscreen-viewport", config);
-    const cameraConfig = { facingMode: "environment" };
+    const cameraConfig = await getPreferredBackCameraConfig();
     const qrboxSize = Math.min(280, Math.min(window.innerWidth, window.innerHeight) * 0.72);
     const scanConfig = { fps: 15, qrbox: { width: qrboxSize, height: qrboxSize } };
 
@@ -2052,6 +2084,11 @@ function initAppDashboard(slug) {
   }
   scannerAmount?.addEventListener("input", () => { scannerVisitOnly = false; updateScannerPointsPreview(); });
 
+  const scannerAmountTap = document.getElementById("app-scanner-amount-tap");
+  if (scannerAmountTap && scannerAmount) {
+    scannerAmountTap.addEventListener("click", () => { scannerAmount.focus(); });
+  }
+
   scannerAddOneStamp?.addEventListener("click", async () => {
     if (!scannerCurrentMemberId) return;
     scannerAddOneStamp.disabled = true;
@@ -2092,7 +2129,8 @@ function initAppDashboard(slug) {
 
   scannerAddPoints?.addEventListener("click", async () => {
     if (!scannerCurrentMemberId) return;
-    const body = scannerVisitOnly ? { visit: true } : { amount_eur: parseFloat(scannerAmount?.value) || 0 };
+    const amountRaw = (scannerAmount?.value || "").replace(",", ".").trim();
+    const body = scannerVisitOnly ? { visit: true } : { amount_eur: parseFloat(amountRaw) || 0 };
     if (!scannerVisitOnly && !body.amount_eur) {
       if (scannerResultMessage) {
         scannerResultMessage.textContent = "Indiquez un montant (€) ou cliquez sur « 1 passage ».";
