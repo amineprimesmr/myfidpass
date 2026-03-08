@@ -1270,6 +1270,17 @@ function initAppDashboard(slug) {
       });
     }
     const useStripText = stripDisplayText && stripDisplayText.checked;
+    const stripImg = document.getElementById("app-wallet-preview-strip-img");
+    const hasLogoUrl = personnaliserLogoDataUrl && personnaliserLogoDataUrl.length > 0;
+    if (stripImg) {
+      if (useStripImage && hasLogoUrl) {
+        stripImg.src = personnaliserLogoDataUrl;
+        stripImg.classList.remove("hidden");
+      } else {
+        stripImg.removeAttribute("src");
+        stripImg.classList.add("hidden");
+      }
+    }
     if (stripTextPreview) {
       if (useStripText) {
         stripTextPreview.textContent = stripTextEl?.value?.trim() || personnaliserOrg?.value?.trim() || "Votre commerce";
@@ -1280,21 +1291,24 @@ function initAppDashboard(slug) {
       }
     }
     if (orgEl) orgEl.classList.toggle("hidden", !!useStripText);
-    if (logoWrap) logoWrap.style.display = useStripText ? "none" : "";
+    if (logoWrap) {
+      if (useStripText) logoWrap.style.display = "none";
+      else if (useStripImage && hasLogoUrl) logoWrap.style.display = "none";
+      else logoWrap.style.display = "";
+    }
     const walletLogo = document.getElementById("app-wallet-preview-logo");
-    const hasLogoUrl = personnaliserLogoDataUrl && personnaliserLogoDataUrl.length > 0;
-    if (walletLogo && hasLogoUrl && !useStripText) {
+    if (walletLogo && hasLogoUrl && !useStripText && !(useStripImage && hasLogoUrl)) {
       walletLogo.src = personnaliserLogoDataUrl;
       walletLogo.classList.remove("hidden");
     } else if (walletLogo) {
       if (useStripText) walletLogo.classList.add("hidden");
-      else if (!hasLogoUrl) {
-      walletLogo.removeAttribute("src");
-      walletLogo.classList.add("hidden");
+      else if (!hasLogoUrl || (useStripImage && hasLogoUrl)) {
+        walletLogo.removeAttribute("src");
+        walletLogo.classList.add("hidden");
+      }
     }
-  }
     const logoFallback = document.getElementById("app-wallet-preview-logo-fallback");
-    if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText || !!(walletLogo && walletLogo.src && !walletLogo.classList.contains("hidden")));
+    if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText || !!((walletLogo && walletLogo.src && !walletLogo.classList.contains("hidden")) || (useStripImage && hasLogoUrl)));
   }
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));

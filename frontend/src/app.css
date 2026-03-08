@@ -1407,6 +1407,7 @@ body.page-app .site-banner { display: none !important; }
   --wallet-label: #e8f5e9;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-header {
+  position: relative;
   background: var(--wallet-bg);
   color: var(--wallet-fg);
   display: flex;
@@ -1415,7 +1416,23 @@ body.page-app .site-banner { display: none !important; }
   padding: 0.12rem 0.5rem 0.25rem 0.25rem;
   min-height: 2rem;
   transition: background 0.2s, color 0.2s;
+  overflow: hidden;
 }
+.app-wallet-preview-dynamic .app-wallet-preview-strip-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  display: block;
+}
+.app-wallet-preview-dynamic .app-wallet-preview-strip-img.hidden { display: none !important; }
+.app-wallet-preview-dynamic .builder-wallet-card-header:has(.app-wallet-preview-strip-img:not(.hidden)) { min-height: 3.25rem; }
+.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-strip-text,
+.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap,
+.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org { position: relative; z-index: 1; }
 .app-wallet-preview-dynamic .builder-wallet-card-body {
   background: var(--wallet-bg);
   color: var(--wallet-fg);
