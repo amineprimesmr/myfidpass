@@ -96,10 +96,10 @@ body.page-app .site-banner { display: none !important; }
   font-weight: 500;
   border-radius: var(--app-radius-sm);
   margin-bottom: 0.12rem;
-  transition: background var(--app-transition), color var(--app-transition), transform 0.18s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
   position: relative;
 }
-.app-sidebar-link:active { transform: scale(0.99); }
+.app-sidebar-link:active { transform: scale(0.98); }
 
 .app-sidebar-link:hover {
   background: var(--app-sidebar-hover);
@@ -204,11 +204,13 @@ body.page-app .site-banner { display: none !important; }
   margin-left: var(--app-sidebar-width);
   margin-top: 12px;
   margin-right: 12px;
-  min-height: calc(100vh - 12px);
+  margin-bottom: 12px;
+  min-height: calc(100vh - 24px);
   padding: 2rem 1.75rem 4rem;
   background: var(--app-surface);
-  border-radius: 20px 20px 0 0;
+  border-radius: 20px;
   box-shadow: var(--app-shadow-sm);
+  transition: box-shadow var(--app-transition);
 }
 
 @media (max-width: 900px) {
@@ -233,9 +235,10 @@ body.page-app .site-banner { display: none !important; }
     margin-left: 72px;
     margin-right: 10px;
     margin-top: 10px;
-    min-height: calc(100vh - 10px);
+    margin-bottom: 10px;
+    min-height: calc(100vh - 20px);
     padding: 1.5rem 1rem;
-    border-radius: 16px 16px 0 0;
+    border-radius: 16px;
   }
 }
 
@@ -299,17 +302,17 @@ body.page-app .site-banner { display: none !important; }
 
 #app-dashboard-content .app-section.app-section-visible {
   display: block;
-  animation: app-section-enter 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: app-section-enter 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @keyframes app-section-enter {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(16px) scale(0.995);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -342,7 +345,7 @@ body.page-app .site-banner { display: none !important; }
 
 .app-section-overview { margin-bottom: 2.5rem; }
 
-/* Stats — cartes avec hover et ombre */
+/* Stats — cartes avec hover, ombre et animation d’entrée */
 .app-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -356,13 +359,35 @@ body.page-app .site-banner { display: none !important; }
   padding: 1.5rem;
   text-align: center;
   box-shadow: var(--app-shadow-sm);
-  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow var(--app-transition), border-color var(--app-transition);
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, border-color var(--app-transition);
 }
 
 .app-stat:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
   box-shadow: var(--app-shadow-md);
   border-color: rgba(10, 124, 66, 0.15);
+}
+
+/* Entrée en cascade des cartes stats (quand la section est visible) */
+.app-section-overview.app-section-visible .app-stat {
+  animation: app-stat-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+}
+.app-section-overview.app-section-visible .app-stat:nth-child(1) { animation-delay: 0.05s; }
+.app-section-overview.app-section-visible .app-stat:nth-child(2) { animation-delay: 0.1s; }
+.app-section-overview.app-section-visible .app-stat:nth-child(3) { animation-delay: 0.15s; }
+.app-section-overview.app-section-visible .app-stat:nth-child(4) { animation-delay: 0.2s; }
+.app-section-overview.app-section-visible .app-stat:nth-child(5) { animation-delay: 0.25s; }
+.app-section-overview.app-section-visible .app-stat:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes app-stat-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .app-stat-value {
@@ -554,10 +579,11 @@ body.page-app .site-banner { display: none !important; }
   border-radius: var(--app-radius-sm);
   cursor: pointer;
   border: none;
-  transition: background var(--app-transition), opacity var(--app-transition), transform 0.15s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, opacity 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.25s ease;
 }
 
-.app-btn:active:not(:disabled) { transform: scale(0.98); }
+.app-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.app-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
 
 .app-btn:disabled {
   opacity: 0.5;
@@ -572,7 +598,7 @@ body.page-app .site-banner { display: none !important; }
 
 .app-btn-primary:hover:not(:disabled) {
   background: var(--app-accent-hover);
-  box-shadow: 0 4px 12px rgba(10, 124, 66, 0.3);
+  box-shadow: 0 4px 14px rgba(10, 124, 66, 0.35);
 }
 
 .app-btn-secondary {
@@ -1339,16 +1365,16 @@ body.page-app .site-banner { display: none !important; }
   text-decoration: none;
   cursor: pointer;
   font-family: inherit;
-  transition: background var(--app-transition), border-color var(--app-transition), transform 0.18s ease, box-shadow var(--app-transition);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.25s ease;
   box-shadow: var(--app-shadow-sm);
 }
 .app-shortcut-btn:hover {
   background: var(--app-surface-hover);
   border-color: var(--app-accent);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: var(--app-shadow-md);
 }
-.app-shortcut-btn:active { transform: translateY(0); }
+.app-shortcut-btn:active { transform: translateY(0); transition-duration: 0.1s; }
 .app-shortcut-icon {
   display: inline-flex;
   align-items: center;
