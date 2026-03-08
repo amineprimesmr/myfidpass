@@ -102,9 +102,14 @@ router.get("/:memberId/pass", async (req, res) => {
     res.send(buffer);
   } catch (err) {
     console.error("Génération pass:", err);
+    const msg = err?.message || "";
+    const isCert = /certificat|PASS_TYPE_ID|TEAM_ID|manquant|WWDR|SIGNER/i.test(msg);
+    const userMessage = isCert
+      ? "Configuration Wallet manquante ou invalide sur le serveur. Vérifiez les certificats (Railway → Variables, voir docs/APPLE-WALLET-SETUP.md)."
+      : "Impossible de générer la carte. Réessayez dans un instant.";
     res.status(500).json({
-      error: "Impossible de générer la carte. Vérifiez les certificats (voir docs/APPLE-WALLET-SETUP.md).",
-      detail: err.message,
+      error: userMessage,
+      detail: msg,
     });
   }
 });

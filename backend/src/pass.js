@@ -500,11 +500,19 @@ async function createEmptyStampWithEmojiPng(strokeRgb, stampEmoji = "☕") {
 /** Crée un buffer tampon = uniquement l’icône centrée sur fond transparent (pas de cercle). */
 async function createStampIconOnlyPng(iconBuf, opacity = 1) {
   const size = STAMP_SIZE;
-  let input = iconBuf;
+  const normalized = await sharp(iconBuf)
+    .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+  let input = normalized;
   if (opacity < 1) {
-    const { data, info } = await sharp(iconBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-    for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * opacity);
-    input = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+    const { data, info } = await sharp(normalized).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const expectedLen = info.width * info.height * 4;
+    if (data.length === expectedLen) {
+      for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * opacity);
+      input = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+    }
   }
   const padding = 2;
   const transparent = await sharp({
@@ -520,17 +528,33 @@ async function createStampIconOnlyPng(iconBuf, opacity = 1) {
 
 /**
  * Tampon non débloqué = même icône que le commerçant, en grisé + opacité réduite.
+ * On redimensionne d'abord l'icône à STAMP_SIZE pour éviter "VipsImage: memory area too small"
+ * (buffer raw doit faire exactement width*height*4 bytes).
  */
 async function createEmptyStampFromIcon(iconBuf) {
   const size = STAMP_SIZE;
   const padding = 2;
-  const greyed = await sharp(iconBuf)
+  const normalized = await sharp(iconBuf)
+    .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+  const greyed = await sharp(normalized)
     .grayscale()
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
-  for (let i = 3; i < greyed.data.length; i += 4) greyed.data[i] = Math.round(greyed.data[i] * 0.5);
-  const input = await sharp(greyed.data, { raw: { width: greyed.info.width, height: greyed.info.height, channels: 4 } }).png().toBuffer();
+  const { data, info } = greyed;
+  const expectedLen = info.width * info.height * 4;
+  if (data.length !== expectedLen) {
+    return sharp({
+      create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0.5 } },
+    })
+      .png()
+      .toBuffer();
+  }
+  for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * 0.5);
+  const input = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
   const transparent = await sharp({
     create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
   })
@@ -570,15 +594,20 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     const top = Math.max(0, cy - STAMP_R);
     const filled = i < filledCount;
     let stampBuf;
-    if (filled) {
-      stampBuf = await createStampIconOnlyPng(iconBuf, 1);
-    } else {
-      if (emptyStampBuf === null) emptyStampBuf = await createEmptyStampFromIcon(iconBuf);
-      stampBuf = emptyStampBuf;
+    try {
+      if (filled) {
+        stampBuf = await createStampIconOnlyPng(iconBuf, 1);
+      } else {
+        if (emptyStampBuf === null) emptyStampBuf = await createEmptyStampFromIcon(iconBuf);
+        stampBuf = emptyStampBuf;
+      }
+      if (stampBuf) composites.push({ input: stampBuf, left, top });
+    } catch (e) {
+      if (process.env.NODE_ENV === "production") console.warn("[PassKit] Stamp icon failed, skip:", e?.message);
     }
-    composites.push({ input: stampBuf, left, top });
   }
 
+  if (composites.length === 0) return baseStripBuf;
   return sharp(baseStripBuf)
     .composite(composites)
     .png()
