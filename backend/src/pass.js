@@ -519,48 +519,31 @@ async function createStampIconOnlyPng(iconBuf, opacity = 1) {
 }
 
 /**
- * Retourne un buffer PNG STAMP_SIZE×STAMP_SIZE pour un tampon vide (non débloqué).
- * Utilise assets/icons/vide.png si présent, sinon null (fallback = icône en filigrane).
+ * Tampon non débloqué = même icône que le commerçant, en grisé + opacité réduite.
  */
-async function getEmptyStampPng() {
-  const raw = STAMP_ICONS_RAW.get("vide");
-  if (!raw || !Buffer.isBuffer(raw)) return null;
-  try {
-    return await sharp(Buffer.from(raw))
-      .resize(STAMP_SIZE, STAMP_SIZE, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
-      .png()
-      .toBuffer();
-  } catch (e) {
-    console.warn("[PassKit] Resize vide.png failed:", e?.message);
-    return null;
-  }
+async function createEmptyStampFromIcon(iconBuf) {
+  const size = STAMP_SIZE;
+  const padding = 2;
+  const greyed = await sharp(iconBuf)
+    .grayscale()
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  for (let i = 3; i < greyed.data.length; i += 4) greyed.data[i] = Math.round(greyed.data[i] * 0.5);
+  const input = await sharp(greyed.data, { raw: { width: greyed.info.width, height: greyed.info.height, channels: 4 } }).png().toBuffer();
+  const transparent = await sharp({
+    create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .png()
+    .toBuffer();
+  return sharp(transparent)
+    .composite([{ input, left: padding, top: padding }])
+    .png()
+    .toBuffer();
 }
 
 /**
- * Pour certains emojis (ex. burger 🍔), une icône "sombre" dédiée pour les tampons pas encore obtenus (ex. darkburger.png).
- * Retourne un buffer STAMP_SIZE×STAMP_SIZE ou null si pas d’icône dédiée.
- */
-async function getEmptyStampPngForEmoji(stampEmoji) {
-  const cp = emojiToCodepoint((stampEmoji && String(stampEmoji).trim()) || "");
-  const emptyIconName = cp === "1f354" ? "darkburger" : null;
-  if (!emptyIconName) return null;
-  const raw = STAMP_ICONS_RAW.get(emptyIconName);
-  if (!raw || !Buffer.isBuffer(raw)) return null;
-  try {
-    const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
-    const resized = await sharp(Buffer.from(raw))
-      .resize(STAMP_SIZE - 4, STAMP_SIZE - 4, { fit: "contain", background: transparent })
-      .png()
-      .toBuffer();
-    return createStampIconOnlyPng(resized, 1);
-  } catch (e) {
-    console.warn("[PassKit] Resize", emptyIconName, "failed:", e?.message);
-    return null;
-  }
-}
-
-/**
- * Grille de tampons : tampons débloqués = icône pleine ; tampons non débloqués = vide.png (assets/icons) ou icône en filigrane en fallback.
+ * Grille de tampons : débloqués = icône pleine ; non débloqués = même icône en grisé.
  */
 async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
   const cols = 5;
@@ -577,7 +560,6 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
   if (process.env.NODE_ENV === "production") console.log("[PassKit] Strip tampons: emoji", emojiToCodepoint(emojiForStamp), "→ PNG du dossier", STAMP_ICONS_DIR);
 
   let emptyStampBuf = null;
-  let emptyStampForEmojiBuf = null;
   const composites = [];
   for (let i = 0; i < Math.min(stampMax, 10); i++) {
     const col = i % cols;
@@ -591,13 +573,8 @@ async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMa
     if (filled) {
       stampBuf = await createStampIconOnlyPng(iconBuf, 1);
     } else {
-      if (emptyStampForEmojiBuf === null) emptyStampForEmojiBuf = await getEmptyStampPngForEmoji(emojiForStamp);
-      if (emptyStampForEmojiBuf) {
-        stampBuf = emptyStampForEmojiBuf;
-      } else {
-        if (emptyStampBuf === null) emptyStampBuf = await getEmptyStampPng();
-        stampBuf = emptyStampBuf || (await createStampIconOnlyPng(iconBuf, 0.75));
-      }
+      if (emptyStampBuf === null) emptyStampBuf = await createEmptyStampFromIcon(iconBuf);
+      stampBuf = emptyStampBuf;
     }
     composites.push({ input: stampBuf, left, top });
   }

@@ -1556,7 +1556,7 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic .builder-wallet-card-restants-value { font-size: 0.5rem; font-weight: 500; color: var(--wallet-fg); }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img { display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 0; }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img img { width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem; object-fit: contain; display: block; }
-.app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img:not(.filled) img { opacity: 0.5; }
+.app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img:not(.filled) img { opacity: 0.5; filter: grayscale(1); }
 
 /* QR dans l’aperçu (réutilise builder-wallet-card-qr) */
 .app-wallet-preview-dynamic .builder-wallet-card-qr { margin-bottom: 0.4rem; }

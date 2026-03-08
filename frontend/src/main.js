@@ -1247,8 +1247,7 @@ function initAppDashboard(slug) {
     if (stampsGridEl && isStamps) {
       const emojiToIcon = { "☕": "cafe", "🍔": "burger", "🍕": "pizza", "🥐": "croissant", "🥩": "steak", "🍣": "sushi", "🥗": "salade", "🍚": "riz", "🥖": "baguette", "💄": "giftsilver", "✂️": "giftsilver" };
       const iconName = emojiToIcon[stampEmoji] || "cafe";
-      const filledSrc = "/assets/icons/" + iconName + ".png";
-      const emptySrc = "/assets/icons/vide.png";
+      const iconSrc = "/assets/icons/" + iconName + ".png";
       const filledCount = 0;
       const rows = stampsGridEl.querySelectorAll(".builder-wallet-card-stamps-row");
       let index = 0;
@@ -1260,7 +1259,7 @@ function initAppDashboard(slug) {
           span.className = "stamp stamp-img" + (isFilled ? " filled" : "");
           span.setAttribute("aria-hidden", "true");
           const img = document.createElement("img");
-          img.src = isFilled ? filledSrc : emptySrc;
+          img.src = iconSrc;
           img.alt = "";
           img.width = 48;
           img.height = 48;
