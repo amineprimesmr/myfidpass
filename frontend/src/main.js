@@ -1227,9 +1227,8 @@ function initAppDashboard(slug) {
     const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "☕";
     const requiredStamps = 10;
     const useStripImage = stripDisplayLogo && stripDisplayLogo.checked;
-    const showPtsOrStamps = !useStripImage;
-    if (ptsWrap) ptsWrap.classList.toggle("hidden", !!isStamps || !showPtsOrStamps);
-    if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps || !showPtsOrStamps);
+    if (ptsWrap) ptsWrap.classList.toggle("hidden", !!isStamps);
+    if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps);
     const rewardWrap = document.getElementById("app-preview-reward-wrap");
     if (rewardWrap) rewardWrap.classList.toggle("hidden", !!isStamps);
     if (restantsWrap) restantsWrap.classList.toggle("hidden", !isStamps);
