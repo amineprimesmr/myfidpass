@@ -1237,10 +1237,10 @@ function initAppDashboard(slug) {
               type: "fill-extrusion",
               minzoom: 14,
               paint: {
-                "fill-extrusion-color": "#e8e6e3",
+                "fill-extrusion-color": "#f2f0ed",
                 "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.05, ["get", "height"]],
                 "fill-extrusion-base": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.05, ["get", "min_height"]],
-                "fill-extrusion-opacity": 0.92,
+                "fill-extrusion-opacity": 0.96,
               },
             }, labelLayerId);
           }
