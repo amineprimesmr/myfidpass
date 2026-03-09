@@ -378,13 +378,38 @@
   font-size: clamp(2.75rem, 6.5vw, 4.25rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.15;
+  line-height: 1.2;
   margin: 0 0 1rem;
   color: #000;
+  max-width: 26ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .landing-hero-title strong {
   color: #000;
+}
+
+.landing-hero-title-underline {
+  position: relative;
+  display: inline-block;
+  color: #000;
+  font-weight: 800;
+}
+
+.landing-hero-title-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.08em;
+  height: 0.28em;
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 50%, #2563eb 100%);
+  border-radius: 9999px;
+  z-index: -1;
+  opacity: 0.85;
+  transform: rotate(-0.5deg);
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.35);
 }
 
 .landing-hero-subtitle {
