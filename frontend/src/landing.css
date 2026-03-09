@@ -416,32 +416,19 @@
   line-height: 1.2;
   margin: 0 0 1rem;
   color: #000;
-  max-width: 32ch;
   margin-left: auto;
   margin-right: auto;
   padding: 0 0.5rem;
 }
 
+.landing-hero-title-line1,
+.landing-hero-title-line2 {
+  display: block;
+  color: #000;
+}
+
 .landing-hero-title strong {
   color: #000;
-}
-
-.landing-hero-title-underline {
-  position: relative;
-  display: inline-block;
-  color: #000;
-  font-weight: 800;
-}
-
-.landing-hero-title-underline::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -2px;
-  height: 1px;
-  background: #000;
-  box-shadow: 0 4px 0 0 #000;
 }
 
 .landing-hero-subtitle {
@@ -3847,7 +3834,6 @@ body.page-checkout .site-banner { display: none !important; }
 
   .landing-hero-title {
     font-size: clamp(2.1rem, 7vw, 3rem);
-    max-width: 28ch;
     padding: 0 0.25rem;
   }
 
