@@ -416,9 +416,10 @@
   line-height: 1.2;
   margin: 0 0 1rem;
   color: #000;
-  max-width: 26ch;
+  max-width: 32ch;
   margin-left: auto;
   margin-right: auto;
+  padding: 0 0.5rem;
 }
 
 .landing-hero-title strong {
@@ -437,14 +438,10 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0.08em;
-  height: 0.28em;
-  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 50%, #2563eb 100%);
-  border-radius: 9999px;
-  z-index: -1;
-  opacity: 0.85;
-  transform: rotate(-0.5deg);
-  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.35);
+  bottom: -2px;
+  height: 1px;
+  background: #000;
+  box-shadow: 0 4px 0 0 #000;
 }
 
 .landing-hero-subtitle {
@@ -3850,6 +3847,8 @@ body.page-checkout .site-banner { display: none !important; }
 
   .landing-hero-title {
     font-size: clamp(2.1rem, 7vw, 3rem);
+    max-width: 28ch;
+    padding: 0 0.25rem;
   }
 
   .landing-hero-subtitle {
