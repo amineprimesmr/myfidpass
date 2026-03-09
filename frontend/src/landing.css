@@ -375,16 +375,16 @@
 }
 
 .landing-hero-title {
-  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  font-size: clamp(2.75rem, 6.5vw, 4.25rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.15;
   margin: 0 0 1rem;
-  color: var(--landing-text);
+  color: #000;
 }
 
 .landing-hero-title strong {
-  color: var(--landing-accent);
+  color: #000;
 }
 
 .landing-hero-subtitle {
@@ -3789,7 +3789,7 @@ body.page-checkout .site-banner { display: none !important; }
   }
 
   .landing-hero-title {
-    font-size: clamp(1.85rem, 6vw, 2.5rem);
+    font-size: clamp(2.1rem, 7vw, 3rem);
   }
 
   .landing-hero-subtitle {
