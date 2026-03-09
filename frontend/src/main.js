@@ -5731,10 +5731,70 @@ function initLandingHeroAnim() {
   }
 }
 
+function initLandingCardsScroll() {
+  const wrapper = document.getElementById("landing-cards-scroll-wrapper");
+  const track = document.getElementById("landing-cards-scroll-track");
+  if (!wrapper || !track) return;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReducedMotion) return;
+
+  let ticking = false;
+  function updateCarouselScroll() {
+    const vh = window.innerHeight;
+    const trackWidth = track.scrollWidth;
+    const viewWidth = window.innerWidth;
+    const maxTranslate = Math.max(0, trackWidth - viewWidth + 80);
+    const wrapperHeight = wrapper.offsetHeight;
+    const scrollRange = wrapperHeight - vh;
+    if (scrollRange <= 0) {
+      track.style.transform = "translateX(0)";
+      ticking = false;
+      return;
+    }
+    const scrollY = window.scrollY || window.pageYOffset;
+    const wrapperTop = wrapper.offsetTop;
+    const progress = Math.max(0, Math.min(1, (scrollY - wrapperTop + vh * 0.2) / scrollRange));
+    const x = -progress * maxTranslate;
+    track.style.transform = `translateX(${x}px)`;
+    ticking = false;
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(updateCarouselScroll);
+  }
+
+  if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger);
+    const viewWidth = window.innerWidth;
+    const maxScroll = Math.max(0, track.scrollWidth - viewWidth + 80);
+    gsap.to(track, {
+      x: -maxScroll,
+      ease: "none",
+      scrollTrigger: {
+        trigger: wrapper,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1.2,
+        invalidateOnRefresh: true,
+      },
+    });
+    return;
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", () => {
+    requestAnimationFrame(updateCarouselScroll);
+  });
+  requestAnimationFrame(updateCarouselScroll);
+}
+
 function initLandingAnimations() {
   initLandingReveal();
   if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
     initLandingHeroAnim();
+    initLandingCardsScroll();
   }
 }
 

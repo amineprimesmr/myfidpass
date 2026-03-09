@@ -600,40 +600,60 @@
   }
 }
 
-/* Bandeau cartes fidélité – défilement horizontal infini (mockups iPhone comme page Créer ma carte) */
+/* Bandeau cartes fidélité – défilement horizontal lié au scroll vertical */
+.landing-cards-scroll-wrapper {
+  min-height: 220vh;
+  position: relative;
+}
 .landing-cards-scroll {
   margin-top: 2.5rem;
   padding: 1.5rem 0 2.5rem;
   overflow: hidden;
   width: 100vw;
-  position: relative;
+  position: sticky;
+  top: 0;
   left: 50%;
   right: 50%;
   margin-left: -50vw;
   margin-right: -50vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
 }
 .landing-cards-scroll-mask {
   overflow: hidden;
-  mask-image: linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%);
+  width: 100%;
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
 }
 .landing-cards-scroll-track {
   display: flex;
   align-items: stretch;
   gap: 1.25rem;
   width: max-content;
-  padding: 0 0.5rem;
-  animation: landing-cards-scroll 55s linear infinite;
+  padding: 0 5vw;
   will-change: transform;
+  transition: transform 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-@media (prefers-reduced-motion: reduce) {
-  .landing-cards-scroll-track {
-    animation-duration: 120s;
+@media (max-width: 768px) {
+  .landing-cards-scroll-wrapper {
+    min-height: 160vh;
+  }
+  .landing-cards-scroll {
+    height: 85vh;
   }
 }
-@keyframes landing-cards-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+@media (prefers-reduced-motion: reduce) {
+  .landing-cards-scroll-wrapper {
+    min-height: auto;
+  }
+  .landing-cards-scroll {
+    position: relative;
+    height: auto;
+  }
+  .landing-cards-scroll-track {
+    transition: none;
+  }
 }
 
 /* Image dans le défilement (ex. G La Dalle) – même largeur visuelle que les mockups */
