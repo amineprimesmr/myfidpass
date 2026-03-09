@@ -1040,16 +1040,18 @@
 
       <main id="landing-main" class="landing-main">
         <section class="landing-hero">
-          <h1 class="landing-hero-title">Le meilleur moyen de <strong>développer votre commerce</strong></h1>
+          <h1 class="landing-hero-title">Le meilleur moyen de <strong>faire revenir vos clients</strong></h1>
           <p class="landing-hero-subtitle">Transformez vos visiteurs en clients fidèles grâce à des récompenses attrayantes qui les inciteront à revenir.</p>
           <form id="landing-hero-form" class="landing-hero-form">
             <input type="hidden" id="landing-place-id" name="place_id" value="" />
-            <div class="landing-hero-input-wrap">
-              <img src="/assets/googlelogo.png" alt="Google" class="landing-hero-google-logo" width="32" height="32" />
-              <input type="text" id="landing-etablissement" class="landing-hero-input" placeholder="Nom de votre établissement" autocomplete="organization" />
-            </div>
-            <div class="landing-hero-cta">
-              <button type="submit" class="landing-btn landing-btn-primary" id="landing-hero-submit" disabled>Créer ma carte — Gratuit</button>
+            <div class="landing-hero-form-row">
+              <div class="landing-hero-input-wrap">
+                <img src="/assets/googlelogo.png" alt="Google" class="landing-hero-google-logo" width="32" height="32" />
+                <input type="text" id="landing-etablissement" class="landing-hero-input" placeholder="Nom de votre établissement" autocomplete="organization" />
+              </div>
+              <div class="landing-hero-cta">
+                <button type="submit" class="landing-btn landing-btn-primary landing-btn-hero" id="landing-hero-submit" disabled>Créer ma carte</button>
+              </div>
             </div>
             <p class="landing-hero-helper" id="landing-hero-helper" aria-live="polite">Aucun résultat ? Indiquez le nom, la ville et le code postal.</p>
           </form>

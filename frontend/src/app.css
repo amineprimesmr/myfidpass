@@ -504,7 +504,7 @@ body.page-app .site-banner { display: none !important; }
 .app-logo-label:hover { border-color: var(--app-accent); }
 .app-logo-preview { max-width: 200px; max-height: 60px; object-fit: contain; }
 .app-logo-preview.hidden { display: none; }
-.app-textarea { width: 100%; max-width: 360px; padding: 0.75rem 1rem; font-family: inherit; font-size: 1rem; color: var(--app-text); background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 10px; margin-bottom: 0.5rem; box-sizing: border-box; resize: vertical; min-height: 80px; }
+.app-textarea { width: 100%; max-width: 360px; padding: 0.75rem 1rem; font-family: inherit; font-size: 1rem; color: var(--app-text); background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; margin-bottom: 0.5rem; box-sizing: border-box; resize: vertical; min-height: 80px; }
 .app-notifications-wallet-hint { font-size: 0.88rem; color: var(--app-text-muted); margin: 0 0 0.75rem; line-height: 1.4; }
 .app-notifications-iphone-tip { font-size: 0.85rem; background: #e8f5e9; border: 1px solid #81c784; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; line-height: 1.45; color: #2e7d32; }
 .app-notifications-iphone-tip strong { color: #1b5e20; }
@@ -621,13 +621,14 @@ body.page-app .site-banner { display: none !important; }
   border-color: #cbd5e1;
 }
 
-/* Member list (dropdown) */
+/* Member list (dropdown) — fond clair pour lisibilité (éviter texte noir sur fond noir) */
 .app-member-list {
   max-height: 220px;
   overflow-y: auto;
   border: 1px solid var(--app-border);
   border-radius: 10px;
-  background: var(--app-bg);
+  background: var(--app-surface);
+  color: var(--app-text);
   margin-top: 0.25rem;
   margin-bottom: 0.5rem;
 }
@@ -637,11 +638,12 @@ body.page-app .site-banner { display: none !important; }
   cursor: pointer;
   border-bottom: 1px solid var(--app-border);
   font-size: 0.95rem;
+  color: var(--app-text);
 }
 
 .app-member-item:last-child { border-bottom: none; }
 
-.app-member-item:hover { background: var(--app-surface-hover); }
+.app-member-item:hover { background: var(--app-surface-hover); color: var(--app-text); }
 
 .app-message {
   margin-top: 0.75rem;
@@ -967,7 +969,7 @@ body.page-app .site-banner { display: none !important; }
 .app-scanner-viewport {
   position: relative;
   min-height: 280px;
-  background: var(--app-bg);
+  background: #1a1a1a;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -976,7 +978,7 @@ body.page-app .site-banner { display: none !important; }
 
 .app-scanner-placeholder {
   text-align: center;
-  color: var(--app-text-muted);
+  color: rgba(255, 255, 255, 0.85);
   padding: 1.5rem;
 }
 
@@ -997,14 +999,15 @@ body.page-app .site-banner { display: none !important; }
   border-radius: 12px;
 }
 
-/* États communs (vérification, rejet, succès) */
+/* États communs (vérification, rejet, succès) — fond clair pour lisibilité */
 .app-scanner-state {
   margin-top: 1rem;
   padding: 1.5rem;
-  background: var(--app-bg);
+  background: var(--app-surface);
   border-radius: 14px;
   border: 1px solid var(--app-border);
   text-align: center;
+  color: var(--app-text);
 }
 
 .app-scanner-state-icon {
