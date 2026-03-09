@@ -9,7 +9,7 @@
     <title>Myfidpass — Carte fidélité Apple Wallet & Google Wallet pour les commerces</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/landing.css" />
     <link rel="stylesheet" href="/src/dashboard.css" />
@@ -19,10 +19,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   </head>
   <body>
-    <!-- Bannière promo (toutes les pages) -->
-    <div class="site-banner">
-      <p class="site-banner-text">Essayez Myfidpass GRATUITEMENT aujourd'hui <a href="/creer-ma-carte" class="site-banner-link">Rejoindre</a></p>
-    </div>
     <!-- Header parcours (étapes 1–2–3) : visible sur /creer-ma-carte et /checkout -->
     <header class="builder-header hidden" id="builder-header" aria-hidden="true">
       <div class="builder-header-inner">
@@ -1046,8 +1042,15 @@
 
       <main id="landing-main" class="landing-main">
         <section class="landing-hero">
+          <a href="/creer-ma-carte" class="landing-hero-cta-bar" aria-label="Créer votre Fidpass gratuitement">
+            <span class="landing-hero-cta-bar-chip">
+              <span class="landing-hero-cta-bar-dot" aria-hidden="true"></span>
+              Gratuit
+            </span>
+            <span class="landing-hero-cta-bar-text">Créez votre Fidpass gratuitement</span>
+          </a>
           <h1 class="landing-hero-title"><span class="landing-hero-title-line1">Le meilleur moyen de</span><span class="landing-hero-title-line2">faire revenir vos clients</span></h1>
-          <p class="landing-hero-subtitle">Transformez vos visiteurs en clients fidèles grâce à des récompenses attrayantes qui les inciteront à revenir.</p>
+          <p class="landing-hero-subtitle">Augmentez votre chiffre d'affaires, transformez vos clients en clients <span class="landing-hero-subtitle-underline">fidèles</span>.</p>
           <form id="landing-hero-form" class="landing-hero-form">
             <input type="hidden" id="landing-place-id" name="place_id" value="" />
             <div class="landing-hero-form-row">
@@ -1061,26 +1064,6 @@
             </div>
             <p class="landing-hero-helper" id="landing-hero-helper" aria-live="polite">Aucun résultat ? Indiquez le nom, la ville et le code postal.</p>
           </form>
-          <div class="landing-hero-benefits" aria-label="Avantages pour les commerçants">
-            <div class="landing-hero-benefit">
-              <span class="landing-hero-benefit-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-              </span>
-              <span class="landing-hero-benefit-text">Carte fidélité digitale</span>
-            </div>
-            <div class="landing-hero-benefit">
-              <span class="landing-hero-benefit-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-              </span>
-              <span class="landing-hero-benefit-text">Données clients & statistiques</span>
-            </div>
-            <div class="landing-hero-benefit">
-              <span class="landing-hero-benefit-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-              </span>
-              <span class="landing-hero-benefit-text">Notifications illimitées</span>
-            </div>
-          </div>
           <p class="landing-hero-stats">
             <span class="landing-hero-trustpilot-stars" aria-label="4,8 sur 5 étoiles">
               <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>

@@ -5711,6 +5711,7 @@ function initLandingHeroAnim() {
     hero.querySelector(".landing-hero-title"),
     hero.querySelector(".landing-hero-subtitle"),
     hero.querySelector(".landing-hero-form"),
+    hero.querySelector(".landing-hero-cta-bar"),
     hero.querySelector(".landing-hero-benefits"),
     hero.querySelector(".landing-hero-stats"),
   ].filter(Boolean);
@@ -5753,7 +5754,7 @@ function initLandingCardsScroll() {
     }
     const scrollY = window.scrollY || window.pageYOffset;
     const wrapperTop = wrapper.offsetTop;
-    const progress = Math.max(0, Math.min(1, (scrollY - wrapperTop + vh * 0.2) / scrollRange));
+    const progress = Math.max(0, Math.min(1, (scrollY - wrapperTop + vh) / scrollRange));
     const x = -progress * maxTranslate;
     track.style.transform = `translateX(${x}px)`;
     ticking = false;
@@ -5774,8 +5775,8 @@ function initLandingCardsScroll() {
       ease: "none",
       scrollTrigger: {
         trigger: wrapper,
-        start: "top top",
-        end: "bottom bottom",
+        start: "top bottom",
+        end: "bottom top",
         scrub: 1.2,
         invalidateOnRefresh: true,
       },
