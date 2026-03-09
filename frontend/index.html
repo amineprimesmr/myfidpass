@@ -994,26 +994,28 @@
 
     <!-- Landing Myfidpass (visible sur /) -->
     <div id="landing">
-      <header class="landing-header" id="landing-header">
-        <div class="landing-header-inner">
-          <button type="button" class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
-            <span class="landing-menu-toggle-bar"></span>
-            <span class="landing-menu-toggle-bar"></span>
-            <span class="landing-menu-toggle-bar"></span>
-          </button>
-          <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Myfidpass" class="landing-logo-img"></a>
-          <nav class="landing-nav landing-nav-desk">
-            <a href="#comment-ca-marche">Comment ça marche</a>
-            <a href="#produit">Offre</a>
-            <a href="#faq">FAQ</a>
-            <a href="#contact">Contact</a>
-          </nav>
-          <div class="landing-header-ctas">
-            <a href="#telecharger" class="landing-cta landing-cta-download landing-cta-desk">Télécharger l'application</a>
-            <a href="/login?redirect=/app" class="landing-cta landing-cta-desk landing-nav-login-link" id="landing-header-cta">Se connecter</a>
+      <div class="landing-header-outer">
+        <header class="landing-header landing-header-bar" id="landing-header">
+          <div class="landing-header-inner">
+            <button type="button" class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+              <span class="landing-menu-toggle-bar"></span>
+              <span class="landing-menu-toggle-bar"></span>
+              <span class="landing-menu-toggle-bar"></span>
+            </button>
+            <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Myfidpass" class="landing-logo-img"></a>
+            <nav class="landing-nav landing-nav-desk">
+              <a href="#comment-ca-marche">Comment ça marche</a>
+              <a href="#produit">Offre</a>
+              <a href="#faq">FAQ</a>
+              <a href="#contact">Contact</a>
+            </nav>
+            <div class="landing-header-ctas">
+              <a href="#telecharger" class="landing-cta landing-cta-download landing-cta-desk">Télécharger l'application</a>
+              <a href="/login?redirect=/app" class="landing-cta landing-cta-primary landing-cta-desk landing-nav-login-link" id="landing-header-cta">Se connecter</a>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
       <!-- Menu mobile (drawer style WHOOP) -->
       <div class="landing-menu-overlay" id="landing-menu-overlay" aria-hidden="true">

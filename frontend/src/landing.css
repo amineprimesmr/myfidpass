@@ -43,8 +43,12 @@
   .unified-shell .landing-logo { grid-column: 1; }
 }
 
-/* Header (fond noir, style WHOOP) */
+/* Header – barre flottante type relief 3D (style Nexuma) */
 .landing-header {
+  position: relative;
+}
+/* Auth / Offers : header noir classique (sans barre flottante) */
+.landing-header:not(.landing-header-bar) {
   position: sticky;
   top: 0;
   z-index: 100;
@@ -52,22 +56,55 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.5rem 1rem;
 }
-
 @media (min-width: 900px) {
-  .landing-header {
+  .landing-header:not(.landing-header-bar) {
     padding: 0.6rem 1.5rem 0.6rem 2rem;
   }
 }
+.landing-header-outer {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 1rem 1.25rem 0.75rem;
+  background: #e8eaed;
+  box-sizing: border-box;
+}
+
+.landing-header-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  border-radius: 20px;
+  padding: 0.65rem 1.5rem 0.65rem 1.25rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 6px 16px rgba(0, 0, 0, 0.08),
+    0 12px 32px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  transition: box-shadow 0.25s ease;
+}
+
+.landing-header-bar:hover {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.05),
+    0 10px 28px rgba(0, 0, 0, 0.1),
+    0 18px 44px rgba(0, 0, 0, 0.08);
+}
 
 .landing-header-inner {
-  max-width: 1280px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  position: relative;
+}
+.landing-header:not(.landing-header-bar) .landing-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
-/* Bouton hamburger (mobile uniquement) */
+/* Bouton hamburger (mobile) – couleur sombre sur barre claire */
 .landing-menu-toggle {
   display: none;
   flex-direction: column;
@@ -78,13 +115,19 @@
   padding: 0;
   background: none;
   border: none;
-  color: #fff;
+  color: #2d2d2d;
   cursor: pointer;
   flex-shrink: 0;
+  border-radius: 10px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.landing-menu-toggle:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1a1a1a;
 }
 .landing-menu-toggle-bar {
   display: block;
-  width: 22px;
+  width: 20px;
   height: 2px;
   background: currentColor;
   border-radius: 1px;
@@ -100,8 +143,15 @@
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* Mobile: barre noire = hamburger gauche, logo centre */
+/* Mobile: hamburger gauche, logo centre */
 @media (max-width: 900px) {
+  .landing-header-outer {
+    padding: 0.75rem 1rem;
+  }
+  .landing-header-bar {
+    padding: 0.6rem 1rem;
+    border-radius: 18px;
+  }
   .landing-nav-desk,
   .landing-cta-desk,
   .landing-header-ctas {
@@ -148,15 +198,18 @@
   top: 0;
   right: 0;
   width: 85%;
-  max-width: 400px;
+  max-width: 380px;
   height: 100%;
-  background: var(--landing-surface);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  box-shadow:
+    -2px 0 8px rgba(0, 0, 0, 0.06),
+    -8px 0 32px rgba(0, 0, 0, 0.12);
   transform: translateX(100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
 }
 .landing-menu-overlay.is-open .landing-menu-drawer {
   transform: translateX(0);
@@ -166,9 +219,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  background: #000;
+  background: #f8f9fa;
   flex-shrink: 0;
   position: relative;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 .landing-menu-close {
   width: 44px;
@@ -178,11 +232,17 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #fff;
+  color: #2d2d2d;
   font-size: 1.75rem;
   line-height: 1;
   cursor: pointer;
   padding: 0;
+  border-radius: 12px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.landing-menu-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1a1a1a;
 }
 .landing-menu-drawer-logo .landing-logo-img {
   height: 32px;
@@ -197,57 +257,88 @@
 .landing-menu-drawer-nav {
   display: flex;
   flex-direction: column;
-  padding: 0 1.25rem 1.5rem;
+  padding: 1rem 1.25rem 1.5rem;
   flex: 1;
+  gap: 0.25rem;
 }
 .landing-menu-drawer-nav a {
   display: block;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--landing-border);
-  color: var(--landing-text);
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  color: #2d2d2d;
   font-weight: 600;
   text-decoration: none;
   font-size: 1rem;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 .landing-menu-drawer-nav a:hover {
-  color: var(--landing-accent);
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1a1a;
 }
 .landing-menu-drawer-download {
   margin-top: 0.5rem;
   padding: 0.85rem 1.25rem !important;
   text-align: center;
-  background: #1a1a1a !important;
+  background: #2d2d2d !important;
   color: #fff !important;
   border-radius: 9999px;
   border-bottom: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-weight: 600;
 }
 .landing-menu-drawer-download:hover {
+  background: #3d3d3d !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+.landing-menu-drawer-login {
+  margin-top: 0.25rem;
+  padding: 0.85rem 1.25rem !important;
+  text-align: center;
+  background: #1a1a1a !important;
+  color: #fff !important;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-weight: 600;
+}
+.landing-menu-drawer-login:hover {
   background: #2d2d2d !important;
   color: #fff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 .landing-menu-drawer-cta {
   margin-top: 1rem;
   text-align: center;
-  background: var(--landing-accent) !important;
+  background: #1a1a1a !important;
   color: #fff !important;
   padding: 1rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 14px;
   border-bottom: none !important;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .landing-logo {
   font-weight: 800;
   font-size: 1.5rem;
   letter-spacing: -0.02em;
-  color: #fff;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
   margin-right: auto;
+}
+
+/* Barre flottante : logo et liens en sombre */
+.landing-header-bar .landing-logo {
+  color: #1a1a1a;
+}
+.landing-header-bar .landing-logo-img {
+  height: 32px;
+  max-height: 36px;
+  width: auto;
+  object-fit: contain;
+  vertical-align: middle;
 }
 
 .landing-logo-img {
@@ -274,29 +365,29 @@
 }
 
 .landing-nav a {
-  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  font-weight: 700;
-  font-size: 0.8rem;
-  transition: color 0.2s, text-decoration 0.2s;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
 }
 
-@media (min-width: 900px) {
-  .landing-nav a {
-    font-size: 0.82rem;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-  }
+/* Barre flottante : liens nav gris foncé */
+.landing-header-bar .landing-nav a {
+  color: #2d2d2d;
 }
-
+.landing-header-bar .landing-nav a:hover {
+  color: #1a1a1a;
+}
 .landing-nav a:hover {
-  color: #fff;
-  text-decoration: underline;
+  color: #1a1a1a;
 }
 .landing-nav a:focus-visible {
-  outline: 2px solid rgba(255,255,255,0.8);
-  outline-offset: 4px;
-  border-radius: 4px;
+  outline: 2px solid rgba(37, 99, 235, 0.5);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.landing-header-bar .landing-nav a:focus-visible {
+  outline-color: rgba(0, 0, 0, 0.25);
 }
 
 .landing-header-ctas {
@@ -308,48 +399,72 @@
 }
 
 .landing-cta {
-  background: var(--landing-accent) !important;
-  color: #fff !important;
-  padding: 0.5rem 1.15rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.85rem;
   flex-shrink: 0;
   text-decoration: none;
-  margin-left: auto;
+  font-weight: 600;
+  font-size: 0.88rem;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-@media (min-width: 900px) {
-  .landing-cta {
-    padding: 0.55rem 1.35rem;
-    font-size: 0.88rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-}
-
-.landing-cta-download {
+/* CTA principal (Se connecter) – bouton sombre avec relief 3D */
+.landing-cta-primary {
   background: #1a1a1a !important;
   color: #fff !important;
-  border-radius: 9999px;
-  padding: 0.6rem 1.25rem;
+  padding: 0.6rem 1.35rem;
+  border-radius: 14px;
   border: none;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 6px 16px rgba(0, 0, 0, 0.15);
 }
-.landing-cta-download:hover {
+.landing-cta-primary:hover {
   background: #2d2d2d !important;
   color: #fff !important;
   transform: translateY(-1px);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.12),
+    0 10px 24px rgba(0, 0, 0, 0.18);
+}
+.landing-cta-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
-.landing-cta:hover {
-  background: var(--landing-accent-hover) !important;
+/* CTA secondaire (Télécharger) – pilule sombre avec léger relief */
+.landing-cta-download {
+  background: #2d2d2d !important;
+  color: #fff !important;
+  border-radius: 9999px;
+  padding: 0.55rem 1.15rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.landing-cta-download:hover {
+  background: #3d3d3d !important;
   color: #fff !important;
   transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+/* Fallback pour autres headers (auth, offers) sans barre flottante */
+.landing-header:not(.landing-header-bar) .landing-logo { color: #fff; }
+.landing-header:not(.landing-header-bar) .landing-nav a { color: rgba(255, 255, 255, 0.9); }
+.landing-header:not(.landing-header-bar) .landing-nav a:hover { color: #fff; }
+.landing-header:not(.landing-header-bar) .landing-cta-primary,
+.landing-header:not(.landing-header-bar) .landing-cta {
+  background: var(--landing-accent) !important;
+  color: #fff !important;
+  box-shadow: none;
+}
+.landing-header:not(.landing-header-bar) .landing-cta:hover {
+  background: var(--landing-accent-hover) !important;
 }
 .landing-cta:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.5);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
+}
+.landing-header-bar .landing-cta:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Main */
