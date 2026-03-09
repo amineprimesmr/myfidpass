@@ -6,11 +6,17 @@ import { OAuth2Client } from "google-auth-library";
 import {
   createUser,
   getUserByEmail,
+  getUserById,
   getBusinessesByUserId,
   getSubscriptionByUserId,
   hasActiveSubscription,
+  setPasswordResetToken,
+  getPasswordResetByToken,
+  deletePasswordResetToken,
+  updateUserPassword,
 } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
+import { sendMail, isEmailConfigured } from "../email.js";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
@@ -333,6 +339,77 @@ router.get("/apple-exchange", (req, res) => {
     return res.status(401).json({ error: "Code invalide ou expiré" });
   }
   return res.json({ token: data.token, user: data.user, businesses: data.businesses });
+});
+
+const PASSWORD_RESET_EXPIRY_HOURS = 1;
+
+/**
+ * POST /api/auth/forgot-password
+ * Body: { email }
+ * Envoie un email avec lien de réinitialisation (si le compte existe). Réponse identique dans tous les cas (sécurité).
+ */
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body || {};
+  const emailNorm = String(email || "").trim().toLowerCase();
+  const message = "Si un compte existe avec cet email, vous recevrez un lien pour réinitialiser votre mot de passe.";
+  if (!emailNorm) {
+    return res.status(400).json({ error: "Email requis" });
+  }
+  const user = getUserByEmail(emailNorm);
+  if (!user) {
+    return res.json({ message });
+  }
+  const token = randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "").slice(0, 16);
+  const expiresAt = new Date(Date.now() + PASSWORD_RESET_EXPIRY_HOURS * 60 * 60 * 1000).toISOString();
+  setPasswordResetToken(user.id, token, expiresAt);
+  const resetLink = `${FRONTEND_URL}/login?reset=${encodeURIComponent(token)}`;
+  const { sent } = await sendMail({
+    to: user.email,
+    subject: "Réinitialisation de votre mot de passe — Myfidpass",
+    text: `Bonjour,\n\nVous avez demandé à réinitialiser votre mot de passe. Cliquez sur le lien ci-dessous (valable ${PASSWORD_RESET_EXPIRY_HOURS} h) :\n\n${resetLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.`,
+    html: `<p>Bonjour,</p><p>Vous avez demandé à réinitialiser votre mot de passe. <a href="${resetLink}">Cliquez ici</a> (lien valable ${PASSWORD_RESET_EXPIRY_HOURS} h).</p><p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>`,
+  });
+  if (!sent && isEmailConfigured()) {
+    return res.status(500).json({ error: "Impossible d'envoyer l'email. Réessayez plus tard." });
+  }
+  if (!sent) {
+    console.log("[Auth] SMTP non configuré — lien de réinitialisation (dev):", resetLink);
+  }
+  return res.json({ message });
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Body: { token, newPassword }
+ * Réinitialise le mot de passe avec le token reçu par email.
+ */
+router.post("/reset-password", async (req, res) => {
+  const { token, newPassword } = req.body || {};
+  const tokenStr = typeof token === "string" ? token.trim() : "";
+  if (!tokenStr) {
+    return res.status(400).json({ error: "Token manquant" });
+  }
+  if (!newPassword || String(newPassword).length < 8) {
+    return res.status(400).json({ error: "Nouveau mot de passe requis (8 caractères minimum)" });
+  }
+  const row = getPasswordResetByToken(tokenStr);
+  if (!row) {
+    return res.status(400).json({ error: "Lien invalide ou expiré. Demandez un nouveau lien." });
+  }
+  const user = getUserById(row.user_id);
+  if (!user) {
+    deletePasswordResetToken(tokenStr);
+    return res.status(400).json({ error: "Lien invalide." });
+  }
+  try {
+    const passwordHash = await bcrypt.hash(String(newPassword), SALT_ROUNDS);
+    updateUserPassword(user.id, passwordHash);
+    deletePasswordResetToken(tokenStr);
+    return res.json({ message: "Mot de passe mis à jour. Vous pouvez vous connecter." });
+  } catch (e) {
+    console.error("Reset password error:", e);
+    return res.status(500).json({ error: "Erreur lors de la mise à jour du mot de passe." });
+  }
 });
 
 /**

@@ -19,99 +19,198 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   </head>
   <body>
-    <!-- Header parcours (étapes 1–2–3) : visible sur /creer-ma-carte et /checkout -->
+    <!-- Header parcours (étapes 1–2–3) : même UX barre flottante que la page d'accueil -->
     <header class="builder-header hidden" id="builder-header" aria-hidden="true">
-      <div class="builder-header-inner">
-        <div class="builder-header-left">
-          <a href="/" class="builder-header-logo" aria-label="Myfidpass">
-            <img src="/assets/logodark.png" alt="" class="builder-header-logo-img" onerror="this.style.display='none'; this.closest('.builder-header-logo')?.classList.add('show-fallback');">
-            <span class="builder-header-logo-fallback" aria-hidden="true">Myfidpass</span>
-          </a>
-          <a href="/login?redirect=/creer-ma-carte" class="builder-header-login" id="builder-header-login">Se connecter</a>
-        </div>
-        <nav class="builder-header-steps" aria-label="Étapes du parcours">
-          <button type="button" class="builder-header-step builder-header-step-active" data-step="1" aria-current="step" aria-label="Étape 1">1</button>
-          <button type="button" class="builder-header-step" data-step="2" aria-label="Étape 2">2</button>
-          <button type="button" class="builder-header-step" data-step="3" aria-label="Étape 3">3</button>
-        </nav>
-        <div class="builder-header-cart-wrap">
-          <a href="/checkout" class="builder-header-cart" aria-label="Panier">
-            <svg class="builder-header-cart-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-            </svg>
-            <span class="builder-header-cart-badge" id="builder-header-cart-badge">0</span>
-          </a>
+      <div class="builder-header-outer">
+        <div class="builder-header-bar">
+          <div class="builder-header-inner">
+            <div class="builder-header-left">
+              <a href="/" class="builder-header-logo" aria-label="Myfidpass">
+                <img src="/assets/logodark.png" alt="" class="builder-header-logo-img" onerror="this.style.display='none'; this.closest('.builder-header-logo')?.classList.add('show-fallback');">
+                <span class="builder-header-logo-fallback" aria-hidden="true">Myfidpass</span>
+              </a>
+              <a href="/login?redirect=/creer-ma-carte" class="builder-header-login" id="builder-header-login">Se connecter</a>
+            </div>
+            <nav class="builder-header-steps" aria-label="Étapes du parcours">
+              <button type="button" class="builder-header-step builder-header-step-active" data-step="1" aria-current="step" aria-label="Étape 1">1</button>
+              <button type="button" class="builder-header-step" data-step="2" aria-label="Étape 2">2</button>
+              <button type="button" class="builder-header-step" data-step="3" aria-label="Étape 3">3</button>
+            </nav>
+            <div class="builder-header-right">
+              <a href="/checkout" class="builder-header-cart" aria-label="Panier">
+                <svg class="builder-header-cart-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="builder-header-cart-badge" id="builder-header-cart-badge">0</span>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </header>
-    <!-- Auth : même shell que landing (header noir, fond clair) -->
+    <!-- Auth : même UX barre flottante que landing -->
     <div id="auth-app" class="hidden unified-shell">
-      <header class="landing-header">
-        <div class="landing-header-inner">
-          <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Myfidpass" class="landing-logo-img"></a>
-          <nav class="landing-nav landing-nav-desk">
+      <div class="landing-header-outer">
+        <header class="landing-header landing-header-bar">
+          <div class="landing-header-inner">
+            <button type="button" class="landing-menu-toggle" id="auth-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+              <span class="landing-menu-toggle-bar"></span>
+              <span class="landing-menu-toggle-bar"></span>
+              <span class="landing-menu-toggle-bar"></span>
+            </button>
+            <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Myfidpass" class="landing-logo-img"></a>
+            <nav class="landing-nav landing-nav-desk">
+              <a href="/creer-ma-carte">Créer ma carte</a>
+              <a href="/">Accueil</a>
+            </nav>
+            <div class="landing-header-ctas">
+              <a href="/creer-ma-carte" class="landing-cta landing-cta-primary landing-cta-desk">Obtenir ma carte</a>
+            </div>
+          </div>
+        </header>
+      </div>
+      <div class="landing-menu-overlay" id="auth-menu-overlay" aria-hidden="true">
+        <div class="landing-menu-drawer">
+          <div class="landing-menu-drawer-header">
+            <button type="button" class="landing-menu-close" id="auth-menu-close" aria-label="Fermer le menu"><span aria-hidden="true">×</span></button>
+            <a href="/" class="landing-menu-drawer-logo"><img src="/assets/logo.png" alt="Myfidpass" class="landing-logo-img"></a>
+          </div>
+          <nav class="landing-menu-drawer-nav">
             <a href="/creer-ma-carte">Créer ma carte</a>
-            <a href="/" class="landing-nav-login">Accueil</a>
+            <a href="/">Accueil</a>
+            <a href="/creer-ma-carte" class="landing-menu-drawer-login">Obtenir ma carte</a>
           </nav>
-          <a href="/creer-ma-carte" class="landing-cta landing-cta-desk">Obtenir ma carte</a>
         </div>
-      </header>
+      </div>
       <main class="unified-main auth-main">
       <div class="auth-container">
-        <div id="auth-tabs" class="auth-tabs">
-          <button type="button" class="auth-tab active" data-tab="login">Connexion</button>
-          <button type="button" class="auth-tab" data-tab="register">Créer un compte</button>
+        <a href="/" class="auth-top-btn" aria-label="Retour à l'accueil"><span class="auth-top-btn-icon" aria-hidden="true">[ → ]</span></a>
+        <p id="auth-reset-success" class="auth-success-msg hidden"></p>
+        <div id="auth-forgot-block" class="auth-form-block hidden">
+          <h1 class="auth-title">Mot de passe oublié</h1>
+          <p class="auth-subtitle">Entrez votre email pour recevoir un lien de réinitialisation.</p>
+          <form id="auth-forgot-form" class="auth-form">
+            <label class="auth-label" for="auth-forgot-email">Email</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+              <input type="email" id="auth-forgot-email" class="auth-input" placeholder="Email" required autocomplete="email" />
+            </div>
+            <p id="auth-forgot-error" class="auth-error hidden"></p>
+            <p id="auth-forgot-success" class="auth-success-msg hidden"></p>
+            <button type="submit" class="auth-btn-primary" id="auth-forgot-submit">Envoyer le lien</button>
+          </form>
+          <p class="auth-back-login"><a href="#" id="auth-forgot-back">← Retour à la connexion</a></p>
         </div>
-        <div id="auth-form-login" class="auth-form-block">
-          <h1 class="auth-title">Connexion</h1>
+        <div id="auth-reset-block" class="auth-form-block hidden">
+          <h1 class="auth-title">Nouveau mot de passe</h1>
+          <p class="auth-subtitle">Choisissez un nouveau mot de passe (8 caractères minimum).</p>
+          <form id="auth-reset-form" class="auth-form">
+            <input type="hidden" id="auth-reset-token" name="token" value="" />
+            <label class="auth-label" for="auth-reset-password">Nouveau mot de passe</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input type="password" id="auth-reset-password" class="auth-input" placeholder="Nouveau mot de passe" required minlength="8" autocomplete="new-password" />
+            </div>
+            <label class="auth-label" for="auth-reset-password-confirm">Confirmer le mot de passe</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input type="password" id="auth-reset-password-confirm" class="auth-input" placeholder="Confirmer" required minlength="8" autocomplete="new-password" />
+            </div>
+            <p id="auth-reset-error" class="auth-error hidden"></p>
+            <button type="submit" class="auth-btn-primary">Réinitialiser le mot de passe</button>
+          </form>
+        </div>
+        <div id="auth-form-login" class="auth-form-block hidden">
+          <h1 class="auth-title">Se connecter avec email</h1>
+          <p class="auth-subtitle">Accédez à votre espace et gérez vos cartes fidélité. Gratuit.</p>
           <form id="auth-login-form" class="auth-form">
-            <label class="auth-label">Email</label>
-            <input type="email" id="auth-login-email" class="auth-input" placeholder="vous@exemple.fr" required autocomplete="email" />
-            <label class="auth-label">Mot de passe</label>
-            <input type="password" id="auth-login-password" class="auth-input" placeholder="••••••••" required autocomplete="current-password" />
+            <label class="auth-label" for="auth-login-email">Email</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+              <input type="email" id="auth-login-email" class="auth-input" placeholder="Email" required autocomplete="email" />
+            </div>
+            <label class="auth-label" for="auth-login-password">Mot de passe</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input type="password" id="auth-login-password" class="auth-input" placeholder="Mot de passe" required autocomplete="current-password" />
+            </div>
+            <p class="auth-forgot-wrap"><a href="#" id="auth-forgot-password" class="auth-forgot-link">Mot de passe oublié ?</a></p>
             <p id="auth-login-error" class="auth-error hidden"></p>
-            <button type="submit" class="landing-btn landing-btn-primary landing-btn-block">Se connecter</button>
+            <button type="submit" class="auth-btn-primary">Se connecter</button>
           </form>
         </div>
-        <div id="auth-form-register" class="auth-form-block hidden">
+        <div id="auth-form-register" class="auth-form-block">
           <h1 class="auth-title">Créer un compte</h1>
+          <p class="auth-subtitle">Rejoignez Myfidpass et créez vos cartes en quelques minutes. Gratuit.</p>
           <form id="auth-register-form" class="auth-form">
-            <label class="auth-label">Nom (optionnel)</label>
-            <input type="text" id="auth-register-name" class="auth-input" placeholder="Votre nom ou établissement" autocomplete="name" />
-            <label class="auth-label">Email</label>
-            <input type="email" id="auth-register-email" class="auth-input" placeholder="vous@exemple.fr" required autocomplete="email" />
-            <label class="auth-label">Mot de passe (8 caractères min.)</label>
-            <input type="password" id="auth-register-password" class="auth-input" placeholder="••••••••" required autocomplete="new-password" minlength="8" />
+            <label class="auth-label" for="auth-register-email">Email</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+              <input type="email" id="auth-register-email" class="auth-input" placeholder="Email" required autocomplete="email" />
+            </div>
+            <label class="auth-label" for="auth-register-password">Mot de passe (8 caractères min.)</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input type="password" id="auth-register-password" class="auth-input" placeholder="Mot de passe" required autocomplete="new-password" minlength="8" />
+            </div>
             <p id="auth-register-error" class="auth-error hidden"></p>
-            <button type="submit" class="landing-btn landing-btn-primary landing-btn-block">Créer mon compte</button>
+            <button type="submit" class="auth-btn-primary">Créer mon compte</button>
           </form>
         </div>
-        <p class="auth-social-divider">Ou continuer avec</p>
+        <p class="auth-social-divider"><span>Ou continuer avec</span></p>
         <div class="auth-social-buttons">
-          <div id="auth-google-btn" class="auth-social-btn-wrap"></div>
+          <div id="auth-google-btn" class="auth-social-btn-wrap">
+            <button type="button" id="auth-google-btn-fallback" class="auth-btn-social auth-btn-google" aria-label="Continuer avec Google">
+              <span class="auth-btn-google-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span>
+              Google
+            </button>
+          </div>
           <button type="button" id="auth-apple-btn" class="auth-btn-social auth-btn-apple" aria-label="Continuer avec Apple">
             <span class="auth-btn-apple-icon" aria-hidden="true"></span>
             Apple
           </button>
         </div>
+        <p id="auth-social-hint" class="auth-social-hint hidden" aria-live="polite"></p>
         <p class="auth-footer"><a href="/">← Retour à l'accueil</a></p>
       </div>
       </main>
     </div>
 
-    <!-- Choisir une offre : même shell (header noir, fond clair) -->
+    <!-- Choisir une offre : même UX barre flottante que landing -->
     <div id="offers-app" class="hidden unified-shell">
-      <header class="landing-header">
-        <div class="landing-header-inner">
-          <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Myfidpass" class="landing-logo-img"></a>
-          <nav class="landing-nav landing-nav-desk">
+      <div class="landing-header-outer">
+        <header class="landing-header landing-header-bar">
+          <div class="landing-header-inner">
+            <button type="button" class="landing-menu-toggle" id="offers-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+              <span class="landing-menu-toggle-bar"></span>
+              <span class="landing-menu-toggle-bar"></span>
+              <span class="landing-menu-toggle-bar"></span>
+            </button>
+            <a href="/" class="landing-logo"><img src="/assets/logo.png" alt="Myfidpass" class="landing-logo-img"></a>
+            <nav class="landing-nav landing-nav-desk">
+              <a href="/app">Mon espace</a>
+              <a href="/">Accueil</a>
+            </nav>
+            <div class="landing-header-ctas">
+              <a href="/app" class="landing-cta landing-cta-primary landing-cta-desk">Mon espace</a>
+            </div>
+          </div>
+        </header>
+      </div>
+      <div class="landing-menu-overlay" id="offers-menu-overlay" aria-hidden="true">
+        <div class="landing-menu-drawer">
+          <div class="landing-menu-drawer-header">
+            <button type="button" class="landing-menu-close" id="offers-menu-close" aria-label="Fermer le menu"><span aria-hidden="true">×</span></button>
+            <a href="/" class="landing-menu-drawer-logo"><img src="/assets/logo.png" alt="Myfidpass" class="landing-logo-img"></a>
+          </div>
+          <nav class="landing-menu-drawer-nav">
             <a href="/app">Mon espace</a>
-            <a href="/" class="landing-nav-login">Accueil</a>
+            <a href="/">Accueil</a>
+            <a href="/app" class="landing-menu-drawer-login">Mon espace</a>
           </nav>
-          <a href="/app" class="landing-cta landing-cta-desk">Mon espace</a>
         </div>
-      </header>
+      </div>
       <main class="unified-main offers-main">
         <h1 class="offers-title">Choisissez votre tarif</h1>
         <p class="offers-subtitle">Accédez à votre espace et créez vos cartes fidélité (Apple Wallet et Google Wallet).</p>
@@ -1002,8 +1101,6 @@
             <nav class="landing-nav landing-nav-desk">
               <a href="#comment-ca-marche">C'est quoi ?</a>
               <a href="#produit">Tarif</a>
-              <a href="#faq">FAQ</a>
-              <a href="#contact">Contact</a>
             </nav>
             <div class="landing-header-ctas">
               <a href="#telecharger" class="landing-cta landing-cta-download landing-cta-desk">Télécharger l'application</a>
@@ -1025,8 +1122,6 @@
           <nav class="landing-menu-drawer-nav">
             <a href="#comment-ca-marche">C'est quoi ?</a>
             <a href="#produit">Tarif</a>
-            <a href="#faq">FAQ</a>
-            <a href="#contact">Contact</a>
             <a href="#telecharger" class="landing-menu-drawer-download">Télécharger l'application</a>
             <a href="/login?redirect=/app" class="landing-menu-drawer-login">Se connecter</a>
           </nav>
@@ -1135,86 +1230,107 @@
           </div>
         </section>
 
-        <section class="landing-value landing-section-dark landing-reveal" data-reveal>
-          <span class="landing-tag">MyFidpass</span>
-          <h2 class="landing-section-title">Obtenez une carte fidélité en <strong>3 secondes</strong></h2>
-          <p class="landing-section-subtitle">Vos clients scannent un QR ou ouvrent un lien, ajoutent la carte à leur téléphone (Apple Wallet ou Google Wallet). C’est tout.</p>
-        </section>
-
-        <section id="comment-ca-marche" class="landing-steps landing-reveal" data-reveal>
-          <h2 class="landing-section-title">Comment ça marche</h2>
-          <ol class="landing-steps-list">
-            <li>
-              <span class="landing-steps-num">1</span>
-              <div>
-                <h3>Nous créons votre carte</h3>
-                <p>Vous nous donnez le nom de votre commerce. Nous générons votre carte fidélité et votre lien unique (ou QR code).</p>
+        <!-- C'est quoi ? – Étapes produit -->
+        <section id="comment-ca-marche" class="landing-how landing-reveal" data-reveal>
+          <h2 class="landing-how-title">C'est quoi Myfidpass ?</h2>
+          <p class="landing-how-subtitle">Quatre étapes pour fidéliser vos clients avec une carte digitale.</p>
+          <ol class="landing-how-steps">
+            <li class="landing-how-step">
+              <span class="landing-how-step-num" aria-hidden="true">1</span>
+              <div class="landing-how-step-content">
+                <h3 class="landing-how-step-title">Créez votre carte</h3>
+                <p class="landing-how-step-desc">En quelques clics, configurez votre carte fidélité : type (points ou tampons), design, nom de votre commerce. Vous recevez un lien unique et un QR code.</p>
               </div>
             </li>
-            <li>
-              <span class="landing-steps-num">2</span>
-              <div>
-                <h3>Vous diffusez le lien</h3>
-                <p>Affichage en caisse, sur votre vitrine, ou en fin de commande. Vos clients cliquent ou scannent.</p>
+            <li class="landing-how-step">
+              <span class="landing-how-step-num" aria-hidden="true">2</span>
+              <div class="landing-how-step-content">
+                <h3 class="landing-how-step-title">Partagez le lien</h3>
+                <p class="landing-how-step-desc">Affichez le QR ou le lien en caisse, sur votre vitrine ou en fin de commande. Vos clients scannent ou cliquent — aucun logiciel à installer.</p>
               </div>
             </li>
-            <li>
-              <span class="landing-steps-num">3</span>
-              <div>
-                <h3>Ils l’ajoutent sur leur téléphone</h3>
-                <p>Un clic sur « Apple Wallet » ou « Google Wallet ». La carte est dans le téléphone. Ils la présentent en caisse (code-barres scannable).</p>
+            <li class="landing-how-step">
+              <span class="landing-how-step-num" aria-hidden="true">3</span>
+              <div class="landing-how-step-content">
+                <h3 class="landing-how-step-title">Ils l’ajoutent sur leur téléphone</h3>
+                <p class="landing-how-step-desc">Un clic : la carte s’ajoute dans Apple Wallet (iPhone) ou Google Wallet (Android). Ils la présentent en caisse à chaque visite — vous scannez le code-barres.</p>
+              </div>
+            </li>
+            <li class="landing-how-step">
+              <span class="landing-how-step-num" aria-hidden="true">4</span>
+              <div class="landing-how-step-content">
+                <h3 class="landing-how-step-title">Rappelez-les avec des offres</h3>
+                <p class="landing-how-step-desc">Envoyez des notifications pour annoncer une offre, un rappel ou une actualité. Faites revenir vos clients au bon moment.</p>
               </div>
             </li>
           </ol>
         </section>
 
-        <section id="produit" class="landing-product landing-section-dark landing-reveal" data-reveal>
-          <h2 class="landing-section-title">Carte fidélité sur tous les téléphones</h2>
-          <p class="landing-section-subtitle">Doublez la fidélité de vos clients. Paiement unique, pas d’abonnement.</p>
-          <div class="landing-product-card">
-            <div class="landing-product-content">
-              <h3>Carte fidélité Myfidpass</h3>
-              <ul>
-                <li>Lien unique + QR code pour votre commerce</li>
-                <li>Carte aux couleurs de votre marque dans Apple Wallet ou Google Wallet</li>
-                <li>Points, niveaux, code-barres pour la caisse</li>
-                <li>Instantané — aucun envoi physique</li>
+        <section id="produit" class="landing-tarif landing-reveal" data-reveal>
+          <span class="landing-tarif-tag">Tarif</span>
+          <h2 class="landing-tarif-title">Un tarif qui suit <strong>votre croissance</strong></h2>
+          <p class="landing-tarif-subtitle">De la première carte à des centaines de clients fidèles, Myfidpass grandit avec vous.</p>
+          <div class="landing-tarif-grid">
+            <article class="landing-tarif-card">
+              <div class="landing-tarif-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M7 15h2"/></svg>
+              </div>
+              <h3 class="landing-tarif-card-title">Découverte</h3>
+              <p class="landing-tarif-card-desc">Pour démarrer</p>
+              <p class="landing-tarif-card-price">
+                <span class="landing-tarif-card-amount">7 jours gratuits</span>
+                <span class="landing-tarif-card-period">puis 49 €/mois</span>
+              </p>
+              <a href="/creer-ma-carte" class="landing-tarif-card-btn">Commencer</a>
+              <ul class="landing-tarif-card-features">
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>1 carte fidélité</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Lien + QR code</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Tableau de bord</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Apple Wallet &amp; Google Wallet</li>
               </ul>
-              <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-block">Obtenir ma carte</a>
-            </div>
+            </article>
+            <article class="landing-tarif-card landing-tarif-card-popular">
+              <span class="landing-tarif-card-badge">Recommandé</span>
+              <div class="landing-tarif-card-icon landing-tarif-card-icon-accent" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+              </div>
+              <h3 class="landing-tarif-card-title">Myfidpass</h3>
+              <p class="landing-tarif-card-desc">Pour les commerçants</p>
+              <p class="landing-tarif-card-price">
+                <span class="landing-tarif-card-amount">49 €</span>
+                <span class="landing-tarif-card-period">/mois</span>
+              </p>
+              <a href="/creer-ma-carte" class="landing-tarif-card-btn">Choisir ce tarif</a>
+              <ul class="landing-tarif-card-features landing-tarif-card-features-accent">
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Tout Découverte</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Notifications illimitées</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Scan en caisse</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Sans engagement</li>
+              </ul>
+            </article>
+            <article class="landing-tarif-card">
+              <div class="landing-tarif-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <h3 class="landing-tarif-card-title">Équipe</h3>
+              <p class="landing-tarif-card-desc">Pour les chaînes</p>
+              <p class="landing-tarif-card-price">
+                <span class="landing-tarif-card-amount">Sur devis</span>
+                <span class="landing-tarif-card-period"></span>
+              </p>
+              <a href="/creer-ma-carte" class="landing-tarif-card-btn">Nous contacter</a>
+              <ul class="landing-tarif-card-features">
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Tout Myfidpass</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Multi-établissements</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Intégration caisse / borne</li>
+                <li><span class="landing-tarif-check" aria-hidden="true"></span>Support prioritaire</li>
+              </ul>
+            </article>
           </div>
         </section>
 
-        <section class="landing-guarantee landing-reveal" data-reveal>
-          <h2 class="landing-section-title">Garantie satisfait ou remboursé 30 jours</h2>
-          <p>Si la carte ne correspond pas à vos attentes, nous vous remboursons. Sans condition.</p>
-        </section>
-
-        <section id="faq" class="landing-faq landing-section-dark landing-reveal" data-reveal>
-          <h2 class="landing-section-title">Questions fréquentes</h2>
-          <div class="landing-faq-list">
-            <details class="landing-faq-item">
-              <summary>Quel type de téléphone pour mes clients ?</summary>
-              <p>iPhone : carte dans Apple Wallet. Android : carte dans Google Wallet. Même code-barres, même scan en caisse. Tous les clients sont couverts.</p>
-            </details>
-            <details class="landing-faq-item">
-              <summary>Comment mes clients ajoutent la carte ?</summary>
-              <p>Ils ouvrent le lien que vous leur donnez (ou scannent le QR), renseignent nom et email, puis choisissent « Apple Wallet » ou « Google Wallet ». La carte s’ajoute en quelques secondes.</p>
-            </details>
-            <details class="landing-faq-item">
-              <summary>C’est instantané ?</summary>
-              <p>Oui. Dès que votre carte est configurée, vous recevez un lien. Vous n’avez rien à imprimer ni à livrer : tout est digital.</p>
-            </details>
-            <details class="landing-faq-item">
-              <summary>Puis-je avoir plusieurs commerces ?</summary>
-              <p>Oui. Chaque commerce a son propre lien et sa propre carte. Idéal pour les franchises ou les enseignes à plusieurs points de vente.</p>
-            </details>
-          </div>
-        </section>
-
-        <section id="contact" class="landing-cta-block landing-reveal" data-reveal>
-          <h2 class="landing-section-title">Prêt à fidéliser ?</h2>
-          <p>Obtenez votre carte fidélité (Apple Wallet ou Google Wallet) en quelques clics.</p>
+        <section class="landing-cta-final landing-reveal" data-reveal>
+          <h2 class="landing-cta-final-title">Prêt à fidéliser ?</h2>
           <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
         </section>
 
@@ -1224,13 +1340,11 @@
             <nav class="landing-footer-links">
               <a href="#comment-ca-marche">C'est quoi ?</a>
               <a href="#produit">Tarif</a>
-              <a href="#faq">FAQ</a>
               <a href="/mentions-legales">Mentions légales</a>
               <a href="/politique-confidentialite">Politique de confidentialité</a>
               <a href="/cgu">CGU</a>
               <a href="/cgv">CGV</a>
               <a href="/cookies">Cookies</a>
-              <a href="#contact">Contact</a>
             </nav>
             <p class="landing-footer-legal">Myfidpass est indépendant et n’est pas affilié à Apple ni Google. Nos cartes utilisent Apple Wallet (iPhone) et Google Wallet (Android) pour une expérience native sur tous les téléphones.</p>
             <p class="landing-footer-copy">© 2026 Myfidpass. Tous droits réservés.</p>

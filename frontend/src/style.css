@@ -99,7 +99,7 @@ body {
   display: none;
 }
 #builder-header:not(.hidden) {
-  display: flex;
+  display: block;
 }
 
 /* Bannière promo – entrée douce */

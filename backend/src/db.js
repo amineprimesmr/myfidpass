@@ -69,6 +69,15 @@ db.exec(`
   );
   CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_password_reset_user ON password_reset_tokens(user_id);
+  CREATE INDEX IF NOT EXISTS idx_password_reset_expires ON password_reset_tokens(expires_at);
+
   CREATE TABLE IF NOT EXISTS subscriptions (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL UNIQUE REFERENCES users(id),
@@ -236,6 +245,24 @@ try {
 } catch (_) {
   // Index existe déjà
 }
+// Migration : table password_reset_tokens (mot de passe oublié)
+try {
+  const tableExists = db.prepare(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='password_reset_tokens'"
+  ).get();
+  if (!tableExists) {
+    db.exec(`
+      CREATE TABLE password_reset_tokens (
+        token TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX idx_password_reset_user ON password_reset_tokens(user_id);
+      CREATE INDEX idx_password_reset_expires ON password_reset_tokens(expires_at);
+    `);
+  }
+} catch (_) {}
 
 export function getBusinessBySlug(slug) {
   if (!slug || typeof slug !== "string") return null;
@@ -259,6 +286,36 @@ export function getUserByEmail(email) {
 export function getUserById(id) {
   const row = db.prepare("SELECT * FROM users WHERE id = ?").get(id);
   return row || null;
+}
+
+/** Met à jour le mot de passe d’un utilisateur (réinitialisation). */
+export function updateUserPassword(userId, passwordHash) {
+  if (!userId || !passwordHash) return false;
+  const info = db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(passwordHash, userId);
+  return info.changes > 0;
+}
+
+/** Enregistre un token de réinitialisation (écrase un éventuel ancien pour ce user). */
+export function setPasswordResetToken(userId, token, expiresAt) {
+  db.prepare("DELETE FROM password_reset_tokens WHERE user_id = ?").run(userId);
+  db.prepare(
+    "INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)"
+  ).run(token, userId, expiresAt);
+}
+
+/** Récupère l’entrée token si valide (non expiré). */
+export function getPasswordResetByToken(token) {
+  if (!token) return null;
+  const row = db.prepare(
+    "SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > datetime('now')"
+  ).get(token);
+  return row || null;
+}
+
+/** Supprime un token (après utilisation ou annulation). */
+export function deletePasswordResetToken(token) {
+  if (!token) return;
+  db.prepare("DELETE FROM password_reset_tokens WHERE token = ?").run(token);
 }
 
 export function getBusinessesByUserId(userId) {
