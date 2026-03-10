@@ -5745,9 +5745,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
   (async () => {
     if (!engagementBlock || !engagementActionsEl) return;
     try {
-      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement-actions`);
-      const data = res.ok ? await res.json().catch(() => ({})) : {};
-      const actions = Array.isArray(data.actions) ? data.actions : [];
+      const actions = await fetchEngagementActions(slug);
       if (actions.length === 0) {
         engagementBlock.classList.add("hidden");
         if (engagementEmptyEl) engagementEmptyEl.classList.remove("hidden");
@@ -5927,6 +5925,28 @@ function arrayBufferToBase64(buffer) {
   let binary = "";
   for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function fetchEngagementActions(slug) {
+  const encodedSlug = encodeURIComponent(slug);
+  const candidates = [];
+  const add = (url) => {
+    if (url && !candidates.includes(url)) candidates.push(url);
+  };
+  add(`${API_BASE}/api/businesses/${encodedSlug}/engagement-actions`);
+  if (typeof window !== "undefined") {
+    add(`${window.location.origin}/api/businesses/${encodedSlug}/engagement-actions`);
+    add(`https://api.myfidpass.fr/api/businesses/${encodedSlug}/engagement-actions`);
+  }
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) continue;
+      const data = await res.json().catch(() => ({}));
+      if (Array.isArray(data.actions)) return data.actions;
+    } catch (_) {}
+  }
+  return [];
 }
 
 function showSlugError(message) {
