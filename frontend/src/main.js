@@ -5489,7 +5489,15 @@ function setPageBusiness(business) {
   }
 }
 
+const FIDPASS_SUCCESS_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 jours
+
 function showFidelitySuccess(slug, memberId) {
+  try {
+    sessionStorage.setItem(
+      "fidpass_success_" + slug,
+      JSON.stringify({ memberId, createdAt: Date.now() })
+    );
+  } catch (_) {}
   if (form) form.classList.add("hidden");
   if (fidelitySuccessEl) {
     fidelitySuccessEl.classList.remove("hidden");
@@ -5540,6 +5548,9 @@ function showFidelitySuccess(slug, memberId) {
   }
   if (btnAnotherCard) {
     btnAnotherCard.onclick = () => {
+      try {
+        sessionStorage.removeItem("fidpass_success_" + slug);
+      } catch (_) {}
       if (fidelitySuccessEl) fidelitySuccessEl.classList.add("hidden");
       if (form) form.classList.remove("hidden");
       if (fidelityGoogleErrorEl) {
@@ -5761,6 +5772,19 @@ function runFidelityApp(slug) {
     .then((business) => {
       ensureFidelityPath(slug);
       setPageBusiness(business);
+      // Au retour sur la page après ajout de la carte au Wallet, restaurer l’écran succès avec les missions
+      try {
+        const raw = sessionStorage.getItem("fidpass_success_" + slug);
+        if (raw) {
+          const { memberId: storedMemberId, createdAt } = JSON.parse(raw);
+          if (
+            storedMemberId &&
+            Date.now() - (createdAt || 0) < FIDPASS_SUCCESS_MAX_AGE
+          ) {
+            showFidelitySuccess(slug, storedMemberId);
+          }
+        }
+      } catch (_) {}
     })
     .catch(() => {
       showSlugError(`Entreprise « ${slug} » introuvable.`);
