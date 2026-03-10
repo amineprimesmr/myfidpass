@@ -1938,7 +1938,7 @@ body.page-builder {
 
 #landing.builder-visible main.landing-builder {
   margin-top: 0;
-  padding-top: 0;
+  padding-top: 2.5rem;
 }
 
 .builder-steps {
@@ -1964,7 +1964,6 @@ body.page-builder {
 }
 
 #landing.builder-visible .builder-step-1-block {
-  padding-top: 0;
   margin-top: 0;
 }
 
