@@ -620,6 +620,12 @@
           <div id="app-scanner-fullscreen" class="app-scanner-fullscreen hidden" aria-hidden="true">
             <div class="app-scanner-fullscreen-header">
               <span class="app-scanner-fullscreen-title">Scanner la carte</span>
+              <label class="app-scanner-camera-picker">
+                <span class="app-scanner-camera-picker-label">Caméra</span>
+                <select id="app-scanner-camera-select" class="app-scanner-camera-select" aria-label="Choisir la caméra">
+                  <option value="">Chargement…</option>
+                </select>
+              </label>
               <button type="button" id="app-scanner-fullscreen-close" class="app-scanner-fullscreen-close" aria-label="Fermer">×</button>
             </div>
             <div id="app-scanner-fullscreen-viewport" class="app-scanner-fullscreen-viewport"></div>

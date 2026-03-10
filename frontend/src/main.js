@@ -2798,54 +2798,43 @@ function initAppDashboard(slug) {
     updateRedeemButtons();
   }
 
-  /** Préfère la caméra arrière sur mobile ; sur PC (webcam) utilise la première caméra disponible. */
-  async function getPreferredBackCameraConfig() {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoInputs = devices.filter((d) => d.kind === "videoinput");
-      const backLabels = /back|arrière|environment/i;
-      const ultrawideLabels = /ultra\s*wide|grand\s*angle|0\.5x|wide\s*angle/i;
-      const backCameras = videoInputs.filter((d) => backLabels.test(d.label || ""));
-      const mainBack = backCameras.find((d) => !ultrawideLabels.test(d.label || ""));
-      const fallback = backCameras[0];
-      const chosen = mainBack || fallback;
-      if (chosen?.deviceId) {
-        return {
-          deviceId: { exact: chosen.deviceId },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        };
-      }
-      /* Sur PC il n’y a souvent pas de caméra "arrière" : utiliser la première caméra (webcam). */
-      if (videoInputs.length > 0 && videoInputs[0].deviceId) {
-        return {
-          deviceId: { exact: videoInputs[0].deviceId },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        };
-      }
-    } catch (_) {}
-    /* Dernier recours : "user" (webcam) pour que ça marche sur PC. */
-    return {
-      facingMode: "user",
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
-    };
+  const scannerCameraSelect = document.getElementById("app-scanner-camera-select");
+  let scannerCameraList = [];
+
+  /** Construit la config caméra à partir du deviceId sélectionné ou facingMode. */
+  function getCameraConfigFromSelection(deviceId) {
+    const base = { width: { ideal: 1280 }, height: { ideal: 720 } };
+    if (deviceId && deviceId !== "default") {
+      return { deviceId: { exact: deviceId }, ...base };
+    }
+    return { facingMode: "user", ...base };
   }
 
-  async function startFullscreenScanner() {
-    if (scannerInstance) return;
-    if (!scannerFullscreen || !scannerFullscreenViewport) return;
-    scannerFullscreen.classList.remove("hidden");
-    scannerFullscreen.setAttribute("aria-hidden", "false");
-    if (scannerFullscreenVerifying) scannerFullscreenVerifying.classList.add("hidden");
-    if (scannerSuccessFlash) scannerSuccessFlash.classList.add("hidden");
-    if (scannerFullscreenReject) scannerFullscreenReject.classList.add("hidden");
-    scannerFullscreenViewport.innerHTML = "";
+  function fillCameraSelect(cameras) {
+    if (!scannerCameraSelect) return;
+    scannerCameraList = cameras;
+    scannerCameraSelect.innerHTML = "";
+    if (cameras.length === 0) {
+      scannerCameraSelect.innerHTML = '<option value="default">Par défaut</option>';
+      return;
+    }
+    cameras.forEach((cam, i) => {
+      const opt = document.createElement("option");
+      opt.value = cam.deviceId;
+      opt.textContent = cam.label || "Caméra " + (i + 1);
+      scannerCameraSelect.appendChild(opt);
+    });
+  }
 
+  function getSelectedCameraId() {
+    if (!scannerCameraSelect || !scannerCameraSelect.value) return "default";
+    return scannerCameraSelect.value;
+  }
+
+  function startScannerWithCamera(cameraConfig) {
+    if (scannerInstance || !scannerFullscreenViewport) return;
     const config = { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] };
     scannerInstance = new Html5Qrcode("app-scanner-fullscreen-viewport", config);
-    const cameraConfig = await getPreferredBackCameraConfig();
     const qrboxSize = Math.min(280, Math.min(window.innerWidth, window.innerHeight) * 0.72);
     const scanConfig = { fps: 15, qrbox: { width: qrboxSize, height: qrboxSize } };
 
@@ -2878,8 +2867,63 @@ function initAppDashboard(slug) {
     }, () => {}).catch((err) => {
       scannerInstance = null;
       closeFullscreenScanner();
-      showScannerReject(err?.message || "Impossible d’accéder à la caméra. Vérifiez les permissions du navigateur.");
+      const msg = err?.message || "Impossible d'accéder à la caméra. Vérifiez les permissions du navigateur.";
+      showScannerReject(msg, true);
     });
+  }
+
+  async function startFullscreenScanner() {
+    if (scannerInstance) return;
+    if (!scannerFullscreen || !scannerFullscreenViewport) return;
+
+    // Demander l'accès caméra IMMÉDIATEMENT (dans le même « geste » que le clic), sinon Chrome ne montre pas la demande
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    } catch (err) {
+      const msg = err?.message || "Impossible d'accéder à la caméra. Vérifiez les permissions (site en HTTPS, clic sur le cadenas pour autoriser la caméra).";
+      showScannerReject(msg, true);
+      return;
+    }
+
+    const cameras = await navigator.mediaDevices.enumerateDevices().then((devices) => devices.filter((d) => d.kind === "videoinput"));
+    stream.getTracks().forEach((t) => t.stop());
+
+    scannerFullscreen.classList.remove("hidden");
+    scannerFullscreen.setAttribute("aria-hidden", "false");
+    if (scannerFullscreenVerifying) scannerFullscreenVerifying.classList.add("hidden");
+    if (scannerSuccessFlash) scannerSuccessFlash.classList.add("hidden");
+    if (scannerFullscreenReject) scannerFullscreenReject.classList.add("hidden");
+    scannerFullscreenViewport.innerHTML = "";
+    fillCameraSelect(cameras);
+    if (scannerCameraSelect) scannerCameraSelect.disabled = false;
+
+    const deviceId = cameras.length > 0 ? getSelectedCameraId() || cameras[0].deviceId : "default";
+    const cameraConfig = getCameraConfigFromSelection(deviceId);
+    startScannerWithCamera(cameraConfig);
+  }
+
+  function restartScannerWithSelectedCamera() {
+    if (!scannerFullscreen || scannerFullscreen.classList.contains("hidden")) return;
+    if (scannerInstance) {
+      scannerInstance.stop().then(() => {
+        scannerInstance = null;
+        scannerFullscreenViewport.innerHTML = "";
+        const deviceId = getSelectedCameraId();
+        const cameraConfig = getCameraConfigFromSelection(deviceId);
+        startScannerWithCamera(cameraConfig);
+      }).catch(() => {
+        scannerInstance = null;
+        scannerFullscreenViewport.innerHTML = "";
+        const deviceId = getSelectedCameraId();
+        const cameraConfig = getCameraConfigFromSelection(deviceId);
+        startScannerWithCamera(cameraConfig);
+      });
+    }
+  }
+
+  if (scannerCameraSelect) {
+    scannerCameraSelect.addEventListener("change", () => restartScannerWithSelectedCamera());
   }
 
   function stopFullscreenScanner() {
