@@ -2887,6 +2887,8 @@ function initAppDashboard(slug) {
     }
 
     const cameras = await navigator.mediaDevices.enumerateDevices().then((devices) => devices.filter((d) => d.kind === "videoinput"));
+    const videoTrack = stream.getVideoTracks()[0];
+    const workingDeviceId = videoTrack ? videoTrack.getSettings().deviceId : null;
     stream.getTracks().forEach((t) => t.stop());
 
     scannerFullscreen.classList.remove("hidden");
@@ -2898,7 +2900,11 @@ function initAppDashboard(slug) {
     fillCameraSelect(cameras);
     if (scannerCameraSelect) scannerCameraSelect.disabled = false;
 
-    const deviceId = cameras.length > 0 ? getSelectedCameraId() || cameras[0].deviceId : "default";
+    // Sur PC, utiliser la même caméra que celle qui a répondu à la demande (évite « arrière » / flux noir)
+    const deviceId = workingDeviceId || (cameras.length > 0 ? getSelectedCameraId() || cameras[0].deviceId : null) || "default";
+    if (scannerCameraSelect && workingDeviceId && cameras.some((c) => c.deviceId === workingDeviceId)) {
+      scannerCameraSelect.value = workingDeviceId;
+    }
     const cameraConfig = getCameraConfigFromSelection(deviceId);
     startScannerWithCamera(cameraConfig);
   }
