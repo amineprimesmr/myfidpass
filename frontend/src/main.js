@@ -2805,7 +2805,7 @@ function initAppDashboard(slug) {
   function getCameraConfigFromSelection(deviceId) {
     const base = { width: { ideal: 1280 }, height: { ideal: 720 } };
     if (deviceId && deviceId !== "default") {
-      return { deviceId: { exact: deviceId }, ...base };
+      return deviceId;
     }
     return { facingMode: "user", ...base };
   }
@@ -2831,7 +2831,7 @@ function initAppDashboard(slug) {
     return scannerCameraSelect.value;
   }
 
-  function startScannerWithCamera(cameraConfig) {
+  function startScannerWithCamera(cameraConfig, allowFallback = true) {
     if (scannerInstance || !scannerFullscreenViewport) return;
     const config = { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] };
     scannerInstance = new Html5Qrcode("app-scanner-fullscreen-viewport", config);
@@ -2866,6 +2866,12 @@ function initAppDashboard(slug) {
       }
     }, () => {}).catch((err) => {
       scannerInstance = null;
+      const canFallback = allowFallback && (typeof cameraConfig === "string" || (cameraConfig && cameraConfig.deviceId));
+      if (canFallback) {
+        // Fallback robuste desktop: webcam user sans deviceId strict.
+        startScannerWithCamera({ facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, false);
+        return;
+      }
       closeFullscreenScanner();
       const msg = err?.message || "Impossible d'accéder à la caméra. Vérifiez les permissions du navigateur.";
       showScannerReject(msg, true);
@@ -2906,7 +2912,7 @@ function initAppDashboard(slug) {
       scannerCameraSelect.value = workingDeviceId;
     }
     const cameraConfig = getCameraConfigFromSelection(deviceId);
-    startScannerWithCamera(cameraConfig);
+    startScannerWithCamera(cameraConfig, true);
   }
 
   function restartScannerWithSelectedCamera() {
@@ -2917,13 +2923,13 @@ function initAppDashboard(slug) {
         scannerFullscreenViewport.innerHTML = "";
         const deviceId = getSelectedCameraId();
         const cameraConfig = getCameraConfigFromSelection(deviceId);
-        startScannerWithCamera(cameraConfig);
+        startScannerWithCamera(cameraConfig, true);
       }).catch(() => {
         scannerInstance = null;
         scannerFullscreenViewport.innerHTML = "";
         const deviceId = getSelectedCameraId();
         const cameraConfig = getCameraConfigFromSelection(deviceId);
-        startScannerWithCamera(cameraConfig);
+        startScannerWithCamera(cameraConfig, true);
       });
     }
   }
