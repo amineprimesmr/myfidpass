@@ -1769,8 +1769,12 @@ function initAppDashboard(slug) {
   if (programTypePoints) programTypePoints.addEventListener("change", setRulesPanelVisibility);
   if (programTypeStamps) programTypeStamps.addEventListener("change", setRulesPanelVisibility);
 
-  /** Redimensionne et compresse l'image logo (max 640px largeur, JPEG 0.85) pour éviter dépassement taille requête. */
-  function resizeLogoToDataUrl(file, maxWidth = 640, quality = 0.85) {
+  /**
+   * Redimensionne une image et la convertit en data URL.
+   * - logo: conserve PNG si le fichier source est PNG (meilleur rendu des logos)
+   * - fond carte: peut rester en JPEG pour limiter la taille
+   */
+  function resizeLogoToDataUrl(file, maxWidth = 640, quality = 0.85, format = "auto") {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
@@ -1787,7 +1791,15 @@ function initAppDashboard(slug) {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, cw, ch);
         try {
-          const dataUrl = canvas.toDataURL("image/jpeg", quality);
+          const isPngSource = String(file.type || "").toLowerCase().includes("png");
+          const mime =
+            format === "png" || (format === "auto" && isPngSource)
+              ? "image/png"
+              : "image/jpeg";
+          const dataUrl =
+            mime === "image/png"
+              ? canvas.toDataURL("image/png")
+              : canvas.toDataURL("image/jpeg", quality);
           resolve(dataUrl);
         } catch (e) {
           reject(e);
@@ -2359,7 +2371,7 @@ function initAppDashboard(slug) {
         return;
       }
       try {
-        personnaliserLogoDataUrl = await resizeLogoToDataUrl(file);
+        personnaliserLogoDataUrl = await resizeLogoToDataUrl(file, 640, 0.9, "auto");
         if (personnaliserLogoPreview) {
           personnaliserLogoPreview.src = personnaliserLogoDataUrl;
           personnaliserLogoPreview.classList.remove("hidden");
@@ -2379,7 +2391,7 @@ function initAppDashboard(slug) {
     }
     try {
       personnaliserCardBgRemoveRequested = false;
-      personnaliserCardBgDataUrl = await resizeLogoToDataUrl(file, 750, 0.85);
+      personnaliserCardBgDataUrl = await resizeLogoToDataUrl(file, 750, 0.85, "jpeg");
       if (personnaliserCardBgPreview) {
         personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
         personnaliserCardBgPreview.classList.remove("hidden");
