@@ -1636,7 +1636,6 @@ router.patch("/:slug", (req, res) => {
     backgroundColor,
     foregroundColor,
     labelColor,
-    logoBase64,
     locationLat,
     locationLng,
     locationRelevantText,
@@ -1658,13 +1657,18 @@ router.patch("/:slug", (req, res) => {
   if (locationLng !== undefined) updates.location_lng = locationLng === null || locationLng === "" ? null : Number(locationLng);
   if (locationRelevantText !== undefined) updates.location_relevant_text = locationRelevantText ? String(locationRelevantText).trim() : null;
   if (locationRadiusMeters !== undefined) updates.location_radius_meters = locationRadiusMeters === null || locationRadiusMeters === "" ? null : Math.min(2000, Math.max(0, Number(locationRadiusMeters) || 500));
-  if (logoBase64 !== undefined && logoBase64 !== null && typeof logoBase64 === "string") {
-    const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, "");
-    const buf = Buffer.from(base64Data, "base64");
-    if (buf.length === 0 || buf.length > 4 * 1024 * 1024) {
-      return res.status(400).json({ error: "Logo invalide ou trop volumineux (max 4 Mo)." });
+  const logoBase64 = body.logoBase64 ?? body.logo_base64;
+  if (logoBase64 !== undefined) {
+    if (logoBase64 === null || logoBase64 === "") {
+      updates.logo_base64 = null;
+    } else if (typeof logoBase64 === "string") {
+      const base64Data = logoBase64.replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length === 0 || buf.length > 4 * 1024 * 1024) {
+        return res.status(400).json({ error: "Logo invalide ou trop volumineux (max 4 Mo)." });
+      }
+      updates.logo_base64 = logoBase64;
     }
-    updates.logo_base64 = logoBase64;
   }
   const cardBackgroundBase64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   if (cardBackgroundBase64 !== undefined) {

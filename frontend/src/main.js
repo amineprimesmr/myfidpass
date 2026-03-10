@@ -1003,7 +1003,6 @@ const APP_MOBILE_TITLES = {
 
 function showAppSection(sectionId) {
   let normalized = sectionId === "partager" ? "personnaliser" : sectionId;
-  if (normalized === "profil" && window.matchMedia("(min-width: 769px)").matches) normalized = "vue-ensemble";
   const id = APP_SECTION_IDS.includes(normalized) ? normalized : "vue-ensemble";
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   const content = document.getElementById("app-dashboard-content");
@@ -2630,6 +2629,187 @@ function initAppDashboard(slug) {
       personnaliserSave.disabled = false;
     });
   }
+
+  // ——— Profil (nom, logo, adresse) ———
+  const profilOrg = document.getElementById("app-profil-org");
+  const profilAddress = document.getElementById("app-profil-address");
+  const profilLogoPreview = document.getElementById("app-profil-logo-preview");
+  const profilLogoPlaceholder = document.getElementById("app-profil-logo-placeholder");
+  const profilLogoInput = document.getElementById("app-profil-logo-input");
+  const profilLogoRemove = document.getElementById("app-profil-logo-remove");
+  const profilSlugDisplay = document.getElementById("app-profil-slug-display");
+  const profilMessage = document.getElementById("app-profil-message");
+  const profilSave = document.getElementById("app-profil-save");
+  const profilSaveText = document.getElementById("app-profil-save-text");
+  const profilSaveSpinner = document.getElementById("app-profil-save-spinner");
+  let profilLogoDataUrl = "";
+  let profilLogoRemoved = false;
+
+  function showProfilMessage(text, isError = false) {
+    if (!profilMessage) return;
+    profilMessage.textContent = text || "";
+    profilMessage.classList.toggle("hidden", !text);
+    profilMessage.classList.toggle("success", text && !isError);
+    profilMessage.classList.toggle("error", text && isError);
+  }
+
+  function loadProfil() {
+    api("/dashboard/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        if (profilOrg) profilOrg.value = (data.organization_name ?? data.organizationName ?? "").trim();
+        if (profilAddress) profilAddress.value = (data.location_address ?? data.locationAddress ?? "").trim();
+        const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin.replace(/\/$/, "") : "";
+        if (profilSlugDisplay) {
+          profilSlugDisplay.textContent = base ? `${base}/fidelity/${slug}` : `/fidelity/${slug}`;
+          const link = document.createElement("a");
+          link.href = base ? `${base}/fidelity/${slug}` : "#";
+          link.target = "_blank";
+          link.rel = "noopener";
+          link.textContent = base ? `${base}/fidelity/${slug}` : slug;
+          link.style.color = "inherit";
+          profilSlugDisplay.innerHTML = "";
+          profilSlugDisplay.appendChild(link);
+        }
+        profilLogoDataUrl = "";
+        if (profilLogoPreview) {
+          profilLogoPreview.src = "";
+          profilLogoPreview.classList.add("hidden");
+        }
+        if (profilLogoPlaceholder) {
+          profilLogoPlaceholder.textContent = "Aucun logo";
+          profilLogoPlaceholder.classList.remove("hidden");
+        }
+        if (profilLogoRemove) profilLogoRemove.classList.add("hidden");
+        profilLogoRemoved = false;
+        if (data.logo_url ?? data.logoUrl) {
+          api("/logo?v=" + Date.now())
+            .then((r) => (r.ok ? r.blob() : null))
+            .then((blob) => {
+              if (blob && profilLogoPreview) {
+                const url = URL.createObjectURL(blob);
+                profilLogoPreview.src = url;
+                profilLogoPreview.classList.remove("hidden");
+                if (profilLogoPlaceholder) profilLogoPlaceholder.classList.add("hidden");
+                if (profilLogoRemove) profilLogoRemove.classList.remove("hidden");
+              }
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }
+
+  if (profilLogoInput) {
+    profilLogoInput.addEventListener("change", async (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      try {
+        if (typeof resizeLogoToDataUrl === "function") {
+          profilLogoDataUrl = await resizeLogoToDataUrl(file, 640, 0.9, "auto");
+        } else {
+          const reader = new FileReader();
+          profilLogoDataUrl = await new Promise((res, rej) => {
+            reader.onload = () => res(reader.result);
+            reader.onerror = rej;
+            reader.readAsDataURL(file);
+          });
+        }
+        if (profilLogoPreview) {
+          profilLogoPreview.src = profilLogoDataUrl;
+          profilLogoPreview.classList.remove("hidden");
+        }
+        if (profilLogoPlaceholder) profilLogoPlaceholder.classList.add("hidden");
+        if (profilLogoRemove) profilLogoRemove.classList.remove("hidden");
+      } catch (err) {
+        showProfilMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG.", true);
+      }
+      profilLogoInput.value = "";
+    });
+  }
+  if (profilLogoRemove) {
+    profilLogoRemove.addEventListener("click", () => {
+      profilLogoDataUrl = "";
+      profilLogoRemoved = true;
+      if (profilLogoPreview) {
+        profilLogoPreview.src = "";
+        profilLogoPreview.classList.add("hidden");
+      }
+      if (profilLogoPlaceholder) {
+        profilLogoPlaceholder.textContent = "Aucun logo";
+        profilLogoPlaceholder.classList.remove("hidden");
+      }
+      profilLogoRemove.classList.add("hidden");
+      showProfilMessage("");
+    });
+  }
+
+  if (profilSave) {
+    profilSave.addEventListener("click", async () => {
+      const organizationName = profilOrg?.value?.trim() || "";
+      const addressVal = profilAddress?.value?.trim() || "";
+      const body = {
+        organization_name: organizationName || undefined,
+        location_address: addressVal || undefined,
+      };
+      if (profilLogoRemoved) {
+        body.logo_base64 = null;
+      } else if (profilLogoDataUrl && typeof profilLogoDataUrl === "string" && profilLogoDataUrl.startsWith("data:")) {
+        body.logo_base64 = profilLogoDataUrl;
+      }
+      if (addressVal) {
+        try {
+          const coords = await geocodeAddress(addressVal);
+          if (coords) {
+            body.location_lat = coords.lat;
+            body.location_lng = coords.lng;
+          }
+        } catch (_) {}
+      }
+      profilSave.disabled = true;
+      if (profilSaveText) profilSaveText.classList.add("hidden");
+      if (profilSaveSpinner) profilSaveSpinner.classList.remove("hidden");
+      showProfilMessage("");
+      const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
+      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
+      try {
+        const res = await fetch(url, { method: "PATCH", headers, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          showProfilMessage("Modifications enregistrées.");
+          profilLogoRemoved = false;
+          if (body.logo_base64 && profilLogoPreview?.src?.startsWith("data:")) {
+            profilLogoDataUrl = "";
+          }
+          if (body.logo_base64 === null) {
+            if (profilLogoPreview) {
+              profilLogoPreview.src = "";
+              profilLogoPreview.classList.add("hidden");
+            }
+            if (profilLogoPlaceholder) {
+              profilLogoPlaceholder.textContent = "Aucun logo";
+              profilLogoPlaceholder.classList.remove("hidden");
+            }
+            if (profilLogoRemove) profilLogoRemove.classList.add("hidden");
+          }
+        } else {
+          showProfilMessage(data.error || "Erreur lors de l'enregistrement.", true);
+        }
+      } catch (_) {
+        showProfilMessage("Erreur réseau. Réessayez.", true);
+      }
+      profilSave.disabled = false;
+      if (profilSaveText) profilSaveText.classList.remove("hidden");
+      if (profilSaveSpinner) profilSaveSpinner.classList.add("hidden");
+    });
+  }
+
+  window.addEventListener("app-section-change", (e) => {
+    if (e.detail?.sectionId === "profil") loadProfil();
+  });
+  if (document.getElementById("profil")?.classList.contains("app-section-visible")) loadProfil();
 
   // ——— Scanner (caméra) ———
   const caisseChoose = document.getElementById("app-caisse-choose");
@@ -5746,6 +5926,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
         }
         btnIAddedCard.textContent = "C'est fait ✓";
         btnIAddedCard.disabled = true;
+        loadEngagementActions();
       };
     }
   }
@@ -5754,7 +5935,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
   const engagementEmptyEl = document.getElementById("fidelity-engagement-empty");
   const engagementActionsEl = document.getElementById("fidelity-engagement-actions");
   const engagementClaimFeedback = document.getElementById("fidelity-engagement-claim-feedback");
-  (async () => {
+  async function loadEngagementActions() {
     if (!engagementBlock || !engagementActionsEl) return;
     try {
       const actions = await fetchEngagementActions(slug);
@@ -5824,7 +6005,12 @@ function showFidelitySuccess(slug, memberId, memberName) {
       if (engagementBlock) engagementBlock.classList.add("hidden");
       if (engagementEmptyEl) engagementEmptyEl.classList.remove("hidden");
     }
-  })();
+  }
+  loadEngagementActions();
+  // Retry court pour éviter les cas de course (cache/redirect réseau au premier hit).
+  setTimeout(() => {
+    loadEngagementActions();
+  }, 1200);
 
   const btnEnableNotifications = document.getElementById("btn-enable-notifications");
   const notificationsStatusEl = document.getElementById("fidelity-notifications-status");

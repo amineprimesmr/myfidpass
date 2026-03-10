@@ -445,6 +445,10 @@
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
             <span class="app-sidebar-link-text">Notifications</span>
           </a>
+          <a href="#profil" class="app-sidebar-link" data-section="profil">
+            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <span class="app-sidebar-link-text">Profil</span>
+          </a>
         </nav>
         <div class="app-sidebar-footer">
           <p class="app-sidebar-user" id="app-user-email"></p>
@@ -1089,12 +1093,51 @@
               </div>
             </div>
           </section>
-          <!-- Section Profil mobile (style app) -->
+          <!-- Section Profil : infos établissement (nom, logo, adresse) -->
           <section id="profil" class="app-section app-section-profil">
             <h2 class="app-section-title">Profil</h2>
-            <p class="app-section-desc">Mon espace et paramètres.</p>
-            <p class="app-mobile-profil-user" id="app-mobile-profil-email"></p>
-            <ul class="app-mobile-profil-list">
+            <p class="app-section-desc">Modifiez les informations de votre établissement (nom, logo, adresse). Elles apparaissent sur la carte fidélité et dans l’app.</p>
+            <div class="app-card app-profil-card">
+              <h3 class="app-subsection-title">Mon établissement</h3>
+              <div class="app-profil-form">
+                <div class="app-rules-row">
+                  <label class="app-label" for="app-profil-org">Nom affiché</label>
+                  <input type="text" id="app-profil-org" class="app-input" placeholder="ex. Café de la Gare" autocomplete="organization" />
+                  <p class="app-hint">Nom visible sur la carte fidélité et en en-tête de la page carte.</p>
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Logo</label>
+                  <div class="app-profil-logo-row">
+                    <div class="app-profil-logo-preview-wrap">
+                      <img id="app-profil-logo-preview" class="app-profil-logo-preview hidden" alt="" />
+                      <span id="app-profil-logo-placeholder" class="app-profil-logo-placeholder">Aucun logo</span>
+                    </div>
+                    <div class="app-profil-logo-actions">
+                      <input type="file" id="app-profil-logo-input" class="app-input-file" accept="image/jpeg,image/png,image/webp" aria-label="Choisir un logo" />
+                      <label for="app-profil-logo-input" class="app-btn app-btn-secondary">Changer le logo</label>
+                      <button type="button" id="app-profil-logo-remove" class="app-btn app-btn-ghost hidden">Supprimer</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label" for="app-profil-address">Adresse du commerce</label>
+                  <input type="text" id="app-profil-address" class="app-input" placeholder="Rechercher ou saisir une adresse…" autocomplete="street-address" />
+                  <p class="app-hint">Utilisée pour la localisation du pass (Relevant locations) et la carte.</p>
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Lien de votre page carte</label>
+                  <p id="app-profil-slug-display" class="app-profil-slug-display"></p>
+                  <p class="app-hint">Partagez ce lien ou le QR code (onglet Ma carte) à vos clients.</p>
+                </div>
+                <p id="app-profil-message" class="app-message app-profil-message hidden"></p>
+                <button type="button" id="app-profil-save" class="app-btn app-btn-primary">
+                  <span id="app-profil-save-text">Enregistrer</span>
+                  <span id="app-profil-save-spinner" class="app-profil-save-spinner hidden"></span>
+                </button>
+              </div>
+            </div>
+            <p class="app-mobile-profil-user app-mobile-only" id="app-mobile-profil-email"></p>
+            <ul class="app-mobile-profil-list app-mobile-only">
               <li><a href="#membres" class="app-mobile-profil-item" data-section="membres">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                 Tous les membres
