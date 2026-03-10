@@ -2067,6 +2067,12 @@ function initAppDashboard(slug) {
       if (fbEnable) fbEnable.checked = !!fb.enabled;
       if (fbPoints) fbPoints.value = fb.points ?? 10;
       if (fbUrl) fbUrl.value = fb.url ?? "";
+      const fidelityUrlEl = document.getElementById("app-engagement-fidelity-url");
+      if (fidelityUrlEl && slug) {
+        const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin : "https://myfidpass.fr";
+        fidelityUrlEl.href = `${base}/fidelity/${encodeURIComponent(slug)}`;
+        fidelityUrlEl.textContent = `${base}/fidelity/${slug}`;
+      }
       if (personnaliserAddress && (data.location_address ?? data.locationAddress) != null) personnaliserAddress.value = data.location_address ?? data.locationAddress ?? "";
       updateCoordsDisplay(data.location_lat ?? data.locationLat, data.location_lng ?? data.locationLng);
       if (personnaliserLocationText && (data.location_relevant_text ?? data.locationRelevantText) != null) personnaliserLocationText.value = data.location_relevant_text ?? data.locationRelevantText ?? "";
@@ -5665,9 +5671,8 @@ function showFidelitySuccess(slug, memberId, memberName) {
     if (!engagementBlock || !engagementActionsEl) return;
     try {
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement-actions`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const actions = data.actions || [];
+      const data = res.ok ? await res.json().catch(() => ({})) : {};
+      const actions = Array.isArray(data.actions) ? data.actions : [];
       if (actions.length === 0) {
         engagementBlock.classList.add("hidden");
         if (engagementEmptyEl) engagementEmptyEl.classList.remove("hidden");
@@ -5732,6 +5737,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
       });
     } catch (_) {
       if (engagementBlock) engagementBlock.classList.add("hidden");
+      if (engagementEmptyEl) engagementEmptyEl.classList.remove("hidden");
     }
   })();
 
