@@ -86,6 +86,7 @@ body {
 #landing.builder-visible .site-banner {
   display: none !important;
 }
+#landing.builder-visible .landing-header-outer,
 #landing.builder-visible #landing-header {
   display: none !important;
 }

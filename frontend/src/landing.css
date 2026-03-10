@@ -1888,7 +1888,7 @@
   }
 }
 
-/* Page créer ma carte : pleine largeur, fond unifié, sans bordure ni ligne sur le côté */
+/* Page créer ma carte : pleine largeur, fond unifié, sans bandeau blanc au-dessus du titre */
 .landing-builder {
   width: 100%;
   min-height: 100vh;
@@ -1903,6 +1903,8 @@
 .landing-builder .builder-inner {
   max-width: 1200px;
   margin: 0 auto;
+  padding-top: 0;
+  margin-top: 0;
   border: none;
   box-shadow: none;
 }
@@ -1934,6 +1936,11 @@ body.page-builder {
   box-shadow: none;
 }
 
+#landing.builder-visible main.landing-builder {
+  margin-top: 0;
+  padding-top: 0;
+}
+
 .builder-steps {
   display: flex;
   align-items: center;
@@ -1956,15 +1963,22 @@ body.page-builder {
   display: block;
 }
 
+#landing.builder-visible .builder-step-1-block {
+  padding-top: 0;
+  margin-top: 0;
+}
+
 .builder-step-1-content {
   max-width: 1100px;
   margin: 0 auto;
 }
 
-/* Titre + sous-titre au-dessus des deux colonnes */
+/* Titre + sous-titre au-dessus des deux colonnes — pas d'espace au-dessus (évite le bandeau blanc) */
 .builder-step-1-heading {
   text-align: center;
   margin-bottom: 2rem;
+  margin-top: 0;
+  padding-top: 0;
 }
 .builder-step-1-heading .builder-title {
   margin-top: 0;
