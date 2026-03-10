@@ -1,6 +1,12 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
-const API_BASE = typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL : "";
+const RUNTIME_DEFAULT_API_BASE =
+  typeof window !== "undefined" && /(^|\.)myfidpass\.fr$/i.test(window.location.hostname)
+    ? "https://api.myfidpass.fr"
+    : "";
+const API_BASE = typeof import.meta.env?.VITE_API_URL === "string" && import.meta.env.VITE_API_URL.trim()
+  ? import.meta.env.VITE_API_URL
+  : RUNTIME_DEFAULT_API_BASE;
 const AUTH_TOKEN_KEY = "fidpass_token";
 
 const landingEl = document.getElementById("landing");
