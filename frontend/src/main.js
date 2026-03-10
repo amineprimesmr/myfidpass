@@ -1,12 +1,25 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
-const RUNTIME_DEFAULT_API_BASE =
-  typeof window !== "undefined" && /(^|\.)myfidpass\.fr$/i.test(window.location.hostname)
-    ? "https://api.myfidpass.fr"
-    : "";
-const API_BASE = typeof import.meta.env?.VITE_API_URL === "string" && import.meta.env.VITE_API_URL.trim()
-  ? import.meta.env.VITE_API_URL
-  : RUNTIME_DEFAULT_API_BASE;
+const IS_MYFIDPASS_HOST =
+  typeof window !== "undefined" && /(^|\.)myfidpass\.fr$/i.test(window.location.hostname);
+const RAW_ENV_API_BASE =
+  typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : "";
+
+function shouldForceApiSubdomain(base) {
+  if (!IS_MYFIDPASS_HOST) return false;
+  if (!base) return true;
+  if (base.startsWith("/")) return true; // ex: /api -> tombe sur le frontend myfidpass.fr
+  try {
+    const u = new URL(base, window.location.origin);
+    return !/(^|\.)api\.myfidpass\.fr$/i.test(u.hostname);
+  } catch (_) {
+    return true;
+  }
+}
+
+const API_BASE = shouldForceApiSubdomain(RAW_ENV_API_BASE)
+  ? "https://api.myfidpass.fr"
+  : RAW_ENV_API_BASE;
 const AUTH_TOKEN_KEY = "fidpass_token";
 
 const landingEl = document.getElementById("landing");
