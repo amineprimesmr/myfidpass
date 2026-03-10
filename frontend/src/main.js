@@ -5493,7 +5493,7 @@ const FIDPASS_SUCCESS_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
 function showFidelitySuccess(slug, memberId) {
   try {
-    sessionStorage.setItem(
+    localStorage.setItem(
       "fidpass_success_" + slug,
       JSON.stringify({ memberId, createdAt: Date.now() })
     );
@@ -5549,7 +5549,7 @@ function showFidelitySuccess(slug, memberId) {
   if (btnAnotherCard) {
     btnAnotherCard.onclick = () => {
       try {
-        sessionStorage.removeItem("fidpass_success_" + slug);
+        localStorage.removeItem("fidpass_success_" + slug);
       } catch (_) {}
       if (fidelitySuccessEl) fidelitySuccessEl.classList.add("hidden");
       if (form) form.classList.remove("hidden");
@@ -5630,6 +5630,7 @@ function showFidelitySuccess(slug, memberId) {
           }
         });
       });
+      engagementBlock.scrollIntoView({ behavior: "smooth", block: "center" });
     } catch (_) {
       if (engagementBlock) engagementBlock.classList.add("hidden");
     }
@@ -5774,7 +5775,7 @@ function runFidelityApp(slug) {
       setPageBusiness(business);
       // Au retour sur la page après ajout de la carte au Wallet, restaurer l’écran succès avec les missions
       try {
-        const raw = sessionStorage.getItem("fidpass_success_" + slug);
+        const raw = localStorage.getItem("fidpass_success_" + slug);
         if (raw) {
           const { memberId: storedMemberId, createdAt } = JSON.parse(raw);
           if (
@@ -5823,6 +5824,20 @@ function runFidelityApp(slug) {
     });
   }
 
+  // Quand l’utilisateur revient sur l’onglet (bouton Retour après ajout au Wallet), réafficher l’écran succès et les missions
+  window.addEventListener("pageshow", (e) => {
+    if (!e.persisted) return;
+    const s = getSlugFromPath();
+    if (!s) return;
+    try {
+      const raw = localStorage.getItem("fidpass_success_" + s);
+      if (!raw) return;
+      const { memberId: storedMemberId, createdAt } = JSON.parse(raw);
+      if (storedMemberId && Date.now() - (createdAt || 0) < FIDPASS_SUCCESS_MAX_AGE) {
+        showFidelitySuccess(s, storedMemberId);
+      }
+    } catch (_) {}
+  });
 }
 
 // Parcours unifié : transition accueil → créateur sans rechargement (même page, même UX)
