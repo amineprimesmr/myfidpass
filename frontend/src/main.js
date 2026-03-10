@@ -6359,26 +6359,60 @@ function initLandingHeroAnim() {
 function initLandingCardsScroll() {
   const wrapper = document.getElementById("landing-cards-scroll-wrapper");
   const track = document.getElementById("landing-cards-scroll-track");
+  const section = wrapper?.querySelector(".landing-cards-scroll");
   if (!wrapper || !track) return;
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (prefersReducedMotion) return;
 
+  const computeScrollDistance = () => {
+    const viewWidth = window.innerWidth;
+    const maxTranslate = Math.max(0, track.scrollWidth - viewWidth + 80);
+    return maxTranslate;
+  };
+
+  const applyWrapperHeight = () => {
+    const vh = window.innerHeight;
+    const distance = computeScrollDistance();
+    // 1 écran min + distance horizontale => quand le carrousel finit, on sort de la section sans "bloquer".
+    wrapper.style.minHeight = `${Math.max(vh * 1.05, vh + distance)}px`;
+  };
+
+  if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger);
+    applyWrapperHeight();
+    // Nettoie l'ancienne animation si la fonction est réinitialisée.
+    const oldTween = wrapper._cardsScrollTween;
+    if (oldTween?.scrollTrigger) oldTween.scrollTrigger.kill();
+    if (oldTween) oldTween.kill();
+
+    const tween = gsap.to(track, {
+      x: () => -computeScrollDistance(),
+      ease: "none",
+      scrollTrigger: {
+        trigger: wrapper,
+        start: "top top",
+        end: () => `+=${computeScrollDistance()}`,
+        scrub: 0.6,
+        pin: section || true,
+        pinSpacing: true,
+        invalidateOnRefresh: true,
+        onRefresh: applyWrapperHeight,
+      },
+    });
+    wrapper._cardsScrollTween = tween;
+    return;
+  }
+
+  applyWrapperHeight();
   let ticking = false;
   function updateCarouselScroll() {
     const vh = window.innerHeight;
-    const trackWidth = track.scrollWidth;
-    const viewWidth = window.innerWidth;
-    const maxTranslate = Math.max(0, trackWidth - viewWidth + 80);
+    const maxTranslate = computeScrollDistance();
     const wrapperHeight = wrapper.offsetHeight;
-    const scrollRange = wrapperHeight - vh;
-    if (scrollRange <= 0) {
-      track.style.transform = "translateX(0)";
-      ticking = false;
-      return;
-    }
+    const scrollRange = Math.max(1, wrapperHeight - vh);
     const scrollY = window.scrollY || window.pageYOffset;
     const wrapperTop = wrapper.offsetTop;
-    const progress = Math.max(0, Math.min(1, (scrollY - wrapperTop + vh) / scrollRange));
+    const progress = Math.max(0, Math.min(1, (scrollY - wrapperTop) / scrollRange));
     const x = -progress * maxTranslate;
     track.style.transform = `translateX(${x}px)`;
     ticking = false;
@@ -6390,26 +6424,9 @@ function initLandingCardsScroll() {
     requestAnimationFrame(updateCarouselScroll);
   }
 
-  if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
-    gsap.registerPlugin(ScrollTrigger);
-    const viewWidth = window.innerWidth;
-    const maxScroll = Math.max(0, track.scrollWidth - viewWidth + 80);
-    gsap.to(track, {
-      x: -maxScroll,
-      ease: "none",
-      scrollTrigger: {
-        trigger: wrapper,
-        start: "top bottom",
-        end: "bottom top",
-        scrub: 1.2,
-        invalidateOnRefresh: true,
-      },
-    });
-    return;
-  }
-
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", () => {
+    applyWrapperHeight();
     requestAnimationFrame(updateCarouselScroll);
   });
   requestAnimationFrame(updateCarouselScroll);

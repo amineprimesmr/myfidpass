@@ -914,7 +914,8 @@
   /* Padding gauche pour que la première image soit bien visible (plus de coupure à gauche) */
   padding: 0 2rem 0 min(2.5rem, 8vw);
   will-change: transform;
-  transition: transform 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: none;
+  transform: translate3d(0, 0, 0);
 }
 @media (max-width: 768px) {
   .landing-cards-scroll-wrapper {
