@@ -532,6 +532,44 @@ body {
   color: var(--text);
 }
 
+.fidelity-engagement-block {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+.fidelity-engagement-block.hidden { display: none; }
+.fidelity-engagement-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0 0 0.35rem;
+  color: var(--text, #1a1a1a);
+}
+.fidelity-engagement-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted, #666);
+  margin: 0 0 1rem;
+}
+.fidelity-engagement-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+.fidelity-engagement-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.fidelity-engagement-item-info { display: flex; flex-direction: column; gap: 0.2rem; }
+.fidelity-engagement-item-label { font-weight: 600; font-size: 0.95rem; }
+.fidelity-engagement-item-points { font-size: 0.85rem; color: var(--accent, #0a7c42); font-weight: 600; }
+.fidelity-engagement-item-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.fidelity-engagement-item-btns .fidelity-btn { flex: 0 0 auto; }
+.fidelity-engagement-feedback { font-size: 0.9rem; margin-top: 0.5rem; }
+.fidelity-engagement-feedback.success { color: var(--accent, #0a7c42); }
+.fidelity-engagement-feedback.error { color: #c00; }
+
 .wallet-label {
   font-weight: 600;
   margin: 0;

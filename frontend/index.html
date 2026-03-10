@@ -437,6 +437,10 @@
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-4"/><path d="M12 18a2 2 0 0 1-2-2V8a2 2 0 0 1 4 0v8a2 2 0 0 1-2 2z"/><path d="M8 6l4-4 4 4"/><path d="M8 6h8"/></svg></span>
             <span class="app-sidebar-link-text">Intégration caisse / borne</span>
           </a>
+          <a href="#engagement" class="app-sidebar-link" data-section="engagement">
+            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+            <span class="app-sidebar-link-text">Avis & Réseaux</span>
+          </a>
           <a href="#notifications" class="app-sidebar-link" data-section="notifications">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
             <span class="app-sidebar-link-text">Notifications</span>
@@ -992,6 +996,48 @@
             </div>
           </section>
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
+          <section id="engagement" class="app-section">
+            <h2 class="app-section-title">Avis & Réseaux</h2>
+            <p class="app-section-desc">Offrez des points à vos clients en échange d'un avis Google ou d'un follow sur vos réseaux. Ils voient ces actions sur la page carte après avoir créé leur carte.</p>
+            <div class="app-card">
+              <h3 class="app-subsection-title">Récompenses configurées</h3>
+              <p class="app-hint">Activez les actions et indiquez le nombre de points. Pour l'avis Google, vous pouvez exiger une validation manuelle avant de créditer les points.</p>
+              <div id="app-engagement-form" class="app-engagement-form">
+                <div class="app-engagement-row">
+                  <label class="app-checkbox-label app-engagement-enable-wrap"><input type="checkbox" id="app-engagement-google-enable" /> Avis Google</label>
+                  <label class="app-label app-engagement-points-label">Points</label>
+                  <input type="number" id="app-engagement-google-points" class="app-input app-input-amount" min="1" max="500" value="50" />
+                  <label class="app-label">Place ID (Google)</label>
+                  <input type="text" id="app-engagement-google-place-id" class="app-input" placeholder="ex. ChIJ..." />
+                  <label class="app-checkbox-label"><input type="checkbox" id="app-engagement-google-require-approval" checked /> Valider manuellement avant de créditer</label>
+                </div>
+                <div class="app-engagement-row">
+                  <label class="app-checkbox-label"><input type="checkbox" id="app-engagement-instagram-enable" /> Instagram</label>
+                  <input type="number" id="app-engagement-instagram-points" class="app-input app-input-amount" min="1" max="200" value="10" />
+                  <input type="url" id="app-engagement-instagram-url" class="app-input" placeholder="https://instagram.com/votre_compte" />
+                </div>
+                <div class="app-engagement-row">
+                  <label class="app-checkbox-label"><input type="checkbox" id="app-engagement-tiktok-enable" /> TikTok</label>
+                  <input type="number" id="app-engagement-tiktok-points" class="app-input app-input-amount" min="1" max="200" value="10" />
+                  <input type="url" id="app-engagement-tiktok-url" class="app-input" placeholder="https://tiktok.com/@votre_compte" />
+                </div>
+                <div class="app-engagement-row">
+                  <label class="app-checkbox-label"><input type="checkbox" id="app-engagement-facebook-enable" /> Facebook</label>
+                  <input type="number" id="app-engagement-facebook-points" class="app-input app-input-amount" min="1" max="200" value="10" />
+                  <input type="url" id="app-engagement-facebook-url" class="app-input" placeholder="https://facebook.com/votre_page" />
+                </div>
+              </div>
+              <p class="app-hint"><a href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" target="_blank" rel="noopener">Trouver votre Place ID Google</a>. Une fois la config enregistrée, vos clients verront « Gagnez X points » sur la page carte.</p>
+              <button type="button" id="app-engagement-save" class="app-btn app-btn-primary">Enregistrer</button>
+              <p id="app-engagement-save-feedback" class="app-message hidden"></p>
+            </div>
+            <div class="app-card app-engagement-pending-wrap">
+              <h3 class="app-subsection-title">Demandes en attente (avis Google)</h3>
+              <p class="app-hint">Si vous avez activé « Valider manuellement », les clients qui déclarent avoir laissé un avis apparaissent ici. Vérifiez sur Google puis validez pour leur créditer les points.</p>
+              <div id="app-engagement-pending-list" class="app-engagement-pending-list"></div>
+              <p id="app-engagement-pending-empty" class="app-hint hidden">Aucune demande en attente.</p>
+            </div>
+          </section>
           <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
             <h2 class="app-section-title">Carte & périmètre</h2>
             <p class="app-section-desc">Définissez l’emplacement de votre établissement et le rayon dans lequel les clients recevront une notification en y entrant (sur leur téléphone).</p>
@@ -1045,6 +1091,10 @@
               <li><a href="#membres" class="app-mobile-profil-item" data-section="membres">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                 Tous les membres
+              </a></li>
+              <li><a href="#engagement" class="app-mobile-profil-item" data-section="engagement">
+                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+                Avis & Réseaux
               </a></li>
               <li><a href="#notifications" class="app-mobile-profil-item" data-section="notifications">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
@@ -1826,6 +1876,12 @@ X-Dashboard-Token: TOKEN
               <p class="fidelity-notifications-iphone-hint">Sur iPhone : si tu ajoutes la carte à <strong>Apple Wallet</strong>, tu recevras les notifications via Wallet (pas besoin d’autoriser ici).</p>
               <button type="button" id="btn-enable-notifications" class="fidelity-btn fidelity-btn-secondary">Autoriser les notifications (navigateur)</button>
               <p id="fidelity-notifications-status" class="fidelity-notifications-status hidden"></p>
+            </div>
+            <div id="fidelity-engagement-block" class="fidelity-engagement-block hidden">
+              <p class="fidelity-engagement-title">Gagnez des points</p>
+              <p class="fidelity-engagement-desc">Effectuez une action puis réclamez vos points.</p>
+              <div id="fidelity-engagement-actions" class="fidelity-engagement-actions"></div>
+              <p id="fidelity-engagement-claim-feedback" class="fidelity-engagement-feedback hidden"></p>
             </div>
             <button type="button" id="btn-another-card" class="fidelity-link-btn">Créer une autre carte</button>
           </div>

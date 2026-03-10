@@ -970,13 +970,15 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["vue-ensemble", "caisse", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "notifications", "profil"];
+const APP_SECTION_IDS = ["vue-ensemble", "caisse", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
 
 const APP_MOBILE_TITLES = {
   "vue-ensemble": "Tableau de bord",
   "caisse": "Caisse",
   "personnaliser": "Ma Carte",
   "carte-perimetre": "Carte & périmètre",
+  "engagement": "Avis & Réseaux",
+  "notifications": "Notifications",
   "profil": "Profil",
 };
 
@@ -2034,6 +2036,37 @@ function initAppDashboard(slug) {
       if (stampEmojiEl) stampEmojiEl.value = data.stamp_emoji ?? data.stampEmoji ?? "";
       if (stampRewardLabelEl) stampRewardLabelEl.value = data.stamp_reward_label ?? data.stampRewardLabel ?? "";
       if (expiryMonthsEl != null) expiryMonthsEl.value = data.expiry_months ?? data.expiryMonths ?? "";
+      const er = data.engagement_rewards ?? data.engagementRewards ?? {};
+      const g = er.google_review ?? {};
+      const ig = er.instagram_follow ?? {};
+      const tk = er.tiktok_follow ?? {};
+      const fb = er.facebook_follow ?? {};
+      const gEnable = document.getElementById("app-engagement-google-enable");
+      const gPoints = document.getElementById("app-engagement-google-points");
+      const gPlaceId = document.getElementById("app-engagement-google-place-id");
+      const gApproval = document.getElementById("app-engagement-google-require-approval");
+      if (gEnable) gEnable.checked = !!g.enabled;
+      if (gPoints) gPoints.value = g.points ?? 50;
+      if (gPlaceId) gPlaceId.value = g.place_id ?? "";
+      if (gApproval) gApproval.checked = g.require_approval !== false;
+      const igEnable = document.getElementById("app-engagement-instagram-enable");
+      const igPoints = document.getElementById("app-engagement-instagram-points");
+      const igUrl = document.getElementById("app-engagement-instagram-url");
+      if (igEnable) igEnable.checked = !!ig.enabled;
+      if (igPoints) igPoints.value = ig.points ?? 10;
+      if (igUrl) igUrl.value = ig.url ?? "";
+      const tkEnable = document.getElementById("app-engagement-tiktok-enable");
+      const tkPoints = document.getElementById("app-engagement-tiktok-points");
+      const tkUrl = document.getElementById("app-engagement-tiktok-url");
+      if (tkEnable) tkEnable.checked = !!tk.enabled;
+      if (tkPoints) tkPoints.value = tk.points ?? 10;
+      if (tkUrl) tkUrl.value = tk.url ?? "";
+      const fbEnable = document.getElementById("app-engagement-facebook-enable");
+      const fbPoints = document.getElementById("app-engagement-facebook-points");
+      const fbUrl = document.getElementById("app-engagement-facebook-url");
+      if (fbEnable) fbEnable.checked = !!fb.enabled;
+      if (fbPoints) fbPoints.value = fb.points ?? 10;
+      if (fbUrl) fbUrl.value = fb.url ?? "";
       if (personnaliserAddress && (data.location_address ?? data.locationAddress) != null) personnaliserAddress.value = data.location_address ?? data.locationAddress ?? "";
       updateCoordsDisplay(data.location_lat ?? data.locationLat, data.location_lng ?? data.locationLng);
       if (personnaliserLocationText && (data.location_relevant_text ?? data.locationRelevantText) != null) personnaliserLocationText.value = data.location_relevant_text ?? data.locationRelevantText ?? "";
@@ -2090,6 +2123,81 @@ function initAppDashboard(slug) {
     .catch(() => {});
 
   /** Grille d’icônes (Emoji.family Fluent) pour choisir l’emoji des tampons sans taper. */
+  async function loadEngagementPending() {
+    const listEl = document.getElementById("app-engagement-pending-list");
+    const emptyEl = document.getElementById("app-engagement-pending-empty");
+    if (!listEl) return;
+    try {
+      const res = await api("/dashboard/engagement-completions?status=pending");
+      if (!res.ok) return;
+      const data = await res.json();
+      const completions = data.completions || [];
+      if (completions.length === 0) {
+        listEl.innerHTML = "";
+        if (emptyEl) emptyEl.classList.remove("hidden");
+        return;
+      }
+      if (emptyEl) emptyEl.classList.add("hidden");
+      listEl.innerHTML = completions
+        .map(
+          (c) =>
+            `<div class="app-engagement-pending-item" data-completion-id="${escapeHtml(c.id)}">
+              <span class="app-engagement-pending-member">${escapeHtml(c.member_name || "")} — ${escapeHtml(c.member_email || "")}</span>
+              <span class="app-engagement-pending-type">${c.action_type === "google_review" ? "Avis Google" : c.action_type}</span>
+              <span class="app-engagement-pending-date">${c.created_at ? formatDate(c.created_at) : ""}</span>
+              <div class="app-engagement-pending-actions">
+                <button type="button" class="app-btn app-btn-primary app-engagement-approve" data-completion-id="${escapeHtml(c.id)}">Valider</button>
+                <button type="button" class="app-btn app-btn-secondary app-engagement-reject" data-completion-id="${escapeHtml(c.id)}">Refuser</button>
+              </div>
+            </div>`
+        )
+        .join("");
+    } catch (_) {
+      if (emptyEl) emptyEl.classList.remove("hidden");
+      listEl.innerHTML = "";
+    }
+  }
+  document.getElementById("app-engagement-save")?.addEventListener("click", async () => {
+    const feedback = document.getElementById("app-engagement-save-feedback");
+    const gEnable = document.getElementById("app-engagement-google-enable");
+    const gPoints = document.getElementById("app-engagement-google-points");
+    const gPlaceId = document.getElementById("app-engagement-google-place-id");
+    const gApproval = document.getElementById("app-engagement-google-require-approval");
+    const igEnable = document.getElementById("app-engagement-instagram-enable");
+    const igPoints = document.getElementById("app-engagement-instagram-points");
+    const igUrl = document.getElementById("app-engagement-instagram-url");
+    const tkEnable = document.getElementById("app-engagement-tiktok-enable");
+    const tkPoints = document.getElementById("app-engagement-tiktok-points");
+    const tkUrl = document.getElementById("app-engagement-tiktok-url");
+    const fbEnable = document.getElementById("app-engagement-facebook-enable");
+    const fbPoints = document.getElementById("app-engagement-facebook-points");
+    const fbUrl = document.getElementById("app-engagement-facebook-url");
+    const engagement_rewards = {
+      google_review: { enabled: !!gEnable?.checked, points: Math.max(0, parseInt(gPoints?.value, 10) || 50), place_id: (gPlaceId?.value || "").trim(), require_approval: !!gApproval?.checked },
+      instagram_follow: { enabled: !!igEnable?.checked, points: Math.max(0, parseInt(igPoints?.value, 10) || 10), url: (igUrl?.value || "").trim() },
+      tiktok_follow: { enabled: !!tkEnable?.checked, points: Math.max(0, parseInt(tkPoints?.value, 10) || 10), url: (tkUrl?.value || "").trim() },
+      facebook_follow: { enabled: !!fbEnable?.checked, points: Math.max(0, parseInt(fbPoints?.value, 10) || 10), url: (fbUrl?.value || "").trim() },
+    };
+    try {
+      const res = await api("/dashboard/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ engagement_rewards }) });
+      if (!res.ok) throw new Error("Erreur enregistrement");
+      if (feedback) { feedback.textContent = "Enregistré."; feedback.classList.remove("hidden", "error"); feedback.classList.add("success"); }
+      setTimeout(() => { if (feedback) feedback.classList.add("hidden"); }, 3000);
+    } catch (e) {
+      if (feedback) { feedback.textContent = e.message || "Erreur lors de l'enregistrement."; feedback.classList.remove("hidden", "success"); feedback.classList.add("error"); }
+    }
+  });
+  document.getElementById("app-engagement-pending-list")?.addEventListener("click", async (e) => {
+    const id = e.target.getAttribute("data-completion-id");
+    if (!id) return;
+    if (e.target.classList.contains("app-engagement-approve")) {
+      try { const res = await api(`/dashboard/engagement-completions/${encodeURIComponent(id)}/approve`, { method: "PATCH" }); if (res.ok) loadEngagementPending(); } catch (_) {}
+    } else if (e.target.classList.contains("app-engagement-reject")) {
+      try { const res = await api(`/dashboard/engagement-completions/${encodeURIComponent(id)}/reject`, { method: "PATCH" }); if (res.ok) loadEngagementPending(); } catch (_) {}
+    }
+  });
+  window.addEventListener("app-section-change", (e) => { if (e.detail?.sectionId === "engagement") loadEngagementPending(); }, { once: false });
+
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
   if (emojiPickerEl && stampEmojiEl) {
     const ASSETS_ICONS = "/assets/icons";
@@ -5440,6 +5548,81 @@ function showFidelitySuccess(slug, memberId) {
       }
     };
   }
+
+  const engagementBlock = document.getElementById("fidelity-engagement-block");
+  const engagementActionsEl = document.getElementById("fidelity-engagement-actions");
+  const engagementClaimFeedback = document.getElementById("fidelity-engagement-claim-feedback");
+  (async () => {
+    if (!engagementBlock || !engagementActionsEl) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement-actions`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const actions = data.actions || [];
+      if (actions.length === 0) {
+        engagementBlock.classList.add("hidden");
+        return;
+      }
+      engagementBlock.classList.remove("hidden");
+      engagementActionsEl.innerHTML = actions
+        .map(
+          (a) =>
+            `<div class="fidelity-engagement-item" data-action-type="${a.action_type}">
+              <div class="fidelity-engagement-item-info">
+                <span class="fidelity-engagement-item-label">${escapeHtml(a.label)}</span>
+                <span class="fidelity-engagement-item-points">+${a.points} points</span>
+              </div>
+              <div class="fidelity-engagement-item-btns">
+                <a href="${escapeHtml(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open">Ouvrir</a>
+                <button type="button" class="fidelity-btn fidelity-btn-primary fidelity-engagement-claim" data-action-type="${escapeHtml(a.action_type)}">J'ai fait, réclamer</button>
+              </div>
+            </div>`
+        )
+        .join("");
+      engagementActionsEl.querySelectorAll(".fidelity-engagement-claim").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const actionType = btn.getAttribute("data-action-type");
+          if (!actionType) return;
+          if (engagementClaimFeedback) {
+            engagementClaimFeedback.textContent = "Envoi…";
+            engagementClaimFeedback.classList.remove("hidden", "success", "error");
+          }
+          try {
+            const claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ memberId, action_type: actionType }),
+            });
+            const claimData = await claimRes.json().catch(() => ({}));
+            if (claimRes.ok) {
+              if (engagementClaimFeedback) {
+                engagementClaimFeedback.textContent = claimData.message || "Points crédités.";
+                engagementClaimFeedback.classList.remove("error");
+                engagementClaimFeedback.classList.add("success");
+              }
+              btn.disabled = true;
+              btn.textContent = "Réclamé";
+            } else {
+              if (engagementClaimFeedback) {
+                engagementClaimFeedback.textContent = claimData.error || "Erreur.";
+                engagementClaimFeedback.classList.remove("success");
+                engagementClaimFeedback.classList.add("error");
+              }
+              if (claimData.code === "already_done") btn.textContent = "Déjà réclamé";
+            }
+          } catch (_) {
+            if (engagementClaimFeedback) {
+              engagementClaimFeedback.textContent = "Erreur réseau.";
+              engagementClaimFeedback.classList.remove("success");
+              engagementClaimFeedback.classList.add("error");
+            }
+          }
+        });
+      });
+    } catch (_) {
+      if (engagementBlock) engagementBlock.classList.add("hidden");
+    }
+  })();
 
   const btnEnableNotifications = document.getElementById("btn-enable-notifications");
   const notificationsStatusEl = document.getElementById("fidelity-notifications-status");

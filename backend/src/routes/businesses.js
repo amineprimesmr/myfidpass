@@ -38,6 +38,12 @@ import {
   getPassKitPushTokensForBusinessFiltered,
   getWebPushSubscriptionsByBusinessFiltered,
   getMemberIdsInCategories,
+  getEngagementRewards,
+  createEngagementCompletion,
+  getEngagementCompletionsForBusiness,
+  approveEngagementCompletion,
+  rejectEngagementCompletion,
+  getEngagementCompletionsForMember,
 } from "../db.js";
 import { sendWebPush, getLogoIconBuffer } from "../notifications.js";
 import { sendPassKitUpdate } from "../apns.js";
@@ -109,6 +115,7 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     strip_color: business.strip_color ?? undefined,
     strip_display_mode: business.strip_display_mode ?? "logo",
     strip_text: business.strip_text ?? undefined,
+    engagement_rewards: getEngagementRewards(business.id),
   });
 });
 
@@ -252,6 +259,21 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   if (strip_text !== undefined) {
     updates.strip_text = strip_text == null || String(strip_text).trim() === "" ? null : String(strip_text).trim().slice(0, 120);
   }
+  const engagement_rewards = body.engagement_rewards ?? body.engagementRewards;
+  if (engagement_rewards !== undefined) {
+    if (engagement_rewards === null || (typeof engagement_rewards === "object" && Object.keys(engagement_rewards).length === 0)) {
+      updates.engagement_rewards = null;
+    } else if (typeof engagement_rewards === "object") {
+      updates.engagement_rewards = JSON.stringify(engagement_rewards);
+    } else if (typeof engagement_rewards === "string") {
+      try {
+        JSON.parse(engagement_rewards);
+        updates.engagement_rewards = engagement_rewards;
+      } catch (_) {
+        updates.engagement_rewards = null;
+      }
+    }
+  }
   if (logo_url && (logo_url.startsWith("http://") || logo_url.startsWith("https://"))) {
     try {
       const controller = new AbortController();
@@ -287,6 +309,121 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
     }
   }
   return res.status(200).send();
+});
+
+/**
+ * GET /api/businesses/:slug/engagement-actions
+ * Public : liste des actions engagement (avis Google, follow) avec URLs pour la page client.
+ */
+router.get("/:slug/engagement-actions", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const rewards = getEngagementRewards(business.id);
+  const actions = [];
+  if (rewards.google_review?.enabled && rewards.google_review?.place_id && rewards.google_review?.points > 0) {
+    actions.push({
+      action_type: "google_review",
+      label: "Laisser un avis Google",
+      points: Math.floor(Number(rewards.google_review.points)) || 50,
+      url: `https://search.google.com/local/writereview?placeid=${encodeURIComponent(rewards.google_review.place_id.trim())}`,
+      require_approval: !!rewards.google_review.require_approval,
+    });
+  }
+  ["instagram_follow", "tiktok_follow", "facebook_follow"].forEach((key) => {
+    const c = rewards[key];
+    if (c?.enabled && c?.url && c?.points > 0) {
+      const labels = { instagram_follow: "Nous suivre sur Instagram", tiktok_follow: "Nous suivre sur TikTok", facebook_follow: "Nous suivre sur Facebook" };
+      actions.push({
+        action_type: key,
+        label: labels[key] || key,
+        points: Math.floor(Number(c.points)) || 10,
+        url: String(c.url).trim(),
+      });
+    }
+  });
+  res.json({ actions });
+});
+
+/**
+ * POST /api/businesses/:slug/engagement/claim
+ * Public : le client déclare avoir fait une action (avis Google, follow). memberId = membre qui a la carte.
+ */
+router.post("/:slug/engagement/claim", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const { memberId, action_type: actionType } = req.body || {};
+  if (!memberId || !actionType) {
+    return res.status(400).json({ error: "memberId et action_type requis" });
+  }
+  const member = getMemberForBusiness(memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+  const result = createEngagementCompletion(business.id, memberId, actionType);
+  if (result.error === "action_disabled") {
+    return res.status(400).json({ error: "Cette action n'est pas activée." });
+  }
+  if (result.error === "already_done") {
+    return res.status(400).json({ error: "Vous avez déjà effectué cette action.", code: "already_done" });
+  }
+  res.status(201).json({
+    completion_id: result.completion.id,
+    status: result.status,
+    points_granted: result.pointsGranted,
+    message:
+      result.status === "approved"
+        ? `${result.pointsGranted} points ont été ajoutés à votre carte.`
+        : "Votre avis sera vérifié par le commerce. Les points vous seront crédités après validation.",
+  });
+});
+
+/**
+ * GET /api/businesses/:slug/dashboard/engagement-completions
+ * Liste des demandes d'engagement (pending, approved, rejected). Token ou JWT.
+ */
+router.get("/:slug/dashboard/engagement-completions", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const status = ["pending", "approved", "rejected"].includes(req.query.status) ? req.query.status : null;
+  const completions = getEngagementCompletionsForBusiness(business.id, { status, limit: 100 });
+  res.json({ completions });
+});
+
+/**
+ * PATCH /api/businesses/:slug/dashboard/engagement-completions/:id/approve
+ * Valider une demande (avis Google etc.) et créditer les points.
+ */
+router.patch("/:slug/dashboard/engagement-completions/:id/approve", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const updated = approveEngagementCompletion(req.params.id, business.id);
+  if (!updated) return res.status(404).json({ error: "Demande introuvable ou déjà traitée" });
+  if (updated.points_granted > 0) {
+    const tokens = getPushTokensForMember(updated.member_id);
+    setImmediate(() => {
+      tokens.forEach((token) => sendPassKitUpdate(token).catch(() => {}));
+    });
+  }
+  res.json({ completion: updated });
+});
+
+/**
+ * PATCH /api/businesses/:slug/dashboard/engagement-completions/:id/reject
+ * Rejeter une demande.
+ */
+router.patch("/:slug/dashboard/engagement-completions/:id/reject", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const updated = rejectEngagementCompletion(req.params.id, business.id);
+  if (!updated) return res.status(404).json({ error: "Demande introuvable ou déjà traitée" });
+  res.json({ completion: updated });
 });
 
 /**

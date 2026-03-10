@@ -264,6 +264,31 @@ try {
   }
 } catch (_) {}
 
+// Migration : Avis & Réseaux (récompenses Google avis, Instagram, TikTok, etc.)
+const bizColsEng = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+if (!bizColsEng.includes("engagement_rewards")) {
+  db.exec("ALTER TABLE businesses ADD COLUMN engagement_rewards TEXT");
+}
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS engagement_completions (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      member_id TEXT NOT NULL,
+      action_type TEXT NOT NULL,
+      points_granted INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      reviewed_at TEXT,
+      FOREIGN KEY (business_id) REFERENCES businesses(id),
+      FOREIGN KEY (member_id) REFERENCES members(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_engagement_completions_business ON engagement_completions(business_id);
+    CREATE INDEX IF NOT EXISTS idx_engagement_completions_member ON engagement_completions(member_id);
+    CREATE INDEX IF NOT EXISTS idx_engagement_completions_created ON engagement_completions(created_at);
+  `);
+} catch (_) {}
+
 export function getBusinessBySlug(slug) {
   if (!slug || typeof slug !== "string") return null;
   const row = db.prepare("SELECT * FROM businesses WHERE LOWER(TRIM(slug)) = LOWER(TRIM(?))").get(slug);
@@ -404,6 +429,7 @@ export function updateBusiness(businessId, updates) {
     "points_reward_tiers",
     "expiry_months",
     "sector",
+    "engagement_rewards",
   ];
   const numericCols = ["location_lat", "location_lng", "location_radius_meters", "required_stamps", "points_min_amount_eur", "expiry_months"];
   const setClauses = [];
@@ -414,7 +440,7 @@ export function updateBusiness(businessId, updates) {
       setClauses.push(`${col} = ?`);
       if (col === "logo_base64" || col === "card_background_base64") {
         values.push(value === null || value === "" ? null : String(value));
-      } else if (col === "points_reward_tiers") {
+      } else if (col === "points_reward_tiers" || col === "engagement_rewards") {
         values.push(value == null || value === "" ? null : (typeof value === "string" ? value : JSON.stringify(value)));
       } else if (numericCols.includes(col)) {
         const n = value === null || value === "" ? null : Number(value);
@@ -509,6 +535,135 @@ export function createTransaction({ id, businessId, memberId, type, points, meta
      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
   ).run(tid, businessId, memberId, type, points, metadata ? JSON.stringify(metadata) : null);
   return db.prepare("SELECT * FROM transactions WHERE id = ?").get(tid);
+}
+
+// ——— Avis & Réseaux (engagement_rewards, engagement_completions) ———
+
+const DEFAULT_ENGAGEMENT_REWARDS = {
+  google_review: { enabled: false, points: 50, place_id: "", require_approval: true },
+  instagram_follow: { enabled: false, points: 10, url: "" },
+  tiktok_follow: { enabled: false, points: 10, url: "" },
+  facebook_follow: { enabled: false, points: 10, url: "" },
+};
+
+/** Retourne la config engagement d'une business (objet). */
+export function getEngagementRewards(businessId) {
+  const b = getBusinessById(businessId);
+  if (!b || !b.engagement_rewards) return { ...DEFAULT_ENGAGEMENT_REWARDS };
+  try {
+    const parsed = typeof b.engagement_rewards === "string" ? JSON.parse(b.engagement_rewards) : b.engagement_rewards;
+    return { ...DEFAULT_ENGAGEMENT_REWARDS, ...parsed };
+  } catch (_) {
+    return { ...DEFAULT_ENGAGEMENT_REWARDS };
+  }
+}
+
+/** Vérifie si un membre a déjà complété une action (une fois par an par défaut pour avis Google). */
+export function hasMemberCompletedEngagementAction(businessId, memberId, actionType, cooldownMonths = 12) {
+  const since = new Date();
+  since.setMonth(since.getMonth() - cooldownMonths);
+  const sinceStr = since.toISOString();
+  const row = db
+    .prepare(
+      `SELECT 1 FROM engagement_completions
+       WHERE business_id = ? AND member_id = ? AND action_type = ? AND status IN ('approved', 'pending')
+       AND created_at >= ? LIMIT 1`
+    )
+    .get(businessId, memberId, actionType, sinceStr);
+  return !!row;
+}
+
+/** Crée une completion (pending ou approved selon config). Retourne { completion, pointsGranted, alreadyDone }. */
+export function createEngagementCompletion(businessId, memberId, actionType) {
+  const rewards = getEngagementRewards(businessId);
+  const config = rewards[actionType];
+  if (!config || !config.enabled || (config.points && config.points < 1)) {
+    return { error: "action_disabled" };
+  }
+  const points = Math.max(0, Math.floor(Number(config.points) || 0));
+  const cooldown = actionType === "google_review" ? 12 : 120; // 12 mois avis, 120 mois (10 ans) pour follow = quasi une fois
+  if (hasMemberCompletedEngagementAction(businessId, memberId, actionType, cooldown)) {
+    return { error: "already_done", alreadyDone: true };
+  }
+  const requireApproval = actionType === "google_review" && config.require_approval;
+  const status = requireApproval ? "pending" : "approved";
+  const pointsGranted = status === "approved" ? points : 0;
+  const id = randomUUID();
+  db.prepare(
+    `INSERT INTO engagement_completions (id, business_id, member_id, action_type, points_granted, status, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+  ).run(id, businessId, memberId, actionType, pointsGranted, status);
+  if (status === "approved") {
+    addPoints(memberId, points);
+    createTransaction({
+      businessId,
+      memberId,
+      type: "points_add",
+      points,
+      metadata: JSON.stringify({ source: "engagement", action_type: actionType }),
+    });
+  }
+  const completion = db.prepare("SELECT * FROM engagement_completions WHERE id = ?").get(id);
+  return { completion, pointsGranted, status, alreadyDone: false };
+}
+
+/** Liste des completions pour une business (pending + récentes). */
+export function getEngagementCompletionsForBusiness(businessId, { status = null, limit = 50 } = {}) {
+  let sql = `SELECT c.*, m.name as member_name, m.email as member_email
+    FROM engagement_completions c
+    JOIN members m ON m.id = c.member_id
+    WHERE c.business_id = ?`;
+  const params = [businessId];
+  if (status && ["pending", "approved", "rejected"].includes(status)) {
+    sql += " AND c.status = ?";
+    params.push(status);
+  }
+  sql += " ORDER BY c.created_at DESC LIMIT ?";
+  params.push(limit);
+  return db.prepare(sql).all(...params);
+}
+
+/** Approuver une completion : créditer les points et passer en approved. */
+export function approveEngagementCompletion(completionId, businessId) {
+  const c = db.prepare("SELECT * FROM engagement_completions WHERE id = ? AND business_id = ?").get(completionId, businessId);
+  if (!c || c.status !== "pending") return null;
+  const rewards = getEngagementRewards(businessId);
+  const config = rewards[c.action_type];
+  const points = config && config.points ? Math.max(0, Math.floor(Number(config.points))) : 0;
+  db.prepare(
+    "UPDATE engagement_completions SET status = 'approved', points_granted = ?, reviewed_at = datetime('now') WHERE id = ?"
+  ).run(points, completionId);
+  if (points > 0) {
+    addPoints(c.member_id, points);
+    createTransaction({
+      businessId: c.business_id,
+      memberId: c.member_id,
+      type: "points_add",
+      points,
+      metadata: JSON.stringify({ source: "engagement", action_type: c.action_type, approved: true }),
+    });
+  }
+  return db.prepare("SELECT * FROM engagement_completions WHERE id = ?").get(completionId);
+}
+
+/** Rejeter une completion. */
+export function rejectEngagementCompletion(completionId, businessId) {
+  const c = db.prepare("SELECT * FROM engagement_completions WHERE id = ? AND business_id = ?").get(completionId, businessId);
+  if (!c || c.status !== "pending") return null;
+  db.prepare(
+    "UPDATE engagement_completions SET status = 'rejected', reviewed_at = datetime('now') WHERE id = ?"
+  ).run(completionId);
+  return db.prepare("SELECT * FROM engagement_completions WHERE id = ?").get(completionId);
+}
+
+/** Completions déjà faites par un membre (pour affichage client). */
+export function getEngagementCompletionsForMember(businessId, memberId) {
+  return db
+    .prepare(
+      `SELECT action_type, points_granted, status, created_at FROM engagement_completions
+       WHERE business_id = ? AND member_id = ? ORDER BY created_at DESC`
+    )
+    .all(businessId, memberId);
 }
 
 export function getDashboardStats(businessId) {
