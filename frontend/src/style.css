@@ -596,6 +596,16 @@ body {
   border: 1px solid rgba(10, 124, 66, 0.2);
 }
 .fidelity-engagement-block.hidden { display: none; }
+
+.fidelity-engagement-empty { margin-top: 1rem; }
+.fidelity-engagement-empty.hidden { display: none; }
+.fidelity-engagement-empty-text {
+  font-size: 0.95rem;
+  color: #495057;
+  margin: 0;
+  line-height: 1.45;
+}
+
 .fidelity-engagement-title {
   font-weight: 700;
   font-size: 1.1rem;

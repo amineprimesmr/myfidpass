@@ -5658,6 +5658,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
   }
 
   const engagementBlock = document.getElementById("fidelity-engagement-block");
+  const engagementEmptyEl = document.getElementById("fidelity-engagement-empty");
   const engagementActionsEl = document.getElementById("fidelity-engagement-actions");
   const engagementClaimFeedback = document.getElementById("fidelity-engagement-claim-feedback");
   (async () => {
@@ -5669,8 +5670,10 @@ function showFidelitySuccess(slug, memberId, memberName) {
       const actions = data.actions || [];
       if (actions.length === 0) {
         engagementBlock.classList.add("hidden");
+        if (engagementEmptyEl) engagementEmptyEl.classList.remove("hidden");
         return;
       }
+      if (engagementEmptyEl) engagementEmptyEl.classList.add("hidden");
       engagementBlock.classList.remove("hidden");
       engagementActionsEl.innerHTML = actions
         .map(
