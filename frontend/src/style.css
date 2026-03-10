@@ -432,17 +432,18 @@ body {
   font-size: 1.35rem;
   font-weight: 700;
   margin: 0 0 0.35rem;
+  color: #1a1a1a;
 }
 
 .fidelity-success-desc {
   font-size: 0.95rem;
-  color: var(--text-muted);
+  color: #495057;
   margin: 0 0 1.25rem;
 }
 
 .fidelity-welcome-name {
   font-size: 1rem;
-  color: var(--text-muted);
+  color: #495057;
   margin: 0 0 0.75rem;
 }
 
@@ -464,23 +465,23 @@ body {
 .fidelity-after-add-intro {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text, #1a1a1a);
+  color: #1a1a1a;
   margin: 0 0 1rem;
 }
 
 .fidelity-rules-recap {
   margin-bottom: 1.25rem;
   padding: 1rem 1rem 1rem 1.1rem;
-  background: #f8f9fa;
+  background: #f0f2f5;
   border-radius: 10px;
-  border: 1px solid #eee;
+  border: 1px solid #dee2e6;
 }
 
 .fidelity-rules-intro,
 .fidelity-rules-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: #495057;
   margin: 0 0 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -488,7 +489,7 @@ body {
 
 .fidelity-rules-text {
   font-size: 0.95rem;
-  color: var(--text, #1a1a1a);
+  color: #1a1a1a;
   margin: 0.35rem 0 0;
   line-height: 1.4;
 }
@@ -538,11 +539,11 @@ body {
 
 .fidelity-notifications-desc {
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #495057;
 }
 .fidelity-notifications-iphone-hint {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: #495057;
   margin: 0.35rem 0 0.75rem;
 }
 
@@ -575,7 +576,7 @@ body {
   padding: 0.6rem;
   font-family: var(--font);
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #495057;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -584,7 +585,7 @@ body {
 }
 
 .fidelity-link-btn:hover {
-  color: var(--text);
+  color: #1a1a1a;
 }
 
 .fidelity-engagement-block {
@@ -599,11 +600,11 @@ body {
   font-weight: 700;
   font-size: 1.1rem;
   margin: 0 0 0.35rem;
-  color: var(--text, #1a1a1a);
+  color: #1a1a1a;
 }
 .fidelity-engagement-desc {
   font-size: 0.9rem;
-  color: var(--text-muted, #555);
+  color: #495057;
   margin: 0 0 1rem;
   line-height: 1.4;
 }
@@ -620,7 +621,7 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 .fidelity-engagement-item-info { display: flex; flex-direction: column; gap: 0.2rem; }
-.fidelity-engagement-item-label { font-weight: 600; font-size: 0.95rem; }
+.fidelity-engagement-item-label { font-weight: 600; font-size: 0.95rem; color: #1a1a1a; }
 .fidelity-engagement-item-points { font-size: 0.85rem; color: var(--accent, #0a7c42); font-weight: 600; }
 .fidelity-engagement-item-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .fidelity-engagement-item-btns .fidelity-btn { flex: 0 0 auto; }
