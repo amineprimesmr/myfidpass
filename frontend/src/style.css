@@ -533,9 +533,11 @@ body {
 }
 
 .fidelity-engagement-block {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 1.25rem;
+  padding: 1rem 1.1rem;
+  background: rgba(10, 124, 66, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(10, 124, 66, 0.2);
 }
 .fidelity-engagement-block.hidden { display: none; }
 .fidelity-engagement-title {
@@ -546,8 +548,9 @@ body {
 }
 .fidelity-engagement-desc {
   font-size: 0.9rem;
-  color: var(--text-muted, #666);
+  color: var(--text-muted, #555);
   margin: 0 0 1rem;
+  line-height: 1.4;
 }
 .fidelity-engagement-actions { display: flex; flex-direction: column; gap: 0.75rem; }
 .fidelity-engagement-item {
