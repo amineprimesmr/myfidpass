@@ -1118,6 +1118,14 @@ router.get("/:slug", (req, res) => {
     business = ensureDefaultBusiness();
   }
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  let points_reward_tiers = business.points_reward_tiers;
+  if (typeof points_reward_tiers === "string" && points_reward_tiers?.trim()) {
+    try {
+      points_reward_tiers = JSON.parse(points_reward_tiers);
+    } catch (_) {
+      points_reward_tiers = undefined;
+    }
+  }
   res.json({
     id: business.id,
     name: business.name,
@@ -1126,6 +1134,10 @@ router.get("/:slug", (req, res) => {
     backgroundColor: business.background_color ?? undefined,
     foregroundColor: business.foreground_color ?? undefined,
     labelColor: business.label_color ?? undefined,
+    program_type: business.program_type ?? undefined,
+    required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
+    stamp_reward_label: business.stamp_reward_label ?? undefined,
+    points_reward_tiers: points_reward_tiers ?? undefined,
   });
 });
 

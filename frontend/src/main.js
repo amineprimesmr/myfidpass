@@ -5390,6 +5390,8 @@ function getCookiesHtml() {
 
 // ——— App Carte (uniquement sur /fidelity/:slug) ———
 
+let _fidelityBusiness = null;
+
 const form = document.getElementById("card-form");
 const inputName = document.getElementById("input-name");
 const inputEmail = document.getElementById("input-email");
@@ -5491,13 +5493,61 @@ function setPageBusiness(business) {
 
 const FIDPASS_SUCCESS_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
-function showFidelitySuccess(slug, memberId) {
+function renderFidelityRulesRecap(business) {
+  const el = document.getElementById("fidelity-rules-recap");
+  if (!el) return;
+  if (!business) {
+    el.innerHTML = "<p class=\"fidelity-rules-text\">Les points sont crédités à chaque visite. Renseignez-vous en magasin pour les détails.</p>";
+    return;
+  }
+  const programType = business.program_type;
+  const parts = [];
+  if (programType === "stamps" && business.required_stamps > 0) {
+    const label = (business.stamp_reward_label || "1 offert").trim();
+    parts.push(`<p class="fidelity-rules-text"><strong>${business.required_stamps} tampons</strong> = ${escapeHtml(label)}</p>`);
+  } else if (programType === "points" && Array.isArray(business.points_reward_tiers) && business.points_reward_tiers.length > 0) {
+    parts.push("<p class=\"fidelity-rules-label\">Paliers de récompenses</p>");
+    business.points_reward_tiers.forEach((tier) => {
+      const pts = tier.points != null ? tier.points : tier.points_required;
+      const lbl = (tier.label || "Récompense").trim();
+      if (pts != null) parts.push(`<p class="fidelity-rules-text">${pts} points = ${escapeHtml(lbl)}</p>`);
+    });
+  }
+  if (parts.length === 0) {
+    el.innerHTML = "<p class=\"fidelity-rules-text\">Les points sont crédités à chaque visite. Renseignez-vous en magasin pour les détails.</p>";
+  } else {
+    el.innerHTML = "<p class=\"fidelity-rules-intro\">Règles du programme</p>" + parts.join("");
+  }
+}
+
+function showFidelitySuccess(slug, memberId, memberName) {
+  const toStore = { memberId, createdAt: Date.now() };
+  if (memberName != null && String(memberName).trim()) toStore.memberName = String(memberName).trim();
   try {
-    localStorage.setItem(
-      "fidpass_success_" + slug,
-      JSON.stringify({ memberId, createdAt: Date.now() })
-    );
+    localStorage.setItem("fidpass_success_" + slug, JSON.stringify(toStore));
   } catch (_) {}
+  const welcomeEl = document.getElementById("fidelity-welcome-name");
+  const nameToShow = memberName != null ? String(memberName).trim() : (() => {
+    try {
+      const raw = localStorage.getItem("fidpass_success_" + slug);
+      if (raw) {
+        const o = JSON.parse(raw);
+        return o.memberName || "";
+      }
+    } catch (_) {}
+    return "";
+  })();
+  if (welcomeEl) {
+    if (nameToShow) {
+      welcomeEl.textContent = "Bienvenue, " + nameToShow + ".";
+      welcomeEl.classList.remove("hidden");
+      welcomeEl.setAttribute("aria-hidden", "false");
+    } else {
+      welcomeEl.textContent = "";
+      welcomeEl.classList.add("hidden");
+      welcomeEl.setAttribute("aria-hidden", "true");
+    }
+  }
   if (form) form.classList.add("hidden");
   if (fidelitySuccessEl) {
     fidelitySuccessEl.classList.remove("hidden");
@@ -5550,6 +5600,7 @@ function showFidelitySuccess(slug, memberId) {
     btnAnotherCard.onclick = () => {
       try {
         localStorage.removeItem("fidpass_success_" + slug);
+        localStorage.removeItem("fidpass_added_" + slug);
       } catch (_) {}
       if (fidelitySuccessEl) fidelitySuccessEl.classList.add("hidden");
       if (form) form.classList.remove("hidden");
@@ -5557,7 +5608,53 @@ function showFidelitySuccess(slug, memberId) {
         fidelityGoogleErrorEl.classList.add("hidden");
         fidelityGoogleErrorEl.textContent = "";
       }
+      const afterAdd = document.getElementById("fidelity-after-add-section");
+      if (afterAdd) afterAdd.classList.add("hidden");
+      const btnAdded = document.getElementById("btn-i-added-card");
+      if (btnAdded) {
+        btnAdded.textContent = "J'ai ajouté la carte à mon Wallet";
+        btnAdded.disabled = false;
+      }
     };
+  }
+
+  const afterAddSection = document.getElementById("fidelity-after-add-section");
+  const btnIAddedCard = document.getElementById("btn-i-added-card");
+  const alreadyAdded = (() => {
+    try {
+      return localStorage.getItem("fidpass_added_" + slug) === "true";
+    } catch (_) {
+      return false;
+    }
+  })();
+  if (afterAddSection) {
+    if (alreadyAdded) {
+      afterAddSection.classList.remove("hidden");
+      renderFidelityRulesRecap(_fidelityBusiness);
+    } else {
+      afterAddSection.classList.add("hidden");
+    }
+  }
+  if (btnIAddedCard) {
+    if (alreadyAdded) {
+      btnIAddedCard.textContent = "C'est fait ✓";
+      btnIAddedCard.disabled = true;
+    } else {
+      btnIAddedCard.textContent = "J'ai ajouté la carte à mon Wallet";
+      btnIAddedCard.disabled = false;
+      btnIAddedCard.onclick = () => {
+        try {
+          localStorage.setItem("fidpass_added_" + slug, "true");
+        } catch (_) {}
+        if (afterAddSection) {
+          renderFidelityRulesRecap(_fidelityBusiness);
+          afterAddSection.classList.remove("hidden");
+          afterAddSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        btnIAddedCard.textContent = "C'est fait ✓";
+        btnIAddedCard.disabled = true;
+      };
+    }
   }
 
   const engagementBlock = document.getElementById("fidelity-engagement-block");
@@ -5630,7 +5727,6 @@ function showFidelitySuccess(slug, memberId) {
           }
         });
       });
-      engagementBlock.scrollIntoView({ behavior: "smooth", block: "center" });
     } catch (_) {
       if (engagementBlock) engagementBlock.classList.add("hidden");
     }
@@ -5771,18 +5867,19 @@ function runFidelityApp(slug) {
   }
   fetchBusiness(slug)
     .then((business) => {
+      _fidelityBusiness = business;
       ensureFidelityPath(slug);
       setPageBusiness(business);
       // Au retour sur la page après ajout de la carte au Wallet, restaurer l’écran succès avec les missions
       try {
         const raw = localStorage.getItem("fidpass_success_" + slug);
         if (raw) {
-          const { memberId: storedMemberId, createdAt } = JSON.parse(raw);
+          const { memberId: storedMemberId, memberName: storedMemberName, createdAt } = JSON.parse(raw);
           if (
             storedMemberId &&
             Date.now() - (createdAt || 0) < FIDPASS_SUCCESS_MAX_AGE
           ) {
-            showFidelitySuccess(slug, storedMemberId);
+            showFidelitySuccess(slug, storedMemberId, storedMemberName);
           }
         }
       } catch (_) {}
@@ -5810,7 +5907,7 @@ function runFidelityApp(slug) {
         const data = await createMember(s, name, email);
         const memberId = data.memberId || data.member?.id;
         if (!memberId) throw new Error("Réponse serveur invalide");
-        showFidelitySuccess(s, memberId);
+        showFidelitySuccess(s, memberId, data.member?.name);
       } catch (err) {
         const isNetworkError = err.message === "Failed to fetch" || err.name === "TypeError";
         showError(
@@ -5832,9 +5929,9 @@ function runFidelityApp(slug) {
     try {
       const raw = localStorage.getItem("fidpass_success_" + s);
       if (!raw) return;
-      const { memberId: storedMemberId, createdAt } = JSON.parse(raw);
+      const { memberId: storedMemberId, memberName: storedMemberName, createdAt } = JSON.parse(raw);
       if (storedMemberId && Date.now() - (createdAt || 0) < FIDPASS_SUCCESS_MAX_AGE) {
-        showFidelitySuccess(s, storedMemberId);
+        showFidelitySuccess(s, storedMemberId, storedMemberName);
       }
     } catch (_) {}
   });

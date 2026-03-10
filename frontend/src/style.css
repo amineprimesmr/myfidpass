@@ -440,6 +440,61 @@ body {
   margin: 0 0 1.25rem;
 }
 
+.fidelity-welcome-name {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.fidelity-welcome-name.hidden { display: none; }
+
+.fidelity-btn-i-added-card {
+  margin-top: 1.25rem;
+  width: 100%;
+}
+
+.fidelity-after-add-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.fidelity-after-add-section.hidden { display: none; }
+
+.fidelity-after-add-intro {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text, #1a1a1a);
+  margin: 0 0 1rem;
+}
+
+.fidelity-rules-recap {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1rem 1rem 1.1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+
+.fidelity-rules-intro,
+.fidelity-rules-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.fidelity-rules-text {
+  font-size: 0.95rem;
+  color: var(--text, #1a1a1a);
+  margin: 0.35rem 0 0;
+  line-height: 1.4;
+}
+
+.fidelity-rules-recap .fidelity-rules-text:first-of-type { margin-top: 0; }
+
 .fidelity-wallet-buttons {
   display: flex;
   flex-direction: column;
