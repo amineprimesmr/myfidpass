@@ -15,10 +15,17 @@ export function hashValue(value) {
   return createHash("sha256").update(String(value || "")).digest("hex");
 }
 
-export function buildIpHash(req) {
-  const xff = req.get("x-forwarded-for");
-  const raw = (xff ? String(xff).split(",")[0] : req.ip || "").trim();
-  return raw ? hashValue(raw) : null;
+export function buildIpHash(reqOrIp) {
+  if (!reqOrIp || typeof reqOrIp !== "object") return null;
+  const get = reqOrIp.get;
+  if (typeof get !== "function") return null;
+  try {
+    const xff = get.call(reqOrIp, "x-forwarded-for");
+    const raw = (xff ? String(xff).split(",")[0] : reqOrIp.ip || "").trim();
+    return raw ? hashValue(raw) : null;
+  } catch (_) {
+    return null;
+  }
 }
 
 export function buildDeviceHash(clientFingerprint) {
