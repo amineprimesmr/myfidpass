@@ -13,7 +13,7 @@ export function renderClientPage(root, state, options = {}) {
   const hasMember = !!state.member?.id;
   const isGameMode = (state.business?.loyalty_mode || "points_cash") === "points_game_tickets";
   const points = Number(state.member?.points || 0);
-  const tickets = Number(state.tickets?.ticket_balance || 0);
+  const tickets = state.unlimitedTicketsTest ? 999 : Number(state.tickets?.ticket_balance || 0);
   const pointsPerTicket = Number(state.business?.points_per_ticket || 10);
   const roulette = (state.games || []).find((g) => g.game_code === "roulette");
   const showRoulette = isGameMode && roulette && roulette.enabled;
@@ -36,7 +36,7 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-roulette-title-line">tentez de gagner un cadeau</span>
           </h2>
           <div class="fidelity-roulette-btn-row">
-            <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" ${tickets < spinCost ? 'disabled' : ''}>
+            <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" aria-label="Lancer la roue">
               Jouer !
             </button>
           </div>
@@ -132,6 +132,7 @@ export function renderClientPage(root, state, options = {}) {
       <section class="fidelity-v2-card ${hasMember && !isGameMode ? "" : "hidden"}">
         <h2>Programme points classique</h2>
         <p class="fidelity-v2-muted">Ici tes points servent directement pour des avantages en caisse. Le mode jeu n'est pas activé pour ce commerce.</p>
+        <p class="fidelity-v2-game-link-wrap"><a href="${gamePageUrl}" class="fidelity-btn fidelity-cta-jouer">Tourner la roue →</a></p>
       </section>
 
       <section class="fidelity-v2-card ${hasMember ? "" : "hidden"}" id="fidelity-v2-rewards">

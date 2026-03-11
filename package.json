@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "setup": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "backend": "node backend/src/index.js",
     "frontend": "npm run dev --prefix frontend",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "dev:local": "concurrently \"npm run backend\" \"npm run dev --prefix frontend -- --port 3004\"",
+    "dev": "node scripts/start-all.mjs",
+    "start": "npm run dev",
     "build": "npm run build:frontend",
     "build:frontend": "cd frontend && npm run build",
     "deploy": "sh scripts/deploy.sh"

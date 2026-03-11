@@ -3,6 +3,8 @@ import { initClientFidelityPage } from "./client-fidelity/bootstrap.js";
 
 const IS_MYFIDPASS_HOST =
   typeof window !== "undefined" && /(^|\.)myfidpass\.fr$/i.test(window.location.hostname);
+const IS_LOCALHOST =
+  typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 const RAW_ENV_API_BASE =
   typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : "";
 
@@ -18,9 +20,12 @@ function shouldForceApiSubdomain(base) {
   }
 }
 
-const API_BASE = shouldForceApiSubdomain(RAW_ENV_API_BASE)
-  ? "https://api.myfidpass.fr"
-  : RAW_ENV_API_BASE;
+// En dev (localhost), on utilise toujours le proxy Vite → backend local (port 3001)
+const API_BASE = IS_LOCALHOST
+  ? ""
+  : shouldForceApiSubdomain(RAW_ENV_API_BASE)
+    ? "https://api.myfidpass.fr"
+    : RAW_ENV_API_BASE;
 const AUTH_TOKEN_KEY = "fidpass_token";
 
 const landingEl = document.getElementById("landing");
@@ -2464,6 +2469,94 @@ function initAppDashboard(slug) {
       if (feedback) { feedback.textContent = e.message || "Erreur lors de l'enregistrement."; feedback.classList.remove("hidden", "success"); feedback.classList.add("error"); }
     }
   });
+  const supportedEngagementActions = ["google_review", "instagram_follow", "tiktok_follow", "facebook_follow"];
+  const engagementModal = document.getElementById("app-engagement-modal");
+  const engagementModalBackdrop = document.getElementById("app-engagement-modal-backdrop");
+  const engagementModalClose = document.getElementById("app-engagement-modal-close");
+  const engagementModalTitle = document.getElementById("app-engagement-modal-title");
+  const engagementModalInputLabel = document.getElementById("app-engagement-modal-input-label");
+  const engagementModalInput = document.getElementById("app-engagement-modal-input");
+  const engagementModalPoints = document.getElementById("app-engagement-modal-points");
+  const engagementModalSubmit = document.getElementById("app-engagement-modal-submit");
+  function openEngagementModal(action, title, inputLabel, placeholder, currentValue, currentPoints) {
+    if (!engagementModal || !supportedEngagementActions.includes(action)) return;
+    engagementModal.dataset.currentAction = action;
+    if (engagementModalTitle) engagementModalTitle.textContent = title;
+    if (engagementModalInputLabel) engagementModalInputLabel.textContent = inputLabel;
+    if (engagementModalInput) {
+      engagementModalInput.placeholder = placeholder || "";
+      engagementModalInput.value = currentValue || "";
+    }
+    if (engagementModalPoints) engagementModalPoints.value = Math.max(1, parseInt(currentPoints, 10) || 10);
+    engagementModal.classList.remove("hidden");
+    engagementModalInput?.focus();
+  }
+  function closeEngagementModal() {
+    if (engagementModal) engagementModal.classList.add("hidden");
+    engagementModal?.removeAttribute("data-current-action");
+  }
+  document.getElementById("app-engagement-objectives-grid")?.addEventListener("click", (e) => {
+    const card = e.target.closest(".app-engagement-objective-card");
+    if (!card || card.disabled) return;
+    const action = card.getAttribute("data-action");
+    const label = card.querySelector(".app-engagement-objective-label")?.textContent?.trim() || action;
+    const inputLabel = card.getAttribute("data-input-label") || "URL";
+    const placeholder = card.getAttribute("data-placeholder") || "";
+    if (!supportedEngagementActions.includes(action)) return;
+    const gPlaceId = document.getElementById("app-engagement-google-place-id");
+    const igUrl = document.getElementById("app-engagement-instagram-url");
+    const tkUrl = document.getElementById("app-engagement-tiktok-url");
+    const fbUrl = document.getElementById("app-engagement-facebook-url");
+    const gPoints = document.getElementById("app-engagement-google-points");
+    const igPoints = document.getElementById("app-engagement-instagram-points");
+    const tkPoints = document.getElementById("app-engagement-tiktok-points");
+    const fbPoints = document.getElementById("app-engagement-facebook-points");
+    let value = "";
+    let points = 10;
+    if (action === "google_review") { value = gPlaceId?.value || ""; points = parseInt(gPoints?.value, 10) || 50; }
+    else if (action === "instagram_follow") { value = igUrl?.value || ""; points = parseInt(igPoints?.value, 10) || 10; }
+    else if (action === "tiktok_follow") { value = tkUrl?.value || ""; points = parseInt(tkPoints?.value, 10) || 10; }
+    else if (action === "facebook_follow") { value = fbUrl?.value || ""; points = parseInt(fbPoints?.value, 10) || 10; }
+    openEngagementModal(action, label, inputLabel, placeholder, value, points);
+  });
+  engagementModalBackdrop?.addEventListener("click", closeEngagementModal);
+  engagementModalClose?.addEventListener("click", closeEngagementModal);
+  engagementModalSubmit?.addEventListener("click", () => {
+    const action = engagementModal?.dataset?.currentAction;
+    if (!action || !supportedEngagementActions.includes(action)) return;
+    const value = (engagementModalInput?.value || "").trim();
+    const points = Math.max(1, parseInt(engagementModalPoints?.value, 10) || 10);
+    const gEnable = document.getElementById("app-engagement-google-enable");
+    const gPoints = document.getElementById("app-engagement-google-points");
+    const gPlaceId = document.getElementById("app-engagement-google-place-id");
+    const igEnable = document.getElementById("app-engagement-instagram-enable");
+    const igPoints = document.getElementById("app-engagement-instagram-points");
+    const igUrl = document.getElementById("app-engagement-instagram-url");
+    const tkEnable = document.getElementById("app-engagement-tiktok-enable");
+    const tkPoints = document.getElementById("app-engagement-tiktok-points");
+    const tkUrl = document.getElementById("app-engagement-tiktok-url");
+    const fbEnable = document.getElementById("app-engagement-facebook-enable");
+    const fbPoints = document.getElementById("app-engagement-facebook-points");
+    const fbUrl = document.getElementById("app-engagement-facebook-url");
+    if (action === "google_review") {
+      if (gEnable) gEnable.checked = true;
+      if (gPoints) gPoints.value = points;
+      if (gPlaceId) gPlaceId.value = value;
+    } else if (action === "instagram_follow") {
+      if (igEnable) igEnable.checked = true;
+      if (igPoints) igPoints.value = points;
+      if (igUrl) igUrl.value = value;
+    } else if (action === "tiktok_follow") {
+      if (tkEnable) tkEnable.checked = true;
+      if (tkPoints) tkPoints.value = points;
+      if (tkUrl) tkUrl.value = value;
+    } else if (action === "facebook_follow") {
+      if (fbEnable) fbEnable.checked = true;
+      if (fbPoints) fbPoints.value = points;
+      if (fbUrl) fbUrl.value = value;
+    }
+    closeEngagementModal();
+  });
   document.getElementById("app-engagement-pending-list")?.addEventListener("click", async (e) => {
     const id = e.target.getAttribute("data-completion-id");
     if (!id) return;
@@ -2515,6 +2608,11 @@ function initAppDashboard(slug) {
     if (e.detail?.sectionId !== "engagement") return;
     loadEngagementPending();
     runEngagementAutoSuggest();
+    const previewIframe = document.getElementById("app-engagement-preview-iframe");
+    if (previewIframe && slug) {
+      const base = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
+      previewIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}/jeu` : "";
+    }
   }, { once: false });
 
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");

@@ -1538,56 +1538,69 @@ router.post("/:slug/members/:memberId/tickets/convert", (req, res) => {
 });
 
 router.post("/:slug/games/:gameCode/spins", (req, res) => {
-  const business = getBusinessBySlug(req.params.slug);
-  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  const memberId = String(req.body?.memberId || "").trim();
-  if (!memberId) return res.status(400).json({ error: "memberId requis" });
-  const member = getMemberForBusiness(memberId, business.id);
-  if (!member) return res.status(404).json({ error: "Membre introuvable" });
-  const idempotencyKey = getIdempotencyKey(req);
-  const clientIpHash = buildIpHash(getClientIp(req));
-  const deviceHash = buildDeviceHash(req.body?.client_fingerprint ?? req.body?.clientFingerprint ?? "");
-  const result = spinGameForMember({
-    businessId: business.id,
-    memberId: member.id,
-    gameCode: req.params.gameCode,
-    idempotencyKey,
-    clientIpHash,
-    deviceHash,
-    riskScore: deviceHash ? 0.15 : 0.35,
-  });
-  if (result?.error === "mode_disabled") return res.status(400).json({ error: "Mode jeu désactivé", code: "MODE_DISABLED" });
-  if (result?.error === "game_disabled") return res.status(400).json({ error: "Jeu indisponible", code: "GAME_DISABLED" });
-  if (result?.error === "not_enough_tickets") {
-    return res.status(400).json({
-      error: "Tickets insuffisants",
-      code: "NOT_ENOUGH_TICKETS",
-      ticket_cost: result.ticket_cost,
-      ticket_balance: result.ticket_balance,
+  try {
+    const business = getBusinessBySlug(req.params.slug);
+    if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+    const memberId = String(req.body?.memberId || "").trim();
+    if (!memberId) return res.status(400).json({ error: "memberId requis" });
+    const member = getMemberForBusiness(memberId, business.id);
+    if (!member) return res.status(404).json({ error: "Membre introuvable" });
+    const idempotencyKey = getIdempotencyKey(req);
+    const clientIpHash = buildIpHash(getClientIp(req));
+    const deviceHash = buildDeviceHash(req.body?.client_fingerprint ?? req.body?.clientFingerprint ?? "");
+    const result = spinGameForMember({
+      businessId: business.id,
+      memberId: member.id,
+      gameCode: req.params.gameCode,
+      idempotencyKey,
+      clientIpHash,
+      deviceHash,
+      riskScore: deviceHash ? 0.15 : 0.35,
     });
-  }
-  if (result?.error === "daily_limit_reached") return res.status(429).json({ error: "Limite quotidienne atteinte", code: "DAILY_LIMIT_REACHED" });
-  if (result?.error === "cooldown_active") {
-    return res.status(429).json({ error: "Attendez avant de rejouer", code: "COOLDOWN_ACTIVE", cooldown_seconds: result.cooldown_seconds });
-  }
-  if (result?.error) return res.status(400).json({ error: "Spin impossible", code: String(result.error).toUpperCase() });
-  const reward = result.reward
-    ? {
-      id: result.reward.id,
-      code: result.reward.code,
-      label: result.reward.label,
-      kind: result.reward.kind,
-      value: result.reward.value || null,
+    if (result?.error === "mode_disabled") return res.status(400).json({ error: "Mode jeu désactivé", code: "MODE_DISABLED" });
+    if (result?.error === "game_disabled") return res.status(400).json({ error: "Jeu indisponible", code: "GAME_DISABLED" });
+    if (result?.error === "not_enough_tickets") {
+      return res.status(400).json({
+        error: "Tickets insuffisants",
+        code: "NOT_ENOUGH_TICKETS",
+        ticket_cost: result.ticket_cost,
+        ticket_balance: result.ticket_balance,
+      });
     }
-    : null;
-  return res.json({
-    ok: true,
-    idempotent: !!result.idempotent,
-    spin: result.spin,
-    reward,
-    ticket_balance: result.ticket_balance,
-    member_points: result.member_points,
-  });
+    if (result?.error === "daily_limit_reached") return res.status(429).json({ error: "Limite quotidienne atteinte", code: "DAILY_LIMIT_REACHED" });
+    if (result?.error === "cooldown_active") {
+      return res.status(429).json({ error: "Attendez avant de rejouer", code: "COOLDOWN_ACTIVE", cooldown_seconds: result.cooldown_seconds });
+    }
+    if (result?.error === "member_not_found") {
+      return res.status(404).json({ error: "Membre introuvable. Recharge la page ou recrée ta carte.", code: "MEMBER_NOT_FOUND" });
+    }
+    if (result?.error === "business_not_found") {
+      return res.status(404).json({ error: "Commerce introuvable.", code: "BUSINESS_NOT_FOUND" });
+    }
+    if (result?.error) {
+      return res.status(400).json({ error: "Spin impossible", code: String(result.error).toUpperCase() });
+    }
+    const reward = result.reward
+      ? {
+        id: result.reward.id,
+        code: result.reward.code,
+        label: result.reward.label,
+        kind: result.reward.kind,
+        value: result.reward.value || null,
+      }
+      : null;
+    return res.json({
+      ok: true,
+      idempotent: !!result.idempotent,
+      spin: result.spin,
+      reward,
+      ticket_balance: result.ticket_balance,
+      member_points: result.member_points,
+    });
+  } catch (err) {
+    console.error("[spins] Erreur:", err);
+    return res.status(500).json({ error: "Erreur serveur. Réessaie dans un instant.", code: "SERVER_ERROR" });
+  }
 });
 
 router.get("/:slug/members/:memberId/rewards", (req, res) => {

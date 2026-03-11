@@ -15,6 +15,14 @@ function getFingerprint() {
   return `${ua}|${lang}|${tz}|${hw}`.slice(0, 250);
 }
 
+/** Mode test : tickets illimités (localhost ou ?tickets=unlimited) */
+function isUnlimitedTicketsTest() {
+  if (typeof window === "undefined") return false;
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const hasParam = window.location.search.includes("tickets=unlimited");
+  return isLocal || hasParam;
+}
+
 // Configuration roulette (roue circulaire)
 const ROULETTE_SPIN_DURATION_MS = 4000;
 const ROULETTE_EXTRA_TURNS = 6;
@@ -49,7 +57,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
   }
 
   const business = await api.getBusiness(slug);
-  store.patch({ business });
+  store.patch({ business, unlimitedTicketsTest: isUnlimitedTicketsTest() });
   try {
     const raw = localStorage.getItem(memberStorageKey(slug));
     if (raw) {
@@ -63,12 +71,20 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
   function buildConicGradient(n) {
     const step = 360 / n;
     const stops = [];
-    for (let i = 0; i <= n; i++) {
-      const deg = i * step;
-      const fill = i % 2 === 0 ? "#1a2b42" : "#fff";
-      stops.push(`${fill} ${deg}deg`);
+    for (let i = 0; i < n; i++) {
+      const a = i * step;
+      const b = (i + 1) * step;
+      const fill = i % 2 === 0 ? "#000000" : "#ffffff";
+      stops.push(`${fill} ${a}deg`, `${fill} ${b}deg`);
     }
     return `conic-gradient(${stops.join(", ")})`;
+  }
+
+  /** Affiche "PeRDu" pour les segments PERDU (design image 2). */
+  function formatWheelLabel(label) {
+    const t = String(label || "").trim().toUpperCase();
+    if (t === "PERDU") return "PeRDu";
+    return label;
   }
 
   function initRouletteWheel() {
@@ -82,8 +98,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     const segmentHtml = wheelLabels.map((label, i) => {
       const angle = (i + 0.5) * (360 / n);
       const isWhite = i % 2 === 1;
-      const segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
-      return `<div class="${segClass}" style="transform: rotate(${angle}deg);"><span>${escapeHtml(label)}</span></div>`;
+      const flip = angle > 90 && angle < 270;
+      let segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
+      if (flip) segClass += " fidelity-roulette-segment-flip";
+      const displayLabel = formatWheelLabel(label);
+      return `<div class="${segClass}" style="transform: rotate(${angle}deg);"><span class="fidelity-roulette-segment-label">${escapeHtml(displayLabel)}</span></div>`;
     }).join("");
 
     wheelEl.innerHTML = segmentHtml;
@@ -172,6 +191,26 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
     if (!wheelEl || !spinBtn) return;
 
+    const tickets = state.unlimitedTicketsTest ? 999 : Number(state.tickets?.ticket_balance ?? 0);
+    const spinCost = Number((state.games || []).find((g) => g.game_code === "roulette")?.ticket_cost ?? 1);
+
+    if (!state.member?.id) {
+      if (feedback) {
+        feedback.textContent = "Crée ta carte fidélité pour jouer.";
+        feedback.classList.add("error");
+        feedback.classList.remove("hidden", "success");
+      }
+      return;
+    }
+    if (tickets < spinCost) {
+      if (feedback) {
+        feedback.textContent = `Il te faut ${spinCost} ticket(s). Convertis tes points en tickets sur la page carte.`;
+        feedback.classList.add("error");
+        feedback.classList.remove("hidden", "success");
+      }
+      return;
+    }
+
     isSpinning = true;
     spinBtn.disabled = true;
     if (feedback) {
@@ -186,22 +225,27 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
     try {
       const result = await api.spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey());
-      const rewardLabel = (result.reward?.label || "PERDU").trim();
-      const isWin = result.reward && result.reward.type !== "none";
+      const rawLabel = (result.reward?.label || "PERDU").trim();
+      const isWin = !!(result.reward && result.reward.kind !== "none");
+      // Backend peut renvoyer "Pas de lot" pour un perdant → on mappe sur un segment PERDU
+      const rewardLabel = !result.reward || result.reward.kind === "none" ? "PERDU" : rawLabel;
 
       let winIndex = wheelLabels.findIndex((l) => String(l).toLowerCase() === rewardLabel.toLowerCase());
       if (winIndex === -1) {
-        winIndex = 0;
-        wheelLabels[0] = rewardLabel;
-        initRouletteWheel();
+        winIndex = wheelLabels.findIndex((l) => String(l).toLowerCase() === "perdu");
+        if (winIndex === -1) winIndex = 0;
       }
 
       const n = wheelLabels.length;
       const segmentAngle = 360 / n;
-      // Arrêt : le segment winIndex doit être sous l'indicateur (à droite = 0°)
-      const finalDelta = 360 * ROULETTE_EXTRA_TURNS + (360 - winIndex * segmentAngle);
-      const targetRotation = currentRotation + finalDelta;
+      // Pointeur à droite = 90°. On veut que le centre du segment winIndex soit à 90° après rotation.
+      const baseRotation = spinStart + 360;
+      let deltaMod = (90 - (winIndex + 0.5) * segmentAngle - baseRotation) % 360;
+      if (deltaMod < 0) deltaMod += 360;
+      const finalDelta = deltaMod + 360 * ROULETTE_EXTRA_TURNS;
+      const targetRotation = baseRotation + finalDelta;
 
+      wheelEl.offsetHeight; // force reflow pour que la position spinStart+360 soit appliquée
       wheelEl.style.transition = `transform ${ROULETTE_SPIN_DURATION_MS}ms cubic-bezier(0.2, 0.8, 0.3, 1)`;
       wheelEl.style.transform = `rotate(${targetRotation}deg)`;
 
@@ -212,7 +256,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
         spinBtn.disabled = false;
 
         if (feedback) {
-          feedback.textContent = isWin ? `Gagné : ${rewardLabel} ! 🎉` : "Dommage, essaie encore !";
+          feedback.textContent = isWin ? `Gagné : ${rawLabel} ! 🎉` : "Dommage, essaie encore !";
           feedback.classList.add(isWin ? "success" : "error");
           feedback.classList.remove("hidden");
         }

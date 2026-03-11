@@ -30,10 +30,8 @@ Sans ces éléments, le backend ne pourra pas générer de `.pkpass` valide.
 # Cloner / aller dans le projet
 cd fidelity
 
-# Installer les dépendances
-npm install
-cd backend && npm install && cd ..
-cd frontend && npm install && cd ..
+# Tout installer (racine + backend + frontend)
+npm run setup
 
 # Configurer (voir ci-dessous)
 cp backend/.env.example backend/.env
@@ -62,12 +60,14 @@ ORGANIZATION_NAME=Mon Fast-Food
 Puis :
 
 ```bash
-# Lancer le backend
-npm run backend
-
-# Dans un autre terminal : lancer le frontend
-npm run frontend
+# Tout démarrer (backend + frontend en une commande)
+npm start
 ```
+
+Ou en deux terminaux : `npm run backend` puis `npm run frontend`.
+
+- **Frontend** : http://localhost:5173  
+- **Backend API** : http://localhost:3001 (proxié via /api en dev)
 
 Ouvrir **http://localhost:5173/fidelity/demo** (ou `http://localhost:5173` → redirection vers `/fidelity/demo`). Une entreprise « demo » existe par défaut. Pour une autre entreprise : **http://localhost:5173/fidelity/nom-slug** (après l’avoir créée via l’API ci-dessous).
 

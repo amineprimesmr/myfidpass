@@ -921,13 +921,13 @@ body {
 
 .fidelity-game-back-float {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
+  top: 0.5rem;
+  left: 0.75rem;
   z-index: 10;
   color: #1a2b42;
   font-weight: 700;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .fidelity-game-back-float:hover {
@@ -936,7 +936,7 @@ body {
 
 .fidelity-game-top {
   text-align: center;
-  padding: 1rem 1rem 0.75rem;
+  padding: 0.4rem 1rem 0.25rem;
   flex-shrink: 0;
 }
 
@@ -954,9 +954,9 @@ body {
 }
 
 .fidelity-roulette-logo {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 0.75rem;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.35rem;
   border: 2px solid #000;
   border-radius: 50%;
   display: flex;
@@ -966,25 +966,25 @@ body {
 }
 
 .fidelity-roulette-logo-text {
-  font-size: 0.6rem;
+  font-size: 0.5rem;
   font-weight: 800;
   color: #000;
   text-transform: uppercase;
   text-align: center;
   line-height: 1.2;
-  padding: 0 6px;
+  padding: 0 4px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .fidelity-roulette-title {
-  margin: 0 0 1rem;
-  font-size: 1.05rem;
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
   font-weight: 800;
   color: #000;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  line-height: 1.3;
+  line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
@@ -996,24 +996,24 @@ body {
   display: flex;
   justify-content: flex-end;
   padding-right: 1rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.2rem;
 }
 
 .fidelity-roulette-btn-jouer {
-  background: #1a2b42;
+  background: #283549;
   color: #fff;
-  border: 3px solid #e8c16e;
-  padding: 0.75rem 1.5rem;
-  font-size: 1.1rem;
+  border: 3px solid #d4a84b;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.95rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-radius: 999px;
   cursor: pointer;
   box-shadow:
-    0 6px 0 rgba(0,0,0,0.2),
-    0 8px 24px rgba(0,0,0,0.15),
-    inset 0 1px 0 rgba(255,255,255,0.15);
+    0 6px 20px rgba(0,0,0,0.12),
+    0 4px 12px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.12);
   transition: transform 0.1s, box-shadow 0.1s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1057,11 +1057,9 @@ body {
   position: absolute;
   right: 0;
   top: 50%;
-  transform: translateY(-50%);
-  width: min(200vmin, 200vw);
-  height: min(200vmin, 200vw);
-  max-width: none;
-  max-height: none;
+  transform: translate(-28%, -50%);
+  width: min(125vmin, 125vw);
+  height: min(125vmin, 125vw);
   pointer-events: none;
 }
 
@@ -1076,12 +1074,14 @@ body {
   box-sizing: border-box;
   transition: transform 0.1s linear;
   will-change: transform;
-  border: 5px solid #1a2b42;
+  border: 12px solid #000;
+  background-color: #fff;
   box-shadow:
-    inset 0 0 30px rgba(0,0,0,0.15),
-    inset 0 2px 4px rgba(255,255,255,0.1),
-    0 20px 50px rgba(0,0,0,0.25),
-    0 12px 30px rgba(0,0,0,0.18);
+    0 12px 0 -4px #1a1a1a,
+    0 16px 32px rgba(0,0,0,0.35),
+    0 8px 16px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -1px 0 rgba(0,0,0,0.08);
 }
 
 .fidelity-roulette-wheel-rim {
@@ -1091,16 +1091,11 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 8px solid transparent;
+  border: 4px solid #000;
   box-sizing: border-box;
   pointer-events: none;
-  box-shadow:
-    inset 0 -4px 12px rgba(0,0,0,0.4),
-    inset 0 4px 8px rgba(255,255,255,0.2);
-  border-top-color: rgba(255,255,255,0.35);
-  border-right-color: rgba(255,255,255,0.2);
-  border-bottom-color: rgba(0,0,0,0.35);
-  border-left-color: rgba(0,0,0,0.25);
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.2);
+  background: transparent;
 }
 
 .fidelity-roulette-wheel-segment {
@@ -1114,44 +1109,77 @@ body {
   pointer-events: none;
 }
 
-.fidelity-roulette-wheel-segment span {
+.fidelity-roulette-wheel-segment span,
+.fidelity-roulette-wheel-segment .fidelity-roulette-segment-label {
   position: absolute;
   left: 0;
   top: 0;
-  font-size: clamp(0.55rem, 2.2vmin, 0.9rem);
-  font-weight: 800;
+  font-size: clamp(1.25rem, 6.5vmin, 2.25rem);
+  font-weight: 900;
   color: #fff;
-  text-transform: uppercase;
   white-space: nowrap;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-  transform: translateY(-38vmin) rotate(90deg);
-  transform-origin: 0 38vmin;
+  font-family: inherit;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  display: inline-block;
+  text-align: center;
+  direction: ltr;
+  unicode-bidi: normal;
+  transform: translate(-50%, -42vmin) rotate(90deg);
+  transform-origin: 50% 42vmin;
 }
 
-.fidelity-game-page .fidelity-roulette-wheel-segment span {
-  transform: translateY(-52vmin) rotate(90deg);
-  transform-origin: 0 52vmin;
-  font-size: clamp(0.6rem, 2.5vmin, 1rem);
+.fidelity-game-page .fidelity-roulette-wheel-segment span,
+.fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label {
+  font-size: clamp(1.4rem, 7vmin, 2.5rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  text-align: center;
+  direction: ltr;
+  unicode-bidi: normal;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  transform: translate(-50%, -42vmin) rotate(90deg);
+  transform-origin: 50% 42vmin;
+}
+
+.fidelity-roulette-wheel-segment-flip .fidelity-roulette-segment-label {
+  transform: translate(-50%, -42vmin) rotate(-90deg);
+  transform-origin: 50% 42vmin;
 }
 
 .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white span {
-  color: #1a2b42;
-  text-shadow: 0 1px 1px rgba(255,255,255,0.6);
+  color: #000;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.5);
 }
 
+/* Pointeur goutte or (image 2), sur le bord droit de l'écran */
 .fidelity-roulette-indicator {
   position: absolute;
   right: 2%;
   top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 16px solid transparent;
-  border-bottom: 16px solid transparent;
-  border-right: 28px solid #e8c16e;
-  filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.25));
+  width: min(6vmin, 28px);
+  height: min(12vmin, 56px);
+  background: linear-gradient(145deg, #d4a84b 0%, #c4942e 50%, #b88620 100%);
+  border-radius: 50% 50% 50% 0;
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   z-index: 3;
   pointer-events: none;
+}
+
+.fidelity-roulette-indicator::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 28%;
+  height: 28%;
+  background: #000;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .fidelity-roulette-feedback {
@@ -1256,6 +1284,10 @@ body {
   text-decoration: underline;
 }
 
+.fidelity-v2-game-link-wrap {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
 .fidelity-cta-jouer {
   display: inline-flex;
   justify-content: center;
@@ -1273,8 +1305,8 @@ body {
 
 @media (max-width: 480px) {
   .fidelity-roulette-wheel-outer {
-    width: min(220vmin, 220vw);
-    height: min(220vmin, 220vw);
+    width: min(140vmin, 140vw);
+    height: min(140vmin, 140vw);
   }
   .fidelity-roulette-indicator {
     right: 1%;

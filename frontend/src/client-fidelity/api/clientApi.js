@@ -58,7 +58,12 @@ export function createClientFidelityApi(apiBase) {
       body: JSON.stringify({ memberId, client_fingerprint: clientFingerprint }),
     });
     const data = await safeJson(res);
-    if (!res.ok) throw new Error(data.error || "Spin impossible");
+    if (!res.ok) {
+      const fallback = res.status >= 500 ? "Erreur serveur. Réessaie dans un instant." : "Spin impossible";
+      const msg = data.error || fallback;
+      const code = data.code ? ` (${data.code})` : "";
+      throw new Error(msg + code);
+    }
     return data;
   }
 
