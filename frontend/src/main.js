@@ -6339,6 +6339,11 @@ function showFidelitySuccess(slug, memberId, memberName) {
   const engagementEmptyEl = document.getElementById("fidelity-engagement-empty");
   const engagementActionsEl = document.getElementById("fidelity-engagement-actions");
   const engagementClaimFeedback = document.getElementById("fidelity-engagement-claim-feedback");
+  function escapeHtmlFidelity(s) {
+    const div = document.createElement("div");
+    div.textContent = s == null ? "" : String(s);
+    return div.innerHTML;
+  }
   async function loadEngagementActions() {
     if (!engagementBlock || !engagementActionsEl) return;
     if (engagementEmptyEl) engagementEmptyEl.classList.add("hidden");
@@ -6363,20 +6368,20 @@ function showFidelitySuccess(slug, memberId, memberName) {
     }
     engagementBlock.classList.remove("hidden");
     engagementActionsEl.innerHTML = actions
-        .map(
-          (a) =>
-            `<div class="fidelity-engagement-item" data-action-type="${a.action_type}">
+      .map(
+        (a) =>
+          `<div class="fidelity-engagement-item" data-action-type="${a.action_type}">
               <div class="fidelity-engagement-item-info">
-                <span class="fidelity-engagement-item-label">${escapeHtml(a.label)}</span>
+                <span class="fidelity-engagement-item-label">${escapeHtmlFidelity(a.label)}</span>
                 <span class="fidelity-engagement-item-points">+${a.points} points</span>
               </div>
               <div class="fidelity-engagement-item-btns">
-                <a href="${escapeHtml(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open">Ouvrir</a>
-                <button type="button" class="fidelity-btn fidelity-btn-primary fidelity-engagement-claim" data-action-type="${escapeHtml(a.action_type)}">J'ai fait, réclamer</button>
+                <a href="${escapeHtmlFidelity(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open">Ouvrir le lien</a>
+                <button type="button" class="fidelity-btn fidelity-btn-primary fidelity-engagement-claim" data-action-type="${escapeHtmlFidelity(a.action_type)}">Réclamer mes points</button>
               </div>
             </div>`
-        )
-        .join("");
+      )
+      .join("");
     engagementActionsEl.querySelectorAll(".fidelity-engagement-claim").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const actionType = btn.getAttribute("data-action-type");
