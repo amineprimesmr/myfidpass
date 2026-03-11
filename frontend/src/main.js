@@ -989,10 +989,10 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["vue-ensemble", "caisse", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
+const APP_SECTION_IDS = ["dashboard", "caisse", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
 
 const APP_MOBILE_TITLES = {
-  "vue-ensemble": "Tableau de bord",
+  "dashboard": "Dashboard",
   "caisse": "Caisse",
   "personnaliser": "Ma Carte",
   "carte-perimetre": "Carte & périmètre",
@@ -1003,7 +1003,7 @@ const APP_MOBILE_TITLES = {
 
 function showAppSection(sectionId) {
   let normalized = sectionId === "partager" ? "personnaliser" : sectionId;
-  const id = APP_SECTION_IDS.includes(normalized) ? normalized : "vue-ensemble";
+  const id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   const content = document.getElementById("app-dashboard-content");
   if (!content) return;
@@ -1036,14 +1036,22 @@ function initAppSidebar() {
       }
     });
   });
-  let hashSection = (window.location.hash || "#vue-ensemble").slice(1);
+  let hashSection = (window.location.hash || "#dashboard").slice(1);
   if (hashSection === "scanner") hashSection = "caisse";
-  const sectionToShow = hashSection === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(hashSection) ? hashSection : "vue-ensemble");
+  if (hashSection === "vue-ensemble") {
+    hashSection = "dashboard";
+    if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#dashboard");
+  }
+  const sectionToShow = hashSection === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(hashSection) ? hashSection : "dashboard");
   showAppSection(sectionToShow);
   window.addEventListener("hashchange", () => {
-    let section = (window.location.hash || "#vue-ensemble").slice(1);
+    let section = (window.location.hash || "#dashboard").slice(1);
     if (section === "scanner") section = "caisse";
-    const toShow = section === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(section) ? section : "vue-ensemble");
+    if (section === "vue-ensemble") {
+      section = "dashboard";
+      if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#dashboard");
+    }
+    const toShow = section === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(section) ? section : "dashboard");
     showAppSection(toShow);
   });
   initAppMobile();
@@ -1128,6 +1136,11 @@ function initAppDashboard(slug) {
   const statNew30 = document.getElementById("app-stat-new30");
   const statInactive30 = document.getElementById("app-stat-inactive30");
   const statAvgPoints = document.getElementById("app-stat-avg-points");
+  const statRevenue = document.getElementById("app-stat-revenue");
+  const statRetention = document.getElementById("app-stat-retention");
+  const statRecurrent = document.getElementById("app-stat-recurrent");
+  const dashboardPeriodSelect = document.getElementById("app-dashboard-period-select");
+  const evolutionTitleEl = document.getElementById("app-evolution-title");
   const memberSearchInput = document.getElementById("app-member-search");
   const memberListEl = document.getElementById("app-member-list");
   const amountInput = document.getElementById("app-amount");
@@ -3427,8 +3440,13 @@ function initAppDashboard(slug) {
     return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
+  function getDashboardPeriod() {
+    return (dashboardPeriodSelect && dashboardPeriodSelect.value) || "this_month";
+  }
+
   async function loadStats() {
-    const res = await api("/dashboard/stats");
+    const period = getDashboardPeriod();
+    const res = await api(`/dashboard/stats?period=${encodeURIComponent(period)}`);
     if (res.status === 401) throw new Error("Unauthorized");
     if (!res.ok) return null;
     const raw = await res.json();
@@ -3440,6 +3458,9 @@ function initAppDashboard(slug) {
       newMembersLast7Days: raw.new_members_last_7_days ?? raw.newMembersLast7Days ?? 0,
       inactiveMembers30Days: raw.inactive_members_30_days ?? raw.inactiveMembers30Days ?? 0,
       pointsAveragePerMember: raw.points_average_per_member ?? raw.pointsAveragePerMember ?? 0,
+      estimatedRevenueEur: raw.estimated_revenue_eur ?? raw.estimatedRevenueEur ?? 0,
+      retentionPct: raw.retention_pct ?? raw.retentionPct ?? 0,
+      recurrentMembersInPeriod: raw.recurrent_members_in_period ?? raw.recurrentMembersInPeriod ?? 0,
     };
     if (statMembers) statMembers.textContent = data.membersCount;
     if (statPoints) statPoints.textContent = data.pointsThisMonth;
@@ -3447,6 +3468,9 @@ function initAppDashboard(slug) {
     if (statNew30) statNew30.textContent = data.newMembersLast30Days;
     if (statInactive30) statInactive30.textContent = data.inactiveMembers30Days;
     if (statAvgPoints) statAvgPoints.textContent = data.pointsAveragePerMember;
+    if (statRevenue) statRevenue.textContent = `${Number(data.estimatedRevenueEur).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+    if (statRetention) statRetention.textContent = `${data.retentionPct} %`;
+    if (statRecurrent) statRecurrent.textContent = data.recurrentMembersInPeriod;
     const mobileStatMembers = document.getElementById("app-mobile-stat-members");
     const mobileStatScans = document.getElementById("app-mobile-stat-scans");
     if (mobileStatMembers) mobileStatMembers.textContent = data.membersCount;
@@ -3455,11 +3479,18 @@ function initAppDashboard(slug) {
   }
 
   async function loadEvolution() {
-    const res = await api("/dashboard/evolution?weeks=6");
+    const period = getDashboardPeriod();
+    const weeksMap = { 7d: 1, 30d: 4, this_month: 4, 6m: 26 };
+    const weeks = weeksMap[period] ?? 6;
+    const res = await api(`/dashboard/evolution?period=${encodeURIComponent(period)}&weeks=${weeks}`);
     if (!res.ok) return;
     const data = await res.json();
     const chartEl = document.getElementById("app-evolution-chart");
     const evolution = data.evolution || [];
+    if (evolutionTitleEl) {
+      const periodLabels = { 7d: "7 j", 30d: "4 sem.", this_month: "mois", 6m: "6 mois" };
+      evolutionTitleEl.textContent = `Activité — opérations par semaine (${periodLabels[period] ?? evolution.length + " sem."})`;
+    }
     if (!chartEl || !evolution.length) {
       if (chartEl) chartEl.innerHTML = "<p class=\"app-evolution-empty\">Aucune donnée pour le moment.</p>";
       return;
@@ -3607,6 +3638,7 @@ function initAppDashboard(slug) {
   membersSortEl?.addEventListener("change", () => refresh());
   transactionsDaysEl?.addEventListener("change", () => refresh());
   transactionsTypeEl?.addEventListener("change", () => refresh());
+  dashboardPeriodSelect?.addEventListener("change", () => refresh());
 
   const membersExportBtn = document.getElementById("app-members-export");
   const transactionsExportBtn = document.getElementById("app-transactions-export");

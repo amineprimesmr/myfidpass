@@ -429,6 +429,7 @@ router.patch("/:slug/dashboard/engagement-completions/:id/reject", (req, res) =>
 /**
  * GET /api/businesses/:slug/dashboard/stats
  * Stats pour le tableau de bord (token OU JWT propriétaire).
+ * Query: period = 7d | 30d | this_month | 6m
  */
 router.get("/:slug/dashboard/stats", (req, res, next) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -436,9 +437,11 @@ router.get("/:slug/dashboard/stats", (req, res, next) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const stats = getDashboardStats(business.id);
-  // snake_case pour l'app iOS (keyDecodingStrategy .convertFromSnakeCase)
+  const period = ["7d", "30d", "this_month", "6m"].includes(req.query.period) ? req.query.period : "this_month";
+  const stats = getDashboardStats(business.id, period);
   res.json({
+    period: stats.period,
+    period_key: stats.periodKey,
     members_count: stats.membersCount ?? 0,
     points_this_month: stats.pointsThisMonth ?? 0,
     transactions_this_month: stats.transactionsThisMonth ?? 0,
@@ -446,6 +449,10 @@ router.get("/:slug/dashboard/stats", (req, res, next) => {
     new_members_last_30_days: stats.newMembersLast30Days ?? 0,
     inactive_members_30_days: stats.inactiveMembers30Days ?? 0,
     points_average_per_member: stats.pointsAveragePerMember ?? 0,
+    estimated_revenue_eur: stats.estimatedRevenueEur ?? 0,
+    active_members_in_period: stats.activeMembersInPeriod ?? 0,
+    retention_pct: stats.retentionPct ?? 0,
+    recurrent_members_in_period: stats.recurrentMembersInPeriod ?? 0,
     business_name: business.organization_name ?? undefined,
   });
 });
@@ -573,7 +580,8 @@ router.get("/:slug/dashboard/transactions", (req, res, next) => {
 
 /**
  * GET /api/businesses/:slug/dashboard/evolution
- * Données pour graphique (opérations / membres par semaine, 6 semaines).
+ * Données pour graphique (opérations / membres par semaine).
+ * Query: weeks (4–26) ou period = 7d|30d|this_month|6m pour déduire le nombre de semaines.
  */
 router.get("/:slug/dashboard/evolution", (req, res, next) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -581,7 +589,17 @@ router.get("/:slug/dashboard/evolution", (req, res, next) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const weeks = Math.min(Math.max(Number(req.query.weeks) || 6, 4), 12);
+  let weeks = Number(req.query.weeks);
+  if (!Number.isFinite(weeks) && req.query.period) {
+    const p = req.query.period;
+    if (p === "7d") weeks = 1;
+    else if (p === "30d") weeks = 4;
+    else if (p === "this_month") weeks = 4;
+    else if (p === "6m") weeks = 26;
+    else weeks = 6;
+  }
+  if (!Number.isFinite(weeks)) weeks = 6;
+  weeks = Math.min(Math.max(weeks, 1), 26);
   const evolution = getDashboardEvolution(business.id, weeks);
   res.json({ evolution });
 });

@@ -409,9 +409,9 @@
           <p class="app-sidebar-business" id="app-business-name">Mon espace</p>
         </div>
         <nav class="app-sidebar-nav" aria-label="Navigation principale">
-          <a href="#vue-ensemble" class="app-sidebar-link app-sidebar-link-active" data-section="vue-ensemble">
+          <a href="#dashboard" class="app-sidebar-link app-sidebar-link-active" data-section="dashboard">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
-            <span class="app-sidebar-link-text">Vue d'ensemble</span>
+            <span class="app-sidebar-link-text">Dashboard</span>
           </a>
           <a href="#caisse" class="app-sidebar-link" data-section="caisse">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M12 5v14"/><path d="M5 12h14"/></svg></span>
@@ -480,9 +480,22 @@
           </div>
         </div>
         <div id="app-dashboard-content" class="app-content hidden">
-          <section id="vue-ensemble" class="app-section app-section-overview">
-            <h1 class="app-section-title">Vue d'ensemble</h1>
-            <p class="app-section-desc">Vos chiffres du mois et indicateurs clés.</p>
+          <section id="dashboard" class="app-section app-section-overview">
+            <div class="app-dashboard-header">
+              <div>
+                <h1 class="app-section-title">Dashboard</h1>
+                <p class="app-section-desc">Valeur générée par la fidélité et indicateurs clés.</p>
+              </div>
+              <div class="app-dashboard-period">
+                <label for="app-dashboard-period-select" class="app-dashboard-period-label">Période</label>
+                <select id="app-dashboard-period-select" class="app-dashboard-period-select" aria-label="Choisir la période des indicateurs">
+                  <option value="7d">7 derniers jours</option>
+                  <option value="30d">30 derniers jours</option>
+                  <option value="this_month" selected>Ce mois-ci</option>
+                  <option value="6m">6 derniers mois</option>
+                </select>
+              </div>
+            </div>
             <!-- Hero mobile : 2 cartes + message -->
             <div class="app-mobile-dashboard-hero app-mobile-only" id="app-mobile-dashboard-hero">
               <div class="app-mobile-dashboard-card" id="app-mobile-card-members">
@@ -493,7 +506,7 @@
               <div class="app-mobile-dashboard-card" id="app-mobile-card-scans">
                 <div class="app-mobile-dashboard-card-icon scans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
                 <span class="app-mobile-dashboard-card-value" id="app-mobile-stat-scans">0</span>
-                <span class="app-mobile-dashboard-card-label">Scans aujourd'hui</span>
+                <span class="app-mobile-dashboard-card-label">Opérations</span>
               </div>
             </div>
             <div class="app-mobile-message-bar-wrap app-mobile-only" id="app-mobile-message-bar-wrap">
@@ -503,22 +516,34 @@
               </div>
             </div>
             <div id="app-overview-alerts" class="app-overview-alerts hidden"></div>
-            <!-- Bloc principal : 2 KPIs mis en avant -->
+            <!-- KPIs valeur & activité -->
             <div class="app-dashboard-hero">
+              <div class="app-dashboard-hero-card app-dashboard-hero-revenue">
+                <span class="app-dashboard-hero-value" id="app-stat-revenue">0 €</span>
+                <span class="app-dashboard-hero-label">CA estimé (période)</span>
+              </div>
               <div class="app-dashboard-hero-card app-dashboard-hero-members">
                 <span class="app-dashboard-hero-value" id="app-stat-members">0</span>
                 <span class="app-dashboard-hero-label">Membres inscrits</span>
               </div>
               <div class="app-dashboard-hero-card app-dashboard-hero-ops">
                 <span class="app-dashboard-hero-value" id="app-stat-transactions">0</span>
-                <span class="app-dashboard-hero-label">Opérations ce mois</span>
+                <span class="app-dashboard-hero-label">Opérations (période)</span>
               </div>
             </div>
-            <!-- Indicateurs secondaires -->
+            <!-- Indicateurs secondaires : rétention, récurrence, points -->
             <div class="app-dashboard-indicators">
               <div class="app-dashboard-indicator">
+                <span class="app-dashboard-indicator-value" id="app-stat-retention">0 %</span>
+                <span class="app-dashboard-indicator-label">Taux de rétention (période)</span>
+              </div>
+              <div class="app-dashboard-indicator">
+                <span class="app-dashboard-indicator-value" id="app-stat-recurrent">0</span>
+                <span class="app-dashboard-indicator-label">Clients récurrents (période)</span>
+              </div>
+              <div class="app-dashboard-indicator">
                 <span class="app-dashboard-indicator-value" id="app-stat-points">0</span>
-                <span class="app-dashboard-indicator-label">Points distribués (mois)</span>
+                <span class="app-dashboard-indicator-label">Points distribués (période)</span>
               </div>
               <div class="app-dashboard-indicator">
                 <span class="app-dashboard-indicator-value" id="app-stat-new30">0</span>
@@ -535,7 +560,7 @@
             </div>
             <!-- Graphique d'activité -->
             <div class="app-evolution-wrap">
-              <h3 class="app-evolution-title">Activité — opérations par semaine (6 sem.)</h3>
+              <h3 class="app-evolution-title" id="app-evolution-title">Activité — opérations par semaine</h3>
               <div id="app-evolution-chart" class="app-evolution-chart" role="img" aria-label="Graphique des opérations par semaine"></div>
             </div>
             <!-- Actions rapides -->
@@ -1168,9 +1193,9 @@
       </main>
       <!-- Barre d'onglets mobile (style app) -->
       <nav class="app-mobile-tab-bar" id="app-mobile-tab-bar" aria-label="Navigation principale" aria-hidden="true">
-        <button type="button" class="app-mobile-tab active" data-mobile-tab="vue-ensemble" aria-current="page">
+        <button type="button" class="app-mobile-tab active" data-mobile-tab="dashboard" aria-current="page">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Tableau de bord
+          Dashboard
         </button>
         <button type="button" class="app-mobile-tab" data-mobile-tab="caisse">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
