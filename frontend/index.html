@@ -869,6 +869,7 @@
               </div>
               <div id="app-rules-points" class="app-rules-panel hidden">
                 <p class="app-step-label">Mode de fidélité</p>
+                <p class="app-hint">Activez ici le mode client: soit points classiques, soit points convertis en tickets de jeu.</p>
                 <div class="app-rules-type">
                   <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points = réduction en caisse</label>
                   <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points -> tickets de jeu (roulette)</label>
@@ -904,7 +905,8 @@
                   <option value="retail">Commerce / Retail</option>
                   <option value="other">Autre</option>
                 </select>
-                <p class="app-step-label">Configuration roulette (mode jeu)</p>
+                <p class="app-step-label">Mode Jeu - Configuration roulette</p>
+                <p class="app-hint">Cette configuration contrôle ce que le client voit sur sa page (conversion tickets + bouton Lancer la roulette).</p>
                 <div class="app-rules-row">
                   <label class="app-label">Coût d'un spin (tickets)</label>
                   <input type="number" id="app-game-ticket-cost" class="app-input app-input-number" min="1" step="1" value="1" />

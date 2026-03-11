@@ -432,6 +432,63 @@ body {
   font-size: 1rem;
 }
 
+.fidelity-v2-muted {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.fidelity-v2-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.fidelity-v2-flow-step {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.fidelity-v2-flow-step span {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.fidelity-v2-flow-step p {
+  margin: 0;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.fidelity-v2-step-card {
+  margin-top: 0.65rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.fidelity-v2-step-title {
+  margin: 0 0 0.55rem;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
 .fidelity-v2-row {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -460,6 +517,12 @@ body {
 
 .fidelity-v2-empty {
   color: #64748b;
+}
+
+@media (max-width: 640px) {
+  .fidelity-v2-flow-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .fidelity-input {

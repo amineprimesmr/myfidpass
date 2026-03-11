@@ -16,6 +16,7 @@ export function renderClientPage(root, state) {
   const pointsPerTicket = Number(state.business?.points_per_ticket || 10);
   const roulette = (state.games || []).find((g) => g.game_code === "roulette");
   const showRoulette = isGameMode && roulette && roulette.enabled;
+  const spinCost = Number(roulette?.ticket_cost || 1);
   const rewards = Array.isArray(state.rewards) ? state.rewards : [];
   const actions = Array.isArray(state.engagementActions) ? state.engagementActions : [];
 
@@ -38,6 +39,15 @@ export function renderClientPage(root, state) {
         <article><span>Mode</span><strong>${isGameMode ? "Jeu" : "Points / €"}</strong></article>
       </section>
 
+      <section class="fidelity-v2-card fidelity-v2-flow ${hasMember ? "" : "hidden"}">
+        <h2>Comment ça marche</h2>
+        <div class="fidelity-v2-flow-grid">
+          <div class="fidelity-v2-flow-step"><span>1</span><p>Gagner des points</p></div>
+          <div class="fidelity-v2-flow-step"><span>2</span><p>Convertir en tickets</p></div>
+          <div class="fidelity-v2-flow-step"><span>3</span><p>Jouer et gagner</p></div>
+        </div>
+      </section>
+
       <section class="fidelity-v2-card ${hasMember ? "hidden" : ""}" id="fidelity-v2-signup">
         <form id="fidelity-v2-form" class="fidelity-v2-form" novalidate>
           <input id="fidelity-v2-name" class="fidelity-input" type="text" placeholder="Ton prénom ou nom" autocomplete="name" required />
@@ -57,18 +67,24 @@ export function renderClientPage(root, state) {
       </section>
 
       <section class="fidelity-v2-card ${showRoulette ? "" : "hidden"}" id="fidelity-v2-game">
-        <h2>Jouer à la roulette</h2>
-        <p>Conversion: ${pointsPerTicket} points = 1 ticket</p>
-        <div class="fidelity-v2-row">
-          <input id="fidelity-v2-convert-input" class="fidelity-input" type="number" min="${pointsPerTicket}" step="${pointsPerTicket}" placeholder="Points à convertir" />
-          <button id="fidelity-v2-convert-btn" class="fidelity-btn fidelity-btn-secondary" type="button">Convertir</button>
+        <h2>Mode jeu: roulette</h2>
+        <p class="fidelity-v2-muted">Règle: <strong>${pointsPerTicket} points = 1 ticket</strong> - 1 spin coûte <strong>${spinCost} ticket${spinCost > 1 ? "s" : ""}</strong>.</p>
+        <div class="fidelity-v2-step-card">
+          <p class="fidelity-v2-step-title">Étape 2 - Convertir des points en tickets</p>
+          <div class="fidelity-v2-row">
+            <input id="fidelity-v2-convert-input" class="fidelity-input" type="number" min="${pointsPerTicket}" step="${pointsPerTicket}" placeholder="Ex: ${pointsPerTicket}" />
+            <button id="fidelity-v2-convert-btn" class="fidelity-btn fidelity-btn-secondary" type="button">Convertir</button>
+          </div>
         </div>
-        <button id="fidelity-v2-spin-btn" class="fidelity-btn" type="button">Lancer la roulette (${Number(roulette?.ticket_cost || 1)} ticket)</button>
+        <div class="fidelity-v2-step-card">
+          <p class="fidelity-v2-step-title">Étape 3 - Lancer la roulette</p>
+          <button id="fidelity-v2-spin-btn" class="fidelity-btn" type="button">Lancer la roulette (${spinCost} ticket${spinCost > 1 ? "s" : ""})</button>
+        </div>
         <p id="fidelity-v2-game-feedback" class="fidelity-engagement-feedback hidden"></p>
       </section>
 
       <section class="fidelity-v2-card ${actions.length ? "" : "hidden"}" id="fidelity-v2-actions">
-        <h2>Gagner des points bonus</h2>
+        <h2>Étape 1 - Gagner des points bonus</h2>
         <div class="fidelity-engagement-actions">
           ${actions
             .map(
@@ -88,6 +104,11 @@ export function renderClientPage(root, state) {
             .join("")}
         </div>
         <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
+      </section>
+
+      <section class="fidelity-v2-card ${hasMember && !isGameMode ? "" : "hidden"}">
+        <h2>Programme points classique</h2>
+        <p class="fidelity-v2-muted">Ici tes points servent directement pour des avantages en caisse. Le mode jeu n'est pas activé pour ce commerce.</p>
       </section>
 
       <section class="fidelity-v2-card ${hasMember ? "" : "hidden"}" id="fidelity-v2-rewards">
