@@ -67,20 +67,39 @@ export function renderClientPage(root, state) {
       </section>
 
       <section class="fidelity-v2-card ${showRoulette ? "" : "hidden"}" id="fidelity-v2-game">
-        <h2>Mode jeu: roulette</h2>
-        <p class="fidelity-v2-muted">Règle: <strong>${pointsPerTicket} points = 1 ticket</strong> - 1 spin coûte <strong>${spinCost} ticket${spinCost > 1 ? "s" : ""}</strong>.</p>
-        <div class="fidelity-v2-step-card">
-          <p class="fidelity-v2-step-title">Étape 2 - Convertir des points en tickets</p>
-          <div class="fidelity-v2-row">
-            <input id="fidelity-v2-convert-input" class="fidelity-input" type="number" min="${pointsPerTicket}" step="${pointsPerTicket}" placeholder="Ex: ${pointsPerTicket}" />
-            <button id="fidelity-v2-convert-btn" class="fidelity-btn fidelity-btn-secondary" type="button">Convertir</button>
+        <div class="fidelity-slot-machine-container">
+          <div class="fidelity-slot-header">
+            <h2 class="fidelity-slot-title">SLOT MACHINE</h2>
+            <div class="fidelity-slot-tickets">
+              <span class="fidelity-slot-ticket-icon">🎟️</span>
+              <span class="fidelity-slot-ticket-count" id="fidelity-slot-ticket-count">${tickets}</span>
+            </div>
+          </div>
+          
+          <div class="fidelity-slot-window">
+            <div class="fidelity-slot-reel" id="fidelity-slot-reel">
+              <!-- Reel items will be injected here by JS -->
+              <div class="fidelity-slot-item">Prêt à jouer ?</div>
+            </div>
+            <div class="fidelity-slot-overlay"></div>
+          </div>
+
+          <div class="fidelity-slot-controls">
+            <button id="fidelity-v2-spin-btn" class="fidelity-slot-btn" type="button" ${tickets < spinCost ? 'disabled' : ''}>
+              <span class="fidelity-slot-btn-text">SPIN</span>
+              <span class="fidelity-slot-btn-cost">${spinCost} TICKET${spinCost > 1 ? "S" : ""}</span>
+            </button>
+          </div>
+          
+          <div class="fidelity-slot-convert-area">
+            <p class="fidelity-slot-convert-hint">${pointsPerTicket} pts = 1 ticket</p>
+            <div class="fidelity-slot-convert-row">
+              <input id="fidelity-v2-convert-input" class="fidelity-slot-input" type="number" min="${pointsPerTicket}" step="${pointsPerTicket}" placeholder="Pts à convertir" />
+              <button id="fidelity-v2-convert-btn" class="fidelity-slot-convert-btn" type="button">Convertir</button>
+            </div>
+            <p id="fidelity-v2-game-feedback" class="fidelity-slot-feedback hidden"></p>
           </div>
         </div>
-        <div class="fidelity-v2-step-card">
-          <p class="fidelity-v2-step-title">Étape 3 - Lancer la roulette</p>
-          <button id="fidelity-v2-spin-btn" class="fidelity-btn" type="button">Lancer la roulette (${spinCost} ticket${spinCost > 1 ? "s" : ""})</button>
-        </div>
-        <p id="fidelity-v2-game-feedback" class="fidelity-engagement-feedback hidden"></p>
       </section>
 
       <section class="fidelity-v2-card ${actions.length ? "" : "hidden"}" id="fidelity-v2-actions">

@@ -887,3 +887,259 @@ body {
   color: #f87171;
   margin-top: 0.5rem;
 }
+
+/* ==========================================================================
+   SLOT MACHINE (UX PREMIUM)
+   ========================================================================== */
+
+.fidelity-slot-machine-container {
+  background: #1a1a2e; /* Dark arcade background */
+  border: 2px solid #302b63;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 0, 255, 0.1);
+  color: #fff;
+  font-family: 'Courier New', Courier, monospace; /* Arcade font feel */
+  position: relative;
+  overflow: hidden;
+}
+
+.fidelity-slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px dashed #e94560;
+  padding-bottom: 0.75rem;
+}
+
+.fidelity-slot-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px #e94560, 0 0 20px #e94560;
+}
+
+.fidelity-slot-tickets {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid #0f3460;
+  box-shadow: 0 0 10px rgba(15, 52, 96, 0.8);
+}
+
+.fidelity-slot-ticket-icon {
+  font-size: 1.2rem;
+}
+
+.fidelity-slot-ticket-count {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #00ffcc;
+}
+
+/* Slot Window */
+.fidelity-slot-window {
+  background: #000;
+  border: 4px solid #e94560;
+  border-radius: 12px;
+  height: 120px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 0 0 15px rgba(233, 69, 96, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fidelity-slot-reel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Will be translated via JS */
+  transform: translateY(0);
+  will-change: transform;
+}
+
+.fidelity-slot-item {
+  height: 120px; /* Must match window height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  width: 100%;
+  padding: 0 1rem;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+.fidelity-slot-item.winner {
+  color: #ffd700;
+  text-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00;
+  animation: pulse-winner 1s infinite alternate;
+}
+
+@keyframes pulse-winner {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+.fidelity-slot-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0) 25%,
+    rgba(0, 0, 0, 0) 75%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  pointer-events: none;
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.1);
+}
+
+/* Controls */
+.fidelity-slot-controls {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.fidelity-slot-btn {
+  background: linear-gradient(to bottom, #ff0055, #cc0044);
+  border: none;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 
+    0 10px 0 #880022,
+    0 15px 20px rgba(0,0,0,0.5),
+    inset 0 5px 10px rgba(255,255,255,0.4);
+  transition: all 0.1s ease;
+  position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fidelity-slot-btn:active:not(:disabled) {
+  transform: translateY(10px);
+  box-shadow: 
+    0 0px 0 #880022,
+    0 5px 10px rgba(0,0,0,0.5),
+    inset 0 5px 10px rgba(255,255,255,0.4);
+}
+
+.fidelity-slot-btn:disabled {
+  background: linear-gradient(to bottom, #555, #333);
+  box-shadow: 
+    0 10px 0 #222,
+    0 15px 20px rgba(0,0,0,0.5);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.fidelity-slot-btn:disabled:active {
+  transform: none;
+}
+
+.fidelity-slot-btn-text {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.fidelity-slot-btn-cost {
+  font-size: 0.8rem;
+  font-weight: bold;
+  opacity: 0.9;
+  margin-top: 5px;
+}
+
+/* Convert Area */
+.fidelity-slot-convert-area {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #302b63;
+}
+
+.fidelity-slot-convert-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #a0a0b0;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.fidelity-slot-convert-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fidelity-slot-input {
+  flex: 1;
+  background: #0f3460;
+  border: 1px solid #e94560;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+.fidelity-slot-input:focus {
+  box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+}
+
+.fidelity-slot-convert-btn {
+  background: #0f3460;
+  color: #fff;
+  border: 1px solid #e94560;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.fidelity-slot-convert-btn:hover {
+  background: #e94560;
+  box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+}
+
+.fidelity-slot-feedback {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.fidelity-slot-feedback.success { color: #00ffcc; text-shadow: 0 0 5px #00ffcc; }
+.fidelity-slot-feedback.error { color: #ff3366; text-shadow: 0 0 5px #ff3366; }
+
