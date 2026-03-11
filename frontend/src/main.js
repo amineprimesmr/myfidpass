@@ -102,6 +102,8 @@ async function geocodeAddress(address) {
  */
 function getRoute() {
   const path = window.location.pathname.replace(/\/$/, "");
+  const gameMatch = path.match(/^\/fidelity\/([^/]+)\/jeu$/);
+  if (gameMatch) return { type: "fidelity", slug: gameMatch[1], gamePage: true };
   const match = path.match(/^\/fidelity\/([^/]+)$/);
   if (match) return { type: "fidelity", slug: match[1] };
   if (path === "/dashboard") return { type: "dashboard" };
@@ -6721,10 +6723,12 @@ function showSlugError(message) {
 }
 
 function initFidelityApp(slug) {
+  const route = getRoute();
   initClientFidelityPage({
     slug,
     apiBase: API_BASE,
     rootEl: fidelityAppEl,
+    gamePage: route.type === "fidelity" && route.gamePage === true,
   }).catch(() => {
     showSlugError(`Entreprise « ${slug} » introuvable.`);
   });
@@ -7185,11 +7189,59 @@ function initLandingCardsScroll() {
   requestAnimationFrame(updateCarouselScroll);
 }
 
+function initLandingSimulator() {
+  const btn = document.getElementById("landing-simulator-btn");
+  const modal = document.getElementById("landing-simulator-modal");
+  const backdrop = document.getElementById("landing-simulator-modal-backdrop");
+  const closeBtn = document.getElementById("landing-simulator-modal-close");
+  const inputClients = document.getElementById("landing-simulator-clients");
+  const inputPanier = document.getElementById("landing-simulator-panier");
+  const elAvis = document.getElementById("landing-simulator-avis");
+  const elFidelises = document.getElementById("landing-simulator-fidelises");
+  const elNouveaux = document.getElementById("landing-simulator-nouveaux");
+  const elCa = document.getElementById("landing-simulator-ca");
+
+  if (!btn || !modal) return;
+
+  function openModal() {
+    const clients = Math.max(1, parseInt(inputClients?.value || "20", 10) || 20);
+    const panier = Math.max(5, parseFloat(inputPanier?.value || "15") || 15);
+    const clientsMois = clients * 30;
+    const avis = Math.round(clientsMois * 0.08);
+    const fidelises = Math.round(clientsMois * 0.12);
+    const nouveaux = Math.round(avis * 0.6);
+    const ca = Math.round((fidelises + nouveaux) * panier * 0.4);
+
+    if (elAvis) elAvis.textContent = `${avis} avis Google`;
+    if (elFidelises) elFidelises.textContent = `${fidelises} clients / mois`;
+    if (elNouveaux) elNouveaux.textContent = `${nouveaux} nouveaux clients`;
+    if (elCa) elCa.textContent = `${ca} € / mois`;
+
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    if (typeof window.confetti === "function") {
+      window.confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
+    }
+  }
+
+  function closeModal() {
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  btn.addEventListener("click", openModal);
+  if (backdrop) backdrop.addEventListener("click", closeModal);
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+}
+
 function initLandingAnimations() {
   initLandingReveal();
   if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
     initLandingHeroAnim();
     initLandingCardsScroll();
+    initLandingSimulator();
   }
 }
 

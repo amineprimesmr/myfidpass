@@ -1,5 +1,5 @@
 ---
-description: Déploiement sur demande (ne pas déployer automatiquement en production)
+description: Déployer automatiquement après des modifications (sauf si l'utilisateur refuse)
 alwaysApply: true
 ---
 
@@ -9,9 +9,8 @@ Ce projet (Fidpass) est développé **uniquement en production**. Les changement
 
 ## Règle
 
-- **Ne pas exécuter `npm run deploy` automatiquement** après chaque modification. En mode production, l’utilisateur n’a pas besoin d’un déploiement à chaque changement.
-- **Déployer uniquement** quand l’utilisateur le demande explicitement (ex. « déploie », « mets en ligne », « push en prod »).
-- Si l’utilisateur dit de ne pas déployer, ne jamais lancer le déploiement.
-- Pour déployer : `npm run deploy` à la racine (git add, commit « Deploy: mise à jour YYYY-MM-DD », push → Vercel + Railway).
+- **Déployer automatiquement** à la fin des modifications quand tu as fait des changements qui touchent le code en prod (frontend, backend, config). L’utilisateur ne doit pas avoir à redemander à chaque fois.
+- Commande : `npm run deploy` à la racine (git add, commit « Deploy: mise à jour YYYY-MM-DD », push → Vercel + Railway).
+- **Ne pas déployer** si l’utilisateur a explicitement dit de ne pas déployer, ou si les changements sont uniquement des brouillons / fichiers temporaires / docs internes.
 
-Exception : changements uniquement brouillons / fichiers temporaires → pas de déploiement.
+En résumé : une fois une tâche terminée avec des modifs réelles → lancer le déploiement sans attendre que l’utilisateur le demande.

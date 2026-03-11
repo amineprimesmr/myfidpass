@@ -1,17 +1,16 @@
 ---
-description: Déploiement sur demande (projet en production, pas de déploiement auto)
+description: Déployer en fin de modification (projet production uniquement)
 alwaysApply: true
 ---
 
 # Déploiement production
 
-Ce projet (Fidpass) est développé **uniquement en production**. Il n’y a pas d’environnement de dev/staging dédié. Les changements sont en ligne sur myfidpass.fr après un déploiement.
+Ce projet (Fidpass) est développé **uniquement en production**. Les changements sont en ligne sur myfidpass.fr après un déploiement.
 
 ## Règle
 
-- **Ne pas déployer automatiquement** après chaque modification. En mode production, pas besoin de déployer à chaque fois.
-- **Déployer seulement** lorsque l’utilisateur le demande (ex. « déploie », « mets en ligne »).
-- Si l’utilisateur indique de ne pas déployer, ne pas exécuter `npm run deploy`.
+- **Déployer en fin de session** dès que des modifications (code, config) ont été faites et sont terminées. Ne pas attendre que l’utilisateur demande « déploie » à chaque fois.
 - Commande : `npm run deploy` à la racine → `git add -A`, commit, `git push origin main` → Vercel (front) et Railway (back).
+- **Exception** : ne pas déployer si l’utilisateur a dit de ne pas déployer, ou si seuls des brouillons / fichiers temporaires ont été modifiés.
 
-Tu peux proposer un déploiement en fin de session si l’utilisateur a fait des changements et semble vouloir les mettre en ligne, mais sans l’exécuter sans son accord.
+Tu peux rappeler en une phrase que le déploiement a été lancé et qu’il faut attendre 1–2 min puis rafraîchir myfidpass.fr.

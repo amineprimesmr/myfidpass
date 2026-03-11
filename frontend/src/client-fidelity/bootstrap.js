@@ -20,7 +20,7 @@ const ROULETTE_SPIN_DURATION_MS = 4000;
 const ROULETTE_EXTRA_TURNS = 6;
 const DEFAULT_WHEEL_LABELS = ["PERDU", "PERDU", "Café offert", "PERDU", "-10%", "PERDU", "Dessert", "PERDU"];
 
-export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
+export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage = false }) {
   const api = createClientFidelityApi(apiBase);
   const store = createClientFidelityStore({ slug });
   
@@ -96,7 +96,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function rerender() {
-    renderClientPage(rootEl, store.get());
+    renderClientPage(rootEl, store.get(), { gamePage, slug });
     bindEvents();
     if (!isSpinning) {
       initRouletteWheel();

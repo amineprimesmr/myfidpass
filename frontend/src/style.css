@@ -1201,6 +1201,31 @@ body {
   color: #374151;
 }
 
+.fidelity-game-header .fidelity-game-back {
+  color: #1a2b42;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.fidelity-game-header .fidelity-game-back:hover {
+  text-decoration: underline;
+}
+
+.fidelity-cta-jouer {
+  display: inline-flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+  text-decoration: none;
+  background: #1a2b42;
+  color: #fff;
+  border: 2px solid #e8c16e;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+}
+
+.fidelity-cta-jouer:hover {
+  background: #2d3f5a;
+}
+
 @media (max-width: 480px) {
   .fidelity-roulette-wheel-outer {
     right: -15%;
