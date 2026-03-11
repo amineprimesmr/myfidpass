@@ -361,8 +361,8 @@
   color: #1a1a1a;
 }
 .landing-header-bar .landing-logo-img {
-  height: 26px;
-  max-height: 30px;
+  height: 32px;
+  max-height: 36px;
   width: auto;
   object-fit: contain;
   vertical-align: middle;
@@ -1740,8 +1740,8 @@
 }
 .builder-header-logo-img {
   display: block;
-  height: 26px;
-  max-height: 30px;
+  height: 32px;
+  max-height: 36px;
   width: auto;
   object-fit: contain;
 }
@@ -3740,7 +3740,7 @@ body.page-checkout .site-banner { display: none !important; }
   justify-content: space-between;
 }
 .checkout-logo { display: flex; align-items: center; }
-.checkout-logo .landing-logo-img { height: 28px; width: auto; filter: none; }
+.checkout-logo .landing-logo-img { height: 34px; width: auto; filter: none; }
 .checkout-badge {
   font-size: 0.7rem;
   letter-spacing: 0.1em;
