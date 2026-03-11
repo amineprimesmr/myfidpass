@@ -89,7 +89,7 @@
   max-width: 880px;
   margin: 0 auto;
   background: linear-gradient(180deg, #ffffff 0%, #f2f2f2 50%, #ebebeb 100%);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 0.4rem 1rem 0.4rem 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.95);
   position: relative;
@@ -176,7 +176,7 @@
   }
   .landing-header-bar {
     padding: 0.4rem 0.8rem;
-    border-radius: 12px;
+    border-radius: 14px;
     max-width: 100%;
   }
   .landing-nav-desk,
@@ -1692,7 +1692,7 @@
   max-width: 880px;
   margin: 0 auto;
   background: linear-gradient(180deg, #ffffff 0%, #f2f2f2 50%, #ebebeb 100%);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 0.4rem 1rem 0.4rem 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.95);
   box-shadow:
@@ -1879,7 +1879,7 @@
 @media (max-width: 768px) {
   .builder-header-bar {
     padding: 0.4rem 0.8rem;
-    border-radius: 12px;
+    border-radius: 14px;
   }
   .builder-header-step {
     width: 32px;
