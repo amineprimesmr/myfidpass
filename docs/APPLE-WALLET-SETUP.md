@@ -34,6 +34,16 @@ Ce certificat permet de signer les fichiers `.pkpass`. Il expire au bout d’un 
 
 ### 3.1 Créer une CSR (Certificate Signing Request) sur Mac
 
+**Option A — Script (recommandé)** : depuis la racine du projet fidelity :
+
+```bash
+./scripts/create-csr.sh
+```
+
+Cela crée `backend/certs/csr/fidelity.certSigningRequest` et `backend/certs/csr/private.key`. Uploade le fichier `.certSigningRequest` sur le portail Apple (étape 3.2). Le dossier `certs/csr/` est ignoré par Git.
+
+**Option B — Keychain Access** :
+
 1. Ouvre **Keychain Access** (Trousseau d’accès).
 2. Menu **Keychain Access** → **Certificate Assistant** → **Request a Certificate From a Certificate Authority**.
 3. Renseigne :
@@ -52,6 +62,16 @@ Ce certificat permet de signer les fichiers `.pkpass`. Il expire au bout d’un 
 5. Double-clique sur le `.cer` pour l’installer dans le Trousseau.
 
 ### 3.3 Exporter en PEM pour le backend
+
+**Si tu as utilisé le script create-csr.sh** : après avoir téléchargé le `.cer` depuis Apple, place-le dans `backend/certs/csr/pass.cer`, puis lance :
+
+```bash
+./scripts/convert-cert-to-pem.sh
+```
+
+Les fichiers `signerCert.pem` et `signerKey.pem` sont générés et copiés dans `backend/certs/`.
+
+**Sinon (méthode Keychain)** :
 
 1. Dans **Keychain Access**, trouve le certificat (nom lié à ton Pass Type ID).
 2. Clique droit → **Export**.

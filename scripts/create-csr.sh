@@ -1,9 +1,10 @@
 #!/bin/bash
 # Crée le fichier CSR pour le certificat Pass Type ID Apple Wallet.
-# Email : aminennasri@outlook.com
+# Les fichiers sont créés dans backend/certs/csr/ (dossier ignoré par Git).
 
 set -e
-DIR="$HOME/Desktop/fidelity-csr"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DIR="$SCRIPT_DIR/../backend/certs/csr"
 mkdir -p "$DIR"
 cd "$DIR"
 

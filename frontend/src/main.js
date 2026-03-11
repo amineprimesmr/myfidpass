@@ -6527,7 +6527,7 @@ function initLandingHeroAnim() {
   ].filter(Boolean);
 
   if (prefersReducedMotion) {
-    items.forEach((el) => el.classList.add("landing-hero-visible"));
+    hero.classList.add("landing-hero-visible");
     return;
   }
 
