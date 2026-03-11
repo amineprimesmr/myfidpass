@@ -144,6 +144,39 @@ export function renderClientPage(root, state) {
           }
         </ul>
       </section>
+
+      <section class="fidelity-v2-card">
+        <h2>Test UI Uiverse</h2>
+        <div class="ui-parent">
+          <div class="ui-card">
+            <div class="ui-logo">
+              <span class="ui-circle ui-circle1"></span>
+              <span class="ui-circle ui-circle2"></span>
+              <span class="ui-circle ui-circle3"></span>
+              <span class="ui-circle ui-circle4"></span>
+              <span class="ui-circle ui-circle5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="ui-svg"><path d="M12 2L2 22h20L12 2z"/></svg>
+              </span>
+            </div>
+            <div class="ui-glass"></div>
+            <div class="ui-content">
+              <span class="ui-title">UIVERSE 3D</span>
+              <span class="ui-text">Passe la souris dessus pour voir l'effet 3D incroyable !</span>
+            </div>
+            <div class="ui-bottom">
+              <div class="ui-social-buttons-container">
+                <button class="ui-social-button"><svg class="ui-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></button>
+                <button class="ui-social-button"><svg class="ui-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></button>
+                <button class="ui-social-button"><svg class="ui-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></button>
+              </div>
+              <div class="ui-view-more">
+                <button class="ui-view-more-button">Voir plus</button>
+                <svg class="ui-svg" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   `;
 }
