@@ -44,6 +44,12 @@ import {
   approveEngagementCompletion,
   rejectEngagementCompletion,
   getEngagementCompletionsForMember,
+  createEngagementProof,
+  getEngagementProofByTokenHash,
+  markEngagementProofReturned,
+  incrementEngagementProofAttempts,
+  finalizeEngagementProof,
+  countRecentEngagementProofStarts,
 } from "../db.js";
 import { sendWebPush, getLogoIconBuffer } from "../notifications.js";
 import { sendPassKitUpdate } from "../apns.js";
@@ -51,11 +57,42 @@ import { requireAuth } from "../middleware/auth.js";
 import { generatePass, getPassAuthenticationToken } from "../pass.js";
 import { getGoogleWalletSaveUrl } from "../google-wallet.js";
 import { randomUUID } from "crypto";
+import {
+  buildIpHash,
+  buildDeviceHash,
+  hashValue,
+  signProofToken,
+  verifyProofToken,
+  getProofTtlSeconds,
+  computeProofScore,
+} from "../services/engagement-proof.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const businessAssetsDir = join(__dirname, "..", "assets", "businesses");
 
 const router = Router();
+const START_RATE_BUCKET = new Map();
+
+function getApiBase(req) {
+  return (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
+}
+
+function checkStartRateLimit(ipHash) {
+  if (!ipHash) return true;
+  const now = Date.now();
+  const key = `start:${ipHash}`;
+  const windowMs = 60 * 1000;
+  const maxCalls = 20;
+  const row = START_RATE_BUCKET.get(key) || { count: 0, ts: now };
+  if (now - row.ts > windowMs) {
+    START_RATE_BUCKET.set(key, { count: 1, ts: now });
+    return true;
+  }
+  if (row.count >= maxCalls) return false;
+  row.count += 1;
+  START_RATE_BUCKET.set(key, row);
+  return true;
+}
 
 /** Vérifie l'accès au dashboard : token valide pour ce commerce OU utilisateur connecté propriétaire. */
 function canAccessDashboard(business, req) {
@@ -327,6 +364,7 @@ router.get("/:slug/engagement-actions", (req, res) => {
       points: Math.floor(Number(rewards.google_review.points)) || 50,
       url: `https://search.google.com/local/writereview?placeid=${encodeURIComponent(rewards.google_review.place_id.trim())}`,
       require_approval: !!rewards.google_review.require_approval,
+      auto_verify_enabled: rewards.google_review.auto_verify_enabled !== false,
     });
   }
   ["instagram_follow", "tiktok_follow", "facebook_follow"].forEach((key) => {
@@ -342,6 +380,204 @@ router.get("/:slug/engagement-actions", (req, res) => {
     }
   });
   res.json({ actions });
+});
+
+/**
+ * POST /api/businesses/:slug/engagement/start
+ * Démarre un flow de preuve pour une action engagement (V1: google_review).
+ * Body: { memberId, action_type, client_fingerprint? }
+ */
+router.post("/:slug/engagement/start", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const { memberId, action_type: actionType, client_fingerprint: clientFingerprint } = req.body || {};
+  if (!memberId || !actionType) {
+    return res.status(400).json({ error: "memberId et action_type requis" });
+  }
+  if (actionType !== "google_review") {
+    return res.status(400).json({ error: "Action non supportée en auto-vérification V1." });
+  }
+  const member = getMemberForBusiness(memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+
+  const rewards = getEngagementRewards(business.id);
+  const cfg = rewards?.google_review || {};
+  if (!cfg.enabled || !cfg.place_id) {
+    return res.status(400).json({ error: "Action Google non activée pour ce commerce." });
+  }
+  if (cfg.auto_verify_enabled === false) {
+    return res.status(400).json({ error: "Auto-vérification désactivée par le commerce." });
+  }
+
+  const ipHash = buildIpHash(req);
+  if (!checkStartRateLimit(ipHash)) {
+    return res.status(429).json({ error: "Trop de tentatives. Réessayez dans 1 minute." });
+  }
+  const recentStarts = countRecentEngagementProofStarts({
+    businessId: business.id,
+    memberId,
+    actionType,
+    sinceMinutes: 5,
+  });
+  if (recentStarts >= 5) {
+    return res.status(429).json({ error: "Trop de tentatives rapprochées pour cette action." });
+  }
+
+  const proofId = randomUUID();
+  const nonce = randomUUID().replace(/-/g, "");
+  const issuedAt = Date.now();
+  const ttlSeconds = getProofTtlSeconds();
+  const expiresAtIso = new Date(issuedAt + ttlSeconds * 1000).toISOString();
+  const payload = {
+    pid: proofId,
+    bid: business.id,
+    mid: memberId,
+    act: actionType,
+    nonce,
+    iat: issuedAt,
+  };
+  const proofToken = signProofToken(payload);
+  const tokenHash = hashValue(proofToken);
+  const deviceHash = buildDeviceHash(clientFingerprint);
+  createEngagementProof({
+    id: proofId,
+    businessId: business.id,
+    memberId,
+    actionType,
+    nonce,
+    tokenHash,
+    expiresAt: expiresAtIso,
+    startIpHash: ipHash,
+    startDeviceHash: deviceHash,
+  });
+
+  const apiBase = getApiBase(req);
+  const openUrl = `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/engagement/return?token=${encodeURIComponent(proofToken)}`;
+  res.status(201).json({
+    proof_token: proofToken,
+    open_url: openUrl,
+    expires_in_sec: ttlSeconds,
+    action_type: actionType,
+  });
+});
+
+/**
+ * GET /api/businesses/:slug/engagement/return
+ * Endpoint de passage avant redirection Google (preuve de clic + nonce signé).
+ */
+router.get("/:slug/engagement/return", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).send("Entreprise introuvable");
+  const token = (req.query.token || "").toString();
+  const parsed = verifyProofToken(token);
+  if (!parsed || parsed.bid !== business.id || parsed.act !== "google_review" || !parsed.pid) {
+    return res.status(400).send("Lien de vérification invalide.");
+  }
+  const tokenHash = hashValue(token);
+  const proof = getEngagementProofByTokenHash(tokenHash);
+  if (!proof || proof.id !== parsed.pid || proof.business_id !== business.id) {
+    return res.status(400).send("Preuve introuvable.");
+  }
+  const expiresAtMs = Date.parse(String(proof.expires_at || ""));
+  if (!Number.isFinite(expiresAtMs) || expiresAtMs < Date.now()) {
+    return res.status(410).send("Lien expiré. Recommencez l’action depuis votre carte.");
+  }
+  markEngagementProofReturned(proof.id, buildIpHash(req));
+  const rewards = getEngagementRewards(business.id);
+  const placeId = rewards?.google_review?.place_id;
+  if (!placeId) return res.status(400).send("Place ID Google manquant.");
+  const googleUrl = `https://search.google.com/local/writereview?placeid=${encodeURIComponent(String(placeId).trim())}`;
+  return res.redirect(302, googleUrl);
+});
+
+/**
+ * POST /api/businesses/:slug/engagement/claim-auto
+ * Vérifie la preuve + score anti-fraude, puis auto-crédite ou passe en pending_review.
+ * Body: { memberId, action_type, proof_token, client_fingerprint? }
+ */
+router.post("/:slug/engagement/claim-auto", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const { memberId, action_type: actionType, proof_token: proofToken, client_fingerprint: clientFingerprint } = req.body || {};
+  if (!memberId || !actionType || !proofToken) {
+    return res.status(400).json({ error: "memberId, action_type et proof_token requis" });
+  }
+  if (actionType !== "google_review") {
+    return res.status(400).json({ error: "Action non supportée en auto-vérification V1." });
+  }
+  const member = getMemberForBusiness(memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+
+  const parsed = verifyProofToken(proofToken);
+  if (!parsed || parsed.bid !== business.id || parsed.mid !== memberId || parsed.act !== actionType) {
+    return res.status(400).json({ error: "Preuve invalide." });
+  }
+  const tokenHash = hashValue(proofToken);
+  const proof = getEngagementProofByTokenHash(tokenHash);
+  if (!proof || proof.id !== parsed.pid || proof.business_id !== business.id || proof.member_id !== memberId) {
+    return res.status(400).json({ error: "Preuve introuvable." });
+  }
+  if (proof.status === "claimed_approved" || proof.status === "claimed_pending_review") {
+    return res.status(400).json({ error: "Cette preuve a déjà été utilisée." });
+  }
+  const expiresAtMs = Date.parse(String(proof.expires_at || ""));
+  if (!Number.isFinite(expiresAtMs) || expiresAtMs < Date.now()) {
+    return res.status(410).json({ error: "Preuve expirée. Recommencez l’action.", code: "proof_expired" });
+  }
+
+  const proofAfterAttempt = incrementEngagementProofAttempts(proof.id);
+  const claimIpHash = buildIpHash(req);
+  const claimDeviceHash = buildDeviceHash(clientFingerprint);
+  const scored = computeProofScore({
+    proof: proofAfterAttempt || proof,
+    claimIpHash,
+    claimDeviceHash,
+    nowMs: Date.now(),
+  });
+
+  const statusOverride = scored.verdict === "approved" ? "approved" : "pending_review";
+  const completionResult = createEngagementCompletion(business.id, memberId, actionType, {
+    statusOverride,
+    proofId: proof.id,
+    proofScore: scored.score,
+  });
+  if (completionResult.error === "already_done") {
+    finalizeEngagementProof({
+      proofId: proof.id,
+      status: "claimed_rejected",
+      score: scored.score,
+      reasons: [...scored.reasons, "already_done"],
+      claimIpHash,
+      claimDeviceHash,
+    });
+    return res.status(400).json({ error: "Action déjà réalisée récemment.", code: "already_done" });
+  }
+  if (completionResult.error) {
+    return res.status(400).json({ error: "Impossible de traiter la demande." });
+  }
+
+  const proofStatus = statusOverride === "approved" ? "claimed_approved" : "claimed_pending_review";
+  finalizeEngagementProof({
+    proofId: proof.id,
+    status: proofStatus,
+    score: scored.score,
+    reasons: scored.reasons,
+    completionId: completionResult.completion.id,
+    claimIpHash,
+    claimDeviceHash,
+  });
+
+  const responseStatus = completionResult.status;
+  return res.status(201).json({
+    completion_id: completionResult.completion.id,
+    status: responseStatus,
+    points_granted: completionResult.pointsGranted,
+    score: scored.score,
+    message:
+      responseStatus === "approved"
+        ? `${completionResult.pointsGranted} points ont été ajoutés automatiquement.`
+        : "Vérification complémentaire requise avant crédit des points.",
+  });
 });
 
 /**
@@ -377,7 +613,7 @@ router.post("/:slug/engagement/claim", (req, res) => {
 
 /**
  * GET /api/businesses/:slug/dashboard/engagement-completions
- * Liste des demandes d'engagement (pending, approved, rejected). Token ou JWT.
+ * Liste des demandes d'engagement (pending, pending_review, approved, rejected). Token ou JWT.
  */
 router.get("/:slug/dashboard/engagement-completions", (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
@@ -385,7 +621,7 @@ router.get("/:slug/dashboard/engagement-completions", (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const status = ["pending", "approved", "rejected"].includes(req.query.status) ? req.query.status : null;
+  const status = ["pending", "pending_review", "approved", "rejected"].includes(req.query.status) ? req.query.status : null;
   const completions = getEngagementCompletionsForBusiness(business.id, { status, limit: 100 });
   res.json({ completions });
 });

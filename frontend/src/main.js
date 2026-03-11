@@ -6339,10 +6339,29 @@ function showFidelitySuccess(slug, memberId, memberName) {
   const engagementEmptyEl = document.getElementById("fidelity-engagement-empty");
   const engagementActionsEl = document.getElementById("fidelity-engagement-actions");
   const engagementClaimFeedback = document.getElementById("fidelity-engagement-claim-feedback");
+  const engagementProofTokens = new Map();
   function escapeHtmlFidelity(s) {
     const div = document.createElement("div");
     div.textContent = s == null ? "" : String(s);
     return div.innerHTML;
+  }
+  function setEngagementClaimFeedback(message, type = "success") {
+    if (!engagementClaimFeedback) return;
+    engagementClaimFeedback.textContent = message || "";
+    engagementClaimFeedback.classList.remove("hidden", "success", "error");
+    if (type === "error") engagementClaimFeedback.classList.add("error");
+    else engagementClaimFeedback.classList.add("success");
+  }
+  function getEngagementFingerprint() {
+    const parts = [
+      navigator.userAgent || "",
+      navigator.language || "",
+      navigator.platform || "",
+      String(screen?.width || ""),
+      String(screen?.height || ""),
+      String(new Date().getTimezoneOffset()),
+    ];
+    return parts.join("|");
   }
   async function loadEngagementActions() {
     if (!engagementBlock || !engagementActionsEl) return;
@@ -6369,56 +6388,96 @@ function showFidelitySuccess(slug, memberId, memberName) {
     engagementBlock.classList.remove("hidden");
     engagementActionsEl.innerHTML = actions
       .map(
-        (a) =>
+        (a) => {
+          const isGoogleAuto = a.action_type === "google_review" && a.auto_verify_enabled !== false;
+          const openLabel = isGoogleAuto ? "Étape 1 : Ouvrir Google" : "Ouvrir le lien";
+          const claimLabel = isGoogleAuto ? "Étape 2 : Vérifier automatiquement" : "Réclamer mes points";
+          return (
           `<div class="fidelity-engagement-item" data-action-type="${a.action_type}">
               <div class="fidelity-engagement-item-info">
                 <span class="fidelity-engagement-item-label">${escapeHtmlFidelity(a.label)}</span>
                 <span class="fidelity-engagement-item-points">+${a.points} points</span>
               </div>
               <div class="fidelity-engagement-item-btns">
-                <a href="${escapeHtmlFidelity(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open">Ouvrir le lien</a>
-                <button type="button" class="fidelity-btn fidelity-btn-primary fidelity-engagement-claim" data-action-type="${escapeHtmlFidelity(a.action_type)}">Réclamer mes points</button>
+                <a href="${escapeHtmlFidelity(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open" data-action-type="${escapeHtmlFidelity(a.action_type)}">${openLabel}</a>
+                <button type="button" class="fidelity-btn fidelity-btn-primary fidelity-engagement-claim" data-action-type="${escapeHtmlFidelity(a.action_type)}">${claimLabel}</button>
               </div>
             </div>`
+          );
+        }
       )
       .join("");
+    engagementActionsEl.querySelectorAll(".fidelity-engagement-open").forEach((openBtn) => {
+      openBtn.addEventListener("click", async (e) => {
+        const actionType = openBtn.getAttribute("data-action-type");
+        if (actionType !== "google_review") return;
+        e.preventDefault();
+        setEngagementClaimFeedback("Préparation de la vérification automatique…");
+        try {
+          const startRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/start`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              memberId,
+              action_type: actionType,
+              client_fingerprint: getEngagementFingerprint(),
+            }),
+          });
+          const startData = await startRes.json().catch(() => ({}));
+          if (!startRes.ok) {
+            setEngagementClaimFeedback(startData.error || "Impossible de préparer la vérification.", "error");
+            return;
+          }
+          engagementProofTokens.set(actionType, startData.proof_token);
+          window.open(startData.open_url || openBtn.href, "_blank", "noopener,noreferrer");
+          setEngagementClaimFeedback("Lien Google ouvert. Revenez ici puis cliquez sur Étape 2.");
+        } catch (_) {
+          setEngagementClaimFeedback("Erreur réseau lors de la préparation.", "error");
+        }
+      });
+    });
     engagementActionsEl.querySelectorAll(".fidelity-engagement-claim").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const actionType = btn.getAttribute("data-action-type");
         if (!actionType) return;
-        if (engagementClaimFeedback) {
-          engagementClaimFeedback.textContent = "Envoi…";
-          engagementClaimFeedback.classList.remove("hidden", "success", "error");
-        }
+        setEngagementClaimFeedback("Vérification…");
         try {
-          const claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ memberId, action_type: actionType }),
-          });
+          const isGoogleAuto = actionType === "google_review";
+          let claimRes;
+          if (isGoogleAuto) {
+            const proofToken = engagementProofTokens.get(actionType);
+            if (!proofToken) {
+              setEngagementClaimFeedback("Commencez par Étape 1 pour ouvrir Google.", "error");
+              return;
+            }
+            claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim-auto`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                memberId,
+                action_type: actionType,
+                proof_token: proofToken,
+                client_fingerprint: getEngagementFingerprint(),
+              }),
+            });
+          } else {
+            claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ memberId, action_type: actionType }),
+            });
+          }
           const claimData = await claimRes.json().catch(() => ({}));
           if (claimRes.ok) {
-            if (engagementClaimFeedback) {
-              engagementClaimFeedback.textContent = claimData.message || "Points crédités.";
-              engagementClaimFeedback.classList.remove("error");
-              engagementClaimFeedback.classList.add("success");
-            }
+            setEngagementClaimFeedback(claimData.message || "Points crédités.");
             btn.disabled = true;
             btn.textContent = "Réclamé";
           } else {
-            if (engagementClaimFeedback) {
-              engagementClaimFeedback.textContent = claimData.error || "Erreur.";
-              engagementClaimFeedback.classList.remove("success");
-              engagementClaimFeedback.classList.add("error");
-            }
+            setEngagementClaimFeedback(claimData.error || "Erreur.", "error");
             if (claimData.code === "already_done") btn.textContent = "Déjà réclamé";
           }
         } catch (_) {
-          if (engagementClaimFeedback) {
-            engagementClaimFeedback.textContent = "Erreur réseau.";
-            engagementClaimFeedback.classList.remove("success");
-            engagementClaimFeedback.classList.add("error");
-          }
+          setEngagementClaimFeedback("Erreur réseau.", "error");
         }
       });
     });

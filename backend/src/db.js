@@ -288,6 +288,44 @@ try {
     CREATE INDEX IF NOT EXISTS idx_engagement_completions_created ON engagement_completions(created_at);
   `);
 } catch (_) {}
+try {
+  const cols = db.prepare("PRAGMA table_info(engagement_completions)").all().map((c) => c.name);
+  if (!cols.includes("proof_id")) db.exec("ALTER TABLE engagement_completions ADD COLUMN proof_id TEXT");
+  if (!cols.includes("proof_score")) db.exec("ALTER TABLE engagement_completions ADD COLUMN proof_score REAL");
+} catch (_) {}
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS engagement_proofs (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      member_id TEXT NOT NULL,
+      action_type TEXT NOT NULL,
+      nonce TEXT NOT NULL,
+      token_hash TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'started',
+      score REAL NOT NULL DEFAULT 0,
+      reasons TEXT,
+      start_ip_hash TEXT,
+      return_ip_hash TEXT,
+      claim_ip_hash TEXT,
+      start_device_hash TEXT,
+      claim_device_hash TEXT,
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      returned_at TEXT,
+      claimed_at TEXT,
+      completion_id TEXT,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (business_id) REFERENCES businesses(id),
+      FOREIGN KEY (member_id) REFERENCES members(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_engagement_proofs_business ON engagement_proofs(business_id);
+    CREATE INDEX IF NOT EXISTS idx_engagement_proofs_member ON engagement_proofs(member_id);
+    CREATE INDEX IF NOT EXISTS idx_engagement_proofs_action ON engagement_proofs(action_type);
+    CREATE INDEX IF NOT EXISTS idx_engagement_proofs_created ON engagement_proofs(created_at);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_engagement_proofs_token_hash ON engagement_proofs(token_hash);
+  `);
+} catch (_) {}
 
 export function getBusinessBySlug(slug) {
   if (!slug || typeof slug !== "string") return null;
@@ -541,7 +579,7 @@ export function createTransaction({ id, businessId, memberId, type, points, meta
 // ——— Avis & Réseaux (engagement_rewards, engagement_completions) ———
 
 const DEFAULT_ENGAGEMENT_REWARDS = {
-  google_review: { enabled: false, points: 50, place_id: "", require_approval: true },
+  google_review: { enabled: false, points: 50, place_id: "", require_approval: true, auto_verify_enabled: true },
   instagram_follow: { enabled: false, points: 10, url: "" },
   tiktok_follow: { enabled: false, points: 10, url: "" },
   facebook_follow: { enabled: false, points: 10, url: "" },
@@ -567,7 +605,7 @@ export function hasMemberCompletedEngagementAction(businessId, memberId, actionT
   const row = db
     .prepare(
       `SELECT 1 FROM engagement_completions
-       WHERE business_id = ? AND member_id = ? AND action_type = ? AND status IN ('approved', 'pending')
+       WHERE business_id = ? AND member_id = ? AND action_type = ? AND status IN ('approved', 'pending', 'pending_review')
        AND created_at >= ? LIMIT 1`
     )
     .get(businessId, memberId, actionType, sinceStr);
@@ -575,25 +613,37 @@ export function hasMemberCompletedEngagementAction(businessId, memberId, actionT
 }
 
 /** Crée une completion (pending ou approved selon config). Retourne { completion, pointsGranted, alreadyDone }. */
-export function createEngagementCompletion(businessId, memberId, actionType) {
+export function createEngagementCompletion(businessId, memberId, actionType, options = {}) {
   const rewards = getEngagementRewards(businessId);
   const config = rewards[actionType];
   if (!config || !config.enabled || (config.points && config.points < 1)) {
     return { error: "action_disabled" };
   }
   const points = Math.max(0, Math.floor(Number(config.points) || 0));
-  const cooldown = actionType === "google_review" ? 12 : 120; // 12 mois avis, 120 mois (10 ans) pour follow = quasi une fois
+  const cooldown = Number.isFinite(Number(options.cooldownMonths))
+    ? Number(options.cooldownMonths)
+    : (actionType === "google_review" ? 12 : 120); // 12 mois avis, 120 mois (10 ans) pour follow = quasi une fois
   if (hasMemberCompletedEngagementAction(businessId, memberId, actionType, cooldown)) {
     return { error: "already_done", alreadyDone: true };
   }
   const requireApproval = actionType === "google_review" && config.require_approval;
-  const status = requireApproval ? "pending" : "approved";
+  const forcedStatus = ["approved", "pending", "pending_review"].includes(options.statusOverride) ? options.statusOverride : null;
+  const status = forcedStatus || (requireApproval ? "pending" : "approved");
   const pointsGranted = status === "approved" ? points : 0;
   const id = randomUUID();
   db.prepare(
-    `INSERT INTO engagement_completions (id, business_id, member_id, action_type, points_granted, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
-  ).run(id, businessId, memberId, actionType, pointsGranted, status);
+    `INSERT INTO engagement_completions (id, business_id, member_id, action_type, points_granted, status, proof_id, proof_score, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+  ).run(
+    id,
+    businessId,
+    memberId,
+    actionType,
+    pointsGranted,
+    status,
+    options.proofId || null,
+    Number.isFinite(Number(options.proofScore)) ? Number(options.proofScore) : null
+  );
   if (status === "approved") {
     addPoints(memberId, points);
     createTransaction({
@@ -615,9 +665,13 @@ export function getEngagementCompletionsForBusiness(businessId, { status = null,
     JOIN members m ON m.id = c.member_id
     WHERE c.business_id = ?`;
   const params = [businessId];
-  if (status && ["pending", "approved", "rejected"].includes(status)) {
-    sql += " AND c.status = ?";
-    params.push(status);
+  if (status && ["pending", "pending_review", "approved", "rejected"].includes(status)) {
+    if (status === "pending") {
+      sql += " AND c.status IN ('pending', 'pending_review')";
+    } else {
+      sql += " AND c.status = ?";
+      params.push(status);
+    }
   }
   sql += " ORDER BY c.created_at DESC LIMIT ?";
   params.push(limit);
@@ -627,7 +681,7 @@ export function getEngagementCompletionsForBusiness(businessId, { status = null,
 /** Approuver une completion : créditer les points et passer en approved. */
 export function approveEngagementCompletion(completionId, businessId) {
   const c = db.prepare("SELECT * FROM engagement_completions WHERE id = ? AND business_id = ?").get(completionId, businessId);
-  if (!c || c.status !== "pending") return null;
+  if (!c || (c.status !== "pending" && c.status !== "pending_review")) return null;
   const rewards = getEngagementRewards(businessId);
   const config = rewards[c.action_type];
   const points = config && config.points ? Math.max(0, Math.floor(Number(config.points))) : 0;
@@ -650,7 +704,7 @@ export function approveEngagementCompletion(completionId, businessId) {
 /** Rejeter une completion. */
 export function rejectEngagementCompletion(completionId, businessId) {
   const c = db.prepare("SELECT * FROM engagement_completions WHERE id = ? AND business_id = ?").get(completionId, businessId);
-  if (!c || c.status !== "pending") return null;
+  if (!c || (c.status !== "pending" && c.status !== "pending_review")) return null;
   db.prepare(
     "UPDATE engagement_completions SET status = 'rejected', reviewed_at = datetime('now') WHERE id = ?"
   ).run(completionId);
@@ -665,6 +719,83 @@ export function getEngagementCompletionsForMember(businessId, memberId) {
        WHERE business_id = ? AND member_id = ? ORDER BY created_at DESC`
     )
     .all(businessId, memberId);
+}
+
+export function createEngagementProof({
+  id,
+  businessId,
+  memberId,
+  actionType,
+  nonce,
+  tokenHash,
+  expiresAt,
+  startIpHash = null,
+  startDeviceHash = null,
+}) {
+  db.prepare(
+    `INSERT INTO engagement_proofs
+     (id, business_id, member_id, action_type, nonce, token_hash, status, start_ip_hash, start_device_hash, expires_at, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'started', ?, ?, ?, datetime('now'))`
+  ).run(id, businessId, memberId, actionType, nonce, tokenHash, startIpHash, startDeviceHash, expiresAt);
+  return db.prepare("SELECT * FROM engagement_proofs WHERE id = ?").get(id);
+}
+
+export function getEngagementProofById(proofId) {
+  return db.prepare("SELECT * FROM engagement_proofs WHERE id = ?").get(proofId) || null;
+}
+
+export function getEngagementProofByTokenHash(tokenHash) {
+  return db.prepare("SELECT * FROM engagement_proofs WHERE token_hash = ?").get(tokenHash) || null;
+}
+
+export function markEngagementProofReturned(proofId, returnIpHash = null) {
+  db.prepare(
+    `UPDATE engagement_proofs
+     SET status = CASE WHEN status = 'started' THEN 'returned' ELSE status END,
+         returned_at = COALESCE(returned_at, datetime('now')),
+         return_ip_hash = COALESCE(return_ip_hash, ?)
+     WHERE id = ?`
+  ).run(returnIpHash, proofId);
+  return getEngagementProofById(proofId);
+}
+
+export function incrementEngagementProofAttempts(proofId) {
+  db.prepare("UPDATE engagement_proofs SET attempt_count = attempt_count + 1 WHERE id = ?").run(proofId);
+  return getEngagementProofById(proofId);
+}
+
+export function finalizeEngagementProof({
+  proofId,
+  status,
+  score = 0,
+  reasons = [],
+  completionId = null,
+  claimIpHash = null,
+  claimDeviceHash = null,
+}) {
+  db.prepare(
+    `UPDATE engagement_proofs
+     SET status = ?, score = ?, reasons = ?, completion_id = ?, claim_ip_hash = ?, claim_device_hash = ?, claimed_at = datetime('now')
+     WHERE id = ?`
+  ).run(
+    status,
+    Number(score) || 0,
+    Array.isArray(reasons) ? JSON.stringify(reasons) : null,
+    completionId,
+    claimIpHash,
+    claimDeviceHash,
+    proofId
+  );
+  return getEngagementProofById(proofId);
+}
+
+export function countRecentEngagementProofStarts({ businessId, memberId, actionType, sinceMinutes = 5 }) {
+  const row = db.prepare(
+    `SELECT COUNT(*) as n FROM engagement_proofs
+     WHERE business_id = ? AND member_id = ? AND action_type = ?
+       AND created_at >= datetime('now', '-' || ? || ' minutes')`
+  ).get(businessId, memberId, actionType, Math.max(1, Number(sinceMinutes) || 5));
+  return row?.n ?? 0;
 }
 
 /** Périodes supportées pour le dashboard: 7d, 30d, this_month, 6m */
