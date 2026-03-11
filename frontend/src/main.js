@@ -6487,6 +6487,9 @@ function showFidelitySuccess(slug, memberId, memberName) {
   const btnEnableNotifications = document.getElementById("btn-enable-notifications");
   const notificationsStatusEl = document.getElementById("fidelity-notifications-status");
   const notificationsBlock = document.getElementById("fidelity-notifications-block");
+  const isIOSDevice =
+    /iPad|iPhone|iPod/i.test(navigator.userAgent || "") ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
   async function trySubscribeToPush() {
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
@@ -6572,11 +6575,8 @@ function showFidelitySuccess(slug, memberId, memberName) {
   }
 
   if (btnEnableNotifications) btnEnableNotifications.onclick = () => trySubscribeToPush();
-
-  if (notificationsBlock) {
-    setTimeout(() => {
-      trySubscribeToPush();
-    }, 800);
+  if (notificationsBlock && isIOSDevice) {
+    notificationsBlock.classList.add("hidden");
   }
 }
 
