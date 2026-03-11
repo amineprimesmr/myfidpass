@@ -15,17 +15,18 @@ function getFingerprint() {
   return `${ua}|${lang}|${tz}|${hw}`.slice(0, 250);
 }
 
-// Configuration de la Slot Machine
-const SLOT_ITEM_HEIGHT = 120; // Doit correspondre à la hauteur en CSS
-const SPIN_DURATION_MS = 3000;
-const EXTRA_SPINS = 5; // Nombre de tours complets avant de s'arrêter
+// Configuration roulette (roue circulaire)
+const ROULETTE_SPIN_DURATION_MS = 4000;
+const ROULETTE_EXTRA_TURNS = 6;
+const DEFAULT_WHEEL_LABELS = ["PERDU", "PERDU", "Café offert", "PERDU", "-10%", "PERDU", "Dessert", "PERDU"];
 
 export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   const api = createClientFidelityApi(apiBase);
   const store = createClientFidelityStore({ slug });
   
   let isSpinning = false;
-  let currentReelItems = [];
+  let wheelLabels = [...DEFAULT_WHEEL_LABELS];
+  let currentRotation = 0;
 
   async function hydrateMember(memberId) {
     if (!memberId) return;
@@ -59,42 +60,46 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     }
   } catch (_) {}
 
-  function initSlotMachine() {
-    const reelEl = rootEl.querySelector("#fidelity-slot-reel");
-    if (!reelEl) return;
-
-    // Récupérer les lots possibles (simulé ici, idéalement on les aurait dans l'état du jeu)
-    // Pour l'instant, on utilise une liste par défaut ou on extrait des rewards existants
-    const defaultItems = ["Rien", "Café Offert", "Rien", "-10%", "Rien", "Dessert Offert", "Rien", "Menu Gratuit"];
-    
-    // On duplique la liste pour l'effet de rotation
-    currentReelItems = [...defaultItems];
-    
-    renderReel(reelEl, currentReelItems);
+  function buildConicGradient(n) {
+    const step = 360 / n;
+    const stops = [];
+    for (let i = 0; i <= n; i++) {
+      const deg = i * step;
+      const fill = i % 2 === 0 ? "#1a2b42" : "#fff";
+      stops.push(`${fill} ${deg}deg`);
+    }
+    return `conic-gradient(${stops.join(", ")})`;
   }
 
-  function renderReel(reelEl, items) {
-    // On crée une longue liste pour l'animation
-    const displayItems = [...items, ...items, ...items, ...items, ...items, ...items];
-    
-    reelEl.innerHTML = displayItems.map(item => 
-      `<div class="fidelity-slot-item">${item}</div>`
-    ).join("");
-    
-    // Position initiale (sur le premier élément du 2ème set pour pouvoir monter/descendre)
-    const initialOffset = -(items.length * SLOT_ITEM_HEIGHT);
-    reelEl.style.transform = `translateY(${initialOffset}px)`;
-    reelEl.style.transition = "none";
-    
-    // Forcer le reflow
-    reelEl.offsetHeight;
+  function initRouletteWheel() {
+    const wheelEl = rootEl.querySelector("#fidelity-roulette-wheel");
+    if (!wheelEl || isSpinning) return;
+
+    const n = wheelLabels.length;
+    wheelEl.style.background = buildConicGradient(n);
+    wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+
+    const segmentHtml = wheelLabels.map((label, i) => {
+      const angle = (i + 0.5) * (360 / n);
+      const isWhite = i % 2 === 1;
+      const segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
+      return `<div class="${segClass}" style="transform: rotate(${angle}deg);"><span>${escapeHtml(label)}</span></div>`;
+    }).join("");
+
+    wheelEl.innerHTML = segmentHtml;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   function rerender() {
     renderClientPage(rootEl, store.get());
     bindEvents();
     if (!isSpinning) {
-      initSlotMachine();
+      initRouletteWheel();
     }
   }
 
@@ -159,88 +164,68 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
   async function onSpinRoulette() {
     if (isSpinning) return;
-    
+
     const state = store.get();
-    const reelEl = rootEl.querySelector("#fidelity-slot-reel");
+    const wheelEl = rootEl.querySelector("#fidelity-roulette-wheel");
     const spinBtn = rootEl.querySelector("#fidelity-v2-spin-btn");
     const feedback = rootEl.querySelector("#fidelity-v2-game-feedback");
-    
-    if (!reelEl || !spinBtn) return;
-    
+
+    if (!wheelEl || !spinBtn) return;
+
     isSpinning = true;
     spinBtn.disabled = true;
-    
     if (feedback) {
       feedback.classList.add("hidden");
       feedback.classList.remove("success", "error");
     }
 
-    // 1. Démarrer l'animation d'attente (rotation rapide infinie)
-    const baseItemsCount = currentReelItems.length;
-    const startY = -(baseItemsCount * SLOT_ITEM_HEIGHT);
-    const endYWait = -(baseItemsCount * 4 * SLOT_ITEM_HEIGHT);
-    
-    reelEl.style.transition = `transform 2s linear infinite`;
-    reelEl.style.transform = `translateY(${endYWait}px)`;
+    // Rotation d'attente (rapide) pendant l'appel API
+    wheelEl.style.transition = "transform 0.15s linear";
+    const spinStart = currentRotation;
+    wheelEl.style.transform = `rotate(${spinStart + 360}deg)`;
 
     try {
-      // 2. Appel API en parallèle
       const result = await api.spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey());
-      const rewardLabel = result.reward?.label || "Perdu";
+      const rewardLabel = (result.reward?.label || "PERDU").trim();
       const isWin = result.reward && result.reward.type !== "none";
 
-      // 3. Calculer la position finale
-      // On s'assure que le lot gagnant est dans notre liste, sinon on l'ajoute temporairement
-      let targetIndex = currentReelItems.findIndex(item => item.toLowerCase() === rewardLabel.toLowerCase());
-      if (targetIndex === -1) {
-        currentReelItems[0] = rewardLabel; // On remplace le premier pour simplifier
-        targetIndex = 0;
-        renderReel(reelEl, currentReelItems); // Re-render silencieux
+      let winIndex = wheelLabels.findIndex((l) => String(l).toLowerCase() === rewardLabel.toLowerCase());
+      if (winIndex === -1) {
+        winIndex = 0;
+        wheelLabels[0] = rewardLabel;
+        initRouletteWheel();
       }
 
-      // Calcul de la position : on fait plusieurs tours complets (EXTRA_SPINS) + on s'arrête sur l'index
-      // On vise le 3ème set d'éléments pour avoir de la marge
-      const finalTargetY = -((baseItemsCount * 3) + targetIndex) * SLOT_ITEM_HEIGHT;
+      const n = wheelLabels.length;
+      const segmentAngle = 360 / n;
+      // Arrêt : le segment winIndex doit être sous l'indicateur (à droite = 0°)
+      const finalDelta = 360 * ROULETTE_EXTRA_TURNS + (360 - winIndex * segmentAngle);
+      const targetRotation = currentRotation + finalDelta;
 
-      // 4. Animer vers la position finale avec un effet de rebond (cubic-bezier)
-      // On attend un peu pour que l'API ne réponde pas trop vite et qu'on voit l'animation
-      setTimeout(() => {
-        reelEl.style.transition = `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.15, 0.85, 0.3, 1.1)`;
-        reelEl.style.transform = `translateY(${finalTargetY}px)`;
+      wheelEl.style.transition = `transform ${ROULETTE_SPIN_DURATION_MS}ms cubic-bezier(0.2, 0.8, 0.3, 1)`;
+      wheelEl.style.transform = `rotate(${targetRotation}deg)`;
 
-        // 5. Fin de l'animation
-        setTimeout(async () => {
-          isSpinning = false;
-          spinBtn.disabled = false;
-          
-          // Mettre en surbrillance le lot
-          const items = reelEl.querySelectorAll('.fidelity-slot-item');
-          const winningItemIndex = (baseItemsCount * 3) + targetIndex;
-          if (items[winningItemIndex]) {
-             if(isWin) items[winningItemIndex].classList.add('winner');
-          }
+      currentRotation = targetRotation;
 
-          if (feedback) {
-            feedback.textContent = isWin ? `Gagné : ${rewardLabel} ! 🎉` : "Dommage, essaie encore !";
-            feedback.classList.add(isWin ? "success" : "error");
-            feedback.classList.remove("hidden");
-          }
+      setTimeout(async () => {
+        isSpinning = false;
+        spinBtn.disabled = false;
 
-          // Déclencher les confettis si victoire (à implémenter)
-          if (isWin) {
-            triggerConfetti();
-          }
+        if (feedback) {
+          feedback.textContent = isWin ? `Gagné : ${rewardLabel} ! 🎉` : "Dommage, essaie encore !";
+          feedback.classList.add(isWin ? "success" : "error");
+          feedback.classList.remove("hidden");
+        }
 
-          await refreshMemberData();
-        }, SPIN_DURATION_MS);
-      }, 500); // Petit délai artificiel minimum
-
+        if (isWin) triggerConfetti();
+        await refreshMemberData();
+      }, ROULETTE_SPIN_DURATION_MS);
     } catch (err) {
       isSpinning = false;
       spinBtn.disabled = false;
-      reelEl.style.transition = "transform 0.5s ease-out";
-      reelEl.style.transform = `translateY(${startY}px)`; // Retour au début
-      
+      wheelEl.style.transition = "transform 0.5s ease-out";
+      wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+
       if (feedback) {
         feedback.textContent = err.message || "Erreur lors du jeu.";
         feedback.classList.add("error");

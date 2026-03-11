@@ -889,7 +889,262 @@ body {
 }
 
 /* ==========================================================================
-   SLOT MACHINE (UX PREMIUM)
+   ROULETTE (design type Cadeo – image référence)
+   ========================================================================== */
+
+.fidelity-roulette-wrap {
+  background: #fff;
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.fidelity-roulette-inner {
+  padding: 1.25rem 1rem 1rem;
+}
+
+.fidelity-roulette-logo {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1rem;
+  border: 2px solid #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.fidelity-roulette-logo-text {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #000;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.2;
+  padding: 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fidelity-roulette-title {
+  margin: 0 0 1.25rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.fidelity-roulette-title-line {
+  display: block;
+}
+
+.fidelity-roulette-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.fidelity-roulette-wheel-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.fidelity-roulette-wheel {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #1a2b42;
+  box-sizing: border-box;
+  transition: transform 0.1s linear;
+  will-change: transform;
+}
+
+.fidelity-roulette-wheel-shadow {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 20px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.fidelity-roulette-wheel-segment {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  margin: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.fidelity-roulette-wheel-segment span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  transform: translateY(-52px) rotate(90deg);
+  transform-origin: 0 52px;
+}
+
+.fidelity-roulette-wheel-segment.fidelity-roulette-segment-white span {
+  color: #1a2b42;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.8);
+}
+
+.fidelity-roulette-indicator {
+  width: 0;
+  height: 0;
+  border-top: 12px solid transparent;
+  border-bottom: 12px solid transparent;
+  border-right: 20px solid #e8c16e;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+  flex-shrink: 0;
+  margin-left: -4px;
+  z-index: 2;
+}
+
+.fidelity-roulette-btn-jouer {
+  background: #1a2b42;
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #e8c16e;
+  transition: transform 0.1s, box-shadow 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fidelity-roulette-btn-jouer:hover:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 3px 3px 0 #e8c16e;
+}
+
+.fidelity-roulette-btn-jouer:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 #e8c16e;
+}
+
+.fidelity-roulette-btn-jouer:disabled {
+  background: #6b7280;
+  cursor: not-allowed;
+  box-shadow: 4px 4px 0 #9ca3af;
+}
+
+.fidelity-roulette-feedback {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.fidelity-roulette-feedback.success { color: #059669; }
+.fidelity-roulette-feedback.error { color: #b91c1c; }
+
+.fidelity-roulette-convert {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.fidelity-roulette-convert-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.fidelity-roulette-convert-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fidelity-roulette-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+}
+
+.fidelity-roulette-input:focus {
+  outline: none;
+  border-color: #1a2b42;
+  box-shadow: 0 0 0 2px rgba(26, 43, 66, 0.2);
+}
+
+.fidelity-roulette-btn-convert {
+  background: #1a2b42;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.fidelity-roulette-btn-convert:hover {
+  background: #2d3f5a;
+}
+
+.fidelity-roulette-footer {
+  background: #1a2b42;
+  color: #fff;
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.fidelity-roulette-footer-link {
+  color: #fff;
+  text-decoration: none;
+}
+
+.fidelity-roulette-footer-link:hover {
+  text-decoration: underline;
+}
+
+.fidelity-roulette-footer-brand {
+  color: rgba(255,255,255,0.9);
+}
+
+@media (max-width: 480px) {
+  .fidelity-roulette-wheel { width: 180px; height: 180px; }
+  .fidelity-roulette-wheel-segment span { font-size: 0.6rem; }
+}
+
+/* ==========================================================================
+   SLOT MACHINE (UX PREMIUM) – conservé pour compat
    ========================================================================== */
 
 .fidelity-slot-machine-container {

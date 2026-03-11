@@ -66,40 +66,40 @@ export function renderClientPage(root, state) {
         <button id="fidelity-v2-refresh" class="fidelity-btn fidelity-btn-secondary" type="button">Actualiser mes données</button>
       </section>
 
-      <section class="fidelity-v2-card ${showRoulette ? "" : "hidden"}" id="fidelity-v2-game">
-        <div class="fidelity-slot-machine-container">
-          <div class="fidelity-slot-header">
-            <h2 class="fidelity-slot-title">SLOT MACHINE</h2>
-            <div class="fidelity-slot-tickets">
-              <span class="fidelity-slot-ticket-icon">🎟️</span>
-              <span class="fidelity-slot-ticket-count" id="fidelity-slot-ticket-count">${tickets}</span>
-            </div>
+      <section class="fidelity-v2-card fidelity-roulette-wrap ${showRoulette ? "" : "hidden"}" id="fidelity-v2-game">
+        <div class="fidelity-roulette-inner">
+          <div class="fidelity-roulette-logo">
+            <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 12))}</span>
           </div>
-          
-          <div class="fidelity-slot-window">
-            <div class="fidelity-slot-reel" id="fidelity-slot-reel">
-              <!-- Reel items will be injected here by JS -->
-              <div class="fidelity-slot-item">Prêt à jouer ?</div>
+          <h2 class="fidelity-roulette-title">
+            <span class="fidelity-roulette-title-line">Participez à notre jeu et</span>
+            <span class="fidelity-roulette-title-line">tentez de gagner un cadeau</span>
+          </h2>
+          <div class="fidelity-roulette-top-row">
+            <div class="fidelity-roulette-wheel-wrap">
+              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel">
+                <!-- Segments injectés par JS -->
+              </div>
+              <div class="fidelity-roulette-wheel-shadow"></div>
             </div>
-            <div class="fidelity-slot-overlay"></div>
-          </div>
-
-          <div class="fidelity-slot-controls">
-            <button id="fidelity-v2-spin-btn" class="fidelity-slot-btn" type="button" ${tickets < spinCost ? 'disabled' : ''}>
-              <span class="fidelity-slot-btn-text">SPIN</span>
-              <span class="fidelity-slot-btn-cost">${spinCost} TICKET${spinCost > 1 ? "S" : ""}</span>
+            <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
+            <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" ${tickets < spinCost ? 'disabled' : ''}>
+              Jouer !
             </button>
           </div>
-          
-          <div class="fidelity-slot-convert-area">
-            <p class="fidelity-slot-convert-hint">${pointsPerTicket} pts = 1 ticket</p>
-            <div class="fidelity-slot-convert-row">
-              <input id="fidelity-v2-convert-input" class="fidelity-slot-input" type="number" min="${pointsPerTicket}" step="${pointsPerTicket}" placeholder="Pts à convertir" />
-              <button id="fidelity-v2-convert-btn" class="fidelity-slot-convert-btn" type="button">Convertir</button>
+          <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
+          <div class="fidelity-roulette-convert">
+            <p class="fidelity-roulette-convert-hint">${pointsPerTicket} pts = 1 ticket · 1 partie = ${spinCost} ticket${spinCost > 1 ? "s" : ""}</p>
+            <div class="fidelity-roulette-convert-row">
+              <input id="fidelity-v2-convert-input" class="fidelity-roulette-input" type="number" min="${pointsPerTicket}" step="${pointsPerTicket}" placeholder="Points à convertir" />
+              <button id="fidelity-v2-convert-btn" class="fidelity-roulette-btn-convert" type="button">Convertir</button>
             </div>
-            <p id="fidelity-v2-game-feedback" class="fidelity-slot-feedback hidden"></p>
           </div>
         </div>
+        <footer class="fidelity-roulette-footer">
+          <a href="#" class="fidelity-roulette-footer-link" id="fidelity-roulette-reglement">Règlement</a>
+          <span class="fidelity-roulette-footer-brand">Propulsé par Myfidpass</span>
+        </footer>
       </section>
 
       <section class="fidelity-v2-card ${actions.length ? "" : "hidden"}" id="fidelity-v2-actions">
