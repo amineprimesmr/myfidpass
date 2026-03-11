@@ -3480,7 +3480,7 @@ function initAppDashboard(slug) {
 
   async function loadEvolution() {
     const period = getDashboardPeriod();
-    const weeksMap = { 7d: 1, 30d: 4, this_month: 4, 6m: 26 };
+    const weeksMap = { "7d": 1, "30d": 4, this_month: 4, "6m": 26 };
     const weeks = weeksMap[period] ?? 6;
     const res = await api(`/dashboard/evolution?period=${encodeURIComponent(period)}&weeks=${weeks}`);
     if (!res.ok) return;
@@ -3488,7 +3488,7 @@ function initAppDashboard(slug) {
     const chartEl = document.getElementById("app-evolution-chart");
     const evolution = data.evolution || [];
     if (evolutionTitleEl) {
-      const periodLabels = { 7d: "7 j", 30d: "4 sem.", this_month: "mois", 6m: "6 mois" };
+      const periodLabels = { "7d": "7 j", "30d": "4 sem.", this_month: "mois", "6m": "6 mois" };
       evolutionTitleEl.textContent = `Activité — opérations par semaine (${periodLabels[period] ?? evolution.length + " sem."})`;
     }
     if (!chartEl || !evolution.length) {
