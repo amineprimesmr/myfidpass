@@ -999,24 +999,23 @@
               <button type="button" id="app-personnaliser-save" class="app-btn app-btn-primary">Enregistrer les modifications</button>
             </div>
             <h3 class="app-subsection-title">Partager votre carte</h3>
-            <div class="app-card app-share-card">
-              <p class="app-step-label">Lien à partager</p>
-              <p class="app-hint app-share-slug-hint" id="app-share-slug-hint">Votre lien de carte : …/fidelity/<strong id="app-share-slug-value"></strong> — utilisez exactement ce lien (pas le nom de l'établissement).</p>
-              <div class="app-share-row">
+            <div class="app-card app-share-card app-share-card-minimal">
+              <p class="app-step-label">Votre lien FidPass</p>
+              <div class="app-share-edit-row">
+                <span class="app-share-prefix">/fidelity/</span>
+                <input type="text" id="app-share-slug-input" class="app-input app-share-slug-input" aria-label="Modifier le lien FidPass" />
+                <button type="button" id="app-share-slug-save" class="app-btn app-btn-secondary">Mettre à jour</button>
+              </div>
+              <p id="app-share-slug-message" class="app-hint app-share-slug-message hidden"></p>
+              <div class="app-share-row app-share-link-row">
                 <input type="text" id="app-share-link" class="app-input app-share-input" readonly aria-label="Lien de la page carte" />
                 <button type="button" id="app-share-copy" class="app-btn app-btn-primary">Copier</button>
               </div>
-              <p class="app-step-label">Texte prêt à envoyer (SMS / WhatsApp)</p>
-              <div class="app-share-row">
-                <input type="text" id="app-share-sms-text" class="app-input app-share-input" readonly aria-label="Texte SMS" />
-                <button type="button" id="app-share-copy-sms" class="app-btn app-btn-primary">Copier le texte</button>
-              </div>
-              <p class="app-step-label">QR code à afficher ou imprimer</p>
-              <div class="app-qr-wrap">
+              <div class="app-qr-wrap app-qr-wrap-minimal">
                 <img id="app-share-qr" class="app-qr-img" src="" alt="QR code vers la page carte" />
-                <button type="button" id="app-share-download-qr" class="app-btn app-btn-secondary app-qr-download">Télécharger le QR (PNG)</button>
+                <p class="app-share-qr-caption">Scannez pour ouvrir la carte</p>
+                <button type="button" id="app-share-download-qr" class="app-btn app-btn-secondary app-qr-download">Télécharger PNG</button>
               </div>
-              <p class="app-share-page-link"><a id="app-share-page-link" href="" target="_blank" rel="noopener">Voir la page carte →</a></p>
             </div>
           </section>
           <section id="integration" class="app-section">

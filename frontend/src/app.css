@@ -1954,13 +1954,56 @@ body.page-app .site-banner { display: none !important; }
 .app-shortcut-inactifs:hover { border-color: rgba(245, 158, 11, 0.95); color: #fde68a; }
 
 /* Partager */
+.app-share-card-minimal {
+  max-width: 560px;
+}
+.app-share-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+.app-share-prefix {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #64748b;
+}
+.app-share-slug-input {
+  flex: 1;
+  min-width: 170px;
+}
+.app-share-slug-message {
+  margin: 0.45rem 0 0.2rem;
+}
+.app-share-slug-message.error {
+  color: #b91c1c;
+}
+.app-share-slug-message.success {
+  color: #0f766e;
+}
 .app-share-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
 .app-share-row .app-input { flex: 1; min-width: 200px; margin-bottom: 0; }
-.app-qr-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; margin-top: 0.5rem; }
-.app-qr-download { margin-top: 0.25rem; }
-.app-share-page-link { margin-top: 1rem; font-size: 0.9rem; }
-.app-share-page-link a { color: var(--app-accent); text-decoration: none; }
-.app-share-page-link a:hover { text-decoration: underline; }
+.app-share-link-row { margin-top: 0.5rem; }
+.app-qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+  padding: 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+.app-qr-wrap-minimal {
+  width: fit-content;
+}
+.app-share-qr-caption {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+.app-qr-download { margin-top: 0.1rem; }
 
 /* Caisse récents */
 .app-caisse-recent { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; min-height: 2rem; }

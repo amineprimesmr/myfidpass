@@ -402,6 +402,7 @@ export function updateBusiness(businessId, updates) {
   const b = getBusinessById(businessId);
   if (!b) return null;
   const allowed = [
+    "slug",
     "organization_name",
     "back_terms",
     "back_contact",

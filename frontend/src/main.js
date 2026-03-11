@@ -1191,12 +1191,30 @@ function initAppDashboard(slug) {
   const shareLinkEl = document.getElementById("app-share-link");
   const shareQrEl = document.getElementById("app-share-qr");
   const shareCopyBtn = document.getElementById("app-share-copy");
+  const shareSlugInputEl = document.getElementById("app-share-slug-input");
+  const shareSlugSaveBtn = document.getElementById("app-share-slug-save");
+  const shareSlugMessageEl = document.getElementById("app-share-slug-message");
 
-  const fullShareLink = (typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "") + "/fidelity/" + slug;
-  if (shareLinkEl) shareLinkEl.value = fullShareLink;
-  const shareSlugValueEl = document.getElementById("app-share-slug-value");
-  if (shareSlugValueEl) shareSlugValueEl.textContent = slug || "";
-  if (shareQrEl) shareQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=" + encodeURIComponent(fullShareLink);
+  const pageOrigin = (typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "");
+  function getShareLinkForSlug(value) {
+    return `${pageOrigin}/fidelity/${value}`;
+  }
+  let currentShareSlug = slug || "";
+  function renderShareCard(value) {
+    if (!value) return;
+    const fullShareLink = getShareLinkForSlug(value);
+    if (shareLinkEl) shareLinkEl.value = fullShareLink;
+    if (shareQrEl) shareQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=" + encodeURIComponent(fullShareLink);
+    if (shareSlugInputEl) shareSlugInputEl.value = value;
+  }
+  function setShareSlugMessage(text, isError = false) {
+    if (!shareSlugMessageEl) return;
+    shareSlugMessageEl.textContent = text || "";
+    shareSlugMessageEl.classList.toggle("hidden", !text);
+    shareSlugMessageEl.classList.toggle("error", !!(text && isError));
+    shareSlugMessageEl.classList.toggle("success", !!(text && !isError));
+  }
+  renderShareCard(currentShareSlug);
   if (shareCopyBtn) {
     shareCopyBtn.addEventListener("click", () => {
       if (!shareLinkEl) return;
@@ -1207,18 +1225,43 @@ function initAppDashboard(slug) {
       });
     });
   }
-  const shareSmsTextEl = document.getElementById("app-share-sms-text");
-  const shareCopySmsBtn = document.getElementById("app-share-copy-sms");
   const shareDownloadQrBtn = document.getElementById("app-share-download-qr");
-  const sharePageLinkEl = document.getElementById("app-share-page-link");
-  const smsText = "Ajoutez notre carte fidélité en un clic : " + fullShareLink;
-  if (shareSmsTextEl) shareSmsTextEl.value = smsText;
-  if (shareCopySmsBtn) {
-    shareCopySmsBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(smsText).then(() => {
-        shareCopySmsBtn.textContent = "Copié !";
-        setTimeout(() => { shareCopySmsBtn.textContent = "Copier le texte"; }, 2000);
-      });
+  if (shareSlugSaveBtn) {
+    shareSlugSaveBtn.addEventListener("click", async () => {
+      const proposed = slugify(shareSlugInputEl?.value || "");
+      if (!proposed || proposed.length < 3) {
+        setShareSlugMessage("Le lien doit contenir au moins 3 caractères (lettres/chiffres/tirets).", true);
+        return;
+      }
+      if (proposed === currentShareSlug) {
+        setShareSlugMessage("Ce lien est déjà actif.");
+        return;
+      }
+      shareSlugSaveBtn.disabled = true;
+      setShareSlugMessage("");
+      try {
+        const res = await api("", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug: proposed }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const msg = data.error || (res.status === 409 ? "Ce lien est déjà pris." : "Impossible de modifier le lien.");
+          setShareSlugMessage(msg, true);
+          return;
+        }
+        currentShareSlug = data.slug || proposed;
+        renderShareCard(currentShareSlug);
+        setShareSlugMessage("Lien mis à jour. Rechargement de la page…");
+        setTimeout(() => {
+          window.location.reload();
+        }, 900);
+      } catch (_) {
+        setShareSlugMessage("Erreur réseau. Réessayez.", true);
+      } finally {
+        shareSlugSaveBtn.disabled = false;
+      }
     });
   }
   if (shareDownloadQrBtn && shareQrEl) {
@@ -1232,15 +1275,12 @@ function initAppDashboard(slug) {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
         const a = document.createElement("a");
-        a.download = "fidpass-qr-" + slug + ".png";
+        a.download = "fidpass-qr-" + currentShareSlug + ".png";
         a.href = canvas.toDataURL("image/png");
         a.click();
       };
       img.src = shareQrEl.src;
     });
-  }
-  if (sharePageLinkEl) {
-    sharePageLinkEl.href = fullShareLink;
   }
 
   const integrationBaseUrlEl = document.getElementById("app-integration-base-url");
@@ -1255,7 +1295,8 @@ function initAppDashboard(slug) {
   const integrationOpenPageEl = document.getElementById("app-integration-open-page");
   if (integrationOpenPageEl) integrationOpenPageEl.href = prestatairePageUrl;
   const walletPreviewQr = document.getElementById("app-wallet-preview-qr");
-  if (walletPreviewQr && fullShareLink) {
+  if (walletPreviewQr && currentShareSlug) {
+    const fullShareLink = getShareLinkForSlug(currentShareSlug);
     walletPreviewQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullShareLink)}`;
     walletPreviewQr.alt = "QR code — scannez pour ajouter la carte à Apple Wallet";
   }
