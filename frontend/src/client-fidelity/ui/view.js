@@ -25,49 +25,31 @@ export function renderClientPage(root, state, options = {}) {
 
   if (gamePage) {
     root.innerHTML = `
-      <header class="header fidelity-v2-header fidelity-game-header">
-        <div class="header-inner fidelity-v2-header-inner">
-          <a href="${backUrl}" class="fidelity-game-back">← Retour</a>
-          <span class="fidelity-v2-business">${businessName}</span>
-        </div>
-      </header>
-      <section class="fidelity-v2-card fidelity-roulette-wrap" id="fidelity-v2-game">
-        <div class="fidelity-roulette-fullpage">
-          <div class="fidelity-roulette-header">
-            <div class="fidelity-roulette-logo">
-              <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>
-            </div>
-            <h2 class="fidelity-roulette-title">
-              <span class="fidelity-roulette-title-line">Participez à notre jeu et</span>
-              <span class="fidelity-roulette-title-line">tentez de gagner un cadeau</span>
-            </h2>
-            <div class="fidelity-roulette-btn-row">
-              <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" ${tickets < spinCost ? 'disabled' : ''}>
-                Jouer !
-              </button>
-            </div>
+      <div class="fidelity-game-page">
+        <a href="${backUrl}" class="fidelity-game-back-float">← Retour</a>
+        <div class="fidelity-game-top">
+          <div class="fidelity-roulette-logo">
+            <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>
           </div>
-          <div class="fidelity-roulette-wheel-zone">
-            <div class="fidelity-roulette-wheel-outer">
-              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
-              <div class="fidelity-roulette-wheel-rim"></div>
-            </div>
-            <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
-          </div>
-          <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
-          <div class="fidelity-roulette-convert">
-            <p class="fidelity-roulette-convert-hint">${pointsPerTicket} pts = 1 ticket · 1 partie = ${spinCost} ticket${spinCost > 1 ? "s" : ""}</p>
-            <div class="fidelity-roulette-convert-row">
-              <input id="fidelity-v2-convert-input" class="fidelity-roulette-input" type="number" min="${pointsPerTicket}" step="${pointsPerTicket}" placeholder="Points à convertir" />
-              <button id="fidelity-v2-convert-btn" class="fidelity-roulette-btn-convert" type="button">Convertir</button>
-            </div>
+          <h2 class="fidelity-roulette-title">
+            <span class="fidelity-roulette-title-line">Participez à notre jeu et</span>
+            <span class="fidelity-roulette-title-line">tentez de gagner un cadeau</span>
+          </h2>
+          <div class="fidelity-roulette-btn-row">
+            <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" ${tickets < spinCost ? 'disabled' : ''}>
+              Jouer !
+            </button>
           </div>
         </div>
-        <footer class="fidelity-roulette-footer">
-          <a href="#" class="fidelity-roulette-footer-link" id="fidelity-roulette-reglement">Règlement</a>
-          <span class="fidelity-roulette-footer-brand">Propulsé par Myfidpass</span>
-        </footer>
-      </section>
+        <div class="fidelity-roulette-wheel-zone">
+          <div class="fidelity-roulette-wheel-outer">
+            <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
+            <div class="fidelity-roulette-wheel-rim"></div>
+          </div>
+          <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
+        </div>
+        <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
+      </div>
     `;
     return;
   }

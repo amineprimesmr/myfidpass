@@ -909,6 +909,37 @@ body {
   overflow-x: hidden;
 }
 
+/* Page jeu dédiée : pleine page, que la roue (moitié droite visible) */
+.fidelity-game-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  padding: 0;
+  position: relative;
+}
+
+.fidelity-game-back-float {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  color: #1a2b42;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.fidelity-game-back-float:hover {
+  text-decoration: underline;
+}
+
+.fidelity-game-top {
+  text-align: center;
+  padding: 1rem 1rem 0.75rem;
+  flex-shrink: 0;
+}
+
 .fidelity-roulette-fullpage {
   flex: 1;
   display: flex;
@@ -1010,24 +1041,27 @@ body {
   box-shadow: 0 4px 0 rgba(0,0,0,0.15);
 }
 
-/* Zone roue : seule la moitié (haut-droite) visible, effet cylindre 3D */
+/* Zone roue : TOUTE la moitié DROITE visible (bord droit de la roue = bord droit de l’écran) */
 .fidelity-roulette-wheel-zone {
   position: relative;
   flex: 1;
-  min-height: 42vh;
+  min-height: 50vh;
   overflow: hidden;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
-  padding-right: 0;
+  padding: 0;
 }
 
 .fidelity-roulette-wheel-outer {
   position: absolute;
-  right: -5%;
-  bottom: -75%;
-  width: min(160vmin, 160vw);
-  height: min(160vmin, 160vw);
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(200vmin, 200vw);
+  height: min(200vmin, 200vw);
+  max-width: none;
+  max-height: none;
   pointer-events: none;
 }
 
@@ -1084,7 +1118,7 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  font-size: clamp(0.55rem, 2.2vmin, 0.85rem);
+  font-size: clamp(0.55rem, 2.2vmin, 0.9rem);
   font-weight: 800;
   color: #fff;
   text-transform: uppercase;
@@ -1094,6 +1128,12 @@ body {
   transform-origin: 0 38vmin;
 }
 
+.fidelity-game-page .fidelity-roulette-wheel-segment span {
+  transform: translateY(-52vmin) rotate(90deg);
+  transform-origin: 0 52vmin;
+  font-size: clamp(0.6rem, 2.5vmin, 1rem);
+}
+
 .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white span {
   color: #1a2b42;
   text-shadow: 0 1px 1px rgba(255,255,255,0.6);
@@ -1101,14 +1141,14 @@ body {
 
 .fidelity-roulette-indicator {
   position: absolute;
-  right: 12%;
+  right: 2%;
   top: 50%;
   transform: translateY(-50%);
   width: 0;
   height: 0;
-  border-top: 14px solid transparent;
-  border-bottom: 14px solid transparent;
-  border-right: 24px solid #e8c16e;
+  border-top: 16px solid transparent;
+  border-bottom: 16px solid transparent;
+  border-right: 28px solid #e8c16e;
   filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.25));
   z-index: 3;
   pointer-events: none;
@@ -1120,6 +1160,11 @@ body {
   font-weight: 700;
   margin: 0.5rem 0 0.75rem;
   padding: 0 1rem;
+  flex-shrink: 0;
+}
+
+.fidelity-game-page .fidelity-roulette-feedback {
+  margin: 0.25rem 0 1rem;
 }
 
 .fidelity-roulette-feedback.success { color: #059669; }
@@ -1228,13 +1273,11 @@ body {
 
 @media (max-width: 480px) {
   .fidelity-roulette-wheel-outer {
-    right: -15%;
-    bottom: -80%;
-    width: min(180vmin, 180vw);
-    height: min(180vmin, 180vw);
+    width: min(220vmin, 220vw);
+    height: min(220vmin, 220vw);
   }
   .fidelity-roulette-indicator {
-    right: 8%;
+    right: 1%;
   }
 }
 
