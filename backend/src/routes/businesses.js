@@ -15,6 +15,16 @@ import {
   deductPoints,
   resetMemberPoints,
   createTransaction,
+  getBusinessGames,
+  updateBusinessGameConfig,
+  getGameRewardsForBusiness,
+  replaceGameRewardsForBusiness,
+  getMemberTicketWallet,
+  getMemberTicketHistory,
+  convertPointsToTickets,
+  spinGameForMember,
+  getMemberRewards,
+  markRewardGrantClaimed,
   getDashboardStats,
   getDashboardEvolution,
   getMembersForBusiness,
@@ -94,6 +104,18 @@ function checkStartRateLimit(ipHash) {
   return true;
 }
 
+function getClientIp(req) {
+  const hdr = req.get("x-forwarded-for") || req.get("x-real-ip");
+  const ip = (hdr || req.ip || "").toString().split(",")[0].trim();
+  return ip || "";
+}
+
+function getIdempotencyKey(req) {
+  const key = (req.get("Idempotency-Key") || "").trim();
+  if (!key) return null;
+  return key.slice(0, 120);
+}
+
 /** Vérifie l'accès au dashboard : token valide pour ce commerce OU utilisateur connecté propriétaire. */
 function canAccessDashboard(business, req) {
   if (!business) return false;
@@ -142,6 +164,8 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     points_per_euro: business.points_per_euro != null ? Number(business.points_per_euro) : undefined,
     points_per_visit: business.points_per_visit != null ? Number(business.points_per_visit) : undefined,
     program_type: business.program_type ?? undefined,
+    loyalty_mode: business.loyalty_mode ?? "points_cash",
+    points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     points_min_amount_eur: business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
     expiry_months: business.expiry_months != null ? Number(business.expiry_months) : undefined,
@@ -186,6 +210,8 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const program_type = body.program_type ?? body.programType;
   const points_per_euro = body.points_per_euro ?? body.pointsPerEuro;
   const points_per_visit = body.points_per_visit ?? body.pointsPerVisit;
+  const loyalty_mode = body.loyalty_mode ?? body.loyaltyMode;
+  const points_per_ticket = body.points_per_ticket ?? body.pointsPerTicket;
   const points_min_amount_eur = body.points_min_amount_eur ?? body.pointsMinAmountEur;
   const points_reward_tiers = body.points_reward_tiers ?? body.pointsRewardTiers;
   const expiry_months = body.expiry_months ?? body.expiryMonths;
@@ -224,6 +250,14 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   if (points_per_visit !== undefined) {
     const n = points_per_visit === null || points_per_visit === "" ? null : Number(points_per_visit);
     updates.points_per_visit = Number.isFinite(n) && n >= 0 ? String(n) : "0";
+  }
+  if (loyalty_mode !== undefined) {
+    const mode = String(loyalty_mode || "").trim().toLowerCase();
+    updates.loyalty_mode = mode === "points_game_tickets" ? "points_game_tickets" : "points_cash";
+  }
+  if (points_per_ticket !== undefined) {
+    const n = Number(points_per_ticket);
+    updates.points_per_ticket = Number.isInteger(n) && n > 0 ? n : 10;
   }
   if (points_min_amount_eur !== undefined) {
     const n = points_min_amount_eur === null || points_min_amount_eur === "" ? null : Number(points_min_amount_eur);
@@ -346,6 +380,55 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
     }
   }
   return res.status(200).send();
+});
+
+router.get("/:slug/dashboard/games", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const games = getBusinessGames(business.id);
+  return res.json({ games });
+});
+
+router.patch("/:slug/dashboard/games/:gameCode", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const body = req.body || {};
+  const game = updateBusinessGameConfig(business.id, req.params.gameCode, {
+    enabled: body.enabled,
+    ticket_cost: body.ticket_cost ?? body.ticketCost,
+    daily_spin_limit: body.daily_spin_limit ?? body.dailySpinLimit,
+    cooldown_seconds: body.cooldown_seconds ?? body.cooldownSeconds,
+    weight_profile_json: body.weight_profile_json ?? body.weightProfile,
+  });
+  if (!game) return res.status(404).json({ error: "Jeu introuvable" });
+  return res.json({ ok: true, game });
+});
+
+router.get("/:slug/dashboard/games/:gameCode/rewards", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const rewards = getGameRewardsForBusiness(business.id, req.params.gameCode);
+  return res.json({ rewards });
+});
+
+router.put("/:slug/dashboard/games/:gameCode/rewards", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const rewardsInput = Array.isArray(req.body?.rewards) ? req.body.rewards : [];
+  const rewards = replaceGameRewardsForBusiness(business.id, req.params.gameCode, rewardsInput);
+  return res.json({ ok: true, rewards });
 });
 
 /**
@@ -1389,10 +1472,144 @@ router.get("/:slug", (req, res) => {
     foregroundColor: business.foreground_color ?? undefined,
     labelColor: business.label_color ?? undefined,
     program_type: business.program_type ?? undefined,
+    loyalty_mode: business.loyalty_mode ?? "points_cash",
+    points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
     stamp_reward_label: business.stamp_reward_label ?? undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
   });
+});
+
+router.get("/:slug/games", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const games = getBusinessGames(business.id).map((g) => ({
+    game_code: g.game_code,
+    game_name: g.game_name,
+    game_type: g.game_type,
+    enabled: g.enabled,
+    ticket_cost: g.ticket_cost,
+    daily_spin_limit: g.daily_spin_limit,
+    cooldown_seconds: g.cooldown_seconds,
+  }));
+  return res.json({
+    loyalty_mode: business.loyalty_mode ?? "points_cash",
+    points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
+    games,
+  });
+});
+
+router.get("/:slug/members/:memberId/tickets", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const member = getMemberForBusiness(req.params.memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+  const wallet = getMemberTicketWallet(business.id, member.id);
+  const history = getMemberTicketHistory(business.id, member.id, 20);
+  return res.json({
+    member_id: member.id,
+    points: Number(member.points) || 0,
+    loyalty_mode: business.loyalty_mode ?? "points_cash",
+    points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
+    ticket_balance: Number(wallet?.ticket_balance) || 0,
+    history,
+  });
+});
+
+router.post("/:slug/members/:memberId/tickets/convert", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const member = getMemberForBusiness(req.params.memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+  const pointsToConvert = Number(req.body?.points_to_convert ?? req.body?.pointsToConvert);
+  const idempotencyKey = getIdempotencyKey(req);
+  const result = convertPointsToTickets({
+    businessId: business.id,
+    memberId: member.id,
+    pointsToConvert,
+    idempotencyKey,
+    metadata: { source: "client_page" },
+  });
+  if (result?.error === "mode_disabled") return res.status(400).json({ error: "Mode jeu désactivé", code: "MODE_DISABLED" });
+  if (result?.error === "invalid_points") return res.status(400).json({ error: "Nombre de points invalide", code: "INVALID_POINTS" });
+  if (result?.error === "not_enough_points") return res.status(400).json({ error: "Pas assez de points", code: "NOT_ENOUGH_POINTS" });
+  if (result?.error) return res.status(400).json({ error: "Conversion impossible", code: String(result.error).toUpperCase() });
+  return res.json(result);
+});
+
+router.post("/:slug/games/:gameCode/spins", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const memberId = String(req.body?.memberId || "").trim();
+  if (!memberId) return res.status(400).json({ error: "memberId requis" });
+  const member = getMemberForBusiness(memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+  const idempotencyKey = getIdempotencyKey(req);
+  const clientIpHash = buildIpHash(getClientIp(req));
+  const deviceHash = buildDeviceHash(req.body?.client_fingerprint ?? req.body?.clientFingerprint ?? "");
+  const result = spinGameForMember({
+    businessId: business.id,
+    memberId: member.id,
+    gameCode: req.params.gameCode,
+    idempotencyKey,
+    clientIpHash,
+    deviceHash,
+    riskScore: deviceHash ? 0.15 : 0.35,
+  });
+  if (result?.error === "mode_disabled") return res.status(400).json({ error: "Mode jeu désactivé", code: "MODE_DISABLED" });
+  if (result?.error === "game_disabled") return res.status(400).json({ error: "Jeu indisponible", code: "GAME_DISABLED" });
+  if (result?.error === "not_enough_tickets") {
+    return res.status(400).json({
+      error: "Tickets insuffisants",
+      code: "NOT_ENOUGH_TICKETS",
+      ticket_cost: result.ticket_cost,
+      ticket_balance: result.ticket_balance,
+    });
+  }
+  if (result?.error === "daily_limit_reached") return res.status(429).json({ error: "Limite quotidienne atteinte", code: "DAILY_LIMIT_REACHED" });
+  if (result?.error === "cooldown_active") {
+    return res.status(429).json({ error: "Attendez avant de rejouer", code: "COOLDOWN_ACTIVE", cooldown_seconds: result.cooldown_seconds });
+  }
+  if (result?.error) return res.status(400).json({ error: "Spin impossible", code: String(result.error).toUpperCase() });
+  const reward = result.reward
+    ? {
+      id: result.reward.id,
+      code: result.reward.code,
+      label: result.reward.label,
+      kind: result.reward.kind,
+      value: result.reward.value || null,
+    }
+    : null;
+  return res.json({
+    ok: true,
+    idempotent: !!result.idempotent,
+    spin: result.spin,
+    reward,
+    ticket_balance: result.ticket_balance,
+    member_points: result.member_points,
+  });
+});
+
+router.get("/:slug/members/:memberId/rewards", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const member = getMemberForBusiness(req.params.memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+  const rewards = getMemberRewards(business.id, member.id, 30);
+  return res.json({ rewards });
+});
+
+router.post("/:slug/members/:memberId/rewards/:grantId/claim", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Accès non autorisé" });
+  }
+  const member = getMemberForBusiness(req.params.memberId, business.id);
+  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+  const claimed = markRewardGrantClaimed(business.id, member.id, req.params.grantId);
+  if (!claimed) return res.status(404).json({ error: "Récompense introuvable ou déjà utilisée" });
+  return res.json({ ok: true, reward_grant: claimed });
 });
 
 /**
@@ -1976,12 +2193,22 @@ router.patch("/:slug", (req, res) => {
     updates.points_min_amount_eur = Number.isFinite(n) && n >= 0 ? n : null;
   }
   const pointsRewardTiers = body.pointsRewardTiers ?? body.points_reward_tiers;
+  const loyaltyMode = body.loyaltyMode ?? body.loyalty_mode;
+  const pointsPerTicket = body.pointsPerTicket ?? body.points_per_ticket;
   if (pointsRewardTiers !== undefined) {
     if (pointsRewardTiers === null || pointsRewardTiers === "") updates.points_reward_tiers = null;
     else if (Array.isArray(pointsRewardTiers)) updates.points_reward_tiers = JSON.stringify(pointsRewardTiers);
     else if (typeof pointsRewardTiers === "string") {
       try { JSON.parse(pointsRewardTiers); updates.points_reward_tiers = pointsRewardTiers; } catch (_) { updates.points_reward_tiers = null; }
     }
+  }
+  if (loyaltyMode !== undefined) {
+    const mode = String(loyaltyMode || "").trim().toLowerCase();
+    updates.loyalty_mode = mode === "points_game_tickets" ? "points_game_tickets" : "points_cash";
+  }
+  if (pointsPerTicket !== undefined) {
+    const n = Number(pointsPerTicket);
+    updates.points_per_ticket = Number.isInteger(n) && n > 0 ? n : 10;
   }
   const expiryMonths = body.expiryMonths ?? body.expiry_months;
   if (expiryMonths !== undefined) {

@@ -355,6 +355,113 @@ body {
   gap: 0.75rem;
 }
 
+.fidelity-v2-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.fidelity-v2-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.fidelity-v2-business {
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.fidelity-v2-main {
+  max-width: 760px;
+}
+
+.fidelity-v2-hero h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+.fidelity-v2-hero p {
+  margin: 0.45rem 0 0;
+  color: #475569;
+}
+
+.fidelity-v2-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1rem;
+  margin-top: 0.9rem;
+}
+
+.fidelity-v2-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.fidelity-v2-kpis article {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fidelity-v2-kpis span {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.fidelity-v2-kpis strong {
+  color: #0f172a;
+  font-size: 1.2rem;
+}
+
+.fidelity-v2-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.fidelity-v2-card h2 {
+  margin: 0 0 0.75rem;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.fidelity-v2-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.fidelity-v2-reward-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.fidelity-v2-reward-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.fidelity-v2-empty {
+  color: #64748b;
+}
+
 .fidelity-input {
   width: 100%;
   padding: 0.85rem 1rem;

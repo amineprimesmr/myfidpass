@@ -868,6 +868,15 @@
                 <label class="app-radio-label"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> Tampons (ex. 1 tampon par visite, 10 tampons = 1 café offert)</label>
               </div>
               <div id="app-rules-points" class="app-rules-panel hidden">
+                <p class="app-step-label">Mode de fidélité</p>
+                <div class="app-rules-type">
+                  <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points = réduction en caisse</label>
+                  <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points -> tickets de jeu (roulette)</label>
+                </div>
+                <div id="app-game-economy-panel" class="app-rules-row hidden">
+                  <label class="app-label">Points nécessaires pour 1 ticket</label>
+                  <input type="number" id="app-points-per-ticket" class="app-input app-input-number" min="1" step="1" value="10" />
+                </div>
                 <p class="app-step-label">Attribution des points</p>
                 <div class="app-rules-row">
                   <label class="app-label">Points par € dépensé</label>
@@ -895,6 +904,23 @@
                   <option value="retail">Commerce / Retail</option>
                   <option value="other">Autre</option>
                 </select>
+                <p class="app-step-label">Configuration roulette (mode jeu)</p>
+                <div class="app-rules-row">
+                  <label class="app-label">Coût d'un spin (tickets)</label>
+                  <input type="number" id="app-game-ticket-cost" class="app-input app-input-number" min="1" step="1" value="1" />
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Limite de spins / jour / client</label>
+                  <input type="number" id="app-game-daily-limit" class="app-input app-input-number" min="1" step="1" value="20" />
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Cooldown entre spins (secondes)</label>
+                  <input type="number" id="app-game-cooldown" class="app-input app-input-number" min="0" step="1" value="10" />
+                </div>
+                <p class="app-hint">Récompenses roulette (JSON): code, label, kind, weight, value. Ex: points bonus avec kind=\"points\" et value.points.</p>
+                <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="6" placeholder='[{"code":"no_reward","label":"Pas de lot","kind":"none","weight":65},{"code":"small_points","label":"10 points bonus","kind":"points","weight":25,"value":{"points":10}}]'></textarea>
+                <button type="button" id="app-game-save" class="app-btn app-btn-secondary">Enregistrer la configuration jeu</button>
+                <p id="app-game-save-feedback" class="app-message hidden"></p>
               </div>
               <div id="app-rules-stamps" class="app-rules-panel hidden">
                 <p class="app-step-label">Emoji des tampons (ex. ☕ 🍔 🍕)</p>

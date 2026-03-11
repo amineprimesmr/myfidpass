@@ -1,4 +1,5 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { initClientFidelityPage } from "./client-fidelity/bootstrap.js";
 
 const IS_MYFIDPASS_HOST =
   typeof window !== "undefined" && /(^|\.)myfidpass\.fr$/i.test(window.location.hostname);
@@ -1842,6 +1843,14 @@ function initAppDashboard(slug) {
   const rulesPanelStamps = document.getElementById("app-rules-stamps");
   const pointsPerEuroEl = document.getElementById("app-points-per-euro");
   const pointsPerVisitEl = document.getElementById("app-points-per-visit");
+  const loyaltyModeCashEl = document.getElementById("app-loyalty-mode-cash");
+  const loyaltyModeGameEl = document.getElementById("app-loyalty-mode-game");
+  const gameEconomyPanelEl = document.getElementById("app-game-economy-panel");
+  const pointsPerTicketEl = document.getElementById("app-points-per-ticket");
+  const gameTicketCostEl = document.getElementById("app-game-ticket-cost");
+  const gameDailyLimitEl = document.getElementById("app-game-daily-limit");
+  const gameCooldownEl = document.getElementById("app-game-cooldown");
+  const gameRewardsJsonEl = document.getElementById("app-game-rewards-json");
   const pointsMinAmountEl = document.getElementById("app-points-min-amount");
   const pointsRewardTiersEl = document.getElementById("app-points-reward-tiers");
   const sectorEl = document.getElementById("app-sector");
@@ -1855,9 +1864,13 @@ function initAppDashboard(slug) {
     const isStamps = programTypeStamps && programTypeStamps.checked;
     if (rulesPanelPoints) rulesPanelPoints.classList.toggle("hidden", !!isStamps);
     if (rulesPanelStamps) rulesPanelStamps.classList.toggle("hidden", !isStamps);
+    const gameMode = loyaltyModeGameEl?.checked === true;
+    if (gameEconomyPanelEl) gameEconomyPanelEl.classList.toggle("hidden", !gameMode);
   }
   if (programTypePoints) programTypePoints.addEventListener("change", setRulesPanelVisibility);
   if (programTypeStamps) programTypeStamps.addEventListener("change", setRulesPanelVisibility);
+  if (loyaltyModeCashEl) loyaltyModeCashEl.addEventListener("change", setRulesPanelVisibility);
+  if (loyaltyModeGameEl) loyaltyModeGameEl.addEventListener("change", setRulesPanelVisibility);
 
   /**
    * Redimensionne une image et la convertit en data URL.
@@ -2244,6 +2257,10 @@ function initAppDashboard(slug) {
       setRulesPanelVisibility();
       if (pointsPerEuroEl != null) pointsPerEuroEl.value = data.points_per_euro ?? data.pointsPerEuro ?? 1;
       if (pointsPerVisitEl != null) pointsPerVisitEl.value = data.points_per_visit ?? data.pointsPerVisit ?? 0;
+      const loyaltyMode = String(data.loyalty_mode ?? data.loyaltyMode ?? "points_cash").toLowerCase();
+      if (loyaltyMode === "points_game_tickets" && loyaltyModeGameEl) loyaltyModeGameEl.checked = true;
+      else if (loyaltyModeCashEl) loyaltyModeCashEl.checked = true;
+      if (pointsPerTicketEl) pointsPerTicketEl.value = data.points_per_ticket ?? data.pointsPerTicket ?? 10;
       if (pointsMinAmountEl != null) pointsMinAmountEl.value = data.points_min_amount_eur ?? data.pointsMinAmountEur ?? "";
       const tiers = data.points_reward_tiers ?? data.pointsRewardTiers;
       if (pointsRewardTiersEl && Array.isArray(tiers) && tiers.length) {
@@ -2323,6 +2340,35 @@ function initAppDashboard(slug) {
           .catch(() => {});
       }
       updatePersonnaliserPreview();
+      api("/dashboard/games")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((gamesData) => {
+          const roulette = Array.isArray(gamesData?.games)
+            ? gamesData.games.find((g) => g.game_code === "roulette")
+            : null;
+          if (!roulette) return;
+          if (gameTicketCostEl) gameTicketCostEl.value = roulette.ticket_cost ?? 1;
+          if (gameDailyLimitEl) gameDailyLimitEl.value = roulette.daily_spin_limit ?? 20;
+          if (gameCooldownEl) gameCooldownEl.value = roulette.cooldown_seconds ?? 10;
+        })
+        .catch(() => {});
+      api("/dashboard/games/roulette/rewards")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((rewardsData) => {
+          if (!gameRewardsJsonEl) return;
+          const rewards = Array.isArray(rewardsData?.rewards)
+            ? rewardsData.rewards.map((r) => ({
+              code: r.code,
+              label: r.label,
+              kind: r.kind,
+              weight: r.weight,
+              value: r.value || null,
+              active: r.active,
+            }))
+            : [];
+          if (rewards.length) gameRewardsJsonEl.value = JSON.stringify(rewards, null, 2);
+        })
+        .catch(() => {});
       api("/logo?v=" + Date.now())
         .then((r) => (r.ok ? r.blob() : null))
         .then((blob) => {
@@ -2423,6 +2469,44 @@ function initAppDashboard(slug) {
       try { const res = await api(`/dashboard/engagement-completions/${encodeURIComponent(id)}/approve`, { method: "PATCH" }); if (res.ok) loadEngagementPending(); } catch (_) {}
     } else if (e.target.classList.contains("app-engagement-reject")) {
       try { const res = await api(`/dashboard/engagement-completions/${encodeURIComponent(id)}/reject`, { method: "PATCH" }); if (res.ok) loadEngagementPending(); } catch (_) {}
+    }
+  });
+  document.getElementById("app-game-save")?.addEventListener("click", async () => {
+    const feedback = document.getElementById("app-game-save-feedback");
+    const gameCode = "roulette";
+    const payload = {
+      ticket_cost: parseInt(gameTicketCostEl?.value, 10) || 1,
+      daily_spin_limit: parseInt(gameDailyLimitEl?.value, 10) || 20,
+      cooldown_seconds: parseInt(gameCooldownEl?.value, 10) || 10,
+      enabled: loyaltyModeGameEl?.checked === true,
+    };
+    try {
+      const gameRes = await api(`/dashboard/games/${encodeURIComponent(gameCode)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!gameRes.ok) throw new Error("Erreur configuration jeu");
+      if (gameRewardsJsonEl && gameRewardsJsonEl.value.trim()) {
+        const rewards = JSON.parse(gameRewardsJsonEl.value);
+        const rewardsRes = await api(`/dashboard/games/${encodeURIComponent(gameCode)}/rewards`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rewards }),
+        });
+        if (!rewardsRes.ok) throw new Error("Erreur sauvegarde récompenses");
+      }
+      if (feedback) {
+        feedback.textContent = "Configuration jeu enregistrée.";
+        feedback.classList.remove("hidden", "error");
+        feedback.classList.add("success");
+      }
+    } catch (err) {
+      if (feedback) {
+        feedback.textContent = err.message || "Impossible d'enregistrer la configuration jeu.";
+        feedback.classList.remove("hidden", "success");
+        feedback.classList.add("error");
+      }
     }
   });
   window.addEventListener("app-section-change", (e) => {
@@ -2677,11 +2761,16 @@ function initAppDashboard(slug) {
       };
       const isStamps = programTypeStamps && programTypeStamps.checked;
       body.programType = isStamps ? "stamps" : "points";
+      body.loyaltyMode = loyaltyModeGameEl?.checked ? "points_game_tickets" : "points_cash";
       const stripDisplayMode = stripDisplayText && stripDisplayText.checked ? "text" : "logo";
       body.stripDisplayMode = stripDisplayMode;
       if (stripDisplayMode === "text" && stripTextEl) body.stripText = stripTextEl.value.trim() || undefined;
       if (pointsPerEuroEl) body.pointsPerEuro = parseInt(pointsPerEuroEl.value, 10) || 1;
       if (pointsPerVisitEl) body.pointsPerVisit = parseInt(pointsPerVisitEl.value, 10) || 0;
+      if (pointsPerTicketEl) {
+        const ppt = parseInt(pointsPerTicketEl.value, 10);
+        if (!Number.isNaN(ppt) && ppt > 0) body.pointsPerTicket = ppt;
+      }
       if (pointsMinAmountEl && pointsMinAmountEl.value.trim() !== "") {
         const minVal = parseFloat(pointsMinAmountEl.value);
         if (!Number.isNaN(minVal) && minVal >= 0) body.pointsMinAmountEur = minVal;
@@ -6632,8 +6721,13 @@ function showSlugError(message) {
 }
 
 function initFidelityApp(slug) {
-  // Toujours afficher la page carte : le commerçant peut tester le parcours client ou partager le lien.
-  runFidelityApp(slug);
+  initClientFidelityPage({
+    slug,
+    apiBase: API_BASE,
+    rootEl: fidelityAppEl,
+  }).catch(() => {
+    showSlugError(`Entreprise « ${slug} » introuvable.`);
+  });
 }
 
 function runFidelityApp(slug) {
