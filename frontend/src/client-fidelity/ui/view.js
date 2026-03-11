@@ -67,25 +67,29 @@ export function renderClientPage(root, state) {
       </section>
 
       <section class="fidelity-v2-card fidelity-roulette-wrap ${showRoulette ? "" : "hidden"}" id="fidelity-v2-game">
-        <div class="fidelity-roulette-inner">
-          <div class="fidelity-roulette-logo">
-            <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 12))}</span>
+        <div class="fidelity-roulette-fullpage">
+          <div class="fidelity-roulette-header">
+            <div class="fidelity-roulette-logo">
+              <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>
+            </div>
+            <h2 class="fidelity-roulette-title">
+              <span class="fidelity-roulette-title-line">Participez à notre jeu et</span>
+              <span class="fidelity-roulette-title-line">tentez de gagner un cadeau</span>
+            </h2>
+            <div class="fidelity-roulette-btn-row">
+              <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" ${tickets < spinCost ? 'disabled' : ''}>
+                Jouer !
+              </button>
+            </div>
           </div>
-          <h2 class="fidelity-roulette-title">
-            <span class="fidelity-roulette-title-line">Participez à notre jeu et</span>
-            <span class="fidelity-roulette-title-line">tentez de gagner un cadeau</span>
-          </h2>
-          <div class="fidelity-roulette-top-row">
-            <div class="fidelity-roulette-wheel-wrap">
+          <div class="fidelity-roulette-wheel-zone">
+            <div class="fidelity-roulette-wheel-outer">
               <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel">
                 <!-- Segments injectés par JS -->
               </div>
-              <div class="fidelity-roulette-wheel-shadow"></div>
+              <div class="fidelity-roulette-wheel-rim"></div>
             </div>
             <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
-            <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" ${tickets < spinCost ? 'disabled' : ''}>
-              Jouer !
-            </button>
           </div>
           <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
           <div class="fidelity-roulette-convert">
