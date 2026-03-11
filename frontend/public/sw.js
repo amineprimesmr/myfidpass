@@ -10,8 +10,8 @@ self.addEventListener("push", (event) => {
     }
     const options = {
       body: data.body || "Nouvelle notification",
-      icon: data.icon || "/assets/logo.png",
-      badge: data.icon || "/assets/logo.png",
+      icon: data.icon || "/assets/logo.png?v=20260311",
+      badge: data.icon || "/assets/logo.png?v=20260311",
       tag: "fidpass-" + Date.now(),
       renotify: true,
     };
