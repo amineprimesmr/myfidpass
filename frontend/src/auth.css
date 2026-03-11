@@ -335,6 +335,27 @@
     inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.auth-mini-switch-wrap {
+  margin: 0.55rem 0 0;
+  text-align: center;
+}
+
+.auth-mini-switch-btn {
+  border: none;
+  background: transparent;
+  color: var(--auth-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+  padding: 0.2rem 0.4rem;
+}
+
+.auth-mini-switch-btn:hover {
+  color: var(--auth-text);
+}
+
 /* —— Séparateur : ligne pointillée + texte centré —— */
 .auth-social-divider {
   display: flex;

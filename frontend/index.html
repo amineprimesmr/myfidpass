@@ -138,9 +138,12 @@
             <p class="auth-forgot-wrap"><a href="#" id="auth-forgot-password" class="auth-forgot-link">Mot de passe oublié ?</a></p>
             <p id="auth-login-error" class="auth-error hidden"></p>
             <button type="submit" class="auth-btn-primary">Se connecter</button>
+            <p class="auth-mini-switch-wrap">
+              <button type="button" id="auth-show-register" class="auth-mini-switch-btn">Créer un compte</button>
+            </p>
           </form>
         </div>
-        <div id="auth-form-register" class="auth-form-block">
+        <div id="auth-form-register" class="auth-form-block hidden">
           <h1 class="auth-title">Créer un compte</h1>
           <p class="auth-subtitle">Rejoignez Myfidpass et créez vos cartes en quelques minutes. Gratuit.</p>
           <form id="auth-register-form" class="auth-form">
@@ -156,6 +159,9 @@
             </div>
             <p id="auth-register-error" class="auth-error hidden"></p>
             <button type="submit" class="auth-btn-primary">Créer mon compte</button>
+            <p class="auth-mini-switch-wrap">
+              <button type="button" id="auth-show-login" class="auth-mini-switch-btn">Déjà un compte ? Connexion</button>
+            </p>
           </form>
         </div>
         <p class="auth-social-divider"><span>Ou continuer avec</span></p>
@@ -481,21 +487,34 @@
         </div>
         <div id="app-dashboard-content" class="app-content hidden">
           <section id="dashboard" class="app-section app-section-overview">
-            <div class="app-dashboard-header">
-              <div>
-                <h1 class="app-section-title">Dashboard</h1>
-                <p class="app-section-desc">Valeur générée par la fidélité et indicateurs clés.</p>
+            <div class="app-dashboard-shell">
+              <div class="app-dashboard-header">
+                <div>
+                  <h1 class="app-section-title">Dashboard</h1>
+                  <p class="app-section-desc">Vue claire et actionnable de la fidélité, sans surcharge visuelle.</p>
+                </div>
+                <div class="app-dashboard-controls">
+                  <div class="app-dashboard-period">
+                  <label for="app-dashboard-period-select" class="app-dashboard-period-label">Période d'analyse</label>
+                  <select id="app-dashboard-period-select" class="app-dashboard-period-select" aria-label="Choisir la période des indicateurs">
+                    <option value="7d">7 derniers jours</option>
+                    <option value="30d">30 derniers jours</option>
+                    <option value="this_month" selected>Ce mois-ci</option>
+                    <option value="6m">6 derniers mois</option>
+                  </select>
+                  <div class="app-dashboard-period-pills" role="tablist" aria-label="Sélection rapide de période">
+                    <button type="button" class="app-dashboard-period-pill" data-period="7d">7j</button>
+                    <button type="button" class="app-dashboard-period-pill" data-period="30d">30j</button>
+                    <button type="button" class="app-dashboard-period-pill active" data-period="this_month">Mois</button>
+                    <button type="button" class="app-dashboard-period-pill" data-period="6m">6m</button>
+                  </div>
+                </div>
+                  <div class="app-dashboard-testing">
+                    <button type="button" id="app-dashboard-simulate" class="app-dashboard-simulate-btn">Charger données simulées</button>
+                    <p id="app-dashboard-simulate-state" class="app-dashboard-simulate-state hidden">Mode test actif</p>
+                  </div>
+                </div>
               </div>
-              <div class="app-dashboard-period">
-                <label for="app-dashboard-period-select" class="app-dashboard-period-label">Période</label>
-                <select id="app-dashboard-period-select" class="app-dashboard-period-select" aria-label="Choisir la période des indicateurs">
-                  <option value="7d">7 derniers jours</option>
-                  <option value="30d">30 derniers jours</option>
-                  <option value="this_month" selected>Ce mois-ci</option>
-                  <option value="6m">6 derniers mois</option>
-                </select>
-              </div>
-            </div>
             <!-- Hero mobile : 2 cartes + message -->
             <div class="app-mobile-dashboard-hero app-mobile-only" id="app-mobile-dashboard-hero">
               <div class="app-mobile-dashboard-card" id="app-mobile-card-members">
@@ -516,58 +535,87 @@
               </div>
             </div>
             <div id="app-overview-alerts" class="app-overview-alerts hidden"></div>
-            <!-- KPIs valeur & activité -->
             <div class="app-dashboard-hero">
-              <div class="app-dashboard-hero-card app-dashboard-hero-revenue">
+              <article class="app-dashboard-hero-card app-dashboard-hero-revenue">
+                <p class="app-dashboard-card-kicker">Valeur générée</p>
                 <span class="app-dashboard-hero-value" id="app-stat-revenue">0 €</span>
-                <span class="app-dashboard-hero-label">CA estimé (période)</span>
-              </div>
-              <div class="app-dashboard-hero-card app-dashboard-hero-members">
-                <span class="app-dashboard-hero-value" id="app-stat-members">0</span>
-                <span class="app-dashboard-hero-label">Membres inscrits</span>
-              </div>
-              <div class="app-dashboard-hero-card app-dashboard-hero-ops">
-                <span class="app-dashboard-hero-value" id="app-stat-transactions">0</span>
-                <span class="app-dashboard-hero-label">Opérations (période)</span>
-              </div>
+                <span class="app-dashboard-hero-label">CA estimé sur <span id="app-dashboard-period-label">ce mois</span></span>
+              </article>
+              <article class="app-dashboard-hero-card">
+                <p class="app-dashboard-card-kicker">Clients actifs</p>
+                <span class="app-dashboard-hero-value" id="app-stat-active-members">0</span>
+                <span class="app-dashboard-hero-label">sur <span id="app-stat-members">0</span> membres</span>
+              </article>
+              <article class="app-dashboard-hero-card app-dashboard-hero-ops">
+                <p class="app-dashboard-card-kicker">Fréquence de retour</p>
+                <span class="app-dashboard-hero-value" id="app-stat-frequency">0,00</span>
+                <span class="app-dashboard-hero-label">visites / client actif</span>
+              </article>
+              <article class="app-dashboard-hero-card">
+                <p class="app-dashboard-card-kicker">Clients à relancer</p>
+                <span class="app-dashboard-hero-value" id="app-stat-inactive30-main">0</span>
+                <span class="app-dashboard-hero-label">inactifs depuis 30 jours</span>
+              </article>
             </div>
-            <!-- Indicateurs secondaires : rétention, récurrence, points -->
-            <div class="app-dashboard-indicators">
-              <div class="app-dashboard-indicator">
-                <span class="app-dashboard-indicator-value" id="app-stat-retention">0 %</span>
-                <span class="app-dashboard-indicator-label">Taux de rétention (période)</span>
+
+            <section class="app-dashboard-explorer">
+              <div class="app-dashboard-actions">
+                <h3 class="app-evolution-title">Actions du jour</h3>
+                <div class="app-dashboard-actions-grid">
+                  <a href="#membres" data-section="membres" class="app-dashboard-action-card">
+                    <span class="app-dashboard-action-title">Relancer les inactifs</span>
+                    <strong id="app-action-inactive-count">0 clients</strong>
+                  </a>
+                  <a href="#membres" data-section="membres" class="app-dashboard-action-card">
+                    <span class="app-dashboard-action-title">Soigner les nouveaux</span>
+                    <strong id="app-action-new-count">0 nouveaux</strong>
+                  </a>
+                  <a href="#notifications" data-section="notifications" class="app-dashboard-action-card">
+                    <span class="app-dashboard-action-title">Campagne fidélité</span>
+                    <strong id="app-action-recurrent-count">0 récurrents</strong>
+                  </a>
+                </div>
               </div>
-              <div class="app-dashboard-indicator">
-                <span class="app-dashboard-indicator-value" id="app-stat-recurrent">0</span>
-                <span class="app-dashboard-indicator-label">Clients récurrents (période)</span>
+              <div class="app-dashboard-explorer-header">
+                <h3 class="app-evolution-title">Explorer les données</h3>
+                <div class="app-dashboard-explorer-tabs" role="tablist" aria-label="Segments de données">
+                  <button type="button" class="app-dashboard-explorer-tab active" data-dashboard-segment="revenus">Revenus</button>
+                  <button type="button" class="app-dashboard-explorer-tab" data-dashboard-segment="clients">Clients</button>
+                  <button type="button" class="app-dashboard-explorer-tab" data-dashboard-segment="fidelite">Fidélité</button>
+                </div>
               </div>
-              <div class="app-dashboard-indicator">
-                <span class="app-dashboard-indicator-value" id="app-stat-points">0</span>
-                <span class="app-dashboard-indicator-label">Points distribués (période)</span>
+
+              <div class="app-dashboard-explorer-panel active" data-dashboard-segment-panel="revenus">
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-avg-ticket">0 €</span><span class="app-dashboard-indicator-label">Panier moyen fidélité</span></article>
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-revenue-per-active">0 €</span><span class="app-dashboard-indicator-label">CA par client actif</span></article>
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-transactions">0</span><span class="app-dashboard-indicator-label">Opérations enregistrées</span></article>
               </div>
-              <div class="app-dashboard-indicator">
-                <span class="app-dashboard-indicator-value" id="app-stat-new30">0</span>
-                <span class="app-dashboard-indicator-label">Nouveaux (30 j)</span>
+
+              <div class="app-dashboard-explorer-panel" data-dashboard-segment-panel="clients">
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-members-segment">0</span><span class="app-dashboard-indicator-label">Total membres</span></article>
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-new30">0</span><span class="app-dashboard-indicator-label">Nouveaux (30 j)</span></article>
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-inactive30">0</span><span class="app-dashboard-indicator-label">Inactifs (30 j)</span></article>
               </div>
-              <div class="app-dashboard-indicator">
-                <span class="app-dashboard-indicator-value" id="app-stat-inactive30">0</span>
-                <span class="app-dashboard-indicator-label">Inactifs 30 j</span>
+
+              <div class="app-dashboard-explorer-panel" data-dashboard-segment-panel="fidelite">
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-recurrent">0</span><span class="app-dashboard-indicator-label">Clients récurrents</span></article>
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-avg-points">0</span><span class="app-dashboard-indicator-label">Solde moyen de points</span></article>
+                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-retention-echo">0 %</span><span class="app-dashboard-indicator-label">Rétention</span></article>
               </div>
-              <div class="app-dashboard-indicator">
-                <span class="app-dashboard-indicator-value" id="app-stat-avg-points">0</span>
-                <span class="app-dashboard-indicator-label">Points moy. / membre</span>
-              </div>
-            </div>
-            <!-- Graphique d'activité -->
-            <div class="app-evolution-wrap">
-              <h3 class="app-evolution-title" id="app-evolution-title">Activité — opérations par semaine</h3>
-              <div id="app-evolution-chart" class="app-evolution-chart" role="img" aria-label="Graphique des opérations par semaine"></div>
+            </section>
+
+            <div class="app-dashboard-analytics-grid">
+              <article class="app-dashboard-panel app-evolution-wrap">
+                <h3 class="app-evolution-title" id="app-evolution-title">Activité — opérations par semaine</h3>
+                <div id="app-evolution-chart" class="app-evolution-chart" role="img" aria-label="Graphique des opérations par semaine"></div>
+              </article>
             </div>
             <!-- Actions rapides -->
             <div class="app-overview-shortcuts">
               <a href="#caisse" class="app-shortcut-btn" data-section="caisse"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span> Ouvrir la caisse</a>
               <button type="button" id="app-overview-copy-link" class="app-shortcut-btn"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span> Copier le lien partage</button>
               <a href="#membres" class="app-shortcut-btn app-shortcut-inactifs" data-section="membres"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Voir les inactifs 30 j</a>
+            </div>
             </div>
           </section>
 

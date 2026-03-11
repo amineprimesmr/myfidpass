@@ -53,10 +53,12 @@ const DEV_BYPASS_PAYMENT_KEY = "fidpass_dev_paid";
 
 function isDevBypassPayment() {
   try {
-    return localStorage.getItem(DEV_BYPASS_PAYMENT_KEY) === "1";
+    if (localStorage.getItem(DEV_BYPASS_PAYMENT_KEY) === "1") return true;
   } catch (_) {
-    return false;
+    // ignore
   }
+  // En local, on active le bypass par défaut pour éviter de bloquer les tests.
+  return typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
 }
 
 function setDevBypassPayment(on) {
@@ -104,7 +106,7 @@ function getRoute() {
   if (path === "/dashboard") return { type: "dashboard" };
   if (path === "/app") return { type: "app" };
   if (path === "/login") return { type: "auth", tab: "login" };
-  if (path === "/register") return { type: "auth", tab: "register" };
+  if (path === "/register") return { type: "auth", tab: "login" };
   if (path === "/creer-ma-carte") return { type: "templates" };
   if (path === "/choisir-offre") return { type: "offers" };
   if (path === "/checkout") return { type: "checkout" };
@@ -396,8 +398,9 @@ function initAuthPage(initialTab) {
     if (window.location.pathname !== path) history.replaceState(null, "", path);
   }
 
-  showAuthForm("register");
-  const initialForm = formRegister;
+  const defaultMode = initialTab === "register" ? "register" : "login";
+  showAuthForm(defaultMode);
+  const initialForm = defaultMode === "register" ? formRegister : formLogin;
   if (initialForm) {
     initialForm.classList.add("auth-form-enter");
     window.setTimeout(() => initialForm.classList.remove("auth-form-enter"), 450);
@@ -443,6 +446,13 @@ function initAuthPage(initialTab) {
 
   document.getElementById("auth-forgot-back")?.addEventListener("click", (e) => {
     e.preventDefault();
+    showAuthForm("login");
+  });
+
+  document.getElementById("auth-show-register")?.addEventListener("click", () => {
+    showAuthForm("register");
+  });
+  document.getElementById("auth-show-login")?.addEventListener("click", () => {
     showAuthForm("login");
   });
 
@@ -960,8 +970,12 @@ function initAppPage() {
         if (res.status === 403 && (data.code === "subscription_required")) {
           if (isDevBypassPayment()) {
             if (emptyCreateError) {
-              emptyCreateError.innerHTML =
-                "Mode dev actif ici. Pour autoriser la création sans paiement : <strong>Railway</strong> → ton projet → service backend → <strong>Variables</strong> → <strong>+ New Variable</strong> → Nom = <code>DEV_BYPASS_PAYMENT</code>, Valeur = <code>true</code> → enregistre puis <strong>Redeploy</strong> le service. Voir docs/ETAPES-DEPLOIEMENT.md (mode dev).";
+              const isLocalhost =
+                typeof window !== "undefined" &&
+                (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+              emptyCreateError.innerHTML = isLocalhost
+                ? "Mode dev actif ici. En <strong>localhost</strong>, ajoute <code>DEV_BYPASS_PAYMENT=true</code> dans <code>backend/.env</code>, puis redémarre le backend (<code>npm run backend</code>)."
+                : "Mode dev actif ici. Pour autoriser la création sans paiement : <strong>Railway</strong> → ton projet → service backend → <strong>Variables</strong> → <strong>+ New Variable</strong> → Nom = <code>DEV_BYPASS_PAYMENT</code>, Valeur = <code>true</code> → enregistre puis <strong>Redeploy</strong> le service. Voir docs/ETAPES-DEPLOIEMENT.md (mode dev).";
               emptyCreateError.classList.remove("hidden");
             }
             return;
@@ -1139,8 +1153,31 @@ function initAppDashboard(slug) {
   const statRevenue = document.getElementById("app-stat-revenue");
   const statRetention = document.getElementById("app-stat-retention");
   const statRecurrent = document.getElementById("app-stat-recurrent");
+  const statActiveMembers = document.getElementById("app-stat-active-members");
+  const statMembersSegment = document.getElementById("app-stat-members-segment");
+  const statFrequency = document.getElementById("app-stat-frequency");
+  const statInactive30Main = document.getElementById("app-stat-inactive30-main");
+  const statAvgTicket = document.getElementById("app-stat-avg-ticket");
+  const statRevenuePerActive = document.getElementById("app-stat-revenue-per-active");
+  const actionInactiveCount = document.getElementById("app-action-inactive-count");
+  const actionNewCount = document.getElementById("app-action-new-count");
+  const actionRecurrentCount = document.getElementById("app-action-recurrent-count");
+  const dashboardPeriodLabelEl = document.getElementById("app-dashboard-period-label");
+  const insightSummaryEl = document.getElementById("app-insight-summary");
+  const insightFocusEl = document.getElementById("app-insight-focus");
+  const insightActionEl = document.getElementById("app-insight-action");
+  const insightConfidenceEl = document.getElementById("app-insight-confidence");
+  const dashboardSimulateBtn = document.getElementById("app-dashboard-simulate");
+  const dashboardSimulateState = document.getElementById("app-dashboard-simulate-state");
+  const dashboardToggleDetailsBtn = document.getElementById("app-dashboard-toggle-details");
+  const dashboardDetailsEl = document.getElementById("app-dashboard-details");
+  const dashboardSegmentTabs = Array.from(document.querySelectorAll(".app-dashboard-explorer-tab"));
+  const dashboardSegmentPanels = Array.from(document.querySelectorAll(".app-dashboard-explorer-panel"));
+  const statRetentionEcho = document.getElementById("app-stat-retention-echo");
   const dashboardPeriodSelect = document.getElementById("app-dashboard-period-select");
+  const dashboardPeriodPills = Array.from(document.querySelectorAll(".app-dashboard-period-pill"));
   const evolutionTitleEl = document.getElementById("app-evolution-title");
+  let dashboardUseSimulatedData = false;
   const memberSearchInput = document.getElementById("app-member-search");
   const memberListEl = document.getElementById("app-member-list");
   const amountInput = document.getElementById("app-amount");
@@ -3444,37 +3481,154 @@ function initAppDashboard(slug) {
     return (dashboardPeriodSelect && dashboardPeriodSelect.value) || "this_month";
   }
 
+  const dashboardPeriodLabels = {
+    "7d": "7 derniers jours",
+    "30d": "30 derniers jours",
+    this_month: "ce mois",
+    "6m": "6 derniers mois",
+  };
+
+  function formatEuro(value) {
+    return `${Number(value || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  }
+
+  function syncDashboardPeriodUI(period) {
+    if (dashboardPeriodSelect && dashboardPeriodSelect.value !== period) {
+      dashboardPeriodSelect.value = period;
+    }
+    dashboardPeriodPills.forEach((pill) => {
+      pill.classList.toggle("active", pill.dataset.period === period);
+    });
+    if (dashboardPeriodLabelEl) dashboardPeriodLabelEl.textContent = dashboardPeriodLabels[period] || "la période sélectionnée";
+  }
+
+  function setSimulatedMode(active) {
+    dashboardUseSimulatedData = !!active;
+    if (dashboardSimulateBtn) {
+      dashboardSimulateBtn.textContent = dashboardUseSimulatedData ? "Revenir aux données réelles" : "Charger données simulées";
+    }
+    if (dashboardSimulateState) {
+      dashboardSimulateState.classList.toggle("hidden", !dashboardUseSimulatedData);
+      dashboardSimulateState.textContent = dashboardUseSimulatedData ? "Mode test actif" : "";
+    }
+  }
+
+  function getSimulatedStats(period) {
+    const map = {
+      "7d": { rev: 1280, tx: 64, members: 182, retention: 44, recurrent: 29, active: 80, points: 920, new30: 21, inactive30: 34, avgPoints: 17 },
+      "30d": { rev: 5380, tx: 302, members: 182, retention: 57, recurrent: 88, active: 104, points: 2860, new30: 49, inactive30: 30, avgPoints: 24 },
+      this_month: { rev: 4620, tx: 246, members: 182, retention: 53, recurrent: 77, active: 96, points: 2390, new30: 42, inactive30: 33, avgPoints: 22 },
+      "6m": { rev: 28490, tx: 1408, members: 182, retention: 69, recurrent: 132, active: 126, points: 12480, new30: 42, inactive30: 33, avgPoints: 22 },
+    };
+    const base = map[period] || map.this_month;
+    return {
+      membersCount: base.members,
+      pointsThisMonth: base.points,
+      transactionsThisMonth: base.tx,
+      newMembersLast30Days: base.new30,
+      newMembersLast7Days: Math.max(0, Math.floor(base.new30 / 4)),
+      inactiveMembers30Days: base.inactive30,
+      pointsAveragePerMember: base.avgPoints,
+      estimatedRevenueEur: base.rev,
+      retentionPct: base.retention,
+      recurrentMembersInPeriod: base.recurrent,
+      activeMembersInPeriod: base.active,
+    };
+  }
+
+  function getSimulatedEvolution(period) {
+    const byPeriod = {
+      "7d": [14],
+      "30d": [42, 57, 74, 69],
+      this_month: [39, 61, 70, 76],
+      "6m": [28, 37, 44, 52, 49, 58, 63, 69, 64, 72, 79, 81, 75, 84, 92, 88, 95, 101, 97, 109, 116, 110, 122, 126, 119, 132],
+    };
+    const values = byPeriod[period] || byPeriod.this_month;
+    return values.map((v, idx) => ({ weekIndex: idx, operationsCount: v }));
+  }
+
+  function renderDashboardInsights(data) {
+    if (!insightSummaryEl || !insightFocusEl || !insightActionEl || !insightConfidenceEl) return;
+    const retention = Number(data.retentionPct || 0);
+    const inactive = Number(data.inactiveMembers30Days || 0);
+    const recurrent = Number(data.recurrentMembersInPeriod || 0);
+    const tx = Number(data.transactionsThisMonth || 0);
+    const revenue = Number(data.estimatedRevenueEur || 0);
+    const periodText = dashboardPeriodLabels[getDashboardPeriod()] || "la période";
+
+    if (retention >= 55) {
+      insightSummaryEl.textContent = `Très bonne dynamique sur ${periodText}: tes clients reviennent régulièrement et la base est active.`;
+      insightFocusEl.textContent = "Capitaliser sur les habitués";
+      insightActionEl.textContent = "Lancer une offre VIP aux récurrents";
+    } else if (retention >= 30) {
+      insightSummaryEl.textContent = `Activité correcte sur ${periodText}, mais il reste du potentiel pour transformer plus de membres en habitués.`;
+      insightFocusEl.textContent = "Augmenter la fréquence d'achat";
+      insightActionEl.textContent = "Relancer inactifs + bonus 2e visite";
+    } else {
+      insightSummaryEl.textContent = `La rétention est faible sur ${periodText}: une partie des membres ne revient pas encore assez souvent.`;
+      insightFocusEl.textContent = "Réactiver les clients dormants";
+      insightActionEl.textContent = "Campagne ciblée inactifs 30 jours";
+    }
+
+    let confidence = "Moyenne";
+    if (revenue > 0 && tx > 0) confidence = "Élevée";
+    if (revenue <= 0 && tx > 0) confidence = "Faible";
+    if (inactive > 20 && recurrent < 5) confidence = "À surveiller";
+    insightConfidenceEl.textContent = confidence;
+  }
+
   async function loadStats() {
     const period = getDashboardPeriod();
-    const res = await api(`/dashboard/stats?period=${encodeURIComponent(period)}`);
-    if (res.status === 401) throw new Error("Unauthorized");
-    if (!res.ok) return null;
-    const raw = await res.json();
-    const data = {
-      membersCount: raw.members_count ?? raw.membersCount ?? 0,
-      pointsThisMonth: raw.points_this_month ?? raw.pointsThisMonth ?? 0,
-      transactionsThisMonth: raw.transactions_this_month ?? raw.transactionsThisMonth ?? 0,
-      newMembersLast30Days: raw.new_members_last_30_days ?? raw.newMembersLast30Days ?? 0,
-      newMembersLast7Days: raw.new_members_last_7_days ?? raw.newMembersLast7Days ?? 0,
-      inactiveMembers30Days: raw.inactive_members_30_days ?? raw.inactiveMembers30Days ?? 0,
-      pointsAveragePerMember: raw.points_average_per_member ?? raw.pointsAveragePerMember ?? 0,
-      estimatedRevenueEur: raw.estimated_revenue_eur ?? raw.estimatedRevenueEur ?? 0,
-      retentionPct: raw.retention_pct ?? raw.retentionPct ?? 0,
-      recurrentMembersInPeriod: raw.recurrent_members_in_period ?? raw.recurrentMembersInPeriod ?? 0,
-    };
+    let data;
+    if (dashboardUseSimulatedData) {
+      data = getSimulatedStats(period);
+    } else {
+      const res = await api(`/dashboard/stats?period=${encodeURIComponent(period)}`);
+      if (res.status === 401) throw new Error("Unauthorized");
+      if (!res.ok) return null;
+      const raw = await res.json();
+      data = {
+        membersCount: raw.members_count ?? raw.membersCount ?? 0,
+        pointsThisMonth: raw.points_this_month ?? raw.pointsThisMonth ?? 0,
+        transactionsThisMonth: raw.transactions_this_month ?? raw.transactionsThisMonth ?? 0,
+        newMembersLast30Days: raw.new_members_last_30_days ?? raw.newMembersLast30Days ?? 0,
+        newMembersLast7Days: raw.new_members_last_7_days ?? raw.newMembersLast7Days ?? 0,
+        inactiveMembers30Days: raw.inactive_members_30_days ?? raw.inactiveMembers30Days ?? 0,
+        pointsAveragePerMember: raw.points_average_per_member ?? raw.pointsAveragePerMember ?? 0,
+        estimatedRevenueEur: raw.estimated_revenue_eur ?? raw.estimatedRevenueEur ?? 0,
+        retentionPct: raw.retention_pct ?? raw.retentionPct ?? 0,
+        recurrentMembersInPeriod: raw.recurrent_members_in_period ?? raw.recurrentMembersInPeriod ?? 0,
+        activeMembersInPeriod: raw.active_members_in_period ?? raw.activeMembersInPeriod ?? 0,
+      };
+    }
+    const avgTicket = data.transactionsThisMonth > 0 ? data.estimatedRevenueEur / data.transactionsThisMonth : 0;
+    const revenuePerActive = data.activeMembersInPeriod > 0 ? data.estimatedRevenueEur / data.activeMembersInPeriod : 0;
+    const frequency = data.activeMembersInPeriod > 0 ? data.transactionsThisMonth / data.activeMembersInPeriod : 0;
     if (statMembers) statMembers.textContent = data.membersCount;
+    if (statMembersSegment) statMembersSegment.textContent = data.membersCount;
     if (statPoints) statPoints.textContent = data.pointsThisMonth;
     if (statTransactions) statTransactions.textContent = data.transactionsThisMonth;
     if (statNew30) statNew30.textContent = data.newMembersLast30Days;
     if (statInactive30) statInactive30.textContent = data.inactiveMembers30Days;
+    if (statInactive30Main) statInactive30Main.textContent = data.inactiveMembers30Days;
     if (statAvgPoints) statAvgPoints.textContent = data.pointsAveragePerMember;
-    if (statRevenue) statRevenue.textContent = `${Number(data.estimatedRevenueEur).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+    if (statRevenue) statRevenue.textContent = formatEuro(data.estimatedRevenueEur);
     if (statRetention) statRetention.textContent = `${data.retentionPct} %`;
+    if (statRetentionEcho) statRetentionEcho.textContent = `${data.retentionPct} %`;
     if (statRecurrent) statRecurrent.textContent = data.recurrentMembersInPeriod;
+    if (statActiveMembers) statActiveMembers.textContent = data.activeMembersInPeriod;
+    if (statFrequency) statFrequency.textContent = frequency.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (statAvgTicket) statAvgTicket.textContent = formatEuro(avgTicket);
+    if (statRevenuePerActive) statRevenuePerActive.textContent = formatEuro(revenuePerActive);
+    if (actionInactiveCount) actionInactiveCount.textContent = `${data.inactiveMembers30Days} clients`;
+    if (actionNewCount) actionNewCount.textContent = `${data.newMembersLast30Days} nouveaux`;
+    if (actionRecurrentCount) actionRecurrentCount.textContent = `${data.recurrentMembersInPeriod} récurrents`;
     const mobileStatMembers = document.getElementById("app-mobile-stat-members");
     const mobileStatScans = document.getElementById("app-mobile-stat-scans");
     if (mobileStatMembers) mobileStatMembers.textContent = data.membersCount;
     if (mobileStatScans) mobileStatScans.textContent = data.transactionsThisMonth;
+    syncDashboardPeriodUI(period);
+    renderDashboardInsights(data);
     return data;
   }
 
@@ -3482,11 +3636,16 @@ function initAppDashboard(slug) {
     const period = getDashboardPeriod();
     const weeksMap = { "7d": 1, "30d": 4, this_month: 4, "6m": 26 };
     const weeks = weeksMap[period] ?? 6;
-    const res = await api(`/dashboard/evolution?period=${encodeURIComponent(period)}&weeks=${weeks}`);
-    if (!res.ok) return;
-    const data = await res.json();
     const chartEl = document.getElementById("app-evolution-chart");
-    const evolution = data.evolution || [];
+    let evolution = [];
+    if (dashboardUseSimulatedData) {
+      evolution = getSimulatedEvolution(period);
+    } else {
+      const res = await api(`/dashboard/evolution?period=${encodeURIComponent(period)}&weeks=${weeks}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      evolution = data.evolution || [];
+    }
     if (evolutionTitleEl) {
       const periodLabels = { "7d": "7 j", "30d": "4 sem.", this_month: "mois", "6m": "6 mois" };
       evolutionTitleEl.textContent = `Activité — opérations par semaine (${periodLabels[period] ?? evolution.length + " sem."})`;
@@ -3495,24 +3654,57 @@ function initAppDashboard(slug) {
       if (chartEl) chartEl.innerHTML = "<p class=\"app-evolution-empty\">Aucune donnée pour le moment.</p>";
       return;
     }
-    const maxOp = Math.max(1, ...evolution.map((w) => w.operationsCount ?? w.operations_count ?? 0));
-    const weekLabels = [];
-    for (let i = evolution.length - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - (i + 1) * 7);
-      weekLabels.push(`S. ${d.getDate()}/${d.getMonth() + 1}`);
-    }
-    chartEl.innerHTML = evolution.map((w, i) => {
-      const op = w.operationsCount ?? w.operations_count ?? 0;
-      const pct = maxOp > 0 ? (op / maxOp) * 100 : 0;
-      const label = weekLabels[i] || `Sem. ${i + 1}`;
-      return `<div class="app-evolution-bar-wrap" title="${label}: ${op} opération(s)">
-        <div class="app-evolution-bar-outer">
-          <div class="app-evolution-bar" style="height: ${pct}%" aria-hidden="true"></div>
-        </div>
-        <span class="app-evolution-bar-label">${label}</span>
-      </div>`;
+    const points = evolution.map((w) => Number(w.operationsCount ?? w.operations_count ?? 0));
+    const maxOp = Math.max(1, ...points);
+    const minOp = Math.min(...points, 0);
+    const count = points.length;
+    const width = 900;
+    const height = 220;
+    const paddingX = 18;
+    const paddingY = 16;
+    const drawWidth = width - paddingX * 2;
+    const drawHeight = height - paddingY * 2;
+    const range = Math.max(1, maxOp - minOp);
+
+    const xy = points.map((v, i) => {
+      const x = paddingX + (count <= 1 ? drawWidth / 2 : (i / (count - 1)) * drawWidth);
+      const y = paddingY + (1 - (v - minOp) / range) * drawHeight;
+      return { x, y, v };
+    });
+
+    const linePath = xy.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
+    const areaPath = `${linePath} L ${(paddingX + drawWidth).toFixed(2)} ${(paddingY + drawHeight).toFixed(2)} L ${paddingX.toFixed(2)} ${(paddingY + drawHeight).toFixed(2)} Z`;
+
+    const gridLines = [0.25, 0.5, 0.75].map((k) => {
+      const y = paddingY + drawHeight * k;
+      return `<line class="app-evolution-grid-line" x1="${paddingX}" y1="${y.toFixed(2)}" x2="${(paddingX + drawWidth).toFixed(2)}" y2="${y.toFixed(2)}"></line>`;
     }).join("");
+
+    const step = Math.ceil(count / 6);
+    const labels = xy
+      .filter((_, i) => i === 0 || i === count - 1 || i % step === 0)
+      .map((_, i) => {
+        const idx = Math.min(i * step, count - 1);
+        const d = new Date();
+        d.setDate(d.getDate() - (count - 1 - idx) * 7);
+        return `S. ${d.getDate()}/${d.getMonth() + 1}`;
+      });
+
+    chartEl.innerHTML = `
+      <svg class="app-evolution-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Évolution des opérations en courbe">
+        <defs>
+          <linearGradient id="app-evolution-area-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#60a5fa" />
+            <stop offset="100%" stop-color="#bfdbfe" />
+          </linearGradient>
+        </defs>
+        ${gridLines}
+        <path class="app-evolution-area" d="${areaPath}"></path>
+        <path class="app-evolution-line" d="${linePath}"></path>
+        ${xy.map((p) => `<circle class="app-evolution-point" cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="3"></circle>`).join("")}
+      </svg>
+      <div class="app-evolution-labels">${labels.map((l) => `<span>${l}</span>`).join("")}</div>
+    `;
   }
 
   function renderOverviewAlerts(stats) {
@@ -3638,7 +3830,40 @@ function initAppDashboard(slug) {
   membersSortEl?.addEventListener("change", () => refresh());
   transactionsDaysEl?.addEventListener("change", () => refresh());
   transactionsTypeEl?.addEventListener("change", () => refresh());
-  dashboardPeriodSelect?.addEventListener("change", () => refresh());
+  dashboardPeriodSelect?.addEventListener("change", () => {
+    syncDashboardPeriodUI(getDashboardPeriod());
+    refresh();
+  });
+  dashboardSimulateBtn?.addEventListener("click", () => {
+    setSimulatedMode(!dashboardUseSimulatedData);
+    refresh();
+  });
+  dashboardToggleDetailsBtn?.addEventListener("click", () => {
+    if (!dashboardDetailsEl) return;
+    const willShow = dashboardDetailsEl.classList.contains("hidden");
+    dashboardDetailsEl.classList.toggle("hidden", !willShow);
+    if (dashboardToggleDetailsBtn) {
+      dashboardToggleDetailsBtn.textContent = willShow
+        ? "Masquer les indicateurs détaillés"
+        : "Afficher les indicateurs détaillés";
+    }
+  });
+  dashboardSegmentTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const segment = tab.dataset.dashboardSegment;
+      if (!segment) return;
+      dashboardSegmentTabs.forEach((t) => t.classList.toggle("active", t === tab));
+      dashboardSegmentPanels.forEach((p) => p.classList.toggle("active", p.dataset.dashboardSegmentPanel === segment));
+    });
+  });
+  dashboardPeriodPills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      const period = pill.dataset.period;
+      if (!period) return;
+      syncDashboardPeriodUI(period);
+      refresh();
+    });
+  });
 
   const membersExportBtn = document.getElementById("app-members-export");
   const transactionsExportBtn = document.getElementById("app-transactions-export");

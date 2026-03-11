@@ -6,6 +6,7 @@
     "backend": "node backend/src/index.js",
     "frontend": "npm run dev --prefix frontend",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "dev:local": "concurrently \"npm run backend\" \"npm run dev --prefix frontend -- --port 3004\"",
     "build": "npm run build:frontend",
     "build:frontend": "cd frontend && npm run build",
     "deploy": "sh scripts/deploy.sh"
