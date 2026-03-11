@@ -1546,7 +1546,7 @@ router.post("/:slug/games/:gameCode/spins", (req, res) => {
     const member = getMemberForBusiness(memberId, business.id);
     if (!member) return res.status(404).json({ error: "Membre introuvable" });
     const idempotencyKey = getIdempotencyKey(req);
-    const clientIpHash = buildIpHash(getClientIp(req));
+    const clientIpHash = buildIpHash(req);
     const deviceHash = buildDeviceHash(req.body?.client_fingerprint ?? req.body?.clientFingerprint ?? "");
     const result = spinGameForMember({
       businessId: business.id,
