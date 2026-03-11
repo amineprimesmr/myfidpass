@@ -1599,7 +1599,12 @@ router.post("/:slug/games/:gameCode/spins", (req, res) => {
     });
   } catch (err) {
     console.error("[spins] Erreur:", err);
-    return res.status(500).json({ error: "Erreur serveur. Réessaie dans un instant.", code: "SERVER_ERROR" });
+    const detail = err?.message || String(err);
+    return res.status(500).json({
+      error: "Erreur serveur. Réessaie dans un instant.",
+      code: "SERVER_ERROR",
+      detail: detail.slice(0, 200),
+    });
   }
 });
 

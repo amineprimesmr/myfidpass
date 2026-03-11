@@ -20,12 +20,12 @@ function shouldForceApiSubdomain(base) {
   }
 }
 
-// En dev (localhost), on utilise toujours le proxy Vite → backend local (port 3001)
-const API_BASE = IS_LOCALHOST
+// En dev (localhost) : par défaut proxy Vite → backend local (3001). Si VITE_API_URL est défini (ex. https://api.myfidpass.fr), on l’utilise pour tester l’API de prod.
+const API_BASE = IS_LOCALHOST && !RAW_ENV_API_BASE
   ? ""
   : shouldForceApiSubdomain(RAW_ENV_API_BASE)
     ? "https://api.myfidpass.fr"
-    : RAW_ENV_API_BASE;
+    : RAW_ENV_API_BASE || "";
 const AUTH_TOKEN_KEY = "fidpass_token";
 
 const landingEl = document.getElementById("landing");

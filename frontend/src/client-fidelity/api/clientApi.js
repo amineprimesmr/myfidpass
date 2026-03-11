@@ -62,7 +62,8 @@ export function createClientFidelityApi(apiBase) {
       const fallback = res.status >= 500 ? "Erreur serveur. Réessaie dans un instant." : "Spin impossible";
       const msg = data.error || fallback;
       const code = data.code ? ` (${data.code})` : "";
-      throw new Error(msg + code);
+      const detail = data.detail ? ` — ${data.detail}` : "";
+      throw new Error(msg + code + detail);
     }
     return data;
   }
