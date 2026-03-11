@@ -15,6 +15,7 @@ import devRouter from "./routes/dev.js";
 import placePhotoRouter from "./routes/place-photo.js";
 import placeCategoryRouter from "./routes/place-category.js";
 import findPlaceRouter from "./routes/find-place.js";
+import placeEnrichmentRouter from "./routes/place-enrichment.js";
 import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
 import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
@@ -117,6 +118,7 @@ app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);
 app.use("/api/place-category", placeCategoryRouter);
 app.use("/api/find-place", findPlaceRouter);
+app.use("/api/place-enrichment", placeEnrichmentRouter);
 app.use("/api/passes", passesRouter);
 app.use("/passes", passesRouter);
 

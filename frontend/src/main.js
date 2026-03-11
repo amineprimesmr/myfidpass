@@ -2112,6 +2112,107 @@ function initAppDashboard(slug) {
     }
   }
 
+  const engagementGooglePlaceIdEl = document.getElementById("app-engagement-google-place-id");
+  const engagementInstagramUrlEl = document.getElementById("app-engagement-instagram-url");
+  const engagementTiktokUrlEl = document.getElementById("app-engagement-tiktok-url");
+  const engagementFacebookUrlEl = document.getElementById("app-engagement-facebook-url");
+  const engagementAutoSuggestBtn = document.getElementById("app-engagement-auto-suggest");
+  const engagementAutoFeedbackEl = document.getElementById("app-engagement-auto-feedback");
+  const engagementAutoFields = [
+    engagementGooglePlaceIdEl,
+    engagementInstagramUrlEl,
+    engagementTiktokUrlEl,
+    engagementFacebookUrlEl,
+  ].filter(Boolean);
+  let isApplyingEngagementAuto = false;
+  let lastEngagementAutoRun = 0;
+
+  function setEngagementAutoFeedback(message, isError = false) {
+    if (!engagementAutoFeedbackEl) return;
+    if (!message) {
+      engagementAutoFeedbackEl.textContent = "";
+      engagementAutoFeedbackEl.classList.add("hidden");
+      engagementAutoFeedbackEl.classList.remove("error", "success");
+      return;
+    }
+    engagementAutoFeedbackEl.textContent = message;
+    engagementAutoFeedbackEl.classList.remove("hidden");
+    engagementAutoFeedbackEl.classList.toggle("error", !!isError);
+    engagementAutoFeedbackEl.classList.toggle("success", !isError);
+  }
+
+  function markEngagementFieldManual(el) {
+    if (!el) return;
+    const mark = () => {
+      if (isApplyingEngagementAuto) return;
+      el.dataset.manual = "1";
+      delete el.dataset.autofilled;
+    };
+    el.addEventListener("input", mark);
+    el.addEventListener("change", mark);
+  }
+
+  function canAutofillEngagementField(el) {
+    if (!el) return false;
+    if (el.dataset.manual === "1") return false;
+    const value = (el.value || "").trim();
+    if (!value) return true;
+    return el.dataset.autofilled === "1";
+  }
+
+  function applyEngagementAutofill(el, value) {
+    const next = (value || "").trim();
+    if (!next || !canAutofillEngagementField(el)) return false;
+    if ((el.value || "").trim() === next) return false;
+    isApplyingEngagementAuto = true;
+    el.value = next;
+    el.dataset.autofilled = "1";
+    isApplyingEngagementAuto = false;
+    return true;
+  }
+
+  async function runEngagementAutoSuggest({ settingsData = null, forceFeedback = false } = {}) {
+    const now = Date.now();
+    if (!forceFeedback && now - lastEngagementAutoRun < 12000) return;
+    const name = (
+      settingsData?.organization_name ??
+      settingsData?.organizationName ??
+      personnaliserOrg?.value ??
+      ""
+    ).trim();
+    const placeId = (engagementGooglePlaceIdEl?.value || "").trim();
+    if (!name && !placeId) {
+      if (forceFeedback) setEngagementAutoFeedback("Ajoutez d’abord un nom d’établissement dans Profil.");
+      return;
+    }
+    try {
+      const qs = new URLSearchParams();
+      if (placeId) qs.set("place_id", placeId);
+      if (name) qs.set("name", name);
+      const base = (API_BASE || "").replace(/\/$/, "");
+      const res = await fetch(`${base}/api/place-enrichment?${qs.toString()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error("suggestions_unavailable");
+      const data = await res.json().catch(() => ({}));
+      let appliedCount = 0;
+      if (applyEngagementAutofill(engagementGooglePlaceIdEl, data.place_id)) appliedCount += 1;
+      if (applyEngagementAutofill(engagementInstagramUrlEl, data.socials?.instagram_url)) appliedCount += 1;
+      if (applyEngagementAutofill(engagementTiktokUrlEl, data.socials?.tiktok_url)) appliedCount += 1;
+      if (applyEngagementAutofill(engagementFacebookUrlEl, data.socials?.facebook_url)) appliedCount += 1;
+      lastEngagementAutoRun = Date.now();
+      if (forceFeedback) {
+        if (appliedCount > 0) setEngagementAutoFeedback(`Suggestions appliquées (${appliedCount}).`);
+        else setEngagementAutoFeedback("Aucune nouvelle suggestion trouvée.");
+      }
+    } catch (_) {
+      if (forceFeedback) setEngagementAutoFeedback("Impossible de récupérer des suggestions pour le moment.", true);
+    }
+  }
+
+  engagementAutoFields.forEach(markEngagementFieldManual);
+  engagementAutoSuggestBtn?.addEventListener("click", () => {
+    runEngagementAutoSuggest({ forceFeedback: true });
+  });
+
   api("/dashboard/settings")
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
@@ -2188,6 +2289,7 @@ function initAppDashboard(slug) {
       if (fbEnable) fbEnable.checked = !!fb.enabled;
       if (fbPoints) fbPoints.value = fb.points ?? 10;
       if (fbUrl) fbUrl.value = fb.url ?? "";
+      runEngagementAutoSuggest({ settingsData: data });
       const fidelityUrlEl = document.getElementById("app-engagement-fidelity-url");
       if (fidelityUrlEl && slug) {
         const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin : "https://myfidpass.fr";
@@ -2323,7 +2425,11 @@ function initAppDashboard(slug) {
       try { const res = await api(`/dashboard/engagement-completions/${encodeURIComponent(id)}/reject`, { method: "PATCH" }); if (res.ok) loadEngagementPending(); } catch (_) {}
     }
   });
-  window.addEventListener("app-section-change", (e) => { if (e.detail?.sectionId === "engagement") loadEngagementPending(); }, { once: false });
+  window.addEventListener("app-section-change", (e) => {
+    if (e.detail?.sectionId !== "engagement") return;
+    loadEngagementPending();
+    runEngagementAutoSuggest();
+  }, { once: false });
 
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
   if (emojiPickerEl && stampEmojiEl) {
