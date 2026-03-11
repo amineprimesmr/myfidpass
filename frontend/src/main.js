@@ -6341,16 +6341,28 @@ function showFidelitySuccess(slug, memberId, memberName) {
   const engagementClaimFeedback = document.getElementById("fidelity-engagement-claim-feedback");
   async function loadEngagementActions() {
     if (!engagementBlock || !engagementActionsEl) return;
-    try {
-      const actions = await fetchEngagementActions(slug);
-      if (actions.length === 0) {
-        engagementBlock.classList.add("hidden");
-        if (engagementEmptyEl) engagementEmptyEl.classList.remove("hidden");
-        return;
+    if (engagementEmptyEl) engagementEmptyEl.classList.add("hidden");
+    const retryDelays = [0, 1200, 3200];
+    let actions = [];
+    for (let i = 0; i < retryDelays.length; i += 1) {
+      if (retryDelays[i] > 0) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelays[i]));
       }
-      if (engagementEmptyEl) engagementEmptyEl.classList.add("hidden");
-      engagementBlock.classList.remove("hidden");
-      engagementActionsEl.innerHTML = actions
+      try {
+        const current = await fetchEngagementActions(slug);
+        if (Array.isArray(current) && current.length > 0) {
+          actions = current;
+          break;
+        }
+      } catch (_) {}
+    }
+    if (actions.length === 0) {
+      engagementBlock.classList.add("hidden");
+      if (engagementEmptyEl) engagementEmptyEl.classList.remove("hidden");
+      return;
+    }
+    engagementBlock.classList.remove("hidden");
+    engagementActionsEl.innerHTML = actions
         .map(
           (a) =>
             `<div class="fidelity-engagement-item" data-action-type="${a.action_type}">
@@ -6365,56 +6377,48 @@ function showFidelitySuccess(slug, memberId, memberName) {
             </div>`
         )
         .join("");
-      engagementActionsEl.querySelectorAll(".fidelity-engagement-claim").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const actionType = btn.getAttribute("data-action-type");
-          if (!actionType) return;
-          if (engagementClaimFeedback) {
-            engagementClaimFeedback.textContent = "Envoi…";
-            engagementClaimFeedback.classList.remove("hidden", "success", "error");
-          }
-          try {
-            const claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ memberId, action_type: actionType }),
-            });
-            const claimData = await claimRes.json().catch(() => ({}));
-            if (claimRes.ok) {
-              if (engagementClaimFeedback) {
-                engagementClaimFeedback.textContent = claimData.message || "Points crédités.";
-                engagementClaimFeedback.classList.remove("error");
-                engagementClaimFeedback.classList.add("success");
-              }
-              btn.disabled = true;
-              btn.textContent = "Réclamé";
-            } else {
-              if (engagementClaimFeedback) {
-                engagementClaimFeedback.textContent = claimData.error || "Erreur.";
-                engagementClaimFeedback.classList.remove("success");
-                engagementClaimFeedback.classList.add("error");
-              }
-              if (claimData.code === "already_done") btn.textContent = "Déjà réclamé";
-            }
-          } catch (_) {
+    engagementActionsEl.querySelectorAll(".fidelity-engagement-claim").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const actionType = btn.getAttribute("data-action-type");
+        if (!actionType) return;
+        if (engagementClaimFeedback) {
+          engagementClaimFeedback.textContent = "Envoi…";
+          engagementClaimFeedback.classList.remove("hidden", "success", "error");
+        }
+        try {
+          const claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ memberId, action_type: actionType }),
+          });
+          const claimData = await claimRes.json().catch(() => ({}));
+          if (claimRes.ok) {
             if (engagementClaimFeedback) {
-              engagementClaimFeedback.textContent = "Erreur réseau.";
+              engagementClaimFeedback.textContent = claimData.message || "Points crédités.";
+              engagementClaimFeedback.classList.remove("error");
+              engagementClaimFeedback.classList.add("success");
+            }
+            btn.disabled = true;
+            btn.textContent = "Réclamé";
+          } else {
+            if (engagementClaimFeedback) {
+              engagementClaimFeedback.textContent = claimData.error || "Erreur.";
               engagementClaimFeedback.classList.remove("success");
               engagementClaimFeedback.classList.add("error");
             }
+            if (claimData.code === "already_done") btn.textContent = "Déjà réclamé";
           }
-        });
+        } catch (_) {
+          if (engagementClaimFeedback) {
+            engagementClaimFeedback.textContent = "Erreur réseau.";
+            engagementClaimFeedback.classList.remove("success");
+            engagementClaimFeedback.classList.add("error");
+          }
+        }
       });
-    } catch (_) {
-      if (engagementBlock) engagementBlock.classList.add("hidden");
-      if (engagementEmptyEl) engagementEmptyEl.classList.remove("hidden");
-    }
+    });
   }
   loadEngagementActions();
-  // Retry court pour éviter les cas de course (cache/redirect réseau au premier hit).
-  setTimeout(() => {
-    loadEngagementActions();
-  }, 1200);
 
   const btnEnableNotifications = document.getElementById("btn-enable-notifications");
   const notificationsStatusEl = document.getElementById("fidelity-notifications-status");
@@ -6531,14 +6535,15 @@ function arrayBufferToBase64(buffer) {
 
 async function fetchEngagementActions(slug) {
   const encodedSlug = encodeURIComponent(slug);
+  const noCacheKey = Date.now().toString();
   const candidates = [];
   const add = (url) => {
     if (url && !candidates.includes(url)) candidates.push(url);
   };
-  add(`${API_BASE}/api/businesses/${encodedSlug}/engagement-actions`);
+  add(`${API_BASE}/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}`);
   if (typeof window !== "undefined") {
-    add(`${window.location.origin}/api/businesses/${encodedSlug}/engagement-actions`);
-    add(`https://api.myfidpass.fr/api/businesses/${encodedSlug}/engagement-actions`);
+    add(`${window.location.origin}/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}`);
+    add(`https://api.myfidpass.fr/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}`);
   }
   for (const url of candidates) {
     try {
