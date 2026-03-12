@@ -54,11 +54,12 @@ export function renderClientPage(root, state, options = {}) {
     return;
   }
 
+  const logoUrl = state.business?.logoUrl;
   root.innerHTML = `
     <header class="header fidelity-v2-header">
       <div class="header-inner fidelity-v2-header-inner">
-        <a href="/" class="logo">Myfidpass</a>
-        <span class="fidelity-v2-business">${businessName}</span>
+        ${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(businessName)}" class="fidelity-v2-logo" />` : `<span class="fidelity-v2-business-name">${esc(businessName)}</span>`}
+        <span class="fidelity-v2-business">${esc(businessName)}</span>
       </div>
     </header>
     <main class="main fidelity-v2-main">
@@ -76,9 +77,9 @@ export function renderClientPage(root, state, options = {}) {
       <section class="fidelity-v2-card fidelity-v2-flow ${hasMember ? "" : "hidden"}">
         <h2>Comment ça marche</h2>
         <div class="fidelity-v2-flow-grid">
-          <div class="fidelity-v2-flow-step"><span>1</span><p>Gagner des points</p></div>
-          <div class="fidelity-v2-flow-step"><span>2</span><p>Convertir en tickets</p></div>
-          <div class="fidelity-v2-flow-step"><span>3</span><p>Jouer et gagner</p></div>
+          <div class="fidelity-v2-flow-step"><span>1</span><p>Faire une mission</p></div>
+          <div class="fidelity-v2-flow-step"><span>2</span><p>Gagner des tickets</p></div>
+          <div class="fidelity-v2-flow-step"><span>3</span><p>1 ticket = 1 tour de roue</p></div>
         </div>
       </section>
 
@@ -107,23 +108,24 @@ export function renderClientPage(root, state, options = {}) {
       </section>
 
       <section class="fidelity-v2-card ${actions.length ? "" : "hidden"}" id="fidelity-v2-actions">
-        <h2>Étape 1 - Gagner des points bonus</h2>
+        <h2>Étape 1 - Gagner des tickets</h2>
         <div class="fidelity-engagement-actions">
           ${actions
             .map(
-              (a) => `
+              (a) => {
+                const tickets = Math.min(10, Math.max(1, Number(a.points) || (a.action_type === "google_review" ? 2 : 1)));
+                return `
             <div class="fidelity-engagement-item" data-action-type="${esc(a.action_type)}">
               <div class="fidelity-engagement-item-info">
                 <span class="fidelity-engagement-item-label">${esc(a.label)}</span>
-                <span class="fidelity-engagement-item-points">+${Number(a.points || 0)} points</span>
+                <span class="fidelity-engagement-item-points">+${tickets} ticket${tickets > 1 ? "s" : ""}</span>
               </div>
               <div class="fidelity-engagement-item-btns">
-                <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary">Ouvrir</a>
-                <button type="button" class="fidelity-btn" data-claim-action="${esc(a.action_type)}">Réclamer</button>
+                <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open-link" data-action-type="${esc(a.action_type)}">Ouvrir</a>
               </div>
             </div>
-          `
-            )
+          `;
+            })
             .join("")}
         </div>
         <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>

@@ -2292,26 +2292,26 @@ function initAppDashboard(slug) {
       const gPlaceId = document.getElementById("app-engagement-google-place-id");
       const gApproval = document.getElementById("app-engagement-google-require-approval");
       if (gEnable) gEnable.checked = !!g.enabled;
-      if (gPoints) gPoints.value = g.points ?? 50;
+      if (gPoints) gPoints.value = g.points ?? 2;
       if (gPlaceId) gPlaceId.value = g.place_id ?? "";
       if (gApproval) gApproval.checked = g.require_approval !== false;
       const igEnable = document.getElementById("app-engagement-instagram-enable");
       const igPoints = document.getElementById("app-engagement-instagram-points");
       const igUrl = document.getElementById("app-engagement-instagram-url");
       if (igEnable) igEnable.checked = !!ig.enabled;
-      if (igPoints) igPoints.value = ig.points ?? 10;
+      if (igPoints) igPoints.value = ig.points ?? 1;
       if (igUrl) igUrl.value = ig.url ?? "";
       const tkEnable = document.getElementById("app-engagement-tiktok-enable");
       const tkPoints = document.getElementById("app-engagement-tiktok-points");
       const tkUrl = document.getElementById("app-engagement-tiktok-url");
       if (tkEnable) tkEnable.checked = !!tk.enabled;
-      if (tkPoints) tkPoints.value = tk.points ?? 10;
+      if (tkPoints) tkPoints.value = tk.points ?? 1;
       if (tkUrl) tkUrl.value = tk.url ?? "";
       const fbEnable = document.getElementById("app-engagement-facebook-enable");
       const fbPoints = document.getElementById("app-engagement-facebook-points");
       const fbUrl = document.getElementById("app-engagement-facebook-url");
       if (fbEnable) fbEnable.checked = !!fb.enabled;
-      if (fbPoints) fbPoints.value = fb.points ?? 10;
+      if (fbPoints) fbPoints.value = fb.points ?? 1;
       if (fbUrl) fbUrl.value = fb.url ?? "";
       runEngagementAutoSuggest({ settingsData: data });
       const fidelityUrlEl = document.getElementById("app-engagement-fidelity-url");
@@ -2405,40 +2405,6 @@ function initAppDashboard(slug) {
     .catch(() => {});
 
   /** Grille d’icônes (Emoji.family Fluent) pour choisir l’emoji des tampons sans taper. */
-  async function loadEngagementPending() {
-    const listEl = document.getElementById("app-engagement-pending-list");
-    const emptyEl = document.getElementById("app-engagement-pending-empty");
-    if (!listEl) return;
-    try {
-      const res = await api("/dashboard/engagement-completions?status=pending");
-      if (!res.ok) return;
-      const data = await res.json();
-      const completions = data.completions || [];
-      if (completions.length === 0) {
-        listEl.innerHTML = "";
-        if (emptyEl) emptyEl.classList.remove("hidden");
-        return;
-      }
-      if (emptyEl) emptyEl.classList.add("hidden");
-      listEl.innerHTML = completions
-        .map(
-          (c) =>
-            `<div class="app-engagement-pending-item" data-completion-id="${escapeHtml(c.id)}">
-              <span class="app-engagement-pending-member">${escapeHtml(c.member_name || "")} — ${escapeHtml(c.member_email || "")}</span>
-              <span class="app-engagement-pending-type">${c.action_type === "google_review" ? "Avis Google" : c.action_type}</span>
-              <span class="app-engagement-pending-date">${c.created_at ? formatDate(c.created_at) : ""}</span>
-              <div class="app-engagement-pending-actions">
-                <button type="button" class="app-btn app-btn-primary app-engagement-approve" data-completion-id="${escapeHtml(c.id)}">Valider</button>
-                <button type="button" class="app-btn app-btn-secondary app-engagement-reject" data-completion-id="${escapeHtml(c.id)}">Refuser</button>
-              </div>
-            </div>`
-        )
-        .join("");
-    } catch (_) {
-      if (emptyEl) emptyEl.classList.remove("hidden");
-      listEl.innerHTML = "";
-    }
-  }
   document.getElementById("app-engagement-save")?.addEventListener("click", async () => {
     const feedback = document.getElementById("app-engagement-save-feedback");
     const gEnable = document.getElementById("app-engagement-google-enable");
@@ -2455,10 +2421,10 @@ function initAppDashboard(slug) {
     const fbPoints = document.getElementById("app-engagement-facebook-points");
     const fbUrl = document.getElementById("app-engagement-facebook-url");
     const engagement_rewards = {
-      google_review: { enabled: !!gEnable?.checked, points: Math.max(0, parseInt(gPoints?.value, 10) || 50), place_id: (gPlaceId?.value || "").trim(), require_approval: !!gApproval?.checked },
-      instagram_follow: { enabled: !!igEnable?.checked, points: Math.max(0, parseInt(igPoints?.value, 10) || 10), url: (igUrl?.value || "").trim() },
-      tiktok_follow: { enabled: !!tkEnable?.checked, points: Math.max(0, parseInt(tkPoints?.value, 10) || 10), url: (tkUrl?.value || "").trim() },
-      facebook_follow: { enabled: !!fbEnable?.checked, points: Math.max(0, parseInt(fbPoints?.value, 10) || 10), url: (fbUrl?.value || "").trim() },
+      google_review: { enabled: !!gEnable?.checked, points: Math.min(10, Math.max(1, parseInt(gPoints?.value, 10) || 2)), place_id: (gPlaceId?.value || "").trim(), require_approval: !!gApproval?.checked },
+      instagram_follow: { enabled: !!igEnable?.checked, points: Math.min(10, Math.max(1, parseInt(igPoints?.value, 10) || 1)), url: (igUrl?.value || "").trim() },
+      tiktok_follow: { enabled: !!tkEnable?.checked, points: Math.min(10, Math.max(1, parseInt(tkPoints?.value, 10) || 1)), url: (tkUrl?.value || "").trim() },
+      facebook_follow: { enabled: !!fbEnable?.checked, points: Math.min(10, Math.max(1, parseInt(fbPoints?.value, 10) || 1)), url: (fbUrl?.value || "").trim() },
     };
     try {
       const res = await api("/dashboard/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ engagement_rewards }) });
@@ -2487,7 +2453,7 @@ function initAppDashboard(slug) {
       engagementModalInput.placeholder = placeholder || "";
       engagementModalInput.value = currentValue || "";
     }
-    if (engagementModalPoints) engagementModalPoints.value = Math.max(1, parseInt(currentPoints, 10) || 10);
+    if (engagementModalPoints) engagementModalPoints.value = Math.min(10, Math.max(1, parseInt(currentPoints, 10) || 1));
     engagementModal.classList.remove("hidden");
     engagementModalInput?.focus();
   }
@@ -2512,12 +2478,12 @@ function initAppDashboard(slug) {
     const tkPoints = document.getElementById("app-engagement-tiktok-points");
     const fbPoints = document.getElementById("app-engagement-facebook-points");
     let value = "";
-    let points = 10;
-    if (action === "google_review") { value = gPlaceId?.value || ""; points = parseInt(gPoints?.value, 10) || 50; }
-    else if (action === "instagram_follow") { value = igUrl?.value || ""; points = parseInt(igPoints?.value, 10) || 10; }
-    else if (action === "tiktok_follow") { value = tkUrl?.value || ""; points = parseInt(tkPoints?.value, 10) || 10; }
-    else if (action === "facebook_follow") { value = fbUrl?.value || ""; points = parseInt(fbPoints?.value, 10) || 10; }
-    openEngagementModal(action, label, inputLabel, placeholder, value, points);
+    let tickets = 1;
+    if (action === "google_review") { value = gPlaceId?.value || ""; tickets = parseInt(gPoints?.value, 10) || 2; }
+    else if (action === "instagram_follow") { value = igUrl?.value || ""; tickets = parseInt(igPoints?.value, 10) || 1; }
+    else if (action === "tiktok_follow") { value = tkUrl?.value || ""; tickets = parseInt(tkPoints?.value, 10) || 1; }
+    else if (action === "facebook_follow") { value = fbUrl?.value || ""; tickets = parseInt(fbPoints?.value, 10) || 1; }
+    openEngagementModal(action, label, inputLabel, placeholder, value, tickets);
   });
   engagementModalBackdrop?.addEventListener("click", closeEngagementModal);
   engagementModalClose?.addEventListener("click", closeEngagementModal);
@@ -2525,7 +2491,7 @@ function initAppDashboard(slug) {
     const action = engagementModal?.dataset?.currentAction;
     if (!action || !supportedEngagementActions.includes(action)) return;
     const value = (engagementModalInput?.value || "").trim();
-    const points = Math.max(1, parseInt(engagementModalPoints?.value, 10) || 10);
+    const points = Math.min(10, Math.max(1, parseInt(engagementModalPoints?.value, 10) || 1));
     const gEnable = document.getElementById("app-engagement-google-enable");
     const gPoints = document.getElementById("app-engagement-google-points");
     const gPlaceId = document.getElementById("app-engagement-google-place-id");
@@ -2556,15 +2522,6 @@ function initAppDashboard(slug) {
       if (fbUrl) fbUrl.value = value;
     }
     closeEngagementModal();
-  });
-  document.getElementById("app-engagement-pending-list")?.addEventListener("click", async (e) => {
-    const id = e.target.getAttribute("data-completion-id");
-    if (!id) return;
-    if (e.target.classList.contains("app-engagement-approve")) {
-      try { const res = await api(`/dashboard/engagement-completions/${encodeURIComponent(id)}/approve`, { method: "PATCH" }); if (res.ok) loadEngagementPending(); } catch (_) {}
-    } else if (e.target.classList.contains("app-engagement-reject")) {
-      try { const res = await api(`/dashboard/engagement-completions/${encodeURIComponent(id)}/reject`, { method: "PATCH" }); if (res.ok) loadEngagementPending(); } catch (_) {}
-    }
   });
   document.getElementById("app-game-save")?.addEventListener("click", async () => {
     const feedback = document.getElementById("app-game-save-feedback");
@@ -2604,16 +2561,19 @@ function initAppDashboard(slug) {
       }
     }
   });
-  window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId !== "engagement") return;
-    loadEngagementPending();
-    runEngagementAutoSuggest();
+  function setEngagementPreviewIframeSrc() {
     const previewIframe = document.getElementById("app-engagement-preview-iframe");
     if (previewIframe && slug) {
       const base = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
       previewIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}/jeu` : "";
     }
+  }
+  window.addEventListener("app-section-change", (e) => {
+    if (e.detail?.sectionId !== "engagement") return;
+    runEngagementAutoSuggest();
+    setEngagementPreviewIframeSrc();
   }, { once: false });
+  if (document.getElementById("engagement")?.classList.contains("app-section-visible")) setEngagementPreviewIframeSrc();
 
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
   if (emojiPickerEl && stampEmojiEl) {
@@ -6578,98 +6538,58 @@ function showFidelitySuccess(slug, memberId, memberName) {
     engagementActionsEl.innerHTML = actions
       .map(
         (a) => {
-          const isGoogleAuto = a.action_type === "google_review" && a.auto_verify_enabled !== false;
-          const openLabel = isGoogleAuto ? "Étape 1 : Ouvrir Google" : "Ouvrir le lien";
-          const claimLabel = isGoogleAuto ? "Étape 2 : Vérifier automatiquement" : "Réclamer mes points";
-          return (
-          `<div class="fidelity-engagement-item" data-action-type="${a.action_type}">
+          const tickets = Math.min(10, Math.max(1, Number(a.points) || (a.action_type === "google_review" ? 2 : 1)));
+          return `<div class="fidelity-engagement-item" data-action-type="${escapeHtmlFidelity(a.action_type)}">
               <div class="fidelity-engagement-item-info">
                 <span class="fidelity-engagement-item-label">${escapeHtmlFidelity(a.label)}</span>
-                <span class="fidelity-engagement-item-points">+${a.points} points</span>
+                <span class="fidelity-engagement-item-points">+${tickets} ticket${tickets > 1 ? "s" : ""}</span>
               </div>
               <div class="fidelity-engagement-item-btns">
-                <a href="${escapeHtmlFidelity(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open" data-action-type="${escapeHtmlFidelity(a.action_type)}">${openLabel}</a>
-                <button type="button" class="fidelity-btn fidelity-btn-primary fidelity-engagement-claim" data-action-type="${escapeHtmlFidelity(a.action_type)}">${claimLabel}</button>
+                <a href="${escapeHtmlFidelity(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open" data-action-type="${escapeHtmlFidelity(a.action_type)}">Ouvrir</a>
               </div>
-            </div>`
-          );
+            </div>`;
         }
       )
       .join("");
+    const PENDING_CLAIM_KEY_MAIN = "fidelity_pending_engagement_claim";
+    const PENDING_CLAIM_MIN_MS = 45000;
+    const PENDING_CLAIM_MAX_MS = 24 * 60 * 60 * 1000;
+    async function tryAutoClaimOnReturnFidelity() {
+      try {
+        const raw = sessionStorage.getItem(PENDING_CLAIM_KEY_MAIN);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (data.slug !== slug || !data.actionType || !data.ts) return;
+        const age = Date.now() - data.ts;
+        if (age < PENDING_CLAIM_MIN_MS || age > PENDING_CLAIM_MAX_MS) return;
+        const successRaw = localStorage.getItem("fidpass_success_" + slug);
+        if (!successRaw) return;
+        const { memberId: storedMemberId } = JSON.parse(successRaw);
+        if (!storedMemberId) return;
+        sessionStorage.removeItem(PENDING_CLAIM_KEY_MAIN);
+        const claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ memberId: storedMemberId, action_type: data.actionType }),
+        });
+        const claimData = await claimRes.json().catch(() => ({}));
+        if (claimRes.ok) {
+          setEngagementClaimFeedback(claimData.message || "Points ajoutés à ta carte.");
+        }
+      } catch (_) {}
+    }
     engagementActionsEl.querySelectorAll(".fidelity-engagement-open").forEach((openBtn) => {
-      openBtn.addEventListener("click", async (e) => {
+      openBtn.addEventListener("click", () => {
         const actionType = openBtn.getAttribute("data-action-type");
-        if (actionType !== "google_review") return;
-        e.preventDefault();
-        setEngagementClaimFeedback("Préparation de la vérification automatique…");
-        try {
-          const startRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/start`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              memberId,
-              action_type: actionType,
-              client_fingerprint: getEngagementFingerprint(),
-            }),
-          });
-          const startData = await startRes.json().catch(() => ({}));
-          if (!startRes.ok) {
-            setEngagementClaimFeedback(startData.error || "Impossible de préparer la vérification.", "error");
-            return;
-          }
-          engagementProofTokens.set(actionType, startData.proof_token);
-          window.open(startData.open_url || openBtn.href, "_blank", "noopener,noreferrer");
-          setEngagementClaimFeedback("Lien Google ouvert. Revenez ici puis cliquez sur Étape 2.");
-        } catch (_) {
-          setEngagementClaimFeedback("Erreur réseau lors de la préparation.", "error");
+        if (actionType) {
+          sessionStorage.setItem(PENDING_CLAIM_KEY_MAIN, JSON.stringify({ slug, actionType, ts: Date.now() }));
         }
       });
     });
-    engagementActionsEl.querySelectorAll(".fidelity-engagement-claim").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const actionType = btn.getAttribute("data-action-type");
-        if (!actionType) return;
-        setEngagementClaimFeedback("Vérification…");
-        try {
-          const isGoogleAuto = actionType === "google_review";
-          let claimRes;
-          if (isGoogleAuto) {
-            const proofToken = engagementProofTokens.get(actionType);
-            if (!proofToken) {
-              setEngagementClaimFeedback("Commencez par Étape 1 pour ouvrir Google.", "error");
-              return;
-            }
-            claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim-auto`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                memberId,
-                action_type: actionType,
-                proof_token: proofToken,
-                client_fingerprint: getEngagementFingerprint(),
-              }),
-            });
-          } else {
-            claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ memberId, action_type: actionType }),
-            });
-          }
-          const claimData = await claimRes.json().catch(() => ({}));
-          if (claimRes.ok) {
-            setEngagementClaimFeedback(claimData.message || "Points crédités.");
-            btn.disabled = true;
-            btn.textContent = "Réclamé";
-          } else {
-            setEngagementClaimFeedback(claimData.error || "Erreur.", "error");
-            if (claimData.code === "already_done") btn.textContent = "Déjà réclamé";
-          }
-        } catch (_) {
-          setEngagementClaimFeedback("Erreur réseau.", "error");
-        }
-      });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") tryAutoClaimOnReturnFidelity();
     });
+    tryAutoClaimOnReturnFidelity();
   }
   loadEngagementActions();
 

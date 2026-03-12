@@ -738,6 +738,29 @@ function ensureMemberTicketWallet(businessId, memberId) {
     .get(memberId, businessId);
 }
 
+/** Ajoute des tickets au membre pour une mission engagement (avis Google = 2, autres = 1). */
+function addTicketsForEngagement(businessId, memberId, tickets, actionType, completionId) {
+  if (!tickets || tickets < 1) return;
+  const wallet = ensureMemberTicketWallet(businessId, memberId);
+  const nextBalance = (Number(wallet?.ticket_balance) || 0) + tickets;
+  db.prepare(
+    "UPDATE member_ticket_wallets SET ticket_balance = ?, updated_at = datetime('now') WHERE member_id = ? AND business_id = ?"
+  ).run(nextBalance, memberId, businessId);
+  db.prepare(
+    `INSERT INTO ticket_ledger
+     (id, business_id, member_id, source_type, delta, balance_after, reference_type, reference_id, idempotency_key, metadata_json, created_at)
+     VALUES (?, ?, ?, 'engagement', ?, ?, 'engagement_completion', ?, NULL, ?, datetime('now'))`
+  ).run(
+    randomUUID(),
+    businessId,
+    memberId,
+    tickets,
+    nextBalance,
+    completionId,
+    JSON.stringify({ action_type: actionType })
+  );
+}
+
 function getGameByCode(gameCode = "roulette") {
   return db.prepare("SELECT * FROM games WHERE code = ? AND active = 1").get(gameCode) || null;
 }
@@ -1287,7 +1310,9 @@ export function createEngagementCompletion(businessId, memberId, actionType, opt
   const requireApproval = actionType === "google_review" && config.require_approval;
   const forcedStatus = ["approved", "pending", "pending_review"].includes(options.statusOverride) ? options.statusOverride : null;
   const status = forcedStatus || (requireApproval ? "pending" : "approved");
-  const pointsGranted = status === "approved" ? points : 0;
+  const defaultTickets = actionType === "google_review" ? 2 : 1;
+  const ticketsToGrant = status === "approved" ? Math.min(10, Math.max(1, Math.floor(Number(config.points) || defaultTickets))) : 0;
+  const pointsGranted = 0;
   const id = randomUUID();
   db.prepare(
     `INSERT INTO engagement_completions (id, business_id, member_id, action_type, points_granted, status, proof_id, proof_score, created_at)
@@ -1302,18 +1327,11 @@ export function createEngagementCompletion(businessId, memberId, actionType, opt
     options.proofId || null,
     Number.isFinite(Number(options.proofScore)) ? Number(options.proofScore) : null
   );
-  if (status === "approved") {
-    addPoints(memberId, points);
-    createTransaction({
-      businessId,
-      memberId,
-      type: "points_add",
-      points,
-      metadata: JSON.stringify({ source: "engagement", action_type: actionType }),
-    });
+  if (status === "approved" && ticketsToGrant > 0) {
+    addTicketsForEngagement(businessId, memberId, ticketsToGrant, actionType, id);
   }
   const completion = db.prepare("SELECT * FROM engagement_completions WHERE id = ?").get(id);
-  return { completion, pointsGranted, status, alreadyDone: false };
+  return { completion, pointsGranted: 0, ticketsGranted: ticketsToGrant, status, alreadyDone: false };
 }
 
 /** Liste des completions pour une business (pending + récentes). */
@@ -1336,26 +1354,18 @@ export function getEngagementCompletionsForBusiness(businessId, { status = null,
   return db.prepare(sql).all(...params);
 }
 
-/** Approuver une completion : créditer les points et passer en approved. */
+/** Approuver une completion : créditer les tickets (selon config engagement_rewards) et passer en approved. */
 export function approveEngagementCompletion(completionId, businessId) {
   const c = db.prepare("SELECT * FROM engagement_completions WHERE id = ? AND business_id = ?").get(completionId, businessId);
   if (!c || (c.status !== "pending" && c.status !== "pending_review")) return null;
   const rewards = getEngagementRewards(businessId);
   const config = rewards[c.action_type];
-  const points = config && config.points ? Math.max(0, Math.floor(Number(config.points))) : 0;
+  const defaultTickets = c.action_type === "google_review" ? 2 : 1;
+  const tickets = Math.min(10, Math.max(1, Math.floor(Number(config?.points) || defaultTickets)));
   db.prepare(
-    "UPDATE engagement_completions SET status = 'approved', points_granted = ?, reviewed_at = datetime('now') WHERE id = ?"
-  ).run(points, completionId);
-  if (points > 0) {
-    addPoints(c.member_id, points);
-    createTransaction({
-      businessId: c.business_id,
-      memberId: c.member_id,
-      type: "points_add",
-      points,
-      metadata: JSON.stringify({ source: "engagement", action_type: c.action_type, approved: true }),
-    });
-  }
+    "UPDATE engagement_completions SET status = 'approved', points_granted = 0, reviewed_at = datetime('now') WHERE id = ?"
+  ).run(completionId);
+  addTicketsForEngagement(businessId, c.member_id, tickets, c.action_type, completionId);
   return db.prepare("SELECT * FROM engagement_completions WHERE id = ?").get(completionId);
 }
 

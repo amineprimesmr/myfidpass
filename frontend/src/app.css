@@ -2784,7 +2784,7 @@ body.page-app .site-banner { display: none !important; }
   background: var(--app-surface-hover);
 }
 .app-engagement-personalise-icon { font-size: 1rem; }
-.app-engagement-phone-mockup {
+.app-engagement-preview-wrap {
   width: 100%;
   max-width: 320px;
   margin: 0 auto;

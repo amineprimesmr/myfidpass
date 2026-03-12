@@ -1109,7 +1109,7 @@
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
           <section id="engagement" class="app-section">
             <h2 class="app-section-title">Avis & Réseaux</h2>
-            <p class="app-section-desc">Offrez des points à vos clients en échange d'un avis ou d'un follow. Ajoutez un objectif puis enregistrez.</p>
+            <p class="app-section-desc">Offrez des tickets à vos clients en échange d'un avis ou d'un follow (1 ticket = 1 tour de roue). Ajoutez un objectif puis enregistrez.</p>
             <div class="app-engagement-cadeo-wrap">
               <div class="app-engagement-left">
                 <h3 class="app-engagement-objectives-title">Ajouter un objectif</h3>
@@ -1157,17 +1157,17 @@
                 </div>
                 <div id="app-engagement-form" class="app-engagement-form-hidden">
                   <input type="checkbox" id="app-engagement-google-enable" />
-                  <input type="number" id="app-engagement-google-points" min="1" max="500" value="50" />
+                  <input type="number" id="app-engagement-google-points" min="1" max="10" value="2" aria-label="Tickets avis Google" />
                   <input type="text" id="app-engagement-google-place-id" />
                   <input type="checkbox" id="app-engagement-google-require-approval" checked />
                   <input type="checkbox" id="app-engagement-instagram-enable" />
-                  <input type="number" id="app-engagement-instagram-points" min="1" max="200" value="10" />
+                  <input type="number" id="app-engagement-instagram-points" min="1" max="10" value="1" aria-label="Tickets Instagram" />
                   <input type="url" id="app-engagement-instagram-url" />
                   <input type="checkbox" id="app-engagement-tiktok-enable" />
-                  <input type="number" id="app-engagement-tiktok-points" min="1" max="200" value="10" />
+                  <input type="number" id="app-engagement-tiktok-points" min="1" max="10" value="1" aria-label="Tickets TikTok" />
                   <input type="url" id="app-engagement-tiktok-url" />
                   <input type="checkbox" id="app-engagement-facebook-enable" />
-                  <input type="number" id="app-engagement-facebook-points" min="1" max="200" value="10" />
+                  <input type="number" id="app-engagement-facebook-points" min="1" max="10" value="1" aria-label="Tickets Facebook" />
                   <input type="url" id="app-engagement-facebook-url" />
                 </div>
                 <div class="app-engagement-actions-row">
@@ -1182,7 +1182,7 @@
                 <div class="app-engagement-personalise-bar">
                   <button type="button" class="app-engagement-personalise-btn" onclick="document.querySelector('[data-section=personnaliser]')?.click()"><span class="app-engagement-personalise-icon">✎</span> Personnaliser</button>
                 </div>
-                <div class="app-engagement-phone-mockup">
+                <div class="app-engagement-preview-wrap">
                   <iframe id="app-engagement-preview-iframe" class="app-engagement-preview-iframe" title="Aperçu page carte" src="about:blank"></iframe>
                 </div>
               </div>
@@ -1194,16 +1194,10 @@
                 <h4 class="app-engagement-modal-title" id="app-engagement-modal-title">Ajouter un objectif</h4>
                 <label class="app-engagement-modal-label" id="app-engagement-modal-input-label">URL</label>
                 <input type="text" id="app-engagement-modal-input" class="app-engagement-modal-input" placeholder="" />
-                <label class="app-engagement-modal-label">Points</label>
-                <input type="number" id="app-engagement-modal-points" class="app-engagement-modal-input" min="1" max="500" value="10" />
+                <label class="app-engagement-modal-label">Tickets</label>
+                <input type="number" id="app-engagement-modal-points" class="app-engagement-modal-input" min="1" max="10" value="1" aria-label="Nombre de tickets" />
                 <button type="button" id="app-engagement-modal-submit" class="app-engagement-modal-btn">Ajouter</button>
               </div>
-            </div>
-            <div class="app-card app-engagement-pending-wrap">
-              <h3 class="app-subsection-title">Demandes en attente (avis Google)</h3>
-              <p class="app-hint">Si vous avez activé « Valider manuellement », les clients qui déclarent avoir laissé un avis apparaissent ici.</p>
-              <div id="app-engagement-pending-list" class="app-engagement-pending-list"></div>
-              <p id="app-engagement-pending-empty" class="app-hint hidden">Aucune demande en attente.</p>
             </div>
           </section>
           <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
@@ -2107,7 +2101,7 @@ X-Dashboard-Token: TOKEN
               </div>
               <div id="fidelity-engagement-block" class="fidelity-engagement-block hidden">
                 <p class="fidelity-engagement-title">Gagnez des points en plus</p>
-                <p class="fidelity-engagement-desc">Ouvrez le lien, faites l’action, puis revenez ici pour réclamer vos points.</p>
+                <p class="fidelity-engagement-desc">Ouvrez le lien, faites l’action, puis revenez sur cette page : les points seront ajoutés automatiquement.</p>
                 <div id="fidelity-engagement-actions" class="fidelity-engagement-actions"></div>
                 <p id="fidelity-engagement-claim-feedback" class="fidelity-engagement-feedback hidden"></p>
               </div>

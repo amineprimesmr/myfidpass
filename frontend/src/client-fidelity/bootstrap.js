@@ -308,22 +308,30 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     }
   }
 
-  async function onClaimAction(actionType) {
+  const PENDING_CLAIM_KEY = "fidelity_pending_engagement_claim";
+  const PENDING_CLAIM_MIN_MS = 45000;
+  const PENDING_CLAIM_MAX_MS = 24 * 60 * 60 * 1000;
+
+  async function tryAutoClaimOnReturn() {
     const state = store.get();
-    const feedback = rootEl.querySelector("#fidelity-v2-action-feedback");
+    if (!state.member?.id) return;
     try {
-      await api.claimEngagement(slug, state.member.id, actionType);
-      if (feedback) {
-        feedback.textContent = "Demande envoyée. Les points seront crédités selon les règles du commerce.";
-        feedback.classList.remove("hidden");
-      }
+      const raw = sessionStorage.getItem(PENDING_CLAIM_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data.slug !== slug || !data.actionType || !data.ts) return;
+      const age = Date.now() - data.ts;
+      if (age < PENDING_CLAIM_MIN_MS || age > PENDING_CLAIM_MAX_MS) return;
+      sessionStorage.removeItem(PENDING_CLAIM_KEY);
+      await api.claimEngagement(slug, state.member.id, data.actionType);
       await refreshMemberData();
-    } catch (err) {
+      const feedback = rootEl.querySelector("#fidelity-v2-action-feedback");
       if (feedback) {
-        feedback.textContent = err.message || "Impossible de réclamer les points.";
+        feedback.textContent = "Tickets ajoutés à ta carte.";
         feedback.classList.remove("hidden");
+        setTimeout(() => feedback.classList.add("hidden"), 4000);
       }
-    }
+    } catch (_) {}
   }
 
   function bindEvents() {
@@ -331,8 +339,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     rootEl.querySelector("#fidelity-v2-refresh")?.addEventListener("click", refreshMemberData);
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
-    rootEl.querySelectorAll("[data-claim-action]").forEach((btn) => {
-      btn.addEventListener("click", () => onClaimAction(btn.getAttribute("data-claim-action")));
+    rootEl.querySelectorAll(".fidelity-engagement-open-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        const actionType = link.getAttribute("data-action-type");
+        if (actionType) {
+          sessionStorage.setItem(PENDING_CLAIM_KEY, JSON.stringify({
+            slug,
+            actionType,
+            ts: Date.now(),
+          }));
+        }
+      });
     });
     const apple = rootEl.querySelector("#fidelity-v2-apple");
     const google = rootEl.querySelector("#fidelity-v2-google");
@@ -341,5 +358,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     if (google && wallet.google) google.href = wallet.google;
   }
 
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") tryAutoClaimOnReturn();
+  });
+
   rerender();
+  tryAutoClaimOnReturn();
 }

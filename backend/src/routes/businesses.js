@@ -651,15 +651,17 @@ router.post("/:slug/engagement/claim-auto", (req, res) => {
   });
 
   const responseStatus = completionResult.status;
+  const ticketsGranted = completionResult.ticketsGranted ?? 0;
   return res.status(201).json({
     completion_id: completionResult.completion.id,
     status: responseStatus,
-    points_granted: completionResult.pointsGranted,
+    points_granted: completionResult.pointsGranted ?? 0,
+    tickets_granted: ticketsGranted,
     score: scored.score,
     message:
       responseStatus === "approved"
-        ? `${completionResult.pointsGranted} points ont été ajoutés automatiquement.`
-        : "Vérification complémentaire requise avant crédit des points.",
+        ? (ticketsGranted > 0 ? `${ticketsGranted} ticket${ticketsGranted > 1 ? "s" : ""} ajouté${ticketsGranted > 1 ? "s" : ""} automatiquement.` : "C'est enregistré.")
+        : "Vérification complémentaire requise.",
   });
 });
 
@@ -676,21 +678,23 @@ router.post("/:slug/engagement/claim", (req, res) => {
   }
   const member = getMemberForBusiness(memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
-  const result = createEngagementCompletion(business.id, memberId, actionType);
+  const result = createEngagementCompletion(business.id, memberId, actionType, { statusOverride: "approved" });
   if (result.error === "action_disabled") {
     return res.status(400).json({ error: "Cette action n'est pas activée." });
   }
   if (result.error === "already_done") {
     return res.status(400).json({ error: "Vous avez déjà effectué cette action.", code: "already_done" });
   }
+  const ticketsGranted = result.ticketsGranted ?? 0;
   res.status(201).json({
     completion_id: result.completion.id,
     status: result.status,
-    points_granted: result.pointsGranted,
+    points_granted: result.pointsGranted ?? 0,
+    tickets_granted: ticketsGranted,
     message:
       result.status === "approved"
-        ? `${result.pointsGranted} points ont été ajoutés à votre carte.`
-        : "Votre avis sera vérifié par le commerce. Les points vous seront crédités après validation.",
+        ? (ticketsGranted > 0 ? `${ticketsGranted} ticket${ticketsGranted > 1 ? "s" : ""} ajouté${ticketsGranted > 1 ? "s" : ""} à ta carte.` : "C'est enregistré.")
+        : "Votre avis sera vérifié par le commerce.",
   });
 });
 
@@ -1446,6 +1450,26 @@ router.get("/:slug/card-background", (req, res) => {
 });
 
 /**
+ * GET /api/businesses/:slug/public/logo
+ * Logo du commerce (public, pour la page fidélité client).
+ */
+router.get("/:slug/public/logo", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).send();
+  if (business.logo_base64) {
+    const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(base64Data, "base64");
+    if (buf.length > 0) {
+      const isPng = business.logo_base64.includes("image/png");
+      res.setHeader("Content-Type", isPng ? "image/png" : "image/jpeg");
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      return res.send(buf);
+    }
+  }
+  return res.status(404).send();
+});
+
+/**
  * GET /api/businesses/:slug
  * Infos publiques d'une entreprise (pour la page d'inscription).
  */
@@ -1455,6 +1479,7 @@ router.get("/:slug", (req, res) => {
     business = ensureDefaultBusiness();
   }
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  const apiBase = (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
   let points_reward_tiers = business.points_reward_tiers;
   if (typeof points_reward_tiers === "string" && points_reward_tiers?.trim()) {
     try {
@@ -1468,6 +1493,7 @@ router.get("/:slug", (req, res) => {
     name: business.name,
     slug: business.slug,
     organizationName: business.organization_name,
+    logoUrl: business.logo_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/public/logo` : undefined,
     backgroundColor: business.background_color ?? undefined,
     foregroundColor: business.foreground_color ?? undefined,
     labelColor: business.label_color ?? undefined,
