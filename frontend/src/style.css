@@ -1161,10 +1161,7 @@ body {
 }
 
 /* Moitié basse : -90° pour que le texte suive l’arc dans le bon sens */
-.fidelity-roulette-wheel-segment-flip .fidelity-roulette-segment-label {
-  transform: translate(-50%, -42vmin) rotate(180deg);
-  transform-origin: 50% 42vmin;
-}
+/* Contre-rotation du label appliquée en JS (bootstrap) pour texte toujours droit */
 
 .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white span {
   color: #000;
