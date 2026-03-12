@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/src/auth.css" />
     <link rel="stylesheet" href="/src/app.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
+    <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
@@ -1386,6 +1387,11 @@
              onload="this.closest('.site-banner-media')?.classList.remove('hero-unloaded')" />
       </div>
 
+      <!-- Scroll-Driven 3D Image Tube (helmet) — hors de main pour full viewport -->
+      <section id="landing-helmet-section" class="landing-helmet-section">
+        <div id="landing-helmet-root"></div>
+      </section>
+
       <main id="landing-main" class="landing-main">
         <section class="landing-hero">
           <a href="/creer-ma-carte" class="landing-hero-cta-bar" aria-label="Créer votre Fidpass gratuitement">
@@ -1485,7 +1491,7 @@
           </ol>
         </section>
 
-        <!-- Simulateur d’impact (style Cadeo : 3D, relief, effet incroyable) -->
+<!-- Simulateur d’impact (style Cadeo : 3D, relief, effet incroyable) -->
         <section id="simulateur" class="landing-simulator-wrap landing-reveal" data-reveal>
           <p class="landing-simulator-teaser">
             <span class="landing-simulator-arrow" aria-hidden="true">▼</span>

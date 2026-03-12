@@ -7260,6 +7260,8 @@ function initLandingAnimations() {
     initLandingHeroAnim();
     initLandingCardsScroll();
     initLandingSimulator();
+    // Section 3D helmet (github.com/matdn/helmet)
+    import("./helmet/index.jsx").then((m) => m.mountHelmet());
   }
 }
 

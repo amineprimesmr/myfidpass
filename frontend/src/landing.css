@@ -1206,14 +1206,25 @@
 .landing-how,
 .landing-tarif,
 .landing-cta-final,
-.landing-footer {
+.landing-footer,
+.landing-helmet-section {
   width: 100vw;
   max-width: 100vw;
   margin-left: calc(-50vw + 50%);
   margin-right: calc(-50vw + 50%);
   box-sizing: border-box;
+}
+.landing-how,
+.landing-tarif,
+.landing-cta-final,
+.landing-footer {
   padding-left: max(1.5rem, calc(50vw - 400px));
   padding-right: max(1.5rem, calc(50vw - 400px));
+}
+.landing-helmet-section {
+  padding: 0;
+  height: 100vh;
+  min-height: 100vh;
 }
 
 .landing-section-dark {
