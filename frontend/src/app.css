@@ -2730,6 +2730,7 @@ body.page-app .site-banner { display: none !important; }
   height: 24px;
   object-fit: contain;
   display: block;
+  filter: none; /* garder les couleurs officielles des marques */
 }
 .app-engagement-objective-label { flex: 1; min-width: 0; }
 .app-engagement-objective-arrow {
