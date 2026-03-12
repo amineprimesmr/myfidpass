@@ -2721,6 +2721,16 @@ body.page-app .site-banner { display: none !important; }
   color: #333;
   border: 1px solid #e0e0e0;
 }
+.app-engagement-objective-icon.app-engagement-icon-svg {
+  padding: 2px;
+  background: #fff;
+}
+.app-engagement-objective-icon.app-engagement-icon-svg img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
 .app-engagement-objective-label { flex: 1; min-width: 0; }
 .app-engagement-objective-arrow {
   flex-shrink: 0;

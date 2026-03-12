@@ -1109,7 +1109,7 @@ body {
   pointer-events: none;
 }
 
-/* Texte pivoté radialement : du centre vers l’extérieur, lisible sans pencher la tête */
+/* Texte le long de l’arc : pivot 90° pour suivre la courbe de la roue, position fixe */
 .fidelity-roulette-wheel-segment span,
 .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label {
   position: absolute;
@@ -1127,7 +1127,7 @@ body {
   text-align: center;
   direction: ltr;
   unicode-bidi: normal;
-  transform: translate(-50%, -42vmin);
+  transform: translate(-50%, -42vmin) rotate(90deg);
   transform-origin: 50% 42vmin;
 }
 
@@ -1142,13 +1142,13 @@ body {
   direction: ltr;
   unicode-bidi: normal;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-  transform: translate(-50%, -42vmin);
+  transform: translate(-50%, -42vmin) rotate(90deg);
   transform-origin: 50% 42vmin;
 }
 
-/* Moitié basse : retourner le texte pour qu’il reste lisible (pas à l’envers) */
+/* Moitié basse : -90° pour que le texte suive l’arc dans le bon sens */
 .fidelity-roulette-wheel-segment-flip .fidelity-roulette-segment-label {
-  transform: translate(-50%, -42vmin) rotate(180deg);
+  transform: translate(-50%, -42vmin) rotate(-90deg);
   transform-origin: 50% 42vmin;
 }
 
