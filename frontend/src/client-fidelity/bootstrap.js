@@ -102,9 +102,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       let segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
       if (flip) segClass += " fidelity-roulette-segment-flip";
       const displayLabel = formatWheelLabel(label);
-      // Contre-rotation pour que le texte reste droit et lisible (indépendant de l'angle du segment)
-      const labelTransform = `translate(-50%, -42vmin) rotate(-${angle}deg)`;
-      return `<div class="${segClass}" style="transform: rotate(${angle}deg);"><span class="fidelity-roulette-segment-label" style="transform: ${labelTransform}; transform-origin: 50% 42vmin;">${escapeHtml(displayLabel)}</span></div>`;
+      // Ancre + contre-rotation : texte horizontal et lisible dans chaque segment.
+      return `<div class="${segClass}" style="transform: rotate(${angle}deg); --segment-angle: ${angle}deg;"><span class="fidelity-roulette-segment-label-anchor"><span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(displayLabel)}</span></span></div>`;
     }).join("");
 
     wheelEl.innerHTML = segmentHtml;

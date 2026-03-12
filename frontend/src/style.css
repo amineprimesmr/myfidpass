@@ -1123,12 +1123,22 @@ body {
   pointer-events: none;
 }
 
-/* Texte le long de l’arc : pivot 90° pour suivre la courbe de la roue, position fixe */
-.fidelity-roulette-wheel-segment span,
-.fidelity-roulette-wheel-segment .fidelity-roulette-segment-label {
+/* Ancre du label : placement au centre de chaque segment (sur le rayon). */
+.fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-anchor {
   position: absolute;
   left: 0;
   top: 0;
+  transform: translate(-50%, -33vmin);
+  transform-origin: 50% 33vmin;
+  pointer-events: none;
+}
+
+/* Texte du label : contre-rotation pour rester droit/horizontal. */
+.fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
+.fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
   font-size: clamp(1.25rem, 6.5vmin, 2.25rem);
   font-weight: 900;
   color: #fff;
@@ -1141,12 +1151,12 @@ body {
   text-align: center;
   direction: ltr;
   unicode-bidi: normal;
-  transform: translate(-50%, -42vmin) rotate(0deg);
-  transform-origin: 50% 42vmin;
+  transform: translate(-50%, -50%) rotate(calc(-1 * var(--segment-angle, 0deg)));
+  transform-origin: 50% 50%;
 }
 
-.fidelity-game-page .fidelity-roulette-wheel-segment span,
-.fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label {
+.fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
+.fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
   font-size: clamp(1.4rem, 7vmin, 2.5rem);
   font-weight: 900;
   text-transform: uppercase;
@@ -1156,14 +1166,9 @@ body {
   direction: ltr;
   unicode-bidi: normal;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-  transform: translate(-50%, -42vmin) rotate(0deg);
-  transform-origin: 50% 42vmin;
 }
 
-/* Moitié basse : -90° pour que le texte suive l’arc dans le bon sens */
-/* Contre-rotation du label appliquée en JS (bootstrap) pour texte toujours droit */
-
-.fidelity-roulette-wheel-segment.fidelity-roulette-segment-white span {
+.fidelity-roulette-wheel-segment.fidelity-roulette-segment-white .fidelity-roulette-segment-label {
   color: #000;
   text-shadow: 0 1px 1px rgba(255,255,255,0.5);
 }
