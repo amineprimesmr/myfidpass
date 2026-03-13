@@ -87,6 +87,13 @@ body.page-app .site-banner { display: none !important; }
 #app-app:not([data-sidebar-expanded="true"]) .app-main { margin-left: 72px; }
 #app-app[data-sidebar-expanded="true"] .app-main { margin-left: 272px; }
 #app-app .app-main { transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow var(--app-transition), transform var(--app-transition); }
+/* Quand collapsed : masquer labels, éviter overflow */
+#app-app:not([data-sidebar-expanded="true"]) .app-sidebar .app-sidebar-business,
+#app-app:not([data-sidebar-expanded="true"]) .app-sidebar .app-sidebar-link-text,
+#app-app:not([data-sidebar-expanded="true"]) .app-sidebar .app-sidebar-user { display: none; }
+#app-app:not([data-sidebar-expanded="true"]) .app-sidebar .app-sidebar-brand { padding: 1rem 0.5rem; }
+#app-app:not([data-sidebar-expanded="true"]) .app-sidebar .app-sidebar-link { justify-content: center; padding: 0.85rem; }
+#app-app:not([data-sidebar-expanded="true"]) .app-sidebar { overflow: hidden; }
 
 /* Sidebar — fond noir, style app moderne */
 .app-sidebar {
