@@ -883,7 +883,17 @@
   }
 }
 
-/* Carousel simple – défilement horizontal */
+/* Apple Cards Carousel (Aceternity) */
+.landing-apple-carousel-wrapper {
+  width: 100%;
+  min-height: 360px;
+}
+.landing-apple-carousel-wrapper .scrollbar-hide::-webkit-scrollbar,
+.landing-apple-carousel-wrapper [style*="scrollbarWidth"]::-webkit-scrollbar {
+  display: none;
+}
+
+/* Carousel simple – défilement horizontal (legacy, conservé pour compat) */
 .landing-cards-scroll-wrapper {
   width: 100%;
   margin: 2rem 0 3rem;

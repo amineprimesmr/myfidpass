@@ -7136,7 +7136,12 @@ function initLandingHeroAnim() {
 }
 
 function initLandingCardsScroll() {
-  /* Carrousel simple : overflow-x scroll en CSS, rien à faire côté JS */
+  /* Apple Cards Carousel (React) monté via landing-apple-cards-root */
+  const root = document.getElementById("landing-apple-cards-root");
+  if (root && !root._carouselMounted) {
+    root._carouselMounted = true;
+    import("./components/AppleCardsCarouselLanding.jsx").then((m) => m.mountAppleCardsCarousel());
+  }
 }
 
 function initLandingSimulator() {
