@@ -83,6 +83,11 @@ body.page-app .site-banner { display: none !important; }
 
 #app-app .app-main { padding-top: 1.5rem; }
 
+/* Sidebar Aceternity — largeur dynamique (collapsed 72px, expanded 272px) */
+#app-app:not([data-sidebar-expanded="true"]) .app-main { margin-left: 72px; }
+#app-app[data-sidebar-expanded="true"] .app-main { margin-left: 272px; }
+#app-app .app-main { transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow var(--app-transition), transform var(--app-transition); }
+
 /* Sidebar — fond noir, style app moderne */
 .app-sidebar {
   width: var(--app-sidebar-width);
@@ -264,6 +269,7 @@ body.page-app .site-banner { display: none !important; }
   flex: 1;
   margin-left: var(--app-sidebar-width);
   margin-top: 12px;
+  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   margin-right: 12px;
   margin-bottom: 12px;
   min-height: calc(100vh - 24px);
