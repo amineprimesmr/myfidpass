@@ -792,8 +792,7 @@ function initAuthPage(initialTab) {
   }
 }
 
-async function initAppPage() {
-  await import("./components/AppSidebar.jsx").then((m) => m.mountAppSidebar());
+function initAppPage() {
   const emptyEl = document.getElementById("app-empty");
   const contentEl = document.getElementById("app-dashboard-content");
   const businessNameEl = document.getElementById("app-business-name");
