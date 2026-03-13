@@ -7137,7 +7137,7 @@ function initLandingHeroAnim() {
 
 function initLandingCardsScroll() {
   /* Apple Cards Carousel (React) monté via landing-apple-cards-root */
-  const root = document.getElementById("landing-apple-cards-root");
+  const root = document.getElementById("landing-apple-carousel-root");
   if (root && !root._carouselMounted) {
     root._carouselMounted = true;
     import("./components/AppleCardsCarouselLanding.jsx").then((m) => m.mountAppleCardsCarousel());
