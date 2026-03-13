@@ -2140,15 +2140,7 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 .app-personnaliser-preview.builder-phone-mockup { width: min(390px, 92vw); max-width: 430px; margin-left: auto; margin-right: auto; }
-.app-personnaliser-preview .builder-phone-frame {
-  position: relative;
-  isolation: isolate;
-}
-.app-personnaliser-preview .builder-phone-frame-img {
-  z-index: 5;
-}
 .app-personnaliser-preview .builder-phone-screen {
-  z-index: 2;
   overflow: hidden;
   border-radius: 11% / 7%;
 }
