@@ -2116,22 +2116,22 @@ body.page-app .site-banner { display: none !important; }
 /* Historique toolbar */
 .app-histoire-toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
 
-/* Personnaliser — UX 2 colonnes (gauche: réglages, droite: aperçu iPhone) */
-#personnaliser.app-section {
+/* Personnaliser — UX 2 colonnes (gauche: reglages, droite: apercu iPhone) */
+#app-dashboard-content #personnaliser.app-section.app-section-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
   gap: 1.5rem 2rem;
   align-items: start;
 }
-#personnaliser .app-section-title,
-#personnaliser .app-section-desc {
+#app-dashboard-content #personnaliser .app-section-title,
+#app-dashboard-content #personnaliser .app-section-desc {
   grid-column: 1 / -1;
 }
-#personnaliser .app-personnaliser-card {
+#app-dashboard-content #personnaliser .app-personnaliser-card {
   grid-column: 1;
   grid-row: 3;
 }
-#personnaliser .app-personnaliser-live-preview-wrap {
+#app-dashboard-content #personnaliser .app-personnaliser-live-preview-wrap {
   grid-column: 2;
   grid-row: 3;
   margin-bottom: 0;
@@ -2141,10 +2141,10 @@ body.page-app .site-banner { display: none !important; }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 .app-personnaliser-preview.builder-phone-mockup { width: min(390px, 92vw); max-width: 430px; margin-left: auto; margin-right: auto; }
 @media (max-width: 980px) {
-  #personnaliser.app-section {
+  #app-dashboard-content #personnaliser.app-section.app-section-visible {
     display: block;
   }
-  #personnaliser .app-personnaliser-live-preview-wrap {
+  #app-dashboard-content #personnaliser .app-personnaliser-live-preview-wrap {
     position: static;
     margin-bottom: 1.5rem;
   }
