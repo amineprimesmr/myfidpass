@@ -532,6 +532,13 @@
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
 }
+/* Failsafe : contenu landing toujours visible quand #landing est affiché */
+#landing:not(.hidden) #landing-main:not(.hidden),
+#landing #landing-main {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 
 /* Hero – entrée en cascade (fallback si pas GSAP) */
 .landing-hero .landing-hero-title,
@@ -541,13 +548,14 @@
 .landing-hero .landing-hero-stats {
   transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
+/* Affichage visible par défaut — GSAP anime en entrée si dispo */
 .landing-hero:not(.landing-hero-visible) .landing-hero-title,
 .landing-hero:not(.landing-hero-visible) .landing-hero-subtitle,
 .landing-hero:not(.landing-hero-visible) .landing-hero-form,
 .landing-hero:not(.landing-hero-visible) .landing-hero-benefits,
 .landing-hero:not(.landing-hero-visible) .landing-hero-stats {
-  opacity: 0;
-  transform: translateY(24px);
+  opacity: 1;
+  transform: translateY(0);
 }
 .landing-hero.landing-hero-visible .landing-hero-title,
 .landing-hero.landing-hero-visible .landing-hero-subtitle,
