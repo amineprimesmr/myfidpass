@@ -1,0 +1,60 @@
+/* Cover — Aceternity UI : beams + space, hover to reveal speed */
+.cover-wrapper {
+  display: inline;
+  position: relative;
+  background: linear-gradient(to bottom, #262626 0%, #404040 50%, #404040 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 100%;
+  background-position: 0% 0%;
+  transition: background-position 0.5s ease;
+  cursor: default;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cover-wrapper {
+    background: linear-gradient(to bottom, #262626 0%, #fff 50%, #fff 100%);
+  }
+}
+
+/* CoverDemo h1 — équivalent Tailwind: text-4xl lg:text-6xl font-semibold max-w-7xl mx-auto etc. */
+.cover-demo-h1 {
+  font-size: 2.25rem;
+  font-weight: 600;
+  max-width: 80rem;
+  margin: 1.5rem auto 0;
+  text-align: center;
+  position: relative;
+  z-index: 20;
+  padding: 1.5rem 0;
+  background: linear-gradient(to bottom, #262626, #404040, #404040);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+@media (min-width: 1024px) {
+  .cover-demo-h1 {
+    font-size: 3.75rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .cover-demo-h1 {
+    background: linear-gradient(to bottom, #262626, #fff, #fff);
+  }
+}
+
+.cover-demo-h1 .cover-wrapper:hover,
+.cover-wrapper:focus-within {
+  background-position: 100% 0%;
+  animation: cover-speed 0.6s ease;
+}
+
+@keyframes cover-speed {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 0%; }
+  100% { background-position: 100% 0%; }
+}

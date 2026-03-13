@@ -1,0 +1,228 @@
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+}
+
+/* Variables scopées à la depth gallery uniquement (évite d'écraser la landing) */
+#landing-depth-gallery-root {
+  --dg-font-size: 12px;
+  --dg-color-text: #fff;
+  --dg-color-bg: #fff;
+  --dg-color-link: #fff;
+  --dg-page-padding: 1.5rem;
+  --dg-ui-font: 'IBM Plex Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  --dg-ui-tracking: 0.08em;
+}
+
+/* Quand Engine passe en mode dark (body.frame-text-dark) */
+body.frame-text-dark #landing-depth-gallery-root {
+  --dg-color-text: #121212;
+  --dg-color-link: #121212;
+}
+
+/* Body.loading : loader pendant l'init (Engine utilise 'loading') */
+@media (scripting: enabled) {
+  body.loading {
+    &::before,
+    &::after {
+      content: '';
+      position: fixed;
+      z-index: 10000;
+    }
+
+    &::before {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
+
+    &::after {
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 1px;
+      margin: 0 0 0 -50px;
+      background: #333;
+      animation: loaderAnim 1.5s ease-in-out infinite alternate forwards;
+    }
+  }
+}
+
+@keyframes loaderAnim {
+  0% {
+    transform: scaleX(0);
+    transform-origin: 0% 50%;
+  }
+
+  50% {
+    transform: scaleX(1);
+    transform-origin: 0% 50%;
+  }
+
+  50.1% {
+    transform: scaleX(1);
+    transform-origin: 100% 50%;
+  }
+
+  100% {
+    transform: scaleX(0);
+    transform-origin: 100% 50%;
+  }
+}
+
+/* Liens dans la frame depth gallery uniquement */
+#landing-depth-gallery-root .frame a {
+  text-decoration: none;
+  color: var(--dg-color-link, #fff);
+  outline: none;
+  cursor: pointer;
+  transition: color 520ms ease;
+}
+
+#landing-depth-gallery-root .frame a:hover {
+  text-decoration: underline;
+  color: var(--dg-color-link, #fff);
+
+}
+
+#landing-depth-gallery-root .frame a:focus {
+  outline: none;
+  background: lightgrey;
+}
+
+#landing-depth-gallery-root .frame a:focus:not(:focus-visible) {
+  background: transparent;
+}
+
+#landing-depth-gallery-root .frame a:focus-visible {
+  outline: 2px solid red;
+  background: transparent;
+}
+
+#landing-depth-gallery-root .frame,
+#landing-depth-gallery-root .frame span,
+#landing-depth-gallery-root .frame p,
+#landing-depth-gallery-root .frame h1 {
+  transition: color 520ms ease;
+}
+
+#landing-depth-gallery-root .frame {
+  padding: 3rem var(--dg-page-padding, 1.5rem) 0;
+  display: grid;
+  z-index: 1000;
+  position: relative;
+  grid-row-gap: 1rem;
+  grid-column-gap: 2rem;
+  pointer-events: none;
+  justify-items: start;
+  grid-template-columns: auto auto auto 1fr;
+  grid-template-areas:
+    'title title title title'
+    'back archive github ...'
+    'credit credit credit credit'
+    'tags tags tags tags'
+    'sponsor sponsor sponsor sponsor';
+
+  #cdawrap {
+    justify-self: start;
+    grid-area: sponsor;
+  }
+
+  a,
+  button {
+    pointer-events: auto;
+  }
+
+  .frame__title {
+    grid-area: title;
+    font-size: inherit;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .frame__back {
+    grid-area: back;
+    justify-self: start;
+  }
+
+  .frame__archive {
+    grid-area: archive;
+    justify-self: start;
+  }
+
+  .frame__github {
+    grid-area: github;
+  }
+
+  .frame__tags {
+    grid-area: tags;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .frame__demos {
+    grid-area: demos;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .frame__credit {
+    grid-area: credit;
+    margin: 0;
+    opacity: 0.78;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: var(--dg-ui-tracking, 0.08em);
+    line-height: 1.2;
+    text-align: right;
+  }
+
+  .frame__credit p {
+    margin-bottom: 0;
+  }
+
+  @media screen and (min-width: 53em) {
+    padding: var(--dg-page-padding, 1.5rem);
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    grid-template-columns: auto auto auto auto 1fr;
+    grid-template-rows: auto auto;
+    align-content: space-between;
+    grid-template-areas:
+      'title back github archive sponsor'
+      'tags tags tags credit credit';
+
+    .frame__tags {
+      align-self: end;
+    }
+
+    .frame__credit,
+    #cdawrap {
+      justify-self: end;
+      text-align: right;
+      max-width: 300px;
+    }
+  }
+}
+
+#landing-depth-gallery-root .content {
+  padding: var(--dg-page-padding, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  position: relative;
+  pointer-events: none;
+  @media screen and (min-width: 53em) {
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+  }
+}

@@ -13,11 +13,18 @@
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@tabler/icons-react": "^3.40.0",
     "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.27",
     "colorthief": "^2.6.0",
+    "framer-motion": "^12.36.0",
     "html5-qrcode": "^2.3.8",
+    "postcss": "^8.5.8",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "three": "^0.183.2"
+    "tailwindcss": "^4.2.1",
+    "three": "^0.183.2",
+    "tweakpane": "^4.0.5",
+    "vite-plugin-glsl": "^1.5.5"
   }
 }

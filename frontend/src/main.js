@@ -1100,6 +1100,10 @@ function initAppMobile() {
       if (id && APP_SECTION_IDS.includes(id)) showAppSection(id);
     });
   });
+  window.addEventListener("fidpass-mobile-tab", (e) => {
+    const id = e.detail?.tab;
+    if (id && APP_SECTION_IDS.includes(id)) showAppSection(id);
+  });
   headerScanBtn?.addEventListener("click", () => showAppSection("caisse"));
 
   document.querySelectorAll(".app-mobile-profil-item[data-section]").forEach((item) => {

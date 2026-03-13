@@ -875,7 +875,13 @@
   }
 }
 
-/* Bandeau cartes fidélité – défilement horizontal lié au scroll vertical */
+/* Atmospheric Depth Gallery (Codrops) - remplace le carousel */
+.landing-depth-gallery-wrapper {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Bandeau cartes fidélité – défilement horizontal lié au scroll vertical (legacy, masqué) */
 .landing-cards-scroll-wrapper {
   min-height: 220vh;
   position: relative;

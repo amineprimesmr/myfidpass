@@ -1,0 +1,111 @@
+/* FloatingDock — Aceternity UI style, macOS dock */
+
+.floating-dock-demo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.floating-dock {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.floating-dock-desktop {
+  display: none;
+}
+.floating-dock-mobile {
+  display: flex;
+  justify-content: center;
+}
+.floating-dock-mobile.translate-y-20 {
+  bottom: calc(16px + 80px);
+}
+
+@media (min-width: 769px) {
+  .floating-dock-desktop {
+    display: flex;
+    justify-content: center;
+  }
+  .floating-dock-mobile {
+    display: none !important;
+  }
+}
+
+.floating-dock-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 10px 16px 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.floating-dock-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: #64748b;
+  text-decoration: none;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.2s ease,
+    background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.floating-dock-icon:hover,
+.floating-dock-icon:active {
+  color: #1e293b;
+  background: rgba(0, 0, 0, 0.06);
+  transform: scale(1.1);
+}
+
+.floating-dock-icon-active {
+  color: #2563eb !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+}
+
+.floating-dock-icon-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.floating-dock-svg,
+.floating-dock-icon-default {
+  width: 22px;
+  height: 22px;
+}
+
+/* Mobile: seulement en mode app mobile */
+#app-app.app-mobile .floating-dock-demo-wrap {
+  display: block;
+}
+#app-app:not(.app-mobile) .floating-dock-demo-wrap {
+  display: none !important;
+}
+
+/* Tab bar contient le FloatingDock : fond transparent, pas de bordure */
+#app-mobile-tab-bar:has(#app-mobile-floating-dock-root) {
+  background: transparent !important;
+  border-top: none !important;
+  box-shadow: none !important;
+  padding: 0;
+}
