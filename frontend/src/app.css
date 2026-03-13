@@ -2116,10 +2116,43 @@ body.page-app .site-banner { display: none !important; }
 /* Historique toolbar */
 .app-histoire-toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
 
-/* Personnaliser aperçu live — même mockup iPhone que « Créer ma carte » */
-.app-personnaliser-live-preview-wrap { margin-bottom: 1.5rem; }
+/* Personnaliser — UX 2 colonnes (gauche: réglages, droite: aperçu iPhone) */
+#personnaliser.app-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  gap: 1.5rem 2rem;
+  align-items: start;
+}
+#personnaliser .app-section-title,
+#personnaliser .app-section-desc {
+  grid-column: 1 / -1;
+}
+#personnaliser .app-personnaliser-card {
+  grid-column: 1;
+  grid-row: 3;
+}
+#personnaliser .app-personnaliser-live-preview-wrap {
+  grid-column: 2;
+  grid-row: 3;
+  margin-bottom: 0;
+  position: sticky;
+  top: 1.5rem;
+}
 .app-personnaliser-preview { margin-top: 0.5rem; }
-.app-personnaliser-preview.builder-phone-mockup { width: min(280px, 85vw); max-width: 320px; margin-left: auto; margin-right: auto; }
+.app-personnaliser-preview.builder-phone-mockup { width: min(390px, 92vw); max-width: 430px; margin-left: auto; margin-right: auto; }
+@media (max-width: 980px) {
+  #personnaliser.app-section {
+    display: block;
+  }
+  #personnaliser .app-personnaliser-live-preview-wrap {
+    position: static;
+    margin-bottom: 1.5rem;
+  }
+  .app-personnaliser-preview.builder-phone-mockup {
+    width: min(300px, 85vw);
+    max-width: 340px;
+  }
+}
 .app-personnaliser-preview .builder-phone-screen { height: 74%; top: 13%; }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic { height: 82%; max-height: none; min-height: 0; }
 
