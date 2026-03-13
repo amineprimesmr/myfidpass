@@ -2140,6 +2140,23 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-personnaliser-preview { margin-top: 0.5rem; }
 .app-personnaliser-preview.builder-phone-mockup { width: min(390px, 92vw); max-width: 430px; margin-left: auto; margin-right: auto; }
+.app-personnaliser-preview .builder-phone-frame {
+  position: relative;
+  isolation: isolate;
+}
+.app-personnaliser-preview .builder-phone-frame-img {
+  z-index: 5;
+}
+.app-personnaliser-preview .builder-phone-screen {
+  z-index: 2;
+  overflow: hidden;
+  border-radius: 11% / 7%;
+}
+.app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 @media (max-width: 980px) {
   #app-dashboard-content #personnaliser.app-section.app-section-visible {
     display: block;
@@ -2148,10 +2165,7 @@ body.page-app .site-banner { display: none !important; }
     position: static;
     margin-bottom: 1.5rem;
   }
-  .app-personnaliser-preview.builder-phone-mockup {
-    width: min(300px, 85vw);
-    max-width: 340px;
-  }
+  .app-personnaliser-preview.builder-phone-mockup { width: min(300px, 85vw); max-width: 340px; }
 }
 .app-personnaliser-preview .builder-phone-screen { height: 74%; top: 13%; }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic { height: 82%; max-height: none; min-height: 0; }
