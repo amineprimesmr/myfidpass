@@ -883,78 +883,40 @@
   }
 }
 
-/* Atmospheric Depth Gallery (Codrops) - remplace le carousel */
-.landing-depth-gallery-wrapper {
-  min-height: 100vh;
-  position: relative;
-}
-
-/* Bandeau cartes fidélité – défilement horizontal lié au scroll vertical (legacy, masqué) */
+/* Carousel simple – défilement horizontal */
 .landing-cards-scroll-wrapper {
-  min-height: 220vh;
-  position: relative;
-  width: 100vw;
-  max-width: 100vw;
-  margin-top: -0.5rem;
-  margin-left: calc(50% - 50vw);
-  left: 0;
-  box-sizing: border-box;
+  width: 100%;
+  margin: 2rem 0 3rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scroll-snap-type: x mandatory;
 }
 .landing-cards-scroll {
-  margin-top: 0;
-  padding: 0.25rem 0 2.5rem;
-  overflow: hidden;
-  width: 100%;
-  max-width: 100vw;
-  position: sticky;
-  top: 0;
-  left: 0;
-  height: 100vh;
   display: flex;
-  align-items: center;
+  padding: 0.5rem 1.5rem;
+  gap: 1.25rem;
+  width: max-content;
+  min-width: 100%;
   box-sizing: border-box;
 }
 .landing-cards-scroll-mask {
-  overflow: hidden;
-  width: 100%;
-  /* Dégradé plus doux à gauche pour ne pas cacher la première image */
-  mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+  /* Plus de masque – scroll direct */
 }
 .landing-cards-scroll-track {
   display: flex;
   align-items: stretch;
   gap: 1.25rem;
-  width: max-content;
-  /* Padding gauche pour que la première image soit bien visible (plus de coupure à gauche) */
-  padding: 0 2rem 0 min(2.5rem, 8vw);
-  will-change: transform;
-  transition: none;
-  transform: translate3d(0, 0, 0);
+  padding: 0 0.5rem;
 }
 @media (max-width: 768px) {
   .landing-cards-scroll-wrapper {
-    min-height: 160vh;
-    margin-top: -1.75rem;
+    margin: 1.5rem -1rem 2rem;
+    padding: 0 1rem;
   }
   .landing-cards-scroll {
-    height: 85vh;
-    padding-top: 0;
-  }
-  .landing-cards-scroll-track {
-    padding-left: 1.5rem;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .landing-cards-scroll-wrapper {
-    min-height: auto;
-  }
-  .landing-cards-scroll {
-    position: relative;
-    height: auto;
-  }
-  .landing-cards-scroll-track {
-    transition: none;
+    padding: 0 0.5rem;
   }
 }
 
