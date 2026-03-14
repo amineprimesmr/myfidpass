@@ -1017,14 +1017,14 @@ const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
   "caisse": "Caisse",
   "personnaliser": "Ma Carte",
-  "carte-perimetre": "Carte & périmètre",
+  "carte-perimetre": "Zone & notifications",
   "engagement": "Avis & Réseaux",
-  "notifications": "Notifications",
   "profil": "Profil",
 };
 
 function showAppSection(sectionId) {
   let normalized = sectionId === "partager" ? "personnaliser" : sectionId;
+  if (normalized === "notifications") normalized = "carte-perimetre";
   const id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   const content = document.getElementById("app-dashboard-content");
@@ -1122,7 +1122,7 @@ function initAppMobile() {
     mobileMessageSend.addEventListener("click", () => {
       const text = (mobileMessageInput.value || "").trim();
       if (text) {
-        showAppSection("notifications");
+        showAppSection("carte-perimetre");
         const notifMsg = document.getElementById("app-notif-message");
         if (notifMsg) notifMsg.value = text;
       }
@@ -1870,6 +1870,38 @@ function initAppDashboard(slug) {
   const stampEmojiEl = document.getElementById("app-stamp-emoji");
   const stampRewardLabelEl = document.getElementById("app-stamp-reward-label");
   const expiryMonthsEl = document.getElementById("app-expiry-months");
+  const personnaliserAccordion = document.getElementById("app-personnaliser-accordion");
+
+  function initPersonnaliserAccordion() {
+    if (!personnaliserAccordion) return;
+    const groups = Array.from(personnaliserAccordion.querySelectorAll("[data-personnaliser-group]"));
+    if (!groups.length) return;
+
+    function setOpen(group, shouldOpen) {
+      if (!group) return;
+      group.classList.toggle("is-open", shouldOpen);
+      const toggle = group.querySelector(".app-personnaliser-group-toggle");
+      if (toggle) toggle.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    }
+
+    // Par défaut: tout fermé. Si une section a explicitement "is-open", on la respecte.
+    const initiallyOpen = groups.find((group) => group.classList.contains("is-open")) || null;
+    groups.forEach((group) => setOpen(group, group === initiallyOpen));
+
+    groups.forEach((group) => {
+      const toggle = group.querySelector(".app-personnaliser-group-toggle");
+      if (!toggle) return;
+      toggle.addEventListener("click", () => {
+        const isCurrentlyOpen = group.classList.contains("is-open");
+        if (isCurrentlyOpen) {
+          setOpen(group, false);
+          return;
+        }
+        groups.forEach((item) => setOpen(item, item === group));
+      });
+    });
+  }
+  initPersonnaliserAccordion();
 
   function setRulesPanelVisibility() {
     const isStamps = programTypeStamps && programTypeStamps.checked;
@@ -4365,8 +4397,8 @@ function initAppDashboard(slug) {
         const membersCount = data.membersCount != null ? data.membersCount : 0;
         if (membersCount > 0 || total > 0) {
           membersSummaryEl.innerHTML = total > 0
-            ? `<strong>Notifications :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#notifications" class="app-link-inline">Envoyer une notification →</a>`
-            : `<strong>Notifications :</strong> tu as ${membersCount} membre(s). La carte peut être bien dans le Wallet, mais <strong>aucun iPhone ne nous a encore envoyé son enregistrement</strong> — donc on ne peut pas envoyer de notifications push. Ce n’est pas que tu n’as pas la carte ; c’est que notre serveur n’a reçu le signal d’aucun appareil. <a href="#notifications" class="app-link-inline">Voir le diagnostic →</a>`;
+            ? `<strong>Notifications :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#carte-perimetre" class="app-link-inline">Envoyer une notification →</a>`
+            : `<strong>Notifications :</strong> tu as ${membersCount} membre(s). La carte peut être bien dans le Wallet, mais <strong>aucun iPhone ne nous a encore envoyé son enregistrement</strong> — donc on ne peut pas envoyer de notifications push. Ce n’est pas que tu n’as pas la carte ; c’est que notre serveur n’a reçu le signal d’aucun appareil. <a href="#carte-perimetre" class="app-link-inline">Voir le diagnostic →</a>`;
           membersSummaryEl.classList.remove("hidden");
         } else {
           membersSummaryEl.classList.add("hidden");
@@ -4532,7 +4564,7 @@ function initAppDashboard(slug) {
   });
 
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "notifications") loadAppNotificationStats();
+    if (e.detail?.sectionId === "carte-perimetre") loadAppNotificationStats();
   }, { once: false });
 
   refresh();

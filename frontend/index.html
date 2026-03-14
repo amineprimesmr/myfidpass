@@ -439,7 +439,7 @@
           </a>
           <a href="#carte-perimetre" class="app-sidebar-link" data-section="carte-perimetre">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
-            <span class="app-sidebar-link-text">Carte & périmètre</span>
+            <span class="app-sidebar-link-text">Zone & notifications</span>
           </a>
           <a href="#integration" class="app-sidebar-link" data-section="integration">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-4"/><path d="M12 18a2 2 0 0 1-2-2V8a2 2 0 0 1 4 0v8a2 2 0 0 1-2 2z"/><path d="M8 6l4-4 4 4"/><path d="M8 6h8"/></svg></span>
@@ -448,10 +448,6 @@
           <a href="#engagement" class="app-sidebar-link" data-section="engagement">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
             <span class="app-sidebar-link-text">Avis & Réseaux</span>
-          </a>
-          <a href="#notifications" class="app-sidebar-link" data-section="notifications">
-            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
-            <span class="app-sidebar-link-text">Notifications</span>
           </a>
           <a href="#profil" class="app-sidebar-link" data-section="profil">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
@@ -572,7 +568,7 @@
                     <span class="app-dashboard-action-title">Soigner les nouveaux</span>
                     <strong id="app-action-new-count">0 nouveaux</strong>
                   </a>
-                  <a href="#notifications" data-section="notifications" class="app-dashboard-action-card">
+                  <a href="#carte-perimetre" data-section="carte-perimetre" class="app-dashboard-action-card">
                     <span class="app-dashboard-action-title">Campagne fidélité</span>
                     <strong id="app-action-recurrent-count">0 récurrents</strong>
                   </a>
@@ -811,9 +807,7 @@
 
           <section id="personnaliser" class="app-section">
             <h2 class="app-section-title">Ma carte</h2>
-            <p class="app-section-desc">Personnalisez les couleurs et le logo, puis partagez le lien ou le QR code à vos clients. Les changements s’appliquent aux nouvelles cartes ajoutées.</p>
             <div class="app-personnaliser-live-preview-wrap">
-              <p class="app-step-label">Aperçu — comme dans Apple Wallet</p>
               <div id="app-personnaliser-preview" class="app-personnaliser-preview builder-phone-mockup" role="img" aria-label="Aperçu de la carte fidélité">
                 <div class="builder-phone-frame">
                   <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="this.style.display='none'" loading="lazy" />
@@ -863,6 +857,14 @@
               </div>
             </div>
             <div class="app-card app-personnaliser-card">
+              <div class="app-personnaliser-accordion" id="app-personnaliser-accordion">
+                <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-rules">
+                    <span class="app-personnaliser-group-title">Programme de fidélité</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-rules" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
               <h3 class="app-subsection-title">Règles de la carte</h3>
               <p class="app-hint">Choisissez le type de programme (points ou tampons) et définissez comment les clients gagnent et échangent leurs avantages.</p>
               <div class="app-rules-type">
@@ -949,6 +951,16 @@
                 <p class="app-step-label">Expiration des points/tampons (mois, optionnel)</p>
                 <input type="number" id="app-expiry-months" class="app-input app-input-number" min="0" placeholder="Jamais" title="0 = pas d'expiration" />
               </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-design">
+                    <span class="app-personnaliser-group-title">Design et contenu carte</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-design" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
               <p class="app-step-label">Nom affiché sur la carte</p>
               <input type="text" id="app-personnaliser-org" class="app-input" placeholder="Nom du commerce" />
               <p class="app-step-label">Couleurs</p>
@@ -1008,6 +1020,16 @@
                 </div>
                 <button type="button" id="app-personnaliser-card-bg-remove" class="app-btn app-btn-secondary hidden">Supprimer l’image de fond</button>
               </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-location">
+                    <span class="app-personnaliser-group-title">Localisation Wallet</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-location" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
               <p class="app-step-label">Localisation Apple Wallet</p>
               <p class="app-hint app-location-hint">Indiquez l’adresse de votre commerce : la carte s’affichera sur l’écran de verrouillage des clients à l’approche. Les coordonnées sont calculées automatiquement.</p>
               <div class="app-personnaliser-location">
@@ -1025,8 +1047,14 @@
                   <input type="number" id="app-personnaliser-radius" class="app-input app-input-number" placeholder="500" min="100" max="2000" step="50" title="Périmètre d’affichage (100–2000 m)" />
                 </div>
               </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <div class="app-personnaliser-actions">
               <div id="app-personnaliser-message" class="app-personnaliser-message hidden"></div>
               <button type="button" id="app-personnaliser-save" class="app-btn app-btn-primary">Enregistrer les modifications</button>
+              </div>
             </div>
             <h3 class="app-subsection-title">Partager votre carte</h3>
             <div class="app-card app-share-card app-share-card-minimal">
@@ -1075,36 +1103,6 @@
               <pre id="app-integration-curl" class="app-integration-curl"></pre>
               <button type="button" id="app-integration-copy-curl" class="app-btn app-btn-secondary">Copier l'exemple cURL</button>
               <p class="app-integration-doc-link"><a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md" target="_blank" rel="noopener">Documentation complète (format code-barres, lookup, exemples JS/Python, erreurs)</a></p>
-            </div>
-          </section>
-          <section id="notifications" class="app-section">
-            <h2 class="app-section-title">Notifications push</h2>
-            <p class="app-section-desc">Envoyez une notification à tous les membres : dès qu’un client ajoute la carte, il peut recevoir les alertes sur son téléphone (ex. : « Aujourd'hui les points valent double ! »).</p>
-            <p class="app-notifications-wallet-hint">Sur iPhone (Apple Wallet), la notif sur l’écran de verrouillage apparaît quand tu <strong>ajoutes des points</strong> au client (Scanner carte ou Membres). Le client reçoit alors « Tu as maintenant X points ! ». Le bouton ci-dessous envoie un rappel de mise à jour à tous les appareils.</p>
-            <div class="app-notifications-iphone-tip" role="note">
-              <strong>Pas de notif sur l’iPhone ?</strong> Sur le téléphone du client : ouvrir la carte dans <strong>Portefeuille</strong> → toucher <strong>⋯</strong> (trois points) → <strong>Détails du pass</strong> → activer <strong>« Autoriser les notifications »</strong> (et « Suggérer sur l’écran de verrouillage » si proposé). Puis vérifier Réglages → Notifications → Portefeuille.
-            </div>
-            <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
-            <div class="app-card">
-              <label class="app-label" for="app-notif-title">Titre (optionnel)</label>
-              <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />
-              <label class="app-label" for="app-notif-message">Message</label>
-              <textarea id="app-notif-message" class="app-input app-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3" required></textarea>
-              <div class="app-notif-target-wrap">
-                <label class="app-label">Envoyer à</label>
-                <label class="app-checkbox-label app-notif-target-all-wrap">
-                  <input type="checkbox" id="app-notif-target-all" class="app-notif-target-all" checked /> Tous les membres
-                </label>
-                <div id="app-notif-categories-wrap" class="app-notif-categories-wrap hidden">
-                  <span class="app-notif-categories-label">Ou à des catégories :</span>
-                  <div id="app-notif-categories-list" class="app-notif-categories-list"></div>
-                </div>
-              </div>
-              <p id="app-notifications-stats" class="app-notifications-stats"></p>
-              <p id="app-notifications-members-vs-devices-hint" class="app-notifications-members-vs-devices-hint hidden" role="note"></p>
-              <p id="app-notifications-remove-test-wrap" class="app-notifications-remove-test hidden"><button type="button" id="app-notifications-remove-test-btn" class="app-link-btn">Supprimer l'appareil de test</button> (remet le compteur à 0)</p>
-              <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer la notification</button>
-              <p id="app-notif-feedback" class="app-message hidden"></p>
             </div>
           </section>
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
@@ -1202,8 +1200,35 @@
             </div>
           </section>
           <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
-            <h2 class="app-section-title">Carte & périmètre</h2>
-            <p class="app-section-desc">Définissez l’emplacement de votre établissement et le rayon dans lequel les clients recevront une notification en y entrant (sur leur téléphone).</p>
+            <h2 class="app-section-title">Zone & notifications</h2>
+            <p class="app-section-desc">Tout est réuni ici: géolocalisation + envoi de notifications. Réglez votre zone, puis envoyez vos campagnes depuis le même écran.</p>
+            <div class="app-card">
+              <h3 class="app-subsection-title">Notifications push</h3>
+              <p class="app-notifications-wallet-hint">Sur iPhone (Apple Wallet), la notif sur l’écran de verrouillage apparaît quand tu <strong>ajoutes des points</strong> au client (Scanner carte ou Membres). Le client reçoit alors « Tu as maintenant X points ! ». Le bouton ci-dessous envoie un rappel de mise à jour à tous les appareils.</p>
+              <div class="app-notifications-iphone-tip" role="note">
+                <strong>Pas de notif sur l’iPhone ?</strong> Sur le téléphone du client : ouvrir la carte dans <strong>Portefeuille</strong> → toucher <strong>⋯</strong> (trois points) → <strong>Détails du pass</strong> → activer <strong>« Autoriser les notifications »</strong> (et « Suggérer sur l’écran de verrouillage » si proposé). Puis vérifier Réglages → Notifications → Portefeuille.
+              </div>
+              <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
+              <label class="app-label" for="app-notif-title">Titre (optionnel)</label>
+              <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />
+              <label class="app-label" for="app-notif-message">Message</label>
+              <textarea id="app-notif-message" class="app-input app-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3" required></textarea>
+              <div class="app-notif-target-wrap">
+                <label class="app-label">Envoyer à</label>
+                <label class="app-checkbox-label app-notif-target-all-wrap">
+                  <input type="checkbox" id="app-notif-target-all" class="app-notif-target-all" checked /> Tous les membres
+                </label>
+                <div id="app-notif-categories-wrap" class="app-notif-categories-wrap hidden">
+                  <span class="app-notif-categories-label">Ou à des catégories :</span>
+                  <div id="app-notif-categories-list" class="app-notif-categories-list"></div>
+                </div>
+              </div>
+              <p id="app-notifications-stats" class="app-notifications-stats"></p>
+              <p id="app-notifications-members-vs-devices-hint" class="app-notifications-members-vs-devices-hint hidden" role="note"></p>
+              <p id="app-notifications-remove-test-wrap" class="app-notifications-remove-test hidden"><button type="button" id="app-notifications-remove-test-btn" class="app-link-btn">Supprimer l'appareil de test</button> (remet le compteur à 0)</p>
+              <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer la notification</button>
+              <p id="app-notif-feedback" class="app-message hidden"></p>
+            </div>
             <div class="app-carte-perimetre-wrap">
               <div class="app-carte-perimetre-panel">
                 <div class="app-carte-perimetre-card">
@@ -1297,10 +1322,6 @@
               <li><a href="#engagement" class="app-mobile-profil-item" data-section="engagement">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
                 Avis & Réseaux
-              </a></li>
-              <li><a href="#notifications" class="app-mobile-profil-item" data-section="notifications">
-                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
-                Notifications
               </a></li>
               <li><a href="#personnaliser" class="app-mobile-profil-item" data-section="personnaliser">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></span>
