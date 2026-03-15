@@ -2350,8 +2350,14 @@ function initAppDashboard(slug) {
       if (headerRightEl != null) headerRightEl.value = data.header_right_text ?? data.headerRightText ?? "";
       const notifTitleOverrideEl = document.getElementById("app-notification-title-override");
       const notifChangeMsgEl = document.getElementById("app-notification-change-message");
-      if (notifTitleOverrideEl != null) notifTitleOverrideEl.value = data.notification_title_override ?? data.notificationTitleOverride ?? "";
-      if (notifChangeMsgEl != null) notifChangeMsgEl.value = data.notification_change_message ?? data.notificationChangeMessage ?? "";
+      const bannerTitleEl = document.getElementById("app-notification-banner-title");
+      const bannerMessageEl = document.getElementById("app-notification-banner-message");
+      const titleVal = data.notification_title_override ?? data.notificationTitleOverride ?? "";
+      const msgVal = data.notification_change_message ?? data.notificationChangeMessage ?? "";
+      if (notifTitleOverrideEl != null) notifTitleOverrideEl.value = titleVal;
+      if (notifChangeMsgEl != null) notifChangeMsgEl.value = msgVal;
+      if (bannerTitleEl != null) bannerTitleEl.value = titleVal;
+      if (bannerMessageEl != null) bannerMessageEl.value = msgVal;
       if (typeof updateAppNotificationPreview === "function") updateAppNotificationPreview();
       const er = data.engagement_rewards ?? data.engagementRewards ?? {};
       const g = er.google_review ?? {};
@@ -4519,65 +4525,97 @@ function initAppDashboard(slug) {
   window.addEventListener("app-members-refresh", () => refresh());
 
   function updateAppNotificationPreview() {
-    const titleInput = document.getElementById("app-notification-title-override");
-    const messageInput = document.getElementById("app-notification-change-message");
-    const exampleEl = document.getElementById("app-notification-preview-body-example");
-    const iconImg = document.getElementById("app-notification-preview-icon-img");
-    const iconFallback = document.getElementById("app-notification-preview-icon-fallback");
-    const profilLogo = document.getElementById("app-profil-logo-preview");
-    const title = (titleInput?.value ?? "").trim() || "Nom de votre commerce";
-    const format = (messageInput?.value ?? "").trim() || "Nouveau message : %@";
-    const sampleContent = title + ": test";
-    const bodyExample = format.replace(/%@/g, sampleContent);
-    if (exampleEl) exampleEl.textContent = bodyExample;
-    if (profilLogo?.src && !profilLogo.classList.contains("hidden")) {
-      if (iconImg) {
-        iconImg.src = profilLogo.src;
-        iconImg.classList.remove("hidden");
-      }
-      if (iconFallback) iconFallback.classList.add("hidden");
-    } else {
-      if (iconImg) iconImg.classList.add("hidden");
-      if (iconFallback) {
-        iconFallback.classList.remove("hidden");
-        iconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Votre logo";
-      }
-    }
-    syncNotificationBanner();
-  }
-
-  function syncNotificationBanner() {
-    const titleInput = document.getElementById("app-notification-title-override");
-    const messageInput = document.getElementById("app-notification-change-message");
-    const exampleEl = document.getElementById("app-notification-preview-body-example");
     const bannerTitle = document.getElementById("app-notification-banner-title");
     const bannerMessage = document.getElementById("app-notification-banner-message");
     const bannerExample = document.getElementById("app-notification-banner-example");
-    const bannerIconImg = document.getElementById("app-notification-banner-icon-img");
     const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
-    const previewIconImg = document.getElementById("app-notification-preview-icon-img");
-    const title = (titleInput?.value ?? "").trim() || "Nom de votre commerce";
-    const message = (messageInput?.value ?? "").trim() || "Nouveau message : %@";
-    if (bannerTitle) bannerTitle.textContent = title;
-    if (bannerMessage) bannerMessage.textContent = message;
-    if (bannerExample && exampleEl) bannerExample.textContent = exampleEl.textContent || "";
-    if (previewIconImg?.src && !previewIconImg.classList.contains("hidden")) {
-      if (bannerIconImg) {
-        bannerIconImg.src = previewIconImg.src;
-        bannerIconImg.classList.remove("hidden");
-      }
-      if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
-    } else {
-      if (bannerIconImg) bannerIconImg.classList.add("hidden");
-      if (bannerIconFallback) {
-        bannerIconFallback.classList.remove("hidden");
-        bannerIconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Nom de votre.";
-      }
+    const title = (bannerTitle?.value ?? "").trim() || "Nom de votre commerce";
+    const format = (bannerMessage?.value ?? "").trim() || "Nouveau message : %@";
+    const sampleContent = title + ": test";
+    const bodyExample = format.replace(/%@/g, sampleContent);
+    if (bannerExample) bannerExample.textContent = bodyExample;
+    if (bannerIconFallback) {
+      bannerIconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Logo";
     }
   }
 
-  document.getElementById("app-notification-title-override")?.addEventListener("input", updateAppNotificationPreview);
-  document.getElementById("app-notification-change-message")?.addEventListener("input", updateAppNotificationPreview);
+  async function refreshNotificationBannerIcon() {
+    const bannerIconImg = document.getElementById("app-notification-banner-icon-img");
+    const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
+    const profilLogo = document.getElementById("app-profil-logo-preview");
+    if (profilLogo?.src && !profilLogo.classList.contains("hidden")) {
+      if (bannerIconImg) {
+        bannerIconImg.src = profilLogo.src;
+        bannerIconImg.classList.remove("hidden");
+      }
+      if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
+      return;
+    }
+    try {
+      const r = await api("/logo?v=" + Date.now());
+      if (!r.ok) throw new Error("No logo");
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      if (bannerIconImg) {
+        if (bannerIconImg.src && bannerIconImg.src.startsWith("blob:")) URL.revokeObjectURL(bannerIconImg.src);
+        bannerIconImg.src = url;
+        bannerIconImg.classList.remove("hidden");
+      }
+      if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
+    } catch (_) {
+      if (bannerIconImg) bannerIconImg.classList.add("hidden");
+      if (bannerIconFallback) bannerIconFallback.classList.remove("hidden");
+    }
+  }
+
+  document.getElementById("app-notification-banner-title")?.addEventListener("input", updateAppNotificationPreview);
+  document.getElementById("app-notification-banner-message")?.addEventListener("input", updateAppNotificationPreview);
+
+  const notificationBannerLogoInput = document.getElementById("app-notification-banner-logo-input");
+  const notificationBannerLogoDrop = document.getElementById("app-notification-banner-logo-drop");
+  if (notificationBannerLogoInput && notificationBannerLogoDrop) {
+    notificationBannerLogoDrop.addEventListener("click", (e) => {
+      if (e.target === notificationBannerLogoInput) return;
+      notificationBannerLogoInput.click();
+    });
+    notificationBannerLogoInput.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result;
+        if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) return;
+        const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
+        const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+        if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
+        try {
+          const res = await fetch(url, { method: "PATCH", headers, body: JSON.stringify({ logo_base64: dataUrl }) });
+          if (res.ok) {
+            await refreshNotificationBannerIcon();
+            const profilLogoPreview = document.getElementById("app-profil-logo-preview");
+            if (profilLogoPreview) {
+              const r2 = await api("/logo?v=" + Date.now());
+              if (r2.ok) {
+                const blob2 = await r2.blob();
+                profilLogoPreview.src = URL.createObjectURL(blob2);
+                profilLogoPreview.classList.remove("hidden");
+                document.getElementById("app-profil-logo-placeholder")?.classList.add("hidden");
+              }
+            }
+          }
+        } catch (_) {}
+        notificationBannerLogoInput.value = "";
+      };
+      reader.readAsDataURL(file);
+    });
+    setupImageDropZone(notificationBannerLogoDrop, (file) => {
+      notificationBannerLogoInput.files = null;
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      notificationBannerLogoInput.files = dt.files;
+      notificationBannerLogoInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }
 
   async function loadAppNotificationStats() {
     try {
@@ -4734,8 +4772,8 @@ function initAppDashboard(slug) {
   });
 
   document.getElementById("app-notification-texts-save")?.addEventListener("click", async () => {
-    const titleEl = document.getElementById("app-notification-title-override");
-    const msgEl = document.getElementById("app-notification-change-message");
+    const titleEl = document.getElementById("app-notification-banner-title");
+    const msgEl = document.getElementById("app-notification-banner-message");
     const feedbackEl = document.getElementById("app-notification-texts-feedback");
     const btn = document.getElementById("app-notification-texts-save");
     if (btn) btn.disabled = true;
@@ -4833,6 +4871,7 @@ function initAppDashboard(slug) {
     if (e.detail?.sectionId === "notifications") {
       loadAppNotificationStats();
       updateAppNotificationPreview();
+      refreshNotificationBannerIcon();
     }
   }, { once: false });
 

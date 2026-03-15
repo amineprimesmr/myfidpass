@@ -1197,26 +1197,32 @@
           </section>
           <section id="notifications" class="app-section">
             <h2 class="app-section-title">Notifications</h2>
-            <p class="app-section-desc">Personnalisez l'aperçu puis envoyez vos campagnes.</p>
-            <div class="app-notification-preview-banner" aria-hidden="true">
+            <p class="app-section-desc">Modifiez l'aperçu ci-dessous — c'est exactement ce que verront vos clients. Puis envoyez vos campagnes.</p>
+            <div class="app-notification-preview-banner" role="region" aria-label="Aperçu et réglages de la notification">
               <div class="app-notification-preview-banner-bubble">
-                <div class="app-notification-preview-banner-icon-wrap">
+                <div class="app-notification-preview-banner-icon-wrap app-drop-zone" id="app-notification-banner-logo-drop" role="button" tabindex="0" aria-label="Changer le logo de la notification (glisser une image ou cliquer)">
+                  <input type="file" id="app-notification-banner-logo-input" class="app-file" accept="image/png,image/jpeg,image/jpg,image/webp" aria-hidden="true" />
                   <div class="app-notification-preview-banner-icon" id="app-notification-banner-icon">
                     <img id="app-notification-banner-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
-                    <span class="app-notification-preview-icon-fallback" id="app-notification-banner-icon-fallback">Nom de votre.</span>
+                    <span class="app-notification-preview-icon-fallback" id="app-notification-banner-icon-fallback">Logo</span>
                   </div>
                   <span class="app-notification-preview-icon-badge" aria-hidden="true">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                   </span>
+                  <span class="app-notification-banner-logo-hint">Changer</span>
                 </div>
                 <div class="app-notification-preview-banner-content">
                   <div class="app-notification-preview-banner-headline">
-                    <span id="app-notification-banner-title" class="app-notification-preview-banner-title">Nom de votre commerce</span>
+                    <input type="text" id="app-notification-banner-title" class="app-notification-preview-banner-title" placeholder="Nom de votre commerce" maxlength="80" aria-label="Nom affiché sur la notification" />
                     <span class="app-notification-preview-time-label">maintenant</span>
                   </div>
-                  <span id="app-notification-banner-message" class="app-notification-preview-banner-message">Nouveau message : %@</span>
+                  <input type="text" id="app-notification-banner-message" class="app-notification-preview-banner-message" placeholder="Nouveau message : %@" maxlength="200" aria-label="Format du message (%@ = contenu)" />
                   <p class="app-notification-preview-banner-hint">Exemple : <span id="app-notification-banner-example"></span></p>
                 </div>
+              </div>
+              <div class="app-notification-banner-actions">
+                <button type="button" id="app-notification-texts-save" class="app-btn app-btn-primary">Enregistrer l'aperçu</button>
+                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
               </div>
             </div>
             <div class="app-card app-notifications-card app-notifications-grid">
@@ -1241,22 +1247,6 @@
                 <p id="app-notif-feedback" class="app-message hidden"></p>
               </div>
               <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
-              </div>
-              <div class="app-notification-preview-wrap app-notifications-col-preview" aria-label="Aperçu et personnalisation de la notification">
-                <h3 class="app-subsection-title">Personnaliser l'aperçu</h3>
-                <div id="app-notification-preview-icon" class="hidden" aria-hidden="true">
-                  <img id="app-notification-preview-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
-                  <span class="app-notification-preview-icon-fallback" id="app-notification-preview-icon-fallback">Votre logo</span>
-                </div>
-                <p class="app-notification-preview-body-hint hidden" aria-hidden="true">Exemple : <span id="app-notification-preview-body-example"></span></p>
-                <label class="app-label" for="app-notification-title-override">Nom affiché sur la notification</label>
-                <input type="text" id="app-notification-title-override" class="app-input" placeholder="Nom de votre commerce" maxlength="80" />
-                <label class="app-label" for="app-notification-change-message">Format du message (%@ = contenu)</label>
-                <input type="text" id="app-notification-change-message" class="app-input" placeholder="Nouveau message : %@" maxlength="200" />
-                <div class="app-notification-preview-actions">
-                  <button type="button" id="app-notification-texts-save" class="app-btn app-btn-secondary">Enregistrer</button>
-                  <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
-                </div>
               </div>
             </div>
           </section>
