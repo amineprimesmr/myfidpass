@@ -2916,7 +2916,7 @@ function initAppDashboard(slug) {
         personnaliserStampIconPreview.classList.add("hidden");
       }
       if (personnaliserStampIconPlaceholder) {
-        personnaliserStampIconPlaceholder.textContent = "+ Choisir une icône (glisser une image, cliquer ou coller Ctrl+V)";
+        personnaliserStampIconPlaceholder.textContent = "+";
         personnaliserStampIconPlaceholder.classList.remove("hidden");
       }
       personnaliserStampIconRemove.classList.add("hidden");
