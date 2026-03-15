@@ -178,6 +178,7 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     strip_text: business.strip_text ?? undefined,
     label_restants: business.label_restants ?? undefined,
     label_member: business.label_member ?? undefined,
+    header_right_text: business.header_right_text ?? undefined,
     engagement_rewards: getEngagementRewards(business.id),
   });
 });
@@ -339,6 +340,10 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   }
   if (label_member !== undefined) {
     updates.label_member = label_member == null || String(label_member).trim() === "" ? null : String(label_member).trim().slice(0, 64);
+  }
+  const header_right_text = body.header_right_text ?? body.headerRightText;
+  if (header_right_text !== undefined) {
+    updates.header_right_text = header_right_text == null || String(header_right_text).trim() === "" ? null : String(header_right_text).trim().slice(0, 64);
   }
   const engagement_rewards = body.engagement_rewards ?? body.engagementRewards;
   if (engagement_rewards !== undefined) {
@@ -2295,6 +2300,11 @@ router.patch("/:slug", (req, res) => {
   if (labelMember !== undefined) {
     const v = labelMember == null || labelMember === "" ? null : String(labelMember).trim().slice(0, 32);
     updates.label_member = v || null;
+  }
+  const headerRightText = body.headerRightText ?? body.header_right_text;
+  if (headerRightText !== undefined) {
+    const v = headerRightText == null || headerRightText === "" ? null : String(headerRightText).trim().slice(0, 32);
+    updates.header_right_text = v || null;
   }
   const stripColor = body.stripColor ?? body.strip_color;
   if (stripColor !== undefined) {

@@ -2368,7 +2368,16 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic .builder-wallet-card-header:has(.app-wallet-preview-strip-img:not(.hidden)) { min-height: 3.25rem; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-strip-text,
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap,
-.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org { position: relative; z-index: 1; }
+.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org,
+.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right { position: relative; z-index: 1; }
+.app-wallet-preview-dynamic .app-wallet-preview-header-right {
+  margin-left: auto;
+  font-size: 0.5rem;
+  font-weight: 600;
+  opacity: 0.95;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 .app-wallet-preview-dynamic .builder-wallet-card-body {
   background: var(--wallet-bg);
   color: var(--wallet-fg);
