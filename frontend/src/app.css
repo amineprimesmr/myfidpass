@@ -2545,7 +2545,8 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-wallet-preview-dynamic .builder-wallet-card-member { align-items: flex-end; margin-top: 0; }
 .app-wallet-preview-dynamic .builder-wallet-card-member-label {
-  font-size: 0.38rem;
+  font-size: 0.52rem;
+  font-size: 0.52rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--wallet-label);
@@ -2559,7 +2560,7 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic #app-preview-reward-wrap.hidden { display: none !important; }
 .app-wallet-preview-dynamic #app-preview-restants-wrap.hidden { display: none !important; }
 .app-wallet-preview-dynamic .builder-wallet-card-restants { display: flex; flex-direction: column; align-items: flex-start; gap: 0.05rem; }
-.app-wallet-preview-dynamic .builder-wallet-card-restants-label { font-size: 0.38rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--wallet-label); opacity: 0.9; }
+.app-wallet-preview-dynamic .builder-wallet-card-restants-label { font-size: 0.52rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--wallet-label); opacity: 0.9; }
 .app-wallet-preview-dynamic .builder-wallet-card-restants-value { font-size: 0.5rem; font-weight: 500; color: var(--wallet-fg); }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img { display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 0; }
 .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img img { width: 1.65rem; height: 1.65rem; min-width: 1.65rem; min-height: 1.65rem; object-fit: contain; display: block; }
