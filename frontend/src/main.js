@@ -4534,10 +4534,10 @@ function initAppDashboard(slug) {
         const hintEl = document.getElementById("app-notifications-members-vs-devices-hint");
         if (hintEl) {
           if (membersCount > total && total > 0) {
-            hintEl.textContent = "« Envoyer » envoie à tous les appareils enregistrés (" + total + "), pas à tous les " + membersCount + " membres. Seuls les clients qui ont ajouté la carte au Portefeuille reçoivent la notif. Si tu ne reçois pas : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.textContent = "« Envoyer » envoie à tous les appareils enregistrés (" + total + "), pas à tous les " + membersCount + " membres.";
             hintEl.classList.remove("hidden");
           } else if (total > 0) {
-            hintEl.textContent = "Si tu ne reçois pas sur ton iPhone : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.textContent = "";
             hintEl.classList.remove("hidden");
           } else {
             hintEl.classList.add("hidden");
@@ -4738,7 +4738,7 @@ function initAppDashboard(slug) {
             if (pk > 0) {
               const tip = document.createElement("p");
               tip.className = "app-notif-feedback-tip";
-              tip.textContent = "Si tu ne reçois pas sur ton iPhone : Portefeuille → ta carte → ⋯ → Autoriser les notifications ; Réglages → Notifications → Portefeuille.";
+              tip.textContent = "";
               feedbackEl.after(tip);
             }
           }
@@ -6156,10 +6156,10 @@ function initDashboardPage() {
         const hintEl = document.getElementById("dashboard-notifications-members-vs-devices-hint");
         if (hintEl) {
           if (membersCount > total && total > 0) {
-            hintEl.textContent = "« Envoyer » envoie à tous les appareils enregistrés (" + total + "), pas à tous les " + membersCount + " membres. Seuls les clients qui ont ajouté la carte au Portefeuille reçoivent la notif. Si tu ne reçois pas : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.textContent = "« Envoyer » envoie à tous les appareils enregistrés (" + total + "), pas à tous les " + membersCount + " membres.";
             hintEl.classList.remove("hidden");
           } else if (total > 0) {
-            hintEl.textContent = "Si tu ne reçois pas sur ton iPhone : Portefeuille → ta carte → ⋯ → Détails du pass → « Autoriser les notifications » ; puis Réglages → Notifications → Portefeuille.";
+            hintEl.textContent = "";
             hintEl.classList.remove("hidden");
           } else {
             hintEl.classList.add("hidden");
@@ -6266,7 +6266,7 @@ function initDashboardPage() {
             if (pk > 0) {
               const tip = document.createElement("p");
               tip.className = "dashboard-notif-feedback-tip";
-              tip.textContent = "Si tu ne reçois pas sur ton iPhone : Portefeuille → ta carte → ⋯ → Autoriser les notifications ; Réglages → Notifications → Portefeuille.";
+              tip.textContent = "";
               feedbackEl.after(tip);
             }
           }
