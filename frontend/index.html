@@ -1031,29 +1031,36 @@
                     </div>
                   </div>
                 </section>
+                <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-share">
+                    <span class="app-personnaliser-group-title">Lien et QR code</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-share" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
+                      <p class="app-step-label">Votre lien FidPass</p>
+                      <div class="app-share-edit-row">
+                        <span class="app-share-prefix">/fidelity/</span>
+                        <input type="text" id="app-share-slug-input" class="app-input app-share-slug-input" aria-label="Modifier le lien FidPass" />
+                        <button type="button" id="app-share-slug-save" class="app-btn app-btn-secondary">Mettre à jour</button>
+                      </div>
+                      <p id="app-share-slug-message" class="app-hint app-share-slug-message hidden"></p>
+                      <div class="app-share-row app-share-link-row">
+                        <input type="text" id="app-share-link" class="app-input app-share-input" readonly aria-label="Lien de la page carte" />
+                        <button type="button" id="app-share-copy" class="app-btn app-btn-primary">Copier</button>
+                      </div>
+                      <div class="app-qr-wrap app-qr-wrap-minimal">
+                        <img id="app-share-qr" class="app-qr-img" src="" alt="QR code vers la page carte" />
+                        <p class="app-share-qr-caption">Scannez pour ouvrir la carte</p>
+                        <button type="button" id="app-share-download-qr" class="app-btn app-btn-secondary app-qr-download">Télécharger PNG</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
               </div>
               <div class="app-personnaliser-actions">
               <div id="app-personnaliser-message" class="app-personnaliser-message hidden"></div>
               <button type="button" id="app-personnaliser-save" class="app-btn app-btn-primary">Enregistrer les modifications</button>
-              </div>
-            </div>
-            <h3 class="app-subsection-title">Partager votre carte</h3>
-            <div class="app-card app-share-card app-share-card-minimal">
-              <p class="app-step-label">Votre lien FidPass</p>
-              <div class="app-share-edit-row">
-                <span class="app-share-prefix">/fidelity/</span>
-                <input type="text" id="app-share-slug-input" class="app-input app-share-slug-input" aria-label="Modifier le lien FidPass" />
-                <button type="button" id="app-share-slug-save" class="app-btn app-btn-secondary">Mettre à jour</button>
-              </div>
-              <p id="app-share-slug-message" class="app-hint app-share-slug-message hidden"></p>
-              <div class="app-share-row app-share-link-row">
-                <input type="text" id="app-share-link" class="app-input app-share-input" readonly aria-label="Lien de la page carte" />
-                <button type="button" id="app-share-copy" class="app-btn app-btn-primary">Copier</button>
-              </div>
-              <div class="app-qr-wrap app-qr-wrap-minimal">
-                <img id="app-share-qr" class="app-qr-img" src="" alt="QR code vers la page carte" />
-                <p class="app-share-qr-caption">Scannez pour ouvrir la carte</p>
-                <button type="button" id="app-share-download-qr" class="app-btn app-btn-secondary app-qr-download">Télécharger PNG</button>
               </div>
             </div>
           </section>
