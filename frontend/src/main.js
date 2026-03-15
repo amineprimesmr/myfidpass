@@ -1848,6 +1848,12 @@ function initAppDashboard(slug) {
   let personnaliserCardBgDataUrl = "";
   let personnaliserCardBgRemoveRequested = false;
   let hasCardBackgroundFromServer = false;
+  const personnaliserStampIcon = document.getElementById("app-stamp-icon-input");
+  const personnaliserStampIconPreview = document.getElementById("app-stamp-icon-preview");
+  const personnaliserStampIconRemove = document.getElementById("app-stamp-icon-remove");
+  let personnaliserStampIconDataUrl = "";
+  let personnaliserStampIconRemoveRequested = false;
+  let hasStampIconFromServer = false;
   const programTypePoints = document.getElementById("app-program-type-points");
   const programTypeStamps = document.getElementById("app-program-type-stamps");
   const rulesPanelPoints = document.getElementById("app-rules-points");
@@ -2091,9 +2097,10 @@ function initAppDashboard(slug) {
     if (labelEl) labelEl.textContent = isStamps ? "Tampons" : "Points";
     if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
     if (stampsGridEl && isStamps) {
+      const hasCustomStampIcon = personnaliserStampIconDataUrl && personnaliserStampIconDataUrl.length > 0;
       const emojiToIcon = { "☕": "cafe", "🍔": "burger", "🍕": "pizza", "🥐": "croissant", "🥩": "steak", "🍣": "sushi", "🥗": "salade", "🍚": "riz", "🥖": "baguette", "💄": "giftsilver", "✂️": "giftsilver" };
       const iconName = emojiToIcon[stampEmoji] || "cafe";
-      const iconSrc = "/assets/icons/" + iconName + ".png";
+      const iconSrc = hasCustomStampIcon ? personnaliserStampIconDataUrl : "/assets/icons/" + iconName + ".png";
       const filledCount = 0;
       const rows = stampsGridEl.querySelectorAll(".builder-wallet-card-stamps-row");
       let index = 0;
@@ -2387,6 +2394,22 @@ function initAppDashboard(slug) {
               }
               if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
               if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+              updatePersonnaliserPreview();
+            }
+          })
+          .catch(() => {});
+      }
+      if (data.has_stamp_icon ?? data.hasStampIcon) {
+        api("/stamp-icon?v=" + Date.now())
+          .then((r) => (r.ok ? r.blob() : null))
+          .then((blob) => {
+            if (blob && personnaliserStampIconPreview) {
+              const url = URL.createObjectURL(blob);
+              personnaliserStampIconDataUrl = url;
+              personnaliserStampIconPreview.src = url;
+              personnaliserStampIconPreview.classList.remove("hidden");
+              if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.add("hidden");
+              if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.remove("hidden");
               updatePersonnaliserPreview();
             }
           })
@@ -2995,6 +3018,33 @@ function initAppDashboard(slug) {
                   personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
                   personnaliserCardBgPreview.classList.remove("hidden");
                   if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
+                  updatePersonnaliserPreview();
+                }
+              })
+              .catch(() => {});
+          }
+          if (body.stampIconBase64 === "" || body.stampIconBase64 === "") {
+            personnaliserStampIconRemoveRequested = false;
+            personnaliserStampIconDataUrl = "";
+            if (personnaliserStampIconInput) personnaliserStampIconInput.value = "";
+            if (personnaliserStampIconPreview) {
+              personnaliserStampIconPreview.src = "";
+              personnaliserStampIconPreview.classList.add("hidden");
+            }
+            if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.remove("hidden");
+            if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.add("hidden");
+            updatePersonnaliserPreview();
+          } else if (body.stampIconBase64) {
+            personnaliserStampIconRemoveRequested = false;
+            api("/stamp-icon?v=" + Date.now())
+              .then((r) => (r.ok ? r.blob() : null))
+              .then((blob) => {
+                if (blob && personnaliserStampIconPreview) {
+                  personnaliserStampIconDataUrl = URL.createObjectURL(blob);
+                  personnaliserStampIconPreview.src = personnaliserStampIconDataUrl;
+                  personnaliserStampIconPreview.classList.remove("hidden");
+                  if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.add("hidden");
+                  if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.remove("hidden");
                   updatePersonnaliserPreview();
                 }
               })

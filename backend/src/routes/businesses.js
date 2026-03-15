@@ -178,6 +178,8 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     label_restants: business.label_restants ?? undefined,
     label_member: business.label_member ?? undefined,
     header_right_text: business.header_right_text ?? undefined,
+    has_stamp_icon: !!(business.stamp_icon_base64 && String(business.stamp_icon_base64).trim()),
+    stamp_icon_url: business.stamp_icon_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/stamp-icon` : undefined,
     engagement_rewards: getEngagementRewards(business.id),
   });
 });
@@ -219,6 +221,7 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
+  const stamp_icon_base64 = body.stamp_icon_base64 ?? body.stampIconBase64;
   const strip_color = body.strip_color ?? body.stripColor;
   const strip_display_mode = body.strip_display_mode ?? body.stripDisplayMode;
   const strip_text = body.strip_text ?? body.stripText;
@@ -314,6 +317,20 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
         return res.status(400).json({ error: "Image de fond trop volumineuse (max 4 Mo)." });
       }
       updates.card_background_base64 = card_background_base64.startsWith("data:") ? card_background_base64 : `data:image/png;base64,${base64Data}`;
+    }
+  }
+  const MAX_STAMP_ICON_BYTES = 512 * 1024; // 512 Ko
+  if (stamp_icon_base64 !== undefined) {
+    if (stamp_icon_base64 === null || (typeof stamp_icon_base64 === "string" && stamp_icon_base64.trim() === "")) {
+      updates.stamp_icon_base64 = null;
+    } else if (typeof stamp_icon_base64 === "string") {
+      const base64Data = String(stamp_icon_base64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > MAX_STAMP_ICON_BYTES) {
+        return res.status(400).json({ error: "Icône tampon trop volumineuse (max 512 Ko)." });
+      }
+      if (buf.length > 0) updates.stamp_icon_base64 = stamp_icon_base64.startsWith("data:") ? stamp_icon_base64 : `data:image/png;base64,${base64Data}`;
+      else updates.stamp_icon_base64 = null;
     }
   }
   if (strip_color !== undefined) {
@@ -1459,6 +1476,30 @@ router.get("/:slug/card-background", (req, res) => {
 });
 
 /**
+ * GET /api/businesses/:slug/stamp-icon
+ * Icône personnalisée des tampons (pour aperçu dans le dashboard). Token ou JWT requis.
+ */
+router.get("/:slug/stamp-icon", (req, res) => {
+  const business = getBusinessBySlug(req.params.slug);
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  if (business.stamp_icon_base64) {
+    const base64Data = String(business.stamp_icon_base64).replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(base64Data, "base64");
+    if (buf.length > 0) {
+      const isPng = business.stamp_icon_base64.includes("image/png");
+      res.setHeader("Content-Type", isPng ? "image/png" : "image/jpeg");
+      res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      return res.send(buf);
+    }
+  }
+  return res.status(404).send();
+});
+
+/**
  * GET /api/businesses/:slug/public/logo
  * Logo du commerce (public, pour la page fidélité client).
  */
@@ -2222,6 +2263,23 @@ router.patch("/:slug", (req, res) => {
         updates.card_background_base64 = cardBackgroundBase64.startsWith("data:") ? cardBackgroundBase64 : `data:image/png;base64,${base64Data}`;
       } else {
         updates.card_background_base64 = null;
+      }
+    }
+  }
+  const stampIconBase64 = body.stampIconBase64 ?? body.stamp_icon_base64;
+  if (stampIconBase64 !== undefined) {
+    if (stampIconBase64 === null || (typeof stampIconBase64 === "string" && stampIconBase64.trim() === "")) {
+      updates.stamp_icon_base64 = null;
+    } else if (typeof stampIconBase64 === "string") {
+      const base64Data = String(stampIconBase64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > 512 * 1024) {
+        return res.status(400).json({ error: "Icône personnalisée trop volumineuse (max 512 Ko)." });
+      }
+      if (buf.length > 0) {
+        updates.stamp_icon_base64 = stampIconBase64.startsWith("data:") ? stampIconBase64 : `data:image/png;base64,${base64Data}`;
+      } else {
+        updates.stamp_icon_base64 = null;
       }
     }
   }

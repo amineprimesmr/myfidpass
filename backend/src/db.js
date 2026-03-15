@@ -189,6 +189,14 @@ const bizColsAfter = db.prepare("PRAGMA table_info(businesses)").all().map((c) =
 if (!bizColsAfter.includes("stamp_emoji")) {
   db.exec("ALTER TABLE businesses ADD COLUMN stamp_emoji TEXT");
 }
+// Migration : stamp_icon_base64 (icône personnalisée pour tampons, remplace l'emoji)
+if (!bizColsAfter.includes("stamp_icon_base64")) {
+  db.exec("ALTER TABLE businesses ADD COLUMN stamp_icon_base64 TEXT");
+}
+// Migration : stamp_icon_base64 (icône personnalisée pour tampons, image uploadée par le commerçant)
+if (!bizColsAfter.includes("stamp_icon_base64")) {
+  db.exec("ALTER TABLE businesses ADD COLUMN stamp_icon_base64 TEXT");
+}
 // Migration : image de fond de carte (strip personnalisé pour le pass Wallet)
 const bizColsBg = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
 if (!bizColsBg.includes("card_background_base64")) {

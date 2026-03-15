@@ -919,6 +919,16 @@
               <div id="app-rules-stamps" class="app-rules-panel hidden">
                 <input type="hidden" id="app-stamp-emoji" value="☕" />
                 <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône"></div>
+                <p class="app-step-label">Icône personnalisée (optionnel)</p>
+                <p class="app-hint">Importez votre propre image pour les tampons (ex. logo du commerce). Carré ou PNG transparent recommandé.</p>
+                <div class="app-stamp-icon-wrap">
+                  <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                  <label for="app-stamp-icon-input" class="app-stamp-icon-label">
+                    <span id="app-stamp-icon-placeholder">+ Importer une image</span>
+                    <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
+                  </label>
+                  <button type="button" id="app-stamp-icon-remove" class="app-btn app-btn-secondary hidden">Supprimer l'icône</button>
+                </div>
                 <p class="app-step-label">Texte de la récompense (affiché sur la carte)</p>
                 <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. 1 café offert, 1 croissant offert" />
               </div>

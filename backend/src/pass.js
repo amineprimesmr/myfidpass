@@ -568,20 +568,41 @@ async function createEmptyStampFromIcon(iconBuf) {
 
 /**
  * Grille de tampons : débloqués = icône pleine ; non débloqués = même icône en grisé.
+ * customIconBase64 : base64 d'une image personnalisée (PNG/JPEG) pour remplacer l'icône prédéfinie.
  */
-async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji) {
+async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji, customIconBase64) {
   const cols = 5;
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
   const row0Y = STAMP_TOP + STAMP_R;
   const row1Y = row0Y + STAMP_SIZE + STAMP_GAP;
 
-  const emojiForStamp = (stampEmoji && String(stampEmoji).trim()) || "☕";
-  const iconBuf = await fetchEmojiPng(emojiForStamp);
+  let iconBuf = null;
+  if (customIconBase64 && String(customIconBase64).trim()) {
+    try {
+      const base64Data = String(customIconBase64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > 0) {
+        iconBuf = await sharp(buf)
+          .resize(STAMP_SIZE, STAMP_SIZE, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+          .ensureAlpha()
+          .png()
+          .toBuffer();
+      }
+    } catch (e) {
+      if (process.env.NODE_ENV === "production") console.warn("[PassKit] Stamp custom icon failed:", e?.message);
+    }
+  }
   if (!iconBuf) {
-    if (process.env.NODE_ENV === "production") console.warn("[PassKit] Strip sans icônes (fichier introuvable pour emoji)", emojiToCodepoint(emojiForStamp));
+    const emojiForStamp = (stampEmoji && String(stampEmoji).trim()) || "☕";
+    iconBuf = await fetchEmojiPng(emojiForStamp);
+  }
+  if (!iconBuf) {
+    if (process.env.NODE_ENV === "production") console.warn("[PassKit] Strip sans icônes (fichier introuvable pour emoji)", emojiToCodepoint((stampEmoji && String(stampEmoji).trim()) || "☕"));
     return baseStripBuf;
   }
-  if (process.env.NODE_ENV === "production") console.log("[PassKit] Strip tampons: emoji", emojiToCodepoint(emojiForStamp), "→ PNG du dossier", STAMP_ICONS_DIR);
+  if (process.env.NODE_ENV === "production" && !customIconBase64) {
+    console.log("[PassKit] Strip tampons: emoji", emojiToCodepoint((stampEmoji && String(stampEmoji).trim()) || "☕"), "→ PNG du dossier", STAMP_ICONS_DIR);
+  }
 
   let emptyStampBuf = null;
   const composites = [];
@@ -825,7 +846,8 @@ export async function generatePass(member, business = null, options = {}) {
       }
     }
     if (!baseStrip) baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
-    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stripStampEmoji);
+    const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
+    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stripStampEmoji, stampIconBase64);
     buffers["strip.png"] = stripWithStamps;
     buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
   } else {
