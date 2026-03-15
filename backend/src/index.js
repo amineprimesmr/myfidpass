@@ -125,7 +125,6 @@ app.use("/passes", passesRouter);
 app.get("/api/passes/demo", handlePassDemo);
 app.get("/passes/demo", handlePassDemo);
 
-
 function startServer(port) {
   const p = Number(port) || 3001;
   const server = app.listen(p, () => {

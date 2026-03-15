@@ -1015,22 +1015,25 @@ const APP_SECTION_IDS = ["dashboard", "membres", "historique", "personnaliser", 
 
 const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
-"personnaliser": "Ma Carte",
-  "carte-perimetre": "Notifications",
+  "personnaliser": "Ma Carte",
+  "notifications": "Notifications",
+  "carte-perimetre": "Emplacement",
   "engagement": "Avis & Réseaux",
   "profil": "Profil",
 };
 
 function showAppSection(sectionId) {
-  let normalized = sectionId === "partager" ? "personnaliser" : sectionId;
-  if (normalized === "notifications") normalized = "carte-perimetre";
+  const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
   const id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
-  const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
-  const content = document.getElementById("app-dashboard-content");
-  if (!content) return;
-  content.querySelectorAll(".app-section").forEach((section) => {
-    section.classList.toggle("app-section-visible", section.id === id);
+  APP_SECTION_IDS.forEach((sid) => {
+    const el = document.getElementById(sid);
+    if (el) {
+      const show = el.id === id;
+      el.classList.toggle("app-section-visible", show);
+      el.style.setProperty("display", show ? "block" : "none", "important");
+    }
   });
+  const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   links.forEach((l) => {
     l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === id);
   });
@@ -1046,35 +1049,43 @@ function showAppSection(sectionId) {
   window.dispatchEvent(new CustomEvent("app-section-change", { detail: { sectionId: id } }));
 }
 
+let _appSidebarInitialized = false;
 function initAppSidebar() {
-  const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
-  links.forEach((link) => {
-    link.addEventListener("click", (e) => {
+  const appRoot = document.getElementById("app-app");
+  if (!appRoot) return;
+  if (!_appSidebarInitialized) {
+    _appSidebarInitialized = true;
+    appRoot.addEventListener("click", (e) => {
+      const link = e.target?.closest?.(".app-sidebar-link[data-section]");
+      if (!link) return;
       e.preventDefault();
       const id = link.getAttribute("data-section");
       if (APP_SECTION_IDS.includes(id)) {
         showAppSection(id);
+        requestAnimationFrame(() => showAppSection(id));
       }
     });
-  });
+    window.addEventListener("hashchange", () => {
+      let section = (window.location.hash || "#dashboard").slice(1);
+      if (section === "scanner") section = "dashboard";
+      if (section === "vue-ensemble") {
+        section = "dashboard";
+        if (window.history?.replaceState) window.history.replaceState(null, "", "#dashboard");
+      }
+      const toShow = section === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(section) ? section : "dashboard");
+      showAppSection(toShow);
+      requestAnimationFrame(() => showAppSection(toShow));
+    });
+  }
   let hashSection = (window.location.hash || "#dashboard").slice(1);
   if (hashSection === "scanner") hashSection = "dashboard";
   if (hashSection === "vue-ensemble") {
     hashSection = "dashboard";
-    if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#dashboard");
+    if (window.history?.replaceState) window.history.replaceState(null, "", "#dashboard");
   }
   const sectionToShow = hashSection === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(hashSection) ? hashSection : "dashboard");
   showAppSection(sectionToShow);
-  window.addEventListener("hashchange", () => {
-    let section = (window.location.hash || "#dashboard").slice(1);
-    if (section === "scanner") section = "dashboard";
-    if (section === "vue-ensemble") {
-      section = "dashboard";
-      if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#dashboard");
-    }
-    const toShow = section === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(section) ? section : "dashboard");
-    showAppSection(toShow);
-  });
+  requestAnimationFrame(() => showAppSection(sectionToShow));
   initAppMobile();
 }
 
@@ -1121,7 +1132,7 @@ function initAppMobile() {
     mobileMessageSend.addEventListener("click", () => {
       const text = (mobileMessageInput.value || "").trim();
       if (text) {
-        showAppSection("carte-perimetre");
+        showAppSection("notifications");
         const notifMsg = document.getElementById("app-notif-message");
         if (notifMsg) notifMsg.value = text;
       }
@@ -2341,6 +2352,7 @@ function initAppDashboard(slug) {
       const notifChangeMsgEl = document.getElementById("app-notification-change-message");
       if (notifTitleOverrideEl != null) notifTitleOverrideEl.value = data.notification_title_override ?? data.notificationTitleOverride ?? "";
       if (notifChangeMsgEl != null) notifChangeMsgEl.value = data.notification_change_message ?? data.notificationChangeMessage ?? "";
+      if (typeof updateAppNotificationPreview === "function") updateAppNotificationPreview();
       const er = data.engagement_rewards ?? data.engagementRewards ?? {};
       const g = er.google_review ?? {};
       const ig = er.instagram_follow ?? {};
@@ -4506,6 +4518,67 @@ function initAppDashboard(slug) {
 
   window.addEventListener("app-members-refresh", () => refresh());
 
+  function updateAppNotificationPreview() {
+    const titleInput = document.getElementById("app-notification-title-override");
+    const messageInput = document.getElementById("app-notification-change-message");
+    const exampleEl = document.getElementById("app-notification-preview-body-example");
+    const iconImg = document.getElementById("app-notification-preview-icon-img");
+    const iconFallback = document.getElementById("app-notification-preview-icon-fallback");
+    const profilLogo = document.getElementById("app-profil-logo-preview");
+    const title = (titleInput?.value ?? "").trim() || "Nom de votre commerce";
+    const format = (messageInput?.value ?? "").trim() || "Nouveau message : %@";
+    const sampleContent = title + ": test";
+    const bodyExample = format.replace(/%@/g, sampleContent);
+    if (exampleEl) exampleEl.textContent = bodyExample;
+    if (profilLogo?.src && !profilLogo.classList.contains("hidden")) {
+      if (iconImg) {
+        iconImg.src = profilLogo.src;
+        iconImg.classList.remove("hidden");
+      }
+      if (iconFallback) iconFallback.classList.add("hidden");
+    } else {
+      if (iconImg) iconImg.classList.add("hidden");
+      if (iconFallback) {
+        iconFallback.classList.remove("hidden");
+        iconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Votre logo";
+      }
+    }
+    syncNotificationBanner();
+  }
+
+  function syncNotificationBanner() {
+    const titleInput = document.getElementById("app-notification-title-override");
+    const messageInput = document.getElementById("app-notification-change-message");
+    const exampleEl = document.getElementById("app-notification-preview-body-example");
+    const bannerTitle = document.getElementById("app-notification-banner-title");
+    const bannerMessage = document.getElementById("app-notification-banner-message");
+    const bannerExample = document.getElementById("app-notification-banner-example");
+    const bannerIconImg = document.getElementById("app-notification-banner-icon-img");
+    const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
+    const previewIconImg = document.getElementById("app-notification-preview-icon-img");
+    const title = (titleInput?.value ?? "").trim() || "Nom de votre commerce";
+    const message = (messageInput?.value ?? "").trim() || "Nouveau message : %@";
+    if (bannerTitle) bannerTitle.textContent = title;
+    if (bannerMessage) bannerMessage.textContent = message;
+    if (bannerExample && exampleEl) bannerExample.textContent = exampleEl.textContent || "";
+    if (previewIconImg?.src && !previewIconImg.classList.contains("hidden")) {
+      if (bannerIconImg) {
+        bannerIconImg.src = previewIconImg.src;
+        bannerIconImg.classList.remove("hidden");
+      }
+      if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
+    } else {
+      if (bannerIconImg) bannerIconImg.classList.add("hidden");
+      if (bannerIconFallback) {
+        bannerIconFallback.classList.remove("hidden");
+        bannerIconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Nom de votre.";
+      }
+    }
+  }
+
+  document.getElementById("app-notification-title-override")?.addEventListener("input", updateAppNotificationPreview);
+  document.getElementById("app-notification-change-message")?.addEventListener("input", updateAppNotificationPreview);
+
   async function loadAppNotificationStats() {
     try {
       const res = await api("/notifications/stats");
@@ -4551,8 +4624,8 @@ function initAppDashboard(slug) {
         const membersCount = data.membersCount != null ? data.membersCount : 0;
         if (membersCount > 0 || total > 0) {
           membersSummaryEl.innerHTML = total > 0
-            ? `<strong>Notifications :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#carte-perimetre" class="app-link-inline">Envoyer une notification →</a>`
-            : `<strong>Notifications :</strong> tu as ${membersCount} membre(s). La carte peut être bien dans le Wallet, mais <strong>aucun iPhone ne nous a encore envoyé son enregistrement</strong> — donc on ne peut pas envoyer de notifications push. Ce n’est pas que tu n’as pas la carte ; c’est que notre serveur n’a reçu le signal d’aucun appareil. <a href="#carte-perimetre" class="app-link-inline">Voir le diagnostic →</a>`;
+            ? `<strong>Notifications :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#notifications" class="app-link-inline">Envoyer une notification →</a>`
+            : `<strong>Notifications :</strong> tu as ${membersCount} membre(s). La carte peut être bien dans le Wallet, mais <strong>aucun iPhone ne nous a encore envoyé son enregistrement</strong> — donc on ne peut pas envoyer de notifications push. Ce n’est pas que tu n’as pas la carte ; c’est que notre serveur n’a reçu le signal d’aucun appareil. <a href="#notifications" class="app-link-inline">Voir le diagnostic →</a>`;
           membersSummaryEl.classList.remove("hidden");
         } else {
           membersSummaryEl.classList.add("hidden");
@@ -4580,8 +4653,8 @@ function initAppDashboard(slug) {
           diagEl.innerHTML = html;
           diagEl.classList.remove("hidden");
         } else if (total === 0 && !passKitOk && data.diagnostic) {
-          diagEl.innerHTML = `<p class="app-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="app-notifications-diagnostic-text">${data.diagnostic}</p>`;
-          diagEl.classList.remove("hidden");
+          diagEl.classList.add("hidden");
+          diagEl.innerHTML = "";
         } else if (total === 0 && (data.paradoxExplanation || data.membersVsDevicesExplanation || data.dataDirHint)) {
           let html = "";
           if (data.paradoxExplanation || data.membersVsDevicesExplanation) {
@@ -4605,6 +4678,7 @@ function initAppDashboard(slug) {
         removeTestWrap.classList.toggle("hidden", total === 0);
       }
       await loadAppNotificationCategories();
+      updateAppNotificationPreview();
     } catch (_) {}
   }
 
@@ -4756,7 +4830,10 @@ function initAppDashboard(slug) {
   });
 
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "carte-perimetre") loadAppNotificationStats();
+    if (e.detail?.sectionId === "notifications") {
+      loadAppNotificationStats();
+      updateAppNotificationPreview();
+    }
   }, { once: false });
 
   refresh();
@@ -6182,8 +6259,8 @@ function initDashboardPage() {
           diagEl.innerHTML = html;
           diagEl.classList.remove("hidden");
         } else if (total === 0 && !passKitOk && data.diagnostic) {
-          diagEl.innerHTML = `<p class="dashboard-notifications-diagnostic-title">Pourquoi aucun appareil ?</p><p class="dashboard-notifications-diagnostic-text">${data.diagnostic}</p>`;
-          diagEl.classList.remove("hidden");
+          diagEl.classList.add("hidden");
+          diagEl.innerHTML = "";
         } else {
           diagEl.classList.add("hidden");
           diagEl.innerHTML = "";

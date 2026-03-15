@@ -418,9 +418,13 @@
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></span>
             <span class="app-sidebar-link-text">Ma carte</span>
           </a>
+          <a href="#notifications" class="app-sidebar-link" data-section="notifications">
+            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+            <span class="app-sidebar-link-text">Notifications</span>
+          </a>
           <a href="#carte-perimetre" class="app-sidebar-link" data-section="carte-perimetre">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
-            <span class="app-sidebar-link-text">Notifications</span>
+            <span class="app-sidebar-link-text">Emplacement</span>
           </a>
           <a href="#membres" class="app-sidebar-link" data-section="membres">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
@@ -473,7 +477,8 @@
         </div>
         <div id="app-dashboard-content" class="app-content hidden">
           <section id="dashboard" class="app-section app-section-overview">
-            <div class="app-dashboard-shell">
+            <div class="app-dashboard-shell app-section-grid-wrap">
+              <div class="app-section-col-main">
               <div class="app-dashboard-header">
                 <div>
                   <h1 class="app-section-title">Dashboard</h1>
@@ -493,11 +498,11 @@
                     <button type="button" class="app-dashboard-period-pill" data-period="30d">30j</button>
                     <button type="button" class="app-dashboard-period-pill active" data-period="this_month">Mois</button>
                     <button type="button" class="app-dashboard-period-pill" data-period="6m">6m</button>
-                  </div>
-                </div>
+</div>
                 </div>
               </div>
-            <!-- Scanner (ex-caisse) intégré au dashboard -->
+            </div>
+            <div class="app-section-col-aside">
             <div class="app-dashboard-scanner-wrap" id="app-dashboard-scanner-wrap">
               <h3 class="app-dashboard-scanner-title">Scanner la carte</h3>
               <div class="app-card app-scanner-card app-caisse-card app-dashboard-scanner-card" id="app-scanner-card">
@@ -565,9 +570,11 @@
                   </div>
                   <p id="app-scanner-result-message" class="app-message hidden"></p>
                   <p id="app-caisse-message" class="app-message hidden" aria-live="polite"></p>
+                  </div>
                 </div>
               </div>
             </div>
+            <div class="app-dashboard-col-main-rest">
             <!-- Hero mobile : 2 cartes + message -->
             <div class="app-mobile-dashboard-hero app-mobile-only" id="app-mobile-dashboard-hero">
               <div class="app-mobile-dashboard-card" id="app-mobile-card-members">
@@ -670,6 +677,7 @@
               <a href="#membres" class="app-shortcut-btn app-shortcut-inactifs" data-section="membres"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Voir les inactifs 30 j</a>
             </div>
             </div>
+            </div>
           </section>
 
           <div id="app-scanner-fullscreen" class="app-scanner-fullscreen hidden" aria-hidden="true">
@@ -705,6 +713,8 @@
           <section id="membres" class="app-section">
             <h2 class="app-section-title">Membres</h2>
             <p class="app-section-desc">Liste des clients qui ont ajouté votre carte à leur téléphone.</p>
+            <div class="app-section-grid-wrap app-membres-grid">
+              <div class="app-section-col-main">
             <div class="app-card app-import-card">
               <h3 class="app-subsection-title">Importer une base clients</h3>
               <p class="app-hint">Vous avez déjà une liste de clients (Excel, ancien logiciel) ? Exportez-la en CSV avec les colonnes <strong>email</strong> et <strong>name</strong> (optionnel : <strong>points</strong>).</p>
@@ -724,6 +734,8 @@
               <p id="app-members-import-result" class="app-import-result hidden"></p>
             </div>
             <div id="app-members-notifications-summary" class="app-members-notifications-summary hidden"></div>
+              </div>
+              <div class="app-section-col-aside">
             <div class="app-card">
               <div class="app-members-toolbar">
               <input type="text" id="app-members-search" class="app-input app-search" placeholder="Rechercher par nom ou email..." aria-label="Rechercher un membre" />
@@ -748,6 +760,8 @@
                 </table>
               </div>
             </div>
+              </div>
+            </div>
             <div id="app-member-detail-modal" class="app-modal hidden" aria-modal="true" role="dialog" aria-labelledby="app-member-detail-title">
               <div class="app-modal-backdrop"></div>
               <div class="app-modal-content">
@@ -761,7 +775,9 @@
           <section id="historique" class="app-section">
             <h2 class="app-section-title">Historique</h2>
             <p class="app-section-desc">Derniers points ajoutés (achats ou passages enregistrés).</p>
-            <div class="app-card">
+            <div class="app-section-grid-wrap app-historique-grid">
+              <div class="app-section-col-main">
+            <div class="app-card app-histoire-filters">
               <div class="app-histoire-toolbar">
                 <select id="app-transactions-days" class="app-select" aria-label="Période">
                   <option value="">Toutes les dates</option>
@@ -776,11 +792,17 @@
                 </select>
                 <button type="button" id="app-transactions-export" class="app-btn app-btn-secondary">Exporter CSV</button>
               </div>
+            </div>
+              </div>
+              <div class="app-section-col-aside">
+            <div class="app-card">
               <div class="app-table-wrap">
                 <table class="app-table">
                   <thead><tr><th>Client</th><th>Type</th><th>Points</th><th>Date</th></tr></thead>
                   <tbody id="app-transactions-tbody"></tbody>
                 </table>
+              </div>
+            </div>
               </div>
             </div>
           </section>
@@ -913,7 +935,7 @@
                 <p class="app-step-label">Texte de la récompense (affiché sur la carte)</p>
                 <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. 1 café offert, 1 croissant offert" />
               </div>
-                    </div>
+              </div>
                   </div>
                 </section>
                 <section class="app-personnaliser-group" data-personnaliser-group>
@@ -923,26 +945,26 @@
                   </button>
                   <div id="app-personnaliser-panel-colors" class="app-personnaliser-group-panel">
                     <div class="app-personnaliser-group-panel-inner">
-                      <div class="app-personnaliser-colors">
-                        <div class="app-color-row">
-                          <label class="app-label">Fond</label>
-                          <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#0a7c42" />
-                          <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#0a7c42" maxlength="7" />
-                        </div>
-                        <div class="app-color-row">
-                          <label class="app-label">Texte</label>
-                          <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#ffffff" />
-                          <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
-                        </div>
-                        <div class="app-color-row">
-                          <label class="app-label">Labels</label>
-                          <input type="color" id="app-personnaliser-label" class="app-color-input" value="#e8f5e9" />
-                          <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#e8f5e9" maxlength="7" />
-                        </div>
-                        <p class="app-hint app-personnaliser-strip-hint">Le bandeau (tampons / points) utilise toujours la même couleur que le fond de la carte.</p>
-                        <input type="hidden" id="app-personnaliser-strip" value="#0a7c42" />
-                        <input type="hidden" id="app-personnaliser-strip-hex" value="#0a7c42" />
-                      </div>
+              <div class="app-personnaliser-colors">
+                <div class="app-color-row">
+                  <label class="app-label">Fond</label>
+                  <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#0a7c42" />
+                  <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#0a7c42" maxlength="7" />
+                </div>
+                <div class="app-color-row">
+                  <label class="app-label">Texte</label>
+                  <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#ffffff" />
+                  <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
+                </div>
+                <div class="app-color-row">
+                  <label class="app-label">Labels</label>
+                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#e8f5e9" />
+                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#e8f5e9" maxlength="7" />
+                </div>
+                <p class="app-hint app-personnaliser-strip-hint">Le bandeau (tampons / points) utilise toujours la même couleur que le fond de la carte.</p>
+                <input type="hidden" id="app-personnaliser-strip" value="#0a7c42" />
+                <input type="hidden" id="app-personnaliser-strip-hex" value="#0a7c42" />
+              </div>
                       <p class="app-step-label">Image de fond de carte</p>
                       <p class="app-hint">Utilisée comme bandeau sur la carte dans le Wallet (optionnel). Ajouter, modifier ou supprimer.</p>
                       <div class="app-personnaliser-card-bg">
@@ -966,31 +988,31 @@
                   <div id="app-personnaliser-panel-logo" class="app-personnaliser-group-panel">
                     <div class="app-personnaliser-group-panel-inner">
                       <p class="app-step-label">Affichage de l’en-tête</p>
-                      <div class="app-rules-type">
-                        <label class="app-radio-label"><input type="radio" name="app-strip-display" value="logo" id="app-strip-display-logo" checked /> Logo (image)</label>
-                        <label class="app-radio-label"><input type="radio" name="app-strip-display" value="text" id="app-strip-display-text" /> Texte à la place du logo</label>
-                      </div>
-                      <div id="app-strip-text-wrap" class="hidden">
-                        <p class="app-step-label">Texte affiché dans le bandeau</p>
-                        <input type="text" id="app-strip-text" class="app-input" maxlength="120" placeholder="ex. Mon Commerce" />
-                      </div>
-                      <div id="app-personnaliser-logo-wrap">
-                        <p class="app-step-label">Logo (recommandé 320×100 px)</p>
+              <div class="app-rules-type">
+                <label class="app-radio-label"><input type="radio" name="app-strip-display" value="logo" id="app-strip-display-logo" checked /> Logo (image)</label>
+                <label class="app-radio-label"><input type="radio" name="app-strip-display" value="text" id="app-strip-display-text" /> Texte à la place du logo</label>
+              </div>
+              <div id="app-strip-text-wrap" class="hidden">
+                <p class="app-step-label">Texte affiché dans le bandeau</p>
+                <input type="text" id="app-strip-text" class="app-input" maxlength="120" placeholder="ex. Mon Commerce" />
+              </div>
+              <div id="app-personnaliser-logo-wrap">
+              <p class="app-step-label">Logo (recommandé 320×100 px)</p>
                         <div class="app-personnaliser-logo app-drop-zone" id="app-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
-                          <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                          <label for="app-personnaliser-logo" class="app-logo-label">
+                <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                <label for="app-personnaliser-logo" class="app-logo-label">
                             <span id="app-personnaliser-logo-placeholder">+ Changer le logo (glisser une image, cliquer ou coller Ctrl+V)</span>
-                            <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
-                          </label>
-                        </div>
-                        <div id="app-logo-colors-wrap" class="app-logo-colors-wrap hidden">
-                          <p class="app-step-label">Couleurs du logo</p>
-                          <p class="app-hint">Cliquez sur une couleur pour l’appliquer au fond de la carte.</p>
-                          <div id="app-logo-colors-swatches" class="app-logo-colors-swatches" role="group" aria-label="Couleurs dominantes du logo"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
+                </label>
+              </div>
+              <div id="app-logo-colors-wrap" class="app-logo-colors-wrap hidden">
+                <p class="app-step-label">Couleurs du logo</p>
+                <p class="app-hint">Cliquez sur une couleur pour l’appliquer au fond de la carte.</p>
+                <div id="app-logo-colors-swatches" class="app-logo-colors-swatches" role="group" aria-label="Couleurs dominantes du logo"></div>
+              </div>
+              </div>
+                </div>
+              </div>
                 </section>
                 <section class="app-personnaliser-group" data-personnaliser-group>
                   <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-labels">
@@ -1008,8 +1030,8 @@
                       <p class="app-step-label">Texte en haut à droite de la carte</p>
                       <input type="text" id="app-personnaliser-header-right" class="app-input" maxlength="32" placeholder="+ d'infos ↗" />
                       <p class="app-hint">Par défaut : + d'infos ↗ (texte + flèche). Ex. Détails →, En savoir plus ↗…</p>
-                    </div>
-                  </div>
+                </div>
+                </div>
                 </section>
                 <section class="app-personnaliser-group" data-personnaliser-group>
                   <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-share">
@@ -1018,21 +1040,21 @@
                   </button>
                   <div id="app-personnaliser-panel-share" class="app-personnaliser-group-panel">
                     <div class="app-personnaliser-group-panel-inner">
-                      <p class="app-step-label">Votre lien FidPass</p>
-                      <div class="app-share-edit-row">
-                        <span class="app-share-prefix">/fidelity/</span>
-                        <input type="text" id="app-share-slug-input" class="app-input app-share-slug-input" aria-label="Modifier le lien FidPass" />
-                        <button type="button" id="app-share-slug-save" class="app-btn app-btn-secondary">Mettre à jour</button>
-                      </div>
-                      <p id="app-share-slug-message" class="app-hint app-share-slug-message hidden"></p>
-                      <div class="app-share-row app-share-link-row">
-                        <input type="text" id="app-share-link" class="app-input app-share-input" readonly aria-label="Lien de la page carte" />
-                        <button type="button" id="app-share-copy" class="app-btn app-btn-primary">Copier</button>
-                      </div>
-                      <div class="app-qr-wrap app-qr-wrap-minimal">
-                        <img id="app-share-qr" class="app-qr-img" src="" alt="QR code vers la page carte" />
-                        <p class="app-share-qr-caption">Scannez pour ouvrir la carte</p>
-                        <button type="button" id="app-share-download-qr" class="app-btn app-btn-secondary app-qr-download">Télécharger PNG</button>
+              <p class="app-step-label">Votre lien FidPass</p>
+              <div class="app-share-edit-row">
+                <span class="app-share-prefix">/fidelity/</span>
+                <input type="text" id="app-share-slug-input" class="app-input app-share-slug-input" aria-label="Modifier le lien FidPass" />
+                <button type="button" id="app-share-slug-save" class="app-btn app-btn-secondary">Mettre à jour</button>
+              </div>
+              <p id="app-share-slug-message" class="app-hint app-share-slug-message hidden"></p>
+              <div class="app-share-row app-share-link-row">
+                <input type="text" id="app-share-link" class="app-input app-share-input" readonly aria-label="Lien de la page carte" />
+                <button type="button" id="app-share-copy" class="app-btn app-btn-primary">Copier</button>
+              </div>
+              <div class="app-qr-wrap app-qr-wrap-minimal">
+                <img id="app-share-qr" class="app-qr-img" src="" alt="QR code vers la page carte" />
+                <p class="app-share-qr-caption">Scannez pour ouvrir la carte</p>
+                <button type="button" id="app-share-download-qr" class="app-btn app-btn-secondary app-qr-download">Télécharger PNG</button>
                       </div>
                     </div>
                   </div>
@@ -1047,6 +1069,8 @@
           <section id="integration" class="app-section">
             <h2 class="app-section-title">Intégration</h2>
             <p class="app-section-desc">Connectez Myfidpass à n'importe quelle caisse, borne de commande ou logiciel métier : une seule API, compatible avec tout système qui peut lire un code-barres et envoyer une requête HTTP.</p>
+            <div class="app-section-grid-wrap app-integration-grid">
+              <div class="app-section-col-main">
             <div class="app-card app-integration-how">
               <h3 class="app-integration-how-title">Comment ça se passe ?</h3>
               <p>Vous n'avez pas besoin de faire la technique. Transmettez le lien ci-dessous à la personne qui gère votre caisse ou votre borne (votre installateur, le support de votre logiciel, ou votre prestataire). Ils auront toute la documentation pour connecter Myfidpass. <strong>Votre prestataire n'a pas besoin de compte Myfidpass.</strong> Vous devrez lui communiquer votre <strong>token</strong> (visible dans l'URL de votre tableau de bord lorsque vous y accédez par le lien reçu par email).</p>
@@ -1057,6 +1081,8 @@
               </div>
               <p class="app-hint"><a href="#" id="app-integration-open-page" target="_blank" rel="noopener">Ouvrir la page dans un nouvel onglet</a> pour voir ce que votre prestataire verra.</p>
             </div>
+              </div>
+              <div class="app-section-col-aside">
             <div class="app-card">
               <p class="app-step-label">URL de base de l'API</p>
               <div class="app-share-row">
@@ -1071,6 +1097,8 @@
               <pre id="app-integration-curl" class="app-integration-curl"></pre>
               <button type="button" id="app-integration-copy-curl" class="app-btn app-btn-secondary">Copier l'exemple cURL</button>
               <p class="app-integration-doc-link"><a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md" target="_blank" rel="noopener">Documentation complète (format code-barres, lookup, exemples JS/Python, erreurs)</a></p>
+            </div>
+              </div>
             </div>
           </section>
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
@@ -1167,43 +1195,74 @@
               </div>
             </div>
           </section>
-          <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
+          <section id="notifications" class="app-section">
             <h2 class="app-section-title">Notifications</h2>
-            <p class="app-section-desc">Tout est réuni ici: géolocalisation + envoi de notifications. Réglez votre zone, puis envoyez vos campagnes depuis le même écran.</p>
-            <div class="app-card">
-              <h3 class="app-subsection-title">Notifications push</h3>
-              <p class="app-notifications-wallet-hint">Les notifications s’affichent sur l’iPhone lorsque vous ajoutez des points ou envoyez une campagne.</p>
-              <div class="app-notif-texts-custom">
-                <h4 class="app-subsubsection-title">Personnaliser les textes des notifications</h4>
-                <label class="app-label" for="app-notification-title-override">Titre de la notification</label>
-                <input type="text" id="app-notification-title-override" class="app-input" placeholder="Nom de votre commerce (par défaut)" maxlength="80" />
-                <p class="app-hint">Affiché sur l’écran de verrouillage (ex. « Carte fidélité » ou le nom de votre commerce).</p>
-                <label class="app-label" for="app-notification-change-message">Format du message</label>
-                <input type="text" id="app-notification-change-message" class="app-input" placeholder="Nouveau message : %@" maxlength="200" />
-                <p class="app-hint">Le symbole <code>%@</code> est remplacé par le contenu du message (ex. « O'CALI CROUSTY: test »).</p>
-                <button type="button" id="app-notification-texts-save" class="app-btn app-btn-secondary">Enregistrer les textes</button>
-                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
-              </div>
-              <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
-              <label class="app-label" for="app-notif-title">Titre (optionnel)</label>
-              <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />
-              <label class="app-label" for="app-notif-message">Message</label>
-              <textarea id="app-notif-message" class="app-input app-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3" required></textarea>
-              <div class="app-notif-target-wrap">
-                <label class="app-label">Envoyer à</label>
-                <label class="app-checkbox-label app-notif-target-all-wrap">
-                  <input type="checkbox" id="app-notif-target-all" class="app-notif-target-all" checked /> Tous les membres
-                </label>
-                <div id="app-notif-categories-wrap" class="app-notif-categories-wrap hidden">
-                  <span class="app-notif-categories-label">Ou à des catégories :</span>
-                  <div id="app-notif-categories-list" class="app-notif-categories-list"></div>
+            <p class="app-section-desc">Personnalisez l'aperçu puis envoyez vos campagnes.</p>
+            <div class="app-notification-preview-banner" aria-hidden="true">
+              <div class="app-notification-preview-banner-bubble">
+                <div class="app-notification-preview-banner-icon-wrap">
+                  <div class="app-notification-preview-banner-icon" id="app-notification-banner-icon">
+                    <img id="app-notification-banner-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
+                    <span class="app-notification-preview-icon-fallback" id="app-notification-banner-icon-fallback">Nom de votre.</span>
+                  </div>
+                  <span class="app-notification-preview-icon-badge" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </span>
+                </div>
+                <div class="app-notification-preview-banner-content">
+                  <div class="app-notification-preview-banner-headline">
+                    <span id="app-notification-banner-title" class="app-notification-preview-banner-title">Nom de votre commerce</span>
+                    <span class="app-notification-preview-time-label">maintenant</span>
+                  </div>
+                  <span id="app-notification-banner-message" class="app-notification-preview-banner-message">Nouveau message : %@</span>
+                  <p class="app-notification-preview-banner-hint">Exemple : <span id="app-notification-banner-example"></span></p>
                 </div>
               </div>
-              <p id="app-notifications-stats" class="app-notifications-stats"></p>
-              <p id="app-notifications-members-vs-devices-hint" class="app-notifications-members-vs-devices-hint hidden" role="note"></p>
-              <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer la notification</button>
-              <p id="app-notif-feedback" class="app-message hidden"></p>
             </div>
+            <div class="app-card app-notifications-card app-notifications-grid">
+              <div class="app-notifications-col-form">
+              <div class="app-notifications-send-block">
+                <h3 class="app-subsection-title">Envoyer une notification</h3>
+                <label class="app-label" for="app-notif-title">Titre (optionnel)</label>
+                <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />
+                <label class="app-label" for="app-notif-message">Message</label>
+                <textarea id="app-notif-message" class="app-input app-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="2"></textarea>
+                <div class="app-notif-target-wrap">
+                  <label class="app-checkbox-label app-notif-target-all-wrap">
+                    <input type="checkbox" id="app-notif-target-all" class="app-notif-target-all" checked /> Tous les membres
+                  </label>
+                  <div id="app-notif-categories-wrap" class="app-notif-categories-wrap hidden">
+                    <div id="app-notif-categories-list" class="app-notif-categories-list"></div>
+                  </div>
+                </div>
+                <p id="app-notifications-stats" class="app-notifications-stats"></p>
+                <p id="app-notifications-members-vs-devices-hint" class="app-notifications-members-vs-devices-hint hidden" role="note"></p>
+                <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer</button>
+                <p id="app-notif-feedback" class="app-message hidden"></p>
+              </div>
+              <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
+              </div>
+              <div class="app-notification-preview-wrap app-notifications-col-preview" aria-label="Aperçu et personnalisation de la notification">
+                <h3 class="app-subsection-title">Personnaliser l'aperçu</h3>
+                <div id="app-notification-preview-icon" class="hidden" aria-hidden="true">
+                  <img id="app-notification-preview-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
+                  <span class="app-notification-preview-icon-fallback" id="app-notification-preview-icon-fallback">Votre logo</span>
+                </div>
+                <p class="app-notification-preview-body-hint hidden" aria-hidden="true">Exemple : <span id="app-notification-preview-body-example"></span></p>
+                <label class="app-label" for="app-notification-title-override">Nom affiché sur la notification</label>
+                <input type="text" id="app-notification-title-override" class="app-input" placeholder="Nom de votre commerce" maxlength="80" />
+                <label class="app-label" for="app-notification-change-message">Format du message (%@ = contenu)</label>
+                <input type="text" id="app-notification-change-message" class="app-input" placeholder="Nouveau message : %@" maxlength="200" />
+                <div class="app-notification-preview-actions">
+                  <button type="button" id="app-notification-texts-save" class="app-btn app-btn-secondary">Enregistrer</button>
+                  <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
+            <h2 class="app-section-title">Emplacement</h2>
+            <p class="app-section-desc">Réglez le périmètre sur la carte pour les alertes à l'approche (notifications à l'entrée dans la zone).</p>
             <div class="app-carte-perimetre-wrap">
               <div class="app-carte-perimetre-panel">
                 <div class="app-carte-perimetre-card">
@@ -1249,6 +1308,8 @@
           <section id="profil" class="app-section app-section-profil">
             <h2 class="app-section-title">Profil</h2>
             <p class="app-section-desc">Modifiez les informations de votre établissement (nom, logo, adresse). Elles apparaissent sur la carte fidélité et dans l’app.</p>
+            <div class="app-section-grid-wrap app-profil-grid">
+              <div class="app-section-col-main">
             <div class="app-card app-profil-card">
               <h3 class="app-subsection-title">Mon établissement</h3>
               <div class="app-profil-form">
@@ -1259,16 +1320,10 @@
                 </div>
                 <div class="app-rules-row">
                   <label class="app-label">Logo</label>
-                  <div class="app-profil-logo-row">
-                    <div class="app-profil-logo-preview-wrap">
-                      <img id="app-profil-logo-preview" class="app-profil-logo-preview hidden" alt="" />
-                      <span id="app-profil-logo-placeholder" class="app-profil-logo-placeholder">Aucun logo</span>
-                    </div>
-                    <div class="app-profil-logo-actions">
-                      <input type="file" id="app-profil-logo-input" class="app-input-file" accept="image/jpeg,image/png,image/webp" aria-label="Choisir un logo" />
-                      <label for="app-profil-logo-input" class="app-btn app-btn-secondary">Changer le logo</label>
-                      <button type="button" id="app-profil-logo-remove" class="app-btn app-btn-ghost hidden">Supprimer</button>
-                    </div>
+                  <div class="app-profil-logo-actions">
+                    <input type="file" id="app-profil-logo-input" class="app-input-file" accept="image/jpeg,image/png,image/webp" aria-label="Choisir un logo" />
+                    <label for="app-profil-logo-input" class="app-btn app-btn-secondary">Changer le logo</label>
+                    <button type="button" id="app-profil-logo-remove" class="app-btn app-btn-ghost hidden">Supprimer</button>
                   </div>
                 </div>
                 <div class="app-rules-row">
@@ -1286,6 +1341,17 @@
                   <span id="app-profil-save-text">Enregistrer</span>
                   <span id="app-profil-save-spinner" class="app-profil-save-spinner hidden"></span>
                 </button>
+              </div>
+            </div>
+              </div>
+              <div class="app-section-col-aside">
+                <div class="app-card app-profil-aside-card">
+                  <h3 class="app-subsection-title">Aperçu du logo</h3>
+                  <div class="app-profil-logo-preview-wrap app-profil-aside-preview">
+                    <img id="app-profil-logo-preview" class="app-profil-logo-preview hidden" alt="" />
+                    <span id="app-profil-logo-placeholder" class="app-profil-logo-placeholder">Aucun logo</span>
+                  </div>
+                </div>
               </div>
             </div>
             <p class="app-mobile-profil-user app-mobile-only" id="app-mobile-profil-email"></p>
@@ -2160,7 +2226,7 @@ X-Dashboard-Token: TOKEN
               <label class="dashboard-label" for="dashboard-notif-title">Titre (optionnel)</label>
               <input type="text" id="dashboard-notif-title" class="dashboard-input" placeholder="ex. Offre du jour" />
               <label class="dashboard-label" for="dashboard-notif-message">Message</label>
-              <textarea id="dashboard-notif-message" class="dashboard-input dashboard-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3" required></textarea>
+              <textarea id="dashboard-notif-message" class="dashboard-input dashboard-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="3"></textarea>
               <div class="dashboard-notif-target-wrap">
                 <label class="dashboard-label">Envoyer à</label>
                 <label class="dashboard-checkbox-label dashboard-notif-target-all-wrap">
