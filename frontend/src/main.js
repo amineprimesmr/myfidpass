@@ -1821,6 +1821,7 @@ function initAppDashboard(slug) {
   })();
 
   // ——— Personnaliser la carte ———
+  let currentOrganizationName = "Votre commerce";
   const personnaliserOrg = document.getElementById("app-personnaliser-org");
   const personnaliserBg = document.getElementById("app-personnaliser-bg");
   const personnaliserBgHex = document.getElementById("app-personnaliser-bg-hex");
@@ -2049,7 +2050,7 @@ function initAppDashboard(slug) {
       bodyEl.style.background = bgHex;
       bodyEl.style.backgroundImage = "none";
     }
-    orgEl.textContent = personnaliserOrg?.value?.trim() || "Votre commerce";
+    orgEl.textContent = personnaliserOrg?.value?.trim() || currentOrganizationName;
     const isStamps = programTypeStamps && programTypeStamps.checked;
     const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "☕";
     const requiredStamps = 10;
@@ -2131,7 +2132,7 @@ function initAppDashboard(slug) {
     }
     if (stripTextPreview) {
       if (useStripText) {
-        stripTextPreview.textContent = stripTextEl?.value?.trim() || personnaliserOrg?.value?.trim() || "Votre commerce";
+        stripTextPreview.textContent = stripTextEl?.value?.trim() || personnaliserOrg?.value?.trim() || currentOrganizationName;
         stripTextPreview.classList.remove("hidden");
       } else {
         stripTextPreview.textContent = "";
@@ -2288,8 +2289,7 @@ function initAppDashboard(slug) {
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
       if (!data) return;
-      const org = data.organization_name ?? data.organizationName ?? "";
-      if (personnaliserOrg) personnaliserOrg.value = org;
+      currentOrganizationName = (data.organization_name ?? data.organizationName ?? "").trim() || "Votre commerce";
       const bg = data.background_color ?? data.backgroundColor ?? "#0a7c42";
       const fg = data.foreground_color ?? data.foregroundColor ?? "#ffffff";
       const label = data.label_color ?? data.labelColor ?? "#e8f5e9";
@@ -2890,7 +2890,6 @@ function initAppDashboard(slug) {
 
   if (personnaliserSave) {
     personnaliserSave.addEventListener("click", async () => {
-      const organizationName = personnaliserOrg?.value?.trim() || "";
       const backgroundColor = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
       const foregroundColor = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
       const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#e8f5e9";
@@ -2901,7 +2900,7 @@ function initAppDashboard(slug) {
         return undefined;
       };
       const body = {
-        organizationName: organizationName || undefined,
+        ...(organizationName ? { organizationName } : {}),
         backgroundColor: toHex(backgroundColor),
         foregroundColor: toHex(foregroundColor),
         labelColor: toHex(labelColor),
