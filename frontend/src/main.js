@@ -1133,8 +1133,8 @@ function initAppMobile() {
       const text = (mobileMessageInput.value || "").trim();
       if (text) {
         showAppSection("notifications");
-        const notifMsg = document.getElementById("app-notif-message");
-        if (notifMsg) notifMsg.value = text;
+        const bannerMsg = document.getElementById("app-notification-banner-message");
+        if (bannerMsg) bannerMsg.value = text;
       }
     });
   }
@@ -4526,14 +4526,8 @@ function initAppDashboard(slug) {
 
   function updateAppNotificationPreview() {
     const bannerTitle = document.getElementById("app-notification-banner-title");
-    const bannerMessage = document.getElementById("app-notification-banner-message");
-    const bannerExample = document.getElementById("app-notification-banner-example");
     const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
     const title = (bannerTitle?.value ?? "").trim() || "Nom de votre commerce";
-    const format = (bannerMessage?.value ?? "").trim() || "Nouveau message : %@";
-    const sampleContent = title + ": test";
-    const bodyExample = format.replace(/%@/g, sampleContent);
-    if (bannerExample) bannerExample.textContent = bodyExample;
     if (bannerIconFallback) {
       bannerIconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Logo";
     }
@@ -4810,20 +4804,14 @@ function initAppDashboard(slug) {
   });
 
   document.getElementById("app-notif-send")?.addEventListener("click", async () => {
-    const titleEl = document.getElementById("app-notif-title");
-    const messageEl = document.getElementById("app-notif-message");
+    const titleEl = document.getElementById("app-notification-banner-title");
+    const messageEl = document.getElementById("app-notification-banner-message");
     const feedbackEl = document.getElementById("app-notif-feedback");
     const btn = document.getElementById("app-notif-send");
-    const targetAll = document.getElementById("app-notif-target-all");
     const message = messageEl?.value?.trim();
     if (!message) {
-      if (feedbackEl) { feedbackEl.textContent = "Saisissez un message."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+      if (feedbackEl) { feedbackEl.textContent = "Saisissez un message dans l'aperçu."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
       return;
-    }
-    let categoryIds = undefined;
-    if (!targetAll?.checked) {
-      const checked = document.querySelectorAll(".app-notif-category-cb:checked");
-      if (checked.length > 0) categoryIds = Array.from(checked).map((c) => c.dataset.id).filter(Boolean);
     }
     if (btn) btn.disabled = true;
     if (feedbackEl) feedbackEl.classList.add("hidden");
@@ -4831,7 +4819,7 @@ function initAppDashboard(slug) {
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
-        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}) }),
+        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message }),
       });
       const data = await res.json().catch(() => ({}));
       if (feedbackEl) {

@@ -1217,36 +1217,13 @@
                     <span class="app-notification-preview-time-label">maintenant</span>
                   </div>
                   <input type="text" id="app-notification-banner-message" class="app-notification-preview-banner-message" placeholder="Nouveau message : %@" maxlength="200" aria-label="Format du message (%@ = contenu)" />
-                  <p class="app-notification-preview-banner-hint">Exemple : <span id="app-notification-banner-example"></span></p>
                 </div>
               </div>
               <div class="app-notification-banner-actions">
-                <button type="button" id="app-notification-texts-save" class="app-btn app-btn-primary">Enregistrer l'aperçu</button>
-                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
-              </div>
-            </div>
-            <div class="app-card app-notifications-card app-notifications-grid">
-              <div class="app-notifications-col-form">
-              <div class="app-notifications-send-block">
-                <h3 class="app-subsection-title">Envoyer une notification</h3>
-                <label class="app-label" for="app-notif-title">Titre (optionnel)</label>
-                <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />
-                <label class="app-label" for="app-notif-message">Message</label>
-                <textarea id="app-notif-message" class="app-input app-textarea" placeholder="ex. Aujourd'hui les points valent double !" rows="2"></textarea>
-                <div class="app-notif-target-wrap">
-                  <label class="app-checkbox-label app-notif-target-all-wrap">
-                    <input type="checkbox" id="app-notif-target-all" class="app-notif-target-all" checked /> Tous les membres
-                  </label>
-                  <div id="app-notif-categories-wrap" class="app-notif-categories-wrap hidden">
-                    <div id="app-notif-categories-list" class="app-notif-categories-list"></div>
-                  </div>
-                </div>
-                <p id="app-notifications-stats" class="app-notifications-stats"></p>
-                <p id="app-notifications-members-vs-devices-hint" class="app-notifications-members-vs-devices-hint hidden" role="note"></p>
+                <button type="button" id="app-notification-texts-save" class="app-btn app-btn-secondary">Enregistrer l'aperçu</button>
                 <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer</button>
+                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
                 <p id="app-notif-feedback" class="app-message hidden"></p>
-              </div>
-              <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
               </div>
             </div>
           </section>
