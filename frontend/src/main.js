@@ -1869,7 +1869,6 @@ function initAppDashboard(slug) {
   const requiredStampsEl = document.getElementById("app-required-stamps");
   const stampEmojiEl = document.getElementById("app-stamp-emoji");
   const stampRewardLabelEl = document.getElementById("app-stamp-reward-label");
-  const expiryMonthsEl = document.getElementById("app-expiry-months");
   const personnaliserAccordion = document.getElementById("app-personnaliser-accordion");
 
   function initPersonnaliserAccordion() {
@@ -2335,7 +2334,6 @@ function initAppDashboard(slug) {
       if (labelRestantsEl && (data.label_restants ?? data.labelRestants) != null) labelRestantsEl.value = data.label_restants ?? data.labelRestants ?? "";
       if (labelMemberEl && (data.label_member ?? data.labelMember) != null) labelMemberEl.value = data.label_member ?? data.labelMember ?? "";
       if (headerRightEl != null) headerRightEl.value = data.header_right_text ?? data.headerRightText ?? "";
-      if (expiryMonthsEl != null) expiryMonthsEl.value = data.expiry_months ?? data.expiryMonths ?? "";
       const er = data.engagement_rewards ?? data.engagementRewards ?? {};
       const g = er.google_review ?? {};
       const ig = er.instagram_follow ?? {};
@@ -2906,10 +2904,6 @@ function initAppDashboard(slug) {
       else if (requiredStampsEl) body.requiredStamps = parseInt(requiredStampsEl.value, 10) || 10;
       if (stampEmojiEl) body.stampEmoji = stampEmojiEl.value.trim() || undefined;
       if (stampRewardLabelEl) body.stampRewardLabel = stampRewardLabelEl.value.trim() || undefined;
-      if (expiryMonthsEl && expiryMonthsEl.value.trim() !== "") {
-        const m = parseInt(expiryMonthsEl.value, 10);
-        if (!Number.isNaN(m) && m >= 0) body.expiryMonths = m;
-      }
       const sectorVal = (isStamps ? sectorStampsEl : sectorEl)?.value?.trim();
       if (sectorVal) body.sector = sectorVal;
       // N'envoyer le logo que si c'est un data URL (nouvelle image choisie). Une blob URL (logo chargé depuis l'API) ne doit pas être envoyée sinon on écrase le logo en base.

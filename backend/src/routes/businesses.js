@@ -168,7 +168,6 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     points_min_amount_eur: business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
-    expiry_months: business.expiry_months != null ? Number(business.expiry_months) : undefined,
     sector: business.sector ?? undefined,
     logo_url: business.logo_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/logo` : undefined,
     logo_updated_at: business.logo_updated_at ?? undefined,
@@ -217,7 +216,6 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const points_per_ticket = body.points_per_ticket ?? body.pointsPerTicket;
   const points_min_amount_eur = body.points_min_amount_eur ?? body.pointsMinAmountEur;
   const points_reward_tiers = body.points_reward_tiers ?? body.pointsRewardTiers;
-  const expiry_months = body.expiry_months ?? body.expiryMonths;
   const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
@@ -279,10 +277,6 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
         updates.points_reward_tiers = null;
       }
     }
-  }
-  if (expiry_months !== undefined) {
-    const n = expiry_months === null || expiry_months === "" ? null : Number(expiry_months);
-    updates.expiry_months = Number.isInteger(n) && n >= 0 ? n : null;
   }
   if (sector !== undefined) updates.sector = sector ? String(sector).trim().slice(0, 64) : null;
   if (required_stamps !== undefined) {
@@ -2268,11 +2262,6 @@ router.patch("/:slug", (req, res) => {
   if (pointsPerTicket !== undefined) {
     const n = Number(pointsPerTicket);
     updates.points_per_ticket = Number.isInteger(n) && n > 0 ? n : 10;
-  }
-  const expiryMonths = body.expiryMonths ?? body.expiry_months;
-  if (expiryMonths !== undefined) {
-    const n = expiryMonths === null || expiryMonths === "" ? null : Number(expiryMonths);
-    updates.expiry_months = Number.isInteger(n) && n >= 0 ? n : null;
   }
   const sector = body.sector;
   if (sector !== undefined) updates.sector = sector ? String(sector).trim().slice(0, 64) : null;
