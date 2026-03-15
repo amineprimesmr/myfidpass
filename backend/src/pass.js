@@ -904,6 +904,15 @@ export async function generatePass(member, business = null, options = {}) {
     });
   }
 
+  // Texte en haut à droite de la carte (ex. "+ d'infos ›")
+  const headerRightText = (options.header_right_text ?? business?.header_right_text)?.trim() || "+ d'infos ›";
+  pass.headerFields.push({
+    key: "headerRight",
+    label: "",
+    value: headerRightText,
+    textAlignment: "PKTextAlignmentRight",
+  });
+
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
   const labelRestants = (options.label_restants ?? business?.label_restants)?.trim() || "Restants";
   const labelMember = (options.label_member ?? business?.label_member)?.trim() || "Membre";
