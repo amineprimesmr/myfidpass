@@ -2400,7 +2400,7 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org { position: relative; z-index: 1; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right {
   position: absolute;
-  top: 0.12rem;
+  top: 0.22rem;
   right: 0.5rem;
   z-index: 2;
   margin-left: 0;
@@ -2455,6 +2455,8 @@ body.page-app .site-banner { display: none !important; }
   align-items: center;
   justify-content: flex-start;
   overflow: visible;
+  align-self: flex-start;
+  margin-top: 0.22rem;
   box-sizing: border-box;
   background: transparent !important;
   padding: 0 !important;
