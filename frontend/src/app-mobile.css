@@ -401,7 +401,8 @@
   .app-mobile-only {
     display: none !important;
   }
-  #app-app .app-section-profil {
-    display: none !important;
+  /* S'assurer que la section Profil reste visible sur desktop (formulaire établissement) */
+  #app-dashboard-content #profil.app-section-visible {
+    display: block !important;
   }
 }
