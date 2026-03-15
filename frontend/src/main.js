@@ -2087,7 +2087,7 @@ function initAppDashboard(slug) {
     if (memberLabelEl) memberLabelEl.textContent = labelMemberVal || "Membre";
     const headerRightEl = document.getElementById("app-wallet-preview-header-right");
     const headerRightVal = document.getElementById("app-personnaliser-header-right")?.value?.trim();
-    if (headerRightEl) headerRightEl.textContent = headerRightVal || "+ d'infos ›";
+    if (headerRightEl) headerRightEl.textContent = headerRightVal || "+ d'infos ↗";
     const rewardValueEl = document.getElementById("app-wallet-preview-reward");
     if (rewardValueEl && !isStamps) {
       const tiersRaw = pointsRewardTiersEl?.value?.trim() || "";

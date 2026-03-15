@@ -926,8 +926,8 @@ export async function generatePass(member, business = null, options = {}) {
     });
   }
 
-  // Texte en haut à droite de la carte (ex. "+ d'infos ›")
-  const headerRightText = (options.header_right_text ?? business?.header_right_text)?.trim() || "+ d'infos ›";
+  // Texte en haut à droite de la carte (ex. "+ d'infos ↗")
+  const headerRightText = (options.header_right_text ?? business?.header_right_text)?.trim() || "+ d'infos ↗";
   pass.headerFields.push({
     key: "headerRight",
     label: "",
