@@ -1,5 +1,4 @@
 /* Helmet — Scroll-Driven 3D Image Tube (matdn/helmet, Codrops) — pleine largeur, tout l'écran */
-/* TEMPORAIRE : masqué pour debug page blanche — remettre display block une fois résolu */
 .landing-helmet-section {
   display: none !important;
 }

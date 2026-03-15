@@ -230,10 +230,6 @@
             <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Choisir — 49 €/mois</button>
           </article>
         </div>
-        <p class="offers-footer"><a href="/app">J'ai déjà un abonnement → aller à mon espace</a></p>
-        <p id="offers-dev-bypass-wrap" class="offers-dev-bypass-wrap">
-          <button type="button" id="offers-dev-bypass-btn" class="offers-dev-bypass-btn" title="Temporaire : simuler un paiement pour tester l’app sans Stripe">Mode dev : passer le paiement</button>
-        </p>
       </main>
     </div>
 
@@ -295,9 +291,6 @@
                   <span class="checkout-btn-payment-sub">7 jours gratuits · puis 49 €/mois</span>
                 </button>
                 <p id="checkout-error" class="checkout-error hidden"></p>
-                <p class="checkout-dev-bypass-wrap">
-                  <button type="button" id="checkout-dev-bypass-btn" class="checkout-dev-bypass-btn" title="Temporaire : simuler un paiement sans Stripe">🔧 Mode dev : passer le paiement</button>
-                </p>
               </div>
             </section>
           </div>
@@ -457,7 +450,6 @@
         <div class="app-sidebar-footer">
           <p class="app-sidebar-user" id="app-user-email"></p>
           <button type="button" id="app-logout" class="app-sidebar-logout">Déconnexion</button>
-          <button type="button" id="app-reset-all" class="app-sidebar-reset" title="Supprime tous les comptes et cartes (dev)">Reset tout (dev)</button>
         </div>
       </aside>
       <!-- Header mobile (style app) -->
@@ -507,10 +499,6 @@
                     <button type="button" class="app-dashboard-period-pill" data-period="6m">6m</button>
                   </div>
                 </div>
-                  <div class="app-dashboard-testing">
-                    <button type="button" id="app-dashboard-simulate" class="app-dashboard-simulate-btn">Charger données simulées</button>
-                    <p id="app-dashboard-simulate-state" class="app-dashboard-simulate-state hidden">Mode test actif</p>
-                  </div>
                 </div>
               </div>
             <!-- Hero mobile : 2 cartes + message -->
@@ -1213,7 +1201,6 @@
               </div>
               <p id="app-notifications-stats" class="app-notifications-stats"></p>
               <p id="app-notifications-members-vs-devices-hint" class="app-notifications-members-vs-devices-hint hidden" role="note"></p>
-              <p id="app-notifications-remove-test-wrap" class="app-notifications-remove-test hidden"><button type="button" id="app-notifications-remove-test-btn" class="app-link-btn">Supprimer l'appareil de test</button> (remet le compteur à 0)</p>
               <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer la notification</button>
               <p id="app-notif-feedback" class="app-message hidden"></p>
             </div>

@@ -130,9 +130,6 @@ export default function AppSidebar() {
             <button type="button" id="app-logout" className="app-sidebar-logout w-full rounded-[var(--app-radius-sm)] border border-[var(--app-sidebar-border)] bg-white/[0.04] px-3.5 py-2.5 text-sm font-medium text-[var(--app-sidebar-text-muted)] shadow-sm transition-colors hover:bg-[var(--app-sidebar-hover)] hover:text-[var(--app-sidebar-text)]">
               Déconnexion
             </button>
-            <button type="button" id="app-reset-all" className="app-sidebar-reset mt-2 w-full px-3 py-1.5 text-left text-xs text-[var(--app-sidebar-text-muted)] hover:text-[#f87171] hover:underline" title="Supprime tous les comptes et cartes (dev)">
-              Reset tout (dev)
-            </button>
           </div>
       </DesktopSidebar>
     </Sidebar>
