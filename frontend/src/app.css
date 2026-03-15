@@ -2304,9 +2304,9 @@ body.page-app .site-banner { display: none !important; }
   z-index: 2;
 }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
-  width: 99%;
-  max-width: 99%;
-  max-height: 90%;
+  width: 97%;
+  max-width: 97%;
+  max-height: 78%;
   border-radius: 16px;
   overflow: hidden;
   box-sizing: border-box;
@@ -2328,8 +2328,8 @@ body.page-app .site-banner { display: none !important; }
   height: 70.6%;
 }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
-  height: 90%;
-  max-height: 90%;
+  height: 78%;
+  max-height: 78%;
   min-height: 0;
 }
 @media (min-width: 981px) {
