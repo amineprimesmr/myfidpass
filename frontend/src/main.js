@@ -3003,29 +3003,32 @@ function initAppDashboard(slug) {
       else if (personnaliserCardBgDataUrl && typeof personnaliserCardBgDataUrl === "string" && personnaliserCardBgDataUrl.startsWith("data:")) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
       if (personnaliserStampIconRemoveRequested) body.stampIconBase64 = "";
       else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) body.stampIconBase64 = personnaliserStampIconDataUrl;
-      const addressVal = document.getElementById("app-personnaliser-address")?.value?.trim() || "";
-      const locTextVal = document.getElementById("app-personnaliser-location-text")?.value?.trim();
-      const radiusVal = document.getElementById("app-personnaliser-radius")?.value;
-      body.locationAddress = addressVal || null;
-      if (addressVal) {
-        showPersonnaliserMessage("Localisation de l'adresse en cours…", false);
-        try {
-          const coords = await geocodeAddress(addressVal);
-          if (coords) {
-            body.locationLat = coords.lat;
-            body.locationLng = coords.lng;
-          } else {
-            showPersonnaliserMessage("Adresse non trouvée. Vérifiez l'adresse ou réessayez. Les autres modifications seront enregistrées.", true);
+      const addressEl = document.getElementById("app-personnaliser-address");
+      if (addressEl) {
+        const addressVal = addressEl.value?.trim() || "";
+        const locTextVal = document.getElementById("app-personnaliser-location-text")?.value?.trim();
+        const radiusVal = document.getElementById("app-personnaliser-radius")?.value;
+        body.locationAddress = addressVal || null;
+        if (addressVal) {
+          showPersonnaliserMessage("Localisation de l'adresse en cours…", false);
+          try {
+            const coords = await geocodeAddress(addressVal);
+            if (coords) {
+              body.locationLat = coords.lat;
+              body.locationLng = coords.lng;
+            } else {
+              showPersonnaliserMessage("Adresse non trouvée. Vérifiez l'adresse ou réessayez. Les autres modifications seront enregistrées.", true);
+            }
+          } catch (e) {
+            showPersonnaliserMessage("Impossible de localiser l'adresse (réseau). Les autres modifications seront enregistrées.", true);
           }
-        } catch (e) {
-          showPersonnaliserMessage("Impossible de localiser l'adresse (réseau). Les autres modifications seront enregistrées.", true);
+        } else {
+          body.locationLat = null;
+          body.locationLng = null;
         }
-      } else {
-        body.locationLat = null;
-        body.locationLng = null;
+        if (locTextVal !== undefined) body.locationRelevantText = locTextVal || undefined;
+        if (radiusVal !== undefined) body.locationRadiusMeters = radiusVal === "" ? undefined : parseInt(radiusVal, 10);
       }
-      if (locTextVal !== undefined) body.locationRelevantText = locTextVal || undefined;
-      if (radiusVal !== undefined) body.locationRadiusMeters = radiusVal === "" ? undefined : parseInt(radiusVal, 10);
       const labelRestantsVal = document.getElementById("app-personnaliser-label-restants")?.value?.trim();
       const labelMemberVal = document.getElementById("app-personnaliser-label-member")?.value?.trim();
       const headerRightVal = document.getElementById("app-personnaliser-header-right")?.value?.trim();
