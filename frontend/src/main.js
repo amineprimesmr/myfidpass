@@ -1011,12 +1011,11 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["dashboard", "caisse", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
+const APP_SECTION_IDS = ["dashboard", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
 
 const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
-  "caisse": "Caisse",
-  "personnaliser": "Ma Carte",
+"personnaliser": "Ma Carte",
   "carte-perimetre": "Notifications",
   "engagement": "Avis & Réseaux",
   "profil": "Profil",
@@ -1059,7 +1058,7 @@ function initAppSidebar() {
     });
   });
   let hashSection = (window.location.hash || "#dashboard").slice(1);
-  if (hashSection === "scanner") hashSection = "caisse";
+  if (hashSection === "scanner") hashSection = "dashboard";
   if (hashSection === "vue-ensemble") {
     hashSection = "dashboard";
     if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#dashboard");
@@ -1068,7 +1067,7 @@ function initAppSidebar() {
   showAppSection(sectionToShow);
   window.addEventListener("hashchange", () => {
     let section = (window.location.hash || "#dashboard").slice(1);
-    if (section === "scanner") section = "caisse";
+    if (section === "scanner") section = "dashboard";
     if (section === "vue-ensemble") {
       section = "dashboard";
       if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#dashboard");
@@ -1104,7 +1103,7 @@ function initAppMobile() {
     const id = e.detail?.tab;
     if (id && APP_SECTION_IDS.includes(id)) showAppSection(id);
   });
-  headerScanBtn?.addEventListener("click", () => showAppSection("caisse"));
+  headerScanBtn?.addEventListener("click", () => { showAppSection("dashboard"); document.getElementById("app-dashboard-scanner-wrap")?.scrollIntoView({ behavior: "smooth" }); });
 
   document.querySelectorAll(".app-mobile-profil-item[data-section]").forEach((item) => {
     item.addEventListener("click", (e) => {
@@ -3826,11 +3825,11 @@ function initAppDashboard(slug) {
   document.querySelectorAll("#app-app .app-sidebar-link[data-section]").forEach((link) => {
     link.addEventListener("click", () => {
       const id = link.getAttribute("data-section");
-      if (id !== "caisse") stopFullscreenScanner();
+      if (id !== "dashboard") stopFullscreenScanner();
     });
   });
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId !== "caisse") stopFullscreenScanner();
+    if (e.detail?.sectionId !== "dashboard") stopFullscreenScanner();
   });
 
   let allMembers = [];
@@ -4451,6 +4450,11 @@ function initAppDashboard(slug) {
       URL.revokeObjectURL(a.href);
     });
   }
+
+  document.getElementById("app-scanner-scroll-btn")?.addEventListener("click", () => {
+    showAppSection("dashboard");
+    document.getElementById("app-dashboard-scanner-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   const overviewCopyLinkBtn = document.getElementById("app-overview-copy-link");
   if (overviewCopyLinkBtn) {

@@ -80,8 +80,7 @@ const APP_LINKS = [
   { section: "dashboard", href: "#dashboard", label: "Dashboard", icon: IconDashboard },
   { section: "personnaliser", href: "#personnaliser", label: "Ma carte", icon: IconCarte },
   { section: "carte-perimetre", href: "#carte-perimetre", label: "Notifications", icon: IconMap },
-  { section: "caisse", href: "#caisse", label: "Caisse", icon: IconCaisse },
-  { section: "membres", href: "#membres", label: "Membres", icon: IconMembres },
+{ section: "membres", href: "#membres", label: "Membres", icon: IconMembres },
   { section: "historique", href: "#historique", label: "Historique", icon: IconHistorique },
   { section: "integration", href: "#integration", label: "Intégration", icon: IconIntegration },
   { section: "engagement", href: "#engagement", label: "Avis & Réseaux", icon: IconEngagement },
@@ -91,7 +90,7 @@ const APP_LINKS = [
 
 function getActiveSection() {
   let hash = (window.location.hash || "#dashboard").slice(1);
-  if (hash === "scanner") hash = "caisse";
+  if (hash === "scanner") hash = "dashboard";
   if (hash === "partager") hash = "personnaliser";
   return hash;
 }
