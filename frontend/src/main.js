@@ -2338,6 +2338,10 @@ function initAppDashboard(slug) {
       if (labelRestantsEl && (data.label_restants ?? data.labelRestants) != null) labelRestantsEl.value = data.label_restants ?? data.labelRestants ?? "";
       if (labelMemberEl && (data.label_member ?? data.labelMember) != null) labelMemberEl.value = data.label_member ?? data.labelMember ?? "";
       if (headerRightEl != null) headerRightEl.value = data.header_right_text ?? data.headerRightText ?? "";
+      const notifTitleOverrideEl = document.getElementById("app-notification-title-override");
+      const notifChangeMsgEl = document.getElementById("app-notification-change-message");
+      if (notifTitleOverrideEl != null) notifTitleOverrideEl.value = data.notification_title_override ?? data.notificationTitleOverride ?? "";
+      if (notifChangeMsgEl != null) notifChangeMsgEl.value = data.notification_change_message ?? data.notificationChangeMessage ?? "";
       const er = data.engagement_rewards ?? data.engagementRewards ?? {};
       const g = er.google_review ?? {};
       const ig = er.instagram_follow ?? {};
@@ -4647,6 +4651,44 @@ function initAppDashboard(slug) {
       }
     } catch (_) {
       if (wrap) { wrap.textContent = "Erreur réseau."; wrap.classList.remove("hidden"); }
+    }
+    if (btn) btn.disabled = false;
+  });
+
+  document.getElementById("app-notification-texts-save")?.addEventListener("click", async () => {
+    const titleEl = document.getElementById("app-notification-title-override");
+    const msgEl = document.getElementById("app-notification-change-message");
+    const feedbackEl = document.getElementById("app-notification-texts-feedback");
+    const btn = document.getElementById("app-notification-texts-save");
+    if (btn) btn.disabled = true;
+    if (feedbackEl) feedbackEl.classList.add("hidden");
+    try {
+      const res = await api("/dashboard/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notification_title_override: titleEl?.value?.trim() || null,
+          notification_change_message: msgEl?.value?.trim() || null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (feedbackEl) {
+        feedbackEl.classList.remove("hidden");
+        if (res.ok) {
+          feedbackEl.textContent = "Textes enregistrés.";
+          feedbackEl.classList.remove("error");
+          feedbackEl.classList.add("success");
+        } else {
+          feedbackEl.textContent = data.error || "Erreur lors de l'enregistrement.";
+          feedbackEl.classList.add("error");
+        }
+      }
+    } catch (_) {
+      if (feedbackEl) {
+        feedbackEl.classList.remove("hidden");
+        feedbackEl.textContent = "Erreur réseau.";
+        feedbackEl.classList.add("error");
+      }
     }
     if (btn) btn.disabled = false;
   });

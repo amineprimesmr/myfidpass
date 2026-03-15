@@ -178,6 +178,8 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     label_restants: business.label_restants ?? undefined,
     label_member: business.label_member ?? undefined,
     header_right_text: business.header_right_text ?? undefined,
+    notification_title_override: business.notification_title_override ?? undefined,
+    notification_change_message: business.notification_change_message ?? undefined,
     has_stamp_icon: !!(business.stamp_icon_base64 && String(business.stamp_icon_base64).trim()),
     stamp_icon_url: business.stamp_icon_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/stamp-icon` : undefined,
     engagement_rewards: getEngagementRewards(business.id),
@@ -355,6 +357,14 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   const header_right_text = body.header_right_text ?? body.headerRightText;
   if (header_right_text !== undefined) {
     updates.header_right_text = header_right_text == null || String(header_right_text).trim() === "" ? null : String(header_right_text).trim().slice(0, 64);
+  }
+  const notification_title_override = body.notification_title_override ?? body.notificationTitleOverride;
+  if (notification_title_override !== undefined) {
+    updates.notification_title_override = notification_title_override == null || String(notification_title_override).trim() === "" ? null : String(notification_title_override).trim().slice(0, 80);
+  }
+  const notification_change_message = body.notification_change_message ?? body.notificationChangeMessage;
+  if (notification_change_message !== undefined) {
+    updates.notification_change_message = notification_change_message == null || String(notification_change_message).trim() === "" ? null : String(notification_change_message).trim().slice(0, 200);
   }
   const engagement_rewards = body.engagement_rewards ?? body.engagementRewards;
   if (engagement_rewards !== undefined) {

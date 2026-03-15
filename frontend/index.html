@@ -1184,6 +1184,17 @@
               <div class="app-notifications-iphone-tip" role="note">
                 <strong>Pas de notif sur l’iPhone ?</strong> Sur le téléphone du client : ouvrir la carte dans <strong>Portefeuille</strong> → toucher <strong>⋯</strong> (trois points) → <strong>Détails du pass</strong> → activer <strong>« Autoriser les notifications »</strong> (et « Suggérer sur l’écran de verrouillage » si proposé). Puis vérifier Réglages → Notifications → Portefeuille.
               </div>
+              <div class="app-notif-texts-custom">
+                <h4 class="app-subsubsection-title">Personnaliser les textes des notifications</h4>
+                <label class="app-label" for="app-notification-title-override">Titre de la notification</label>
+                <input type="text" id="app-notification-title-override" class="app-input" placeholder="Nom de votre commerce (par défaut)" maxlength="80" />
+                <p class="app-hint">Affiché sur l’écran de verrouillage (ex. « Carte fidélité » ou le nom de votre commerce).</p>
+                <label class="app-label" for="app-notification-change-message">Format du message</label>
+                <input type="text" id="app-notification-change-message" class="app-input" placeholder="Nouveau message : %@" maxlength="200" />
+                <p class="app-hint">Le symbole <code>%@</code> est remplacé par le contenu du message (ex. « O'CALI CROUSTY: test »).</p>
+                <button type="button" id="app-notification-texts-save" class="app-btn app-btn-secondary">Enregistrer les textes</button>
+                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
+              </div>
               <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
               <label class="app-label" for="app-notif-title">Titre (optionnel)</label>
               <input type="text" id="app-notif-title" class="app-input" placeholder="ex. Offre du jour" />

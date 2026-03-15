@@ -1871,6 +1871,16 @@ if (!bizColsFinal.includes("last_broadcast_at")) {
     db.prepare("ALTER TABLE businesses ADD COLUMN last_broadcast_at TEXT").run();
   } catch (_) {}
 }
+if (!bizColsFinal.includes("notification_title_override")) {
+  try {
+    db.prepare("ALTER TABLE businesses ADD COLUMN notification_title_override TEXT").run();
+  } catch (_) {}
+}
+if (!bizColsFinal.includes("notification_change_message")) {
+  try {
+    db.prepare("ALTER TABLE businesses ADD COLUMN notification_change_message TEXT").run();
+  } catch (_) {}
+}
 
 // ——— Catégories de membres (classement par le commerçant, ciblage notifications) ———
 try {

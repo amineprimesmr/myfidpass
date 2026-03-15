@@ -889,10 +889,12 @@ export async function generatePass(member, business = null, options = {}) {
 
   const webServiceURL = process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL;
   const authToken = getPassAuthenticationToken(member.id);
+  const notifTitle = (options.notification_title_override ?? business?.notification_title_override)?.trim() || organizationName;
+  const changeMsg = (options.notification_change_message ?? business?.notification_change_message)?.trim() || "Nouveau message : %@";
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
-    organizationName: "Carte fidélité",
+    organizationName: notifTitle,
     description: format === "tampons"
       ? `Carte fidélité — ${stamps}/${stampMax} tampons`
       : `Carte de fidélité — ${member.points} pts`,
@@ -1031,7 +1033,7 @@ export async function generatePass(member, business = null, options = {}) {
     const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
 
     pass.backFields.push(
-      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: "Nouveau message : %@" },
+      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: changeMsg },
       { key: "reward", label: "Récompense", value: `${stampMax} tampons = ${rewardLabel}` },
       { key: "terms", label: "Conditions", value: backTerms },
       { key: "contact", label: "Contact", value: backContact },
@@ -1055,7 +1057,7 @@ export async function generatePass(member, business = null, options = {}) {
         : "Consultez le commerce pour les paliers de récompenses.";
 
   pass.backFields.push(
-      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: "Nouveau message : %@" },
+      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: changeMsg },
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       {
         key: "rewards",
