@@ -81,7 +81,7 @@ const APP_LINKS = [
   { section: "caisse", href: "#caisse", label: "Caisse", icon: IconCaisse },
   { section: "membres", href: "#membres", label: "Membres", icon: IconMembres },
   { section: "historique", href: "#historique", label: "Historique", icon: IconHistorique },
-  { section: "personnaliser", href: "#personnaliser", label: "Ma carte (partage & QR)", icon: IconCarte },
+  { section: "personnaliser", href: "#personnaliser", label: "Ma carte", icon: IconCarte },
   { section: "carte-perimetre", href: "#carte-perimetre", label: "Carte & périmètre", icon: IconMap },
   { section: "integration", href: "#integration", label: "Intégration caisse / borne", icon: IconIntegration },
   { section: "engagement", href: "#engagement", label: "Avis & Réseaux", icon: IconEngagement },
