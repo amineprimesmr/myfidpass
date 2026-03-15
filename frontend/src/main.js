@@ -2156,9 +2156,8 @@ function initAppDashboard(slug) {
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl, personnaliserLabelRestants, personnaliserLabelMember, personnaliserHeaderRight].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl, personnaliserLabelRestants, personnaliserLabelMember, personnaliserHeaderRight].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [stripDisplayLogo, stripDisplayText].forEach((el) => el?.addEventListener("change", () => { setStripDisplayVisibility(); updatePersonnaliserPreview(); }));
-  [programTypePoints, programTypeStamps, stampEmojiEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+  [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
-  if (stampEmojiEl) stampEmojiEl.addEventListener("input", updatePersonnaliserPreview);
   if (pointsRewardTiersEl) pointsRewardTiersEl.addEventListener("input", updatePersonnaliserPreview);
 
   const personnaliserAddress = document.getElementById("app-personnaliser-address");
@@ -2679,6 +2678,25 @@ function initAppDashboard(slug) {
       }
     }
     renderPicker(STAMP_ICONS);
+    window.syncStampEmojiPickerSelection = function () {
+      if (!emojiPickerEl || !stampEmojiEl) return;
+      emojiPickerEl.querySelectorAll(".app-emoji-picker-btn").forEach((b) => b.classList.remove("selected"));
+      let current = (stampEmojiEl.value || "").trim();
+      if (!current) {
+        stampEmojiEl.value = "☕";
+        current = "☕";
+      }
+      const match = emojiPickerEl.querySelector(`.app-emoji-picker-btn[data-emoji="${current.replace(/"/g, "\\\"")}"]`);
+      if (match) match.classList.add("selected");
+      else {
+        const firstBtn = emojiPickerEl.querySelector(".app-emoji-picker-btn");
+        if (firstBtn) {
+          firstBtn.classList.add("selected");
+          stampEmojiEl.value = firstBtn.dataset.emoji || "☕";
+        }
+      }
+    };
+    window.syncStampEmojiPickerSelection();
   }
 
   function getDominantColorsFromImage(imageSource, maxColors = 4) {
