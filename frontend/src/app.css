@@ -282,7 +282,7 @@ body.page-app .site-banner { display: none !important; }
 @media (max-width: 900px) {
   .app-sidebar {
     width: 72px;
-    min-width: 72px;
+    min-width: 88px;
     padding: 0;
   }
   .app-sidebar-link-active::before { display: none; }
@@ -2568,10 +2568,10 @@ body.page-app .site-banner { display: none !important; }
 /* QR dans l’aperçu (réutilise builder-wallet-card-qr) */
 .app-wallet-preview-dynamic .builder-wallet-card-qr { margin-bottom: 0.4rem; }
 .app-wallet-preview-dynamic .builder-wallet-card-qr-img {
-  width: 50px !important;
-  height: 50px !important;
-  min-width: 50px;
-  min-height: 50px;
+  width: 88px !important;
+  height: 88px !important;
+  min-width: 88px;
+  min-height: 88px;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-qr-img[src=""],
 .app-wallet-preview-dynamic .builder-wallet-card-qr-img:not([src]) { opacity: 0.5; background: rgba(255,255,255,0.2); border-radius: 4px; }
