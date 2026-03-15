@@ -1017,7 +1017,7 @@ const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
   "caisse": "Caisse",
   "personnaliser": "Ma Carte",
-  "carte-perimetre": "Zone & notifications",
+  "carte-perimetre": "Notifications",
   "engagement": "Avis & Réseaux",
   "profil": "Profil",
 };
