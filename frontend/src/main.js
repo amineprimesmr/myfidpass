@@ -2068,7 +2068,9 @@ function initAppDashboard(slug) {
           bandeauEl.style.backgroundPosition = "center";
         } else {
           bandeauEl.style.background = bgHex;
-          bandeauEl.style.backgroundImage = "none";
+          bandeauEl.style.removeProperty("background-image");
+          bandeauEl.style.removeProperty("background-size");
+          bandeauEl.style.removeProperty("background-position");
         }
       } else {
         bandeauEl.style.backgroundImage = "none";
@@ -2926,6 +2928,9 @@ function initAppDashboard(slug) {
   if (personnaliserCardBgRemove) {
     personnaliserCardBgRemove.addEventListener("click", () => {
       personnaliserCardBgRemoveRequested = true;
+      if (personnaliserCardBgDataUrl && personnaliserCardBgDataUrl.startsWith("blob:")) {
+        try { URL.revokeObjectURL(personnaliserCardBgDataUrl); } catch (_) {}
+      }
       personnaliserCardBgDataUrl = "";
       if (personnaliserCardBg) personnaliserCardBg.value = "";
       if (personnaliserCardBgPreview) {
@@ -2941,6 +2946,8 @@ function initAppDashboard(slug) {
       } else {
         personnaliserCardBgRemove.classList.add("hidden");
       }
+      updatePersonnaliserPreview();
+      requestAnimationFrame(() => updatePersonnaliserPreview());
     });
   }
 
