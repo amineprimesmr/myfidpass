@@ -176,6 +176,8 @@ router.get("/:slug/dashboard/settings", (req, res, next) => {
     strip_color: business.strip_color ?? undefined,
     strip_display_mode: business.strip_display_mode ?? "logo",
     strip_text: business.strip_text ?? undefined,
+    label_restants: business.label_restants ?? undefined,
+    label_member: business.label_member ?? undefined,
     engagement_rewards: getEngagementRewards(business.id),
   });
 });
@@ -329,6 +331,14 @@ router.patch("/:slug/dashboard/settings", async (req, res) => {
   }
   if (strip_text !== undefined) {
     updates.strip_text = strip_text == null || String(strip_text).trim() === "" ? null : String(strip_text).trim().slice(0, 120);
+  }
+  const label_restants = body.label_restants ?? body.labelRestants;
+  const label_member = body.label_member ?? body.labelMember;
+  if (label_restants !== undefined) {
+    updates.label_restants = label_restants == null || String(label_restants).trim() === "" ? null : String(label_restants).trim().slice(0, 64);
+  }
+  if (label_member !== undefined) {
+    updates.label_member = label_member == null || String(label_member).trim() === "" ? null : String(label_member).trim().slice(0, 64);
   }
   const engagement_rewards = body.engagement_rewards ?? body.engagementRewards;
   if (engagement_rewards !== undefined) {
@@ -2275,6 +2285,16 @@ router.patch("/:slug", (req, res) => {
   if (stampRewardLabel !== undefined) {
     const v = stampRewardLabel == null || stampRewardLabel === "" ? null : String(stampRewardLabel).trim().slice(0, 120);
     updates.stamp_reward_label = v || null;
+  }
+  const labelRestants = body.labelRestants ?? body.label_restants;
+  if (labelRestants !== undefined) {
+    const v = labelRestants == null || labelRestants === "" ? null : String(labelRestants).trim().slice(0, 32);
+    updates.label_restants = v || null;
+  }
+  const labelMember = body.labelMember ?? body.label_member;
+  if (labelMember !== undefined) {
+    const v = labelMember == null || labelMember === "" ? null : String(labelMember).trim().slice(0, 32);
+    updates.label_member = v || null;
   }
   const stripColor = body.stripColor ?? body.strip_color;
   if (stripColor !== undefined) {

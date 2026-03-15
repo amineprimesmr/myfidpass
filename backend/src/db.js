@@ -208,6 +208,8 @@ if (!bizColsStrip.includes("strip_text")) {
 const bizColsRules = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
 for (const { col, type } of [
   { col: "program_type", type: "TEXT" },
+  { col: "label_restants", type: "TEXT" },
+  { col: "label_member", type: "TEXT" },
   { col: "stamp_reward_label", type: "TEXT" },
   { col: "points_min_amount_eur", type: "REAL" },
   { col: "points_reward_tiers", type: "TEXT" },
@@ -215,6 +217,8 @@ for (const { col, type } of [
   { col: "points_per_ticket", type: "INTEGER" },
   { col: "expiry_months", type: "INTEGER" },
   { col: "sector", type: "TEXT" },
+  { col: "label_restants", type: "TEXT" },
+  { col: "label_member", type: "TEXT" },
 ]) {
   if (!bizColsRules.includes(col)) {
     db.exec(`ALTER TABLE businesses ADD COLUMN ${col} ${type}`);

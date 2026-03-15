@@ -841,11 +841,11 @@
                             <span class="builder-wallet-card-reward-value" id="app-wallet-preview-reward">Paliers en magasin</span>
                           </div>
                           <div class="builder-wallet-card-restants hidden" id="app-preview-restants-wrap">
-                            <span class="builder-wallet-card-restants-label">Restants</span>
+                            <span class="builder-wallet-card-restants-label" id="app-wallet-preview-restants-label">Restants</span>
                             <span class="builder-wallet-card-restants-value" id="app-wallet-preview-restants">= 10</span>
                           </div>
                           <div class="builder-wallet-card-member">
-                            <span class="builder-wallet-card-member-label">Membre</span>
+                            <span class="builder-wallet-card-member-label" id="app-wallet-preview-member-label">Membre</span>
                             <span class="builder-wallet-card-member-value">Amine</span>
                           </div>
                         </div>
@@ -955,71 +955,116 @@
                   </div>
                 </section>
                 <section class="app-personnaliser-group" data-personnaliser-group>
-                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-design">
-                    <span class="app-personnaliser-group-title">Design et contenu carte</span>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-identity">
+                    <span class="app-personnaliser-group-title">Identité de la carte</span>
                     <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
                   </button>
-                  <div id="app-personnaliser-panel-design" class="app-personnaliser-group-panel">
+                  <div id="app-personnaliser-panel-identity" class="app-personnaliser-group-panel">
                     <div class="app-personnaliser-group-panel-inner">
-              <p class="app-step-label">Nom affiché sur la carte</p>
-              <input type="text" id="app-personnaliser-org" class="app-input" placeholder="Nom du commerce" />
-              <p class="app-step-label">Couleurs</p>
-              <div class="app-personnaliser-colors">
-                <div class="app-color-row">
-                  <label class="app-label">Fond</label>
-                  <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#0a7c42" />
-                  <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#0a7c42" maxlength="7" />
-                </div>
-                <div class="app-color-row">
-                  <label class="app-label">Texte</label>
-                  <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#ffffff" />
-                  <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
-                </div>
-                <div class="app-color-row">
-                  <label class="app-label">Labels</label>
-                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#e8f5e9" />
-                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#e8f5e9" maxlength="7" />
-                </div>
-                <p class="app-hint app-personnaliser-strip-hint">Le bandeau (tampons / points) utilise toujours la même couleur que le fond de la carte.</p>
-                <input type="hidden" id="app-personnaliser-strip" value="#0a7c42" />
-                <input type="hidden" id="app-personnaliser-strip-hex" value="#0a7c42" />
-              </div>
-              <p class="app-step-label">En-tête de la carte</p>
-              <div class="app-rules-type">
-                <label class="app-radio-label"><input type="radio" name="app-strip-display" value="logo" id="app-strip-display-logo" checked /> Logo (image)</label>
-                <label class="app-radio-label"><input type="radio" name="app-strip-display" value="text" id="app-strip-display-text" /> Texte à la place du logo</label>
-              </div>
-              <div id="app-strip-text-wrap" class="hidden">
-                <p class="app-step-label">Texte affiché dans le bandeau</p>
-                <input type="text" id="app-strip-text" class="app-input" maxlength="120" placeholder="ex. Mon Commerce" />
-              </div>
-              <div id="app-personnaliser-logo-wrap">
-              <p class="app-step-label">Logo (recommandé 320×100 px)</p>
-              <div class="app-personnaliser-logo app-drop-zone" id="app-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image ou cliquer pour parcourir">
-                <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                <label for="app-personnaliser-logo" class="app-logo-label">
-                  <span id="app-personnaliser-logo-placeholder">+ Changer le logo (glisser une image ou cliquer)</span>
-                  <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
-                </label>
-              </div>
-              <div id="app-logo-colors-wrap" class="app-logo-colors-wrap hidden">
-                <p class="app-step-label">Couleurs du logo</p>
-                <p class="app-hint">Cliquez sur une couleur pour l’appliquer au fond de la carte.</p>
-                <div id="app-logo-colors-swatches" class="app-logo-colors-swatches" role="group" aria-label="Couleurs dominantes du logo"></div>
-              </div>
-              </div>
-              <p class="app-step-label">Image de fond de carte</p>
-              <p class="app-hint">Utilisée comme bandeau sur la carte dans le Wallet (optionnel). Comme dans l’app : ajouter, modifier ou supprimer.</p>
-              <div class="app-personnaliser-card-bg">
-                <div class="app-drop-zone app-personnaliser-card-bg-zone" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image ou cliquer pour parcourir">
-                  <input type="file" id="app-personnaliser-card-bg" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                  <label for="app-personnaliser-card-bg" class="app-logo-label">
-                    <span id="app-personnaliser-card-bg-placeholder">+ Choisir une image de fond (glisser une image ou cliquer)</span>
-                  <img id="app-personnaliser-card-bg-preview" class="app-logo-preview hidden" alt="" />
-                  </label>
-                </div>
-                <button type="button" id="app-personnaliser-card-bg-remove" class="app-btn app-btn-secondary hidden">Supprimer l’image de fond</button>
-              </div>
+                      <p class="app-step-label">Nom affiché sur la carte</p>
+                      <input type="text" id="app-personnaliser-org" class="app-input" placeholder="Nom du commerce" />
+                    </div>
+                  </div>
+                </section>
+                <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-colors">
+                    <span class="app-personnaliser-group-title">Couleurs de la carte</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-colors" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
+                      <div class="app-personnaliser-colors">
+                        <div class="app-color-row">
+                          <label class="app-label">Fond</label>
+                          <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#0a7c42" />
+                          <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#0a7c42" maxlength="7" />
+                        </div>
+                        <div class="app-color-row">
+                          <label class="app-label">Texte</label>
+                          <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#ffffff" />
+                          <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
+                        </div>
+                        <div class="app-color-row">
+                          <label class="app-label">Labels</label>
+                          <input type="color" id="app-personnaliser-label" class="app-color-input" value="#e8f5e9" />
+                          <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#e8f5e9" maxlength="7" />
+                        </div>
+                        <p class="app-hint app-personnaliser-strip-hint">Le bandeau (tampons / points) utilise toujours la même couleur que le fond de la carte.</p>
+                        <input type="hidden" id="app-personnaliser-strip" value="#0a7c42" />
+                        <input type="hidden" id="app-personnaliser-strip-hex" value="#0a7c42" />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-logo">
+                    <span class="app-personnaliser-group-title">Logo et en-tête</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-logo" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
+                      <p class="app-step-label">Affichage de l’en-tête</p>
+                      <div class="app-rules-type">
+                        <label class="app-radio-label"><input type="radio" name="app-strip-display" value="logo" id="app-strip-display-logo" checked /> Logo (image)</label>
+                        <label class="app-radio-label"><input type="radio" name="app-strip-display" value="text" id="app-strip-display-text" /> Texte à la place du logo</label>
+                      </div>
+                      <div id="app-strip-text-wrap" class="hidden">
+                        <p class="app-step-label">Texte affiché dans le bandeau</p>
+                        <input type="text" id="app-strip-text" class="app-input" maxlength="120" placeholder="ex. Mon Commerce" />
+                      </div>
+                      <div id="app-personnaliser-logo-wrap">
+                        <p class="app-step-label">Logo (recommandé 320×100 px)</p>
+                        <div class="app-personnaliser-logo app-drop-zone" id="app-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image ou cliquer pour parcourir">
+                          <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                          <label for="app-personnaliser-logo" class="app-logo-label">
+                            <span id="app-personnaliser-logo-placeholder">+ Changer le logo (glisser une image ou cliquer)</span>
+                            <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
+                          </label>
+                        </div>
+                        <div id="app-logo-colors-wrap" class="app-logo-colors-wrap hidden">
+                          <p class="app-step-label">Couleurs du logo</p>
+                          <p class="app-hint">Cliquez sur une couleur pour l’appliquer au fond de la carte.</p>
+                          <div id="app-logo-colors-swatches" class="app-logo-colors-swatches" role="group" aria-label="Couleurs dominantes du logo"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-background">
+                    <span class="app-personnaliser-group-title">Image de fond</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-background" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
+                      <p class="app-step-label">Image de fond de carte</p>
+                      <p class="app-hint">Utilisée comme bandeau sur la carte dans le Wallet (optionnel). Ajouter, modifier ou supprimer.</p>
+                      <div class="app-personnaliser-card-bg">
+                        <div class="app-drop-zone app-personnaliser-card-bg-zone" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image ou cliquer pour parcourir">
+                          <input type="file" id="app-personnaliser-card-bg" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                          <label for="app-personnaliser-card-bg" class="app-logo-label">
+                            <span id="app-personnaliser-card-bg-placeholder">+ Choisir une image de fond (glisser une image ou cliquer)</span>
+                            <img id="app-personnaliser-card-bg-preview" class="app-logo-preview hidden" alt="" />
+                          </label>
+                        </div>
+                        <button type="button" id="app-personnaliser-card-bg-remove" class="app-btn app-btn-secondary hidden">Supprimer l’image de fond</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-labels">
+                    <span class="app-personnaliser-group-title">Libellés de la carte</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-labels" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
+                      <p class="app-step-label">Label « Restants » (mode tampons)</p>
+                      <input type="text" id="app-personnaliser-label-restants" class="app-input" maxlength="32" placeholder="Restants" />
+                      <p class="app-hint">Ex. Restants, RESTANTS, Tampons restants…</p>
+                      <p class="app-step-label">Label « Membre »</p>
+                      <input type="text" id="app-personnaliser-label-member" class="app-input" maxlength="32" placeholder="Membre" />
+                      <p class="app-hint">Ex. Membre, MEMBRE, Client…</p>
                     </div>
                   </div>
                 </section>

@@ -2074,6 +2074,12 @@ function initAppDashboard(slug) {
     if (rewardWrap) rewardWrap.classList.toggle("hidden", !!isStamps);
     if (restantsWrap) restantsWrap.classList.toggle("hidden", !isStamps);
     if (restantsValueEl && isStamps) restantsValueEl.textContent = "= " + String(requiredStamps);
+    const restantsLabelEl = document.getElementById("app-wallet-preview-restants-label");
+    const memberLabelEl = document.getElementById("app-wallet-preview-member-label");
+    const labelRestantsVal = document.getElementById("app-personnaliser-label-restants")?.value?.trim();
+    const labelMemberVal = document.getElementById("app-personnaliser-label-member")?.value?.trim();
+    if (restantsLabelEl) restantsLabelEl.textContent = labelRestantsVal || "Restants";
+    if (memberLabelEl) memberLabelEl.textContent = labelMemberVal || "Membre";
     const rewardValueEl = document.getElementById("app-wallet-preview-reward");
     if (rewardValueEl && !isStamps) {
       const tiersRaw = pointsRewardTiersEl?.value?.trim() || "";
@@ -2144,8 +2150,10 @@ function initAppDashboard(slug) {
     const logoFallback = document.getElementById("app-wallet-preview-logo-fallback");
     if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText || !!(walletLogo && walletLogo.src && !walletLogo.classList.contains("hidden")));
   }
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+  const personnaliserLabelRestants = document.getElementById("app-personnaliser-label-restants");
+  const personnaliserLabelMember = document.getElementById("app-personnaliser-label-member");
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl, personnaliserLabelRestants, personnaliserLabelMember].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl, personnaliserLabelRestants, personnaliserLabelMember].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [stripDisplayLogo, stripDisplayText].forEach((el) => el?.addEventListener("change", () => { setStripDisplayVisibility(); updatePersonnaliserPreview(); }));
   [programTypePoints, programTypeStamps, stampEmojiEl].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
@@ -2317,6 +2325,10 @@ function initAppDashboard(slug) {
       // En mode tampons : toujours 10 (champ supprimé). En mode points on ne modifie pas requiredStamps.
       if (stampEmojiEl) stampEmojiEl.value = data.stamp_emoji ?? data.stampEmoji ?? "";
       if (stampRewardLabelEl) stampRewardLabelEl.value = data.stamp_reward_label ?? data.stampRewardLabel ?? "";
+      const labelRestantsEl = document.getElementById("app-personnaliser-label-restants");
+      const labelMemberEl = document.getElementById("app-personnaliser-label-member");
+      if (labelRestantsEl && (data.label_restants ?? data.labelRestants) != null) labelRestantsEl.value = data.label_restants ?? data.labelRestants ?? "";
+      if (labelMemberEl && (data.label_member ?? data.labelMember) != null) labelMemberEl.value = data.label_member ?? data.labelMember ?? "";
       if (expiryMonthsEl != null) expiryMonthsEl.value = data.expiry_months ?? data.expiryMonths ?? "";
       const er = data.engagement_rewards ?? data.engagementRewards ?? {};
       const g = er.google_review ?? {};
@@ -2923,6 +2935,10 @@ function initAppDashboard(slug) {
       }
       if (locTextVal !== undefined) body.locationRelevantText = locTextVal || undefined;
       if (radiusVal !== undefined) body.locationRadiusMeters = radiusVal === "" ? undefined : parseInt(radiusVal, 10);
+      const labelRestantsVal = document.getElementById("app-personnaliser-label-restants")?.value?.trim();
+      const labelMemberVal = document.getElementById("app-personnaliser-label-member")?.value?.trim();
+      if (labelRestantsVal) body.labelRestants = labelRestantsVal;
+      if (labelMemberVal) body.labelMember = labelMemberVal;
       personnaliserSave.disabled = true;
       showPersonnaliserMessage("");
       const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;

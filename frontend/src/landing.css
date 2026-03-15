@@ -708,21 +708,25 @@
   font-weight: 600;
   color: var(--landing-text);
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 @media (max-width: 640px) {
   .landing-hero-cta-bar {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-    padding: 0.4rem 0.65rem;
-    gap: 0.4rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+    max-width: 360px;
+    padding: 0.35rem 0.65rem;
+    gap: 0.35rem;
     border-radius: 20px;
   }
   .landing-hero-cta-bar-chip {
     justify-content: center;
+    padding: 0.18rem 0.4rem;
   }
   .landing-hero-cta-bar-text {
-    font-size: 0.78rem;
+    font-size: 0.74rem;
   }
 }
 

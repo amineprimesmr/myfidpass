@@ -905,18 +905,20 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   const stampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "";
+  const labelRestants = (options.label_restants ?? business?.label_restants)?.trim() || "Restants";
+  const labelMember = (options.label_member ?? business?.label_member)?.trim() || "Membre";
   if (format === "tampons") {
     const restants = Math.max(0, stampMax - stamps);
     pass.secondaryFields.push({
       key: "stampRewardFront",
       label: "",
-      value: `Restants = ${restants}`,
+      value: `${labelRestants} = ${restants}`,
       textAlignment: "PKTextAlignmentLeft",
     });
     if (!isSectorTemplate) {
       pass.secondaryFields.push({
         key: "member",
-        label: "Membre",
+        label: labelMember,
         value: member.name,
         textAlignment: "PKTextAlignmentRight",
       });
@@ -947,7 +949,7 @@ export async function generatePass(member, business = null, options = {}) {
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
         key: "member",
-        label: "Membre",
+        label: labelMember,
         value: member.name,
         textAlignment: "PKTextAlignmentRight",
       });
