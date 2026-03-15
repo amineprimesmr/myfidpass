@@ -1851,6 +1851,7 @@ function initAppDashboard(slug) {
   let hasCardBackgroundFromServer = false;
   const personnaliserStampIcon = document.getElementById("app-stamp-icon-input");
   const personnaliserStampIconPreview = document.getElementById("app-stamp-icon-preview");
+  const personnaliserStampIconPlaceholder = document.getElementById("app-stamp-icon-placeholder");
   const personnaliserStampIconRemove = document.getElementById("app-stamp-icon-remove");
   let personnaliserStampIconDataUrl = "";
   let personnaliserStampIconRemoveRequested = false;
@@ -2829,6 +2830,27 @@ function initAppDashboard(slug) {
     } catch (err) {
       showPersonnaliserMessage("Impossible de charger l'image de fond.", true);
     }
+    updatePersonnaliserPreview();
+  }
+
+  async function applyStampIconFromFile(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
+      return;
+    }
+    try {
+      personnaliserStampIconRemoveRequested = false;
+      personnaliserStampIconDataUrl = await resizeLogoToDataUrl(file, 256, 0.9, "auto");
+      if (personnaliserStampIconPreview) {
+        personnaliserStampIconPreview.src = personnaliserStampIconDataUrl;
+        personnaliserStampIconPreview.classList.remove("hidden");
+      }
+      if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.add("hidden");
+      if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.remove("hidden");
+    } catch (err) {
+      showPersonnaliserMessage("Impossible de charger l'icône.", true);
+    }
+    updatePersonnaliserPreview();
   }
 
   function setupImageDropZone(zoneEl, onFile) {
@@ -2847,6 +2869,14 @@ function initAppDashboard(slug) {
       zoneEl.classList.remove("app-drop-zone-active");
       const file = e.dataTransfer?.files?.[0];
       if (file) onFile(file);
+    });
+    zoneEl.addEventListener("paste", (e) => {
+      const item = Array.from(e.clipboardData?.items || []).find((i) => i.type.startsWith("image/"));
+      const file = item?.getAsFile?.();
+      if (file) {
+        e.preventDefault();
+        onFile(file);
+      }
     });
   }
 
@@ -2867,6 +2897,32 @@ function initAppDashboard(slug) {
     const cardBgDropZone = document.getElementById("app-card-bg-drop-zone");
     setupImageDropZone(cardBgDropZone, (file) => applyCardBgFromFile(file));
   }
+
+  if (personnaliserStampIcon) {
+    personnaliserStampIcon.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (file) await applyStampIconFromFile(file);
+    });
+    const stampIconDropZone = document.getElementById("app-stamp-icon-drop-zone");
+    setupImageDropZone(stampIconDropZone, (file) => applyStampIconFromFile(file));
+  }
+  if (personnaliserStampIconRemove) {
+    personnaliserStampIconRemove.addEventListener("click", () => {
+      personnaliserStampIconRemoveRequested = true;
+      personnaliserStampIconDataUrl = "";
+      if (personnaliserStampIcon) personnaliserStampIcon.value = "";
+      if (personnaliserStampIconPreview) {
+        personnaliserStampIconPreview.src = "";
+        personnaliserStampIconPreview.classList.add("hidden");
+      }
+      if (personnaliserStampIconPlaceholder) {
+        personnaliserStampIconPlaceholder.textContent = "+ Choisir une icône (glisser une image, cliquer ou coller Ctrl+V)";
+        personnaliserStampIconPlaceholder.classList.remove("hidden");
+      }
+      personnaliserStampIconRemove.classList.add("hidden");
+    });
+  }
+
   if (personnaliserCardBgRemove) {
     personnaliserCardBgRemove.addEventListener("click", () => {
       personnaliserCardBgRemoveRequested = true;
@@ -2945,6 +3001,8 @@ function initAppDashboard(slug) {
       }
       if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
       else if (personnaliserCardBgDataUrl && typeof personnaliserCardBgDataUrl === "string" && personnaliserCardBgDataUrl.startsWith("data:")) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
+      if (personnaliserStampIconRemoveRequested) body.stampIconBase64 = "";
+      else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) body.stampIconBase64 = personnaliserStampIconDataUrl;
       const addressVal = document.getElementById("app-personnaliser-address")?.value?.trim() || "";
       const locTextVal = document.getElementById("app-personnaliser-location-text")?.value?.trim();
       const radiusVal = document.getElementById("app-personnaliser-radius")?.value;
@@ -3025,7 +3083,7 @@ function initAppDashboard(slug) {
           if (body.stampIconBase64 === "" || body.stampIconBase64 === "") {
             personnaliserStampIconRemoveRequested = false;
             personnaliserStampIconDataUrl = "";
-            if (personnaliserStampIconInput) personnaliserStampIconInput.value = "";
+            if (personnaliserStampIcon) personnaliserStampIcon.value = "";
             if (personnaliserStampIconPreview) {
               personnaliserStampIconPreview.src = "";
               personnaliserStampIconPreview.classList.add("hidden");

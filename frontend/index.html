@@ -921,12 +921,14 @@
                 <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône"></div>
                 <p class="app-step-label">Icône personnalisée (optionnel)</p>
                 <p class="app-hint">Importez votre propre image pour les tampons (ex. logo du commerce). Carré ou PNG transparent recommandé.</p>
-                <div class="app-stamp-icon-wrap">
-                  <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                  <label for="app-stamp-icon-input" class="app-stamp-icon-label">
-                    <span id="app-stamp-icon-placeholder">+ Importer une image</span>
-                    <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
-                  </label>
+                <div class="app-personnaliser-card-bg app-stamp-icon-wrap">
+                  <div class="app-drop-zone app-personnaliser-stamp-icon-zone" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                    <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                    <label for="app-stamp-icon-input" class="app-logo-label">
+                      <span id="app-stamp-icon-placeholder">+ Choisir une icône (glisser une image, cliquer ou coller Ctrl+V)</span>
+                      <img id="app-stamp-icon-preview" class="app-logo-preview hidden" alt="" />
+                    </label>
+                  </div>
                   <button type="button" id="app-stamp-icon-remove" class="app-btn app-btn-secondary hidden">Supprimer l'icône</button>
                 </div>
                 <p class="app-step-label">Texte de la récompense (affiché sur la carte)</p>
@@ -983,10 +985,10 @@
                       </div>
                       <div id="app-personnaliser-logo-wrap">
                         <p class="app-step-label">Logo (recommandé 320×100 px)</p>
-                        <div class="app-personnaliser-logo app-drop-zone" id="app-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image ou cliquer pour parcourir">
+                        <div class="app-personnaliser-logo app-drop-zone" id="app-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
                           <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
                           <label for="app-personnaliser-logo" class="app-logo-label">
-                            <span id="app-personnaliser-logo-placeholder">+ Changer le logo (glisser une image ou cliquer)</span>
+                            <span id="app-personnaliser-logo-placeholder">+ Changer le logo (glisser une image, cliquer ou coller Ctrl+V)</span>
                             <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
                           </label>
                         </div>
@@ -1009,10 +1011,10 @@
                       <p class="app-step-label">Image de fond de carte</p>
                       <p class="app-hint">Utilisée comme bandeau sur la carte dans le Wallet (optionnel). Ajouter, modifier ou supprimer.</p>
                       <div class="app-personnaliser-card-bg">
-                        <div class="app-drop-zone app-personnaliser-card-bg-zone" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image ou cliquer pour parcourir">
+                        <div class="app-drop-zone app-personnaliser-card-bg-zone" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
                           <input type="file" id="app-personnaliser-card-bg" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
                           <label for="app-personnaliser-card-bg" class="app-logo-label">
-                            <span id="app-personnaliser-card-bg-placeholder">+ Choisir une image de fond (glisser une image ou cliquer)</span>
+                            <span id="app-personnaliser-card-bg-placeholder">+ Choisir une image de fond (glisser une image, cliquer ou coller Ctrl+V)</span>
                             <img id="app-personnaliser-card-bg-preview" class="app-logo-preview hidden" alt="" />
                           </label>
                         </div>
