@@ -1864,8 +1864,6 @@ function initAppDashboard(slug) {
   const gameRewardsJsonEl = document.getElementById("app-game-rewards-json");
   const pointsMinAmountEl = document.getElementById("app-points-min-amount");
   const pointsRewardTiersEl = document.getElementById("app-points-reward-tiers");
-  const sectorEl = document.getElementById("app-sector");
-  const sectorStampsEl = document.getElementById("app-sector-stamps");
   const requiredStampsEl = document.getElementById("app-required-stamps");
   const stampEmojiEl = document.getElementById("app-stamp-emoji");
   const stampRewardLabelEl = document.getElementById("app-stamp-reward-label");
@@ -2322,9 +2320,6 @@ function initAppDashboard(slug) {
       } else if (pointsRewardTiersEl && typeof tiers === "string" && tiers.trim()) {
         pointsRewardTiersEl.value = tiers;
       }
-      const sectorVal = data.sector ?? "";
-      if (sectorEl) sectorEl.value = sectorVal;
-      if (sectorStampsEl) sectorStampsEl.value = sectorVal;
       // En mode tampons : toujours 10 (champ supprimé). En mode points on ne modifie pas requiredStamps.
       if (stampEmojiEl) stampEmojiEl.value = data.stamp_emoji ?? data.stampEmoji ?? "";
       if (stampRewardLabelEl) stampRewardLabelEl.value = data.stamp_reward_label ?? data.stampRewardLabel ?? "";
@@ -2904,8 +2899,6 @@ function initAppDashboard(slug) {
       else if (requiredStampsEl) body.requiredStamps = parseInt(requiredStampsEl.value, 10) || 10;
       if (stampEmojiEl) body.stampEmoji = stampEmojiEl.value.trim() || undefined;
       if (stampRewardLabelEl) body.stampRewardLabel = stampRewardLabelEl.value.trim() || undefined;
-      const sectorVal = (isStamps ? sectorStampsEl : sectorEl)?.value?.trim();
-      if (sectorVal) body.sector = sectorVal;
       // N'envoyer le logo que si c'est un data URL (nouvelle image choisie). Une blob URL (logo chargé depuis l'API) ne doit pas être envoyée sinon on écrase le logo en base.
       if (personnaliserLogoDataUrl && typeof personnaliserLogoDataUrl === "string" && personnaliserLogoDataUrl.startsWith("data:")) {
         body.logoBase64 = personnaliserLogoDataUrl;
