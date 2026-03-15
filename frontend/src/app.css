@@ -2132,7 +2132,7 @@ body.page-app .site-banner { display: none !important; }
   font-size: 0.82rem;
   color: #64748b;
 }
-.app-qr-download { margin-top: 0.1rem; }
+.app-qr-download { margin-top: 0.05rem; }
 
 /* Caisse récents */
 .app-caisse-recent { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; min-height: 2rem; }
@@ -2400,7 +2400,7 @@ body.page-app .site-banner { display: none !important; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org { position: relative; z-index: 1; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right {
   position: absolute;
-  top: 0.22rem;
+  top: 0.38rem;
   right: 0.5rem;
   z-index: 2;
   margin-left: 0;
@@ -2456,7 +2456,7 @@ body.page-app .site-banner { display: none !important; }
   justify-content: flex-start;
   overflow: visible;
   align-self: flex-start;
-  margin-top: 0.22rem;
+  margin-top: 0.04rem;
   box-sizing: border-box;
   background: transparent !important;
   padding: 0 !important;
