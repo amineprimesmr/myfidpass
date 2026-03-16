@@ -1219,7 +1219,8 @@ function initAppDashboard(slug) {
   const addPointsBtn = document.getElementById("app-add-points");
   const caisseMessage = document.getElementById("app-caisse-message");
   const membersSearchInput = document.getElementById("app-members-search");
-  const membersTbody = document.getElementById("app-members-tbody");
+  const membersListEl = document.getElementById("app-members-list");
+  const membersEmptyEl = document.getElementById("app-members-empty");
   const transactionsTbody = document.getElementById("app-transactions-tbody");
   const dashboardScanCta = document.getElementById("app-dashboard-scan-cta");
   const dashboardSearchCta = document.getElementById("app-dashboard-search-cta");
@@ -1323,6 +1324,20 @@ function initAppDashboard(slug) {
   if (dashboardProfileBtn) {
     dashboardProfileBtn.addEventListener("click", () => {
       showAppSection("profil");
+    });
+  }
+
+  // Bouton "Afficher plus de données" : toggle panneau avec catégories
+  const dashboardMoreWrap = document.getElementById("app-dashboard-more-wrap");
+  const dashboardMoreBtn = document.getElementById("app-dashboard-more-btn");
+  const dashboardMorePanel = document.getElementById("app-dashboard-more-panel");
+  const dashboardMoreLabel = document.getElementById("app-dashboard-more-label");
+  if (dashboardMoreBtn && dashboardMoreWrap && dashboardMorePanel) {
+    dashboardMoreBtn.addEventListener("click", () => {
+      const isOpen = dashboardMoreWrap.classList.toggle("is-open");
+      dashboardMoreBtn.setAttribute("aria-expanded", String(isOpen));
+      dashboardMorePanel.setAttribute("aria-hidden", String(!isOpen));
+      if (dashboardMoreLabel) dashboardMoreLabel.textContent = isOpen ? "Masquer les indicateurs" : "Afficher plus de données";
     });
   }
 
@@ -4298,6 +4313,26 @@ function initAppDashboard(slug) {
     if (statFrequency) statFrequency.textContent = frequency.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (statAvgTicket) statAvgTicket.textContent = formatEuro(avgTicket);
     if (statRevenuePerActive) statRevenuePerActive.textContent = formatEuro(revenuePerActive);
+    const statMoreRevenue = document.getElementById("app-stat-more-revenue");
+    const statMoreAvgTicket = document.getElementById("app-stat-more-avg-ticket");
+    const statMoreRevenuePerActive = document.getElementById("app-stat-more-revenue-per-active");
+    const statMoreTransactions = document.getElementById("app-stat-more-transactions");
+    const statMoreMembers = document.getElementById("app-stat-more-members");
+    const statMoreNew30 = document.getElementById("app-stat-more-new30");
+    const statMoreInactive30 = document.getElementById("app-stat-more-inactive30");
+    const statMoreRetention = document.getElementById("app-stat-more-retention");
+    const statMoreFrequency = document.getElementById("app-stat-more-frequency");
+    const statMoreRecurrent = document.getElementById("app-stat-more-recurrent");
+    if (statMoreRevenue) statMoreRevenue.textContent = formatEuro(data.estimatedRevenueEur);
+    if (statMoreAvgTicket) statMoreAvgTicket.textContent = formatEuro(avgTicket);
+    if (statMoreRevenuePerActive) statMoreRevenuePerActive.textContent = formatEuro(revenuePerActive);
+    if (statMoreTransactions) statMoreTransactions.textContent = data.transactionsThisMonth;
+    if (statMoreMembers) statMoreMembers.textContent = data.membersCount;
+    if (statMoreNew30) statMoreNew30.textContent = data.newMembersLast30Days;
+    if (statMoreInactive30) statMoreInactive30.textContent = data.inactiveMembers30Days;
+    if (statMoreRetention) statMoreRetention.textContent = `${data.retentionPct} %`;
+    if (statMoreFrequency) statMoreFrequency.textContent = frequency.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (statMoreRecurrent) statMoreRecurrent.textContent = data.recurrentMembersInPeriod;
     if (actionInactiveCount) actionInactiveCount.textContent = `${data.inactiveMembers30Days} clients`;
     if (actionNewCount) actionNewCount.textContent = `${data.newMembersLast30Days} nouveaux`;
     if (actionRecurrentCount) actionRecurrentCount.textContent = `${data.recurrentMembersInPeriod} récurrents`;
@@ -4425,12 +4460,34 @@ function initAppDashboard(slug) {
   }
 
   function renderMembers(members) {
-    if (!membersTbody) return;
-    membersTbody.innerHTML = (members || [])
-      .map((m) =>
-        `<tr data-member-id="${escapeHtml(m.id)}"><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.email)}</td><td>${m.points}</td><td>${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</td></tr>`
+    const list = membersListEl;
+    const empty = membersEmptyEl;
+    if (!list) return;
+    const arr = members || [];
+    if (arr.length === 0) {
+      list.innerHTML = "";
+      if (empty) {
+        empty.classList.remove("hidden");
+        const hasSearchOrFilter = !!(membersSearchInput?.value?.trim() || membersFilterEl?.value);
+        empty.querySelector("p").textContent = hasSearchOrFilter ? "Aucun membre ne correspond à votre recherche." : "Aucun membre pour le moment.";
+      }
+      return;
+    }
+    if (empty) empty.classList.add("hidden");
+    const lastVisitLabel = (m) => (m.last_visit_at ? formatDate(m.last_visit_at) : "Jamais");
+    list.innerHTML = arr
+      .map(
+        (m) =>
+          `<article class="app-membres-card" role="listitem" data-member-id="${escapeHtml(m.id)}" tabindex="0">
+            <h3 class="app-membres-card-name">${escapeHtml(m.name || "Sans nom")}</h3>
+            <p class="app-membres-card-email">${escapeHtml(m.email)}</p>
+            <div class="app-membres-card-meta">
+              <span class="app-membres-card-meta-item"><strong>${m.points ?? 0}</strong> points</span>
+              <span class="app-membres-card-meta-item">Dernier passage : ${lastVisitLabel(m)}</span>
+            </div>
+          </article>`
       )
-      .join("") || "<tr><td colspan='4'>Aucun membre</td></tr>";
+      .join("");
   }
 
   function renderTransactions(transactions) {
@@ -4495,7 +4552,11 @@ function initAppDashboard(slug) {
     const q = membersSearchInput.value.trim();
     const filter = membersFilterEl?.value || "";
     const sort = membersSortEl?.value || "last_visit";
-    loadMembers(q, filter, sort).then((data) => renderMembers(data.members || []));
+    loadMembers(q, filter, sort).then((data) => {
+      const members = data.members || [];
+      allMembers = members;
+      renderMembers(members);
+    });
   });
   membersFilterEl?.addEventListener("change", () => refresh());
   membersSortEl?.addEventListener("change", () => refresh());
@@ -4686,10 +4747,19 @@ function initAppDashboard(slug) {
   }
   memberDetailClose?.addEventListener("click", closeMemberDetail);
   memberDetailBackdrop?.addEventListener("click", closeMemberDetail);
-  membersTbody?.addEventListener("click", (e) => {
-    const row = e.target.closest("tr[data-member-id]");
-    if (!row) return;
-    const id = row.getAttribute("data-member-id");
+  membersListEl?.addEventListener("click", (e) => {
+    const card = e.target.closest(".app-membres-card[data-member-id]");
+    if (!card) return;
+    const id = card.getAttribute("data-member-id");
+    const member = allMembers.find((m) => m.id === id);
+    if (member) openMemberDetail(member);
+  });
+  membersListEl?.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const card = e.target.closest(".app-membres-card[data-member-id]");
+    if (!card) return;
+    e.preventDefault();
+    const id = card.getAttribute("data-member-id");
     const member = allMembers.find((m) => m.id === id);
     if (member) openMemberDetail(member);
   });
