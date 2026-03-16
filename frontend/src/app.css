@@ -2594,7 +2594,7 @@ body.page-app .site-banner { display: none !important; }
 .app-dashboard-controls {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.9rem;
   align-items: flex-end;
 }
 .app-dashboard-header-main,
