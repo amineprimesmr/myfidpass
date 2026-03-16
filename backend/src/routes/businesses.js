@@ -1133,11 +1133,12 @@ router.post("/:slug/notifications/send", async (req, res) => {
     ? `${apiBase}/api/businesses/${encodeURIComponent(req.params.slug)}/notification-icon`
     : null;
   const payload = {
-    title: (title || business.organization_name || "Myfidpass").trim(),
+    title: (title || business.notification_title_override || business.organization_name || "Myfidpass").trim(),
     body,
     ...(iconUrl && { icon: iconUrl }),
   };
-  const broadcastText = payload.title ? `${payload.title}: ${body}` : body;
+  // Message stocké sur le pass et utilisé pour la notif Wallet : uniquement le texte saisi
+  const broadcastText = body;
   let sentWebPush = 0;
   let sentPassKit = 0;
   const errors = [];

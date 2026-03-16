@@ -890,7 +890,8 @@ export async function generatePass(member, business = null, options = {}) {
   const webServiceURL = process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL;
   const authToken = getPassAuthenticationToken(member.id);
   const notifTitle = (options.notification_title_override ?? business?.notification_title_override)?.trim() || organizationName;
-  const changeMsg = (options.notification_change_message ?? business?.notification_change_message)?.trim() || "Nouveau message : %@";
+  // Texte de notif Wallet : par défaut, n'ajoute rien autour du message
+  const changeMsg = (options.notification_change_message ?? business?.notification_change_message)?.trim() || "%@";
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
