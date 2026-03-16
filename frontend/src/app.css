@@ -2729,6 +2729,8 @@ body.page-app .site-banner { display: none !important; }
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  align-items: flex-start;
+  text-align: left;
 }
 .app-dashboard-period-label {
   font-size: 0.7rem;
@@ -2746,7 +2748,7 @@ body.page-app .site-banner { display: none !important; }
 .app-dashboard-period-select::-ms-expand { display: none; }
 
 .app-dashboard-period-display {
-  font-size: 0.98rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #111827;
 }
