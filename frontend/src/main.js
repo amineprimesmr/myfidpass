@@ -1,32 +1,15 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { initClientFidelityPage } from "./client-fidelity/bootstrap.js";
-
-const IS_MYFIDPASS_HOST =
-  typeof window !== "undefined" && /(^|\.)myfidpass\.fr$/i.test(window.location.hostname);
-const IS_LOCALHOST =
-  typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-const RAW_ENV_API_BASE =
-  typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : "";
-
-function shouldForceApiSubdomain(base) {
-  if (!IS_MYFIDPASS_HOST) return false;
-  if (!base) return true;
-  if (base.startsWith("/")) return true; // ex: /api -> tombe sur le frontend myfidpass.fr
-  try {
-    const u = new URL(base, window.location.origin);
-    return !/(^|\.)api\.myfidpass\.fr$/i.test(u.hostname);
-  } catch (_) {
-    return true;
-  }
-}
-
-// En dev (localhost) : par défaut proxy Vite → backend local (3001). Si VITE_API_URL est défini (ex. https://api.myfidpass.fr), on l’utilise pour tester l’API de prod.
-const API_BASE = IS_LOCALHOST && !RAW_ENV_API_BASE
-  ? ""
-  : shouldForceApiSubdomain(RAW_ENV_API_BASE)
-    ? "https://api.myfidpass.fr"
-    : RAW_ENV_API_BASE || "";
-const AUTH_TOKEN_KEY = "fidpass_token";
+import {
+  API_BASE,
+  getAuthToken,
+  setAuthToken,
+  clearAuthToken,
+  getAuthHeaders,
+  isDevBypassPayment,
+  setDevBypassPayment,
+} from "./config.js";
+import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "./utils/apiError.js";
 
 const landingEl = document.getElementById("landing");
 const fidelityAppEl = document.getElementById("fidelity-app");
@@ -35,52 +18,6 @@ const authAppEl = document.getElementById("auth-app");
 const appAppEl = document.getElementById("app-app");
 const offersAppEl = document.getElementById("offers-app");
 const checkoutAppEl = document.getElementById("checkout-app");
-
-function getAuthToken() {
-  try {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
-  } catch (_) {
-    return null;
-  }
-}
-
-function setAuthToken(token) {
-  try {
-    if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
-    else localStorage.removeItem(AUTH_TOKEN_KEY);
-  } catch (_) {}
-}
-
-function clearAuthToken() {
-  setAuthToken(null);
-}
-
-const DEV_BYPASS_PAYMENT_KEY = "fidpass_dev_paid";
-
-function isDevBypassPayment() {
-  try {
-    if (localStorage.getItem(DEV_BYPASS_PAYMENT_KEY) === "1") return true;
-  } catch (_) {
-    // ignore
-  }
-  // En local, on active le bypass par défaut pour éviter de bloquer les tests.
-  return typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-}
-
-function setDevBypassPayment(on) {
-  try {
-    if (on) localStorage.setItem(DEV_BYPASS_PAYMENT_KEY, "1");
-    else localStorage.removeItem(DEV_BYPASS_PAYMENT_KEY);
-  } catch (_) {}
-}
-
-function getAuthHeaders() {
-  const token = getAuthToken();
-  const headers = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-  if (isDevBypassPayment()) headers["X-Dev-Bypass-Payment"] = "1";
-  return headers;
-}
 
 /**
  * Géocodage d'une adresse via Nominatim (OpenStreetMap). Retourne { lat, lng } ou null.
@@ -124,7 +61,8 @@ function getRoute() {
   if (path === "/cgv") return { type: "legal", page: "cgv" };
   if (path === "/cookies") return { type: "legal", page: "cookies" };
   if (path === "/integration") return { type: "integration" };
-  return { type: "landing" };
+  if (path === "") return { type: "landing" };
+  return { type: "404" };
 }
 
 /** Met à jour l’affichage des étapes dans le header parcours (1=accueil, 2=créateur, 3=checkout). Aucun verrou : on peut toujours naviguer. */
@@ -171,6 +109,8 @@ function initRouting() {
   document.body.classList.remove("page-builder");
 
   const builderHeader = document.getElementById("builder-header");
+  const page404El = document.getElementById("page-404");
+  if (page404El) page404El.classList.add("hidden");
 
   if (route.type === "fidelity") {
     landingEl.classList.add("hidden");
@@ -325,7 +265,27 @@ function initRouting() {
         slugHint.classList.remove("hidden");
       }
     }
+  } else if (route.type === "404") {
+    landingEl?.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
+    fidelityAppEl?.classList.add("hidden");
+    dashboardAppEl?.classList.add("hidden");
+    authAppEl?.classList.add("hidden");
+    appAppEl?.classList.add("hidden");
+    offersAppEl?.classList.add("hidden");
+    checkoutAppEl?.classList.add("hidden");
+    landingMain?.classList.add("hidden");
+    landingLegal?.classList.add("hidden");
+    document.getElementById("landing-integration")?.classList.add("hidden");
+    landingTemplates?.classList.add("hidden");
+    const page404 = document.getElementById("page-404");
+    if (page404) {
+      page404.classList.remove("hidden");
+      page404.setAttribute("aria-hidden", "false");
+    }
   } else {
+    const page404 = document.getElementById("page-404");
+    if (page404) page404.classList.add("hidden");
     document.body.classList.remove("page-builder");
     if (landingEl) landingEl.classList.remove("builder-visible");
     const bannerMedia = document.getElementById("site-banner-media");
@@ -572,11 +532,8 @@ function initAuthPage(initialTab) {
       const redirectParams = new URLSearchParams(window.location.search);
       const redirect = redirectParams.get("redirect") || "/app";
       window.location.replace(redirect);
-    } catch (err) {
-      if (loginError) {
-        loginError.textContent = "Erreur réseau. Réessayez.";
-        loginError.classList.remove("hidden");
-      }
+    } catch (_) {
+      showApiError(null, null, loginError);
     }
   });
 
@@ -601,21 +558,15 @@ function initAuthPage(initialTab) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        if (registerError) {
-          registerError.textContent = data.error || `Erreur serveur (${res.status}). Réessayez ou testez sur myfidpass.fr si vous êtes en local.`;
-          registerError.classList.remove("hidden");
-        }
+        showApiError(res, data, registerError);
         return;
       }
       setAuthToken(data.token);
       const redirectParams = new URLSearchParams(window.location.search);
       const redirect = redirectParams.get("redirect") || "/app";
       window.location.replace(redirect);
-    } catch (err) {
-      if (registerError) {
-        registerError.textContent = "Impossible de joindre l'API. En local : démarrez le backend (port 3001). Sinon testez sur myfidpass.fr.";
-        registerError.classList.remove("hidden");
-      }
+    } catch (_) {
+      showApiError(null, null, registerError);
     }
   });
 
@@ -1473,7 +1424,7 @@ function initAppDashboard(slug) {
     const saveFeedback = document.getElementById("app-perimetre-save-feedback");
     const mapWrap = document.querySelector(".app-carte-perimetre-map-wrap");
     const mapHintEl = document.getElementById("app-perimetre-map-hint");
-    if (!mapEl || !addressInput || !radiusSlider || !saveBtn) return;
+    if (!mapEl || !radiusSlider || !saveBtn) return;
 
     const mapboxToken = (typeof import.meta.env !== "undefined" && import.meta.env.VITE_MAPBOX_ACCESS_TOKEN) ? String(import.meta.env.VITE_MAPBOX_ACCESS_TOKEN).trim() : "";
     const useMapbox = !!(mapboxToken && typeof mapboxgl !== "undefined");
@@ -1484,6 +1435,7 @@ function initAppDashboard(slug) {
     let perimetreMapboxCircleId = null;
     let currentLat = null;
     let currentLng = null;
+    let currentAddress = "";
     let currentRadiusM = 500;
     let autocompleteAbort = null;
     let autocompleteDebounce = null;
@@ -1523,10 +1475,11 @@ function initAppDashboard(slug) {
       saveFeedback.classList.remove("hidden");
     }
     function showAddressHint(msg, isError = false) {
-      if (!addressHint) return;
-      addressHint.textContent = msg || "";
-      addressHint.classList.toggle("hidden", !msg);
-      addressHint.classList.toggle("error", isError);
+      if (addressHint) {
+        addressHint.textContent = msg || "";
+        addressHint.classList.toggle("hidden", !msg);
+        addressHint.classList.toggle("error", isError);
+      }
     }
 
     function hideSuggestions() {
@@ -1540,6 +1493,7 @@ function initAppDashboard(slug) {
     function applySuggestion(lat, lng, displayAddress) {
       currentLat = lat;
       currentLng = lng;
+      if (displayAddress) currentAddress = displayAddress;
       if (addressInput) addressInput.value = displayAddress || addressInput.value;
       hideSuggestions();
       showAddressHint("");
@@ -1563,6 +1517,7 @@ function initAppDashboard(slug) {
     function setCenter(lat, lng, addressText) {
       currentLat = lat;
       currentLng = lng;
+      if (addressText != null) currentAddress = addressText;
       if (addressInput && addressText != null) addressInput.value = addressText;
       if (!perimetreMap) return;
       if (useMapbox) {
@@ -1670,8 +1625,10 @@ function initAppDashboard(slug) {
           fetch(`${NOMINATIM_REVERSE}?lat=${lat_}&lon=${lng_}&format=json`).then((r) => r.json()).then((data) => {
             const addr = data?.address;
             const parts = [addr?.road, addr?.suburb, addr?.city, addr?.country].filter(Boolean);
-            if (addressInput) addressInput.value = parts.length ? parts.join(", ") : `${lat_.toFixed(5)}, ${lng_.toFixed(5)}`;
-          }).catch(() => { if (addressInput) addressInput.value = `${lat_.toFixed(5)}, ${lng_.toFixed(5)}`; });
+            const str = parts.length ? parts.join(", ") : `${lat_.toFixed(5)}, ${lng_.toFixed(5)}`;
+            currentAddress = str;
+            if (addressInput) addressInput.value = str;
+          }).catch(() => { currentAddress = `${lat_.toFixed(5)}, ${lng_.toFixed(5)}`; if (addressInput) addressInput.value = currentAddress; });
         });
         if (mapWrap) mapWrap.classList.add("has-map");
         if (mapHintEl) mapHintEl.classList.add("hidden");
@@ -1712,8 +1669,10 @@ function initAppDashboard(slug) {
         fetch(`${NOMINATIM_REVERSE}?lat=${e.latlng.lat}&lon=${e.latlng.lng}&format=json`).then((r) => r.json()).then((data) => {
           const addr = data?.address;
           const parts = [addr?.road, addr?.suburb, addr?.city, addr?.country].filter(Boolean);
-          if (addressInput) addressInput.value = parts.length ? parts.join(", ") : `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
-        }).catch(() => { if (addressInput) addressInput.value = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`; });
+          const str = parts.length ? parts.join(", ") : `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+          currentAddress = str;
+          if (addressInput) addressInput.value = str;
+        }).catch(() => { currentAddress = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`; if (addressInput) addressInput.value = currentAddress; });
       });
       if (mapWrap) mapWrap.classList.add("has-map");
       if (mapHintEl) mapHintEl.classList.add("hidden");
@@ -1776,6 +1735,7 @@ function initAppDashboard(slug) {
         const lng = data.location_lng != null ? Number(data.location_lng) : null;
         const radius = data.location_radius_meters != null ? Math.min(2000, Math.max(100, Number(data.location_radius_meters))) : 500;
         const address = data.location_address || "";
+        currentAddress = address;
         const organizationName = (data.organization_name || "").trim();
         if (addressInput) addressInput.value = address;
         updateRadiusUI(radius);
@@ -1803,6 +1763,11 @@ function initAppDashboard(slug) {
                   lng: coords[0],
                   address: formatPhotonAddress(f.properties || {}),
                 };
+                currentLat = defaultSuggestionData.lat;
+                currentLng = defaultSuggestionData.lng;
+                currentAddress = defaultSuggestionData.address;
+                const section = document.getElementById("carte-perimetre");
+                if (section?.classList.contains("app-section-visible")) initMap(currentLat, currentLng);
                 if (defaultAddressTextEl) defaultAddressTextEl.textContent = defaultSuggestionData.address;
                 if (defaultSuggestionEl) defaultSuggestionEl.classList.remove("hidden");
               }
@@ -1812,53 +1777,55 @@ function initAppDashboard(slug) {
       } catch (_) {}
     }
 
-    addressInput.addEventListener("input", () => {
-      if (autocompleteDebounce) clearTimeout(autocompleteDebounce);
-      const q = (addressInput.value || "").trim();
-      if (q.length < MIN_QUERY_LENGTH) { hideSuggestions(); return; }
-      autocompleteDebounce = setTimeout(() => {
-        fetchPhotonSuggestions(q, (features) => renderSuggestions(features));
-      }, AUTCOMPLETE_DEBOUNCE_MS);
-    });
+    if (addressInput) {
+      addressInput.addEventListener("input", () => {
+        if (autocompleteDebounce) clearTimeout(autocompleteDebounce);
+        const q = (addressInput.value || "").trim();
+        if (q.length < MIN_QUERY_LENGTH) { hideSuggestions(); return; }
+        autocompleteDebounce = setTimeout(() => {
+          fetchPhotonSuggestions(q, (features) => renderSuggestions(features));
+        }, AUTCOMPLETE_DEBOUNCE_MS);
+      });
 
-    addressInput.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") { hideSuggestions(); return; }
-      const items = suggestionsEl?.querySelectorAll("li[data-lat]") || [];
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        const current = suggestionsEl?.querySelector("li[aria-selected='true']");
-        const next = current?.nextElementSibling || items[0];
-        if (next) {
-          items.forEach((el) => el.setAttribute("aria-selected", "false"));
-          next.setAttribute("aria-selected", "true");
-          next.scrollIntoView({ block: "nearest" });
-        }
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        const current = suggestionsEl?.querySelector("li[aria-selected='true']");
-        const prev = current?.previousElementSibling || items[items.length - 1];
-        if (prev) {
-          items.forEach((el) => el.setAttribute("aria-selected", "false"));
-          prev.setAttribute("aria-selected", "true");
-          prev.scrollIntoView({ block: "nearest" });
-        }
-        return;
-      }
-      if (e.key === "Enter") {
-        const selected = suggestionsEl?.querySelector("li[aria-selected='true']") || items[0];
-        if (selected) {
+      addressInput.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") { hideSuggestions(); return; }
+        const items = suggestionsEl?.querySelectorAll("li[data-lat]") || [];
+        if (e.key === "ArrowDown") {
           e.preventDefault();
-          selected.click();
+          const current = suggestionsEl?.querySelector("li[aria-selected='true']");
+          const next = current?.nextElementSibling || items[0];
+          if (next) {
+            items.forEach((el) => el.setAttribute("aria-selected", "false"));
+            next.setAttribute("aria-selected", "true");
+            next.scrollIntoView({ block: "nearest" });
+          }
+          return;
         }
-      }
-    });
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          const current = suggestionsEl?.querySelector("li[aria-selected='true']");
+          const prev = current?.previousElementSibling || items[items.length - 1];
+          if (prev) {
+            items.forEach((el) => el.setAttribute("aria-selected", "false"));
+            prev.setAttribute("aria-selected", "true");
+            prev.scrollIntoView({ block: "nearest" });
+          }
+          return;
+        }
+        if (e.key === "Enter") {
+          const selected = suggestionsEl?.querySelector("li[aria-selected='true']") || items[0];
+          if (selected) {
+            e.preventDefault();
+            selected.click();
+          }
+        }
+      });
 
-    addressInput.addEventListener("focus", () => {
-      const q = (addressInput.value || "").trim();
-      if (q.length >= MIN_QUERY_LENGTH) fetchPhotonSuggestions(q, (features) => renderSuggestions(features));
-    });
+      addressInput.addEventListener("focus", () => {
+        const q = (addressInput.value || "").trim();
+        if (q.length >= MIN_QUERY_LENGTH) fetchPhotonSuggestions(q, (features) => renderSuggestions(features));
+      });
+    }
 
     document.addEventListener("click", (e) => {
       if (suggestionsEl && !suggestionsEl.classList.contains("hidden") && !addressInput?.contains(e.target) && !suggestionsEl.contains(e.target)) {
@@ -1908,7 +1875,7 @@ function initAppDashboard(slug) {
         return;
       }
       saveBtn.disabled = true;
-      saveFeedback.classList.add("hidden");
+      if (saveFeedback) saveFeedback.classList.add("hidden");
       try {
         const res = await api("/dashboard/settings", {
           method: "PATCH",
@@ -1917,7 +1884,7 @@ function initAppDashboard(slug) {
             location_lat: currentLat,
             location_lng: currentLng,
             location_radius_meters: currentRadiusM,
-            location_address: (addressInput?.value || "").trim() || undefined,
+            location_address: ((addressInput?.value ?? currentAddress) || "").trim() || undefined,
           }),
         });
         if (res.ok || res.status === 204) {
@@ -3692,6 +3659,11 @@ function initAppDashboard(slug) {
       setTimeout(() => {
         scannerAmount.focus();
       }, 450);
+    } else {
+      const firstBtn = scannerResult?.querySelector("button:not([disabled]), .app-btn-primary, [id^='app-caisse-one'], [id^='app-scanner-']");
+      if (firstBtn && typeof firstBtn.focus === "function") {
+        setTimeout(() => firstBtn.focus(), 450);
+      }
     }
 
     if (scannerHistoryList) {
@@ -4925,14 +4897,14 @@ function initAppDashboard(slug) {
         if (total === 0 && data.helpWhenNoDevice) {
           let html = "";
           if (data.paradoxExplanation) {
-            html += `<p class="app-notifications-diagnostic-title">J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?</p><p class="app-notifications-diagnostic-text">${data.paradoxExplanation}</p>`;
+            html += `<p class="app-notifications-diagnostic-title">J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.paradoxExplanation)}</p>`;
           } else if (data.membersVsDevicesExplanation) {
-            html += `<p class="app-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="app-notifications-diagnostic-text">${data.membersVsDevicesExplanation}</p>`;
+            html += `<p class="app-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.membersVsDevicesExplanation)}</p>`;
           }
           if (data.dataDirHint) {
-            html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${data.dataDirHint}</p>`;
+            html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.dataDirHint)}</p>`;
           }
-          html += `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+          html += `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.helpWhenNoDevice)}</p>`;
           if (data.testPasskitCurl) {
             const curlEscaped = data.testPasskitCurl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             html += `<p class="app-notifications-diagnostic-text" style="margin-top: 0.75rem;"><strong>Test diagnostic :</strong> exécute cette commande dans un terminal (sur ton ordi). Si tu obtiens <code>HTTP 201</code>, l'API fonctionne et le blocage vient de l'iPhone ou du réseau.</p><pre class="app-notifications-curl">${curlEscaped}</pre>`;
@@ -4947,12 +4919,12 @@ function initAppDashboard(slug) {
           if (data.paradoxExplanation || data.membersVsDevicesExplanation) {
             const text = data.paradoxExplanation || data.membersVsDevicesExplanation;
             const title = data.paradoxExplanation ? "J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?" : "Pourquoi des membres mais « 0 appareil » ?";
-            html += `<p class="app-notifications-diagnostic-title">${title}</p><p class="app-notifications-diagnostic-text">${text}</p>`;
+            html += `<p class="app-notifications-diagnostic-title">${escapeHtmlForServer(title)}</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(text)}</p>`;
           }
           if (data.dataDirHint) {
-            html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${data.dataDirHint}</p>`;
+            html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.dataDirHint)}</p>`;
           }
-          diagEl.innerHTML = html || `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${data.dataDirHint}</p>`;
+          diagEl.innerHTML = html || `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.dataDirHint || "")}</p>`;
           diagEl.classList.remove("hidden");
         } else {
           diagEl.classList.add("hidden");
@@ -6667,9 +6639,9 @@ function initDashboardPage() {
         const passKitOk = data.passKitUrlConfigured === true;
         if (total === 0 && data.helpWhenNoDevice) {
           let html = data.paradoxExplanation
-            ? `<p class="dashboard-notifications-diagnostic-title">J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?</p><p class="dashboard-notifications-diagnostic-text">${data.paradoxExplanation}</p>`
-            : (data.membersVsDevicesExplanation ? `<p class="dashboard-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="dashboard-notifications-diagnostic-text">${data.membersVsDevicesExplanation}</p>` : "");
-          html += `<p class="dashboard-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="dashboard-notifications-diagnostic-text">${data.helpWhenNoDevice}</p>`;
+            ? `<p class="dashboard-notifications-diagnostic-title">J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?</p><p class="dashboard-notifications-diagnostic-text">${escapeHtmlForServer(data.paradoxExplanation)}</p>`
+            : (data.membersVsDevicesExplanation ? `<p class="dashboard-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="dashboard-notifications-diagnostic-text">${escapeHtmlForServer(data.membersVsDevicesExplanation)}</p>` : "");
+          html += `<p class="dashboard-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="dashboard-notifications-diagnostic-text">${escapeHtmlForServer(data.helpWhenNoDevice)}</p>`;
           if (data.testPasskitCurl) {
             const curlEscaped = data.testPasskitCurl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             html += `<p class="dashboard-notifications-diagnostic-text" style="margin-top: 0.75rem;"><strong>Test diagnostic :</strong> exécute cette commande dans un terminal (sur ton ordi). Si tu obtiens <code>HTTP 201</code>, l'API fonctionne et le blocage vient de l'iPhone ou du réseau.</p><pre class="dashboard-notifications-curl">${curlEscaped}</pre>`;

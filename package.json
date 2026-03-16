@@ -10,9 +10,13 @@
     "start": "npm run dev",
     "build": "npm run build:frontend",
     "build:frontend": "cd frontend && npm run build",
+    "lint": "eslint backend/src frontend/src scripts",
+    "lint:fix": "eslint backend/src frontend/src scripts --fix",
     "deploy": "sh scripts/deploy.sh"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^8.2.2",
+    "eslint": "^10.0.3"
   }
 }

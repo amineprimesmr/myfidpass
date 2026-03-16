@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -82,6 +83,15 @@ const businessAssetsDir = join(__dirname, "..", "assets", "businesses");
 
 const router = Router();
 const START_RATE_BUCKET = new Map();
+
+// Rate limiting : création de membres (page fidélité client) 30 req / 15 min par IP
+const membersCreateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: "Trop de créations. Réessayez dans 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 function getApiBase(req) {
   return (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
@@ -1722,7 +1732,7 @@ router.post("/:slug/members/:memberId/rewards/:grantId/claim", (req, res) => {
  * Créer un membre (carte fidélité) pour cette entreprise.
  * Body: { email, name }
  */
-router.post("/:slug/members", (req, res) => {
+router.post("/:slug/members", membersCreateLimiter, (req, res) => {
   const business = getBusinessBySlug(req.params.slug);
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
 
@@ -2121,7 +2131,9 @@ router.post("/", requireAuth, (req, res) => {
     return res.status(400).json({ error: "name et slug requis" });
   }
   const devBypass =
-    process.env.DEV_BYPASS_PAYMENT === "true" && req.get("X-Dev-Bypass-Payment") === "1";
+    process.env.NODE_ENV !== "production" &&
+    process.env.DEV_BYPASS_PAYMENT === "true" &&
+    req.get("X-Dev-Bypass-Payment") === "1";
   if (!devBypass && !canCreateBusiness(req.user.id)) {
     return res.status(403).json({
       error: "Abonnement requis ou limite de cartes atteinte",

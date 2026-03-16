@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -53,6 +55,18 @@ async function handlePassDemo(req, res) {
 
 dotenv.config({ path: join(__dirname, "..", ".env") });
 
+const isProduction = process.env.NODE_ENV === "production";
+if (isProduction) {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    console.error("En production, JWT_SECRET doit être défini et faire au moins 32 caractères.");
+    process.exit(1);
+  }
+  if (!process.env.PASSKIT_SECRET || process.env.PASSKIT_SECRET.length < 32) {
+    console.error("En production, PASSKIT_SECRET doit être défini et faire au moins 32 caractères.");
+    process.exit(1);
+  }
+}
+
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
@@ -63,6 +77,7 @@ const allowedOrigins =
     ? [FRONTEND_URL, FRONTEND_URL.replace(/\/$/, ""), "https://myfidpass.fr", "https://www.myfidpass.fr"].filter(Boolean)
     : true;
 app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // Webhook Stripe doit recevoir le body brut (pour vérification de signature)
 app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
@@ -70,6 +85,17 @@ app.post("/api/payment/webhook", paymentWebhookHandler);
 
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true, limit: "64kb" }));
+
+// Rate limiting : auth (login/register) 10 req / 15 min par IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Trop de tentatives. Réessayez dans 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
 
 // Parse JWT si présent (Authorization: Bearer) pour toutes les routes
 app.use(optionalAuth);
@@ -125,6 +151,14 @@ app.use("/passes", passesRouter);
 app.get("/api/passes/demo", handlePassDemo);
 app.get("/passes/demo", handlePassDemo);
 
+// 404 et middleware d'erreur global (réponse JSON)
+app.use((req, res) => res.status(404).json({ error: "Not found" }));
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Une erreur interne est survenue." });
+});
+
 function startServer(port) {
   const p = Number(port) || 3001;
   const server = app.listen(p, () => {
@@ -155,4 +189,8 @@ function startServer(port) {
   });
 }
 
-startServer(PORT);
+if (process.env.NODE_ENV !== "test") {
+  startServer(PORT);
+}
+
+export { app };

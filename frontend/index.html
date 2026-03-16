@@ -399,6 +399,22 @@
       </footer>
     </div>
 
+    <!-- Page 404 : URL inconnue -->
+    <div id="page-404" class="hidden unified-shell" aria-hidden="true" role="main">
+      <div class="landing-header-outer">
+        <header class="landing-header landing-header-bar">
+          <div class="landing-header-inner">
+            <a href="/" class="landing-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
+          </div>
+        </header>
+      </div>
+      <main class="unified-main" style="max-width: 36rem; margin: 4rem auto; padding: 2rem; text-align: center;">
+        <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Page introuvable</h1>
+        <p style="color: var(--muted, #64748b); margin-bottom: 1.5rem;">Cette page n'existe pas ou a été déplacée.</p>
+        <a href="/" class="landing-btn landing-btn-primary">Retour à l'accueil</a>
+      </main>
+    </div>
+
     <!-- App connectée : interface logiciel (sans bannière ni menu haut) -->
     <div id="app-app" class="hidden app-unified-shell">
       <aside class="app-sidebar" id="app-sidebar">
@@ -573,12 +589,12 @@
                 </div>
                 <div id="app-scanner-verifying" class="app-scanner-state app-scanner-verifying hidden" aria-live="polite" aria-atomic="true">
                   <div class="app-scanner-state-icon app-scanner-spinner" aria-hidden="true"></div>
-                  <p class="app-scanner-state-title">Vérification…</p>
+                  <p class="app-scanner-state-title" aria-label="Vérification du code en cours">Vérification…</p>
                   <p class="app-scanner-state-desc">Nous vérifions que la carte correspond à un client de votre commerce.</p>
                 </div>
                 <div id="app-scanner-reject" class="app-scanner-state app-scanner-reject hidden" aria-live="assertive" aria-atomic="true">
                   <div class="app-scanner-state-icon app-scanner-icon-reject" aria-hidden="true">✕</div>
-                  <p id="app-scanner-reject-title" class="app-scanner-state-title">Code non reconnu</p>
+                  <p id="app-scanner-reject-title" class="app-scanner-state-title" aria-label="Code non reconnu">Code non reconnu</p>
                   <p id="app-scanner-reject-message" class="app-scanner-state-desc">Ce QR code ne correspond pas à un client de votre commerce.</p>
                   <button type="button" id="app-scanner-retry" class="app-btn app-btn-primary">Réessayer</button>
                 </div>
@@ -619,7 +635,7 @@
                     <button type="button" id="app-scanner-resume" class="app-btn app-btn-secondary app-caisse-change-client">Changer de client</button>
                   </div>
                   <p id="app-scanner-result-message" class="app-message hidden"></p>
-                  <p id="app-caisse-message" class="app-message hidden" aria-live="polite"></p>
+                  <p id="app-caisse-message" class="app-message hidden" aria-live="polite" aria-atomic="true" role="status" aria-label="Résultat du scan"></p>
                   </div>
                 </div>
               </div>
@@ -834,7 +850,7 @@
             </div>
             <div id="app-scanner-success-flash" class="app-scanner-success-flash hidden">
               <div class="app-scanner-success-check">✓</div>
-              <p>Client reconnu</p>
+              <p aria-label="Client reconnu">Client reconnu</p>
             </div>
             <div id="app-scanner-fullscreen-reject" class="app-scanner-fullscreen-reject hidden">
               <p id="app-scanner-fullscreen-reject-msg"></p>
@@ -1416,7 +1432,7 @@
               <div class="app-carte-perimetre-map-stage">
                 <div class="app-carte-perimetre-map-wrap">
                   <div id="app-perimetre-map" class="app-perimetre-map" aria-label="Carte de l’emplacement"></div>
-                  <p id="app-perimetre-map-hint" class="app-perimetre-map-hint">Choisissez une adresse ou utilisez « Ma position » pour afficher la carte.</p>
+                  <p id="app-perimetre-map-hint" class="app-perimetre-map-hint">L’emplacement est défini dans la page Profil. La carte se centre automatiquement sur l’adresse de votre établissement.</p>
 
                   <div class="app-carte-perimetre-overlay-bottom" aria-hidden="false">
                     <div class="app-notification-preview-banner app-perimetre-permanent-banner" role="region" aria-label="Notification permanente (aperçu)">
@@ -1443,43 +1459,18 @@
                       </div>
                     </div>
                   </div>
+                    <div class="app-carte-perimetre-radius-bar">
+                      <label class="app-carte-perimetre-radius-label" for="app-perimetre-radius">Rayon</label>
+                      <input type="range" id="app-perimetre-radius" class="app-perimetre-radius-slider" min="100" max="2000" step="50" value="500" aria-label="Rayon en mètres" />
+                      <span id="app-perimetre-radius-value" class="app-perimetre-radius-value">500 m</span>
+                      <button type="button" id="app-perimetre-save" class="app-btn app-btn-primary app-perimetre-save-btn">Enregistrer</button>
+                      <p id="app-perimetre-save-feedback" class="app-perimetre-save-feedback hidden"></p>
+                    </div>
+                  
                 </div>
               </div>
 
-              <div class="app-carte-perimetre-panel app-carte-perimetre-panel-floating">
-                <div class="app-carte-perimetre-card">
-                  <h3 class="app-subsection-title">Emplacement</h3>
-                  <label class="app-label" for="app-perimetre-address">Adresse ou lieu</label>
-                  <div class="app-perimetre-address-row">
-                    <div class="app-perimetre-address-input-wrap">
-                      <input type="text" id="app-perimetre-address" class="app-input" placeholder="ex. 12 rue de la Paix, Paris ou nom du commerce" autocomplete="off" aria-autocomplete="list" aria-controls="app-perimetre-suggestions" aria-expanded="false" />
-                      <ul id="app-perimetre-suggestions" class="app-perimetre-suggestions hidden" role="listbox" aria-label="Suggestions d’adresses"></ul>
-                    </div>
-                    <button type="button" id="app-perimetre-geoloc" class="app-btn app-btn-secondary app-perimetre-geoloc-btn" aria-label="Ma position actuelle">
-                      <span class="app-perimetre-geoloc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
-                      Ma position
-                    </button>
-                  </div>
-                  <div id="app-perimetre-default-suggestion" class="app-perimetre-default-suggestion hidden" role="region" aria-label="Proposition par défaut">
-                    <p class="app-perimetre-default-label">Proposition selon le nom de votre établissement</p>
-                    <p class="app-perimetre-default-address" id="app-perimetre-default-address-text"></p>
-                    <button type="button" id="app-perimetre-use-default" class="app-btn app-btn-primary app-perimetre-use-default-btn">Utiliser cette adresse</button>
-                  </div>
-                  <p id="app-perimetre-address-hint" class="app-hint app-perimetre-hint hidden"></p>
-                </div>
-                <div class="app-carte-perimetre-card">
-                  <h3 class="app-subsection-title">Rayon de notification</h3>
-                  <div class="app-perimetre-radius-row">
-                    <input type="range" id="app-perimetre-radius" class="app-perimetre-radius-slider" min="100" max="2000" step="50" value="500" aria-label="Rayon en mètres" />
-                    <span id="app-perimetre-radius-value" class="app-perimetre-radius-value">500 m</span>
-                  </div>
-                  <p class="app-hint">Les membres qui entrent dans ce périmètre recevront une notification (Apple Wallet / Google Wallet).</p>
-                </div>
-                <div class="app-carte-perimetre-card app-carte-perimetre-actions">
-                  <button type="button" id="app-perimetre-save" class="app-btn app-btn-primary">Enregistrer le périmètre</button>
-                  <p id="app-perimetre-save-feedback" class="app-message app-perimetre-feedback hidden"></p>
-                </div>
-              </div>
+              
             </div>
           </section>
           <!-- Section Profil : infos établissement (nom, logo, adresse) -->
@@ -1529,7 +1520,7 @@
                 <div class="app-rules-row">
                   <label class="app-label" for="app-profil-address">Adresse du commerce</label>
                   <input type="text" id="app-profil-address" class="app-input" placeholder="Rechercher ou saisir une adresse…" autocomplete="street-address" />
-                  <p class="app-hint">Utilisée pour la localisation du pass (Relevant locations) et la carte.</p>
+                  <p class="app-hint">Utilisée pour la localisation du pass (Relevant locations), la carte et le périmètre de notification (page Emplacement).</p>
                 </div>
                 <div class="app-rules-row">
                   <label class="app-label">Lien de votre page carte</label>
