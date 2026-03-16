@@ -5418,7 +5418,7 @@ function initBuilderPage() {
     }
     saveDraft();
     updateBuilderPreviewOrgName(state.organizationName || "Votre commerce");
-  setTemplateSelection(state.selectedTemplateId);
+    setTemplateSelection(state.selectedTemplateId);
     if (hasLandingParams) {
       updateBuilderPreviewLogo("");
       clearBuilderBrandColors();
@@ -5430,6 +5430,10 @@ function initBuilderPage() {
   }
 
   applyInitialState();
+  const builderStep1 = document.getElementById("builder-step-1-block");
+  if (builderStep1) {
+    builderStep1.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   if (hasLandingParams) {
     (async () => {
       let placeId = placeIdFromUrl;
