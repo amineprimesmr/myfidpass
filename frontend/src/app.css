@@ -489,6 +489,10 @@ body.page-app .site-banner { display: none !important; }
   letter-spacing: -0.02em;
 }
 
+#dashboard .app-section-title {
+  white-space: nowrap;
+}
+
 .app-section-desc {
   font-size: 1rem;
   color: var(--app-text-muted);
