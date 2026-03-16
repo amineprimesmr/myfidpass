@@ -4141,6 +4141,27 @@ function initAppDashboard(slug) {
     return (dashboardPeriodSelect && dashboardPeriodSelect.value) || "this_month";
   }
 
+  function getDashboardPeriodRange(period) {
+    const now = new Date();
+    let start = new Date(now);
+    let end = new Date(now);
+    if (period === "7d") {
+      start.setDate(end.getDate() - 6);
+    } else if (period === "30d") {
+      start.setDate(end.getDate() - 29);
+    } else if (period === "6m") {
+      start.setMonth(end.getMonth() - 6);
+    } else if (period === "this_month") {
+      start = new Date(end.getFullYear(), end.getMonth(), 1);
+    }
+    const sameYear = start.getFullYear() === end.getFullYear();
+    const optsStart = { day: "2-digit", month: "short" };
+    const optsEnd = sameYear ? { day: "2-digit", month: "short", year: "numeric" } : { day: "2-digit", month: "short", year: "numeric" };
+    const startStr = start.toLocaleDateString("fr-FR", optsStart);
+    const endStr = end.toLocaleDateString("fr-FR", optsEnd);
+    return `${startStr} - ${endStr}`;
+  }
+
   const dashboardPeriodLabels = {
     "7d": "7 derniers jours",
     "30d": "30 derniers jours",
@@ -4284,8 +4305,7 @@ function initAppDashboard(slug) {
     if (actionNewCount) actionNewCount.textContent = `${data.newMembersLast30Days} nouveaux`;
     if (actionRecurrentCount) actionRecurrentCount.textContent = `${data.recurrentMembersInPeriod} récurrents`;
     if (dashboardPeriodDisplay) {
-      const label = dashboardPeriodLabels[period] || "Ce mois-ci";
-      dashboardPeriodDisplay.textContent = label;
+      dashboardPeriodDisplay.textContent = getDashboardPeriodRange(period);
     }
     // Broadcast des stats pour d'autres composants (ex: badge notifications)
     window.dispatchEvent(new CustomEvent("fidpass-dashboard-stats", { detail: { stats: data } }));
