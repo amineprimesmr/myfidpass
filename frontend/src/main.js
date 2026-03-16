@@ -7355,6 +7355,20 @@ if (landingHeroForm) {
     if (landingHelperEl) landingHelperEl.classList.add("is-visible");
   }
   if (landingEtablissementInput) {
+    // Pré-remplit le champ si l’URL contient déjà ?etablissement=… (&place_id=…)
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const presetName = params.get("etablissement");
+      const presetPlaceId = params.get("place_id");
+      if (presetName && !landingEtablissementInput.value) {
+        landingEtablissementInput.value = presetName;
+      }
+      if (presetPlaceId && landingPlaceIdInput && !landingPlaceIdInput.value) {
+        landingPlaceIdInput.value = presetPlaceId;
+      }
+    } catch (_) {
+      // ignore si URLSearchParams n'est pas dispo
+    }
     let helperDebounce = null;
     landingEtablissementInput.addEventListener("input", () => {
       updateLandingCtaState();
