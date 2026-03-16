@@ -2716,8 +2716,8 @@ body.page-app .site-banner { display: none !important; }
   border: 1px solid rgba(148, 163, 184, 0.6);
 }
 .app-dashboard-period-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
   display: inline-flex;
@@ -2753,8 +2753,8 @@ body.page-app .site-banner { display: none !important; }
   color: #111827;
 }
 .app-dashboard-period-chevron {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   background: #ffffff;
   display: inline-flex;
