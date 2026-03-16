@@ -1,6 +1,9 @@
-import js from "@eslint/js";
+/* eslint-env node */
+"use strict";
 
-export default [
+const js = require("@eslint/js");
+
+module.exports = [
   js.configs.recommended,
   {
     ignores: [
@@ -50,8 +53,6 @@ export default [
         Blob: "readonly",
         URL: "readonly",
         crypto: "readonly",
-        import: "readonly",
-        import.meta: "readonly",
       },
     },
     rules: {

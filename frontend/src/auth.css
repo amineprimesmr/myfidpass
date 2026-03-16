@@ -244,6 +244,15 @@
     0 0 0 3px var(--auth-accent-light);
 }
 
+.auth-hint {
+  font-size: 0.8rem;
+  color: var(--auth-muted, #64748b);
+  margin: 0.25rem 0 0.5rem;
+}
+.auth-password-hint {
+  margin-top: 0.2rem;
+}
+
 .auth-forgot-wrap {
   margin: -0.2rem 0 0.4rem;
   text-align: right;

@@ -508,7 +508,13 @@ function initAuthPage(initialTab) {
     e.preventDefault();
     const email = document.getElementById("auth-login-email")?.value?.trim();
     const password = document.getElementById("auth-login-password")?.value;
-    if (!email || !password) return;
+    if (!email || !password) {
+      if (loginError) {
+        loginError.textContent = !password ? "Veuillez saisir votre mot de passe. Si un gestionnaire de mots de passe (ex. iCloud) masque le champ, cliquez dans la zone mot de passe pour l’autoriser à remplir." : "Veuillez saisir votre email.";
+        loginError.classList.remove("hidden");
+      }
+      return;
+    }
     if (loginError) { loginError.classList.add("hidden"); loginError.textContent = ""; }
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -7907,11 +7913,28 @@ function initLandingAnimations() {
   }
 }
 
-// Bootstrap
-const slug = initRouting();
-if (slug) initFidelityApp(slug);
+// Bootstrap : attendre que le DOM soit prêt, puis lancer le routage
+function bootstrap() {
+  try {
+    const slug = initRouting();
+    if (slug) initFidelityApp(slug);
+    if (landingEl && !landingEl.classList.contains("hidden")) {
+      initLandingAnimations();
+    }
+  } catch (err) {
+    console.error("Erreur au chargement de l'app:", err);
+    document.body.innerHTML = `
+      <div style="font-family: system-ui; max-width: 32rem; margin: 2rem auto; padding: 1.5rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
+        <h1 style="margin: 0 0 0.5rem; font-size: 1.25rem;">Erreur de chargement</h1>
+        <p style="margin: 0 0 1rem; color: #991b1b;">L'application n'a pas pu démarrer. Ouvre la console (F12 → Console) pour voir l'erreur.</p>
+        <p style="margin: 0; font-size: 0.875rem; color: #64748b;">Vérifie que le backend tourne sur le port 3001 (npm run dev à la racine).</p>
+      </div>
+    `;
+  }
+}
 
-// Lancer les animations landing quand la landing est affichée
-if (landingEl && !landingEl.classList.contains("hidden")) {
-  initLandingAnimations();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootstrap);
+} else {
+  bootstrap();
 }

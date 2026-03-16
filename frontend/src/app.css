@@ -1706,6 +1706,158 @@ body.page-app .site-banner { display: none !important; }
 
 .app-member-item:hover { background: var(--app-surface-hover); color: var(--app-text); }
 
+/* Page Membres (#membres) — grille de cartes */
+.app-membres-shell {
+  padding: 0;
+  max-width: 100%;
+}
+.app-membres-header {
+  margin-bottom: 1.25rem;
+}
+.app-membres-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  color: var(--app-text-muted);
+}
+.app-membres-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+.app-membres-search-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+.app-membres-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--app-text-muted);
+  pointer-events: none;
+}
+.app-membres-search-input {
+  width: 100%;
+  max-width: 280px;
+  padding: 0.6rem 0.75rem 0.6rem 2.5rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-surface);
+  color: var(--app-text);
+  transition: border-color var(--app-transition), box-shadow var(--app-transition);
+}
+.app-membres-search-input:focus {
+  outline: none;
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 3px var(--app-accent-light);
+}
+.app-membres-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.app-membres-select {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+.app-membres-export-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-surface);
+  color: var(--app-text);
+  cursor: pointer;
+  transition: background var(--app-transition), border-color var(--app-transition);
+}
+.app-membres-export-btn:hover {
+  background: var(--app-surface-hover);
+  border-color: var(--app-text-muted);
+}
+.app-membres-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.app-membres-card {
+  display: block;
+  padding: 1.25rem;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  box-shadow: var(--app-shadow-sm);
+  cursor: pointer;
+  transition: box-shadow var(--app-transition), border-color var(--app-transition), background var(--app-transition);
+  text-align: left;
+}
+.app-membres-card:hover {
+  background: var(--app-surface-hover);
+  border-color: var(--app-text-muted);
+  box-shadow: var(--app-shadow-md);
+}
+.app-membres-card:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--app-accent-light);
+}
+.app-membres-card-name {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+.app-membres-card-email {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--app-text-muted);
+}
+.app-membres-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--app-text-muted);
+}
+.app-membres-card-meta-item strong {
+  color: var(--app-text);
+}
+.app-membres-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--app-text-muted);
+  background: var(--app-surface);
+  border: 1px dashed var(--app-border);
+  border-radius: var(--app-radius-md);
+}
+.app-membres-import-wrap {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+}
+.app-membres-import-summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--app-accent);
+}
+.app-membres-import-summary:hover {
+  text-decoration: underline;
+}
+
 .app-message {
   margin-top: 0.75rem;
   font-size: 0.9rem;
