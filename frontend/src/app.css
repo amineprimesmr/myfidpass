@@ -2547,10 +2547,10 @@ body.page-app .site-banner { display: none !important; }
 .app-dashboard-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
 }
 .app-dashboard-header .app-section-title { margin-bottom: 0.2rem; }
 .app-dashboard-header-main {
@@ -2591,6 +2591,11 @@ body.page-app .site-banner { display: none !important; }
   font-weight: 400;
 }
 .app-dashboard-controls { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: flex-start; }
+.app-dashboard-header-main,
+.app-dashboard-controls,
+.app-dashboard-quick-actions {
+  align-items: center;
+}
 .app-dashboard-quick-actions {
   display: flex;
   gap: 0.4rem;
