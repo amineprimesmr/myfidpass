@@ -1208,6 +1208,7 @@ function initAppDashboard(slug) {
   const statRetentionEcho = document.getElementById("app-stat-retention-echo");
   const dashboardPeriodSelect = document.getElementById("app-dashboard-period-select");
   const dashboardPeriodPills = Array.from(document.querySelectorAll(".app-dashboard-period-pill"));
+  const dashboardPeriodDisplay = document.getElementById("app-dashboard-period-display");
   const evolutionTitleEl = document.getElementById("app-evolution-title");
   let dashboardUseSimulatedData = false;
   const memberSearchInput = document.getElementById("app-member-search");
@@ -4282,6 +4283,10 @@ function initAppDashboard(slug) {
     if (actionInactiveCount) actionInactiveCount.textContent = `${data.inactiveMembers30Days} clients`;
     if (actionNewCount) actionNewCount.textContent = `${data.newMembersLast30Days} nouveaux`;
     if (actionRecurrentCount) actionRecurrentCount.textContent = `${data.recurrentMembersInPeriod} récurrents`;
+    if (dashboardPeriodDisplay) {
+      const label = dashboardPeriodLabels[period] || "Ce mois-ci";
+      dashboardPeriodDisplay.textContent = label;
+    }
     // Broadcast des stats pour d'autres composants (ex: badge notifications)
     window.dispatchEvent(new CustomEvent("fidpass-dashboard-stats", { detail: { stats: data } }));
 

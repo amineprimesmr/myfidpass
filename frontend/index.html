@@ -501,7 +501,7 @@
                 </div>
                 <div class="app-dashboard-controls">
                   <div class="app-dashboard-period">
-                    <div class="app-dashboard-period-pill-main">
+                    <button type="button" class="app-dashboard-period-pill-main" aria-label="Changer la période">
                       <span class="app-dashboard-period-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                           <rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -509,20 +509,21 @@
                       </span>
                       <div class="app-dashboard-period-text">
                         <span class="app-dashboard-period-label">Période</span>
-                        <select id="app-dashboard-period-select" class="app-dashboard-period-select" aria-label="Choisir la période des indicateurs">
-                          <option value="7d">7 derniers jours</option>
-                          <option value="30d">30 derniers jours</option>
-                          <option value="this_month" selected>Ce mois-ci</option>
-                          <option value="6m">6 derniers mois</option>
-                        </select>
+                        <span id="app-dashboard-period-display" class="app-dashboard-period-display">Ce mois-ci</span>
                       </div>
-                    </div>
-                    <div class="app-dashboard-period-pills" role="tablist" aria-label="Sélection rapide de période">
-                      <button type="button" class="app-dashboard-period-pill" data-period="7d">7j</button>
-                      <button type="button" class="app-dashboard-period-pill" data-period="30d">30j</button>
-                      <button type="button" class="app-dashboard-period-pill active" data-period="this_month">Mois</button>
-                      <button type="button" class="app-dashboard-period-pill" data-period="6m">6m</button>
-                    </div>
+                      <span class="app-dashboard-period-chevron" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                      </span>
+                    </button>
+                    <!-- Select natif caché mais fonctionnel -->
+                    <select id="app-dashboard-period-select" class="app-dashboard-period-select" aria-label="Choisir la période des indicateurs">
+                      <option value="7d">7 derniers jours</option>
+                      <option value="30d">30 derniers jours</option>
+                      <option value="this_month" selected>Ce mois-ci</option>
+                      <option value="6m">6 derniers mois</option>
+                    </select>
                   </div>
                 <div class="app-dashboard-quick-actions">
                   <button type="button" id="app-dashboard-notif-pill" class="app-dashboard-notif-pill" aria-label="Ouvrir les notifications">
