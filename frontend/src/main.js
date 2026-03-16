@@ -1292,20 +1292,11 @@ function initAppDashboard(slug) {
     window.addEventListener("fidpass-dashboard-stats", (e) => {
       const stats = e.detail?.stats || {};
       const newMembers = stats.newMembersLast7Days ?? 0;
-      const inactive = stats.inactiveMembers30Days ?? 0;
-      if (newMembers > 0 || inactive > 0) {
+      if (newMembers > 0) {
         if (notifLabelEl) {
-          let text = "";
-          if (newMembers > 0 && inactive > 0) {
-            text = `${newMembers} nouveaux · ${inactive} inactifs 30j`;
-          } else if (newMembers > 0) {
-            text = `${newMembers} nouveaux`;
-          } else if (inactive > 0) {
-            text = `${inactive} inactifs 30j`;
-          }
-          notifLabelEl.textContent = text;
+          notifLabelEl.textContent = `${newMembers} nouveaux`;
         }
-        dashboardNotifCountEl.textContent = String(newMembers || inactive);
+        dashboardNotifCountEl.textContent = String(newMembers);
         dashboardNotifCountEl.classList.remove("hidden");
       } else {
         if (notifLabelEl) notifLabelEl.textContent = "Notifications";
