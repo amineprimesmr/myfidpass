@@ -2748,8 +2748,8 @@ body.page-app .site-banner { display: none !important; }
 .app-dashboard-period-select::-ms-expand { display: none; }
 
 .app-dashboard-period-display {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: #111827;
 }
 .app-dashboard-period-chevron {
