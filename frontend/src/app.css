@@ -2592,7 +2592,6 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-dashboard-controls { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: flex-start; }
 .app-dashboard-header-main,
-.app-dashboard-controls,
 .app-dashboard-quick-actions {
   align-items: center;
 }
@@ -2605,11 +2604,11 @@ body.page-app .site-banner { display: none !important; }
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.35rem 0.6rem;
+  padding: 0.5rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(255, 255, 255, 0.9);
-  font-size: 0.78rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #f3f4f6;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #1f2937;
   cursor: pointer;
