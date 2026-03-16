@@ -1358,6 +1358,28 @@
             <p class="app-section-desc">Modifiez les informations de votre établissement (nom, logo, adresse). Elles apparaissent sur la carte fidélité et dans l’app.</p>
             <div class="app-section-grid-wrap app-profil-grid">
               <div class="app-section-col-main">
+            <div class="app-card app-profil-account-card">
+              <h3 class="app-subsection-title">Mon compte</h3>
+              <div class="app-profil-form">
+                <div class="app-rules-row">
+                  <label class="app-label" for="app-profil-email">Adresse e-mail</label>
+                  <input type="email" id="app-profil-email" class="app-input" placeholder="vous@example.com" autocomplete="email" readonly />
+                  <p class="app-hint">Email utilisé pour vous connecter à Myfidpass.</p>
+                </div>
+                <div class="app-rules-row app-profil-password-row">
+                  <div class="app-profil-password-text">
+                    <label class="app-label">Mot de passe</label>
+                    <p class="app-hint">Vous recevrez un lien de réinitialisation par e-mail.</p>
+                  </div>
+                  <button type="button" id="app-profil-change-password" class="app-btn app-btn-secondary app-profil-change-password-btn">Changer le mot de passe</button>
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Abonnement</label>
+                  <p id="app-profil-subscription-status" class="app-profil-subscription-status">Chargement…</p>
+                </div>
+                <p id="app-profil-account-message" class="app-message app-profil-message hidden"></p>
+              </div>
+            </div>
             <div class="app-card app-profil-card">
               <h3 class="app-subsection-title">Mon établissement</h3>
               <div class="app-profil-form">

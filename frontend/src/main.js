@@ -867,6 +867,16 @@ function initAppPage() {
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
       const mobileProfilEmail = document.getElementById("app-mobile-profil-email");
       if (mobileProfilEmail) mobileProfilEmail.textContent = user?.email || "";
+      // Partage les infos compte pour la page Profil
+      window.dispatchEvent(
+        new CustomEvent("fidpass-auth-me", {
+          detail: {
+            user,
+            subscription: data.subscription || null,
+            hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
+          },
+        })
+      );
 
       if (businesses.length === 0) {
         if (emptyEl) emptyEl.classList.remove("hidden");
@@ -3278,6 +3288,10 @@ function initAppDashboard(slug) {
   const profilSave = document.getElementById("app-profil-save");
   const profilSaveText = document.getElementById("app-profil-save-text");
   const profilSaveSpinner = document.getElementById("app-profil-save-spinner");
+  const profilEmailInput = document.getElementById("app-profil-email");
+  const profilAccountMessage = document.getElementById("app-profil-account-message");
+  const profilChangePasswordBtn = document.getElementById("app-profil-change-password");
+  const profilSubscriptionStatus = document.getElementById("app-profil-subscription-status");
   let profilLogoDataUrl = "";
   let profilLogoRemoved = false;
 
@@ -3287,6 +3301,14 @@ function initAppDashboard(slug) {
     profilMessage.classList.toggle("hidden", !text);
     profilMessage.classList.toggle("success", text && !isError);
     profilMessage.classList.toggle("error", text && isError);
+  }
+
+  function showProfilAccountMessage(text, isError = false) {
+    if (!profilAccountMessage) return;
+    profilAccountMessage.textContent = text || "";
+    profilAccountMessage.classList.toggle("hidden", !text);
+    profilAccountMessage.classList.toggle("success", text && !isError);
+    profilAccountMessage.classList.toggle("error", text && isError);
   }
 
   function loadProfil() {
@@ -3336,6 +3358,20 @@ function initAppDashboard(slug) {
       })
       .catch(() => {});
   }
+
+  // Renseigne les infos compte (email, abonnement) à partir de /api/auth/me
+  window.addEventListener("fidpass-auth-me", (e) => {
+    const { user, subscription, hasActiveSubscription } = e.detail || {};
+    if (profilEmailInput && user?.email) profilEmailInput.value = user.email;
+    if (profilSubscriptionStatus) {
+      let text = "Aucun abonnement actif";
+      if (hasActiveSubscription) {
+        text = "Abonnement actif";
+        if (subscription?.plan_id) text += ` — ${subscription.plan_id}`;
+      }
+      profilSubscriptionStatus.textContent = text;
+    }
+  });
 
   if (profilLogoInput) {
     profilLogoInput.addEventListener("change", async (e) => {
@@ -3439,6 +3475,37 @@ function initAppDashboard(slug) {
       profilSave.disabled = false;
       if (profilSaveText) profilSaveText.classList.remove("hidden");
       if (profilSaveSpinner) profilSaveSpinner.classList.add("hidden");
+    });
+  }
+
+  if (profilChangePasswordBtn) {
+    profilChangePasswordBtn.addEventListener("click", async () => {
+      const email = profilEmailInput?.value?.trim();
+      if (!email) {
+        showProfilAccountMessage("Email inconnu. Rechargez la page ou reconnectez-vous.", true);
+        return;
+      }
+      showProfilAccountMessage("");
+      profilChangePasswordBtn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          showProfilAccountMessage(
+            data.message || "Si un compte existe avec cet email, vous allez recevoir un lien pour choisir un nouveau mot de passe.",
+            false
+          );
+        } else {
+          showProfilAccountMessage(data.error || "Impossible d'envoyer l'e-mail. Réessayez plus tard.", true);
+        }
+      } catch (_) {
+        showProfilAccountMessage("Erreur réseau. Vérifiez votre connexion et réessayez.", true);
+      }
+      profilChangePasswordBtn.disabled = false;
     });
   }
 
