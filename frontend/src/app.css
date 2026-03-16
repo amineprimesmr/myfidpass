@@ -372,10 +372,10 @@ body.page-app .site-banner { display: none !important; }
   min-width: 0;
 }
 @media (min-width: 981px) {
-  /* Dashboard : gauche = indicateurs + explorer, droite = scanner */
+  /* Dashboard : contenu principal en pleine largeur (scanner latéral masqué) */
   #dashboard.app-section-visible .app-dashboard-shell.app-section-grid-wrap {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem 2rem;
     align-items: start;
   }
@@ -384,10 +384,7 @@ body.page-app .site-banner { display: none !important; }
     grid-column: 1;
   }
   #dashboard.app-section-visible .app-section-col-aside {
-    grid-column: 2;
-    grid-row: 1 / -1;
-    position: sticky;
-    top: 1.5rem;
+    display: none;
   }
   /* Membres : gauche = import + résumé, droite = tableau */
   #membres.app-section-visible .app-membres-grid {
