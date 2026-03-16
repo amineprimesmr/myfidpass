@@ -2538,7 +2538,7 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-dashboard-shell .app-section-title {
   color: #0b0b0f;
-  font-size: 2.15rem;
+  font-size: 2.4rem;
   font-weight: 700;
   letter-spacing: -0.03em;
   white-space: nowrap;
@@ -2722,7 +2722,7 @@ body.page-app .site-banner { display: none !important; }
   min-height: 48px;
   border-radius: 999px;
   background: #f3f4f6;
-  border: 1px solid rgba(148, 163, 184, 0.6);
+  border: none;
 }
 .app-dashboard-period-icon {
   width: 28px;
