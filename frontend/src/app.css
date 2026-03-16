@@ -2590,7 +2590,12 @@ body.page-app .site-banner { display: none !important; }
   color: #9ca3af;
   font-weight: 400;
 }
-.app-dashboard-controls { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: flex-start; }
+.app-dashboard-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-items: flex-end;
+}
 .app-dashboard-header-main,
 .app-dashboard-quick-actions {
   align-items: center;
@@ -2598,6 +2603,11 @@ body.page-app .site-banner { display: none !important; }
 .app-dashboard-quick-actions {
   display: flex;
   gap: 0.4rem;
+  align-items: center;
+}
+.app-dashboard-secondary-actions {
+  display: flex;
+  gap: 0.6rem;
   align-items: center;
 }
 .app-dashboard-icon-btn {
