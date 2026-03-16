@@ -146,11 +146,18 @@ router.post("/google", async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: "Email non fourni par Google" });
     }
-    const user = getUserByEmail(email);
+    let user = getUserByEmail(email);
     if (!user) {
-      return res.status(404).json({
-        error: "Aucun compte associé à cet email Google. Créez d'abord votre compte sur myfidpass.fr.",
-        code: "NO_ACCOUNT",
+      // Création automatique d'un compte lors de la première connexion Google
+      const displayNameRaw =
+        (payload?.name && String(payload.name)) ||
+        [payload?.given_name, payload?.family_name].filter(Boolean).join(" ");
+      const displayName = displayNameRaw ? displayNameRaw.trim() : null;
+      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
+      user = createUser({
+        email,
+        passwordHash: oauthPlaceholder,
+        name: displayName,
       });
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
