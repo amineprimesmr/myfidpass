@@ -2551,7 +2551,7 @@ body.page-app .site-banner { display: none !important; }
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem 1.25rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.8rem;
 }
 .app-dashboard-header .app-section-title { margin-bottom: 0.2rem; }
 .app-dashboard-header-main {
@@ -2610,6 +2610,7 @@ body.page-app .site-banner { display: none !important; }
   display: flex;
   gap: 0.6rem;
   align-items: center;
+  margin-top: 0.6rem;
 }
 .app-dashboard-icon-btn {
   display: inline-flex;
