@@ -1727,8 +1727,8 @@ body.page-app .site-banner { display: none !important; }
 
 /* Scanner (caméra) */
 .app-scanner-card {
-  /* Masqué par défaut dans le dashboard, accessible via les raccourcis Scanner / Recherche */
-  display: none;
+  /* Section "Scanner la carte" masquée dans le dashboard : accès direct via bouton Scanner en haut */
+  display: none !important;
   overflow: hidden;
 }
 

@@ -1254,7 +1254,13 @@ function initAppDashboard(slug) {
   // Raccourcis discrets en haut du dashboard : scroll vers scanner / recherche client
   if (dashboardScanCta) {
     dashboardScanCta.addEventListener("click", () => {
-      document.getElementById("app-dashboard-scanner-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Ouvre directement le scanner plein écran (comme le gros bouton "Scanner le QR code")
+      const launchBtn = document.getElementById("app-scanner-launch-btn");
+      if (launchBtn) {
+        launchBtn.click();
+      } else if (typeof startFullscreenScanner === "function") {
+        startFullscreenScanner();
+      }
     });
   }
   if (dashboardSearchCta) {
