@@ -2616,7 +2616,7 @@ body.page-app .site-banner { display: none !important; }
   align-items: center;
   gap: 0.35rem;
   padding: 0.5rem 0.85rem 0.5rem 0.9rem;
-  min-height: 44px;
+  min-height: 48px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.6);
   background: #f3f4f6;
@@ -2712,6 +2712,7 @@ body.page-app .site-banner { display: none !important; }
   align-items: center;
   gap: 0.6rem;
   padding: 0.5rem 0.85rem 0.5rem 0.9rem;
+  min-height: 48px;
   border-radius: 999px;
   background: #f3f4f6;
   border: 1px solid rgba(148, 163, 184, 0.6);
