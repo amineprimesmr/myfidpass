@@ -2560,7 +2560,7 @@ body.page-app .site-banner { display: none !important; }
   gap: 0.75rem;
 }
 .app-dashboard-searchbar-wrap {
-  max-width: 320px;
+  max-width: 420px;
 }
 .app-dashboard-searchbar {
   display: flex;
