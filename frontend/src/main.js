@@ -1183,6 +1183,7 @@ function initAppDashboard(slug) {
   const statInactive30 = document.getElementById("app-stat-inactive30");
   const statAvgPoints = document.getElementById("app-stat-avg-points");
   const statRevenue = document.getElementById("app-stat-revenue");
+  const statCardsActive = document.getElementById("app-stat-cards-active");
   const statRetention = document.getElementById("app-stat-retention");
   const statRecurrent = document.getElementById("app-stat-recurrent");
   const statActiveMembers = document.getElementById("app-stat-active-members");
@@ -4289,7 +4290,7 @@ function initAppDashboard(slug) {
     if (statInactive30) statInactive30.textContent = data.inactiveMembers30Days;
     if (statInactive30Main) statInactive30Main.textContent = data.inactiveMembers30Days;
     if (statAvgPoints) statAvgPoints.textContent = data.pointsAveragePerMember;
-    if (statRevenue) statRevenue.textContent = formatEuro(data.estimatedRevenueEur);
+    if (statCardsActive) statCardsActive.textContent = data.membersCount;
     if (statRetention) statRetention.textContent = `${data.retentionPct} %`;
     if (statRetentionEcho) statRetentionEcho.textContent = `${data.retentionPct} %`;
     if (statRecurrent) statRecurrent.textContent = data.recurrentMembersInPeriod;
