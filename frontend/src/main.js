@@ -4902,7 +4902,9 @@ function initAppDashboard(slug) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // Le titre de notif sert aussi de « nom affiché » pour aligner Wallet, Profil et notifications
           notification_title_override: titleEl?.value?.trim() || null,
+          organization_name: titleEl?.value?.trim() || null,
           notification_change_message: msgEl?.value?.trim() || null,
         }),
       });
