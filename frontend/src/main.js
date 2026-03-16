@@ -1287,32 +1287,38 @@ function initAppDashboard(slug) {
   }
 
   if (dashboardNotifPill && dashboardNotifCountEl) {
-    const NOTIF_KEY = `fidpass_new_members_seen_${slug}`;
-    let seenCount = 0;
-    try {
-      const raw = window.localStorage.getItem(NOTIF_KEY);
-      if (raw) seenCount = parseInt(raw, 10) || 0;
-    } catch (_) {}
-    // Quand on a les stats du dashboard, on mettra à jour le badge via renderOverviewAlerts / loadDashboardStats
+    const notifLabelEl = dashboardNotifPill.querySelector(".app-dashboard-notif-label");
     window.addEventListener("fidpass-dashboard-stats", (e) => {
       const stats = e.detail?.stats || {};
-      const totalNew = stats.newMembersLast7Days ?? 0;
-      const unread = Math.max(0, totalNew - seenCount);
-      if (unread > 0) {
-        dashboardNotifCountEl.textContent = String(unread);
+      const newMembers = stats.newMembersLast7Days ?? 0;
+      const inactive = stats.inactiveMembers30Days ?? 0;
+      if (newMembers > 0 || inactive > 0) {
+        if (notifLabelEl) {
+          const parts = [];
+          if (newMembers > 0) parts.push(`${newMembers} nouveau(x) cette semaine`);
+          if (inactive > 0) parts.push(`${inactive} inactif(s) 30 j`);
+          notifLabelEl.textContent = parts.join(" · ");
+        }
+        dashboardNotifCountEl.textContent = String(newMembers || inactive);
         dashboardNotifCountEl.classList.remove("hidden");
       } else {
+        if (notifLabelEl) notifLabelEl.textContent = "Notifications";
         dashboardNotifCountEl.classList.add("hidden");
       }
     });
     dashboardNotifPill.addEventListener("click", () => {
-      // Marque tout comme vu et ouvre la section Notifications
-      try {
-        const latest = dashboardNotifCountEl.textContent ? seenCount + parseInt(dashboardNotifCountEl.textContent, 10) : seenCount;
-        window.localStorage.setItem(NOTIF_KEY, String(latest));
-      } catch (_) {}
-      dashboardNotifCountEl.classList.add("hidden");
-      showAppSection("notifications");
+      // Ouvre la liste des membres, comme "Voir les membres / Voir les inactifs"
+      showAppSection("membres");
+      // Si le commerçant clique alors qu'il y a surtout des inactifs, on peut pré-filtrer
+      const statsEvent = window._lastDashboardStats;
+      const stats = statsEvent?.detail?.stats || {};
+      if ((stats.inactiveMembers30Days ?? 0) > 0) {
+        const filterEl = document.getElementById("app-members-filter");
+        if (filterEl) {
+          filterEl.value = "inactive30";
+          window.dispatchEvent(new CustomEvent("app-members-refresh"));
+        }
+      }
     });
   }
 
@@ -4364,25 +4370,12 @@ function initAppDashboard(slug) {
   }
 
   function renderOverviewAlerts(stats) {
+    // L'ancien bandeau d'alertes est remplacé par le bouton Notifications du header.
     const alertsEl = document.getElementById("app-overview-alerts");
-    if (!alertsEl) return;
-    const parts = [];
-    if ((stats.newMembersLast7Days ?? 0) > 0) parts.push(`${stats.newMembersLast7Days} nouveau(x) membre(s) cette semaine. <a href="#membres">Voir les membres</a>`);
-    if ((stats.inactiveMembers30Days ?? 0) > 0) parts.push(`${stats.inactiveMembers30Days} membre(s) inactif(s) depuis 30 j. <a href="#membres" data-filter="inactive30">Voir les inactifs</a>`);
-    if (parts.length === 0) { alertsEl.classList.add("hidden"); alertsEl.innerHTML = ""; return; }
-    alertsEl.classList.remove("hidden");
-    alertsEl.innerHTML = parts.join(" — ");
-    alertsEl.querySelectorAll("a[href='#membres']").forEach((a) => {
-      a.addEventListener("click", (e) => {
-        e.preventDefault();
-        showAppSection("membres");
-        if (a.dataset.filter === "inactive30") {
-          const filterEl = document.getElementById("app-members-filter");
-          if (filterEl) filterEl.value = "inactive30";
-          window.dispatchEvent(new CustomEvent("app-members-refresh"));
-        }
-      });
-    });
+    if (alertsEl) {
+      alertsEl.classList.add("hidden");
+      alertsEl.innerHTML = "";
+    }
   }
 
   const membersFilterEl = document.getElementById("app-members-filter");
