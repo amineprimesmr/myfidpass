@@ -2615,8 +2615,8 @@ body.page-app .site-banner { display: none !important; }
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.65rem 0.95rem 0.65rem 1rem;
-  min-height: 48px;
+  padding: 0.75rem 0.95rem 0.75rem 1rem;
+  min-height: 56px;
   border-radius: 999px;
   border: none;
   background: #020617;
