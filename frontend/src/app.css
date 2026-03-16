@@ -1730,6 +1730,8 @@ body.page-app .site-banner { display: none !important; }
 
 /* Scanner (caméra) */
 .app-scanner-card {
+  /* Masqué par défaut dans le dashboard, accessible via les raccourcis Scanner / Recherche */
+  display: none;
   overflow: hidden;
 }
 
