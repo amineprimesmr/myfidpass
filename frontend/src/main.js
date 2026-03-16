@@ -2314,6 +2314,11 @@ function initAppDashboard(slug) {
       if (personnaliserLabelHex) personnaliserLabelHex.value = label;
       if (personnaliserStrip) personnaliserStrip.value = bg.startsWith("#") ? bg : "#" + bg;
       if (personnaliserStripHex) personnaliserStripHex.value = bg.startsWith("#") ? bg : "#" + bg;
+      // Utiliser la couleur de fond de la carte pour l'icône de prévisualisation de notification
+      const notifIcon = document.querySelector(".app-notification-preview-banner-icon");
+      if (notifIcon) {
+        notifIcon.style.setProperty("--app-notif-icon-bg", bg.startsWith("#") ? bg : `#${bg}`);
+      }
       const stripDisplayMode = (data.strip_display_mode ?? data.stripDisplayMode ?? "logo").toLowerCase();
       if (stripDisplayMode === "text" && stripDisplayText) stripDisplayText.checked = true;
       else if (stripDisplayLogo) stripDisplayLogo.checked = true;

@@ -895,7 +895,8 @@ body.page-app .site-banner { display: none !important; }
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  /* Fond aligné avec la couleur principale de la carte (défaut : vert Myfidpass) */
+  background: var(--app-notif-icon-bg, #0a7c42);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -923,19 +924,8 @@ body.page-app .site-banner { display: none !important; }
   text-align: center;
 }
 .app-notification-preview-banner-icon-wrap .app-notification-preview-icon-badge {
-  position: absolute;
-  bottom: -4px;
-  right: -4px;
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #d4af37 0%, #b8962e 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 2px 6px rgba(0,0,0,0.25);
-  pointer-events: none;
+  /* Badge courrier supprimé dans l'aperçu */
+  display: none;
 }
 .app-notification-banner-logo-hint {
   position: absolute;
