@@ -4716,12 +4716,19 @@ function initAppDashboard(slug) {
   async function refreshNotificationBannerIcon() {
     const bannerIconImg = document.getElementById("app-notification-banner-icon-img");
     const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
+    const headerAvatar = document.getElementById("app-dashboard-profile-avatar");
+    const headerInitials = document.getElementById("app-dashboard-profile-initials");
     const profilLogo = document.getElementById("app-profil-logo-preview");
     if (profilLogo?.src && !profilLogo.classList.contains("hidden")) {
       if (bannerIconImg) {
         bannerIconImg.src = profilLogo.src;
         bannerIconImg.classList.remove("hidden");
       }
+      if (headerAvatar) {
+        headerAvatar.src = profilLogo.src;
+        headerAvatar.classList.remove("hidden");
+      }
+      if (headerInitials) headerInitials.classList.add("hidden");
       if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
       return;
     }
@@ -4735,6 +4742,12 @@ function initAppDashboard(slug) {
         bannerIconImg.src = url;
         bannerIconImg.classList.remove("hidden");
       }
+      if (headerAvatar) {
+        if (headerAvatar.src && headerAvatar.src.startsWith("blob:")) URL.revokeObjectURL(headerAvatar.src);
+        headerAvatar.src = url;
+        headerAvatar.classList.remove("hidden");
+      }
+      if (headerInitials) headerInitials.classList.add("hidden");
       if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
     } catch (_) {
       if (bannerIconImg) bannerIconImg.classList.add("hidden");
