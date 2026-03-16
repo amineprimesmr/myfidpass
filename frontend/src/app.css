@@ -2651,7 +2651,7 @@ body.page-app .site-banner { display: none !important; }
   padding: 0.45rem 0.8rem;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(248, 250, 252, 0.96);
+  background: #ffffff;
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 600;
