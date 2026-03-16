@@ -2690,36 +2690,56 @@ body.page-app .site-banner { display: none !important; }
   font-weight: 700;
   color: #111827;
 }
-.app-dashboard-period { display: flex; flex-direction: column; gap: 0.45rem; min-width: 220px; }
+.app-dashboard-period {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 230px;
+}
+.app-dashboard-period-pill-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+.app-dashboard-period-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+.app-dashboard-period-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
 .app-dashboard-period-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #5d7290;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: #9ca3af;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .app-dashboard-period-select {
-  padding: 0.52rem 2rem 0.52rem 0.75rem;
-  font-size: 0.88rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #1d3557;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.42);
-  border-radius: 10px;
+  color: #111827;
   cursor: pointer;
   font-family: inherit;
   appearance: none;
-  backdrop-filter: blur(6px);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.6rem center;
 }
-.app-dashboard-period-select:hover { border-color: rgba(56, 189, 248, 0.7); }
-.app-dashboard-period-select:focus {
-  outline: none;
-  border-color: rgba(56, 189, 248, 0.8);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.18);
-}
+.app-dashboard-period-select::-ms-expand { display: none; }
 .app-dashboard-period-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .app-dashboard-period-pill {
   border: 1px solid rgba(148, 163, 184, 0.26);
