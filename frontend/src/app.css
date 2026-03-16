@@ -3077,7 +3077,8 @@ body.page-app .site-banner { display: none !important; }
 #app-dashboard-content #personnaliser .app-personnaliser-live-preview-wrap {
   margin-bottom: 0;
   position: sticky;
-  top: 1.5rem;
+  /* remonte légèrement l'iPhone dans la colonne de droite */
+  top: 0.75rem;
   min-width: 0;
   max-width: 100%;
   display: flex;
@@ -3119,9 +3120,10 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-personnaliser-preview .builder-phone-screen {
   left: 11.8%;
-  top: 14%;
+  top: 13.2%;
   width: 76.4%;
-  height: 70.6%;
+  /* un peu plus haute pour éviter de couper le bas de la carte */
+  height: 72.5%;
   overflow: hidden;
   border-radius: 12.5% / 9%;
   background: #000;
