@@ -3325,10 +3325,10 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-personnaliser-preview .builder-phone-screen {
   left: 11.8%;
-  top: 12.2%;
+  top: 11.5%;
   width: 76.4%;
   /* hauteur augmentée pour afficher complètement la carte (bandeau bas compris) */
-  height: 77%;
+  height: 79%;
   overflow: hidden;
   border-radius: 12.5% / 9%;
   background: #000;
