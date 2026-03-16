@@ -2550,6 +2550,42 @@ body.page-app .site-banner { display: none !important; }
 }
 .app-dashboard-header .app-section-title { margin-bottom: 0.2rem; }
 .app-dashboard-controls { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: flex-start; }
+.app-dashboard-quick-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.app-dashboard-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+.app-dashboard-icon-btn:hover {
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+.app-dashboard-icon-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.app-dashboard-icon-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-dashboard-icon-btn-label {
+  white-space: nowrap;
+}
 .app-dashboard-period { display: flex; flex-direction: column; gap: 0.45rem; min-width: 220px; }
 .app-dashboard-period-label {
   font-size: 0.72rem;

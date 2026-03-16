@@ -1209,6 +1209,8 @@ function initAppDashboard(slug) {
   const membersSearchInput = document.getElementById("app-members-search");
   const membersTbody = document.getElementById("app-members-tbody");
   const transactionsTbody = document.getElementById("app-transactions-tbody");
+  const dashboardScanCta = document.getElementById("app-dashboard-scan-cta");
+  const dashboardSearchCta = document.getElementById("app-dashboard-search-cta");
 
   const shareLinkEl = document.getElementById("app-share-link");
   const shareQrEl = document.getElementById("app-share-qr");
@@ -1248,6 +1250,22 @@ function initAppDashboard(slug) {
     });
   }
   const shareDownloadQrBtn = document.getElementById("app-share-download-qr");
+
+  // Raccourcis discrets en haut du dashboard : scroll vers scanner / recherche client
+  if (dashboardScanCta) {
+    dashboardScanCta.addEventListener("click", () => {
+      document.getElementById("app-dashboard-scanner-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+  if (dashboardSearchCta) {
+    dashboardSearchCta.addEventListener("click", () => {
+      const input = document.getElementById("app-member-search");
+      if (input) {
+        input.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => input.focus(), 350);
+      }
+    });
+  }
   if (shareSlugSaveBtn) {
     shareSlugSaveBtn.addEventListener("click", async () => {
       const proposed = slugify(shareSlugInputEl?.value || "");
