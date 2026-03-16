@@ -1272,6 +1272,25 @@ function initAppDashboard(slug) {
       }
     });
   }
+
+  // Barre de recherche en haut du Dashboard : proxy vers la recherche de membres
+  const dashboardInlineSearch = document.getElementById("app-dashboard-inline-search");
+  if (dashboardInlineSearch) {
+    dashboardInlineSearch.addEventListener("focus", () => {
+      const membersSearch = document.getElementById("app-members-search") || document.getElementById("app-member-search");
+      if (membersSearch) {
+        membersSearch.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+    dashboardInlineSearch.addEventListener("input", () => {
+      const value = dashboardInlineSearch.value;
+      const membersSearch = document.getElementById("app-members-search") || document.getElementById("app-member-search");
+      if (membersSearch) {
+        membersSearch.value = value;
+        membersSearch.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+  }
   if (shareSlugSaveBtn) {
     shareSlugSaveBtn.addEventListener("click", async () => {
       const proposed = slugify(shareSlugInputEl?.value || "");

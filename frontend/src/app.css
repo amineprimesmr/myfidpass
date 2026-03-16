@@ -2548,6 +2548,43 @@ body.page-app .site-banner { display: none !important; }
   margin-bottom: 1rem;
 }
 .app-dashboard-header .app-section-title { margin-bottom: 0.2rem; }
+.app-dashboard-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.app-dashboard-searchbar-wrap {
+  max-width: 320px;
+}
+.app-dashboard-searchbar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+.app-dashboard-searchbar-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+.app-dashboard-searchbar-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+.app-dashboard-searchbar-input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
 .app-dashboard-controls { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: flex-start; }
 .app-dashboard-quick-actions {
   display: flex;
