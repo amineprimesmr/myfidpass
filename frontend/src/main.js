@@ -4714,37 +4714,157 @@ function initAppDashboard(slug) {
     } catch (_) {}
   }
 
+  const NOTIF_CATEGORY_COLORS = ["#0a7c42", "#2563eb", "#b45309", "#7c3aed", "#dc2626", "#0891b2"];
+  let notifCategoriesCache = [];
+
   async function loadAppNotificationCategories() {
     try {
       const res = await api("/dashboard/categories");
       if (!res.ok) return;
       const data = await res.json();
       const categories = data.categories || [];
-      const wrap = document.getElementById("app-notif-categories-wrap");
-      const listEl = document.getElementById("app-notif-categories-list");
+      notifCategoriesCache = categories;
+
       const targetAll = document.getElementById("app-notif-target-all");
-      if (!wrap || !listEl) return;
-      if (categories.length === 0) {
-        wrap.classList.add("hidden");
-        return;
+      const targetCategories = document.getElementById("app-notif-target-categories");
+      const targetCategoriesLabel = document.getElementById("app-notif-target-categories-label");
+      const picksWrap = document.getElementById("app-notif-categories-picks");
+      const picksList = document.getElementById("app-notif-categories-list");
+      const manageList = document.getElementById("app-notif-categories-manage-list");
+
+      if (targetCategoriesLabel) {
+        targetCategoriesLabel.classList.toggle("hidden", categories.length === 0);
+        targetCategoriesLabel.style.display = categories.length === 0 ? "none" : "";
       }
-      wrap.classList.remove("hidden");
-      listEl.innerHTML = categories
-        .map((c) => `<label class="app-checkbox-label"><input type="checkbox" class="app-notif-category-cb" data-id="${escapeHtml(c.id)}" /> ${escapeHtml(c.name)}</label>`)
-        .join("");
-      listEl.querySelectorAll(".app-notif-category-cb").forEach((cb) => {
-        cb.addEventListener("change", () => {
-          if (cb.checked && targetAll) targetAll.checked = false;
-        });
-      });
-      if (targetAll && !targetAll.dataset.notifCatListen) {
-        targetAll.dataset.notifCatListen = "1";
-        targetAll.addEventListener("change", () => {
-          if (targetAll.checked) listEl.querySelectorAll(".app-notif-category-cb").forEach((c) => { c.checked = false; });
+      if (targetCategories) targetCategories.disabled = categories.length === 0;
+
+      if (picksList) {
+        picksList.innerHTML = categories
+          .map((c) => {
+            const color = c.color_hex || c.colorHex || "#94a3b8";
+            return `<label class="app-notif-category-chip" data-id="${escapeHtml(c.id)}">
+              <input type="checkbox" class="app-notif-category-cb" data-id="${escapeHtml(c.id)}" />
+              <span class="app-notif-category-chip-dot"></span>
+              <span class="app-notif-category-chip-color" style="background:${color}"></span>
+              <span class="app-notif-category-chip-name">${escapeHtml(c.name)}</span>
+            </label>`;
+          })
+          .join("");
+      }
+      if (picksWrap) picksWrap.classList.toggle("hidden", !targetCategories?.checked);
+      if (targetAll?.checked) picksWrap?.classList.add("hidden");
+
+      if (manageList) {
+        manageList.innerHTML = categories
+          .map((c) => {
+            const color = c.color_hex || c.colorHex || "#94a3b8";
+            return `<div class="app-notif-category-manage-item" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}">
+              <span class="app-notif-category-chip-color" style="background:${color}"></span>
+              <input type="text" class="app-input app-notif-category-input" value="${escapeHtml(c.name)}" maxlength="64" data-id="${escapeHtml(c.id)}" aria-label="Nom de la catégorie" />
+              <div class="app-notif-category-manage-item-actions">
+                <button type="button" class="app-notif-category-save" data-id="${escapeHtml(c.id)}" aria-label="Enregistrer">OK</button>
+                <button type="button" class="app-notif-category-delete" data-id="${escapeHtml(c.id)}" aria-label="Supprimer">Supprimer</button>
+              </div>
+            </div>`;
+          })
+          .join("");
+        manageList.querySelectorAll(".app-notif-category-manage-item").forEach((row) => {
+          const id = row.dataset.id;
+          const input = row.querySelector(".app-notif-category-input");
+          const saveBtn = row.querySelector(".app-notif-category-save");
+          const delBtn = row.querySelector(".app-notif-category-delete");
+          const save = async () => {
+            const name = input?.value?.trim();
+            if (!name) return;
+            try {
+              const r = await api(`/dashboard/categories/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+              if (r.ok) {
+                row.dataset.name = name;
+                const chipName = document.querySelector(`.app-notif-category-chip[data-id="${id}"] .app-notif-category-chip-name`);
+                if (chipName) chipName.textContent = name;
+                notifCategoriesCache.find((c) => c.id === id).name = name;
+              }
+            } catch (_) {}
+          };
+          input?.addEventListener("blur", save);
+          input?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+          saveBtn?.addEventListener("click", save);
+          delBtn?.addEventListener("click", async () => {
+            if (!confirm("Supprimer cette catégorie ? Les membres ne seront plus associés à celle-ci.")) return;
+            try {
+              const r = await api(`/dashboard/categories/${id}`, { method: "DELETE" });
+              if (r.ok) {
+                row.style.animation = "none";
+                row.offsetHeight;
+                row.style.animation = "app-notif-category-item-out 0.25s ease forwards";
+                row.addEventListener("animationend", () => row.remove());
+                notifCategoriesCache = notifCategoriesCache.filter((c) => c.id !== id);
+                const chip = document.querySelector(`.app-notif-category-chip[data-id="${id}"]`);
+                if (chip) chip.remove();
+              }
+            } catch (_) {}
+          });
         });
       }
     } catch (_) {}
   }
+
+  document.getElementById("app-notif-target-all")?.addEventListener("change", () => {
+    const picks = document.getElementById("app-notif-categories-picks");
+    if (picks) picks.classList.add("hidden");
+  });
+  document.getElementById("app-notif-target-categories")?.addEventListener("change", () => {
+    const picks = document.getElementById("app-notif-categories-picks");
+    if (picks) picks.classList.remove("hidden");
+  });
+
+  const notifCategoryNewName = document.getElementById("app-notif-category-new-name");
+  const notifCategoryAddBtn = document.getElementById("app-notif-category-add-btn");
+  const notifCategoriesManageFeedback = document.getElementById("app-notif-categories-manage-feedback");
+  async function addNotifCategory() {
+    const name = notifCategoryNewName?.value?.trim();
+    if (!name) return;
+    if (notifCategoryAddBtn) notifCategoryAddBtn.disabled = true;
+    if (notifCategoriesManageFeedback) { notifCategoriesManageFeedback.classList.add("hidden"); notifCategoriesManageFeedback.textContent = ""; }
+    try {
+      const colorHex = NOTIF_CATEGORY_COLORS[notifCategoriesCache.length % NOTIF_CATEGORY_COLORS.length];
+      const res = await api("/dashboard/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, color_hex: colorHex }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.id) {
+        notifCategoryNewName.value = "";
+        notifCategoriesCache.push({ id: data.id, name: data.name || name, color_hex: colorHex });
+        await loadAppNotificationCategories();
+        if (notifCategoriesManageFeedback) {
+          notifCategoriesManageFeedback.textContent = "Catégorie ajoutée.";
+          notifCategoriesManageFeedback.classList.remove("hidden", "error");
+          notifCategoriesManageFeedback.classList.add("success");
+          setTimeout(() => { notifCategoriesManageFeedback.classList.add("hidden"); }, 2000);
+        }
+        document.getElementById("app-notif-target-categories-label")?.classList.remove("hidden");
+        document.getElementById("app-notif-target-categories-label").style.display = "";
+        document.getElementById("app-notif-target-categories").disabled = false;
+      } else {
+        if (notifCategoriesManageFeedback) {
+          notifCategoriesManageFeedback.textContent = data.error || "Erreur";
+          notifCategoriesManageFeedback.classList.remove("hidden", "success");
+          notifCategoriesManageFeedback.classList.add("error");
+        }
+      }
+    } catch (_) {
+      if (notifCategoriesManageFeedback) {
+        notifCategoriesManageFeedback.textContent = "Erreur réseau.";
+        notifCategoriesManageFeedback.classList.remove("hidden", "success");
+        notifCategoriesManageFeedback.classList.add("error");
+      }
+    }
+    if (notifCategoryAddBtn) notifCategoryAddBtn.disabled = false;
+  }
+  notifCategoryAddBtn?.addEventListener("click", addNotifCategory);
+  notifCategoryNewName?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addNotifCategory(); } });
 
   document.getElementById("app-notifications-remove-test-btn")?.addEventListener("click", async () => {
     const btn = document.getElementById("app-notifications-remove-test-btn");
@@ -4808,10 +4928,20 @@ function initAppDashboard(slug) {
     const messageEl = document.getElementById("app-notification-banner-message");
     const feedbackEl = document.getElementById("app-notif-feedback");
     const btn = document.getElementById("app-notif-send");
+    const targetCategories = document.getElementById("app-notif-target-categories");
     const message = messageEl?.value?.trim();
     if (!message) {
       if (feedbackEl) { feedbackEl.textContent = "Saisissez un message dans l'aperçu."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
       return;
+    }
+    let categoryIds = undefined;
+    if (targetCategories?.checked) {
+      const checked = document.querySelectorAll(".app-notif-category-cb:checked");
+      categoryIds = Array.from(checked).map((c) => c.dataset.id).filter(Boolean);
+      if (categoryIds.length === 0) {
+        if (feedbackEl) { feedbackEl.textContent = "Cochez au moins une catégorie pour envoyer."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+        return;
+      }
     }
     if (btn) btn.disabled = true;
     if (feedbackEl) feedbackEl.classList.add("hidden");
@@ -4819,7 +4949,7 @@ function initAppDashboard(slug) {
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
-        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message }),
+        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}) }),
       });
       const data = await res.json().catch(() => ({}));
       if (feedbackEl) {

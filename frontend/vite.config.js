@@ -14,7 +14,7 @@ export default defineConfig({
   },
   server: {
     port: 5174,
-    host: "127.0.0.1", // localhost uniquement (évite uv_interface_addresses); mettre true pour accès réseau
+    host: "127.0.0.1",
     proxy: {
       "/api": {
         target: apiProxyTarget,

@@ -23,8 +23,8 @@ const front = spawn(isWin ? "npm.cmd" : "npm", ["run", "dev", "--prefix", "front
 });
 
 console.log("\n  Backend  → http://localhost:3001");
-console.log("  Frontend → http://localhost:5173");
-console.log("  Carte fidélité → http://localhost:5173/fidelity/demo\n");
+console.log("  Frontend → http://localhost:5174");
+console.log("  Carte fidélité → http://localhost:5174/fidelity/demo\n");
 
 function killAll() {
   back.kill();

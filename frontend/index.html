@@ -809,56 +809,9 @@
 
           <section id="personnaliser" class="app-section">
             <h2 class="app-section-title">Ma carte</h2>
-            <div class="app-personnaliser-live-preview-wrap">
-              <div id="app-personnaliser-preview" class="app-personnaliser-preview builder-phone-mockup" role="img" aria-label="Aperçu de la carte fidélité">
-                <div class="builder-phone-frame">
-                  <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="this.style.display='none'" loading="lazy" />
-                  <div class="builder-phone-screen">
-                    <div class="builder-wallet-card app-wallet-preview-dynamic" id="app-personnaliser-preview-card">
-                      <div class="builder-wallet-card-header app-wallet-preview-header" id="app-wallet-preview-strip">
-                        <img id="app-wallet-preview-strip-img" class="app-wallet-preview-strip-img hidden" alt="" aria-hidden="true" />
-                        <span id="app-wallet-preview-strip-text" class="app-wallet-preview-strip-text hidden"></span>
-                        <div class="app-wallet-preview-logo-wrap" id="app-personnaliser-header-logo-wrap">
-                          <img id="app-wallet-preview-logo" class="app-wallet-preview-logo hidden" alt="" />
-                          <span id="app-wallet-preview-logo-fallback" class="app-wallet-preview-logo-fallback">Logo</span>
-                        </div>
-                        <span class="app-wallet-preview-org hidden" id="app-personnaliser-preview-org" aria-hidden="true">Votre commerce</span>
-                        <span id="app-wallet-preview-header-right" class="app-wallet-preview-header-right">+ d'infos ↗</span>
-                      </div>
-                      <div class="builder-wallet-card-body app-wallet-preview-body">
-                        <div class="builder-wallet-card-pts-wrap" id="app-preview-pts-wrap">
-                          <span class="builder-wallet-card-pts-value"><span class="wallet-preview-emoji hidden" id="app-preview-pts-emoji" aria-hidden="true">⭐</span><span id="app-wallet-preview-value">0</span></span>
-                          <span class="builder-wallet-card-label" id="app-wallet-preview-label">points</span>
-                        </div>
-                        <div class="app-wallet-preview-bandeau" id="app-preview-bandeau">
-                          <div class="builder-wallet-card-stamps-wrap hidden" id="app-preview-stamps-wrap">
-                            <div class="builder-wallet-card-stamps-grid" id="app-preview-stamps-grid" aria-hidden="true">
-                              <div class="builder-wallet-card-stamps-row"></div>
-                              <div class="builder-wallet-card-stamps-row"></div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="app-wallet-preview-bottom-row">
-                          <div class="builder-wallet-card-reward" id="app-preview-reward-wrap">
-                            <span class="builder-wallet-card-reward-label">Récompense</span>
-                            <span class="builder-wallet-card-reward-value" id="app-wallet-preview-reward">Paliers en magasin</span>
-                          </div>
-                          <div class="builder-wallet-card-restants hidden" id="app-preview-restants-wrap">
-                            <span class="builder-wallet-card-restants-label" id="app-wallet-preview-restants-label">Restants</span>
-                            <span class="builder-wallet-card-restants-value" id="app-wallet-preview-restants">= 10</span>
-                          </div>
-                          <div class="builder-wallet-card-member">
-                            <span class="builder-wallet-card-member-label" id="app-wallet-preview-member-label">Membre</span>
-                            <span class="builder-wallet-card-member-value">Amine</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="builder-wallet-card-qr"><img class="builder-wallet-card-qr-img" id="app-wallet-preview-qr" src="" alt="QR code — scannez pour ajouter la carte à Apple Wallet" width="64" height="64" /></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p class="app-section-desc">Personnalisez le design et les règles de votre carte fidélité. L'aperçu à droite se met à jour en direct.</p>
+            <div class="app-personnaliser-grid">
+            <div class="app-personnaliser-col-left">
             <div class="app-card app-personnaliser-card">
               <div class="app-personnaliser-accordion" id="app-personnaliser-accordion">
                 <section class="app-personnaliser-group" data-personnaliser-group>
@@ -1065,6 +1018,58 @@
               <button type="button" id="app-personnaliser-save" class="app-btn app-btn-primary">Enregistrer les modifications</button>
               </div>
             </div>
+            </div>
+            <div class="app-personnaliser-live-preview-wrap">
+              <div id="app-personnaliser-preview" class="app-personnaliser-preview builder-phone-mockup" role="img" aria-label="Aperçu de la carte fidélité">
+                <div class="builder-phone-frame">
+                  <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="this.style.display='none'" loading="lazy" />
+                  <div class="builder-phone-screen">
+                    <div class="builder-wallet-card app-wallet-preview-dynamic" id="app-personnaliser-preview-card">
+                      <div class="builder-wallet-card-header app-wallet-preview-header" id="app-wallet-preview-strip">
+                        <img id="app-wallet-preview-strip-img" class="app-wallet-preview-strip-img hidden" alt="" aria-hidden="true" />
+                        <span id="app-wallet-preview-strip-text" class="app-wallet-preview-strip-text hidden"></span>
+                        <div class="app-wallet-preview-logo-wrap" id="app-personnaliser-header-logo-wrap">
+                          <img id="app-wallet-preview-logo" class="app-wallet-preview-logo hidden" alt="" />
+                          <span class="app-wallet-preview-logo-fallback" id="app-wallet-preview-logo-fallback">Logo</span>
+                        </div>
+                        <span class="app-wallet-preview-org hidden" id="app-personnaliser-preview-org" aria-hidden="true">Votre commerce</span>
+                        <span id="app-wallet-preview-header-right" class="app-wallet-preview-header-right">+ d'infos ↗</span>
+                      </div>
+                      <div class="builder-wallet-card-body app-wallet-preview-body">
+                        <div class="builder-wallet-card-pts-wrap" id="app-preview-pts-wrap">
+                          <span class="builder-wallet-card-pts-value"><span class="wallet-preview-emoji hidden" id="app-preview-pts-emoji" aria-hidden="true">⭐</span><span id="app-wallet-preview-value">0</span></span>
+                          <span class="builder-wallet-card-label" id="app-wallet-preview-label">points</span>
+                        </div>
+                        <div class="app-wallet-preview-bandeau" id="app-preview-bandeau">
+                          <div class="builder-wallet-card-stamps-wrap hidden" id="app-preview-stamps-wrap">
+                            <div class="builder-wallet-card-stamps-grid" id="app-preview-stamps-grid" aria-hidden="true">
+                              <div class="builder-wallet-card-stamps-row"></div>
+                              <div class="builder-wallet-card-stamps-row"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="app-wallet-preview-bottom-row">
+                          <div class="builder-wallet-card-reward" id="app-preview-reward-wrap">
+                            <span class="builder-wallet-card-reward-label">Récompense</span>
+                            <span class="builder-wallet-card-reward-value" id="app-wallet-preview-reward">Paliers en magasin</span>
+                          </div>
+                          <div class="builder-wallet-card-restants hidden" id="app-preview-restants-wrap">
+                            <span class="builder-wallet-card-restants-label" id="app-wallet-preview-restants-label">Restants</span>
+                            <span class="builder-wallet-card-restants-value" id="app-wallet-preview-restants">= 10</span>
+                          </div>
+                          <div class="builder-wallet-card-member">
+                            <span class="builder-wallet-card-member-label" id="app-wallet-preview-member-label">Membre</span>
+                            <span class="builder-wallet-card-member-value">Amine</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="builder-wallet-card-qr"><img class="builder-wallet-card-qr-img" id="app-wallet-preview-qr" src="" alt="QR code — scannez pour ajouter la carte à Apple Wallet" width="64" height="64" /></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
           </section>
           <section id="integration" class="app-section">
             <h2 class="app-section-title">Intégration</h2>
@@ -1225,6 +1230,42 @@
                 <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
                 <p id="app-notif-feedback" class="app-message hidden"></p>
               </div>
+            </div>
+
+            <div class="app-notif-categories-block" role="region" aria-labelledby="app-notif-categories-heading">
+              <h3 id="app-notif-categories-heading" class="app-subsection-title">À qui envoyer ?</h3>
+              <div class="app-notif-target-row">
+                <label class="app-radio-label app-notif-target-option">
+                  <input type="radio" name="app-notif-target" value="all" id="app-notif-target-all" checked />
+                  <span class="app-notif-target-dot"></span>
+                  <span>Tous les membres</span>
+                </label>
+                <label class="app-radio-label app-notif-target-option app-notif-target-categories-wrap" id="app-notif-target-categories-label">
+                  <input type="radio" name="app-notif-target" value="categories" id="app-notif-target-categories" />
+                  <span class="app-notif-target-dot"></span>
+                  <span>Par catégorie</span>
+                </label>
+              </div>
+              <div id="app-notif-categories-picks" class="app-notif-categories-picks hidden" aria-hidden="true">
+                <p class="app-notif-categories-picks-hint">Cochez les catégories qui recevront la notification :</p>
+                <div id="app-notif-categories-list" class="app-notif-categories-list" role="group" aria-label="Catégories"></div>
+              </div>
+
+              <details class="app-notif-categories-manage" id="app-notif-categories-manage">
+                <summary class="app-notif-categories-manage-summary">
+                  <span>Gérer les catégories</span>
+                  <span class="app-notif-categories-manage-icon" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="app-notif-categories-manage-panel">
+                  <p class="app-hint">Créez des catégories (ex. VIP, Fidèles) et assignez-les aux membres dans la page Membres. Ensuite choisissez « Par catégorie » pour cibler vos envois.</p>
+                  <div id="app-notif-categories-manage-list" class="app-notif-categories-manage-list"></div>
+                  <div class="app-notif-category-add">
+                    <input type="text" id="app-notif-category-new-name" class="app-input app-notif-category-input" placeholder="Nom de la catégorie" maxlength="64" aria-label="Nom de la nouvelle catégorie" />
+                    <button type="button" id="app-notif-category-add-btn" class="app-btn app-btn-primary">Ajouter</button>
+                  </div>
+                  <p id="app-notif-categories-manage-feedback" class="app-message hidden"></p>
+                </div>
+              </details>
             </div>
           </section>
           <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
