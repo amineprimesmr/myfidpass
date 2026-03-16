@@ -1211,6 +1211,9 @@ function initAppDashboard(slug) {
   const transactionsTbody = document.getElementById("app-transactions-tbody");
   const dashboardScanCta = document.getElementById("app-dashboard-scan-cta");
   const dashboardSearchCta = document.getElementById("app-dashboard-search-cta");
+  const dashboardNotifPill = document.getElementById("app-dashboard-notif-pill");
+  const dashboardNotifCountEl = document.getElementById("app-dashboard-notif-count");
+  const dashboardProfileBtn = document.getElementById("app-dashboard-profile-btn");
 
   const shareLinkEl = document.getElementById("app-share-link");
   const shareQrEl = document.getElementById("app-share-qr");
@@ -1270,6 +1273,42 @@ function initAppDashboard(slug) {
         input.scrollIntoView({ behavior: "smooth", block: "center" });
         setTimeout(() => input.focus(), 350);
       }
+    });
+  }
+
+  if (dashboardNotifPill && dashboardNotifCountEl) {
+    const NOTIF_KEY = `fidpass_new_members_seen_${slug}`;
+    let seenCount = 0;
+    try {
+      const raw = window.localStorage.getItem(NOTIF_KEY);
+      if (raw) seenCount = parseInt(raw, 10) || 0;
+    } catch (_) {}
+    // Quand on a les stats du dashboard, on mettra à jour le badge via renderOverviewAlerts / loadDashboardStats
+    window.addEventListener("fidpass-dashboard-stats", (e) => {
+      const stats = e.detail?.stats || {};
+      const totalNew = stats.newMembersLast7Days ?? 0;
+      const unread = Math.max(0, totalNew - seenCount);
+      if (unread > 0) {
+        dashboardNotifCountEl.textContent = String(unread);
+        dashboardNotifCountEl.classList.remove("hidden");
+      } else {
+        dashboardNotifCountEl.classList.add("hidden");
+      }
+    });
+    dashboardNotifPill.addEventListener("click", () => {
+      // Marque tout comme vu et ouvre la section Notifications
+      try {
+        const latest = dashboardNotifCountEl.textContent ? seenCount + parseInt(dashboardNotifCountEl.textContent, 10) : seenCount;
+        window.localStorage.setItem(NOTIF_KEY, String(latest));
+      } catch (_) {}
+      dashboardNotifCountEl.classList.add("hidden");
+      showAppSection("notifications");
+    });
+  }
+
+  if (dashboardProfileBtn) {
+    dashboardProfileBtn.addEventListener("click", () => {
+      showAppSection("profil");
     });
   }
 
@@ -4170,6 +4209,9 @@ function initAppDashboard(slug) {
     if (actionInactiveCount) actionInactiveCount.textContent = `${data.inactiveMembers30Days} clients`;
     if (actionNewCount) actionNewCount.textContent = `${data.newMembersLast30Days} nouveaux`;
     if (actionRecurrentCount) actionRecurrentCount.textContent = `${data.recurrentMembersInPeriod} récurrents`;
+    // Broadcast des stats pour d'autres composants (ex: badge notifications)
+    window.dispatchEvent(new CustomEvent("fidpass-dashboard-stats", { detail: { stats: data } }));
+
     const mobileStatMembers = document.getElementById("app-mobile-stat-members");
     const mobileStatScans = document.getElementById("app-mobile-stat-scans");
     if (mobileStatMembers) mobileStatMembers.textContent = data.membersCount;
