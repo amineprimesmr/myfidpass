@@ -1295,10 +1295,15 @@ function initAppDashboard(slug) {
       const inactive = stats.inactiveMembers30Days ?? 0;
       if (newMembers > 0 || inactive > 0) {
         if (notifLabelEl) {
-          const parts = [];
-          if (newMembers > 0) parts.push(`${newMembers} nouveau(x) cette semaine`);
-          if (inactive > 0) parts.push(`${inactive} inactif(s) 30 j`);
-          notifLabelEl.textContent = parts.join(" · ");
+          let text = "";
+          if (newMembers > 0 && inactive > 0) {
+            text = `${newMembers} nouveaux · ${inactive} inactifs 30j`;
+          } else if (newMembers > 0) {
+            text = `${newMembers} nouveaux`;
+          } else if (inactive > 0) {
+            text = `${inactive} inactifs 30j`;
+          }
+          notifLabelEl.textContent = text;
         }
         dashboardNotifCountEl.textContent = String(newMembers || inactive);
         dashboardNotifCountEl.classList.remove("hidden");
