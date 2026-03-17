@@ -123,7 +123,6 @@ export function initLandingAnimations() {
   if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
     initLandingHeroAnim();
     import("./landing-gradient-carousel.js").then((m) => m.mountLandingGradientCarousel());
-    import("./landing-card-beam.js").then((m) => m.mountLandingCardBeam());
     initLandingSimulator();
     import("../helmet/index.jsx").then((m) => m.mountHelmet());
   }
