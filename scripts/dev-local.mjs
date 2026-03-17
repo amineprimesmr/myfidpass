@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawn } from "child_process";
+import { execSync, spawn } from "child_process";
 import { existsSync, mkdirSync, openSync, readFileSync, writeFileSync } from "fs";
 import net from "net";
 import { dirname, join } from "path";
@@ -60,6 +60,41 @@ function stopPid(pid) {
   }
 }
 
+function getListeningPids(port) {
+  try {
+    if (process.platform === "win32") {
+      const out = execSync(`netstat -ano -p tcp | findstr :${port}`, { stdio: ["ignore", "pipe", "ignore"] }).toString("utf8");
+      const pids = out
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.split(/\s+/).pop())
+        .map((v) => Number(v))
+        .filter((v) => Number.isInteger(v) && v > 0);
+      return Array.from(new Set(pids));
+    }
+    const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t`, { stdio: ["ignore", "pipe", "ignore"] }).toString("utf8");
+    const pids = out
+      .split(/\r?\n/)
+      .map((v) => Number(v.trim()))
+      .filter((v) => Number.isInteger(v) && v > 0);
+    return Array.from(new Set(pids));
+  } catch (_) {
+    return [];
+  }
+}
+
+function stopPids(pids) {
+  for (const pid of pids) {
+    if (!pid || pid === process.pid) continue;
+    try {
+      process.kill(pid, "SIGTERM");
+    } catch (_) {
+      // ignore
+    }
+  }
+}
+
 function checkPortOnHost(port, host) {
   return new Promise((resolve) => {
     const socket = net.createConnection({ host, port });
@@ -110,10 +145,22 @@ function openBrowser(url) {
 }
 
 async function up() {
-  const backendUp = await isPortOpen(3001);
-  const frontendUp = await isPortOpen(5174);
   let backendPid = readPid(backendPidFile);
   let frontendPid = readPid(frontendPidFile);
+  let backendUp = await isPortOpen(3001);
+  let frontendUp = await isPortOpen(5174);
+
+  // Nettoie les instances externes/fantômes: port occupé mais PID suivi absent/inactif.
+  if (backendUp && (!backendPid || !isPidAlive(backendPid))) {
+    stopPids(getListeningPids(3001));
+    await new Promise((r) => setTimeout(r, 500));
+    backendUp = await isPortOpen(3001);
+  }
+  if (frontendUp && (!frontendPid || !isPidAlive(frontendPid))) {
+    stopPids(getListeningPids(5174));
+    await new Promise((r) => setTimeout(r, 500));
+    frontendUp = await isPortOpen(5174);
+  }
 
   if (!backendUp) {
     backendPid = spawnDetached(nodeCmd, ["--watch", "backend/src/index.js"], backendLog);
@@ -159,6 +206,9 @@ async function status() {
 async function down() {
   stopPid(readPid(backendPidFile));
   stopPid(readPid(frontendPidFile));
+  // Nettoyage complémentaire si des process externes occupent encore les ports.
+  stopPids(getListeningPids(3001));
+  stopPids(getListeningPids(5174));
   await new Promise((r) => setTimeout(r, 600));
   const backendUp = await isPortOpen(3001);
   const frontendUp = await isPortOpen(5174);

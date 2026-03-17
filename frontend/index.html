@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="/src/app-mobile.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-shoe-finder.css" />
+    <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
@@ -1434,6 +1435,10 @@
           <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
             <h2 class="app-section-title">Emplacement</h2>
             <p class="app-section-desc">Réglez le périmètre sur la carte pour les alertes à l'approche (notifications à l'entrée dans la zone).</p>
+            <div class="app-carte-perimetre-top-actions">
+              <button type="button" id="app-perimetre-save" class="app-btn app-btn-secondary app-perimetre-save-btn">Enregistrer</button>
+              <p id="app-perimetre-save-feedback" class="app-perimetre-save-feedback hidden"></p>
+            </div>
             <div class="app-carte-perimetre-wrap app-carte-perimetre-wrap-v2">
               <div class="app-carte-perimetre-map-stage">
                 <div class="app-carte-perimetre-map-wrap">
@@ -1446,32 +1451,28 @@
                       <input type="range" id="app-perimetre-radius" class="app-perimetre-radius-slider" min="100" max="2000" step="50" value="500" aria-label="Rayon en mètres" />
                     </div>
                     <span id="app-perimetre-radius-value" class="app-perimetre-radius-value">500 m</span>
-                    <button type="button" id="app-perimetre-save" class="app-btn app-btn-primary app-perimetre-save-btn">Enregistrer</button>
-                    <p id="app-perimetre-save-feedback" class="app-perimetre-save-feedback hidden"></p>
                   </div>
                   <div class="app-carte-perimetre-overlay-bottom" aria-hidden="false">
-                    <div class="app-notification-preview-banner app-perimetre-permanent-banner app-perimetre-liquidglass" role="region" aria-label="Notification à l'entrée — personnalisable">
+                    <div class="app-notification-preview-banner app-perimetre-permanent-banner" role="region" aria-label="Notification à l'entrée — personnalisable">
                       <div class="app-notification-preview-banner-bubble">
-                        <div class="app-notification-preview-banner-icon-wrap app-perimetre-permanent-icon-wrap" aria-hidden="true">
-                          <div class="app-notification-preview-banner-icon app-perimetre-permanent-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                              <path d="M12 22s8-6 8-12a8 8 0 0 0-16 0c0 6 8 12 8 12z" />
-                              <circle cx="12" cy="10" r="3" />
-                            </svg>
+                        <div class="app-notification-preview-banner-icon-wrap app-drop-zone" aria-hidden="true">
+                          <div class="app-notification-preview-banner-icon">
+                            <img id="app-perimetre-banner-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
+                            <span id="app-perimetre-banner-icon-fallback" class="app-notification-preview-icon-fallback">Logo</span>
                           </div>
+                          <span class="app-notification-preview-icon-badge" aria-hidden="true">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                          </span>
+                          <span class="app-notification-banner-logo-hint">Changer</span>
                         </div>
                         <div class="app-notification-preview-banner-content">
                           <div class="app-notification-preview-banner-headline">
-                            <input type="text" id="app-perimetre-notif-title" class="app-perimetre-notif-input app-perimetre-notif-title" placeholder="Nom de votre commerce" maxlength="80" aria-label="Titre de la notification à l'entrée" />
+                            <input type="text" id="app-perimetre-notif-title" class="app-notification-preview-banner-title app-perimetre-notif-title" placeholder="Nom de votre commerce" maxlength="80" aria-label="Titre de la notification à l'entrée" />
                             <span class="app-notification-preview-time-label">à l’entrée</span>
                           </div>
-                          <input type="text" id="app-perimetre-notif-message" class="app-perimetre-notif-input app-perimetre-notif-message" placeholder="Ex. Bienvenue ! -10% aujourd'hui sur les desserts." maxlength="200" aria-label="Message affiché aux clients qui entrent dans le périmètre" />
+                          <input type="text" id="app-perimetre-notif-message" class="app-notification-preview-banner-message app-perimetre-notif-message" placeholder="Ex. Bienvenue ! -10% aujourd'hui sur les desserts." maxlength="200" aria-label="Message affiché aux clients qui entrent dans le périmètre" />
                           <p class="app-notification-preview-banner-hint">Ce message s’affiche sur le téléphone des clients quand ils entrent dans la zone.</p>
                         </div>
-                      </div>
-                      <div class="app-notification-banner-actions app-perimetre-notif-actions">
-                        <button type="button" id="app-perimetre-notif-save" class="app-btn app-btn-primary">Enregistrer le message</button>
-                        <p id="app-perimetre-notif-feedback" class="app-perimetre-notif-feedback hidden"></p>
                       </div>
                     </div>
                   </div>
@@ -1684,6 +1685,11 @@
             </span>
             <span class="landing-hero-trustpilot-text">Excellent · Trustpilot</span>
           </p>
+
+          <section id="landing-gradient-carousel" class="landing-gradient-carousel" aria-label="Exemples de cartes par secteur">
+            <canvas id="landing-gradient-carousel-bg" class="landing-gradient-carousel-bg" aria-hidden="true"></canvas>
+            <div id="landing-gradient-carousel-track" class="landing-gradient-carousel-track"></div>
+          </section>
 
         </section>
 
