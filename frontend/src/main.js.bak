@@ -39,6 +39,294 @@ async function geocodeAddress(address) {
   return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 }
 
+/**
+ * Route : / → landing, /dashboard → tableau de bord, /app → espace connecté, /login, /register, etc.
+ */
+function getRoute() {
+  const path = window.location.pathname.replace(/\/$/, "");
+  const gameMatch = path.match(/^\/fidelity\/([^/]+)\/jeu$/);
+  if (gameMatch) return { type: "fidelity", slug: gameMatch[1], gamePage: true };
+  const match = path.match(/^\/fidelity\/([^/]+)$/);
+  if (match) return { type: "fidelity", slug: match[1] };
+  if (path === "/dashboard") return { type: "dashboard" };
+  if (path === "/app") return { type: "app" };
+  if (path === "/login") return { type: "auth", tab: "login" };
+  if (path === "/register") return { type: "auth", tab: "login" };
+  if (path === "/creer-ma-carte") return { type: "templates" };
+  if (path === "/choisir-offre") return { type: "offers" };
+  if (path === "/checkout") return { type: "checkout" };
+  if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
+  if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
+  if (path === "/cgu") return { type: "legal", page: "cgu" };
+  if (path === "/cgv") return { type: "legal", page: "cgv" };
+  if (path === "/cookies") return { type: "legal", page: "cookies" };
+  if (path === "/integration") return { type: "integration" };
+  if (path === "") return { type: "landing" };
+  return { type: "404" };
+}
+
+/** Met à jour l’affichage des étapes dans le header parcours (1=accueil, 2=créateur, 3=checkout). Aucun verrou : on peut toujours naviguer. */
+function setBuilderHeaderStep(activeStep) {
+  const headerSteps = document.querySelectorAll(".builder-header-step");
+  headerSteps.forEach((el) => {
+    const n = parseInt(el.getAttribute("data-step"), 10);
+    el.classList.toggle("builder-header-step-active", n === activeStep);
+    el.classList.remove("builder-header-step-locked");
+    el.setAttribute("aria-current", n === activeStep ? "step" : null);
+    el.disabled = false;
+  });
+  const builderHeader = document.getElementById("builder-header");
+  if (builderHeader) {
+    builderHeader.classList.toggle("builder-header-hide-login", activeStep >= 2);
+  }
+}
+
+/** Clics sur le header parcours quand on est sur la page checkout (étape 3). */
+function attachBuilderHeaderNavForCheckout() {
+  document.querySelectorAll(".builder-header-step").forEach((btn) => {
+    const n = parseInt(btn.getAttribute("data-step"), 10);
+    btn.onclick = () => {
+      if (n === 3) return;
+      const url = n === 1 ? "/" : n === 2 ? "/creer-ma-carte" : "/creer-ma-carte";
+      history.pushState({}, "", url);
+      initRouting();
+    };
+  });
+}
+
+function triggerRouteViewEnter(el) {
+  if (!el) return;
+  el.classList.remove("route-view-enter");
+  el.offsetHeight;
+  el.classList.add("route-view-enter");
+  setTimeout(() => el.classList.remove("route-view-enter"), 480);
+}
+
+function initRouting() {
+  const route = getRoute();
+  document.body.classList.toggle("page-checkout", route.type === "checkout");
+  document.body.classList.toggle("page-app", route.type === "app");
+  document.body.classList.remove("page-builder");
+
+  const builderHeader = document.getElementById("builder-header");
+  const page404El = document.getElementById("page-404");
+  if (page404El) page404El.classList.add("hidden");
+
+  if (route.type === "fidelity") {
+    landingEl.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
+    fidelityAppEl.classList.remove("hidden");
+    return route.slug;
+  }
+
+  if (route.type === "app") {
+    if (!getAuthToken()) {
+      window.location.replace("/login?redirect=/app");
+      return null;
+    }
+    landingEl.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
+    fidelityAppEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.remove("hidden");
+    initAppPage();
+    return null;
+  }
+
+  if (route.type === "auth") {
+    landingEl.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
+    fidelityAppEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.remove("hidden");
+    initAuthPage(route.tab || "login");
+    return null;
+  }
+
+  if (route.type === "checkout") {
+    landingEl.classList.add("hidden");
+    fidelityAppEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) {
+      checkoutAppEl.classList.remove("hidden");
+      checkoutAppEl.classList.add("checkout-with-builder-header");
+      triggerRouteViewEnter(checkoutAppEl);
+    }
+    if (builderHeader) {
+      builderHeader.classList.remove("hidden");
+      builderHeader.setAttribute("aria-hidden", "false");
+      setBuilderHeaderStep(3);
+      attachBuilderHeaderNavForCheckout();
+    }
+    initCheckoutPage();
+    return null;
+  }
+
+  if (route.type === "dashboard") {
+    fidelityAppEl.classList.add("hidden");
+    landingEl.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
+    if (offersAppEl) offersAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
+    if (dashboardAppEl) {
+      dashboardAppEl.classList.remove("hidden");
+      initDashboardPage();
+    }
+    return null;
+  }
+
+  landingEl.classList.remove("hidden");
+  fidelityAppEl.classList.add("hidden");
+  if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+  if (authAppEl) authAppEl.classList.add("hidden");
+  if (appAppEl) appAppEl.classList.add("hidden");
+  if (offersAppEl) offersAppEl.classList.add("hidden");
+  if (checkoutAppEl) {
+    checkoutAppEl.classList.add("hidden");
+    checkoutAppEl.classList.remove("checkout-with-builder-header");
+  }
+  const landingMain = document.getElementById("landing-main");
+  const landingLegal = document.getElementById("landing-legal");
+  const landingTemplates = document.getElementById("landing-templates");
+  const legalContent = document.getElementById("landing-legal-content");
+
+  if (route.type === "templates") {
+    document.body.classList.add("page-builder");
+    if (landingEl) landingEl.classList.add("builder-visible");
+    const bannerMedia = document.getElementById("site-banner-media");
+    const siteBanner = document.querySelector(".site-banner");
+    const landingHeader = document.getElementById("landing-header");
+    if (bannerMedia) bannerMedia.classList.add("hidden");
+    if (siteBanner) siteBanner.classList.add("hidden");
+    if (landingHeader) landingHeader.classList.add("hidden");
+    if (builderHeader) {
+      builderHeader.classList.remove("hidden");
+      builderHeader.setAttribute("aria-hidden", "false");
+    }
+    if (landingMain) landingMain.classList.add("hidden");
+    if (landingLegal) landingLegal.classList.add("hidden");
+    if (landingTemplates) {
+      landingTemplates.classList.remove("hidden");
+      triggerRouteViewEnter(landingTemplates);
+      initBuilderPage();
+    }
+    updateAuthNavLinks();
+  } else if (route.type === "offers") {
+    if (!getAuthToken()) {
+      window.location.replace("/login?redirect=/choisir-offre");
+      return null;
+    }
+    landingEl.classList.add("hidden");
+    fidelityAppEl.classList.add("hidden");
+    if (dashboardAppEl) dashboardAppEl.classList.add("hidden");
+    if (authAppEl) authAppEl.classList.add("hidden");
+    if (appAppEl) appAppEl.classList.add("hidden");
+    if (checkoutAppEl) checkoutAppEl.classList.add("hidden");
+    const offersEl = document.getElementById("offers-app");
+    if (offersEl) {
+      offersEl.classList.remove("hidden");
+      initOffersPage();
+    }
+  } else if (route.type === "legal" && landingMain && landingLegal && legalContent) {
+    landingMain.classList.add("hidden");
+    if (landingTemplates) landingTemplates.classList.add("hidden");
+    const landingIntegration = document.getElementById("landing-integration");
+    if (landingIntegration) landingIntegration.classList.add("hidden");
+    landingLegal.classList.remove("hidden");
+    const legalHtml = getLegalPageHtml(route.page);
+    if (legalHtml) legalContent.innerHTML = legalHtml;
+  } else if (route.type === "integration") {
+    landingMain?.classList.add("hidden");
+    if (landingTemplates) landingTemplates.classList.add("hidden");
+    landingLegal?.classList.add("hidden");
+    const landingIntegration = document.getElementById("landing-integration");
+    if (landingIntegration) {
+      landingIntegration.classList.remove("hidden");
+      const slugHint = document.getElementById("integration-page-slug-hint");
+      const slug = new URLSearchParams(window.location.search).get("slug");
+      if (slugHint && slug) {
+        slugHint.textContent = "Commerce concerné : " + slug;
+        slugHint.classList.remove("hidden");
+      }
+    }
+  } else if (route.type === "404") {
+    landingEl?.classList.add("hidden");
+    if (builderHeader) builderHeader.classList.add("hidden");
+    fidelityAppEl?.classList.add("hidden");
+    dashboardAppEl?.classList.add("hidden");
+    authAppEl?.classList.add("hidden");
+    appAppEl?.classList.add("hidden");
+    offersAppEl?.classList.add("hidden");
+    checkoutAppEl?.classList.add("hidden");
+    landingMain?.classList.add("hidden");
+    landingLegal?.classList.add("hidden");
+    document.getElementById("landing-integration")?.classList.add("hidden");
+    landingTemplates?.classList.add("hidden");
+    const page404 = document.getElementById("page-404");
+    if (page404) {
+      page404.classList.remove("hidden");
+      page404.setAttribute("aria-hidden", "false");
+    }
+  } else {
+    const page404 = document.getElementById("page-404");
+    if (page404) page404.classList.add("hidden");
+    document.body.classList.remove("page-builder");
+    if (landingEl) landingEl.classList.remove("builder-visible");
+    const bannerMedia = document.getElementById("site-banner-media");
+    const siteBanner = document.querySelector(".site-banner");
+    const landingHeader = document.getElementById("landing-header");
+    const builderHeader = document.getElementById("builder-header");
+    if (bannerMedia) bannerMedia.classList.remove("hidden");
+    if (siteBanner) siteBanner.classList.remove("hidden");
+    if (landingHeader) landingHeader.classList.remove("hidden");
+    if (builderHeader) {
+      builderHeader.classList.add("hidden");
+      builderHeader.setAttribute("aria-hidden", "true");
+    }
+    if (landingMain) {
+      landingMain.classList.remove("hidden");
+      triggerRouteViewEnter(landingMain);
+    }
+    if (landingLegal) landingLegal.classList.add("hidden");
+    const landingIntegration = document.getElementById("landing-integration");
+    if (landingIntegration) landingIntegration.classList.add("hidden");
+    if (landingTemplates) landingTemplates.classList.add("hidden");
+    updateAuthNavLinks();
+  }
+  return null;
+}
+
+/** Met à jour les liens "Se connecter" / "Mon espace" selon la présence du token (landing + builder). */
+function updateAuthNavLinks() {
+  const isLoggedIn = !!getAuthToken();
+  const label = isLoggedIn ? "Mon espace" : "Se connecter";
+  const landingHref = isLoggedIn ? "/app" : "/login?redirect=/app";
+  document.querySelectorAll(".landing-nav-login-link, .landing-menu-drawer-login").forEach((a) => {
+    a.textContent = label;
+    a.href = landingHref;
+  });
+  const builderLogin = document.getElementById("builder-header-login");
+  if (builderLogin) {
+    builderLogin.textContent = label;
+    builderLogin.href = isLoggedIn ? "/app" : "/login?redirect=/creer-ma-carte";
+  }
+}
 
 function initAuthPage(initialTab) {
   const formLogin = document.getElementById("auth-form-login");
@@ -7366,7 +7654,7 @@ if (landingHeroForm) {
 }
 
 window.addEventListener("popstate", () => {
-  initRouting().catch((err) => console.error("Routing error:", err));
+  initRouting();
 });
 
 // Autocomplete Google Places (recherche d'entreprise) — optionnel si VITE_GOOGLE_PLACES_API_KEY est défini
@@ -7630,22 +7918,14 @@ function initLandingAnimations() {
   }
 }
 
-export {
-  initAuthPage,
-  initAppPage,
-  initDashboardPage,
-  initBuilderPage,
-  initCheckoutPage,
-  initOffersPage,
-  getLegalPageHtml,
-  initLandingAnimations,
-  showSlugError,
-};
-
 // Bootstrap : attendre que le DOM soit prêt, puis lancer le routage
-async function bootstrap() {
+function bootstrap() {
   try {
-    await initRouting();
+    const slug = initRouting();
+    if (slug) initFidelityApp(slug);
+    if (landingEl && !landingEl.classList.contains("hidden")) {
+      initLandingAnimations();
+    }
   } catch (err) {
     console.error("Erreur au chargement de l'app:", err);
     document.body.innerHTML = `

@@ -44,10 +44,10 @@
    **Fait.** Découpage en `backend/src/pass/` : `constants.js`, `auth.js` (getPassAuthenticationToken), `images-logo.js`, `images-strip.js`, `images-stamps.js`, `certs.js`, `build-buffers.js`, `generate.js` (generatePass). Chaque fichier < 400 lignes. `pass.js` réexporte depuis `./pass/auth.js` et `./pass/generate.js`.
 
 ### Frontend
-4. **main.js → routeur + pages**  
-   - Créer `frontend/src/router/index.js` (getRoute, initRouting, chargement des écrans en `import()` dynamique).
-   - Créer un module par écran : `pages/landing.js`, `pages/auth.js`, `pages/dashboard.js`, `pages/app-caisse.js`, `pages/checkout.js`, etc. Chaque page exporte `init(container)` ou équivalent.
-   - Réduire `main.js` à bootstrap + appel du routeur (< 400 lignes).
+4. **main.js → routeur + pages** ✅ (structure en place)  
+   - **Fait.** `frontend/src/router/index.js` : getRoute, initRouting (async), setBuilderHeaderStep, attachBuilderHeaderNavForCheckout, updateAuthNavLinks, triggerRouteViewEnter. Show/hide des vues puis `import(\`../pages/${route.type}.js\`)` et `page.init(route)`.
+   - **Fait.** Un module par écran dans `frontend/src/pages/` : `fidelity.js`, `auth.js`, `app.js`, `dashboard.js`, `checkout.js`, `templates.js`, `offers.js`, `legal.js`, `integration.js`, `not-found.js`, `landing.js`. Chaque page exporte `default { init(route) }` et délègue aux `init*` exportés par `main.js` (ou à `initClientFidelityPage` / `getLegalPageHtml`).
+   - **En attente.** Réduire `main.js` à < 400 lignes (déplacer la logique des init* dans les pages ou des modules métier).
 
 5. **index.html**  
    Réduire à un shell < 200 lignes : head, polices, CSS, divs racine vides (ex. `#landing`, `#auth-app`, …), un seul script d’entrée. Déplacer le markup des vues vers des templates (ex. `frontend/src/templates/*.html`) chargés par les modules de page, ou générés par des composants.
