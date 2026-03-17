@@ -71,14 +71,6 @@ function initLandingHeroAnim() {
   }
 }
 
-function initLandingCardsScroll() {
-  const root = document.getElementById("landing-apple-carousel-root");
-  if (root && !root._carouselMounted) {
-    root._carouselMounted = true;
-    import("../components/AppleCardsCarouselLanding.jsx").then((m) => m.mountAppleCardsCarousel());
-  }
-}
-
 function initLandingSimulator() {
   const btn = document.getElementById("landing-simulator-btn");
   const modal = document.getElementById("landing-simulator-modal");
@@ -130,7 +122,6 @@ export function initLandingAnimations() {
   initLandingReveal();
   if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
     initLandingHeroAnim();
-    initLandingCardsScroll();
     initLandingSimulator();
     import("../helmet/index.jsx").then((m) => m.mountHelmet());
   }
