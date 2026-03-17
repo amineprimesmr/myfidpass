@@ -1,4 +1,4 @@
-import { initDashboardPage } from "../main.js";
+import { initDashboardPage } from "../features/dashboard.js";
 
 export default {
   init() {
