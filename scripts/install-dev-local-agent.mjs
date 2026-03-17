@@ -15,7 +15,7 @@ const launchAgentsDir = join(process.env.HOME || "", "Library", "LaunchAgents");
 const plistPath = join(launchAgentsDir, `${label}.plist`);
 const node22 = "/opt/homebrew/opt/node@22/bin/node";
 const nodeBin = existsSync(node22) ? node22 : "node";
-const scriptPath = join(root, "scripts", "dev-local.mjs");
+const scriptPath = join(root, "scripts", "start-all.mjs");
 const logDir = join(root, ".dev-local");
 const outLog = join(logDir, "launchd.out.log");
 const errLog = join(logDir, "launchd.err.log");
@@ -33,16 +33,13 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
   <array>
     <string>${nodeBin}</string>
     <string>${scriptPath}</string>
-    <string>up</string>
-    <string>--no-open</string>
-    <string>--quiet</string>
   </array>
   <key>WorkingDirectory</key>
   <string>${root}</string>
   <key>RunAtLoad</key>
   <true/>
-  <key>StartInterval</key>
-  <integer>8</integer>
+  <key>KeepAlive</key>
+  <true/>
   <key>StandardOutPath</key>
   <string>${outLog}</string>
   <key>StandardErrorPath</key>
