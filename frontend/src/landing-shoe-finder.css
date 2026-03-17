@@ -1,0 +1,71 @@
+.landing-shoe-finder-section {
+  margin: 3.5rem auto 2rem;
+  padding: 1.5rem;
+  width: min(1120px, calc(100vw - 2rem));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+.landing-shoe-finder-head {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.landing-shoe-finder-kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.landing-shoe-finder-title {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  line-height: 1.15;
+  color: #0f172a;
+}
+
+.landing-shoe-finder-subtitle {
+  margin: 0.75rem auto 0;
+  max-width: 64ch;
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.landing-shoe-finder-frame-wrap {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #0b0f19;
+}
+
+.landing-shoe-finder-frame {
+  display: block;
+  width: 100%;
+  height: min(72vh, 780px);
+  border: 0;
+}
+
+.landing-shoe-finder-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .landing-shoe-finder-section {
+    margin-top: 2.5rem;
+    padding: 1rem;
+    border-radius: 14px;
+  }
+
+  .landing-shoe-finder-frame {
+    height: 58vh;
+  }
+}

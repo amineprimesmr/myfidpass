@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="/src/app.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
+    <link rel="stylesheet" href="/src/landing-shoe-finder.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
@@ -1839,6 +1840,26 @@
         <section class="landing-cta-final landing-reveal" data-reveal>
           <h2 class="landing-cta-final-title">Prêt à fidéliser ?</h2>
           <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
+        </section>
+
+        <section id="landing-shoe-finder" class="landing-shoe-finder-section landing-reveal" data-reveal>
+          <div class="landing-shoe-finder-head">
+            <p class="landing-shoe-finder-kicker">Nouveau module en intégration</p>
+            <h2 class="landing-shoe-finder-title">Aperçu “Shoe Finder” ajouté en bas de la landing</h2>
+            <p class="landing-shoe-finder-subtitle">Premiere integration du projet 3D. On affine ensuite le design et les interactions pour coller a Myfidpass.</p>
+          </div>
+          <div class="landing-shoe-finder-frame-wrap">
+            <iframe
+              class="landing-shoe-finder-frame"
+              src="https://shoe-finder-wine.vercel.app"
+              title="Aperçu Shoe Finder"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+          <div class="landing-shoe-finder-actions">
+            <a href="https://github.com/MatthewGreenberg/shoe-finder.git" target="_blank" rel="noopener noreferrer" class="landing-btn landing-btn-secondary">Voir le repo source</a>
+          </div>
         </section>
 
         <footer class="landing-footer landing-section-dark">
