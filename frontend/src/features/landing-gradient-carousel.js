@@ -13,7 +13,6 @@ const IMAGES = [
 ];
 
 const FRICTION = 0.9;
-const WHEEL_SENS = 0.65;
 const DRAG_SENS = 1.0;
 const MAX_ROTATION = 26;
 const MAX_DEPTH = 120;
@@ -226,13 +225,13 @@ export async function mountLandingGradientCarousel() {
     const y1 = h * 0.5 + Math.sin(t * 0.8) * Math.min(w, h) * 0.2;
     const x2 = w * 0.5 + Math.cos(-t * 0.9 + 1.2) * Math.min(w, h) * 0.3;
     const y2 = h * 0.5 + Math.sin(-t * 0.7 + 0.7) * Math.min(w, h) * 0.2;
-    const g1 = bgCtx.createRadialGradient(x1, y1, 0, x1, y1, Math.max(w, h) * 0.72);
-    g1.addColorStop(0, `rgba(${gradCurrent.r1},${gradCurrent.g1},${gradCurrent.b1},0.8)`);
+    const g1 = bgCtx.createRadialGradient(x1, y1, 0, x1, y1, Math.max(w, h) * 0.68);
+    g1.addColorStop(0, `rgba(${gradCurrent.r1},${gradCurrent.g1},${gradCurrent.b1},0.34)`);
     g1.addColorStop(1, "rgba(255,255,255,0)");
     bgCtx.fillStyle = g1;
     bgCtx.fillRect(0, 0, w, h);
-    const g2 = bgCtx.createRadialGradient(x2, y2, 0, x2, y2, Math.max(w, h) * 0.62);
-    g2.addColorStop(0, `rgba(${gradCurrent.r2},${gradCurrent.g2},${gradCurrent.b2},0.65)`);
+    const g2 = bgCtx.createRadialGradient(x2, y2, 0, x2, y2, Math.max(w, h) * 0.58);
+    g2.addColorStop(0, `rgba(${gradCurrent.r2},${gradCurrent.g2},${gradCurrent.b2},0.24)`);
     g2.addColorStop(1, "rgba(255,255,255,0)");
     bgCtx.fillStyle = g2;
     bgCtx.fillRect(0, 0, w, h);
@@ -281,11 +280,6 @@ export async function mountLandingGradientCarousel() {
   let lastX = 0;
   let lastT = 0;
   let lastDelta = 0;
-  root.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    velocity += delta * WHEEL_SENS * 20;
-  }, { passive: false });
   root.addEventListener("pointerdown", (e) => {
     dragging = true;
     lastX = e.clientX;
@@ -318,6 +312,10 @@ export async function mountLandingGradientCarousel() {
   });
 
   measure();
+  if (track > 0) {
+    const middleIndex = Math.floor(items.length / 2);
+    scrollX = mod(items[middleIndex].x, track);
+  }
   palette = items.map((it, i) => extractColors(it.el.querySelector("img"), i));
   updateTransforms();
   resizeBg();
