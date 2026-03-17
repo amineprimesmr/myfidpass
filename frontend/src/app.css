@@ -1,4 +1,4 @@
-/* Interface logiciel (/app) — refonte UX complète */
+/* Interface logiciel (/app) — refonte UX complète. Dérogation REFONTE-REGLES : > 500 lignes, à découper par blocs logiques (@media, sections). */
 body.page-app .site-banner { display: none !important; }
 
 #app-app {

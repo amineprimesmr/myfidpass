@@ -63,7 +63,7 @@
    Vérifier `manualChunks` (Vite) pour limiter les chunks à ~300 Ko (hors vendor). Build < 2 min.
 
 9. **Lint**  
-   Corriger les erreurs ESLint existantes (no-empty, no-unused-vars dans db.js, etc.) au fil du découpage.
+   Corriger les erreurs ESLint existantes (no-empty, no-unused-vars, no-undef setImmediate, etc.) au fil du découpage. Lint exécuté en CI ; warnings/errors à traiter progressivement.
 
 10. **Checklist**  
     Valider la checklist en fin de [REFONTE-REGLES.md](./REFONTE-REGLES.md) avant de considérer la refonte terminée.
