@@ -5,10 +5,10 @@
 
 const IMAGES = [
   "/assets/caroussel/miecaline.png",
-  "/assets/caroussel/kazdal.png",
-  "/assets/caroussel/miecaline.png",
-  "/assets/caroussel/kazdal.png",
-  "/assets/caroussel/miecaline.png",
+  "/assets/caroussel/nike.png",
+  "/assets/caroussel/tastycrousty.png",
+  "/assets/caroussel/sephora.png",
+  "/assets/caroussel/gladalle.png",
   "/assets/caroussel/kazdal.png",
 ];
 
