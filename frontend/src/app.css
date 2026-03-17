@@ -4269,6 +4269,80 @@ body.page-app .site-banner { display: none !important; }
   width: 100%;
   max-width: 980px;
 }
+/* Liquid glass : bannière sur la carte (flou carte, transparence, profondeur) */
+.app-perimetre-liquidglass .app-notification-preview-banner-bubble {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.72) 0%, rgba(248, 250, 252, 0.58) 45%, rgba(241, 245, 249, 0.52) 100%);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.04) inset,
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 16px 48px rgba(0, 0, 0, 0.06);
+}
+.app-perimetre-liquidglass .app-notification-preview-banner-bubble:hover {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.78) 0%, rgba(248, 250, 252, 0.64) 45%, rgba(241, 245, 249, 0.58) 100%);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.95) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.05) inset,
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.08),
+    0 24px 56px rgba(0, 0, 0, 0.06);
+}
+.app-perimetre-notif-input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  font-size: inherit;
+  font-family: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--app-text, #1e293b);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.app-perimetre-notif-input::placeholder {
+  color: var(--app-text-muted, #64748b);
+}
+.app-perimetre-notif-input:hover {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+.app-perimetre-notif-input:focus {
+  outline: none;
+  border-color: var(--app-accent, #0a7c42);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 3px rgba(10, 124, 66, 0.2);
+}
+.app-perimetre-permanent-banner .app-notification-preview-time-label {
+  flex-shrink: 0;
+}
+.app-perimetre-notif-title {
+  font-weight: 600;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+.app-perimetre-notif-message {
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}
+.app-perimetre-notif-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.app-perimetre-notif-feedback {
+  width: 100%;
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.app-perimetre-notif-feedback.success { color: var(--app-accent, #0a7c42); }
+.app-perimetre-notif-feedback.error { color: #b91c1c; }
+.app-perimetre-notif-feedback.hidden { display: none; }
 /* Barre rayon minimaliste sous la notification */
 .app-carte-perimetre-radius-bar {
   display: flex;
@@ -4321,11 +4395,8 @@ body.page-app .site-banner { display: none !important; }
   padding: 1rem 1.1rem;
   min-height: 0;
 }
-.app-perimetre-permanent-banner .app-notification-preview-banner-title {
-  font-size: 1rem;
-}
-.app-perimetre-permanent-banner .app-notification-preview-banner-message {
-  font-size: 0.95rem;
+.app-perimetre-permanent-banner .app-notification-preview-banner-content {
+  gap: 0.5rem;
 }
 .app-perimetre-permanent-banner .app-notification-banner-actions {
   margin-top: 0.65rem;
