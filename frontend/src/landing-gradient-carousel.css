@@ -41,6 +41,7 @@
   aspect-ratio: 4 / 5;
   border-radius: 14px;
   overflow: hidden;
+  background: rgba(255, 255, 255, 0.72);
   backface-visibility: hidden;
   transform-origin: 90% center;
   will-change: transform, filter;
@@ -50,7 +51,7 @@
 .landing-gradient-card img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   pointer-events: none;
 }

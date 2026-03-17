@@ -1186,7 +1186,7 @@
             <div class="app-personnaliser-live-preview-wrap">
               <div id="app-personnaliser-preview" class="app-personnaliser-preview builder-phone-mockup" role="img" aria-label="Aperçu de la carte fidélité">
                 <div class="builder-phone-frame">
-                  <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="this.style.display='none'" loading="lazy" />
+                  <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='/assets/mockupiphone.png';return;} this.style.display='none'" loading="lazy" />
                   <div class="builder-phone-screen">
                     <div class="builder-wallet-card app-wallet-preview-dynamic" id="app-personnaliser-preview-card">
                       <div class="builder-wallet-card-header app-wallet-preview-header" id="app-wallet-preview-strip">
@@ -1872,7 +1872,7 @@ X-Dashboard-Token: TOKEN
               <div class="builder-step-1-left">
                 <div class="builder-phone-mockup" id="builder-phone-mockup">
                   <div class="builder-phone-frame">
-                    <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="this.style.display='none'" loading="lazy">
+                    <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='/assets/mockupiphone.png';return;} this.style.display='none'" loading="lazy">
                     <div class="builder-phone-screen">
                       <div class="builder-wallet-slider" id="builder-wallet-slider">
                         <div class="builder-wallet-card builder-wallet-card-fastfood-points" data-template="fastfood-points">
