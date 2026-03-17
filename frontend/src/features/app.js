@@ -1091,6 +1091,8 @@ function initAppDashboard(slug) {
           if (section?.classList.contains("app-section-visible")) initMap(lat, lng);
           if (defaultSuggestionEl) defaultSuggestionEl.classList.add("hidden");
           defaultSuggestionData = null;
+          savedPerimetreState = getPerimetreDraftState();
+          refreshPerimetreSaveButtonState();
           return;
         }
         if (organizationName && organizationName.length >= 2) {
@@ -1223,10 +1225,6 @@ function initAppDashboard(slug) {
     perimetreNotifMessageEl?.addEventListener("input", refreshPerimetreSaveButtonState);
 
     saveBtn.addEventListener("click", async () => {
-      if (currentLat == null || currentLng == null) {
-        showSaveFeedback("Choisissez d’abord un emplacement (adresse ou Ma position).", true);
-        return;
-      }
       saveBtn.disabled = true;
       if (saveFeedback) saveFeedback.classList.add("hidden");
       try {
@@ -4519,49 +4517,6 @@ function initAppDashboard(slug) {
           feedbackEl.classList.add("error");
         }
       }
-    } catch (_) {
-      if (feedbackEl) {
-        feedbackEl.classList.remove("hidden");
-        feedbackEl.textContent = "Erreur réseau.";
-        feedbackEl.classList.add("error");
-      }
-    }
-    if (btn) btn.disabled = false;
-  });
-
-  document.getElementById("app-perimetre-notif-save")?.addEventListener("click", async () => {
-    const titleEl = document.getElementById("app-perimetre-notif-title");
-    const msgEl = document.getElementById("app-perimetre-notif-message");
-    const feedbackEl = document.getElementById("app-perimetre-notif-feedback");
-    const btn = document.getElementById("app-perimetre-notif-save");
-    if (btn) btn.disabled = true;
-    if (feedbackEl) feedbackEl.classList.add("hidden");
-    try {
-      const res = await api("/dashboard/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          notification_title_override: titleEl?.value?.trim() || null,
-          organization_name: titleEl?.value?.trim() || null,
-          notification_change_message: msgEl?.value?.trim() || null,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (feedbackEl) {
-        feedbackEl.classList.remove("hidden");
-        if (res.ok) {
-          feedbackEl.textContent = "Message enregistré. Il sera utilisé pour les notifications à l'entrée dans le périmètre.";
-          feedbackEl.classList.remove("error");
-          feedbackEl.classList.add("success");
-        } else {
-          feedbackEl.textContent = data.error || "Erreur lors de l'enregistrement.";
-          feedbackEl.classList.add("error");
-        }
-      }
-      const bannerTitle = document.getElementById("app-notification-banner-title");
-      const bannerMessage = document.getElementById("app-notification-banner-message");
-      if (bannerTitle && titleEl) bannerTitle.value = titleEl.value;
-      if (bannerMessage && msgEl) bannerMessage.value = msgEl.value;
     } catch (_) {
       if (feedbackEl) {
         feedbackEl.classList.remove("hidden");
