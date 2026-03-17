@@ -4,6 +4,7 @@
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
 import { API_BASE } from "../config.js";
 import { setBuilderHeaderStep, initRouting, navigateToLanding } from "../router/index.js";
+import { slugify } from "../utils/slugify.js";
 
 async function geocodeAddress(address) {
   const q = String(address).trim();
@@ -19,17 +20,6 @@ async function geocodeAddress(address) {
   const lat = parseFloat(first.lat);
   const lng = parseFloat(first.lon);
   return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
-}
-
-
-function slugify(text) {
-  return String(text)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .slice(0, 50) || "ma-carte";
 }
 
 const BUILD_CATEGORY_LABELS = {

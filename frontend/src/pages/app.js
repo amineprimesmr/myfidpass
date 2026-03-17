@@ -1,4 +1,4 @@
-import { initAppPage } from "../main.js";
+import { initAppPage } from "../features/app.js";
 
 export default {
   init() {
