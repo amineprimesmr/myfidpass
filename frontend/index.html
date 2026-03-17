@@ -1438,6 +1438,15 @@
                   <div id="app-perimetre-map" class="app-perimetre-map" aria-label="Carte de l’emplacement"></div>
                   <p id="app-perimetre-map-hint" class="app-perimetre-map-hint">L’emplacement est défini dans la page Profil. La carte se centre automatiquement sur l’adresse de votre établissement.</p>
 
+                  <div class="app-carte-perimetre-radius-vertical" aria-label="Réglage du rayon du périmètre">
+                    <span class="app-carte-perimetre-radius-label">Rayon</span>
+                    <div class="app-perimetre-radius-slider-wrap">
+                      <input type="range" id="app-perimetre-radius" class="app-perimetre-radius-slider" min="100" max="2000" step="50" value="500" aria-label="Rayon en mètres" />
+                    </div>
+                    <span id="app-perimetre-radius-value" class="app-perimetre-radius-value">500 m</span>
+                    <button type="button" id="app-perimetre-save" class="app-btn app-btn-primary app-perimetre-save-btn">Enregistrer</button>
+                    <p id="app-perimetre-save-feedback" class="app-perimetre-save-feedback hidden"></p>
+                  </div>
                   <div class="app-carte-perimetre-overlay-bottom" aria-hidden="false">
                     <div class="app-notification-preview-banner app-perimetre-permanent-banner app-perimetre-liquidglass" role="region" aria-label="Notification à l'entrée — personnalisable">
                       <div class="app-notification-preview-banner-bubble">
@@ -1460,19 +1469,10 @@
                       </div>
                       <div class="app-notification-banner-actions app-perimetre-notif-actions">
                         <button type="button" id="app-perimetre-notif-save" class="app-btn app-btn-primary">Enregistrer le message</button>
-                        <a href="#notifications" class="app-btn app-btn-secondary app-perimetre-overlay-cta">Voir Notifications</a>
                         <p id="app-perimetre-notif-feedback" class="app-perimetre-notif-feedback hidden"></p>
                       </div>
                     </div>
                   </div>
-                    <div class="app-carte-perimetre-radius-bar">
-                      <label class="app-carte-perimetre-radius-label" for="app-perimetre-radius">Rayon</label>
-                      <input type="range" id="app-perimetre-radius" class="app-perimetre-radius-slider" min="100" max="2000" step="50" value="500" aria-label="Rayon en mètres" />
-                      <span id="app-perimetre-radius-value" class="app-perimetre-radius-value">500 m</span>
-                      <button type="button" id="app-perimetre-save" class="app-btn app-btn-primary app-perimetre-save-btn">Enregistrer</button>
-                      <p id="app-perimetre-save-feedback" class="app-perimetre-save-feedback hidden"></p>
-                    </div>
-                  
                 </div>
               </div>
 

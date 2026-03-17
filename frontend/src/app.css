@@ -4176,8 +4176,9 @@ body.page-app .site-banner { display: none !important; }
 .app-perimetre-map-wrap .mapboxgl-ctrl-group button:hover {
   background: var(--app-accent-light) !important;
 }
-.app-perimetre-map-wrap .mapboxgl-ctrl-attrib {
-  font-size: 10px;
+.app-perimetre-map-wrap .mapboxgl-ctrl-attrib,
+.app-perimetre-map-wrap .mapboxgl-ctrl-logo {
+  display: none !important;
 }
 .app-perimetre-map-wrap .mapboxgl-canvas-container {
   border-radius: var(--app-radius-md);
@@ -4343,50 +4344,70 @@ body.page-app .site-banner { display: none !important; }
 .app-perimetre-notif-feedback.success { color: var(--app-accent, #0a7c42); }
 .app-perimetre-notif-feedback.error { color: #b91c1c; }
 .app-perimetre-notif-feedback.hidden { display: none; }
-/* Barre rayon minimaliste sous la notification */
-.app-carte-perimetre-radius-bar {
+/* Rayon en barre verticale en haut à gauche */
+.app-carte-perimetre-radius-vertical {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: 10px 14px;
-  width: 100%;
-  max-width: 980px;
-  padding: 10px 14px 12px;
+  gap: 8px;
+  padding: 12px 10px 14px;
   background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.88) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  pointer-events: auto;
 }
-.app-carte-perimetre-radius-label {
-  font-size: 0.875rem;
-  font-weight: 600;
+.app-carte-perimetre-radius-vertical .app-carte-perimetre-radius-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--app-text, #1e293b);
   margin: 0;
-  flex-shrink: 0;
 }
-.app-carte-perimetre-radius-bar .app-perimetre-radius-slider {
-  flex: 1;
-  min-width: 100px;
-  max-width: 200px;
+.app-perimetre-radius-slider-wrap {
+  width: 28px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
-.app-carte-perimetre-radius-bar .app-perimetre-radius-value {
+.app-carte-perimetre-radius-vertical .app-perimetre-radius-slider {
+  width: 120px;
+  height: 28px;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -60px;
+  margin-top: -14px;
+  transform: rotate(-90deg);
+  transform-origin: center center;
+  cursor: pointer;
+  flex: none;
+}
+.app-carte-perimetre-radius-vertical .app-perimetre-radius-value {
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--app-accent, #0a7c42);
-  min-width: 3.5rem;
 }
-.app-carte-perimetre-radius-bar .app-perimetre-save-btn {
-  flex-shrink: 0;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+.app-carte-perimetre-radius-vertical .app-perimetre-save-btn {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
 }
 .app-perimetre-save-feedback {
   width: 100%;
-  margin: 4px 0 0;
-  font-size: 0.8rem;
+  margin: 2px 0 0;
+  font-size: 0.7rem;
   font-weight: 500;
+  text-align: center;
 }
 .app-perimetre-save-feedback.success { color: var(--app-accent, #0a7c42); }
 .app-perimetre-save-feedback.error { color: #b91c1c; }
