@@ -1,32 +1,57 @@
-/* ============================================
-   SaaS mobile — design aligné sur l'app MyFidpass
-   (Tableau de bord, Scanner, Ma Carte, Profil)
-   ============================================ */
+/* ============================================================
+   SaaS mobile — MyFidpass Merchant App v2
+   Design: #2563EB primary | #F8FAFC background
+   Premium iOS-inspired UI
+   ============================================================ */
 
-/* Variables design app */
+/* ── Design variables ── */
 #app-app.app-mobile {
   --app-primary: #2563EB;
   --app-primary-dark: #1D4ED8;
-  --app-bg: #F8FAFC;
+  --app-primary-light: #3B82F6;
+  --app-primary-xlight: #EFF6FF;
+  --app-bg: #F0F4F8;
+  --app-bg-alt: #E8EEF5;
   --app-surface: #ffffff;
+  --app-surface-2: #F8FAFC;
   --app-text: #0F172A;
+  --app-text-secondary: #334155;
   --app-text-muted: #64748B;
   --app-border: #E2E8F0;
+  --app-border-subtle: #EEF2F7;
+  --app-border-focus: #93C5FD;
   --app-accent: #2563EB;
   --app-accent-hover: #1D4ED8;
-  --app-accent-light: rgba(37, 99, 235, 0.12);
+  --app-accent-light: rgba(37, 99, 235, 0.09);
+  --app-accent-ring: rgba(37, 99, 235, 0.18);
+  --app-success: #10B981;
+  --app-success-light: rgba(16, 185, 129, 0.09);
+  --app-warning: #F59E0B;
+  --app-warning-light: rgba(245, 158, 11, 0.1);
+  --app-error: #EF4444;
+  --app-error-light: rgba(239, 68, 68, 0.08);
+  --app-purple: #8B5CF6;
+  --app-purple-light: rgba(139, 92, 246, 0.09);
   --app-radius: 14px;
   --app-radius-lg: 18px;
-  --app-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --app-shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --app-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --app-radius-xl: 24px;
+  --app-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --app-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.05);
+  --app-shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.1), 0 4px 12px rgba(15, 23, 42, 0.07);
+  --app-shadow-xl: 0 16px 48px rgba(15, 23, 42, 0.12), 0 8px 20px rgba(15, 23, 42, 0.08);
+  --app-shadow-blue: 0 4px 16px rgba(37, 99, 235, 0.28), 0 2px 8px rgba(37, 99, 235, 0.18);
+  --app-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --app-transition-bounce: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Outfit", system-ui, sans-serif;
   background: var(--app-bg);
   color: var(--app-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Breakpoint mobile */
+/* ── Mobile breakpoint ── */
 @media (max-width: 768px) {
+
   #app-app.app-mobile .app-sidebar {
     display: none !important;
   }
@@ -34,9 +59,10 @@
   #app-app.app-mobile .app-main {
     margin-left: 0;
     padding: 0;
-    padding-top: 56px; /* header */
-    padding-bottom: 82px; /* tab bar */
+    padding-top: 60px;
+    padding-bottom: 92px;
     min-height: 100vh;
+    background: var(--app-bg);
   }
 
   #app-app.app-mobile .app-content {
@@ -44,35 +70,37 @@
     padding: 0 16px;
   }
 
-  /* Header mobile — style app */
+  /* ── Mobile header ── */
   .app-mobile-header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 100;
-    height: 56px;
+    height: 60px;
     padding: 0 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--app-surface);
-    border-bottom: 1px solid var(--app-border);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    transition: opacity var(--app-transition);
+    background: rgba(255, 255, 255, 0.88);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05), 0 2px 8px rgba(15, 23, 42, 0.04);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    transition: box-shadow var(--app-transition);
   }
 
   .app-mobile-header-title {
-    font-size: 1.35rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 800;
     color: var(--app-text);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     margin: 0;
   }
 
   .app-mobile-header-btn {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: none;
     background: var(--app-accent-light);
@@ -81,20 +109,26 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.2s ease, background var(--app-transition);
-  }
-  .app-mobile-header-btn:hover {
-    background: rgba(37, 99, 235, 0.2);
-  }
-  .app-mobile-header-btn:active {
-    transform: scale(0.95);
-  }
-  .app-mobile-header-btn svg {
-    width: 22px;
-    height: 22px;
+    transition: transform var(--app-transition-bounce), background var(--app-transition), box-shadow var(--app-transition);
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Barre d'onglets bas — 100% style app */
+  .app-mobile-header-btn:hover {
+    background: rgba(37, 99, 235, 0.14);
+    box-shadow: 0 0 0 4px var(--app-accent-ring);
+  }
+
+  .app-mobile-header-btn:active {
+    transform: scale(0.88);
+    background: rgba(37, 99, 235, 0.18);
+  }
+
+  .app-mobile-header-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* ── Bottom tab bar ── */
   .app-mobile-tab-bar {
     position: fixed;
     bottom: 0;
@@ -103,15 +137,17 @@
     z-index: 100;
     height: 72px;
     padding-bottom: env(safe-area-inset-bottom, 0);
-    background: var(--app-surface);
-    border-top: 1px solid var(--app-border);
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 6px;
+    background: rgba(255, 255, 255, 0.94);
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.07);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding-left: 8px;
-    padding-right: 8px;
-    padding-top: 8px;
   }
 
   .app-mobile-tab {
@@ -121,105 +157,225 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 6px 4px;
+    padding: 5px 4px 4px;
     border: none;
     background: transparent;
     color: var(--app-text-muted);
-    font-size: 0.7rem;
+    font-size: 0.67rem;
     font-weight: 500;
     font-family: inherit;
     cursor: pointer;
-    border-radius: 12px;
-    transition: color var(--app-transition), background var(--app-transition);
+    border-radius: 14px;
+    position: relative;
+    transition: color var(--app-transition);
     -webkit-tap-highlight-color: transparent;
+    min-height: 54px;
+    letter-spacing: 0.01em;
   }
+
   .app-mobile-tab:hover {
-    color: var(--app-text);
+    color: var(--app-text-secondary);
   }
+
   .app-mobile-tab.active {
     color: var(--app-primary);
-    background: var(--app-accent-light);
+    font-weight: 700;
   }
+
+  /* Active pill indicator — glowing top line */
+  .app-mobile-tab.active::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--app-primary), var(--app-primary-light));
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+    animation: tab-indicator-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  @keyframes tab-indicator-in {
+    from {
+      width: 0;
+      opacity: 0;
+    }
+    to {
+      width: 36px;
+      opacity: 1;
+    }
+  }
+
+  /* Active icon background pill */
+  .app-mobile-tab.active .app-mobile-tab-icon-wrap {
+    background: var(--app-primary-xlight);
+    border-radius: 999px;
+    padding: 5px 14px;
+    transition: background var(--app-transition-bounce);
+  }
+
   .app-mobile-tab svg {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     flex-shrink: 0;
+    transition: transform var(--app-transition-bounce);
   }
+
   .app-mobile-tab.active svg {
+    color: var(--app-primary);
+    transform: scale(1.08);
+  }
+
+  .app-mobile-tab:active svg {
+    transform: scale(0.88);
+  }
+
+  /* Tab press ripple */
+  .app-mobile-tab:active {
     color: var(--app-primary);
   }
 
-  /* Cartes dashboard style app (Vue d'ensemble) */
+  /* ── Dashboard hero cards ── */
   .app-mobile-dashboard-hero {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     margin-bottom: 20px;
+    animation: app-mobile-section-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
   .app-mobile-dashboard-card {
     background: var(--app-surface);
-    border-radius: var(--app-radius);
+    border-radius: var(--app-radius-lg);
     padding: 18px 16px;
     box-shadow: var(--app-shadow);
-    border: 1px solid var(--app-border);
-    transition: transform var(--app-transition), box-shadow var(--app-transition);
+    border: 1px solid var(--app-border-subtle);
+    transition: transform var(--app-transition), box-shadow var(--app-transition), border-color var(--app-transition);
+    position: relative;
+    overflow: hidden;
   }
+
+  /* Subtle gradient top strip */
+  .app-mobile-dashboard-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--app-primary), var(--app-primary-light));
+    opacity: 0;
+    transition: opacity var(--app-transition);
+  }
+
   .app-mobile-dashboard-card:active {
-    transform: scale(0.98);
+    transform: scale(0.96);
+    box-shadow: var(--app-shadow-md);
+  }
+
+  .app-mobile-dashboard-card:active::before {
+    opacity: 1;
   }
 
   .app-mobile-dashboard-card-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 10px;
+    flex-shrink: 0;
+    transition: transform var(--app-transition-bounce);
   }
+
+  .app-mobile-dashboard-card:active .app-mobile-dashboard-card-icon {
+    transform: scale(0.9) rotate(-4deg);
+  }
+
   .app-mobile-dashboard-card-icon.members {
     background: var(--app-accent-light);
     color: var(--app-primary);
   }
+
   .app-mobile-dashboard-card-icon.scans {
-    background: rgba(245, 158, 11, 0.15);
+    background: var(--app-warning-light);
     color: #D97706;
   }
-  .app-mobile-dashboard-card-icon svg {
-    width: 22px;
-    height: 22px;
-  }
-  .app-mobile-dashboard-card-value {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--app-text);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-  }
-  .app-mobile-dashboard-card-label {
-    font-size: 0.8rem;
-    color: var(--app-text-muted);
-    margin-top: 2px;
+
+  .app-mobile-dashboard-card-icon.active-cards {
+    background: var(--app-success-light);
+    color: var(--app-success);
   }
 
-  /* Barre message — style app */
+  .app-mobile-dashboard-card-icon.revenue {
+    background: var(--app-purple-light);
+    color: #7C3AED;
+  }
+
+  .app-mobile-dashboard-card-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .app-mobile-dashboard-card-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--app-text);
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+  }
+
+  .app-mobile-dashboard-card-label {
+    font-size: 0.73rem;
+    color: var(--app-text-muted);
+    margin-top: 3px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .app-mobile-dashboard-card-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-top: 5px;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+
+  .app-mobile-dashboard-card-trend.up {
+    color: var(--app-success);
+    background: var(--app-success-light);
+  }
+
+  .app-mobile-dashboard-card-trend.down {
+    color: var(--app-error);
+    background: var(--app-error-light);
+  }
+
+  /* ── Message bar ── */
   .app-mobile-message-bar {
     display: flex;
     align-items: center;
     gap: 10px;
     background: var(--app-surface);
-    border-radius: 14px;
-    padding: 12px 14px;
+    border-radius: 16px;
+    padding: 10px 12px;
     margin-bottom: 24px;
-    border: 1px solid var(--app-border);
+    border: 1.5px solid var(--app-border);
     box-shadow: var(--app-shadow);
     transition: border-color var(--app-transition), box-shadow var(--app-transition);
   }
+
   .app-mobile-message-bar:focus-within {
-    border-color: var(--app-primary);
-    box-shadow: 0 0 0 3px var(--app-accent-light);
+    border-color: var(--app-border-focus);
+    box-shadow: 0 0 0 3px var(--app-accent-ring), var(--app-shadow);
   }
+
   .app-mobile-message-bar input {
     flex: 1;
     border: none;
@@ -228,36 +384,52 @@
     color: var(--app-text);
     font-family: inherit;
     outline: none;
+    min-width: 0;
   }
+
   .app-mobile-message-bar input::placeholder {
     color: var(--app-text-muted);
   }
+
   .app-mobile-message-bar-btn {
     width: 36px;
     height: 36px;
     border-radius: 50%;
     border: none;
-    background: var(--app-accent-light);
-    color: var(--app-primary);
+    background: linear-gradient(135deg, var(--app-primary-light), var(--app-primary));
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-  }
-  .app-mobile-message-bar-btn svg {
-    width: 18px;
-    height: 18px;
+    transition: transform var(--app-transition-bounce), box-shadow var(--app-transition);
+    box-shadow: var(--app-shadow-blue);
   }
 
-  /* Sections : animation d'entrée */
-  #app-app.app-mobile .app-section {
-    animation: app-mobile-section-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  .app-mobile-message-bar-btn:hover {
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    transform: scale(1.06);
   }
+
+  .app-mobile-message-bar-btn:active {
+    transform: scale(0.9);
+  }
+
+  .app-mobile-message-bar-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* ── Section entrance animations ── */
+  #app-app.app-mobile .app-section {
+    animation: app-mobile-section-in 0.38s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
   @keyframes app-mobile-section-in {
     from {
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(16px);
     }
     to {
       opacity: 1;
@@ -265,77 +437,161 @@
     }
   }
 
-  #app-app.app-mobile .app-section-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem;
-    letter-spacing: -0.02em;
-  }
-  #app-app.app-mobile .app-section-desc {
-    font-size: 0.9rem;
-    margin: 0 0 1.25rem;
+  /* Page transition class */
+  #app-app.app-mobile .app-section.page-entering {
+    animation: app-mobile-page-enter 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
-  /* Stats vue d'ensemble : grille compacte */
+  @keyframes app-mobile-page-enter {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Stagger animations */
+  #app-app.app-mobile .app-section > *:nth-child(1) { animation-delay: 0ms; }
+  #app-app.app-mobile .app-section > *:nth-child(2) { animation-delay: 55ms; }
+  #app-app.app-mobile .app-section > *:nth-child(3) { animation-delay: 110ms; }
+  #app-app.app-mobile .app-section > *:nth-child(4) { animation-delay: 165ms; }
+
+  #app-app.app-mobile .app-section-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.03em;
+    color: var(--app-text);
+  }
+
+  #app-app.app-mobile .app-section-desc {
+    font-size: 0.875rem;
+    margin: 0 0 1.35rem;
+    color: var(--app-text-muted);
+    line-height: 1.55;
+  }
+
+  /* ── Stats grid ── */
   #app-app.app-mobile .app-stats {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
+
   #app-app.app-mobile .app-stat {
     border-radius: var(--app-radius);
-    padding: 1rem;
-    border-color: var(--app-border);
+    padding: 1rem 1rem;
+    border-color: var(--app-border-subtle);
+    box-shadow: var(--app-shadow);
+    background: var(--app-surface);
   }
+
   #app-app.app-mobile .app-stat-value {
     color: var(--app-primary);
     font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
   }
 
-  /* Cartes & boutons */
+  /* ── Cards & buttons ── */
   #app-app.app-mobile .app-card {
-    border-radius: var(--app-radius);
-    border-color: var(--app-border);
+    border-radius: var(--app-radius-lg);
+    border-color: var(--app-border-subtle);
     box-shadow: var(--app-shadow);
-  }
-  #app-app.app-mobile .app-btn-primary {
-    background: var(--app-primary);
-  }
-  #app-app.app-mobile .app-btn-primary:hover:not(:disabled) {
-    background: var(--app-primary-dark);
+    background: var(--app-surface);
   }
 
-  /* Section Profil mobile : liste style app */
+  #app-app.app-mobile .app-btn-primary {
+    background: linear-gradient(135deg, var(--app-primary-light), var(--app-primary));
+    box-shadow: var(--app-shadow-blue);
+    border-radius: 12px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  #app-app.app-mobile .app-btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--app-primary), var(--app-primary-dark));
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4);
+    transform: translateY(-2px);
+  }
+
+  #app-app.app-mobile .app-btn-primary:active:not(:disabled) {
+    transform: scale(0.96);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  }
+
+  /* ── Profile list ── */
   .app-mobile-profil-list {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
+
   .app-mobile-profil-item {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 16px 18px;
+    padding: 15px 16px;
     background: var(--app-surface);
     border-radius: var(--app-radius);
-    margin-bottom: 10px;
-    border: 1px solid var(--app-border);
+    border: 1px solid var(--app-border-subtle);
     text-decoration: none;
     color: var(--app-text);
-    font-size: 1rem;
+    font-size: 0.94rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background var(--app-transition), transform 0.15s ease;
+    transition:
+      background var(--app-transition),
+      border-color var(--app-transition),
+      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow var(--app-transition);
     box-shadow: var(--app-shadow);
+    position: relative;
+    padding-right: 44px;
+    -webkit-tap-highlight-color: transparent;
   }
+
+  /* Chevron arrow */
+  .app-mobile-profil-item::after {
+    content: "";
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--app-text-muted);
+    border-top: 2px solid var(--app-text-muted);
+    transform: translateY(-50%) rotate(45deg);
+    transition: border-color var(--app-transition), right var(--app-transition);
+    border-radius: 1px;
+  }
+
+  .app-mobile-profil-item:hover::after {
+    border-color: var(--app-primary);
+    right: 15px;
+  }
+
   .app-mobile-profil-item:hover {
-    background: var(--app-bg);
+    background: #F8FBFF;
+    border-color: var(--app-border-focus);
+    box-shadow: var(--app-shadow-md), 0 0 0 0 var(--app-accent-ring);
+    transform: translateX(2px);
   }
+
   .app-mobile-profil-item:active {
-    transform: scale(0.99);
+    transform: scale(0.985);
+    box-shadow: var(--app-shadow);
+    background: var(--app-primary-xlight);
   }
+
   .app-mobile-profil-item-icon {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     border-radius: 12px;
     background: var(--app-accent-light);
     color: var(--app-primary);
@@ -343,56 +599,248 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-  }
-  .app-mobile-profil-item-icon svg {
-    width: 22px;
-    height: 22px;
-  }
-  .app-mobile-profil-item.logout .app-mobile-profil-item-icon {
-    background: rgba(239, 68, 68, 0.12);
-    color: #DC2626;
-  }
-  .app-mobile-profil-user {
-    font-size: 0.85rem;
-    color: var(--app-text-muted);
-    padding: 0 18px 16px;
-    margin: 0;
-    word-break: break-all;
+    transition: background var(--app-transition), transform var(--app-transition-bounce);
   }
 
-  /* Cacher le hero desktop sur mobile quand on a le hero mobile */
+  .app-mobile-profil-item:hover .app-mobile-profil-item-icon {
+    background: rgba(37, 99, 235, 0.14);
+    transform: scale(1.06);
+  }
+
+  .app-mobile-profil-item-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .app-mobile-profil-item.logout .app-mobile-profil-item-icon {
+    background: var(--app-error-light);
+    color: #DC2626;
+  }
+
+  .app-mobile-profil-item.logout {
+    color: #DC2626;
+    border-color: rgba(239, 68, 68, 0.1);
+  }
+
+  .app-mobile-profil-item.logout::after {
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+
+  .app-mobile-profil-item.logout:hover {
+    background: rgba(239, 68, 68, 0.04);
+    border-color: rgba(239, 68, 68, 0.2);
+  }
+
+  .app-mobile-profil-user {
+    font-size: 0.82rem;
+    color: var(--app-text-muted);
+    padding: 0 18px 14px;
+    margin: 0;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .app-mobile-profil-user::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--app-success);
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+  }
+
+  /* ── Profile section separator ── */
+  .app-mobile-profil-separator {
+    height: 1px;
+    background: var(--app-border-subtle);
+    margin: 8px 0;
+    border: none;
+  }
+
+  /* ── Overview layout adjustments ── */
   #app-app.app-mobile .app-section-overview .app-stats-grid {
     margin-top: 0;
   }
+
   #app-app.app-mobile .app-evolution-wrap,
   #app-app.app-mobile .app-overview-shortcuts {
-    margin-top: 1.25rem;
+    margin-top: 1.35rem;
   }
-}
 
-/* Masquer header/tab bar et blocs hero mobile sur desktop */
+  /* ── List items with dividers ── */
+  .app-mobile-list {
+    background: var(--app-surface);
+    border-radius: var(--app-radius-lg);
+    border: 1px solid var(--app-border-subtle);
+    box-shadow: var(--app-shadow);
+    overflow: hidden;
+  }
+
+  .app-mobile-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--app-border-subtle);
+    transition: background var(--app-transition);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+
+  .app-mobile-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .app-mobile-list-item:hover {
+    background: var(--app-surface-2);
+  }
+
+  .app-mobile-list-item:active {
+    background: var(--app-primary-xlight);
+  }
+
+  /* ── Empty state ── */
+  .app-mobile-empty {
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+    color: var(--app-text-muted);
+    animation: app-mobile-section-in 0.3s ease both;
+  }
+
+  .app-mobile-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.28;
+    display: block;
+    animation: app-empty-float 3s ease-in-out infinite;
+  }
+
+  @keyframes app-empty-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .app-mobile-empty-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--app-text-secondary);
+    margin: 0 0 0.45rem;
+    letter-spacing: -0.015em;
+  }
+
+  .app-mobile-empty-desc {
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.55;
+    color: var(--app-text-muted);
+    max-width: 28ch;
+    margin-inline: auto;
+  }
+
+  /* ── Section header row (title + action) ── */
+  .app-mobile-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 0 2px;
+  }
+
+  .app-mobile-section-header-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--app-text);
+    margin: 0;
+    letter-spacing: -0.015em;
+  }
+
+  .app-mobile-section-header-action {
+    font-size: 0.8rem;
+    color: var(--app-primary);
+    font-weight: 600;
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--app-accent-light);
+    transition: background var(--app-transition), transform var(--app-transition-bounce);
+    letter-spacing: 0.01em;
+  }
+
+  .app-mobile-section-header-action:hover {
+    background: rgba(37, 99, 235, 0.14);
+    transform: translateX(2px);
+  }
+
+  /* ── Skeleton loading ── */
+  @keyframes app-shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+
+  .app-mobile-skeleton {
+    background: linear-gradient(
+      90deg,
+      #f0f4f8 0%,
+      #e8eef5 40%,
+      #f0f4f8 80%
+    );
+    background-size: 400px 100%;
+    animation: app-shimmer 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  .app-mobile-skeleton-text {
+    height: 13px;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+  }
+
+  .app-mobile-skeleton-card {
+    height: 90px;
+    border-radius: var(--app-radius);
+  }
+
+} /* end @media (max-width: 768px) */
+
+/* ── Hide mobile-only elements on desktop ── */
 .app-mobile-header,
 .app-mobile-tab-bar,
 .app-mobile-only {
   display: none !important;
 }
+
 @media (max-width: 768px) {
   .app-mobile-header,
   .app-mobile-tab-bar {
     display: flex !important;
   }
-  .app-mobile-header { align-items: center; justify-content: space-between; }
-  .app-mobile-tab-bar { justify-content: space-around; }
+
+  .app-mobile-header {
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .app-mobile-tab-bar {
+    justify-content: space-around;
+  }
+
   .app-mobile-only {
     display: block !important;
   }
+
   .app-mobile-dashboard-hero.app-mobile-only {
     display: grid !important;
   }
+
   .app-mobile-message-bar-wrap.app-mobile-only {
     display: block !important;
   }
 }
+
 @media (min-width: 769px) {
   .app-mobile-header,
   .app-mobile-tab-bar,
@@ -401,7 +849,8 @@
   .app-mobile-only {
     display: none !important;
   }
-  /* S'assurer que la section Profil reste visible sur desktop (formulaire établissement) */
+
+  /* Keep profil section visible on desktop (form) */
   #app-dashboard-content #profil.app-section-visible {
     display: block !important;
   }

@@ -478,8 +478,10 @@
         </button>
       </header>
       <main class="app-main">
+        <div id="app-main-loading" class="app-main-loading" aria-live="polite">Chargement…</div>
         <div id="app-empty" class="app-empty hidden">
           <div class="app-empty-card">
+            <p id="app-empty-load-error" class="app-message error hidden" role="alert"></p>
             <h1 class="app-empty-title">Aucune carte pour l'instant</h1>
             <p class="app-empty-text">Créez votre première carte de fidélité (Apple Wallet et Google Wallet). Nom et lien sont modifiables plus tard dans « Ma carte ».</p>
             <form id="app-empty-create-form" class="app-empty-form">

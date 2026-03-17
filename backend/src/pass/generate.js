@@ -1,9 +1,10 @@
 /**
  * Génération du fichier .pkpass (point d'entrée principal).
  * Référence : REFONTE-REGLES.md — pass.js découpé.
+ * sharp est chargé à la demande (évite ERR_INVALID_PACKAGE_CONFIG au démarrage avec Node 24).
+ * Mis en cache après le premier import pour ne pas ré-importer à chaque génération.
  */
 import { PKPass } from "passkit-generator";
-import sharp from "sharp";
 import { getPassAuthenticationToken } from "./auth.js";
 import { sanitizeLogoText, createLogoFromText, resizeLogoForPass, resizeLogoForPassIcon } from "./images-logo.js";
 import { createStripBuffer, buildPassLocations } from "./images-strip.js";
@@ -12,6 +13,12 @@ import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
 import { PASS_TEMPLATES, STRIP_W, STRIP_H } from "./constants.js";
 
+let _sharp = null;
+async function getSharp() {
+  if (!_sharp) _sharp = (await import("sharp")).default;
+  return _sharp;
+}
+
 /**
  * Génère un fichier .pkpass (buffer) pour un membre.
  * @param {Object} member - { id, name, points }
@@ -19,6 +26,7 @@ import { PASS_TEMPLATES, STRIP_W, STRIP_H } from "./constants.js";
  * @param {Object} options - { template, format, organizationName, ... }
  */
 export async function generatePass(member, business = null, options = {}) {
+  const sharp = await getSharp();
   const passTypeId = process.env.PASS_TYPE_ID;
   const teamId = process.env.TEAM_ID;
 

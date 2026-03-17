@@ -2550,6 +2550,22 @@ body.page-app .site-banner { display: none !important; }
 
 .app-table tbody tr:hover { background: var(--app-surface-hover); }
 
+/* Chargement initial /app — léger, pas d’animation coûteuse */
+.app-main-loading {
+  max-width: 500px;
+  margin: 4rem auto 0;
+  text-align: center;
+  color: var(--app-text-muted);
+  font-size: 1rem;
+  transition: opacity 0.15s ease-out;
+}
+.app-main-loading.hidden {
+  display: none !important;
+}
+.app-content.hidden {
+  display: none !important;
+}
+
 /* Empty state — carte centrée, entrée douce */
 .app-empty {
   max-width: 500px;

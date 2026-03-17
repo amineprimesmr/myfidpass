@@ -1,9 +1,15 @@
 /**
  * Génération logo / bandeau texte et icône pour le pass.
  * Référence : REFONTE-REGLES.md — pass.js découpé.
+ * sharp chargé à la demande (Node 24).
  */
-import sharp from "sharp";
 import { LOGO_WIDTH_2X, LOGO_HEIGHT_2X, LOGO_WIDTH_1X, LOGO_HEIGHT_1X, ICON_SIZE_1X, ICON_SIZE_2X, ICON_SIZE_3X } from "./constants.js";
+
+let _sharp = null;
+async function getSharp() {
+  if (!_sharp) _sharp = (await import("sharp")).default;
+  return _sharp;
+}
 
 function escapeSvgText(s) {
   if (s == null || typeof s !== "string") return "";
@@ -37,6 +43,7 @@ export async function createLogoFromText(stripColorHex, text) {
   <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="28" font-family="Arial, Helvetica, sans-serif" font-weight="600">${escaped}</text>
 </svg>`;
   try {
+    const sharp = await getSharp();
     const out2x = await sharp(Buffer.from(svg))
       .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X)
       .png()
@@ -57,6 +64,7 @@ export async function createLogoFromText(stripColorHex, text) {
  */
 export async function resizeLogoForPass(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
+  const sharp = await getSharp();
   const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
   try {
     const meta = await sharp(inputBuffer).metadata();
@@ -112,6 +120,7 @@ export async function resizeLogoForPass(inputBuffer) {
  */
 export async function resizeLogoForPassIcon(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
+  const sharp = await getSharp();
   try {
     const opts = { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } };
     const [iconPng, iconPng2x, iconPng3x] = await Promise.all([

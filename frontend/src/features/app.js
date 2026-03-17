@@ -6,13 +6,28 @@ import { API_BASE, getAuthHeaders, clearAuthToken, isDevBypassPayment } from "..
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
 
+const APP_LOAD_ERROR_MSG =
+  "Impossible de charger vos données. Vérifiez que le serveur tourne (backend sur le port 3001) ou réessayez plus tard.";
+
 function initAppPage() {
   const emptyEl = document.getElementById("app-empty");
   const contentEl = document.getElementById("app-dashboard-content");
+  const loadingEl = document.getElementById("app-main-loading");
+  const loadErrorEl = document.getElementById("app-empty-load-error");
   const businessNameEl = document.getElementById("app-business-name");
   const userEmailEl = document.getElementById("app-user-email");
   const logoutBtn = document.getElementById("app-logout");
   const resetAllBtn = document.getElementById("app-reset-all");
+
+  function showLoadError() {
+    if (loadingEl) loadingEl.classList.add("hidden");
+    if (emptyEl) emptyEl.classList.remove("hidden");
+    if (contentEl) contentEl.classList.add("hidden");
+    if (loadErrorEl) {
+      loadErrorEl.textContent = APP_LOAD_ERROR_MSG;
+      loadErrorEl.classList.remove("hidden");
+    }
+  }
 
   logoutBtn?.addEventListener("click", () => {
     clearAuthToken();
@@ -63,16 +78,21 @@ function initAppPage() {
     try {
       const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
       if (res.status === 401) {
+        loadingEl?.classList.add("hidden");
         const body = await res.json().catch(() => ({}));
         clearAuthToken();
         const code = body.code || "invalid";
         window.location.replace("/login?redirect=/app&session=" + code);
         return;
       }
-      if (!res.ok) return;
+      if (!res.ok) {
+        showLoadError();
+        return;
+      }
       const data = await res.json();
       const hasSubscription = data.hasActiveSubscription || isDevBypassPayment();
       if (!hasSubscription) {
+        loadingEl?.classList.add("hidden");
         window.location.replace("/choisir-offre");
         return;
       }
@@ -81,7 +101,6 @@ function initAppPage() {
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
       const mobileProfilEmail = document.getElementById("app-mobile-profil-email");
       if (mobileProfilEmail) mobileProfilEmail.textContent = user?.email || "";
-      // Partage les infos compte pour la page Profil
       window.dispatchEvent(
         new CustomEvent("fidpass-auth-me", {
           detail: {
@@ -93,10 +112,20 @@ function initAppPage() {
       );
 
       if (businesses.length === 0) {
+        loadingEl?.classList.add("hidden");
+        if (loadErrorEl) {
+          loadErrorEl.textContent = "";
+          loadErrorEl.classList.add("hidden");
+        }
         if (emptyEl) emptyEl.classList.remove("hidden");
         if (contentEl) contentEl.classList.add("hidden");
         if (businessNameEl) businessNameEl.textContent = "Mon espace";
         return;
+      }
+      loadingEl?.classList.add("hidden");
+      if (loadErrorEl) {
+        loadErrorEl.textContent = "";
+        loadErrorEl.classList.add("hidden");
       }
       if (emptyEl) emptyEl.classList.add("hidden");
       if (contentEl) contentEl.classList.remove("hidden");
@@ -105,8 +134,7 @@ function initAppPage() {
       initAppSidebar();
       initAppDashboard(business.slug);
     } catch (_) {
-      if (emptyEl) emptyEl.classList.remove("hidden");
-      if (contentEl) contentEl.classList.add("hidden");
+      showLoadError();
     }
   })();
 

@@ -57,12 +57,13 @@ dotenv.config({ path: join(__dirname, "..", ".env") });
 
 const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
+  console.log("[startup] Production — vérification JWT_SECRET / PASSKIT_SECRET…");
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-    console.error("En production, JWT_SECRET doit être défini et faire au moins 32 caractères.");
+    console.error("[startup] ERREUR: En production, JWT_SECRET doit être défini et faire au moins 32 caractères. Railway → Variables → ajoute JWT_SECRET puis redéploie. Voir docs/RAILWAY-CRASH-DEPANNAGE.md");
     process.exit(1);
   }
   if (!process.env.PASSKIT_SECRET || process.env.PASSKIT_SECRET.length < 32) {
-    console.error("En production, PASSKIT_SECRET doit être défini et faire au moins 32 caractères.");
+    console.error("[startup] ERREUR: En production, PASSKIT_SECRET doit être défini et faire au moins 32 caractères. Railway → Variables → ajoute PASSKIT_SECRET puis redéploie. Voir docs/RAILWAY-CRASH-DEPANNAGE.md");
     process.exit(1);
   }
 }
@@ -71,6 +72,11 @@ const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const app = express();
+// Derrière un proxy (Railway, etc.) : Express doit faire confiance à X-Forwarded-For pour que
+// req.ip soit la vraie IP client et que express-rate-limit ne logue pas ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
 // CORS : en prod accepter le site + www ; en dev toute origine (pour test iPhone en local)
 const allowedOrigins =
   process.env.NODE_ENV === "production"
@@ -87,12 +93,14 @@ app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true, limit: "64kb" }));
 
 // Rate limiting : auth (login/register) 10 req / 15 min par IP
+// validate.forwardedHeader: false — en prod le proxy peut envoyer "Forwarded" que Express n’utilise pas ; on s’appuie sur X-Forwarded-For (trust proxy).
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: "Trop de tentatives. Réessayez dans 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { forwardedHeader: false },
 });
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);

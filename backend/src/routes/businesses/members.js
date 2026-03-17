@@ -33,6 +33,7 @@ const membersCreateLimiter = rateLimit({
   message: { error: "Trop de créations. Réessayez dans 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { forwardedHeader: false },
 });
 
 // ——— POST / (création membre) ———

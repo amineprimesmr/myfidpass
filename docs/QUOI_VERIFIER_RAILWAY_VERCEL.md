@@ -10,6 +10,8 @@ En bref :
 
 **Site :** https://railway.app → ouvre ton projet → clique sur le **service** (ex. fidpass-api).
 
+**Si le déploiement crash (« Deploy Crashed », api.myfidpass.fr ne répond pas)** → voir **docs/RAILWAY-CRASH-DEPANNAGE.md**. Vérifier les **Deploy Logs** et les variables **JWT_SECRET** / **PASSKIT_SECRET** (obligatoires en prod, 32+ caractères).
+
 ### 1. Variables (Variables / Settings)
 
 À vérifier ou ajouter :
@@ -19,8 +21,9 @@ En bref :
 | `API_URL`       | URL publique de ton API. **Utilisée pour l’icône des notifications** (logo du commerce). Si elle est fausse ou absente, l’icône peut ne pas s’afficher. | `https://api.myfidpass.fr` (sans slash à la fin) |
 | `NODE_ENV`      | Environnement | `production` |
 | `FRONTEND_URL`  | URL du site (pour CORS) | `https://myfidpass.fr` |
-| `JWT_SECRET`    | Secret pour la connexion | une chaîne longue aléatoire |
+| `JWT_SECRET`    | **Obligatoire en prod.** Secret pour la connexion. Sinon le backend crash au démarrage. | Chaîne ≥ 32 caractères (aléatoire) |
 | `PASS_TYPE_ID`  | Pour Apple Wallet | ex. `pass.com.fidelity` |
+| `PASSKIT_SECRET` | **Obligatoire en prod.** Secret pour les passes Apple Wallet. Sinon le backend crash au démarrage. | Chaîne ≥ 32 caractères (aléatoire) |
 | `TEAM_ID`       | Team ID Apple | ex. `F2CJGJ69XU` |
 | `DATA_DIR`      | Pour garder les données (comptes, etc.) après redéploiement | `/data` (si tu as un volume monté en `/data`) |
 

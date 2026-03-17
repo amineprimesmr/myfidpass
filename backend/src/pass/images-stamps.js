@@ -1,10 +1,10 @@
 /**
  * Tampons (grille d'icônes sur le strip) : emoji, icônes perso, drawStampsOnStrip.
  * Référence : REFONTE-REGLES.md — pass.js découpé.
+ * sharp chargé à la demande (Node 24).
  */
 import { readdirSync, readFileSync, existsSync } from "fs";
 import { join, resolve } from "path";
-import sharp from "sharp";
 import {
   assetsDir,
   STRIP_W,
@@ -20,6 +20,12 @@ import {
   createEmptyStampOutlinePng,
   createFilledStampCirclePng,
 } from "./images-strip.js";
+
+let _sharp = null;
+async function getSharp() {
+  if (!_sharp) _sharp = (await import("sharp")).default;
+  return _sharp;
+}
 
 const iconsDir = resolve(assetsDir, "icons");
 const iconsDirFallback = resolve(process.cwd(), "backend", "assets", "icons");
@@ -75,6 +81,7 @@ function emojiToCodepoint(emoji) {
 }
 
 async function loadCustomStampImage(emojiKey, emojiPx) {
+  const sharp = await getSharp();
   const baseName = `icon_${emojiKey.replace(/-/g, "_")}`;
   const candidates = [baseName];
   const aliases = ICON_ALIASES[emojiKey];
@@ -103,6 +110,7 @@ async function loadCustomStampImage(emojiKey, emojiPx) {
 }
 
 async function fetchEmojiPng(stampEmoji) {
+  const sharp = await getSharp();
   const str = (stampEmoji && String(stampEmoji).trim()) || "";
   const emojiPxDefault = STAMP_SIZE - 8;
   const directName = str.replace(/\.png$/i, "").replace(/\s/g, "");
@@ -131,6 +139,7 @@ async function fetchEmojiPng(stampEmoji) {
 }
 
 async function createFilledStampWithEmojiPng(hexColor, stampEmoji = "☕") {
+  const sharp = await getSharp();
   const circleRgb = hexToRgb(hexColor || "#5d4e37");
   const circlePng = createFilledStampCirclePng(circleRgb);
   const emojiChar = (typeof stampEmoji === "string" && stampEmoji.trim()) ? stampEmoji.trim()[0] : "☕";
@@ -150,6 +159,7 @@ async function createFilledStampWithEmojiPng(hexColor, stampEmoji = "☕") {
 }
 
 async function createEmptyStampWithEmojiPng(strokeRgb, stampEmoji = "☕") {
+  const sharp = await getSharp();
   const emojiChar = (typeof stampEmoji === "string" && stampEmoji.trim()) ? stampEmoji.trim()[0] : "☕";
   const isCoffee = emojiToCodepoint(emojiChar) === "2615";
   const emptyPng = isCoffee
@@ -173,6 +183,7 @@ async function createEmptyStampWithEmojiPng(strokeRgb, stampEmoji = "☕") {
 }
 
 async function createStampIconOnlyPng(iconBuf, opacity = 1) {
+  const sharp = await getSharp();
   const size = STAMP_SIZE;
   const normalized = await sharp(iconBuf)
     .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
@@ -201,6 +212,7 @@ async function createStampIconOnlyPng(iconBuf, opacity = 1) {
 }
 
 async function createEmptyStampFromIcon(iconBuf) {
+  const sharp = await getSharp();
   const size = STAMP_SIZE;
   const padding = 2;
   const normalized = await sharp(iconBuf)
@@ -239,6 +251,7 @@ async function createEmptyStampFromIcon(iconBuf) {
  * Grille de tampons sur le strip. customIconBase64 = image perso pour l'icône.
  */
 export async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji, customIconBase64) {
+  const sharp = await getSharp();
   const cols = 5;
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
   const row0Y = STAMP_TOP + STAMP_R;
