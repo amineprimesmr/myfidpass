@@ -1758,10 +1758,9 @@ function initAppDashboard(slug) {
       if (personnaliserStrip) personnaliserStrip.value = bg.startsWith("#") ? bg : "#" + bg;
       if (personnaliserStripHex) personnaliserStripHex.value = bg.startsWith("#") ? bg : "#" + bg;
       // Utiliser la couleur de fond de la carte pour l'icône de prévisualisation de notification
-      const notifIcon = document.querySelector(".app-notification-preview-banner-icon");
-      if (notifIcon) {
+      document.querySelectorAll(".app-notification-preview-banner-icon").forEach((notifIcon) => {
         notifIcon.style.setProperty("--app-notif-icon-bg", bg.startsWith("#") ? bg : `#${bg}`);
-      }
+      });
       const stripDisplayMode = (data.strip_display_mode ?? data.stripDisplayMode ?? "logo").toLowerCase();
       if (stripDisplayMode === "text" && stripDisplayText) stripDisplayText.checked = true;
       else if (stripDisplayLogo) stripDisplayLogo.checked = true;
@@ -4116,15 +4115,21 @@ function initAppDashboard(slug) {
   function updateAppNotificationPreview() {
     const bannerTitle = document.getElementById("app-notification-banner-title");
     const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
+    const perimetreIconFallback = document.getElementById("app-perimetre-banner-icon-fallback");
     const title = (bannerTitle?.value ?? "").trim() || "Nom de votre commerce";
     if (bannerIconFallback) {
       bannerIconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Logo";
+    }
+    if (perimetreIconFallback) {
+      perimetreIconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Logo";
     }
   }
 
   async function refreshNotificationBannerIcon() {
     const bannerIconImg = document.getElementById("app-notification-banner-icon-img");
     const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
+    const perimetreIconImg = document.getElementById("app-perimetre-banner-icon-img");
+    const perimetreIconFallback = document.getElementById("app-perimetre-banner-icon-fallback");
     const headerAvatar = document.getElementById("app-dashboard-profile-avatar");
     const headerInitials = document.getElementById("app-dashboard-profile-initials");
     const profilLogo = document.getElementById("app-profil-logo-preview");
@@ -4133,12 +4138,17 @@ function initAppDashboard(slug) {
         bannerIconImg.src = profilLogo.src;
         bannerIconImg.classList.remove("hidden");
       }
+      if (perimetreIconImg) {
+        perimetreIconImg.src = profilLogo.src;
+        perimetreIconImg.classList.remove("hidden");
+      }
       if (headerAvatar) {
         headerAvatar.src = profilLogo.src;
         headerAvatar.classList.remove("hidden");
       }
       if (headerInitials) headerInitials.classList.add("hidden");
       if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
+      if (perimetreIconFallback) perimetreIconFallback.classList.add("hidden");
       return;
     }
     try {
@@ -4151,6 +4161,11 @@ function initAppDashboard(slug) {
         bannerIconImg.src = url;
         bannerIconImg.classList.remove("hidden");
       }
+      if (perimetreIconImg) {
+        if (perimetreIconImg.src && perimetreIconImg.src.startsWith("blob:")) URL.revokeObjectURL(perimetreIconImg.src);
+        perimetreIconImg.src = url;
+        perimetreIconImg.classList.remove("hidden");
+      }
       if (headerAvatar) {
         if (headerAvatar.src && headerAvatar.src.startsWith("blob:")) URL.revokeObjectURL(headerAvatar.src);
         headerAvatar.src = url;
@@ -4158,9 +4173,12 @@ function initAppDashboard(slug) {
       }
       if (headerInitials) headerInitials.classList.add("hidden");
       if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
+      if (perimetreIconFallback) perimetreIconFallback.classList.add("hidden");
     } catch (_) {
       if (bannerIconImg) bannerIconImg.classList.add("hidden");
+      if (perimetreIconImg) perimetreIconImg.classList.add("hidden");
       if (bannerIconFallback) bannerIconFallback.classList.remove("hidden");
+      if (perimetreIconFallback) perimetreIconFallback.classList.remove("hidden");
     }
   }
 

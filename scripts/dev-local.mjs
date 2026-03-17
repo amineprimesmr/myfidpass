@@ -12,7 +12,10 @@ const backendPidFile = join(stateDir, "backend.pid");
 const frontendPidFile = join(stateDir, "frontend.pid");
 const backendLog = join(stateDir, "backend.log");
 const frontendLog = join(stateDir, "frontend.log");
-const mode = (process.argv[2] || "up").toLowerCase();
+const args = process.argv.slice(2);
+const mode = (args.find((a) => !a.startsWith("-")) || "up").toLowerCase();
+const noOpen = args.includes("--no-open");
+const quiet = args.includes("--quiet");
 
 const node22Bin = "/opt/homebrew/opt/node@22/bin";
 const nodeCmd = existsSync(join(node22Bin, "node")) ? join(node22Bin, "node") : "node";
@@ -130,14 +133,16 @@ async function up() {
   const frontPidStatus = frontendPid
     ? `${frontendPid}${isPidAlive(frontendPid) ? "" : " (inactif)"}`
     : (frontendUp ? "déjà actif (pid externe)" : "n/a");
-  console.log(`Backend  : ${backendReady ? "OK" : "KO"} (http://localhost:3001)`);
-  console.log(`Frontend : ${frontendReady ? "OK" : "KO"} (http://localhost:5174)`);
-  console.log(`PID back : ${backPidStatus}`);
-  console.log(`PID front: ${frontPidStatus}`);
+  if (!quiet) {
+    console.log(`Backend  : ${backendReady ? "OK" : "KO"} (http://localhost:3001)`);
+    console.log(`Frontend : ${frontendReady ? "OK" : "KO"} (http://localhost:5174)`);
+    console.log(`PID back : ${backPidStatus}`);
+    console.log(`PID front: ${frontPidStatus}`);
+  }
 
-  if (frontendReady) {
+  if (frontendReady && !noOpen) {
     openBrowser("http://localhost:5174");
-    console.log("Navigateur ouvert sur http://localhost:5174");
+    if (!quiet) console.log("Navigateur ouvert sur http://localhost:5174");
   }
 }
 
