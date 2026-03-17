@@ -866,7 +866,7 @@
             <div class="app-membres-shell">
               <header class="app-membres-header">
                 <h2 class="app-section-title">Membres</h2>
-                <p class="app-membres-desc">Vos clients qui ont ajouté la carte. Cliquez sur un membre pour voir le détail.</p>
+                <p class="app-membres-desc">Vos clients qui ont ajouté la carte. Cliquez sur une ligne pour voir le détail et gérer les points.</p>
               </header>
 
               <div class="app-membres-toolbar">
@@ -874,7 +874,7 @@
                   <span class="app-membres-search-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="6"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
                   </span>
-                  <input type="text" id="app-members-search" class="app-membres-search-input" placeholder="Rechercher un membre (nom ou email)" autocomplete="off" aria-label="Rechercher un membre" />
+                  <input type="text" id="app-members-search" class="app-membres-search-input" placeholder="Rechercher (nom ou email)" autocomplete="off" aria-label="Rechercher un membre" />
                 </div>
                 <div class="app-membres-filters">
                   <select id="app-members-filter" class="app-membres-select" aria-label="Filtrer">
@@ -893,12 +893,13 @@
                 </div>
               </div>
 
-              <div class="app-membres-list" id="app-members-list" role="list">
-                <!-- Rempli par JS -->
-              </div>
-
-              <div class="app-membres-empty hidden" id="app-members-empty">
-                <p>Aucun membre ne correspond à votre recherche.</p>
+              <div class="app-membres-list-card">
+                <div class="app-membres-list" id="app-members-list" role="list">
+                  <!-- Rempli par JS -->
+                </div>
+                <div class="app-membres-empty hidden" id="app-members-empty">
+                  <p class="app-membres-empty-text">Aucun membre ne correspond à votre recherche.</p>
+                </div>
               </div>
 
               <details class="app-membres-import-wrap">

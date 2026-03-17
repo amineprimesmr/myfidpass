@@ -3743,16 +3743,21 @@ function initAppDashboard(slug) {
     }
     if (empty) empty.classList.add("hidden");
     const lastVisitLabel = (m) => (m.last_visit_at ? formatDate(m.last_visit_at) : "Jamais");
+    const initial = (name) => (name && name.trim() ? String(name.trim()).charAt(0).toUpperCase() : "?");
     list.innerHTML = arr
       .map(
         (m) =>
           `<article class="app-membres-card" role="listitem" data-member-id="${escapeHtml(m.id)}" tabindex="0">
-            <h3 class="app-membres-card-name">${escapeHtml(m.name || "Sans nom")}</h3>
-            <p class="app-membres-card-email">${escapeHtml(m.email)}</p>
-            <div class="app-membres-card-meta">
-              <span class="app-membres-card-meta-item"><strong>${m.points ?? 0}</strong> points</span>
-              <span class="app-membres-card-meta-item">Dernier passage : ${lastVisitLabel(m)}</span>
+            <span class="app-membres-card-avatar" aria-hidden="true">${escapeHtml(initial(m.name || m.email))}</span>
+            <div class="app-membres-card-body">
+              <h3 class="app-membres-card-name">${escapeHtml(m.name || "Sans nom")}</h3>
+              <p class="app-membres-card-email">${escapeHtml(m.email)}</p>
+              <div class="app-membres-card-meta">
+                <span class="app-membres-card-meta-item"><strong>${m.points ?? 0}</strong> points</span>
+                <span class="app-membres-card-meta-item">Dernier passage : ${lastVisitLabel(m)}</span>
+              </div>
             </div>
+            <span class="app-membres-card-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
           </article>`
       )
       .join("");
