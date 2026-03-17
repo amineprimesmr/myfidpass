@@ -1,5 +1,8 @@
 .landing-card-beam {
   margin: 2.8rem auto 0;
+  padding: 1.2rem;
+  border-radius: 24px;
+  background: #000;
 }
 
 .landing-card-beam-head {
@@ -9,42 +12,34 @@
 
 .landing-card-beam-title {
   margin: 0;
-  color: #0f172a;
+  color: #f8fafc;
   font-size: clamp(1.2rem, 2.4vw, 1.7rem);
 }
 
 .landing-card-beam-subtitle {
   margin: 0.45rem 0 0;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.9rem;
 }
 
-.landing-card-beam-crop {
-  position: relative;
+.landing-card-beam-frame {
+  display: block;
   width: 100%;
-  height: clamp(280px, 42vw, 430px);
+  min-height: 520px;
   border-radius: 20px;
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: #020617;
 }
 
-.landing-card-beam-frame {
-  display: block;
-  width: 100%;
-  height: clamp(560px, 70vw, 760px);
-  border: 0;
-  transform: translateY(-110px);
-}
-
 @media (max-width: 768px) {
-  .landing-card-beam-crop {
-    height: 240px;
-    border-radius: 12px;
+  .landing-card-beam {
+    padding: 0.7rem;
+    border-radius: 16px;
   }
 
   .landing-card-beam-frame {
-    height: 560px;
-    transform: translateY(-126px);
+    min-height: 420px;
+    border-radius: 12px;
   }
 }

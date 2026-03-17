@@ -13,6 +13,7 @@
     "dev:local": "node scripts/dev-local.mjs up",
     "dev:local:status": "node scripts/dev-local.mjs status",
     "dev:local:stop": "node scripts/dev-local.mjs down",
+    "dev:guardian": "node scripts/dev-guardian.mjs",
     "dev:auto:install": "node scripts/install-dev-local-agent.mjs",
     "dev:auto:uninstall": "node scripts/uninstall-dev-local-agent.mjs",
     "start": "npm run dev",
