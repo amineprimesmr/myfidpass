@@ -96,6 +96,16 @@ export function updateAuthNavLinks() {
   }
 }
 
+export function navigateToBuilder(queryString) {
+  history.pushState({ step: "builder" }, "", "/creer-ma-carte" + (queryString || ""));
+  return initRouting();
+}
+
+export function navigateToLanding() {
+  history.replaceState(null, "", "/");
+  return initRouting();
+}
+
 async function loadPage(routeType) {
   const type = routeType || "landing";
   const mod = await import(`../pages/${type}.js`);

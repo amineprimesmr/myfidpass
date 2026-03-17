@@ -1,4 +1,4 @@
-import { initBuilderPage } from "../main.js";
+import { initBuilderPage } from "../features/builder.js";
 
 export default {
   init() {
