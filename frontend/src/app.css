@@ -4382,22 +4382,20 @@ body.page-app .site-banner { display: none !important; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px 10px 14px;
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.88) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   pointer-events: auto;
 }
 .app-carte-perimetre-radius-vertical .app-carte-perimetre-radius-label {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--app-text, #1e293b);
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   margin: 0;
 }
 .app-perimetre-radius-slider-wrap {
@@ -4423,9 +4421,10 @@ body.page-app .site-banner { display: none !important; }
   flex: none;
 }
 .app-carte-perimetre-radius-vertical .app-perimetre-radius-value {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--app-accent, #0a7c42);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .app-perimetre-save-feedback {
   font-weight: 500;
