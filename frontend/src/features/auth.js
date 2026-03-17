@@ -3,7 +3,7 @@
  * Référence : REFONTE-REGLES.md — un module par écran, max 400 lignes.
  */
 import { API_BASE, setAuthToken } from "../config.js";
-import { showApiError } from "../utils/apiError.js";
+import { getApiErrorMessage, showApiError } from "../utils/apiError.js";
 
 function isAppleRedirectDevice() {
   if (typeof navigator === "undefined") return false;
@@ -193,8 +193,10 @@ export function initAuthPage(initialTab) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (loginError) {
-          let msg = data.error || "Erreur de connexion";
-          if (res.status === 401) msg += " Si vous aviez déjà un compte et que la connexion ne marche plus, l'hébergeur a peut‑être été réinitialisé : vous pouvez recréer un compte avec le même email.";
+          let msg;
+          if (res.status === 401) msg = (data?.error && typeof data.error === "string" ? data.error : "Email ou mot de passe incorrect.") + " Si vous aviez déjà un compte et que la connexion ne marche plus, l'hébergeur a peut‑être été réinitialisé : vous pouvez recréer un compte avec le même email.";
+          else if (res.status >= 502 && res.status <= 503) msg = "Service temporairement indisponible. Réessayez dans un instant.";
+          else msg = getApiErrorMessage(res, data);
           loginError.textContent = msg;
           loginError.classList.remove("hidden");
         }
