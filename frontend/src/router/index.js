@@ -119,6 +119,7 @@ export async function initRouting() {
   const route = getRoute();
   const c = getContainers();
 
+  document.body.classList.toggle("route-landing", route.type === "landing");
   document.body.classList.toggle("page-checkout", route.type === "checkout");
   document.body.classList.toggle("page-app", route.type === "app");
   document.body.classList.remove("page-builder");

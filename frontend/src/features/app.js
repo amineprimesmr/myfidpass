@@ -713,6 +713,8 @@ function initAppDashboard(slug) {
     const radiusValueEl = document.getElementById("app-perimetre-radius-value");
     const saveBtn = document.getElementById("app-perimetre-save");
     const saveFeedback = document.getElementById("app-perimetre-save-feedback");
+    const perimetreNotifTitleEl = document.getElementById("app-perimetre-notif-title");
+    const perimetreNotifMessageEl = document.getElementById("app-perimetre-notif-message");
     const mapWrap = document.querySelector(".app-carte-perimetre-map-wrap");
     const mapHintEl = document.getElementById("app-perimetre-map-hint");
     if (!mapEl || !radiusSlider || !saveBtn) return;
@@ -731,6 +733,7 @@ function initAppDashboard(slug) {
     let autocompleteAbort = null;
     let autocompleteDebounce = null;
     let defaultSuggestionData = null;
+    let savedPerimetreState = null;
 
     const DEFAULT_CENTER = [48.8566, 2.3522];
     function circleGeoJSON(lat, lng, radiusMeters) {
@@ -748,6 +751,47 @@ function initAppDashboard(slug) {
     const NOMINATIM_REVERSE = "https://nominatim.openstreetmap.org/reverse";
     const AUTCOMPLETE_DEBOUNCE_MS = 320;
     const MIN_QUERY_LENGTH = 2;
+
+    function normalizePerimetreText(value) {
+      return String(value || "").trim();
+    }
+
+    function getPerimetreDraftState() {
+      return {
+        lat: currentLat != null ? Number(currentLat) : null,
+        lng: currentLng != null ? Number(currentLng) : null,
+        radius: Number(currentRadiusM) || 500,
+        address: normalizePerimetreText((addressInput?.value ?? currentAddress) || ""),
+        notifTitle: normalizePerimetreText(perimetreNotifTitleEl?.value),
+        notifMessage: normalizePerimetreText(perimetreNotifMessageEl?.value),
+      };
+    }
+
+    function isSamePerimetreState(a, b) {
+      if (!a || !b) return false;
+      const coordEquals = (x, y) => {
+        if (x == null && y == null) return true;
+        if (x == null || y == null) return false;
+        return Math.abs(Number(x) - Number(y)) < 0.000001;
+      };
+      return (
+        coordEquals(a.lat, b.lat) &&
+        coordEquals(a.lng, b.lng) &&
+        Number(a.radius) === Number(b.radius) &&
+        normalizePerimetreText(a.address) === normalizePerimetreText(b.address) &&
+        normalizePerimetreText(a.notifTitle) === normalizePerimetreText(b.notifTitle) &&
+        normalizePerimetreText(a.notifMessage) === normalizePerimetreText(b.notifMessage)
+      );
+    }
+
+    function hasPerimetreChanges() {
+      if (!savedPerimetreState) return false;
+      return !isSamePerimetreState(savedPerimetreState, getPerimetreDraftState());
+    }
+
+    function refreshPerimetreSaveButtonState() {
+      saveBtn.disabled = !hasPerimetreChanges();
+    }
 
     function formatPhotonAddress(props) {
       if (!props) return "";
@@ -791,6 +835,7 @@ function initAppDashboard(slug) {
       const section = document.getElementById("carte-perimetre");
       if (section?.classList.contains("app-section-visible")) initMap(lat, lng);
       setCenter(lat, lng, displayAddress);
+      refreshPerimetreSaveButtonState();
     }
 
     function updateRadiusUI(m) {
@@ -803,6 +848,7 @@ function initAppDashboard(slug) {
       if (!useMapbox && perimetreCircle && currentLat != null && currentLng != null) {
         perimetreCircle.setRadius(m);
       }
+      refreshPerimetreSaveButtonState();
     }
 
     function setCenter(lat, lng, addressText) {
@@ -919,7 +965,9 @@ function initAppDashboard(slug) {
             const str = parts.length ? parts.join(", ") : `${lat_.toFixed(5)}, ${lng_.toFixed(5)}`;
             currentAddress = str;
             if (addressInput) addressInput.value = str;
+          refreshPerimetreSaveButtonState();
           }).catch(() => { currentAddress = `${lat_.toFixed(5)}, ${lng_.toFixed(5)}`; if (addressInput) addressInput.value = currentAddress; });
+          refreshPerimetreSaveButtonState();
         });
         if (mapWrap) mapWrap.classList.add("has-map");
         if (mapHintEl) mapHintEl.classList.add("hidden");
@@ -963,7 +1011,9 @@ function initAppDashboard(slug) {
           const str = parts.length ? parts.join(", ") : `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
           currentAddress = str;
           if (addressInput) addressInput.value = str;
+          refreshPerimetreSaveButtonState();
         }).catch(() => { currentAddress = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`; if (addressInput) addressInput.value = currentAddress; });
+        refreshPerimetreSaveButtonState();
       });
       if (mapWrap) mapWrap.classList.add("has-map");
       if (mapHintEl) mapHintEl.classList.add("hidden");
@@ -1026,9 +1076,13 @@ function initAppDashboard(slug) {
         const lng = data.location_lng != null ? Number(data.location_lng) : null;
         const radius = data.location_radius_meters != null ? Math.min(2000, Math.max(100, Number(data.location_radius_meters))) : 500;
         const address = data.location_address || "";
+        const notifTitle = data.notification_title_override ?? data.notificationTitleOverride ?? "";
+        const notifMessage = data.notification_change_message ?? data.notificationChangeMessage ?? "";
         currentAddress = address;
         const organizationName = (data.organization_name || "").trim();
         if (addressInput) addressInput.value = address;
+        if (perimetreNotifTitleEl) perimetreNotifTitleEl.value = notifTitle;
+        if (perimetreNotifMessageEl) perimetreNotifMessageEl.value = notifMessage;
         updateRadiusUI(radius);
         if (lat != null && lng != null) {
           currentLat = lat;
@@ -1065,6 +1119,8 @@ function initAppDashboard(slug) {
             }
           } catch (_) {}
         } else if (defaultSuggestionEl) defaultSuggestionEl.classList.add("hidden");
+        savedPerimetreState = getPerimetreDraftState();
+        refreshPerimetreSaveButtonState();
       } catch (_) {}
     }
 
@@ -1072,6 +1128,7 @@ function initAppDashboard(slug) {
       addressInput.addEventListener("input", () => {
         if (autocompleteDebounce) clearTimeout(autocompleteDebounce);
         const q = (addressInput.value || "").trim();
+        refreshPerimetreSaveButtonState();
         if (q.length < MIN_QUERY_LENGTH) { hideSuggestions(); return; }
         autocompleteDebounce = setTimeout(() => {
           fetchPhotonSuggestions(q, (features) => renderSuggestions(features));
@@ -1147,7 +1204,9 @@ function initAppDashboard(slug) {
             const addr = data?.address;
             const parts = [addr?.road, addr?.suburb, addr?.city, addr?.country].filter(Boolean);
             if (addressInput) addressInput.value = parts.length ? parts.join(", ") : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            refreshPerimetreSaveButtonState();
           }).catch(() => { if (addressInput) addressInput.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; });
+          refreshPerimetreSaveButtonState();
           geolocBtn.disabled = false;
         },
         () => { showAddressHint("Impossible d’obtenir la position.", true); geolocBtn.disabled = false; },
@@ -1160,6 +1219,9 @@ function initAppDashboard(slug) {
       updateRadiusUI(m);
     });
 
+    perimetreNotifTitleEl?.addEventListener("input", refreshPerimetreSaveButtonState);
+    perimetreNotifMessageEl?.addEventListener("input", refreshPerimetreSaveButtonState);
+
     saveBtn.addEventListener("click", async () => {
       if (currentLat == null || currentLng == null) {
         showSaveFeedback("Choisissez d’abord un emplacement (adresse ou Ma position).", true);
@@ -1168,18 +1230,30 @@ function initAppDashboard(slug) {
       saveBtn.disabled = true;
       if (saveFeedback) saveFeedback.classList.add("hidden");
       try {
+        const payload = {
+          notification_title_override: perimetreNotifTitleEl?.value?.trim() || null,
+          organization_name: perimetreNotifTitleEl?.value?.trim() || null,
+          notification_change_message: perimetreNotifMessageEl?.value?.trim() || null,
+        };
+        if (currentLat != null && currentLng != null) {
+          payload.location_lat = currentLat;
+          payload.location_lng = currentLng;
+          payload.location_radius_meters = currentRadiusM;
+          payload.location_address = ((addressInput?.value ?? currentAddress) || "").trim() || undefined;
+        }
         const res = await api("/dashboard/settings", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location_lat: currentLat,
-            location_lng: currentLng,
-            location_radius_meters: currentRadiusM,
-            location_address: ((addressInput?.value ?? currentAddress) || "").trim() || undefined,
-          }),
+          body: JSON.stringify(payload),
         });
         if (res.ok || res.status === 204) {
-          showSaveFeedback("Périmètre enregistré. Les cartes déjà ajoutées (Apple Wallet) seront mises à jour ; les clients recevront une notification en entrant dans la zone.");
+          const bannerTitle = document.getElementById("app-notification-banner-title");
+          const bannerMessage = document.getElementById("app-notification-banner-message");
+          if (bannerTitle && perimetreNotifTitleEl) bannerTitle.value = perimetreNotifTitleEl.value;
+          if (bannerMessage && perimetreNotifMessageEl) bannerMessage.value = perimetreNotifMessageEl.value;
+          if (typeof updateAppNotificationPreview === "function") updateAppNotificationPreview();
+          savedPerimetreState = getPerimetreDraftState();
+          showSaveFeedback("Enregistré. Le périmètre et le message d'entrée sont à jour.");
         } else {
           const data = await res.json().catch(() => ({}));
           showSaveFeedback(data.error || "Erreur lors de l’enregistrement.", true);
@@ -1187,7 +1261,7 @@ function initAppDashboard(slug) {
       } catch (_) {
         showSaveFeedback("Erreur réseau.", true);
       }
-      saveBtn.disabled = false;
+      refreshPerimetreSaveButtonState();
     });
 
     window.addEventListener("app-section-change", (e) => {
@@ -1197,6 +1271,8 @@ function initAppDashboard(slug) {
     });
 
     if (document.getElementById("carte-perimetre")?.classList.contains("app-section-visible")) loadPerimetreSettings();
+    savedPerimetreState = getPerimetreDraftState();
+    refreshPerimetreSaveButtonState();
   })();
 
   // ——— Personnaliser la carte ———

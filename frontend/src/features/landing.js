@@ -79,6 +79,49 @@ function initLandingCardsScroll() {
   }
 }
 
+function initLandingPerfectDock() {
+  const dock = document.getElementById("landing-perfect-dock");
+  if (!dock || dock.dataset.initialized === "1") return;
+  dock.dataset.initialized = "1";
+
+  const links = Array.from(dock.querySelectorAll("[data-dock-target]"));
+  const sections = links
+    .map((link) => document.querySelector(link.getAttribute("data-dock-target")))
+    .filter(Boolean);
+
+  function setActive(targetId) {
+    links.forEach((link) => {
+      const isActive = link.getAttribute("data-dock-target") === targetId;
+      link.classList.toggle("is-active", isActive);
+      link.setAttribute("aria-current", isActive ? "page" : "false");
+    });
+  }
+
+  links.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      const target = link.getAttribute("data-dock-target");
+      const section = target ? document.querySelector(target) : null;
+      if (!section) return;
+      e.preventDefault();
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActive(target);
+    });
+  });
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visibleEntry = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visibleEntry) return;
+      setActive(`#${visibleEntry.target.id}`);
+    },
+    { rootMargin: "-35% 0px -45% 0px", threshold: [0.2, 0.45, 0.7] }
+  );
+
+  sections.forEach((section) => observer.observe(section));
+}
+
 function initLandingSimulator() {
   const btn = document.getElementById("landing-simulator-btn");
   const modal = document.getElementById("landing-simulator-modal");
@@ -129,8 +172,10 @@ function initLandingSimulator() {
 export function initLandingAnimations() {
   initLandingReveal();
   if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
+    import("../components/LandingPerfectPairBackground.jsx").then((m) => m.mountLandingPerfectPairBackground());
     initLandingHeroAnim();
     initLandingCardsScroll();
+    initLandingPerfectDock();
     initLandingSimulator();
     import("../helmet/index.jsx").then((m) => m.mountHelmet());
   }
