@@ -22,6 +22,10 @@
   font-size: 0.9rem;
 }
 
+.landing-card-beam-frame-wrap {
+  position: relative;
+}
+
 .landing-card-beam-frame {
   display: block;
   width: 100%;
@@ -30,6 +34,17 @@
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: #020617;
+}
+
+.landing-card-beam-footer-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42px;
+  background: #000;
+  border-radius: 0 0 20px 20px;
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {
@@ -41,5 +56,9 @@
   .landing-card-beam-frame {
     min-height: 420px;
     border-radius: 12px;
+  }
+
+  .landing-card-beam-footer-mask {
+    border-radius: 0 0 12px 12px;
   }
 }
