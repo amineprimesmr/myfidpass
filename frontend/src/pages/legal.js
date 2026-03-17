@@ -1,4 +1,4 @@
-import { getLegalPageHtml } from "../main.js";
+import { getLegalPageHtml } from "../features/legal.js";
 
 const legalContent = () => document.getElementById("landing-legal-content");
 

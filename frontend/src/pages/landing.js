@@ -1,4 +1,4 @@
-import { initLandingAnimations } from "../main.js";
+import { initLandingAnimations } from "../features/landing.js";
 
 export default {
   init() {

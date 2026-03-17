@@ -1,4 +1,4 @@
-import { initOffersPage } from "../main.js";
+import { initOffersPage } from "../features/offers.js";
 
 export default {
   init() {

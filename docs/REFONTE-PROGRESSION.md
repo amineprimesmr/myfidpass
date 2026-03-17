@@ -47,7 +47,7 @@
 4. **main.js → routeur + pages** ✅ (structure en place)  
    - **Fait.** `frontend/src/router/index.js` : getRoute, initRouting (async), setBuilderHeaderStep, attachBuilderHeaderNavForCheckout, updateAuthNavLinks, triggerRouteViewEnter. Show/hide des vues puis `import(\`../pages/${route.type}.js\`)` et `page.init(route)`.
    - **Fait.** Un module par écran dans `frontend/src/pages/` : `fidelity.js`, `auth.js`, `app.js`, `dashboard.js`, `checkout.js`, `templates.js`, `offers.js`, `legal.js`, `integration.js`, `not-found.js`, `landing.js`. Chaque page exporte `default { init(route) }` et délègue aux `init*` exportés par `main.js` (ou à `initClientFidelityPage` / `getLegalPageHtml`).
-   - **En attente.** Réduire `main.js` à < 400 lignes (déplacer la logique des init* dans les pages ou des modules métier).
+   - **En cours.** Modules `features/` créés : `legal.js`, `landing.js`, `offers.js`, `auth.js` (pages importent depuis ces modules). `main.js` réduit (~6893 lignes) ; objectif < 400 en poursuivant l’extraction (dashboard, checkout, builder, app).
 
 5. **index.html**  
    Réduire à un shell < 200 lignes : head, polices, CSS, divs racine vides (ex. `#landing`, `#auth-app`, …), un seul script d’entrée. Déplacer le markup des vues vers des templates (ex. `frontend/src/templates/*.html`) chargés par les modules de page, ou générés par des composants.

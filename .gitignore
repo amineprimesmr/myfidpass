@@ -12,6 +12,7 @@ frontend/dist/
 
 # Sauvegardes locales
 backups/
+*.bak
 
 # IDE
 .idea/

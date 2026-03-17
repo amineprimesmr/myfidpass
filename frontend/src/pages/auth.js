@@ -1,4 +1,4 @@
-import { initAuthPage } from "../main.js";
+import { initAuthPage } from "../features/auth.js";
 
 export default {
   init(route) {
