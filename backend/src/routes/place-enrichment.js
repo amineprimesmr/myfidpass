@@ -122,7 +122,7 @@ function scoreCandidate(source, platform, url) {
   try {
     const depth = (new URL(url).pathname.split("/").filter(Boolean).length || 1);
     if (depth <= 2) score += 0.02;
-  } catch (_) {}
+  } catch (_) { /* ignore */ }
   return Math.min(1, Number(score.toFixed(2)));
 }
 
@@ -137,7 +137,7 @@ function extractUrlsFromHtml(html, baseUrl) {
     try {
       const absolute = new URL(raw, baseUrl).toString();
       urls.push(absolute);
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
   }
   return urls;
 }
@@ -215,7 +215,7 @@ async function extractSocialsFromWebsite(website) {
     let pageUrl = `${website}${path}`;
     try {
       pageUrl = new URL(path, `${website}/`).toString();
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
     const html = await fetchTextWithTimeout(pageUrl);
     if (!html) continue;
     const urls = extractUrlsFromHtml(html, pageUrl);

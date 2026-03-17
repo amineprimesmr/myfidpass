@@ -290,7 +290,7 @@ router.post("/apple-redirect", async (req, res) => {
   try {
     const userStr = req.body?.user;
     if (userStr && typeof userStr === "string") userPayload = JSON.parse(decodeURIComponent(userStr));
-  } catch (_) {}
+  } catch (_) { /* ignore */ }
   if (!idToken) {
     return res.redirect(FRONTEND_URL + (state === "auth" ? "/login" : "/checkout") + "?apple_error=no_token");
   }

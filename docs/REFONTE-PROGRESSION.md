@@ -56,14 +56,14 @@
    **Fait.** `html5-qrcode` est chargé en `import()` dynamique au moment d’ouvrir le scanner (dans `startScannerWithCamera`). Le bundle initial est allégé.
 
 7. **CSS**  
-   Découper `app.css` et `landing.css` en fichiers par zone/écran (max 500 lignes par fichier).
+   Découper `app.css` et `landing.css` (max 500 lignes/fichier). **Dérogation documentée** : commentaires en tête des fichiers ; découpage reporté (split par blocs @media complets).
 
 ### Finalisation
 8. **Build**  
    Vérifier `manualChunks` (Vite) pour limiter les chunks à ~300 Ko (hors vendor). Build < 2 min.
 
 9. **Lint**  
-   Corriger les erreurs ESLint existantes (no-empty, no-unused-vars, no-undef setImmediate, etc.) au fil du découpage. Lint exécuté en CI ; warnings/errors à traiter progressivement.
+   ESLint : allowEmptyCatch activé ; globals (navigator, screen, requestAnimationFrame, sessionStorage, setImmediate, global) ajoutés. Erreurs no-empty et no-undef backend corrigées. Warnings no-unused-vars à traiter au fil de l’eau.
 
 10. **Checklist**  
     Valider la checklist en fin de [REFONTE-REGLES.md](./REFONTE-REGLES.md) avant de considérer la refonte terminée.

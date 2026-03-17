@@ -300,7 +300,7 @@ router.post("/:memberId/redeem", async (req, res) => {
     });
     const tokens = getPushTokensForMember(member.id);
     for (const token of tokens) {
-      try { await sendPassKitUpdate(token); } catch (_) {}
+      try { await sendPassKitUpdate(token); } catch (_) { /* ignore */ }
     }
     return res.json({
       ok: true,
@@ -352,7 +352,7 @@ router.post("/:memberId/redeem", async (req, res) => {
     });
     const tokens = getPushTokensForMember(member.id);
     for (const token of tokens) {
-      try { await sendPassKitUpdate(token); } catch (_) {}
+      try { await sendPassKitUpdate(token); } catch (_) { /* ignore */ }
     }
     return res.json({
       ok: true,

@@ -9,7 +9,6 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
 } else {
   const { publicKey, privateKey } = webPush.generateVAPIDKeys();
   VAPID_PUBLIC = publicKey;
-  VAPID_PRIVATE = privateKey;
   webPush.setVapidDetails("mailto:contact@myfidpass.fr", publicKey, privateKey);
   if (process.env.NODE_ENV === "production") {
     console.warn("[notifications] VAPID non configuré : définir VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY (voir web-push generate-vapid-keys).");

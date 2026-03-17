@@ -58,14 +58,14 @@ export async function notifyHandler(req, res) {
       await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
       sentWebPush++;
       logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body: message, type: "web_push" });
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
   }
 
   if (passKitTokens.length > 0) {
     for (const row of passKitTokens) {
       try {
         await sendPassKitUpdate(row.push_token);
-      } catch (_) {}
+      } catch (_) { /* ignore */ }
     }
     await new Promise((r) => setTimeout(r, 2500));
   }
@@ -84,7 +84,7 @@ export async function notifyHandler(req, res) {
         sentPassKit++;
         logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body: message, type: "passkit" });
       }
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
   }
   res.status(200).json({ ok: true, sent: sentWebPush + sentPassKit, sentWebPush, sentPassKit });
 }
@@ -147,7 +147,7 @@ router.post("/send", async (req, res) => {
   }
   if (passKitTokens.length > 0) {
     for (const row of passKitTokens) {
-      try { await sendPassKitUpdate(row.push_token); } catch (_) {}
+      try { await sendPassKitUpdate(row.push_token); } catch (_) { /* ignore */ }
     }
     await new Promise((r) => setTimeout(r, 2500));
   }

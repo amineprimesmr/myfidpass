@@ -502,7 +502,6 @@
     0 8px 20px rgba(0, 0, 0, 0.25),
     0 14px 32px rgba(0, 0, 0, 0.18);
 }
-
 /* Fallback pour autres headers (auth, offers) sans barre flottante */
 .landing-header:not(.landing-header-bar) .landing-logo { color: #fff; }
 .landing-header:not(.landing-header-bar) .landing-nav a { color: rgba(255, 255, 255, 0.9); }
@@ -906,8 +905,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scroll-snap-type: x mandatory;
-}
-.landing-cards-scroll {
+}.landing-cards-scroll {
   display: flex;
   padding: 0.5rem 1.5rem;
   gap: 1.25rem;
@@ -1310,7 +1308,6 @@
   color: var(--landing-muted);
   line-height: 1.55;
 }
-
 /* Tarif – même fond que la page, cartes en relief 3D comme le menu */
 .landing-tarif {
   padding: 4rem 0 4.5rem;
@@ -1715,7 +1712,6 @@
   margin: 0;
   line-height: 1.5;
 }
-
 .landing-simulator-form-wrap {
   display: flex;
   flex-direction: column;
@@ -2123,8 +2119,7 @@
     0 -1px 0 rgba(0, 0, 0, 0.2) inset,
     0 1px 2px rgba(0, 0, 0, 0.15),
     0 2px 6px rgba(0, 0, 0, 0.12);
-}
-.builder-header-step-active:hover {
+}.builder-header-step-active:hover {
   background: linear-gradient(180deg, #1a1a1a 0%, #000 100%);
   color: #fff;
 }
@@ -2591,7 +2586,6 @@ body.page-builder {
     padding-bottom: 1rem;
   }
 }
-
 @keyframes builderStickyIn {
   from {
     opacity: 0;
@@ -2990,8 +2984,7 @@ body.page-builder {
 .builder-wallet-card-cafe-points .builder-wallet-card-header,
 .builder-wallet-card-cafe-tampons .builder-wallet-card-header {
   background: linear-gradient(165deg, #6d5d47 0%, #5d4e37 50%, #4a3f2d 100%);
-}
-.builder-wallet-card-cafe-points .builder-wallet-card-body,
+}.builder-wallet-card-cafe-points .builder-wallet-card-body,
 .builder-wallet-card-cafe-tampons .builder-wallet-card-body {
   background: linear-gradient(180deg, #63543e 0%, #5d4e37 50%, #3d3325 100%);
   color: #fff;
@@ -3392,7 +3385,6 @@ body.page-builder {
 .builder-demo-hint strong {
   color: var(--landing-text);
 }
-
 .builder-fields-compact {
   max-width: 420px;
 }
@@ -3796,7 +3788,6 @@ body.page-builder {
   color: #6b7280;
   margin-top: 0.15rem;
 }
-
 .cart-item-qty {
   display: block;
   font-size: 0.75rem;
@@ -4195,8 +4186,7 @@ body.page-checkout .site-banner { display: none !important; }
   font-family: inherit;
   color: #1a1a1a;
   cursor: default;
-}
-.checkout-step-open .checkout-step-title {
+}.checkout-step-open .checkout-step-title {
   background: #fff;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.75rem;

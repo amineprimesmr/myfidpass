@@ -299,7 +299,7 @@ router.patch("/settings", async (req, res) => {
   if (locationUpdated) {
     const passKitTokens = getPassKitPushTokensForBusiness(business.id);
     if (passKitTokens.length > 0) {
-      setImmediate(() => {
+      process.nextTick(() => {
         passKitTokens.forEach((row) => {
           sendPassKitUpdate(row.push_token).catch(() => {});
         });
@@ -351,7 +351,7 @@ router.patch("/engagement-completions/:id/approve", (req, res) => {
   if (!updated) return res.status(404).json({ error: "Demande introuvable ou déjà traitée" });
   if (updated.points_granted > 0) {
     const tokens = getPushTokensForMember(updated.member_id);
-    setImmediate(() => {
+    process.nextTick(() => {
       tokens.forEach((token) => sendPassKitUpdate(token).catch(() => {}));
     });
   }

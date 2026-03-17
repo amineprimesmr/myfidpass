@@ -36,9 +36,9 @@ function loadStampIconsAtStartup() {
       const p = join(STAMP_ICONS_DIR, e.name);
       try {
         STAMP_ICONS_RAW.set(name, readFileSync(p));
-      } catch (_) {}
+      } catch (_) { /* ignore */ }
     }
-  } catch (_) {}
+  } catch (_) { /* ignore */ }
 }
 loadStampIconsAtStartup();
 if (process.env.NODE_ENV === "production") {
