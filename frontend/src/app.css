@@ -3557,10 +3557,8 @@ body.page-app .site-banner { display: none !important; }
   margin: 0;
 }
 #app-dashboard-content #personnaliser .app-personnaliser-live-preview-wrap {
-  margin-bottom: 0;
-  position: sticky;
-  /* remonte légèrement l'iPhone dans la colonne de droite */
-  top: 0.75rem;
+  margin-bottom: 2rem;
+  /* pas de sticky : la section défile pour que tout l'iPhone (cadre + carte) soit visible */
   min-width: 0;
   max-width: 100%;
   display: flex;
@@ -3604,27 +3602,31 @@ body.page-app .site-banner { display: none !important; }
   left: 11.8%;
   top: 11.5%;
   width: 76.4%;
-  /* hauteur augmentée pour afficher complètement la carte (bandeau bas compris) */
-  height: 79%;
-  overflow: hidden;
+  /* hauteur pour afficher cadre iPhone + carte complète (bandeau bas visible) */
+  height: 84%;
+  overflow-y: auto;
+  overflow-x: hidden;
   border-radius: 12.5% / 9%;
   background: #000;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding-top: 0.45rem;
+  padding-bottom: 0.25rem;
   isolation: isolate;
   z-index: 2;
 }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
   width: 97%;
   max-width: 97%;
-  max-height: 78%;
-  height: 78%;
+  /* carte peut dépasser : défilement dans l'écran si besoin, bandeau bas visible */
+  max-height: none;
+  height: auto;
   min-height: 0;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 @media (max-width: 980px) {
