@@ -525,8 +525,9 @@ async function fetchEngagementActions(slug) {
 }
 
 function showSlugError(message) {
-  if (!fidelityAppEl) return;
-  fidelityAppEl.innerHTML = `
+  const el = document.getElementById("fidelity-app");
+  if (!el) return;
+  el.innerHTML = `
     <header class="header"><div class="header-inner"><a href="/" class="logo">Myfidpass</a></div></header>
     <main class="main" style="text-align: center; padding: 3rem 1.5rem;">
       <p class="error-message" style="font-size: 1.1rem;">${message}</p>
