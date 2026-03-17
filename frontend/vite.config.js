@@ -53,6 +53,10 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  // Réduire la lenteur en dev : pre-bundle des grosses deps dès le démarrage
+  optimizeDeps: {
+    include: ["html5-qrcode", "three", "react", "react-dom"],
+  },
   server: {
     port: 5174,
     host: true,

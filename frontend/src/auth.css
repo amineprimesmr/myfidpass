@@ -252,6 +252,20 @@
 .auth-password-hint {
   margin-top: 0.2rem;
 }
+.auth-local-hint {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(37, 99, 235, 0.08);
+  border-radius: 8px;
+  border-left: 3px solid var(--auth-accent, #2563eb);
+}
+.auth-local-hint a {
+  color: var(--auth-accent, #2563eb);
+  font-weight: 500;
+}
+.auth-local-hint a:hover {
+  text-decoration: underline;
+}
 
 .auth-forgot-wrap {
   margin: -0.2rem 0 0.4rem;

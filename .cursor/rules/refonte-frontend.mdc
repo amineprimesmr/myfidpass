@@ -1,0 +1,14 @@
+---
+description: Règles frontend refonte — modules par écran, dynamic import, routeur léger
+globs: frontend/src/**/*
+alwaysApply: false
+---
+
+# Frontend — Règles refonte
+
+- **Un module par écran** : landing, login, dashboard, app-caisse, etc. Chaque écran = fichier séparé chargé en `import()` dynamique depuis le routeur.
+- **Routeur léger** : le routeur ne fait que lire l’URL, décider quel module charger, afficher le composant. Pas de logique métier des écrans dans le routeur.
+- **Libs lourdes en dynamique** : `html5-qrcode`, `three`, `@react-three/fiber`, `@react-three/drei` → chargées avec `import()` uniquement quand on entre sur l’écran concerné, jamais en tête du point d’entrée.
+- **Point d’entrée** : un seul script (main.js ou App.jsx) ; index.html = shell minimal (head + divs racine vides + ce script). Pas de markup des vues dans index.html.
+
+Référence : `docs/REFONTE-REGLES.md` §3.

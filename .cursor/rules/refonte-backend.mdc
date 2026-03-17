@@ -1,0 +1,14 @@
+---
+description: Règles backend refonte — services, repositories, routes courtes
+globs: backend/src/**/*
+alwaysApply: false
+---
+
+# Backend — Règles refonte
+
+- **Routes** : uniquement définition des routes et appel des services. Max 15 routes et 400 lignes par fichier. Handler court : validation → service/repository → réponse.
+- **Services** : toute logique métier (création commerce, génération pass, notifications, etc.) dans `backend/src/services/` (ou `lib/`). Les routes n’appellent que les services.
+- **Données** : accès DB dans des modules dédiés (`db/` ou `repositories/`), découpés par domaine (users.js, businesses.js, members.js, etc.). Pas un seul db.js de 2000+ lignes.
+- **Pass** : pass.js découpé en sous-modules (signature, images, champs, etc.), chaque fichier < 400 lignes.
+
+Référence : `docs/REFONTE-REGLES.md` §4.

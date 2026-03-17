@@ -8,6 +8,8 @@ const IS_LOCALHOST =
 const RAW_ENV_API_BASE =
   typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : "";
 
+// En prod sur myfidpass.fr : utiliser /api (proxy Vercel → api.myfidpass.fr) pour éviter CORS.
+// En local : proxy Vite ou URL explicite si VITE_API_URL est défini.
 function shouldForceApiSubdomain(base) {
   if (!IS_MYFIDPASS_HOST) return false;
   if (!base) return true;
@@ -23,9 +25,11 @@ function shouldForceApiSubdomain(base) {
 export const API_BASE =
   IS_LOCALHOST && !RAW_ENV_API_BASE
     ? ""
-    : shouldForceApiSubdomain(RAW_ENV_API_BASE)
-      ? "https://api.myfidpass.fr"
-      : RAW_ENV_API_BASE || "";
+    : IS_MYFIDPASS_HOST
+      ? ""
+      : shouldForceApiSubdomain(RAW_ENV_API_BASE)
+        ? "https://api.myfidpass.fr"
+        : RAW_ENV_API_BASE || "";
 
 const AUTH_TOKEN_KEY = "fidpass_token";
 

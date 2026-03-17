@@ -1,0 +1,14 @@
+---
+description: Limites strictes refonte Fidpass — 400 lignes max, pas de monolithe
+alwaysApply: true
+---
+
+# Limites à respecter absolument (refonte Fidpass)
+
+- **Max 400 lignes** par fichier source (JS/TS/JSX/CSS). Dérogation uniquement si documentée avec date de résolution.
+- **index.html** : max 200 lignes ; tout le markup des vues doit venir de composants ou de templates chargés dynamiquement.
+- **CSS** : max 500 lignes par fichier ; un fichier par composant/écran si possible.
+- **Backend** : max 15 routes par fichier de routes ; max 400 lignes par fichier.
+- **Interdit** : un seul fichier JS contenant routage + auth + dashboard + app ; un seul db.js avec schéma + toutes les requêtes ; un seul fichier de routes avec toute la logique métier.
+
+Référence complète : `docs/REFONTE-REGLES.md`.

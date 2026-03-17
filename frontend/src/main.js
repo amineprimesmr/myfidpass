@@ -1,4 +1,3 @@
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { initClientFidelityPage } from "./client-fidelity/bootstrap.js";
 import {
   API_BASE,
@@ -368,6 +367,10 @@ function initAuthPage(initialTab) {
 
   const defaultMode = initialTab === "register" ? "register" : "login";
   showAuthForm(defaultMode);
+  const localDbHint = document.getElementById("auth-local-db-hint");
+  if (localDbHint && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    localDbHint.classList.remove("hidden");
+  }
   const initialForm = defaultMode === "register" ? formRegister : formLogin;
   if (initialForm) {
     initialForm.classList.add("auth-form-enter");
@@ -3742,8 +3745,9 @@ function initAppDashboard(slug) {
     return scannerCameraSelect.value;
   }
 
-  function startScannerWithCamera(cameraConfig, allowFallback = true) {
+  async function startScannerWithCamera(cameraConfig, allowFallback = true) {
     if (scannerInstance || !scannerFullscreenViewport) return;
+    const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
     const config = { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] };
     scannerInstance = new Html5Qrcode("app-scanner-fullscreen-viewport", config);
     const qrboxSize = Math.min(280, Math.min(window.innerWidth, window.innerHeight) * 0.72);
@@ -3780,7 +3784,7 @@ function initAppDashboard(slug) {
       const canFallback = allowFallback && (typeof cameraConfig === "string" || (cameraConfig && cameraConfig.deviceId));
       if (canFallback) {
         // Fallback robuste desktop: webcam user sans deviceId strict.
-        startScannerWithCamera({ facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, false);
+        startScannerWithCamera({ facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, false).catch(() => {});
         return;
       }
       closeFullscreenScanner();
@@ -3823,24 +3827,24 @@ function initAppDashboard(slug) {
       scannerCameraSelect.value = workingDeviceId;
     }
     const cameraConfig = getCameraConfigFromSelection(deviceId);
-    startScannerWithCamera(cameraConfig, true);
+    await startScannerWithCamera(cameraConfig, true);
   }
 
   function restartScannerWithSelectedCamera() {
     if (!scannerFullscreen || scannerFullscreen.classList.contains("hidden")) return;
     if (scannerInstance) {
-      scannerInstance.stop().then(() => {
+      scannerInstance.stop().then(async () => {
         scannerInstance = null;
         scannerFullscreenViewport.innerHTML = "";
         const deviceId = getSelectedCameraId();
         const cameraConfig = getCameraConfigFromSelection(deviceId);
-        startScannerWithCamera(cameraConfig, true);
-      }).catch(() => {
+        await startScannerWithCamera(cameraConfig, true);
+      }).catch(async () => {
         scannerInstance = null;
         scannerFullscreenViewport.innerHTML = "";
         const deviceId = getSelectedCameraId();
         const cameraConfig = getCameraConfigFromSelection(deviceId);
-        startScannerWithCamera(cameraConfig, true);
+        await startScannerWithCamera(cameraConfig, true);
       });
     }
   }

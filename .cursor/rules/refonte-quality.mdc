@@ -1,0 +1,12 @@
+---
+description: Qualité refonte — ESLint tous fichiers, tests, build
+alwaysApply: true
+---
+
+# Qualité — Règles refonte
+
+- **ESLint** : s’applique à tous les fichiers sources `*.js`, `*.jsx`, `*.ts`, `*.tsx`. Ne pas committer d’erreurs ESLint sur les fichiers modifiés.
+- **Tests** : nouvelles routes/services backend = au moins un test. Ne pas désactiver les tests existants (auth, payment). Frontend : au moins un test (config, apiError, routeur) à terme.
+- **Build** : front < 2 min ; pas de chunk app > 300 Ko hors vendor. Lint + build doivent passer avant déploiement.
+
+Référence : `docs/REFONTE-REGLES.md` §5.
