@@ -1,0 +1,123 @@
+.landing-card-beam {
+  margin: 2.8rem auto 0;
+}
+
+.landing-card-beam-head {
+  text-align: center;
+  margin-bottom: 0.9rem;
+}
+
+.landing-card-beam-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+}
+
+.landing-card-beam-subtitle {
+  margin: 0.45rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.landing-card-beam-stage {
+  position: relative;
+  width: 100%;
+  min-height: 290px;
+  border-radius: 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.14) 0%, rgba(15, 23, 42, 0) 45%),
+    linear-gradient(180deg, #030712 0%, #0b1221 100%);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.landing-card-beam-stream {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 2.6rem;
+  will-change: transform;
+}
+
+.landing-card-beam-card {
+  position: relative;
+  width: clamp(200px, 24vw, 300px);
+  aspect-ratio: 1.6 / 1;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.landing-card-beam-card-normal,
+.landing-card-beam-card-ascii {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.landing-card-beam-card-normal {
+  clip-path: inset(0 0 0 var(--clip-right, 0%));
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+
+.landing-card-beam-card-normal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.landing-card-beam-card-ascii {
+  background: rgba(2, 6, 23, 0.92);
+  clip-path: inset(0 calc(100% - var(--clip-left, 0%)) 0 0);
+  border: 1px solid rgba(167, 139, 250, 0.22);
+}
+
+.landing-card-beam-ascii-content {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0.65rem;
+  font-family: "Roboto Mono", Menlo, monospace;
+  font-size: 9px;
+  line-height: 1.2;
+  color: rgba(196, 181, 253, 0.85);
+  white-space: pre;
+  overflow: hidden;
+}
+
+.landing-card-beam-scanner {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.9), transparent);
+  box-shadow: 0 0 22px rgba(34, 211, 238, 0.9), 0 0 70px rgba(34, 211, 238, 0.35);
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .landing-card-beam-stage {
+    min-height: 220px;
+    border-radius: 14px;
+  }
+
+  .landing-card-beam-stream {
+    gap: 1.2rem;
+  }
+
+  .landing-card-beam-card {
+    width: clamp(170px, 62vw, 230px);
+    border-radius: 12px;
+  }
+
+  .landing-card-beam-card-normal,
+  .landing-card-beam-card-ascii {
+    border-radius: 12px;
+  }
+}

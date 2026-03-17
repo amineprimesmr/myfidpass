@@ -17,8 +17,8 @@
     <link rel="stylesheet" href="/src/app.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
-    <link rel="stylesheet" href="/src/landing-shoe-finder.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
+    <link rel="stylesheet" href="/src/landing-card-beam.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
@@ -1782,23 +1782,14 @@
           <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
         </section>
 
-        <section id="landing-shoe-finder" class="landing-shoe-finder-section landing-reveal" data-reveal>
-          <div class="landing-shoe-finder-head">
-            <p class="landing-shoe-finder-kicker">Nouveau module en intégration</p>
-            <h2 class="landing-shoe-finder-title">Aperçu “Shoe Finder” ajouté en bas de la landing</h2>
-            <p class="landing-shoe-finder-subtitle">Premiere integration du projet 3D. On affine ensuite le design et les interactions pour coller a Myfidpass.</p>
+        <section id="landing-card-beam" class="landing-card-beam landing-reveal" data-reveal>
+          <div class="landing-card-beam-head">
+            <h2 class="landing-card-beam-title">Card Beam Experience</h2>
+            <p class="landing-card-beam-subtitle">Un flux de cartes avec effet scanner, inspire du design partage.</p>
           </div>
-          <div class="landing-shoe-finder-frame-wrap">
-            <iframe
-              class="landing-shoe-finder-frame"
-              src="https://shoe-finder-wine.vercel.app"
-              title="Aperçu Shoe Finder"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-            ></iframe>
-          </div>
-          <div class="landing-shoe-finder-actions">
-            <a href="https://github.com/MatthewGreenberg/shoe-finder.git" target="_blank" rel="noopener noreferrer" class="landing-btn landing-btn-secondary">Voir le repo source</a>
+          <div id="landing-card-beam-stage" class="landing-card-beam-stage" aria-label="Animation de cartes">
+            <div id="landing-card-beam-stream" class="landing-card-beam-stream"></div>
+            <div class="landing-card-beam-scanner" aria-hidden="true"></div>
           </div>
         </section>
 
