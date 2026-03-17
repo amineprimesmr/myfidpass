@@ -40,8 +40,8 @@
 2. **routes/businesses.js** ✅  
    **Fait.** Découpage en `backend/src/routes/businesses/` : `index.js` (param slug, POST /, montage slugRouter), `slug.js` (composition), `shared.js` (helpers + rate limit), `create.js` (POST /, PATCH /:slug), `public.js` + `public-assets.js`, `assets.js`, `integration.js`, `engagement.js`, `notifications.js`, `dashboard.js`, `members.js`. Le fichier `routes/businesses.js` réexporte `./businesses/index.js`. Backend démarre correctement. Optionnel : extraire la logique lourde (ex. PATCH settings) dans `services/`.
 
-3. **pass.js**  
-   Découper en sous-modules (ex. `pass/signature.js`, `pass/images.js`, `pass/fields.js`, `pass/registration.js`), chaque fichier < 400 lignes.
+3. **pass.js** ✅  
+   **Fait.** Découpage en `backend/src/pass/` : `constants.js`, `auth.js` (getPassAuthenticationToken), `images-logo.js`, `images-strip.js`, `images-stamps.js`, `certs.js`, `build-buffers.js`, `generate.js` (generatePass). Chaque fichier < 400 lignes. `pass.js` réexporte depuis `./pass/auth.js` et `./pass/generate.js`.
 
 ### Frontend
 4. **main.js → routeur + pages**  
