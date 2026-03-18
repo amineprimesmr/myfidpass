@@ -286,7 +286,7 @@
   background: var(--fidpass-surface);
   border-radius: 0;
   overflow: hidden;
-  padding: 7.5rem max(1.25rem, calc(50vw - 660px)) 0;
+  padding: 9.5rem max(1.25rem, calc(50vw - 660px)) 0;
 }
 
 #landing .landing-hero-grid {
@@ -1002,7 +1002,7 @@
   }
 
   #landing .landing-hero-v2 {
-    padding-top: 7.75rem;
+    padding-top: 9.75rem;
   }
 
   #landing .landing-hero-grid {
@@ -1189,7 +1189,7 @@
   }
 
   #landing .landing-hero-v2 {
-    padding-top: 7rem;
+    padding-top: 9rem;
   }
 
   #landing .landing-dashboard-window {
