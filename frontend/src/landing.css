@@ -5901,6 +5901,10 @@ body.page-checkout .site-banner { display: none !important; }
 
 /* Responsive */
 @media (max-width: 640px) {
+  #landing {
+    overflow-x: hidden;
+  }
+
   .landing-hero {
     padding: 2rem 0 3rem;
   }
@@ -5915,17 +5919,45 @@ body.page-checkout .site-banner { display: none !important; }
     line-height: 1.5;
   }
 
+  #landing .landing-hero-v2 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  #landing .landing-hero-copy {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #landing .landing-hero-form {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
   .landing-hero-form-row {
     flex-direction: column;
     gap: 0.75rem;
+    min-width: 0;
   }
 
   .landing-hero-form-row .landing-hero-cta {
     justify-content: stretch;
+    min-width: 0;
   }
 
   .landing-hero-form-row .landing-hero-cta .landing-btn-hero {
     width: 100%;
+    box-sizing: border-box;
+  }
+
+  .landing-hero-input-wrap {
+    min-width: 0;
+  }
+
+  .landing-hero-input {
+    box-sizing: border-box;
   }
 
   .landing-how-step {
