@@ -40,10 +40,17 @@ export function engagementActionsHandler(req, res) {
       auto_verify_enabled: rewards.google_review.auto_verify_enabled !== false,
     });
   }
-  ["instagram_follow", "tiktok_follow", "facebook_follow"].forEach((key) => {
+  ["instagram_follow", "tiktok_follow", "facebook_follow", "twitter_follow", "trustpilot_review", "tripadvisor_review"].forEach((key) => {
     const c = rewards[key];
     if (c?.enabled && c?.url && c?.points > 0) {
-      const labels = { instagram_follow: "Nous suivre sur Instagram", tiktok_follow: "Nous suivre sur TikTok", facebook_follow: "Nous suivre sur Facebook" };
+      const labels = {
+        instagram_follow: "Nous suivre sur Instagram",
+        tiktok_follow: "Nous suivre sur TikTok",
+        facebook_follow: "Nous suivre sur Facebook",
+        twitter_follow: "Nous suivre sur X (Twitter)",
+        trustpilot_review: "Laisser un avis Trustpilot",
+        tripadvisor_review: "Laisser un avis TripAdvisor",
+      };
       actions.push({
         action_type: key,
         label: labels[key] || key,

@@ -71,6 +71,7 @@ function initBuilderPage() {
       rewardModel: "later",
       engagementGoals: [],
       goalsFreeText: "",
+      goalConfigs: {},
     },
   };
   const headerSteps = document.querySelectorAll(".builder-header-step");
@@ -106,13 +107,14 @@ function initBuilderPage() {
           const o = d.onboarding;
           state.onboarding = {
             ...state.onboarding,
-            currentStep: Number.isFinite(o.currentStep) ? Math.max(0, Math.min(4, o.currentStep)) : state.onboarding.currentStep,
+            currentStep: Number.isFinite(o.currentStep) ? Math.max(0, Math.min(5, o.currentStep)) : state.onboarding.currentStep,
             completed: o.completed === true,
             logoDataUrl: typeof o.logoDataUrl === "string" ? o.logoDataUrl : state.onboarding.logoDataUrl,
             stylePreset: typeof o.stylePreset === "string" ? o.stylePreset : state.onboarding.stylePreset,
             rewardModel: typeof o.rewardModel === "string" ? o.rewardModel : state.onboarding.rewardModel,
             engagementGoals: Array.isArray(o.engagementGoals) ? o.engagementGoals.filter(Boolean) : state.onboarding.engagementGoals,
             goalsFreeText: typeof o.goalsFreeText === "string" ? o.goalsFreeText : state.onboarding.goalsFreeText,
+            goalConfigs: o.goalConfigs && typeof o.goalConfigs === "object" ? o.goalConfigs : state.onboarding.goalConfigs,
           };
         }
       }
@@ -454,6 +456,7 @@ function initBuilderPage() {
   loadDraft();
   const placeIdFromUrl = urlParams.get("place_id")?.trim();
   const hasLandingParams = (etablissementFromUrl && typeof etablissementFromUrl === "string") || placeIdFromUrl;
+  let resolvedPlaceId = placeIdFromUrl || "";
   const onboardingRoot = document.getElementById("builder-onboarding");
   const optionsPanel = document.getElementById("builder-options-panel");
   const inlineCta = document.getElementById("builder-inline-cta");
@@ -496,6 +499,8 @@ function initBuilderPage() {
           logoDataUrl: state.logoDataUrl || state.onboarding.logoDataUrl,
         },
         organizationName: state.organizationName || etablissementFromUrl || "votre établissement",
+        apiBase: API_BASE,
+        placeIdHint: resolvedPlaceId,
         onStateChange(nextOnboardingState) {
           state.onboarding = nextOnboardingState;
           saveDraft();
@@ -545,6 +550,7 @@ function initBuilderPage() {
             const findData = await findRes.json().catch(() => ({}));
             if (findData.place_id) {
               placeId = findData.place_id;
+              resolvedPlaceId = placeId;
               if (findData.name) state.organizationName = findData.name;
               const newUrl = new URL(window.location.href);
               newUrl.searchParams.set("place_id", placeId);
@@ -552,6 +558,7 @@ function initBuilderPage() {
               history.replaceState(null, "", newUrl.pathname + newUrl.search);
               saveDraft({ placeId });
               updateBuilderPreviewOrgName(state.organizationName || name);
+              onboardingController?.setPlaceIdHint(placeId);
             }
           }
         } catch (_) {}
@@ -570,6 +577,8 @@ function initBuilderPage() {
       } catch (_) {}
 
       if (placeId) {
+        resolvedPlaceId = placeId;
+        onboardingController?.setPlaceIdHint(placeId);
         try {
           if (state.logoDataUrl) return;
           const photoRes = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-photo?place_id=${encodeURIComponent(placeId)}`, { cache: "no-store" });

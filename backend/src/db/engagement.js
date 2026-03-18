@@ -13,6 +13,9 @@ const DEFAULT_ENGAGEMENT_REWARDS = {
   instagram_follow: { enabled: false, points: 10, url: "" },
   tiktok_follow: { enabled: false, points: 10, url: "" },
   facebook_follow: { enabled: false, points: 10, url: "" },
+  twitter_follow: { enabled: false, points: 10, url: "" },
+  trustpilot_review: { enabled: false, points: 10, url: "" },
+  tripadvisor_review: { enabled: false, points: 10, url: "" },
 };
 
 export function getEngagementRewards(businessId) {

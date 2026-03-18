@@ -175,6 +175,45 @@ function initAppPage() {
     } catch (_) {}
   })();
 
+  function buildEngagementRewardsFromOnboarding(onboarding) {
+    if (!onboarding || typeof onboarding !== "object") return null;
+    const selected = Array.isArray(onboarding.engagementGoals) ? onboarding.engagementGoals : [];
+    const configs = onboarding.goalConfigs && typeof onboarding.goalConfigs === "object" ? onboarding.goalConfigs : {};
+    const isSelected = (id) => selected.includes(id);
+    const val = (id) => String(configs[id]?.value || "").trim();
+    return {
+      google_review: {
+        enabled: isSelected("google_review") && !!val("google_review"),
+        points: 2,
+        place_id: val("google_review"),
+        require_approval: true,
+        auto_verify_enabled: true,
+      },
+      instagram_follow: { enabled: isSelected("instagram_follow") && !!val("instagram_follow"), points: 1, url: val("instagram_follow") },
+      tiktok_follow: { enabled: isSelected("tiktok_follow") && !!val("tiktok_follow"), points: 1, url: val("tiktok_follow") },
+      facebook_follow: { enabled: isSelected("facebook_follow") && !!val("facebook_follow"), points: 1, url: val("facebook_follow") },
+      twitter_follow: { enabled: isSelected("twitter_follow") && !!val("twitter_follow"), points: 1, url: val("twitter_follow") },
+      trustpilot_review: { enabled: isSelected("trustpilot_review") && !!val("trustpilot_review"), points: 1, url: val("trustpilot_review") },
+      tripadvisor_review: { enabled: isSelected("tripadvisor_review") && !!val("tripadvisor_review"), points: 1, url: val("tripadvisor_review") },
+    };
+  }
+
+  async function applyDraftEngagementRewards(slug) {
+    if (!slug) return;
+    try {
+      const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      const engagementRewards = buildEngagementRewardsFromOnboarding(draft.onboarding);
+      if (!engagementRewards) return;
+      await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/dashboard/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ engagement_rewards: engagementRewards }),
+      });
+    } catch (_) {}
+  }
+
   emptyForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = emptyName?.value?.trim();
@@ -249,6 +288,7 @@ function initAppPage() {
         }
         return;
       }
+      await applyDraftEngagementRewards(data.slug || slug);
       if (emptyEl) emptyEl.classList.add("hidden");
       if (contentEl) contentEl.classList.remove("hidden");
       if (businessNameEl) businessNameEl.textContent = data.organization_name || data.name || data.slug;

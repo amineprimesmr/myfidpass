@@ -30,6 +30,7 @@ export function getRoute() {
 function getContainers() {
   return {
     landing: document.getElementById("landing"),
+    builderApp: document.getElementById("builder-app"),
     fidelityApp: document.getElementById("fidelity-app"),
     dashboardApp: document.getElementById("dashboard-app"),
     authApp: document.getElementById("auth-app"),
@@ -126,7 +127,7 @@ export async function initRouting() {
   if (c.page404) c.page404.classList.add("hidden");
 
   const hideAll = () => {
-    [c.landing, c.fidelityApp, c.dashboardApp, c.authApp, c.appApp, c.offersApp, c.checkoutApp].forEach((el) => {
+    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.authApp, c.appApp, c.offersApp, c.checkoutApp].forEach((el) => {
       if (el) el.classList.add("hidden");
     });
     if (c.builderHeader) c.builderHeader.classList.add("hidden");
@@ -167,6 +168,7 @@ export async function initRouting() {
       c.checkoutApp.classList.add("checkout-with-builder-header");
       triggerRouteViewEnter(c.checkoutApp);
     }
+    if (c.builderApp) c.builderApp.classList.remove("hidden");
     if (c.builderHeader) {
       c.builderHeader.classList.remove("hidden");
       c.builderHeader.setAttribute("aria-hidden", "false");
@@ -188,19 +190,17 @@ export async function initRouting() {
 
   if (route.type === "templates") {
     document.body.classList.add("page-builder");
-    if (c.landing) c.landing.classList.add("builder-visible");
-    const bannerMedia = document.getElementById("site-banner-media");
-    const siteBanner = document.querySelector(".site-banner");
-    const landingHeader = document.getElementById("landing-header");
-    if (bannerMedia) bannerMedia.classList.add("hidden");
-    if (siteBanner) siteBanner.classList.add("hidden");
-    if (landingHeader) landingHeader.classList.add("hidden");
+    hideAll();
+    if (c.landingTemplates && c.builderApp) {
+      c.builderApp.appendChild(c.landingTemplates);
+    }
+    if (c.builderApp) {
+      c.builderApp.classList.remove("hidden");
+    }
     if (c.builderHeader) {
       c.builderHeader.classList.remove("hidden");
       c.builderHeader.setAttribute("aria-hidden", "false");
     }
-    if (c.landingMain) c.landingMain.classList.add("hidden");
-    if (c.landingLegal) c.landingLegal.classList.add("hidden");
     if (c.landingTemplates) {
       c.landingTemplates.classList.remove("hidden");
       triggerRouteViewEnter(c.landingTemplates);

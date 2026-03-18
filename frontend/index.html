@@ -23,6 +23,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
   <body>
+    <!-- Page créateur de carte / onboarding : indépendante de la landing (visible sur /creer-ma-carte) -->
+    <div id="builder-app" class="hidden">
     <!-- Header parcours (étapes 1–2–3) : même UX barre flottante que la page d'accueil -->
     <header class="builder-header hidden" id="builder-header" aria-hidden="true">
       <div class="builder-header-outer">
@@ -53,6 +55,7 @@
         </div>
       </div>
     </header>
+    </div>
     <!-- Auth : même UX barre flottante que landing -->
     <div id="auth-app" class="hidden unified-shell">
       <div class="landing-header-outer">

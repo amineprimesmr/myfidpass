@@ -2539,6 +2539,33 @@ body.page-builder {
   color: #0f172a;
   font-size: 0.9rem;
 }
+.builder-onboarding-config-grid {
+  gap: 0.75rem;
+}
+.builder-onboarding-config-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.75rem;
+}
+.builder-onboarding-autosuggest-feedback {
+  margin: 0.55rem 0 0.75rem;
+  font-size: 0.82rem;
+}
+.builder-onboarding-autosuggest-feedback.success {
+  color: #0f766e;
+}
+.builder-onboarding-autosuggest-feedback.error {
+  color: #b91c1c;
+}
+.builder-onboarding-autosuggest-feedback.info {
+  color: #334155;
+}
+.builder-onboarding-field-error {
+  margin: 0.35rem 0 0;
+  color: #b91c1c;
+  font-size: 0.78rem;
+}
 .builder-onboarding-nav {
   margin-top: 1rem;
   display: flex;
