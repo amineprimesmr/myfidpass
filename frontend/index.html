@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
     <link rel="stylesheet" href="/src/landing-onboarding-sheet.css" />
+    <link rel="stylesheet" href="/src/landing-footer.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
@@ -1852,17 +1853,50 @@
           </div>
         </section>
 
-        <footer class="landing-footer landing-section-dark">
-          <div class="landing-footer-inner landing-footer-inner-v2">
-            <div class="landing-footer-branding">
-              <div class="landing-footer-brand">Myfidpass</div>
-              <p class="landing-footer-summary">Cartes de fidelite digitales, plus simples a lancer et plus desirables a utiliser.</p>
+        <footer class="landing-footer landing-footer-v3">
+          <div class="landing-footer-inner-v3">
+            <div class="landing-footer-header-v3">
+              <div class="landing-footer-logo-wrap">
+                <div class="landing-footer-logo-icon" aria-hidden="true">
+                  <img src="/assets/logo.png?v=20260311" alt="" width="32" height="32" />
+                </div>
+                <span class="landing-footer-brand-v3">Myfidpass</span>
+              </div>
+              <p class="landing-footer-slogan-v3">Cartes de fidélité digitales, plus simples à lancer et plus désirables à utiliser.</p>
+              <a href="mailto:contact@myfidpass.fr" class="landing-footer-contact-v3">contact@myfidpass.fr</a>
+              <div class="landing-footer-socials-v3" aria-label="Réseaux sociaux">
+                <a href="https://x.com/myfidpass" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" class="landing-footer-social-v3">X</a>
+                <a href="https://linkedin.com/company/myfidpass" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="landing-footer-social-v3">in</a>
+                <a href="https://instagram.com/myfidpass" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="landing-footer-social-v3">ig</a>
+              </div>
             </div>
-            <div class="landing-footer-columns">
-              <nav class="landing-footer-links">
+            <div class="landing-footer-grid-v3">
+              <nav class="landing-footer-col-v3" aria-label="Entreprise">
+                <h3 class="landing-footer-col-title-v3">Entreprise</h3>
+                <a href="/creer-ma-carte">Créer ma carte</a>
                 <a href="#produit">Produit</a>
+                <a href="/choisir-offre">Tarifs</a>
+                <a href="/integration">Intégration</a>
               </nav>
-              <nav class="landing-footer-links">
+              <nav class="landing-footer-col-v3" aria-label="Fonctionnalités">
+                <h3 class="landing-footer-col-title-v3">Fonctionnalités</h3>
+                <a href="#produit">Cartes Wallet</a>
+                <a href="#produit">Notifications push</a>
+                <a href="#produit">Tableau de bord</a>
+                <a href="#produit">Statistiques</a>
+                <a href="#produit">QR code</a>
+              </nav>
+              <nav class="landing-footer-col-v3" aria-label="Cas d'usage">
+                <h3 class="landing-footer-col-title-v3">Cas d'usage</h3>
+                <a href="/creer-ma-carte">Restaurants</a>
+                <a href="/creer-ma-carte">Boulangeries</a>
+                <a href="/creer-ma-carte">Cafés</a>
+                <a href="/creer-ma-carte">Coiffeurs</a>
+                <a href="/creer-ma-carte">Beauté</a>
+                <a href="/creer-ma-carte">Boucheries</a>
+              </nav>
+              <nav class="landing-footer-col-v3" aria-label="Informations légales">
+                <h3 class="landing-footer-col-title-v3">Informations</h3>
                 <a href="/mentions-legales">Mentions légales</a>
                 <a href="/politique-confidentialite">Politique de confidentialité</a>
                 <a href="/cgu">CGU</a>
@@ -1870,8 +1904,10 @@
                 <a href="/cookies">Cookies</a>
               </nav>
             </div>
-            <p class="landing-footer-legal">Compatible Apple Wallet et Google Wallet.</p>
-            <p class="landing-footer-copy">© 2026 Myfidpass. Tous droits réservés.</p>
+            <div class="landing-footer-bottom-v3">
+              <p class="landing-footer-legal-v3">Compatible Apple Wallet et Google Wallet.</p>
+              <p class="landing-footer-copy-v3">© 2026 Myfidpass. Tous droits réservés.</p>
+            </div>
           </div>
         </footer>
       </main>
