@@ -3,6 +3,7 @@
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
 import { getAuthToken } from "../config.js";
+import { openOnboardingSheet } from "../features/landing-onboarding-sheet.js";
 
 export function getRoute() {
   const path = window.location.pathname.replace(/\/$/, "");
@@ -14,7 +15,7 @@ export function getRoute() {
   if (path === "/app") return { type: "app" };
   if (path === "/login") return { type: "auth", tab: "login" };
   if (path === "/register") return { type: "auth", tab: "login" };
-  if (path === "/creer-ma-carte") return { type: "templates" };
+  if (path === "/creer-ma-carte") return { type: "landing", openOnboarding: true };
   if (path === "/choisir-offre") return { type: "offers" };
   if (path === "/checkout") return { type: "checkout" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
@@ -188,28 +189,6 @@ export async function initRouting() {
     return null;
   }
 
-  if (route.type === "templates") {
-    document.body.classList.add("page-builder");
-    hideAll();
-    if (c.landingTemplates && c.builderApp) {
-      c.builderApp.appendChild(c.landingTemplates);
-    }
-    if (c.builderApp) {
-      c.builderApp.classList.remove("hidden");
-    }
-    if (c.builderHeader) {
-      c.builderHeader.classList.add("hidden");
-      c.builderHeader.setAttribute("aria-hidden", "true");
-    }
-    if (c.landingTemplates) {
-      c.landingTemplates.classList.remove("hidden");
-      triggerRouteViewEnter(c.landingTemplates);
-    }
-    updateAuthNavLinks();
-    const page = await loadPage("templates");
-    await page.init(route);
-    return null;
-  }
 
   if (route.type === "offers") {
     if (!getAuthToken()) {
@@ -297,5 +276,9 @@ export async function initRouting() {
 
   const page = await loadPage("landing");
   await page.init(route);
+  if (route.openOnboarding) {
+    history.replaceState(null, "", "/" + (window.location.search || ""));
+    requestAnimationFrame(() => openOnboardingSheet());
+  }
   return null;
 }
