@@ -1,9 +1,8 @@
 .landing-card-beam {
-  margin: 1.4rem 0 0;
+  margin: 2.8rem 0 0;
   padding: 2.4rem 0;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  overflow-x: clip;
   background: #000;
 }
 
