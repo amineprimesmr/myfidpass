@@ -25,34 +25,16 @@
 }
 
 .landing-footer-logo-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  display: inline-block;
   margin-bottom: 0.75rem;
+  text-decoration: none;
 }
 
-.landing-footer-logo-icon {
-  width: 40px;
+.landing-footer-logo-img {
+  display: block;
   height: 40px;
-  background: #0a7c42;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.landing-footer-logo-icon img {
-  width: 24px;
-  height: 24px;
+  width: auto;
   object-fit: contain;
-  filter: brightness(0) invert(1);
-}
-
-.landing-footer-brand-v3 {
-  font-weight: 700;
-  font-size: 1.35rem;
-  color: #000000;
 }
 
 .landing-footer-slogan-v3 {
