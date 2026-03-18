@@ -2224,20 +2224,26 @@
 body.page-builder {
   overflow-x: hidden;
 }
-#landing.builder-visible {
+#landing.builder-visible,
+#builder-app {
   overflow-x: hidden;
   border: none;
 }
 #landing.builder-visible .landing-builder,
 #landing.builder-visible .builder-inner,
 #landing.builder-visible .builder-step-1-block,
-#landing.builder-visible .builder-step-1-content {
+#landing.builder-visible .builder-step-1-content,
+#builder-app .landing-builder,
+#builder-app .builder-inner,
+#builder-app .builder-step-1-block,
+#builder-app .builder-step-1-content {
   border-left: none;
   border-right: none;
   box-shadow: none;
 }
 
-#landing.builder-visible main.landing-builder {
+#landing.builder-visible main.landing-builder,
+#builder-app main.landing-builder {
   margin-top: 0;
   padding-top: 2.5rem;
 }
@@ -2264,7 +2270,8 @@ body.page-builder {
   display: block;
 }
 
-#landing.builder-visible .builder-step-1-block {
+#landing.builder-visible .builder-step-1-block,
+#builder-app .builder-step-1-block {
   margin-top: 0;
 }
 

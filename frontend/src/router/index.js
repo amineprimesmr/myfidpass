@@ -269,9 +269,12 @@ export async function initRouting() {
   }
 
   document.body.classList.remove("page-builder");
+  if (c.builderApp) c.builderApp.classList.add("hidden");
+  if (c.landingTemplates && c.landing) {
+    c.landing.appendChild(c.landingTemplates);
+  }
   if (c.landing) {
     c.landing.classList.remove("hidden");
-    c.landing.classList.remove("builder-visible");
   }
   const bannerMedia = document.getElementById("site-banner-media");
   const siteBanner = document.querySelector(".site-banner");
