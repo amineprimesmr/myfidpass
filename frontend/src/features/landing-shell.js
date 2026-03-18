@@ -68,6 +68,17 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
 }
 
 export function initLandingShell() {
+  document.querySelectorAll(".landing-cta-try").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      const form = document.getElementById("landing-hero-form");
+      const input = document.getElementById("landing-etablissement");
+      if (!form) return;
+      e.preventDefault();
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => input?.focus(), 300);
+    });
+  });
+
   const landingHeroForm = document.getElementById("landing-hero-form");
   if (landingHeroForm) {
     const landingEtablissementInput = document.getElementById("landing-etablissement");

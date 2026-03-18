@@ -495,61 +495,54 @@ function initBuilderPage() {
   }
 
   applyInitialState();
-  const shouldShowOnboarding = Boolean(hasLandingParams);
+  const shouldShowOnboarding = true;
   if (onboardingRoot) {
-    if (shouldShowOnboarding) {
-      state.onboarding.completed = false;
-      builderRoot?.classList.add("builder-onboarding-active");
-      setBuilderHeaderVisibility(false);
-      onboardingRoot.classList.remove("hidden");
-      setBuilderOptionsVisibility(false);
-      onboardingController = initBuilderOnboarding({
-        mountEl: onboardingRoot,
-        initialState: {
-          ...state.onboarding,
-          logoDataUrl: state.logoDataUrl || state.onboarding.logoDataUrl,
-        },
-        organizationName: state.organizationName || etablissementFromUrl || "votre établissement",
-        apiBase: API_BASE,
-        placeIdHint: resolvedPlaceId,
-        onStateChange(nextOnboardingState) {
-          state.onboarding = nextOnboardingState;
-          saveDraft();
-        },
-        onLogoChange(dataUrl) {
-          state.logoDataUrl = dataUrl;
-          state.onboarding.logoDataUrl = dataUrl;
-          updateBuilderPreviewLogo(dataUrl);
-          saveDraft({ logoDataUrl: dataUrl });
-        },
-        onStyleChange(stylePreset) {
-          state.onboarding.stylePreset = stylePreset;
-          applyOnboardingTemplatePreset(stylePreset, state.onboarding.rewardModel);
-          saveDraft();
-        },
-        onRewardChange(rewardModel) {
-          state.onboarding.rewardModel = rewardModel;
-          applyOnboardingTemplatePreset(state.onboarding.stylePreset, rewardModel);
-          saveDraft();
-        },
-        onComplete(nextOnboardingState) {
-          state.onboarding = { ...nextOnboardingState, completed: true };
-          applyOnboardingTemplatePreset(state.onboarding.stylePreset, state.onboarding.rewardModel);
-          saveDraft();
-          setBuilderOptionsVisibility(true);
-          onboardingRoot.classList.add("hidden");
-          builderRoot?.classList.remove("builder-onboarding-active");
-          setBuilderHeaderVisibility(true);
-          setBuilderHeaderStep(1);
-        },
-      });
-    } else {
-      onboardingRoot.classList.add("hidden");
-      setBuilderOptionsVisibility(true);
-      builderRoot?.classList.remove("builder-onboarding-active");
-      setBuilderHeaderVisibility(true);
-      setBuilderHeaderStep(1);
-    }
+    state.onboarding.completed = false;
+    builderRoot?.classList.add("builder-onboarding-active");
+    setBuilderHeaderVisibility(false);
+    onboardingRoot.classList.remove("hidden");
+    setBuilderOptionsVisibility(false);
+    onboardingController = initBuilderOnboarding({
+      mountEl: onboardingRoot,
+      initialState: {
+        ...state.onboarding,
+        logoDataUrl: state.logoDataUrl || state.onboarding.logoDataUrl,
+      },
+      organizationName: state.organizationName || etablissementFromUrl || "votre établissement",
+      apiBase: API_BASE,
+      placeIdHint: resolvedPlaceId,
+      onStateChange(nextOnboardingState) {
+        state.onboarding = nextOnboardingState;
+        saveDraft();
+      },
+      onLogoChange(dataUrl) {
+        state.logoDataUrl = dataUrl;
+        state.onboarding.logoDataUrl = dataUrl;
+        updateBuilderPreviewLogo(dataUrl);
+        saveDraft({ logoDataUrl: dataUrl });
+      },
+      onStyleChange(stylePreset) {
+        state.onboarding.stylePreset = stylePreset;
+        applyOnboardingTemplatePreset(stylePreset, state.onboarding.rewardModel);
+        saveDraft();
+      },
+      onRewardChange(rewardModel) {
+        state.onboarding.rewardModel = rewardModel;
+        applyOnboardingTemplatePreset(state.onboarding.stylePreset, rewardModel);
+        saveDraft();
+      },
+      onComplete(nextOnboardingState) {
+        state.onboarding = { ...nextOnboardingState, completed: true };
+        applyOnboardingTemplatePreset(state.onboarding.stylePreset, state.onboarding.rewardModel);
+        saveDraft();
+        onboardingRoot.classList.add("hidden");
+        builderRoot?.classList.remove("builder-onboarding-active");
+        setBuilderHeaderVisibility(true);
+        setBuilderHeaderStep(1);
+        history.pushState({}, "", "/checkout");
+        initRouting();
+      },
+    });
   }
   const builderStep1 = document.getElementById("builder-step-1-block");
   if (builderStep1) {

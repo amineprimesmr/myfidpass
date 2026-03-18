@@ -34,3 +34,6 @@ backend/railway-vapid-keys.txt
 
 # Runtime local automatique
 .dev-local/
+
+# Fichiers temporaires Vite générés localement
+frontend/vite.config.js.timestamp-*.mjs

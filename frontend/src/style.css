@@ -105,13 +105,6 @@ body {
   object-fit: cover;
 }
 
-/* Builder visibility overrides */
-#landing.builder-visible .site-banner-media { display: none !important; }
-#landing.builder-visible .site-banner { display: none !important; }
-#landing.builder-visible .landing-header-outer,
-#landing.builder-visible #landing-header { display: none !important; }
-#landing.builder-visible .landing-menu-overlay { display: none !important; }
-#landing.builder-visible #builder-header.hidden { display: flex !important; }
 #builder-header { display: none; }
 #builder-header:not(.hidden) { display: block; }
 
