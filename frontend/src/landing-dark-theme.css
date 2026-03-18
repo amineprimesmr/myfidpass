@@ -1,0 +1,137 @@
+#landing {
+  --landing-bg: #000;
+  --landing-surface: #0a0a0a;
+  --landing-border: rgba(148, 163, 184, 0.24);
+  --landing-text: #f8fafc;
+  --landing-muted: #cbd5e1;
+  --landing-accent: #3b82f6;
+  --landing-accent-hover: #2563eb;
+}
+
+#landing,
+#landing .landing-main,
+#landing .landing-legal {
+  background: #000;
+  color: var(--landing-text);
+}
+
+#landing .landing-header-outer {
+  background: #000;
+}
+
+#landing .landing-header-bar {
+  background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.35) inset,
+    0 14px 36px rgba(0, 0, 0, 0.55);
+}
+
+#landing .landing-header-bar .landing-nav a,
+#landing .landing-header-bar .landing-menu-toggle,
+#landing .landing-header-bar .landing-logo {
+  color: #f8fafc;
+}
+
+#landing .landing-hero-title,
+#landing .landing-how-title,
+#landing .landing-simulator-title,
+#landing .landing-cta-final-title {
+  color: #f8fafc;
+}
+
+#landing .landing-hero-subtitle,
+#landing .landing-hero-helper,
+#landing .landing-hero-trustpilot-text,
+#landing .landing-how-subtitle,
+#landing .landing-how-step-desc,
+#landing .landing-simulator-desc,
+#landing .landing-footer-legal,
+#landing .landing-footer-copy {
+  color: #cbd5e1;
+}
+
+#landing .landing-hero-cta-bar {
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+#landing .landing-hero-cta-bar-text {
+  color: #e2e8f0;
+}
+
+#landing .landing-hero-input {
+  background: #020617;
+  border-color: rgba(148, 163, 184, 0.35);
+  color: #f8fafc;
+}
+
+#landing .landing-hero-input::placeholder {
+  color: #94a3b8;
+}
+
+#landing .landing-hero-input-wrap {
+  background: transparent;
+}
+
+#landing .landing-how-step,
+#landing .landing-simulator-box,
+#landing .landing-cta-final {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(2, 6, 23, 0.85));
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.35);
+}
+
+#landing .landing-how-step-title,
+#landing .landing-simulator-teaser {
+  color: #f8fafc;
+}
+
+#landing .landing-how-step-num {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+#landing .landing-simulator-input {
+  background: #020617;
+  border-color: rgba(148, 163, 184, 0.34);
+  color: #f8fafc;
+}
+
+#landing .landing-simulator-input::placeholder {
+  color: #94a3b8;
+}
+
+#landing .landing-simulator-modal-box {
+  background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+  color: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+#landing .landing-simulator-result-row {
+  border-bottom-color: rgba(148, 163, 184, 0.22);
+}
+
+#landing .landing-footer {
+  background: #000;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+#landing .landing-footer-links a,
+#landing .landing-footer-brand {
+  color: #f8fafc;
+}
+
+#landing .landing-footer-links a:hover {
+  color: #93c5fd;
+}
+
+#landing .landing-btn-secondary {
+  background: #0f172a;
+  color: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
