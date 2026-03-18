@@ -2,7 +2,6 @@
  * Shell landing : formulaire hero, Google Places, menus drawer, bottom sheet onboarding.
  * Appelé au chargement pour attacher les listeners (formulaire, menus, script Places).
  */
-import { navigateToBuilder } from "../router/index.js";
 import { openOnboardingSheet, initOnboardingSheet } from "./landing-onboarding-sheet.js";
 
 function updateLandingCtaState() {
@@ -70,12 +69,12 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
 
 export function initLandingShell() {
   initOnboardingSheet();
-  document.querySelectorAll(".landing-cta-try").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      openOnboardingSheet();
-    });
-  });
+  function openSheet(e) {
+    e.preventDefault();
+    openOnboardingSheet();
+  }
+  document.querySelectorAll(".landing-cta-try").forEach((link) => link.addEventListener("click", openSheet));
+  document.querySelectorAll("#landing a[href*='creer-ma-carte']").forEach((link) => link.addEventListener("click", openSheet));
 
   const landingHeroForm = document.getElementById("landing-hero-form");
   if (landingHeroForm) {
@@ -123,15 +122,7 @@ export function initLandingShell() {
     updateLandingCtaState();
     landingHeroForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const input = document.getElementById("landing-etablissement");
-      const placeIdInput = document.getElementById("landing-place-id");
-      const name = input?.value?.trim();
-      const placeId = placeIdInput?.value?.trim();
-      if (!name) return;
-      let qs = "";
-      if (name) qs += `?etablissement=${encodeURIComponent(name)}`;
-      if (placeId) qs += (qs ? "&" : "?") + `place_id=${encodeURIComponent(placeId)}`;
-      navigateToBuilder(qs);
+      openOnboardingSheet();
     });
   }
 
