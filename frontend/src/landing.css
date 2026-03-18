@@ -860,6 +860,7 @@
 #landing .landing-cta-final-v2 {
   width: 100vw;
   max-width: 100vw;
+  margin-top: 0;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   padding: clamp(2rem, 5vw, 3rem) max(1.5rem, calc(50vw - 620px));
