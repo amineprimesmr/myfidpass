@@ -198,8 +198,8 @@ export async function initRouting() {
       c.builderApp.classList.remove("hidden");
     }
     if (c.builderHeader) {
-      c.builderHeader.classList.remove("hidden");
-      c.builderHeader.setAttribute("aria-hidden", "false");
+      c.builderHeader.classList.add("hidden");
+      c.builderHeader.setAttribute("aria-hidden", "true");
     }
     if (c.landingTemplates) {
       c.landingTemplates.classList.remove("hidden");

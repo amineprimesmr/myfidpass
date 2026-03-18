@@ -2998,6 +2998,34 @@ body.page-builder #builder-app main.landing-builder {
   margin: 0 auto;
 }
 
+/* Onboarding first : experience focus (sans ancien panneau builder) */
+.landing-builder.builder-onboarding-active .builder-step-1-left,
+.landing-builder.builder-onboarding-active #builder-options-panel,
+.landing-builder.builder-onboarding-active #builder-inline-cta,
+.landing-builder.builder-onboarding-active #builder-step-1-sticky {
+  display: none !important;
+}
+
+.landing-builder.builder-onboarding-active .builder-step-1-content {
+  max-width: 760px;
+  margin: 0 auto;
+  display: block;
+}
+
+.landing-builder.builder-onboarding-active .builder-step-1-right {
+  width: 100%;
+  max-width: none;
+}
+
+.landing-builder.builder-onboarding-active .builder-onboarding {
+  margin: 0;
+}
+
+.landing-builder.builder-onboarding-active .builder-onboarding-card {
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.18);
+}
+
 /* Titre + sous-titre au-dessus des deux colonnes — pas d'espace au-dessus (évite le bandeau blanc) */
 .builder-step-1-heading {
   text-align: center;

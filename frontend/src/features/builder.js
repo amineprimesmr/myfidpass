@@ -75,8 +75,16 @@ function initBuilderPage() {
     },
   };
   const headerSteps = document.querySelectorAll(".builder-header-step");
+  const builderHeaderEl = document.getElementById("builder-header");
+  const builderRoot = document.getElementById("landing-templates");
 
-  setBuilderHeaderStep(2);
+  setBuilderHeaderStep(1);
+
+  function setBuilderHeaderVisibility(visible) {
+    if (!builderHeaderEl) return;
+    builderHeaderEl.classList.toggle("hidden", !visible);
+    builderHeaderEl.setAttribute("aria-hidden", visible ? "false" : "true");
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   const etablissementFromUrl = urlParams.get("etablissement");
@@ -487,9 +495,12 @@ function initBuilderPage() {
   }
 
   applyInitialState();
-  const shouldShowOnboarding = Boolean(hasLandingParams) && state.onboarding?.completed !== true;
+  const shouldShowOnboarding = Boolean(hasLandingParams);
   if (onboardingRoot) {
     if (shouldShowOnboarding) {
+      state.onboarding.completed = false;
+      builderRoot?.classList.add("builder-onboarding-active");
+      setBuilderHeaderVisibility(false);
       onboardingRoot.classList.remove("hidden");
       setBuilderOptionsVisibility(false);
       onboardingController = initBuilderOnboarding({
@@ -527,11 +538,17 @@ function initBuilderPage() {
           saveDraft();
           setBuilderOptionsVisibility(true);
           onboardingRoot.classList.add("hidden");
+          builderRoot?.classList.remove("builder-onboarding-active");
+          setBuilderHeaderVisibility(true);
+          setBuilderHeaderStep(1);
         },
       });
     } else {
       onboardingRoot.classList.add("hidden");
       setBuilderOptionsVisibility(true);
+      builderRoot?.classList.remove("builder-onboarding-active");
+      setBuilderHeaderVisibility(true);
+      setBuilderHeaderStep(1);
     }
   }
   const builderStep1 = document.getElementById("builder-step-1-block");
