@@ -2723,16 +2723,17 @@
   padding-bottom: 2.5rem;
   max-width: 880px;
   margin: 0 auto;
+  overflow: visible;
 }
 
 .landing-bandeau {
   position: absolute;
-  bottom: 0;
+  top: 100%;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: min(880px, calc(100vw - 2.5rem));
-  height: 20px;
+  height: 24px;
   margin: 0;
   background: #000;
   clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
