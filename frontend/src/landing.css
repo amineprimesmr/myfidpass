@@ -2402,6 +2402,15 @@ body.page-builder {
   display: grid;
   gap: 0.65rem;
 }
+.builder-onboarding-selected-count {
+  margin: 0 0 0.75rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.82rem;
+  border: 1px solid #e2e8f0;
+}
 .builder-onboarding-choice {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -2428,6 +2437,60 @@ body.page-builder {
   margin-top: 0.2rem;
   color: #6b7280;
   font-size: 0.84rem;
+}
+.builder-onboarding-goal-choice {
+  position: relative;
+  overflow: hidden;
+}
+.builder-onboarding-goal-main {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.builder-onboarding-goal-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.builder-onboarding-goal-icon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.builder-onboarding-goal-icon-fallback {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111827;
+}
+.builder-onboarding-choice.is-selected .builder-onboarding-goal-icon {
+  border-color: #2563eb;
+}
+.builder-onboarding-soon-chip {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+}
+.builder-onboarding-goal-choice.is-coming-soon {
+  background: #fafafa;
+  border-style: dashed;
+}
+.builder-onboarding-goal-choice.is-coming-soon .builder-onboarding-choice-title,
+.builder-onboarding-goal-choice.is-coming-soon .builder-onboarding-choice-hint {
+  color: #9ca3af;
 }
 .builder-onboarding-toggles {
   display: grid;

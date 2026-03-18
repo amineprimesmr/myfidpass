@@ -20,13 +20,55 @@ const REWARD_OPTIONS = [
 ];
 
 const GOAL_OPTIONS = [
-  { id: "google_review", label: "Obtenir plus d'avis Google", hint: "Visibilite locale et confiance" },
-  { id: "instagram_follow", label: "Avoir plus de followers Instagram", hint: "Communaute et UGC" },
-  { id: "tiktok_follow", label: "Avoir plus de followers TikTok", hint: "Portee et viralite" },
-  { id: "facebook_follow", label: "Avoir plus de followers Facebook", hint: "Audience locale mature" },
-  { id: "twitter_follow", label: "Avoir plus de followers X (Twitter)", hint: "Bientot disponible" },
-  { id: "trustpilot_review", label: "Collecter des avis Trustpilot", hint: "Bientot disponible" },
-  { id: "tripadvisor_review", label: "Collecter des avis TripAdvisor", hint: "Bientot disponible" },
+  {
+    id: "google_review",
+    label: "Obtenir plus d'avis Google",
+    hint: "Visibilite locale et confiance",
+    icon: "/assets/logos/google.png",
+    available: true,
+  },
+  {
+    id: "instagram_follow",
+    label: "Avoir plus de followers Instagram",
+    hint: "Communaute et UGC",
+    icon: "/assets/logos/instagram.png",
+    available: true,
+  },
+  {
+    id: "tiktok_follow",
+    label: "Avoir plus de followers TikTok",
+    hint: "Portee et viralite",
+    icon: "/assets/logos/tiktok.png",
+    available: true,
+  },
+  {
+    id: "facebook_follow",
+    label: "Avoir plus de followers Facebook",
+    hint: "Audience locale mature",
+    icon: "/assets/logos/facebook.png",
+    available: true,
+  },
+  {
+    id: "twitter_follow",
+    label: "Avoir plus de followers X (Twitter)",
+    hint: "Bientot disponible",
+    iconText: "X",
+    available: false,
+  },
+  {
+    id: "trustpilot_review",
+    label: "Collecter des avis Trustpilot",
+    hint: "Bientot disponible",
+    icon: "/assets/logos/trustpilot.png",
+    available: false,
+  },
+  {
+    id: "tripadvisor_review",
+    label: "Collecter des avis TripAdvisor",
+    hint: "Bientot disponible",
+    icon: "/assets/logos/tripadvisor.png",
+    available: false,
+  },
 ];
 
 function escapeHtml(value) {
@@ -87,6 +129,13 @@ function fileToResizedDataUrl(file, maxWidth = 512) {
     reader.onerror = () => resolve("");
     reader.readAsDataURL(file);
   });
+}
+
+function renderGoalIcon(goal) {
+  if (goal.icon) {
+    return `<span class="builder-onboarding-goal-icon" aria-hidden="true"><img src="${goal.icon}" alt="" loading="lazy" width="24" height="24" /></span>`;
+  }
+  return `<span class="builder-onboarding-goal-icon builder-onboarding-goal-icon-fallback" aria-hidden="true">${escapeHtml(goal.iconText || "?")}</span>`;
 }
 
 export function initBuilderOnboarding({
@@ -157,14 +206,26 @@ export function initBuilderOnboarding({
 
     if (state.currentStep === 2) {
       const cards = GOAL_OPTIONS.map((opt) => `
-        <button type="button" class="builder-onboarding-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" data-goal="${opt.id}">
-          <span class="builder-onboarding-choice-title">${opt.label}</span>
+        <button
+          type="button"
+          class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""} ${opt.available === false ? "is-coming-soon" : ""}"
+          data-goal="${opt.id}"
+          ${opt.available === false ? "disabled" : ""}
+          ${opt.available === false ? 'title="Bientot disponible"' : ""}
+        >
+          <span class="builder-onboarding-goal-main">
+            ${renderGoalIcon(opt)}
+            <span class="builder-onboarding-choice-title">${opt.label}</span>
+          </span>
           <span class="builder-onboarding-choice-hint">${opt.hint}</span>
+          ${opt.available === false ? '<span class="builder-onboarding-soon-chip">Bientot</span>' : ""}
         </button>
       `).join("");
+      const selectedCount = state.engagementGoals.length;
       return `
         <h3 class="builder-onboarding-question">Qu'est-ce que vous voulez qu'on mette en place pour vos clients ?</h3>
-        <p class="builder-onboarding-help">Selection multiple possible. On vous proposera la meilleure configuration ensuite.</p>
+        <p class="builder-onboarding-help">Selection multiple possible. Choisissez vos priorites pour lancer les bons objectifs des le depart.</p>
+        <div class="builder-onboarding-selected-count">${selectedCount > 0 ? `${selectedCount} objectif${selectedCount > 1 ? "s" : ""} selectionne${selectedCount > 1 ? "s" : ""}` : "Aucun objectif selectionne pour le moment"}</div>
         <div class="builder-onboarding-grid">${cards}</div>
         <label class="builder-onboarding-input-label" for="builder-onboarding-goals-free-text">Autre objectif (optionnel)</label>
         <input id="builder-onboarding-goals-free-text" class="builder-onboarding-input" type="text" maxlength="120" value="${escapeHtml(state.goalsFreeText)}" placeholder="Ex. Plus d'avis sur une autre plateforme" />
@@ -252,6 +313,8 @@ export function initBuilderOnboarding({
       btn.addEventListener("click", () => {
         const goalId = btn.getAttribute("data-goal");
         if (!goalId) return;
+        const goal = GOAL_OPTIONS.find((x) => x.id === goalId);
+        if (!goal || goal.available === false) return;
         const alreadySelected = state.engagementGoals.includes(goalId);
         const nextGoals = alreadySelected
           ? state.engagementGoals.filter((id) => id !== goalId)
