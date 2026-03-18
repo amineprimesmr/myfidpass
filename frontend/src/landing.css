@@ -2751,9 +2751,19 @@
 }
 
 .landing-simulator-wrap {
+  position: relative;
   padding: 3rem 1.25rem 2rem;
   max-width: 880px;
   margin: 0 auto;
+}
+
+/* Extension noire pour supprimer tout micro-espace avec le bandeau */
+.landing-simulator-wrap::after {
+  content: "";
+  display: block;
+  height: 25px;
+  margin-top: -1px;
+  background: #000;
 }
 
 .landing-simulator-teaser {
