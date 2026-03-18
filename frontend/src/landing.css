@@ -858,7 +858,7 @@
 }
 
 #landing .landing-cta-final-v2 {
-  padding: clamp(1.5rem, 4vw, 2.5rem) max(1.5rem, calc(50vw - 620px));
+  padding: clamp(2rem, 5vw, 3rem) max(1.5rem, calc(50vw - 620px));
   text-align: center;
   background: #ffffff;
 }
@@ -866,7 +866,7 @@
 #landing .landing-cta-final-card {
   position: relative;
   padding: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3rem);
-  border-radius: 32px;
+  border-radius: 40px;
   background: #000;
   color: #fff;
   display: flex;
