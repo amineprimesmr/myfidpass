@@ -1,7 +1,10 @@
 .landing-gradient-carousel {
   position: relative;
   margin: 1.4rem auto 0;
-  width: min(1200px, 100%);
+  width: 100dvw;
+  max-width: 100dvw;
+  margin-left: calc(50% - 50dvw);
+  margin-right: calc(50% - 50dvw);
   height: clamp(280px, 42vw, 460px);
   overflow-x: clip;
   overflow-y: visible;
