@@ -207,6 +207,11 @@
 .landing-onboarding-sheet .builder-onboarding-progress-label {
   color: rgba(255, 255, 255, 0.6);
 }
+
+.landing-onboarding-sheet .builder-onboarding-progress {
+  margin-bottom: 1rem;
+}
+
 .landing-onboarding-sheet .builder-onboarding-question {
   color: #fff;
 }
@@ -285,6 +290,27 @@
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.landing-onboarding-sheet .builder-onboarding-upload-link {
+  margin: 0.5rem 0 1rem;
+}
+
+.landing-onboarding-sheet .builder-onboarding-link {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.landing-onboarding-sheet .builder-onboarding-link:hover {
+  color: #ff9f7a;
 }
 
 @media (min-width: 641px) {

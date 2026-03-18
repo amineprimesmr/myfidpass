@@ -4,6 +4,14 @@
  */
 
 const TOTAL_STEPS = 6;
+const STEP_QUESTIONS = [
+  "Votre établissement a-t-il un logo à importer ?",
+  "Quel style de carte vous ressemble le plus ?",
+  "Quels objectifs pour vos clients ?",
+  "Configurez vos liens",
+  "Quel type de récompense ?",
+  "Votre carte est prête",
+];
 const STYLE_OPTIONS = [
   { id: "classic", label: "Classique", hint: "Sobre et lisible" },
   { id: "modern", label: "Moderne", hint: "Impact visuel fort" },
@@ -98,7 +106,10 @@ export function initBuilderOnboarding({ mountEl, initialState, organizationName,
   let currentPlaceIdHint = String(placeIdHint || "");
   let state = normalizeState(initialState, currentPlaceIdHint);
   let suggestUi = { loading: false, message: "", kind: "" };
-  const emitState = () => { if (typeof onStateChange === "function") onStateChange({ ...state, placeIdHint: currentPlaceIdHint }); };
+  const emitState = () => {
+    const currentQuestion = STEP_QUESTIONS[state.currentStep] || "";
+    if (typeof onStateChange === "function") onStateChange({ ...state, placeIdHint: currentPlaceIdHint, currentQuestion });
+  };
   function updateState(patch) { state = normalizeState({ ...state, ...patch }, currentPlaceIdHint); emitState(); render(); }
   const goToStep = (n) => updateState({ currentStep: Math.max(0, Math.min(TOTAL_STEPS - 1, n)), goalConfigErrors: {} });
   const nextStep = () => { if (state.currentStep < TOTAL_STEPS - 1) goToStep(state.currentStep + 1); };
@@ -139,29 +150,48 @@ export function initBuilderOnboarding({ mountEl, initialState, organizationName,
   }
 
   function renderGoalConfigStep() {
-    if (!state.engagementGoals.length) return `<h3 class="builder-onboarding-question">Configurer les liens d'objectifs</h3><p class="builder-onboarding-help">Aucun objectif selectionne a l'etape precedente. Vous pouvez continuer.</p>`;
+    if (!state.engagementGoals.length) return `<h3 class="builder-onboarding-question">Configurez vos liens</h3><p class="builder-onboarding-help">Aucun objectif sélectionné. Continuez.</p>`;
     const rows = state.engagementGoals.map((goalId) => {
       const opt = getGoalOption(goalId); if (!opt) return "";
       const value = String(state.goalConfigs[goalId]?.value || "");
       const error = state.goalConfigErrors[goalId] ? `<p class="builder-onboarding-field-error">${state.goalConfigErrors[goalId]}</p>` : "";
       return `<div class="builder-onboarding-config-card"><div class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></div><label class="builder-onboarding-input-label" for="builder-goal-config-${goalId}">${opt.inputLabel}</label><input id="builder-goal-config-${goalId}" class="builder-onboarding-input" data-goal-config="${goalId}" type="text" value="${escapeHtml(value)}" placeholder="${escapeHtml(opt.placeholder || "")}" />${error}</div>`;
     }).join("");
-    return `<h3 class="builder-onboarding-question">Configurez vos liens pour activer les objectifs</h3><p class="builder-onboarding-help">On a pre-rempli ce qu'on a pu trouver automatiquement. Verifiez puis corrigez si besoin.</p><div class="builder-onboarding-actions"><button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="autosuggest-goals" ${suggestUi.loading ? "disabled" : ""}>${suggestUi.loading ? "Detection..." : "Detecter automatiquement"}</button></div>${suggestUi.message ? `<p class="builder-onboarding-autosuggest-feedback ${suggestUi.kind || ""}">${escapeHtml(suggestUi.message)}</p>` : ""}<div class="builder-onboarding-grid builder-onboarding-config-grid">${rows}</div>`;
+    return `<h3 class="builder-onboarding-question">Configurez vos liens</h3><p class="builder-onboarding-help">Pré-rempli si possible.</p><div class="builder-onboarding-actions"><button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="autosuggest-goals" ${suggestUi.loading ? "disabled" : ""}>${suggestUi.loading ? "..." : "Détecter"}</button></div>${suggestUi.message ? `<p class="builder-onboarding-autosuggest-feedback ${suggestUi.kind || ""}">${escapeHtml(suggestUi.message)}</p>` : ""}<div class="builder-onboarding-grid builder-onboarding-config-grid">${rows}</div>`;
   }
 
   function renderStepContent() {
-    if (state.currentStep === 0) return `<h3 class="builder-onboarding-question">Votre etablissement a-t-il un logo a importer maintenant ?</h3><p class="builder-onboarding-help">Format conseille : PNG ou JPG. Vous pourrez le changer a tout moment.</p><div class="builder-onboarding-actions"><button type="button" class="builder-onboarding-btn" data-action="upload-logo">Importer mon logo</button><button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="skip-logo">Passer pour l'instant</button></div>${state.logoDataUrl ? `<div class="builder-onboarding-logo-preview"><img src="${escapeHtml(state.logoDataUrl)}" alt="Apercu logo"></div>` : ""}<input type="file" id="builder-onboarding-logo-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="hidden" />`;
-    if (state.currentStep === 1) return `<h3 class="builder-onboarding-question">Quel style de carte vous ressemble le plus ?</h3><p class="builder-onboarding-help">On applique un theme ajustable ensuite automatiquement ou manuellement.</p><div class="builder-onboarding-grid">${STYLE_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" data-style="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
-    if (state.currentStep === 2) return `<h3 class="builder-onboarding-question">Qu'est-ce que vous voulez qu'on mette en place pour vos clients ?</h3><p class="builder-onboarding-help">Selection multiple possible. Choisissez vos priorites pour lancer les bons objectifs des le depart.</p><div class="builder-onboarding-selected-count">${state.engagementGoals.length > 0 ? `${state.engagementGoals.length} objectif${state.engagementGoals.length > 1 ? "s" : ""} selectionne${state.engagementGoals.length > 1 ? "s" : ""}` : "Aucun objectif selectionne pour le moment"}</div><div class="builder-onboarding-grid">${GOAL_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div><label class="builder-onboarding-input-label" for="builder-onboarding-goals-free-text">Autre objectif (optionnel)</label><input id="builder-onboarding-goals-free-text" class="builder-onboarding-input" type="text" maxlength="120" value="${escapeHtml(state.goalsFreeText)}" placeholder="Ex. Plus d'avis sur une autre plateforme" />`;
+    if (state.currentStep === 0) {
+      const logoBlock = state.logoDataUrl ? `<div class="builder-onboarding-logo-preview"><img src="${escapeHtml(state.logoDataUrl)}" alt="Apercu logo"></div>` : "";
+      const actions = state.logoDataUrl
+        ? ""
+        : `<p class="builder-onboarding-upload-link"><button type="button" class="builder-onboarding-link" data-action="upload-logo">Importer un logo</button></p>`;
+      return `<h3 class="builder-onboarding-question">Votre établissement a-t-il un logo à importer ?</h3><p class="builder-onboarding-help">PNG ou JPG. Modifiable à tout moment.</p>${actions}${logoBlock}<input type="file" id="builder-onboarding-logo-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="hidden" />`;
+    }
+    if (state.currentStep === 1) return `<h3 class="builder-onboarding-question">Quel style de carte vous ressemble le plus ?</h3><p class="builder-onboarding-help">Thème ajustable ensuite.</p><div class="builder-onboarding-grid">${STYLE_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" data-style="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
+    if (state.currentStep === 2) return `<h3 class="builder-onboarding-question">Quels objectifs pour vos clients ?</h3><p class="builder-onboarding-help">Sélection multiple.</p><div class="builder-onboarding-selected-count">${state.engagementGoals.length > 0 ? `${state.engagementGoals.length} sélectionné${state.engagementGoals.length > 1 ? "s" : ""}` : "Aucun"}</div><div class="builder-onboarding-grid">${GOAL_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div><label class="builder-onboarding-input-label" for="builder-onboarding-goals-free-text">Autre (optionnel)</label><input id="builder-onboarding-goals-free-text" class="builder-onboarding-input" type="text" maxlength="120" value="${escapeHtml(state.goalsFreeText)}" placeholder="Ex. Plus d'avis" />`;
     if (state.currentStep === 3) return renderGoalConfigStep();
-    if (state.currentStep === 4) return `<h3 class="builder-onboarding-question">Quel type de recompense est le plus simple pour vous ?</h3><div class="builder-onboarding-grid">${REWARD_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
+    if (state.currentStep === 4) return `<h3 class="builder-onboarding-question">Quel type de récompense ?</h3><div class="builder-onboarding-grid">${REWARD_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     const selectedGoals = state.engagementGoals.map((id) => getGoalOption(id)?.label || "").filter(Boolean); if (state.goalsFreeText.trim()) selectedGoals.push(state.goalsFreeText.trim());
     const configuredGoals = state.engagementGoals.filter((goalId) => String(state.goalConfigs?.[goalId]?.value || "").trim()).length;
-    return `<h3 class="builder-onboarding-question">Votre carte est prete pour ${escapeHtml(organizationName || "votre etablissement")}</h3><div class="builder-onboarding-recap"><p><strong>Logo :</strong> ${state.logoDataUrl ? "importe" : "non defini"}</p><p><strong>Style :</strong> ${(STYLE_OPTIONS.find((x) => x.id === state.stylePreset) || STYLE_OPTIONS[0]).label}</p><p><strong>Objectifs clients :</strong> ${selectedGoals.length ? selectedGoals.join(", ") : "Aucun objectif selectionne"}</p><p><strong>Liens configures :</strong> ${configuredGoals}/${state.engagementGoals.length || 0}</p><p><strong>Recompense :</strong> ${(REWARD_OPTIONS.find((x) => x.id === state.rewardModel) || REWARD_OPTIONS[3]).label}</p></div><p class="builder-onboarding-help">Vous pourrez ajuster ces choix apres cette etape dans votre espace pro.</p>`;
+    return `<h3 class="builder-onboarding-question">Votre carte est prête</h3><div class="builder-onboarding-recap"><p><strong>Logo :</strong> ${state.logoDataUrl ? "Oui" : "Non"}</p><p><strong>Style :</strong> ${(STYLE_OPTIONS.find((x) => x.id === state.stylePreset) || STYLE_OPTIONS[0]).label}</p><p><strong>Objectifs :</strong> ${selectedGoals.length ? selectedGoals.join(", ") : "Aucun"}</p><p><strong>Liens :</strong> ${configuredGoals}/${state.engagementGoals.length || 0}</p><p><strong>Récompense :</strong> ${(REWARD_OPTIONS.find((x) => x.id === state.rewardModel) || REWARD_OPTIONS[3]).label}</p></div><p class="builder-onboarding-help">Modifiable dans votre espace pro.</p>`;
   }
 
+  function getNavButtonLabel() {
+    if (state.currentStep === TOTAL_STEPS - 1) return "Terminer";
+    if (state.currentStep === 0 && !state.logoDataUrl) return "Passer";
+    return "Continuer";
+  }
+  function showPrevButton() {
+    return state.currentStep > 0;
+  }
   function render() {
-    mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-progress"><span class="builder-onboarding-progress-label">Etape ${state.currentStep + 1}/${TOTAL_STEPS}</span><div class="builder-onboarding-progress-bar"><span style="width:${((state.currentStep + 1) / TOTAL_STEPS) * 100}%"></span></div></div>${renderStepContent()}<div class="builder-onboarding-nav"><button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="prev" ${state.currentStep === 0 ? "disabled" : ""}>Retour</button><button type="button" class="builder-onboarding-btn" data-action="next">${state.currentStep === TOTAL_STEPS - 1 ? "Terminer la personnalisation" : "Continuer"}</button></div></section>`;
+    const progress = `<div class="builder-onboarding-progress"><span class="builder-onboarding-progress-label">Étape ${state.currentStep + 1}/${TOTAL_STEPS}</span><div class="builder-onboarding-progress-bar"><span style="width:${((state.currentStep + 1) / TOTAL_STEPS) * 100}%"></span></div></div>`;
+    const content = renderStepContent();
+    const prevBtn = showPrevButton() ? `<button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="prev">Retour</button>` : "";
+    const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
+    const nav = `<div class="builder-onboarding-nav">${prevBtn}${nextBtn}</div>`;
+    mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte">${progress}${content}${nav}</section>`;
     mountEl.querySelector("[data-action='prev']")?.addEventListener("click", previousStep);
     mountEl.querySelector("[data-action='next']")?.addEventListener("click", () => {
       if (state.currentStep === 3) {
@@ -172,7 +202,6 @@ export function initBuilderOnboarding({ mountEl, initialState, organizationName,
       nextStep();
     });
     mountEl.querySelector("[data-action='upload-logo']")?.addEventListener("click", () => mountEl.querySelector("#builder-onboarding-logo-input")?.click());
-    mountEl.querySelector("[data-action='skip-logo']")?.addEventListener("click", nextStep);
     mountEl.querySelector("#builder-onboarding-logo-input")?.addEventListener("change", async (event) => { const file = event.target?.files?.[0]; if (!file) return; const dataUrl = await fileToResizedDataUrl(file); if (!dataUrl) return; updateState({ logoDataUrl: dataUrl }); if (typeof onLogoChange === "function") onLogoChange(dataUrl); nextStep(); });
     mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "modern"; updateState({ stylePreset }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
     mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.addEventListener("click", () => { const goalId = btn.getAttribute("data-goal"); if (!goalId) return; const already = state.engagementGoals.includes(goalId); const goals = already ? state.engagementGoals.filter((id) => id !== goalId) : [...state.engagementGoals, goalId]; updateState({ engagementGoals: goals, goalConfigs: normalizeGoalConfigs(goals, state.goalConfigs, currentPlaceIdHint), goalConfigErrors: {} }); }));

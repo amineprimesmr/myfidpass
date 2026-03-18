@@ -83,6 +83,9 @@ export function openOnboardingSheet() {
   sheet.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
 
+  const titleEl = document.getElementById("landing-onboarding-sheet-title");
+  if (titleEl) titleEl.textContent = "Nom de votre établissement";
+
   const step0 = document.getElementById("landing-onboarding-sheet-step0");
   const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
 
@@ -130,13 +133,18 @@ function showOnboardingInSheet(organizationName, placeId) {
   step0.classList.add("hidden");
   onboardingMount.classList.remove("hidden");
 
+  const titleEl = document.getElementById("landing-onboarding-sheet-title");
+  const updateTitle = (q) => {
+    if (titleEl && q) titleEl.textContent = q;
+  };
+
   onboardingController = initBuilderOnboarding({
     mountEl: onboardingMount,
     initialState: { placeIdHint: placeId },
     organizationName: organizationName || "votre établissement",
     apiBase: API_BASE,
     placeIdHint: placeId,
-    onStateChange: () => {},
+    onStateChange: (s) => { if (s.currentQuestion) updateTitle(s.currentQuestion); },
     onLogoChange: () => {},
     onStyleChange: () => {},
     onRewardChange: () => {},
