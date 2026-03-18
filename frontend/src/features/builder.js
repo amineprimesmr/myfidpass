@@ -4,7 +4,7 @@
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
 import { API_BASE } from "../config.js";
 import { setBuilderHeaderStep, initRouting, navigateToLanding } from "../router/index.js";
-import { slugify } from "../utils/slugify.js";
+import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";
 
 async function geocodeAddress(address) {
   const q = String(address).trim();
@@ -45,13 +45,38 @@ function getTemplateIdFromCategoryFormat(category, format) {
   return `${category}-${format}`;
 }
 
+function templateIdFromOnboardingStyle(stylePreset) {
+  if (stylePreset === "classic") return "classic";
+  if (stylePreset === "premium") return "elegant";
+  if (stylePreset === "colorful") return "fastfood-points";
+  return "bold";
+}
+
 function initBuilderPage() {
 
   const btnSubmit = document.getElementById("builder-submit");
   const cartBadge = document.getElementById("builder-header-cart-badge");
   if (cartBadge) cartBadge.textContent = "1";
 
-  const state = { selectedTemplateId: "fastfood-tampons", organizationName: "", logoDataUrl: "", brandColors: null };
+  const state = {
+    selectedTemplateId: "fastfood-tampons",
+    organizationName: "",
+    logoDataUrl: "",
+    brandColors: null,
+    onboarding: {
+      currentStep: 0,
+      completed: false,
+      logoDataUrl: "",
+      stylePreset: "modern",
+      rewardModel: "later",
+      tagline: "",
+      publicInfo: {
+        phone: true,
+        address: true,
+        social: true,
+      },
+    },
+  };
   const headerSteps = document.querySelectorAll(".builder-header-step");
 
   setBuilderHeaderStep(2);
@@ -81,6 +106,23 @@ function initBuilderPage() {
         if (typeof d.organizationName === "string") state.organizationName = d.organizationName.trim();
         if (typeof d.logoDataUrl === "string" && d.logoDataUrl.startsWith("data:image/")) state.logoDataUrl = d.logoDataUrl;
         if (d.brandColors && typeof d.brandColors.header === "string" && d.brandColors.body && d.brandColors.label) state.brandColors = d.brandColors;
+        if (d.onboarding && typeof d.onboarding === "object") {
+          const o = d.onboarding;
+          state.onboarding = {
+            ...state.onboarding,
+            currentStep: Number.isFinite(o.currentStep) ? Math.max(0, Math.min(4, o.currentStep)) : state.onboarding.currentStep,
+            completed: o.completed === true,
+            logoDataUrl: typeof o.logoDataUrl === "string" ? o.logoDataUrl : state.onboarding.logoDataUrl,
+            stylePreset: typeof o.stylePreset === "string" ? o.stylePreset : state.onboarding.stylePreset,
+            rewardModel: typeof o.rewardModel === "string" ? o.rewardModel : state.onboarding.rewardModel,
+            tagline: typeof o.tagline === "string" ? o.tagline : state.onboarding.tagline,
+            publicInfo: {
+              phone: o.publicInfo?.phone !== false,
+              address: o.publicInfo?.address !== false,
+              social: o.publicInfo?.social !== false,
+            },
+          };
+        }
       }
     } catch (_) {}
   }
@@ -92,7 +134,8 @@ function initBuilderPage() {
       if (raw) try { existing = JSON.parse(raw); } catch (_) {}
       const payload = {
         selectedTemplateId: state.selectedTemplateId,
-        organizationName: state.organizationName || ""
+        organizationName: state.organizationName || "",
+        onboarding: state.onboarding,
       };
       if (extra.logoDataUrl != null) payload.logoDataUrl = extra.logoDataUrl;
       else if (existing.logoDataUrl) payload.logoDataUrl = existing.logoDataUrl;
@@ -367,6 +410,21 @@ function initBuilderPage() {
     applySelection();
   }
 
+  function applyOnboardingTemplatePreset(stylePreset, rewardModel) {
+    const preferredTemplateId = templateIdFromOnboardingStyle(stylePreset);
+    if (CARD_TEMPLATES.some((t) => t.id === preferredTemplateId)) {
+      state.selectedTemplateId = preferredTemplateId;
+    }
+    const prefersStamps = rewardModel === "stamps";
+    const current = templateIdToCategoryFormat(state.selectedTemplateId);
+    if (prefersStamps && current.category !== "classic") {
+      state.selectedTemplateId = getTemplateIdFromCategoryFormat(current.category, "tampons");
+    } else if (!prefersStamps && current.category !== "classic") {
+      state.selectedTemplateId = getTemplateIdFromCategoryFormat(current.category, "points");
+    }
+    applySelection();
+  }
+
   function initWalletCardQRCodes() {
     const base = API_BASE.replace(/\/$/, "");
     document.querySelectorAll("#builder-wallet-slider .builder-wallet-card").forEach((card) => {
@@ -404,6 +462,17 @@ function initBuilderPage() {
   loadDraft();
   const placeIdFromUrl = urlParams.get("place_id")?.trim();
   const hasLandingParams = (etablissementFromUrl && typeof etablissementFromUrl === "string") || placeIdFromUrl;
+  const onboardingRoot = document.getElementById("builder-onboarding");
+  const optionsPanel = document.getElementById("builder-options-panel");
+  const inlineCta = document.getElementById("builder-inline-cta");
+  const stickyStepBar = document.getElementById("builder-step-1-sticky");
+  let onboardingController = null;
+
+  function setBuilderOptionsVisibility(visible) {
+    optionsPanel?.classList.toggle("hidden", !visible);
+    inlineCta?.classList.toggle("hidden", !visible);
+    stickyStepBar?.classList.toggle("hidden", !visible);
+  }
 
   function applyInitialState() {
     if (etablissementFromUrl && typeof etablissementFromUrl === "string") {
@@ -423,6 +492,51 @@ function initBuilderPage() {
   }
 
   applyInitialState();
+  const shouldShowOnboarding = Boolean(hasLandingParams) && state.onboarding?.completed !== true;
+  if (onboardingRoot) {
+    if (shouldShowOnboarding) {
+      onboardingRoot.classList.remove("hidden");
+      setBuilderOptionsVisibility(false);
+      onboardingController = initBuilderOnboarding({
+        mountEl: onboardingRoot,
+        initialState: {
+          ...state.onboarding,
+          logoDataUrl: state.logoDataUrl || state.onboarding.logoDataUrl,
+        },
+        organizationName: state.organizationName || etablissementFromUrl || "votre établissement",
+        onStateChange(nextOnboardingState) {
+          state.onboarding = nextOnboardingState;
+          saveDraft();
+        },
+        onLogoChange(dataUrl) {
+          state.logoDataUrl = dataUrl;
+          state.onboarding.logoDataUrl = dataUrl;
+          updateBuilderPreviewLogo(dataUrl);
+          saveDraft({ logoDataUrl: dataUrl });
+        },
+        onStyleChange(stylePreset) {
+          state.onboarding.stylePreset = stylePreset;
+          applyOnboardingTemplatePreset(stylePreset, state.onboarding.rewardModel);
+          saveDraft();
+        },
+        onRewardChange(rewardModel) {
+          state.onboarding.rewardModel = rewardModel;
+          applyOnboardingTemplatePreset(state.onboarding.stylePreset, rewardModel);
+          saveDraft();
+        },
+        onComplete(nextOnboardingState) {
+          state.onboarding = { ...nextOnboardingState, completed: true };
+          applyOnboardingTemplatePreset(state.onboarding.stylePreset, state.onboarding.rewardModel);
+          saveDraft();
+          setBuilderOptionsVisibility(true);
+          onboardingRoot.classList.add("hidden");
+        },
+      });
+    } else {
+      onboardingRoot.classList.add("hidden");
+      setBuilderOptionsVisibility(true);
+    }
+  }
   const builderStep1 = document.getElementById("builder-step-1-block");
   if (builderStep1) {
     builderStep1.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -465,14 +579,17 @@ function initBuilderPage() {
 
       if (placeId) {
         try {
+          if (state.logoDataUrl) return;
           const photoRes = await fetch(`${API_BASE.replace(/\/$/, "")}/api/place-photo?place_id=${encodeURIComponent(placeId)}`, { cache: "no-store" });
           if (photoRes.ok && photoRes.headers.get("content-type")?.startsWith("image/")) {
             const blob = await photoRes.blob();
             const dataUrl = await blobToResizedLogoDataUrl(blob, 512);
             if (dataUrl) {
               state.logoDataUrl = dataUrl;
+              state.onboarding.logoDataUrl = dataUrl;
               saveDraft({ logoDataUrl: dataUrl, placeId });
               updateBuilderPreviewLogo(dataUrl);
+              onboardingController?.setLogoDataUrl(dataUrl);
             }
           }
         } catch (_) {}
@@ -568,6 +685,10 @@ function initBuilderPage() {
   }
 
   function goToCheckout() {
+    if (state.onboarding?.completed !== true && shouldShowOnboarding) {
+      onboardingRoot?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     history.pushState({}, "", "/checkout");
     initRouting();
   }

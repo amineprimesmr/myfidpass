@@ -1,8 +1,9 @@
 .landing-card-beam {
   margin: 2.8rem 0 0;
-  padding: 2.4rem 0;
+  padding: 2rem 0 0;
   width: 100vw;
   margin-left: calc(50% - 50vw);
+  overflow-x: clip;
   background: #000;
 }
 
@@ -25,12 +26,12 @@
 
 .landing-card-beam-frame-wrap {
   position: relative;
-  width: min(1280px, 100% - 2rem);
-  margin: 0 auto;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   height: min(86vh, 720px);
   overflow: hidden;
-  border-radius: 24px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 0;
+  border: 0;
   background: #000;
 }
 
@@ -47,12 +48,12 @@
 
 .landing-card-beam-frame-wrap::before {
   top: 0;
-  height: 74px;
+  height: 72px;
 }
 
 .landing-card-beam-frame-wrap::after {
   bottom: 0;
-  height: 32px;
+  height: 20px;
 }
 
 .landing-card-beam-frame {
@@ -67,25 +68,26 @@
 
 @media (max-width: 768px) {
   .landing-card-beam {
-    padding: 1rem 0;
+    padding: 0.65rem 0 0;
   }
 
   .landing-card-beam-frame-wrap {
-    width: calc(100% - 1rem);
-    height: min(74vh, 520px);
-    border-radius: 12px;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    height: min(70vh, 500px);
+    border-radius: 0;
   }
 
   .landing-card-beam-frame-wrap::before {
-    height: 62px;
+    height: 56px;
   }
 
   .landing-card-beam-frame-wrap::after {
-    height: 26px;
+    height: 8px;
   }
 
   .landing-card-beam-frame {
-    top: -102px;
-    height: 860px;
+    top: -96px;
+    height: 820px;
   }
 }
