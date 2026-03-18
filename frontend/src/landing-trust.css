@@ -1,0 +1,116 @@
+/* Section "Ils nous ont fait confiance" — marquee logos, fond sombre */
+
+#landing .landing-trust-section {
+  margin-top: 3rem;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  width: 100vw;
+  padding: 2rem 0;
+  background: #0f0f0f;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+#landing .landing-trust-title {
+  margin: 0 0 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+#landing .landing-trust-marquee-wrap {
+  overflow: hidden;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+}
+
+#landing .landing-trust-marquee {
+  display: flex;
+  width: max-content;
+  animation: landing-trust-marquee 28s linear infinite;
+}
+
+#landing .landing-trust-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #landing .landing-trust-marquee {
+    animation: none;
+    width: 100%;
+    justify-content: center;
+  }
+  #landing .landing-trust-marquee .landing-trust-logos:last-child {
+    display: none;
+  }
+}
+
+@keyframes landing-trust-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+#landing .landing-trust-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3.5rem;
+  padding: 0 4rem;
+  flex-shrink: 0;
+}
+
+#landing .landing-trust-logos img {
+  height: 36px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+}
+
+#landing .landing-trust-logos img:hover {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  #landing .landing-trust-section {
+    margin-top: 2.5rem;
+    padding: 1.5rem 0;
+  }
+
+  #landing .landing-trust-title {
+    font-size: 0.8rem;
+    margin-bottom: 1.25rem;
+  }
+
+  #landing .landing-trust-logos {
+    gap: 2.5rem;
+    padding: 0 3rem;
+  }
+
+  #landing .landing-trust-logos img {
+    height: 28px;
+  }
+}
