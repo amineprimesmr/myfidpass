@@ -2741,8 +2741,12 @@
 
 @media (min-width: 768px) {
   .landing-bandeau {
-    margin-top: -5.5rem;
-    transform: translateY(-5px);
+    margin-top: -6.5rem;
+    transform: translateY(-10px);
+  }
+
+  .landing-bandeau::before {
+    height: 16px;
   }
 }
 
