@@ -82,24 +82,27 @@
 }
 
 .landing-footer-social-v3 {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: #f3f4f6;
-  color: #374151;
-  font-size: 0.75rem;
-  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .landing-footer-social-v3:hover {
   background: #e5e7eb;
-  color: #111827;
+  transform: scale(1.05);
+}
+
+.landing-footer-social-v3 img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 /* Grille colonnes */
