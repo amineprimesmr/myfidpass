@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
     <link rel="stylesheet" href="/src/landing-onboarding-sheet.css" />
+    <link rel="stylesheet" href="/src/landing-testimonials-faq.css" />
     <link rel="stylesheet" href="/src/landing-footer.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -1836,6 +1837,110 @@
               <p class="landing-simulator-modal-disclaimer">Sous réserve d'une mise en place optimale · Estimation mensuelle</p>
               <a href="/creer-ma-carte" class="landing-simulator-modal-cta">Essayez gratuitement&nbsp;!</a>
             </div>
+          </div>
+        </section>
+
+        <!-- Section Témoignages -->
+        <section id="temoignages" class="landing-testimonials-v2 landing-reveal" data-reveal>
+          <div class="landing-testimonials-v2-inner">
+            <h2 class="landing-testimonials-v2-title">Ils nous font confiance, et vous ?</h2>
+            <a href="#landing-hero-form" class="landing-testimonials-v2-cta landing-cta-try">Essayer gratuitement</a>
+            <div class="landing-testimonials-v2-grid">
+              <article class="landing-testimonial-v2-card">
+                <div class="landing-testimonial-v2-stars" aria-hidden="true">★★★★★</div>
+                <p class="landing-testimonial-v2-text">La carte dans le Wallet, c’est génial. Mes clients n’oublient plus leur carte et les scans sont instantanés. On a doublé les passages en 3 mois.</p>
+                <div class="landing-testimonial-v2-author">
+                  <span class="landing-testimonial-v2-avatar" aria-hidden="true">M</span>
+                  <div>
+                    <strong class="landing-testimonial-v2-name">Marie L.</strong>
+                    <span class="landing-testimonial-v2-role">Boulangerie Le Pain Doré</span>
+                  </div>
+                </div>
+              </article>
+              <article class="landing-testimonial-v2-card">
+                <div class="landing-testimonial-v2-stars" aria-hidden="true">★★★★★</div>
+                <p class="landing-testimonial-v2-text">Simple à mettre en place, beau résultat. Mes clientes adorent avoir la carte sur leur téléphone. Fini les cartes en papier qui s’abîment.</p>
+                <div class="landing-testimonial-v2-author">
+                  <span class="landing-testimonial-v2-avatar" aria-hidden="true">S</span>
+                  <div>
+                    <strong class="landing-testimonial-v2-name">Sophie</strong>
+                    <span class="landing-testimonial-v2-role">Institut Beauté</span>
+                  </div>
+                </div>
+              </article>
+              <article class="landing-testimonial-v2-card">
+                <div class="landing-testimonial-v2-stars" aria-hidden="true">★★★★★</div>
+                <p class="landing-testimonial-v2-text">Le tableau de bord est clair, les notifications push marchent nickel. Je recommande à tous les commerces qui veulent fidéliser sans se prendre la tête.</p>
+                <div class="landing-testimonial-v2-author">
+                  <span class="landing-testimonial-v2-avatar" aria-hidden="true">T</span>
+                  <div>
+                    <strong class="landing-testimonial-v2-name">Thomas</strong>
+                    <span class="landing-testimonial-v2-role">Café des Arts</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section FAQ -->
+        <section id="faq" class="landing-faq-v2 landing-reveal" data-reveal>
+          <div class="landing-faq-v2-inner">
+            <div class="landing-faq-v2-header">
+              <div>
+                <h2 class="landing-faq-v2-title">Vos questions.</h2>
+                <h2 class="landing-faq-v2-title landing-faq-v2-title-muted">Nos réponses</h2>
+              </div>
+              <p class="landing-faq-v2-subtitle">Vous ne trouvez pas ce que vous cherchez ? <a href="mailto:contact@myfidpass.fr">Contactez-nous</a> ou réservez un appel.</p>
+              <a href="mailto:contact@myfidpass.fr" class="landing-faq-v2-cta">Contactez-nous</a>
+            </div>
+            <ul class="landing-faq-v2-list" role="list">
+              <li class="landing-faq-item landing-faq-v2-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-1" id="faq-q1">
+                  <span>Comment mes clients ajoutent-ils la carte à leur téléphone ?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer hidden" id="faq-1" role="region" aria-labelledby="faq-q1">
+                  <p>Vos clients scannent le QR code affiché (caisse, vitrine, reçu) ou cliquent sur un lien. La carte s’ajoute directement dans Apple Wallet ou Google Wallet. Aucune app à télécharger.</p>
+                </div>
+              </li>
+              <li class="landing-faq-item landing-faq-v2-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-2" id="faq-q2">
+                  <span>Quels types de commerces peuvent utiliser Myfidpass ?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer hidden" id="faq-2" role="region" aria-labelledby="faq-q2">
+                  <p>Restaurants, cafés, boulangeries, coiffeurs, instituts de beauté, boucheries… Tout commerce avec une clientèle récurrente. Vous choisissez le système (points ou tampons) et le design adapté à votre secteur.</p>
+                </div>
+              </li>
+              <li class="landing-faq-item landing-faq-v2-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-3" id="faq-q3">
+                  <span>Faut-il un logiciel de caisse spécifique ?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer hidden" id="faq-3" role="region" aria-labelledby="faq-q3">
+                  <p>Non. Vous pouvez scanner le QR code avec n’importe quel lecteur ou smartphone. Pour une intégration automatique (caisse, borne), nous fournissons une API et une documentation.</p>
+                </div>
+              </li>
+              <li class="landing-faq-item landing-faq-v2-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-4" id="faq-q4">
+                  <span>Quelle est la durée de l’essai gratuit ?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer hidden" id="faq-4" role="region" aria-labelledby="faq-q4">
+                  <p>7 jours gratuits, sans engagement. Vous créez votre carte, testez le tableau de bord et les scans. À partir de là, vous pouvez souscrire à l’offre ou arrêter sans frais.</p>
+                </div>
+              </li>
+              <li class="landing-faq-item landing-faq-v2-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-5" id="faq-q5">
+                  <span>Les données de mes clients sont-elles sécurisées ?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer hidden" id="faq-5" role="region" aria-labelledby="faq-q5">
+                  <p>Oui. Nous collectons uniquement les données nécessaires au service (identifiant membre, points/tampons). Les données sont hébergées en Europe et respectent le RGPD.</p>
+                </div>
+              </li>
+            </ul>
           </div>
         </section>
 
