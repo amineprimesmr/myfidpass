@@ -1,8 +1,9 @@
 /**
- * Shell landing : formulaire hero, Google Places, menus drawer.
+ * Shell landing : formulaire hero, Google Places, menus drawer, bottom sheet onboarding.
  * Appelé au chargement pour attacher les listeners (formulaire, menus, script Places).
  */
 import { navigateToBuilder } from "../router/index.js";
+import { openOnboardingSheet, initOnboardingSheet } from "./landing-onboarding-sheet.js";
 
 function updateLandingCtaState() {
   const input = document.getElementById("landing-etablissement");
@@ -68,14 +69,11 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
 }
 
 export function initLandingShell() {
+  initOnboardingSheet();
   document.querySelectorAll(".landing-cta-try").forEach((link) => {
     link.addEventListener("click", (e) => {
-      const form = document.getElementById("landing-hero-form");
-      const input = document.getElementById("landing-etablissement");
-      if (!form) return;
       e.preventDefault();
-      form.scrollIntoView({ behavior: "smooth", block: "center" });
-      window.setTimeout(() => input?.focus(), 300);
+      openOnboardingSheet();
     });
   });
 

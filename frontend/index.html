@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
+    <link rel="stylesheet" href="/src/landing-onboarding-sheet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
@@ -1640,6 +1641,34 @@
           </nav>
           <div class="landing-menu-drawer-footer">
             <a href="#landing-hero-form" class="landing-menu-drawer-cta landing-cta-try">Essayer gratuitement</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom sheet onboarding (drawer depuis le bas) -->
+      <div id="landing-onboarding-sheet" class="landing-onboarding-sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="landing-onboarding-sheet-title">
+        <div class="landing-onboarding-sheet-backdrop" id="landing-onboarding-sheet-backdrop"></div>
+        <div class="landing-onboarding-sheet-drawer">
+          <div class="landing-onboarding-sheet-handle" aria-hidden="true"></div>
+          <div class="landing-onboarding-sheet-header">
+            <h2 id="landing-onboarding-sheet-title" class="landing-onboarding-sheet-title">Créer ma carte</h2>
+            <button type="button" class="landing-onboarding-sheet-close" id="landing-onboarding-sheet-close" aria-label="Fermer">×</button>
+          </div>
+          <div class="landing-onboarding-sheet-body" id="landing-onboarding-sheet-body">
+            <div id="landing-onboarding-sheet-step0" class="landing-onboarding-sheet-step0">
+              <form id="landing-onboarding-sheet-form">
+                <input type="hidden" id="onboarding-sheet-place-id" name="place_id" value="" />
+                <h2>Nom de votre établissement</h2>
+                <p>Commencez par indiquer le nom de votre commerce pour personnaliser votre carte.</p>
+                <div class="landing-onboarding-sheet-input-wrap">
+                  <img src="/assets/googlelogo.png" alt="Google" width="20" height="20" />
+                  <input type="text" id="onboarding-sheet-etablissement" class="landing-onboarding-sheet-input" placeholder="Ex. Maison Napoli" autocomplete="organization" />
+                </div>
+                <button type="submit" id="onboarding-sheet-submit" class="landing-onboarding-sheet-cta" disabled>Continuer</button>
+                <p class="landing-onboarding-sheet-helper">Aucun résultat ? Indiquez le nom, la ville et le code postal.</p>
+              </form>
+            </div>
+            <div id="landing-onboarding-sheet-onboarding" class="hidden"></div>
           </div>
         </div>
       </div>
