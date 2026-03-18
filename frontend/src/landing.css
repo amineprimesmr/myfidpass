@@ -5829,3 +5829,34 @@ body.page-checkout .site-banner { display: none !important; }
     font-size: 0.9rem;
   }
 }
+
+/* Hotfix centrage hero desktop (prioritaire) */
+@media (min-width: 1101px) {
+  #landing .landing-hero-grid {
+    max-width: 1180px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    justify-content: center !important;
+    align-items: center !important;
+    grid-template-columns: minmax(520px, 600px) minmax(420px, 520px) !important;
+    gap: 2.6rem !important;
+  }
+
+  #landing .landing-hero-copy {
+    justify-self: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  #landing .landing-hero-title,
+  #landing .landing-hero-subtitle,
+  #landing .landing-hero-form,
+  #landing .landing-hero-proof-row,
+  #landing .landing-hero-microproof {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+}
