@@ -1,0 +1,8 @@
+# Couleur « blanc » — fond de surface
+
+Quand on parle de **fond blanc** ou **blanc** pour les surfaces du site (landing, auth, app, footer, sections), utiliser la couleur de la section FAQ :
+
+- **Variable CSS** : `var(--fidpass-surface)`
+- **Valeur** : `#f5f5f7` (gris très clair, style Apple/Trendtrack)
+
+Définie dans `:root` (style.css). Ne pas utiliser `#fff` ou `#ffffff` pour les fonds de section.

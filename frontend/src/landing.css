@@ -1,8 +1,8 @@
 /* Landing Myfidpass — thème clair. Dérogation REFONTE-REGLES : > 500 lignes, à découper par blocs logiques. */
 
 #landing {
-  --landing-bg: #fafafa;
-  --landing-surface: #fff;
+  --landing-bg: #f5f5f7;
+  --landing-surface: #f5f5f7;
   --landing-border: #e5e5e5;
   --landing-text: #1a1a1a;
   --landing-muted: #6b7280;
@@ -281,7 +281,7 @@
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   margin-top: -6rem;
-  background: #fff;
+  background: var(--fidpass-surface);
   border-bottom-left-radius: 28px;
   border-bottom-right-radius: 28px;
   overflow: hidden;
@@ -864,7 +864,7 @@
   margin-right: calc(50% - 50vw);
   padding: clamp(2rem, 5vw, 3rem) max(1.5rem, calc(50vw - 620px));
   text-align: center;
-  background: #ffffff;
+  background: var(--fidpass-surface);
   box-sizing: border-box;
 }
 
@@ -1757,7 +1757,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.45rem;
-  background: #ffffff;
+  background: var(--fidpass-surface);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 9999px;
   font-size: 0.68rem;
@@ -2311,7 +2311,7 @@
 /* C'est quoi ? – Étapes produit (fond clair) */
 .landing-how {
   padding: 4rem 0;
-  background: #fff;
+  background: var(--fidpass-surface);
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;
 }
@@ -2802,7 +2802,7 @@
   font-family: var(--landing-font);
   border: 2px solid #1a1a1a;
   border-radius: 12px;
-  background: #fff;
+  background: var(--fidpass-surface);
   color: #1a1a1a;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -2883,7 +2883,7 @@
   max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
-  background: #fff;
+  background: var(--fidpass-surface);
   border: 4px solid #1a1a1a;
   border-radius: 24px;
   padding: 2rem 1.75rem;
@@ -2913,7 +2913,7 @@
   height: 36px;
   border: 2px solid #1a1a1a;
   border-radius: 50%;
-  background: #fff;
+  background: var(--fidpass-surface);
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
@@ -3453,7 +3453,7 @@ body.page-builder #builder-app main.landing-builder {
 .builder-onboarding-card {
   --landing-text: #0f172a;
   --landing-muted: #64748b;
-  background: #fff;
+  background: var(--fidpass-surface);
   border: 1px solid var(--landing-border, #e5e7eb);
   border-radius: 16px;
   padding: 1rem;
@@ -3516,7 +3516,7 @@ body.page-builder #builder-app main.landing-builder {
   cursor: not-allowed;
 }
 .builder-onboarding-btn-ghost {
-  background: #fff;
+  background: var(--fidpass-surface);
   color: #111827;
   border-color: #d1d5db;
 }
@@ -3539,7 +3539,7 @@ body.page-builder #builder-app main.landing-builder {
 .builder-onboarding-choice {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  background: #fff;
+  background: var(--fidpass-surface);
   padding: 0.8rem;
   text-align: left;
   cursor: pointer;
@@ -3577,7 +3577,7 @@ body.page-builder #builder-app main.landing-builder {
   height: 32px;
   border-radius: 999px;
   border: 1px solid #e5e7eb;
-  background: #fff;
+  background: var(--fidpass-surface);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3670,7 +3670,7 @@ body.page-builder #builder-app main.landing-builder {
 .builder-onboarding-config-card {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  background: #fff;
+  background: var(--fidpass-surface);
   padding: 0.75rem;
 }
 .builder-onboarding-autosuggest-feedback {
@@ -3751,7 +3751,7 @@ body.page-builder #builder-app main.landing-builder {
   font-family: inherit;
   border: 1.5px solid var(--landing-border, #ddd);
   border-radius: 10px;
-  background: #fff;
+  background: var(--fidpass-surface);
   color: #111;
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -3911,7 +3911,7 @@ body.page-builder #builder-app main.landing-builder {
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
     padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
-    background: #fff;
+    background: var(--fidpass-surface);
     border-top: 1px solid var(--landing-border);
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
     z-index: 50;
@@ -4187,7 +4187,7 @@ body.page-builder #builder-app main.landing-builder {
   align-items: center;
   justify-content: center;
   padding: 3px;
-  background: #fff;
+  background: var(--fidpass-surface);
   border-radius: 6px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
 }
@@ -4755,7 +4755,7 @@ body.page-builder #builder-app main.landing-builder {
 .builder-demo-qr-wrap {
   display: inline-flex;
   padding: 12px;
-  background: #fff;
+  background: var(--fidpass-surface);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   margin-bottom: 0.75rem;
@@ -5049,7 +5049,7 @@ body.page-builder #builder-app main.landing-builder {
   position: relative;
   width: 100%;
   max-width: 420px;
-  background: #fff;
+  background: var(--fidpass-surface);
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
@@ -5408,7 +5408,7 @@ body.page-checkout .site-banner { display: none !important; }
 
 /* Header blanc avec bordure, comme WHOOP */
 .checkout-header {
-  background: #fff;
+  background: var(--fidpass-surface);
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #e5e5e5;
 }
@@ -5551,7 +5551,7 @@ body.page-checkout .site-banner { display: none !important; }
   transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .checkout-step-open {
-  background: #fff;
+  background: var(--fidpass-surface);
   border-color: #d5d5d5;
   box-shadow: 0 2px 10px rgba(0,0,0,0.07);
 }
@@ -5576,7 +5576,7 @@ body.page-checkout .site-banner { display: none !important; }
   color: #1a1a1a;
   cursor: default;
 }.checkout-step-open .checkout-step-title {
-  background: #fff;
+  background: var(--fidpass-surface);
   border-bottom: 1px solid #eee;
   padding-bottom: 0.75rem;
 }
@@ -5584,7 +5584,7 @@ body.page-checkout .site-banner { display: none !important; }
 .checkout-step-content {
   padding: 1.25rem 1.5rem;
   display: none;
-  background: #fff;
+  background: var(--fidpass-surface);
 }
 .checkout-step-open .checkout-step-content {
   display: block;
@@ -5599,7 +5599,7 @@ body.page-checkout .site-banner { display: none !important; }
   margin-bottom: 1rem;
   font-family: inherit;
   box-sizing: border-box;
-  background: #fff;
+  background: var(--fidpass-surface);
   color: #1a1a1a;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -5705,7 +5705,7 @@ body.page-checkout .site-banner { display: none !important; }
 
 /* Panier droit : carte récap moderne */
 .checkout-order-card {
-  background: #fff;
+  background: var(--fidpass-surface);
   color: #1a1a1a;
   border-radius: 12px;
   padding: 1.5rem 1.35rem;
@@ -5828,7 +5828,7 @@ body.page-checkout .site-banner { display: none !important; }
   justify-content: center;
   gap: 0.5rem;
   border: 1px solid #ddd;
-  background: #fff;
+  background: var(--fidpass-surface);
   color: #1a1a1a;
 }
 .checkout-btn-social:hover { background: #f5f5f5; }
@@ -5952,7 +5952,7 @@ body.page-checkout .site-banner { display: none !important; }
 
 /* Footer clair, comme WHOOP */
 .checkout-footer {
-  background: #fff;
+  background: var(--fidpass-surface);
   padding: 1.5rem;
   border-top: 1px solid #e5e5e5;
   display: flex;

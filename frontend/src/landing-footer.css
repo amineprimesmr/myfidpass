@@ -4,7 +4,7 @@
  */
 
 .landing-footer.landing-footer-v3 {
-  background: #ffffff;
+  background: var(--fidpass-surface);
   border-top: 1px solid #e5e7eb;
   padding: 4rem max(1.5rem, calc(50vw - 600px)) 3rem;
   margin-top: 0;

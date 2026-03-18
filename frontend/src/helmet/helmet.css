@@ -34,7 +34,7 @@
 
 .landing-helmet-section .sceneRoot--light,
 .landing-helmet-section .helmet-sceneRoot--light {
-  background: #fff;
+  background: var(--fidpass-surface);
 }
 
 .landing-helmet-section .sceneRoot::before,

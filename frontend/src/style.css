@@ -7,6 +7,8 @@
    ============================================================ */
 
 :root {
+  /* Fond « blanc » du site : gris très clair (section FAQ). Quand on dit « blanc », utiliser cette couleur. */
+  --fidpass-surface: #f5f5f7;
   --bg: #0A0A0F;
   --surface: #111118;
   --surface-2: #16161F;
@@ -417,7 +419,7 @@ body {
 }
 
 .fidelity-page .card-section {
-  background: #ffffff;
+  background: var(--fidpass-surface);
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -598,7 +600,7 @@ body {
 
 /* ── V2 Cards ── */
 .fidelity-v2-card {
-  background: #ffffff;
+  background: var(--fidpass-surface);
   border: 1px solid #E2E8F0;
   border-radius: 18px;
   padding: 1.35rem;
@@ -779,7 +781,7 @@ body {
   outline: none;
   border-color: #2563EB;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-  background: #fff;
+  background: var(--fidpass-surface);
 }
 
 /* ── Buttons (fidelity light page) ── */
@@ -858,7 +860,7 @@ body {
 }
 
 .fidelity-btn-google {
-  background: #ffffff;
+  background: var(--fidpass-surface);
   color: #1A73E8;
   border: 1.5px solid #E2E8F0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
@@ -1571,7 +1573,7 @@ body {
    ========================================================================== */
 
 .fidelity-roulette-wrap {
-  background: #fff;
+  background: var(--fidpass-surface);
   padding: 0;
   overflow: hidden;
   width: 100vw;
@@ -1591,7 +1593,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--fidpass-surface);
   padding: 0;
   position: relative;
 }
@@ -1646,7 +1648,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
+  background: var(--fidpass-surface);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
@@ -1759,7 +1761,7 @@ body {
   transition: transform 0.1s linear;
   will-change: transform;
   border: 12px solid #000;
-  background-color: #fff;
+  background-color: var(--fidpass-surface);
   box-shadow:
     0 12px 0 -4px #1a1a1a,
     0 20px 40px rgba(0, 0, 0, 0.35),
@@ -1911,7 +1913,7 @@ body {
   font-size: 0.95rem;
   border: 1.5px solid #CBD5E1;
   border-radius: 8px;
-  background: #fff;
+  background: var(--fidpass-surface);
   color: #0F172A;
   font-family: var(--font);
   outline: none;
@@ -1943,7 +1945,7 @@ body {
 }
 
 .fidelity-roulette-footer {
-  background: #fff;
+  background: var(--fidpass-surface);
   color: #000;
   padding: 0.85rem 1rem;
   display: flex;
@@ -2333,7 +2335,7 @@ body {
 
 /* Skeleton wrapper card */
 .skeleton-card-wrap {
-  background: #ffffff;
+  background: var(--fidpass-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   padding: 1.25rem;
