@@ -337,8 +337,8 @@
 }
 
 #landing .landing-hero-microproof {
-  margin-top: 1.15rem;
-  margin-bottom: 1.5rem;
+  margin-top: 0.9rem;
+  margin-bottom: 1.25rem;
 }
 
 #landing .landing-hero-caption {
@@ -2227,35 +2227,36 @@
   font-size: 1.1rem;
 }
 
-/* Badge Trustpilot style pill (image 2) */
+/* Badge Trustpilot style pill – fond clair, compact */
 .landing-hero-trustpilot-badge {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 24px;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 6px;
+  padding: 5px 14px;
+  background: #f0f5f9;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 50px;
   text-decoration: none;
-  color: #fff;
-  font-size: 0.9rem;
+  color: var(--landing-text);
+  font-size: 0.8rem;
   font-weight: 500;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .landing-hero-trustpilot-badge:hover {
-  background: rgba(0, 0, 0, 0.75);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: #e8eef5;
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .landing-hero-trustpilot-badge-dot {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.5rem;
+  color: var(--landing-muted);
+  font-size: 0.4rem;
   line-height: 1;
 }
 
 .landing-hero-trustpilot-badge-text {
-  color: #fff;
+  color: var(--landing-text);
 }
 
 .landing-hero-trustpilot-badge-brand {
@@ -2263,8 +2264,8 @@
 }
 
 .landing-hero-trustpilot-badge-logo {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   object-fit: contain;
   display: block;
 }
