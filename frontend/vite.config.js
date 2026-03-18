@@ -11,7 +11,6 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 /** En dev, servir index.html pour toutes les routes SPA (/login, /app, etc.) pour éviter 404 au clic. */
 function spaFallback() {
-  let indexHtml = "";
   return {
     name: "spa-fallback",
     apply: "serve",
@@ -25,7 +24,8 @@ function spaFallback() {
         if (path.includes(".") && !path.endsWith(".html")) return next();
         if (path.startsWith("/src/") || path.startsWith("/@") || path.startsWith("/node_modules") || path.startsWith("/assets/")) return next();
         try {
-          if (!indexHtml) indexHtml = readFileSync(join(root, "index.html"), "utf-8");
+          // Relecture a chaque requete pour refléter immédiatement les modifs de index.html.
+          const indexHtml = readFileSync(join(root, "index.html"), "utf-8");
           res.setHeader("Content-Type", "text/html; charset=utf-8");
           res.end(indexHtml);
         } catch (e) {

@@ -1611,8 +1611,6 @@
             <a href="/" class="landing-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
             <nav class="landing-nav landing-nav-desk">
               <a href="#produit">Produit</a>
-              <a href="#fonctionnalites">Fonctionnalités</a>
-              <a href="#tarifs">Tarifs</a>
             </nav>
             <div class="landing-header-ctas">
               <a href="#landing-hero-form" class="landing-cta landing-cta-download landing-cta-desk landing-cta-try">Essayer gratuitement</a>
@@ -1628,22 +1626,21 @@
         </header>
       </div>
 
-      <!-- Menu mobile (drawer style WHOOP) -->
+      <!-- Menu mobile (style référence) -->
       <div class="landing-menu-overlay" id="landing-menu-overlay" aria-hidden="true">
         <div class="landing-menu-drawer">
           <div class="landing-menu-drawer-header">
+            <span class="landing-menu-drawer-title">Menu</span>
             <button type="button" class="landing-menu-close" id="landing-menu-close" aria-label="Fermer le menu">
               <span aria-hidden="true">×</span>
             </button>
-            <a href="/" class="landing-menu-drawer-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
           </div>
           <nav class="landing-menu-drawer-nav">
-            <a href="#produit">Produit</a>
-            <a href="#fonctionnalites">Fonctionnalités</a>
-            <a href="#tarifs">Tarifs</a>
-            <a href="#landing-hero-form" class="landing-menu-drawer-download landing-cta-try">Essayer gratuitement</a>
-            <a href="#landing-hero-form" class="landing-menu-drawer-login landing-cta-try">Essayer gratuitement</a>
+            <a href="#produit" class="landing-menu-drawer-link"><span>Produit</span><span class="landing-menu-drawer-arrow" aria-hidden="true">→</span></a>
           </nav>
+          <div class="landing-menu-drawer-footer">
+            <a href="#landing-hero-form" class="landing-menu-drawer-cta landing-cta-try">Essayer gratuitement</a>
+          </div>
         </div>
       </div>
 
@@ -1663,24 +1660,11 @@
         <section class="landing-hero landing-hero-visible landing-hero-v2">
           <div class="landing-hero-grid">
             <div class="landing-hero-copy">
-              <a href="/creer-ma-carte" class="landing-hero-cta-bar" aria-label="Créer votre Fidpass gratuitement">
-                <span class="landing-hero-cta-bar-chip">
-                  <span class="landing-hero-cta-bar-dot" aria-hidden="true"></span>
-                  7 jours offerts
-                </span>
-                <span class="landing-hero-cta-bar-text">Lancez votre programme de fidélité sans carte plastique</span>
-              </a>
               <h1 class="landing-hero-title">
                 <span class="landing-hero-title-line1">Faites revenir vos clients</span>
                 <span class="landing-hero-title-line2">avec une carte fidélité digitale simple</span>
               </h1>
               <p class="landing-hero-subtitle">Une carte de fidelite digitale plus simple a adopter, plus belle a garder et plus naturelle a utiliser.</p>
-              <div class="landing-hero-proof-row">
-                <span class="landing-proof-pill">Apple Wallet</span>
-                <span class="landing-proof-pill">Google Wallet</span>
-                <span class="landing-proof-pill">Sans application client</span>
-                <span class="landing-proof-pill">Mise en ligne rapide</span>
-              </div>
               <form id="landing-hero-form" class="landing-hero-form">
                 <input type="hidden" id="landing-place-id" name="place_id" value="" />
                 <div class="landing-hero-form-row">
@@ -1749,32 +1733,9 @@
                     </div>
                   </div>
                 </div>
-                <div class="landing-wallet-stack">
-                  <article class="landing-wallet-card landing-wallet-card-front">
-                    <p class="landing-wallet-eyebrow">Carte Wallet</p>
-                    <strong>Maison Napoli</strong>
-                    <span>9 points avant votre prochaine récompense</span>
-                  </article>
-                  <article class="landing-wallet-card landing-wallet-card-back">
-                    <p class="landing-wallet-eyebrow">Caisse rapide</p>
-                    <strong>Scanner en 2 sec</strong>
-                    <span>QR code, recherche client, historique et ajout de points.</span>
-                  </article>
-                </div>
               </div>
             </div>
           </div>
-
-          <section class="landing-logo-cloud" aria-label="Canaux et usages couverts par Myfidpass">
-            <div class="landing-logo-cloud-track">
-              <span>Restaurants</span>
-              <span>Boulangeries</span>
-              <span>Instituts</span>
-              <span>Coiffeurs</span>
-              <span>Fast-food</span>
-              <span>Retail local</span>
-            </div>
-          </section>
 
           <section id="landing-gradient-carousel" class="landing-gradient-carousel" aria-label="Exemples de cartes par secteur">
             <canvas id="landing-gradient-carousel-bg" class="landing-gradient-carousel-bg" aria-hidden="true"></canvas>
@@ -1782,65 +1743,22 @@
           </section>
         </section>
 
-        <section class="landing-metrics-strip landing-reveal" data-reveal>
-          <article class="landing-metrics-card">
-            <strong>Ajout instantane</strong>
-            <span>vos clients activent leur carte en quelques secondes</span>
-          </article>
-          <article class="landing-metrics-card">
-            <strong>Apple + Google Wallet</strong>
-            <span>une experience native sur iPhone et Android</span>
-          </article>
-          <article class="landing-metrics-card">
-            <strong>Plus de retours</strong>
-            <span>une carte plus simple a sortir qu’un support papier</span>
-          </article>
-        </section>
-
         <section id="produit" class="landing-section-block landing-story-section landing-reveal" data-reveal>
-          <div class="landing-section-heading">
-            <span class="landing-tag">Produit</span>
-            <h2 class="landing-section-title">Une carte fidelite qui donne envie d’etre gardee</h2>
-            <p class="landing-section-subtitle">Minimal, rapide, elegante. Vos clients l’ajoutent, la retrouvent vite et l’utilisent naturellement.</p>
-          </div>
-          <div class="landing-story-grid">
-            <article class="landing-story-card">
-              <span class="landing-story-step">01</span>
-              <h3>Simple a lancer</h3>
-              <p>Vous creez votre carte en quelques instants, sans parcours lourd.</p>
-            </article>
-            <article class="landing-story-card">
-              <span class="landing-story-step">02</span>
-              <h3>Simple a utiliser</h3>
-              <p>Le client garde sa carte dans son Wallet et la montre facilement en caisse.</p>
-            </article>
-            <article class="landing-story-card">
-              <span class="landing-story-step">03</span>
-              <h3>Simple a retenir</h3>
-              <p>Un rendu plus premium, plus moderne, plus memorisable qu’une carte carton.</p>
-            </article>
+          <h2 class="landing-produit-headline">Envoyez des notifications à tous vos clients</h2>
+          <div class="landing-produit-mockup-wrap">
+            <img src="/assets/mockup.png" alt="Aperçu du tableau de bord Myfidpass" class="landing-produit-mockup-img" loading="lazy" />
           </div>
         </section>
 
-        <section id="fonctionnalites" class="landing-section-block landing-features-section landing-reveal" data-reveal>
-          <div class="landing-section-heading">
-            <span class="landing-tag">Fonctionnalités</span>
-            <h2 class="landing-section-title">Une experience plus fluide, cote client comme cote commerce</h2>
-            <p class="landing-section-subtitle">Moins de friction. Plus de clarté. Une présence plus premium pour votre marque.</p>
-          </div>
-          <div class="landing-features-grid">
-            <article class="landing-feature-card">
-              <h3>Ajout en un geste</h3>
-              <p>Une carte qui s’ajoute directement dans le Wallet depuis un lien ou un QR code.</p>
-            </article>
-            <article class="landing-feature-card">
-              <h3>Visible tout de suite</h3>
-              <p>Le design met votre commerce en valeur avec un rendu plus net et plus actuel.</p>
-            </article>
-            <article class="landing-feature-card">
-              <h3>Compatible partout</h3>
-              <p>iPhone et Android, sans forcer vos clients a installer une application dédiée.</p>
-            </article>
+        <section id="landing-card-beam" class="landing-card-beam landing-reveal" data-reveal>
+          <div class="landing-card-beam-frame-wrap">
+            <iframe
+              class="landing-card-beam-frame"
+              src="https://codepen.io/blacklead-studio/full/xbwaqxE"
+              title="Card Beam Animation"
+              loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
+            ></iframe>
           </div>
         </section>
 
@@ -1891,53 +1809,17 @@
           </div>
         </section>
 
-        <section id="tarifs" class="landing-section-block landing-pricing-section landing-reveal" data-reveal>
-          <div class="landing-section-heading">
-            <span class="landing-tag">Tarifs</span>
-            <h2 class="landing-section-title">Un prix clair, un essai simple, zero complexité</h2>
-            <p class="landing-section-subtitle">Vous commencez vite, sans engagement compliqué ni mise en place lourde.</p>
-          </div>
-          <div class="landing-pricing-grid">
-            <article class="landing-pricing-card landing-pricing-card-main">
-              <div class="landing-pricing-badge">Offre principale</div>
-              <h3>Myfidpass</h3>
-              <p class="landing-pricing-desc">Pour les commerces qui veulent une carte de fidelite digitale elegante et facile a deployer.</p>
-              <p class="landing-pricing-price"><strong>49 €</strong><span>/ mois</span></p>
-              <p class="landing-pricing-trial">7 jours gratuits, puis sans engagement.</p>
-              <ul class="landing-check-list">
-                <li>Carte Apple Wallet et Google Wallet</li>
-                <li>Lien public et QR code à partager</li>
-                <li>Design propre et experience fluide</li>
-                <li>Activation rapide pour vos clients</li>
-                <li>Mise en route simple pour votre commerce</li>
-              </ul>
-              <div class="landing-pricing-actions">
-                <a href="#landing-hero-form" class="landing-btn landing-btn-primary landing-btn-block landing-cta-try">Essayer gratuitement</a>
-              </div>
-            </article>
-          </div>
-        </section>
-
         <section class="landing-cta-final landing-cta-final-v2 landing-reveal" data-reveal>
-          <div>
-            <span class="landing-tag">Prêt à lancer</span>
-            <h2 class="landing-cta-final-title">Creez votre carte et commencez a fideliser des aujourd’hui</h2>
+          <div class="landing-cta-final-card">
+            <div class="landing-cta-final-trust">
+              <div class="landing-cta-final-avatars" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <span class="landing-cta-final-trust-text">Utilisé par des centaines de commerces</span>
+            </div>
+            <h2 class="landing-cta-final-title">Êtes-vous prêt à lancer ?</h2>
             <p class="landing-cta-final-text">Une experience plus propre, plus rapide et plus naturelle pour vos clients.</p>
-          </div>
-          <div class="landing-cta-final-actions">
-            <a href="#landing-hero-form" class="landing-btn landing-btn-primary landing-btn-large landing-cta-try">Essayer gratuitement</a>
-          </div>
-        </section>
-
-        <section id="landing-card-beam" class="landing-card-beam landing-reveal" data-reveal>
-          <div class="landing-card-beam-frame-wrap">
-            <iframe
-              class="landing-card-beam-frame"
-              src="https://codepen.io/blacklead-studio/full/xbwaqxE"
-              title="Card Beam Animation"
-              loading="lazy"
-              referrerpolicy="strict-origin-when-cross-origin"
-            ></iframe>
+            <a href="#landing-hero-form" class="landing-cta-final-btn landing-cta-try">Essayer gratuitement</a>
           </div>
         </section>
 
@@ -1950,8 +1832,6 @@
             <div class="landing-footer-columns">
               <nav class="landing-footer-links">
                 <a href="#produit">Produit</a>
-                <a href="#fonctionnalites">Fonctionnalités</a>
-                <a href="#tarifs">Tarifs</a>
               </nav>
               <nav class="landing-footer-links">
                 <a href="/mentions-legales">Mentions légales</a>

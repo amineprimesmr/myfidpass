@@ -1,6 +1,6 @@
 .landing-card-beam {
-  margin: 2.8rem 0 0;
-  padding: 2rem 0 0;
+  margin: 0.8rem 0 0;
+  padding: 0;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   overflow-x: clip;
@@ -48,27 +48,28 @@
 
 .landing-card-beam-frame-wrap::before {
   top: 0;
-  height: 72px;
+  height: 88px;
 }
 
 .landing-card-beam-frame-wrap::after {
   bottom: 0;
-  height: 20px;
+  height: 56px;
 }
 
 .landing-card-beam-frame {
   position: absolute;
-  top: -96px;
+  top: -120px;
   left: 0;
   width: 100%;
-  height: 980px;
+  height: calc(100% + 120px);
   border: 0;
   background: #020617;
 }
 
 @media (max-width: 768px) {
   .landing-card-beam {
-    padding: 0.65rem 0 0;
+    margin-top: 0.45rem;
+    padding: 0;
   }
 
   .landing-card-beam-frame-wrap {
@@ -79,15 +80,15 @@
   }
 
   .landing-card-beam-frame-wrap::before {
-    height: 56px;
+    height: 72px;
   }
 
   .landing-card-beam-frame-wrap::after {
-    height: 8px;
+    height: 48px;
   }
 
   .landing-card-beam-frame {
-    top: -96px;
-    height: 820px;
+    top: -100px;
+    height: calc(100% + 110px);
   }
 }

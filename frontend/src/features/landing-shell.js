@@ -161,7 +161,7 @@ export function initLandingShell() {
     landingMenuOverlay.addEventListener("click", (e) => {
       if (e.target === landingMenuOverlay) closeLandingMenu();
     });
-    landingMenuOverlay.querySelectorAll(".landing-menu-drawer-nav a").forEach((a) => {
+    landingMenuOverlay.querySelectorAll(".landing-menu-drawer-nav a, .landing-menu-drawer-cta").forEach((a) => {
       a.addEventListener("click", closeLandingMenu);
     });
   }
