@@ -46,32 +46,25 @@ function initLandingFaq() {
   const items = document.querySelectorAll(".landing-faq-item");
   if (!items.length) return;
 
-  items.forEach((item, index) => {
+  items.forEach((item) => {
     const btn = item.querySelector(".landing-faq-question");
     const answer = item.querySelector(".landing-faq-answer");
     if (!btn || !answer) return;
 
-    if (index === 0) {
-      item.classList.add("is-open");
-      btn.setAttribute("aria-expanded", "true");
-      answer.classList.remove("hidden");
-      return;
-    }
-
     btn.addEventListener("click", () => {
-      const open = btn.getAttribute("aria-expanded") === "true";
+      const isOpen = item.classList.contains("is-open");
       items.forEach((entry) => {
         entry.classList.remove("is-open");
         const entryBtn = entry.querySelector(".landing-faq-question");
         const entryAnswer = entry.querySelector(".landing-faq-answer");
         entryBtn?.setAttribute("aria-expanded", "false");
-        entryAnswer?.classList.add("hidden");
+        if (entryAnswer) entryAnswer.setAttribute("aria-hidden", "true");
       });
 
-      if (!open) {
+      if (!isOpen) {
         item.classList.add("is-open");
         btn.setAttribute("aria-expanded", "true");
-        answer.classList.remove("hidden");
+        answer.removeAttribute("aria-hidden");
       }
     });
   });
