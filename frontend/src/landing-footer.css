@@ -3,8 +3,14 @@
  * Fond blanc, colonnes, logo + slogan + contact + réseaux.
  */
 
+/* Suppression de tout trait ou espace entre CTA et footer */
+#landing main + .landing-footer {
+  margin-top: 0 !important;
+}
+
 .landing-footer.landing-footer-v3 {
   background: var(--fidpass-surface);
+  border-top: none;
   padding: 4rem max(1.5rem, calc(50vw - 600px)) 3rem;
   margin-top: 0;
   width: 100vw;

@@ -251,6 +251,7 @@
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 1.25rem 0;
+  border: none;
 }
 
 #landing .landing-main-v2::before {
@@ -861,12 +862,14 @@
   width: 100vw;
   max-width: 100vw;
   margin-top: 0;
+  margin-bottom: 0;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   padding: clamp(2rem, 5vw, 3rem) max(1.5rem, calc(50vw - 620px));
   text-align: center;
   background: var(--fidpass-surface);
   box-sizing: border-box;
+  border: none;
 }
 
 #landing .landing-cta-final-card {
