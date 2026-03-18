@@ -2716,23 +2716,38 @@
 }
 
 /* ========== Simulateur d’impact (style Cadeo : 3D, relief, effets) ========== */
-/* Bandeau blanc sous hero (transition hero → section produit) */
+/* Bandeau blanc sous hero (transition hero → section produit), collé comme le bandeau noir */
 .landing-bandeau-hero {
+  position: relative;
   display: block;
   width: 100%;
   max-width: min(880px, calc(100vw - 2.5rem));
   height: 24px;
-  margin: -4.5rem auto 0;
+  margin: -5rem auto 0;
   background: #fff;
   clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
-  position: relative;
   z-index: 2;
+  transform: translateY(-2px);
+}
+
+.landing-bandeau-hero::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 8px;
+  background: #fff;
 }
 
 @media (min-width: 768px) {
   .landing-bandeau-hero {
-    margin-top: -5rem;
-    transform: translateY(-2px);
+    margin-top: -6.5rem;
+    transform: translateY(-3px);
+  }
+
+  .landing-bandeau-hero::before {
+    height: 12px;
   }
 }
 
