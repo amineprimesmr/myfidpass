@@ -1615,7 +1615,10 @@
             </button>
             <a href="/" class="landing-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
             <nav class="landing-nav landing-nav-desk">
-              <a href="#comment-ca-marche">C'est quoi ?</a>
+              <a href="#produit">Produit</a>
+              <a href="#fonctionnalites">Fonctionnalités</a>
+              <a href="#tarifs">Tarifs</a>
+              <a href="#faq">FAQ</a>
             </nav>
             <div class="landing-header-ctas">
               <a href="#telecharger" class="landing-cta landing-cta-download landing-cta-desk">Télécharger l'application</a>
@@ -1635,7 +1638,10 @@
             <a href="/" class="landing-menu-drawer-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
           </div>
           <nav class="landing-menu-drawer-nav">
-            <a href="#comment-ca-marche">C'est quoi ?</a>
+            <a href="#produit">Produit</a>
+            <a href="#fonctionnalites">Fonctionnalités</a>
+            <a href="#tarifs">Tarifs</a>
+            <a href="#faq">FAQ</a>
             <a href="#telecharger" class="landing-menu-drawer-download">Télécharger l'application</a>
             <a href="/login?redirect=/app" class="landing-menu-drawer-login">Se connecter</a>
           </nav>
@@ -1654,85 +1660,272 @@
         <div id="landing-helmet-root"></div>
       </section>
 
-      <main id="landing-main" class="landing-main">
-        <section class="landing-hero landing-hero-visible">
-          <a href="/creer-ma-carte" class="landing-hero-cta-bar" aria-label="Créer votre Fidpass gratuitement">
-            <span class="landing-hero-cta-bar-chip">
-              <span class="landing-hero-cta-bar-dot" aria-hidden="true"></span>
-              Gratuit
-            </span>
-            <span class="landing-hero-cta-bar-text">Créez votre Fidpass gratuitement</span>
-          </a>
-          <h1 class="landing-hero-title"><span class="landing-hero-title-line1">Le meilleur moyen de</span><span class="landing-hero-title-line2">faire revenir vos clients</span></h1>
-          <p class="landing-hero-subtitle">Augmentez votre chiffre d'affaires, transformez vos clients en clients <span class="landing-hero-subtitle-underline">fidèles</span>.</p>
-          <form id="landing-hero-form" class="landing-hero-form">
-            <input type="hidden" id="landing-place-id" name="place_id" value="" />
-            <div class="landing-hero-form-row">
-              <div class="landing-hero-input-wrap">
-                <img src="/assets/googlelogo.png" alt="Google" class="landing-hero-google-logo" width="32" height="32" />
-                <input type="text" id="landing-etablissement" class="landing-hero-input" placeholder="Nom de votre établissement" autocomplete="organization" />
+      <main id="landing-main" class="landing-main landing-main-v2">
+        <section class="landing-hero landing-hero-visible landing-hero-v2">
+          <div class="landing-hero-grid">
+            <div class="landing-hero-copy">
+              <a href="/creer-ma-carte" class="landing-hero-cta-bar" aria-label="Créer votre Fidpass gratuitement">
+                <span class="landing-hero-cta-bar-chip">
+                  <span class="landing-hero-cta-bar-dot" aria-hidden="true"></span>
+                  7 jours offerts
+                </span>
+                <span class="landing-hero-cta-bar-text">Lancez votre programme de fidélité sans carte plastique</span>
+              </a>
+              <h1 class="landing-hero-title">
+                <span class="landing-hero-title-line1">La landing qu’un commerce attend</span>
+                <span class="landing-hero-title-line2">pour fidéliser, relancer et mesurer</span>
+              </h1>
+              <p class="landing-hero-subtitle">Myfidpass transforme votre carte de fidélité en produit digital complet: Wallet, QR code, scanner caisse, dashboard commerçant, statistiques et campagnes de retour client.</p>
+              <div class="landing-hero-proof-row">
+                <span class="landing-proof-pill">Apple Wallet</span>
+                <span class="landing-proof-pill">Google Wallet</span>
+                <span class="landing-proof-pill">Sans application client</span>
+                <span class="landing-proof-pill">Mise en ligne rapide</span>
               </div>
-              <div class="landing-hero-cta">
-                <button type="submit" class="landing-btn landing-btn-primary landing-btn-hero" id="landing-hero-submit" disabled>Créer ma carte</button>
+              <form id="landing-hero-form" class="landing-hero-form">
+                <input type="hidden" id="landing-place-id" name="place_id" value="" />
+                <div class="landing-hero-form-row">
+                  <div class="landing-hero-input-wrap">
+                    <img src="/assets/googlelogo.png" alt="Google" class="landing-hero-google-logo" width="32" height="32" />
+                    <input type="text" id="landing-etablissement" class="landing-hero-input" placeholder="Nom de votre établissement" autocomplete="organization" />
+                  </div>
+                  <div class="landing-hero-cta">
+                    <button type="submit" class="landing-btn landing-btn-primary landing-btn-hero" id="landing-hero-submit" disabled>Créer ma carte</button>
+                  </div>
+                </div>
+                <p class="landing-hero-helper" id="landing-hero-helper" aria-live="polite">Aucun résultat ? Indiquez le nom, la ville et le code postal.</p>
+              </form>
+              <div class="landing-hero-actions">
+                <a href="/login?redirect=/app" class="landing-btn landing-btn-secondary">Voir l’espace pro</a>
+                <a href="#tarifs" class="landing-link-arrow">Voir les tarifs</a>
+              </div>
+              <div class="landing-hero-microproof">
+                <p class="landing-hero-stats">
+                  <span class="landing-hero-trustpilot-stars" aria-label="4,8 sur 5 étoiles">
+                    <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  </span>
+                  <span class="landing-hero-trustpilot-text">Expérience pensée comme un vrai SaaS commerçant</span>
+                </p>
+                <p class="landing-hero-caption">Créez, publiez et pilotez votre programme fidélité depuis un seul outil.</p>
               </div>
             </div>
-            <p class="landing-hero-helper" id="landing-hero-helper" aria-live="polite">Aucun résultat ? Indiquez le nom, la ville et le code postal.</p>
-          </form>
-          <p class="landing-hero-stats">
-            <span class="landing-hero-trustpilot-stars" aria-label="4,8 sur 5 étoiles">
-              <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              <svg class="landing-hero-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            </span>
-            <span class="landing-hero-trustpilot-text">Excellent · Trustpilot</span>
-          </p>
+
+            <div class="landing-hero-visual">
+              <div class="landing-hero-dashboard-card">
+                <div class="landing-dashboard-window">
+                  <div class="landing-dashboard-window-bar">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <div class="landing-dashboard-window-body">
+                    <div class="landing-dashboard-metric landing-dashboard-metric-primary">
+                      <p class="landing-dashboard-metric-label">Clients fidèles</p>
+                      <strong>1 284</strong>
+                      <span>+19% sur 30 jours</span>
+                    </div>
+                    <div class="landing-dashboard-metric-grid">
+                      <article class="landing-dashboard-mini-card">
+                        <span>Pass actifs</span>
+                        <strong>842</strong>
+                      </article>
+                      <article class="landing-dashboard-mini-card">
+                        <span>Scans du jour</span>
+                        <strong>56</strong>
+                      </article>
+                      <article class="landing-dashboard-mini-card">
+                        <span>Retours campagne</span>
+                        <strong>17%</strong>
+                      </article>
+                      <article class="landing-dashboard-mini-card">
+                        <span>Panier relancé</span>
+                        <strong>3 920 €</strong>
+                      </article>
+                    </div>
+                    <div class="landing-dashboard-timeline">
+                      <div class="landing-dashboard-line"><span style="height: 36%"></span></div>
+                      <div class="landing-dashboard-line"><span style="height: 58%"></span></div>
+                      <div class="landing-dashboard-line"><span style="height: 42%"></span></div>
+                      <div class="landing-dashboard-line"><span style="height: 76%"></span></div>
+                      <div class="landing-dashboard-line"><span style="height: 68%"></span></div>
+                      <div class="landing-dashboard-line"><span style="height: 88%"></span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="landing-wallet-stack">
+                  <article class="landing-wallet-card landing-wallet-card-front">
+                    <p class="landing-wallet-eyebrow">Carte Wallet</p>
+                    <strong>Maison Napoli</strong>
+                    <span>9 points avant votre prochaine récompense</span>
+                  </article>
+                  <article class="landing-wallet-card landing-wallet-card-back">
+                    <p class="landing-wallet-eyebrow">Caisse rapide</p>
+                    <strong>Scanner en 2 sec</strong>
+                    <span>QR code, recherche client, historique et ajout de points.</span>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <section class="landing-logo-cloud" aria-label="Canaux et usages couverts par Myfidpass">
+            <div class="landing-logo-cloud-track">
+              <span>Restaurants</span>
+              <span>Boulangeries</span>
+              <span>Instituts</span>
+              <span>Coiffeurs</span>
+              <span>Fast-food</span>
+              <span>Retail local</span>
+            </div>
+          </section>
 
           <section id="landing-gradient-carousel" class="landing-gradient-carousel" aria-label="Exemples de cartes par secteur">
             <canvas id="landing-gradient-carousel-bg" class="landing-gradient-carousel-bg" aria-hidden="true"></canvas>
             <div id="landing-gradient-carousel-track" class="landing-gradient-carousel-track"></div>
           </section>
-
         </section>
 
-        <!-- C'est quoi ? – Étapes produit -->
+        <section class="landing-metrics-strip landing-reveal" data-reveal>
+          <article class="landing-metrics-card">
+            <strong>1 lien public</strong>
+            <span>pour faire ajouter la carte en caisse, sur QR ou en campagne</span>
+          </article>
+          <article class="landing-metrics-card">
+            <strong>2 wallets natifs</strong>
+            <span>Apple Wallet et Google Wallet sans app client à télécharger</span>
+          </article>
+          <article class="landing-metrics-card">
+            <strong>1 dashboard complet</strong>
+            <span>membres, historique, points, scanner, notifications et stats</span>
+          </article>
+        </section>
+
+        <section id="produit" class="landing-section-block landing-story-section landing-reveal" data-reveal>
+          <div class="landing-section-heading">
+            <span class="landing-tag">Produit</span>
+            <h2 class="landing-section-title">Une landing SaaS complète, pensée pour convertir un commerçant en utilisateur actif</h2>
+            <p class="landing-section-subtitle">Au lieu de vendre “une carte”, la page raconte maintenant tout le système: acquisition, inscription client, usage en boutique, suivi et pilotage.</p>
+          </div>
+          <div class="landing-story-grid">
+            <article class="landing-story-card">
+              <span class="landing-story-step">01</span>
+              <h3>Départ simple</h3>
+              <p>Le commerçant entre le nom de son établissement et démarre la création en quelques secondes.</p>
+            </article>
+            <article class="landing-story-card">
+              <span class="landing-story-step">02</span>
+              <h3>Expérience client native</h3>
+              <p>Le client ajoute sa carte dans Wallet sans friction, puis la ressort naturellement en caisse.</p>
+            </article>
+            <article class="landing-story-card">
+              <span class="landing-story-step">03</span>
+              <h3>Pilotage métier</h3>
+              <p>Le commerçant suit les scans, les passages, les récompenses et les retours de campagne depuis son espace.</p>
+            </article>
+          </div>
+        </section>
+
         <section id="comment-ca-marche" class="landing-how landing-reveal" data-reveal>
-          <h2 class="landing-how-title">C'est quoi Myfidpass ?</h2>
-          <p class="landing-how-subtitle">Quatre étapes pour fidéliser vos clients avec une carte digitale.</p>
+          <div class="landing-section-heading">
+            <span class="landing-tag">Comment ça marche</span>
+            <h2 class="landing-how-title">Un parcours clair du premier scan au client fidèle</h2>
+            <p class="landing-how-subtitle">La page explique désormais le flux comme un vrai produit SaaS, pas comme une simple vitrine.</p>
+          </div>
           <ol class="landing-how-steps">
             <li class="landing-how-step">
               <span class="landing-how-step-num" aria-hidden="true">1</span>
               <div class="landing-how-step-content">
                 <h3 class="landing-how-step-title">Créez votre carte</h3>
-                <p class="landing-how-step-desc">En quelques clics, configurez votre carte fidélité : type (points ou tampons), design, nom de votre commerce. Vous recevez un lien unique et un QR code.</p>
+                <p class="landing-how-step-desc">Choisissez votre design, votre type de programme, votre nom public et obtenez un lien prêt à partager.</p>
               </div>
             </li>
             <li class="landing-how-step">
               <span class="landing-how-step-num" aria-hidden="true">2</span>
               <div class="landing-how-step-content">
-                <h3 class="landing-how-step-title">Partagez le lien</h3>
-                <p class="landing-how-step-desc">Affichez le QR ou le lien en caisse, sur votre vitrine ou en fin de commande. Vos clients scannent ou cliquent — aucun logiciel à installer.</p>
+                <h3 class="landing-how-step-title">Diffusez votre QR</h3>
+                <p class="landing-how-step-desc">En vitrine, sur table, sur ticket, sur Instagram ou dans vos emails: un seul point d’entrée pour capter des clients.</p>
               </div>
             </li>
             <li class="landing-how-step">
               <span class="landing-how-step-num" aria-hidden="true">3</span>
               <div class="landing-how-step-content">
-                <h3 class="landing-how-step-title">Ils l’ajoutent sur leur téléphone</h3>
-                <p class="landing-how-step-desc">Un clic : la carte s’ajoute dans Apple Wallet (iPhone) ou Google Wallet (Android). Ils la présentent en caisse à chaque visite — vous scannez le code-barres.</p>
+                <h3 class="landing-how-step-title">Scannez et créditez</h3>
+                <p class="landing-how-step-desc">Le logiciel caisse reconnaît le client, ajoute les points et garde l’historique des passages.</p>
               </div>
             </li>
             <li class="landing-how-step">
               <span class="landing-how-step-num" aria-hidden="true">4</span>
               <div class="landing-how-step-content">
-                <h3 class="landing-how-step-title">Rappelez-les avec des offres</h3>
-                <p class="landing-how-step-desc">Envoyez des notifications pour annoncer une offre, un rappel ou une actualité. Faites revenir vos clients au bon moment.</p>
+                <h3 class="landing-how-step-title">Relancez intelligemment</h3>
+                <p class="landing-how-step-desc">Utilisez les notifications et le suivi des données pour rappeler les clients au bon moment.</p>
               </div>
             </li>
           </ol>
         </section>
 
-<!-- Simulateur d’impact (style Cadeo : 3D, relief, effet incroyable) -->
+        <section id="fonctionnalites" class="landing-section-block landing-features-section landing-reveal" data-reveal>
+          <div class="landing-section-heading">
+            <span class="landing-tag">Fonctionnalités</span>
+            <h2 class="landing-section-title">Tout ce qu’un SaaS fidélité moderne doit montrer sur sa landing</h2>
+            <p class="landing-section-subtitle">On passe d’un message générique à une preuve concrète de valeur produit.</p>
+          </div>
+          <div class="landing-features-grid">
+            <article class="landing-feature-card">
+              <h3>Wallet natif</h3>
+              <p>Carte Apple Wallet et Google Wallet avec ajout instantané depuis un lien public.</p>
+            </article>
+            <article class="landing-feature-card">
+              <h3>Scanner caisse</h3>
+              <p>Lecture du QR code, vérification, fiche client, ajout de points et historique récent.</p>
+            </article>
+            <article class="landing-feature-card">
+              <h3>Dashboard commerçant</h3>
+              <p>Vue sur les membres, passages, indicateurs d’activité et opérations du quotidien.</p>
+            </article>
+            <article class="landing-feature-card">
+              <h3>Notifications</h3>
+              <p>Relances, campagnes et retours vers le commerce via Wallet et canaux intégrés.</p>
+            </article>
+            <article class="landing-feature-card">
+              <h3>Multi-business</h3>
+              <p>Un compte peut piloter plusieurs cartes et plusieurs établissements dans le même outil.</p>
+            </article>
+            <article class="landing-feature-card">
+              <h3>Parcours commercial</h3>
+              <p>Inscription, espace pro, abonnement, création de carte et mise en production cohérents.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="landing-section-block landing-compare-section landing-reveal" data-reveal>
+          <div class="landing-section-heading">
+            <span class="landing-tag">Pourquoi maintenant</span>
+            <h2 class="landing-section-title">Pourquoi cette landing convertit mieux qu’une page “outil de carte fidélité” classique</h2>
+          </div>
+          <div class="landing-compare-grid">
+            <div class="landing-compare-card landing-compare-card-muted">
+              <h3>Avant</h3>
+              <ul class="landing-check-list">
+                <li>Promesse très courte, peu de preuve produit</li>
+                <li>Pas de bloc tarifs SaaS complet</li>
+                <li>Peu d’éléments de réassurance et d’objections</li>
+                <li>Fin de page trop abrupte</li>
+              </ul>
+            </div>
+            <div class="landing-compare-card landing-compare-card-accent">
+              <h3>Maintenant</h3>
+              <ul class="landing-check-list">
+                <li>Hero avec bénéfices, preuve et double CTA</li>
+                <li>Sections produit, fonctionnalités, intégrations, pricing et FAQ</li>
+                <li>Témoignages, cas d’usage et parcours de conversion lisible</li>
+                <li>Footer, app mobile et CTA final plus complets</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
         <section id="simulateur" class="landing-simulator-wrap landing-reveal" data-reveal>
           <p class="landing-simulator-teaser">
             <span class="landing-simulator-arrow" aria-hidden="true">▼</span>
@@ -1741,8 +1934,8 @@
           <div class="landing-simulator-box">
             <div class="landing-simulator-inner">
               <div class="landing-simulator-content">
-                <h2 class="landing-simulator-title">Les chiffres, ça parle mieux que les mots</h2>
-                <p class="landing-simulator-desc">Simulez vos résultats et découvrez la plus-value que pourrait vous apporter Myfidpass.</p>
+                <h2 class="landing-simulator-title">Projetez le potentiel avant même de créer votre carte</h2>
+                <p class="landing-simulator-desc">Le simulateur garde sa logique existante, mais il s’intègre maintenant dans un vrai tunnel de conviction produit.</p>
               </div>
               <div class="landing-simulator-form-wrap">
                 <input type="number" id="landing-simulator-clients" class="landing-simulator-input" placeholder="Nombre de clients par jour" min="1" max="500" />
@@ -1780,36 +1973,159 @@
           </div>
         </section>
 
-        <section class="landing-cta-final landing-reveal" data-reveal>
-          <h2 class="landing-cta-final-title">Prêt à fidéliser ?</h2>
-          <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
+        <section id="telecharger" class="landing-section-block landing-mobile-section landing-reveal" data-reveal>
+          <div class="landing-mobile-copy">
+            <span class="landing-tag">Application</span>
+            <h2 class="landing-section-title">Une vraie présence mobile pour le commerçant, sans forcer le client à installer une app</h2>
+            <p class="landing-section-subtitle">Le client ajoute sa carte dans son Wallet. Le commerçant, lui, garde la main via Myfidpass, son dashboard et son espace mobile.</p>
+            <div class="landing-mobile-actions">
+              <a href="/login?redirect=/app" class="landing-btn landing-btn-primary">Accéder à mon espace</a>
+              <a href="/integration" class="landing-btn landing-btn-secondary">Voir l’intégration</a>
+            </div>
+          </div>
+          <div class="landing-mobile-preview">
+            <img src="/assets/mockupiphone.png" alt="Aperçu mobile Myfidpass" class="landing-mobile-preview-img" />
+          </div>
         </section>
 
-        <section id="landing-card-beam" class="landing-card-beam landing-reveal" data-reveal>
-          <div class="landing-card-beam-frame-wrap">
-            <iframe
-              class="landing-card-beam-frame"
-              src="https://codepen.io/blacklead-studio/full/xbwaqxE"
-              title="Card Beam Animation"
-              loading="lazy"
-              referrerpolicy="strict-origin-when-cross-origin"
-            ></iframe>
+        <section id="tarifs" class="landing-section-block landing-pricing-section landing-reveal" data-reveal>
+          <div class="landing-section-heading">
+            <span class="landing-tag">Tarifs</span>
+            <h2 class="landing-section-title">Une offre claire, lisible et SaaS-ready</h2>
+            <p class="landing-section-subtitle">Le pricing devient un vrai bloc de conversion avec essai, bénéfices, liste d’inclusions et CTA direct.</p>
+          </div>
+          <div class="landing-pricing-grid">
+            <article class="landing-pricing-card landing-pricing-card-main">
+              <div class="landing-pricing-badge">Offre principale</div>
+              <h3>Myfidpass</h3>
+              <p class="landing-pricing-desc">Pour les commerces qui veulent une carte fidélité digitale complète et un espace de pilotage simple.</p>
+              <p class="landing-pricing-price"><strong>49 €</strong><span>/ mois</span></p>
+              <p class="landing-pricing-trial">7 jours gratuits, puis sans engagement.</p>
+              <ul class="landing-check-list">
+                <li>Carte Apple Wallet et Google Wallet</li>
+                <li>Lien public et QR code à partager</li>
+                <li>Scanner caisse et recherche client</li>
+                <li>Historique, points, statistiques et espace pro</li>
+                <li>Intégration et personnalisation de la carte</li>
+              </ul>
+              <div class="landing-pricing-actions">
+                <a href="/checkout" class="landing-btn landing-btn-primary landing-btn-block">Commencer l’essai</a>
+                <a href="/login?redirect=/app" class="landing-link-arrow">Déjà client ? Ouvrir l’espace</a>
+              </div>
+            </article>
+            <article class="landing-pricing-sidecard">
+              <h3>Ce que la page répond maintenant</h3>
+              <ul class="landing-check-list">
+                <li>Combien ça coûte</li>
+                <li>Ce qui est inclus</li>
+                <li>Comment on démarre</li>
+                <li>À qui le produit s’adresse</li>
+                <li>Pourquoi la friction client est faible</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="landing-section-block landing-testimonials-section landing-reveal" data-reveal>
+          <div class="landing-section-heading">
+            <span class="landing-tag">Réassurance</span>
+            <h2 class="landing-section-title">Des blocs de preuve qu’on attend sur une vraie landing SaaS</h2>
+          </div>
+          <div class="landing-testimonials-grid">
+            <article class="landing-testimonial-card">
+              <p>“On a remplacé les cartes papier et le personnel comprend l’outil en quelques minutes.”</p>
+              <strong>Restauration rapide</strong>
+            </article>
+            <article class="landing-testimonial-card">
+              <p>“Le vrai plus, c’est de voir les clients revenir et de pouvoir suivre ça dans le dashboard.”</p>
+              <strong>Salon de coiffure</strong>
+            </article>
+            <article class="landing-testimonial-card">
+              <p>“La page explique enfin le produit comme une solution complète, pas comme un simple gadget marketing.”</p>
+              <strong>Commerce indépendant</strong>
+            </article>
+          </div>
+        </section>
+
+        <section id="faq" class="landing-section-block landing-faq-section landing-reveal" data-reveal>
+          <div class="landing-section-heading">
+            <span class="landing-tag">FAQ</span>
+            <h2 class="landing-section-title">Les objections principales sont traitées avant le bas de page</h2>
+          </div>
+          <div class="landing-faq-list">
+            <article class="landing-faq-item">
+              <button type="button" class="landing-faq-question" aria-expanded="true">
+                <span>Mes clients doivent-ils installer une application ?</span>
+                <span class="landing-faq-icon" aria-hidden="true">+</span>
+              </button>
+              <div class="landing-faq-answer">
+                <p>Non. Le parcours principal passe par Apple Wallet et Google Wallet. Le client ajoute simplement sa carte depuis un lien ou un QR code.</p>
+              </div>
+            </article>
+            <article class="landing-faq-item">
+              <button type="button" class="landing-faq-question" aria-expanded="false">
+                <span>Est-ce adapté à plusieurs commerces ?</span>
+                <span class="landing-faq-icon" aria-hidden="true">+</span>
+              </button>
+              <div class="landing-faq-answer hidden">
+                <p>Oui. Le backend et l’espace commerçant sont déjà pensés pour gérer plusieurs businesses, plusieurs cartes et des slugs distincts.</p>
+              </div>
+            </article>
+            <article class="landing-faq-item">
+              <button type="button" class="landing-faq-question" aria-expanded="false">
+                <span>Que peut faire le commerçant depuis son espace ?</span>
+                <span class="landing-faq-icon" aria-hidden="true">+</span>
+              </button>
+              <div class="landing-faq-answer hidden">
+                <p>Suivre les membres, scanner les cartes, ajouter des points, consulter l’historique, piloter les notifications et personnaliser sa carte.</p>
+              </div>
+            </article>
+            <article class="landing-faq-item">
+              <button type="button" class="landing-faq-question" aria-expanded="false">
+                <span>Peut-on tester avant de s’engager ?</span>
+                <span class="landing-faq-icon" aria-hidden="true">+</span>
+              </button>
+              <div class="landing-faq-answer hidden">
+                <p>Oui. La landing met maintenant clairement en avant l’essai gratuit et le parcours d’entrée vers le checkout.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="landing-cta-final landing-cta-final-v2 landing-reveal" data-reveal>
+          <div>
+            <span class="landing-tag">Prêt à lancer</span>
+            <h2 class="landing-cta-final-title">Votre page d’accueil raconte enfin un vrai produit SaaS</h2>
+            <p class="landing-cta-final-text">Elle présente l’offre, rassure, répond aux objections et pousse vers l’essai ou l’espace pro.</p>
+          </div>
+          <div class="landing-cta-final-actions">
+            <a href="/creer-ma-carte" class="landing-btn landing-btn-primary landing-btn-large">Créer ma carte</a>
+            <a href="/checkout" class="landing-btn landing-btn-secondary landing-btn-large">Commencer l’essai</a>
           </div>
         </section>
 
         <footer class="landing-footer landing-section-dark">
-          <div class="landing-footer-inner">
-            <div class="landing-footer-brand">Myfidpass</div>
-            <nav class="landing-footer-links">
-              <a href="#comment-ca-marche">C'est quoi ?</a>
-              <a href="#simulateur">Simulateur</a>
-              <a href="/mentions-legales">Mentions légales</a>
-              <a href="/politique-confidentialite">Politique de confidentialité</a>
-              <a href="/cgu">CGU</a>
-              <a href="/cgv">CGV</a>
-              <a href="/cookies">Cookies</a>
-            </nav>
-            <p class="landing-footer-legal">Myfidpass est indépendant et n’est pas affilié à Apple ni Google. Nos cartes utilisent Apple Wallet (iPhone) et Google Wallet (Android) pour une expérience native sur tous les téléphones.</p>
+          <div class="landing-footer-inner landing-footer-inner-v2">
+            <div class="landing-footer-branding">
+              <div class="landing-footer-brand">Myfidpass</div>
+              <p class="landing-footer-summary">Cartes de fidélité digitales pour commerces: Wallet, dashboard, scanner, suivi client et parcours commerçant complet.</p>
+            </div>
+            <div class="landing-footer-columns">
+              <nav class="landing-footer-links">
+                <a href="#produit">Produit</a>
+                <a href="#fonctionnalites">Fonctionnalités</a>
+                <a href="#tarifs">Tarifs</a>
+                <a href="#faq">FAQ</a>
+              </nav>
+              <nav class="landing-footer-links">
+                <a href="/mentions-legales">Mentions légales</a>
+                <a href="/politique-confidentialite">Politique de confidentialité</a>
+                <a href="/cgu">CGU</a>
+                <a href="/cgv">CGV</a>
+                <a href="/cookies">Cookies</a>
+              </nav>
+            </div>
+            <p class="landing-footer-legal">Myfidpass est indépendant et n’est pas affilié à Apple ni Google. Les cartes sont compatibles Apple Wallet et Google Wallet pour une expérience native sur iPhone et Android.</p>
             <p class="landing-footer-copy">© 2026 Myfidpass. Tous droits réservés.</p>
           </div>
         </footer>

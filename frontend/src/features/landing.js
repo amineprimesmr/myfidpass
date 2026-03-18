@@ -17,7 +17,7 @@ function initLandingReveal() {
     gsap.registerPlugin(ScrollTrigger);
     gsap.utils.toArray("[data-reveal]").forEach((section) => {
       gsap.set(section, { opacity: 1 });
-      const children = section.querySelectorAll(".landing-section-title, .landing-section-subtitle, .landing-tag, .landing-product-card, .landing-steps-list > li, .landing-faq-list .landing-faq-item, .landing-cta-block .landing-btn, .landing-cta-block p");
+      const children = section.querySelectorAll(".landing-section-title, .landing-section-subtitle, .landing-tag, .landing-product-card, .landing-steps-list > li, .landing-faq-list .landing-faq-item, .landing-cta-block .landing-btn, .landing-cta-block p, .landing-story-card, .landing-feature-card, .landing-compare-card, .landing-metrics-card, .landing-pricing-card, .landing-pricing-sidecard, .landing-testimonial-card, .landing-mobile-copy, .landing-mobile-preview, .landing-cta-final-v2 > *, .landing-how-step");
       const targets = children.length ? children : [section];
       gsap.set(targets, { opacity: 0, y: 32 });
       gsap.to(targets, {
@@ -40,6 +40,41 @@ function initLandingReveal() {
     );
     els.forEach((el) => io.observe(el));
   }
+}
+
+function initLandingFaq() {
+  const items = document.querySelectorAll(".landing-faq-item");
+  if (!items.length) return;
+
+  items.forEach((item, index) => {
+    const btn = item.querySelector(".landing-faq-question");
+    const answer = item.querySelector(".landing-faq-answer");
+    if (!btn || !answer) return;
+
+    if (index === 0) {
+      item.classList.add("is-open");
+      btn.setAttribute("aria-expanded", "true");
+      answer.classList.remove("hidden");
+      return;
+    }
+
+    btn.addEventListener("click", () => {
+      const open = btn.getAttribute("aria-expanded") === "true";
+      items.forEach((entry) => {
+        entry.classList.remove("is-open");
+        const entryBtn = entry.querySelector(".landing-faq-question");
+        const entryAnswer = entry.querySelector(".landing-faq-answer");
+        entryBtn?.setAttribute("aria-expanded", "false");
+        entryAnswer?.classList.add("hidden");
+      });
+
+      if (!open) {
+        item.classList.add("is-open");
+        btn.setAttribute("aria-expanded", "true");
+        answer.classList.remove("hidden");
+      }
+    });
+  });
 }
 
 function initLandingHeroAnim() {
@@ -122,6 +157,7 @@ export function initLandingAnimations() {
   initLandingReveal();
   if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
     initLandingHeroAnim();
+    initLandingFaq();
     import("./landing-gradient-carousel.js").then((m) => m.mountLandingGradientCarousel());
     initLandingSimulator();
     import("../helmet/index.jsx").then((m) => m.mountHelmet());
