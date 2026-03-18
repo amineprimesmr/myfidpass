@@ -3081,6 +3081,8 @@ body.page-builder #builder-app main.landing-builder {
   margin-bottom: 1.25rem;
 }
 .builder-onboarding-card {
+  --landing-text: #0f172a;
+  --landing-muted: #64748b;
   background: #fff;
   border: 1px solid var(--landing-border, #e5e7eb);
   border-radius: 16px;
