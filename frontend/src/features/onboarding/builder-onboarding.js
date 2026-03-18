@@ -51,23 +51,23 @@ const GOAL_OPTIONS = [
   {
     id: "twitter_follow",
     label: "Avoir plus de followers X (Twitter)",
-    hint: "Bientot disponible",
+    hint: "Audience en temps reel",
     iconText: "X",
-    available: false,
+    available: true,
   },
   {
     id: "trustpilot_review",
     label: "Collecter des avis Trustpilot",
-    hint: "Bientot disponible",
+    hint: "Confiance et preuve sociale",
     icon: "/assets/logos/trustpilot.png",
-    available: false,
+    available: true,
   },
   {
     id: "tripadvisor_review",
     label: "Collecter des avis TripAdvisor",
-    hint: "Bientot disponible",
+    hint: "Visibilite tourisme et local",
     icon: "/assets/logos/tripadvisor.png",
-    available: false,
+    available: true,
   },
 ];
 
@@ -208,17 +208,14 @@ export function initBuilderOnboarding({
       const cards = GOAL_OPTIONS.map((opt) => `
         <button
           type="button"
-          class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""} ${opt.available === false ? "is-coming-soon" : ""}"
+          class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}"
           data-goal="${opt.id}"
-          ${opt.available === false ? "disabled" : ""}
-          ${opt.available === false ? 'title="Bientot disponible"' : ""}
         >
           <span class="builder-onboarding-goal-main">
             ${renderGoalIcon(opt)}
             <span class="builder-onboarding-choice-title">${opt.label}</span>
           </span>
           <span class="builder-onboarding-choice-hint">${opt.hint}</span>
-          ${opt.available === false ? '<span class="builder-onboarding-soon-chip">Bientot</span>' : ""}
         </button>
       `).join("");
       const selectedCount = state.engagementGoals.length;
@@ -313,8 +310,6 @@ export function initBuilderOnboarding({
       btn.addEventListener("click", () => {
         const goalId = btn.getAttribute("data-goal");
         if (!goalId) return;
-        const goal = GOAL_OPTIONS.find((x) => x.id === goalId);
-        if (!goal || goal.available === false) return;
         const alreadySelected = state.engagementGoals.includes(goalId);
         const nextGoals = alreadySelected
           ? state.engagementGoals.filter((id) => id !== goalId)
