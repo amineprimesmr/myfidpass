@@ -19,6 +19,16 @@ const REWARD_OPTIONS = [
   { id: "later", label: "Je configurerai plus tard", hint: "Vous pourrez modifier ensuite" },
 ];
 
+const GOAL_OPTIONS = [
+  { id: "google_review", label: "Obtenir plus d'avis Google", hint: "Visibilite locale et confiance" },
+  { id: "instagram_follow", label: "Avoir plus de followers Instagram", hint: "Communaute et UGC" },
+  { id: "tiktok_follow", label: "Avoir plus de followers TikTok", hint: "Portee et viralite" },
+  { id: "facebook_follow", label: "Avoir plus de followers Facebook", hint: "Audience locale mature" },
+  { id: "twitter_follow", label: "Avoir plus de followers X (Twitter)", hint: "Bientot disponible" },
+  { id: "trustpilot_review", label: "Collecter des avis Trustpilot", hint: "Bientot disponible" },
+  { id: "tripadvisor_review", label: "Collecter des avis TripAdvisor", hint: "Bientot disponible" },
+];
+
 function escapeHtml(value) {
   const div = document.createElement("div");
   div.textContent = value == null ? "" : String(value);
@@ -26,19 +36,15 @@ function escapeHtml(value) {
 }
 
 function normalizeState(input = {}) {
-  const publicInfo = input.publicInfo && typeof input.publicInfo === "object" ? input.publicInfo : {};
+  const goals = Array.isArray(input.engagementGoals) ? input.engagementGoals.filter(Boolean) : [];
   return {
     currentStep: Number.isFinite(input.currentStep) ? Math.max(0, Math.min(TOTAL_STEPS - 1, input.currentStep)) : 0,
     completed: input.completed === true,
     logoDataUrl: typeof input.logoDataUrl === "string" ? input.logoDataUrl : "",
     stylePreset: typeof input.stylePreset === "string" ? input.stylePreset : "modern",
     rewardModel: typeof input.rewardModel === "string" ? input.rewardModel : "later",
-    tagline: typeof input.tagline === "string" ? input.tagline : "",
-    publicInfo: {
-      phone: publicInfo.phone !== false,
-      address: publicInfo.address !== false,
-      social: publicInfo.social !== false,
-    },
+    engagementGoals: goals,
+    goalsFreeText: typeof input.goalsFreeText === "string" ? input.goalsFreeText : "",
   };
 }
 
@@ -150,15 +156,18 @@ export function initBuilderOnboarding({
     }
 
     if (state.currentStep === 2) {
+      const cards = GOAL_OPTIONS.map((opt) => `
+        <button type="button" class="builder-onboarding-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" data-goal="${opt.id}">
+          <span class="builder-onboarding-choice-title">${opt.label}</span>
+          <span class="builder-onboarding-choice-hint">${opt.hint}</span>
+        </button>
+      `).join("");
       return `
-        <h3 class="builder-onboarding-question">Quelles informations voulez-vous afficher publiquement ?</h3>
-        <div class="builder-onboarding-toggles">
-          <label><input type="checkbox" data-public="phone" ${state.publicInfo.phone ? "checked" : ""}> Téléphone</label>
-          <label><input type="checkbox" data-public="address" ${state.publicInfo.address ? "checked" : ""}> Adresse</label>
-          <label><input type="checkbox" data-public="social" ${state.publicInfo.social ? "checked" : ""}> Réseaux sociaux</label>
-        </div>
-        <label class="builder-onboarding-input-label" for="builder-onboarding-tagline">Slogan (optionnel)</label>
-        <input id="builder-onboarding-tagline" class="builder-onboarding-input" type="text" maxlength="90" value="${escapeHtml(state.tagline)}" placeholder="Ex. La pause café qui récompense votre fidélité" />
+        <h3 class="builder-onboarding-question">Qu'est-ce que vous voulez qu'on mette en place pour vos clients ?</h3>
+        <p class="builder-onboarding-help">Selection multiple possible. On vous proposera la meilleure configuration ensuite.</p>
+        <div class="builder-onboarding-grid">${cards}</div>
+        <label class="builder-onboarding-input-label" for="builder-onboarding-goals-free-text">Autre objectif (optionnel)</label>
+        <input id="builder-onboarding-goals-free-text" class="builder-onboarding-input" type="text" maxlength="120" value="${escapeHtml(state.goalsFreeText)}" placeholder="Ex. Plus d'avis sur une autre plateforme" />
       `;
     }
 
@@ -175,17 +184,16 @@ export function initBuilderOnboarding({
       `;
     }
 
-    const publicInfoSelected = [
-      state.publicInfo.phone ? "Téléphone" : "",
-      state.publicInfo.address ? "Adresse" : "",
-      state.publicInfo.social ? "Réseaux sociaux" : "",
-    ].filter(Boolean);
+    const selectedGoalsLabels = state.engagementGoals
+      .map((id) => GOAL_OPTIONS.find((x) => x.id === id)?.label || "")
+      .filter(Boolean);
+    if (state.goalsFreeText.trim()) selectedGoalsLabels.push(state.goalsFreeText.trim());
     return `
       <h3 class="builder-onboarding-question">Votre carte est prête pour ${escapeHtml(organizationName || "votre établissement")}</h3>
       <div class="builder-onboarding-recap">
         <p><strong>Logo :</strong> ${state.logoDataUrl ? "importé" : "non défini"}</p>
         <p><strong>Style :</strong> ${(STYLE_OPTIONS.find((x) => x.id === state.stylePreset) || STYLE_OPTIONS[0]).label}</p>
-        <p><strong>Informations :</strong> ${publicInfoSelected.length ? publicInfoSelected.join(", ") : "Aucune info publique"}</p>
+        <p><strong>Objectifs clients :</strong> ${selectedGoalsLabels.length ? selectedGoalsLabels.join(", ") : "Aucun objectif selectionne"}</p>
         <p><strong>Récompense :</strong> ${(REWARD_OPTIONS.find((x) => x.id === state.rewardModel) || REWARD_OPTIONS[3]).label}</p>
       </div>
       <p class="builder-onboarding-help">Vous pourrez ajuster ces choix juste après cette étape.</p>
@@ -240,21 +248,20 @@ export function initBuilderOnboarding({
       });
     });
 
-    mountEl.querySelectorAll("input[data-public]").forEach((input) => {
-      input.addEventListener("change", () => {
-        const key = input.getAttribute("data-public");
-        if (!key) return;
-        updateState({
-          publicInfo: {
-            ...state.publicInfo,
-            [key]: input.checked,
-          },
-        });
+    mountEl.querySelectorAll("[data-goal]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const goalId = btn.getAttribute("data-goal");
+        if (!goalId) return;
+        const alreadySelected = state.engagementGoals.includes(goalId);
+        const nextGoals = alreadySelected
+          ? state.engagementGoals.filter((id) => id !== goalId)
+          : [...state.engagementGoals, goalId];
+        updateState({ engagementGoals: nextGoals });
       });
     });
 
-    mountEl.querySelector("#builder-onboarding-tagline")?.addEventListener("input", (event) => {
-      updateState({ tagline: event.target?.value || "" });
+    mountEl.querySelector("#builder-onboarding-goals-free-text")?.addEventListener("input", (event) => {
+      updateState({ goalsFreeText: event.target?.value || "" });
     });
 
     mountEl.querySelectorAll("[data-reward]").forEach((btn) => {

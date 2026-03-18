@@ -69,12 +69,8 @@ function initBuilderPage() {
       logoDataUrl: "",
       stylePreset: "modern",
       rewardModel: "later",
-      tagline: "",
-      publicInfo: {
-        phone: true,
-        address: true,
-        social: true,
-      },
+      engagementGoals: [],
+      goalsFreeText: "",
     },
   };
   const headerSteps = document.querySelectorAll(".builder-header-step");
@@ -115,12 +111,8 @@ function initBuilderPage() {
             logoDataUrl: typeof o.logoDataUrl === "string" ? o.logoDataUrl : state.onboarding.logoDataUrl,
             stylePreset: typeof o.stylePreset === "string" ? o.stylePreset : state.onboarding.stylePreset,
             rewardModel: typeof o.rewardModel === "string" ? o.rewardModel : state.onboarding.rewardModel,
-            tagline: typeof o.tagline === "string" ? o.tagline : state.onboarding.tagline,
-            publicInfo: {
-              phone: o.publicInfo?.phone !== false,
-              address: o.publicInfo?.address !== false,
-              social: o.publicInfo?.social !== false,
-            },
+            engagementGoals: Array.isArray(o.engagementGoals) ? o.engagementGoals.filter(Boolean) : state.onboarding.engagementGoals,
+            goalsFreeText: typeof o.goalsFreeText === "string" ? o.goalsFreeText : state.onboarding.goalsFreeText,
           };
         }
       }
