@@ -83,7 +83,6 @@ function initLandingHeroAnim() {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const items = [
     hero.querySelector(".landing-hero-title"),
-    hero.querySelector(".landing-hero-subtitle"),
     hero.querySelector(".landing-hero-form"),
     hero.querySelector(".landing-hero-cta-bar"),
     hero.querySelector(".landing-hero-benefits"),
