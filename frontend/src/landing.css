@@ -250,7 +250,7 @@
 #landing .landing-main-v2 {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 0 1.25rem 5rem;
+  padding: 0 1.25rem 0;
 }
 
 #landing .landing-main-v2::before {
