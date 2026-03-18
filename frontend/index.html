@@ -1930,14 +1930,45 @@
         </section>
 
         <section id="landing-card-beam" class="landing-card-beam landing-reveal" data-reveal>
-          <div class="landing-card-beam-frame-wrap">
-            <iframe
-              class="landing-card-beam-frame"
-              src="https://codepen.io/blacklead-studio/full/xbwaqxE"
-              title="Card Beam Animation"
-              loading="lazy"
-              referrerpolicy="strict-origin-when-cross-origin"
-            ></iframe>
+          <div class="landing-card-beam-stage">
+            <div class="landing-card-beam-code" aria-hidden="true">
+              <span>// compiled preview • scanner demo • generated for visual effect</span>
+              <span>const EXECUTED = true; const SCAN_WIDTH = 8; const FADE_ZONE = 35;</span>
+              <span>const MAX_PARTICLES = 2500; const TRANSITION = 0.05; function clamp(a, b)</span>
+              <span>return Math.max(a, Math.min(b, n)); function lerp(a, b, t) {</span>
+              <span>return a + (b - a) * t; } const now = () =&gt; performance.now();</span>
+              <span>class Particle { constructor(x, y, vx, vy, r, a) { this.x = x; }</span>
+              <span>this.y = y; this.vx = vx; this.vy = vy; this.r = r; this.a = a; }</span>
+              <span>step(dt) { this.x += this.vx * dt; this.y += this.vy * dt; } }</span>
+              <span>function rng(min, max) { return min + Math.random() * (max - min); }</span>
+              <span>function draw(ctx, p) { ctx.globalAlpha = p.a; ctx.drawImage(gradient, p.x, p.y); }</span>
+            </div>
+
+            <div class="landing-card-beam-spark"></div>
+
+            <article class="landing-card-showcase landing-card-showcase-dark">
+              <div class="landing-card-showcase-top">
+                <strong>Esther Howard</strong>
+                <span class="landing-card-showcase-chip">
+                  <span></span><span></span><span></span><span></span>
+                </span>
+              </div>
+              <div class="landing-card-showcase-art landing-card-showcase-art-iridescent"></div>
+              <div class="landing-card-showcase-bottom">
+                <span>1234 5678 9000 0000</span>
+              </div>
+            </article>
+
+            <article class="landing-card-showcase landing-card-showcase-light">
+              <div class="landing-card-showcase-brand">
+                <span class="landing-card-showcase-apple">Apple</span>
+              </div>
+              <div class="landing-card-showcase-light-body">
+                <strong>Steve Jobs</strong>
+                <span>1234 5678 9000 0000</span>
+              </div>
+              <div class="landing-card-showcase-mastercard" aria-hidden="true"></div>
+            </article>
           </div>
         </section>
 

@@ -1,93 +1,325 @@
 .landing-card-beam {
-  margin: 2.8rem 0 0;
-  padding: 2rem 0 0;
+  margin: 3rem 0 0;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  overflow-x: clip;
-  background: #000;
-}
-
-.landing-card-beam-head {
-  text-align: center;
-  margin-bottom: 0.9rem;
-}
-
-.landing-card-beam-title {
-  margin: 0;
-  color: #f8fafc;
-  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
-}
-
-.landing-card-beam-subtitle {
-  margin: 0.45rem 0 0;
-  color: #94a3b8;
-  font-size: 0.9rem;
-}
-
-.landing-card-beam-frame-wrap {
-  position: relative;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  height: min(86vh, 720px);
   overflow: hidden;
-  border-radius: 0;
-  border: 0;
   background: #000;
 }
 
-.landing-card-beam-frame-wrap::before,
-.landing-card-beam-frame-wrap::after {
+.landing-card-beam-stage {
+  position: relative;
+  min-height: 620px;
+  background:
+    radial-gradient(circle at 18% 46%, rgba(56, 189, 248, 0.14), transparent 16%),
+    radial-gradient(circle at 42% 18%, rgba(96, 165, 250, 0.12), transparent 18%),
+    radial-gradient(circle at 68% 66%, rgba(99, 102, 241, 0.1), transparent 18%),
+    #000;
+  overflow: hidden;
+}
+
+.landing-card-beam-code {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 58%;
+  padding: 4rem 1rem 3rem 0;
+  color: rgba(203, 213, 225, 0.42);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.landing-card-beam-code span {
+  display: block;
+}
+
+.landing-card-beam-spark {
+  position: absolute;
+  top: 78px;
+  left: 50.8%;
+  width: 38px;
+  height: 470px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(196, 181, 253, 0.92) 18%, rgba(168, 85, 247, 0.98) 48%, rgba(244, 114, 182, 0.74) 76%, rgba(255, 255, 255, 0) 100%);
+  filter: blur(7px);
+  box-shadow:
+    0 0 40px rgba(168, 85, 247, 0.7),
+    0 0 88px rgba(192, 132, 252, 0.42);
+}
+
+.landing-card-beam-spark::before {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 3;
-  background: #000;
-  pointer-events: none;
+  inset: -30px -32px;
+  background:
+    radial-gradient(circle, rgba(216, 180, 254, 0.8) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.65) 0 1px, transparent 2px);
+  background-size: 18px 18px, 26px 26px;
+  opacity: 0.55;
+  filter: blur(0.4px);
 }
 
-.landing-card-beam-frame-wrap::before {
-  top: 0;
-  height: 72px;
-}
-
-.landing-card-beam-frame-wrap::after {
-  bottom: 0;
-  height: 20px;
-}
-
-.landing-card-beam-frame {
+.landing-card-showcase {
   position: absolute;
-  top: -96px;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow:
+    0 24px 40px rgba(0, 0, 0, 0.28),
+    0 40px 80px rgba(0, 0, 0, 0.22);
+}
+
+.landing-card-showcase-dark {
+  top: 92px;
+  left: 50.8%;
+  width: 410px;
+  height: 390px;
+  transform: translateX(-6%);
+  background: linear-gradient(180deg, rgba(26, 26, 30, 0.98), rgba(17, 17, 20, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.landing-card-showcase-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.65rem 1.7rem 1rem;
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.landing-card-showcase-top strong {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.landing-card-showcase-chip {
+  width: 58px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.landing-card-showcase-chip span {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.landing-card-showcase-art {
+  margin: 0 18px;
+  height: 274px;
+  border-radius: 26px;
+}
+
+.landing-card-showcase-art-iridescent {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(251, 255, 194, 0.95), transparent 18%),
+    radial-gradient(circle at 64% 18%, rgba(59, 130, 246, 0.88), transparent 30%),
+    radial-gradient(circle at 78% 64%, rgba(254, 240, 138, 0.96), transparent 22%),
+    radial-gradient(circle at 26% 74%, rgba(168, 85, 247, 0.72), transparent 26%),
+    repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.14) 0 3px, transparent 4px 10px);
+  background-color: #0f172a;
+}
+
+.landing-card-showcase-bottom {
+  padding: 1rem 1.8rem 0;
+  color: rgba(241, 245, 249, 0.88);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
+
+.landing-card-showcase-light {
+  top: 92px;
+  right: 58px;
+  width: 475px;
+  height: 390px;
+  background:
+    radial-gradient(circle at 24% 72%, rgba(253, 224, 71, 0.52), transparent 26%),
+    radial-gradient(circle at 58% 80%, rgba(244, 114, 182, 0.34), transparent 24%),
+    radial-gradient(circle at 86% 20%, rgba(96, 165, 250, 0.78), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 250, 250, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.landing-card-showcase-brand {
+  padding: 1.75rem 2rem 0;
+  color: #020617;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.landing-card-showcase-apple::before {
+  content: " ";
+}
+
+.landing-card-showcase-light-body {
+  position: absolute;
+  left: 2rem;
+  bottom: 2.2rem;
+  display: grid;
+  gap: 1rem;
+  color: #0f172a;
+}
+
+.landing-card-showcase-light-body strong {
+  font-size: 1.1rem;
+}
+
+.landing-card-showcase-light-body span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.94rem;
+  letter-spacing: 0.12em;
+}
+
+.landing-card-showcase-mastercard {
+  position: absolute;
+  right: 1.8rem;
+  bottom: 1.9rem;
+  width: 44px;
+  height: 28px;
+}
+
+.landing-card-showcase-mastercard::before,
+.landing-card-showcase-mastercard::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.landing-card-showcase-mastercard::before {
   left: 0;
-  width: 100%;
-  height: 980px;
-  border: 0;
-  background: #020617;
+  background: rgba(99, 102, 241, 0.72);
+}
+
+.landing-card-showcase-mastercard::after {
+  right: 0;
+  background: rgba(31, 41, 55, 0.58);
+}
+
+@media (max-width: 1100px) {
+  .landing-card-beam-stage {
+    min-height: 860px;
+  }
+
+  .landing-card-beam-code {
+    width: 100%;
+    opacity: 0.45;
+  }
+
+  .landing-card-beam-spark {
+    left: 34%;
+    height: 360px;
+  }
+
+  .landing-card-showcase-dark {
+    top: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .landing-card-showcase-light {
+    top: 458px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
 }
 
 @media (max-width: 768px) {
-  .landing-card-beam {
-    padding: 0.65rem 0 0;
+  .landing-card-beam-stage {
+    min-height: 640px;
   }
 
-  .landing-card-beam-frame-wrap {
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-    height: min(70vh, 500px);
-    border-radius: 0;
+  .landing-card-beam-code {
+    width: 150%;
+    left: -12%;
+    font-size: 0.68rem;
+    line-height: 1.5;
+    opacity: 0.34;
   }
 
-  .landing-card-beam-frame-wrap::before {
-    height: 56px;
+  .landing-card-beam-spark {
+    left: 30%;
+    top: 70px;
+    height: 240px;
+    width: 26px;
   }
 
-  .landing-card-beam-frame-wrap::after {
-    height: 8px;
+  .landing-card-showcase-dark {
+    width: 270px;
+    height: 258px;
+    top: 74px;
+    left: 53%;
+    transform: translateX(-50%);
+    border-radius: 22px;
   }
 
-  .landing-card-beam-frame {
-    top: -96px;
-    height: 820px;
+  .landing-card-showcase-top {
+    padding: 1rem 1rem 0.7rem;
+  }
+
+  .landing-card-showcase-top strong {
+    font-size: 0.84rem;
+  }
+
+  .landing-card-showcase-chip {
+    width: 42px;
+    height: 34px;
+    padding: 7px;
+  }
+
+  .landing-card-showcase-art {
+    margin: 0 10px;
+    height: 176px;
+    border-radius: 18px;
+  }
+
+  .landing-card-showcase-bottom {
+    padding: 0.8rem 1rem 0;
+    font-size: 0.72rem;
+  }
+
+  .landing-card-showcase-light {
+    width: 310px;
+    height: 258px;
+    top: 328px;
+    border-radius: 22px;
+  }
+
+  .landing-card-showcase-brand {
+    padding: 1rem 1.2rem 0;
+    font-size: 0.9rem;
+  }
+
+  .landing-card-showcase-light-body {
+    left: 1.2rem;
+    bottom: 1.35rem;
+    gap: 0.7rem;
+  }
+
+  .landing-card-showcase-light-body strong {
+    font-size: 0.95rem;
+  }
+
+  .landing-card-showcase-light-body span {
+    font-size: 0.72rem;
+  }
+
+  .landing-card-showcase-mastercard {
+    right: 1.1rem;
+    bottom: 1.1rem;
+    transform: scale(0.78);
   }
 }

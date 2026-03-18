@@ -892,6 +892,22 @@
     text-align: center;
   }
 
+  #landing .landing-hero-title,
+  #landing .landing-hero-subtitle {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #landing .landing-hero-copy .landing-hero-cta-bar,
+  #landing .landing-hero-copy .landing-hero-proof-row,
+  #landing .landing-hero-copy .landing-hero-form,
+  #landing .landing-hero-copy .landing-hero-microproof {
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
+  }
+
   #landing .landing-hero-title {
     max-width: 10.8ch;
     font-size: clamp(3.5rem, 5.2vw, 5.6rem);
