@@ -2722,10 +2722,17 @@
   width: 100%;
   max-width: min(880px, calc(100vw - 2.5rem));
   height: 20px;
-  margin: -4.5rem auto 0;
+  margin: -5rem auto 0;
   background: #000;
   clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
-  transform: translateY(-1px);
+  transform: translateY(-3px);
+}
+
+@media (min-width: 768px) {
+  .landing-bandeau {
+    margin-top: -5.5rem;
+    transform: translateY(-5px);
+  }
 }
 
 .landing-simulator-wrap {
