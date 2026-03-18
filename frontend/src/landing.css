@@ -2736,9 +2736,11 @@
   z-index: 2;
 }
 
+/* Desktop uniquement : bandeau collé au bord noir (mobile inchangé) */
 @media (min-width: 768px) {
   .landing-bandeau {
-    margin-top: -5rem;
+    margin-top: -6.5rem;
+    transform: translateY(-3px);
   }
 }
 
