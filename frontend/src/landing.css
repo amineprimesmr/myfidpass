@@ -2716,6 +2716,26 @@
 }
 
 /* ========== Simulateur d’impact (style Cadeo : 3D, relief, effets) ========== */
+/* Bandeau blanc sous hero (transition hero → section produit) */
+.landing-bandeau-hero {
+  display: block;
+  width: 100%;
+  max-width: min(880px, calc(100vw - 2.5rem));
+  height: 24px;
+  margin: -4.5rem auto 0;
+  background: #fff;
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
+  position: relative;
+  z-index: 2;
+}
+
+@media (min-width: 768px) {
+  .landing-bandeau-hero {
+    margin-top: -5rem;
+    transform: translateY(-2px);
+  }
+}
+
 /* Bandeau noir trapézoïdal : dans témoignages, remonté pour coller au simulateur noir */
 .landing-simulator-wrap {
   position: relative;
