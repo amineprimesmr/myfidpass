@@ -987,7 +987,7 @@
 @media (min-width: 1101px) {
   #landing .landing-main-v2 {
     max-width: 1320px;
-    padding: 0 2rem 5rem;
+    padding: 0 2rem 0;
   }
 
   #landing .landing-hero-v2 {
@@ -1162,7 +1162,7 @@
 
 @media (max-width: 720px) {
   #landing .landing-main-v2 {
-    padding: 0 0.9rem 4rem;
+    padding: 0 0.9rem 0;
   }
 
   #landing .landing-main-v2::before {
