@@ -1,4 +1,5 @@
 .landing-gradient-carousel {
+  display: none; /* Temporaire : carousel masqué */
   position: relative;
   margin: 1.4rem auto 0;
   width: 100dvw;
