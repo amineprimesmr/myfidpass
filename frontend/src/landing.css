@@ -282,6 +282,7 @@
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   margin-top: -6rem;
+  margin-bottom: 0;
   background: var(--fidpass-surface);
   border-bottom-left-radius: 28px;
   border-bottom-right-radius: 28px;
@@ -2717,13 +2718,13 @@
 }
 
 /* ========== Simulateur d’impact (style Cadeo : 3D, relief, effets) ========== */
-/* Bandeau blanc : dernier élément du hero, transition vers section produit (flux normal, pas de marge négative) */
+/* Bandeau blanc : entre hero et produit, collé juste en dessous du hero (flux normal) */
 .landing-bandeau-hero {
   display: block;
   width: 100%;
   max-width: min(880px, calc(100vw - 2.5rem));
   height: 24px;
-  margin: 2rem auto 0;
+  margin: 0 auto;
   background: #fff;
   clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
 }
