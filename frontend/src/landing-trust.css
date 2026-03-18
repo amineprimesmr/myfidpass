@@ -77,11 +77,11 @@
 }
 
 #landing .landing-trust-logos img {
-  height: 36px;
+  height: 48px;
   width: auto;
-  max-width: 120px;
+  max-width: 160px;
   object-fit: contain;
-  opacity: 0.7;
+  opacity: 1;
   transition: opacity 0.25s ease;
 }
 
@@ -106,6 +106,6 @@
   }
 
   #landing .landing-trust-logos img {
-    height: 28px;
+    height: 38px;
   }
 }
