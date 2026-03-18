@@ -81,8 +81,18 @@
   top: 0;
   z-index: 100;
   padding: 1.25rem 1.25rem 0.6rem;
-  background: var(--landing-bg, #fafafa);
+  background: transparent;
   box-sizing: border-box;
+}
+
+/* Landing accueil : barre flottante seule, superposée au contenu */
+#landing > .landing-header-outer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 120;
+  background: transparent;
 }
 
 .landing-header-bar {
@@ -530,6 +540,10 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
+}
+
+#landing > .landing-main {
+  padding-top: 6.2rem;
 }
 /* Failsafe : contenu landing toujours visible quand #landing est affiché */
 #landing:not(.hidden) #landing-main:not(.hidden),
@@ -4789,5 +4803,11 @@ body.page-checkout .site-banner { display: none !important; }
   }
   .landing-how-step-desc {
     font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 900px) {
+  #landing > .landing-main {
+    padding-top: 5.4rem;
   }
 }
