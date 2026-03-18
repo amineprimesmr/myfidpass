@@ -7,6 +7,9 @@
    ============================================================ */
 
 :root {
+  /* Charte graphique : bleu foncé (pas de vert). */
+  --fidpass-brand: #1e3a8a;
+  --fidpass-brand-light: #2563eb;
   /* Fond « blanc » du site : gris très clair (section FAQ). Quand on dit « blanc », utiliser cette couleur. */
   --fidpass-surface: #f5f5f7;
   --bg: #0A0A0F;

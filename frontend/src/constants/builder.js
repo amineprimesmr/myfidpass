@@ -16,7 +16,7 @@ export const CARD_TEMPLATES = [
   { id: "boucherie-tampons", name: "Tampons (Boucherie)", format: "tampons", design: "boucherie", bg: "#6d2c3e", fg: "#ffffff", label: "#ffcdd2" },
   { id: "cafe-points", name: "Points (Café)", format: "points", design: "cafe", bg: "#5d4e37", fg: "#ffffff", label: "#d7ccc8" },
   { id: "cafe-tampons", name: "Tampons (Café)", format: "tampons", design: "cafe", bg: "#5d4e37", fg: "#ffffff", label: "#d7ccc8" },
-  { id: "classic", name: "Classique", format: "points", bg: "#0a7c42", fg: "#ffffff", label: "#e8f5e9" },
+  { id: "classic", name: "Classique", format: "points", bg: "#1e3a8a", fg: "#ffffff", label: "#dbeafe" },
   { id: "bold", name: "Moderne", format: "points", bg: "#2563eb", fg: "#ffffff", label: "#bfdbfe" },
   { id: "elegant", name: "Élégant", format: "points", bg: "#8b7355", fg: "#ffffff", label: "#f5f0e6" },
 ];

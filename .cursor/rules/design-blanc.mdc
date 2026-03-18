@@ -6,3 +6,11 @@ Quand on parle de **fond blanc** ou **blanc** pour les surfaces du site (landing
 - **Valeur** : `#f5f5f7` (gris très clair, style Apple/Trendtrack)
 
 Définie dans `:root` (style.css). Ne pas utiliser `#fff` ou `#ffffff` pour les fonds de section.
+
+---
+
+# Charte graphique — bleu foncé (pas de vert)
+
+- **Couleur principale** : `var(--fidpass-brand)` = `#1e3a8a` (bleu foncé)
+- **Accent** : `#2563eb` / `#3b82f6`
+- Ne jamais utiliser de vert (#0a7c42, #c1ff72, etc.) pour la marque.

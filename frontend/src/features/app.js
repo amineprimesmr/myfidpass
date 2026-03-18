@@ -907,13 +907,13 @@ function initAppDashboard(slug) {
         perimetreMap.setView([lat, lng], perimetreMap.getZoom() < 14 ? 14 : perimetreMap.getZoom());
         if (perimetreMarker) perimetreMarker.setLatLng([lat, lng]);
         else if (typeof L !== "undefined") {
-          const mhtml = `<span class="app-perimetre-marker-pin"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#0a7c42"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
+          const mhtml = `<span class="app-perimetre-marker-pin"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#1e3a8a"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
           const micon = L.divIcon({ html: mhtml, className: "app-perimetre-marker-icon", iconSize: [32, 44], iconAnchor: [16, 44] });
           perimetreMarker = L.marker([lat, lng], { icon: micon }).addTo(perimetreMap);
         }
         if (perimetreCircle) perimetreCircle.setLatLng([lat, lng]).setRadius(currentRadiusM);
         else if (typeof L !== "undefined") {
-          perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
+          perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#1e3a8a", fillColor: "#1e3a8a", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
         }
       }
       if (mapWrap) mapWrap.classList.add("has-map");
@@ -946,7 +946,7 @@ function initAppDashboard(slug) {
           antialias: true,
         });
         perimetreMap.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
-        perimetreMarker = new mapboxgl.Marker({ color: "#0a7c42" }).setLngLat([lng, lat]).addTo(perimetreMap);
+        perimetreMarker = new mapboxgl.Marker({ color: "#1e3a8a" }).setLngLat([lng, lat]).addTo(perimetreMap);
         perimetreMap.on("load", () => {
           try {
             if (!perimetreMap.getSource("mapbox-dem")) {
@@ -982,13 +982,13 @@ function initAppDashboard(slug) {
             id: "perimetre-circle-fill",
             type: "fill",
             source: "perimetre-circle",
-            paint: { "fill-color": "#0a7c42", "fill-opacity": 0.2 },
+            paint: { "fill-color": "#1e3a8a", "fill-opacity": 0.2 },
           });
           perimetreMap.addLayer({
             id: "perimetre-circle-line",
             type: "line",
             source: "perimetre-circle",
-            paint: { "line-color": "#0a7c42", "line-width": 3 },
+            paint: { "line-color": "#1e3a8a", "line-width": 3 },
           });
         });
         perimetreMap.on("click", (e) => {
@@ -1017,12 +1017,12 @@ function initAppDashboard(slug) {
       if (typeof L === "undefined") return;
       if (perimetreMap) {
         perimetreMap.setView([lat, lng], 14);
-        const mhtml = `<span class="app-perimetre-marker-pin"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#0a7c42"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
+        const mhtml = `<span class="app-perimetre-marker-pin"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#1e3a8a"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
         const micon = L.divIcon({ html: mhtml, className: "app-perimetre-marker-icon", iconSize: [32, 44], iconAnchor: [16, 44] });
         if (perimetreMarker) perimetreMarker.setLatLng([lat, lng]);
         else perimetreMarker = L.marker([lat, lng], { icon: micon }).addTo(perimetreMap);
         if (perimetreCircle) perimetreCircle.setLatLng([lat, lng]).setRadius(currentRadiusM);
-        else perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
+        else perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#1e3a8a", fillColor: "#1e3a8a", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
         perimetreMap.invalidateSize();
         if (mapWrap) mapWrap.classList.add("has-map");
         if (mapHintEl) mapHintEl.classList.add("hidden");
@@ -1036,10 +1036,10 @@ function initAppDashboard(slug) {
         maxZoom: 20,
         maxNativeZoom: 19,
       }).addTo(perimetreMap);
-      const markerHtml = `<span class="app-perimetre-marker-pin" aria-hidden="true"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#0a7c42"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
+      const markerHtml = `<span class="app-perimetre-marker-pin" aria-hidden="true"><svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#1e3a8a"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg></span>`;
       const markerIcon = L.divIcon({ html: markerHtml, className: "app-perimetre-marker-icon", iconSize: [32, 44], iconAnchor: [16, 44] });
       perimetreMarker = L.marker([lat, lng], { icon: markerIcon }).addTo(perimetreMap);
-      perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#0a7c42", fillColor: "#0a7c42", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
+      perimetreCircle = L.circle([lat, lng], { radius: currentRadiusM, color: "#1e3a8a", fillColor: "#1e3a8a", fillOpacity: 0.12, weight: 2.5 }).addTo(perimetreMap);
       perimetreMap.on("click", (e) => {
         currentLat = e.latlng.lat;
         currentLng = e.latlng.lng;
@@ -1479,7 +1479,7 @@ function initAppDashboard(slug) {
   bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
   bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
   function syncStripToBg() {
-    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
+    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#1e3a8a";
     const hex = bg.startsWith("#") ? bg : "#" + bg;
     if (personnaliserStrip) personnaliserStrip.value = hex;
     if (personnaliserStripHex) personnaliserStripHex.value = hex;
@@ -1526,9 +1526,9 @@ function initAppDashboard(slug) {
     const restantsValueEl = document.getElementById("app-wallet-preview-restants");
     const ptsEmojiEl = document.getElementById("app-preview-pts-emoji");
     if (!card || !orgEl) return;
-    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
+    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#1e3a8a";
     const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
-    const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#e8f5e9";
+    const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#dbeafe";
     const bgHex = bg.startsWith("#") ? bg : "#" + bg;
     if (personnaliserStrip) personnaliserStrip.value = bgHex;
     if (personnaliserStripHex) personnaliserStripHex.value = bgHex;
@@ -1786,9 +1786,9 @@ function initAppDashboard(slug) {
     .then((data) => {
       if (!data) return;
       currentOrganizationName = (data.organization_name ?? data.organizationName ?? "").trim() || "Votre commerce";
-      const bg = data.background_color ?? data.backgroundColor ?? "#0a7c42";
+      const bg = data.background_color ?? data.backgroundColor ?? "#1e3a8a";
       const fg = data.foreground_color ?? data.foregroundColor ?? "#ffffff";
-      const label = data.label_color ?? data.labelColor ?? "#e8f5e9";
+      const label = data.label_color ?? data.labelColor ?? "#dbeafe";
       if (personnaliserBg) personnaliserBg.value = bg;
       if (personnaliserBgHex) personnaliserBgHex.value = bg;
       if (personnaliserFg) personnaliserFg.value = fg;
@@ -2465,9 +2465,9 @@ function initAppDashboard(slug) {
 
   if (personnaliserSave) {
     personnaliserSave.addEventListener("click", async () => {
-      const backgroundColor = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#0a7c42";
+      const backgroundColor = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#1e3a8a";
       const foregroundColor = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
-      const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#e8f5e9";
+      const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#dbeafe";
       const toHex = (v) => {
         const s = (v || "").trim();
         if (/^#[0-9A-Fa-f]{6}$/.test(s)) return s;
@@ -4374,7 +4374,7 @@ function initAppDashboard(slug) {
     } catch (_) {}
   }
 
-  const NOTIF_CATEGORY_COLORS = ["#0a7c42", "#2563eb", "#b45309", "#7c3aed", "#dc2626", "#0891b2"];
+  const NOTIF_CATEGORY_COLORS = ["#1e3a8a", "#2563eb", "#b45309", "#7c3aed", "#dc2626", "#0891b2"];
   let notifCategoriesCache = [];
 
   async function loadAppNotificationCategories() {
