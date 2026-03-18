@@ -87,7 +87,7 @@ function initLandingHeroAnim() {
     hero.querySelector(".landing-hero-form"),
     hero.querySelector(".landing-hero-cta-bar"),
     hero.querySelector(".landing-hero-benefits"),
-    hero.querySelector(".landing-hero-stats"),
+    hero.querySelector(".landing-hero-trustpilot-badge"),
   ].filter(Boolean);
 
   if (prefersReducedMotion) {
