@@ -2716,13 +2716,13 @@
 }
 
 /* ========== Simulateur d’impact (style Cadeo : 3D, relief, effets) ========== */
-/* Bandeau noir trapézoïdal sous simulateur et témoignages */
+/* Bandeau noir trapézoïdal : transition simulateur (noir) → témoignages (clair) */
 .landing-bandeau {
   display: block;
   width: 100%;
   max-width: min(880px, calc(100vw - 2.5rem));
-  height: 14px;
-  margin: 2rem auto 0;
+  height: 20px;
+  margin: -4rem auto 0;
   background: #000;
   clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
 }
