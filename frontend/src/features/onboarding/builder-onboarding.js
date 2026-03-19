@@ -111,7 +111,22 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     if (typeof onStateChange === "function") onStateChange({ ...state, placeIdHint: currentPlaceIdHint, currentQuestion });
   };
   let lastDirection = "next";
-  function updateState(patch) { state = normalizeState({ ...state, ...patch }, currentPlaceIdHint); emitState(); render(); }
+  function updateState(patch, opts = {}) {
+    state = normalizeState({ ...state, ...patch }, currentPlaceIdHint);
+    emitState();
+    if (opts.skipRender) {
+      updateChoiceSelectionOnly();
+      return;
+    }
+    render();
+  }
+  function updateChoiceSelectionOnly() {
+    if (state.currentStep === 1) {
+      mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.classList.toggle("is-selected", btn.getAttribute("data-style") === state.stylePreset));
+    } else if (state.currentStep === 4) {
+      mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.classList.toggle("is-selected", btn.getAttribute("data-reward") === state.rewardModel));
+    }
+  }
   const goToStep = (n) => updateState({ currentStep: Math.max(0, Math.min(TOTAL_STEPS - 1, n)), goalConfigErrors: {} });
   const nextStep = () => { lastDirection = "next"; if (state.currentStep < TOTAL_STEPS - 1) goToStep(state.currentStep + 1); };
   const previousStep = () => { lastDirection = "prev"; if (state.currentStep > 0) goToStep(state.currentStep - 1); };
@@ -206,12 +221,12 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     });
     mountEl.querySelector("[data-action='upload-logo']")?.addEventListener("click", () => mountEl.querySelector("#builder-onboarding-logo-input")?.click());
     mountEl.querySelector("#builder-onboarding-logo-input")?.addEventListener("change", async (event) => { const file = event.target?.files?.[0]; if (!file) return; const dataUrl = await fileToResizedDataUrl(file); if (!dataUrl) return; updateState({ logoDataUrl: dataUrl }); if (typeof onLogoChange === "function") onLogoChange(dataUrl); nextStep(); });
-    mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "modern"; updateState({ stylePreset }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
+    mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "modern"; updateState({ stylePreset }, { skipRender: true }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
     mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.addEventListener("click", () => { const goalId = btn.getAttribute("data-goal"); if (!goalId) return; const already = state.engagementGoals.includes(goalId); const goals = already ? state.engagementGoals.filter((id) => id !== goalId) : [...state.engagementGoals, goalId]; updateState({ engagementGoals: goals, goalConfigs: normalizeGoalConfigs(goals, state.goalConfigs, currentPlaceIdHint), goalConfigErrors: {} }); }));
     mountEl.querySelector("#builder-onboarding-goals-free-text")?.addEventListener("input", (event) => updateState({ goalsFreeText: event.target?.value || "" }));
     mountEl.querySelector("[data-action='autosuggest-goals']")?.addEventListener("click", runGoalAutoSuggest);
-    mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }); }));
-    mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
+    mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }, { skipRender: true }); }));
+    mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }, { skipRender: true }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
   }
 
   render(); emitState();
