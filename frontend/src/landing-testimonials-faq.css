@@ -42,26 +42,27 @@
   font-weight: 700;
 }
 
+/* Bouton Rejoindre maintenant — UX image (bleu royal, ombre douce, reflet vert) */
 #landing .landing-testimonials-v2-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin: 0 0 3rem;
   padding: 1rem 2.25rem;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #111827;
+  background: #2563eb;
+  color: #0f172a;
   font-weight: 700;
   font-size: 1.05rem;
   text-decoration: none;
   border-radius: 14px;
-  box-shadow: 0 4px 24px rgba(193, 255, 114, 0.4);
+  box-shadow: 4px 6px 20px rgba(0, 0, 0, 0.18), 6px 4px 16px rgba(180, 220, 100, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   width: fit-content;
 }
 
 #landing .landing-testimonials-v2-cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(193, 255, 114, 0.5);
+  box-shadow: 6px 8px 24px rgba(0, 0, 0, 0.2), 8px 6px 20px rgba(180, 220, 100, 0.1);
 }
 
 #landing .landing-testimonials-v2-grid {
