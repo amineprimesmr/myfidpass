@@ -5,7 +5,7 @@
 
 const TOTAL_STEPS = 6;
 const STEP_QUESTIONS = [
-  "Votre établissement a-t-il un logo à importer ?",
+  "Avez-vous un logo ?",
   "Quel style de carte vous ressemble le plus ?",
   "Quels objectifs pour vos clients ?",
   "Configurez vos liens",
