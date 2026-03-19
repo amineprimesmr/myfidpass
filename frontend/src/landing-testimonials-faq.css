@@ -331,22 +331,14 @@
   color: #374151;
 }
 
-/* Animation fluide hauteur (grid) — réponses cachées par défaut */
+/* Réponses cachées par défaut — display:none garanti visiblement masqué */
 #landing .landing-faq-v2-item .landing-faq-answer {
-  display: grid;
-  grid-template-rows: 0fr;
+  display: none;
   padding: 0;
-  overflow: hidden;
-  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #landing .landing-faq-v2-item.is-open .landing-faq-answer {
-  grid-template-rows: 1fr;
-}
-
-#landing .landing-faq-v2-item .landing-faq-answer > * {
-  min-height: 0;
-  overflow: hidden;
+  display: block;
 }
 
 #landing .landing-faq-v2-item .landing-faq-answer p {
