@@ -244,7 +244,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     const rewardOpts = getRewardOptions(state.stylePreset);
     const rewardLabel = (rewardOpts.find((x) => x.id === state.rewardModel) || rewardOpts[rewardOpts.length - 1]).label;
     const recapHtml = `<div class="builder-onboarding-recap"><p><strong>Logo :</strong> ${state.logoDataUrl ? "Oui" : "Non"}</p><p><strong>Style :</strong> ${(STYLE_OPTIONS.find((x) => x.id === state.stylePreset) || STYLE_OPTIONS[0]).label}</p><p><strong>Objectifs :</strong> ${selectedGoals.length ? selectedGoals.join(", ") : "Aucun"}</p><p><strong>Liens :</strong> ${configuredGoals}/${state.engagementGoals.length || 0}</p><p><strong>Récompense :</strong> ${rewardLabel}</p></div><p class="builder-onboarding-help">Modifiable dans votre espace pro.</p>`;
-    const hasAccountForm = typeof onAccountCreated === "function";
+    const hasAccountForm = typeof onAccountCreated === "function" || (apiBase != null && typeof apiBase === "string");
     const alreadyLoggedIn = hasAccountForm && typeof getAuthToken === "function" && getAuthToken();
     if (hasAccountForm && alreadyLoggedIn) {
       return recapHtml + `<button type="button" class="builder-onboarding-btn builder-onboarding-btn-inline" data-action="account-continue">Voir ma carte</button>`;
@@ -300,7 +300,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }, { skipRender: true }); }));
     mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }, { skipRender: true }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
 
-    if (state.currentStep === TOTAL_STEPS - 1 && typeof onAccountCreated === "function") {
+    if (state.currentStep === TOTAL_STEPS - 1 && (typeof onAccountCreated === "function" || (apiBase != null && typeof apiBase === "string"))) {
       bindAccountFormHandlers();
     }
   }
