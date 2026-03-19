@@ -309,6 +309,12 @@ function showOnboardingInSheet(organizationName, placeId) {
       saveDraftAndMaybeShowBeam(nextState);
       showCardBeamInSheet();
     },
+    getAuthToken,
+    setAuthToken,
+    onAccountCreated(nextState) {
+      saveDraftAndMaybeShowBeam(nextState);
+      goToCheckout();
+    },
   });
 }
 

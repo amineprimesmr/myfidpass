@@ -2,7 +2,7 @@
  * Page créateur de carte (templates, brouillon, panier). Dérogation temporaire : > 400 lignes, à découper. REFONTE-REGLES.md.
  */
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
-import { API_BASE } from "../config.js";
+import { API_BASE, getAuthToken, setAuthToken } from "../config.js";
 import { setBuilderHeaderStep, initRouting, navigateToLanding } from "../router/index.js";
 import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";
 
@@ -523,6 +523,19 @@ function initBuilderPage() {
         saveDraft();
       },
       onComplete(nextOnboardingState) {
+        state.onboarding = { ...nextOnboardingState, completed: true };
+        applyOnboardingTemplatePreset(state.onboarding.stylePreset);
+        saveDraft();
+        onboardingRoot.classList.add("hidden");
+        builderRoot?.classList.remove("builder-onboarding-active");
+        setBuilderHeaderVisibility(true);
+        setBuilderHeaderStep(1);
+        history.pushState({}, "", "/checkout");
+        initRouting();
+      },
+      getAuthToken,
+      setAuthToken,
+      onAccountCreated(nextOnboardingState) {
         state.onboarding = { ...nextOnboardingState, completed: true };
         applyOnboardingTemplatePreset(state.onboarding.stylePreset);
         saveDraft();
