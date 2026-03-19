@@ -801,35 +801,6 @@
               </div>
             </div>
 
-            <section class="app-dashboard-explorer">
-              <div class="app-dashboard-explorer-header">
-                <h3 class="app-evolution-title">Explorer les données</h3>
-                <div class="app-dashboard-explorer-tabs" role="tablist" aria-label="Segments de données">
-                  <button type="button" class="app-dashboard-explorer-tab active" data-dashboard-segment="revenus">Revenus</button>
-                  <button type="button" class="app-dashboard-explorer-tab" data-dashboard-segment="clients">Clients</button>
-                  <button type="button" class="app-dashboard-explorer-tab" data-dashboard-segment="fidelite">Fidélité</button>
-                </div>
-              </div>
-
-              <div class="app-dashboard-explorer-panel active" data-dashboard-segment-panel="revenus">
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-avg-ticket">0 €</span><span class="app-dashboard-indicator-label">Panier moyen fidélité</span></article>
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-revenue-per-active">0 €</span><span class="app-dashboard-indicator-label">CA par client actif</span></article>
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-transactions">0</span><span class="app-dashboard-indicator-label">Opérations enregistrées</span></article>
-              </div>
-
-              <div class="app-dashboard-explorer-panel" data-dashboard-segment-panel="clients">
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-members-segment">0</span><span class="app-dashboard-indicator-label">Total membres</span></article>
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-new30">0</span><span class="app-dashboard-indicator-label">Nouveaux (30 j)</span></article>
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-inactive30">0</span><span class="app-dashboard-indicator-label">Inactifs (30 j)</span></article>
-              </div>
-
-              <div class="app-dashboard-explorer-panel" data-dashboard-segment-panel="fidelite">
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-recurrent">0</span><span class="app-dashboard-indicator-label">Clients récurrents</span></article>
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-avg-points">0</span><span class="app-dashboard-indicator-label">Solde moyen de points</span></article>
-                <article class="app-dashboard-indicator"><span class="app-dashboard-indicator-value" id="app-stat-retention-echo">0 %</span><span class="app-dashboard-indicator-label">Rétention</span></article>
-              </div>
-            </section>
-
             <div class="app-dashboard-recent-history" role="region" aria-labelledby="app-dashboard-recent-heading">
               <div class="app-dashboard-recent-header">
                 <span class="app-dashboard-recent-icon" aria-hidden="true">
@@ -845,19 +816,6 @@
               <div class="app-dashboard-recent-list" id="app-dashboard-recent-list">
                 <!-- Rempli par JS -->
               </div>
-            </div>
-
-            <div class="app-dashboard-analytics-grid">
-              <article class="app-dashboard-panel app-evolution-wrap">
-                <h3 class="app-evolution-title" id="app-evolution-title">Activité — opérations par semaine</h3>
-                <div id="app-evolution-chart" class="app-evolution-chart" role="img" aria-label="Graphique des opérations par semaine"></div>
-              </article>
-            </div>
-            <!-- Actions rapides -->
-            <div class="app-overview-shortcuts">
-              <button type="button" id="app-scanner-scroll-btn" class="app-shortcut-btn"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span> Scanner</button>
-              <button type="button" id="app-overview-copy-link" class="app-shortcut-btn"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span> Copier le lien partage</button>
-              <a href="#membres" class="app-shortcut-btn app-shortcut-inactifs" data-section="membres"><span class="app-shortcut-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Voir les inactifs 30 j</a>
             </div>
             </div>
             </div>

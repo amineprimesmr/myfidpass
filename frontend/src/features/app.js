@@ -483,13 +483,10 @@ function initAppDashboard(slug) {
   const dashboardSimulateState = document.getElementById("app-dashboard-simulate-state");
   const dashboardToggleDetailsBtn = document.getElementById("app-dashboard-toggle-details");
   const dashboardDetailsEl = document.getElementById("app-dashboard-details");
-  const dashboardSegmentTabs = Array.from(document.querySelectorAll(".app-dashboard-explorer-tab"));
-  const dashboardSegmentPanels = Array.from(document.querySelectorAll(".app-dashboard-explorer-panel"));
   const statRetentionEcho = document.getElementById("app-stat-retention-echo");
   const dashboardPeriodSelect = document.getElementById("app-dashboard-period-select");
   const dashboardPeriodPills = Array.from(document.querySelectorAll(".app-dashboard-period-pill"));
   const dashboardPeriodDisplay = document.getElementById("app-dashboard-period-display");
-  const evolutionTitleEl = document.getElementById("app-evolution-title");
   let dashboardUseSimulatedData = false;
   const memberSearchInput = document.getElementById("app-member-search");
   const memberListEl = document.getElementById("app-member-list");
@@ -3726,81 +3723,6 @@ function initAppDashboard(slug) {
     return data;
   }
 
-  async function loadEvolution() {
-    const period = getDashboardPeriod();
-    const weeksMap = { "7d": 1, "30d": 4, this_month: 4, "6m": 26 };
-    const weeks = weeksMap[period] ?? 6;
-    const chartEl = document.getElementById("app-evolution-chart");
-    let evolution = [];
-    if (dashboardUseSimulatedData) {
-      evolution = getSimulatedEvolution(period);
-    } else {
-      const res = await api(`/dashboard/evolution?period=${encodeURIComponent(period)}&weeks=${weeks}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      evolution = data.evolution || [];
-    }
-    if (evolutionTitleEl) {
-      const periodLabels = { "7d": "7 j", "30d": "4 sem.", this_month: "mois", "6m": "6 mois" };
-      evolutionTitleEl.textContent = `Activité — opérations par semaine (${periodLabels[period] ?? evolution.length + " sem."})`;
-    }
-    if (!chartEl || !evolution.length) {
-      if (chartEl) chartEl.innerHTML = "<p class=\"app-evolution-empty\">Aucune donnée pour le moment.</p>";
-      return;
-    }
-    const points = evolution.map((w) => Number(w.operationsCount ?? w.operations_count ?? 0));
-    const maxOp = Math.max(1, ...points);
-    const minOp = Math.min(...points, 0);
-    const count = points.length;
-    const width = 900;
-    const height = 220;
-    const paddingX = 18;
-    const paddingY = 16;
-    const drawWidth = width - paddingX * 2;
-    const drawHeight = height - paddingY * 2;
-    const range = Math.max(1, maxOp - minOp);
-
-    const xy = points.map((v, i) => {
-      const x = paddingX + (count <= 1 ? drawWidth / 2 : (i / (count - 1)) * drawWidth);
-      const y = paddingY + (1 - (v - minOp) / range) * drawHeight;
-      return { x, y, v };
-    });
-
-    const linePath = xy.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
-    const areaPath = `${linePath} L ${(paddingX + drawWidth).toFixed(2)} ${(paddingY + drawHeight).toFixed(2)} L ${paddingX.toFixed(2)} ${(paddingY + drawHeight).toFixed(2)} Z`;
-
-    const gridLines = [0.25, 0.5, 0.75].map((k) => {
-      const y = paddingY + drawHeight * k;
-      return `<line class="app-evolution-grid-line" x1="${paddingX}" y1="${y.toFixed(2)}" x2="${(paddingX + drawWidth).toFixed(2)}" y2="${y.toFixed(2)}"></line>`;
-    }).join("");
-
-    const step = Math.ceil(count / 6);
-    const labels = xy
-      .filter((_, i) => i === 0 || i === count - 1 || i % step === 0)
-      .map((_, i) => {
-        const idx = Math.min(i * step, count - 1);
-        const d = new Date();
-        d.setDate(d.getDate() - (count - 1 - idx) * 7);
-        return `S. ${d.getDate()}/${d.getMonth() + 1}`;
-      });
-
-    chartEl.innerHTML = `
-      <svg class="app-evolution-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Évolution des opérations en courbe">
-        <defs>
-          <linearGradient id="app-evolution-area-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#60a5fa" />
-            <stop offset="100%" stop-color="#bfdbfe" />
-          </linearGradient>
-        </defs>
-        ${gridLines}
-        <path class="app-evolution-area" d="${areaPath}"></path>
-        <path class="app-evolution-line" d="${linePath}"></path>
-        ${xy.map((p) => `<circle class="app-evolution-point" cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="3"></circle>`).join("")}
-      </svg>
-      <div class="app-evolution-labels">${labels.map((l) => `<span>${l}</span>`).join("")}</div>
-    `;
-  }
-
   function renderOverviewAlerts(stats) {
     // L'ancien bandeau d'alertes est remplacé par le bouton Notifications du header.
     const alertsEl = document.getElementById("app-overview-alerts");
@@ -3924,7 +3846,6 @@ function initAppDashboard(slug) {
     try {
       const stats = await loadStats();
       if (stats) renderOverviewAlerts(stats);
-      await loadEvolution();
       const recentTx = await loadDashboardRecentHistory();
       renderDashboardRecentHistory(recentTx);
     } catch (_) { return; }
@@ -4002,14 +3923,6 @@ function initAppDashboard(slug) {
         ? "Masquer les indicateurs détaillés"
         : "Afficher les indicateurs détaillés";
     }
-  });
-  dashboardSegmentTabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const segment = tab.dataset.dashboardSegment;
-      if (!segment) return;
-      dashboardSegmentTabs.forEach((t) => t.classList.toggle("active", t === tab));
-      dashboardSegmentPanels.forEach((p) => p.classList.toggle("active", p.dataset.dashboardSegmentPanel === segment));
-    });
   });
   dashboardPeriodPills.forEach((pill) => {
     pill.addEventListener("click", () => {
@@ -4124,11 +4037,6 @@ function initAppDashboard(slug) {
       URL.revokeObjectURL(a.href);
     });
   }
-
-  document.getElementById("app-scanner-scroll-btn")?.addEventListener("click", () => {
-    showAppSection("dashboard");
-    document.getElementById("app-dashboard-scanner-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
 
   const overviewCopyLinkBtn = document.getElementById("app-overview-copy-link");
   if (overviewCopyLinkBtn) {
