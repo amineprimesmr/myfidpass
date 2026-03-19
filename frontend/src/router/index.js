@@ -24,6 +24,7 @@ export function getRoute() {
   if (path === "/cgu") return { type: "legal", page: "cgu" };
   if (path === "/cgv") return { type: "legal", page: "cgv" };
   if (path === "/cookies") return { type: "legal", page: "cookies" };
+  if (path === "/supprimer-compte") return { type: "legal", page: "delete-account" };
   if (path === "/integration") return { type: "integration" };
   if (path === "") return { type: "landing" };
   return { type: "404" };

@@ -147,6 +147,30 @@ export function getCookiesHtml() {
   `;
 }
 
+export function getDeleteAccountHtml() {
+  const e = LEGAL_EDITOR;
+  return `
+    <h1>Supprimer mon compte</h1>
+    <p>Conformément au RGPD et aux exigences des plateformes (App Store, Google Play), vous pouvez demander la suppression définitive de votre compte Myfidpass.</p>
+    <h2>Conséquences</h2>
+    <p>La suppression de votre compte entraînera :</p>
+    <ul>
+      <li>La suppression de vos données personnelles (email, nom, établissement)</li>
+      <li>La suppression de vos cartes fidélité et de leurs paramètres</li>
+      <li>La suppression de la liste des membres et de l'historique des transactions</li>
+      <li>La résiliation de votre abonnement (sans remboursement de la période en cours)</li>
+    </ul>
+    <p><strong>Cette action est irréversible.</strong></p>
+    <h2>Comment procéder</h2>
+    <p>Envoyez un email à <a href="mailto:${e.contact}">${e.contact}</a> avec l'objet « Suppression de compte » et l'adresse email associée à votre compte. Nous traiterons votre demande sous 30 jours.</p>
+    <p>Vous pouvez également vous connecter à votre espace sur <a href="${e.site}/app">${e.site}/app</a>, puis nous contacter depuis les paramètres.</p>
+    <nav class="landing-legal-nav">
+      <a href="/politique-confidentialite">Politique de confidentialité</a>
+      <a href="/">Retour à l'accueil</a>
+    </nav>
+  `;
+}
+
 export function getLegalPageHtml(page) {
   switch (page) {
     case "mentions":
@@ -159,6 +183,8 @@ export function getLegalPageHtml(page) {
       return getCgvHtml();
     case "cookies":
       return getCookiesHtml();
+    case "delete-account":
+      return getDeleteAccountHtml();
     default:
       return "";
   }
