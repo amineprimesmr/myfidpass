@@ -138,7 +138,14 @@ function showOnboardingInSheet(organizationName, placeId) {
   const titleEl = document.getElementById("landing-onboarding-sheet-title");
   const progressEl = document.getElementById("landing-onboarding-sheet-progress");
   const updateTitle = (q) => {
-    if (titleEl && q) titleEl.textContent = q;
+    if (!titleEl || !q) return;
+    titleEl.style.opacity = "0";
+    setTimeout(() => {
+      titleEl.textContent = q;
+      requestAnimationFrame(() => {
+        titleEl.style.opacity = "1";
+      });
+    }, 150);
   };
 
   onboardingController = initBuilderOnboarding({

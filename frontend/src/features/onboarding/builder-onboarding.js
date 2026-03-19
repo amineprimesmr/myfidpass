@@ -110,10 +110,11 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     const currentQuestion = STEP_QUESTIONS[state.currentStep] || "";
     if (typeof onStateChange === "function") onStateChange({ ...state, placeIdHint: currentPlaceIdHint, currentQuestion });
   };
+  let lastDirection = "next";
   function updateState(patch) { state = normalizeState({ ...state, ...patch }, currentPlaceIdHint); emitState(); render(); }
   const goToStep = (n) => updateState({ currentStep: Math.max(0, Math.min(TOTAL_STEPS - 1, n)), goalConfigErrors: {} });
-  const nextStep = () => { if (state.currentStep < TOTAL_STEPS - 1) goToStep(state.currentStep + 1); };
-  const previousStep = () => { if (state.currentStep > 0) goToStep(state.currentStep - 1); };
+  const nextStep = () => { lastDirection = "next"; if (state.currentStep < TOTAL_STEPS - 1) goToStep(state.currentStep + 1); };
+  const previousStep = () => { lastDirection = "prev"; if (state.currentStep > 0) goToStep(state.currentStep - 1); };
 
   async function runGoalAutoSuggest() {
     if (!apiBase || suggestUi.loading) return;
@@ -151,13 +152,13 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
 
   function renderGoalConfigStep() {
     if (!state.engagementGoals.length) return `<p class="builder-onboarding-help">Aucun objectif sélectionné. Continuez.</p>`;
-    const rows = state.engagementGoals.map((goalId) => {
+    const rows = state.engagementGoals.map((goalId, i) => {
       const opt = getGoalOption(goalId); if (!opt) return "";
       const value = String(state.goalConfigs[goalId]?.value || "");
       const error = state.goalConfigErrors[goalId] ? `<p class="builder-onboarding-field-error">${state.goalConfigErrors[goalId]}</p>` : "";
-      return `<div class="builder-onboarding-config-card"><div class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></div><label class="builder-onboarding-input-label" for="builder-goal-config-${goalId}">${opt.inputLabel}</label><input id="builder-goal-config-${goalId}" class="builder-onboarding-input" data-goal-config="${goalId}" type="text" value="${escapeHtml(value)}" placeholder="${escapeHtml(opt.placeholder || "")}" />${error}</div>`;
+      return `<div class="builder-onboarding-config-card" style="--stagger: ${i}"><div class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></div><label class="builder-onboarding-input-label" for="builder-goal-config-${goalId}">${opt.inputLabel}</label><input id="builder-goal-config-${goalId}" class="builder-onboarding-input" data-goal-config="${goalId}" type="text" value="${escapeHtml(value)}" placeholder="${escapeHtml(opt.placeholder || "")}" />${error}</div>`;
     }).join("");
-    return `<p class="builder-onboarding-help">Pré-rempli si possible.</p><div class="builder-onboarding-actions"><button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="autosuggest-goals" ${suggestUi.loading ? "disabled" : ""}>${suggestUi.loading ? "..." : "Détecter"}</button></div>${suggestUi.message ? `<p class="builder-onboarding-autosuggest-feedback ${suggestUi.kind || ""}">${escapeHtml(suggestUi.message)}</p>` : ""}<div class="builder-onboarding-grid builder-onboarding-config-grid">${rows}</div>`;
+    return `<p class="builder-onboarding-help">Pré-rempli si possible.</p><div class="builder-onboarding-actions"><button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="autosuggest-goals" ${suggestUi.loading ? "disabled" : ""}>${suggestUi.loading ? "..." : "Détecter"}</button></div>${suggestUi.message ? `<p class="builder-onboarding-autosuggest-feedback ${suggestUi.kind || ""}">${escapeHtml(suggestUi.message)}</p>` : ""}<div class="builder-onboarding-grid builder-onboarding-config-grid builder-onboarding-grid-animate">${rows}</div>`;
   }
 
   function renderStepContent() {
@@ -168,10 +169,10 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
         : `<p class="builder-onboarding-upload-link"><button type="button" class="builder-onboarding-link" data-action="upload-logo">Importer un logo</button></p>`;
       return `<p class="builder-onboarding-help">PNG ou JPG. Modifiable à tout moment.</p>${actions}${logoBlock}<input type="file" id="builder-onboarding-logo-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="hidden" />`;
     }
-    if (state.currentStep === 1) return `<p class="builder-onboarding-help">Thème ajustable ensuite.</p><div class="builder-onboarding-grid">${STYLE_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" data-style="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
-    if (state.currentStep === 2) return `<p class="builder-onboarding-help">Sélection multiple.</p><div class="builder-onboarding-selected-count">${state.engagementGoals.length > 0 ? `${state.engagementGoals.length} sélectionné${state.engagementGoals.length > 1 ? "s" : ""}` : "Aucun"}</div><div class="builder-onboarding-grid">${GOAL_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div><label class="builder-onboarding-input-label" for="builder-onboarding-goals-free-text">Autre (optionnel)</label><input id="builder-onboarding-goals-free-text" class="builder-onboarding-input" type="text" maxlength="120" value="${escapeHtml(state.goalsFreeText)}" placeholder="Ex. Plus d'avis" />`;
+    if (state.currentStep === 1) return `<p class="builder-onboarding-help">Thème ajustable ensuite.</p><div class="builder-onboarding-grid builder-onboarding-grid-animate">${STYLE_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-style="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
+    if (state.currentStep === 2) return `<p class="builder-onboarding-help">Sélection multiple.</p><div class="builder-onboarding-selected-count">${state.engagementGoals.length > 0 ? `${state.engagementGoals.length} sélectionné${state.engagementGoals.length > 1 ? "s" : ""}` : "Aucun"}</div><div class="builder-onboarding-grid builder-onboarding-grid-animate">${GOAL_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" style="--stagger: ${i}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div><label class="builder-onboarding-input-label" for="builder-onboarding-goals-free-text">Autre (optionnel)</label><input id="builder-onboarding-goals-free-text" class="builder-onboarding-input" type="text" maxlength="120" value="${escapeHtml(state.goalsFreeText)}" placeholder="Ex. Plus d'avis" />`;
     if (state.currentStep === 3) return renderGoalConfigStep();
-    if (state.currentStep === 4) return `<div class="builder-onboarding-grid">${REWARD_OPTIONS.map((opt) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
+    if (state.currentStep === 4) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${REWARD_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     const selectedGoals = state.engagementGoals.map((id) => getGoalOption(id)?.label || "").filter(Boolean); if (state.goalsFreeText.trim()) selectedGoals.push(state.goalsFreeText.trim());
     const configuredGoals = state.engagementGoals.filter((goalId) => String(state.goalConfigs?.[goalId]?.value || "").trim()).length;
     return `<div class="builder-onboarding-recap"><p><strong>Logo :</strong> ${state.logoDataUrl ? "Oui" : "Non"}</p><p><strong>Style :</strong> ${(STYLE_OPTIONS.find((x) => x.id === state.stylePreset) || STYLE_OPTIONS[0]).label}</p><p><strong>Objectifs :</strong> ${selectedGoals.length ? selectedGoals.join(", ") : "Aucun"}</p><p><strong>Liens :</strong> ${configuredGoals}/${state.engagementGoals.length || 0}</p><p><strong>Récompense :</strong> ${(REWARD_OPTIONS.find((x) => x.id === state.rewardModel) || REWARD_OPTIONS[3]).label}</p></div><p class="builder-onboarding-help">Modifiable dans votre espace pro.</p>`;
@@ -190,7 +191,10 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     const content = renderStepContent();
     const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
     const nav = `<div class="builder-onboarding-nav">${nextBtn}</div>`;
-    mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-content">${progressEl ? "" : progressHtml}${content}</div>${nav}</section>`;
+    const dir = lastDirection;
+    mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-content" data-direction="${dir}"><div class="builder-onboarding-content-inner">${progressEl ? "" : progressHtml}${content}</div></div>${nav}</section>`;
+    const contentEl = mountEl.querySelector(".builder-onboarding-content");
+    if (contentEl) contentEl.scrollTop = 0;
     mountEl.querySelector("[data-action='next']")?.addEventListener("click", () => {
       if (state.currentStep === 3) {
         const errors = validateGoalConfigs(state.engagementGoals, state.goalConfigs);

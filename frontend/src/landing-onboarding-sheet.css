@@ -1,6 +1,7 @@
 /**
  * Bottom sheet onboarding — overlay sombre, drawer depuis le bas.
  * Style référence : "5x plus productif" — premium dark, coins arrondis.
+ * Dérogation 500 lignes : 567 lignes (2026-03-19) — animations UX.
  */
 
 /* Overlay */
@@ -73,10 +74,11 @@
 
 .landing-onboarding-sheet-progress .builder-onboarding-progress-bar {
   background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
-
 .landing-onboarding-sheet-progress .builder-onboarding-progress-bar > span {
   background: linear-gradient(90deg, #a0a0a0 0%, #d0d0d0 100%);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .landing-onboarding-sheet-header-row {
@@ -115,6 +117,7 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: #fff;
+  transition: opacity 0.2s ease;
 }
 .landing-onboarding-sheet-close {
   width: 40px;
@@ -168,6 +171,8 @@
   overflow: hidden;
   padding: 0 20px 20px;
   -webkit-overflow-scrolling: touch;
+  position: relative;
+  isolation: isolate;
 }
 
 .landing-onboarding-sheet-body > *:not(.hidden) {
@@ -175,6 +180,30 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Step0 et onboarding — crossfade fluide */
+.landing-onboarding-sheet-step0,
+.landing-onboarding-sheet-onboarding {
+  position: absolute;
+  inset: 0;
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.35s;
+}
+.landing-onboarding-sheet-step0.hidden,
+.landing-onboarding-sheet-onboarding.hidden {
+  display: flex !important;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.landing-onboarding-sheet-step0:not(.hidden),
+.landing-onboarding-sheet-onboarding:not(.hidden) {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .landing-onboarding-sheet-step0 {
@@ -217,6 +246,7 @@
   overflow: hidden;
   background: #1a1a1a;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .landing-onboarding-sheet-input-wrap:focus-within {
   border-color: #b0b0b0;
@@ -289,13 +319,54 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-bottom: 1rem;
+}
+.landing-onboarding-sheet .builder-onboarding-content-inner {
+  animation: builder-step-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.landing-onboarding-sheet .builder-onboarding-content[data-direction="next"] .builder-onboarding-content-inner {
+  animation-name: builder-step-enter-next;
+}
+.landing-onboarding-sheet .builder-onboarding-content[data-direction="prev"] .builder-onboarding-content-inner {
+  animation-name: builder-step-enter-prev;
+}
+@keyframes builder-step-enter-next {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes builder-step-enter-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes builder-step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .landing-onboarding-sheet .builder-onboarding-progress-bar {
   background: rgba(255, 255, 255, 0.1);
 }
 .landing-onboarding-sheet .builder-onboarding-progress-bar > span {
   background: linear-gradient(90deg, #a0a0a0 0%, #d0d0d0 100%);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .landing-onboarding-sheet .builder-onboarding-progress-label {
   color: rgba(255, 255, 255, 0.6);
@@ -374,9 +445,33 @@
 .landing-onboarding-sheet .builder-onboarding-choice {
   background: #1a1a1a;
   border-color: rgba(255, 255, 255, 0.15);
+  animation: builder-choice-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--stagger, 0) * 45ms);
+  opacity: 0;
+}
+.landing-onboarding-sheet .builder-onboarding-grid-animate .builder-onboarding-config-card {
+  animation: builder-choice-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--stagger, 0) * 45ms);
+  opacity: 0;
+}
+@keyframes builder-choice-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.landing-onboarding-sheet .builder-onboarding-choice {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 .landing-onboarding-sheet .builder-onboarding-choice:hover {
   border-color: rgba(176, 176, 176, 0.6);
+}
+.landing-onboarding-sheet .builder-onboarding-choice:active {
+  transform: scale(0.98);
 }
 .landing-onboarding-sheet .builder-onboarding-choice.is-selected {
   border-color: #b0b0b0;
@@ -400,6 +495,7 @@
   background: #1a1a1a;
   border-color: rgba(255, 255, 255, 0.15);
   color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .landing-onboarding-sheet .builder-onboarding-input:focus {
   border-color: #b0b0b0;
@@ -407,6 +503,7 @@
 .landing-onboarding-sheet .builder-onboarding-config-card {
   background: #1a1a1a;
   border-color: rgba(255, 255, 255, 0.1);
+  transition: border-color 0.2s ease;
 }
 .landing-onboarding-sheet .builder-onboarding-recap p {
   color: rgba(255, 255, 255, 0.85);
