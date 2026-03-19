@@ -180,11 +180,17 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
 
   function renderStepContent() {
     if (state.currentStep === 0) {
-      const logoBlock = state.logoDataUrl ? `<div class="builder-onboarding-logo-preview"><img src="${escapeHtml(state.logoDataUrl)}" alt="Apercu logo"></div>` : "";
-      const actions = state.logoDataUrl
-        ? ""
-        : `<p class="builder-onboarding-upload-link"><button type="button" class="builder-onboarding-link" data-action="upload-logo">Importer un logo</button></p>`;
-      return `<p class="builder-onboarding-help">PNG ou JPG. Modifiable à tout moment.</p>${actions}${logoBlock}<input type="file" id="builder-onboarding-logo-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="hidden" />`;
+      const placeholderCls = state.logoDataUrl ? "hidden" : "";
+      const previewCls = state.logoDataUrl ? "" : "hidden";
+      const previewSrc = state.logoDataUrl ? escapeHtml(state.logoDataUrl) : "";
+      return `<p class="builder-onboarding-help">PNG ou JPG. Modifiable à tout moment.</p>
+<div class="builder-onboarding-logo-drop-zone" id="builder-onboarding-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+  <input type="file" id="builder-onboarding-logo-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="builder-onboarding-file-hidden" aria-hidden="true" />
+  <label for="builder-onboarding-logo-input" class="builder-onboarding-logo-label">
+    <span class="builder-onboarding-logo-placeholder ${placeholderCls}">+ Glisser une image ou cliquer (PNG, JPG)</span>
+    <img id="builder-onboarding-logo-preview" class="builder-onboarding-logo-preview-img ${previewCls}" src="${previewSrc}" alt="Aperçu logo" />
+  </label>
+</div>`;
     }
     if (state.currentStep === 1) return `<p class="builder-onboarding-help">Thème ajustable ensuite.</p><div class="builder-onboarding-grid builder-onboarding-grid-animate">${STYLE_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-style="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     if (state.currentStep === 2) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${GOAL_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" style="--stagger: ${i}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div><label class="builder-onboarding-input-label" for="builder-onboarding-goals-free-text">Autre (optionnel)</label><input id="builder-onboarding-goals-free-text" class="builder-onboarding-input" type="text" maxlength="120" value="${escapeHtml(state.goalsFreeText)}" placeholder="Ex. Plus d'avis" />`;
@@ -221,8 +227,15 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
       if (state.currentStep === TOTAL_STEPS - 1) { updateState({ completed: true }); if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint }); return; }
       nextStep();
     });
-    mountEl.querySelector("[data-action='upload-logo']")?.addEventListener("click", () => mountEl.querySelector("#builder-onboarding-logo-input")?.click());
-    mountEl.querySelector("#builder-onboarding-logo-input")?.addEventListener("change", async (event) => { const file = event.target?.files?.[0]; if (!file) return; const dataUrl = await fileToResizedDataUrl(file); if (!dataUrl) return; updateState({ logoDataUrl: dataUrl }); if (typeof onLogoChange === "function") onLogoChange(dataUrl); nextStep(); });
+    const processLogoFile = async (file) => { if (!file || !file.type.startsWith("image/")) return; const dataUrl = await fileToResizedDataUrl(file); if (!dataUrl) return; updateState({ logoDataUrl: dataUrl }); if (typeof onLogoChange === "function") onLogoChange(dataUrl); nextStep(); };
+    mountEl.querySelector("#builder-onboarding-logo-input")?.addEventListener("change", (e) => { const file = e.target?.files?.[0]; if (file) processLogoFile(file); });
+    const logoDropZone = mountEl.querySelector("#builder-onboarding-logo-drop-zone");
+    if (logoDropZone) {
+      logoDropZone.addEventListener("dragover", (e) => { e.preventDefault(); e.stopPropagation(); logoDropZone.classList.add("builder-onboarding-logo-drop-active"); });
+      logoDropZone.addEventListener("dragleave", (e) => { if (!logoDropZone.contains(e.relatedTarget)) logoDropZone.classList.remove("builder-onboarding-logo-drop-active"); });
+      logoDropZone.addEventListener("drop", (e) => { e.preventDefault(); e.stopPropagation(); logoDropZone.classList.remove("builder-onboarding-logo-drop-active"); const file = e.dataTransfer?.files?.[0]; if (file) processLogoFile(file); });
+      logoDropZone.addEventListener("paste", (e) => { const item = Array.from(e.clipboardData?.items || []).find((i) => i.type.startsWith("image/")); const file = item?.getAsFile?.(); if (file) { e.preventDefault(); processLogoFile(file); } });
+    }
     mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "modern"; updateState({ stylePreset }, { skipRender: true }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
     mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.addEventListener("click", () => { const goalId = btn.getAttribute("data-goal"); if (!goalId) return; const already = state.engagementGoals.includes(goalId); const goals = already ? state.engagementGoals.filter((id) => id !== goalId) : [...state.engagementGoals, goalId]; updateState({ engagementGoals: goals, goalConfigs: normalizeGoalConfigs(goals, state.goalConfigs, currentPlaceIdHint), goalConfigErrors: {} }, { skipRender: true }); }));
     mountEl.querySelector("#builder-onboarding-goals-free-text")?.addEventListener("input", (event) => updateState({ goalsFreeText: event.target?.value || "" }, { skipRender: true }));

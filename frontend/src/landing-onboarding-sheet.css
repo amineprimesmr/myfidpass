@@ -389,6 +389,55 @@
   margin: 0.5rem 0 1rem;
 }
 
+/* Zone drag-and-drop logo (étape 0) — même UX que personnalisation */
+.landing-onboarding-sheet .builder-onboarding-logo-drop-zone {
+  outline: none;
+  margin: 1rem 0;
+}
+.landing-onboarding-sheet .builder-onboarding-file-hidden {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.landing-onboarding-sheet .builder-onboarding-logo-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  padding: 1.25rem;
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.04);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.landing-onboarding-sheet .builder-onboarding-logo-label:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+.landing-onboarding-sheet .builder-onboarding-logo-drop-zone.builder-onboarding-logo-drop-active .builder-onboarding-logo-label {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+}
+.landing-onboarding-sheet .builder-onboarding-logo-placeholder {
+  text-align: center;
+}
+.landing-onboarding-sheet .builder-onboarding-logo-placeholder.hidden {
+  display: none;
+}
+.landing-onboarding-sheet .builder-onboarding-logo-preview-img {
+  max-width: 200px;
+  max-height: 80px;
+  object-fit: contain;
+}
+.landing-onboarding-sheet .builder-onboarding-logo-preview-img.hidden {
+  display: none;
+}
+
 /* Contenu card beam (après Terminer) — continuité logique dans le sheet */
 .landing-onboarding-card-beam {
   display: flex;
