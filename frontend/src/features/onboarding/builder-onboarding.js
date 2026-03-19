@@ -2,6 +2,7 @@
  * Onboarding de personnalisation pour le builder (questions progressives).
  * Le module reste UI-only et délègue la persistance au parent.
  */
+import { setDevBypassPayment } from "../../config.js";
 
 const TOTAL_STEPS = 6;
 
@@ -138,7 +139,7 @@ function normalizeState(input = {}, placeIdHint = "") {
   };
 }
 
-export function initBuilderOnboarding({ mountEl, progressEl, initialState, organizationName, apiBase, placeIdHint, onStateChange, onLogoChange, onStyleChange, onRewardChange, onComplete, getAuthToken, setAuthToken, onAccountCreated }) {
+export function initBuilderOnboarding({ mountEl, progressEl, initialState, organizationName, apiBase, placeIdHint, onStateChange, onLogoChange, onStyleChange, onRewardChange, onComplete, onDevBypass }) {
   if (!mountEl) return null;
   let currentPlaceIdHint = String(placeIdHint || "");
   let state = normalizeState(initialState, currentPlaceIdHint);
@@ -256,7 +257,8 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     }
     const content = renderStepContent();
     const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
-    const nav = `<div class="builder-onboarding-nav">${nextBtn}</div>`;
+    const devBypassBtn = state.currentStep === 5 ? `<p class="builder-onboarding-dev-bypass-wrap"><button type="button" class="builder-onboarding-dev-bypass-btn" data-action="dev-bypass">Mode dev (simuler paiement)</button></p>` : "";
+    const nav = `<div class="builder-onboarding-nav">${nextBtn}${devBypassBtn}</div>`;
     const dir = lastDirection;
     mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-content" data-direction="${dir}"><div class="builder-onboarding-content-inner">${progressEl ? "" : progressHtml}${content}</div></div>${nav}</section>`;
     const contentEl = mountEl.querySelector(".builder-onboarding-content");
@@ -289,6 +291,13 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }, { skipRender: true }); }));
     mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }, { skipRender: true }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
 
+    mountEl.querySelector("[data-action='dev-bypass']")?.addEventListener("click", () => {
+      updateState({ completed: true });
+      if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
+      setDevBypassPayment(true);
+      if (typeof onDevBypass === "function") onDevBypass();
+      else window.location.href = "/app";
+    });
   }
 
   render(); emitState();

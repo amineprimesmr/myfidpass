@@ -795,6 +795,26 @@
   color: #2563eb;
 }
 
+/* Mode dev : simuler paiement (étape 5) */
+.builder-onboarding-dev-bypass-wrap {
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #cbd5e1;
+  text-align: center;
+}
+.builder-onboarding-dev-bypass-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.25rem 0.5rem;
+}
+.builder-onboarding-dev-bypass-btn:hover {
+  color: #3b82f6;
+}
+
 /* Tablette : drawer centré, plus large */
 @media (min-width: 641px) {
   .landing-onboarding-sheet-drawer {
