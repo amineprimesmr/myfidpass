@@ -5,6 +5,7 @@
 import { API_BASE, getAuthHeaders, clearAuthToken, isDevBypassPayment } from "../config.js";
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
+import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
 
 const IS_LOCALHOST =
   typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
