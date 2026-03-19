@@ -308,7 +308,7 @@ const APP_SECTION_IDS = ["dashboard", "membres", "historique", "personnaliser", 
 const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
   "personnaliser": "Ma Carte",
-  "notifications": "Notifications",
+  "notifications": "Campagnes",
   "carte-perimetre": "Emplacement",
   "engagement": "Avis & Réseaux",
   "profil": "Profil",
@@ -580,7 +580,7 @@ function initAppDashboard(slug) {
         dashboardNotifCountEl.textContent = String(newMembers);
         dashboardNotifCountEl.classList.remove("hidden");
       } else {
-        if (notifLabelEl) notifLabelEl.textContent = "Notifications";
+        if (notifLabelEl) notifLabelEl.textContent = "Campagnes";
         dashboardNotifCountEl.classList.add("hidden");
       }
     });
