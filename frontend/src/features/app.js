@@ -4310,8 +4310,8 @@ function initAppDashboard(slug) {
         const membersCount = data.membersCount != null ? data.membersCount : 0;
         if (membersCount > 0 || total > 0) {
           membersSummaryEl.innerHTML = total > 0
-            ? `<strong>Notifications :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#notifications" class="app-link-inline">Envoyer une notification →</a>`
-            : `<strong>Notifications :</strong> tu as ${membersCount} membre(s). La carte peut être bien dans le Wallet, mais <strong>aucun iPhone ne nous a encore envoyé son enregistrement</strong> — donc on ne peut pas envoyer de notifications push. Ce n’est pas que tu n’as pas la carte ; c’est que notre serveur n’a reçu le signal d’aucun appareil. <a href="#notifications" class="app-link-inline">Voir le diagnostic →</a>`;
+            ? `<strong>Campagnes :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#notifications" class="app-link-inline">Envoyer une campagne →</a>`
+            : `<strong>Campagnes :</strong> tu as ${membersCount} membre(s). La carte peut être bien dans le Wallet, mais <strong>aucun iPhone ne nous a encore envoyé son enregistrement</strong> — donc on ne peut pas envoyer de notifications push. Ce n’est pas que tu n’as pas la carte ; c’est que notre serveur n’a reçu le signal d’aucun appareil. <a href="#notifications" class="app-link-inline">Voir le diagnostic →</a>`;
           membersSummaryEl.classList.remove("hidden");
         } else {
           membersSummaryEl.classList.add("hidden");
