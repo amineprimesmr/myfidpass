@@ -6,7 +6,7 @@
 const TOTAL_STEPS = 6;
 const STEP_QUESTIONS = [
   "Avez-vous un logo ?",
-  "Quel style de carte vous ressemble le plus ?",
+  "Choisissez votre carte",
   "Quels objectifs pour vos clients ?",
   "Configurez vos liens",
   "Quel type de récompense ?",
