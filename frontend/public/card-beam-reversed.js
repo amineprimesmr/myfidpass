@@ -43,7 +43,7 @@ class CardStreamController {
 
   calculateDimensions() {
     this.containerWidth = this.container.offsetWidth;
-    const cardWidth = 400;
+    const cardWidth = 260;
     const cardGap = 60;
     const cardCount = this.cardLine.children.length;
     this.cardLineWidth = (cardWidth + cardGap) * cardCount;
@@ -286,17 +286,17 @@ class CardStreamController {
     const cardImage = document.createElement("img");
     cardImage.className = "card-image";
     cardImage.src = cardImages[index % cardImages.length];
-    cardImage.alt = "Credit Card";
+    cardImage.alt = "Carte";
     cardImage.onerror = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = 400;
-      canvas.height = 250;
+      canvas.width = 260;
+      canvas.height = 400;
       const ctx = canvas.getContext("2d");
-      const gradient = ctx.createLinearGradient(0, 0, 400, 250);
+      const gradient = ctx.createLinearGradient(0, 0, 260, 400);
       gradient.addColorStop(0, "#667eea");
       gradient.addColorStop(1, "#764ba2");
       ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 400, 250);
+      ctx.fillRect(0, 0, 260, 400);
       cardImage.src = canvas.toDataURL();
     };
 
@@ -309,7 +309,7 @@ class CardStreamController {
     asciiContent.className = "ascii-content";
 
     const { width, height, fontSize, lineHeight } =
-      this.calculateCodeDimensions(400, 250);
+      this.calculateCodeDimensions(260, 400);
     asciiContent.style.fontSize = fontSize + "px";
     asciiContent.style.lineHeight = lineHeight + "px";
     asciiContent.textContent = this.generateCode(width, height);
@@ -382,7 +382,7 @@ class CardStreamController {
   updateAsciiContent() {
     document.querySelectorAll(".ascii-content").forEach((content) => {
       if (Math.random() < 0.15) {
-        const { width, height } = this.calculateCodeDimensions(400, 250);
+        const { width, height } = this.calculateCodeDimensions(260, 400);
         content.textContent = this.generateCode(width, height);
       }
     });
@@ -449,16 +449,16 @@ class CardStreamController {
     }
 
     normalCard.innerHTML = `
-      <div style="display:flex;flex-direction:column;width:100%;height:100%;border-radius:15px;overflow:hidden;background:linear-gradient(180deg,${headerBg} 0%,${bodyBg} 100%);color:${fg}">
-        <div style="padding:12px 16px;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0">${logoHtml}${orgName ? `<span style="font-size:10px;opacity:0.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${orgName}</span>` : ""}</div>
-        <div style="flex:1;padding:16px 20px;display:flex;align-items:center">${bodyHtml}</div>
+      <div style="display:flex;flex-direction:column;width:100%;height:100%;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,${headerBg} 0%,${bodyBg} 100%);color:${fg}">
+        <div style="padding:14px 12px;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex-shrink:0">${logoHtml}${orgName ? `<span style="font-size:12px;font-weight:600;opacity:0.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${orgName}</span>` : ""}</div>
+        <div style="flex:1;padding:20px 16px;display:flex;align-items:center;justify-content:center">${bodyHtml}</div>
       </div>`;
 
     const asciiCard = document.createElement("div");
     asciiCard.className = "card card-ascii";
     const asciiContent = document.createElement("div");
     asciiContent.className = "ascii-content";
-    const { width, height, fontSize, lineHeight } = this.calculateCodeDimensions(400, 250);
+    const { width, height, fontSize, lineHeight } = this.calculateCodeDimensions(260, 400);
     asciiContent.style.fontSize = fontSize + "px";
     asciiContent.style.lineHeight = lineHeight + "px";
     asciiContent.textContent = this.generateCode(width, height);
@@ -523,8 +523,8 @@ class ParticleSystem {
     this.camera = new THREE.OrthographicCamera(
       -window.innerWidth / 2,
       window.innerWidth / 2,
-      125,
-      -125,
+      210,
+      -210,
       1,
       1000
     );
@@ -535,7 +535,7 @@ class ParticleSystem {
       alpha: true,
       antialias: true,
     });
-    this.renderer.setSize(window.innerWidth, 250);
+    this.renderer.setSize(window.innerWidth, 420);
     this.renderer.setClearColor(0x000000, 0);
 
     this.createParticles();
@@ -575,7 +575,7 @@ class ParticleSystem {
 
     for (let i = 0; i < this.particleCount; i++) {
       positions[i * 3] = (Math.random() - 0.5) * window.innerWidth * 2;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 250;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 420;
       positions[i * 3 + 2] = 0;
 
       colors[i * 3] = 1;
@@ -652,7 +652,7 @@ class ParticleSystem {
 
         if (positions[i * 3] < -window.innerWidth / 2 - 100) {
           positions[i * 3] = window.innerWidth / 2 + 100;
-          positions[i * 3 + 1] = (Math.random() - 0.5) * 250;
+          positions[i * 3 + 1] = (Math.random() - 0.5) * 420;
         }
 
         positions[i * 3 + 1] += Math.sin(time + i * 0.1) * 0.5;
@@ -679,7 +679,7 @@ class ParticleSystem {
     this.camera.right = window.innerWidth / 2;
     this.camera.updateProjectionMatrix();
 
-    this.renderer.setSize(window.innerWidth, 250);
+    this.renderer.setSize(window.innerWidth, 420);
   }
 
   destroy() {
@@ -701,7 +701,7 @@ class ParticleScanner {
     this.animationId = null;
 
     this.w = window.innerWidth;
-    this.h = 300;
+    this.h = 450;
     this.particles = [];
     this.count = 0;
     this.maxParticles = 800;
