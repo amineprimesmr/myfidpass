@@ -123,6 +123,10 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
   function updateChoiceSelectionOnly() {
     if (state.currentStep === 1) {
       mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.classList.toggle("is-selected", btn.getAttribute("data-style") === state.stylePreset));
+    } else if (state.currentStep === 2) {
+      mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.classList.toggle("is-selected", state.engagementGoals.includes(btn.getAttribute("data-goal"))));
+      const countEl = mountEl.querySelector(".builder-onboarding-selected-count");
+      if (countEl) countEl.textContent = state.engagementGoals.length > 0 ? `${state.engagementGoals.length} sélectionné${state.engagementGoals.length > 1 ? "s" : ""}` : "Aucun";
     } else if (state.currentStep === 4) {
       mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.classList.toggle("is-selected", btn.getAttribute("data-reward") === state.rewardModel));
     }
@@ -222,8 +226,8 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     mountEl.querySelector("[data-action='upload-logo']")?.addEventListener("click", () => mountEl.querySelector("#builder-onboarding-logo-input")?.click());
     mountEl.querySelector("#builder-onboarding-logo-input")?.addEventListener("change", async (event) => { const file = event.target?.files?.[0]; if (!file) return; const dataUrl = await fileToResizedDataUrl(file); if (!dataUrl) return; updateState({ logoDataUrl: dataUrl }); if (typeof onLogoChange === "function") onLogoChange(dataUrl); nextStep(); });
     mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "modern"; updateState({ stylePreset }, { skipRender: true }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
-    mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.addEventListener("click", () => { const goalId = btn.getAttribute("data-goal"); if (!goalId) return; const already = state.engagementGoals.includes(goalId); const goals = already ? state.engagementGoals.filter((id) => id !== goalId) : [...state.engagementGoals, goalId]; updateState({ engagementGoals: goals, goalConfigs: normalizeGoalConfigs(goals, state.goalConfigs, currentPlaceIdHint), goalConfigErrors: {} }); }));
-    mountEl.querySelector("#builder-onboarding-goals-free-text")?.addEventListener("input", (event) => updateState({ goalsFreeText: event.target?.value || "" }));
+    mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.addEventListener("click", () => { const goalId = btn.getAttribute("data-goal"); if (!goalId) return; const already = state.engagementGoals.includes(goalId); const goals = already ? state.engagementGoals.filter((id) => id !== goalId) : [...state.engagementGoals, goalId]; updateState({ engagementGoals: goals, goalConfigs: normalizeGoalConfigs(goals, state.goalConfigs, currentPlaceIdHint), goalConfigErrors: {} }, { skipRender: true }); }));
+    mountEl.querySelector("#builder-onboarding-goals-free-text")?.addEventListener("input", (event) => updateState({ goalsFreeText: event.target?.value || "" }, { skipRender: true }));
     mountEl.querySelector("[data-action='autosuggest-goals']")?.addEventListener("click", runGoalAutoSuggest);
     mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }, { skipRender: true }); }));
     mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }, { skipRender: true }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
