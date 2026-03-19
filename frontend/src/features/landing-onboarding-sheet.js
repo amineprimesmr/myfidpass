@@ -192,6 +192,31 @@ export function initOnboardingSheet() {
   backdrop?.addEventListener("click", close);
   closeBtn?.addEventListener("click", close);
 
+  const backBtn = document.getElementById("landing-onboarding-sheet-back");
+  backBtn?.addEventListener("click", () => {
+    const step0 = document.getElementById("landing-onboarding-sheet-step0");
+    const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
+    const titleEl = document.getElementById("landing-onboarding-sheet-title");
+    const progressEl = document.getElementById("landing-onboarding-sheet-progress");
+    if (step0 && !step0.classList.contains("hidden")) {
+      close();
+      return;
+    }
+    if (onboardingController && onboardingMount) {
+      const state = onboardingController.getState();
+      if (state.currentStep > 0) {
+        onboardingController.previousStep();
+      } else {
+        step0?.classList.remove("hidden");
+        onboardingMount.classList.add("hidden");
+        onboardingMount.innerHTML = "";
+        onboardingController = null;
+        if (titleEl) titleEl.textContent = "Nom de votre établissement";
+        if (progressEl) progressEl.innerHTML = "";
+      }
+    }
+  });
+
   form?.addEventListener("submit", (e) => {
     e.preventDefault();
     const input = document.getElementById("onboarding-sheet-etablissement");
