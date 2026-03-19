@@ -351,7 +351,7 @@ class CardStreamController {
       const normalCard = wrapper.querySelector(".card-normal");
       const asciiCard = wrapper.querySelector(".card-ascii");
 
-      if (cardRight < scannerLeft && !this.fullyRevealed) {
+      if (cardLeft > scannerRight && !this.fullyRevealed) {
         this.setFullyRevealed();
         return;
       }
