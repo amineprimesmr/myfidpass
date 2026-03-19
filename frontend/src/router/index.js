@@ -17,8 +17,7 @@ export function getRoute() {
   if (path === "/register") return { type: "auth", tab: "login" };
   if (path === "/creer-ma-carte") return { type: "landing", openOnboarding: true };
   if (path === "/choisir-offre") return { type: "offers" };
-  if (path === "/creation-carte") return { type: "creation-carte" };
-  if (path === "/checkout") return { type: "checkout" };
+  if (path === "/checkout" || path === "/creation-carte") return { type: "redirect-stripe" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
   if (path === "/cgu") return { type: "legal", page: "cgu" };
@@ -39,8 +38,6 @@ function getContainers() {
     authApp: document.getElementById("auth-app"),
     appApp: document.getElementById("app-app"),
     offersApp: document.getElementById("offers-app"),
-    creationCarteApp: document.getElementById("creation-carte-app"),
-    checkoutApp: document.getElementById("checkout-app"),
     builderHeader: document.getElementById("builder-header"),
     page404: document.getElementById("page-404"),
     landingMain: document.getElementById("landing-main"),
@@ -124,14 +121,13 @@ export async function initRouting() {
   const route = getRoute();
   const c = getContainers();
 
-  document.body.classList.toggle("page-checkout", route.type === "checkout");
   document.body.classList.toggle("page-app", route.type === "app");
   document.body.classList.remove("page-builder");
 
   if (c.page404) c.page404.classList.add("hidden");
 
   const hideAll = () => {
-    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.authApp, c.appApp, c.offersApp, c.checkoutApp].forEach((el) => {
+    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.authApp, c.appApp, c.offersApp].forEach((el) => {
       if (el) el.classList.add("hidden");
     });
     if (c.builderHeader) c.builderHeader.classList.add("hidden");
@@ -165,32 +161,8 @@ export async function initRouting() {
     return null;
   }
 
-  if (route.type === "creation-carte") {
-    hideAll();
-    if (c.creationCarteApp) {
-      c.creationCarteApp.classList.remove("hidden");
-    }
-    const page = await loadPage("creation-carte");
-    await page.init(route);
-    return null;
-  }
-
-  if (route.type === "checkout") {
-    hideAll();
-    if (c.checkoutApp) {
-      c.checkoutApp.classList.remove("hidden");
-      c.checkoutApp.classList.add("checkout-with-builder-header");
-      triggerRouteViewEnter(c.checkoutApp);
-    }
-    if (c.builderApp) c.builderApp.classList.remove("hidden");
-    if (c.builderHeader) {
-      c.builderHeader.classList.remove("hidden");
-      c.builderHeader.setAttribute("aria-hidden", "false");
-      setBuilderHeaderStep(3);
-      attachBuilderHeaderNavForCheckout();
-    }
-    const page = await loadPage("checkout");
-    await page.init(route);
+  if (route.type === "redirect-stripe") {
+    window.location.href = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
     return null;
   }
 

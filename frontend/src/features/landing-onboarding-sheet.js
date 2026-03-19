@@ -3,8 +3,10 @@
  * Utilise le nom d'établissement du hero. Onboarding builder (logo, style, objectifs, etc.).
  * Étape 5 : « Votre carte est prête » (animation seule). Étape 6 : « Créez votre compte » (formulaire).
  */
-import { API_BASE, getAuthToken, setAuthToken } from "../config.js";
+import { API_BASE } from "../config.js";
 import { initRouting } from "../router/index.js";
+
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";
 import { BUILDER_DRAFT_KEY, CARD_TEMPLATES } from "../constants/builder.js";
 
@@ -68,10 +70,8 @@ export function closeOnboardingSheet() {
   onboardingController = null;
 }
 
-function goToCheckout() {
-  closeOnboardingSheet();
-  history.pushState({}, "", "/checkout");
-  initRouting();
+function redirectToStripe() {
+  window.location.href = STRIPE_PAYMENT_LINK;
 }
 
 function showOnboardingInSheet(organizationName, placeId) {
@@ -129,13 +129,7 @@ function showOnboardingInSheet(organizationName, placeId) {
     onRewardChange: () => {},
     onComplete(nextState) {
       saveDraftAndMaybeShowBeam(nextState);
-      goToCheckout();
-    },
-    getAuthToken,
-    setAuthToken,
-    onAccountCreated(nextState) {
-      saveDraftAndMaybeShowBeam(nextState);
-      goToCheckout();
+      redirectToStripe();
     },
   });
 }

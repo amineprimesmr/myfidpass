@@ -523,6 +523,12 @@
   color: #334155;
   text-align: center;
 }
+.builder-onboarding-card-beam-pay-desc {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-align: center;
+}
 
 /* Contenu card beam (après Terminer) — continuité logique dans le sheet */
 .landing-onboarding-card-beam {

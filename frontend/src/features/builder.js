@@ -2,6 +2,8 @@
  * Page créateur de carte (templates, brouillon, panier). Dérogation temporaire : > 400 lignes, à découper. REFONTE-REGLES.md.
  */
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
+
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 import { API_BASE, getAuthToken, setAuthToken } from "../config.js";
 import { setBuilderHeaderStep, initRouting, navigateToLanding } from "../router/index.js";
 import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";
@@ -94,8 +96,7 @@ function initBuilderPage() {
         history.pushState({}, "", "/");
         initRouting();
       } else if (n === 3) {
-        history.pushState({}, "", "/checkout");
-        initRouting();
+        window.location.href = STRIPE_PAYMENT_LINK;
       }
     });
   });
@@ -526,25 +527,7 @@ function initBuilderPage() {
         state.onboarding = { ...nextOnboardingState, completed: true };
         applyOnboardingTemplatePreset(state.onboarding.stylePreset);
         saveDraft();
-        onboardingRoot.classList.add("hidden");
-        builderRoot?.classList.remove("builder-onboarding-active");
-        setBuilderHeaderVisibility(true);
-        setBuilderHeaderStep(1);
-        history.pushState({}, "", "/checkout");
-        initRouting();
-      },
-      getAuthToken,
-      setAuthToken,
-      onAccountCreated(nextOnboardingState) {
-        state.onboarding = { ...nextOnboardingState, completed: true };
-        applyOnboardingTemplatePreset(state.onboarding.stylePreset);
-        saveDraft();
-        onboardingRoot.classList.add("hidden");
-        builderRoot?.classList.remove("builder-onboarding-active");
-        setBuilderHeaderVisibility(true);
-        setBuilderHeaderStep(1);
-        history.pushState({}, "", "/checkout");
-        initRouting();
+        window.location.href = STRIPE_PAYMENT_LINK;
       },
     });
   }
@@ -699,22 +682,21 @@ function initBuilderPage() {
     }
   }
 
-  function goToCheckout() {
+  function goToPayment() {
     if (state.onboarding?.completed !== true && shouldShowOnboarding) {
       onboardingRoot?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    history.pushState({}, "", "/checkout");
-    initRouting();
+    window.location.href = STRIPE_PAYMENT_LINK;
   }
 
-  btnSubmit?.addEventListener("click", goToCheckout);
+  btnSubmit?.addEventListener("click", goToPayment);
 
   const stickyCta = document.getElementById("builder-sticky-cta");
   const stickyChange = document.getElementById("builder-sticky-change");
   const optionsWrap = document.getElementById("builder-options-wrap");
 
-  stickyCta?.addEventListener("click", goToCheckout);
+  stickyCta?.addEventListener("click", goToPayment);
   stickyChange?.addEventListener("click", () => {
     optionsWrap?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
@@ -727,7 +709,7 @@ function initBuilderPage() {
   });
   cartContinue?.addEventListener("click", () => {
     closeCart();
-    window.location.replace("/checkout");
+    window.location.href = STRIPE_PAYMENT_LINK;
   });
 }
 

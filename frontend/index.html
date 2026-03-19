@@ -19,7 +19,6 @@
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
-    <link rel="stylesheet" href="/src/creation-carte.css" />
     <link rel="stylesheet" href="/src/landing-onboarding-sheet.css" />
     <link rel="stylesheet" href="/src/landing-testimonials-faq.css" />
     <link rel="stylesheet" href="/src/landing-trust.css" />
@@ -48,7 +47,7 @@
               <button type="button" class="builder-header-step" data-step="3" aria-label="Étape 3">3</button>
             </nav>
             <div class="builder-header-right">
-              <a href="/checkout" class="builder-header-cart" aria-label="Panier">
+              <a href="https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01" class="builder-header-cart" aria-label="Paiement" target="_blank" rel="noopener">
                 <svg class="builder-header-cart-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                   <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
@@ -245,204 +244,8 @@
       </main>
     </div>
 
-    <!-- Page création de carte (animation card beam après onboarding) -->
-    <div id="creation-carte-app" class="hidden creation-carte-shell">
-      <div class="creation-carte-inner">
-        <h1 class="creation-carte-title">Création de votre carte</h1>
-        <p class="creation-carte-subtitle">Votre carte fidélité est en cours de préparation…</p>
-        <div class="creation-carte-beam-wrap">
-          <iframe
-            class="creation-carte-beam-frame"
-            src="/card-beam-reversed.html"
-            title="Animation création carte"
-            referrerpolicy="strict-origin-when-cross-origin"
-          ></iframe>
-        </div>
-        <a href="/checkout" class="creation-carte-cta" id="creation-carte-cta">Voir ma carte</a>
-      </div>
-    </div>
+    <!-- Checkout supprimé : redirection directe vers Stripe Payment Link -->
 
-    <!-- Checkout (style WHOOP) : 2 colonnes = étapes à gauche, panier à droite -->
-    <div id="checkout-app" class="hidden checkout-shell">
-      <header class="checkout-header">
-        <div class="checkout-header-inner">
-          <a href="/" class="checkout-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
-        </div>
-      </header>
-      <main class="checkout-main" data-mobile-step="0">
-        <div class="checkout-main-left">
-          <div class="checkout-title-row">
-            <a href="/creer-ma-carte" id="checkout-mobile-back" class="checkout-mobile-only checkout-mobile-back" aria-label="Retour">← Retour</a>
-            <h1 class="checkout-title">REJOINDRE FIDPASS</h1>
-            <span class="checkout-badge">CHECKOUT</span>
-          </div>
-          <div class="checkout-steps">
-            <section class="checkout-step checkout-step-open" id="checkout-step-1" data-step="1">
-              <h2 class="checkout-step-title">1. CRÉATION DE COMPTE</h2>
-              <p class="checkout-commerce-context">Compte pour <strong id="checkout-commerce-context-name" class="checkout-commerce-context-name">—</strong></p>
-              <p class="checkout-step-subtitle">Saisissez votre adresse e-mail pour continuer.</p>
-              <p class="checkout-have-account"><a href="/login?redirect=/checkout" class="checkout-login-link">Déjà un compte ? Se connecter</a></p>
-              <p id="checkout-oauth-error" class="checkout-field-error checkout-oauth-error hidden" role="alert"></p>
-              <div class="checkout-step-content">
-                <p class="checkout-social-divider">Ou continuer avec</p>
-                <div class="checkout-social-buttons">
-                  <div id="checkout-google-btn" class="checkout-social-btn-wrap"></div>
-                  <button type="button" id="checkout-apple-btn" class="checkout-btn-social checkout-btn-apple" aria-label="Continuer avec Apple">
-                    <span class="checkout-btn-apple-icon" aria-hidden="true"></span>
-                    Apple
-                  </button>
-                </div>
-                <p class="checkout-email-divider">Ou avec votre e-mail</p>
-                <label for="checkout-email" class="checkout-label">Adresse e-mail</label>
-                <input type="email" id="checkout-email" class="checkout-input" placeholder="vous@exemple.fr" autocomplete="email" />
-                <p id="checkout-email-error" class="checkout-field-error hidden" role="alert"></p>
-                <button type="button" id="checkout-next-1" class="checkout-btn-next" disabled>SUIVANT</button>
-              </div>
-            </section>
-            <section class="checkout-step" id="checkout-step-2" data-step="2">
-              <h2 class="checkout-step-title">2. CRÉER VOTRE MOT DE PASSE</h2>
-              <p class="checkout-commerce-context checkout-commerce-context-step2">Pour <strong id="checkout-commerce-context-name-step2" class="checkout-commerce-context-name">—</strong></p>
-              <div class="checkout-step-content">
-                <label class="checkout-label">Mot de passe (8 caractères minimum)</label>
-                <input type="password" id="checkout-password" class="checkout-input" placeholder="••••••••" autocomplete="new-password" minlength="8" />
-                <label class="checkout-label">Votre nom (optionnel)</label>
-                <input type="text" id="checkout-name" class="checkout-input" placeholder="Prénom ou nom du gérant" autocomplete="name" />
-                <button type="button" id="checkout-next-2" class="checkout-btn-next">SUIVANT</button>
-              </div>
-            </section>
-            <section class="checkout-step" id="checkout-step-3" data-step="3">
-              <h2 class="checkout-step-title">3. ENTRER LE MODE DE PAIEMENT</h2>
-              <div class="checkout-step-content">
-                <p id="checkout-already-logged-in-hint" class="checkout-already-logged-in hidden" role="status">Vous êtes déjà connecté. Procédez au paiement ci-dessous. <a href="#" id="checkout-logout-link">Créer un autre compte ? Se déconnecter et reprendre à l’étape 1</a></p>
-                <p class="checkout-step-desc">Vous serez redirigé vers notre partenaire de paiement sécurisé.</p>
-                <button type="button" id="checkout-payment" class="checkout-btn-payment">
-                  <span class="checkout-btn-payment-main">Commencer pour 0 €</span>
-                  <span class="checkout-btn-payment-sub">7 jours gratuits · puis 49 €/mois</span>
-                </button>
-                <p id="checkout-error" class="checkout-error hidden"></p>
-              </div>
-            </section>
-          </div>
-        </div>
-        <aside class="checkout-main-right" aria-label="Détails de la commande">
-          <div class="checkout-order-card">
-            <h2 class="checkout-order-title">Récapitulatif</h2>
-            <section class="checkout-order-section checkout-recap-section" id="checkout-recap-section">
-              <div class="checkout-recap-commerce-block">
-                <span class="checkout-recap-commerce-label">Votre établissement</span>
-                <p id="checkout-recap-commerce" class="checkout-recap-commerce-name">—</p>
-              </div>
-              <ul class="checkout-recap-list">
-                <li class="checkout-recap-row"><span class="checkout-recap-label">Modèle</span><span id="checkout-recap-template" class="checkout-recap-value">—</span></li>
-                <li class="checkout-recap-row"><span class="checkout-recap-label">Type</span><span id="checkout-recap-type" class="checkout-recap-value">—</span></li>
-                <li class="checkout-recap-row"><span class="checkout-recap-label">Catégorie</span><span id="checkout-recap-category" class="checkout-recap-value">—</span></li>
-              </ul>
-              <p class="checkout-recap-edit"><a href="/creer-ma-carte" class="checkout-recap-edit-link">Modifier ma sélection</a></p>
-            </section>
-            <section class="checkout-order-section">
-              <h3 class="checkout-order-section-title">Votre tarif Myfidpass</h3>
-              <ul class="checkout-order-list">
-                <li class="checkout-order-item">
-                  <span class="checkout-order-item-icon" aria-hidden="true">📱</span>
-                  <div class="checkout-order-item-content">
-                    <span class="checkout-order-item-name">Carte de fidélité</span>
-                    <span class="checkout-order-item-desc">7 jours gratuits · puis 49 €/mois sans engagement</span>
-                    <span class="checkout-order-item-qty">Qté : 1</span>
-                  </div>
-                  <span class="checkout-order-item-price">
-                    <span class="checkout-order-item-price-main">0 €</span>
-                    <span class="checkout-order-item-price-sub">7 jours gratuits</span>
-                    <span class="checkout-order-item-price-then">puis 49 €/mois</span>
-                  </span>
-                </li>
-              </ul>
-            </section>
-            <section class="checkout-order-section">
-              <h3 class="checkout-order-section-title">Inclus dans votre tarif</h3>
-              <ul class="checkout-order-list checkout-order-list-included">
-                <li class="checkout-order-item">
-                  <span class="checkout-order-item-icon" aria-hidden="true">🖥️</span>
-                  <div class="checkout-order-item-content">
-                    <span class="checkout-order-item-name">Accès logiciel</span>
-                    <span class="checkout-order-item-desc">Tableau de bord complet en ligne</span>
-                  </div>
-                  <span class="checkout-order-item-free">Offert</span>
-                </li>
-                <li class="checkout-order-item">
-                  <span class="checkout-order-item-icon" aria-hidden="true">📲</span>
-                  <div class="checkout-order-item-content">
-                    <span class="checkout-order-item-name">Application Myfidpass</span>
-                    <span class="checkout-order-item-desc">Gérez vos clients depuis partout</span>
-                  </div>
-                  <span class="checkout-order-item-free">Offert</span>
-                </li>
-                <li class="checkout-order-item">
-                  <span class="checkout-order-item-icon" aria-hidden="true">👥</span>
-                  <div class="checkout-order-item-content">
-                    <span class="checkout-order-item-name">Données clients</span>
-                    <span class="checkout-order-item-desc">Historique des passages et points</span>
-                  </div>
-                  <span class="checkout-order-item-free">Offert</span>
-                </li>
-                <li class="checkout-order-item">
-                  <span class="checkout-order-item-icon" aria-hidden="true">📊</span>
-                  <div class="checkout-order-item-content">
-                    <span class="checkout-order-item-name">Statistiques et rapports</span>
-                    <span class="checkout-order-item-desc">Suivez la fidélisation en temps réel</span>
-                  </div>
-                  <span class="checkout-order-item-free">Offert</span>
-                </li>
-                <li class="checkout-order-item">
-                  <span class="checkout-order-item-icon" aria-hidden="true">✓</span>
-                  <div class="checkout-order-item-content">
-                    <span class="checkout-order-item-name">Sans engagement</span>
-                    <span class="checkout-order-item-desc">Résiliez quand vous voulez</span>
-                  </div>
-                  <span class="checkout-order-item-free">Offert</span>
-                </li>
-              </ul>
-            </section>
-            <div class="checkout-order-summary">
-              <div class="checkout-order-summary-row checkout-order-summary-start">
-                <span class="checkout-order-summary-label">Commencer pour</span>
-                <span class="checkout-order-summary-value checkout-order-summary-value-zero">0 €</span>
-              </div>
-              <p class="checkout-order-trial checkout-order-trial-main">7 jours gratuits</p>
-              <p class="checkout-order-trial checkout-order-trial-then">puis 49 €/mois. Sans engagement.</p>
-            </div>
-            <p class="checkout-mobile-only checkout-order-cta-hint">Ensuite : création de compte (e-mail)</p>
-            <button type="button" id="checkout-mobile-continue" class="checkout-mobile-only checkout-order-cta">CONTINUER</button>
-          </div>
-        </aside>
-      </main>
-      <footer class="checkout-footer">
-        <a href="/" class="checkout-footer-logo">Myfidpass</a>
-        <p class="checkout-footer-copy">© 2026 Myfidpass</p>
-        <nav class="checkout-footer-links">
-          <a href="/mentions-legales">Mentions légales</a>
-          <a href="/politique-confidentialite">Politique de confidentialité</a>
-          <a href="/cgu">CGU</a>
-          <a href="/cgv">CGV</a>
-          <a href="/cookies">Cookies</a>
-        </nav>
-      </footer>
-    </div>
-
-    <!-- Page 404 : URL inconnue -->
-    <div id="page-404" class="hidden unified-shell" aria-hidden="true" role="main">
-      <div class="landing-header-outer">
-        <header class="landing-header landing-header-bar">
-          <div class="landing-header-inner">
-            <a href="/" class="landing-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
-          </div>
-        </header>
-      </div>
-      <main class="unified-main" style="max-width: 36rem; margin: 4rem auto; padding: 2rem; text-align: center;">
-        <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Page introuvable</h1>
-        <p style="color: var(--muted, #64748b); margin-bottom: 1.5rem;">Cette page n'existe pas ou a été déplacée.</p>
-        <a href="/" class="landing-btn landing-btn-primary">Retour à l'accueil</a>
-      </main>
-    </div>
 
     <!-- App connectée : interface logiciel (sans bannière ni menu haut) -->
     <div id="app-app" class="hidden app-unified-shell">

@@ -3,13 +3,10 @@
  * Le module reste UI-only et délègue la persistance au parent.
  */
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 6;
 
-function isValidEmailForAccount(email) {
-  if (!email || typeof email !== "string") return false;
-  const s = email.trim();
-  return s.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-}
+/** Lien Stripe Payment Link — redirection directe pour le paiement */
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 
 const STEP_QUESTIONS = [
   "Avez-vous un logo ?",
@@ -18,7 +15,6 @@ const STEP_QUESTIONS = [
   "Configurez vos liens",
   "Quel type de récompense ?",
   "Votre carte est prête",
-  "Créez votre compte",
 ];
 const STYLE_OPTIONS = [
   { id: "points", label: "Système de points", hint: "Montant cumulé converti en points" },
@@ -241,32 +237,16 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
       return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${rewardOpts.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     }
     if (state.currentStep === 5) {
-      return `<div class="builder-onboarding-card-beam-step"><div class="builder-onboarding-card-beam-wrap"><iframe class="builder-onboarding-card-beam-frame" src="/card-beam-reversed.html" title="Animation création carte" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="builder-onboarding-card-beam-hint">Votre carte fidélité est prête</p></div>`;
-    }
-    const hasAccountForm = typeof onAccountCreated === "function" || (apiBase != null && typeof apiBase === "string");
-    if (state.currentStep === 6 && hasAccountForm) {
-      const googleClientId = (typeof import.meta.env?.VITE_GOOGLE_CLIENT_ID === "string" && import.meta.env.VITE_GOOGLE_CLIENT_ID.trim()) ? import.meta.env.VITE_GOOGLE_CLIENT_ID.trim() : "";
-      const appleClientId = (typeof import.meta.env?.VITE_APPLE_CLIENT_ID === "string" && import.meta.env.VITE_APPLE_CLIENT_ID.trim()) ? import.meta.env.VITE_APPLE_CLIENT_ID.trim() : "";
-      const googleBtn = googleClientId ? `<div id="builder-onboarding-google-btn" class="landing-onboarding-google-wrap"></div>` : `<button type="button" class="landing-onboarding-btn-apple builder-onboarding-social-placeholder" disabled title="Configurez VITE_GOOGLE_CLIENT_ID sur Vercel"><span class="builder-onboarding-social-icon builder-onboarding-social-icon-google" aria-hidden="true">G</span>Continuer avec Google</button>`;
-      const appleBtn = appleClientId ? `<button type="button" id="builder-onboarding-apple-btn" class="landing-onboarding-btn-apple" aria-label="Continuer avec Apple"><span class="landing-onboarding-apple-icon" aria-hidden="true"></span>Continuer avec Apple</button>` : `<button type="button" class="landing-onboarding-btn-apple builder-onboarding-social-placeholder" disabled title="Configurez VITE_APPLE_CLIENT_ID sur Vercel"><span class="landing-onboarding-apple-icon" aria-hidden="true"></span>Continuer avec Apple</button>`;
-      const socialBlock = `<div class="builder-onboarding-account-social-row">${googleBtn}${appleBtn}</div>`;
-      const emailDivider = `<p class="landing-onboarding-account-divider">Ou avec votre e-mail</p>`;
-      const emailBlock = `${emailDivider}<label for="builder-onboarding-email" class="landing-onboarding-account-label">Email</label><input type="email" id="builder-onboarding-email" class="landing-onboarding-account-input" placeholder="vous@exemple.fr" autocomplete="email" /><label for="builder-onboarding-password" class="landing-onboarding-account-label">Mot de passe (8 caractères min.)</label><input type="password" id="builder-onboarding-password" class="landing-onboarding-account-input" placeholder="••••••••" autocomplete="new-password" minlength="8" /><button type="button" id="builder-onboarding-register-btn" class="builder-onboarding-btn builder-onboarding-btn-primary">Créer mon compte</button>`;
-      const alreadyLoggedIn = typeof getAuthToken === "function" && getAuthToken();
-      const skipLink = alreadyLoggedIn ? `<p class="builder-onboarding-account-skip"><button type="button" class="builder-onboarding-link" data-action="account-continue">Déjà connecté ? Voir ma carte</button></p>` : "";
-      return `<div class="landing-onboarding-account-form builder-onboarding-account-step"><p class="landing-onboarding-account-title">Créez votre compte</p><p id="builder-onboarding-account-error" class="landing-onboarding-account-error hidden" role="alert"></p>${socialBlock}${emailBlock}${skipLink}</div>`;
+      return `<div class="builder-onboarding-card-beam-step"><div class="builder-onboarding-card-beam-wrap"><iframe class="builder-onboarding-card-beam-frame" src="/card-beam-reversed.html" title="Animation création carte" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="builder-onboarding-card-beam-hint">Votre carte fidélité est prête</p><p class="builder-onboarding-card-beam-pay-desc">Paiement sécurisé pour accéder à votre espace pro.</p></div>`;
     }
     return `<div class="builder-onboarding-account-step"><p class="builder-onboarding-help">Cliquez sur Terminer pour continuer.</p></div>`;
   }
 
   function getNavButtonLabel() {
-    if (state.currentStep === 5) return "Créer mon compte";
+    if (state.currentStep === 5) return "Accéder au paiement";
     if (state.currentStep === TOTAL_STEPS - 1) return "Terminer";
     if (state.currentStep === 0 && !state.logoDataUrl) return "Passer";
     return "Continuer";
-  }
-  function shouldShowNav() {
-    return state.currentStep !== 6;
   }
   function render() {
     const pct = ((state.currentStep + 1) / TOTAL_STEPS) * 100;
@@ -276,7 +256,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     }
     const content = renderStepContent();
     const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
-    const nav = shouldShowNav() ? `<div class="builder-onboarding-nav">${nextBtn}</div>` : "";
+    const nav = `<div class="builder-onboarding-nav">${nextBtn}</div>`;
     const dir = lastDirection;
     mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-content" data-direction="${dir}"><div class="builder-onboarding-content-inner">${progressEl ? "" : progressHtml}${content}</div></div>${nav}</section>`;
     const contentEl = mountEl.querySelector(".builder-onboarding-content");
@@ -286,8 +266,12 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
         const errors = validateGoalConfigs(state.engagementGoals, state.goalConfigs);
         if (Object.keys(errors).length > 0) { updateState({ goalConfigErrors: errors }); return; }
       }
-      if (state.currentStep === 5) { nextStep(); return; }
-      if (state.currentStep === TOTAL_STEPS - 1) { updateState({ completed: true }); if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint }); return; }
+      if (state.currentStep === TOTAL_STEPS - 1) {
+        updateState({ completed: true });
+        if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
+        window.location.href = STRIPE_PAYMENT_LINK;
+        return;
+      }
       nextStep();
     });
     const processLogoFile = async (file) => { if (!file || !file.type.startsWith("image/")) return; const dataUrl = await fileToResizedDataUrl(file); if (!dataUrl) return; updateState({ logoDataUrl: dataUrl }); if (typeof onLogoChange === "function") onLogoChange(dataUrl); nextStep(); };
@@ -305,95 +289,6 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }, { skipRender: true }); }));
     mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }, { skipRender: true }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
 
-    if (state.currentStep === 6 && (typeof onAccountCreated === "function" || (apiBase != null && typeof apiBase === "string"))) {
-      bindAccountFormHandlers();
-    }
-  }
-
-  function bindAccountFormHandlers() {
-    mountEl.querySelector("[data-action='account-continue']")?.addEventListener("click", () => {
-      if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
-      if (typeof onAccountCreated === "function") onAccountCreated({ ...state, placeIdHint: currentPlaceIdHint });
-    });
-    const base = String(apiBase || "").replace(/\/$/, "");
-    const errorEl = document.getElementById("builder-onboarding-account-error");
-    const emailInput = document.getElementById("builder-onboarding-email");
-    const passwordInput = document.getElementById("builder-onboarding-password");
-    const registerBtn = document.getElementById("builder-onboarding-register-btn");
-    const googleClientId = typeof import.meta.env?.VITE_GOOGLE_CLIENT_ID === "string" ? import.meta.env.VITE_GOOGLE_CLIENT_ID : "";
-    const appleClientId = typeof import.meta.env?.VITE_APPLE_CLIENT_ID === "string" ? import.meta.env.VITE_APPLE_CLIENT_ID : "";
-
-    function showError(msg) {
-      if (errorEl) { errorEl.textContent = msg || ""; errorEl.classList.toggle("hidden", !msg); }
-    }
-
-    function onSuccess() {
-      if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
-      if (typeof onAccountCreated === "function") onAccountCreated({ ...state, placeIdHint: currentPlaceIdHint });
-    }
-
-    registerBtn?.addEventListener("click", async () => {
-      const email = emailInput?.value?.trim() || "";
-      const password = passwordInput?.value || "";
-      if (!email) { showError("Saisissez votre adresse e-mail."); emailInput?.focus(); return; }
-      if (!isValidEmailForAccount(email)) { showError("Adresse e-mail invalide."); emailInput?.focus(); return; }
-      if (!password || password.length < 8) { showError("Le mot de passe doit faire au moins 8 caractères."); passwordInput?.focus(); return; }
-      showError("");
-      registerBtn.disabled = true;
-      try {
-        const res = await fetch(`${base}/api/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) { showError(data.error || "Erreur lors de la création du compte."); registerBtn.disabled = false; return; }
-        if (data.token && typeof setAuthToken === "function") { setAuthToken(data.token); onSuccess(); } else { showError("Erreur inattendue."); registerBtn.disabled = false; }
-      } catch (_) { showError("Erreur réseau. Réessayez."); registerBtn.disabled = false; }
-    });
-
-    if (googleClientId) {
-      const googleWrap = document.getElementById("builder-onboarding-google-btn");
-      if (googleWrap && !window.__fidpassBuilderGoogleInited) {
-        window.__fidpassBuilderGoogleInited = true;
-        const script = document.createElement("script");
-        script.src = "https://accounts.google.com/gsi/client";
-        script.async = true;
-        script.onload = () => {
-          if (typeof google !== "undefined" && google.accounts?.id) {
-            google.accounts.id.initialize({
-              client_id: googleClientId,
-              callback: (res) => {
-                if (!res?.credential) return;
-                showError("");
-                fetch(`${base}/api/auth/google`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: res.credential }) })
-                  .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
-                  .then(({ ok, data }) => {
-                    if (ok && data?.token && typeof setAuthToken === "function") { setAuthToken(data.token); onSuccess(); } else { showError(data?.error || "Erreur lors de la connexion Google."); }
-                  })
-                  .catch(() => showError("Erreur réseau. Réessayez."));
-              },
-            });
-            google.accounts.id.renderButton(googleWrap, { type: "standard", theme: "outline", size: "large", text: "continue_with", width: 260, locale: "fr" });
-          }
-        };
-        document.head.appendChild(script);
-      }
-    }
-
-    const appleBtn = document.getElementById("builder-onboarding-apple-btn");
-    if (appleClientId && appleBtn) {
-      appleBtn.addEventListener("click", () => {
-        showError("");
-        const redirectBase = base || (typeof window !== "undefined" && /myfidpass\.fr$/i.test(window.location.hostname) ? "https://api.myfidpass.fr" : window.location.origin);
-        const redirectUri = redirectBase + (redirectBase.endsWith("/") ? "" : "/") + "api/auth/apple-redirect";
-        window.location.href = "https://appleid.apple.com/auth/authorize?" + new URLSearchParams({
-          client_id: appleClientId,
-          redirect_uri: redirectUri,
-          response_type: "id_token code",
-          scope: "name email",
-          response_mode: "form_post",
-          state: "checkout",
-          nonce: Math.random().toString(36).slice(2) + Date.now().toString(36),
-        }).toString();
-      });
-    }
   }
 
   render(); emitState();
