@@ -17,6 +17,7 @@ export function getRoute() {
   if (path === "/register") return { type: "auth", tab: "login" };
   if (path === "/creer-ma-carte") return { type: "landing", openOnboarding: true };
   if (path === "/choisir-offre") return { type: "offers" };
+  if (path === "/creation-carte") return { type: "creation-carte" };
   if (path === "/checkout") return { type: "checkout" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
@@ -37,6 +38,7 @@ function getContainers() {
     authApp: document.getElementById("auth-app"),
     appApp: document.getElementById("app-app"),
     offersApp: document.getElementById("offers-app"),
+    creationCarteApp: document.getElementById("creation-carte-app"),
     checkoutApp: document.getElementById("checkout-app"),
     builderHeader: document.getElementById("builder-header"),
     page404: document.getElementById("page-404"),
@@ -158,6 +160,16 @@ export async function initRouting() {
     hideAll();
     if (c.authApp) c.authApp.classList.remove("hidden");
     const page = await loadPage("auth");
+    await page.init(route);
+    return null;
+  }
+
+  if (route.type === "creation-carte") {
+    hideAll();
+    if (c.creationCarteApp) {
+      c.creationCarteApp.classList.remove("hidden");
+    }
+    const page = await loadPage("creation-carte");
     await page.init(route);
     return null;
   }

@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
+    <link rel="stylesheet" href="/src/creation-carte.css" />
     <link rel="stylesheet" href="/src/landing-onboarding-sheet.css" />
     <link rel="stylesheet" href="/src/landing-testimonials-faq.css" />
     <link rel="stylesheet" href="/src/landing-trust.css" />
@@ -242,6 +243,23 @@
           </article>
         </div>
       </main>
+    </div>
+
+    <!-- Page création de carte (animation card beam après onboarding) -->
+    <div id="creation-carte-app" class="hidden creation-carte-shell">
+      <div class="creation-carte-inner">
+        <h1 class="creation-carte-title">Création de votre carte</h1>
+        <p class="creation-carte-subtitle">Votre carte fidélité est en cours de préparation…</p>
+        <div class="creation-carte-beam-wrap">
+          <iframe
+            class="creation-carte-beam-frame"
+            src="https://codepen.io/blacklead-studio/full/xbwaqxE"
+            title="Animation création carte"
+            referrerpolicy="strict-origin-when-cross-origin"
+          ></iframe>
+        </div>
+        <a href="/checkout" class="creation-carte-cta" id="creation-carte-cta">Voir ma carte</a>
+      </div>
     </div>
 
     <!-- Checkout (style WHOOP) : 2 colonnes = étapes à gauche, panier à droite -->

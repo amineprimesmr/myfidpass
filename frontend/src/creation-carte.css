@@ -1,0 +1,80 @@
+/**
+ * Page création de carte — affichée après "Terminer" dans l'onboarding.
+ * Réutilise l'animation card beam de la landing.
+ */
+.creation-carte-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #020617;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.creation-carte-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.creation-carte-title {
+  margin: 0 0 0.5rem;
+  font-family: "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 800;
+  color: #f8fafc;
+  text-align: center;
+}
+
+.creation-carte-subtitle {
+  margin: 0 0 1.5rem;
+  font-size: 1rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.creation-carte-beam-wrap {
+  position: relative;
+  width: 100%;
+  height: min(55vh, 420px);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.creation-carte-beam-frame {
+  position: absolute;
+  top: -80px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 160px);
+  border: 0;
+  background: #020617;
+}
+
+.creation-carte-cta {
+  margin-top: 2rem;
+  padding: 16px 40px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #020617;
+  background: linear-gradient(180deg, #ffffff 0%, #e2e6eb 100%);
+  border: none;
+  border-radius: 9999px;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.creation-carte-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}

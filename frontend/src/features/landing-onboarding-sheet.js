@@ -127,7 +127,7 @@ function showOnboardingInSheet(organizationName, placeId) {
         localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify(payload));
       } catch (_) {}
       closeOnboardingSheet();
-      history.pushState({}, "", "/checkout");
+      history.pushState({}, "", "/creation-carte");
       initRouting();
     },
   });
