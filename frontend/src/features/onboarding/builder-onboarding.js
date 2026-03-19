@@ -4,7 +4,7 @@
  */
 import { setDevBypassPayment } from "../../config.js";
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 4;
 
 /** Lien Stripe Payment Link — redirection directe pour le paiement */
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
@@ -13,8 +13,6 @@ const STEP_QUESTIONS = [
   "Avez-vous un logo ?",
   "Choisissez votre carte",
   "Quels objectifs pour vos clients ?",
-  "Configurez vos liens",
-  "Quel type de récompense ?",
   "Votre carte est prête",
 ];
 const STYLE_OPTIONS = [
@@ -163,8 +161,6 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
       mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.classList.toggle("is-selected", btn.getAttribute("data-style") === state.stylePreset));
     } else if (state.currentStep === 2) {
       mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.classList.toggle("is-selected", state.engagementGoals.includes(btn.getAttribute("data-goal"))));
-    } else if (state.currentStep === 4) {
-      mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.classList.toggle("is-selected", btn.getAttribute("data-reward") === state.rewardModel));
     }
   }
   const goToStep = (n) => updateState({ currentStep: Math.max(0, Math.min(TOTAL_STEPS - 1, n)), goalConfigErrors: {} });
@@ -232,19 +228,14 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     }
     if (state.currentStep === 1) return `<p class="builder-onboarding-help">Modifiable dans votre espace pro.</p><div class="builder-onboarding-style-grid builder-onboarding-grid-animate">${STYLE_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-style-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-style="${opt.id}"><span class="builder-onboarding-style-mockup-wrap">${renderStyleMockup(opt)}</span><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     if (state.currentStep === 2) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${GOAL_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" style="--stagger: ${i}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span></button>`).join("")}</div>`;
-    if (state.currentStep === 3) return renderGoalConfigStep();
-    if (state.currentStep === 4) {
-      const rewardOpts = getRewardOptions(state.stylePreset);
-      return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${rewardOpts.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
-    }
-    if (state.currentStep === 5) {
+    if (state.currentStep === 3) {
       return `<div class="builder-onboarding-card-beam-step"><div class="builder-onboarding-card-beam-wrap"><iframe class="builder-onboarding-card-beam-frame" src="/card-beam-reversed.html" title="Animation création carte" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="builder-onboarding-card-beam-hint">Votre carte fidélité est prête</p><p class="builder-onboarding-card-beam-pay-desc">Paiement sécurisé pour accéder à votre espace pro.</p></div>`;
     }
     return `<div class="builder-onboarding-account-step"><p class="builder-onboarding-help">Cliquez sur Terminer pour continuer.</p></div>`;
   }
 
   function getNavButtonLabel() {
-    if (state.currentStep === 5) return "Accéder au paiement";
+    if (state.currentStep === 3) return "Accéder au paiement";
     if (state.currentStep === TOTAL_STEPS - 1) return "Terminer";
     if (state.currentStep === 0 && !state.logoDataUrl) return "Passer";
     return "Continuer";
@@ -257,17 +248,13 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     }
     const content = renderStepContent();
     const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
-    const devBypassBtn = state.currentStep === 5 ? `<p class="builder-onboarding-dev-bypass-wrap"><button type="button" class="builder-onboarding-dev-bypass-btn" data-action="dev-bypass">Mode dev (simuler paiement)</button></p>` : "";
+    const devBypassBtn = state.currentStep === 3 ? `<p class="builder-onboarding-dev-bypass-wrap"><button type="button" class="builder-onboarding-dev-bypass-btn" data-action="dev-bypass">Mode dev (simuler paiement)</button></p>` : "";
     const nav = `<div class="builder-onboarding-nav">${nextBtn}${devBypassBtn}</div>`;
     const dir = lastDirection;
     mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-content" data-direction="${dir}"><div class="builder-onboarding-content-inner">${progressEl ? "" : progressHtml}${content}</div></div>${nav}</section>`;
     const contentEl = mountEl.querySelector(".builder-onboarding-content");
     if (contentEl) contentEl.scrollTop = 0;
     mountEl.querySelector("[data-action='next']")?.addEventListener("click", () => {
-      if (state.currentStep === 3) {
-        const errors = validateGoalConfigs(state.engagementGoals, state.goalConfigs);
-        if (Object.keys(errors).length > 0) { updateState({ goalConfigErrors: errors }); return; }
-      }
       if (state.currentStep === TOTAL_STEPS - 1) {
         updateState({ completed: true });
         if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
@@ -287,9 +274,6 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     }
     mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "points"; updateState({ stylePreset }, { skipRender: true }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
     mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.addEventListener("click", () => { const goalId = btn.getAttribute("data-goal"); if (!goalId) return; const already = state.engagementGoals.includes(goalId); const goals = already ? state.engagementGoals.filter((id) => id !== goalId) : [...state.engagementGoals, goalId]; updateState({ engagementGoals: goals, goalConfigs: normalizeGoalConfigs(goals, state.goalConfigs, currentPlaceIdHint), goalConfigErrors: {} }, { skipRender: true }); }));
-    mountEl.querySelector("[data-action='autosuggest-goals']")?.addEventListener("click", runGoalAutoSuggest);
-    mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }, { skipRender: true }); }));
-    mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }, { skipRender: true }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
 
     mountEl.querySelector("[data-action='dev-bypass']")?.addEventListener("click", () => {
       updateState({ completed: true });
