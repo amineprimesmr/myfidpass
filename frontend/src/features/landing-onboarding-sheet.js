@@ -1,6 +1,6 @@
 /**
  * Bottom sheet onboarding — overlay sur la landing, drawer depuis le bas.
- * Step 0 : établissement. Puis onboarding builder (logo, style, objectifs, etc.).
+ * Utilise le nom d'établissement du hero. Onboarding builder (logo, style, objectifs, etc.).
  */
 import { API_BASE } from "../config.js";
 import { initRouting } from "../router/index.js";
@@ -43,34 +43,12 @@ function computeSelectedTemplateId(stylePreset, rewardModel) {
   return "fastfood-tampons";
 }
 
-function initPlacesOnInput(input, placeIdHidden) {
-  if (typeof google === "undefined" || !google.maps?.places || input?.dataset?.placesInit) return;
-  try {
-    const frBounds = new google.maps.LatLngBounds(
-      new google.maps.LatLng(41.0, -5.5),
-      new google.maps.LatLng(51.2, 9.6)
-    );
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      types: ["establishment"],
-      fields: ["name", "formatted_address", "place_id"],
-      bounds: frBounds,
-      strictBounds: false,
-    });
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (place.name) input.value = place.name;
-      if (placeIdHidden) placeIdHidden.value = place.place_id || "";
-    });
-    input.dataset.placesInit = "1";
-  } catch (_) {}
-}
-
 let onboardingController = null;
 
 export function openOnboardingSheet() {
   const sheet = document.getElementById("landing-onboarding-sheet");
-  const body = document.getElementById("landing-onboarding-sheet-body");
-  if (!sheet || !body) return;
+  const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
+  if (!sheet || !onboardingMount) return;
 
   const menuOverlay = document.getElementById("landing-menu-overlay");
   if (menuOverlay?.classList.contains("is-open")) {
@@ -83,39 +61,12 @@ export function openOnboardingSheet() {
   sheet.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
 
-  const titleEl = document.getElementById("landing-onboarding-sheet-title");
-  const progressEl = document.getElementById("landing-onboarding-sheet-progress");
-  if (titleEl) titleEl.textContent = "Nom de votre établissement";
-  if (progressEl) progressEl.innerHTML = "";
+  const heroInput = document.getElementById("landing-etablissement");
+  const heroPlaceId = document.getElementById("landing-place-id");
+  const organizationName = heroInput?.value?.trim() || "votre établissement";
+  const placeId = heroPlaceId?.value?.trim() || "";
 
-  const step0 = document.getElementById("landing-onboarding-sheet-step0");
-  const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
-
-  if (step0 && onboardingMount) {
-    step0.classList.remove("hidden");
-    onboardingMount.classList.add("hidden");
-    onboardingMount.innerHTML = "";
-
-    const input = document.getElementById("onboarding-sheet-etablissement");
-    const placeIdInput = document.getElementById("onboarding-sheet-place-id");
-    const submitBtn = document.getElementById("onboarding-sheet-submit");
-
-    if (input && placeIdInput && submitBtn) {
-      const heroInput = document.getElementById("landing-etablissement");
-      const heroPlaceId = document.getElementById("landing-place-id");
-      if (heroInput?.value?.trim()) {
-        input.value = heroInput.value;
-        if (heroPlaceId?.value) placeIdInput.value = heroPlaceId.value;
-      }
-      submitBtn.disabled = !input.value?.trim();
-
-      input.addEventListener("input", () => {
-        submitBtn.disabled = !input.value?.trim();
-      });
-
-      initPlacesOnInput(input, placeIdInput);
-    }
-  }
+  showOnboardingInSheet(organizationName, placeId);
 }
 
 export function closeOnboardingSheet() {
@@ -128,12 +79,10 @@ export function closeOnboardingSheet() {
 }
 
 function showOnboardingInSheet(organizationName, placeId) {
-  const step0 = document.getElementById("landing-onboarding-sheet-step0");
   const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
-  if (!step0 || !onboardingMount) return;
+  if (!onboardingMount) return;
 
-  step0.classList.add("hidden");
-  onboardingMount.classList.remove("hidden");
+  onboardingMount.innerHTML = "";
 
   const titleEl = document.getElementById("landing-onboarding-sheet-title");
   const progressEl = document.getElementById("landing-onboarding-sheet-progress");
@@ -187,7 +136,6 @@ function showOnboardingInSheet(organizationName, placeId) {
 export function initOnboardingSheet() {
   const sheet = document.getElementById("landing-onboarding-sheet");
   const backdrop = document.getElementById("landing-onboarding-sheet-backdrop");
-  const form = document.getElementById("landing-onboarding-sheet-form");
 
   if (!sheet) return;
 
@@ -199,36 +147,16 @@ export function initOnboardingSheet() {
 
   const backBtn = document.getElementById("landing-onboarding-sheet-back");
   backBtn?.addEventListener("click", () => {
-    const step0 = document.getElementById("landing-onboarding-sheet-step0");
     const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
-    const titleEl = document.getElementById("landing-onboarding-sheet-title");
-    const progressEl = document.getElementById("landing-onboarding-sheet-progress");
-    if (step0 && !step0.classList.contains("hidden")) {
-      close();
-      return;
-    }
     if (onboardingController && onboardingMount) {
       const state = onboardingController.getState();
       if (state.currentStep > 0) {
         onboardingController.previousStep();
       } else {
-        step0?.classList.remove("hidden");
-        onboardingMount.classList.add("hidden");
-        onboardingMount.innerHTML = "";
-        onboardingController = null;
-        if (titleEl) titleEl.textContent = "Nom de votre établissement";
-        if (progressEl) progressEl.innerHTML = "";
+        close();
       }
+    } else {
+      close();
     }
-  });
-
-  form?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("onboarding-sheet-etablissement");
-    const placeIdInput = document.getElementById("onboarding-sheet-place-id");
-    const name = input?.value?.trim();
-    const placeId = placeIdInput?.value?.trim();
-    if (!name) return;
-    showOnboardingInSheet(name, placeId);
   });
 }
