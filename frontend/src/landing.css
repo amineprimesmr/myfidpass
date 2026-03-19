@@ -3638,6 +3638,72 @@ body.page-builder #builder-app main.landing-builder {
 .builder-onboarding .builder-onboarding-logo-preview-img.hidden {
   display: none;
 }
+/* Grille style (points/tampons) — cartes plus grandes avec mini maquette */
+.builder-onboarding .builder-onboarding-style-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+.builder-onboarding .builder-onboarding-style-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem;
+  min-height: 140px;
+  text-align: center;
+}
+.builder-onboarding .builder-onboarding-style-mockup-wrap {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.builder-onboarding .builder-onboarding-style-mockup {
+  width: 100%;
+  max-width: 140px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.builder-onboarding .builder-onboarding-style-mockup .builder-wallet-card-header {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.5rem;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.builder-onboarding .builder-onboarding-style-mockup .builder-onboarding-mockup-logo {
+  font-size: 0.45rem;
+  font-weight: 600;
+  opacity: 0.95;
+}
+.builder-onboarding .builder-onboarding-style-mockup .builder-wallet-card-body {
+  padding: 0.4rem 0.5rem;
+  min-height: 48px;
+}
+.builder-onboarding .builder-onboarding-style-mockup .builder-wallet-card-pts-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.builder-onboarding .builder-onboarding-style-mockup .builder-wallet-card-label {
+  font-size: 0.35rem;
+}
+.builder-onboarding .builder-onboarding-style-mockup .builder-wallet-card-stamps-row .stamp {
+  font-size: 0.5rem;
+}
+.builder-onboarding .builder-onboarding-style-mockup .builder-wallet-card-stamps-grid {
+  gap: 1px;
+  margin: 0.05rem 0;
+}
+.builder-onboarding .builder-onboarding-style-mockup .builder-onboarding-mockup-reward,
+.builder-onboarding .builder-onboarding-style-mockup .builder-onboarding-mockup-restants {
+  font-size: 0.3rem;
+  opacity: 0.9;
+  margin-top: 0.2rem;
+}
 .builder-onboarding-recap p {
   margin: 0 0 0.45rem;
   color: #0f172a;

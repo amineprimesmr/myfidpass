@@ -35,6 +35,30 @@ const GOAL_OPTIONS = [
 const SOCIAL_AUTOFILL_MAP = { instagram_follow: "instagram_url", tiktok_follow: "tiktok_url", facebook_follow: "facebook_url" };
 
 function escapeHtml(value) { const div = document.createElement("div"); div.textContent = value == null ? "" : String(value); return div.innerHTML; }
+function renderStyleMockup(opt) {
+  if (opt.id === "points") {
+    return `<div class="builder-onboarding-style-mockup builder-wallet-card builder-wallet-card-bold" aria-hidden="true">
+      <div class="builder-wallet-card-header"><span class="builder-onboarding-mockup-logo">Logo</span></div>
+      <div class="builder-wallet-card-body">
+        <div class="builder-wallet-card-pts-wrap"><span class="builder-wallet-card-pts-value">0</span><span class="builder-wallet-card-label">points</span></div>
+        <div class="builder-onboarding-mockup-reward">Récompense</div>
+      </div>
+    </div>`;
+  }
+  const stampsRow = (filled) => Array(5).fill(0).map((_, i) => `<span class="stamp stamp-emoji ${i < filled ? "filled" : ""}" aria-hidden="true">☕</span>`).join("");
+  return `<div class="builder-onboarding-style-mockup builder-wallet-card builder-wallet-card-fastfood-tampons" aria-hidden="true">
+    <div class="builder-wallet-card-header"><span class="builder-onboarding-mockup-logo">Logo</span></div>
+    <div class="builder-wallet-card-body">
+      <div class="builder-wallet-card-stamps-wrap">
+        <div class="builder-wallet-card-stamps-grid">
+          <div class="builder-wallet-card-stamps-row">${stampsRow(3)}</div>
+          <div class="builder-wallet-card-stamps-row">${stampsRow(1)}</div>
+        </div>
+      </div>
+      <div class="builder-onboarding-mockup-restants">= 10</div>
+    </div>
+  </div>`;
+}
 function getGoalOption(goalId) { return GOAL_OPTIONS.find((x) => x.id === goalId) || null; }
 function isValidUrl(value) { try { const u = new URL(String(value || "").trim()); return u.protocol === "http:" || u.protocol === "https:"; } catch (_) { return false; } }
 function renderGoalIcon(goal) {
@@ -190,7 +214,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
   </label>
 </div>`;
     }
-    if (state.currentStep === 1) return `<p class="builder-onboarding-help">Modifiable dans votre espace pro.</p><div class="builder-onboarding-grid builder-onboarding-grid-animate">${STYLE_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-style="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
+    if (state.currentStep === 1) return `<p class="builder-onboarding-help">Modifiable dans votre espace pro.</p><div class="builder-onboarding-style-grid builder-onboarding-grid-animate">${STYLE_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-style-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-style="${opt.id}"><span class="builder-onboarding-style-mockup-wrap">${renderStyleMockup(opt)}</span><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     if (state.currentStep === 2) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${GOAL_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" style="--stagger: ${i}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span></button>`).join("")}</div>`;
     if (state.currentStep === 3) return renderGoalConfigStep();
     if (state.currentStep === 4) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${REWARD_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;

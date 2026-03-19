@@ -331,6 +331,73 @@
   border-color: #b0b0b0;
   box-shadow: 0 0 0 1px #b0b0b0 inset;
 }
+
+/* Grille style (points/tampons) — cartes plus grandes avec mini maquette */
+.landing-onboarding-sheet .builder-onboarding-style-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+.landing-onboarding-sheet .builder-onboarding-style-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem;
+  min-height: 140px;
+  text-align: center;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup-wrap {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup {
+  width: 100%;
+  max-width: 140px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-wallet-card-header {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.5rem;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-onboarding-mockup-logo {
+  font-size: 0.45rem;
+  font-weight: 600;
+  opacity: 0.95;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-wallet-card-body {
+  padding: 0.4rem 0.5rem;
+  min-height: 48px;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-wallet-card-pts-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-wallet-card-label {
+  font-size: 0.35rem;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-wallet-card-stamps-row .stamp {
+  font-size: 0.5rem;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-wallet-card-stamps-grid {
+  gap: 1px;
+  margin: 0.05rem 0;
+}
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-onboarding-mockup-reward,
+.landing-onboarding-sheet .builder-onboarding-style-mockup .builder-onboarding-mockup-restants {
+  font-size: 0.3rem;
+  opacity: 0.9;
+  margin-top: 0.2rem;
+}
 .landing-onboarding-sheet .builder-onboarding-choice-title {
   color: #fff;
 }
