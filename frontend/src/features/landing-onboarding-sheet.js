@@ -275,6 +275,23 @@ function showOnboardingInSheet(organizationName, placeId) {
     }, 150);
   };
 
+  function saveDraftAndMaybeShowBeam(nextState) {
+    const selectedTemplateId = computeSelectedTemplateId(nextState.stylePreset);
+    try {
+      let existing = {};
+      const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
+      if (raw) try { existing = JSON.parse(raw); } catch (_) {}
+      const payload = {
+        selectedTemplateId,
+        organizationName: organizationName || "",
+        placeId: placeId || existing.placeId,
+        onboarding: { ...nextState, completed: true },
+        logoDataUrl: nextState.logoDataUrl || existing.logoDataUrl,
+      };
+      localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify(payload));
+    } catch (_) {}
+  }
+
   onboardingController = initBuilderOnboarding({
     mountEl: onboardingMount,
     progressEl: progressEl || undefined,
@@ -282,26 +299,23 @@ function showOnboardingInSheet(organizationName, placeId) {
     organizationName: organizationName || "votre établissement",
     apiBase: API_BASE,
     placeIdHint: placeId,
-    onStateChange: (s) => { if (s.currentQuestion) updateTitle(s.currentQuestion); },
+    onStateChange: (s) => {
+      if (s.currentQuestion) updateTitle(s.currentQuestion);
+      if (s.currentStep === 5 && typeof s.placeIdHint !== "undefined") {
+        sheet?.classList.add("is-expanded");
+      }
+    },
     onLogoChange: () => {},
     onStyleChange: () => {},
     onRewardChange: () => {},
     onComplete(nextState) {
-      const selectedTemplateId = computeSelectedTemplateId(nextState.stylePreset);
-      try {
-        let existing = {};
-        const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
-        if (raw) try { existing = JSON.parse(raw); } catch (_) {}
-        const payload = {
-          selectedTemplateId,
-          organizationName: organizationName || "",
-          placeId: placeId || existing.placeId,
-          onboarding: { ...nextState, completed: true },
-          logoDataUrl: nextState.logoDataUrl || existing.logoDataUrl,
-        };
-        localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify(payload));
-      } catch (_) {}
-      showCardBeamInSheet();
+      saveDraftAndMaybeShowBeam(nextState);
+    },
+    getAuthToken,
+    setAuthToken,
+    onAccountCreated(nextState) {
+      saveDraftAndMaybeShowBeam(nextState);
+      goToCheckout();
     },
   });
 }
