@@ -490,6 +490,40 @@
   display: none;
 }
 
+/* Étape 5 : Votre carte est prête — animation seule (sans formulaire) */
+.builder-onboarding-card-beam-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0 1rem;
+}
+.builder-onboarding-card-beam-step .builder-onboarding-card-beam-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+  height: min(45vh, 320px);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #020617;
+}
+.builder-onboarding-card-beam-step .builder-onboarding-card-beam-frame {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 200px);
+  border: 0;
+  background: #020617;
+}
+.builder-onboarding-card-beam-hint {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  text-align: center;
+}
+
 /* Contenu card beam (après Terminer) — continuité logique dans le sheet */
 .landing-onboarding-card-beam {
   display: flex;

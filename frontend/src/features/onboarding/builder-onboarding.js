@@ -3,7 +3,7 @@
  * Le module reste UI-only et délègue la persistance au parent.
  */
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 function isValidEmailForAccount(email) {
   if (!email || typeof email !== "string") return false;
@@ -18,6 +18,7 @@ const STEP_QUESTIONS = [
   "Configurez vos liens",
   "Quel type de récompense ?",
   "Votre carte est prête",
+  "Créez votre compte",
 ];
 const STYLE_OPTIONS = [
   { id: "points", label: "Système de points", hint: "Montant cumulé converti en points" },
@@ -239,11 +240,13 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
       const rewardOpts = getRewardOptions(state.stylePreset);
       return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${rewardOpts.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     }
+    if (state.currentStep === 5) {
+      return `<div class="builder-onboarding-card-beam-step"><div class="builder-onboarding-card-beam-wrap"><iframe class="builder-onboarding-card-beam-frame" src="/card-beam-reversed.html" title="Animation création carte" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="builder-onboarding-card-beam-hint">Votre carte fidélité est prête</p></div>`;
+    }
     const hasAccountForm = typeof onAccountCreated === "function" || (apiBase != null && typeof apiBase === "string");
-    if (hasAccountForm) {
+    if (state.currentStep === 6 && hasAccountForm) {
       const googleClientId = (typeof import.meta.env?.VITE_GOOGLE_CLIENT_ID === "string" && import.meta.env.VITE_GOOGLE_CLIENT_ID.trim()) ? import.meta.env.VITE_GOOGLE_CLIENT_ID.trim() : "";
       const appleClientId = (typeof import.meta.env?.VITE_APPLE_CLIENT_ID === "string" && import.meta.env.VITE_APPLE_CLIENT_ID.trim()) ? import.meta.env.VITE_APPLE_CLIENT_ID.trim() : "";
-      const hasSocial = !!(googleClientId || appleClientId);
       const googleBtn = googleClientId ? `<div id="builder-onboarding-google-btn" class="landing-onboarding-google-wrap"></div>` : `<button type="button" class="landing-onboarding-btn-apple builder-onboarding-social-placeholder" disabled title="Configurez VITE_GOOGLE_CLIENT_ID sur Vercel"><span class="builder-onboarding-social-icon builder-onboarding-social-icon-google" aria-hidden="true">G</span>Continuer avec Google</button>`;
       const appleBtn = appleClientId ? `<button type="button" id="builder-onboarding-apple-btn" class="landing-onboarding-btn-apple" aria-label="Continuer avec Apple"><span class="landing-onboarding-apple-icon" aria-hidden="true"></span>Continuer avec Apple</button>` : `<button type="button" class="landing-onboarding-btn-apple builder-onboarding-social-placeholder" disabled title="Configurez VITE_APPLE_CLIENT_ID sur Vercel"><span class="landing-onboarding-apple-icon" aria-hidden="true"></span>Continuer avec Apple</button>`;
       const socialBlock = `<div class="builder-onboarding-account-social-row">${googleBtn}${appleBtn}</div>`;
@@ -257,9 +260,13 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
   }
 
   function getNavButtonLabel() {
+    if (state.currentStep === 5) return "Créer mon compte";
     if (state.currentStep === TOTAL_STEPS - 1) return "Terminer";
     if (state.currentStep === 0 && !state.logoDataUrl) return "Passer";
     return "Continuer";
+  }
+  function shouldShowNav() {
+    return state.currentStep !== 6;
   }
   function render() {
     const pct = ((state.currentStep + 1) / TOTAL_STEPS) * 100;
@@ -269,7 +276,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     }
     const content = renderStepContent();
     const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
-    const nav = `<div class="builder-onboarding-nav">${nextBtn}</div>`;
+    const nav = shouldShowNav() ? `<div class="builder-onboarding-nav">${nextBtn}</div>` : "";
     const dir = lastDirection;
     mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-content" data-direction="${dir}"><div class="builder-onboarding-content-inner">${progressEl ? "" : progressHtml}${content}</div></div>${nav}</section>`;
     const contentEl = mountEl.querySelector(".builder-onboarding-content");
@@ -279,6 +286,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
         const errors = validateGoalConfigs(state.engagementGoals, state.goalConfigs);
         if (Object.keys(errors).length > 0) { updateState({ goalConfigErrors: errors }); return; }
       }
+      if (state.currentStep === 5) { nextStep(); return; }
       if (state.currentStep === TOTAL_STEPS - 1) { updateState({ completed: true }); if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint }); return; }
       nextStep();
     });
@@ -297,7 +305,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }, { skipRender: true }); }));
     mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }, { skipRender: true }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
 
-    if (state.currentStep === TOTAL_STEPS - 1 && (typeof onAccountCreated === "function" || (apiBase != null && typeof apiBase === "string"))) {
+    if (state.currentStep === 6 && (typeof onAccountCreated === "function" || (apiBase != null && typeof apiBase === "string"))) {
       bindAccountFormHandlers();
     }
   }
