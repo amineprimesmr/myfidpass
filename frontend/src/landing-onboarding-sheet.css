@@ -35,8 +35,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 92vh;
-  max-height: 92vh;
+  height: 75vh;
+  max-height: 75vh;
   background: #0a0a0a;
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
@@ -190,14 +190,14 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Onboarding dans le sheet — thème dark */
+/* Onboarding dans le sheet — thème dark, sans encadré */
 .landing-onboarding-sheet .builder-onboarding-card {
   --landing-text: #fff;
   --landing-muted: rgba(255, 255, 255, 0.65);
-  background: #0f0f0f;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 .landing-onboarding-sheet .builder-onboarding-progress-bar {
   background: rgba(255, 255, 255, 0.1);
@@ -354,9 +354,9 @@
     left: 50%;
     right: auto;
     width: 100%;
-    max-width: 520px;
-    height: 85vh;
-    max-height: 700px;
+    max-width: 480px;
+    height: 70vh;
+    max-height: 560px;
     transform: translateX(-50%) translateY(100%);
   }
   .landing-onboarding-sheet.is-open .landing-onboarding-sheet-drawer {
