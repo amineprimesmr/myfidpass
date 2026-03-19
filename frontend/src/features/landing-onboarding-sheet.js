@@ -72,16 +72,50 @@ export function openOnboardingSheet() {
 export function closeOnboardingSheet() {
   const sheet = document.getElementById("landing-onboarding-sheet");
   if (!sheet) return;
-  sheet.classList.remove("is-open");
+  sheet.classList.remove("is-open", "is-expanded");
   sheet.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
   onboardingController = null;
 }
 
-function showOnboardingInSheet(organizationName, placeId) {
+function showCardBeamInSheet() {
+  const sheet = document.getElementById("landing-onboarding-sheet");
   const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
-  if (!onboardingMount) return;
+  const titleEl = document.getElementById("landing-onboarding-sheet-title");
+  const progressEl = document.getElementById("landing-onboarding-sheet-progress");
+  const backBtn = document.getElementById("landing-onboarding-sheet-back");
+  if (!sheet || !onboardingMount) return;
 
+  sheet.classList.add("is-expanded");
+  if (titleEl) titleEl.textContent = "Création de votre carte";
+  if (progressEl) progressEl.innerHTML = "";
+  if (backBtn) backBtn.style.display = "none";
+
+  onboardingMount.innerHTML = `
+    <div class="landing-onboarding-card-beam">
+      <p class="landing-onboarding-card-beam-subtitle">Votre carte fidélité est en cours de préparation…</p>
+      <div class="landing-onboarding-card-beam-wrap">
+        <iframe class="landing-onboarding-card-beam-frame" src="/card-beam-reversed.html" title="Animation création carte" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+      <button type="button" class="landing-onboarding-card-beam-cta" id="landing-onboarding-card-beam-cta">Voir ma carte</button>
+    </div>`;
+
+  const cta = document.getElementById("landing-onboarding-card-beam-cta");
+  cta?.addEventListener("click", () => {
+    closeOnboardingSheet();
+    history.pushState({}, "", "/checkout");
+    initRouting();
+  });
+}
+
+function showOnboardingInSheet(organizationName, placeId) {
+  const sheet = document.getElementById("landing-onboarding-sheet");
+  const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
+  const backBtn = document.getElementById("landing-onboarding-sheet-back");
+  if (!sheet || !onboardingMount) return;
+
+  sheet.classList.remove("is-expanded");
+  if (backBtn) backBtn.style.display = "";
   onboardingMount.innerHTML = "";
 
   const titleEl = document.getElementById("landing-onboarding-sheet-title");
@@ -126,9 +160,7 @@ function showOnboardingInSheet(organizationName, placeId) {
         };
         localStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify(payload));
       } catch (_) {}
-      closeOnboardingSheet();
-      history.pushState({}, "", "/creation-carte");
-      initRouting();
+      showCardBeamInSheet();
     },
   });
 }
