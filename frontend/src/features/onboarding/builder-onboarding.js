@@ -16,12 +16,19 @@ const STYLE_OPTIONS = [
   { id: "points", label: "Système de points", hint: "Montant cumulé converti en points" },
   { id: "stamps", label: "Système de tampons", hint: "X achats = 1 offert" },
 ];
-const REWARD_OPTIONS = [
-  { id: "stamps", label: "10 achats = 1 offert", hint: "Simple a expliquer en caisse" },
-  { id: "points", label: "Montant cumule en points", hint: "Flexible et progressif" },
-  { id: "discount", label: "Remise fixe", hint: "Ex. -10% apres X passages" },
+const REWARD_OPTIONS_POINTS = [
+  { id: "points", label: "Paliers de points", hint: "Ex. 100 pts = 5€ de réduction" },
+  { id: "discount", label: "Remise fixe", hint: "Ex. -10% après X passages" },
   { id: "later", label: "Je configurerai plus tard", hint: "Vous pourrez modifier ensuite" },
 ];
+const REWARD_OPTIONS_STAMPS = [
+  { id: "stamps", label: "10 achats = 1 offert", hint: "Le plus courant" },
+  { id: "stamps_5", label: "5 achats = 1 offert", hint: "Récompense plus rapide" },
+  { id: "later", label: "Je configurerai plus tard", hint: "Vous pourrez modifier ensuite" },
+];
+function getRewardOptions(stylePreset) {
+  return stylePreset === "stamps" ? REWARD_OPTIONS_STAMPS : REWARD_OPTIONS_POINTS;
+}
 const GOAL_OPTIONS = [
   { id: "google_review", label: "Obtenir plus d'avis Google", hint: "Visibilite locale et confiance", icon: "/assets/logos/google.png", kind: "place_id", inputLabel: "Place ID Google", placeholder: "Ex. ChIJ..." },
   { id: "instagram_follow", label: "Avoir plus de followers Instagram", hint: "Communaute et UGC", icon: "/assets/logos/instagram.png", kind: "url", inputLabel: "Lien Instagram", placeholder: "https://instagram.com/votrecompte" },
@@ -110,12 +117,16 @@ function fileToResizedDataUrl(file, maxWidth = 512) {
 function normalizeState(input = {}, placeIdHint = "") {
   const goals = Array.isArray(input.engagementGoals) ? input.engagementGoals.filter(Boolean) : [];
   const goalConfigs = normalizeGoalConfigs(goals, input.goalConfigs, placeIdHint || input.placeIdHint || "");
+  const stylePreset = typeof input.stylePreset === "string" ? input.stylePreset : "points";
+  const rewardOpts = getRewardOptions(stylePreset);
+  const rawReward = typeof input.rewardModel === "string" ? input.rewardModel : "later";
+  const rewardModel = rewardOpts.some((o) => o.id === rawReward) ? rawReward : "later";
   return {
     currentStep: Number.isFinite(input.currentStep) ? Math.max(0, Math.min(TOTAL_STEPS - 1, input.currentStep)) : 0,
     completed: input.completed === true,
     logoDataUrl: typeof input.logoDataUrl === "string" ? input.logoDataUrl : "",
-    stylePreset: typeof input.stylePreset === "string" ? input.stylePreset : "points",
-    rewardModel: typeof input.rewardModel === "string" ? input.rewardModel : "later",
+    stylePreset,
+    rewardModel,
     engagementGoals: goals,
     goalsFreeText: typeof input.goalsFreeText === "string" ? input.goalsFreeText : "",
     goalConfigs,
@@ -217,10 +228,15 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     if (state.currentStep === 1) return `<p class="builder-onboarding-help">Modifiable dans votre espace pro.</p><div class="builder-onboarding-style-grid builder-onboarding-grid-animate">${STYLE_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-style-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-style="${opt.id}"><span class="builder-onboarding-style-mockup-wrap">${renderStyleMockup(opt)}</span><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     if (state.currentStep === 2) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${GOAL_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" style="--stagger: ${i}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span></button>`).join("")}</div>`;
     if (state.currentStep === 3) return renderGoalConfigStep();
-    if (state.currentStep === 4) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${REWARD_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
+    if (state.currentStep === 4) {
+      const rewardOpts = getRewardOptions(state.stylePreset);
+      return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${rewardOpts.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
+    }
     const selectedGoals = state.engagementGoals.map((id) => getGoalOption(id)?.label || "").filter(Boolean);
     const configuredGoals = state.engagementGoals.filter((goalId) => String(state.goalConfigs?.[goalId]?.value || "").trim()).length;
-    return `<div class="builder-onboarding-recap"><p><strong>Logo :</strong> ${state.logoDataUrl ? "Oui" : "Non"}</p><p><strong>Style :</strong> ${(STYLE_OPTIONS.find((x) => x.id === state.stylePreset) || STYLE_OPTIONS[0]).label}</p><p><strong>Objectifs :</strong> ${selectedGoals.length ? selectedGoals.join(", ") : "Aucun"}</p><p><strong>Liens :</strong> ${configuredGoals}/${state.engagementGoals.length || 0}</p><p><strong>Récompense :</strong> ${(REWARD_OPTIONS.find((x) => x.id === state.rewardModel) || REWARD_OPTIONS[3]).label}</p></div><p class="builder-onboarding-help">Modifiable dans votre espace pro.</p>`;
+    const rewardOpts = getRewardOptions(state.stylePreset);
+    const rewardLabel = (rewardOpts.find((x) => x.id === state.rewardModel) || rewardOpts[rewardOpts.length - 1]).label;
+    return `<div class="builder-onboarding-recap"><p><strong>Logo :</strong> ${state.logoDataUrl ? "Oui" : "Non"}</p><p><strong>Style :</strong> ${(STYLE_OPTIONS.find((x) => x.id === state.stylePreset) || STYLE_OPTIONS[0]).label}</p><p><strong>Objectifs :</strong> ${selectedGoals.length ? selectedGoals.join(", ") : "Aucun"}</p><p><strong>Liens :</strong> ${configuredGoals}/${state.engagementGoals.length || 0}</p><p><strong>Récompense :</strong> ${rewardLabel}</p></div><p class="builder-onboarding-help">Modifiable dans votre espace pro.</p>`;
   }
 
   function getNavButtonLabel() {

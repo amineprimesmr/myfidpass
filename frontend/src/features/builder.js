@@ -410,17 +410,10 @@ function initBuilderPage() {
     applySelection();
   }
 
-  function applyOnboardingTemplatePreset(stylePreset, rewardModel) {
-    const preferredTemplateId = templateIdFromOnboardingStyle(stylePreset);
-    if (CARD_TEMPLATES.some((t) => t.id === preferredTemplateId)) {
-      state.selectedTemplateId = preferredTemplateId;
-    }
-    const prefersStamps = rewardModel === "stamps";
-    const current = templateIdToCategoryFormat(state.selectedTemplateId);
-    if (prefersStamps && current.category !== "classic") {
-      state.selectedTemplateId = getTemplateIdFromCategoryFormat(current.category, "tampons");
-    } else if (!prefersStamps && current.category !== "classic") {
-      state.selectedTemplateId = getTemplateIdFromCategoryFormat(current.category, "points");
+  function applyOnboardingTemplatePreset(stylePreset) {
+    const templateId = templateIdFromOnboardingStyle(stylePreset);
+    if (CARD_TEMPLATES.some((t) => t.id === templateId)) {
+      state.selectedTemplateId = templateId;
     }
     applySelection();
   }
@@ -521,17 +514,17 @@ function initBuilderPage() {
       },
       onStyleChange(stylePreset) {
         state.onboarding.stylePreset = stylePreset;
-        applyOnboardingTemplatePreset(stylePreset, state.onboarding.rewardModel);
+        applyOnboardingTemplatePreset(stylePreset);
         saveDraft();
       },
       onRewardChange(rewardModel) {
         state.onboarding.rewardModel = rewardModel;
-        applyOnboardingTemplatePreset(state.onboarding.stylePreset, rewardModel);
+        applyOnboardingTemplatePreset(state.onboarding.stylePreset);
         saveDraft();
       },
       onComplete(nextOnboardingState) {
         state.onboarding = { ...nextOnboardingState, completed: true };
-        applyOnboardingTemplatePreset(state.onboarding.stylePreset, state.onboarding.rewardModel);
+        applyOnboardingTemplatePreset(state.onboarding.stylePreset);
         saveDraft();
         onboardingRoot.classList.add("hidden");
         builderRoot?.classList.remove("builder-onboarding-active");

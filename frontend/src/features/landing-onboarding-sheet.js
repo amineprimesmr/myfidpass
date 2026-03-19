@@ -25,20 +25,9 @@ function getTemplateIdFromCategoryFormat(category, format) {
   return `${category}-${format}`;
 }
 
-function computeSelectedTemplateId(stylePreset, rewardModel) {
-  const preferredTemplateId = templateIdFromOnboardingStyle(stylePreset);
-  if (CARD_TEMPLATES.some((t) => t.id === preferredTemplateId)) {
-    const prefersStamps = rewardModel === "stamps";
-    const current = templateIdToCategoryFormat(preferredTemplateId);
-    if (prefersStamps && current.category !== "classic") {
-      return getTemplateIdFromCategoryFormat(current.category, "tampons");
-    }
-    if (!prefersStamps && current.category !== "classic") {
-      return getTemplateIdFromCategoryFormat(current.category, "points");
-    }
-    return preferredTemplateId;
-  }
-  return "fastfood-tampons";
+function computeSelectedTemplateId(stylePreset) {
+  const templateId = templateIdFromOnboardingStyle(stylePreset);
+  return CARD_TEMPLATES.some((t) => t.id === templateId) ? templateId : "fastfood-tampons";
 }
 
 let onboardingController = null;
@@ -141,10 +130,7 @@ function showOnboardingInSheet(organizationName, placeId) {
     onStyleChange: () => {},
     onRewardChange: () => {},
     onComplete(nextState) {
-      const selectedTemplateId = computeSelectedTemplateId(
-        nextState.stylePreset,
-        nextState.rewardModel
-      );
+      const selectedTemplateId = computeSelectedTemplateId(nextState.stylePreset);
       try {
         let existing = {};
         const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
