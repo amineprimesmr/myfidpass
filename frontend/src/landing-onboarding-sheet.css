@@ -35,8 +35,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 75vh;
-  max-height: 75vh;
+  height: 58vh;
+  max-height: 58vh;
   background: #0a0a0a;
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
@@ -414,8 +414,8 @@
     right: auto;
     width: 100%;
     max-width: 480px;
-    height: 70vh;
-    max-height: 560px;
+    height: 55vh;
+    max-height: 480px;
     transform: translateX(-50%) translateY(100%);
   }
   .landing-onboarding-sheet.is-open .landing-onboarding-sheet-drawer {
