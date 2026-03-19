@@ -29,16 +29,16 @@
   opacity: 1;
 }
 
-/* Drawer — fond clair */
+/* Drawer — fond clair, plus grand et fixe */
 .landing-onboarding-sheet-drawer {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 65vh;
-  max-height: 65vh;
+  height: 82vh;
+  max-height: 82vh;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
-  border-radius: 24px 24px 0 0;
+  border-radius: 20px 20px 0 0;
   box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.12);
   transform: translateY(100%);
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -801,9 +801,9 @@
     left: 50%;
     right: auto;
     width: 100%;
-    max-width: 560px;
-    height: 70vh;
-    max-height: 640px;
+    max-width: 580px;
+    height: 78vh;
+    max-height: 700px;
     transform: translateX(-50%) translateY(100%);
   }
   .landing-onboarding-sheet.is-open .landing-onboarding-sheet-drawer {
@@ -833,9 +833,9 @@
 /* Desktop : encore plus large pour s'adapter à l'écran */
 @media (min-width: 1024px) {
   .landing-onboarding-sheet-drawer {
-    max-width: 640px;
-    height: 75vh;
-    max-height: 720px;
+    max-width: 660px;
+    height: 82vh;
+    max-height: 780px;
   }
   .landing-onboarding-sheet.is-expanded .landing-onboarding-sheet-drawer {
     height: 90vh;
@@ -861,9 +861,9 @@
 /* Grand écran : modal bien proportionné */
 @media (min-width: 1280px) {
   .landing-onboarding-sheet-drawer {
-    max-width: 720px;
-    height: 80vh;
-    max-height: 800px;
+    max-width: 740px;
+    height: 85vh;
+    max-height: 860px;
   }
   .landing-onboarding-sheet.is-expanded .landing-onboarding-sheet-drawer {
     height: 90vh;
