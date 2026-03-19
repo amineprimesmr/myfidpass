@@ -239,7 +239,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
       const rewardOpts = getRewardOptions(state.stylePreset);
       return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${rewardOpts.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     }
-    if (state.currentStep === TOTAL_STEPS - 1 && typeof onAccountCreated === "function") {
+    if (state.currentStep === TOTAL_STEPS - 1) {
       return renderAccountStepContent();
     }
     const selectedGoals = state.engagementGoals.map((id) => getGoalOption(id)?.label || "").filter(Boolean);
@@ -261,8 +261,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
   }
 
   function getNavButtonLabel() {
-    if (state.currentStep === TOTAL_STEPS - 1 && typeof onAccountCreated === "function") return null;
-    if (state.currentStep === TOTAL_STEPS - 1) return "Terminer";
+    if (state.currentStep === TOTAL_STEPS - 1) return null;
     if (state.currentStep === 0 && !state.logoDataUrl) return "Passer";
     return "Continuer";
   }
@@ -303,7 +302,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     mountEl.querySelectorAll("[data-goal-config]").forEach((input) => input.addEventListener("input", () => { const goalId = input.getAttribute("data-goal-config"); if (!goalId) return; updateState({ goalConfigs: { ...state.goalConfigs, [goalId]: { value: input.value || "" } }, goalConfigErrors: { ...state.goalConfigErrors, [goalId]: "" } }, { skipRender: true }); }));
     mountEl.querySelectorAll("[data-reward]").forEach((btn) => btn.addEventListener("click", () => { const rewardModel = btn.getAttribute("data-reward") || "later"; updateState({ rewardModel }, { skipRender: true }); if (typeof onRewardChange === "function") onRewardChange(rewardModel); }));
 
-    if (state.currentStep === TOTAL_STEPS - 1 && typeof onAccountCreated === "function") {
+    if (state.currentStep === TOTAL_STEPS - 1) {
       bindAccountFormHandlers();
     }
   }
