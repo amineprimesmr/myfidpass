@@ -111,6 +111,7 @@ export function initLandingAnimations() {
   if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
     initLandingHeroAnim();
     initLandingFaq();
+    import("./landing-mockup-notif.js").then((m) => m.initLandingMockupNotif());
     import("./landing-gradient-carousel.js").then((m) => m.mountLandingGradientCarousel());
     import("../helmet/index.jsx").then((m) => m.mountHelmet());
   }
