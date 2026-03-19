@@ -32,8 +32,8 @@
 /* Drawer */
 .landing-onboarding-sheet-drawer {
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: 0;
+  right: 0;
   bottom: 0;
   height: 75vh;
   max-height: 75vh;
