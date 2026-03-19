@@ -1,7 +1,7 @@
 /**
  * Bottom sheet onboarding — overlay sur la landing, drawer depuis le bas.
  * Utilise le nom d'établissement du hero. Onboarding builder (logo, style, objectifs, etc.).
- * L'étape « Votre carte est prête » inclut la création de compte (email, Google, Apple).
+ * Après « Terminer », affiche card beam + création de compte.
  */
 import { API_BASE, getAuthToken, setAuthToken } from "../config.js";
 import { initRouting } from "../router/index.js";
@@ -301,21 +301,13 @@ function showOnboardingInSheet(organizationName, placeId) {
     placeIdHint: placeId,
     onStateChange: (s) => {
       if (s.currentQuestion) updateTitle(s.currentQuestion);
-      if (s.currentStep === 5 && typeof s.placeIdHint !== "undefined") {
-        sheet?.classList.add("is-expanded");
-      }
     },
     onLogoChange: () => {},
     onStyleChange: () => {},
     onRewardChange: () => {},
     onComplete(nextState) {
       saveDraftAndMaybeShowBeam(nextState);
-    },
-    getAuthToken,
-    setAuthToken,
-    onAccountCreated(nextState) {
-      saveDraftAndMaybeShowBeam(nextState);
-      goToCheckout();
+      showCardBeamInSheet();
     },
   });
 }
