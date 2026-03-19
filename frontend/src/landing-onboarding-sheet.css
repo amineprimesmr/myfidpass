@@ -513,6 +513,7 @@
   flex: 1;
   min-height: 0;
   padding: 0.5rem 0 1.5rem;
+  overflow-y: auto;
 }
 .landing-onboarding-card-beam-subtitle {
   margin: 0 0 1rem;
@@ -524,8 +525,8 @@
   position: relative;
   width: 100%;
   flex: 1;
-  min-height: 420px;
-  height: min(60vh, 480px);
+  min-height: 320px;
+  height: min(50vh, 400px);
   border-radius: 12px;
   overflow: hidden;
   background: #000;
@@ -556,6 +557,106 @@
 .landing-onboarding-card-beam-cta:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Formulaire création compte (étape carte prête) */
+.landing-onboarding-account-form {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 1rem;
+  padding: 1rem 0;
+}
+.landing-onboarding-account-title {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+}
+.landing-onboarding-account-error {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.15);
+  border-radius: 8px;
+}
+.landing-onboarding-account-error.hidden {
+  display: none;
+}
+.landing-onboarding-account-divider {
+  margin: 1rem 0 0.75rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+.landing-onboarding-account-social {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.landing-onboarding-google-wrap {
+  display: flex;
+  justify-content: center;
+}
+.landing-onboarding-google-wrap iframe {
+  border-radius: 8px;
+}
+.landing-onboarding-btn-apple {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 260px;
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+  background: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.landing-onboarding-btn-apple:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.landing-onboarding-apple-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z'/%3E%3C/svg%3E") center/contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.landing-onboarding-account-label {
+  display: block;
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+.landing-onboarding-account-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+.landing-onboarding-account-input::placeholder {
+  color: #6b7280;
+}
+.landing-onboarding-account-form .landing-onboarding-card-beam-cta {
+  width: 100%;
+  margin-top: 1.25rem;
 }
 
 .landing-onboarding-sheet .builder-onboarding-link {
