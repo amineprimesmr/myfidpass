@@ -4,6 +4,8 @@
  * Utilise THREE (global depuis three.min.js)
  */
 
+const SCANNER_X_RATIO = 0.38; // barre de révélation décalée à gauche (38 % de l'écran)
+
 const codeChars =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789(){}[]<>;:,._-+=!@#$%^&*|\\/\"'`~?";
 
@@ -27,6 +29,7 @@ class CardStreamController {
 
     this.containerWidth = 0;
     this.cardLineWidth = 0;
+    this.fullyRevealed = false;
 
     this.init();
   }
@@ -139,6 +142,7 @@ class CardStreamController {
   }
 
   updateCardPosition() {
+    if (this.fullyRevealed) return;
     const containerWidth = this.containerWidth;
     const cardLineWidth = this.cardLineWidth;
 
@@ -322,7 +326,17 @@ class CardStreamController {
   }
 
   updateCardClipping() {
-    const scannerX = window.innerWidth / 2;
+    if (this.fullyRevealed) {
+      document.querySelectorAll(".card-wrapper").forEach((wrapper) => {
+        const normalCard = wrapper.querySelector(".card-normal");
+        const asciiCard = wrapper.querySelector(".card-ascii");
+        normalCard.style.setProperty("--clip-right", "0%");
+        asciiCard.style.setProperty("--clip-left", "100%");
+      });
+      return;
+    }
+
+    const scannerX = window.innerWidth * SCANNER_X_RATIO;
     const scannerWidth = 8;
     const scannerLeft = scannerX - scannerWidth / 2;
     const scannerRight = scannerX + scannerWidth / 2;
@@ -336,6 +350,11 @@ class CardStreamController {
 
       const normalCard = wrapper.querySelector(".card-normal");
       const asciiCard = wrapper.querySelector(".card-ascii");
+
+      if (cardRight < scannerLeft && !this.fullyRevealed) {
+        this.setFullyRevealed();
+        return;
+      }
 
       if (cardLeft < scannerRight && cardRight > scannerLeft) {
         anyScanningActive = true;
@@ -379,7 +398,22 @@ class CardStreamController {
     }
   }
 
+  setFullyRevealed() {
+    if (this.fullyRevealed) return;
+    this.fullyRevealed = true;
+    this.isAnimating = false;
+    const cardWidth = 260;
+    const centerX = window.innerWidth / 2;
+    this.position = centerX - cardWidth / 2;
+    this.cardLine.style.transform = `translateX(${this.position}px)`;
+    this.updateCardClipping();
+    if (window.setScannerScanning) {
+      window.setScannerScanning(false);
+    }
+  }
+
   updateAsciiContent() {
+    if (this.fullyRevealed) return;
     document.querySelectorAll(".ascii-content").forEach((content) => {
       if (Math.random() < 0.15) {
         const { width, height } = this.calculateCodeDimensions(260, 400);
@@ -491,6 +525,7 @@ class CardStreamController {
   }
 
   resetPosition() {
+    this.fullyRevealed = false;
     this.position = -this.cardLineWidth;
     this.velocity = 120;
     this.direction = 1;
@@ -706,7 +741,7 @@ class ParticleScanner {
     this.count = 0;
     this.maxParticles = 800;
     this.intensity = 0.8;
-    this.lightBarX = this.w / 2;
+    this.lightBarX = this.w * SCANNER_X_RATIO;
     this.lightBarWidth = 3;
     this.fadeZone = 60;
 
@@ -743,7 +778,7 @@ class ParticleScanner {
 
   onResize() {
     this.w = window.innerWidth;
-    this.lightBarX = this.w / 2;
+    this.lightBarX = this.w * SCANNER_X_RATIO;
     this.setupCanvas();
   }
 
