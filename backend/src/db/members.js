@@ -88,3 +88,34 @@ export function getMembersForBusiness(businessId, { search = "", limit = 50, off
   const members = rows.map((m) => ({ ...m, category_ids: getCategoryIdsForMember(m.id) }));
   return { members, total };
 }
+
+/** Retourne les IDs des membres correspondant au segment (pour campagnes ciblées). */
+export function getMemberIdsBySegment(businessId, segment) {
+  let where = "business_id = ?";
+  const params = [businessId];
+  switch (segment) {
+    case "inactive30":
+      where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))";
+      break;
+    case "inactive90":
+      where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))";
+      break;
+    case "new30":
+      where += " AND created_at >= datetime('now', '-30 days')";
+      break;
+    case "points50":
+      where += " AND points >= 50";
+      break;
+    case "recurrent":
+      where += ` AND id IN (
+        SELECT member_id FROM transactions WHERE business_id = ? AND created_at >= datetime('now', '-30 days')
+        GROUP BY member_id HAVING COUNT(*) >= 2
+      )`;
+      params.push(businessId);
+      break;
+    default:
+      return [];
+  }
+  const rows = db.prepare(`SELECT id FROM members WHERE ${where}`).all(...params);
+  return rows.map((r) => r.id);
+}

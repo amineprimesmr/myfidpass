@@ -53,6 +53,9 @@ export function getDashboardStats(businessId, period = "this_month") {
   const inactive90d = db.prepare(
     `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))`
   ).get(businessId);
+  const points50Count = db.prepare(
+    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 50"
+  ).get(businessId);
   const pointsAvg = db.prepare(
     "SELECT COALESCE(ROUND(AVG(points), 0), 0) as avg FROM members WHERE business_id = ?"
   ).get(businessId);
@@ -116,6 +119,7 @@ export function getDashboardStats(businessId, period = "this_month") {
     newMembersLast30Days: newMembers30d?.n ?? 0,
     inactiveMembers30Days: inactive30d?.n ?? 0,
     inactiveMembers90Days: inactive90d?.n ?? 0,
+    membersWithPoints50: points50Count?.n ?? 0,
     pointsAveragePerMember: pointsAvg?.avg ?? 0,
     estimatedRevenueEur: Math.round(estimatedRevenueEur * 100) / 100,
     activeMembersInPeriod: activeInPeriod?.n ?? 0,

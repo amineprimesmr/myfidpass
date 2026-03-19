@@ -474,9 +474,6 @@ function initAppDashboard(slug) {
   const statInactive30Main = document.getElementById("app-stat-inactive30-main");
   const statAvgTicket = document.getElementById("app-stat-avg-ticket");
   const statRevenuePerActive = document.getElementById("app-stat-revenue-per-active");
-  const actionInactiveCount = document.getElementById("app-action-inactive-count");
-  const actionNewCount = document.getElementById("app-action-new-count");
-  const actionRecurrentCount = document.getElementById("app-action-recurrent-count");
   const dashboardPeriodLabelEl = document.getElementById("app-dashboard-period-label");
   const insightSummaryEl = document.getElementById("app-insight-summary");
   const insightFocusEl = document.getElementById("app-insight-focus");
@@ -3714,9 +3711,6 @@ function initAppDashboard(slug) {
     if (statMoreRetention) statMoreRetention.textContent = `${data.retentionPct} %`;
     if (statMoreFrequency) statMoreFrequency.textContent = frequency.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (statMoreRecurrent) statMoreRecurrent.textContent = data.recurrentMembersInPeriod;
-    if (actionInactiveCount) actionInactiveCount.textContent = `${data.inactiveMembers30Days} clients`;
-    if (actionNewCount) actionNewCount.textContent = `${data.newMembersLast30Days} nouveaux`;
-    if (actionRecurrentCount) actionRecurrentCount.textContent = `${data.recurrentMembersInPeriod} récurrents`;
     if (dashboardPeriodDisplay) {
       dashboardPeriodDisplay.textContent = getDashboardPeriodRange(period);
     }
@@ -4647,9 +4641,107 @@ function initAppDashboard(slug) {
     if (btn) btn.disabled = false;
   });
 
+  async function loadCampaignSegments() {
+    try {
+      const res = await api("/notifications/campaign-segments");
+      if (!res.ok) return;
+      const data = await res.json();
+      const ids = { inactive30: "app-campaign-count-inactive30", inactive90: "app-campaign-count-inactive90", new30: "app-campaign-count-new30", recurrent: "app-campaign-count-recurrent", points50: "app-campaign-count-points50" };
+      for (const [key, id] of Object.entries(ids)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = data[key] ?? 0;
+      }
+    } catch (_) { /* ignore */ }
+  }
+
+  const CAMPAIGN_DEFAULTS = {
+    inactive30: "On vous a manqué ! Revenez nous voir : -10% sur votre prochaine visite.",
+    inactive90: "Ça fait longtemps ! Profitez de notre offre exclusive pour revenir.",
+    new30: "Bienvenue chez nous ! Voici -10% sur votre première visite.",
+    recurrent: "Merci pour votre fidélité ! Offre exclusive pour vous.",
+    points50: "Vous avez des points à utiliser ! Venez les échanger contre une récompense.",
+  };
+  const CAMPAIGN_LABELS = {
+    inactive30: "Relancer les inactifs (30 j)",
+    inactive90: "Relancer les inactifs (90 j)",
+    new30: "Bienvenue aux nouveaux",
+    recurrent: "Récompenser les fidèles",
+    points50: "Proches de la récompense",
+  };
+
+  let campaignModalSegment = null;
+  const campaignModal = document.getElementById("app-campaign-modal");
+  const campaignModalBackdrop = document.getElementById("app-campaign-modal-backdrop");
+  const campaignModalTitle = document.getElementById("app-campaign-modal-title");
+  const campaignModalSegmentEl = document.getElementById("app-campaign-modal-segment");
+  const campaignModalMessage = document.getElementById("app-campaign-modal-message");
+  const campaignModalCancel = document.getElementById("app-campaign-modal-cancel");
+  const campaignModalSend = document.getElementById("app-campaign-modal-send");
+  const campaignModalFeedback = document.getElementById("app-campaign-modal-feedback");
+
+  function openCampaignModal(segment) {
+    campaignModalSegment = segment;
+    if (campaignModal) campaignModal.classList.remove("hidden");
+    if (campaignModalTitle) campaignModalTitle.textContent = "Envoyer une campagne";
+    if (campaignModalSegmentEl) campaignModalSegmentEl.textContent = CAMPAIGN_LABELS[segment] || segment;
+    if (campaignModalMessage) campaignModalMessage.value = CAMPAIGN_DEFAULTS[segment] || "";
+    if (campaignModalFeedback) { campaignModalFeedback.classList.add("hidden"); campaignModalFeedback.textContent = ""; }
+  }
+  function closeCampaignModal() {
+    campaignModalSegment = null;
+    if (campaignModal) campaignModal.classList.add("hidden");
+  }
+  campaignModalBackdrop?.addEventListener("click", closeCampaignModal);
+  campaignModalCancel?.addEventListener("click", closeCampaignModal);
+  campaignModalSend?.addEventListener("click", async () => {
+    if (!campaignModalSegment) return;
+    const message = campaignModalMessage?.value?.trim();
+    if (!message) {
+      if (campaignModalFeedback) { campaignModalFeedback.textContent = "Saisissez un message."; campaignModalFeedback.classList.remove("hidden"); campaignModalFeedback.classList.add("error"); }
+      return;
+    }
+    if (campaignModalSend) campaignModalSend.disabled = true;
+    if (campaignModalFeedback) { campaignModalFeedback.classList.add("hidden"); campaignModalFeedback.textContent = ""; }
+    try {
+      const titleEl = document.getElementById("app-notification-banner-title");
+      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
+        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, segment: campaignModalSegment }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (campaignModalFeedback) {
+        campaignModalFeedback.classList.remove("hidden");
+        if (res.ok) {
+          const sent = data.sent ?? 0;
+          campaignModalFeedback.textContent = sent > 0 ? `Envoyé à ${sent} appareil(s).` : (data.message || "Aucun appareil n'a reçu la notification.");
+          campaignModalFeedback.classList.remove("error");
+          campaignModalFeedback.classList.add("success");
+          loadAppNotificationStats();
+          loadCampaignSegments();
+          setTimeout(closeCampaignModal, 1500);
+        } else {
+          campaignModalFeedback.textContent = data.error || "Erreur";
+          campaignModalFeedback.classList.add("error");
+        }
+      }
+    } catch (_) {
+      if (campaignModalFeedback) { campaignModalFeedback.textContent = "Erreur réseau."; campaignModalFeedback.classList.remove("hidden"); campaignModalFeedback.classList.add("error"); }
+    }
+    if (campaignModalSend) campaignModalSend.disabled = false;
+  });
+
+  document.querySelectorAll(".app-campaign-send-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const seg = btn.dataset.segment;
+      if (seg) openCampaignModal(seg);
+    });
+  });
+
   window.addEventListener("app-section-change", (e) => {
     if (e.detail?.sectionId === "notifications") {
       loadAppNotificationStats();
+      loadCampaignSegments();
       updateAppNotificationPreview();
       refreshNotificationBannerIcon();
     }
@@ -4657,6 +4749,7 @@ function initAppDashboard(slug) {
 
   refresh();
   loadAppNotificationStats();
+  loadCampaignSegments();
 }
 
 export { initAppPage };

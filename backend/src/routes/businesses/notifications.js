@@ -5,6 +5,7 @@
 import { Router } from "express";
 import {
   getMemberIdsInCategories,
+  getMemberIdsBySegment,
   getWebPushSubscriptionsByBusiness,
   getWebPushSubscriptionsByBusinessFiltered,
   getPassKitPushTokensForBusiness,
@@ -19,6 +20,7 @@ import {
 import { sendWebPush } from "../../notifications.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
+import { getDashboardStats } from "../../db.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
 
 export async function notifyHandler(req, res) {
@@ -96,13 +98,18 @@ router.post("/send", async (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const { title, message, category_ids: reqCategoryIds } = req.body || {};
+  const { title, message, category_ids: reqCategoryIds, segment } = req.body || {};
   const body = (message || "").trim();
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
   }
-  const categoryIds = Array.isArray(reqCategoryIds) ? reqCategoryIds.filter(Boolean) : null;
-  const memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
+  let memberIds = null;
+  if (segment && ["inactive30", "inactive90", "new30", "recurrent", "points50"].includes(segment)) {
+    memberIds = getMemberIdsBySegment(business.id, segment);
+  } else {
+    const categoryIds = Array.isArray(reqCategoryIds) ? reqCategoryIds.filter(Boolean) : null;
+    memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
+  }
   const webSubscriptions = memberIds !== null
     ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
     : getWebPushSubscriptionsByBusiness(business.id);
@@ -186,6 +193,21 @@ router.post("/send", async (req, res) => {
       sent === 0 && totalDevices > 0 && firstError
         ? `Aucun appareil n'a reçu la notification. Erreur : ${firstError}`
         : undefined,
+  });
+});
+
+router.get("/campaign-segments", (req, res) => {
+  const business = req.business;
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const stats = getDashboardStats(business.id, "30d");
+  res.json({
+    inactive30: stats.inactiveMembers30Days ?? 0,
+    inactive90: stats.inactiveMembers90Days ?? 0,
+    new30: stats.newMembersLast30Days ?? 0,
+    recurrent: stats.recurrentMembersInPeriod ?? 0,
+    points50: stats.membersWithPoints50 ?? 0,
   });
 });
 

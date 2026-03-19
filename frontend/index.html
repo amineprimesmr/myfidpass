@@ -802,23 +802,6 @@
             </div>
 
             <section class="app-dashboard-explorer">
-              <div class="app-dashboard-actions">
-                <h3 class="app-evolution-title">Actions du jour</h3>
-                <div class="app-dashboard-actions-grid">
-                  <a href="#membres" data-section="membres" class="app-dashboard-action-card">
-                    <span class="app-dashboard-action-title">Relancer les inactifs</span>
-                    <strong id="app-action-inactive-count">0 clients</strong>
-                  </a>
-                  <a href="#membres" data-section="membres" class="app-dashboard-action-card">
-                    <span class="app-dashboard-action-title">Soigner les nouveaux</span>
-                    <strong id="app-action-new-count">0 nouveaux</strong>
-                  </a>
-                  <a href="#carte-perimetre" data-section="carte-perimetre" class="app-dashboard-action-card">
-                    <span class="app-dashboard-action-title">Campagne fidélité</span>
-                    <strong id="app-action-recurrent-count">0 récurrents</strong>
-                  </a>
-                </div>
-              </div>
               <div class="app-dashboard-explorer-header">
                 <h3 class="app-evolution-title">Explorer les données</h3>
                 <div class="app-dashboard-explorer-tabs" role="tablist" aria-label="Segments de données">
@@ -1391,7 +1374,60 @@
           </section>
           <section id="notifications" class="app-section">
             <h2 class="app-section-title">Notifications</h2>
-            <p class="app-section-desc">Modifiez l'aperçu ci-dessous — c'est exactement ce que verront vos clients. Puis envoyez vos campagnes.</p>
+            <p class="app-section-desc">Campagnes ciblées et envoi manuel. Utilisez vos données pour relancer les inactifs, accueillir les nouveaux et fidéliser vos clients.</p>
+
+            <div class="app-campaigns-block" role="region" aria-labelledby="app-campaigns-heading">
+              <h3 id="app-campaigns-heading" class="app-subsection-title">Campagnes suggérées</h3>
+              <p class="app-campaigns-intro">Actions ciblées basées sur le comportement de vos clients. Cliquez pour envoyer une notification au segment choisi.</p>
+              <div class="app-campaigns-grid" id="app-campaigns-grid">
+                <article class="app-campaign-card" data-segment="inactive30">
+                  <div class="app-campaign-card-icon app-campaign-icon-inactive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                  <div class="app-campaign-card-body">
+                    <h4 class="app-campaign-card-title">Relancer les inactifs (30 j)</h4>
+                    <p class="app-campaign-card-desc">Clients sans visite depuis 30 jours. Offre spéciale pour les faire revenir.</p>
+                    <p class="app-campaign-card-count"><strong id="app-campaign-count-inactive30">0</strong> clients</p>
+                    <button type="button" class="app-campaign-send-btn" data-segment="inactive30">Envoyer maintenant</button>
+                  </div>
+                </article>
+                <article class="app-campaign-card" data-segment="inactive90">
+                  <div class="app-campaign-card-icon app-campaign-icon-inactive90"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                  <div class="app-campaign-card-body">
+                    <h4 class="app-campaign-card-title">Relancer les inactifs (90 j)</h4>
+                    <p class="app-campaign-card-desc">Clients absents depuis 3 mois. Campagne de réactivation.</p>
+                    <p class="app-campaign-card-count"><strong id="app-campaign-count-inactive90">0</strong> clients</p>
+                    <button type="button" class="app-campaign-send-btn" data-segment="inactive90">Envoyer maintenant</button>
+                  </div>
+                </article>
+                <article class="app-campaign-card" data-segment="new30">
+                  <div class="app-campaign-card-icon app-campaign-icon-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+                  <div class="app-campaign-card-body">
+                    <h4 class="app-campaign-card-title">Bienvenue aux nouveaux</h4>
+                    <p class="app-campaign-card-desc">Inscrits dans les 30 derniers jours. Message de bienvenue et offre de parrainage.</p>
+                    <p class="app-campaign-card-count"><strong id="app-campaign-count-new30">0</strong> nouveaux</p>
+                    <button type="button" class="app-campaign-send-btn" data-segment="new30">Envoyer maintenant</button>
+                  </div>
+                </article>
+                <article class="app-campaign-card" data-segment="recurrent">
+                  <div class="app-campaign-card-icon app-campaign-icon-recurrent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>
+                  <div class="app-campaign-card-body">
+                    <h4 class="app-campaign-card-title">Récompenser les fidèles</h4>
+                    <p class="app-campaign-card-desc">Clients avec 2+ visites ce mois. Offre exclusive pour les récurrents.</p>
+                    <p class="app-campaign-card-count"><strong id="app-campaign-count-recurrent">0</strong> récurrents</p>
+                    <button type="button" class="app-campaign-send-btn" data-segment="recurrent">Envoyer maintenant</button>
+                  </div>
+                </article>
+                <article class="app-campaign-card" data-segment="points50">
+                  <div class="app-campaign-card-icon app-campaign-icon-points"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+                  <div class="app-campaign-card-body">
+                    <h4 class="app-campaign-card-title">Proches de la récompense</h4>
+                    <p class="app-campaign-card-desc">Clients avec 50+ points. Rappel pour venir échanger leurs points.</p>
+                    <p class="app-campaign-card-count"><strong id="app-campaign-count-points50">0</strong> clients</p>
+                    <button type="button" class="app-campaign-send-btn" data-segment="points50">Envoyer maintenant</button>
+                  </div>
+                </article>
+              </div>
+            </div>
+
             <div class="app-notification-preview-banner" role="region" aria-label="Aperçu et réglages de la notification">
               <div class="app-notification-preview-banner-bubble">
                 <div class="app-notification-preview-banner-icon-wrap app-drop-zone" id="app-notification-banner-logo-drop" role="button" tabindex="0" aria-label="Changer le logo de la notification (glisser une image ou cliquer)">
@@ -1421,8 +1457,23 @@
               </div>
             </div>
 
+            <div id="app-campaign-modal" class="app-campaign-modal hidden" role="dialog" aria-modal="true" aria-labelledby="app-campaign-modal-title">
+              <div class="app-campaign-modal-backdrop" id="app-campaign-modal-backdrop"></div>
+              <div class="app-campaign-modal-box">
+                <h4 id="app-campaign-modal-title" class="app-campaign-modal-title">Envoyer une campagne</h4>
+                <p class="app-campaign-modal-segment" id="app-campaign-modal-segment"></p>
+                <label class="app-label" for="app-campaign-modal-message">Message</label>
+                <textarea id="app-campaign-modal-message" class="app-input app-campaign-modal-textarea" rows="3" maxlength="200" placeholder="Votre message…"></textarea>
+                <div class="app-campaign-modal-actions">
+                  <button type="button" class="app-btn app-btn-secondary" id="app-campaign-modal-cancel">Annuler</button>
+                  <button type="button" class="app-btn app-btn-primary" id="app-campaign-modal-send">Envoyer</button>
+                </div>
+                <p id="app-campaign-modal-feedback" class="app-message hidden"></p>
+              </div>
+            </div>
+
             <div class="app-notif-categories-block" role="region" aria-labelledby="app-notif-categories-heading">
-              <h3 id="app-notif-categories-heading" class="app-subsection-title">À qui envoyer ?</h3>
+              <h3 id="app-notif-categories-heading" class="app-subsection-title">Envoi manuel</h3>
               <div class="app-notif-target-row">
                 <label class="app-radio-label app-notif-target-option">
                   <input type="radio" name="app-notif-target" value="all" id="app-notif-target-all" checked />
