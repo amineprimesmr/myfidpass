@@ -261,7 +261,7 @@
 
 #landing .landing-faq-v2-item {
   background: #ffffff;
-  border-radius: 14px;
+  border-radius: 24px;
   border: 1px solid rgba(17, 24, 39, 0.06);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   overflow: hidden;
@@ -275,7 +275,7 @@
 
 #landing .landing-faq-v2-item.is-open {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  border-color: rgba(30, 58, 138, 0.18);
+  border-color: rgba(17, 24, 39, 0.1);
 }
 
 #landing .landing-faq-v2-item .landing-faq-question {
@@ -294,15 +294,20 @@
   text-align: left;
   cursor: pointer;
   transition: color 0.25s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #landing .landing-faq-v2-item .landing-faq-question:hover {
-  color: #1e3a8a;
+  color: #374151;
+}
+
+#landing .landing-faq-v2-item .landing-faq-question:focus {
+  outline: none;
 }
 
 #landing .landing-faq-v2-item .landing-faq-question:focus-visible {
-  outline: 2px solid #1e3a8a;
-  outline-offset: 2px;
+  outline: none;
 }
 
 #landing .landing-faq-v2-item .landing-faq-icon {
@@ -322,15 +327,16 @@
 
 #landing .landing-faq-v2-item.is-open .landing-faq-icon {
   transform: rotate(45deg);
-  background: rgba(30, 58, 138, 0.1);
-  color: #1e3a8a;
+  background: rgba(17, 24, 39, 0.08);
+  color: #374151;
 }
 
-/* Animation fluide hauteur (grid) */
+/* Animation fluide hauteur (grid) — réponses cachées par défaut */
 #landing .landing-faq-v2-item .landing-faq-answer {
   display: grid;
   grid-template-rows: 0fr;
   padding: 0;
+  overflow: hidden;
   transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

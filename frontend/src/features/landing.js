@@ -47,6 +47,14 @@ function initLandingFaq() {
   if (!items.length) return;
 
   items.forEach((item) => {
+    item.classList.remove("is-open");
+    const entryAnswer = item.querySelector(".landing-faq-answer");
+    const entryBtn = item.querySelector(".landing-faq-question");
+    if (entryBtn) entryBtn.setAttribute("aria-expanded", "false");
+    if (entryAnswer) entryAnswer.setAttribute("aria-hidden", "true");
+  });
+
+  items.forEach((item) => {
     const btn = item.querySelector(".landing-faq-question");
     const answer = item.querySelector(".landing-faq-answer");
     if (!btn || !answer) return;
