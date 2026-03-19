@@ -3471,6 +3471,115 @@ body.page-app .whatsapp-fab { display: none !important; }
 @media (max-width: 760px) { .app-dashboard-explorer-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 420px) { .app-dashboard-explorer-panel { grid-template-columns: 1fr; } }
 
+/* Historique récent — card-table UX (style Recent Consultation) */
+.app-dashboard-recent-history {
+  margin: 1.25rem 0;
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.app-dashboard-recent-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.app-dashboard-recent-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  border-radius: 8px;
+  color: #fff;
+}
+.app-dashboard-recent-icon svg { width: 18px; height: 18px; }
+.app-dashboard-recent-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.app-dashboard-recent-headers {
+  display: grid;
+  grid-template-columns: 1fr minmax(120px, auto) minmax(140px, auto);
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  background: #f1f5f9;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+.app-dashboard-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.app-dashboard-recent-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(120px, auto) minmax(140px, auto);
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.app-dashboard-recent-row:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.app-dashboard-recent-row-name {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.app-dashboard-recent-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+.app-dashboard-recent-avatar.av-0 { background: #fef3c7; }
+.app-dashboard-recent-avatar.av-1 { background: #e9d5ff; }
+.app-dashboard-recent-avatar.av-2 { background: #bbf7d0; }
+.app-dashboard-recent-avatar.av-3 { background: #fde68a; }
+.app-dashboard-recent-avatar.av-4 { background: #bfdbfe; }
+.app-dashboard-recent-avatar.av-5 { background: #fbcfe8; }
+.app-dashboard-recent-avatar.av-6 { background: #ddd6fe; }
+.app-dashboard-recent-avatar.av-7 { background: #a7f3d0; }
+.app-dashboard-recent-name { font-weight: 500; color: #1e293b; }
+.app-dashboard-recent-type { font-size: 0.9rem; color: #475569; }
+.app-dashboard-recent-date { font-size: 0.9rem; color: #1e293b; }
+.app-dashboard-recent-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+@media (max-width: 640px) {
+  .app-dashboard-recent-headers,
+  .app-dashboard-recent-row {
+    grid-template-columns: 1fr auto;
+  }
+  .app-dashboard-recent-col-type,
+  .app-dashboard-recent-row-type { display: none; }
+}
+
 .app-dashboard-analytics-grid {
   display: grid;
   grid-template-columns: 1fr;

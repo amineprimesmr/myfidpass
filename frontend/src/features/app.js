@@ -3879,11 +3879,54 @@ function initAppDashboard(slug) {
       .join("") || "<tr><td colspan='4'>Aucune opération</td></tr>";
   }
 
+  async function loadDashboardRecentHistory() {
+    const res = await api("/dashboard/transactions?limit=8");
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.transactions || [];
+  }
+
+  function renderDashboardRecentHistory(transactions) {
+    const listEl = document.getElementById("app-dashboard-recent-list");
+    if (!listEl) return;
+    const arr = transactions || [];
+    const typeLabel = (t) => {
+      if (t.type !== "points_add") return t.type;
+      const meta = t.metadata ? String(t.metadata) : "";
+      return meta.includes("visit") ? "Passage" : "Points ajoutés";
+    };
+    const formatRecentDate = (iso) => {
+      const d = new Date(iso);
+      return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    };
+    const initial = (name) => (name && name.trim() ? String(name.trim()).charAt(0).toUpperCase() : "?");
+    const avatarColors = ["av-0", "av-1", "av-2", "av-3", "av-4", "av-5", "av-6", "av-7"];
+    if (arr.length === 0) {
+      listEl.innerHTML = '<p class="app-dashboard-recent-empty">Aucun passage récent.</p>';
+      return;
+    }
+    listEl.innerHTML = arr
+      .map(
+        (t, i) =>
+          `<article class="app-dashboard-recent-row" role="listitem">
+            <div class="app-dashboard-recent-row-name">
+              <span class="app-dashboard-recent-avatar ${avatarColors[i % avatarColors.length]}" aria-hidden="true">${escapeHtml(initial(t.member_name || t.member_email))}</span>
+              <span class="app-dashboard-recent-name">${escapeHtml(t.member_name || "Sans nom")}</span>
+            </div>
+            <span class="app-dashboard-recent-type app-dashboard-recent-row-type">${typeLabel(t)}</span>
+            <span class="app-dashboard-recent-date">${formatRecentDate(t.created_at)}</span>
+          </article>`
+      )
+      .join("");
+  }
+
   async function refresh() {
     try {
       const stats = await loadStats();
       if (stats) renderOverviewAlerts(stats);
       await loadEvolution();
+      const recentTx = await loadDashboardRecentHistory();
+      renderDashboardRecentHistory(recentTx);
     } catch (_) { return; }
     const membersData = await loadMembers(membersSearchInput?.value || "", membersFilterEl?.value || "", membersSortEl?.value || "last_visit");
     allMembers = membersData.members || [];
