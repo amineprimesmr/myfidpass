@@ -1,7 +1,6 @@
 /**
- * Bottom sheet onboarding — overlay sombre, drawer depuis le bas.
- * Style référence : "5x plus productif" — premium dark, coins arrondis.
- * Dérogation 500 lignes : 567 lignes (2026-03-19) — animations UX.
+ * Bottom sheet onboarding — fond clair, drawer depuis le bas.
+ * UX épurée, coins arrondis, contraste optimisé.
  */
 
 /* Overlay */
@@ -22,7 +21,7 @@
 .landing-onboarding-sheet-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   transition: opacity 0.35s cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -30,7 +29,7 @@
   opacity: 1;
 }
 
-/* Drawer */
+/* Drawer — fond clair */
 .landing-onboarding-sheet-drawer {
   position: absolute;
   left: 0;
@@ -38,9 +37,9 @@
   bottom: 0;
   height: 65vh;
   max-height: 65vh;
-  background: linear-gradient(180deg, #1f1f1f 0%, #141414 50%, #0a0a0a 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
   border-radius: 24px 24px 0 0;
-  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.12);
   transform: translateY(100%);
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
@@ -84,17 +83,16 @@
 }
 .landing-onboarding-sheet-progress .builder-onboarding-progress-bar {
   height: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #e2e8f0;
   border-radius: 999px;
   overflow: hidden;
 }
 .landing-onboarding-sheet-progress .builder-onboarding-progress-fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #8a8a8a 0%, #b8b8b8 50%, #e0e0e0 100%);
+  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
   border-radius: 999px;
   transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 0 12px rgba(224, 224, 224, 0.2);
 }
 
 .landing-onboarding-sheet-header-row {
@@ -112,7 +110,7 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: rgba(255, 255, 255, 0.9);
+  color: #475569;
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
@@ -122,8 +120,8 @@
   transition: background 0.2s ease, color 0.2s ease;
 }
 .landing-onboarding-sheet-back:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: #f1f5f9;
+  color: #020617;
 }
 .landing-onboarding-sheet-title {
   margin: 0;
@@ -132,7 +130,7 @@
   font-family: "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #fff;
+  color: #020617;
   transition: opacity 0.2s ease;
 }
 
@@ -156,10 +154,10 @@
   flex-direction: column;
 }
 
-/* Onboarding dans le sheet — thème dark, sans encadré */
+/* Onboarding dans le sheet — thème clair */
 .landing-onboarding-sheet .builder-onboarding-card {
-  --landing-text: #fff;
-  --landing-muted: rgba(255, 255, 255, 0.65);
+  --landing-text: #020617;
+  --landing-muted: #64748b;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -217,13 +215,13 @@
   }
 }
 .landing-onboarding-sheet .builder-onboarding-progress-bar {
-  background: rgba(255, 255, 255, 0.08);
+  background: #e2e8f0;
 }
 .landing-onboarding-sheet .builder-onboarding-progress-fill {
   transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .landing-onboarding-sheet .builder-onboarding-progress-label {
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
 }
 
 .landing-onboarding-sheet .builder-onboarding-progress {
@@ -231,74 +229,58 @@
 }
 
 .landing-onboarding-sheet .builder-onboarding-question {
-  color: #fff;
+  color: #020617;
 }
 .landing-onboarding-sheet .builder-onboarding-help {
-  color: rgba(255, 255, 255, 0.65);
+  color: #64748b;
 }
 .landing-onboarding-sheet .builder-onboarding-btn {
-  background: linear-gradient(180deg, #e8e8e8 0%, #c0c0c0 100%);
-  color: #1a1a1a;
-  border-color: transparent;
+  background: #f1f5f9;
+  color: #020617;
+  border-color: #e2e8f0;
 }
 
-/* Bouton principal (Passer/Continuer/Terminer) — relief 3D prononcé */
+/* Bouton principal (Passer/Continuer/Terminer) */
 .landing-onboarding-sheet .builder-onboarding-nav .builder-onboarding-btn:not(.builder-onboarding-btn-ghost) {
   flex: 1;
   min-width: 0;
   padding: 15px 26px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  background: linear-gradient(180deg, #ffffff 0%, #f0f2f5 35%, #e2e6eb 70%, #d4d9e0 100%);
-  color: #1a1a1a;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
   border: none;
-  border-radius: 9999px;
-  box-shadow:
-    0 2px 0 rgba(255, 255, 255, 0.95) inset,
-    0 1px 0 rgba(255, 255, 255, 0.6) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.4),
-    0 4px 0 #c8ced6,
-    0 5px 10px rgba(0, 0, 0, 0.2),
-    0 8px 24px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .landing-onboarding-sheet .builder-onboarding-nav .builder-onboarding-btn:not(.builder-onboarding-btn-ghost):hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f5f7fa 35%, #e8ecf1 70%, #dce1e8 100%);
-  box-shadow:
-    0 2px 0 rgba(255, 255, 255, 1) inset,
-    0 1px 0 rgba(255, 255, 255, 0.7) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.5),
-    0 6px 0 #c8ced6,
-    0 7px 14px rgba(0, 0, 0, 0.18),
-    0 12px 32px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
   transform: translateY(-2px);
 }
 
 .landing-onboarding-sheet .builder-onboarding-nav .builder-onboarding-btn:not(.builder-onboarding-btn-ghost):active {
-  background: linear-gradient(180deg, #e2e6eb 0%, #d4d9e0 50%, #c8ced6 100%);
-  box-shadow:
-    0 -2px 4px rgba(0, 0, 0, 0.15) inset,
-    0 1px 0 rgba(255, 255, 255, 0.2) inset,
-    0 1px 0 #c8ced6,
-    0 2px 4px rgba(0, 0, 0, 0.2);
-  transform: translateY(2px);
+  transform: translateY(0);
 }
 
 .landing-onboarding-sheet .builder-onboarding-btn:hover {
-  background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%);
+  background: #e2e8f0;
 }
 .landing-onboarding-sheet .builder-onboarding-btn-ghost {
   background: transparent;
-  color: rgba(255, 255, 255, 0.9);
-  border-color: rgba(255, 255, 255, 0.3);
+  color: #475569;
+  border: 1px solid #cbd5e1;
 }
 .landing-onboarding-sheet .builder-onboarding-btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: #f1f5f9;
+  border-color: #94a3b8;
 }
 .landing-onboarding-sheet .builder-onboarding-choice {
-  background: #1a1a1a;
-  border-color: rgba(255, 255, 255, 0.15);
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   animation: builder-choice-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: calc(var(--stagger, 0) * 45ms);
   opacity: 0;
@@ -322,14 +304,15 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 .landing-onboarding-sheet .builder-onboarding-choice:hover {
-  border-color: rgba(176, 176, 176, 0.6);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .landing-onboarding-sheet .builder-onboarding-choice:active {
   transform: scale(0.98);
 }
 .landing-onboarding-sheet .builder-onboarding-choice.is-selected {
-  border-color: #b0b0b0;
-  box-shadow: 0 0 0 1px #b0b0b0 inset;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 /* Grille style (points/tampons) — cartes plus grandes avec mini maquette */
@@ -358,7 +341,7 @@
   max-width: 140px;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 .landing-onboarding-sheet .builder-onboarding-style-mockup .builder-wallet-card-header {
   padding: 0.35rem 0.5rem;
@@ -399,53 +382,55 @@
   margin-top: 0.2rem;
 }
 .landing-onboarding-sheet .builder-onboarding-choice-title {
-  color: #fff;
+  color: #020617;
 }
 .landing-onboarding-sheet .builder-onboarding-choice-hint {
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
 }
 .landing-onboarding-sheet .builder-onboarding-selected-count {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #475569;
 }
 .landing-onboarding-sheet .builder-onboarding-input-label {
-  color: rgba(255, 255, 255, 0.8);
+  color: #334155;
 }
 .landing-onboarding-sheet .builder-onboarding-input {
-  background: #1a1a1a;
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #020617;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .landing-onboarding-sheet .builder-onboarding-input:focus {
-  border-color: #b0b0b0;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
 }
 .landing-onboarding-sheet .builder-onboarding-config-card {
-  background: #1a1a1a;
-  border-color: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border: 1px solid #e2e8f0;
   transition: border-color 0.2s ease;
 }
 .landing-onboarding-sheet .builder-onboarding-recap p {
-  color: rgba(255, 255, 255, 0.85);
+  color: #334155;
 }
 .landing-onboarding-sheet .builder-onboarding-field-error {
-  color: #ff6b6b;
+  color: #dc2626;
 }
 .landing-onboarding-sheet .builder-onboarding-autosuggest-feedback.success {
-  color: #7bed9f;
+  color: #16a34a;
 }
 .landing-onboarding-sheet .builder-onboarding-autosuggest-feedback.error {
-  color: #ff6b6b;
+  color: #dc2626;
 }
 .landing-onboarding-sheet .builder-onboarding-autosuggest-feedback.info {
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
 }
 .landing-onboarding-sheet .builder-onboarding-nav {
   flex-shrink: 0;
   margin-top: auto;
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #e2e8f0;
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
@@ -474,21 +459,21 @@
   justify-content: center;
   min-height: 100px;
   padding: 1.25rem;
-  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border: 2px dashed #cbd5e1;
   border-radius: 12px;
   cursor: pointer;
   font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.04);
+  color: #64748b;
+  background: #f8fafc;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 .landing-onboarding-sheet .builder-onboarding-logo-label:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: #94a3b8;
+  background: #f1f5f9;
 }
 .landing-onboarding-sheet .builder-onboarding-logo-drop-zone.builder-onboarding-logo-drop-active .builder-onboarding-logo-label {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.1);
+  border-color: #3b82f6;
+  background: #eff6ff;
 }
 .landing-onboarding-sheet .builder-onboarding-logo-placeholder {
   text-align: center;
@@ -518,7 +503,7 @@
 .landing-onboarding-card-beam-subtitle {
   margin: 0 0 1rem;
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
   text-align: center;
 }
 .landing-onboarding-card-beam-wrap {
@@ -570,15 +555,15 @@
   margin: 0 0 1rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: #020617;
   text-align: center;
 }
 .landing-onboarding-account-error {
   margin: 0 0 0.75rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
-  color: #fca5a5;
-  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+  background: #fef2f2;
   border-radius: 8px;
 }
 .landing-onboarding-account-error.hidden {
@@ -587,7 +572,7 @@
 .landing-onboarding-account-divider {
   margin: 1rem 0 0.75rem;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   text-align: center;
 }
 .landing-onboarding-account-social {
@@ -638,18 +623,23 @@
   margin: 0.75rem 0 0.35rem;
   font-size: 0.85rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  color: #334155;
 }
 .landing-onboarding-account-input {
   width: 100%;
   padding: 12px 14px;
   font-family: inherit;
   font-size: 1rem;
-  color: #1a1a1a;
+  color: #020617;
   background: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   box-sizing: border-box;
+}
+.landing-onboarding-account-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
 }
 .landing-onboarding-account-input::placeholder {
   color: #6b7280;
@@ -670,7 +660,7 @@
   margin: 0 0 1.25rem;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #fff;
+  color: #020617;
   text-align: center;
 }
 .builder-onboarding-account-social-row {
@@ -698,7 +688,7 @@
 .builder-onboarding-account-step .landing-onboarding-account-divider {
   margin: 1rem 0 0.75rem;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: #64748b;
 }
 .builder-onboarding-account-step .landing-onboarding-account-label {
   margin-top: 0.75rem;
@@ -713,17 +703,17 @@
   padding: 14px 24px;
   font-size: 1rem;
   font-weight: 600;
-  color: #020617;
-  background: linear-gradient(180deg, #fff 0%, #e8eaed 100%);
+  color: #fff;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .builder-onboarding-btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
 }
 .builder-onboarding-account-skip {
   margin: 1rem 0 0;
@@ -733,7 +723,7 @@
 .landing-onboarding-sheet .builder-onboarding-link {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: #3b82f6;
   font-size: 0.9rem;
   cursor: pointer;
   text-decoration: underline;
@@ -741,7 +731,7 @@
 }
 
 .landing-onboarding-sheet .builder-onboarding-link:hover {
-  color: #d0d0d0;
+  color: #2563eb;
 }
 
 /* Tablette : drawer centré, plus large */
