@@ -14,6 +14,7 @@ import {
   getPasswordResetByToken,
   deletePasswordResetToken,
   updateUserPassword,
+  deleteUserAccount,
 } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
@@ -446,6 +447,20 @@ router.get("/me", (req, res, next) => {
 router.get("/me/businesses", requireAuth, (req, res) => {
   const businesses = getBusinessesByUserId(req.user.id);
   res.json({ businesses });
+});
+
+/**
+ * DELETE /api/auth/account
+ * Supprime définitivement le compte de l'utilisateur connecté (RGPD, exigence App Store).
+ */
+router.delete("/account", requireAuth, (req, res) => {
+  try {
+    deleteUserAccount(req.user.id);
+    return res.json({ ok: true, message: "Compte supprimé" });
+  } catch (e) {
+    console.error("Delete account error:", e);
+    return res.status(500).json({ error: "Erreur lors de la suppression du compte." });
+  }
 });
 
 export default router;
