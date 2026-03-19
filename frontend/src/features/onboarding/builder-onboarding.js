@@ -250,8 +250,8 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     return "Continuer";
   }
   function render() {
-    const pct = ((state.currentStep + 1) / TOTAL_STEPS) * 100;
-    const progressHtml = `<div class="builder-onboarding-progress" role="progressbar" aria-valuenow="${state.currentStep + 1}" aria-valuemin="1" aria-valuemax="${TOTAL_STEPS}" aria-label="Étape ${state.currentStep + 1} sur ${TOTAL_STEPS}"><div class="builder-onboarding-progress-bar"><span class="builder-onboarding-progress-fill" style="width:${pct}%"></span></div></div>`;
+    const stepLabel = `Étape ${state.currentStep + 1}/${TOTAL_STEPS}`;
+    const progressHtml = `<div class="builder-onboarding-step-badge-wrap" role="status" aria-label="${stepLabel}"><span class="builder-onboarding-step-badge">${stepLabel}</span></div>`;
     if (progressEl) {
       progressEl.innerHTML = progressHtml;
     }

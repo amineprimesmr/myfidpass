@@ -66,33 +66,40 @@
   flex-shrink: 0;
 }
 
+/* Badge étape x/x — même UX que bouton Contactez-nous (pilule, halo) */
 .landing-onboarding-sheet-progress {
   margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
 }
 
 .landing-onboarding-sheet-progress:empty {
   display: none;
 }
 
-.landing-onboarding-sheet-progress .builder-onboarding-progress {
-  margin-bottom: 0;
+.builder-onboarding-step-badge-wrap {
+  display: inline-block;
+  padding: 2px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
-.landing-onboarding-sheet-progress .builder-onboarding-progress {
-  display: block;
-}
-.landing-onboarding-sheet-progress .builder-onboarding-progress-bar {
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-}
-.landing-onboarding-sheet-progress .builder-onboarding-progress-fill {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
-  border-radius: 999px;
-  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+.builder-onboarding-step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.4rem;
+  background: linear-gradient(180deg, #3d3d3d 0%, #252525 50%, #141414 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-font-smoothing: antialiased;
 }
 
 .landing-onboarding-sheet-header-row {
@@ -214,18 +221,8 @@
     transform: translateY(0);
   }
 }
-.landing-onboarding-sheet .builder-onboarding-progress-bar {
-  background: #e2e8f0;
-}
-.landing-onboarding-sheet .builder-onboarding-progress-fill {
-  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.landing-onboarding-sheet .builder-onboarding-progress-label {
-  color: #64748b;
-}
-
-.landing-onboarding-sheet .builder-onboarding-progress {
-  margin-bottom: 1rem;
+.landing-onboarding-sheet .builder-onboarding-step-badge-wrap {
+  margin-bottom: 0.5rem;
 }
 
 .landing-onboarding-sheet .builder-onboarding-question {
