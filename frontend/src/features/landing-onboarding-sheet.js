@@ -8,9 +8,7 @@ import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";
 import { BUILDER_DRAFT_KEY, CARD_TEMPLATES } from "../constants/builder.js";
 
 function templateIdFromOnboardingStyle(stylePreset) {
-  if (stylePreset === "classic") return "classic";
-  if (stylePreset === "premium") return "elegant";
-  if (stylePreset === "colorful") return "fastfood-points";
+  if (stylePreset === "stamps") return "fastfood-tampons";
   return "bold";
 }
 

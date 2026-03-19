@@ -46,9 +46,7 @@ function getTemplateIdFromCategoryFormat(category, format) {
 }
 
 function templateIdFromOnboardingStyle(stylePreset) {
-  if (stylePreset === "classic") return "classic";
-  if (stylePreset === "premium") return "elegant";
-  if (stylePreset === "colorful") return "fastfood-points";
+  if (stylePreset === "stamps") return "fastfood-tampons";
   return "bold";
 }
 
@@ -67,7 +65,7 @@ function initBuilderPage() {
       currentStep: 0,
       completed: false,
       logoDataUrl: "",
-      stylePreset: "modern",
+      stylePreset: "points",
       rewardModel: "later",
       engagementGoals: [],
       goalsFreeText: "",

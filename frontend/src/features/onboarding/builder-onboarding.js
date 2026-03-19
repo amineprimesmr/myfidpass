@@ -13,10 +13,8 @@ const STEP_QUESTIONS = [
   "Votre carte est prête",
 ];
 const STYLE_OPTIONS = [
-  { id: "classic", label: "Classique", hint: "Sobre et lisible" },
-  { id: "modern", label: "Moderne", hint: "Impact visuel fort" },
-  { id: "premium", label: "Premium", hint: "Elegant et haut de gamme" },
-  { id: "colorful", label: "Colore", hint: "Dynamique et chaleureux" },
+  { id: "points", label: "Système de points", hint: "Montant cumulé converti en points" },
+  { id: "stamps", label: "Système de tampons", hint: "X achats = 1 offert" },
 ];
 const REWARD_OPTIONS = [
   { id: "stamps", label: "10 achats = 1 offert", hint: "Simple a expliquer en caisse" },
@@ -92,7 +90,7 @@ function normalizeState(input = {}, placeIdHint = "") {
     currentStep: Number.isFinite(input.currentStep) ? Math.max(0, Math.min(TOTAL_STEPS - 1, input.currentStep)) : 0,
     completed: input.completed === true,
     logoDataUrl: typeof input.logoDataUrl === "string" ? input.logoDataUrl : "",
-    stylePreset: typeof input.stylePreset === "string" ? input.stylePreset : "modern",
+    stylePreset: typeof input.stylePreset === "string" ? input.stylePreset : "points",
     rewardModel: typeof input.rewardModel === "string" ? input.rewardModel : "later",
     engagementGoals: goals,
     goalsFreeText: typeof input.goalsFreeText === "string" ? input.goalsFreeText : "",
@@ -192,7 +190,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
   </label>
 </div>`;
     }
-    if (state.currentStep === 1) return `<p class="builder-onboarding-help">Thème ajustable ensuite.</p><div class="builder-onboarding-grid builder-onboarding-grid-animate">${STYLE_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-style="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
+    if (state.currentStep === 1) return `<p class="builder-onboarding-help">Modifiable dans votre espace pro.</p><div class="builder-onboarding-grid builder-onboarding-grid-animate">${STYLE_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.stylePreset === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-style="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
     if (state.currentStep === 2) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${GOAL_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice builder-onboarding-goal-choice ${state.engagementGoals.includes(opt.id) ? "is-selected" : ""}" style="--stagger: ${i}" data-goal="${opt.id}"><span class="builder-onboarding-goal-main">${renderGoalIcon(opt)}<span class="builder-onboarding-choice-title">${opt.label}</span></span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div><label class="builder-onboarding-input-label" for="builder-onboarding-goals-free-text">Autre (optionnel)</label><input id="builder-onboarding-goals-free-text" class="builder-onboarding-input" type="text" maxlength="120" value="${escapeHtml(state.goalsFreeText)}" placeholder="Ex. Plus d'avis" />`;
     if (state.currentStep === 3) return renderGoalConfigStep();
     if (state.currentStep === 4) return `<div class="builder-onboarding-grid builder-onboarding-grid-animate">${REWARD_OPTIONS.map((opt, i) => `<button type="button" class="builder-onboarding-choice ${state.rewardModel === opt.id ? "is-selected" : ""}" style="--stagger: ${i}" data-reward="${opt.id}"><span class="builder-onboarding-choice-title">${opt.label}</span><span class="builder-onboarding-choice-hint">${opt.hint}</span></button>`).join("")}</div>`;
@@ -236,7 +234,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
       logoDropZone.addEventListener("drop", (e) => { e.preventDefault(); e.stopPropagation(); logoDropZone.classList.remove("builder-onboarding-logo-drop-active"); const file = e.dataTransfer?.files?.[0]; if (file) processLogoFile(file); });
       logoDropZone.addEventListener("paste", (e) => { const item = Array.from(e.clipboardData?.items || []).find((i) => i.type.startsWith("image/")); const file = item?.getAsFile?.(); if (file) { e.preventDefault(); processLogoFile(file); } });
     }
-    mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "modern"; updateState({ stylePreset }, { skipRender: true }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
+    mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "points"; updateState({ stylePreset }, { skipRender: true }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
     mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.addEventListener("click", () => { const goalId = btn.getAttribute("data-goal"); if (!goalId) return; const already = state.engagementGoals.includes(goalId); const goals = already ? state.engagementGoals.filter((id) => id !== goalId) : [...state.engagementGoals, goalId]; updateState({ engagementGoals: goals, goalConfigs: normalizeGoalConfigs(goals, state.goalConfigs, currentPlaceIdHint), goalConfigErrors: {} }, { skipRender: true }); }));
     mountEl.querySelector("#builder-onboarding-goals-free-text")?.addEventListener("input", (event) => updateState({ goalsFreeText: event.target?.value || "" }, { skipRender: true }));
     mountEl.querySelector("[data-action='autosuggest-goals']")?.addEventListener("click", runGoalAutoSuggest);
