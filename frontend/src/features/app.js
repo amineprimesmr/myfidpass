@@ -6,8 +6,11 @@ import { API_BASE, getAuthHeaders, clearAuthToken, isDevBypassPayment } from "..
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
 
-const APP_LOAD_ERROR_MSG =
-  "Impossible de charger vos données. Vérifiez que le serveur tourne (backend sur le port 3001) ou réessayez plus tard.";
+const IS_LOCALHOST =
+  typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+const APP_LOAD_ERROR_MSG = IS_LOCALHOST
+  ? "Impossible de charger vos données. Vérifiez que le serveur tourne (backend sur le port 3001) ou réessayez plus tard."
+  : "Impossible de charger vos données. Réessayez ou rafraîchissez la page.";
 
 function initAppPage() {
   const emptyEl = document.getElementById("app-empty");
@@ -74,9 +77,22 @@ function initAppPage() {
     }
   });
 
+  async function fetchAuthMe(retries = 2) {
+    for (let i = 0; i <= retries; i++) {
+      const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
+      if (res.ok || res.status === 401) return res;
+      if (i < retries) await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
+    return null;
+  }
+
   (async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
+      const res = await fetchAuthMe();
+      if (!res) {
+        showLoadError();
+        return;
+      }
       if (res.status === 401) {
         loadingEl?.classList.add("hidden");
         const body = await res.json().catch(() => ({}));
@@ -1656,6 +1672,15 @@ function initAppDashboard(slug) {
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   if (pointsRewardTiersEl) pointsRewardTiersEl.addEventListener("input", updatePersonnaliserPreview);
+
+  window.addEventListener("app-section-change", (e) => {
+    if (e.detail?.sectionId === "personnaliser") {
+      requestAnimationFrame(() => {
+        updatePersonnaliserPreview();
+        requestAnimationFrame(() => updatePersonnaliserPreview());
+      });
+    }
+  });
 
   const personnaliserAddress = document.getElementById("app-personnaliser-address");
   const personnaliserCoordsDisplay = document.getElementById("app-personnaliser-coords-display");
