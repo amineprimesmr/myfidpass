@@ -225,37 +225,47 @@
   border-color: transparent;
 }
 
-/* Bouton principal (Passer/Continuer/Terminer) — relief 3D blanc/gris */
+/* Bouton principal (Passer/Continuer/Terminer) — relief 3D prononcé */
 .landing-onboarding-sheet .builder-onboarding-nav .builder-onboarding-btn:not(.builder-onboarding-btn-ghost) {
   flex: 1;
   min-width: 0;
-  padding: 14px 24px;
-  font-weight: 600;
-  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+  padding: 15px 26px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #ffffff 0%, #f0f2f5 35%, #e2e6eb 70%, #d4d9e0 100%);
   color: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: none;
   border-radius: 9999px;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 2px 4px rgba(0, 0, 0, 0.15),
-    0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+    0 2px 0 rgba(255, 255, 255, 0.95) inset,
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 4px 0 #c8ced6,
+    0 5px 10px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
 }
 
 .landing-onboarding-sheet .builder-onboarding-nav .builder-onboarding-btn:not(.builder-onboarding-btn-ghost):hover {
-  background: linear-gradient(180deg, #fff 0%, #f1f3f5 50%, #e9ecef 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7fa 35%, #e8ecf1 70%, #dce1e8 100%);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
-    0 3px 6px rgba(0, 0, 0, 0.12),
-    0 6px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
+    0 2px 0 rgba(255, 255, 255, 1) inset,
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 6px 0 #c8ced6,
+    0 7px 14px rgba(0, 0, 0, 0.18),
+    0 12px 32px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .landing-onboarding-sheet .builder-onboarding-nav .builder-onboarding-btn:not(.builder-onboarding-btn-ghost):active {
+  background: linear-gradient(180deg, #e2e6eb 0%, #d4d9e0 50%, #c8ced6 100%);
   box-shadow:
-    0 -1px 0 rgba(0, 0, 0, 0.08) inset,
-    0 1px 2px rgba(0, 0, 0, 0.15);
-  transform: translateY(0);
+    0 -2px 4px rgba(0, 0, 0, 0.15) inset,
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 1px 0 #c8ced6,
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateY(2px);
 }
 
 .landing-onboarding-sheet .builder-onboarding-btn:hover {
