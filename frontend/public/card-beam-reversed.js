@@ -546,7 +546,7 @@ class ParticleSystem {
     this.camera = null;
     this.renderer = null;
     this.particles = null;
-    this.particleCount = 400;
+    this.particleCount = 120;
     this.canvas = document.getElementById("particleCanvas");
 
     this.init();
@@ -596,9 +596,9 @@ class ParticleSystem {
     const hue = 217;
 
     const gradient = ctx.createRadialGradient(half, half, 0, half, half, half);
-    gradient.addColorStop(0.025, "#fff");
-    gradient.addColorStop(0.1, `hsl(${hue}, 61%, 33%)`);
-    gradient.addColorStop(0.25, `hsl(${hue}, 64%, 6%)`);
+    gradient.addColorStop(0, "rgba(255,255,255,0.95)");
+    gradient.addColorStop(0.25, "rgba(200,210,255,0.5)");
+    gradient.addColorStop(0.5, "rgba(150,180,255,0.15)");
     gradient.addColorStop(1, "transparent");
 
     ctx.fillStyle = gradient;
@@ -639,7 +639,7 @@ class ParticleSystem {
     const material = new THREE.ShaderMaterial({
       uniforms: {
         pointTexture: { value: texture },
-        size: { value: 15.0 },
+        size: { value: 6.0 },
       },
       vertexShader: `
         attribute float alpha;
@@ -665,7 +665,7 @@ class ParticleSystem {
         }
       `,
       transparent: true,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending,
       depthWrite: false,
       vertexColors: true,
     });
