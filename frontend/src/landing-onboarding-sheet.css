@@ -118,10 +118,35 @@
 /* Body scrollable */
 .landing-onboarding-sheet-body {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0 20px 32px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 20px 20px;
   -webkit-overflow-scrolling: touch;
+}
+
+.landing-onboarding-sheet-body > *:not(.hidden) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-onboarding-sheet-step0 {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-onboarding-sheet-step0 form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.landing-onboarding-sheet-step0 .landing-onboarding-sheet-cta {
+  margin-top: auto;
 }
 
 /* Step 0 — établissement */
@@ -210,6 +235,17 @@
   border: none;
   border-radius: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.landing-onboarding-sheet .builder-onboarding-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 1rem;
 }
 .landing-onboarding-sheet .builder-onboarding-progress-bar {
   background: rgba(255, 255, 255, 0.1);
@@ -344,7 +380,8 @@
   color: rgba(255, 255, 255, 0.7);
 }
 .landing-onboarding-sheet .builder-onboarding-nav {
-  margin-top: 1.25rem;
+  flex-shrink: 0;
+  margin-top: auto;
   padding-top: 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;

@@ -194,7 +194,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     const prevBtn = showPrevButton() ? `<button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="prev">Retour</button>` : "";
     const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
     const nav = `<div class="builder-onboarding-nav">${prevBtn}${nextBtn}</div>`;
-    mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte">${progressEl ? "" : progressHtml}${content}${nav}</section>`;
+    mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-content">${progressEl ? "" : progressHtml}${content}</div>${nav}</section>`;
     mountEl.querySelector("[data-action='prev']")?.addEventListener("click", previousStep);
     mountEl.querySelector("[data-action='next']")?.addEventListener("click", () => {
       if (state.currentStep === 3) {
