@@ -245,15 +245,13 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     const rewardLabel = (rewardOpts.find((x) => x.id === state.rewardModel) || rewardOpts[rewardOpts.length - 1]).label;
     const recapHtml = `<div class="builder-onboarding-recap"><p><strong>Logo :</strong> ${state.logoDataUrl ? "Oui" : "Non"}</p><p><strong>Style :</strong> ${(STYLE_OPTIONS.find((x) => x.id === state.stylePreset) || STYLE_OPTIONS[0]).label}</p><p><strong>Objectifs :</strong> ${selectedGoals.length ? selectedGoals.join(", ") : "Aucun"}</p><p><strong>Liens :</strong> ${configuredGoals}/${state.engagementGoals.length || 0}</p><p><strong>Récompense :</strong> ${rewardLabel}</p></div><p class="builder-onboarding-help">Modifiable dans votre espace pro.</p>`;
     const hasAccountForm = typeof onAccountCreated === "function" || (apiBase != null && typeof apiBase === "string");
-    const alreadyLoggedIn = hasAccountForm && typeof getAuthToken === "function" && getAuthToken();
-    if (hasAccountForm && alreadyLoggedIn) {
-      return recapHtml + `<button type="button" class="builder-onboarding-btn builder-onboarding-btn-inline" data-action="account-continue">Voir ma carte</button>`;
-    }
     if (hasAccountForm) {
       const googleClientId = typeof import.meta.env?.VITE_GOOGLE_CLIENT_ID === "string" ? import.meta.env.VITE_GOOGLE_CLIENT_ID : "";
       const appleClientId = typeof import.meta.env?.VITE_APPLE_CLIENT_ID === "string" ? import.meta.env.VITE_APPLE_CLIENT_ID : "";
       const socialBlock = (googleClientId || appleClientId) ? `<p class="landing-onboarding-account-divider">Ou avec</p><div class="landing-onboarding-account-social builder-onboarding-account-social-inline">${googleClientId ? `<div id="builder-onboarding-google-btn" class="landing-onboarding-google-wrap"></div>` : ""}${appleClientId ? `<button type="button" id="builder-onboarding-apple-btn" class="landing-onboarding-btn-apple builder-onboarding-btn-apple-inline" aria-label="Continuer avec Apple"><span class="landing-onboarding-apple-icon" aria-hidden="true"></span>Apple</button>` : ""}</div>` : "";
-      const accountForm = `<div class="landing-onboarding-account-form builder-onboarding-account-inline"><p class="landing-onboarding-account-title">Créez votre compte</p><p id="builder-onboarding-account-error" class="landing-onboarding-account-error hidden" role="alert"></p>${socialBlock}<label for="builder-onboarding-email" class="landing-onboarding-account-label">Email</label><input type="email" id="builder-onboarding-email" class="landing-onboarding-account-input" placeholder="vous@exemple.fr" autocomplete="email" /><label for="builder-onboarding-password" class="landing-onboarding-account-label">Mot de passe (8 caractères min.)</label><input type="password" id="builder-onboarding-password" class="landing-onboarding-account-input" placeholder="••••••••" autocomplete="new-password" minlength="8" /><button type="button" id="builder-onboarding-register-btn" class="builder-onboarding-btn builder-onboarding-btn-ghost">Créer mon compte</button></div>`;
+      const alreadyLoggedIn = typeof getAuthToken === "function" && getAuthToken();
+      const skipLink = alreadyLoggedIn ? `<p class="builder-onboarding-help" style="margin-top:0.75rem"><button type="button" class="builder-onboarding-link" data-action="account-continue">Déjà connecté ? Voir ma carte</button></p>` : "";
+      const accountForm = `<div class="landing-onboarding-account-form builder-onboarding-account-inline"><p class="landing-onboarding-account-title">Créez votre compte</p><p id="builder-onboarding-account-error" class="landing-onboarding-account-error hidden" role="alert"></p>${socialBlock}<label for="builder-onboarding-email" class="landing-onboarding-account-label">Email</label><input type="email" id="builder-onboarding-email" class="landing-onboarding-account-input" placeholder="vous@exemple.fr" autocomplete="email" /><label for="builder-onboarding-password" class="landing-onboarding-account-label">Mot de passe (8 caractères min.)</label><input type="password" id="builder-onboarding-password" class="landing-onboarding-account-input" placeholder="••••••••" autocomplete="new-password" minlength="8" /><button type="button" id="builder-onboarding-register-btn" class="builder-onboarding-btn builder-onboarding-btn-ghost">Créer mon compte</button>${skipLink}</div>`;
       return recapHtml + accountForm;
     }
     return recapHtml;
@@ -306,14 +304,10 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
   }
 
   function bindAccountFormHandlers() {
-    const continueBtn = mountEl.querySelector("[data-action='account-continue']");
-    if (continueBtn) {
-      continueBtn.addEventListener("click", () => {
-        if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
-        if (typeof onAccountCreated === "function") onAccountCreated({ ...state, placeIdHint: currentPlaceIdHint });
-      });
-      return;
-    }
+    mountEl.querySelector("[data-action='account-continue']")?.addEventListener("click", () => {
+      if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
+      if (typeof onAccountCreated === "function") onAccountCreated({ ...state, placeIdHint: currentPlaceIdHint });
+    });
     const base = String(apiBase || "").replace(/\/$/, "");
     const errorEl = document.getElementById("builder-onboarding-account-error");
     const emailInput = document.getElementById("builder-onboarding-email");
