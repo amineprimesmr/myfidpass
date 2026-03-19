@@ -187,7 +187,6 @@ function showOnboardingInSheet(organizationName, placeId) {
 export function initOnboardingSheet() {
   const sheet = document.getElementById("landing-onboarding-sheet");
   const backdrop = document.getElementById("landing-onboarding-sheet-backdrop");
-  const closeBtn = document.getElementById("landing-onboarding-sheet-close");
   const form = document.getElementById("landing-onboarding-sheet-form");
 
   if (!sheet) return;
@@ -197,7 +196,6 @@ export function initOnboardingSheet() {
   }
 
   backdrop?.addEventListener("click", close);
-  closeBtn?.addEventListener("click", close);
 
   const backBtn = document.getElementById("landing-onboarding-sheet-back");
   backBtn?.addEventListener("click", () => {
