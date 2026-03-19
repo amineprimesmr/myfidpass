@@ -503,7 +503,7 @@
   height: min(45vh, 320px);
   border-radius: 12px;
   overflow: hidden;
-  background: #020617;
+  background: #ffffff;
 }
 .builder-onboarding-card-beam-step .builder-onboarding-card-beam-frame {
   position: absolute;
@@ -512,7 +512,7 @@
   width: 100%;
   height: calc(100% + 200px);
   border: 0;
-  background: #020617;
+  background: #ffffff;
 }
 .builder-onboarding-card-beam-hint {
   margin: 0;
