@@ -185,13 +185,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
   }
   function render() {
     const pct = ((state.currentStep + 1) / TOTAL_STEPS) * 100;
-    const dots = Array.from({ length: TOTAL_STEPS }, (_, i) => {
-      const done = i < state.currentStep;
-      const current = i === state.currentStep;
-      const cls = `builder-onboarding-progress-dot${done ? " is-done" : ""}${current ? " is-current" : ""}`;
-      return `<span class="${cls}" aria-hidden="true"></span>`;
-    }).join("");
-    const progressHtml = `<div class="builder-onboarding-progress" role="progressbar" aria-valuenow="${state.currentStep + 1}" aria-valuemin="1" aria-valuemax="${TOTAL_STEPS}" aria-label="Étape ${state.currentStep + 1} sur ${TOTAL_STEPS}"><div class="builder-onboarding-progress-bar"><span class="builder-onboarding-progress-fill" style="width:${pct}%"></span></div><div class="builder-onboarding-progress-dots">${dots}</div></div>`;
+    const progressHtml = `<div class="builder-onboarding-progress" role="progressbar" aria-valuenow="${state.currentStep + 1}" aria-valuemin="1" aria-valuemax="${TOTAL_STEPS}" aria-label="Étape ${state.currentStep + 1} sur ${TOTAL_STEPS}"><div class="builder-onboarding-progress-bar"><span class="builder-onboarding-progress-fill" style="width:${pct}%"></span></div></div>`;
     if (progressEl) {
       progressEl.innerHTML = progressHtml;
     }
