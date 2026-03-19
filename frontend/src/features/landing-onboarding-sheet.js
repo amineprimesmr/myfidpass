@@ -84,7 +84,9 @@ export function openOnboardingSheet() {
   document.body.style.overflow = "hidden";
 
   const titleEl = document.getElementById("landing-onboarding-sheet-title");
+  const progressEl = document.getElementById("landing-onboarding-sheet-progress");
   if (titleEl) titleEl.textContent = "Nom de votre établissement";
+  if (progressEl) progressEl.innerHTML = "";
 
   const step0 = document.getElementById("landing-onboarding-sheet-step0");
   const onboardingMount = document.getElementById("landing-onboarding-sheet-onboarding");
@@ -134,12 +136,14 @@ function showOnboardingInSheet(organizationName, placeId) {
   onboardingMount.classList.remove("hidden");
 
   const titleEl = document.getElementById("landing-onboarding-sheet-title");
+  const progressEl = document.getElementById("landing-onboarding-sheet-progress");
   const updateTitle = (q) => {
     if (titleEl && q) titleEl.textContent = q;
   };
 
   onboardingController = initBuilderOnboarding({
     mountEl: onboardingMount,
+    progressEl: progressEl || undefined,
     initialState: { placeIdHint: placeId },
     organizationName: organizationName || "votre établissement",
     apiBase: API_BASE,

@@ -101,7 +101,7 @@ function normalizeState(input = {}, placeIdHint = "") {
   };
 }
 
-export function initBuilderOnboarding({ mountEl, initialState, organizationName, apiBase, placeIdHint, onStateChange, onLogoChange, onStyleChange, onRewardChange, onComplete }) {
+export function initBuilderOnboarding({ mountEl, progressEl, initialState, organizationName, apiBase, placeIdHint, onStateChange, onLogoChange, onStyleChange, onRewardChange, onComplete }) {
   if (!mountEl) return null;
   let currentPlaceIdHint = String(placeIdHint || "");
   let state = normalizeState(initialState, currentPlaceIdHint);
@@ -186,12 +186,15 @@ export function initBuilderOnboarding({ mountEl, initialState, organizationName,
     return state.currentStep > 0;
   }
   function render() {
-    const progress = `<div class="builder-onboarding-progress"><div class="builder-onboarding-progress-bar"><span style="width:${((state.currentStep + 1) / TOTAL_STEPS) * 100}%"></span></div></div>`;
+    const progressHtml = `<div class="builder-onboarding-progress"><div class="builder-onboarding-progress-bar"><span style="width:${((state.currentStep + 1) / TOTAL_STEPS) * 100}%"></span></div></div>`;
+    if (progressEl) {
+      progressEl.innerHTML = progressHtml;
+    }
     const content = renderStepContent();
     const prevBtn = showPrevButton() ? `<button type="button" class="builder-onboarding-btn builder-onboarding-btn-ghost" data-action="prev">Retour</button>` : "";
     const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
     const nav = `<div class="builder-onboarding-nav">${prevBtn}${nextBtn}</div>`;
-    mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte">${progress}${content}${nav}</section>`;
+    mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte">${progressEl ? "" : progressHtml}${content}${nav}</section>`;
     mountEl.querySelector("[data-action='prev']")?.addEventListener("click", previousStep);
     mountEl.querySelector("[data-action='next']")?.addEventListener("click", () => {
       if (state.currentStep === 3) {
