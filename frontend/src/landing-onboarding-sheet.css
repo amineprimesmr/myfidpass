@@ -659,39 +659,75 @@
   margin-top: 1.25rem;
 }
 
-/* Formulaire compte inline (étape Votre carte est prête) */
-.builder-onboarding-account-inline {
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-.builder-onboarding-account-inline .landing-onboarding-account-title {
-  margin-bottom: 0.75rem;
-  font-size: 0.9rem;
-}
-.builder-onboarding-account-inline .landing-onboarding-account-label {
-  margin-top: 0.5rem;
-}
-.builder-onboarding-account-inline .landing-onboarding-account-divider {
-  margin: 0.75rem 0 0.5rem;
-}
-.builder-onboarding-account-social-inline {
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-}
-.builder-onboarding-btn-apple-inline {
-  max-width: 140px;
-  padding: 10px 16px;
-  font-size: 0.9rem;
-}
-.builder-onboarding-account-social-inline .landing-onboarding-google-wrap {
-  max-width: 200px;
-}
-.builder-onboarding-btn-inline {
-  margin-top: 1rem;
+/* Étape création compte (Votre carte est prête) — UX épurée */
+.builder-onboarding-account-step {
   width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 0.5rem 0 1rem;
+}
+.builder-onboarding-account-step .landing-onboarding-account-title {
+  margin: 0 0 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+}
+.builder-onboarding-account-social-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.builder-onboarding-account-social-row .landing-onboarding-google-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.builder-onboarding-account-social-row .landing-onboarding-google-wrap iframe {
+  width: 100% !important;
+  max-width: 100%;
+}
+.builder-onboarding-account-social-row .landing-onboarding-btn-apple {
+  width: 100%;
+  max-width: none;
+  padding: 14px 20px;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+.builder-onboarding-account-step .landing-onboarding-account-divider {
+  margin: 1rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+.builder-onboarding-account-step .landing-onboarding-account-label {
+  margin-top: 0.75rem;
+}
+.builder-onboarding-account-step .landing-onboarding-account-input {
+  margin-top: 0.35rem;
+  border-radius: 12px;
+}
+.builder-onboarding-btn-primary {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #020617;
+  background: linear-gradient(180deg, #fff 0%, #e8eaed 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.builder-onboarding-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.builder-onboarding-account-skip {
+  margin: 1rem 0 0;
+  text-align: center;
 }
 
 .landing-onboarding-sheet .builder-onboarding-link {
