@@ -56,7 +56,6 @@
   height: calc(100% + 160px);
   border: 0;
   background: #020617;
-  transform: scaleX(-1);
 }
 
 .creation-carte-cta {
