@@ -303,7 +303,7 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["dashboard", "membres", "historique", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
+const APP_SECTION_IDS = ["dashboard", "membres", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
 
 const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
@@ -497,7 +497,6 @@ function initAppDashboard(slug) {
   const membersSearchInput = document.getElementById("app-members-search");
   const membersListEl = document.getElementById("app-members-list");
   const membersEmptyEl = document.getElementById("app-members-empty");
-  const transactionsTbody = document.getElementById("app-transactions-tbody");
   const dashboardScanCta = document.getElementById("app-dashboard-scan-cta");
   const dashboardSearchCta = document.getElementById("app-dashboard-search-cta");
   const dashboardNotifPill = document.getElementById("app-dashboard-notif-pill");
@@ -3734,9 +3733,6 @@ function initAppDashboard(slug) {
 
   const membersFilterEl = document.getElementById("app-members-filter");
   const membersSortEl = document.getElementById("app-members-sort");
-  const transactionsDaysEl = document.getElementById("app-transactions-days");
-  const transactionsTypeEl = document.getElementById("app-transactions-type");
-
   async function loadMembers(search = "", filter = "", sort = "last_visit") {
     const params = new URLSearchParams({ limit: 100 });
     if (search) params.set("search", search);
@@ -3744,15 +3740,6 @@ function initAppDashboard(slug) {
     if (sort) params.set("sort", sort);
     const res = await api(`/dashboard/members?${params}`);
     if (!res.ok) return { members: [], total: 0 };
-    return res.json();
-  }
-
-  async function loadTransactions(days = "", type = "") {
-    const params = new URLSearchParams({ limit: 50 });
-    if (days) params.set("days", days);
-    if (type) params.set("type", type);
-    const res = await api(`/dashboard/transactions?${params}`);
-    if (!res.ok) return { transactions: [], total: 0 };
     return res.json();
   }
 
@@ -3790,15 +3777,6 @@ function initAppDashboard(slug) {
           </article>`
       )
       .join("");
-  }
-
-  function renderTransactions(transactions) {
-    if (!transactionsTbody) return;
-    transactionsTbody.innerHTML = (transactions || [])
-      .map((t) =>
-        `<tr><td>${escapeHtml(t.member_name)}</td><td>${t.type === "points_add" ? "Points ajoutés" : t.type}</td><td>+${t.points}</td><td>${formatDate(t.created_at)}</td></tr>`
-      )
-      .join("") || "<tr><td colspan='4'>Aucune opération</td></tr>";
   }
 
   async function loadDashboardRecentHistory() {
@@ -3852,8 +3830,6 @@ function initAppDashboard(slug) {
     const membersData = await loadMembers(membersSearchInput?.value || "", membersFilterEl?.value || "", membersSortEl?.value || "last_visit");
     allMembers = membersData.members || [];
     renderMembers(allMembers);
-    const txData = await loadTransactions(transactionsDaysEl?.value || "", transactionsTypeEl?.value || "");
-    renderTransactions(txData.transactions || []);
   }
 
   memberSearchInput?.addEventListener("input", async () => {
@@ -3904,8 +3880,6 @@ function initAppDashboard(slug) {
   });
   membersFilterEl?.addEventListener("change", () => refresh());
   membersSortEl?.addEventListener("change", () => refresh());
-  transactionsDaysEl?.addEventListener("change", () => refresh());
-  transactionsTypeEl?.addEventListener("change", () => refresh());
   dashboardPeriodSelect?.addEventListener("change", () => {
     syncDashboardPeriodUI(getDashboardPeriod());
     refresh();
@@ -3934,7 +3908,6 @@ function initAppDashboard(slug) {
   });
 
   const membersExportBtn = document.getElementById("app-members-export");
-  const transactionsExportBtn = document.getElementById("app-transactions-export");
   if (membersExportBtn) {
     membersExportBtn.addEventListener("click", async () => {
       const params = new URLSearchParams();
@@ -4019,22 +3992,6 @@ function initAppDashboard(slug) {
         if (membersImportResult) { membersImportResult.textContent = "Erreur réseau."; membersImportResult.classList.add("error"); }
       }
       membersImportBtn.disabled = false;
-    });
-  }
-
-  if (transactionsExportBtn) {
-    transactionsExportBtn.addEventListener("click", async () => {
-      const params = new URLSearchParams();
-      if (transactionsDaysEl?.value) params.set("days", transactionsDaysEl.value);
-      if (transactionsTypeEl?.value) params.set("type", transactionsTypeEl.value);
-      const res = await api(`/dashboard/transactions/export?${params}`);
-      if (!res.ok) return;
-      const blob = await res.blob();
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `transactions-${slug}.csv`;
-      a.click();
-      URL.revokeObjectURL(a.href);
     });
   }
 

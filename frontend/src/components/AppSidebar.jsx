@@ -32,12 +32,6 @@ const IconMembres = () => (
     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
-const IconHistorique = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 6v6l4 2" />
-  </svg>
-);
 const IconCarte = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -82,7 +76,6 @@ const APP_LINKS = [
   { section: "notifications", href: "#notifications", label: "Campagnes", icon: IconNotifications },
   { section: "carte-perimetre", href: "#carte-perimetre", label: "Emplacement", icon: IconMap },
   { section: "membres", href: "#membres", label: "Membres", icon: IconMembres },
-  { section: "historique", href: "#historique", label: "Historique", icon: IconHistorique },
   { section: "integration", href: "#integration", label: "Intégration", icon: IconIntegration },
   { section: "engagement", href: "#engagement", label: "Avis & Réseaux", icon: IconEngagement },
   { section: "profil", href: "#profil", label: "Profil", icon: IconProfil },
@@ -90,7 +83,7 @@ const APP_LINKS = [
 
 function getActiveSection() {
   let hash = (window.location.hash || "#dashboard").slice(1);
-  if (hash === "scanner") hash = "dashboard";
+  if (hash === "scanner" || hash === "historique") hash = "dashboard";
   if (hash === "partager") hash = "personnaliser";
   return hash;
 }

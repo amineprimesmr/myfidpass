@@ -475,10 +475,6 @@
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
             <span class="app-sidebar-link-text">Membres</span>
           </a>
-          <a href="#historique" class="app-sidebar-link" data-section="historique">
-            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
-            <span class="app-sidebar-link-text">Historique</span>
-          </a>
           <a href="#integration" class="app-sidebar-link" data-section="integration">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-4"/><path d="M12 18a2 2 0 0 1-2-2V8a2 2 0 0 1 4 0v8a2 2 0 0 1-2 2z"/><path d="M8 6l4-4 4 4"/><path d="M8 6h8"/></svg></span>
             <span class="app-sidebar-link-text">Intégration</span>
@@ -915,41 +911,6 @@
                 <h2 id="app-member-detail-title" class="app-modal-title">Fiche membre</h2>
                 <div id="app-member-detail-body"></div>
                 <button type="button" class="app-modal-close" aria-label="Fermer">×</button>
-              </div>
-            </div>
-          </section>
-
-          <section id="historique" class="app-section">
-            <h2 class="app-section-title">Historique</h2>
-            <p class="app-section-desc">Derniers points ajoutés (achats ou passages enregistrés).</p>
-            <div class="app-section-grid-wrap app-historique-grid">
-              <div class="app-section-col-main">
-            <div class="app-card app-histoire-filters">
-              <div class="app-histoire-toolbar">
-                <select id="app-transactions-days" class="app-select" aria-label="Période">
-                  <option value="">Toutes les dates</option>
-                  <option value="7">7 derniers jours</option>
-                  <option value="30">30 derniers jours</option>
-                  <option value="90">90 derniers jours</option>
-                </select>
-                <select id="app-transactions-type" class="app-select" aria-label="Type">
-                  <option value="">Tous les types</option>
-                  <option value="points_add">Points ajoutés</option>
-                  <option value="visit">Passage seul</option>
-                </select>
-                <button type="button" id="app-transactions-export" class="app-btn app-btn-secondary">Exporter CSV</button>
-              </div>
-            </div>
-              </div>
-              <div class="app-section-col-aside">
-            <div class="app-card">
-              <div class="app-table-wrap">
-                <table class="app-table">
-                  <thead><tr><th>Client</th><th>Type</th><th>Points</th><th>Date</th></tr></thead>
-                  <tbody id="app-transactions-tbody"></tbody>
-                </table>
-              </div>
-            </div>
               </div>
             </div>
           </section>
