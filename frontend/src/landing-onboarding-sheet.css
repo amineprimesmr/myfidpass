@@ -499,18 +499,18 @@
 .builder-onboarding-card-beam-step .builder-onboarding-card-beam-wrap {
   position: relative;
   width: 100%;
-  min-height: 240px;
-  height: min(45vh, 320px);
+  min-height: 420px;
+  height: min(55vh, 440px);
   border-radius: 12px;
   overflow: hidden;
   background: #ffffff;
 }
 .builder-onboarding-card-beam-step .builder-onboarding-card-beam-frame {
   position: absolute;
-  top: -100px;
+  top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% + 200px);
+  height: 100%;
   border: 0;
   background: #ffffff;
 }
