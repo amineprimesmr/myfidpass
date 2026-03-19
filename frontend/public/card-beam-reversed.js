@@ -388,13 +388,94 @@ class CardStreamController {
     });
   }
 
+  getMerchantCardData() {
+    try {
+      const raw = localStorage.getItem("fidpass_builder_draft_v2");
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      const tplId = d.selectedTemplateId || "bold";
+      const templates = {
+        bold: { bg: "#2563eb", fg: "#fff", label: "#bfdbfe", format: "points" },
+        "fastfood-tampons": { bg: "#c41e3a", fg: "#fff", label: "#ffd54f", format: "tampons" },
+        "fastfood-points": { bg: "#c41e3a", fg: "#fff", label: "#ffd54f", format: "points" },
+        classic: { bg: "#1e3a8a", fg: "#fff", label: "#dbeafe", format: "points" },
+        elegant: { bg: "#8b7355", fg: "#fff", label: "#f5f0e6", format: "points" },
+        "beauty-points": { bg: "#b76e79", fg: "#fff", label: "#fce4ec", format: "points" },
+        "beauty-tampons": { bg: "#b76e79", fg: "#fff", label: "#fce4ec", format: "tampons" },
+        "coiffure-points": { bg: "#2563eb", fg: "#fff", label: "#bfdbfe", format: "points" },
+        "coiffure-tampons": { bg: "#2563eb", fg: "#fff", label: "#bfdbfe", format: "tampons" },
+        "boulangerie-points": { bg: "#b8860b", fg: "#fff", label: "#fff8e1", format: "points" },
+        "boulangerie-tampons": { bg: "#b8860b", fg: "#fff", label: "#fff8e1", format: "tampons" },
+        "boucherie-points": { bg: "#6d2c3e", fg: "#fff", label: "#ffcdd2", format: "points" },
+        "boucherie-tampons": { bg: "#6d2c3e", fg: "#fff", label: "#ffcdd2", format: "tampons" },
+        "cafe-points": { bg: "#5d4e37", fg: "#fff", label: "#d7ccc8", format: "points" },
+        "cafe-tampons": { bg: "#5d4e37", fg: "#fff", label: "#d7ccc8", format: "tampons" },
+      };
+      const tpl = templates[tplId] || (String(tplId).includes("tampons") ? templates["fastfood-tampons"] : templates.bold);
+      return {
+        organizationName: (d.organizationName || "Votre commerce").trim() || "Votre commerce",
+        logoDataUrl: typeof d.logoDataUrl === "string" && d.logoDataUrl.startsWith("data:image/") ? d.logoDataUrl : "",
+        ...tpl,
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  createMerchantCardWrapper(data) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "card-wrapper";
+
+    const normalCard = document.createElement("div");
+    normalCard.className = "card card-normal";
+
+    const headerBg = data.bg || "#2563eb";
+    const bodyBg = data.bg || "#1e40af";
+    const fg = data.fg || "#fff";
+    const labelColor = data.label || "#bfdbfe";
+
+    const logoHtml = data.logoDataUrl
+      ? `<img src="${data.logoDataUrl.replace(/"/g, "&quot;")}" alt="" style="max-height:28px;max-width:80px;object-fit:contain" />`
+      : '<span style="font-size:12px;font-weight:600;opacity:0.9">Logo</span>';
+    const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const orgName = esc((data.organizationName || "").slice(0, 20));
+
+    let bodyHtml;
+    if (data.format === "tampons") {
+      const row = (n) => Array(5).fill(0).map((_, i) => `<span style="font-size:14px;opacity:${i < n ? 1 : 0.4}">☕</span>`).join("");
+      bodyHtml = `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0"><div style="display:flex;gap:2px">${row(3)}</div><div style="display:flex;gap:2px">${row(1)}</div><div style="font-size:10px;opacity:0.9">= 10</div></div>`;
+    } else {
+      bodyHtml = `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px"><span style="font-size:28px;font-weight:700;color:${fg}">0</span><span style="font-size:11px;color:${labelColor};text-transform:uppercase;letter-spacing:0.05em">points</span></div>`;
+    }
+
+    normalCard.innerHTML = `
+      <div style="display:flex;flex-direction:column;width:100%;height:100%;border-radius:15px;overflow:hidden;background:linear-gradient(180deg,${headerBg} 0%,${bodyBg} 100%);color:${fg}">
+        <div style="padding:12px 16px;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0">${logoHtml}${orgName ? `<span style="font-size:10px;opacity:0.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${orgName}</span>` : ""}</div>
+        <div style="flex:1;padding:16px 20px;display:flex;align-items:center">${bodyHtml}</div>
+      </div>`;
+
+    const asciiCard = document.createElement("div");
+    asciiCard.className = "card card-ascii";
+    const asciiContent = document.createElement("div");
+    asciiContent.className = "ascii-content";
+    const { width, height, fontSize, lineHeight } = this.calculateCodeDimensions(400, 250);
+    asciiContent.style.fontSize = fontSize + "px";
+    asciiContent.style.lineHeight = lineHeight + "px";
+    asciiContent.textContent = this.generateCode(width, height);
+    asciiCard.appendChild(asciiContent);
+
+    wrapper.appendChild(normalCard);
+    wrapper.appendChild(asciiCard);
+    return wrapper;
+  }
+
   populateCardLine() {
     this.cardLine.innerHTML = "";
-    const cardsCount = 30;
-    for (let i = 0; i < cardsCount; i++) {
-      const cardWrapper = this.createCardWrapper(i);
-      this.cardLine.appendChild(cardWrapper);
-    }
+    const merchantData = this.getMerchantCardData();
+    const cardWrapper = merchantData
+      ? this.createMerchantCardWrapper(merchantData)
+      : this.createCardWrapper(0);
+    this.cardLine.appendChild(cardWrapper);
   }
 
   startPeriodicUpdates() {
