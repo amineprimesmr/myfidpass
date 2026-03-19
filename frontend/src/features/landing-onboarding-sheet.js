@@ -53,6 +53,7 @@ export function openOnboardingSheet() {
 
   sheet.classList.add("is-open");
   sheet.setAttribute("aria-hidden", "false");
+  document.body.classList.add("onboarding-open");
   document.body.style.overflow = "hidden";
 
   const heroInput = document.getElementById("landing-etablissement");
@@ -68,6 +69,7 @@ export function closeOnboardingSheet() {
   if (!sheet) return;
   sheet.classList.remove("is-open", "is-expanded");
   sheet.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("onboarding-open");
   document.body.style.overflow = "";
   onboardingController = null;
 }

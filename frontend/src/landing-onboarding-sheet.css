@@ -783,3 +783,8 @@
     max-height: 90vh;
   }
 }
+
+/* Masquer le FAB WhatsApp pendant l'onboarding */
+body.onboarding-open .whatsapp-fab {
+  display: none !important;
+}
