@@ -6,6 +6,6 @@
   "framework": null,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://api.myfidpass.fr/api/$1" },
-    { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|api/|card-beam-reversed).*)", "destination": "/index.html" }
   ]
 }
