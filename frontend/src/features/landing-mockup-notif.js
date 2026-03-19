@@ -9,16 +9,18 @@ const VISIBLE_DURATION_MS = 4000;
 const LOOP_INTERVAL_MS = 7500;
 
 const NOTIF_MESSAGES = [
-  { msg: "Les baguettes sortent du four !", time: "maintenant" },
-  { msg: "Offre du jour : -20% sur ton menu !", time: "maintenant" },
-  { msg: "Offre spéciale : -15% sur ta prochaine visite !", time: "maintenant" },
+  { app: "Le Pain Doré", msg: "Les baguettes sortent du four !", logo: "/assets/icons/baguette.png" },
+  { app: "Burger Plus", msg: "Offre du jour : -20% sur ton menu !", logo: "/assets/icons/burger.png" },
+  { app: "Institut Beauté", msg: "Offre spéciale : -15% sur ta prochaine visite !", logo: "/assets/icons/giftgold.png" },
 ];
 
 export function initLandingMockupNotif() {
   const notif = document.getElementById("landing-produit-notif");
   const section = document.getElementById("produit");
   const msgEl = notif?.querySelector(".landing-produit-notif-msg");
-  if (!notif || !section || !msgEl) return;
+  const appEl = notif?.querySelector(".landing-produit-notif-app");
+  const logoImg = notif?.querySelector(".landing-produit-notif-icon img");
+  if (!notif || !section || !msgEl || !appEl || !logoImg) return;
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (prefersReducedMotion) return;
@@ -28,14 +30,17 @@ export function initLandingMockupNotif() {
   let hideTimer = null;
   let msgIndex = 0;
 
-  function setMessage() {
-    const { msg } = NOTIF_MESSAGES[msgIndex];
+  function setContent() {
+    const { app, msg, logo } = NOTIF_MESSAGES[msgIndex];
+    appEl.textContent = app;
     msgEl.textContent = msg;
+    logoImg.src = logo;
+    logoImg.alt = app;
     msgIndex = (msgIndex + 1) % NOTIF_MESSAGES.length;
   }
 
   function showNotif() {
-    setMessage();
+    setContent();
     notif.classList.remove("is-exiting");
     notif.classList.add("is-visible");
     notif.setAttribute("aria-hidden", "false");
