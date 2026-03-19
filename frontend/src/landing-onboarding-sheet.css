@@ -396,17 +396,66 @@
   color: #d0d0d0;
 }
 
+/* Tablette : drawer centré, plus large */
 @media (min-width: 641px) {
   .landing-onboarding-sheet-drawer {
     left: 50%;
     right: auto;
     width: 100%;
-    max-width: 480px;
-    height: 58vh;
-    max-height: 520px;
+    max-width: 560px;
+    height: 70vh;
+    max-height: 640px;
     transform: translateX(-50%) translateY(100%);
   }
   .landing-onboarding-sheet.is-open .landing-onboarding-sheet-drawer {
     transform: translateX(-50%) translateY(0);
+  }
+  .landing-onboarding-sheet-header {
+    padding: 16px 28px 20px;
+  }
+  .landing-onboarding-sheet-title {
+    font-size: 1.4rem;
+  }
+  .landing-onboarding-sheet-body {
+    padding: 0 28px 28px;
+  }
+  .landing-onboarding-sheet .builder-onboarding-question {
+    font-size: 1.15rem;
+  }
+  .landing-onboarding-sheet .builder-onboarding-help {
+    font-size: 0.95rem;
+  }
+}
+
+/* Desktop : encore plus large pour s'adapter à l'écran */
+@media (min-width: 1024px) {
+  .landing-onboarding-sheet-drawer {
+    max-width: 640px;
+    height: 75vh;
+    max-height: 720px;
+  }
+  .landing-onboarding-sheet-header {
+    padding: 20px 32px 24px;
+  }
+  .landing-onboarding-sheet-title {
+    font-size: 1.5rem;
+  }
+  .landing-onboarding-sheet-body {
+    padding: 0 32px 32px;
+  }
+  .landing-onboarding-sheet .builder-onboarding-question {
+    font-size: 1.25rem;
+  }
+  .landing-onboarding-sheet .builder-onboarding-help {
+    font-size: 1rem;
+  }
+}
+
+/* Grand écran : modal bien proportionné */
+@media (min-width: 1280px) {
+  .landing-onboarding-sheet-drawer {
+    max-width: 720px;
+    height: 80vh;
+    max-height: 800px;
   }
 }
