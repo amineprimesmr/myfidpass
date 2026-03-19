@@ -76,7 +76,7 @@
 }
 
 .landing-onboarding-sheet-progress .builder-onboarding-progress-bar > span {
-  background: linear-gradient(90deg, #ff6b35 0%, #ff9f7a 100%);
+  background: linear-gradient(90deg, #a0a0a0 0%, #d0d0d0 100%);
 }
 
 .landing-onboarding-sheet-header-row {
@@ -195,8 +195,8 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .landing-onboarding-sheet-input-wrap:focus-within {
-  border-color: #ff6b35;
-  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.25);
+  border-color: #b0b0b0;
+  box-shadow: 0 0 0 2px rgba(176, 176, 176, 0.3);
 }
 .landing-onboarding-sheet-input-wrap img {
   width: 20px;
@@ -225,8 +225,8 @@
   padding: 14px 24px;
   border: none;
   border-radius: 12px;
-  background: #ff6b35;
-  color: #fff;
+  background: linear-gradient(180deg, #e8e8e8 0%, #c0c0c0 100%);
+  color: #1a1a1a;
   font-size: 1rem;
   font-weight: 700;
   font-family: inherit;
@@ -234,7 +234,7 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .landing-onboarding-sheet-cta:hover:not(:disabled) {
-  background: #ff8555;
+  background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%);
   transform: translateY(-1px);
 }
 .landing-onboarding-sheet-cta:disabled {
@@ -271,7 +271,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 .landing-onboarding-sheet .builder-onboarding-progress-bar > span {
-  background: linear-gradient(90deg, #ff6b35 0%, #ff9f7a 100%);
+  background: linear-gradient(90deg, #a0a0a0 0%, #d0d0d0 100%);
 }
 .landing-onboarding-sheet .builder-onboarding-progress-label {
   color: rgba(255, 255, 255, 0.6);
@@ -288,8 +288,8 @@
   color: rgba(255, 255, 255, 0.65);
 }
 .landing-onboarding-sheet .builder-onboarding-btn {
-  background: #ff6b35;
-  color: #fff;
+  background: linear-gradient(180deg, #e8e8e8 0%, #c0c0c0 100%);
+  color: #1a1a1a;
   border-color: transparent;
 }
 
@@ -337,7 +337,7 @@
 }
 
 .landing-onboarding-sheet .builder-onboarding-btn:hover {
-  background: #ff8555;
+  background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%);
 }
 .landing-onboarding-sheet .builder-onboarding-btn-ghost {
   background: transparent;
@@ -352,11 +352,11 @@
   border-color: rgba(255, 255, 255, 0.15);
 }
 .landing-onboarding-sheet .builder-onboarding-choice:hover {
-  border-color: rgba(255, 107, 53, 0.5);
+  border-color: rgba(176, 176, 176, 0.6);
 }
 .landing-onboarding-sheet .builder-onboarding-choice.is-selected {
-  border-color: #ff6b35;
-  box-shadow: 0 0 0 1px #ff6b35 inset;
+  border-color: #b0b0b0;
+  box-shadow: 0 0 0 1px #b0b0b0 inset;
 }
 .landing-onboarding-sheet .builder-onboarding-choice-title {
   color: #fff;
@@ -378,7 +378,7 @@
   color: #fff;
 }
 .landing-onboarding-sheet .builder-onboarding-input:focus {
-  border-color: #ff6b35;
+  border-color: #b0b0b0;
 }
 .landing-onboarding-sheet .builder-onboarding-config-card {
   background: #1a1a1a;
@@ -425,7 +425,7 @@
 }
 
 .landing-onboarding-sheet .builder-onboarding-link:hover {
-  color: #ff9f7a;
+  color: #d0d0d0;
 }
 
 @media (min-width: 641px) {
