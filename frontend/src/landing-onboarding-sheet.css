@@ -66,21 +66,21 @@
   flex-shrink: 0;
 }
 
-/* Badge étape x/x — même UX que bouton Contactez-nous (pilule, halo) */
+/* Badge étape x/x — en haut à droite, même hauteur que le titre */
 .landing-onboarding-sheet-progress {
-  margin-bottom: 12px;
+  flex-shrink: 0;
   display: flex;
-  justify-content: center;
+  align-items: center;
 }
 
 .landing-onboarding-sheet-progress:empty {
   display: none;
 }
 
-/* Style Processus : fond blanc, halo léger, ombre douce */
+/* Style Processus : fond blanc, plus petit */
 .builder-onboarding-step-badge-wrap {
   display: inline-block;
-  padding: 2px;
+  padding: 1.5px;
   border-radius: 9999px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.6);
@@ -91,14 +91,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1.4rem;
+  padding: 0.3rem 0.85rem;
   background: #ffffff;
   color: #5d6370;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   border-radius: 9999px;
   border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   -webkit-font-smoothing: antialiased;
 }
