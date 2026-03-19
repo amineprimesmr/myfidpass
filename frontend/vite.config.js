@@ -22,6 +22,8 @@ function spaFallback() {
         const path = req.url.split("?")[0];
         if (path.startsWith("/api")) return next();
         if (path.includes(".") && !path.endsWith(".html")) return next();
+        // Laisser Vite servir les .html statiques (ex. card-beam-reversed.html pour l'iframe)
+        if (path.endsWith(".html") && path !== "/index.html") return next();
         if (path.startsWith("/src/") || path.startsWith("/@") || path.startsWith("/node_modules") || path.startsWith("/assets/")) return next();
         try {
           // Relecture a chaque requete pour refléter immédiatement les modifs de index.html.
