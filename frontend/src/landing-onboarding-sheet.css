@@ -720,6 +720,27 @@
   text-align: center;
 }
 
+/* Placeholders Google/Apple quand non configurés */
+.builder-onboarding-social-placeholder {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.builder-onboarding-social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 4px;
+}
+.builder-onboarding-social-icon-google {
+  background: #fff;
+  color: #4285f4;
+  border: 1px solid #dadce0;
+}
+
 .landing-onboarding-sheet .builder-onboarding-link {
   background: none;
   border: none;

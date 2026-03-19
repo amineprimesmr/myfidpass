@@ -110,6 +110,13 @@ function showCardBeamInSheet() {
     return;
   }
 
+  const googleBtnHtml = googleClientId
+    ? `<div id="landing-onboarding-google-btn" class="landing-onboarding-google-wrap"></div>`
+    : `<button type="button" class="landing-onboarding-btn-apple builder-onboarding-social-placeholder" disabled title="Configurez VITE_GOOGLE_CLIENT_ID sur Vercel"><span class="builder-onboarding-social-icon builder-onboarding-social-icon-google" aria-hidden="true">G</span>Continuer avec Google</button>`;
+  const appleBtnHtml = appleClientId
+    ? `<button type="button" id="landing-onboarding-apple-btn" class="landing-onboarding-btn-apple" aria-label="Continuer avec Apple"><span class="landing-onboarding-apple-icon" aria-hidden="true"></span>Continuer avec Apple</button>`
+    : `<button type="button" class="landing-onboarding-btn-apple builder-onboarding-social-placeholder" disabled title="Configurez VITE_APPLE_CLIENT_ID sur Vercel"><span class="landing-onboarding-apple-icon" aria-hidden="true"></span>Continuer avec Apple</button>`;
+
   onboardingMount.innerHTML = `
     <div class="landing-onboarding-card-beam">
       <p class="landing-onboarding-card-beam-subtitle">Votre carte fidélité est en cours de préparation…</p>
@@ -119,7 +126,11 @@ function showCardBeamInSheet() {
       <div class="landing-onboarding-account-form">
         <p class="landing-onboarding-account-title">Créez votre compte pour accéder à votre carte</p>
         <p id="landing-onboarding-account-error" class="landing-onboarding-account-error hidden" role="alert"></p>
-        ${googleClientId || appleClientId ? `<p class="landing-onboarding-account-divider">Ou continuer avec</p><div class="landing-onboarding-account-social">${googleClientId ? `<div id="landing-onboarding-google-btn" class="landing-onboarding-google-wrap"></div>` : ""}${appleClientId ? `<button type="button" id="landing-onboarding-apple-btn" class="landing-onboarding-btn-apple" aria-label="Continuer avec Apple"><span class="landing-onboarding-apple-icon" aria-hidden="true"></span>Apple</button>` : ""}</div><p class="landing-onboarding-account-divider">Ou avec votre e-mail</p>` : ""}
+        <div class="builder-onboarding-account-social-row">
+          ${googleBtnHtml}
+          ${appleBtnHtml}
+        </div>
+        <p class="landing-onboarding-account-divider">Ou avec votre e-mail</p>
         <label for="landing-onboarding-email" class="landing-onboarding-account-label">Email</label>
         <input type="email" id="landing-onboarding-email" class="landing-onboarding-account-input" placeholder="vous@exemple.fr" autocomplete="email" />
         <label for="landing-onboarding-password" class="landing-onboarding-account-label">Mot de passe (8 caractères min.)</label>
