@@ -291,7 +291,7 @@ function initAppPage() {
                 (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
               emptyCreateError.innerHTML = isLocalhost
                 ? "Mode dev actif ici. En <strong>localhost</strong>, ajoute <code>DEV_BYPASS_PAYMENT=true</code> dans <code>backend/.env</code>, puis redémarre le backend (<code>npm run backend</code>)."
-                : "Mode dev actif ici. Pour autoriser la création sans paiement : <strong>Railway</strong> → ton projet → service backend → <strong>Variables</strong> → <strong>+ New Variable</strong> → Nom = <code>DEV_BYPASS_PAYMENT</code>, Valeur = <code>true</code> → enregistre puis <strong>Redeploy</strong> le service. Voir docs/ETAPES-DEPLOIEMENT.md (mode dev).";
+                : "Mode dev actif ici. Pour autoriser la création sans paiement : <strong>Railway</strong> → service backend → <strong>Variables</strong> → <code>DEV_BYPASS_PAYMENT</code> = <code>true</code> → enregistre puis <strong>Redeploy</strong>. Pense à cliquer « Mode dev : passer le paiement » sur la page Choisir une offre avant d’arriver ici.";
               emptyCreateError.classList.remove("hidden");
             }
             return;

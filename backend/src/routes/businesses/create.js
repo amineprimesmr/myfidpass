@@ -32,7 +32,6 @@ export function createHandler(req, res) {
     return res.status(400).json({ error: "name et slug requis" });
   }
   const devBypass =
-    process.env.NODE_ENV !== "production" &&
     process.env.DEV_BYPASS_PAYMENT === "true" &&
     req.get("X-Dev-Bypass-Payment") === "1";
   if (!devBypass && !canCreateBusiness(req.user.id)) {
