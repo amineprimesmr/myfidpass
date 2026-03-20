@@ -139,7 +139,6 @@ export function initAppDirtyGuard(opts) {
   const backdrop = document.getElementById("app-unsaved-backdrop");
   const btnSave = document.getElementById("app-unsaved-save");
   const btnDiscard = document.getElementById("app-unsaved-discard");
-  const btnCancel = document.getElementById("app-unsaved-cancel");
 
   function requestNavigate(targetId) {
     const norm = normalizeSectionId(targetId, sectionIdsRef);
@@ -194,10 +193,6 @@ export function initAppDirtyGuard(opts) {
       closeUnsavedModal();
       if (nav) forceNavigateToSection(nav);
       else if (typeof leave === "function") leave();
-    });
-
-    btnCancel?.addEventListener("click", () => {
-      closeUnsavedModal();
     });
 
     backdrop?.addEventListener("click", () => {
