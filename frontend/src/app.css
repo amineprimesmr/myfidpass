@@ -3927,8 +3927,9 @@ body.page-app .whatsapp-fab { display: none !important; }
   background-position: center center, center center;
   background-repeat: no-repeat, no-repeat;
 }
+/* Cadre sous l’écran (comme landing.css) : sinon la PNG opaque masque toute la carte */
 .app-personnaliser-preview .builder-phone-frame-img {
-  z-index: 3;
+  z-index: 1;
   max-width: 100%;
   height: auto;
   display: block;
