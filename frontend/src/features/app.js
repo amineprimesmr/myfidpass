@@ -478,6 +478,58 @@ function initAppDashboard(slug) {
     return fetch(url, { ...opts, headers });
   };
 
+  let sidebarLogoObjectUrl = null;
+  function refreshSidebarBusinessLogo() {
+    const img = document.getElementById("app-sidebar-business-logo");
+    const fallback = document.getElementById("app-sidebar-logo-fallback");
+    if (!img || !fallback) return;
+    const businessLabel = () => {
+      const raw = (document.getElementById("app-business-name")?.textContent || "").trim();
+      const name = raw || "Mon commerce";
+      return name.length > 26 ? `${name.slice(0, 24)}…` : name;
+    };
+    api("/logo?v=" + Date.now())
+      .then((r) => (r.ok ? r.blob() : null))
+      .then((blob) => {
+        if (sidebarLogoObjectUrl) {
+          try {
+            URL.revokeObjectURL(sidebarLogoObjectUrl);
+          } catch (_) {
+            /* ignore */
+          }
+          sidebarLogoObjectUrl = null;
+        }
+        const label = businessLabel();
+        if (blob && blob.size > 0) {
+          sidebarLogoObjectUrl = URL.createObjectURL(blob);
+          img.src = sidebarLogoObjectUrl;
+          img.classList.remove("hidden");
+          img.alt = label;
+          fallback.classList.add("hidden");
+        } else {
+          img.removeAttribute("src");
+          img.classList.add("hidden");
+          fallback.textContent = label;
+          fallback.classList.remove("hidden");
+        }
+      })
+      .catch(() => {
+        img.removeAttribute("src");
+        img.classList.add("hidden");
+        fallback.textContent = businessLabel();
+        fallback.classList.remove("hidden");
+      });
+  }
+
+  (function primeSidebarBrandFallback() {
+    const fb = document.getElementById("app-sidebar-logo-fallback");
+    if (!fb) return;
+    const raw = (document.getElementById("app-business-name")?.textContent || "").trim();
+    const name = raw || "Mon commerce";
+    fb.textContent = name.length > 26 ? `${name.slice(0, 24)}…` : name;
+  })();
+  refreshSidebarBusinessLogo();
+
   const statMembers = document.getElementById("app-stat-members");
   const statPoints = document.getElementById("app-stat-points");
   const statTransactions = document.getElementById("app-stat-transactions");
@@ -2502,8 +2554,9 @@ function initAppDashboard(slug) {
         if (/^[0-9A-Fa-f]{6}$/.test(s)) return "#" + s;
         return undefined;
       };
+      const personnaliserOrgName = (personnaliserOrg?.value ?? "").trim();
       const body = {
-        ...(organizationName ? { organizationName } : {}),
+        ...(personnaliserOrgName ? { organizationName: personnaliserOrgName } : {}),
         backgroundColor: toHex(backgroundColor),
         foregroundColor: toHex(foregroundColor),
         labelColor: toHex(labelColor),
@@ -2592,6 +2645,11 @@ function initAppDashboard(slug) {
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showPersonnaliserMessage("Modifications enregistrées.");
+          if (personnaliserOrgName) {
+            currentOrganizationName = personnaliserOrgName;
+            const sideBiz = document.getElementById("app-business-name");
+            if (sideBiz) sideBiz.textContent = personnaliserOrgName;
+          }
           updateCoordsDisplay(data.locationLat, data.locationLng);
           if (personnaliserLogo) personnaliserLogo.value = "";
           if (body.cardBackgroundBase64 === "") {
@@ -2673,6 +2731,7 @@ function initAppDashboard(slug) {
                     walletLogo.classList.remove("hidden");
                   }
                   updatePersonnaliserPreview();
+                  refreshSidebarBusinessLogo();
           } else {
                 personnaliserLogoDataUrl = "";
             if (personnaliserLogoPreview) {
@@ -2681,9 +2740,13 @@ function initAppDashboard(slug) {
             }
             if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
             updatePersonnaliserPreview();
+            refreshSidebarBusinessLogo();
           }
             })
-            .catch(() => { updatePersonnaliserPreview(); });
+            .catch(() => {
+              updatePersonnaliserPreview();
+              refreshSidebarBusinessLogo();
+            });
         } else {
           let errMsg = data.error || "Erreur lors de l'enregistrement.";
           if (res.status === 401) errMsg = "Accès refusé. Utilisez le lien reçu par e-mail pour ouvrir cette page (il contient le token), ou déconnectez-vous puis reconnectez-vous.";
@@ -2741,7 +2804,10 @@ function initAppDashboard(slug) {
           showProfilMessage("Impossible de charger les données de l’établissement. Vérifiez la connexion ou rechargez la page.", true);
           return;
         }
-        if (profilOrg) profilOrg.value = (data.organization_name ?? data.organizationName ?? "").trim();
+        const orgName = (data.organization_name ?? data.organizationName ?? "").trim();
+        if (profilOrg) profilOrg.value = orgName;
+        const sideBusinessName = document.getElementById("app-business-name");
+        if (sideBusinessName && orgName) sideBusinessName.textContent = orgName;
         if (profilAddress) profilAddress.value = (data.location_address ?? data.locationAddress ?? "").trim();
         const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin.replace(/\/$/, "") : "";
         if (profilSlugDisplay) {
@@ -2777,8 +2843,13 @@ function initAppDashboard(slug) {
                 if (profilLogoPlaceholder) profilLogoPlaceholder.classList.add("hidden");
                 if (profilLogoRemove) profilLogoRemove.classList.remove("hidden");
               }
+              refreshSidebarBusinessLogo();
             })
-            .catch(() => {});
+            .catch(() => {
+              refreshSidebarBusinessLogo();
+            });
+        } else {
+          refreshSidebarBusinessLogo();
         }
       })
       .catch(() => {
@@ -2882,6 +2953,11 @@ function initAppDashboard(slug) {
         if (res.ok) {
           showProfilMessage("Modifications enregistrées.");
           profilLogoRemoved = false;
+          if (organizationName) {
+            const sideBusinessName = document.getElementById("app-business-name");
+            if (sideBusinessName) sideBusinessName.textContent = organizationName;
+          }
+          refreshSidebarBusinessLogo();
           if (body.logo_base64 && profilLogoPreview?.src?.startsWith("data:")) {
             profilLogoDataUrl = "";
           }

@@ -124,6 +124,22 @@ body.page-app .whatsapp-fab { display: none !important; }
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
+/* Logo commerce (sidebar) : couleurs d’origine, pas de forçage blanc */
+.app-sidebar-logo-img--commerce {
+  filter: none;
+  max-height: 40px;
+  border-radius: 6px;
+}
+.app-sidebar-logo-fallback {
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  color: var(--app-sidebar-text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .app-sidebar-logo-fallback.hidden { display: none; }
 
 .app-sidebar-business {
