@@ -755,7 +755,29 @@ body.page-app .whatsapp-fab { display: none !important; }
   margin-bottom: 0.35rem;
 }
 .app-logo-colors-wrap.hidden { display: none; }
-.app-logo-colors-swatches { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.35rem; }
+.app-logo-colors-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+.app-logo-colors-target {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.app-logo-colors-target-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.app-logo-colors-swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0; }
+.app-logo-colors-target .app-logo-color-swatch {
+  width: 36px;
+  height: 36px;
+}
 .app-logo-color-swatch { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--app-border); cursor: pointer; flex-shrink: 0; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 .app-logo-color-swatch:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .app-logo-color-swatch:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--app-accent); }

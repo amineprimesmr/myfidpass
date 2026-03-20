@@ -2357,29 +2357,51 @@ function initAppDashboard(slug) {
 
   function renderLogoColorSwatches(colors) {
     const wrap = document.getElementById("app-logo-colors-wrap");
-    const container = document.getElementById("app-logo-colors-swatches");
-    if (!wrap || !container) return;
-    container.innerHTML = "";
+    const cBg = document.getElementById("app-logo-colors-swatches-bg");
+    const cFg = document.getElementById("app-logo-colors-swatches-fg");
+    const cLbl = document.getElementById("app-logo-colors-swatches-label");
+    if (!wrap || !cBg || !cFg || !cLbl) return;
+    cBg.innerHTML = "";
+    cFg.innerHTML = "";
+    cLbl.innerHTML = "";
     if (!colors || colors.length === 0) {
       wrap.classList.add("hidden");
       return;
     }
-    colors.forEach((hex) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "app-logo-color-swatch";
-      btn.style.background = hex;
-      btn.title = hex;
-      btn.setAttribute("aria-label", "Appliquer " + hex + " au fond de la carte");
-      btn.addEventListener("click", () => {
-        const h = hex.startsWith("#") ? hex : "#" + hex;
-        if (personnaliserBg) personnaliserBg.value = h;
-        if (personnaliserBgHex) personnaliserBgHex.value = h;
-        syncStripToBg();
-        updatePersonnaliserPreview();
+    const ariaTarget = {
+      bg: "au fond de la carte et au bandeau",
+      fg: "au texte de la carte",
+      label: "aux labels de la carte",
+    };
+    function fillRow(container, targetKey) {
+      colors.forEach((hex) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "app-logo-color-swatch";
+        btn.style.background = hex;
+        btn.title = hex;
+        btn.setAttribute("aria-label", "Appliquer " + hex + " " + ariaTarget[targetKey]);
+        btn.addEventListener("click", () => {
+          const h = hex.startsWith("#") ? hex : "#" + hex;
+          if (targetKey === "bg") {
+            if (personnaliserBg) personnaliserBg.value = h;
+            if (personnaliserBgHex) personnaliserBgHex.value = h;
+            syncStripToBg();
+          } else if (targetKey === "fg") {
+            if (personnaliserFg) personnaliserFg.value = h;
+            if (personnaliserFgHex) personnaliserFgHex.value = h;
+          } else {
+            if (personnaliserLabel) personnaliserLabel.value = h;
+            if (personnaliserLabelHex) personnaliserLabelHex.value = h;
+          }
+          updatePersonnaliserPreview();
+        });
+        container.appendChild(btn);
       });
-      container.appendChild(btn);
-    });
+    }
+    fillRow(cBg, "bg");
+    fillRow(cFg, "fg");
+    fillRow(cLbl, "label");
     wrap.classList.remove("hidden");
   }
 

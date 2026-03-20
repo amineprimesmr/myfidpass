@@ -836,8 +836,21 @@
               </div>
                       <div id="app-logo-colors-wrap" class="app-logo-colors-wrap hidden">
                         <p class="app-step-label">Teintes suggérées depuis votre logo</p>
-                        <p class="app-hint">Ces couleurs sont extraites de l’image du logo. Cliquez sur une pastille pour l’appliquer au <strong>fond de la carte</strong> (et au bandeau).</p>
-                        <div id="app-logo-colors-swatches" class="app-logo-colors-swatches" role="group" aria-label="Teintes du logo pour le fond de la carte"></div>
+                        <p class="app-hint">Ces couleurs sont extraites de l’image du logo. Chaque ligne applique la teinte choisie au <strong>fond</strong>, au <strong>texte</strong> ou aux <strong>labels</strong> (fond → bandeau inclus).</p>
+                        <div class="app-logo-colors-rows">
+                          <div class="app-logo-colors-target">
+                            <span class="app-logo-colors-target-label" id="app-logo-colors-label-bg">Fond</span>
+                            <div id="app-logo-colors-swatches-bg" class="app-logo-colors-swatches" role="group" aria-labelledby="app-logo-colors-label-bg"></div>
+                          </div>
+                          <div class="app-logo-colors-target">
+                            <span class="app-logo-colors-target-label" id="app-logo-colors-label-fg">Texte</span>
+                            <div id="app-logo-colors-swatches-fg" class="app-logo-colors-swatches" role="group" aria-labelledby="app-logo-colors-label-fg"></div>
+                          </div>
+                          <div class="app-logo-colors-target">
+                            <span class="app-logo-colors-target-label" id="app-logo-colors-label-lbl">Labels</span>
+                            <div id="app-logo-colors-swatches-label" class="app-logo-colors-swatches" role="group" aria-labelledby="app-logo-colors-label-lbl"></div>
+                          </div>
+                        </div>
                       </div>
                       <p class="app-step-label">Image de fond de carte</p>
                       <p class="app-hint">Utilisée comme bandeau sur la carte dans le Wallet (optionnel). Ajouter, modifier ou supprimer.</p>
