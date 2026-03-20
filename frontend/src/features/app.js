@@ -19,6 +19,17 @@ import {
   refreshAppSaveCtaDirtyVisual,
 } from "./app-dirty-guard.js";
 import { initAppCardRulesGuide, refreshCardRulesChecklist } from "./app-card-rules-guide.js";
+import {
+  setLastKnownBusinessSector,
+  getLastKnownBusinessSector,
+  getDefaultPointTiersBySector,
+  tiersFromApiPayload,
+  writePointTierInputs,
+  readPointTierInputs,
+  arePointTierInputsEmpty,
+  normalizeBusinessSector,
+  POINT_TIER_COUNT,
+} from "./app-card-rules-point-tiers.js";
 
 const IS_LOCALHOST =
   typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -1450,14 +1461,12 @@ function initAppDashboard(slug) {
   const pointsPerVisitEl = document.getElementById("app-points-per-visit");
   const loyaltyModeCashEl = document.getElementById("app-loyalty-mode-cash");
   const loyaltyModeGameEl = document.getElementById("app-loyalty-mode-game");
-  const gameEconomyPanelEl = document.getElementById("app-game-economy-panel");
   const pointsPerTicketEl = document.getElementById("app-points-per-ticket");
   const gameTicketCostEl = document.getElementById("app-game-ticket-cost");
   const gameDailyLimitEl = document.getElementById("app-game-daily-limit");
   const gameCooldownEl = document.getElementById("app-game-cooldown");
   const gameRewardsJsonEl = document.getElementById("app-game-rewards-json");
   const pointsMinAmountEl = document.getElementById("app-points-min-amount");
-  const pointsRewardTiersEl = document.getElementById("app-points-reward-tiers");
   const requiredStampsEl = document.getElementById("app-required-stamps");
   const stampEmojiEl = document.getElementById("app-stamp-emoji");
   const stampRewardLabelEl = document.getElementById("app-stamp-reward-label");
@@ -1498,12 +1507,26 @@ function initAppDashboard(slug) {
     const isStamps = programTypeStamps && programTypeStamps.checked;
     if (rulesPanelPoints) rulesPanelPoints.classList.toggle("hidden", !!isStamps);
     if (rulesPanelStamps) rulesPanelStamps.classList.toggle("hidden", !isStamps);
-    const gameMode = loyaltyModeGameEl?.checked === true;
-    if (gameEconomyPanelEl) gameEconomyPanelEl.classList.toggle("hidden", !gameMode);
     refreshCardRulesChecklist();
   }
-  if (programTypePoints) programTypePoints.addEventListener("change", setRulesPanelVisibility);
-  if (programTypeStamps) programTypeStamps.addEventListener("change", setRulesPanelVisibility);
+  if (programTypePoints) {
+    programTypePoints.addEventListener("change", () => {
+      setRulesPanelVisibility();
+      if (programTypePoints.checked && arePointTierInputsEmpty()) {
+        writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
+        markAppSectionDirty("regles-carte");
+      }
+      updatePersonnaliserPreview();
+      refreshCardRulesChecklist();
+    });
+  }
+  if (programTypeStamps) {
+    programTypeStamps.addEventListener("change", () => {
+      setRulesPanelVisibility();
+      updatePersonnaliserPreview();
+      refreshCardRulesChecklist();
+    });
+  }
   if (loyaltyModeCashEl) loyaltyModeCashEl.addEventListener("change", setRulesPanelVisibility);
   if (loyaltyModeGameEl) loyaltyModeGameEl.addEventListener("change", setRulesPanelVisibility);
 
@@ -1679,10 +1702,9 @@ function initAppDashboard(slug) {
     if (headerRightEl) headerRightEl.textContent = headerRightVal || "+ d'infos ↗";
     const rewardValueEl = document.getElementById("app-wallet-preview-reward");
     if (rewardValueEl && !isStamps) {
-      const tiersRaw = pointsRewardTiersEl?.value?.trim() || "";
-      const firstLine = tiersRaw.split("\n").map((s) => s.trim()).find(Boolean);
-      const raw = firstLine ? (firstLine.replace(/^\d+:\s*/, "").trim()) : "";
-      rewardValueEl.textContent = raw || "Paliers en magasin";
+      const sorted = readPointTierInputs(document);
+      const first = sorted[0];
+      rewardValueEl.textContent = first?.label?.trim() || "Paliers en magasin";
     }
     if (valueEl) valueEl.textContent = isStamps ? "" : "0";
     if (labelEl) labelEl.textContent = isStamps ? "Tampons" : "Points";
@@ -1756,7 +1778,16 @@ function initAppDashboard(slug) {
   [stripDisplayLogo, stripDisplayText].forEach((el) => el?.addEventListener("change", () => { setStripDisplayVisibility(); updatePersonnaliserPreview(); }));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
-  if (pointsRewardTiersEl) pointsRewardTiersEl.addEventListener("input", updatePersonnaliserPreview);
+  for (let ti = 0; ti < POINT_TIER_COUNT; ti++) {
+    document.getElementById(`app-points-tier-${ti}-points`)?.addEventListener("input", updatePersonnaliserPreview);
+    document.getElementById(`app-points-tier-${ti}-label`)?.addEventListener("input", updatePersonnaliserPreview);
+  }
+  document.getElementById("app-points-tiers-reset-sector")?.addEventListener("click", () => {
+    writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
+    markAppSectionDirty("regles-carte");
+    updatePersonnaliserPreview();
+    refreshCardRulesChecklist();
+  });
   [
     pointsPerEuroEl,
     pointsPerVisitEl,
@@ -1896,6 +1927,28 @@ function initAppDashboard(slug) {
     runEngagementAutoSuggest({ forceFeedback: true });
   });
 
+  const SECTOR_HINT_FR = {
+    fastfood: "restauration rapide",
+    cafe: "café / salon de thé",
+    beauty: "beauté / spa",
+    coiffure: "salon de coiffure",
+    boulangerie: "boulangerie — pâtisserie",
+    boucherie: "boucherie — charcuterie",
+  };
+  function updatePointsTiersSectorLine() {
+    const el = document.getElementById("app-points-tiers-sector-line");
+    if (!el) return;
+    const raw = getLastKnownBusinessSector();
+    const key = normalizeBusinessSector(raw);
+    if (key) {
+      el.textContent = `Exemples suggérés pour un commerce de type « ${SECTOR_HINT_FR[key] || key} ».`;
+    } else if (String(raw || "").trim()) {
+      el.textContent = `Secteur enregistré « ${String(raw).trim()} » : si ce n’est pas une catégorie reconnue, nous affichons des libellés génériques.`;
+    } else {
+      el.textContent = "Secteur d’activité inconnu pour ce commerce : exemples génériques (réductions en €).";
+    }
+  }
+
   function applyDashboardSettingsToForms(data) {
     if (!data) return;
       currentOrganizationName = (data.organization_name ?? data.organizationName ?? "").trim() || "Votre commerce";
@@ -1933,11 +1986,16 @@ function initAppDashboard(slug) {
       else if (loyaltyModeCashEl) loyaltyModeCashEl.checked = true;
       if (pointsPerTicketEl) pointsPerTicketEl.value = data.points_per_ticket ?? data.pointsPerTicket ?? 10;
       if (pointsMinAmountEl != null) pointsMinAmountEl.value = data.points_min_amount_eur ?? data.pointsMinAmountEur ?? "";
-      const tiers = data.points_reward_tiers ?? data.pointsRewardTiers;
-      if (pointsRewardTiersEl && Array.isArray(tiers) && tiers.length) {
-        pointsRewardTiersEl.value = tiers.map((t) => (typeof t === "object" && t != null && "points" in t ? `${t.points}:${t.label || ""}` : String(t))).join("\n");
-      } else if (pointsRewardTiersEl && typeof tiers === "string" && tiers.trim()) {
-        pointsRewardTiersEl.value = tiers;
+      setLastKnownBusinessSector(data.sector ?? "");
+      updatePointsTiersSectorLine();
+      const tiersPayload = data.points_reward_tiers ?? data.pointsRewardTiers;
+      const parsedTiers = tiersFromApiPayload(tiersPayload);
+      if (programType === "points") {
+        if (parsedTiers.length > 0) {
+          writePointTierInputs(document, parsedTiers);
+        } else {
+          writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
+        }
       }
       // En mode tampons : toujours 10 (champ supprimé). En mode points on ne modifie pas requiredStamps.
       if (stampEmojiEl) stampEmojiEl.value = data.stamp_emoji ?? data.stampEmoji ?? "";
@@ -2664,17 +2722,8 @@ function initAppDashboard(slug) {
       const minVal = parseFloat(pointsMinAmountEl.value);
       if (!Number.isNaN(minVal) && minVal >= 0) body.pointsMinAmountEur = minVal;
     }
-    if (pointsRewardTiersEl && pointsRewardTiersEl.value.trim()) {
-      const lines = pointsRewardTiersEl.value.split("\n").map((s) => s.trim()).filter(Boolean);
-      const tiers = [];
-      for (const line of lines) {
-        const colon = line.indexOf(":");
-        if (colon >= 0) {
-          const pts = parseInt(line.slice(0, colon).trim(), 10);
-          const label = line.slice(colon + 1).trim();
-          if (!Number.isNaN(pts) && pts >= 0) tiers.push({ points: pts, label });
-        }
-      }
+    if (!isStamps) {
+      const tiers = readPointTierInputs(document);
       if (tiers.length) body.pointsRewardTiers = tiers;
     }
     if (isStamps) body.requiredStamps = 10;

@@ -33,7 +33,7 @@ function closeUnsavedModal() {
 /** Boutons Enregistrer par section (pastille bleue = non enregistré) — Ma carte a 2 CTA. */
 const SAVE_BUTTON_IDS_BY_SECTION = {
   personnaliser: ["app-personnaliser-save"],
-  "regles-carte": ["app-regles-save", "app-game-save"],
+  "regles-carte": ["app-regles-save"],
   engagement: ["app-engagement-save"],
   notifications: ["app-notification-texts-save"],
   "carte-perimetre": ["app-perimetre-save"],

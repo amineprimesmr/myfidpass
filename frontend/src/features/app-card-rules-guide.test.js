@@ -6,42 +6,30 @@ describe("deriveCardRulesChecklistSteps", () => {
     const steps = deriveCardRulesChecklistSteps({
       isStamps: true,
       rewardLabelTrim: "",
-      pointsPerEuro: 0,
-      pointsPerVisit: 0,
-      isGameMode: false,
-      pointsPerTicket: 10,
-      gameRewardsJsonTrim: "",
+      pointTierFilledCount: 0,
     });
     const earn = steps.find((x) => x.id === "earn");
     expect(earn?.ok).toBe(false);
   });
 
-  it("points : earn true si points par visite > 0", () => {
+  it("points : earn toujours ok (économie gérée côté serveur / champs masqués)", () => {
     const steps = deriveCardRulesChecklistSteps({
       isStamps: false,
       rewardLabelTrim: "",
-      pointsPerEuro: 0,
-      pointsPerVisit: 1,
-      isGameMode: false,
-      pointsPerTicket: 10,
-      gameRewardsJsonTrim: "",
+      pointTierFilledCount: 0,
     });
     const earn = steps.find((x) => x.id === "earn");
     expect(earn?.ok).toBe(true);
     expect(steps.some((x) => x.id === "game")).toBe(false);
   });
 
-  it("mode jeu : game false si JSON invalide", () => {
+  it("points : paliers optionnels — tiers ok si au moins une ligne", () => {
     const steps = deriveCardRulesChecklistSteps({
       isStamps: false,
       rewardLabelTrim: "",
-      pointsPerEuro: 1,
-      pointsPerVisit: 0,
-      isGameMode: true,
-      pointsPerTicket: 5,
-      gameRewardsJsonTrim: "{pas json",
+      pointTierFilledCount: 2,
     });
-    const game = steps.find((x) => x.id === "game");
-    expect(game?.ok).toBe(false);
+    const tiers = steps.find((x) => x.id === "tiers");
+    expect(tiers?.ok).toBe(true);
   });
 });

@@ -2,41 +2,24 @@
  * Page « Règles de la carte » : checklist de parcours commerçant (sans logique métier serveur).
  */
 
+import { readPointTierInputs } from "./app-card-rules-point-tiers.js";
+
 /**
  * @param {{
  *   isStamps: boolean;
  *   rewardLabelTrim: string;
- *   pointsPerEuro: number;
- *   pointsPerVisit: number;
- *   isGameMode: boolean;
- *   pointsPerTicket: number;
- *   gameRewardsJsonTrim: string;
+ *   pointTierFilledCount: number;
  * }} s
  * @returns {{ id: string; ok: boolean; optional?: boolean }[]}
  */
 export function deriveCardRulesChecklistSteps(s) {
   const steps = [];
   steps.push({ id: "type", ok: true });
-  const earnOk = s.isStamps
-    ? s.rewardLabelTrim.length > 0
-    : s.pointsPerEuro > 0 || s.pointsPerVisit > 0;
+  const earnOk = s.isStamps ? s.rewardLabelTrim.length > 0 : true;
   steps.push({ id: "earn", ok: earnOk });
   if (!s.isStamps) {
-    steps.push({ id: "mode", ok: true, optional: true });
-    if (s.isGameMode) {
-      const ticketOk = Number.isFinite(s.pointsPerTicket) && s.pointsPerTicket >= 1;
-      let jsonOk = true;
-      if (s.gameRewardsJsonTrim) {
-        try {
-          JSON.parse(s.gameRewardsJsonTrim);
-        } catch {
-          jsonOk = false;
-        }
-      }
-      steps.push({ id: "game", ok: ticketOk && jsonOk });
-    } else {
-      steps.push({ id: "tiers", ok: true, optional: true });
-    }
+    const tierOk = s.pointTierFilledCount >= 1;
+    steps.push({ id: "tiers", ok: tierOk, optional: true });
   }
   steps.push({ id: "run", ok: true, optional: true });
   return steps;
@@ -45,19 +28,11 @@ export function deriveCardRulesChecklistSteps(s) {
 function readInputsFromRoot(root) {
   const isStamps = !!root.querySelector("#app-program-type-stamps:checked");
   const rewardLabelTrim = root.querySelector("#app-stamp-reward-label")?.value?.trim() ?? "";
-  const pointsPerEuro = parseInt(root.querySelector("#app-points-per-euro")?.value, 10) || 0;
-  const pointsPerVisit = parseInt(root.querySelector("#app-points-per-visit")?.value, 10) || 0;
-  const isGameMode = !!root.querySelector("#app-loyalty-mode-game:checked");
-  const pointsPerTicket = parseInt(root.querySelector("#app-points-per-ticket")?.value, 10) || 0;
-  const gameRewardsJsonTrim = root.querySelector("#app-game-rewards-json")?.value?.trim() ?? "";
+  const pointTierFilledCount = readPointTierInputs(root.ownerDocument || document).length;
   return deriveCardRulesChecklistSteps({
     isStamps,
     rewardLabelTrim,
-    pointsPerEuro,
-    pointsPerVisit,
-    isGameMode,
-    pointsPerTicket,
-    gameRewardsJsonTrim,
+    pointTierFilledCount: isStamps ? 0 : pointTierFilledCount,
   });
 }
 

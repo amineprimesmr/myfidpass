@@ -136,3 +136,48 @@
 .app-personnaliser-rules-teaser .app-btn {
   margin: 0;
 }
+
+/* Paliers points simplifiés (5 lignes) */
+.app-points-tiers-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.app-points-tiers-sector-line {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 0.9rem;
+}
+.app-points-tiers-reset-sector {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+}
+.app-points-tier-row {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+.app-points-tier-row .app-label {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+}
+.app-points-tier-fields {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.5rem 0.65rem;
+  min-width: 0;
+}
+@media (max-width: 520px) {
+  .app-points-tier-row {
+    grid-template-columns: 1fr;
+  }
+  .app-points-tier-row .app-label {
+    margin-bottom: -0.25rem;
+  }
+  .app-points-tier-fields {
+    grid-template-columns: 1fr;
+  }
+}

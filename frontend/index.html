@@ -931,8 +931,7 @@
               <ol class="app-card-rules-flow-list">
                 <li><strong>Ajout de la carte</strong> — le client scanne le QR ou ouvre le lien ; il voit le design défini dans « Ma carte ».</li>
                 <li><strong>Passage en magasin</strong> — vous enregistrez la visite ou le montant : utilisez le <strong>scanner</strong> ou l’ajout manuel depuis le Dashboard.</li>
-                <li><strong>Mode points « caisse »</strong> — le solde monte ; les paliers (optionnels) l’aident à comprendre quoi viser.</li>
-                <li><strong>Mode points « jeu »</strong> — il convertit des points en tickets et lance la roulette sur sa page fidélité.</li>
+                <li><strong>Mode points</strong> — le solde monte ; jusqu’à <strong>5 paliers</strong> indiquent quelles récompenses viser (affichées sur la carte).</li>
                 <li><strong>Mode tampons</strong> — la grille compte jusqu’à <strong>10 tampons</strong> ; le texte de récompense indique ce qui est offert à la complétion.</li>
               </ol>
             </div>
@@ -944,19 +943,11 @@
               </li>
               <li class="app-card-rules-step" data-check-step="earn">
                 <span class="app-card-rules-step-badge">…</span>
-                <div class="app-card-rules-step-body"><strong>Règle de gain</strong> Points : au moins « par € » ou « par passage » &gt; 0. Tampons : libellé de la récompense obligatoire.</div>
-              </li>
-              <li class="app-card-rules-step hidden" data-check-step="mode">
-                <span class="app-card-rules-step-badge">info</span>
-                <div class="app-card-rules-step-body"><strong>Expérience sur la page client</strong> Réduction en magasin (paliers) ou jeu (tickets + roulette).</div>
+                <div class="app-card-rules-step-body"><strong>Règle de gain</strong> Tampons : libellé de la récompense obligatoire. Points : réglages techniques en arrière-plan ; vous éditez surtout les paliers ci-dessous.</div>
               </li>
               <li class="app-card-rules-step hidden" data-check-step="tiers">
                 <span class="app-card-rules-step-badge">info</span>
-                <div class="app-card-rules-step-body"><strong>Paliers (optionnel)</strong> Affiche des objectifs clairs sur la page carte ; à adapter à votre politique commerciale.</div>
-              </li>
-              <li class="app-card-rules-step hidden" data-check-step="game">
-                <span class="app-card-rules-step-badge">…</span>
-                <div class="app-card-rules-step-body"><strong>Roulette</strong> Points pour 1 ticket, limites, JSON des lots — puis « Enregistrer la configuration jeu ».</div>
+                <div class="app-card-rules-step-body"><strong>Paliers (recommandé)</strong> Jusqu’à 5 seuils de points et libellés de récompense — visibles sur la carte client.</div>
               </li>
               <li class="app-card-rules-step hidden" data-check-step="run">
                 <span class="app-card-rules-step-badge">info</span>
@@ -970,55 +961,63 @@
                 <label class="app-radio-label"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> Tampons (ex. 1 tampon par visite, 10 tampons = 1 café offert)</label>
               </div>
               <div id="app-rules-points" class="app-rules-panel hidden">
-                <p class="app-step-label">Mode de fidélité</p>
-                <p class="app-hint">Activez ici le mode client: soit points classiques, soit points convertis en tickets de jeu.</p>
-                <div class="app-rules-type">
-                  <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points = réduction en caisse</label>
-                  <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points -&gt; tickets de jeu (roulette)</label>
+                <div class="app-points-tiers-simple">
+                  <p class="app-step-label">Récompenses par paliers</p>
+                  <p class="app-hint">Jusqu’à <strong>5 niveaux</strong> : seuil de points + texte affiché sur la carte. Des <strong>exemples</strong> sont proposés selon le <strong>secteur d’activité</strong> connu pour votre commerce (ex. fast-food, coiffure…) ; sinon réductions génériques.</p>
+                  <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line"></p>
+                  <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector">Réappliquer les exemples du secteur</button>
+                  <div class="app-points-tier-row">
+                    <label class="app-label" for="app-points-tier-0-points">Palier 1</label>
+                    <div class="app-points-tier-fields">
+                      <input type="number" id="app-points-tier-0-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 1 — points" />
+                      <input type="text" id="app-points-tier-0-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Palier 1 — récompense" />
+                    </div>
+                  </div>
+                  <div class="app-points-tier-row">
+                    <label class="app-label" for="app-points-tier-1-points">Palier 2</label>
+                    <div class="app-points-tier-fields">
+                      <input type="number" id="app-points-tier-1-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 2 — points" />
+                      <input type="text" id="app-points-tier-1-label" class="app-input" maxlength="120" placeholder="ex. Dessert offert" aria-label="Palier 2 — récompense" />
+                    </div>
+                  </div>
+                  <div class="app-points-tier-row">
+                    <label class="app-label" for="app-points-tier-2-points">Palier 3</label>
+                    <div class="app-points-tier-fields">
+                      <input type="number" id="app-points-tier-2-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 3 — points" />
+                      <input type="text" id="app-points-tier-2-label" class="app-input" maxlength="120" placeholder="ex. Menu du jour" aria-label="Palier 3 — récompense" />
+                    </div>
+                  </div>
+                  <div class="app-points-tier-row">
+                    <label class="app-label" for="app-points-tier-3-points">Palier 4</label>
+                    <div class="app-points-tier-fields">
+                      <input type="number" id="app-points-tier-3-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 4 — points" />
+                      <input type="text" id="app-points-tier-3-label" class="app-input" maxlength="120" placeholder="ex. Menu complet" aria-label="Palier 4 — récompense" />
+                    </div>
+                  </div>
+                  <div class="app-points-tier-row">
+                    <label class="app-label" for="app-points-tier-4-points">Palier 5</label>
+                    <div class="app-points-tier-fields">
+                      <input type="number" id="app-points-tier-4-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 5 — points" />
+                      <input type="text" id="app-points-tier-4-label" class="app-input" maxlength="120" placeholder="ex. Formule premium" aria-label="Palier 5 — récompense" />
+                    </div>
+                  </div>
                 </div>
-                <div id="app-game-economy-panel" class="app-rules-row hidden">
-                  <label class="app-label">Points nécessaires pour 1 ticket</label>
-                  <input type="number" id="app-points-per-ticket" class="app-input app-input-number" min="1" step="1" value="10" />
-                </div>
-                <p class="app-step-label">Attribution des points</p>
-                <div class="app-rules-row">
-                  <label class="app-label">Points par € dépensé</label>
+                <div id="app-rules-points-legacy-hidden" class="hidden" aria-hidden="true">
+                  <div class="app-rules-type">
+                    <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points caisse</label>
+                    <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points jeu</label>
+                  </div>
+                  <div id="app-game-economy-panel">
+                    <input type="number" id="app-points-per-ticket" class="app-input app-input-number" min="1" step="1" value="10" />
+                  </div>
                   <input type="number" id="app-points-per-euro" class="app-input app-input-number" min="0" step="1" value="1" />
-                </div>
-                <div class="app-rules-row">
-                  <label class="app-label">Points par passage (sans montant)</label>
                   <input type="number" id="app-points-per-visit" class="app-input app-input-number" min="0" step="1" value="0" />
-                </div>
-                <div class="app-rules-row">
-                  <label class="app-label">Montant minimum (€) pour gagner des points (optionnel)</label>
-                  <input type="number" id="app-points-min-amount" class="app-input app-input-number" min="0" step="0.01" placeholder="Aucun minimum" />
-                </div>
-                <p class="app-step-label">Paliers de récompenses (optionnel)</p>
-                <p class="app-hint">Ex. 100 pts = 5€ de réduction, 200 pts = 10€. Un palier par ligne : &quot;points:label&quot; (ex. 100:5€ de réduction).</p>
-                <textarea id="app-points-reward-tiers" class="app-input app-textarea" rows="4" placeholder="100:5€ de réduction&#10;200:10€ de réduction&#10;500:Menu offert"></textarea>
-                <p class="app-step-label">Mode Jeu - Configuration roulette</p>
-                <p class="app-hint">Cette configuration contrôle ce que le client voit sur sa page (conversion tickets + bouton Lancer la roulette).</p>
-                <div class="app-rules-row">
-                  <label class="app-label">Coût d'un spin (tickets)</label>
+                  <input type="number" id="app-points-min-amount" class="app-input app-input-number" min="0" step="0.01" placeholder="" />
                   <input type="number" id="app-game-ticket-cost" class="app-input app-input-number" min="1" step="1" value="1" />
-                </div>
-                <div class="app-rules-row">
-                  <label class="app-label">Limite de spins / jour / client</label>
                   <input type="number" id="app-game-daily-limit" class="app-input app-input-number" min="1" step="1" value="20" />
-                </div>
-                <div class="app-rules-row">
-                  <label class="app-label">Cooldown entre spins (secondes)</label>
                   <input type="number" id="app-game-cooldown" class="app-input app-input-number" min="0" step="1" value="10" />
+                  <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="2" tabindex="-1"></textarea>
                 </div>
-                <p class="app-hint">Lots de la roue : uniquement des <strong>points bonus</strong> (kind <code>points</code> + <code>value.points</code>) ou « perdant » (<code>none</code>). Les libellés apparaissent sur la roue côté client. Pas de réduction ni cadeau en magasin ici.</p>
-                <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="6" placeholder='[{"code":"no_reward","label":"PERDU","kind":"none","weight":65},{"code":"p10","label":"+10 pts","kind":"points","weight":25,"value":{"points":10}},{"code":"p25","label":"+25 pts","kind":"points","weight":8,"value":{"points":25}},{"code":"p50","label":"+50 pts","kind":"points","weight":2,"value":{"points":50}}]'></textarea>
-                <span class="app-save-cta-wrap">
-                  <button type="button" id="app-game-save" class="app-save-cta">
-                    <span class="app-save-cta-dot" aria-hidden="true"></span>
-                    <span class="app-save-cta-label">Enregistrer la configuration jeu</span>
-                  </button>
-                </span>
-                <p id="app-game-save-feedback" class="app-message hidden"></p>
               </div>
               <div id="app-rules-stamps" class="app-rules-panel hidden">
                 <input type="hidden" id="app-stamp-emoji" value="☕" />
