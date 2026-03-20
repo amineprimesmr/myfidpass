@@ -16,6 +16,7 @@ import {
   registerAppDiscardHandler,
   notifyAppSectionSaveSuccess,
   wrapAppLogoutButtonsWithDirtyGuard,
+  refreshAppSaveCtaDirtyVisual,
 } from "./app-dirty-guard.js";
 
 const IS_LOCALHOST =
@@ -917,6 +918,7 @@ function initAppDashboard(slug) {
 
     function refreshPerimetreSaveButtonState() {
       saveBtn.disabled = !hasPerimetreChanges();
+      refreshAppSaveCtaDirtyVisual("carte-perimetre");
     }
 
     function formatPhotonAddress(props) {

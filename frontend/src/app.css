@@ -738,6 +738,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   margin-top: 1rem;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.65rem;
 }
 .app-personnaliser-card .app-step-label { margin-top: 1rem; display: block; }
@@ -1866,12 +1867,16 @@ body.page-app .whatsapp-fab { display: none !important; }
 /* Enregistrer — même UX que FAQ « Rejoindre maintenant » : halo, pilule très arrondie, fond noir, pastille verte */
 #app-app .app-save-cta-wrap {
   display: inline-block;
-  padding: 2px;
+  width: fit-content;
+  max-width: 100%;
+  align-self: flex-start;
+  padding: 5px;
   border-radius: 9999px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   background: rgba(255, 255, 255, 0.55);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   vertical-align: middle;
+  box-sizing: border-box;
 }
 #app-app button.app-save-cta {
   appearance: none;
@@ -1883,8 +1888,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  padding: 0.72rem 1.6rem;
-  min-height: 3.05rem;
+  padding: 0.82rem 1.65rem;
+  min-height: 3.2rem;
   box-sizing: border-box;
   width: auto;
   background: linear-gradient(180deg, #3a3a3a 0%, #222 50%, #0a0a0a 100%);
@@ -1932,6 +1937,11 @@ body.page-app .whatsapp-fab { display: none !important; }
   border-radius: 50%;
   box-shadow: 0 0 10px 3px rgba(34, 197, 94, 0.55);
   flex-shrink: 0;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+#app-app .app-save-cta-wrap--dirty .app-save-cta-dot {
+  background: #3b82f6;
+  box-shadow: 0 0 10px 3px rgba(59, 130, 246, 0.55);
 }
 #app-app .app-save-cta-label {
   flex: 0 1 auto;
@@ -4894,11 +4904,13 @@ body.page-app .whatsapp-fab { display: none !important; }
   margin-top: 0.75rem;
 }
 .app-carte-perimetre-top-actions .app-save-cta-wrap--perimetre {
-  width: auto;
+  width: fit-content;
   min-width: 148px;
+  max-width: 100%;
 }
 .app-carte-perimetre-top-actions .app-save-cta-wrap--perimetre button.app-save-cta {
   width: 100%;
+  min-width: 0;
 }
 .app-carte-perimetre-top-actions .app-perimetre-save-feedback {
   margin: 0;

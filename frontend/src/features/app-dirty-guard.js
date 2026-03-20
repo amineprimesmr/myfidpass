@@ -30,12 +30,40 @@ function closeUnsavedModal() {
   pendingLeaveFn = null;
 }
 
+/** Boutons Enregistrer par section (pastille bleue = non enregistré) — Ma carte a 2 CTA. */
+const SAVE_BUTTON_IDS_BY_SECTION = {
+  personnaliser: ["app-personnaliser-save", "app-game-save"],
+  engagement: ["app-engagement-save"],
+  notifications: ["app-notification-texts-save"],
+  "carte-perimetre": ["app-perimetre-save"],
+  profil: ["app-profil-save"],
+};
+
+function updateSaveCtaDirtyVisual(sectionId) {
+  const ids = SAVE_BUTTON_IDS_BY_SECTION[sectionId];
+  if (!ids) return;
+  const dirty = isAppSectionDirty(sectionId);
+  for (const btnId of ids) {
+    const btn = document.getElementById(btnId);
+    const wrap = btn?.closest(".app-save-cta-wrap");
+    if (wrap) wrap.classList.toggle("app-save-cta-wrap--dirty", dirty);
+  }
+}
+
 export function markAppSectionDirty(sectionId) {
   if (sectionId) dirtyFlags.set(sectionId, true);
+  if (sectionId) updateSaveCtaDirtyVisual(sectionId);
 }
 
 export function clearAppSectionDirty(sectionId) {
   if (sectionId) dirtyFlags.delete(sectionId);
+  if (sectionId) updateSaveCtaDirtyVisual(sectionId);
+}
+
+/** À appeler quand le « sale » vient uniquement du getter externe (ex. périmètre). */
+export function refreshAppSaveCtaDirtyVisual(sectionId) {
+  if (sectionId) updateSaveCtaDirtyVisual(sectionId);
+  else Object.keys(SAVE_BUTTON_IDS_BY_SECTION).forEach((sid) => updateSaveCtaDirtyVisual(sid));
 }
 
 export function registerAppExternalDirty(sectionId, fn) {
@@ -75,7 +103,8 @@ function forceNavigateToSection(sectionId) {
   committedSection = id;
 }
 
-const SAVE_BUTTON_BY_SECTION = {
+/** Cible du clic « Enregistrer » dans la modale (un seul bouton par section). */
+const MODAL_SAVE_BUTTON_BY_SECTION = {
   personnaliser: "app-personnaliser-save",
   engagement: "app-engagement-save",
   notifications: "app-notification-texts-save",
@@ -143,7 +172,7 @@ export function initAppDirtyGuard(opts) {
 
     btnSave?.addEventListener("click", () => {
       const sid = committedSection;
-      const btnId = SAVE_BUTTON_BY_SECTION[sid];
+      const btnId = MODAL_SAVE_BUTTON_BY_SECTION[sid];
       if (btnId) document.getElementById(btnId)?.click();
       else closeUnsavedModal();
     });
