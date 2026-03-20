@@ -1,5 +1,5 @@
 /**
- * Feuille modale « guide » étape par étape (intégration dashboard).
+ * Guide intégration : page complète dans la section (pas de modale).
  */
 const DOC_HREF =
   "https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md";
@@ -58,9 +58,9 @@ async function copyText(text, btn, doneLabel) {
  * @param {{ resolvedApiBase: string, fallbackSlug: string }} ctx
  */
 export function createIntegrationGuide(ctx) {
-  const sheet = document.getElementById("app-integration-sheet");
-  const backdrop = document.getElementById("app-int-sheet-backdrop");
-  const closeBtn = document.getElementById("app-int-sheet-close");
+  const catalogView = document.getElementById("app-integration-catalog-view");
+  const guideView = document.getElementById("app-integration-guide-view");
+  const backBtn = document.getElementById("app-int-guide-back");
   const titleEl = document.getElementById("app-int-sheet-title");
   const kickerEl = document.getElementById("app-int-sheet-kicker");
   const badgeWrap = document.getElementById("app-int-sheet-badge-wrap");
@@ -69,7 +69,7 @@ export function createIntegrationGuide(ctx) {
   const prevBtn = document.getElementById("app-int-sheet-prev");
   const nextBtn = document.getElementById("app-int-sheet-next");
 
-  if (!sheet || !bodyEl || !titleEl || !progressEl || !prevBtn || !nextBtn) {
+  if (!guideView || !bodyEl || !titleEl || !progressEl || !prevBtn || !nextBtn) {
     return { open: () => {} };
   }
 
@@ -77,14 +77,10 @@ export function createIntegrationGuide(ctx) {
   let current = null;
   let stepIndex = 0;
 
-  function lockScroll(lock) {
-    document.body.classList.toggle("app-int-sheet-open", lock);
-  }
-
   function close() {
-    sheet.classList.add("hidden");
-    sheet.setAttribute("aria-hidden", "true");
-    lockScroll(false);
+    guideView.classList.add("hidden");
+    guideView.setAttribute("aria-hidden", "true");
+    catalogView?.classList.remove("hidden");
     current = null;
   }
 
@@ -202,11 +198,12 @@ export function createIntegrationGuide(ctx) {
   function open(item) {
     current = item;
     stepIndex = 0;
-    sheet.classList.remove("hidden");
-    sheet.setAttribute("aria-hidden", "false");
-    lockScroll(true);
+    catalogView?.classList.add("hidden");
+    guideView.classList.remove("hidden");
+    guideView.setAttribute("aria-hidden", "false");
     paint();
-    closeBtn?.focus();
+    document.getElementById("integration")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    backBtn?.focus();
   }
 
   prevBtn.addEventListener("click", () => {
@@ -225,11 +222,10 @@ export function createIntegrationGuide(ctx) {
     }
   });
 
-  closeBtn?.addEventListener("click", close);
-  backdrop?.addEventListener("click", close);
+  backBtn?.addEventListener("click", close);
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !sheet.classList.contains("hidden")) {
+    if (e.key === "Escape" && !guideView.classList.contains("hidden")) {
       e.preventDefault();
       close();
     }

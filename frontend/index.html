@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="/src/auth.css" />
     <link rel="stylesheet" href="/src/app.css" />
     <link rel="stylesheet" href="/src/app-integration.css" />
-    <link rel="stylesheet" href="/src/app-integration-sheet.css" />
+    <link rel="stylesheet" href="/src/app-integration-guide.css" />
     <link rel="stylesheet" href="/src/landing-integration-catalog.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
@@ -987,33 +987,26 @@
             </div>
           </section>
           <section id="integration" class="app-section">
-            <h2 class="app-section-title">Connecter votre logiciel</h2>
-            <p class="app-section-desc">Choisissez votre environnement (caisse, borne, site web…). Un <strong>guide pas à pas</strong> s’ouvre : d’abord ce que vous faites vous-même, puis ce qu’il faut transmettre au prestataire, enfin le détail technique.</p>
-            <div class="app-integration-page">
-              <div class="app-integration-hero app-integration-hero--simple">
-                <h3 class="app-integration-hero-title">1. Recherchez votre logiciel</h3>
-                <p class="app-integration-hero-desc">Tapez le nom (Zelty, WooCommerce, borne…). <strong>2.</strong> Cliquez sur une carte pour ouvrir le guide. Pas besoin de tout comprendre d’un coup : une étape à la fois.</p>
+            <div id="app-integration-catalog-view">
+              <h2 class="app-section-title">Connecter votre logiciel</h2>
+              <p class="app-section-desc">Choisissez votre environnement (caisse, borne, site web…). <strong>Cliquez sur une carte</strong> : le guide s’affiche sur toute la page (sans fenêtre par-dessus), étape par étape.</p>
+              <div class="app-integration-page">
+                <div class="app-integration-hero app-integration-hero--simple">
+                  <h3 class="app-integration-hero-title">1. Recherchez votre logiciel</h3>
+                  <p class="app-integration-hero-desc">Tapez le nom (Zelty, WooCommerce, borne…). <strong>2.</strong> Ouvrez le guide : une page dédiée, une étape à la fois.</p>
+                </div>
+                <div class="app-integration-toolbar">
+                  <span class="app-integration-toolbar-label" id="app-integration-search-label">Recherche</span>
+                  <input type="search" id="app-integration-search" class="app-input" placeholder="Ex. Zelty, Shopify, borne, API…" autocomplete="off" aria-labelledby="app-integration-search-label" />
+                </div>
+                <div id="app-integration-hub-root" aria-label="Catalogue des intégrations"></div>
+                <p class="app-integration-footnote">Une seule API pour tous les cas : le guide adapte les textes, les repères (lien, slug, exemple de requête) restent les mêmes pour votre commerce.</p>
               </div>
-              <div class="app-integration-toolbar">
-                <span class="app-integration-toolbar-label" id="app-integration-search-label">Recherche</span>
-                <input type="search" id="app-integration-search" class="app-input" placeholder="Ex. Zelty, Shopify, borne, API…" autocomplete="off" aria-labelledby="app-integration-search-label" />
-              </div>
-              <div id="app-integration-hub-root" aria-label="Catalogue des intégrations"></div>
-              <p class="app-integration-footnote">Une seule API pour tous les cas : le guide adapte les textes, les repères (lien, slug, exemple de requête) restent les mêmes pour votre commerce.</p>
             </div>
-            <!-- Champs remplis par app.js (hors écran) : le guide modal les lit pour les étapes « copier » -->
-            <div class="app-integration-tech-sr" aria-hidden="true">
-              <input type="text" id="app-integration-prestataire-link" class="app-input" readonly tabindex="-1" />
-              <a href="#" id="app-integration-open-page" target="_blank" rel="noopener" tabindex="-1"></a>
-              <input type="text" id="app-integration-base-url" readonly tabindex="-1" />
-              <input type="text" id="app-integration-slug" readonly tabindex="-1" />
-              <pre id="app-integration-curl" class="app-integration-curl"></pre>
-            </div>
-            <div id="app-integration-sheet" class="app-int-sheet hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="app-int-sheet-title">
-              <div class="app-int-sheet-backdrop" id="app-int-sheet-backdrop"></div>
-              <div class="app-int-sheet-panel">
-                <button type="button" class="app-int-sheet-close" id="app-int-sheet-close" aria-label="Fermer le guide">×</button>
-                <div class="app-int-sheet-head">
+            <div id="app-integration-guide-view" class="hidden" aria-hidden="true" role="region" aria-label="Guide d’intégration pas à pas">
+              <div class="app-int-guide-panel">
+                <div class="app-int-guide-topbar">
+                  <button type="button" class="app-int-guide-back" id="app-int-guide-back">← Retour au catalogue</button>
                   <p class="app-int-sheet-kicker" id="app-int-sheet-kicker">Guide</p>
                   <div class="app-int-sheet-title-row">
                     <h3 id="app-int-sheet-title" class="app-int-sheet-title">—</h3>
@@ -1027,6 +1020,14 @@
                   <button type="button" class="app-btn app-btn-primary" id="app-int-sheet-next">Suivant</button>
                 </div>
               </div>
+            </div>
+            <!-- Champs remplis par app.js (hors écran) : le guide lit les valeurs pour les étapes « copier » -->
+            <div class="app-integration-tech-sr" aria-hidden="true">
+              <input type="text" id="app-integration-prestataire-link" class="app-input" readonly tabindex="-1" />
+              <a href="#" id="app-integration-open-page" target="_blank" rel="noopener" tabindex="-1"></a>
+              <input type="text" id="app-integration-base-url" readonly tabindex="-1" />
+              <input type="text" id="app-integration-slug" readonly tabindex="-1" />
+              <pre id="app-integration-curl" class="app-integration-curl"></pre>
             </div>
           </section>
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
