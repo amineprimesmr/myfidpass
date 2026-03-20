@@ -32,8 +32,7 @@ function closeUnsavedModal() {
 
 /** Boutons Enregistrer par section (pastille bleue = non enregistré) — Ma carte a 2 CTA. */
 const SAVE_BUTTON_IDS_BY_SECTION = {
-  personnaliser: ["app-personnaliser-save"],
-  "regles-carte": ["app-regles-save"],
+  personnaliser: ["app-personnaliser-save", "app-regles-save"],
   engagement: ["app-engagement-save"],
   notifications: ["app-notification-texts-save"],
   "carte-perimetre": ["app-perimetre-save"],
@@ -87,7 +86,8 @@ export function getAppCommittedSection() {
 }
 
 function normalizeSectionId(raw, sectionIds) {
-  const normalized = raw === "partager" ? "personnaliser" : raw;
+  let normalized = raw === "partager" ? "personnaliser" : raw;
+  if (normalized === "regles-carte") normalized = "personnaliser";
   if (normalized === "scanner" || normalized === "vue-ensemble") return "dashboard";
   return sectionIds.includes(normalized) ? normalized : "dashboard";
 }
@@ -107,7 +107,6 @@ function forceNavigateToSection(sectionId) {
 /** Cible du clic « Enregistrer » dans la modale (un seul bouton par section). */
 const MODAL_SAVE_BUTTON_BY_SECTION = {
   personnaliser: "app-personnaliser-save",
-  "regles-carte": "app-regles-save",
   engagement: "app-engagement-save",
   notifications: "app-notification-texts-save",
   "carte-perimetre": "app-perimetre-save",

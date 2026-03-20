@@ -351,12 +351,11 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["dashboard", "membres", "personnaliser", "regles-carte", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
+const APP_SECTION_IDS = ["dashboard", "membres", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
 
 const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
   "personnaliser": "Ma Carte",
-  "regles-carte": "Règles carte",
   "notifications": "Campagnes",
   "carte-perimetre": "Emplacement",
   "engagement": "Avis & Réseaux",
@@ -1520,7 +1519,7 @@ function initAppDashboard(slug) {
       stampMidRewardLabelEl.value = getDefaultStampMidLabelBySector(getLastKnownBusinessSector());
     }
     syncStampMidUi();
-    markAppSectionDirty("regles-carte");
+    markAppSectionDirty("personnaliser");
     refreshCardRulesChecklist();
   });
   syncStampMidUi();
@@ -1536,7 +1535,7 @@ function initAppDashboard(slug) {
       setRulesPanelVisibility();
       if (programTypePoints.checked && arePointTierInputsEmpty()) {
         writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
-        markAppSectionDirty("regles-carte");
+        markAppSectionDirty("personnaliser");
       }
       updatePersonnaliserPreview();
       refreshCardRulesChecklist();
@@ -1556,7 +1555,7 @@ function initAppDashboard(slug) {
           }
           syncStampMidUi();
         }
-        markAppSectionDirty("regles-carte");
+        markAppSectionDirty("personnaliser");
       }
       updatePersonnaliserPreview();
       refreshCardRulesChecklist();
@@ -1819,7 +1818,7 @@ function initAppDashboard(slug) {
   }
   document.getElementById("app-points-tiers-reset-sector")?.addEventListener("click", () => {
     writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
-    markAppSectionDirty("regles-carte");
+    markAppSectionDirty("personnaliser");
     updatePersonnaliserPreview();
     refreshCardRulesChecklist();
   });
@@ -1839,7 +1838,7 @@ function initAppDashboard(slug) {
   });
 
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "personnaliser" || e.detail?.sectionId === "regles-carte") {
+    if (e.detail?.sectionId === "personnaliser") {
       requestAnimationFrame(() => {
         updatePersonnaliserPreview();
         requestAnimationFrame(() => updatePersonnaliserPreview());
@@ -2219,11 +2218,10 @@ function initAppDashboard(slug) {
   }
 
   registerAppDiscardHandler("personnaliser", reloadDashboardSettingsForms);
-  registerAppDiscardHandler("regles-carte", reloadDashboardSettingsForms);
   registerAppDiscardHandler("engagement", reloadDashboardSettingsForms);
   registerAppDiscardHandler("notifications", reloadDashboardSettingsForms);
 
-  ["personnaliser", "regles-carte", "engagement", "notifications", "profil"].forEach((sid) => {
+  ["personnaliser", "engagement", "notifications", "profil"].forEach((sid) => {
     const root = document.getElementById(sid);
     if (!root) return;
     const m = () => markAppSectionDirty(sid);
@@ -2387,7 +2385,7 @@ function initAppDashboard(slug) {
         feedback.classList.remove("hidden", "error");
         feedback.classList.add("success");
       }
-      notifyAppSectionSaveSuccess("regles-carte");
+      notifyAppSectionSaveSuccess("personnaliser");
     } catch (err) {
       if (feedback) {
         feedback.textContent = err.message || "Impossible d'enregistrer la configuration jeu.";
@@ -2456,7 +2454,7 @@ function initAppDashboard(slug) {
           stampEmojiEl.value = emoji;
           emojiPickerEl.querySelectorAll(".app-emoji-picker-btn").forEach((b) => b.classList.remove("selected"));
           btn.classList.add("selected");
-          markAppSectionDirty("regles-carte");
+          markAppSectionDirty("personnaliser");
           if (typeof updatePersonnaliserPreview === "function") updatePersonnaliserPreview();
         });
         emojiPickerEl.appendChild(btn);
@@ -2647,7 +2645,7 @@ function initAppDashboard(slug) {
       }
       if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.add("hidden");
       if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.remove("hidden");
-      markAppSectionDirty("regles-carte");
+      markAppSectionDirty("personnaliser");
     } catch (err) {
       showReglesMessage("Impossible de charger l'icône.", true);
     }
@@ -2721,7 +2719,7 @@ function initAppDashboard(slug) {
         personnaliserStampIconPlaceholder.classList.remove("hidden");
       }
       personnaliserStampIconRemove.classList.add("hidden");
-      markAppSectionDirty("regles-carte");
+      markAppSectionDirty("personnaliser");
       updatePersonnaliserPreview();
     });
   }
@@ -2812,7 +2810,7 @@ function initAppDashboard(slug) {
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showReglesMessage("Règles enregistrées.");
-          notifyAppSectionSaveSuccess("regles-carte");
+          notifyAppSectionSaveSuccess("personnaliser");
           updatePersonnaliserPreview();
           if (body.stampIconBase64 === "") {
             personnaliserStampIconRemoveRequested = false;
@@ -2914,6 +2912,8 @@ function initAppDashboard(slug) {
       if (labelRestantsVal) body.labelRestants = labelRestantsVal;
       if (labelMemberVal) body.labelMember = labelMemberVal;
       body.headerRightText = headerRightVal || null;
+      const rulesPatch = buildCardRulesPatchBody();
+      Object.assign(body, rulesPatch);
       personnaliserSave.disabled = true;
       showPersonnaliserMessage("");
       const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
@@ -2925,6 +2925,35 @@ function initAppDashboard(slug) {
         if (res.ok) {
           showPersonnaliserMessage("Modifications enregistrées.");
           notifyAppSectionSaveSuccess("personnaliser");
+          showReglesMessage("");
+          if (rulesPatch.stampIconBase64 === "") {
+            personnaliserStampIconRemoveRequested = false;
+            personnaliserStampIconDataUrl = "";
+            if (personnaliserStampIcon) personnaliserStampIcon.value = "";
+            if (personnaliserStampIconPreview) {
+              personnaliserStampIconPreview.src = "";
+              personnaliserStampIconPreview.classList.add("hidden");
+            }
+            if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.remove("hidden");
+            if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.add("hidden");
+            updatePersonnaliserPreview();
+          } else if (rulesPatch.stampIconBase64) {
+            personnaliserStampIconRemoveRequested = false;
+            api("/stamp-icon?v=" + Date.now())
+              .then((r) => (r.ok ? r.blob() : null))
+              .then((blob) => {
+                if (blob && personnaliserStampIconPreview) {
+                  personnaliserStampIconDataUrl = URL.createObjectURL(blob);
+                  personnaliserStampIconPreview.src = personnaliserStampIconDataUrl;
+                  personnaliserStampIconPreview.classList.remove("hidden");
+                  if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.add("hidden");
+                  if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.remove("hidden");
+                  updatePersonnaliserPreview();
+                }
+              })
+              .catch(() => {});
+          }
+          refreshCardRulesChecklist();
           if (personnaliserOrgName) {
             currentOrganizationName = personnaliserOrgName;
             const sideBiz = document.getElementById("app-business-name");

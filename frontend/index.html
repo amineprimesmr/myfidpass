@@ -272,10 +272,6 @@
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></span>
             <span class="app-sidebar-link-text">Ma carte</span>
           </a>
-          <a href="#regles-carte" class="app-sidebar-link" data-section="regles-carte">
-            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h6"/></svg></span>
-            <span class="app-sidebar-link-text">Règles carte</span>
-          </a>
           <a href="#notifications" class="app-sidebar-link" data-section="notifications">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
             <span class="app-sidebar-link-text">Campagnes</span>
@@ -730,14 +726,10 @@
 
           <section id="personnaliser" class="app-section">
             <h2 class="app-section-title">Ma carte</h2>
-            <p class="app-section-desc">Personnalisez le <strong>design</strong> de votre carte (couleurs, logo, textes). Les <strong>règles</strong> de fidélité se configurent dans l’onglet « Règles carte ». L’aperçu à droite se met à jour en direct.</p>
+            <p class="app-section-desc">Personnalisez le <strong>design</strong> et les <strong>règles</strong> de fidélité (points, tampons, paliers). Ouvrez les blocs ci-dessous ; l’aperçu à droite se met à jour en direct.</p>
             <div class="app-personnaliser-grid">
             <div class="app-personnaliser-col-left">
             <div class="app-card app-personnaliser-card">
-              <div class="app-personnaliser-rules-teaser">
-                <p>Les <strong>règles de fidélité</strong> (points, tampons, paliers, roulette) sont sur une page dédiée : parcours client, checklist et formulaire réunis.</p>
-                <a href="#regles-carte" class="app-btn app-btn-secondary">Ouvrir « Règles de la carte »</a>
-              </div>
               <div class="app-personnaliser-accordion" id="app-personnaliser-accordion">
                 <section class="app-personnaliser-group" data-personnaliser-group>
                   <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-colors">
@@ -832,6 +824,154 @@
                 </div>
                 </section>
                 <section class="app-personnaliser-group" data-personnaliser-group>
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-rules">
+                    <span class="app-personnaliser-group-title">Règles du programme</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-rules" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
+                      <div id="regles-carte" class="app-personnaliser-rules-embed">
+                        <p class="app-hint app-personnaliser-rules-lead">Ce que le client voit sur la carte et ce que vous enregistrez en caisse : scénario type, checklist, puis formulaire. Enregistrez avec le bouton dédié ci-dessous ou « Enregistrer les modifications » en bas de la colonne.</p>
+                        <div class="app-card-rules-flow">
+                          <p class="app-card-rules-flow-title">Scénario côté client</p>
+                          <ol class="app-card-rules-flow-list">
+                            <li><strong>Ajout de la carte</strong> — le client scanne le QR ou ouvre le lien ; il voit le design défini dans « Ma carte ».</li>
+                            <li><strong>Passage en magasin</strong> — vous enregistrez la visite ou le montant : utilisez le <strong>scanner</strong> ou l’ajout manuel depuis le Dashboard.</li>
+                            <li><strong>Mode points</strong> — le solde monte ; jusqu’à <strong>5 paliers</strong> indiquent quelles récompenses viser (affichées sur la carte).</li>
+                            <li><strong>Mode tampons</strong> — la grille compte jusqu’à <strong>10 tampons</strong> ; le texte de récompense indique ce qui est offert à la complétion.</li>
+                          </ol>
+                        </div>
+                        <p class="app-step-label">Checklist — ce que vous devez renseigner</p>
+                        <ul id="app-card-rules-checklist" class="app-card-rules-checklist" aria-live="polite">
+                          <li class="app-card-rules-step" data-check-step="type">
+                            <span class="app-card-rules-step-badge">ok</span>
+                            <div class="app-card-rules-step-body"><strong>Type de programme</strong> Choisir points (€ / visites) ou tampons (grille fixe 10 cases).</div>
+                          </li>
+                          <li class="app-card-rules-step" data-check-step="earn">
+                            <span class="app-card-rules-step-badge">…</span>
+                            <div class="app-card-rules-step-body"><strong>Règle de gain</strong> Tampons : récompense à la <strong>10ᵉ</strong> visite obligatoire ; la 5ᵉ est optionnelle. Points : paliers ci-dessous.</div>
+                          </li>
+                          <li class="app-card-rules-step hidden" data-check-step="tiers">
+                            <span class="app-card-rules-step-badge">info</span>
+                            <div class="app-card-rules-step-body"><strong>Paliers (recommandé)</strong> Jusqu’à 5 seuils de points et libellés de récompense — visibles sur la carte client.</div>
+                          </li>
+                          <li class="app-card-rules-step hidden" data-check-step="run">
+                            <span class="app-card-rules-step-badge">info</span>
+                            <div class="app-card-rules-step-body"><strong>En boutique</strong> Formez l’équipe : chaque achat ou visite doit être enregistré dans l’app pour que la carte ait du sens.</div>
+                          </li>
+                        </ul>
+                        <div class="app-card-rules-form-card">
+                          <p class="app-step-label">Formulaire</p>
+                          <div class="app-rules-type">
+                            <label class="app-radio-label"><input type="radio" name="app-program-type" value="points" id="app-program-type-points" /> Points (ex. 1 pt par €, paliers de récompenses)</label>
+                            <label class="app-radio-label"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> Tampons (ex. 1 tampon par visite, 10 tampons = 1 café offert)</label>
+                          </div>
+                          <div id="app-rules-points" class="app-rules-panel hidden">
+                            <div class="app-points-tiers-simple">
+                              <p class="app-step-label">Récompenses par paliers</p>
+                              <p class="app-hint">Jusqu’à <strong>5 niveaux</strong> : seuil de points + texte affiché sur la carte. Des <strong>exemples</strong> sont proposés selon le <strong>secteur d’activité</strong> connu pour votre commerce (ex. fast-food, coiffure…) ; sinon réductions génériques.</p>
+                              <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line"></p>
+                              <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector">Réappliquer les exemples du secteur</button>
+                              <div class="app-points-tier-row">
+                                <label class="app-label" for="app-points-tier-0-points">Palier 1</label>
+                                <div class="app-points-tier-fields">
+                                  <input type="number" id="app-points-tier-0-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 1 — points" />
+                                  <input type="text" id="app-points-tier-0-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Palier 1 — récompense" />
+                                </div>
+                              </div>
+                              <div class="app-points-tier-row">
+                                <label class="app-label" for="app-points-tier-1-points">Palier 2</label>
+                                <div class="app-points-tier-fields">
+                                  <input type="number" id="app-points-tier-1-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 2 — points" />
+                                  <input type="text" id="app-points-tier-1-label" class="app-input" maxlength="120" placeholder="ex. Dessert offert" aria-label="Palier 2 — récompense" />
+                                </div>
+                              </div>
+                              <div class="app-points-tier-row">
+                                <label class="app-label" for="app-points-tier-2-points">Palier 3</label>
+                                <div class="app-points-tier-fields">
+                                  <input type="number" id="app-points-tier-2-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 3 — points" />
+                                  <input type="text" id="app-points-tier-2-label" class="app-input" maxlength="120" placeholder="ex. Menu du jour" aria-label="Palier 3 — récompense" />
+                                </div>
+                              </div>
+                              <div class="app-points-tier-row">
+                                <label class="app-label" for="app-points-tier-3-points">Palier 4</label>
+                                <div class="app-points-tier-fields">
+                                  <input type="number" id="app-points-tier-3-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 4 — points" />
+                                  <input type="text" id="app-points-tier-3-label" class="app-input" maxlength="120" placeholder="ex. Menu complet" aria-label="Palier 4 — récompense" />
+                                </div>
+                              </div>
+                              <div class="app-points-tier-row">
+                                <label class="app-label" for="app-points-tier-4-points">Palier 5</label>
+                                <div class="app-points-tier-fields">
+                                  <input type="number" id="app-points-tier-4-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 5 — points" />
+                                  <input type="text" id="app-points-tier-4-label" class="app-input" maxlength="120" placeholder="ex. Formule premium" aria-label="Palier 5 — récompense" />
+                                </div>
+                              </div>
+                            </div>
+                            <div id="app-rules-points-legacy-hidden" class="hidden" aria-hidden="true">
+                              <div class="app-rules-type">
+                                <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points caisse</label>
+                                <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points jeu</label>
+                              </div>
+                              <div id="app-game-economy-panel">
+                                <input type="number" id="app-points-per-ticket" class="app-input app-input-number" min="1" step="1" value="10" />
+                              </div>
+                              <input type="number" id="app-points-per-euro" class="app-input app-input-number" min="0" step="1" value="1" />
+                              <input type="number" id="app-points-per-visit" class="app-input app-input-number" min="0" step="1" value="0" />
+                              <input type="number" id="app-points-min-amount" class="app-input app-input-number" min="0" step="0.01" placeholder="" />
+                              <input type="number" id="app-game-ticket-cost" class="app-input app-input-number" min="1" step="1" value="1" />
+                              <input type="number" id="app-game-daily-limit" class="app-input app-input-number" min="1" step="1" value="20" />
+                              <input type="number" id="app-game-cooldown" class="app-input app-input-number" min="0" step="1" value="10" />
+                              <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="2" tabindex="-1"></textarea>
+                            </div>
+                          </div>
+                          <div id="app-rules-stamps" class="app-rules-panel hidden">
+                            <input type="hidden" id="app-stamp-emoji" value="☕" />
+                            <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône">
+                              <div class="app-stamp-icon-custom-wrap">
+                              <div class="app-drop-zone app-stamp-icon-custom" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                                <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                                <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
+                                  <span id="app-stamp-icon-placeholder">+</span>
+                                  <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
+                                </label>
+                              </div>
+                              <button type="button" id="app-stamp-icon-remove" class="app-stamp-icon-remove-btn hidden" title="Supprimer l'icône">×</button>
+                            </div>
+                            </div>
+                            <p class="app-step-label">Récompenses tampons</p>
+                            <p class="app-hint">La grille compte <strong>10 tampons</strong> par carte. Vous définissez ce qui est offert à la <strong>5ᵉ</strong> et à la <strong>10ᵉ</strong> visite (tampon).</p>
+                            <div class="app-stamp-tier-block">
+                              <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5ᵉ tampon</span></div>
+                              <label class="app-checkbox-label app-stamp-skip-mid-label">
+                                <input type="checkbox" id="app-stamp-skip-mid" />
+                                <span>Pas de récompense à la 5ᵉ visite</span>
+                              </label>
+                              <label class="app-label" for="app-stamp-reward-mid-label">Récompense intermédiaire</label>
+                              <input type="text" id="app-stamp-reward-mid-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Récompense à la 5ᵉ visite" />
+                            </div>
+                            <div class="app-stamp-tier-block">
+                              <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">10ᵉ tampon</span></div>
+                              <label class="app-label" for="app-stamp-reward-label">Récompense carte complète</label>
+                              <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. Menu offert" aria-label="Récompense à la 10ᵉ visite" />
+                            </div>
+                          </div>
+                        </div>
+                        <div class="app-card-rules-actions">
+                          <div id="app-regles-message" class="app-message hidden" role="status"></div>
+                          <span class="app-save-cta-wrap">
+                            <button type="button" id="app-regles-save" class="app-save-cta">
+                              <span class="app-save-cta-dot" aria-hidden="true"></span>
+                              <span class="app-save-cta-label">Enregistrer les règles de la carte</span>
+                            </button>
+                          </span>
+                        </div>
+          
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="app-personnaliser-group" data-personnaliser-group>
                   <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-share">
                     <span class="app-personnaliser-group-title">Lien et QR code</span>
                     <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
@@ -921,147 +1061,7 @@
             </div>
             </div>
           </section>
-          <section id="regles-carte" class="app-section">
-            <div class="app-card-rules-page-head">
-              <h2 class="app-section-title app-card-rules-page-title">Règles de la carte</h2>
-              <p class="app-card-rules-page-desc">Une carte fonctionnelle = <strong>ce que le client voit</strong> sur son téléphone + <strong>ce que vous faites en caisse</strong> pour le créditer. Ci-dessous : le scénario type, puis ce qu’il vous reste à remplir, puis le formulaire.</p>
-            </div>
-            <div class="app-card-rules-flow">
-              <p class="app-card-rules-flow-title">Scénario côté client</p>
-              <ol class="app-card-rules-flow-list">
-                <li><strong>Ajout de la carte</strong> — le client scanne le QR ou ouvre le lien ; il voit le design défini dans « Ma carte ».</li>
-                <li><strong>Passage en magasin</strong> — vous enregistrez la visite ou le montant : utilisez le <strong>scanner</strong> ou l’ajout manuel depuis le Dashboard.</li>
-                <li><strong>Mode points</strong> — le solde monte ; jusqu’à <strong>5 paliers</strong> indiquent quelles récompenses viser (affichées sur la carte).</li>
-                <li><strong>Mode tampons</strong> — la grille compte jusqu’à <strong>10 tampons</strong> ; le texte de récompense indique ce qui est offert à la complétion.</li>
-              </ol>
-            </div>
-            <p class="app-step-label">Checklist — ce que vous devez renseigner</p>
-            <ul id="app-card-rules-checklist" class="app-card-rules-checklist" aria-live="polite">
-              <li class="app-card-rules-step" data-check-step="type">
-                <span class="app-card-rules-step-badge">ok</span>
-                <div class="app-card-rules-step-body"><strong>Type de programme</strong> Choisir points (€ / visites) ou tampons (grille fixe 10 cases).</div>
-              </li>
-              <li class="app-card-rules-step" data-check-step="earn">
-                <span class="app-card-rules-step-badge">…</span>
-                <div class="app-card-rules-step-body"><strong>Règle de gain</strong> Tampons : récompense à la <strong>10ᵉ</strong> visite obligatoire ; la 5ᵉ est optionnelle. Points : paliers ci-dessous.</div>
-              </li>
-              <li class="app-card-rules-step hidden" data-check-step="tiers">
-                <span class="app-card-rules-step-badge">info</span>
-                <div class="app-card-rules-step-body"><strong>Paliers (recommandé)</strong> Jusqu’à 5 seuils de points et libellés de récompense — visibles sur la carte client.</div>
-              </li>
-              <li class="app-card-rules-step hidden" data-check-step="run">
-                <span class="app-card-rules-step-badge">info</span>
-                <div class="app-card-rules-step-body"><strong>En boutique</strong> Formez l’équipe : chaque achat ou visite doit être enregistré dans l’app pour que la carte ait du sens.</div>
-              </li>
-            </ul>
-            <div class="app-card-rules-form-card">
-              <p class="app-step-label">Formulaire</p>
-              <div class="app-rules-type">
-                <label class="app-radio-label"><input type="radio" name="app-program-type" value="points" id="app-program-type-points" /> Points (ex. 1 pt par €, paliers de récompenses)</label>
-                <label class="app-radio-label"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> Tampons (ex. 1 tampon par visite, 10 tampons = 1 café offert)</label>
-              </div>
-              <div id="app-rules-points" class="app-rules-panel hidden">
-                <div class="app-points-tiers-simple">
-                  <p class="app-step-label">Récompenses par paliers</p>
-                  <p class="app-hint">Jusqu’à <strong>5 niveaux</strong> : seuil de points + texte affiché sur la carte. Des <strong>exemples</strong> sont proposés selon le <strong>secteur d’activité</strong> connu pour votre commerce (ex. fast-food, coiffure…) ; sinon réductions génériques.</p>
-                  <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line"></p>
-                  <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector">Réappliquer les exemples du secteur</button>
-                  <div class="app-points-tier-row">
-                    <label class="app-label" for="app-points-tier-0-points">Palier 1</label>
-                    <div class="app-points-tier-fields">
-                      <input type="number" id="app-points-tier-0-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 1 — points" />
-                      <input type="text" id="app-points-tier-0-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Palier 1 — récompense" />
-                    </div>
-                  </div>
-                  <div class="app-points-tier-row">
-                    <label class="app-label" for="app-points-tier-1-points">Palier 2</label>
-                    <div class="app-points-tier-fields">
-                      <input type="number" id="app-points-tier-1-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 2 — points" />
-                      <input type="text" id="app-points-tier-1-label" class="app-input" maxlength="120" placeholder="ex. Dessert offert" aria-label="Palier 2 — récompense" />
-                    </div>
-                  </div>
-                  <div class="app-points-tier-row">
-                    <label class="app-label" for="app-points-tier-2-points">Palier 3</label>
-                    <div class="app-points-tier-fields">
-                      <input type="number" id="app-points-tier-2-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 3 — points" />
-                      <input type="text" id="app-points-tier-2-label" class="app-input" maxlength="120" placeholder="ex. Menu du jour" aria-label="Palier 3 — récompense" />
-                    </div>
-                  </div>
-                  <div class="app-points-tier-row">
-                    <label class="app-label" for="app-points-tier-3-points">Palier 4</label>
-                    <div class="app-points-tier-fields">
-                      <input type="number" id="app-points-tier-3-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 4 — points" />
-                      <input type="text" id="app-points-tier-3-label" class="app-input" maxlength="120" placeholder="ex. Menu complet" aria-label="Palier 4 — récompense" />
-                    </div>
-                  </div>
-                  <div class="app-points-tier-row">
-                    <label class="app-label" for="app-points-tier-4-points">Palier 5</label>
-                    <div class="app-points-tier-fields">
-                      <input type="number" id="app-points-tier-4-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 5 — points" />
-                      <input type="text" id="app-points-tier-4-label" class="app-input" maxlength="120" placeholder="ex. Formule premium" aria-label="Palier 5 — récompense" />
-                    </div>
-                  </div>
-                </div>
-                <div id="app-rules-points-legacy-hidden" class="hidden" aria-hidden="true">
-                  <div class="app-rules-type">
-                    <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points caisse</label>
-                    <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points jeu</label>
-                  </div>
-                  <div id="app-game-economy-panel">
-                    <input type="number" id="app-points-per-ticket" class="app-input app-input-number" min="1" step="1" value="10" />
-                  </div>
-                  <input type="number" id="app-points-per-euro" class="app-input app-input-number" min="0" step="1" value="1" />
-                  <input type="number" id="app-points-per-visit" class="app-input app-input-number" min="0" step="1" value="0" />
-                  <input type="number" id="app-points-min-amount" class="app-input app-input-number" min="0" step="0.01" placeholder="" />
-                  <input type="number" id="app-game-ticket-cost" class="app-input app-input-number" min="1" step="1" value="1" />
-                  <input type="number" id="app-game-daily-limit" class="app-input app-input-number" min="1" step="1" value="20" />
-                  <input type="number" id="app-game-cooldown" class="app-input app-input-number" min="0" step="1" value="10" />
-                  <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="2" tabindex="-1"></textarea>
-                </div>
-              </div>
-              <div id="app-rules-stamps" class="app-rules-panel hidden">
-                <input type="hidden" id="app-stamp-emoji" value="☕" />
-                <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône">
-                  <div class="app-stamp-icon-custom-wrap">
-                  <div class="app-drop-zone app-stamp-icon-custom" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
-                    <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                    <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
-                      <span id="app-stamp-icon-placeholder">+</span>
-                      <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
-                    </label>
-                  </div>
-                  <button type="button" id="app-stamp-icon-remove" class="app-stamp-icon-remove-btn hidden" title="Supprimer l'icône">×</button>
-                </div>
-                </div>
-                <p class="app-step-label">Récompenses tampons</p>
-                <p class="app-hint">La grille compte <strong>10 tampons</strong> par carte. Vous définissez ce qui est offert à la <strong>5ᵉ</strong> et à la <strong>10ᵉ</strong> visite (tampon).</p>
-                <div class="app-stamp-tier-block">
-                  <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5ᵉ tampon</span></div>
-                  <label class="app-checkbox-label app-stamp-skip-mid-label">
-                    <input type="checkbox" id="app-stamp-skip-mid" />
-                    <span>Pas de récompense à la 5ᵉ visite</span>
-                  </label>
-                  <label class="app-label" for="app-stamp-reward-mid-label">Récompense intermédiaire</label>
-                  <input type="text" id="app-stamp-reward-mid-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Récompense à la 5ᵉ visite" />
-                </div>
-                <div class="app-stamp-tier-block">
-                  <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">10ᵉ tampon</span></div>
-                  <label class="app-label" for="app-stamp-reward-label">Récompense carte complète</label>
-                  <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. Menu offert" aria-label="Récompense à la 10ᵉ visite" />
-                </div>
-              </div>
-            </div>
-            <div class="app-card-rules-actions">
-              <div id="app-regles-message" class="app-message hidden" role="status"></div>
-              <span class="app-save-cta-wrap">
-                <button type="button" id="app-regles-save" class="app-save-cta">
-                  <span class="app-save-cta-dot" aria-hidden="true"></span>
-                  <span class="app-save-cta-label">Enregistrer les règles de la carte</span>
-                </button>
-              </span>
-            </div>
-          </section>
-          <section id="integration" class="app-section">
+                    <section id="integration" class="app-section">
             <div id="app-integration-catalog-view">
               <h2 class="app-section-title">Intégration technique</h2>
               <p class="app-section-desc">Cet espace s’adresse à l’<strong>intégrateur / prestataire</strong> qui branche Myfidpass. Choisissez le type d’environnement, ouvrez le guide : tout est expliqué de votre point de vue (identifiants, appel API).</p>

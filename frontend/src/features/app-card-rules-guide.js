@@ -76,7 +76,7 @@ export function initAppCardRulesGuide() {
   root.addEventListener("input", run, true);
   root.addEventListener("change", run, true);
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "regles-carte") run();
+    if (e.detail?.sectionId === "personnaliser") run();
   });
   run();
 }

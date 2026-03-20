@@ -1,6 +1,9 @@
-/* Page Règles de la carte (#regles-carte) */
-#regles-carte.app-section {
-  max-width: 52rem;
+/* Bloc Règles dans Ma carte (#regles-carte) */
+#regles-carte.app-personnaliser-rules-embed {
+  max-width: 100%;
+}
+.app-personnaliser-rules-lead {
+  margin-bottom: 1rem;
 }
 .app-card-rules-page-head {
   margin-bottom: 1.25rem;
@@ -120,23 +123,6 @@
   align-items: flex-start;
   gap: 0.65rem;
 }
-.app-personnaliser-rules-teaser {
-  margin: 0 0 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: 10px;
-  border: 1px dashed rgba(10, 124, 66, 0.35);
-  background: rgba(10, 124, 66, 0.05);
-}
-.app-personnaliser-rules-teaser p {
-  margin: 0 0 0.65rem;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  color: var(--app-text);
-}
-.app-personnaliser-rules-teaser .app-btn {
-  margin: 0;
-}
-
 /* Paliers points simplifiés (5 lignes) */
 .app-points-tiers-simple {
   display: flex;
