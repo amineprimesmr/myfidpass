@@ -4032,8 +4032,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   border: none !important;
   border-radius: 12px 12px 0 0 !important;
   min-height: 2.65rem;
-  /* Logo collé au bord supérieur du bandeau (pas de centrage vertical dans la boîte logo) */
-  padding: 0 0.75rem 0.45rem 0.5rem;
+  /* Petit air en haut : logo et « + d’infos » légèrement descendus */
+  padding: 0.22rem 0.75rem 0.45rem 0.5rem;
   gap: 0.5rem;
   font-size: clamp(0.7rem, 6.2cqw, 0.9rem);
 }
@@ -4076,7 +4076,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right {
   font-size: clamp(0.55rem, 5cqw, 0.72rem);
-  top: 0.02rem;
+  top: 0.24rem;
   right: 0.65rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value,
