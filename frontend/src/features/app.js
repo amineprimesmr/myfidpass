@@ -18,6 +18,7 @@ import {
   wrapAppLogoutButtonsWithDirtyGuard,
   refreshAppSaveCtaDirtyVisual,
 } from "./app-dirty-guard.js";
+import { initAppCardRulesGuide, refreshCardRulesChecklist } from "./app-card-rules-guide.js";
 
 const IS_LOCALHOST =
   typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -337,11 +338,12 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["dashboard", "membres", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
+const APP_SECTION_IDS = ["dashboard", "membres", "personnaliser", "regles-carte", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
 
 const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
   "personnaliser": "Ma Carte",
+  "regles-carte": "Règles carte",
   "notifications": "Campagnes",
   "carte-perimetre": "Emplacement",
   "engagement": "Avis & Réseaux",
@@ -1498,6 +1500,7 @@ function initAppDashboard(slug) {
     if (rulesPanelStamps) rulesPanelStamps.classList.toggle("hidden", !isStamps);
     const gameMode = loyaltyModeGameEl?.checked === true;
     if (gameEconomyPanelEl) gameEconomyPanelEl.classList.toggle("hidden", !gameMode);
+    refreshCardRulesChecklist();
   }
   if (programTypePoints) programTypePoints.addEventListener("change", setRulesPanelVisibility);
   if (programTypeStamps) programTypeStamps.addEventListener("change", setRulesPanelVisibility);
@@ -1754,9 +1757,21 @@ function initAppDashboard(slug) {
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
   if (pointsRewardTiersEl) pointsRewardTiersEl.addEventListener("input", updatePersonnaliserPreview);
+  [
+    pointsPerEuroEl,
+    pointsPerVisitEl,
+    pointsMinAmountEl,
+    stampRewardLabelEl,
+    loyaltyModeCashEl,
+    loyaltyModeGameEl,
+    pointsPerTicketEl,
+  ].forEach((el) => {
+    el?.addEventListener("input", updatePersonnaliserPreview);
+    el?.addEventListener("change", updatePersonnaliserPreview);
+  });
 
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "personnaliser") {
+    if (e.detail?.sectionId === "personnaliser" || e.detail?.sectionId === "regles-carte") {
       requestAnimationFrame(() => {
         updatePersonnaliserPreview();
         requestAnimationFrame(() => updatePersonnaliserPreview());
@@ -2092,10 +2107,11 @@ function initAppDashboard(slug) {
   }
 
   registerAppDiscardHandler("personnaliser", reloadDashboardSettingsForms);
+  registerAppDiscardHandler("regles-carte", reloadDashboardSettingsForms);
   registerAppDiscardHandler("engagement", reloadDashboardSettingsForms);
   registerAppDiscardHandler("notifications", reloadDashboardSettingsForms);
 
-  ["personnaliser", "engagement", "notifications", "profil"].forEach((sid) => {
+  ["personnaliser", "regles-carte", "engagement", "notifications", "profil"].forEach((sid) => {
     const root = document.getElementById(sid);
     if (!root) return;
     const m = () => markAppSectionDirty(sid);
@@ -2259,7 +2275,7 @@ function initAppDashboard(slug) {
         feedback.classList.remove("hidden", "error");
         feedback.classList.add("success");
       }
-      notifyAppSectionSaveSuccess("personnaliser");
+      notifyAppSectionSaveSuccess("regles-carte");
     } catch (err) {
       if (feedback) {
         feedback.textContent = err.message || "Impossible d'enregistrer la configuration jeu.";
@@ -2328,6 +2344,7 @@ function initAppDashboard(slug) {
           stampEmojiEl.value = emoji;
           emojiPickerEl.querySelectorAll(".app-emoji-picker-btn").forEach((b) => b.classList.remove("selected"));
           btn.classList.add("selected");
+          markAppSectionDirty("regles-carte");
           if (typeof updatePersonnaliserPreview === "function") updatePersonnaliserPreview();
         });
         emojiPickerEl.appendChild(btn);
@@ -2506,7 +2523,7 @@ function initAppDashboard(slug) {
 
   async function applyStampIconFromFile(file) {
     if (!file || !file.type.startsWith("image/")) {
-      showPersonnaliserMessage("Choisissez une image (JPG, PNG).", true);
+      showReglesMessage("Choisissez une image (JPG, PNG).", true);
       return;
     }
     try {
@@ -2518,8 +2535,9 @@ function initAppDashboard(slug) {
       }
       if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.add("hidden");
       if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.remove("hidden");
+      markAppSectionDirty("regles-carte");
     } catch (err) {
-      showPersonnaliserMessage("Impossible de charger l'icône.", true);
+      showReglesMessage("Impossible de charger l'icône.", true);
     }
     updatePersonnaliserPreview();
   }
@@ -2591,6 +2609,8 @@ function initAppDashboard(slug) {
         personnaliserStampIconPlaceholder.classList.remove("hidden");
       }
       personnaliserStampIconRemove.classList.add("hidden");
+      markAppSectionDirty("regles-carte");
+      updatePersonnaliserPreview();
     });
   }
 
@@ -2620,6 +2640,110 @@ function initAppDashboard(slug) {
     });
   }
 
+  function showReglesMessage(text, isError = false) {
+    const el = document.getElementById("app-regles-message");
+    if (!el) return;
+    el.textContent = text || "";
+    el.classList.toggle("hidden", !text);
+    el.classList.remove("success", "error");
+    if (text) el.classList.add(isError ? "error" : "success");
+  }
+
+  function buildCardRulesPatchBody() {
+    const body = {};
+    const isStamps = programTypeStamps && programTypeStamps.checked;
+    body.programType = isStamps ? "stamps" : "points";
+    body.loyaltyMode = loyaltyModeGameEl?.checked ? "points_game_tickets" : "points_cash";
+    if (pointsPerEuroEl) body.pointsPerEuro = parseInt(pointsPerEuroEl.value, 10) || 1;
+    if (pointsPerVisitEl) body.pointsPerVisit = parseInt(pointsPerVisitEl.value, 10) || 0;
+    if (pointsPerTicketEl) {
+      const ppt = parseInt(pointsPerTicketEl.value, 10);
+      if (!Number.isNaN(ppt) && ppt > 0) body.pointsPerTicket = ppt;
+    }
+    if (pointsMinAmountEl && pointsMinAmountEl.value.trim() !== "") {
+      const minVal = parseFloat(pointsMinAmountEl.value);
+      if (!Number.isNaN(minVal) && minVal >= 0) body.pointsMinAmountEur = minVal;
+    }
+    if (pointsRewardTiersEl && pointsRewardTiersEl.value.trim()) {
+      const lines = pointsRewardTiersEl.value.split("\n").map((s) => s.trim()).filter(Boolean);
+      const tiers = [];
+      for (const line of lines) {
+        const colon = line.indexOf(":");
+        if (colon >= 0) {
+          const pts = parseInt(line.slice(0, colon).trim(), 10);
+          const label = line.slice(colon + 1).trim();
+          if (!Number.isNaN(pts) && pts >= 0) tiers.push({ points: pts, label });
+        }
+      }
+      if (tiers.length) body.pointsRewardTiers = tiers;
+    }
+    if (isStamps) body.requiredStamps = 10;
+    else if (requiredStampsEl) body.requiredStamps = parseInt(requiredStampsEl.value, 10) || 10;
+    if (stampEmojiEl) body.stampEmoji = stampEmojiEl.value.trim() || undefined;
+    if (stampRewardLabelEl) body.stampRewardLabel = stampRewardLabelEl.value.trim() || undefined;
+    if (personnaliserStampIconRemoveRequested) body.stampIconBase64 = "";
+    else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) {
+      body.stampIconBase64 = personnaliserStampIconDataUrl;
+    }
+    return body;
+  }
+
+  const reglesSave = document.getElementById("app-regles-save");
+  if (reglesSave) {
+    reglesSave.addEventListener("click", async () => {
+      const body = buildCardRulesPatchBody();
+      reglesSave.disabled = true;
+      showReglesMessage("");
+      const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
+      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
+      try {
+        const res = await fetch(url, { method: "PATCH", headers, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          showReglesMessage("Règles enregistrées.");
+          notifyAppSectionSaveSuccess("regles-carte");
+          updatePersonnaliserPreview();
+          if (body.stampIconBase64 === "") {
+            personnaliserStampIconRemoveRequested = false;
+            personnaliserStampIconDataUrl = "";
+            if (personnaliserStampIcon) personnaliserStampIcon.value = "";
+            if (personnaliserStampIconPreview) {
+              personnaliserStampIconPreview.src = "";
+              personnaliserStampIconPreview.classList.add("hidden");
+            }
+            if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.remove("hidden");
+            if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.add("hidden");
+            updatePersonnaliserPreview();
+          } else if (body.stampIconBase64) {
+            personnaliserStampIconRemoveRequested = false;
+            api("/stamp-icon?v=" + Date.now())
+              .then((r) => (r.ok ? r.blob() : null))
+              .then((blob) => {
+                if (blob && personnaliserStampIconPreview) {
+                  personnaliserStampIconDataUrl = URL.createObjectURL(blob);
+                  personnaliserStampIconPreview.src = personnaliserStampIconDataUrl;
+                  personnaliserStampIconPreview.classList.remove("hidden");
+                  if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.add("hidden");
+                  if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.remove("hidden");
+                  updatePersonnaliserPreview();
+                }
+              })
+              .catch(() => {});
+          }
+        } else {
+          let errMsg = data.error || "Erreur lors de l'enregistrement.";
+          if (res.status === 401) errMsg = "Accès refusé. Utilisez le lien reçu par e-mail pour ouvrir cette page (il contient le token), ou déconnectez-vous puis reconnectez-vous.";
+          else if (res.status === 404) errMsg = "Commerce introuvable.";
+          showReglesMessage(errMsg, true);
+        }
+      } catch (_) {
+        showReglesMessage("Erreur réseau. Vérifiez votre connexion.", true);
+      }
+      reglesSave.disabled = false;
+    });
+  }
+
   if (personnaliserSave) {
     personnaliserSave.addEventListener("click", async () => {
       const backgroundColor = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#1e3a8a";
@@ -2639,47 +2763,15 @@ function initAppDashboard(slug) {
         labelColor: toHex(labelColor),
         stripColor: toHex(backgroundColor),
       };
-      const isStamps = programTypeStamps && programTypeStamps.checked;
-      body.programType = isStamps ? "stamps" : "points";
-      body.loyaltyMode = loyaltyModeGameEl?.checked ? "points_game_tickets" : "points_cash";
       const stripDisplayMode = stripDisplayText && stripDisplayText.checked ? "text" : "logo";
       body.stripDisplayMode = stripDisplayMode;
       if (stripDisplayMode === "text" && stripTextEl) body.stripText = stripTextEl.value.trim() || undefined;
-      if (pointsPerEuroEl) body.pointsPerEuro = parseInt(pointsPerEuroEl.value, 10) || 1;
-      if (pointsPerVisitEl) body.pointsPerVisit = parseInt(pointsPerVisitEl.value, 10) || 0;
-      if (pointsPerTicketEl) {
-        const ppt = parseInt(pointsPerTicketEl.value, 10);
-        if (!Number.isNaN(ppt) && ppt > 0) body.pointsPerTicket = ppt;
-      }
-      if (pointsMinAmountEl && pointsMinAmountEl.value.trim() !== "") {
-        const minVal = parseFloat(pointsMinAmountEl.value);
-        if (!Number.isNaN(minVal) && minVal >= 0) body.pointsMinAmountEur = minVal;
-      }
-      if (pointsRewardTiersEl && pointsRewardTiersEl.value.trim()) {
-        const lines = pointsRewardTiersEl.value.split("\n").map((s) => s.trim()).filter(Boolean);
-        const tiers = [];
-        for (const line of lines) {
-          const colon = line.indexOf(":");
-          if (colon >= 0) {
-            const pts = parseInt(line.slice(0, colon).trim(), 10);
-            const label = line.slice(colon + 1).trim();
-            if (!Number.isNaN(pts) && pts >= 0) tiers.push({ points: pts, label });
-          }
-        }
-        if (tiers.length) body.pointsRewardTiers = tiers;
-      }
-      if (isStamps) body.requiredStamps = 10;
-      else if (requiredStampsEl) body.requiredStamps = parseInt(requiredStampsEl.value, 10) || 10;
-      if (stampEmojiEl) body.stampEmoji = stampEmojiEl.value.trim() || undefined;
-      if (stampRewardLabelEl) body.stampRewardLabel = stampRewardLabelEl.value.trim() || undefined;
       // N'envoyer le logo que si c'est un data URL (nouvelle image choisie). Une blob URL (logo chargé depuis l'API) ne doit pas être envoyée sinon on écrase le logo en base.
       if (personnaliserLogoDataUrl && typeof personnaliserLogoDataUrl === "string" && personnaliserLogoDataUrl.startsWith("data:")) {
         body.logoBase64 = personnaliserLogoDataUrl;
       }
       if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
       else if (personnaliserCardBgDataUrl && typeof personnaliserCardBgDataUrl === "string" && personnaliserCardBgDataUrl.startsWith("data:")) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
-      if (personnaliserStampIconRemoveRequested) body.stampIconBase64 = "";
-      else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) body.stampIconBase64 = personnaliserStampIconDataUrl;
       const addressEl = document.getElementById("app-personnaliser-address");
       if (addressEl) {
         const addressVal = addressEl.value?.trim() || "";
@@ -2761,33 +2853,6 @@ function initAppDashboard(slug) {
                   personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
                   personnaliserCardBgPreview.classList.remove("hidden");
                   if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
-                  updatePersonnaliserPreview();
-                }
-              })
-              .catch(() => {});
-          }
-          if (body.stampIconBase64 === "" || body.stampIconBase64 === "") {
-            personnaliserStampIconRemoveRequested = false;
-            personnaliserStampIconDataUrl = "";
-            if (personnaliserStampIcon) personnaliserStampIcon.value = "";
-            if (personnaliserStampIconPreview) {
-              personnaliserStampIconPreview.src = "";
-              personnaliserStampIconPreview.classList.add("hidden");
-            }
-            if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.remove("hidden");
-            if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.add("hidden");
-            updatePersonnaliserPreview();
-          } else if (body.stampIconBase64) {
-            personnaliserStampIconRemoveRequested = false;
-            api("/stamp-icon?v=" + Date.now())
-              .then((r) => (r.ok ? r.blob() : null))
-              .then((blob) => {
-                if (blob && personnaliserStampIconPreview) {
-                  personnaliserStampIconDataUrl = URL.createObjectURL(blob);
-                  personnaliserStampIconPreview.src = personnaliserStampIconDataUrl;
-                  personnaliserStampIconPreview.classList.remove("hidden");
-                  if (personnaliserStampIconPlaceholder) personnaliserStampIconPlaceholder.classList.add("hidden");
-                  if (personnaliserStampIconRemove) personnaliserStampIconRemove.classList.remove("hidden");
                   updatePersonnaliserPreview();
                 }
               })
@@ -4861,6 +4926,7 @@ function initAppDashboard(slug) {
     }
   }, { once: false });
 
+  initAppCardRulesGuide();
   refresh();
   loadAppNotificationStats();
   loadCampaignSegments();
