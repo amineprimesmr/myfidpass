@@ -3934,8 +3934,8 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-personnaliser-preview { margin-top: 0; }
 .app-personnaliser-preview.builder-phone-mockup {
-  width: min(310px, 100%);
-  max-width: 340px;
+  width: min(352px, 100%);
+  max-width: 400px;
   margin-left: auto;
   margin-right: auto;
   flex-shrink: 0;
@@ -4016,16 +4016,16 @@ body.page-app .whatsapp-fab { display: none !important; }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
   border: none !important;
   border-radius: 18px 18px 0 0 !important;
-  min-height: 2.85rem;
-  padding: 0.5rem 0.75rem 0.55rem 0.55rem;
-  gap: 0.5rem;
+  min-height: 2.45rem;
+  padding: 0.4rem 0.7rem 0.45rem 0.5rem;
+  gap: 0.4rem;
   font-size: clamp(0.7rem, 6.2cqw, 0.9rem);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-body {
   border: none !important;
   border-radius: 0 !important;
-  padding: 0.65rem 0.75rem 0.7rem;
-  gap: 0.55rem;
+  padding: 0.48rem 0.7rem 0.52rem;
+  gap: 0.38rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr {
   position: static !important;
@@ -4041,14 +4041,14 @@ body.page-app .whatsapp-fab { display: none !important; }
   box-shadow: none !important;
   border: none !important;
   border-radius: 0 0 18px 18px !important;
-  padding: 0.45rem 0.65rem 0.55rem;
+  padding: 0.32rem 0.55rem 0.4rem;
   width: 100%;
   box-sizing: border-box;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap {
-  width: clamp(3.1rem, 26cqw, 3.85rem);
-  height: clamp(3.1rem, 26cqw, 3.85rem);
-  margin-top: 0.2rem;
+  width: clamp(2.85rem, 24cqw, 3.5rem);
+  height: clamp(2.85rem, 24cqw, 3.5rem);
+  margin-top: 0.12rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-fallback {
   font-size: clamp(0.52rem, 4.8cqw, 0.68rem);
@@ -4060,15 +4060,15 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value,
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value #app-wallet-preview-value {
-  font-size: clamp(1.85rem, 19cqw, 2.45rem);
+  font-size: clamp(1.55rem, 17cqw, 2.1rem);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-wrap .builder-wallet-card-label {
   font-size: clamp(0.68rem, 6cqw, 0.85rem);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bottom-row {
-  margin-top: 0.65rem;
-  gap: 0.65rem;
-  padding-top: 0.15rem;
+  margin-top: 0.4rem;
+  gap: 0.5rem;
+  padding-top: 0.08rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-label {
   font-size: clamp(0.55rem, 5cqw, 0.72rem);
@@ -4084,8 +4084,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   font-size: clamp(0.65rem, 5.8cqw, 0.85rem);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bandeau {
-  min-height: 4.25rem;
-  padding: 0.55rem 0.65rem;
+  min-height: 3.35rem;
+  padding: 0.4rem 0.55rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img img {
   width: clamp(1.65rem, 13.5cqw, 2.15rem);
@@ -4094,10 +4094,10 @@ body.page-app .whatsapp-fab { display: none !important; }
   min-height: clamp(1.65rem, 13.5cqw, 2.15rem);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img {
-  width: clamp(80px, 46cqw, 112px) !important;
-  height: clamp(80px, 46cqw, 112px) !important;
-  min-width: clamp(80px, 46cqw, 112px);
-  min-height: clamp(80px, 46cqw, 112px);
+  width: clamp(72px, 42cqw, 100px) !important;
+  height: clamp(72px, 42cqw, 100px) !important;
+  min-width: clamp(72px, 42cqw, 100px);
+  min-height: clamp(72px, 42cqw, 100px);
   mix-blend-mode: normal;
   border-radius: 6px;
 }
@@ -4121,15 +4121,15 @@ body.page-app .whatsapp-fab { display: none !important; }
     margin-bottom: 1rem;
   }
   .app-personnaliser-preview.builder-phone-mockup {
-    width: min(300px, 88vw);
-    max-width: 340px;
+    width: min(330px, 92vw);
+    max-width: 380px;
   }
 }
 
 @media (min-width: 981px) {
   /* Ma carte : grille 2 colonnes dans .app-personnaliser-grid (formulaire à gauche, aperçu à droite) */
   #app-dashboard-content #personnaliser .app-personnaliser-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
     gap: 1.5rem;
   }
   #app-dashboard-content #personnaliser .app-personnaliser-live-preview-wrap {
@@ -4138,8 +4138,8 @@ body.page-app .whatsapp-fab { display: none !important; }
     margin-top: -1.1rem;
   }
   .app-personnaliser-preview.builder-phone-mockup {
-    width: 310px;
-    max-width: 340px;
+    width: 352px;
+    max-width: 400px;
     margin-right: 0;
     margin-left: auto;
   }
