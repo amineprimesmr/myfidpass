@@ -98,12 +98,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     const segmentHtml = wheelLabels.map((label, i) => {
       const angle = (i + 0.5) * (360 / n);
       const isWhite = i % 2 === 1;
-      const flip = angle > 90 && angle < 270;
-      let segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
-      if (flip) segClass += " fidelity-roulette-segment-flip";
+      const segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
       const displayLabel = formatWheelLabel(label);
-      // Bissecteur du segment + texte orienté le long du rayon (flip côté gauche pour rester lisible).
-      return `<div class="${segClass}" style="transform: rotate(${angle}deg);"><span class="fidelity-roulette-segment-label-anchor"><span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(displayLabel)}</span></span></div>`;
+      // Demi-disque bas (bissectrice > 180°) : inverser la rotation du libellé pour qu’il ne soit pas à l’envers.
+      const labelRotateDeg = angle > 180 ? 90 : -90;
+      return `<div class="${segClass}" style="transform: rotate(${angle}deg); --label-rotate: ${labelRotateDeg}deg;"><span class="fidelity-roulette-segment-label-anchor"><span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(displayLabel)}</span></span></div>`;
     }).join("");
 
     wheelEl.innerHTML = segmentHtml;
