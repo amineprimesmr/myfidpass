@@ -714,7 +714,7 @@ function initAppDashboard(slug) {
   const integrationCurlEl = document.getElementById("app-integration-curl");
   const integrationPrestataireLinkEl = document.getElementById("app-integration-prestataire-link");
   const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "";
-  if (integrationBaseUrlEl) integrationBaseUrlEl.value = API_BASE || "";
+  if (integrationBaseUrlEl) integrationBaseUrlEl.value = API_BASE || "https://api.myfidpass.fr";
   if (integrationSlugEl) integrationSlugEl.value = slug || "";
   const prestatairePageUrl = `${origin}/integration?slug=${encodeURIComponent(slug || "")}`;
   if (integrationPrestataireLinkEl) integrationPrestataireLinkEl.value = prestatairePageUrl;

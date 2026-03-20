@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="/src/auth.css" />
     <link rel="stylesheet" href="/src/app.css" />
     <link rel="stylesheet" href="/src/app-integration.css" />
+    <link rel="stylesheet" href="/src/app-integration-sheet.css" />
+    <link rel="stylesheet" href="/src/landing-integration-catalog.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
@@ -985,50 +987,46 @@
             </div>
           </section>
           <section id="integration" class="app-section">
-            <h2 class="app-section-title">Hub d'intégration</h2>
-            <p class="app-section-desc">Connectez Myfidpass à votre caisse, borne ou logiciel métier : une seule API REST, le même flux partout. Explorez l'écosystème ci-dessous, puis copiez les repères techniques pour votre prestataire.</p>
-            <div class="app-section-grid-wrap app-integration-grid">
-              <div class="app-section-col-main">
-                <div class="app-integration-hero">
-                  <h3 class="app-integration-hero-title">Catalogue &amp; recherche</h3>
-                  <p class="app-integration-hero-desc">Filtrez par nom (ex. Zelty, WooCommerce, borne). Chaque fiche résume le scénario ; l'API et la doc restent identiques pour tous les commerces.</p>
-                </div>
-                <div class="app-integration-toolbar">
-                  <span class="app-integration-toolbar-label" id="app-integration-search-label">Recherche</span>
-                  <input type="search" id="app-integration-search" class="app-input" placeholder="Zelty, Shopify, borne, API…" autocomplete="off" aria-labelledby="app-integration-search-label" />
-                </div>
-                <div id="app-integration-hub-root" aria-label="Catalogue des intégrations"></div>
-                <div class="app-card app-integration-how">
-                  <h3 class="app-integration-how-title">Comment ça se passe ?</h3>
-                  <p>Vous n'avez pas besoin de faire la technique. Transmettez le lien ci-dessous à la personne qui gère votre caisse ou votre borne (votre installateur, le support de votre logiciel, ou votre prestataire). Ils auront toute la documentation pour connecter Myfidpass. <strong>Votre prestataire n'a pas besoin de compte Myfidpass.</strong> Vous devrez lui communiquer votre <strong>token</strong> (visible dans l'URL de votre tableau de bord lorsque vous y accédez par le lien reçu par email).</p>
-                  <p class="app-step-label">Lien à envoyer à votre prestataire</p>
-                  <div class="app-share-row">
-                    <input type="text" id="app-integration-prestataire-link" class="app-input app-share-input" readonly aria-label="Lien documentation" />
-                    <button type="button" id="app-integration-copy-prestataire-link" class="app-btn app-btn-primary">Copier le lien</button>
+            <h2 class="app-section-title">Connecter votre logiciel</h2>
+            <p class="app-section-desc">Choisissez votre environnement (caisse, borne, site web…). Un <strong>guide pas à pas</strong> s’ouvre : d’abord ce que vous faites vous-même, puis ce qu’il faut transmettre au prestataire, enfin le détail technique.</p>
+            <div class="app-integration-page">
+              <div class="app-integration-hero app-integration-hero--simple">
+                <h3 class="app-integration-hero-title">1. Recherchez votre logiciel</h3>
+                <p class="app-integration-hero-desc">Tapez le nom (Zelty, WooCommerce, borne…). <strong>2.</strong> Cliquez sur une carte pour ouvrir le guide. Pas besoin de tout comprendre d’un coup : une étape à la fois.</p>
+              </div>
+              <div class="app-integration-toolbar">
+                <span class="app-integration-toolbar-label" id="app-integration-search-label">Recherche</span>
+                <input type="search" id="app-integration-search" class="app-input" placeholder="Ex. Zelty, Shopify, borne, API…" autocomplete="off" aria-labelledby="app-integration-search-label" />
+              </div>
+              <div id="app-integration-hub-root" aria-label="Catalogue des intégrations"></div>
+              <p class="app-integration-footnote">Une seule API pour tous les cas : le guide adapte les textes, les repères (lien, slug, exemple de requête) restent les mêmes pour votre commerce.</p>
+            </div>
+            <!-- Champs remplis par app.js (hors écran) : le guide modal les lit pour les étapes « copier » -->
+            <div class="app-integration-tech-sr" aria-hidden="true">
+              <input type="text" id="app-integration-prestataire-link" class="app-input" readonly tabindex="-1" />
+              <a href="#" id="app-integration-open-page" target="_blank" rel="noopener" tabindex="-1"></a>
+              <input type="text" id="app-integration-base-url" readonly tabindex="-1" />
+              <input type="text" id="app-integration-slug" readonly tabindex="-1" />
+              <pre id="app-integration-curl" class="app-integration-curl"></pre>
+            </div>
+            <div id="app-integration-sheet" class="app-int-sheet hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="app-int-sheet-title">
+              <div class="app-int-sheet-backdrop" id="app-int-sheet-backdrop"></div>
+              <div class="app-int-sheet-panel">
+                <button type="button" class="app-int-sheet-close" id="app-int-sheet-close" aria-label="Fermer le guide">×</button>
+                <div class="app-int-sheet-head">
+                  <p class="app-int-sheet-kicker" id="app-int-sheet-kicker">Guide</p>
+                  <div class="app-int-sheet-title-row">
+                    <h3 id="app-int-sheet-title" class="app-int-sheet-title">—</h3>
+                    <span id="app-int-sheet-badge-wrap"></span>
                   </div>
-                  <p class="app-hint"><a href="#" id="app-integration-open-page" target="_blank" rel="noopener">Ouvrir la page dans un nouvel onglet</a> pour voir ce que votre prestataire verra.</p>
+                </div>
+                <div class="app-int-sheet-progress" id="app-int-sheet-progress" aria-label="Progression du guide"></div>
+                <div class="app-int-sheet-body" id="app-int-sheet-body"></div>
+                <div class="app-int-sheet-footer">
+                  <button type="button" class="app-btn app-btn-secondary" id="app-int-sheet-prev">Précédent</button>
+                  <button type="button" class="app-btn app-btn-primary" id="app-int-sheet-next">Suivant</button>
                 </div>
               </div>
-              <aside class="app-section-col-aside app-integration-aside">
-                <div class="app-card">
-                  <p class="app-step-label">URL de base de l'API</p>
-                  <div class="app-share-row">
-                    <input type="text" id="app-integration-base-url" class="app-input app-share-input" readonly aria-label="URL de base API" />
-                    <button type="button" id="app-integration-copy-base" class="app-btn app-btn-primary">Copier</button>
-                  </div>
-                  <p class="app-step-label">Votre identifiant commerce (slug)</p>
-                  <input type="text" id="app-integration-slug" class="app-input app-share-input" readonly aria-label="Slug" />
-                  <p class="app-step-label">Authentification</p>
-                  <p class="app-integration-auth-text">Utilisez le <strong>token du tableau de bord</strong> (présent dans l'URL lorsque vous accédez à cette page par le lien envoyé par email : <code>?token=...</code>). Envoyez-le dans le header <code>X-Dashboard-Token</code>.</p>
-                  <p class="app-step-label">Endpoint principal (scan + crédit en un appel)</p>
-                  <pre id="app-integration-curl" class="app-integration-curl"></pre>
-                  <button type="button" id="app-integration-copy-curl" class="app-btn app-btn-secondary">Copier l'exemple cURL</button>
-                  <p class="app-integration-doc-link"><a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md" target="_blank" rel="noopener">Documentation complète (format code-barres, lookup, exemples JS/Python, erreurs)</a></p>
-                </div>
-                <div id="app-integration-detail-panel" class="app-integration-detail-panel" aria-live="polite">
-                  <p class="app-integration-detail-placeholder">Sélectionnez une carte pour afficher le détail, les prérequis et le lien documentation.</p>
-                </div>
-              </aside>
             </div>
           </section>
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->

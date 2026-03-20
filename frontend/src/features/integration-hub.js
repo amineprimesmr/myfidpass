@@ -1,7 +1,8 @@
 /**
- * Hub Intégration (dashboard + aperçu page publique prestataire).
+ * Hub Intégration (dashboard) + aperçu page publique prestataire.
  */
 import catalog from "../data/integrations-catalog.json";
+import { createIntegrationGuide } from "./integration-guide.js";
 
 const DOC_HREF =
   "https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md";
@@ -39,53 +40,21 @@ function matchesQuery(q, item) {
   return hay.includes(q);
 }
 
-/** @param {HTMLElement} panel */
-function clearDetail(panel) {
-  panel.innerHTML =
-    '<p class="app-integration-detail-placeholder">Sélectionnez une carte pour afficher le détail, les prérequis et le lien documentation.</p>';
-}
-
 /**
  * @param {{ slug?: string, apiBase?: string, origin?: string }} opts
  */
 export function initIntegrationHub(opts) {
   const root = document.getElementById("app-integration-hub-root");
-  const panel = document.getElementById("app-integration-detail-panel");
   const searchEl = document.getElementById("app-integration-search");
-  if (!root || !panel) return;
+  if (!root) return;
 
-  const slug = opts.slug || "VOTRE_SLUG";
-  const apiBase = opts.apiBase || "https://api.myfidpass.fr";
+  const resolvedApiBase = opts.apiBase || "https://api.myfidpass.fr";
+  const guide = createIntegrationGuide({
+    resolvedApiBase,
+    fallbackSlug: opts.slug || "",
+  });
 
   const categories = [...catalog.categories].sort((a, b) => a.order - b.order);
-  let selectedId = /** @type {string | null} */ (null);
-
-  function showDetail(id) {
-    const item = catalog.integrations.find((i) => i.id === id);
-    if (!item) return;
-    selectedId = id;
-
-    const bullets = (item.bullets || []).map((b) => `<li>${esc(b)}</li>`).join("");
-    const tagLine = (item.tags || []).map((t) => `<span class="app-int-tag">${esc(t)}</span>`).join("");
-
-    panel.innerHTML = `
-      <div class="app-integration-detail-inner">
-        <div class="app-integration-detail-head">
-          <h3 class="app-integration-detail-title">${esc(item.name)}</h3>
-          <span class="${badgeClass(item.status)}" aria-label="Statut">${esc(STATUS_LABEL[item.status] || item.status)}</span>
-        </div>
-        <p class="app-integration-detail-desc">${esc(item.description)}</p>
-        ${bullets ? `<ul class="app-integration-detail-bullets">${bullets}</ul>` : ""}
-        ${tagLine ? `<div class="app-int-tags" aria-label="Mots-clés">${tagLine}</div>` : ""}
-        <p class="app-integration-detail-api-hint">L’API reste la même pour tous les commerces : <code>POST</code> …<code>/api/businesses/${esc(slug)}/integration/scan</code> avec le header <code>X-Dashboard-Token</code> (fourni par le commerçant). Base API actuelle : <code>${esc(apiBase)}</code></p>
-        <a class="app-btn app-btn-secondary app-integration-detail-doc-btn" href="${DOC_HREF}" target="_blank" rel="noopener">Documentation API complète</a>
-      </div>
-    `;
-
-    root.querySelectorAll(".app-int-card").forEach((el) => {
-      el.classList.toggle("app-int-card--active", el.getAttribute("data-int-id") === id);
-    });
-  }
 
   function renderCatalog(filter) {
     const q = filter.trim().toLowerCase();
@@ -97,12 +66,13 @@ export function initIntegrationHub(opts) {
 
       const cards = items
         .map((item) => {
-          const disabled = item.status === "coming";
+          const muted = item.status === "coming";
           return `
-            <button type="button" class="app-int-card${disabled ? " app-int-card--muted" : ""}" data-int-id="${esc(item.id)}" aria-label="${esc(item.name)}">
+            <button type="button" class="app-int-card${muted ? " app-int-card--muted" : ""}" data-int-id="${esc(item.id)}" aria-label="Ouvrir le guide : ${esc(item.name)}">
               <span class="app-int-card-title">${esc(item.name)}</span>
               <span class="${badgeClass(item.status)}">${esc(STATUS_LABEL[item.status] || item.status)}</span>
               <span class="app-int-card-desc">${esc(item.description.slice(0, 120))}${item.description.length > 120 ? "…" : ""}</span>
+              <span class="app-int-card-cta">Voir le guide étape par étape →</span>
             </button>
           `;
         })
@@ -119,8 +89,6 @@ export function initIntegrationHub(opts) {
     if (!parts.length) {
       root.innerHTML =
         '<p class="app-int-empty">Aucun résultat. Essayez « Zelty », « borne », « WooCommerce »…</p>';
-      selectedId = null;
-      clearDetail(panel);
       return;
     }
 
@@ -128,16 +96,10 @@ export function initIntegrationHub(opts) {
     root.querySelectorAll(".app-int-card").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-int-id");
-        if (id) showDetail(id);
+        const item = catalog.integrations.find((i) => i.id === id);
+        if (item) guide.open(item);
       });
     });
-
-    const still = selectedId && catalog.integrations.some((i) => i.id === selectedId && matchesQuery(q, i));
-    if (still) showDetail(selectedId);
-    else {
-      selectedId = null;
-      clearDetail(panel);
-    }
   }
 
   searchEl?.addEventListener("input", () => renderCatalog(searchEl.value));
@@ -145,7 +107,6 @@ export function initIntegrationHub(opts) {
 }
 
 /**
- * Aperçu compact pour la page publique /integration (prestataire).
  * @param {HTMLElement} container
  */
 export function renderPublicCatalogSummary(container) {
