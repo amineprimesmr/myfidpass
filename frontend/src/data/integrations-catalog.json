@@ -44,7 +44,7 @@
       "categoryId": "caisse",
       "status": "partner",
       "summary": "Caisse restauration — intégration partenaire.",
-      "logo": "https://logo.clearbit.com/zelty.fr",
+      "logo": "/assets/integration-logos/zelty.svg",
       "description": "Restauration : caisse et flux habituels. Intégration type partenaire (webhooks ou module selon offre).",
       "bullets": [
         "Scénario typique : passage en caisse → crédit fidélité",
@@ -59,12 +59,12 @@
       "categoryId": "caisse",
       "status": "beta",
       "summary": "Caisse FR — scripts / couche HTTP selon déploiement.",
-      "logo": "https://logo.clearbit.com/tillersystems.com",
+      "logo": "/assets/integration-logos/tiller.svg",
       "description": "Écosystème caisse FR : intégration possible via couche HTTP / scripts métier selon votre déploiement Tiller.",
       "bullets": [
         "Vérifier la version et les hooks disponibles sur votre contrat",
         "Token et slug fournis par le commerçant Myfidpass",
-        "Phase bêta : nous contacter pour accompagnement"
+        "Nous contacter pour accompagnement bêta"
       ],
       "tags": ["caisse", "france"]
     },
@@ -74,7 +74,7 @@
       "categoryId": "caisse",
       "status": "beta",
       "summary": "Retail / resto — passerelle vers l’API Myfidpass.",
-      "logo": "https://logo.clearbit.com/lightspeedhq.com",
+      "logo": "/assets/integration-logos/lightspeed.svg",
       "description": "Retail et restauration : selon série, passerelle HTTP ou app script vers l’API Myfidpass.",
       "bullets": [
         "Identifier la série (R/K) et les APIs ouvertes du site",
@@ -88,12 +88,12 @@
       "name": "Square POS",
       "categoryId": "caisse",
       "status": "coming",
-      "summary": "Terminal Square — feuille de route.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/square.svg",
+      "summary": "Terminal Square — extensions ou webhooks selon région.",
+      "logo": "/assets/integration-logos/square.svg",
       "description": "Terminal Square : intégration envisagée via extensions ou webhooks selon disponibilité régionale.",
       "bullets": [
-        "Feuille de route produit",
-        "En attendant : flux générique HTTP depuis un middleware"
+        "Modèle cible : middleware HTTPS + API scan Myfidpass",
+        "Token et slug fournis par le commerçant"
       ],
       "tags": ["pos", "us"]
     },
@@ -103,9 +103,12 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "TPE — pont logiciel à définir.",
-      "logo": "https://logo.clearbit.com/sumup.com",
+      "logo": "/assets/integration-logos/sumup.svg",
       "description": "TPE SumUp : exploration d’un pont logiciel vers l’API scan.",
-      "bullets": ["Bientôt", "Solution transitoire : tablette auxiliaire + lecteur 2D"]
+      "bullets": [
+        "Tablette auxiliaire + lecteur 2D possible en solution transitoire",
+        "Même schéma barcode + X-Dashboard-Token"
+      ]
     },
     {
       "id": "clover",
@@ -113,9 +116,12 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "Apps Clover ou serveur relais HTTPS.",
-      "logo": "https://logo.clearbit.com/clover.com",
+      "logo": "/assets/integration-logos/clover.svg",
       "description": "Apps Clover ou serveur intermédiaire pour relayer les scans vers Myfidpass.",
-      "bullets": ["Feuille de route", "Architecture recommandée : micro-service HTTPS"]
+      "bullets": [
+        "Architecture type : micro-service HTTPS vers l’API scan",
+        "Ne pas exposer le token côté terminal"
+      ]
     },
     {
       "id": "toast",
@@ -123,9 +129,12 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "Restauration US — écosystème partenaire.",
-      "logo": "https://logo.clearbit.com/toasttab.com",
+      "logo": "/assets/integration-logos/toast.svg",
       "description": "Restauration US : intégration ciblée via l’écosystème partenaire Toast.",
-      "bullets": ["À l’étude", "Contact intégration pour scoping"]
+      "bullets": [
+        "Scoping avec l’équipe intégration Toast si besoin",
+        "API générique Myfidpass utilisable côté serveur"
+      ]
     },
     {
       "id": "revel",
@@ -133,9 +142,12 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "iPad POS — API Revel + worker scan.",
-      "logo": "https://logo.clearbit.com/revelsystems.com",
+      "logo": "/assets/integration-logos/revel.svg",
       "description": "iPad POS : passerelle possible via Revel API + worker scan.",
-      "bullets": ["Roadmap", "Kit API déjà utilisable côté serveur"]
+      "bullets": [
+        "Kit API Myfidpass utilisable côté serveur dès maintenant",
+        "Mapper les événements caisse vers POST scan"
+      ]
     },
     {
       "id": "shopify-pos",
@@ -143,9 +155,12 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "Extensions ou app custom Shopify.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/shopify.svg",
+      "logo": "/assets/integration-logos/shopify.svg",
       "description": "Extensions Shopify ou app custom pour envoyer barcode + montant à Myfidpass.",
-      "bullets": ["Prévu", "Shopify en ligne : voir e-commerce"]
+      "bullets": [
+        "Shopify en ligne : voir fiche e-commerce",
+        "Barcode membre + montant dans le corps JSON scan"
+      ]
     },
     {
       "id": "oracle-micros",
@@ -153,9 +168,12 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "Hôtellerie-restauration — connecteur sur mesure.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/oracle.svg",
+      "logo": "/assets/integration-logos/oracle.svg",
       "description": "Hôtellerie-restauration : connecteur via couche interface ou serveur fidélité.",
-      "bullets": ["Enterprise", "Accompagnement projet"]
+      "bullets": [
+        "Projets souvent avec intégrateur",
+        "Même modèle barcode + token dashboard"
+      ]
     },
     {
       "id": "ncr-aloha",
@@ -163,9 +181,12 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "POS legacy — bridge local vers HTTPS.",
-      "logo": "https://logo.clearbit.com/ncr.com",
+      "logo": "/assets/integration-logos/ncr.svg",
       "description": "POS legacy : souvent un bridge sur site vers HTTPS.",
-      "bullets": ["Intégrateur requis", "Même modèle barcode + token"]
+      "bullets": [
+        "Intégrateur fréquent sur ce type de site",
+        "Même modèle barcode + token"
+      ]
     },
     {
       "id": "ubereats",
@@ -173,9 +194,12 @@
       "categoryId": "commande",
       "status": "coming",
       "summary": "Points après livraison — webhooks à définir.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/ubereats.svg",
+      "logo": "/assets/integration-logos/ubereats.svg",
       "description": "Attribuer des points après commande livraison : lien avec webhooks commande + règle métier.",
-      "bullets": ["Feuille de route", "Aujourd’hui : crédit en magasin via API scan"]
+      "bullets": [
+        "Crédit en magasin : déjà possible via API scan",
+        "Livraison : mapping commande → membre à définir"
+      ]
     },
     {
       "id": "deliveroo",
@@ -183,9 +207,12 @@
       "categoryId": "commande",
       "status": "coming",
       "summary": "Commande → fidélité (API partenaire).",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/deliveroo.svg",
+      "logo": "/assets/integration-logos/deliveroo.svg",
       "description": "Synchronisation commande → fidélité (à définir selon API partenaire).",
-      "bullets": ["Étude", "Priorité caisse physique d’abord"]
+      "bullets": [
+        "Caisse physique prioritaire pour un premier déploiement",
+        "Contrat et API Deliveroo selon votre pays"
+      ]
     },
     {
       "id": "hubrise",
@@ -193,7 +220,7 @@
       "categoryId": "commande",
       "status": "partner",
       "summary": "Hub multi-canaux — endpoint HTTPS Myfidpass.",
-      "logo": "https://logo.clearbit.com/hubrise.com",
+      "logo": "/assets/integration-logos/hubrise.svg",
       "description": "Hub commandes multi-canaux : possibilité de relayer événements vers un connecteur Myfidpass.",
       "bullets": [
         "Architecture hub → endpoint HTTPS dédié",
@@ -207,7 +234,7 @@
       "categoryId": "ecommerce",
       "status": "kit",
       "summary": "Plugin / webhook PHP vers l’API.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/woocommerce.svg",
+      "logo": "/assets/integration-logos/woocommerce.svg",
       "description": "Plugin ou snippet PHP : après commande ou webhook, appeler l’API (lookup + crédit) selon votre règle.",
       "bullets": [
         "Utiliser le UUID membre (Wallet) comme identifiant stable",
@@ -221,7 +248,7 @@
       "categoryId": "ecommerce",
       "status": "kit",
       "summary": "Module ou tâche cron + API REST.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/prestashop.svg",
+      "logo": "/assets/integration-logos/prestashop.svg",
       "description": "Module léger ou tâche cron : même schéma REST Myfidpass.",
       "bullets": ["Hooks commande", "Ne jamais exposer le token en front"]
     },
@@ -231,7 +258,7 @@
       "categoryId": "ecommerce",
       "status": "beta",
       "summary": "App admin ou Flow + endpoint sécurisé.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/shopify.svg",
+      "logo": "/assets/integration-logos/shopify.svg",
       "description": "App Shopify (admin) ou Flow + endpoint sécurisé vers scan / lookup.",
       "bullets": [
         "Shopify Functions / webhooks selon cas",
@@ -245,9 +272,12 @@
       "categoryId": "ecommerce",
       "status": "coming",
       "summary": "Extension ou middleware commandes.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/magento.svg",
+      "logo": "/assets/integration-logos/magento.svg",
       "description": "Extension ou intégration middleware pour relier les commandes aux membres Myfidpass.",
-      "bullets": ["Enterprise", "Contact pour POC"]
+      "bullets": [
+        "Extension ou middleware selon votre stack",
+        "Contact pour un POC ciblé"
+      ]
     },
     {
       "id": "bigcommerce",
@@ -255,9 +285,12 @@
       "categoryId": "ecommerce",
       "status": "coming",
       "summary": "Webhooks commande + mapping client.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/bigcommerce.svg",
+      "logo": "/assets/integration-logos/bigcommerce.svg",
       "description": "Webhooks commande + mapping client.",
-      "bullets": ["Roadmap"]
+      "bullets": [
+        "Webhooks commande côté BigCommerce",
+        "Lier l’e-mail client au membre Wallet si besoin"
+      ]
     },
     {
       "id": "zapier-make",
@@ -265,11 +298,11 @@
       "categoryId": "fidelite",
       "status": "coming",
       "summary": "Automatisations — HTTP signé recommandé.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/zapier.svg",
+      "logo": "/assets/integration-logos/zapier.svg",
       "description": "Automatiser des crédits depuis d’autres outils (CRM, sheets) via requêtes HTTP signées.",
       "bullets": [
-        "Besoin d’un connecteur dédié (sécurité token)",
-        "Aujourd’hui : script serveur recommandé"
+        "Connecteur dédié conseillé (sécurité du token)",
+        "Script serveur intermédiaire recommandé"
       ],
       "tags": ["no-code"]
     },
@@ -279,19 +312,25 @@
       "categoryId": "fidelite",
       "status": "coming",
       "summary": "Email marketing — lien membre / export.",
-      "logo": "https://cdn.simpleicons.org/mailchimp/FFE01B",
+      "logo": "/assets/integration-logos/mailchimp.svg",
       "description": "Scénarios email : lien avec statut membre Myfidpass (export ou API future).",
-      "bullets": ["Marketing", "Non critique pour le scan caisse"]
+      "bullets": [
+        "Indépendant du flux scan caisse",
+        "Export ou synchro selon votre outil"
+      ]
     },
     {
       "id": "webhook-generic",
-      "name": "Webhooks sortants (futur)",
+      "name": "Webhooks sortants",
       "categoryId": "dev",
       "status": "coming",
       "summary": "Notifications serveur → votre URL.",
       "logo": "/assets/integration-api.svg",
       "description": "Notification Myfidpass vers votre URL (événements membre / passage) — évolution produit.",
-      "bullets": ["Sur la roadmap", "Utiliser l’API pull en attendant"]
+      "bullets": [
+        "En attendant : requêtes pull ou polling côté serveur",
+        "Même API scan / lookup pour les écritures"
+      ]
     },
     {
       "id": "aws-lambda",
@@ -299,7 +338,7 @@
       "categoryId": "dev",
       "status": "kit",
       "summary": "Fonction serverless qui appelle POST scan.",
-      "logo": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.2.0/icons/amazonaws.svg",
+      "logo": "/assets/integration-logos/aws-lambda.svg",
       "description": "Fonction serverless qui reçoit le payload caisse et appelle POST /integration/scan.",
       "bullets": [
         "Idéal pour isoler le token hors caisse",
@@ -313,9 +352,12 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "Fast food — franchise / API ouverte.",
-      "logo": "https://logo.clearbit.com/brinkpos.com",
+      "logo": "/assets/integration-logos/brink.svg",
       "description": "Fast food : intégration via couche franchise ou API ouverte.",
-      "bullets": ["US-focused", "Contact partenaire"]
+      "bullets": [
+        "Marché US courant",
+        "Contact partenaire pour accès API"
+      ]
     }
   ]
 }

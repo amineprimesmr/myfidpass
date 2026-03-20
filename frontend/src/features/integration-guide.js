@@ -7,11 +7,11 @@ const DOC_HREF =
 const STATUS_LABEL = {
   kit: "Kit API",
   beta: "Bêta",
-  coming: "Bientôt",
+  coming: "",
   partner: "Partenaire",
 };
 
-const STEP_LABELS = ["Contexte", "Aide publique", "Identifiants", "Appel API"];
+const STEP_LABELS = ["Vue d’ensemble", "Lien public", "Identifiants", "Appel API"];
 
 /** @param {unknown} s */
 function esc(s) {
@@ -103,7 +103,7 @@ export function createIntegrationGuide(ctx) {
     if (stepIndex === 0) {
       const bullets = (item.bullets || []).map((b) => `<li>${esc(b)}</li>`).join("");
       const warn = isComing
-        ? `<div class="app-int-callout app-int-callout--warn"><strong>Bientôt disponible.</strong> Il n’y a pas encore de connecteur prêt à l’emploi pour ce logiciel. Vous pouvez déjà utiliser l’<strong>API générique</strong> (étape 4) ou nous écrire pour un accompagnement.</div>`
+        ? `<div class="app-int-callout app-int-callout--warn"><strong>Pas de connecteur clé en main</strong> pour ce logiciel. Utilisez l’<strong>API générique</strong> (dernier écran) ou contactez-nous pour un accompagnement.</div>`
         : "";
       bodyEl.innerHTML = `
         <div class="app-int-step-block">
@@ -111,7 +111,6 @@ export function createIntegrationGuide(ctx) {
           <p class="app-int-step-text">${esc(item.description)}</p>
           ${bullets ? `<ul class="app-int-step-list">${bullets}</ul>` : ""}
           ${warn}
-          <p class="app-int-hint-muted">Ensuite : une <strong>page d’aide publique</strong> (à partager au commerçant si besoin), les <strong>identifiants</strong> à utiliser pour l’API, puis l’<strong>exemple d’appel</strong>.</p>
         </div>`;
       return;
     }
@@ -174,7 +173,7 @@ export function createIntegrationGuide(ctx) {
           <button type="button" class="app-btn app-btn-secondary" id="app-int-copy-curl-sheet">Copier l’exemple</button>
           <a class="app-btn app-btn-primary" href="${DOC_HREF}" target="_blank" rel="noopener">Documentation complète</a>
         </div>
-        ${isComing ? `<p class="app-int-hint-muted">Connecteur nommé « ${esc(item.name)} » : feuille de route — l’API ci-dessus fonctionne déjà pour un branchement sur mesure.</p>` : ""}
+        ${isComing ? `<p class="app-int-hint-muted">Fiche « ${esc(item.name)} » : l’API ci-dessus s’utilise pour un branchement sur mesure.</p>` : ""}
       </div>`;
     document.getElementById("app-int-copy-curl-sheet")?.addEventListener("click", (e) => {
       copyText(tech.curl, /** @type {HTMLButtonElement} */ (e.currentTarget));
@@ -188,10 +187,12 @@ export function createIntegrationGuide(ctx) {
 
   function paint() {
     if (!current) return;
-    if (kickerEl) kickerEl.textContent = `Étape ${stepIndex + 1} / ${STEP_LABELS.length}`;
+    if (kickerEl) kickerEl.textContent = "";
     titleEl.textContent = current.name;
-    if (badgeWrap)
-      badgeWrap.innerHTML = `<span class="${badgeClass(current.status)}">${esc(STATUS_LABEL[current.status] || current.status)}</span>`;
+    if (badgeWrap) {
+      const lbl = STATUS_LABEL[current.status] || (current.status !== "coming" ? current.status : "");
+      badgeWrap.innerHTML = lbl ? `<span class="${badgeClass(current.status)}">${esc(lbl)}</span>` : "";
+    }
     renderProgress();
     renderBody();
     updateFooter();

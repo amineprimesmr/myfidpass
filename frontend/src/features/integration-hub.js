@@ -10,7 +10,7 @@ const DOC_HREF =
 const STATUS_LABEL = {
   kit: "Kit API",
   beta: "Bêta",
-  coming: "Bientôt",
+  coming: "",
   partner: "Partenaire",
 };
 
@@ -65,26 +65,29 @@ export function initIntegrationHub(opts) {
       const items = catalog.integrations.filter((i) => i.categoryId === cat.id && matchesQuery(q, i));
       if (!items.length) continue;
 
-      const cards = items
+          const cards = items
         .map((item) => {
           const muted = item.status === "coming";
           const logoSrc = item.logo ? esc(item.logo) : "";
           const initial = esc((item.name || "?").trim().charAt(0).toUpperCase());
           const summaryText = esc(item.summary || item.description || "");
+          const badgeLabel = STATUS_LABEL[item.status] || (item.status !== "coming" ? item.status : "");
+          const badgeHtml = badgeLabel
+            ? `<span class="${badgeClass(item.status)}">${esc(badgeLabel)}</span>`
+            : "";
           const logoBlock = logoSrc
             ? `<span class="app-int-card-logo-wrap"><img class="app-int-card-logo" src="${logoSrc}" alt="" width="40" height="40" loading="lazy" decoding="async" /><span class="app-int-card-logo-fallback" aria-hidden="true">${initial}</span></span>`
             : `<span class="app-int-card-logo-wrap app-int-card-logo-wrap--letter" aria-hidden="true">${initial}</span>`;
           return `
-            <button type="button" class="app-int-card${muted ? " app-int-card--muted" : ""}" data-int-id="${esc(item.id)}" aria-label="Ouvrir le guide : ${esc(item.name)}">
+            <button type="button" class="app-int-card${muted ? " app-int-card--muted" : ""}" data-int-id="${esc(item.id)}" aria-label="Ouvrir la fiche ${esc(item.name)}">
               <div class="app-int-card-top">
                 ${logoBlock}
                 <div class="app-int-card-meta">
                   <span class="app-int-card-title">${esc(item.name)}</span>
-                  <span class="${badgeClass(item.status)}">${esc(STATUS_LABEL[item.status] || item.status)}</span>
+                  ${badgeHtml}
                 </div>
               </div>
               <p class="app-int-card-summary">${summaryText}</p>
-              <span class="app-int-card-cta">Guide étape par étape →</span>
             </button>
           `;
         })
@@ -137,8 +140,7 @@ export function renderPublicCatalogSummary(container) {
       const chips = items
         .map((item) => {
           const muted = item.status === "coming" ? " landing-int-chip--muted" : "";
-          const st = esc(STATUS_LABEL[item.status] || item.status);
-          return `<span class="landing-int-chip${muted}" title="${st}">${esc(item.name)}</span>`;
+          return `<span class="landing-int-chip${muted}">${esc(item.name)}</span>`;
         })
         .join("");
       return `

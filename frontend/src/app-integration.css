@@ -220,13 +220,6 @@
   flex: 1;
 }
 
-.app-int-card-cta {
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: var(--app-accent, #6366f1);
-  margin-top: auto;
-}
-
 .app-int-badge {
   display: inline-block;
   font-size: 0.62rem;
