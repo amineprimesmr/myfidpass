@@ -3875,7 +3875,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 #app-dashboard-content #personnaliser .app-personnaliser-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
   gap: 1.5rem;
   align-items: start;
   margin-top: 0.5rem;
@@ -3910,12 +3910,13 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-personnaliser-preview { margin-top: 0; }
 .app-personnaliser-preview.builder-phone-mockup {
-  width: min(280px, 100%);
-  max-width: 300px;
+  width: min(310px, 100%);
+  max-width: 340px;
   margin-left: auto;
   margin-right: auto;
   flex-shrink: 0;
   box-sizing: border-box;
+  padding-bottom: 0.75rem;
 }
 /* Hauteur pilotée par la PNG (pas aspect-ratio landing) : évite de couper le bas du cadre */
 .app-personnaliser-preview .builder-phone-frame {
@@ -3956,98 +3957,109 @@ body.page-app .whatsapp-fab { display: none !important; }
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: 12.5% / 9%;
-  background: #000;
+  /* Fond clair type « écran Wallet » — plus de noir derrière la carte */
+  background: linear-gradient(165deg, #eef0f4 0%, #e2e6ed 45%, #d8dde6 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 0.35rem;
-  padding-bottom: 0.45rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.65rem;
   isolation: isolate;
   z-index: 2;
-  /* Typos en cqw = relatif à la largeur de l’écran du mockup (plus de texte “écrasé” vs 100vw) */
+  /* Typos en cqw = relatif à la largeur de l’écran du mockup */
   container-type: inline-size;
   container-name: personnaliser-phone;
 }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
-  width: 88%;
-  max-width: 88%;
-  /* carte peut dépasser : défilement dans l'écran si besoin, bandeau bas visible */
+  width: 94%;
+  max-width: 94%;
   max-height: none;
   height: auto;
   min-height: 0;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: visible;
   box-sizing: border-box;
   flex-shrink: 0;
-  margin-top: 0.15rem;
+  margin-top: 0.2rem;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
 }
 
-/* Ma carte — aperçu Wallet : proportions et lisibilité (cqw = largeur écran mockup) */
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
-  min-height: 2.75rem;
-  padding: 0.4rem 0.65rem 0.5rem 0.5rem;
-  gap: 0.5rem;
-  font-size: clamp(0.62rem, 5.5cqw, 0.82rem);
+/* Ma carte — carte plus grande, plus aérée ; QR en flux (plus de chevauchement landing.css absolute) */
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr {
+  position: static !important;
+  inset: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0.85rem auto 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-body {
-  padding: 0.55rem 0.65rem 0.85rem;
-  gap: 0.5rem;
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
+  min-height: 3.1rem;
+  padding: 0.55rem 0.85rem 0.6rem 0.6rem;
+  gap: 0.6rem;
+  font-size: clamp(0.72rem, 6.5cqw, 0.95rem);
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap {
-  width: clamp(2.75rem, 22cqw, 3.35rem);
-  height: clamp(2.75rem, 22cqw, 3.35rem);
-  margin-top: 0.25rem;
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-body {
+  padding: 0.75rem 0.85rem 1rem;
+  gap: 0.65rem;
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-fallback {
-  font-size: clamp(0.45rem, 4cqw, 0.58rem);
+#app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap {
+  width: clamp(3.1rem, 26cqw, 3.85rem);
+  height: clamp(3.1rem, 26cqw, 3.85rem);
+  margin-top: 0.2rem;
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right {
-  font-size: clamp(0.48rem, 4.2cqw, 0.62rem);
-  top: 0.42rem;
-  right: 0.55rem;
+#app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-fallback {
+  font-size: clamp(0.52rem, 4.8cqw, 0.68rem);
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value,
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value #app-wallet-preview-value {
-  font-size: clamp(1.55rem, 16cqw, 2.05rem);
+#app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right {
+  font-size: clamp(0.55rem, 5cqw, 0.72rem);
+  top: 0.48rem;
+  right: 0.65rem;
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-wrap .builder-wallet-card-label {
-  font-size: clamp(0.58rem, 5cqw, 0.72rem);
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value,
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value #app-wallet-preview-value {
+  font-size: clamp(1.85rem, 19cqw, 2.45rem);
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bottom-row {
-  margin-top: 0.5rem;
-  gap: 0.5rem;
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-wrap .builder-wallet-card-label {
+  font-size: clamp(0.68rem, 6cqw, 0.85rem);
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-label {
-  font-size: clamp(0.48rem, 4.2cqw, 0.62rem);
+#app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bottom-row {
+  margin-top: 0.65rem;
+  gap: 0.65rem;
+  padding-top: 0.15rem;
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-value {
-  font-size: clamp(0.58rem, 5cqw, 0.72rem);
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-label {
+  font-size: clamp(0.55rem, 5cqw, 0.72rem);
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-member-label {
-  font-size: clamp(0.52rem, 4.5cqw, 0.68rem);
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-value {
+  font-size: clamp(0.65rem, 5.8cqw, 0.82rem);
+  line-height: 1.35;
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-member-value {
-  font-size: clamp(0.58rem, 5cqw, 0.75rem);
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-member-label {
+  font-size: clamp(0.58rem, 5.2cqw, 0.76rem);
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bandeau {
-  min-height: 3.85rem;
-  padding: 0.45rem 0.55rem;
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-member-value {
+  font-size: clamp(0.65rem, 5.8cqw, 0.85rem);
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img img {
-  width: clamp(1.5rem, 12cqw, 1.95rem);
-  height: clamp(1.5rem, 12cqw, 1.95rem);
-  min-width: clamp(1.5rem, 12cqw, 1.95rem);
-  min-height: clamp(1.5rem, 12cqw, 1.95rem);
+#app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bandeau {
+  min-height: 4.25rem;
+  padding: 0.55rem 0.65rem;
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr {
-  margin-top: 0.35rem;
-  margin-bottom: 0.55rem;
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img img {
+  width: clamp(1.65rem, 13.5cqw, 2.15rem);
+  height: clamp(1.65rem, 13.5cqw, 2.15rem);
+  min-width: clamp(1.65rem, 13.5cqw, 2.15rem);
+  min-height: clamp(1.65rem, 13.5cqw, 2.15rem);
 }
-#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img {
-  width: clamp(72px, 42cqw, 102px) !important;
-  height: clamp(72px, 42cqw, 102px) !important;
-  min-width: clamp(72px, 42cqw, 102px);
-  min-height: clamp(72px, 42cqw, 102px);
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img {
+  width: clamp(80px, 46cqw, 112px) !important;
+  height: clamp(80px, 46cqw, 112px) !important;
+  min-width: clamp(80px, 46cqw, 112px);
+  min-height: clamp(80px, 46cqw, 112px);
 }
 
 @media (max-width: 980px) {
@@ -4070,7 +4082,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 @media (min-width: 981px) {
   /* Ma carte : grille 2 colonnes dans .app-personnaliser-grid (formulaire à gauche, aperçu à droite) */
   #app-dashboard-content #personnaliser .app-personnaliser-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
     gap: 1.5rem;
   }
   #app-dashboard-content #personnaliser .app-personnaliser-live-preview-wrap {
@@ -4079,8 +4091,8 @@ body.page-app .whatsapp-fab { display: none !important; }
     margin-top: -1.1rem;
   }
   .app-personnaliser-preview.builder-phone-mockup {
-    width: 280px;
-    max-width: 300px;
+    width: 310px;
+    max-width: 340px;
     margin-right: 0;
     margin-left: auto;
   }
