@@ -3915,24 +3915,35 @@ body.page-app .whatsapp-fab { display: none !important; }
   flex-shrink: 0;
   box-sizing: border-box;
 }
+/* Hauteur pilotée par la PNG (pas aspect-ratio landing) : évite de couper le bas du cadre */
 .app-personnaliser-preview .builder-phone-frame {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   max-height: none;
   width: 100%;
   max-width: 100%;
-  /* Fallback robuste local: si iphone-frame manque, mockupiphone s'affiche */
+  aspect-ratio: unset;
+  height: auto;
+  /* Fallback si l’img échoue */
   background-image: url("/assets/iphone-frame.png"), url("/assets/mockupiphone.png");
   background-size: contain, contain;
-  background-position: center center, center center;
+  background-position: center top, center top;
   background-repeat: no-repeat, no-repeat;
 }
-/* Cadre sous l’écran (comme landing.css) : sinon la PNG opaque masque toute la carte */
+/* Image en flux : définit la hauteur du cadre ; absolute + aspect-ratio rognaient le bas */
 .app-personnaliser-preview .builder-phone-frame-img {
+  position: relative;
+  inset: unset;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
   z-index: 1;
+  width: 100%;
   max-width: 100%;
   height: auto;
   display: block;
+  pointer-events: none;
 }
 .app-personnaliser-preview .builder-phone-screen {
   left: 11.8%;
