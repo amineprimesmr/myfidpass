@@ -4005,21 +4005,23 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 /* Aperçu carte : proportions naturelles (pas de scale horizontal/vertical) */
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
+  /* Annule le padding global de .builder-wallet-card (landing) : sinon bande noire entre le contour et le vert */
+  padding: 0 !important;
+  flex: none !important;
   width: 100%;
   max-width: 100%;
-  max-height: none;
-  height: auto;
+  max-height: none !important;
+  height: auto !important;
   min-height: 0;
   margin: 0;
   border-radius: 12px;
   overflow: hidden;
   box-sizing: border-box;
   flex-shrink: 0;
-  /* Contour visible sur fond noir (carte sombre sur mockup sombre) + léger relief */
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.34),
-    0 0 0 2px rgba(0, 0, 0, 0.75),
-    0 10px 36px rgba(0, 0, 0, 0.55);
+  background: var(--wallet-bg);
+  /* Contour sur le bord exact du bloc (pas d’anneau décalé) */
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.42);
 }
 
 /* Ma carte — une seule carte unifiée ; angles arrondis en haut ; QR sur fond blanc en bas */
