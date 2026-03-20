@@ -9,9 +9,20 @@ import nodemailer from "nodemailer";
 
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
 const MAIL_FROM_DEFAULT = "noreply@myfidpass.fr";
+/** Expéditeur Resend si aucune variable : domaine de test (domaine perso = vérifier myfidpass.fr sur Resend + MAIL_FROM). */
+const RESEND_FROM_FALLBACK = "Myfidpass <onboarding@resend.dev>";
 
 function mailFrom() {
   return (process.env.MAIL_FROM || process.env.SMTP_USER || MAIL_FROM_DEFAULT).trim();
+}
+
+/** Expéditeur pour l’API Resend uniquement (ne pas réutiliser le défaut SMTP si non vérifié chez Resend). */
+function fromForResend() {
+  const rf = (process.env.RESEND_FROM || "").trim();
+  if (rf) return rf;
+  const mf = (process.env.MAIL_FROM || "").trim();
+  if (mf) return mf;
+  return RESEND_FROM_FALLBACK;
 }
 
 function getResendKey() {
@@ -53,7 +64,7 @@ async function sendViaResend({ to, subject, text, html }) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: mailFrom(),
+      from: fromForResend(),
       to: destinations,
       subject,
       text: text || (html && html.replace(/<[^>]+>/g, "").trim()) || "",

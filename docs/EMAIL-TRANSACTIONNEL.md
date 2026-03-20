@@ -23,20 +23,56 @@ Réponse attendue quand tout est prêt :
 
 ou `"provider": "smtp"`.
 
-Si `"transactionalEmailReady": false` et `"provider": "none"`, **aucun mail ne part** tant que tu n’ajoutes pas les variables ci-dessous sur Railway (service backend).
+Si `"transactionalEmailReady": false` et `"provider": "none"`, **aucun mail ne part** tant que tu n’ajoutes pas les variables ci-dessous sur Railway (service **backend** uniquement, pas Vercel).
+
+---
+
+## Resend — pièges fréquents (si tu ne reçois rien)
+
+### 1. Expéditeur `noreply@myfidpass.fr` sans domaine vérifié
+
+Resend **refuse** l’envoi si `from` utilise un domaine que tu n’as pas ajouté et vérifié dans **Resend → Domains**.
+
+- **Soit** tu ajoutes `myfidpass.fr` (DNS) puis tu mets par ex.  
+  `MAIL_FROM=Myfidpass <noreply@myfidpass.fr>`  
+  ou `RESEND_FROM=Myfidpass <noreply@myfidpass.fr>`
+- **Soit** tu ne mets **pas** `MAIL_FROM` sur Railway : le backend utilise alors par défaut  
+  `Myfidpass <onboarding@resend.dev>` (domaine de test Resend).
+
+### 2. `onboarding@resend.dev` : destinataires limités
+
+Avec l’expéditeur de test **`onboarding@resend.dev`**, Resend n’envoie en pratique qu’à **l’adresse e-mail du compte Resend** (celle avec laquelle tu t’es inscrit).
+
+- Si ton compte Fidpass est **`…@outlook.com`** mais ton compte Resend est **`…@gmail.com`**, **tu ne recevras pas** le mail de reset sur Outlook.
+- **Solutions :**
+  - **Produit** : vérifie le domaine `myfidpass.fr` sur Resend + `MAIL_FROM` / `RESEND_FROM` avec `@myfidpass.fr` → tu peux envoyer à **tous** les utilisateurs.
+  - **Test** : demande un reset avec un compte Fidpass dont l’e-mail est **le même** que sur Resend, ou teste avec cette adresse.
+
+### 3. Variables sur le bon service Railway
+
+`RESEND_API_KEY` doit être sur le **même service** que l’API Node (celui qui répond sur `api.myfidpass.fr`). Après modification : **redéployer** (Redeploy).
+
+### 4. Logs
+
+- **Resend** → **Logs** : statut de chaque envoi (succès / erreur / rejet).
+- **Railway** → logs du service : lignes `[Email] Resend HTTP …` en cas d’erreur API.
+
+---
 
 ## Option A — Resend (recommandé)
 
 1. Crée un compte sur [resend.com](https://resend.com), récupère une clé API.
-2. Vérifie ton domaine `myfidpass.fr` (DNS) pour pouvoir envoyer depuis `noreply@myfidpass.fr` (ou utilise l’adresse de test fournie par Resend pendant les essais).
+2. **Production (tous les utilisateurs)** : **Domains** → ajoute `myfidpass.fr`, configure les enregistrements DNS, attends « Verified ».
 3. Sur **Railway** → variables du service API :
 
-| Variable           | Exemple                    |
-|--------------------|----------------------------|
-| `RESEND_API_KEY`   | `re_…`                     |
-| `MAIL_FROM`        | `noreply@myfidpass.fr`     |
+| Variable            | Exemple (production) |
+|---------------------|----------------------|
+| `RESEND_API_KEY`    | `re_…`               |
+| `RESEND_FROM` ou `MAIL_FROM` | `Myfidpass <noreply@myfidpass.fr>` (après vérif DNS) |
 
-4. Redéploie le backend si besoin.
+4. **Test sans domaine** : laisse `MAIL_FROM` **vide** ; le serveur utilise `Myfidpass <onboarding@resend.dev>`. Rappel : le reset ne partira « visible » que vers l’e-mail de ton compte Resend.
+
+5. Redéploie le backend si besoin.
 
 ## Option B — SMTP (fournisseur mail classique)
 
