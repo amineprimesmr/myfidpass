@@ -25,42 +25,31 @@ export function renderClientPage(root, state, options = {}) {
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
 
   if (gamePage) {
-    const ticketPill = hasMember
-      ? `<p class="fidelity-game-ticket-pill" aria-live="polite">🎟 ${tickets} ticket${tickets !== 1 ? "s" : ""} · ${spinCost} / tour</p>`
-      : `<p class="fidelity-game-ticket-pill fidelity-game-ticket-pill--muted">Ouvre ta carte fidélité pour voir tes tickets</p>`;
     root.innerHTML = `
       <div class="fidelity-game-page">
         <a href="${backUrl}" class="fidelity-game-back-float">← Retour</a>
-        <div class="fidelity-game-inner">
-          <header class="fidelity-game-hero">
-            <div class="fidelity-roulette-logo">
-              <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>
-            </div>
-            ${ticketPill}
-            <h2 class="fidelity-roulette-title">
-              <span class="fidelity-roulette-title-line">Un tour de roue,</span>
-              <span class="fidelity-roulette-title-line fidelity-roulette-title-line--accent">un cadeau peut-être</span>
-            </h2>
-            <p class="fidelity-roulette-sub">Le curseur doré indique le résultat — bonne chance&nbsp;!</p>
-          </header>
-          <div class="fidelity-roulette-wheel-zone">
-            <div class="fidelity-roulette-stage">
-              <div class="fidelity-roulette-wheel-outer">
-                <div class="fidelity-roulette-wheel-shine" aria-hidden="true"></div>
-                <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
-                <div class="fidelity-roulette-wheel-hub" aria-hidden="true"></div>
-                <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
-              </div>
-              <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
-            </div>
+        <div class="fidelity-game-top">
+          <div class="fidelity-roulette-logo">
+            <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>
           </div>
-          <div class="fidelity-game-actions">
+          <h2 class="fidelity-roulette-title">
+            <span class="fidelity-roulette-title-line">Participez à notre jeu et</span>
+            <span class="fidelity-roulette-title-line">tentez de gagner un cadeau</span>
+          </h2>
+          <div class="fidelity-roulette-btn-row">
             <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" aria-label="Lancer la roue">
-              Lancer la roue
+              Jouer&nbsp;!
             </button>
           </div>
-          <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden" role="status"></p>
         </div>
+        <div class="fidelity-roulette-wheel-zone">
+          <div class="fidelity-roulette-wheel-outer">
+            <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
+            <div class="fidelity-roulette-wheel-rim"></div>
+          </div>
+          <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
+        </div>
+        <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
       </div>
     `;
     return;

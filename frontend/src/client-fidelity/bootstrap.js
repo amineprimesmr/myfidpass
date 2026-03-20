@@ -74,14 +74,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     for (let i = 0; i < n; i++) {
       const a = i * step;
       const b = (i + 1) * step;
-      const mid = a + step / 2;
-      if (i % 2 === 0) {
-        stops.push(`#0a0a0a ${a}deg`, `#2a2a2a ${mid}deg`, `#141414 ${b}deg`);
-      } else {
-        stops.push(`#ffffff ${a}deg`, `#e4e4e4 ${mid}deg`, `#f8f8f8 ${b}deg`);
-      }
+      const fill = i % 2 === 0 ? "#000000" : "#ffffff";
+      stops.push(`${fill} ${a}deg`, `${fill} ${b}deg`);
     }
     return `conic-gradient(${stops.join(", ")})`;
+  }
+
+  /** Affiche "PeRDu" pour les segments PERDU (design image 2). */
+  function formatWheelLabel(label) {
+    const t = String(label || "").trim().toUpperCase();
+    if (t === "PERDU") return "PeRDu";
+    return label;
   }
 
   function initRouletteWheel() {
@@ -95,10 +98,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     const segmentHtml = wheelLabels.map((label, i) => {
       const angle = (i + 0.5) * (360 / n);
       const isWhite = i % 2 === 1;
-      const segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
-      // Demi-cercle bas (angle > 180°) : rotation opposée pour garder les mots lisibles côté spectateur.
-      const labelRotateDeg = angle > 180 ? 90 : -90;
-      return `<div class="${segClass}" style="transform: rotate(${angle}deg); --label-rotate: ${labelRotateDeg}deg;"><span class="fidelity-roulette-segment-label-anchor"><span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(String(label || ""))}</span></span></div>`;
+      const flip = angle > 90 && angle < 270;
+      let segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
+      if (flip) segClass += " fidelity-roulette-segment-flip";
+      const displayLabel = formatWheelLabel(label);
+      // Bissecteur du segment + texte orienté le long du rayon (flip côté gauche pour rester lisible).
+      return `<div class="${segClass}" style="transform: rotate(${angle}deg);"><span class="fidelity-roulette-segment-label-anchor"><span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(displayLabel)}</span></span></div>`;
     }).join("");
 
     wheelEl.innerHTML = segmentHtml;

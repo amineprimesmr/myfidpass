@@ -108,22 +108,6 @@ export function navigateToLanding() {
   return initRouting();
 }
 
-/** FAB WhatsApp : uniquement accueil `/` avec #landing-main visible. */
-function syncWhatsappFabVisibility() {
-  const pathname = window.location.pathname.replace(/\/$/, "") || "";
-  const routeNow = getRoute();
-  const landing = document.getElementById("landing");
-  const landingMain = document.getElementById("landing-main");
-  const show =
-    routeNow.type === "landing" &&
-    pathname === "" &&
-    landing &&
-    !landing.classList.contains("hidden") &&
-    landingMain &&
-    !landingMain.classList.contains("hidden");
-  document.body.classList.toggle("page-home", show);
-}
-
 async function loadPage(routeType) {
   const type = routeType || "landing";
   const mod = await import(`../pages/${type}.js`);
@@ -166,7 +150,6 @@ export async function initRouting() {
     if (c.appApp) c.appApp.classList.remove("hidden");
     const page = await loadPage("app");
     await page.init(route);
-    syncWhatsappFabVisibility();
     return null;
   }
 
@@ -175,7 +158,6 @@ export async function initRouting() {
     if (c.authApp) c.authApp.classList.remove("hidden");
     const page = await loadPage("auth");
     await page.init(route);
-    syncWhatsappFabVisibility();
     return null;
   }
 
@@ -189,7 +171,6 @@ export async function initRouting() {
     if (c.dashboardApp) c.dashboardApp.classList.remove("hidden");
     const page = await loadPage("dashboard");
     await page.init(route);
-    syncWhatsappFabVisibility();
     return null;
   }
 
@@ -203,7 +184,6 @@ export async function initRouting() {
     if (c.offersApp) c.offersApp.classList.remove("hidden");
     const page = await loadPage("offers");
     await page.init(route);
-    syncWhatsappFabVisibility();
     return null;
   }
 
@@ -215,7 +195,6 @@ export async function initRouting() {
     c.landingLegal.classList.remove("hidden");
     const page = await loadPage("legal");
     await page.init(route);
-    syncWhatsappFabVisibility();
     return null;
   }
 
@@ -235,7 +214,6 @@ export async function initRouting() {
     }
     const page = await loadPage("integration");
     await page.init(route);
-    syncWhatsappFabVisibility();
     return null;
   }
 
@@ -251,7 +229,6 @@ export async function initRouting() {
     }
     const page = await loadPage("not-found");
     await page.init(route);
-    syncWhatsappFabVisibility();
     return null;
   }
 
@@ -288,6 +265,5 @@ export async function initRouting() {
     history.replaceState(null, "", "/" + (window.location.search || ""));
     requestAnimationFrame(() => openOnboardingSheet());
   }
-  syncWhatsappFabVisibility();
   return null;
 }

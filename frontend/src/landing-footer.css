@@ -176,15 +176,11 @@
   border-radius: 50%;
   background: #1a1a1a;
   color: #fff;
-  display: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-body.page-home .whatsapp-fab {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .whatsapp-fab:hover {
