@@ -4040,7 +4040,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-body {
   border: none !important;
   border-radius: 0 !important;
-  padding: 0.65rem 0.75rem 0.7rem;
+  padding: 0.42rem 0.75rem 0.7rem;
   gap: 0.55rem;
 }
 /* Fond carte (vert) jusqu’en bas ; blanc uniquement derrière le QR */
@@ -4079,12 +4079,17 @@ body.page-app .whatsapp-fab { display: none !important; }
   top: 0.24rem;
   right: 0.65rem;
 }
+#app-personnaliser-preview .app-wallet-preview-dynamic #app-preview-pts-wrap {
+  margin-top: -0.06rem;
+}
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value,
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value #app-wallet-preview-value {
-  font-size: clamp(1.85rem, 19cqw, 2.45rem);
+  font-size: clamp(1.52rem, 15.5cqw, 2.05rem);
+  line-height: 1.05;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-wrap .builder-wallet-card-label {
-  font-size: clamp(0.68rem, 6cqw, 0.85rem);
+  font-size: clamp(0.6rem, 5.4cqw, 0.76rem);
+  margin-top: 0.04rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bottom-row {
   margin-top: 0.6rem;
