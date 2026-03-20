@@ -1802,8 +1802,8 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate(-50%, -30vmin);
-  transform-origin: 50% 30vmin;
+  transform: translate(-50%, -36vmin);
+  transform-origin: 50% 36vmin;
   pointer-events: none;
 }
 
@@ -1812,7 +1812,7 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  font-size: clamp(0.95rem, 4.6vmin, 1.75rem);
+  font-size: clamp(0.82rem, 3.85vmin, 1.52rem);
   font-weight: 900;
   color: #fff;
   white-space: nowrap;
@@ -1831,7 +1831,7 @@ body {
 
 .fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
 .fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
-  font-size: clamp(1.05rem, 5.2vmin, 1.95rem);
+  font-size: clamp(0.92rem, 4.35vmin, 1.72rem);
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.04em;
