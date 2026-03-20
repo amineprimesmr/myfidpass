@@ -1824,8 +1824,14 @@ body {
   text-align: center;
   direction: ltr;
   unicode-bidi: normal;
-  transform: translate(-50%, -50%) rotate(calc(-1 * var(--segment-angle, 0deg)));
+  /* Texte le long du rayon du segment (lisible du centre vers l’extérieur), pas horizontal */
+  transform: translate(-50%, -50%) rotate(-90deg);
   transform-origin: 50% 50%;
+}
+
+.fidelity-roulette-wheel-segment.fidelity-roulette-segment-flip .fidelity-roulette-segment-label,
+.fidelity-roulette-wheel-segment.fidelity-roulette-segment-flip .fidelity-roulette-segment-label-text {
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 
 .fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
