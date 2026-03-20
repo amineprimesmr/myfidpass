@@ -1,0 +1,171 @@
+/* Roue fidélité — effet 3D (page jeu uniquement). Chargé après style.css. */
+
+.fidelity-game-page .fidelity-roulette-wheel-zone {
+  perspective: 1500px;
+  perspective-origin: 52% 40%;
+  overflow: visible;
+}
+
+.fidelity-game-page .fidelity-roulette-wheel-mount {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: min(125vmin, 125vw);
+  height: min(125vmin, 125vw);
+  transform: translate(-28%, -50%);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.fidelity-game-page .fidelity-roulette-wheel-outer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  right: auto;
+  top: auto;
+  transform: rotateX(14deg) scale(0.97);
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 32px 56px rgba(15, 23, 42, 0.32)) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.22));
+}
+
+.fidelity-game-page .fidelity-roulette-wheel {
+  border-width: 14px;
+  border-style: solid;
+  border-color: #050505 #1a1a1a #2e2e2e #0d0d0d;
+  background-color: #0a0a0a;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.07) inset,
+    0 22px 0 -8px rgba(0, 0, 0, 0.5),
+    0 36px 60px rgba(0, 0, 0, 0.38),
+    inset 0 4px 16px rgba(255, 255, 255, 0.07),
+    inset 0 -12px 28px rgba(0, 0, 0, 0.42);
+}
+
+.fidelity-game-page .fidelity-roulette-wheel-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  z-index: 3;
+  pointer-events: none;
+  background: conic-gradient(
+    from 210deg at 45% 42%,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.28) 48deg,
+    transparent 100deg,
+    transparent 200deg,
+    rgba(255, 255, 255, 0.06) 268deg,
+    transparent 320deg
+  );
+  mix-blend-mode: soft-light;
+}
+
+.fidelity-game-page .fidelity-roulette-wheel-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.fidelity-game-page .fidelity-roulette-wheel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 13%;
+  height: 13%;
+  min-width: 42px;
+  min-height: 42px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 8;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.95) 0%, rgba(226, 232, 240, 0.4) 22%, transparent 45%),
+    radial-gradient(circle at 50% 100%, #1e293b 0%, #0a0a0a 100%);
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.55),
+    0 0 0 3px #c4942e,
+    0 0 0 5px rgba(20, 20, 20, 0.85),
+    inset 0 2px 5px rgba(255, 255, 255, 0.35),
+    inset 0 -5px 12px rgba(0, 0, 0, 0.55);
+}
+
+.fidelity-game-page .fidelity-roulette-wheel-rim {
+  border: none;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(155deg, #fff6d4 0%, #e8c547 22%, #a16207 48%, #d4a84b 78%, #fde68a 100%) border-box;
+  border: 6px solid transparent;
+  box-shadow:
+    inset 0 3px 6px rgba(255, 255, 255, 0.45),
+    inset 0 -5px 12px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 3px 0 rgba(255, 255, 255, 0.12);
+  z-index: 6;
+}
+
+.fidelity-game-page .fidelity-roulette-indicator {
+  right: 1.5%;
+  top: 50%;
+  width: min(7vmin, 34px);
+  height: min(14vmin, 64px);
+  z-index: 10;
+  transform: translateY(-50%) rotate(44deg);
+  transform-origin: 70% 50%;
+  background: linear-gradient(165deg, #fff8e7 0%, #d4a84b 35%, #b45309 92%);
+  border-radius: 50% 50% 50% 0;
+  box-shadow:
+    0 3px 0 rgba(120, 53, 15, 0.55),
+    0 10px 24px rgba(180, 83, 9, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.25),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55);
+  filter: drop-shadow(-2px 6px 4px rgba(0, 0, 0, 0.2));
+}
+
+.fidelity-game-page .fidelity-roulette-indicator::after {
+  width: 32%;
+  height: 32%;
+  top: 51%;
+  background: radial-gradient(circle at 38% 35%, #fff 0%, #cbd5e1 40%, #0f172a 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
+.fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.fidelity-game-page .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white .fidelity-roulette-segment-label {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75),
+    0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 480px) {
+  .fidelity-game-page .fidelity-roulette-wheel-mount {
+    width: min(140vmin, 140vw);
+    height: min(140vmin, 140vw);
+  }
+
+  .fidelity-game-page .fidelity-roulette-wheel-outer {
+    transform: rotateX(11deg) scale(0.96);
+  }
+
+  .fidelity-game-page .fidelity-roulette-indicator {
+    right: 0.5%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fidelity-game-page .fidelity-roulette-wheel-outer {
+    transform: none;
+    filter: drop-shadow(0 18px 36px rgba(15, 23, 42, 0.22));
+  }
+
+  .fidelity-game-page .fidelity-roulette-wheel-zone {
+    perspective: none;
+  }
+}

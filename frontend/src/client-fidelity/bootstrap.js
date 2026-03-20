@@ -74,8 +74,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     for (let i = 0; i < n; i++) {
       const a = i * step;
       const b = (i + 1) * step;
-      const fill = i % 2 === 0 ? "#000000" : "#ffffff";
-      stops.push(`${fill} ${a}deg`, `${fill} ${b}deg`);
+      const mid = a + step / 2;
+      if (i % 2 === 0) {
+        stops.push(`#080808 ${a}deg`, `#2a2a2a ${mid}deg`, `#111111 ${b}deg`);
+      } else {
+        stops.push(`#ffffff ${a}deg`, `#e6e6e6 ${mid}deg`, `#fafafa ${b}deg`);
+      }
     }
     return `conic-gradient(${stops.join(", ")})`;
   }
@@ -105,7 +109,20 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       return `<div class="${segClass}" style="transform: rotate(${angle}deg); --label-rotate: ${labelRotateDeg}deg;"><span class="fidelity-roulette-segment-label-anchor"><span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(displayLabel)}</span></span></div>`;
     }).join("");
 
-    wheelEl.innerHTML = segmentHtml;
+    let shine = wheelEl.querySelector(".fidelity-roulette-wheel-shine");
+    if (!shine) {
+      shine = document.createElement("div");
+      shine.className = "fidelity-roulette-wheel-shine";
+      shine.setAttribute("aria-hidden", "true");
+      wheelEl.insertBefore(shine, wheelEl.firstChild);
+    }
+    let disc = wheelEl.querySelector(".fidelity-roulette-wheel-disc");
+    if (!disc) {
+      disc = document.createElement("div");
+      disc.className = "fidelity-roulette-wheel-disc";
+      wheelEl.appendChild(disc);
+    }
+    disc.innerHTML = segmentHtml;
   }
 
   function escapeHtml(str) {

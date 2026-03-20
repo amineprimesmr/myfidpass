@@ -17,7 +17,6 @@ export function renderClientPage(root, state, options = {}) {
   const pointsPerTicket = Number(state.business?.points_per_ticket || 10);
   const roulette = (state.games || []).find((g) => g.game_code === "roulette");
   const showRoulette = isGameMode && roulette && roulette.enabled;
-  const spinCost = Number(roulette?.ticket_cost || 1);
   const rewards = Array.isArray(state.rewards) ? state.rewards : [];
   const actions = Array.isArray(state.engagementActions) ? state.engagementActions : [];
   const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
@@ -43,11 +42,13 @@ export function renderClientPage(root, state, options = {}) {
           </div>
         </div>
         <div class="fidelity-roulette-wheel-zone">
-          <div class="fidelity-roulette-wheel-outer">
-            <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
-            <div class="fidelity-roulette-wheel-rim"></div>
+          <div class="fidelity-roulette-wheel-mount">
+            <div class="fidelity-roulette-wheel-outer">
+              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
+              <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
+              <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
+            </div>
           </div>
-          <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
         </div>
         <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
       </div>
