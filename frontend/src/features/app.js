@@ -2370,7 +2370,7 @@ function initAppDashboard(slug) {
       btn.className = "app-logo-color-swatch";
       btn.style.background = hex;
       btn.title = hex;
-      btn.setAttribute("aria-label", "Appliquer la couleur " + hex);
+      btn.setAttribute("aria-label", "Appliquer " + hex + " au fond de la carte");
       btn.addEventListener("click", () => {
         const h = hex.startsWith("#") ? hex : "#" + hex;
         if (personnaliserBg) personnaliserBg.value = h;
