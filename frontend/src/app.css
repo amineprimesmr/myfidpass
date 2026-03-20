@@ -3933,7 +3933,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   background-position: center top, center top;
   background-repeat: no-repeat, no-repeat;
 }
-/* Image en flux : définit la hauteur du cadre ; absolute + aspect-ratio rognaient le bas */
+/* Image en flux : définit la hauteur du cadre */
 .app-personnaliser-preview .builder-phone-frame-img {
   position: relative;
   inset: unset;
@@ -3948,54 +3948,61 @@ body.page-app .whatsapp-fab { display: none !important; }
   display: block;
   pointer-events: none;
 }
-/* Masque uniquement le noir du PNG dans la zone écran (même teinte que le dashboard, pas un 2e « panneau » en dégradé) */
-.app-personnaliser-preview .builder-phone-frame::after {
-  content: "";
-  position: absolute;
-  left: 10%;
-  top: 10.6%;
-  width: 80%;
-  height: 88%;
-  border-radius: 11% / 7.5%;
-  background: var(--fidpass-surface);
-  z-index: 1;
-  pointer-events: none;
-}
+/*
+ * Aperçu Ma carte : zone = hauteur du contenu uniquement (plus de grand vide sous la carte).
+ * Centré dans l’iPhone ; le noir du PNG reste autour (status bar / bas) — pas de 2e panneau blanc.
+ */
 .app-personnaliser-preview .builder-phone-screen {
-  left: 10%;
-  top: 10.6%;
-  width: 80%;
-  height: 88%;
-  overflow-y: auto;
+  position: absolute;
+  left: 9.5%;
+  width: 81%;
+  top: 50%;
+  transform: translateY(-46%);
+  height: auto;
+  max-height: 76%;
+  min-height: 0;
   overflow-x: hidden;
-  border-radius: 11% / 7.5%;
-  /* Pas de fond sur ce calque : uniquement la carte, le noir du mockup est masqué par ::after */
+  overflow-y: auto;
+  border-radius: 14px;
   background: transparent;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 0.5rem;
-  padding-bottom: 0.65rem;
+  padding: 0.35rem 0.4rem;
   z-index: 2;
-  /* Typos en cqw = relatif à la largeur de l’écran du mockup */
+  box-sizing: border-box;
   container-type: inline-size;
   container-name: personnaliser-phone;
 }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
-  width: 94%;
-  max-width: 94%;
+  width: 100%;
+  max-width: 100%;
   max-height: none;
   height: auto;
   min-height: 0;
-  border-radius: 16px;
-  overflow: visible;
+  margin: 0;
+  border-radius: 14px;
+  overflow: hidden;
   box-sizing: border-box;
   flex-shrink: 0;
-  margin-top: 0.2rem;
-  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.14);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
 }
 
-/* Ma carte — QR = suite du corps de carte (même fond vert), plus de bloc blanc landing */
+/* Ma carte — une seule carte verte unifiée (pas de filets gris / blocs séparés) ; fin du design au bas du QR */
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
+  border: none !important;
+  border-radius: 0 !important;
+  min-height: 2.85rem;
+  padding: 0.5rem 0.75rem 0.55rem 0.55rem;
+  gap: 0.5rem;
+  font-size: clamp(0.7rem, 6.2cqw, 0.9rem);
+}
+#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-body {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0.65rem 0.75rem 0.7rem;
+  gap: 0.55rem;
+}
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr {
   position: static !important;
   inset: auto !important;
@@ -4008,27 +4015,11 @@ body.page-app .whatsapp-fab { display: none !important; }
   align-items: center;
   background: var(--wallet-bg) !important;
   box-shadow: none !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.38);
-  border-right: 1px solid rgba(255, 255, 255, 0.38);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.38);
-  border-top: none;
-  border-radius: 0 0 15px 15px;
-  padding: 0.55rem 0.75rem 0.75rem;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0.4rem 0.6rem 0.5rem;
   width: 100%;
   box-sizing: border-box;
-}
-#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
-  min-height: 3.1rem;
-  padding: 0.55rem 0.85rem 0.6rem 0.6rem;
-  gap: 0.6rem;
-  font-size: clamp(0.72rem, 6.5cqw, 0.95rem);
-  border-radius: 15px 15px 0 0 !important;
-}
-#app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-body {
-  border-radius: 0 !important;
-  border-bottom: none !important;
-  padding: 0.75rem 0.85rem 0.85rem;
-  gap: 0.65rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap {
   width: clamp(3.1rem, 26cqw, 3.85rem);
