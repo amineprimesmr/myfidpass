@@ -747,15 +747,36 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-personnaliser-colors > .app-color-row { flex: 1 1 100%; }
 .app-personnaliser-colors > .app-personnaliser-strip-hint,
 .app-personnaliser-colors > .app-logo-colors-inline-hint { flex-basis: 100%; margin-top: 0; }
-.app-color-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
-.app-color-row .app-label { margin: 0; margin-right: 0.25rem; font-size: 0.85rem; min-width: 3rem; }
-.app-color-input { width: 40px; height: 36px; padding: 2px; border: 1px solid var(--app-border); border-radius: 8px; cursor: pointer; }
+.app-color-row { display: flex; align-items: center; flex-wrap: nowrap; gap: 0.45rem; min-width: 0; }
+.app-personnaliser-colors .app-color-row {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+.app-color-row .app-label { margin: 0; margin-right: 0.25rem; font-size: 0.85rem; min-width: 3rem; flex-shrink: 0; }
+.app-color-input { width: 40px; height: 36px; padding: 2px; border: 1px solid var(--app-border); border-radius: 8px; cursor: pointer; flex-shrink: 0; }
+/* Annule width:100% des .app-input pour garder label + pipette + hex + pastilles sur une ligne */
+.app-personnaliser-colors .app-color-row .app-input-hex {
+  width: 7.25rem;
+  min-width: 7.25rem;
+  max-width: 7.25rem;
+  flex: 0 0 7.25rem;
+  margin-bottom: 0;
+}
 .app-input-hex { max-width: 90px; margin-bottom: 0; }
 .app-personnaliser-strip-hint { font-size: 0.85rem; color: var(--app-text-muted); margin: 0.5rem 0 0; }
 .app-logo-colors-inline-hint { font-size: 0.8rem; color: var(--app-text-muted); margin: 0.15rem 0 0; }
 .app-logo-colors-inline-hint.hidden { display: none !important; }
 .app-logo-colors-swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0; align-items: center; }
-.app-logo-colors-swatches--inline { gap: 0.35rem; margin-top: 0; margin-left: 0.15rem; }
+.app-logo-colors-swatches--inline {
+  gap: 0.3rem;
+  margin-top: 0;
+  margin-left: 0.1rem;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
+}
 .app-logo-colors-swatches--inline.hidden { display: none !important; }
 .app-logo-colors-swatches--inline .app-logo-color-swatch {
   width: 28px;
