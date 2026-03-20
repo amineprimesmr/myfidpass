@@ -11,7 +11,7 @@ const STATUS_LABEL = {
   partner: "Partenaire",
 };
 
-const STEP_LABELS = ["Contexte", "Votre lien", "À transmettre", "Côté technique"];
+const STEP_LABELS = ["Contexte", "Aide publique", "Identifiants", "Appel API"];
 
 /** @param {unknown} s */
 function esc(s) {
@@ -105,11 +105,11 @@ export function createIntegrationGuide(ctx) {
         : "";
       bodyEl.innerHTML = `
         <div class="app-int-step-block">
-          <p class="app-int-lead">Voici ce que cette intégration représente pour <strong>votre commerce</strong> et comment Myfidpass s’y branche.</p>
+          <p class="app-int-lead">Vous êtes sur cette page en tant qu’<strong>intégrateur / prestataire technique</strong>. Voici ce que couvre cette fiche pour le commerce que vous branchez.</p>
           <p class="app-int-step-text">${esc(item.description)}</p>
           ${bullets ? `<ul class="app-int-step-list">${bullets}</ul>` : ""}
           ${warn}
-          <p class="app-int-hint-muted">Les étapes suivantes vous guident : d’abord ce que <strong>vous</strong> envoyez, puis ce que le <strong>prestataire</strong> reçoit, enfin le détail technique.</p>
+          <p class="app-int-hint-muted">Ensuite : une <strong>page d’aide publique</strong> (à partager au commerçant si besoin), les <strong>identifiants</strong> à utiliser pour l’API, puis l’<strong>exemple d’appel</strong>.</p>
         </div>`;
       return;
     }
@@ -117,15 +117,15 @@ export function createIntegrationGuide(ctx) {
     if (stepIndex === 1) {
       bodyEl.innerHTML = `
         <div class="app-int-step-block">
-          <p class="app-int-lead"><strong>Étape la plus simple pour vous :</strong> transmettre la page documentation à la personne qui gère votre caisse ou votre borne.</p>
-          <p class="app-int-step-text">Elle explique l’API sans avoir besoin d’un compte Myfidpass. Vous n’avez rien à coder.</p>
-          <label class="app-int-field-label" for="app-int-sheet-fake-link">Lien à copier-coller (e-mail, SMS…)</label>
+          <p class="app-int-lead"><strong>Page d’aide publique</strong> (même contenu que <code>/integration</code> sur le site) : utile pour expliquer le contexte au <strong>commerçant</strong>, pas pour votre intégration technique.</p>
+          <p class="app-int-step-text">Vous n’êtes pas censé « ouvrir une page prestataire » : <strong>vous êtes déjà l’intégrateur</strong>. Copiez ce lien seulement si le commerçant veut lire l’aide grand public. Votre travail, c’est l’API (étapes 3 et 4).</p>
+          <label class="app-int-field-label" for="app-int-sheet-fake-link">URL à transmettre au commerçant (optionnel)</label>
           <div class="app-int-copy-row">
             <input type="text" id="app-int-sheet-fake-link" class="app-input app-int-copy-input" readonly value="${esc(tech.prestataire)}" />
             <button type="button" class="app-btn app-btn-primary" id="app-int-copy-presta">Copier le lien</button>
           </div>
           <p class="app-int-step-actions">
-            <a class="app-btn app-btn-secondary" href="${esc(tech.openPage)}" target="_blank" rel="noopener">Ouvrir la page prestataire</a>
+            <a class="app-btn app-btn-secondary" href="${esc(tech.openPage)}" target="_blank" rel="noopener">Prévisualiser la page d’aide (nouvel onglet)</a>
           </p>
         </div>`;
       document.getElementById("app-int-copy-presta")?.addEventListener("click", (e) => {
@@ -137,17 +137,17 @@ export function createIntegrationGuide(ctx) {
     if (stepIndex === 2) {
       bodyEl.innerHTML = `
         <div class="app-int-step-block">
-          <p class="app-int-lead">Votre prestataire aura besoin de <strong>deux informations</strong> en plus du lien (vous les copiez ci-dessous).</p>
+          <p class="app-int-lead">Pour appeler l’API, vous avez besoin du <strong>token</strong> et du <strong>slug</strong> du commerce. Les valeurs ci-dessous correspondent à la session / au compte avec lequel cet espace est ouvert.</p>
           <div class="app-int-info-card">
-            <p class="app-int-info-title">1. Token d’accès</p>
-            <p class="app-int-step-text">C’est la clé secrète : elle apparaît dans l’URL de <strong>votre</strong> tableau de bord quand vous ouvrez Myfidpass depuis le lien reçu par e-mail (<code>?token=…</code>). À communiquer <strong>uniquement</strong> à votre prestataire de confiance, jamais sur un forum public.</p>
+            <p class="app-int-info-title">1. Token d’accès (<code>X-Dashboard-Token</code>)</p>
+            <p class="app-int-step-text">Secret à passer dans le header HTTP. Le <strong>commerçant</strong> le voit dans l’URL de son tableau de bord lorsqu’il se connecte via le lien reçu par e-mail (<code>?token=…</code>) : demandez-le lui si vous n’êtes pas connecté à son espace. Ne jamais l’exposer côté client public ni dans un dépôt.</p>
           </div>
           <label class="app-int-field-label" for="app-int-sheet-slug">2. Identifiant commerce (slug)</label>
           <div class="app-int-copy-row">
             <input type="text" id="app-int-sheet-slug" class="app-input app-int-copy-input" readonly value="${esc(tech.slug)}" />
             <button type="button" class="app-btn app-btn-primary" id="app-int-copy-slug">Copier</button>
           </div>
-          <label class="app-int-field-label" for="app-int-sheet-base">3. URL de base de l’API</label>
+          <label class="app-int-field-label" for="app-int-sheet-base">3. URL de base de l’API Myfidpass</label>
           <div class="app-int-copy-row">
             <input type="text" id="app-int-sheet-base" class="app-input app-int-copy-input" readonly value="${esc(tech.baseUrl)}" />
             <button type="button" class="app-btn app-btn-primary" id="app-int-copy-base">Copier</button>
@@ -164,8 +164,8 @@ export function createIntegrationGuide(ctx) {
 
     bodyEl.innerHTML = `
       <div class="app-int-step-block">
-        <p class="app-int-lead">À destination du <strong>développeur / intégrateur</strong> : requête type et documentation.</p>
-        <p class="app-int-step-text">Le QR carte client contient l’<strong>UUID membre</strong> à envoyer en <code>barcode</code>. Le montant en euros permet de créditer des points selon vos règles.</p>
+        <p class="app-int-lead"><strong>Implémentation</strong> : intégrez cet appel dans votre caisse, borne ou middleware.</p>
+        <p class="app-int-step-text">Le QR code (ou la valeur lue) côté client correspond à l’<strong>UUID membre</strong> Myfidpass : envoyez-le dans le corps JSON en <code>barcode</code>. Le montant en euros sert au crédit de points selon les règles du commerce.</p>
         <label class="app-int-field-label">Exemple cURL (scan + crédit)</label>
         <pre class="app-integration-curl app-int-sheet-curl" id="app-int-sheet-curl-display">${esc(tech.curl)}</pre>
         <div class="app-int-step-actions app-int-step-actions--row">
