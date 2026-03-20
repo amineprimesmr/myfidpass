@@ -3983,21 +3983,21 @@ body.page-app .whatsapp-fab { display: none !important; }
  */
 .app-personnaliser-preview .builder-phone-screen {
   position: absolute;
-  left: 9.5%;
-  width: 81%;
+  left: 6.5%;
+  width: 87%;
   top: 50%;
   transform: translateY(-54%);
   height: auto;
-  max-height: 76%;
+  max-height: 84%;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  border-radius: 16px;
+  border-radius: 12px;
   background: transparent;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 0.35rem 0.4rem;
+  padding: 0.18rem 0.22rem;
   z-index: 2;
   box-sizing: border-box;
   container-type: inline-size;
@@ -4011,7 +4011,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   height: auto;
   min-height: 0;
   margin: 0;
-  border-radius: 18px;
+  border-radius: 12px;
   overflow: hidden;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -4028,7 +4028,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
   border: none !important;
-  border-radius: 18px 18px 0 0 !important;
+  border-radius: 12px 12px 0 0 !important;
   min-height: 2.65rem;
   /* Logo collé au bord supérieur du bandeau (pas de centrage vertical dans la boîte logo) */
   padding: 0 0.75rem 0.45rem 0.5rem;
@@ -4055,7 +4055,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   background: var(--wallet-bg) !important;
   box-shadow: none !important;
   border: none !important;
-  border-radius: 0 0 18px 18px !important;
+  border-radius: 0 0 12px 12px !important;
   padding: 0.38rem 0.55rem 0.5rem;
   width: 100%;
   box-sizing: border-box;
@@ -4114,15 +4114,15 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img {
   display: block;
-  width: clamp(76px, 44cqw, 108px) !important;
-  height: clamp(76px, 44cqw, 108px) !important;
-  min-width: clamp(76px, 44cqw, 108px);
-  min-height: clamp(76px, 44cqw, 108px);
+  width: clamp(82px, 46cqw, 114px) !important;
+  height: clamp(82px, 46cqw, 114px) !important;
+  min-width: clamp(82px, 46cqw, 114px);
+  min-height: clamp(82px, 46cqw, 114px);
   mix-blend-mode: normal;
   padding: 6px;
   box-sizing: content-box;
   background: #ffffff !important;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img[src=""],
@@ -4130,7 +4130,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   mix-blend-mode: normal;
   opacity: 0.65 !important;
   background: rgba(255, 255, 255, 0.92) !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
 }
 
 @media (max-width: 980px) {
