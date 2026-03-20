@@ -165,7 +165,7 @@
   }
 }
 
-/* ========== Bouton WhatsApp flottant (FAB) ========== */
+/* ========== Bouton WhatsApp flottant (FAB) — uniquement accueil `/` (body.page-home) ========== */
 .whatsapp-fab {
   position: fixed;
   bottom: 1.5rem;
@@ -176,11 +176,15 @@
   border-radius: 50%;
   background: #1a1a1a;
   color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.page-home .whatsapp-fab {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
 .whatsapp-fab:hover {
