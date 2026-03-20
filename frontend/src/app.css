@@ -3957,7 +3957,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: 12.5% / 9%;
-  background: #000;
+  /* Même fond que la zone principale du dashboard : plus de bande noire sous la carte */
+  background: linear-gradient(180deg, var(--fidpass-surface) 0%, #fefefe 35%, #f6f7f9 100%);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -3980,7 +3981,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   box-sizing: border-box;
   flex-shrink: 0;
   margin-top: 0.2rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.14);
 }
 
 /* Ma carte — QR = suite du corps de carte (même fond vert), plus de bloc blanc landing */
@@ -4071,9 +4072,12 @@ body.page-app .whatsapp-fab { display: none !important; }
   height: clamp(80px, 46cqw, 112px) !important;
   min-width: clamp(80px, 46cqw, 112px);
   min-height: clamp(80px, 46cqw, 112px);
+  /* Blanc du PNG → prend la teinte du fond vert (modules noirs restent lisibles) */
+  mix-blend-mode: multiply;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img[src=""],
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img:not([src]) {
+  mix-blend-mode: normal;
   opacity: 0.55 !important;
   background: rgba(255, 255, 255, 0.14) !important;
   border-radius: 6px !important;
