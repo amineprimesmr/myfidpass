@@ -32,11 +32,12 @@ function badgeClass(status) {
 
 /**
  * @param {string} q
- * @param {{ name: string, description: string, tags?: string[] }} item
+ * @param {{ name: string, description: string, summary?: string, tags?: string[] }} item
  */
 function matchesQuery(q, item) {
   if (!q) return true;
-  const hay = `${item.name} ${item.description} ${(item.tags || []).join(" ")}`.toLowerCase();
+  const sum = item.summary || "";
+  const hay = `${item.name} ${sum} ${item.description} ${(item.tags || []).join(" ")}`.toLowerCase();
   return hay.includes(q);
 }
 
@@ -67,12 +68,23 @@ export function initIntegrationHub(opts) {
       const cards = items
         .map((item) => {
           const muted = item.status === "coming";
+          const logoSrc = item.logo ? esc(item.logo) : "";
+          const initial = esc((item.name || "?").trim().charAt(0).toUpperCase());
+          const summaryText = esc(item.summary || item.description || "");
+          const logoBlock = logoSrc
+            ? `<span class="app-int-card-logo-wrap"><img class="app-int-card-logo" src="${logoSrc}" alt="" width="40" height="40" loading="lazy" decoding="async" /><span class="app-int-card-logo-fallback" aria-hidden="true">${initial}</span></span>`
+            : `<span class="app-int-card-logo-wrap app-int-card-logo-wrap--letter" aria-hidden="true">${initial}</span>`;
           return `
             <button type="button" class="app-int-card${muted ? " app-int-card--muted" : ""}" data-int-id="${esc(item.id)}" aria-label="Ouvrir le guide : ${esc(item.name)}">
-              <span class="app-int-card-title">${esc(item.name)}</span>
-              <span class="${badgeClass(item.status)}">${esc(STATUS_LABEL[item.status] || item.status)}</span>
-              <span class="app-int-card-desc">${esc(item.description.slice(0, 120))}${item.description.length > 120 ? "…" : ""}</span>
-              <span class="app-int-card-cta">Voir le guide étape par étape →</span>
+              <div class="app-int-card-top">
+                ${logoBlock}
+                <div class="app-int-card-meta">
+                  <span class="app-int-card-title">${esc(item.name)}</span>
+                  <span class="${badgeClass(item.status)}">${esc(STATUS_LABEL[item.status] || item.status)}</span>
+                </div>
+              </div>
+              <p class="app-int-card-summary">${summaryText}</p>
+              <span class="app-int-card-cta">Guide étape par étape →</span>
             </button>
           `;
         })
@@ -98,6 +110,11 @@ export function initIntegrationHub(opts) {
         const id = btn.getAttribute("data-int-id");
         const item = catalog.integrations.find((i) => i.id === id);
         if (item) guide.open(item);
+      });
+    });
+    root.querySelectorAll(".app-int-card-logo").forEach((img) => {
+      img.addEventListener("error", () => {
+        img.closest(".app-int-card-logo-wrap")?.classList.add("app-int-card-logo-wrap--show-fallback");
       });
     });
   }

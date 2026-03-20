@@ -19,6 +19,11 @@ describe("integrations-catalog.json", () => {
       expect(item.id.length).toBeGreaterThan(0);
       expect(typeof item.name).toBe("string");
       expect(typeof item.description).toBe("string");
+      expect(typeof item.summary).toBe("string");
+      expect(item.summary.length).toBeGreaterThan(0);
+      if (item.logo != null) {
+        expect(typeof item.logo).toBe("string");
+      }
       expect(allowed.has(item.status)).toBe(true);
       if (item.bullets) {
         expect(Array.isArray(item.bullets)).toBe(true);
