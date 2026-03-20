@@ -101,7 +101,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 
 .app-sidebar-brand {
-  padding: 1.35rem 1.25rem;
+  padding: 1.1rem 1.25rem 1.25rem;
   border-bottom: 1px solid var(--app-sidebar-border);
 }
 
@@ -112,6 +112,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   text-decoration: none;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   letter-spacing: -0.02em;
   transition: color var(--app-transition);
 }
@@ -124,11 +125,16 @@ body.page-app .whatsapp-fab { display: none !important; }
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
-/* Logo commerce (sidebar) : couleurs d’origine, pas de forçage blanc */
+/* Logo commerce (sidebar) : couleurs d’origine, plus grand ; pas de forçage blanc */
 .app-sidebar-logo-img--commerce {
   filter: none;
-  max-height: 40px;
-  border-radius: 6px;
+  width: 72px;
+  height: 72px;
+  max-width: min(100%, 88px);
+  max-height: 72px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .app-sidebar-logo-fallback {
   font-weight: 800;
@@ -142,7 +148,9 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-sidebar-logo-fallback.hidden { display: none; }
 
+/* Masqué visuellement : le nom reste en #app-business-name pour le JS (fallback logo, profil). */
 .app-sidebar-business {
+  display: none !important;
   margin: 0.4rem 0 0;
   font-size: 0.7rem;
   font-weight: 600;
