@@ -33,9 +33,11 @@ function readTechFromDom(resolvedApiBase, fallbackSlug) {
   const baseUrl =
     document.getElementById("app-integration-base-url")?.value?.trim() || resolvedApiBase || "https://api.myfidpass.fr";
   const slug = document.getElementById("app-integration-slug")?.value?.trim() || fallbackSlug || "VOTRE_SLUG";
-  const prestataire = document.getElementById("app-integration-prestataire-link")?.value || "";
+  const prestataire = document.getElementById("app-integration-prestataire-link")?.value?.trim() || "";
   const curl = document.getElementById("app-integration-curl")?.textContent || "";
-  const openPage = document.getElementById("app-integration-open-page")?.getAttribute("href") || prestataire;
+  const linkEl = document.getElementById("app-integration-open-page");
+  /* Même URL que app.js : le champ input est la source fiable ; l’ancre peut encore être href="#" avant init. */
+  const openPage = prestataire || linkEl?.href || "";
   return { baseUrl, slug, prestataire, curl, openPage };
 }
 

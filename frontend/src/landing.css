@@ -1547,9 +1547,8 @@
   padding: 2rem 1.5rem 4rem;
 }
 
-/* Failsafe : contenu landing toujours visible quand #landing est affiché */
-#landing:not(.hidden) #landing-main:not(.hidden),
-#landing #landing-main {
+/* Accueil visible seulement si #landing-main n’a pas .hidden (sinon /integration, légal, etc. restent masqués) */
+#landing:not(.hidden) #landing-main:not(.hidden) {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;

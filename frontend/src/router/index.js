@@ -221,6 +221,7 @@ export async function initRouting() {
   }
 
   if (route.type === "integration") {
+    hideAll();
     if (c.landing) c.landing.classList.remove("hidden");
     c.landingMain?.classList.add("hidden");
     if (c.landingTemplates) c.landingTemplates.classList.add("hidden");
