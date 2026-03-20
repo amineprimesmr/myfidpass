@@ -3,6 +3,7 @@
  */
 
 import { readPointTierInputs } from "./app-card-rules-point-tiers.js";
+import { updatePersonnaliserGroupStatusIndicators } from "./app-personnaliser-groups-status.js";
 
 /**
  * @param {{
@@ -72,7 +73,10 @@ export function refreshCardRulesChecklist(root = document.getElementById("regles
 export function initAppCardRulesGuide() {
   const root = document.getElementById("regles-carte");
   if (!root) return;
-  const run = () => refreshCardRulesChecklist(root);
+  const run = () => {
+    refreshCardRulesChecklist(root);
+    updatePersonnaliserGroupStatusIndicators(root.ownerDocument || document);
+  };
   root.addEventListener("input", run, true);
   root.addEventListener("change", run, true);
   window.addEventListener("app-section-change", (e) => {

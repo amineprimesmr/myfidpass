@@ -675,14 +675,36 @@ body.page-app .whatsapp-fab { display: none !important; }
   background: var(--fidpass-surface);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: flex-start;
+  gap: 0.65rem;
   padding: 0.95rem 1rem;
   text-align: left;
   cursor: pointer;
   font: inherit;
   color: var(--app-text);
   transition: background-color 0.25s ease, color 0.2s ease;
+}
+.app-personnaliser-group-status {
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-sizing: border-box;
+  transition: background-color 0.28s ease, border-color 0.28s ease, transform 0.22s ease, box-shadow 0.28s ease;
+}
+.app-personnaliser-group-status.is-status-pending {
+  border: 2px solid #e2e8f0;
+  background: var(--fidpass-surface);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+.app-personnaliser-group-status.is-status-complete {
+  border: 2px solid rgba(10, 124, 66, 0.45);
+  background: #0a7c42 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.2 6.4 11l6.1-6.5' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 10px 10px no-repeat;
+  box-shadow: 0 1px 2px rgba(10, 124, 66, 0.2);
+  transform: scale(1);
+}
+.app-personnaliser-group.is-open .app-personnaliser-group-status.is-status-complete {
+  box-shadow: 0 2px 6px rgba(10, 124, 66, 0.25);
 }
 .app-personnaliser-group-toggle:hover {
   background: #f8fafc;
@@ -695,11 +717,14 @@ body.page-app .whatsapp-fab { display: none !important; }
   background: #f8fafc;
 }
 .app-personnaliser-group-title {
+  flex: 1;
+  min-width: 0;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 .app-personnaliser-group-icon {
+  margin-left: auto;
   font-size: 1.05rem;
   color: var(--app-text-muted);
   transform: rotate(-90deg);

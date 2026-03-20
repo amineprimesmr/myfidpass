@@ -19,6 +19,7 @@ import {
   refreshAppSaveCtaDirtyVisual,
 } from "./app-dirty-guard.js";
 import { initAppCardRulesGuide, refreshCardRulesChecklist } from "./app-card-rules-guide.js";
+import { updatePersonnaliserGroupStatusIndicators } from "./app-personnaliser-groups-status.js";
 import {
   setLastKnownBusinessSector,
   getLastKnownBusinessSector,
@@ -1447,6 +1448,12 @@ function initAppDashboard(slug) {
   let personnaliserCardBgDataUrl = "";
   let personnaliserCardBgRemoveRequested = false;
   let hasCardBackgroundFromServer = false;
+  function syncPersonnaliserAccordionServerCardBg() {
+    const acc = document.getElementById("app-personnaliser-accordion");
+    if (!acc) return;
+    if (hasCardBackgroundFromServer) acc.dataset.serverCardBg = "1";
+    else delete acc.dataset.serverCardBg;
+  }
   const personnaliserStampIcon = document.getElementById("app-stamp-icon-input");
   const personnaliserStampIconPreview = document.getElementById("app-stamp-icon-preview");
   const personnaliserStampIconPlaceholder = document.getElementById("app-stamp-icon-placeholder");
@@ -1505,6 +1512,7 @@ function initAppDashboard(slug) {
     });
   }
   initPersonnaliserAccordion();
+  schedulePersonnaliserGroupStatusRefresh();
 
   function syncStampMidUi() {
     if (!stampMidRewardLabelEl || !stampSkipMidEl) return;
@@ -1662,6 +1670,14 @@ function initAppDashboard(slug) {
     if (stripTextWrap) stripTextWrap.classList.toggle("hidden", !isText);
     if (personnaliserLogoWrap) personnaliserLogoWrap.classList.toggle("hidden", !!isText);
   }
+  let personnaliserStatusRaf = 0;
+  function schedulePersonnaliserGroupStatusRefresh() {
+    if (personnaliserStatusRaf) cancelAnimationFrame(personnaliserStatusRaf);
+    personnaliserStatusRaf = requestAnimationFrame(() => {
+      personnaliserStatusRaf = 0;
+      updatePersonnaliserGroupStatusIndicators();
+    });
+  }
   function updatePersonnaliserPreview() {
     const card = document.getElementById("app-personnaliser-preview-card");
     const stripEl = document.getElementById("app-wallet-preview-strip");
@@ -1803,6 +1819,7 @@ function initAppDashboard(slug) {
     }
     const logoFallback = document.getElementById("app-wallet-preview-logo-fallback");
     if (logoFallback) logoFallback.classList.toggle("hidden", !!useStripText || !!(walletLogo && walletLogo.src && !walletLogo.classList.contains("hidden")));
+    schedulePersonnaliserGroupStatusRefresh();
   }
   const personnaliserLabelRestants = document.getElementById("app-personnaliser-label-restants");
   const personnaliserLabelMember = document.getElementById("app-personnaliser-label-member");
@@ -1842,6 +1859,7 @@ function initAppDashboard(slug) {
       requestAnimationFrame(() => {
         updatePersonnaliserPreview();
         requestAnimationFrame(() => updatePersonnaliserPreview());
+        schedulePersonnaliserGroupStatusRefresh();
       });
     }
   });
@@ -2117,6 +2135,7 @@ function initAppDashboard(slug) {
       if (personnaliserLocationText && (data.location_relevant_text ?? data.locationRelevantText) != null) personnaliserLocationText.value = data.location_relevant_text ?? data.locationRelevantText ?? "";
       if (personnaliserRadius != null && (data.location_radius_meters ?? data.locationRadiusMeters) != null) personnaliserRadius.value = data.location_radius_meters ?? data.locationRadiusMeters;
       hasCardBackgroundFromServer = !!(data.has_card_background ?? data.hasCardBackground);
+      syncPersonnaliserAccordionServerCardBg();
       if (personnaliserCardBgRemove) {
         if (hasCardBackgroundFromServer || personnaliserCardBgDataUrl) personnaliserCardBgRemove.classList.remove("hidden");
         else personnaliserCardBgRemove.classList.add("hidden");
@@ -2206,9 +2225,11 @@ function initAppDashboard(slug) {
             updatePersonnaliserPreview();
           } else {
             if (typeof extractAndShowLogoColors === "function") extractAndShowLogoColors(null);
+            schedulePersonnaliserGroupStatusRefresh();
           }
         })
         .catch(() => {});
+    schedulePersonnaliserGroupStatusRefresh();
   }
 
   async function reloadDashboardSettingsForms() {
@@ -2964,6 +2985,7 @@ function initAppDashboard(slug) {
           if (body.cardBackgroundBase64 === "") {
             personnaliserCardBgRemoveRequested = false;
             hasCardBackgroundFromServer = false;
+            syncPersonnaliserAccordionServerCardBg();
             personnaliserCardBgDataUrl = "";
             if (personnaliserCardBg) personnaliserCardBg.value = "";
             if (personnaliserCardBgPreview) {
@@ -2977,6 +2999,7 @@ function initAppDashboard(slug) {
             if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.add("hidden");
           } else if (body.cardBackgroundBase64) {
             hasCardBackgroundFromServer = true;
+            syncPersonnaliserAccordionServerCardBg();
             personnaliserCardBgDataUrl = "";
             if (personnaliserCardBg) personnaliserCardBg.value = "";
             if (personnaliserCardBgPlaceholder) {
