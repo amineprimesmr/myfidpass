@@ -3941,30 +3941,41 @@ body.page-app .whatsapp-fab { display: none !important; }
   right: auto;
   bottom: auto;
   left: auto;
-  z-index: 1;
+  z-index: 0;
   width: 100%;
   max-width: 100%;
   height: auto;
   display: block;
   pointer-events: none;
 }
+/* Masque uniquement le noir du PNG dans la zone écran (même teinte que le dashboard, pas un 2e « panneau » en dégradé) */
+.app-personnaliser-preview .builder-phone-frame::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  top: 10.6%;
+  width: 80%;
+  height: 88%;
+  border-radius: 11% / 7.5%;
+  background: var(--fidpass-surface);
+  z-index: 1;
+  pointer-events: none;
+}
 .app-personnaliser-preview .builder-phone-screen {
-  left: 11.8%;
-  top: 11.5%;
-  width: 76.4%;
-  /* hauteur pour afficher cadre iPhone + carte complète (bandeau bas visible) */
-  height: 84%;
+  left: 10%;
+  top: 10.6%;
+  width: 80%;
+  height: 88%;
   overflow-y: auto;
   overflow-x: hidden;
-  border-radius: 12.5% / 9%;
-  /* Même fond que la zone principale du dashboard : plus de bande noire sous la carte */
-  background: linear-gradient(180deg, var(--fidpass-surface) 0%, #fefefe 35%, #f6f7f9 100%);
+  border-radius: 11% / 7.5%;
+  /* Pas de fond sur ce calque : uniquement la carte, le noir du mockup est masqué par ::after */
+  background: transparent;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding-top: 0.5rem;
   padding-bottom: 0.65rem;
-  isolation: isolate;
   z-index: 2;
   /* Typos en cqw = relatif à la largeur de l’écran du mockup */
   container-type: inline-size;
