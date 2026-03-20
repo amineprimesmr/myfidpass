@@ -6,6 +6,7 @@ import { API_BASE, getAuthHeaders, clearAuthToken, isDevBypassPayment } from "..
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
+import { initIntegrationHub } from "./integration-hub.js";
 
 const IS_LOCALHOST =
   typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -747,6 +748,12 @@ function initAppDashboard(slug) {
   document.getElementById("app-integration-copy-curl")?.addEventListener("click", () => {
     if (!integrationCurlEl) return;
     navigator.clipboard.writeText(integrationCurlEl.textContent);
+  });
+
+  initIntegrationHub({
+    slug: slug || "",
+    apiBase: API_BASE || "https://api.myfidpass.fr",
+    origin,
   });
 
   // ——— Carte & périmètre ———

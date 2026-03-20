@@ -1,0 +1,269 @@
+{
+  "categories": [
+    { "id": "bornes", "title": "Bornes & kiosks", "order": 1 },
+    { "id": "caisse", "title": "Caisses & terminaux", "order": 2 },
+    { "id": "commande", "title": "Commande en ligne & livraison", "order": 3 },
+    { "id": "ecommerce", "title": "E-commerce & CMS", "order": 4 },
+    { "id": "fidelite", "title": "Fidélité & marketing", "order": 5 },
+    { "id": "dev", "title": "Studio, cloud & générique", "order": 6 }
+  ],
+  "integrations": [
+    {
+      "id": "api-directe",
+      "name": "API REST Myfidpass",
+      "categoryId": "dev",
+      "status": "kit",
+      "description": "Intégration directe : scan du QR (UUID membre) + POST JSON sur l’endpoint scan. Toute stack capable d’HTTP.",
+      "bullets": [
+        "Un seul contrat d’API pour tous les commerces",
+        "Header X-Dashboard-Token fourni par le commerçant",
+        "Documentation : format code-barres, lookup, erreurs"
+      ],
+      "tags": ["http", "rest", "api"]
+    },
+    {
+      "id": "borne-generique",
+      "name": "Borne / kiosk (HTTP)",
+      "categoryId": "bornes",
+      "status": "kit",
+      "description": "Kiosk Windows/Android/iOS qui peut appeler une URL HTTPS ou exécuter un script : branchez l’UUID scanné sur l’API scan.",
+      "bullets": [
+        "Compatible toute borne avec lecteur 2D et accès réseau",
+        "Pas de SDK propriétaire requis",
+        "Tester avec l’exemple Node.js fourni dans la doc"
+      ],
+      "tags": ["borne", "kiosk", "http"]
+    },
+    {
+      "id": "zelty",
+      "name": "Zelty",
+      "categoryId": "caisse",
+      "status": "partner",
+      "description": "Restauration : caisse et flux habituels. Intégration type partenaire (webhooks ou module selon offre).",
+      "bullets": [
+        "Scénario typique : passage en caisse → crédit fidélité",
+        "Coordination avec l’équipe Zelty ou intégrateur",
+        "Même API scan / lookup côté Myfidpass"
+      ],
+      "tags": ["restaurant", "caisse"]
+    },
+    {
+      "id": "tiller",
+      "name": "Tiller",
+      "categoryId": "caisse",
+      "status": "beta",
+      "description": "Écosystème caisse FR : intégration possible via couche HTTP / scripts métier selon votre déploiement Tiller.",
+      "bullets": [
+        "Vérifier la version et les hooks disponibles sur votre contrat",
+        "Token et slug fournis par le commerçant Myfidpass",
+        "Phase bêta : nous contacter pour accompagnement"
+      ],
+      "tags": ["caisse", "france"]
+    },
+    {
+      "id": "lightspeed",
+      "name": "Lightspeed (R-Series / K-Series)",
+      "categoryId": "caisse",
+      "status": "beta",
+      "description": "Retail et restauration : selon série, passerelle HTTP ou app script vers l’API Myfidpass.",
+      "bullets": [
+        "Identifier la série (R/K) et les APIs ouvertes du site",
+        "Mapper le scan membre → barcode dans le corps JSON",
+        "Documentation commune INTEGRATION-API-BORNES-CAISSES.md"
+      ],
+      "tags": ["retail", "restaurant"]
+    },
+    {
+      "id": "square",
+      "name": "Square POS",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "Terminal Square : intégration envisagée via extensions ou webhooks selon disponibilité régionale.",
+      "bullets": [
+        "Feuille de route produit",
+        "En attendant : flux générique HTTP depuis un middleware"
+      ],
+      "tags": ["pos", "us"]
+    },
+    {
+      "id": "sumup",
+      "name": "SumUp",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "TPE SumUp : exploration d’un pont logiciel vers l’API scan.",
+      "bullets": ["Bientôt", "Solution transitoire : tablette auxiliaire + lecteur 2D"]
+    },
+    {
+      "id": "clover",
+      "name": "Clover",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "Apps Clover ou serveur intermédiaire pour relayer les scans vers Myfidpass.",
+      "bullets": ["Feuille de route", "Architecture recommandée : micro-service HTTPS"]
+    },
+    {
+      "id": "toast",
+      "name": "Toast",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "Restauration US : intégration ciblée via l’écosystème partenaire Toast.",
+      "bullets": ["À l’étude", "Contact intégration pour scoping"]
+    },
+    {
+      "id": "revel",
+      "name": "Revel Systems",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "iPad POS : passerelle possible via Revel API + worker scan.",
+      "bullets": ["Roadmap", "Kit API déjà utilisable côté serveur"]
+    },
+    {
+      "id": "shopify-pos",
+      "name": "Shopify POS",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "Extensions Shopify ou app custom pour envoyer barcode + montant à Myfidpass.",
+      "bullets": ["Prévu", "Shopify en ligne : voir e-commerce"]
+    },
+    {
+      "id": "oracle-micros",
+      "name": "Oracle MICROS / Simphony",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "Hôtellerie-restauration : connecteur via couche interface ou serveur fidélité.",
+      "bullets": ["Enterprise", "Accompagnement projet"]
+    },
+    {
+      "id": "ncr-aloha",
+      "name": "NCR Aloha",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "POS legacy : souvent un bridge sur site vers HTTPS.",
+      "bullets": ["Intégrateur requis", "Même modèle barcode + token"]
+    },
+    {
+      "id": "ubereats",
+      "name": "Uber Eats (Manager)",
+      "categoryId": "commande",
+      "status": "coming",
+      "description": "Attribuer des points après commande livraison : lien avec webhooks commande + règle métier.",
+      "bullets": ["Feuille de route", "Aujourd’hui : crédit en magasin via API scan"]
+    },
+    {
+      "id": "deliveroo",
+      "name": "Deliveroo",
+      "categoryId": "commande",
+      "status": "coming",
+      "description": "Synchronisation commande → fidélité (à définir selon API partenaire).",
+      "bullets": ["Étude", "Priorité caisse physique d’abord"]
+    },
+    {
+      "id": "hubrise",
+      "name": "HubRise",
+      "categoryId": "commande",
+      "status": "partner",
+      "description": "Hub commandes multi-canaux : possibilité de relayer événements vers un connecteur Myfidpass.",
+      "bullets": [
+        "Architecture hub → endpoint HTTPS dédié",
+        "Alignement avec intégrateurs HubRise"
+      ],
+      "tags": ["hub", "delivery"]
+    },
+    {
+      "id": "woocommerce",
+      "name": "WooCommerce",
+      "categoryId": "ecommerce",
+      "status": "kit",
+      "description": "Plugin ou snippet PHP : après commande ou webhook, appeler l’API (lookup + crédit) selon votre règle.",
+      "bullets": [
+        "Utiliser le UUID membre (Wallet) comme identifiant stable",
+        "Jeton dashboard dans les réglages sécurisés du plugin"
+      ],
+      "tags": ["wordpress", "php"]
+    },
+    {
+      "id": "prestashop",
+      "name": "PrestaShop",
+      "categoryId": "ecommerce",
+      "status": "kit",
+      "description": "Module léger ou tâche cron : même schéma REST Myfidpass.",
+      "bullets": ["Hooks commande", "Ne jamais exposer le token en front"]
+    },
+    {
+      "id": "shopify",
+      "name": "Shopify",
+      "categoryId": "ecommerce",
+      "status": "beta",
+      "description": "App Shopify (admin) ou Flow + endpoint sécurisé vers scan / lookup.",
+      "bullets": [
+        "Shopify Functions / webhooks selon cas",
+        "Accompagnement bêta disponible"
+      ],
+      "tags": ["saas"]
+    },
+    {
+      "id": "magento",
+      "name": "Adobe Commerce / Magento",
+      "categoryId": "ecommerce",
+      "status": "coming",
+      "description": "Extension ou intégration middleware pour relier les commandes aux membres Myfidpass.",
+      "bullets": ["Enterprise", "Contact pour POC"]
+    },
+    {
+      "id": "bigcommerce",
+      "name": "BigCommerce",
+      "categoryId": "ecommerce",
+      "status": "coming",
+      "description": "Webhooks commande + mapping client.",
+      "bullets": ["Roadmap"]
+    },
+    {
+      "id": "zapier-make",
+      "name": "Zapier / Make",
+      "categoryId": "fidelite",
+      "status": "coming",
+      "description": "Automatiser des crédits depuis d’autres outils (CRM, sheets) via requêtes HTTP signées.",
+      "bullets": [
+        "Besoin d’un connecteur dédié (sécurité token)",
+        "Aujourd’hui : script serveur recommandé"
+      ],
+      "tags": ["no-code"]
+    },
+    {
+      "id": "mailchimp",
+      "name": "Klaviyo / Mailchimp",
+      "categoryId": "fidelite",
+      "status": "coming",
+      "description": "Scénarios email : lien avec statut membre Myfidpass (export ou API future).",
+      "bullets": ["Marketing", "Non critique pour le scan caisse"]
+    },
+    {
+      "id": "webhook-generic",
+      "name": "Webhooks sortants (futur)",
+      "categoryId": "dev",
+      "status": "coming",
+      "description": "Notification Myfidpass vers votre URL (événements membre / passage) — évolution produit.",
+      "bullets": ["Sur la roadmap", "Utiliser l’API pull en attendant"]
+    },
+    {
+      "id": "aws-lambda",
+      "name": "AWS Lambda / Cloud Functions",
+      "categoryId": "dev",
+      "status": "kit",
+      "description": "Fonction serverless qui reçoit le payload caisse et appelle POST /integration/scan.",
+      "bullets": [
+        "Idéal pour isoler le token hors caisse",
+        "Exemples curl / Node dans la documentation GitHub"
+      ],
+      "tags": ["cloud", "node"]
+    },
+    {
+      "id": "brink",
+      "name": "Brink POS / PAR",
+      "categoryId": "caisse",
+      "status": "coming",
+      "description": "Fast food : intégration via couche franchise ou API ouverte.",
+      "bullets": ["US-focused", "Contact partenaire"]
+    }
+  ]
+}
