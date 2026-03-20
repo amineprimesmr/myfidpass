@@ -1,5 +1,6 @@
 /**
  * Repository games (roulette, tickets, spins, rewards). Référence : REFONTE-REGLES.md.
+ * Dérogation 2026-03-21 : fichier > 400 lignes — à scinder (ex. games-roulette-public.js) si évolution.
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
@@ -13,6 +14,7 @@ import {
   ensureBusinessGame,
   seedDefaultGameRewards,
   pickWeightedReward,
+  DEFAULT_ROULETTE_POINT_REWARDS,
 } from "./games-helpers.js";
 
 export { addTicketsForEngagement } from "./games-helpers.js";
@@ -92,6 +94,32 @@ export function getGameRewardsForBusiness(businessId, gameCode = "roulette") {
   }));
 }
 
+/**
+ * Roulette : uniquement kind "none" ou "points" (bonus sur la carte).
+ * Réinitialise avec les défauts si config invalide ou aucun segment jouable.
+ */
+export function ensureRoulettePointsOnlyRewards(businessId) {
+  const bg = ensureBusinessGame(businessId, "roulette");
+  if (!bg) return;
+  seedDefaultGameRewards(businessId, bg.game_id);
+  const rows = getGameRewardsForBusiness(businessId, "roulette");
+  const hasForbiddenKind = rows.some((r) => r.kind !== "none" && r.kind !== "points");
+  const playable = rows.filter((r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points"));
+  if (hasForbiddenKind || playable.length === 0) {
+    replaceGameRewardsForBusiness(businessId, "roulette", DEFAULT_ROULETTE_POINT_REWARDS);
+  }
+}
+
+export function getRoulettePublicSegments(businessId) {
+  ensureRoulettePointsOnlyRewards(businessId);
+  return getGameRewardsForBusiness(businessId, "roulette")
+    .filter((r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points"))
+    .map((r) => ({
+      label: (String(r.label || "").trim() || (r.kind === "none" ? "PERDU" : "?")).slice(0, 120),
+      kind: r.kind,
+    }));
+}
+
 export function replaceGameRewardsForBusiness(businessId, gameCode = "roulette", rewards = []) {
   const bg = ensureBusinessGame(businessId, gameCode);
   if (!bg) return [];
@@ -107,22 +135,18 @@ export function replaceGameRewardsForBusiness(businessId, gameCode = "roulette",
       const code = String(reward.code || "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_").slice(0, 40);
       if (!code) continue;
       const label = String(reward.label || code).trim().slice(0, 120);
-      const kind = ["none", "points", "discount", "free_item"].includes(reward.kind) ? reward.kind : "none";
+      const kind = reward.kind === "points" ? "points" : reward.kind === "none" ? "none" : null;
+      if (!kind) continue;
       const weight = Math.max(0, Number(reward.weight) || 0);
       const stock = reward.stock == null ? null : Math.max(0, Number(reward.stock) || 0);
       const active = reward.active === false ? 0 : 1;
-      insert.run(
-        id,
-        businessId,
-        bg.game_id,
-        code,
-        label,
-        kind,
-        reward.value == null ? null : JSON.stringify(reward.value),
-        stock,
-        active,
-        weight
-      );
+      let valueJson = null;
+      if (kind === "points") {
+        const pts = Math.floor(Number(reward.value?.points));
+        if (!Number.isFinite(pts) || pts < 0) continue;
+        valueJson = JSON.stringify({ points: pts });
+      }
+      insert.run(id, businessId, bg.game_id, code, label, kind, valueJson, stock, active, weight);
     }
   });
   tx();
@@ -321,9 +345,12 @@ export function spinGameForMember({
       JSON.stringify({ game_code: gameCode, ticket_cost: ticketCost })
     );
 
-    const rewards = getGameRewardsForBusiness(businessId, gameCode);
-    const reward = pickWeightedReward(rewards);
-    const isWinning = !!reward && reward.kind !== "none";
+    ensureRoulettePointsOnlyRewards(businessId);
+    const spinRewards = getGameRewardsForBusiness(businessId, gameCode).filter(
+      (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points")
+    );
+    const reward = pickWeightedReward(spinRewards);
+    const isWinning = !!reward && reward.kind === "points" && Math.max(0, Number(reward.value?.points) || 0) > 0;
     const grantedRewardId = reward?.id || null;
     const outcomeCode = reward?.code || "none";
     const status = isWinning ? "won" : "lost";
@@ -339,26 +366,16 @@ export function spinGameForMember({
           points: bonusPoints,
           metadata: { source: "game_spin", game_code: gameCode, reward_code: reward.code },
         });
+        grant = {
+          id: randomUUID(),
+          business_id: businessId,
+          member_id: memberId,
+          spin_id: spinId,
+          reward_id: reward.id,
+          status: "granted",
+          metadata_json: JSON.stringify({ reward_kind: "points", points: bonusPoints }),
+        };
       }
-      grant = {
-        id: randomUUID(),
-        business_id: businessId,
-        member_id: memberId,
-        spin_id: spinId,
-        reward_id: reward.id,
-        status: "granted",
-        metadata_json: JSON.stringify({ reward_kind: "points", points: bonusPoints }),
-      };
-    } else if (reward && reward.kind !== "none") {
-      grant = {
-        id: randomUUID(),
-        business_id: businessId,
-        member_id: memberId,
-        spin_id: spinId,
-        reward_id: reward.id,
-        status: "granted",
-        metadata_json: JSON.stringify({ reward_kind: reward.kind, value: reward.value || null }),
-      };
     }
 
     db.prepare(

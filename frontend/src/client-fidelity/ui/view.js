@@ -32,8 +32,8 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>
           </div>
           <h2 class="fidelity-roulette-title">
-            <span class="fidelity-roulette-title-line">Participez à notre jeu et</span>
-            <span class="fidelity-roulette-title-line">tentez de gagner un cadeau</span>
+            <span class="fidelity-roulette-title-line">Tourne la roue et</span>
+            <span class="fidelity-roulette-title-line">gagne des points bonus</span>
           </h2>
           <div class="fidelity-roulette-btn-row">
             <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" aria-label="Lancer la roue">

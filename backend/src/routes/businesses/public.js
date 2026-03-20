@@ -3,7 +3,7 @@
  * Référence : REFONTE-REGLES.md — max 15 routes par fichier.
  */
 import { Router } from "express";
-import { getBusinessGames, getMemberForBusiness, spinGameForMember } from "../../db.js";
+import { getBusinessGames, getMemberForBusiness, getRoulettePublicSegments, spinGameForMember } from "../../db.js";
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
 
@@ -48,10 +48,13 @@ export function publicGames(req, res) {
     daily_spin_limit: g.daily_spin_limit,
     cooldown_seconds: g.cooldown_seconds,
   }));
+  const roulette_segments =
+    (business.loyalty_mode || "points_cash") === "points_game_tickets" ? getRoulettePublicSegments(business.id) : [];
   return res.json({
     loyalty_mode: business.loyalty_mode ?? "points_cash",
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     games,
+    roulette_segments,
   });
 }
 

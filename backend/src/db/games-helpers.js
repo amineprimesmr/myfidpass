@@ -90,33 +90,27 @@ export function ensureBusinessGame(businessId, gameCode = "roulette") {
     .get(id);
 }
 
+/** Lots roulette : uniquement points bonus ou « perdant » (pas de réduction / cadeau commerce). */
+export const DEFAULT_ROULETTE_POINT_REWARDS = [
+  { code: "no_reward", label: "PERDU", kind: "none", weight: 65, value: null },
+  { code: "p10", label: "+10 pts", kind: "points", weight: 25, value: { points: 10 } },
+  { code: "p25", label: "+25 pts", kind: "points", weight: 8, value: { points: 25 } },
+  { code: "p50", label: "+50 pts", kind: "points", weight: 2, value: { points: 50 } },
+];
+
 export function seedDefaultGameRewards(businessId, gameId) {
   const count = db
     .prepare("SELECT COUNT(*) as n FROM game_rewards WHERE business_id = ? AND game_id = ?")
     .get(businessId, gameId)?.n;
   if ((count || 0) > 0) return;
-  const rows = [
-    { code: "no_reward", label: "Pas de lot", kind: "none", weight: 65, value: null },
-    { code: "small_points", label: "10 points bonus", kind: "points", weight: 25, value: { points: 10 } },
-    { code: "medium_points", label: "25 points bonus", kind: "points", weight: 8, value: { points: 25 } },
-    { code: "big_points", label: "50 points bonus", kind: "points", weight: 2, value: { points: 50 } },
-  ];
+  const rows = DEFAULT_ROULETTE_POINT_REWARDS;
   const stmt = db.prepare(
     `INSERT INTO game_rewards
      (id, business_id, game_id, code, label, kind, value_json, stock, active, weight, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 1, ?, datetime('now'))`
   );
   for (const row of rows) {
-    stmt.run(
-      randomUUID(),
-      businessId,
-      gameId,
-      row.code,
-      row.label,
-      row.kind,
-      row.value ? JSON.stringify(row.value) : null,
-      row.weight
-    );
+    stmt.run(randomUUID(), businessId, gameId, row.code, row.label, row.kind, row.value ? JSON.stringify(row.value) : null, row.weight);
   }
 }
 

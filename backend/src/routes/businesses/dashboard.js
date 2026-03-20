@@ -335,6 +335,23 @@ router.get("/games/:gameCode/rewards", (req, res) => {
 
 router.put("/games/:gameCode/rewards", (req, res) => {
   const rewardsInput = Array.isArray(req.body?.rewards) ? req.body.rewards : [];
+  if (req.params.gameCode === "roulette") {
+    for (const r of rewardsInput) {
+      const k = String(r?.kind || "none").trim();
+      if (k !== "none" && k !== "points") {
+        return res.status(400).json({
+          error:
+            "La roulette ne gère que des lots en points (kind: \"points\" avec value.points) ou sans gain (kind: \"none\"). Pas de réduction ni cadeau en magasin sur la roue.",
+        });
+      }
+      if (k === "points") {
+        const pts = Math.floor(Number(r?.value?.points));
+        if (!Number.isFinite(pts) || pts < 0) {
+          return res.status(400).json({ error: "Chaque lot « points » doit avoir value.points (entier ≥ 0)." });
+        }
+      }
+    }
+  }
   const rewards = replaceGameRewardsForBusiness(req.business.id, req.params.gameCode, rewardsInput);
   return res.json({ ok: true, rewards });
 });

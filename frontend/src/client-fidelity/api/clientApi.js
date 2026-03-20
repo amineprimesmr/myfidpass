@@ -30,7 +30,7 @@ export function createClientFidelityApi(apiBase) {
 
   async function getGames(slug) {
     const res = await fetch(withBase(`/api/businesses/${encodeURIComponent(slug)}/games`), { cache: "no-store" });
-    if (!res.ok) return { games: [] };
+    if (!res.ok) return { games: [], roulette_segments: [] };
     return safeJson(res);
   }
 

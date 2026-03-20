@@ -26,7 +26,7 @@ function isUnlimitedTicketsTest() {
 // Configuration roulette (roue circulaire)
 const ROULETTE_SPIN_DURATION_MS = 4000;
 const ROULETTE_EXTRA_TURNS = 6;
-const DEFAULT_WHEEL_LABELS = ["PERDU", "PERDU", "Café offert", "PERDU", "-10%", "PERDU", "Dessert", "PERDU"];
+const DEFAULT_WHEEL_LABELS = ["PERDU", "+10 pts", "PERDU", "+25 pts", "PERDU", "+50 pts", "PERDU", "+10 pts", "PERDU", "+25 pts"];
 
 export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage = false }) {
   const api = createClientFidelityApi(apiBase);
@@ -49,6 +49,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     store.patch({
       member,
       games: gamesData?.games || [],
+      roulette_segments: Array.isArray(gamesData?.roulette_segments) ? gamesData.roulette_segments : [],
       tickets,
       rewards: rewardsData?.rewards || [],
       engagementActions: actionsData?.actions || [],
@@ -58,6 +59,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   const business = await api.getBusiness(slug);
   store.patch({ business, unlimitedTicketsTest: isUnlimitedTicketsTest() });
+  if (gamePage) {
+    try {
+      const gamesPayload = await api.getGames(slug);
+      store.patch({
+        games: gamesPayload?.games || [],
+        roulette_segments: Array.isArray(gamesPayload?.roulette_segments) ? gamesPayload.roulette_segments : [],
+      });
+    } catch (_) {
+      store.patch({ roulette_segments: [] });
+    }
+  }
   try {
     const raw = localStorage.getItem(memberStorageKey(slug));
     if (raw) {
@@ -91,9 +103,19 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     return label;
   }
 
+  function syncWheelLabelsFromStore() {
+    const segs = store.get().roulette_segments;
+    if (Array.isArray(segs) && segs.length > 0) {
+      wheelLabels = segs.map((s) => String(s.label || "").trim() || "PERDU");
+    } else {
+      wheelLabels = [...DEFAULT_WHEEL_LABELS];
+    }
+  }
+
   function initRouletteWheel() {
     const wheelEl = rootEl.querySelector("#fidelity-roulette-wheel");
     if (!wheelEl || isSpinning) return;
+    syncWheelLabelsFromStore();
 
     const n = wheelLabels.length;
     wheelEl.style.background = buildConicGradient(n);
@@ -243,9 +265,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     try {
       const result = await api.spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey());
       const rawLabel = (result.reward?.label || "PERDU").trim();
-      const isWin = !!(result.reward && result.reward.kind !== "none");
-      // Backend peut renvoyer "Pas de lot" pour un perdant → on mappe sur un segment PERDU
-      const rewardLabel = !result.reward || result.reward.kind === "none" ? "PERDU" : rawLabel;
+      const bonusPts = Math.max(0, Number(result.reward?.value?.points) || 0);
+      const isWin = result.reward?.kind === "points" && bonusPts > 0;
+      const rewardLabel = isWin ? rawLabel : "PERDU";
 
       let winIndex = wheelLabels.findIndex((l) => String(l).toLowerCase() === rewardLabel.toLowerCase());
       if (winIndex === -1) {
@@ -273,7 +295,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
         spinBtn.disabled = false;
 
         if (feedback) {
-          feedback.textContent = isWin ? `Gagné : ${rawLabel} ! 🎉` : "Dommage, essaie encore !";
+          feedback.textContent = isWin
+            ? `Bravo ! +${bonusPts} point${bonusPts > 1 ? "s" : ""} sur ta carte 🎉`
+            : "Dommage, essaie encore !";
           feedback.classList.add(isWin ? "success" : "error");
           feedback.classList.remove("hidden");
         }

@@ -4,6 +4,7 @@ export function createClientFidelityStore(initial = {}) {
     business: null,
     member: null,
     games: [],
+    roulette_segments: [],
     tickets: null,
     rewards: [],
     engagementActions: [],

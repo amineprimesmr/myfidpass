@@ -1010,8 +1010,8 @@
                   <label class="app-label">Cooldown entre spins (secondes)</label>
                   <input type="number" id="app-game-cooldown" class="app-input app-input-number" min="0" step="1" value="10" />
                 </div>
-                <p class="app-hint">Récompenses roulette (JSON): code, label, kind, weight, value. Ex: points bonus avec kind=&quot;points&quot; et value.points.</p>
-                <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="6" placeholder='[{"code":"no_reward","label":"Pas de lot","kind":"none","weight":65},{"code":"small_points","label":"10 points bonus","kind":"points","weight":25,"value":{"points":10}}]'></textarea>
+                <p class="app-hint">Lots de la roue : uniquement des <strong>points bonus</strong> (kind <code>points</code> + <code>value.points</code>) ou « perdant » (<code>none</code>). Les libellés apparaissent sur la roue côté client. Pas de réduction ni cadeau en magasin ici.</p>
+                <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="6" placeholder='[{"code":"no_reward","label":"PERDU","kind":"none","weight":65},{"code":"p10","label":"+10 pts","kind":"points","weight":25,"value":{"points":10}},{"code":"p25","label":"+25 pts","kind":"points","weight":8,"value":{"points":25}},{"code":"p50","label":"+50 pts","kind":"points","weight":2,"value":{"points":50}}]'></textarea>
                 <span class="app-save-cta-wrap">
                   <button type="button" id="app-game-save" class="app-save-cta">
                     <span class="app-save-cta-dot" aria-hidden="true"></span>
