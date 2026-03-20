@@ -108,7 +108,8 @@ function initAppPage() {
         return;
       }
       const data = await res.json();
-      const hasSubscription = data.hasActiveSubscription || isDevBypassPayment();
+      const hasSubscription =
+        !!(data.has_active_subscription ?? data.hasActiveSubscription) || isDevBypassPayment();
       if (!hasSubscription) {
         loadingEl?.classList.add("hidden");
         window.location.replace("/choisir-offre");
@@ -119,15 +120,7 @@ function initAppPage() {
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
       const mobileProfilEmail = document.getElementById("app-mobile-profil-email");
       if (mobileProfilEmail) mobileProfilEmail.textContent = user?.email || "";
-      window.dispatchEvent(
-        new CustomEvent("fidpass-auth-me", {
-          detail: {
-            user,
-            subscription: data.subscription || null,
-            hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
-          },
-        })
-      );
+      /* fidpass-auth-me : émis seulement après initAppDashboard (l’écouteur Profil y est enregistré). */
 
       if (businesses.length === 0) {
         loadingEl?.classList.add("hidden");
@@ -151,6 +144,15 @@ function initAppPage() {
       if (businessNameEl) businessNameEl.textContent = business.organization_name || business.name || business.slug;
       initAppSidebar();
       initAppDashboard(business.slug);
+      window.dispatchEvent(
+        new CustomEvent("fidpass-auth-me", {
+          detail: {
+            user,
+            subscription: data.subscription || null,
+            hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
+          },
+        })
+      );
     } catch (_) {
       showLoadError();
     }
@@ -2735,7 +2737,10 @@ function initAppDashboard(slug) {
     api("/dashboard/settings")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (!data) return;
+        if (!data) {
+          showProfilMessage("Impossible de charger les données de l’établissement. Vérifiez la connexion ou rechargez la page.", true);
+          return;
+        }
         if (profilOrg) profilOrg.value = (data.organization_name ?? data.organizationName ?? "").trim();
         if (profilAddress) profilAddress.value = (data.location_address ?? data.locationAddress ?? "").trim();
         const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin.replace(/\/$/, "") : "";
@@ -2776,12 +2781,17 @@ function initAppDashboard(slug) {
             .catch(() => {});
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        showProfilMessage("Erreur réseau lors du chargement du profil.", true);
+      });
   }
 
-  // Renseigne les infos compte (email, abonnement) à partir de /api/auth/me
+  // Renseigne les infos compte (email, abonnement) à partir de /api/auth/me (événement émis après initAppDashboard)
   window.addEventListener("fidpass-auth-me", (e) => {
-    const { user, subscription, hasActiveSubscription } = e.detail || {};
+    const d = e.detail || {};
+    const user = d.user;
+    const subscription = d.subscription || null;
+    const hasActiveSubscription = !!(d.hasActiveSubscription ?? d.has_active_subscription);
     if (profilEmailInput && user?.email) profilEmailInput.value = user.email;
     if (profilSubscriptionStatus) {
       let text = "Aucun abonnement actif";
@@ -2930,7 +2940,12 @@ function initAppDashboard(slug) {
   }
 
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "profil") loadProfil();
+    if (e.detail?.sectionId !== "profil") return;
+    loadProfil();
+    const sidebarEmail = document.getElementById("app-user-email")?.textContent?.trim();
+    if (profilEmailInput && sidebarEmail && !profilEmailInput.value?.trim()) {
+      profilEmailInput.value = sidebarEmail;
+    }
   });
   if (document.getElementById("profil")?.classList.contains("app-section-visible")) loadProfil();
 
