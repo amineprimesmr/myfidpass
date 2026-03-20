@@ -109,10 +109,15 @@ Après redéploiement, l’autocomplétion s’affichera sur le champ établisse
 
 ---
 
+## E-mails (mot de passe oublié / réinitialisation)
+
+Sans **Resend** ou **SMTP** sur le backend, le message « vous recevrez un lien » s’affiche mais **aucun mail n’est envoyé**. Voir **[docs/EMAIL-TRANSACTIONNEL.md](EMAIL-TRANSACTIONNEL.md)** et le diagnostic `GET /api/health/email`.
+
 ## Checklist rapide « tout est prêt »
 
 - [ ] Backend déployé (URL ex. https://api.myfidpass.fr).
 - [ ] Variables backend : NODE_ENV=production, FRONTEND_URL=https://myfidpass.fr, + Apple Wallet.
+- [ ] **E-mails** : `RESEND_API_KEY` + `MAIL_FROM` (ou SMTP complet) — test `GET /api/health/email` → `transactionalEmailReady: true`.
 - [ ] Sur Vercel : VITE_API_URL = URL du backend (ex. https://api.myfidpass.fr).
 - [ ] Redéploiement frontend après ajout de VITE_API_URL.
 - [ ] Test : création d’une carte sur myfidpass.fr → succès (et pas « Erreur lors de la création »).

@@ -381,7 +381,12 @@ router.post("/forgot-password", async (req, res) => {
     return res.status(500).json({ error: "Impossible d'envoyer l'email. Réessayez plus tard." });
   }
   if (!sent) {
-    console.log("[Auth] SMTP non configuré — lien de réinitialisation (dev):", resetLink);
+    console.warn(
+      "[Auth] forgot-password: aucun email envoyé — définir RESEND_API_KEY ou SMTP_HOST+SMTP_USER+SMTP_PASS sur le serveur (Railway). Voir docs/EMAIL-TRANSACTIONNEL.md"
+    );
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[Auth] lien reset (dev uniquement):", resetLink);
+    }
   }
   return res.json({ message });
 });

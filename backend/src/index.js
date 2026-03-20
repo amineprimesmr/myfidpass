@@ -25,6 +25,7 @@ import webPushRouter from "./routes/web-push.js";
 import deviceRouter from "./routes/device.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus } from "./apns.js";
+import { isEmailConfigured, getEmailTransportLabel } from "./email.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -110,6 +111,13 @@ app.use(optionalAuth);
 
 // Routes de diagnostic AVANT PassKit pour être sûrs qu’elles répondent (PassKit est monté en premier et reçoit tout)
 app.get("/health", (req, res) => res.json({ ok: true }));
+/** Diagnostic : les mails transactionnels (reset MDP) partent seulement si provider ≠ none */
+app.get("/api/health/email", (req, res) => {
+  res.json({
+    transactionalEmailReady: isEmailConfigured(),
+    provider: getEmailTransportLabel(),
+  });
+});
 app.get("/api/health/db", (req, res) => {
   res.json({
     DATA_DIR: process.env.DATA_DIR ?? "(non défini, défaut backend/data)",
