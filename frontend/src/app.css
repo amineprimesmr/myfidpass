@@ -3895,6 +3895,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   justify-content: center;
   align-items: flex-start;
   padding-left: 0.5rem;
+  /* Remonter l’aperçu pour l’aligner visuellement avec le panneau gauche */
+  margin-top: -0.35rem;
 }
 .app-personnaliser-col-left .app-card {
   padding: 1.5rem 1.75rem;
@@ -3906,7 +3908,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-personnaliser-col-left .app-card:hover {
   box-shadow: 0 2px 0 rgba(255, 255, 255, 0.9) inset, 0 8px 32px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-.app-personnaliser-preview { margin-top: 0.35rem; }
+.app-personnaliser-preview { margin-top: 0; }
 .app-personnaliser-preview.builder-phone-mockup {
   width: min(280px, 100%);
   max-width: 300px;
@@ -3958,22 +3960,94 @@ body.page-app .whatsapp-fab { display: none !important; }
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 0.45rem;
-  padding-bottom: 0.25rem;
+  padding-top: 0.35rem;
+  padding-bottom: 0.45rem;
   isolation: isolate;
   z-index: 2;
+  /* Typos en cqw = relatif à la largeur de l’écran du mockup (plus de texte “écrasé” vs 100vw) */
+  container-type: inline-size;
+  container-name: personnaliser-phone;
 }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
-  width: 97%;
-  max-width: 97%;
+  width: 88%;
+  max-width: 88%;
   /* carte peut dépasser : défilement dans l'écran si besoin, bandeau bas visible */
   max-height: none;
   height: auto;
   min-height: 0;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: visible;
   box-sizing: border-box;
   flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+/* Ma carte — aperçu Wallet : proportions et lisibilité (cqw = largeur écran mockup) */
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.65rem 0.5rem 0.5rem;
+  gap: 0.5rem;
+  font-size: clamp(0.62rem, 5.5cqw, 0.82rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-body {
+  padding: 0.55rem 0.65rem 0.85rem;
+  gap: 0.5rem;
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap {
+  width: clamp(2.75rem, 22cqw, 3.35rem);
+  height: clamp(2.75rem, 22cqw, 3.35rem);
+  margin-top: 0.25rem;
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-fallback {
+  font-size: clamp(0.45rem, 4cqw, 0.58rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right {
+  font-size: clamp(0.48rem, 4.2cqw, 0.62rem);
+  top: 0.42rem;
+  right: 0.55rem;
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value,
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value #app-wallet-preview-value {
+  font-size: clamp(1.55rem, 16cqw, 2.05rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-wrap .builder-wallet-card-label {
+  font-size: clamp(0.58rem, 5cqw, 0.72rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bottom-row {
+  margin-top: 0.5rem;
+  gap: 0.5rem;
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-label {
+  font-size: clamp(0.48rem, 4.2cqw, 0.62rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-value {
+  font-size: clamp(0.58rem, 5cqw, 0.72rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-member-label {
+  font-size: clamp(0.52rem, 4.5cqw, 0.68rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-member-value {
+  font-size: clamp(0.58rem, 5cqw, 0.75rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bandeau {
+  min-height: 3.85rem;
+  padding: 0.45rem 0.55rem;
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-stamps-row .stamp.stamp-img img {
+  width: clamp(1.5rem, 12cqw, 1.95rem);
+  height: clamp(1.5rem, 12cqw, 1.95rem);
+  min-width: clamp(1.5rem, 12cqw, 1.95rem);
+  min-height: clamp(1.5rem, 12cqw, 1.95rem);
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr {
+  margin-top: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+#app-personnaliser-preview.app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img {
+  width: clamp(72px, 42cqw, 102px) !important;
+  height: clamp(72px, 42cqw, 102px) !important;
+  min-width: clamp(72px, 42cqw, 102px);
+  min-height: clamp(72px, 42cqw, 102px);
 }
 
 @media (max-width: 980px) {
@@ -4002,6 +4076,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   #app-dashboard-content #personnaliser .app-personnaliser-live-preview-wrap {
     justify-content: flex-end;
     padding-right: 0;
+    margin-top: -1.1rem;
   }
   .app-personnaliser-preview.builder-phone-mockup {
     width: 280px;
