@@ -1,5 +1,5 @@
 /**
- * Page « Règles de la carte » : checklist de parcours commerçant (sans logique métier serveur).
+ * Bloc « Règles » dans Ma carte : rafraîchit la checklist si présente dans le DOM ; sinon no-op.
  */
 
 import { readPointTierInputs } from "./app-card-rules-point-tiers.js";
@@ -66,7 +66,7 @@ function applyStepsToDom(root, steps) {
 }
 
 export function refreshCardRulesChecklist(root = document.getElementById("regles-carte")) {
-  if (!root) return;
+  if (!root?.querySelector("#app-card-rules-checklist")) return;
   applyStepsToDom(root, readInputsFromRoot(root));
 }
 
