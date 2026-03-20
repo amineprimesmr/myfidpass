@@ -1863,6 +1863,80 @@ body.page-app .whatsapp-fab { display: none !important; }
   transform: translateY(0) scale(0.98);
 }
 
+/* Enregistrer — même UX que FAQ « Rejoindre maintenant » : halo, pilule très arrondie, fond noir, pastille verte */
+#app-app .app-save-cta-wrap {
+  display: inline-block;
+  padding: 2px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  vertical-align: middle;
+}
+#app-app button.app-save-cta {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.72rem 1.6rem;
+  min-height: 3.05rem;
+  box-sizing: border-box;
+  width: auto;
+  background: linear-gradient(180deg, #3a3a3a 0%, #222 50%, #0a0a0a 100%);
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 0.93rem;
+  line-height: 1.2;
+  text-align: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 10px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  -webkit-font-smoothing: antialiased;
+}
+#app-app button.app-save-cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 8px 24px rgba(0, 0, 0, 0.38);
+}
+#app-app button.app-save-cta:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.22);
+}
+#app-app button.app-save-cta:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
+#app-app button.app-save-cta:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 10px rgba(0, 0, 0, 0.22);
+}
+#app-app .app-save-cta-dot {
+  width: 9px;
+  height: 9px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 3px rgba(34, 197, 94, 0.55);
+  flex-shrink: 0;
+}
+#app-app .app-save-cta-label {
+  flex: 0 1 auto;
+}
+
 /* Bouton secondaire — relief 3D (levé) */
 .app-btn-secondary {
   background: linear-gradient(180deg, var(--fidpass-surface) 0%, #f8f9fc 100%);
@@ -3916,9 +3990,12 @@ body.page-app .whatsapp-fab { display: none !important; }
   align-items: center;
 }
 .app-unsaved-actions .app-btn,
-.app-unsaved-actions .landing-cta {
+.app-unsaved-actions .app-save-cta-wrap {
   flex: 1 1 auto;
   min-width: min(100%, 7.5rem);
+}
+.app-unsaved-actions .app-save-cta-wrap .app-save-cta {
+  width: 100%;
 }
 
 /* Historique toolbar */
@@ -4816,9 +4893,12 @@ body.page-app .whatsapp-fab { display: none !important; }
   gap: 0.75rem;
   margin-top: 0.75rem;
 }
-.app-carte-perimetre-top-actions .app-perimetre-save-btn {
+.app-carte-perimetre-top-actions .app-save-cta-wrap--perimetre {
   width: auto;
-  min-width: 140px;
+  min-width: 148px;
+}
+.app-carte-perimetre-top-actions .app-save-cta-wrap--perimetre button.app-save-cta {
+  width: 100%;
 }
 .app-carte-perimetre-top-actions .app-perimetre-save-feedback {
   margin: 0;
@@ -4959,7 +5039,7 @@ body.page-app .whatsapp-fab { display: none !important; }
     flex-direction: column;
     align-items: stretch;
   }
-  .app-carte-perimetre-top-actions .app-perimetre-save-btn {
+  .app-carte-perimetre-top-actions .app-save-cta-wrap--perimetre {
     width: 100%;
   }
   .app-section-carte-perimetre .app-carte-perimetre-wrap.app-carte-perimetre-wrap-v2 {

@@ -784,7 +784,12 @@
                 </div>
                 <p class="app-hint">Récompenses roulette (JSON): code, label, kind, weight, value. Ex: points bonus avec kind=\"points\" et value.points.</p>
                 <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="6" placeholder='[{"code":"no_reward","label":"Pas de lot","kind":"none","weight":65},{"code":"small_points","label":"10 points bonus","kind":"points","weight":25,"value":{"points":10}}]'></textarea>
-                <button type="button" id="app-game-save" class="landing-cta landing-cta-primary">Enregistrer la configuration jeu</button>
+                <span class="app-save-cta-wrap">
+                  <button type="button" id="app-game-save" class="app-save-cta">
+                    <span class="app-save-cta-dot" aria-hidden="true"></span>
+                    <span class="app-save-cta-label">Enregistrer la configuration jeu</span>
+                  </button>
+                </span>
                 <p id="app-game-save-feedback" class="app-message hidden"></p>
               </div>
               <div id="app-rules-stamps" class="app-rules-panel hidden">
@@ -944,7 +949,12 @@
               </div>
               <div class="app-personnaliser-actions">
               <div id="app-personnaliser-message" class="app-personnaliser-message hidden"></div>
-              <button type="button" id="app-personnaliser-save" class="landing-cta landing-cta-primary">Enregistrer les modifications</button>
+              <span class="app-save-cta-wrap">
+                <button type="button" id="app-personnaliser-save" class="app-save-cta">
+                  <span class="app-save-cta-dot" aria-hidden="true"></span>
+                  <span class="app-save-cta-label">Enregistrer les modifications</span>
+                </button>
+              </span>
               </div>
             </div>
             </div>
@@ -1113,7 +1123,12 @@
                   <p id="app-engagement-auto-feedback" class="app-message hidden" aria-live="polite"></p>
                 </div>
                 <p class="app-hint app-engagement-fidelity-url-wrap"><strong>Page client :</strong> <a id="app-engagement-fidelity-url" href="#" target="_blank" rel="noopener">—</a></p>
-                <button type="button" id="app-engagement-save" class="landing-cta landing-cta-primary">Enregistrer</button>
+                <span class="app-save-cta-wrap">
+                  <button type="button" id="app-engagement-save" class="app-save-cta">
+                    <span class="app-save-cta-dot" aria-hidden="true"></span>
+                    <span class="app-save-cta-label">Enregistrer</span>
+                  </button>
+                </span>
                 <p id="app-engagement-save-feedback" class="app-message hidden"></p>
               </div>
               <div class="app-engagement-right">
@@ -1216,7 +1231,12 @@
                 </div>
               </div>
               <div class="app-notification-banner-actions">
-                <button type="button" id="app-notification-texts-save" class="landing-cta landing-cta-primary">Enregistrer l'aperçu</button>
+                <span class="app-save-cta-wrap">
+                  <button type="button" id="app-notification-texts-save" class="app-save-cta">
+                    <span class="app-save-cta-dot" aria-hidden="true"></span>
+                    <span class="app-save-cta-label">Enregistrer l'aperçu</span>
+                  </button>
+                </span>
                 <button type="button" id="app-notif-send" class="app-btn app-btn-primary">Envoyer</button>
                 <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
                 <p id="app-notif-feedback" class="app-message hidden"></p>
@@ -1278,7 +1298,12 @@
             <h2 class="app-section-title">Emplacement</h2>
             <p class="app-section-desc">Réglez le périmètre sur la carte pour les alertes à l'approche (notifications à l'entrée dans la zone).</p>
             <div class="app-carte-perimetre-top-actions">
-              <button type="button" id="app-perimetre-save" class="landing-cta landing-cta-primary app-perimetre-save-btn">Enregistrer</button>
+              <span class="app-save-cta-wrap app-save-cta-wrap--perimetre">
+                <button type="button" id="app-perimetre-save" class="app-save-cta app-perimetre-save-btn">
+                  <span class="app-save-cta-dot" aria-hidden="true"></span>
+                  <span class="app-save-cta-label">Enregistrer</span>
+                </button>
+              </span>
               <p id="app-perimetre-save-feedback" class="app-perimetre-save-feedback hidden"></p>
             </div>
             <div class="app-carte-perimetre-wrap app-carte-perimetre-wrap-v2">
@@ -1378,10 +1403,13 @@
                   <p class="app-hint">Partagez ce lien ou le QR code (onglet Ma carte) à vos clients.</p>
                 </div>
                 <p id="app-profil-message" class="app-message app-profil-message hidden"></p>
-                <button type="button" id="app-profil-save" class="landing-cta landing-cta-primary">
-                  <span id="app-profil-save-text">Enregistrer</span>
-                  <span id="app-profil-save-spinner" class="app-profil-save-spinner hidden"></span>
-                </button>
+                <span class="app-save-cta-wrap">
+                  <button type="button" id="app-profil-save" class="app-save-cta">
+                    <span class="app-save-cta-dot" aria-hidden="true"></span>
+                    <span id="app-profil-save-text" class="app-save-cta-label">Enregistrer</span>
+                    <span id="app-profil-save-spinner" class="app-profil-save-spinner hidden"></span>
+                  </button>
+                </span>
               </div>
             </div>
               </div>
@@ -1426,7 +1454,12 @@
           <h2 id="app-unsaved-title" class="app-modal-title">Modifications non enregistrées</h2>
           <p class="app-unsaved-desc">Enregistrez vos changements ou abandonnez-les avant de quitter cette page.</p>
           <div class="app-unsaved-actions">
-            <button type="button" id="app-unsaved-save" class="landing-cta landing-cta-primary">Enregistrer</button>
+            <span class="app-save-cta-wrap app-save-cta-wrap--modal">
+              <button type="button" id="app-unsaved-save" class="app-save-cta">
+                <span class="app-save-cta-dot" aria-hidden="true"></span>
+                <span class="app-save-cta-label">Enregistrer</span>
+              </button>
+            </span>
             <button type="button" id="app-unsaved-discard" class="app-btn app-btn-secondary">Abandonner</button>
             <button type="button" id="app-unsaved-cancel" class="app-btn app-btn-secondary">Annuler</button>
           </div>
