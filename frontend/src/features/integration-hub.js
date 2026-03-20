@@ -76,7 +76,7 @@ export function initIntegrationHub(opts) {
             ? `<span class="${badgeClass(item.status)}">${esc(badgeLabel)}</span>`
             : "";
           const logoBlock = logoSrc
-            ? `<span class="app-int-card-logo-wrap"><img class="app-int-card-logo" src="${logoSrc}" alt="" width="40" height="40" loading="lazy" decoding="async" /><span class="app-int-card-logo-fallback" aria-hidden="true">${initial}</span></span>`
+            ? `<span class="app-int-card-logo-wrap"><img class="app-int-card-logo" src="${logoSrc}" alt="" loading="lazy" decoding="async" /><span class="app-int-card-logo-fallback" aria-hidden="true">${initial}</span></span>`
             : `<span class="app-int-card-logo-wrap app-int-card-logo-wrap--letter" aria-hidden="true">${initial}</span>`;
           return `
             <button type="button" class="app-int-card${muted ? " app-int-card--muted" : ""}" data-int-id="${esc(item.id)}" aria-label="Ouvrir la fiche ${esc(item.name)}">

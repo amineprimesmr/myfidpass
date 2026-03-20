@@ -44,7 +44,7 @@
       "categoryId": "caisse",
       "status": "partner",
       "summary": "Caisse restauration — intégration partenaire.",
-      "logo": "/assets/integration-logos/zelty.svg",
+      "logo": "/assets/integration-logos/zelty.png",
       "description": "Restauration : caisse et flux habituels. Intégration type partenaire (webhooks ou module selon offre).",
       "bullets": [
         "Scénario typique : passage en caisse → crédit fidélité",
@@ -59,7 +59,7 @@
       "categoryId": "caisse",
       "status": "beta",
       "summary": "Caisse FR — scripts / couche HTTP selon déploiement.",
-      "logo": "/assets/integration-logos/tiller.svg",
+      "logo": "/assets/integration-logos/tiller.png",
       "description": "Écosystème caisse FR : intégration possible via couche HTTP / scripts métier selon votre déploiement Tiller.",
       "bullets": [
         "Vérifier la version et les hooks disponibles sur votre contrat",
@@ -74,7 +74,7 @@
       "categoryId": "caisse",
       "status": "beta",
       "summary": "Retail / resto — passerelle vers l’API Myfidpass.",
-      "logo": "/assets/integration-logos/lightspeed.svg",
+      "logo": "/assets/integration-logos/lightspeed.png",
       "description": "Retail et restauration : selon série, passerelle HTTP ou app script vers l’API Myfidpass.",
       "bullets": [
         "Identifier la série (R/K) et les APIs ouvertes du site",
@@ -103,7 +103,7 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "TPE — pont logiciel à définir.",
-      "logo": "/assets/integration-logos/sumup.svg",
+      "logo": "/assets/integration-logos/sumup.png",
       "description": "TPE SumUp : exploration d’un pont logiciel vers l’API scan.",
       "bullets": [
         "Tablette auxiliaire + lecteur 2D possible en solution transitoire",
@@ -142,7 +142,7 @@
       "categoryId": "caisse",
       "status": "coming",
       "summary": "iPad POS — API Revel + worker scan.",
-      "logo": "/assets/integration-logos/revel.svg",
+      "logo": "/assets/integration-logos/revel.png",
       "description": "iPad POS : passerelle possible via Revel API + worker scan.",
       "bullets": [
         "Kit API Myfidpass utilisable côté serveur dès maintenant",

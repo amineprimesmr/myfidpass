@@ -7,6 +7,7 @@ import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
 import { initIntegrationHub } from "./integration-hub.js";
+import { maybeShowPostPurchaseAppModal } from "./post-purchase-app-modal.js";
 
 const IS_LOCALHOST =
   typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -131,6 +132,7 @@ function initAppPage() {
         if (emptyEl) emptyEl.classList.remove("hidden");
         if (contentEl) contentEl.classList.add("hidden");
         if (businessNameEl) businessNameEl.textContent = "Mon espace";
+        requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
         return;
       }
       loadingEl?.classList.add("hidden");
@@ -153,6 +155,7 @@ function initAppPage() {
           },
         })
       );
+      requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
     } catch (_) {
       showLoadError();
     }

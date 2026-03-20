@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="/src/app-integration-guide.css" />
     <link rel="stylesheet" href="/src/landing-integration-catalog.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
+    <link rel="stylesheet" href="/src/post-purchase-app-modal.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
@@ -1426,6 +1427,20 @@
           Profil
         </button>
       </nav>
+      <div id="post-purchase-app-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="post-purchase-app-modal-title" aria-hidden="true">
+        <div class="post-purchase-app-modal__sheet">
+          <button type="button" class="post-purchase-app-modal__close" id="post-purchase-app-modal-close" aria-label="Fermer">×</button>
+          <div class="post-purchase-app-modal__hero">
+            <img src="/assets/mockup.png?v=20260319" alt="" class="post-purchase-app-modal__mockup" width="220" height="440" decoding="async" />
+          </div>
+          <h2 id="post-purchase-app-modal-title" class="post-purchase-app-modal__title">Gérez votre commerce en déplacement avec l’application Myfidpass</h2>
+          <p class="post-purchase-app-modal__desc">Scannez les cartes, consultez vos stats et envoyez des campagnes depuis votre téléphone — même hors bureau.</p>
+          <a id="post-purchase-app-modal-cta" class="post-purchase-app-modal__cta" href="#" target="_blank" rel="noopener noreferrer">
+            <img src="/assets/logo.png?v=20260311" alt="" width="26" height="26" />
+            Obtenir l’application
+          </a>
+        </div>
+      </div>
     </div>
 
     <!-- Landing Myfidpass (visible sur /) -->

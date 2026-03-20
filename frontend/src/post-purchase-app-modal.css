@@ -1,0 +1,176 @@
+/* Interstitiel « Télécharger l’app » après retour Stripe (mobile) */
+body.post-purchase-app-modal-open {
+  overflow: hidden;
+}
+
+#post-purchase-app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#post-purchase-app-modal.hidden {
+  display: none !important;
+}
+
+.post-purchase-app-modal__sheet {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(92vh, 720px);
+  overflow: auto;
+  border-radius: 20px 20px 0 0;
+  background: #fafafa;
+  box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.18);
+  padding: 20px 20px 28px;
+  animation: post-purchase-app-modal-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes post-purchase-app-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.post-purchase-app-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #1e293b;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.post-purchase-app-modal__close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.post-purchase-app-modal__close:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.post-purchase-app-modal__hero {
+  margin: 8px auto 16px;
+  max-width: 280px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #e0e7ff 0%, #fae8ff 48%, #e0f2fe 100%);
+  padding: 20px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-purchase-app-modal__mockup {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 12px 24px rgba(15, 23, 42, 0.15));
+}
+
+.post-purchase-app-modal__title {
+  font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  color: #0f172a;
+  margin: 0 0 10px;
+  padding: 0 36px;
+}
+
+.post-purchase-app-modal__desc {
+  font-family: "Outfit", system-ui, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  text-align: center;
+  color: #64748b;
+  margin: 0 0 22px;
+  padding: 0 8px;
+}
+
+.post-purchase-app-modal__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.post-purchase-app-modal__cta:hover {
+  background: #1e293b;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.3);
+}
+
+.post-purchase-app-modal__cta:active {
+  transform: scale(0.98);
+}
+
+.post-purchase-app-modal__cta img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+@media (min-width: 769px) {
+  #post-purchase-app-modal:not(.hidden) {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .post-purchase-app-modal__sheet {
+    max-width: 400px;
+    border-radius: 24px;
+    max-height: 90vh;
+    animation-name: post-purchase-app-modal-in-desk;
+  }
+
+  @keyframes post-purchase-app-modal-in-desk {
+    from {
+      opacity: 0;
+      transform: scale(0.94) translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+}

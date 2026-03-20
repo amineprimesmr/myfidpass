@@ -153,7 +153,6 @@
 .app-int-card-logo-wrap {
   position: relative;
   flex-shrink: 0;
-  width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
@@ -163,7 +162,20 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
+/* Logos horizontaux (PNG partenaires) : zone plus large, sans écrasement */
+.app-int-card-logo-wrap:not(.app-int-card-logo-wrap--letter) {
+  width: auto;
+  min-width: 44px;
+  max-width: 148px;
+  padding: 0.2rem 0.55rem;
+  box-sizing: border-box;
+}
+
 .app-int-card-logo-wrap--letter {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  padding: 0;
   font-weight: 800;
   font-size: 1.05rem;
   color: #4338ca;
@@ -171,10 +183,11 @@
 }
 
 .app-int-card-logo {
-  width: 28px;
-  height: 28px;
-  max-width: 32px;
-  max-height: 32px;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 36px;
   object-fit: contain;
 }
 
