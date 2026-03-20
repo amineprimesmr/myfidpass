@@ -4214,24 +4214,24 @@ body.page-app .whatsapp-fab { display: none !important; }
   padding-top: 0.12rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-label {
-  font-size: clamp(0.55rem, 5cqw, 0.72rem);
+  font-size: clamp(0.48rem, 4.35cqw, 0.62rem);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-reward-value {
-  font-size: clamp(0.65rem, 5.8cqw, 0.82rem);
+  font-size: clamp(0.56rem, 5cqw, 0.7rem);
   line-height: 1.35;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-member-label {
-  font-size: clamp(0.58rem, 5.2cqw, 0.76rem);
+  font-size: clamp(0.5rem, 4.5cqw, 0.65rem);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-member-value {
-  font-size: clamp(0.65rem, 5.8cqw, 0.85rem);
+  font-size: clamp(0.56rem, 5cqw, 0.72rem);
 }
 /* Mode tampons : même échelle typographique que « Membre » */
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-restants-label {
-  font-size: clamp(0.58rem, 5.2cqw, 0.76rem);
+  font-size: clamp(0.5rem, 4.5cqw, 0.65rem);
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-restants-value {
-  font-size: clamp(0.65rem, 5.8cqw, 0.85rem);
+  font-size: clamp(0.56rem, 5cqw, 0.72rem);
   font-weight: 600;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-bandeau {
@@ -4468,27 +4468,27 @@ body.page-app .whatsapp-fab { display: none !important; }
   gap: 0.05rem;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-reward-label {
-  font-size: 0.38rem;
+  font-size: 0.33rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--wallet-label);
   opacity: 0.9;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-reward-value {
-  font-size: 0.5rem;
+  font-size: 0.43rem;
   font-weight: 500;
   color: var(--wallet-fg);
 }
 .app-wallet-preview-dynamic .builder-wallet-card-member { align-items: flex-end; margin-top: 0.35rem; }
 .app-wallet-preview-dynamic .builder-wallet-card-member-label {
-  font-size: 0.52rem;
+  font-size: 0.45rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--wallet-label);
   opacity: 0.9;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-member-value {
-  font-size: 0.52rem;
+  font-size: 0.45rem;
   font-weight: 600;
   color: var(--wallet-fg);
 }
@@ -4496,14 +4496,14 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-wallet-preview-dynamic #app-preview-restants-wrap.hidden { display: none !important; }
 .app-wallet-preview-dynamic .builder-wallet-card-restants { display: flex; flex-direction: column; align-items: flex-start; gap: 0.05rem; }
 .app-wallet-preview-dynamic .builder-wallet-card-restants-label {
-  font-size: 0.52rem;
+  font-size: 0.45rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--wallet-label);
   opacity: 0.9;
 }
 .app-wallet-preview-dynamic .builder-wallet-card-restants-value {
-  font-size: 0.52rem;
+  font-size: 0.45rem;
   font-weight: 600;
   color: var(--wallet-fg);
 }
