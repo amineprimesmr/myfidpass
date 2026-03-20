@@ -8,6 +8,15 @@ import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
 import { initIntegrationHub } from "./integration-hub.js";
 import { maybeShowPostPurchaseAppModal } from "./post-purchase-app-modal.js";
+import {
+  initAppDirtyGuard,
+  markAppSectionDirty,
+  clearAppSectionDirty,
+  registerAppExternalDirty,
+  registerAppDiscardHandler,
+  notifyAppSectionSaveSuccess,
+  wrapAppLogoutButtonsWithDirtyGuard,
+} from "./app-dirty-guard.js";
 
 const IS_LOCALHOST =
   typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
@@ -16,6 +25,7 @@ const APP_LOAD_ERROR_MSG = IS_LOCALHOST
   : "Impossible de charger vos données. Réessayez ou rafraîchissez la page.";
 
 function initAppPage() {
+  wrapAppLogoutButtonsWithDirtyGuard(clearAuthToken);
   const emptyEl = document.getElementById("app-empty");
   const contentEl = document.getElementById("app-dashboard-content");
   const loadingEl = document.getElementById("app-main-loading");
@@ -337,7 +347,7 @@ const APP_MOBILE_TITLES = {
   "profil": "Profil",
 };
 
-function showAppSection(sectionId) {
+function showAppSectionCore(sectionId) {
   const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
   const id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
   APP_SECTION_IDS.forEach((sid) => {
@@ -364,6 +374,15 @@ function showAppSection(sectionId) {
   window.dispatchEvent(new CustomEvent("app-section-change", { detail: { sectionId: id } }));
 }
 
+const appDirtyNav = initAppDirtyGuard({
+  sectionIds: APP_SECTION_IDS,
+  showSectionCore: showAppSectionCore,
+});
+
+function showAppSection(sectionId) {
+  appDirtyNav.navigateAppSection(sectionId);
+}
+
 let _appSidebarInitialized = false;
 function initAppSidebar() {
   const appRoot = document.getElementById("app-app");
@@ -381,15 +400,7 @@ function initAppSidebar() {
       }
     });
     window.addEventListener("hashchange", () => {
-      let section = (window.location.hash || "#dashboard").slice(1);
-      if (section === "scanner") section = "dashboard";
-      if (section === "vue-ensemble") {
-        section = "dashboard";
-        if (window.history?.replaceState) window.history.replaceState(null, "", "#dashboard");
-      }
-      const toShow = section === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(section) ? section : "dashboard");
-      showAppSection(toShow);
-      requestAnimationFrame(() => showAppSection(toShow));
+      appDirtyNav.onAppHashChange();
     });
   }
   let hashSection = (window.location.hash || "#dashboard").slice(1);
@@ -736,6 +747,7 @@ function initAppDashboard(slug) {
         }
         currentShareSlug = data.slug || proposed;
         renderShareCard(currentShareSlug);
+        clearAppSectionDirty("personnaliser");
         setShareSlugMessage("Lien mis à jour. Rechargement de la page…");
         setTimeout(() => {
           window.location.reload();
@@ -1366,6 +1378,7 @@ function initAppDashboard(slug) {
           if (typeof updateAppNotificationPreview === "function") updateAppNotificationPreview();
           savedPerimetreState = getPerimetreDraftState();
           showSaveFeedback("Enregistré. Le périmètre et le message d'entrée sont à jour.");
+          notifyAppSectionSaveSuccess("carte-perimetre");
         } else {
           const data = await res.json().catch(() => ({}));
           showSaveFeedback(data.error || "Erreur lors de l’enregistrement.", true);
@@ -1385,6 +1398,8 @@ function initAppDashboard(slug) {
     if (document.getElementById("carte-perimetre")?.classList.contains("app-section-visible")) loadPerimetreSettings();
     savedPerimetreState = getPerimetreDraftState();
     refreshPerimetreSaveButtonState();
+    registerAppExternalDirty("carte-perimetre", hasPerimetreChanges);
+    registerAppDiscardHandler("carte-perimetre", loadPerimetreSettings);
   })();
 
   // ——— Personnaliser la carte ———
@@ -1864,10 +1879,8 @@ function initAppDashboard(slug) {
     runEngagementAutoSuggest({ forceFeedback: true });
   });
 
-  api("/dashboard/settings")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((data) => {
-      if (!data) return;
+  function applyDashboardSettingsToForms(data) {
+    if (!data) return;
       currentOrganizationName = (data.organization_name ?? data.organizationName ?? "").trim() || "Votre commerce";
       const bg = data.background_color ?? data.backgroundColor ?? "#1e3a8a";
       const fg = data.foreground_color ?? data.foregroundColor ?? "#ffffff";
@@ -2068,7 +2081,29 @@ function initAppDashboard(slug) {
           }
         })
         .catch(() => {});
-    })
+  }
+
+  async function reloadDashboardSettingsForms() {
+    const res = await api("/dashboard/settings");
+    if (!res.ok) return;
+    applyDashboardSettingsToForms(await res.json());
+  }
+
+  registerAppDiscardHandler("personnaliser", reloadDashboardSettingsForms);
+  registerAppDiscardHandler("engagement", reloadDashboardSettingsForms);
+  registerAppDiscardHandler("notifications", reloadDashboardSettingsForms);
+
+  ["personnaliser", "engagement", "notifications", "profil"].forEach((sid) => {
+    const root = document.getElementById(sid);
+    if (!root) return;
+    const m = () => markAppSectionDirty(sid);
+    root.addEventListener("input", m, true);
+    root.addEventListener("change", m, true);
+  });
+
+  api("/dashboard/settings")
+    .then((r) => (r.ok ? r.json() : null))
+    .then(applyDashboardSettingsToForms)
     .catch(() => {});
 
   /** Grille d’icônes (Emoji.family Fluent) pour choisir l’emoji des tampons sans taper. */
@@ -2098,6 +2133,7 @@ function initAppDashboard(slug) {
       if (!res.ok) throw new Error("Erreur enregistrement");
       if (feedback) { feedback.textContent = "Enregistré."; feedback.classList.remove("hidden", "error"); feedback.classList.add("success"); }
       setTimeout(() => { if (feedback) feedback.classList.add("hidden"); }, 3000);
+      notifyAppSectionSaveSuccess("engagement");
     } catch (e) {
       if (feedback) { feedback.textContent = e.message || "Erreur lors de l'enregistrement."; feedback.classList.remove("hidden", "success"); feedback.classList.add("error"); }
     }
@@ -2188,6 +2224,7 @@ function initAppDashboard(slug) {
       if (fbPoints) fbPoints.value = points;
       if (fbUrl) fbUrl.value = value;
     }
+    markAppSectionDirty("engagement");
     closeEngagementModal();
   });
   document.getElementById("app-game-save")?.addEventListener("click", async () => {
@@ -2220,6 +2257,7 @@ function initAppDashboard(slug) {
         feedback.classList.remove("hidden", "error");
         feedback.classList.add("success");
       }
+      notifyAppSectionSaveSuccess("personnaliser");
     } catch (err) {
       if (feedback) {
         feedback.textContent = err.message || "Impossible d'enregistrer la configuration jeu.";
@@ -2670,6 +2708,7 @@ function initAppDashboard(slug) {
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showPersonnaliserMessage("Modifications enregistrées.");
+          notifyAppSectionSaveSuccess("personnaliser");
           if (personnaliserOrgName) {
             currentOrganizationName = personnaliserOrgName;
             const sideBiz = document.getElementById("app-business-name");
@@ -2822,7 +2861,7 @@ function initAppDashboard(slug) {
   }
 
   function loadProfil() {
-    api("/dashboard/settings")
+    return api("/dashboard/settings")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data) {
@@ -2881,6 +2920,8 @@ function initAppDashboard(slug) {
         showProfilMessage("Erreur réseau lors du chargement du profil.", true);
       });
   }
+
+  registerAppDiscardHandler("profil", () => loadProfil());
 
   // Renseigne les infos compte (email, abonnement) à partir de /api/auth/me (événement émis après initAppDashboard)
   window.addEventListener("fidpass-auth-me", (e) => {
@@ -2977,6 +3018,7 @@ function initAppDashboard(slug) {
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showProfilMessage("Modifications enregistrées.");
+          notifyAppSectionSaveSuccess("profil");
           profilLogoRemoved = false;
           if (organizationName) {
             const sideBusinessName = document.getElementById("app-business-name");
@@ -4621,6 +4663,7 @@ function initAppDashboard(slug) {
           feedbackEl.textContent = "Textes enregistrés.";
           feedbackEl.classList.remove("error");
           feedbackEl.classList.add("success");
+          notifyAppSectionSaveSuccess("notifications");
         } else {
           feedbackEl.textContent = data.error || "Erreur lors de l'enregistrement.";
           feedbackEl.classList.add("error");

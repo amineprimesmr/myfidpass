@@ -1420,6 +1420,18 @@
             </ul>
           </section>
         </div>
+      <div id="app-unsaved-changes-modal" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="app-unsaved-title" aria-hidden="true">
+        <div class="app-modal-backdrop" id="app-unsaved-backdrop"></div>
+        <div class="app-modal-content app-modal-content--unsaved">
+          <h2 id="app-unsaved-title" class="app-modal-title">Modifications non enregistrées</h2>
+          <p class="app-unsaved-desc">Enregistrez vos changements ou abandonnez-les avant de quitter cette page.</p>
+          <div class="app-unsaved-actions">
+            <button type="button" id="app-unsaved-save" class="landing-cta landing-cta-primary">Enregistrer</button>
+            <button type="button" id="app-unsaved-discard" class="app-btn app-btn-secondary">Abandonner</button>
+            <button type="button" id="app-unsaved-cancel" class="app-btn app-btn-secondary">Annuler</button>
+          </div>
+        </div>
+      </div>
       </main>
       <!-- Barre d'onglets mobile (style app) -->
       <nav class="app-mobile-tab-bar" id="app-mobile-tab-bar" aria-label="Navigation principale" aria-hidden="true">
