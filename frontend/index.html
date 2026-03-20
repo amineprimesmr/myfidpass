@@ -943,7 +943,7 @@
               </li>
               <li class="app-card-rules-step" data-check-step="earn">
                 <span class="app-card-rules-step-badge">…</span>
-                <div class="app-card-rules-step-body"><strong>Règle de gain</strong> Tampons : libellé de la récompense obligatoire. Points : réglages techniques en arrière-plan ; vous éditez surtout les paliers ci-dessous.</div>
+                <div class="app-card-rules-step-body"><strong>Règle de gain</strong> Tampons : récompense à la <strong>10ᵉ</strong> visite obligatoire ; la 5ᵉ est optionnelle. Points : paliers ci-dessous.</div>
               </li>
               <li class="app-card-rules-step hidden" data-check-step="tiers">
                 <span class="app-card-rules-step-badge">info</span>
@@ -1033,8 +1033,22 @@
                   <button type="button" id="app-stamp-icon-remove" class="app-stamp-icon-remove-btn hidden" title="Supprimer l'icône">×</button>
                 </div>
                 </div>
-                <p class="app-step-label">Texte de la récompense (affiché sur la carte)</p>
-                <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. 1 café offert, 1 croissant offert" />
+                <p class="app-step-label">Récompenses tampons</p>
+                <p class="app-hint">La grille compte <strong>10 tampons</strong> par carte. Vous définissez ce qui est offert à la <strong>5ᵉ</strong> et à la <strong>10ᵉ</strong> visite (tampon).</p>
+                <div class="app-stamp-tier-block">
+                  <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5ᵉ tampon</span></div>
+                  <label class="app-checkbox-label app-stamp-skip-mid-label">
+                    <input type="checkbox" id="app-stamp-skip-mid" />
+                    <span>Pas de récompense à la 5ᵉ visite</span>
+                  </label>
+                  <label class="app-label" for="app-stamp-reward-mid-label">Récompense intermédiaire</label>
+                  <input type="text" id="app-stamp-reward-mid-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Récompense à la 5ᵉ visite" />
+                </div>
+                <div class="app-stamp-tier-block">
+                  <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">10ᵉ tampon</span></div>
+                  <label class="app-label" for="app-stamp-reward-label">Récompense carte complète</label>
+                  <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. Menu offert" aria-label="Récompense à la 10ᵉ visite" />
+                </div>
               </div>
             </div>
             <div class="app-card-rules-actions">

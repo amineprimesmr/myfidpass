@@ -70,6 +70,7 @@ router.get("/settings", (req, res) => {
     required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
     stamp_emoji: business.stamp_emoji ?? undefined,
     stamp_reward_label: business.stamp_reward_label ?? undefined,
+    stamp_mid_reward_label: business.stamp_mid_reward_label ?? undefined,
     points_per_euro: business.points_per_euro != null ? Number(business.points_per_euro) : undefined,
     points_per_visit: business.points_per_visit != null ? Number(business.points_per_visit) : undefined,
     program_type: business.program_type ?? undefined,
@@ -186,6 +187,13 @@ router.patch("/settings", async (req, res) => {
   if (stamp_reward_label !== undefined) {
     const v = stamp_reward_label == null || stamp_reward_label === "" ? null : String(stamp_reward_label).trim().slice(0, 120);
     updates.stamp_reward_label = v || null;
+  }
+  if (stamp_mid_reward_label !== undefined) {
+    const v =
+      stamp_mid_reward_label == null || stamp_mid_reward_label === ""
+        ? null
+        : String(stamp_mid_reward_label).trim().slice(0, 120);
+    updates.stamp_mid_reward_label = v || null;
   }
   if (logo_base64 !== undefined) {
     if (logo_base64 === null || (typeof logo_base64 === "string" && logo_base64.trim() === "")) {

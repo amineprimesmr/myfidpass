@@ -75,7 +75,7 @@ export function updateBusiness(businessId, updates) {
     "logo_base64", "logo_updated_at", "card_background_base64", "strip_color", "strip_display_mode", "strip_text",
     "location_lat", "location_lng", "location_relevant_text", "location_radius_meters", "location_address",
     "required_stamps", "stamp_emoji", "points_per_euro", "points_per_visit", "program_type", "loyalty_mode",
-    "points_per_ticket", "stamp_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
+    "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
     "sector", "engagement_rewards",
   ];
   const numericCols = ["location_lat", "location_lng", "location_radius_meters", "required_stamps", "points_min_amount_eur", "expiry_months", "points_per_ticket"];

@@ -171,3 +171,33 @@ export function arePointTierInputsEmpty(doc = document) {
   }
   return true;
 }
+
+/** Tampons (5ᵉ / 10ᵉ) : libellés d’exemple selon secteur. */
+
+export function getDefaultStampMidLabelBySector(sector) {
+  const key = normalizeBusinessSector(sector) || "default";
+  const m = {
+    fastfood: "Boisson offerte",
+    cafe: "Viennoiserie ou café offert",
+    beauty: "Soin découverte offert",
+    coiffure: "Shampoing offert",
+    boulangerie: "Viennoiserie au choix",
+    boucherie: "Saucisse ou chipolata offerte",
+    default: "Petite récompense offerte",
+  };
+  return m[key] || m.default;
+}
+
+export function getDefaultStampFinalLabelBySector(sector) {
+  const key = normalizeBusinessSector(sector) || "default";
+  const m = {
+    fastfood: "Menu ou burger offert",
+    cafe: "Petit-déjeuner complet offert",
+    beauty: "Soin visage offert",
+    coiffure: "Coupe ou barbe offerte",
+    boulangerie: "Gâteau ou tarte offert(e)",
+    boucherie: "Colis viande offert",
+    default: "Récompense principale offerte",
+  };
+  return m[key] || m.default;
+}

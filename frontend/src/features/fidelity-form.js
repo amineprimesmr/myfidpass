@@ -124,7 +124,11 @@ function renderFidelityRulesRecap(business) {
   const programType = business.program_type;
   const parts = [];
   if (programType === "stamps" && business.required_stamps > 0) {
+    const mid = (business.stamp_mid_reward_label || "").trim();
     const label = (business.stamp_reward_label || "1 offert").trim();
+    if (mid) {
+      parts.push(`<p class="fidelity-rules-text"><strong>5 tampons</strong> = ${escapeHtmlForServer(mid)}</p>`);
+    }
     parts.push(`<p class="fidelity-rules-text"><strong>${business.required_stamps} tampons</strong> = ${escapeHtmlForServer(label)}</p>`);
   } else if (programType === "points" && Array.isArray(business.points_reward_tiers) && business.points_reward_tiers.length > 0) {
     parts.push("<p class=\"fidelity-rules-label\">Paliers de récompenses</p>");

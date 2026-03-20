@@ -289,9 +289,13 @@ export async function generatePass(member, business = null, options = {}) {
 
   if (format === "tampons") {
     const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
+    const midLabel = (options.stamp_mid_reward_label ?? business?.stamp_mid_reward_label)?.trim() || "";
+    const rewardValue = midLabel
+      ? `5 tampons = ${midLabel} — ${stampMax} tampons = ${rewardLabel}`
+      : `${stampMax} tampons = ${rewardLabel}`;
     pass.backFields.push(
       { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: changeMsg },
-      { key: "reward", label: "Récompense", value: `${stampMax} tampons = ${rewardLabel}` },
+      { key: "reward", label: "Récompense", value: rewardValue },
       { key: "terms", label: "Conditions", value: backTerms },
       { key: "contact", label: "Contact", value: backContact },
       { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }

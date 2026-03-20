@@ -252,6 +252,14 @@ export function updateHandler(req, res) {
     const v = stampRewardLabel == null || stampRewardLabel === "" ? null : String(stampRewardLabel).trim().slice(0, 120);
     updates.stamp_reward_label = v || null;
   }
+  const stampMidRewardLabel = body.stampMidRewardLabel ?? body.stamp_mid_reward_label;
+  if (stampMidRewardLabel !== undefined) {
+    const v =
+      stampMidRewardLabel == null || stampMidRewardLabel === ""
+        ? null
+        : String(stampMidRewardLabel).trim().slice(0, 120);
+    updates.stamp_mid_reward_label = v || null;
+  }
   const labelRestants = body.labelRestants ?? body.label_restants;
   if (labelRestants !== undefined) {
     const v = labelRestants == null || labelRestants === "" ? null : String(labelRestants).trim().slice(0, 32);

@@ -99,6 +99,11 @@ export function runMigrations(db) {
     db.exec("UPDATE businesses SET points_per_ticket = 10 WHERE points_per_ticket IS NULL OR points_per_ticket <= 0");
   });
 
+  const bizColsStampMid = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsStampMid.includes("stamp_mid_reward_label")) {
+    db.exec("ALTER TABLE businesses ADD COLUMN stamp_mid_reward_label TEXT");
+  }
+
   function ensureDemoBusiness() {
     let b = db.prepare("SELECT * FROM businesses WHERE slug = ?").get("demo");
     if (!b) {

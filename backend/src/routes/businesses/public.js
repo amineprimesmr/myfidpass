@@ -33,6 +33,7 @@ export function publicInfo(req, res) {
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
     stamp_reward_label: business.stamp_reward_label ?? undefined,
+    stamp_mid_reward_label: business.stamp_mid_reward_label ?? undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
   });
 }

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   getDefaultPointTiersBySector,
+  getDefaultStampMidLabelBySector,
+  getDefaultStampFinalLabelBySector,
   tiersFromApiPayload,
   readPointTierInputs,
   writePointTierInputs,
@@ -34,6 +36,11 @@ describe("app-card-rules-point-tiers", () => {
     expect(t).toHaveLength(5);
     expect(t[0].points).toBe(20);
     expect(t[0].label).toMatch(/boisson/i);
+  });
+
+  it("tampons : libellés par défaut fastfood", () => {
+    expect(getDefaultStampMidLabelBySector("fastfood")).toMatch(/boisson/i);
+    expect(getDefaultStampFinalLabelBySector("fastfood")).toMatch(/menu|burger/i);
   });
 
   it("tiersFromApiPayload parse un tableau", () => {

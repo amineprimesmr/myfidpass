@@ -29,6 +29,8 @@ import {
   arePointTierInputsEmpty,
   normalizeBusinessSector,
   POINT_TIER_COUNT,
+  getDefaultStampMidLabelBySector,
+  getDefaultStampFinalLabelBySector,
 } from "./app-card-rules-point-tiers.js";
 
 const IS_LOCALHOST =
@@ -1470,6 +1472,8 @@ function initAppDashboard(slug) {
   const requiredStampsEl = document.getElementById("app-required-stamps");
   const stampEmojiEl = document.getElementById("app-stamp-emoji");
   const stampRewardLabelEl = document.getElementById("app-stamp-reward-label");
+  const stampSkipMidEl = document.getElementById("app-stamp-skip-mid");
+  const stampMidRewardLabelEl = document.getElementById("app-stamp-reward-mid-label");
   const personnaliserAccordion = document.getElementById("app-personnaliser-accordion");
 
   function initPersonnaliserAccordion() {
@@ -1503,6 +1507,24 @@ function initAppDashboard(slug) {
   }
   initPersonnaliserAccordion();
 
+  function syncStampMidUi() {
+    if (!stampMidRewardLabelEl || !stampSkipMidEl) return;
+    const disabled = stampSkipMidEl.checked;
+    stampMidRewardLabelEl.disabled = disabled;
+    stampMidRewardLabelEl.setAttribute("aria-disabled", disabled ? "true" : "false");
+    stampMidRewardLabelEl.classList.toggle("app-input-disabled", disabled);
+  }
+  stampSkipMidEl?.addEventListener("change", () => {
+    if (stampSkipMidEl.checked) stampMidRewardLabelEl.value = "";
+    else if (!stampMidRewardLabelEl.value.trim()) {
+      stampMidRewardLabelEl.value = getDefaultStampMidLabelBySector(getLastKnownBusinessSector());
+    }
+    syncStampMidUi();
+    markAppSectionDirty("regles-carte");
+    refreshCardRulesChecklist();
+  });
+  syncStampMidUi();
+
   function setRulesPanelVisibility() {
     const isStamps = programTypeStamps && programTypeStamps.checked;
     if (rulesPanelPoints) rulesPanelPoints.classList.toggle("hidden", !!isStamps);
@@ -1523,6 +1545,19 @@ function initAppDashboard(slug) {
   if (programTypeStamps) {
     programTypeStamps.addEventListener("change", () => {
       setRulesPanelVisibility();
+      if (programTypeStamps.checked) {
+        if (stampRewardLabelEl && !stampRewardLabelEl.value.trim()) {
+          stampRewardLabelEl.value = getDefaultStampFinalLabelBySector(getLastKnownBusinessSector());
+        }
+        if (stampSkipMidEl && stampMidRewardLabelEl) {
+          if (stampSkipMidEl.checked) stampMidRewardLabelEl.value = "";
+          else if (!stampMidRewardLabelEl.value.trim()) {
+            stampMidRewardLabelEl.value = getDefaultStampMidLabelBySector(getLastKnownBusinessSector());
+          }
+          syncStampMidUi();
+        }
+        markAppSectionDirty("regles-carte");
+      }
       updatePersonnaliserPreview();
       refreshCardRulesChecklist();
     });
@@ -1793,6 +1828,8 @@ function initAppDashboard(slug) {
     pointsPerVisitEl,
     pointsMinAmountEl,
     stampRewardLabelEl,
+    stampMidRewardLabelEl,
+    stampSkipMidEl,
     loyaltyModeCashEl,
     loyaltyModeGameEl,
     pointsPerTicketEl,
@@ -1999,7 +2036,24 @@ function initAppDashboard(slug) {
       }
       // En mode tampons : toujours 10 (champ supprimé). En mode points on ne modifie pas requiredStamps.
       if (stampEmojiEl) stampEmojiEl.value = data.stamp_emoji ?? data.stampEmoji ?? "";
-      if (stampRewardLabelEl) stampRewardLabelEl.value = data.stamp_reward_label ?? data.stampRewardLabel ?? "";
+      const midSaved = data.stamp_mid_reward_label ?? data.stampMidRewardLabel;
+      if (stampSkipMidEl && stampMidRewardLabelEl) {
+        if (midSaved != null && String(midSaved).trim()) {
+          stampSkipMidEl.checked = false;
+          stampMidRewardLabelEl.value = String(midSaved).trim();
+        } else {
+          stampSkipMidEl.checked = true;
+          stampMidRewardLabelEl.value = "";
+        }
+        syncStampMidUi();
+      }
+      if (stampRewardLabelEl) {
+        const fin = (data.stamp_reward_label ?? data.stampRewardLabel ?? "").trim();
+        if (fin) stampRewardLabelEl.value = fin;
+        else if (programType === "stamps") {
+          stampRewardLabelEl.value = getDefaultStampFinalLabelBySector(getLastKnownBusinessSector());
+        }
+      }
       const labelRestantsEl = document.getElementById("app-personnaliser-label-restants");
       const labelMemberEl = document.getElementById("app-personnaliser-label-member");
       const headerRightEl = document.getElementById("app-personnaliser-header-right");
@@ -2730,6 +2784,13 @@ function initAppDashboard(slug) {
     else if (requiredStampsEl) body.requiredStamps = parseInt(requiredStampsEl.value, 10) || 10;
     if (stampEmojiEl) body.stampEmoji = stampEmojiEl.value.trim() || undefined;
     if (stampRewardLabelEl) body.stampRewardLabel = stampRewardLabelEl.value.trim() || undefined;
+    if (isStamps) {
+      if (stampSkipMidEl?.checked) body.stampMidRewardLabel = null;
+      else {
+        const midTrim = stampMidRewardLabelEl?.value?.trim() || "";
+        body.stampMidRewardLabel = midTrim || null;
+      }
+    }
     if (personnaliserStampIconRemoveRequested) body.stampIconBase64 = "";
     else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) {
       body.stampIconBase64 = personnaliserStampIconDataUrl;
