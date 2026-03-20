@@ -745,8 +745,6 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-personnaliser-card .app-step-label:first-child { margin-top: 0.35rem; }
 .app-personnaliser-colors { display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; margin-bottom: 0.5rem; }
 .app-personnaliser-colors > .app-color-row { flex: 1 1 100%; }
-.app-personnaliser-colors > .app-personnaliser-strip-hint,
-.app-personnaliser-colors > .app-logo-colors-inline-hint { flex-basis: 100%; margin-top: 0; }
 .app-color-row { display: flex; align-items: center; flex-wrap: nowrap; gap: 0.45rem; min-width: 0; }
 .app-personnaliser-colors .app-color-row {
   overflow-x: auto;
@@ -766,9 +764,6 @@ body.page-app .whatsapp-fab { display: none !important; }
   margin-bottom: 0;
 }
 .app-input-hex { max-width: 90px; margin-bottom: 0; }
-.app-personnaliser-strip-hint { font-size: 0.85rem; color: var(--app-text-muted); margin: 0.5rem 0 0; }
-.app-logo-colors-inline-hint { font-size: 0.8rem; color: var(--app-text-muted); margin: 0.15rem 0 0; }
-.app-logo-colors-inline-hint.hidden { display: none !important; }
 .app-logo-colors-swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0; align-items: center; }
 .app-logo-colors-swatches--inline {
   gap: 0.3rem;

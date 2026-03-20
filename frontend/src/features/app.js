@@ -2404,14 +2404,12 @@ function initAppDashboard(slug) {
         el.classList.add("hidden");
       }
     });
-    document.getElementById("app-logo-colors-inline-hint")?.classList.add("hidden");
   }
 
   function renderLogoColorSwatches(colors) {
     const cBg = document.getElementById("app-logo-colors-swatches-bg");
     const cFg = document.getElementById("app-logo-colors-swatches-fg");
     const cLbl = document.getElementById("app-logo-colors-swatches-label");
-    const hint = document.getElementById("app-logo-colors-inline-hint");
     if (!cBg || !cFg || !cLbl) return;
     cBg.innerHTML = "";
     cFg.innerHTML = "";
@@ -2457,7 +2455,6 @@ function initAppDashboard(slug) {
     cBg.classList.remove("hidden");
     cFg.classList.remove("hidden");
     cLbl.classList.remove("hidden");
-    hint?.classList.remove("hidden");
   }
 
   function extractAndShowLogoColors(imageSource) {
