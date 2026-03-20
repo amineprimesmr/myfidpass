@@ -108,19 +108,20 @@ export function updateHandler(req, res) {
   }
   const body = req.body || {};
   const {
-    organizationName,
     backTerms,
     backContact,
     backgroundColor,
     foregroundColor,
     labelColor,
-    locationLat,
-    locationLng,
-    locationRelevantText,
-    locationRadiusMeters,
-    locationAddress,
     slug: requestedSlug,
   } = body;
+  /* Profil / clients envoient souvent snake_case (organization_name…) — aligné sur PATCH /dashboard/settings */
+  const organizationName = body.organizationName ?? body.organization_name;
+  const locationAddress = body.locationAddress ?? body.location_address;
+  const locationLat = body.locationLat ?? body.location_lat;
+  const locationLng = body.locationLng ?? body.location_lng;
+  const locationRelevantText = body.locationRelevantText ?? body.location_relevant_text;
+  const locationRadiusMeters = body.locationRadiusMeters ?? body.location_radius_meters;
   const updates = {};
   if (requestedSlug !== undefined) {
     const normalizedSlug = String(requestedSlug).trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
