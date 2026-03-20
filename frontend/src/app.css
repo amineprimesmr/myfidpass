@@ -4025,9 +4025,9 @@ body.page-app .whatsapp-fab { display: none !important; }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
   border: none !important;
   border-radius: 18px 18px 0 0 !important;
-  min-height: 2.85rem;
-  /* padding-top réduit : logo collé au haut du bandeau */
-  padding: 0.22rem 0.75rem 0.55rem 0.55rem;
+  min-height: 2.65rem;
+  /* Logo aligné en haut du bandeau (aperçu = proche du rendu Wallet) */
+  padding: 0.05rem 0.75rem 0.5rem 0.5rem;
   gap: 0.5rem;
   font-size: clamp(0.7rem, 6.2cqw, 0.9rem);
 }
@@ -4067,7 +4067,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right {
   font-size: clamp(0.55rem, 5cqw, 0.72rem);
-  top: 0.26rem;
+  top: 0.1rem;
   right: 0.65rem;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-pts-value,
@@ -4173,9 +4173,9 @@ body.page-app .whatsapp-fab { display: none !important; }
   background: var(--wallet-bg);
   color: var(--wallet-fg);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
-  padding: 0.12rem 0.5rem 0.25rem 0.25rem;
+  padding: 0.04rem 0.5rem 0.22rem 0.2rem;
   min-height: 2rem;
   transition: background 0.2s, color 0.2s;
   overflow: hidden;
@@ -4197,7 +4197,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org { position: relative; z-index: 1; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-header-right {
   position: absolute;
-  top: 0.35rem;
+  top: 0.12rem;
   right: 0.5rem;
   z-index: 2;
   margin-left: 0;
@@ -4253,7 +4253,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   justify-content: flex-start;
   overflow: visible;
   align-self: flex-start;
-  margin-top: 0.35rem;
+  margin-top: 0;
   box-sizing: border-box;
   background: transparent !important;
   padding: 0 !important;

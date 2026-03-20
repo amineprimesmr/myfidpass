@@ -75,14 +75,9 @@ export async function resizeLogoForPass(inputBuffer) {
     const w2 = Math.min(LOGO_WIDTH_2X, Math.round(h2 * aspect));
     const h1 = LOGO_HEIGHT_1X;
     const w1 = Math.min(LOGO_WIDTH_1X, Math.round(h1 * aspect));
-    const logo2x = await sharp(inputBuffer)
-      .resize(w2, h2, { fit: "contain", background: transparent })
-      .png()
-      .toBuffer();
-    const logo1x = await sharp(inputBuffer)
-      .resize(w1, h1, { fit: "contain", background: transparent })
-      .png()
-      .toBuffer();
+    const containTop = { fit: "contain", background: transparent, position: "north" };
+    const logo2x = await sharp(inputBuffer).resize(w2, h2, containTop).png().toBuffer();
+    const logo1x = await sharp(inputBuffer).resize(w1, h1, containTop).png().toBuffer();
     const out2x = await sharp({
       create: { width: LOGO_WIDTH_2X, height: LOGO_HEIGHT_2X, channels: 4, background: transparent },
     })
@@ -100,14 +95,9 @@ export async function resizeLogoForPass(inputBuffer) {
     console.warn("[PassKit] resizeLogoForPass failed:", err.message);
   }
   try {
-    const out2x = await sharp(inputBuffer)
-      .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X, { fit: "contain", background: transparent })
-      .png()
-      .toBuffer();
-    const out1x = await sharp(inputBuffer)
-      .resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X, { fit: "contain", background: transparent })
-      .png()
-      .toBuffer();
+    const containTop = { fit: "contain", background: transparent, position: "north" };
+    const out2x = await sharp(inputBuffer).resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X, containTop).png().toBuffer();
+    const out1x = await sharp(inputBuffer).resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X, containTop).png().toBuffer();
     return { logoPng: out1x, logoPng2x: out2x };
   } catch (err2) {
     console.warn("[PassKit] resizeLogoForPass fallback failed:", err2?.message);
