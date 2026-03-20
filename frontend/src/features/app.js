@@ -2395,17 +2395,29 @@ function initAppDashboard(slug) {
     });
   }
 
+  function hideLogoColorSwatchRows() {
+    const ids = ["app-logo-colors-swatches-bg", "app-logo-colors-swatches-fg", "app-logo-colors-swatches-label"];
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = "";
+        el.classList.add("hidden");
+      }
+    });
+    document.getElementById("app-logo-colors-inline-hint")?.classList.add("hidden");
+  }
+
   function renderLogoColorSwatches(colors) {
-    const wrap = document.getElementById("app-logo-colors-wrap");
     const cBg = document.getElementById("app-logo-colors-swatches-bg");
     const cFg = document.getElementById("app-logo-colors-swatches-fg");
     const cLbl = document.getElementById("app-logo-colors-swatches-label");
-    if (!wrap || !cBg || !cFg || !cLbl) return;
+    const hint = document.getElementById("app-logo-colors-inline-hint");
+    if (!cBg || !cFg || !cLbl) return;
     cBg.innerHTML = "";
     cFg.innerHTML = "";
     cLbl.innerHTML = "";
     if (!colors || colors.length === 0) {
-      wrap.classList.add("hidden");
+      hideLogoColorSwatchRows();
       return;
     }
     const ariaTarget = {
@@ -2442,12 +2454,15 @@ function initAppDashboard(slug) {
     fillRow(cBg, "bg");
     fillRow(cFg, "fg");
     fillRow(cLbl, "label");
-    wrap.classList.remove("hidden");
+    cBg.classList.remove("hidden");
+    cFg.classList.remove("hidden");
+    cLbl.classList.remove("hidden");
+    hint?.classList.remove("hidden");
   }
 
   function extractAndShowLogoColors(imageSource) {
     if (!imageSource) {
-      document.getElementById("app-logo-colors-wrap")?.classList.add("hidden");
+      hideLogoColorSwatchRows();
       return;
     }
     getDominantColorsFromImage(imageSource, 4).then((colors) => renderLogoColorSwatches(colors));

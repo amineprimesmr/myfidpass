@@ -821,42 +821,28 @@
                     <div class="app-personnaliser-group-panel-inner">
               <div class="app-personnaliser-colors">
                 <div class="app-color-row">
-                  <label class="app-label">Fond</label>
+                  <label class="app-label" for="app-personnaliser-bg" id="app-logo-colors-aria-bg">Fond</label>
                   <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#1e3a8a" />
                   <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#1e3a8a" maxlength="7" />
+                  <div id="app-logo-colors-swatches-bg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-bg"></div>
                 </div>
                 <div class="app-color-row">
-                  <label class="app-label">Texte</label>
+                  <label class="app-label" for="app-personnaliser-fg" id="app-logo-colors-aria-fg">Texte</label>
                   <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#ffffff" />
                   <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
+                  <div id="app-logo-colors-swatches-fg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-fg"></div>
                 </div>
                 <div class="app-color-row">
-                  <label class="app-label">Labels</label>
+                  <label class="app-label" for="app-personnaliser-label" id="app-logo-colors-aria-lbl">Labels</label>
                   <input type="color" id="app-personnaliser-label" class="app-color-input" value="#dbeafe" />
                   <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#dbeafe" maxlength="7" />
+                  <div id="app-logo-colors-swatches-label" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-lbl"></div>
                 </div>
                 <p class="app-hint app-personnaliser-strip-hint">Le bandeau (tampons / points) utilise toujours la même couleur que le fond de la carte.</p>
+                <p class="app-hint app-logo-colors-inline-hint hidden" id="app-logo-colors-inline-hint">Pastilles extraites de votre logo — clic pour appliquer à la ligne concernée (fond → bandeau inclus).</p>
                 <input type="hidden" id="app-personnaliser-strip" value="#1e3a8a" />
                 <input type="hidden" id="app-personnaliser-strip-hex" value="#1e3a8a" />
               </div>
-                      <div id="app-logo-colors-wrap" class="app-logo-colors-wrap hidden">
-                        <p class="app-step-label">Teintes suggérées depuis votre logo</p>
-                        <p class="app-hint">Ces couleurs sont extraites de l’image du logo. Chaque ligne applique la teinte choisie au <strong>fond</strong>, au <strong>texte</strong> ou aux <strong>labels</strong> (fond → bandeau inclus).</p>
-                        <div class="app-logo-colors-rows">
-                          <div class="app-logo-colors-target">
-                            <span class="app-logo-colors-target-label" id="app-logo-colors-label-bg">Fond</span>
-                            <div id="app-logo-colors-swatches-bg" class="app-logo-colors-swatches" role="group" aria-labelledby="app-logo-colors-label-bg"></div>
-                          </div>
-                          <div class="app-logo-colors-target">
-                            <span class="app-logo-colors-target-label" id="app-logo-colors-label-fg">Texte</span>
-                            <div id="app-logo-colors-swatches-fg" class="app-logo-colors-swatches" role="group" aria-labelledby="app-logo-colors-label-fg"></div>
-                          </div>
-                          <div class="app-logo-colors-target">
-                            <span class="app-logo-colors-target-label" id="app-logo-colors-label-lbl">Labels</span>
-                            <div id="app-logo-colors-swatches-label" class="app-logo-colors-swatches" role="group" aria-labelledby="app-logo-colors-label-lbl"></div>
-                          </div>
-                        </div>
-                      </div>
                       <p class="app-step-label">Image de fond de carte</p>
                       <p class="app-hint">Utilisée comme bandeau sur la carte dans le Wallet (optionnel). Ajouter, modifier ou supprimer.</p>
                       <div class="app-personnaliser-card-bg">
