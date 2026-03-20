@@ -4015,7 +4015,11 @@ body.page-app .whatsapp-fab { display: none !important; }
   overflow: hidden;
   box-sizing: border-box;
   flex-shrink: 0;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
+  /* Contour visible sur fond noir (carte sombre sur mockup sombre) + léger relief */
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.34),
+    0 0 0 2px rgba(0, 0, 0, 0.75),
+    0 10px 36px rgba(0, 0, 0, 0.55);
 }
 
 /* Ma carte — une seule carte unifiée ; angles arrondis en haut ; QR sur fond blanc en bas */
