@@ -25,15 +25,16 @@
   top: auto;
   transform: rotateX(14deg) scale(0.97);
   transform-style: preserve-3d;
-  filter: drop-shadow(0 32px 56px rgba(15, 23, 42, 0.32)) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.22));
 }
 
 .fidelity-game-page .fidelity-roulette-wheel {
+  z-index: 1;
   border-width: 14px;
   border-style: solid;
   border-color: #050505 #1a1a1a #2e2e2e #0d0d0d;
   background-color: #0a0a0a;
   position: relative;
+  isolation: isolate;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.07) inset,
     0 22px 0 -8px rgba(0, 0, 0, 0.5),
@@ -42,30 +43,30 @@
     inset 0 -12px 28px rgba(0, 0, 0, 0.42);
 }
 
-/* Sous les segments pour ne pas masquer texte + parts (z-index < .wheel-disc). */
+/* Reflet léger, sans mix-blend-mode (évite écran tout doré sur WebKit). */
 .fidelity-game-page .fidelity-roulette-wheel-shine {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   z-index: 1;
   pointer-events: none;
+  opacity: 0.55;
   background: conic-gradient(
     from 210deg at 45% 42%,
     transparent 0deg,
-    rgba(255, 255, 255, 0.22) 48deg,
+    rgba(255, 255, 255, 0.35) 48deg,
     transparent 100deg,
     transparent 200deg,
-    rgba(255, 255, 255, 0.05) 268deg,
+    rgba(255, 255, 255, 0.12) 268deg,
     transparent 320deg
   );
-  mix-blend-mode: soft-light;
 }
 
 .fidelity-game-page .fidelity-roulette-wheel-disc {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  z-index: 2;
+  z-index: 4;
   pointer-events: none;
 }
 
@@ -80,7 +81,7 @@
   min-height: 42px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  z-index: 8;
+  z-index: 6;
   pointer-events: none;
   background:
     radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.95) 0%, rgba(226, 232, 240, 0.4) 22%, transparent 45%),
@@ -93,19 +94,25 @@
     inset 0 -5px 12px rgba(0, 0, 0, 0.55);
 }
 
-/* Intérieur transparent : un fond blanc en padding-box masquait toute la roue. */
+/*
+ * Anneau au-dessus de la roue : masque radial = que la couronne (centre 100 % transparent).
+ * Évite tout « disque doré » qui recouvre texte + parts.
+ */
 .fidelity-game-page .fidelity-roulette-wheel-rim {
+  z-index: 5;
   border: none;
-  background:
-    linear-gradient(transparent, transparent) padding-box,
-    linear-gradient(155deg, #fff6d4 0%, #e8c547 22%, #a16207 48%, #d4a84b 78%, #fde68a 100%) border-box;
-  border: 6px solid transparent;
-  box-shadow:
-    inset 0 2px 5px rgba(255, 255, 255, 0.35),
-    inset 0 -4px 10px rgba(0, 0, 0, 0.28),
-    0 0 0 1px rgba(0, 0, 0, 0.45),
-    0 3px 0 rgba(255, 255, 255, 0.1);
-  z-index: 6;
+  background: linear-gradient(145deg, #fff6d4 0%, #e8c547 25%, #a16207 55%, #d4a84b 85%, #fde68a 100%);
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent calc(100% - 14px),
+    #000 calc(100% - 12px)
+  );
+  mask: radial-gradient(
+    circle,
+    transparent calc(100% - 14px),
+    #000 calc(100% - 12px)
+  );
+  box-shadow: none;
 }
 
 .fidelity-game-page .fidelity-roulette-indicator {
@@ -165,7 +172,6 @@
 @media (prefers-reduced-motion: reduce) {
   .fidelity-game-page .fidelity-roulette-wheel-outer {
     transform: none;
-    filter: drop-shadow(0 18px 36px rgba(15, 23, 42, 0.22));
   }
 
   .fidelity-game-page .fidelity-roulette-wheel-zone {
