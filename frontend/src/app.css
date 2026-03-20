@@ -3957,13 +3957,13 @@ body.page-app .whatsapp-fab { display: none !important; }
   left: 9.5%;
   width: 81%;
   top: 50%;
-  transform: translateY(-46%);
+  transform: translateY(-54%);
   height: auto;
   max-height: 76%;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  border-radius: 14px;
+  border-radius: 16px;
   background: transparent;
   display: flex;
   justify-content: center;
@@ -3981,17 +3981,17 @@ body.page-app .whatsapp-fab { display: none !important; }
   height: auto;
   min-height: 0;
   margin: 0;
-  border-radius: 14px;
+  border-radius: 18px;
   overflow: hidden;
   box-sizing: border-box;
   flex-shrink: 0;
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
 }
 
-/* Ma carte — une seule carte verte unifiée (pas de filets gris / blocs séparés) ; fin du design au bas du QR */
+/* Ma carte — une seule carte unifiée ; angles arrondis en haut ; QR sur fond blanc en bas */
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-header {
   border: none !important;
-  border-radius: 0 !important;
+  border-radius: 18px 18px 0 0 !important;
   min-height: 2.85rem;
   padding: 0.5rem 0.75rem 0.55rem 0.55rem;
   gap: 0.5rem;
@@ -4013,11 +4013,11 @@ body.page-app .whatsapp-fab { display: none !important; }
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--wallet-bg) !important;
+  background: #ffffff !important;
   box-shadow: none !important;
   border: none !important;
-  border-radius: 0 !important;
-  padding: 0.4rem 0.6rem 0.5rem;
+  border-radius: 0 0 18px 18px !important;
+  padding: 0.45rem 0.65rem 0.55rem;
   width: 100%;
   box-sizing: border-box;
 }
@@ -4074,8 +4074,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   height: clamp(80px, 46cqw, 112px) !important;
   min-width: clamp(80px, 46cqw, 112px);
   min-height: clamp(80px, 46cqw, 112px);
-  /* Blanc du PNG → prend la teinte du fond vert (modules noirs restent lisibles) */
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal;
+  border-radius: 6px;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img[src=""],
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr-img:not([src]) {
