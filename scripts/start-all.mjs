@@ -6,9 +6,13 @@
 import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { freeBackendPort } from "./free-backend-port.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
+
+const backendPort = Number(process.env.PORT) || 3001;
+freeBackendPort(backendPort);
 
 const isWin = process.platform === "win32";
 const back = spawn("node", ["backend/src/index.js"], {

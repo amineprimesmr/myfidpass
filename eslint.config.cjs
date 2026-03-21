@@ -16,7 +16,15 @@ module.exports = [
     ],
   },
   {
-    files: ["backend/**/*.js", "frontend/src/**/*.js", "frontend/src/**/*.jsx", "frontend/src/**/*.ts", "frontend/src/**/*.tsx", "scripts/**/*.js"],
+    files: [
+      "backend/**/*.js",
+      "frontend/src/**/*.js",
+      "frontend/src/**/*.jsx",
+      "frontend/src/**/*.ts",
+      "frontend/src/**/*.tsx",
+      "scripts/**/*.js",
+      "scripts/**/*.mjs",
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
