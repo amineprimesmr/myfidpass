@@ -1856,8 +1856,7 @@ function initAppDashboard(slug) {
     orgEl.textContent = personnaliserOrg?.value?.trim() || currentOrganizationName;
     const isStamps = programTypeStamps && programTypeStamps.checked;
     /**
-     * Image de fond : bannière dédiée (haute), jamais sous les points/tampons.
-     * Le bloc principal garde la couleur carte → texte et tampons lisibles.
+     * Image de fond (strip) : exclusif avec points et tampons — soit l’image, soit points, soit tampons.
      */
     if (bodyEl) {
       bodyEl.style.color = fg;
@@ -1896,10 +1895,11 @@ function initAppDashboard(slug) {
     const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "☕";
     const requiredStamps = 10;
     const useStripImage = stripDisplayLogo && stripDisplayLogo.checked;
-    if (ptsWrap) ptsWrap.classList.toggle("hidden", !!isStamps);
-    if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps);
+    const showPointsOrStamps = !hasCardBgUrl;
+    if (ptsWrap) ptsWrap.classList.toggle("hidden", !!isStamps || !showPointsOrStamps);
+    if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps || !showPointsOrStamps);
     if (bandeauEl) {
-      if (isStamps) {
+      if (isStamps && showPointsOrStamps) {
         bandeauEl.classList.remove("hidden");
         bandeauEl.style.background = bgHex;
         bandeauEl.style.backgroundImage = "none";
@@ -1912,7 +1912,7 @@ function initAppDashboard(slug) {
     }
     const rewardWrap = document.getElementById("app-preview-reward-wrap");
     if (rewardWrap) rewardWrap.classList.toggle("hidden", !!isStamps);
-    if (restantsWrap) restantsWrap.classList.toggle("hidden", !isStamps);
+    if (restantsWrap) restantsWrap.classList.toggle("hidden", !isStamps || !showPointsOrStamps);
     if (restantsValueEl && isStamps) restantsValueEl.textContent = "= " + String(requiredStamps);
     const restantsLabelEl = document.getElementById("app-wallet-preview-restants-label");
     const memberLabelEl = document.getElementById("app-wallet-preview-member-label");
@@ -1932,7 +1932,7 @@ function initAppDashboard(slug) {
     if (valueEl) valueEl.textContent = isStamps ? "" : "0";
     if (labelEl) labelEl.textContent = isStamps ? "Tampons" : "Points";
     if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
-    if (stampsGridEl && isStamps) {
+    if (stampsGridEl && isStamps && showPointsOrStamps) {
       const hasCustomStampIcon = personnaliserStampIconDataUrl && personnaliserStampIconDataUrl.length > 0;
       const emojiToIcon = { "☕": "cafe", "🍔": "burger", "🍕": "pizza", "🥐": "croissant", "🥩": "steak", "🍣": "sushi", "🥗": "salade", "🍚": "riz", "🥖": "baguette", "💄": "giftsilver", "✂️": "giftsilver" };
       const iconName = emojiToIcon[stampEmoji] || "cafe";
