@@ -1452,8 +1452,11 @@
                 </div>
                 <div class="app-rules-row">
                   <label class="app-label" for="app-profil-address">Adresse du commerce</label>
-                  <input type="text" id="app-profil-address" class="app-input" placeholder="Rechercher ou saisir une adresse…" autocomplete="street-address" />
-                  <p class="app-hint">Utilisée pour la localisation du pass (Relevant locations), la carte et le périmètre de notification (page Emplacement).</p>
+                  <div class="app-profil-address-wrap app-perimetre-address-input-wrap">
+                    <input type="text" id="app-profil-address" class="app-input" placeholder="Tapez pour chercher une adresse…" autocomplete="street-address" aria-autocomplete="list" aria-expanded="false" aria-controls="app-profil-address-suggestions" />
+                    <ul id="app-profil-address-suggestions" class="app-perimetre-suggestions hidden" role="listbox" aria-label="Suggestions d’adresse"></ul>
+                  </div>
+                  <p class="app-hint">Suggestions automatiques (OpenStreetMap). Vous pouvez aussi coller une adresse complète puis enregistrer.</p>
                 </div>
                 <div class="app-rules-row">
                   <label class="app-label">Lien public de la page carte (identifiant technique)</label>

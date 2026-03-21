@@ -33,6 +33,7 @@ import {
   getDefaultStampMidLabelBySector,
   getDefaultStampFinalLabelBySector,
 } from "./app-card-rules-point-tiers.js";
+import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../utils/geocoding.js";
 
 /** En dev : front sur localhost et API_BASE vide → requêtes /api/* via proxy Vite vers le backend. */
 const IS_LOCAL_VITE_PROXY = IS_LOCAL_DEV && !API_BASE;
@@ -3235,6 +3236,74 @@ function initAppDashboard(slug) {
   const profilSubscriptionStatus = document.getElementById("app-profil-subscription-status");
   let profilLogoDataUrl = "";
   let profilLogoRemoved = false;
+  const profilAddressSuggestions = document.getElementById("app-profil-address-suggestions");
+  let profilAddrDebounce = null;
+
+  function hideProfilAddressSuggestions() {
+    if (profilAddressSuggestions) {
+      profilAddressSuggestions.classList.add("hidden");
+      profilAddressSuggestions.innerHTML = "";
+    }
+    profilAddress?.setAttribute("aria-expanded", "false");
+  }
+
+  function escapeHtmlProfilAddr(s) {
+    const div = document.createElement("div");
+    div.textContent = String(s);
+    return div.innerHTML;
+  }
+
+  if (profilAddress && profilAddressSuggestions) {
+    profilAddress.addEventListener("input", () => {
+      if (profilAddrDebounce) clearTimeout(profilAddrDebounce);
+      const q = (profilAddress.value || "").trim();
+      markAppSectionDirty("profil");
+      if (q.length < 2) {
+        hideProfilAddressSuggestions();
+        return;
+      }
+      profilAddrDebounce = setTimeout(async () => {
+        const features = await photonGeocodeFeatures(q, 8);
+        profilAddressSuggestions.innerHTML = "";
+        if (!features.length) {
+          hideProfilAddressSuggestions();
+          return;
+        }
+        features.forEach((f) => {
+          const coords = f.geometry?.coordinates;
+          if (!coords || coords.length < 2) return;
+          const props = f.properties || {};
+          const displayAddr = formatPhotonAddress(props);
+          const main = props.name || [props.street, props.housenumber].filter(Boolean).join(" ") || "Adresse";
+          const sub = [props.postcode, props.city, props.country].filter(Boolean).join(", ");
+          const li = document.createElement("li");
+          li.setAttribute("role", "option");
+          li.innerHTML = sub
+            ? `${escapeHtmlProfilAddr(main)}<small>${escapeHtmlProfilAddr(sub)}</small>`
+            : escapeHtmlProfilAddr(main);
+          li.addEventListener("click", () => {
+            if (profilAddress) profilAddress.value = displayAddr;
+            hideProfilAddressSuggestions();
+            markAppSectionDirty("profil");
+          });
+          profilAddressSuggestions.appendChild(li);
+        });
+        profilAddressSuggestions.classList.remove("hidden");
+        profilAddress.setAttribute("aria-expanded", "true");
+      }, 320);
+    });
+
+    profilAddress.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") hideProfilAddressSuggestions();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!profilAddressSuggestions || profilAddressSuggestions.classList.contains("hidden")) return;
+      const t = /** @type {Node} */ (e.target);
+      if (profilAddress?.contains(t) || profilAddressSuggestions.contains(t)) return;
+      hideProfilAddressSuggestions();
+    });
+  }
 
   function showProfilMessage(text, isError = false) {
     if (!profilMessage) return;
@@ -3264,6 +3333,7 @@ function initAppDashboard(slug) {
         if (profilOrg) profilOrg.value = orgName;
         propagateEstablishmentDisplayName(orgName);
         if (profilAddress) profilAddress.value = (data.location_address ?? data.locationAddress ?? "").trim();
+        hideProfilAddressSuggestions();
         const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin.replace(/\/$/, "") : "";
         if (profilSlugDisplay) {
           profilSlugDisplay.textContent = base ? `${base}/fidelity/${slug}` : `/fidelity/${slug}`;

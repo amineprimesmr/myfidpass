@@ -7,22 +7,7 @@ const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 import { API_BASE, getAuthToken, setAuthToken } from "../config.js";
 import { setBuilderHeaderStep, initRouting, navigateToLanding } from "../router/index.js";
 import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";
-
-async function geocodeAddress(address) {
-  const q = String(address).trim();
-  if (!q) return null;
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
-  const res = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": "MyFidpass/1.0 (https://myfidpass.fr)" },
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const first = data?.[0];
-  if (!first || first.lat == null || first.lon == null) return null;
-  const lat = parseFloat(first.lat);
-  const lng = parseFloat(first.lon);
-  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
-}
+import { geocodeAddress } from "../utils/geocoding.js";
 
 const BUILD_CATEGORY_LABELS = {
   fastfood: "Fast food",
