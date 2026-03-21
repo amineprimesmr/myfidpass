@@ -1579,6 +1579,16 @@ function initAppDashboard(slug) {
   const stampMidRewardLabelEl = document.getElementById("app-stamp-reward-mid-label");
   const personnaliserAccordion = document.getElementById("app-personnaliser-accordion");
 
+  /** Déclaré avant tout appel à schedulePersonnaliserGroupStatusRefresh (évite TDZ sur let). */
+  let personnaliserStatusRaf = 0;
+  function schedulePersonnaliserGroupStatusRefresh() {
+    if (personnaliserStatusRaf) cancelAnimationFrame(personnaliserStatusRaf);
+    personnaliserStatusRaf = requestAnimationFrame(() => {
+      personnaliserStatusRaf = 0;
+      updatePersonnaliserGroupStatusIndicators();
+    });
+  }
+
   function initPersonnaliserAccordion() {
     if (!personnaliserAccordion) return;
     const groups = Array.from(personnaliserAccordion.querySelectorAll("[data-personnaliser-group]"));
@@ -1766,14 +1776,6 @@ function initAppDashboard(slug) {
     const isText = stripDisplayText && stripDisplayText.checked;
     if (stripTextWrap) stripTextWrap.classList.toggle("hidden", !isText);
     if (personnaliserLogoWrap) personnaliserLogoWrap.classList.toggle("hidden", !!isText);
-  }
-  let personnaliserStatusRaf = 0;
-  function schedulePersonnaliserGroupStatusRefresh() {
-    if (personnaliserStatusRaf) cancelAnimationFrame(personnaliserStatusRaf);
-    personnaliserStatusRaf = requestAnimationFrame(() => {
-      personnaliserStatusRaf = 0;
-      updatePersonnaliserGroupStatusIndicators();
-    });
   }
   function updatePersonnaliserPreview() {
     const card = document.getElementById("app-personnaliser-preview-card");
