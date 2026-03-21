@@ -32,3 +32,8 @@ curl -s http://127.0.0.1:3001/api/health
 ```
 
 Attendu : `{"ok":true,"service":"fidelity-api"}`.
+
+## Prod : `myfidpass.fr` sans `www` et `/api`
+
+Sur l’apex `https://myfidpass.fr`, Vercel peut répondre **307** vers `https://www.myfidpass.fr` **avant** la réécriture `/api` → le navigateur suit la redirection vers un autre hôte : la requête API devient **cross-origin** et peut échouer (CORS / session).  
+Le front en prod utilise donc **`https://api.myfidpass.fr`** comme base d’API (CORS déjà ouvert pour `myfidpass.fr` et `www.myfidpass.fr` sur Railway).
