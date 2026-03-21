@@ -1849,25 +1849,48 @@ function initAppDashboard(slug) {
     card.style.setProperty("--wallet-label", labelColor);
     if (stripEl) stripEl.style.background = bgHex;
     const bodyEl = card?.querySelector(".app-wallet-preview-body");
+    const cardBgBannerEl = document.getElementById("app-wallet-preview-card-bg-banner");
+    const mainBlockEl = document.getElementById("app-wallet-preview-main-block");
     const hasCardBgUrl = personnaliserCardBgDataUrl && personnaliserCardBgDataUrl.length > 0;
     const bandeauEl = document.getElementById("app-preview-bandeau");
     orgEl.textContent = personnaliserOrg?.value?.trim() || currentOrganizationName;
     const isStamps = programTypeStamps && programTypeStamps.checked;
-    /** Image de fond : avant seulement sur le bandeau tampons ; en mode points le bandeau est masqué → image sur le corps de la carte. */
+    /**
+     * Image de fond : bannière dédiée (haute), jamais sous les points/tampons.
+     * Le bloc principal garde la couleur carte → texte et tampons lisibles.
+     */
     if (bodyEl) {
       bodyEl.style.color = fg;
-      if (hasCardBgUrl && !isStamps) {
+      if (hasCardBgUrl) {
         bodyEl.style.background = "transparent";
-        bodyEl.style.backgroundImage = `url(${personnaliserCardBgDataUrl})`;
-        bodyEl.style.backgroundSize = "cover";
-        bodyEl.style.backgroundPosition = "center";
-        bodyEl.style.backgroundRepeat = "no-repeat";
+        bodyEl.style.backgroundImage = "none";
+        bodyEl.style.removeProperty("background-size");
+        bodyEl.style.removeProperty("background-position");
+        bodyEl.style.removeProperty("background-repeat");
+        if (cardBgBannerEl) {
+          cardBgBannerEl.classList.remove("hidden");
+          cardBgBannerEl.setAttribute("aria-hidden", "false");
+          cardBgBannerEl.style.backgroundImage = `url(${personnaliserCardBgDataUrl})`;
+          cardBgBannerEl.style.backgroundSize = "cover";
+          cardBgBannerEl.style.backgroundPosition = "center";
+          cardBgBannerEl.style.backgroundRepeat = "no-repeat";
+        }
+        if (mainBlockEl) mainBlockEl.style.background = bgHex;
       } else {
         bodyEl.style.background = bgHex;
         bodyEl.style.backgroundImage = "none";
         bodyEl.style.removeProperty("background-size");
         bodyEl.style.removeProperty("background-position");
         bodyEl.style.removeProperty("background-repeat");
+        if (cardBgBannerEl) {
+          cardBgBannerEl.classList.add("hidden");
+          cardBgBannerEl.setAttribute("aria-hidden", "true");
+          cardBgBannerEl.style.backgroundImage = "none";
+          cardBgBannerEl.style.removeProperty("background-size");
+          cardBgBannerEl.style.removeProperty("background-position");
+          cardBgBannerEl.style.removeProperty("background-repeat");
+        }
+        if (mainBlockEl) mainBlockEl.style.removeProperty("background");
       }
     }
     const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "☕";
@@ -1878,17 +1901,10 @@ function initAppDashboard(slug) {
     if (bandeauEl) {
       if (isStamps) {
         bandeauEl.classList.remove("hidden");
-        if (hasCardBgUrl) {
-          bandeauEl.style.background = "transparent";
-          bandeauEl.style.backgroundImage = `url(${personnaliserCardBgDataUrl})`;
-          bandeauEl.style.backgroundSize = "cover";
-          bandeauEl.style.backgroundPosition = "center";
-        } else {
-          bandeauEl.style.background = bgHex;
-          bandeauEl.style.removeProperty("background-image");
-          bandeauEl.style.removeProperty("background-size");
-          bandeauEl.style.removeProperty("background-position");
-        }
+        bandeauEl.style.background = bgHex;
+        bandeauEl.style.backgroundImage = "none";
+        bandeauEl.style.removeProperty("background-size");
+        bandeauEl.style.removeProperty("background-position");
       } else {
         bandeauEl.style.backgroundImage = "none";
         bandeauEl.classList.add("hidden");
