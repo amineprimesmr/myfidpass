@@ -59,17 +59,15 @@ ORGANIZATION_NAME=Mon Fast-Food
 
 Puis :
 
-```bash
-# Tout démarrer (backend + frontend en une commande)
-npm start
-```
+- **Sans taper de commande** : dans Cursor / VS Code → `Cmd+Shift+P` → **Tasks: Run Task** → **Fidpass — Dev local (backend + front + navigateur)**. Voir **[docs/LANCER-SANS-TERMINAL.md](docs/LANCER-SANS-TERMINAL.md)**.
+- **En terminal** (si tu préfères) : `npm start` (backend + front), ou `npm run dev:local` (ouvre le navigateur sur le bon port).
 
-Ou en deux terminaux : `npm run backend` puis `npm run frontend`.
+- **Frontend (Vite)** : **http://localhost:5174**  
+- **Backend API** : http://localhost:3001 en direct ; en dev, le front appelle **`/api/...`** sur le même port que Vite (proxy → 3001).
 
-- **Frontend** : http://localhost:5173  
-- **Backend API** : http://localhost:3001 (proxié via /api en dev)
+**Note :** `http://localhost:5174/api/health` affiche du **JSON** (`{"ok":true,...}`) — c’est le test de santé de l’API, pas l’interface. L’app : **/** ou **/app**.
 
-Ouvrir **http://localhost:5173/fidelity/demo** (ou `http://localhost:5173` → redirection vers `/fidelity/demo`). Une entreprise « demo » existe par défaut. Pour une autre entreprise : **http://localhost:5173/fidelity/nom-slug** (après l’avoir créée via l’API ci-dessous).
+Ouvrir **http://localhost:5174/fidelity/demo** (ou la racine → redirection vers la démo). Une entreprise « demo » existe par défaut. Pour une autre entreprise : **http://localhost:5174/fidelity/nom-slug** (après l’avoir créée via l’API ci-dessous).
 
 ## Architecture
 

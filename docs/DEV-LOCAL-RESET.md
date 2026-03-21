@@ -1,5 +1,7 @@
 # Réinitialiser le dev local (nettoyage complet)
 
+Pour lancer **sans taper au terminal** au quotidien, voir **[LANCER-SANS-TERMINAL.md](./LANCER-SANS-TERMINAL.md)**.
+
 ## Une commande
 
 ```bash
