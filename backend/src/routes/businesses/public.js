@@ -3,7 +3,13 @@
  * Référence : REFONTE-REGLES.md — max 15 routes par fichier.
  */
 import { Router } from "express";
-import { getBusinessGames, getMemberForBusiness, getRoulettePublicSegments, spinGameForMember } from "../../db.js";
+import {
+  getBusinessGames,
+  getMemberForBusiness,
+  getRoulettePublicSegments,
+  resolveBusinessProgramType,
+  spinGameForMember,
+} from "../../db.js";
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
 
@@ -28,7 +34,7 @@ export function publicInfo(req, res) {
     backgroundColor: business.background_color ?? undefined,
     foregroundColor: business.foreground_color ?? undefined,
     labelColor: business.label_color ?? undefined,
-    program_type: business.program_type ?? undefined,
+    program_type: resolveBusinessProgramType(business),
     loyalty_mode: business.loyalty_mode ?? "points_cash",
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
@@ -49,12 +55,11 @@ export function publicGames(req, res) {
     daily_spin_limit: g.daily_spin_limit,
     cooldown_seconds: g.cooldown_seconds,
   }));
-  const programType = String(business.program_type || "points").toLowerCase();
-  const roulette_segments =
-    programType === "points" || programType === "stamps" ? getRoulettePublicSegments(business.id, programType) : [];
+  const programType = resolveBusinessProgramType(business);
+  const roulette_segments = getRoulettePublicSegments(business.id, programType);
   return res.json({
     loyalty_mode: business.loyalty_mode ?? "points_cash",
-    program_type: business.program_type ?? undefined,
+    program_type: programType,
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     games,
     roulette_segments,

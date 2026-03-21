@@ -27,6 +27,21 @@ export function getBusinessById(id) {
   return row || null;
 }
 
+/**
+ * Programme fidélité effectif (points vs tampons), aligné sur la logique du dashboard.
+ * Gère les alias (tampons), les chaînes vides / bizarres et le repli sur required_stamps > 0.
+ */
+export function resolveBusinessProgramType(business) {
+  if (!business) return "points";
+  let pt = String(business.program_type ?? "").trim().toLowerCase();
+  if (pt === "tampons" || pt === "tampon" || pt === "stamp") pt = "stamps";
+  if (pt === "point") pt = "points";
+  if (pt === "points" || pt === "stamps") return pt;
+  const rs = business.required_stamps != null ? Number(business.required_stamps) : NaN;
+  if (Number.isFinite(rs) && rs > 0) return "stamps";
+  return "points";
+}
+
 export function createBusiness({
   id,
   name,

@@ -4,7 +4,7 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { getBusinessById } from "./businesses.js";
+import { getBusinessById, resolveBusinessProgramType } from "./businesses.js";
 import { getMemberForBusiness, getMember, addPoints, addStampsCapped } from "./members.js";
 import { createTransaction } from "./transactions.js";
 import {
@@ -210,7 +210,7 @@ export function convertPointsToTickets({
 }) {
   const business = getBusinessById(businessId);
   if (!business) return { error: "business_not_found" };
-  if (String(business.program_type || "").toLowerCase() === "stamps") {
+  if (resolveBusinessProgramType(business) === "stamps") {
     return { error: "mode_disabled" };
   }
   if ((business.loyalty_mode || "points_cash") !== "points_game_tickets") {
@@ -317,10 +317,7 @@ export function spinGameForMember({
     }
     const business = getBusinessById(businessId);
     if (!business) return { error: "business_not_found" };
-    const programType = String(business.program_type || "points").toLowerCase();
-    if (programType !== "points" && programType !== "stamps") {
-      return { error: "mode_disabled" };
-    }
+    const programType = resolveBusinessProgramType(business);
     const member = getMemberForBusiness(memberId, businessId);
     if (!member) return { error: "member_not_found" };
     const game = ensureBusinessGame(businessId, gameCode);
