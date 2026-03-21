@@ -11,7 +11,7 @@ import { createStripBuffer, buildPassLocations } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
-import { PASS_TEMPLATES, STRIP_W, STRIP_H, PASS_HEADER_RIGHT_LABEL } from "./constants.js";
+import { PASS_TEMPLATES, STRIP_W, STRIP_H, PASS_HEADER_RIGHT_LABEL, PASS_LABEL_MEMBER } from "./constants.js";
 import {
   parsePointRewardTiersFromBusiness,
   frontRewardLabelFromSortedTiers,
@@ -209,7 +209,7 @@ export async function generatePass(member, business = null, options = {}) {
   });
 
   const labelRestants = (options.label_restants ?? business?.label_restants)?.trim() || "Restants";
-  const labelMember = (options.label_member ?? business?.label_member)?.trim() || "Membre";
+  const labelMember = PASS_LABEL_MEMBER;
   if (format === "tampons") {
     const restants = Math.max(0, stampMax - stamps);
     pass.secondaryFields.push({

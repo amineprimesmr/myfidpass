@@ -26,6 +26,9 @@ export const ICON_SIZE_3X = 87;
 /** Lien en-tête droit (face avant) — fixe, non configurable commerce. */
 export const PASS_HEADER_RIGHT_LABEL = "Récompenses ↗";
 
+/** Libellé champ « membre » (face avant / auxiliaire) — fixe. */
+export const PASS_LABEL_MEMBER = "Membre";
+
 /** Strip Apple : 750×246. Tampons : diam. 96 px. */
 export const STRIP_W = 750;
 export const STRIP_H = 246;

@@ -1936,9 +1936,8 @@ function initAppDashboard(slug) {
     const restantsLabelEl = document.getElementById("app-wallet-preview-restants-label");
     const memberLabelEl = document.getElementById("app-wallet-preview-member-label");
     const labelRestantsVal = document.getElementById("app-personnaliser-label-restants")?.value?.trim();
-    const labelMemberVal = document.getElementById("app-personnaliser-label-member")?.value?.trim();
     if (restantsLabelEl) restantsLabelEl.textContent = labelRestantsVal || "Restants";
-    if (memberLabelEl) memberLabelEl.textContent = labelMemberVal || "Membre";
+    if (memberLabelEl) memberLabelEl.textContent = "Membre";
     const headerRightEl = document.getElementById("app-wallet-preview-header-right");
     if (headerRightEl) headerRightEl.textContent = "Récompenses ↗";
     const rewardValueEl = document.getElementById("app-wallet-preview-reward");
@@ -2013,9 +2012,8 @@ function initAppDashboard(slug) {
     schedulePersonnaliserGroupStatusRefresh();
   }
   const personnaliserLabelRestants = document.getElementById("app-personnaliser-label-restants");
-  const personnaliserLabelMember = document.getElementById("app-personnaliser-label-member");
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl, personnaliserLabelRestants, personnaliserLabelMember].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
-  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl, personnaliserLabelRestants, personnaliserLabelMember].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl, personnaliserLabelRestants].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
+  [personnaliserOrg, personnaliserBg, personnaliserBgHex, personnaliserFg, personnaliserFgHex, personnaliserLabel, personnaliserLabelHex, personnaliserStrip, personnaliserStripHex, stripTextEl, personnaliserLabelRestants].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [stripDisplayLogo, stripDisplayText].forEach((el) => el?.addEventListener("change", () => { setStripDisplayVisibility(); updatePersonnaliserPreview(); }));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("change", updatePersonnaliserPreview));
   [programTypePoints, programTypeStamps].forEach((el) => el?.addEventListener("input", updatePersonnaliserPreview));
@@ -2266,9 +2264,7 @@ function initAppDashboard(slug) {
         }
       }
       const labelRestantsEl = document.getElementById("app-personnaliser-label-restants");
-      const labelMemberEl = document.getElementById("app-personnaliser-label-member");
       if (labelRestantsEl && (data.label_restants ?? data.labelRestants) != null) labelRestantsEl.value = data.label_restants ?? data.labelRestants ?? "";
-      if (labelMemberEl && (data.label_member ?? data.labelMember) != null) labelMemberEl.value = data.label_member ?? data.labelMember ?? "";
       const notifTitleOverrideEl = document.getElementById("app-notification-title-override");
       const notifChangeMsgEl = document.getElementById("app-notification-change-message");
       const bannerTitleEl = document.getElementById("app-notification-banner-title");
@@ -3155,9 +3151,7 @@ function initAppDashboard(slug) {
         if (radiusVal !== undefined) body.locationRadiusMeters = radiusVal === "" ? undefined : parseInt(radiusVal, 10);
       }
       const labelRestantsVal = document.getElementById("app-personnaliser-label-restants")?.value?.trim();
-      const labelMemberVal = document.getElementById("app-personnaliser-label-member")?.value?.trim();
       if (labelRestantsVal) body.labelRestants = labelRestantsVal;
-      if (labelMemberVal) body.labelMember = labelMemberVal;
       const rulesPatch = buildCardRulesPatchBody();
       Object.assign(body, rulesPatch);
       personnaliserSave.disabled = true;

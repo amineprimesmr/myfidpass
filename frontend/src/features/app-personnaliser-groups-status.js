@@ -43,9 +43,12 @@ function isLogoGroupComplete(doc) {
 }
 
 function isLabelsGroupComplete(doc) {
-  const a = doc.getElementById("app-personnaliser-label-restants")?.value?.trim() ?? "";
-  const b = doc.getElementById("app-personnaliser-label-member")?.value?.trim() ?? "";
-  return a.length > 0 && b.length > 0;
+  const root = doc.getElementById("regles-carte");
+  const checked = root?.querySelector('input[name="app-program-type"]:checked');
+  const isStamps = checked?.value === "stamps";
+  const restants = doc.getElementById("app-personnaliser-label-restants")?.value?.trim() ?? "";
+  if (isStamps) return restants.length > 0;
+  return true;
 }
 
 function isCardRulesProgramConfigured(doc) {
