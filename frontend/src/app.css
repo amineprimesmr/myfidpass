@@ -3014,7 +3014,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   gap: 0.75rem;
   margin-top: 1.25rem;
 }
-.app-empty-card--fatal .app-empty-title {
+.app-empty-fatal .app-empty-title {
   margin-top: 0.65rem;
 }
 .app-empty-load-detail {

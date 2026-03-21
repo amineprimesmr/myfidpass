@@ -52,11 +52,15 @@ function initAppPage() {
   const resetAllBtn = document.getElementById("app-reset-all");
 
   const loadErrorDetailEl = document.getElementById("app-empty-load-error-detail");
+  const emptyWelcomeEl = document.getElementById("app-empty-welcome");
+  const emptyFatalEl = document.getElementById("app-empty-fatal");
 
   function showLoadError(detailLine = "") {
     if (loadingEl) loadingEl.classList.add("hidden");
     if (emptyEl) emptyEl.classList.remove("hidden");
     if (contentEl) contentEl.classList.add("hidden");
+    emptyWelcomeEl?.classList.add("hidden");
+    emptyFatalEl?.classList.remove("hidden");
     if (loadErrorEl) {
       loadErrorEl.textContent = APP_LOAD_ERROR_MSG;
       loadErrorEl.classList.remove("hidden");
@@ -205,13 +209,10 @@ function initAppPage() {
           loadErrorEl.classList.add("hidden");
         }
         loadErrorDetailEl?.classList.add("hidden");
-        if (emptyEl) emptyEl.classList.add("hidden");
-        if (contentEl) contentEl.classList.remove("hidden");
-        document.getElementById("app-app")?.classList.add("app-awaiting-first-business");
-        const setupEl = document.getElementById("app-personnaliser-first-setup");
-        const editorEl = document.getElementById("app-personnaliser-editor-wrap");
-        setupEl?.classList.remove("hidden");
-        editorEl?.classList.add("hidden");
+        emptyWelcomeEl?.classList.remove("hidden");
+        emptyFatalEl?.classList.add("hidden");
+        if (emptyEl) emptyEl.classList.remove("hidden");
+        if (contentEl) contentEl.classList.add("hidden");
         if (businessNameEl) businessNameEl.textContent = "Mon espace";
         initAppSidebar();
         window.dispatchEvent(
@@ -224,10 +225,7 @@ function initAppPage() {
             },
           })
         );
-        requestAnimationFrame(() => {
-          showAppSection("personnaliser");
-          maybeShowPostPurchaseAppModal();
-        });
+        requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
         return;
       }
       loadingEl?.classList.add("hidden");
@@ -236,6 +234,8 @@ function initAppPage() {
         loadErrorEl.classList.add("hidden");
       }
       loadErrorDetailEl?.classList.add("hidden");
+      emptyWelcomeEl?.classList.remove("hidden");
+      emptyFatalEl?.classList.add("hidden");
       if (emptyEl) emptyEl.classList.add("hidden");
       if (contentEl) contentEl.classList.remove("hidden");
       const business = businesses[0];
@@ -408,10 +408,6 @@ function initAppPage() {
       if (emptyEl) emptyEl.classList.add("hidden");
       if (contentEl) contentEl.classList.remove("hidden");
       document.getElementById("app-app")?.classList.remove("app-awaiting-first-business");
-      const setupEl = document.getElementById("app-personnaliser-first-setup");
-      const editorEl = document.getElementById("app-personnaliser-editor-wrap");
-      setupEl?.classList.add("hidden");
-      editorEl?.classList.remove("hidden");
       if (businessNameEl) businessNameEl.textContent = data.organization_name || data.name || data.slug;
       initAppSidebar();
       initAppDashboard(data.slug);

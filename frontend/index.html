@@ -312,14 +312,29 @@
       <main class="app-main">
         <div id="app-main-loading" class="app-main-loading" aria-live="polite">Chargement…</div>
         <div id="app-empty" class="app-empty hidden" aria-live="polite">
-          <div class="app-empty-card app-empty-card--fatal">
+          <div class="app-empty-card">
             <p id="app-empty-load-error" class="app-message error hidden" role="alert"></p>
             <p id="app-empty-load-error-detail" class="app-empty-load-detail hidden" role="status"></p>
-            <h1 class="app-empty-title">Connexion au serveur impossible</h1>
-            <p class="app-empty-text">L’application n’a pas pu joindre l’API (session / réseau). Ce n’est pas l’écran pour créer une carte : le problème vient du chargement des données.</p>
-            <div class="app-empty-fatal-actions">
-              <button type="button" id="app-empty-retry-btn" class="app-btn app-btn-primary">Réessayer</button>
-              <a href="/" class="app-btn app-btn-secondary">Accueil</a>
+            <div id="app-empty-welcome" class="app-empty-welcome">
+              <h1 class="app-empty-title">Aucune carte pour l’instant</h1>
+              <p class="app-empty-text">Créez votre première carte de fidélité (Apple Wallet et Google Wallet). Nom et lien sont modifiables plus tard dans « Ma carte ».</p>
+              <form id="app-empty-create-form" class="app-empty-form">
+                <label class="app-label" for="app-empty-name">Nom de l’établissement</label>
+                <input type="text" id="app-empty-name" class="app-input" placeholder="ex. Café NBK" autocomplete="organization" required />
+                <label class="app-label" for="app-empty-slug">Votre lien (pour la page carte et le QR)</label>
+                <input type="text" id="app-empty-slug" class="app-input app-input-slug" placeholder="cafe-nbk" autocomplete="off" />
+                <p class="app-hint">Vos clients iront sur : …/fidelity/<strong id="app-empty-slug-preview">votre-lien</strong></p>
+                <button type="submit" class="app-btn app-btn-primary app-empty-cta">Créer ma carte</button>
+                <p id="app-empty-create-error" class="app-message error hidden"></p>
+              </form>
+            </div>
+            <div id="app-empty-fatal" class="app-empty-fatal hidden" role="region" aria-label="Erreur de chargement">
+              <h1 class="app-empty-title">Connexion au serveur impossible</h1>
+              <p class="app-empty-text">L’application n’a pas pu joindre l’API (session ou réseau). Vérifiez que le backend tourne puis réessayez.</p>
+              <div class="app-empty-fatal-actions">
+                <button type="button" id="app-empty-retry-btn" class="app-btn app-btn-primary">Réessayer</button>
+                <a href="/" class="app-btn app-btn-secondary">Accueil</a>
+              </div>
             </div>
           </div>
         </div>
@@ -721,19 +736,6 @@
           </section>
 
           <section id="personnaliser" class="app-section">
-            <div id="app-personnaliser-first-setup" class="app-personnaliser-setup app-card hidden">
-              <h2 class="app-section-title">Créez votre carte</h2>
-              <p class="app-section-desc">Indiquez le <strong>nom</strong> de l’établissement et le <strong>lien</strong> public de la page carte. Ensuite vous personnaliserez design et règles dans <strong>Ma carte</strong> (couleurs, logo, fidélité).</p>
-              <form id="app-empty-create-form" class="app-empty-form">
-                <label class="app-label" for="app-empty-name">Nom de l'établissement</label>
-                <input type="text" id="app-empty-name" class="app-input" placeholder="ex. Café NBK" autocomplete="organization" required />
-                <label class="app-label" for="app-empty-slug">Votre lien (page carte et QR)</label>
-                <input type="text" id="app-empty-slug" class="app-input app-input-slug" placeholder="cafe-nbk" autocomplete="off" />
-                <p class="app-hint">Vos clients iront sur : …/fidelity/<strong id="app-empty-slug-preview">votre-lien</strong></p>
-                <button type="submit" class="app-btn app-btn-primary app-empty-cta">Créer ma carte et continuer</button>
-                <p id="app-empty-create-error" class="app-message error hidden"></p>
-              </form>
-            </div>
             <div id="app-personnaliser-editor-wrap">
             <h2 class="app-section-title">Ma carte</h2>
             <p class="app-section-desc">Personnalisez le <strong>design</strong> et les <strong>règles</strong> de fidélité (points, tampons, paliers). Ouvrez les blocs ci-dessous ; l’aperçu à droite se met à jour en direct.</p>
