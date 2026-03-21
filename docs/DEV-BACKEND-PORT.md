@@ -1,3 +1,10 @@
+# Développement local — ports
+
+- **Port 3001** : processus **Node backend** (Express). Réponses JSON (`/api/...`, PassKit, etc.). Ce n’est **pas** l’URL de l’interface : si tu ouvres `http://localhost:3001` dans Chrome alors que le backend est arrêté → **ERR_CONNECTION_REFUSED**.
+- **Port 5174 / 5177** (ou autre) : **Vite** sert le site (HTML/JS). C’est là que tu vas sur **`/app`**.
+
+Commande typique : à la racine du dépôt, **`npm start`** (backend + Vite), puis ouvre l’URL **Frontend** affichée dans le terminal.
+
 # Pourquoi le dashboard local affiche « connexion impossible » / `/api/health` → `Not found`
 
 ## Ce qui se passait (cause racine)

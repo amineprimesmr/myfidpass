@@ -26,9 +26,9 @@ const front = spawn(isWin ? "npm.cmd" : "npm", ["run", "dev", "--prefix", "front
   shell: isWin,
 });
 
-console.log("\n  Backend  → http://localhost:3001");
-console.log("  Frontend → http://localhost:5174");
-console.log("  Carte fidélité → http://localhost:5174/fidelity/demo\n");
+console.log("\n  Backend (API JSON) → http://localhost:3001  — ne pas ouvrir ça comme « le site » : si rien n’écoute, ERR_CONNECTION_REFUSED.");
+console.log("  Frontend (l’app)   → http://localhost:5174  — ouvre cette URL dans le navigateur (Vite peut afficher un autre port, ex. 5177).");
+console.log("  Carte démo         → http://localhost:5174/fidelity/demo\n");
 
 function killAll() {
   back.kill();
