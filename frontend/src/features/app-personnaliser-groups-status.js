@@ -45,8 +45,7 @@ function isLogoGroupComplete(doc) {
 function isLabelsGroupComplete(doc) {
   const a = doc.getElementById("app-personnaliser-label-restants")?.value?.trim() ?? "";
   const b = doc.getElementById("app-personnaliser-label-member")?.value?.trim() ?? "";
-  const c = doc.getElementById("app-personnaliser-header-right")?.value?.trim() ?? "";
-  return a.length > 0 && b.length > 0 && c.length > 0;
+  return a.length > 0 && b.length > 0;
 }
 
 function isCardRulesProgramConfigured(doc) {

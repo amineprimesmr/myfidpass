@@ -11,7 +11,7 @@ import { createStripBuffer, buildPassLocations } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
-import { PASS_TEMPLATES, STRIP_W, STRIP_H } from "./constants.js";
+import { PASS_TEMPLATES, STRIP_W, STRIP_H, PASS_HEADER_RIGHT_LABEL } from "./constants.js";
 import {
   parsePointRewardTiersFromBusiness,
   frontRewardLabelFromSortedTiers,
@@ -201,11 +201,10 @@ export async function generatePass(member, business = null, options = {}) {
     });
   }
 
-  const headerRightText = (options.header_right_text ?? business?.header_right_text)?.trim() || "+ d'infos ↗";
   pass.headerFields.push({
     key: "headerRight",
     label: "",
-    value: headerRightText,
+    value: PASS_HEADER_RIGHT_LABEL,
     textAlignment: "PKTextAlignmentRight",
   });
 
