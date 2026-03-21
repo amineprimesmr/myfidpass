@@ -834,6 +834,34 @@ function initAppDashboard(slug) {
       }
     });
   }
+  /** Ouvre Personnaliser → Partager et préremplit le slug (ex. depuis Profil). */
+  function openPersonnaliserShareWithSuggestedSlug(suggestedRaw) {
+    const suggested = slugify(suggestedRaw || currentShareSlug || "ma-carte");
+    showAppSection("personnaliser");
+    const acc = document.getElementById("app-personnaliser-accordion");
+    if (acc) {
+      const groups = acc.querySelectorAll("[data-personnaliser-group]");
+      groups.forEach((group) => {
+        const isShare = group.getAttribute("data-personnaliser-step") === "share";
+        group.classList.toggle("is-open", !!isShare);
+        const toggle = group.querySelector(".app-personnaliser-group-toggle");
+        if (toggle) toggle.setAttribute("aria-expanded", isShare ? "true" : "false");
+      });
+    }
+    requestAnimationFrame(() => {
+      if (shareSlugInputEl) {
+        shareSlugInputEl.value = suggested;
+        shareSlugInputEl.focus();
+        shareSlugInputEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      setShareSlugMessage(
+        "Vérifiez le lien proposé puis cliquez sur « Mettre à jour ». Attention : les anciens QR et liens cesseront de fonctionner.",
+        false
+      );
+      schedulePersonnaliserGroupStatusRefresh();
+    });
+  }
+
   if (shareSlugSaveBtn) {
     shareSlugSaveBtn.addEventListener("click", async () => {
       const proposed = slugify(shareSlugInputEl?.value || "");
@@ -3444,6 +3472,11 @@ function initAppDashboard(slug) {
       showProfilMessage("");
     });
   }
+
+  document.getElementById("app-profil-open-slug-editor")?.addEventListener("click", () => {
+    const name = profilOrg?.value?.trim() || "";
+    openPersonnaliserShareWithSuggestedSlug(name);
+  });
 
   if (profilSave) {
     profilSave.addEventListener("click", async () => {

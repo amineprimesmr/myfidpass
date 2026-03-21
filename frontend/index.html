@@ -1459,10 +1459,13 @@
                   <p class="app-hint">Suggestions automatiques (OpenStreetMap). Vous pouvez aussi coller une adresse complète puis enregistrer.</p>
                 </div>
                 <div class="app-rules-row">
-                  <label class="app-label">Lien public de la page carte (identifiant technique)</label>
+                  <label class="app-label">Lien public de la page carte (identifiant dans l’URL)</label>
                   <p id="app-profil-slug-display" class="app-profil-slug-display"></p>
-                  <p class="app-hint">Le segment <code>/fidelity/…</code> est le <strong>slug</strong> : il ne change pas quand vous modifiez le nom affiché, pour ne pas casser les liens et QR déjà partagés. Pour changer ce lien, ouvrez <strong>Ma carte</strong> → section <strong>Partager</strong> → « Mettre à jour ».</p>
-                  <p class="app-hint">Le <strong>nom affiché</strong> ci-dessus s’applique partout sur la carte, les notifications et l’aperçu dès que vous enregistrez le Profil.</p>
+                  <p class="app-hint"><strong>Nom affiché</strong> ≠ texte dans l’URL : le lien utilise un <strong>slug</strong> (ex. <code>mon-cafe</code>) pour rester stable si vous changez seulement le nom sur la carte. Les anciens QR restent valides tant que vous ne changez pas le slug.</p>
+                  <p class="app-profil-slug-actions">
+                    <button type="button" id="app-profil-open-slug-editor" class="app-btn app-btn-primary">Mettre le lien à jour selon mon nom</button>
+                  </p>
+                  <p class="app-hint">Ouvre <strong>Ma carte</strong> → <strong>Partager</strong> avec un lien proposé à partir du <strong>Nom affiché</strong> (modifiable avant validation). Après « Mettre à jour », la page se recharge : les anciens liens / QR ne marcheront plus.</p>
                 </div>
                 <p id="app-profil-message" class="app-message app-profil-message hidden"></p>
                 <span class="app-save-cta-wrap">

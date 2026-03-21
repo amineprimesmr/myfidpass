@@ -4669,6 +4669,13 @@ body.page-app .whatsapp-fab { display: none !important; }
   margin-bottom: 0.75rem;
   font-size: 1.05rem;
 }
+.app-profil-slug-actions {
+  margin: 0.65rem 0 0.25rem;
+}
+.app-profil-slug-actions .app-btn {
+  width: fit-content;
+  max-width: 100%;
+}
 .app-perimetre-address-block {
   margin-bottom: 1rem;
 }
