@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-body: "Barlow", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: 213 45% 67%;
+  --foreground: 0 0% 100%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 213 45% 67%;
+  --border: 0 0% 100% / 0.2;
+  --radius: 9999px;
+  --font-heading: "Instrument Serif", serif;
+  --font-body: "Barlow", sans-serif;
+}
+
+@layer components {
+  .liquid-glass {
+    position: relative;
+    overflow: hidden;
+    border: none;
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(4px);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.15) 20%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0.15) 80%,
+      rgba(255, 255, 255, 0.45) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .liquid-glass-strong {
+    position: relative;
+    overflow: hidden;
+    border: none;
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(50px);
+    box-shadow:
+      4px 4px 4px rgba(0, 0, 0, 0.05),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  }
+
+  .liquid-glass-strong::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0.2) 80%,
+      rgba(255, 255, 255, 0.5) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .ai-section-badge {
+    @apply mb-4 inline-block rounded-full px-3.5 py-1 font-body text-xs font-medium text-white;
+  }
+
+  .ai-section-heading {
+    @apply font-heading text-4xl italic leading-[0.9] tracking-tight text-white md:text-5xl lg:text-6xl;
+  }
+
+  .ai-body {
+    @apply font-body text-sm font-light text-white/60;
+  }
+}

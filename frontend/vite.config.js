@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 /* 127.0.0.1 : évite que « localhost » résolve en ::1 alors que Node écoute en IPv4 → proxy Vite en échec silencieux. */
 const apiProxyTarget = process.env.VITE_PROXY_TARGET || "http://127.0.0.1:3001";
@@ -51,6 +51,14 @@ function spaFallback() {
 export default defineConfig({
   appType: "spa",
   plugins: [react(), tailwindcss(), spaFallback()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, "index.html"),
+        landingAiAgency: resolve(__dirname, "landing-ai-agency.html"),
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -58,7 +66,7 @@ export default defineConfig({
   },
   // Réduire la lenteur en dev : pre-bundle des grosses deps dès le démarrage
   optimizeDeps: {
-    include: ["html5-qrcode", "three", "react", "react-dom"],
+    include: ["html5-qrcode", "three", "react", "react-dom", "hls.js"],
   },
   server: {
     port: 5174,
