@@ -5,7 +5,8 @@ import { fileURLToPath, URL } from "node:url";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const apiProxyTarget = process.env.VITE_PROXY_TARGET || "http://localhost:3001";
+/* 127.0.0.1 : évite que « localhost » résolve en ::1 alors que Node écoute en IPv4 → proxy Vite en échec silencieux. */
+const apiProxyTarget = process.env.VITE_PROXY_TARGET || "http://127.0.0.1:3001";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 

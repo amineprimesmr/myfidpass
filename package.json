@@ -7,6 +7,7 @@
   },
   "scripts": {
     "setup": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "clean:all": "node scripts/dev-local.mjs down 2>/dev/null || true; rm -rf node_modules backend/node_modules frontend/node_modules frontend/dist .dev-local frontend/.vite frontend/node_modules/.vite .turbo coverage backend/coverage frontend/coverage 2>/dev/null; find frontend -maxdepth 1 -name 'vite.config.js.timestamp-*.mjs' -delete 2>/dev/null; echo 'Nettoyage terminé. Puis: npm run setup — si le backend refuse de démarrer (better-sqlite3), voir docs/DEV-LOCAL-RESET.md'",
     "backend": "node scripts/free-backend-port.mjs && node backend/src/index.js",
     "backend:free-port": "node scripts/free-backend-port.mjs",
     "frontend": "npm run dev --prefix frontend",

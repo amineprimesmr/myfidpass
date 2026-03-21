@@ -3,8 +3,18 @@
  */
 const IS_MYFIDPASS_HOST =
   typeof window !== "undefined" && /(^|\.)myfidpass\.fr$/i.test(window.location.hostname);
-const IS_LOCALHOST =
-  typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+/** True si on est en dev navigateur sur machine locale (localhost, 127.0.0.1, ::1). */
+export function isLocalDevHostname(hostname) {
+  if (!hostname) return false;
+  const h = String(hostname).toLowerCase().replace(/^\[|\]$/g, "");
+  return h === "localhost" || h === "127.0.0.1" || h === "::1";
+}
+
+const IS_LOCALHOST = typeof window !== "undefined" && isLocalDevHostname(window.location.hostname);
+
+/** Export pour app.js : même règle que pour API_BASE / proxy Vite. */
+export const IS_LOCAL_DEV = IS_LOCALHOST;
 const RAW_ENV_API_BASE =
   typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : "";
 
@@ -60,7 +70,7 @@ export function isDevBypassPayment() {
   try {
     if (localStorage.getItem(DEV_BYPASS_PAYMENT_KEY) === "1") return true;
   } catch (_) {}
-  return typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+  return typeof window !== "undefined" && isLocalDevHostname(window.location.hostname);
 }
 
 export function setDevBypassPayment(on) {

@@ -2,7 +2,7 @@
  * Page app (/app) : espace pro, sidebar, dashboard, caisse, notifications, profil, personnaliser, engagement.
  * Dérogation : fichier > 400 lignes, à découper en sous-modules (app/notifications.js, app/caisse.js, etc.). REFONTE-REGLES.md.
  */
-import { API_BASE, getAuthHeaders, clearAuthToken, isDevBypassPayment } from "../config.js";
+import { API_BASE, getAuthHeaders, clearAuthToken, isDevBypassPayment, IS_LOCAL_DEV } from "../config.js";
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
@@ -34,11 +34,9 @@ import {
   getDefaultStampFinalLabelBySector,
 } from "./app-card-rules-point-tiers.js";
 
-const IS_LOCALHOST =
-  typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 /** En dev : front sur localhost et API_BASE vide → requêtes /api/* via proxy Vite vers le backend. */
-const IS_LOCAL_VITE_PROXY = IS_LOCALHOST && !API_BASE;
-const APP_LOAD_ERROR_MSG = IS_LOCALHOST
+const IS_LOCAL_VITE_PROXY = IS_LOCAL_DEV && !API_BASE;
+const APP_LOAD_ERROR_MSG = IS_LOCAL_DEV
   ? "Impossible de charger vos données. Vérifiez que le serveur tourne (backend sur le port 3001) ou réessayez plus tard."
   : "Impossible de charger vos données. Réessayez ou rafraîchissez la page.";
 
@@ -151,7 +149,7 @@ function initAppPage() {
       : "";
     const hint = IS_LOCAL_VITE_PROXY
       ? hintLocalProxy
-      : IS_LOCALHOST
+      : IS_LOCAL_DEV
         ? " Vérifie VITE_API_URL dans .env et que le backend répond."
         : "";
     const serverBit =
@@ -390,10 +388,7 @@ function initAppPage() {
         if (res.status === 403 && (data.code === "subscription_required")) {
           if (isDevBypassPayment()) {
             if (emptyCreateError) {
-              const isLocalhost =
-                typeof window !== "undefined" &&
-                (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-              emptyCreateError.innerHTML = isLocalhost
+              emptyCreateError.innerHTML = IS_LOCAL_DEV
                 ? "Mode dev actif ici. En <strong>localhost</strong>, ajoute <code>DEV_BYPASS_PAYMENT=true</code> dans <code>backend/.env</code>, puis redémarre le backend (<code>npm run backend</code>)."
                 : "Mode dev actif ici. Pour autoriser la création sans paiement : <strong>Railway</strong> → service backend → <strong>Variables</strong> → <code>DEV_BYPASS_PAYMENT</code> = <code>true</code> → enregistre puis <strong>Redeploy</strong>. Pense à cliquer « Mode dev : passer le paiement » sur la page Choisir une offre avant d’arriver ici.";
               emptyCreateError.classList.remove("hidden");
