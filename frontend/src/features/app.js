@@ -2121,7 +2121,11 @@ function initAppDashboard(slug) {
 
   function applyDashboardSettingsToForms(data) {
     if (!data) return;
-      currentOrganizationName = (data.organization_name ?? data.organizationName ?? "").trim() || "Votre commerce";
+      const orgFromApi = (data.organization_name ?? data.organizationName ?? "").trim();
+      currentOrganizationName = orgFromApi || "Votre commerce";
+      if (personnaliserOrg && orgFromApi) personnaliserOrg.value = orgFromApi;
+      const sideBizName = document.getElementById("app-business-name");
+      if (sideBizName) sideBizName.textContent = orgFromApi || slug || "Mon espace";
       const bg = data.background_color ?? data.backgroundColor ?? "#1e3a8a";
       const fg = data.foreground_color ?? data.foregroundColor ?? "#ffffff";
       const label = data.label_color ?? data.labelColor ?? "#dbeafe";
@@ -3184,6 +3188,35 @@ function initAppDashboard(slug) {
     });
   }
 
+  /** Après changement du nom d’établissement (Profil ou chargement) : sidebar, Ma carte, aperçus. */
+  function propagateEstablishmentDisplayName(displayName) {
+    const n = (displayName || "").trim();
+    currentOrganizationName = n || "Votre commerce";
+    const side = document.getElementById("app-business-name");
+    if (side) side.textContent = n || slug || "Mon espace";
+    if (personnaliserOrg && n) personnaliserOrg.value = n;
+    try {
+      if (typeof updatePersonnaliserPreview === "function") updatePersonnaliserPreview();
+    } catch (_) {
+      /* preview pas encore initialisé */
+    }
+    try {
+      if (typeof updateAppNotificationPreview === "function") updateAppNotificationPreview();
+    } catch (_) {
+      /* idem */
+    }
+    const headerAvatar = document.getElementById("app-dashboard-profile-avatar");
+    const initialsEl = document.getElementById("app-dashboard-profile-initials");
+    if (initialsEl && n && (!headerAvatar || headerAvatar.classList.contains("hidden"))) {
+      const parts = n.split(/\s+/).filter(Boolean);
+      let ini = "";
+      if (parts.length >= 2) ini = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      else if (parts.length === 1 && parts[0].length >= 2) ini = parts[0].slice(0, 2).toUpperCase();
+      else if (parts.length === 1) ini = (parts[0][0] || "?").toUpperCase();
+      initialsEl.textContent = ini || "ME";
+    }
+  }
+
   // ——— Profil (nom, logo, adresse) ———
   const profilOrg = document.getElementById("app-profil-org");
   const profilAddress = document.getElementById("app-profil-address");
@@ -3229,8 +3262,7 @@ function initAppDashboard(slug) {
         }
         const orgName = (data.organization_name ?? data.organizationName ?? "").trim();
         if (profilOrg) profilOrg.value = orgName;
-        const sideBusinessName = document.getElementById("app-business-name");
-        if (sideBusinessName && orgName) sideBusinessName.textContent = orgName;
+        propagateEstablishmentDisplayName(orgName);
         if (profilAddress) profilAddress.value = (data.location_address ?? data.locationAddress ?? "").trim();
         const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin.replace(/\/$/, "") : "";
         if (profilSlugDisplay) {
@@ -3379,10 +3411,7 @@ function initAppDashboard(slug) {
           showProfilMessage("Modifications enregistrées.");
           notifyAppSectionSaveSuccess("profil");
           profilLogoRemoved = false;
-          if (organizationName) {
-            const sideBusinessName = document.getElementById("app-business-name");
-            if (sideBusinessName) sideBusinessName.textContent = organizationName;
-          }
+          propagateEstablishmentDisplayName(organizationName);
           refreshSidebarBusinessLogo();
           if (body.logo_base64 && profilLogoPreview?.src?.startsWith("data:")) {
             profilLogoDataUrl = "";
@@ -5038,7 +5067,6 @@ function initAppDashboard(slug) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notification_title_override: titleEl?.value?.trim() || null,
-          organization_name: titleEl?.value?.trim() || null,
           notification_change_message: messageEl?.value?.trim() || null,
         }),
       });
