@@ -4198,6 +4198,8 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-personnaliser-preview .builder-wallet-card.app-wallet-preview-dynamic {
   /* Annule le padding global de .builder-wallet-card (landing) : sinon bande noire entre le contour et le vert */
   padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
   flex: none !important;
   width: 100%;
   max-width: 100%;
@@ -4223,8 +4225,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   border: none !important;
   border-radius: 12px 12px 0 0 !important;
   min-height: 2.65rem;
-  /* Petit air en haut : logo et « + d’infos » légèrement descendus */
-  padding: 0.22rem 0.75rem 0.45rem 0.5rem;
+  /* Strip image juste dessous (comme Wallet) : peu de marge sous le logo */
+  padding: 0.18rem 0.75rem 0.12rem 0.5rem;
   gap: 0.5rem;
   font-size: clamp(0.7rem, 6.2cqw, 0.9rem);
 }
@@ -4237,18 +4239,26 @@ body.page-app .whatsapp-fab { display: none !important; }
   flex-direction: column;
   align-items: stretch;
 }
-/* Image « fond de carte » = strip PassKit 750×246 (backend/src/pass/constants.js STRIP_W/H) */
+/* Strip sous l’en-tête (même empilement qu’Apple Wallet) — ratio PassKit 750×246 */
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-card-bg-banner {
   flex-shrink: 0;
   width: 100%;
   aspect-ratio: 750 / 246;
   min-height: 0;
   max-height: none;
+  margin: 0;
+  margin-top: -0.04rem;
   box-sizing: border-box;
   background-color: var(--wallet-bg);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+#app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-card-bg-banner.hidden {
+  display: none !important;
+  margin: 0;
+  min-height: 0;
+  aspect-ratio: auto;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-main-block {
   display: flex;
@@ -4259,6 +4269,10 @@ body.page-app .whatsapp-fab { display: none !important; }
   flex: 1 1 auto;
   min-height: 0;
   border-radius: 0;
+}
+/* Strip visible : moins d’air entre l’image et récompense / membre (comme Wallet) */
+#app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-card-bg-banner:not(.hidden) + .builder-wallet-card-body .app-wallet-preview-main-block {
+  padding-top: 0.28rem;
 }
 /* Fond carte (vert) jusqu’en bas ; blanc uniquement derrière le QR */
 #app-personnaliser-preview .app-wallet-preview-dynamic .builder-wallet-card-qr {
