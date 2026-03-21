@@ -1316,10 +1316,11 @@ function initAppDashboard(slug) {
         const lng = data.location_lng != null ? Number(data.location_lng) : null;
         const radius = data.location_radius_meters != null ? Math.min(2000, Math.max(100, Number(data.location_radius_meters))) : 500;
         const address = data.location_address || "";
-        const notifTitle = data.notification_title_override ?? data.notificationTitleOverride ?? "";
+        const notifTitleRaw = data.notification_title_override ?? data.notificationTitleOverride ?? "";
         const notifMessage = data.notification_change_message ?? data.notificationChangeMessage ?? "";
         currentAddress = address;
         const organizationName = (data.organization_name || "").trim();
+        const notifTitle = String(notifTitleRaw).trim() || organizationName;
         if (addressInput) addressInput.value = address;
         if (perimetreNotifTitleEl) perimetreNotifTitleEl.value = notifTitle;
         if (perimetreNotifMessageEl) perimetreNotifMessageEl.value = notifMessage;
@@ -2180,7 +2181,9 @@ function initAppDashboard(slug) {
       const notifChangeMsgEl = document.getElementById("app-notification-change-message");
       const bannerTitleEl = document.getElementById("app-notification-banner-title");
       const bannerMessageEl = document.getElementById("app-notification-banner-message");
-      const titleVal = data.notification_title_override ?? data.notificationTitleOverride ?? "";
+      const orgNameForNotif = (data.organization_name ?? data.organizationName ?? "").trim();
+      const titleOverrideRaw = data.notification_title_override ?? data.notificationTitleOverride ?? "";
+      const titleVal = String(titleOverrideRaw).trim() || orgNameForNotif;
       const msgVal = data.notification_change_message ?? data.notificationChangeMessage ?? "";
       if (notifTitleOverrideEl != null) notifTitleOverrideEl.value = titleVal;
       if (notifChangeMsgEl != null) notifChangeMsgEl.value = msgVal;
@@ -4589,7 +4592,10 @@ function initAppDashboard(slug) {
     const bannerTitle = document.getElementById("app-notification-banner-title");
     const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
     const perimetreIconFallback = document.getElementById("app-perimetre-banner-icon-fallback");
-    const title = (bannerTitle?.value ?? "").trim() || "Nom de votre commerce";
+    const fromSidebar = (document.getElementById("app-business-name")?.textContent ?? "").trim();
+    const fromPersonnaliser = (document.getElementById("app-personnaliser-org")?.value ?? "").trim();
+    const title =
+      (bannerTitle?.value ?? "").trim() || fromSidebar || fromPersonnaliser || "Nom de votre commerce";
     if (bannerIconFallback) {
       bannerIconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Logo";
     }
