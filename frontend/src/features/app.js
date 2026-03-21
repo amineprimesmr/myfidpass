@@ -4980,54 +4980,18 @@ function initAppDashboard(slug) {
 
   document.getElementById("app-notification-texts-save")?.addEventListener("click", async () => {
     const titleEl = document.getElementById("app-notification-banner-title");
-    const msgEl = document.getElementById("app-notification-banner-message");
-    const feedbackEl = document.getElementById("app-notification-texts-feedback");
-    const btn = document.getElementById("app-notification-texts-save");
-    if (btn) btn.disabled = true;
-    if (feedbackEl) feedbackEl.classList.add("hidden");
-    try {
-      const res = await api("/dashboard/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          // Le titre de notif sert aussi de « nom affiché » pour aligner Wallet, Profil et notifications
-          notification_title_override: titleEl?.value?.trim() || null,
-          organization_name: titleEl?.value?.trim() || null,
-          notification_change_message: msgEl?.value?.trim() || null,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (feedbackEl) {
-        feedbackEl.classList.remove("hidden");
-        if (res.ok) {
-          feedbackEl.textContent = "Textes enregistrés.";
-          feedbackEl.classList.remove("error");
-          feedbackEl.classList.add("success");
-          notifyAppSectionSaveSuccess("notifications");
-        } else {
-          feedbackEl.textContent = data.error || "Erreur lors de l'enregistrement.";
-          feedbackEl.classList.add("error");
-        }
-      }
-    } catch (_) {
-      if (feedbackEl) {
-        feedbackEl.classList.remove("hidden");
-        feedbackEl.textContent = "Erreur réseau.";
-        feedbackEl.classList.add("error");
-      }
-    }
-    if (btn) btn.disabled = false;
-  });
-
-  document.getElementById("app-notif-send")?.addEventListener("click", async () => {
-    const titleEl = document.getElementById("app-notification-banner-title");
     const messageEl = document.getElementById("app-notification-banner-message");
-    const feedbackEl = document.getElementById("app-notif-feedback");
-    const btn = document.getElementById("app-notif-send");
+    const textsFeedbackEl = document.getElementById("app-notification-texts-feedback");
+    const notifFeedbackEl = document.getElementById("app-notif-feedback");
+    const btn = document.getElementById("app-notification-texts-save");
     const targetCategories = document.getElementById("app-notif-target-categories");
     const message = messageEl?.value?.trim();
     if (!message) {
-      if (feedbackEl) { feedbackEl.textContent = "Saisissez un message dans l'aperçu."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+      if (notifFeedbackEl) {
+        notifFeedbackEl.textContent = "Saisissez un message dans l'aperçu.";
+        notifFeedbackEl.classList.remove("hidden", "success");
+        notifFeedbackEl.classList.add("error");
+      }
       return;
     }
     let categoryIds = undefined;
@@ -5035,48 +4999,79 @@ function initAppDashboard(slug) {
       const checked = document.querySelectorAll(".app-notif-category-cb:checked");
       categoryIds = Array.from(checked).map((c) => c.dataset.id).filter(Boolean);
       if (categoryIds.length === 0) {
-        if (feedbackEl) { feedbackEl.textContent = "Cochez au moins une catégorie pour envoyer."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+        if (notifFeedbackEl) {
+          notifFeedbackEl.textContent = "Cochez au moins une catégorie pour envoyer.";
+          notifFeedbackEl.classList.remove("hidden", "success");
+          notifFeedbackEl.classList.add("error");
+        }
         return;
       }
     }
     if (btn) btn.disabled = true;
-    if (feedbackEl) feedbackEl.classList.add("hidden");
+    if (textsFeedbackEl) textsFeedbackEl.classList.add("hidden");
+    if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
     try {
+      const saveRes = await api("/dashboard/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notification_title_override: titleEl?.value?.trim() || null,
+          organization_name: titleEl?.value?.trim() || null,
+          notification_change_message: messageEl?.value?.trim() || null,
+        }),
+      });
+      const saveData = await saveRes.json().catch(() => ({}));
+      if (!saveRes.ok) {
+        if (textsFeedbackEl) {
+          textsFeedbackEl.classList.remove("hidden");
+          textsFeedbackEl.textContent = saveData.error || "Erreur lors de l'enregistrement des textes.";
+          textsFeedbackEl.classList.add("error");
+          textsFeedbackEl.classList.remove("success");
+        }
+        return;
+      }
+      notifyAppSectionSaveSuccess("notifications");
+
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
         body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}) }),
       });
       const data = await res.json().catch(() => ({}));
-      if (feedbackEl) {
-        feedbackEl.classList.remove("hidden");
+      if (notifFeedbackEl) {
+        notifFeedbackEl.classList.remove("hidden");
         if (res.ok) {
           const sent = data.sent != null ? data.sent : 0;
           const wp = data.sentWebPush != null ? data.sentWebPush : 0;
           const pk = data.sentPassKit != null ? data.sentPassKit : 0;
-          if (sent === 0) feedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
+          if (sent === 0) notifFeedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
           else {
             let msg = pk > 0 && wp > 0 ? `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).` : pk > 0 ? `Notification envoyée à ${sent} appareil(s) (Apple Wallet).` : `Notification envoyée à ${sent} appareil(s).`;
             if (data.failed > 0 && data.errors?.length) msg += ` ${data.failed} échec(s).`;
-            feedbackEl.textContent = msg;
-            const prevTip = feedbackEl.nextElementSibling?.classList?.contains("app-notif-feedback-tip") ? feedbackEl.nextElementSibling : null;
+            notifFeedbackEl.textContent = msg;
+            const prevTip = notifFeedbackEl.nextElementSibling?.classList?.contains("app-notif-feedback-tip") ? notifFeedbackEl.nextElementSibling : null;
             if (prevTip) prevTip.remove();
             if (pk > 0) {
               const tip = document.createElement("p");
               tip.className = "app-notif-feedback-tip";
               tip.textContent = "";
-              feedbackEl.after(tip);
+              notifFeedbackEl.after(tip);
             }
           }
-          feedbackEl.classList.remove("error"); feedbackEl.classList.add("success");
+          notifFeedbackEl.classList.remove("error");
+          notifFeedbackEl.classList.add("success");
         } else {
-          feedbackEl.textContent = data.error || "Erreur";
-          feedbackEl.classList.add("error");
+          notifFeedbackEl.textContent = data.error || "Erreur";
+          notifFeedbackEl.classList.add("error");
         }
       }
       if (res.ok) loadAppNotificationStats();
-    } catch (e) {
-      if (feedbackEl) { feedbackEl.textContent = "Erreur réseau."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
+    } catch (_) {
+      if (notifFeedbackEl) {
+        notifFeedbackEl.textContent = "Erreur réseau.";
+        notifFeedbackEl.classList.remove("hidden", "success");
+        notifFeedbackEl.classList.add("error");
+      }
     }
     if (btn) btn.disabled = false;
   });
