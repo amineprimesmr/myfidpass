@@ -1587,10 +1587,29 @@ function initAppDashboard(slug) {
   const personnaliserCardBg = document.getElementById("app-personnaliser-card-bg");
   const personnaliserCardBgPlaceholder = document.getElementById("app-personnaliser-card-bg-placeholder");
   const personnaliserCardBgPreview = document.getElementById("app-personnaliser-card-bg-preview");
-  const personnaliserCardBgRemove = document.getElementById("app-personnaliser-card-bg-remove");
+  const personnaliserCardBgClear = document.getElementById("app-personnaliser-card-bg-clear");
+  const personnaliserLogoClear = document.getElementById("app-personnaliser-logo-clear");
   let personnaliserCardBgDataUrl = "";
   let personnaliserCardBgRemoveRequested = false;
   let hasCardBackgroundFromServer = false;
+  let hasLogoOnServerPersonnaliser = false;
+  let personnaliserLogoRemoveRequested = false;
+  function syncPersonnaliserCardBgClearVisibility() {
+    if (!personnaliserCardBgClear) return;
+    if (hasCardBackgroundFromServer || (personnaliserCardBgDataUrl && String(personnaliserCardBgDataUrl).trim())) {
+      personnaliserCardBgClear.classList.remove("hidden");
+    } else {
+      personnaliserCardBgClear.classList.add("hidden");
+    }
+  }
+  function syncPersonnaliserLogoClearVisibility() {
+    if (!personnaliserLogoClear) return;
+    if (hasLogoOnServerPersonnaliser || (personnaliserLogoDataUrl && String(personnaliserLogoDataUrl).trim())) {
+      personnaliserLogoClear.classList.remove("hidden");
+    } else {
+      personnaliserLogoClear.classList.add("hidden");
+    }
+  }
   function syncPersonnaliserAccordionServerCardBg() {
     const acc = document.getElementById("app-personnaliser-accordion");
     if (!acc) return;
@@ -2311,10 +2330,9 @@ function initAppDashboard(slug) {
       if (personnaliserRadius != null && (data.location_radius_meters ?? data.locationRadiusMeters) != null) personnaliserRadius.value = data.location_radius_meters ?? data.locationRadiusMeters;
       hasCardBackgroundFromServer = !!(data.has_card_background ?? data.hasCardBackground);
       syncPersonnaliserAccordionServerCardBg();
-      if (personnaliserCardBgRemove) {
-        if (hasCardBackgroundFromServer || personnaliserCardBgDataUrl) personnaliserCardBgRemove.classList.remove("hidden");
-        else personnaliserCardBgRemove.classList.add("hidden");
-      }
+      hasLogoOnServerPersonnaliser = !!(data.logo_url || data.logoUrl);
+      syncPersonnaliserCardBgClearVisibility();
+      syncPersonnaliserLogoClearVisibility();
       if (hasCardBackgroundFromServer) {
         api("/card-background?v=" + Date.now())
           .then((r) => (r.ok ? r.blob() : null))
@@ -2326,7 +2344,7 @@ function initAppDashboard(slug) {
                 personnaliserCardBgPreview.classList.remove("hidden");
               }
               if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
-              if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+              syncPersonnaliserCardBgClearVisibility();
               updatePersonnaliserPreview();
             }
           })
@@ -2378,10 +2396,12 @@ function initAppDashboard(slug) {
           if (rewards.length) gameRewardsJsonEl.value = JSON.stringify(rewards, null, 2);
         })
         .catch(() => {});
+      personnaliserLogoRemoveRequested = false;
       api("/logo?v=" + Date.now())
         .then((r) => (r.ok ? r.blob() : null))
         .then((blob) => {
           if (blob && personnaliserLogoPreview) {
+            hasLogoOnServerPersonnaliser = true;
             const url = URL.createObjectURL(blob);
             personnaliserLogoDataUrl = url;
             personnaliserLogoPreview.src = url;
@@ -2397,9 +2417,13 @@ function initAppDashboard(slug) {
               if (typeof extractAndShowLogoColors === "function") extractAndShowLogoColors(url);
             };
             if (personnaliserLogoPreview.complete) personnaliserLogoPreview.onload();
+            syncPersonnaliserLogoClearVisibility();
             updatePersonnaliserPreview();
           } else {
+            hasLogoOnServerPersonnaliser = false;
+            personnaliserLogoDataUrl = "";
             if (typeof extractAndShowLogoColors === "function") extractAndShowLogoColors(null);
+            syncPersonnaliserLogoClearVisibility();
             schedulePersonnaliserGroupStatusRefresh();
           }
         })
@@ -2794,6 +2818,7 @@ function initAppDashboard(slug) {
         return;
       }
       try {
+        personnaliserLogoRemoveRequested = false;
         personnaliserLogoDataUrl = await resizeLogoToDataUrl(file, 640, 0.9, "auto");
         if (personnaliserLogoPreview) {
           personnaliserLogoPreview.src = personnaliserLogoDataUrl;
@@ -2801,6 +2826,7 @@ function initAppDashboard(slug) {
         }
         if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.add("hidden");
         extractAndShowLogoColors(personnaliserLogoDataUrl);
+        syncPersonnaliserLogoClearVisibility();
         updatePersonnaliserPreview();
       } catch (err) {
         showPersonnaliserMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG valide.", true);
@@ -2820,7 +2846,7 @@ function initAppDashboard(slug) {
         personnaliserCardBgPreview.classList.remove("hidden");
       }
       if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
-      if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+      syncPersonnaliserCardBgClearVisibility();
     } catch (err) {
       showPersonnaliserMessage("Impossible de charger l'image de fond.", true);
     }
@@ -2902,7 +2928,9 @@ function initAppDashboard(slug) {
     setupImageDropZone(stampIconDropZone, (file) => applyStampIconFromFile(file));
   }
   if (personnaliserStampIconRemove) {
-    personnaliserStampIconRemove.addEventListener("click", () => {
+    personnaliserStampIconRemove.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
       personnaliserStampIconRemoveRequested = true;
       personnaliserStampIconDataUrl = "";
       if (personnaliserStampIcon) personnaliserStampIcon.value = "";
@@ -2920,8 +2948,10 @@ function initAppDashboard(slug) {
     });
   }
 
-  if (personnaliserCardBgRemove) {
-    personnaliserCardBgRemove.addEventListener("click", () => {
+  if (personnaliserCardBgClear) {
+    personnaliserCardBgClear.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
       personnaliserCardBgRemoveRequested = true;
       if (personnaliserCardBgDataUrl && personnaliserCardBgDataUrl.startsWith("blob:")) {
         try { URL.revokeObjectURL(personnaliserCardBgDataUrl); } catch (_) {}
@@ -2936,13 +2966,33 @@ function initAppDashboard(slug) {
         personnaliserCardBgPlaceholder.textContent = "+ Choisir une image de fond (glisser une image ou cliquer)";
         personnaliserCardBgPlaceholder.classList.remove("hidden");
       }
-      if (hasCardBackgroundFromServer) {
-        personnaliserCardBgRemove.classList.remove("hidden");
-      } else {
-        personnaliserCardBgRemove.classList.add("hidden");
-      }
+      syncPersonnaliserCardBgClearVisibility();
+      markAppSectionDirty("personnaliser");
       updatePersonnaliserPreview();
       requestAnimationFrame(() => updatePersonnaliserPreview());
+    });
+  }
+
+  if (personnaliserLogoClear) {
+    personnaliserLogoClear.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      personnaliserLogoRemoveRequested = true;
+      if (personnaliserLogoDataUrl && personnaliserLogoDataUrl.startsWith("blob:")) {
+        try { URL.revokeObjectURL(personnaliserLogoDataUrl); } catch (_) {}
+      }
+      personnaliserLogoDataUrl = "";
+      if (personnaliserLogo) personnaliserLogo.value = "";
+      if (personnaliserLogoPreview) {
+        personnaliserLogoPreview.src = "";
+        personnaliserLogoPreview.classList.add("hidden");
+      }
+      if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
+      const sw = document.getElementById("app-logo-colors-swatches");
+      if (sw) sw.classList.add("hidden");
+      syncPersonnaliserLogoClearVisibility();
+      updatePersonnaliserPreview();
+      markAppSectionDirty("personnaliser");
     });
   }
 
@@ -3071,7 +3121,9 @@ function initAppDashboard(slug) {
       body.stripDisplayMode = stripDisplayMode;
       if (stripDisplayMode === "text" && stripTextEl) body.stripText = stripTextEl.value.trim() || undefined;
       // N'envoyer le logo que si c'est un data URL (nouvelle image choisie). Une blob URL (logo chargé depuis l'API) ne doit pas être envoyée sinon on écrase le logo en base.
-      if (personnaliserLogoDataUrl && typeof personnaliserLogoDataUrl === "string" && personnaliserLogoDataUrl.startsWith("data:")) {
+      if (personnaliserLogoRemoveRequested) {
+        body.logoBase64 = null;
+      } else if (personnaliserLogoDataUrl && typeof personnaliserLogoDataUrl === "string" && personnaliserLogoDataUrl.startsWith("data:")) {
         body.logoBase64 = personnaliserLogoDataUrl;
       }
       if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
@@ -3169,7 +3221,7 @@ function initAppDashboard(slug) {
               personnaliserCardBgPlaceholder.textContent = "+ Choisir une image de fond";
               personnaliserCardBgPlaceholder.classList.remove("hidden");
             }
-            if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.add("hidden");
+            syncPersonnaliserCardBgClearVisibility();
           } else if (body.cardBackgroundBase64) {
             hasCardBackgroundFromServer = true;
             syncPersonnaliserAccordionServerCardBg();
@@ -3179,7 +3231,7 @@ function initAppDashboard(slug) {
               personnaliserCardBgPlaceholder.textContent = "Image de fond enregistrée";
               personnaliserCardBgPlaceholder.classList.remove("hidden");
             }
-            if (personnaliserCardBgRemove) personnaliserCardBgRemove.classList.remove("hidden");
+            syncPersonnaliserCardBgClearVisibility();
             api("/card-background?v=" + Date.now())
               .then((r) => (r.ok ? r.blob() : null))
               .then((blob) => {
@@ -3188,16 +3240,19 @@ function initAppDashboard(slug) {
                   personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
                   personnaliserCardBgPreview.classList.remove("hidden");
                   if (personnaliserCardBgPlaceholder) personnaliserCardBgPlaceholder.classList.add("hidden");
+                  syncPersonnaliserCardBgClearVisibility();
                   updatePersonnaliserPreview();
                 }
               })
               .catch(() => {});
           }
           // Toujours recharger le logo depuis l'API après enregistrement : garde l'affichage cohérent et met à jour personnaliserLogoDataUrl (blob URL) pour les prochains saves.
+          personnaliserLogoRemoveRequested = false;
           api("/logo?v=" + Date.now())
               .then((r) => (r.ok ? r.blob() : null))
               .then((blob) => {
                 if (blob && personnaliserLogoPreview) {
+                  hasLogoOnServerPersonnaliser = true;
                   const url = URL.createObjectURL(blob);
                 personnaliserLogoDataUrl = url;
                   personnaliserLogoPreview.src = url;
@@ -3208,20 +3263,24 @@ function initAppDashboard(slug) {
                     walletLogo.src = url;
                     walletLogo.classList.remove("hidden");
                   }
+                  syncPersonnaliserLogoClearVisibility();
                   updatePersonnaliserPreview();
                   refreshSidebarBusinessLogo();
           } else {
+                hasLogoOnServerPersonnaliser = false;
                 personnaliserLogoDataUrl = "";
             if (personnaliserLogoPreview) {
               personnaliserLogoPreview.src = "";
               personnaliserLogoPreview.classList.add("hidden");
             }
             if (personnaliserLogoPlaceholder) personnaliserLogoPlaceholder.classList.remove("hidden");
+            syncPersonnaliserLogoClearVisibility();
             updatePersonnaliserPreview();
             refreshSidebarBusinessLogo();
           }
             })
             .catch(() => {
+              syncPersonnaliserLogoClearVisibility();
               updatePersonnaliserPreview();
               refreshSidebarBusinessLogo();
             });

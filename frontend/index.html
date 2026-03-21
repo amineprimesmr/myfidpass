@@ -776,14 +776,14 @@
                       <p class="app-step-label">Image de fond de carte</p>
                       <p class="app-hint">Bandeau Wallet (ratio 750×246 px, optionnel). Ajouter, modifier ou supprimer.</p>
                       <div class="app-personnaliser-card-bg">
-                        <div class="app-drop-zone app-personnaliser-card-bg-zone" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                        <div class="app-drop-zone app-personnaliser-card-bg-zone app-media-drop-wrap" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
                           <input type="file" id="app-personnaliser-card-bg" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
                           <label for="app-personnaliser-card-bg" class="app-logo-label">
                             <span id="app-personnaliser-card-bg-placeholder">+ Choisir une image de fond (glisser une image, cliquer ou coller Ctrl+V)</span>
                             <img id="app-personnaliser-card-bg-preview" class="app-logo-preview hidden" alt="" />
                           </label>
+                          <button type="button" id="app-personnaliser-card-bg-clear" class="app-media-drop-clear hidden" aria-label="Supprimer l'image de fond" title="Supprimer">×</button>
                         </div>
-                        <button type="button" id="app-personnaliser-card-bg-remove" class="app-btn app-btn-secondary hidden">Supprimer l'image de fond</button>
                       </div>
                     </div>
                   </div>
@@ -807,12 +807,13 @@
               </div>
               <div id="app-personnaliser-logo-wrap">
               <p class="app-step-label">Logo (format 160×50 pt — ex. 320×100 px @2x)</p>
-                        <div class="app-personnaliser-logo app-drop-zone" id="app-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                        <div class="app-personnaliser-logo app-drop-zone app-media-drop-wrap" id="app-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
                 <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
                 <label for="app-personnaliser-logo" class="app-logo-label">
                             <span id="app-personnaliser-logo-placeholder">+ Changer le logo (glisser une image, cliquer ou coller Ctrl+V)</span>
                   <img id="app-personnaliser-logo-preview" class="app-logo-preview hidden" alt="" />
                 </label>
+                <button type="button" id="app-personnaliser-logo-clear" class="app-media-drop-clear hidden" aria-label="Supprimer le logo" title="Supprimer">×</button>
               </div>
               </div>
                 </div>
@@ -915,14 +916,14 @@
                             <input type="hidden" id="app-stamp-emoji" value="☕" />
                             <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône">
                               <div class="app-stamp-icon-custom-wrap">
-                              <div class="app-drop-zone app-stamp-icon-custom" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                              <div class="app-drop-zone app-stamp-icon-custom app-media-drop-wrap" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
                                 <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
                                 <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
                                   <span id="app-stamp-icon-placeholder">+</span>
                                   <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
                                 </label>
+                                <button type="button" id="app-stamp-icon-remove" class="app-media-drop-clear app-media-drop-clear--compact hidden" aria-label="Supprimer l'icône personnalisée" title="Supprimer">×</button>
                               </div>
-                              <button type="button" id="app-stamp-icon-remove" class="app-stamp-icon-remove-btn hidden" title="Supprimer l'icône">×</button>
                             </div>
                             </div>
                             <p class="app-step-label">Récompenses tampons</p>
