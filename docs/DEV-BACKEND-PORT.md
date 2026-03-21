@@ -33,6 +33,12 @@ curl -s http://127.0.0.1:3001/api/health
 
 Attendu : `{"ok":true,"service":"fidelity-api"}`.
 
+## Local : HTTP 500 sur `/api/auth/me` alors que `/api/health` est OK
+
+`/api/health` ne lit presque rien en base. **`/api/auth/me`** interroge SQLite (commerces, abonnement) : une **base locale corrompue**, **incomplète** ou un fichier `fidelity.db` d’une **vieille version** peut faire répondre **500** (en dev le JSON d’erreur contient souvent un champ **`detail`** avec le message SQLite).
+
+**Recréer la base locale** (données locales perdues) : arrêter le backend, supprimer `backend/data/fidelity.db`, redémarrer `npm run backend`, puis te **réinscrire** / te reconnecter.
+
 ## Prod : `myfidpass.fr` sans `www` et `/api`
 
 Sur l’apex `https://myfidpass.fr`, Vercel peut répondre **307** vers `https://www.myfidpass.fr` **avant** la réécriture `/api` → le navigateur suit la redirection vers un autre hôte : la requête API devient **cross-origin** et peut échouer (CORS / session).  

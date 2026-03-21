@@ -121,10 +121,21 @@ function initAppPage() {
   async function fetchAuthMe(retries = 3) {
     let lastStatus = null;
     let networkFail = false;
+    /** Dernière erreur JSON du backend (ex. détail SQLite en dev sur /api/auth/me). */
+    let serverErrorLine = "";
     for (let i = 0; i <= retries; i++) {
       try {
         const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
         lastStatus = res.status;
+        if (res.status >= 500) {
+          try {
+            const j = await res.clone().json();
+            if (j.detail) serverErrorLine = String(j.detail);
+            else if (j.error) serverErrorLine = String(j.error);
+          } catch (_) {
+            /* corps non-JSON */
+          }
+        }
         if (res.ok || res.status === 401) return res;
         if (i < retries) await new Promise((r) => setTimeout(r, 600 * (i + 1)));
       } catch (_) {
@@ -133,15 +144,22 @@ function initAppPage() {
         if (i < retries) await new Promise((r) => setTimeout(r, 600 * (i + 1)));
       }
     }
+    const originHint =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const hintLocalProxy = IS_LOCAL_VITE_PROXY
+      ? ` Ici tu parles au backend local (proxy → port 3001), pas à api.myfidpass.fr : un « health » vert en prod ne dit rien sur ta machine. Test : ${originHint}/api/health → {"ok":true,"service":"fidelity-api"}. Si 500 sur /me : regarde la ligne « Détail » ci-dessous ; souvent SQLite locale — arrête le backend, supprime backend/data/fidelity.db, relance, réinscris-toi. Port 3001 pris par un vieux Node : lsof -i :3001 puis kill.`
+      : "";
     const hint = IS_LOCAL_VITE_PROXY
-      ? ` Test : ouvre ${typeof window !== "undefined" ? window.location.origin : ""}/api/health — tu dois voir {"ok":true,"service":"fidelity-api"}. Si tu vois {"error":"Not found"}, un ancien Node écoute encore sur le port 3001 : lsof -i :3001 puis kill le PID, puis relance le backend depuis ce dépôt.`
+      ? hintLocalProxy
       : IS_LOCALHOST
         ? " Vérifie VITE_API_URL dans .env et que le backend répond."
         : "";
+    const serverBit =
+      serverErrorLine && lastStatus === 500 ? ` Détail : ${serverErrorLine}` : "";
     if (networkFail && !lastStatus) {
       window.__fidpassAuthMeFailDetail = `Aucune réponse du serveur (réseau ou API injoignable).${hint}`;
     } else if (lastStatus) {
-      window.__fidpassAuthMeFailDetail = `Le serveur a répondu HTTP ${lastStatus} (réessayé ${retries + 1} fois).${hint}`;
+      window.__fidpassAuthMeFailDetail = `Le serveur a répondu HTTP ${lastStatus} (réessayé ${retries + 1} fois).${serverBit}${hint}`;
     } else {
       window.__fidpassAuthMeFailDetail = `Échec après plusieurs tentatives.${hint}`;
     }
