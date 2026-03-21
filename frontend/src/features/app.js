@@ -36,6 +36,8 @@ import {
 
 const IS_LOCALHOST =
   typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+/** En dev : front sur localhost et API_BASE vide → requêtes /api/* via proxy Vite vers le backend. */
+const IS_LOCAL_VITE_PROXY = IS_LOCALHOST && !API_BASE;
 const APP_LOAD_ERROR_MSG = IS_LOCALHOST
   ? "Impossible de charger vos données. Vérifiez que le serveur tourne (backend sur le port 3001) ou réessayez plus tard."
   : "Impossible de charger vos données. Réessayez ou rafraîchissez la page.";
@@ -51,13 +53,19 @@ function initAppPage() {
   const logoutBtn = document.getElementById("app-logout");
   const resetAllBtn = document.getElementById("app-reset-all");
 
-  function showLoadError() {
+  const loadErrorDetailEl = document.getElementById("app-empty-load-error-detail");
+
+  function showLoadError(detailLine = "") {
     if (loadingEl) loadingEl.classList.add("hidden");
     if (emptyEl) emptyEl.classList.remove("hidden");
     if (contentEl) contentEl.classList.add("hidden");
     if (loadErrorEl) {
       loadErrorEl.textContent = APP_LOAD_ERROR_MSG;
       loadErrorEl.classList.remove("hidden");
+    }
+    if (loadErrorDetailEl) {
+      loadErrorDetailEl.textContent = detailLine || "";
+      loadErrorDetailEl.classList.toggle("hidden", !detailLine);
     }
   }
 
@@ -110,11 +118,32 @@ function initAppPage() {
     }
   });
 
-  async function fetchAuthMe(retries = 2) {
+  async function fetchAuthMe(retries = 3) {
+    let lastStatus = null;
+    let networkFail = false;
     for (let i = 0; i <= retries; i++) {
-      const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
-      if (res.ok || res.status === 401) return res;
-      if (i < retries) await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
+        lastStatus = res.status;
+        if (res.ok || res.status === 401) return res;
+        if (i < retries) await new Promise((r) => setTimeout(r, 600 * (i + 1)));
+      } catch (_) {
+        networkFail = true;
+        lastStatus = null;
+        if (i < retries) await new Promise((r) => setTimeout(r, 600 * (i + 1)));
+      }
+    }
+    const hint = IS_LOCAL_VITE_PROXY
+      ? ` Test : ouvre ${typeof window !== "undefined" ? window.location.origin : ""}/api/health — tu dois voir {"ok":true,"service":"fidelity-api"}. Sinon le proxy Vite n’atteint pas le backend (lance le backend sur le port 3001 ou définis VITE_API_URL).`
+      : IS_LOCALHOST
+        ? " Vérifie VITE_API_URL dans .env et que le backend répond."
+        : "";
+    if (networkFail && !lastStatus) {
+      window.__fidpassAuthMeFailDetail = `Aucune réponse du serveur (réseau ou API injoignable).${hint}`;
+    } else if (lastStatus) {
+      window.__fidpassAuthMeFailDetail = `Le serveur a répondu HTTP ${lastStatus} (réessayé ${retries + 1} fois).${hint}`;
+    } else {
+      window.__fidpassAuthMeFailDetail = `Échec après plusieurs tentatives.${hint}`;
     }
     return null;
   }
@@ -123,7 +152,7 @@ function initAppPage() {
     try {
       const res = await fetchAuthMe();
       if (!res) {
-        showLoadError();
+        showLoadError(typeof window !== "undefined" ? window.__fidpassAuthMeFailDetail || "" : "");
         return;
       }
       if (res.status === 401) {
@@ -135,7 +164,7 @@ function initAppPage() {
         return;
       }
       if (!res.ok) {
-        showLoadError();
+        showLoadError(typeof window !== "undefined" ? window.__fidpassAuthMeFailDetail || "" : "");
         return;
       }
       const data = await res.json();
@@ -159,6 +188,7 @@ function initAppPage() {
           loadErrorEl.textContent = "";
           loadErrorEl.classList.add("hidden");
         }
+        loadErrorDetailEl?.classList.add("hidden");
         if (emptyEl) emptyEl.classList.add("hidden");
         if (contentEl) contentEl.classList.remove("hidden");
         document.getElementById("app-app")?.classList.add("app-awaiting-first-business");
@@ -189,6 +219,7 @@ function initAppPage() {
         loadErrorEl.textContent = "";
         loadErrorEl.classList.add("hidden");
       }
+      loadErrorDetailEl?.classList.add("hidden");
       if (emptyEl) emptyEl.classList.add("hidden");
       if (contentEl) contentEl.classList.remove("hidden");
       const business = businesses[0];
@@ -206,7 +237,7 @@ function initAppPage() {
       );
       requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
     } catch (_) {
-      showLoadError();
+      showLoadError("Une erreur inattendue s’est produite pendant le chargement. Ouvre la console (F12) pour plus de détails.");
     }
   })();
 

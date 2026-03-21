@@ -111,6 +111,8 @@ app.use(optionalAuth);
 
 // Routes de diagnostic AVANT PassKit pour être sûrs qu’elles répondent (PassKit est monté en premier et reçoit tout)
 app.get("/health", (req, res) => res.json({ ok: true }));
+/** Même chose sous /api pour que le front dev (proxy Vite /api → backend) puisse tester sans aller à la racine PassKit. */
+app.get("/api/health", (req, res) => res.json({ ok: true, service: "fidelity-api" }));
 /** Diagnostic : les mails transactionnels (reset MDP) partent seulement si provider ≠ none */
 app.get("/api/health/email", (req, res) => {
   res.json({
