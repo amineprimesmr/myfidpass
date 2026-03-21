@@ -5,7 +5,7 @@
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { getBusinessById } from "./businesses.js";
-import { getMemberForBusiness, getMember, addPoints } from "./members.js";
+import { getMemberForBusiness, getMember, addPoints, addStampsCapped } from "./members.js";
 import { createTransaction } from "./transactions.js";
 import {
   parseJsonSafe,
@@ -15,6 +15,7 @@ import {
   seedDefaultGameRewards,
   pickWeightedReward,
   DEFAULT_ROULETTE_POINT_REWARDS,
+  DEFAULT_ROULETTE_STAMP_REWARDS,
 } from "./games-helpers.js";
 
 export { addTicketsForEngagement } from "./games-helpers.js";
@@ -110,10 +111,30 @@ export function ensureRoulettePointsOnlyRewards(businessId) {
   }
 }
 
-export function getRoulettePublicSegments(businessId) {
-  ensureRoulettePointsOnlyRewards(businessId);
+export function ensureRouletteStampsOnlyRewards(businessId) {
+  const bg = ensureBusinessGame(businessId, "roulette");
+  if (!bg) return;
+  seedDefaultGameRewards(businessId, bg.game_id);
+  const rows = getGameRewardsForBusiness(businessId, "roulette");
+  const hasForbiddenKind = rows.some((r) => r.kind !== "none" && r.kind !== "stamps");
+  const playable = rows.filter((r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "stamps"));
+  if (hasForbiddenKind || playable.length === 0) {
+    replaceGameRewardsForBusiness(businessId, "roulette", DEFAULT_ROULETTE_STAMP_REWARDS);
+  }
+}
+
+export function ensureRouletteRewardsForProgram(businessId, programType) {
+  const pt = String(programType || "points").toLowerCase();
+  if (pt === "stamps") ensureRouletteStampsOnlyRewards(businessId);
+  else ensureRoulettePointsOnlyRewards(businessId);
+}
+
+export function getRoulettePublicSegments(businessId, programType = "points") {
+  const pt = String(programType || "points").toLowerCase();
+  ensureRouletteRewardsForProgram(businessId, pt);
+  const kindOk = pt === "stamps" ? (k) => k === "none" || k === "stamps" : (k) => k === "none" || k === "points";
   return getGameRewardsForBusiness(businessId, "roulette")
-    .filter((r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points"))
+    .filter((r) => r.active && Number(r.weight) > 0 && kindOk(r.kind))
     .map((r) => ({
       label: (String(r.label || "").trim() || (r.kind === "none" ? "PERDU" : "?")).slice(0, 120),
       kind: r.kind,
@@ -135,7 +156,8 @@ export function replaceGameRewardsForBusiness(businessId, gameCode = "roulette",
       const code = String(reward.code || "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_").slice(0, 40);
       if (!code) continue;
       const label = String(reward.label || code).trim().slice(0, 120);
-      const kind = reward.kind === "points" ? "points" : reward.kind === "none" ? "none" : null;
+      const kind =
+        reward.kind === "points" ? "points" : reward.kind === "stamps" ? "stamps" : reward.kind === "none" ? "none" : null;
       if (!kind) continue;
       const weight = Math.max(0, Number(reward.weight) || 0);
       const stock = reward.stock == null ? null : Math.max(0, Number(reward.stock) || 0);
@@ -145,6 +167,10 @@ export function replaceGameRewardsForBusiness(businessId, gameCode = "roulette",
         const pts = Math.floor(Number(reward.value?.points));
         if (!Number.isFinite(pts) || pts < 0) continue;
         valueJson = JSON.stringify({ points: pts });
+      } else if (kind === "stamps") {
+        const st = Math.floor(Number(reward.value?.stamps));
+        if (!Number.isFinite(st) || st < 1) continue;
+        valueJson = JSON.stringify({ stamps: st });
       }
       insert.run(id, businessId, bg.game_id, code, label, kind, valueJson, stock, active, weight);
     }
@@ -184,6 +210,9 @@ export function convertPointsToTickets({
 }) {
   const business = getBusinessById(businessId);
   if (!business) return { error: "business_not_found" };
+  if (String(business.program_type || "").toLowerCase() === "stamps") {
+    return { error: "mode_disabled" };
+  }
   if ((business.loyalty_mode || "points_cash") !== "points_game_tickets") {
     return { error: "mode_disabled" };
   }
@@ -288,7 +317,8 @@ export function spinGameForMember({
     }
     const business = getBusinessById(businessId);
     if (!business) return { error: "business_not_found" };
-    if ((business.loyalty_mode || "points_cash") !== "points_game_tickets") {
+    const programType = String(business.program_type || "points").toLowerCase();
+    if (programType !== "points" && programType !== "stamps") {
       return { error: "mode_disabled" };
     }
     const member = getMemberForBusiness(memberId, businessId);
@@ -345,19 +375,23 @@ export function spinGameForMember({
       JSON.stringify({ game_code: gameCode, ticket_cost: ticketCost })
     );
 
-    ensureRoulettePointsOnlyRewards(businessId);
-    const spinRewards = getGameRewardsForBusiness(businessId, gameCode).filter(
-      (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points")
-    );
+    ensureRouletteRewardsForProgram(businessId, programType);
+    const kindFilter =
+      programType === "stamps"
+        ? (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "stamps")
+        : (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points");
+    const spinRewards = getGameRewardsForBusiness(businessId, gameCode).filter(kindFilter);
     const reward = pickWeightedReward(spinRewards);
-    const isWinning = !!reward && reward.kind === "points" && Math.max(0, Number(reward.value?.points) || 0) > 0;
+    const rawMax = business.required_stamps != null ? Number(business.required_stamps) : 10;
+    const maxStamps = Number.isFinite(rawMax) && rawMax > 0 ? Math.floor(rawMax) : 10;
+    let isWinning = false;
     const grantedRewardId = reward?.id || null;
     const outcomeCode = reward?.code || "none";
-    const status = isWinning ? "won" : "lost";
     let grant = null;
     if (reward && reward.kind === "points") {
       const bonusPoints = Math.max(0, Number(reward.value?.points) || 0);
       if (bonusPoints > 0) {
+        isWinning = true;
         addPoints(memberId, bonusPoints);
         createTransaction({
           businessId,
@@ -376,7 +410,38 @@ export function spinGameForMember({
           metadata_json: JSON.stringify({ reward_kind: "points", points: bonusPoints }),
         };
       }
+    } else if (reward && reward.kind === "stamps") {
+      const bonusStamps = Math.max(0, Math.floor(Number(reward.value?.stamps) || 0));
+      if (bonusStamps > 0) {
+        const { added } = addStampsCapped(memberId, bonusStamps, maxStamps);
+        if (added > 0) {
+          isWinning = true;
+          createTransaction({
+            businessId,
+            memberId,
+            type: "points_add",
+            points: added,
+            metadata: {
+              source: "game_spin",
+              game_code: gameCode,
+              reward_code: reward.code,
+              reward_kind: "stamps",
+              stamps_added: added,
+            },
+          });
+          grant = {
+            id: randomUUID(),
+            business_id: businessId,
+            member_id: memberId,
+            spin_id: spinId,
+            reward_id: reward.id,
+            status: "granted",
+            metadata_json: JSON.stringify({ reward_kind: "stamps", stamps: added }),
+          };
+        }
+      }
     }
+    const status = isWinning ? "won" : "lost";
 
     db.prepare(
       `INSERT INTO game_spins

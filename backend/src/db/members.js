@@ -46,6 +46,24 @@ export function addPoints(id, points) {
   return getMember(id);
 }
 
+/**
+ * Ajoute des tampons (colonne `points` en programme tampons), plafonnés à `maxStamps`.
+ * @returns {{ member: object | null, added: number }}
+ */
+export function addStampsCapped(memberId, delta, maxStamps) {
+  const cap = Math.max(0, Math.floor(Number(maxStamps) || 0));
+  const d = Math.max(0, Math.floor(Number(delta) || 0));
+  const m0 = getMember(memberId);
+  if (!m0) return { member: null, added: 0 };
+  if (d <= 0) return { member: m0, added: 0 };
+  const cur = Math.max(0, Math.floor(Number(m0.points) || 0));
+  const next = cap > 0 ? Math.min(cap, cur + d) : cur + d;
+  const added = next - cur;
+  if (added <= 0) return { member: m0, added: 0 };
+  db.prepare("UPDATE members SET points = ?, last_visit_at = datetime('now') WHERE id = ?").run(next, memberId);
+  return { member: getMember(memberId), added };
+}
+
 export function deductPoints(id, pointsToDeduct) {
   const amount = Math.max(0, Math.floor(Number(pointsToDeduct) || 0));
   if (amount <= 0) return getMember(id);

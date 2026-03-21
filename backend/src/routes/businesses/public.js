@@ -49,10 +49,12 @@ export function publicGames(req, res) {
     daily_spin_limit: g.daily_spin_limit,
     cooldown_seconds: g.cooldown_seconds,
   }));
+  const programType = String(business.program_type || "points").toLowerCase();
   const roulette_segments =
-    (business.loyalty_mode || "points_cash") === "points_game_tickets" ? getRoulettePublicSegments(business.id) : [];
+    programType === "points" || programType === "stamps" ? getRoulettePublicSegments(business.id, programType) : [];
   return res.json({
     loyalty_mode: business.loyalty_mode ?? "points_cash",
+    program_type: business.program_type ?? undefined,
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     games,
     roulette_segments,

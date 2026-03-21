@@ -243,7 +243,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     }
     if (tickets < spinCost) {
       if (feedback) {
-        feedback.textContent = `Il te faut ${spinCost} ticket(s). Convertis tes points en tickets sur la page carte.`;
+        feedback.textContent = `Il te faut ${spinCost} ticket(s). Gagne des tickets via les missions ou (mode points) convertis tes points sur la page carte.`;
         feedback.classList.add("error");
         feedback.classList.remove("hidden", "success");
       }
@@ -266,7 +266,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       const result = await api.spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey());
       const rawLabel = (result.reward?.label || "PERDU").trim();
       const bonusPts = Math.max(0, Number(result.reward?.value?.points) || 0);
-      const isWin = result.reward?.kind === "points" && bonusPts > 0;
+      const bonusStamps = Math.max(0, Number(result.reward?.value?.stamps) || 0);
+      const programType = String(state.business?.program_type || "points").toLowerCase();
+      const isWinPoints = result.reward?.kind === "points" && bonusPts > 0;
+      const isWinStamps = result.reward?.kind === "stamps" && bonusStamps > 0;
+      const isWin = isWinPoints || isWinStamps;
       const rewardLabel = isWin ? rawLabel : "PERDU";
 
       let winIndex = wheelLabels.findIndex((l) => String(l).toLowerCase() === rewardLabel.toLowerCase());
@@ -295,9 +299,15 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
         spinBtn.disabled = false;
 
         if (feedback) {
-          feedback.textContent = isWin
-            ? `Bravo ! +${bonusPts} point${bonusPts > 1 ? "s" : ""} sur ta carte 🎉`
-            : "Dommage, essaie encore !";
+          const winMsg =
+            programType === "stamps" && isWinStamps
+              ? `Bravo ! ${rawLabel} sur ta carte 🎉`
+              : isWinPoints
+                ? `Bravo ! +${bonusPts} point${bonusPts > 1 ? "s" : ""} sur ta carte 🎉`
+                : isWin
+                  ? `Bravo ! ${rawLabel} 🎉`
+                  : "";
+          feedback.textContent = isWin ? winMsg : "Dommage, essaie encore !";
           feedback.classList.add(isWin ? "success" : "error");
           feedback.classList.remove("hidden");
         }

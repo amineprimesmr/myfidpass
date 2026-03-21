@@ -11,12 +11,13 @@ export function renderClientPage(root, state, options = {}) {
   const { gamePage = false, slug = "" } = options;
   const businessName = esc(state.business?.organizationName || state.business?.name || "Carte fidélité");
   const hasMember = !!state.member?.id;
-  const isGameMode = (state.business?.loyalty_mode || "points_cash") === "points_game_tickets";
+  const loyaltyGameTickets = (state.business?.loyalty_mode || "points_cash") === "points_game_tickets";
+  const programType = String(state.business?.program_type || "points").toLowerCase();
+  const isStampsProgram = programType === "stamps";
   const points = Number(state.member?.points || 0);
   const tickets = state.unlimitedTicketsTest ? 999 : Number(state.tickets?.ticket_balance || 0);
-  const pointsPerTicket = Number(state.business?.points_per_ticket || 10);
   const roulette = (state.games || []).find((g) => g.game_code === "roulette");
-  const showRoulette = isGameMode && roulette && roulette.enabled;
+  const showRoulette = !!(roulette && roulette.enabled && (programType === "points" || programType === "stamps"));
   const rewards = Array.isArray(state.rewards) ? state.rewards : [];
   const actions = Array.isArray(state.engagementActions) ? state.engagementActions : [];
   const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
@@ -24,6 +25,7 @@ export function renderClientPage(root, state, options = {}) {
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
 
   if (gamePage) {
+    const gameSubtitle = isStampsProgram ? "gagne des passages bonus" : "gagne des points bonus";
     root.innerHTML = `
       <div class="fidelity-game-page">
         <a href="${backUrl}" class="fidelity-game-back-float">← Retour</a>
@@ -33,7 +35,7 @@ export function renderClientPage(root, state, options = {}) {
           </div>
           <h2 class="fidelity-roulette-title">
             <span class="fidelity-roulette-title-line">Tourne la roue et</span>
-            <span class="fidelity-roulette-title-line">gagne des points bonus</span>
+            <span class="fidelity-roulette-title-line">${esc(gameSubtitle)}</span>
           </h2>
           <div class="fidelity-roulette-btn-row">
             <button id="fidelity-v2-spin-btn" class="fidelity-roulette-btn-jouer" type="button" aria-label="Lancer la roue">
@@ -99,10 +101,10 @@ export function renderClientPage(root, state, options = {}) {
               </div>
               <div class="fidelity-v2-kpi-data">
                 <strong id="fidelity-v2-points" class="fidelity-v2-kpi-value">${points}</strong>
-                <span class="fidelity-v2-kpi-label">Points</span>
+                <span class="fidelity-v2-kpi-label">${isStampsProgram ? "Tampons" : "Points"}</span>
               </div>
             </div>
-            ${isGameMode ? `
+            ${showRoulette ? `
             <div class="fidelity-v2-kpi">
               <div class="fidelity-v2-kpi-icon fidelity-v2-kpi-icon--tickets">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg>
@@ -118,7 +120,7 @@ export function renderClientPage(root, state, options = {}) {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
               </div>
               <div class="fidelity-v2-kpi-data">
-                <strong class="fidelity-v2-kpi-value">${isGameMode ? "🎯 Jeu" : "💰 Points"}</strong>
+                <strong class="fidelity-v2-kpi-value">${isStampsProgram ? "🎫 Tampons" : loyaltyGameTickets ? "🎯 Jeu" : "💰 Points"}</strong>
                 <span class="fidelity-v2-kpi-label">Mode</span>
               </div>
             </div>
@@ -228,7 +230,7 @@ export function renderClientPage(root, state, options = {}) {
       </section>
 
       <!-- Programme points classique (non-jeu) -->
-      <section class="fidelity-v2-card ${hasMember && !isGameMode ? "" : "hidden"}">
+      <section class="fidelity-v2-card ${hasMember && !loyaltyGameTickets && !isStampsProgram ? "" : "hidden"}">
         <h2 class="fidelity-v2-card-title">💳 Programme fidélité classique</h2>
         <p class="fidelity-v2-card-desc">Tes points sont directement utilisables en caisse pour bénéficier de réductions et avantages.</p>
       </section>
