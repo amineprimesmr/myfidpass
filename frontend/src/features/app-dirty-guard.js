@@ -141,7 +141,12 @@ export function initAppDirtyGuard(opts) {
 
   function requestNavigate(targetId) {
     const norm = normalizeSectionId(targetId, sectionIdsRef);
-    if (norm === committedSection) return true;
+    // Même si on est déjà sur la section (ex. committedSection par défaut = dashboard),
+    // appliquer le core : sinon le premier showAppSection("dashboard") ne fait rien et l’UI reste figée.
+    if (norm === committedSection) {
+      showSectionCoreRef?.(norm);
+      return true;
+    }
     if (isAppSectionDirty(committedSection)) {
       pendingNavigateSection = norm;
       pendingLeaveFn = null;
@@ -154,7 +159,10 @@ export function initAppDirtyGuard(opts) {
 
   function onHashChange() {
     const norm = parseHashSection(sectionIdsRef);
-    if (norm === committedSection) return;
+    if (norm === committedSection) {
+      showSectionCoreRef?.(norm);
+      return;
+    }
     if (isAppSectionDirty(committedSection)) {
       if (window.history?.replaceState) {
         window.history.replaceState(null, "", window.location.pathname + "#" + committedSection);

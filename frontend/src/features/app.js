@@ -187,7 +187,26 @@ function initAppPage() {
         showLoadError(typeof window !== "undefined" ? window.__fidpassAuthMeFailDetail || "" : "");
         return;
       }
-      const data = await res.json();
+      const rawMe = await res.text();
+      let data;
+      try {
+        data = rawMe ? JSON.parse(rawMe) : {};
+      } catch (parseErr) {
+        const snippet = (rawMe || "").slice(0, 120).replace(/\s+/g, " ");
+        const hint =
+          IS_LOCAL_DEV && API_BASE
+            ? " En local, retire ou corrige VITE_API_URL dans frontend/.env : une URL qui ne renvoie pas du JSON (page HTML, 404) provoque cette erreur."
+            : "";
+        showLoadError(
+          `La réponse de /api/auth/me n’est pas du JSON valide.${hint}${snippet ? ` (début de réponse : ${snippet}…)` : ""}`
+        );
+        if (typeof console !== "undefined" && console.error) console.error("[fidpass] /api/auth/me parse:", parseErr, rawMe?.slice?.(0, 500));
+        return;
+      }
+      if (!data || typeof data !== "object") {
+        showLoadError("Réponse /api/auth/me invalide (corps vide ou non objet).");
+        return;
+      }
       const hasSubscription =
         !!(data.has_active_subscription ?? data.hasActiveSubscription) || isDevBypassPayment();
       if (!hasSubscription) {
@@ -228,6 +247,7 @@ function initAppPage() {
         requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
         return;
       }
+      document.getElementById("app-app")?.classList.remove("app-awaiting-first-business");
       loadingEl?.classList.add("hidden");
       if (loadErrorEl) {
         loadErrorEl.textContent = "";
@@ -252,8 +272,13 @@ function initAppPage() {
         })
       );
       requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
-    } catch (_) {
-      showLoadError("Une erreur inattendue s’est produite pendant le chargement. Ouvre la console (F12) pour plus de détails.");
+    } catch (err) {
+      if (typeof console !== "undefined" && console.error) console.error("[fidpass] init /app:", err);
+      const tech = err instanceof Error ? err.message : String(err);
+      const devHint = IS_LOCAL_DEV && tech ? ` Détail technique : ${tech}` : "";
+      showLoadError(
+        `Une erreur inattendue s’est produite pendant le chargement. Ouvre la console (F12) pour plus de détails.${devHint}`
+      );
     }
   })();
 
