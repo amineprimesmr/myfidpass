@@ -4254,8 +4254,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   box-sizing: border-box;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap {
-  width: clamp(3.1rem, 26cqw, 3.85rem);
-  height: clamp(3.1rem, 26cqw, 3.85rem);
+  width: clamp(3.45rem, 28cqw, 4.25rem);
+  height: clamp(3.45rem, 28cqw, 4.25rem);
   margin-top: 0;
   align-self: flex-start;
   /* Critique : sans ça, align-items:center (règle générale) centre l’image dans le carré → bande vide au-dessus */
@@ -4458,8 +4458,8 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap,
 #app-personnaliser-preview .app-wallet-preview-logo-wrap {
   flex-shrink: 0;
-  width: 3rem;
-  height: 3rem;
+  width: 3.45rem;
+  height: 3.45rem;
   max-height: 88%;
   display: flex;
   align-items: flex-start;

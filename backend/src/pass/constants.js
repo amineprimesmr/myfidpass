@@ -2,18 +2,18 @@
  * Constantes et templates pour la génération des passes Apple Wallet.
  * Référence : REFONTE-REGLES.md — pass.js découpé en sous-modules < 400 lignes.
  */
-import { dirname, resolve, join } from "path";
+import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const assetsDir = resolve(__dirname, "..", "..", "assets");
 export const certsDir = resolve(__dirname, "..", "..", "certs");
 
-/** Dimensions Apple logo pass : logo@2x = 320×100, logo = 160×50. */
-export const LOGO_WIDTH_2X = 320;
-export const LOGO_HEIGHT_2X = 100;
-export const LOGO_WIDTH_1X = 160;
-export const LOGO_HEIGHT_1X = 50;
+/** Logo pass (plus lisible qu’Apple mini) : @2x puis @1x. Wallet scale selon la zone. */
+export const LOGO_WIDTH_2X = 400;
+export const LOGO_HEIGHT_2X = 125;
+export const LOGO_WIDTH_1X = 200;
+export const LOGO_HEIGHT_1X = 62;
 
 /** Dimensions icône pass (notifications, écran verrouillage). */
 export const ICON_SIZE_1X = 29;

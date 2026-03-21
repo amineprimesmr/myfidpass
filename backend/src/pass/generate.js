@@ -12,6 +12,11 @@ import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
 import { PASS_TEMPLATES, STRIP_W, STRIP_H } from "./constants.js";
+import {
+  parsePointRewardTiersFromBusiness,
+  frontRewardLabelFromSortedTiers,
+  backRewardLinesFromSortedTiers,
+} from "./point-tiers.js";
 
 let _sharp = null;
 async function getSharp() {
@@ -67,7 +72,7 @@ export async function generatePass(member, business = null, options = {}) {
         buffers["logo.png"] = resized.logoPng;
         buffers["logo@2x.png"] = resized.logoPng2x;
         if (process.env.NODE_ENV === "production") {
-          console.log("[PassKit] Logo commerce injecté dans le pass (160×50 / 320×100)");
+          console.log("[PassKit] Logo commerce injecté dans le pass (dimensions constants.js)");
         }
       } else {
         const textFallback = await createLogoFromText(stripColorHex, sanitizeLogoText(organizationName));
@@ -231,17 +236,11 @@ export async function generatePass(member, business = null, options = {}) {
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tu as maintenant %@ points !",
     });
-    let tiers = business?.points_reward_tiers;
-    if (typeof tiers === "string" && tiers.trim()) {
-      try { tiers = JSON.parse(tiers); } catch (_) { tiers = []; }
-    }
-    const tierLines = Array.isArray(tiers)
-      ? tiers.filter((t) => t != null && Number.isInteger(Number(t.points))).map((t) => `${t.points} pts = ${(t.label && String(t.label).trim()) || "Récompense"}`)
-      : [];
+    const sortedPointTiers = parsePointRewardTiersFromBusiness(business);
     pass.secondaryFields.push({
       key: "rewardsFront",
       label: "Récompense",
-      value: tierLines.length > 0 ? tierLines.join(" · ") : "Paliers en magasin",
+      value: frontRewardLabelFromSortedTiers(sortedPointTiers),
       textAlignment: "PKTextAlignmentLeft",
     });
     if (!isSectorTemplate) {
@@ -302,14 +301,8 @@ export async function generatePass(member, business = null, options = {}) {
     );
   } else {
     const pts = Math.max(0, Math.floor(Number(member.points) || 0));
-    let tiers = business?.points_reward_tiers;
-    if (typeof tiers === "string" && tiers.trim()) {
-      try { tiers = JSON.parse(tiers); } catch (_) { tiers = []; }
-    }
-    const tierList = Array.isArray(tiers)
-      ? tiers.filter((t) => t != null && Number.isInteger(Number(t.points))).sort((a, b) => Number(a.points) - Number(b.points))
-      : [];
-    const rewardLines = tierList.map((t) => `${t.points} pts = ${(t.label && String(t.label).trim()) || "Récompense"}`);
+    const tierList = parsePointRewardTiersFromBusiness(business);
+    const rewardLines = backRewardLinesFromSortedTiers(tierList);
     const nextTier = tierList.find((t) => Number(t.points) > pts);
     const toUnlockText = nextTier
       ? `Encore ${Number(nextTier.points) - pts} points pour : ${(nextTier.label && String(nextTier.label).trim()) || "récompense"}.`

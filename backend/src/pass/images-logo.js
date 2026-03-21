@@ -40,7 +40,7 @@ export async function createLogoFromText(stripColorHex, text) {
   const escaped = escapeSvgText(label);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LOGO_WIDTH_2X}" height="${LOGO_HEIGHT_2X}">
   <rect width="100%" height="100%" fill="${hex}"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="28" font-family="Arial, Helvetica, sans-serif" font-weight="600">${escaped}</text>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="36" font-family="Arial, Helvetica, sans-serif" font-weight="600">${escaped}</text>
 </svg>`;
   try {
     const sharp = await getSharp();
@@ -60,7 +60,7 @@ export async function createLogoFromText(stripColorHex, text) {
 }
 
 /**
- * Redimensionne le buffer image pour le pass (logo 320×100 / 160×50).
+ * Redimensionne le buffer image pour le pass (dimensions LOGO_* dans constants.js).
  */
 export async function resizeLogoForPass(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
