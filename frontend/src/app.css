@@ -4237,12 +4237,15 @@ body.page-app .whatsapp-fab { display: none !important; }
   flex-direction: column;
   align-items: stretch;
 }
-/* Bannière promo (image seule) — au-dessus du bloc points/tampons pour lisibilité */
+/* Image « fond de carte » = strip PassKit 750×246 (backend/src/pass/constants.js STRIP_W/H) */
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-card-bg-banner {
   flex-shrink: 0;
   width: 100%;
-  min-height: clamp(6.25rem, 52cqw, 9.5rem);
+  aspect-ratio: 750 / 246;
+  min-height: 0;
+  max-height: none;
   box-sizing: border-box;
+  background-color: var(--wallet-bg);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
