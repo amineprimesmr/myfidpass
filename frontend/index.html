@@ -853,6 +853,12 @@
                             <label class="app-radio-label"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> Tampons (ex. 1 tampon par visite, 10 tampons = 1 café offert)</label>
                           </div>
                           <div id="app-rules-points" class="app-rules-panel hidden">
+                            <p class="app-step-label">Mode fidélité (programme points)</p>
+                            <p class="app-hint">Le mode <strong>Points jeu</strong> active la <strong>roue</strong> et les <strong>tickets</strong> (échange de points contre des tours, objectifs avis &amp; réseaux). En <strong>Points caisse</strong>, seuls les paliers de récompenses s’appliquent — la roue renvoie « mode désactivé ».</p>
+                            <div class="app-rules-type app-loyalty-mode-row">
+                              <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points caisse</label>
+                              <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points jeu</label>
+                            </div>
                             <div class="app-points-tiers-simple">
                               <p class="app-step-label">Récompenses par paliers</p>
                               <p class="app-hint">Jusqu’à <strong>5 niveaux</strong> : seuil de points + texte affiché sur la carte. Des <strong>exemples</strong> sont proposés selon le <strong>secteur d’activité</strong> connu pour votre commerce (ex. fast-food, coiffure…) ; sinon réductions génériques.</p>
@@ -895,10 +901,6 @@
                               </div>
                             </div>
                             <div id="app-rules-points-legacy-hidden" class="hidden" aria-hidden="true">
-                              <div class="app-rules-type">
-                                <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points caisse</label>
-                                <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points jeu</label>
-                              </div>
                               <div id="app-game-economy-panel">
                                 <input type="number" id="app-points-per-ticket" class="app-input app-input-number" min="1" step="1" value="10" />
                               </div>
@@ -1099,7 +1101,7 @@
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
           <section id="engagement" class="app-section">
             <h2 class="app-section-title">Avis & Réseaux</h2>
-            <p class="app-section-desc">Offrez des tickets à vos clients en échange d'un avis ou d'un follow (1 ticket = 1 tour de roue). Ajoutez un objectif puis enregistrez.</p>
+            <p class="app-section-desc">Offrez des tickets à vos clients en échange d'un avis ou d'un follow (1 ticket = 1 tour de roue). Ajoutez un objectif puis enregistrez. <strong>La roue nécessite le mode « Points jeu »</strong> dans <strong>Ma carte → Règles du programme</strong> (programme <strong>points</strong>), puis enregistrez depuis Ma carte.</p>
             <div class="app-engagement-cadeo-wrap">
               <div class="app-engagement-left">
                 <h3 class="app-engagement-objectives-title">Ajouter un objectif</h3>
