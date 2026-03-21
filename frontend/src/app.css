@@ -4669,6 +4669,9 @@ body.page-app .whatsapp-fab { display: none !important; }
   margin-bottom: 0.75rem;
   font-size: 1.05rem;
 }
+.app-perimetre-address-block {
+  margin-bottom: 1rem;
+}
 .app-perimetre-address-row {
   display: flex;
   gap: 0.5rem;

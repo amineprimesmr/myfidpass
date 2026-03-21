@@ -1335,7 +1335,26 @@
           </section>
           <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
             <h2 class="app-section-title">Emplacement</h2>
-            <p class="app-section-desc">Réglez le périmètre sur la carte pour les alertes à l'approche (notifications à l'entrée dans la zone).</p>
+            <p class="app-section-desc">Indiquez l’adresse ou placez le point sur la carte, puis le rayon. Les données sont enregistrées avec le message affiché à l’entrée dans la zone (synchronisé avec l’adresse du <a href="#profil" class="app-link-inline">Profil</a> après enregistrement).</p>
+            <div class="app-perimetre-address-block app-rules-row">
+              <label class="app-label" for="app-perimetre-address">Adresse du commerce</label>
+              <div class="app-perimetre-address-row">
+                <div class="app-perimetre-address-input-wrap">
+                  <input type="text" id="app-perimetre-address" class="app-input" placeholder="Rechercher une adresse…" autocomplete="street-address" aria-label="Adresse pour centrer la carte" aria-autocomplete="list" aria-expanded="false" />
+                  <ul id="app-perimetre-suggestions" class="app-perimetre-suggestions hidden" role="listbox" aria-label="Suggestions d’adresse"></ul>
+                </div>
+                <button type="button" id="app-perimetre-geoloc" class="app-btn app-btn-secondary app-perimetre-geoloc-btn" aria-label="Centrer sur ma position">
+                  <span class="app-perimetre-geoloc-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg></span>
+                  Ma position
+                </button>
+              </div>
+              <p id="app-perimetre-address-hint" class="app-perimetre-hint hidden"></p>
+              <div id="app-perimetre-default-suggestion" class="app-perimetre-default-suggestion hidden">
+                <p class="app-perimetre-default-label">Position suggérée</p>
+                <p id="app-perimetre-default-address-text" class="app-perimetre-default-address"></p>
+                <button type="button" id="app-perimetre-use-default" class="app-btn app-btn-secondary app-perimetre-use-default-btn">Utiliser cette position</button>
+              </div>
+            </div>
             <div class="app-carte-perimetre-top-actions">
               <span class="app-save-cta-wrap app-save-cta-wrap--perimetre">
                 <button type="button" id="app-perimetre-save" class="app-save-cta app-perimetre-save-btn">
@@ -1349,7 +1368,7 @@
               <div class="app-carte-perimetre-map-stage">
                 <div class="app-carte-perimetre-map-wrap">
                   <div id="app-perimetre-map" class="app-perimetre-map" aria-label="Carte de l’emplacement"></div>
-                  <p id="app-perimetre-map-hint" class="app-perimetre-map-hint">L’emplacement est défini dans la page Profil. La carte se centre automatiquement sur l’adresse de votre établissement.</p>
+                  <p id="app-perimetre-map-hint" class="app-perimetre-map-hint">La carte se centre sur l’adresse ci-dessus ou sur celle enregistrée dans le Profil. Cliquez sur la carte pour déplacer le point.</p>
 
                   <div class="app-carte-perimetre-radius-vertical" aria-label="Réglage du rayon du périmètre">
                     <span class="app-carte-perimetre-radius-label">Rayon</span>

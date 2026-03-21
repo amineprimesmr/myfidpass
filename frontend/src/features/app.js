@@ -1336,32 +1336,46 @@ function initAppDashboard(slug) {
           refreshPerimetreSaveButtonState();
           return;
         }
-        if (organizationName && organizationName.length >= 2) {
-          const url = `${PHOTON_URL}?q=${encodeURIComponent(organizationName)}&limit=1&lang=fr`;
+        /** @param {string} query @param {{ showSuggestionBanner?: boolean }} opts */
+        async function geocodePerimetreQuery(query, opts = {}) {
+          const showSuggestionBanner = opts.showSuggestionBanner !== false;
+          const q = String(query || "").trim();
+          if (q.length < 2) return false;
+          const url = `${PHOTON_URL}?q=${encodeURIComponent(q)}&limit=1&lang=fr`;
           try {
             const r = await fetch(url);
             const json = await r.json();
             const features = json?.features || [];
-            if (features.length > 0) {
-              const f = features[0];
-              const coords = f.geometry?.coordinates;
-              if (coords && coords.length >= 2) {
-                defaultSuggestionData = {
-                  lat: coords[1],
-                  lng: coords[0],
-                  address: formatPhotonAddress(f.properties || {}),
-                };
-                currentLat = defaultSuggestionData.lat;
-                currentLng = defaultSuggestionData.lng;
-                currentAddress = defaultSuggestionData.address;
-                const section = document.getElementById("carte-perimetre");
-                if (section?.classList.contains("app-section-visible")) initMap(currentLat, currentLng);
-                if (defaultAddressTextEl) defaultAddressTextEl.textContent = defaultSuggestionData.address;
-                if (defaultSuggestionEl) defaultSuggestionEl.classList.remove("hidden");
-              }
+            if (features.length === 0) return false;
+            const f = features[0];
+            const coords = f.geometry?.coordinates;
+            if (!coords || coords.length < 2) return false;
+            const resolvedAddress = formatPhotonAddress(f.properties || {});
+            currentLat = coords[1];
+            currentLng = coords[0];
+            currentAddress = resolvedAddress;
+            if (addressInput) addressInput.value = currentAddress;
+            const section = document.getElementById("carte-perimetre");
+            if (section?.classList.contains("app-section-visible")) initMap(currentLat, currentLng);
+            if (showSuggestionBanner) {
+              defaultSuggestionData = { lat: currentLat, lng: currentLng, address: resolvedAddress };
+              if (defaultAddressTextEl) defaultAddressTextEl.textContent = resolvedAddress;
+              if (defaultSuggestionEl) defaultSuggestionEl.classList.remove("hidden");
+            } else {
+              defaultSuggestionData = null;
+              if (defaultSuggestionEl) defaultSuggestionEl.classList.add("hidden");
             }
-          } catch (_) {}
-        } else if (defaultSuggestionEl) defaultSuggestionEl.classList.add("hidden");
+            return true;
+          } catch (_) {
+            return false;
+          }
+        }
+        const addrTrim = (address || "").trim();
+        let geocoded = await geocodePerimetreQuery(addrTrim, { showSuggestionBanner: false });
+        if (!geocoded && organizationName && organizationName.length >= 2) {
+          geocoded = await geocodePerimetreQuery(organizationName);
+        }
+        if (!geocoded && defaultSuggestionEl) defaultSuggestionEl.classList.add("hidden");
         savedPerimetreState = getPerimetreDraftState();
         refreshPerimetreSaveButtonState();
       } catch (_) {}
@@ -1469,9 +1483,10 @@ function initAppDashboard(slug) {
       saveBtn.disabled = true;
       if (saveFeedback) saveFeedback.classList.add("hidden");
       try {
+        // Ne pas envoyer organization_name ici : le titre périmètre est notification_title_override uniquement.
+        // Envoyer organization_name vide depuis ce formulaire écrasait le nom d’établissement (Profil) et pouvait faire échouer l’API.
         const payload = {
           notification_title_override: perimetreNotifTitleEl?.value?.trim() || null,
-          organization_name: perimetreNotifTitleEl?.value?.trim() || null,
           notification_change_message: perimetreNotifMessageEl?.value?.trim() || null,
         };
         if (currentLat != null && currentLng != null) {
@@ -1498,7 +1513,8 @@ function initAppDashboard(slug) {
           const data = await res.json().catch(() => ({}));
           showSaveFeedback(data.error || "Erreur lors de l’enregistrement.", true);
         }
-      } catch (_) {
+      } catch (err) {
+        if (typeof console !== "undefined" && console.error) console.error("[fidpass] périmètre save:", err);
         showSaveFeedback("Erreur réseau.", true);
       }
       refreshPerimetreSaveButtonState();
