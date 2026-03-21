@@ -61,6 +61,10 @@ function initAppPage() {
     }
   }
 
+  document.getElementById("app-empty-retry-btn")?.addEventListener("click", () => {
+    window.location.reload();
+  });
+
   logoutBtn?.addEventListener("click", () => {
     clearAuthToken();
     window.location.replace("/");
@@ -155,10 +159,29 @@ function initAppPage() {
           loadErrorEl.textContent = "";
           loadErrorEl.classList.add("hidden");
         }
-        if (emptyEl) emptyEl.classList.remove("hidden");
-        if (contentEl) contentEl.classList.add("hidden");
+        if (emptyEl) emptyEl.classList.add("hidden");
+        if (contentEl) contentEl.classList.remove("hidden");
+        document.getElementById("app-app")?.classList.add("app-awaiting-first-business");
+        const setupEl = document.getElementById("app-personnaliser-first-setup");
+        const editorEl = document.getElementById("app-personnaliser-editor-wrap");
+        setupEl?.classList.remove("hidden");
+        editorEl?.classList.add("hidden");
         if (businessNameEl) businessNameEl.textContent = "Mon espace";
-        requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
+        initAppSidebar();
+        window.dispatchEvent(
+          new CustomEvent("fidpass-auth-me", {
+            detail: {
+              user,
+              subscription: data.subscription || null,
+              hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
+              awaitingFirstBusiness: true,
+            },
+          })
+        );
+        requestAnimationFrame(() => {
+          showAppSection("personnaliser");
+          maybeShowPostPurchaseAppModal();
+        });
         return;
       }
       loadingEl?.classList.add("hidden");
@@ -340,6 +363,11 @@ function initAppPage() {
       await applyDraftEngagementRewards(data.slug || slug);
       if (emptyEl) emptyEl.classList.add("hidden");
       if (contentEl) contentEl.classList.remove("hidden");
+      document.getElementById("app-app")?.classList.remove("app-awaiting-first-business");
+      const setupEl = document.getElementById("app-personnaliser-first-setup");
+      const editorEl = document.getElementById("app-personnaliser-editor-wrap");
+      setupEl?.classList.add("hidden");
+      editorEl?.classList.remove("hidden");
       if (businessNameEl) businessNameEl.textContent = data.organization_name || data.name || data.slug;
       initAppSidebar();
       initAppDashboard(data.slug);
@@ -365,7 +393,9 @@ const APP_MOBILE_TITLES = {
 
 function showAppSectionCore(sectionId) {
   const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
-  const id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
+  let id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
+  const awaiting = document.getElementById("app-app")?.classList.contains("app-awaiting-first-business");
+  if (awaiting && id !== "personnaliser" && id !== "profil") id = "personnaliser";
   APP_SECTION_IDS.forEach((sid) => {
     const el = document.getElementById(sid);
     if (el) {
@@ -425,7 +455,9 @@ function initAppSidebar() {
     hashSection = "dashboard";
     if (window.history?.replaceState) window.history.replaceState(null, "", "#dashboard");
   }
-  const sectionToShow = hashSection === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(hashSection) ? hashSection : "dashboard");
+  let sectionToShow = hashSection === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(hashSection) ? hashSection : "dashboard");
+  const awaitingBiz = document.getElementById("app-app")?.classList.contains("app-awaiting-first-business");
+  if (awaitingBiz && sectionToShow !== "profil") sectionToShow = "personnaliser";
   showAppSection(sectionToShow);
   requestAnimationFrame(() => showAppSection(sectionToShow));
   initAppMobile();
