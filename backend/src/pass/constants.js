@@ -9,7 +9,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const assetsDir = resolve(__dirname, "..", "..", "assets");
 export const certsDir = resolve(__dirname, "..", "..", "certs");
 
-/** Logo pass (plus lisible qu’Apple mini) : @2x puis @1x. Wallet scale selon la zone. */
+/**
+ * Spec Apple PassKit : emplacement max. 160×50 pt, logo@2x = 320×100 px.
+ * Valeurs légèrement au-dessus pour lisibilité ; l’aperçu SaaS utilise le ratio officiel.
+ */
 export const LOGO_WIDTH_2X = 400;
 export const LOGO_HEIGHT_2X = 125;
 export const LOGO_WIDTH_1X = 200;

@@ -4212,6 +4212,9 @@ body.page-app .whatsapp-fab { display: none !important; }
   box-sizing: border-box;
   flex-shrink: 0;
   background: var(--wallet-bg);
+  /* Conteneur pour cqw = largeur de la carte (comme le pass à l’écran) */
+  container-type: inline-size;
+  container-name: wallet-pass-preview;
   /* Contour sur le bord exact du bloc (pas d’anneau décalé) */
   border: 1px solid rgba(255, 255, 255, 0.34);
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.42);
@@ -4294,11 +4297,16 @@ body.page-app .whatsapp-fab { display: none !important; }
   box-sizing: border-box;
 }
 #app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-logo-wrap {
-  width: clamp(3.85rem, 32cqw, 4.95rem);
-  height: clamp(3.85rem, 32cqw, 4.95rem);
+  /*
+   * Apple PassKit : emplacement logo max. 160×50 pt ; assets @2x = 320×100 px
+   * (PassKit Programming Guide — Creating). Largeur max ≈ 160/320 de la carte.
+   */
+  width: min(50cqw, 160px);
+  aspect-ratio: 160 / 50;
+  height: auto;
+  max-height: none;
   margin-top: 0;
   align-self: flex-start;
-  /* Critique : sans ça, align-items:center (règle générale) centre l’image dans le carré → bande vide au-dessus */
   align-items: flex-start;
   justify-content: flex-start;
 }
