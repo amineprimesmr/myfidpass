@@ -185,7 +185,7 @@ function startServer(port) {
     } else {
       console.log(`Backend fidélité: http://localhost:${server.address().port}`);
     }
-    console.log(`  API: /api/businesses/:slug, /api/members`);
+    console.log(`  API: /api/businesses/:slug, /api/members — diagnostic: GET /api/health`);
     try {
       const passRegCount = getPassRegistrationsTotalCount();
       console.log(`  [PassKit] Au démarrage: DATA_DIR=${process.env.DATA_DIR || "(défaut)"}, pass_registrations=${passRegCount}`);
@@ -199,11 +199,12 @@ function startServer(port) {
   });
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {
-      console.warn(`Port ${p} occupé, tentative sur ${p + 1}...`);
-      startServer(p + 1);
-    } else {
-      throw err;
+      console.error(`[startup] Le port ${p} est déjà utilisé (souvent un ancien backend Node).`);
+      console.error(`  Arrête ce processus, sinon le front (proxy Vite → localhost:${p}) parle à l’ancienne API.`);
+      console.error(`  Ex. : lsof -nP -iTCP:${p} -sTCP:LISTEN  puis  kill <PID>`);
+      process.exit(1);
     }
+    throw err;
   });
 }
 

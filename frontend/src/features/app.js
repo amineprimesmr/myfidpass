@@ -134,7 +134,7 @@ function initAppPage() {
       }
     }
     const hint = IS_LOCAL_VITE_PROXY
-      ? ` Test : ouvre ${typeof window !== "undefined" ? window.location.origin : ""}/api/health — tu dois voir {"ok":true,"service":"fidelity-api"}. Sinon le proxy Vite n’atteint pas le backend (lance le backend sur le port 3001 ou définis VITE_API_URL).`
+      ? ` Test : ouvre ${typeof window !== "undefined" ? window.location.origin : ""}/api/health — tu dois voir {"ok":true,"service":"fidelity-api"}. Si tu vois {"error":"Not found"}, un ancien Node écoute encore sur le port 3001 : lsof -i :3001 puis kill le PID, puis relance le backend depuis ce dépôt.`
       : IS_LOCALHOST
         ? " Vérifie VITE_API_URL dans .env et que le backend répond."
         : "";
