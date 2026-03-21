@@ -1851,13 +1851,25 @@ function initAppDashboard(slug) {
     const bodyEl = card?.querySelector(".app-wallet-preview-body");
     const hasCardBgUrl = personnaliserCardBgDataUrl && personnaliserCardBgDataUrl.length > 0;
     const bandeauEl = document.getElementById("app-preview-bandeau");
-    if (bodyEl) {
-      bodyEl.style.color = fg;
-      bodyEl.style.background = bgHex;
-      bodyEl.style.backgroundImage = "none";
-    }
     orgEl.textContent = personnaliserOrg?.value?.trim() || currentOrganizationName;
     const isStamps = programTypeStamps && programTypeStamps.checked;
+    /** Image de fond : avant seulement sur le bandeau tampons ; en mode points le bandeau est masqué → image sur le corps de la carte. */
+    if (bodyEl) {
+      bodyEl.style.color = fg;
+      if (hasCardBgUrl && !isStamps) {
+        bodyEl.style.background = "transparent";
+        bodyEl.style.backgroundImage = `url(${personnaliserCardBgDataUrl})`;
+        bodyEl.style.backgroundSize = "cover";
+        bodyEl.style.backgroundPosition = "center";
+        bodyEl.style.backgroundRepeat = "no-repeat";
+      } else {
+        bodyEl.style.background = bgHex;
+        bodyEl.style.backgroundImage = "none";
+        bodyEl.style.removeProperty("background-size");
+        bodyEl.style.removeProperty("background-position");
+        bodyEl.style.removeProperty("background-repeat");
+      }
+    }
     const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "☕";
     const requiredStamps = 10;
     const useStripImage = stripDisplayLogo && stripDisplayLogo.checked;
