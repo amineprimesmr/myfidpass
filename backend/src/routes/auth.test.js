@@ -45,6 +45,19 @@ describe("Auth API", () => {
     expect(res.body.user.email).toBe(testEmail);
   });
 
+  it("GET /api/auth/me with Bearer token returns 200 and user", async () => {
+    const login = await request(app)
+      .post("/api/auth/login")
+      .set("Content-Type", "application/json")
+      .send({ email: testEmail, password: testPassword });
+    expect(login.status).toBe(200);
+    const token = login.body.token;
+    const res = await request(app).get("/api/auth/me").set("Authorization", `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.user?.email).toBe(testEmail);
+    expect(Array.isArray(res.body.businesses)).toBe(true);
+  });
+
   it("POST /api/auth/login with missing email returns 400", async () => {
     const res = await request(app)
       .post("/api/auth/login")

@@ -435,14 +435,24 @@ router.get("/me", (req, res, next) => {
     const code = req.authError || "invalid";
     return res.status(401).json({ error: "Session invalide ou expirée", code });
   }
-  const businesses = getBusinessesByUserId(req.user.id);
-  const subscription = getSubscriptionByUserId(req.user.id);
-  res.json({
-    user: { id: req.user.id, email: req.user.email, name: req.user.name },
-    businesses,
-    subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
-    has_active_subscription: hasActiveSubscription(req.user.id),
-  });
+  try {
+    const businesses = getBusinessesByUserId(req.user.id);
+    const subscription = getSubscriptionByUserId(req.user.id);
+    res.json({
+      user: { id: req.user.id, email: req.user.email, name: req.user.name },
+      businesses,
+      subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
+      has_active_subscription: hasActiveSubscription(req.user.id),
+    });
+  } catch (e) {
+    console.error("GET /api/auth/me:", e);
+    const isProd = process.env.NODE_ENV === "production";
+    return res.status(500).json({
+      error: "Impossible de charger le compte.",
+      code: "me_failed",
+      ...(!isProd && e?.message ? { detail: String(e.message) } : {}),
+    });
+  }
 });
 
 /**

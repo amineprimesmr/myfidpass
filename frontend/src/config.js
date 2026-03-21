@@ -8,7 +8,9 @@ const IS_LOCALHOST =
 const RAW_ENV_API_BASE =
   typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : "";
 
-// En prod sur myfidpass.fr : utiliser /api (proxy Vercel → api.myfidpass.fr) pour éviter CORS.
+// En prod sur myfidpass.fr : appeler directement api.myfidpass.fr (CORS déjà autorisé côté Railway).
+// Ne pas utiliser /api sur la même origine : sur myfidpass.fr (sans www) Vercel renvoie d’abord une 307
+// vers www.myfidpass.fr, ce qui casse fetch (cross-origin + perte possible du Bearer).
 // En local : proxy Vite ou URL explicite si VITE_API_URL est défini.
 function shouldForceApiSubdomain(base) {
   if (!IS_MYFIDPASS_HOST) return false;
@@ -26,7 +28,7 @@ export const API_BASE =
   IS_LOCALHOST && !RAW_ENV_API_BASE
     ? ""
     : IS_MYFIDPASS_HOST
-      ? ""
+      ? RAW_ENV_API_BASE || "https://api.myfidpass.fr"
       : shouldForceApiSubdomain(RAW_ENV_API_BASE)
         ? "https://api.myfidpass.fr"
         : RAW_ENV_API_BASE || "";
