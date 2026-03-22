@@ -54,50 +54,52 @@ export function renderNextRewardBannerMarkup(esc, state, ctx) {
 
   if (state.kind === "visitor") {
     return `
-        <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--visitor" role="region" aria-label="Programme fidélité">
-          <p class="fidelity-v2-next-reward-eyebrow">Programme fidélité</p>
-          <p class="fidelity-v2-next-reward-lead"><strong>${businessNameEsc}</strong></p>
-          <p class="fidelity-v2-next-reward-hint">Inscris-toi pour suivre ta progression vers la prochaine récompense.</p>
+        <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--visitor fidelity-v2-next-reward--single-line" role="region" aria-label="Programme fidélité">
+          <p class="fidelity-v2-next-reward-one-line">
+            <strong class="fidelity-v2-next-reward-name-bit">${businessNameEsc}</strong>
+            <span class="fidelity-v2-next-reward-sep" aria-hidden="true">·</span>
+            <span class="fidelity-v2-next-reward-muted fidelity-v2-next-reward-truncate">Fidélité — inscris-toi pour suivre ta progression</span>
+          </p>
         </div>`;
   }
 
   if (state.kind === "no_tiers") {
     return `
-        <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--neutral" role="status" aria-label="Paliers non affichés en ligne">
-          <p class="fidelity-v2-next-reward-eyebrow">Récompenses</p>
-          <p class="fidelity-v2-next-reward-lead">Paliers en magasin</p>
-          <p class="fidelity-v2-next-reward-hint">Les étapes s’affichent sur place chez le commerce.</p>
+        <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--neutral fidelity-v2-next-reward--single-line" role="status" aria-label="Paliers non affichés en ligne">
+          <p class="fidelity-v2-next-reward-one-line">
+            <span class="fidelity-v2-next-reward-muted">Récompenses</span>
+            <span class="fidelity-v2-next-reward-sep" aria-hidden="true">·</span>
+            <span>Paliers en magasin</span>
+          </p>
         </div>`;
   }
 
   if (state.kind === "complete") {
     const aria = `Palier max atteint : ${state.lastLabel}`;
     return `
-        <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--complete" role="status" aria-label="${esc(aria)}">
-          <p class="fidelity-v2-next-reward-eyebrow">Objectif atteint</p>
-          <p class="fidelity-v2-next-reward-title">${esc(state.lastLabel)}</p>
-          <p class="fidelity-v2-next-reward-hint">Tu as débloqué la meilleure récompense du programme.</p>
-          <div class="fidelity-v2-next-reward-bar" aria-hidden="true" style="--fid-next-pct: 100%;"><div class="fidelity-v2-next-reward-bar-fill"></div></div>
+        <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--complete fidelity-v2-next-reward--single-line" role="status" aria-label="${esc(aria)}">
+          <p class="fidelity-v2-next-reward-one-line">
+            <span class="fidelity-v2-next-reward-complete-mark" aria-hidden="true">✓</span>
+            <span class="fidelity-v2-next-reward-complete-text">Palier max <span class="fidelity-v2-next-reward-sep" aria-hidden="true">·</span> <strong class="fidelity-v2-next-reward-name-bit">${esc(state.lastLabel)}</strong></span>
+          </p>
         </div>`;
   }
 
   const unitW = state.isStamps ? esc(state.unitShort) : "pts";
   const need = esc(String(state.need));
+  const needSuffix = state.isStamps ? ` ${unitW}` : "";
   const bal = esc(String(state.balance));
   const max = esc(String(state.nextThreshold));
   const aria = `Prochaine récompense : ${state.label}. ${state.balance} sur ${state.nextThreshold}, encore ${state.need} ${state.unitShort}.`;
 
   return `
-        <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--next" role="status" aria-label="${esc(aria)}">
-          <p class="fidelity-v2-next-reward-eyebrow">Ta prochaine récompense</p>
-          <p class="fidelity-v2-next-reward-title">${esc(state.label)}</p>
-          <div class="fidelity-v2-next-reward-stats" aria-hidden="true">
-            <span class="fidelity-v2-next-reward-stat-num"><span class="fidelity-v2-next-reward-current">${bal}</span><span class="fidelity-v2-next-reward-stat-sep">/</span><span class="fidelity-v2-next-reward-max">${max}</span></span>
-            <span class="fidelity-v2-next-reward-stat-unit">${unitW}</span>
-          </div>
-          <div class="fidelity-v2-next-reward-bar-wrap">
-            <div class="fidelity-v2-next-reward-bar" style="--fid-next-pct: ${state.pct.toFixed(2)}%;"><div class="fidelity-v2-next-reward-bar-fill"></div></div>
-          </div>
-          <p class="fidelity-v2-next-reward-hint">Encore <strong>${need}</strong> ${unitW} pour la débloquer.</p>
+        <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--next fidelity-v2-next-reward--single-line" role="status" aria-label="${esc(aria)}">
+          <p class="fidelity-v2-next-reward-one-line">
+            <span class="fidelity-v2-next-reward-title-bit">${esc(state.label)}</span>
+            <span class="fidelity-v2-next-reward-sep" aria-hidden="true">·</span>
+            <span class="fidelity-v2-next-reward-pts-bit"><span class="fidelity-v2-next-reward-current">${bal}</span><span class="fidelity-v2-next-reward-stat-sep">/</span><span class="fidelity-v2-next-reward-max">${max}</span> <span class="fidelity-v2-next-reward-stat-unit">${unitW}</span></span>
+            <span class="fidelity-v2-next-reward-sep" aria-hidden="true">·</span>
+            <span class="fidelity-v2-next-reward-need-bit">+<strong>${need}</strong>${needSuffix}</span>
+          </p>
         </div>`;
 }
