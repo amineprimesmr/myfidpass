@@ -29,7 +29,14 @@ export function initPricingNavigation() {
     "submit",
     (e) => {
       if (e.target?.id !== "landing-hero-form") return;
-      goPricing(e);
+      const name = document.getElementById("landing-etablissement")?.value?.trim();
+      const submitBtn = document.getElementById("landing-hero-submit");
+      if (!name || submitBtn?.disabled) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      } else {
+        goPricing(e);
+      }
     },
     true
   );

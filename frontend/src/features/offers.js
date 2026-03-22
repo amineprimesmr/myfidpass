@@ -2,13 +2,7 @@
  * Page choix d'offre / abonnement (publique : sans compte → inscription, puis Stripe).
  * Référence : REFONTE-REGLES.md — un module par écran.
  */
-import {
-  API_BASE,
-  getAuthToken,
-  getAuthHeaders,
-  isDevBypassPayment,
-  setDevBypassPayment,
-} from "../config.js";
+import { API_BASE, getAuthToken, getAuthHeaders, setDevBypassPayment } from "../config.js";
 import { navigateToLanding } from "../router/index.js";
 
 /** Essai sans compte app : même lien que l’ancien parcours onboarding (Stripe collecte l’email). */
@@ -28,19 +22,6 @@ export function initOffersPage() {
       ? "Continuer — 49 €/mois (7 jours gratuits)"
       : "Essayer gratuitement";
   }
-
-  (async () => {
-    if (!getAuthToken()) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.hasActiveSubscription || isDevBypassPayment()) {
-          window.location.replace("/app");
-        }
-      }
-    } catch (_) {}
-  })();
 
   const devBypassBtn = document.getElementById("offers-dev-bypass-btn");
   if (devBypassBtn) {

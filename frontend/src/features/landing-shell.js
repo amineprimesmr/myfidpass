@@ -3,8 +3,12 @@
  * La navigation vers les tarifs est gérée par pricing-navigation.js (capture).
  */
 function updateLandingCtaState() {
+  const input = document.getElementById("landing-etablissement");
   const btn = document.getElementById("landing-hero-submit");
-  if (btn) btn.disabled = false;
+  if (!btn) return;
+  const ok = !!(input?.value?.trim());
+  btn.disabled = !ok;
+  btn.setAttribute("aria-disabled", ok ? "false" : "true");
 }
 
 function initPlacesAutocomplete() {
@@ -29,6 +33,7 @@ function initPlacesAutocomplete() {
       if (hidden) hidden.value = place.place_id || "";
       const helper = document.getElementById("landing-hero-helper");
       if (helper) helper.classList.remove("is-visible");
+      updateLandingCtaState();
     });
     input.dataset.placesInit = "1";
   } catch (_) {}
