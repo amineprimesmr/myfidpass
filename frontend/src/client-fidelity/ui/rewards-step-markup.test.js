@@ -19,7 +19,7 @@ describe("renderRewardsStepMarkup", () => {
       balanceUnit: "pts",
       stampEmoji: "",
     });
-    expect(html).toContain("Paliers du programme");
+    expect(html).toContain("fid-tiers-block");
     expect(html).toContain("Boisson");
     expect(html).toContain("Menu");
     expect(html).toContain("Encore");

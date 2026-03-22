@@ -95,10 +95,7 @@ ${tiers
         </ol>`;
 
   return `
-            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">Suis ta progression vers les <strong>paliers</strong> définis par le commerce.</p>
-
             <div class="fid-tiers-block">
-              <h3 class="fidelity-v2-step-subtitle fid-tiers-block-title">Paliers du programme</h3>
               ${progressCard}
               ${stepsHtml}
             </div>`;
