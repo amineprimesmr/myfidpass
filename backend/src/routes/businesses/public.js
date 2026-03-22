@@ -42,6 +42,8 @@ export function publicInfo(req, res) {
     required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
     stamp_reward_label: business.stamp_reward_label ?? undefined,
     stamp_mid_reward_label: business.stamp_mid_reward_label ?? undefined,
+    label_restants: business.label_restants?.trim() || undefined,
+    stamp_emoji: business.stamp_emoji?.trim() || undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
   });
 }

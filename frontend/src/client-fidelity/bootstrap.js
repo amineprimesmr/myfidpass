@@ -46,8 +46,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       api.getEngagementActions(slug),
     ]);
     const wallet = await api.getWalletUrls(slug, memberId);
+    const memberWithPoints =
+      member && tickets != null && Number.isFinite(Number(tickets.points))
+        ? { ...member, points: Number(tickets.points) }
+        : member;
     store.patch({
-      member,
+      member: memberWithPoints,
       games: gamesData?.games || [],
       roulette_segments: Array.isArray(gamesData?.roulette_segments) ? gamesData.roulette_segments : [],
       tickets,

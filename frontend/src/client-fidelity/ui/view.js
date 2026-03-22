@@ -45,12 +45,25 @@ export function renderClientPage(root, state, options = {}) {
   const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
   const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
-
-  /** Logo : aligné sur l’API (base64 ou fichiers pass), même base que les fetch. */
-  const hasServerLogo = !!state.business?.logoUrl;
-  const logoPath = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
   const baseTrim = String(apiBase || "").replace(/\/$/, "");
-  const logoSrc = hasServerLogo && logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : null;
+  /** Toujours tenter l’URL publique du logo (même base que les fetch API) — si 404, repli initiale. */
+  const logoPath = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
+  const logoAttemptSrc = logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : "";
+  const logoImgOnError =
+    "this.style.display='none';var w=this.closest('.fidelity-v2-header-brand-logo,.fidelity-roulette-logo-wrap');if(w){var f=w.querySelector('[data-fid-logo-fallback]');if(f)f.style.display='flex';}";
+  const memberBalance =
+    hasMember && state.member?.id != null ? Math.max(0, Math.floor(Number(state.member?.points) || 0)) : null;
+  const headerBalanceUnit = isStampsProgram
+    ? (() => {
+        const raw = String(state.business?.label_restants || "").trim();
+        if (!raw) return "tampons";
+        return raw.length <= 14 ? raw : "tampons";
+      })()
+    : "pts";
+  const stampEmojiHeader =
+    isStampsProgram && state.business?.stamp_emoji
+      ? esc(String(state.business.stamp_emoji).trim().slice(0, 8))
+      : "";
 
   if (gamePage) {
     const gameSubtitle = isStampsProgram ? "gagne des passages bonus" : "gagne des points bonus";
@@ -58,6 +71,15 @@ export function renderClientPage(root, state, options = {}) {
     root.innerHTML = `
       <div class="fidelity-game-page">
         <a href="${backUrl}" class="fidelity-game-back-float">← Retour</a>
+        ${memberBalance != null ? `
+        <div class="fidelity-game-balance-pill" role="status" aria-label="${esc(isStampsProgram ? "Tampons sur ta carte" : "Points sur ta carte")}">
+          <div class="fidelity-v2-header-balance-inner">
+            ${stampEmojiHeader ? `<span class="fidelity-v2-header-balance-emoji" aria-hidden="true">${stampEmojiHeader}</span>` : ""}
+            <span class="fidelity-v2-header-balance-num">${esc(String(memberBalance))}</span>
+            <span class="fidelity-v2-header-balance-unit">${esc(headerBalanceUnit)}</span>
+          </div>
+        </div>
+        ` : ""}
         ${gameWalletLocked ? `
         <div class="fidelity-game-wallet-banner" role="alert">
           <p class="fidelity-game-wallet-banner-text"><strong>Étape 1 requise.</strong> Ajoute ta carte au Wallet sur la page précédente et confirme avec « Oui, j’ai ajouté ma carte » pour débloquer le jeu.</p>
@@ -65,9 +87,9 @@ export function renderClientPage(root, state, options = {}) {
         </div>
         ` : ""}
         <div class="fidelity-game-top">
-          <div class="fidelity-roulette-logo">
-            ${logoSrc
-              ? `<img src="${esc(logoSrc)}" alt="" class="fidelity-roulette-logo-img" loading="lazy" decoding="async" />`
+          <div class="fidelity-roulette-logo-wrap fidelity-roulette-logo">
+            ${logoAttemptSrc
+              ? `<img src="${esc(logoAttemptSrc)}" alt="" class="fidelity-roulette-logo-img" loading="eager" decoding="async" onerror="${logoImgOnError}" /><div class="fidelity-roulette-logo-fallback" data-fid-logo-fallback><span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span></div>`
               : `<span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>`
             }
           </div>
@@ -125,12 +147,21 @@ export function renderClientPage(root, state, options = {}) {
     <header class="fidelity-v2-header">
       <div class="fidelity-v2-header-inner">
         <div class="fidelity-v2-header-brand">
-          ${logoSrc
-            ? `<img src="${esc(logoSrc)}" alt="" class="fidelity-v2-logo" loading="lazy" decoding="async" />`
+          ${logoAttemptSrc
+            ? `<div class="fidelity-v2-header-brand-logo"><img src="${esc(logoAttemptSrc)}" alt="" class="fidelity-v2-logo" loading="eager" decoding="async" onerror="${logoImgOnError}" /><div class="fidelity-v2-logo-placeholder" data-fid-logo-fallback style="display:none"><span>${esc(businessName.slice(0, 1).toUpperCase())}</span></div></div>`
             : `<div class="fidelity-v2-logo-placeholder"><span>${esc(businessName.slice(0, 1).toUpperCase())}</span></div>`
           }
           <span class="fidelity-v2-business-name">${esc(businessName)}</span>
         </div>
+        ${memberBalance != null ? `
+        <div class="fidelity-v2-header-balance" role="status" aria-label="${esc(isStampsProgram ? "Tampons sur ta carte" : "Points sur ta carte")}">
+          <div class="fidelity-v2-header-balance-inner">
+            ${stampEmojiHeader ? `<span class="fidelity-v2-header-balance-emoji" aria-hidden="true">${stampEmojiHeader}</span>` : ""}
+            <span class="fidelity-v2-header-balance-num" id="fidelity-v2-header-balance-num">${esc(String(memberBalance))}</span>
+            <span class="fidelity-v2-header-balance-unit">${esc(headerBalanceUnit)}</span>
+          </div>
+        </div>
+        ` : ""}
       </div>
     </header>
 
