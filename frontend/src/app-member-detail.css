@@ -1,5 +1,5 @@
 /**
- * Panneau détail membre (/app#membres) — tiroir latéral, voile léger.
+ * Panneau détail membre (/app#membres) — tiroir latéral, voile uni (sans flou).
  * Fichier dédié (REFONTE-REGLES : CSS par composant).
  */
 #app-app .app-member-drawer {
@@ -11,8 +11,6 @@
   align-items: stretch;
   pointer-events: none;
   visibility: hidden;
-  /* Évite que le flou ne « fuit » visuellement sur les textes du fond */
-  isolation: isolate;
 }
 
 #app-app .app-member-drawer:not(.hidden) {
@@ -23,27 +21,16 @@
 #app-app .app-member-drawer__scrim {
   position: absolute;
   inset: 0;
-  /* Voile + flou plus franc : limite les halos « sales » du léger blur sur fond clair/sombre */
-  background: rgba(248, 250, 252, 0.52);
-  backdrop-filter: blur(32px) saturate(1.35);
-  -webkit-backdrop-filter: blur(32px) saturate(1.35);
-  transform: translateZ(0);
+  /* Voile opaque léger : pas de backdrop-filter (pas de flou, pas d’artefacts). */
+  background: rgba(13, 13, 13, 0.18);
   opacity: 0;
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
   padding: 0;
   margin: 0;
   cursor: pointer;
   appearance: none;
   font: inherit;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #app-app .app-member-drawer__scrim {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(15, 23, 42, 0.22);
-  }
 }
 
 #app-app .app-member-drawer.is-open .app-member-drawer__scrim {
@@ -75,9 +62,7 @@
   gap: 1rem;
   padding: 1.25rem 1.25rem 1rem;
   border-bottom: 1px solid var(--app-border, #e8ecf1);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: #ffffff;
 }
 
 #app-app .app-member-drawer__eyebrow {
