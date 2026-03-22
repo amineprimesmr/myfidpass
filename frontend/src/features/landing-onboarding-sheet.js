@@ -1,7 +1,7 @@
 /**
  * Bottom sheet onboarding — overlay sur la landing, drawer depuis le bas.
- * Utilise le nom d'établissement du hero. Onboarding builder (logo, style, objectifs, etc.).
- * Étape 5 : « Votre carte est prête » (animation seule). Étape 6 : « Créez votre compte » (formulaire).
+ * Ouverture depuis les CTA « Essayez 7 jours gratuitement » (même logique qu’une landing type essai).
+ * Utilise le nom d’établissement du hero si renseigné. Onboarding builder (logo, style, objectifs, etc.).
  */
 import { API_BASE } from "../config.js";
 import { initRouting } from "../router/index.js";

@@ -4,10 +4,10 @@
  */
 import { openOnboardingSheet, initOnboardingSheet } from "./landing-onboarding-sheet.js";
 
+/** Le CTA principal reste actif (parcours type essai gratuit, comme une landing SaaS). */
 function updateLandingCtaState() {
-  const input = document.getElementById("landing-etablissement");
   const btn = document.getElementById("landing-hero-submit");
-  if (input && btn) btn.disabled = !input.value?.trim();
+  if (btn) btn.disabled = false;
 }
 
 function initPlacesAutocomplete() {

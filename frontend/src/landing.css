@@ -1440,11 +1440,13 @@
   display: none;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
   min-height: 46px;
-  padding: 0.72rem 1rem;
-  font-size: 0.9rem;
-  line-height: 1;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.72rem;
+  line-height: 1.15;
+  max-width: min(11.5rem, 38vw);
 }
 
 .landing-cta {
@@ -1877,6 +1879,18 @@
   }
 }
 
+/* Sous-texte essai gratuit (aligné landing type Limova) */
+.landing-hero-trial-hint {
+  font-size: 0.8125rem;
+  color: var(--landing-muted);
+  margin: 0.65rem 0 0;
+  text-align: center;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.35;
+}
+
 .landing-hero-benefits {
   display: flex;
   flex-wrap: nowrap;
@@ -2134,8 +2148,18 @@
 
 .landing-btn-hero {
   border-radius: 9999px;
-  padding: 0.6rem 1.6rem;
+  padding: 0.6rem 1.25rem;
   white-space: nowrap;
+  max-width: 100%;
+}
+@media (max-width: 640px) {
+  .landing-btn-hero {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+  }
 }
 .landing-btn:focus-visible {
   outline: none;
