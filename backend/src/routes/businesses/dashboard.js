@@ -104,6 +104,8 @@ router.patch("/settings", async (req, res) => {
   const required_stamps = body.required_stamps ?? body.requiredStamps;
   const stamp_emoji = body.stamp_emoji ?? body.stampEmoji;
   const stamp_reward_label = body.stamp_reward_label ?? body.stampRewardLabel;
+  const stamp_mid_reward_label =
+    body.stamp_mid_reward_label !== undefined ? body.stamp_mid_reward_label : body.stampMidRewardLabel;
   const program_type = body.program_type ?? body.programType;
   const points_per_euro = body.points_per_euro ?? body.pointsPerEuro;
   const points_per_visit = body.points_per_visit ?? body.pointsPerVisit;
