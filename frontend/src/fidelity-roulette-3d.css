@@ -13,30 +13,42 @@
   margin-bottom: 1.05rem;
 }
 
-/* Titre hero page jeu : plus impactant que les titres de cartes fidélité */
+/* Titre page jeu : deux lignes même corps, bloc premium lisible */
 .fidelity-game-page .fidelity-roulette-title {
-  margin: 0 auto clamp(1.35rem, 4.2vw, 1.85rem);
-  max-width: min(22rem, 94vw);
+  margin: 0 auto clamp(1.4rem, 4.4vw, 1.95rem);
+  max-width: min(24rem, 94vw);
+  padding: clamp(0.9rem, 3vw, 1.2rem) clamp(1.05rem, 4vw, 1.4rem);
+  border-radius: 22px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.94) 45%, rgba(241, 245, 249, 0.92) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 10px 36px rgba(79, 70, 229, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   font-family: "Plus Jakarta Sans", var(--font, system-ui), sans-serif;
-  font-size: clamp(1.48rem, 6.4vw, 2.05rem);
+  font-size: clamp(1.65rem, 7.5vw, 2.32rem);
   font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -0.045em;
-  color: #0a0f1a;
+  line-height: 1.13;
+  letter-spacing: -0.048em;
+  color: #060a12;
   text-transform: none;
   text-wrap: balance;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.fidelity-game-page .fidelity-roulette-title-line {
+  display: block;
+  font-size: 1em;
+  font-weight: 800;
+  letter-spacing: inherit;
+  color: inherit;
+  line-height: 1.13;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85),
+    0 2px 16px rgba(15, 23, 42, 0.06);
 }
 
 .fidelity-game-page .fidelity-roulette-title-line + .fidelity-roulette-title-line {
-  display: block;
-  margin-top: 0.2em;
-  font-size: 0.88em;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: #111827;
-  line-height: 1.18;
-  opacity: 0.96;
+  margin-top: 0.14em;
 }
 
 .fidelity-game-page .fidelity-roulette-btn-row {
