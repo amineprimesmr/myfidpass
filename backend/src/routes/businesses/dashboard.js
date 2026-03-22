@@ -10,10 +10,6 @@ import {
   getGameRewardsForBusiness,
   replaceGameRewardsForBusiness,
   getEngagementRewards,
-  getEngagementCompletionsForBusiness,
-  approveEngagementCompletion,
-  rejectEngagementCompletion,
-  getPushTokensForMember,
   getPassKitPushTokensForBusiness,
   getDashboardStats,
   getDashboardEvolution,
@@ -283,11 +279,18 @@ router.patch("/settings", async (req, res) => {
     if (engagement_rewards === null || (typeof engagement_rewards === "object" && Object.keys(engagement_rewards).length === 0)) {
       updates.engagement_rewards = null;
     } else if (typeof engagement_rewards === "object") {
-      updates.engagement_rewards = JSON.stringify(engagement_rewards);
+      const er = JSON.parse(JSON.stringify(engagement_rewards));
+      if (er.google_review && typeof er.google_review === "object") {
+        er.google_review.require_approval = false;
+      }
+      updates.engagement_rewards = JSON.stringify(er);
     } else if (typeof engagement_rewards === "string") {
       try {
-        JSON.parse(engagement_rewards);
-        updates.engagement_rewards = engagement_rewards;
+        const er = JSON.parse(engagement_rewards);
+        if (er && typeof er === "object" && er.google_review && typeof er.google_review === "object") {
+          er.google_review.require_approval = false;
+        }
+        updates.engagement_rewards = JSON.stringify(er);
       } catch (_) {
         updates.engagement_rewards = null;
       }
@@ -375,31 +378,6 @@ router.put("/games/:gameCode/rewards", (req, res) => {
   }
   const rewards = replaceGameRewardsForBusiness(req.business.id, req.params.gameCode, rewardsInput);
   return res.json({ ok: true, rewards });
-});
-
-// ——— Engagement completions ———
-router.get("/engagement-completions", (req, res) => {
-  const status = ["pending", "pending_review", "approved", "rejected"].includes(req.query.status) ? req.query.status : null;
-  const completions = getEngagementCompletionsForBusiness(req.business.id, { status, limit: 100 });
-  res.json({ completions });
-});
-
-router.patch("/engagement-completions/:id/approve", (req, res) => {
-  const updated = approveEngagementCompletion(req.params.id, req.business.id);
-  if (!updated) return res.status(404).json({ error: "Demande introuvable ou déjà traitée" });
-  if (updated.points_granted > 0) {
-    const tokens = getPushTokensForMember(updated.member_id);
-    process.nextTick(() => {
-      tokens.forEach((token) => sendPassKitUpdate(token).catch(() => {}));
-    });
-  }
-  res.json({ completion: updated });
-});
-
-router.patch("/engagement-completions/:id/reject", (req, res) => {
-  const updated = rejectEngagementCompletion(req.params.id, req.business.id);
-  if (!updated) return res.status(404).json({ error: "Demande introuvable ou déjà traitée" });
-  res.json({ completion: updated });
 });
 
 // ——— Stats ———

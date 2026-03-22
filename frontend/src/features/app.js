@@ -331,7 +331,7 @@ function initAppPage() {
         enabled: isSelected("google_review") && !!val("google_review"),
         points: 2,
         place_id: val("google_review"),
-        require_approval: true,
+        require_approval: false,
         auto_verify_enabled: true,
       },
       instagram_follow: { enabled: isSelected("instagram_follow") && !!val("instagram_follow"), points: 1, url: val("instagram_follow") },
@@ -2290,11 +2290,9 @@ function initAppDashboard(slug) {
       const gEnable = document.getElementById("app-engagement-google-enable");
       const gPoints = document.getElementById("app-engagement-google-points");
       const gPlaceId = document.getElementById("app-engagement-google-place-id");
-      const gApproval = document.getElementById("app-engagement-google-require-approval");
       if (gEnable) gEnable.checked = !!g.enabled;
       if (gPoints) gPoints.value = g.points ?? 2;
       if (gPlaceId) gPlaceId.value = g.place_id ?? "";
-      if (gApproval) gApproval.checked = g.require_approval !== false;
       const igEnable = document.getElementById("app-engagement-instagram-enable");
       const igPoints = document.getElementById("app-engagement-instagram-points");
       const igUrl = document.getElementById("app-engagement-instagram-url");
@@ -2456,7 +2454,6 @@ function initAppDashboard(slug) {
     const gEnable = document.getElementById("app-engagement-google-enable");
     const gPoints = document.getElementById("app-engagement-google-points");
     const gPlaceId = document.getElementById("app-engagement-google-place-id");
-    const gApproval = document.getElementById("app-engagement-google-require-approval");
     const igEnable = document.getElementById("app-engagement-instagram-enable");
     const igPoints = document.getElementById("app-engagement-instagram-points");
     const igUrl = document.getElementById("app-engagement-instagram-url");
@@ -2467,7 +2464,7 @@ function initAppDashboard(slug) {
     const fbPoints = document.getElementById("app-engagement-facebook-points");
     const fbUrl = document.getElementById("app-engagement-facebook-url");
     const engagement_rewards = {
-      google_review: { enabled: !!gEnable?.checked, points: Math.min(10, Math.max(1, parseInt(gPoints?.value, 10) || 2)), place_id: (gPlaceId?.value || "").trim(), require_approval: !!gApproval?.checked },
+      google_review: { enabled: !!gEnable?.checked, points: Math.min(10, Math.max(1, parseInt(gPoints?.value, 10) || 2)), place_id: (gPlaceId?.value || "").trim(), require_approval: false },
       instagram_follow: { enabled: !!igEnable?.checked, points: Math.min(10, Math.max(1, parseInt(igPoints?.value, 10) || 1)), url: (igUrl?.value || "").trim() },
       tiktok_follow: { enabled: !!tkEnable?.checked, points: Math.min(10, Math.max(1, parseInt(tkPoints?.value, 10) || 1)), url: (tkUrl?.value || "").trim() },
       facebook_follow: { enabled: !!fbEnable?.checked, points: Math.min(10, Math.max(1, parseInt(fbPoints?.value, 10) || 1)), url: (fbUrl?.value || "").trim() },

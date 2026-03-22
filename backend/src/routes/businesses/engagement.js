@@ -37,7 +37,7 @@ export function engagementActionsHandler(req, res) {
       label: "Laisser un avis Google",
       points: 1,
       url: `https://search.google.com/local/writereview?placeid=${encodeURIComponent(rewards.google_review.place_id.trim())}`,
-      require_approval: !!rewards.google_review.require_approval,
+      require_approval: false,
       auto_verify_enabled: rewards.google_review.auto_verify_enabled !== false,
     });
   }
@@ -210,9 +210,7 @@ engagementRouter.post("/claim-auto", (req, res) => {
     nowMs: Date.now(),
   });
 
-  const statusOverride = scored.verdict === "approved" ? "approved" : "pending_review";
   const completionResult = createEngagementCompletion(business.id, memberId, actionType, {
-    statusOverride,
     proofId: proof.id,
     proofScore: scored.score,
   });
@@ -231,10 +229,9 @@ engagementRouter.post("/claim-auto", (req, res) => {
     return res.status(400).json({ error: "Impossible de traiter la demande." });
   }
 
-  const proofStatus = statusOverride === "approved" ? "claimed_approved" : "claimed_pending_review";
   finalizeEngagementProof({
     proofId: proof.id,
-    status: proofStatus,
+    status: "claimed_approved",
     score: scored.score,
     reasons: scored.reasons,
     completionId: completionResult.completion.id,
@@ -242,18 +239,17 @@ engagementRouter.post("/claim-auto", (req, res) => {
     claimDeviceHash,
   });
 
-  const responseStatus = completionResult.status;
   const ticketsGranted = completionResult.ticketsGranted ?? 0;
   return res.status(201).json({
     completion_id: completionResult.completion.id,
-    status: responseStatus,
+    status: completionResult.status,
     points_granted: completionResult.pointsGranted ?? 0,
     tickets_granted: ticketsGranted,
     score: scored.score,
     message:
-      responseStatus === "approved"
-        ? (ticketsGranted > 0 ? `${ticketsGranted} ticket${ticketsGranted > 1 ? "s" : ""} ajouté${ticketsGranted > 1 ? "s" : ""} automatiquement.` : "C'est enregistré.")
-        : "Vérification complémentaire requise.",
+      ticketsGranted > 0
+        ? `${ticketsGranted} ticket${ticketsGranted > 1 ? "s" : ""} ajouté${ticketsGranted > 1 ? "s" : ""} automatiquement.`
+        : "C'est enregistré.",
   });
 });
 
@@ -265,7 +261,7 @@ engagementRouter.post("/claim", (req, res) => {
   }
   const member = getMemberForBusiness(memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
-  const result = createEngagementCompletion(business.id, memberId, actionType, { statusOverride: "approved" });
+  const result = createEngagementCompletion(business.id, memberId, actionType, {});
   if (result.error === "action_disabled") {
     return res.status(400).json({ error: "Cette action n'est pas activée." });
   }
@@ -279,9 +275,9 @@ engagementRouter.post("/claim", (req, res) => {
     points_granted: result.pointsGranted ?? 0,
     tickets_granted: ticketsGranted,
     message:
-      result.status === "approved"
-        ? (ticketsGranted > 0 ? `${ticketsGranted} ticket${ticketsGranted > 1 ? "s" : ""} ajouté${ticketsGranted > 1 ? "s" : ""} à ta carte.` : "C'est enregistré.")
-        : "Votre avis sera vérifié par le commerce.",
+      ticketsGranted > 0
+        ? `${ticketsGranted} ticket${ticketsGranted > 1 ? "s" : ""} ajouté${ticketsGranted > 1 ? "s" : ""} à ta carte.`
+        : "C'est enregistré.",
   });
 });
 
