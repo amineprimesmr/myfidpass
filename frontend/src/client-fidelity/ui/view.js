@@ -145,12 +145,10 @@ export function renderClientPage(root, state, options = {}) {
         </div>
         <form id="fidelity-v2-form" class="fidelity-v2-form" novalidate>
           <div class="fidelity-v2-input-group">
-            <label class="fidelity-v2-label" for="fidelity-v2-name">Prénom ou nom</label>
-            <input id="fidelity-v2-name" class="fidelity-input" type="text" placeholder="Ex : Marie Dupont" autocomplete="name" required />
+            <input id="fidelity-v2-name" class="fidelity-input" type="text" placeholder="prénom" autocomplete="given-name" aria-label="Prénom" required />
           </div>
           <div class="fidelity-v2-input-group">
-            <label class="fidelity-v2-label" for="fidelity-v2-email">Adresse email</label>
-            <input id="fidelity-v2-email" class="fidelity-input" type="email" placeholder="ton@email.com" autocomplete="email" required />
+            <input id="fidelity-v2-email" class="fidelity-input" type="email" placeholder="ton@email.com" autocomplete="email" aria-label="Adresse e-mail" required />
           </div>
           <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
             <button id="fidelity-v2-submit" class="fidelity-cta-pill" type="submit">
