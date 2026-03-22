@@ -1,6 +1,7 @@
 import { renderEngagementActionsMarkup } from "./mission-markup.js";
 import { renderProfileMissionModalMarkup } from "./profile-mission-modal-markup.js";
 import { renderRewardsStepMarkup } from "./rewards-step-markup.js";
+import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
 
 function esc(value) {
   return String(value == null ? "" : value)
@@ -143,26 +144,19 @@ export function renderClientPage(root, state, options = {}) {
     balanceUnit: headerBalanceUnit,
     stampEmoji: stampEmojiHeader,
   });
+  const nextRewardBannerState = buildNextRewardBannerState({
+    hasMember,
+    business: state.business,
+    member: state.member,
+    programType,
+    balanceUnit: headerBalanceUnit,
+  });
+  const nextRewardBannerHtml = renderNextRewardBannerMarkup(esc, nextRewardBannerState, { businessNameEsc: businessName });
 
   root.innerHTML = `
-    <header class="fidelity-v2-header">
-      <div class="fidelity-v2-header-inner">
-        <div class="fidelity-v2-header-brand">
-          ${logoAttemptSrc
-            ? `<div class="fidelity-v2-header-brand-logo"><img src="${esc(logoAttemptSrc)}" alt="" class="fidelity-v2-logo" loading="eager" decoding="async" onerror="${logoImgOnError}" /><div class="fidelity-v2-logo-placeholder" data-fid-logo-fallback style="display:none"><span>${esc(businessName.slice(0, 1).toUpperCase())}</span></div></div>`
-            : `<div class="fidelity-v2-logo-placeholder"><span>${esc(businessName.slice(0, 1).toUpperCase())}</span></div>`
-          }
-          <span class="fidelity-v2-business-name">${esc(businessName)}</span>
-        </div>
-        ${memberBalance != null ? `
-        <div class="fidelity-v2-header-balance" role="status" aria-label="${esc(isStampsProgram ? "Tampons sur ta carte" : "Points sur ta carte")}">
-          <div class="fidelity-v2-header-balance-inner">
-            ${stampEmojiHeader ? `<span class="fidelity-v2-header-balance-emoji" aria-hidden="true">${stampEmojiHeader}</span>` : ""}
-            <span class="fidelity-v2-header-balance-num" id="fidelity-v2-header-balance-num">${esc(String(memberBalance))}</span>
-            <span class="fidelity-v2-header-balance-unit">${esc(headerBalanceUnit)}</span>
-          </div>
-        </div>
-        ` : ""}
+    <header class="fidelity-v2-header fidelity-v2-header--next-reward">
+      <div class="fidelity-v2-header-inner fidelity-v2-header-inner--next-reward">
+        ${nextRewardBannerHtml}
       </div>
     </header>
 
