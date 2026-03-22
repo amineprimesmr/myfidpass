@@ -41,6 +41,11 @@ export function renderClientPage(root, state, options = {}) {
   const profilePhone = esc(state.member?.phone || "");
   const profileCity = esc(state.member?.city || "");
   const profileBirth = esc(state.member?.birth_date || "");
+  const joinNameRaw = (state.member?.name || "").trim();
+  const joinNameParts = joinNameRaw.split(/\s+/).filter(Boolean);
+  const joinPrenom = esc(joinNameParts[0] || "—");
+  const joinNom = joinNameParts.length > 1 ? esc(joinNameParts.slice(1).join(" ")) : "";
+  const joinEmailDisplay = esc((state.member?.email || "").trim() || "—");
   const showProfileMissionModal = hasMember && walletConfirmed && profileEligible && !profileClaimed;
   const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
   const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
@@ -350,6 +355,25 @@ export function renderClientPage(root, state, options = {}) {
           <button type="button" class="fidelity-profile-mission-modal__close" aria-label="Fermer">×</button>
         </div>
         <p class="fidelity-profile-mission-modal__desc">Quelques infos pour le commerce — <strong>1 ticket bonus</strong> sur ta carte (une seule fois).</p>
+        <div class="fidelity-profile-mission-modal__identity">
+          <p class="fidelity-profile-mission-modal__identity-kicker">Tes infos d’inscription</p>
+          <dl class="fidelity-profile-mission-modal__identity-dl">
+            <div class="fidelity-profile-mission-modal__identity-row">
+              <dt>Prénom</dt>
+              <dd>${joinPrenom}</dd>
+            </div>
+            ${joinNom ? `
+            <div class="fidelity-profile-mission-modal__identity-row">
+              <dt>Nom</dt>
+              <dd>${joinNom}</dd>
+            </div>
+            ` : ""}
+            <div class="fidelity-profile-mission-modal__identity-row">
+              <dt>E-mail</dt>
+              <dd class="fidelity-profile-mission-modal__identity-email">${joinEmailDisplay}</dd>
+            </div>
+          </dl>
+        </div>
         <form id="fidelity-v2-profile-form" class="fidelity-v2-profile-form" novalidate>
           <div class="fidelity-v2-input-group">
             <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-phone">Téléphone</label>
