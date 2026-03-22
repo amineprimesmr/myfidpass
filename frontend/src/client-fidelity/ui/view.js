@@ -16,14 +16,9 @@ export function renderClientPage(root, state, options = {}) {
   const businessName = esc(state.business?.organizationName || state.business?.name || "Carte fidélité");
   const hasMember = !!state.member?.id;
   const walletConfirmed = !!state.walletConfirmed;
-  const stepGateLocked = hasMember && !walletConfirmed;
   const showWalletStep = hasMember && !walletConfirmed;
-  const stepPlayKicker = walletConfirmed ? "Étape 1" : "Étape 2";
-  const stepRewardsKicker = walletConfirmed ? "Étape 2" : "Étape 3";
-  const memberHeroSubtitle = walletConfirmed
-    ? `Deux étapes pour profiter chez <strong>${esc(businessName)}</strong>`
-    : `Trois étapes pour tout débloquer chez <strong>${esc(businessName)}</strong>`;
-  const stepsAriaLabel = walletConfirmed ? "Parcours en deux étapes" : "Parcours en trois étapes";
+  const memberHeroSubtitle = `Tes avantages chez <strong>${esc(businessName)}</strong>`;
+  const memberSectionsAriaLabel = "Ton espace fidélité";
   const loyaltyGameTickets = (state.business?.loyalty_mode || "points_cash") === "points_game_tickets";
   const programType = String(state.business?.program_type || "points").toLowerCase();
   const isStampsProgram = programType === "stamps";
@@ -36,11 +31,11 @@ export function renderClientPage(root, state, options = {}) {
   const profileClaimed = !!state.member?.profile_bonus_claimed;
   const actionsForDisplay = engagementActionsRaw.filter((a) => {
     if (a.action_type === "profile_complete") {
-      return walletConfirmed && profileEligible && !profileClaimed;
+      return profileEligible && !profileClaimed;
     }
     return true;
   });
-  const showProfileMissionModal = hasMember && walletConfirmed && profileEligible && !profileClaimed;
+  const showProfileMissionModal = hasMember && profileEligible && !profileClaimed;
   const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
   const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
@@ -67,7 +62,6 @@ export function renderClientPage(root, state, options = {}) {
 
   if (gamePage) {
     const gameSubtitle = isStampsProgram ? "gagne des passages bonus" : "gagne des points bonus";
-    const gameWalletLocked = hasMember && !walletConfirmed;
     root.innerHTML = `
       <div class="fidelity-game-page">
         <a href="${backUrl}" class="fidelity-game-back-float">← Retour</a>
@@ -78,12 +72,6 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-v2-header-balance-num">${esc(String(memberBalance))}</span>
             <span class="fidelity-v2-header-balance-unit">${esc(headerBalanceUnit)}</span>
           </div>
-        </div>
-        ` : ""}
-        ${gameWalletLocked ? `
-        <div class="fidelity-game-wallet-banner" role="alert">
-          <p class="fidelity-game-wallet-banner-text"><strong>Étape 1 requise.</strong> Ajoute ta carte au Wallet sur la page précédente et confirme avec « Oui, j’ai ajouté ma carte » pour débloquer le jeu.</p>
-          <a href="${backUrl}" class="fidelity-game-wallet-banner-link">Retour à mon espace</a>
         </div>
         ` : ""}
         <div class="fidelity-game-top">
@@ -99,7 +87,7 @@ export function renderClientPage(root, state, options = {}) {
           </h2>
           <div class="fidelity-roulette-btn-row">
             <span class="fidelity-cta-wrap">
-              <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--with-tickets" type="button" aria-label="${esc(spinCtaAriaLabel)}" ${gameWalletLocked ? "disabled" : ""}>
+              <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--with-tickets" type="button" aria-label="${esc(spinCtaAriaLabel)}">
                 <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
                 <span class="fidelity-cta-pill-label">Jouer&nbsp;!</span>
                 <span class="fidelity-cta-tickets-badge" id="fidelity-v2-tickets-display" aria-hidden="true">${esc(String(tickets))}</span>
@@ -139,7 +127,7 @@ export function renderClientPage(root, state, options = {}) {
       ? ""
       : `Ouvre la page jeu pour utiliser la roue${tickets > 0 ? "" : " dès que tu auras des tickets"}.`
     : actionsForDisplay.length
-      ? "Quelques actions rapides pour débloquer des tickets ou valider une étape."
+      ? "Quelques actions rapides pour gagner des tickets."
       : showClassicProgram
         ? "Tes points montent quand tu utilises ta carte au moment de payer."
         : isStampsProgram
@@ -223,13 +211,11 @@ export function renderClientPage(root, state, options = {}) {
         </p>
       </section>
 
-      <div class="fidelity-v2-steps ${hasMember ? "" : "hidden"}" aria-label="${esc(stepsAriaLabel)}">
+      <div class="fidelity-v2-steps ${hasMember ? "" : "hidden"}" aria-label="${esc(memberSectionsAriaLabel)}">
         ${showWalletStep ? `
-        <!-- Étape 1 — Wallet (masquée une fois la carte ajoutée + confirmée) -->
         <section class="fidelity-v2-card fidelity-v2-step" id="fidelity-v2-wallet">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
-              <p class="fidelity-v2-step-kicker">Étape 1</p>
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">Ajoute ta carte au Wallet</h2>
             </div>
           </header>
@@ -253,7 +239,7 @@ export function renderClientPage(root, state, options = {}) {
             </div>
             <div class="fidelity-v2-wallet-confirm" id="fidelity-v2-wallet-confirm-block">
               <p class="fidelity-v2-wallet-confirm-title">Tu as fini l’ajout ?</p>
-              <p class="fidelity-v2-wallet-confirm-desc">Après avoir suivi Apple ou Google Wallet, confirme ici pour débloquer la suite : roue, missions et récompenses.</p>
+              <p class="fidelity-v2-wallet-confirm-desc">Après avoir suivi Apple ou Google Wallet, tu peux confirmer ici pour masquer ce bloc — la roue et les missions restent accessibles en dessous.</p>
               <button type="button" class="fidelity-v2-wallet-confirm-btn" id="fidelity-v2-wallet-confirm">Oui, j’ai ajouté ma carte</button>
               <p class="fidelity-v2-wallet-confirm-later">Pas encore ? Utilise les boutons ci-dessus, puis reviens cliquer ici.</p>
               <p class="fidelity-v2-wallet-confirm-hint">Nous ne pouvons pas vérifier automatiquement l’ajout — merci d’indiquer la vérité pour garder le programme équitable.</p>
@@ -263,14 +249,13 @@ export function renderClientPage(root, state, options = {}) {
         ` : ""}
 
         <!-- Roue / missions / programme -->
-        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play ${stepGateLocked ? "fidelity-v2-step--locked" : ""}" id="fidelity-v2-step-2">
+        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play" id="fidelity-v2-step-2">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
-              <p class="fidelity-v2-step-kicker">${esc(stepPlayKicker)}</p>
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
             </div>
           </header>
-          <div class="fidelity-v2-step-body ${stepGateLocked ? "fidelity-v2-step-body--gate" : ""}">
+          <div class="fidelity-v2-step-body">
             <div class="fidelity-v2-step-body-inner">
             ${step2Intro ? `<p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>` : ""}
             ${showRoulette && actionsForDisplay.length ? `
@@ -305,37 +290,19 @@ export function renderClientPage(root, state, options = {}) {
             ` : ""}
             <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
             </div>
-            ${stepGateLocked ? `
-            <div class="fidelity-v2-step-lock" role="status">
-              <span class="fidelity-v2-step-lock-icon" aria-hidden="true">🔒</span>
-              <p class="fidelity-v2-step-lock-title">Étape verrouillée</p>
-              <p class="fidelity-v2-step-lock-text">Complète l’étape 1 et confirme l’ajout au Wallet pour accéder à la roue, aux missions et au reste.</p>
-              <button type="button" class="fidelity-v2-step-lock-link fidelity-v2-scroll-to-wallet">Aller à l’étape 1</button>
-            </div>
-            ` : ""}
           </div>
         </section>
 
-        <!-- Étape 3 — Récompenses -->
-        <section class="fidelity-v2-card fidelity-v2-step ${stepGateLocked ? "fidelity-v2-step--locked" : ""}" id="fidelity-v2-rewards">
+        <section class="fidelity-v2-card fidelity-v2-step" id="fidelity-v2-rewards">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
-              <p class="fidelity-v2-step-kicker">${esc(stepRewardsKicker)}</p>
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">Récupère tes récompenses</h2>
             </div>
           </header>
-          <div class="fidelity-v2-step-body ${stepGateLocked ? "fidelity-v2-step-body--gate" : ""}">
+          <div class="fidelity-v2-step-body">
             <div class="fidelity-v2-step-body-inner">
             ${rewardsStepHtml}
             </div>
-            ${stepGateLocked ? `
-            <div class="fidelity-v2-step-lock" role="status">
-              <span class="fidelity-v2-step-lock-icon" aria-hidden="true">🔒</span>
-              <p class="fidelity-v2-step-lock-title">Étape verrouillée</p>
-              <p class="fidelity-v2-step-lock-text">Les récompenses s’affichent ici une fois l’étape 1 validée (carte ajoutée au Wallet + confirmation).</p>
-              <button type="button" class="fidelity-v2-step-lock-link fidelity-v2-scroll-to-wallet">Aller à l’étape 1</button>
-            </div>
-            ` : ""}
           </div>
         </section>
       </div>

@@ -296,11 +296,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   async function onSpinRoulette() {
     if (isSpinning) return;
-    if (!readWalletConfirmed()) {
-      document.getElementById("fidelity-v2-wallet")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-
     const state = store.get();
     const wheelEl = rootEl.querySelector("#fidelity-roulette-wheel");
     const spinBtn = rootEl.querySelector("#fidelity-v2-spin-btn");
@@ -469,11 +464,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       writeWalletConfirmed();
       store.patch({ walletConfirmed: true });
       rerender();
-    });
-    rootEl.querySelectorAll(".fidelity-v2-scroll-to-wallet").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.getElementById("fidelity-v2-wallet")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
     });
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
