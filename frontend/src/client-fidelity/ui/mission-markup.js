@@ -4,6 +4,7 @@
 
 function missionTheme(actionType) {
   const map = {
+    profile_complete: "profile",
     google_review: "google",
     instagram_follow: "instagram",
     facebook_follow: "facebook",
@@ -32,6 +33,8 @@ function missionIconSvg(theme, uid) {
       return `<svg ${common}><defs><linearGradient id="tp-${uid}" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00B67A"/><stop offset="100%" stop-color="#058A61"/></linearGradient></defs><rect x="2" y="2" width="36" height="36" rx="10" fill="url(#tp-${uid})"/><path d="M20 11l2.2 6.8h7.1l-5.7 4.1 2.2 6.8L20 24.6l-5.8 4.1 2.2-6.8-5.7-4.1h7.1L20 11z" fill="#fff"/></svg>`;
     case "tripadvisor":
       return `<svg ${common}><defs><linearGradient id="ta-${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00AF87"/><stop offset="100%" stop-color="#007E6A"/></linearGradient></defs><rect x="2" y="2" width="36" height="36" rx="10" fill="url(#ta-${uid})"/><circle cx="14" cy="18" r="4" fill="#fff"/><circle cx="26" cy="18" r="4" fill="#fff"/><ellipse cx="20" cy="24" rx="8" ry="5" fill="#fff" opacity=".35"/><circle cx="14" cy="18" r="1.8" fill="#00AF87"/><circle cx="26" cy="18" r="1.8" fill="#00AF87"/></svg>`;
+    case "profile":
+      return `<svg ${common}><defs><linearGradient id="pr-${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="50%" stop-color="#fb7185"/><stop offset="100%" stop-color="#e11d48"/></linearGradient></defs><rect x="2" y="2" width="36" height="36" rx="10" fill="url(#pr-${uid})"/><rect x="7" y="11" width="26" height="16" rx="2.5" fill="#fff" opacity=".95"/><path d="M7 17h26M7 21h26" stroke="#fda4af" stroke-width="1.2"/><circle cx="20" cy="19" r="2.2" fill="#fb7185"/></svg>`;
     default:
       return `<svg ${common}><defs><linearGradient id="gn-${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#64748B"/><stop offset="100%" stop-color="#334155"/></linearGradient></defs><rect x="2" y="2" width="36" height="36" rx="10" fill="url(#gn-${uid})"/><path d="M14 12h12v2.5H14V12zm0 6.5h12v2.5H14v-2.5zm-4-6.5v15l4-3.5h12v-11.5H10z" fill="#fff" fill-opacity=".95"/></svg>`;
   }
@@ -47,17 +50,25 @@ export function renderEngagementActionsMarkup(actions, esc) {
       const theme = missionTheme(a.action_type);
       const uid = `m${i}`;
       const icon = missionIconSvg(theme, uid);
-      return `
-            <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-mission-card fidelity-mission-card--${theme} fidelity-engagement-open-link" data-action-type="${esc(a.action_type)}">
+      const inner = `
               <div class="fidelity-mission-card__icon" aria-hidden="true">${icon}</div>
               <div class="fidelity-mission-card__main">
                 <span class="fidelity-mission-card__label">${esc(a.label)}</span>
                 <span class="fidelity-mission-card__reward"><span class="fidelity-mission-card__reward-plus">+</span>1 ticket</span>
               </div>
               <span class="fidelity-mission-card__cta">
-                <span class="fidelity-mission-card__cta-text">Ouvrir</span>
+                <span class="fidelity-mission-card__cta-text">${a.action_type === "profile_complete" ? "Remplir" : "Ouvrir"}</span>
                 <span class="fidelity-mission-card__cta-arrow" aria-hidden="true">›</span>
-              </span>
+              </span>`;
+      if (a.action_type === "profile_complete") {
+        return `
+            <button type="button" class="fidelity-mission-card fidelity-mission-card--${theme} fidelity-profile-mission-open" data-action-type="${esc(a.action_type)}">
+              ${inner}
+            </button>`;
+      }
+      return `
+            <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-mission-card fidelity-mission-card--${theme} fidelity-engagement-open-link" data-action-type="${esc(a.action_type)}">
+              ${inner}
             </a>`;
     })
     .join("");

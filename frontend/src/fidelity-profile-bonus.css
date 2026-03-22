@@ -1,49 +1,109 @@
-/* Section « Complète tes infos » — page fidélité client v2 */
-.fidelity-v2-profile-bonus {
-  margin: 1rem 0 1.25rem;
-  padding: 1rem 1rem 1.1rem;
-  border-radius: 1rem;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.55), rgba(245, 245, 247, 0.9));
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-}
-
-.fidelity-v2-profile-bonus-head {
+/* Mission « Complète ton profil » : formulaire en modale — page fidélité client v2 */
+.fidelity-profile-mission-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
   display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.fidelity-v2-profile-bonus-badge {
-  font-size: 1.5rem;
-  line-height: 1;
-  flex-shrink: 0;
+@media (min-width: 480px) {
+  .fidelity-profile-mission-modal {
+    align-items: center;
+    padding: 1rem;
+  }
 }
 
-.fidelity-v2-profile-bonus-title {
-  margin: 0 0 0.35rem;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.fidelity-profile-mission-modal.hidden {
+  display: none;
 }
 
-.fidelity-v2-profile-bonus-desc {
+.fidelity-profile-mission-modal__backdrop {
+  position: absolute;
+  inset: 0;
   margin: 0;
+  padding: 0;
+  border: none;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.fidelity-profile-mission-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  max-height: min(90vh, 640px);
+  overflow: auto;
+  margin: 0;
+  padding: 1.15rem 1.25rem 1.35rem;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: #fff;
+  box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.18);
+}
+
+@media (min-width: 480px) {
+  .fidelity-profile-mission-modal__panel {
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+  }
+}
+
+.fidelity-profile-mission-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.fidelity-profile-mission-modal__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.fidelity-profile-mission-modal__close {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: -0.25rem -0.35rem 0 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fidelity-profile-mission-modal__close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.fidelity-profile-mission-modal__desc {
+  margin: 0 0 0.85rem;
   font-size: 0.875rem;
   line-height: 1.45;
-  color: rgba(0, 0, 0, 0.65);
+  color: rgba(15, 23, 42, 0.65);
 }
 
-.fidelity-v2-profile-bonus-desc strong {
-  color: rgba(0, 0, 0, 0.88);
+.fidelity-profile-mission-modal__desc strong {
+  color: rgba(15, 23, 42, 0.9);
 }
 
 .fidelity-v2-profile-form {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .fidelity-v2-profile-label {
@@ -54,13 +114,6 @@
   letter-spacing: 0.04em;
   color: rgba(0, 0, 0, 0.45);
   margin-bottom: 0.25rem;
-}
-
-.fidelity-v2-profile-bonus-done {
-  margin: 0.5rem 0 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: rgba(0, 0, 0, 0.75);
 }
 
 .fidelity-v2-profile-feedback {

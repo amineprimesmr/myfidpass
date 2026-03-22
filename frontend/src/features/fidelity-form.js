@@ -324,7 +324,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
       try {
         const current = await fetchEngagementActions(slug);
         if (Array.isArray(current) && current.length > 0) {
-          actions = current;
+          actions = current.filter((a) => a.action_type !== "profile_complete");
           break;
         }
       } catch (_) {}

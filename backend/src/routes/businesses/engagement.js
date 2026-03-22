@@ -7,6 +7,7 @@ import { randomUUID } from "crypto";
 import {
   getMemberForBusiness,
   getEngagementRewards,
+  businessUsesTicketBonuses,
   createEngagementCompletion,
   createEngagementProof,
   getEngagementProofByTokenHash,
@@ -38,6 +39,14 @@ export function engagementActionsHandler(req, res) {
       url: `https://search.google.com/local/writereview?placeid=${encodeURIComponent(rewards.google_review.place_id.trim())}`,
       require_approval: !!rewards.google_review.require_approval,
       auto_verify_enabled: rewards.google_review.auto_verify_enabled !== false,
+    });
+  }
+  if (businessUsesTicketBonuses(business.id)) {
+    actions.unshift({
+      action_type: "profile_complete",
+      label: "Complète ton profil",
+      points: 1,
+      url: "#",
     });
   }
   ["instagram_follow", "tiktok_follow", "facebook_follow", "twitter_follow", "trustpilot_review", "tripadvisor_review"].forEach((key) => {

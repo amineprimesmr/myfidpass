@@ -29,12 +29,19 @@ export function renderClientPage(root, state, options = {}) {
   const roulette = (state.games || []).find((g) => g.game_code === "roulette");
   const showRoulette = !!(roulette && roulette.enabled && (programType === "points" || programType === "stamps"));
   const rewards = Array.isArray(state.rewards) ? state.rewards : [];
-  const actions = Array.isArray(state.engagementActions) ? state.engagementActions : [];
+  const engagementActionsRaw = Array.isArray(state.engagementActions) ? state.engagementActions : [];
   const profileEligible = !!(hasMember && state.member?.profile_ticket_eligible);
   const profileClaimed = !!state.member?.profile_bonus_claimed;
+  const actionsForDisplay = engagementActionsRaw.filter((a) => {
+    if (a.action_type === "profile_complete") {
+      return walletConfirmed && profileEligible && !profileClaimed;
+    }
+    return true;
+  });
   const profilePhone = esc(state.member?.phone || "");
   const profileCity = esc(state.member?.city || "");
   const profileBirth = esc(state.member?.birth_date || "");
+  const showProfileMissionModal = hasMember && walletConfirmed && profileEligible && !profileClaimed;
   const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
   const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
@@ -93,11 +100,11 @@ export function renderClientPage(root, state, options = {}) {
     return;
   }
 
-  const engagementHtml = renderEngagementActionsMarkup(actions, esc);
+  const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
   const step2Title = showRoulette
     ? "Tourne la roue"
-    : actions.length
+    : actionsForDisplay.length
       ? "Gagne des tickets & bonus"
       : showClassicProgram
         ? "Cumule en caisse"
@@ -106,7 +113,7 @@ export function renderClientPage(root, state, options = {}) {
           : "Profite de ton programme";
   const step2Intro = showRoulette
     ? `Tu as <strong id="fidelity-v2-tickets-display">${tickets}</strong> ticket${tickets !== 1 ? "s" : ""} — un ticket = un tour pour gagner un cadeau.`
-    : actions.length
+    : actionsForDisplay.length
       ? "Quelques actions rapides pour débloquer des tickets ou valider une étape."
       : showClassicProgram
         ? "Tes points montent quand tu utilises ta carte au moment de payer."
@@ -223,43 +230,6 @@ export function renderClientPage(root, state, options = {}) {
           <div class="fidelity-v2-step-body ${stepGateLocked ? "fidelity-v2-step-body--gate" : ""}">
             <div class="fidelity-v2-step-body-inner">
             <p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>
-            ${walletConfirmed && profileEligible ? `
-            <div class="fidelity-v2-profile-bonus" id="fidelity-v2-profile-bonus">
-              <div class="fidelity-v2-profile-bonus-head">
-                <span class="fidelity-v2-profile-bonus-badge" aria-hidden="true">🎟️</span>
-                <div>
-                  <h3 class="fidelity-v2-profile-bonus-title">Complète tes infos</h3>
-                  <p class="fidelity-v2-profile-bonus-desc">${profileClaimed ? "Merci : le commerce peut mieux te reconnaître et t’envoyer des offres adaptées." : "Le commerce récupère quelques infos utiles — en échange, <strong>1 ticket bonus</strong> sur ta carte (une seule fois)."}</p>
-                </div>
-              </div>
-              ${profileClaimed ? `
-              <p class="fidelity-v2-profile-bonus-done" role="status"><span class="fidelity-v2-wallet-done-icon" aria-hidden="true">✓</span> Profil enregistré${showRoulette ? " — ton ticket a été ajouté." : "."}</p>
-              ` : `
-              <form id="fidelity-v2-profile-form" class="fidelity-v2-profile-form" novalidate>
-                <div class="fidelity-v2-input-group">
-                  <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-phone">Téléphone</label>
-                  <input id="fidelity-v2-profile-phone" class="fidelity-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" value="${profilePhone}" required />
-                </div>
-                <div class="fidelity-v2-input-group">
-                  <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-city">Ville</label>
-                  <input id="fidelity-v2-profile-city" class="fidelity-input" type="text" autocomplete="address-level2" placeholder="Paris" value="${profileCity}" required />
-                </div>
-                <div class="fidelity-v2-input-group">
-                  <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-birth">Date de naissance</label>
-                  <input id="fidelity-v2-profile-birth" class="fidelity-input" type="date" autocomplete="bday" value="${profileBirth}" required />
-                </div>
-                <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-                  <button type="submit" class="fidelity-cta-pill" id="fidelity-v2-profile-submit">
-                    <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-                    <span class="fidelity-cta-pill-label">Valider et obtenir mon ticket</span>
-                    <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                  </button>
-                </span>
-              </form>
-              <p id="fidelity-v2-profile-feedback" class="fidelity-v2-profile-feedback hidden" role="status"></p>
-              `}
-            </div>
-            ` : ""}
             ${showRoulette ? `
             <div class="fidelity-v2-step-wheel">
               <div class="fidelity-v2-game-header fidelity-v2-game-header--inline">
@@ -275,7 +245,7 @@ export function renderClientPage(root, state, options = {}) {
               </span>
             </div>
             ` : ""}
-            ${actions.length ? `
+            ${actionsForDisplay.length ? `
             <div class="fidelity-v2-step-missions ${showRoulette ? "fidelity-v2-step-missions--after-wheel" : ""}">
               ${showRoulette ? `<h3 class="fidelity-v2-step-subtitle">Besoin de plus de tickets ?</h3>` : ""}
               <div class="fidelity-engagement-actions" id="fidelity-v2-actions">${engagementHtml}</div>
@@ -339,6 +309,41 @@ export function renderClientPage(root, state, options = {}) {
       </div>
 
     </main>
+
+    ${showProfileMissionModal ? `
+    <div id="fidelity-profile-mission-modal" class="fidelity-profile-mission-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fidelity-profile-mission-modal-title">
+      <button type="button" class="fidelity-profile-mission-modal__backdrop" aria-label="Fermer"></button>
+      <div class="fidelity-profile-mission-modal__panel">
+        <div class="fidelity-profile-mission-modal__head">
+          <h2 id="fidelity-profile-mission-modal-title" class="fidelity-profile-mission-modal__title">Complète ton profil</h2>
+          <button type="button" class="fidelity-profile-mission-modal__close" aria-label="Fermer">×</button>
+        </div>
+        <p class="fidelity-profile-mission-modal__desc">Quelques infos pour le commerce — <strong>1 ticket bonus</strong> sur ta carte (une seule fois).</p>
+        <form id="fidelity-v2-profile-form" class="fidelity-v2-profile-form" novalidate>
+          <div class="fidelity-v2-input-group">
+            <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-phone">Téléphone</label>
+            <input id="fidelity-v2-profile-phone" class="fidelity-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" value="${profilePhone}" required />
+          </div>
+          <div class="fidelity-v2-input-group">
+            <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-city">Ville</label>
+            <input id="fidelity-v2-profile-city" class="fidelity-input" type="text" autocomplete="address-level2" placeholder="Paris" value="${profileCity}" required />
+          </div>
+          <div class="fidelity-v2-input-group">
+            <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-birth">Date de naissance</label>
+            <input id="fidelity-v2-profile-birth" class="fidelity-input" type="date" autocomplete="bday" value="${profileBirth}" required />
+          </div>
+          <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+            <button type="submit" class="fidelity-cta-pill" id="fidelity-v2-profile-submit">
+              <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
+              <span class="fidelity-cta-pill-label">Valider et obtenir mon ticket</span>
+              <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+            </button>
+          </span>
+        </form>
+        <p id="fidelity-v2-profile-feedback" class="fidelity-v2-profile-feedback hidden" role="status"></p>
+      </div>
+    </div>
+    ` : ""}
 
     <footer class="fidelity-v2-footer">
       <p>Propulsé par <a href="https://myfidpass.fr" target="_blank" rel="noopener noreferrer">MyFidpass</a></p>

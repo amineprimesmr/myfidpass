@@ -171,7 +171,25 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     } catch (_) {}
   }
 
+  function openProfileMissionModal() {
+    const m = rootEl.querySelector("#fidelity-profile-mission-modal");
+    if (!m) return;
+    m.classList.remove("hidden");
+    m.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => rootEl.querySelector("#fidelity-v2-profile-phone")?.focus());
+  }
+
+  function closeProfileMissionModal() {
+    const m = rootEl.querySelector("#fidelity-profile-mission-modal");
+    if (!m) return;
+    m.classList.add("hidden");
+    m.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
   function rerender() {
+    document.body.style.overflow = "";
     store.patch({ walletConfirmed: readWalletConfirmed() });
     renderClientPage(rootEl, store.get(), { gamePage, slug, apiBase });
     bindEvents();
@@ -456,6 +474,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
     rootEl.querySelector("#fidelity-v2-profile-form")?.addEventListener("submit", onProfileBonusSubmit);
+    rootEl.querySelectorAll(".fidelity-profile-mission-open").forEach((btn) => {
+      btn.addEventListener("click", () => openProfileMissionModal());
+    });
+    rootEl.querySelector(".fidelity-profile-mission-modal__backdrop")?.addEventListener("click", closeProfileMissionModal);
+    rootEl.querySelector(".fidelity-profile-mission-modal__close")?.addEventListener("click", closeProfileMissionModal);
     rootEl.querySelectorAll(".fidelity-engagement-open-link").forEach((link) => {
       link.addEventListener("click", () => {
         const actionType = link.getAttribute("data-action-type");
@@ -477,6 +500,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") tryAutoClaimOnReturn();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const m = rootEl.querySelector("#fidelity-profile-mission-modal");
+    if (m && !m.classList.contains("hidden")) closeProfileMissionModal();
   });
 
   rerender();

@@ -20,6 +20,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+button.fidelity-mission-card {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .fidelity-mission-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 32px rgba(15, 23, 42, 0.12);
@@ -226,6 +235,26 @@
 
 .fidelity-mission-card--tripadvisor:hover .fidelity-mission-card__cta {
   background: rgba(255, 255, 255, 0.32);
+}
+
+/* ── Profil (+1 ticket) ── */
+.fidelity-mission-card--profile {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 45%, #fecdd3 100%);
+  border-color: rgba(225, 29, 72, 0.2);
+  color: #881337;
+}
+
+.fidelity-mission-card--profile .fidelity-mission-card__reward {
+  color: #be123c;
+}
+
+.fidelity-mission-card--profile .fidelity-mission-card__cta {
+  background: #0f172a;
+  color: #fff;
+}
+
+.fidelity-mission-card--profile:hover .fidelity-mission-card__cta {
+  background: #1e293b;
 }
 
 /* ── Autres / lien ── */
