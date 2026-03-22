@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_WHEEL_LABELS,
+  formatWheelSegmentDisplayLabel,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
   WHEEL_SEGMENT_COUNT,
@@ -35,6 +36,23 @@ describe("normalizeWheelLabelsFromSegments", () => {
   it("tronque au-delà de 8", () => {
     const segs = Array.from({ length: 10 }, (_, i) => ({ label: `L${i}` }));
     expect(normalizeWheelLabelsFromSegments(segs)).toEqual(["L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7"]);
+  });
+});
+
+describe("formatWheelSegmentDisplayLabel", () => {
+  it("raccourcit les libellés points longs", () => {
+    expect(formatWheelSegmentDisplayLabel("10 POINTS BONUS")).toBe("+10 pts");
+    expect(formatWheelSegmentDisplayLabel("25 points bonus")).toBe("+25 pts");
+    expect(formatWheelSegmentDisplayLabel("50 PTS")).toBe("+50 pts");
+  });
+
+  it("perdant / pas de lot → PeRDu", () => {
+    expect(formatWheelSegmentDisplayLabel("PERDU")).toBe("PeRDu");
+    expect(formatWheelSegmentDisplayLabel("PAS DE LOT")).toBe("PeRDu");
+  });
+
+  it("laisse les courts inchangés", () => {
+    expect(formatWheelSegmentDisplayLabel("+10 pts")).toBe("+10 pts");
   });
 });
 

@@ -55,3 +55,30 @@ export function pickWheelIndexForReward(wheelLabels, rewardLabel) {
   }
   return indices[Math.floor(Math.random() * indices.length)];
 }
+
+/**
+ * Libellé court sur la roue uniquement (le tirage serveur reste sur le label complet en base).
+ */
+export function formatWheelSegmentDisplayLabel(label) {
+  const s = String(label ?? "").trim();
+  if (!s) return "PeRDu";
+  const compact = s.replace(/\s+/g, " ");
+  const u = compact.toUpperCase();
+  if (
+    u === "PERDU" ||
+    /^(PAS DE LOT|PAS DE PRIX|RIEN|NO PRIZE|LOSE|LOST)$/i.test(compact) ||
+    /\bPAS DE LOT\b/i.test(compact)
+  ) {
+    return "PeRDu";
+  }
+  let m = compact.match(/\+?\s*(\d+)\s*(?:POINTS?\s*BONUS|PTS?\s*BONUS|POINTS?|PTS?)\b/i);
+  if (m) return `+${m[1]} pts`;
+  m = compact.match(/\b(\d+)\s*(?:POINTS?\s*BONUS|PTS?\s*BONUS|POINTS?|PTS?)\b/i);
+  if (m) return `+${m[1]} pts`;
+  m = compact.match(/\+?\s*(\d+)\s*(?:PASSAGES?|TAMPONS?)\b/i);
+  if (m) return `+${m[1]} pass.`;
+  m = compact.match(/\b(\d+)\s*(?:PASSAGES?|TAMPONS?)\b/i);
+  if (m) return `+${m[1]} pass.`;
+  if (compact.length > 11) return `${compact.slice(0, 10)}…`;
+  return compact;
+}

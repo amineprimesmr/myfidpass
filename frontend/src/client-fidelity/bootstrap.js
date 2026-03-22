@@ -9,6 +9,7 @@ import { renderClientPage } from "./ui/view.js";
 import { memberStorageKey, SUCCESS_MAX_AGE_MS, walletConfirmedStorageKey } from "./constants.js";
 import {
   DEFAULT_WHEEL_LABELS,
+  formatWheelSegmentDisplayLabel,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
 } from "./lib/wheel-segments.js";
@@ -104,11 +105,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     return `conic-gradient(${stops.join(", ")})`;
   }
 
-  /** Affiche "PeRDu" pour les segments PERDU (design image 2). */
   function formatWheelLabel(label) {
-    const t = String(label || "").trim().toUpperCase();
-    if (t === "PERDU") return "PeRDu";
-    return label;
+    return formatWheelSegmentDisplayLabel(label);
   }
 
   function syncWheelLabelsFromStore() {
