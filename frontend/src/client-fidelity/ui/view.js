@@ -253,7 +253,14 @@ export function renderClientPage(root, state, options = {}) {
         <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play" id="fidelity-v2-step-2">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
+              ${showRoulette ? `
+              <h2 class="fidelity-v2-card-title fidelity-v2-step-title fidelity-v2-step-title--roulette">
+                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🎡</span>
+                <span class="fidelity-v2-step-title-label">Tourne la roue</span>
+              </h2>
+              ` : `
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
+              `}
             </div>
           </header>
           <div class="fidelity-v2-step-body">

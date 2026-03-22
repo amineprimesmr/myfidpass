@@ -708,6 +708,35 @@ body {
   border-color: #e9d5ff;
 }
 
+.fidelity-v2-step--play .fidelity-v2-step-header {
+  margin-bottom: 1rem;
+}
+
+/* Titre section roue : 🎡 + texte (spécificité > .fidelity-v2-step-title ailleurs dans le fichier) */
+.fidelity-v2-step-header .fidelity-v2-step-title--roulette {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.42rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  color: #0f172a;
+  margin: 0;
+}
+
+.fidelity-v2-step-header .fidelity-v2-step-title--roulette .fidelity-v2-step-title-emoji {
+  font-size: 1.55rem;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(139, 92, 246, 0.2));
+}
+
+.fidelity-v2-step-header .fidelity-v2-step-title--roulette .fidelity-v2-step-title-label {
+  font-family: "Plus Jakarta Sans", var(--font, system-ui), sans-serif;
+  padding-top: 0.06rem;
+}
+
 .fidelity-v2-step-wheel {
   margin-top: 0.25rem;
 }
