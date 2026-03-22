@@ -1,7 +1,9 @@
 /**
  * Assets publics (sans auth) : logo pour la page fidélité client.
+ * Même priorité que le pass : logo_base64, puis fichiers assets/businesses/:id/logo*.png, puis icon*.png.
  */
 import { Router } from "express";
+import { getBusinessLogoFileForPublic } from "../../lib/business-logo-assets.js";
 
 const router = Router();
 
@@ -17,6 +19,12 @@ router.get("/logo", (req, res) => {
       res.setHeader("Cache-Control", "public, max-age=3600");
       return res.send(buf);
     }
+  }
+  const fileLogo = getBusinessLogoFileForPublic(business.id);
+  if (fileLogo?.buffer?.length) {
+    res.setHeader("Content-Type", fileLogo.contentType);
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    return res.send(fileLogo.buffer);
   }
   return res.status(404).send();
 });

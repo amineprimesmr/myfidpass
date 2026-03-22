@@ -32,6 +32,12 @@ export function renderClientPage(root, state, options = {}) {
   const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
 
+  /** Logo : aligné sur l’API (base64 ou fichiers pass), même base que les fetch. */
+  const hasServerLogo = !!state.business?.logoUrl;
+  const logoPath = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
+  const baseTrim = String(apiBase || "").replace(/\/$/, "");
+  const logoSrc = hasServerLogo && logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : null;
+
   if (gamePage) {
     const gameSubtitle = isStampsProgram ? "gagne des passages bonus" : "gagne des points bonus";
     const gameWalletLocked = hasMember && !walletConfirmed;
@@ -46,7 +52,10 @@ export function renderClientPage(root, state, options = {}) {
         ` : ""}
         <div class="fidelity-game-top">
           <div class="fidelity-roulette-logo">
-            <span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>
+            ${logoSrc
+              ? `<img src="${esc(logoSrc)}" alt="" class="fidelity-roulette-logo-img" loading="lazy" decoding="async" />`
+              : `<span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>`
+            }
           </div>
           <h2 class="fidelity-roulette-title">
             <span class="fidelity-roulette-title-line">Tourne la roue et</span>
@@ -76,12 +85,6 @@ export function renderClientPage(root, state, options = {}) {
     `;
     return;
   }
-
-  /** Même base que les fetch API : évite logo cassé si le JSON renvoie une URL backend incorrecte (host interne, http, etc.). */
-  const hasServerLogo = !!state.business?.logoUrl;
-  const logoPath = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
-  const baseTrim = String(apiBase || "").replace(/\/$/, "");
-  const logoSrc = hasServerLogo && logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : null;
 
   const engagementHtml = renderEngagementActionsMarkup(actions, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
