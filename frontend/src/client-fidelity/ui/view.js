@@ -2,6 +2,7 @@ import { renderEngagementActionsMarkup } from "./mission-markup.js";
 import { renderProfileMissionModalMarkup } from "./profile-mission-modal-markup.js";
 import { renderRewardsStepMarkup } from "./rewards-step-markup.js";
 import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
+import { resolveClientLogoImgSrc } from "../lib/resolve-client-logo-src.js";
 
 function esc(value) {
   return String(value == null ? "" : value)
@@ -41,19 +42,8 @@ export function renderClientPage(root, state, options = {}) {
   const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
   const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
-  const baseTrim = String(apiBase || "").replace(/\/$/, "");
-  /** Même source que le bandeau Wallet : URL renvoyée par l’API (+ cache-bust si maj logo). */
-  const logoFromApi = typeof state.business?.logoUrl === "string" ? state.business.logoUrl.trim() : "";
-  const logoPath = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
-  const logoFallbackSrc = logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : "";
-  const logoSrcBase = logoFromApi || logoFallbackSrc;
-  const logoUpdatedRaw = state.business?.logo_updated_at ?? state.business?.logoUpdatedAt;
-  const logoV =
-    logoUpdatedRaw != null && String(logoUpdatedRaw).trim() !== ""
-      ? encodeURIComponent(String(logoUpdatedRaw).trim())
-      : "";
-  const logoAttemptSrc =
-    logoSrcBase && logoV ? `${logoSrcBase}${logoSrcBase.includes("?") ? "&" : "?"}v=${logoV}` : logoSrcBase;
+  /** Logo : même origine que la page si proxy (apiBase vide), sinon URL API absolue. */
+  const logoAttemptSrc = resolveClientLogoImgSrc(state.business, slug, apiBase);
   const logoImgAlt = esc(businessName) || "Logo";
   const logoImgOnError =
     "this.style.display='none';var w=this.closest('.fidelity-v2-header-brand-logo,.fidelity-roulette-logo-wrap');if(w){var f=w.querySelector('[data-fid-logo-fallback]');if(f)f.style.display='flex';}";
