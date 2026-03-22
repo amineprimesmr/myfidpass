@@ -712,24 +712,6 @@ body {
   margin-top: 0.25rem;
 }
 
-.fidelity-v2-game-header--inline {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 0.75rem;
-}
-
-.fidelity-v2-game-header--inline .fidelity-v2-game-emoji {
-  font-size: 1.65rem;
-}
-
-.fidelity-v2-step-wheel-cta-label {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #334155;
-}
-
 .fidelity-v2-step-subtitle {
   font-size: 0.88rem;
   font-weight: 700;
@@ -747,13 +729,6 @@ body {
   padding-bottom: 1rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid rgba(226, 232, 240, 0.95);
-}
-
-.fidelity-v2-missions-rail-hint {
-  margin: 0 0 0.65rem;
-  font-size: 0.78rem;
-  color: #64748b;
-  line-height: 1.45;
 }
 
 .fidelity-v2-missions-rail {
@@ -1417,18 +1392,6 @@ body {
 .fidelity-v2-game-card {
   background: linear-gradient(135deg, #FAF5FF 0%, #F3F0FF 100%);
   border-color: #DDD6FE;
-}
-
-.fidelity-v2-game-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.fidelity-v2-game-emoji {
-  font-size: 2rem;
-  flex-shrink: 0;
 }
 
 /* ── Success screen ── */

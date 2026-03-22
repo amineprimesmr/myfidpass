@@ -261,19 +261,13 @@ export function renderClientPage(root, state, options = {}) {
             ${step2Intro ? `<p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>` : ""}
             ${showRoulette && actionsForDisplay.length ? `
             <div class="fidelity-v2-step-missions fidelity-v2-step-missions--before-wheel">
-              <h3 class="fidelity-v2-step-subtitle">Besoin de plus de tickets ?</h3>
-              <p class="fidelity-v2-missions-rail-hint" id="fidelity-v2-missions-rail-hint">Glisse vers la gauche ou la droite pour voir toutes les missions.</p>
-              <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions pour gagner des tickets" aria-describedby="fidelity-v2-missions-rail-hint" tabindex="0">
+              <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions pour gagner des tickets" tabindex="0">
                 <div class="fidelity-engagement-actions fidelity-engagement-actions--rail" id="fidelity-v2-actions">${engagementHtml}</div>
               </div>
             </div>
             ` : ""}
             ${showRoulette ? `
             <div class="fidelity-v2-step-wheel">
-              <div class="fidelity-v2-game-header fidelity-v2-game-header--inline">
-                <div class="fidelity-v2-game-emoji" aria-hidden="true">🎡</div>
-                <p class="fidelity-v2-step-wheel-cta-label">Prêt à tenter le coup ?</p>
-              </div>
               <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
                 <a href="${gamePageUrl}" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" id="fidelity-v2-game-cta" aria-label="${esc(gameCtaAriaLabel)}">
                   <span class="fidelity-cta-wheel-line">
