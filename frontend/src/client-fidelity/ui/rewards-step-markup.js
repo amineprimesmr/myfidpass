@@ -1,5 +1,5 @@
 /**
- * Section « Récompenses » : paliers (points / tampons) + liste des lots.
+ * Section « Récompenses » : paliers (points / tampons) + progression.
  */
 
 const STAMP_MID_DEFAULT = 5;
@@ -76,14 +76,13 @@ function tierProgressState(tiers, balance) {
  * @param {{
  *   business: Record<string, unknown> | null | undefined;
  *   member: { points?: number } | null | undefined;
- *   rewards: Array<{ reward?: { label?: string }; status?: string }>;
  *   programType: string;
  *   balanceUnit: string;
  *   stampEmoji: string;
  * }} ctx
  */
 export function renderRewardsStepMarkup(esc, ctx) {
-  const { business, member, rewards, programType, balanceUnit, stampEmoji } = ctx;
+  const { business, member, programType, balanceUnit, stampEmoji } = ctx;
   const isStamps = programType === "stamps";
   const balance = Math.max(0, Math.floor(Number(member?.points) || 0));
   const tiers = isStamps ? buildStampTiers(business) : parsePointTiers(business);
@@ -164,43 +163,12 @@ ${tiers
   .join("\n")}
         </ol>`;
 
-  const lotsTitle = "Lots &amp; cadeaux à utiliser";
-  const lotsIntro = "Récompenses gagnées à la <strong>roue</strong> ou débloquées via le programme.";
-
-  const lotsList =
-    rewards.length > 0
-      ? rewards
-          .map(
-            (r) => `
-          <li class="fidelity-v2-reward-item">
-            <div class="fidelity-v2-reward-info">
-              <span class="fidelity-v2-reward-icon">🎁</span>
-              <strong>${esc(r.reward?.label || "Lot")}</strong>
-            </div>
-            <span class="fidelity-v2-reward-status fidelity-v2-reward-status--${esc(r.status || "granted")}">${esc(r.status === "used" ? "Utilisée" : r.status === "expired" ? "Expirée" : "Disponible")}</span>
-          </li>`
-          )
-          .join("")
-      : `
-          <li class="fidelity-v2-reward-empty fidelity-v2-reward-empty--compact">
-            <div class="fidelity-v2-reward-empty-icon" aria-hidden="true">🎯</div>
-            <p>Tes lots gagnés s’affichent ici dès qu’ils sont <strong>disponibles</strong>.</p>
-          </li>`;
-
   return `
-            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">Suis ta progression vers les <strong>paliers</strong> du commerce et retrouve tes <strong>lots</strong> à utiliser.</p>
+            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">Suis ta progression vers les <strong>paliers</strong> définis par le commerce.</p>
 
             <div class="fid-tiers-block">
               <h3 class="fidelity-v2-step-subtitle fid-tiers-block-title">Paliers du programme</h3>
               ${progressCard}
               ${stepsHtml}
-            </div>
-
-            <div class="fid-tiers-lots-block">
-              <h3 class="fidelity-v2-step-subtitle">${lotsTitle}</h3>
-              <p class="fid-tiers-lots-intro">${lotsIntro}</p>
-              <ul class="fidelity-v2-reward-list">
-                ${lotsList}
-              </ul>
             </div>`;
 }

@@ -6,7 +6,6 @@ export function createClientFidelityStore(initial = {}) {
     games: [],
     roulette_segments: [],
     tickets: null,
-    rewards: [],
     engagementActions: [],
     engagementDone: [],
     /** Confirmation honnête « carte ajoutée » — masque le bloc Wallet (localStorage). */

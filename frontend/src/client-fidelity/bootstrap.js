@@ -38,11 +38,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   async function hydrateMember(memberId) {
     if (!memberId) return;
-    const [member, gamesData, tickets, rewardsData, actionsData] = await Promise.all([
+    const [member, gamesData, tickets, actionsData] = await Promise.all([
       api.getMember(slug, memberId),
       api.getGames(slug),
       api.getTickets(slug, memberId),
-      api.getRewards(slug, memberId),
       api.getEngagementActions(slug),
     ]);
     const wallet = await api.getWalletUrls(slug, memberId);
@@ -55,7 +54,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       games: gamesData?.games || [],
       roulette_segments: Array.isArray(gamesData?.roulette_segments) ? gamesData.roulette_segments : [],
       tickets,
-      rewards: rewardsData?.rewards || [],
       engagementActions: actionsData?.actions || [],
       wallet,
     });

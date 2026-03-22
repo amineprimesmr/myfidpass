@@ -68,12 +68,6 @@ export function createClientFidelityApi(apiBase) {
     return data;
   }
 
-  async function getRewards(slug, memberId) {
-    const res = await fetch(withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/rewards`), { cache: "no-store" });
-    if (!res.ok) return { rewards: [] };
-    return safeJson(res);
-  }
-
   async function getWalletUrls(slug, memberId) {
     const [googleRes] = await Promise.all([
       fetch(withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/google-wallet-url`), { cache: "no-store" }),
@@ -128,7 +122,6 @@ export function createClientFidelityApi(apiBase) {
     getTickets,
     convertTickets,
     spin,
-    getRewards,
     getWalletUrls,
     getEngagementActions,
     claimEngagement,

@@ -25,7 +25,6 @@ export function renderClientPage(root, state, options = {}) {
   const tickets = state.unlimitedTicketsTest ? 999 : Number(state.tickets?.ticket_balance || 0);
   const roulette = (state.games || []).find((g) => g.game_code === "roulette");
   const showRoulette = !!(roulette && roulette.enabled && (programType === "points" || programType === "stamps"));
-  const rewards = Array.isArray(state.rewards) ? state.rewards : [];
   const engagementActionsRaw = Array.isArray(state.engagementActions) ? state.engagementActions : [];
   const profileEligible = !!(hasMember && state.member?.profile_ticket_eligible);
   const profileClaimed = !!state.member?.profile_bonus_claimed;
@@ -140,7 +139,6 @@ export function renderClientPage(root, state, options = {}) {
   const rewardsStepHtml = renderRewardsStepMarkup(esc, {
     business: state.business,
     member: state.member,
-    rewards,
     programType,
     balanceUnit: headerBalanceUnit,
     stampEmoji: stampEmojiHeader,
