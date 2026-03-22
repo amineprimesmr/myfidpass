@@ -13,7 +13,7 @@ export function getRoute() {
   if (path === "/dashboard") return { type: "dashboard" };
   if (path === "/app") return { type: "app" };
   if (path === "/login") return { type: "auth", tab: "login" };
-  if (path === "/register") return { type: "auth", tab: "login" };
+  if (path === "/register") return { type: "auth", tab: "register" };
   if (path === "/creer-ma-carte") return { type: "offers" };
   if (path === "/choisir-offre") return { type: "offers" };
   if (path === "/checkout" || path === "/creation-carte") return { type: "redirect-stripe" };

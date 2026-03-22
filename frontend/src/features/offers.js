@@ -11,7 +11,8 @@ import {
 } from "../config.js";
 import { navigateToLanding } from "../router/index.js";
 
-const REGISTER_TRIAL = "/register?redirect=/choisir-offre";
+/** Essai sans compte app : même lien que l’ancien parcours onboarding (Stripe collecte l’email). */
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 
 export function initOffersPage() {
   document.querySelectorAll(".offers-pricing-back").forEach((a) => {
@@ -52,7 +53,7 @@ export function initOffersPage() {
   if (btnStarter) {
     btnStarter.addEventListener("click", async () => {
       if (!getAuthToken()) {
-        window.location.href = REGISTER_TRIAL;
+        window.location.href = STRIPE_PAYMENT_LINK;
         return;
       }
       btnStarter.disabled = true;

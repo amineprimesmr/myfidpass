@@ -1,9 +1,7 @@
 /**
- * Shell landing : formulaire hero, Google Places, menus drawer, navigation vers page tarifs.
- * Appelé au chargement pour attacher les listeners (formulaire, menus, script Places).
+ * Shell landing : formulaire hero, Google Places, menus drawer.
+ * La navigation vers les tarifs est gérée par pricing-navigation.js (capture).
  */
-import { navigateToPricing } from "../router/index.js";
-
 function updateLandingCtaState() {
   const btn = document.getElementById("landing-hero-submit");
   if (btn) btn.disabled = false;
@@ -66,16 +64,7 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
   });
 }
 
-function goToPricing(e) {
-  e.preventDefault();
-  navigateToPricing().catch((err) => console.error("[Myfidpass] navigation tarifs", err));
-}
-
 export function initLandingShell() {
-  document.querySelectorAll('#landing a[href="/choisir-offre"], #auth-app a[href="/choisir-offre"]').forEach((link) =>
-    link.addEventListener("click", goToPricing)
-  );
-
   const landingHeroForm = document.getElementById("landing-hero-form");
   if (landingHeroForm) {
     const landingEtablissementInput = document.getElementById("landing-etablissement");
@@ -120,7 +109,6 @@ export function initLandingShell() {
       });
     }
     updateLandingCtaState();
-    landingHeroForm.addEventListener("submit", goToPricing);
   }
 
   const landingMenuToggle = document.getElementById("landing-menu-toggle");
