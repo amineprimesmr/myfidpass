@@ -1135,37 +1135,57 @@ body {
   line-height: 1;
 }
 
-.fidelity-v2-main .fidelity-cta-pill--with-tickets,
-.fidelity-game-page .fidelity-cta-pill--with-tickets {
-  justify-content: flex-start;
-  gap: 0.5rem;
-  padding-left: 1.1rem;
-  padding-right: 1.1rem;
+/* CTA roue : ligne unique centrée (🎟️ + N tickets · action) */
+.fidelity-v2-main .fidelity-cta-pill--wheel-cta,
+.fidelity-game-page .fidelity-cta-pill--wheel-cta {
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
 }
 
-.fidelity-v2-main .fidelity-cta-pill--with-tickets .fidelity-cta-pill-label,
-.fidelity-game-page .fidelity-cta-pill--with-tickets .fidelity-cta-pill-label {
-  flex: 1 1 auto;
-  text-align: left;
-  min-width: 0;
+.fidelity-v2-main .fidelity-cta-wrap--full .fidelity-cta-pill--wheel-cta,
+.fidelity-game-page .fidelity-cta-wrap--full .fidelity-cta-pill--wheel-cta {
+  justify-content: center;
 }
 
-.fidelity-v2-main .fidelity-cta-tickets-badge,
-.fidelity-game-page .fidelity-cta-tickets-badge {
-  flex-shrink: 0;
+.fidelity-cta-wheel-line {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.9rem;
-  padding: 0.32rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.45rem;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.fidelity-cta-wheel-emoji {
+  font-size: 1.12rem;
   line-height: 1;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
+}
+
+.fidelity-cta-wheel-tickets {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.fidelity-cta-wheel-sep {
+  opacity: 0.5;
+  font-weight: 500;
+  user-select: none;
+}
+
+.fidelity-cta-wheel-action {
+  font-weight: 600;
+}
+
+.fidelity-cta-pill--wheel-cta .fidelity-cta-pill-chevron {
+  margin-left: 0.1rem;
+  opacity: 0.85;
 }
 
 .fidelity-v2-main .fidelity-cta-pill .fidelity-cta-pill-icon,

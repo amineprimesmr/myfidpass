@@ -87,11 +87,14 @@ export function renderClientPage(root, state, options = {}) {
           </h2>
           <div class="fidelity-roulette-btn-row">
             <span class="fidelity-cta-wrap">
-              <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--with-tickets" type="button" aria-label="${esc(spinCtaAriaLabel)}">
-                <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-                <span class="fidelity-cta-pill-label">Jouer&nbsp;!</span>
-                <span class="fidelity-cta-tickets-badge" id="fidelity-v2-tickets-display" aria-hidden="true">${esc(String(tickets))}</span>
-                <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+              <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" type="button" aria-label="${esc(spinCtaAriaLabel)}">
+                <span class="fidelity-cta-wheel-line">
+                  <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
+                  <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${esc(String(tickets))} ticket${tickets !== 1 ? "s" : ""}</span>
+                  <span class="fidelity-cta-wheel-sep" aria-hidden="true">·</span>
+                  <span class="fidelity-cta-wheel-action">Jouer</span>
+                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                </span>
               </button>
             </span>
           </div>
@@ -274,11 +277,14 @@ export function renderClientPage(root, state, options = {}) {
                 <p class="fidelity-v2-step-wheel-cta-label">Prêt à tenter le coup ?</p>
               </div>
               <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-                <a href="${gamePageUrl}" class="fidelity-cta-pill fidelity-cta-pill--with-tickets" id="fidelity-v2-game-cta" aria-label="${esc(gameCtaAriaLabel)}">
-                  <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-                  <span class="fidelity-cta-pill-label">Tourner la roue</span>
-                  <span class="fidelity-cta-tickets-badge" id="fidelity-v2-tickets-display" aria-hidden="true">${esc(String(tickets))}</span>
-                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                <a href="${gamePageUrl}" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" id="fidelity-v2-game-cta" aria-label="${esc(gameCtaAriaLabel)}">
+                  <span class="fidelity-cta-wheel-line">
+                    <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
+                    <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${esc(String(tickets))} ticket${tickets !== 1 ? "s" : ""}</span>
+                    <span class="fidelity-cta-wheel-sep" aria-hidden="true">·</span>
+                    <span class="fidelity-cta-wheel-action">Tourner la roue</span>
+                    <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                  </span>
                 </a>
               </span>
             </div>
