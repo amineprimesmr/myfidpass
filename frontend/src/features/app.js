@@ -4545,6 +4545,8 @@ function initAppDashboard(slug) {
     if (!listEl) return;
     const arr = transactions || [];
     const typeLabel = (t) => {
+      if (t.type === "points_correction") return "Correction caisse";
+      if (t.type === "reward_redeem") return "Récompense";
       if (t.type !== "points_add") return t.type;
       const meta = t.metadata ? String(t.metadata) : "";
       return meta.includes("visit") ? "Passage" : "Points ajoutés";
@@ -4765,8 +4767,72 @@ function initAppDashboard(slug) {
   const memberDetailBody = document.getElementById("app-member-detail-body");
   const memberDetailClose = memberDetailModal?.querySelector(".app-modal-close");
   const memberDetailBackdrop = memberDetailModal?.querySelector(".app-modal-backdrop");
+  let memberDetailOpenId = null;
+
+  function formatMemberTransactionLine(t) {
+    const pts = Number(t.points) || 0;
+    const signed = (pts > 0 ? "+" : "") + pts;
+    let label = "Opération";
+    if (t.type === "points_add") {
+      const meta = t.metadata ? String(t.metadata) : "";
+      label = meta.includes("visit") ? "Passage" : "Points ajoutés";
+    } else if (t.type === "points_correction") {
+      label = "Correction caisse";
+    } else if (t.type === "reward_redeem") {
+      label = "Récompense";
+    }
+    return `<li>${label} : ${signed} pts — ${formatDate(t.created_at)}</li>`;
+  }
+
+  function memberDetailMarkup(m, transactions) {
+    const txList =
+      (transactions || []).map(formatMemberTransactionLine).join("") || "<li>Aucune opération</li>";
+    const extra =
+      (m.phone ? `<p>Tél. : ${escapeHtml(m.phone)}</p>` : "") +
+      (m.city ? `<p>Ville : ${escapeHtml(m.city)}</p>` : "") +
+      (m.birth_date ? `<p>Naissance : ${escapeHtml(m.birth_date)}</p>` : "");
+    return `
+          <p><strong>${escapeHtml(m.name)}</strong></p>
+          <p>${escapeHtml(m.email)}</p>
+          ${extra}
+          <p>${m.points} point(s)</p>
+          <p>Dernière visite : ${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</p>
+          <h3 style="font-size:1rem;margin:0.75rem 0 0.25rem">Historique</h3>
+          <ul class="app-scanner-history-list">${txList}</ul>
+          <div class="app-member-points-correction" style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--app-border, #e8e8e8)">
+            <h3 style="font-size:1rem;margin:0 0 0.5rem">Retirer des points (erreur de caisse)</h3>
+            <p style="font-size:0.875rem;margin:0 0 0.5rem;opacity:0.85">Enregistré dans l’historique ; le client est notifié sur Apple Wallet si applicable.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
+              <input type="number" min="1" step="1" id="app-member-remove-points-input" placeholder="Nb pts" style="width:5.5rem;padding:0.35rem 0.5rem;border-radius:8px;border:1px solid var(--app-border, #ccc)" />
+              <button type="button" class="btn btn-secondary" id="app-member-remove-points-btn">Retirer</button>
+            </div>
+            <p id="app-member-remove-points-msg" class="hidden" style="margin-top:0.5rem;font-size:0.875rem"></p>
+          </div>
+        `;
+  }
+
+  async function refreshMemberDetailPanel() {
+    if (!memberDetailOpenId || !memberDetailBody) return;
+    const member = allMembers.find((x) => x.id === memberDetailOpenId);
+    const base = member || { id: memberDetailOpenId };
+    try {
+      const [full, data] = await Promise.all([
+        api(`/members/${encodeURIComponent(memberDetailOpenId)}`).then((r) => (r.ok ? r.json() : base)),
+        api(`/dashboard/transactions?memberId=${encodeURIComponent(memberDetailOpenId)}&limit=20`).then((r) =>
+          r.ok ? r.json() : { transactions: [] }
+        ),
+      ]);
+      const m = { ...base, ...full };
+      memberDetailOpenId = m.id;
+      memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || []);
+    } catch (_) {
+      memberDetailBody.innerHTML = "<p>Erreur chargement.</p>";
+    }
+  }
+
   function openMemberDetail(member) {
     if (!memberDetailModal || !memberDetailBody) return;
+    memberDetailOpenId = member.id;
     memberDetailBody.innerHTML = "<p>Chargement…</p>";
     memberDetailModal.classList.remove("hidden");
     Promise.all([
@@ -4777,31 +4843,67 @@ function initAppDashboard(slug) {
     ])
       .then(([full, data]) => {
         const m = { ...member, ...full };
-        const txList =
-          (data.transactions || [])
-            .map((t) => `<li>${t.type === "points_add" ? "Points" : "Opération"} +${t.points} — ${formatDate(t.created_at)}</li>`)
-            .join("") || "<li>Aucune opération</li>";
-        const extra =
-          (m.phone ? `<p>Tél. : ${escapeHtml(m.phone)}</p>` : "") +
-          (m.city ? `<p>Ville : ${escapeHtml(m.city)}</p>` : "") +
-          (m.birth_date ? `<p>Naissance : ${escapeHtml(m.birth_date)}</p>` : "");
-        memberDetailBody.innerHTML = `
-          <p><strong>${escapeHtml(m.name)}</strong></p>
-          <p>${escapeHtml(m.email)}</p>
-          ${extra}
-          <p>${m.points} point(s)</p>
-          <p>Dernière visite : ${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</p>
-          <h3 style="font-size:1rem;margin:0.75rem 0 0.25rem">Historique</h3>
-          <ul class="app-scanner-history-list">${txList}</ul>
-        `;
+        memberDetailOpenId = m.id;
+        memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || []);
       })
       .catch(() => {
         memberDetailBody.innerHTML = "<p>Erreur chargement.</p>";
       });
   }
   function closeMemberDetail() {
+    memberDetailOpenId = null;
     memberDetailModal?.classList.add("hidden");
   }
+
+  memberDetailModal?.addEventListener("click", async (e) => {
+    const btn = e.target.closest("#app-member-remove-points-btn");
+    if (!btn || !memberDetailOpenId || !memberDetailBody) return;
+    e.preventDefault();
+    const input = memberDetailBody.querySelector("#app-member-remove-points-input");
+    const msg = memberDetailBody.querySelector("#app-member-remove-points-msg");
+    const n = parseInt(input?.value, 10);
+    if (!input || !Number.isFinite(n) || n < 1) {
+      if (msg) {
+        msg.textContent = "Indiquez un nombre entier ≥ 1.";
+        msg.classList.remove("hidden");
+        msg.classList.remove("error");
+      }
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const res = await api(`/members/${encodeURIComponent(memberDetailOpenId)}/points/remove`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ points: n }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (msg) {
+          msg.textContent = data.error || "Erreur";
+          msg.classList.add("error");
+          msg.classList.remove("hidden");
+        }
+        btn.disabled = false;
+        return;
+      }
+      if (msg) {
+        msg.textContent = `Retiré : ${data.points_removed ?? n} pts. Nouveau solde : ${data.points} pts.`;
+        msg.classList.remove("error");
+        msg.classList.remove("hidden");
+      }
+      input.value = "";
+      window.dispatchEvent(new Event("app-members-refresh"));
+      await refreshMemberDetailPanel();
+    } catch (_) {
+      if (msg) {
+        msg.textContent = "Erreur réseau.";
+        msg.classList.add("error");
+        msg.classList.remove("hidden");
+      }
+    }
+    btn.disabled = false;
+  });
   memberDetailClose?.addEventListener("click", closeMemberDetail);
   memberDetailBackdrop?.addEventListener("click", closeMemberDetail);
   membersListEl?.addEventListener("click", (e) => {

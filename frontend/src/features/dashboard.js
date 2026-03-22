@@ -105,16 +105,23 @@ export function initDashboardPage() {
 
   function renderTransactions(transactions) {
     if (!transactionsTbody) return;
+    const txTypeLabel = (t) => {
+      if (t.type === "points_add") return "Points ajoutés";
+      if (t.type === "points_correction") return "Correction caisse";
+      if (t.type === "reward_redeem") return "Récompense";
+      return t.type;
+    };
     transactionsTbody.innerHTML = transactions
-      .map(
-        (t) =>
-          `<tr>
+      .map((t) => {
+        const pts = Number(t.points) || 0;
+        const signed = (pts > 0 ? "+" : "") + pts;
+        return `<tr>
             <td>${escapeHtml(t.member_name)}</td>
-            <td>${t.type === "points_add" ? "Points ajoutés" : t.type}</td>
-            <td>+${t.points}</td>
+            <td>${txTypeLabel(t)}</td>
+            <td>${signed}</td>
             <td>${formatDate(t.created_at)}</td>
-          </tr>`
-      )
+          </tr>`;
+      })
       .join("") || "<tr><td colspan='4'>Aucune opération</td></tr>";
   }
 
