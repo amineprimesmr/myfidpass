@@ -62,6 +62,7 @@ export function renderClientPage(root, state, options = {}) {
     isStampsProgram && state.business?.stamp_emoji
       ? esc(String(state.business.stamp_emoji).trim().slice(0, 8))
       : "";
+  const spinCtaAriaLabel = `Lancer la roue — ${tickets} ticket${tickets !== 1 ? "s" : ""} disponible${tickets !== 1 ? "s" : ""}`;
 
   if (gamePage) {
     const gameSubtitle = isStampsProgram ? "gagne des passages bonus" : "gagne des points bonus";
@@ -97,9 +98,10 @@ export function renderClientPage(root, state, options = {}) {
           </h2>
           <div class="fidelity-roulette-btn-row">
             <span class="fidelity-cta-wrap">
-              <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill" type="button" aria-label="Lancer la roue" ${gameWalletLocked ? "disabled" : ""}>
+              <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--with-tickets" type="button" aria-label="${esc(spinCtaAriaLabel)}" ${gameWalletLocked ? "disabled" : ""}>
                 <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
                 <span class="fidelity-cta-pill-label">Jouer&nbsp;!</span>
+                <span class="fidelity-cta-tickets-badge" id="fidelity-v2-tickets-display" aria-hidden="true">${esc(String(tickets))}</span>
                 <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
               </button>
             </span>
@@ -132,7 +134,9 @@ export function renderClientPage(root, state, options = {}) {
           ? "Tampons & récompenses"
           : "Profite de ton programme";
   const step2Intro = showRoulette
-    ? `Tu as <strong id="fidelity-v2-tickets-display">${tickets}</strong> ticket${tickets !== 1 ? "s" : ""} — un ticket = un tour pour gagner un cadeau.`
+    ? actionsForDisplay.length
+      ? ""
+      : `Ouvre la page jeu pour utiliser la roue${tickets > 0 ? "" : " dès que tu auras des tickets"}.`
     : actionsForDisplay.length
       ? "Quelques actions rapides pour débloquer des tickets ou valider une étape."
       : showClassicProgram
@@ -140,6 +144,7 @@ export function renderClientPage(root, state, options = {}) {
         : isStampsProgram
           ? "À chaque passage validé, tu te rapproches de la récompense prévue."
           : `Présente ta carte chez <strong>${esc(businessName)}</strong> pour cumuler tes avantages.`;
+  const gameCtaAriaLabel = `Tourner la roue — ${tickets} ticket${tickets !== 1 ? "s" : ""} disponible${tickets !== 1 ? "s" : ""}`;
 
   root.innerHTML = `
     <header class="fidelity-v2-header">
@@ -258,7 +263,16 @@ export function renderClientPage(root, state, options = {}) {
           </header>
           <div class="fidelity-v2-step-body ${stepGateLocked ? "fidelity-v2-step-body--gate" : ""}">
             <div class="fidelity-v2-step-body-inner">
-            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>
+            ${step2Intro ? `<p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>` : ""}
+            ${showRoulette && actionsForDisplay.length ? `
+            <div class="fidelity-v2-step-missions fidelity-v2-step-missions--before-wheel">
+              <h3 class="fidelity-v2-step-subtitle">Besoin de plus de tickets ?</h3>
+              <p class="fidelity-v2-missions-rail-hint" id="fidelity-v2-missions-rail-hint">Glisse vers la gauche ou la droite pour voir toutes les missions.</p>
+              <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions pour gagner des tickets" aria-describedby="fidelity-v2-missions-rail-hint" tabindex="0">
+                <div class="fidelity-engagement-actions fidelity-engagement-actions--rail" id="fidelity-v2-actions">${engagementHtml}</div>
+              </div>
+            </div>
+            ` : ""}
             ${showRoulette ? `
             <div class="fidelity-v2-step-wheel">
               <div class="fidelity-v2-game-header fidelity-v2-game-header--inline">
@@ -266,17 +280,17 @@ export function renderClientPage(root, state, options = {}) {
                 <p class="fidelity-v2-step-wheel-cta-label">Prêt à tenter le coup ?</p>
               </div>
               <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-                <a href="${gamePageUrl}" class="fidelity-cta-pill" id="fidelity-v2-game-cta">
+                <a href="${gamePageUrl}" class="fidelity-cta-pill fidelity-cta-pill--with-tickets" id="fidelity-v2-game-cta" aria-label="${esc(gameCtaAriaLabel)}">
                   <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
                   <span class="fidelity-cta-pill-label">Tourner la roue</span>
+                  <span class="fidelity-cta-tickets-badge" id="fidelity-v2-tickets-display" aria-hidden="true">${esc(String(tickets))}</span>
                   <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
                 </a>
               </span>
             </div>
             ` : ""}
-            ${actionsForDisplay.length ? `
-            <div class="fidelity-v2-step-missions ${showRoulette ? "fidelity-v2-step-missions--after-wheel" : ""}">
-              ${showRoulette ? `<h3 class="fidelity-v2-step-subtitle">Besoin de plus de tickets ?</h3>` : ""}
+            ${!showRoulette && actionsForDisplay.length ? `
+            <div class="fidelity-v2-step-missions">
               <div class="fidelity-engagement-actions" id="fidelity-v2-actions">${engagementHtml}</div>
             </div>
             ` : ""}

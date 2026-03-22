@@ -6,6 +6,23 @@
   gap: 0.85rem;
 }
 
+/* Carrousel horizontal (étape roue + missions) */
+.fidelity-engagement-actions--rail {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.9rem;
+  width: max-content;
+  padding: 0.1rem 0;
+}
+
+.fidelity-engagement-actions--rail .fidelity-mission-card {
+  scroll-snap-align: start;
+  min-width: min(86vw, 300px);
+  max-width: 300px;
+  width: min(86vw, 300px);
+  box-sizing: border-box;
+}
+
 .fidelity-mission-card {
   display: flex;
   align-items: center;

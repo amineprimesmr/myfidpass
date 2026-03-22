@@ -500,6 +500,25 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     const wallet = store.get().wallet || {};
     if (apple && wallet.apple) apple.href = wallet.apple;
     if (google && wallet.google) google.href = wallet.google;
+
+    rootEl.querySelector("[data-fid-missions-rail]")?.addEventListener("keydown", (e) => {
+      const rail = e.currentTarget;
+      if (!(rail instanceof HTMLElement)) return;
+      const step = Math.min(300, Math.max(160, rail.clientWidth * 0.82));
+      if (e.key === "ArrowRight") {
+        rail.scrollBy({ left: step, behavior: "smooth" });
+        e.preventDefault();
+      } else if (e.key === "ArrowLeft") {
+        rail.scrollBy({ left: -step, behavior: "smooth" });
+        e.preventDefault();
+      } else if (e.key === "Home") {
+        rail.scrollTo({ left: 0, behavior: "smooth" });
+        e.preventDefault();
+      } else if (e.key === "End") {
+        rail.scrollTo({ left: rail.scrollWidth, behavior: "smooth" });
+        e.preventDefault();
+      }
+    });
   }
 
   document.addEventListener("visibilitychange", () => {

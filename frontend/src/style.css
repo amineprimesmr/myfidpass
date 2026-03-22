@@ -741,10 +741,46 @@ body {
   margin-top: 1rem;
 }
 
-.fidelity-v2-step-missions--after-wheel {
-  padding-top: 0.85rem;
-  margin-top: 1.1rem;
-  border-top: 1px solid #e2e8f0;
+.fidelity-v2-step-missions--before-wheel {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+.fidelity-v2-missions-rail-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.fidelity-v2-missions-rail {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 6px;
+  margin: 0 -0.4rem;
+  padding: 0.2rem 0.4rem 0.55rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.22) transparent;
+}
+
+.fidelity-v2-missions-rail:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.35);
+  border-radius: 14px;
+}
+
+.fidelity-v2-missions-rail::-webkit-scrollbar {
+  height: 5px;
+}
+
+.fidelity-v2-missions-rail::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.2);
+  border-radius: 999px;
 }
 
 /* ── Confirmation Wallet (étape 1) + verrou étapes 2–3 ── */
@@ -1097,6 +1133,39 @@ body {
   opacity: 0.9;
   flex-shrink: 0;
   line-height: 1;
+}
+
+.fidelity-v2-main .fidelity-cta-pill--with-tickets,
+.fidelity-game-page .fidelity-cta-pill--with-tickets {
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
+}
+
+.fidelity-v2-main .fidelity-cta-pill--with-tickets .fidelity-cta-pill-label,
+.fidelity-game-page .fidelity-cta-pill--with-tickets .fidelity-cta-pill-label {
+  flex: 1 1 auto;
+  text-align: left;
+  min-width: 0;
+}
+
+.fidelity-v2-main .fidelity-cta-tickets-badge,
+.fidelity-game-page .fidelity-cta-tickets-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9rem;
+  padding: 0.32rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .fidelity-v2-main .fidelity-cta-pill .fidelity-cta-pill-icon,
