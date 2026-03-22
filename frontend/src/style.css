@@ -787,7 +787,158 @@ body {
   background: var(--fidpass-surface);
 }
 
-/* ── Buttons (fidelity light page) ── */
+/* ── Fidelity v2 — CTA = même UX que landing « Contactez-nous » / SaaS « Enregistrer » (halo + pilule noire + point vert + chevron) ── */
+.fidelity-v2-main .fidelity-cta-wrap,
+.fidelity-game-page .fidelity-cta-wrap {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.fidelity-v2-main .fidelity-cta-wrap--full,
+.fidelity-game-page .fidelity-cta-wrap--full {
+  display: block;
+  width: 100%;
+}
+
+.fidelity-v2-main .fidelity-cta-pill,
+.fidelity-game-page .fidelity-cta-pill {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--font);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.82rem 1.65rem;
+  min-height: 3.2rem;
+  box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
+  background: linear-gradient(180deg, #3a3a3a 0%, #222 50%, #0a0a0a 100%);
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 0.93rem;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 10px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fidelity-v2-main .fidelity-cta-wrap--full .fidelity-cta-pill,
+.fidelity-game-page .fidelity-cta-wrap--full .fidelity-cta-pill {
+  width: 100%;
+}
+
+.fidelity-v2-main .fidelity-cta-pill:hover:not(:disabled),
+.fidelity-game-page .fidelity-cta-pill:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 8px 24px rgba(0, 0, 0, 0.38);
+}
+
+.fidelity-v2-main .fidelity-cta-pill:active:not(:disabled),
+.fidelity-game-page .fidelity-cta-pill:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.fidelity-v2-main .fidelity-cta-pill:disabled,
+.fidelity-game-page .fidelity-cta-pill:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.fidelity-v2-main .fidelity-cta-pill:focus-visible,
+.fidelity-game-page .fidelity-cta-pill:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 10px rgba(0, 0, 0, 0.22);
+}
+
+.fidelity-v2-main .fidelity-cta-pill-dot,
+.fidelity-game-page .fidelity-cta-pill-dot {
+  width: 9px;
+  height: 9px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 3px rgba(34, 197, 94, 0.55);
+  flex-shrink: 0;
+}
+
+.fidelity-v2-main .fidelity-cta-pill-label,
+.fidelity-game-page .fidelity-cta-pill-label {
+  flex: 1 1 auto;
+  text-align: center;
+}
+
+.fidelity-v2-main .fidelity-cta-wrap--full .fidelity-cta-pill-label,
+.fidelity-game-page .fidelity-cta-wrap--full .fidelity-cta-pill-label {
+  flex: 0 1 auto;
+}
+
+.fidelity-v2-main .fidelity-cta-pill-chevron,
+.fidelity-game-page .fidelity-cta-pill-chevron {
+  font-size: 1.15rem;
+  font-weight: 400;
+  opacity: 0.9;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.fidelity-v2-main .fidelity-cta-pill .fidelity-cta-pill-icon,
+.fidelity-game-page .fidelity-cta-pill .fidelity-cta-pill-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.fidelity-v2-main .fidelity-cta-pill--compact,
+.fidelity-game-page .fidelity-cta-pill--compact {
+  min-height: 0;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.82rem;
+  gap: 0.45rem;
+}
+
+.fidelity-v2-main .fidelity-cta-pill--compact .fidelity-cta-pill-dot,
+.fidelity-game-page .fidelity-cta-pill--compact .fidelity-cta-pill-dot {
+  width: 7px;
+  height: 7px;
+}
+
+.fidelity-v2-main .fidelity-cta-pill--compact .fidelity-cta-pill-label,
+.fidelity-game-page .fidelity-cta-pill--compact .fidelity-cta-pill-label {
+  flex: 0 1 auto;
+}
+
+.fidelity-v2-form .fidelity-cta-wrap--full {
+  margin-top: 0.25rem;
+}
+
+/* ── Buttons (fidelity light page) — héritage / variantes non v2 ── */
 .fidelity-btn {
   display: inline-flex;
   align-items: center;
@@ -966,8 +1117,7 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.fidelity-wallet-buttons .fidelity-btn {
-  text-decoration: none;
+.fidelity-wallet-buttons .fidelity-cta-wrap {
   box-sizing: border-box;
 }
 
@@ -1219,7 +1369,9 @@ body {
   flex-shrink: 0;
 }
 
-.fidelity-engagement-item-btns .fidelity-btn { flex: 0 0 auto; }
+.fidelity-engagement-item-btns .fidelity-cta-wrap {
+  flex: 0 0 auto;
+}
 
 .fidelity-engagement-feedback {
   font-size: 0.875rem;
@@ -1438,28 +1590,10 @@ body {
 
 .fidelity-error.hidden { display: none; }
 
-/* ── CTA jouer ── */
+/* ── Lien « Jouer à la roue » (pilule CTA) ── */
 .fidelity-v2-game-link-wrap {
   margin-top: 1rem;
   margin-bottom: 0;
-}
-
-.fidelity-cta-jouer {
-  display: inline-flex;
-  justify-content: center;
-  text-decoration: none;
-  background: linear-gradient(135deg, #1E3A5F, #1A2B42);
-  color: #fff;
-  border: 2px solid #D4A84B;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
-  transition: background var(--transition), transform 0.1s, box-shadow 0.1s;
-}
-
-.fidelity-cta-jouer:hover {
-  background: linear-gradient(135deg, #2D3F5A, #243552);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2), 0 12px 24px rgba(0, 0, 0, 0.18);
 }
 
 /* ── Fidelity page background ── */
