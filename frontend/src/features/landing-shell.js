@@ -1,14 +1,13 @@
 /**
- * Shell landing : formulaire hero, Google Places, menus drawer.
- * La navigation vers les tarifs est gérée par pricing-navigation.js (capture).
+ * Shell landing : formulaire hero, Google Places, menus drawer, bottom sheet onboarding.
+ * Appelé au chargement pour attacher les listeners (formulaire, menus, script Places).
  */
+import { openOnboardingSheet, initOnboardingSheet } from "./landing-onboarding-sheet.js";
+
 function updateLandingCtaState() {
   const input = document.getElementById("landing-etablissement");
   const btn = document.getElementById("landing-hero-submit");
-  if (!btn) return;
-  const ok = !!(input?.value?.trim());
-  btn.disabled = !ok;
-  btn.setAttribute("aria-disabled", ok ? "false" : "true");
+  if (input && btn) btn.disabled = !input.value?.trim();
 }
 
 function initPlacesAutocomplete() {
@@ -70,6 +69,14 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
 }
 
 export function initLandingShell() {
+  initOnboardingSheet();
+  function openSheet(e) {
+    e.preventDefault();
+    openOnboardingSheet();
+  }
+  document.querySelectorAll(".landing-cta-try").forEach((link) => link.addEventListener("click", openSheet));
+  document.querySelectorAll("#landing a[href*='creer-ma-carte']").forEach((link) => link.addEventListener("click", openSheet));
+
   const landingHeroForm = document.getElementById("landing-hero-form");
   if (landingHeroForm) {
     const landingEtablissementInput = document.getElementById("landing-etablissement");
@@ -114,6 +121,10 @@ export function initLandingShell() {
       });
     }
     updateLandingCtaState();
+    landingHeroForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      openOnboardingSheet();
+    });
   }
 
   const landingMenuToggle = document.getElementById("landing-menu-toggle");

@@ -33,7 +33,6 @@
     <link rel="stylesheet" href="/src/landing-testimonials-faq.css" />
     <link rel="stylesheet" href="/src/landing-trust.css" />
     <link rel="stylesheet" href="/src/landing-footer.css" />
-    <link rel="stylesheet" href="/src/offers-pricing.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
@@ -50,7 +49,7 @@
                 <img src="/assets/logo.png?v=20260311" alt="" class="builder-header-logo-img" onerror="this.style.display='none'; this.closest('.builder-header-logo')?.classList.add('show-fallback');">
                 <span class="builder-header-logo-fallback" aria-hidden="true">Myfidpass</span>
               </a>
-              <a href="/login?redirect=/choisir-offre" class="builder-header-login" id="builder-header-login">Se connecter</a>
+              <a href="/login?redirect=/creer-ma-carte" class="builder-header-login" id="builder-header-login">Se connecter</a>
             </div>
             <nav class="builder-header-steps" aria-label="Étapes du parcours">
               <button type="button" class="builder-header-step builder-header-step-active" data-step="1" aria-current="step" aria-label="Étape 1">1</button>
@@ -83,11 +82,11 @@
             </button>
             <a href="/" class="landing-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
             <nav class="landing-nav landing-nav-desk">
-              <a href="/choisir-offre" data-fidpass-open-pricing="1">Essai gratuit 7 jours</a>
+              <a href="/creer-ma-carte">Créer ma carte</a>
               <a href="/">Accueil</a>
             </nav>
             <div class="landing-header-ctas">
-              <a href="/choisir-offre" data-fidpass-open-pricing="1" class="landing-cta landing-cta-primary landing-cta-desk">Essayez 7 jours gratuitement</a>
+              <a href="/creer-ma-carte" class="landing-cta landing-cta-primary landing-cta-desk">Obtenir ma carte</a>
             </div>
           </div>
         </header>
@@ -99,9 +98,9 @@
             <a href="/" class="landing-menu-drawer-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
           </div>
           <nav class="landing-menu-drawer-nav">
-            <a href="/choisir-offre" data-fidpass-open-pricing="1">Essai gratuit 7 jours</a>
+            <a href="/creer-ma-carte">Créer ma carte</a>
             <a href="/">Accueil</a>
-            <a href="/choisir-offre" data-fidpass-open-pricing="1" class="landing-menu-drawer-cta">Essayez 7 jours gratuitement</a>
+            <a href="/creer-ma-carte" class="landing-menu-drawer-login">Obtenir ma carte</a>
           </nav>
         </div>
       </div>
@@ -207,8 +206,8 @@
       </main>
     </div>
 
-    <!-- Choisir une offre (/choisir-offre) — page tarifs publique, puis compte + Stripe -->
-    <div id="offers-app" class="hidden unified-shell offers-pricing-shell">
+    <!-- Choisir une offre : même UX barre flottante que landing -->
+    <div id="offers-app" class="hidden unified-shell">
       <div class="landing-header-outer">
         <header class="landing-header landing-header-bar">
           <div class="landing-header-inner">
@@ -219,11 +218,11 @@
             </button>
             <a href="/" class="landing-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
             <nav class="landing-nav landing-nav-desk">
-              <a href="/" class="offers-header-secondary">Accueil</a>
-              <a href="/login?redirect=/choisir-offre" class="offers-header-login">Se connecter</a>
+              <a href="/app">Mon espace</a>
+              <a href="/">Accueil</a>
             </nav>
             <div class="landing-header-ctas">
-              <a href="/register?redirect=/choisir-offre" class="landing-cta landing-cta-primary landing-cta-desk offers-header-cta">Créer un compte</a>
+              <a href="/app" class="landing-cta landing-cta-primary landing-cta-desk">Mon espace</a>
             </div>
           </div>
         </header>
@@ -235,47 +234,22 @@
             <a href="/" class="landing-menu-drawer-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
           </div>
           <nav class="landing-menu-drawer-nav">
+            <a href="/app">Mon espace</a>
             <a href="/">Accueil</a>
-            <a href="/login?redirect=/choisir-offre" class="offers-drawer-login">Se connecter</a>
-            <a href="/register?redirect=/choisir-offre" class="landing-menu-drawer-cta offers-drawer-cta">Créer un compte</a>
+            <a href="/app" class="landing-menu-drawer-login">Mon espace</a>
           </nav>
         </div>
       </div>
       <main class="unified-main offers-main">
-        <a href="/" class="offers-pricing-back">← Accueil</a>
-        <div class="offers-pricing-card">
-          <h1 class="offers-pricing-headline">Fidélisez vos clients, sans friction</h1>
-          <div class="offers-billing-toggle" aria-hidden="true">
-            <span class="offers-billing-option is-active">Mensuel</span>
-            <span class="offers-billing-option">Annuel</span>
-          </div>
-          <div class="offers-plan-row">
-            <div>
-              <h2 class="offers-plan-name">Myfidpass <span class="offers-popular-badge">Populaire</span></h2>
-              <p class="offers-plan-desc">Carte Wallet, tableau de bord, scans et notifications — tout pour votre commerce.</p>
-            </div>
-            <span class="offers-trial-badge">7 jours gratuits</span>
-          </div>
-          <div class="offers-price-block">
-            <span class="offers-price-main">49 €</span><span class="offers-price-suffix">TTC / mois</span>
-            <p class="offers-price-note">Essai gratuit 7 jours, sans engagement. Paiement après l’essai.</p>
-          </div>
-          <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Essayer gratuitement</button>
-          <div class="offers-features" id="offers-features-list">
-            <ul>
-              <li><span class="offers-feature-icon" aria-hidden="true">✓</span> Cartes Apple Wallet &amp; Google Wallet</li>
-              <li><span class="offers-feature-icon" aria-hidden="true">✓</span> Tableau de bord, statistiques et scan QR</li>
-            </ul>
-            <p class="offers-feature-group">Notifications</p>
-            <ul>
-              <li><span class="offers-feature-icon" aria-hidden="true">✓</span> Campagnes push vers vos clients</li>
-            </ul>
-            <p class="offers-feature-group">Personnalisation</p>
-            <ul>
-              <li><span class="offers-feature-icon" aria-hidden="true">✓</span> Logo, couleurs et tampons ou points</li>
-              <li><span class="offers-feature-icon" aria-hidden="true">✓</span> Lien et QR à afficher en boutique</li>
-            </ul>
-          </div>
+        <h1 class="offers-title">Choisissez votre tarif</h1>
+        <p class="offers-subtitle">Accédez à votre espace et créez vos cartes fidélité (Apple Wallet et Google Wallet).</p>
+        <div class="offers-grid" id="offers-grid">
+          <article class="offers-card offers-card-featured">
+            <h2 class="offers-card-title">Myfidpass</h2>
+            <p class="offers-card-desc">Carte de fidélité, tableau de bord, accès logiciel, application Myfidpass. Sans engagement, 7 jours gratuits.</p>
+            <p class="offers-card-price"><span class="offers-card-amount">49 €</span> / mois</p>
+            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Choisir — 49 €/mois</button>
+          </article>
         </div>
       </main>
     </div>
@@ -354,7 +328,7 @@
                 <label class="app-label" for="app-empty-slug">Votre lien (pour la page carte et le QR)</label>
                 <input type="text" id="app-empty-slug" class="app-input app-input-slug" placeholder="cafe-nbk" autocomplete="off" />
                 <p class="app-hint">Vos clients iront sur : …/fidelity/<strong id="app-empty-slug-preview">votre-lien</strong></p>
-                <button type="submit" class="app-btn app-btn-primary app-empty-cta">Essayez 7 jours gratuitement</button>
+                <button type="submit" class="app-btn app-btn-primary app-empty-cta">Créer ma carte</button>
                 <p id="app-empty-create-error" class="app-message error hidden"></p>
               </form>
             </div>
@@ -1606,13 +1580,13 @@
             <a href="/" class="landing-logo"><img src="/assets/logo.png?v=20260311" alt="Myfidpass" class="landing-logo-img"></a>
             <nav class="landing-nav landing-nav-desk">
               <a href="#produit">Produit</a>
-              <a href="/login" id="landing-nav-auth-link" class="landing-nav-login-link">Se connecter</a>
+              <a href="/login" class="landing-nav-login-link">Se connecter</a>
             </nav>
             <div class="landing-header-ctas">
-              <a href="/choisir-offre" data-fidpass-open-pricing="1" class="landing-cta landing-cta-download landing-cta-desk landing-cta-try">Essayez 7 jours gratuitement</a>
-              <a href="/choisir-offre" data-fidpass-open-pricing="1" class="landing-cta landing-cta-primary landing-cta-desk landing-cta-try" id="landing-header-cta">Essayez 7 jours gratuitement</a>
+              <a href="#landing-hero-form" class="landing-cta landing-cta-download landing-cta-desk landing-cta-try">Rejoindre maintenant</a>
+              <a href="#landing-hero-form" class="landing-cta landing-cta-primary landing-cta-desk landing-nav-login-link landing-cta-try" id="landing-header-cta">Rejoindre maintenant</a>
             </div>
-            <a href="/choisir-offre" data-fidpass-open-pricing="1" class="landing-cta landing-cta-primary landing-cta-mobile landing-cta-try">Essayez 7 jours gratuitement</a>
+            <a href="#landing-hero-form" class="landing-cta landing-cta-primary landing-cta-mobile landing-cta-try">Essayer</a>
             <button type="button" class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
               <span class="landing-menu-toggle-bar"></span>
               <span class="landing-menu-toggle-bar"></span>
@@ -1633,10 +1607,10 @@
           </div>
           <nav class="landing-menu-drawer-nav">
             <a href="#produit" class="landing-menu-drawer-link"><span>Produit</span><span class="landing-menu-drawer-arrow" aria-hidden="true">→</span></a>
-            <a href="/login" id="landing-drawer-auth-link" class="landing-menu-drawer-link landing-menu-drawer-login">Se connecter</a>
+            <a href="/login" class="landing-menu-drawer-link landing-menu-drawer-login">Se connecter</a>
           </nav>
           <div class="landing-menu-drawer-footer">
-            <a href="/choisir-offre" data-fidpass-open-pricing="1" class="landing-menu-drawer-cta landing-cta-try">Essayez 7 jours gratuitement</a>
+            <a href="#landing-hero-form" class="landing-menu-drawer-cta landing-cta-try">Rejoindre maintenant</a>
           </div>
         </div>
       </div>
@@ -1648,7 +1622,7 @@
           <div class="landing-onboarding-sheet-header">
             <div class="landing-onboarding-sheet-header-row">
               <button type="button" class="landing-onboarding-sheet-back" id="landing-onboarding-sheet-back" aria-label="Retour">←</button>
-              <h2 id="landing-onboarding-sheet-title" class="landing-onboarding-sheet-title">Essai gratuit 7 jours</h2>
+              <h2 id="landing-onboarding-sheet-title" class="landing-onboarding-sheet-title">Créer ma carte</h2>
               <div id="landing-onboarding-sheet-progress" class="landing-onboarding-sheet-progress"></div>
             </div>
           </div>
@@ -1696,10 +1670,9 @@
                     <input type="text" id="landing-etablissement" class="landing-hero-input" placeholder="Nom de votre établissement" autocomplete="organization" />
                   </div>
                   <div class="landing-hero-cta">
-                    <button type="submit" class="landing-btn landing-btn-primary landing-btn-hero" id="landing-hero-submit" disabled aria-disabled="true">Essayez 7 jours gratuitement</button>
+                    <button type="submit" class="landing-btn landing-btn-primary landing-btn-hero" id="landing-hero-submit" disabled>Créer ma carte</button>
                   </div>
                 </div>
-                <p class="landing-hero-trial-hint" id="landing-hero-trial-hint">7 jours gratuits, sans engagement.</p>
                 <p class="landing-hero-helper" id="landing-hero-helper" aria-live="polite">Aucun résultat ? Indiquez le nom, la ville et le code postal.</p>
               </form>
               <section class="landing-trust-section" aria-label="Ils nous ont fait confiance">
@@ -1775,9 +1748,9 @@
                 <h2 class="landing-testimonials-v2-title landing-testimonials-v2-title-muted">pourquoi pas vous ?</h2>
               </div>
               <div class="landing-faq-v2-cta-wrap">
-                <a href="/choisir-offre" data-fidpass-open-pricing="1" class="landing-faq-v2-cta landing-cta-try">
+                <a href="#landing-hero-form" class="landing-faq-v2-cta landing-cta-try">
                   <span class="landing-faq-v2-cta-dot" aria-hidden="true"></span>
-                  <span class="landing-faq-v2-cta-text">Essayez 7 jours gratuitement</span>
+                  <span class="landing-faq-v2-cta-text">Rejoindre maintenant</span>
                   <span class="landing-faq-v2-cta-chevron" aria-hidden="true">›</span>
                 </a>
               </div>
@@ -1898,9 +1871,9 @@
             <h2 class="landing-cta-final-title">Êtes-vous prêt à lancer ?</h2>
             <p class="landing-cta-final-text">Une experience plus propre, plus rapide et plus naturelle pour vos clients.</p>
             <div class="landing-faq-v2-cta-wrap">
-              <a href="/choisir-offre" data-fidpass-open-pricing="1" class="landing-faq-v2-cta landing-cta-try">
+              <a href="#landing-hero-form" class="landing-faq-v2-cta landing-cta-try">
                 <span class="landing-faq-v2-cta-dot" aria-hidden="true"></span>
-                <span class="landing-faq-v2-cta-text">Essayez 7 jours gratuitement</span>
+                <span class="landing-faq-v2-cta-text">Rejoindre maintenant</span>
                 <span class="landing-faq-v2-cta-chevron" aria-hidden="true">›</span>
               </a>
             </div>
@@ -1925,9 +1898,9 @@
             <div class="landing-footer-grid-v3">
               <nav class="landing-footer-col-v3" aria-label="Entreprise">
                 <h3 class="landing-footer-col-title-v3">Entreprise</h3>
-                <a href="/choisir-offre" data-fidpass-open-pricing="1">Essai gratuit 7 jours</a>
+                <a href="/creer-ma-carte">Créer ma carte</a>
                 <a href="#produit">Produit</a>
-                <a href="/choisir-offre" data-fidpass-open-pricing="1">Tarifs</a>
+                <a href="/choisir-offre">Tarifs</a>
                 <a href="/integration">Intégration</a>
               </nav>
               <nav class="landing-footer-col-v3" aria-label="Fonctionnalités">
@@ -1940,12 +1913,12 @@
               </nav>
               <nav class="landing-footer-col-v3" aria-label="Cas d'usage">
                 <h3 class="landing-footer-col-title-v3">Cas d'usage</h3>
-                <a href="/choisir-offre" data-fidpass-open-pricing="1">Restaurants</a>
-                <a href="/choisir-offre" data-fidpass-open-pricing="1">Boulangeries</a>
-                <a href="/choisir-offre" data-fidpass-open-pricing="1">Cafés</a>
-                <a href="/choisir-offre" data-fidpass-open-pricing="1">Coiffeurs</a>
-                <a href="/choisir-offre" data-fidpass-open-pricing="1">Beauté</a>
-                <a href="/choisir-offre" data-fidpass-open-pricing="1">Boucheries</a>
+                <a href="/creer-ma-carte">Restaurants</a>
+                <a href="/creer-ma-carte">Boulangeries</a>
+                <a href="/creer-ma-carte">Cafés</a>
+                <a href="/creer-ma-carte">Coiffeurs</a>
+                <a href="/creer-ma-carte">Beauté</a>
+                <a href="/creer-ma-carte">Boucheries</a>
               </nav>
               <nav class="landing-footer-col-v3" aria-label="Informations légales">
                 <h3 class="landing-footer-col-title-v3">Informations</h3>
@@ -2026,7 +1999,7 @@ X-Dashboard-Token: TOKEN
           <form class="card-form" id="card-form" novalidate>
             <input type="text" id="input-name" class="fidelity-input" placeholder="Ton prénom ou nom" autocomplete="name" required />
             <input type="email" id="input-email" class="fidelity-input" placeholder="ton@email.com" autocomplete="email" required />
-            <button type="submit" class="fidelity-btn" id="btn-submit"><span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Essayez 7 jours gratuitement</button>
+            <button type="submit" class="fidelity-btn" id="btn-submit"><span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Créer ma carte</button>
             <p id="fidelity-error" class="fidelity-error hidden"></p>
           </form>
           <div id="fidelity-success" class="fidelity-success hidden">

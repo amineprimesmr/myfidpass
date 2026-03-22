@@ -1,28 +1,24 @@
 /**
- * Page choix d'offre / abonnement (publique : sans compte → inscription, puis Stripe).
+ * Page choix d'offre / abonnement (redirection si déjà abonné, bouton Stripe).
  * Référence : REFONTE-REGLES.md — un module par écran.
  */
-import { API_BASE, getAuthToken, getAuthHeaders, setDevBypassPayment } from "../config.js";
-import { navigateToLanding } from "../router/index.js";
-
-/** Essai sans compte app : même lien que l’ancien parcours onboarding (Stripe collecte l’email). */
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
+import { API_BASE, getAuthHeaders, isDevBypassPayment, setDevBypassPayment } from "../config.js";
 
 export function initOffersPage() {
-  document.querySelectorAll(".offers-pricing-back").forEach((a) => {
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      navigateToLanding().catch((err) => console.error("[Myfidpass] retour accueil", err));
-    });
-  });
+  (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hasActiveSubscription || isDevBypassPayment()) {
+          window.location.replace("/app");
+          return;
+        }
+      }
+    } catch (_) {}
+  })();
 
-  const btnStarter = document.getElementById("offers-btn-starter");
-  if (btnStarter) {
-    btnStarter.textContent = getAuthToken()
-      ? "Continuer — 49 €/mois (7 jours gratuits)"
-      : "Essayer gratuitement";
-  }
-
+  const devBypassWrap = document.getElementById("offers-dev-bypass-wrap");
   const devBypassBtn = document.getElementById("offers-dev-bypass-btn");
   if (devBypassBtn) {
     devBypassBtn.addEventListener("click", () => {
@@ -31,12 +27,9 @@ export function initOffersPage() {
     });
   }
 
+  const btnStarter = document.getElementById("offers-btn-starter");
   if (btnStarter) {
     btnStarter.addEventListener("click", async () => {
-      if (!getAuthToken()) {
-        window.location.href = STRIPE_PAYMENT_LINK;
-        return;
-      }
       btnStarter.disabled = true;
       btnStarter.textContent = "Redirection…";
       try {
@@ -61,7 +54,7 @@ export function initOffersPage() {
         window.location.replace("/app");
       }
       btnStarter.disabled = false;
-      btnStarter.textContent = "Continuer — 49 €/mois (7 jours gratuits)";
+      btnStarter.textContent = "Choisir — 49 €/mois";
     });
   }
 }

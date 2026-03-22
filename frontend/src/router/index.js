@@ -3,6 +3,7 @@
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
 import { getAuthToken } from "../config.js";
+import { openOnboardingSheet } from "../features/landing-onboarding-sheet.js";
 
 export function getRoute() {
   const path = window.location.pathname.replace(/\/$/, "");
@@ -14,7 +15,7 @@ export function getRoute() {
   if (path === "/app") return { type: "app" };
   if (path === "/login") return { type: "auth", tab: "login" };
   if (path === "/register") return { type: "auth", tab: "register" };
-  if (path === "/creer-ma-carte") return { type: "offers" };
+  if (path === "/creer-ma-carte") return { type: "landing", openOnboarding: true };
   if (path === "/choisir-offre") return { type: "offers" };
   if (path === "/checkout" || path === "/creation-carte") return { type: "redirect-stripe" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
@@ -86,51 +87,15 @@ export function updateAuthNavLinks() {
   const isLoggedIn = !!getAuthToken();
   const label = isLoggedIn ? "Mon espace" : "Se connecter";
   const landingHref = isLoggedIn ? "/app" : "/login?redirect=/app";
-  /** Connexion / espace : seulement ces deux IDs — jamais les CTA « Essayez 7 jours ». */
-  const desk = document.getElementById("landing-nav-auth-link");
-  if (desk) {
-    desk.textContent = label;
-    desk.href = landingHref;
-  }
-  const drawer = document.getElementById("landing-drawer-auth-link");
-  if (drawer) {
-    drawer.textContent = label;
-    drawer.href = landingHref;
-  }
+  document.querySelectorAll(".landing-nav-login-link, .landing-menu-drawer-login").forEach((a) => {
+    a.textContent = label;
+    a.href = landingHref;
+  });
   const builderLogin = document.getElementById("builder-header-login");
   if (builderLogin) {
     builderLogin.textContent = label;
-    builderLogin.href = isLoggedIn ? "/app" : "/login?redirect=/choisir-offre";
+    builderLogin.href = isLoggedIn ? "/app" : "/login?redirect=/creer-ma-carte";
   }
-  /** Sécurité : réinitialiser le href des CTA tarifs si un script les avait modifiés. */
-  document.querySelectorAll("#landing [data-fidpass-open-pricing], #auth-app [data-fidpass-open-pricing]").forEach((el) => {
-    if (el.tagName === "A") el.setAttribute("href", "/choisir-offre");
-  });
-}
-
-export function updateOffersNavLinks() {
-  const logged = !!getAuthToken();
-  const loginLabel = logged ? "Mon espace" : "Se connecter";
-  const loginHref = logged ? "/app" : "/login?redirect=/choisir-offre";
-  const ctaLabel = logged ? "Mon espace" : "Créer un compte";
-  const ctaHref = logged ? "/app" : "/register?redirect=/choisir-offre";
-
-  document.querySelectorAll("#offers-app .offers-header-login").forEach((a) => {
-    a.textContent = loginLabel;
-    a.href = loginHref;
-  });
-  document.querySelectorAll("#offers-app .offers-drawer-login").forEach((a) => {
-    a.textContent = loginLabel;
-    a.href = loginHref;
-  });
-  document.querySelectorAll("#offers-app .offers-header-cta").forEach((a) => {
-    a.textContent = ctaLabel;
-    a.href = ctaHref;
-  });
-  document.querySelectorAll("#offers-app .offers-drawer-cta").forEach((a) => {
-    a.textContent = ctaLabel;
-    a.href = ctaHref;
-  });
 }
 
 export function navigateToBuilder(queryString) {
@@ -140,12 +105,6 @@ export function navigateToBuilder(queryString) {
 
 export function navigateToLanding() {
   history.replaceState(null, "", "/");
-  return initRouting();
-}
-
-/** Parcours essai : page tarifs (/choisir-offre), sans onboarding bottom sheet. */
-export function navigateToPricing() {
-  history.pushState({}, "", "/choisir-offre");
   return initRouting();
 }
 
@@ -239,13 +198,12 @@ export async function initRouting() {
 
 
   if (route.type === "offers") {
-    const pathNorm = window.location.pathname.replace(/\/$/, "") || "";
-    if (pathNorm === "/creer-ma-carte") {
-      history.replaceState({}, "", "/choisir-offre" + (window.location.search || ""));
+    if (!getAuthToken()) {
+      window.location.replace("/login?redirect=/choisir-offre");
+      return null;
     }
     hideAll();
     if (c.offersApp) c.offersApp.classList.remove("hidden");
-    updateOffersNavLinks();
     const page = await loadPage("offers");
     await page.init(route);
     syncWhatsappFabVisibility();
@@ -330,6 +288,10 @@ export async function initRouting() {
 
   const page = await loadPage("landing");
   await page.init(route);
+  if (route.openOnboarding) {
+    history.replaceState(null, "", "/" + (window.location.search || ""));
+    requestAnimationFrame(() => openOnboardingSheet());
+  }
   syncWhatsappFabVisibility();
   return null;
 }

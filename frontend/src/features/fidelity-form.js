@@ -92,7 +92,7 @@ function setLoading(loading) {
     if (loading) {
       btnSubmit.innerHTML = "Création…";
     } else {
-      btnSubmit.innerHTML = '<span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Essayez 7 jours gratuitement';
+      btnSubmit.innerHTML = '<span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Créer ma carte';
     }
   }
 }

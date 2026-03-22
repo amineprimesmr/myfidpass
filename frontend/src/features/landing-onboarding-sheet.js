@@ -1,6 +1,5 @@
 /**
- * Bottom sheet onboarding (builder) — conservé dans le DOM pour d’éventuels parcours internes.
- * Le parcours public « essai » passe par /choisir-offre (page tarifs).
+ * Bottom sheet onboarding (builder) depuis la landing : ouverture via /creer-ma-carte ou CTA.
  */
 import { API_BASE } from "../config.js";
 

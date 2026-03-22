@@ -4,7 +4,6 @@
  */
 import { showSlugError } from "./features/fidelity-form.js";
 import { initLandingShell } from "./features/landing-shell.js";
-import { initPricingNavigation } from "./features/pricing-navigation.js";
 import { initRouting } from "./router/index.js";
 
 export { showSlugError };
@@ -14,7 +13,6 @@ window.addEventListener("popstate", () => {
 });
 
 async function bootstrap() {
-  initPricingNavigation();
   initLandingShell();
   try {
     await initRouting();

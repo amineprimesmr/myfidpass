@@ -33,7 +33,7 @@ function isAppleRedirectDevice() {
 export function initCheckoutPage() {
   const draft = getCheckoutDraft();
   if (!draft) {
-    history.replaceState({}, "", "/choisir-offre");
+    history.replaceState({}, "", "/creer-ma-carte");
     initRouting();
     return;
   }
@@ -317,7 +317,7 @@ export function initCheckoutPage() {
     if (!isMobile() || !checkoutMain) return;
     const current = parseInt(checkoutMain.getAttribute("data-mobile-step") || "0", 10);
     if (current <= 1) {
-      history.pushState({}, "", "/choisir-offre");
+      history.pushState({}, "", "/creer-ma-carte");
       initRouting();
       return;
     }
