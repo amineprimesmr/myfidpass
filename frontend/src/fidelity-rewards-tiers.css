@@ -1,0 +1,290 @@
+/* Paliers + progression — section récompenses client fidélité v2 */
+
+.fid-tiers-block {
+  margin-bottom: 1.35rem;
+}
+
+.fid-tiers-block-title {
+  margin-bottom: 0.75rem;
+}
+
+.fid-tiers-progress-card {
+  position: relative;
+  overflow: hidden;
+  padding: 1.05rem 1.15rem 1.15rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(250, 245, 255, 0.95) 0%, rgba(240, 253, 250, 0.75) 48%, rgba(239, 246, 255, 0.9) 100%);
+  border: 1px solid rgba(196, 181, 253, 0.45);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06);
+  margin-bottom: 1rem;
+}
+
+.fid-tiers-progress-card::before {
+  content: "";
+  position: absolute;
+  inset: -40% 50% 40% -20%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.2) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.fid-tiers-progress-head {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.fid-tiers-progress-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #64748b;
+}
+
+.fid-tiers-balance-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.fid-tiers-emoji {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.fid-tiers-balance-num {
+  font-family: "Plus Jakarta Sans", var(--font, system-ui), sans-serif;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.fid-tiers-balance-unit {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: lowercase;
+}
+
+.fid-tiers-next-msg {
+  position: relative;
+  margin: 0 0 0.85rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.fid-tiers-next-msg strong {
+  color: #0f172a;
+}
+
+.fid-tiers-bar {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.fid-tiers-bar-fill {
+  height: 100%;
+  width: var(--fid-tier-pct, 0%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 40%, #10b981 100%);
+  transition: width 0.45s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.fid-tiers-bar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--fid-tier-pct, 0%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.fid-tiers-range-caption {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+
+.fid-tiers-empty-card {
+  text-align: center;
+  padding: 1.25rem 1rem 1.35rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px dashed #cbd5e1;
+  margin-bottom: 1rem;
+}
+
+.fid-tiers-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.55;
+}
+
+.fid-tiers-empty-text {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.fid-tiers-empty-text strong {
+  color: #475569;
+}
+
+.fid-tiers-track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.fid-tiers-step {
+  position: relative;
+  display: flex;
+  gap: 0.85rem;
+  padding-bottom: 1rem;
+  padding-left: 0.15rem;
+}
+
+.fid-tiers-step:last-child {
+  padding-bottom: 0;
+}
+
+.fid-tiers-step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: calc(0.15rem + 13px);
+  top: 32px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.35), rgba(148, 163, 184, 0.25));
+  border-radius: 1px;
+}
+
+.fid-tiers-step-marker {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  z-index: 1;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fid-tiers-step--done .fid-tiers-step-marker {
+  background: linear-gradient(145deg, #10b981, #059669);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+}
+
+.fid-tiers-step--current .fid-tiers-step-marker {
+  background: linear-gradient(145deg, #fff, #f8fafc);
+  color: #5b21b6;
+  border: 2px solid #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+}
+
+.fid-tiers-step--locked .fid-tiers-step-marker {
+  background: #e2e8f0;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.fid-tiers-step-body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 0.12rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.fid-tiers-step-threshold {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.fid-tiers-step--current .fid-tiers-step-threshold {
+  color: #6d28d9;
+}
+
+.fid-tiers-step-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.fid-tiers-step--locked .fid-tiers-step-label {
+  color: #64748b;
+}
+
+.fid-tiers-lots-block {
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.fid-tiers-lots-intro {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.fid-tiers-lots-intro strong {
+  color: #475569;
+}
+
+.fidelity-v2-reward-empty--compact {
+  padding: 1.25rem 1rem;
+}
+
+.fidelity-v2-reward-empty--compact .fidelity-v2-reward-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.45rem;
+}
+
+.fidelity-v2-reward-empty--compact p {
+  font-size: 0.82rem;
+  max-width: 18rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fid-tiers-bar-fill {
+    transition: none;
+  }
+
+  .fid-tiers-step-marker {
+    transition: none;
+  }
+}

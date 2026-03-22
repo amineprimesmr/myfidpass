@@ -1,5 +1,6 @@
 import { renderEngagementActionsMarkup } from "./mission-markup.js";
 import { renderProfileMissionModalMarkup } from "./profile-mission-modal-markup.js";
+import { renderRewardsStepMarkup } from "./rewards-step-markup.js";
 
 function esc(value) {
   return String(value == null ? "" : value)
@@ -145,6 +146,14 @@ export function renderClientPage(root, state, options = {}) {
           ? "À chaque passage validé, tu te rapproches de la récompense prévue."
           : `Présente ta carte chez <strong>${esc(businessName)}</strong> pour cumuler tes avantages.`;
   const gameCtaAriaLabel = `Tourner la roue — ${tickets} ticket${tickets !== 1 ? "s" : ""} disponible${tickets !== 1 ? "s" : ""}`;
+  const rewardsStepHtml = renderRewardsStepMarkup(esc, {
+    business: state.business,
+    member: state.member,
+    rewards,
+    programType,
+    balanceUnit: headerBalanceUnit,
+    stampEmoji: stampEmojiHeader,
+  });
 
   root.innerHTML = `
     <header class="fidelity-v2-header">
@@ -317,27 +326,7 @@ export function renderClientPage(root, state, options = {}) {
           </header>
           <div class="fidelity-v2-step-body ${stepGateLocked ? "fidelity-v2-step-body--gate" : ""}">
             <div class="fidelity-v2-step-body-inner">
-            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">Lots gagnés à la roue ou débloqués avec ton programme — tout est regroupé ici.</p>
-            <ul class="fidelity-v2-reward-list">
-          ${
-            rewards.length
-              ? rewards
-                .map((r) => `
-                  <li class="fidelity-v2-reward-item">
-                    <div class="fidelity-v2-reward-info">
-                      <span class="fidelity-v2-reward-icon">🎁</span>
-                      <strong>${esc(r.reward?.label || "Lot")}</strong>
-                    </div>
-                    <span class="fidelity-v2-reward-status fidelity-v2-reward-status--${esc(r.status || "granted")}">${esc(r.status === "used" ? "Utilisée" : r.status === "expired" ? "Expirée" : "Disponible")}</span>
-                  </li>
-                `)
-                .join("")
-              : `<li class="fidelity-v2-reward-empty">
-                  <div class="fidelity-v2-reward-empty-icon">🎯</div>
-                  <p>Tes lots et avantages débloqués s’affichent ici dès qu’ils sont disponibles.</p>
-                </li>`
-          }
-            </ul>
+            ${rewardsStepHtml}
             </div>
             ${stepGateLocked ? `
             <div class="fidelity-v2-step-lock" role="status">
