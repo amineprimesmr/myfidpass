@@ -1,5 +1,63 @@
 /* Roue fidélité — effet 3D (page jeu uniquement). Chargé après style.css. */
 
+/* ── Titre + CTA : décalés vers le bas, typo plus lisible ── */
+.fidelity-game-page .fidelity-game-top {
+  padding: clamp(4.85rem, 18vw, 6.5rem) 1.25rem 0.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.fidelity-game-page .fidelity-roulette-logo-wrap.fidelity-roulette-logo {
+  margin-bottom: 1.05rem;
+}
+
+.fidelity-game-page .fidelity-roulette-title {
+  margin: 0 auto clamp(1.4rem, 4.5vw, 2rem);
+  max-width: min(20rem, 94vw);
+  font-size: clamp(1.14rem, 5.2vw, 1.78rem);
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: 0.05em;
+  color: #0f172a;
+  text-transform: uppercase;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9),
+    0 4px 18px rgba(15, 23, 42, 0.07);
+}
+
+.fidelity-game-page .fidelity-roulette-title-line + .fidelity-roulette-title-line {
+  display: block;
+  margin-top: 0.22em;
+  font-size: 1.1em;
+  letter-spacing: 0.042em;
+  color: #020617;
+}
+
+.fidelity-game-page .fidelity-roulette-btn-row {
+  justify-content: center;
+  width: 100%;
+  padding: 0 0.75rem;
+  margin-top: 0.55rem;
+  margin-bottom: clamp(1.05rem, 4.2vw, 1.65rem);
+}
+
+.fidelity-game-page .fidelity-cta-pill--wheel-cta {
+  min-height: 3.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.fidelity-game-page .fidelity-cta-wheel-line {
+  font-size: clamp(1rem, 3.6vw, 1.12rem);
+  gap: 0.42rem 0.55rem;
+}
+
+.fidelity-game-page .fidelity-cta-wheel-emoji {
+  font-size: 1.22rem;
+}
+
 .fidelity-game-page .fidelity-roulette-wheel-zone {
   perspective: 1500px;
   perspective-origin: 52% 40%;
