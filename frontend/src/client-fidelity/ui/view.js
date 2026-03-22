@@ -297,7 +297,7 @@ export function renderClientPage(root, state, options = {}) {
             <div class="fidelity-v2-step-head-text">
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title fidelity-v2-step-title--rewards">
                 <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🎁</span>
-                <span class="fidelity-v2-step-title-label">Récupère tes récompenses</span>
+                <span class="fidelity-v2-step-title-label">Récompenses</span>
               </h2>
             </div>
           </header>
