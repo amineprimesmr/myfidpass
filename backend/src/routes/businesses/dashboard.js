@@ -25,6 +25,7 @@ import {
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { canAccessDashboard, getApiBase, normalizeHexForPatch, MAX_LOGO_BASE64_BYTES } from "./shared.js";
+import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 
 const router = Router();
 
@@ -439,6 +440,9 @@ router.get("/members", (req, res) => {
   const result = getMembersForBusiness(req.business.id, { search, limit, offset, filter, sort });
   res.json(result);
 });
+
+/** Même logique que POST /members/:id/points/remove — chemin dashboard pour éviter 404 si le sous-routeur members n’est pas à jour en prod. */
+router.post("/members/:memberId/points/remove", postMemberPointsRemove);
 
 // ——— Categories ———
 router.get("/categories", (req, res) => {

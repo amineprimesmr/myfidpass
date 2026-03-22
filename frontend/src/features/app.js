@@ -4872,11 +4872,14 @@ function initAppDashboard(slug) {
     }
     btn.disabled = true;
     try {
-      const res = await api(`/members/${encodeURIComponent(memberDetailOpenId)}/points/remove`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ points: n }),
-      });
+      const res = await api(
+        `/dashboard/members/${encodeURIComponent(memberDetailOpenId)}/points/remove`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ points: n }),
+        }
+      );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (msg) {
