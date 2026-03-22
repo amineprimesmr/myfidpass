@@ -72,7 +72,9 @@ function goToPricing(e) {
 }
 
 export function initLandingShell() {
-  document.querySelectorAll('#landing a[href="/choisir-offre"]').forEach((link) => link.addEventListener("click", goToPricing));
+  document.querySelectorAll('#landing a[href="/choisir-offre"], #auth-app a[href="/choisir-offre"]').forEach((link) =>
+    link.addEventListener("click", goToPricing)
+  );
 
   const landingHeroForm = document.getElementById("landing-hero-form");
   if (landingHeroForm) {

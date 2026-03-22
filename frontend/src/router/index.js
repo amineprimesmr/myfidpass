@@ -86,10 +86,13 @@ export function updateAuthNavLinks() {
   const isLoggedIn = !!getAuthToken();
   const label = isLoggedIn ? "Mon espace" : "Se connecter";
   const landingHref = isLoggedIn ? "/app" : "/login?redirect=/app";
-  document.querySelectorAll(".landing-nav-login-link, .landing-menu-drawer-login").forEach((a) => {
-    a.textContent = label;
-    a.href = landingHref;
-  });
+  /** Uniquement #landing : ne pas toucher aux CTA essai (auth, offres) qui réutilisaient la même classe. */
+  document
+    .querySelectorAll("#landing .landing-nav-login-link, #landing .landing-menu-drawer-nav .landing-menu-drawer-login")
+    .forEach((a) => {
+      a.textContent = label;
+      a.href = landingHref;
+    });
   const builderLogin = document.getElementById("builder-header-login");
   if (builderLogin) {
     builderLogin.textContent = label;
