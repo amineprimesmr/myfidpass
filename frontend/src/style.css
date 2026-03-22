@@ -1940,11 +1940,40 @@ body.fidpass-fidelity-route {
 
 .fidelity-game-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--fidpass-surface);
   padding: 0;
   position: relative;
+}
+
+/* CTA roue : collé en bas de l’écran, reste visible au scroll */
+.fidelity-game-page .fidelity-roulette-sticky-cta {
+  position: sticky;
+  bottom: 0;
+  z-index: 25;
+  flex-shrink: 0;
+  margin-top: auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.45rem 0.85rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(
+    180deg,
+    rgba(245, 245, 247, 0) 0%,
+    rgba(245, 245, 247, 0.75) 35%,
+    var(--fidpass-surface) 72%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.fidelity-game-page .fidelity-roulette-sticky-cta .fidelity-roulette-btn-row {
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  width: 100%;
 }
 
 .fidelity-game-back-float {

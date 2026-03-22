@@ -87,8 +87,20 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-roulette-title-line">Tourne la roue et</span>
             <span class="fidelity-roulette-title-line">${esc(gameSubtitle)}</span>
           </h2>
+        </div>
+        <div class="fidelity-roulette-wheel-zone">
+          <div class="fidelity-roulette-wheel-mount">
+            <div class="fidelity-roulette-wheel-outer">
+              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
+              <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
+              <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+        <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
+        <div class="fidelity-roulette-sticky-cta">
           <div class="fidelity-roulette-btn-row">
-            <span class="fidelity-cta-wrap">
+            <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
               <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" type="button" aria-label="${esc(spinCtaAriaLabel)}">
                 <span class="fidelity-cta-wheel-line">
                   <span class="${ticketStatusDotClass}" aria-hidden="true"></span>
@@ -102,16 +114,6 @@ export function renderClientPage(root, state, options = {}) {
             </span>
           </div>
         </div>
-        <div class="fidelity-roulette-wheel-zone">
-          <div class="fidelity-roulette-wheel-mount">
-            <div class="fidelity-roulette-wheel-outer">
-              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
-              <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
-              <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
-            </div>
-          </div>
-        </div>
-        <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
       </div>
     `;
     return;
