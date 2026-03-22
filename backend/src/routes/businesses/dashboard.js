@@ -104,8 +104,6 @@ router.patch("/settings", async (req, res) => {
   const required_stamps = body.required_stamps ?? body.requiredStamps;
   const stamp_emoji = body.stamp_emoji ?? body.stampEmoji;
   const stamp_reward_label = body.stamp_reward_label ?? body.stampRewardLabel;
-  const stamp_mid_reward_label =
-    body.stamp_mid_reward_label !== undefined ? body.stamp_mid_reward_label : body.stampMidRewardLabel;
   const program_type = body.program_type ?? body.programType;
   const points_per_euro = body.points_per_euro ?? body.pointsPerEuro;
   const points_per_visit = body.points_per_visit ?? body.pointsPerVisit;
@@ -199,12 +197,16 @@ router.patch("/settings", async (req, res) => {
     const v = stamp_reward_label == null || stamp_reward_label === "" ? null : String(stamp_reward_label).trim().slice(0, 120);
     updates.stamp_reward_label = v || null;
   }
-  if (stamp_mid_reward_label !== undefined) {
-    const v =
-      stamp_mid_reward_label == null || stamp_mid_reward_label === ""
-        ? null
-        : String(stamp_mid_reward_label).trim().slice(0, 120);
-    updates.stamp_mid_reward_label = v || null;
+  {
+    const stampMidIncoming =
+      body.stamp_mid_reward_label !== undefined ? body.stamp_mid_reward_label : body.stampMidRewardLabel;
+    if (stampMidIncoming !== undefined) {
+      const v =
+        stampMidIncoming == null || stampMidIncoming === ""
+          ? null
+          : String(stampMidIncoming).trim().slice(0, 120);
+      updates.stamp_mid_reward_label = v || null;
+    }
   }
   if (logo_base64 !== undefined) {
     if (logo_base64 === null || (typeof logo_base64 === "string" && logo_base64.trim() === "")) {

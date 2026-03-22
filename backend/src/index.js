@@ -186,6 +186,7 @@ function startServer(port) {
       console.log(`Backend fidélité: http://localhost:${server.address().port}`);
     }
     console.log(`  API: /api/businesses/:slug, /api/members — diagnostic: GET /api/health`);
+    console.log("  [api] dashboard PATCH settings: récompense 5ᵉ tampon lue depuis body (build 2026-03-22b)");
     try {
       const passRegCount = getPassRegistrationsTotalCount();
       console.log(`  [PassKit] Au démarrage: DATA_DIR=${process.env.DATA_DIR || "(défaut)"}, pass_registrations=${passRegCount}`);
