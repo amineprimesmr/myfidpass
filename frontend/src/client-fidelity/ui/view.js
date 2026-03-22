@@ -11,7 +11,7 @@ function esc(value) {
 function renderEngagementActionsMarkup(actions) {
   return actions
     .map((a) => {
-      const ticketCount = Math.min(10, Math.max(1, Number(a.points) || (a.action_type === "google_review" ? 2 : 1)));
+      const ticketCount = 1;
       const actionEmoji =
         a.action_type === "google_review" ? "⭐" : a.action_type === "instagram" ? "📸" : a.action_type === "facebook" ? "👍" : "🔗";
       return `

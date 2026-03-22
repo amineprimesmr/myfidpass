@@ -58,8 +58,7 @@ export function createEngagementCompletion(businessId, memberId, actionType, opt
   const requireApproval = actionType === "google_review" && config.require_approval;
   const forcedStatus = ["approved", "pending", "pending_review"].includes(options.statusOverride) ? options.statusOverride : null;
   const status = forcedStatus || (requireApproval ? "pending" : "approved");
-  const defaultTickets = actionType === "google_review" ? 2 : 1;
-  const ticketsToGrant = status === "approved" ? Math.min(10, Math.max(1, Math.floor(Number(config.points) || defaultTickets))) : 0;
+  const ticketsToGrant = status === "approved" ? 1 : 0;
   const id = randomUUID();
   db.prepare(
     `INSERT INTO engagement_completions (id, business_id, member_id, action_type, points_granted, status, proof_id, proof_score, created_at)
@@ -105,8 +104,7 @@ export function approveEngagementCompletion(completionId, businessId) {
   if (!c || (c.status !== "pending" && c.status !== "pending_review")) return null;
   const rewards = getEngagementRewards(businessId);
   const config = rewards[c.action_type];
-  const defaultTickets = c.action_type === "google_review" ? 2 : 1;
-  const tickets = Math.min(10, Math.max(1, Math.floor(Number(config?.points) || defaultTickets)));
+  const tickets = 1;
   db.prepare(
     "UPDATE engagement_completions SET status = 'approved', points_granted = 0, reviewed_at = datetime('now') WHERE id = ?"
   ).run(completionId);

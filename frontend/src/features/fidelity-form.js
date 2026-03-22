@@ -337,7 +337,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
     engagementActionsEl.innerHTML = actions
       .map(
         (a) => {
-          const tickets = Math.min(10, Math.max(1, Number(a.points) || (a.action_type === "google_review" ? 2 : 1)));
+          const tickets = 1;
           return `<div class="fidelity-engagement-item" data-action-type="${escapeHtmlFidelity(a.action_type)}">
               <div class="fidelity-engagement-item-info">
                 <span class="fidelity-engagement-item-label">${escapeHtmlFidelity(a.label)}</span>

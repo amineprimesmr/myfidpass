@@ -34,7 +34,7 @@ export function engagementActionsHandler(req, res) {
     actions.push({
       action_type: "google_review",
       label: "Laisser un avis Google",
-      points: Math.floor(Number(rewards.google_review.points)) || 50,
+      points: 1,
       url: `https://search.google.com/local/writereview?placeid=${encodeURIComponent(rewards.google_review.place_id.trim())}`,
       require_approval: !!rewards.google_review.require_approval,
       auto_verify_enabled: rewards.google_review.auto_verify_enabled !== false,
@@ -54,7 +54,7 @@ export function engagementActionsHandler(req, res) {
       actions.push({
         action_type: key,
         label: labels[key] || key,
-        points: Math.floor(Number(c.points)) || 10,
+        points: 1,
         url: String(c.url).trim(),
       });
     }

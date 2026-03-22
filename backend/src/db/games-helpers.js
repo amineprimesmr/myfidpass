@@ -3,8 +3,49 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { getBusinessById, resolveBusinessProgramType } from "./businesses.js";
 
 const db = getDb();
+
+/** Roue active ou mode jeu → 1 ticket offert si portefeuille encore vierge (solde 0, aucune écriture). */
+function businessEligibleForWelcomeTicket(businessId) {
+  const business = getBusinessById(businessId);
+  if (!business) return false;
+  const pt = resolveBusinessProgramType(business);
+  if (pt !== "points" && pt !== "stamps") return false;
+  const row = db
+    .prepare(
+      `SELECT bg.enabled FROM business_games bg
+       INNER JOIN games g ON g.id = bg.game_id AND g.code = 'roulette' AND g.active = 1
+       WHERE bg.business_id = ? LIMIT 1`
+    )
+    .get(businessId);
+  const rouletteOn = row && Number(row.enabled) === 1;
+  const gameTicketsMode = (business.loyalty_mode || "points_cash") === "points_game_tickets";
+  return Boolean(rouletteOn || gameTicketsMode);
+}
+
+function grantWelcomeTicketIfEligible(businessId, memberId) {
+  if (!businessEligibleForWelcomeTicket(businessId)) return;
+  const wallet = db
+    .prepare("SELECT ticket_balance FROM member_ticket_wallets WHERE member_id = ? AND business_id = ?")
+    .get(memberId, businessId);
+  if (!wallet || Number(wallet.ticket_balance) !== 0) return;
+  const ledgerCount =
+    db.prepare("SELECT COUNT(*) as n FROM ticket_ledger WHERE business_id = ? AND member_id = ?").get(businessId, memberId)?.n || 0;
+  if (ledgerCount > 0) return;
+  const tx = db.transaction(() => {
+    db.prepare(
+      "UPDATE member_ticket_wallets SET ticket_balance = 1, updated_at = datetime('now') WHERE member_id = ? AND business_id = ?"
+    ).run(memberId, businessId);
+    db.prepare(
+      `INSERT INTO ticket_ledger
+       (id, business_id, member_id, source_type, delta, balance_after, reference_type, reference_id, idempotency_key, metadata_json, created_at)
+       VALUES (?, ?, ?, 'welcome', 1, 1, 'welcome', NULL, NULL, ?, datetime('now'))`
+    ).run(randomUUID(), businessId, memberId, JSON.stringify({ reason: "first_wallet" }));
+  });
+  tx();
+}
 
 export function parseJsonSafe(value, fallback = null) {
   if (value == null || value === "") return fallback;
@@ -23,13 +64,10 @@ export function getDefaultPointsPerTicket(business) {
 }
 
 export function ensureMemberTicketWallet(businessId, memberId) {
-  const existing = db
-    .prepare("SELECT member_id, business_id, ticket_balance, updated_at FROM member_ticket_wallets WHERE member_id = ? AND business_id = ?")
-    .get(memberId, businessId);
-  if (existing) return existing;
   db.prepare(
     "INSERT OR IGNORE INTO member_ticket_wallets (member_id, business_id, ticket_balance, updated_at) VALUES (?, ?, 0, datetime('now'))"
   ).run(memberId, businessId);
+  grantWelcomeTicketIfEligible(businessId, memberId);
   return db
     .prepare("SELECT member_id, business_id, ticket_balance, updated_at FROM member_ticket_wallets WHERE member_id = ? AND business_id = ?")
     .get(memberId, businessId);
