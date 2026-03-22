@@ -102,6 +102,9 @@ router.patch("/settings", async (req, res) => {
   const organization_name = body.organization_name ?? body.organizationName;
   const background_color = body.background_color ?? body.backgroundColor;
   const foreground_color = body.foreground_color ?? body.foregroundColor;
+  const label_color = body.label_color ?? body.labelColor;
+  const back_terms = body.back_terms ?? body.backTerms;
+  const back_contact = body.back_contact ?? body.backContact;
   const required_stamps = body.required_stamps ?? body.requiredStamps;
   const stamp_emoji = body.stamp_emoji ?? body.stampEmoji;
   const stamp_reward_label = body.stamp_reward_label ?? body.stampRewardLabel;
@@ -137,6 +140,16 @@ router.patch("/settings", async (req, res) => {
     updates.strip_color = updates.background_color;
   }
   if (foreground_color !== undefined) updates.foreground_color = normalizeHexForPatch(foreground_color);
+  if (label_color !== undefined) {
+    updates.label_color =
+      label_color === null || label_color === "" ? null : normalizeHexForPatch(label_color);
+  }
+  if (back_terms !== undefined) {
+    updates.back_terms = back_terms == null ? null : String(back_terms).trim() || null;
+  }
+  if (back_contact !== undefined) {
+    updates.back_contact = back_contact == null ? null : String(back_contact).trim() || null;
+  }
   if (program_type !== undefined) {
     const v = program_type === null || program_type === "" ? null : String(program_type).trim().toLowerCase();
     updates.program_type = (v === "points" || v === "stamps") ? v : null;
