@@ -654,89 +654,6 @@ body {
   line-height: 1.5;
 }
 
-/* ── KPIs card ── */
-.fidelity-v2-kpis-card {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-  border-color: #1E293B;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2), 0 8px 32px rgba(15, 23, 42, 0.15);
-}
-
-.fidelity-v2-kpis-card::before {
-  background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.3), transparent);
-}
-
-.fidelity-v2-kpis {
-  display: flex;
-  gap: 1rem;
-  justify-content: space-around;
-}
-
-.fidelity-v2-kpi {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  text-align: center;
-}
-
-.fidelity-v2-kpi-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform var(--transition-bounce);
-}
-
-.fidelity-v2-kpi-icon:hover {
-  transform: scale(1.1) rotate(-3deg);
-}
-
-.fidelity-v2-kpi-icon svg {
-  width: 22px;
-  height: 22px;
-}
-
-.fidelity-v2-kpi-icon--points {
-  background: rgba(251, 191, 36, 0.15);
-  color: #FBBF24;
-}
-
-.fidelity-v2-kpi-icon--tickets {
-  background: rgba(167, 139, 250, 0.15);
-  color: #A78BFA;
-}
-
-.fidelity-v2-kpi-icon--mode {
-  background: rgba(52, 211, 153, 0.15);
-  color: #34D399;
-}
-
-.fidelity-v2-kpi-data {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.fidelity-v2-kpi-value {
-  font-size: 1.65rem;
-  font-weight: 800;
-  color: #F1F5F9;
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
-
-.fidelity-v2-kpi-label {
-  font-size: 0.7rem;
-  color: #64748B;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-}
-
 /* ── Signup form ── */
 .fidelity-v2-signup-header {
   margin-bottom: 1rem;
@@ -1554,19 +1471,6 @@ body {
 }
 
 .fidelity-v2-empty { color: #64748B; font-size: 0.875rem; }
-
-/* ── KPIs (legacy) ── */
-.fidelity-v2-kpis article {
-  background: #F8FAFC;
-  border-radius: 14px;
-  padding: 0.8rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.fidelity-v2-kpis span { color: #64748B; font-size: 0.78rem; }
-.fidelity-v2-kpis strong { color: #0F172A; font-size: 1.2rem; font-weight: 800; }
 
 @media (max-width: 640px) {
   .fidelity-v2-flow-grid { grid-template-columns: 1fr; }

@@ -387,7 +387,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   function bindEvents() {
     rootEl.querySelector("#fidelity-v2-form")?.addEventListener("submit", onSignupSubmit);
-    rootEl.querySelector("#fidelity-v2-refresh")?.addEventListener("click", refreshMemberData);
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
     rootEl.querySelectorAll(".fidelity-engagement-open-link").forEach((link) => {
