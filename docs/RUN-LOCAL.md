@@ -20,6 +20,8 @@ npm run dev
 
 Le frontend envoie les appels API vers `/api/...` ; Vite les proxyfie vers le backend (voir `frontend/vite.config.js`).
 
+**Roue en local (tickets illimités)** : le front affiche des tickets illimités sur `localhost` / `127.0.0.1` ; le backend **ne débite pas** le wallet au spin si le `Host` est local et `NODE_ENV !== 'production'` (voir `shouldSkipTicketConsumptionForLocalDev` dans `games-helpers.js`). `FIDPASS_LOCAL_UNLIMITED_TICKETS=0` désactive ce mode ; `=1` l’active même avec `NODE_ENV=production` (utile si tu testes en local avec `NODE_ENV=production`).
+
 ## Lancer séparément
 
 - Terminal 1 — backend : `npm run backend` (ou `node backend/src/index.js`)

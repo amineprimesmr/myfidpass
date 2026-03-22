@@ -292,6 +292,8 @@ export function spinGameForMember({
   clientIpHash = null,
   deviceHash = null,
   riskScore = 0,
+  /** Aligné front : localhost + tickets illimités — pas de débit wallet */
+  skipTicketConsumption = false,
 }) {
   const tx = db.transaction(() => {
     if (idempotencyKey) {
@@ -330,52 +332,60 @@ export function spinGameForMember({
     seedDefaultGameRewards(businessId, game.game_id);
     const wallet = ensureMemberTicketWallet(businessId, memberId);
     const ticketCost = Math.max(1, Number(game.ticket_cost) || 1);
-    const currentBalance = Number(wallet?.ticket_balance) || 0;
-    if (currentBalance < ticketCost) return { error: "not_enough_tickets", ticket_cost: ticketCost, ticket_balance: currentBalance };
-
-    const dailyLimit = Math.max(0, Number(game.daily_spin_limit) || 0);
-    if (dailyLimit > 0) {
-      const todayCount = db
-        .prepare(
-          `SELECT COUNT(*) as n FROM game_spins
-           WHERE business_id = ? AND member_id = ? AND game_id = ?
-             AND created_at >= datetime('now', 'start of day')`
-        )
-        .get(businessId, memberId, game.game_id)?.n;
-      if ((todayCount || 0) >= dailyLimit) return { error: "daily_limit_reached" };
-    }
-    const cooldownSeconds = Math.max(0, Number(game.cooldown_seconds) || 0);
-    if (cooldownSeconds > 0) {
-      const lastSpin = db
-        .prepare(
-          `SELECT id FROM game_spins
-           WHERE business_id = ? AND member_id = ? AND game_id = ?
-             AND created_at >= datetime('now', '-' || ? || ' seconds')
-           ORDER BY created_at DESC LIMIT 1`
-        )
-        .get(businessId, memberId, game.game_id, cooldownSeconds);
-      if (lastSpin) return { error: "cooldown_active", cooldown_seconds: cooldownSeconds };
+    const skipConsume = Boolean(skipTicketConsumption);
+    const rawBalance = Number(wallet?.ticket_balance) || 0;
+    if (!skipConsume && rawBalance < ticketCost) {
+      return { error: "not_enough_tickets", ticket_cost: ticketCost, ticket_balance: rawBalance };
     }
 
-    const nextBalance = currentBalance - ticketCost;
-    db.prepare(
-      "UPDATE member_ticket_wallets SET ticket_balance = ?, updated_at = datetime('now') WHERE member_id = ? AND business_id = ?"
-    ).run(nextBalance, memberId, businessId);
+    if (!skipConsume) {
+      const dailyLimit = Math.max(0, Number(game.daily_spin_limit) || 0);
+      if (dailyLimit > 0) {
+        const todayCount = db
+          .prepare(
+            `SELECT COUNT(*) as n FROM game_spins
+             WHERE business_id = ? AND member_id = ? AND game_id = ?
+               AND created_at >= datetime('now', 'start of day')`
+          )
+          .get(businessId, memberId, game.game_id)?.n;
+        if ((todayCount || 0) >= dailyLimit) return { error: "daily_limit_reached" };
+      }
+      const cooldownSeconds = Math.max(0, Number(game.cooldown_seconds) || 0);
+      if (cooldownSeconds > 0) {
+        const lastSpin = db
+          .prepare(
+            `SELECT id FROM game_spins
+             WHERE business_id = ? AND member_id = ? AND game_id = ?
+               AND created_at >= datetime('now', '-' || ? || ' seconds')
+             ORDER BY created_at DESC LIMIT 1`
+          )
+          .get(businessId, memberId, game.game_id, cooldownSeconds);
+        if (lastSpin) return { error: "cooldown_active", cooldown_seconds: cooldownSeconds };
+      }
+    }
+
+    const nextBalance = skipConsume ? rawBalance : rawBalance - ticketCost;
     const spinId = randomUUID();
-    db.prepare(
-      `INSERT INTO ticket_ledger
-       (id, business_id, member_id, source_type, delta, balance_after, reference_type, reference_id, idempotency_key, metadata_json, created_at)
-       VALUES (?, ?, ?, 'consume', ?, ?, 'spin', ?, ?, ?, datetime('now'))`
-    ).run(
-      randomUUID(),
-      businessId,
-      memberId,
-      -ticketCost,
-      nextBalance,
-      spinId,
-      idempotencyKey || null,
-      JSON.stringify({ game_code: gameCode, ticket_cost: ticketCost })
-    );
+
+    if (!skipConsume) {
+      db.prepare(
+        "UPDATE member_ticket_wallets SET ticket_balance = ?, updated_at = datetime('now') WHERE member_id = ? AND business_id = ?"
+      ).run(nextBalance, memberId, businessId);
+      db.prepare(
+        `INSERT INTO ticket_ledger
+         (id, business_id, member_id, source_type, delta, balance_after, reference_type, reference_id, idempotency_key, metadata_json, created_at)
+         VALUES (?, ?, ?, 'consume', ?, ?, 'spin', ?, ?, ?, datetime('now'))`
+      ).run(
+        randomUUID(),
+        businessId,
+        memberId,
+        -ticketCost,
+        nextBalance,
+        spinId,
+        idempotencyKey || null,
+        JSON.stringify({ game_code: gameCode, ticket_cost: ticketCost })
+      );
+    }
 
     ensureRouletteRewardsForProgram(businessId, programType);
     const kindFilter =

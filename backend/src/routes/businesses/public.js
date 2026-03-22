@@ -8,6 +8,7 @@ import {
   getMemberForBusiness,
   getRoulettePublicSegments,
   resolveBusinessProgramType,
+  shouldSkipTicketConsumptionForLocalDev,
   spinGameForMember,
 } from "../../db.js";
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
@@ -80,6 +81,8 @@ function spinsHandler(req, res) {
     const idempotencyKey = getIdempotencyKey(req);
     const clientIpHash = buildIpHash(req);
     const deviceHash = buildDeviceHash(req.body?.client_fingerprint ?? req.body?.clientFingerprint ?? "");
+    const host = String(req.get("x-forwarded-host") || req.get("host") || "");
+    const skipTicketConsumption = shouldSkipTicketConsumptionForLocalDev(host);
     const result = spinGameForMember({
       businessId: business.id,
       memberId: member.id,
@@ -88,6 +91,7 @@ function spinsHandler(req, res) {
       clientIpHash,
       deviceHash,
       riskScore: deviceHash ? 0.15 : 0.35,
+      skipTicketConsumption,
     });
     if (result?.error === "mode_disabled") return res.status(400).json({ error: "Mode jeu désactivé", code: "MODE_DISABLED" });
     if (result?.error === "game_disabled") return res.status(400).json({ error: "Jeu indisponible", code: "GAME_DISABLED" });

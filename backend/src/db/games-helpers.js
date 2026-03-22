@@ -7,6 +7,27 @@ import { getBusinessById, resolveBusinessProgramType } from "./businesses.js";
 
 const db = getDb();
 
+/**
+ * Même logique que le front (`isUnlimitedTicketsTest`) : sur localhost / 127.0.0.1,
+ * ne pas exiger ni consommer de tickets au spin (démo & dev).
+ * Désactiver : FIDPASS_LOCAL_UNLIMITED_TICKETS=0
+ * Forcer (ex. NODE_ENV=production en local) : FIDPASS_LOCAL_UNLIMITED_TICKETS=1
+ *
+ * @param {string | undefined} hostHeader Host ou X-Forwarded-Host (ex. localhost:5174)
+ */
+export function shouldSkipTicketConsumptionForLocalDev(hostHeader) {
+  const raw = String(hostHeader || "").trim().toLowerCase();
+  /* IPv6 [::1]:port → bracket form */
+  const host = raw.startsWith("[")
+    ? raw.slice(1, raw.indexOf("]")) || raw
+    : raw.split(":")[0];
+  const local = host === "localhost" || host === "127.0.0.1" || host === "::1";
+  if (!local) return false;
+  if (process.env.FIDPASS_LOCAL_UNLIMITED_TICKETS === "0") return false;
+  if (process.env.FIDPASS_LOCAL_UNLIMITED_TICKETS === "1") return true;
+  return process.env.NODE_ENV !== "production";
+}
+
 /** Roue active ou mode « points → tickets » : bonus ticket (bienvenue, profil, etc.). */
 export function businessUsesTicketBonuses(businessId) {
   const business = getBusinessById(businessId);
