@@ -730,33 +730,6 @@
                 </div>
               </details>
             </div>
-
-            <div
-              id="app-member-detail-drawer"
-              class="app-member-drawer hidden"
-              aria-hidden="true"
-              aria-modal="true"
-              role="dialog"
-              aria-labelledby="app-member-detail-title"
-            >
-              <button type="button" class="app-member-drawer__scrim" id="app-member-drawer-scrim" aria-label="Fermer le panneau"></button>
-              <div class="app-member-drawer__panel">
-                <header class="app-member-drawer__header">
-                  <div>
-                    <p class="app-member-drawer__eyebrow">Membre</p>
-                    <h2 id="app-member-detail-title" class="app-member-drawer__title">Fiche client</h2>
-                  </div>
-                  <button type="button" class="app-member-drawer__close" id="app-member-drawer-close" aria-label="Fermer">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  </button>
-                </header>
-                <div class="app-member-drawer__scroll">
-                  <div id="app-member-detail-body" class="app-member-drawer__body"></div>
-                </div>
-              </div>
-            </div>
           </section>
 
           <section id="personnaliser" class="app-section">
@@ -1540,6 +1513,32 @@
             </ul>
           </section>
         </div>
+      <div
+        id="app-member-detail-drawer"
+        class="app-member-drawer hidden"
+        aria-hidden="true"
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="app-member-detail-title"
+      >
+        <button type="button" class="app-member-drawer__scrim" id="app-member-drawer-scrim" aria-label="Fermer le panneau"></button>
+        <div class="app-member-drawer__panel">
+          <header class="app-member-drawer__header">
+            <div>
+              <p class="app-member-drawer__eyebrow">Membre</p>
+              <h2 id="app-member-detail-title" class="app-member-drawer__title">Fiche client</h2>
+            </div>
+            <button type="button" class="app-member-drawer__close" id="app-member-drawer-close" aria-label="Fermer">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </header>
+          <div class="app-member-drawer__scroll">
+            <div id="app-member-detail-body" class="app-member-drawer__body"></div>
+          </div>
+        </div>
+      </div>
       <div id="app-unsaved-changes-modal" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="app-unsaved-title" aria-hidden="true">
         <div class="app-modal-backdrop" id="app-unsaved-backdrop"></div>
         <div class="app-modal-content app-modal-content--unsaved">
