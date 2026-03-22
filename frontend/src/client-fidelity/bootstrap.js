@@ -203,29 +203,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     }
     if (submitBtn) submitBtn.disabled = true;
     try {
-      const data = await api.submitProfileForTicket(slug, state.member.id, {
+      await api.submitProfileForTicket(slug, state.member.id, {
         phone,
         city,
         birth_date: birthRaw,
       });
-      if (data?.member) {
-        store.patch({ member: { ...state.member, ...data.member } });
-      }
       await refreshMemberData();
-      if (feedback) {
-        feedback.classList.remove("hidden");
-        if (data.ticket_granted > 0) {
-          feedback.textContent = "+1 ticket ajouté à ta carte !";
-          feedback.classList.add("success");
-        } else if (data.already_done) {
-          feedback.textContent = "Profil déjà enregistré.";
-          feedback.classList.add("success");
-        } else {
-          feedback.textContent = "Profil enregistré.";
-          feedback.classList.add("success");
-        }
-      }
-      rerender();
     } catch (err) {
       if (feedback) {
         feedback.textContent = err.message || "Enregistrement impossible.";
