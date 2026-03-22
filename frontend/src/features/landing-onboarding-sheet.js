@@ -1,10 +1,8 @@
 /**
- * Bottom sheet onboarding — overlay sur la landing, drawer depuis le bas.
- * Ouverture depuis les CTA « Essayez 7 jours gratuitement » (même logique qu’une landing type essai).
- * Utilise le nom d’établissement du hero si renseigné. Onboarding builder (logo, style, objectifs, etc.).
+ * Bottom sheet onboarding (builder) — conservé dans le DOM pour d’éventuels parcours internes.
+ * Le parcours public « essai » passe par /choisir-offre (page tarifs).
  */
 import { API_BASE } from "../config.js";
-import { initRouting } from "../router/index.js";
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";

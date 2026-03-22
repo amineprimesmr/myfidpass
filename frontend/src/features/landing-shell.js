@@ -1,10 +1,9 @@
 /**
- * Shell landing : formulaire hero, Google Places, menus drawer, bottom sheet onboarding.
+ * Shell landing : formulaire hero, Google Places, menus drawer, navigation vers page tarifs.
  * Appelé au chargement pour attacher les listeners (formulaire, menus, script Places).
  */
-import { openOnboardingSheet, initOnboardingSheet } from "./landing-onboarding-sheet.js";
+import { navigateToPricing } from "../router/index.js";
 
-/** Le CTA principal reste actif (parcours type essai gratuit, comme une landing SaaS). */
 function updateLandingCtaState() {
   const btn = document.getElementById("landing-hero-submit");
   if (btn) btn.disabled = false;
@@ -67,14 +66,13 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
   });
 }
 
+function goToPricing(e) {
+  e.preventDefault();
+  navigateToPricing().catch((err) => console.error("[Myfidpass] navigation tarifs", err));
+}
+
 export function initLandingShell() {
-  initOnboardingSheet();
-  function openSheet(e) {
-    e.preventDefault();
-    openOnboardingSheet();
-  }
-  document.querySelectorAll(".landing-cta-try").forEach((link) => link.addEventListener("click", openSheet));
-  document.querySelectorAll("#landing a[href*='creer-ma-carte']").forEach((link) => link.addEventListener("click", openSheet));
+  document.querySelectorAll('#landing a[href="/choisir-offre"]').forEach((link) => link.addEventListener("click", goToPricing));
 
   const landingHeroForm = document.getElementById("landing-hero-form");
   if (landingHeroForm) {
@@ -120,10 +118,7 @@ export function initLandingShell() {
       });
     }
     updateLandingCtaState();
-    landingHeroForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      openOnboardingSheet();
-    });
+    landingHeroForm.addEventListener("submit", goToPricing);
   }
 
   const landingMenuToggle = document.getElementById("landing-menu-toggle");

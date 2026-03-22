@@ -1,0 +1,252 @@
+/**
+ * Page tarifs /choisir-offre — présentation type modal SaaS (réf. Limova),
+ * couleurs Myfidpass (bleu nuit, accent bleu roi).
+ */
+#offers-app.offers-pricing-shell {
+  --op-bg: #0a0a0c;
+  --op-card: #12121a;
+  --op-border: rgba(255, 255, 255, 0.08);
+  --op-text: #f4f4f5;
+  --op-muted: #a1a1aa;
+  --op-accent: #3b82f6;
+  --op-accent-hover: #2563eb;
+  --op-accent-glow: rgba(59, 130, 246, 0.35);
+  font-family: "Outfit", system-ui, sans-serif;
+  background: var(--op-bg);
+  color: var(--op-text);
+  min-height: 100vh;
+}
+
+#offers-app.offers-pricing-shell .unified-main.offers-main {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+#offers-app.offers-pricing-shell .offers-pricing-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--op-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  transition: color 0.2s ease;
+}
+
+#offers-app.offers-pricing-shell .offers-pricing-back:hover {
+  color: var(--op-text);
+}
+
+#offers-app.offers-pricing-shell .offers-pricing-card {
+  background: linear-gradient(165deg, rgba(30, 58, 138, 0.12) 0%, var(--op-card) 45%);
+  border: 1px solid var(--op-border);
+  border-radius: 24px;
+  padding: 1.5rem 1.35rem 1.75rem;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+#offers-app.offers-pricing-shell .offers-pricing-headline {
+  font-size: clamp(1.35rem, 4.5vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+#offers-app.offers-pricing-shell .offers-billing-toggle {
+  display: flex;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  border: 1px solid var(--op-border);
+  margin-bottom: 1.35rem;
+}
+
+#offers-app.offers-pricing-shell .offers-billing-option {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--op-muted);
+  cursor: default;
+  font-family: inherit;
+}
+
+#offers-app.offers-pricing-shell .offers-billing-option.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--op-text);
+}
+
+#offers-app.offers-pricing-shell .offers-plan-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+#offers-app.offers-pricing-shell .offers-plan-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 0 0 0.2rem;
+}
+
+#offers-app.offers-pricing-shell .offers-plan-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--op-muted);
+  line-height: 1.4;
+}
+
+#offers-app.offers-pricing-shell .offers-trial-badge {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--op-text);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+#offers-app.offers-pricing-shell .offers-popular-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  vertical-align: middle;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  background: var(--op-accent);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+#offers-app.offers-pricing-shell .offers-price-block {
+  margin: 1rem 0 1.25rem;
+}
+
+#offers-app.offers-pricing-shell .offers-price-main {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+#offers-app.offers-pricing-shell .offers-price-suffix {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--op-muted);
+  margin-left: 0.25rem;
+}
+
+#offers-app.offers-pricing-shell .offers-price-note {
+  font-size: 0.8rem;
+  color: var(--op-muted);
+  margin: 0.35rem 0 0;
+}
+
+#offers-app.offers-pricing-shell #offers-btn-starter {
+  width: 100%;
+  display: block;
+  border: none;
+  border-radius: 999px;
+  padding: 0.95rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, var(--op-accent), var(--op-accent-hover));
+  box-shadow: 0 4px 24px var(--op-accent-glow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+#offers-app.offers-pricing-shell #offers-btn-starter:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px var(--op-accent-glow);
+}
+
+#offers-app.offers-pricing-shell #offers-btn-starter:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+#offers-app.offers-pricing-shell .offers-features {
+  margin: 1.5rem 0 0;
+  padding: 1.25rem 0 0;
+  border-top: 1px solid var(--op-border);
+}
+
+#offers-app.offers-pricing-shell .offers-features ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#offers-app.offers-pricing-shell .offers-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  margin-bottom: 0.65rem;
+  color: #e4e4e7;
+}
+
+#offers-app.offers-pricing-shell .offers-features li:last-child {
+  margin-bottom: 0;
+}
+
+#offers-app.offers-pricing-shell .offers-feature-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.25);
+  color: var(--op-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  margin-top: 0.1rem;
+}
+
+#offers-app.offers-pricing-shell .offers-feature-group {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--op-muted);
+  margin: 1rem 0 0.5rem;
+}
+
+#offers-app.offers-pricing-shell .offers-feature-group:first-of-type {
+  margin-top: 0;
+}
+
+#offers-app.offers-pricing-shell .offers-dev-bypass-wrap {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+
+@media (min-width: 480px) {
+  #offers-app.offers-pricing-shell .unified-main.offers-main {
+    padding-top: 1.5rem;
+  }
+
+  #offers-app.offers-pricing-shell .offers-pricing-card {
+    padding: 1.75rem 1.6rem 2rem;
+  }
+}
