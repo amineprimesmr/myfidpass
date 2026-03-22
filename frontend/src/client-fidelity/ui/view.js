@@ -133,8 +133,8 @@ export function renderClientPage(root, state, options = {}) {
         <!-- HERO nouveau visiteur (bénéfices client : pas la « carte » en soi) -->
         <section class="fidelity-v2-hero fidelity-v2-hero-new">
           <div class="fidelity-v2-hero-icon">🎁</div>
-          <h1 class="fidelity-v2-hero-title">Remises, offres &amp; cadeaux</h1>
-          <p class="fidelity-v2-hero-subtitle">Chez <strong>${esc(businessName)}</strong>, profite d’avantages réservés aux clients : réductions, produits offerts et surprises. Ton prénom et ton e-mail suffisent pour commencer.</p>
+          <h1 class="fidelity-v2-hero-title">Découvrez votre cadeau</h1>
+          <p class="fidelity-v2-hero-subtitle">Chez <strong>${esc(businessName)}</strong>, un instant suffit.</p>
         </section>
       `}
 
