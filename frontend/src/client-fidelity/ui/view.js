@@ -122,7 +122,7 @@ export function renderClientPage(root, state, options = {}) {
   const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
   const step2Title = showRoulette
-    ? "Tourne la roue"
+    ? "Gagne des points"
     : actionsForDisplay.length
       ? "Gagne des tickets & bonus"
       : showClassicProgram
@@ -254,7 +254,7 @@ export function renderClientPage(root, state, options = {}) {
               ${showRoulette ? `
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title fidelity-v2-step-title--roulette">
                 <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🎡</span>
-                <span class="fidelity-v2-step-title-label">Tourne la roue</span>
+                <span class="fidelity-v2-step-title-label">${esc(step2Title)}</span>
               </h2>
               ` : `
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
