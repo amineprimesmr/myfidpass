@@ -72,9 +72,9 @@
   position: absolute;
   right: 0;
   top: 50%;
-  width: min(125vmin, 125vw);
-  height: min(125vmin, 125vw);
-  transform: translate(-28%, -50%);
+  width: min(138vmin, 138vw);
+  height: min(138vmin, 138vw);
+  transform: translate(-24%, -50%);
   transform-style: preserve-3d;
   pointer-events: none;
 }
@@ -85,7 +85,7 @@
   height: 100%;
   right: auto;
   top: auto;
-  transform: rotateX(14deg) scale(0.97);
+  transform: rotateX(14deg) scale(1);
   transform-style: preserve-3d;
 }
 
@@ -180,30 +180,24 @@
   box-shadow: none;
 }
 
+/* Flèche classique (triangle vers le centre), pas le vieux « quart de pastille + point » */
 .fidelity-game-page .fidelity-roulette-indicator {
-  right: 1.5%;
+  right: 0.6%;
   top: 50%;
-  width: min(7vmin, 34px);
-  height: min(14vmin, 64px);
+  width: min(11vmin, 52px);
+  height: min(13vmin, 62px);
   z-index: 10;
-  transform: translateY(-50%) rotate(44deg);
-  transform-origin: 70% 50%;
-  background: linear-gradient(165deg, #fff8e7 0%, #d4a84b 35%, #b45309 92%);
-  border-radius: 50% 50% 50% 0;
-  box-shadow:
-    0 3px 0 rgba(120, 53, 15, 0.55),
-    0 10px 24px rgba(180, 83, 9, 0.45),
-    0 4px 10px rgba(0, 0, 0, 0.25),
-    inset 0 2px 0 rgba(255, 255, 255, 0.55);
-  filter: drop-shadow(-2px 6px 4px rgba(0, 0, 0, 0.2));
+  transform: translateY(-50%);
+  transform-origin: 0 50%;
+  background: linear-gradient(118deg, #fff7d6 0%, #f59e0b 38%, #c2410c 72%, #7c2d12 100%);
+  clip-path: polygon(0% 50%, 100% 5%, 100% 95%);
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(-3px 4px 8px rgba(0, 0, 0, 0.35));
 }
 
 .fidelity-game-page .fidelity-roulette-indicator::after {
-  width: 32%;
-  height: 32%;
-  top: 51%;
-  background: radial-gradient(circle at 38% 35%, #fff 0%, #cbd5e1 40%, #0f172a 100%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  display: none;
 }
 
 .fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
@@ -221,17 +215,19 @@
 
 @media (max-width: 480px) {
   .fidelity-game-page .fidelity-roulette-wheel-mount {
-    /* Légèrement plus petit sur mobile = moins de pixels à composer */
-    width: min(118vmin, 118vw);
-    height: min(118vmin, 118vw);
+    width: min(128vmin, 128vw);
+    height: min(128vmin, 128vw);
+    transform: translate(-22%, -50%);
   }
 
   .fidelity-game-page .fidelity-roulette-wheel-outer {
-    transform: rotateX(9deg) scale(0.94);
+    transform: rotateX(9deg) scale(0.99);
   }
 
   .fidelity-game-page .fidelity-roulette-indicator {
-    right: 0.5%;
+    right: 0.35%;
+    width: min(10vmin, 46px);
+    height: min(12vmin, 56px);
   }
 }
 
