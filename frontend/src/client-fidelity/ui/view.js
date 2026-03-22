@@ -1,3 +1,5 @@
+import { renderEngagementActionsMarkup } from "./mission-markup.js";
+
 function esc(value) {
   return String(value == null ? "" : value)
     .replaceAll("&", "&amp;")
@@ -5,34 +7,6 @@ function esc(value) {
     .replaceAll(">", "&gt;")
     .replaceAll("\"", "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-/** Lignes missions (étape 2) — extrait pour garder le template lisible. */
-function renderEngagementActionsMarkup(actions) {
-  return actions
-    .map((a) => {
-      const ticketCount = 1;
-      const actionEmoji =
-        a.action_type === "google_review" ? "⭐" : a.action_type === "instagram" ? "📸" : a.action_type === "facebook" ? "👍" : "🔗";
-      return `
-            <div class="fidelity-engagement-item" data-action-type="${esc(a.action_type)}">
-              <div class="fidelity-engagement-item-emoji">${actionEmoji}</div>
-              <div class="fidelity-engagement-item-info">
-                <span class="fidelity-engagement-item-label">${esc(a.label)}</span>
-                <span class="fidelity-engagement-item-points">+${ticketCount} ticket${ticketCount > 1 ? "s" : ""}</span>
-              </div>
-              <div class="fidelity-engagement-item-btns">
-                <span class="fidelity-cta-wrap">
-                  <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-cta-pill fidelity-cta-pill--compact fidelity-engagement-open-link" data-action-type="${esc(a.action_type)}">
-                    <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-                    <span class="fidelity-cta-pill-label">Ouvrir</span>
-                    <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                  </a>
-                </span>
-              </div>
-            </div>`;
-    })
-    .join("");
 }
 
 export function renderClientPage(root, state, options = {}) {
@@ -104,7 +78,7 @@ export function renderClientPage(root, state, options = {}) {
   const baseTrim = String(apiBase || "").replace(/\/$/, "");
   const logoSrc = hasServerLogo && logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : null;
 
-  const engagementHtml = renderEngagementActionsMarkup(actions);
+  const engagementHtml = renderEngagementActionsMarkup(actions, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
   const step2Title = showRoulette
     ? "Tourne la roue"

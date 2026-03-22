@@ -1505,64 +1505,7 @@ body {
   line-height: 1.45;
 }
 
-/* ── Engagement actions ── */
-.fidelity-engagement-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.fidelity-engagement-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  transition: background var(--transition), border-color var(--transition), transform var(--transition);
-}
-
-.fidelity-engagement-item:hover {
-  background: #EEF4FF;
-  border-color: rgba(37, 99, 235, 0.2);
-  transform: translateX(2px);
-}
-
-.fidelity-engagement-item-emoji {
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.fidelity-engagement-item-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.fidelity-engagement-item-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #0F172A;
-}
-
-.fidelity-engagement-item-points {
-  font-size: 0.8rem;
-  color: #7C3AED;
-  font-weight: 700;
-}
-
-.fidelity-engagement-item-btns {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.fidelity-engagement-item-btns .fidelity-cta-wrap {
-  flex: 0 0 auto;
-}
+/* Cartes missions : voir fidelity-missions.css */
 
 .fidelity-engagement-feedback {
   font-size: 0.875rem;

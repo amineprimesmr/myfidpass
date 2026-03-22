@@ -7,6 +7,7 @@ import { getRoute } from "../router/index.js";
 import { CARD_TEMPLATES } from "../constants/builder.js";
 import { escapeHtmlForServer } from "../utils/apiError.js";
 import { initClientFidelityPage } from "../client-fidelity/bootstrap.js";
+import { renderEngagementActionsMarkup } from "../client-fidelity/ui/mission-markup.js";
 
 const fidelityAppEl = document.getElementById("fidelity-app");
 
@@ -334,22 +335,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
       return;
     }
     engagementBlock.classList.remove("hidden");
-    engagementActionsEl.innerHTML = actions
-      .map(
-        (a) => {
-          const tickets = 1;
-          return `<div class="fidelity-engagement-item" data-action-type="${escapeHtmlFidelity(a.action_type)}">
-              <div class="fidelity-engagement-item-info">
-                <span class="fidelity-engagement-item-label">${escapeHtmlFidelity(a.label)}</span>
-                <span class="fidelity-engagement-item-points">+${tickets} ticket${tickets > 1 ? "s" : ""}</span>
-              </div>
-              <div class="fidelity-engagement-item-btns">
-                <a href="${escapeHtmlFidelity(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-btn fidelity-btn-secondary fidelity-engagement-open" data-action-type="${escapeHtmlFidelity(a.action_type)}">Ouvrir</a>
-              </div>
-            </div>`;
-        }
-      )
-      .join("");
+    engagementActionsEl.innerHTML = renderEngagementActionsMarkup(actions, escapeHtmlFidelity);
     const PENDING_CLAIM_KEY_MAIN = "fidelity_pending_engagement_claim";
     const PENDING_CLAIM_MIN_MS = 45000;
     const PENDING_CLAIM_MAX_MS = 24 * 60 * 60 * 1000;
@@ -377,7 +363,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
         }
       } catch (_) {}
     }
-    engagementActionsEl.querySelectorAll(".fidelity-engagement-open").forEach((openBtn) => {
+    engagementActionsEl.querySelectorAll(".fidelity-engagement-open-link").forEach((openBtn) => {
       openBtn.addEventListener("click", () => {
         const actionType = openBtn.getAttribute("data-action-type");
         if (actionType) {

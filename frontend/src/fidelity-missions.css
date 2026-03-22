@@ -1,0 +1,249 @@
+/* Cartes missions fidélité — un style par réseau / type d’action */
+
+.fidelity-engagement-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.fidelity-mission-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: 18px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fidelity-mission-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.12);
+}
+
+.fidelity-mission-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.45), 0 8px 28px rgba(15, 23, 42, 0.12);
+}
+
+.fidelity-mission-card__icon {
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.fidelity-mission-card__svg {
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+
+.fidelity-mission-card__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.fidelity-mission-card__label {
+  font-weight: 700;
+  font-size: 0.94rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.fidelity-mission-card__reward {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.fidelity-mission-card__reward-plus {
+  font-weight: 800;
+}
+
+.fidelity-mission-card__cta {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.fidelity-mission-card__cta-arrow {
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+/* ── Google ── */
+.fidelity-mission-card--google {
+  background: #fff;
+  border-color: #e8eaed;
+  color: #202124;
+}
+
+.fidelity-mission-card--google .fidelity-mission-card__reward {
+  color: #188038;
+}
+
+.fidelity-mission-card--google .fidelity-mission-card__cta {
+  background: #f1f3f4;
+  color: #1967d2;
+}
+
+.fidelity-mission-card--google:hover .fidelity-mission-card__cta {
+  background: #e8f0fe;
+}
+
+/* ── Instagram ── */
+.fidelity-mission-card--instagram {
+  background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 45%, #fcb045 100%);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fidelity-mission-card--instagram .fidelity-mission-card__reward {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.fidelity-mission-card--instagram .fidelity-mission-card__cta {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.fidelity-mission-card--instagram:hover .fidelity-mission-card__cta {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* ── Facebook ── */
+.fidelity-mission-card--facebook {
+  background: linear-gradient(145deg, #1877f2 0%, #0d4bab 100%);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.fidelity-mission-card--facebook .fidelity-mission-card__reward {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.fidelity-mission-card--facebook .fidelity-mission-card__cta {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.fidelity-mission-card--facebook:hover .fidelity-mission-card__cta {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ── TikTok ── */
+.fidelity-mission-card--tiktok {
+  background: linear-gradient(145deg, #010101 0%, #121212 50%, #2a2a2a 100%);
+  color: #fff;
+  border-color: rgba(37, 244, 238, 0.35);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.fidelity-mission-card--tiktok .fidelity-mission-card__reward {
+  color: #25f4ee;
+}
+
+.fidelity-mission-card--tiktok .fidelity-mission-card__cta {
+  background: rgba(254, 44, 85, 0.9);
+  color: #fff;
+}
+
+.fidelity-mission-card--tiktok:hover .fidelity-mission-card__cta {
+  background: #fe2c55;
+}
+
+/* ── X (Twitter) ── */
+.fidelity-mission-card--twitter {
+  background: linear-gradient(145deg, #000 0%, #1a1a1a 100%);
+  color: #fff;
+  border-color: #333;
+}
+
+.fidelity-mission-card--twitter .fidelity-mission-card__reward {
+  color: #e7e9ea;
+}
+
+.fidelity-mission-card--twitter .fidelity-mission-card__cta {
+  background: #fff;
+  color: #000;
+}
+
+.fidelity-mission-card--twitter:hover .fidelity-mission-card__cta {
+  background: #e7e9ea;
+}
+
+/* ── Trustpilot ── */
+.fidelity-mission-card--trustpilot {
+  background: linear-gradient(135deg, #00b67a 0%, #048a5c 100%);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fidelity-mission-card--trustpilot .fidelity-mission-card__reward {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.fidelity-mission-card--trustpilot .fidelity-mission-card__cta {
+  background: rgba(255, 255, 255, 0.95);
+  color: #00b67a;
+}
+
+.fidelity-mission-card--trustpilot:hover .fidelity-mission-card__cta {
+  background: #fff;
+}
+
+/* ── Tripadvisor ── */
+.fidelity-mission-card--tripadvisor {
+  background: linear-gradient(135deg, #00af87 0%, #007e6a 100%);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fidelity-mission-card--tripadvisor .fidelity-mission-card__reward {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.fidelity-mission-card--tripadvisor .fidelity-mission-card__cta {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.fidelity-mission-card--tripadvisor:hover .fidelity-mission-card__cta {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* ── Autres / lien ── */
+.fidelity-mission-card--generic {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.fidelity-mission-card--generic .fidelity-mission-card__reward {
+  color: #4f46e5;
+}
+
+.fidelity-mission-card--generic .fidelity-mission-card__cta {
+  background: #0f172a;
+  color: #fff;
+}
+
+.fidelity-mission-card--generic:hover .fidelity-mission-card__cta {
+  background: #1e293b;
+}
