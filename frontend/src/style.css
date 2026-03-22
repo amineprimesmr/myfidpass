@@ -1119,6 +1119,13 @@ body {
   flex-shrink: 0;
 }
 
+/* Même pastille que les CTA SaaS : rouge si 0 ticket */
+.fidelity-v2-main .fidelity-cta-pill-dot--empty-tickets,
+.fidelity-game-page .fidelity-cta-pill-dot--empty-tickets {
+  background: #ef4444;
+  box-shadow: 0 0 10px 3px rgba(239, 68, 68, 0.52);
+}
+
 .fidelity-v2-main .fidelity-cta-pill-label,
 .fidelity-game-page .fidelity-cta-pill-label {
   flex: 1 1 auto;
@@ -1139,7 +1146,7 @@ body {
   line-height: 1;
 }
 
-/* CTA roue : ligne unique centrée (🎟️ + N tickets · action) */
+/* CTA roue : pastille + 🎟️ + N tickets */
 .fidelity-v2-main .fidelity-cta-pill--wheel-cta,
 .fidelity-game-page .fidelity-cta-pill--wheel-cta {
   justify-content: center;
@@ -1175,21 +1182,6 @@ body {
 .fidelity-cta-wheel-tickets {
   font-weight: 700;
   white-space: nowrap;
-}
-
-.fidelity-cta-wheel-sep {
-  opacity: 0.5;
-  font-weight: 500;
-  user-select: none;
-}
-
-.fidelity-cta-wheel-action {
-  font-weight: 600;
-}
-
-.fidelity-cta-pill--wheel-cta .fidelity-cta-pill-chevron {
-  margin-left: 0.1rem;
-  opacity: 0.85;
 }
 
 .fidelity-v2-main .fidelity-cta-pill .fidelity-cta-pill-icon,

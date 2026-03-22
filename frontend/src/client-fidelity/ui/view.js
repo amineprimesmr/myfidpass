@@ -24,6 +24,8 @@ export function renderClientPage(root, state, options = {}) {
   const programType = String(state.business?.program_type || "points").toLowerCase();
   const isStampsProgram = programType === "stamps";
   const tickets = state.unlimitedTicketsTest ? 999 : Number(state.tickets?.ticket_balance || 0);
+  const ticketStatusDotClass =
+    tickets > 0 ? "fidelity-cta-pill-dot" : "fidelity-cta-pill-dot fidelity-cta-pill-dot--empty-tickets";
   const roulette = (state.games || []).find((g) => g.game_code === "roulette");
   const showRoulette = !!(roulette && roulette.enabled && (programType === "points" || programType === "stamps"));
   const engagementActionsRaw = Array.isArray(state.engagementActions) ? state.engagementActions : [];
@@ -272,11 +274,9 @@ export function renderClientPage(root, state, options = {}) {
               <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
                 <a href="${gamePageUrl}" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" id="fidelity-v2-game-cta" aria-label="${esc(gameCtaAriaLabel)}">
                   <span class="fidelity-cta-wheel-line">
+                    <span class="${ticketStatusDotClass}" aria-hidden="true"></span>
                     <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
                     <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${esc(String(tickets))} ticket${tickets !== 1 ? "s" : ""}</span>
-                    <span class="fidelity-cta-wheel-sep" aria-hidden="true">·</span>
-                    <span class="fidelity-cta-wheel-action">Tourner la roue</span>
-                    <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
                   </span>
                 </a>
               </span>
