@@ -16,6 +16,7 @@ import {
   pickWeightedReward,
   DEFAULT_ROULETTE_POINT_REWARDS,
   DEFAULT_ROULETTE_STAMP_REWARDS,
+  businessUsesTicketBonuses,
 } from "./games-helpers.js";
 
 export { addTicketsForEngagement } from "./games-helpers.js";
@@ -322,6 +323,10 @@ export function spinGameForMember({
     if (!member) return { error: "member_not_found" };
     const game = ensureBusinessGame(businessId, gameCode);
     if (!game || !game.enabled) return { error: "game_disabled" };
+    const loyaltyMode = String(business.loyalty_mode || "points_cash").trim();
+    if (loyaltyMode !== "points_game_tickets" && !businessUsesTicketBonuses(business.id)) {
+      return { error: "mode_disabled" };
+    }
     seedDefaultGameRewards(businessId, game.game_id);
     const wallet = ensureMemberTicketWallet(businessId, memberId);
     const ticketCost = Math.max(1, Number(game.ticket_cost) || 1);

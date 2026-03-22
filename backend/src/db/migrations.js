@@ -3,7 +3,11 @@
  * Référence : REFONTE-REGLES.md — db découpé par domaine.
  */
 import { randomUUID } from "crypto";
-import { DEMO_POINTS_REWARD_TIERS_JSON, DEMO_ENGAGEMENT_REWARDS_JSON } from "./demo-business-defaults.js";
+import {
+  DEMO_LOYALTY_MODE,
+  DEMO_POINTS_REWARD_TIERS_JSON,
+  DEMO_ENGAGEMENT_REWARDS_JSON,
+} from "./demo-business-defaults.js";
 
 function safeRun(db, fn) {
   try {
@@ -278,6 +282,27 @@ export function runMigrations(db) {
       "INSERT INTO games (id, code, name, type, active, config_json, created_at) VALUES (?, 'roulette', 'Roulette FidPass', 'roulette', 1, ?, datetime('now'))"
     ).run(gameId, JSON.stringify({ display_name: "Roulette", min_client_version: 1 }));
   }
+  safeRun(db, () => {
+    const demoRow = db.prepare("SELECT id FROM businesses WHERE LOWER(TRIM(slug)) = 'demo' LIMIT 1").get();
+    const gameRow = db.prepare("SELECT id FROM games WHERE code = 'roulette' AND active = 1 LIMIT 1").get();
+    if (!demoRow || !gameRow) return;
+    const existing = db
+      .prepare("SELECT id FROM business_games WHERE business_id = ? AND game_id = ? LIMIT 1")
+      .get(demoRow.id, gameRow.id);
+    const profile = JSON.stringify({ profile: "default" });
+    if (!existing) {
+      const id = randomUUID();
+      db.prepare(
+        `INSERT INTO business_games (id, business_id, game_id, enabled, ticket_cost, daily_spin_limit, cooldown_seconds, weight_profile_json, created_at, updated_at)
+         VALUES (?, ?, ?, 1, 1, 100, 0, ?, datetime('now'), datetime('now'))`
+      ).run(id, demoRow.id, gameRow.id, profile);
+    } else {
+      db.prepare(
+        `UPDATE business_games SET enabled = 1, cooldown_seconds = 0, daily_spin_limit = 100, updated_at = datetime('now')
+         WHERE business_id = ? AND game_id = ?`
+      ).run(demoRow.id, gameRow.id);
+    }
+  });
   const cols = db.prepare("PRAGMA table_info(engagement_completions)").all().map((c) => c.name);
   if (!cols.includes("proof_id")) db.exec("ALTER TABLE engagement_completions ADD COLUMN proof_id TEXT");
   if (!cols.includes("proof_score")) db.exec("ALTER TABLE engagement_completions ADD COLUMN proof_score REAL");

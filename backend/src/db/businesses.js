@@ -3,7 +3,11 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { DEMO_POINTS_REWARD_TIERS_JSON, DEMO_ENGAGEMENT_REWARDS_JSON } from "./demo-business-defaults.js";
+import {
+  DEMO_LOYALTY_MODE,
+  DEMO_POINTS_REWARD_TIERS_JSON,
+  DEMO_ENGAGEMENT_REWARDS_JSON,
+} from "./demo-business-defaults.js";
 
 const db = getDb();
 
@@ -135,8 +139,8 @@ export function ensureDefaultBusiness() {
   if (!b) {
     const id = randomUUID();
     db.prepare(
-      `INSERT INTO businesses (id, name, slug, organization_name, back_terms, back_contact, points_reward_tiers, engagement_rewards)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO businesses (id, name, slug, organization_name, back_terms, back_contact, loyalty_mode, points_reward_tiers, engagement_rewards)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       id,
       "Demo Fast-Food",
@@ -144,6 +148,7 @@ export function ensureDefaultBusiness() {
       "Demo Fast-Food",
       "1 point = 1 € de réduction. Valable en magasin.",
       "contact@example.com",
+      DEMO_LOYALTY_MODE,
       DEMO_POINTS_REWARD_TIERS_JSON,
       DEMO_ENGAGEMENT_REWARDS_JSON,
     );

@@ -3,6 +3,9 @@
  * Paliers points + missions engagement toutes actives avec URLs factices.
  */
 
+/** Mode tickets + rouleau : évite MODE_DISABLED sur conversion / jeu */
+export const DEMO_LOYALTY_MODE = "points_game_tickets";
+
 export const DEMO_POINTS_REWARD_TIERS_JSON = JSON.stringify([
   { points: 50, label: "Boisson offerte" },
   { points: 100, label: "Menu du jour" },

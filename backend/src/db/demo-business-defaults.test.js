@@ -1,7 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { DEMO_POINTS_REWARD_TIERS_JSON, DEMO_ENGAGEMENT_REWARDS_JSON } from "./demo-business-defaults.js";
+import {
+  DEMO_LOYALTY_MODE,
+  DEMO_POINTS_REWARD_TIERS_JSON,
+  DEMO_ENGAGEMENT_REWARDS_JSON,
+} from "./demo-business-defaults.js";
 
 describe("demo-business-defaults", () => {
+  it("définit le mode fidélité jeu / tickets pour la démo", () => {
+    expect(DEMO_LOYALTY_MODE).toBe("points_game_tickets");
+  });
+
   it("exporte des paliers points JSON valides", () => {
     const tiers = JSON.parse(DEMO_POINTS_REWARD_TIERS_JSON);
     expect(Array.isArray(tiers)).toBe(true);
