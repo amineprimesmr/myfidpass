@@ -144,7 +144,6 @@ export function renderClientPage(root, state, options = {}) {
     member: state.member,
     programType,
     balanceUnit: headerBalanceUnit,
-    stampEmoji: stampEmojiHeader,
   });
   const nextRewardBannerState = buildNextRewardBannerState({
     hasMember,

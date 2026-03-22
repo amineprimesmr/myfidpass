@@ -1,121 +1,7 @@
-/* Paliers + progression — section récompenses client fidélité v2 */
+/* Paliers — section récompenses client fidélité v2 */
 
 .fid-tiers-block {
   margin-bottom: 1.35rem;
-}
-
-.fid-tiers-progress-card {
-  position: relative;
-  overflow: hidden;
-  padding: 1.05rem 1.15rem 1.15rem;
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(250, 245, 255, 0.95) 0%, rgba(240, 253, 250, 0.75) 48%, rgba(239, 246, 255, 0.9) 100%);
-  border: 1px solid rgba(196, 181, 253, 0.45);
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06);
-  margin-bottom: 1rem;
-}
-
-.fid-tiers-progress-card::before {
-  content: "";
-  position: absolute;
-  inset: -40% 50% 40% -20%;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.2) 0%, transparent 65%);
-  pointer-events: none;
-}
-
-.fid-tiers-progress-head {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  margin-bottom: 0.55rem;
-}
-
-.fid-tiers-progress-kicker {
-  font-size: 0.68rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #64748b;
-}
-
-.fid-tiers-balance-line {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-left: auto;
-}
-
-.fid-tiers-emoji {
-  font-size: 1.15rem;
-  line-height: 1;
-}
-
-.fid-tiers-balance-num {
-  font-family: "Plus Jakarta Sans", var(--font, system-ui), sans-serif;
-  font-size: 1.65rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: #0f172a;
-  line-height: 1;
-}
-
-.fid-tiers-balance-unit {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #475569;
-  text-transform: lowercase;
-}
-
-.fid-tiers-next-msg {
-  position: relative;
-  margin: 0 0 0.85rem;
-  font-size: 0.84rem;
-  line-height: 1.5;
-  color: #334155;
-}
-
-.fid-tiers-next-msg strong {
-  color: #0f172a;
-}
-
-.fid-tiers-bar {
-  position: relative;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.08);
-  overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
-}
-
-.fid-tiers-bar-fill {
-  height: 100%;
-  width: var(--fid-tier-pct, 0%);
-  border-radius: 999px;
-  background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 40%, #10b981 100%);
-  transition: width 0.45s cubic-bezier(0.2, 0.85, 0.25, 1);
-}
-
-.fid-tiers-bar-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: var(--fid-tier-pct, 0%);
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-  pointer-events: none;
-  opacity: 0.85;
-}
-
-.fid-tiers-range-caption {
-  margin: 0.45rem 0 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #64748b;
-  letter-spacing: 0.02em;
 }
 
 .fid-tiers-empty-card {
@@ -243,10 +129,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fid-tiers-bar-fill {
-    transition: none;
-  }
-
   .fid-tiers-step-marker {
     transition: none;
   }

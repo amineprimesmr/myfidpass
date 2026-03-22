@@ -6,7 +6,7 @@ function idEsc(s) {
 }
 
 describe("renderRewardsStepMarkup", () => {
-  it("affiche paliers points et message de progression", () => {
+  it("affiche la liste des paliers points", () => {
     const html = renderRewardsStepMarkup(idEsc, {
       business: {
         points_reward_tiers: [
@@ -17,14 +17,13 @@ describe("renderRewardsStepMarkup", () => {
       member: { points: 40 },
       programType: "points",
       balanceUnit: "pts",
-      stampEmoji: "",
     });
     expect(html).toContain("fid-tiers-block");
     expect(html).toContain("Boisson");
     expect(html).toContain("Menu");
-    expect(html).toContain("Encore");
     expect(html).toContain("50");
-    expect(html).toContain("fid-tiers-bar");
+    expect(html).toContain("fid-tiers-track");
+    expect(html).not.toContain("fid-tiers-progress-card");
   });
 
   it("affiche paliers tampons avec récompense intermédiaire à 5", () => {
@@ -37,9 +36,7 @@ describe("renderRewardsStepMarkup", () => {
       member: { points: 3 },
       programType: "stamps",
       balanceUnit: "tampons",
-      stampEmoji: "🥐",
     });
-    expect(html).toContain("🥐");
     expect(html).toContain("Viennoiserie");
     expect(html).toContain("Menu offert");
     expect(html).toContain("5");
