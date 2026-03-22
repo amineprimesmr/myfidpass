@@ -63,7 +63,7 @@ export function renderClientPage(root, state, options = {}) {
   const spinCtaAriaLabel = `Lancer la roue — ${tickets} ticket${tickets !== 1 ? "s" : ""} disponible${tickets !== 1 ? "s" : ""}`;
 
   if (gamePage) {
-    const gameSubtitle = isStampsProgram ? "gagne des passages bonus" : "gagne des points bonus";
+    const gameSubtitle = isStampsProgram ? "Gagne des passages bonus" : "Gagne des points bonus";
     root.innerHTML = `
       <div class="fidelity-game-page">
         <a href="${backUrl}" class="fidelity-game-back-float">← Retour</a>

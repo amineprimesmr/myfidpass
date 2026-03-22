@@ -13,26 +13,25 @@
   margin-bottom: 1.05rem;
 }
 
+/* Même UX typo que .fidelity-v2-step-title--roulette / --rewards (carte fidélité) */
 .fidelity-game-page .fidelity-roulette-title {
   margin: 0 auto clamp(1.4rem, 4.5vw, 2rem);
   max-width: min(20rem, 94vw);
-  font-size: clamp(1.14rem, 5.2vw, 1.78rem);
+  font-family: "Plus Jakarta Sans", var(--font, system-ui), sans-serif;
+  font-size: clamp(1.22rem, 4.8vw, 1.42rem);
   font-weight: 800;
-  line-height: 1.16;
-  letter-spacing: 0.05em;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
   color: #0f172a;
-  text-transform: uppercase;
-  text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9),
-    0 4px 18px rgba(15, 23, 42, 0.07);
+  text-transform: none;
 }
 
 .fidelity-game-page .fidelity-roulette-title-line + .fidelity-roulette-title-line {
   display: block;
-  margin-top: 0.22em;
-  font-size: 1.1em;
-  letter-spacing: 0.042em;
-  color: #020617;
+  margin-top: 0.18em;
+  font-size: 1em;
+  letter-spacing: -0.04em;
+  color: #0f172a;
 }
 
 .fidelity-game-page .fidelity-roulette-btn-row {
