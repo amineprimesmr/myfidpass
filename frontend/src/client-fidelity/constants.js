@@ -1,5 +1,7 @@
 export const STORAGE_MEMBER_KEY_PREFIX = "fidpass_success_";
 export const STORAGE_ADDED_KEY_PREFIX = "fidpass_added_";
+/** Confirmation honnête « carte ajoutée au Wallet » (localStorage, par slug + membre). */
+export const STORAGE_WALLET_CONFIRMED_PREFIX = "fidpass_wallet_confirmed_";
 export const SUCCESS_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7;
 
 export function memberStorageKey(slug) {
@@ -8,4 +10,8 @@ export function memberStorageKey(slug) {
 
 export function addedStorageKey(slug, memberId) {
   return `${STORAGE_ADDED_KEY_PREFIX}${slug}:${memberId}`;
+}
+
+export function walletConfirmedStorageKey(slug, memberId) {
+  return `${STORAGE_WALLET_CONFIRMED_PREFIX}${encodeURIComponent(slug)}:${memberId}`;
 }

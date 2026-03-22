@@ -1,7 +1,7 @@
 import { createClientFidelityApi } from "./api/clientApi.js";
 import { createClientFidelityStore } from "./state/store.js";
 import { renderClientPage } from "./ui/view.js";
-import { memberStorageKey, SUCCESS_MAX_AGE_MS } from "./constants.js";
+import { memberStorageKey, SUCCESS_MAX_AGE_MS, walletConfirmedStorageKey } from "./constants.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -153,7 +153,26 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     return div.innerHTML;
   }
 
+  function readWalletConfirmed() {
+    const mid = store.get().member?.id;
+    if (!mid) return false;
+    try {
+      return localStorage.getItem(walletConfirmedStorageKey(slug, mid)) === "1";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function writeWalletConfirmed() {
+    const mid = store.get().member?.id;
+    if (!mid) return;
+    try {
+      localStorage.setItem(walletConfirmedStorageKey(slug, mid), "1");
+    } catch (_) {}
+  }
+
   function rerender() {
+    store.patch({ walletConfirmed: readWalletConfirmed() });
     renderClientPage(rootEl, store.get(), { gamePage, slug, apiBase });
     bindEvents();
     if (!isSpinning) {
@@ -222,6 +241,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   async function onSpinRoulette() {
     if (isSpinning) return;
+    if (!readWalletConfirmed()) {
+      document.getElementById("fidelity-v2-wallet")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
 
     const state = store.get();
     const wheelEl = rootEl.querySelector("#fidelity-roulette-wheel");
@@ -387,6 +410,16 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   function bindEvents() {
     rootEl.querySelector("#fidelity-v2-form")?.addEventListener("submit", onSignupSubmit);
+    rootEl.querySelector("#fidelity-v2-wallet-confirm")?.addEventListener("click", () => {
+      writeWalletConfirmed();
+      store.patch({ walletConfirmed: true });
+      rerender();
+    });
+    rootEl.querySelectorAll(".fidelity-v2-scroll-to-wallet").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.getElementById("fidelity-v2-wallet")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
     rootEl.querySelectorAll(".fidelity-engagement-open-link").forEach((link) => {

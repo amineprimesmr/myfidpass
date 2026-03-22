@@ -9,6 +9,8 @@ export function createClientFidelityStore(initial = {}) {
     rewards: [],
     engagementActions: [],
     engagementDone: [],
+    /** Débloque étapes 2–3 après confirmation utilisateur (voir localStorage). */
+    walletConfirmed: false,
     ...initial,
   };
 

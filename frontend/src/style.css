@@ -774,6 +774,187 @@ body {
   }
 }
 
+/* ── Confirmation Wallet (étape 1) + verrou étapes 2–3 ── */
+.fidelity-v2-wallet-confirm {
+  margin-top: 1.15rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #eff6ff 100%);
+  border: 1px solid #bfdbfe;
+}
+
+.fidelity-v2-wallet-confirm-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.fidelity-v2-wallet-confirm-desc {
+  margin: 0 0 0.85rem;
+  font-size: 0.84rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.fidelity-v2-wallet-confirm-btn {
+  display: block;
+  width: 100%;
+  margin: 0 0 0.65rem;
+  padding: 0.75rem 1rem;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fidelity-v2-wallet-confirm-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+}
+
+.fidelity-v2-wallet-confirm-later {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.fidelity-v2-wallet-confirm-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.fidelity-v2-wallet-done {
+  margin: 1rem 0 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #166534;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.fidelity-v2-wallet-done-icon {
+  font-weight: 800;
+}
+
+.fidelity-v2-step-body--gate {
+  position: relative;
+  min-height: 7rem;
+}
+
+.fidelity-v2-step-body--gate .fidelity-v2-step-body-inner {
+  filter: blur(3px);
+  opacity: 0.38;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fidelity-v2-step-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.25rem 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+.fidelity-v2-step-lock-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.fidelity-v2-step-lock-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.fidelity-v2-step-lock-text {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+  max-width: 18rem;
+}
+
+.fidelity-v2-step-lock-link {
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0.35rem;
+}
+
+.fidelity-v2-step-lock-link:hover {
+  color: #1d4ed8;
+}
+
+.fidelity-v2-step--locked {
+  border-style: dashed;
+  border-color: #cbd5e1;
+}
+
+.fidelity-game-wallet-banner {
+  max-width: 420px;
+  margin: 0 auto 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fdba74;
+  text-align: center;
+}
+
+.fidelity-game-wallet-banner-text {
+  margin: 0 0 0.65rem;
+  font-size: 0.84rem;
+  color: #431407;
+  line-height: 1.45;
+}
+
+.fidelity-game-wallet-banner-link {
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #c2410c;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.fidelity-game-page .fidelity-cta-pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none;
+}
+
 /* ── Signup form ── */
 .fidelity-v2-signup-header {
   margin-bottom: 1rem;
