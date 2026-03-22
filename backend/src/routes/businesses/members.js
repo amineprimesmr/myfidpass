@@ -23,6 +23,7 @@ import {
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
+import { patchMemberProfile } from "./member-patch-handler.js";
 import { generatePass } from "../../pass.js";
 import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
 import { getIdempotencyKey, canAccessDashboard } from "./shared.js";
@@ -213,6 +214,9 @@ router.get("/:memberId", (req, res) => {
     profile_bonus_claimed: Number(member.profile_ticket_bonus_granted) === 1,
   });
 });
+
+// ——— PATCH /:memberId ——— (coordonnées : nom, téléphone, ville, naissance)
+router.patch("/:memberId", patchMemberProfile);
 
 // ——— POST /:memberId/points/remove ——— (correction caisse : retire des points sans passer par une récompense)
 router.post("/:memberId/points/remove", postMemberPointsRemove);

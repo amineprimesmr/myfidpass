@@ -4826,18 +4826,33 @@ function initAppDashboard(slug) {
     </li>`;
   }
 
-  function memberDetailMarkup(m, transactions) {
+  async function dashboardProgramIsStamps() {
+    try {
+      const settingsRes = await api("/dashboard/settings");
+      if (!settingsRes.ok) return scannerProgramType === "stamps";
+      const data = await settingsRes.json();
+      let pt = (data.program_type ?? data.programType ?? "").toLowerCase();
+      if (pt !== "points" && pt !== "stamps") {
+        pt = (data.required_stamps ?? data.requiredStamps) > 0 ? "stamps" : "points";
+      }
+      return pt === "stamps";
+    } catch (_) {
+      return scannerProgramType === "stamps";
+    }
+  }
+
+  function memberDetailMarkup(m, transactions, isStamps) {
     const rawName = (m.name || m.email || "?").trim();
     const initial = rawName ? rawName.charAt(0).toUpperCase() : "?";
     const pointsVal = m.points ?? 0;
     const lastVisit = m.last_visit_at ? formatDate(m.last_visit_at) : "—";
-    const metaChips = [
-      m.phone ? `<span class="app-member-meta__chip">${escapeHtml(m.phone)}</span>` : "",
-      m.city ? `<span class="app-member-meta__chip">${escapeHtml(m.city)}</span>` : "",
-      m.birth_date ? `<span class="app-member-meta__chip">${escapeHtml(m.birth_date)}</span>` : "",
-    ]
-      .filter(Boolean)
-      .join("");
+    const unitLabel = isStamps ? "tampons" : "points";
+    const unitSuffix = isStamps ? "tampons" : "pts";
+    const statBalanceLabel = isStamps ? "Tampons" : "Points";
+    const birthVal =
+      m.birth_date && String(m.birth_date).trim()
+        ? String(m.birth_date).trim().slice(0, 10)
+        : "";
     const txRows = (transactions || []).map(formatMemberTransactionLine).join("");
     const historyBlock = txRows
       ? `<ul class="app-member-timeline" role="list">${txRows}</ul>`
@@ -4852,27 +4867,60 @@ function initAppDashboard(slug) {
       </div>
       <div class="app-member-stats">
         <div class="app-member-stat">
-          <span class="app-member-stat__label">Solde</span>
-          <span class="app-member-stat__value">${escapeHtml(String(pointsVal))}<span class="app-member-stat__suffix">pts</span></span>
+          <span class="app-member-stat__label">${escapeHtml(statBalanceLabel)}</span>
+          <span class="app-member-stat__value">${escapeHtml(String(pointsVal))}<span class="app-member-stat__suffix">${escapeHtml(unitSuffix)}</span></span>
         </div>
         <div class="app-member-stat">
           <span class="app-member-stat__label">Dernier passage</span>
           <span class="app-member-stat__value app-member-stat__value--muted">${escapeHtml(lastVisit)}</span>
         </div>
       </div>
-      ${metaChips ? `<div class="app-member-meta" role="list">${metaChips}</div>` : ""}
-      <section class="app-member-section" aria-labelledby="app-member-history-title">
-        <h3 id="app-member-history-title" class="app-member-section__title">Historique</h3>
-        ${historyBlock}
+      <section class="app-member-profile" aria-labelledby="app-member-profile-title">
+        <h3 id="app-member-profile-title" class="app-member-section__title">Coordonnées</h3>
+        <p class="app-member-adjust__hint">L’email sert d’identifiant sur la carte et n’est pas modifiable ici.</p>
+        <p class="app-member-profile__email-readonly">${escapeHtml(m.email || "—")}</p>
+        <div class="app-member-profile__grid">
+          <div class="app-member-profile__field">
+            <label class="app-member-profile__label" for="app-member-field-name">Nom affiché</label>
+            <input type="text" id="app-member-field-name" class="app-member-profile__input" autocomplete="name" value="${escapeHtmlForServer(m.name || "")}" />
+          </div>
+          <div class="app-member-profile__field">
+            <label class="app-member-profile__label" for="app-member-field-phone">Téléphone</label>
+            <input type="tel" id="app-member-field-phone" class="app-member-profile__input" autocomplete="tel" value="${escapeHtmlForServer(m.phone || "")}" placeholder="Optionnel" />
+          </div>
+          <div class="app-member-profile__field">
+            <label class="app-member-profile__label" for="app-member-field-city">Ville</label>
+            <input type="text" id="app-member-field-city" class="app-member-profile__input" autocomplete="address-level2" value="${escapeHtmlForServer(m.city || "")}" placeholder="Optionnel" />
+          </div>
+          <div class="app-member-profile__field">
+            <label class="app-member-profile__label" for="app-member-field-birth">Date de naissance</label>
+            <input type="date" id="app-member-field-birth" class="app-member-profile__input" value="${escapeHtmlForServer(birthVal)}" />
+          </div>
+        </div>
+        <button type="button" class="app-member-adjust__btn app-member-adjust__btn--secondary" id="app-member-save-profile-btn">Enregistrer les coordonnées</button>
+        <p id="app-member-profile-msg" class="app-member-adjust__feedback hidden" role="status"></p>
       </section>
-      <section class="app-member-adjust" aria-labelledby="app-member-adjust-title">
-        <h3 id="app-member-adjust-title" class="app-member-adjust__title">Retirer des points</h3>
-        <p class="app-member-adjust__hint">En cas d’erreur de caisse. L’opération est enregistrée ; le client peut être notifié sur Apple Wallet.</p>
+      <section class="app-member-adjust" aria-labelledby="app-member-add-title">
+        <h3 id="app-member-add-title" class="app-member-adjust__title">Ajouter des ${escapeHtml(unitLabel)}</h3>
+        <p class="app-member-adjust__hint">Crédit manuel (bonus, geste commercial, correction). Inscrit dans l’historique ; notification Wallet possible.</p>
         <div class="app-member-adjust__row">
-          <input type="number" min="1" step="1" id="app-member-remove-points-input" class="app-member-adjust__input" placeholder="Nombre" inputmode="numeric" aria-label="Nombre de points à retirer" />
+          <input type="number" min="1" step="1" id="app-member-add-points-input" class="app-member-adjust__input" placeholder="Nombre" inputmode="numeric" aria-label="Nombre à ajouter" />
+          <button type="button" class="app-member-adjust__btn" id="app-member-add-points-btn">Ajouter</button>
+        </div>
+        <p id="app-member-add-points-msg" class="app-member-adjust__feedback hidden" role="status"></p>
+      </section>
+      <section class="app-member-adjust" aria-labelledby="app-member-remove-title">
+        <h3 id="app-member-remove-title" class="app-member-adjust__title">Retirer des ${escapeHtml(unitLabel)}</h3>
+        <p class="app-member-adjust__hint">En cas d’erreur de caisse. Inscrit dans l’historique ; notification Wallet possible.</p>
+        <div class="app-member-adjust__row">
+          <input type="number" min="1" step="1" id="app-member-remove-points-input" class="app-member-adjust__input" placeholder="Nombre" inputmode="numeric" aria-label="Nombre à retirer" />
           <button type="button" class="app-member-adjust__btn" id="app-member-remove-points-btn">Retirer</button>
         </div>
         <p id="app-member-remove-points-msg" class="app-member-adjust__feedback hidden" role="status"></p>
+      </section>
+      <section class="app-member-section" aria-labelledby="app-member-history-title">
+        <h3 id="app-member-history-title" class="app-member-section__title">Historique</h3>
+        ${historyBlock}
       </section>
     `;
   }
@@ -4882,15 +4930,17 @@ function initAppDashboard(slug) {
     const member = allMembers.find((x) => x.id === memberDetailOpenId);
     const base = member || { id: memberDetailOpenId };
     try {
-      const [full, data] = await Promise.all([
+      const [full, data, isStamps] = await Promise.all([
         api(`/members/${encodeURIComponent(memberDetailOpenId)}`).then((r) => (r.ok ? r.json() : base)),
         api(`/dashboard/transactions?memberId=${encodeURIComponent(memberDetailOpenId)}&limit=20`).then((r) =>
           r.ok ? r.json() : { transactions: [] }
         ),
+        dashboardProgramIsStamps(),
       ]);
       const m = { ...base, ...full };
       memberDetailOpenId = m.id;
-      memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || []);
+      memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || [], isStamps);
+      memberDetailBody.dataset.programStamps = isStamps ? "1" : "0";
     } catch (_) {
       memberDetailBody.innerHTML = '<p class="app-member-drawer__error">Impossible de charger ce membre.</p>';
     }
@@ -4906,11 +4956,13 @@ function initAppDashboard(slug) {
       api(`/dashboard/transactions?memberId=${encodeURIComponent(member.id)}&limit=20`).then((r) =>
         r.ok ? r.json() : { transactions: [] }
       ),
+      dashboardProgramIsStamps(),
     ])
-      .then(([full, data]) => {
+      .then(([full, data, isStamps]) => {
         const m = { ...member, ...full };
         memberDetailOpenId = m.id;
-        memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || []);
+        memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || [], isStamps);
+        memberDetailBody.dataset.programStamps = isStamps ? "1" : "0";
       })
       .catch(() => {
         memberDetailBody.innerHTML = '<p class="app-member-drawer__error">Impossible de charger ce membre.</p>';
@@ -4923,8 +4975,116 @@ function initAppDashboard(slug) {
   }
 
   memberDetailDrawer?.addEventListener("click", async (e) => {
+    if (!memberDetailOpenId || !memberDetailBody) return;
+
+    const saveProfileBtn = e.target.closest("#app-member-save-profile-btn");
+    if (saveProfileBtn) {
+      e.preventDefault();
+      const name = memberDetailBody.querySelector("#app-member-field-name")?.value?.trim() ?? "";
+      const phone = memberDetailBody.querySelector("#app-member-field-phone")?.value?.trim() ?? "";
+      const city = memberDetailBody.querySelector("#app-member-field-city")?.value?.trim() ?? "";
+      const birthRaw = memberDetailBody.querySelector("#app-member-field-birth")?.value?.trim() ?? "";
+      const msg = memberDetailBody.querySelector("#app-member-profile-msg");
+      if (!name) {
+        if (msg) {
+          msg.textContent = "Le nom est obligatoire.";
+          msg.classList.remove("hidden", "is-success");
+          msg.classList.add("is-error");
+        }
+        return;
+      }
+      saveProfileBtn.disabled = true;
+      try {
+        const res = await api(`/dashboard/members/${encodeURIComponent(memberDetailOpenId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            phone: phone || null,
+            city: city || null,
+            birth_date: birthRaw || null,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (msg) {
+            msg.textContent = data.error || "Erreur";
+            msg.classList.remove("is-success");
+            msg.classList.add("is-error");
+            msg.classList.remove("hidden");
+          }
+        } else if (msg) {
+          msg.textContent = "Coordonnées enregistrées.";
+          msg.classList.remove("is-error");
+          msg.classList.add("is-success");
+          msg.classList.remove("hidden");
+        }
+        window.dispatchEvent(new Event("app-members-refresh"));
+        await refreshMemberDetailPanel();
+      } catch (_) {
+        if (msg) {
+          msg.textContent = "Erreur réseau.";
+          msg.classList.remove("is-success");
+          msg.classList.add("is-error");
+          msg.classList.remove("hidden");
+        }
+      }
+      saveProfileBtn.disabled = false;
+      return;
+    }
+
+    const addBtn = e.target.closest("#app-member-add-points-btn");
+    if (addBtn) {
+      e.preventDefault();
+      const input = memberDetailBody.querySelector("#app-member-add-points-input");
+      const msg = memberDetailBody.querySelector("#app-member-add-points-msg");
+      const n = parseInt(input?.value, 10);
+      if (!input || !Number.isFinite(n) || n < 1) {
+        if (msg) {
+          msg.textContent = "Indiquez un nombre entier ≥ 1.";
+          msg.classList.remove("hidden", "is-success", "is-error");
+        }
+        return;
+      }
+      addBtn.disabled = true;
+      try {
+        const res = await api(`/members/${encodeURIComponent(memberDetailOpenId)}/points`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ points: n }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (msg) {
+            msg.textContent = data.error || "Erreur";
+            msg.classList.remove("is-success");
+            msg.classList.add("is-error");
+            msg.classList.remove("hidden");
+          }
+        } else if (msg) {
+          const added = data.points_added ?? n;
+          msg.textContent = `+${added} crédité(s). Nouveau solde : ${data.points ?? "—"}.`;
+          msg.classList.remove("is-error");
+          msg.classList.add("is-success");
+          msg.classList.remove("hidden");
+        }
+        input.value = "";
+        window.dispatchEvent(new Event("app-members-refresh"));
+        await refreshMemberDetailPanel();
+      } catch (_) {
+        if (msg) {
+          msg.textContent = "Erreur réseau.";
+          msg.classList.remove("is-success");
+          msg.classList.add("is-error");
+          msg.classList.remove("hidden");
+        }
+      }
+      addBtn.disabled = false;
+      return;
+    }
+
     const btn = e.target.closest("#app-member-remove-points-btn");
-    if (!btn || !memberDetailOpenId || !memberDetailBody) return;
+    if (!btn) return;
     e.preventDefault();
     const input = memberDetailBody.querySelector("#app-member-remove-points-input");
     const msg = memberDetailBody.querySelector("#app-member-remove-points-msg");
@@ -4936,6 +5096,7 @@ function initAppDashboard(slug) {
       }
       return;
     }
+    const unitWord = memberDetailBody.dataset.programStamps === "1" ? "tampons" : "points";
     btn.disabled = true;
     try {
       const res = await api(
@@ -4958,7 +5119,7 @@ function initAppDashboard(slug) {
         return;
       }
       if (msg) {
-        msg.textContent = `Retiré : ${data.points_removed ?? n} pts. Nouveau solde : ${data.points} pts.`;
+        msg.textContent = `Retiré : ${data.points_removed ?? n} ${unitWord}. Nouveau solde : ${data.points}.`;
         msg.classList.remove("is-error");
         msg.classList.add("is-success");
         msg.classList.remove("hidden");

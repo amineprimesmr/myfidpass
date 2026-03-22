@@ -1,0 +1,109 @@
+/**
+ * Panneau membre — formulaire coordonnées + bouton secondaire (REFONTE : CSS < 500 lignes).
+ */
+#app-app .app-member-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+#app-app .app-member-meta__chip {
+  font-size: 0.8125rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--app-text, #1a202c);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+#app-app .app-member-profile {
+  margin-bottom: 1.25rem;
+  padding: 1.1rem 1.1rem 1.15rem;
+  border-radius: var(--app-radius-md, 14px);
+  background: #fff;
+  border: 1px solid var(--app-border, #e8ecf1);
+  box-shadow: var(--app-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+#app-app .app-member-profile__email-readonly {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--app-text, #1a202c);
+  word-break: break-all;
+}
+
+#app-app .app-member-profile__grid {
+  display: grid;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 400px) {
+  #app-app .app-member-profile__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+#app-app .app-member-profile__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+#app-app .app-member-profile__field:nth-child(4) {
+  grid-column: 1 / -1;
+}
+
+#app-app .app-member-profile__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-member-profile__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9375rem;
+  border: 1px solid var(--app-border, #e8ecf1);
+  border-radius: var(--app-radius-sm, 10px);
+  background: #f8fafc;
+  color: var(--app-text, #1a202c);
+  box-shadow: var(--app-relief-inset, inset 2px 2px 5px rgba(255, 255, 255, 0.9), inset -2px -2px 5px rgba(0, 0, 0, 0.06));
+}
+
+#app-app .app-member-profile__input:focus {
+  outline: none;
+  box-shadow: var(--app-relief-inset-focus, 0 0 0 3px var(--app-accent-light, rgba(37, 99, 235, 0.12)));
+}
+
+#app-app .app-member-adjust + .app-member-adjust {
+  margin-top: 1rem;
+}
+
+#app-app .app-member-adjust__btn--secondary {
+  width: 100%;
+  margin-top: 0.15rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--app-radius-sm, 10px);
+  background: #fff;
+  color: var(--app-text, #1a202c);
+  border: 1px solid var(--app-border, #e8ecf1);
+  box-shadow: var(--app-relief-btn-secondary, 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 -1px 0 rgba(0, 0, 0, 0.06) inset, 0 1px 2px rgba(0, 0, 0, 0.05));
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+#app-app .app-member-adjust__btn--secondary:hover:not(:disabled) {
+  background: var(--app-surface-hover, #f0f2f5);
+}
+
+#app-app .app-member-adjust__btn--secondary:active:not(:disabled) {
+  transform: scale(0.99);
+}

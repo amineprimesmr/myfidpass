@@ -26,6 +26,7 @@ import {
 import { sendPassKitUpdate } from "../../apns.js";
 import { canAccessDashboard, getApiBase, normalizeHexForPatch, MAX_LOGO_BASE64_BYTES } from "./shared.js";
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
+import { patchMemberProfile } from "./member-patch-handler.js";
 
 const router = Router();
 
@@ -443,6 +444,9 @@ router.get("/members", (req, res) => {
 
 /** Même logique que POST /members/:id/points/remove — chemin dashboard pour éviter 404 si le sous-routeur members n’est pas à jour en prod. */
 router.post("/members/:memberId/points/remove", postMemberPointsRemove);
+
+/** Même logique que PATCH /members/:id — mise à jour profil depuis le panneau Membres. */
+router.patch("/members/:memberId", patchMemberProfile);
 
 // ——— Categories ———
 router.get("/categories", (req, res) => {
