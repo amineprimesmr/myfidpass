@@ -15,6 +15,13 @@ export function renderClientPage(root, state, options = {}) {
   const hasMember = !!state.member?.id;
   const walletConfirmed = !!state.walletConfirmed;
   const stepGateLocked = hasMember && !walletConfirmed;
+  const showWalletStep = hasMember && !walletConfirmed;
+  const stepPlayKicker = walletConfirmed ? "Étape 1" : "Étape 2";
+  const stepRewardsKicker = walletConfirmed ? "Étape 2" : "Étape 3";
+  const memberHeroSubtitle = walletConfirmed
+    ? `Deux étapes pour profiter chez <strong>${esc(businessName)}</strong>`
+    : `Trois étapes pour tout débloquer chez <strong>${esc(businessName)}</strong>`;
+  const stepsAriaLabel = walletConfirmed ? "Parcours en deux étapes" : "Parcours en trois étapes";
   const loyaltyGameTickets = (state.business?.loyalty_mode || "points_cash") === "points_game_tickets";
   const programType = String(state.business?.program_type || "points").toLowerCase();
   const isStampsProgram = programType === "stamps";
@@ -129,7 +136,7 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-v2-hero-wave">👋</span>
             <div>
               <h1 class="fidelity-v2-hero-title">Bonjour${memberFirstName ? ` ${memberFirstName}` : ""} !</h1>
-              <p class="fidelity-v2-hero-subtitle">Trois étapes pour tout débloquer chez <strong>${esc(businessName)}</strong></p>
+              <p class="fidelity-v2-hero-subtitle">${memberHeroSubtitle}</p>
             </div>
           </div>
         </section>
@@ -166,8 +173,9 @@ export function renderClientPage(root, state, options = {}) {
         </p>
       </section>
 
-      <div class="fidelity-v2-steps ${hasMember ? "" : "hidden"}" aria-label="Parcours en trois étapes">
-        <!-- Étape 1 — Wallet -->
+      <div class="fidelity-v2-steps ${hasMember ? "" : "hidden"}" aria-label="${esc(stepsAriaLabel)}">
+        ${showWalletStep ? `
+        <!-- Étape 1 — Wallet (masquée une fois la carte ajoutée + confirmée) -->
         <section class="fidelity-v2-card fidelity-v2-step" id="fidelity-v2-wallet">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
@@ -193,7 +201,6 @@ export function renderClientPage(root, state, options = {}) {
                 </a>
               </span>
             </div>
-            ${hasMember && !walletConfirmed ? `
             <div class="fidelity-v2-wallet-confirm" id="fidelity-v2-wallet-confirm-block">
               <p class="fidelity-v2-wallet-confirm-title">Tu as fini l’ajout ?</p>
               <p class="fidelity-v2-wallet-confirm-desc">Après avoir suivi Apple ou Google Wallet, confirme ici pour débloquer la suite : roue, missions et récompenses.</p>
@@ -201,18 +208,15 @@ export function renderClientPage(root, state, options = {}) {
               <p class="fidelity-v2-wallet-confirm-later">Pas encore ? Utilise les boutons ci-dessus, puis reviens cliquer ici.</p>
               <p class="fidelity-v2-wallet-confirm-hint">Nous ne pouvons pas vérifier automatiquement l’ajout — merci d’indiquer la vérité pour garder le programme équitable.</p>
             </div>
-            ` : ""}
-            ${hasMember && walletConfirmed ? `
-            <p class="fidelity-v2-wallet-done" role="status"><span class="fidelity-v2-wallet-done-icon" aria-hidden="true">✓</span> Carte enregistrée — les étapes 2 et 3 sont débloquées.</p>
-            ` : ""}
           </div>
         </section>
+        ` : ""}
 
-        <!-- Étape 2 — Roue / missions / programme -->
+        <!-- Roue / missions / programme -->
         <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play ${stepGateLocked ? "fidelity-v2-step--locked" : ""}" id="fidelity-v2-step-2">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
-              <p class="fidelity-v2-step-kicker">Étape 2</p>
+              <p class="fidelity-v2-step-kicker">${esc(stepPlayKicker)}</p>
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
             </div>
           </header>
@@ -294,7 +298,7 @@ export function renderClientPage(root, state, options = {}) {
         <section class="fidelity-v2-card fidelity-v2-step ${stepGateLocked ? "fidelity-v2-step--locked" : ""}" id="fidelity-v2-rewards">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
-              <p class="fidelity-v2-step-kicker">Étape 3</p>
+              <p class="fidelity-v2-step-kicker">${esc(stepRewardsKicker)}</p>
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">Récupère tes récompenses</h2>
             </div>
           </header>
