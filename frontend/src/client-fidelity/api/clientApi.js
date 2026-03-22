@@ -1,4 +1,5 @@
 import { messageUtilisateurPourErreur } from "../lib/client-error-fr.js";
+import { isUnlimitedTicketsDemo } from "../lib/unlimited-tickets-demo.js";
 
 function safeJson(res) {
   return res.json().catch(() => ({}));
@@ -96,11 +97,16 @@ export function createClientFidelityApi(apiBase) {
   }
 
   async function spin(slug, gameCode, memberId, clientFingerprint, idempotencyKey) {
+    const demoHeaders = isUnlimitedTicketsDemo() ? { "X-Fidpass-Unlimited-Tickets-Demo": "1" } : {};
     const res = await fetchFidelity(
       withBase(`/api/businesses/${encodeURIComponent(slug)}/games/${encodeURIComponent(gameCode)}/spins`),
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey || "" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey || "",
+          ...demoHeaders,
+        },
         body: JSON.stringify({ memberId, client_fingerprint: clientFingerprint }),
       },
       "La roue n’a pas pu joindre le serveur. Réessaie.",

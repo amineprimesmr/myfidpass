@@ -12,6 +12,7 @@ import {
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
 } from "./lib/wheel-segments.js";
+import { isUnlimitedTicketsDemo } from "./lib/unlimited-tickets-demo.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -23,14 +24,6 @@ function getFingerprint() {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const hw = `${screen.width}x${screen.height}`;
   return `${ua}|${lang}|${tz}|${hw}`.slice(0, 250);
-}
-
-/** Mode test : tickets illimités (localhost ou ?tickets=unlimited) */
-function isUnlimitedTicketsTest() {
-  if (typeof window === "undefined") return false;
-  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  const hasParam = window.location.search.includes("tickets=unlimited");
-  return isLocal || hasParam;
 }
 
 // Configuration roulette (roue circulaire)
@@ -73,7 +66,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
   }
 
   const business = await api.getBusiness(slug);
-  store.patch({ business, unlimitedTicketsTest: isUnlimitedTicketsTest() });
+  store.patch({ business, unlimitedTicketsTest: isUnlimitedTicketsDemo() });
   if (gamePage) {
     try {
       const gamesPayload = await api.getGames(slug);

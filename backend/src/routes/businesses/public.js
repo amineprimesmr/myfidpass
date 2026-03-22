@@ -8,6 +8,7 @@ import {
   getMemberForBusiness,
   getRoulettePublicSegments,
   resolveBusinessProgramType,
+  shouldSkipTicketConsumptionForLocalBrowser,
   shouldSkipTicketConsumptionForLocalDev,
   spinGameForMember,
 } from "../../db.js";
@@ -83,7 +84,8 @@ function spinsHandler(req, res) {
     const clientIpHash = buildIpHash(req);
     const deviceHash = buildDeviceHash(req.body?.client_fingerprint ?? req.body?.clientFingerprint ?? "");
     const host = String(req.get("x-forwarded-host") || req.get("host") || "");
-    const skipTicketConsumption = shouldSkipTicketConsumptionForLocalDev(host);
+    const skipTicketConsumption =
+      shouldSkipTicketConsumptionForLocalDev(host) || shouldSkipTicketConsumptionForLocalBrowser(req);
     const result = spinGameForMember({
       businessId: business.id,
       memberId: member.id,

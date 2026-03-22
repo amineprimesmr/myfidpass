@@ -20,7 +20,7 @@ npm run dev
 
 Le frontend envoie les appels API vers `/api/...` ; Vite les proxyfie vers le backend (voir `frontend/vite.config.js`).
 
-**Roue en local (tickets illimités)** : le front affiche des tickets illimités sur `localhost` / `127.0.0.1` ; le backend **ne débite pas** le wallet au spin si le `Host` est local et `NODE_ENV !== 'production'` (voir `shouldSkipTicketConsumptionForLocalDev` dans `games-helpers.js`). `FIDPASS_LOCAL_UNLIMITED_TICKETS=0` désactive ce mode ; `=1` l’active même avec `NODE_ENV=production` (utile si tu testes en local avec `NODE_ENV=production`).
+**Roue en local (tickets illimités)** : le front affiche des tickets illimités sur `localhost` / `127.0.0.1` / `::1` ou avec `?tickets=unlimited`, et envoie `X-Fidpass-Unlimited-Tickets-Demo: 1` sur le POST spin. L’API ne débite pas si le `Host` est local (`shouldSkipTicketConsumptionForLocalDev`) **ou** si `Origin` / `Referer` est local — utile quand Vite appelle **api.myfidpass.fr** (`shouldSkipTicketConsumptionForLocalBrowser`). `FIDPASS_LOCAL_UNLIMITED_TICKETS=0` coupe tout ; `=1` force le mode Host local même en `NODE_ENV=production`. API prod : `FIDPASS_BLOCK_LOCAL_ORIGIN_UNLIMITED_SPINS=1` refuse le contournement via `Origin` localhost. `?tickets=unlimited` sur un domaine non-local : `FIDPASS_TRUST_REMOTE_UNLIMITED_TICKETS_HEADER=1` sur l’API.
 
 ## Lancer séparément
 

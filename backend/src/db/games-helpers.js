@@ -28,6 +28,38 @@ export function shouldSkipTicketConsumptionForLocalDev(hostHeader) {
   return process.env.NODE_ENV !== "production";
 }
 
+/**
+ * Front Vite (localhost) qui appelle l’API distante : Host = api.*, mais Origin = http://localhost:5174.
+ * Désactiver tout le bloc : FIDPASS_LOCAL_UNLIMITED_TICKETS=0
+ * API prod + bloquer ce mode : FIDPASS_BLOCK_LOCAL_ORIGIN_UNLIMITED_SPINS=1
+ * ?tickets=unlimited sur hôte non-local : en-tête X-Fidpass-Unlimited-Tickets-Demo: 1 + FIDPASS_TRUST_REMOTE_UNLIMITED_TICKETS_HEADER=1
+ *
+ * @param {import("express").Request} req
+ */
+export function shouldSkipTicketConsumptionForLocalBrowser(req) {
+  if (process.env.FIDPASS_LOCAL_UNLIMITED_TICKETS === "0") return false;
+
+  const demoHeader = String(req.get("x-fidpass-unlimited-tickets-demo") || "").trim() === "1";
+  if (demoHeader && process.env.FIDPASS_TRUST_REMOTE_UNLIMITED_TICKETS_HEADER === "1") return true;
+
+  const candidates = [req.get("origin"), req.get("referer")].filter(Boolean);
+  for (const raw of candidates) {
+    try {
+      const u = new URL(String(raw));
+      const h = u.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+      if (h === "localhost" || h === "127.0.0.1" || h === "::1") {
+        if (process.env.NODE_ENV === "production" && process.env.FIDPASS_BLOCK_LOCAL_ORIGIN_UNLIMITED_SPINS === "1") {
+          return false;
+        }
+        return true;
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  return false;
+}
+
 /** Roue active ou mode « points → tickets » : bonus ticket (bienvenue, profil, etc.). */
 export function businessUsesTicketBonuses(businessId) {
   const business = getBusinessById(businessId);
