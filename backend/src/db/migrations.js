@@ -3,6 +3,7 @@
  * Référence : REFONTE-REGLES.md — db découpé par domaine.
  */
 import { randomUUID } from "crypto";
+import { DEMO_POINTS_REWARD_TIERS_JSON, DEMO_ENGAGEMENT_REWARDS_JSON } from "./demo-business-defaults.js";
 
 function safeRun(db, fn) {
   try {
@@ -138,6 +139,12 @@ export function runMigrations(db) {
   if (!bizColsEng.includes("engagement_rewards")) {
     db.exec("ALTER TABLE businesses ADD COLUMN engagement_rewards TEXT");
   }
+  safeRun(db, () => {
+    db.prepare(
+      `UPDATE businesses SET points_reward_tiers = ?, engagement_rewards = ?
+       WHERE LOWER(TRIM(slug)) = 'demo'`,
+    ).run(DEMO_POINTS_REWARD_TIERS_JSON, DEMO_ENGAGEMENT_REWARDS_JSON);
+  });
   safeRun(db, () => db.exec(`
     CREATE TABLE IF NOT EXISTS engagement_completions (
       id TEXT PRIMARY KEY,
