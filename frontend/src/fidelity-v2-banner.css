@@ -1,4 +1,4 @@
-/* Bannière page fidélité client v2 : prochaine récompense (paliers) */
+/* Bannière page fidélité client v2 : prochaine récompense — une ligne + barre */
 
 .fidelity-v2-header-inner--next-reward {
   display: block;
@@ -8,76 +8,96 @@
 }
 
 .fidelity-v2-next-reward {
-  text-align: center;
-  padding: 0.15rem 0 0.1rem;
+  padding: 0.1rem 0 0.05rem;
 }
 
-.fidelity-v2-next-reward-kicker {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #64748b;
-  margin-bottom: 0.45rem;
-}
-
-.fidelity-v2-next-reward-row {
-  display: inline-flex;
+/* Une seule ligne visuelle (wrap seulement si trop étroit) */
+.fidelity-v2-next-reward-one {
+  margin: 0 0 0.45rem;
+  display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.35rem;
+  gap: 0.3rem 0.4rem;
+  font-size: 0.88rem;
+  line-height: 1.3;
+  text-align: center;
 }
 
-.fidelity-v2-next-reward-arrow {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #8b5cf6;
-  line-height: 1;
-  transform: translateY(1px);
+.fidelity-v2-next-reward-tag {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
 }
 
-.fidelity-v2-next-reward-label {
+.fidelity-v2-next-reward-name {
+  flex: 0 1 auto;
+  min-width: 0;
   font-family: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #0f172a;
-  line-height: 1.25;
-  text-align: center;
   max-width: 100%;
 }
 
-.fidelity-v2-next-reward-meta {
-  margin: 0 0 0.55rem;
+.fidelity-v2-next-reward-nums {
+  flex-shrink: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #334155;
+  font-size: 0.88rem;
+}
+
+.fidelity-v2-next-reward-need {
+  flex-shrink: 0;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #475569;
-  line-height: 1.45;
+  color: #64748b;
 }
 
-.fidelity-v2-next-reward-meta strong {
-  color: #0f172a;
+.fidelity-v2-next-reward-muted {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.84rem;
 }
 
-.fidelity-v2-next-reward-meta--success {
+.fidelity-v2-next-reward-dotsep {
+  color: #cbd5e1;
+  font-weight: 500;
+  user-select: none;
+}
+
+.fidelity-v2-next-reward--complete .fidelity-v2-next-reward-tag {
+  color: #059669;
+  letter-spacing: 0.08em;
+}
+
+.fidelity-v2-next-reward--complete .fidelity-v2-next-reward-name {
   color: #047857;
 }
 
-.fidelity-v2-next-reward-meta--success strong {
-  color: #065f46;
+.fidelity-v2-next-reward--visitor .fidelity-v2-next-reward-one {
+  color: #475569;
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.fidelity-v2-next-reward--visitor .fidelity-v2-next-reward-one strong {
+  color: #0f172a;
 }
 
 .fidelity-v2-next-reward-bar {
-  height: 6px;
+  height: 5px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.07);
   overflow: hidden;
-  max-width: 280px;
+  max-width: min(100%, 320px);
   margin: 0 auto;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 .fidelity-v2-next-reward-bar-fill {
@@ -86,34 +106,6 @@
   border-radius: 999px;
   background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 45%, #10b981 100%);
   transition: width 0.45s cubic-bezier(0.2, 0.85, 0.25, 1);
-}
-
-.fidelity-v2-next-reward--visitor .fidelity-v2-next-reward-visitor-lead {
-  margin: 0 0 0.35rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #334155;
-}
-
-.fidelity-v2-next-reward--visitor .fidelity-v2-next-reward-visitor-sub {
-  margin: 0;
-  font-size: 0.8rem;
-  color: #64748b;
-  line-height: 1.45;
-}
-
-.fidelity-v2-next-reward--neutral .fidelity-v2-next-reward-neutral-msg {
-  margin: 0;
-  font-size: 0.82rem;
-  color: #64748b;
-  line-height: 1.5;
-  max-width: 22rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.fidelity-v2-next-reward--complete .fidelity-v2-next-reward-kicker {
-  color: #059669;
 }
 
 /* Ancien pill solde (page jeu uniquement) */
