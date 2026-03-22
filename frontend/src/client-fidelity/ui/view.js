@@ -296,8 +296,6 @@ export function renderClientPage(root, state, options = {}) {
         </section>
       </div>
 
-    </main>
-
     ${showRoulette && hasMember ? `
     <div class="fidelity-v2-sticky-play-cta">
       <div class="fidelity-v2-sticky-play-inner">
@@ -316,6 +314,8 @@ export function renderClientPage(root, state, options = {}) {
       </div>
     </div>
     ` : ""}
+
+    </main>
 
     ${showProfileMissionModal
       ? renderProfileMissionModalMarkup(esc, {

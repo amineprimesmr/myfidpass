@@ -1944,7 +1944,7 @@ body.fidpass-fidelity-route {
   position: relative;
 }
 
-/* CTA tickets + Jouer : page carte fidélité (pas la page jeu roue) */
+/* CTA tickets + Jouer : fixé en bas (à l’intérieur de .fidelity-v2-main pour hériter des styles pilule) */
 .fidelity-v2-sticky-play-cta {
   position: fixed;
   bottom: 0;
@@ -1952,23 +1952,16 @@ body.fidpass-fidelity-route {
   right: 0;
   z-index: 40;
   box-sizing: border-box;
-  padding: 0.45rem 0.85rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(
-    180deg,
-    rgba(248, 250, 252, 0) 0%,
-    rgba(248, 250, 252, 0.82) 32%,
-    #f8fafc 78%
-  );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
-  pointer-events: none;
+  padding: 0.55rem 1rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  background: #eef2f7;
+  background: linear-gradient(180deg, rgba(238, 242, 247, 0.97) 0%, #e8edf4 55%, #e2e8f0 100%);
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.1);
 }
 
 .fidelity-v2-sticky-play-inner {
   max-width: 640px;
   margin: 0 auto;
-  pointer-events: auto;
 }
 
 #fidelity-app.fidelity-page:has(.fidelity-v2-sticky-play-cta) {
