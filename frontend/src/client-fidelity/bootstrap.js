@@ -7,6 +7,11 @@ import { messageUtilisateurPourErreur } from "./lib/client-error-fr.js";
 import { createClientFidelityStore } from "./state/store.js";
 import { renderClientPage } from "./ui/view.js";
 import { memberStorageKey, SUCCESS_MAX_AGE_MS, walletConfirmedStorageKey } from "./constants.js";
+import {
+  DEFAULT_WHEEL_LABELS,
+  normalizeWheelLabelsFromSegments,
+  pickWheelIndexForReward,
+} from "./lib/wheel-segments.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -36,8 +41,6 @@ function prefersReducedMotion() {
   if (typeof globalThis.matchMedia !== "function") return false;
   return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
-const DEFAULT_WHEEL_LABELS = ["PERDU", "+10 pts", "PERDU", "+25 pts", "PERDU", "+50 pts", "PERDU", "+10 pts", "PERDU", "+25 pts"];
-
 export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage = false }) {
   const api = createClientFidelityApi(apiBase);
   const store = createClientFidelityStore({ slug });
@@ -117,11 +120,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   function syncWheelLabelsFromStore() {
     const segs = store.get().roulette_segments;
-    if (Array.isArray(segs) && segs.length > 0) {
-      wheelLabels = segs.map((s) => String(s.label || "").trim() || "PERDU");
-    } else {
-      wheelLabels = [...DEFAULT_WHEEL_LABELS];
-    }
+    wheelLabels = normalizeWheelLabelsFromSegments(Array.isArray(segs) ? segs : []);
   }
 
   function initRouletteWheel() {
@@ -367,11 +366,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       const isWin = isWinPoints || isWinStamps;
       const rewardLabel = isWin ? rawLabel : "PERDU";
 
-      let winIndex = wheelLabels.findIndex((l) => String(l).toLowerCase() === rewardLabel.toLowerCase());
-      if (winIndex === -1) {
-        winIndex = wheelLabels.findIndex((l) => String(l).toLowerCase() === "perdu");
-        if (winIndex === -1) winIndex = 0;
-      }
+      const winIndex = pickWheelIndexForReward(wheelLabels, rewardLabel);
 
       const n = wheelLabels.length;
       const segmentAngle = 360 / n;
