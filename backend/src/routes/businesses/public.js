@@ -13,7 +13,6 @@ import {
 } from "../../db.js";
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
-import { businessHasFileLogoForPublic } from "../../lib/business-logo-assets.js";
 
 export function publicInfo(req, res) {
   const business = req.business;
@@ -27,13 +26,15 @@ export function publicInfo(req, res) {
       points_reward_tiers = undefined;
     }
   }
-  const hasPublicLogo = Boolean(business.logo_base64) || businessHasFileLogoForPublic(business.id);
+  /* Toujours une URL : /public/logo reproduit le rendu Wallet (image, texte bandeau, repli). */
+  const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/logo`;
   res.json({
     id: business.id,
     name: business.name,
     slug: business.slug,
     organizationName: business.organization_name,
-    logoUrl: hasPublicLogo ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/logo` : undefined,
+    logoUrl,
+    logo_updated_at: business.logo_updated_at ?? undefined,
     backgroundColor: business.background_color ?? undefined,
     foregroundColor: business.foreground_color ?? undefined,
     labelColor: business.label_color ?? undefined,

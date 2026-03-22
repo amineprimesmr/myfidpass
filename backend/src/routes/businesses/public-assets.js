@@ -1,32 +1,25 @@
 /**
  * Assets publics (sans auth) : logo pour la page fidélité client.
- * Même priorité que le pass : logo_base64, puis fichiers assets/businesses/:id/logo*.png, puis icon*.png.
+ * Aligné sur le bandeau Wallet (generatePass) : image, fichier, mode texte, repli nom commerce.
  */
 import { Router } from "express";
-import { getBusinessLogoFileForPublic } from "../../lib/business-logo-assets.js";
+import { resolvePublicWalletLogoPng } from "../../lib/resolve-public-business-logo.js";
 
 const router = Router();
 
-router.get("/logo", (req, res) => {
+router.get("/logo", async (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).send();
-  if (business.logo_base64) {
-    const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "");
-    const buf = Buffer.from(base64Data, "base64");
-    if (buf.length > 0) {
-      const isPng = business.logo_base64.includes("image/png");
-      res.setHeader("Content-Type", isPng ? "image/png" : "image/jpeg");
-      res.setHeader("Cache-Control", "public, max-age=3600");
-      return res.send(buf);
-    }
-  }
-  const fileLogo = getBusinessLogoFileForPublic(business.id);
-  if (fileLogo?.buffer?.length) {
-    res.setHeader("Content-Type", fileLogo.contentType);
+  try {
+    const resolved = await resolvePublicWalletLogoPng(business);
+    if (!resolved?.buffer?.length) return res.status(404).send();
+    res.setHeader("Content-Type", resolved.contentType || "image/png");
     res.setHeader("Cache-Control", "public, max-age=3600");
-    return res.send(fileLogo.buffer);
+    return res.send(resolved.buffer);
+  } catch (err) {
+    console.warn("[public/logo]", err?.message || err);
+    return res.status(500).send();
   }
-  return res.status(404).send();
 });
 
 export default router;

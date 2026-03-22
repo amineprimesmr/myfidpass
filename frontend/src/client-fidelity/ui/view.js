@@ -42,9 +42,19 @@ export function renderClientPage(root, state, options = {}) {
   const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
   const baseTrim = String(apiBase || "").replace(/\/$/, "");
-  /** Toujours tenter l’URL publique du logo (même base que les fetch API) — si 404, repli initiale. */
+  /** Même source que le bandeau Wallet : URL renvoyée par l’API (+ cache-bust si maj logo). */
+  const logoFromApi = typeof state.business?.logoUrl === "string" ? state.business.logoUrl.trim() : "";
   const logoPath = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
-  const logoAttemptSrc = logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : "";
+  const logoFallbackSrc = logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : "";
+  const logoSrcBase = logoFromApi || logoFallbackSrc;
+  const logoUpdatedRaw = state.business?.logo_updated_at ?? state.business?.logoUpdatedAt;
+  const logoV =
+    logoUpdatedRaw != null && String(logoUpdatedRaw).trim() !== ""
+      ? encodeURIComponent(String(logoUpdatedRaw).trim())
+      : "";
+  const logoAttemptSrc =
+    logoSrcBase && logoV ? `${logoSrcBase}${logoSrcBase.includes("?") ? "&" : "?"}v=${logoV}` : logoSrcBase;
+  const logoImgAlt = esc(businessName) || "Logo";
   const logoImgOnError =
     "this.style.display='none';var w=this.closest('.fidelity-v2-header-brand-logo,.fidelity-roulette-logo-wrap');if(w){var f=w.querySelector('[data-fid-logo-fallback]');if(f)f.style.display='flex';}";
   const memberBalance =
@@ -79,7 +89,7 @@ export function renderClientPage(root, state, options = {}) {
         <div class="fidelity-game-top">
           <div class="fidelity-roulette-logo-wrap fidelity-roulette-logo">
             ${logoAttemptSrc
-              ? `<img src="${esc(logoAttemptSrc)}" alt="" class="fidelity-roulette-logo-img" loading="eager" decoding="async" onerror="${logoImgOnError}" /><div class="fidelity-roulette-logo-fallback" data-fid-logo-fallback><span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span></div>`
+              ? `<img src="${esc(logoAttemptSrc)}" alt="${logoImgAlt}" class="fidelity-roulette-logo-img" loading="eager" decoding="async" onerror="${logoImgOnError}" /><div class="fidelity-roulette-logo-fallback" data-fid-logo-fallback><span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span></div>`
               : `<span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>`
             }
           </div>
