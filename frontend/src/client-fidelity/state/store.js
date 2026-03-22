@@ -9,7 +9,7 @@ export function createClientFidelityStore(initial = {}) {
     rewards: [],
     engagementActions: [],
     engagementDone: [],
-    /** Débloque étapes 2–3 après confirmation utilisateur (voir localStorage). */
+    /** Confirmation honnête « carte ajoutée » — masque le bloc Wallet (localStorage). */
     walletConfirmed: false,
     ...initial,
   };

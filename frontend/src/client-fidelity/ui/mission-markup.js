@@ -1,5 +1,5 @@
 /**
- * Cartes missions fidélité (étape 2) — design par type d’action.
+ * Cartes missions fidélité client — design par type d’action.
  */
 
 function missionTheme(actionType) {
