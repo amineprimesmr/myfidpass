@@ -86,18 +86,26 @@ export function updateAuthNavLinks() {
   const isLoggedIn = !!getAuthToken();
   const label = isLoggedIn ? "Mon espace" : "Se connecter";
   const landingHref = isLoggedIn ? "/app" : "/login?redirect=/app";
-  /** Uniquement #landing : ne pas toucher aux CTA essai (auth, offres) qui réutilisaient la même classe. */
-  document
-    .querySelectorAll("#landing .landing-nav-login-link, #landing .landing-menu-drawer-nav .landing-menu-drawer-login")
-    .forEach((a) => {
-      a.textContent = label;
-      a.href = landingHref;
-    });
+  /** Connexion / espace : seulement ces deux IDs — jamais les CTA « Essayez 7 jours ». */
+  const desk = document.getElementById("landing-nav-auth-link");
+  if (desk) {
+    desk.textContent = label;
+    desk.href = landingHref;
+  }
+  const drawer = document.getElementById("landing-drawer-auth-link");
+  if (drawer) {
+    drawer.textContent = label;
+    drawer.href = landingHref;
+  }
   const builderLogin = document.getElementById("builder-header-login");
   if (builderLogin) {
     builderLogin.textContent = label;
     builderLogin.href = isLoggedIn ? "/app" : "/login?redirect=/choisir-offre";
   }
+  /** Sécurité : réinitialiser le href des CTA tarifs si un script les avait modifiés. */
+  document.querySelectorAll("#landing [data-fidpass-open-pricing], #auth-app [data-fidpass-open-pricing]").forEach((el) => {
+    if (el.tagName === "A") el.setAttribute("href", "/choisir-offre");
+  });
 }
 
 export function updateOffersNavLinks() {

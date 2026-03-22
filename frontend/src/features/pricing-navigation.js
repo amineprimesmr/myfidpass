@@ -1,6 +1,6 @@
 /**
- * Navigation fiable vers /choisir-offre : interception en capture pour éviter
- * tout autre handler ou navigation native vers /login par erreur.
+ * Ouverture page tarifs : uniquement les liens marqués data-fidpass-open-pricing
+ * (aucune confusion possible avec Se connecter / Mon espace).
  */
 import { navigateToPricing } from "../router/index.js";
 
@@ -15,13 +15,10 @@ export function initPricingNavigation() {
     "click",
     (e) => {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      const a = e.target.closest?.("a");
+      const a = e.target.closest?.("a[data-fidpass-open-pricing]");
       if (!a) return;
       const t = a.getAttribute("target");
       if (t && t !== "_self") return;
-      const raw = (a.getAttribute("href") || "").trim();
-      const path = raw.split("?")[0].replace(/\/$/, "") || "/";
-      if (path !== "/choisir-offre") return;
       if (!a.closest("#landing") && !a.closest("#auth-app")) return;
       goPricing(e);
     },
