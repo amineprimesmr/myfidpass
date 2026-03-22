@@ -217,6 +217,8 @@ export async function generatePass(member, business = null, options = {}) {
       label: "",
       value: `${labelRestants} = ${restants}`,
       textAlignment: "PKTextAlignmentLeft",
+      /* %@ = nouvelle valeur du champ → Apple peut afficher une notif sur l’écran de verrouillage (comme pour les points). */
+      changeMessage: "Fidélité : %@",
     });
     if (!isSectorTemplate) {
       pass.secondaryFields.push({
