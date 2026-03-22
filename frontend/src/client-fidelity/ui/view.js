@@ -7,6 +7,34 @@ function esc(value) {
     .replaceAll("'", "&#39;");
 }
 
+/** Lignes missions (étape 2) — extrait pour garder le template lisible. */
+function renderEngagementActionsMarkup(actions) {
+  return actions
+    .map((a) => {
+      const ticketCount = Math.min(10, Math.max(1, Number(a.points) || (a.action_type === "google_review" ? 2 : 1)));
+      const actionEmoji =
+        a.action_type === "google_review" ? "⭐" : a.action_type === "instagram" ? "📸" : a.action_type === "facebook" ? "👍" : "🔗";
+      return `
+            <div class="fidelity-engagement-item" data-action-type="${esc(a.action_type)}">
+              <div class="fidelity-engagement-item-emoji">${actionEmoji}</div>
+              <div class="fidelity-engagement-item-info">
+                <span class="fidelity-engagement-item-label">${esc(a.label)}</span>
+                <span class="fidelity-engagement-item-points">+${ticketCount} ticket${ticketCount > 1 ? "s" : ""}</span>
+              </div>
+              <div class="fidelity-engagement-item-btns">
+                <span class="fidelity-cta-wrap">
+                  <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-cta-pill fidelity-cta-pill--compact fidelity-engagement-open-link" data-action-type="${esc(a.action_type)}">
+                    <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
+                    <span class="fidelity-cta-pill-label">Ouvrir</span>
+                    <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                  </a>
+                </span>
+              </div>
+            </div>`;
+    })
+    .join("");
+}
+
 export function renderClientPage(root, state, options = {}) {
   const { gamePage = false, slug = "", apiBase = "" } = options;
   const businessName = esc(state.business?.organizationName || state.business?.name || "Carte fidélité");
@@ -67,6 +95,27 @@ export function renderClientPage(root, state, options = {}) {
   const baseTrim = String(apiBase || "").replace(/\/$/, "");
   const logoSrc = hasServerLogo && logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : null;
 
+  const engagementHtml = renderEngagementActionsMarkup(actions);
+  const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
+  const step2Title = showRoulette
+    ? "Tourne la roue"
+    : actions.length
+      ? "Gagne des tickets & bonus"
+      : showClassicProgram
+        ? "Cumule en caisse"
+        : isStampsProgram
+          ? "Tampons & récompenses"
+          : "Profite de ton programme";
+  const step2Intro = showRoulette
+    ? `Tu as <strong id="fidelity-v2-tickets-display">${tickets}</strong> ticket${tickets !== 1 ? "s" : ""} — un ticket = un tour pour gagner un cadeau.`
+    : actions.length
+      ? "Quelques actions rapides pour débloquer des tickets ou valider une étape."
+      : showClassicProgram
+        ? "Tes points montent quand tu utilises ta carte au moment de payer."
+        : isStampsProgram
+          ? "À chaque passage validé, tu te rapproches de la récompense prévue."
+          : `Présente ta carte chez <strong>${esc(businessName)}</strong> pour cumuler tes avantages.`;
+
   root.innerHTML = `
     <header class="fidelity-v2-header">
       <div class="fidelity-v2-header-inner">
@@ -89,7 +138,7 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-v2-hero-wave">👋</span>
             <div>
               <h1 class="fidelity-v2-hero-title">Bonjour${memberFirstName ? ` ${memberFirstName}` : ""} !</h1>
-              <p class="fidelity-v2-hero-subtitle">Voici ton espace fidélité chez <strong>${esc(businessName)}</strong></p>
+              <p class="fidelity-v2-hero-subtitle">Trois étapes pour tout débloquer chez <strong>${esc(businessName)}</strong></p>
             </div>
           </div>
         </section>
@@ -126,91 +175,85 @@ export function renderClientPage(root, state, options = {}) {
         </p>
       </section>
 
-      <!-- Wallet -->
-      <section class="fidelity-v2-card ${hasMember ? "" : "hidden"}" id="fidelity-v2-wallet">
-        <h2 class="fidelity-v2-card-title">📱 Ajouter au Wallet</h2>
-        <p class="fidelity-v2-card-desc">Ajoute ta carte sur ton téléphone pour la retrouver facilement à chaque visite.</p>
-        <div class="fidelity-wallet-buttons">
-          <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-            <a href="#" id="fidelity-v2-apple" class="fidelity-cta-pill">
-              <svg class="fidelity-cta-pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-              <span class="fidelity-cta-pill-label">Apple Wallet</span>
-              <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-            </a>
-          </span>
-          <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-            <a href="#" id="fidelity-v2-google" class="fidelity-cta-pill">
-              <svg class="fidelity-cta-pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              <span class="fidelity-cta-pill-label">Google Wallet</span>
-              <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-            </a>
-          </span>
-        </div>
-      </section>
-
-      <!-- Jeu roulette CTA -->
-      <section class="fidelity-v2-card fidelity-v2-game-card ${showRoulette ? "" : "hidden"}" id="fidelity-v2-game-cta">
-        <div class="fidelity-v2-game-header">
-          <div class="fidelity-v2-game-emoji">🎡</div>
-          <div>
-            <h2 class="fidelity-v2-card-title">Roue des cadeaux</h2>
-            <p class="fidelity-v2-card-desc">Tu as <strong id="fidelity-v2-tickets-display">${tickets}</strong> ticket${tickets !== 1 ? "s" : ""} — chaque ticket = 1 tour de roue !</p>
-          </div>
-        </div>
-        <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-          <a href="${gamePageUrl}" class="fidelity-cta-pill">
-            <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-            <span class="fidelity-cta-pill-label">🎰 Jouer à la roue</span>
-            <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-          </a>
-        </span>
-      </section>
-
-      <!-- Actions d'engagement -->
-      <section class="fidelity-v2-card ${actions.length ? "" : "hidden"}" id="fidelity-v2-actions">
-        <div class="fidelity-v2-actions-header">
-          <h2 class="fidelity-v2-card-title">🎯 Gagner des tickets</h2>
-          <p class="fidelity-v2-card-desc">Complète ces missions pour gagner des tickets et jouer à la roue.</p>
-        </div>
-        <div class="fidelity-engagement-actions">
-          ${actions
-            .map((a) => {
-              const ticketCount = Math.min(10, Math.max(1, Number(a.points) || (a.action_type === "google_review" ? 2 : 1)));
-              const actionEmoji = a.action_type === "google_review" ? "⭐" : a.action_type === "instagram" ? "📸" : a.action_type === "facebook" ? "👍" : "🔗";
-              return `
-            <div class="fidelity-engagement-item" data-action-type="${esc(a.action_type)}">
-              <div class="fidelity-engagement-item-emoji">${actionEmoji}</div>
-              <div class="fidelity-engagement-item-info">
-                <span class="fidelity-engagement-item-label">${esc(a.label)}</span>
-                <span class="fidelity-engagement-item-points">+${ticketCount} ticket${ticketCount > 1 ? "s" : ""}</span>
-              </div>
-              <div class="fidelity-engagement-item-btns">
-                <span class="fidelity-cta-wrap">
-                  <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="fidelity-cta-pill fidelity-cta-pill--compact fidelity-engagement-open-link" data-action-type="${esc(a.action_type)}">
-                    <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-                    <span class="fidelity-cta-pill-label">Ouvrir</span>
-                    <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                  </a>
-                </span>
-              </div>
+      <div class="fidelity-v2-steps ${hasMember ? "" : "hidden"}" aria-label="Parcours en trois étapes">
+        <!-- Étape 1 — Wallet -->
+        <section class="fidelity-v2-card fidelity-v2-step" id="fidelity-v2-wallet">
+          <header class="fidelity-v2-step-header">
+            <span class="fidelity-v2-step-badge" aria-hidden="true">1</span>
+            <div class="fidelity-v2-step-head-text">
+              <p class="fidelity-v2-step-kicker">Étape 1</p>
+              <h2 class="fidelity-v2-card-title fidelity-v2-step-title">Ajoute ta carte au Wallet</h2>
             </div>
-          `;
-            })
-            .join("")}
-        </div>
-        <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
-      </section>
+          </header>
+          <div class="fidelity-v2-step-body">
+            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">Ton pass sur le téléphone : prêt à chaque visite, toujours à portée de main.</p>
+            <div class="fidelity-wallet-buttons">
+              <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+                <a href="#" id="fidelity-v2-apple" class="fidelity-cta-pill">
+                  <svg class="fidelity-cta-pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                  <span class="fidelity-cta-pill-label">Apple Wallet</span>
+                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                </a>
+              </span>
+              <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+                <a href="#" id="fidelity-v2-google" class="fidelity-cta-pill">
+                  <svg class="fidelity-cta-pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                  <span class="fidelity-cta-pill-label">Google Wallet</span>
+                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </section>
 
-      <!-- Programme points classique (non-jeu) -->
-      <section class="fidelity-v2-card ${hasMember && !loyaltyGameTickets && !isStampsProgram ? "" : "hidden"}">
-        <h2 class="fidelity-v2-card-title">💳 Programme fidélité classique</h2>
-        <p class="fidelity-v2-card-desc">Tes points sont directement utilisables en caisse pour bénéficier de réductions et avantages.</p>
-      </section>
+        <!-- Étape 2 — Roue / missions / programme -->
+        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play" id="fidelity-v2-step-2">
+          <header class="fidelity-v2-step-header">
+            <span class="fidelity-v2-step-badge" aria-hidden="true">2</span>
+            <div class="fidelity-v2-step-head-text">
+              <p class="fidelity-v2-step-kicker">Étape 2</p>
+              <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
+            </div>
+          </header>
+          <div class="fidelity-v2-step-body">
+            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>
+            ${showRoulette ? `
+            <div class="fidelity-v2-step-wheel">
+              <div class="fidelity-v2-game-header fidelity-v2-game-header--inline">
+                <div class="fidelity-v2-game-emoji" aria-hidden="true">🎡</div>
+                <p class="fidelity-v2-step-wheel-cta-label">Prêt à tenter le coup ?</p>
+              </div>
+              <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+                <a href="${gamePageUrl}" class="fidelity-cta-pill" id="fidelity-v2-game-cta">
+                  <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
+                  <span class="fidelity-cta-pill-label">Tourner la roue</span>
+                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                </a>
+              </span>
+            </div>
+            ` : ""}
+            ${actions.length ? `
+            <div class="fidelity-v2-step-missions ${showRoulette ? "fidelity-v2-step-missions--after-wheel" : ""}">
+              ${showRoulette ? `<h3 class="fidelity-v2-step-subtitle">Besoin de plus de tickets ?</h3>` : ""}
+              <div class="fidelity-engagement-actions" id="fidelity-v2-actions">${engagementHtml}</div>
+            </div>
+            ` : ""}
+            <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
+          </div>
+        </section>
 
-      <!-- Récompenses -->
-      <section class="fidelity-v2-card ${hasMember ? "" : "hidden"}" id="fidelity-v2-rewards">
-        <h2 class="fidelity-v2-card-title">🏆 Mes récompenses</h2>
-        <ul class="fidelity-v2-reward-list">
+        <!-- Étape 3 — Récompenses -->
+        <section class="fidelity-v2-card fidelity-v2-step" id="fidelity-v2-rewards">
+          <header class="fidelity-v2-step-header">
+            <span class="fidelity-v2-step-badge" aria-hidden="true">3</span>
+            <div class="fidelity-v2-step-head-text">
+              <p class="fidelity-v2-step-kicker">Étape 3</p>
+              <h2 class="fidelity-v2-card-title fidelity-v2-step-title">Récupère tes récompenses</h2>
+            </div>
+          </header>
+          <div class="fidelity-v2-step-body">
+            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">Lots gagnés à la roue ou débloqués avec ton programme — tout est regroupé ici.</p>
+            <ul class="fidelity-v2-reward-list">
           ${
             rewards.length
               ? rewards
@@ -226,11 +269,13 @@ export function renderClientPage(root, state, options = {}) {
                 .join("")
               : `<li class="fidelity-v2-reward-empty">
                   <div class="fidelity-v2-reward-empty-icon">🎯</div>
-                  <p>Continue à accumuler des points pour débloquer des récompenses !</p>
+                  <p>Tes lots et avantages débloqués s’affichent ici dès qu’ils sont disponibles.</p>
                 </li>`
           }
-        </ul>
-      </section>
+            </ul>
+          </div>
+        </section>
+      </div>
 
     </main>
 
