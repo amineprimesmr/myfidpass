@@ -62,6 +62,24 @@ export function getCategoryIdsForMember(memberId) {
   return rows.map((r) => r.category_id);
 }
 
+/** Une requête pour tous les membres (évite N appels dans GET /dashboard/members). */
+export function getCategoryIdsForMembers(memberIds) {
+  if (!Array.isArray(memberIds) || memberIds.length === 0) return new Map();
+  const placeholders = memberIds.map(() => "?").join(",");
+  const rows = db
+    .prepare(`SELECT member_id, category_id FROM member_category_assignments WHERE member_id IN (${placeholders})`)
+    .all(...memberIds);
+  const map = new Map();
+  for (const id of memberIds) {
+    map.set(id, []);
+  }
+  for (const r of rows) {
+    const list = map.get(r.member_id);
+    if (list) list.push(r.category_id);
+  }
+  return map;
+}
+
 export function setMemberCategories(memberId, categoryIds) {
   if (!memberId) return;
   db.prepare("DELETE FROM member_category_assignments WHERE member_id = ?").run(memberId);

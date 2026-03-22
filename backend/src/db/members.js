@@ -3,7 +3,7 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { getCategoryIdsForMember } from "./categories.js";
+import { getCategoryIdsForMembers } from "./categories.js";
 
 const db = getDb();
 
@@ -108,7 +108,8 @@ export function getMembersForBusiness(businessId, { search = "", limit = 50, off
   const countStmt = db.prepare(`SELECT COUNT(*) as n FROM members WHERE ${where}`);
   const rows = stmt.all(...params, limit, offset);
   const total = countStmt.get(...params)?.n ?? 0;
-  const members = rows.map((m) => ({ ...m, category_ids: getCategoryIdsForMember(m.id) }));
+  const catMap = getCategoryIdsForMembers(rows.map((m) => m.id));
+  const members = rows.map((m) => ({ ...m, category_ids: catMap.get(m.id) ?? [] }));
   return { members, total };
 }
 
