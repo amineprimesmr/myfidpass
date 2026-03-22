@@ -188,7 +188,6 @@ export function renderClientPage(root, state, options = {}) {
         <!-- Étape 1 — Wallet -->
         <section class="fidelity-v2-card fidelity-v2-step" id="fidelity-v2-wallet">
           <header class="fidelity-v2-step-header">
-            <span class="fidelity-v2-step-badge" aria-hidden="true">1</span>
             <div class="fidelity-v2-step-head-text">
               <p class="fidelity-v2-step-kicker">Étape 1</p>
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">Ajoute ta carte au Wallet</h2>
@@ -230,7 +229,6 @@ export function renderClientPage(root, state, options = {}) {
         <!-- Étape 2 — Roue / missions / programme -->
         <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play ${stepGateLocked ? "fidelity-v2-step--locked" : ""}" id="fidelity-v2-step-2">
           <header class="fidelity-v2-step-header">
-            <span class="fidelity-v2-step-badge" aria-hidden="true">2</span>
             <div class="fidelity-v2-step-head-text">
               <p class="fidelity-v2-step-kicker">Étape 2</p>
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
@@ -276,7 +274,6 @@ export function renderClientPage(root, state, options = {}) {
         <!-- Étape 3 — Récompenses -->
         <section class="fidelity-v2-card fidelity-v2-step ${stepGateLocked ? "fidelity-v2-step--locked" : ""}" id="fidelity-v2-rewards">
           <header class="fidelity-v2-step-header">
-            <span class="fidelity-v2-step-badge" aria-hidden="true">3</span>
             <div class="fidelity-v2-step-head-text">
               <p class="fidelity-v2-step-kicker">Étape 3</p>
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">Récupère tes récompenses</h2>

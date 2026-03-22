@@ -670,30 +670,10 @@ body {
 }
 
 .fidelity-v2-step-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
   margin-bottom: 0.85rem;
 }
 
-.fidelity-v2-step-badge {
-  flex-shrink: 0;
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #fff;
-  font-weight: 800;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
-  line-height: 1;
-}
-
 .fidelity-v2-step-head-text {
-  flex: 1;
   min-width: 0;
 }
 
@@ -712,7 +692,7 @@ body {
 }
 
 .fidelity-v2-step-body {
-  padding-left: calc(2.35rem + 1rem);
+  padding-left: 0;
 }
 
 .fidelity-v2-step-desc {
@@ -765,13 +745,6 @@ body {
   padding-top: 0.85rem;
   margin-top: 1.1rem;
   border-top: 1px solid #e2e8f0;
-}
-
-@media (max-width: 420px) {
-  .fidelity-v2-step-body {
-    padding-left: 0;
-    margin-top: 0.35rem;
-  }
 }
 
 /* ── Confirmation Wallet (étape 1) + verrou étapes 2–3 ── */
