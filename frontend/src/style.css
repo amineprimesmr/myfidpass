@@ -708,12 +708,14 @@ body {
   border-color: #e9d5ff;
 }
 
-.fidelity-v2-step--play .fidelity-v2-step-header {
+.fidelity-v2-step--play .fidelity-v2-step-header,
+.fidelity-v2-step--rewards .fidelity-v2-step-header {
   margin-bottom: 1rem;
 }
 
-/* Titre section roue : 🎡 + texte (spécificité > .fidelity-v2-step-title ailleurs dans le fichier) */
-.fidelity-v2-step-header .fidelity-v2-step-title--roulette {
+/* Titres mis en avant : emoji + texte (roue 🎡, récompenses 🎁) */
+.fidelity-v2-step-header .fidelity-v2-step-title--roulette,
+.fidelity-v2-step-header .fidelity-v2-step-title--rewards {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -725,14 +727,20 @@ body {
   margin: 0;
 }
 
-.fidelity-v2-step-header .fidelity-v2-step-title--roulette .fidelity-v2-step-title-emoji {
+.fidelity-v2-step-header .fidelity-v2-step-title--roulette .fidelity-v2-step-title-emoji,
+.fidelity-v2-step-header .fidelity-v2-step-title--rewards .fidelity-v2-step-title-emoji {
   font-size: 1.55rem;
   line-height: 1;
   flex-shrink: 0;
   filter: drop-shadow(0 2px 6px rgba(139, 92, 246, 0.2));
 }
 
-.fidelity-v2-step-header .fidelity-v2-step-title--roulette .fidelity-v2-step-title-label {
+.fidelity-v2-step-header .fidelity-v2-step-title--rewards .fidelity-v2-step-title-emoji {
+  filter: drop-shadow(0 2px 6px rgba(234, 179, 8, 0.28));
+}
+
+.fidelity-v2-step-header .fidelity-v2-step-title--roulette .fidelity-v2-step-title-label,
+.fidelity-v2-step-header .fidelity-v2-step-title--rewards .fidelity-v2-step-title-label {
   font-family: "Plus Jakarta Sans", var(--font, system-ui), sans-serif;
   padding-top: 0.06rem;
 }
