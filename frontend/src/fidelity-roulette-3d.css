@@ -51,11 +51,12 @@
   margin-top: 0.14em;
 }
 
-.fidelity-game-page .fidelity-roulette-sticky-cta .fidelity-roulette-btn-row {
+.fidelity-game-page .fidelity-roulette-btn-row {
   justify-content: center;
   width: 100%;
-  padding: 0;
-  margin: 0;
+  padding: 0 0.75rem;
+  margin-top: 0.55rem;
+  margin-bottom: clamp(1.05rem, 4.2vw, 1.65rem);
 }
 
 .fidelity-game-page .fidelity-cta-pill--wheel-cta {

@@ -87,20 +87,8 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-roulette-title-line">Tourne la roue et</span>
             <span class="fidelity-roulette-title-line">${esc(gameSubtitle)}</span>
           </h2>
-        </div>
-        <div class="fidelity-roulette-wheel-zone">
-          <div class="fidelity-roulette-wheel-mount">
-            <div class="fidelity-roulette-wheel-outer">
-              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
-              <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
-              <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
-            </div>
-          </div>
-        </div>
-        <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
-        <div class="fidelity-roulette-sticky-cta">
           <div class="fidelity-roulette-btn-row">
-            <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+            <span class="fidelity-cta-wrap">
               <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" type="button" aria-label="${esc(spinCtaAriaLabel)}">
                 <span class="fidelity-cta-wheel-line">
                   <span class="${ticketStatusDotClass}" aria-hidden="true"></span>
@@ -114,6 +102,16 @@ export function renderClientPage(root, state, options = {}) {
             </span>
           </div>
         </div>
+        <div class="fidelity-roulette-wheel-zone">
+          <div class="fidelity-roulette-wheel-mount">
+            <div class="fidelity-roulette-wheel-outer">
+              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
+              <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
+              <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+        <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
       </div>
     `;
     return;
@@ -271,19 +269,6 @@ export function renderClientPage(root, state, options = {}) {
               </div>
             </div>
             ` : ""}
-            ${showRoulette ? `
-            <div class="fidelity-v2-step-wheel">
-              <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-                <a href="${gamePageUrl}" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" id="fidelity-v2-game-cta" aria-label="${esc(gameCtaAriaLabel)}">
-                  <span class="fidelity-cta-wheel-line">
-                    <span class="${ticketStatusDotClass}" aria-hidden="true"></span>
-                    <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
-                    <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${esc(String(tickets))} ticket${tickets !== 1 ? "s" : ""}</span>
-                  </span>
-                </a>
-              </span>
-            </div>
-            ` : ""}
             ${!showRoulette && actionsForDisplay.length ? `
             <div class="fidelity-v2-step-missions">
               <div class="fidelity-engagement-actions" id="fidelity-v2-actions">${engagementHtml}</div>
@@ -312,6 +297,25 @@ export function renderClientPage(root, state, options = {}) {
       </div>
 
     </main>
+
+    ${showRoulette && hasMember ? `
+    <div class="fidelity-v2-sticky-play-cta">
+      <div class="fidelity-v2-sticky-play-inner">
+        <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+          <a href="${gamePageUrl}" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" id="fidelity-v2-game-cta" aria-label="${esc(gameCtaAriaLabel)}">
+            <span class="fidelity-cta-wheel-line">
+              <span class="${ticketStatusDotClass}" aria-hidden="true"></span>
+              <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
+              <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${esc(String(tickets))} ticket${tickets !== 1 ? "s" : ""}</span>
+              <span class="fidelity-cta-wheel-sep" aria-hidden="true">·</span>
+              <span class="fidelity-cta-wheel-action">Jouer</span>
+              <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+            </span>
+          </a>
+        </span>
+      </div>
+    </div>
+    ` : ""}
 
     ${showProfileMissionModal
       ? renderProfileMissionModalMarkup(esc, {

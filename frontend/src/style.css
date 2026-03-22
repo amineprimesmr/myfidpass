@@ -751,10 +751,6 @@ body.fidpass-fidelity-route {
   padding-top: 0.06rem;
 }
 
-.fidelity-v2-step-wheel {
-  margin-top: 0.25rem;
-}
-
 .fidelity-v2-step-subtitle {
   font-size: 0.88rem;
   font-weight: 700;
@@ -1948,32 +1944,35 @@ body.fidpass-fidelity-route {
   position: relative;
 }
 
-/* CTA roue : collé en bas de l’écran, reste visible au scroll */
-.fidelity-game-page .fidelity-roulette-sticky-cta {
-  position: sticky;
+/* CTA tickets + Jouer : page carte fidélité (pas la page jeu roue) */
+.fidelity-v2-sticky-play-cta {
+  position: fixed;
   bottom: 0;
-  z-index: 25;
-  flex-shrink: 0;
-  margin-top: auto;
-  width: 100%;
+  left: 0;
+  right: 0;
+  z-index: 40;
   box-sizing: border-box;
   padding: 0.45rem 0.85rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(
     180deg,
-    rgba(245, 245, 247, 0) 0%,
-    rgba(245, 245, 247, 0.75) 35%,
-    var(--fidpass-surface) 72%
+    rgba(248, 250, 252, 0) 0%,
+    rgba(248, 250, 252, 0.82) 32%,
+    #f8fafc 78%
   );
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid rgba(15, 23, 42, 0.08);
+  pointer-events: none;
 }
 
-.fidelity-game-page .fidelity-roulette-sticky-cta .fidelity-roulette-btn-row {
-  margin: 0;
-  padding: 0;
-  justify-content: center;
-  width: 100%;
+.fidelity-v2-sticky-play-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  pointer-events: auto;
+}
+
+#fidelity-app.fidelity-page:has(.fidelity-v2-sticky-play-cta) {
+  padding-bottom: calc(5.35rem + env(safe-area-inset-bottom, 0px));
 }
 
 .fidelity-game-back-float {
