@@ -7,8 +7,8 @@ import { getBusinessById, resolveBusinessProgramType } from "./businesses.js";
 
 const db = getDb();
 
-/** Roue active ou mode jeu → 1 ticket offert si portefeuille encore vierge (solde 0, aucune écriture). */
-function businessEligibleForWelcomeTicket(businessId) {
+/** Roue active ou mode « points → tickets » : bonus ticket (bienvenue, profil, etc.). */
+export function businessUsesTicketBonuses(businessId) {
   const business = getBusinessById(businessId);
   if (!business) return false;
   const pt = resolveBusinessProgramType(business);
@@ -26,7 +26,7 @@ function businessEligibleForWelcomeTicket(businessId) {
 }
 
 function grantWelcomeTicketIfEligible(businessId, memberId) {
-  if (!businessEligibleForWelcomeTicket(businessId)) return;
+  if (!businessUsesTicketBonuses(businessId)) return;
   const wallet = db
     .prepare("SELECT ticket_balance FROM member_ticket_wallets WHERE member_id = ? AND business_id = ?")
     .get(memberId, businessId);
@@ -94,6 +94,22 @@ export function addTicketsForEngagement(businessId, memberId, tickets, actionTyp
     completionId,
     JSON.stringify({ action_type: actionType })
   );
+}
+
+/** +1 ticket pour formulaire « complète ton profil » (ledger distinct de l’engagement). */
+export function addTicketsForProfileComplete(businessId, memberId, tickets) {
+  if (!tickets || tickets < 1) return;
+  const wallet = ensureMemberTicketWallet(businessId, memberId);
+  const nextBalance = (Number(wallet?.ticket_balance) || 0) + tickets;
+  db.prepare(
+    "UPDATE member_ticket_wallets SET ticket_balance = ?, updated_at = datetime('now') WHERE member_id = ? AND business_id = ?"
+  ).run(nextBalance, memberId, businessId);
+  const ledgerId = randomUUID();
+  db.prepare(
+    `INSERT INTO ticket_ledger
+     (id, business_id, member_id, source_type, delta, balance_after, reference_type, reference_id, idempotency_key, metadata_json, created_at)
+     VALUES (?, ?, ?, 'profile_complete', ?, ?, 'member_profile', ?, NULL, ?, datetime('now'))`
+  ).run(ledgerId, businessId, memberId, tickets, nextBalance, memberId, JSON.stringify({ reason: "profile_complete_bonus" }));
 }
 
 export function getGameByCode(gameCode = "roulette") {

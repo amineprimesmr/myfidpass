@@ -346,4 +346,16 @@ export function runMigrations(db) {
     CREATE INDEX IF NOT EXISTS idx_member_category_assignments_member ON member_category_assignments(member_id);
     CREATE INDEX IF NOT EXISTS idx_member_category_assignments_category ON member_category_assignments(category_id);
   `));
+
+  const memColsProfile = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name);
+  for (const { col, type } of [
+    { col: "phone", type: "TEXT" },
+    { col: "city", type: "TEXT" },
+    { col: "birth_date", type: "TEXT" },
+    { col: "profile_ticket_bonus_granted", type: "INTEGER" },
+  ]) {
+    if (!memColsProfile.includes(col)) {
+      safeRun(db, () => db.exec(`ALTER TABLE members ADD COLUMN ${col} ${type}`));
+    }
+  }
 }

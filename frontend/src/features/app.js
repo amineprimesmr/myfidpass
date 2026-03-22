@@ -4772,20 +4772,35 @@ function initAppDashboard(slug) {
     if (!memberDetailModal || !memberDetailBody) return;
     memberDetailBody.innerHTML = "<p>Chargement…</p>";
     memberDetailModal.classList.remove("hidden");
-    api(`/dashboard/transactions?memberId=${encodeURIComponent(member.id)}&limit=20`)
-      .then((r) => (r.ok ? r.json() : { transactions: [] }))
-      .then((data) => {
-        const txList = (data.transactions || []).map((t) => `<li>${t.type === "points_add" ? "Points" : "Opération"} +${t.points} — ${formatDate(t.created_at)}</li>`).join("") || "<li>Aucune opération</li>";
+    Promise.all([
+      api(`/members/${encodeURIComponent(member.id)}`).then((r) => (r.ok ? r.json() : member)),
+      api(`/dashboard/transactions?memberId=${encodeURIComponent(member.id)}&limit=20`).then((r) =>
+        r.ok ? r.json() : { transactions: [] }
+      ),
+    ])
+      .then(([full, data]) => {
+        const m = { ...member, ...full };
+        const txList =
+          (data.transactions || [])
+            .map((t) => `<li>${t.type === "points_add" ? "Points" : "Opération"} +${t.points} — ${formatDate(t.created_at)}</li>`)
+            .join("") || "<li>Aucune opération</li>";
+        const extra =
+          (m.phone ? `<p>Tél. : ${escapeHtml(m.phone)}</p>` : "") +
+          (m.city ? `<p>Ville : ${escapeHtml(m.city)}</p>` : "") +
+          (m.birth_date ? `<p>Naissance : ${escapeHtml(m.birth_date)}</p>` : "");
         memberDetailBody.innerHTML = `
-          <p><strong>${escapeHtml(member.name)}</strong></p>
-          <p>${escapeHtml(member.email)}</p>
-          <p>${member.points} point(s)</p>
-          <p>Dernière visite : ${member.last_visit_at ? formatDate(member.last_visit_at) : "—"}</p>
+          <p><strong>${escapeHtml(m.name)}</strong></p>
+          <p>${escapeHtml(m.email)}</p>
+          ${extra}
+          <p>${m.points} point(s)</p>
+          <p>Dernière visite : ${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</p>
           <h3 style="font-size:1rem;margin:0.75rem 0 0.25rem">Historique</h3>
           <ul class="app-scanner-history-list">${txList}</ul>
         `;
       })
-      .catch(() => { memberDetailBody.innerHTML = "<p>Erreur chargement.</p>"; });
+      .catch(() => {
+        memberDetailBody.innerHTML = "<p>Erreur chargement.</p>";
+      });
   }
   function closeMemberDetail() {
     memberDetailModal?.classList.add("hidden");

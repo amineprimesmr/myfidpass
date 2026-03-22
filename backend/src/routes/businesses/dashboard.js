@@ -419,13 +419,16 @@ router.get("/members/export", (req, res) => {
   const filter = ["inactive30", "inactive90", "points50"].includes(req.query.filter) ? req.query.filter : null;
   const sort = ["last_visit", "points", "name", "created"].includes(req.query.sort) ? req.query.sort : "last_visit";
   const { members } = getMembersForBusiness(business.id, { search, limit: 2000, offset: 0, filter, sort });
-  const header = "Nom;Email;Points;Dernière visite;Inscrit le\n";
+  const header = "Nom;Email;Téléphone;Ville;Naissance;Points;Dernière visite;Inscrit le\n";
   const csv = header + members.map((m) => {
     const name = (m.name || "").replace(/;/g, ",").replace(/\n/g, " ");
     const email = (m.email || "").replace(/;/g, ",");
+    const phone = (m.phone || "").replace(/;/g, ",").replace(/\n/g, " ");
+    const city = (m.city || "").replace(/;/g, ",").replace(/\n/g, " ");
+    const birth = (m.birth_date || "").replace(/;/g, ",");
     const lastVisit = m.last_visit_at ? new Date(m.last_visit_at).toLocaleString("fr-FR") : "";
     const created = m.created_at ? new Date(m.created_at).toLocaleString("fr-FR") : "";
-    return `${name};${email};${m.points};${lastVisit};${created}`;
+    return `${name};${email};${phone};${city};${birth};${m.points};${lastVisit};${created}`;
   }).join("\n");
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="membres-${business.slug}.csv"`);

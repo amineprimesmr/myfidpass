@@ -33,11 +33,16 @@ export function getMemberByEmailForBusiness(businessId, email) {
   return db.prepare("SELECT * FROM members WHERE business_id = ? AND LOWER(TRIM(email)) = ?").get(businessId, norm) || null;
 }
 
-export function updateMember(memberId, { name, points }) {
+export function updateMember(memberId, { name, points, phone, city, birth_date: birthDate }) {
   const m = getMember(memberId);
   if (!m) return null;
   if (name !== undefined) db.prepare("UPDATE members SET name = ? WHERE id = ?").run(String(name).trim(), memberId);
   if (Number.isFinite(Number(points)) && Number(points) >= 0) db.prepare("UPDATE members SET points = ? WHERE id = ?").run(Number(points), memberId);
+  if (phone !== undefined) db.prepare("UPDATE members SET phone = ? WHERE id = ?").run(phone == null ? null : String(phone).trim(), memberId);
+  if (city !== undefined) db.prepare("UPDATE members SET city = ? WHERE id = ?").run(city == null ? null : String(city).trim(), memberId);
+  if (birthDate !== undefined) {
+    db.prepare("UPDATE members SET birth_date = ? WHERE id = ?").run(birthDate == null ? null : String(birthDate).trim(), memberId);
+  }
   return getMember(memberId);
 }
 
@@ -98,7 +103,7 @@ export function getMembersForBusiness(businessId, { search = "", limit = 50, off
     where += " AND points >= 50";
   }
   const stmt = db.prepare(
-    `SELECT id, name, email, points, created_at, last_visit_at FROM members WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`
+    `SELECT id, name, email, phone, city, birth_date, points, created_at, last_visit_at FROM members WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`
   );
   const countStmt = db.prepare(`SELECT COUNT(*) as n FROM members WHERE ${where}`);
   const rows = stmt.all(...params, limit, offset);

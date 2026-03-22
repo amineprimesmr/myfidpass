@@ -19,6 +19,8 @@ export * from "./passes.js";
 export * from "./webpush.js";
 export * from "./dashboard.js";
 export * from "./games.js";
+export { businessUsesTicketBonuses, addTicketsForProfileComplete } from "./games-helpers.js";
+export { completeMemberProfileForTicket } from "./member-profile-bonus.js";
 export * from "./engagement.js";
 export * from "./engagement-proof.js";
 export * from "./reset.js";

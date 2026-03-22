@@ -102,6 +102,24 @@ export function createClientFidelityApi(apiBase) {
     return data;
   }
 
+  async function submitProfileForTicket(slug, memberId, payload) {
+    const res = await fetch(
+      withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/profile-complete`),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: payload.phone,
+          city: payload.city,
+          birth_date: payload.birth_date,
+        }),
+      }
+    );
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.error || "Enregistrement impossible");
+    return data;
+  }
+
   return {
     getBusiness,
     createMember,
@@ -114,5 +132,6 @@ export function createClientFidelityApi(apiBase) {
     getWalletUrls,
     getEngagementActions,
     claimEngagement,
+    submitProfileForTicket,
   };
 }

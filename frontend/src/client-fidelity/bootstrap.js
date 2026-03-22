@@ -187,6 +187,56 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     rerender();
   }
 
+  async function onProfileBonusSubmit(event) {
+    event.preventDefault();
+    const state = store.get();
+    if (!state.member?.id) return;
+    const phone = rootEl.querySelector("#fidelity-v2-profile-phone")?.value?.trim() || "";
+    const city = rootEl.querySelector("#fidelity-v2-profile-city")?.value?.trim() || "";
+    const birthRaw = rootEl.querySelector("#fidelity-v2-profile-birth")?.value?.trim() || "";
+    const feedback = rootEl.querySelector("#fidelity-v2-profile-feedback");
+    const submitBtn = rootEl.querySelector("#fidelity-v2-profile-submit");
+    if (feedback) {
+      feedback.textContent = "";
+      feedback.classList.remove("success", "error");
+      feedback.classList.add("hidden");
+    }
+    if (submitBtn) submitBtn.disabled = true;
+    try {
+      const data = await api.submitProfileForTicket(slug, state.member.id, {
+        phone,
+        city,
+        birth_date: birthRaw,
+      });
+      if (data?.member) {
+        store.patch({ member: { ...state.member, ...data.member } });
+      }
+      await refreshMemberData();
+      if (feedback) {
+        feedback.classList.remove("hidden");
+        if (data.ticket_granted > 0) {
+          feedback.textContent = "+1 ticket ajouté à ta carte !";
+          feedback.classList.add("success");
+        } else if (data.already_done) {
+          feedback.textContent = "Profil déjà enregistré.";
+          feedback.classList.add("success");
+        } else {
+          feedback.textContent = "Profil enregistré.";
+          feedback.classList.add("success");
+        }
+      }
+      rerender();
+    } catch (err) {
+      if (feedback) {
+        feedback.textContent = err.message || "Enregistrement impossible.";
+        feedback.classList.remove("hidden");
+        feedback.classList.add("error");
+      }
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  }
+
   async function onSignupSubmit(event) {
     event.preventDefault();
     const name = rootEl.querySelector("#fidelity-v2-name")?.value?.trim();
@@ -422,6 +472,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     });
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
+    rootEl.querySelector("#fidelity-v2-profile-form")?.addEventListener("submit", onProfileBonusSubmit);
     rootEl.querySelectorAll(".fidelity-engagement-open-link").forEach((link) => {
       link.addEventListener("click", () => {
         const actionType = link.getAttribute("data-action-type");

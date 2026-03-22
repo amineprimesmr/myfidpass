@@ -19,6 +19,7 @@ import {
   getMemberRewards,
   markRewardGrantClaimed,
   getPushTokensForMember,
+  businessUsesTicketBonuses,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
@@ -204,6 +205,11 @@ router.get("/:memberId", (req, res) => {
     name: member.name,
     points: member.points,
     last_visit_at: member.last_visit_at || null,
+    phone: member.phone || null,
+    city: member.city || null,
+    birth_date: member.birth_date || null,
+    profile_ticket_eligible: businessUsesTicketBonuses(business.id),
+    profile_bonus_claimed: Number(member.profile_ticket_bonus_granted) === 1,
   });
 });
 

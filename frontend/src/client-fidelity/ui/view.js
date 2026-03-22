@@ -23,6 +23,11 @@ export function renderClientPage(root, state, options = {}) {
   const showRoulette = !!(roulette && roulette.enabled && (programType === "points" || programType === "stamps"));
   const rewards = Array.isArray(state.rewards) ? state.rewards : [];
   const actions = Array.isArray(state.engagementActions) ? state.engagementActions : [];
+  const profileEligible = !!(hasMember && state.member?.profile_ticket_eligible);
+  const profileClaimed = !!state.member?.profile_bonus_claimed;
+  const profilePhone = esc(state.member?.phone || "");
+  const profileCity = esc(state.member?.city || "");
+  const profileBirth = esc(state.member?.birth_date || "");
   const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
   const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
@@ -211,6 +216,43 @@ export function renderClientPage(root, state, options = {}) {
           <div class="fidelity-v2-step-body ${stepGateLocked ? "fidelity-v2-step-body--gate" : ""}">
             <div class="fidelity-v2-step-body-inner">
             <p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>
+            ${walletConfirmed && profileEligible ? `
+            <div class="fidelity-v2-profile-bonus" id="fidelity-v2-profile-bonus">
+              <div class="fidelity-v2-profile-bonus-head">
+                <span class="fidelity-v2-profile-bonus-badge" aria-hidden="true">🎟️</span>
+                <div>
+                  <h3 class="fidelity-v2-profile-bonus-title">Complète tes infos</h3>
+                  <p class="fidelity-v2-profile-bonus-desc">${profileClaimed ? "Merci : le commerce peut mieux te reconnaître et t’envoyer des offres adaptées." : "Le commerce récupère quelques infos utiles — en échange, <strong>1 ticket bonus</strong> sur ta carte (une seule fois)."}</p>
+                </div>
+              </div>
+              ${profileClaimed ? `
+              <p class="fidelity-v2-profile-bonus-done" role="status"><span class="fidelity-v2-wallet-done-icon" aria-hidden="true">✓</span> Profil enregistré${showRoulette ? " — ton ticket a été ajouté." : "."}</p>
+              ` : `
+              <form id="fidelity-v2-profile-form" class="fidelity-v2-profile-form" novalidate>
+                <div class="fidelity-v2-input-group">
+                  <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-phone">Téléphone</label>
+                  <input id="fidelity-v2-profile-phone" class="fidelity-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" value="${profilePhone}" required />
+                </div>
+                <div class="fidelity-v2-input-group">
+                  <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-city">Ville</label>
+                  <input id="fidelity-v2-profile-city" class="fidelity-input" type="text" autocomplete="address-level2" placeholder="Paris" value="${profileCity}" required />
+                </div>
+                <div class="fidelity-v2-input-group">
+                  <label class="fidelity-v2-profile-label" for="fidelity-v2-profile-birth">Date de naissance</label>
+                  <input id="fidelity-v2-profile-birth" class="fidelity-input" type="date" autocomplete="bday" value="${profileBirth}" required />
+                </div>
+                <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+                  <button type="submit" class="fidelity-cta-pill" id="fidelity-v2-profile-submit">
+                    <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
+                    <span class="fidelity-cta-pill-label">Valider et obtenir mon ticket</span>
+                    <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                  </button>
+                </span>
+              </form>
+              <p id="fidelity-v2-profile-feedback" class="fidelity-v2-profile-feedback hidden" role="status"></p>
+              `}
+            </div>
+            ` : ""}
             ${showRoulette ? `
             <div class="fidelity-v2-step-wheel">
               <div class="fidelity-v2-game-header fidelity-v2-game-header--inline">
