@@ -6,7 +6,7 @@ function idEsc(s) {
 }
 
 describe("renderNextRewardBannerMarkup (ligne unique)", () => {
-  it("affiche prochaine récompense sur une seule ligne sans barre", () => {
+  it("affiche libellé, barre de progression et 0/x pts sans +N redondant", () => {
     const state = buildNextRewardBannerState({
       hasMember: true,
       business: { points_reward_tiers: [{ points: 50, label: "Boisson offerte" }] },
@@ -21,11 +21,12 @@ describe("renderNextRewardBannerMarkup (ligne unique)", () => {
     expect(html).toContain("Boisson offerte");
     expect(html).toContain("0");
     expect(html).toContain("50");
-    expect(html).toContain("+<strong>50</strong>");
-    expect(html).not.toContain("fidelity-v2-next-reward-bar");
+    expect(html).toContain("fidelity-v2-next-reward-bar-inline");
+    expect(html).toContain("--fid-next-pct:");
+    expect(html).not.toMatch(/\+<strong>/);
   });
 
-  it("ajoute l’unité sur le manquant pour les tampons", () => {
+  it("affiche la barre pour la prochaine récompense tampons", () => {
     const state = buildNextRewardBannerState({
       hasMember: true,
       business: {
@@ -39,7 +40,8 @@ describe("renderNextRewardBannerMarkup (ligne unique)", () => {
     });
     expect(state.kind).toBe("next");
     const html = renderNextRewardBannerMarkup(idEsc, state, { businessNameEsc: "X" });
-    expect(html).toMatch(/\+<strong>\d+<\/strong> tampons/);
+    expect(html).toContain("fidelity-v2-next-reward-bar-inline");
     expect(html).toContain("Viennoiserie");
+    expect(html).not.toMatch(/\+<strong>/);
   });
 });

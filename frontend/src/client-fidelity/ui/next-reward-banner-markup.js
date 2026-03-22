@@ -86,20 +86,21 @@ export function renderNextRewardBannerMarkup(esc, state, ctx) {
   }
 
   const unitW = state.isStamps ? esc(state.unitShort) : "pts";
-  const need = esc(String(state.need));
-  const needSuffix = state.isStamps ? ` ${unitW}` : "";
   const bal = esc(String(state.balance));
   const max = esc(String(state.nextThreshold));
+  const pctRounded = Math.round(Math.max(0, Math.min(100, state.pct)));
   const aria = `Prochaine récompense : ${state.label}. ${state.balance} sur ${state.nextThreshold}, encore ${state.need} ${state.unitShort}.`;
 
   return `
         <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--next fidelity-v2-next-reward--single-line" role="status" aria-label="${esc(aria)}">
-          <p class="fidelity-v2-next-reward-one-line">
+          <div class="fidelity-v2-next-reward-one-line">
             <span class="fidelity-v2-next-reward-title-bit">${esc(state.label)}</span>
-            <span class="fidelity-v2-next-reward-sep" aria-hidden="true">·</span>
+            <span class="fidelity-v2-next-reward-bar-inline" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pctRounded}" aria-label="Progression vers cette récompense">
+              <span class="fidelity-v2-next-reward-bar-inline-track">
+                <span class="fidelity-v2-next-reward-bar-inline-fill" style="--fid-next-pct: ${state.pct.toFixed(2)}%;"></span>
+              </span>
+            </span>
             <span class="fidelity-v2-next-reward-pts-bit"><span class="fidelity-v2-next-reward-current">${bal}</span><span class="fidelity-v2-next-reward-stat-sep">/</span><span class="fidelity-v2-next-reward-max">${max}</span> <span class="fidelity-v2-next-reward-stat-unit">${unitW}</span></span>
-            <span class="fidelity-v2-next-reward-sep" aria-hidden="true">·</span>
-            <span class="fidelity-v2-next-reward-need-bit">+<strong>${need}</strong>${needSuffix}</span>
-          </p>
+          </div>
         </div>`;
 }
