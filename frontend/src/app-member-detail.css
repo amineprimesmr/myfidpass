@@ -1,5 +1,6 @@
 /**
- * Panneau détail membre (/app#membres) — tiroir latéral, voile uni (sans flou).
+ * Panneau détail membre (/app#membres) — tiroir latéral, sans assombrissement du fond.
+ * Le scrim reste transparent mais cliquable pour fermer.
  * Fichier dédié (REFONTE-REGLES : CSS par composant).
  */
 #app-app .app-member-drawer {
@@ -21,20 +22,13 @@
 #app-app .app-member-drawer__scrim {
   position: absolute;
   inset: 0;
-  /* Voile opaque léger : pas de backdrop-filter (pas de flou, pas d’artefacts). */
-  background: rgba(13, 13, 13, 0.18);
-  opacity: 0;
-  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
   border: none;
   padding: 0;
   margin: 0;
   cursor: pointer;
   appearance: none;
   font: inherit;
-}
-
-#app-app .app-member-drawer.is-open .app-member-drawer__scrim {
-  opacity: 1;
 }
 
 #app-app .app-member-drawer__panel {
