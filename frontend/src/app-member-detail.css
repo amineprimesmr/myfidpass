@@ -1,0 +1,453 @@
+/**
+ * Panneau détail membre (/app#membres) — tiroir latéral, voile léger.
+ * Fichier dédié (REFONTE-REGLES : CSS par composant).
+ */
+#app-app .app-member-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+#app-app .app-member-drawer:not(.hidden) {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+#app-app .app-member-drawer__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  appearance: none;
+  font: inherit;
+}
+
+#app-app .app-member-drawer.is-open .app-member-drawer__scrim {
+  opacity: 1;
+}
+
+#app-app .app-member-drawer__panel {
+  position: relative;
+  width: min(100%, 440px);
+  max-height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: -12px 0 40px rgba(15, 23, 42, 0.07), -1px 0 0 rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 1;
+}
+
+#app-app .app-member-drawer.is-open .app-member-drawer__panel {
+  transform: translateX(0);
+}
+
+#app-app .app-member-drawer__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--app-border, #e8ecf1);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#app-app .app-member-drawer__eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-member-drawer__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--app-text, #1a202c);
+  line-height: 1.25;
+}
+
+#app-app .app-member-drawer__close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--app-radius-sm, 10px);
+  background: var(--app-surface-hover, #f0f2f5);
+  color: var(--app-text-muted, #64748b);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--app-transition, 0.22s ease),
+    color var(--app-transition, 0.22s ease),
+    transform 0.15s ease;
+  box-shadow: var(--app-relief-inset, inset 2px 2px 5px rgba(255, 255, 255, 0.9), inset -2px -2px 5px rgba(0, 0, 0, 0.06));
+}
+
+#app-app .app-member-drawer__close:hover {
+  color: var(--app-text, #1a202c);
+}
+
+#app-app .app-member-drawer__close:active {
+  transform: scale(0.96);
+}
+
+#app-app .app-member-drawer__close svg {
+  display: block;
+}
+
+#app-app .app-member-drawer__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+#app-app .app-member-drawer__body {
+  padding: 1.25rem 1.25rem 2rem;
+}
+
+/* Hero */
+#app-app .app-member-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+#app-app .app-member-hero__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--app-accent-light, rgba(37, 99, 235, 0.15)) 0%, rgba(37, 99, 235, 0.06) 100%);
+  color: var(--app-accent, #2563eb);
+  font-weight: 800;
+  font-size: 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--app-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+#app-app .app-member-hero__text {
+  min-width: 0;
+}
+
+#app-app .app-member-hero__name {
+  margin: 0 0 0.2rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+#app-app .app-member-hero__email {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--app-text-muted, #64748b);
+  word-break: break-all;
+}
+
+/* Stats */
+#app-app .app-member-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+#app-app .app-member-stat {
+  background: #fff;
+  border: 1px solid var(--app-border, #e8ecf1);
+  border-radius: var(--app-radius-md, 14px);
+  padding: 0.85rem 1rem;
+  box-shadow: var(--app-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+#app-app .app-member-stat__label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-text-muted, #64748b);
+  margin-bottom: 0.35rem;
+}
+
+#app-app .app-member-stat__value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--app-text, #1a202c);
+  line-height: 1.1;
+}
+
+#app-app .app-member-stat__value--muted {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+#app-app .app-member-stat__suffix {
+  font-size: 0.55em;
+  font-weight: 700;
+  opacity: 0.42;
+  margin-left: 0.2em;
+}
+
+/* Meta chips */
+#app-app .app-member-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+#app-app .app-member-meta__chip {
+  font-size: 0.8125rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--app-text, #1a202c);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+/* Sections */
+#app-app .app-member-section__title {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-text-muted, #64748b);
+}
+
+/* Timeline */
+#app-app .app-member-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+#app-app .app-member-timeline__item {
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.65rem 0 0.65rem 0.1rem;
+  border-left: 2px solid var(--app-border, #e8ecf1);
+  margin-left: 0.45rem;
+  padding-left: 1rem;
+}
+
+#app-app .app-member-timeline__item:last-child {
+  padding-bottom: 0;
+}
+
+#app-app .app-member-timeline__dot {
+  position: absolute;
+  left: -0.4rem;
+  top: 0.85rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--app-accent, #2563eb);
+  box-shadow: 0 0 0 3px #fff;
+}
+
+#app-app .app-member-timeline__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  width: 100%;
+}
+
+#app-app .app-member-timeline__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--app-text, #1a202c);
+}
+
+#app-app .app-member-timeline__pts {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--app-accent, #2563eb);
+}
+
+#app-app .app-member-timeline__pts--neg {
+  color: #dc2626;
+}
+
+#app-app .app-member-timeline__time {
+  font-size: 0.75rem;
+  color: var(--app-text-muted, #64748b);
+  width: 100%;
+}
+
+#app-app .app-member-timeline__empty {
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 0.9rem;
+  color: var(--app-text-muted, #64748b);
+}
+
+/* Correction caisse */
+#app-app .app-member-adjust {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1.1rem 1.15rem;
+  border-radius: var(--app-radius-md, 14px);
+  background: #fff;
+  border: 1px solid var(--app-border, #e8ecf1);
+  box-shadow: var(--app-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+#app-app .app-member-adjust__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--app-text, #1a202c);
+}
+
+#app-app .app-member-adjust__hint {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-member-adjust__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+#app-app .app-member-adjust__input {
+  width: 6.5rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border: 1px solid var(--app-border, #e8ecf1);
+  border-radius: var(--app-radius-sm, 10px);
+  background: #f8fafc;
+  color: var(--app-text, #1a202c);
+  box-shadow: var(--app-relief-inset, inset 2px 2px 5px rgba(255, 255, 255, 0.9), inset -2px -2px 5px rgba(0, 0, 0, 0.06));
+}
+
+#app-app .app-member-adjust__input:focus {
+  outline: none;
+  box-shadow: var(--app-relief-inset-focus, 0 0 0 3px var(--app-accent-light, rgba(37, 99, 235, 0.12)));
+}
+
+#app-app .app-member-adjust__btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--app-radius-sm, 10px);
+  cursor: pointer;
+  background: var(--app-text, #1a202c);
+  color: #fff;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+}
+
+#app-app .app-member-adjust__btn:hover:not(:disabled) {
+  background: #0f172a;
+}
+
+#app-app .app-member-adjust__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+#app-app .app-member-adjust__btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+#app-app .app-member-adjust__feedback {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-member-adjust__feedback.is-error {
+  color: #b91c1c;
+}
+
+#app-app .app-member-adjust__feedback.is-success {
+  color: #15803d;
+}
+
+#app-app .app-member-drawer__loading {
+  margin: 0;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-member-drawer__error {
+  margin: 0;
+  padding: 1.5rem 0;
+  font-size: 0.9rem;
+  color: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  #app-app .app-member-drawer {
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+
+  #app-app .app-member-drawer__panel {
+    width: 100%;
+    max-height: min(92vh, 100%);
+    border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+    box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.1);
+  }
+
+  #app-app .app-member-drawer.is-open .app-member-drawer__panel {
+    transform: translateY(0);
+  }
+
+  #app-app .app-member-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.app-member-drawer-open {
+  overflow: hidden;
+}

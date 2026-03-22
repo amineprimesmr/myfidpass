@@ -4763,11 +4763,45 @@ function initAppDashboard(slug) {
     });
   }
 
-  const memberDetailModal = document.getElementById("app-member-detail-modal");
+  const memberDetailDrawer = document.getElementById("app-member-detail-drawer");
   const memberDetailBody = document.getElementById("app-member-detail-body");
-  const memberDetailClose = memberDetailModal?.querySelector(".app-modal-close");
-  const memberDetailBackdrop = memberDetailModal?.querySelector(".app-modal-backdrop");
+  const memberDetailClose = document.getElementById("app-member-drawer-close");
+  const memberDetailScrim = document.getElementById("app-member-drawer-scrim");
   let memberDetailOpenId = null;
+
+  function memberDrawerKeydown(e) {
+    if (e.key !== "Escape") return;
+    if (!memberDetailOpenId || !memberDetailDrawer || memberDetailDrawer.classList.contains("hidden")) return;
+    e.preventDefault();
+    closeMemberDetail();
+  }
+  document.addEventListener("keydown", memberDrawerKeydown);
+
+  function openMemberDetailDrawerAnim() {
+    if (!memberDetailDrawer) return;
+    const wasHidden = memberDetailDrawer.classList.contains("hidden");
+    memberDetailDrawer.classList.remove("hidden");
+    memberDetailDrawer.setAttribute("aria-hidden", "false");
+    document.body.classList.add("app-member-drawer-open");
+    if (wasHidden) {
+      memberDetailDrawer.classList.remove("is-open");
+      void memberDetailDrawer.offsetWidth;
+      requestAnimationFrame(() => {
+        memberDetailDrawer.classList.add("is-open");
+        memberDetailClose?.focus();
+      });
+    }
+  }
+
+  function closeMemberDetailDrawerAnim() {
+    if (!memberDetailDrawer) return;
+    memberDetailDrawer.classList.remove("is-open");
+    window.setTimeout(() => {
+      memberDetailDrawer.classList.add("hidden");
+      memberDetailDrawer.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("app-member-drawer-open");
+    }, 320);
+  }
 
   function formatMemberTransactionLine(t) {
     const pts = Number(t.points) || 0;
@@ -4781,34 +4815,66 @@ function initAppDashboard(slug) {
     } else if (t.type === "reward_redeem") {
       label = "Récompense";
     }
-    return `<li>${label} : ${signed} pts — ${formatDate(t.created_at)}</li>`;
+    const ptsClass = pts < 0 ? "app-member-timeline__pts app-member-timeline__pts--neg" : "app-member-timeline__pts";
+    return `<li class="app-member-timeline__item">
+      <span class="app-member-timeline__dot" aria-hidden="true"></span>
+      <div class="app-member-timeline__row">
+        <span class="app-member-timeline__label">${escapeHtml(label)}</span>
+        <span class="${ptsClass}">${escapeHtml(signed)} pts</span>
+        <time class="app-member-timeline__time">${escapeHtml(formatDate(t.created_at))}</time>
+      </div>
+    </li>`;
   }
 
   function memberDetailMarkup(m, transactions) {
-    const txList =
-      (transactions || []).map(formatMemberTransactionLine).join("") || "<li>Aucune opération</li>";
-    const extra =
-      (m.phone ? `<p>Tél. : ${escapeHtml(m.phone)}</p>` : "") +
-      (m.city ? `<p>Ville : ${escapeHtml(m.city)}</p>` : "") +
-      (m.birth_date ? `<p>Naissance : ${escapeHtml(m.birth_date)}</p>` : "");
+    const rawName = (m.name || m.email || "?").trim();
+    const initial = rawName ? rawName.charAt(0).toUpperCase() : "?";
+    const pointsVal = m.points ?? 0;
+    const lastVisit = m.last_visit_at ? formatDate(m.last_visit_at) : "—";
+    const metaChips = [
+      m.phone ? `<span class="app-member-meta__chip">${escapeHtml(m.phone)}</span>` : "",
+      m.city ? `<span class="app-member-meta__chip">${escapeHtml(m.city)}</span>` : "",
+      m.birth_date ? `<span class="app-member-meta__chip">${escapeHtml(m.birth_date)}</span>` : "",
+    ]
+      .filter(Boolean)
+      .join("");
+    const txRows = (transactions || []).map(formatMemberTransactionLine).join("");
+    const historyBlock = txRows
+      ? `<ul class="app-member-timeline" role="list">${txRows}</ul>`
+      : `<p class="app-member-timeline__empty">Aucune opération enregistrée.</p>`;
     return `
-          <p><strong>${escapeHtml(m.name)}</strong></p>
-          <p>${escapeHtml(m.email)}</p>
-          ${extra}
-          <p>${m.points} point(s)</p>
-          <p>Dernière visite : ${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</p>
-          <h3 style="font-size:1rem;margin:0.75rem 0 0.25rem">Historique</h3>
-          <ul class="app-scanner-history-list">${txList}</ul>
-          <div class="app-member-points-correction" style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--app-border, #e8e8e8)">
-            <h3 style="font-size:1rem;margin:0 0 0.5rem">Retirer des points (erreur de caisse)</h3>
-            <p style="font-size:0.875rem;margin:0 0 0.5rem;opacity:0.85">Enregistré dans l’historique ; le client est notifié sur Apple Wallet si applicable.</p>
-            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
-              <input type="number" min="1" step="1" id="app-member-remove-points-input" placeholder="Nb pts" style="width:5.5rem;padding:0.35rem 0.5rem;border-radius:8px;border:1px solid var(--app-border, #ccc)" />
-              <button type="button" class="btn btn-secondary" id="app-member-remove-points-btn">Retirer</button>
-            </div>
-            <p id="app-member-remove-points-msg" class="hidden" style="margin-top:0.5rem;font-size:0.875rem"></p>
-          </div>
-        `;
+      <div class="app-member-hero">
+        <div class="app-member-hero__avatar" aria-hidden="true">${escapeHtml(initial)}</div>
+        <div class="app-member-hero__text">
+          <p class="app-member-hero__name">${escapeHtml(m.name || "Sans nom")}</p>
+          <p class="app-member-hero__email">${escapeHtml(m.email || "")}</p>
+        </div>
+      </div>
+      <div class="app-member-stats">
+        <div class="app-member-stat">
+          <span class="app-member-stat__label">Solde</span>
+          <span class="app-member-stat__value">${escapeHtml(String(pointsVal))}<span class="app-member-stat__suffix">pts</span></span>
+        </div>
+        <div class="app-member-stat">
+          <span class="app-member-stat__label">Dernier passage</span>
+          <span class="app-member-stat__value app-member-stat__value--muted">${escapeHtml(lastVisit)}</span>
+        </div>
+      </div>
+      ${metaChips ? `<div class="app-member-meta" role="list">${metaChips}</div>` : ""}
+      <section class="app-member-section" aria-labelledby="app-member-history-title">
+        <h3 id="app-member-history-title" class="app-member-section__title">Historique</h3>
+        ${historyBlock}
+      </section>
+      <section class="app-member-adjust" aria-labelledby="app-member-adjust-title">
+        <h3 id="app-member-adjust-title" class="app-member-adjust__title">Retirer des points</h3>
+        <p class="app-member-adjust__hint">En cas d’erreur de caisse. L’opération est enregistrée ; le client peut être notifié sur Apple Wallet.</p>
+        <div class="app-member-adjust__row">
+          <input type="number" min="1" step="1" id="app-member-remove-points-input" class="app-member-adjust__input" placeholder="Nombre" inputmode="numeric" aria-label="Nombre de points à retirer" />
+          <button type="button" class="app-member-adjust__btn" id="app-member-remove-points-btn">Retirer</button>
+        </div>
+        <p id="app-member-remove-points-msg" class="app-member-adjust__feedback hidden" role="status"></p>
+      </section>
+    `;
   }
 
   async function refreshMemberDetailPanel() {
@@ -4826,15 +4892,15 @@ function initAppDashboard(slug) {
       memberDetailOpenId = m.id;
       memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || []);
     } catch (_) {
-      memberDetailBody.innerHTML = "<p>Erreur chargement.</p>";
+      memberDetailBody.innerHTML = '<p class="app-member-drawer__error">Impossible de charger ce membre.</p>';
     }
   }
 
   function openMemberDetail(member) {
-    if (!memberDetailModal || !memberDetailBody) return;
+    if (!memberDetailDrawer || !memberDetailBody) return;
     memberDetailOpenId = member.id;
-    memberDetailBody.innerHTML = "<p>Chargement…</p>";
-    memberDetailModal.classList.remove("hidden");
+    memberDetailBody.innerHTML = '<p class="app-member-drawer__loading">Chargement…</p>';
+    openMemberDetailDrawerAnim();
     Promise.all([
       api(`/members/${encodeURIComponent(member.id)}`).then((r) => (r.ok ? r.json() : member)),
       api(`/dashboard/transactions?memberId=${encodeURIComponent(member.id)}&limit=20`).then((r) =>
@@ -4847,15 +4913,16 @@ function initAppDashboard(slug) {
         memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || []);
       })
       .catch(() => {
-        memberDetailBody.innerHTML = "<p>Erreur chargement.</p>";
+        memberDetailBody.innerHTML = '<p class="app-member-drawer__error">Impossible de charger ce membre.</p>';
       });
   }
   function closeMemberDetail() {
     memberDetailOpenId = null;
-    memberDetailModal?.classList.add("hidden");
+    if (!memberDetailDrawer || memberDetailDrawer.classList.contains("hidden")) return;
+    closeMemberDetailDrawerAnim();
   }
 
-  memberDetailModal?.addEventListener("click", async (e) => {
+  memberDetailDrawer?.addEventListener("click", async (e) => {
     const btn = e.target.closest("#app-member-remove-points-btn");
     if (!btn || !memberDetailOpenId || !memberDetailBody) return;
     e.preventDefault();
@@ -4865,8 +4932,7 @@ function initAppDashboard(slug) {
     if (!input || !Number.isFinite(n) || n < 1) {
       if (msg) {
         msg.textContent = "Indiquez un nombre entier ≥ 1.";
-        msg.classList.remove("hidden");
-        msg.classList.remove("error");
+        msg.classList.remove("hidden", "is-success", "is-error");
       }
       return;
     }
@@ -4884,7 +4950,8 @@ function initAppDashboard(slug) {
       if (!res.ok) {
         if (msg) {
           msg.textContent = data.error || "Erreur";
-          msg.classList.add("error");
+          msg.classList.remove("is-success");
+          msg.classList.add("is-error");
           msg.classList.remove("hidden");
         }
         btn.disabled = false;
@@ -4892,7 +4959,8 @@ function initAppDashboard(slug) {
       }
       if (msg) {
         msg.textContent = `Retiré : ${data.points_removed ?? n} pts. Nouveau solde : ${data.points} pts.`;
-        msg.classList.remove("error");
+        msg.classList.remove("is-error");
+        msg.classList.add("is-success");
         msg.classList.remove("hidden");
       }
       input.value = "";
@@ -4901,14 +4969,21 @@ function initAppDashboard(slug) {
     } catch (_) {
       if (msg) {
         msg.textContent = "Erreur réseau.";
-        msg.classList.add("error");
+        msg.classList.remove("is-success");
+        msg.classList.add("is-error");
         msg.classList.remove("hidden");
       }
     }
     btn.disabled = false;
   });
-  memberDetailClose?.addEventListener("click", closeMemberDetail);
-  memberDetailBackdrop?.addEventListener("click", closeMemberDetail);
+  memberDetailClose?.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeMemberDetail();
+  });
+  memberDetailScrim?.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeMemberDetail();
+  });
   membersListEl?.addEventListener("click", (e) => {
     const card = e.target.closest(".app-membres-card[data-member-id]");
     if (!card) return;
