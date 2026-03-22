@@ -139,6 +139,8 @@ export async function initRouting() {
 
   document.body.classList.toggle("page-app", route.type === "app");
   document.body.classList.remove("page-builder");
+  document.documentElement.classList.toggle("fidpass-fidelity-route", route.type === "fidelity");
+  document.body.classList.toggle("fidpass-fidelity-route", route.type === "fidelity");
 
   if (c.page404) c.page404.classList.add("hidden");
 

@@ -69,6 +69,12 @@ body {
   line-height: 1.5;
 }
 
+/* Routes /fidelity/* : le body global est sombre ; éviter bandes noires (overscroll, safe-area). */
+html.fidpass-fidelity-route,
+body.fidpass-fidelity-route {
+  background: #f8fafc;
+}
+
 /* ── Site banner media ── */
 .site-banner-media {
   width: 100%;
@@ -2088,6 +2094,7 @@ body {
   align-items: center;
   justify-content: flex-end;
   padding: 0;
+  background: var(--fidpass-surface);
 }
 
 .fidelity-roulette-wheel-outer {
