@@ -8,7 +8,7 @@ function esc(value) {
 }
 
 export function renderClientPage(root, state, options = {}) {
-  const { gamePage = false, slug = "" } = options;
+  const { gamePage = false, slug = "", apiBase = "" } = options;
   const businessName = esc(state.business?.organizationName || state.business?.name || "Carte fidélité");
   const hasMember = !!state.member?.id;
   const loyaltyGameTickets = (state.business?.loyalty_mode || "points_cash") === "points_game_tickets";
@@ -62,21 +62,21 @@ export function renderClientPage(root, state, options = {}) {
     return;
   }
 
-  const logoUrl = state.business?.logoUrl;
+  /** Même base que les fetch API : évite logo cassé si le JSON renvoie une URL backend incorrecte (host interne, http, etc.). */
+  const hasServerLogo = !!state.business?.logoUrl;
+  const logoPath = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
+  const baseTrim = String(apiBase || "").replace(/\/$/, "");
+  const logoSrc = hasServerLogo && logoPath ? (baseTrim ? `${baseTrim}${logoPath}` : logoPath) : null;
 
   root.innerHTML = `
     <header class="fidelity-v2-header">
       <div class="fidelity-v2-header-inner">
         <div class="fidelity-v2-header-brand">
-          ${logoUrl
-            ? `<img src="${esc(logoUrl)}" alt="${esc(businessName)}" class="fidelity-v2-logo" />`
+          ${logoSrc
+            ? `<img src="${esc(logoSrc)}" alt="" class="fidelity-v2-logo" loading="lazy" decoding="async" />`
             : `<div class="fidelity-v2-logo-placeholder"><span>${esc(businessName.slice(0, 1).toUpperCase())}</span></div>`
           }
           <span class="fidelity-v2-business-name">${esc(businessName)}</span>
-        </div>
-        <div class="fidelity-v2-header-badge">
-          <span class="fidelity-v2-header-powered">Propulsé par</span>
-          <span class="fidelity-v2-header-brand-name">MyFidpass</span>
         </div>
       </div>
     </header>
@@ -142,7 +142,6 @@ export function renderClientPage(root, state, options = {}) {
       <section class="fidelity-v2-card fidelity-v2-signup-card ${hasMember ? "hidden" : ""}" id="fidelity-v2-signup">
         <div class="fidelity-v2-signup-header">
           <h2 class="fidelity-v2-card-title">Créer ma carte</h2>
-          <p class="fidelity-v2-card-desc">C'est gratuit et prend moins de 30 secondes.</p>
         </div>
         <form id="fidelity-v2-form" class="fidelity-v2-form" novalidate>
           <div class="fidelity-v2-input-group">

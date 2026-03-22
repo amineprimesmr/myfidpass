@@ -154,7 +154,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
   }
 
   function rerender() {
-    renderClientPage(rootEl, store.get(), { gamePage, slug });
+    renderClientPage(rootEl, store.get(), { gamePage, slug, apiBase });
     bindEvents();
     if (!isSpinning) {
       initRouletteWheel();
