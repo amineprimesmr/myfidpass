@@ -130,19 +130,16 @@ export function renderClientPage(root, state, options = {}) {
           </div>
         </section>
       ` : `
-        <!-- HERO nouveau visiteur -->
+        <!-- HERO nouveau visiteur (bénéfices client : pas la « carte » en soi) -->
         <section class="fidelity-v2-hero fidelity-v2-hero-new">
           <div class="fidelity-v2-hero-icon">🎁</div>
-          <h1 class="fidelity-v2-hero-title">Ta carte fidélité gratuite</h1>
-          <p class="fidelity-v2-hero-subtitle">Rejoins le programme de fidélité de <strong>${esc(businessName)}</strong> et accumule des avantages à chaque visite.</p>
+          <h1 class="fidelity-v2-hero-title">Remises, offres &amp; cadeaux</h1>
+          <p class="fidelity-v2-hero-subtitle">Chez <strong>${esc(businessName)}</strong>, profite d’avantages réservés aux clients : réductions, produits offerts et surprises. Ton prénom et ton e-mail suffisent pour commencer.</p>
         </section>
       `}
 
       <!-- Formulaire d'inscription -->
-      <section class="fidelity-v2-card fidelity-v2-signup-card ${hasMember ? "hidden" : ""}" id="fidelity-v2-signup">
-        <div class="fidelity-v2-signup-header">
-          <h2 class="fidelity-v2-card-title">Créer ma carte</h2>
-        </div>
+      <section class="fidelity-v2-card fidelity-v2-signup-card ${hasMember ? "hidden" : ""}" id="fidelity-v2-signup" aria-label="Inscription aux offres">
         <form id="fidelity-v2-form" class="fidelity-v2-form" novalidate>
           <div class="fidelity-v2-input-group">
             <input id="fidelity-v2-name" class="fidelity-input" type="text" placeholder="prénom" autocomplete="given-name" aria-label="Prénom" required />
@@ -153,7 +150,7 @@ export function renderClientPage(root, state, options = {}) {
           <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
             <button id="fidelity-v2-submit" class="fidelity-cta-pill" type="submit">
               <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-              <span class="fidelity-cta-pill-label">Créer ma carte gratuite</span>
+              <span class="fidelity-cta-pill-label">Accéder à mes offres</span>
               <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
             </button>
           </span>
