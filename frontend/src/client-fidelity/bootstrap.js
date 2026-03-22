@@ -1,4 +1,9 @@
+/**
+ * Dérogation REFONTE-REGLES (max 400 lignes) : extraction prévue vers client-fidelity/roulette/
+ * — à traiter avant 2026-06-01.
+ */
 import { createClientFidelityApi } from "./api/clientApi.js";
+import { messageUtilisateurPourErreur } from "./lib/client-error-fr.js";
 import { createClientFidelityStore } from "./state/store.js";
 import { renderClientPage } from "./ui/view.js";
 import { memberStorageKey, SUCCESS_MAX_AGE_MS, walletConfirmedStorageKey } from "./constants.js";
@@ -24,8 +29,13 @@ function isUnlimitedTicketsTest() {
 }
 
 // Configuration roulette (roue circulaire)
-const ROULETTE_SPIN_DURATION_MS = 4000;
-const ROULETTE_EXTRA_TURNS = 6;
+const ROULETTE_SPIN_DURATION_MS = 3400;
+const ROULETTE_EXTRA_TURNS = 5;
+
+function prefersReducedMotion() {
+  if (typeof globalThis.matchMedia !== "function") return false;
+  return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 const DEFAULT_WHEEL_LABELS = ["PERDU", "+10 pts", "PERDU", "+25 pts", "PERDU", "+50 pts", "PERDU", "+10 pts", "PERDU", "+25 pts"];
 
 export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage = false }) {
@@ -231,7 +241,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       await refreshMemberData();
     } catch (err) {
       if (feedback) {
-        feedback.textContent = err.message || "Enregistrement impossible.";
+        feedback.textContent = messageUtilisateurPourErreur(err, err.message || "Enregistrement impossible.");
         feedback.classList.remove("hidden");
         feedback.classList.add("error");
       }
@@ -261,7 +271,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       rerender();
     } catch (err) {
       if (errorEl) {
-        errorEl.textContent = err.message || "Erreur lors de la création.";
+        errorEl.textContent = messageUtilisateurPourErreur(err, err.message || "Erreur lors de la création.");
         errorEl.classList.remove("hidden");
       }
     }
@@ -286,7 +296,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       await refreshMemberData();
     } catch (err) {
       if (feedback) {
-        feedback.textContent = err.message || "Conversion impossible.";
+        feedback.textContent = messageUtilisateurPourErreur(err, err.message || "Conversion impossible.");
         feedback.classList.add("error");
       }
     }
@@ -321,17 +331,30 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
       return;
     }
 
+    const reduceMotion = prefersReducedMotion();
+    const spinDurationMs = reduceMotion ? 0 : ROULETTE_SPIN_DURATION_MS;
+    const spinStart = currentRotation;
+
     isSpinning = true;
     spinBtn.disabled = true;
+    spinBtn.setAttribute("aria-busy", "true");
     if (feedback) {
       feedback.classList.add("hidden");
       feedback.classList.remove("success", "error");
     }
 
-    // Rotation d'attente (rapide) pendant l'appel API
-    wheelEl.style.transition = "transform 0.15s linear";
-    const spinStart = currentRotation;
-    wheelEl.style.transform = `rotate(${spinStart + 360}deg)`;
+    wheelEl.style.willChange = "transform";
+
+    const clearBusy = () => {
+      spinBtn.disabled = false;
+      spinBtn.removeAttribute("aria-busy");
+    };
+
+    const releaseWillChangeSoon = () => {
+      window.setTimeout(() => {
+        wheelEl.style.willChange = "auto";
+      }, 120);
+    };
 
     try {
       const result = await api.spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey());
@@ -352,23 +375,16 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
       const n = wheelLabels.length;
       const segmentAngle = 360 / n;
-      // Pointeur à droite = 90°. On veut que le centre du segment winIndex soit à 90° après rotation.
+      /* Un tour complet depuis la position actuelle, puis alignement segment + tours bonus */
       const baseRotation = spinStart + 360;
       let deltaMod = (90 - (winIndex + 0.5) * segmentAngle - baseRotation) % 360;
       if (deltaMod < 0) deltaMod += 360;
       const finalDelta = deltaMod + 360 * ROULETTE_EXTRA_TURNS;
       const targetRotation = baseRotation + finalDelta;
 
-      wheelEl.offsetHeight; // force reflow pour que la position spinStart+360 soit appliquée
-      wheelEl.style.transition = `transform ${ROULETTE_SPIN_DURATION_MS}ms cubic-bezier(0.2, 0.8, 0.3, 1)`;
-      wheelEl.style.transform = `rotate(${targetRotation}deg)`;
-
-      currentRotation = targetRotation;
-
-      setTimeout(async () => {
+      const showOutcome = async () => {
         isSpinning = false;
-        spinBtn.disabled = false;
-
+        clearBusy();
         if (feedback) {
           const winMsg =
             programType === "stamps" && isWinStamps
@@ -382,52 +398,87 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
           feedback.classList.add(isWin ? "success" : "error");
           feedback.classList.remove("hidden");
         }
-
         if (isWin) triggerConfetti();
         await refreshMemberData();
-      }, ROULETTE_SPIN_DURATION_MS);
+        releaseWillChangeSoon();
+      };
+
+      wheelEl.offsetHeight;
+      currentRotation = targetRotation;
+
+      if (reduceMotion) {
+        wheelEl.style.transition = "none";
+        wheelEl.style.transform = `rotate(${targetRotation}deg)`;
+        await showOutcome();
+        return;
+      }
+
+      wheelEl.style.transition = `transform ${spinDurationMs}ms cubic-bezier(0.17, 0.82, 0.24, 1)`;
+      wheelEl.style.transform = `rotate(${targetRotation}deg)`;
+
+      let completed = false;
+      const fallbackMs = spinDurationMs + 750;
+      const t = window.setTimeout(() => {
+        if (completed) return;
+        completed = true;
+        wheelEl.removeEventListener("transitionend", onTransitionEnd);
+        void showOutcome();
+      }, fallbackMs);
+
+      function onTransitionEnd(e) {
+        if (e.target !== wheelEl || e.propertyName !== "transform") return;
+        if (completed) return;
+        completed = true;
+        window.clearTimeout(t);
+        wheelEl.removeEventListener("transitionend", onTransitionEnd);
+        void showOutcome();
+      }
+
+      wheelEl.addEventListener("transitionend", onTransitionEnd);
     } catch (err) {
       isSpinning = false;
-      spinBtn.disabled = false;
-      wheelEl.style.transition = "transform 0.5s ease-out";
-      wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+      clearBusy();
+      wheelEl.style.willChange = "transform";
+      wheelEl.style.transition = reduceMotion ? "none" : "transform 0.45s cubic-bezier(0.33, 1, 0.68, 1)";
+      wheelEl.style.transform = `rotate(${spinStart}deg)`;
+      releaseWillChangeSoon();
 
       if (feedback) {
-        feedback.textContent = err.message || "Erreur lors du jeu.";
+        feedback.textContent = messageUtilisateurPourErreur(err, "Le jeu n’a pas pu aboutir. Réessaie.");
         feedback.classList.add("error");
-        feedback.classList.remove("hidden");
+        feedback.classList.remove("hidden", "success");
       }
     }
   }
 
   function triggerConfetti() {
-    if (typeof window.confetti === "function") {
-      const duration = 3000;
-      const end = Date.now() + duration;
+    if (prefersReducedMotion() || typeof window.confetti !== "function") return;
+    const mobile =
+      typeof globalThis.matchMedia === "function" && globalThis.matchMedia("(max-width: 520px)").matches;
+    const duration = mobile ? 1600 : 2400;
+    const end = Date.now() + duration;
+    const n = mobile ? 2 : 4;
 
-      (function frame() {
-        window.confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ['#ff0055', '#00ffcc', '#ffd700']
-        });
-        window.confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ['#ff0055', '#00ffcc', '#ffd700']
-        });
+    (function frame() {
+      window.confetti({
+        particleCount: n,
+        angle: 60,
+        spread: 52,
+        origin: { x: 0 },
+        colors: ["#ff0055", "#00ffcc", "#ffd700"],
+      });
+      window.confetti({
+        particleCount: n,
+        angle: 120,
+        spread: 52,
+        origin: { x: 1 },
+        colors: ["#ff0055", "#00ffcc", "#ffd700"],
+      });
 
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      }());
-    } else {
-      console.log("Confetti library not loaded.");
-    }
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
   }
 
   const PENDING_CLAIM_KEY = "fidelity_pending_engagement_claim";

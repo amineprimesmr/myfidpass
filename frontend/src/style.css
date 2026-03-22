@@ -974,6 +974,12 @@ body {
   pointer-events: none;
 }
 
+/* Pendant le spin, rester lisible (évite l’effet « bouton gris mort ») */
+.fidelity-game-page .fidelity-cta-pill--wheel-cta:disabled {
+  opacity: 0.88;
+  pointer-events: none;
+}
+
 /* ── Signup form ── */
 .fidelity-v2-signup-header {
   margin-bottom: 1rem;
@@ -2225,7 +2231,15 @@ body {
 }
 
 .fidelity-game-page .fidelity-roulette-feedback {
-  margin: 0.25rem 0 1rem;
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0.35rem;
+  padding: 0 1rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
 }
 
 .fidelity-roulette-feedback.success { color: #059669; }

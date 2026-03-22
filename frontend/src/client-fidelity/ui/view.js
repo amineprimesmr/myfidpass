@@ -91,6 +91,7 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-cta-wrap">
               <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" type="button" aria-label="${esc(spinCtaAriaLabel)}">
                 <span class="fidelity-cta-wheel-line">
+                  <span class="${ticketStatusDotClass}" aria-hidden="true"></span>
                   <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
                   <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${esc(String(tickets))} ticket${tickets !== 1 ? "s" : ""}</span>
                   <span class="fidelity-cta-wheel-sep" aria-hidden="true">·</span>

@@ -35,6 +35,9 @@
   background-color: #0a0a0a;
   position: relative;
   isolation: isolate;
+  /* transition pilotée en JS uniquement (évite conflit avec style.css 0.1s linear) */
+  transition: none;
+  backface-visibility: hidden;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.07) inset,
     0 22px 0 -8px rgba(0, 0, 0, 0.5),
@@ -156,12 +159,13 @@
 
 @media (max-width: 480px) {
   .fidelity-game-page .fidelity-roulette-wheel-mount {
-    width: min(140vmin, 140vw);
-    height: min(140vmin, 140vw);
+    /* Légèrement plus petit sur mobile = moins de pixels à composer */
+    width: min(118vmin, 118vw);
+    height: min(118vmin, 118vw);
   }
 
   .fidelity-game-page .fidelity-roulette-wheel-outer {
-    transform: rotateX(11deg) scale(0.96);
+    transform: rotateX(9deg) scale(0.94);
   }
 
   .fidelity-game-page .fidelity-roulette-indicator {
