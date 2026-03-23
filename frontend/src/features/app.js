@@ -42,9 +42,34 @@ import { initAppFlyerQr } from "./app-flyer-qr.js";
 
 /** En dev : front sur localhost et API_BASE vide → requêtes /api/* via proxy Vite vers le backend. */
 const IS_LOCAL_VITE_PROXY = IS_LOCAL_DEV && !API_BASE;
-const APP_LOAD_ERROR_MSG = IS_LOCAL_DEV
-  ? "Impossible de charger vos données. Vérifiez que le serveur tourne (backend sur le port 3001) ou réessayez plus tard."
-  : "Impossible de charger vos données. Réessayez ou rafraîchissez la page.";
+
+/** @typedef {"network"|"server500"|"client"|"parse"|"unknown"|"unexpected"} AppLoadFailKind */
+
+/**
+ * Message principal affiché au commerçant (sans jargon dev).
+ * @param {AppLoadFailKind} kind
+ */
+function userFacingFatalMessage(kind) {
+  if (IS_LOCAL_DEV && IS_LOCAL_VITE_PROXY) {
+    return "Vous êtes en local : cette page parle à votre API sur la machine (souvent le port 3001). Démarrez le backend (ex. npm run backend à la racine du projet), puis touchez « Réessayer » ou rafraîchissez.";
+  }
+  if (IS_LOCAL_DEV) {
+    return "Mode développement : vérifiez VITE_API_URL dans frontend/.env et que l’API répond.";
+  }
+  if (kind === "network") {
+    return "Aucune réponse du serveur. Vérifiez votre connexion internet, puis réessayez.";
+  }
+  if (kind === "server500") {
+    return "Le service rencontre un problème temporaire. Réessayez dans quelques minutes.";
+  }
+  if (kind === "client") {
+    return "La connexion a été refusée. Déconnectez-vous, reconnectez-vous, puis réessayez.";
+  }
+  if (kind === "parse") {
+    return "Réponse inattendue du serveur. Réessayez plus tard ou reconnectez-vous.";
+  }
+  return "Nous n’avons pas pu charger votre espace. Réessayez ou revenez plus tard.";
+}
 
 function initAppPage() {
   wrapAppLogoutButtonsWithDirtyGuard(clearAuthToken);
@@ -60,20 +85,58 @@ function initAppPage() {
   const loadErrorDetailEl = document.getElementById("app-empty-load-error-detail");
   const emptyWelcomeEl = document.getElementById("app-empty-welcome");
   const emptyFatalEl = document.getElementById("app-empty-fatal");
+  const emptyFatalDescEl = document.getElementById("app-empty-fatal-desc");
+  const emptyFatalLocalHintEl = document.getElementById("app-empty-fatal-local-hint");
+  const emptyFatalTechEl = document.getElementById("app-empty-fatal-tech");
+  const emptyFatalTechPreEl = document.getElementById("app-empty-fatal-tech-pre");
 
-  function showLoadError(detailLine = "") {
+  /**
+   * @param {string | { technical?: string; kind?: AppLoadFailKind }} options
+   */
+  function showLoadError(options = "") {
+    let technical = "";
+    let kind = /** @type {AppLoadFailKind} */ ("unknown");
+    if (typeof options === "string") {
+      technical = options;
+    } else if (options && typeof options === "object") {
+      technical = options.technical ?? "";
+      kind = options.kind ?? "unknown";
+    }
     if (loadingEl) loadingEl.classList.add("hidden");
     if (emptyEl) emptyEl.classList.remove("hidden");
     if (contentEl) contentEl.classList.add("hidden");
     emptyWelcomeEl?.classList.add("hidden");
     emptyFatalEl?.classList.remove("hidden");
     if (loadErrorEl) {
-      loadErrorEl.textContent = APP_LOAD_ERROR_MSG;
-      loadErrorEl.classList.remove("hidden");
+      loadErrorEl.textContent = "";
+      loadErrorEl.classList.add("hidden");
     }
     if (loadErrorDetailEl) {
-      loadErrorDetailEl.textContent = detailLine || "";
-      loadErrorDetailEl.classList.toggle("hidden", !detailLine);
+      loadErrorDetailEl.textContent = "";
+      loadErrorDetailEl.classList.add("hidden");
+    }
+    if (emptyFatalDescEl) {
+      emptyFatalDescEl.textContent = userFacingFatalMessage(kind);
+    }
+    const originHint =
+      typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "";
+    if (emptyFatalLocalHintEl) {
+      const showLocal = IS_LOCAL_DEV && IS_LOCAL_VITE_PROXY && !!originHint;
+      emptyFatalLocalHintEl.classList.toggle("hidden", !showLocal);
+      emptyFatalLocalHintEl.textContent = showLocal
+        ? `Vérification : ouvrez ${originHint}/api/health — vous devez voir un JSON avec « ok ». Si erreur 500 sur la session : souvent base SQLite locale (voir terminal du backend).`
+        : "";
+    }
+    const showTech = IS_LOCAL_DEV && !!technical.trim();
+    if (emptyFatalTechEl) {
+      emptyFatalTechEl.classList.toggle("hidden", !showTech);
+      emptyFatalTechEl.open = false;
+    }
+    if (emptyFatalTechPreEl) {
+      emptyFatalTechPreEl.textContent = showTech ? technical.trim() : "";
+    }
+    if (technical.trim() && typeof console !== "undefined" && console.error) {
+      console.error("[fidpass] Chargement /app :", technical.trim());
     }
   }
 
@@ -154,23 +217,29 @@ function initAppPage() {
     }
     const originHint =
       typeof window !== "undefined" ? window.location.origin : "";
-    const hintLocalProxy = IS_LOCAL_VITE_PROXY
-      ? ` Ici tu parles au backend local (proxy → port 3001), pas à api.myfidpass.fr : un « health » vert en prod ne dit rien sur ta machine. Test : ${originHint}/api/health → {"ok":true,"service":"fidelity-api"}. Si 500 sur /me : regarde la ligne « Détail » ci-dessous ; souvent SQLite locale — arrête le backend, supprime backend/data/fidelity.db, relance, réinscris-toi. Port 3001 pris par un vieux Node : lsof -i :3001 puis kill.`
+    /** @type {AppLoadFailKind} */
+    let failKind = "unknown";
+    if (networkFail && !lastStatus) failKind = "network";
+    else if (lastStatus != null && lastStatus >= 500) failKind = "server500";
+    else if (lastStatus != null && lastStatus >= 400) failKind = "client";
+
+    const devExtra = IS_LOCAL_DEV
+      ? IS_LOCAL_VITE_PROXY
+        ? ` (proxy Vite → API locale, pas api.myfidpass.fr ; origin ${originHint})`
+        : " Vérifiez VITE_API_URL et que l’API répond."
       : "";
-    const hint = IS_LOCAL_VITE_PROXY
-      ? hintLocalProxy
-      : IS_LOCAL_DEV
-        ? " Vérifie VITE_API_URL dans .env et que le backend répond."
-        : "";
     const serverBit =
-      serverErrorLine && lastStatus === 500 ? ` Détail : ${serverErrorLine}` : "";
+      serverErrorLine && lastStatus === 500 ? ` — réponse serveur : ${serverErrorLine}` : "";
+    let technical = "";
     if (networkFail && !lastStatus) {
-      window.__fidpassAuthMeFailDetail = `Aucune réponse du serveur (réseau ou API injoignable).${hint}`;
-    } else if (lastStatus) {
-      window.__fidpassAuthMeFailDetail = `Le serveur a répondu HTTP ${lastStatus} (réessayé ${retries + 1} fois).${serverBit}${hint}`;
+      technical = `Aucune réponse HTTP après ${retries + 1} tentative(s).${devExtra}`;
+    } else if (lastStatus != null) {
+      technical = `HTTP ${lastStatus} après ${retries + 1} tentative(s).${serverBit}${devExtra}`;
     } else {
-      window.__fidpassAuthMeFailDetail = `Échec après plusieurs tentatives.${hint}`;
+      technical = `Échec après ${retries + 1} tentative(s).${devExtra}`;
     }
+    window.__fidpassAuthMeFailDetail = technical;
+    window.__fidpassAuthMeFailKind = failKind;
     return null;
   }
 
@@ -178,7 +247,10 @@ function initAppPage() {
     try {
       const res = await fetchAuthMe();
       if (!res) {
-        showLoadError(typeof window !== "undefined" ? window.__fidpassAuthMeFailDetail || "" : "");
+        showLoadError({
+          technical: typeof window !== "undefined" ? window.__fidpassAuthMeFailDetail || "" : "",
+          kind: typeof window !== "undefined" ? window.__fidpassAuthMeFailKind || "unknown" : "unknown",
+        });
         return;
       }
       if (res.status === 401) {
@@ -190,7 +262,10 @@ function initAppPage() {
         return;
       }
       if (!res.ok) {
-        showLoadError(typeof window !== "undefined" ? window.__fidpassAuthMeFailDetail || "" : "");
+        showLoadError({
+          technical: typeof window !== "undefined" ? window.__fidpassAuthMeFailDetail || "" : "",
+          kind: typeof window !== "undefined" ? window.__fidpassAuthMeFailKind || "unknown" : "unknown",
+        });
         return;
       }
       const rawMe = await res.text();
@@ -199,18 +274,17 @@ function initAppPage() {
         data = rawMe ? JSON.parse(rawMe) : {};
       } catch (parseErr) {
         const snippet = (rawMe || "").slice(0, 120).replace(/\s+/g, " ");
-        const hint =
+        const tech = `Réponse /api/auth/me non JSON.${snippet ? ` Début : ${snippet}…` : ""}${
           IS_LOCAL_DEV && API_BASE
-            ? " En local, retire ou corrige VITE_API_URL dans frontend/.env : une URL qui ne renvoie pas du JSON (page HTML, 404) provoque cette erreur."
-            : "";
-        showLoadError(
-          `La réponse de /api/auth/me n’est pas du JSON valide.${hint}${snippet ? ` (début de réponse : ${snippet}…)` : ""}`
-        );
+            ? " En local : VITE_API_URL peut pointer vers une page HTML (404) au lieu de l’API."
+            : ""
+        }`;
+        showLoadError({ technical: tech, kind: "parse" });
         if (typeof console !== "undefined" && console.error) console.error("[fidpass] /api/auth/me parse:", parseErr, rawMe?.slice?.(0, 500));
         return;
       }
       if (!data || typeof data !== "object") {
-        showLoadError("Réponse /api/auth/me invalide (corps vide ou non objet).");
+        showLoadError({ technical: "Réponse /api/auth/me : corps vide ou non objet.", kind: "parse" });
         return;
       }
       const hasSubscription =
@@ -281,10 +355,10 @@ function initAppPage() {
     } catch (err) {
       if (typeof console !== "undefined" && console.error) console.error("[fidpass] init /app:", err);
       const tech = err instanceof Error ? err.message : String(err);
-      const devHint = IS_LOCAL_DEV && tech ? ` Détail technique : ${tech}` : "";
-      showLoadError(
-        `Une erreur inattendue s’est produite pendant le chargement. Ouvre la console (F12) pour plus de détails.${devHint}`
-      );
+      showLoadError({
+        technical: `Exception pendant l’init /app : ${tech}`,
+        kind: "unexpected",
+      });
     }
   })();
 

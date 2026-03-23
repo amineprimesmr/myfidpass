@@ -340,8 +340,13 @@
               </form>
             </div>
             <div id="app-empty-fatal" class="app-empty-fatal hidden" role="region" aria-label="Erreur de chargement">
-              <h1 class="app-empty-title">Connexion au serveur impossible</h1>
-              <p class="app-empty-text">L’application n’a pas pu joindre l’API (session ou réseau). Vérifiez que le backend tourne puis réessayez.</p>
+              <h1 class="app-empty-title">Connexion impossible</h1>
+              <p id="app-empty-fatal-desc" class="app-empty-text"></p>
+              <p id="app-empty-fatal-local-hint" class="app-empty-fatal-local-hint hidden" role="note"></p>
+              <details id="app-empty-fatal-tech" class="app-empty-fatal-tech hidden">
+                <summary class="app-empty-fatal-tech-summary">Détail technique</summary>
+                <pre id="app-empty-fatal-tech-pre" class="app-empty-fatal-pre" tabindex="0"></pre>
+              </details>
               <div class="app-empty-fatal-actions">
                 <button type="button" id="app-empty-retry-btn" class="app-btn app-btn-primary">Réessayer</button>
                 <a href="/" class="app-btn app-btn-secondary">Accueil</a>

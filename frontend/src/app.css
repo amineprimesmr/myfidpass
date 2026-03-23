@@ -3102,6 +3102,48 @@ body.page-app .whatsapp-fab { display: none !important; }
   color: var(--app-text-muted);
   max-width: 36rem;
 }
+
+.app-empty-fatal-local-hint {
+  margin: -0.5rem 0 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--app-text-muted);
+  text-align: left;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.app-empty-fatal-tech {
+  margin: 0 0 1.25rem;
+  text-align: left;
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.app-empty-fatal-tech-summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  list-style-position: outside;
+}
+
+.app-empty-fatal-pre {
+  margin: 0.65rem 0 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--app-surface-hover, #f0f2f5);
+  border: 1px solid var(--app-border, #e8ecf1);
+  border-radius: var(--app-radius-sm, 10px);
+  color: var(--app-text, #1a202c);
+  max-height: 12rem;
+  overflow: auto;
+}
 .app-personnaliser-setup {
   margin-bottom: 1.25rem;
   max-width: 38rem;
