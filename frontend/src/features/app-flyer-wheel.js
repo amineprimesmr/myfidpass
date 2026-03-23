@@ -3,6 +3,7 @@
  */
 import {
   wheelSegmentColorsResolved,
+  FLYER_EXPORT,
   FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG,
   FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR,
 } from "./app-flyer-qr-presets.js";
@@ -111,6 +112,56 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
   drawWheelHub(ctx, cx, cy, r);
 }
 
+/** @param {unknown} v @param {string} fb */
+function hexOr(v, fb) {
+  return typeof v === "string" && /^#[0-9A-Fa-f]{6}$/.test(v.trim()) ? v.trim() : fb;
+}
+
+/**
+ * Anneaux autour du disque (couleur marque + profondeur).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} r rayon des parts / image
+ * @param {number} scale facteur px export (canvasW / 2400)
+ * @param {number} strength 0–10 (0 = rien)
+ * @param {string} primaryHex
+ * @param {string} darkHex
+ */
+function drawWheelDecorativeRim(ctx, cx, cy, r, scale, strength, primaryHex, darkHex) {
+  const u = Number(strength);
+  const str = Number.isFinite(u) ? Math.max(0, Math.min(10, Math.round(u))) : 0;
+  if (str <= 0) return;
+  const px = Math.max(2, scale * str * 1.08);
+
+  ctx.save();
+  ctx.lineJoin = "round";
+
+  ctx.shadowColor = "rgba(0,0,0,0.35)";
+  ctx.shadowBlur = 10 * scale + px * 0.7;
+  ctx.shadowOffsetY = 2.5 * scale;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + px * 0.06, 0, Math.PI * 2);
+  ctx.strokeStyle = darkHex;
+  ctx.lineWidth = px * 1.02;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + px * 0.02, 0, Math.PI * 2);
+  ctx.strokeStyle = primaryHex;
+  ctx.lineWidth = px * 0.52;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - px * 0.22, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = Math.max(1, px * 0.26);
+  ctx.stroke();
+  ctx.restore();
+}
+
 /**
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  * @param {CanvasImageSource | null} roueImg
@@ -126,4 +177,17 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
+
+  const cw = ctx.canvas.width || 1;
+  const pxScale = cw / FLYER_EXPORT.w;
+  drawWheelDecorativeRim(
+    ctx,
+    wheelCx,
+    wheelCy,
+    wheelR,
+    pxScale,
+    s.flyerWheelOutlineWidth,
+    hexOr(s.colorPrimary, "#fbbf24"),
+    hexOr(s.colorBgBottom, "#020617"),
+  );
 }

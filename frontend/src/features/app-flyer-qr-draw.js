@@ -10,6 +10,7 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
+import { drawFlyerQrCardOutline } from "./app-flyer-qr-qr-frame.js";
 
 export { FLYER_EXPORT };
 
@@ -363,6 +364,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   roundRect(ctx, qx, qy, qSize, qSize, 16 * scale);
   ctx.fill();
   if (qrImg) ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
+  drawFlyerQrCardOutline(ctx, qx, qy, qSize, 16 * scale, scale, s);
   ctx.restore();
   const socialEntries = parseFlyerSocialEntries(s);
   const stripH = flyerSocialStripHeight(h, socialEntries.length);

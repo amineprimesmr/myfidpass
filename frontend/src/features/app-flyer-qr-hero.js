@@ -63,8 +63,8 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
 
   const fill = s.headlineTextColor || "#ffffff";
   const strokeC = s.headlineStrokeColor || "#020617";
-  const strokeW = Math.min(14, Math.max(0, Number(s.headlineStrokeWidth) || 0));
-  const strokePx = strokeW > 0 ? Math.max(1, scale * strokeW * 0.85) : 0;
+  const strokeW = Math.min(24, Math.max(0, Number(s.headlineStrokeWidth) || 0));
+  const strokePx = strokeW > 0 ? Math.max(0.8, scale * strokeW * 1.05) : 0;
 
   const trackRaw = Number(s.headlineLetterSpacing);
   const trackPx = Number.isFinite(trackRaw)
@@ -76,8 +76,14 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   lines.forEach((line, i) => {
     const ly = firstLineCy + i * lineH;
     if (strokePx > 0) {
+      ctx.strokeStyle = "rgba(0,0,0,0.34)";
+      ctx.lineWidth = strokePx * 2.1;
+      ctx.strokeText(line, w / 2, ly);
       ctx.strokeStyle = strokeC;
-      ctx.lineWidth = strokePx;
+      ctx.lineWidth = strokePx * 1.28;
+      ctx.strokeText(line, w / 2, ly);
+      ctx.strokeStyle = "rgba(255,255,255,0.22)";
+      ctx.lineWidth = Math.max(1, strokePx * 0.36);
       ctx.strokeText(line, w / 2, ly);
     }
     ctx.fillStyle = fill;

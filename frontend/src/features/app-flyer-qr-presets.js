@@ -94,10 +94,12 @@ export function flyerTemplateMeta(id) {
  * @property {string} headlineFontId police titre (voir FLYER_HEADLINE_FONTS)
  * @property {string} headlineTextColor couleur remplissage titre
  * @property {string} headlineStrokeColor couleur contour titre
- * @property {number} headlineStrokeWidth épaisseur contour (0 = aucun), 1–14
+ * @property {number} headlineStrokeWidth épaisseur contour (0 = aucun), 0–24
  * @property {number} headlineLogoGapPct espace logo → titre (% hauteur flyer, 0–14)
  * @property {number} headlineLetterSpacing espacement lettres (0–8, px réf. export)
  * @property {number} flyerBgOverlayPct voile sur image de fond (0–90), 0 = photo seule
+ * @property {number} flyerQrOutlineWidth cadre autour du QR (0 = off), 0–12
+ * @property {number} flyerWheelOutlineWidth pourtour autour de la roue (0 = off), 0–10
  */
 
 /** @returns {FlyerState} */
@@ -127,10 +129,12 @@ export function defaultFlyerState() {
     headlineFontId: "fraunces",
     headlineTextColor: "#ffffff",
     headlineStrokeColor: "#020617",
-    headlineStrokeWidth: 3,
+    headlineStrokeWidth: 5,
     headlineLogoGapPct: 4,
     headlineLetterSpacing: 0,
     flyerBgOverlayPct: 52,
+    flyerQrOutlineWidth: 5,
+    flyerWheelOutlineWidth: 4,
   };
 }
 
@@ -166,8 +170,20 @@ function clampWheelOffsetDeg(v) {
 
 function clampHeadlineStrokeW(v) {
   const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 3;
-  return Math.max(0, Math.min(14, Math.round(n)));
+  if (!Number.isFinite(n)) return 5;
+  return Math.max(0, Math.min(24, Math.round(n)));
+}
+
+function clampFlyerQrOutlineW(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 5;
+  return Math.max(0, Math.min(12, Math.round(n)));
+}
+
+function clampFlyerWheelOutlineW(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 4;
+  return Math.max(0, Math.min(10, Math.round(n)));
 }
 
 function clampHeadlineGapPct(v) {
@@ -233,5 +249,7 @@ export function mergeFlyerState(raw) {
     headlineLogoGapPct: clampHeadlineGapPct(merged.headlineLogoGapPct),
     headlineLetterSpacing: clampHeadlineLetterSpacing(merged.headlineLetterSpacing),
     flyerBgOverlayPct: clampFlyerBgOverlayPct(merged.flyerBgOverlayPct),
+    flyerQrOutlineWidth: clampFlyerQrOutlineW(merged.flyerQrOutlineWidth),
+    flyerWheelOutlineWidth: clampFlyerWheelOutlineW(merged.flyerWheelOutlineWidth),
   };
 }
