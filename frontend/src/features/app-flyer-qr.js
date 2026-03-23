@@ -4,6 +4,11 @@
 import { API_BASE } from "../config.js";
 import { FLYER_STORAGE_KEY, FLYER_EXPORT, mergeFlyerState } from "./app-flyer-qr-presets.js";
 import { renderFlyerCanvas } from "./app-flyer-qr-draw.js";
+import {
+  getStoredFlyerCustomLogoDataUrl,
+  initFlyerLogoControl,
+  clearStoredFlyerCustomLogo,
+} from "./app-flyer-logo-control.js";
 
 /** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string }} FlyerQrOpts */
 
@@ -110,8 +115,11 @@ export function initAppFlyerQr(slug, opts) {
   let flyerLogoBitmap = null;
   /** @type {string | null} */
   let flyerLogoObjectUrl = null;
-  /** Recharge le logo (ex. après retour de « Ma carte »). */
+  /** Recharge le logo (ex. après retour de « Ma carte » ou changement import flyer). */
   let flyerLogoDirty = true;
+
+  /** @type {{ syncPreview: () => void } | undefined} */
+  let flyerLogoPanelApi;
 
   writeFormFromState(root, state);
   if (linkInput) linkInput.value = shareUrl();
@@ -128,6 +136,13 @@ export function initAppFlyerQr(slug, opts) {
   const wheelModeEl = root.querySelector("#app-flyer-wheel-mode");
   wheelModeEl?.addEventListener("change", () => {
     schedulePaint();
+  });
+
+  flyerLogoPanelApi = initFlyerLogoControl({
+    onCustomLogoChange: () => {
+      flyerLogoDirty = true;
+      schedulePaint();
+    },
   });
 
   async function paint() {
@@ -149,22 +164,48 @@ export function initAppFlyerQr(slug, opts) {
         } catch (_) {}
         flyerLogoObjectUrl = null;
       }
-      try {
-        const res = await fetch(logoApi, { mode: "cors", credentials: "omit" });
-        if (res.ok) {
-          const blob = await res.blob();
-          if (typeof createImageBitmap === "function") {
-            try {
-              flyerLogoBitmap = await createImageBitmap(blob);
-            } catch (_) {
+      const customData = getStoredFlyerCustomLogoDataUrl();
+      let loaded = false;
+      if (customData) {
+        try {
+          const res = await fetch(customData);
+          if (res.ok) {
+            const blob = await res.blob();
+            if (typeof createImageBitmap === "function") {
+              try {
+                flyerLogoBitmap = await createImageBitmap(blob);
+                loaded = !!flyerLogoBitmap;
+              } catch (_) {
+                flyerLogoObjectUrl = URL.createObjectURL(blob);
+                loaded = true;
+              }
+            } else {
+              flyerLogoObjectUrl = URL.createObjectURL(blob);
+              loaded = true;
+            }
+          }
+        } catch (_) {
+          /* fallback logo fiche */
+        }
+      }
+      if (!loaded) {
+        try {
+          const res = await fetch(logoApi, { mode: "cors", credentials: "omit" });
+          if (res.ok) {
+            const blob = await res.blob();
+            if (typeof createImageBitmap === "function") {
+              try {
+                flyerLogoBitmap = await createImageBitmap(blob);
+              } catch (_) {
+                flyerLogoObjectUrl = URL.createObjectURL(blob);
+              }
+            } else {
               flyerLogoObjectUrl = URL.createObjectURL(blob);
             }
-          } else {
-            flyerLogoObjectUrl = URL.createObjectURL(blob);
           }
+        } catch (_) {
+          /* pas de logo */
         }
-      } catch (_) {
-        /* pas de logo */
       }
       flyerLogoDirty = false;
     }
@@ -224,6 +265,9 @@ export function initAppFlyerQr(slug, opts) {
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
       if (!confirm("Réinitialiser le flyer aux textes et couleurs par défaut ?")) return;
+      clearStoredFlyerCustomLogo();
+      flyerLogoPanelApi?.syncPreview();
+      flyerLogoDirty = true;
       state = mergeFlyerState(null);
       writeFormFromState(root, state);
       schedulePaint();

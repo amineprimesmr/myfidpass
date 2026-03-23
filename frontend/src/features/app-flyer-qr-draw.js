@@ -201,10 +201,10 @@ function drawImageContain(ctx, img, dx, dy, dstW, dstH) {
  * @param {number} h
  */
 function drawFlyerCommerceLogo(ctx, logoImg, w, h) {
-  const maxW = w * 0.44;
-  const maxH = h * 0.1;
+  const maxW = w * 0.62;
+  const maxH = h * 0.15;
   const cx = w * 0.5;
-  const cy = h * 0.11;
+  const cy = h * 0.1;
   const lx = cx - maxW / 2;
   const ly = cy - maxH / 2;
   drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
@@ -341,9 +341,6 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   }
 
   fillGradientV(ctx, w, h, s.colorBgTop, s.colorBgBottom);
-  ctx.fillStyle = "rgba(255,255,255,0.06)";
-  roundRect(ctx, w * 0.04, h * 0.03, w * 0.92, h * 0.34, 20 * scale);
-  ctx.fill();
   if (logoImg) drawFlyerCommerceLogo(ctx, logoImg, w, h);
   /* Roue avant les textes : sinon elle recouvre l’accroche et le sous-texte. */
   const wheelCx = w * 0.5;
@@ -353,10 +350,10 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   ctx.fillStyle = s.colorPrimary;
   ctx.textAlign = "center";
   ctx.font = `900 italic ${Math.round(w * 0.048)}px "Plus Jakarta Sans", Outfit, sans-serif`;
-  wrapCenter(ctx, s.headline, w / 2, h * 0.22, w * 0.82, Math.round(w * 0.052));
+  wrapCenter(ctx, s.headline, w / 2, h * 0.235, w * 0.82, Math.round(w * 0.052));
   ctx.fillStyle = s.colorAccent;
   ctx.font = `600 ${Math.round(w * 0.028)}px Outfit, sans-serif`;
-  ctx.fillText(s.subline, w / 2, h * 0.282);
+  ctx.fillText(s.subline, w / 2, h * 0.297);
   const qx = w * 0.515;
   const qy = h * 0.608;
   const qCx = qx + qSize / 2;

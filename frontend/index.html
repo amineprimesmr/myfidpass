@@ -767,6 +767,20 @@
                 <div class="app-flyer-qr-side">
                   <button type="button" id="app-flyer-panel-toggle" class="app-flyer-panel-toggle" aria-expanded="false" aria-controls="app-flyer-panel">Personnaliser le flyer</button>
                   <div id="app-flyer-panel" class="app-flyer-panel">
+                    <div id="app-flyer-logo-panel" class="app-flyer-logo-panel">
+                      <p class="app-flyer-chip-label">Logo sur le flyer</p>
+                      <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">Image uniquement pour ce PNG : n’altère pas le logo de la fiche ni les autres pages.</p>
+                      <input type="file" id="app-flyer-logo-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Choisir un logo pour le flyer" />
+                      <div class="app-flyer-logo-panel-actions">
+                        <button type="button" id="app-flyer-logo-choose" class="app-btn app-btn-secondary">Choisir une image</button>
+                        <button type="button" id="app-flyer-logo-use-default" class="app-btn app-btn-secondary">Logo de la fiche</button>
+                      </div>
+                      <p id="app-flyer-logo-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
+                      <div id="app-flyer-logo-preview-wrap" class="app-flyer-logo-preview-wrap hidden">
+                        <span class="app-flyer-logo-preview-label">Aperçu (ce navigateur)</span>
+                        <img id="app-flyer-logo-preview" class="app-flyer-logo-preview" width="96" height="96" alt="" decoding="async" />
+                      </div>
+                    </div>
                     <div class="app-flyer-field">
                       <label class="app-label" for="app-flyer-headline">Accroche principale</label>
                       <textarea id="app-flyer-headline" class="app-input" rows="2" maxlength="200" data-flyer-input></textarea>
