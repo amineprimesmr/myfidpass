@@ -65,6 +65,8 @@ Puis :
 - **Frontend (Vite)** : **http://localhost:5174**  
 - **Backend API** : http://localhost:3001 en direct ; en dev, le front appelle **`/api/...`** sur le même port que Vite (proxy → 3001).
 
+**Piège fréquent :** lancer uniquement `npm run dev` **dans** `frontend/` sans processus sur le port **3001** → l’app affiche « Connexion impossible ». Toujours **`npm start` à la racine** (recommandé) **ou** un terminal `npm run backend` à la racine + le front. Au démarrage, Vite affiche aussi un encadré jaune dans le terminal si l’API ne répond pas.
+
 **Note :** `http://localhost:5174/api/health` affiche du **JSON** (`{"ok":true,...}`) — c’est le test de santé de l’API, pas l’interface. L’app : **/** ou **/app**.
 
 Ouvrir **http://localhost:5174/fidelity/demo** (ou la racine → redirection vers la démo). Une entreprise « demo » existe par défaut. Pour une autre entreprise : **http://localhost:5174/fidelity/nom-slug** (après l’avoir créée via l’API ci-dessous).

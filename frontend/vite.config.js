@@ -10,6 +10,64 @@ const apiProxyTarget = process.env.VITE_PROXY_TARGET || "http://127.0.0.1:3001";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
+/**
+ * Avertit si l’API n’est pas joignable (évite « Connexion impossible » sans comprendre pourquoi).
+ */
+function fidpassApiReachableCheck() {
+  return {
+    name: "fidpass-api-reachable-check",
+    apply: "serve",
+    configureServer(server) {
+      const httpServer = server.httpServer;
+      if (!httpServer) return;
+      httpServer.once("listening", () => {
+        setTimeout(() => void runHealthCheck(), 600);
+      });
+    },
+  };
+}
+
+async function runHealthCheck() {
+  const viteApiUrl = (process.env.VITE_API_URL || "").trim();
+  let healthUrl;
+  if (viteApiUrl) {
+    try {
+      healthUrl = new URL("/api/health", viteApiUrl.replace(/\/$/, ""));
+    } catch {
+      return;
+    }
+  } else {
+    healthUrl = new URL("/api/health", apiProxyTarget.replace(/\/$/, ""));
+  }
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 5000);
+  try {
+    const res = await fetch(healthUrl.href, { signal: ac.signal });
+    clearTimeout(timer);
+    if (!res.ok) {
+      console.warn(
+        `\n[Fidpass] ${healthUrl.href} → HTTP ${res.status}. L’API répond en erreur ; voir le terminal du backend.\n`
+      );
+    }
+  } catch (err) {
+    clearTimeout(timer);
+    const msg = err instanceof Error ? err.message : String(err);
+    if (viteApiUrl) {
+      console.warn(`\n[Fidpass] Impossible de joindre ${healthUrl.href} (${msg}). Vérifiez VITE_API_URL.\n`);
+    } else {
+      console.warn(
+        "\n\x1b[33m╔══════════════════════════════════════════════════════════════════╗\n" +
+          "║  Fidpass — API locale introuvable (attendue sur le port 3001)     ║\n" +
+          "╠══════════════════════════════════════════════════════════════════╣\n" +
+          "║  Ouvrez un terminal à la RACINE du dépôt (pas seulement frontend)║\n" +
+          "║    npm run backend          ou          npm start                 ║\n" +
+          "║  « npm run dev » dans frontend/ ne démarre pas l’API.            ║\n" +
+          "╚══════════════════════════════════════════════════════════════════╝\x1b[0m\n"
+      );
+    }
+  }
+}
+
 /** En dev, servir index.html pour toutes les routes SPA (/login, /app, etc.) pour éviter 404 au clic. */
 function spaFallback() {
   return {
@@ -50,7 +108,7 @@ function spaFallback() {
 
 export default defineConfig({
   appType: "spa",
-  plugins: [react(), tailwindcss(), spaFallback()],
+  plugins: [react(), tailwindcss(), spaFallback(), fidpassApiReachableCheck()],
   build: {
     rollupOptions: {
       input: {

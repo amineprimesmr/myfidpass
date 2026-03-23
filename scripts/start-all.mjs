@@ -15,6 +15,11 @@ const backendPort = Number(process.env.PORT) || 3001;
 freeBackendPort(backendPort);
 
 const isWin = process.platform === "win32";
+console.log(
+  "\n\x1b[33m[Fidpass]\x1b[0m Cette commande démarre l’API (3001) ET Vite (5174). " +
+    "Si vous lancez seulement « npm run dev » dans frontend/, l’API manque → « Connexion impossible » dans /app.\n"
+);
+
 const back = spawn("node", ["backend/src/index.js"], {
   cwd: root,
   stdio: "inherit",
