@@ -340,7 +340,18 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const wheelR = w * 0.36;
   const wheelBox = wheelR * 2;
   if (roueImg) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(wheelCx, wheelCy, wheelR, 0, Math.PI * 2);
+    ctx.clip();
     drawImageCover(ctx, roueImg, wheelCx - wheelBox / 2, wheelCy - wheelBox / 2, wheelBox, wheelBox);
+    /* Teinte = couleur primaire ; mode « color » garde les volumes d’un PNG gris/blanc. */
+    if (s.wheelImageTintPrimary !== false) {
+      ctx.globalCompositeOperation = "color";
+      ctx.fillStyle = s.colorPrimary;
+      ctx.fillRect(wheelCx - wheelBox / 2, wheelCy - wheelBox / 2, wheelBox, wheelBox);
+    }
+    ctx.restore();
   } else {
     drawWheel(ctx, wheelCx, wheelCy, wheelR, s.colorPrimary, s.colorSecondary);
   }

@@ -45,6 +45,7 @@ export function flyerTemplateMeta(id) {
  * @property {string} colorAccent
  * @property {string} colorBgTop
  * @property {string} colorBgBottom
+ * @property {boolean} wheelImageTintPrimary teinte PNG « roue » avec la couleur primaire
  */
 
 /** @returns {FlyerState} */
@@ -68,6 +69,7 @@ export function defaultFlyerState() {
     colorAccent: "#ffffff",
     colorBgTop: "#0f172a",
     colorBgBottom: "#020617",
+    wheelImageTintPrimary: true,
   };
 }
 
@@ -84,6 +86,7 @@ export function mergeFlyerState(raw) {
     ...base,
     ...raw,
     templateId: FLYER_TEMPLATE_ID,
+    wheelImageTintPrimary: raw.wheelImageTintPrimary !== false,
   };
   return {
     ...merged,

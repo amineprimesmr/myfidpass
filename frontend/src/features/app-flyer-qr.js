@@ -28,6 +28,7 @@ function readStateFromForm(root) {
     colorAccent: q("app-flyer-c3")?.value,
     colorBgTop: q("app-flyer-bg1")?.value,
     colorBgBottom: q("app-flyer-bg2")?.value,
+    wheelImageTintPrimary: q("app-flyer-wheel-tint")?.checked !== false,
   });
 }
 
@@ -54,6 +55,8 @@ function writeFormFromState(root, s) {
   set("app-flyer-c3", s.colorAccent);
   set("app-flyer-bg1", s.colorBgTop);
   set("app-flyer-bg2", s.colorBgBottom);
+  const tintEl = root.querySelector("#app-flyer-wheel-tint");
+  if (tintEl && "checked" in tintEl) tintEl.checked = s.wheelImageTintPrimary !== false;
 }
 
 function loadStoredState() {
