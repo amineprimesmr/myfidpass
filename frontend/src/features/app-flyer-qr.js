@@ -17,7 +17,12 @@ function readStateFromForm(root) {
     step1: q("app-flyer-step1")?.value,
     step2: q("app-flyer-step2")?.value,
     step3: q("app-flyer-step3")?.value,
-    footerSocial: q("app-flyer-social")?.value,
+    social1: q("app-flyer-social-1-type")?.value ?? "",
+    socialUrl1: q("app-flyer-social-1-url")?.value ?? "",
+    social2: q("app-flyer-social-2-type")?.value ?? "",
+    socialUrl2: q("app-flyer-social-2-url")?.value ?? "",
+    social3: q("app-flyer-social-3-type")?.value ?? "",
+    socialUrl3: q("app-flyer-social-3-url")?.value ?? "",
     colorPrimary: q("app-flyer-c1")?.value,
     colorSecondary: q("app-flyer-c2")?.value,
     colorAccent: q("app-flyer-c3")?.value,
@@ -38,7 +43,12 @@ function writeFormFromState(root, s) {
   set("app-flyer-step1", s.step1);
   set("app-flyer-step2", s.step2);
   set("app-flyer-step3", s.step3);
-  set("app-flyer-social", s.footerSocial);
+  set("app-flyer-social-1-type", s.social1 ?? "");
+  set("app-flyer-social-1-url", s.socialUrl1 ?? "");
+  set("app-flyer-social-2-type", s.social2 ?? "");
+  set("app-flyer-social-2-url", s.socialUrl2 ?? "");
+  set("app-flyer-social-3-type", s.social3 ?? "");
+  set("app-flyer-social-3-url", s.socialUrl3 ?? "");
   set("app-flyer-c1", s.colorPrimary);
   set("app-flyer-c2", s.colorSecondary);
   set("app-flyer-c3", s.colorAccent);

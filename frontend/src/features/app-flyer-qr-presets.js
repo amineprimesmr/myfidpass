@@ -34,7 +34,12 @@ export function flyerTemplateMeta(id) {
  * @property {string} step1
  * @property {string} step2
  * @property {string} step3
- * @property {string} footerSocial
+ * @property {string} social1
+ * @property {string} socialUrl1
+ * @property {string} social2
+ * @property {string} socialUrl2
+ * @property {string} social3
+ * @property {string} socialUrl3
  * @property {string} colorPrimary
  * @property {string} colorSecondary
  * @property {string} colorAccent
@@ -52,7 +57,12 @@ export function defaultFlyerState() {
     step1: "Scannez le QR code",
     step2: "Ajoutez la carte au Wallet",
     step3: "Cumulez points & avantages",
-    footerSocial: "",
+    social1: "",
+    socialUrl1: "",
+    social2: "",
+    socialUrl2: "",
+    social3: "",
+    socialUrl3: "",
     colorPrimary: "#fbbf24",
     colorSecondary: "#f97316",
     colorAccent: "#ffffff",

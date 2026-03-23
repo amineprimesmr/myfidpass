@@ -2,6 +2,11 @@
  * Rendu canvas des flyers QR (export PNG & aperçu).
  */
 import { FLYER_EXPORT } from "./app-flyer-qr-presets.js";
+import {
+  parseFlyerSocialEntries,
+  flyerSocialStripHeight,
+  drawFlyerSocialStrip,
+} from "./app-flyer-social-strip.js";
 
 export { FLYER_EXPORT };
 
@@ -203,28 +208,30 @@ async function getFlyerFooterBanner() {
   }
 }
 
-/** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} h @param {HTMLImageElement} img */
-function drawFooterBanner(ctx, w, h, img) {
+/** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} canvasH @param {number} bottomY bord bas du bandeau (souvent h - bande sociale). @param {HTMLImageElement} img */
+function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   const iw = img.naturalWidth || img.width;
   const ih = img.naturalHeight || img.height;
   if (!iw || !ih) return;
   const drawW = w;
   let drawH = (drawW * ih) / iw;
-  const maxH = h * 0.28;
+  const maxH = canvasH * 0.28;
   if (drawH > maxH) {
     drawH = maxH;
     const drawW2 = (drawH * iw) / ih;
     const x0 = (w - drawW2) / 2;
-    ctx.drawImage(img, x0, h - drawH, drawW2, drawH);
+    const yTop = bottomY - drawH;
+    ctx.drawImage(img, x0, yTop, drawW2, drawH);
     return;
   }
-  ctx.drawImage(img, 0, h - drawH, drawW, drawH);
+  const yTop = bottomY - drawH;
+  ctx.drawImage(img, 0, yTop, drawW, drawH);
 }
 
-/** @param {import("./app-flyer-qr-presets.js").FlyerState} s */
-function drawFooterBar(ctx, w, h, s, dark) {
+/** @param {import("./app-flyer-qr-presets.js").FlyerState} s @param {number} [bottomReserve] réserve bas (bande sociale). */
+function drawFooterBar(ctx, w, h, s, dark, bottomReserve = 0) {
   const fh = h * 0.2;
-  const y0 = h - fh;
+  const y0 = Math.max(0, h - bottomReserve - fh);
   ctx.fillStyle = dark ? "#0a0a0a" : "#1e293b";
   ctx.fillRect(0, y0, w, fh);
   const steps = [s.step1, s.step2, s.step3];
@@ -242,11 +249,6 @@ function drawFooterBar(ctx, w, h, s, dark) {
     ctx.font = `600 ${Math.round(fh * 0.09)}px Outfit, system-ui, sans-serif`;
     const words = steps[i] || "";
     wrapCenter(ctx, words, cx, cy + fh * 0.1, cw * 0.85, Math.round(fh * 0.085));
-  }
-  if (s.footerSocial?.trim()) {
-    ctx.fillStyle = "rgba(255,255,255,0.45)";
-    ctx.font = `500 ${Math.round(fh * 0.07)}px Outfit, system-ui, sans-serif`;
-    ctx.fillText(s.footerSocial.trim(), w / 2, y0 + fh - fh * 0.12);
   }
 }
 
@@ -329,7 +331,11 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   roundRect(ctx, qx, qy, qSize, qSize, 14 * scale);
   ctx.fill();
   if (qrImg) ctx.drawImage(qrImg, qx + 10 * scale, qy + 10 * scale, qSize - 20 * scale, qSize - 20 * scale);
+  const socialEntries = parseFlyerSocialEntries(s);
+  const stripH = flyerSocialStripHeight(h, socialEntries.length);
+  const bannerBottom = h - stripH;
   const footerBannerImg = await getFlyerFooterBanner();
-  if (footerBannerImg) drawFooterBanner(ctx, w, h, footerBannerImg);
-  else drawFooterBar(ctx, w, h, s, true);
+  if (footerBannerImg) drawFooterBanner(ctx, w, h, bannerBottom, footerBannerImg);
+  else drawFooterBar(ctx, w, h, s, true, stripH);
+  await drawFlyerSocialStrip(ctx, w, h - stripH, stripH, socialEntries);
 }

@@ -189,6 +189,24 @@
   resize: vertical;
 }
 
+#app-app .app-flyer-social-row {
+  display: grid;
+  grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+#app-app .app-flyer-social-select {
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.85rem;
+  border-radius: var(--app-radius-md, 10px);
+  border: 1px solid var(--app-border, #e8ecf1);
+  background: #fff;
+  color: var(--app-text, #1a202c);
+}
+
 #app-app .app-flyer-colors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
