@@ -1,7 +1,7 @@
 /**
  * Rendu canvas des flyers QR (export PNG & aperçu).
  */
-import { FLYER_EXPORT } from "./app-flyer-qr-presets.js";
+import { FLYER_EXPORT, FLYER_LOGO_LAYOUT } from "./app-flyer-qr-presets.js";
 import {
   parseFlyerSocialEntries,
   flyerSocialStripHeight,
@@ -202,10 +202,10 @@ function drawImageContain(ctx, img, dx, dy, dstW, dstH) {
  * @param {number} h
  */
 function drawFlyerCommerceLogo(ctx, logoImg, w, h) {
-  const maxW = w * 0.62;
-  const maxH = h * 0.15;
+  const maxW = w * FLYER_LOGO_LAYOUT.maxWFrac;
+  const maxH = h * FLYER_LOGO_LAYOUT.maxHFrac;
   const cx = w * 0.5;
-  const cy = h * 0.1;
+  const cy = h * FLYER_LOGO_LAYOUT.centerYFrac;
   const lx = cx - maxW / 2;
   const ly = cy - maxH / 2;
   drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
@@ -348,7 +348,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const wheelCy = h * 0.565;
   const wheelR = w * 0.36;
   drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
-  drawFlyerHeroHeadline(ctx, s, w, h, scale);
+  drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
   const sub = (s.subline || "").trim();
   if (sub) {
     ctx.textAlign = "center";

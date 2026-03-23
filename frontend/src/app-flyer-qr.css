@@ -270,6 +270,27 @@
   cursor: pointer;
 }
 
+#app-app .app-flyer-headline-style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 400px) {
+  #app-app .app-flyer-headline-style-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+#app-app .app-flyer-headline-style-grid .app-flyer-field--compact {
+  grid-column: 1 / -1;
+}
+
+#app-app .app-flyer-field--compact .app-label {
+  font-size: 0.78rem;
+}
+
 #app-app .app-flyer-actions {
   display: flex;
   flex-wrap: wrap;

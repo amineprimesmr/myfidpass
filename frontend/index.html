@@ -9,7 +9,7 @@
     <title>Myfidpass — Carte fidélité Apple Wallet & Google Wallet pour les commerces</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@700&family=Fraunces:wght@700&family=Montserrat:wght@700;800&family=Oswald:wght@700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&family=Sora:wght@700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/fidelity-missions.css" />
     <link rel="stylesheet" href="/src/fidelity-profile-bonus.css" />
@@ -784,6 +784,33 @@
                     <div class="app-flyer-field">
                       <label class="app-label" for="app-flyer-headline">Accroche principale</label>
                       <textarea id="app-flyer-headline" class="app-input" rows="2" maxlength="200" data-flyer-input></textarea>
+                    </div>
+                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Style du titre</p>
+                    <div class="app-flyer-field">
+                      <label class="app-label" for="app-flyer-headline-font">Police</label>
+                      <select id="app-flyer-headline-font" class="app-input app-flyer-social-select" data-flyer-input aria-label="Police du titre"></select>
+                    </div>
+                    <div class="app-flyer-headline-style-grid">
+                      <div class="app-flyer-color-row">
+                        <label for="app-flyer-headline-fill">Couleur du texte</label>
+                        <input type="color" id="app-flyer-headline-fill" data-flyer-input aria-label="Couleur du texte du titre" />
+                      </div>
+                      <div class="app-flyer-color-row">
+                        <label for="app-flyer-headline-stroke">Contour du texte</label>
+                        <input type="color" id="app-flyer-headline-stroke" data-flyer-input aria-label="Couleur du contour du titre" />
+                      </div>
+                      <div class="app-flyer-field app-flyer-field--compact">
+                        <label class="app-label" for="app-flyer-headline-stroke-w">Épaisseur du contour (0 = aucun)</label>
+                        <input type="number" id="app-flyer-headline-stroke-w" class="app-input" min="0" max="14" step="1" value="3" data-flyer-input inputmode="numeric" />
+                      </div>
+                      <div class="app-flyer-field app-flyer-field--compact">
+                        <label class="app-label" for="app-flyer-headline-logo-gap">Espace logo → titre (% hauteur)</label>
+                        <input type="number" id="app-flyer-headline-logo-gap" class="app-input" min="0" max="14" step="0.5" value="4" data-flyer-input inputmode="decimal" />
+                      </div>
+                      <div class="app-flyer-field app-flyer-field--compact">
+                        <label class="app-label" for="app-flyer-headline-tracking">Espacement des lettres</label>
+                        <input type="number" id="app-flyer-headline-tracking" class="app-input" min="0" max="8" step="0.5" value="0" data-flyer-input inputmode="decimal" />
+                      </div>
                     </div>
                     <div class="app-flyer-field">
                       <label class="app-label" for="app-flyer-subline">Sous-texte (optionnel)</label>

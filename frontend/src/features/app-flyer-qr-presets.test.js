@@ -57,4 +57,23 @@ describe("mergeFlyerState", () => {
     expect(s.headline).toBe("Ma accroche");
     expect(s.colorPrimary).toBe("#ff00aa");
   });
+
+  it("normalise la police et les couleurs du titre", () => {
+    const base = defaultFlyerState();
+    expect(mergeFlyerState({ headlineFontId: "inconnue" }).headlineFontId).toBe(base.headlineFontId);
+    const s = mergeFlyerState({
+      headlineFontId: "bebas",
+      headlineTextColor: "#aabbcc",
+      headlineStrokeColor: "#010203",
+      headlineStrokeWidth: 99,
+      headlineLogoGapPct: 20,
+      headlineLetterSpacing: 12,
+    });
+    expect(s.headlineFontId).toBe("bebas");
+    expect(s.headlineTextColor).toBe("#aabbcc");
+    expect(s.headlineStrokeColor).toBe("#010203");
+    expect(s.headlineStrokeWidth).toBe(14);
+    expect(s.headlineLogoGapPct).toBe(14);
+    expect(s.headlineLetterSpacing).toBe(8);
+  });
 });

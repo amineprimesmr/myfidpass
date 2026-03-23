@@ -1,6 +1,8 @@
 /**
  * Gabarits et valeurs par défaut — Flyer QR (/app#flyer-qr).
  */
+import { normalizeHeadlineFontId } from "./app-flyer-qr-headline-fonts.js";
+
 export const FLYER_STORAGE_KEY = "fidpass_flyer_prefs_v1";
 
 /** Dimensions export PNG (haute définition impression / zoom). */
@@ -19,6 +21,16 @@ export const FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG = -30;
  * Rayon des teintes PNG / clip = ce facteur × rayon affiché (bord 3D blanc plus étroit que le disque logique).
  */
 export const FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR = 0.94;
+
+/** Zone logo (drawFlyerCommerceLogo) : bas du bloc = centerYFrac + maxHFrac/2. */
+export const FLYER_LOGO_LAYOUT = Object.freeze({
+  centerYFrac: 0.1,
+  maxHFrac: 0.15,
+  maxWFrac: 0.62,
+});
+
+export const FLYER_LOGO_BLOCK_BOTTOM_FRAC =
+  FLYER_LOGO_LAYOUT.centerYFrac + FLYER_LOGO_LAYOUT.maxHFrac / 2;
 
 /** Identifiant unique du gabarit flyer (ancien localStorage avec d’autres ids → normalisé au merge). */
 export const FLYER_TEMPLATE_ID = "noir-or-roue";
@@ -64,6 +76,12 @@ export function flyerTemplateMeta(id) {
  * @property {string} wheelColorOdd parts impaires (1, 3, 5…)
  * @property {string} wheelColorEven parts paires (2, 4…)
  * @property {number} wheelSegmentOffsetDeg rotation découpe PNG / parts (°)
+ * @property {string} headlineFontId police titre (voir FLYER_HEADLINE_FONTS)
+ * @property {string} headlineTextColor couleur remplissage titre
+ * @property {string} headlineStrokeColor couleur contour titre
+ * @property {number} headlineStrokeWidth épaisseur contour (0 = aucun), 1–14
+ * @property {number} headlineLogoGapPct espace logo → titre (% hauteur flyer, 0–14)
+ * @property {number} headlineLetterSpacing espacement lettres (0–8, px réf. export)
  */
 
 /** @returns {FlyerState} */
@@ -91,6 +109,12 @@ export function defaultFlyerState() {
     wheelColorOdd: "#fbbf24",
     wheelColorEven: "#f97316",
     wheelSegmentOffsetDeg: 0,
+    headlineFontId: "plus-jakarta",
+    headlineTextColor: "#ffffff",
+    headlineStrokeColor: "#020617",
+    headlineStrokeWidth: 3,
+    headlineLogoGapPct: 4,
+    headlineLetterSpacing: 0,
   };
 }
 
@@ -124,6 +148,24 @@ function clampWheelOffsetDeg(v) {
   return Math.max(-180, Math.min(180, Math.round(n * 20) / 20));
 }
 
+function clampHeadlineStrokeW(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 3;
+  return Math.max(0, Math.min(14, Math.round(n)));
+}
+
+function clampHeadlineGapPct(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 4;
+  return Math.max(0, Math.min(14, Math.round(n * 10) / 10));
+}
+
+function clampHeadlineLetterSpacing(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(8, Math.round(n * 2) / 2));
+}
+
 /** @param {Partial<FlyerState> | null | undefined} raw */
 export function mergeFlyerState(raw) {
   const base = defaultFlyerState();
@@ -155,5 +197,17 @@ export function mergeFlyerState(raw) {
     colorBgBottom: safeHex(String(merged.colorBgBottom ?? ""), base.colorBgBottom),
     wheelColorOdd,
     wheelColorEven,
+    headlineFontId: normalizeHeadlineFontId(merged.headlineFontId),
+    headlineTextColor: safeHex(
+      String(merged.headlineTextColor ?? ""),
+      base.headlineTextColor,
+    ),
+    headlineStrokeColor: safeHex(
+      String(merged.headlineStrokeColor ?? ""),
+      base.headlineStrokeColor,
+    ),
+    headlineStrokeWidth: clampHeadlineStrokeW(merged.headlineStrokeWidth),
+    headlineLogoGapPct: clampHeadlineGapPct(merged.headlineLogoGapPct),
+    headlineLetterSpacing: clampHeadlineLetterSpacing(merged.headlineLetterSpacing),
   };
 }

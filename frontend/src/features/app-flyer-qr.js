@@ -3,6 +3,7 @@
  */
 import { API_BASE } from "../config.js";
 import { FLYER_STORAGE_KEY, FLYER_EXPORT, mergeFlyerState } from "./app-flyer-qr-presets.js";
+import { FLYER_HEADLINE_FONTS } from "./app-flyer-qr-headline-fonts.js";
 import { renderFlyerCanvas } from "./app-flyer-qr-draw.js";
 import {
   getStoredFlyerCustomLogoDataUrl,
@@ -37,6 +38,12 @@ function readStateFromForm(root) {
     wheelColorOdd: q("app-flyer-wheel-color-odd")?.value,
     wheelColorEven: q("app-flyer-wheel-color-even")?.value,
     wheelSegmentOffsetDeg: Number(q("app-flyer-wheel-offset")?.value),
+    headlineFontId: q("app-flyer-headline-font")?.value,
+    headlineTextColor: q("app-flyer-headline-fill")?.value,
+    headlineStrokeColor: q("app-flyer-headline-stroke")?.value,
+    headlineStrokeWidth: Number(q("app-flyer-headline-stroke-w")?.value),
+    headlineLogoGapPct: Number(q("app-flyer-headline-logo-gap")?.value),
+    headlineLetterSpacing: Number(q("app-flyer-headline-tracking")?.value),
   });
 }
 
@@ -67,6 +74,12 @@ function writeFormFromState(root, s) {
   set("app-flyer-wheel-color-odd", s.wheelColorOdd ?? "");
   set("app-flyer-wheel-color-even", s.wheelColorEven ?? "");
   set("app-flyer-wheel-offset", String(s.wheelSegmentOffsetDeg ?? 0));
+  set("app-flyer-headline-font", s.headlineFontId ?? "");
+  set("app-flyer-headline-fill", s.headlineTextColor);
+  set("app-flyer-headline-stroke", s.headlineStrokeColor);
+  set("app-flyer-headline-stroke-w", String(s.headlineStrokeWidth ?? 0));
+  set("app-flyer-headline-logo-gap", String(s.headlineLogoGapPct ?? 0));
+  set("app-flyer-headline-tracking", String(s.headlineLetterSpacing ?? 0));
 }
 
 function loadStoredState() {
@@ -102,6 +115,16 @@ export function initAppFlyerQr(slug, opts) {
   const exportNote = document.getElementById("app-flyer-export-note");
 
   if (!root || !canvas || !(canvas instanceof HTMLCanvasElement)) return;
+
+  const fontSel = root.querySelector("#app-flyer-headline-font");
+  if (fontSel instanceof HTMLSelectElement && fontSel.options.length === 0) {
+    FLYER_HEADLINE_FONTS.forEach((f) => {
+      const o = document.createElement("option");
+      o.value = f.id;
+      o.textContent = f.label;
+      fontSel.appendChild(o);
+    });
+  }
 
   if (panel && window.matchMedia("(min-width: 961px)").matches) {
     panel.classList.add("is-open");

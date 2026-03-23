@@ -1,6 +1,8 @@
 /**
- * Titre principal du flyer QR — rendu canvas premium (dégradé, contour, lueur).
+ * Titre principal du flyer QR — rendu sobre (couleurs & police pilotées par l’utilisateur).
  */
+import { flyerHeadlineFontDef } from "./app-flyer-qr-headline-fonts.js";
+import { FLYER_LOGO_BLOCK_BOTTOM_FRAC } from "./app-flyer-qr-presets.js";
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -30,77 +32,52 @@ function wrapTextLines(ctx, text, maxW) {
  * @param {number} w
  * @param {number} h
  * @param {number} scale
+ * @param {boolean} hasLogo
  */
-export function drawFlyerHeroHeadline(ctx, s, w, h, scale) {
+export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   const text = (s.headline || "").trim();
   if (!text) return;
 
-  const cx = w / 2;
-  const cy = h * 0.228;
-  const maxW = w * 0.86;
-  const fontSize = Math.round(w * 0.058);
-  const lineH = Math.round(fontSize * 1.12);
+  const font = flyerHeadlineFontDef(s.headlineFontId);
+  const fontSize = Math.round(w * 0.052);
+  const lineH = Math.round(fontSize * (font.id === "bebas" ? 1.05 : 1.18));
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
   ctx.miterLimit = 2;
-  ctx.font = `900 italic ${fontSize}px "Plus Jakarta Sans", "Outfit", ui-sans-serif, system-ui, sans-serif`;
+  ctx.font = `${font.style === "italic" ? "italic " : ""}${font.weight} ${fontSize}px ${font.stack}`;
 
+  const maxW = w * 0.88;
   const lines = wrapTextLines(ctx, text, maxW);
-  const totalH = lines.length * lineH;
-  const y0 = cy - totalH / 2 + lineH / 2;
 
-  const c1 = s.colorPrimary || "#fbbf24";
-  const c2 = s.colorSecondary || "#f97316";
+  const gapFrac = Math.min(14, Math.max(0, Number(s.headlineLogoGapPct) || 0)) / 100;
+  const logoBottomFrac = hasLogo ? FLYER_LOGO_BLOCK_BOTTOM_FRAC : 0.052;
+  const blockTop = h * logoBottomFrac + h * gapFrac;
+  const firstLineCy = blockTop + lineH * 0.5;
+
+  const fill = s.headlineTextColor || "#ffffff";
+  const strokeC = s.headlineStrokeColor || "#020617";
+  const strokeW = Math.min(14, Math.max(0, Number(s.headlineStrokeWidth) || 0));
+  const strokePx = strokeW > 0 ? Math.max(1, scale * strokeW * 0.85) : 0;
+
+  const trackRaw = Number(s.headlineLetterSpacing);
+  const trackPx = Number.isFinite(trackRaw)
+    ? Math.round(Math.min(8, Math.max(0, trackRaw)) * scale)
+    : 0;
+  const canTrack = trackPx > 0 && "letterSpacing" in ctx;
+  if (canTrack) ctx.letterSpacing = `${trackPx}px`;
 
   lines.forEach((line, i) => {
-    const ly = y0 + i * lineH;
-    const gx0 = cx - maxW * 0.52;
-    const gx1 = cx + maxW * 0.52;
-    const g = ctx.createLinearGradient(gx0, ly - fontSize * 0.55, gx1, ly + fontSize * 0.55);
-    g.addColorStop(0, "#38bdf8");
-    g.addColorStop(0.22, c1);
-    g.addColorStop(0.48, "#fef9c3");
-    g.addColorStop(0.72, c2);
-    g.addColorStop(1, c1);
-
-    const off = Math.max(2, scale * 2.5);
-    ctx.save();
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = "#020617";
-    ctx.fillText(line, cx + off, ly + off);
-    ctx.restore();
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(15, 23, 42, 0.94)";
-    ctx.lineWidth = Math.max(5, scale * 7);
-    ctx.strokeText(line, cx, ly);
-    ctx.restore();
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-    ctx.lineWidth = Math.max(1.5, scale * 2);
-    ctx.strokeText(line, cx, ly);
-    ctx.restore();
-
-    ctx.save();
-    ctx.shadowColor = "rgba(56, 189, 248, 0.7)";
-    ctx.shadowBlur = scale * 26;
-    ctx.fillStyle = g;
-    ctx.fillText(line, cx, ly);
-    ctx.restore();
-
-    ctx.save();
-    ctx.shadowColor = "rgba(251, 191, 36, 0.45)";
-    ctx.shadowBlur = scale * 14;
-    ctx.fillStyle = g;
-    ctx.fillText(line, cx, ly);
-    ctx.restore();
-
-    ctx.save();
-    ctx.fillStyle = g;
-    ctx.fillText(line, cx, ly);
-    ctx.restore();
+    const ly = firstLineCy + i * lineH;
+    if (strokePx > 0) {
+      ctx.strokeStyle = strokeC;
+      ctx.lineWidth = strokePx;
+      ctx.strokeText(line, w / 2, ly);
+    }
+    ctx.fillStyle = fill;
+    ctx.fillText(line, w / 2, ly);
   });
+
+  if (canTrack) ctx.letterSpacing = "0px";
 }
