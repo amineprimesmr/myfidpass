@@ -87,6 +87,37 @@ function fillGradientV(ctx, w, h, top, bot) {
   ctx.fillRect(0, 0, w, h);
 }
 
+/**
+ * Remplit le rectangle comme object-fit: cover (échelle uniforme, centré).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {CanvasImageSource} img
+ * @param {number} dx
+ * @param {number} dy
+ * @param {number} dstW
+ * @param {number} dstH
+ */
+function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
+  let sw = 0;
+  let sh = 0;
+  if (img instanceof HTMLImageElement) {
+    sw = img.naturalWidth || img.width;
+    sh = img.naturalHeight || img.height;
+  } else if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
+    sw = img.width;
+    sh = img.height;
+  }
+  if (!sw || !sh) {
+    ctx.drawImage(img, dx, dy, dstW, dstH);
+    return;
+  }
+  const scale = Math.max(dstW / sw, dstH / sh);
+  const bw = sw * scale;
+  const bh = sh * scale;
+  const ox = dx + (dstW - bw) / 2;
+  const oy = dy + (dstH - bh) / 2;
+  ctx.drawImage(img, 0, 0, sw, sh, ox, oy, bw, bh);
+}
+
 /** @param {import("./app-flyer-qr-presets.js").FlyerState} s */
 function drawFooterBar(ctx, w, h, s, dark) {
   const fh = h * 0.2;
@@ -171,11 +202,14 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoUrl) {
   ctx.fill();
   if (logoImg) {
     const lw = w * 0.22;
+    const side = lw * 0.9;
+    const lx = w * 0.5 - side / 2;
+    const ly = h * 0.11 - side / 2;
     ctx.save();
     ctx.beginPath();
     ctx.arc(w * 0.5, h * 0.11, lw * 0.45, 0, Math.PI * 2);
     ctx.clip();
-    ctx.drawImage(logoImg, w * 0.5 - lw * 0.45, h * 0.11 - lw * 0.45, lw * 0.9, lw * 0.9);
+    drawImageCover(ctx, logoImg, lx, ly, side, side);
     ctx.restore();
     ctx.strokeStyle = "rgba(255,255,255,0.4)";
     ctx.lineWidth = 3 * scale;
