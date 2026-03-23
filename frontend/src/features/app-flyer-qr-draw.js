@@ -8,6 +8,7 @@ import {
   drawFlyerSocialStrip,
 } from "./app-flyer-social-strip.js";
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
+import { drawFlyerHeroHeadline } from "./app-flyer-qr-hero.js";
 
 export { FLYER_EXPORT };
 
@@ -347,13 +348,15 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const wheelCy = h * 0.565;
   const wheelR = w * 0.36;
   drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
-  ctx.fillStyle = s.colorPrimary;
-  ctx.textAlign = "center";
-  ctx.font = `900 italic ${Math.round(w * 0.048)}px "Plus Jakarta Sans", Outfit, sans-serif`;
-  wrapCenter(ctx, s.headline, w / 2, h * 0.235, w * 0.82, Math.round(w * 0.052));
-  ctx.fillStyle = s.colorAccent;
-  ctx.font = `600 ${Math.round(w * 0.028)}px Outfit, sans-serif`;
-  ctx.fillText(s.subline, w / 2, h * 0.297);
+  drawFlyerHeroHeadline(ctx, s, w, h, scale);
+  const sub = (s.subline || "").trim();
+  if (sub) {
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = s.colorAccent;
+    ctx.font = `600 ${Math.round(w * 0.028)}px Outfit, sans-serif`;
+    ctx.fillText(sub, w / 2, h * 0.292);
+  }
   const qx = w * 0.515;
   const qy = h * 0.608;
   const qCx = qx + qSize / 2;

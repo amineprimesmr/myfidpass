@@ -70,8 +70,8 @@ export function flyerTemplateMeta(id) {
 export function defaultFlyerState() {
   return {
     templateId: FLYER_TEMPLATE_ID,
-    headline: "SCANNEZ · GAGNEZ · FIDÉLISEZ",
-    subline: "Ajoutez la carte fidélité en un scan",
+    headline: "Fais tourner la roue",
+    subline: "",
     ctaBanner: "SCANNEZ POUR JOUER",
     step1: "Scannez le QR code",
     step2: "Ajoutez la carte au Wallet",
