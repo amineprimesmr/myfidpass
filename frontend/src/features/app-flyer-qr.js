@@ -28,6 +28,13 @@ function readStateFromForm(root) {
     colorAccent: q("app-flyer-c3")?.value,
     colorBgTop: q("app-flyer-bg1")?.value,
     colorBgBottom: q("app-flyer-bg2")?.value,
+    wheelRenderMode: q("app-flyer-wheel-mode")?.value === "png" ? "png" : "segments",
+    wheelSeg1: q("app-flyer-wheel-seg-1")?.value,
+    wheelSeg2: q("app-flyer-wheel-seg-2")?.value,
+    wheelSeg3: q("app-flyer-wheel-seg-3")?.value,
+    wheelSeg4: q("app-flyer-wheel-seg-4")?.value,
+    wheelSeg5: q("app-flyer-wheel-seg-5")?.value,
+    wheelSeg6: q("app-flyer-wheel-seg-6")?.value,
     wheelImageTintPrimary: q("app-flyer-wheel-tint")?.checked !== false,
   });
 }
@@ -55,6 +62,13 @@ function writeFormFromState(root, s) {
   set("app-flyer-c3", s.colorAccent);
   set("app-flyer-bg1", s.colorBgTop);
   set("app-flyer-bg2", s.colorBgBottom);
+  set("app-flyer-wheel-mode", s.wheelRenderMode === "png" ? "png" : "segments");
+  set("app-flyer-wheel-seg-1", s.wheelSeg1 ?? "");
+  set("app-flyer-wheel-seg-2", s.wheelSeg2 ?? "");
+  set("app-flyer-wheel-seg-3", s.wheelSeg3 ?? "");
+  set("app-flyer-wheel-seg-4", s.wheelSeg4 ?? "");
+  set("app-flyer-wheel-seg-5", s.wheelSeg5 ?? "");
+  set("app-flyer-wheel-seg-6", s.wheelSeg6 ?? "");
   const tintEl = root.querySelector("#app-flyer-wheel-tint");
   if (tintEl && "checked" in tintEl) tintEl.checked = s.wheelImageTintPrimary !== false;
 }
@@ -119,6 +133,20 @@ export function initAppFlyerQr(slug, opts) {
       void paint();
     });
   }
+
+  const wheelModeEl = root.querySelector("#app-flyer-wheel-mode");
+  const wheelSegWrap = root.querySelector("#app-flyer-wheel-segments-wrap");
+  const wheelTintWrap = root.querySelector("#app-flyer-wheel-tint-wrap");
+  function syncWheelModeUi() {
+    const png = wheelModeEl?.value === "png";
+    wheelSegWrap?.classList.toggle("hidden", png);
+    wheelTintWrap?.classList.toggle("hidden", !png);
+  }
+  syncWheelModeUi();
+  wheelModeEl?.addEventListener("change", () => {
+    syncWheelModeUi();
+    schedulePaint();
+  });
 
   async function paint() {
     state = readStateFromForm(root);

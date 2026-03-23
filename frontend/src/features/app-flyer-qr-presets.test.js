@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { mergeFlyerState, defaultFlyerState, FLYER_TEMPLATE_ID } from "./app-flyer-qr-presets.js";
+import {
+  mergeFlyerState,
+  defaultFlyerState,
+  FLYER_TEMPLATE_ID,
+  wheelSegmentColorsResolved,
+  FLYER_WHEEL_SEGMENT_COUNT,
+} from "./app-flyer-qr-presets.js";
 
 describe("mergeFlyerState", () => {
   it("force le gabarit unique", () => {
@@ -17,6 +23,17 @@ describe("mergeFlyerState", () => {
     const s = mergeFlyerState({ colorPrimary: "red", colorBgTop: "#abc" });
     expect(s.colorPrimary).toBe(base.colorPrimary);
     expect(s.colorBgTop).toBe(base.colorBgTop);
+  });
+
+  it("résout 6 couleurs de parts de roue", () => {
+    const s = mergeFlyerState({
+      wheelSeg1: "#ff0000",
+      wheelSeg3: "#00ff00",
+    });
+    const cols = wheelSegmentColorsResolved(s);
+    expect(cols).toHaveLength(FLYER_WHEEL_SEGMENT_COUNT);
+    expect(cols[0]).toBe("#ff0000");
+    expect(cols[2]).toBe("#00ff00");
   });
 
   it("conserve les textes et couleurs valides du stockage", () => {

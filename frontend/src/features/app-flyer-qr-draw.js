@@ -7,6 +7,7 @@ import {
   flyerSocialStripHeight,
   drawFlyerSocialStrip,
 } from "./app-flyer-social-strip.js";
+import { drawFlyerWheel } from "./app-flyer-wheel.js";
 
 export { FLYER_EXPORT };
 
@@ -75,28 +76,6 @@ async function loadQrAsImage(targetUrl, sizePx) {
       return null;
     }
   }
-}
-
-/** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r @param {string} a @param {string} b */
-function drawWheel(ctx, cx, cy, r, a, b) {
-  const n = 10;
-  for (let i = 0; i < n; i++) {
-    const t0 = (i / n) * Math.PI * 2 - Math.PI / 2;
-    const t1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, t0, t1);
-    ctx.closePath();
-    ctx.fillStyle = i % 2 === 0 ? a : b;
-    ctx.fill();
-  }
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.95)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.12)";
-  ctx.lineWidth = Math.max(2, r * 0.02);
-  ctx.stroke();
 }
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} h @param {string} top @param {string} bot */
@@ -338,23 +317,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const wheelCx = w * 0.5;
   const wheelCy = h * 0.565;
   const wheelR = w * 0.36;
-  const wheelBox = wheelR * 2;
-  if (roueImg) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(wheelCx, wheelCy, wheelR, 0, Math.PI * 2);
-    ctx.clip();
-    drawImageCover(ctx, roueImg, wheelCx - wheelBox / 2, wheelCy - wheelBox / 2, wheelBox, wheelBox);
-    /* Teinte = couleur primaire ; mode « color » garde les volumes d’un PNG gris/blanc. */
-    if (s.wheelImageTintPrimary !== false) {
-      ctx.globalCompositeOperation = "color";
-      ctx.fillStyle = s.colorPrimary;
-      ctx.fillRect(wheelCx - wheelBox / 2, wheelCy - wheelBox / 2, wheelBox, wheelBox);
-    }
-    ctx.restore();
-  } else {
-    drawWheel(ctx, wheelCx, wheelCy, wheelR, s.colorPrimary, s.colorSecondary);
-  }
+  drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
   ctx.fillStyle = s.colorPrimary;
   ctx.textAlign = "center";
   ctx.font = `900 italic ${Math.round(w * 0.048)}px "Plus Jakarta Sans", Outfit, sans-serif`;
