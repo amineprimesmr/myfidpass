@@ -145,49 +145,69 @@ function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
 }
 
 /**
- * Logo dans le disque : rendu sur patch puis copie (évite bugs clip × drawImage sur blob/WebKit).
+ * Comme object-fit: contain — tient entièrement dans le rectangle, centré.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {CanvasImageSource} img
+ * @param {number} dx
+ * @param {number} dy
+ * @param {number} dstW
+ * @param {number} dstH
+ */
+function drawImageContain(ctx, img, dx, dy, dstW, dstH) {
+  const prevSmooth = ctx.imageSmoothingEnabled;
+  const prevQ = "imageSmoothingQuality" in ctx ? ctx.imageSmoothingQuality : "low";
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+  try {
+    let sw = 0;
+    let sh = 0;
+    if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
+      sw = img.width;
+      sh = img.height;
+    } else if (img && typeof img === "object") {
+      const o = /** @type {{ naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }} */ (img);
+      sw = o.naturalWidth || o.width || 0;
+      sh = o.naturalHeight || o.height || 0;
+    }
+    if (!sw || !sh) {
+      try {
+        ctx.drawImage(img, dx, dy, dstW, dstH);
+      } catch (_) {}
+      return;
+    }
+    const sc = Math.min(dstW / sw, dstH / sh);
+    const bw = sw * sc;
+    const bh = sh * sc;
+    const ox = dx + (dstW - bw) / 2;
+    const oy = dy + (dstH - bh) / 2;
+    try {
+      ctx.drawImage(img, ox, oy, bw, bh);
+    } catch (_) {
+      try {
+        ctx.drawImage(img, dx, dy, dstW, dstH);
+      } catch (_e) {}
+    }
+  } finally {
+    ctx.imageSmoothingEnabled = prevSmooth;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = prevQ;
+  }
+}
+
+/**
+ * Logo commerce en tête de flyer : pas de cercle ni bord, proportions respectées.
  * @param {CanvasRenderingContext2D} ctx
  * @param {CanvasImageSource} logoImg
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- * @param {number} scale
+ * @param {number} w
+ * @param {number} h
  */
-function drawLogoCircle(ctx, logoImg, cx, cy, r, scale) {
-  const side = r * 2;
-  const lx = cx - r;
-  const ly = cy - r;
-  const sidePx = Math.max(1, Math.round(side));
-  let patch;
-  if (typeof OffscreenCanvas !== "undefined") {
-    patch = new OffscreenCanvas(sidePx, sidePx);
-  } else {
-    patch = document.createElement("canvas");
-    patch.width = sidePx;
-    patch.height = sidePx;
-  }
-  const pctx = patch.getContext("2d");
-  if (pctx) {
-    drawImageCover(pctx, logoImg, 0, 0, sidePx, sidePx);
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.drawImage(patch, lx, ly, side, side);
-    ctx.restore();
-  } else {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.clip();
-    drawImageCover(ctx, logoImg, lx, ly, side, side);
-    ctx.restore();
-  }
-  ctx.strokeStyle = "rgba(255,255,255,0.4)";
-  ctx.lineWidth = 3 * scale;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.stroke();
+function drawFlyerCommerceLogo(ctx, logoImg, w, h) {
+  const maxW = w * 0.44;
+  const maxH = h * 0.1;
+  const cx = w * 0.5;
+  const cy = h * 0.11;
+  const lx = cx - maxW / 2;
+  const ly = cy - maxH / 2;
+  drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
 }
 
 async function getFlyerFooterBanner() {
@@ -324,10 +344,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   ctx.fillStyle = "rgba(255,255,255,0.06)";
   roundRect(ctx, w * 0.04, h * 0.03, w * 0.92, h * 0.34, 20 * scale);
   ctx.fill();
-  if (logoImg) {
-    const lw = w * 0.22;
-    drawLogoCircle(ctx, logoImg, w * 0.5, h * 0.11, lw * 0.45, scale);
-  }
+  if (logoImg) drawFlyerCommerceLogo(ctx, logoImg, w, h);
   /* Roue avant les textes : sinon elle recouvre l’accroche et le sous-texte. */
   const wheelCx = w * 0.5;
   const wheelCy = h * 0.565;
