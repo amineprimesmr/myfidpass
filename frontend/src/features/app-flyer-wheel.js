@@ -3,6 +3,7 @@
  */
 import {
   wheelSegmentColorsResolved,
+  FLYER_WHEEL_SEGMENT_COUNT,
   FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG,
   FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR,
 } from "./app-flyer-qr-presets.js";
@@ -27,6 +28,51 @@ function segmentAnglesEqual(i, n, offsetDeg) {
     t0: base + i * step - SEG_OVERLAP_RAD,
     t1: base + (i + 1) * step + SEG_OVERLAP_RAD,
   };
+}
+
+/**
+ * Libellés alternés sur chaque secteur (même découpe angulaire que les parts).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} r
+ * @param {number} offsetDeg
+ * @param {number} n
+ */
+function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n) {
+  if (n < 1) return;
+  const base = -Math.PI / 2 + offsetRad(offsetDeg);
+  const step = (Math.PI * 2) / n;
+  const labelR = r * 0.56;
+  const fontPx = Math.max(11, Math.round(r * 0.068));
+
+  ctx.save();
+  ctx.font = `800 ${fontPx}px Outfit, system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+
+  for (let i = 0; i < n; i++) {
+    const mid = base + (i + 0.5) * step;
+    const tx = cx + Math.cos(mid) * labelR;
+    const ty = cy + Math.sin(mid) * labelR;
+    const label = i % 2 === 0 ? "Gagné !" : "Perdu !";
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    let rot = mid + Math.PI / 2;
+    if (Math.cos(mid) < 0) rot += Math.PI;
+    ctx.rotate(rot);
+
+    const sw = Math.max(2, fontPx * 0.11);
+    ctx.lineWidth = sw;
+    ctx.strokeStyle = "rgba(0,0,0,0.5)";
+    ctx.strokeText(label, 0, 0);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(label, 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
 }
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
@@ -60,7 +106,6 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
     ctx.fillStyle = colors[i];
     ctx.fill();
   }
-  drawWheelHub(ctx, cx, cy, r);
 }
 
 /**
@@ -108,7 +153,6 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
     ctx.restore();
   }
   ctx.restore();
-  drawWheelHub(ctx, cx, cy, r);
 }
 
 /**
@@ -120,10 +164,14 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
   const usePng = s.wheelRenderMode === "png" && roueImg;
+  const n = FLYER_WHEEL_SEGMENT_COUNT;
   if (usePng) {
     const off = userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG;
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
+    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, off, n);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
+    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, n);
   }
+  drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }
