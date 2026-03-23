@@ -842,17 +842,17 @@
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Roue</p>
                     <label class="app-label" for="app-flyer-wheel-mode">Affichage</label>
                     <select id="app-flyer-wheel-mode" class="app-input app-flyer-social-select app-flyer-wheel-mode-select" data-flyer-input>
-                      <option value="segments">8 parts vectorielles (plat)</option>
-                      <option value="png">Image roue.png (8 parts, teinte par secteur)</option>
+                      <option value="segments">5 parts vectorielles (égales)</option>
+                      <option value="png">Image roue.png (5 zones, teinte par zone)</option>
                     </select>
                     <div class="app-flyer-field" style="margin-top:0.65rem">
                       <label class="app-label" for="app-flyer-wheel-offset">Rotation découpe (°)</label>
                       <input type="number" id="app-flyer-wheel-offset" class="app-input" min="-180" max="180" step="0.5" value="0" data-flyer-input inputmode="decimal" />
                     </div>
                     <div id="app-flyer-wheel-segments-wrap">
-                      <p class="app-hint" style="margin:0.35rem 0 0.5rem;font-size:0.78rem">8 couleurs = 8 secteurs, sens horaire depuis le haut (part 1 au sommet). Ajuste la rotation si ton fichier <code>roue.png</code> n’est pas aligné (souvent ±11,25° pour 8 parts). PNG en niveaux de gris / blanc = meilleur volume 3D. Pour un rendu net : image <strong>≥ 2000 px</strong> de côté, fond transparent, export <strong>PNG</strong> sans compression agressive.</p>
+                      <p class="app-hint" style="margin:0.35rem 0 0.5rem;font-size:0.78rem"><code>roue.png</code> du site = <strong>5 zones</strong> (angles 60° / 60° / 90° / 90° / 60°), sens horaire à partir de la zone sous le pointeur. Mode PNG : teintes calées sur ces rainures. Ajuste « Rotation découpe » si besoin. PNG niveaux de gris / blanc = meilleur volume 3D ; image <strong>≥ 2000 px</strong> de côté, fond transparent.</p>
                       <div class="app-flyer-wheel-seg-grid" role="group" aria-label="Couleurs des parts de la roue">
-                        <label for="app-flyer-wheel-seg-1">Part 1</label>
+                        <label for="app-flyer-wheel-seg-1">Part 1 (haut)</label>
                         <input type="color" id="app-flyer-wheel-seg-1" data-flyer-input />
                         <label for="app-flyer-wheel-seg-2">Part 2</label>
                         <input type="color" id="app-flyer-wheel-seg-2" data-flyer-input />
@@ -862,12 +862,6 @@
                         <input type="color" id="app-flyer-wheel-seg-4" data-flyer-input />
                         <label for="app-flyer-wheel-seg-5">Part 5</label>
                         <input type="color" id="app-flyer-wheel-seg-5" data-flyer-input />
-                        <label for="app-flyer-wheel-seg-6">Part 6</label>
-                        <input type="color" id="app-flyer-wheel-seg-6" data-flyer-input />
-                        <label for="app-flyer-wheel-seg-7">Part 7</label>
-                        <input type="color" id="app-flyer-wheel-seg-7" data-flyer-input />
-                        <label for="app-flyer-wheel-seg-8">Part 8</label>
-                        <input type="color" id="app-flyer-wheel-seg-8" data-flyer-input />
                       </div>
                     </div>
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Couleurs (texte &amp; fond)</p>

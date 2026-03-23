@@ -6,8 +6,20 @@ export const FLYER_STORAGE_KEY = "fidpass_flyer_prefs_v1";
 /** Dimensions export PNG (haute définition impression / zoom). */
 export const FLYER_EXPORT = { w: 2400, h: 3600 };
 
-/** Nombre de parts (découpe canvas = celle du PNG aligné sur 8 secteurs). */
-export const FLYER_WHEEL_SEGMENT_COUNT = 8;
+/** Nombre de parts (aligné sur le visuel actuel de public/assets/roue.png : 5 zones). */
+export const FLYER_WHEEL_SEGMENT_COUNT = 5;
+
+/**
+ * Fractions de tour (sens horaire) pour chaque part du PNG — rainures ~11h, 1h, 3h, 6h, 9h.
+ * Somme = 1 (60° + 60° + 90° + 90° + 60°).
+ */
+export const FLYER_WHEEL_PNG_ARC_FRACTIONS = Object.freeze([1 / 6, 1 / 6, 1 / 4, 1 / 4, 1 / 6]);
+
+/**
+ * Décalage interne mode PNG seulement : première rainure ≈ 11h quand la rotation utilisateur vaut 0°.
+ * (Le mode « parts vectorielles » reste centré sur 12h avec parts égales.)
+ */
+export const FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG = -30;
 
 /** Identifiant unique du gabarit flyer (ancien localStorage avec d’autres ids → normalisé au merge). */
 export const FLYER_TEMPLATE_ID = "noir-or-roue";
@@ -55,9 +67,6 @@ export function flyerTemplateMeta(id) {
  * @property {string} wheelSeg3
  * @property {string} wheelSeg4
  * @property {string} wheelSeg5
- * @property {string} wheelSeg6
- * @property {string} wheelSeg7
- * @property {string} wheelSeg8
  * @property {number} wheelSegmentOffsetDeg rotation découpe PNG / parts (°)
  */
 
@@ -88,9 +97,6 @@ export function defaultFlyerState() {
     wheelSeg3: "#fbbf24",
     wheelSeg4: "#f97316",
     wheelSeg5: "#fbbf24",
-    wheelSeg6: "#f97316",
-    wheelSeg7: "#fbbf24",
-    wheelSeg8: "#f97316",
     wheelSegmentOffsetDeg: 0,
   };
 }

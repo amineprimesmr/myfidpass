@@ -5,6 +5,7 @@ import {
   FLYER_TEMPLATE_ID,
   wheelSegmentColorsResolved,
   FLYER_WHEEL_SEGMENT_COUNT,
+  FLYER_WHEEL_PNG_ARC_FRACTIONS,
 } from "./app-flyer-qr-presets.js";
 
 describe("mergeFlyerState", () => {
@@ -25,7 +26,7 @@ describe("mergeFlyerState", () => {
     expect(s.colorBgTop).toBe(base.colorBgTop);
   });
 
-  it("résout les couleurs des parts de roue (8 secteurs)", () => {
+  it("résout les couleurs des parts de roue (5 secteurs)", () => {
     const s = mergeFlyerState({
       wheelSeg1: "#ff0000",
       wheelSeg3: "#00ff00",
@@ -51,5 +52,13 @@ describe("mergeFlyerState", () => {
     expect(s.templateId).toBe(FLYER_TEMPLATE_ID);
     expect(s.headline).toBe("Ma accroche");
     expect(s.colorPrimary).toBe("#ff00aa");
+  });
+});
+
+describe("FLYER_WHEEL_PNG_ARC_FRACTIONS", () => {
+  it("somme à 1 et correspond au nombre de parts", () => {
+    const sum = FLYER_WHEEL_PNG_ARC_FRACTIONS.reduce((a, b) => a + b, 0);
+    expect(sum).toBeCloseTo(1, 10);
+    expect(FLYER_WHEEL_PNG_ARC_FRACTIONS.length).toBe(FLYER_WHEEL_SEGMENT_COUNT);
   });
 });
