@@ -81,6 +81,7 @@ export function flyerTemplateMeta(id) {
  * @property {number} headlineStrokeWidth épaisseur contour (0 = aucun), 1–14
  * @property {number} headlineLogoGapPct espace logo → titre (% hauteur flyer, 0–14)
  * @property {number} headlineLetterSpacing espacement lettres (0–8, px réf. export)
+ * @property {number} flyerBgOverlayPct voile sur image de fond (0–90), 0 = photo seule
  */
 
 /** @returns {FlyerState} */
@@ -113,6 +114,7 @@ export function defaultFlyerState() {
     headlineStrokeWidth: 3,
     headlineLogoGapPct: 4,
     headlineLetterSpacing: 0,
+    flyerBgOverlayPct: 52,
   };
 }
 
@@ -164,6 +166,12 @@ function clampHeadlineLetterSpacing(v) {
   return Math.max(0, Math.min(8, Math.round(n * 2) / 2));
 }
 
+function clampFlyerBgOverlayPct(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 52;
+  return Math.max(0, Math.min(90, Math.round(n)));
+}
+
 /** @param {Partial<FlyerState> | null | undefined} raw */
 export function mergeFlyerState(raw) {
   const base = defaultFlyerState();
@@ -208,5 +216,6 @@ export function mergeFlyerState(raw) {
     headlineStrokeWidth: clampHeadlineStrokeW(merged.headlineStrokeWidth),
     headlineLogoGapPct: clampHeadlineGapPct(merged.headlineLogoGapPct),
     headlineLetterSpacing: clampHeadlineLetterSpacing(merged.headlineLetterSpacing),
+    flyerBgOverlayPct: clampFlyerBgOverlayPct(merged.flyerBgOverlayPct),
   };
 }

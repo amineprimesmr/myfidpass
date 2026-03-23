@@ -10,6 +10,11 @@ import {
   initFlyerLogoControl,
   clearStoredFlyerCustomLogo,
 } from "./app-flyer-logo-control.js";
+import {
+  getStoredFlyerCustomBgDataUrl,
+  initFlyerBgControl,
+  clearStoredFlyerCustomBg,
+} from "./app-flyer-bg-control.js";
 
 /** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string }} FlyerQrOpts */
 
@@ -43,6 +48,7 @@ function readStateFromForm(root) {
     headlineStrokeWidth: Number(q("app-flyer-headline-stroke-w")?.value),
     headlineLogoGapPct: Number(q("app-flyer-headline-logo-gap")?.value),
     headlineLetterSpacing: Number(q("app-flyer-headline-tracking")?.value),
+    flyerBgOverlayPct: Number(q("app-flyer-bg-overlay")?.value),
   });
 }
 
@@ -78,6 +84,7 @@ function writeFormFromState(root, s) {
   set("app-flyer-headline-stroke-w", String(s.headlineStrokeWidth ?? 0));
   set("app-flyer-headline-logo-gap", String(s.headlineLogoGapPct ?? 0));
   set("app-flyer-headline-tracking", String(s.headlineLetterSpacing ?? 0));
+  set("app-flyer-bg-overlay", String(s.flyerBgOverlayPct ?? 52));
 }
 
 function loadStoredState() {
@@ -139,8 +146,16 @@ export function initAppFlyerQr(slug, opts) {
   /** Recharge le logo (ex. après retour de « Ma carte » ou changement import flyer). */
   let flyerLogoDirty = true;
 
+  /** @type {ImageBitmap | null} */
+  let flyerBgBitmap = null;
+  /** @type {string | null} */
+  let flyerBgObjectUrl = null;
+  let flyerBgDirty = true;
+
   /** @type {{ syncPreview: () => void } | undefined} */
   let flyerLogoPanelApi;
+  /** @type {{ syncPreview: () => void } | undefined} */
+  let flyerBgPanelApi;
 
   writeFormFromState(root, state);
   if (linkInput) linkInput.value = shareUrl();
@@ -162,6 +177,13 @@ export function initAppFlyerQr(slug, opts) {
   flyerLogoPanelApi = initFlyerLogoControl({
     onCustomLogoChange: () => {
       flyerLogoDirty = true;
+      schedulePaint();
+    },
+  });
+
+  flyerBgPanelApi = initFlyerBgControl({
+    onBgChange: () => {
+      flyerBgDirty = true;
       schedulePaint();
     },
   });
@@ -230,9 +252,47 @@ export function initAppFlyerQr(slug, opts) {
       }
       flyerLogoDirty = false;
     }
+    if (flyerBgDirty) {
+      if (flyerBgBitmap) {
+        try {
+          flyerBgBitmap.close();
+        } catch (_) {}
+        flyerBgBitmap = null;
+      }
+      if (flyerBgObjectUrl) {
+        try {
+          URL.revokeObjectURL(flyerBgObjectUrl);
+        } catch (_) {}
+        flyerBgObjectUrl = null;
+      }
+      const bgData = getStoredFlyerCustomBgDataUrl();
+      let bgLoaded = false;
+      if (bgData) {
+        try {
+          const res = await fetch(bgData);
+          if (res.ok) {
+            const blob = await res.blob();
+            if (typeof createImageBitmap === "function") {
+              try {
+                flyerBgBitmap = await createImageBitmap(blob);
+                bgLoaded = !!flyerBgBitmap;
+              } catch (_) {
+                flyerBgObjectUrl = URL.createObjectURL(blob);
+                bgLoaded = true;
+              }
+            } else {
+              flyerBgObjectUrl = URL.createObjectURL(blob);
+              bgLoaded = true;
+            }
+          }
+        } catch (_) {}
+      }
+      flyerBgDirty = false;
+    }
     const logoForCanvas = flyerLogoBitmap ?? flyerLogoObjectUrl;
+    const bgForCanvas = flyerBgBitmap ?? flyerBgObjectUrl;
     try {
-      await renderFlyerCanvas(canvas, state, shareUrl(), logoForCanvas);
+      await renderFlyerCanvas(canvas, state, shareUrl(), logoForCanvas, bgForCanvas);
     } catch (e) {
       if (typeof console !== "undefined" && console.warn) console.warn("[flyer-qr] render", e);
     }
@@ -287,8 +347,11 @@ export function initAppFlyerQr(slug, opts) {
     resetBtn.addEventListener("click", () => {
       if (!confirm("Réinitialiser le flyer aux textes et couleurs par défaut ?")) return;
       clearStoredFlyerCustomLogo();
+      clearStoredFlyerCustomBg();
       flyerLogoPanelApi?.syncPreview();
+      flyerBgPanelApi?.syncPreview();
       flyerLogoDirty = true;
+      flyerBgDirty = true;
       state = mergeFlyerState(null);
       writeFormFromState(root, state);
       schedulePaint();
@@ -298,6 +361,7 @@ export function initAppFlyerQr(slug, opts) {
   window.addEventListener("app-section-change", (e) => {
     if (e.detail?.sectionId === "flyer-qr") {
       flyerLogoDirty = true;
+      flyerBgDirty = true;
       if (linkInput) linkInput.value = shareUrl();
       schedulePaint();
     }

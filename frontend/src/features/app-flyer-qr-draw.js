@@ -9,6 +9,7 @@ import {
 } from "./app-flyer-social-strip.js";
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
+import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
 
 export { FLYER_EXPORT };
 
@@ -77,15 +78,6 @@ async function loadQrAsImage(targetUrl, sizePx) {
       return null;
     }
   }
-}
-
-/** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} h @param {string} top @param {string} bot */
-function fillGradientV(ctx, w, h, top, bot) {
-  const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, top);
-  g.addColorStop(1, bot);
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, w, h);
 }
 
 /**
@@ -330,7 +322,24 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
     }
   }
 
-  fillGradientV(ctx, w, h, s.colorBgTop, s.colorBgBottom);
+  /** @type {CanvasImageSource | null} */
+  let bgCanvasImg = null;
+  if (bgInput && typeof ImageBitmap !== "undefined" && bgInput instanceof ImageBitmap) {
+    bgCanvasImg = bgInput;
+  } else if (typeof bgInput === "string" && bgInput) {
+    const isBlob = bgInput.startsWith("blob:");
+    try {
+      bgCanvasImg = await loadImage(bgInput, !isBlob);
+    } catch (_) {
+      if (!isBlob) {
+        try {
+          bgCanvasImg = await loadImage(bgInput, false);
+        } catch (_e) {}
+      }
+    }
+  }
+
+  drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   if (logoImg) drawFlyerCommerceLogo(ctx, logoImg, w, h);
   /* Roue avant le titre : sinon elle recouvre l’accroche. */
   const wheelCx = w * 0.5;

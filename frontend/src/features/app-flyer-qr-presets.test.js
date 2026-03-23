@@ -58,6 +58,11 @@ describe("mergeFlyerState", () => {
     expect(s.colorPrimary).toBe("#ff00aa");
   });
 
+  it("borne l’intensité du voile sur l’image de fond", () => {
+    expect(mergeFlyerState({ flyerBgOverlayPct: -5 }).flyerBgOverlayPct).toBe(0);
+    expect(mergeFlyerState({ flyerBgOverlayPct: 120 }).flyerBgOverlayPct).toBe(90);
+  });
+
   it("retire l’ancienne clé subline du stockage", () => {
     const s = mergeFlyerState({ subline: "texte obsolète" });
     expect(Object.prototype.hasOwnProperty.call(s, "subline")).toBe(false);
