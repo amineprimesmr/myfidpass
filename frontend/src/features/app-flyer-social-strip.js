@@ -92,40 +92,6 @@ export function flyerSocialStripHeight(canvasH, count) {
   return count > 0 ? Math.round(canvasH * FLYER_LAYOUT.socialStripHeightFrac) : 0;
 }
 
-/**
- * Hauteur totale réservée en bas (icônes réseaux ou zone vide avec consigne).
- * @param {number} canvasH
- * @param {number} entryCount
- */
-export function flyerBottomStripHeight(canvasH, entryCount) {
-  if (entryCount > 0) {
-    return Math.round(canvasH * FLYER_LAYOUT.socialStripHeightFrac);
-  }
-  return Math.round(canvasH * FLYER_LAYOUT.socialStripPlaceholderFrac);
-}
-
-/**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} w
- * @param {number} canvasH
- * @param {{ platform: string; url: string }[]} entries
- */
-export async function drawFlyerSocialBottom(ctx, w, canvasH, entries) {
-  const sh = flyerBottomStripHeight(canvasH, entries.length);
-  const yTop = canvasH - sh;
-  if (!entries.length) {
-    ctx.fillStyle = "#06070b";
-    ctx.fillRect(0, yTop, w, sh);
-    ctx.fillStyle = "rgba(148,163,184,0.94)";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = `600 ${Math.max(14, Math.round(sh * 0.3))}px Outfit, system-ui, sans-serif`;
-    ctx.fillText("Réseaux sociaux — renseignez-les dans le panneau à droite", w / 2, yTop + sh * 0.52);
-    return;
-  }
-  await drawFlyerSocialStrip(ctx, w, yTop, sh, entries);
-}
-
 /** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
 function drawYoutubeGlyph(ctx, cx, cy, r) {
   const s = r * 1.45;

@@ -46,8 +46,6 @@ export const FLYER_LAYOUT = Object.freeze({
   footerBannerMaxHeightFrac: 0.132,
   /** Bande « Suivez-nous » quand au moins un réseau (fraction hauteur). */
   socialStripHeightFrac: 0.124,
-  /** Bande réservée en bas si aucun réseau (aperçu de la zone + texte). */
-  socialStripPlaceholderFrac: 0.058,
 });
 
 /** Identifiant unique du gabarit flyer (ancien localStorage avec d’autres ids → normalisé au merge). */

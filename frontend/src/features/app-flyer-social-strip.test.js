@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  parseFlyerSocialEntries,
-  flyerSocialStripHeight,
-  flyerBottomStripHeight,
-} from "./app-flyer-social-strip.js";
+import { parseFlyerSocialEntries, flyerSocialStripHeight } from "./app-flyer-social-strip.js";
 import { defaultFlyerState, mergeFlyerState } from "./app-flyer-qr-presets.js";
 
 describe("parseFlyerSocialEntries", () => {
@@ -57,12 +53,3 @@ describe("flyerSocialStripHeight", () => {
   });
 });
 
-describe("flyerBottomStripHeight", () => {
-  it("réserve une bande même sans réseau (aperçu zone sociale)", () => {
-    expect(flyerBottomStripHeight(3600, 0)).toBeGreaterThan(0);
-  });
-
-  it("plus large avec au moins un réseau", () => {
-    expect(flyerBottomStripHeight(3600, 1)).toBeGreaterThan(flyerBottomStripHeight(3600, 0));
-  });
-});
