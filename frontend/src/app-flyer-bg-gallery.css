@@ -1,0 +1,40 @@
+/**
+ * Vignettes fonds flyer (public/assets/flyers/).
+ */
+#app-app .app-flyer-bg-gallery-wrap {
+  margin-bottom: 0.65rem;
+}
+
+#app-app .app-flyer-bg-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#app-app .app-flyer-bg-gallery-item {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--app-border, #e8ecf1);
+  border-radius: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  background-color: #f1f5f9;
+  background-size: cover;
+  background-position: center;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+#app-app .app-flyer-bg-gallery-item:hover {
+  border-color: var(--app-accent, #2563eb);
+  transform: translateY(-1px);
+}
+
+#app-app .app-flyer-bg-gallery-item:focus-visible {
+  outline: 2px solid var(--app-accent, #2563eb);
+  outline-offset: 2px;
+}

@@ -15,6 +15,7 @@ import {
   initFlyerBgControl,
   clearStoredFlyerCustomBg,
 } from "./app-flyer-bg-control.js";
+import { initFlyerBgGallery } from "./app-flyer-bg-gallery.js";
 
 /** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string }} FlyerQrOpts */
 
@@ -194,6 +195,24 @@ export function initAppFlyerQr(slug, opts) {
       flyerBgDirty = true;
       schedulePaint();
     },
+  });
+
+  function setFlyerBgStatus(msg) {
+    const statusEl = root.querySelector("#app-flyer-bg-status");
+    if (!statusEl) return;
+    statusEl.textContent = msg || "";
+    statusEl.classList.toggle("hidden", !msg);
+  }
+
+  void initFlyerBgGallery(root, {
+    onBgChange: () => {
+      flyerBgDirty = true;
+      schedulePaint();
+    },
+    syncPreview: () => {
+      flyerBgPanelApi?.syncPreview?.();
+    },
+    setStatus: setFlyerBgStatus,
   });
 
   async function paint() {

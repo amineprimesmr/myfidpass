@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="/src/app-integration.css" />
     <link rel="stylesheet" href="/src/app-flyer-qr.css" />
     <link rel="stylesheet" href="/src/app-flyer-qr-typography.css" />
+    <link rel="stylesheet" href="/src/app-flyer-bg-gallery.css" />
     <link rel="stylesheet" href="/src/app-integration-guide.css" />
     <link rel="stylesheet" href="/src/landing-integration-catalog.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
@@ -793,6 +794,11 @@
                     <div id="app-flyer-bg-panel" class="app-flyer-logo-panel app-flyer-bg-panel">
                       <p class="app-flyer-chip-label">Image de fond du poster</p>
                       <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">Remplit tout le flyer (recadrage type « cover »). Les couleurs « Fond haut / bas » ajoutent un voile pour garder titre et QR lisibles.</p>
+                      <div id="app-flyer-bg-gallery-wrap" class="app-flyer-bg-gallery-wrap hidden">
+                        <p class="app-flyer-chip-label" style="margin:0.65rem 0 0.35rem">Fonds proposés</p>
+                        <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">Un clic applique le fond (comme une image importée). Liste : <code>public/assets/flyers/manifest.json</code>.</p>
+                        <div id="app-flyer-bg-gallery" class="app-flyer-bg-gallery" role="list"></div>
+                      </div>
                       <input type="file" id="app-flyer-bg-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Importer une image de fond pour le flyer" />
                       <div class="app-flyer-logo-panel-actions">
                         <button type="button" id="app-flyer-bg-choose" class="app-btn app-btn-secondary">Importer une image</button>

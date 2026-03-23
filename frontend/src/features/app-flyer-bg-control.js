@@ -35,6 +35,31 @@ export function clearStoredFlyerCustomBg() {
 }
 
 /**
+ * @param {ImageBitmap} bitmap
+ * @returns {string} data URL JPEG (léger) ou PNG si besoin
+ */
+export function compressImageBitmapToFlyerBgDataUrl(bitmap) {
+  let { width, height } = bitmap;
+  const long = Math.max(width, height);
+  if (long > MAX_LONG_EDGE) {
+    const sc = MAX_LONG_EDGE / long;
+    width = Math.round(width * sc);
+    height = Math.round(height * sc);
+  }
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, width);
+  c.height = Math.max(1, height);
+  const x = c.getContext("2d");
+  if (!x) throw new Error("Canvas indisponible.");
+  x.drawImage(bitmap, 0, 0, c.width, c.height);
+  try {
+    return c.toDataURL("image/jpeg", 0.88);
+  } catch (_) {
+    return c.toDataURL("image/png", 0.92);
+  }
+}
+
+/**
  * @param {File} file
  * @returns {Promise<string>} data URL JPEG (léger) ou PNG si besoin
  */
@@ -47,24 +72,31 @@ export async function compressFileToFlyerBgDataUrl(file) {
   }
   const bitmap = await createImageBitmap(file);
   try {
-    let { width, height } = bitmap;
-    const long = Math.max(width, height);
-    if (long > MAX_LONG_EDGE) {
-      const sc = MAX_LONG_EDGE / long;
-      width = Math.round(width * sc);
-      height = Math.round(height * sc);
-    }
-    const c = document.createElement("canvas");
-    c.width = Math.max(1, width);
-    c.height = Math.max(1, height);
-    const x = c.getContext("2d");
-    if (!x) throw new Error("Canvas indisponible.");
-    x.drawImage(bitmap, 0, 0, c.width, c.height);
+    return compressImageBitmapToFlyerBgDataUrl(bitmap);
+  } finally {
     try {
-      return c.toDataURL("image/jpeg", 0.88);
-    } catch (_) {
-      return c.toDataURL("image/png", 0.92);
-    }
+      bitmap.close();
+    } catch (_) {}
+  }
+}
+
+/**
+ * @param {string} url URL absolue ou même origine (ex. /assets/flyers/photo.jpg)
+ * @returns {Promise<string>} data URL (même compression que l’import fichier)
+ */
+export async function compressFetchedImageToFlyerBgDataUrl(url) {
+  const res = await fetch(url, { mode: "cors", credentials: "omit" });
+  if (!res.ok) throw new Error("Image introuvable.");
+  const blob = await res.blob();
+  if (!blob.type.startsWith("image/")) {
+    throw new Error("Format non pris en charge (PNG, JPG, WebP).");
+  }
+  if (blob.size > MAX_FILE_BYTES) {
+    throw new Error("Image trop lourde (max 5 Mo).");
+  }
+  const bitmap = await createImageBitmap(blob);
+  try {
+    return compressImageBitmapToFlyerBgDataUrl(bitmap);
   } finally {
     try {
       bitmap.close();
