@@ -345,7 +345,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = s.colorAccent;
-    ctx.font = `600 ${subPx}px "Manrope", "Outfit", system-ui, sans-serif`;
+    ctx.font = `600 ${subPx}px "DM Sans", system-ui, sans-serif`;
     const subMaxW = w * 0.92;
     const subLines = wrapCanvasTextLines(ctx, sub, subMaxW);
     const gapBelow = h * 0.014;
