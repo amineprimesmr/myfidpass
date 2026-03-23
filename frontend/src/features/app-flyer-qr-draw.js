@@ -4,8 +4,8 @@
 import { FLYER_EXPORT, FLYER_LOGO_LAYOUT, FLYER_LAYOUT } from "./app-flyer-qr-presets.js";
 import {
   parseFlyerSocialEntries,
-  flyerSocialStripHeight,
-  drawFlyerSocialStrip,
+  flyerBottomStripHeight,
+  drawFlyerSocialBottom,
 } from "./app-flyer-social-strip.js";
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
@@ -365,10 +365,10 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (qrImg) ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
   ctx.restore();
   const socialEntries = parseFlyerSocialEntries(s);
-  const stripH = flyerSocialStripHeight(h, socialEntries.length);
-  const bannerBottom = h - stripH;
+  const bottomStripH = flyerBottomStripHeight(h, socialEntries.length);
+  const bannerBottom = h - bottomStripH;
   const footerBannerImg = await getFlyerFooterBanner();
   if (footerBannerImg) drawFooterBanner(ctx, w, h, bannerBottom, footerBannerImg);
-  else drawFooterBar(ctx, w, h, s, true, stripH);
-  await drawFlyerSocialStrip(ctx, w, h - stripH, stripH, socialEntries);
+  else drawFooterBar(ctx, w, h, s, true, bottomStripH);
+  await drawFlyerSocialBottom(ctx, w, h, socialEntries);
 }

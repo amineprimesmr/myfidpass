@@ -33,19 +33,21 @@ export const FLYER_LOGO_BLOCK_BOTTOM_FRAC =
   FLYER_LOGO_LAYOUT.centerYFrac + FLYER_LOGO_LAYOUT.maxHFrac / 2;
 
 /**
- * Composition verticale du flyer (roue / QR remontés, bandeau étapes plus compact, réseaux en pied net).
+ * Composition verticale du flyer (écarts volontairement marqués pour l’aperçu + impression).
  */
 export const FLYER_LAYOUT = Object.freeze({
   /** Centre vertical de la roue (fraction hauteur canvas). */
-  wheelCenterYFrac: 0.528,
+  wheelCenterYFrac: 0.492,
   /** Bord supérieur du carré QR (fraction hauteur). */
-  qrTopYFrac: 0.568,
+  qrTopYFrac: 0.528,
   /** Hauteur du bandeau noir « étapes » (sans la bande sociale). */
-  footerStepsHeightFrac: 0.136,
+  footerStepsHeightFrac: 0.108,
   /** Hauteur max du PNG bandeau pied (fraction canvas). */
-  footerBannerMaxHeightFrac: 0.185,
-  /** Hauteur de la bande « Suivez-nous » quand au moins un réseau (fraction canvas). */
-  socialStripHeightFrac: 0.096,
+  footerBannerMaxHeightFrac: 0.132,
+  /** Bande « Suivez-nous » quand au moins un réseau (fraction hauteur). */
+  socialStripHeightFrac: 0.124,
+  /** Bande réservée en bas si aucun réseau (aperçu de la zone + texte). */
+  socialStripPlaceholderFrac: 0.058,
 });
 
 /** Identifiant unique du gabarit flyer (ancien localStorage avec d’autres ids → normalisé au merge). */

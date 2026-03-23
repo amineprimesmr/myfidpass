@@ -158,6 +158,9 @@
   border: 1px solid var(--app-border, #e8ecf1);
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   box-shadow: var(--app-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.06));
+  max-height: min(78vh, 880px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 #app-app .app-flyer-chip-label {
