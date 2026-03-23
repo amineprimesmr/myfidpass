@@ -4857,6 +4857,21 @@ body.page-app .whatsapp-fab { display: none !important; }
   width: fit-content;
   max-width: 100%;
 }
+.app-perimetre-wallet-pass-row {
+  margin-top: 0.5rem;
+  max-width: 44rem;
+}
+.app-perimetre-wallet-pass-label {
+  align-items: flex-start;
+  line-height: 1.4;
+  gap: 0.55rem;
+}
+.app-perimetre-wallet-pass-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-weight: normal;
+}
+
 .app-perimetre-address-block {
   margin-bottom: 1rem;
 }

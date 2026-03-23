@@ -1080,6 +1080,7 @@ function initAppDashboard(slug) {
     const saveFeedback = document.getElementById("app-perimetre-save-feedback");
     const perimetreNotifTitleEl = document.getElementById("app-perimetre-notif-title");
     const perimetreNotifMessageEl = document.getElementById("app-perimetre-notif-message");
+    const walletIncludeLocationsEl = document.getElementById("app-perimetre-wallet-include-locations");
     const mapWrap = document.querySelector(".app-carte-perimetre-map-wrap");
     const mapHintEl = document.getElementById("app-perimetre-map-hint");
     if (!mapEl || !radiusSlider || !saveBtn) return;
@@ -1129,6 +1130,7 @@ function initAppDashboard(slug) {
         address: normalizePerimetreText((addressInput?.value ?? currentAddress) || ""),
         notifTitle: normalizePerimetreText(perimetreNotifTitleEl?.value),
         notifMessage: normalizePerimetreText(perimetreNotifMessageEl?.value),
+        walletIncludeLocations: !!(walletIncludeLocationsEl && walletIncludeLocationsEl.checked),
       };
     }
 
@@ -1145,7 +1147,8 @@ function initAppDashboard(slug) {
         Number(a.radius) === Number(b.radius) &&
         normalizePerimetreText(a.address) === normalizePerimetreText(b.address) &&
         normalizePerimetreText(a.notifTitle) === normalizePerimetreText(b.notifTitle) &&
-        normalizePerimetreText(a.notifMessage) === normalizePerimetreText(b.notifMessage)
+        normalizePerimetreText(a.notifMessage) === normalizePerimetreText(b.notifMessage) &&
+        !!a.walletIncludeLocations === !!b.walletIncludeLocations
       );
     }
 
@@ -1451,9 +1454,12 @@ function initAppDashboard(slug) {
         currentAddress = address;
         const organizationName = (data.organization_name || "").trim();
         const notifTitle = String(notifTitleRaw).trim() || organizationName;
+        const walletLoc =
+          data.wallet_pass_include_locations != null ? Number(data.wallet_pass_include_locations) : 0;
         if (addressInput) addressInput.value = address;
         if (perimetreNotifTitleEl) perimetreNotifTitleEl.value = notifTitle;
         if (perimetreNotifMessageEl) perimetreNotifMessageEl.value = notifMessage;
+        if (walletIncludeLocationsEl) walletIncludeLocationsEl.checked = walletLoc === 1;
         updateRadiusUI(radius);
         if (lat != null && lng != null) {
           currentLat = lat;
@@ -1608,6 +1614,7 @@ function initAppDashboard(slug) {
 
     perimetreNotifTitleEl?.addEventListener("input", refreshPerimetreSaveButtonState);
     perimetreNotifMessageEl?.addEventListener("input", refreshPerimetreSaveButtonState);
+    walletIncludeLocationsEl?.addEventListener("change", refreshPerimetreSaveButtonState);
 
     saveBtn.addEventListener("click", async () => {
       saveBtn.disabled = true;
@@ -1618,6 +1625,7 @@ function initAppDashboard(slug) {
         const payload = {
           notification_title_override: perimetreNotifTitleEl?.value?.trim() || null,
           notification_change_message: perimetreNotifMessageEl?.value?.trim() || null,
+          wallet_pass_include_locations: walletIncludeLocationsEl?.checked ? 1 : 0,
         };
         if (currentLat != null && currentLng != null) {
           payload.location_lat = currentLat;

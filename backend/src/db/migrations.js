@@ -366,6 +366,14 @@ export function runMigrations(db) {
   if (!bizColsFinal.includes("notification_change_message")) {
     safeRun(db, () => db.prepare("ALTER TABLE businesses ADD COLUMN notification_change_message TEXT").run());
   }
+  const bizColsWalletLoc = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsWalletLoc.includes("wallet_pass_include_locations")) {
+    // 0 = ne pas embarquer les coordonnées dans le .pkpass → campagnes notification visibles partout (comportement iOS).
+    // 1 = embarquer (écran de verrouillage / pertinence près du magasin, peut réduire la visibilité des alertes hors zone).
+    safeRun(db, () =>
+      db.prepare("ALTER TABLE businesses ADD COLUMN wallet_pass_include_locations INTEGER NOT NULL DEFAULT 0").run()
+    );
+  }
   safeRun(db, () => db.exec(`
     CREATE TABLE IF NOT EXISTS member_categories (
       id TEXT PRIMARY KEY,

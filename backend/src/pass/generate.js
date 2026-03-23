@@ -287,9 +287,11 @@ export async function generatePass(member, business = null, options = {}) {
     console.log("[PassKit] Barcode format:", barcodePayload.format);
   }
 
+  const embedWalletLocations =
+    business?.wallet_pass_include_locations != null && Number(business.wallet_pass_include_locations) === 1;
   const locLat = business?.location_lat != null ? Number(business.location_lat) : null;
   const locLng = business?.location_lng != null ? Number(business.location_lng) : null;
-  if (Number.isFinite(locLat) && Number.isFinite(locLng)) {
+  if (embedWalletLocations && Number.isFinite(locLat) && Number.isFinite(locLng)) {
     const radiusM = radiusMetersForPass(business.location_radius_meters);
     const relevantText =
       (business?.location_relevant_text && String(business.location_relevant_text).trim()) ||

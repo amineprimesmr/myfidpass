@@ -66,6 +66,9 @@ router.get("/settings", (req, res) => {
     location_relevant_text: business.location_relevant_text ?? undefined,
     location_radius_meters: business.location_radius_meters != null ? Number(business.location_radius_meters) : undefined,
     location_address: business.location_address ?? undefined,
+    /** 1 = embarquer lat/lng/rayon dans le .pkpass (géofence Wallet). 0 = pas d’emplacements dans le pass (campagnes / alertes plus visibles hors zone). */
+    wallet_pass_include_locations:
+      business.wallet_pass_include_locations != null ? Number(business.wallet_pass_include_locations) : 0,
     required_stamps: business.required_stamps != null ? Number(business.required_stamps) : undefined,
     stamp_emoji: business.stamp_emoji ?? undefined,
     stamp_reward_label: business.stamp_reward_label ?? undefined,
@@ -130,6 +133,8 @@ router.patch("/settings", async (req, res) => {
   const location_lng = body.location_lng ?? body.locationLng;
   const location_radius_meters = body.location_radius_meters ?? body.locationRadiusMeters;
   const location_relevant_text = body.location_relevant_text ?? body.locationRelevantText;
+  const wallet_pass_include_locations_in =
+    body.wallet_pass_include_locations ?? body.walletPassIncludeLocations;
   const updates = {};
   if (organization_name !== undefined) updates.organization_name = organization_name ? String(organization_name).trim() : null;
   if (location_address !== undefined) updates.location_address = location_address ? String(location_address).trim() : null;
@@ -142,6 +147,15 @@ router.patch("/settings", async (req, res) => {
         : normalizeLocationRadiusForStorage(location_radius_meters);
   }
   if (location_relevant_text !== undefined) updates.location_relevant_text = location_relevant_text ? String(location_relevant_text).trim() : null;
+  if (wallet_pass_include_locations_in !== undefined) {
+    const v = wallet_pass_include_locations_in;
+    const on =
+      v === true ||
+      v === 1 ||
+      String(v).toLowerCase() === "true" ||
+      String(v) === "1";
+    updates.wallet_pass_include_locations = on ? 1 : 0;
+  }
   if (background_color !== undefined) {
     updates.background_color = normalizeHexForPatch(background_color);
     updates.strip_color = updates.background_color;
@@ -351,8 +365,10 @@ router.patch("/settings", async (req, res) => {
   }
   const locationKeys = ["location_lat", "location_lng", "location_radius_meters", "location_relevant_text"];
   const locationUpdated = locationKeys.some((k) => updates[k] !== undefined);
+  const passWalletGeometryUpdated =
+    locationUpdated || updates.wallet_pass_include_locations !== undefined;
   updateBusiness(business.id, updates);
-  if (locationUpdated) {
+  if (passWalletGeometryUpdated) {
     const passKitTokens = getPassKitPushTokensForBusiness(business.id);
     if (passKitTokens.length > 0) {
       process.nextTick(() => {
