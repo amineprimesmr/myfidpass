@@ -107,7 +107,7 @@ export function defaultFlyerState() {
     wheelColorOdd: "#fbbf24",
     wheelColorEven: "#f97316",
     wheelSegmentOffsetDeg: 0,
-    headlineFontId: "plus-jakarta",
+    headlineFontId: "fraunces",
     headlineTextColor: "#ffffff",
     headlineStrokeColor: "#020617",
     headlineStrokeWidth: 3,
