@@ -8,7 +8,7 @@ import {
   drawFlyerSocialStrip,
 } from "./app-flyer-social-strip.js";
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
-import { drawFlyerHeroHeadline } from "./app-flyer-qr-hero.js";
+import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 
 export { FLYER_EXPORT };
 
@@ -281,18 +281,7 @@ function drawFooterBar(ctx, w, h, s, dark, bottomReserve = 0) {
 
 /** @param {CanvasRenderingContext2D} ctx @param {string} text @param {number} cx @param {number} cy @param {number} maxW @param {number} lineH */
 function wrapCenter(ctx, text, cx, cy, maxW, lineH) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines = [];
-  let cur = "";
-  for (const w of words) {
-    const next = cur ? `${cur} ${w}` : w;
-    if (ctx.measureText(next).width <= maxW) cur = next;
-    else {
-      if (cur) lines.push(cur);
-      cur = w;
-    }
-  }
-  if (cur) lines.push(cur);
+  const lines = wrapCanvasTextLines(ctx, text, maxW);
   const startY = cy - ((lines.length - 1) * lineH) / 2;
   lines.forEach((ln, i) => {
     ctx.fillText(ln, cx, startY + i * lineH);
@@ -348,14 +337,23 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const wheelCy = h * 0.565;
   const wheelR = w * 0.36;
   drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
-  drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
+  const headlineBottom = drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
   const sub = (s.subline || "").trim();
   if (sub) {
+    const subPx = Math.round(w * 0.044);
+    const subLineH = Math.round(subPx * 1.22);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = s.colorAccent;
-    ctx.font = `600 ${Math.round(w * 0.028)}px Outfit, sans-serif`;
-    ctx.fillText(sub, w / 2, h * 0.292);
+    ctx.font = `600 ${subPx}px "Manrope", "Outfit", system-ui, sans-serif`;
+    const subMaxW = w * 0.92;
+    const subLines = wrapCanvasTextLines(ctx, sub, subMaxW);
+    const gapBelow = h * 0.014;
+    const anchorY = Math.max(h * 0.255, headlineBottom + gapBelow);
+    const blockHalf = ((subLines.length - 1) * subLineH) / 2;
+    subLines.forEach((ln, i) => {
+      ctx.fillText(ln, w / 2, anchorY - blockHalf + i * subLineH);
+    });
   }
   const qx = w * 0.515;
   const qy = h * 0.608;

@@ -4,13 +4,16 @@
 import { flyerHeadlineFontDef } from "./app-flyer-qr-headline-fonts.js";
 import { FLYER_LOGO_BLOCK_BOTTOM_FRAC } from "./app-flyer-qr-presets.js";
 
+/** Part de la largeur canvas pour la taille du titre (export 2400 px). */
+const HEADLINE_SIZE_FRAC = 0.092;
+
 /**
  * @param {CanvasRenderingContext2D} ctx
  * @param {string} text
  * @param {number} maxW
  * @returns {string[]}
  */
-function wrapTextLines(ctx, text, maxW) {
+export function wrapCanvasTextLines(ctx, text, maxW) {
   const words = text.split(/\s+/).filter(Boolean);
   const lines = [];
   let cur = "";
@@ -33,14 +36,16 @@ function wrapTextLines(ctx, text, maxW) {
  * @param {number} h
  * @param {number} scale
  * @param {boolean} hasLogo
+ * @returns {number} bord bas approximatif du bloc titre (px), ou 0 si pas de texte
  */
 export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   const text = (s.headline || "").trim();
-  if (!text) return;
+  if (!text) return 0;
 
   const font = flyerHeadlineFontDef(s.headlineFontId);
-  const fontSize = Math.round(w * 0.052);
-  const lineH = Math.round(fontSize * (font.id === "bebas" ? 1.05 : 1.18));
+  const fontSize = Math.round(w * HEADLINE_SIZE_FRAC);
+  const lineMult = font.tight || font.id === "bebas" ? 1.08 : 1.2;
+  const lineH = Math.round(fontSize * lineMult);
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -48,8 +53,8 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   ctx.miterLimit = 2;
   ctx.font = `${font.style === "italic" ? "italic " : ""}${font.weight} ${fontSize}px ${font.stack}`;
 
-  const maxW = w * 0.88;
-  const lines = wrapTextLines(ctx, text, maxW);
+  const maxW = w * 0.9;
+  const lines = wrapCanvasTextLines(ctx, text, maxW);
 
   const gapFrac = Math.min(14, Math.max(0, Number(s.headlineLogoGapPct) || 0)) / 100;
   const logoBottomFrac = hasLogo ? FLYER_LOGO_BLOCK_BOTTOM_FRAC : 0.052;
@@ -80,4 +85,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   });
 
   if (canTrack) ctx.letterSpacing = "0px";
+
+  const lastCy = firstLineCy + (lines.length - 1) * lineH;
+  return lastCy + lineH * 0.55;
 }

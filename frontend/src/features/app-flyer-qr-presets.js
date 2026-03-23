@@ -89,7 +89,7 @@ export function defaultFlyerState() {
   return {
     templateId: FLYER_TEMPLATE_ID,
     headline: "Fais tourner la roue",
-    subline: "",
+    subline: "La carte fidélité en un scan",
     ctaBanner: "SCANNEZ POUR JOUER",
     step1: "Scannez le QR code",
     step2: "Ajoutez la carte au Wallet",

@@ -1,67 +1,11 @@
 /**
  * Polices titres flyer (Google Fonts — chargées dans index.html).
- * @typedef {{ id: string; label: string; stack: string; weight: number; style: "normal"|"italic" }} FlyerHeadlineFontDef
+ * @typedef {{ id: string; label: string; stack: string; weight: number; style: "normal"|"italic"; tight?: boolean }} FlyerHeadlineFontDef
  */
+import { FLYER_HEADLINE_FONT_ENTRIES } from "./app-flyer-qr-headline-fonts-list.js";
 
 /** @type {readonly FlyerHeadlineFontDef[]} */
-export const FLYER_HEADLINE_FONTS = Object.freeze([
-  {
-    id: "plus-jakarta",
-    label: "Plus Jakarta Sans",
-    stack: `"Plus Jakarta Sans", system-ui, sans-serif`,
-    weight: 800,
-    style: "italic",
-  },
-  {
-    id: "outfit",
-    label: "Outfit",
-    stack: `"Outfit", system-ui, sans-serif`,
-    weight: 800,
-    style: "normal",
-  },
-  {
-    id: "montserrat",
-    label: "Montserrat",
-    stack: `"Montserrat", system-ui, sans-serif`,
-    weight: 800,
-    style: "normal",
-  },
-  {
-    id: "sora",
-    label: "Sora",
-    stack: `"Sora", system-ui, sans-serif`,
-    weight: 700,
-    style: "normal",
-  },
-  {
-    id: "dm-sans",
-    label: "DM Sans",
-    stack: `"DM Sans", system-ui, sans-serif`,
-    weight: 700,
-    style: "normal",
-  },
-  {
-    id: "oswald",
-    label: "Oswald",
-    stack: `"Oswald", system-ui, sans-serif`,
-    weight: 700,
-    style: "normal",
-  },
-  {
-    id: "bebas",
-    label: "Bebas Neue",
-    stack: `"Bebas Neue", Impact, sans-serif`,
-    weight: 400,
-    style: "normal",
-  },
-  {
-    id: "fraunces",
-    label: "Fraunces (serif)",
-    stack: `"Fraunces", Georgia, "Times New Roman", serif`,
-    weight: 700,
-    style: "normal",
-  },
-]);
+export const FLYER_HEADLINE_FONTS = FLYER_HEADLINE_FONT_ENTRIES;
 
 const IDS = new Set(FLYER_HEADLINE_FONTS.map((f) => f.id));
 
