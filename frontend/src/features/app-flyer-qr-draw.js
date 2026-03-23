@@ -1,7 +1,7 @@
 /**
  * Rendu canvas des flyers QR (export PNG & aperçu).
  */
-import { FLYER_EXPORT, FLYER_LOGO_LAYOUT } from "./app-flyer-qr-presets.js";
+import { FLYER_EXPORT, FLYER_LOGO_LAYOUT, FLYER_LAYOUT } from "./app-flyer-qr-presets.js";
 import {
   parseFlyerSocialEntries,
   flyerSocialStripHeight,
@@ -234,7 +234,7 @@ function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   if (!iw || !ih) return;
   const drawW = w;
   let drawH = (drawW * ih) / iw;
-  const maxH = canvasH * 0.28;
+  const maxH = canvasH * FLYER_LAYOUT.footerBannerMaxHeightFrac;
   if (drawH > maxH) {
     drawH = maxH;
     const drawW2 = (drawH * iw) / ih;
@@ -249,7 +249,7 @@ function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
 
 /** @param {import("./app-flyer-qr-presets.js").FlyerState} s @param {number} [bottomReserve] réserve bas (bande sociale). */
 function drawFooterBar(ctx, w, h, s, dark, bottomReserve = 0) {
-  const fh = h * 0.2;
+  const fh = h * FLYER_LAYOUT.footerStepsHeightFrac;
   const y0 = Math.max(0, h - bottomReserve - fh);
   ctx.fillStyle = dark ? "#0a0a0a" : "#1e293b";
   ctx.fillRect(0, y0, w, fh);
@@ -344,12 +344,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (logoImg) drawFlyerCommerceLogo(ctx, logoImg, w, h);
   /* Roue avant le titre : sinon elle recouvre l’accroche. */
   const wheelCx = w * 0.5;
-  const wheelCy = h * 0.565;
+  const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
   const wheelR = w * 0.36;
   drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
   drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
   const qx = w * 0.515;
-  const qy = h * 0.608;
+  const qy = h * FLYER_LAYOUT.qrTopYFrac;
   const qCx = qx + qSize / 2;
   const qCy = qy + qSize / 2;
   /** Légère inclinaison (sens inverse des aiguilles d’une montre), ~11°. */

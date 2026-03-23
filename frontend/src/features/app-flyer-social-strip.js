@@ -1,6 +1,7 @@
 /**
  * Bande réseaux sociaux sous le bandeau du flyer QR (icônes + canvas).
  */
+import { FLYER_LAYOUT } from "./app-flyer-qr-presets.js";
 
 /** @type {Record<string, string>} */
 const ICON_PNG = {
@@ -88,7 +89,7 @@ export function parseFlyerSocialEntries(s) {
 
 /** @param {number} canvasH @param {number} count */
 export function flyerSocialStripHeight(canvasH, count) {
-  return count > 0 ? Math.round(canvasH * 0.076) : 0;
+  return count > 0 ? Math.round(canvasH * FLYER_LAYOUT.socialStripHeightFrac) : 0;
 }
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
