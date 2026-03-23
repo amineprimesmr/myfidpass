@@ -50,7 +50,6 @@ function readStateFromForm(root) {
     headlineLetterSpacing: Number(q("app-flyer-headline-tracking")?.value),
     flyerBgOverlayPct: Number(q("app-flyer-bg-overlay")?.value),
     flyerQrOutlineWidth: Number(q("app-flyer-qr-outline")?.value),
-    flyerWheelOutlineWidth: Number(q("app-flyer-wheel-outline")?.value),
   });
 }
 
@@ -88,7 +87,6 @@ function writeFormFromState(root, s) {
   set("app-flyer-headline-tracking", String(s.headlineLetterSpacing ?? 0));
   set("app-flyer-bg-overlay", String(s.flyerBgOverlayPct ?? 52));
   set("app-flyer-qr-outline", String(s.flyerQrOutlineWidth ?? 0));
-  set("app-flyer-wheel-outline", String(s.flyerWheelOutlineWidth ?? 0));
 }
 
 function loadStoredState() {

@@ -82,16 +82,20 @@ describe("mergeFlyerState", () => {
     expect(s.headlineFontId).toBe("bebas");
     expect(s.headlineTextColor).toBe("#aabbcc");
     expect(s.headlineStrokeColor).toBe("#010203");
-    expect(s.headlineStrokeWidth).toBe(24);
+    expect(s.headlineStrokeWidth).toBe(32);
     expect(s.headlineLogoGapPct).toBe(14);
     expect(s.headlineLetterSpacing).toBe(8);
   });
 
-  it("borne les épaisseurs de cadre QR et roue", () => {
+  it("borne l’épaisseur de cadre QR", () => {
     const base = defaultFlyerState();
     expect(mergeFlyerState({ flyerQrOutlineWidth: 99 }).flyerQrOutlineWidth).toBe(12);
-    expect(mergeFlyerState({ flyerWheelOutlineWidth: -3 }).flyerWheelOutlineWidth).toBe(0);
     expect(mergeFlyerState({ flyerQrOutlineWidth: 7 }).flyerQrOutlineWidth).toBe(7);
     expect(mergeFlyerState({}).flyerQrOutlineWidth).toBe(base.flyerQrOutlineWidth);
+  });
+
+  it("retire l’ancienne clé flyerWheelOutlineWidth du stockage", () => {
+    const s = mergeFlyerState({ flyerWheelOutlineWidth: 8 });
+    expect(Object.prototype.hasOwnProperty.call(s, "flyerWheelOutlineWidth")).toBe(false);
   });
 });
