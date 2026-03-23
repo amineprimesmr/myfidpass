@@ -35,6 +35,9 @@ function readStateFromForm(root) {
     wheelSeg4: q("app-flyer-wheel-seg-4")?.value,
     wheelSeg5: q("app-flyer-wheel-seg-5")?.value,
     wheelSeg6: q("app-flyer-wheel-seg-6")?.value,
+    wheelSeg7: q("app-flyer-wheel-seg-7")?.value,
+    wheelSeg8: q("app-flyer-wheel-seg-8")?.value,
+    wheelSegmentOffsetDeg: Number(q("app-flyer-wheel-offset")?.value),
   });
 }
 
@@ -68,6 +71,9 @@ function writeFormFromState(root, s) {
   set("app-flyer-wheel-seg-4", s.wheelSeg4 ?? "");
   set("app-flyer-wheel-seg-5", s.wheelSeg5 ?? "");
   set("app-flyer-wheel-seg-6", s.wheelSeg6 ?? "");
+  set("app-flyer-wheel-seg-7", s.wheelSeg7 ?? "");
+  set("app-flyer-wheel-seg-8", s.wheelSeg8 ?? "");
+  set("app-flyer-wheel-offset", String(s.wheelSegmentOffsetDeg ?? 0));
 }
 
 function loadStoredState() {
@@ -214,7 +220,7 @@ export function initAppFlyerQr(slug, opts) {
         a.href = canvas.toDataURL("image/png");
         a.click();
         if (exportNote) {
-          exportNote.textContent = "Image prête pour impression (haute définition).";
+          exportNote.textContent = `PNG ${FLYER_EXPORT.w}×${FLYER_EXPORT.h} px — prêt pour impression.`;
           exportNote.classList.remove("hidden");
         }
       } catch (_) {

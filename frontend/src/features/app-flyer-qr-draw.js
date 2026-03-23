@@ -97,41 +97,50 @@ function fillGradientV(ctx, w, h, top, bot) {
  * @param {number} dstH
  */
 function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
-  let sw = 0;
-  let sh = 0;
-  if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
-    sw = img.width;
-    sh = img.height;
-  } else if (img && typeof img === "object") {
-    const o = /** @type {{ naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }} */ (img);
-    sw = o.naturalWidth || o.width || 0;
-    sh = o.naturalHeight || o.height || 0;
-  }
-  const drawStretch = () => {
-    ctx.drawImage(img, dx, dy, dstW, dstH);
-  };
-  if (!sw || !sh) {
-    try {
-      drawStretch();
-    } catch (_) {
-      /* logo illisible pour le canvas */
-    }
-    return;
-  }
-  const scale = Math.max(dstW / sw, dstH / sh);
-  const bw = sw * scale;
-  const bh = sh * scale;
-  const ox = dx + (dstW - bw) / 2;
-  const oy = dy + (dstH - bh) / 2;
+  const prevSmooth = ctx.imageSmoothingEnabled;
+  const prevQ = "imageSmoothingQuality" in ctx ? ctx.imageSmoothingQuality : "low";
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
   try {
-    /* Forme 5 params : la forme 9 params casse parfois (blob / SVG / WebKit). */
-    ctx.drawImage(img, ox, oy, bw, bh);
-  } catch (_) {
-    try {
-      drawStretch();
-    } catch (_e) {
-      /* ignore */
+    let sw = 0;
+    let sh = 0;
+    if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
+      sw = img.width;
+      sh = img.height;
+    } else if (img && typeof img === "object") {
+      const o = /** @type {{ naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }} */ (img);
+      sw = o.naturalWidth || o.width || 0;
+      sh = o.naturalHeight || o.height || 0;
     }
+    const drawStretch = () => {
+      ctx.drawImage(img, dx, dy, dstW, dstH);
+    };
+    if (!sw || !sh) {
+      try {
+        drawStretch();
+      } catch (_) {
+        /* logo illisible pour le canvas */
+      }
+      return;
+    }
+    const scale = Math.max(dstW / sw, dstH / sh);
+    const bw = sw * scale;
+    const bh = sh * scale;
+    const ox = dx + (dstW - bw) / 2;
+    const oy = dy + (dstH - bh) / 2;
+    try {
+      /* Forme 5 params : la forme 9 params casse parfois (blob / SVG / WebKit). */
+      ctx.drawImage(img, ox, oy, bw, bh);
+    } catch (_) {
+      try {
+        drawStretch();
+      } catch (_e) {
+        /* ignore */
+      }
+    }
+  } finally {
+    ctx.imageSmoothingEnabled = prevSmooth;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = prevQ;
   }
 }
 
@@ -280,12 +289,16 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const h = canvas.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
   ctx.clearRect(0, 0, w, h);
 
   const scale = w / FLYER_EXPORT.w;
-  const qrPx = Math.round(420 * scale);
+  const qSize = w * 0.38;
+  const qrInner = Math.max(1, qSize - 20 * scale);
+  const qrFetchPx = Math.min(2048, Math.max(512, Math.round(qrInner * 2)));
 
-  const qrImg = await loadQrAsImage(qrTargetUrl, Math.min(800, Math.round(qrPx * 2)));
+  const qrImg = await loadQrAsImage(qrTargetUrl, qrFetchPx);
   const roueImg = await getFlyerRoueImage();
 
   /** @type {CanvasImageSource | null} */
@@ -325,7 +338,6 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   ctx.fillStyle = s.colorAccent;
   ctx.font = `600 ${Math.round(w * 0.028)}px Outfit, sans-serif`;
   ctx.fillText(s.subline, w / 2, h * 0.282);
-  const qSize = w * 0.38;
   const qx = w * 0.54;
   const qy = h * 0.625;
   ctx.fillStyle = "#fff";

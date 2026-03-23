@@ -25,7 +25,7 @@ describe("mergeFlyerState", () => {
     expect(s.colorBgTop).toBe(base.colorBgTop);
   });
 
-  it("résout 6 couleurs de parts de roue", () => {
+  it("résout les couleurs des parts de roue (8 secteurs)", () => {
     const s = mergeFlyerState({
       wheelSeg1: "#ff0000",
       wheelSeg3: "#00ff00",
@@ -34,6 +34,12 @@ describe("mergeFlyerState", () => {
     expect(cols).toHaveLength(FLYER_WHEEL_SEGMENT_COUNT);
     expect(cols[0]).toBe("#ff0000");
     expect(cols[2]).toBe("#00ff00");
+  });
+
+  it("borne la rotation de découpe (°)", () => {
+    expect(mergeFlyerState({ wheelSegmentOffsetDeg: 999 }).wheelSegmentOffsetDeg).toBe(180);
+    expect(mergeFlyerState({ wheelSegmentOffsetDeg: -200 }).wheelSegmentOffsetDeg).toBe(-180);
+    expect(mergeFlyerState({ wheelSegmentOffsetDeg: 11.234 }).wheelSegmentOffsetDeg).toBe(11.25);
   });
 
   it("conserve les textes et couleurs valides du stockage", () => {

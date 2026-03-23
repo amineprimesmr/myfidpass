@@ -3,10 +3,11 @@
  */
 export const FLYER_STORAGE_KEY = "fidpass_flyer_prefs_v1";
 
-export const FLYER_EXPORT = { w: 1200, h: 1800 };
+/** Dimensions export PNG (haute définition impression / zoom). */
+export const FLYER_EXPORT = { w: 2400, h: 3600 };
 
-/** Nombre de parts sur la roue vectorielle du flyer. */
-export const FLYER_WHEEL_SEGMENT_COUNT = 6;
+/** Nombre de parts (découpe canvas = celle du PNG aligné sur 8 secteurs). */
+export const FLYER_WHEEL_SEGMENT_COUNT = 8;
 
 /** Identifiant unique du gabarit flyer (ancien localStorage avec d’autres ids → normalisé au merge). */
 export const FLYER_TEMPLATE_ID = "noir-or-roue";
@@ -55,6 +56,9 @@ export function flyerTemplateMeta(id) {
  * @property {string} wheelSeg4
  * @property {string} wheelSeg5
  * @property {string} wheelSeg6
+ * @property {string} wheelSeg7
+ * @property {string} wheelSeg8
+ * @property {number} wheelSegmentOffsetDeg rotation découpe PNG / parts (°)
  */
 
 /** @returns {FlyerState} */
@@ -85,6 +89,9 @@ export function defaultFlyerState() {
     wheelSeg4: "#f97316",
     wheelSeg5: "#fbbf24",
     wheelSeg6: "#f97316",
+    wheelSeg7: "#fbbf24",
+    wheelSeg8: "#f97316",
+    wheelSegmentOffsetDeg: 0,
   };
 }
 
@@ -117,29 +124,38 @@ function safeHex(v, fallback) {
   return fallback;
 }
 
+function clampWheelOffsetDeg(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(-180, Math.min(180, Math.round(n * 20) / 20));
+}
+
 /** @param {Partial<FlyerState> | null | undefined} raw */
 export function mergeFlyerState(raw) {
   const base = defaultFlyerState();
   if (!raw || typeof raw !== "object") return base;
+  /** @type {Record<string, unknown>} */
   const merged = {
     ...base,
     ...raw,
     templateId: FLYER_TEMPLATE_ID,
     wheelRenderMode: raw.wheelRenderMode === "png" ? "png" : "segments",
   };
-  const seg = (k) => safeHex(merged[k], base[k]);
+  merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
+  const seg = (k) => safeHex(String(merged[k] ?? ""), base[k]);
+  /** @type {Record<string, string>} */
+  const wheelSegs = {};
+  for (let i = 1; i <= FLYER_WHEEL_SEGMENT_COUNT; i++) {
+    const k = `wheelSeg${i}`;
+    wheelSegs[k] = seg(k);
+  }
   return {
     ...merged,
-    colorPrimary: safeHex(merged.colorPrimary, base.colorPrimary),
-    colorSecondary: safeHex(merged.colorSecondary, base.colorSecondary),
-    colorAccent: safeHex(merged.colorAccent, base.colorAccent),
-    colorBgTop: safeHex(merged.colorBgTop, base.colorBgTop),
-    colorBgBottom: safeHex(merged.colorBgBottom, base.colorBgBottom),
-    wheelSeg1: seg("wheelSeg1"),
-    wheelSeg2: seg("wheelSeg2"),
-    wheelSeg3: seg("wheelSeg3"),
-    wheelSeg4: seg("wheelSeg4"),
-    wheelSeg5: seg("wheelSeg5"),
-    wheelSeg6: seg("wheelSeg6"),
+    colorPrimary: safeHex(String(merged.colorPrimary ?? ""), base.colorPrimary),
+    colorSecondary: safeHex(String(merged.colorSecondary ?? ""), base.colorSecondary),
+    colorAccent: safeHex(String(merged.colorAccent ?? ""), base.colorAccent),
+    colorBgTop: safeHex(String(merged.colorBgTop ?? ""), base.colorBgTop),
+    colorBgBottom: safeHex(String(merged.colorBgBottom ?? ""), base.colorBgBottom),
+    ...wheelSegs,
   };
 }
