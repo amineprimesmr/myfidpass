@@ -70,25 +70,38 @@ function parsePassUpdatedAt(str) {
   return Number.isNaN(t) ? 0 : t;
 }
 
+/**
+ * Instant « pass mis à jour » côté PassKit : visite en caisse, dernière diffusion, ou création du membre.
+ * Sans last_broadcast / created_at, un membre sans last_visit_at (jamais scanné) était exclu dès qu’Apple
+ * envoyait passesUpdatedSince — typique des clients à distance (ex. Laval) qui ne repassent pas au commerce.
+ */
+export function effectivePassKitRowUpdateTs(row) {
+  return Math.max(
+    parsePassUpdatedAt(row.last_visit_at),
+    parsePassUpdatedAt(row.last_broadcast_at),
+    parsePassUpdatedAt(row.created_at)
+  );
+}
+
 export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
   const base = db.prepare(
-    `SELECT pr.serial_number, m.last_visit_at
+    `SELECT pr.serial_number, m.last_visit_at, m.created_at, b.last_broadcast_at
      FROM pass_registrations pr
      INNER JOIN members m ON m.id = pr.serial_number
+     INNER JOIN businesses b ON b.id = m.business_id
      WHERE pr.device_library_identifier = ? AND pr.pass_type_identifier = ?`
   ).all(deviceId, passTypeId);
   let list = base;
   if (passesUpdatedSince && String(passesUpdatedSince).trim()) {
     const sinceTs = parsePassUpdatedAt(String(passesUpdatedSince));
-    list = base.filter((r) => parsePassUpdatedAt(r.last_visit_at) > sinceTs);
+    list = base.filter((r) => effectivePassKitRowUpdateTs(r) > sinceTs);
   }
   const serialNumbers = list.map((r) => r.serial_number);
   let lastUpdated = new Date().toISOString().replace("T", " ").slice(0, 19);
   if (list.length > 0) {
-    const withDate = list.filter((r) => r.last_visit_at).map((r) => ({ ...r, ts: parsePassUpdatedAt(r.last_visit_at) }));
-    if (withDate.length > 0) {
-      const maxRow = withDate.reduce((a, b) => (a.ts >= b.ts ? a : b));
-      lastUpdated = maxRow.last_visit_at;
+    const maxTs = list.reduce((acc, r) => Math.max(acc, effectivePassKitRowUpdateTs(r)), 0);
+    if (maxTs > 0) {
+      lastUpdated = new Date(maxTs).toISOString().replace("T", " ").slice(0, 19);
     }
   }
   return { serialNumbers, lastUpdated };

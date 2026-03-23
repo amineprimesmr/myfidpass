@@ -64,30 +64,31 @@ export async function notifyHandler(req, res) {
     } catch (_) { /* ignore */ }
   }
 
+  const broadcastStored = payload.title ? `${payload.title}: ${message}` : message;
+  setLastBroadcastMessage(business.id, broadcastStored);
   if (passKitTokens.length > 0) {
+    const touchedMembers = new Set();
+    for (const row of passKitTokens) {
+      if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+        touchMemberLastVisit(row.serial_number);
+        touchedMembers.add(row.serial_number);
+      }
+    }
     for (const row of passKitTokens) {
       try {
         await sendPassKitUpdate(row.push_token);
       } catch (_) { /* ignore */ }
     }
     await new Promise((r) => setTimeout(r, 2500));
-  }
-  setLastBroadcastMessage(business.id, payload.title ? `${payload.title}: ${message}` : message);
-  const touchedMembers = new Set();
-  for (const row of passKitTokens) {
-    if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-      touchMemberLastVisit(row.serial_number);
-      touchedMembers.add(row.serial_number);
+    for (const row of passKitTokens) {
+      try {
+        const result = await sendPassKitUpdate(row.push_token);
+        if (result.sent) {
+          sentPassKit++;
+          logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body: message, type: "passkit" });
+        }
+      } catch (_) { /* ignore */ }
     }
-  }
-  for (const row of passKitTokens) {
-    try {
-      const result = await sendPassKitUpdate(row.push_token);
-      if (result.sent) {
-        sentPassKit++;
-        logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body: message, type: "passkit" });
-      }
-    } catch (_) { /* ignore */ }
   }
   res.status(200).json({ ok: true, sent: sentWebPush + sentPassKit, sentWebPush, sentPassKit });
 }
@@ -104,7 +105,7 @@ router.post("/send", async (req, res) => {
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
   }
-  let memberIds = null;
+  let memberIds;
   if (segment && ["inactive30", "inactive90", "new30", "recurrent", "points50"].includes(segment)) {
     memberIds = getMemberIdsBySegment(business.id, segment);
   } else {
@@ -154,31 +155,33 @@ router.post("/send", async (req, res) => {
       errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
     }
   }
+  setLastBroadcastMessage(business.id, broadcastText);
   if (passKitTokens.length > 0) {
+    const touchedMembers = new Set();
     for (const row of passKitTokens) {
-      try { await sendPassKitUpdate(row.push_token); } catch (_) { /* ignore */ }
+      if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+        touchMemberLastVisit(row.serial_number);
+        touchedMembers.add(row.serial_number);
+      }
+    }
+    for (const row of passKitTokens) {
+      try {
+        await sendPassKitUpdate(row.push_token);
+      } catch (_) { /* ignore */ }
     }
     await new Promise((r) => setTimeout(r, 2500));
-  }
-  setLastBroadcastMessage(business.id, broadcastText);
-  const touchedMembers = new Set();
-  for (const row of passKitTokens) {
-    if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-      touchMemberLastVisit(row.serial_number);
-      touchedMembers.add(row.serial_number);
-    }
-  }
-  for (const row of passKitTokens) {
-    try {
-      const result = await sendPassKitUpdate(row.push_token);
-      if (result.sent) {
-        sentPassKit++;
-        logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body, type: "passkit" });
-      } else if (result.error) {
-        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+    for (const row of passKitTokens) {
+      try {
+        const result = await sendPassKitUpdate(row.push_token);
+        if (result.sent) {
+          sentPassKit++;
+          logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body, type: "passkit" });
+        } else if (result.error) {
+          errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+        }
+      } catch (err) {
+        errors.push({ type: "passkit", memberId: row.serial_number, error: err.message || String(err) });
       }
-    } catch (err) {
-      errors.push({ type: "passkit", memberId: row.serial_number, error: err.message || String(err) });
     }
   }
   const sent = sentWebPush + sentPassKit;
