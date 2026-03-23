@@ -5,6 +5,39 @@
   scroll-margin-top: 0.5rem;
 }
 
+/**
+ * Même fond que l’ancien cadre aperçu : points + dégradé, sur toute la zone visible Flyer QR.
+ * Marges négatives = alignement sur les bords intérieurs de .app-main (padding recréé ici).
+ */
+#app-app #flyer-qr.app-section-flyer-qr.app-section-visible {
+  background:
+    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0),
+    linear-gradient(160deg, #f8fafc 0%, #eef2ff 45%, #faf5ff 100%);
+  background-size: 18px 18px, 100% 100%;
+  margin: -2rem -1.75rem -4rem;
+  padding: 2rem 1.75rem 4rem;
+  border-radius: 18px;
+  min-height: min(88vh, 960px);
+}
+
+@media (max-width: 900px) {
+  #app-app #flyer-qr.app-section-flyer-qr.app-section-visible {
+    margin: -1.5rem -1rem -3.5rem;
+    padding: 1.5rem 1rem 3.5rem;
+    border-radius: 14px;
+    min-height: min(82vh, 900px);
+  }
+}
+
+@media (max-width: 600px) {
+  #app-app #flyer-qr.app-section-flyer-qr.app-section-visible {
+    margin: -1.25rem -1rem -2.5rem;
+    padding: 1.25rem 1rem 2.5rem;
+    border-radius: 12px;
+    min-height: 75vh;
+  }
+}
+
 #app-app .app-flyer-qr-shell {
   max-width: 1180px;
   margin: 0 auto;
@@ -43,13 +76,8 @@
 
 #app-app .app-flyer-qr-preview-frame {
   position: relative;
-  border-radius: var(--app-radius-lg, 18px);
-  padding: 1rem;
-  background:
-    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0),
-    linear-gradient(160deg, #f8fafc 0%, #eef2ff 45%, #faf5ff 100%);
-  background-size: 18px 18px, 100% 100%;
-  box-shadow: var(--app-relief-raised, 0 4px 24px rgba(0, 0, 0, 0.06));
+  padding: 0.35rem 0 0.75rem;
+  background: transparent;
   margin-bottom: 1.25rem;
 }
 
