@@ -99,15 +99,23 @@ function fillGradientV(ctx, w, h, top, bot) {
 function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
   let sw = 0;
   let sh = 0;
-  if (img instanceof HTMLImageElement) {
-    sw = img.naturalWidth || img.width;
-    sh = img.naturalHeight || img.height;
-  } else if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
+  if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
     sw = img.width;
     sh = img.height;
+  } else if (img && typeof img === "object") {
+    const o = /** @type {{ naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }} */ (img);
+    sw = o.naturalWidth || o.width || 0;
+    sh = o.naturalHeight || o.height || 0;
   }
-  if (!sw || !sh) {
+  const drawStretch = () => {
     ctx.drawImage(img, dx, dy, dstW, dstH);
+  };
+  if (!sw || !sh) {
+    try {
+      drawStretch();
+    } catch (_) {
+      /* logo illisible pour le canvas */
+    }
     return;
   }
   const scale = Math.max(dstW / sw, dstH / sh);
@@ -115,7 +123,16 @@ function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
   const bh = sh * scale;
   const ox = dx + (dstW - bw) / 2;
   const oy = dy + (dstH - bh) / 2;
-  ctx.drawImage(img, 0, 0, sw, sh, ox, oy, bw, bh);
+  try {
+    /* Forme 5 params : la forme 9 params casse parfois (blob / SVG / WebKit). */
+    ctx.drawImage(img, ox, oy, bw, bh);
+  } catch (_) {
+    try {
+      drawStretch();
+    } catch (_e) {
+      /* ignore */
+    }
+  }
 }
 
 /** @param {import("./app-flyer-qr-presets.js").FlyerState} s */
