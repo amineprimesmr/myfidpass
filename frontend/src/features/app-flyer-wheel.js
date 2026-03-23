@@ -31,7 +31,7 @@ function segmentAnglesEqual(i, n, offsetDeg) {
 }
 
 /**
- * Libellés le long du rayon de chaque part (axe centre → bord), alternés Gagné / Perdu.
+ * Libellés le long du rayon de chaque part (axe centre → bord), alternés GAGNÉ / PERDU.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
  * @param {number} cy
@@ -43,8 +43,8 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n) {
   if (n < 1) return;
   const base = -Math.PI / 2 + offsetRad(offsetDeg);
   const step = (Math.PI * 2) / n;
-  /** Milieu radial de la couronne (entre moyeu et bord). */
-  const labelR = r * 0.58;
+  /** Milieu radial de la couronne, un peu plus près du centre que le milieu exact. */
+  const labelR = r * 0.47;
   const fontPx = Math.max(15, Math.round(r * 0.104));
   const track = Math.round(fontPx * 0.04);
 
@@ -60,7 +60,7 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n) {
     const mid = base + (i + 0.5) * step;
     const tx = cx + Math.cos(mid) * labelR;
     const ty = cy + Math.sin(mid) * labelR;
-    const label = i % 2 === 0 ? "Gagné !" : "Perdu !";
+    const label = i % 2 === 0 ? "GAGNÉ !" : "PERDU !";
 
     ctx.save();
     ctx.translate(tx, ty);
@@ -69,22 +69,17 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n) {
     if (Math.sin(mid) > 0) rot += Math.PI;
     ctx.rotate(rot);
 
-    const sw = Math.max(2.5, fontPx * 0.1);
     ctx.shadowColor = "rgba(0,0,0,0.55)";
     ctx.shadowBlur = Math.round(fontPx * 0.45);
     ctx.shadowOffsetX = Math.round(fontPx * 0.14);
     ctx.shadowOffsetY = Math.round(fontPx * 0.26);
-    ctx.fillStyle = "rgba(250,250,250,0.98)";
+    ctx.fillStyle = "rgba(252,252,252,0.98)";
     ctx.fillText(label, 0, 0);
 
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-
-    ctx.lineWidth = sw;
-    ctx.strokeStyle = "rgba(0,0,0,0.42)";
-    ctx.strokeText(label, 0, 0);
     ctx.fillStyle = "#ffffff";
     ctx.fillText(label, 0, 0);
     ctx.restore();
