@@ -5,6 +5,9 @@
 import { API_BASE, setAuthToken } from "../config.js";
 import { getApiErrorMessage, showApiError } from "../utils/apiError.js";
 
+/** Remettre à false pour réactiver Sign in with Apple sur /login et /register. */
+const AUTH_APPLE_SIGNIN_DISABLED = true;
+
 function isAppleRedirectDevice() {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
@@ -254,10 +257,10 @@ export function initAuthPage(initialTab) {
   const authUrlParams = new URLSearchParams(window.location.search);
   const authAppleCode = authUrlParams.get("apple_code");
   const authAppleError = authUrlParams.get("apple_error");
-  if (authAppleError && authAppleClientId) {
+  if (!AUTH_APPLE_SIGNIN_DISABLED && authAppleError && authAppleClientId) {
     history.replaceState({}, "", window.location.pathname + (authUrlParams.get("redirect") ? "?redirect=" + encodeURIComponent(authUrlParams.get("redirect")) : ""));
     authOAuthError(authAppleError === "no_email" ? "Email non fourni par Apple." : "Connexion Apple impossible. Réessayez.");
-  } else if (authAppleCode && authAppleClientId) {
+  } else if (!AUTH_APPLE_SIGNIN_DISABLED && authAppleCode && authAppleClientId) {
     const redirectParam = authUrlParams.get("redirect");
     history.replaceState({}, "", window.location.pathname + (redirectParam ? "?redirect=" + encodeURIComponent(redirectParam) : ""));
     fetch(`${API_BASE}/api/auth/apple-exchange?code=${encodeURIComponent(authAppleCode)}`)
@@ -311,7 +314,7 @@ export function initAuthPage(initialTab) {
   }
 
   const authAppleBtn = document.getElementById("auth-apple-btn");
-  if (authAppleClientId && authAppleBtn && !window.__fidpassAuthAppleInited) {
+  if (!AUTH_APPLE_SIGNIN_DISABLED && authAppleClientId && authAppleBtn && !window.__fidpassAuthAppleInited) {
     window.__fidpassAuthAppleInited = true;
     const authRedirectUri = API_BASE + "/api/auth/apple-redirect";
     const buildAuthAppleRedirectUrl = () =>
@@ -388,7 +391,7 @@ export function initAuthPage(initialTab) {
       showSocialHint("Connexion Google non configurée. Ajoutez VITE_GOOGLE_CLIENT_ID dans .env (voir docs).");
     });
   }
-  if (!authAppleClientId && authAppleBtn) {
+  if (!AUTH_APPLE_SIGNIN_DISABLED && !authAppleClientId && authAppleBtn) {
     authAppleBtn.addEventListener("click", (e) => {
       e.preventDefault();
       showSocialHint("Connexion Apple non configurée. Ajoutez VITE_APPLE_CLIENT_ID dans .env (voir docs).");

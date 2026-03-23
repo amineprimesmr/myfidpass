@@ -6,6 +6,9 @@ import { API_BASE, getAuthToken, setAuthToken, clearAuthToken, getAuthHeaders, s
 import { initRouting } from "../router/index.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY, DESIGN_CATEGORY_LABELS } from "../constants/builder.js";
 
+/** Remettre à false pour réactiver Sign in with Apple sur le parcours checkout. */
+const CHECKOUT_APPLE_SIGNIN_DISABLED = true;
+
 function getCheckoutDraft() {
   try {
     const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
@@ -109,11 +112,11 @@ export function initCheckoutPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const appleCode = urlParams.get("apple_code");
   const appleError = urlParams.get("apple_error");
-  if (appleError && appleClientId) {
+  if (!CHECKOUT_APPLE_SIGNIN_DISABLED && appleError && appleClientId) {
     history.replaceState({}, "", window.location.pathname);
     const msg = appleError === "no_email" ? "Email non fourni par Apple. Réautorisez pour partager votre email." : "Connexion Apple impossible. Réessayez.";
     handleOAuthError(msg);
-  } else if (appleCode && appleClientId) {
+  } else if (!CHECKOUT_APPLE_SIGNIN_DISABLED && appleCode && appleClientId) {
     history.replaceState({}, "", window.location.pathname);
     fetch(`${API_BASE}/api/auth/apple-exchange?code=${encodeURIComponent(appleCode)}`)
       .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
@@ -166,7 +169,7 @@ export function initCheckoutPage() {
   }
 
   const appleBtn = document.getElementById("checkout-apple-btn");
-  if (appleClientId && appleBtn && !window.__fidpassAppleInited) {
+  if (!CHECKOUT_APPLE_SIGNIN_DISABLED && appleClientId && appleBtn && !window.__fidpassAppleInited) {
     window.__fidpassAppleInited = true;
     const redirectUri = API_BASE + "/api/auth/apple-redirect";
     const buildAppleRedirectUrl = () =>
@@ -246,17 +249,22 @@ export function initCheckoutPage() {
 
   const socialDivider = document.querySelector(".checkout-social-divider");
   const socialButtons = document.querySelector(".checkout-social-buttons");
-  if (!googleClientId && appleBtn) {
+  if (!googleClientId && appleBtn && !CHECKOUT_APPLE_SIGNIN_DISABLED) {
     const wrap = document.getElementById("checkout-google-btn");
     if (wrap && !wrap.querySelector("iframe")) {
       wrap.innerHTML = "<span class=\"checkout-social-placeholder\">Google (configurez VITE_GOOGLE_CLIENT_ID)</span>";
       wrap.classList.add("checkout-social-placeholder-wrap");
     }
   }
-  if (!appleClientId && appleBtn) {
+  if (!CHECKOUT_APPLE_SIGNIN_DISABLED && !appleClientId && appleBtn) {
     appleBtn.disabled = true;
     appleBtn.title = "Configurez VITE_APPLE_CLIENT_ID sur Vercel pour activer";
     appleBtn.classList.add("checkout-btn-social-disabled");
+  }
+  if (CHECKOUT_APPLE_SIGNIN_DISABLED && appleBtn) {
+    appleBtn.classList.add("hidden");
+    appleBtn.setAttribute("hidden", "true");
+    appleBtn.setAttribute("aria-hidden", "true");
   }
 
   function showStep(stepNum) {
