@@ -1,0 +1,299 @@
+/**
+ * Page Flyer QR (#flyer-qr) — aperçu + panneau personnalisation.
+ */
+#app-app .app-section-flyer-qr {
+  scroll-margin-top: 0.5rem;
+}
+
+#app-app .app-flyer-qr-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+#app-app .app-flyer-qr-hero {
+  margin-bottom: 1.75rem;
+}
+
+#app-app .app-flyer-qr-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-accent, #2563eb);
+}
+
+#app-app .app-flyer-qr-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  #app-app .app-flyer-qr-layout {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+#app-app .app-flyer-qr-preview-col {
+  position: relative;
+}
+
+#app-app .app-flyer-qr-preview-frame {
+  position: relative;
+  border-radius: var(--app-radius-lg, 18px);
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0),
+    linear-gradient(160deg, #f8fafc 0%, #eef2ff 45%, #faf5ff 100%);
+  background-size: 18px 18px, 100% 100%;
+  box-shadow: var(--app-relief-raised, 0 4px 24px rgba(0, 0, 0, 0.06));
+  margin-bottom: 1.25rem;
+}
+
+#app-app .app-flyer-canvas {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+#app-app .app-flyer-qr-link-row .app-label {
+  margin-bottom: 0.35rem;
+}
+
+#app-app .app-flyer-qr-link-wrap {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+#app-app .app-flyer-qr-link-wrap .app-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+
+#app-app .app-flyer-download-main {
+  width: 100%;
+  justify-content: center;
+  font-weight: 700;
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+#app-app .app-flyer-qr-side {
+  position: sticky;
+  top: 1rem;
+}
+
+#app-app .app-flyer-panel-toggle {
+  display: none;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: var(--app-radius-md, 14px);
+  border: 2px solid var(--app-text, #1a202c);
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+#app-app .app-flyer-panel-toggle:hover {
+  background: #f8fafc;
+}
+
+#app-app .app-flyer-panel-toggle:active {
+  transform: scale(0.99);
+}
+
+@media (min-width: 961px) {
+  #app-app .app-flyer-panel-toggle {
+    display: none;
+  }
+
+  #app-app .app-flyer-panel {
+    display: block !important;
+  }
+}
+
+@media (max-width: 960px) {
+  #app-app .app-flyer-panel-toggle {
+    display: block;
+  }
+
+  #app-app .app-flyer-panel:not(.is-open) {
+    display: none;
+  }
+
+  #app-app .app-flyer-panel.is-open {
+    display: block;
+    animation: app-flyer-panel-in 0.35s var(--app-ease-out, ease) forwards;
+  }
+}
+
+@keyframes app-flyer-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#app-app .app-flyer-panel {
+  padding: 1.25rem;
+  border-radius: var(--app-radius-lg, 18px);
+  border: 1px solid var(--app-border, #e8ecf1);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: var(--app-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.06));
+}
+
+#app-app .app-flyer-chip-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-flyer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+#app-app .app-flyer-chip {
+  position: relative;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--app-text, #1a202c);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+#app-app .app-flyer-chip:hover {
+  border-color: var(--app-accent, #2563eb);
+  box-shadow: 0 0 0 3px var(--app-accent-light, rgba(37, 99, 235, 0.12));
+}
+
+#app-app .app-flyer-chip.is-active {
+  border-color: var(--app-accent, #2563eb);
+  background: var(--app-accent-light, rgba(37, 99, 235, 0.12));
+  color: var(--app-accent-hover, #1d4ed8);
+}
+
+#app-app .app-flyer-chip-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--app-accent, #2563eb);
+  vertical-align: middle;
+}
+
+#app-app .app-flyer-field {
+  margin-bottom: 0.85rem;
+}
+
+#app-app .app-flyer-field .app-label {
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+#app-app .app-flyer-field .app-input,
+#app-app .app-flyer-field textarea.app-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#app-app .app-flyer-field textarea.app-input {
+  min-height: 3.25rem;
+  resize: vertical;
+}
+
+#app-app .app-flyer-colors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 400px) {
+  #app-app .app-flyer-colors {
+    grid-template-columns: 1fr;
+  }
+}
+
+#app-app .app-flyer-color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#app-app .app-flyer-color-row label {
+  flex: 1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-flyer-color-row input[type="color"] {
+  width: 44px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--app-border, #e8ecf1);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#app-app .app-flyer-legal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1rem;
+  font-size: 0.85rem;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-flyer-legal input {
+  width: 1rem;
+  height: 1rem;
+}
+
+#app-app .app-flyer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#app-app .app-flyer-actions .app-btn {
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+}

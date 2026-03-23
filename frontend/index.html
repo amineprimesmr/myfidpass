@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="/src/app-member-detail-profile.css" />
     <link rel="stylesheet" href="/src/app-card-rules.css" />
     <link rel="stylesheet" href="/src/app-integration.css" />
+    <link rel="stylesheet" href="/src/app-flyer-qr.css" />
     <link rel="stylesheet" href="/src/app-integration-guide.css" />
     <link rel="stylesheet" href="/src/landing-integration-catalog.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
@@ -289,6 +290,10 @@
           <a href="#membres" class="app-sidebar-link" data-section="membres">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
             <span class="app-sidebar-link-text">Membres</span>
+          </a>
+          <a href="#flyer-qr" class="app-sidebar-link" data-section="flyer-qr">
+            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg></span>
+            <span class="app-sidebar-link-text">Flyer QR</span>
           </a>
           <a href="#integration" class="app-sidebar-link" data-section="integration">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-4"/><path d="M12 18a2 2 0 0 1-2-2V8a2 2 0 0 1 4 0v8a2 2 0 0 1-2 2z"/><path d="M8 6l4-4 4 4"/><path d="M8 6h8"/></svg></span>
@@ -729,6 +734,105 @@
                   <p id="app-members-import-result" class="app-import-result hidden"></p>
                 </div>
               </details>
+            </div>
+          </section>
+
+          <section id="flyer-qr" class="app-section app-section-flyer-qr">
+            <div class="app-flyer-qr-shell">
+              <header class="app-flyer-qr-hero">
+                <p class="app-flyer-qr-eyebrow">Point de vente</p>
+                <h2 class="app-section-title">Flyer QR code</h2>
+                <p class="app-section-desc">Une affiche <strong>prête à imprimer</strong> avec le lien vers votre page carte (fidélité, Wallet). Choisissez un modèle, ajustez textes et couleurs, puis téléchargez en <strong>PNG haute définition</strong>.</p>
+              </header>
+              <div class="app-flyer-qr-layout">
+                <div class="app-flyer-qr-preview-col">
+                  <div class="app-flyer-qr-preview-frame">
+                    <canvas id="app-flyer-canvas" class="app-flyer-canvas" width="1200" height="1800" aria-label="Aperçu du flyer"></canvas>
+                  </div>
+                  <div class="app-flyer-qr-link-row">
+                    <label class="app-label" for="app-flyer-link">Lien de la page carte</label>
+                    <div class="app-flyer-qr-link-wrap">
+                      <input type="text" id="app-flyer-link" class="app-input" readonly autocomplete="off" />
+                      <button type="button" id="app-flyer-copy-link" class="app-btn app-btn-secondary">Copier</button>
+                    </div>
+                    <button type="button" id="app-flyer-download" class="app-btn app-btn-primary app-flyer-download-main">Télécharger le flyer (PNG HD)</button>
+                    <p id="app-flyer-export-note" class="app-hint hidden" role="status"></p>
+                  </div>
+                </div>
+                <div class="app-flyer-qr-side">
+                  <button type="button" id="app-flyer-panel-toggle" class="app-flyer-panel-toggle" aria-expanded="false" aria-controls="app-flyer-panel">Personnaliser le flyer</button>
+                  <div id="app-flyer-panel" class="app-flyer-panel">
+                    <p class="app-flyer-chip-label">Modèle</p>
+                    <div id="app-flyer-template-chips" class="app-flyer-chips" role="group" aria-label="Choisir un modèle visuel">
+                      <button type="button" class="app-flyer-chip is-active" data-flyer-tpl="noir-or-roue">Énergie &amp; roue<span class="app-flyer-chip-badge">Pop</span></button>
+                      <button type="button" class="app-flyer-chip" data-flyer-tpl="foret-jeu">Jeu vert<span class="app-flyer-chip-badge">Pro</span></button>
+                      <button type="button" class="app-flyer-chip" data-flyer-tpl="sunset-roue">Sunset<span class="app-flyer-chip-badge">Trend</span></button>
+                      <button type="button" class="app-flyer-chip" data-flyer-tpl="studio-clean">Studio<span class="app-flyer-chip-badge">Print</span></button>
+                    </div>
+                    <input type="hidden" id="app-flyer-template" value="noir-or-roue" />
+                    <div class="app-flyer-field">
+                      <label class="app-label" for="app-flyer-headline">Accroche principale</label>
+                      <textarea id="app-flyer-headline" class="app-input" rows="2" maxlength="200" data-flyer-input></textarea>
+                    </div>
+                    <div class="app-flyer-field">
+                      <label class="app-label" for="app-flyer-subline">Sous-texte</label>
+                      <input type="text" id="app-flyer-subline" class="app-input" maxlength="160" data-flyer-input />
+                    </div>
+                    <div class="app-flyer-field">
+                      <label class="app-label" for="app-flyer-cta">Bandeau d’action</label>
+                      <input type="text" id="app-flyer-cta" class="app-input" maxlength="80" data-flyer-input />
+                    </div>
+                    <p class="app-flyer-chip-label" style="margin-top:1rem">Étapes (bas de flyer)</p>
+                    <div class="app-flyer-field">
+                      <label class="app-label" for="app-flyer-step1">Étape 1</label>
+                      <input type="text" id="app-flyer-step1" class="app-input" maxlength="120" data-flyer-input />
+                    </div>
+                    <div class="app-flyer-field">
+                      <label class="app-label" for="app-flyer-step2">Étape 2</label>
+                      <input type="text" id="app-flyer-step2" class="app-input" maxlength="120" data-flyer-input />
+                    </div>
+                    <div class="app-flyer-field">
+                      <label class="app-label" for="app-flyer-step3">Étape 3</label>
+                      <input type="text" id="app-flyer-step3" class="app-input" maxlength="120" data-flyer-input />
+                    </div>
+                    <div class="app-flyer-field">
+                      <label class="app-label" for="app-flyer-social">Réseaux / mention (optionnel)</label>
+                      <input type="text" id="app-flyer-social" class="app-input" maxlength="120" placeholder="@moncommerce · Instagram" data-flyer-input />
+                    </div>
+                    <p class="app-flyer-chip-label" style="margin-top:1rem">Couleurs</p>
+                    <div class="app-flyer-colors">
+                      <div class="app-flyer-color-row">
+                        <label for="app-flyer-c1">Primaire</label>
+                        <input type="color" id="app-flyer-c1" data-flyer-input />
+                      </div>
+                      <div class="app-flyer-color-row">
+                        <label for="app-flyer-c2">Secondaire</label>
+                        <input type="color" id="app-flyer-c2" data-flyer-input />
+                      </div>
+                      <div class="app-flyer-color-row">
+                        <label for="app-flyer-c3">Texte clair</label>
+                        <input type="color" id="app-flyer-c3" data-flyer-input />
+                      </div>
+                      <div class="app-flyer-color-row">
+                        <label for="app-flyer-bg1">Fond haut</label>
+                        <input type="color" id="app-flyer-bg1" data-flyer-input />
+                      </div>
+                      <div class="app-flyer-color-row" style="grid-column:1/-1">
+                        <label for="app-flyer-bg2">Fond bas</label>
+                        <input type="color" id="app-flyer-bg2" data-flyer-input />
+                      </div>
+                    </div>
+                    <label class="app-flyer-legal app-flyer-legal-row">
+                      <input type="checkbox" id="app-flyer-legal" checked data-flyer-input />
+                      Afficher la mention « Ne pas jeter sur la voie publique »
+                    </label>
+                    <div class="app-flyer-actions">
+                      <button type="button" id="app-flyer-reset" class="app-btn app-btn-secondary">Réinitialiser le modèle</button>
+                    </div>
+                    <p class="app-hint" style="margin-top:0.75rem;margin-bottom:0">Le logo provient de <strong>Ma carte</strong> (même visuel que le bandeau Wallet). QR généré automatiquement à partir du lien public.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -1510,6 +1614,10 @@
               <li><a href="#membres" class="app-mobile-profil-item" data-section="membres">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                 Tous les membres
+              </a></li>
+              <li><a href="#flyer-qr" class="app-mobile-profil-item" data-section="flyer-qr">
+                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg></span>
+                Flyer QR
               </a></li>
               <li><a href="#engagement" class="app-mobile-profil-item" data-section="engagement">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
