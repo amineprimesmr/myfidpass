@@ -40,7 +40,6 @@ export function flyerTemplateMeta(id) {
  * @property {string} colorAccent
  * @property {string} colorBgTop
  * @property {string} colorBgBottom
- * @property {boolean} showLegalMention
  */
 
 /** @returns {FlyerState} */
@@ -59,7 +58,6 @@ export function defaultFlyerState() {
     colorAccent: "#ffffff",
     colorBgTop: "#0f172a",
     colorBgBottom: "#020617",
-    showLegalMention: true,
   };
 }
 
@@ -76,7 +74,6 @@ export function mergeFlyerState(raw) {
     ...base,
     ...raw,
     templateId: FLYER_TEMPLATE_ID,
-    showLegalMention: raw.showLegalMention !== false,
   };
   return {
     ...merged,

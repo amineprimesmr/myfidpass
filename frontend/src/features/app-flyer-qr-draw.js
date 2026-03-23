@@ -332,11 +332,4 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const footerBannerImg = await getFlyerFooterBanner();
   if (footerBannerImg) drawFooterBanner(ctx, w, h, footerBannerImg);
   else drawFooterBar(ctx, w, h, s, true);
-
-  if (s.showLegalMention) {
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.font = `500 ${Math.round(w * 0.022)}px Outfit, sans-serif`;
-    ctx.textAlign = "right";
-    ctx.fillText("Ne pas jeter sur la voie publique", w - w * 0.03, h - h * 0.018);
-  }
 }

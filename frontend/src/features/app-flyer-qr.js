@@ -23,7 +23,6 @@ function readStateFromForm(root) {
     colorAccent: q("app-flyer-c3")?.value,
     colorBgTop: q("app-flyer-bg1")?.value,
     colorBgBottom: q("app-flyer-bg2")?.value,
-    showLegalMention: q("app-flyer-legal")?.checked !== false,
   });
 }
 
@@ -32,10 +31,6 @@ function writeFormFromState(root, s) {
   const set = (id, v) => {
     const el = root.querySelector(`#${id}`);
     if (el && "value" in el) el.value = v;
-  };
-  const chk = (id, v) => {
-    const el = root.querySelector(`#${id}`);
-    if (el && "checked" in el) el.checked = v;
   };
   set("app-flyer-headline", s.headline);
   set("app-flyer-subline", s.subline);
@@ -49,7 +44,6 @@ function writeFormFromState(root, s) {
   set("app-flyer-c3", s.colorAccent);
   set("app-flyer-bg1", s.colorBgTop);
   set("app-flyer-bg2", s.colorBgBottom);
-  chk("app-flyer-legal", s.showLegalMention);
 }
 
 function loadStoredState() {
