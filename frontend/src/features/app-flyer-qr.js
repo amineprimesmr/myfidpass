@@ -29,11 +29,8 @@ function readStateFromForm(root) {
     colorBgTop: q("app-flyer-bg1")?.value,
     colorBgBottom: q("app-flyer-bg2")?.value,
     wheelRenderMode: q("app-flyer-wheel-mode")?.value === "png" ? "png" : "segments",
-    wheelSeg1: q("app-flyer-wheel-seg-1")?.value,
-    wheelSeg2: q("app-flyer-wheel-seg-2")?.value,
-    wheelSeg3: q("app-flyer-wheel-seg-3")?.value,
-    wheelSeg4: q("app-flyer-wheel-seg-4")?.value,
-    wheelSeg5: q("app-flyer-wheel-seg-5")?.value,
+    wheelColorOdd: q("app-flyer-wheel-color-odd")?.value,
+    wheelColorEven: q("app-flyer-wheel-color-even")?.value,
     wheelSegmentOffsetDeg: Number(q("app-flyer-wheel-offset")?.value),
   });
 }
@@ -62,11 +59,8 @@ function writeFormFromState(root, s) {
   set("app-flyer-bg1", s.colorBgTop);
   set("app-flyer-bg2", s.colorBgBottom);
   set("app-flyer-wheel-mode", s.wheelRenderMode === "png" ? "png" : "segments");
-  set("app-flyer-wheel-seg-1", s.wheelSeg1 ?? "");
-  set("app-flyer-wheel-seg-2", s.wheelSeg2 ?? "");
-  set("app-flyer-wheel-seg-3", s.wheelSeg3 ?? "");
-  set("app-flyer-wheel-seg-4", s.wheelSeg4 ?? "");
-  set("app-flyer-wheel-seg-5", s.wheelSeg5 ?? "");
+  set("app-flyer-wheel-color-odd", s.wheelColorOdd ?? "");
+  set("app-flyer-wheel-color-even", s.wheelColorEven ?? "");
   set("app-flyer-wheel-offset", String(s.wheelSegmentOffsetDeg ?? 0));
 }
 

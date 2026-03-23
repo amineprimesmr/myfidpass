@@ -62,11 +62,8 @@ export function flyerTemplateMeta(id) {
  * @property {string} colorBgTop
  * @property {string} colorBgBottom
  * @property {"segments"|"png"} wheelRenderMode
- * @property {string} wheelSeg1
- * @property {string} wheelSeg2
- * @property {string} wheelSeg3
- * @property {string} wheelSeg4
- * @property {string} wheelSeg5
+ * @property {string} wheelColorOdd parts impaires (1, 3, 5…)
+ * @property {string} wheelColorEven parts paires (2, 4…)
  * @property {number} wheelSegmentOffsetDeg rotation découpe PNG / parts (°)
  */
 
@@ -92,11 +89,8 @@ export function defaultFlyerState() {
     colorBgTop: "#0f172a",
     colorBgBottom: "#020617",
     wheelRenderMode: "segments",
-    wheelSeg1: "#fbbf24",
-    wheelSeg2: "#f97316",
-    wheelSeg3: "#fbbf24",
-    wheelSeg4: "#f97316",
-    wheelSeg5: "#fbbf24",
+    wheelColorOdd: "#fbbf24",
+    wheelColorEven: "#f97316",
     wheelSegmentOffsetDeg: 0,
   };
 }
@@ -110,17 +104,12 @@ export function wheelSegmentColorsResolved(s) {
   const b = defaultFlyerState();
   /** @type {Record<string, unknown>} */
   const src = /** @type {Record<string, unknown>} */ (s);
-  /** @type {Record<string, unknown>} */
-  const def = /** @type {Record<string, unknown>} */ (b);
+  const odd = safeHex(String(src.wheelColorOdd ?? ""), b.wheelColorOdd);
+  const even = safeHex(String(src.wheelColorEven ?? ""), b.wheelColorEven);
   /** @type {string[]} */
   const out = [];
-  for (let i = 1; i <= FLYER_WHEEL_SEGMENT_COUNT; i++) {
-    const key = `wheelSeg${i}`;
-    const raw = src[key];
-    const fb = def[key];
-    out.push(
-      safeHex(typeof raw === "string" ? raw : "", typeof fb === "string" ? fb : b.colorPrimary),
-    );
+  for (let i = 0; i < FLYER_WHEEL_SEGMENT_COUNT; i++) {
+    out.push(i % 2 === 0 ? odd : even);
   }
   return out;
 }
@@ -148,13 +137,16 @@ export function mergeFlyerState(raw) {
     wheelRenderMode: raw.wheelRenderMode === "png" ? "png" : "segments",
   };
   merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
-  const seg = (k) => safeHex(String(merged[k] ?? ""), base[k]);
-  /** @type {Record<string, string>} */
-  const wheelSegs = {};
-  for (let i = 1; i <= FLYER_WHEEL_SEGMENT_COUNT; i++) {
-    const k = `wheelSeg${i}`;
-    wheelSegs[k] = seg(k);
-  }
+  const hasOddKey = Object.prototype.hasOwnProperty.call(raw, "wheelColorOdd");
+  const hasEvenKey = Object.prototype.hasOwnProperty.call(raw, "wheelColorEven");
+  const wheelColorOdd = safeHex(
+    String(hasOddKey ? raw.wheelColorOdd ?? "" : raw.wheelSeg1 ?? ""),
+    base.wheelColorOdd,
+  );
+  const wheelColorEven = safeHex(
+    String(hasEvenKey ? raw.wheelColorEven ?? "" : raw.wheelSeg2 ?? ""),
+    base.wheelColorEven,
+  );
   return {
     ...merged,
     colorPrimary: safeHex(String(merged.colorPrimary ?? ""), base.colorPrimary),
@@ -162,6 +154,7 @@ export function mergeFlyerState(raw) {
     colorAccent: safeHex(String(merged.colorAccent ?? ""), base.colorAccent),
     colorBgTop: safeHex(String(merged.colorBgTop ?? ""), base.colorBgTop),
     colorBgBottom: safeHex(String(merged.colorBgBottom ?? ""), base.colorBgBottom),
-    ...wheelSegs,
+    wheelColorOdd,
+    wheelColorEven,
   };
 }
