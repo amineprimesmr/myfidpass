@@ -1,15 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { mergeFlyerState, flyerDefaultsForTemplate, defaultFlyerState } from "./app-flyer-qr-presets.js";
+import { mergeFlyerState, defaultFlyerState, FLYER_TEMPLATE_ID } from "./app-flyer-qr-presets.js";
 
 describe("mergeFlyerState", () => {
-  it("garde un template valide", () => {
+  it("force le gabarit unique", () => {
     const s = mergeFlyerState({ templateId: "studio-clean" });
-    expect(s.templateId).toBe("studio-clean");
+    expect(s.templateId).toBe(FLYER_TEMPLATE_ID);
   });
 
-  it("remplace un template inconnu par défaut", () => {
+  it("normalise un template inconnu vers le gabarit unique", () => {
     const s = mergeFlyerState({ templateId: "nope" });
-    expect(s.templateId).toBe("noir-or-roue");
+    expect(s.templateId).toBe(FLYER_TEMPLATE_ID);
   });
 
   it("corrige les couleurs invalides", () => {
@@ -19,10 +19,14 @@ describe("mergeFlyerState", () => {
     expect(s.colorBgTop).toBe(base.colorBgTop);
   });
 
-  it("applique les défauts du template forêt", () => {
-    const d = flyerDefaultsForTemplate("foret-jeu");
-    expect(d.colorPrimary).toMatch(/^#/);
-    const s = mergeFlyerState({ templateId: "foret-jeu" });
-    expect(s.colorPrimary).toBe(d.colorPrimary);
+  it("conserve les textes et couleurs valides du stockage", () => {
+    const s = mergeFlyerState({
+      templateId: "foret-jeu",
+      headline: "Ma accroche",
+      colorPrimary: "#ff00aa",
+    });
+    expect(s.templateId).toBe(FLYER_TEMPLATE_ID);
+    expect(s.headline).toBe("Ma accroche");
+    expect(s.colorPrimary).toBe("#ff00aa");
   });
 });

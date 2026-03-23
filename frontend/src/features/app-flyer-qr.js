@@ -2,12 +2,7 @@
  * Page Flyer QR — aperçu canvas, personnalisation, export PNG.
  */
 import { API_BASE } from "../config.js";
-import {
-  FLYER_STORAGE_KEY,
-  FLYER_EXPORT,
-  mergeFlyerState,
-  flyerDefaultsForTemplate,
-} from "./app-flyer-qr-presets.js";
+import { FLYER_STORAGE_KEY, FLYER_EXPORT, mergeFlyerState } from "./app-flyer-qr-presets.js";
 import { renderFlyerCanvas } from "./app-flyer-qr-draw.js";
 
 /** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string }} FlyerQrOpts */
@@ -16,7 +11,6 @@ function readStateFromForm(root) {
   /** @type {Record<string, HTMLInputElement | HTMLTextAreaElement | null>} */
   const q = (id) => root.querySelector(`#${id}`);
   return mergeFlyerState({
-    templateId: q("app-flyer-template")?.value,
     headline: q("app-flyer-headline")?.value,
     subline: q("app-flyer-subline")?.value,
     ctaBanner: q("app-flyer-cta")?.value,
@@ -43,7 +37,6 @@ function writeFormFromState(root, s) {
     const el = root.querySelector(`#${id}`);
     if (el && "checked" in el) el.checked = v;
   };
-  set("app-flyer-template", s.templateId);
   set("app-flyer-headline", s.headline);
   set("app-flyer-subline", s.subline);
   set("app-flyer-cta", s.ctaBanner);
@@ -87,7 +80,6 @@ export function initAppFlyerQr(slug, opts) {
   const copyBtn = document.getElementById("app-flyer-copy-link");
   const downloadBtn = document.getElementById("app-flyer-download");
   const resetBtn = document.getElementById("app-flyer-reset");
-  const tplChips = document.getElementById("app-flyer-template-chips");
   const panelToggle = document.getElementById("app-flyer-panel-toggle");
   const panel = document.getElementById("app-flyer-panel");
   const exportNote = document.getElementById("app-flyer-export-note");
@@ -152,31 +144,6 @@ export function initAppFlyerQr(slug, opts) {
     el.addEventListener("change", schedulePaint);
   });
 
-  if (tplChips) {
-    tplChips.addEventListener("click", (e) => {
-      const btn = e.target?.closest?.("[data-flyer-tpl]");
-      if (!btn) return;
-      const id = btn.getAttribute("data-flyer-tpl");
-      if (!id) return;
-      const tpl = document.getElementById("app-flyer-template");
-      if (tpl) tpl.value = id;
-      state = { ...state, ...flyerDefaultsForTemplate(id), templateId: id };
-      writeFormFromState(root, state);
-      tplChips.querySelectorAll("[data-flyer-tpl]").forEach((b) => {
-        b.classList.toggle("is-active", b.getAttribute("data-flyer-tpl") === id);
-      });
-      schedulePaint();
-    });
-  }
-
-  function syncTplChips() {
-    const id = document.getElementById("app-flyer-template")?.value || state.templateId;
-    tplChips?.querySelectorAll("[data-flyer-tpl]").forEach((b) => {
-      b.classList.toggle("is-active", b.getAttribute("data-flyer-tpl") === id);
-    });
-  }
-  syncTplChips();
-
   if (panelToggle && panel) {
     panelToggle.addEventListener("click", () => {
       const open = panel.classList.toggle("is-open");
@@ -219,11 +186,9 @@ export function initAppFlyerQr(slug, opts) {
 
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
-      if (!confirm("Réinitialiser le flyer aux textes et couleurs du modèle sélectionné ?")) return;
-      const tid = document.getElementById("app-flyer-template")?.value || "noir-or-roue";
-      state = mergeFlyerState({ ...flyerDefaultsForTemplate(tid), templateId: tid });
+      if (!confirm("Réinitialiser le flyer aux textes et couleurs par défaut ?")) return;
+      state = mergeFlyerState(null);
       writeFormFromState(root, state);
-      syncTplChips();
       schedulePaint();
     });
   }
