@@ -55,7 +55,6 @@ export function flyerTemplateMeta(id) {
  * @property {string} wheelSeg4
  * @property {string} wheelSeg5
  * @property {string} wheelSeg6
- * @property {boolean} wheelImageTintPrimary teinte PNG « roue » avec la couleur primaire
  */
 
 /** @returns {FlyerState} */
@@ -86,7 +85,6 @@ export function defaultFlyerState() {
     wheelSeg4: "#f97316",
     wheelSeg5: "#fbbf24",
     wheelSeg6: "#f97316",
-    wheelImageTintPrimary: true,
   };
 }
 
@@ -128,7 +126,6 @@ export function mergeFlyerState(raw) {
     ...raw,
     templateId: FLYER_TEMPLATE_ID,
     wheelRenderMode: raw.wheelRenderMode === "png" ? "png" : "segments",
-    wheelImageTintPrimary: raw.wheelImageTintPrimary !== false,
   };
   const seg = (k) => safeHex(merged[k], base[k]);
   return {

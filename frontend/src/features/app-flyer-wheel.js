@@ -1,7 +1,18 @@
 /**
- * Rendu roue du flyer : parts colorées (canvas) ou image PNG.
+ * Rendu roue du flyer : parts vectorielles ou image PNG teintée part par part.
  */
 import { wheelSegmentColorsResolved } from "./app-flyer-qr-presets.js";
+
+/** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
+function drawWheelHub(ctx, cx, cy, r) {
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.12)";
+  ctx.lineWidth = Math.max(2, r * 0.02);
+  ctx.stroke();
+}
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -23,13 +34,45 @@ export function drawWheelSegments(ctx, cx, cy, r, colors) {
     ctx.fillStyle = colors[i];
     ctx.fill();
   }
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.95)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.12)";
-  ctx.lineWidth = Math.max(2, r * 0.02);
-  ctx.stroke();
+  drawWheelHub(ctx, cx, cy, r);
+}
+
+/**
+ * PNG : une part = clip secteur → image complète → fusion « color » (conserve le volume).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} r
+ * @param {CanvasImageSource} roueImg
+ * @param {string[]} colors
+ * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
+ */
+function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, drawImageCover) {
+  const n = colors.length;
+  if (n < 1) return;
+  const box = r * 2;
+  const lx = cx - r;
+  const ly = cy - r;
+  for (let i = 0; i < n; i++) {
+    const t0 = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const t1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, t0, t1);
+    ctx.closePath();
+    ctx.clip();
+    drawImageCover(ctx, roueImg, lx, ly, box, box);
+    ctx.globalCompositeOperation = "color";
+    ctx.fillStyle = colors[i];
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, t0, t1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  drawWheelHub(ctx, cx, cy, r);
 }
 
 /**
@@ -38,21 +81,11 @@ export function drawWheelSegments(ctx, cx, cy, r, colors) {
  * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
  */
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
-  const wheelBox = wheelR * 2;
+  const colors = wheelSegmentColorsResolved(s);
   const usePng = s.wheelRenderMode === "png" && roueImg;
   if (usePng) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(wheelCx, wheelCy, wheelR, 0, Math.PI * 2);
-    ctx.clip();
-    drawImageCover(ctx, roueImg, wheelCx - wheelBox / 2, wheelCy - wheelBox / 2, wheelBox, wheelBox);
-    if (s.wheelImageTintPrimary !== false) {
-      ctx.globalCompositeOperation = "color";
-      ctx.fillStyle = s.colorPrimary;
-      ctx.fillRect(wheelCx - wheelBox / 2, wheelCy - wheelBox / 2, wheelBox, wheelBox);
-    }
-    ctx.restore();
+    drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, drawImageCover);
   } else {
-    drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, wheelSegmentColorsResolved(s));
+    drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors);
   }
 }

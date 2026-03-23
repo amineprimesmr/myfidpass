@@ -35,7 +35,6 @@ function readStateFromForm(root) {
     wheelSeg4: q("app-flyer-wheel-seg-4")?.value,
     wheelSeg5: q("app-flyer-wheel-seg-5")?.value,
     wheelSeg6: q("app-flyer-wheel-seg-6")?.value,
-    wheelImageTintPrimary: q("app-flyer-wheel-tint")?.checked !== false,
   });
 }
 
@@ -69,8 +68,6 @@ function writeFormFromState(root, s) {
   set("app-flyer-wheel-seg-4", s.wheelSeg4 ?? "");
   set("app-flyer-wheel-seg-5", s.wheelSeg5 ?? "");
   set("app-flyer-wheel-seg-6", s.wheelSeg6 ?? "");
-  const tintEl = root.querySelector("#app-flyer-wheel-tint");
-  if (tintEl && "checked" in tintEl) tintEl.checked = s.wheelImageTintPrimary !== false;
 }
 
 function loadStoredState() {
@@ -135,16 +132,7 @@ export function initAppFlyerQr(slug, opts) {
   }
 
   const wheelModeEl = root.querySelector("#app-flyer-wheel-mode");
-  const wheelSegWrap = root.querySelector("#app-flyer-wheel-segments-wrap");
-  const wheelTintWrap = root.querySelector("#app-flyer-wheel-tint-wrap");
-  function syncWheelModeUi() {
-    const png = wheelModeEl?.value === "png";
-    wheelSegWrap?.classList.toggle("hidden", png);
-    wheelTintWrap?.classList.toggle("hidden", !png);
-  }
-  syncWheelModeUi();
   wheelModeEl?.addEventListener("change", () => {
-    syncWheelModeUi();
     schedulePaint();
   });
 

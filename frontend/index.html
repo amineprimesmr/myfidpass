@@ -842,11 +842,11 @@
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Roue</p>
                     <label class="app-label" for="app-flyer-wheel-mode">Affichage</label>
                     <select id="app-flyer-wheel-mode" class="app-input app-flyer-social-select app-flyer-wheel-mode-select" data-flyer-input>
-                      <option value="segments">6 parts colorées (réglage par part)</option>
-                      <option value="png">Image roue.png (teinte avec primaire)</option>
+                      <option value="segments">6 parts vectorielles (plat)</option>
+                      <option value="png">Image roue.png (même découpe, couleur par part)</option>
                     </select>
                     <div id="app-flyer-wheel-segments-wrap">
-                      <p class="app-hint" style="margin:0.35rem 0 0.5rem;font-size:0.78rem">Une couleur par part, dans le sens horaire en partant du haut.</p>
+                      <p class="app-hint" style="margin:0.35rem 0 0.5rem;font-size:0.78rem">Les 6 couleurs s’appliquent à chaque part (vectoriel <strong>ou</strong> PNG). Sens horaire depuis le haut. PNG en niveaux de gris / blanc = meilleur rendu 3D.</p>
                       <div class="app-flyer-wheel-seg-grid" role="group" aria-label="Couleurs des parts de la roue">
                         <label for="app-flyer-wheel-seg-1">Part 1</label>
                         <input type="color" id="app-flyer-wheel-seg-1" data-flyer-input />
@@ -861,13 +861,6 @@
                         <label for="app-flyer-wheel-seg-6">Part 6</label>
                         <input type="color" id="app-flyer-wheel-seg-6" data-flyer-input />
                       </div>
-                    </div>
-                    <div id="app-flyer-wheel-tint-wrap" class="hidden">
-                      <p class="app-hint" style="margin:0.35rem 0 0.5rem;font-size:0.78rem">Teinte uniforme avec la couleur <strong>primaire</strong>. PNG à fond transparent recommandé.</p>
-                      <label class="app-flyer-wheel-tint-label">
-                        <input type="checkbox" id="app-flyer-wheel-tint" checked data-flyer-input />
-                        Teinter l’image avec la couleur primaire
-                      </label>
                     </div>
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Couleurs (texte &amp; fond)</p>
                     <div class="app-flyer-colors">

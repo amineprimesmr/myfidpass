@@ -235,24 +235,6 @@
   cursor: pointer;
 }
 
-#app-app .app-flyer-wheel-tint-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin: 0 0 0.85rem;
-  font-size: 0.82rem;
-  line-height: 1.35;
-  color: var(--app-text-muted, #64748b);
-  cursor: pointer;
-}
-
-#app-app .app-flyer-wheel-tint-label input {
-  margin-top: 0.2rem;
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-}
-
 #app-app .app-flyer-colors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
