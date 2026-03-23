@@ -169,6 +169,23 @@ export function updateHandler(req, res) {
       updates.logo_base64 = logoBase64;
     }
   }
+  const logoIconBase64 = body.logoIconBase64 ?? body.logo_icon_base64;
+  if (logoIconBase64 !== undefined) {
+    if (logoIconBase64 === null || (typeof logoIconBase64 === "string" && logoIconBase64.trim() === "")) {
+      updates.logo_icon_base64 = null;
+    } else if (typeof logoIconBase64 === "string") {
+      const base64Data = String(logoIconBase64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > 512 * 1024) {
+        return res.status(400).json({ error: "Logo carré trop volumineux (max 512 Ko)." });
+      }
+      if (buf.length > 0) {
+        updates.logo_icon_base64 = logoIconBase64.startsWith("data:") ? logoIconBase64 : `data:image/png;base64,${base64Data}`;
+      } else {
+        updates.logo_icon_base64 = null;
+      }
+    }
+  }
   const cardBackgroundBase64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   if (cardBackgroundBase64 !== undefined) {
     if (cardBackgroundBase64 === null || (typeof cardBackgroundBase64 === "string" && cardBackgroundBase64.trim() === "")) {

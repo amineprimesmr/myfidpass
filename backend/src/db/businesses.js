@@ -92,7 +92,7 @@ export function updateBusiness(businessId, updates) {
   if (!b) return null;
   const allowed = [
     "slug", "organization_name", "back_terms", "back_contact", "background_color", "foreground_color", "label_color",
-    "logo_base64", "logo_updated_at", "card_background_base64", "strip_color", "strip_display_mode", "strip_text",
+    "logo_base64", "logo_updated_at", "logo_icon_base64", "logo_icon_updated_at", "card_background_base64", "strip_color", "strip_display_mode", "strip_text",
     "location_lat", "location_lng", "location_relevant_text", "location_radius_meters", "location_address",
     "required_stamps", "stamp_emoji", "points_per_euro", "points_per_visit", "program_type", "loyalty_mode",
     "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
@@ -105,7 +105,7 @@ export function updateBusiness(businessId, updates) {
     const col = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
     if (allowed.includes(col) && value !== undefined) {
       setClauses.push(`${col} = ?`);
-      if (col === "logo_base64" || col === "card_background_base64") {
+      if (col === "logo_base64" || col === "logo_icon_base64" || col === "card_background_base64") {
         values.push(value === null || value === "" ? null : String(value));
       } else if (col === "points_reward_tiers" || col === "engagement_rewards") {
         values.push(value == null || value === "" ? null : (typeof value === "string" ? value : JSON.stringify(value)));
@@ -120,6 +120,10 @@ export function updateBusiness(businessId, updates) {
   if (setClauses.length === 0) return b;
   if (updates.logo_base64 !== undefined) {
     setClauses.push("logo_updated_at = ?");
+    values.push(new Date().toISOString());
+  }
+  if (updates.logo_icon_base64 !== undefined) {
+    setClauses.push("logo_icon_updated_at = ?");
     values.push(new Date().toISOString());
   }
   values.push(businessId);

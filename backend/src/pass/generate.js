@@ -83,21 +83,35 @@ export async function generatePass(member, business = null, options = {}) {
           console.warn("[PassKit] Logo image invalide — bandeau texte (nom commerce) utilisé à la place");
         }
       }
-      const iconResized = await resizeLogoForPassIcon(logoBuf);
-      if (iconResized) {
-        buffers["icon.png"] = iconResized.iconPng;
-        buffers["icon@2x.png"] = iconResized.iconPng2x;
-        buffers["icon@3x.png"] = iconResized.iconPng3x;
-        if (process.env.NODE_ENV === "production") {
-          console.log("[PassKit] Icône notification Wallet générée depuis le logo (29/58/87px)");
-        }
-      }
     }
   } else if (!useTextInStrip && !buffers["logo.png"]) {
     const textLogo = await createLogoFromText(stripColorHex, organizationName);
     if (textLogo) {
       buffers["logo.png"] = textLogo.logoPng;
       buffers["logo@2x.png"] = textLogo.logoPng2x;
+    }
+  }
+
+  let passIconSourceBuf = null;
+  if (business?.logo_icon_base64) {
+    const d = String(business.logo_icon_base64).replace(/^data:image\/\w+;base64,/, "").trim();
+    const b = Buffer.from(d, "base64");
+    if (b.length > 0) passIconSourceBuf = b;
+  }
+  if (!passIconSourceBuf && business?.logo_base64) {
+    const d = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "").trim();
+    const b = Buffer.from(d, "base64");
+    if (b.length > 0) passIconSourceBuf = b;
+  }
+  if (passIconSourceBuf) {
+    const iconResized = await resizeLogoForPassIcon(passIconSourceBuf);
+    if (iconResized) {
+      buffers["icon.png"] = iconResized.iconPng;
+      buffers["icon@2x.png"] = iconResized.iconPng2x;
+      buffers["icon@3x.png"] = iconResized.iconPng3x;
+      if (process.env.NODE_ENV === "production") {
+        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis logo carré ou bandeau");
+      }
     }
   }
 

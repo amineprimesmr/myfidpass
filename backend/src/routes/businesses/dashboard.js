@@ -80,6 +80,8 @@ router.get("/settings", (req, res) => {
     sector: business.sector ?? undefined,
     logo_url: business.logo_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/logo` : undefined,
     logo_updated_at: business.logo_updated_at ?? undefined,
+    logo_icon_url: business.logo_icon_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/logo-icon` : undefined,
+    logo_icon_updated_at: business.logo_icon_updated_at ?? undefined,
     has_card_background: !!(business.card_background_base64 && String(business.card_background_base64).trim()),
     strip_color: business.strip_color ?? undefined,
     strip_display_mode: business.strip_display_mode ?? "logo",
@@ -116,6 +118,7 @@ router.patch("/settings", async (req, res) => {
   const points_reward_tiers = body.points_reward_tiers ?? body.pointsRewardTiers;
   const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
+  const logo_icon_base64 = body.logo_icon_base64 ?? body.logoIconBase64;
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   const stamp_icon_base64 = body.stamp_icon_base64 ?? body.stampIconBase64;
   const strip_color = body.strip_color ?? body.stripColor;
@@ -227,6 +230,23 @@ router.patch("/settings", async (req, res) => {
       }
       if (buf.length > 0) updates.logo_base64 = logo_base64.startsWith("data:") ? logo_base64 : `data:image/png;base64,${base64Data}`;
       else updates.logo_base64 = null;
+    }
+  }
+  const MAX_LOGO_ICON_BYTES = 512 * 1024;
+  if (logo_icon_base64 !== undefined) {
+    if (logo_icon_base64 === null || (typeof logo_icon_base64 === "string" && logo_icon_base64.trim() === "")) {
+      updates.logo_icon_base64 = null;
+    } else if (typeof logo_icon_base64 === "string") {
+      const base64Data = String(logo_icon_base64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > MAX_LOGO_ICON_BYTES) {
+        return res.status(400).json({ error: "Logo carré trop volumineux (max 512 Ko)." });
+      }
+      if (buf.length > 0) {
+        updates.logo_icon_base64 = logo_icon_base64.startsWith("data:") ? logo_icon_base64 : `data:image/png;base64,${base64Data}`;
+      } else {
+        updates.logo_icon_base64 = null;
+      }
     }
   }
   if (card_background_base64 !== undefined) {

@@ -3340,6 +3340,10 @@ function initAppDashboard(slug) {
   const profilLogoPlaceholder = document.getElementById("app-profil-logo-placeholder");
   const profilLogoInput = document.getElementById("app-profil-logo-input");
   const profilLogoRemove = document.getElementById("app-profil-logo-remove");
+  const profilLogoIconPreview = document.getElementById("app-profil-logo-icon-preview");
+  const profilLogoIconPlaceholder = document.getElementById("app-profil-logo-icon-placeholder");
+  const profilLogoIconInput = document.getElementById("app-profil-logo-icon-input");
+  const profilLogoIconRemove = document.getElementById("app-profil-logo-icon-remove");
   const profilSlugDisplay = document.getElementById("app-profil-slug-display");
   const profilMessage = document.getElementById("app-profil-message");
   const profilSave = document.getElementById("app-profil-save");
@@ -3351,6 +3355,8 @@ function initAppDashboard(slug) {
   const profilSubscriptionStatus = document.getElementById("app-profil-subscription-status");
   let profilLogoDataUrl = "";
   let profilLogoRemoved = false;
+  let profilLogoIconDataUrl = "";
+  let profilLogoIconRemoved = false;
   const profilAddressSuggestions = document.getElementById("app-profil-address-suggestions");
   let profilAddrDebounce = null;
 
@@ -3472,6 +3478,17 @@ function initAppDashboard(slug) {
         }
         if (profilLogoRemove) profilLogoRemove.classList.add("hidden");
         profilLogoRemoved = false;
+        if (profilLogoIconPreview) {
+          profilLogoIconPreview.src = "";
+          profilLogoIconPreview.classList.add("hidden");
+        }
+        if (profilLogoIconPlaceholder) {
+          profilLogoIconPlaceholder.textContent = "Aucun logo carré";
+          profilLogoIconPlaceholder.classList.remove("hidden");
+        }
+        if (profilLogoIconRemove) profilLogoIconRemove.classList.add("hidden");
+        profilLogoIconRemoved = false;
+        profilLogoIconDataUrl = "";
         if (data.logo_url ?? data.logoUrl) {
           api("/logo?v=" + Date.now())
             .then((r) => (r.ok ? r.blob() : null))
@@ -3490,6 +3507,20 @@ function initAppDashboard(slug) {
             });
         } else {
           refreshSidebarBusinessLogo();
+        }
+        if (data.logo_icon_url ?? data.logoIconUrl) {
+          api("/logo-icon?v=" + Date.now())
+            .then((r) => (r.ok ? r.blob() : null))
+            .then((blob) => {
+              if (blob && profilLogoIconPreview) {
+                const url = URL.createObjectURL(blob);
+                profilLogoIconPreview.src = url;
+                profilLogoIconPreview.classList.remove("hidden");
+                if (profilLogoIconPlaceholder) profilLogoIconPlaceholder.classList.add("hidden");
+                if (profilLogoIconRemove) profilLogoIconRemove.classList.remove("hidden");
+              }
+            })
+            .catch(() => {});
         }
       })
       .catch(() => {
@@ -3560,6 +3591,51 @@ function initAppDashboard(slug) {
     });
   }
 
+  if (profilLogoIconInput) {
+    profilLogoIconInput.addEventListener("change", async (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      try {
+        if (typeof resizeLogoToDataUrl === "function") {
+          profilLogoIconDataUrl = await resizeLogoToDataUrl(file, 512, 0.88, "auto");
+        } else {
+          const reader = new FileReader();
+          profilLogoIconDataUrl = await new Promise((res, rej) => {
+            reader.onload = () => res(reader.result);
+            reader.onerror = rej;
+            reader.readAsDataURL(file);
+          });
+        }
+        if (profilLogoIconPreview) {
+          profilLogoIconPreview.src = profilLogoIconDataUrl;
+          profilLogoIconPreview.classList.remove("hidden");
+        }
+        if (profilLogoIconPlaceholder) profilLogoIconPlaceholder.classList.add("hidden");
+        if (profilLogoIconRemove) profilLogoIconRemove.classList.remove("hidden");
+        profilLogoIconRemoved = false;
+      } catch (err) {
+        showProfilMessage("Impossible de charger l’image du logo carré. Choisissez un JPG ou PNG.", true);
+      }
+      profilLogoIconInput.value = "";
+    });
+  }
+  if (profilLogoIconRemove) {
+    profilLogoIconRemove.addEventListener("click", () => {
+      profilLogoIconDataUrl = "";
+      profilLogoIconRemoved = true;
+      if (profilLogoIconPreview) {
+        profilLogoIconPreview.src = "";
+        profilLogoIconPreview.classList.add("hidden");
+      }
+      if (profilLogoIconPlaceholder) {
+        profilLogoIconPlaceholder.textContent = "Aucun logo carré";
+        profilLogoIconPlaceholder.classList.remove("hidden");
+      }
+      profilLogoIconRemove.classList.add("hidden");
+      showProfilMessage("");
+    });
+  }
+
   document.getElementById("app-profil-open-slug-editor")?.addEventListener("click", () => {
     const name = profilOrg?.value?.trim() || "";
     openPersonnaliserShareWithSuggestedSlug(name);
@@ -3577,6 +3653,11 @@ function initAppDashboard(slug) {
         body.logo_base64 = null;
       } else if (profilLogoDataUrl && typeof profilLogoDataUrl === "string" && profilLogoDataUrl.startsWith("data:")) {
         body.logo_base64 = profilLogoDataUrl;
+      }
+      if (profilLogoIconRemoved) {
+        body.logo_icon_base64 = null;
+      } else if (profilLogoIconDataUrl && typeof profilLogoIconDataUrl === "string" && profilLogoIconDataUrl.startsWith("data:")) {
+        body.logo_icon_base64 = profilLogoIconDataUrl;
       }
       if (addressVal) {
         try {
@@ -3616,6 +3697,21 @@ function initAppDashboard(slug) {
               profilLogoPlaceholder.classList.remove("hidden");
             }
             if (profilLogoRemove) profilLogoRemove.classList.add("hidden");
+          }
+          profilLogoIconRemoved = false;
+          if (body.logo_icon_base64 && profilLogoIconPreview?.src?.startsWith("data:")) {
+            profilLogoIconDataUrl = "";
+          }
+          if (body.logo_icon_base64 === null) {
+            if (profilLogoIconPreview) {
+              profilLogoIconPreview.src = "";
+              profilLogoIconPreview.classList.add("hidden");
+            }
+            if (profilLogoIconPlaceholder) {
+              profilLogoIconPlaceholder.textContent = "Aucun logo carré";
+              profilLogoIconPlaceholder.classList.remove("hidden");
+            }
+            if (profilLogoIconRemove) profilLogoIconRemove.classList.add("hidden");
           }
         } else {
           showProfilMessage(data.error || "Erreur lors de l'enregistrement.", true);

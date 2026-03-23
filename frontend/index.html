@@ -1443,12 +1443,22 @@
                   <p class="app-hint">Nom visible sur la carte fidélité et en en-tête de la page carte.</p>
                 </div>
                 <div class="app-rules-row">
-                  <label class="app-label">Logo</label>
+                  <label class="app-label">Logo (bandeau carte)</label>
                   <div class="app-profil-logo-actions">
                     <input type="file" id="app-profil-logo-input" class="app-input-file" accept="image/jpeg,image/png,image/webp" aria-label="Choisir un logo" />
                     <label for="app-profil-logo-input" class="app-btn app-btn-secondary">Changer le logo</label>
                     <button type="button" id="app-profil-logo-remove" class="app-btn app-btn-ghost hidden">Supprimer</button>
                   </div>
+                  <p class="app-hint">Image large pour le haut de la carte Wallet / aperçu « Ma carte ».</p>
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Logo carré</label>
+                  <div class="app-profil-logo-actions">
+                    <input type="file" id="app-profil-logo-icon-input" class="app-input-file" accept="image/jpeg,image/png,image/webp" aria-label="Choisir un logo carré" />
+                    <label for="app-profil-logo-icon-input" class="app-btn app-btn-secondary">Changer le logo carré</label>
+                    <button type="button" id="app-profil-logo-icon-remove" class="app-btn app-btn-ghost hidden">Supprimer</button>
+                  </div>
+                  <p class="app-hint">Icône notifications Web Push et apps clientes (idéalement 512×512 px, max 512 Ko).</p>
                 </div>
                 <div class="app-rules-row">
                   <label class="app-label" for="app-profil-address">Adresse du commerce</label>
@@ -1480,10 +1490,17 @@
               </div>
               <div class="app-section-col-aside">
                 <div class="app-card app-profil-aside-card">
-                  <h3 class="app-subsection-title">Aperçu du logo</h3>
+                  <h3 class="app-subsection-title">Aperçu bandeau</h3>
                   <div class="app-profil-logo-preview-wrap app-profil-aside-preview">
                     <img id="app-profil-logo-preview" class="app-profil-logo-preview hidden" alt="" />
                     <span id="app-profil-logo-placeholder" class="app-profil-logo-placeholder">Aucun logo</span>
+                  </div>
+                </div>
+                <div class="app-card app-profil-aside-card app-profil-aside-card--icon">
+                  <h3 class="app-subsection-title">Aperçu logo carré</h3>
+                  <div class="app-profil-logo-preview-wrap app-profil-aside-preview app-profil-logo-icon-preview-wrap">
+                    <img id="app-profil-logo-icon-preview" class="app-profil-logo-preview app-profil-logo-icon-preview hidden" alt="" />
+                    <span id="app-profil-logo-icon-placeholder" class="app-profil-logo-placeholder app-profil-logo-icon-placeholder">Aucun logo carré</span>
                   </div>
                 </div>
               </div>

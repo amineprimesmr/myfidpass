@@ -44,9 +44,10 @@ export async function notifyHandler(req, res) {
   }
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  const iconUrl = business.logo_base64
-    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
-    : null;
+  const iconUrl =
+    (business.logo_icon_base64 || business.logo_base64)
+      ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+      : null;
   const payload = {
     title: (business.organization_name || "Myfidpass").trim(),
     body: message,
@@ -128,9 +129,10 @@ router.post("/send", async (req, res) => {
   }
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  const iconUrl = business.logo_base64
-    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
-    : null;
+  const iconUrl =
+    (business.logo_icon_base64 || business.logo_base64)
+      ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+      : null;
   const payload = {
     title: (title || business.notification_title_override || business.organization_name || "Myfidpass").trim(),
     body,

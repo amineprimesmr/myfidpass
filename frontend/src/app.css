@@ -5593,6 +5593,15 @@ body.page-app .whatsapp-fab { display: none !important; }
   height: 160px;
   margin: 0 auto;
 }
+.app-profil-logo-icon-preview-wrap .app-profil-logo-icon-preview {
+  object-fit: cover;
+}
+.app-profil-aside-card--icon .app-profil-logo-icon-preview-wrap {
+  border-radius: 28px;
+}
+.app-profil-logo-icon-preview-wrap:has(.app-profil-logo-icon-preview:not(.hidden)) .app-profil-logo-icon-placeholder {
+  display: none;
+}
 .app-profil-logo-actions {
   display: flex;
   flex-direction: column;

@@ -71,6 +71,14 @@ export function runMigrations(db) {
   if (!bizColsBg.includes("card_background_base64")) {
     db.exec("ALTER TABLE businesses ADD COLUMN card_background_base64 TEXT");
   }
+  const bizColsLogoIcon = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsLogoIcon.includes("logo_icon_base64")) {
+    db.exec("ALTER TABLE businesses ADD COLUMN logo_icon_base64 TEXT");
+  }
+  if (!bizColsLogoIcon.includes("logo_icon_updated_at")) {
+    db.exec("ALTER TABLE businesses ADD COLUMN logo_icon_updated_at TEXT");
+  }
+
   const bizColsStrip = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
   if (!bizColsStrip.includes("strip_color")) {
     db.exec("ALTER TABLE businesses ADD COLUMN strip_color TEXT");

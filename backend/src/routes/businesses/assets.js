@@ -10,8 +10,9 @@ const router = Router();
 
 router.get("/notification-icon", async (req, res) => {
   const business = req.business;
-  if (!business || !business.logo_base64) return res.status(404).send();
-  const buffer = await getLogoIconBuffer(business.logo_base64);
+  const b64 = business?.logo_icon_base64 || business?.logo_base64;
+  if (!business || !b64) return res.status(404).send();
+  const buffer = await getLogoIconBuffer(b64);
   if (!buffer) return res.status(404).send();
   res.setHeader("Content-Type", "image/png");
   res.setHeader("Cache-Control", "public, max-age=3600");
@@ -29,6 +30,26 @@ router.get("/logo", (req, res) => {
     const buf = Buffer.from(base64Data, "base64");
     if (buf.length > 0) {
       const isPng = business.logo_base64.includes("image/png");
+      res.setHeader("Content-Type", isPng ? "image/png" : "image/jpeg");
+      res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      return res.send(buf);
+    }
+  }
+  return res.status(404).send();
+});
+
+router.get("/logo-icon", (req, res) => {
+  const business = req.business;
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  if (business.logo_icon_base64) {
+    const base64Data = String(business.logo_icon_base64).replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(base64Data, "base64");
+    if (buf.length > 0) {
+      const isPng = business.logo_icon_base64.includes("image/png");
       res.setHeader("Content-Type", isPng ? "image/png" : "image/jpeg");
       res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
       res.setHeader("Pragma", "no-cache");
