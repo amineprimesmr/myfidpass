@@ -234,6 +234,8 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoUrl) {
     ctx.arc(w * 0.5, h * 0.11, lw * 0.45, 0, Math.PI * 2);
     ctx.stroke();
   }
+  /* Roue avant les textes : sinon elle recouvre l’accroche et le sous-texte. */
+  drawWheel(ctx, w * 0.5, h * 0.52, w * 0.36, s.colorPrimary, s.colorSecondary);
   ctx.fillStyle = s.colorPrimary;
   ctx.textAlign = "center";
   ctx.font = `900 italic ${Math.round(w * 0.048)}px "Plus Jakarta Sans", Outfit, sans-serif`;
@@ -241,7 +243,6 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoUrl) {
   ctx.fillStyle = s.colorAccent;
   ctx.font = `600 ${Math.round(w * 0.028)}px Outfit, sans-serif`;
   ctx.fillText(s.subline, w / 2, h * 0.3);
-  drawWheel(ctx, w * 0.5, h * 0.52, w * 0.36, s.colorPrimary, s.colorSecondary);
   const qSize = w * 0.38;
   const qx = w * 0.54;
   const qy = h * 0.58;
