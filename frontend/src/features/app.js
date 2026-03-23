@@ -5582,14 +5582,30 @@ function initAppDashboard(slug) {
           textsFeedbackEl.classList.add("error");
           textsFeedbackEl.classList.remove("success");
         }
+        if (btn) btn.disabled = false;
         return;
       }
-      notifyAppSectionSaveSuccess("notifications");
+    } catch (_) {
+      if (textsFeedbackEl) {
+        textsFeedbackEl.classList.remove("hidden");
+        textsFeedbackEl.textContent = "Connexion interrompue lors de l’enregistrement. Vérifiez votre réseau et réessayez.";
+        textsFeedbackEl.classList.add("error");
+        textsFeedbackEl.classList.remove("success");
+      }
+      if (btn) btn.disabled = false;
+      return;
+    }
+    notifyAppSectionSaveSuccess("notifications");
 
-      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`, {
+    try {
+      const res = await api("/notifications/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
-        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}) }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: titleEl?.value?.trim() || undefined,
+          message,
+          ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (notifFeedbackEl) {
@@ -5622,7 +5638,8 @@ function initAppDashboard(slug) {
       if (res.ok) loadAppNotificationStats();
     } catch (_) {
       if (notifFeedbackEl) {
-        notifFeedbackEl.textContent = "Erreur réseau.";
+        notifFeedbackEl.textContent =
+          "Connexion interrompue pendant l’envoi (réseau, pare-feu ou bloqueur). Réessayez ou testez depuis un autre réseau / navigateur.";
         notifFeedbackEl.classList.remove("hidden", "success");
         notifFeedbackEl.classList.add("error");
       }
@@ -5693,9 +5710,9 @@ function initAppDashboard(slug) {
     if (campaignModalFeedback) { campaignModalFeedback.classList.add("hidden"); campaignModalFeedback.textContent = ""; }
     try {
       const titleEl = document.getElementById("app-notification-banner-title");
-      const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`, {
+      const res = await api("/notifications/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders(), ...(dashboardToken ? { "X-Dashboard-Token": dashboardToken } : {}) },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, segment: campaignModalSegment }),
       });
       const data = await res.json().catch(() => ({}));
@@ -5715,7 +5732,12 @@ function initAppDashboard(slug) {
         }
       }
     } catch (_) {
-      if (campaignModalFeedback) { campaignModalFeedback.textContent = "Erreur réseau."; campaignModalFeedback.classList.remove("hidden"); campaignModalFeedback.classList.add("error"); }
+      if (campaignModalFeedback) {
+        campaignModalFeedback.textContent =
+          "Connexion interrompue (réseau, pare-feu ou bloqueur). Réessayez ou changez de réseau.";
+        campaignModalFeedback.classList.remove("hidden");
+        campaignModalFeedback.classList.add("error");
+      }
     }
     if (campaignModalSend) campaignModalSend.disabled = false;
   });
