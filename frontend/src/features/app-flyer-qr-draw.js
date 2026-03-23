@@ -294,8 +294,10 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   ctx.clearRect(0, 0, w, h);
 
   const scale = w / FLYER_EXPORT.w;
-  const qSize = w * 0.38;
-  const qrInner = Math.max(1, qSize - 20 * scale);
+  /** Un peu plus petit que avant : une fois pivoté, le carré tient dans le flyer sans rogner les coins. */
+  const qSize = w * 0.33;
+  const qrPad = 14 * scale;
+  const qrInner = Math.max(1, qSize - 2 * qrPad);
   const qrFetchPx = Math.min(2048, Math.max(512, Math.round(qrInner * 2)));
 
   const qrImg = await loadQrAsImage(qrTargetUrl, qrFetchPx);
@@ -338,12 +340,22 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   ctx.fillStyle = s.colorAccent;
   ctx.font = `600 ${Math.round(w * 0.028)}px Outfit, sans-serif`;
   ctx.fillText(s.subline, w / 2, h * 0.282);
-  const qx = w * 0.54;
-  const qy = h * 0.625;
+  const qx = w * 0.515;
+  const qy = h * 0.608;
+  const qCx = qx + qSize / 2;
+  const qCy = qy + qSize / 2;
+  /** Légère inclinaison (sens inverse des aiguilles d’une montre), ~11°. */
+  const qrTiltRad = (-11 * Math.PI) / 180;
+
+  ctx.save();
+  ctx.translate(qCx, qCy);
+  ctx.rotate(qrTiltRad);
+  ctx.translate(-qCx, -qCy);
   ctx.fillStyle = "#fff";
-  roundRect(ctx, qx, qy, qSize, qSize, 14 * scale);
+  roundRect(ctx, qx, qy, qSize, qSize, 16 * scale);
   ctx.fill();
-  if (qrImg) ctx.drawImage(qrImg, qx + 10 * scale, qy + 10 * scale, qSize - 20 * scale, qSize - 20 * scale);
+  if (qrImg) ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
+  ctx.restore();
   const socialEntries = parseFlyerSocialEntries(s);
   const stripH = flyerSocialStripHeight(h, socialEntries.length);
   const bannerBottom = h - stripH;
