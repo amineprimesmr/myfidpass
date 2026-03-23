@@ -28,6 +28,7 @@ import { canAccessDashboard, getApiBase, normalizeHexForPatch, MAX_LOGO_BASE64_B
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
+import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
 
 const router = Router();
 
@@ -379,6 +380,41 @@ router.patch("/settings", async (req, res) => {
     }
   }
   return res.status(200).send();
+});
+
+// ——— Flyer QR (sync SaaS + app, même état que le canvas) ———
+router.get("/flyer", (req, res) => {
+  const business = req.business;
+  const slug = req.params.slug ?? business.slug;
+  const fe = (process.env.FRONTEND_URL || "https://www.myfidpass.fr").replace(/\/$/, "");
+  const shareUrl = `${fe}/fidelity/${encodeURIComponent(slug)}`;
+  let flyer_prefs = null;
+  if (business.flyer_prefs_json && String(business.flyer_prefs_json).trim()) {
+    try {
+      flyer_prefs = JSON.parse(business.flyer_prefs_json);
+    } catch (_) {
+      flyer_prefs = null;
+    }
+  }
+  res.json({
+    flyer_prefs,
+    updated_at: business.flyer_prefs_updated_at ?? null,
+    share_url: shareUrl,
+  });
+});
+
+router.put("/flyer", (req, res) => {
+  const business = req.business;
+  const normalized = normalizeFlyerPrefsPut(req.body || {}, business.flyer_prefs_json);
+  if (!normalized.ok) {
+    return res.status(400).json({ error: normalized.error });
+  }
+  const now = new Date().toISOString();
+  updateBusiness(business.id, {
+    flyer_prefs_json: JSON.stringify(normalized.value),
+    flyer_prefs_updated_at: now,
+  });
+  res.json({ ok: true, updated_at: now });
 });
 
 // ——— Games ———

@@ -406,4 +406,13 @@ export function runMigrations(db) {
       safeRun(db, () => db.exec(`ALTER TABLE members ADD COLUMN ${col} ${type}`));
     }
   }
+
+  const bizFlyerCols = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizFlyerCols.includes("flyer_prefs_json")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN flyer_prefs_json TEXT"));
+  }
+  const bizFlyerCols2 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizFlyerCols2.includes("flyer_prefs_updated_at")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN flyer_prefs_updated_at TEXT"));
+  }
 }

@@ -2,7 +2,7 @@
  * Page Flyer QR — aperçu canvas, personnalisation, export PNG.
  */
 import { API_BASE } from "../config.js";
-import { FLYER_EXPORT, mergeFlyerState } from "./app-flyer-qr-presets.js";
+import { FLYER_EXPORT, FLYER_STORAGE_KEY, mergeFlyerState } from "./app-flyer-qr-presets.js";
 import {
   readFlyerStateFromForm,
   writeFlyerFormFromState,
@@ -13,17 +13,19 @@ import { FLYER_HEADLINE_FONTS } from "./app-flyer-qr-headline-fonts.js";
 import { renderFlyerCanvas } from "./app-flyer-qr-draw.js";
 import {
   getStoredFlyerCustomLogoDataUrl,
+  setStoredFlyerCustomLogoDataUrl,
   initFlyerLogoControl,
   clearStoredFlyerCustomLogo,
 } from "./app-flyer-logo-control.js";
 import {
   getStoredFlyerCustomBgDataUrl,
+  setStoredFlyerCustomBgDataUrl,
   initFlyerBgControl,
   clearStoredFlyerCustomBg,
 } from "./app-flyer-bg-control.js";
 import { wireFlyerQrBackgroundGallery } from "./app-flyer-qr-wire-bg.js";
 
-/** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string }} FlyerQrOpts */
+/** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string; dashboardApi?: (path: string, init?: RequestInit) => Promise<Response> }} FlyerQrOpts */
 
 /**
  * @param {string} slug
@@ -78,6 +80,101 @@ export function initAppFlyerQr(slug, opts) {
   /** @type {{ syncPreview: () => void } | undefined} */
   let flyerBgPanelApi;
 
+  let remoteTimer = null;
+  let remoteBusy = false;
+
+  /** @param {unknown} prefs */
+  function applyServerFlyerPrefs(prefs) {
+    if (!prefs || typeof prefs !== "object") return;
+    const p = /** @type {{ state?: unknown; custom_logo_data_url?: unknown; custom_bg_data_url?: unknown }} */ (prefs);
+    const merged = mergeFlyerState(
+      p.state && typeof p.state === "object" && !Array.isArray(p.state)
+        ? /** @type {import("./app-flyer-qr-presets.js").FlyerState} */ (p.state)
+        : null,
+    );
+    writeFlyerFormFromState(root, merged);
+    persistFlyerState(merged);
+    state = merged;
+    if (typeof p.custom_logo_data_url === "string" && p.custom_logo_data_url.startsWith("data:image/")) {
+      setStoredFlyerCustomLogoDataUrl(p.custom_logo_data_url);
+    } else {
+      clearStoredFlyerCustomLogo();
+    }
+    if (typeof p.custom_bg_data_url === "string" && p.custom_bg_data_url.startsWith("data:image/")) {
+      setStoredFlyerCustomBgDataUrl(p.custom_bg_data_url);
+    } else {
+      clearStoredFlyerCustomBg();
+    }
+    flyerLogoPanelApi?.syncPreview();
+    flyerBgPanelApi?.syncPreview();
+    flyerLogoDirty = true;
+    flyerBgDirty = true;
+  }
+
+  function shouldMigrateLocalFlyerToServer() {
+    if (getStoredFlyerCustomLogoDataUrl() || getStoredFlyerCustomBgDataUrl()) return true;
+    try {
+      const raw = localStorage.getItem(FLYER_STORAGE_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return JSON.stringify(mergeFlyerState(parsed)) !== JSON.stringify(mergeFlyerState(null));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function pushFlyerToServerNow() {
+    if (!opts.dashboardApi) return false;
+    const st = readFlyerStateFromForm(root);
+    const body = {
+      state: st,
+      custom_logo_data_url: getStoredFlyerCustomLogoDataUrl() || null,
+      custom_bg_data_url: getStoredFlyerCustomBgDataUrl() || null,
+    };
+    try {
+      const res = await opts.dashboardApi("/dashboard/flyer", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      return res.ok;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function scheduleRemoteSave() {
+    if (!opts.dashboardApi) return;
+    if (remoteTimer) clearTimeout(remoteTimer);
+    remoteTimer = setTimeout(async () => {
+      remoteTimer = null;
+      if (remoteBusy) return;
+      remoteBusy = true;
+      try {
+        await pushFlyerToServerNow();
+      } finally {
+        remoteBusy = false;
+      }
+    }, 2000);
+  }
+
+  async function hydrateFromServer() {
+    if (!opts.dashboardApi) return;
+    try {
+      const res = await opts.dashboardApi("/dashboard/flyer", { method: "GET" });
+      if (!res.ok) return;
+      const j = await res.json();
+      if (j.flyer_prefs && typeof j.flyer_prefs === "object") {
+        applyServerFlyerPrefs(j.flyer_prefs);
+      } else if (shouldMigrateLocalFlyerToServer()) {
+        await pushFlyerToServerNow();
+      }
+      schedulePaint();
+    } catch (_) {
+      /* réseau ou session */
+    }
+  }
+
   writeFlyerFormFromState(root, state);
   if (linkInput) linkInput.value = shareUrl();
 
@@ -99,6 +196,7 @@ export function initAppFlyerQr(slug, opts) {
     onCustomLogoChange: () => {
       flyerLogoDirty = true;
       schedulePaint();
+      scheduleRemoteSave();
     },
   });
 
@@ -106,6 +204,7 @@ export function initAppFlyerQr(slug, opts) {
     onBgChange: () => {
       flyerBgDirty = true;
       schedulePaint();
+      scheduleRemoteSave();
     },
   });
 
@@ -228,8 +327,14 @@ export function initAppFlyerQr(slug, opts) {
   }
 
   root.querySelectorAll("[data-flyer-input]").forEach((el) => {
-    el.addEventListener("input", schedulePaint);
-    el.addEventListener("change", schedulePaint);
+    el.addEventListener("input", () => {
+      schedulePaint();
+      scheduleRemoteSave();
+    });
+    el.addEventListener("change", () => {
+      schedulePaint();
+      scheduleRemoteSave();
+    });
   });
 
   /** @param {string} rangeId @param {string} outId @param {boolean} [commaDecimal] */
@@ -301,6 +406,7 @@ export function initAppFlyerQr(slug, opts) {
       state = mergeFlyerState(null);
       writeFlyerFormFromState(root, state);
       schedulePaint();
+      void pushFlyerToServerNow();
     });
   }
 
@@ -313,5 +419,6 @@ export function initAppFlyerQr(slug, opts) {
     }
   });
 
+  void hydrateFromServer();
   schedulePaint();
 }

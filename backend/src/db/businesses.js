@@ -98,6 +98,7 @@ export function updateBusiness(businessId, updates) {
     "required_stamps", "stamp_emoji", "points_per_euro", "points_per_visit", "program_type", "loyalty_mode",
     "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
     "sector", "engagement_rewards",
+    "flyer_prefs_json", "flyer_prefs_updated_at",
   ];
   const numericCols = [
     "location_lat",

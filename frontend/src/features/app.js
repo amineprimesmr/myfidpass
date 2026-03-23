@@ -5761,6 +5761,7 @@ function initAppDashboard(slug) {
   initAppFlyerQr(slug, {
     pageOrigin,
     getShareLink: () => getShareLinkForSlug(slug),
+    dashboardApi: (path, init) => api(path, init),
   });
   initAppCardRulesGuide();
   refresh();
