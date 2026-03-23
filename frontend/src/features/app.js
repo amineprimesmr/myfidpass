@@ -51,7 +51,17 @@ const IS_LOCAL_VITE_PROXY = IS_LOCAL_DEV && !API_BASE;
  */
 function userFacingFatalMessage(kind) {
   if (IS_LOCAL_DEV && IS_LOCAL_VITE_PROXY) {
-    return "Vous êtes en local : cette page parle à votre API sur la machine (souvent le port 3001). Démarrez le backend (ex. npm run backend à la racine du projet), puis touchez « Réessayer » ou rafraîchissez.";
+    return [
+      "Vous êtes en local : cette page appelle l’API via Vite (proxy → port 3001). Sans processus Node sur 3001, rien ne fonctionne.",
+      "",
+      "Erreur classique : lancer seulement « npm run dev » dans le dossier frontend. Dans ce cas, l’API n’est jamais démarrée.",
+      "",
+      "À faire — terminal ouvert à la racine du dépôt (pas dans frontend/) :",
+      "  • npm run backend   → démarre uniquement l’API",
+      "  • ou npm start      → démarre API + Vite en même temps (recommandé)",
+      "",
+      "Quand le backend tourne, touchez « Réessayer ».",
+    ].join("\n");
   }
   if (IS_LOCAL_DEV) {
     return "Mode développement : vérifiez VITE_API_URL dans frontend/.env et que l’API répond.";
@@ -123,9 +133,16 @@ function initAppPage() {
     if (emptyFatalLocalHintEl) {
       const showLocal = IS_LOCAL_DEV && IS_LOCAL_VITE_PROXY && !!originHint;
       emptyFatalLocalHintEl.classList.toggle("hidden", !showLocal);
-      emptyFatalLocalHintEl.textContent = showLocal
-        ? `Vérification : ouvrez ${originHint}/api/health — vous devez voir un JSON avec « ok ». Si erreur 500 sur la session : souvent base SQLite locale (voir terminal du backend).`
-        : "";
+      if (showLocal) {
+        let t = `Test rapide : ${originHint}/api/health doit afficher un JSON avec « ok ».`;
+        if (kind === "server500") {
+          t +=
+            " Si « ok » mais cette page échoue encore : l’API plante sur /auth/me (souvent base SQLite) — regardez le terminal du backend.";
+        } else if (kind === "network") {
+          t += " Si la page ne charge pas : rien n’écoute sur 3001, lancez npm run backend à la racine.";
+        }
+        emptyFatalLocalHintEl.textContent = t;
+      }
     }
     const showTech = IS_LOCAL_DEV && !!technical.trim();
     if (emptyFatalTechEl) {

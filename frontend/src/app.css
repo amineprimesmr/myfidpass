@@ -3095,6 +3095,14 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-empty-fatal .app-empty-title {
   margin-top: 0.65rem;
 }
+
+#app-app #app-empty-fatal-desc {
+  white-space: pre-line;
+  text-align: left;
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+}
 .app-empty-load-detail {
   margin: 0 0 0.75rem;
   font-size: 0.88rem;
