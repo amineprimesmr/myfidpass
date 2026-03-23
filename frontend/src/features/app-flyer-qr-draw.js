@@ -5,6 +5,12 @@ import { FLYER_EXPORT } from "./app-flyer-qr-presets.js";
 
 export { FLYER_EXPORT };
 
+/** Bandeau « étapes » en bas du flyer (fichier dans public/). */
+const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
+
+/** @type {HTMLImageElement | "fail" | null} */
+let flyerFooterBannerCache = null;
+
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
 function roundRect(ctx, x, y, w, h, r) {
   const rr = Math.min(r, w / 2, h / 2);
@@ -185,6 +191,36 @@ function drawLogoCircle(ctx, logoImg, cx, cy, r, scale) {
   ctx.stroke();
 }
 
+async function getFlyerFooterBanner() {
+  if (flyerFooterBannerCache === "fail") return null;
+  if (flyerFooterBannerCache) return flyerFooterBannerCache;
+  try {
+    flyerFooterBannerCache = await loadImage(FLYER_FOOTER_BANNER_SRC, false);
+    return flyerFooterBannerCache;
+  } catch {
+    flyerFooterBannerCache = "fail";
+    return null;
+  }
+}
+
+/** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} h @param {HTMLImageElement} img */
+function drawFooterBanner(ctx, w, h, img) {
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+  const drawW = w;
+  let drawH = (drawW * ih) / iw;
+  const maxH = h * 0.28;
+  if (drawH > maxH) {
+    drawH = maxH;
+    const drawW2 = (drawH * iw) / ih;
+    const x0 = (w - drawW2) / 2;
+    ctx.drawImage(img, x0, h - drawH, drawW2, drawH);
+    return;
+  }
+  ctx.drawImage(img, 0, h - drawH, drawW, drawH);
+}
+
 /** @param {import("./app-flyer-qr-presets.js").FlyerState} s */
 function drawFooterBar(ctx, w, h, s, dark) {
   const fh = h * 0.2;
@@ -293,7 +329,9 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   roundRect(ctx, qx, qy, qSize, qSize, 14 * scale);
   ctx.fill();
   if (qrImg) ctx.drawImage(qrImg, qx + 10 * scale, qy + 10 * scale, qSize - 20 * scale, qSize - 20 * scale);
-  drawFooterBar(ctx, w, h, s, true);
+  const footerBannerImg = await getFlyerFooterBanner();
+  if (footerBannerImg) drawFooterBanner(ctx, w, h, footerBannerImg);
+  else drawFooterBar(ctx, w, h, s, true);
 
   if (s.showLegalMention) {
     ctx.fillStyle = "rgba(255,255,255,0.35)";
