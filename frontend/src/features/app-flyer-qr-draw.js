@@ -13,8 +13,14 @@ export { FLYER_EXPORT };
 /** Bandeau « étapes » en bas du flyer (fichier dans public/). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
 
+/** Roue décorative (remplace le dessin vectoriel si le fichier est présent). */
+const FLYER_ROUE_SRC = "/assets/roue.png";
+
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;
+
+/** @type {HTMLImageElement | "fail" | null} */
+let flyerRoueCache = null;
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
 function roundRect(ctx, x, y, w, h, r) {
@@ -208,6 +214,18 @@ async function getFlyerFooterBanner() {
   }
 }
 
+async function getFlyerRoueImage() {
+  if (flyerRoueCache === "fail") return null;
+  if (flyerRoueCache) return flyerRoueCache;
+  try {
+    flyerRoueCache = await loadImage(FLYER_ROUE_SRC, false);
+    return flyerRoueCache;
+  } catch {
+    flyerRoueCache = "fail";
+    return null;
+  }
+}
+
 /** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} canvasH @param {number} bottomY bord bas du bandeau (souvent h - bande sociale). @param {HTMLImageElement} img */
 function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   const iw = img.naturalWidth || img.width;
@@ -289,6 +307,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const qrPx = Math.round(420 * scale);
 
   const qrImg = await loadQrAsImage(qrTargetUrl, Math.min(800, Math.round(qrPx * 2)));
+  const roueImg = await getFlyerRoueImage();
 
   /** @type {CanvasImageSource | null} */
   let logoImg = null;
@@ -316,7 +335,15 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
     drawLogoCircle(ctx, logoImg, w * 0.5, h * 0.11, lw * 0.45, scale);
   }
   /* Roue avant les textes : sinon elle recouvre l’accroche et le sous-texte. */
-  drawWheel(ctx, w * 0.5, h * 0.565, w * 0.36, s.colorPrimary, s.colorSecondary);
+  const wheelCx = w * 0.5;
+  const wheelCy = h * 0.565;
+  const wheelR = w * 0.36;
+  const wheelBox = wheelR * 2;
+  if (roueImg) {
+    drawImageCover(ctx, roueImg, wheelCx - wheelBox / 2, wheelCy - wheelBox / 2, wheelBox, wheelBox);
+  } else {
+    drawWheel(ctx, wheelCx, wheelCy, wheelR, s.colorPrimary, s.colorSecondary);
+  }
   ctx.fillStyle = s.colorPrimary;
   ctx.textAlign = "center";
   ctx.font = `900 italic ${Math.round(w * 0.048)}px "Plus Jakarta Sans", Outfit, sans-serif`;
