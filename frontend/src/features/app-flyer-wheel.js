@@ -43,8 +43,8 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n) {
   if (n < 1) return;
   const base = -Math.PI / 2 + offsetRad(offsetDeg);
   const step = (Math.PI * 2) / n;
-  /** Milieu radial de la couronne, un peu plus près du centre que le milieu exact. */
-  const labelR = r * 0.47;
+  /** Milieu radial de la couronne (entre moyeu et bord extérieur). */
+  const labelR = r * 0.53;
   const fontPx = Math.max(15, Math.round(r * 0.104));
   const track = Math.round(fontPx * 0.04);
 
