@@ -94,8 +94,10 @@ export function initAppFlyerQr(slug, opts) {
   const shareUrl = () => (opts.getShareLink ? opts.getShareLink() : `${opts.pageOrigin}/fidelity/${slug}`);
 
   let state = loadStoredState();
+  /** @type {ImageBitmap | null} */
+  let flyerLogoBitmap = null;
   /** @type {string | null} */
-  let logoBlobUrl = null;
+  let flyerLogoObjectUrl = null;
   /** Recharge le logo (ex. après retour de « Ma carte »). */
   let flyerLogoDirty = true;
 
@@ -118,22 +120,40 @@ export function initAppFlyerQr(slug, opts) {
     canvas.height = FLYER_EXPORT.h;
     const logoApi = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/public/logo`;
     if (flyerLogoDirty) {
-      if (logoBlobUrl) {
+      if (flyerLogoBitmap) {
         try {
-          URL.revokeObjectURL(logoBlobUrl);
+          flyerLogoBitmap.close();
         } catch (_) {}
-        logoBlobUrl = null;
+        flyerLogoBitmap = null;
+      }
+      if (flyerLogoObjectUrl) {
+        try {
+          URL.revokeObjectURL(flyerLogoObjectUrl);
+        } catch (_) {}
+        flyerLogoObjectUrl = null;
       }
       try {
         const res = await fetch(logoApi, { mode: "cors", credentials: "omit" });
-        if (res.ok) logoBlobUrl = URL.createObjectURL(await res.blob());
+        if (res.ok) {
+          const blob = await res.blob();
+          if (typeof createImageBitmap === "function") {
+            try {
+              flyerLogoBitmap = await createImageBitmap(blob);
+            } catch (_) {
+              flyerLogoObjectUrl = URL.createObjectURL(blob);
+            }
+          } else {
+            flyerLogoObjectUrl = URL.createObjectURL(blob);
+          }
+        }
       } catch (_) {
         /* pas de logo */
       }
       flyerLogoDirty = false;
     }
+    const logoForCanvas = flyerLogoBitmap ?? flyerLogoObjectUrl;
     try {
-      await renderFlyerCanvas(canvas, state, shareUrl(), logoBlobUrl);
+      await renderFlyerCanvas(canvas, state, shareUrl(), logoForCanvas);
     } catch (e) {
       if (typeof console !== "undefined" && console.warn) console.warn("[flyer-qr] render", e);
     }

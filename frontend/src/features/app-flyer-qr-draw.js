@@ -22,7 +22,11 @@ function loadImage(url, cors = true) {
   return new Promise((resolve, reject) => {
     const im = new Image();
     if (cors) im.crossOrigin = "anonymous";
-    im.onload = () => resolve(im);
+    im.onload = () => {
+      const done = () => resolve(im);
+      if (typeof im.decode === "function") im.decode().then(done).catch(done);
+      else done();
+    };
     im.onerror = () => reject(new Error("image"));
     im.src = url;
   });
@@ -135,6 +139,52 @@ function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
   }
 }
 
+/**
+ * Logo dans le disque : rendu sur patch puis copie (évite bugs clip × drawImage sur blob/WebKit).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {CanvasImageSource} logoImg
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} r
+ * @param {number} scale
+ */
+function drawLogoCircle(ctx, logoImg, cx, cy, r, scale) {
+  const side = r * 2;
+  const lx = cx - r;
+  const ly = cy - r;
+  const sidePx = Math.max(1, Math.round(side));
+  let patch;
+  if (typeof OffscreenCanvas !== "undefined") {
+    patch = new OffscreenCanvas(sidePx, sidePx);
+  } else {
+    patch = document.createElement("canvas");
+    patch.width = sidePx;
+    patch.height = sidePx;
+  }
+  const pctx = patch.getContext("2d");
+  if (pctx) {
+    drawImageCover(pctx, logoImg, 0, 0, sidePx, sidePx);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(patch, lx, ly, side, side);
+    ctx.restore();
+  } else {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    drawImageCover(ctx, logoImg, lx, ly, side, side);
+    ctx.restore();
+  }
+  ctx.strokeStyle = "rgba(255,255,255,0.4)";
+  ctx.lineWidth = 3 * scale;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
 /** @param {import("./app-flyer-qr-presets.js").FlyerState} s */
 function drawFooterBar(ctx, w, h, s, dark) {
   const fh = h * 0.2;
@@ -188,9 +238,9 @@ function wrapCenter(ctx, text, cx, cy, maxW, lineH) {
  * @param {HTMLCanvasElement} canvas
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  * @param {string} qrTargetUrl
- * @param {string | null} logoUrl
+ * @param {ImageBitmap | string | null | undefined} logoInput — ImageBitmap préféré (évite blob + CORS).
  */
-export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoUrl) {
+export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
   const w = canvas.width;
   const h = canvas.height;
   const ctx = canvas.getContext("2d");
@@ -202,14 +252,20 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoUrl) {
 
   const qrImg = await loadQrAsImage(qrTargetUrl, Math.min(800, Math.round(qrPx * 2)));
 
+  /** @type {CanvasImageSource | null} */
   let logoImg = null;
-  if (logoUrl) {
+  if (logoInput && typeof ImageBitmap !== "undefined" && logoInput instanceof ImageBitmap) {
+    logoImg = logoInput;
+  } else if (typeof logoInput === "string" && logoInput) {
+    const isBlob = logoInput.startsWith("blob:");
     try {
-      logoImg = await loadImage(logoUrl, true);
+      logoImg = await loadImage(logoInput, !isBlob);
     } catch (_) {
-      try {
-        logoImg = await loadImage(logoUrl, false);
-      } catch (_) {}
+      if (!isBlob) {
+        try {
+          logoImg = await loadImage(logoInput, false);
+        } catch (_e) {}
+      }
     }
   }
 
@@ -219,33 +275,20 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoUrl) {
   ctx.fill();
   if (logoImg) {
     const lw = w * 0.22;
-    const side = lw * 0.9;
-    const lx = w * 0.5 - side / 2;
-    const ly = h * 0.11 - side / 2;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(w * 0.5, h * 0.11, lw * 0.45, 0, Math.PI * 2);
-    ctx.clip();
-    drawImageCover(ctx, logoImg, lx, ly, side, side);
-    ctx.restore();
-    ctx.strokeStyle = "rgba(255,255,255,0.4)";
-    ctx.lineWidth = 3 * scale;
-    ctx.beginPath();
-    ctx.arc(w * 0.5, h * 0.11, lw * 0.45, 0, Math.PI * 2);
-    ctx.stroke();
+    drawLogoCircle(ctx, logoImg, w * 0.5, h * 0.11, lw * 0.45, scale);
   }
   /* Roue avant les textes : sinon elle recouvre l’accroche et le sous-texte. */
-  drawWheel(ctx, w * 0.5, h * 0.52, w * 0.36, s.colorPrimary, s.colorSecondary);
+  drawWheel(ctx, w * 0.5, h * 0.565, w * 0.36, s.colorPrimary, s.colorSecondary);
   ctx.fillStyle = s.colorPrimary;
   ctx.textAlign = "center";
   ctx.font = `900 italic ${Math.round(w * 0.048)}px "Plus Jakarta Sans", Outfit, sans-serif`;
   wrapCenter(ctx, s.headline, w / 2, h * 0.22, w * 0.82, Math.round(w * 0.052));
   ctx.fillStyle = s.colorAccent;
   ctx.font = `600 ${Math.round(w * 0.028)}px Outfit, sans-serif`;
-  ctx.fillText(s.subline, w / 2, h * 0.3);
+  ctx.fillText(s.subline, w / 2, h * 0.282);
   const qSize = w * 0.38;
   const qx = w * 0.54;
-  const qy = h * 0.58;
+  const qy = h * 0.625;
   ctx.fillStyle = "#fff";
   roundRect(ctx, qx, qy, qSize, qSize, 14 * scale);
   ctx.fill();
