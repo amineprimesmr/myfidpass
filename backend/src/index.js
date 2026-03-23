@@ -18,6 +18,7 @@ import placePhotoRouter from "./routes/place-photo.js";
 import placeCategoryRouter from "./routes/place-category.js";
 import findPlaceRouter from "./routes/find-place.js";
 import placeEnrichmentRouter from "./routes/place-enrichment.js";
+import placesRouter from "./routes/places.js";
 import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
 import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
@@ -105,6 +106,17 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
+
+const placesSearchLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 45,
+  message: { error: "Trop de recherches. Réessayez dans une minute." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { forwardedHeader: false },
+});
+app.use("/api/places", placesSearchLimiter);
+app.use("/api/places", placesRouter);
 
 // Parse JWT si présent (Authorization: Bearer) pour toutes les routes
 app.use(optionalAuth);

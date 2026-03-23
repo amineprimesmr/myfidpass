@@ -26,10 +26,12 @@ export function getBusinessCountByUserId(userId) {
 
 export function canCreateBusiness(userId) {
   if (!userId) return false;
+  const count = getBusinessCountByUserId(userId);
+  // Premier commerce autorisé sans abonnement (inscription app / onboarding, aligné besoin revue produit).
+  if (count === 0) return true;
   if (!hasActiveSubscription(userId)) return false;
   const sub = getSubscriptionByUserId(userId);
   const plan = PLANS[sub.plan_id] || PLANS.starter;
-  const count = getBusinessCountByUserId(userId);
   return count < plan.max_businesses;
 }
 

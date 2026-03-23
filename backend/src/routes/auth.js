@@ -15,6 +15,10 @@ import {
   deletePasswordResetToken,
   updateUserPassword,
   deleteUserAccount,
+  createBusiness,
+  updateBusiness,
+  getBusinessBySlug,
+  canCreateBusiness,
 } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
@@ -27,6 +31,63 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ""; // Pour éc
 const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || ""; // Service ID (bundle id) pour vérifier l'audience
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
 const SALT_ROUNDS = 10;
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
+
+function registerSlugFromName(name) {
+  let s = String(name || "commerce")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  s = s.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return s.slice(0, 48) || "commerce";
+}
+
+/**
+ * Crée le 1er commerce à partir d'un lieu Google (inscription app, comme la sélection Places du site).
+ */
+async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishmentNameHint) {
+  const pid = String(placeId || "").trim();
+  if (!pid || !GOOGLE_PLACES_API_KEY) return;
+  if (!canCreateBusiness(userId)) return;
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(pid)}&fields=name,formatted_address,geometry&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (data.status !== "OK" || !data.result) {
+      console.warn("[auth/register] place details:", data.status);
+      return;
+    }
+    const result = data.result;
+    const hint = String(establishmentNameHint || "").trim();
+    const name = (result.name || hint || "Mon établissement").trim();
+    let baseSlug = registerSlugFromName(name);
+    let slug = baseSlug;
+    let n = 0;
+    while (getBusinessBySlug(slug)) {
+      n += 1;
+      slug = `${baseSlug}-${n}`.slice(0, 60);
+    }
+    const biz = createBusiness({
+      name,
+      slug,
+      organizationName: name,
+      userId,
+    });
+    const lat = result.geometry?.location?.lat;
+    const lng = result.geometry?.location?.lng;
+    const addr = result.formatted_address?.trim() || null;
+    if (addr || (lat != null && lng != null)) {
+      updateBusiness(biz.id, {
+        location_lat: lat ?? null,
+        location_lng: lng ?? null,
+        location_address: addr,
+      });
+    }
+  } catch (e) {
+    console.error("[auth/register] tryCreateFirstBusinessFromGooglePlace:", e);
+  }
+}
 
 const appleOneTimeCodes = new Map();
 const APPLE_CODE_TTL_MS = 5 * 60 * 1000;
@@ -62,10 +123,14 @@ async function getAppleSigningKeyPem(kid) {
 
 /**
  * POST /api/auth/register
- * Body: { email, password, name? }
+ * Body: { email, password, name?, google_place_id? | googlePlaceId?, establishment_name? }
+ * Si google_place_id est fourni et Places configuré, crée le premier commerce (nom + adresse Google).
  */
 router.post("/register", async (req, res) => {
-  const { email, password, name } = req.body || {};
+  const body = req.body || {};
+  const { email, password, name } = body;
+  const googlePlaceId = String(body.google_place_id || body.googlePlaceId || "").trim();
+  const establishmentName = String(body.establishment_name || body.establishmentName || "").trim();
   const emailNorm = String(email || "").trim().toLowerCase();
   if (!emailNorm) {
     return res.status(400).json({ error: "Email requis" });
@@ -83,6 +148,9 @@ router.post("/register", async (req, res) => {
       passwordHash,
       name: name ? String(name).trim() : null,
     });
+    if (googlePlaceId) {
+      await tryCreateFirstBusinessFromGooglePlace(user.id, googlePlaceId, establishmentName);
+    }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
   if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
