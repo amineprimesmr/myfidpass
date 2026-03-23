@@ -31,7 +31,7 @@ function segmentAnglesEqual(i, n, offsetDeg) {
 }
 
 /**
- * Libellés alternés sur chaque secteur (même découpe angulaire que les parts).
+ * Libellés le long du rayon de chaque part (axe centre → bord), alternés Gagné / Perdu.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
  * @param {number} cy
@@ -43,14 +43,18 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n) {
   if (n < 1) return;
   const base = -Math.PI / 2 + offsetRad(offsetDeg);
   const step = (Math.PI * 2) / n;
-  const labelR = r * 0.56;
-  const fontPx = Math.max(11, Math.round(r * 0.068));
+  /** Milieu radial de la couronne (entre moyeu et bord). */
+  const labelR = r * 0.58;
+  const fontPx = Math.max(15, Math.round(r * 0.104));
+  const track = Math.round(fontPx * 0.04);
 
   ctx.save();
   ctx.font = `800 ${fontPx}px Outfit, system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
+  ctx.miterLimit = 2;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = `${track}px`;
 
   for (let i = 0; i < n; i++) {
     const mid = base + (i + 0.5) * step;
@@ -60,18 +64,33 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n) {
 
     ctx.save();
     ctx.translate(tx, ty);
-    let rot = mid + Math.PI / 2;
-    if (Math.cos(mid) < 0) rot += Math.PI;
+    /** Axe local X = rayon de la part ; retournement si besoin pour rester lisible. */
+    let rot = mid;
+    if (Math.sin(mid) > 0) rot += Math.PI;
     ctx.rotate(rot);
 
-    const sw = Math.max(2, fontPx * 0.11);
+    const sw = Math.max(2.5, fontPx * 0.1);
+    ctx.shadowColor = "rgba(0,0,0,0.55)";
+    ctx.shadowBlur = Math.round(fontPx * 0.45);
+    ctx.shadowOffsetX = Math.round(fontPx * 0.14);
+    ctx.shadowOffsetY = Math.round(fontPx * 0.26);
+    ctx.fillStyle = "rgba(250,250,250,0.98)";
+    ctx.fillText(label, 0, 0);
+
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
     ctx.lineWidth = sw;
-    ctx.strokeStyle = "rgba(0,0,0,0.5)";
+    ctx.strokeStyle = "rgba(0,0,0,0.42)";
     ctx.strokeText(label, 0, 0);
     ctx.fillStyle = "#ffffff";
     ctx.fillText(label, 0, 0);
     ctx.restore();
   }
+
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
   ctx.restore();
 }
 
