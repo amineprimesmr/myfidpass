@@ -81,6 +81,91 @@
   margin-bottom: 1.25rem;
 }
 
+/* Mockup affiche : perspective + cadre + ombre au sol (aperçu uniquement, pas l’export PNG) */
+#app-app .app-flyer-qr-mockup {
+  max-width: 432px;
+  margin: 0 auto;
+  perspective: 1200px;
+}
+
+#app-app .app-flyer-qr-mockup-caption {
+  margin: 0 0 0.6rem;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-text-muted, #64748b);
+}
+
+#app-app .app-flyer-qr-mockup-scene {
+  position: relative;
+  padding: 0.5rem 1.1rem 2.35rem;
+  border-radius: 22px;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.42) 0%, transparent 52%),
+    radial-gradient(ellipse 88% 42% at 50% 100%, rgba(15, 23, 42, 0.14) 0%, transparent 70%);
+}
+
+#app-app .app-flyer-qr-mockup-poster {
+  position: relative;
+  margin: 0 auto;
+  padding: 12px;
+  max-width: 400px;
+  border-radius: 14px;
+  background: linear-gradient(150deg, #f8fafc 0%, #e8edf4 55%, #dce3ee 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 28px 56px -16px rgba(15, 23, 42, 0.38),
+    0 12px 24px -12px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(15, 23, 42, 0.07);
+  transform: rotateY(-5.5deg) rotateX(2.5deg);
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#app-app .app-flyer-qr-mockup:hover .app-flyer-qr-mockup-poster {
+  transform: rotateY(-2deg) rotateX(1deg);
+}
+
+#app-app .app-flyer-qr-mockup-poster .app-flyer-canvas {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  margin: 0;
+  border-radius: 8px;
+  /* Liseré type affiche : filet sombre + léger rebord clair sur le pourtour du visuel */
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+    0 0 0 3px #0f172a,
+    0 0 0 5px rgba(241, 245, 249, 0.95),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 600px) {
+  #app-app .app-flyer-qr-mockup-poster {
+    transform: rotateY(-2.5deg) rotateX(1.2deg);
+  }
+
+  #app-app .app-flyer-qr-mockup:hover .app-flyer-qr-mockup-poster {
+    transform: rotateY(-1deg) rotateX(0.5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app-app .app-flyer-qr-mockup-poster {
+    transform: none;
+    transition: none;
+  }
+
+  #app-app .app-flyer-qr-mockup:hover .app-flyer-qr-mockup-poster {
+    transform: none;
+  }
+}
+
 #app-app .app-flyer-canvas {
   display: block;
   width: 100%;
