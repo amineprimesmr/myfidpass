@@ -15,6 +15,11 @@ export const FLYER_WHEEL_SEGMENT_COUNT = 6;
  */
 export const FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG = -30;
 
+/**
+ * Rayon des teintes PNG / clip = ce facteur × rayon affiché (bord 3D blanc plus étroit que le disque logique).
+ */
+export const FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR = 0.94;
+
 /** Identifiant unique du gabarit flyer (ancien localStorage avec d’autres ids → normalisé au merge). */
 export const FLYER_TEMPLATE_ID = "noir-or-roue";
 

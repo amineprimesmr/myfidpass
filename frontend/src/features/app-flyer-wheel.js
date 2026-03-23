@@ -4,6 +4,7 @@
 import {
   wheelSegmentColorsResolved,
   FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG,
+  FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR,
 } from "./app-flyer-qr-presets.js";
 
 /** Léger chevauchement angulaire pour masquer les fentes anti-alias entre secteurs. */
@@ -80,10 +81,11 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
   const box = r * 2;
   const lx = cx - r;
   const ly = cy - r;
+  const rt = r * FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR;
 
   ctx.save();
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.arc(cx, cy, rt, 0, Math.PI * 2);
   ctx.clip();
 
   for (let i = 0; i < n; i++) {
@@ -91,7 +93,7 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, t0, t1);
+    ctx.arc(cx, cy, rt, t0, t1);
     ctx.closePath();
     ctx.clip();
     drawImageCover(ctx, roueImg, lx, ly, box, box);
@@ -99,7 +101,7 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
     ctx.fillStyle = colors[i];
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, t0, t1);
+    ctx.arc(cx, cy, rt, t0, t1);
     ctx.closePath();
     ctx.fill();
     ctx.globalCompositeOperation = "source-over";
