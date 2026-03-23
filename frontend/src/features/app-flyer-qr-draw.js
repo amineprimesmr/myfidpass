@@ -285,8 +285,9 @@ function wrapCenter(ctx, text, cx, cy, maxW, lineH) {
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  * @param {string} qrTargetUrl
  * @param {ImageBitmap | string | null | undefined} logoInput — ImageBitmap préféré (évite blob + CORS).
+ * @param {ImageBitmap | string | null | undefined} [bgInput] — image de fond (optionnel).
  */
-export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
+export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInput) {
   const w = canvas.width;
   const h = canvas.height;
   const ctx = canvas.getContext("2d");
