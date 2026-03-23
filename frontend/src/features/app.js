@@ -6,6 +6,10 @@ import { API_BASE, getAuthHeaders, clearAuthToken, isDevBypassPayment, IS_LOCAL_
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
+import {
+  LOCATION_RADIUS_DEFAULT_M,
+  clampLocationRadiusMetersClient,
+} from "../constants/locationRadius.js";
 import { initIntegrationHub } from "./integration-hub.js";
 import { maybeShowPostPurchaseAppModal } from "./post-purchase-app-modal.js";
 import {
@@ -997,7 +1001,7 @@ function initAppDashboard(slug) {
     let currentLat = null;
     let currentLng = null;
     let currentAddress = "";
-    let currentRadiusM = 500;
+    let currentRadiusM = LOCATION_RADIUS_DEFAULT_M;
     let autocompleteAbort = null;
     let autocompleteDebounce = null;
     let defaultSuggestionData = null;
@@ -1028,7 +1032,7 @@ function initAppDashboard(slug) {
       return {
         lat: currentLat != null ? Number(currentLat) : null,
         lng: currentLng != null ? Number(currentLng) : null,
-        radius: Number(currentRadiusM) || 500,
+        radius: clampLocationRadiusMetersClient(currentRadiusM),
         address: normalizePerimetreText((addressInput?.value ?? currentAddress) || ""),
         notifTitle: normalizePerimetreText(perimetreNotifTitleEl?.value),
         notifMessage: normalizePerimetreText(perimetreNotifMessageEl?.value),
@@ -1108,14 +1112,15 @@ function initAppDashboard(slug) {
     }
 
     function updateRadiusUI(m) {
-      currentRadiusM = m;
-      if (radiusValueEl) radiusValueEl.textContent = m + " m";
-      if (radiusSlider) radiusSlider.value = String(m);
+      const c = clampLocationRadiusMetersClient(m);
+      currentRadiusM = c;
+      if (radiusValueEl) radiusValueEl.textContent = c + " m";
+      if (radiusSlider) radiusSlider.value = String(c);
       if (useMapbox && perimetreMap && perimetreMap.getSource("perimetre-circle") && currentLat != null && currentLng != null) {
-        perimetreMap.getSource("perimetre-circle").setData(circleGeoJSON(currentLat, currentLng, m));
+        perimetreMap.getSource("perimetre-circle").setData(circleGeoJSON(currentLat, currentLng, c));
       }
       if (!useMapbox && perimetreCircle && currentLat != null && currentLng != null) {
-        perimetreCircle.setRadius(m);
+        perimetreCircle.setRadius(c);
       }
       refreshPerimetreSaveButtonState();
     }
@@ -1343,7 +1348,10 @@ function initAppDashboard(slug) {
         const data = await res.json();
         const lat = data.location_lat != null ? Number(data.location_lat) : null;
         const lng = data.location_lng != null ? Number(data.location_lng) : null;
-        const radius = data.location_radius_meters != null ? Math.min(2000, Math.max(100, Number(data.location_radius_meters))) : 500;
+        const radius =
+          data.location_radius_meters != null
+            ? clampLocationRadiusMetersClient(data.location_radius_meters)
+            : LOCATION_RADIUS_DEFAULT_M;
         const address = data.location_address || "";
         const notifTitleRaw = data.notification_title_override ?? data.notificationTitleOverride ?? "";
         const notifMessage = data.notification_change_message ?? data.notificationChangeMessage ?? "";
@@ -1501,7 +1509,7 @@ function initAppDashboard(slug) {
     });
 
     radiusSlider.addEventListener("input", () => {
-      const m = Math.min(2000, Math.max(100, parseInt(radiusSlider.value, 10) || 500));
+      const m = clampLocationRadiusMetersClient(parseInt(radiusSlider.value, 10));
       updateRadiusUI(m);
     });
 
@@ -2321,7 +2329,11 @@ function initAppDashboard(slug) {
       if (personnaliserAddress && (data.location_address ?? data.locationAddress) != null) personnaliserAddress.value = data.location_address ?? data.locationAddress ?? "";
       updateCoordsDisplay(data.location_lat ?? data.locationLat, data.location_lng ?? data.locationLng);
       if (personnaliserLocationText && (data.location_relevant_text ?? data.locationRelevantText) != null) personnaliserLocationText.value = data.location_relevant_text ?? data.locationRelevantText ?? "";
-      if (personnaliserRadius != null && (data.location_radius_meters ?? data.locationRadiusMeters) != null) personnaliserRadius.value = data.location_radius_meters ?? data.locationRadiusMeters;
+      if (personnaliserRadius != null && (data.location_radius_meters ?? data.locationRadiusMeters) != null) {
+        personnaliserRadius.value = String(
+          clampLocationRadiusMetersClient(data.location_radius_meters ?? data.locationRadiusMeters)
+        );
+      }
       hasCardBackgroundFromServer = !!(data.has_card_background ?? data.hasCardBackground);
       syncPersonnaliserAccordionServerCardBg();
       hasLogoOnServerPersonnaliser = !!(data.logo_url || data.logoUrl);
@@ -3145,7 +3157,10 @@ function initAppDashboard(slug) {
           body.locationLng = null;
         }
         if (locTextVal !== undefined) body.locationRelevantText = locTextVal || undefined;
-        if (radiusVal !== undefined) body.locationRadiusMeters = radiusVal === "" ? undefined : parseInt(radiusVal, 10);
+        if (radiusVal !== undefined) {
+          body.locationRadiusMeters =
+            radiusVal === "" ? undefined : clampLocationRadiusMetersClient(parseInt(radiusVal, 10));
+        }
       }
       const labelRestantsVal = document.getElementById("app-personnaliser-label-restants")?.value?.trim();
       if (labelRestantsVal) body.labelRestants = labelRestantsVal;
@@ -4763,45 +4778,11 @@ function initAppDashboard(slug) {
     });
   }
 
-  const memberDetailDrawer = document.getElementById("app-member-detail-drawer");
+  const memberDetailModal = document.getElementById("app-member-detail-modal");
   const memberDetailBody = document.getElementById("app-member-detail-body");
-  const memberDetailClose = document.getElementById("app-member-drawer-close");
-  const memberDetailScrim = document.getElementById("app-member-drawer-scrim");
+  const memberDetailClose = memberDetailModal?.querySelector(".app-modal-close");
+  const memberDetailBackdrop = memberDetailModal?.querySelector(".app-modal-backdrop");
   let memberDetailOpenId = null;
-
-  function memberDrawerKeydown(e) {
-    if (e.key !== "Escape") return;
-    if (!memberDetailOpenId || !memberDetailDrawer || memberDetailDrawer.classList.contains("hidden")) return;
-    e.preventDefault();
-    closeMemberDetail();
-  }
-  document.addEventListener("keydown", memberDrawerKeydown);
-
-  function openMemberDetailDrawerAnim() {
-    if (!memberDetailDrawer) return;
-    const wasHidden = memberDetailDrawer.classList.contains("hidden");
-    memberDetailDrawer.classList.remove("hidden");
-    memberDetailDrawer.setAttribute("aria-hidden", "false");
-    document.body.classList.add("app-member-drawer-open");
-    if (wasHidden) {
-      memberDetailDrawer.classList.remove("is-open");
-      void memberDetailDrawer.offsetWidth;
-      requestAnimationFrame(() => {
-        memberDetailDrawer.classList.add("is-open");
-        memberDetailClose?.focus();
-      });
-    }
-  }
-
-  function closeMemberDetailDrawerAnim() {
-    if (!memberDetailDrawer) return;
-    memberDetailDrawer.classList.remove("is-open");
-    window.setTimeout(() => {
-      memberDetailDrawer.classList.add("hidden");
-      memberDetailDrawer.setAttribute("aria-hidden", "true");
-      document.body.classList.remove("app-member-drawer-open");
-    }, 320);
-  }
 
   function formatMemberTransactionLine(t) {
     const pts = Number(t.points) || 0;
@@ -4815,114 +4796,34 @@ function initAppDashboard(slug) {
     } else if (t.type === "reward_redeem") {
       label = "Récompense";
     }
-    const ptsClass = pts < 0 ? "app-member-timeline__pts app-member-timeline__pts--neg" : "app-member-timeline__pts";
-    return `<li class="app-member-timeline__item">
-      <span class="app-member-timeline__dot" aria-hidden="true"></span>
-      <div class="app-member-timeline__row">
-        <span class="app-member-timeline__label">${escapeHtml(label)}</span>
-        <span class="${ptsClass}">${escapeHtml(signed)} pts</span>
-        <time class="app-member-timeline__time">${escapeHtml(formatDate(t.created_at))}</time>
-      </div>
-    </li>`;
+    return `<li>${label} : ${signed} pts — ${formatDate(t.created_at)}</li>`;
   }
 
-  async function dashboardProgramIsStamps() {
-    try {
-      const settingsRes = await api("/dashboard/settings");
-      if (!settingsRes.ok) return scannerProgramType === "stamps";
-      const data = await settingsRes.json();
-      let pt = (data.program_type ?? data.programType ?? "").toLowerCase();
-      if (pt !== "points" && pt !== "stamps") {
-        pt = (data.required_stamps ?? data.requiredStamps) > 0 ? "stamps" : "points";
-      }
-      return pt === "stamps";
-    } catch (_) {
-      return scannerProgramType === "stamps";
-    }
-  }
-
-  function memberDetailMarkup(m, transactions, isStamps) {
-    const rawName = (m.name || m.email || "?").trim();
-    const initial = rawName ? rawName.charAt(0).toUpperCase() : "?";
-    const pointsVal = m.points ?? 0;
-    const lastVisit = m.last_visit_at ? formatDate(m.last_visit_at) : "—";
-    const unitLabel = isStamps ? "tampons" : "points";
-    const unitSuffix = isStamps ? "tampons" : "pts";
-    const statBalanceLabel = isStamps ? "Tampons" : "Points";
-    const birthVal =
-      m.birth_date && String(m.birth_date).trim()
-        ? String(m.birth_date).trim().slice(0, 10)
-        : "";
-    const txRows = (transactions || []).map(formatMemberTransactionLine).join("");
-    const historyBlock = txRows
-      ? `<ul class="app-member-timeline" role="list">${txRows}</ul>`
-      : `<p class="app-member-timeline__empty">Aucune opération enregistrée.</p>`;
+  function memberDetailMarkup(m, transactions) {
+    const txList =
+      (transactions || []).map(formatMemberTransactionLine).join("") || "<li>Aucune opération</li>";
+    const extra =
+      (m.phone ? `<p>Tél. : ${escapeHtml(m.phone)}</p>` : "") +
+      (m.city ? `<p>Ville : ${escapeHtml(m.city)}</p>` : "") +
+      (m.birth_date ? `<p>Naissance : ${escapeHtml(m.birth_date)}</p>` : "");
     return `
-      <div class="app-member-hero">
-        <div class="app-member-hero__avatar" aria-hidden="true">${escapeHtml(initial)}</div>
-        <div class="app-member-hero__text">
-          <p class="app-member-hero__name">${escapeHtml(m.name || "Sans nom")}</p>
-          <p class="app-member-hero__email">${escapeHtml(m.email || "")}</p>
-        </div>
-      </div>
-      <div class="app-member-stats">
-        <div class="app-member-stat">
-          <span class="app-member-stat__label">${escapeHtml(statBalanceLabel)}</span>
-          <span class="app-member-stat__value">${escapeHtml(String(pointsVal))}<span class="app-member-stat__suffix">${escapeHtml(unitSuffix)}</span></span>
-        </div>
-        <div class="app-member-stat">
-          <span class="app-member-stat__label">Dernier passage</span>
-          <span class="app-member-stat__value app-member-stat__value--muted">${escapeHtml(lastVisit)}</span>
-        </div>
-      </div>
-      <section class="app-member-profile" aria-labelledby="app-member-profile-title">
-        <h3 id="app-member-profile-title" class="app-member-section__title">Coordonnées</h3>
-        <p class="app-member-adjust__hint">L’email sert d’identifiant sur la carte et n’est pas modifiable ici.</p>
-        <p class="app-member-profile__email-readonly">${escapeHtml(m.email || "—")}</p>
-        <div class="app-member-profile__grid">
-          <div class="app-member-profile__field">
-            <label class="app-member-profile__label" for="app-member-field-name">Nom affiché</label>
-            <input type="text" id="app-member-field-name" class="app-member-profile__input" autocomplete="name" value="${escapeHtmlForServer(m.name || "")}" />
+          <p><strong>${escapeHtml(m.name)}</strong></p>
+          <p>${escapeHtml(m.email)}</p>
+          ${extra}
+          <p>${m.points} point(s)</p>
+          <p>Dernière visite : ${m.last_visit_at ? formatDate(m.last_visit_at) : "—"}</p>
+          <h3 style="font-size:1rem;margin:0.75rem 0 0.25rem">Historique</h3>
+          <ul class="app-scanner-history-list">${txList}</ul>
+          <div class="app-member-points-correction" style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--app-border, #e8e8e8)">
+            <h3 style="font-size:1rem;margin:0 0 0.5rem">Retirer des points (erreur de caisse)</h3>
+            <p style="font-size:0.875rem;margin:0 0 0.5rem;opacity:0.85">Enregistré dans l’historique ; le client est notifié sur Apple Wallet si applicable.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
+              <input type="number" min="1" step="1" id="app-member-remove-points-input" placeholder="Nb pts" style="width:5.5rem;padding:0.35rem 0.5rem;border-radius:8px;border:1px solid var(--app-border, #ccc)" />
+              <button type="button" class="btn btn-secondary" id="app-member-remove-points-btn">Retirer</button>
+            </div>
+            <p id="app-member-remove-points-msg" class="hidden" style="margin-top:0.5rem;font-size:0.875rem"></p>
           </div>
-          <div class="app-member-profile__field">
-            <label class="app-member-profile__label" for="app-member-field-phone">Téléphone</label>
-            <input type="tel" id="app-member-field-phone" class="app-member-profile__input" autocomplete="tel" value="${escapeHtmlForServer(m.phone || "")}" placeholder="Optionnel" />
-          </div>
-          <div class="app-member-profile__field">
-            <label class="app-member-profile__label" for="app-member-field-city">Ville</label>
-            <input type="text" id="app-member-field-city" class="app-member-profile__input" autocomplete="address-level2" value="${escapeHtmlForServer(m.city || "")}" placeholder="Optionnel" />
-          </div>
-          <div class="app-member-profile__field">
-            <label class="app-member-profile__label" for="app-member-field-birth">Date de naissance</label>
-            <input type="date" id="app-member-field-birth" class="app-member-profile__input" value="${escapeHtmlForServer(birthVal)}" />
-          </div>
-        </div>
-        <button type="button" class="app-member-adjust__btn app-member-adjust__btn--secondary" id="app-member-save-profile-btn">Enregistrer les coordonnées</button>
-        <p id="app-member-profile-msg" class="app-member-adjust__feedback hidden" role="status"></p>
-      </section>
-      <section class="app-member-adjust" aria-labelledby="app-member-add-title">
-        <h3 id="app-member-add-title" class="app-member-adjust__title">Ajouter des ${escapeHtml(unitLabel)}</h3>
-        <p class="app-member-adjust__hint">Crédit manuel (bonus, geste commercial, correction). Inscrit dans l’historique ; notification Wallet possible.</p>
-        <div class="app-member-adjust__row">
-          <input type="number" min="1" step="1" id="app-member-add-points-input" class="app-member-adjust__input" placeholder="Nombre" inputmode="numeric" aria-label="Nombre à ajouter" />
-          <button type="button" class="app-member-adjust__btn" id="app-member-add-points-btn">Ajouter</button>
-        </div>
-        <p id="app-member-add-points-msg" class="app-member-adjust__feedback hidden" role="status"></p>
-      </section>
-      <section class="app-member-adjust" aria-labelledby="app-member-remove-title">
-        <h3 id="app-member-remove-title" class="app-member-adjust__title">Retirer des ${escapeHtml(unitLabel)}</h3>
-        <p class="app-member-adjust__hint">En cas d’erreur de caisse. Inscrit dans l’historique ; notification Wallet possible.</p>
-        <div class="app-member-adjust__row">
-          <input type="number" min="1" step="1" id="app-member-remove-points-input" class="app-member-adjust__input" placeholder="Nombre" inputmode="numeric" aria-label="Nombre à retirer" />
-          <button type="button" class="app-member-adjust__btn" id="app-member-remove-points-btn">Retirer</button>
-        </div>
-        <p id="app-member-remove-points-msg" class="app-member-adjust__feedback hidden" role="status"></p>
-      </section>
-      <section class="app-member-section" aria-labelledby="app-member-history-title">
-        <h3 id="app-member-history-title" class="app-member-section__title">Historique</h3>
-        ${historyBlock}
-      </section>
-    `;
+        `;
   }
 
   async function refreshMemberDetailPanel() {
@@ -4930,161 +4831,48 @@ function initAppDashboard(slug) {
     const member = allMembers.find((x) => x.id === memberDetailOpenId);
     const base = member || { id: memberDetailOpenId };
     try {
-      const [full, data, isStamps] = await Promise.all([
+      const [full, data] = await Promise.all([
         api(`/members/${encodeURIComponent(memberDetailOpenId)}`).then((r) => (r.ok ? r.json() : base)),
         api(`/dashboard/transactions?memberId=${encodeURIComponent(memberDetailOpenId)}&limit=20`).then((r) =>
           r.ok ? r.json() : { transactions: [] }
         ),
-        dashboardProgramIsStamps(),
       ]);
       const m = { ...base, ...full };
       memberDetailOpenId = m.id;
-      memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || [], isStamps);
-      memberDetailBody.dataset.programStamps = isStamps ? "1" : "0";
+      memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || []);
     } catch (_) {
-      memberDetailBody.innerHTML = '<p class="app-member-drawer__error">Impossible de charger ce membre.</p>';
+      memberDetailBody.innerHTML = "<p>Erreur chargement.</p>";
     }
   }
 
   function openMemberDetail(member) {
-    if (!memberDetailDrawer || !memberDetailBody) return;
+    if (!memberDetailModal || !memberDetailBody) return;
     memberDetailOpenId = member.id;
-    memberDetailBody.innerHTML = '<p class="app-member-drawer__loading">Chargement…</p>';
-    openMemberDetailDrawerAnim();
+    memberDetailBody.innerHTML = "<p>Chargement…</p>";
+    memberDetailModal.classList.remove("hidden");
     Promise.all([
       api(`/members/${encodeURIComponent(member.id)}`).then((r) => (r.ok ? r.json() : member)),
       api(`/dashboard/transactions?memberId=${encodeURIComponent(member.id)}&limit=20`).then((r) =>
         r.ok ? r.json() : { transactions: [] }
       ),
-      dashboardProgramIsStamps(),
     ])
-      .then(([full, data, isStamps]) => {
+      .then(([full, data]) => {
         const m = { ...member, ...full };
         memberDetailOpenId = m.id;
-        memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || [], isStamps);
-        memberDetailBody.dataset.programStamps = isStamps ? "1" : "0";
+        memberDetailBody.innerHTML = memberDetailMarkup(m, data.transactions || []);
       })
       .catch(() => {
-        memberDetailBody.innerHTML = '<p class="app-member-drawer__error">Impossible de charger ce membre.</p>';
+        memberDetailBody.innerHTML = "<p>Erreur chargement.</p>";
       });
   }
   function closeMemberDetail() {
     memberDetailOpenId = null;
-    if (!memberDetailDrawer || memberDetailDrawer.classList.contains("hidden")) return;
-    closeMemberDetailDrawerAnim();
+    memberDetailModal?.classList.add("hidden");
   }
 
-  memberDetailDrawer?.addEventListener("click", async (e) => {
-    if (!memberDetailOpenId || !memberDetailBody) return;
-
-    const saveProfileBtn = e.target.closest("#app-member-save-profile-btn");
-    if (saveProfileBtn) {
-      e.preventDefault();
-      const name = memberDetailBody.querySelector("#app-member-field-name")?.value?.trim() ?? "";
-      const phone = memberDetailBody.querySelector("#app-member-field-phone")?.value?.trim() ?? "";
-      const city = memberDetailBody.querySelector("#app-member-field-city")?.value?.trim() ?? "";
-      const birthRaw = memberDetailBody.querySelector("#app-member-field-birth")?.value?.trim() ?? "";
-      const msg = memberDetailBody.querySelector("#app-member-profile-msg");
-      if (!name) {
-        if (msg) {
-          msg.textContent = "Le nom est obligatoire.";
-          msg.classList.remove("hidden", "is-success");
-          msg.classList.add("is-error");
-        }
-        return;
-      }
-      saveProfileBtn.disabled = true;
-      try {
-        const res = await api(`/dashboard/members/${encodeURIComponent(memberDetailOpenId)}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            phone: phone || null,
-            city: city || null,
-            birth_date: birthRaw || null,
-          }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          if (msg) {
-            msg.textContent = data.error || "Erreur";
-            msg.classList.remove("is-success");
-            msg.classList.add("is-error");
-            msg.classList.remove("hidden");
-          }
-        } else if (msg) {
-          msg.textContent = "Coordonnées enregistrées.";
-          msg.classList.remove("is-error");
-          msg.classList.add("is-success");
-          msg.classList.remove("hidden");
-        }
-        window.dispatchEvent(new Event("app-members-refresh"));
-        await refreshMemberDetailPanel();
-      } catch (_) {
-        if (msg) {
-          msg.textContent = "Erreur réseau.";
-          msg.classList.remove("is-success");
-          msg.classList.add("is-error");
-          msg.classList.remove("hidden");
-        }
-      }
-      saveProfileBtn.disabled = false;
-      return;
-    }
-
-    const addBtn = e.target.closest("#app-member-add-points-btn");
-    if (addBtn) {
-      e.preventDefault();
-      const input = memberDetailBody.querySelector("#app-member-add-points-input");
-      const msg = memberDetailBody.querySelector("#app-member-add-points-msg");
-      const n = parseInt(input?.value, 10);
-      if (!input || !Number.isFinite(n) || n < 1) {
-        if (msg) {
-          msg.textContent = "Indiquez un nombre entier ≥ 1.";
-          msg.classList.remove("hidden", "is-success", "is-error");
-        }
-        return;
-      }
-      addBtn.disabled = true;
-      try {
-        const res = await api(`/members/${encodeURIComponent(memberDetailOpenId)}/points`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ points: n }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          if (msg) {
-            msg.textContent = data.error || "Erreur";
-            msg.classList.remove("is-success");
-            msg.classList.add("is-error");
-            msg.classList.remove("hidden");
-          }
-        } else if (msg) {
-          const added = data.points_added ?? n;
-          msg.textContent = `+${added} crédité(s). Nouveau solde : ${data.points ?? "—"}.`;
-          msg.classList.remove("is-error");
-          msg.classList.add("is-success");
-          msg.classList.remove("hidden");
-        }
-        input.value = "";
-        window.dispatchEvent(new Event("app-members-refresh"));
-        await refreshMemberDetailPanel();
-      } catch (_) {
-        if (msg) {
-          msg.textContent = "Erreur réseau.";
-          msg.classList.remove("is-success");
-          msg.classList.add("is-error");
-          msg.classList.remove("hidden");
-        }
-      }
-      addBtn.disabled = false;
-      return;
-    }
-
+  memberDetailModal?.addEventListener("click", async (e) => {
     const btn = e.target.closest("#app-member-remove-points-btn");
-    if (!btn) return;
+    if (!btn || !memberDetailOpenId || !memberDetailBody) return;
     e.preventDefault();
     const input = memberDetailBody.querySelector("#app-member-remove-points-input");
     const msg = memberDetailBody.querySelector("#app-member-remove-points-msg");
@@ -5092,36 +4880,31 @@ function initAppDashboard(slug) {
     if (!input || !Number.isFinite(n) || n < 1) {
       if (msg) {
         msg.textContent = "Indiquez un nombre entier ≥ 1.";
-        msg.classList.remove("hidden", "is-success", "is-error");
+        msg.classList.remove("hidden");
+        msg.classList.remove("error");
       }
       return;
     }
-    const unitWord = memberDetailBody.dataset.programStamps === "1" ? "tampons" : "points";
     btn.disabled = true;
     try {
-      const res = await api(
-        `/dashboard/members/${encodeURIComponent(memberDetailOpenId)}/points/remove`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ points: n }),
-        }
-      );
+      const res = await api(`/members/${encodeURIComponent(memberDetailOpenId)}/points/remove`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ points: n }),
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (msg) {
           msg.textContent = data.error || "Erreur";
-          msg.classList.remove("is-success");
-          msg.classList.add("is-error");
+          msg.classList.add("error");
           msg.classList.remove("hidden");
         }
         btn.disabled = false;
         return;
       }
       if (msg) {
-        msg.textContent = `Retiré : ${data.points_removed ?? n} ${unitWord}. Nouveau solde : ${data.points}.`;
-        msg.classList.remove("is-error");
-        msg.classList.add("is-success");
+        msg.textContent = `Retiré : ${data.points_removed ?? n} pts. Nouveau solde : ${data.points} pts.`;
+        msg.classList.remove("error");
         msg.classList.remove("hidden");
       }
       input.value = "";
@@ -5130,21 +4913,14 @@ function initAppDashboard(slug) {
     } catch (_) {
       if (msg) {
         msg.textContent = "Erreur réseau.";
-        msg.classList.remove("is-success");
-        msg.classList.add("is-error");
+        msg.classList.add("error");
         msg.classList.remove("hidden");
       }
     }
     btn.disabled = false;
   });
-  memberDetailClose?.addEventListener("click", (e) => {
-    e.preventDefault();
-    closeMemberDetail();
-  });
-  memberDetailScrim?.addEventListener("click", (e) => {
-    e.preventDefault();
-    closeMemberDetail();
-  });
+  memberDetailClose?.addEventListener("click", closeMemberDetail);
+  memberDetailBackdrop?.addEventListener("click", closeMemberDetail);
   membersListEl?.addEventListener("click", (e) => {
     const card = e.target.closest(".app-membres-card[data-member-id]");
     if (!card) return;

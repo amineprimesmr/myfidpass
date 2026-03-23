@@ -12,6 +12,7 @@ import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
 import { PASS_TEMPLATES, STRIP_W, STRIP_H, PASS_HEADER_RIGHT_LABEL, PASS_LABEL_MEMBER } from "./constants.js";
+import { radiusMetersForPass } from "../locationRadiusLimits.js";
 import {
   parsePointRewardTiersFromBusiness,
   frontRewardLabelFromSortedTiers,
@@ -267,7 +268,7 @@ export async function generatePass(member, business = null, options = {}) {
   const locLat = business?.location_lat != null ? Number(business.location_lat) : null;
   const locLng = business?.location_lng != null ? Number(business.location_lng) : null;
   if (Number.isFinite(locLat) && Number.isFinite(locLng)) {
-    const radiusM = Math.min(Math.max(Number(business.location_radius_meters) || 500, 100), 2000);
+    const radiusM = radiusMetersForPass(business.location_radius_meters);
     const relevantText =
       (business?.location_relevant_text && String(business.location_relevant_text).trim()) ||
       `Vous êtes près de ${organizationName}`;

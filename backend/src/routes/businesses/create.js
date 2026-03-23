@@ -12,6 +12,7 @@ import {
   canCreateBusiness,
 } from "../../db.js";
 import { getApiBase, canAccessDashboard, normalizeHex } from "./shared.js";
+import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const businessAssetsDir = join(__dirname, "..", "..", "assets", "businesses");
@@ -149,7 +150,12 @@ export function updateHandler(req, res) {
   if (locationLat !== undefined) updates.location_lat = locationLat === null || locationLat === "" ? null : Number(locationLat);
   if (locationLng !== undefined) updates.location_lng = locationLng === null || locationLng === "" ? null : Number(locationLng);
   if (locationRelevantText !== undefined) updates.location_relevant_text = locationRelevantText ? String(locationRelevantText).trim() : null;
-  if (locationRadiusMeters !== undefined) updates.location_radius_meters = locationRadiusMeters === null || locationRadiusMeters === "" ? null : Math.min(2000, Math.max(0, Number(locationRadiusMeters) || 500));
+  if (locationRadiusMeters !== undefined) {
+    updates.location_radius_meters =
+      locationRadiusMeters === null || locationRadiusMeters === ""
+        ? null
+        : normalizeLocationRadiusForStorage(locationRadiusMeters);
+  }
   const logoBase64 = body.logoBase64 ?? body.logo_base64;
   if (logoBase64 !== undefined) {
     if (logoBase64 === null || logoBase64 === "") {

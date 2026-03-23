@@ -1368,14 +1368,14 @@
               <div class="app-carte-perimetre-map-stage">
                 <div class="app-carte-perimetre-map-wrap">
                   <div id="app-perimetre-map" class="app-perimetre-map" aria-label="Carte de l’emplacement"></div>
-                  <p id="app-perimetre-map-hint" class="app-perimetre-map-hint">La carte se centre sur l’adresse ci-dessus ou sur celle enregistrée dans le Profil. Cliquez sur la carte pour déplacer le point.</p>
+                  <p id="app-perimetre-map-hint" class="app-perimetre-map-hint">La carte se centre sur l’adresse ci-dessus ou sur celle enregistrée dans le Profil. Cliquez sur la carte pour déplacer le point. <strong>Rayon 25–100 m</strong> : plafond aligné sur Apple Wallet pour les cartes magasin / fidélité.</p>
 
                   <div class="app-carte-perimetre-radius-vertical" aria-label="Réglage du rayon du périmètre">
                     <span class="app-carte-perimetre-radius-label">Rayon</span>
                     <div class="app-perimetre-radius-slider-wrap">
-                      <input type="range" id="app-perimetre-radius" class="app-perimetre-radius-slider" min="100" max="2000" step="50" value="500" aria-label="Rayon en mètres" />
+                      <input type="range" id="app-perimetre-radius" class="app-perimetre-radius-slider" min="25" max="100" step="5" value="100" aria-label="Rayon en mètres (max 100 m, Apple Wallet)" />
                     </div>
-                    <span id="app-perimetre-radius-value" class="app-perimetre-radius-value">500 m</span>
+                    <span id="app-perimetre-radius-value" class="app-perimetre-radius-value">100 m</span>
                   </div>
                   <div class="app-carte-perimetre-overlay-bottom" aria-hidden="false">
                     <div class="app-notification-preview-banner app-perimetre-permanent-banner" role="region" aria-label="Notification à l'entrée — personnalisable">

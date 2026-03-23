@@ -27,6 +27,7 @@ import { sendPassKitUpdate } from "../../apns.js";
 import { canAccessDashboard, getApiBase, normalizeHexForPatch, MAX_LOGO_BASE64_BYTES } from "./shared.js";
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 import { patchMemberProfile } from "./member-patch-handler.js";
+import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 
 const router = Router();
 
@@ -131,7 +132,12 @@ router.patch("/settings", async (req, res) => {
   if (location_address !== undefined) updates.location_address = location_address ? String(location_address).trim() : null;
   if (location_lat !== undefined) updates.location_lat = location_lat === null || location_lat === "" ? null : Number(location_lat);
   if (location_lng !== undefined) updates.location_lng = location_lng === null || location_lng === "" ? null : Number(location_lng);
-  if (location_radius_meters !== undefined) updates.location_radius_meters = location_radius_meters === null || location_radius_meters === "" ? null : Math.min(2000, Math.max(0, Number(location_radius_meters) || 500));
+  if (location_radius_meters !== undefined) {
+    updates.location_radius_meters =
+      location_radius_meters === null || location_radius_meters === ""
+        ? null
+        : normalizeLocationRadiusForStorage(location_radius_meters);
+  }
   if (location_relevant_text !== undefined) updates.location_relevant_text = location_relevant_text ? String(location_relevant_text).trim() : null;
   if (background_color !== undefined) {
     updates.background_color = normalizeHexForPatch(background_color);

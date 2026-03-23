@@ -23,7 +23,7 @@ export function hexToRgb(hex) {
 /**
  * Jusqu'à 10 points de localisation pour le pass (centre + cercle).
  */
-export function buildPassLocations(lat, lng, radiusMeters = 500, relevantText) {
+export function buildPassLocations(lat, lng, radiusMeters = 100, relevantText) {
   const latRad = (lat * Math.PI) / 180;
   const metersPerDegLng = METERS_PER_DEG_LAT * Math.cos(latRad);
   const dLat = radiusMeters / METERS_PER_DEG_LAT;
