@@ -26,6 +26,24 @@ async function getSharp() {
 }
 
 /**
+ * Image de fond carte → strip Wallet 750×246 (même logique SaaS : exclusif avec tampons / points sur le strip).
+ * @returns {Promise<Buffer|null>}
+ */
+async function resizeCardBackgroundToStrip(cardBgB64, sharp) {
+  if (cardBgB64 == null || !String(cardBgB64).trim()) return null;
+  const base64Data = String(cardBgB64).replace(/^data:image\/\w+;base64,/, "").trim();
+  if (!base64Data) return null;
+  const buf = Buffer.from(base64Data, "base64");
+  if (buf.length === 0) return null;
+  try {
+    return await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
+  } catch (e) {
+    console.warn("[PassKit] card_background resize failed:", e?.message);
+    return null;
+  }
+}
+
+/**
  * Génère un fichier .pkpass (buffer) pour un membre.
  * @param {Object} member - { id, name, points }
  * @param {Object} business - optionnel
@@ -124,39 +142,26 @@ export async function generatePass(member, business = null, options = {}) {
 
   const stripStampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
 
+  const cardBgB64 = options.card_background_base64 ?? business?.card_background_base64 ?? null;
+  const cardBgStripBuf = await resizeCardBackgroundToStrip(cardBgB64, sharp);
+  const hasCardBackgroundStrip = cardBgStripBuf != null;
+
   if (format === "tampons") {
-    let baseStrip;
-    if (options.card_background_base64) {
-      const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
-      const buf = Buffer.from(base64Data, "base64");
-      if (buf.length > 0) {
-        try {
-          baseStrip = await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
-        } catch (e) {
-          console.warn("[PassKit] card_background resize failed:", e?.message);
-        }
-      }
+    if (cardBgStripBuf) {
+      buffers["strip.png"] = cardBgStripBuf;
+      buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+    } else {
+      const baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
+      const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
+      const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stripStampEmoji, stampIconBase64);
+      buffers["strip.png"] = stripWithStamps;
+      buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
     }
-    if (!baseStrip) baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
-    const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
-    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stripStampEmoji, stampIconBase64);
-    buffers["strip.png"] = stripWithStamps;
-    buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
   } else {
-    if (options.card_background_base64) {
-      const base64Data = String(options.card_background_base64).replace(/^data:image\/\w+;base64,/, "");
-      const buf = Buffer.from(base64Data, "base64");
-      if (buf.length > 0) {
-        try {
-          const resized = await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
-          buffers["strip.png"] = resized;
-          buffers["strip@2x.png"] = resized;
-        } catch (e) {
-          console.warn("[PassKit] card_background resize failed:", e?.message);
-        }
-      }
-    }
-    if (!buffers["strip.png"] || !options.card_background_base64) {
+    if (cardBgStripBuf) {
+      buffers["strip.png"] = cardBgStripBuf;
+      buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+    } else {
       const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
       buffers["strip.png"] = stripBuf;
       buffers["strip@2x.png"] = stripBuf;
@@ -245,14 +250,21 @@ export async function generatePass(member, business = null, options = {}) {
     }
   } else {
     const pointsValue = String(member.points);
-    pass.primaryFields.push({
+    const pointsField = {
       key: "points",
       label: "Points",
       value: pointsValue,
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tu as maintenant %@ points !",
-    });
+    };
+    /* Avec image sur le strip : pas de gros chiffre « primaire » sur la zone visuelle (aligné SaaS / app). */
+    if (!hasCardBackgroundStrip) {
+      pass.primaryFields.push(pointsField);
+    }
     const sortedPointTiers = parsePointRewardTiersFromBusiness(business);
+    if (hasCardBackgroundStrip) {
+      pass.secondaryFields.push(pointsField);
+    }
     pass.secondaryFields.push({
       key: "rewardsFront",
       label: "Récompense",

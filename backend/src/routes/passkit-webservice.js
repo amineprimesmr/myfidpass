@@ -180,6 +180,7 @@ const getPassHandler = async (req, res) => {
     const opts = {
       template: business.required_stamps != null && business.required_stamps > 0 ? "cafe" : "classic",
       required_stamps: business.required_stamps ?? undefined,
+      program_type: business.program_type ?? undefined,
       stamp_emoji: business.stamp_emoji ?? undefined,
       organizationName: business.organization_name ?? undefined,
       background_color: business.background_color ?? undefined,
