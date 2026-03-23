@@ -1,21 +1,20 @@
 /**
- * Rendu roue du flyer : parts vectorielles (égales) ou image PNG teintée (géométrie du fichier roue.png).
+ * Rendu roue du flyer : parts vectorielles (égales) ou image PNG teintée (6 secteurs égaux).
  */
 import {
   wheelSegmentColorsResolved,
-  FLYER_WHEEL_PNG_ARC_FRACTIONS,
   FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG,
 } from "./app-flyer-qr-presets.js";
 
 /** Léger chevauchement angulaire pour masquer les fentes anti-alias entre secteurs. */
-const SEG_OVERLAP_RAD = 0.007;
+const SEG_OVERLAP_RAD = 0.005;
 
 function offsetRad(offsetDeg) {
   return ((Number(offsetDeg) || 0) * Math.PI) / 180;
 }
 
 /**
- * Parts égales (mode vectoriel), 1re part commence au « haut » canvas (-π/2) + offset.
+ * Parts égales, 1re arête à -π/2 + offset (haut du canvas + rotation).
  * @param {number} i
  * @param {number} n
  * @param {number} offsetDeg
@@ -26,24 +25,6 @@ function segmentAnglesEqual(i, n, offsetDeg) {
   return {
     t0: base + i * step - SEG_OVERLAP_RAD,
     t1: base + (i + 1) * step + SEG_OVERLAP_RAD,
-  };
-}
-
-/**
- * Parts selon fractions du PNG (sens horaire depuis la 1re rainure calée par offset).
- * @param {number} i
- * @param {number} offsetDeg
- * @param {readonly number[]} fractions
- */
-function segmentAnglesPng(i, offsetDeg, fractions) {
-  const base = -Math.PI / 2 + offsetRad(offsetDeg);
-  const twoPi = Math.PI * 2;
-  let acc = 0;
-  for (let j = 0; j < i; j++) acc += fractions[j] * twoPi;
-  const span = fractions[i] * twoPi;
-  return {
-    t0: base + acc - SEG_OVERLAP_RAD,
-    t1: base + acc + span + SEG_OVERLAP_RAD,
   };
 }
 
@@ -82,7 +63,8 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
 }
 
 /**
- * PNG : clip secteur → image → fusion « color ».
+ * PNG : clip disque → par secteur : clip part → image → multiply (noir & couleurs vives OK).
+ * « color » cassait le noir (L=0) et pouvait laisser déborder hors du disque.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
  * @param {number} cy
@@ -90,17 +72,22 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
  * @param {CanvasImageSource} roueImg
  * @param {string[]} colors
  * @param {number} offsetDeg
- * @param {readonly number[]} fractions
  * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
  */
-function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, fractions, drawImageCover) {
+function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, drawImageCover) {
   const n = colors.length;
-  if (n < 1 || fractions.length !== n) return;
+  if (n < 1) return;
   const box = r * 2;
   const lx = cx - r;
   const ly = cy - r;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.clip();
+
   for (let i = 0; i < n; i++) {
-    const { t0, t1 } = segmentAnglesPng(i, offsetDeg, fractions);
+    const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -108,15 +95,17 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, fr
     ctx.closePath();
     ctx.clip();
     drawImageCover(ctx, roueImg, lx, ly, box, box);
-    ctx.globalCompositeOperation = "color";
+    ctx.globalCompositeOperation = "multiply";
     ctx.fillStyle = colors[i];
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, r, t0, t1);
     ctx.closePath();
     ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
     ctx.restore();
   }
+  ctx.restore();
   drawWheelHub(ctx, cx, cy, r);
 }
 
@@ -131,17 +120,7 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   const usePng = s.wheelRenderMode === "png" && roueImg;
   if (usePng) {
     const off = userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG;
-    drawPngWheelSegmentTints(
-      ctx,
-      wheelCx,
-      wheelCy,
-      wheelR,
-      roueImg,
-      colors,
-      off,
-      FLYER_WHEEL_PNG_ARC_FRACTIONS,
-      drawImageCover,
-    );
+    drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }

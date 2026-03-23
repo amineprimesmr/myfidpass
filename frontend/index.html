@@ -842,19 +842,19 @@
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Roue</p>
                     <label class="app-label" for="app-flyer-wheel-mode">Affichage</label>
                     <select id="app-flyer-wheel-mode" class="app-input app-flyer-social-select app-flyer-wheel-mode-select" data-flyer-input>
-                      <option value="segments">5 parts vectorielles (égales)</option>
-                      <option value="png">Image roue.png (5 zones, teinte par zone)</option>
+                      <option value="segments">6 parts vectorielles (égales)</option>
+                      <option value="png">Image roue.png (6 parts, teinte multiply)</option>
                     </select>
                     <div class="app-flyer-field" style="margin-top:0.65rem">
                       <label class="app-label" for="app-flyer-wheel-offset">Rotation découpe (°)</label>
                       <input type="number" id="app-flyer-wheel-offset" class="app-input" min="-180" max="180" step="0.5" value="0" data-flyer-input inputmode="decimal" />
                     </div>
                     <div id="app-flyer-wheel-segments-wrap">
-                      <p class="app-hint" style="margin:0.35rem 0 0.5rem;font-size:0.78rem"><code>roue.png</code> = <strong>5 zones</strong> ; seulement <strong>2 couleurs</strong> en alternance (parts 1·3·5 / 2·4). Rotation découpe si besoin. PNG niveaux de gris / blanc = meilleur volume 3D ; <strong>≥ 2000 px</strong> de côté, fond transparent.</p>
+                      <p class="app-hint" style="margin:0.35rem 0 0.5rem;font-size:0.78rem"><strong>6 parts</strong> égales, <strong>2 couleurs</strong> en alternance (1·3·5 / 2·4·6). Teinte PNG en <strong>multiply</strong> (noir et couleurs foncées OK). Rotation découpe si les rainures ne tombent pas juste. Image <strong>≥ 2000 px</strong>, fond transparent.</p>
                       <div class="app-flyer-wheel-seg-grid" role="group" aria-label="Couleurs alternées de la roue">
                         <label for="app-flyer-wheel-color-odd">Parts impaires (1, 3, 5)</label>
                         <input type="color" id="app-flyer-wheel-color-odd" data-flyer-input />
-                        <label for="app-flyer-wheel-color-even">Parts paires (2, 4)</label>
+                        <label for="app-flyer-wheel-color-even">Parts paires (2, 4, 6)</label>
                         <input type="color" id="app-flyer-wheel-color-even" data-flyer-input />
                       </div>
                     </div>

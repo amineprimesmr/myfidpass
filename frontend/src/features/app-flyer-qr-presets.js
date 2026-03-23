@@ -6,18 +6,12 @@ export const FLYER_STORAGE_KEY = "fidpass_flyer_prefs_v1";
 /** Dimensions export PNG (haute définition impression / zoom). */
 export const FLYER_EXPORT = { w: 2400, h: 3600 };
 
-/** Nombre de parts (aligné sur le visuel actuel de public/assets/roue.png : 5 zones). */
-export const FLYER_WHEEL_SEGMENT_COUNT = 5;
+/** Nombre de parts : 6 secteurs égaux (60°), alignés sur roue.png actuelle. */
+export const FLYER_WHEEL_SEGMENT_COUNT = 6;
 
 /**
- * Fractions de tour (sens horaire) pour chaque part du PNG — rainures ~11h, 1h, 3h, 6h, 9h.
- * Somme = 1 (60° + 60° + 90° + 90° + 60°).
- */
-export const FLYER_WHEEL_PNG_ARC_FRACTIONS = Object.freeze([1 / 6, 1 / 6, 1 / 4, 1 / 4, 1 / 6]);
-
-/**
- * Décalage interne mode PNG seulement : première rainure ≈ 11h quand la rotation utilisateur vaut 0°.
- * (Le mode « parts vectorielles » reste centré sur 12h avec parts égales.)
+ * Mode PNG seulement : calage rainures quand pointeur au milieu d’une part (1re arête ~11h si 0° utilisateur).
+ * Mode vectoriel : pas ce décalage (rotation utilisateur seule).
  */
 export const FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG = -30;
 

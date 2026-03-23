@@ -5,7 +5,6 @@ import {
   FLYER_TEMPLATE_ID,
   wheelSegmentColorsResolved,
   FLYER_WHEEL_SEGMENT_COUNT,
-  FLYER_WHEEL_PNG_ARC_FRACTIONS,
 } from "./app-flyer-qr-presets.js";
 
 describe("mergeFlyerState", () => {
@@ -26,18 +25,14 @@ describe("mergeFlyerState", () => {
     expect(s.colorBgTop).toBe(base.colorBgTop);
   });
 
-  it("alterne 2 couleurs sur les 5 secteurs", () => {
+  it("alterne 2 couleurs sur les 6 secteurs", () => {
     const s = mergeFlyerState({
       wheelColorOdd: "#ff0000",
       wheelColorEven: "#00ff00",
     });
     const cols = wheelSegmentColorsResolved(s);
     expect(cols).toHaveLength(FLYER_WHEEL_SEGMENT_COUNT);
-    expect(cols[0]).toBe("#ff0000");
-    expect(cols[1]).toBe("#00ff00");
-    expect(cols[2]).toBe("#ff0000");
-    expect(cols[3]).toBe("#00ff00");
-    expect(cols[4]).toBe("#ff0000");
+    expect(cols).toEqual(["#ff0000", "#00ff00", "#ff0000", "#00ff00", "#ff0000", "#00ff00"]);
   });
 
   it("migre wheelSeg1/2 vers wheelColorOdd/Even si besoin", () => {
@@ -61,13 +56,5 @@ describe("mergeFlyerState", () => {
     expect(s.templateId).toBe(FLYER_TEMPLATE_ID);
     expect(s.headline).toBe("Ma accroche");
     expect(s.colorPrimary).toBe("#ff00aa");
-  });
-});
-
-describe("FLYER_WHEEL_PNG_ARC_FRACTIONS", () => {
-  it("somme à 1 et correspond au nombre de parts", () => {
-    const sum = FLYER_WHEEL_PNG_ARC_FRACTIONS.reduce((a, b) => a + b, 0);
-    expect(sum).toBeCloseTo(1, 10);
-    expect(FLYER_WHEEL_PNG_ARC_FRACTIONS.length).toBe(FLYER_WHEEL_SEGMENT_COUNT);
   });
 });
