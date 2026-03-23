@@ -332,29 +332,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput) {
 
   fillGradientV(ctx, w, h, s.colorBgTop, s.colorBgBottom);
   if (logoImg) drawFlyerCommerceLogo(ctx, logoImg, w, h);
-  /* Roue avant les textes : sinon elle recouvre l’accroche et le sous-texte. */
+  /* Roue avant le titre : sinon elle recouvre l’accroche. */
   const wheelCx = w * 0.5;
   const wheelCy = h * 0.565;
   const wheelR = w * 0.36;
   drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
-  const headlineBottom = drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
-  const sub = (s.subline || "").trim();
-  if (sub) {
-    const subPx = Math.round(w * 0.044);
-    const subLineH = Math.round(subPx * 1.22);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = s.colorAccent;
-    ctx.font = `600 ${subPx}px "DM Sans", system-ui, sans-serif`;
-    const subMaxW = w * 0.92;
-    const subLines = wrapCanvasTextLines(ctx, sub, subMaxW);
-    const gapBelow = h * 0.014;
-    const anchorY = Math.max(h * 0.255, headlineBottom + gapBelow);
-    const blockHalf = ((subLines.length - 1) * subLineH) / 2;
-    subLines.forEach((ln, i) => {
-      ctx.fillText(ln, w / 2, anchorY - blockHalf + i * subLineH);
-    });
-  }
+  drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
   const qx = w * 0.515;
   const qy = h * 0.608;
   const qCx = qx + qSize / 2;

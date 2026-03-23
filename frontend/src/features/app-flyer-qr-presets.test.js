@@ -58,6 +58,11 @@ describe("mergeFlyerState", () => {
     expect(s.colorPrimary).toBe("#ff00aa");
   });
 
+  it("retire l’ancienne clé subline du stockage", () => {
+    const s = mergeFlyerState({ subline: "texte obsolète" });
+    expect(Object.prototype.hasOwnProperty.call(s, "subline")).toBe(false);
+  });
+
   it("normalise la police et les couleurs du titre", () => {
     const base = defaultFlyerState();
     expect(mergeFlyerState({ headlineFontId: "inconnue" }).headlineFontId).toBe(base.headlineFontId);

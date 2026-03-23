@@ -18,7 +18,6 @@ function readStateFromForm(root) {
   const q = (id) => root.querySelector(`#${id}`);
   return mergeFlyerState({
     headline: q("app-flyer-headline")?.value,
-    subline: q("app-flyer-subline")?.value,
     ctaBanner: q("app-flyer-cta")?.value,
     step1: q("app-flyer-step1")?.value,
     step2: q("app-flyer-step2")?.value,
@@ -54,7 +53,6 @@ function writeFormFromState(root, s) {
     if (el && "value" in el) el.value = v;
   };
   set("app-flyer-headline", s.headline);
-  set("app-flyer-subline", s.subline);
   set("app-flyer-cta", s.ctaBanner);
   set("app-flyer-step1", s.step1);
   set("app-flyer-step2", s.step2);

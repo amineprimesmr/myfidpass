@@ -56,7 +56,6 @@ export function flyerTemplateMeta(id) {
  * @typedef {object} FlyerState
  * @property {string} templateId
  * @property {string} headline
- * @property {string} subline
  * @property {string} ctaBanner
  * @property {string} step1
  * @property {string} step2
@@ -89,7 +88,6 @@ export function defaultFlyerState() {
   return {
     templateId: FLYER_TEMPLATE_ID,
     headline: "Fais tourner la roue",
-    subline: "La carte fidélité en un scan",
     ctaBanner: "SCANNEZ POUR JOUER",
     step1: "Scannez le QR code",
     step2: "Ajoutez la carte au Wallet",
@@ -188,6 +186,7 @@ export function mergeFlyerState(raw) {
     String(hasEvenKey ? raw.wheelColorEven ?? "" : raw.wheelSeg2 ?? ""),
     base.wheelColorEven,
   );
+  delete merged.subline;
   return {
     ...merged,
     colorPrimary: safeHex(String(merged.colorPrimary ?? ""), base.colorPrimary),
