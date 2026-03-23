@@ -1,0 +1,25 @@
+/**
+ * Sliders typographie Flyer QR (taille titre, étapes, roue).
+ */
+#app-app .app-flyer-range-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+#app-app .app-flyer-range-row input[type="range"] {
+  flex: 1;
+  min-width: 140px;
+  accent-color: var(--app-accent, #2563eb);
+}
+
+#app-app .app-flyer-range-readout {
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--app-text-muted, #64748b);
+  min-width: 3.25rem;
+  text-align: right;
+}

@@ -98,4 +98,14 @@ describe("mergeFlyerState", () => {
     const s = mergeFlyerState({ flyerWheelOutlineWidth: 8 });
     expect(Object.prototype.hasOwnProperty.call(s, "flyerWheelOutlineWidth")).toBe(false);
   });
+
+  it("borne la taille du titre et l’échelle des textes (étapes / roue)", () => {
+    const b = defaultFlyerState();
+    expect(mergeFlyerState({ headlineSizePct: 22 }).headlineSizePct).toBe(16);
+    expect(mergeFlyerState({ headlineSizePct: 2 }).headlineSizePct).toBe(5);
+    expect(mergeFlyerState({ headlineSizePct: 11.34 }).headlineSizePct).toBe(11.3);
+    expect(mergeFlyerState({}).headlineSizePct).toBe(b.headlineSizePct);
+    expect(mergeFlyerState({ flyerFooterTextScalePct: 200 }).flyerFooterTextScalePct).toBe(130);
+    expect(mergeFlyerState({ flyerWheelLabelScalePct: 40 }).flyerWheelLabelScalePct).toBe(70);
+  });
 });

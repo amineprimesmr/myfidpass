@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="/src/app-card-rules.css" />
     <link rel="stylesheet" href="/src/app-integration.css" />
     <link rel="stylesheet" href="/src/app-flyer-qr.css" />
+    <link rel="stylesheet" href="/src/app-flyer-qr-typography.css" />
     <link rel="stylesheet" href="/src/app-integration-guide.css" />
     <link rel="stylesheet" href="/src/landing-integration-catalog.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
@@ -837,6 +838,13 @@
                         <label class="app-label" for="app-flyer-headline-tracking">Espacement des lettres</label>
                         <input type="number" id="app-flyer-headline-tracking" class="app-input" min="0" max="8" step="0.5" value="0" data-flyer-input inputmode="decimal" />
                       </div>
+                      <div class="app-flyer-field app-flyer-field--compact">
+                        <label class="app-label" for="app-flyer-headline-size">Taille du titre (% de la largeur du flyer)</label>
+                        <div class="app-flyer-range-row">
+                          <input type="range" id="app-flyer-headline-size" min="5" max="16" step="0.5" value="9.2" data-flyer-input aria-valuemin="5" aria-valuemax="16" />
+                          <span class="app-flyer-range-readout" id="app-flyer-headline-size-out" aria-hidden="true">9,2 %</span>
+                        </div>
+                      </div>
                     </div>
                     <p class="app-flyer-chip-label" style="margin-top:0.75rem">Cadre QR</p>
                     <div class="app-flyer-field app-flyer-field--compact">
@@ -848,6 +856,20 @@
                       <input type="text" id="app-flyer-cta" class="app-input" maxlength="80" data-flyer-input />
                     </div>
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Étapes (bas de flyer)</p>
+                    <div class="app-flyer-field app-flyer-field--compact">
+                      <label class="app-label" for="app-flyer-footer-text-scale">Taille du texte (étapes + bande « Suivez-nous »)</label>
+                      <div class="app-flyer-range-row">
+                        <input type="range" id="app-flyer-footer-text-scale" min="70" max="130" step="5" value="100" data-flyer-input aria-valuemin="70" aria-valuemax="130" />
+                        <span class="app-flyer-range-readout" id="app-flyer-footer-text-scale-out" aria-hidden="true">100 %</span>
+                      </div>
+                    </div>
+                    <div class="app-flyer-field app-flyer-field--compact">
+                      <label class="app-label" for="app-flyer-wheel-label-scale">Taille du texte sur la roue (GAGNÉ / PERDU)</label>
+                      <div class="app-flyer-range-row">
+                        <input type="range" id="app-flyer-wheel-label-scale" min="70" max="130" step="5" value="100" data-flyer-input aria-valuemin="70" aria-valuemax="130" />
+                        <span class="app-flyer-range-readout" id="app-flyer-wheel-label-scale-out" aria-hidden="true">100 %</span>
+                      </div>
+                    </div>
                     <div class="app-flyer-field">
                       <label class="app-label" for="app-flyer-step1">Étape 1</label>
                       <input type="text" id="app-flyer-step1" class="app-input" maxlength="120" data-flyer-input />

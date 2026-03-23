@@ -38,14 +38,17 @@ function segmentAnglesEqual(i, n, offsetDeg) {
  * @param {number} r
  * @param {number} offsetDeg
  * @param {number} n
+ * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  */
-function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n) {
+function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
   if (n < 1) return;
   const base = -Math.PI / 2 + offsetRad(offsetDeg);
   const step = (Math.PI * 2) / n;
   /** Milieu radial de la couronne (entre moyeu et bord extérieur). */
   const labelR = r * 0.53;
-  const fontPx = Math.max(15, Math.round(r * 0.104));
+  const wl = Number(s.flyerWheelLabelScalePct);
+  const wsc = Number.isFinite(wl) ? Math.max(0.7, Math.min(1.35, wl / 100)) : 1;
+  const fontPx = Math.max(11, Math.round(r * 0.104 * wsc));
   const track = Math.round(fontPx * 0.04);
 
   ctx.save();
@@ -182,10 +185,10 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   if (usePng) {
     const off = userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG;
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
-    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, off, n);
+    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, off, n, s);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
-    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, n);
+    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, n, s);
   }
   drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }

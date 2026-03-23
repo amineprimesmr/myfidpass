@@ -48,6 +48,9 @@ function readStateFromForm(root) {
     headlineStrokeWidth: Number(q("app-flyer-headline-stroke-w")?.value),
     headlineLogoGapPct: Number(q("app-flyer-headline-logo-gap")?.value),
     headlineLetterSpacing: Number(q("app-flyer-headline-tracking")?.value),
+    headlineSizePct: Number(q("app-flyer-headline-size")?.value),
+    flyerFooterTextScalePct: Number(q("app-flyer-footer-text-scale")?.value),
+    flyerWheelLabelScalePct: Number(q("app-flyer-wheel-label-scale")?.value),
     flyerBgOverlayPct: Number(q("app-flyer-bg-overlay")?.value),
     flyerQrOutlineWidth: Number(q("app-flyer-qr-outline")?.value),
   });
@@ -85,6 +88,9 @@ function writeFormFromState(root, s) {
   set("app-flyer-headline-stroke-w", String(s.headlineStrokeWidth ?? 0));
   set("app-flyer-headline-logo-gap", String(s.headlineLogoGapPct ?? 0));
   set("app-flyer-headline-tracking", String(s.headlineLetterSpacing ?? 0));
+  set("app-flyer-headline-size", String(s.headlineSizePct ?? 9.2));
+  set("app-flyer-footer-text-scale", String(s.flyerFooterTextScalePct ?? 100));
+  set("app-flyer-wheel-label-scale", String(s.flyerWheelLabelScalePct ?? 100));
   set("app-flyer-bg-overlay", String(s.flyerBgOverlayPct ?? 52));
   set("app-flyer-qr-outline", String(s.flyerQrOutlineWidth ?? 0));
 }
@@ -304,6 +310,23 @@ export function initAppFlyerQr(slug, opts) {
     el.addEventListener("input", schedulePaint);
     el.addEventListener("change", schedulePaint);
   });
+
+  /** @param {string} rangeId @param {string} outId @param {boolean} [commaDecimal] */
+  function bindFlyerRangeReadout(rangeId, outId, commaDecimal = false) {
+    const r = root.querySelector(`#${rangeId}`);
+    const o = root.querySelector(`#${outId}`);
+    if (!r || !o || !("value" in r)) return;
+    const sync = () => {
+      let v = String(/** @type {HTMLInputElement} */ (r).value);
+      if (commaDecimal) v = v.replace(".", ",");
+      o.textContent = `${v} %`;
+    };
+    r.addEventListener("input", sync);
+    sync();
+  }
+  bindFlyerRangeReadout("app-flyer-headline-size", "app-flyer-headline-size-out", true);
+  bindFlyerRangeReadout("app-flyer-footer-text-scale", "app-flyer-footer-text-scale-out", false);
+  bindFlyerRangeReadout("app-flyer-wheel-label-scale", "app-flyer-wheel-label-scale-out", false);
 
   if (panelToggle && panel) {
     panelToggle.addEventListener("click", () => {

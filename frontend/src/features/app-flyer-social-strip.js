@@ -145,13 +145,16 @@ function drawTwitterXGlyph(ctx, cx, cy, r) {
  * @param {number} yTop
  * @param {number} stripH
  * @param {{ platform: string; url: string }[]} entries
+ * @param {import("./app-flyer-qr-presets.js").FlyerState} [flyerState]
  */
-export async function drawFlyerSocialStrip(ctx, w, yTop, stripH, entries) {
+export async function drawFlyerSocialStrip(ctx, w, yTop, stripH, entries, flyerState) {
   if (!entries.length) return;
+  const ft = flyerState ? Number(flyerState.flyerFooterTextScalePct) : NaN;
+  const fsc = Number.isFinite(ft) ? Math.max(0.7, Math.min(1.35, ft / 100)) : 1;
   ctx.fillStyle = "#050508";
   ctx.fillRect(0, yTop, w, stripH);
   const n = entries.length;
-  const iconR = stripH * 0.28;
+  const iconR = stripH * 0.28 * fsc;
   const gap = w * 0.055;
   const total = n * iconR * 2 + (n - 1) * gap;
   let x = (w - total) / 2 + iconR;
@@ -159,7 +162,7 @@ export async function drawFlyerSocialStrip(ctx, w, yTop, stripH, entries) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "rgba(148,163,184,0.95)";
-  ctx.font = `700 ${Math.round(stripH * 0.19)}px Outfit, system-ui, sans-serif`;
+  ctx.font = `700 ${Math.round(stripH * 0.19 * fsc)}px Outfit, system-ui, sans-serif`;
   ctx.fillText("Suivez-nous", w / 2, yTop + stripH * 0.24);
 
   for (const e of entries) {

@@ -252,6 +252,8 @@ function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
 function drawFooterBar(ctx, w, h, s, dark, bottomReserve = 0) {
   const fh = h * FLYER_LAYOUT.footerStepsHeightFrac;
   const y0 = Math.max(0, h - bottomReserve - fh);
+  const ft = Number(s.flyerFooterTextScalePct);
+  const fsc = Number.isFinite(ft) ? Math.max(0.7, Math.min(1.35, ft / 100)) : 1;
   ctx.fillStyle = dark ? "#0a0a0a" : "#1e293b";
   ctx.fillRect(0, y0, w, fh);
   const steps = [s.step1, s.step2, s.step3];
@@ -263,12 +265,12 @@ function drawFooterBar(ctx, w, h, s, dark, bottomReserve = 0) {
     const cx = cw * i + cw / 2;
     const cy = y0 + fh * 0.5;
     ctx.fillStyle = dark ? s.colorPrimary : "#94a3b8";
-    ctx.font = `700 ${Math.round(fh * 0.14)}px Outfit, system-ui, sans-serif`;
+    ctx.font = `700 ${Math.round(fh * 0.14 * fsc)}px Outfit, system-ui, sans-serif`;
     ctx.fillText(icons[i], cx, cy - fh * 0.12);
     ctx.fillStyle = dark ? "#f1f5f9" : "#f8fafc";
-    ctx.font = `600 ${Math.round(fh * 0.09)}px Outfit, system-ui, sans-serif`;
+    ctx.font = `600 ${Math.round(fh * 0.09 * fsc)}px Outfit, system-ui, sans-serif`;
     const words = steps[i] || "";
-    wrapCenter(ctx, words, cx, cy + fh * 0.1, cw * 0.85, Math.round(fh * 0.085));
+    wrapCenter(ctx, words, cx, cy + fh * 0.1, cw * 0.85, Math.round(fh * 0.085 * fsc));
   }
 }
 
@@ -372,5 +374,5 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const footerBannerImg = await getFlyerFooterBanner();
   if (footerBannerImg) drawFooterBanner(ctx, w, h, bannerBottom, footerBannerImg);
   else drawFooterBar(ctx, w, h, s, true, stripH);
-  await drawFlyerSocialStrip(ctx, w, h - stripH, stripH, socialEntries);
+  await drawFlyerSocialStrip(ctx, w, h - stripH, stripH, socialEntries, s);
 }

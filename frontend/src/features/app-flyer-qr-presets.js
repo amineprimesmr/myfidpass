@@ -97,6 +97,9 @@ export function flyerTemplateMeta(id) {
  * @property {number} headlineStrokeWidth épaisseur contour (0 = aucun), 0–32
  * @property {number} headlineLogoGapPct espace logo → titre (% hauteur flyer, 0–14)
  * @property {number} headlineLetterSpacing espacement lettres (0–8, px réf. export)
+ * @property {number} headlineSizePct taille police titre (% largeur flyer), 5–16
+ * @property {number} flyerFooterTextScalePct échelle texte étapes + bande sociale, 70–130
+ * @property {number} flyerWheelLabelScalePct échelle GAGNÉ/PERDU sur la roue, 70–130
  * @property {number} flyerBgOverlayPct voile sur image de fond (0–90), 0 = photo seule
  * @property {number} flyerQrOutlineWidth cadre autour du QR (0 = off), 0–12
  */
@@ -131,6 +134,9 @@ export function defaultFlyerState() {
     headlineStrokeWidth: 5,
     headlineLogoGapPct: 4,
     headlineLetterSpacing: 0,
+    headlineSizePct: 9.2,
+    flyerFooterTextScalePct: 100,
+    flyerWheelLabelScalePct: 100,
     flyerBgOverlayPct: 52,
     flyerQrOutlineWidth: 5,
   };
@@ -190,6 +196,18 @@ function clampHeadlineLetterSpacing(v) {
   return Math.max(0, Math.min(8, Math.round(n * 2) / 2));
 }
 
+function clampHeadlineSizePct(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 9.2;
+  return Math.max(5, Math.min(16, Math.round(n * 10) / 10));
+}
+
+function clampFlyerTextScalePct(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 100;
+  return Math.max(70, Math.min(130, Math.round(n / 5) * 5));
+}
+
 function clampFlyerBgOverlayPct(v) {
   const n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return 52;
@@ -241,6 +259,9 @@ export function mergeFlyerState(raw) {
     headlineStrokeWidth: clampHeadlineStrokeW(merged.headlineStrokeWidth),
     headlineLogoGapPct: clampHeadlineGapPct(merged.headlineLogoGapPct),
     headlineLetterSpacing: clampHeadlineLetterSpacing(merged.headlineLetterSpacing),
+    headlineSizePct: clampHeadlineSizePct(merged.headlineSizePct),
+    flyerFooterTextScalePct: clampFlyerTextScalePct(merged.flyerFooterTextScalePct),
+    flyerWheelLabelScalePct: clampFlyerTextScalePct(merged.flyerWheelLabelScalePct),
     flyerBgOverlayPct: clampFlyerBgOverlayPct(merged.flyerBgOverlayPct),
     flyerQrOutlineWidth: clampFlyerQrOutlineW(merged.flyerQrOutlineWidth),
   };

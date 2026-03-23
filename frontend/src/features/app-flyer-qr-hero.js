@@ -4,9 +4,6 @@
 import { flyerHeadlineFontDef } from "./app-flyer-qr-headline-fonts.js";
 import { FLYER_LOGO_BLOCK_BOTTOM_FRAC } from "./app-flyer-qr-presets.js";
 
-/** Part de la largeur canvas pour la taille du titre (export 2400 px). */
-const HEADLINE_SIZE_FRAC = 0.092;
-
 /**
  * @param {CanvasRenderingContext2D} ctx
  * @param {string} text
@@ -43,7 +40,9 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   if (!text) return 0;
 
   const font = flyerHeadlineFontDef(s.headlineFontId);
-  const fontSize = Math.round(w * HEADLINE_SIZE_FRAC);
+  const sizePct = Number(s.headlineSizePct);
+  const frac = (Number.isFinite(sizePct) ? Math.max(5, Math.min(16, sizePct)) : 9.2) / 100;
+  const fontSize = Math.round(w * frac);
   const lineMult = font.tight || font.id === "bebas" ? 1.08 : 1.2;
   const lineH = Math.round(fontSize * lineMult);
 
