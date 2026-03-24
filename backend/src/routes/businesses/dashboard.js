@@ -82,11 +82,18 @@ router.get("/settings", (req, res) => {
     points_min_amount_eur: business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
     sector: business.sector ?? undefined,
-    logo_url: business.logo_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/logo` : undefined,
+    logo_url:
+      Number(business.asset_logo_present) === 1
+        ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/logo`
+        : undefined,
     logo_updated_at: business.logo_updated_at ?? undefined,
-    logo_icon_url: business.logo_icon_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/logo-icon` : undefined,
+    logo_icon_url:
+      Number(business.asset_logo_icon_present) === 1
+        ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/logo-icon`
+        : undefined,
     logo_icon_updated_at: business.logo_icon_updated_at ?? undefined,
-    has_card_background: !!(business.card_background_base64 && String(business.card_background_base64).trim()),
+    has_card_background: Number(business.asset_card_background_present) === 1,
+    card_background_updated_at: business.card_background_updated_at ?? undefined,
     strip_color: business.strip_color ?? undefined,
     strip_display_mode: business.strip_display_mode ?? "logo",
     strip_text: business.strip_text ?? undefined,
@@ -95,8 +102,11 @@ router.get("/settings", (req, res) => {
     header_right_text: business.header_right_text ?? undefined,
     notification_title_override: business.notification_title_override ?? undefined,
     notification_change_message: business.notification_change_message ?? undefined,
-    has_stamp_icon: !!(business.stamp_icon_base64 && String(business.stamp_icon_base64).trim()),
-    stamp_icon_url: business.stamp_icon_base64 ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/stamp-icon` : undefined,
+    has_stamp_icon: Number(business.asset_stamp_icon_present) === 1,
+    stamp_icon_url:
+      Number(business.asset_stamp_icon_present) === 1
+        ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/stamp-icon`
+        : undefined,
     engagement_rewards: getEngagementRewards(business.id),
   });
 });

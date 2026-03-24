@@ -3,6 +3,7 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { setBusinessAssetData } from "./business-assets.js";
 import {
   DEMO_LOYALTY_MODE,
   DEMO_POINTS_REWARD_TIERS_JSON,
@@ -90,9 +91,46 @@ export function createBusiness({
 export function updateBusiness(businessId, updates) {
   const b = getBusinessById(businessId);
   if (!b) return null;
+
+  const u = { ...updates };
+  if (u.logo_base64 !== undefined) {
+    setBusinessAssetData(businessId, "logo", u.logo_base64 === null || u.logo_base64 === "" ? null : String(u.logo_base64));
+    u.logo_updated_at =
+      u.logo_base64 == null || u.logo_base64 === "" ? null : new Date().toISOString();
+    delete u.logo_base64;
+  }
+  if (u.logo_icon_base64 !== undefined) {
+    setBusinessAssetData(
+      businessId,
+      "logo_icon",
+      u.logo_icon_base64 === null || u.logo_icon_base64 === "" ? null : String(u.logo_icon_base64),
+    );
+    u.logo_icon_updated_at =
+      u.logo_icon_base64 == null || u.logo_icon_base64 === "" ? null : new Date().toISOString();
+    delete u.logo_icon_base64;
+  }
+  if (u.card_background_base64 !== undefined) {
+    setBusinessAssetData(
+      businessId,
+      "card_background",
+      u.card_background_base64 === null || u.card_background_base64 === "" ? null : String(u.card_background_base64),
+    );
+    u.card_background_updated_at =
+      u.card_background_base64 == null || u.card_background_base64 === "" ? null : new Date().toISOString();
+    delete u.card_background_base64;
+  }
+  if (u.stamp_icon_base64 !== undefined) {
+    setBusinessAssetData(
+      businessId,
+      "stamp_icon",
+      u.stamp_icon_base64 === null || u.stamp_icon_base64 === "" ? null : String(u.stamp_icon_base64),
+    );
+    delete u.stamp_icon_base64;
+  }
+
   const allowed = [
     "slug", "organization_name", "back_terms", "back_contact", "background_color", "foreground_color", "label_color",
-    "logo_base64", "logo_updated_at", "logo_icon_base64", "logo_icon_updated_at", "card_background_base64", "strip_color", "strip_display_mode", "strip_text",
+    "logo_updated_at", "logo_icon_updated_at", "card_background_updated_at", "strip_color", "strip_display_mode", "strip_text",
     "location_lat", "location_lng", "location_relevant_text", "location_radius_meters", "location_address",
     "wallet_pass_include_locations",
     "required_stamps", "stamp_emoji", "points_per_euro", "points_per_visit", "program_type", "loyalty_mode",
@@ -112,13 +150,11 @@ export function updateBusiness(businessId, updates) {
   ];
   const setClauses = [];
   const values = [];
-  for (const [key, value] of Object.entries(updates)) {
+  for (const [key, value] of Object.entries(u)) {
     const col = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
     if (allowed.includes(col) && value !== undefined) {
       setClauses.push(`${col} = ?`);
-      if (col === "logo_base64" || col === "logo_icon_base64" || col === "card_background_base64") {
-        values.push(value === null || value === "" ? null : String(value));
-      } else if (col === "points_reward_tiers" || col === "engagement_rewards") {
+      if (col === "points_reward_tiers" || col === "engagement_rewards") {
         values.push(value == null || value === "" ? null : (typeof value === "string" ? value : JSON.stringify(value)));
       } else if (numericCols.includes(col)) {
         const n = value === null || value === "" ? null : Number(value);
@@ -128,15 +164,7 @@ export function updateBusiness(businessId, updates) {
       }
     }
   }
-  if (setClauses.length === 0) return b;
-  if (updates.logo_base64 !== undefined) {
-    setClauses.push("logo_updated_at = ?");
-    values.push(new Date().toISOString());
-  }
-  if (updates.logo_icon_base64 !== undefined) {
-    setClauses.push("logo_icon_updated_at = ?");
-    values.push(new Date().toISOString());
-  }
+  if (setClauses.length === 0) return getBusinessById(businessId);
   values.push(businessId);
   db.prepare(`UPDATE businesses SET ${setClauses.join(", ")} WHERE id = ?`).run(...values);
   return getBusinessById(businessId);

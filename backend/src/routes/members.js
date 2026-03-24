@@ -1,5 +1,13 @@
 import { Router } from "express";
-import { createMember, getMember, addPoints, getBusinessBySlug, getBusinessById, getPushTokensForMember } from "../db.js";
+import {
+  createMember,
+  getMember,
+  addPoints,
+  getBusinessBySlug,
+  getBusinessById,
+  getPushTokensForMember,
+  mergeBusinessAssetsForPass,
+} from "../db.js";
 import { generatePass } from "../pass.js";
 import { sendPassKitUpdate } from "../apns.js";
 import { randomUUID } from "crypto";
@@ -93,7 +101,7 @@ router.post("/:memberId/points", async (req, res) => {
 router.get("/:memberId/pass", async (req, res) => {
   const member = getMember(req.params.memberId);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
-  const business = member.business_id ? getBusinessById(member.business_id) : null;
+  const business = member.business_id ? mergeBusinessAssetsForPass(getBusinessById(member.business_id)) : null;
   try {
     const buffer = await generatePass(member, business);
     const filename = `fidelity-${member.id.slice(0, 8)}.pkpass`;

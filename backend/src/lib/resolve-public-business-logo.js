@@ -3,6 +3,7 @@
  * Sert /api/businesses/:slug/public/logo pour la page fidélité / roue.
  */
 import { getBusinessLogoFileForPublic } from "./business-logo-assets.js";
+import { getBusinessAssetData } from "../db/business-assets.js";
 import { buildBuffers } from "../pass/build-buffers.js";
 import { createLogoFromText, sanitizeLogoText, resizeLogoForPass } from "../pass/images-logo.js";
 
@@ -38,8 +39,10 @@ export async function resolvePublicWalletLogoPng(business) {
     }
   }
 
-  if (business.logo_base64) {
-    const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "").trim();
+  const logoFromStore =
+    (business.id && getBusinessAssetData(String(business.id), "logo")) || business.logo_base64 || null;
+  if (logoFromStore) {
+    const base64Data = String(logoFromStore).replace(/^data:image\/\w+;base64,/, "").trim();
     const logoBuf = Buffer.from(base64Data, "base64");
     if (logoBuf.length > 0) {
       const resized = await resizeLogoForPass(logoBuf);

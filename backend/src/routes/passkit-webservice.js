@@ -4,7 +4,15 @@
  * Authentification : header Authorization: ApplePass <authenticationToken>
  */
 import { Router } from "express";
-import { getMember, getBusinessById, registerPassDevice, getPushTokensForMember, unregisterPassDevice, getUpdatedPassSerialNumbersForDevice } from "../db.js";
+import {
+  getMember,
+  getBusinessById,
+  registerPassDevice,
+  getPushTokensForMember,
+  unregisterPassDevice,
+  getUpdatedPassSerialNumbersForDevice,
+  mergeBusinessAssetsForPass,
+} from "../db.js";
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
 
@@ -165,11 +173,12 @@ const getPassHandler = async (req, res) => {
       console.log("[PassKit] GET pass: 404 — membre introuvable serialNumber=", shortId);
       return res.status(404).json({ error: "Pass not found" });
     }
-    const business = getBusinessById(member.business_id);
-    if (!business) {
+    const businessRow = getBusinessById(member.business_id);
+    if (!businessRow) {
       console.log("[PassKit] GET pass: 404 — business introuvable business_id=", member.business_id, "pour", shortId);
       return res.status(404).json({ error: "Business not found" });
     }
+    const business = mergeBusinessAssetsForPass(businessRow);
 
     const lastModified = getPassLastModified(member, business);
     const rawB64 = business.logo_base64 ? String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "") : "";

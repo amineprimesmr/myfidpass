@@ -415,4 +415,71 @@ export function runMigrations(db) {
   if (!bizFlyerCols2.includes("flyer_prefs_updated_at")) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN flyer_prefs_updated_at TEXT"));
   }
+
+  const businessAssetsTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='business_assets'").get();
+  if (!businessAssetsTable) {
+    const bizBeforeAssets = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+    if (!bizBeforeAssets.includes("card_background_updated_at")) {
+      safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN card_background_updated_at TEXT"));
+    }
+    safeRun(db, () => {
+      db.exec(`
+        CREATE TABLE business_assets (
+          business_id TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          data TEXT NOT NULL,
+          PRIMARY KEY (business_id, kind),
+          FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+        );
+        CREATE INDEX idx_business_assets_business_id ON business_assets(business_id);
+      `);
+    });
+    const flagPairs = [
+      ["asset_logo_present", "INTEGER NOT NULL DEFAULT 0"],
+      ["asset_logo_icon_present", "INTEGER NOT NULL DEFAULT 0"],
+      ["asset_card_background_present", "INTEGER NOT NULL DEFAULT 0"],
+      ["asset_stamp_icon_present", "INTEGER NOT NULL DEFAULT 0"],
+    ];
+    for (const [col, colType] of flagPairs) {
+      const cols = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+      if (!cols.includes(col)) {
+        safeRun(db, () => db.exec(`ALTER TABLE businesses ADD COLUMN ${col} ${colType}`));
+      }
+    }
+    const blobRows = db
+      .prepare(
+        "SELECT id, logo_base64, logo_icon_base64, card_background_base64, stamp_icon_base64 FROM businesses",
+      )
+      .all();
+    const ins = db.prepare("INSERT OR REPLACE INTO business_assets (business_id, kind, data) VALUES (?, ?, ?)");
+    for (const row of blobRows) {
+      if (row.logo_base64 && String(row.logo_base64).trim()) ins.run(row.id, "logo", String(row.logo_base64));
+      if (row.logo_icon_base64 && String(row.logo_icon_base64).trim())
+        ins.run(row.id, "logo_icon", String(row.logo_icon_base64));
+      if (row.card_background_base64 && String(row.card_background_base64).trim())
+        ins.run(row.id, "card_background", String(row.card_background_base64));
+      if (row.stamp_icon_base64 && String(row.stamp_icon_base64).trim())
+        ins.run(row.id, "stamp_icon", String(row.stamp_icon_base64));
+    }
+    db.prepare(
+      "UPDATE businesses SET logo_base64 = NULL, logo_icon_base64 = NULL, card_background_base64 = NULL, stamp_icon_base64 = NULL",
+    ).run();
+    db.exec(`UPDATE businesses SET asset_logo_present = 0, asset_logo_icon_present = 0, asset_card_background_present = 0, asset_stamp_icon_present = 0`);
+    db.exec(`UPDATE businesses SET asset_logo_present = 1 WHERE id IN (SELECT business_id FROM business_assets WHERE kind = 'logo')`);
+    db.exec(`UPDATE businesses SET asset_logo_icon_present = 1 WHERE id IN (SELECT business_id FROM business_assets WHERE kind = 'logo_icon')`);
+    db.exec(
+      `UPDATE businesses SET asset_card_background_present = 1 WHERE id IN (SELECT business_id FROM business_assets WHERE kind = 'card_background')`,
+    );
+    db.exec(`UPDATE businesses SET asset_stamp_icon_present = 1 WHERE id IN (SELECT business_id FROM business_assets WHERE kind = 'stamp_icon')`);
+    safeRun(db, () =>
+      db.exec(
+        `UPDATE businesses SET card_background_updated_at = COALESCE(logo_updated_at, datetime('now')) WHERE asset_card_background_present = 1`,
+      ),
+    );
+  }
+
+  const bizColsBgUpd = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsBgUpd.includes("card_background_updated_at")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN card_background_updated_at TEXT"));
+  }
 }

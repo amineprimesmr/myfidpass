@@ -10,6 +10,7 @@ export default db;
 
 export * from "./users.js";
 export * from "./businesses.js";
+export * from "./business-assets.js";
 export * from "./members.js";
 export * from "./transactions.js";
 export * from "./subscriptions.js";

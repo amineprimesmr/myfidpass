@@ -23,6 +23,14 @@ import { getPassAuthenticationToken } from "../../pass.js";
 import { getDashboardStats } from "../../db.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
 
+function businessHasNotificationLogo(business) {
+  return (
+    Number(business?.asset_logo_icon_present) === 1 ||
+    Number(business?.asset_logo_present) === 1 ||
+    !!(business?.logo_icon_base64 || business?.logo_base64)
+  );
+}
+
 export async function notifyHandler(req, res) {
   const business = req.business;
   if (!canAccessDashboard(business, req)) {
@@ -44,10 +52,9 @@ export async function notifyHandler(req, res) {
   }
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  const iconUrl =
-    (business.logo_icon_base64 || business.logo_base64)
-      ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
-      : null;
+  const iconUrl = businessHasNotificationLogo(business)
+    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+    : null;
   const payload = {
     title: (business.organization_name || "Myfidpass").trim(),
     body: message,
@@ -130,10 +137,9 @@ router.post("/send", async (req, res) => {
   }
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  const iconUrl =
-    (business.logo_icon_base64 || business.logo_base64)
-      ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
-      : null;
+  const iconUrl = businessHasNotificationLogo(business)
+    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+    : null;
   const payload = {
     title: (title || business.notification_title_override || business.organization_name || "Myfidpass").trim(),
     body,

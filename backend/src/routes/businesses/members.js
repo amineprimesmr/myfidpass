@@ -20,6 +20,7 @@ import {
   markRewardGrantClaimed,
   getPushTokensForMember,
   businessUsesTicketBonuses,
+  mergeBusinessAssetsForPass,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
@@ -432,30 +433,31 @@ router.get("/:memberId/pass", async (req, res) => {
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
+  const biz = mergeBusinessAssetsForPass(business);
   const template = req.query.template || "classic";
   const opts = { template };
   if (req.query.organization_name != null) opts.organizationName = req.query.organization_name;
-  opts.background_color = req.query.background_color ?? business?.background_color ?? undefined;
+  opts.background_color = req.query.background_color ?? biz?.background_color ?? undefined;
   opts.backgroundColor = opts.background_color;
   const stripFromQuery = (req.query.strip_color ?? "").toString().trim();
-  opts.strip_color = stripFromQuery || opts.background_color || business?.strip_color || undefined;
+  opts.strip_color = stripFromQuery || opts.background_color || biz?.strip_color || undefined;
   opts.stripColor = opts.strip_color;
-  opts.foreground_color = req.query.foreground_color ?? business?.foreground_color ?? undefined;
+  opts.foreground_color = req.query.foreground_color ?? biz?.foreground_color ?? undefined;
   opts.foregroundColor = opts.foreground_color;
   const programTypeQuery = (req.query.program_type || "").toLowerCase();
-  opts.program_type = programTypeQuery === "points" || programTypeQuery === "stamps" ? programTypeQuery : (business?.program_type ?? undefined);
-  opts.stamp_emoji = req.query.stamp_emoji ?? business.stamp_emoji ?? undefined;
+  opts.program_type = programTypeQuery === "points" || programTypeQuery === "stamps" ? programTypeQuery : (biz?.program_type ?? undefined);
+  opts.stamp_emoji = req.query.stamp_emoji ?? biz.stamp_emoji ?? undefined;
   if (req.query.required_stamps != null) {
     const n = parseInt(req.query.required_stamps, 10);
     if (Number.isInteger(n) && n > 0) opts.required_stamps = n;
   }
-  if (business?.card_background_base64) opts.card_background_base64 = business.card_background_base64;
-  const stripDisplayMode = (req.query.strip_display_mode ?? business?.strip_display_mode ?? "logo").toString().toLowerCase();
+  if (biz?.card_background_base64) opts.card_background_base64 = biz.card_background_base64;
+  const stripDisplayMode = (req.query.strip_display_mode ?? biz?.strip_display_mode ?? "logo").toString().toLowerCase();
   opts.strip_display_mode = stripDisplayMode === "text" ? "text" : "logo";
-  opts.strip_text = req.query.strip_text ?? business?.strip_text ?? undefined;
+  opts.strip_text = req.query.strip_text ?? biz?.strip_text ?? undefined;
 
   try {
-    const buffer = await generatePass(member, business, opts);
+    const buffer = await generatePass(member, biz, opts);
     const filename = `fidelity-${business.slug}-${member.id.slice(0, 8)}.pkpass`;
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
