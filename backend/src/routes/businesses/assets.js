@@ -5,7 +5,7 @@
 import { Router } from "express";
 import { getLogoIconBuffer } from "../../notifications.js";
 import { canAccessDashboard } from "./shared.js";
-import { getBusinessAssetData } from "../../db/business-assets.js";
+import { getBusinessAssetData, getAllBusinessAssetsMap } from "../../db/business-assets.js";
 
 const router = Router();
 
@@ -36,9 +36,10 @@ function setAssetCacheHeaders(res, req, etagKey) {
 
 router.get("/notification-icon", async (req, res) => {
   const business = req.business;
+  const assets = business?.id ? getAllBusinessAssetsMap(business.id) : null;
   const b64 =
-    getBusinessAssetData(business.id, "logo_icon") ||
-    getBusinessAssetData(business.id, "logo") ||
+    assets?.logo_icon ||
+    assets?.logo ||
     business?.logo_icon_base64 ||
     business?.logo_base64;
   if (!business || !b64) return res.status(404).send();
