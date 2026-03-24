@@ -28,7 +28,10 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_IOS_CLIENT_ID = process.env.GOOGLE_IOS_CLIENT_ID || ""; // Client ID OAuth iOS pour l'app
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ""; // Pour échange code → token (flow OAuth app)
-const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || ""; // Service ID (bundle id) pour vérifier l'audience
+// Web (Service ID) et/ou app native : le JWT iOS a `aud` = bundle ID (ex. com.myfidpass), le flux web = Services ID.
+const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || "";
+const APPLE_BUNDLE_ID = process.env.APPLE_BUNDLE_ID || "com.myfidpass";
+const APPLE_JWT_AUDIENCES = [...new Set([APPLE_CLIENT_ID, APPLE_BUNDLE_ID].filter(Boolean))];
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
 const SALT_ROUNDS = 10;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
@@ -302,7 +305,7 @@ router.get("/google-oauth-callback", async (req, res) => {
  */
 router.post("/apple", async (req, res) => {
   const { idToken: rawToken, name: bodyName, email: bodyEmail } = req.body || {};
-  if (!rawToken || !APPLE_CLIENT_ID) {
+  if (!rawToken || APPLE_JWT_AUDIENCES.length === 0) {
     return res.status(400).json({ error: "Connexion Apple non configurée ou token manquant" });
   }
   const idToken = String(rawToken).trim();
@@ -315,16 +318,22 @@ router.post("/apple", async (req, res) => {
     const publicKeyPem = await getAppleSigningKeyPem(kid);
     const verified = jwt.verify(idToken, publicKeyPem, {
       algorithms: ["RS256"],
-      audience: APPLE_CLIENT_ID,
+      audience: APPLE_JWT_AUDIENCES.length === 1 ? APPLE_JWT_AUDIENCES[0] : APPLE_JWT_AUDIENCES,
       issuer: "https://appleid.apple.com",
     });
     const email = (verified.email || bodyEmail || "").trim().toLowerCase();
     if (!email) {
       return res.status(400).json({ error: "Email non fourni par Apple. Réautorisez l'application pour partager votre email." });
     }
-    const user = getUserByEmail(email);
+    let user = getUserByEmail(email);
     if (!user) {
-      return res.status(404).json({ error: "Aucun compte associé. Créez votre compte sur myfidpass.fr.", code: "NO_ACCOUNT" });
+      const nameFromBody = bodyName ? String(bodyName).trim() : "";
+      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
+      user = createUser({
+        email,
+        passwordHash: oauthPlaceholder,
+        name: nameFromBody || null,
+      });
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
@@ -337,7 +346,10 @@ router.post("/apple", async (req, res) => {
     console.error("Apple auth error:", e);
     const msg = e.message || "";
     if (msg.includes("audience") || msg.includes("aud"))
-      return res.status(401).json({ error: "Configuration Apple incorrecte : utilisez le Services ID (pas le Bundle ID) pour APPLE_CLIENT_ID sur Railway." });
+      return res.status(401).json({
+        error:
+          "Audience JWT Apple refusée : sur Railway, définissez APPLE_CLIENT_ID (Services ID web) et/ou APPLE_BUNDLE_ID (ex. com.myfidpass) pour l’app iOS.",
+      });
     if (msg.includes("expired") || msg.includes("exp"))
       return res.status(401).json({ error: "Session Apple expirée. Réessayez la connexion." });
     return res.status(401).json({ error: "Token Apple invalide ou expiré. Vérifiez APPLE_CLIENT_ID (Services ID) sur Railway et la config Apple Developer." });
@@ -370,7 +382,7 @@ router.post("/apple-redirect", async (req, res) => {
     const publicKeyPem = await getAppleSigningKeyPem(kid);
     const verified = jwt.verify(idToken, publicKeyPem, {
       algorithms: ["RS256"],
-      audience: APPLE_CLIENT_ID,
+      audience: APPLE_JWT_AUDIENCES.length === 1 ? APPLE_JWT_AUDIENCES[0] : APPLE_JWT_AUDIENCES,
       issuer: "https://appleid.apple.com",
     });
     const email = (verified.email || (userPayload?.email) || "").trim().toLowerCase();
