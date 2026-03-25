@@ -21,6 +21,31 @@ import {
   createFilledStampCirclePng,
 } from "./images-strip.js";
 
+/**
+ * Carré plein (emplacements vides) — même rendu que l’aperçu Ma carte (pas d’icône café en creux).
+ */
+async function createDarkSquareStampBuffer(stripColorHex, sharp) {
+  const raw = stripColorHex && String(stripColorHex).trim() ? String(stripColorHex).trim() : "#333333";
+  const hex = raw.startsWith("#") ? raw : `#${raw}`;
+  const rgb = hexToRgb(hex);
+  const dark = {
+    r: Math.max(0, Math.min(255, Math.round(rgb.r * 0.42))),
+    g: Math.max(0, Math.min(255, Math.round(rgb.g * 0.42))),
+    b: Math.max(0, Math.min(255, Math.round(rgb.b * 0.42))),
+  };
+  const s = STAMP_SIZE;
+  return sharp({
+    create: {
+      width: s,
+      height: s,
+      channels: 4,
+      background: { ...dark, alpha: 1 },
+    },
+  })
+    .png()
+    .toBuffer();
+}
+
 let _sharp = null;
 async function getSharp() {
   if (!_sharp) _sharp = (await import("sharp")).default;
@@ -250,7 +275,15 @@ async function createEmptyStampFromIcon(iconBuf) {
 /**
  * Grille de tampons sur le strip. customIconBase64 = image perso pour l'icône.
  */
-export async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, stampMax, stampEmoji, customIconBase64) {
+export async function drawStampsOnStrip(
+  baseStripBuf,
+  templateKey,
+  filledCount,
+  stampMax,
+  stampEmoji,
+  customIconBase64,
+  stripColorHex
+) {
   const sharp = await getSharp();
   const cols = 5;
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
@@ -297,7 +330,7 @@ export async function drawStampsOnStrip(baseStripBuf, templateKey, filledCount, 
       if (filled) {
         stampBuf = await createStampIconOnlyPng(iconBuf, 1);
       } else {
-        if (emptyStampBuf === null) emptyStampBuf = await createEmptyStampFromIcon(iconBuf);
+        if (emptyStampBuf === null) emptyStampBuf = await createDarkSquareStampBuffer(stripColorHex, sharp);
         stampBuf = emptyStampBuf;
       }
       if (stampBuf) composites.push({ input: stampBuf, left, top });

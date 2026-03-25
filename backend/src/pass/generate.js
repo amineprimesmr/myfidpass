@@ -155,7 +155,15 @@ export async function generatePass(member, business = null, options = {}) {
     /* Même avec image promo sur le strip : dessiner la grille de tampons par-dessus (comme l’aperçu Ma Carte). Sans image, fond couleur + tampons. */
     const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
     const baseStrip = cardBgStripBuf ?? createStripBuffer(stripTemplateKey, stripColorHex);
-    const stripWithStamps = await drawStampsOnStrip(baseStrip, stripTemplateKey, stamps, stampMax, stripStampEmoji, stampIconBase64);
+    const stripWithStamps = await drawStampsOnStrip(
+      baseStrip,
+      stripTemplateKey,
+      stamps,
+      stampMax,
+      stripStampEmoji,
+      stampIconBase64,
+      stripColorHex
+    );
     buffers["strip.png"] = stripWithStamps;
     buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
   } else {
@@ -230,9 +238,14 @@ export async function generatePass(member, business = null, options = {}) {
   });
 
   const labelRestants = (options.label_restants ?? business?.label_restants)?.trim() || "Restants";
-  const labelMember = PASS_LABEL_MEMBER;
+  const labelMember = (options.label_member ?? business?.label_member)?.trim() || PASS_LABEL_MEMBER;
+  const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
+  const stampMidRewardLabel = (options.stamp_mid_reward_label ?? business?.stamp_mid_reward_label)?.trim() || "";
   if (format === "tampons") {
     const restants = Math.max(0, stampMax - stamps);
+    const rewardFrontValue = stampMidRewardLabel
+      ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
+      : "Paliers en magasin";
     pass.secondaryFields.push({
       key: "stampRewardFront",
       label: "",
@@ -241,8 +254,14 @@ export async function generatePass(member, business = null, options = {}) {
       /* %@ = nouvelle valeur du champ → Apple peut afficher une notif sur l’écran de verrouillage (comme pour les points). */
       changeMessage: "Fidélité : %@",
     });
+    pass.secondaryFields.push({
+      key: "rewardsFront",
+      label: "Récompense",
+      value: rewardFrontValue,
+      textAlignment: "PKTextAlignmentRight",
+    });
     if (!isSectorTemplate) {
-      pass.secondaryFields.push({
+      pass.auxiliaryFields.push({
         key: "member",
         label: labelMember,
         value: member.name,
@@ -318,11 +337,9 @@ export async function generatePass(member, business = null, options = {}) {
     : `${frontendUrl}/?ref=pass`;
 
   if (format === "tampons") {
-    const rewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
-    const midLabel = (options.stamp_mid_reward_label ?? business?.stamp_mid_reward_label)?.trim() || "";
-    const rewardValue = midLabel
-      ? `5 tampons = ${midLabel} — ${stampMax} tampons = ${rewardLabel}`
-      : `${stampMax} tampons = ${rewardLabel}`;
+    const rewardValue = stampMidRewardLabel
+      ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
+      : `${stampMax} tampons = ${stampRewardLabel}`;
     pass.backFields.push(
       { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: changeMsg },
       { key: "reward", label: "Récompense", value: rewardValue },
