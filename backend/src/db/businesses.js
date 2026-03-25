@@ -88,6 +88,16 @@ export function createBusiness({
   return getBusinessById(bid);
 }
 
+/**
+ * Met à jour last_broadcast_at sans toucher au texte du dernier message — pour invalider le cache pass
+ * (titre / message pass visibles sur la bannière Wallet) après enregistrement des textes campagne.
+ */
+export function bumpBusinessPassRefreshTimestamp(businessId) {
+  if (!businessId) return;
+  const now = new Date().toISOString().replace("T", " ").slice(0, 19);
+  db.prepare("UPDATE businesses SET last_broadcast_at = ? WHERE id = ?").run(now, businessId);
+}
+
 export function updateBusiness(businessId, updates) {
   const b = getBusinessById(businessId);
   if (!b) return null;
@@ -155,6 +165,12 @@ export function updateBusiness(businessId, updates) {
     "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
     "sector", "engagement_rewards",
     "flyer_prefs_json", "flyer_prefs_updated_at",
+    /** Textes notif. pass / campagnes (doit être persisté — sinon le Wallet garde l’ancien titre affiché sur la bannière). */
+    "notification_title_override",
+    "notification_change_message",
+    "label_restants",
+    "label_member",
+    "header_right_text",
   ];
   const numericCols = [
     "location_lat",

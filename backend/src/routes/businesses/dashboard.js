@@ -5,6 +5,7 @@
 import { Router } from "express";
 import {
   updateBusiness,
+  bumpBusinessPassRefreshTimestamp,
   getBusinessGames,
   updateBusinessGameConfig,
   getGameRewardsForBusiness,
@@ -403,8 +404,13 @@ router.patch("/settings", async (req, res) => {
   const locationUpdated = locationKeys.some((k) => updates[k] !== undefined);
   const passWalletGeometryUpdated =
     locationUpdated || updates.wallet_pass_include_locations !== undefined;
+  const passNotifTextsUpdated =
+    updates.notification_title_override !== undefined || updates.notification_change_message !== undefined;
   updateBusiness(business.id, updates);
-  if (passWalletGeometryUpdated) {
+  if (passNotifTextsUpdated) {
+    bumpBusinessPassRefreshTimestamp(business.id);
+  }
+  if (passWalletGeometryUpdated || passNotifTextsUpdated) {
     const passKitTokens = getPassKitPushTokensForBusiness(business.id);
     if (passKitTokens.length > 0) {
       process.nextTick(() => {

@@ -143,12 +143,17 @@ function toTimestamp(dateStr) {
   return Number.isFinite(t) ? t : null;
 }
 
-/** Retourne la date HTTP la plus récente (membre, notif, logo) pour que l'iPhone refetch le pass quand points, notif ou logo changent. */
+/** Retourne la date HTTP la plus récente pour que l'iPhone refetch le pass (points, message, logos, icône campagne). */
 function getPassLastModified(member, business) {
-  const a = toTimestamp(member?.last_visit_at);
-  const b = toTimestamp(business?.last_broadcast_at);
-  const c = toTimestamp(business?.logo_updated_at);
-  const ts = Math.max(a || 0, b || 0, c || 0);
+  const timestamps = [
+    toTimestamp(member?.last_visit_at),
+    toTimestamp(business?.last_broadcast_at),
+    toTimestamp(business?.logo_updated_at),
+    toTimestamp(business?.logo_icon_updated_at),
+    toTimestamp(business?.notification_icon_updated_at),
+    toTimestamp(business?.card_background_updated_at),
+  ].filter((t) => t != null && Number.isFinite(t) && t > 0);
+  const ts = timestamps.length > 0 ? Math.max(...timestamps) : 0;
   if (!Number.isFinite(ts) || ts <= 0) return new Date().toUTCString();
   return new Date(ts).toUTCString();
 }
@@ -192,6 +197,8 @@ const getPassHandler = async (req, res) => {
       program_type: business.program_type ?? undefined,
       stamp_emoji: business.stamp_emoji ?? undefined,
       organizationName: business.organization_name ?? undefined,
+      notification_title_override: business.notification_title_override ?? undefined,
+      notification_change_message: business.notification_change_message ?? undefined,
       background_color: business.background_color ?? undefined,
       foreground_color: business.foreground_color ?? undefined,
       label_color: business.label_color ?? undefined,

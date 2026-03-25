@@ -111,7 +111,12 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   let passIconSourceBuf = null;
-  if (business?.logo_icon_base64) {
+  if (business?.notification_icon_base64) {
+    const d = String(business.notification_icon_base64).replace(/^data:image\/\w+;base64,/, "").trim();
+    const b = Buffer.from(d, "base64");
+    if (b.length > 0) passIconSourceBuf = b;
+  }
+  if (!passIconSourceBuf && business?.logo_icon_base64) {
     const d = String(business.logo_icon_base64).replace(/^data:image\/\w+;base64,/, "").trim();
     const b = Buffer.from(d, "base64");
     if (b.length > 0) passIconSourceBuf = b;
