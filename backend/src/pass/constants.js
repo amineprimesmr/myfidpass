@@ -29,6 +29,9 @@ export const PASS_HEADER_RIGHT_LABEL = "Récompenses ↗";
 /** Libellé champ « membre » (face avant / auxiliaire) — aligné aperçu Ma carte. */
 export const PASS_LABEL_MEMBER = "MEMBRE";
 
+/** Bandeau logo Wallet quand aucune image commerce n’est fournie (aligné app iOS). */
+export const PASS_LOGO_PLACEHOLDER_TEXT = "[ Votre logo ]";
+
 /** Strip Apple : 750×246. Tampons : diam. 96 px. */
 export const STRIP_W = 750;
 export const STRIP_H = 246;

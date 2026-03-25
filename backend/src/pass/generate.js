@@ -11,7 +11,14 @@ import { createStripBuffer, buildPassLocations } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
-import { PASS_TEMPLATES, STRIP_W, STRIP_H, PASS_HEADER_RIGHT_LABEL, PASS_LABEL_MEMBER } from "./constants.js";
+import {
+  PASS_TEMPLATES,
+  STRIP_W,
+  STRIP_H,
+  PASS_HEADER_RIGHT_LABEL,
+  PASS_LABEL_MEMBER,
+  PASS_LOGO_PLACEHOLDER_TEXT,
+} from "./constants.js";
 import { radiusMetersForPass } from "../locationRadiusLimits.js";
 import {
   parsePointRewardTiersFromBusiness,
@@ -94,16 +101,16 @@ export async function generatePass(member, business = null, options = {}) {
           console.log("[PassKit] Logo commerce injecté dans le pass (dimensions constants.js)");
         }
       } else {
-        const textFallback = await createLogoFromText(stripColorHex, sanitizeLogoText(organizationName));
+        const textFallback = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
         if (textFallback) {
           buffers["logo.png"] = textFallback.logoPng;
           buffers["logo@2x.png"] = textFallback.logoPng2x;
-          console.warn("[PassKit] Logo image invalide — bandeau texte (nom commerce) utilisé à la place");
+          console.warn("[PassKit] Logo image invalide — placeholder texte utilisé à la place");
         }
       }
     }
   } else if (!useTextInStrip && !buffers["logo.png"]) {
-    const textLogo = await createLogoFromText(stripColorHex, organizationName);
+    const textLogo = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
     if (textLogo) {
       buffers["logo.png"] = textLogo.logoPng;
       buffers["logo@2x.png"] = textLogo.logoPng2x;
@@ -241,24 +248,34 @@ export async function generatePass(member, business = null, options = {}) {
   const labelMember = (options.label_member ?? business?.label_member)?.trim() || PASS_LABEL_MEMBER;
   const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
   const stampMidRewardLabel = (options.stamp_mid_reward_label ?? business?.stamp_mid_reward_label)?.trim() || "";
+  /**
+   * Carte avec image de fond mais sans programme tampons ni points (pas de type ni paliers côté commerce).
+   * Dans ce cas seul le champ « Restants » a lieu d’être sur la face ; pas sur les cartes tampons/points classiques.
+   */
+  const rawProgramType = String(options.program_type ?? business?.program_type ?? "")
+    .trim()
+    .toLowerCase();
+  const effectiveRequiredStamps =
+    options.required_stamps != null ? Number(options.required_stamps) : business?.required_stamps != null
+      ? Number(business.required_stamps)
+      : 0;
+  const isDecorativeImageOnlyStrip =
+    hasCardBackgroundStrip &&
+    rawProgramType !== "stamps" &&
+    rawProgramType !== "points" &&
+    rawProgramType !== "tampons" &&
+    rawProgramType !== "stamp" &&
+    rawProgramType !== "point" &&
+    !(Number.isFinite(effectiveRequiredStamps) && effectiveRequiredStamps > 0);
   if (format === "tampons") {
-    const restants = Math.max(0, stampMax - stamps);
     const rewardFrontValue = stampMidRewardLabel
       ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
       : "Paliers en magasin";
     pass.secondaryFields.push({
-      key: "stampRewardFront",
-      label: "",
-      value: `${labelRestants} = ${restants}`,
-      textAlignment: "PKTextAlignmentLeft",
-      /* %@ = nouvelle valeur du champ → Apple peut afficher une notif sur l’écran de verrouillage (comme pour les points). */
-      changeMessage: "Fidélité : %@",
-    });
-    pass.secondaryFields.push({
       key: "rewardsFront",
       label: "Récompense",
       value: rewardFrontValue,
-      textAlignment: "PKTextAlignmentRight",
+      textAlignment: "PKTextAlignmentLeft",
     });
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
@@ -277,13 +294,25 @@ export async function generatePass(member, business = null, options = {}) {
       textAlignment: "PKTextAlignmentCenter",
       changeMessage: "Tu as maintenant %@ points !",
     };
-    /* Avec image sur le strip : pas de gros chiffre « primaire » sur la zone visuelle (aligné SaaS / app). */
-    if (!hasCardBackgroundStrip) {
-      pass.primaryFields.push(pointsField);
-    }
     const sortedPointTiers = parsePointRewardTiersFromBusiness(business);
-    if (hasCardBackgroundStrip) {
-      pass.secondaryFields.push(pointsField);
+    if (isDecorativeImageOnlyStrip) {
+      const balance = Math.floor(Number(member.points) || 0);
+      const restants = Math.max(0, stampMax - Math.min(stampMax, balance));
+      pass.secondaryFields.push({
+        key: "restantsDecoratif",
+        label: "",
+        value: `${labelRestants} = ${restants}`,
+        textAlignment: "PKTextAlignmentLeft",
+        changeMessage: "Fidélité : %@",
+      });
+    } else {
+      /* Avec image sur le strip : pas de gros chiffre « primaire » sur la zone visuelle (aligné SaaS / app). */
+      if (!hasCardBackgroundStrip) {
+        pass.primaryFields.push(pointsField);
+      }
+      if (hasCardBackgroundStrip) {
+        pass.secondaryFields.push(pointsField);
+      }
     }
     pass.secondaryFields.push({
       key: "rewardsFront",
