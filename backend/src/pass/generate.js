@@ -304,7 +304,8 @@ export async function generatePass(member, business = null, options = {}) {
       });
     }
   } else {
-    const pointsValue = String(member.points);
+    const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
+    const pointsValue = String(ptsInt);
     const pointsField = {
       key: "points",
       label: "Points",
@@ -324,13 +325,9 @@ export async function generatePass(member, business = null, options = {}) {
         changeMessage: "Fidélité : %@",
       });
     } else {
-      /* Avec image sur le strip : pas de gros chiffre « primaire » sur la zone visuelle (aligné SaaS / app). */
-      if (!hasCardBackgroundStrip) {
-        pass.primaryFields.push(pointsField);
-      }
-      if (hasCardBackgroundStrip) {
-        pass.secondaryFields.push(pointsField);
-      }
+      /* Wallet réserve toujours une zone « primary » sur une storeCard : si on ne remplit que secondary,
+       * la face avant affiche une case vide. Toujours pousser le solde en primary pour le programme points. */
+      pass.primaryFields.push(pointsField);
     }
     pass.secondaryFields.push({
       key: "rewardsFront",
