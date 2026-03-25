@@ -5631,6 +5631,15 @@ body.page-app .whatsapp-fab { display: none !important; }
   font-weight: 500;
   color: var(--app-text-muted);
 }
+.app-profil-danger-zone {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--app-border);
+}
+.app-profil-danger-hint {
+  margin-bottom: 0.65rem;
+  color: #b91c1c;
+}
 .app-profil-logo-row {
   display: flex;
   flex-wrap: wrap;

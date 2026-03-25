@@ -137,6 +137,29 @@
   color: #888888;
 }
 
+.landing-footer-reset-wrap {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  grid-column: 1 / -1;
+}
+
+.landing-footer-reset-btn {
+  display: inline-block;
+  padding: 0.35rem 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.landing-footer-reset-btn:hover {
+  color: #b91c1c;
+}
+
 @media (min-width: 641px) {
   .landing-footer-grid-v3 {
     grid-template-columns: repeat(4, 1fr);
