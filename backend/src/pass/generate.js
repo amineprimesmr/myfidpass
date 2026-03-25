@@ -143,6 +143,24 @@ export async function generatePass(member, business = null, options = {}) {
         console.log("[PassKit] Icônes Wallet (29/58/87px) depuis logo carré ou bandeau");
       }
     }
+  } else if (buffers["logo.png"] && buffers["logo.png"].length > 0) {
+    // Même rendu que le bandeau logo (y compris [ Votre logo ] généré plus haut).
+    const iconResized = await resizeLogoForPassIcon(buffers["logo.png"]);
+    if (iconResized) {
+      buffers["icon.png"] = iconResized.iconPng;
+      buffers["icon@2x.png"] = iconResized.iconPng2x;
+      buffers["icon@3x.png"] = iconResized.iconPng3x;
+    }
+  } else {
+    const textLogo = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
+    if (textLogo) {
+      const iconResized = await resizeLogoForPassIcon(textLogo.logoPng2x);
+      if (iconResized) {
+        buffers["icon.png"] = iconResized.iconPng;
+        buffers["icon@2x.png"] = iconResized.iconPng2x;
+        buffers["icon@3x.png"] = iconResized.iconPng3x;
+      }
+    }
   }
 
   const stampMax = 10;

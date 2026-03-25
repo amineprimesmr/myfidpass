@@ -30,8 +30,8 @@ export function buildBuffers(businessId, options = {}) {
   if (!buffers["icon.png"]) {
     buffers["icon.png"] = createDefaultIconBuffer(options.template);
   }
-  // Ne pas recopier l’icône en logo : sinon `generatePass` croit qu’un logo existe déjà et
-  // n’injecte pas le bandeau texte « [ Votre logo ] » quand le commerce n’a pas d’image.
+  // Ne pas recopier l’icône par défaut (cercle) en logo : sinon Wallet affiche ce cercle
+  // étiré en bandeau « logo ». `generate.js` injecte le texte [ Votre logo ] si besoin.
   const templateKey = options.template;
   if (!buffers["strip.png"] && templateKey && PASS_TEMPLATES[templateKey]) {
     const stripBuffer = createStripBuffer(templateKey);
