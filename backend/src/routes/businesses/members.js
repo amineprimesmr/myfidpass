@@ -48,12 +48,28 @@ router.post("/", membersCreateLimiter, (req, res) => {
     return res.status(400).json({ error: "email et name requis" });
   }
 
+  const normEmail = String(email).trim().toLowerCase();
+  const normName = String(name).trim();
+  const existing = getMemberByEmailForBusiness(business.id, normEmail);
+  if (existing) {
+    return res.status(200).json({
+      memberId: existing.id,
+      member: {
+        id: existing.id,
+        email: existing.email,
+        name: existing.name,
+        points: existing.points,
+      },
+      reused: true,
+    });
+  }
+
   try {
     const member = createMember({
       id: randomUUID(),
       businessId: business.id,
-      email: email.trim(),
-      name: name.trim(),
+      email: normEmail,
+      name: normName,
     });
     res.status(201).json({
       memberId: member.id,
