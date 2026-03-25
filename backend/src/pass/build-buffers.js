@@ -30,9 +30,8 @@ export function buildBuffers(businessId, options = {}) {
   if (!buffers["icon.png"]) {
     buffers["icon.png"] = createDefaultIconBuffer(options.template);
   }
-  if (!buffers["logo.png"] && buffers["icon.png"]) {
-    buffers["logo.png"] = buffers["icon.png"];
-  }
+  // Ne pas recopier l’icône en logo : sinon `generatePass` croit qu’un logo existe déjà et
+  // n’injecte pas le bandeau texte « [ Votre logo ] » quand le commerce n’a pas d’image.
   const templateKey = options.template;
   if (!buffers["strip.png"] && templateKey && PASS_TEMPLATES[templateKey]) {
     const stripBuffer = createStripBuffer(templateKey);
