@@ -109,6 +109,18 @@ export function updateBusiness(businessId, updates) {
       u.logo_icon_base64 == null || u.logo_icon_base64 === "" ? null : new Date().toISOString();
     delete u.logo_icon_base64;
   }
+  if (u.notification_icon_base64 !== undefined) {
+    setBusinessAssetData(
+      businessId,
+      "notification_icon",
+      u.notification_icon_base64 === null || u.notification_icon_base64 === "" ? null : String(u.notification_icon_base64),
+    );
+    u.notification_icon_updated_at =
+      u.notification_icon_base64 == null || u.notification_icon_base64 === ""
+        ? null
+        : new Date().toISOString();
+    delete u.notification_icon_base64;
+  }
   if (u.card_background_base64 !== undefined) {
     setBusinessAssetData(
       businessId,
@@ -130,7 +142,13 @@ export function updateBusiness(businessId, updates) {
 
   const allowed = [
     "slug", "organization_name", "back_terms", "back_contact", "background_color", "foreground_color", "label_color",
-    "logo_updated_at", "logo_icon_updated_at", "card_background_updated_at", "strip_color", "strip_display_mode", "strip_text",
+    "logo_updated_at",
+    "logo_icon_updated_at",
+    "notification_icon_updated_at",
+    "card_background_updated_at",
+    "strip_color",
+    "strip_display_mode",
+    "strip_text",
     "location_lat", "location_lng", "location_relevant_text", "location_radius_meters", "location_address",
     "wallet_pass_include_locations",
     "required_stamps", "stamp_emoji", "points_per_euro", "points_per_visit", "program_type", "loyalty_mode",

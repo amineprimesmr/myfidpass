@@ -25,6 +25,7 @@ import { canAccessDashboard, getApiBase } from "./shared.js";
 
 function businessHasNotificationLogo(business) {
   return (
+    Number(business?.asset_notification_icon_present) === 1 ||
     Number(business?.asset_logo_icon_present) === 1 ||
     Number(business?.asset_logo_present) === 1 ||
     !!(business?.logo_icon_base64 || business?.logo_base64)

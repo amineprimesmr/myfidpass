@@ -186,6 +186,25 @@ export function updateHandler(req, res) {
       }
     }
   }
+  const notificationIconBase64 = body.notificationIconBase64 ?? body.notification_icon_base64;
+  if (notificationIconBase64 !== undefined) {
+    if (notificationIconBase64 === null || (typeof notificationIconBase64 === "string" && notificationIconBase64.trim() === "")) {
+      updates.notification_icon_base64 = null;
+    } else if (typeof notificationIconBase64 === "string") {
+      const base64Data = String(notificationIconBase64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > 512 * 1024) {
+        return res.status(400).json({ error: "Icône notification trop volumineuse (max 512 Ko)." });
+      }
+      if (buf.length > 0) {
+        updates.notification_icon_base64 = notificationIconBase64.startsWith("data:")
+          ? notificationIconBase64
+          : `data:image/png;base64,${base64Data}`;
+      } else {
+        updates.notification_icon_base64 = null;
+      }
+    }
+  }
   const cardBackgroundBase64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   if (cardBackgroundBase64 !== undefined) {
     if (cardBackgroundBase64 === null || (typeof cardBackgroundBase64 === "string" && cardBackgroundBase64.trim() === "")) {

@@ -37,7 +37,9 @@ function setAssetCacheHeaders(res, req, etagKey) {
 router.get("/notification-icon", async (req, res) => {
   const business = req.business;
   const assets = business?.id ? getAllBusinessAssetsMap(business.id) : null;
+  const dedicated = assets?.notification_icon;
   const b64 =
+    dedicated ||
     assets?.logo_icon ||
     assets?.logo ||
     business?.logo_icon_base64 ||
@@ -45,8 +47,11 @@ router.get("/notification-icon", async (req, res) => {
   if (!business || !b64) return res.status(404).send();
   const buffer = await getLogoIconBuffer(b64);
   if (!buffer) return res.status(404).send();
+  const etagKey = dedicated
+    ? `${business.id}-notification-icon-${business.notification_icon_updated_at || "0"}`
+    : `${business.id}-notification-icon-fb-${business.logo_icon_updated_at || business.logo_updated_at || "0"}`;
+  if (setAssetCacheHeaders(res, req, etagKey)) return;
   res.setHeader("Content-Type", "image/png");
-  res.setHeader("Cache-Control", "public, max-age=3600");
   res.send(buffer);
 });
 

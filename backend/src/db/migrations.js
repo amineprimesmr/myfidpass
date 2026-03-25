@@ -482,4 +482,15 @@ export function runMigrations(db) {
   if (!bizColsBgUpd.includes("card_background_updated_at")) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN card_background_updated_at TEXT"));
   }
+
+  const bizColsNotifIcon = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsNotifIcon.includes("asset_notification_icon_present")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN asset_notification_icon_present INTEGER NOT NULL DEFAULT 0"),
+    );
+  }
+  const bizColsNotifIcon2 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsNotifIcon2.includes("notification_icon_updated_at")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN notification_icon_updated_at TEXT"));
+  }
 }

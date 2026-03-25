@@ -5153,61 +5153,71 @@ function initAppDashboard(slug) {
     }
   }
 
-  async function refreshNotificationBannerIcon() {
+  /** Icône aperçu campagne / push : média serveur dédié (`notification_icon`), indépendant des logos carte & fiche. */
+  async function refreshCampaignNotificationBannerIcon() {
     const bannerIconImg = document.getElementById("app-notification-banner-icon-img");
     const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
+    if (!bannerIconImg) return;
+    try {
+      const r = await api("/notification-icon?v=" + Date.now());
+      if (!r.ok) throw new Error("No notification icon");
+      const blob = await r.blob();
+      if (!blob || blob.size === 0) throw new Error("Empty");
+      const url = URL.createObjectURL(blob);
+      if (bannerIconImg.src && bannerIconImg.src.startsWith("blob:")) URL.revokeObjectURL(bannerIconImg.src);
+      bannerIconImg.src = url;
+      bannerIconImg.classList.remove("hidden");
+      if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
+    } catch (_) {
+      bannerIconImg.classList.add("hidden");
+      if (bannerIconFallback) bannerIconFallback.classList.remove("hidden");
+    }
+  }
+
+  /** Bandeau périmètre + avatar header : logo carré commerce puis logo principal (pas l’icône campagne isolée). */
+  async function refreshPerimeterAndHeaderMerchantIcons() {
     const perimetreIconImg = document.getElementById("app-perimetre-banner-icon-img");
     const perimetreIconFallback = document.getElementById("app-perimetre-banner-icon-fallback");
     const headerAvatar = document.getElementById("app-dashboard-profile-avatar");
     const headerInitials = document.getElementById("app-dashboard-profile-initials");
-    const profilLogo = document.getElementById("app-profil-logo-preview");
-    if (profilLogo?.src && !profilLogo.classList.contains("hidden")) {
-      if (bannerIconImg) {
-        bannerIconImg.src = profilLogo.src;
-        bannerIconImg.classList.remove("hidden");
+    let blob = null;
+    for (const path of ["/logo-icon", "/logo"]) {
+      try {
+        const r = await api(path + "?v=" + Date.now());
+        if (r.ok) {
+          const b = await r.blob();
+          if (b && b.size > 0) {
+            blob = b;
+            break;
+          }
+        }
+      } catch (_) {
+        /* next */
       }
-      if (perimetreIconImg) {
-        perimetreIconImg.src = profilLogo.src;
-        perimetreIconImg.classList.remove("hidden");
-      }
-      if (headerAvatar) {
-        headerAvatar.src = profilLogo.src;
-        headerAvatar.classList.remove("hidden");
-      }
-      if (headerInitials) headerInitials.classList.add("hidden");
-      if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
-      if (perimetreIconFallback) perimetreIconFallback.classList.add("hidden");
-      return;
     }
-    try {
-      const r = await api("/logo?v=" + Date.now());
-      if (!r.ok) throw new Error("No logo");
-      const blob = await r.blob();
+    if (blob) {
       const url = URL.createObjectURL(blob);
-      if (bannerIconImg) {
-        if (bannerIconImg.src && bannerIconImg.src.startsWith("blob:")) URL.revokeObjectURL(bannerIconImg.src);
-        bannerIconImg.src = url;
-        bannerIconImg.classList.remove("hidden");
-      }
       if (perimetreIconImg) {
         if (perimetreIconImg.src && perimetreIconImg.src.startsWith("blob:")) URL.revokeObjectURL(perimetreIconImg.src);
         perimetreIconImg.src = url;
         perimetreIconImg.classList.remove("hidden");
       }
+      if (perimetreIconFallback) perimetreIconFallback.classList.add("hidden");
       if (headerAvatar) {
         if (headerAvatar.src && headerAvatar.src.startsWith("blob:")) URL.revokeObjectURL(headerAvatar.src);
         headerAvatar.src = url;
         headerAvatar.classList.remove("hidden");
       }
       if (headerInitials) headerInitials.classList.add("hidden");
-      if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
-      if (perimetreIconFallback) perimetreIconFallback.classList.add("hidden");
-    } catch (_) {
-      if (bannerIconImg) bannerIconImg.classList.add("hidden");
+    } else {
       if (perimetreIconImg) perimetreIconImg.classList.add("hidden");
-      if (bannerIconFallback) bannerIconFallback.classList.remove("hidden");
       if (perimetreIconFallback) perimetreIconFallback.classList.remove("hidden");
     }
+  }
+
+  async function refreshNotificationBannerIcon() {
+    await refreshCampaignNotificationBannerIcon();
+    await refreshPerimeterAndHeaderMerchantIcons();
   }
 
   document.getElementById("app-notification-banner-title")?.addEventListener("input", updateAppNotificationPreview);
@@ -5231,19 +5241,13 @@ function initAppDashboard(slug) {
         const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
         if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
         try {
-          const res = await fetch(url, { method: "PATCH", headers, body: JSON.stringify({ logo_base64: dataUrl }) });
+          const res = await fetch(url, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ notification_icon_base64: dataUrl }),
+          });
           if (res.ok) {
-            await refreshNotificationBannerIcon();
-            const profilLogoPreview = document.getElementById("app-profil-logo-preview");
-            if (profilLogoPreview) {
-              const r2 = await api("/logo?v=" + Date.now());
-              if (r2.ok) {
-                const blob2 = await r2.blob();
-                profilLogoPreview.src = URL.createObjectURL(blob2);
-                profilLogoPreview.classList.remove("hidden");
-                document.getElementById("app-profil-logo-placeholder")?.classList.add("hidden");
-              }
-            }
+            await refreshCampaignNotificationBannerIcon();
           }
         } catch (_) {}
         notificationBannerLogoInput.value = "";

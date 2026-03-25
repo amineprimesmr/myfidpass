@@ -92,6 +92,12 @@ router.get("/settings", (req, res) => {
         ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/logo-icon`
         : undefined,
     logo_icon_updated_at: business.logo_icon_updated_at ?? undefined,
+    /** Icône campagnes / push — média séparé (ne modifie pas le logo carte ni le logo carré fiche). */
+    notification_icon_url:
+      Number(business.asset_notification_icon_present) === 1
+        ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+        : undefined,
+    notification_icon_updated_at: business.notification_icon_updated_at ?? undefined,
     has_card_background: Number(business.asset_card_background_present) === 1,
     card_background_updated_at: business.card_background_updated_at ?? undefined,
     strip_color: business.strip_color ?? undefined,
@@ -133,6 +139,7 @@ router.patch("/settings", async (req, res) => {
   const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const logo_icon_base64 = body.logo_icon_base64 ?? body.logoIconBase64;
+  const notification_icon_base64 = body.notification_icon_base64 ?? body.notificationIconBase64;
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   const stamp_icon_base64 = body.stamp_icon_base64 ?? body.stampIconBase64;
   const strip_color = body.strip_color ?? body.stripColor;
@@ -271,6 +278,24 @@ router.patch("/settings", async (req, res) => {
         updates.logo_icon_base64 = logo_icon_base64.startsWith("data:") ? logo_icon_base64 : `data:image/png;base64,${base64Data}`;
       } else {
         updates.logo_icon_base64 = null;
+      }
+    }
+  }
+  if (notification_icon_base64 !== undefined) {
+    if (notification_icon_base64 === null || (typeof notification_icon_base64 === "string" && notification_icon_base64.trim() === "")) {
+      updates.notification_icon_base64 = null;
+    } else if (typeof notification_icon_base64 === "string") {
+      const base64Data = String(notification_icon_base64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > MAX_LOGO_ICON_BYTES) {
+        return res.status(400).json({ error: "Icône notification trop volumineuse (max 512 Ko)." });
+      }
+      if (buf.length > 0) {
+        updates.notification_icon_base64 = notification_icon_base64.startsWith("data:")
+          ? notification_icon_base64
+          : `data:image/png;base64,${base64Data}`;
+      } else {
+        updates.notification_icon_base64 = null;
       }
     }
   }
