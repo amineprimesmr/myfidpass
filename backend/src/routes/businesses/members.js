@@ -455,9 +455,20 @@ router.get("/:memberId/pass", async (req, res) => {
   const stripDisplayMode = (req.query.strip_display_mode ?? biz?.strip_display_mode ?? "logo").toString().toLowerCase();
   opts.strip_display_mode = stripDisplayMode === "text" ? "text" : "logo";
   opts.strip_text = req.query.strip_text ?? biz?.strip_text ?? undefined;
+  const lc = (req.query.label_color ?? "").toString().trim();
+  if (lc) opts.label_color = lc.startsWith("#") ? lc : `#${lc}`;
+
+  /** Même solde que l’aperçu « Ma carte » (dashboard uniquement) — sinon le Wallet affiche 0 pts alors que l’app montre 50 fictifs. */
+  let memberForPass = member;
+  if (canAccessDashboard(business, req) && req.query.preview_points != null) {
+    const n = parseInt(String(req.query.preview_points), 10);
+    if (Number.isInteger(n) && n >= 0 && n <= 9999999) {
+      memberForPass = { ...member, points: n };
+    }
+  }
 
   try {
-    const buffer = await generatePass(member, biz, opts);
+    const buffer = await generatePass(memberForPass, biz, opts);
     const filename = `fidelity-${business.slug}-${member.id.slice(0, 8)}.pkpass`;
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
