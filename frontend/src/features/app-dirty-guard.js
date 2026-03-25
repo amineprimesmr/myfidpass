@@ -34,7 +34,7 @@ function closeUnsavedModal() {
 const SAVE_BUTTON_IDS_BY_SECTION = {
   personnaliser: ["app-personnaliser-save", "app-regles-save"],
   engagement: ["app-engagement-save"],
-  notifications: ["app-notification-texts-save"],
+  notifications: ["app-notification-texts-store"],
   "carte-perimetre": ["app-perimetre-save"],
   profil: ["app-profil-save"],
 };
@@ -108,7 +108,7 @@ function forceNavigateToSection(sectionId) {
 const MODAL_SAVE_BUTTON_BY_SECTION = {
   personnaliser: "app-personnaliser-save",
   engagement: "app-engagement-save",
-  notifications: "app-notification-texts-save",
+  notifications: "app-notification-texts-store",
   "carte-perimetre": "app-perimetre-save",
   profil: "app-profil-save",
 };

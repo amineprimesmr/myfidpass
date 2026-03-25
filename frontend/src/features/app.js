@@ -5537,12 +5537,63 @@ function initAppDashboard(slug) {
     if (btn) btn.disabled = false;
   });
 
-  document.getElementById("app-notification-texts-save")?.addEventListener("click", async () => {
+  async function patchNotificationBannerTexts() {
+    const titleEl = document.getElementById("app-notification-banner-title");
+    const messageEl = document.getElementById("app-notification-banner-message");
+    const saveRes = await api("/dashboard/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        notification_title_override: titleEl?.value?.trim() || null,
+        notification_change_message: messageEl?.value?.trim() || null,
+      }),
+    });
+    const saveData = await saveRes.json().catch(() => ({}));
+    return { ok: saveRes.ok, saveData };
+  }
+
+  document.getElementById("app-notification-texts-store")?.addEventListener("click", async () => {
+    const textsFeedbackEl = document.getElementById("app-notification-texts-feedback");
+    const notifFeedbackEl = document.getElementById("app-notif-feedback");
+    const btn = document.getElementById("app-notification-texts-store");
+    if (btn) btn.disabled = true;
+    if (textsFeedbackEl) textsFeedbackEl.classList.add("hidden");
+    if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
+    try {
+      const { ok, saveData } = await patchNotificationBannerTexts();
+      if (!ok) {
+        if (textsFeedbackEl) {
+          textsFeedbackEl.classList.remove("hidden");
+          textsFeedbackEl.textContent = saveData.error || "Erreur lors de l'enregistrement des textes.";
+          textsFeedbackEl.classList.add("error");
+          textsFeedbackEl.classList.remove("success");
+        }
+        if (btn) btn.disabled = false;
+        return;
+      }
+      if (textsFeedbackEl) {
+        textsFeedbackEl.classList.remove("hidden", "error");
+        textsFeedbackEl.classList.add("success");
+        textsFeedbackEl.textContent =
+          "Textes enregistrés. Ils servent aussi au message « pass » et à l’aperçu. Utilisez « Envoyer la notification » pour diffuser.";
+      }
+      notifyAppSectionSaveSuccess("notifications");
+    } catch (_) {
+      if (textsFeedbackEl) {
+        textsFeedbackEl.classList.remove("hidden", "success");
+        textsFeedbackEl.classList.add("error");
+        textsFeedbackEl.textContent = "Connexion interrompue lors de l’enregistrement. Vérifiez votre réseau et réessayez.";
+      }
+    }
+    if (btn) btn.disabled = false;
+  });
+
+  document.getElementById("app-notification-texts-send")?.addEventListener("click", async () => {
     const titleEl = document.getElementById("app-notification-banner-title");
     const messageEl = document.getElementById("app-notification-banner-message");
     const textsFeedbackEl = document.getElementById("app-notification-texts-feedback");
     const notifFeedbackEl = document.getElementById("app-notif-feedback");
-    const btn = document.getElementById("app-notification-texts-save");
+    const btn = document.getElementById("app-notification-texts-send");
     const targetCategories = document.getElementById("app-notif-target-categories");
     const message = messageEl?.value?.trim();
     if (!message) {
@@ -5570,16 +5621,8 @@ function initAppDashboard(slug) {
     if (textsFeedbackEl) textsFeedbackEl.classList.add("hidden");
     if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
     try {
-      const saveRes = await api("/dashboard/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          notification_title_override: titleEl?.value?.trim() || null,
-          notification_change_message: messageEl?.value?.trim() || null,
-        }),
-      });
-      const saveData = await saveRes.json().catch(() => ({}));
-      if (!saveRes.ok) {
+      const { ok, saveData } = await patchNotificationBannerTexts();
+      if (!ok) {
         if (textsFeedbackEl) {
           textsFeedbackEl.classList.remove("hidden");
           textsFeedbackEl.textContent = saveData.error || "Erreur lors de l'enregistrement des textes.";

@@ -1522,14 +1522,22 @@
                 </div>
               </div>
               <div class="app-notification-banner-actions">
-                <span class="app-save-cta-wrap">
-                  <button type="button" id="app-notification-texts-save" class="app-save-cta">
-                    <span class="app-save-cta-dot" aria-hidden="true"></span>
-                    <span class="app-save-cta-label">Envoyer la notification</span>
-                  </button>
-                </span>
-                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden"></p>
-                <p id="app-notif-feedback" class="app-message hidden"></p>
+                <div class="app-notification-banner-actions-row">
+                  <span class="app-save-cta-wrap" id="app-notification-texts-store-wrap">
+                    <button type="button" id="app-notification-texts-store" class="app-save-cta">
+                      <span class="app-save-cta-dot" aria-hidden="true"></span>
+                      <span class="app-save-cta-label">Enregistrer les textes</span>
+                    </button>
+                  </span>
+                  <span class="app-save-cta-wrap app-save-cta-wrap--notif-send">
+                    <button type="button" id="app-notification-texts-send" class="app-save-cta">
+                      <span class="app-save-cta-dot app-save-cta-dot--send" aria-hidden="true"></span>
+                      <span class="app-save-cta-label">Envoyer la notification</span>
+                    </button>
+                  </span>
+                </div>
+                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden" role="status" aria-live="polite"></p>
+                <p id="app-notif-feedback" class="app-message hidden" role="status" aria-live="polite"></p>
               </div>
             </div>
 
