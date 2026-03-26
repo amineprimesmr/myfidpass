@@ -1,10 +1,9 @@
-/** Apple : changeMessage doit contenir %@ pour le texte de notif ; le réglage commerce peut l’omettre. */
+/** Apple : changeMessage doit contenir %@ ; sans %@ on ajoute le suffixe pour préserver le préfixe commerce (ex. « Promo : %@ »). */
 export function normalizeChangeMessage(customMsg) {
   const c = (customMsg || "").trim();
   if (!c) return "%@";
   if (c.includes("%@")) return c;
-  /* Sans %@ : le commerce saisit souvent le message complet par erreur — sinon « Allô » devient « Allô %@ » + valeur « Allô » → « Allô Allô ». Préfixe volontaire : utiliser « Mon préfixe %@ ». */
-  return "%@";
+  return `${c} %@`;
 }
 
 /** Rend chaque envoi distinct pour PassKit (valeur du champ qui change) sans afficher date/heure au client. */

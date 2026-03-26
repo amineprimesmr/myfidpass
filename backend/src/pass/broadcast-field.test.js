@@ -9,8 +9,8 @@ describe("normalizeChangeMessage", () => {
   it("défaut %@ uniquement", () => {
     expect(normalizeChangeMessage("")).toBe("%@");
   });
-  it("sans %@ : message seul → pas de préfixe dupliqué", () => {
-    expect(normalizeChangeMessage("Allô")).toBe("%@");
+  it("sans %@ : ajoute le placeholder après le texte commerce", () => {
+    expect(normalizeChangeMessage("Allô")).toBe("Allô %@");
   });
   it("conserve un modèle avec %@", () => {
     expect(normalizeChangeMessage("Nouveau : %@")).toBe("Nouveau : %@");

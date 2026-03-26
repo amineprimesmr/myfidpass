@@ -5712,9 +5712,13 @@ function initAppDashboard(slug) {
     if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
     clearNotifTextsAutoSaveTimer();
     const savedOk = await runNotificationTextsAutoSave();
-    if (!savedOk) {
-      if (btn) btn.disabled = false;
-      return;
+    /* Ne pas bloquer l’envoi si le PATCH settings échoue (session, réseau) : POST /notifications/send
+     * applique quand même le message (setLastBroadcastMessage) et les pushes. */
+    if (!savedOk && textsFeedbackEl) {
+      textsFeedbackEl.classList.remove("hidden", "success");
+      textsFeedbackEl.classList.add("error");
+      textsFeedbackEl.textContent =
+        "Enregistrement des textes impossible — envoi de la campagne quand même. Vérifie la connexion ou réessaie.";
     }
 
     try {
