@@ -259,24 +259,36 @@
 }
 
 .fidelity-v2-roulette-inline-controls {
-  padding: 0 1rem 0.65rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 0.15rem 0.55rem 1.25rem;
   max-width: 640px;
   margin: 0 auto;
 }
 
+/* Le wrap « full » ne doit pas étirer le bouton sur toute la ligne */
+.fidelity-v2-roulette-inline-controls .fidelity-cta-wrap--full {
+  width: auto;
+  flex: 0 0 auto;
+}
+
 .fidelity-v2-roulette-inline .fidelity-cta-pill--wheel-cta {
-  min-height: 3.5rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  min-height: 2.65rem;
+  padding: 0.48rem 0.85rem !important;
 }
 
 .fidelity-v2-roulette-inline .fidelity-cta-wheel-line {
-  font-size: clamp(1rem, 3.6vw, 1.12rem);
-  gap: 0.42rem 0.55rem;
+  font-size: clamp(0.78rem, 2.9vw, 0.9rem);
+  gap: 0.28rem 0.38rem;
 }
 
 .fidelity-v2-roulette-inline .fidelity-cta-wheel-emoji {
-  font-size: 1.22rem;
+  font-size: 1.02rem;
+}
+
+.fidelity-v2-roulette-inline .fidelity-cta-pill-chevron {
+  font-size: 1rem;
 }
 
 .fidelity-v2-roulette-feedback {
