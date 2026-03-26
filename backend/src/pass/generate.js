@@ -25,15 +25,7 @@ import {
   frontRewardLabelFromSortedTiers,
   backRewardLinesFromSortedTiers,
 } from "./point-tiers.js";
-import { passMessageBroadcastFooter } from "../db/datetime-sql.js";
-
-/** Apple : changeMessage doit contenir %@ pour le texte de notif ; le réglage commerce peut l’omettre. */
-function normalizeChangeMessage(customMsg) {
-  const c = (customMsg || "").trim();
-  if (!c) return "%@";
-  if (c.includes("%@")) return c;
-  return `${c} %@`;
-}
+import { buildLastBroadcastFieldValue, normalizeChangeMessage } from "./broadcast-field.js";
 
 let _sharp = null;
 async function getSharp() {
@@ -233,15 +225,7 @@ export async function generatePass(member, business = null, options = {}) {
     business?.last_broadcast_message != null && String(business.last_broadcast_message).trim() !== ""
       ? String(business.last_broadcast_message).trim().slice(0, 170)
       : "";
-  const broadcastFooter = passMessageBroadcastFooter(business?.last_broadcast_at);
-  let lastBroadcast;
-  if (!rawBroadcast) {
-    lastBroadcast = "—";
-  } else if (broadcastFooter) {
-    lastBroadcast = `${rawBroadcast}\n${broadcastFooter}`.slice(0, 200);
-  } else {
-    lastBroadcast = rawBroadcast.slice(0, 200);
-  }
+  const lastBroadcast = buildLastBroadcastFieldValue(rawBroadcast, business?.last_broadcast_at);
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
