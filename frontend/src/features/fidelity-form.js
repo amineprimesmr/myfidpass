@@ -8,6 +8,7 @@ import { CARD_TEMPLATES } from "../constants/builder.js";
 import { escapeHtmlForServer } from "../utils/apiError.js";
 import { initClientFidelityPage } from "../client-fidelity/bootstrap.js";
 import { renderEngagementActionsMarkup } from "../client-fidelity/ui/mission-markup.js";
+import { applyWalletButtonsLayout } from "../utils/walletPlatform.js";
 
 const fidelityAppEl = document.getElementById("fidelity-app");
 
@@ -190,6 +191,9 @@ function showFidelitySuccess(slug, memberId, memberName) {
       window.location.href = passUrl;
     };
   }
+  const walletButtonsRow = btnAppleWallet?.closest(".fidelity-wallet-buttons");
+  applyWalletButtonsLayout(walletButtonsRow);
+
   if (btnGoogleWallet) {
     btnGoogleWallet.href = "#";
     btnGoogleWallet.onclick = async (e) => {
