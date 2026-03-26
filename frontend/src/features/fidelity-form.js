@@ -496,7 +496,6 @@ function initFidelityApp(slug) {
     slug,
     apiBase: API_BASE,
     rootEl: fidelityAppEl,
-    gamePage: route.type === "fidelity" && route.gamePage === true,
   }).catch(() => {
     showSlugError(`Entreprise « ${slug} » introuvable.`);
   });

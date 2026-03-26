@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import { isFidelityClientSpaPath } from "./fidelity-spa-nav.js";
 
 describe("isFidelityClientSpaPath", () => {
-  it("accepte la page carte et la page jeu", () => {
+  it("accepte la page fidélité membre", () => {
     expect(isFidelityClientSpaPath("/fidelity/demo")).toBe(true);
-    expect(isFidelityClientSpaPath("/fidelity/demo/jeu")).toBe(true);
     expect(isFidelityClientSpaPath("/fidelity/demo/")).toBe(true);
+    expect(isFidelityClientSpaPath("/fidelity/demo/jeu")).toBe(false);
   });
 
   it("refuse les autres chemins", () => {

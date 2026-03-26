@@ -763,7 +763,7 @@ body.fidpass-fidelity-route {
   margin-top: 1rem;
 }
 
-.fidelity-v2-step-missions--before-wheel {
+.fidelity-v2-step-missions--rail {
   margin-top: 0;
   margin-bottom: 0.75rem;
   padding-bottom: 0.25rem;
@@ -2109,7 +2109,9 @@ body.fidpass-fidelity-route {
 }
 
 .fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
-.fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
+.fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text,
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
   font-size: clamp(0.58rem, 2.55vmin, 0.98rem);
   font-weight: 800;
   text-transform: none;

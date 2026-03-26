@@ -2,9 +2,8 @@ import { renderEngagementActionsMarkup } from "./mission-markup.js";
 import { renderProfileMissionModalMarkup } from "./profile-mission-modal-markup.js";
 import { renderRewardsStepMarkup } from "./rewards-step-markup.js";
 import { renderWalletStepMarkup } from "./wallet-step-markup.js";
+import { renderRouletteInlineMarkup } from "./roulette-inline-markup.js";
 import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
-import { resolveClientLogoImgSrc } from "../lib/resolve-client-logo-src.js";
-
 function esc(value) {
   return String(value == null ? "" : value)
     .replaceAll("&", "&amp;")
@@ -14,8 +13,7 @@ function esc(value) {
     .replaceAll("'", "&#39;");
 }
 
-export function renderClientPage(root, state, options = {}) {
-  const { gamePage = false, slug = "", apiBase = "" } = options;
+export function renderClientPage(root, state, _options = {}) {
   const businessName = esc(state.business?.organizationName || state.business?.name || "Carte fidélité");
   const hasMember = !!state.member?.id;
   const showWalletStep = hasMember;
@@ -39,16 +37,7 @@ export function renderClientPage(root, state, options = {}) {
     return true;
   });
   const showProfileMissionModal = hasMember && profileEligible && !profileClaimed;
-  const gamePageUrl = slug ? `/fidelity/${encodeURIComponent(slug)}/jeu` : "#";
-  const backUrl = slug ? `/fidelity/${encodeURIComponent(slug)}` : "/";
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
-  /** Logo : même origine que la page si proxy (apiBase vide), sinon URL API absolue. */
-  const logoAttemptSrc = resolveClientLogoImgSrc(state.business, slug, apiBase);
-  const logoImgAlt = esc(businessName) || "Logo";
-  const logoImgOnError =
-    "this.style.display='none';var w=this.closest('.fidelity-v2-header-brand-logo,.fidelity-roulette-logo-wrap');if(w){var f=w.querySelector('[data-fid-logo-fallback]');if(f)f.style.display='flex';}";
-  const memberBalance =
-    hasMember && state.member?.id != null ? Math.max(0, Math.floor(Number(state.member?.points) || 0)) : null;
   const headerBalanceUnit = isStampsProgram
     ? (() => {
         const raw = String(state.business?.label_restants || "").trim();
@@ -56,90 +45,24 @@ export function renderClientPage(root, state, options = {}) {
         return raw.length <= 14 ? raw : "tampons";
       })()
     : "pts";
-  const stampEmojiHeader =
-    isStampsProgram && state.business?.stamp_emoji
-      ? esc(String(state.business.stamp_emoji).trim().slice(0, 8))
-      : "";
   const spinCtaAriaLabel = `Lancer la roue — ${tickets} ticket${tickets !== 1 ? "s" : ""} disponible${tickets !== 1 ? "s" : ""}`;
-
-  if (gamePage) {
-    const gameSubtitle = isStampsProgram ? "Gagne des passages bonus" : "Gagne des points bonus";
-    root.innerHTML = `
-      <div class="fidelity-game-page">
-        <a href="${backUrl}" class="fidelity-game-back-float">← Retour</a>
-        ${memberBalance != null ? `
-        <div class="fidelity-game-balance-pill" role="status" aria-label="${esc(isStampsProgram ? "Tampons sur ta carte" : "Points sur ta carte")}">
-          <div class="fidelity-v2-header-balance-inner">
-            ${stampEmojiHeader ? `<span class="fidelity-v2-header-balance-emoji" aria-hidden="true">${stampEmojiHeader}</span>` : ""}
-            <span class="fidelity-v2-header-balance-num">${esc(String(memberBalance))}</span>
-            <span class="fidelity-v2-header-balance-unit">${esc(headerBalanceUnit)}</span>
-          </div>
-        </div>
-        ` : ""}
-        <div class="fidelity-game-top">
-          <div class="fidelity-roulette-logo-wrap fidelity-roulette-logo">
-            ${logoAttemptSrc
-              ? `<img src="${esc(logoAttemptSrc)}" alt="${logoImgAlt}" class="fidelity-roulette-logo-img" loading="eager" decoding="async" onerror="${logoImgOnError}" /><div class="fidelity-roulette-logo-fallback" data-fid-logo-fallback><span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span></div>`
-              : `<span class="fidelity-roulette-logo-text">${esc(businessName.slice(0, 14)) || "VOTRE LOGO"}</span>`
-            }
-          </div>
-          <h2 class="fidelity-roulette-title">
-            <span class="fidelity-roulette-title-line">Tourne la roue et</span>
-            <span class="fidelity-roulette-title-line">${esc(gameSubtitle)}</span>
-          </h2>
-          <div class="fidelity-roulette-btn-row">
-            <span class="fidelity-cta-wrap">
-              <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" type="button" aria-label="${esc(spinCtaAriaLabel)}">
-                <span class="fidelity-cta-wheel-line">
-                  <span class="${ticketStatusDotClass}" aria-hidden="true"></span>
-                  <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
-                  <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${esc(String(tickets))} ticket${tickets !== 1 ? "s" : ""}</span>
-                  <span class="fidelity-cta-wheel-sep" aria-hidden="true">·</span>
-                  <span class="fidelity-cta-wheel-action">Jouer</span>
-                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                </span>
-              </button>
-            </span>
-          </div>
-        </div>
-        <div class="fidelity-roulette-wheel-zone">
-          <div class="fidelity-roulette-wheel-mount">
-            <div class="fidelity-roulette-wheel-outer">
-              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
-              <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
-              <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
-            </div>
-          </div>
-        </div>
-        <p id="fidelity-v2-game-feedback" class="fidelity-roulette-feedback hidden"></p>
-      </div>
-    `;
-    return;
-  }
 
   const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
-  const step2Title = showRoulette
-    ? "Gagne des points"
-    : actionsForDisplay.length
-      ? "Gagne des tickets & bonus"
-      : showClassicProgram
-        ? "Cumule en caisse"
-        : isStampsProgram
-          ? "Tampons & récompenses"
-          : "Profite de ton programme";
-  const step2Intro = showRoulette
-    ? actionsForDisplay.length
-      ? ""
-      : `Ouvre la page jeu pour utiliser la roue${tickets > 0 ? "" : " dès que tu auras des tickets"}.`
-    : actionsForDisplay.length
-      ? "Quelques actions rapides pour gagner des tickets."
-      : showClassicProgram
-        ? "Tes points montent quand tu utilises ta carte au moment de payer."
-        : isStampsProgram
-          ? "À chaque passage validé, tu te rapproches de la récompense prévue."
-          : `Présente ta carte chez <strong>${esc(businessName)}</strong> pour cumuler tes avantages.`;
-  const gameCtaAriaLabel = `Tourner la roue — ${tickets} ticket${tickets !== 1 ? "s" : ""} disponible${tickets !== 1 ? "s" : ""}`;
+  const step2Title = actionsForDisplay.length
+    ? "Missions"
+    : showClassicProgram
+      ? "Cumule en caisse"
+      : isStampsProgram
+        ? "Tampons & récompenses"
+        : "Programme";
+  const step2Intro = actionsForDisplay.length
+    ? "Quelques actions rapides pour gagner des tickets."
+    : showClassicProgram
+      ? "Tes points montent quand tu utilises ta carte au moment de payer."
+      : isStampsProgram
+        ? "À chaque passage validé, tu te rapproches de la récompense prévue."
+        : `Présente ta carte chez <strong>${esc(businessName)}</strong> pour cumuler tes avantages.`;
   const rewardsStepHtml = renderRewardsStepMarkup(esc, {
     business: state.business,
     member: state.member,
@@ -215,21 +138,14 @@ export function renderClientPage(root, state, options = {}) {
         <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play" id="fidelity-v2-step-2">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
-              ${showRoulette ? `
-              <h2 class="fidelity-v2-card-title fidelity-v2-step-title fidelity-v2-step-title--roulette">
-                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🎡</span>
-                <span class="fidelity-v2-step-title-label">${esc(step2Title)}</span>
-              </h2>
-              ` : `
               <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
-              `}
             </div>
           </header>
           <div class="fidelity-v2-step-body">
             <div class="fidelity-v2-step-body-inner">
             ${step2Intro ? `<p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>` : ""}
             ${showRoulette && actionsForDisplay.length ? `
-            <div class="fidelity-v2-step-missions fidelity-v2-step-missions--before-wheel">
+            <div class="fidelity-v2-step-missions fidelity-v2-step-missions--rail">
               <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions pour gagner des tickets" tabindex="0">
                 <div class="fidelity-engagement-actions fidelity-engagement-actions--rail" id="fidelity-v2-actions">${engagementHtml}</div>
               </div>
@@ -260,26 +176,15 @@ export function renderClientPage(root, state, options = {}) {
             </div>
           </div>
         </section>
-      </div>
 
-    ${showRoulette && hasMember ? `
-    <div class="fidelity-v2-sticky-play-cta">
-      <div class="fidelity-v2-sticky-play-inner">
-        <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-          <a href="${gamePageUrl}" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" id="fidelity-v2-game-cta" aria-label="${esc(gameCtaAriaLabel)}">
-            <span class="fidelity-cta-wheel-line">
-              <span class="${ticketStatusDotClass}" aria-hidden="true"></span>
-              <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
-              <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${esc(String(tickets))} ticket${tickets !== 1 ? "s" : ""}</span>
-              <span class="fidelity-cta-wheel-sep" aria-hidden="true">·</span>
-              <span class="fidelity-cta-wheel-action">Jouer</span>
-              <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-            </span>
-          </a>
-        </span>
+        ${showRoulette && hasMember
+          ? renderRouletteInlineMarkup(esc, {
+              tickets,
+              spinCtaAriaLabel,
+              ticketStatusDotClass,
+            })
+          : ""}
       </div>
-    </div>
-    ` : ""}
 
     </main>
 

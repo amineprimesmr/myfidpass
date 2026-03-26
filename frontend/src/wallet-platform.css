@@ -1,8 +1,9 @@
-/* Wallet client — boutons uniquement (v2 + succès /fidelity) */
+/* Wallet : boutons seuls, sans carte (v2 + succès /fidelity) */
 
-.fidelity-v2-step-body--wallet-only {
-  padding-top: 0.35rem;
-  padding-bottom: 0.15rem;
+.fidelity-v2-wallet-row {
+  padding: 0 1rem 0.85rem;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .fidelity-v2-main .fidelity-cta-pill--wallet-single {

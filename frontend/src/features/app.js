@@ -2687,7 +2687,7 @@ function initAppDashboard(slug) {
     const previewIframe = document.getElementById("app-engagement-preview-iframe");
     if (previewIframe && slug) {
       const base = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
-      previewIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}/jeu` : "";
+      previewIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}` : "";
     }
   }
   window.addEventListener("app-section-change", (e) => {

@@ -1,9 +1,9 @@
 import { initRouting } from "../router/index.js";
 
-/** Routes client fidélité : `/fidelity/:slug` ou `/fidelity/:slug/jeu` uniquement. */
+/** Route client fidélité : `/fidelity/:slug` uniquement (l’ancienne `/jeu` redirige côté routeur). */
 export function isFidelityClientSpaPath(pathname) {
   const p = pathname.replace(/\/$/, "") || "/";
-  return /^\/fidelity\/[^/]+(\/jeu)?$/.test(p);
+  return /^\/fidelity\/[^/]+$/.test(p);
 }
 
 /**

@@ -6,9 +6,15 @@ import { getAuthToken } from "../config.js";
 import { openOnboardingSheet } from "../features/landing-onboarding-sheet.js";
 
 export function getRoute() {
-  const path = window.location.pathname.replace(/\/$/, "");
-  const gameMatch = path.match(/^\/fidelity\/([^/]+)\/jeu$/);
-  if (gameMatch) return { type: "fidelity", slug: gameMatch[1], gamePage: true };
+  let path = window.location.pathname.replace(/\/$/, "");
+  const legacyJeux = path.match(/^\/fidelity\/([^/]+)\/jeu$/);
+  if (legacyJeux) {
+    const slug = legacyJeux[1];
+    path = `/fidelity/${slug}`;
+    if (typeof history !== "undefined" && history.replaceState) {
+      history.replaceState(null, "", path + window.location.search + window.location.hash);
+    }
+  }
   const match = path.match(/^\/fidelity\/([^/]+)$/);
   if (match) return { type: "fidelity", slug: match[1] };
   if (path === "/dashboard") return { type: "dashboard" };

@@ -252,3 +252,221 @@
     perspective: none;
   }
 }
+
+/* ── Roulette en bas de page (espace membre unifié) ── */
+.fidelity-v2-roulette-inline {
+  margin-top: 1rem;
+}
+
+.fidelity-v2-roulette-inline-controls {
+  padding: 0 1rem 0.65rem;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.fidelity-v2-roulette-inline .fidelity-cta-pill--wheel-cta {
+  min-height: 3.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.fidelity-v2-roulette-inline .fidelity-cta-wheel-line {
+  font-size: clamp(1rem, 3.6vw, 1.12rem);
+  gap: 0.42rem 0.55rem;
+}
+
+.fidelity-v2-roulette-inline .fidelity-cta-wheel-emoji {
+  font-size: 1.22rem;
+}
+
+.fidelity-v2-roulette-feedback {
+  text-align: center;
+  padding: 0.5rem 1rem 0;
+  font-size: 0.9rem;
+}
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-zone {
+  position: relative;
+  flex: none;
+  min-height: 46vh;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0;
+  background: var(--fidpass-surface);
+  perspective: 1500px;
+  perspective-origin: 52% 40%;
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-mount {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: min(138vmin, 138vw);
+  height: min(138vmin, 138vw);
+  transform: translate(-24%, -50%);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-outer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  right: auto;
+  top: auto;
+  transform: rotateX(14deg) scale(1);
+  transform-style: preserve-3d;
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel {
+  z-index: 1;
+  border-width: 14px;
+  border-style: solid;
+  border-color: #050505 #1a1a1a #2e2e2e #0d0d0d;
+  background-color: #0a0a0a;
+  position: relative;
+  isolation: isolate;
+  /* transition pilotée en JS uniquement (évite conflit avec style.css 0.1s linear) */
+  transition: none;
+  backface-visibility: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.07) inset,
+    0 22px 0 -8px rgba(0, 0, 0, 0.5),
+    0 36px 60px rgba(0, 0, 0, 0.38),
+    inset 0 4px 16px rgba(255, 255, 255, 0.07),
+    inset 0 -12px 28px rgba(0, 0, 0, 0.42);
+}
+
+/* Reflet léger, sans mix-blend-mode (évite écran tout doré sur WebKit). */
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.55;
+  background: conic-gradient(
+    from 210deg at 45% 42%,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.35) 48deg,
+    transparent 100deg,
+    transparent 200deg,
+    rgba(255, 255, 255, 0.12) 268deg,
+    transparent 320deg
+  );
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 13%;
+  height: 13%;
+  min-width: 42px;
+  min-height: 42px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.95) 0%, rgba(226, 232, 240, 0.4) 22%, transparent 45%),
+    radial-gradient(circle at 50% 100%, #1e293b 0%, #0a0a0a 100%);
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.55),
+    0 0 0 3px #c4942e,
+    0 0 0 5px rgba(20, 20, 20, 0.85),
+    inset 0 2px 5px rgba(255, 255, 255, 0.35),
+    inset 0 -5px 12px rgba(0, 0, 0, 0.55);
+}
+
+/*
+ * Anneau au-dessus de la roue : masque radial = que la couronne (centre 100 % transparent).
+ * Évite tout « disque doré » qui recouvre texte + parts.
+ */
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-rim {
+  z-index: 5;
+  border: none;
+  background: linear-gradient(145deg, #fff6d4 0%, #e8c547 25%, #a16207 55%, #d4a84b 85%, #fde68a 100%);
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent calc(100% - 14px),
+    #000 calc(100% - 12px)
+  );
+  mask: radial-gradient(
+    circle,
+    transparent calc(100% - 14px),
+    #000 calc(100% - 12px)
+  );
+  box-shadow: none;
+}
+
+/* Flèche classique (triangle vers le centre), pas le vieux « quart de pastille + point » */
+.fidelity-v2-roulette-inline .fidelity-roulette-indicator {
+  right: 0.6%;
+  top: 50%;
+  width: min(11vmin, 52px);
+  height: min(13vmin, 62px);
+  z-index: 10;
+  transform: translateY(-50%);
+  transform-origin: 0 50%;
+  background: linear-gradient(118deg, #fff7d6 0%, #f59e0b 38%, #c2410c 72%, #7c2d12 100%);
+  clip-path: polygon(0% 50%, 100% 5%, 100% 95%);
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(-3px 4px 8px rgba(0, 0, 0, 0.35));
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-indicator::after {
+  display: none;
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white .fidelity-roulette-segment-label {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75),
+    0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 480px) {
+  .fidelity-v2-roulette-inline .fidelity-roulette-wheel-mount {
+    width: min(128vmin, 128vw);
+    height: min(128vmin, 128vw);
+    transform: translate(-22%, -50%);
+  }
+
+  .fidelity-v2-roulette-inline .fidelity-roulette-wheel-outer {
+    transform: rotateX(9deg) scale(0.99);
+  }
+
+  .fidelity-v2-roulette-inline .fidelity-roulette-indicator {
+    right: 0.35%;
+    width: min(10vmin, 46px);
+    height: min(12vmin, 56px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fidelity-v2-roulette-inline .fidelity-roulette-wheel-outer {
+    transform: none;
+  }
+
+  .fidelity-v2-roulette-inline .fidelity-roulette-wheel-zone {
+    perspective: none;
+  }
+}

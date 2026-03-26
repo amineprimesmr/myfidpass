@@ -9,57 +9,54 @@ function googleSvg() {
 }
 
 /**
- * Bloc boutons Wallet uniquement (v2 client fidélité).
+ * Boutons Wallet seuls — pas de carte / cadre.
  * @param {(s: string) => string} _esc
- * @param {{ platform?: 'ios' | 'android' | 'desktop' }} [options]
  */
 export function renderWalletStepMarkup(_esc, options = {}) {
   const platform = options.platform ?? detectWalletPlatform();
 
   const appleOnly = `
-              <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-                <a href="#" id="fidelity-v2-apple" class="fidelity-cta-pill fidelity-cta-pill--wallet-single" aria-label="Apple Wallet">
-                  ${appleSvg()}
-                  <span class="fidelity-cta-pill-label">Apple Wallet</span>
-                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                </a>
-              </span>`;
+        <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+          <a href="#" id="fidelity-v2-apple" class="fidelity-cta-pill fidelity-cta-pill--wallet-single" aria-label="Apple Wallet">
+            ${appleSvg()}
+            <span class="fidelity-cta-pill-label">Apple Wallet</span>
+            <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+          </a>
+        </span>`;
   const googleOnly = `
-              <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-                <a href="#" id="fidelity-v2-google" class="fidelity-cta-pill fidelity-cta-pill--wallet-single" aria-label="Google Wallet">
-                  ${googleSvg()}
-                  <span class="fidelity-cta-pill-label">Google Wallet</span>
-                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                </a>
-              </span>`;
+        <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+          <a href="#" id="fidelity-v2-google" class="fidelity-cta-pill fidelity-cta-pill--wallet-single" aria-label="Google Wallet">
+            ${googleSvg()}
+            <span class="fidelity-cta-pill-label">Google Wallet</span>
+            <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+          </a>
+        </span>`;
   const appleDesktop = `
-              <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-                <a href="#" id="fidelity-v2-apple" class="fidelity-cta-pill fidelity-cta-pill--wallet-equal" aria-label="Apple Wallet">
-                  ${appleSvg()}
-                  <span class="fidelity-cta-pill-label">Apple Wallet</span>
-                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                </a>
-              </span>`;
+        <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+          <a href="#" id="fidelity-v2-apple" class="fidelity-cta-pill fidelity-cta-pill--wallet-equal" aria-label="Apple Wallet">
+            ${appleSvg()}
+            <span class="fidelity-cta-pill-label">Apple Wallet</span>
+            <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+          </a>
+        </span>`;
   const googleDesktop = `
-              <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
-                <a href="#" id="fidelity-v2-google" class="fidelity-cta-pill fidelity-cta-pill--wallet-equal" aria-label="Google Wallet">
-                  ${googleSvg()}
-                  <span class="fidelity-cta-pill-label">Google Wallet</span>
-                  <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                </a>
-              </span>`;
+        <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
+          <a href="#" id="fidelity-v2-google" class="fidelity-cta-pill fidelity-cta-pill--wallet-equal" aria-label="Google Wallet">
+            ${googleSvg()}
+            <span class="fidelity-cta-pill-label">Google Wallet</span>
+            <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+          </a>
+        </span>`;
 
-  let buttonsRow;
-  if (platform === "ios") buttonsRow = appleOnly;
-  else if (platform === "android") buttonsRow = googleOnly;
-  else buttonsRow = `${appleDesktop}${googleDesktop}`;
+  let inner;
+  if (platform === "ios") inner = appleOnly;
+  else if (platform === "android") inner = googleOnly;
+  else inner = `${appleDesktop}${googleDesktop}`;
 
   return `
-        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--wallet" id="fidelity-v2-wallet" aria-label="Wallet">
-          <div class="fidelity-v2-step-body fidelity-v2-step-body--wallet-only">
-            <div class="fidelity-wallet-buttons fidelity-wallet-buttons--${platform}">
-${buttonsRow}
-            </div>
-          </div>
-        </section>`;
+      <div class="fidelity-v2-wallet-row" id="fidelity-v2-wallet">
+        <div class="fidelity-wallet-buttons fidelity-wallet-buttons--${platform}">
+${inner}
+        </div>
+      </div>`;
 }

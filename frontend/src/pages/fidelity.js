@@ -13,7 +13,6 @@ export default {
         slug,
         apiBase: API_BASE,
         rootEl: rootEl(),
-        gamePage: route.gamePage === true,
       });
     } catch {
       showSlugError(`Entreprise « ${slug} » introuvable.`);

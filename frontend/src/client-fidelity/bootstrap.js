@@ -40,7 +40,7 @@ function prefersReducedMotion() {
 /** Annule les écouteurs document de la session précédente (évite doublons à chaque navigation SPA). */
 let fidelityDocumentListenersAbort = null;
 
-export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage = false }) {
+export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   const api = createClientFidelityApi(apiBase);
   const store = createClientFidelityStore({ slug });
   
@@ -73,17 +73,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   const business = await api.getBusiness(slug);
   store.patch({ business, unlimitedTicketsTest: isUnlimitedTicketsDemo() });
-  if (gamePage) {
-    try {
-      const gamesPayload = await api.getGames(slug);
-      store.patch({
-        games: gamesPayload?.games || [],
-        roulette_segments: Array.isArray(gamesPayload?.roulette_segments) ? gamesPayload.roulette_segments : [],
-      });
-    } catch (_) {
-      store.patch({ roulette_segments: [] });
-    }
-  }
   try {
     const raw = localStorage.getItem(memberStorageKey(slug));
     if (raw) {
@@ -179,7 +168,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   function rerender() {
     document.body.style.overflow = "";
-    renderClientPage(rootEl, store.get(), { gamePage, slug, apiBase });
+    renderClientPage(rootEl, store.get(), { slug, apiBase });
     bindEvents();
     if (!isSpinning) {
       initRouletteWheel();
