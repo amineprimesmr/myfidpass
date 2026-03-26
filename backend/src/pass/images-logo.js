@@ -106,21 +106,41 @@ export async function resizeLogoForPass(inputBuffer) {
 }
 
 /**
- * Icônes 29/58/87 px pour notifications Wallet. Fond blanc opaque (iOS 18).
+ * Icônes 29/58/87 px pour notifications / centre de notif Wallet.
+ * cover + centre : remplit le carré (logo bandeau n’est plus miniature au milieu du blanc).
+ * flatten sur blanc : rend l’icône opaque comme recommandé pour les passes.
  */
 export async function resizeLogoForPassIcon(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
   const sharp = await getSharp();
+  const white = { r: 255, g: 255, b: 255, alpha: 1 };
+  const resizeOne = (size) =>
+    sharp(inputBuffer)
+      .rotate()
+      .resize(size, size, { fit: "cover", position: "center" })
+      .flatten({ background: white })
+      .png()
+      .toBuffer();
   try {
-    const opts = { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } };
     const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
-      sharp(inputBuffer).resize(ICON_SIZE_1X, ICON_SIZE_1X, opts).png().toBuffer(),
-      sharp(inputBuffer).resize(ICON_SIZE_2X, ICON_SIZE_2X, opts).png().toBuffer(),
-      sharp(inputBuffer).resize(ICON_SIZE_3X, ICON_SIZE_3X, opts).png().toBuffer(),
+      resizeOne(ICON_SIZE_1X),
+      resizeOne(ICON_SIZE_2X),
+      resizeOne(ICON_SIZE_3X),
     ]);
     return { iconPng, iconPng2x, iconPng3x };
   } catch (err) {
     console.warn("[PassKit] resizeLogoForPassIcon failed:", err.message);
-    return null;
+    try {
+      const opts = { fit: "contain", background: white };
+      const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
+        sharp(inputBuffer).resize(ICON_SIZE_1X, ICON_SIZE_1X, opts).png().toBuffer(),
+        sharp(inputBuffer).resize(ICON_SIZE_2X, ICON_SIZE_2X, opts).png().toBuffer(),
+        sharp(inputBuffer).resize(ICON_SIZE_3X, ICON_SIZE_3X, opts).png().toBuffer(),
+      ]);
+      return { iconPng, iconPng2x, iconPng3x };
+    } catch (err2) {
+      console.warn("[PassKit] resizeLogoForPassIcon fallback failed:", err2.message);
+      return null;
+    }
   }
 }

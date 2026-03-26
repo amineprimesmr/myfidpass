@@ -27,6 +27,23 @@ import {
 } from "./point-tiers.js";
 import { passMessageBroadcastFooter } from "../db/datetime-sql.js";
 
+/** Aperçu court sur la face avant — c’est ce champ + changeMessage qui alimentent la notif (pas le verso seul). */
+function frontBroadcastPreview(lastBroadcast) {
+  if (!lastBroadcast || lastBroadcast === "—") return "—";
+  const firstLine = lastBroadcast.split("\n")[0].trim();
+  const max = 42;
+  if (firstLine.length <= max) return firstLine;
+  return `${firstLine.slice(0, max - 1)}…`;
+}
+
+/** Apple exige souvent %@ dans changeMessage ; le texte commerce peut être sans placeholder. */
+function changeMessageForFrontRow(customMsg) {
+  const c = (customMsg || "").trim();
+  if (!c) return "%@";
+  if (c.includes("%@")) return c;
+  return `${c} %@`;
+}
+
 let _sharp = null;
 async function getSharp() {
   if (!_sharp) _sharp = (await import("sharp")).default;
@@ -221,6 +238,19 @@ export async function generatePass(member, business = null, options = {}) {
   const authToken = getPassAuthenticationToken(member.id);
   const notifTitle = (options.notification_title_override ?? business?.notification_title_override)?.trim() || organizationName;
   const changeMsg = (options.notification_change_message ?? business?.notification_change_message)?.trim() || "%@";
+  const rawBroadcast =
+    business?.last_broadcast_message != null && String(business.last_broadcast_message).trim() !== ""
+      ? String(business.last_broadcast_message).trim().slice(0, 170)
+      : "";
+  const broadcastFooter = passMessageBroadcastFooter(business?.last_broadcast_at);
+  let lastBroadcast;
+  if (!rawBroadcast) {
+    lastBroadcast = "—";
+  } else if (broadcastFooter) {
+    lastBroadcast = `${rawBroadcast}\n${broadcastFooter}`.slice(0, 200);
+  } else {
+    lastBroadcast = rawBroadcast.slice(0, 200);
+  }
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
@@ -303,6 +333,15 @@ export async function generatePass(member, business = null, options = {}) {
       value: rewardFrontValue,
       textAlignment: "PKTextAlignmentLeft",
     });
+    if (rawBroadcast) {
+      pass.secondaryFields.unshift({
+        key: "lastNotifFront",
+        label: "Message",
+        value: frontBroadcastPreview(lastBroadcast),
+        textAlignment: "PKTextAlignmentLeft",
+        changeMessage: changeMessageForFrontRow(changeMsg),
+      });
+    }
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
         key: "member",
@@ -332,6 +371,15 @@ export async function generatePass(member, business = null, options = {}) {
         textAlignment: "PKTextAlignmentLeft",
         changeMessage: "Fidélité : %@",
       });
+      if (rawBroadcast) {
+        pass.secondaryFields.unshift({
+          key: "lastNotifFront",
+          label: "Message",
+          value: frontBroadcastPreview(lastBroadcast),
+          textAlignment: "PKTextAlignmentLeft",
+          changeMessage: changeMessageForFrontRow(changeMsg),
+        });
+      }
     } else {
       /* Wallet réserve toujours une zone « primary » sur une storeCard : si on ne remplit que secondary,
        * la face avant affiche une case vide. Toujours pousser le solde en primary pour le programme points. */
@@ -343,6 +391,15 @@ export async function generatePass(member, business = null, options = {}) {
       value: frontRewardLabelFromSortedTiers(sortedPointTiers),
       textAlignment: "PKTextAlignmentLeft",
     });
+    if (rawBroadcast) {
+      pass.secondaryFields.unshift({
+        key: "lastNotifFront",
+        label: "Message",
+        value: frontBroadcastPreview(lastBroadcast),
+        textAlignment: "PKTextAlignmentLeft",
+        changeMessage: changeMessageForFrontRow(changeMsg),
+      });
+    }
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
         key: "member",
@@ -379,20 +436,6 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  /* Champ « Message » : Apple n’affiche changeMessage que si `value` change ; même texte deux fois = aucune alerte. */
-  const rawBroadcast =
-    business?.last_broadcast_message != null && String(business.last_broadcast_message).trim() !== ""
-      ? String(business.last_broadcast_message).trim().slice(0, 170)
-      : "";
-  const broadcastFooter = passMessageBroadcastFooter(business?.last_broadcast_at);
-  let lastBroadcast;
-  if (!rawBroadcast) {
-    lastBroadcast = "—";
-  } else if (broadcastFooter) {
-    lastBroadcast = `${rawBroadcast}\n${broadcastFooter}`.slice(0, 200);
-  } else {
-    lastBroadcast = rawBroadcast.slice(0, 200);
-  }
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const backContact = business?.back_contact || "contact@example.com";
   const frontendUrl = (process.env.FRONTEND_URL || process.env.API_URL || "https://myfidpass.fr").replace(/\/$/, "");
