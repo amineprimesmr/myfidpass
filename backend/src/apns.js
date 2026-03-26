@@ -156,6 +156,104 @@ export function sendPassKitUpdate(deviceToken) {
   );
 }
 
+// ——— APNs pour l’app iOS commerçant (bundle com.myfidpass) : clé .p8 (Auth Key), pas le certificat Pass Type ID. ———
+
+let merchantProviderInstance = undefined;
+let merchantProviderError = null;
+
+function loadMerchantP8KeyPath() {
+  const p8Raw = process.env.MERCHANT_APNS_KEY_P8?.trim();
+  const p8B64 = process.env.MERCHANT_APNS_KEY_P8_BASE64?.trim();
+  let content = null;
+  if (p8Raw && p8Raw.includes("BEGIN")) {
+    content = p8Raw;
+  } else if (p8B64) {
+    try {
+      content = Buffer.from(p8B64, "base64").toString("utf8");
+    } catch (_) {
+      content = null;
+    }
+  }
+  if (!content || !content.includes("BEGIN")) return null;
+  const apnsDir = join(tmpdir(), "fidpass-apns-merchant");
+  mkdirSync(apnsDir, { recursive: true });
+  const keyPath = join(apnsDir, "merchant-apns-key.p8");
+  writeFileSync(keyPath, content, { mode: 0o600 });
+  return keyPath;
+}
+
+function getMerchantProvider() {
+  if (merchantProviderInstance !== undefined) return merchantProviderInstance;
+  merchantProviderError = null;
+  const keyId = process.env.MERCHANT_APNS_KEY_ID?.trim();
+  const teamId = process.env.MERCHANT_APNS_TEAM_ID?.trim();
+  const keyPath = loadMerchantP8KeyPath();
+  if (!keyId || !teamId || !keyPath) {
+    merchantProviderError =
+      "Clé APNs app commerçant manquante : définissez MERCHANT_APNS_KEY_ID, MERCHANT_APNS_TEAM_ID et MERCHANT_APNS_KEY_P8 (ou MERCHANT_APNS_KEY_P8_BASE64) sur Railway. Créez une clé APNs dans Apple Developer (Keys) avec le droit Apple Push Notifications, puis associez-la à l’identifiant d’app com.myfidpass.";
+    merchantProviderInstance = null;
+    return null;
+  }
+  try {
+    merchantProviderInstance = new apn.Provider({
+      token: { key: keyPath, keyId, teamId },
+      production: process.env.NODE_ENV === "production",
+    });
+    if (!merchantProviderInstance) {
+      merchantProviderError = "Le fournisseur APNs (app commerçant) a retourné null.";
+      merchantProviderInstance = null;
+    }
+  } catch (err) {
+    const msg = err?.message || String(err);
+    console.warn("[apns] Merchant app provider:", msg);
+    merchantProviderError = `APNs app commerçant : ${msg}`;
+    merchantProviderInstance = null;
+  }
+  return merchantProviderInstance;
+}
+
+/**
+ * Raison si l’envoi « test sur mon iPhone » (app commerçant) n’est pas possible côté serveur.
+ */
+export function getMerchantApnsUnavailableReason() {
+  const p = getMerchantProvider();
+  if (p) return null;
+  return merchantProviderError || "APNs app commerçant non configuré.";
+}
+
+/**
+ * Notification visible (titre + corps) sur l’app iOS commerçant (pas Wallet).
+ * @param {string} deviceToken - Token hex enregistré via POST /api/device/register
+ * @param {{ title?: string, body: string }} payload
+ * @returns {Promise<{ sent: boolean, error?: string }>}
+ */
+export function sendMerchantAppAlert(deviceToken, payload) {
+  const prov = getMerchantProvider();
+  if (!prov) {
+    const reason = getMerchantApnsUnavailableReason();
+    return Promise.resolve({ sent: false, error: reason || "APNs app commerçant non configuré" });
+  }
+  const bundleId = process.env.MERCHANT_APP_BUNDLE_ID?.trim() || "com.myfidpass";
+  const title = (payload.title || "Myfidpass").trim() || "Myfidpass";
+  const body = (payload.body || "").trim();
+  if (!body) return Promise.resolve({ sent: false, error: "Message vide" });
+  const note = new apn.Notification();
+  note.topic = bundleId;
+  note.sound = "default";
+  note.alert = { title, body };
+  note.expiry = Math.floor(Date.now() / 1000) + 3600;
+  return prov.send(note, deviceToken).then(
+    (result) => {
+      if (result.failed && result.failed.length > 0) {
+        const err = result.failed[0].response?.reason || result.failed[0].status || "unknown";
+        return { sent: false, error: String(err) };
+      }
+      return { sent: true };
+    },
+    (err) => ({ sent: false, error: err?.message || String(err) })
+  );
+}
+
 /** Marqueur pour vérifier que le bon build est déployé (doit apparaître dans les logs Railway). */
 const APNS_BUILD = "2026-02-28-fichiers";
 
@@ -173,10 +271,28 @@ export function logApnsStatus() {
   console.warn("[apns] Au démarrage: APNs non disponible —", reason || "inconnu");
 }
 
+/**
+ * Diagnostic clé .p8 app commerçant (optionnel).
+ */
+export function logMerchantApnsStatus() {
+  const p = getMerchantProvider();
+  if (p) {
+    const bid = process.env.MERCHANT_APP_BUNDLE_ID?.trim() || "com.myfidpass";
+    console.log("[apns] App commerçant: APNs prêt (topic=", bid, ").");
+    return;
+  }
+  const reason = getMerchantApnsUnavailableReason();
+  console.warn("[apns] App commerçant: push test iPhone indisponible —", reason || "inconnu");
+}
+
 /** Ferme la connexion APNs (à appeler au shutdown si besoin). */
 export function shutdownApns() {
   if (providerInstance) {
     providerInstance.shutdown();
     providerInstance = null;
+  }
+  if (merchantProviderInstance) {
+    merchantProviderInstance.shutdown();
+    merchantProviderInstance = null;
   }
 }

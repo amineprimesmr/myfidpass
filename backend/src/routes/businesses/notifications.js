@@ -12,13 +12,14 @@ import {
   getPassKitPushTokensForBusinessFiltered,
   getPassKitRegistrationsCountForBusiness,
   getMembersForBusiness,
+  getMerchantDeviceToken,
   logNotification,
   setLastBroadcastMessage,
   touchMemberLastVisit,
   removeTestPassKitDevices,
 } from "../../db.js";
 import { sendWebPush } from "../../notifications.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { sendPassKitUpdate, sendMerchantAppAlert, getMerchantApnsUnavailableReason } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
 import { getDashboardStats } from "../../db.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
@@ -30,6 +31,74 @@ function businessHasNotificationLogo(business) {
     Number(business?.asset_logo_present) === 1 ||
     !!(business?.logo_icon_base64 || business?.logo_base64)
   );
+}
+
+/**
+ * Envoi « test sur mon iPhone » uniquement : APNs vers l’app commerçant (token enregistré via /api/device/register).
+ * N’envoie rien aux clients (pas Web Push, pas PassKit).
+ */
+async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage) {
+  if (!req.user) {
+    return res.status(401).json({
+      error:
+        "Connectez-vous avec le compte commerçant (e-mail / mot de passe) dans l’app pour utiliser le mode test. Le lien avec jeton seul ne suffit pas.",
+    });
+  }
+  if (business.user_id !== req.user.id) {
+    return res.status(403).json({ error: "Seul le propriétaire du commerce peut utiliser ce mode test." });
+  }
+  const merchantApnsReason = getMerchantApnsUnavailableReason();
+  if (merchantApnsReason) {
+    return res.status(503).json({
+      error: merchantApnsReason,
+    });
+  }
+  const deviceToken = getMerchantDeviceToken(req.user.id);
+  if (!deviceToken) {
+    return res.status(400).json({
+      error:
+        "Aucun iPhone enregistré pour ce compte. Ouvrez l’app, acceptez les notifications, puis réessayez (ou réinstallez l’app si vous aviez refusé).",
+    });
+  }
+  const apiBase = getApiBase(req);
+  const slug = req.params.slug;
+  const iconUrl = businessHasNotificationLogo(business)
+    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+    : null;
+  const payload = {
+    title: (title || business.notification_title_override || business.organization_name || "Myfidpass").trim(),
+    body: bodyMessage,
+    ...(iconUrl && { icon: iconUrl }),
+  };
+  const result = await sendMerchantAppAlert(deviceToken, payload);
+  if (!result.sent) {
+    return res.status(200).json({
+      ok: true,
+      sent: 0,
+      sentWebPush: 0,
+      sentPassKit: 0,
+      sentMerchantApp: 0,
+      testSelfOnly: true,
+      message: result.error || "Échec de l’envoi APNs vers l’app.",
+    });
+  }
+  logNotification({
+    businessId: business.id,
+    memberId: null,
+    title: payload.title,
+    body: bodyMessage,
+    type: "merchant_app_test",
+  });
+  return res.json({
+    ok: true,
+    sent: 1,
+    sentWebPush: 0,
+    sentPassKit: 0,
+    sentMerchantApp: 1,
+    sentTotal: 1,
+    testSelfOnly: true,
+    message: "Notification de test envoyée sur votre iPhone (app Myfidpass). Aucun client n’a été notifié.",
+  });
 }
 
 export async function notifyHandler(req, res) {
@@ -109,9 +178,13 @@ router.post("/send", async (req, res) => {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
   const { title, message, category_ids: reqCategoryIds, segment } = req.body || {};
+  const testSelfOnly = req.body?.test_self_only === true || req.body?.testSelfOnly === true;
   const body = (message || "").trim();
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
+  }
+  if (testSelfOnly) {
+    return handleMerchantSelfTestSend(req, res, business, title, body);
   }
   let memberIds;
   if (segment && ["inactive30", "inactive90", "new30", "recurrent", "points50"].includes(segment)) {

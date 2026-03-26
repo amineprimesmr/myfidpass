@@ -23,6 +23,16 @@ export function upsertMerchantDeviceToken(userId, deviceToken) {
   ).run(userId, deviceToken.trim(), now);
 }
 
+/** Token APNs hex pour l’app commerçant (mode « test sur mon iPhone »). */
+export function getMerchantDeviceToken(userId) {
+  if (!userId) return null;
+  const row = db.prepare("SELECT device_token FROM merchant_device_tokens WHERE user_id = ?").get(userId);
+  const t = row?.device_token;
+  if (!t || typeof t !== "string") return null;
+  const s = t.trim();
+  return s.length > 0 ? s : null;
+}
+
 export function getPushTokensForMember(serialNumber) {
   const rows = db.prepare(
     `SELECT push_token FROM pass_registrations
