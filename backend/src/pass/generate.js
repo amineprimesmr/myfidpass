@@ -320,6 +320,13 @@ export async function generatePass(member, business = null, options = {}) {
       ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
       : "Paliers en magasin";
     pass.secondaryFields.push({
+      key: "tamponSolde",
+      label: "Tampons",
+      value: String(stamps),
+      textAlignment: "PKTextAlignmentLeft",
+      changeMessage: "Tu as maintenant %@ tampons !",
+    });
+    pass.secondaryFields.push({
       key: "rewardsFront",
       label: "Récompense",
       value: rewardFrontValue,
@@ -336,13 +343,13 @@ export async function generatePass(member, business = null, options = {}) {
   } else {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
-    /* Pas de changeMessage sur le primary « Points » : si les points ne changent pas, iOS ignore
-     * les secondary avec changeMessage et affiche « Carte de fidélité modifiée » (priorité primary). */
+    /* changeMessage obligatoire pour que Wallet affiche une alerte à chaque changement de solde. */
     const pointsField = {
       key: "points",
       label: "Points",
       value: pointsValue,
       textAlignment: "PKTextAlignmentCenter",
+      changeMessage: "Tu as maintenant %@ points !",
     };
     const sortedPointTiers = parsePointRewardTiersFromBusiness(business);
     if (isDecorativeImageOnlyStrip) {
@@ -353,6 +360,7 @@ export async function generatePass(member, business = null, options = {}) {
         label: "",
         value: `${labelRestants} = ${restants}`,
         textAlignment: "PKTextAlignmentLeft",
+        changeMessage: "Fidélité : %@",
       });
     } else {
       /* Wallet réserve toujours une zone « primary » sur une storeCard : si on ne remplit que secondary,

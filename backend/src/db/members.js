@@ -38,7 +38,9 @@ export function updateMember(memberId, { name, points, phone, city, birth_date: 
   const m = getMember(memberId);
   if (!m) return null;
   if (name !== undefined) db.prepare("UPDATE members SET name = ? WHERE id = ?").run(String(name).trim(), memberId);
-  if (Number.isFinite(Number(points)) && Number(points) >= 0) db.prepare("UPDATE members SET points = ? WHERE id = ?").run(Number(points), memberId);
+  if (Number.isFinite(Number(points)) && Number(points) >= 0) {
+    db.prepare("UPDATE members SET points = ?, last_visit_at = ? WHERE id = ?").run(Number(points), nowUtcSqlWithMs(), memberId);
+  }
   if (phone !== undefined) db.prepare("UPDATE members SET phone = ? WHERE id = ?").run(phone == null ? null : String(phone).trim(), memberId);
   if (city !== undefined) db.prepare("UPDATE members SET city = ? WHERE id = ?").run(city == null ? null : String(city).trim(), memberId);
   if (birthDate !== undefined) {
@@ -48,7 +50,8 @@ export function updateMember(memberId, { name, points, phone, city, birth_date: 
 }
 
 export function addPoints(id, points) {
-  db.prepare("UPDATE members SET points = points + ?, last_visit_at = datetime('now') WHERE id = ?").run(points, id);
+  const now = nowUtcSqlWithMs();
+  db.prepare("UPDATE members SET points = points + ?, last_visit_at = ? WHERE id = ?").run(points, now, id);
   return getMember(id);
 }
 
@@ -66,19 +69,19 @@ export function addStampsCapped(memberId, delta, maxStamps) {
   const next = cap > 0 ? Math.min(cap, cur + d) : cur + d;
   const added = next - cur;
   if (added <= 0) return { member: m0, added: 0 };
-  db.prepare("UPDATE members SET points = ?, last_visit_at = datetime('now') WHERE id = ?").run(next, memberId);
+  db.prepare("UPDATE members SET points = ?, last_visit_at = ? WHERE id = ?").run(next, nowUtcSqlWithMs(), memberId);
   return { member: getMember(memberId), added };
 }
 
 export function deductPoints(id, pointsToDeduct) {
   const amount = Math.max(0, Math.floor(Number(pointsToDeduct) || 0));
   if (amount <= 0) return getMember(id);
-  db.prepare("UPDATE members SET points = MAX(0, points - ?), last_visit_at = datetime('now') WHERE id = ?").run(amount, id);
+  db.prepare("UPDATE members SET points = MAX(0, points - ?), last_visit_at = ? WHERE id = ?").run(amount, nowUtcSqlWithMs(), id);
   return getMember(id);
 }
 
 export function resetMemberPoints(id) {
-  db.prepare("UPDATE members SET points = 0, last_visit_at = datetime('now') WHERE id = ?").run(id);
+  db.prepare("UPDATE members SET points = 0, last_visit_at = ? WHERE id = ?").run(nowUtcSqlWithMs(), id);
   return getMember(id);
 }
 

@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { getBusinessById, resolveBusinessProgramType } from "./businesses.js";
 import { getMemberForBusiness, getMember, addPoints, addStampsCapped } from "./members.js";
+import { nowUtcSqlWithMs } from "./datetime-sql.js";
 import { createTransaction } from "./transactions.js";
 import {
   parseJsonSafe,
@@ -249,8 +250,8 @@ export function convertPointsToTickets({
       "UPDATE member_ticket_wallets SET ticket_balance = ?, updated_at = datetime('now') WHERE member_id = ? AND business_id = ?"
     ).run(nextBalance, memberId, businessId);
     db.prepare(
-      "UPDATE members SET points = points - ?, last_visit_at = datetime('now') WHERE id = ? AND business_id = ?"
-    ).run(pointsUsed, memberId, businessId);
+      "UPDATE members SET points = points - ?, last_visit_at = ? WHERE id = ? AND business_id = ?"
+    ).run(pointsUsed, nowUtcSqlWithMs(), memberId, businessId);
     createTransaction({
       businessId,
       memberId,
