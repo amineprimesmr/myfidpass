@@ -255,9 +255,10 @@ export async function generatePass(member, business = null, options = {}) {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
     organizationName: notifTitle,
+    /* Éviter « Carte de fidélité » dans description : iOS peut associer au libellé système de notif. */
     description: format === "tampons"
-      ? `Carte fidélité — ${stamps}/${stampMax} tampons`
-      : `Carte de fidélité — ${member.points} pts`,
+      ? `Tampons · ${stamps}/${stampMax}`
+      : `Fidélité · ${member.points} pts`,
     serialNumber: member.id,
     ...customColors,
   };
@@ -353,12 +354,13 @@ export async function generatePass(member, business = null, options = {}) {
   } else {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
+    /* Pas de changeMessage sur le primary « Points » : si les points ne changent pas, iOS ignore
+     * les secondary avec changeMessage et affiche « Carte de fidélité modifiée » (priorité primary). */
     const pointsField = {
       key: "points",
       label: "Points",
       value: pointsValue,
       textAlignment: "PKTextAlignmentCenter",
-      changeMessage: "Tu as maintenant %@ points !",
     };
     const sortedPointTiers = parsePointRewardTiersFromBusiness(business);
     if (isDecorativeImageOnlyStrip) {
@@ -369,7 +371,6 @@ export async function generatePass(member, business = null, options = {}) {
         label: "",
         value: `${labelRestants} = ${restants}`,
         textAlignment: "PKTextAlignmentLeft",
-        changeMessage: "Fidélité : %@",
       });
       if (rawBroadcast) {
         pass.secondaryFields.unshift({
