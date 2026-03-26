@@ -14,6 +14,7 @@ import {
   pickWheelIndexForReward,
 } from "./lib/wheel-segments.js";
 import { isUnlimitedTicketsDemo } from "./lib/unlimited-tickets-demo.js";
+import { bindFidelitySpaLinks } from "./fidelity-spa-nav.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -35,6 +36,10 @@ function prefersReducedMotion() {
   if (typeof globalThis.matchMedia !== "function") return false;
   return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
+
+/** Annule les écouteurs document de la session précédente (évite doublons à chaque navigation SPA). */
+let fidelityDocumentListenersAbort = null;
+
 export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage = false }) {
   const api = createClientFidelityApi(apiBase);
   const store = createClientFidelityStore({ slug });
@@ -544,17 +549,31 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
         e.preventDefault();
       }
     });
+
+    bindFidelitySpaLinks(rootEl);
   }
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") tryAutoClaimOnReturn();
-  });
+  fidelityDocumentListenersAbort?.abort();
+  fidelityDocumentListenersAbort = new AbortController();
+  const { signal } = fidelityDocumentListenersAbort;
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    const m = rootEl.querySelector("#fidelity-profile-mission-modal");
-    if (m && !m.classList.contains("hidden")) closeProfileMissionModal();
-  });
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (document.visibilityState === "visible") tryAutoClaimOnReturn();
+    },
+    { signal }
+  );
+
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key !== "Escape") return;
+      const m = rootEl.querySelector("#fidelity-profile-mission-modal");
+      if (m && !m.classList.contains("hidden")) closeProfileMissionModal();
+    },
+    { signal }
+  );
 
   rerender();
   tryAutoClaimOnReturn();
