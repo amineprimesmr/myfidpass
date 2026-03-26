@@ -2186,6 +2186,15 @@ body.page-app .whatsapp-fab { display: none !important; }
   border-color: var(--app-accent, #1e3a8a);
   color: var(--app-accent, #1e3a8a);
 }
+.app-membres-delete-all-btn {
+  border-color: rgba(220, 38, 38, 0.45);
+  color: #b91c1c;
+}
+.app-membres-delete-all-btn:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
 /* Conteneur liste type dashboard (carte unique) */
 .app-membres-list-card {
   background: linear-gradient(180deg, var(--fidpass-surface) 0%, #fafbfc 100%);

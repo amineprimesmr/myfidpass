@@ -24,6 +24,7 @@ import {
   getMemberForBusiness,
   setMemberCategories,
 } from "../../db.js";
+import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/member-delete.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { canAccessDashboard, getApiBase, normalizeHexForPatch, MAX_LOGO_BASE64_BYTES } from "./shared.js";
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
@@ -559,6 +560,32 @@ router.get("/members", (req, res) => {
   const sort = ["last_visit", "points", "name", "created"].includes(req.query.sort) ? req.query.sort : "last_visit";
   const result = getMembersForBusiness(req.business.id, { search, limit, offset, filter, sort });
   res.json(result);
+});
+
+/** Supprime tous les membres du commerce (cartes Wallet / Web Push, historiques). Body : { confirm: "SUPPRIMER tous les membres" } */
+router.post("/members/delete-all", (req, res) => {
+  const business = req.business;
+  const confirm = (req.body?.confirm ?? req.body?.confirmText ?? "").toString().trim();
+  if (confirm !== "SUPPRIMER tous les membres") {
+    return res.status(400).json({
+      error: 'Confirmation requise : envoyez { "confirm": "SUPPRIMER tous les membres" }.',
+      code: "CONFIRM_REQUIRED",
+    });
+  }
+  const { deleted } = deleteAllMembersForBusiness(business.id);
+  res.json({ ok: true, deleted });
+});
+
+/** Supprime un membre et sa carte (pass, transactions, abonnements push du client). */
+router.delete("/members/:memberId", (req, res) => {
+  const business = req.business;
+  const memberId = req.params.memberId;
+  if (memberId === "delete-all") {
+    return res.status(400).json({ error: "Utilisez POST /dashboard/members/delete-all pour tout supprimer.", code: "USE_DELETE_ALL" });
+  }
+  const r = deleteMemberForBusiness(business.id, memberId);
+  if (!r.ok) return res.status(404).json({ error: "Membre introuvable" });
+  res.status(204).end();
 });
 
 /** Même logique que POST /members/:id/points/remove — chemin dashboard pour éviter 404 si le sous-routeur members n’est pas à jour en prod. */

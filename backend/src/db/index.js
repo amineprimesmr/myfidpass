@@ -12,6 +12,7 @@ export * from "./users.js";
 export * from "./businesses.js";
 export * from "./business-assets.js";
 export * from "./members.js";
+export * from "./member-delete.js";
 export * from "./transactions.js";
 export * from "./subscriptions.js";
 export * from "./level.js";

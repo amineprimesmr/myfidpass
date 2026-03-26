@@ -4838,6 +4838,38 @@ function initAppDashboard(slug) {
     });
   });
 
+  const membersDeleteAllBtn = document.getElementById("app-members-delete-all");
+  if (membersDeleteAllBtn) {
+    membersDeleteAllBtn.addEventListener("click", async () => {
+      if (
+        !window.confirm(
+          "Attention : vous allez supprimer TOUS les membres et leurs cartes (historique, points). Cette action est irréversible.\n\nConfirmer ?"
+        )
+      ) {
+        return;
+      }
+      membersDeleteAllBtn.disabled = true;
+      try {
+        const res = await api("/dashboard/members/delete-all", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "SUPPRIMER tous les membres" }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert(data.error || "Suppression impossible.");
+          membersDeleteAllBtn.disabled = false;
+          return;
+        }
+        alert(`${data.deleted ?? 0} membre(s) supprimé(s).`);
+        window.dispatchEvent(new Event("app-members-refresh"));
+      } catch (_) {
+        alert("Erreur réseau.");
+      }
+      membersDeleteAllBtn.disabled = false;
+    });
+  }
+
   const membersExportBtn = document.getElementById("app-members-export");
   if (membersExportBtn) {
     membersExportBtn.addEventListener("click", async () => {
@@ -4983,6 +5015,11 @@ function initAppDashboard(slug) {
             </div>
             <p id="app-member-remove-points-msg" class="hidden" style="margin-top:0.5rem;font-size:0.875rem"></p>
           </div>
+          <div class="app-member-delete-zone" style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--app-border, #e8e8e8)">
+            <h3 style="font-size:1rem;margin:0 0 0.5rem;color:#b91c1c">Zone de danger</h3>
+            <p style="font-size:0.875rem;margin:0 0 0.5rem;opacity:0.9">Supprime ce client sur le serveur (carte Apple Wallet, points, historique). Irréversible.</p>
+            <button type="button" class="btn btn-secondary" id="app-member-delete-btn" style="border-color:rgba(220,38,38,0.5);color:#b91c1c">Supprimer ce membre et sa carte</button>
+          </div>
         `;
   }
 
@@ -5031,6 +5068,33 @@ function initAppDashboard(slug) {
   }
 
   memberDetailModal?.addEventListener("click", async (e) => {
+    const delBtn = e.target.closest("#app-member-delete-btn");
+    if (delBtn && memberDetailOpenId) {
+      e.preventDefault();
+      if (
+        !window.confirm(
+          "Supprimer définitivement ce membre et sa carte (pass Apple Wallet, historique) ? Cette action est irréversible."
+        )
+      ) {
+        return;
+      }
+      delBtn.disabled = true;
+      try {
+        const res = await api(`/dashboard/members/${encodeURIComponent(memberDetailOpenId)}`, { method: "DELETE" });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || "Suppression impossible.");
+          delBtn.disabled = false;
+          return;
+        }
+        closeMemberDetail();
+        window.dispatchEvent(new Event("app-members-refresh"));
+      } catch (_) {
+        alert("Erreur réseau.");
+      }
+      delBtn.disabled = false;
+      return;
+    }
     const btn = e.target.closest("#app-member-remove-points-btn");
     if (!btn || !memberDetailOpenId || !memberDetailBody) return;
     e.preventDefault();
