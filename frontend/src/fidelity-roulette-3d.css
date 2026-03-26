@@ -305,7 +305,16 @@
   align-items: center;
   justify-content: flex-end;
   padding: 0;
-  background: var(--fidpass-surface);
+  /* Dégradé vers #f8fafc (body .fidpass-fidelity-route) : évite le rectangle gris aux bords nets */
+  background:
+    radial-gradient(
+      ellipse 110% 95% at 86% 46%,
+      #e8ecf1 0%,
+      #eef1f5 22%,
+      #f4f6f9 48%,
+      #f8fafc 78%,
+      #f8fafc 100%
+    );
   perspective: 1500px;
   perspective-origin: 52% 40%;
 }
