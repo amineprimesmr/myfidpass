@@ -27,17 +27,8 @@ import {
 } from "./point-tiers.js";
 import { passMessageBroadcastFooter } from "../db/datetime-sql.js";
 
-/** Aperçu court sur la face avant — c’est ce champ + changeMessage qui alimentent la notif (pas le verso seul). */
-function frontBroadcastPreview(lastBroadcast) {
-  if (!lastBroadcast || lastBroadcast === "—") return "—";
-  const firstLine = lastBroadcast.split("\n")[0].trim();
-  const max = 42;
-  if (firstLine.length <= max) return firstLine;
-  return `${firstLine.slice(0, max - 1)}…`;
-}
-
-/** Apple exige souvent %@ dans changeMessage ; le texte commerce peut être sans placeholder. */
-function changeMessageForFrontRow(customMsg) {
+/** Apple : changeMessage doit contenir %@ pour le texte de notif ; le réglage commerce peut l’omettre. */
+function normalizeChangeMessage(customMsg) {
   const c = (customMsg || "").trim();
   if (!c) return "%@";
   if (c.includes("%@")) return c;
@@ -334,15 +325,6 @@ export async function generatePass(member, business = null, options = {}) {
       value: rewardFrontValue,
       textAlignment: "PKTextAlignmentLeft",
     });
-    if (rawBroadcast) {
-      pass.secondaryFields.unshift({
-        key: "lastNotifFront",
-        label: "Message",
-        value: frontBroadcastPreview(lastBroadcast),
-        textAlignment: "PKTextAlignmentLeft",
-        changeMessage: changeMessageForFrontRow(changeMsg),
-      });
-    }
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
         key: "member",
@@ -372,15 +354,6 @@ export async function generatePass(member, business = null, options = {}) {
         value: `${labelRestants} = ${restants}`,
         textAlignment: "PKTextAlignmentLeft",
       });
-      if (rawBroadcast) {
-        pass.secondaryFields.unshift({
-          key: "lastNotifFront",
-          label: "Message",
-          value: frontBroadcastPreview(lastBroadcast),
-          textAlignment: "PKTextAlignmentLeft",
-          changeMessage: changeMessageForFrontRow(changeMsg),
-        });
-      }
     } else {
       /* Wallet réserve toujours une zone « primary » sur une storeCard : si on ne remplit que secondary,
        * la face avant affiche une case vide. Toujours pousser le solde en primary pour le programme points. */
@@ -392,15 +365,6 @@ export async function generatePass(member, business = null, options = {}) {
       value: frontRewardLabelFromSortedTiers(sortedPointTiers),
       textAlignment: "PKTextAlignmentLeft",
     });
-    if (rawBroadcast) {
-      pass.secondaryFields.unshift({
-        key: "lastNotifFront",
-        label: "Message",
-        value: frontBroadcastPreview(lastBroadcast),
-        textAlignment: "PKTextAlignmentLeft",
-        changeMessage: changeMessageForFrontRow(changeMsg),
-      });
-    }
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
         key: "member",
@@ -449,7 +413,7 @@ export async function generatePass(member, business = null, options = {}) {
       ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
       : `${stampMax} tampons = ${stampRewardLabel}`;
     pass.backFields.push(
-      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: changeMsg },
+      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg) },
       { key: "reward", label: "Récompense", value: rewardValue },
       { key: "terms", label: "Conditions", value: backTerms },
       { key: "contact", label: "Contact", value: backContact },
@@ -467,7 +431,7 @@ export async function generatePass(member, business = null, options = {}) {
         : "Consultez le commerce pour les paliers de récompenses.";
 
     pass.backFields.push(
-      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: changeMsg },
+      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg) },
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       {
         key: "rewards",
