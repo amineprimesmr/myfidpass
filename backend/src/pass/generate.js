@@ -269,6 +269,10 @@ export async function generatePass(member, business = null, options = {}) {
   /**
    * Carte avec image de fond mais sans programme tampons ni points (pas de type ni paliers côté commerce).
    * Dans ce cas seul le champ « Restants » a lieu d’être sur la face ; pas sur les cartes tampons/points classiques.
+   *
+   * Important : si `program_type` est absent en base (`""`), on ne doit PAS activer ce mode : sinon
+   * `"" !== "points"` est vrai pour tous les tests et on croit à tort que c’est « décoratif » → pas de
+   * champ Points en primary, face avant vide (bug Wallet).
    */
   const rawProgramType = String(options.program_type ?? business?.program_type ?? "")
     .trim()
@@ -279,6 +283,9 @@ export async function generatePass(member, business = null, options = {}) {
       : 0;
   const isDecorativeImageOnlyStrip =
     hasCardBackgroundStrip &&
+    format !== "points" &&
+    format !== "tampons" &&
+    rawProgramType.length > 0 &&
     rawProgramType !== "stamps" &&
     rawProgramType !== "points" &&
     rawProgramType !== "tampons" &&
