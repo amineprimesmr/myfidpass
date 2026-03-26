@@ -25,6 +25,7 @@ import {
   frontRewardLabelFromSortedTiers,
   backRewardLinesFromSortedTiers,
 } from "./point-tiers.js";
+import { passMessageBroadcastFooter } from "../db/datetime-sql.js";
 
 let _sharp = null;
 async function getSharp() {
@@ -378,8 +379,20 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  const lastBroadcast = (business?.last_broadcast_message != null && String(business.last_broadcast_message).trim() !== "")
-    ? String(business.last_broadcast_message).trim().slice(0, 200) : "—";
+  /* Champ « Message » : Apple n’affiche changeMessage que si `value` change ; même texte deux fois = aucune alerte. */
+  const rawBroadcast =
+    business?.last_broadcast_message != null && String(business.last_broadcast_message).trim() !== ""
+      ? String(business.last_broadcast_message).trim().slice(0, 170)
+      : "";
+  const broadcastFooter = passMessageBroadcastFooter(business?.last_broadcast_at);
+  let lastBroadcast;
+  if (!rawBroadcast) {
+    lastBroadcast = "—";
+  } else if (broadcastFooter) {
+    lastBroadcast = `${rawBroadcast}\n${broadcastFooter}`.slice(0, 200);
+  } else {
+    lastBroadcast = rawBroadcast.slice(0, 200);
+  }
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const backContact = business?.back_contact || "contact@example.com";
   const frontendUrl = (process.env.FRONTEND_URL || process.env.API_URL || "https://myfidpass.fr").replace(/\/$/, "");

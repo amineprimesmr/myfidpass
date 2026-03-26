@@ -13,3 +13,17 @@ export function formatUtcSqlWithMs(d = new Date()) {
 export function nowUtcSqlWithMs() {
   return formatUtcSqlWithMs(new Date());
 }
+
+/**
+ * Ligne affichée sous le message campagne sur le pass (verso).
+ * Apple n’affiche l’alerte `changeMessage` que si la valeur du champ change : deux envois avec le même texte
+ * ne produisaient aucune « notification » visible — l’instant d’envoi rend chaque mise à jour distincte.
+ */
+export function passMessageBroadcastFooter(lastBroadcastAt) {
+  if (lastBroadcastAt == null || String(lastBroadcastAt).trim() === "") return "";
+  const s = String(lastBroadcastAt).trim();
+  const iso = s.replace(" ", "T").replace(/Z?$/, "Z");
+  const ms = Date.parse(iso);
+  if (!Number.isFinite(ms)) return "";
+  return new Date(ms).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "medium" });
+}
