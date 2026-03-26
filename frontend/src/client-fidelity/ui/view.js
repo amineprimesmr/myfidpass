@@ -38,14 +38,9 @@ export function renderClientPage(root, state, _options = {}) {
   });
   const showProfileMissionModal = hasMember && profileEligible && !profileClaimed;
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
-  const headerBalanceUnit = isStampsProgram
-    ? (() => {
-        const raw = String(state.business?.label_restants || "").trim();
-        if (!raw) return "tampons";
-        return raw.length <= 14 ? raw : "tampons";
-      })()
-    : "pts";
-  const spinCtaAriaLabel = `Lancer la roue — ${tickets} ticket${tickets !== 1 ? "s" : ""} disponible${tickets !== 1 ? "s" : ""}`;
+  const headerBalanceUnit = "pts";
+  const spinPtsWord = tickets === 1 ? "point" : "points";
+  const spinCtaAriaLabel = `Lancer la roue — ${tickets} ${spinPtsWord} pour jouer`;
 
   const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
@@ -54,10 +49,10 @@ export function renderClientPage(root, state, _options = {}) {
     : showClassicProgram
       ? "Cumule en caisse"
       : isStampsProgram
-        ? "Tampons & récompenses"
+        ? "Points & récompenses"
         : "Programme";
   const step2Intro = actionsForDisplay.length
-    ? "Quelques actions rapides pour gagner des tickets."
+    ? ""
     : showClassicProgram
       ? "Tes points montent quand tu utilises ta carte au moment de payer."
       : isStampsProgram
@@ -150,6 +145,14 @@ export function renderClientPage(root, state, _options = {}) {
           </div>
         </section>
 
+        ${showRoulette && hasMember
+          ? renderRouletteInlineMarkup(esc, {
+              tickets,
+              spinCtaAriaLabel,
+              ticketStatusDotClass,
+            })
+          : ""}
+
         <!-- Missions / programme -->
         <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play" id="fidelity-v2-step-2">
           <header class="fidelity-v2-step-header">
@@ -162,7 +165,7 @@ export function renderClientPage(root, state, _options = {}) {
             ${step2Intro ? `<p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>` : ""}
             ${showRoulette && actionsForDisplay.length ? `
             <div class="fidelity-v2-step-missions fidelity-v2-step-missions--rail">
-              <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions pour gagner des tickets" tabindex="0">
+              <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions" tabindex="0">
                 <div class="fidelity-engagement-actions fidelity-engagement-actions--rail" id="fidelity-v2-actions">${engagementHtml}</div>
               </div>
             </div>
@@ -176,14 +179,6 @@ export function renderClientPage(root, state, _options = {}) {
             </div>
           </div>
         </section>
-
-        ${showRoulette && hasMember
-          ? renderRouletteInlineMarkup(esc, {
-              tickets,
-              spinCtaAriaLabel,
-              ticketStatusDotClass,
-            })
-          : ""}
       </div>
 
     </main>

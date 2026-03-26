@@ -6,7 +6,7 @@
 export function renderRouletteInlineMarkup(esc, p) {
   const { tickets, spinCtaAriaLabel, ticketStatusDotClass } = p;
   const t = esc(String(tickets));
-  const plural = tickets !== 1 ? "s" : "";
+  const ptsWord = tickets === 1 ? "point" : "points";
   return `
       <section class="fidelity-v2-roulette-inline" id="fidelity-v2-roulette-block" aria-label="Roulette">
         <div class="fidelity-v2-roulette-inline-controls">
@@ -14,8 +14,8 @@ export function renderRouletteInlineMarkup(esc, p) {
             <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta" type="button" aria-label="${esc(spinCtaAriaLabel)}">
               <span class="fidelity-cta-wheel-line">
                 <span class="${esc(ticketStatusDotClass)}" aria-hidden="true"></span>
-                <span class="fidelity-cta-wheel-emoji" aria-hidden="true">🎟️</span>
-                <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${t} ticket${plural}</span>
+                <span class="fidelity-cta-wheel-emoji" aria-hidden="true">⭐</span>
+                <span id="fidelity-v2-tickets-display" class="fidelity-cta-wheel-tickets">${t} ${ptsWord}</span>
                 <span class="fidelity-cta-wheel-sep" aria-hidden="true">·</span>
                 <span class="fidelity-cta-wheel-action">Jouer</span>
                 <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>

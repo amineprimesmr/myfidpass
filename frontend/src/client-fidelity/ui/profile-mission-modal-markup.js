@@ -21,7 +21,7 @@ export function renderProfileMissionModalMarkup(esc, data) {
           <h2 id="fidelity-profile-mission-modal-title" class="fidelity-profile-mission-modal__title">Complète ton profil</h2>
           <button type="button" class="fidelity-profile-mission-modal__close" aria-label="Fermer">×</button>
         </div>
-        <p class="fidelity-profile-mission-modal__desc">Quelques infos pour le commerce — <strong>1 ticket bonus</strong> sur ta carte (une seule fois).</p>
+        <p class="fidelity-profile-mission-modal__desc">Quelques infos pour le commerce — <strong>1 point bonus</strong> sur ta carte (une seule fois).</p>
         <div class="fidelity-profile-mission-modal__identity">
           <p class="fidelity-profile-mission-modal__identity-kicker">Tes infos d’inscription</p>
           <dl class="fidelity-profile-mission-modal__identity-dl">
@@ -57,7 +57,7 @@ export function renderProfileMissionModalMarkup(esc, data) {
           <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
             <button type="submit" class="fidelity-cta-pill" id="fidelity-v2-profile-submit">
               <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-              <span class="fidelity-cta-pill-label">Valider et obtenir mon ticket</span>
+              <span class="fidelity-cta-pill-label">Valider et obtenir mon point</span>
               <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
             </button>
           </span>

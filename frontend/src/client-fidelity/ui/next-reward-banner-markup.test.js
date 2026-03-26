@@ -26,7 +26,7 @@ describe("renderNextRewardBannerMarkup (ligne unique)", () => {
     expect(html).not.toMatch(/\+<strong>/);
   });
 
-  it("affiche la barre pour la prochaine récompense tampons", () => {
+  it("affiche la barre pour la prochaine récompense (programme tampons, libellé pts)", () => {
     const state = buildNextRewardBannerState({
       hasMember: true,
       business: {
@@ -36,7 +36,7 @@ describe("renderNextRewardBannerMarkup (ligne unique)", () => {
       },
       member: { points: 3 },
       programType: "stamps",
-      balanceUnit: "tampons",
+      balanceUnit: "pts",
     });
     expect(state.kind).toBe("next");
     const html = renderNextRewardBannerMarkup(idEsc, state, { businessNameEsc: "X" });

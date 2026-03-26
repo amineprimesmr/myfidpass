@@ -76,9 +76,9 @@ export function formatWheelSegmentDisplayLabel(label) {
   m = compact.match(/\b(\d+)\s*(?:POINTS?\s*BONUS|PTS?\s*BONUS|POINTS?|PTS?)\b/i);
   if (m) return `+${m[1]} pts`;
   m = compact.match(/\+?\s*(\d+)\s*(?:PASSAGES?|TAMPONS?)\b/i);
-  if (m) return `+${m[1]} pass.`;
+  if (m) return `+${m[1]} pts`;
   m = compact.match(/\b(\d+)\s*(?:PASSAGES?|TAMPONS?)\b/i);
-  if (m) return `+${m[1]} pass.`;
+  if (m) return `+${m[1]} pts`;
   if (compact.length > 11) return `${compact.slice(0, 10)}…`;
   return compact;
 }

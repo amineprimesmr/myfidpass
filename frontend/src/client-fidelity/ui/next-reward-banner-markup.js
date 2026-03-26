@@ -16,7 +16,7 @@ export function buildNextRewardBannerState(opts) {
   const balance = Math.max(0, Math.floor(Number(member?.points) || 0));
   const isStamps = programType === "stamps";
   const tiers = isStamps ? buildStampTiers(business) : parsePointTiers(business);
-  const unitShort = String(balanceUnit || "").trim() || (isStamps ? "tampons" : "pts");
+  const unitShort = String(balanceUnit || "").trim() || "pts";
 
   if (!tiers.length) {
     return { kind: "no_tiers" };
@@ -85,11 +85,11 @@ export function renderNextRewardBannerMarkup(esc, state, ctx) {
         </div>`;
   }
 
-  const unitW = state.isStamps ? esc(state.unitShort) : "pts";
+  const unitW = esc(state.unitShort || "pts");
   const bal = esc(String(state.balance));
   const max = esc(String(state.nextThreshold));
   const pctRounded = Math.round(Math.max(0, Math.min(100, state.pct)));
-  const aria = `Prochaine récompense : ${state.label}. ${state.balance} sur ${state.nextThreshold}, encore ${state.need} ${state.unitShort}.`;
+  const aria = `Prochaine récompense : ${state.label}. ${state.balance} sur ${state.nextThreshold}, encore ${state.need} pts.`;
 
   return `
         <div class="fidelity-v2-next-reward fidelity-v2-next-reward--card fidelity-v2-next-reward--next fidelity-v2-next-reward--single-line" role="status" aria-label="${esc(aria)}">

@@ -289,7 +289,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     }
     if (tickets < spinCost) {
       if (feedback) {
-        feedback.textContent = `Il te faut ${spinCost} ticket(s). Gagne des tickets via les missions ou (mode points) convertis tes points sur la page carte.`;
+        feedback.textContent = `Il te faut ${spinCost} point${spinCost > 1 ? "s" : ""} pour jouer. Gagne des points via les missions ou convertis tes points sur la page carte.`;
         feedback.classList.add("error");
         feedback.classList.remove("hidden", "success");
       }
@@ -461,7 +461,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       await refreshMemberData();
       const feedback = rootEl.querySelector("#fidelity-v2-action-feedback");
       if (feedback) {
-        feedback.textContent = "Tickets ajoutés à ta carte.";
+        feedback.textContent = "Points ajoutés à ta carte.";
         feedback.classList.remove("hidden");
         setTimeout(() => feedback.classList.add("hidden"), 4000);
       }

@@ -54,7 +54,7 @@ export function renderEngagementActionsMarkup(actions, esc) {
               <div class="fidelity-mission-card__icon" aria-hidden="true">${icon}</div>
               <div class="fidelity-mission-card__main">
                 <span class="fidelity-mission-card__label">${esc(a.label)}</span>
-                <span class="fidelity-mission-card__reward"><span class="fidelity-mission-card__reward-plus">+</span>1 ticket</span>
+                <span class="fidelity-mission-card__reward"><span class="fidelity-mission-card__reward-plus">+</span>1 point</span>
               </div>
               <span class="fidelity-mission-card__cta">
                 <span class="fidelity-mission-card__cta-text">${a.action_type === "profile_complete" ? "Remplir" : "Ouvrir"}</span>

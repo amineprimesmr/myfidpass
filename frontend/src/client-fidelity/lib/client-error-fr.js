@@ -39,5 +39,8 @@ export function messageUtilisateurPourErreur(err, fallback = "Une erreur est sur
   if (low === "unauthorized") return "Accès refusé. Reconnecte-toi si besoin.";
   if (low === "forbidden") return "Action non autorisée.";
 
+  if (low.includes("tickets insuffisants")) return "Points insuffisants pour jouer.";
+  if (low.includes("tickets indisponibles")) return "Solde indisponible. Réessaie.";
+
   return raw || fallback;
 }

@@ -12,7 +12,7 @@ describe("messageUtilisateurPourErreur", () => {
     expect(messageUtilisateurPourErreur(null, "Défaut")).toBe("Défaut");
   });
 
-  it("laisse passer un message déjà exploitable", () => {
-    expect(messageUtilisateurPourErreur(new Error("Tickets insuffisants"))).toBe("Tickets insuffisants");
+  it("adoucit les messages API historiques « tickets »", () => {
+    expect(messageUtilisateurPourErreur(new Error("Tickets insuffisants"))).toBe("Points insuffisants pour jouer.");
   });
 });

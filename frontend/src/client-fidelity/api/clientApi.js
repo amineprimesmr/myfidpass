@@ -75,9 +75,9 @@ export function createClientFidelityApi(apiBase) {
     const res = await fetchFidelity(
       withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/tickets`),
       { cache: "no-store" },
-      "Tickets indisponibles. Vérifie ta connexion.",
+      "Solde indisponible. Vérifie ta connexion.",
     );
-    if (!res.ok) throw new Error("Tickets indisponibles");
+    if (!res.ok) throw new Error("Solde indisponible");
     return safeJson(res);
   }
 

@@ -54,6 +54,11 @@ describe("formatWheelSegmentDisplayLabel", () => {
   it("laisse les courts inchangés", () => {
     expect(formatWheelSegmentDisplayLabel("+10 pts")).toBe("+10 pts");
   });
+
+  it("tampons ou passages → affichage en pts sur la roue", () => {
+    expect(formatWheelSegmentDisplayLabel("+2 tampons")).toBe("+2 pts");
+    expect(formatWheelSegmentDisplayLabel("3 passages")).toBe("+3 pts");
+  });
 });
 
 describe("pickWheelIndexForReward", () => {
