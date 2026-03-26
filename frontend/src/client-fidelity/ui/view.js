@@ -134,7 +134,23 @@ export function renderClientPage(root, state, _options = {}) {
       <div class="fidelity-v2-steps ${hasMember ? "" : "hidden"}" aria-label="${esc(memberSectionsAriaLabel)}">
         ${showWalletStep ? renderWalletStepMarkup(esc) : ""}
 
-        <!-- Roue / missions / programme -->
+        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--rewards" id="fidelity-v2-rewards">
+          <header class="fidelity-v2-step-header">
+            <div class="fidelity-v2-step-head-text">
+              <h2 class="fidelity-v2-card-title fidelity-v2-step-title fidelity-v2-step-title--rewards">
+                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🎁</span>
+                <span class="fidelity-v2-step-title-label">Récompenses</span>
+              </h2>
+            </div>
+          </header>
+          <div class="fidelity-v2-step-body">
+            <div class="fidelity-v2-step-body-inner">
+            ${rewardsStepHtml}
+            </div>
+          </div>
+        </section>
+
+        <!-- Missions / programme -->
         <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play" id="fidelity-v2-step-2">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
@@ -157,22 +173,6 @@ export function renderClientPage(root, state, _options = {}) {
             </div>
             ` : ""}
             <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
-            </div>
-          </div>
-        </section>
-
-        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--rewards" id="fidelity-v2-rewards">
-          <header class="fidelity-v2-step-header">
-            <div class="fidelity-v2-step-head-text">
-              <h2 class="fidelity-v2-card-title fidelity-v2-step-title fidelity-v2-step-title--rewards">
-                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🎁</span>
-                <span class="fidelity-v2-step-title-label">Récompenses</span>
-              </h2>
-            </div>
-          </header>
-          <div class="fidelity-v2-step-body">
-            <div class="fidelity-v2-step-body-inner">
-            ${rewardsStepHtml}
             </div>
           </div>
         </section>
