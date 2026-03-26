@@ -1,4 +1,4 @@
-/* Détection plateforme — priorité Apple Wallet / Google Wallet */
+/* Détection plateforme — un seul Wallet sur mobile (Apple ou Google) */
 
 .fidelity-wallet-detect-hint {
   font-size: 0.82rem;
@@ -20,14 +20,10 @@
   margin-bottom: 1rem;
 }
 
-/* Client v2 — CTA principal recommandé */
-.fidelity-v2-main .fidelity-cta-pill--wallet-primary {
-  outline: 2px solid rgba(34, 197, 94, 0.42);
+/* Un seul CTA sur téléphone */
+.fidelity-v2-main .fidelity-cta-pill--wallet-single {
+  outline: 2px solid rgba(34, 197, 94, 0.38);
   outline-offset: 2px;
-}
-
-.fidelity-v2-main .fidelity-cta-pill--wallet-secondary {
-  opacity: 0.92;
 }
 
 .fidelity-v2-main .fidelity-cta-pill--wallet-equal {
@@ -35,19 +31,9 @@
   opacity: 1;
 }
 
-/* Écran succès /fidelity — boutons pleine largeur */
-.fidelity-success .fidelity-btn--wallet-primary {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
-}
-
-.fidelity-success .fidelity-btn--wallet-secondary {
-  opacity: 0.9;
-  font-size: 0.9rem;
-  padding: 0.68rem 1rem;
-}
-
-.fidelity-success .fidelity-btn-google.fidelity-btn--wallet-secondary {
-  opacity: 0.92;
+/* Écran succès /fidelity */
+.fidelity-success .fidelity-btn--wallet-single {
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.24);
 }
 
 .fidelity-success .fidelity-btn--wallet-equal {

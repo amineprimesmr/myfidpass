@@ -1,5 +1,5 @@
 /**
- * Détection iOS / Android / desktop pour prioriser Apple Wallet vs Google Wallet.
+ * Détection iOS / Android / desktop pour n’afficher que le Wallet adapté à l’appareil.
  * @param {{ userAgent?: string }} opts
  * @returns {'ios' | 'android' | 'desktop'}
  */
@@ -20,57 +20,19 @@ export function detectWalletPlatform(opts = {}) {
 
 /**
  * @param {'ios' | 'android' | 'desktop'} platform
- * @param {'apple' | 'google'} which
- */
-export function walletCtaPillClasses(platform, which) {
-  const base = "fidelity-cta-pill";
-  if (platform === "desktop") {
-    return `${base} fidelity-cta-pill--wallet-equal`;
-  }
-  const primary =
-    (platform === "ios" && which === "apple") || (platform === "android" && which === "google");
-  return primary
-    ? `${base} fidelity-cta-pill--wallet-primary`
-    : `${base} fidelity-cta-pill--wallet-secondary fidelity-cta-pill--compact`;
-}
-
-/**
- * @param {'ios' | 'android' | 'desktop'} platform
  */
 export function walletDetectHintText(platform) {
   if (platform === "ios") {
-    return "Sur iPhone ou iPad, utilise Apple Wallet pour ajouter la carte.";
+    return "Sur iPhone ou iPad, ajoute la carte avec Apple Wallet.";
   }
   if (platform === "android") {
-    return "Sur Android, utilise Google Wallet pour ajouter la carte.";
+    return "Sur Android, ajoute la carte avec Google Wallet.";
   }
-  return "Sur ordinateur : ouvre cette page sur ton téléphone pour ajouter la carte, ou choisis l’option qui correspond à ton appareil.";
+  return "Sur ordinateur : ouvre cette page sur ton téléphone pour ajouter la carte, ou choisis ci-dessous selon ton appareil.";
 }
 
 /**
- * Classes pour les boutons .fidelity-btn (écran succès /fidelity).
- */
-export function walletFidelityBtnClasses(platform, baseApple, baseGoogle) {
-  if (platform === "desktop") {
-    return {
-      apple: `${baseApple} fidelity-btn--wallet-equal`,
-      google: `${baseGoogle} fidelity-btn--wallet-equal`,
-    };
-  }
-  if (platform === "ios") {
-    return {
-      apple: `${baseApple} fidelity-btn--wallet-primary`,
-      google: `${baseGoogle} fidelity-btn--wallet-secondary`,
-    };
-  }
-  return {
-    apple: `${baseApple} fidelity-btn--wallet-secondary`,
-    google: `${baseGoogle} fidelity-btn--wallet-primary`,
-  };
-}
-
-/**
- * Applique l’ordre et les classes sur le bloc succès (#fidelity-success .fidelity-wallet-buttons).
+ * Applique un seul bouton Wallet sur mobile (masque l’autre) ; sur desktop les deux restent visibles.
  * @param {HTMLElement | null} container
  */
 export function applyWalletButtonsLayout(container) {
@@ -83,14 +45,31 @@ export function applyWalletButtonsLayout(container) {
   const google = container.querySelector("#btn-google-wallet");
   const baseApple = "fidelity-btn fidelity-btn-apple";
   const baseGoogle = "fidelity-btn fidelity-btn-google";
-  const { apple: clsA, google: clsG } = walletFidelityBtnClasses(platform, baseApple, baseGoogle);
-  if (apple) apple.className = clsA;
-  if (google) google.className = clsG;
 
-  if (platform === "android" && apple && google && google.parentNode === container && apple.parentNode === container) {
-    container.insertBefore(google, apple);
-  } else if (platform !== "android" && apple && google && apple.parentNode === container && google.parentNode === container) {
-    container.insertBefore(apple, google);
+  if (platform === "ios") {
+    if (apple) {
+      apple.className = `${baseApple} fidelity-btn--wallet-single`;
+      apple.classList.remove("hidden");
+    }
+    if (google) google.classList.add("hidden");
+  } else if (platform === "android") {
+    if (google) {
+      google.className = `${baseGoogle} fidelity-btn--wallet-single`;
+      google.classList.remove("hidden");
+    }
+    if (apple) apple.classList.add("hidden");
+  } else {
+    if (apple) {
+      apple.className = `${baseApple} fidelity-btn--wallet-equal`;
+      apple.classList.remove("hidden");
+    }
+    if (google) {
+      google.className = `${baseGoogle} fidelity-btn--wallet-equal`;
+      google.classList.remove("hidden");
+    }
+    if (apple && google && apple.parentNode === container && google.parentNode === container) {
+      container.insertBefore(apple, google);
+    }
   }
 
   const parent = container.parentNode;

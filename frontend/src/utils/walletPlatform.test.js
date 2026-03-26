@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  detectWalletPlatform,
-  walletCtaPillClasses,
-  walletDetectHintText,
-  walletFidelityBtnClasses,
-} from "./walletPlatform.js";
+import { detectWalletPlatform, walletDetectHintText } from "./walletPlatform.js";
 
 describe("detectWalletPlatform", () => {
   it("détecte iOS (iPhone)", () => {
@@ -34,33 +29,10 @@ describe("detectWalletPlatform", () => {
   });
 });
 
-describe("walletCtaPillClasses", () => {
-  it("iOS : Apple en principal", () => {
-    expect(walletCtaPillClasses("ios", "apple")).toContain("wallet-primary");
-    expect(walletCtaPillClasses("ios", "google")).toContain("wallet-secondary");
-  });
-
-  it("Android : Google en principal", () => {
-    expect(walletCtaPillClasses("android", "google")).toContain("wallet-primary");
-    expect(walletCtaPillClasses("android", "apple")).toContain("wallet-secondary");
-  });
-});
-
 describe("walletDetectHintText", () => {
   it("retourne un texte pour chaque plateforme", () => {
     expect(walletDetectHintText("ios").length).toBeGreaterThan(10);
     expect(walletDetectHintText("android").length).toBeGreaterThan(10);
     expect(walletDetectHintText("desktop").length).toBeGreaterThan(10);
-  });
-});
-
-describe("walletFidelityBtnClasses", () => {
-  it("attribue primary/secondary selon la plateforme", () => {
-    const ios = walletFidelityBtnClasses("ios", "a", "g");
-    expect(ios.apple).toContain("wallet-primary");
-    expect(ios.google).toContain("wallet-secondary");
-    const and = walletFidelityBtnClasses("android", "a", "g");
-    expect(and.google).toContain("wallet-primary");
-    expect(and.apple).toContain("wallet-secondary");
   });
 });
