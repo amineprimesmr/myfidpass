@@ -49,8 +49,10 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
   }
   const merchantApnsReason = getMerchantApnsUnavailableReason();
   if (merchantApnsReason) {
-    return res.status(503).json({
+    // 422 = configuration manquante (pas une panne infra) — le corps JSON reste bien renvoyé aux clients.
+    return res.status(422).json({
       error: merchantApnsReason,
+      code: "MERCHANT_APNS_NOT_CONFIGURED",
     });
   }
   const deviceToken = getMerchantDeviceToken(req.user.id);
@@ -317,12 +319,15 @@ router.get("/stats", (req, res) => {
     const url = `${baseUrl}/api/v1/devices/test-device-123/registrations/${encodeURIComponent(passTypeId)}/${encodeURIComponent(member.id)}`;
     testPasskitCurl = `curl -X POST "${url}" -H "Authorization: ApplePass ${token}" -H "Content-Type: application/json" -d '{"pushToken":"test"}' -w "\\nHTTP %{http_code}"`;
   }
+  const merchantApnsReason = getMerchantApnsUnavailableReason();
   res.json({
     subscriptionsCount,
     membersCount: membersCount ?? 0,
     webPushCount: webSubscriptions.length,
     passKitCount: passKitRegistrationsCount,
     passKitWithTokenCount: passKitTokens.length,
+    merchant_app_push_configured: !merchantApnsReason,
+    merchant_app_push_detail: merchantApnsReason || undefined,
     membersWithNotifications: new Set(webSubscriptions.map((s) => s.member_id)).size + new Set(passKitTokens.map((p) => p.serial_number)).size,
     passKitUrlConfigured,
     diagnostic: !passKitUrlConfigured
