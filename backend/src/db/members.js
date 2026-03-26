@@ -4,6 +4,7 @@
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { getCategoryIdsForMembers } from "./categories.js";
+import { nowUtcSqlWithMs } from "./datetime-sql.js";
 
 const db = getDb();
 
@@ -83,7 +84,7 @@ export function resetMemberPoints(id) {
 
 export function touchMemberLastVisit(memberId) {
   if (!memberId) return;
-  db.prepare("UPDATE members SET last_visit_at = datetime('now') WHERE id = ?").run(memberId);
+  db.prepare("UPDATE members SET last_visit_at = ? WHERE id = ?").run(nowUtcSqlWithMs(), memberId);
 }
 
 export function getMembersForBusiness(businessId, { search = "", limit = 50, offset = 0, filter = null, sort = "last_visit" } = {}) {

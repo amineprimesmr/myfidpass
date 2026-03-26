@@ -2,6 +2,7 @@
  * Repository pass_registrations et merchant_device_tokens (Apple Wallet, APNs). Référence : REFONTE-REGLES.md.
  */
 import { getDb } from "./connection.js";
+import { formatUtcSqlWithMs } from "./datetime-sql.js";
 
 const db = getDb();
 const TEST_DEVICE_ID = "test-device-123";
@@ -107,11 +108,11 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
     list = base.filter((r) => effectivePassKitRowUpdateTs(r) > sinceTs);
   }
   const serialNumbers = list.map((r) => r.serial_number);
-  let lastUpdated = new Date().toISOString().replace("T", " ").slice(0, 19);
+  let lastUpdated = formatUtcSqlWithMs(new Date());
   if (list.length > 0) {
     const maxTs = list.reduce((acc, r) => Math.max(acc, effectivePassKitRowUpdateTs(r)), 0);
     if (maxTs > 0) {
-      lastUpdated = new Date(maxTs).toISOString().replace("T", " ").slice(0, 19);
+      lastUpdated = formatUtcSqlWithMs(maxTs);
     }
   }
   return { serialNumbers, lastUpdated };

@@ -9,6 +9,7 @@ import {
   DEMO_POINTS_REWARD_TIERS_JSON,
   DEMO_ENGAGEMENT_REWARDS_JSON,
 } from "./demo-business-defaults.js";
+import { nowUtcSqlWithMs } from "./datetime-sql.js";
 
 const db = getDb();
 
@@ -94,8 +95,7 @@ export function createBusiness({
  */
 export function bumpBusinessPassRefreshTimestamp(businessId) {
   if (!businessId) return;
-  const now = new Date().toISOString().replace("T", " ").slice(0, 19);
-  db.prepare("UPDATE businesses SET last_broadcast_at = ? WHERE id = ?").run(now, businessId);
+  db.prepare("UPDATE businesses SET last_broadcast_at = ? WHERE id = ?").run(nowUtcSqlWithMs(), businessId);
 }
 
 export function updateBusiness(businessId, updates) {

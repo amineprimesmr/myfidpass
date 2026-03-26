@@ -3,6 +3,7 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { nowUtcSqlWithMs } from "./datetime-sql.js";
 
 const db = getDb();
 
@@ -105,7 +106,7 @@ export function getMemberIdsInCategories(businessId, categoryIds) {
 
 export function setLastBroadcastMessage(businessId, message) {
   if (!businessId || message == null) return;
-  const now = new Date().toISOString().replace("T", " ").slice(0, 19);
+  const now = nowUtcSqlWithMs();
   db.prepare("UPDATE businesses SET last_broadcast_message = ?, last_broadcast_at = ? WHERE id = ?").run(
     String(message).trim().slice(0, 500),
     now,
