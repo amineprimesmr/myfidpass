@@ -563,7 +563,7 @@ router.get("/members", (req, res) => {
 });
 
 /** Supprime tous les membres du commerce (cartes Wallet / Web Push, historiques). Body : { confirm: "SUPPRIMER tous les membres" } */
-router.post("/members/delete-all", (req, res) => {
+router.post("/members/delete-all", async (req, res) => {
   const business = req.business;
   const confirm = (req.body?.confirm ?? req.body?.confirmText ?? "").toString().trim();
   if (confirm !== "SUPPRIMER tous les membres") {
@@ -572,18 +572,18 @@ router.post("/members/delete-all", (req, res) => {
       code: "CONFIRM_REQUIRED",
     });
   }
-  const { deleted } = deleteAllMembersForBusiness(business.id);
+  const { deleted } = await deleteAllMembersForBusiness(business.id);
   res.json({ ok: true, deleted });
 });
 
 /** Supprime un membre et sa carte (pass, transactions, abonnements push du client). */
-router.delete("/members/:memberId", (req, res) => {
+router.delete("/members/:memberId", async (req, res) => {
   const business = req.business;
   const memberId = req.params.memberId;
   if (memberId === "delete-all") {
     return res.status(400).json({ error: "Utilisez POST /dashboard/members/delete-all pour tout supprimer.", code: "USE_DELETE_ALL" });
   }
-  const r = deleteMemberForBusiness(business.id, memberId);
+  const r = await deleteMemberForBusiness(business.id, memberId);
   if (!r.ok) return res.status(404).json({ error: "Membre introuvable" });
   res.status(204).end();
 });
