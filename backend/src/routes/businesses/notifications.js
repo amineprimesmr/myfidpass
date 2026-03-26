@@ -12,14 +12,15 @@ import {
   getPassKitPushTokensForBusinessFiltered,
   getPassKitRegistrationsCountForBusiness,
   getMembersForBusiness,
-  getMerchantDeviceToken,
+  getUserById,
+  getMemberByEmailForBusiness,
   logNotification,
   setLastBroadcastMessage,
   touchMemberLastVisit,
   removeTestPassKitDevices,
 } from "../../db.js";
 import { sendWebPush } from "../../notifications.js";
-import { sendPassKitUpdate, sendMerchantAppAlert, getMerchantApnsUnavailableReason } from "../../apns.js";
+import { sendPassKitUpdate, getMerchantApnsUnavailableReason } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
 import { getDashboardStats } from "../../db.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
@@ -34,8 +35,9 @@ function businessHasNotificationLogo(business) {
 }
 
 /**
- * Envoi « test sur mon iPhone » uniquement : APNs vers l’app commerçant (token enregistré via /api/device/register).
- * N’envoie rien aux clients (pas Web Push, pas PassKit).
+ * Envoi « test sur mon iPhone » uniquement : même pipeline que les clients (PassKit / carte Wallet),
+ * filtré sur le membre dont l’e-mail est celui du compte commerçant. Aucune notif vers l’app Myfidpass,
+ * pas de MERCHANT_APNS_* requis.
  */
 async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage) {
   if (!req.user) {
@@ -47,33 +49,75 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
   if (business.user_id !== req.user.id) {
     return res.status(403).json({ error: "Seul le propriétaire du commerce peut utiliser ce mode test." });
   }
-  const merchantApnsReason = getMerchantApnsUnavailableReason();
-  if (merchantApnsReason) {
-    // 422 = configuration manquante (pas une panne infra) — le corps JSON reste bien renvoyé aux clients.
-    return res.status(422).json({
-      error: merchantApnsReason,
-      code: "MERCHANT_APNS_NOT_CONFIGURED",
-    });
+
+  const user = getUserById(req.user.id);
+  const userEmail = user?.email?.trim();
+  if (!userEmail) {
+    return res.status(400).json({ error: "Compte sans e-mail.", code: "USER_EMAIL_MISSING" });
   }
-  const deviceToken = getMerchantDeviceToken(req.user.id);
-  if (!deviceToken) {
+
+  const member = getMemberByEmailForBusiness(business.id, userEmail);
+  if (!member) {
     return res.status(400).json({
       error:
-        "Aucun iPhone enregistré pour ce compte. Ouvrez l’app, acceptez les notifications, puis réessayez (ou réinstallez l’app si vous aviez refusé).",
+        "Aucun membre pour ce commerce avec l’e-mail de votre compte. Créez une carte (fidélité) avec le même e-mail que votre compte commerçant, puis ajoutez-la dans Apple Wallet pour tester.",
+      code: "MERCHANT_MEMBER_NOT_FOUND",
     });
   }
-  const apiBase = getApiBase(req);
-  const slug = req.params.slug;
-  const iconUrl = businessHasNotificationLogo(business)
-    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
-    : null;
-  const payload = {
-    title: (title || business.notification_title_override || business.organization_name || "Myfidpass").trim(),
-    body: bodyMessage,
-    ...(iconUrl && { icon: iconUrl }),
-  };
-  const result = await sendMerchantAppAlert(deviceToken, payload);
-  if (!result.sent) {
+
+  const passKitTokens = getPassKitPushTokensForBusinessFiltered(business.id, [member.id]);
+  if (passKitTokens.length === 0) {
+    return res.status(400).json({
+      error:
+        "Aucune carte Apple Wallet enregistrée pour cet e-mail. Ajoutez votre carte sur cet iPhone (lien « Partager ») avec le même e-mail que votre compte, puis réessayez.",
+      code: "MERCHANT_PASSKIT_TOKEN_MISSING",
+    });
+  }
+
+  const payloadTitle = (title || business.notification_title_override || business.organization_name || "Myfidpass").trim();
+  const broadcastStored = payloadTitle ? `${payloadTitle}: ${bodyMessage}` : bodyMessage;
+  setLastBroadcastMessage(business.id, broadcastStored);
+
+  const touchedMembers = new Set();
+  for (const row of passKitTokens) {
+    if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+      touchMemberLastVisit(row.serial_number);
+      touchedMembers.add(row.serial_number);
+    }
+  }
+  for (const row of passKitTokens) {
+    try {
+      await sendPassKitUpdate(row.push_token);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  await new Promise((r) => setTimeout(r, 2500));
+
+  let sentPassKit = 0;
+  const errors = [];
+  for (const row of passKitTokens) {
+    try {
+      const result = await sendPassKitUpdate(row.push_token);
+      if (result.sent) {
+        sentPassKit++;
+        logNotification({
+          businessId: business.id,
+          memberId: row.serial_number,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: "passkit_test_self",
+        });
+      } else if (result.error) {
+        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+      }
+    } catch (err) {
+      errors.push({ type: "passkit", memberId: row.serial_number, error: err?.message || String(err) });
+    }
+  }
+
+  const firstError = errors.length > 0 ? errors[0].error : null;
+  if (sentPassKit === 0 && firstError) {
     return res.status(200).json({
       ok: true,
       sent: 0,
@@ -81,25 +125,19 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
       sentPassKit: 0,
       sentMerchantApp: 0,
       testSelfOnly: true,
-      message: result.error || "Échec de l’envoi APNs vers l’app.",
+      message: `Échec PassKit (même canal que les clients) : ${firstError}`,
     });
   }
-  logNotification({
-    businessId: business.id,
-    memberId: null,
-    title: payload.title,
-    body: bodyMessage,
-    type: "merchant_app_test",
-  });
+
   return res.json({
     ok: true,
-    sent: 1,
+    sent: sentPassKit,
     sentWebPush: 0,
-    sentPassKit: 0,
-    sentMerchantApp: 1,
-    sentTotal: 1,
+    sentPassKit: sentPassKit,
+    sentMerchantApp: 0,
+    sentTotal: sentPassKit,
     testSelfOnly: true,
-    message: "Notification de test envoyée sur votre iPhone (app Myfidpass). Aucun client n’a été notifié.",
+    message: "Test envoyé sur votre carte Apple Wallet uniquement (même système qu’une campagne). Aucun autre client n’a été notifié.",
   });
 }
 
