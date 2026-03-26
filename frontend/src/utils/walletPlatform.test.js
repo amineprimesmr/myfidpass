@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectWalletPlatform, walletDetectHintText } from "./walletPlatform.js";
+import { detectWalletPlatform } from "./walletPlatform.js";
 
 describe("detectWalletPlatform", () => {
   it("détecte iOS (iPhone)", () => {
@@ -26,13 +26,5 @@ describe("detectWalletPlatform", () => {
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       })
     ).toBe("desktop");
-  });
-});
-
-describe("walletDetectHintText", () => {
-  it("retourne un texte pour chaque plateforme", () => {
-    expect(walletDetectHintText("ios").length).toBeGreaterThan(10);
-    expect(walletDetectHintText("android").length).toBeGreaterThan(10);
-    expect(walletDetectHintText("desktop").length).toBeGreaterThan(10);
   });
 });

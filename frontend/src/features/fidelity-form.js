@@ -230,7 +230,6 @@ function showFidelitySuccess(slug, memberId, memberName) {
     btnAnotherCard.onclick = () => {
       try {
         localStorage.removeItem("fidpass_success_" + slug);
-        localStorage.removeItem("fidpass_added_" + slug);
       } catch (_) {}
       if (fidelitySuccessEl) fidelitySuccessEl.classList.add("hidden");
       if (form) form.classList.remove("hidden");
@@ -240,52 +239,13 @@ function showFidelitySuccess(slug, memberId, memberName) {
       }
       const afterAdd = document.getElementById("fidelity-after-add-section");
       if (afterAdd) afterAdd.classList.add("hidden");
-      const btnAdded = document.getElementById("btn-i-added-card");
-      if (btnAdded) {
-        btnAdded.textContent = "J'ai ajouté la carte à mon Wallet";
-        btnAdded.disabled = false;
-      }
     };
   }
 
   const afterAddSection = document.getElementById("fidelity-after-add-section");
-  const btnIAddedCard = document.getElementById("btn-i-added-card");
-  const alreadyAdded = (() => {
-    try {
-      return localStorage.getItem("fidpass_added_" + slug) === "true";
-    } catch (_) {
-      return false;
-    }
-  })();
   if (afterAddSection) {
-    if (alreadyAdded) {
-      afterAddSection.classList.remove("hidden");
-      renderFidelityRulesRecap(_fidelityBusiness);
-    } else {
-      afterAddSection.classList.add("hidden");
-    }
-  }
-  if (btnIAddedCard) {
-    if (alreadyAdded) {
-      btnIAddedCard.textContent = "C'est fait ✓";
-      btnIAddedCard.disabled = true;
-    } else {
-      btnIAddedCard.textContent = "J'ai ajouté la carte à mon Wallet";
-      btnIAddedCard.disabled = false;
-      btnIAddedCard.onclick = () => {
-        try {
-          localStorage.setItem("fidpass_added_" + slug, "true");
-        } catch (_) {}
-        if (afterAddSection) {
-          renderFidelityRulesRecap(_fidelityBusiness);
-          afterAddSection.classList.remove("hidden");
-          afterAddSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-        btnIAddedCard.textContent = "C'est fait ✓";
-        btnIAddedCard.disabled = true;
-        loadEngagementActions();
-      };
-    }
+    renderFidelityRulesRecap(_fidelityBusiness);
+    afterAddSection.classList.remove("hidden");
   }
 
   const engagementBlock = document.getElementById("fidelity-engagement-block");

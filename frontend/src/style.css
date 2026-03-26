@@ -796,83 +796,6 @@ body.fidpass-fidelity-route {
   border-radius: 999px;
 }
 
-/* ── Confirmation Wallet (étape 1) + verrou étapes 2–3 ── */
-.fidelity-v2-wallet-confirm {
-  margin-top: 1.15rem;
-  padding: 1rem 1.1rem;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #eff6ff 100%);
-  border: 1px solid #bfdbfe;
-}
-
-.fidelity-v2-wallet-confirm-title {
-  margin: 0 0 0.35rem;
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.fidelity-v2-wallet-confirm-desc {
-  margin: 0 0 0.85rem;
-  font-size: 0.84rem;
-  color: #475569;
-  line-height: 1.5;
-}
-
-.fidelity-v2-wallet-confirm-btn {
-  display: block;
-  width: 100%;
-  margin: 0 0 0.65rem;
-  padding: 0.75rem 1rem;
-  font-family: var(--font);
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.fidelity-v2-wallet-confirm-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
-}
-
-.fidelity-v2-wallet-confirm-later {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
-  color: #64748b;
-  text-align: center;
-}
-
-.fidelity-v2-wallet-confirm-hint {
-  margin: 0;
-  font-size: 0.72rem;
-  color: #94a3b8;
-  line-height: 1.45;
-}
-
-.fidelity-v2-wallet-done {
-  margin: 1rem 0 0;
-  padding: 0.65rem 0.85rem;
-  border-radius: 12px;
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  font-size: 0.84rem;
-  font-weight: 600;
-  color: #166534;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.fidelity-v2-wallet-done-icon {
-  font-weight: 800;
-}
-
 .fidelity-v2-step-body--gate {
   position: relative;
   min-height: 7rem;
@@ -1395,11 +1318,6 @@ body.fidpass-fidelity-route {
   cursor: not-allowed;
 }
 
-.fidelity-btn-i-added-card {
-  margin-top: 1.25rem;
-  width: 100%;
-}
-
 /* ── Wallet buttons block ── */
 .fidelity-wallet-buttons {
   display: flex;
@@ -1438,22 +1356,6 @@ body.fidpass-fidelity-route {
 }
 
 .fidelity-success.hidden { display: none; }
-
-.fidelity-success-title {
-  font-size: 1.4rem;
-  font-weight: 800;
-  margin: 0 0 0.4rem;
-  color: #0F172A;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.fidelity-success-desc {
-  font-size: 0.925rem;
-  color: #475569;
-  margin: 0 0 1.35rem;
-  line-height: 1.55;
-}
 
 .fidelity-welcome-name {
   font-size: 0.95rem;

@@ -18,8 +18,7 @@ export function renderClientPage(root, state, options = {}) {
   const { gamePage = false, slug = "", apiBase = "" } = options;
   const businessName = esc(state.business?.organizationName || state.business?.name || "Carte fidélité");
   const hasMember = !!state.member?.id;
-  const walletConfirmed = !!state.walletConfirmed;
-  const showWalletStep = hasMember && !walletConfirmed;
+  const showWalletStep = hasMember;
   const memberHeroSubtitle = `Tes avantages chez <strong>${esc(businessName)}</strong>`;
   const memberSectionsAriaLabel = "Ton espace fidélité";
   const loyaltyGameTickets = (state.business?.loyalty_mode || "points_cash") === "points_game_tickets";

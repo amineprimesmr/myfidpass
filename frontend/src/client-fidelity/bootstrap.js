@@ -6,7 +6,7 @@ import { createClientFidelityApi } from "./api/clientApi.js";
 import { messageUtilisateurPourErreur } from "./lib/client-error-fr.js";
 import { createClientFidelityStore } from "./state/store.js";
 import { renderClientPage } from "./ui/view.js";
-import { memberStorageKey, SUCCESS_MAX_AGE_MS, walletConfirmedStorageKey } from "./constants.js";
+import { memberStorageKey, SUCCESS_MAX_AGE_MS } from "./constants.js";
 import {
   DEFAULT_WHEEL_LABELS,
   formatWheelSegmentDisplayLabel,
@@ -160,24 +160,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
     return div.innerHTML;
   }
 
-  function readWalletConfirmed() {
-    const mid = store.get().member?.id;
-    if (!mid) return false;
-    try {
-      return localStorage.getItem(walletConfirmedStorageKey(slug, mid)) === "1";
-    } catch (_) {
-      return false;
-    }
-  }
-
-  function writeWalletConfirmed() {
-    const mid = store.get().member?.id;
-    if (!mid) return;
-    try {
-      localStorage.setItem(walletConfirmedStorageKey(slug, mid), "1");
-    } catch (_) {}
-  }
-
   function openProfileMissionModal() {
     const m = rootEl.querySelector("#fidelity-profile-mission-modal");
     if (!m) return;
@@ -197,7 +179,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   function rerender() {
     document.body.style.overflow = "";
-    store.patch({ walletConfirmed: readWalletConfirmed() });
     renderClientPage(rootEl, store.get(), { gamePage, slug, apiBase });
     bindEvents();
     if (!isSpinning) {
@@ -500,11 +481,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl, gamePage =
 
   function bindEvents() {
     rootEl.querySelector("#fidelity-v2-form")?.addEventListener("submit", onSignupSubmit);
-    rootEl.querySelector("#fidelity-v2-wallet-confirm")?.addEventListener("click", () => {
-      writeWalletConfirmed();
-      store.patch({ walletConfirmed: true });
-      rerender();
-    });
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
     rootEl.querySelector("#fidelity-v2-profile-form")?.addEventListener("submit", onProfileBonusSubmit);

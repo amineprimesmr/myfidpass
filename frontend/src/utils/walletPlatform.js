@@ -19,19 +19,6 @@ export function detectWalletPlatform(opts = {}) {
 }
 
 /**
- * @param {'ios' | 'android' | 'desktop'} platform
- */
-export function walletDetectHintText(platform) {
-  if (platform === "ios") {
-    return "Sur iPhone ou iPad, ajoute la carte avec Apple Wallet.";
-  }
-  if (platform === "android") {
-    return "Sur Android, ajoute la carte avec Google Wallet.";
-  }
-  return "Sur ordinateur : ouvre cette page sur ton téléphone pour ajouter la carte, ou choisis ci-dessous selon ton appareil.";
-}
-
-/**
  * Applique un seul bouton Wallet sur mobile (masque l’autre) ; sur desktop les deux restent visibles.
  * @param {HTMLElement | null} container
  */
@@ -71,15 +58,4 @@ export function applyWalletButtonsLayout(container) {
       container.insertBefore(apple, google);
     }
   }
-
-  const parent = container.parentNode;
-  let hint = parent?.querySelector(":scope > .fidelity-wallet-detect-hint");
-  const text = walletDetectHintText(platform);
-  if (!hint && parent) {
-    hint = document.createElement("p");
-    hint.className = "fidelity-wallet-detect-hint";
-    hint.setAttribute("role", "note");
-    parent.insertBefore(hint, container);
-  }
-  if (hint) hint.textContent = text;
 }

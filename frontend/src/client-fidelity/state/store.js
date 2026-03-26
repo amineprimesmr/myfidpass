@@ -8,8 +8,6 @@ export function createClientFidelityStore(initial = {}) {
     tickets: null,
     engagementActions: [],
     engagementDone: [],
-    /** Confirmation honnête « carte ajoutée » — masque le bloc Wallet (localStorage). */
-    walletConfirmed: false,
     ...initial,
   };
 
