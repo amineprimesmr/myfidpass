@@ -19,6 +19,7 @@ import {
   clearAppSectionDirty,
   registerAppExternalDirty,
   registerAppDiscardHandler,
+  registerModalSectionSaveHandler,
   notifyAppSectionSaveSuccess,
   wrapAppLogoutButtonsWithDirtyGuard,
   refreshAppSaveCtaDirtyVisual,
@@ -517,11 +518,22 @@ const APP_MOBILE_TITLES = {
   "profil": "Profil",
 };
 
+/** @type {null | (() => void)} */
+let _flushNotificationBannerTextsRef = null;
+let _lastShownAppSectionId = null;
+
 function showAppSectionCore(sectionId) {
   const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
   let id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
   const awaiting = document.getElementById("app-app")?.classList.contains("app-awaiting-first-business");
   if (awaiting && id !== "personnaliser" && id !== "profil") id = "personnaliser";
+
+  const prev = _lastShownAppSectionId;
+  if (prev === "notifications" && id !== "notifications") {
+    _flushNotificationBannerTextsRef?.();
+  }
+  _lastShownAppSectionId = id;
+
   APP_SECTION_IDS.forEach((sid) => {
     const el = document.getElementById(sid);
     if (el) {
@@ -543,7 +555,7 @@ function showAppSectionCore(sectionId) {
   if (window.location.hash !== newHash) {
     window.history.replaceState(null, "", window.location.pathname + newHash);
   }
-  window.dispatchEvent(new CustomEvent("app-section-change", { detail: { sectionId: id } }));
+  window.dispatchEvent(new CustomEvent("app-section-change", { detail: { sectionId: id, previousSectionId: prev } }));
 }
 
 const appDirtyNav = initAppDirtyGuard({
@@ -2511,13 +2523,24 @@ function initAppDashboard(slug) {
   registerAppDiscardHandler("engagement", reloadDashboardSettingsForms);
   registerAppDiscardHandler("notifications", reloadDashboardSettingsForms);
 
-  ["personnaliser", "engagement", "notifications", "profil"].forEach((sid) => {
+  ["personnaliser", "engagement", "profil"].forEach((sid) => {
     const root = document.getElementById(sid);
     if (!root) return;
     const m = () => markAppSectionDirty(sid);
     root.addEventListener("input", m, true);
     root.addEventListener("change", m, true);
   });
+
+  const notificationsRoot = document.getElementById("notifications");
+  if (notificationsRoot) {
+    const notifDirty = (ev) => {
+      const tid = ev.target?.id;
+      if (tid === "app-notification-banner-title" || tid === "app-notification-banner-message") return;
+      markAppSectionDirty("notifications");
+    };
+    notificationsRoot.addEventListener("input", notifDirty, true);
+    notificationsRoot.addEventListener("change", notifDirty, true);
+  }
 
   api("/dashboard/settings")
     .then((r) => (r.ok ? r.json() : null))
@@ -5600,7 +5623,6 @@ function initAppDashboard(slug) {
         }
         return false;
       }
-      clearAppSectionDirty("notifications");
       if (textsFeedbackEl) {
         if (notifTextsFeedbackHideTimer) {
           clearTimeout(notifTextsFeedbackHideTimer);
@@ -5652,30 +5674,15 @@ function initAppDashboard(slug) {
     void flushNotificationTextsAutoSave();
   });
 
-  document.getElementById("app-notification-texts-store")?.addEventListener("click", async () => {
-    const textsFeedbackEl = document.getElementById("app-notification-texts-feedback");
-    const notifFeedbackEl = document.getElementById("app-notif-feedback");
-    const btn = document.getElementById("app-notification-texts-store");
-    clearNotifTextsAutoSaveTimer();
-    if (btn) btn.disabled = true;
-    if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
-    const ok = await runNotificationTextsAutoSave();
-    if (!ok) {
-      if (btn) btn.disabled = false;
-      return;
-    }
-    if (notifTextsFeedbackHideTimer) {
-      clearTimeout(notifTextsFeedbackHideTimer);
-      notifTextsFeedbackHideTimer = null;
-    }
-    if (textsFeedbackEl) {
-      textsFeedbackEl.classList.remove("hidden", "error");
-      textsFeedbackEl.classList.add("success");
-      textsFeedbackEl.textContent =
-        "Textes enregistrés. Ils servent aussi au message « pass » et à l’aperçu. Utilisez « Envoyer la notification » pour diffuser.";
-    }
+  _flushNotificationBannerTextsRef = () => {
+    void flushNotificationTextsAutoSave();
+  };
+
+  registerModalSectionSaveHandler("notifications", async () => {
+    const ok = await flushNotificationTextsAutoSave();
+    if (!ok) return;
+    clearAppSectionDirty("notifications");
     notifyAppSectionSaveSuccess("notifications");
-    if (btn) btn.disabled = false;
   });
 
   document.getElementById("app-notification-texts-send")?.addEventListener("click", async () => {

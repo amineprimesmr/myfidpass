@@ -34,10 +34,18 @@ function closeUnsavedModal() {
 const SAVE_BUTTON_IDS_BY_SECTION = {
   personnaliser: ["app-personnaliser-save", "app-regles-save"],
   engagement: ["app-engagement-save"],
-  notifications: ["app-notification-texts-store"],
+  /** Pastille sur « Envoyer » : titre/message auto ; le reste peut rester « sale ». */
+  notifications: ["app-notification-texts-send"],
   "carte-perimetre": ["app-perimetre-save"],
   profil: ["app-profil-save"],
 };
+
+/** Enregistrement depuis la modale « modifications non enregistrées » (ex. campagnes / textes notif). */
+const modalSectionSaveHandlers = new Map();
+
+export function registerModalSectionSaveHandler(sectionId, fn) {
+  if (sectionId && typeof fn === "function") modalSectionSaveHandlers.set(sectionId, fn);
+}
 
 function updateSaveCtaDirtyVisual(sectionId) {
   const ids = SAVE_BUTTON_IDS_BY_SECTION[sectionId];
@@ -108,7 +116,6 @@ function forceNavigateToSection(sectionId) {
 const MODAL_SAVE_BUTTON_BY_SECTION = {
   personnaliser: "app-personnaliser-save",
   engagement: "app-engagement-save",
-  notifications: "app-notification-texts-store",
   "carte-perimetre": "app-perimetre-save",
   profil: "app-profil-save",
 };
@@ -178,8 +185,17 @@ export function initAppDirtyGuard(opts) {
   if (!_dirtyGuardModalWired && modalEl) {
     _dirtyGuardModalWired = true;
 
-    btnSave?.addEventListener("click", () => {
+    btnSave?.addEventListener("click", async () => {
       const sid = committedSection;
+      const customSave = modalSectionSaveHandlers.get(sid);
+      if (typeof customSave === "function") {
+        try {
+          await customSave();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
       const btnId = MODAL_SAVE_BUTTON_BY_SECTION[sid];
       if (btnId) document.getElementById(btnId)?.click();
       else closeUnsavedModal();
