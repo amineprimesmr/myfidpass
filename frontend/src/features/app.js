@@ -5247,9 +5247,6 @@ function initAppDashboard(slug) {
     await refreshPerimeterAndHeaderMerchantIcons();
   }
 
-  document.getElementById("app-notification-banner-title")?.addEventListener("input", updateAppNotificationPreview);
-  document.getElementById("app-notification-banner-message")?.addEventListener("input", updateAppNotificationPreview);
-
   const notificationBannerLogoInput = document.getElementById("app-notification-banner-logo-input");
   const notificationBannerLogoDrop = document.getElementById("app-notification-banner-logo-drop");
   if (notificationBannerLogoInput && notificationBannerLogoDrop) {
@@ -5275,6 +5272,7 @@ function initAppDashboard(slug) {
           });
           if (res.ok) {
             await refreshCampaignNotificationBannerIcon();
+            clearAppSectionDirty("notifications");
           }
         } catch (_) {}
         notificationBannerLogoInput.value = "";
@@ -5579,39 +5577,104 @@ function initAppDashboard(slug) {
     return { ok: saveRes.ok, saveData };
   }
 
-  document.getElementById("app-notification-texts-store")?.addEventListener("click", async () => {
+  let notifTextsAutoSaveTimer = null;
+  let notifTextsFeedbackHideTimer = null;
+
+  function clearNotifTextsAutoSaveTimer() {
+    if (notifTextsAutoSaveTimer) {
+      clearTimeout(notifTextsAutoSaveTimer);
+      notifTextsAutoSaveTimer = null;
+    }
+  }
+
+  /** @returns {Promise<boolean>} */
+  async function runNotificationTextsAutoSave() {
     const textsFeedbackEl = document.getElementById("app-notification-texts-feedback");
-    const notifFeedbackEl = document.getElementById("app-notif-feedback");
-    const btn = document.getElementById("app-notification-texts-store");
-    if (btn) btn.disabled = true;
-    if (textsFeedbackEl) textsFeedbackEl.classList.add("hidden");
-    if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
     try {
       const { ok, saveData } = await patchNotificationBannerTexts();
       if (!ok) {
         if (textsFeedbackEl) {
-          textsFeedbackEl.classList.remove("hidden");
-          textsFeedbackEl.textContent = saveData.error || "Erreur lors de l'enregistrement des textes.";
+          textsFeedbackEl.classList.remove("hidden", "success");
           textsFeedbackEl.classList.add("error");
-          textsFeedbackEl.classList.remove("success");
+          textsFeedbackEl.textContent = saveData.error || "Erreur d’enregistrement.";
         }
-        if (btn) btn.disabled = false;
-        return;
+        return false;
       }
+      clearAppSectionDirty("notifications");
       if (textsFeedbackEl) {
+        if (notifTextsFeedbackHideTimer) {
+          clearTimeout(notifTextsFeedbackHideTimer);
+          notifTextsFeedbackHideTimer = null;
+        }
         textsFeedbackEl.classList.remove("hidden", "error");
         textsFeedbackEl.classList.add("success");
-        textsFeedbackEl.textContent =
-          "Textes enregistrés. Ils servent aussi au message « pass » et à l’aperçu. Utilisez « Envoyer la notification » pour diffuser.";
+        textsFeedbackEl.textContent = "Enregistré.";
+        notifTextsFeedbackHideTimer = window.setTimeout(() => {
+          notifTextsFeedbackHideTimer = null;
+          textsFeedbackEl.classList.add("hidden");
+        }, 2200);
       }
-      notifyAppSectionSaveSuccess("notifications");
+      return true;
     } catch (_) {
       if (textsFeedbackEl) {
         textsFeedbackEl.classList.remove("hidden", "success");
         textsFeedbackEl.classList.add("error");
-        textsFeedbackEl.textContent = "Connexion interrompue lors de l’enregistrement. Vérifiez votre réseau et réessayez.";
+        textsFeedbackEl.textContent = "Connexion interrompue — réessayez.";
       }
+      return false;
     }
+  }
+
+  function scheduleNotificationTextsAutoSave() {
+    clearNotifTextsAutoSaveTimer();
+    notifTextsAutoSaveTimer = window.setTimeout(() => {
+      notifTextsAutoSaveTimer = null;
+      void runNotificationTextsAutoSave();
+    }, 550);
+  }
+
+  async function flushNotificationTextsAutoSave() {
+    clearNotifTextsAutoSaveTimer();
+    await runNotificationTextsAutoSave();
+  }
+
+  function onNotificationBannerTextInput() {
+    updateAppNotificationPreview();
+    scheduleNotificationTextsAutoSave();
+  }
+
+  document.getElementById("app-notification-banner-title")?.addEventListener("input", onNotificationBannerTextInput);
+  document.getElementById("app-notification-banner-message")?.addEventListener("input", onNotificationBannerTextInput);
+  document.getElementById("app-notification-banner-title")?.addEventListener("blur", () => {
+    void flushNotificationTextsAutoSave();
+  });
+  document.getElementById("app-notification-banner-message")?.addEventListener("blur", () => {
+    void flushNotificationTextsAutoSave();
+  });
+
+  document.getElementById("app-notification-texts-store")?.addEventListener("click", async () => {
+    const textsFeedbackEl = document.getElementById("app-notification-texts-feedback");
+    const notifFeedbackEl = document.getElementById("app-notif-feedback");
+    const btn = document.getElementById("app-notification-texts-store");
+    clearNotifTextsAutoSaveTimer();
+    if (btn) btn.disabled = true;
+    if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
+    const ok = await runNotificationTextsAutoSave();
+    if (!ok) {
+      if (btn) btn.disabled = false;
+      return;
+    }
+    if (notifTextsFeedbackHideTimer) {
+      clearTimeout(notifTextsFeedbackHideTimer);
+      notifTextsFeedbackHideTimer = null;
+    }
+    if (textsFeedbackEl) {
+      textsFeedbackEl.classList.remove("hidden", "error");
+      textsFeedbackEl.classList.add("success");
+      textsFeedbackEl.textContent =
+        "Textes enregistrés. Ils servent aussi au message « pass » et à l’aperçu. Utilisez « Envoyer la notification » pour diffuser.";
+    }
+    notifyAppSectionSaveSuccess("notifications");
     if (btn) btn.disabled = false;
   });
 
@@ -5647,29 +5710,12 @@ function initAppDashboard(slug) {
     if (btn) btn.disabled = true;
     if (textsFeedbackEl) textsFeedbackEl.classList.add("hidden");
     if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
-    try {
-      const { ok, saveData } = await patchNotificationBannerTexts();
-      if (!ok) {
-        if (textsFeedbackEl) {
-          textsFeedbackEl.classList.remove("hidden");
-          textsFeedbackEl.textContent = saveData.error || "Erreur lors de l'enregistrement des textes.";
-          textsFeedbackEl.classList.add("error");
-          textsFeedbackEl.classList.remove("success");
-        }
-        if (btn) btn.disabled = false;
-        return;
-      }
-    } catch (_) {
-      if (textsFeedbackEl) {
-        textsFeedbackEl.classList.remove("hidden");
-        textsFeedbackEl.textContent = "Connexion interrompue lors de l’enregistrement. Vérifiez votre réseau et réessayez.";
-        textsFeedbackEl.classList.add("error");
-        textsFeedbackEl.classList.remove("success");
-      }
+    clearNotifTextsAutoSaveTimer();
+    const savedOk = await runNotificationTextsAutoSave();
+    if (!savedOk) {
       if (btn) btn.disabled = false;
       return;
     }
-    notifyAppSectionSaveSuccess("notifications");
 
     try {
       const res = await api("/notifications/send", {

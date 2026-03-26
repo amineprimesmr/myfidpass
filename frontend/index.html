@@ -1522,10 +1522,11 @@
                   <input type="text" id="app-notification-banner-message" class="app-notification-preview-banner-message" placeholder="message" maxlength="200" aria-label="Texte de la notification affichée sur le pass" />
                 </div>
               </div>
+              <p class="app-hint app-notification-auto-save-hint">Le titre et le message sont enregistrés automatiquement (aperçu ci-dessus).</p>
               <div class="app-notification-banner-actions">
                 <div class="app-notification-banner-actions-row">
-                  <span class="app-save-cta-wrap" id="app-notification-texts-store-wrap">
-                    <button type="button" id="app-notification-texts-store" class="app-save-cta">
+                  <span class="app-save-cta-wrap hidden" id="app-notification-texts-store-wrap" aria-hidden="true">
+                    <button type="button" id="app-notification-texts-store" class="app-save-cta" tabindex="-1">
                       <span class="app-save-cta-dot" aria-hidden="true"></span>
                       <span class="app-save-cta-label">Enregistrer les textes</span>
                     </button>
