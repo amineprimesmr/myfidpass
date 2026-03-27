@@ -342,14 +342,6 @@ export async function generatePass(member, business = null, options = {}) {
   } else {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
-    /* changeMessage obligatoire pour que Wallet affiche une alerte à chaque changement de solde. */
-    const pointsField = {
-      key: "points",
-      label: "Points",
-      value: pointsValue,
-      textAlignment: "PKTextAlignmentCenter",
-      changeMessage: "Tu as maintenant %@ points !",
-    };
     const sortedPointTiers = parsePointRewardTiersFromBusiness(business);
     if (isDecorativeImageOnlyStrip) {
       const balance = Math.floor(Number(member.points) || 0);
@@ -361,9 +353,10 @@ export async function generatePass(member, business = null, options = {}) {
         textAlignment: "PKTextAlignmentLeft",
         changeMessage: "Fidélité : %@",
       });
-    } else if (hasCardBackgroundStrip) {
-      /* Comme le programme tampons + image : pas de champ « primary » (gros chiffre) qui se superpose
-       * visuellement au strip ; le solde est une ligne en secondary sous la photo. */
+    } else {
+      /* Toujours en secondary (jamais primary) : sur iOS, le champ primary des storeCard applique
+       * souvent un style « emphase » blanc et ne respecte pas foregroundColor / labelColor du pass ;
+       * les champs secondary utilisent bien les couleurs du pass — comme tamponSolde (tampons). */
       pass.secondaryFields.push({
         key: "points",
         label: "Points",
@@ -371,9 +364,6 @@ export async function generatePass(member, business = null, options = {}) {
         textAlignment: "PKTextAlignmentLeft",
         changeMessage: "Tu as maintenant %@ points !",
       });
-    } else {
-      /* Sans image de fond : solde en primary (grand chiffre) comme d’habitude. */
-      pass.primaryFields.push(pointsField);
     }
     pass.secondaryFields.push({
       key: "rewardsFront",
