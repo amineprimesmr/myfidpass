@@ -225,7 +225,11 @@ export async function generatePass(member, business = null, options = {}) {
     business?.last_broadcast_message != null && String(business.last_broadcast_message).trim() !== ""
       ? String(business.last_broadcast_message).trim().slice(0, 170)
       : "";
-  const lastBroadcast = buildLastBroadcastFieldValue(rawBroadcast, business?.last_broadcast_at);
+  const lastBroadcast = buildLastBroadcastFieldValue(
+    rawBroadcast,
+    business?.last_broadcast_at,
+    business?.broadcast_send_seq
+  );
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,

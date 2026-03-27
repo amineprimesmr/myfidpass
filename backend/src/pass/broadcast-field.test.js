@@ -30,4 +30,13 @@ describe("buildLastBroadcastFieldValue", () => {
     expect(v.length).toBeGreaterThan("Allô".length);
     expect(invisibleBroadcastSuffix("2026-03-26 21:37:21.123").length).toBeGreaterThan(0);
   });
+  it("même texte + même date : compteur d’envoi rend la valeur distincte (ré-envois identiques)", () => {
+    const t = "Promo flash";
+    const at = "2026-03-26 21:37:21.123";
+    const a = buildLastBroadcastFieldValue(t, at, 1);
+    const b = buildLastBroadcastFieldValue(t, at, 2);
+    expect(a).not.toBe(b);
+    expect(a.startsWith("Promo flash")).toBe(true);
+    expect(b.startsWith("Promo flash")).toBe(true);
+  });
 });

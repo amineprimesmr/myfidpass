@@ -366,6 +366,12 @@ export function runMigrations(db) {
   if (!bizColsFinal.includes("notification_change_message")) {
     safeRun(db, () => db.prepare("ALTER TABLE businesses ADD COLUMN notification_change_message TEXT").run());
   }
+  const bizColsBroadcastSeq = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsBroadcastSeq.includes("broadcast_send_seq")) {
+    safeRun(db, () =>
+      db.prepare("ALTER TABLE businesses ADD COLUMN broadcast_send_seq INTEGER NOT NULL DEFAULT 0").run()
+    );
+  }
   const bizColsWalletLoc = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
   if (!bizColsWalletLoc.includes("wallet_pass_include_locations")) {
     // 0 = ne pas embarquer les coordonnées dans le .pkpass → campagnes notification visibles partout (comportement iOS).
