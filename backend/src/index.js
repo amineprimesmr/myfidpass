@@ -27,7 +27,7 @@ import passkitWebserviceRouter from "./routes/passkit-webservice.js";
 import webPushRouter from "./routes/web-push.js";
 import deviceRouter from "./routes/device.js";
 import { generatePass } from "./pass.js";
-import { logApnsStatus, logMerchantApnsStatus } from "./apns.js";
+import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics } from "./apns.js";
 import { isEmailConfigured, getEmailTransportLabel } from "./email.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -177,6 +177,14 @@ app.get("/api/health/db", (req, res) => {
     dbExists: existsSync(DB_FILE_PATH),
     hint: "Sur Railway, le volume doit être monté exactement au chemin /data et DATA_DIR=/data.",
   });
+});
+/** APNs PassKit : clé .p8 + JWT (sans fuite de secret — longueurs seulement). */
+app.get("/api/health/apns", (req, res) => {
+  try {
+    res.json(getApnsHealthForDiagnostics());
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 app.get("/api/health/passkit", (req, res) => {
   try {
