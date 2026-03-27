@@ -23,9 +23,17 @@ import { radiusMetersForPass } from "../locationRadiusLimits.js";
 import {
   parsePointRewardTiersFromBusiness,
   frontRewardLabelFromSortedTiers,
-  backRewardLinesFromSortedTiers,
+  formatBackRewardsFieldValue,
 } from "./point-tiers.js";
-import { buildLastBroadcastFieldValue, normalizeChangeMessage } from "./broadcast-field.js";
+import { passMessageBroadcastFooter } from "../db/datetime-sql.js";
+
+/** Apple : changeMessage doit contenir %@ pour le texte de notif ; le réglage commerce peut l’omettre. */
+function normalizeChangeMessage(customMsg) {
+  const c = (customMsg || "").trim();
+  if (!c) return "%@";
+  if (c.includes("%@")) return c;
+  return `${c} %@`;
+}
 
 let _sharp = null;
 async function getSharp() {
@@ -225,11 +233,15 @@ export async function generatePass(member, business = null, options = {}) {
     business?.last_broadcast_message != null && String(business.last_broadcast_message).trim() !== ""
       ? String(business.last_broadcast_message).trim().slice(0, 170)
       : "";
-  const lastBroadcast = buildLastBroadcastFieldValue(
-    rawBroadcast,
-    business?.last_broadcast_at,
-    business?.broadcast_send_seq
-  );
+  const broadcastFooter = passMessageBroadcastFooter(business?.last_broadcast_at);
+  let lastBroadcast;
+  if (!rawBroadcast) {
+    lastBroadcast = "—";
+  } else if (broadcastFooter) {
+    lastBroadcast = `${rawBroadcast}\n${broadcastFooter}`.slice(0, 200);
+  } else {
+    lastBroadcast = rawBroadcast.slice(0, 200);
+  }
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
@@ -398,7 +410,6 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
-  const backContact = business?.back_contact || "contact@example.com";
   const frontendUrl = (process.env.FRONTEND_URL || process.env.API_URL || "https://myfidpass.fr").replace(/\/$/, "");
   const backUrl = business?.slug
     ? `${frontendUrl}/?ref=pass&b=${encodeURIComponent(business.slug)}`
@@ -412,13 +423,12 @@ export async function generatePass(member, business = null, options = {}) {
       { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg) },
       { key: "reward", label: "Récompense", value: rewardValue },
       { key: "terms", label: "Conditions", value: backTerms },
-      { key: "contact", label: "Contact", value: backContact },
       { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
     );
   } else {
     const pts = Math.max(0, Math.floor(Number(member.points) || 0));
     const tierList = parsePointRewardTiersFromBusiness(business);
-    const rewardLines = backRewardLinesFromSortedTiers(tierList);
+    const rewardsBackValue = formatBackRewardsFieldValue(tierList, pts);
     const nextTier = tierList.find((t) => Number(t.points) > pts);
     const toUnlockText = nextTier
       ? `Encore ${Number(nextTier.points) - pts} points pour : ${(nextTier.label && String(nextTier.label).trim()) || "récompense"}.`
@@ -431,12 +441,11 @@ export async function generatePass(member, business = null, options = {}) {
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       {
         key: "rewards",
-        label: "Récompenses",
-        value: rewardLines.length > 0 ? rewardLines.join("\n") : "Paliers définis par le commerce. Demandez en magasin.",
+        label: "Paliers & avantages",
+        value: rewardsBackValue,
       },
       { key: "toUnlock", label: "Pour l'obtenir", value: toUnlockText },
       { key: "terms", label: "Conditions", value: backTerms },
-      { key: "contact", label: "Contact", value: backContact },
       { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
     );
   }

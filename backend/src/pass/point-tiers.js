@@ -40,10 +40,42 @@ export function frontRewardLabelFromSortedTiers(sortedTiers) {
 }
 
 /**
- * Lignes pour le verso « Récompenses ».
+ * Lignes brutes (tests / compat).
  * @param {{ points: number; label: string }[]} sortedTiers
  * @returns {string[]}
  */
 export function backRewardLinesFromSortedTiers(sortedTiers) {
   return sortedTiers.map((t) => `${t.points} pts = ${t.label || "Récompense"}`);
+}
+
+/**
+ * Texte verso du champ paliers : intro + une ligne par palier (atteint / prochain / à venir).
+ * @param {{ points: number; label: string }[]} sortedTiers
+ * @param {number} memberPoints
+ * @returns {string}
+ */
+export function formatBackRewardsFieldValue(sortedTiers, memberPoints) {
+  const pts = Math.max(0, Math.floor(Number(memberPoints) || 0));
+  if (!sortedTiers.length) {
+    return "Les paliers sont définis par le commerce. Renseignez-vous en magasin.";
+  }
+  const lines = [];
+  let foundNext = false;
+  for (const t of sortedTiers) {
+    const p = Number(t.points);
+    const lbl = (t.label && String(t.label).trim()) || "Récompense";
+    if (pts >= p) {
+      lines.push(`✓  ${p} pts — ${lbl}`);
+    } else if (!foundNext) {
+      lines.push(`→  ${p} pts — ${lbl}`);
+      foundNext = true;
+    } else {
+      lines.push(`○  ${p} pts — ${lbl}`);
+    }
+  }
+  return [
+    "Cumulez des points et présentez cette carte pour profiter de chaque avantage.",
+    "",
+    ...lines,
+  ].join("\n");
 }
