@@ -2,10 +2,12 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import pinoHttp from "pino-http";
 import { existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import logger from "./lib/logger.js";
 
 import { DATA_DIR_PATH, DB_FILE_PATH, getPassRegistrationsTotalCount } from "./db.js";
 
@@ -59,13 +61,24 @@ dotenv.config({ path: join(__dirname, "..", ".env") });
 
 const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
-  console.log("[startup] Production — vérification JWT_SECRET / PASSKIT_SECRET…");
+  console.log("[startup] Production — vérification des variables critiques…");
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
     console.error("[startup] ERREUR: En production, JWT_SECRET doit être défini et faire au moins 32 caractères. Railway → Variables → ajoute JWT_SECRET puis redéploie. Voir docs/RAILWAY-CRASH-DEPANNAGE.md");
     process.exit(1);
   }
   if (!process.env.PASSKIT_SECRET || process.env.PASSKIT_SECRET.length < 32) {
     console.error("[startup] ERREUR: En production, PASSKIT_SECRET doit être défini et faire au moins 32 caractères. Railway → Variables → ajoute PASSKIT_SECRET puis redéploie. Voir docs/RAILWAY-CRASH-DEPANNAGE.md");
+    process.exit(1);
+  }
+  // DEV_BYPASS_PAYMENT ne doit JAMAIS être défini en production — si c'est le cas,
+  // c'est une erreur de config critique qui permet de bypasser le paiement.
+  if (process.env.DEV_BYPASS_PAYMENT === "true") {
+    console.error("[startup] ERREUR CRITIQUE: DEV_BYPASS_PAYMENT=true est défini en PRODUCTION. Cette variable est réservée au développement local. Supprime-la immédiatement dans Railway → Variables.");
+    process.exit(1);
+  }
+  // RESET_SECRET ne doit pas être défini en production (route de destruction de BDD).
+  if (process.env.RESET_SECRET) {
+    console.error("[startup] ERREUR: RESET_SECRET est défini en production. Cette variable active une route qui vide toute la base de données. Supprime-la dans Railway → Variables.");
     process.exit(1);
   }
 }
@@ -79,11 +92,18 @@ const app = express();
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
 }
-// CORS : en prod accepter le site + www ; en dev toute origine (pour test iPhone en local)
+// CORS : en prod = domaines myfidpass uniquement ; en dev = localhost Vite uniquement (plus de wildcard)
 const allowedOrigins =
   process.env.NODE_ENV === "production"
     ? [FRONTEND_URL, FRONTEND_URL.replace(/\/$/, ""), "https://myfidpass.fr", "https://www.myfidpass.fr"].filter(Boolean)
-    : true;
+    : [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        // Accès depuis un iPhone en local (IP réseau) : ajouter FRONTEND_URL dans .env si nécessaire
+        ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+      ];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(helmet({ contentSecurityPolicy: false }));
 
@@ -93,6 +113,23 @@ app.post("/api/payment/webhook", paymentWebhookHandler);
 
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true, limit: "64kb" }));
+
+// Logging structuré HTTP (toutes les requêtes) — JSON en prod, pretty en dev
+// Exclure les health checks pour ne pas polluer les logs
+if (process.env.NODE_ENV !== "test") {
+  app.use(
+    pinoHttp({
+      logger,
+      // Pas de log pour les health checks (Railway poll toutes les 30s)
+      autoLogging: {
+        ignore: (req) => req.url === "/health" || req.url === "/api/health",
+      },
+      // Enrichir chaque log avec userId si disponible
+      customSuccessMessage: (req, res) => `${req.method} ${req.url} ${res.statusCode}`,
+      customErrorMessage: (req, res, err) => `${req.method} ${req.url} ${res.statusCode} — ${err.message}`,
+    })
+  );
+}
 
 // Rate limiting : auth (login/register) 10 req / 15 min par IP
 // validate.forwardedHeader: false — en prod le proxy peut envoyer "Forwarded" que Express n’utilise pas ; on s’appuie sur X-Forwarded-For (trust proxy).
@@ -185,37 +222,34 @@ app.get("/passes/demo", handlePassDemo);
 app.use((req, res) => res.status(404).json({ error: "Not found" }));
 
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
+  logger.error({ err, url: req.url, method: req.method }, "Unhandled error");
   res.status(500).json({ error: "Une erreur interne est survenue." });
 });
 
 function startServer(port) {
   const p = Number(port) || 3001;
   const server = app.listen(p, () => {
+    const port = server.address().port;
     if (process.env.NODE_ENV === "production") {
-      console.log(`Backend fidélité: démarré sur le port ${server.address().port} (prod — l’API est exposée par Railway, pas en localhost).`);
+      logger.info({ port }, "Backend fidélité démarré (production)");
     } else {
-      console.log(`Backend fidélité: http://localhost:${server.address().port}`);
+      logger.info({ port, url: `http://localhost:${port}` }, "Backend fidélité démarré (développement)");
     }
-    console.log(`  API: /api/businesses/:slug, /api/members — diagnostic: GET /api/health`);
-    console.log("  [api] dashboard PATCH settings: récompense 5ᵉ tampon lue depuis body (build 2026-03-22b)");
     try {
       const passRegCount = getPassRegistrationsTotalCount();
-      console.log(`  [PassKit] Au démarrage: DATA_DIR=${process.env.DATA_DIR || "(défaut)"}, pass_registrations=${passRegCount}`);
+      logger.info({ passRegistrations: passRegCount, dataDir: process.env.DATA_DIR || "(défaut)" }, "[PassKit] Diagnostic démarrage");
       if (passRegCount === 0 && process.env.NODE_ENV === "production") {
-        console.warn("  [PassKit] Si les iPhones envoient des POST mais le dashboard affiche 0: vérifie volume Railway (Mount path=/data) et variable DATA_DIR=/data.");
+        logger.warn("[PassKit] Aucun appareil enregistré — vérifier volume Railway (Mount path=/data) et DATA_DIR=/data.");
       }
     } catch (e) {
-      console.warn("  [PassKit] Diagnostic démarrage:", e.message);
+      logger.warn({ err: e }, "[PassKit] Diagnostic démarrage échoué");
     }
     logApnsStatus();
     logMerchantApnsStatus();
   });
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {
-      console.error(`[startup] Le port ${p} est déjà utilisé (souvent un ancien backend Node).`);
-      console.error(`  Arrête ce processus, sinon le front (proxy Vite → localhost:${p}) parle à l’ancienne API.`);
-      console.error(`  Ex. : lsof -nP -iTCP:${p} -sTCP:LISTEN  puis  kill <PID>`);
+      logger.fatal({ port: p }, `Port ${p} déjà utilisé. Arrêter l’ancien processus (lsof -nP -iTCP:${p} -sTCP:LISTEN)`);
       process.exit(1);
     }
     throw err;

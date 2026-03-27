@@ -20,7 +20,8 @@ import {
   removeTestPassKitDevices,
 } from "../../db.js";
 import { sendWebPush } from "../../notifications.js";
-import { sendPassKitUpdate, getMerchantApnsUnavailableReason } from "../../apns.js";
+import { getMerchantApnsUnavailableReason } from "../../apns.js";
+import { sendPassKitPushWaves, passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
 import { getPassAuthenticationToken } from "../../pass.js";
 import { getDashboardStats } from "../../db.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
@@ -85,34 +86,22 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
       touchedMembers.add(row.serial_number);
     }
   }
-  for (const row of passKitTokens) {
-    try {
-      await sendPassKitUpdate(row.push_token);
-    } catch (_) {
-      /* ignore */
-    }
-  }
-  await new Promise((r) => setTimeout(r, 2500));
 
+  const waveResults = await sendPassKitPushWaves(passKitTokens);
   let sentPassKit = 0;
   const errors = [];
-  for (const row of passKitTokens) {
-    try {
-      const result = await sendPassKitUpdate(row.push_token);
-      if (result.sent) {
-        sentPassKit++;
-        logNotification({
-          businessId: business.id,
-          memberId: row.serial_number,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: "passkit_test_self",
-        });
-      } else if (result.error) {
-        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
-      }
-    } catch (err) {
-      errors.push({ type: "passkit", memberId: row.serial_number, error: err?.message || String(err) });
+  for (const { row, result } of waveResults) {
+    if (result.sent) {
+      sentPassKit++;
+      logNotification({
+        businessId: business.id,
+        memberId: row.serial_number,
+        title: payloadTitle,
+        body: bodyMessage,
+        type: "passkit_test_self",
+      });
+    } else if (result.error) {
+      errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
     }
   }
 
@@ -182,16 +171,20 @@ export async function notifyHandler(req, res) {
     body: message,
     ...(iconUrl && { icon: iconUrl }),
   };
-  let sentWebPush = 0;
-  let sentPassKit = 0;
+  const webPushResults = await Promise.all(
+    webSubscriptions.map(async (sub) => {
+      try {
+        await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+        logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body: message, type: "web_push" });
+        return 1;
+      } catch (_) {
+        return 0;
+      }
+    })
+  );
+  const sentWebPush = webPushResults.reduce((a, b) => a + b, 0);
 
-  for (const sub of webSubscriptions) {
-    try {
-      await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
-      sentWebPush++;
-      logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body: message, type: "web_push" });
-    } catch (_) { /* ignore */ }
-  }
+  let sentPassKit = 0;
 
   setLastBroadcastMessage(business.id, message);
   if (passKitTokens.length > 0) {
@@ -202,20 +195,12 @@ export async function notifyHandler(req, res) {
         touchedMembers.add(row.serial_number);
       }
     }
-    for (const row of passKitTokens) {
-      try {
-        await sendPassKitUpdate(row.push_token);
-      } catch (_) { /* ignore */ }
-    }
-    await new Promise((r) => setTimeout(r, 2500));
-    for (const row of passKitTokens) {
-      try {
-        const result = await sendPassKitUpdate(row.push_token);
-        if (result.sent) {
-          sentPassKit++;
-          logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body: message, type: "passkit" });
-        }
-      } catch (_) { /* ignore */ }
+    const waveResults = await sendPassKitPushWaves(passKitTokens);
+    for (const { row, result } of waveResults) {
+      if (result.sent) {
+        sentPassKit++;
+        logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body: message, type: "passkit" });
+      }
     }
   }
   res.status(200).json({ ok: true, sent: sentWebPush + sentPassKit, sentWebPush, sentPassKit });
@@ -272,21 +257,25 @@ router.post("/send", async (req, res) => {
     ...(iconUrl && { icon: iconUrl }),
   };
   const broadcastText = body;
-  let sentWebPush = 0;
-  let sentPassKit = 0;
   const errors = [];
-  for (const sub of webSubscriptions) {
-    try {
-      await sendWebPush(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        payload
-      );
-      sentWebPush++;
-      logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body, type: "web_push" });
-    } catch (err) {
-      errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
-    }
-  }
+  const webPushResults = await Promise.all(
+    webSubscriptions.map(async (sub) => {
+      try {
+        await sendWebPush(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          payload
+        );
+        logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body, type: "web_push" });
+        return { ok: true };
+      } catch (err) {
+        errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
+        return { ok: false };
+      }
+    })
+  );
+  const sentWebPush = webPushResults.filter((r) => r.ok).length;
+
+  let sentPassKit = 0;
   setLastBroadcastMessage(business.id, broadcastText);
   if (passKitTokens.length > 0) {
     const touchedMembers = new Set();
@@ -296,23 +285,13 @@ router.post("/send", async (req, res) => {
         touchedMembers.add(row.serial_number);
       }
     }
-    for (const row of passKitTokens) {
-      try {
-        await sendPassKitUpdate(row.push_token);
-      } catch (_) { /* ignore */ }
-    }
-    await new Promise((r) => setTimeout(r, 2500));
-    for (const row of passKitTokens) {
-      try {
-        const result = await sendPassKitUpdate(row.push_token);
-        if (result.sent) {
-          sentPassKit++;
-          logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body, type: "passkit" });
-        } else if (result.error) {
-          errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
-        }
-      } catch (err) {
-        errors.push({ type: "passkit", memberId: row.serial_number, error: err.message || String(err) });
+    const waveResults = await sendPassKitPushWaves(passKitTokens);
+    for (const { row, result } of waveResults) {
+      if (result.sent) {
+        sentPassKit++;
+        logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body, type: "passkit" });
+      } else if (result.error) {
+        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
       }
     }
   }
@@ -371,6 +350,7 @@ router.get("/stats", (req, res) => {
   }
   const merchantApnsReason = getMerchantApnsUnavailableReason();
   res.json({
+    passkit_wave_gap_ms: passKitWaveGapMsForDiagnostics(),
     subscriptionsCount,
     membersCount: membersCount ?? 0,
     webPushCount: webSubscriptions.length,

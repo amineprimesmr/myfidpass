@@ -17,7 +17,44 @@ function safeRun(db, fn) {
   }
 }
 
+/**
+ * Crée la table de versionnage des migrations si elle n'existe pas.
+ * Permet de savoir précisément quelle version du schéma est en place.
+ */
+function ensureMigrationsTable(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      version INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+}
+
+/**
+ * Marque une migration comme appliquée (idempotent).
+ */
+function markMigrationApplied(db, version, name) {
+  safeRun(db, () => {
+    db.prepare(
+      "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (?, ?)"
+    ).run(version, name);
+  });
+}
+
+/**
+ * Retourne la version max appliquée (0 si aucune).
+ */
+export function getSchemaVersion(db) {
+  ensureMigrationsTable(db);
+  const row = db.prepare("SELECT MAX(version) as v FROM schema_migrations").get();
+  return row?.v ?? 0;
+}
+
 export function runMigrations(db) {
+  ensureMigrationsTable(db);
+  // Marquer toutes les migrations existantes comme v1 (première initialisation)
+  markMigrationApplied(db, 1, "initial_schema_and_columns");
   const hasBusinessId = db.prepare("PRAGMA table_info(members)").all().some((c) => c.name === "business_id");
   if (!hasBusinessId) {
     db.exec("ALTER TABLE members ADD COLUMN business_id TEXT");
@@ -504,4 +541,35 @@ export function runMigrations(db) {
   if (!bizColsPassLayout.includes("notification_pass_layout_at")) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN notification_pass_layout_at TEXT"));
   }
+
+  // ── v2 : Idempotency sur transactions + indexes performance ──────────────
+  markMigrationApplied(db, 2, "transaction_idempotency_and_performance_indexes");
+  // ── Idempotency sur transactions (points_add, reward_redeem) ──────────────
+  // Permet de détecter un double-envoi (double-clic, retry réseau) et de retourner
+  // le résultat déjà calculé sans créditer les points une deuxième fois.
+  const txCols = db.prepare("PRAGMA table_info(transactions)").all().map((c) => c.name);
+  if (!txCols.includes("idempotency_key")) {
+    safeRun(db, () => db.exec("ALTER TABLE transactions ADD COLUMN idempotency_key TEXT"));
+    safeRun(db, () => db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_business_idempotency ON transactions(business_id, idempotency_key) WHERE idempotency_key IS NOT NULL"
+    ));
+  }
+
+  // ── Indexes composites manquants pour performance analytics ──────────────
+  // Dashboard stats : transactions des 30 derniers jours par business
+  safeRun(db, () => db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_transactions_business_created ON transactions(business_id, created_at DESC)"
+  ));
+  // Recherche membre par email dans un business (getMemberByEmailForBusiness)
+  safeRun(db, () => db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_members_business_email ON members(business_id, email)"
+  ));
+  // Pass registrations : retrouver le push_token rapidement
+  safeRun(db, () => db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_pass_reg_push_token ON pass_registrations(push_token) WHERE push_token IS NOT NULL"
+  ));
+  // Engagement completions par business + statut (file de validation)
+  safeRun(db, () => db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_engagement_completions_business_status ON engagement_completions(business_id, status, created_at DESC)"
+  ));
 }

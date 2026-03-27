@@ -6,13 +6,24 @@ import { getDb } from "./connection.js";
 
 const db = getDb();
 
-export function createTransaction({ id, businessId, memberId, type, points, metadata }) {
+export function createTransaction({ id, businessId, memberId, type, points, metadata, idempotencyKey }) {
   const tid = id || randomUUID();
   db.prepare(
-    `INSERT INTO transactions (id, business_id, member_id, type, points, metadata, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
-  ).run(tid, businessId, memberId, type, points, metadata ? JSON.stringify(metadata) : null);
+    `INSERT INTO transactions (id, business_id, member_id, type, points, metadata, idempotency_key, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+  ).run(tid, businessId, memberId, type, points, metadata ? JSON.stringify(metadata) : null, idempotencyKey || null);
   return db.prepare("SELECT * FROM transactions WHERE id = ?").get(tid);
+}
+
+/**
+ * Vérifie si une transaction existe déjà pour cette clé d'idempotence.
+ * Retourne la transaction existante ou null.
+ */
+export function getTransactionByIdempotencyKey(businessId, idempotencyKey) {
+  if (!businessId || !idempotencyKey) return null;
+  return db.prepare(
+    "SELECT * FROM transactions WHERE business_id = ? AND idempotency_key = ? LIMIT 1"
+  ).get(businessId, idempotencyKey) || null;
 }
 
 export function getTransactionsForBusiness(businessId, { limit = 30, offset = 0, memberId = null, days = null, type = null } = {}) {

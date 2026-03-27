@@ -12,8 +12,11 @@
     "seed:passkit-test": "DATA_DIR=./test-data node scripts/seed-passkit-test.js"
   },
   "dependencies": {
-    "apn": "^2.2.0",
+    "apns2": "^3.3.0",
     "bcryptjs": "^3.0.3",
+    "pino": "^9.6.0",
+    "pino-http": "^10.3.0",
+    "zod": "^3.24.1",
     "better-sqlite3": "^11.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -30,6 +33,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "pino-pretty": "^13.0.0",
     "supertest": "^7.2.2",
     "vitest": "^4.1.0"
   }

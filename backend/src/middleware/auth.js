@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import { getUserById } from "../db.js";
-
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+import { getJwtSecret } from "../lib/config.js";
 
 /**
  * Vérifie le JWT (header Authorization: Bearer <token>) et attache req.user.
@@ -16,7 +15,7 @@ export function optionalAuth(req, res, next) {
     return next();
   }
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, getJwtSecret());
     const user = getUserById(payload.userId);
     req.user = user || null;
     if (!user) req.authError = "user_not_found";
@@ -37,4 +36,5 @@ export function requireAuth(req, res, next) {
   next();
 }
 
-export { JWT_SECRET };
+// Exporter getJwtSecret pour les routes qui en ont besoin
+export { getJwtSecret };

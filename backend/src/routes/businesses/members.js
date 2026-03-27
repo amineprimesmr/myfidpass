@@ -13,6 +13,7 @@ import {
   deductPoints,
   resetMemberPoints,
   createTransaction,
+  getTransactionByIdempotencyKey,
   getMemberTicketWallet,
   getMemberTicketHistory,
   convertPointsToTickets,
@@ -26,6 +27,7 @@ import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
 import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
 import { getIdempotencyKey, canAccessDashboard } from "./shared.js";
+import { validate, schemas } from "../../lib/validate.js";
 
 const router = Router();
 
@@ -39,7 +41,7 @@ const membersCreateLimiter = rateLimit({
 });
 
 // ——— POST / (création membre) ———
-router.post("/", membersCreateLimiter, (req, res) => {
+router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
 
@@ -289,6 +291,23 @@ router.post("/:memberId/points", async (req, res) => {
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
+  // ── Idempotence : si la même Idempotency-Key a déjà été traitée, on retourne
+  // le membre tel qu'il est sans ajouter de points une deuxième fois.
+  const idempotencyKey = getIdempotencyKey(req);
+  if (idempotencyKey) {
+    const existing = getTransactionByIdempotencyKey(business.id, idempotencyKey);
+    if (existing) {
+      // Double envoi détecté : réponse 200 idempotente (pas de double crédit)
+      const currentMember = getMemberForBusiness(req.params.memberId, business.id);
+      return res.json({
+        id: currentMember.id,
+        points: currentMember.points,
+        points_added: existing.points,
+        idempotent: true,
+      });
+    }
+  }
+
   const pointsDirect = Number(req.body?.points);
   const amountEur = Number(req.body?.amount_eur);
   const visit = req.body?.visit === true;
@@ -316,9 +335,7 @@ router.post("/:memberId/points", async (req, res) => {
     const msg = perVisit === 0 && programType !== "stamps"
       ? `Vos règles : 0 point par passage. Saisissez un montant en € ou un nombre de points pour créditer.${minHint}`
       : `Saisissez le montant du panier en € ou cliquez sur « 1 passage ». Règles : ${perEuro} pt/€, ${perVisit} pt/passage.${minHint}`;
-    return res.status(400).json({
-      error: msg,
-    });
+    return res.status(400).json({ error: msg });
   }
 
   const updated = addPoints(member.id, points);
@@ -328,6 +345,7 @@ router.post("/:memberId/points", async (req, res) => {
     type: "points_add",
     points,
     metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit } : undefined,
+    idempotencyKey: idempotencyKey || null,
   });
   const tokens = getPushTokensForMember(member.id);
   if (tokens.length > 0) {

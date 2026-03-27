@@ -20,11 +20,11 @@ import {
   getBusinessBySlug,
   canCreateBusiness,
 } from "../db.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, getJwtSecret } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
+import { validate, schemas } from "../lib/validate.js";
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_IOS_CLIENT_ID = process.env.GOOGLE_IOS_CLIENT_ID || ""; // Client ID OAuth iOS pour l'app
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ""; // Pour échange code → token (flow OAuth app)
@@ -129,18 +129,13 @@ async function getAppleSigningKeyPem(kid) {
  * Body: { email, password, name?, google_place_id? | googlePlaceId?, establishment_name? }
  * Si google_place_id est fourni et Places configuré, crée le premier commerce (nom + adresse Google).
  */
-router.post("/register", async (req, res) => {
+router.post("/register", validate(schemas.register), async (req, res) => {
   const body = req.body || {};
   const { email, password, name } = body;
   const googlePlaceId = String(body.google_place_id || body.googlePlaceId || "").trim();
   const establishmentName = String(body.establishment_name || body.establishmentName || "").trim();
-  const emailNorm = String(email || "").trim().toLowerCase();
-  if (!emailNorm) {
-    return res.status(400).json({ error: "Email requis" });
-  }
-  if (!password || String(password).length < 8) {
-    return res.status(400).json({ error: "Mot de passe requis (8 caractères minimum)" });
-  }
+  // email et password déjà validés et normalisés par Zod (register schema)
+  const emailNorm = email; // déjà toLowerCase() par le schéma
   if (getUserByEmail(emailNorm)) {
     return res.status(409).json({ error: "Un compte existe déjà avec cet email" });
   }
@@ -154,12 +149,9 @@ router.post("/register", async (req, res) => {
     if (googlePlaceId) {
       await tryCreateFirstBusinessFromGooglePlace(user.id, googlePlaceId, establishmentName);
     }
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
-  if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
-    console.warn("JWT_SECRET non défini en production : définir la variable sur Railway pour une connexion stable.");
-  }
-  res.status(201).json({
+    res.status(201).json({
       user: { id: user.id, email: user.email, name: user.name },
       token,
       businesses,
@@ -174,12 +166,9 @@ router.post("/register", async (req, res) => {
  * POST /api/auth/login
  * Body: { email, password }
  */
-router.post("/login", async (req, res) => {
+router.post("/login", validate(schemas.login), async (req, res) => {
   const { email, password } = req.body || {};
-  const emailNorm = String(email || "").trim().toLowerCase();
-  if (!emailNorm || !password) {
-    return res.status(400).json({ error: "Email et mot de passe requis" });
-  }
+  const emailNorm = email; // déjà normalisé par Zod
   const user = getUserByEmail(emailNorm);
   if (!user) {
     return res.status(404).json({ error: "Aucun compte associé à cet email. Créez votre compte sur myfidpass.fr.", code: "NO_ACCOUNT" });
@@ -188,7 +177,7 @@ router.post("/login", async (req, res) => {
   if (!ok) {
     return res.status(401).json({ error: "Email ou mot de passe incorrect" });
   }
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+  const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
   const businesses = getBusinessesByUserId(user.id);
   res.json({
     user: { id: user.id, email: user.email, name: user.name },
@@ -232,7 +221,7 @@ router.post("/google", async (req, res) => {
         name: displayName,
       });
     }
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
     return res.json({
       user: { id: user.id, email: user.email, name: user.name },
@@ -290,7 +279,7 @@ router.get("/google-oauth-callback", async (req, res) => {
     if (!user) {
       return res.redirect(302, `${redirectApp}?error=no_account`);
     }
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
     return res.redirect(302, `${redirectApp}?token=${encodeURIComponent(token)}`);
   } catch (e) {
     console.error("Google OAuth callback error:", e);
@@ -335,7 +324,7 @@ router.post("/apple", async (req, res) => {
         name: nameFromBody || null,
       });
     }
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
     return res.json({
       user: { id: user.id, email: user.email, name: user.name },
@@ -395,7 +384,7 @@ router.post("/apple-redirect", async (req, res) => {
       const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
       user = createUser({ email, passwordHash: oauthPlaceholder, name: name || null });
     }
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "90d" });
+    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
     const businesses = getBusinessesByUserId(user.id);
     const code = randomUUID().slice(0, 16) + Date.now().toString(36);
     cleanupAppleCodes();
@@ -436,13 +425,10 @@ const PASSWORD_RESET_EXPIRY_HOURS = 1;
  * Body: { email }
  * Envoie un email avec lien de réinitialisation (si le compte existe). Réponse identique dans tous les cas (sécurité).
  */
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", validate(schemas.forgotPassword), async (req, res) => {
   const { email } = req.body || {};
-  const emailNorm = String(email || "").trim().toLowerCase();
+  const emailNorm = email; // déjà normalisé par Zod
   const message = "Si un compte existe avec cet email, vous recevrez un lien pour réinitialiser votre mot de passe.";
-  if (!emailNorm) {
-    return res.status(400).json({ error: "Email requis" });
-  }
   const user = getUserByEmail(emailNorm);
   if (!user) {
     return res.json({ message });
@@ -476,15 +462,9 @@ router.post("/forgot-password", async (req, res) => {
  * Body: { token, newPassword }
  * Réinitialise le mot de passe avec le token reçu par email.
  */
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", validate(schemas.resetPassword), async (req, res) => {
   const { token, newPassword } = req.body || {};
-  const tokenStr = typeof token === "string" ? token.trim() : "";
-  if (!tokenStr) {
-    return res.status(400).json({ error: "Token manquant" });
-  }
-  if (!newPassword || String(newPassword).length < 8) {
-    return res.status(400).json({ error: "Nouveau mot de passe requis (8 caractères minimum)" });
-  }
+  const tokenStr = token; // déjà validé par Zod
   const row = getPasswordResetByToken(tokenStr);
   if (!row) {
     return res.status(400).json({ error: "Lien invalide ou expiré. Demandez un nouveau lien." });
