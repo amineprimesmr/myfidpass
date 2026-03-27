@@ -28,4 +28,14 @@ describe("effectivePassKitRowUpdateTs (PassKit passesUpdatedSince)", () => {
     });
     expect(ts).toBe(Date.parse("2024-05-10T08:30:00Z"));
   });
+
+  it("prend en compte notification_pass_layout_at (textes pass sans nouvelle diffusion)", () => {
+    const ts = effectivePassKitRowUpdateTs({
+      last_visit_at: null,
+      last_broadcast_at: "2026-01-01 00:00:00",
+      notification_pass_layout_at: "2026-06-15 12:00:00",
+      created_at: "2020-01-01 00:00:00",
+    });
+    expect(ts).toBe(Date.parse("2026-06-15T12:00:00Z"));
+  });
 });

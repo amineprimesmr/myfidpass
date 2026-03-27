@@ -82,21 +82,21 @@ function parsePassUpdatedAt(str) {
 }
 
 /**
- * Instant « pass mis à jour » côté PassKit : visite en caisse, dernière diffusion, ou création du membre.
- * Sans last_broadcast / created_at, un membre sans last_visit_at (jamais scanné) était exclu dès qu’Apple
- * envoyait passesUpdatedSince — typique des clients à distance (ex. Laval) qui ne repassent pas au commerce.
+ * Instant « pass mis à jour » côté PassKit : visite en caisse, dernière diffusion, création du membre,
+ * ou mise à jour des textes pass (sans confondre avec une nouvelle diffusion — voir notification_pass_layout_at).
  */
 export function effectivePassKitRowUpdateTs(row) {
   return Math.max(
     parsePassUpdatedAt(row.last_visit_at),
     parsePassUpdatedAt(row.last_broadcast_at),
-    parsePassUpdatedAt(row.created_at)
+    parsePassUpdatedAt(row.created_at),
+    parsePassUpdatedAt(row.notification_pass_layout_at)
   );
 }
 
 export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
   const base = db.prepare(
-    `SELECT pr.serial_number, m.last_visit_at, m.created_at, b.last_broadcast_at
+    `SELECT pr.serial_number, m.last_visit_at, m.created_at, b.last_broadcast_at, b.notification_pass_layout_at
      FROM pass_registrations pr
      INNER JOIN members m ON m.id = pr.serial_number
      INNER JOIN businesses b ON b.id = m.business_id

@@ -148,6 +148,7 @@ function getPassLastModified(member, business) {
   const timestamps = [
     toTimestamp(member?.last_visit_at),
     toTimestamp(business?.last_broadcast_at),
+    toTimestamp(business?.notification_pass_layout_at),
     toTimestamp(business?.logo_updated_at),
     toTimestamp(business?.logo_icon_updated_at),
     toTimestamp(business?.notification_icon_updated_at),

@@ -499,4 +499,9 @@ export function runMigrations(db) {
   if (!bizColsNotifIcon2.includes("notification_icon_updated_at")) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN notification_icon_updated_at TEXT"));
   }
+
+  const bizColsPassLayout = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsPassLayout.includes("notification_pass_layout_at")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN notification_pass_layout_at TEXT"));
+  }
 }

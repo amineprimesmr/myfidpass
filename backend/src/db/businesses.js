@@ -90,12 +90,12 @@ export function createBusiness({
 }
 
 /**
- * Met à jour last_broadcast_at sans toucher au texte du dernier message — pour invalider le cache pass
- * (titre / message pass visibles sur la bannière Wallet) après enregistrement des textes campagne.
+ * Invalide le cache PassKit après enregistrement des textes campagne (titre / modèle de notif),
+ * sans toucher à `last_broadcast_at` (sinon le champ verso « Message » change de suffixe → alerte Wallet en boucle).
  */
 export function bumpBusinessPassRefreshTimestamp(businessId) {
   if (!businessId) return;
-  db.prepare("UPDATE businesses SET last_broadcast_at = ? WHERE id = ?").run(nowUtcSqlWithMs(), businessId);
+  db.prepare("UPDATE businesses SET notification_pass_layout_at = ? WHERE id = ?").run(nowUtcSqlWithMs(), businessId);
 }
 
 export function updateBusiness(businessId, updates) {
