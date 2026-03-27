@@ -26,14 +26,7 @@ import {
   formatBackRewardsFieldValue,
 } from "./point-tiers.js";
 import { passMessageBroadcastFooter } from "../db/datetime-sql.js";
-
-/** Apple : changeMessage doit contenir %@ pour le texte de notif ; le réglage commerce peut l’omettre. */
-function normalizeChangeMessage(customMsg) {
-  const c = (customMsg || "").trim();
-  if (!c) return "%@";
-  if (c.includes("%@")) return c;
-  return `${c} %@`;
-}
+import { normalizeChangeMessage } from "./broadcast-field.js";
 
 let _sharp = null;
 async function getSharp() {
@@ -420,7 +413,7 @@ export async function generatePass(member, business = null, options = {}) {
       ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
       : `${stampMax} tampons = ${stampRewardLabel}`;
     pass.backFields.push(
-      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg) },
+      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg, rawBroadcast) },
       { key: "reward", label: "Récompense", value: rewardValue },
       { key: "terms", label: "Conditions", value: backTerms },
       { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
@@ -437,7 +430,7 @@ export async function generatePass(member, business = null, options = {}) {
         : "Consultez le commerce pour les paliers de récompenses.";
 
     pass.backFields.push(
-      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg) },
+      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg, rawBroadcast) },
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       {
         key: "rewards",

@@ -15,6 +15,9 @@ describe("normalizeChangeMessage", () => {
   it("conserve un modèle avec %@", () => {
     expect(normalizeChangeMessage("Nouveau : %@")).toBe("Nouveau : %@");
   });
+  it("évite la duplication quand le modèle recopie le message diffusé (sans %@)", () => {
+    expect(normalizeChangeMessage("G La dalle", "G La dalle")).toBe("%@");
+  });
 });
 
 describe("buildLastBroadcastFieldValue", () => {

@@ -13,3 +13,20 @@ export function formatUtcSqlWithMs(d = new Date()) {
 export function nowUtcSqlWithMs() {
   return formatUtcSqlWithMs(new Date());
 }
+
+/**
+ * Ligne sous le dernier message au verso du pass (horodatage discret).
+ * @param {string | null | undefined} lastBroadcastAt — SQLite « YYYY-MM-DD HH:MM:SS.mmm » ou ISO
+ */
+export function passMessageBroadcastFooter(lastBroadcastAt) {
+  if (!lastBroadcastAt || !String(lastBroadcastAt).trim()) return "";
+  try {
+    const s = String(lastBroadcastAt).trim();
+    const iso = /Z$|[+-]\d{2}:?\d{2}$/.test(s) ? s : s.replace(" ", "T") + "Z";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+  } catch {
+    return "";
+  }
+}

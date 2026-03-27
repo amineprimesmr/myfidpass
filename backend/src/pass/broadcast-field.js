@@ -1,8 +1,16 @@
-/** Apple : changeMessage doit contenir %@ ; sans %@ on ajoute le suffixe pour préserver le préfixe commerce (ex. « Promo : %@ »). */
-export function normalizeChangeMessage(customMsg) {
+/**
+ * Apple : changeMessage doit contenir %@ ; sans %@ on ajoute « préfixe + %@ » (ex. « Promo : %@ »).
+ * Si le commerce a recopié le message diffusé comme « modèle » sans %@, éviter « texte %@ » + valeur identique
+ * → « G La dalle G La dalle » dans Wallet.
+ *
+ * @param {string | null | undefined} rawBroadcast — dernier message diffusé (sans suffixe PassKit)
+ */
+export function normalizeChangeMessage(customMsg, rawBroadcast) {
   const c = (customMsg || "").trim();
+  const raw = rawBroadcast != null ? String(rawBroadcast).trim() : "";
   if (!c) return "%@";
   if (c.includes("%@")) return c;
+  if (raw && c === raw) return "%@";
   return `${c} %@`;
 }
 
