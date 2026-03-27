@@ -361,9 +361,18 @@ export async function generatePass(member, business = null, options = {}) {
         textAlignment: "PKTextAlignmentLeft",
         changeMessage: "Fidélité : %@",
       });
+    } else if (hasCardBackgroundStrip) {
+      /* Comme le programme tampons + image : pas de champ « primary » (gros chiffre) qui se superpose
+       * visuellement au strip ; le solde est une ligne en secondary sous la photo. */
+      pass.secondaryFields.push({
+        key: "points",
+        label: "Points",
+        value: pointsValue,
+        textAlignment: "PKTextAlignmentLeft",
+        changeMessage: "Tu as maintenant %@ points !",
+      });
     } else {
-      /* Wallet réserve toujours une zone « primary » sur une storeCard : si on ne remplit que secondary,
-       * la face avant affiche une case vide. Toujours pousser le solde en primary pour le programme points. */
+      /* Sans image de fond : solde en primary (grand chiffre) comme d’habitude. */
       pass.primaryFields.push(pointsField);
     }
     pass.secondaryFields.push({
