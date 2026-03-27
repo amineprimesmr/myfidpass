@@ -18,6 +18,7 @@ import {
   setLastBroadcastMessage,
   touchMemberLastVisit,
   removeTestPassKitDevices,
+  deleteWebPushSubscriptionByEndpoint,
 } from "../../db.js";
 import { sendWebPush } from "../../notifications.js";
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
@@ -177,7 +178,13 @@ export async function notifyHandler(req, res) {
         await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
         logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body: message, type: "web_push" });
         return 1;
-      } catch (_) {
+      } catch (err) {
+        const status = err?.statusCode ?? err?.status;
+        if (status === 410 || status === 404) {
+          deleteWebPushSubscriptionByEndpoint(sub.endpoint);
+        } else {
+          console.warn("[notify] web push failed", { memberId: sub.member_id, status, msg: err?.message });
+        }
         return 0;
       }
     })
@@ -203,7 +210,7 @@ export async function notifyHandler(req, res) {
       }
     }
   }
-  res.status(200).json({ ok: true, sent: sentWebPush + sentPassKit, sentWebPush, sentPassKit });
+  res.status(200).json({ ok: true, sent: sentWebPush + sentPassKit, sentWebPush, sentPassKit, sentMerchantApp: 0 });
 }
 
 const router = Router();
@@ -268,7 +275,12 @@ router.post("/send", async (req, res) => {
         logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body, type: "web_push" });
         return { ok: true };
       } catch (err) {
-        errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
+        const status = err?.statusCode ?? err?.status;
+        if (status === 410 || status === 404) {
+          deleteWebPushSubscriptionByEndpoint(sub.endpoint);
+        } else {
+          errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
+        }
         return { ok: false };
       }
     })

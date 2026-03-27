@@ -33,7 +33,12 @@ export async function sendPassKitPushWaves(passKitRows) {
     return wave1;
   }
   await new Promise((r) => setTimeout(r, PASSKIT_WAVE_GAP_MS));
-  return runWave();
+  const wave2 = await runWave();
+  // Garde le meilleur résultat : si wave 1 a réussi mais wave 2 a échoué, on compte quand même l'envoi.
+  return wave2.map((w2, i) => {
+    if (!w2.result.sent && wave1[i]?.result?.sent) return wave1[i];
+    return w2;
+  });
 }
 
 export function passKitWaveGapMsForDiagnostics() {

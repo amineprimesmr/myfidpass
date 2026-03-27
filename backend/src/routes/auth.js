@@ -275,9 +275,19 @@ router.get("/google-oauth-callback", async (req, res) => {
     if (!email) {
       return res.redirect(302, `${redirectApp}?error=no_email`);
     }
-    const user = getUserByEmail(email);
+    let user = getUserByEmail(email);
     if (!user) {
-      return res.redirect(302, `${redirectApp}?error=no_account`);
+      // Aligné sur POST /api/auth/google : première connexion OAuth → création du compte (l’app iOS n’utilise que ce flux).
+      const displayNameRaw =
+        (payload?.name && String(payload.name)) ||
+        [payload?.given_name, payload?.family_name].filter(Boolean).join(" ");
+      const displayName = displayNameRaw ? displayNameRaw.trim() : null;
+      const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
+      user = createUser({
+        email,
+        passwordHash: oauthPlaceholder,
+        name: displayName,
+      });
     }
     const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
     return res.redirect(302, `${redirectApp}?token=${encodeURIComponent(token)}`);

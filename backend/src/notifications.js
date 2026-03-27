@@ -11,7 +11,7 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
   VAPID_PUBLIC = publicKey;
   webPush.setVapidDetails("mailto:contact@myfidpass.fr", publicKey, privateKey);
   if (process.env.NODE_ENV === "production") {
-    console.warn("[notifications] VAPID non configuré : définir VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY (voir web-push generate-vapid-keys).");
+    console.error("[notifications] CRITIQUE : VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY non configurées. Des clés éphémères ont été générées — toutes les subscriptions web push existantes sont maintenant invalides et échoueront silencieusement jusqu'au prochain redémarrage. Définissez ces variables sur Railway de façon permanente (voir web-push generate-vapid-keys).");
   } else {
     console.warn("[notifications] Clés VAPID générées pour ce démarrage. Pour les réutiliser, ajoutez à .env :");
     console.warn("VAPID_PUBLIC_KEY=" + publicKey);

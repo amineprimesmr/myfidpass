@@ -350,7 +350,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
   async function trySubscribeToPush() {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
       if (notificationsStatusEl) {
         notificationsStatusEl.textContent = "Les notifications ne sont pas supportées sur ce navigateur.";
         notificationsStatusEl.classList.remove("hidden");
@@ -503,7 +503,9 @@ function initFidelityApp(slug) {
 
 function runFidelityApp(slug) {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.register("/sw.js").catch((err) => {
+      console.warn("[sw] Enregistrement service worker échoué :", err);
+    });
   }
   fetchBusiness(slug)
     .then((business) => {

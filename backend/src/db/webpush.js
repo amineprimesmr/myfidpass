@@ -39,6 +39,11 @@ export function logNotification({ businessId, memberId, title, body, type = "web
   return id;
 }
 
+/** Supprime une subscription expirée ou invalide (réponse HTTP 410 / 404 du push service). */
+export function deleteWebPushSubscriptionByEndpoint(endpoint) {
+  db.prepare("DELETE FROM web_push_subscriptions WHERE endpoint = ?").run(endpoint);
+}
+
 export function getWebPushSubscriptionsByBusinessFiltered(businessId, memberIds = null) {
   let rows = db.prepare(
     "SELECT id, member_id, endpoint, p256dh, auth FROM web_push_subscriptions WHERE business_id = ?"

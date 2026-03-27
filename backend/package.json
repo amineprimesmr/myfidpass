@@ -12,7 +12,7 @@
     "seed:passkit-test": "DATA_DIR=./test-data node scripts/seed-passkit-test.js"
   },
   "dependencies": {
-    "apns2": "^3.3.0",
+    "apns2": "^12.2.0",
     "bcryptjs": "^3.0.3",
     "pino": "^9.6.0",
     "pino-http": "^10.3.0",
