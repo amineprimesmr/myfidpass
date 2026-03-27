@@ -75,8 +75,8 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
   }
 
   const payloadTitle = (title || business.notification_title_override || business.organization_name || "Myfidpass").trim();
-  const broadcastStored = payloadTitle ? `${payloadTitle}: ${bodyMessage}` : bodyMessage;
-  setLastBroadcastMessage(business.id, broadcastStored);
+  /** Le verso / notif Wallet utilisent `last_broadcast_message` comme corps seul ; le nom commerce est déjà dans organizationName du pass (évite « Titre » + « Titre : texte »). */
+  setLastBroadcastMessage(business.id, bodyMessage);
 
   const touchedMembers = new Set();
   for (const row of passKitTokens) {
@@ -193,8 +193,7 @@ export async function notifyHandler(req, res) {
     } catch (_) { /* ignore */ }
   }
 
-  const broadcastStored = payload.title ? `${payload.title}: ${message}` : message;
-  setLastBroadcastMessage(business.id, broadcastStored);
+  setLastBroadcastMessage(business.id, message);
   if (passKitTokens.length > 0) {
     const touchedMembers = new Set();
     for (const row of passKitTokens) {

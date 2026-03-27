@@ -254,13 +254,13 @@ export function sendMerchantAppAlert(deviceToken, payload) {
     return Promise.resolve({ sent: false, error: reason || "APNs app commerçant non configuré" });
   }
   const bundleId = process.env.MERCHANT_APP_BUNDLE_ID?.trim() || "com.myfidpass";
-  const title = (payload.title || "Myfidpass").trim() || "Myfidpass";
   const body = (payload.body || "").trim();
   if (!body) return Promise.resolve({ sent: false, error: "Message vide" });
   const note = new apn.Notification();
   note.topic = bundleId;
   note.sound = "default";
-  note.alert = { title, body };
+  /** Une ligne de texte : pas de titre + corps dupliqués (évite « Titre » puis « Titre : message »). */
+  note.alert = body;
   note.expiry = Math.floor(Date.now() / 1000) + 3600;
   return prov.send(note, deviceToken).then(
     (result) => {
