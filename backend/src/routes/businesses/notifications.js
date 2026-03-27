@@ -141,6 +141,18 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
   });
 }
 
+/** Un seul envoi « test sur moi » à la fois par commerce (évite courses DB + APNs empilés si double tap / 2 appareils). */
+const merchantTestSendTail = new Map();
+
+function enqueueMerchantTestSend(businessId, fn) {
+  const prev = merchantTestSendTail.get(businessId) || Promise.resolve();
+  const next = prev.then(fn).catch((err) => {
+    console.error("[notifications] merchant test send queue:", err?.message || err);
+  });
+  merchantTestSendTail.set(businessId, next);
+  return next;
+}
+
 export async function notifyHandler(req, res) {
   const business = req.business;
   if (!canAccessDashboard(business, req)) {
@@ -224,7 +236,8 @@ router.post("/send", async (req, res) => {
     return res.status(400).json({ error: "Le message est obligatoire" });
   }
   if (testSelfOnly) {
-    return handleMerchantSelfTestSend(req, res, business, title, body);
+    await enqueueMerchantTestSend(business.id, () => handleMerchantSelfTestSend(req, res, business, title, body));
+    return;
   }
   let memberIds;
   if (segment && ["inactive30", "inactive90", "new30", "recurrent", "points50"].includes(segment)) {

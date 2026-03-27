@@ -4,6 +4,7 @@
  * Payload vide : Apple exige un payload vide pour signaler "pass mis à jour".
  */
 import apn from "apn";
+import { randomUUID } from "node:crypto";
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -144,6 +145,8 @@ export function sendPassKitUpdate(deviceToken) {
   note.payload = {};
   note.topic = passTypeId;
   note.expiry = Math.floor(Date.now() / 1000) + 3600;
+  /** apns-id unique : sans ça, APNs peut fusionner plusieurs pushes « pass vide » vers le même jeton (effet « pas de 2e notif » ou délai bizarre). */
+  note.id = randomUUID();
   return prov.send(note, deviceToken).then(
     (result) => {
       if (result.failed && result.failed.length > 0) {
