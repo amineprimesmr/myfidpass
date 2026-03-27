@@ -25,6 +25,22 @@ import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
 
 const router = Router();
+
+/**
+ * Base URL publique de l’API (identique à celle utilisée par l’app pour `redirect_uri` OAuth).
+ * Sur Railway/proxy, `req.protocol` est souvent `http` alors que le client appelle en `https` :
+ * l’échange code→token Google exige le même `redirect_uri` que dans la requête d’autorisation.
+ */
+function getPublicApiBase(req) {
+  const fromEnv = (process.env.API_URL || "").replace(/\/$/, "").trim();
+  if (fromEnv) return fromEnv;
+  const proto = (req.get("x-forwarded-proto") || req.protocol || "https").split(",")[0].trim() || "https";
+  const host = (req.get("x-forwarded-host") || req.get("host") || "").split(",")[0].trim();
+  if (!host) return "";
+  const scheme = proto === "http" || proto === "https" ? proto : "https";
+  return `${scheme}://${host}`;
+}
+
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_IOS_CLIENT_ID = process.env.GOOGLE_IOS_CLIENT_ID || ""; // Client ID OAuth iOS pour l'app
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ""; // Pour échange code → token (flow OAuth app)
@@ -252,7 +268,7 @@ router.get("/config", (_req, res) => {
  */
 router.get("/google-oauth-callback", async (req, res) => {
   const code = req.query?.code;
-  const apiBase = (process.env.API_URL || "").replace(/\/$/, "") || `${req.protocol}://${req.get("host") || ""}`;
+  const apiBase = getPublicApiBase(req);
   const redirectApp = "myfidpass://auth";
   if (!code || !googleOAuthClient) {
     const err = !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET ? "config" : "no_code";
