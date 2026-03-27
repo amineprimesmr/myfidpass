@@ -5,8 +5,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "NODE_ENV=test DATA_DIR=./test-data npx vitest run",
-    "test:watch": "NODE_ENV=test DATA_DIR=./test-data npx vitest",
+    "test": "NODE_ENV=test DATA_DIR=./test-data JWT_SECRET=test-jwt-secret-do-not-use-in-production-32c npx vitest run",
+    "test:watch": "NODE_ENV=test DATA_DIR=./test-data JWT_SECRET=test-jwt-secret-do-not-use-in-production-32c npx vitest",
     "generate-vapid-keys": "web-push generate-vapid-keys",
     "test:passkit": "bash scripts/test-passkit-get.sh",
     "seed:passkit-test": "DATA_DIR=./test-data node scripts/seed-passkit-test.js"

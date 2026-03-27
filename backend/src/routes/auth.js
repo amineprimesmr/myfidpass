@@ -19,6 +19,11 @@ import {
   updateBusiness,
   getBusinessBySlug,
   canCreateBusiness,
+  createRefreshToken,
+  getRefreshToken,
+  deleteRefreshToken,
+  deleteUserRefreshTokens,
+  cleanExpiredRefreshTokens,
 } from "../db.js";
 import { requireAuth, getJwtSecret } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
@@ -51,6 +56,26 @@ const APPLE_JWT_AUDIENCES = [...new Set([APPLE_CLIENT_ID, APPLE_BUNDLE_ID].filte
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
 const SALT_ROUNDS = 10;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
+
+const ACCESS_TOKEN_TTL = "15m";
+const REFRESH_TOKEN_TTL_DAYS = 30;
+
+/**
+ * Émet une paire access token (15min) + refresh token (30j).
+ * Stocke le refresh token en base pour permettre la révocation.
+ * @param {number} userId
+ * @returns {{ accessToken: string, refreshToken: string }}
+ */
+function issueTokenPair(userId) {
+  const accessToken = jwt.sign({ userId }, getJwtSecret(), { expiresIn: ACCESS_TOKEN_TTL });
+  const refreshToken = randomUUID() + "-" + randomUUID();
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 3600 * 1000).toISOString();
+  createRefreshToken(userId, refreshToken, expiresAt);
+  return { accessToken, refreshToken };
+}
+
+// Nettoyage des tokens expirés au démarrage
+cleanExpiredRefreshTokens();
 
 function registerSlugFromName(name) {
   let s = String(name || "commerce")
@@ -165,11 +190,12 @@ router.post("/register", validate(schemas.register), async (req, res) => {
     if (googlePlaceId) {
       await tryCreateFirstBusinessFromGooglePlace(user.id, googlePlaceId, establishmentName);
     }
-    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
+    const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
     res.status(201).json({
       user: { id: user.id, email: user.email, name: user.name },
-      token,
+      token: accessToken,
+      refreshToken,
       businesses,
     });
   } catch (e) {
@@ -193,11 +219,12 @@ router.post("/login", validate(schemas.login), async (req, res) => {
   if (!ok) {
     return res.status(401).json({ error: "Email ou mot de passe incorrect" });
   }
-  const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
+  const { accessToken, refreshToken } = issueTokenPair(user.id);
   const businesses = getBusinessesByUserId(user.id);
   res.json({
     user: { id: user.id, email: user.email, name: user.name },
-    token,
+    token: accessToken,
+    refreshToken,
     businesses,
   });
 });
@@ -238,11 +265,12 @@ router.post("/google", async (req, res) => {
         name: displayName,
       });
     }
-    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
+    const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
     return res.json({
       user: { id: user.id, email: user.email, name: user.name },
-      token,
+      token: accessToken,
+      refreshToken,
       businesses,
     });
   } catch (e) {
@@ -306,8 +334,8 @@ router.get("/google-oauth-callback", async (req, res) => {
         name: displayName,
       });
     }
-    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
-    return res.redirect(302, `${redirectApp}?token=${encodeURIComponent(token)}`);
+    const { accessToken, refreshToken } = issueTokenPair(user.id);
+    return res.redirect(302, `${redirectApp}?token=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}`);
   } catch (e) {
     console.error("Google OAuth callback error:", e);
     return res.redirect(302, `${redirectApp}?error=invalid`);
@@ -354,11 +382,12 @@ router.post("/apple", async (req, res) => {
         name: nameFromBody || null,
       });
     }
-    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
+    const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
     return res.json({
       user: { id: user.id, email: user.email, name: user.name },
-      token,
+      token: accessToken,
+      refreshToken,
       businesses,
     });
   } catch (e) {
@@ -414,12 +443,13 @@ router.post("/apple-redirect", async (req, res) => {
       const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
       user = createUser({ email, passwordHash: oauthPlaceholder, name: name || null });
     }
-    const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "90d" });
+    const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
     const code = randomUUID().slice(0, 16) + Date.now().toString(36);
     cleanupAppleCodes();
     appleOneTimeCodes.set(code, {
-      token,
+      token: accessToken,
+      refreshToken,
       user: { id: user.id, email: user.email, name: user.name },
       businesses,
       expiry: Date.now() + APPLE_CODE_TTL_MS,
@@ -445,7 +475,7 @@ router.get("/apple-exchange", (req, res) => {
   if (!data || data.expiry < Date.now()) {
     return res.status(401).json({ error: "Code invalide ou expiré" });
   }
-  return res.json({ token: data.token, user: data.user, businesses: data.businesses });
+  return res.json({ token: data.token, refreshToken: data.refreshToken, user: data.user, businesses: data.businesses });
 });
 
 const PASSWORD_RESET_EXPIRY_HOURS = 1;
@@ -566,6 +596,50 @@ router.delete("/account", requireAuth, (req, res) => {
     console.error("Delete account error:", e);
     return res.status(500).json({ error: "Erreur lors de la suppression du compte." });
   }
+});
+
+/**
+ * POST /api/auth/refresh
+ * Body: { refreshToken }
+ * Échange un refresh token valide contre une nouvelle paire (rotation).
+ * L'ancien refresh token est immédiatement invalidé.
+ */
+router.post("/refresh", (req, res) => {
+  const token = req.body?.refreshToken;
+  if (!token || typeof token !== "string") {
+    return res.status(400).json({ error: "refreshToken manquant", code: "missing_refresh_token" });
+  }
+  const stored = getRefreshToken(token);
+  if (!stored) {
+    return res.status(401).json({ error: "Refresh token invalide ou expiré", code: "invalid_refresh_token" });
+  }
+  const user = getUserById(stored.user_id);
+  if (!user) {
+    deleteRefreshToken(token);
+    return res.status(401).json({ error: "Utilisateur introuvable", code: "user_not_found" });
+  }
+  // Rotation : invalider l'ancien et émettre une nouvelle paire
+  deleteRefreshToken(token);
+  const { accessToken, refreshToken: newRefreshToken } = issueTokenPair(user.id);
+  return res.json({
+    token: accessToken,
+    refreshToken: newRefreshToken,
+    user: { id: user.id, email: user.email, name: user.name },
+  });
+});
+
+/**
+ * POST /api/auth/logout
+ * Body: { refreshToken }
+ * Révoque le refresh token (déconnexion propre).
+ * Sans refresh token, donne quand même un 200 (stateless — le client supprime son access token).
+ */
+router.post("/logout", (req, res) => {
+  const token = req.body?.refreshToken;
+  if (token && typeof token === "string") {
+    deleteRefreshToken(token);
+  }
+  return res.json({ ok: true });
 });
 
 export default router;

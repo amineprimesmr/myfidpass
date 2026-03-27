@@ -178,20 +178,25 @@ export async function generatePass(member, business = null, options = {}) {
   const hasCardBackgroundStrip = cardBgStripBuf != null;
 
   if (format === "tampons") {
-    /* Même avec image promo sur le strip : dessiner la grille de tampons par-dessus (comme l’aperçu Ma Carte). Sans image, fond couleur + tampons. */
-    const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
-    const baseStrip = cardBgStripBuf ?? createStripBuffer(stripTemplateKey, stripColorHex);
-    const stripWithStamps = await drawStampsOnStrip(
-      baseStrip,
-      stripTemplateKey,
-      stamps,
-      stampMax,
-      stripStampEmoji,
-      stampIconBase64,
-      stripColorHex
-    );
-    buffers["strip.png"] = stripWithStamps;
-    buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+    /* Avec image de fond : strip = image seule (comme le mode points). Sinon : fond couleur + grille tampons dessinée sur le strip. */
+    if (cardBgStripBuf) {
+      buffers["strip.png"] = cardBgStripBuf;
+      buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+    } else {
+      const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
+      const baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
+      const stripWithStamps = await drawStampsOnStrip(
+        baseStrip,
+        stripTemplateKey,
+        stamps,
+        stampMax,
+        stripStampEmoji,
+        stampIconBase64,
+        stripColorHex
+      );
+      buffers["strip.png"] = stripWithStamps;
+      buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+    }
   } else {
     if (cardBgStripBuf) {
       buffers["strip.png"] = cardBgStripBuf;

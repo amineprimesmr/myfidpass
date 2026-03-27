@@ -2,7 +2,7 @@
  * Page auth : login, register, forgot/reset password, OAuth Google/Apple.
  * Référence : REFONTE-REGLES.md — un module par écran, max 400 lignes.
  */
-import { API_BASE, setAuthToken } from "../config.js";
+import { API_BASE, setAuthToken, setRefreshToken } from "../config.js";
 import { getApiErrorMessage, showApiError } from "../utils/apiError.js";
 
 /** Remettre à false pour réactiver Sign in with Apple sur /login et /register. */
@@ -206,6 +206,7 @@ export function initAuthPage(initialTab) {
         return;
       }
       setAuthToken(data.token);
+      if (data.refreshToken) setRefreshToken(data.refreshToken);
       const redirect = new URLSearchParams(window.location.search).get("redirect") || "/app";
       window.location.replace(redirect);
     } catch (_) {
@@ -232,6 +233,7 @@ export function initAuthPage(initialTab) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { showApiError(res, data, registerError); return; }
       setAuthToken(data.token);
+      if (data.refreshToken) setRefreshToken(data.refreshToken);
       const redirect = new URLSearchParams(window.location.search).get("redirect") || "/app";
       window.location.replace(redirect);
     } catch (_) {
@@ -250,6 +252,7 @@ export function initAuthPage(initialTab) {
   function authOAuthSuccess(data) {
     if (!data?.token) return;
     setAuthToken(data.token);
+    if (data.refreshToken) setRefreshToken(data.refreshToken);
     const redirect = new URLSearchParams(window.location.search).get("redirect") || "/app";
     window.location.replace(redirect);
   }

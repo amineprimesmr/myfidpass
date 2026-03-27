@@ -2,7 +2,7 @@
  * Page checkout : récap, création compte, OAuth, paiement Stripe.
  * Référence : REFONTE-REGLES.md — un module par écran.
  */
-import { API_BASE, getAuthToken, setAuthToken, clearAuthToken, getAuthHeaders, setDevBypassPayment } from "../config.js";
+import { API_BASE, getAuthToken, setAuthToken, setRefreshToken, clearAuthToken, getAuthHeaders, setDevBypassPayment } from "../config.js";
 import { initRouting } from "../router/index.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY, DESIGN_CATEGORY_LABELS } from "../constants/builder.js";
 
@@ -99,6 +99,7 @@ export function initCheckoutPage() {
     if (!data?.token) return;
     showOAuthError("");
     setAuthToken(data.token);
+    if (data.refreshToken) setRefreshToken(data.refreshToken);
     showStep(3);
     if (isMobile()) setMobileStep(3);
     step3?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -380,6 +381,7 @@ export function initCheckoutPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { showError(data.error || "Erreur lors de la création du compte."); return; }
       setAuthToken(data.token);
+      if (data.refreshToken) setRefreshToken(data.refreshToken);
       showStep(3);
       if (isMobile()) setMobileStep(3);
       if (paymentBtn) paymentBtn.focus();

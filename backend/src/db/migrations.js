@@ -572,4 +572,20 @@ export function runMigrations(db) {
   safeRun(db, () => db.exec(
     "CREATE INDEX IF NOT EXISTS idx_engagement_completions_business_status ON engagement_completions(business_id, status, created_at DESC)"
   ));
+
+  // ── v3 : Refresh tokens (accès 15min + refresh 30j avec rotation) ─────────
+  markMigrationApplied(db, 3, "refresh_tokens_table");
+  safeRun(db, () => db.exec(`
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `));
+  safeRun(db, () => db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)"
+  ));
 }
