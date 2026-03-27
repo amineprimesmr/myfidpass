@@ -127,6 +127,18 @@ function getProvider() {
   return providerInstance;
 }
 
+/** Limite chaque envoi APNs PassKit pour éviter de bloquer le handler HTTP (timeouts proxy / app). */
+const PASSKIT_APNS_SEND_TIMEOUT_MS = 25_000;
+
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timeout après ${ms} ms`)), ms)
+    ),
+  ]);
+}
+
 /**
  * Envoie une notification "pass mis à jour" à un device (Apple Wallet).
  * Payload vide comme requis par Apple pour PassKit.
@@ -147,7 +159,7 @@ export function sendPassKitUpdate(deviceToken) {
   note.expiry = Math.floor(Date.now() / 1000) + 3600;
   /** apns-id unique : sans ça, APNs peut fusionner plusieurs pushes « pass vide » vers le même jeton (effet « pas de 2e notif » ou délai bizarre). */
   note.id = randomUUID();
-  return prov.send(note, deviceToken).then(
+  const sendPromise = prov.send(note, deviceToken).then(
     (result) => {
       if (result.failed && result.failed.length > 0) {
         const err = result.failed[0].response?.reason || result.failed[0].status || "unknown";
@@ -157,6 +169,10 @@ export function sendPassKitUpdate(deviceToken) {
     },
     (err) => ({ sent: false, error: err?.message || String(err) })
   );
+  return withTimeout(sendPromise, PASSKIT_APNS_SEND_TIMEOUT_MS, "PassKit APNs").catch((err) => ({
+    sent: false,
+    error: err?.message || String(err),
+  }));
 }
 
 // ——— APNs pour l’app iOS commerçant (bundle com.myfidpass) : clé .p8 (Auth Key), pas le certificat Pass Type ID. ———
@@ -216,7 +232,8 @@ function getMerchantProvider() {
 }
 
 /**
- * Raison si l’envoi « test sur mon iPhone » (app commerçant) n’est pas possible côté serveur.
+ * Raison si l’alerte push dans l’app Myfidpass (bundle commerçant) n’est pas possible.
+ * Indépendant de PassKit / Wallet (certificat Pass Type ID).
  */
 export function getMerchantApnsUnavailableReason() {
   const p = getMerchantProvider();
@@ -275,7 +292,7 @@ export function logApnsStatus() {
 }
 
 /**
- * Diagnostic clé .p8 app commerçant (optionnel).
+ * Diagnostic clé .p8 app commerçant (optionnel — alertes dans l’app Myfidpass, pas Wallet).
  */
 export function logMerchantApnsStatus() {
   const p = getMerchantProvider();
@@ -284,8 +301,9 @@ export function logMerchantApnsStatus() {
     console.log("[apns] App commerçant: APNs prêt (topic=", bid, ").");
     return;
   }
-  const reason = getMerchantApnsUnavailableReason();
-  console.warn("[apns] App commerçant: push test iPhone indisponible —", reason || "inconnu");
+  console.log(
+    "[apns] App commerçant (optionnel) : clé .p8 non définie — pas d’alertes push dans l’app Myfidpass (com.myfidpass). Les mises à jour Wallet / PassKit utilisent le certificat Pass Type ID ci-dessus et ne dépendent pas de MERCHANT_APNS_*."
+  );
 }
 
 /** Ferme la connexion APNs (à appeler au shutdown si besoin). */
