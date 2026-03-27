@@ -342,6 +342,7 @@ export async function generatePass(member, business = null, options = {}) {
   } else {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
+    /* changeMessage obligatoire pour que Wallet affiche une alerte à chaque changement de solde. */
     const sortedPointTiers = parsePointRewardTiersFromBusiness(business);
     if (isDecorativeImageOnlyStrip) {
       const balance = Math.floor(Number(member.points) || 0);
@@ -354,9 +355,11 @@ export async function generatePass(member, business = null, options = {}) {
         changeMessage: "Fidélité : %@",
       });
     } else {
-      /* Toujours en secondary (jamais primary) : sur iOS, le champ primary des storeCard applique
-       * souvent un style « emphase » blanc et ne respecte pas foregroundColor / labelColor du pass ;
-       * les champs secondary utilisent bien les couleurs du pass — comme tamponSolde (tampons). */
+      /*
+       * Toujours secondary pour le solde points (comme tampons) : sur iOS, primaryFields du storeCard
+       * appliquent souvent un rendu système blanc et ignorent foregroundColor / labelColor du pass.
+       * Les secondaryFields respectent bien backgroundColor / foregroundColor / labelColor.
+       */
       pass.secondaryFields.push({
         key: "points",
         label: "Points",
