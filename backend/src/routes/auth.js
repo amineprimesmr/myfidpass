@@ -193,7 +193,8 @@ router.post("/login", validate(schemas.login), async (req, res) => {
  * Audience : GOOGLE_CLIENT_ID (web) et/ou GOOGLE_IOS_CLIENT_ID (app) selon .env.
  */
 router.post("/google", async (req, res) => {
-  const idToken = req.body?.idToken || req.body?.credential;
+  // Clients iOS (JSONEncoder convertToSnakeCase) envoient `id_token` ; le web envoie souvent `idToken`.
+  const idToken = req.body?.idToken || req.body?.id_token || req.body?.credential;
   if (!idToken || GOOGLE_AUDIENCES.length === 0 || !googleClient) {
     return res.status(400).json({ error: "Connexion Google non configurée ou token manquant" });
   }
@@ -303,7 +304,10 @@ router.get("/google-oauth-callback", async (req, res) => {
  * Vérifie le token Apple (JWKS), crée ou récupère l'utilisateur, retourne le JWT.
  */
 router.post("/apple", async (req, res) => {
-  const { idToken: rawToken, name: bodyName, email: bodyEmail } = req.body || {};
+  const body = req.body || {};
+  const rawToken = body.idToken || body.id_token;
+  const bodyName = body.name;
+  const bodyEmail = body.email;
   if (!rawToken || APPLE_JWT_AUDIENCES.length === 0) {
     return res.status(400).json({ error: "Connexion Apple non configurée ou token manquant" });
   }
