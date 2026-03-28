@@ -122,14 +122,30 @@ export function getMemberIdsBySegment(businessId, segment) {
   let where = "business_id = ?";
   const params = [businessId];
   switch (segment) {
+    case "inactive14":
+      where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-14 days'))";
+      break;
     case "inactive30":
       where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))";
+      break;
+    case "inactive60":
+      where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-60 days'))";
       break;
     case "inactive90":
       where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))";
       break;
+    case "new7":
+      where += " AND created_at >= datetime('now', '-7 days')";
+      break;
     case "new30":
       where += " AND created_at >= datetime('now', '-30 days')";
+      break;
+    /** Inscrits ≤ 14 j sans aucune visite enregistrée (première visite attendue). */
+    case "welcomeNew":
+      where += " AND created_at >= datetime('now', '-14 days') AND last_visit_at IS NULL";
+      break;
+    case "pointsNear50":
+      where += " AND points >= 40 AND points < 50";
       break;
     case "points50":
       where += " AND points >= 50";

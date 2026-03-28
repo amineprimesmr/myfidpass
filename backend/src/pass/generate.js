@@ -218,13 +218,7 @@ export async function generatePass(member, business = null, options = {}) {
     } else {
       const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
       const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
-      const stripWithPoints = await drawPointsOnStrip(
-        stripBuf,
-        ptsInt,
-        customColors.foregroundColor,
-        customColors.labelColor,
-        sharp
-      );
+      const stripWithPoints = await drawPointsOnStrip(stripBuf, ptsInt, sharp);
       buffers["strip.png"] = stripWithPoints;
       buffers["strip@2x.png"] = await sharp(stripWithPoints).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
     }

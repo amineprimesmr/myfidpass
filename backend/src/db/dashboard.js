@@ -147,3 +147,54 @@ export function getDashboardEvolution(businessId, weeks = 6) {
   }
   return rows;
 }
+
+/** Compteurs pour l’écran campagnes (segments étendus). */
+export function getCampaignSegmentCounts(businessId) {
+  const inactive14 = db.prepare(
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-14 days'))`
+  ).get(businessId);
+  const inactive60 = db.prepare(
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-60 days'))`
+  ).get(businessId);
+  const new7 = db.prepare(
+    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-7 days')"
+  ).get(businessId);
+  const welcomeNew = db.prepare(
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-14 days') AND last_visit_at IS NULL`
+  ).get(businessId);
+  const pointsNear50 = db.prepare(
+    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 40 AND points < 50"
+  ).get(businessId);
+  const inactive30d = db.prepare(
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))`
+  ).get(businessId);
+  const inactive90d = db.prepare(
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))`
+  ).get(businessId);
+  const new30d = db.prepare(
+    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-30 days')"
+  ).get(businessId);
+  const points50Count = db.prepare(
+    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 50"
+  ).get(businessId);
+  let recurrentInPeriod = { n: 0 };
+  try {
+    recurrentInPeriod = db.prepare(
+      `SELECT COUNT(*) as n FROM (SELECT member_id FROM transactions WHERE business_id = ? AND created_at >= datetime('now', '-30 days') GROUP BY member_id HAVING COUNT(*) >= 2)`
+    ).get(businessId);
+  } catch (_e) {
+    /* */
+  }
+  return {
+    inactive14: inactive14?.n ?? 0,
+    inactive30: inactive30d?.n ?? 0,
+    inactive60: inactive60?.n ?? 0,
+    inactive90: inactive90d?.n ?? 0,
+    new7: new7?.n ?? 0,
+    new30: new30d?.n ?? 0,
+    welcomeNew: welcomeNew?.n ?? 0,
+    pointsNear50: pointsNear50?.n ?? 0,
+    points50: points50Count?.n ?? 0,
+    recurrent: recurrentInPeriod?.n ?? 0,
+  };
+}

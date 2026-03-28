@@ -588,4 +588,9 @@ export function runMigrations(db) {
   safeRun(db, () => db.exec(
     "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)"
   ));
+
+  const bizCamp = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizCamp.includes("campaign_automation_json")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN campaign_automation_json TEXT"));
+  }
 }

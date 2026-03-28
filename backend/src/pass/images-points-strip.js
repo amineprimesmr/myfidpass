@@ -1,27 +1,16 @@
 /**
  * Points sur le strip Wallet (sans image de fond).
- * Rendu en PNG bitmap (pngjs) : pas de dépendance aux polices système / librsvg
- * (évite le « petit carré » sur Railway quand Sharp ne rasterise pas le <text> SVG).
+ * Bitmap pngjs — couleurs fixes lisibles sur le fond carte (PassKit ne permet pas de teinter
+ * proprement le texte « dessiné » sur le strip comme dans l’aperçu app).
  */
 import { PNG } from "pngjs";
 import { STRIP_W, STRIP_H } from "./constants.js";
 
-function hexToRgb(hex) {
-  let h = String(hex ?? "#FFFFFF").trim();
-  if (!h.startsWith("#")) h = `#${h}`;
-  h = h.slice(1);
-  if (h.length === 3) {
-    h = h.split("").map((c) => c + c).join("");
-  }
-  const n = parseInt(h, 16);
-  if (Number.isNaN(n) || h.length !== 6) return { r: 255, g: 255, b: 255 };
-  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
-}
+/** Texte principal : blanc (équivalent rendu Wallet par défaut sur bandeau coloré). */
+const RGB_VALUE = { r: 255, g: 255, b: 255 };
+/** Libellé « Points » : gris clair. */
+const RGB_LABEL = { r: 220, g: 220, b: 220 };
 
-/**
- * Glyphes 5×7 (chaque ligne = 5 caractères '0'/'1').
- * Digits + « Points » (P,o,i,n,t,s) — même logique couleurs que l’aperçu (fg / label).
- */
 const GLYPHS = {
   "0": ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
   "1": ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
@@ -65,12 +54,8 @@ function drawGlyph(png, rows, ox, oy, scale, rgb) {
 
 /**
  * @param {Buffer} stripPngBuffer — strip 750×246 (PNG)
- * @param {string} foregroundColor — couleur « accent » (chiffre), ex. #00BFFF
- * @param {string} labelColor — couleur libellé « Points », ex. #EC4899
  */
-export async function drawPointsOnStrip(stripPngBuffer, pointsInt, foregroundColor, labelColor, sharp) {
-  const fg = hexToRgb(foregroundColor);
-  const lg = hexToRgb(labelColor);
+export async function drawPointsOnStrip(stripPngBuffer, pointsInt, sharp) {
   const numStr = String(Math.max(0, Math.floor(Number(pointsInt) || 0)));
 
   const png = new PNG({ width: STRIP_W, height: STRIP_H });
@@ -90,15 +75,14 @@ export async function drawPointsOnStrip(stripPngBuffer, pointsInt, foregroundCol
   for (const ch of numStr) {
     const rows = GLYPHS[ch];
     if (rows) {
-      drawGlyph(png, rows, x, yNum, scaleBig, fg);
+      drawGlyph(png, rows, x, yNum, scaleBig, RGB_VALUE);
       x += 5 * scaleBig + scaleBig;
     }
   }
 
   const word = "Points";
   let scaleSmall = 5;
-  const smallDigitW = 5 * scaleSmall + scaleSmall;
-  const estLabelW = word.length * smallDigitW;
+  const estLabelW = word.length * (5 * scaleSmall + scaleSmall);
   if (estLabelW > maxContentW) {
     scaleSmall = Math.max(4, Math.floor(maxContentW / word.length / 6));
   }
@@ -108,7 +92,7 @@ export async function drawPointsOnStrip(stripPngBuffer, pointsInt, foregroundCol
   for (const ch of word) {
     const rows = GLYPHS[ch];
     if (rows) {
-      drawGlyph(png, rows, x2, yLabel, scaleSmall, lg);
+      drawGlyph(png, rows, x2, yLabel, scaleSmall, RGB_LABEL);
       x2 += 5 * scaleSmall + scaleSmall;
     }
   }

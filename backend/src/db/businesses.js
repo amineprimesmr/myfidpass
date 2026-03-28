@@ -165,6 +165,8 @@ export function updateBusiness(businessId, updates) {
     "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
     "sector", "engagement_rewards",
     "flyer_prefs_json", "flyer_prefs_updated_at",
+    /** Règles campagnes auto (JSON) — version, règles on/off, messages, cooldown. */
+    "campaign_automation_json",
     /** Textes notif. pass / campagnes (doit être persisté — sinon le Wallet garde l’ancien titre affiché sur la bannière). */
     "notification_title_override",
     "notification_change_message",
@@ -188,7 +190,7 @@ export function updateBusiness(businessId, updates) {
     const col = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
     if (allowed.includes(col) && value !== undefined) {
       setClauses.push(`${col} = ?`);
-      if (col === "points_reward_tiers" || col === "engagement_rewards") {
+      if (col === "points_reward_tiers" || col === "engagement_rewards" || col === "campaign_automation_json") {
         values.push(value == null || value === "" ? null : (typeof value === "string" ? value : JSON.stringify(value)));
       } else if (numericCols.includes(col)) {
         const n = value === null || value === "" ? null : Number(value);
