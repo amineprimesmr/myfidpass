@@ -14,7 +14,6 @@ import { DATA_DIR_PATH, DB_FILE_PATH, getPassRegistrationsTotalCount } from "./d
 import { optionalAuth } from "./middleware/auth.js";
 import membersRouter from "./routes/members.js";
 import businessesRouter from "./routes/businesses.js";
-import oauthTwitterRouter from "./routes/oauth-twitter.js";
 import authRouter from "./routes/auth.js";
 import devRouter from "./routes/dev.js";
 import placePhotoRouter from "./routes/place-photo.js";
@@ -212,7 +211,6 @@ app.get("/api/health/passkit", (req, res) => {
 app.use(passkitWebserviceRouter);
 
 app.use("/api/auth", authRouter);
-app.use("/api/oauth", oauthTwitterRouter);
 app.use("/api/device", deviceRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
