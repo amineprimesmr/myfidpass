@@ -1,15 +1,16 @@
 /**
  * Points sur le strip Wallet (sans image de fond).
- * Bitmap pngjs — couleurs fixes lisibles sur le fond carte (PassKit ne permet pas de teinter
- * proprement le texte « dessiné » sur le strip comme dans l’aperçu app).
+ * Glyphes bitmap dessinés en sur-échantillonnage (×4) puis réduction Lanczos → rendu lisse
+ * sans polices système ni dépendance Resvg (npm local souvent cassé).
  */
 import { PNG } from "pngjs";
 import { STRIP_W, STRIP_H } from "./constants.js";
 
-/** Texte principal : blanc (équivalent rendu Wallet par défaut sur bandeau coloré). */
 const RGB_VALUE = { r: 255, g: 255, b: 255 };
-/** Libellé « Points » : gris clair. */
 const RGB_LABEL = { r: 220, g: 220, b: 220 };
+
+/** Facteur interne avant resize vers 750×246 (adoucit les bords « pixel »). */
+const SUPERSAMPLE = 4;
 
 const GLYPHS = {
   "0": ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
@@ -57,20 +58,23 @@ function drawGlyph(png, rows, ox, oy, scale, rgb) {
  */
 export async function drawPointsOnStrip(stripPngBuffer, pointsInt, sharp) {
   const numStr = String(Math.max(0, Math.floor(Number(pointsInt) || 0)));
+  const S = SUPERSAMPLE;
+  const w = STRIP_W * S;
+  const h = STRIP_H * S;
 
-  const png = new PNG({ width: STRIP_W, height: STRIP_H });
+  const png = new PNG({ width: w, height: h });
   png.data.fill(0);
 
-  const marginLeft = 52;
-  const maxContentW = STRIP_W - marginLeft - 24;
-  let scaleBig = 12;
+  const marginLeft = 52 * S;
+  const maxContentW = w - marginLeft - 24 * S;
+  let scaleBig = 12 * S;
   const digitW = 5 * scaleBig + scaleBig;
   const estNumW = numStr.length * digitW;
   if (estNumW > maxContentW && numStr.length > 0) {
-    scaleBig = Math.max(7, Math.floor(maxContentW / numStr.length / 6));
+    scaleBig = Math.max(7 * S, Math.floor(maxContentW / numStr.length / 6));
   }
 
-  const yNum = 38;
+  const yNum = 38 * S;
   let x = marginLeft;
   for (const ch of numStr) {
     const rows = GLYPHS[ch];
@@ -81,13 +85,13 @@ export async function drawPointsOnStrip(stripPngBuffer, pointsInt, sharp) {
   }
 
   const word = "Points";
-  let scaleSmall = 5;
+  let scaleSmall = 5 * S;
   const estLabelW = word.length * (5 * scaleSmall + scaleSmall);
   if (estLabelW > maxContentW) {
-    scaleSmall = Math.max(4, Math.floor(maxContentW / word.length / 6));
+    scaleSmall = Math.max(4 * S, Math.floor(maxContentW / word.length / 6));
   }
 
-  const yLabel = yNum + 7 * scaleBig + 14;
+  const yLabel = yNum + 7 * scaleBig + 14 * S;
   let x2 = marginLeft;
   for (const ch of word) {
     const rows = GLYPHS[ch];
@@ -97,7 +101,16 @@ export async function drawPointsOnStrip(stripPngBuffer, pointsInt, sharp) {
     }
   }
 
-  const overlay = PNG.sync.write(png);
+  const raw = PNG.sync.write(png);
+  const overlay = await sharp(raw)
+    .resize(STRIP_W, STRIP_H, {
+      kernel: sharp.kernel.lanczos3,
+      fit: "fill",
+    })
+    .png()
+    .ensureAlpha()
+    .toBuffer();
+
   return sharp(stripPngBuffer)
     .composite([{ input: overlay, left: 0, top: 0, blend: "over" }])
     .png()
