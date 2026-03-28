@@ -49,7 +49,17 @@ export function engagementActionsHandler(req, res) {
       url: "#",
     });
   }
-  ["instagram_follow", "tiktok_follow", "facebook_follow", "twitter_follow", "trustpilot_review", "tripadvisor_review"].forEach((key) => {
+  [
+    "instagram_follow",
+    "tiktok_follow",
+    "facebook_follow",
+    "twitter_follow",
+    "snapchat_follow",
+    "linkedin_follow",
+    "youtube_follow",
+    "trustpilot_review",
+    "tripadvisor_review",
+  ].forEach((key) => {
     const c = rewards[key];
     if (c?.enabled && c?.url && c?.points > 0) {
       const labels = {
@@ -57,6 +67,9 @@ export function engagementActionsHandler(req, res) {
         tiktok_follow: "Nous suivre sur TikTok",
         facebook_follow: "Nous suivre sur Facebook",
         twitter_follow: "Nous suivre sur X (Twitter)",
+        snapchat_follow: "Nous suivre sur Snapchat",
+        linkedin_follow: "Nous suivre sur LinkedIn",
+        youtube_follow: "S’abonner sur YouTube",
         trustpilot_review: "Laisser un avis Trustpilot",
         tripadvisor_review: "Laisser un avis TripAdvisor",
       };

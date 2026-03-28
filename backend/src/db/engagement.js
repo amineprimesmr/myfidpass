@@ -14,6 +14,9 @@ const DEFAULT_ENGAGEMENT_REWARDS = {
   tiktok_follow: { enabled: false, points: 10, url: "" },
   facebook_follow: { enabled: false, points: 10, url: "" },
   twitter_follow: { enabled: false, points: 10, url: "" },
+  snapchat_follow: { enabled: false, points: 10, url: "" },
+  linkedin_follow: { enabled: false, points: 10, url: "" },
+  youtube_follow: { enabled: false, points: 10, url: "" },
   trustpilot_review: { enabled: false, points: 10, url: "" },
   tripadvisor_review: { enabled: false, points: 10, url: "" },
 };
