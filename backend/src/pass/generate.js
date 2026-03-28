@@ -9,7 +9,6 @@ import { getPassAuthenticationToken } from "./auth.js";
 import { sanitizeLogoText, createLogoFromText, resizeLogoForPass, resizeLogoForPassIcon } from "./images-logo.js";
 import { createStripBuffer, buildPassLocations } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
-import { drawPointsOnStrip } from "./images-points-strip.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
 import {
@@ -216,11 +215,10 @@ export async function generatePass(member, business = null, options = {}) {
       buffers["strip.png"] = cardBgStripBuf;
       buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
     } else {
+      /* Pas d’image : strip = couleur uniquement. Les points passent par les secondaryFields → typo système Wallet (pas d’image bitmap sur le strip). */
       const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
-      const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
-      const stripWithPoints = await drawPointsOnStrip(stripBuf, ptsInt, sharp);
-      buffers["strip.png"] = stripWithPoints;
-      buffers["strip@2x.png"] = await sharp(stripWithPoints).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+      buffers["strip.png"] = stripBuf;
+      buffers["strip@2x.png"] = stripBuf;
     }
   }
 
@@ -359,11 +357,8 @@ export async function generatePass(member, business = null, options = {}) {
         textAlignment: "PKTextAlignmentLeft",
         changeMessage: "Fidélité : %@",
       });
-    } else if (hasCardBackgroundStrip) {
-      /*
-       * Avec image de fond : pas de gros chiffre sur le strip → ligne « Points » en secondary (comme tampons).
-       * Sans image : solde dessiné sur le strip (images-points-strip.js) → pas de doublon en bas.
-       */
+    } else {
+      /* Toujours en secondary : seul rendu « natif » (SF Text) — jamais de bitmap sur le strip. */
       pass.secondaryFields.push({
         key: "points",
         label: "Points",
