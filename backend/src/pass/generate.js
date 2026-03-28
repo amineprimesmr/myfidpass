@@ -215,7 +215,7 @@ export async function generatePass(member, business = null, options = {}) {
       buffers["strip.png"] = cardBgStripBuf;
       buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
     } else {
-      /* Pas d’image : strip = couleur uniquement. Les points passent par les secondaryFields → typo système Wallet (pas d’image bitmap sur le strip). */
+      /* Pas d’image : strip = couleur uniquement. Les points → primaryFields (gros texte sous le strip), pas la ligne Récompense/Membre. */
       const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
       buffers["strip.png"] = stripBuf;
       buffers["strip@2x.png"] = stripBuf;
@@ -357,9 +357,18 @@ export async function generatePass(member, business = null, options = {}) {
         textAlignment: "PKTextAlignmentLeft",
         changeMessage: "Fidélité : %@",
       });
-    } else {
-      /* Toujours en secondary : seul rendu « natif » (SF Text) — jamais de bitmap sur le strip. */
+    } else if (hasCardBackgroundStrip) {
+      /* Image sur le strip : pas de gros solde au-dessus → Points sur la même ligne que Récompense / Membre. */
       pass.secondaryFields.push({
+        key: "points",
+        label: "Points",
+        value: pointsValue,
+        textAlignment: "PKTextAlignmentLeft",
+        changeMessage: "Tu as maintenant %@ points !",
+      });
+    } else {
+      /* Pas d’image : solde en primaryField (zone principale sous le bandeau couleur), pas en secondary. */
+      pass.primaryFields.push({
         key: "points",
         label: "Points",
         value: pointsValue,
