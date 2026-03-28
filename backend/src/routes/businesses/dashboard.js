@@ -32,8 +32,19 @@ import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
 import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
+import { createTwitterAuthorizationUrl, TWITTER_CLIENT_ID } from "../oauth-twitter.js";
 
 const router = Router();
+
+function getPublicApiBaseForOAuth(req) {
+  const fromEnv = (process.env.API_URL || "").replace(/\/$/, "").trim();
+  if (fromEnv) return fromEnv;
+  const proto = (req.get("x-forwarded-proto") || req.protocol || "https").split(",")[0].trim() || "https";
+  const host = (req.get("x-forwarded-host") || req.get("host") || "").split(",")[0].trim();
+  if (!host) return "";
+  const scheme = proto === "http" || proto === "https" ? proto : "https";
+  return `${scheme}://${host}`;
+}
 
 function requireDashboard(req, res, next) {
   if (!req.business) return res.status(404).json({ error: "Entreprise introuvable" });
@@ -44,6 +55,34 @@ function requireDashboard(req, res, next) {
 }
 
 router.use(requireDashboard);
+
+// ——— OAuth réseaux (type Buffer) : URL d’autorisation X ———
+router.get("/social-oauth/twitter/start", (req, res) => {
+  try {
+    if (!TWITTER_CLIENT_ID) {
+      return res.status(503).json({
+        error: "twitter_oauth_not_configured",
+        message:
+          "OAuth X (Twitter) non configuré sur le serveur. Définissez TWITTER_OAUTH2_CLIENT_ID et TWITTER_OAUTH2_CLIENT_SECRET (developer.x.com).",
+      });
+    }
+    const apiBase = getPublicApiBaseForOAuth(req);
+    if (!apiBase) {
+      return res.status(500).json({ error: "api_base_unknown" });
+    }
+    const { authorizationUrl } = createTwitterAuthorizationUrl(req.business.id, apiBase);
+    res.json({ authorization_url: authorizationUrl });
+  } catch (e) {
+    if (e.code === "twitter_oauth_not_configured") {
+      return res.status(503).json({
+        error: "twitter_oauth_not_configured",
+        message: "OAuth X non configuré.",
+      });
+    }
+    console.error("[dashboard/social-oauth/twitter/start]", e);
+    res.status(500).json({ error: "oauth_start_failed" });
+  }
+});
 
 // ——— Settings ———
 router.get("/settings", (req, res) => {
