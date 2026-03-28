@@ -227,20 +227,6 @@ app.use("/passes", passesRouter);
 app.get("/api/passes/demo", handlePassDemo);
 app.get("/passes/demo", handlePassDemo);
 
-/** Campagnes automatiques (cron Railway / cron-job.org) : X-Cron-Secret doit égaler CRON_SECRET. */
-app.post("/api/internal/campaign-automation/run", async (req, res) => {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers["x-cron-secret"] !== secret) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  try {
-    const r = await runCampaignAutomationCron();
-    res.json({ ok: true, ...r });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
 // 404 et middleware d'erreur global (réponse JSON)
 app.use((req, res) => res.status(404).json({ error: "Not found" }));
 
@@ -248,6 +234,22 @@ app.use((err, req, res, next) => {
   logger.error({ err, url: req.url, method: req.method }, "Unhandled error");
   res.status(500).json({ error: "Une erreur interne est survenue." });
 });
+
+/** Campagnes auto Wallet : exécution dans le processus (pas de CRON_SECRET ni cron externe). */
+function scheduleCampaignAutomationLoop() {
+  if (process.env.NODE_ENV === "test") return;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const run = () => {
+    runCampaignAutomationCron().catch((err) => {
+      logger.error({ err }, "[campaign-automation] job failed");
+    });
+  };
+  setTimeout(() => {
+    run();
+    setInterval(run, DAY_MS);
+  }, 120_000);
+  logger.info("[campaign-automation] planifié : 1er passage dans ~2 min, puis toutes les 24 h");
+}
 
 function startServer(port) {
   const p = Number(port) || 3001;
@@ -269,6 +271,7 @@ function startServer(port) {
     }
     logApnsStatus();
     logMerchantApnsStatus();
+    scheduleCampaignAutomationLoop();
   });
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {

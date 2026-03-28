@@ -1,6 +1,6 @@
 /**
- * Exécution quotidienne des campagnes Wallet automatiques (réglages `campaign_automation_json`).
- * Déclenché par POST /api/internal/campaign-automation/run (secret CRON_SECRET).
+ * Exécution des campagnes Wallet automatiques (réglages `campaign_automation_json`).
+ * Appelé par le planificateur interne dans `index.js` (~2 min après démarrage, puis toutes les 24 h).
  */
 import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
