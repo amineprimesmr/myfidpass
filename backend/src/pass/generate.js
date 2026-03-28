@@ -9,6 +9,7 @@ import { getPassAuthenticationToken } from "./auth.js";
 import { sanitizeLogoText, createLogoFromText, resizeLogoForPass, resizeLogoForPassIcon } from "./images-logo.js";
 import { createStripBuffer, buildPassLocations } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
+import { drawPointsOnStrip } from "./images-points-strip.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
 import {
@@ -177,6 +178,19 @@ export async function generatePass(member, business = null, options = {}) {
   const cardBgStripBuf = await resizeCardBackgroundToStrip(cardBgB64, sharp);
   const hasCardBackgroundStrip = cardBgStripBuf != null;
 
+  const isSectorTemplate = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template);
+  const toHex = (v) => (v && String(v).trim()) ? (String(v).startsWith("#") ? v : `#${v}`) : null;
+  const bgHex = toHex(options.backgroundColor ?? options.background_color) ?? toHex(business?.background_color);
+  const fgHex = toHex(options.foregroundColor ?? options.foreground_color) ?? toHex(business?.foreground_color);
+  const labelHex = toHex(options.label_color) ?? toHex(business?.label_color);
+  const templateKey = isSectorTemplate ? options.template : options.template;
+  const classic = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
+  const customColors = {
+    backgroundColor: bgHex || classic.backgroundColor,
+    foregroundColor: fgHex || classic.foregroundColor,
+    labelColor: labelHex || classic.labelColor,
+  };
+
   if (format === "tampons") {
     /* Avec image de fond : strip = image seule (comme le mode points). Sinon : fond couleur + grille tampons dessinée sur le strip. */
     if (cardBgStripBuf) {
@@ -203,24 +217,18 @@ export async function generatePass(member, business = null, options = {}) {
       buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
     } else {
       const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
-      buffers["strip.png"] = stripBuf;
-      buffers["strip@2x.png"] = stripBuf;
+      const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
+      const stripWithPoints = await drawPointsOnStrip(
+        stripBuf,
+        ptsInt,
+        customColors.foregroundColor,
+        customColors.labelColor,
+        sharp
+      );
+      buffers["strip.png"] = stripWithPoints;
+      buffers["strip@2x.png"] = await sharp(stripWithPoints).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
     }
   }
-
-  const isSectorTemplate = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"].includes(options.template);
-
-  const toHex = (v) => (v && String(v).trim()) ? (String(v).startsWith("#") ? v : `#${v}`) : null;
-  const bgHex = toHex(options.backgroundColor ?? options.background_color) ?? toHex(business?.background_color);
-  const fgHex = toHex(options.foregroundColor ?? options.foreground_color) ?? toHex(business?.foreground_color);
-  const labelHex = toHex(options.label_color) ?? toHex(business?.label_color);
-  const templateKey = isSectorTemplate ? options.template : options.template;
-  const classic = PASS_TEMPLATES[templateKey] || PASS_TEMPLATES.classic;
-  const customColors = {
-    backgroundColor: bgHex || classic.backgroundColor,
-    foregroundColor: fgHex || classic.foregroundColor,
-    labelColor: labelHex || classic.labelColor,
-  };
 
   const webServiceURL = process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL;
   const authToken = getPassAuthenticationToken(member.id);
@@ -318,13 +326,16 @@ export async function generatePass(member, business = null, options = {}) {
     const rewardFrontValue = stampMidRewardLabel
       ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
       : "Paliers en magasin";
-    pass.secondaryFields.push({
-      key: "tamponSolde",
-      label: "Tampons",
-      value: String(stamps),
-      textAlignment: "PKTextAlignmentLeft",
-      changeMessage: "Tu as maintenant %@ tampons !",
-    });
+    /* Solde texte seulement si image de fond : sinon la grille sur le strip suffit (évite doublon Tampons / 0). */
+    if (hasCardBackgroundStrip) {
+      pass.secondaryFields.push({
+        key: "tamponSolde",
+        label: "Tampons",
+        value: String(stamps),
+        textAlignment: "PKTextAlignmentLeft",
+        changeMessage: "Tu as maintenant %@ tampons !",
+      });
+    }
     pass.secondaryFields.push({
       key: "rewardsFront",
       label: "Récompense",
@@ -354,11 +365,10 @@ export async function generatePass(member, business = null, options = {}) {
         textAlignment: "PKTextAlignmentLeft",
         changeMessage: "Fidélité : %@",
       });
-    } else {
+    } else if (hasCardBackgroundStrip) {
       /*
-       * Toujours secondary pour le solde points (comme tampons) : sur iOS, primaryFields du storeCard
-       * appliquent souvent un rendu système blanc et ignorent foregroundColor / labelColor du pass.
-       * Les secondaryFields respectent bien backgroundColor / foregroundColor / labelColor.
+       * Avec image de fond : pas de gros chiffre sur le strip → ligne « Points » en secondary (comme tampons).
+       * Sans image : solde dessiné sur le strip (images-points-strip.js) → pas de doublon en bas.
        */
       pass.secondaryFields.push({
         key: "points",
