@@ -19,13 +19,103 @@ import {
   touchMemberLastVisit,
   removeTestPassKitDevices,
   deleteWebPushSubscriptionByEndpoint,
+  getCampaignSegmentCounts,
 } from "../../db.js";
 import { sendWebPush } from "../../notifications.js";
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
 import { sendPassKitPushWaves, passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
 import { getPassAuthenticationToken } from "../../pass.js";
-import { getDashboardStats } from "../../db.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
+
+/** Segments autorisés pour POST .../notifications/send (campagne manuelle ou auto). */
+export const CAMPAIGN_SEGMENT_KEYS = [
+  "inactive14",
+  "inactive30",
+  "inactive60",
+  "inactive90",
+  "new7",
+  "new30",
+  "welcomeNew",
+  "pointsNear50",
+  "points50",
+  "recurrent",
+];
+
+/**
+ * Pipeline d’envoi Web Push + PassKit (corps = message pass / Wallet).
+ * @param {string[] | null} memberIds — null = tous les abonnés du commerce.
+ */
+export async function deliverDashboardBroadcast(business, slug, apiBase, memberIds, title, bodyMessage, logTypePasskit = "passkit") {
+  const webSubscriptions =
+    memberIds !== null && memberIds.length > 0
+      ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
+      : memberIds !== null && memberIds.length === 0
+        ? []
+        : getWebPushSubscriptionsByBusiness(business.id);
+  const passKitTokens =
+    memberIds !== null && memberIds.length > 0
+      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+      : memberIds !== null && memberIds.length === 0
+        ? []
+        : getPassKitPushTokensForBusiness(business.id);
+  const iconUrl = businessHasNotificationLogo(business)
+    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+    : null;
+  const payloadTitle = (title || business.notification_title_override || business.organization_name || "Myfidpass").trim();
+  const payload = {
+    title: payloadTitle,
+    body: bodyMessage,
+    ...(iconUrl && { icon: iconUrl }),
+  };
+  const errors = [];
+  const webPushResults = await Promise.all(
+    webSubscriptions.map(async (sub) => {
+      try {
+        await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+        logNotification({ businessId: business.id, memberId: sub.member_id, title: payloadTitle, body: bodyMessage, type: "web_push" });
+        return { ok: true };
+      } catch (err) {
+        const status = err?.statusCode ?? err?.status;
+        if (status === 410 || status === 404) {
+          deleteWebPushSubscriptionByEndpoint(sub.endpoint);
+        } else {
+          errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
+        }
+        return { ok: false };
+      }
+    })
+  );
+  const sentWebPush = webPushResults.filter((r) => r.ok).length;
+
+  setLastBroadcastMessage(business.id, bodyMessage);
+  let sentPassKit = 0;
+  if (passKitTokens.length > 0) {
+    const touchedMembers = new Set();
+    for (const row of passKitTokens) {
+      if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+        touchMemberLastVisit(row.serial_number);
+        touchedMembers.add(row.serial_number);
+      }
+    }
+    const waveResults = await sendPassKitPushWaves(passKitTokens);
+    for (const { row, result } of waveResults) {
+      if (result.sent) {
+        sentPassKit++;
+        logNotification({
+          businessId: business.id,
+          memberId: row.serial_number,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: logTypePasskit,
+        });
+      } else if (result.error) {
+        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+      }
+    }
+  }
+  const sent = sentWebPush + sentPassKit;
+  return { sent, sentWebPush, sentPassKit, errors };
+}
 
 function businessHasNotificationLogo(business) {
   return (
@@ -231,18 +321,22 @@ router.post("/send", async (req, res) => {
     return;
   }
   let memberIds;
-  if (segment && ["inactive30", "inactive90", "new30", "recurrent", "points50"].includes(segment)) {
+  if (segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)) {
     memberIds = getMemberIdsBySegment(business.id, segment);
   } else {
     const categoryIds = Array.isArray(reqCategoryIds) ? reqCategoryIds.filter(Boolean) : null;
     memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
   }
-  const webSubscriptions = memberIds !== null
-    ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
-    : getWebPushSubscriptionsByBusiness(business.id);
-  const passKitTokens = memberIds !== null
-    ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
-    : getPassKitPushTokensForBusiness(business.id);
+  const apiBase = getApiBase(req);
+  const slug = req.params.slug;
+  const webSubscriptions =
+    memberIds !== null
+      ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
+      : getWebPushSubscriptionsByBusiness(business.id);
+  const passKitTokens =
+    memberIds !== null
+      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+      : getPassKitPushTokensForBusiness(business.id);
   const totalDevices = webSubscriptions.length + passKitTokens.length;
   if (totalDevices === 0) {
     return res.json({
@@ -253,61 +347,7 @@ router.post("/send", async (req, res) => {
       message: "Aucun appareil enregistré. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
-  const apiBase = getApiBase(req);
-  const slug = req.params.slug;
-  const iconUrl = businessHasNotificationLogo(business)
-    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
-    : null;
-  const payload = {
-    title: (title || business.notification_title_override || business.organization_name || "Myfidpass").trim(),
-    body,
-    ...(iconUrl && { icon: iconUrl }),
-  };
-  const broadcastText = body;
-  const errors = [];
-  const webPushResults = await Promise.all(
-    webSubscriptions.map(async (sub) => {
-      try {
-        await sendWebPush(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload
-        );
-        logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body, type: "web_push" });
-        return { ok: true };
-      } catch (err) {
-        const status = err?.statusCode ?? err?.status;
-        if (status === 410 || status === 404) {
-          deleteWebPushSubscriptionByEndpoint(sub.endpoint);
-        } else {
-          errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
-        }
-        return { ok: false };
-      }
-    })
-  );
-  const sentWebPush = webPushResults.filter((r) => r.ok).length;
-
-  let sentPassKit = 0;
-  setLastBroadcastMessage(business.id, broadcastText);
-  if (passKitTokens.length > 0) {
-    const touchedMembers = new Set();
-    for (const row of passKitTokens) {
-      if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-        touchMemberLastVisit(row.serial_number);
-        touchedMembers.add(row.serial_number);
-      }
-    }
-    const waveResults = await sendPassKitPushWaves(passKitTokens);
-    for (const { row, result } of waveResults) {
-      if (result.sent) {
-        sentPassKit++;
-        logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body, type: "passkit" });
-      } else if (result.error) {
-        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
-      }
-    }
-  }
-  const sent = sentWebPush + sentPassKit;
+  const { sent, sentWebPush, sentPassKit, errors } = await deliverDashboardBroadcast(business, slug, apiBase, memberIds, title, body, "passkit");
   const firstError = errors.length > 0 ? errors[0].error : null;
   res.json({
     ok: true,
@@ -329,13 +369,18 @@ router.get("/campaign-segments", (req, res) => {
   if (!canAccessDashboard(business, req)) {
     return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
   }
-  const stats = getDashboardStats(business.id, "30d");
+  const c = getCampaignSegmentCounts(business.id);
   res.json({
-    inactive30: stats.inactiveMembers30Days ?? 0,
-    inactive90: stats.inactiveMembers90Days ?? 0,
-    new30: stats.newMembersLast30Days ?? 0,
-    recurrent: stats.recurrentMembersInPeriod ?? 0,
-    points50: stats.membersWithPoints50 ?? 0,
+    inactive14: c.inactive14,
+    inactive30: c.inactive30,
+    inactive60: c.inactive60,
+    inactive90: c.inactive90,
+    new7: c.new7,
+    new30: c.new30,
+    welcomeNew: c.welcomeNew,
+    pointsNear50: c.pointsNear50,
+    points50: c.points50,
+    recurrent: c.recurrent,
   });
 });
 

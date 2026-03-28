@@ -54,3 +54,17 @@ export function getWebPushSubscriptionsByBusinessFiltered(businessId, memberIds 
   }
   return rows;
 }
+
+/**
+ * Exclut les membres ayant déjà reçu une notification (tous types) dans les N derniers jours.
+ * Utilisé par les campagnes automatiques pour limiter le spam.
+ */
+export function filterMemberIdsExcludingRecentNotifications(businessId, memberIds, cooldownDays) {
+  if (!memberIds?.length) return [];
+  const safe = Math.min(90, Math.max(1, Math.floor(Number(cooldownDays) || 7)));
+  const placeholders = memberIds.map(() => "?").join(",");
+  const sql = `SELECT DISTINCT member_id FROM notification_log WHERE business_id = ? AND member_id IN (${placeholders}) AND created_at >= datetime('now', '-${safe} days')`;
+  const recent = db.prepare(sql).all(businessId, ...memberIds);
+  const recentSet = new Set(recent.map((r) => r.member_id));
+  return memberIds.filter((id) => !recentSet.has(id));
+}

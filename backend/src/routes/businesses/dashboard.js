@@ -31,6 +31,7 @@ import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
+import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
 
 const router = Router();
 
@@ -110,6 +111,7 @@ router.get("/settings", (req, res) => {
     header_right_text: business.header_right_text ?? undefined,
     notification_title_override: business.notification_title_override ?? undefined,
     notification_change_message: business.notification_change_message ?? undefined,
+    campaign_automation: mergeCampaignAutomationJson(business.campaign_automation_json ?? ""),
     has_stamp_icon: Number(business.asset_stamp_icon_present) === 1,
     stamp_icon_url:
       Number(business.asset_stamp_icon_present) === 1
@@ -359,6 +361,17 @@ router.patch("/settings", async (req, res) => {
     updates.notification_change_message = notification_change_message == null ? null : String(notification_change_message).trim().slice(0, 200);
   }
   const engagement_rewards = body.engagement_rewards ?? body.engagementRewards;
+  const campaign_automation_in = body.campaign_automation ?? body.campaignAutomation;
+  if (campaign_automation_in !== undefined) {
+    if (campaign_automation_in === null) {
+      updates.campaign_automation_json = null;
+    } else if (typeof campaign_automation_in === "object") {
+      updates.campaign_automation_json = JSON.stringify(campaign_automation_in);
+    } else if (typeof campaign_automation_in === "string") {
+      const t = campaign_automation_in.trim();
+      updates.campaign_automation_json = t ? t : null;
+    }
+  }
   if (engagement_rewards !== undefined) {
     if (engagement_rewards === null || (typeof engagement_rewards === "object" && Object.keys(engagement_rewards).length === 0)) {
       updates.engagement_rewards = null;

@@ -99,12 +99,20 @@ export function getMembersForBusiness(businessId, { search = "", limit = 50, off
     where += " AND (name LIKE ? OR email LIKE ?)";
     params.push(q, q);
   }
-  if (filter === "inactive30") {
+  if (filter === "inactive14") {
+    where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-14 days'))";
+  } else if (filter === "inactive30") {
     where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))";
+  } else if (filter === "inactive60") {
+    where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-60 days'))";
   } else if (filter === "inactive90") {
     where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))";
   } else if (filter === "points50") {
     where += " AND points >= 50";
+  } else if (filter === "pointsNear50") {
+    where += " AND points >= 40 AND points < 50";
+  } else if (filter === "welcomeNew") {
+    where += " AND created_at >= datetime('now', '-14 days') AND last_visit_at IS NULL";
   }
   const stmt = db.prepare(
     `SELECT id, name, email, phone, city, birth_date, points, created_at, last_visit_at FROM members WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`

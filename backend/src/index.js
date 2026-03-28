@@ -29,6 +29,7 @@ import deviceRouter from "./routes/device.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics } from "./apns.js";
 import { isEmailConfigured, getEmailTransportLabel } from "./email.js";
+import { runCampaignAutomationCron } from "./lib/campaign-automation-cron.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -225,6 +226,20 @@ app.use("/passes", passesRouter);
 
 app.get("/api/passes/demo", handlePassDemo);
 app.get("/passes/demo", handlePassDemo);
+
+/** Campagnes automatiques (cron Railway / cron-job.org) : X-Cron-Secret doit égaler CRON_SECRET. */
+app.post("/api/internal/campaign-automation/run", async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || req.headers["x-cron-secret"] !== secret) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const r = await runCampaignAutomationCron();
+    res.json({ ok: true, ...r });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 // 404 et middleware d'erreur global (réponse JSON)
 app.use((req, res) => res.status(404).json({ error: "Not found" }));
