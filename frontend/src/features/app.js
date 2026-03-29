@@ -5317,7 +5317,29 @@ function initAppDashboard(slug) {
       if (!res.ok) return;
       const data = await res.json();
       const el = document.getElementById("app-notifications-stats");
+      const lastBatchEl = document.getElementById("app-notifications-last-batch");
       const diagEl = document.getElementById("app-notifications-diagnostic");
+      if (lastBatchEl) {
+        if (data.last_batch && data.last_batch.created_at) {
+          const lb = data.last_batch;
+          const s = lb.summary || {};
+          const w = s.sentWebPush != null ? s.sentWebPush : 0;
+          const p = s.sentPassKit != null ? s.sentPassKit : 0;
+          const m = s.sentMerchantApp != null ? s.sentMerchantApp : 0;
+          const trig = lb.trigger_name ? String(lb.trigger_name) : "envoi";
+          let dstr = "";
+          try {
+            dstr = new Date(lb.created_at).toLocaleString("fr-FR");
+          } catch (_) {
+            dstr = "";
+          }
+          lastBatchEl.textContent = `Dernier lot : ${trig} — Wallet ${p}, Web ${w}${m ? `, accusé app ${m}` : ""}${dstr ? ` · ${dstr}` : ""}`;
+          lastBatchEl.classList.remove("hidden");
+        } else {
+          lastBatchEl.textContent = "";
+          lastBatchEl.classList.add("hidden");
+        }
+      }
       if (el) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const membersCount = data.membersCount != null ? data.membersCount : 0;
@@ -5747,7 +5769,10 @@ function initAppDashboard(slug) {
           const pk = data.sentPassKit != null ? data.sentPassKit : 0;
           if (sent === 0) notifFeedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
           else {
+            const ma = data.sentMerchantApp != null ? data.sentMerchantApp : 0;
             let msg = pk > 0 && wp > 0 ? `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).` : pk > 0 ? `Notification envoyée à ${sent} appareil(s) (Apple Wallet).` : `Notification envoyée à ${sent} appareil(s).`;
+            if (ma > 0) msg += ` Accusé sur votre app : ${ma}.`;
+            if (data.batch_id) msg += ` ID lot : ${data.batch_id.slice(0, 8)}…`;
             if (data.failed > 0 && data.errors?.length) msg += ` ${data.failed} échec(s).`;
             notifFeedbackEl.textContent = msg;
             const prevTip = notifFeedbackEl.nextElementSibling?.classList?.contains("app-notif-feedback-tip") ? notifFeedbackEl.nextElementSibling : null;

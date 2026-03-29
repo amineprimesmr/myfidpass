@@ -229,7 +229,29 @@ export function initDashboardPage() {
       if (!res.ok) return;
       const data = await res.json();
       const el = document.getElementById("dashboard-notifications-stats");
+      const lastBatchEl = document.getElementById("dashboard-notifications-last-batch");
       const diagEl = document.getElementById("dashboard-notifications-diagnostic");
+      if (lastBatchEl) {
+        if (data.last_batch && data.last_batch.created_at) {
+          const lb = data.last_batch;
+          const s = lb.summary || {};
+          const w = s.sentWebPush != null ? s.sentWebPush : 0;
+          const p = s.sentPassKit != null ? s.sentPassKit : 0;
+          const m = s.sentMerchantApp != null ? s.sentMerchantApp : 0;
+          const trig = lb.trigger_name ? String(lb.trigger_name) : "envoi";
+          let dstr = "";
+          try {
+            dstr = new Date(lb.created_at).toLocaleString("fr-FR");
+          } catch (_) {
+            dstr = "";
+          }
+          lastBatchEl.textContent = `Dernier lot : ${trig} — Wallet ${p}, Web ${w}${m ? `, accusé app ${m}` : ""}${dstr ? ` · ${dstr}` : ""}`;
+          lastBatchEl.classList.remove("hidden");
+        } else {
+          lastBatchEl.textContent = "";
+          lastBatchEl.classList.add("hidden");
+        }
+      }
       if (el) {
         const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
         const membersCount = data.membersCount != null ? data.membersCount : 0;

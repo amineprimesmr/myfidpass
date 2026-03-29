@@ -100,7 +100,8 @@ export async function runCampaignAutomationCron() {
           memberIds,
           null,
           message,
-          "campaign_auto"
+          "campaign_auto",
+          { triggerName: "campaign_auto", sendMerchantReceipt: false }
         );
         sentTotal += sent;
       } catch (e) {

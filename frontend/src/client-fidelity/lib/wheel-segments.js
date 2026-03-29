@@ -7,13 +7,13 @@ export const WHEEL_SEGMENT_COUNT = 8;
 /** Défaut page jeu si l’API ne renvoie aucun segment (hors tampons : lots points). */
 export const DEFAULT_WHEEL_LABELS = [
   "PERDU",
-  "+10 pts",
+  "+10 PTS",
   "PERDU",
-  "+25 pts",
+  "+25 PTS",
   "PERDU",
-  "+50 pts",
+  "+50 PTS",
   "PERDU",
-  "+10 pts",
+  "+10 PTS",
 ];
 
 /**
@@ -61,24 +61,24 @@ export function pickWheelIndexForReward(wheelLabels, rewardLabel) {
  */
 export function formatWheelSegmentDisplayLabel(label) {
   const s = String(label ?? "").trim();
-  if (!s) return "PeRDu";
   const compact = s.replace(/\s+/g, " ");
+  if (!compact) return "PERDU";
   const u = compact.toUpperCase();
   if (
     u === "PERDU" ||
     /^(PAS DE LOT|PAS DE PRIX|RIEN|NO PRIZE|LOSE|LOST)$/i.test(compact) ||
     /\bPAS DE LOT\b/i.test(compact)
   ) {
-    return "PeRDu";
+    return "PERDU";
   }
   let m = compact.match(/\+?\s*(\d+)\s*(?:POINTS?\s*BONUS|PTS?\s*BONUS|POINTS?|PTS?)\b/i);
-  if (m) return `+${m[1]} pts`;
+  if (m) return `+${m[1]} PTS`;
   m = compact.match(/\b(\d+)\s*(?:POINTS?\s*BONUS|PTS?\s*BONUS|POINTS?|PTS?)\b/i);
-  if (m) return `+${m[1]} pts`;
+  if (m) return `+${m[1]} PTS`;
   m = compact.match(/\+?\s*(\d+)\s*(?:PASSAGES?|TAMPONS?)\b/i);
-  if (m) return `+${m[1]} pts`;
+  if (m) return `+${m[1]} PTS`;
   m = compact.match(/\b(\d+)\s*(?:PASSAGES?|TAMPONS?)\b/i);
-  if (m) return `+${m[1]} pts`;
-  if (compact.length > 11) return `${compact.slice(0, 10)}…`;
-  return compact;
+  if (m) return `+${m[1]} PTS`;
+  if (compact.length > 11) return `${u.slice(0, 10)}…`;
+  return u;
 }

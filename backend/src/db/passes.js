@@ -1,6 +1,7 @@
 /**
- * Repository pass_registrations et merchant_device_tokens (Apple Wallet, APNs). Référence : REFONTE-REGLES.md.
+ * Repository pass_registrations et merchant_push_devices (Apple Wallet, APNs). Référence : REFONTE-REGLES.md.
  */
+import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { formatUtcSqlWithMs } from "./datetime-sql.js";
 
@@ -15,23 +16,72 @@ export function registerPassDevice({ deviceLibraryIdentifier, passTypeIdentifier
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber, pushToken || null, now);
 }
 
+function merchantDevicesTable() {
+  const row = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='merchant_push_devices'").get();
+  return !!row;
+}
+
+/** Enregistre ou met à jour un appareil (token unique ; plusieurs appareils par utilisateur). */
 export function upsertMerchantDeviceToken(userId, deviceToken) {
   if (!userId || !deviceToken || typeof deviceToken !== "string" || !deviceToken.trim()) return;
   const now = new Date().toISOString();
+  const tok = deviceToken.trim();
+  if (merchantDevicesTable()) {
+    const row = db.prepare("SELECT id FROM merchant_push_devices WHERE device_token = ?").get(tok);
+    if (row?.id) {
+      db.prepare("UPDATE merchant_push_devices SET user_id = ?, updated_at = ? WHERE device_token = ?").run(userId, now, tok);
+    } else {
+      db.prepare(
+        `INSERT INTO merchant_push_devices (id, user_id, device_token, updated_at) VALUES (?, ?, ?, ?)`
+      ).run(randomUUID(), userId, tok, now);
+    }
+    return;
+  }
   db.prepare(
     `INSERT INTO merchant_device_tokens (user_id, device_token, updated_at) VALUES (?, ?, ?)
      ON CONFLICT(user_id) DO UPDATE SET device_token = excluded.device_token, updated_at = excluded.updated_at`
-  ).run(userId, deviceToken.trim(), now);
+  ).run(userId, tok, now);
 }
 
-/** Token APNs hex pour l’app commerçant (mode « test sur mon iPhone »). */
-export function getMerchantDeviceToken(userId) {
-  if (!userId) return null;
+/** Tous les tokens APNs actifs pour l’utilisateur (app commerçant). */
+export function getMerchantDeviceTokensForUser(userId) {
+  if (!userId) return [];
+  if (merchantDevicesTable()) {
+    const rows = db.prepare("SELECT device_token FROM merchant_push_devices WHERE user_id = ?").all(userId);
+    return rows.map((r) => String(r.device_token).trim()).filter(Boolean);
+  }
   const row = db.prepare("SELECT device_token FROM merchant_device_tokens WHERE user_id = ?").get(userId);
   const t = row?.device_token;
-  if (!t || typeof t !== "string") return null;
+  if (!t || typeof t !== "string") return [];
   const s = t.trim();
-  return s.length > 0 ? s : null;
+  return s.length > 0 ? [s] : [];
+}
+
+/** @deprecated Utiliser getMerchantDeviceTokensForUser — premier token uniquement. */
+export function getMerchantDeviceToken(userId) {
+  const arr = getMerchantDeviceTokensForUser(userId);
+  return arr[0] ?? null;
+}
+
+export function deleteMerchantPushDeviceByToken(deviceToken) {
+  if (!deviceToken || typeof deviceToken !== "string") return 0;
+  const tok = deviceToken.trim();
+  if (!tok) return 0;
+  if (merchantDevicesTable()) {
+    const r = db.prepare("DELETE FROM merchant_push_devices WHERE device_token = ?").run(tok);
+    return r.changes ?? 0;
+  }
+  const r = db.prepare("DELETE FROM merchant_device_tokens WHERE device_token = ?").run(tok);
+  return r.changes ?? 0;
+}
+
+/** Supprime les enregistrements PassKit dont le push_token est invalide côté Apple. */
+export function deletePassRegistrationsByPushToken(pushToken) {
+  if (!pushToken || typeof pushToken !== "string") return 0;
+  const tok = pushToken.trim();
+  if (!tok) return 0;
+  const r = db.prepare("DELETE FROM pass_registrations WHERE push_token = ?").run(tok);
+  return r.changes ?? 0;
 }
 
 export function getPushTokensForMember(serialNumber) {

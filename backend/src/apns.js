@@ -304,10 +304,21 @@ export function getMerchantApnsUnavailableReason() {
   return merchantProvider ? null : merchantError;
 }
 
+/** Erreur APNs typique : token invalide ou révoqué — à purger côté base. */
+export function isLikelyInvalidDeviceTokenApnsError(err) {
+  const s = String(err?.reason ?? err?.message ?? err ?? "").toLowerCase();
+  return (
+    s.includes("baddevicetoken") ||
+    s.includes("unregistered") ||
+    s.includes("devicetokennotfortopic") ||
+    s.includes("invalidprovidertoken")
+  );
+}
+
 /**
  * Notification push visible sur l'app iOS commerçant.
  * @param {string} deviceToken
- * @param {{ body: string, title?: string }} payload
+ * @param {{ body: string, title?: string, category?: string, data?: Record<string, string> }} payload
  * @returns {Promise<{ sent: boolean, error?: string }>}
  */
 export function sendMerchantAppAlert(deviceToken, payload) {
@@ -319,12 +330,22 @@ export function sendMerchantAppAlert(deviceToken, payload) {
   if (!body) return Promise.resolve({ sent: false, error: "Message vide" });
 
   const bundleId = (process.env.MERCHANT_APP_BUNDLE_ID ?? "com.myfidpass").trim();
-  const note = new Notification(deviceToken, {
+  const title = (payload.title ?? "").trim();
+  const alert = title ? { title, body } : body;
+  /** @type {Record<string, unknown>} */
+  const opts = {
     topic: bundleId,
     expiration: Math.floor(Date.now() / 1000) + 3600,
-    alert: body,
+    alert,
     sound: "default",
-  });
+  };
+  if (payload.category && typeof payload.category === "string") {
+    opts.category = payload.category;
+  }
+  if (payload.data && typeof payload.data === "object") {
+    opts.data = payload.data;
+  }
+  const note = new Notification(deviceToken, opts);
 
   return prov.send(note).then(
     () => ({ sent: true }),

@@ -15,15 +15,18 @@ import {
   getUserById,
   getMemberByEmailForBusiness,
   logNotification,
+  createNotificationBatch,
   setLastBroadcastMessage,
   touchMemberLastVisit,
   removeTestPassKitDevices,
-  deleteWebPushSubscriptionByEndpoint,
   getCampaignSegmentCounts,
+  getNotificationBatchesForBusiness,
+  getNotificationLogRecentForBusiness,
 } from "../../db.js";
-import { sendWebPush } from "../../notifications.js";
-import { getMerchantApnsUnavailableReason } from "../../apns.js";
+import { deletePassRegistrationsByPushToken } from "../../db/passes.js";
 import { sendPassKitPushWaves, passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
+import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
+import { getMerchantApnsUnavailableReason, isLikelyInvalidDeviceTokenApnsError } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
 
@@ -42,94 +45,43 @@ export const CAMPAIGN_SEGMENT_KEYS = [
 ];
 
 /**
- * Pipeline d’envoi Web Push + PassKit (corps = message pass / Wallet).
- * @param {string[] | null} memberIds — null = tous les abonnés du commerce.
+ * @param {object} [options]
+ * @param {string} [options.triggerName]
+ * @param {string|null} [options.merchantUserId]
+ * @param {boolean} [options.sendMerchantReceipt]
  */
-export async function deliverDashboardBroadcast(business, slug, apiBase, memberIds, title, bodyMessage, logTypePasskit = "passkit") {
-  const webSubscriptions =
-    memberIds !== null && memberIds.length > 0
-      ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
-      : memberIds !== null && memberIds.length === 0
-        ? []
-        : getWebPushSubscriptionsByBusiness(business.id);
-  const passKitTokens =
-    memberIds !== null && memberIds.length > 0
-      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
-      : memberIds !== null && memberIds.length === 0
-        ? []
-        : getPassKitPushTokensForBusiness(business.id);
-  const iconUrl = businessHasNotificationLogo(business)
-    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
-    : null;
-  const payloadTitle = (title || business.notification_title_override || business.organization_name || "Myfidpass").trim();
-  const payload = {
-    title: payloadTitle,
-    body: bodyMessage,
-    ...(iconUrl && { icon: iconUrl }),
-  };
-  const errors = [];
-  const webPushResults = await Promise.all(
-    webSubscriptions.map(async (sub) => {
-      try {
-        await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
-        logNotification({ businessId: business.id, memberId: sub.member_id, title: payloadTitle, body: bodyMessage, type: "web_push" });
-        return { ok: true };
-      } catch (err) {
-        const status = err?.statusCode ?? err?.status;
-        if (status === 410 || status === 404) {
-          deleteWebPushSubscriptionByEndpoint(sub.endpoint);
-        } else {
-          errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
-        }
-        return { ok: false };
-      }
-    })
-  );
-  const sentWebPush = webPushResults.filter((r) => r.ok).length;
-
-  setLastBroadcastMessage(business.id, bodyMessage);
-  let sentPassKit = 0;
-  if (passKitTokens.length > 0) {
-    const touchedMembers = new Set();
-    for (const row of passKitTokens) {
-      if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-        touchMemberLastVisit(row.serial_number);
-        touchedMembers.add(row.serial_number);
-      }
-    }
-    const waveResults = await sendPassKitPushWaves(passKitTokens);
-    for (const { row, result } of waveResults) {
-      if (result.sent) {
-        sentPassKit++;
-        logNotification({
-          businessId: business.id,
-          memberId: row.serial_number,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: logTypePasskit,
-        });
-      } else if (result.error) {
-        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
-      }
-    }
-  }
-  const sent = sentWebPush + sentPassKit;
-  return { sent, sentWebPush, sentPassKit, errors };
-}
-
-function businessHasNotificationLogo(business) {
-  return (
-    Number(business?.asset_notification_icon_present) === 1 ||
-    Number(business?.asset_logo_icon_present) === 1 ||
-    Number(business?.asset_logo_present) === 1 ||
-    !!(business?.logo_icon_base64 || business?.logo_base64)
-  );
+export async function deliverDashboardBroadcast(
+  business,
+  slug,
+  apiBase,
+  memberIds,
+  title,
+  bodyMessage,
+  logTypePasskit = "passkit",
+  options = {}
+) {
+  const {
+    triggerName = "campaign_manual",
+    merchantUserId = null,
+    sendMerchantReceipt = true,
+  } = options || {};
+  return deliverCustomerBroadcast({
+    business,
+    slug,
+    apiBase,
+    memberIds,
+    title,
+    bodyMessage,
+    triggerName,
+    logTypePasskit,
+    merchantUserId,
+    sendMerchantReceipt,
+  });
 }
 
 /**
  * Envoi « test sur mon iPhone » uniquement : même pipeline que les clients (PassKit / carte Wallet),
- * filtré sur le membre dont l’e-mail est celui du compte commerçant. Aucune notif vers l’app Myfidpass,
- * pas de MERCHANT_APNS_* requis.
+ * filtré sur le membre dont l’e-mail est celui du compte commerçant.
  */
 async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage) {
   if (!req.user) {
@@ -167,8 +119,13 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
   }
 
   const payloadTitle = (title || business.notification_title_override || business.organization_name || "Myfidpass").trim();
-  /** Le verso / notif Wallet utilisent `last_broadcast_message` comme corps seul ; le nom commerce est déjà dans organizationName du pass (évite « Titre » + « Titre : texte »). */
   setLastBroadcastMessage(business.id, bodyMessage);
+
+  const batchId = createNotificationBatch({
+    businessId: business.id,
+    triggerName: "passkit_test_self",
+    summary: { test_self: true },
+  });
 
   const touchedMembers = new Set();
   for (const row of passKitTokens) {
@@ -190,9 +147,30 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
         title: payloadTitle,
         body: bodyMessage,
         type: "passkit_test_self",
+        batchId,
+        channel: "passkit",
+        triggerName: "passkit_test_self",
+        countsForMemberCooldown: 1,
+        status: "sent",
       });
     } else if (result.error) {
       errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+      logNotification({
+        businessId: business.id,
+        memberId: row.serial_number,
+        title: payloadTitle,
+        body: bodyMessage,
+        type: "passkit_test_self",
+        batchId,
+        channel: "passkit",
+        triggerName: "passkit_test_self",
+        countsForMemberCooldown: 1,
+        status: "failed",
+        errorDetail: result.error,
+      });
+      if (isLikelyInvalidDeviceTokenApnsError({ message: result.error })) {
+        deletePassRegistrationsByPushToken(row.push_token);
+      }
     }
   }
 
@@ -204,6 +182,7 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
       sentWebPush: 0,
       sentPassKit: 0,
       sentMerchantApp: 0,
+      batch_id: batchId,
       testSelfOnly: true,
       message: `Échec PassKit (même canal que les clients) : ${firstError}`,
     });
@@ -215,6 +194,7 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
     sentWebPush: 0,
     sentPassKit: sentPassKit,
     sentMerchantApp: 0,
+    batch_id: batchId,
     sentTotal: sentPassKit,
     testSelfOnly: true,
     message: "Test envoyé sur votre carte Apple Wallet uniquement (même système qu’une campagne). Aucun autre client n’a été notifié.",
@@ -242,65 +222,44 @@ export async function notifyHandler(req, res) {
   if (!message) return res.status(400).json({ error: "Le message est obligatoire" });
   const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids.filter(Boolean) : null;
   const memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
-  const webSubscriptions = memberIds !== null
-    ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
-    : getWebPushSubscriptionsByBusiness(business.id);
-  const passKitTokens = memberIds !== null
-    ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
-    : getPassKitPushTokensForBusiness(business.id);
-  const totalDevices = webSubscriptions.length + passKitTokens.length;
-  if (totalDevices === 0) {
-    return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0 });
-  }
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  const iconUrl = businessHasNotificationLogo(business)
-    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
-    : null;
-  const payload = {
-    title: (business.organization_name || "Myfidpass").trim(),
-    body: message,
-    ...(iconUrl && { icon: iconUrl }),
-  };
-  const webPushResults = await Promise.all(
-    webSubscriptions.map(async (sub) => {
-      try {
-        await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
-        logNotification({ businessId: business.id, memberId: sub.member_id, title: payload.title, body: message, type: "web_push" });
-        return 1;
-      } catch (err) {
-        const status = err?.statusCode ?? err?.status;
-        if (status === 410 || status === 404) {
-          deleteWebPushSubscriptionByEndpoint(sub.endpoint);
-        } else {
-          console.warn("[notify] web push failed", { memberId: sub.member_id, status, msg: err?.message });
-        }
-        return 0;
-      }
-    })
-  );
-  const sentWebPush = webPushResults.reduce((a, b) => a + b, 0);
 
-  let sentPassKit = 0;
-
-  setLastBroadcastMessage(business.id, message);
-  if (passKitTokens.length > 0) {
-    const touchedMembers = new Set();
-    for (const row of passKitTokens) {
-      if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-        touchMemberLastVisit(row.serial_number);
-        touchedMembers.add(row.serial_number);
-      }
-    }
-    const waveResults = await sendPassKitPushWaves(passKitTokens);
-    for (const { row, result } of waveResults) {
-      if (result.sent) {
-        sentPassKit++;
-        logNotification({ businessId: business.id, memberId: row.serial_number, title: payload.title, body: message, type: "passkit" });
-      }
-    }
+  const webSubscriptions =
+    memberIds !== null
+      ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
+      : getWebPushSubscriptionsByBusiness(business.id);
+  const passKitTokens =
+    memberIds !== null
+      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+      : getPassKitPushTokensForBusiness(business.id);
+  const totalDevices = webSubscriptions.length + passKitTokens.length;
+  if (totalDevices === 0) {
+    return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0, sentMerchantApp: 0, batch_id: null });
   }
-  res.status(200).json({ ok: true, sent: sentWebPush + sentPassKit, sentWebPush, sentPassKit, sentMerchantApp: 0 });
+
+  const result = await deliverCustomerBroadcast({
+    business,
+    slug,
+    apiBase,
+    memberIds,
+    title: null,
+    bodyMessage: message,
+    triggerName: "notify_clients",
+    logTypePasskit: "passkit",
+    merchantUserId: req.user?.id ?? null,
+  });
+
+  res.status(200).json({
+    ok: true,
+    sent: result.sent,
+    sentWebPush: result.sentWebPush,
+    sentPassKit: result.sentPassKit,
+    sentMerchantApp: result.sentMerchantApp ?? 0,
+    batch_id: result.batchId,
+    failed: result.failed ?? 0,
+    errors: result.errors,
+  });
 }
 
 const router = Router();
@@ -344,21 +303,37 @@ router.post("/send", async (req, res) => {
       sent: 0,
       sentWebPush: 0,
       sentPassKit: 0,
+      sentMerchantApp: 0,
+      batch_id: null,
       message: "Aucun appareil enregistré. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
-  const { sent, sentWebPush, sentPassKit, errors } = await deliverDashboardBroadcast(business, slug, apiBase, memberIds, title, body, "passkit");
-  const firstError = errors.length > 0 ? errors[0].error : null;
+
+  const triggerName =
+    segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)
+      ? `campaign_segment_${segment}`
+      : Array.isArray(reqCategoryIds) && reqCategoryIds.filter(Boolean).length > 0
+        ? "campaign_manual_categories"
+        : "campaign_manual";
+
+  const result = await deliverDashboardBroadcast(business, slug, apiBase, memberIds, title, body, "passkit", {
+    triggerName,
+    merchantUserId: req.user?.id ?? null,
+  });
+
+  const firstError = result.errors?.length > 0 ? result.errors[0].error : null;
   res.json({
     ok: true,
-    sent,
-    sentWebPush,
-    sentPassKit,
+    sent: result.sent,
+    sentWebPush: result.sentWebPush,
+    sentPassKit: result.sentPassKit,
+    sentMerchantApp: result.sentMerchantApp ?? 0,
+    batch_id: result.batchId,
     total: totalDevices,
-    failed: errors.length,
-    errors: errors.length > 0 ? errors : undefined,
+    failed: result.failed ?? 0,
+    errors: result.errors,
     message:
-      sent === 0 && totalDevices > 0 && firstError
+      result.sent === 0 && totalDevices > 0 && firstError
         ? `Aucun appareil n'a reçu la notification. Erreur : ${firstError}`
         : undefined,
   });
@@ -384,6 +359,41 @@ router.get("/campaign-segments", (req, res) => {
   });
 });
 
+router.get("/batches", (req, res) => {
+  const business = req.business;
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+  const rows = getNotificationBatchesForBusiness(business.id, { limit });
+  const parsed = rows.map((r) => ({
+    id: r.id,
+    business_id: r.business_id,
+    trigger_name: r.trigger_name,
+    created_at: r.created_at,
+    summary: safeJsonParse(r.summary_json),
+  }));
+  res.json({ ok: true, batches: parsed });
+});
+
+router.get("/history", (req, res) => {
+  const business = req.business;
+  if (!canAccessDashboard(business, req)) {
+    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
+  }
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+  const rows = getNotificationLogRecentForBusiness(business.id, { limit });
+  res.json({ ok: true, entries: rows });
+});
+
+function safeJsonParse(s) {
+  try {
+    return JSON.parse(s || "{}");
+  } catch {
+    return {};
+  }
+}
+
 router.get("/stats", (req, res) => {
   const business = req.business;
   if (!canAccessDashboard(business, req)) {
@@ -406,6 +416,16 @@ router.get("/stats", (req, res) => {
     testPasskitCurl = `curl -X POST "${url}" -H "Authorization: ApplePass ${token}" -H "Content-Type: application/json" -d '{"pushToken":"test"}' -w "\\nHTTP %{http_code}"`;
   }
   const merchantApnsReason = getMerchantApnsUnavailableReason();
+  const recentBatches = getNotificationBatchesForBusiness(business.id, { limit: 3 });
+  const lastBatch = recentBatches[0]
+    ? {
+        id: recentBatches[0].id,
+        trigger_name: recentBatches[0].trigger_name,
+        created_at: recentBatches[0].created_at,
+        summary: safeJsonParse(recentBatches[0].summary_json),
+      }
+    : null;
+
   res.json({
     passkit_wave_gap_ms: passKitWaveGapMsForDiagnostics(),
     subscriptionsCount,
@@ -417,6 +437,7 @@ router.get("/stats", (req, res) => {
     merchant_app_push_detail: merchantApnsReason || undefined,
     membersWithNotifications: new Set(webSubscriptions.map((s) => s.member_id)).size + new Set(passKitTokens.map((p) => p.serial_number)).size,
     passKitUrlConfigured,
+    last_batch: lastBatch,
     diagnostic: !passKitUrlConfigured
       ? "PASSKIT_WEB_SERVICE_URL non défini sur le backend. Les passes sont générés sans URL d'enregistrement, donc l'iPhone ne contacte jamais le serveur. Ajoutez sur Railway : PASSKIT_WEB_SERVICE_URL = https://api.myfidpass.fr (sans slash final), puis redéployez. Ensuite, supprimez la carte du Wallet et ré-ajoutez-la depuis le lien partagé."
       : null,

@@ -465,6 +465,16 @@
   margin: 0;
 }
 
+.dashboard-notifications-last-batch {
+  font-size: 0.8rem;
+  color: var(--dash-muted);
+  margin: 0.35rem 0 0;
+}
+
+.dashboard-notifications-last-batch.hidden {
+  display: none;
+}
+
 /* ── Diagnostic Panel ── */
 .dashboard-notifications-diagnostic {
   background: rgba(245, 158, 11, 0.07);

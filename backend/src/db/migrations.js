@@ -593,4 +593,78 @@ export function runMigrations(db) {
   if (!bizCamp.includes("campaign_automation_json")) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN campaign_automation_json TEXT"));
   }
+
+  // ── v4 : refonte notifications (batches, logs enrichis, multi-appareils commerçant) ──
+  markMigrationApplied(db, 4, "notification_refactor_batches_and_merchant_devices");
+  safeRun(db, () =>
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS notification_batches (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      trigger_name TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      summary_json TEXT NOT NULL DEFAULT '{}',
+      FOREIGN KEY (business_id) REFERENCES businesses(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_notification_batches_business_created ON notification_batches(business_id, created_at DESC);
+  `)
+  );
+
+  let nlCols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+  if (!nlCols.includes("batch_id")) {
+    safeRun(db, () => db.exec("ALTER TABLE notification_log ADD COLUMN batch_id TEXT"));
+    nlCols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+  }
+  if (!nlCols.includes("channel")) {
+    safeRun(db, () => db.exec("ALTER TABLE notification_log ADD COLUMN channel TEXT"));
+    nlCols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+  }
+  if (!nlCols.includes("trigger_name")) {
+    safeRun(db, () => db.exec("ALTER TABLE notification_log ADD COLUMN trigger_name TEXT"));
+    nlCols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+  }
+  if (!nlCols.includes("counts_for_member_cooldown")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE notification_log ADD COLUMN counts_for_member_cooldown INTEGER NOT NULL DEFAULT 1")
+    );
+    nlCols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+  }
+  if (!nlCols.includes("status")) {
+    safeRun(db, () => db.exec("ALTER TABLE notification_log ADD COLUMN status TEXT DEFAULT 'sent'"));
+    nlCols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+  }
+  if (!nlCols.includes("error_detail")) {
+    safeRun(db, () => db.exec("ALTER TABLE notification_log ADD COLUMN error_detail TEXT"));
+  }
+  safeRun(db, () =>
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_notification_log_cooldown ON notification_log(business_id, member_id, created_at) WHERE counts_for_member_cooldown = 1 AND member_id IS NOT NULL"
+    )
+  );
+
+  safeRun(db, () =>
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS merchant_push_devices (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      device_token TEXT NOT NULL UNIQUE,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_merchant_push_devices_user ON merchant_push_devices(user_id);
+  `)
+  );
+
+  const migratedDevices = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='merchant_device_tokens'")
+    .get();
+  if (migratedDevices) {
+    const oldRows = db.prepare("SELECT user_id, device_token, updated_at FROM merchant_device_tokens").all();
+    const ins = db.prepare(
+      `INSERT OR IGNORE INTO merchant_push_devices (id, user_id, device_token, updated_at) VALUES (?, ?, ?, ?)`
+    );
+    for (const row of oldRows) {
+      if (!row.user_id || !row.device_token) continue;
+      ins.run(randomUUID(), row.user_id, String(row.device_token).trim(), row.updated_at || new Date().toISOString());
+    }
+  }
 }

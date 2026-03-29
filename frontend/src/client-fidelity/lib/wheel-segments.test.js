@@ -33,6 +33,10 @@ describe("normalizeWheelLabelsFromSegments", () => {
     ]);
   });
 
+  it("affiche les défauts en majuscules cohérentes", () => {
+    expect(DEFAULT_WHEEL_LABELS.every((l) => l === l.toUpperCase())).toBe(true);
+  });
+
   it("tronque au-delà de 8", () => {
     const segs = Array.from({ length: 10 }, (_, i) => ({ label: `L${i}` }));
     expect(normalizeWheelLabelsFromSegments(segs)).toEqual(["L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7"]);
@@ -40,24 +44,25 @@ describe("normalizeWheelLabelsFromSegments", () => {
 });
 
 describe("formatWheelSegmentDisplayLabel", () => {
-  it("raccourcit les libellés points longs", () => {
-    expect(formatWheelSegmentDisplayLabel("10 POINTS BONUS")).toBe("+10 pts");
-    expect(formatWheelSegmentDisplayLabel("25 points bonus")).toBe("+25 pts");
-    expect(formatWheelSegmentDisplayLabel("50 PTS")).toBe("+50 pts");
+  it("raccourcit les libellés points longs en majuscules", () => {
+    expect(formatWheelSegmentDisplayLabel("10 POINTS BONUS")).toBe("+10 PTS");
+    expect(formatWheelSegmentDisplayLabel("25 points bonus")).toBe("+25 PTS");
+    expect(formatWheelSegmentDisplayLabel("50 PTS")).toBe("+50 PTS");
   });
 
-  it("perdant / pas de lot → PeRDu", () => {
-    expect(formatWheelSegmentDisplayLabel("PERDU")).toBe("PeRDu");
-    expect(formatWheelSegmentDisplayLabel("PAS DE LOT")).toBe("PeRDu");
+  it("perdant / pas de lot → PERDU", () => {
+    expect(formatWheelSegmentDisplayLabel("")).toBe("PERDU");
+    expect(formatWheelSegmentDisplayLabel("PERDU")).toBe("PERDU");
+    expect(formatWheelSegmentDisplayLabel("PAS DE LOT")).toBe("PERDU");
   });
 
-  it("laisse les courts inchangés", () => {
-    expect(formatWheelSegmentDisplayLabel("+10 pts")).toBe("+10 pts");
+  it("normalise les courts en majuscules", () => {
+    expect(formatWheelSegmentDisplayLabel("+10 pts")).toBe("+10 PTS");
   });
 
-  it("tampons ou passages → affichage en pts sur la roue", () => {
-    expect(formatWheelSegmentDisplayLabel("+2 tampons")).toBe("+2 pts");
-    expect(formatWheelSegmentDisplayLabel("3 passages")).toBe("+3 pts");
+  it("tampons ou passages → affichage PTS sur la roue", () => {
+    expect(formatWheelSegmentDisplayLabel("+2 tampons")).toBe("+2 PTS");
+    expect(formatWheelSegmentDisplayLabel("3 passages")).toBe("+3 PTS");
   });
 });
 

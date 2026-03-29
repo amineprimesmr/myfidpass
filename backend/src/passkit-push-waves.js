@@ -9,7 +9,8 @@
  */
 import { sendPassKitUpdate } from "./apns.js";
 
-const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 400)));
+/** Par défaut une seule salve (évite doubles notifications Wallet). Mettre PASSKIT_WAVE_GAP_MS=400 pour l’ancien comportement. */
+const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 0)));
 
 /**
  * @param {Array<{ push_token: string, serial_number?: string }>} passKitRows

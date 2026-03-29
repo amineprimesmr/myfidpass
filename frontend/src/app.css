@@ -960,6 +960,8 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-notif-texts-custom { margin: 1.25rem 0 1rem; padding: 1rem; background: var(--app-surface, #f8f9fa); border: 1px solid var(--app-border, #e2e8f0); border-radius: 10px; }
 .app-subsubsection-title { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.75rem; color: var(--app-text, #1e293b); }
 .app-notifications-stats { font-size: 0.9rem; color: var(--app-text-muted); margin: 0 0 0.5rem; }
+.app-notifications-last-batch { font-size: 0.85rem; color: var(--app-text-muted); margin: 0 0 0.75rem; }
+.app-notifications-last-batch.hidden { display: none; }
 .app-notifications-members-vs-devices-hint { font-size: 0.85rem; color: var(--app-text-muted); margin: 0 0 0.5rem; }
 .app-notifications-members-vs-devices-hint.hidden { display: none; }
 .app-notif-target-wrap { margin: 0.75rem 0; }

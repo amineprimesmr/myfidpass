@@ -1447,7 +1447,8 @@
           </section>
           <section id="notifications" class="app-section">
             <h2 class="app-section-title">Campagnes</h2>
-            <p class="app-section-desc">Campagnes ciblées et envoi manuel. Utilisez vos données pour relancer les inactifs, accueillir les nouveaux et fidéliser vos clients.</p>
+            <p class="app-section-desc">Campagnes ciblées et envoi manuel. Les clients reçoivent l’alerte sur <strong>Apple Wallet</strong> (carte à jour) et/ou le <strong>navigateur</strong> (Web Push). L’<strong>app iPhone MyFidpass</strong> reçoit un accusé de résumé pour vous, pas le message client.</p>
+            <p id="app-notifications-last-batch" class="app-hint app-notifications-last-batch hidden" role="status" aria-live="polite"></p>
 
             <div class="app-campaigns-block" role="region" aria-labelledby="app-campaigns-heading">
               <h3 id="app-campaigns-heading" class="app-subsection-title">Campagnes suggérées</h3>
@@ -2424,6 +2425,7 @@ X-Dashboard-Token: TOKEN
                 </div>
               </div>
               <p id="dashboard-notifications-stats" class="dashboard-notifications-stats"></p>
+              <p id="dashboard-notifications-last-batch" class="dashboard-notifications-last-batch hidden" role="status"></p>
               <p id="dashboard-notifications-members-vs-devices-hint" class="dashboard-notifications-members-vs-devices-hint hidden" role="note"></p>
               <button type="button" id="dashboard-notif-send" class="landing-btn landing-btn-primary">Envoyer la notification</button>
               <p id="dashboard-notif-feedback" class="dashboard-message hidden"></p>

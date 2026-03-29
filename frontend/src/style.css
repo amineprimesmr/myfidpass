@@ -2112,10 +2112,10 @@ body.fidpass-fidelity-route {
 .fidelity-game-page .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text,
 .fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
 .fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
-  font-size: clamp(0.58rem, 2.55vmin, 0.98rem);
+  font-size: clamp(1rem, 5.1vmin, 1.58rem);
   font-weight: 800;
-  text-transform: none;
-  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   display: inline-block;
   text-align: center;
   direction: ltr;

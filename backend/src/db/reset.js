@@ -16,6 +16,9 @@ export function deleteUserAccount(userId) {
   const businessIds = businesses.map((b) => b.id);
   const placeholders = businessIds.map(() => "?").join(",");
   if (placeholders) {
+    try {
+      db.prepare(`DELETE FROM notification_batches WHERE business_id IN (${placeholders})`).run(...businessIds);
+    } catch (_) {}
     db.prepare(`DELETE FROM notification_log WHERE business_id IN (${placeholders})`).run(...businessIds);
     db.prepare(`DELETE FROM web_push_subscriptions WHERE business_id IN (${placeholders})`).run(...businessIds);
     db.prepare(`DELETE FROM transactions WHERE business_id IN (${placeholders})`).run(...businessIds);
@@ -46,6 +49,9 @@ export function deleteUserAccount(userId) {
     db.prepare(`DELETE FROM members WHERE business_id IN (${placeholders})`).run(...businessIds);
     db.prepare(`DELETE FROM businesses WHERE id IN (${placeholders})`).run(...businessIds);
   }
+  try {
+    db.prepare("DELETE FROM merchant_push_devices WHERE user_id = ?").run(userId);
+  } catch (_) {}
   db.prepare("DELETE FROM merchant_device_tokens WHERE user_id = ?").run(userId);
   db.prepare("DELETE FROM password_reset_tokens WHERE user_id = ?").run(userId);
   db.prepare("DELETE FROM subscriptions WHERE user_id = ?").run(userId);
@@ -54,6 +60,9 @@ export function deleteUserAccount(userId) {
 }
 
 export function resetAllData() {
+  try {
+    db.exec("DELETE FROM notification_batches");
+  } catch (_) {}
   db.exec("DELETE FROM notification_log");
   db.exec("DELETE FROM reward_grants");
   db.exec("DELETE FROM game_spins");
@@ -66,6 +75,9 @@ export function resetAllData() {
   db.exec("DELETE FROM transactions");
   db.exec("DELETE FROM web_push_subscriptions");
   db.exec("DELETE FROM pass_registrations");
+  try {
+    db.exec("DELETE FROM merchant_push_devices");
+  } catch (_) {}
   db.exec("DELETE FROM merchant_device_tokens");
   db.exec("DELETE FROM member_category_assignments");
   db.exec("DELETE FROM member_categories");
