@@ -62,7 +62,11 @@ function parseBootstrap() {
   }
 }
 
-async function run() {
+/**
+ * Rendu complet depuis `window.__FIDPASS_FLYER_B64__` (WKWebView / injection live).
+ * Exposé sur `window` pour mises à jour sans recharger la page (évite flash noir).
+ */
+async function renderFromCurrentBootstrap() {
   const { flyer_prefs, share_url } = parseBootstrap();
   const canvas = document.getElementById("fidpass-flyer-canvas");
   if (!canvas || !(canvas instanceof HTMLCanvasElement)) return;
@@ -103,4 +107,10 @@ async function run() {
   }
 }
 
-void run();
+if (typeof window !== "undefined") {
+  window.__FIDPASS_FLYER_APPLY__ = () => {
+    void renderFromCurrentBootstrap();
+  };
+}
+
+void renderFromCurrentBootstrap();
