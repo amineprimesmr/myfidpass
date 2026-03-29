@@ -24,7 +24,7 @@ export function readFlyerStateFromForm(root) {
     colorAccent: q("app-flyer-c3")?.value,
     colorBgTop: q("app-flyer-bg1")?.value,
     colorBgBottom: q("app-flyer-bg2")?.value,
-    wheelRenderMode: q("app-flyer-wheel-mode")?.value === "png" ? "png" : "segments",
+    wheelRenderMode: "png",
     wheelColorOdd: q("app-flyer-wheel-color-odd")?.value,
     wheelColorEven: q("app-flyer-wheel-color-even")?.value,
     wheelSegmentOffsetDeg: Number(q("app-flyer-wheel-offset")?.value),

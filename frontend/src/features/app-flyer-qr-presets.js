@@ -224,7 +224,7 @@ export function mergeFlyerState(raw) {
     ...base,
     ...raw,
     templateId: FLYER_TEMPLATE_ID,
-    wheelRenderMode: raw.wheelRenderMode === "png" ? "png" : "segments",
+    wheelRenderMode: "png",
   };
   merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
   const hasOddKey = Object.prototype.hasOwnProperty.call(raw, "wheelColorOdd");

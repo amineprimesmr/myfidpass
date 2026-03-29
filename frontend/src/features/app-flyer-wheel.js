@@ -222,8 +222,8 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  /** Dès que `roue.png` est chargée : rendu image (trame + teintes) — UX premium. Sinon repli vectoriel. */
-  const usePng = Boolean(roueImg) && s.wheelRenderMode === "png";
+  /** Dès que `roue.png` est chargée : rendu image (trame + teintes). Sinon repli vectoriel minimal. */
+  const usePng = Boolean(roueImg);
   const n = FLYER_WHEEL_SEGMENT_COUNT;
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);

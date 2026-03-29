@@ -933,11 +933,8 @@
                       <input type="url" id="app-flyer-social-3-url" class="app-input" maxlength="500" placeholder="https://…" data-flyer-input autocomplete="url" />
                     </div>
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Roue</p>
-                    <label class="app-label" for="app-flyer-wheel-mode">Affichage</label>
-                    <select id="app-flyer-wheel-mode" class="app-input app-flyer-social-select app-flyer-wheel-mode-select" data-flyer-input>
-                      <option value="png">Image décorative HD (roue.png, recommandé)</option>
-                      <option value="segments">6 parts plates (couleurs unies, sans fichier image)</option>
-                    </select>
+                    <input type="hidden" id="app-flyer-wheel-mode" value="png" />
+                    <p class="app-hint" style="margin:0.35rem 0 0.65rem;font-size:0.78rem">Affichage <strong>image HD</strong> (<code>roue.png</code>), teintée avec vos deux couleurs. Le mode « parts plates » n’est plus utilisé.</p>
                     <div class="app-flyer-field" style="margin-top:0.65rem">
                       <label class="app-label" for="app-flyer-wheel-offset">Rotation découpe (°)</label>
                       <input type="number" id="app-flyer-wheel-offset" class="app-input" min="-180" max="180" step="0.5" value="0" data-flyer-input inputmode="decimal" />
