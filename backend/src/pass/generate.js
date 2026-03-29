@@ -392,6 +392,27 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
+  /*
+   * Message de campagne sur la **face** du pass (pas seulement au verso).
+   * Apple surface souvent les alertes Wallet / écran de verrouillage quand un champ
+   * visible change avec changeMessage ; un champ uniquement en backFields peut mettre
+   * à jour le pass sans bannière perceptible tant que l’utilisateur n’ouvre pas la carte.
+   */
+  if (rawBroadcast) {
+    const broadcastFrontField = {
+      key: "broadcastFront",
+      label: "Message",
+      value: lastBroadcast,
+      textAlignment: "PKTextAlignmentLeft",
+      changeMessage: normalizeChangeMessage(changeMsg, rawBroadcast),
+    };
+    if (isSectorTemplate) {
+      pass.secondaryFields.push(broadcastFrontField);
+    } else {
+      pass.auxiliaryFields.unshift(broadcastFrontField);
+    }
+  }
+
   const barcodePayload = {
     message: member.id,
     format: "PKBarcodeFormatQR",
