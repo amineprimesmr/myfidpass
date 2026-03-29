@@ -124,7 +124,8 @@ export function defaultFlyerState() {
     colorAccent: "#ffffff",
     colorBgTop: "#0f172a",
     colorBgBottom: "#020617",
-    wheelRenderMode: "segments",
+    /** Image HD `roue.png` (recommandé) ; `segments` = repli couleurs unies si l’image ne charge pas. */
+    wheelRenderMode: "png",
     wheelColorOdd: "#fbbf24",
     wheelColorEven: "#f97316",
     wheelSegmentOffsetDeg: 0,

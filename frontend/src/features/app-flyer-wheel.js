@@ -92,14 +92,56 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
   ctx.restore();
 }
 
+/** Ombre portée sous la roue (profondeur, flyer print). */
+function drawWheelGroundShadow(ctx, cx, cy, r) {
+  ctx.save();
+  ctx.globalAlpha = 0.42;
+  const gy = cy + r * 0.74;
+  const grd = ctx.createRadialGradient(cx, gy, r * 0.08, cx, gy, r * 1.02);
+  grd.addColorStop(0, "rgba(0,0,0,0.55)");
+  grd.addColorStop(0.55, "rgba(0,0,0,0.14)");
+  grd.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.ellipse(cx, gy, r * 0.96, r * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Léger relief sur le pourtour du disque (lisibilité sur fond photo). */
+function drawWheelOuterRim(ctx, cx, cy, r) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.998, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = Math.max(1.5, r * 0.014);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.988, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = Math.max(1, r * 0.009);
+  ctx.stroke();
+  ctx.restore();
+}
+
 /** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
 function drawWheelHub(ctx, cx, cy, r) {
+  const hr = r * 0.22;
+  const g = ctx.createRadialGradient(cx - hr * 0.35, cy - hr * 0.35, hr * 0.05, cx, cy, hr);
+  g.addColorStop(0, "#ffffff");
+  g.addColorStop(0.55, "#f4f4f5");
+  g.addColorStop(1, "#d4d4d8");
   ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.arc(cx, cy, hr, 0, Math.PI * 2);
+  ctx.fillStyle = g;
   ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.12)";
-  ctx.lineWidth = Math.max(2, r * 0.02);
+  ctx.strokeStyle = "rgba(0,0,0,0.14)";
+  ctx.lineWidth = Math.max(2, r * 0.019);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, hr * 0.86, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(255,255,255,0.55)";
+  ctx.lineWidth = Math.max(1, r * 0.007);
   ctx.stroke();
 }
 
@@ -180,15 +222,20 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  const usePng = s.wheelRenderMode === "png" && roueImg;
+  /** Dès que `roue.png` est chargée : rendu image (trame + teintes) — UX premium. Sinon repli vectoriel. */
+  const usePng = Boolean(roueImg) && s.wheelRenderMode === "png";
   const n = FLYER_WHEEL_SEGMENT_COUNT;
+
+  drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
+
   if (usePng) {
     const off = userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG;
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
-    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, off, n, s);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
-    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, n, s);
   }
+  drawWheelOuterRim(ctx, wheelCx, wheelCy, wheelR);
+  const labelOff = usePng ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, n, s);
   drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }
