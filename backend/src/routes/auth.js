@@ -57,13 +57,11 @@ const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replac
 const SALT_ROUNDS = 10;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 
-// Access long pour limiter les 401 en rafale côté app ; le refresh coulissant prolonge la session active.
-const ACCESS_TOKEN_TTL = "24h";
-// Rotation à chaque refresh : tant que l’utilisateur ouvre l’app avant cette échéance, la session reste valide.
-const REFRESH_TOKEN_TTL_DAYS = 400;
+const ACCESS_TOKEN_TTL = "15m";
+const REFRESH_TOKEN_TTL_DAYS = 30;
 
 /**
- * Émet une paire access token + refresh token (rotation stockée en base).
+ * Émet une paire access token (15min) + refresh token (30j).
  * Stocke le refresh token en base pour permettre la révocation.
  * @param {number} userId
  * @returns {{ accessToken: string, refreshToken: string }}

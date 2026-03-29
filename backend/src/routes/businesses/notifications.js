@@ -14,6 +14,9 @@ import {
   getMembersForBusiness,
   getUserById,
   getMemberByEmailForBusiness,
+  getBusinessById,
+  updateBusiness,
+  bumpBusinessPassRefreshTimestamp,
   logNotification,
   createNotificationBatch,
   setLastBroadcastMessage,
@@ -29,6 +32,21 @@ import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason, isLikelyInvalidDeviceTokenApnsError } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
+
+/**
+ * Met à jour titre / modèle de notif. sur le commerce + `notification_pass_layout_at`,
+ * **sans** envoyer de push PassKit (évite le double push avec PATCH dashboard + POST send).
+ */
+function syncNotificationTextsForCampaign(businessId, title, messageBody) {
+  const trimmedTitle = title != null ? String(title).trim() : "";
+  const msg = messageBody != null ? String(messageBody).trim() : "";
+  updateBusiness(businessId, {
+    notification_title_override: trimmedTitle ? trimmedTitle.slice(0, 80) : null,
+    notification_change_message: msg ? msg.slice(0, 200) : null,
+  });
+  bumpBusinessPassRefreshTimestamp(businessId);
+  return getBusinessById(businessId);
+}
 
 /** Segments autorisés pour POST .../notifications/send (campagne manuelle ou auto). */
 export const CAMPAIGN_SEGMENT_KEYS = [
@@ -118,7 +136,13 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
     });
   }
 
-  const payloadTitle = (title || business.notification_title_override || business.organization_name || "Myfidpass").trim();
+  const bSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
+  const payloadTitle = (
+    (title != null && String(title).trim() !== "" ? String(title).trim() : null) ||
+    bSync.notification_title_override ||
+    bSync.organization_name ||
+    "Myfidpass"
+  ).trim();
   setLastBroadcastMessage(business.id, bodyMessage);
 
   const batchId = createNotificationBatch({
@@ -316,7 +340,8 @@ router.post("/send", async (req, res) => {
         ? "campaign_manual_categories"
         : "campaign_manual";
 
-  const result = await deliverDashboardBroadcast(business, slug, apiBase, memberIds, title, body, "passkit", {
+  const businessForSend = syncNotificationTextsForCampaign(business.id, title, body);
+  const result = await deliverDashboardBroadcast(businessForSend, slug, apiBase, memberIds, title, body, "passkit", {
     triggerName,
     merchantUserId: req.user?.id ?? null,
   });
