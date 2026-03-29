@@ -4,6 +4,12 @@
 
 export const FLYER_AI_FREE_PER_MONTH = 3;
 
+/**
+ * Secret de déverrouillage illimité si `FLYER_AI_DEV_UNLOCK_SECRET` n’est pas défini.
+ * TEMPORAIRE — même chaîne que l’app iOS ; à retirer quand le mode test n’est plus nécessaire.
+ */
+export const DEFAULT_FLYER_AI_DEV_UNLOCK_SECRET = "myfidpass-flyer-ia-dev-unlock-temp";
+
 /** @returns {string} ex. "2026-03" (UTC) */
 export function currentMonthKeyUTC() {
   const d = new Date();

@@ -43,6 +43,7 @@ import {
   FLYER_AI_FREE_PER_MONTH,
   currentMonthKeyUTC,
   isFlyerAiUnlimited,
+  DEFAULT_FLYER_AI_DEV_UNLOCK_SECRET,
 } from "../../services/flyer-ai-quota.js";
 
 const router = Router();
@@ -569,19 +570,17 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
 });
 
 /**
- * Déverrouillage générations illimitées (équipe / test) — secret serveur `FLYER_AI_DEV_UNLOCK_SECRET`.
+ * Déverrouillage générations illimitées (équipe / test).
+ * Secret : `FLYER_AI_DEV_UNLOCK_SECRET` (optionnel) sinon valeur par défaut dans le code (temporaire).
  * Body : `{ "unlock_secret": "…", "disable": false }` pour activer ; `"disable": true` pour repasser au quota mensuel.
  */
 router.post("/flyer/ai-dev-unlock", async (req, res) => {
-  const secret = process.env.FLYER_AI_DEV_UNLOCK_SECRET;
-  if (!secret || String(secret).trim().length < 8) {
-    return res.status(503).json({
-      error: "Déverrouillage non configuré sur le serveur (FLYER_AI_DEV_UNLOCK_SECRET).",
-    });
-  }
+  const fromEnv = String(process.env.FLYER_AI_DEV_UNLOCK_SECRET || "").trim();
+  const effectiveSecret =
+    fromEnv.length >= 8 ? fromEnv : DEFAULT_FLYER_AI_DEV_UNLOCK_SECRET;
   const body = req.body || {};
   const provided = body.unlock_secret ?? body.unlockSecret;
-  if (String(provided || "") !== String(secret)) {
+  if (String(provided || "") !== String(effectiveSecret)) {
     return res.status(403).json({ error: "Secret incorrect." });
   }
   const disable = Boolean(body.disable ?? body.disable_unlimited);
