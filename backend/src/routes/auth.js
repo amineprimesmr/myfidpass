@@ -57,11 +57,13 @@ const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replac
 const SALT_ROUNDS = 10;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 
-const ACCESS_TOKEN_TTL = "15m";
-const REFRESH_TOKEN_TTL_DAYS = 30;
+// Access long pour limiter les 401 en rafale côté app ; le refresh coulissant prolonge la session active.
+const ACCESS_TOKEN_TTL = "24h";
+// Rotation à chaque refresh : tant que l’utilisateur ouvre l’app avant cette échéance, la session reste valide.
+const REFRESH_TOKEN_TTL_DAYS = 400;
 
 /**
- * Émet une paire access token (15min) + refresh token (30j).
+ * Émet une paire access token + refresh token (rotation stockée en base).
  * Stocke le refresh token en base pour permettre la révocation.
  * @param {number} userId
  * @returns {{ accessToken: string, refreshToken: string }}
@@ -133,6 +135,31 @@ async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishm
   }
 }
 
+/**
+ * Crée le 1er commerce à partir du nom seul (repli si Places indisponible ou échec place details).
+ */
+async function tryCreateFirstBusinessFromNameOnly(userId, establishmentName) {
+  const name = String(establishmentName || "").trim();
+  if (!name || !canCreateBusiness(userId)) return;
+  try {
+    let baseSlug = registerSlugFromName(name);
+    let slug = baseSlug;
+    let n = 0;
+    while (getBusinessBySlug(slug)) {
+      n += 1;
+      slug = `${baseSlug}-${n}`.slice(0, 60);
+    }
+    createBusiness({
+      name,
+      slug,
+      organizationName: name,
+      userId,
+    });
+  } catch (e) {
+    console.error("[auth/register] tryCreateFirstBusinessFromNameOnly:", e);
+  }
+}
+
 const appleOneTimeCodes = new Map();
 const APPLE_CODE_TTL_MS = 5 * 60 * 1000;
 function cleanupAppleCodes() {
@@ -189,6 +216,10 @@ router.post("/register", validate(schemas.register), async (req, res) => {
     });
     if (googlePlaceId) {
       await tryCreateFirstBusinessFromGooglePlace(user.id, googlePlaceId, establishmentName);
+    }
+    const businessesAfterPlace = getBusinessesByUserId(user.id);
+    if (businessesAfterPlace.length === 0 && establishmentName) {
+      await tryCreateFirstBusinessFromNameOnly(user.id, establishmentName);
     }
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
