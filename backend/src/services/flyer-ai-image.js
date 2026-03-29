@@ -1,9 +1,15 @@
 /**
  * Génération d’image flyer via OpenAI Image API.
- * Modèle par défaut : **gpt-image-1.5** (meilleure qualité que DALL·E 3 ; doc OpenAI).
- * Surcharge : variable d’env `FLYER_AI_IMAGE_MODEL` (ex. `gpt-image-1`, `dall-e-3`).
+ *
+ * Modèle **gpt-image-1.5** : dernier modèle « GPT Image » (qualité max côté OpenAI, au-delà de DALL·E 3).
+ * Réglages : portrait 1024×1536, quality high, PNG opaque = le plus coûteux / le plus net pour une affiche.
+ *
+ * Surcharge rare : `FLYER_AI_IMAGE_MODEL` (ex. `gpt-image-1` si quota) — par défaut on ne baisse pas la qualité.
  * Clé API : OPENAI_API_KEY (Railway / env).
  */
+
+/** Dernier modèle image « state of the art » exposé sur POST /v1/images/generations (doc OpenAI 2025–2026). */
+const FLYER_AI_MODEL_BEST = "gpt-image-1.5";
 import { z } from "zod";
 
 const VISUAL_MOODS = ["premium", "energetic", "minimal", "street", "gourmet", "playful"];
@@ -118,9 +124,9 @@ export function buildFlyerImagePrompt(input) {
 /** @returns {{ model: string, body: Record<string, unknown> }} */
 function flyerImageRequestPayload(prompt) {
   const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;
-  const model = (process.env.FLYER_AI_IMAGE_MODEL || "gpt-image-1.5").trim();
+  const model = (process.env.FLYER_AI_IMAGE_MODEL || FLYER_AI_MODEL_BEST).trim();
 
-  // GPT Image 1.x : qualité low|medium|high|auto, tailles incl. portrait 1024x1536
+  // GPT Image 1.x : qualité max = "high" ; plus grand portrait API = 1024x1536
   if (model.startsWith("gpt-image")) {
     return {
       model,
@@ -130,6 +136,8 @@ function flyerImageRequestPayload(prompt) {
         n: 1,
         size: "1024x1536",
         quality: "high",
+        background: "opaque",
+        output_format: "png",
         response_format: "b64_json",
       },
     };
