@@ -112,7 +112,8 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
 app.post("/api/payment/webhook", paymentWebhookHandler);
 
-app.use(express.json({ limit: "8mb" }));
+// Flyer IA : logo + jusqu’à 3 images de référence (base64) peuvent dépasser 8 Mo en JSON.
+app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "64kb" }));
 
 // Logging structuré HTTP (toutes les requêtes) — JSON en prod, pretty en dev

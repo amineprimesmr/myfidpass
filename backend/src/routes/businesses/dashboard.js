@@ -501,8 +501,11 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     return res.status(400).json({ error: parsed.error });
   }
   try {
-    const prompt = buildFlyerImagePrompt(parsed.value);
-    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt);
+    const prompt = buildFlyerImagePrompt(parsed.value, {
+      hasLogo: parsed.multimodal.hasLogo,
+      styleRefCount: parsed.multimodal.styleRefCount,
+    });
+    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, parsed.multimodal);
     return res.json({
       image_base64: b64,
       revised_prompt: revised ?? null,

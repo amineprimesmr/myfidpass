@@ -4,6 +4,9 @@
  * Modèle **gpt-image-1.5** : dernier modèle « GPT Image » (qualité max côté OpenAI, au-delà de DALL·E 3).
  * Réglages : portrait 1024×1536, quality high, PNG opaque = le plus coûteux / le plus net pour une affiche.
  *
+ * Avec **logo** et/ou **images de référence DA** : `POST /v1/images/edits` (JSON) avec `images[].image_url` (data URL).
+ * Sans image : `POST /v1/images/generations` comme avant.
+ *
  * Surcharge rare : `FLYER_AI_IMAGE_MODEL` (ex. `gpt-image-1` si quota) — par défaut on ne baisse pas la qualité.
  * Clé API : OPENAI_API_KEY (Railway / env).
  */
@@ -13,6 +16,9 @@ const FLYER_AI_MODEL_BEST = "gpt-image-1.5";
 import { z } from "zod";
 
 const VISUAL_MOODS = ["premium", "energetic", "minimal", "street", "gourmet", "playful"];
+
+/** Taille max décodée par image (évite surcharge mémoire / quota). */
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 const bodySchema = z.object({
   brand_name: z.string().min(1, "Nom de marque requis.").max(80),
@@ -27,6 +33,8 @@ const bodySchema = z.object({
   hero_products: z.string().max(220).optional(),
   visual_mood: z.enum(VISUAL_MOODS),
   extra_context: z.string().max(400).optional(),
+  logo_base64: z.string().max(6_000_000).optional(),
+  style_reference_images_base64: z.array(z.string().max(6_000_000)).max(3).optional(),
 });
 
 const MOOD_EN = {
@@ -45,8 +53,32 @@ const MOOD_EN = {
 };
 
 /**
+ * @param {string} s
+ * @returns {{ dataUrl: string }}
+ */
+function decodeDataUrlOrBase64(s) {
+  const trimmed = String(s).trim();
+  let mime = "image/jpeg";
+  let b64Part = trimmed;
+  const m = /^data:([^;]+);base64,(.+)$/s.exec(trimmed);
+  if (m) {
+    mime = m[1].split(";")[0].trim();
+    b64Part = m[2];
+  }
+  const buf = Buffer.from(b64Part.replace(/\s/g, ""), "base64");
+  if (buf.length < 32) {
+    throw new Error("Image invalide ou trop petite.");
+  }
+  if (buf.length > MAX_IMAGE_BYTES) {
+    throw new Error("Chaque image doit faire au plus 2 Mo (compressez ou réduisez la résolution).");
+  }
+  const dataUrl = `data:${mime};base64,${buf.toString("base64")}`;
+  return { dataUrl };
+}
+
+/**
  * @param {unknown} raw
- * @returns {{ ok: true, value: z.infer<typeof bodySchema> } | { ok: false, error: string }}
+ * @returns {{ ok: true, value: z.infer<typeof bodySchema>, multimodal: { images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number } } | { ok: false, error: string }}
  */
 export function parseFlyerAIBody(raw) {
   const r = bodySchema.safeParse(raw || {});
@@ -75,14 +107,39 @@ export function parseFlyerAIBody(raw) {
   if (!value.brand_name.length || !value.cuisine_or_concept.length) {
     return { ok: false, error: "Champs obligatoires vides." };
   }
-  return { ok: true, value };
+
+  /** @type {{ images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number }} */
+  const multimodal = { images: [], hasLogo: false, styleRefCount: 0 };
+
+  try {
+    const logoRaw = d.logo_base64?.trim();
+    if (logoRaw) {
+      multimodal.images.push({ image_url: decodeDataUrlOrBase64(logoRaw).dataUrl });
+      multimodal.hasLogo = true;
+    }
+    const refs = Array.isArray(d.style_reference_images_base64) ? d.style_reference_images_base64 : [];
+    for (const item of refs) {
+      if (!item?.trim()) continue;
+      multimodal.images.push({ image_url: decodeDataUrlOrBase64(item.trim()).dataUrl });
+      multimodal.styleRefCount += 1;
+    }
+  } catch (e) {
+    return { ok: false, error: e?.message || "Image invalide." };
+  }
+
+  if (multimodal.images.length > 4) {
+    return { ok: false, error: "Trop d’images (max. 4 : 1 logo + 3 références)." };
+  }
+
+  return { ok: true, value, multimodal };
 }
 
 /**
  * Prompt détaillé (anglais + textes FR entre guillemets) — aligné affiches pros type boulangerie / pizza / bubble tea.
  * @param {z.infer<typeof bodySchema>} input
+ * @param {{ hasLogo: boolean, styleRefCount: number }} multimodalHint
  */
-export function buildFlyerImagePrompt(input) {
+export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, styleRefCount: 0 }) {
   const brand = input.brand_name.trim();
   const concept = input.cuisine_or_concept.trim();
   const accent = input.accent_color_hex.trim();
@@ -100,6 +157,23 @@ export function buildFlyerImagePrompt(input) {
     : "";
 
   const mood = MOOD_EN[input.visual_mood] || MOOD_EN.energetic;
+
+  const multimodalLines = [];
+  if (multimodalHint.hasLogo || multimodalHint.styleRefCount > 0) {
+    multimodalLines.push(
+      "INPUT IMAGES (order matters): The API sends reference images before this text — use them seriously."
+    );
+    if (multimodalHint.hasLogo) {
+      multimodalLines.push(
+        'First reference image is the OFFICIAL BRAND LOGO. Recreate it faithfully in the flyer header (same shapes, colors, proportions, typography). Do not invent a different mark. Place it cleanly on the top brand band, high contrast, print-ready.'
+      );
+    }
+    if (multimodalHint.styleRefCount > 0) {
+      multimodalLines.push(
+        `Following reference image(s) are STYLE / MOODBOARD only: copy their color palette, lighting, grain, typography personality, and overall graphic atmosphere — not their unrelated text, prices, or competitor logos. Merge that visual DNA with the layout below.`
+      );
+    }
+  }
 
   return [
     "TASK: One single finished vertical FLYER / poster image (print-ready), portrait ratio ~2:3, full bleed, no device frame, no phone mockup, no app UI screenshot.",
@@ -119,16 +193,12 @@ export function buildFlyerImagePrompt(input) {
     "QUALITY: 8K advertising poster, sharp edges, consistent lighting, color grading cohesive with brand, professional food styling.",
     mood + ".",
     extra,
+    ...multimodalLines,
   ]
     .filter(Boolean)
     .join(" ");
 }
 
-/**
- * @param {string} apiKey
- * @param {string} prompt
- * @returns {Promise<{ b64: string, revised?: string }>}
- */
 /** @returns {{ model: string, body: Record<string, unknown> }} */
 function flyerImageRequestPayload(prompt) {
   const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;
@@ -183,7 +253,78 @@ function flyerImageRequestPayload(prompt) {
   };
 }
 
-export async function openaiGenerateFlyerImage(apiKey, prompt) {
+/**
+ * Modèle utilisable pour /images/edits (multimodal). DALL·E 3 ne suit pas ce flux.
+ * @param {boolean} needsEdits
+ */
+function resolveModelForFlyer(needsEdits) {
+  const envModel = process.env.FLYER_AI_IMAGE_MODEL;
+  const raw = (envModel && String(envModel).trim()) || FLYER_AI_MODEL_BEST;
+  const m = raw.toLowerCase();
+  if (needsEdits) {
+    if (m.startsWith("gpt-image")) return m;
+    return FLYER_AI_MODEL_BEST;
+  }
+  return flyerImageRequestPayload("").model;
+}
+
+/**
+ * @param {string} apiKey
+ * @param {string} prompt
+ * @param {Array<{ image_url: string }>} images
+ * @param {boolean} hasLogo
+ * @returns {Promise<{ b64: string, revised?: string }>}
+ */
+async function openaiImageEdits(apiKey, prompt, images, hasLogo) {
+  const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;
+  const model = resolveModelForFlyer(true);
+  const body = {
+    model,
+    prompt: clipped,
+    images,
+    n: 1,
+    size: "1024x1536",
+    quality: "high",
+    background: "opaque",
+    output_format: "png",
+    input_fidelity: hasLogo ? "high" : "low",
+  };
+
+  const res = await fetch("https://api.openai.com/v1/images/edits", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const errMsg =
+      json?.error?.message ||
+      json?.message ||
+      `OpenAI HTTP ${res.status}`;
+    const err = new Error(errMsg);
+    /** @type {any} */ (err).status = res.status;
+    throw err;
+  }
+  const b64 = json?.data?.[0]?.b64_json;
+  if (!b64 || typeof b64 !== "string") {
+    throw new Error("Réponse OpenAI invalide (pas d’image).");
+  }
+  return {
+    b64,
+    revised: typeof json?.data?.[0]?.revised_prompt === "string" ? json.data[0].revised_prompt : undefined,
+  };
+}
+
+/**
+ * @param {string} apiKey
+ * @param {string} prompt
+ * @returns {Promise<{ b64: string, revised?: string }>}
+ */
+async function openaiImageGenerations(apiKey, prompt) {
   const { body } = flyerImageRequestPayload(prompt);
   const res = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -212,6 +353,20 @@ export async function openaiGenerateFlyerImage(apiKey, prompt) {
     b64,
     revised: typeof json?.data?.[0]?.revised_prompt === "string" ? json.data[0].revised_prompt : undefined,
   };
+}
+
+/**
+ * @param {string} apiKey
+ * @param {string} prompt
+ * @param {{ images: Array<{ image_url: string }>, hasLogo: boolean }} [multimodal]
+ * @returns {Promise<{ b64: string, revised?: string }>}
+ */
+export async function openaiGenerateFlyerImage(apiKey, prompt, multimodal) {
+  const images = multimodal?.images?.length ? multimodal.images : [];
+  if (images.length === 0) {
+    return openaiImageGenerations(apiKey, prompt);
+  }
+  return openaiImageEdits(apiKey, prompt, images, Boolean(multimodal?.hasLogo));
 }
 
 export { VISUAL_MOODS };
