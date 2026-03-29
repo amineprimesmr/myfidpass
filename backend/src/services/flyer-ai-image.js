@@ -124,29 +124,31 @@ export function buildFlyerImagePrompt(input) {
 /** @returns {{ model: string, body: Record<string, unknown> }} */
 function flyerImageRequestPayload(prompt) {
   const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;
-  const model = (process.env.FLYER_AI_IMAGE_MODEL || FLYER_AI_MODEL_BEST).trim();
+  const envModel = process.env.FLYER_AI_IMAGE_MODEL;
+  const modelRaw = (envModel && String(envModel).trim()) || FLYER_AI_MODEL_BEST;
+  /** Détection insensible à la casse (sinon fallback avec `response_format` → erreur sur GPT Image). */
+  const m = modelRaw.toLowerCase();
 
-  // GPT Image 1.x : qualité max = "high" ; plus grand portrait API = 1024x1536
-  if (model.startsWith("gpt-image")) {
+  // GPT Image 1.x : pas de `response_format` (réservé DALL·E 2/3 uniquement) ; b64_json renvoyé par défaut.
+  if (m.startsWith("gpt-image")) {
     return {
-      model,
+      model: m,
       body: {
-        model,
+        model: m,
         prompt: clipped,
         n: 1,
         size: "1024x1536",
         quality: "high",
         background: "opaque",
         output_format: "png",
-        // Pas de `response_format` : réservé à DALL·E 2/3 ; GPT Image renvoie du base64 par défaut.
       },
     };
   }
 
-  // DALL·E 3 : hd | standard, tailles 1024x1792 (portrait)
-  if (model.includes("dall-e-3")) {
+  // DALL·E 3 uniquement : `response_format` encore supporté ici.
+  if (m.includes("dall-e-3")) {
     return {
-      model,
+      model: "dall-e-3",
       body: {
         model: "dall-e-3",
         prompt: clipped.length > 3800 ? clipped.slice(0, 3800) : clipped,
@@ -158,13 +160,17 @@ function flyerImageRequestPayload(prompt) {
     };
   }
 
+  // Valeur d’env inconnue : même chemin que GPT Image (sans jamais envoyer `response_format`).
   return {
-    model,
+    model: FLYER_AI_MODEL_BEST,
     body: {
-      model,
+      model: FLYER_AI_MODEL_BEST,
       prompt: clipped,
       n: 1,
-      response_format: "b64_json",
+      size: "1024x1536",
+      quality: "high",
+      background: "opaque",
+      output_format: "png",
     },
   };
 }
