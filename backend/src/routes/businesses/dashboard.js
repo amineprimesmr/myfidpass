@@ -32,8 +32,24 @@ import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
 import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
+import rateLimit from "express-rate-limit";
+import {
+  parseFlyerAIBody,
+  buildFlyerImagePrompt,
+  openaiGenerateFlyerImage,
+} from "../../services/flyer-ai-image.js";
 
 const router = Router();
+
+/** Max 8 générations flyer IA / heure / commerce (coût OpenAI). */
+const flyerAiGenerateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `flyer-ai:${req.business?.id ?? req.ip}`,
+  message: { error: "Limite horaire atteinte. Réessayez dans un moment." },
+});
 
 function requireDashboard(req, res, next) {
   if (!req.business) return res.status(404).json({ error: "Entreprise introuvable" });
@@ -470,6 +486,33 @@ router.put("/flyer", (req, res) => {
     flyer_prefs_updated_at: now,
   });
   res.json({ ok: true, updated_at: now });
+});
+
+/** Génération d’image de fond flyer via OpenAI (DALL·E 3) — prompt construit côté serveur. */
+router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || String(apiKey).trim().length < 20) {
+    return res.status(503).json({
+      error: "Génération IA non configurée. Ajoutez OPENAI_API_KEY sur le serveur.",
+    });
+  }
+  const parsed = parseFlyerAIBody(req.body || {});
+  if (!parsed.ok) {
+    return res.status(400).json({ error: parsed.error });
+  }
+  try {
+    const prompt = buildFlyerImagePrompt(parsed.value);
+    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt);
+    return res.json({
+      image_base64: b64,
+      revised_prompt: revised ?? null,
+    });
+  } catch (e) {
+    const msg = e?.message || "Erreur lors de la génération.";
+    const code = Number(e?.status);
+    const status = code === 429 ? 429 : 502;
+    return res.status(status).json({ error: String(msg) });
+  }
 });
 
 // ——— Games ———
