@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildBroadcastUniquenessSuffix,
   buildLastBroadcastFieldValue,
-  invisibleBroadcastSuffix,
   normalizeChangeMessage,
 } from "./broadcast-field.js";
 
@@ -20,18 +20,28 @@ describe("normalizeChangeMessage", () => {
   });
 });
 
+describe("buildBroadcastUniquenessSuffix", () => {
+  it("vide → chaîne vide", () => {
+    expect(buildBroadcastUniquenessSuffix("", null, 0)).toBe("");
+  });
+  it("toujours non vide avec message + seq par défaut", () => {
+    expect(buildBroadcastUniquenessSuffix("Hello", null, undefined).length).toBeGreaterThan(0);
+  });
+});
+
 describe("buildLastBroadcastFieldValue", () => {
   it("vide → tiret", () => {
     expect(buildLastBroadcastFieldValue("", null)).toBe("—");
   });
-  it("sans suffixe si pas d’horodatage", () => {
-    expect(buildLastBroadcastFieldValue("Hello", null)).toBe("Hello");
+  it("suffixe d’unicité même sans horodatage (empreinte contenu + seq)", () => {
+    const v = buildLastBroadcastFieldValue("Hello", null);
+    expect(v.startsWith("Hello")).toBe(true);
+    expect(v.length).toBeGreaterThan("Hello".length);
   });
-  it("suffixe invisible si horodatage (unicité PassKit)", () => {
+  it("horodatage + empreinte + seq (unicité PassKit)", () => {
     const v = buildLastBroadcastFieldValue("Allô", "2026-03-26 21:37:21.123");
     expect(v.startsWith("Allô")).toBe(true);
     expect(v.length).toBeGreaterThan("Allô".length);
-    expect(invisibleBroadcastSuffix("2026-03-26 21:37:21.123").length).toBeGreaterThan(0);
   });
   it("même texte + même date : compteur d’envoi rend la valeur distincte (ré-envois identiques)", () => {
     const t = "Promo flash";
@@ -41,5 +51,11 @@ describe("buildLastBroadcastFieldValue", () => {
     expect(a).not.toBe(b);
     expect(a.startsWith("Promo flash")).toBe(true);
     expect(b.startsWith("Promo flash")).toBe(true);
+  });
+  it("texte différent → valeur différente (empreinte contenu + pipeline identique)", () => {
+    const at = "2026-03-26 21:37:21.123";
+    const a = buildLastBroadcastFieldValue("Message A", at, 5);
+    const b = buildLastBroadcastFieldValue("Message B", at, 5);
+    expect(a).not.toBe(b);
   });
 });
