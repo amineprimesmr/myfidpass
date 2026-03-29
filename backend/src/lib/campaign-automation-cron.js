@@ -58,6 +58,23 @@ export function mergeCampaignAutomationJson(raw) {
         };
       }
     }
+    /** Règles `custom_<uuid>` : ciblage libre (segment API) + message + titre d’affichage. */
+    for (const key of Object.keys(merged.rules)) {
+      if (!key.startsWith("custom_")) continue;
+      const r = merged.rules[key];
+      if (!r || typeof r !== "object") {
+        delete merged.rules[key];
+        continue;
+      }
+      const seg = r.segment != null ? String(r.segment).trim() : "";
+      const safe = {
+        enabled: !!r.enabled && CAMPAIGN_SEGMENT_KEYS.includes(seg),
+        message: String((r.message ?? "") || "").slice(0, 200),
+        segment: seg,
+        title: r.title != null ? String(r.title).trim().slice(0, 80) : "",
+      };
+      merged.rules[key] = safe;
+    }
     const cd = merged.global_cooldown_days ?? merged.globalCooldownDays;
     merged.global_cooldown_days = Math.min(90, Math.max(1, Number(cd) || 7));
     delete merged.globalCooldownDays;
@@ -84,14 +101,23 @@ export async function runCampaignAutomationCron() {
 
     for (const [ruleId, rule] of Object.entries(config.rules || {})) {
       if (!rule?.enabled) continue;
-      const segment = RULE_TO_SEGMENT[ruleId];
+      let segment = RULE_TO_SEGMENT[ruleId];
+      if (!segment && typeof ruleId === "string" && ruleId.startsWith("custom_") && rule.segment) {
+        segment = String(rule.segment).trim();
+      }
       if (!segment || !CAMPAIGN_SEGMENT_KEYS.includes(segment)) continue;
-      const message = (rule.message && String(rule.message).trim()) || DEFAULT_MESSAGES[ruleId];
+      const message =
+        (rule.message && String(rule.message).trim()) ||
+        (RULE_TO_SEGMENT[ruleId] ? DEFAULT_MESSAGES[ruleId] : "") ||
+        "";
       if (!message) continue;
       let memberIds = getMemberIdsBySegment(business.id, segment);
       memberIds = filterMemberIdsExcludingRecentNotifications(business.id, memberIds, config.global_cooldown_days ?? 7);
       if (memberIds.length === 0) continue;
       rulesRun++;
+      const triggerName = ruleId.startsWith("custom_")
+        ? `campaign_auto_${ruleId}`.slice(0, 96)
+        : "campaign_auto";
       try {
         const { sent } = await deliverDashboardBroadcast(
           business,
@@ -101,7 +127,7 @@ export async function runCampaignAutomationCron() {
           null,
           message,
           "campaign_auto",
-          { triggerName: "campaign_auto", sendMerchantReceipt: false }
+          { triggerName, sendMerchantReceipt: false }
         );
         sentTotal += sent;
       } catch (e) {
