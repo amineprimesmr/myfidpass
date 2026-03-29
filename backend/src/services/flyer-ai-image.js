@@ -30,12 +30,18 @@ const bodySchema = z.object({
 });
 
 const MOOD_EN = {
-  premium: "luxury high-end restaurant marketing, refined lighting, subtle gradients",
-  energetic: "bold vibrant energetic fast-food poster, high contrast",
-  minimal: "clean minimal Swiss-style layout, lots of whitespace, subtle",
-  street: "urban street food poster, gritty authentic dynamic",
-  gourmet: "gourmet artisan food styling, editorial quality",
-  playful: "playful bubbly friendly, rounded shapes, soft bokeh",
+  premium:
+    "premium French retail poster, soft studio light, restrained gradients, matte paper look, Michelin-adjacent clarity",
+  energetic:
+    "high-energy fast-food / takeaway poster, saturated accents, punchy contrast, glossy commercial print",
+  minimal:
+    "Swiss editorial layout, generous margins, thin rules, one hero focal point, almost no ornament",
+  street:
+    "urban street-food vibe, chalk and neon accents, authentic texture, night-market energy",
+  gourmet:
+    "gourmet artisan food ads, shallow depth of field on dishes, warm rim light, slate or wood surfaces",
+  playful:
+    "kawaii-influenced retail graphics, rounded bubbles, pastel pops, friendly mascot energy without clutter",
 };
 
 /**
@@ -73,43 +79,45 @@ export function parseFlyerAIBody(raw) {
 }
 
 /**
- * Prompt en anglais (meilleurs résultats DALL·E), contenu utilisateur entre guillemets.
+ * Prompt détaillé (anglais + textes FR entre guillemets) — aligné affiches pros type boulangerie / pizza / bubble tea.
  * @param {z.infer<typeof bodySchema>} input
  */
 export function buildFlyerImagePrompt(input) {
+  const brand = input.brand_name.trim();
+  const concept = input.cuisine_or_concept.trim();
+  const accent = input.accent_color_hex.trim();
   const secondary = input.secondary_color_hex?.trim()
-    ? `Secondary brand color ${input.secondary_color_hex}.`
-    : "Harmonious secondary color complementing the accent.";
+    ? `Secondary accent color ${input.secondary_color_hex} (use for wheel segments, ribbons, or headline word « CADEAU »).`
+    : `Derive a clean secondary (white, cream, or deep black) that complements ${accent}.`;
   const tag = input.tagline?.trim()
-    ? `Tagline text (exact spelling): "${input.tagline.trim()}".`
-    : "No tagline; focus on brand name and headline.";
+    ? `Small subtitle under the logo, exact French text: "${input.tagline.trim()}".`
+    : "Optional thin subtitle line under the logo describing the offer type (breads, pizzas, drinks…) in small clean sans-serif.";
   const products = input.hero_products?.trim()
-    ? `Feature these foods as realistic cutout photos around the wheel: ${input.hero_products.trim()}.`
-    : "Include 2–4 appetizing food photo cutouts appropriate to the concept.";
+    ? `Hero food: show photorealistic dishes as sharp cutouts around the wheel — ${input.hero_products.trim()}. On wooden boards or plates, studio lighting, subtle steam OK, no floating disconnected PNG look.`
+    : "Add 2–4 photorealistic food cutouts matching the cuisine, balanced left and right of the wheel.";
   const extra = input.extra_context?.trim()
-    ? `Additional brand notes: ${input.extra_context.trim().slice(0, 400)}`
+    ? `Brand constraints (respect strictly): ${input.extra_context.trim().slice(0, 450)}`
     : "";
 
   const mood = MOOD_EN[input.visual_mood] || MOOD_EN.energetic;
 
   return [
-    "Professional vertical promotional flyer design, portrait 2:3 aspect, mobile poster, print-ready graphic design.",
-    "NOT a screenshot, NOT a UI mockup of an app — a single flat marketing poster image.",
-    "Structure from top to bottom:",
-    "1) Top: brand area — logo space for text",
-    `   Brand name to emphasize visually (exact): "${input.brand_name.trim()}".`,
-    `   Business type / cuisine: "${input.cuisine_or_concept.trim()}".`,
-    `   ${tag}`,
-    "2) Large headline in French: \"SCANNEZ & GAGNEZ\" and \"VOTRE CADEAU !\" — bold sans-serif, white or light fill, thick black outline, strong shadow for readability.",
-    `3) Center: prize wheel (roulette) with alternating segments, text \"GAGNÉ\" on segments. Wheel uses accent color ${input.accent_color_hex}. ${secondary}`,
-    "   A large crisp black-and-white QR code placeholder centered on the lower part of the wheel (solid modules, scannable look).",
-    "4) Rounded CTA pill button: text \"SCANNE POUR JOUER\" in white on accent color.",
+    "TASK: One single finished vertical FLYER / poster image (print-ready), portrait ratio ~2:3, full bleed, no device frame, no phone mockup, no app UI screenshot.",
+    "REFERENCE STYLE (quality bar): French high-street loyalty flyers — crisp vector graphics + studio food photography; looks like a real printed card, not a collage.",
+    "LAYOUT ZONES (top → bottom, do not crowd; keep generous breathing room):",
+    `HEADER: Brand block on a solid or gradient field using ${accent} plus black/white/cream. Render the trade name prominently, exact spelling: "${brand}".`,
+    `Concept line: "${concept}". ${tag}`,
+    "HEADLINE (French, must be readable): Line 1: « SCANNEZ & GAGNEZ » — Line 2: « VOTRE » + « CADEAU ! » with « CADEAU ! » in the accent color or white on a color block. Bold condensed sans-serif, thick dark outline around light letters OR inverse on dark band; perfect kerning, no warped letters.",
+    "CENTER: Large prize wheel (roue de la fortune) behind a QR code. Wheel: alternating segments in brand colors; readable curved text « GAGNÉ » on segments (optional subtle « PERDU » segments like real games — keep legible). Small pointer at top. Wheel must look vector-clean, symmetric.",
+    `QR CODE: One large square black-on-white QR module pattern centered on the lower half of the wheel, integrated into the design (not a crooked sticker). High contrast, sharp pixels, no smear, no broken modules.`,
+    "CTA: Horizontal ribbon or pill to the side of the QR, French text exactly: « SCANNE POUR JOUER » — text and fill contrast strongly.",
     products,
-    "5) Bottom dark horizontal band with 3 numbered steps with tiny icons: (1) scan QR (2) spin wheel (3) discover gift — short French phrases.",
-    "Optional thin footer strip for address/phone in small text.",
+    "FOOTER (dark band or full-width strip): three numbered steps in a row with small simple line icons (phone → wheel → gift). Exact short French lines: (1) « Scanne le QRcode » (2) « Fais tourner la roue » (3) « Découvre ton cadeau ». Numbers 1 2 3 aligned, even spacing.",
+    "Optional bottom thin strip for city + phone in tiny clean sans-serif (placeholder text OK if no address provided).",
+    secondary,
+    "VISUAL RULES: No misspelled French, no mirrored text, no random English, no extra fake logos, no watermarks, no stock photo marks, no muddy shadows, no greasy blur.",
+    "QUALITY: 8K advertising poster, sharp edges, consistent lighting, color grading cohesive with brand, professional food styling.",
     mood + ".",
-    "Photorealistic food photography where applicable, 4K advertising poster quality, crisp edges, no blur, no muddy colors.",
-    "High resolution, sharp typography, cohesive brand palette, no watermarks, no gibberish text, no deformed QR, no extra logos besides the brand name area.",
     extra,
   ]
     .filter(Boolean)
