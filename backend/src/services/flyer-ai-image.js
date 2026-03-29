@@ -138,7 +138,7 @@ function flyerImageRequestPayload(prompt) {
         quality: "high",
         background: "opaque",
         output_format: "png",
-        response_format: "b64_json",
+        // Pas de `response_format` : réservé à DALL·E 2/3 ; GPT Image renvoie du base64 par défaut.
       },
     };
   }
