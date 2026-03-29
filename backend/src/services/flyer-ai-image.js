@@ -15,8 +15,8 @@
 const FLYER_AI_MODEL_BEST = "gpt-image-1.5";
 import { z } from "zod";
 
-/** Générations flyer IA gratuites par commerce (compteur lifetime, voir `flyer_ai_generations_used`). */
-export const FLYER_AI_FREE_GENERATIONS = 3;
+/** @deprecated Utiliser `FLYER_AI_FREE_PER_MONTH` dans `flyer-ai-quota.js`. */
+export { FLYER_AI_FREE_PER_MONTH as FLYER_AI_FREE_GENERATIONS } from "./flyer-ai-quota.js";
 
 const VISUAL_MOODS = ["premium", "energetic", "minimal", "street", "gourmet", "playful"];
 

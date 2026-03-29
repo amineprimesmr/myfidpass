@@ -5,6 +5,7 @@
 import { Router } from "express";
 import {
   updateBusiness,
+  getBusinessById,
   bumpBusinessPassRefreshTimestamp,
   getBusinessGames,
   updateBusinessGameConfig,
@@ -37,10 +38,27 @@ import {
   parseFlyerAIBody,
   buildFlyerImagePrompt,
   openaiGenerateFlyerImage,
-  FLYER_AI_FREE_GENERATIONS,
 } from "../../services/flyer-ai-image.js";
+import {
+  FLYER_AI_FREE_PER_MONTH,
+  currentMonthKeyUTC,
+  isFlyerAiUnlimited,
+} from "../../services/flyer-ai-quota.js";
 
 const router = Router();
+
+/** Remet le compteur flyer IA au mois UTC courant si besoin. */
+function syncFlyerAiBillingMonth(business) {
+  const month = currentMonthKeyUTC();
+  if (String(business.flyer_ai_billing_month || "").trim() !== month) {
+    updateBusiness(business.id, {
+      flyer_ai_billing_month: month,
+      flyer_ai_generations_used: 0,
+    });
+    return getBusinessById(business.id);
+  }
+  return business;
+}
 
 /** Max 8 générations flyer IA / heure / commerce (coût OpenAI). */
 const flyerAiGenerateLimiter = rateLimit({
@@ -456,7 +474,7 @@ router.patch("/settings", async (req, res) => {
 
 // ——— Flyer QR (sync SaaS + app, même état que le canvas) ———
 router.get("/flyer", (req, res) => {
-  const business = req.business;
+  let business = syncFlyerAiBillingMonth(req.business);
   const slug = req.params.slug ?? business.slug;
   const fe = (process.env.FRONTEND_URL || "https://www.myfidpass.fr").replace(/\/$/, "");
   const shareUrl = `${fe}/fidelity/${encodeURIComponent(slug)}`;
@@ -468,14 +486,17 @@ router.get("/flyer", (req, res) => {
       flyer_prefs = null;
     }
   }
+  const unlimited = isFlyerAiUnlimited(business);
   const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
-  const remaining = Math.max(0, FLYER_AI_FREE_GENERATIONS - used);
+  const remaining = unlimited ? null : Math.max(0, FLYER_AI_FREE_PER_MONTH - used);
   res.json({
     flyer_prefs,
     updated_at: business.flyer_prefs_updated_at ?? null,
     share_url: shareUrl,
+    flyer_ai_unlimited: unlimited,
     flyer_ai_generations_used: used,
     flyer_ai_generations_remaining: remaining,
+    flyer_ai_billing_month: business.flyer_ai_billing_month ?? currentMonthKeyUTC(),
   });
 });
 
@@ -505,12 +526,13 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
   if (!parsed.ok) {
     return res.status(400).json({ error: parsed.error });
   }
-  const business = req.business;
+  let business = syncFlyerAiBillingMonth(req.business);
+  const unlimited = isFlyerAiUnlimited(business);
   const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
-  if (used >= FLYER_AI_FREE_GENERATIONS) {
+  if (!unlimited && used >= FLYER_AI_FREE_PER_MONTH) {
     return res.status(403).json({
       error:
-        "Vous avez utilisé vos 3 générations flyer IA gratuites pour ce commerce. Contactez le support MyFidpass pour aller plus loin.",
+        "Vous avez utilisé vos 3 générations flyer IA gratuites ce mois-ci pour ce commerce. Le quota se renouvelle chaque mois (UTC). Contactez le support MyFidpass pour aller plus loin.",
       code: "FLYER_AI_LIMIT_REACHED",
     });
   }
@@ -520,13 +542,23 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
       styleRefCount: parsed.multimodal.styleRefCount,
     });
     const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, parsed.multimodal);
+    if (unlimited) {
+      return res.json({
+        image_base64: b64,
+        revised_prompt: revised ?? null,
+        flyer_ai_unlimited: true,
+        flyer_ai_generations_used: used,
+        flyer_ai_generations_remaining: null,
+      });
+    }
     const nextUsed = used + 1;
     updateBusiness(business.id, { flyer_ai_generations_used: nextUsed });
     return res.json({
       image_base64: b64,
       revised_prompt: revised ?? null,
+      flyer_ai_unlimited: false,
       flyer_ai_generations_used: nextUsed,
-      flyer_ai_generations_remaining: Math.max(0, FLYER_AI_FREE_GENERATIONS - nextUsed),
+      flyer_ai_generations_remaining: Math.max(0, FLYER_AI_FREE_PER_MONTH - nextUsed),
     });
   } catch (e) {
     const msg = e?.message || "Erreur lors de la génération.";
@@ -534,6 +566,36 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     const status = code === 429 ? 429 : 502;
     return res.status(status).json({ error: String(msg) });
   }
+});
+
+/**
+ * Déverrouillage générations illimitées (équipe / test) — secret serveur `FLYER_AI_DEV_UNLOCK_SECRET`.
+ * Body : `{ "unlock_secret": "…", "disable": false }` pour activer ; `"disable": true` pour repasser au quota mensuel.
+ */
+router.post("/flyer/ai-dev-unlock", async (req, res) => {
+  const secret = process.env.FLYER_AI_DEV_UNLOCK_SECRET;
+  if (!secret || String(secret).trim().length < 8) {
+    return res.status(503).json({
+      error: "Déverrouillage non configuré sur le serveur (FLYER_AI_DEV_UNLOCK_SECRET).",
+    });
+  }
+  const body = req.body || {};
+  const provided = body.unlock_secret ?? body.unlockSecret;
+  if (String(provided || "") !== String(secret)) {
+    return res.status(403).json({ error: "Secret incorrect." });
+  }
+  const disable = Boolean(body.disable ?? body.disable_unlimited);
+  let business = syncFlyerAiBillingMonth(req.business);
+  updateBusiness(business.id, { flyer_ai_unlimited: disable ? 0 : 1 });
+  business = getBusinessById(business.id);
+  const unlimited = isFlyerAiUnlimited(business);
+  const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
+  return res.json({
+    ok: true,
+    flyer_ai_unlimited: unlimited,
+    flyer_ai_generations_used: used,
+    flyer_ai_generations_remaining: unlimited ? null : Math.max(0, FLYER_AI_FREE_PER_MONTH - used),
+  });
 });
 
 // ——— Games ———

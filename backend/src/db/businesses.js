@@ -165,8 +165,12 @@ export function updateBusiness(businessId, updates) {
     "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
     "sector", "engagement_rewards",
     "flyer_prefs_json", "flyer_prefs_updated_at",
-    /** Nombre de générations flyer IA consommées (plafond côté API, ex. 3 gratuites). */
+    /** Générations flyer IA consommées sur le mois `flyer_ai_billing_month` (UTC). */
     "flyer_ai_generations_used",
+    /** Mois UTC courant du compteur flyer IA (YYYY-MM). */
+    "flyer_ai_billing_month",
+    /** 1 = générations flyer IA illimitées (équipe / test). */
+    "flyer_ai_unlimited",
     /** Règles campagnes auto (JSON) — version, règles on/off, messages, cooldown. */
     "campaign_automation_json",
     /** Textes notif. pass / campagnes (doit être persisté — sinon le Wallet garde l’ancien titre affiché sur la bannière). */
@@ -186,6 +190,7 @@ export function updateBusiness(businessId, updates) {
     "points_per_ticket",
     "wallet_pass_include_locations",
     "flyer_ai_generations_used",
+    "flyer_ai_unlimited",
   ];
   const setClauses = [];
   const values = [];

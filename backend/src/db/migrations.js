@@ -676,4 +676,17 @@ export function runMigrations(db) {
       db.exec("ALTER TABLE businesses ADD COLUMN flyer_ai_generations_used INTEGER NOT NULL DEFAULT 0"),
     );
   }
+
+  // ── v6 : quota mensuel + mode illimité (test équipe) ────────────────────────
+  markMigrationApplied(db, 6, "flyer_ai_monthly_quota_and_unlimited");
+  const bizFlyerAi6 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizFlyerAi6.includes("flyer_ai_billing_month")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN flyer_ai_billing_month TEXT"));
+  }
+  const bizFlyerAi62 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizFlyerAi62.includes("flyer_ai_unlimited")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN flyer_ai_unlimited INTEGER NOT NULL DEFAULT 0"),
+    );
+  }
 }
