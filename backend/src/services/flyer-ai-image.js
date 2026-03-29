@@ -1,5 +1,7 @@
 /**
- * Génération d’image flyer (DALL·E 3) pour le dashboard — prompt serveur uniquement.
+ * Génération d’image flyer via OpenAI Image API.
+ * Modèle par défaut : **gpt-image-1.5** (meilleure qualité que DALL·E 3 ; doc OpenAI).
+ * Surcharge : variable d’env `FLYER_AI_IMAGE_MODEL` (ex. `gpt-image-1`, `dall-e-3`).
  * Clé API : OPENAI_API_KEY (Railway / env).
  */
 import { z } from "zod";
@@ -100,6 +102,7 @@ export function buildFlyerImagePrompt(input) {
     "5) Bottom dark horizontal band with 3 numbered steps with tiny icons: (1) scan QR (2) spin wheel (3) discover gift — short French phrases.",
     "Optional thin footer strip for address/phone in small text.",
     mood + ".",
+    "Photorealistic food photography where applicable, 4K advertising poster quality, crisp edges, no blur, no muddy colors.",
     "High resolution, sharp typography, cohesive brand palette, no watermarks, no gibberish text, no deformed QR, no extra logos besides the brand name area.",
     extra,
   ]
@@ -112,22 +115,61 @@ export function buildFlyerImagePrompt(input) {
  * @param {string} prompt
  * @returns {Promise<{ b64: string, revised?: string }>}
  */
+/** @returns {{ model: string, body: Record<string, unknown> }} */
+function flyerImageRequestPayload(prompt) {
+  const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;
+  const model = (process.env.FLYER_AI_IMAGE_MODEL || "gpt-image-1.5").trim();
+
+  // GPT Image 1.x : qualité low|medium|high|auto, tailles incl. portrait 1024x1536
+  if (model.startsWith("gpt-image")) {
+    return {
+      model,
+      body: {
+        model,
+        prompt: clipped,
+        n: 1,
+        size: "1024x1536",
+        quality: "high",
+        response_format: "b64_json",
+      },
+    };
+  }
+
+  // DALL·E 3 : hd | standard, tailles 1024x1792 (portrait)
+  if (model.includes("dall-e-3")) {
+    return {
+      model,
+      body: {
+        model: "dall-e-3",
+        prompt: clipped.length > 3800 ? clipped.slice(0, 3800) : clipped,
+        n: 1,
+        size: "1024x1792",
+        quality: "hd",
+        response_format: "b64_json",
+      },
+    };
+  }
+
+  return {
+    model,
+    body: {
+      model,
+      prompt: clipped,
+      n: 1,
+      response_format: "b64_json",
+    },
+  };
+}
+
 export async function openaiGenerateFlyerImage(apiKey, prompt) {
-  const clipped = prompt.length > 3800 ? prompt.slice(0, 3800) : prompt;
+  const { body } = flyerImageRequestPayload(prompt);
   const res = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: "dall-e-3",
-      prompt: clipped,
-      n: 1,
-      size: "1024x1792",
-      quality: "hd",
-      response_format: "b64_json",
-    }),
+    body: JSON.stringify(body),
   });
 
   const json = await res.json().catch(() => ({}));
