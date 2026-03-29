@@ -44,25 +44,17 @@ describe("normalizeWheelLabelsFromSegments", () => {
 });
 
 describe("formatWheelSegmentDisplayLabel", () => {
-  it("raccourcit les libellés points longs en majuscules", () => {
-    expect(formatWheelSegmentDisplayLabel("10 POINTS BONUS")).toBe("+10 PTS");
-    expect(formatWheelSegmentDisplayLabel("25 points bonus")).toBe("+25 PTS");
-    expect(formatWheelSegmentDisplayLabel("50 PTS")).toBe("+50 PTS");
+  it("affiche GAGNER pour tout lot gagnant (points, tampons, libellé custom)", () => {
+    expect(formatWheelSegmentDisplayLabel("10 POINTS BONUS")).toBe("GAGNER");
+    expect(formatWheelSegmentDisplayLabel("+10 pts")).toBe("GAGNER");
+    expect(formatWheelSegmentDisplayLabel("+2 tampons")).toBe("GAGNER");
+    expect(formatWheelSegmentDisplayLabel("Un super lot")).toBe("GAGNER");
   });
 
-  it("perdant / pas de lot → PERDU", () => {
+  it("affiche PERDU pour perdant / pas de lot / vide", () => {
     expect(formatWheelSegmentDisplayLabel("")).toBe("PERDU");
     expect(formatWheelSegmentDisplayLabel("PERDU")).toBe("PERDU");
     expect(formatWheelSegmentDisplayLabel("PAS DE LOT")).toBe("PERDU");
-  });
-
-  it("normalise les courts en majuscules", () => {
-    expect(formatWheelSegmentDisplayLabel("+10 pts")).toBe("+10 PTS");
-  });
-
-  it("tampons ou passages → affichage PTS sur la roue", () => {
-    expect(formatWheelSegmentDisplayLabel("+2 tampons")).toBe("+2 PTS");
-    expect(formatWheelSegmentDisplayLabel("3 passages")).toBe("+3 PTS");
   });
 });
 

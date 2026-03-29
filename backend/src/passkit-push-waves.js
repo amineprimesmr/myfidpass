@@ -5,7 +5,7 @@
  * (plus de boucle séquentielle ni pause 2,5 s fixe). Deux salves restent optionnelles
  * pour limiter le batching APNs (apns-id unique par appel dans sendPassKitUpdate).
  *
- * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 400). Mettre 0 pour une seule salve.
+ * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 0 = une seule salve). Ex. 400 pour l’ancien double envoi.
  */
 import { sendPassKitUpdate } from "./apns.js";
 

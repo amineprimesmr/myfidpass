@@ -57,28 +57,18 @@ export function pickWheelIndexForReward(wheelLabels, rewardLabel) {
 }
 
 /**
- * Libellé court sur la roue uniquement (le tirage serveur reste sur le label complet en base).
+ * Texte visible sur la roue uniquement : GAGNER ou PERDU (les lots réels restent côté API).
  */
 export function formatWheelSegmentDisplayLabel(label) {
   const s = String(label ?? "").trim();
   const compact = s.replace(/\s+/g, " ");
   if (!compact) return "PERDU";
-  const u = compact.toUpperCase();
   if (
-    u === "PERDU" ||
+    compact.toUpperCase() === "PERDU" ||
     /^(PAS DE LOT|PAS DE PRIX|RIEN|NO PRIZE|LOSE|LOST)$/i.test(compact) ||
     /\bPAS DE LOT\b/i.test(compact)
   ) {
     return "PERDU";
   }
-  let m = compact.match(/\+?\s*(\d+)\s*(?:POINTS?\s*BONUS|PTS?\s*BONUS|POINTS?|PTS?)\b/i);
-  if (m) return `+${m[1]} PTS`;
-  m = compact.match(/\b(\d+)\s*(?:POINTS?\s*BONUS|PTS?\s*BONUS|POINTS?|PTS?)\b/i);
-  if (m) return `+${m[1]} PTS`;
-  m = compact.match(/\+?\s*(\d+)\s*(?:PASSAGES?|TAMPONS?)\b/i);
-  if (m) return `+${m[1]} PTS`;
-  m = compact.match(/\b(\d+)\s*(?:PASSAGES?|TAMPONS?)\b/i);
-  if (m) return `+${m[1]} PTS`;
-  if (compact.length > 11) return `${u.slice(0, 10)}…`;
-  return u;
+  return "GAGNER";
 }
