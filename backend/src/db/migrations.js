@@ -667,4 +667,13 @@ export function runMigrations(db) {
       ins.run(randomUUID(), row.user_id, String(row.device_token).trim(), row.updated_at || new Date().toISOString());
     }
   }
+
+  // ── v5 : quota générations flyer IA (3 gratuites / commerce, lifetime) ─────
+  markMigrationApplied(db, 5, "flyer_ai_generations_quota");
+  const bizFlyerAi = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizFlyerAi.includes("flyer_ai_generations_used")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN flyer_ai_generations_used INTEGER NOT NULL DEFAULT 0"),
+    );
+  }
 }

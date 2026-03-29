@@ -15,6 +15,9 @@
 const FLYER_AI_MODEL_BEST = "gpt-image-1.5";
 import { z } from "zod";
 
+/** Générations flyer IA gratuites par commerce (compteur lifetime, voir `flyer_ai_generations_used`). */
+export const FLYER_AI_FREE_GENERATIONS = 3;
+
 const VISUAL_MOODS = ["premium", "energetic", "minimal", "street", "gourmet", "playful"];
 
 /** Taille max décodée par image (évite surcharge mémoire / quota). */
@@ -144,16 +147,13 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   const concept = input.cuisine_or_concept.trim();
   const accent = input.accent_color_hex.trim();
   const secondary = input.secondary_color_hex?.trim()
-    ? `Secondary accent color ${input.secondary_color_hex} (use for wheel segments, ribbons, or headline word « CADEAU »).`
+    ? `Secondary accent color ${input.secondary_color_hex} (wheel segments, ribbons, headline word « CADEAU »).`
     : `Derive a clean secondary (white, cream, or deep black) that complements ${accent}.`;
-  const tag = input.tagline?.trim()
-    ? `Small subtitle under the logo, exact French text: "${input.tagline.trim()}".`
-    : "Optional thin subtitle line under the logo describing the offer type (breads, pizzas, drinks…) in small clean sans-serif.";
   const products = input.hero_products?.trim()
-    ? `Hero food: show photorealistic dishes as sharp cutouts around the wheel — ${input.hero_products.trim()}. On wooden boards or plates, studio lighting, subtle steam OK, no floating disconnected PNG look.`
-    : "Add 2–4 photorealistic food cutouts matching the cuisine, balanced left and right of the wheel.";
+    ? `Hero food (optional): photorealistic dish cutouts around the wheel — ${input.hero_products.trim()}. Boards/plates, studio light; only if it fits. INTERNAL MOOD for dishes: "${concept}" (do not print this sentence).`
+    : `Optional photorealistic food cutouts matching the vibe of "${concept}" left/right of the wheel — INTERNAL: never print the word "${concept}" as a label unless it is the brand name.`;
   const extra = input.extra_context?.trim()
-    ? `Brand constraints (respect strictly): ${input.extra_context.trim().slice(0, 450)}`
+    ? `Extra constraints (respect strictly): ${input.extra_context.trim().slice(0, 450)}`
     : "";
 
   const mood = MOOD_EN[input.visual_mood] || MOOD_EN.energetic;
@@ -178,19 +178,16 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   return [
     "TASK: One single finished vertical FLYER / poster image (print-ready), portrait ratio ~2:3, full bleed, no device frame, no phone mockup, no app UI screenshot.",
     "REFERENCE STYLE (quality bar): French high-street loyalty flyers — crisp vector graphics + studio food photography; looks like a real printed card, not a collage.",
-    "LAYOUT ZONES (top → bottom, do not crowd; keep generous breathing room):",
-    `HEADER: Brand block on a solid or gradient field using ${accent} plus black/white/cream. Render the trade name prominently, exact spelling: "${brand}".`,
-    `Concept line: "${concept}". ${tag}`,
-    "HEADLINE (French, must be readable): Line 1: « SCANNEZ & GAGNEZ » — Line 2: « VOTRE » + « CADEAU ! » with « CADEAU ! » in the accent color or white on a color block. Bold condensed sans-serif, thick dark outline around light letters OR inverse on dark band; perfect kerning, no warped letters.",
-    "CENTER: Large prize wheel (roue de la fortune) behind a QR code. Wheel: alternating segments in brand colors; readable curved text « GAGNÉ » on segments (optional subtle « PERDU » segments like real games — keep legible). Small pointer at top. Wheel must look vector-clean, symmetric.",
-    `QR CODE: One large square black-on-white QR module pattern centered on the lower half of the wheel, integrated into the design (not a crooked sticker). High contrast, sharp pixels, no smear, no broken modules.`,
-    "CTA: Horizontal ribbon or pill to the side of the QR, French text exactly: « SCANNE POUR JOUER » — text and fill contrast strongly.",
+    "HEADER ZONE (strict): Top band using " + accent + " plus black/white/cream. Show ONLY (1) the brand logo/wordmark if provided by the brief, and (2) the exact trade name \"" + brand + "\" once. FORBIDDEN under or beside the logo: any slogan, subtitle, cuisine description, English words, fake menu lines (e.g. breads/pizzas/drinks), bullet lists, or placeholder product categories. FORBIDDEN: printing the internal concept/cuisine field as text on the poster.",
+    "MAIN HEADLINE (large, directly below the header band, not as tiny text under the logo): French — line 1 « SCANNEZ & GAGNEZ » — line 2 « VOTRE » + « CADEAU ! » (« CADEAU ! » in accent color or white on a block). Bold condensed sans-serif, thick outline if needed; perfect kerning.",
+    "CENTER — PRIZE WHEEL: A large roulette wheel (roue de la fortune). Use AT MOST 9 segments (never 10, 11, 12 or more). Segments alternate in brand colors. Small pointer at top. Typography on wheel: on each segment, « GAGNÉ » or « PERDU » must follow the slice radially (bent along the arc / circumferential), never as horizontal upright blocks sitting on the wheel.",
+    "WHEEL HUB / QR PLACEHOLDER: In the exact center of the wheel, draw a flat white rounded square (solid white fill, optional thin light gray border). NO fake QR modules, NO checkerboard, NO random patterns — a clean blank tile; a real QR will be pasted in post-production.",
+    "CTA: Ribbon or pill near the wheel hub, French text exactly: « SCANNE POUR JOUER » — high contrast.",
     products,
-    "FOOTER (dark band or full-width strip): three numbered steps in a row with small simple line icons (phone → wheel → gift). Exact short French lines: (1) « Scanne le QRcode » (2) « Fais tourner la roue » (3) « Découvre ton cadeau ». Numbers 1 2 3 aligned, even spacing.",
-    "Optional bottom thin strip for city + phone in tiny clean sans-serif (placeholder text OK if no address provided).",
+    "FOOTER: Three numbered steps in one row with small line icons (phone → wheel → gift). Exact lines: (1) « Scanne le QRcode » (2) « Fais tourner la roue » (3) « Découvre ton cadeau ». STRICTLY FORBIDDEN anywhere on the poster: street address, postal code, city, phone number, opening hours, or any contact strip — do not invent or hallucinate contact info.",
     secondary,
-    "VISUAL RULES: No misspelled French, no mirrored text, no random English, no extra fake logos, no watermarks, no stock photo marks, no muddy shadows, no greasy blur.",
-    "QUALITY: 8K advertising poster, sharp edges, consistent lighting, color grading cohesive with brand, professional food styling.",
+    "VISUAL RULES: No misspelled French, no mirrored text, no random English, no extra fake logos, no watermarks, no stock marks, no muddy shadows.",
+    "QUALITY: 8K advertising poster, sharp edges, cohesive lighting and color grading.",
     mood + ".",
     extra,
     ...multimodalLines,

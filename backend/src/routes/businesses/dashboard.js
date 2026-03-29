@@ -37,6 +37,7 @@ import {
   parseFlyerAIBody,
   buildFlyerImagePrompt,
   openaiGenerateFlyerImage,
+  FLYER_AI_FREE_GENERATIONS,
 } from "../../services/flyer-ai-image.js";
 
 const router = Router();
@@ -467,10 +468,14 @@ router.get("/flyer", (req, res) => {
       flyer_prefs = null;
     }
   }
+  const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
+  const remaining = Math.max(0, FLYER_AI_FREE_GENERATIONS - used);
   res.json({
     flyer_prefs,
     updated_at: business.flyer_prefs_updated_at ?? null,
     share_url: shareUrl,
+    flyer_ai_generations_used: used,
+    flyer_ai_generations_remaining: remaining,
   });
 });
 
@@ -500,15 +505,28 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
   if (!parsed.ok) {
     return res.status(400).json({ error: parsed.error });
   }
+  const business = req.business;
+  const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
+  if (used >= FLYER_AI_FREE_GENERATIONS) {
+    return res.status(403).json({
+      error:
+        "Vous avez utilisé vos 3 générations flyer IA gratuites pour ce commerce. Contactez le support MyFidpass pour aller plus loin.",
+      code: "FLYER_AI_LIMIT_REACHED",
+    });
+  }
   try {
     const prompt = buildFlyerImagePrompt(parsed.value, {
       hasLogo: parsed.multimodal.hasLogo,
       styleRefCount: parsed.multimodal.styleRefCount,
     });
     const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, parsed.multimodal);
+    const nextUsed = used + 1;
+    updateBusiness(business.id, { flyer_ai_generations_used: nextUsed });
     return res.json({
       image_base64: b64,
       revised_prompt: revised ?? null,
+      flyer_ai_generations_used: nextUsed,
+      flyer_ai_generations_remaining: Math.max(0, FLYER_AI_FREE_GENERATIONS - nextUsed),
     });
   } catch (e) {
     const msg = e?.message || "Erreur lors de la génération.";
