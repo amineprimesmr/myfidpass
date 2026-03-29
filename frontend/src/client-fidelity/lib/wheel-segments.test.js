@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_WHEEL_LABELS,
-  formatWheelSegmentDisplayLabel,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
+  wheelSegmentAlternateDisplayLabel,
   WHEEL_SEGMENT_COUNT,
 } from "./wheel-segments.js";
 
@@ -43,18 +43,13 @@ describe("normalizeWheelLabelsFromSegments", () => {
   });
 });
 
-describe("formatWheelSegmentDisplayLabel", () => {
-  it("affiche GAGNER pour tout lot gagnant (points, tampons, libellé custom)", () => {
-    expect(formatWheelSegmentDisplayLabel("10 POINTS BONUS")).toBe("GAGNER");
-    expect(formatWheelSegmentDisplayLabel("+10 pts")).toBe("GAGNER");
-    expect(formatWheelSegmentDisplayLabel("+2 tampons")).toBe("GAGNER");
-    expect(formatWheelSegmentDisplayLabel("Un super lot")).toBe("GAGNER");
-  });
-
-  it("affiche PERDU pour perdant / pas de lot / vide", () => {
-    expect(formatWheelSegmentDisplayLabel("")).toBe("PERDU");
-    expect(formatWheelSegmentDisplayLabel("PERDU")).toBe("PERDU");
-    expect(formatWheelSegmentDisplayLabel("PAS DE LOT")).toBe("PERDU");
+describe("wheelSegmentAlternateDisplayLabel", () => {
+  it("alterne GAGNER / PERDU selon l’index (0 = GAGNER)", () => {
+    expect(wheelSegmentAlternateDisplayLabel(0)).toBe("GAGNER");
+    expect(wheelSegmentAlternateDisplayLabel(1)).toBe("PERDU");
+    expect(wheelSegmentAlternateDisplayLabel(2)).toBe("GAGNER");
+    expect(wheelSegmentAlternateDisplayLabel(3)).toBe("PERDU");
+    expect(wheelSegmentAlternateDisplayLabel(7)).toBe("PERDU");
   });
 });
 

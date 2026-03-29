@@ -57,18 +57,10 @@ export function pickWheelIndexForReward(wheelLabels, rewardLabel) {
 }
 
 /**
- * Texte visible sur la roue uniquement : GAGNER ou PERDU (les lots réels restent côté API).
+ * Texte sur la part d’index `i` : alternance fixe GAGNER / PERDU / GAGNER / …
+ * (alignée sur les bandes noir/blanc de la roue, indépendante du libellé du lot en base).
  */
-export function formatWheelSegmentDisplayLabel(label) {
-  const s = String(label ?? "").trim();
-  const compact = s.replace(/\s+/g, " ");
-  if (!compact) return "PERDU";
-  if (
-    compact.toUpperCase() === "PERDU" ||
-    /^(PAS DE LOT|PAS DE PRIX|RIEN|NO PRIZE|LOSE|LOST)$/i.test(compact) ||
-    /\bPAS DE LOT\b/i.test(compact)
-  ) {
-    return "PERDU";
-  }
-  return "GAGNER";
+export function wheelSegmentAlternateDisplayLabel(segmentIndex) {
+  const i = Math.floor(Number(segmentIndex)) || 0;
+  return i % 2 === 0 ? "GAGNER" : "PERDU";
 }
