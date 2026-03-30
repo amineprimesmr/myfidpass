@@ -40,7 +40,8 @@ const bodySchema = z.object({
   style_reference_images_base64: z.array(z.string().max(6_000_000)).max(3).optional(),
 });
 
-const MOOD_EN = {
+/** Ambiances quand le commerce est clairement alimentaire / restauration. */
+const MOOD_EN_FOOD = {
   premium:
     "premium French retail poster, soft studio light, restrained gradients, matte paper look, Michelin-adjacent clarity",
   energetic:
@@ -54,6 +55,53 @@ const MOOD_EN = {
   playful:
     "kawaii-influenced retail graphics, rounded bubbles, pastel pops, friendly mascot energy without clutter",
 };
+
+/** Ambiances génériques (auto, mode, services, etc.) — sans lexique fast-food. */
+const MOOD_EN_GENERAL = {
+  premium:
+    "premium brand poster, soft studio light, restrained gradients, matte paper look, crisp print clarity",
+  energetic:
+    "high-energy retail / automotive / tech poster, saturated accents, punchy contrast, glossy commercial print",
+  minimal:
+    "Swiss editorial layout, generous margins, thin rules, one hero focal point, almost no ornament",
+  street:
+    "urban retail vibe, chalk and neon accents, authentic texture, contemporary city energy",
+  gourmet:
+    "refined editorial product photography, shallow depth of field, warm rim light, slate or brushed metal — no food unless the brand sells food",
+  playful:
+    "friendly retail graphics, rounded bubbles, pastel pops, mascot or icon energy without clutter",
+};
+
+/**
+ * Détecte si le texte métier décrit une activité autour de l’alimentation.
+ * Par défaut **non** si ambigu (évite le biais « bouffe » sur auto, tech, etc.).
+ * @param {string} blob
+ */
+export function inferFlyerFoodServiceContext(blob) {
+  const t = String(blob || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const nonFood =
+    /\b(voiture|vehicule|auto|automobile|electrique|tesla|garage|concession|mecanique|immo|immobilier|mode|vetement|tech|informatique|saas|coiffure|esthetique|sport|salle de sport|gym|fitness|pharmacie|optique|librairie|bijou|horloger|fleuriste|pressing|tabac|presse)\b/.test(
+      t,
+    );
+  if (nonFood) return false;
+  const food =
+    /\b(restaurant|resto|\bcafe\b|coffee|bar |brasserie|boulangerie|patisserie|pizza|burger|kebab|sushi|traiteur|snack|street food|fast food|food|repas|plat|menu|cuisine |kitchen|miam|restauration|crepe|crepes|bubble tea|boulanger|patissier|boucherie|fromager|traiteur|cantine|catering|brunch|tapas|ramen|wok)\b/.test(
+      t,
+    );
+  return food;
+}
+
+/**
+ * @param {z.infer<typeof bodySchema>} input
+ */
+function buildFoodContextBlob(input) {
+  return [input.brand_name, input.cuisine_or_concept, input.hero_products, input.tagline, input.extra_context]
+    .filter(Boolean)
+    .join(" | ");
+}
 
 /**
  * @param {string} s
@@ -138,7 +186,7 @@ export function parseFlyerAIBody(raw) {
 }
 
 /**
- * Prompt détaillé (anglais + textes FR entre guillemets) — aligné affiches pros type boulangerie / pizza / bubble tea.
+ * Prompt détaillé — **sujet visuel** aligné sur le type de commerce (pas de « bouffe » par défaut).
  * @param {z.infer<typeof bodySchema>} input
  * @param {{ hasLogo: boolean, styleRefCount: number }} multimodalHint
  */
@@ -153,7 +201,35 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     ? `Extra constraints (respect strictly): ${input.extra_context.trim().slice(0, 450)}`
     : "";
 
-  const mood = MOOD_EN[input.visual_mood] || MOOD_EN.energetic;
+  const isFood = inferFlyerFoodServiceContext(buildFoodContextBlob(input));
+  const moodTable = isFood ? MOOD_EN_FOOD : MOOD_EN_GENERAL;
+  const mood = moodTable[input.visual_mood] || moodTable.energetic;
+
+  const heroBit = input.hero_products?.trim() ? input.hero_products.trim() : concept;
+  const sideImageryFood =
+    "Photorealistic food and beverages (" +
+      heroBit +
+      ") positioned left/right of the wheel; match the mood of « " +
+      concept +
+      " » visually only.";
+  const sideImageryGeneral =
+    "Photorealistic brand-appropriate imagery around the wheel — vehicles, products, showroom, lifestyle, materials, or abstract brand visuals matching « " +
+      heroBit +
+      " » and « " +
+      concept +
+      " ». NO burgers, pizza, fries, drinks, croissants, or generic fast-food unless the merchant concept explicitly describes food service.";
+  const sideImagery = isFood ? sideImageryFood : sideImageryGeneral;
+
+  const taskStructure = isFood
+    ? "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Structure from top to bottom: (1) optional logo band at top center when a logo reference is supplied; (2) large prize wheel in the middle; (3) photorealistic food around the wheel; (4) soft background. The merchant adds the real scannable QR in software — your image must NOT contain any QR."
+    : "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Structure from top to bottom: (1) optional logo band at top center when a logo reference is supplied; (2) large prize wheel in the middle; (3) photorealistic NON-FOOD visuals around the wheel matching the merchant concept (e.g. vehicles, retail, services); (4) soft background. The merchant adds the real scannable QR in software — your image must NOT contain any QR. Do NOT default to restaurant or fast-food imagery.";
+
+  const referenceStyle = isFood
+    ? "REFERENCE STYLE: Premium French street retail — crisp wheel, photoreal food cutouts, cohesive lighting."
+    : "REFERENCE STYLE: Premium commercial poster — crisp prize wheel, photoreal product or lifestyle cutouts matching the stated business concept, cohesive lighting. Absolutely no generic fast-food stock look.";
+
+  const foodBan =
+    "NON-FOOD BRAND BAN: If the merchant concept is NOT food service, do NOT show meals, burgers, pizza, fries, drinks, pastries, or restaurant tables. Ignore any accidental food bias from training data.";
 
   const multimodalLines = [];
   if (multimodalHint.hasLogo) {
@@ -163,36 +239,37 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   }
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "Following reference image(s) (after the logo, if any): STYLE / MOODBOARD ONLY — borrow color palette, lighting, and food presentation; do NOT copy their text, prices, QR codes, or unrelated logos."
+      isFood
+        ? "Following reference image(s) (after the logo, if any): STYLE / MOODBOARD ONLY — borrow color palette, lighting, and food presentation; do NOT copy their text, prices, QR codes, or unrelated logos."
+        : "Following reference image(s) (after the logo, if any): STYLE / MOODBOARD ONLY — borrow color palette, lighting, materials, and atmosphere from the references; do NOT copy unrelated products, text, QR codes, or logos. Match the references' industry (e.g. automotive) — not food unless references clearly show food."
     );
   }
 
-  return [
-    "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Structure from top to bottom: (1) optional logo band at top center when a logo reference is supplied; (2) large prize wheel in the middle; (3) photorealistic food around the wheel; (4) soft background. The merchant will add ONLY the real scannable QR in software — your image must NOT contain any QR.",
-    "ABSOLUTE BAN — QR / BARCODES: Do not draw any QR code, micro-QR, Data Matrix, or square grid of black modules anywhere (not in the wheel center, not in corners, not overlaid on food). No fake checkerboard, no « finder » corner patterns, no white square with black noise. If unsure, leave areas empty or plain color.",
+  /** @type {string[]} */
+  const lines = [
+    taskStructure,
+    "ABSOLUTE BAN — QR / BARCODES / GRIDS: Do NOT draw any QR code, micro-QR, Data Matrix, Aztec code, or square grid of black modules ANYWHERE — not in the wheel hub, not in corners, not on products, not as a fake 'scan' graphic. The wheel center must NEVER look like a QR: no 3×3 finder squares, no dense black-and-white tile matrix. Hub = ONE plain solid circle only.",
+    "ABSOLUTE BAN — QR / BARCODES (repeat): If you are about to draw something that resembles a QR or barcode, STOP and fill with solid color or soft gradient instead.",
     "FORBIDDEN TEXT / GRAPHICS: No headline « SCANNEZ », « GAGNEZ », « CADEAU », no slogan banners, no address, phone, hours, no footer strip with numbered steps, no « Scanne le QR », « tourne la roue », no ribbon « SCANNE POUR JOUER », no phone mockups.",
-    "FORBIDDEN: Any extra text except exactly the nine wheel words below. Do not print the internal cuisine phrase « " +
+    "FORBIDDEN: Any extra text except exactly the nine wheel words below. Do not print the internal brief phrase « " +
       concept +
       " » as text on the poster.",
-    "REFERENCE STYLE: Premium French street retail — crisp wheel, photoreal food cutouts, cohesive lighting.",
-    "MID LAYOUT: Below the logo area (or from top if no logo), the wheel is the hero. Photorealistic dishes " +
-      (input.hero_products?.trim() ? "(" + input.hero_products.trim() + ") " : "") +
-      "positioned left/right of the wheel; match the mood of « " +
-      concept +
-      " » visually only.",
+    !isFood ? foodBan : "",
+    referenceStyle,
+    "MID LAYOUT: Below the logo area (or from top if no logo), the wheel is the hero. " + sideImagery,
     "PRIZE WHEEL — GEOMETRY: Exactly ONE wheel. EXACTLY 9 equal wedge segments (verify: 9 radial dividers). Not 8, not 10. Small pointer at top center.",
     secondary,
     "WHEEL LABELS — ORDER (clockwise from segment under pointer): 1=GAGNÉ, 2=PERDU, 3=GAGNÉ, 4=PERDU, 5=GAGNÉ, 6=PERDU, 7=GAGNÉ, 8=PERDU, 9=GAGNÉ. One word per segment only.",
     "WHEEL LABELS — ORIENTATION (critical): Set each word in RADIAL / VERTICAL layout inside its wedge — letters run along the radius from the small center hub toward the outer rim (like professional prize wheels), upright and readable within that slice. Do NOT curve text along the outer circumference tangent to the wheel; do NOT lay text horizontally around the rim.",
-    "WHEEL HUB: Only a small solid circle at the geometric center — diameter about 5–10% of the wheel diameter (small pin), white or very light cream. No QR, no thick rounded square, no button, no icon.",
+    "WHEEL HUB (critical): ONLY a small solid FLAT circle at the geometric center — diameter about 5–10% of the wheel diameter. Fill: white or very light cream, NO texture resembling QR modules, NO grid, NO radial black-white pattern.",
     "VISUAL RULES: French words on wheel only; no watermarks; no mirrored text.",
     "QUALITY: Sharp print, clean segment edges, even color fills.",
     mood + ".",
     extra,
     ...multimodalLines,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  ];
+
+  return lines.filter(Boolean).join(" ");
 }
 
 /** @returns {{ model: string, body: Record<string, unknown> }} */
