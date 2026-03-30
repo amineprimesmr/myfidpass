@@ -267,6 +267,8 @@ router.post("/login", validate(schemas.login), async (req, res) => {
 router.post("/google", async (req, res) => {
   // Clients iOS (JSONEncoder convertToSnakeCase) envoient `id_token` ; le web envoie souvent `idToken`.
   const idToken = req.body?.idToken || req.body?.id_token || req.body?.credential;
+  const googleGooglePlaceId = String(req.body?.google_place_id || req.body?.googlePlaceId || "").trim();
+  const googleEstablishmentName = String(req.body?.establishment_name || req.body?.establishmentName || "").trim();
   if (!idToken || GOOGLE_AUDIENCES.length === 0 || !googleClient) {
     return res.status(400).json({ error: "Connexion Google non configurée ou token manquant" });
   }
@@ -281,6 +283,7 @@ router.post("/google", async (req, res) => {
       return res.status(400).json({ error: "Email non fourni par Google" });
     }
     let user = getUserByEmail(email);
+    const isNewUser = !user;
     if (!user) {
       // Création automatique d'un compte lors de la première connexion Google
       const displayNameRaw =
@@ -293,6 +296,16 @@ router.post("/google", async (req, res) => {
         passwordHash: oauthPlaceholder,
         name: displayName,
       });
+    }
+    // Créer le 1er commerce si l'utilisateur est nouveau et qu'un établissement a été sélectionné dans l'onboarding
+    if (isNewUser) {
+      if (googleGooglePlaceId) {
+        await tryCreateFirstBusinessFromGooglePlace(user.id, googleGooglePlaceId, googleEstablishmentName);
+      }
+      const bizAfterPlace = getBusinessesByUserId(user.id);
+      if (bizAfterPlace.length === 0 && googleEstablishmentName) {
+        await tryCreateFirstBusinessFromNameOnly(user.id, googleEstablishmentName);
+      }
     }
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
@@ -331,6 +344,13 @@ router.get("/google-oauth-callback", async (req, res) => {
     const err = !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET ? "config" : "no_code";
     return res.redirect(302, `${redirectApp}?error=${err}`);
   }
+  // Décoder le state encodé en base64 (établissement sélectionné dans l’onboarding iOS)
+  let stateData = null;
+  if (req.query?.state) {
+    try {
+      stateData = JSON.parse(Buffer.from(String(req.query.state), "base64").toString("utf8"));
+    } catch (_) {}
+  }
   try {
     const { tokens } = await googleOAuthClient.getToken({
       code: String(code),
@@ -350,6 +370,7 @@ router.get("/google-oauth-callback", async (req, res) => {
       return res.redirect(302, `${redirectApp}?error=no_email`);
     }
     let user = getUserByEmail(email);
+    const isNewUser = !user;
     if (!user) {
       // Aligné sur POST /api/auth/google : première connexion OAuth → création du compte (l’app iOS n’utilise que ce flux).
       const displayNameRaw =
@@ -362,6 +383,18 @@ router.get("/google-oauth-callback", async (req, res) => {
         passwordHash: oauthPlaceholder,
         name: displayName,
       });
+    }
+    // Créer le 1er commerce si l’utilisateur est nouveau et qu’un établissement a été sélectionné dans l’onboarding
+    if (isNewUser && stateData) {
+      const oauthPlaceId = String(stateData.place_id || "").trim();
+      const oauthEstablishmentName = String(stateData.establishment_name || "").trim();
+      if (oauthPlaceId) {
+        await tryCreateFirstBusinessFromGooglePlace(user.id, oauthPlaceId, oauthEstablishmentName);
+      }
+      const bizAfterPlace = getBusinessesByUserId(user.id);
+      if (bizAfterPlace.length === 0 && oauthEstablishmentName) {
+        await tryCreateFirstBusinessFromNameOnly(user.id, oauthEstablishmentName);
+      }
     }
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     return res.redirect(302, `${redirectApp}?token=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}`);
@@ -381,6 +414,8 @@ router.post("/apple", async (req, res) => {
   const rawToken = body.idToken || body.id_token;
   const bodyName = body.name;
   const bodyEmail = body.email;
+  const appleGooglePlaceId = String(body.google_place_id || body.googlePlaceId || "").trim();
+  const appleEstablishmentName = String(body.establishment_name || body.establishmentName || "").trim();
   if (!rawToken || APPLE_JWT_AUDIENCES.length === 0) {
     return res.status(400).json({ error: "Connexion Apple non configurée ou token manquant" });
   }
@@ -402,6 +437,7 @@ router.post("/apple", async (req, res) => {
       return res.status(400).json({ error: "Email non fourni par Apple. Réautorisez l'application pour partager votre email." });
     }
     let user = getUserByEmail(email);
+    const isNewUser = !user;
     if (!user) {
       const nameFromBody = bodyName ? String(bodyName).trim() : "";
       const oauthPlaceholder = await bcrypt.hash(randomUUID() + "oauth", SALT_ROUNDS);
@@ -410,6 +446,16 @@ router.post("/apple", async (req, res) => {
         passwordHash: oauthPlaceholder,
         name: nameFromBody || null,
       });
+    }
+    // Créer le 1er commerce si l'utilisateur est nouveau et qu'un établissement a été sélectionné dans l'onboarding
+    if (isNewUser) {
+      if (appleGooglePlaceId) {
+        await tryCreateFirstBusinessFromGooglePlace(user.id, appleGooglePlaceId, appleEstablishmentName);
+      }
+      const bizAfterPlace = getBusinessesByUserId(user.id);
+      if (bizAfterPlace.length === 0 && appleEstablishmentName) {
+        await tryCreateFirstBusinessFromNameOnly(user.id, appleEstablishmentName);
+      }
     }
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
