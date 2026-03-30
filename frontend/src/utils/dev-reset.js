@@ -29,7 +29,7 @@ export async function runDevDataReset() {
     }
     if (res.status === 404) {
       alert(
-        "Réinitialisation désactivée : le serveur n’a pas de RESET_SECRET. Dans Railway → Variables du service API, ajoutez RESET_SECRET (au moins 32 caractères aléatoires), redéployez, puis réessayez et saisissez ce secret quand il est demandé. Retirez la variable après usage."
+        "Réinitialisation désactivée : le serveur n’a pas de RESET_SECRET. Dans Railway → Variables du service API, ajoutez RESET_SECRET (le mot de passe de ton choix), redéployez, puis réessayez et saisissez ce même secret quand il est demandé. Retirez la variable après usage."
       );
       return;
     }
