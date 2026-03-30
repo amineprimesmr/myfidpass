@@ -16,7 +16,8 @@ const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASS
  * Parallélisme borné : évite des centaines d’APNs simultanés (saturation connexions / timeouts HTTP côté hébergeur).
  * PASSKIT_PARALLEL_LIMIT (défaut 24) — ajuster si besoin.
  */
-const PASSKIT_PARALLEL_LIMIT = Math.min(80, Math.max(4, Number(process.env.PASSKIT_PARALLEL_LIMIT ?? 24)));
+/** Défaut 48 : envoi souvent en arrière-plan (plus de timeout HTTP) — monter avec PASSKIT_PARALLEL_LIMIT si le serveur suit. */
+const PASSKIT_PARALLEL_LIMIT = Math.min(120, Math.max(4, Number(process.env.PASSKIT_PARALLEL_LIMIT ?? 48)));
 
 async function sendPassKitChunked(rows) {
   const out = [];

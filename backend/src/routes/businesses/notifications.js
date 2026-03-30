@@ -32,6 +32,7 @@ import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason, isLikelyInvalidDeviceTokenApnsError } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
 import { canAccessDashboard, getApiBase } from "./shared.js";
+import logger from "../../lib/logger.js";
 
 /**
  * Met à jour titre / modèle de notif. sur le commerce + `notification_pass_layout_at`,
@@ -344,27 +345,41 @@ router.post("/send", async (req, res) => {
 
   const businessForSend = syncNotificationTextsForCampaign(business.id, title, body);
   const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
-  const result = await deliverDashboardBroadcast(businessForSend, slug, apiBase, memberIds, title, body, "passkit", {
-    triggerName,
-    merchantUserId: req.user?.id ?? null,
-    touchMemberLastVisit: !isBehavioralSegment,
+
+  /**
+   * Envoi **hors** la durée de vie de la requête HTTP : évite timeouts iOS / proxy / Railway
+   * (« Application failed to respond ») sur « tous les inscrits » avec beaucoup de PassKit.
+   * Le détail (sent, erreurs) est dans `notification_batches` + logs.
+   */
+  res.status(202).json({
+    ok: true,
+    accepted: true,
+    async_delivery: true,
+    sent: null,
+    sent_web_push: null,
+    sent_pass_kit: null,
+    sent_merchant_app: null,
+    batch_id: null,
+    total: totalDevices,
+    message: `Envoi lancé vers ${totalDevices} appareil(s). Vous pouvez fermer l’écran : la campagne continue sur le serveur. Consultez l’historique des campagnes pour le résultat.`,
   });
 
-  const firstError = result.errors?.length > 0 ? result.errors[0].error : null;
-  res.json({
-    ok: true,
-    sent: result.sent,
-    sentWebPush: result.sentWebPush,
-    sentPassKit: result.sentPassKit,
-    sentMerchantApp: result.sentMerchantApp ?? 0,
-    batch_id: result.batchId,
-    total: totalDevices,
-    failed: result.failed ?? 0,
-    errors: result.errors,
-    message:
-      result.sent === 0 && totalDevices > 0 && firstError
-        ? `Aucun appareil n'a reçu la notification. Erreur : ${firstError}`
-        : undefined,
+  const slugForJob = slug;
+  const titleForJob = title;
+  const bodyForJob = body;
+  const memberIdsForJob = memberIds;
+  const triggerForJob = triggerName;
+  const merchantUserIdForJob = req.user?.id ?? null;
+  const touchVisitForJob = !isBehavioralSegment;
+
+  setImmediate(() => {
+    deliverDashboardBroadcast(businessForSend, slugForJob, apiBase, memberIdsForJob, titleForJob, bodyForJob, "passkit", {
+      triggerName: triggerForJob,
+      merchantUserId: merchantUserIdForJob,
+      touchMemberLastVisit: touchVisitForJob,
+    }).catch((err) => {
+      logger.error({ err, businessId: business.id, slug: slugForJob }, "[notifications/send] envoi asynchrone échoué");
+    });
   });
 });
 
