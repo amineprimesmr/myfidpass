@@ -11,12 +11,7 @@ import {
 } from "./app-flyer-qr-form.js";
 import { FLYER_HEADLINE_FONTS } from "./app-flyer-qr-headline-fonts.js";
 import { renderFlyerCanvas } from "./app-flyer-qr-draw.js";
-import {
-  getStoredFlyerCustomLogoDataUrl,
-  setStoredFlyerCustomLogoDataUrl,
-  initFlyerLogoControl,
-  clearStoredFlyerCustomLogo,
-} from "./app-flyer-logo-control.js";
+import { getStoredFlyerCustomLogoDataUrl, clearStoredFlyerCustomLogo } from "./app-flyer-logo-control.js";
 import {
   getStoredFlyerCustomBgDataUrl,
   setStoredFlyerCustomBgDataUrl,
@@ -77,8 +72,6 @@ export function initAppFlyerQr(slug, opts) {
   let flyerBgDirty = true;
 
   /** @type {{ syncPreview: () => void } | undefined} */
-  let flyerLogoPanelApi;
-  /** @type {{ syncPreview: () => void } | undefined} */
   let flyerBgPanelApi;
 
   let remoteTimer = null;
@@ -96,17 +89,12 @@ export function initAppFlyerQr(slug, opts) {
     writeFlyerFormFromState(root, merged);
     persistFlyerState(merged);
     state = merged;
-    if (typeof p.custom_logo_data_url === "string" && p.custom_logo_data_url.startsWith("data:image/")) {
-      setStoredFlyerCustomLogoDataUrl(p.custom_logo_data_url);
-    } else {
-      clearStoredFlyerCustomLogo();
-    }
+    clearStoredFlyerCustomLogo();
     if (typeof p.custom_bg_data_url === "string" && p.custom_bg_data_url.startsWith("data:image/")) {
       setStoredFlyerCustomBgDataUrl(p.custom_bg_data_url);
     } else {
       clearStoredFlyerCustomBg();
     }
-    flyerLogoPanelApi?.syncPreview();
     flyerBgPanelApi?.syncPreview();
     flyerLogoDirty = true;
     flyerBgDirty = true;
@@ -129,7 +117,7 @@ export function initAppFlyerQr(slug, opts) {
     const st = readFlyerStateFromForm(root);
     const body = {
       state: st,
-      custom_logo_data_url: getStoredFlyerCustomLogoDataUrl() || null,
+      custom_logo_data_url: null,
       custom_bg_data_url: getStoredFlyerCustomBgDataUrl() || null,
     };
     try {
@@ -193,14 +181,6 @@ export function initAppFlyerQr(slug, opts) {
     schedulePaint();
   });
 
-  flyerLogoPanelApi = initFlyerLogoControl({
-    onCustomLogoChange: () => {
-      flyerLogoDirty = true;
-      schedulePaint();
-      scheduleRemoteSave();
-    },
-  });
-
   flyerBgPanelApi = initFlyerBgControl({
     onBgChange: () => {
       flyerBgDirty = true;
@@ -246,48 +226,22 @@ export function initAppFlyerQr(slug, opts) {
         } catch (_) {}
         flyerLogoObjectUrl = null;
       }
-      const customData = getStoredFlyerCustomLogoDataUrl();
-      let loaded = false;
-      if (customData) {
-        try {
-          const res = await fetch(customData);
-          if (res.ok) {
-            const blob = await res.blob();
-            if (typeof createImageBitmap === "function") {
-              try {
-                flyerLogoBitmap = await createImageBitmap(blob);
-                loaded = !!flyerLogoBitmap;
-              } catch (_) {
-                flyerLogoObjectUrl = URL.createObjectURL(blob);
-                loaded = true;
-              }
-            } else {
-              flyerLogoObjectUrl = URL.createObjectURL(blob);
-              loaded = true;
-            }
-          }
-        } catch (_) {
-          /* fallback logo fiche */
-        }
-      }
-      if (!loaded) {
-        try {
-          const res = await fetch(logoApi, { mode: "cors", credentials: "omit" });
-          if (res.ok) {
-            const blob = await res.blob();
-            if (typeof createImageBitmap === "function") {
-              try {
-                flyerLogoBitmap = await createImageBitmap(blob);
-              } catch (_) {
-                flyerLogoObjectUrl = URL.createObjectURL(blob);
-              }
-            } else {
+      try {
+        const res = await fetch(logoApi, { mode: "cors", credentials: "omit" });
+        if (res.ok) {
+          const blob = await res.blob();
+          if (typeof createImageBitmap === "function") {
+            try {
+              flyerLogoBitmap = await createImageBitmap(blob);
+            } catch (_) {
               flyerLogoObjectUrl = URL.createObjectURL(blob);
             }
+          } else {
+            flyerLogoObjectUrl = URL.createObjectURL(blob);
           }
-        } catch (_) {
-          /* pas de logo */
         }
+      } catch (_) {
+        /* pas de logo */
       }
       flyerLogoDirty = false;
     }
@@ -411,7 +365,6 @@ export function initAppFlyerQr(slug, opts) {
       if (!confirm("Réinitialiser le flyer aux textes et couleurs par défaut ?")) return;
       clearStoredFlyerCustomLogo();
       clearStoredFlyerCustomBg();
-      flyerLogoPanelApi?.syncPreview();
       flyerBgPanelApi?.syncPreview();
       flyerLogoDirty = true;
       flyerBgDirty = true;

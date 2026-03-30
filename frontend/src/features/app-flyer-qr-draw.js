@@ -373,7 +373,8 @@ function wrapCenter(ctx, text, cx, cy, maxW, lineH) {
 }
 
 /**
- * Pastille type « Scanne pour jouer » à gauche du carré QR (même rotation), fond couleur primaire.
+ * Pastille « Scanne pour jouer » à gauche du QR — **axe horizontal**, sans inclinaison (le QR peut rester pivoté).
+ * Dessinée après le bloc QR pour rester lisible et droite.
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  */
@@ -381,13 +382,13 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const raw = (s.ctaBanner || "").trim();
   if (!raw) return;
 
-  const padX = 12 * scale;
-  const padY = 8 * scale;
-  const fontPx = Math.max(13, Math.round(19 * scale));
-  ctx.font = `700 ${fontPx}px Outfit, system-ui, sans-serif`;
+  const padX = 18 * scale;
+  const padY = 12 * scale;
+  const fontPx = Math.max(26, Math.round(Math.min(42, qSize * 0.095)));
+  ctx.font = `800 ${fontPx}px Outfit, system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const maxLineW = Math.max(72, qSize * 0.4);
+  const maxLineW = Math.max(120, qSize * 0.62);
   const lines = wrapCanvasTextLines(ctx, raw.toUpperCase(), maxLineW);
   const lineH = Math.round(fontPx * 1.14);
   let maxTw = 0;
@@ -397,14 +398,14 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   });
   const pillW = maxTw + padX * 2;
   const pillH = lines.length * lineH + padY * 2;
-  const gap = 5 * scale;
+  const gap = 8 * scale;
   let pillLeft = qx - gap - pillW;
   const pillTop = qy + qSize / 2 - pillH / 2;
   const minX = 10 * scale;
   if (pillLeft < minX) {
     pillLeft = minX;
   }
-  const rr = Math.min(14 * scale, pillH / 2);
+  const rr = Math.min(20 * scale, pillH / 2);
   const fill = (s.colorPrimary && /^#[0-9A-Fa-f]{6}$/.test(String(s.colorPrimary).trim()))
     ? String(s.colorPrimary).trim()
     : "#fbbf24";
@@ -509,13 +510,13 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.translate(qCx, qCy);
   ctx.rotate(qrTiltRad);
   ctx.translate(-qCx, -qCy);
-  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
   ctx.fillStyle = "#fff";
   roundRect(ctx, qx, qy, qSize, qSize, 16 * scale);
   ctx.fill();
   if (qrImg) ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
   drawFlyerQrCardOutline(ctx, qx, qy, qSize, 16 * scale, scale, s);
   ctx.restore();
+  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
   const socialEntries = parseFlyerSocialEntries(s);
   const stripH = flyerSocialStripHeight(h, socialEntries.length);
   const bannerBottom = h - stripH;
