@@ -13,6 +13,27 @@ import { sendPassKitUpdate } from "./apns.js";
 const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 0)));
 
 /**
+ * Parallélisme borné : évite des centaines d’APNs simultanés (saturation connexions / timeouts HTTP côté hébergeur).
+ * PASSKIT_PARALLEL_LIMIT (défaut 24) — ajuster si besoin.
+ */
+const PASSKIT_PARALLEL_LIMIT = Math.min(80, Math.max(4, Number(process.env.PASSKIT_PARALLEL_LIMIT ?? 24)));
+
+async function sendPassKitChunked(rows) {
+  const out = [];
+  for (let i = 0; i < rows.length; i += PASSKIT_PARALLEL_LIMIT) {
+    const chunk = rows.slice(i, i + PASSKIT_PARALLEL_LIMIT);
+    const part = await Promise.all(
+      chunk.map(async (row) => {
+        const result = await sendPassKitUpdate(row.push_token);
+        return { row, result };
+      })
+    );
+    out.push(...part);
+  }
+  return out;
+}
+
+/**
  * @param {Array<{ push_token: string, serial_number?: string }>} passKitRows
  * @returns {Promise<Array<{ row: object, result: { sent: boolean, error?: string } }>>}
  *         Résultats de la **dernière** salve (pour comptage / logs), comme l’ancien code (2ᵉ boucle).
@@ -21,13 +42,7 @@ export async function sendPassKitPushWaves(passKitRows) {
   const rows = (passKitRows || []).filter((r) => r.push_token);
   if (rows.length === 0) return [];
 
-  const runWave = () =>
-    Promise.all(
-      rows.map(async (row) => {
-        const result = await sendPassKitUpdate(row.push_token);
-        return { row, result };
-      })
-    );
+  const runWave = () => sendPassKitChunked(rows);
 
   const wave1 = await runWave();
   if (PASSKIT_WAVE_GAP_MS <= 0) {
