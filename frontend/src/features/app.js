@@ -5764,6 +5764,11 @@ function initAppDashboard(slug) {
       if (notifFeedbackEl) {
         notifFeedbackEl.classList.remove("hidden");
         if (res.ok) {
+          if (data.accepted || data.async_delivery) {
+            notifFeedbackEl.textContent = data.message || "Envoi lancé sur le serveur — consultez l’historique des campagnes pour le détail.";
+            notifFeedbackEl.classList.remove("error");
+            notifFeedbackEl.classList.add("success");
+          } else {
           const sent = data.sent != null ? data.sent : 0;
           const wp = data.sentWebPush != null ? data.sentWebPush : 0;
           const pk = data.sentPassKit != null ? data.sentPassKit : 0;
@@ -5786,6 +5791,7 @@ function initAppDashboard(slug) {
           }
           notifFeedbackEl.classList.remove("error");
           notifFeedbackEl.classList.add("success");
+          }
         } else {
           notifFeedbackEl.textContent = data.error || "Erreur";
           notifFeedbackEl.classList.add("error");
@@ -5875,8 +5881,12 @@ function initAppDashboard(slug) {
       if (campaignModalFeedback) {
         campaignModalFeedback.classList.remove("hidden");
         if (res.ok) {
-          const sent = data.sent ?? 0;
-          campaignModalFeedback.textContent = sent > 0 ? `Envoyé à ${sent} appareil(s).` : (data.message || "Aucun appareil n'a reçu la notification.");
+          if (data.accepted || data.async_delivery) {
+            campaignModalFeedback.textContent = data.message || "Envoi lancé sur le serveur — consultez l’historique des campagnes pour le détail.";
+          } else {
+            const sent = data.sent ?? 0;
+            campaignModalFeedback.textContent = sent > 0 ? `Envoyé à ${sent} appareil(s).` : (data.message || "Aucun appareil n'a reçu la notification.");
+          }
           campaignModalFeedback.classList.remove("error");
           campaignModalFeedback.classList.add("success");
           loadAppNotificationStats();

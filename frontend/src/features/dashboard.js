@@ -370,6 +370,11 @@ export function initDashboardPage() {
       if (feedbackEl) {
         feedbackEl.classList.remove("hidden");
         if (res.ok) {
+          if (data.accepted || data.async_delivery) {
+            feedbackEl.textContent = data.message || "Envoi lancé sur le serveur — consultez l’historique des campagnes pour le détail.";
+            feedbackEl.classList.remove("error");
+            feedbackEl.classList.add("success");
+          } else {
           const sent = data.sent != null ? data.sent : 0;
           const wp = data.sentWebPush != null ? data.sentWebPush : 0;
           const pk = data.sentPassKit != null ? data.sentPassKit : 0;
@@ -389,6 +394,7 @@ export function initDashboardPage() {
           }
           feedbackEl.classList.remove("error");
           feedbackEl.classList.add("success");
+          }
         } else {
           feedbackEl.textContent = data.error || "Erreur";
           feedbackEl.classList.add("error");
