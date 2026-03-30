@@ -16,7 +16,9 @@ export function optionalAuth(req, res, next) {
   }
   try {
     const payload = jwt.verify(token, getJwtSecret());
-    const user = getUserById(payload.userId);
+    const rawId = payload.userId ?? payload.sub;
+    const userId = rawId != null && rawId !== "" ? String(rawId) : null;
+    const user = userId ? getUserById(userId) : null;
     req.user = user || null;
     if (!user) req.authError = "user_not_found";
   } catch (err) {

@@ -578,7 +578,7 @@ export function runMigrations(db) {
   safeRun(db, () => db.exec(`
     CREATE TABLE IF NOT EXISTS refresh_tokens (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
+      user_id TEXT NOT NULL,
       token TEXT NOT NULL UNIQUE,
       expires_at TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -588,6 +588,30 @@ export function runMigrations(db) {
   safeRun(db, () => db.exec(
     "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)"
   ));
+
+  // Anciennes BDD : refresh_tokens.user_id était INTEGER → UUID stocké comme 0, refresh cassait tous les JWT.
+  const rtLegacy = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='refresh_tokens'").get();
+  if (rtLegacy) {
+    const uidCol = db.prepare("PRAGMA table_info(refresh_tokens)").all().find((c) => c.name === "user_id");
+    if (uidCol && /INTEGER/i.test(String(uidCol.type || ""))) {
+      markMigrationApplied(db, 8, "refresh_tokens_user_id_text");
+      safeRun(db, () => {
+        db.exec("ALTER TABLE refresh_tokens RENAME TO refresh_tokens_int_legacy");
+        db.exec(`
+          CREATE TABLE refresh_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            token TEXT NOT NULL UNIQUE,
+            expires_at TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+        db.exec("CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)");
+        db.exec("DROP TABLE refresh_tokens_int_legacy");
+      });
+    }
+  }
 
   const bizCamp = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
   if (!bizCamp.includes("campaign_automation_json")) {

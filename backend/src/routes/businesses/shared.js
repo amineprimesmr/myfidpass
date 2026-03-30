@@ -40,10 +40,16 @@ export function getIdempotencyKey(req) {
 
 export function canAccessDashboard(business, req) {
   if (!business) return false;
-  const token = req.query.token || req.get("X-Dashboard-Token");
-  const byToken = getBusinessByDashboardToken(token);
-  if (byToken && byToken.id === business.id) return true;
-  if (req.user && business.user_id === req.user.id) return true;
+  const token = (req.query.token || req.get("X-Dashboard-Token") || "").toString().trim();
+  if (token) {
+    const byToken = getBusinessByDashboardToken(token);
+    if (byToken && byToken.id === business.id) return true;
+  }
+  if (req.user) {
+    const uid = req.user.id != null ? String(req.user.id) : "";
+    const bid = business.user_id != null ? String(business.user_id) : "";
+    if (uid !== "" && bid !== "" && uid === bid) return true;
+  }
   return false;
 }
 

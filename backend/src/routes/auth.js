@@ -67,10 +67,11 @@ const REFRESH_TOKEN_TTL_DAYS = 30;
  * @returns {{ accessToken: string, refreshToken: string }}
  */
 function issueTokenPair(userId) {
-  const accessToken = jwt.sign({ userId }, getJwtSecret(), { expiresIn: ACCESS_TOKEN_TTL });
+  const uid = userId != null && userId !== "" ? String(userId) : userId;
+  const accessToken = jwt.sign({ userId: uid }, getJwtSecret(), { expiresIn: ACCESS_TOKEN_TTL });
   const refreshToken = randomUUID() + "-" + randomUUID();
   const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 3600 * 1000).toISOString();
-  createRefreshToken(userId, refreshToken, expiresAt);
+  createRefreshToken(uid, refreshToken, expiresAt);
   return { accessToken, refreshToken };
 }
 
@@ -688,7 +689,7 @@ router.post("/refresh", (req, res) => {
   if (!stored) {
     return res.status(401).json({ error: "Refresh token invalide ou expiré", code: "invalid_refresh_token" });
   }
-  const user = getUserById(stored.user_id);
+  const user = getUserById(stored.user_id != null ? String(stored.user_id) : "");
   if (!user) {
     deleteRefreshToken(token);
     return res.status(401).json({ error: "Utilisateur introuvable", code: "user_not_found" });
