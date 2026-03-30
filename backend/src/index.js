@@ -78,10 +78,19 @@ if (isProduction) {
     console.error("[startup] ERREUR CRITIQUE: DEV_BYPASS_PAYMENT=true est défini en PRODUCTION. Cette variable est réservée au développement local. Supprime-la immédiatement dans Railway → Variables.");
     process.exit(1);
   }
-  // RESET_SECRET ne doit pas être défini en production (route de destruction de BDD).
+  // RESET_SECRET active POST /api/dev/reset (effacement total). Dangereux mais parfois nécessaire
+  // (ex. repartir de zéro sur un environnement de démo). Le wipe exige en plus le même secret dans le body.
   if (process.env.RESET_SECRET) {
-    console.error("[startup] ERREUR: RESET_SECRET est défini en production. Cette variable active une route qui vide toute la base de données. Supprime-la dans Railway → Variables.");
-    process.exit(1);
+    const len = process.env.RESET_SECRET.length;
+    if (len < 32) {
+      console.error(
+        "[startup] ERREUR: En production, si RESET_SECRET est défini, il doit faire au moins 32 caractères (évite un secret trop faible). Railway → Variables."
+      );
+      process.exit(1);
+    }
+    console.warn(
+      "[startup] ATTENTION: RESET_SECRET est défini — quiconque connaît ce secret peut vider la base via POST /api/dev/reset. Retirez la variable dans Railway dès que vous n’en avez plus besoin."
+    );
   }
 }
 

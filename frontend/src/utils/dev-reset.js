@@ -28,7 +28,9 @@ export async function runDevDataReset() {
       return;
     }
     if (res.status === 404) {
-      alert("Reset désactivé en production (définir RESET_SECRET sur Railway pour l’activer).");
+      alert(
+        "Réinitialisation désactivée : le serveur n’a pas de RESET_SECRET. Dans Railway → Variables du service API, ajoutez RESET_SECRET (au moins 32 caractères aléatoires), redéployez, puis réessayez et saisissez ce secret quand il est demandé. Retirez la variable après usage."
+      );
       return;
     }
     if (!res.ok) {
