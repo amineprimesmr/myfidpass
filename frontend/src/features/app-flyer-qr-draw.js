@@ -373,6 +373,59 @@ function wrapCenter(ctx, text, cx, cy, maxW, lineH) {
 }
 
 /**
+ * Pastille type « Scanne pour jouer » à gauche du carré QR (même rotation), fond couleur primaire.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import("./app-flyer-qr-presets.js").FlyerState} s
+ */
+function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
+  const raw = (s.ctaBanner || "").trim();
+  if (!raw) return;
+
+  const padX = 12 * scale;
+  const padY = 8 * scale;
+  const fontPx = Math.max(13, Math.round(19 * scale));
+  ctx.font = `700 ${fontPx}px Outfit, system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const maxLineW = Math.max(72, qSize * 0.4);
+  const lines = wrapCanvasTextLines(ctx, raw.toUpperCase(), maxLineW);
+  const lineH = Math.round(fontPx * 1.14);
+  let maxTw = 0;
+  lines.forEach((ln) => {
+    const m = ctx.measureText(ln).width;
+    if (m > maxTw) maxTw = m;
+  });
+  const pillW = maxTw + padX * 2;
+  const pillH = lines.length * lineH + padY * 2;
+  const gap = 5 * scale;
+  let pillLeft = qx - gap - pillW;
+  const pillTop = qy + qSize / 2 - pillH / 2;
+  const minX = 10 * scale;
+  if (pillLeft < minX) {
+    pillLeft = minX;
+  }
+  const rr = Math.min(14 * scale, pillH / 2);
+  const fill = (s.colorPrimary && /^#[0-9A-Fa-f]{6}$/.test(String(s.colorPrimary).trim()))
+    ? String(s.colorPrimary).trim()
+    : "#fbbf24";
+
+  ctx.fillStyle = fill;
+  roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.14)";
+  ctx.lineWidth = Math.max(1, scale);
+  roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  const cx = pillLeft + pillW / 2;
+  const startY = pillTop + padY + lineH / 2;
+  lines.forEach((ln, i) => {
+    ctx.fillText(ln, cx, startY + i * lineH);
+  });
+}
+
+/**
  * @param {HTMLCanvasElement} canvas
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  * @param {string} qrTargetUrl
@@ -452,6 +505,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.translate(qCx, qCy);
   ctx.rotate(qrTiltRad);
   ctx.translate(-qCx, -qCy);
+  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
   ctx.fillStyle = "#fff";
   roundRect(ctx, qx, qy, qSize, qSize, 16 * scale);
   ctx.fill();

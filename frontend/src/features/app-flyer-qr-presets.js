@@ -72,7 +72,7 @@ export function flyerTemplateMeta(id) {
  * @typedef {object} FlyerState
  * @property {string} templateId
  * @property {string} headline
- * @property {string} ctaBanner
+ * @property {string} ctaBanner texte pastille à gauche du QR (ex. Scanne pour jouer), vide = masqué
  * @property {string} step1
  * @property {string} step2
  * @property {string} step3
@@ -110,7 +110,7 @@ export function defaultFlyerState() {
   return {
     templateId: FLYER_TEMPLATE_ID,
     headline: "Fais tourner la roue",
-    ctaBanner: "SCANNEZ POUR JOUER",
+    ctaBanner: "SCANNE POUR JOUER",
     step1: "Scan le QR code",
     step2: "Fais tourner la roue",
     step3: "Découvre ton cadeau",
