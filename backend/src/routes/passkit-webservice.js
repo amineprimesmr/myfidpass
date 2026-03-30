@@ -13,6 +13,7 @@ import {
   getUpdatedPassSerialNumbersForDevice,
   mergeBusinessAssetsForPass,
 } from "../db.js";
+import { scheduleMerchantDashboardSyncForBusiness } from "../lib/merchant-dashboard-sync-push.js";
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
 
@@ -94,6 +95,9 @@ function handleDeviceRegistration(req, res) {
       serialNumber,
       pushToken,
     });
+    if (member.business_id) {
+      scheduleMerchantDashboardSyncForBusiness(member.business_id, "wallet_register");
+    }
     console.log("[PassKit] Appareil enregistré pour le membre", serialNumber.slice(0, 8) + "...", "pushToken:", pushToken ? "oui" : "non");
     return res.status(201).send();
   } catch (e) {

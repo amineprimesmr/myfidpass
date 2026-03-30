@@ -30,6 +30,7 @@ import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
 import { getIdempotencyKey, canAccessDashboard } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
 import { scheduleCampaignEventJobsForMember } from "../../lib/campaign-event-jobs.js";
+import { scheduleMerchantDashboardSyncForBusiness } from "../../lib/merchant-dashboard-sync-push.js";
 
 const router = Router();
 
@@ -84,6 +85,7 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
     } catch (e) {
       console.error("[campaign-event-jobs] schedule failed:", e?.message || String(e));
     }
+    scheduleMerchantDashboardSyncForBusiness(business.id, "member_created");
 
     res.status(201).json({
       memberId: member.id,
@@ -153,6 +155,9 @@ router.post("/import", (req, res) => {
     } catch (e) {
       errors.push({ row: i + 1, email, reason: e.message || "Erreur création" });
     }
+  }
+  if (created.length > 0) {
+    scheduleMerchantDashboardSyncForBusiness(business.id, "import");
   }
   res.status(200).json({
     created: created.length,

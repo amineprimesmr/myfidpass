@@ -3,6 +3,7 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { scheduleMerchantDashboardSyncForBusiness } from "../lib/merchant-dashboard-sync-push.js";
 
 const db = getDb();
 
@@ -12,7 +13,9 @@ export function createTransaction({ id, businessId, memberId, type, points, meta
     `INSERT INTO transactions (id, business_id, member_id, type, points, metadata, idempotency_key, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
   ).run(tid, businessId, memberId, type, points, metadata ? JSON.stringify(metadata) : null, idempotencyKey || null);
-  return db.prepare("SELECT * FROM transactions WHERE id = ?").get(tid);
+  const row = db.prepare("SELECT * FROM transactions WHERE id = ?").get(tid);
+  scheduleMerchantDashboardSyncForBusiness(businessId, "transaction");
+  return row;
 }
 
 /**

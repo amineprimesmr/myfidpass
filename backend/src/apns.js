@@ -27,7 +27,7 @@
  */
 import { createPrivateKey } from "node:crypto";
 import { createSigner } from "fast-jwt";
-import { ApnsClient, Notification } from "apns2";
+import { ApnsClient, Notification, SilentNotification } from "apns2";
 import logger from "./lib/logger.js";
 
 const APNS_BUILD = "2026-03-27-apns2-v12-fastjwt-validate";
@@ -350,6 +350,45 @@ export function sendMerchantAppAlert(deviceToken, payload) {
   return prov.send(note).then(
     () => ({ sent: true }),
     (err) => ({ sent: false, error: String(err?.reason ?? err?.message ?? err) })
+  );
+}
+
+/**
+ * Push silencieux (content-available, apns-push-type background) : réveille l’app commerçant
+ * pour un pull API sans bannière ni son. Même clé APNs / topic que `sendMerchantAppAlert`.
+ *
+ * @param {string} deviceToken
+ * @param {Record<string, string>} [data] — clés custom (tout en chaînes côté payload).
+ * @returns {Promise<{ sent: boolean, error?: string, rawError?: unknown }>}
+ */
+export function sendMerchantSilentDashboardSync(deviceToken, data = {}) {
+  const prov = getMerchantProvider();
+  if (!prov) {
+    return Promise.resolve({ sent: false, error: merchantError ?? "APNs app commerçant non configuré" });
+  }
+  const bundleId = (process.env.MERCHANT_APP_BUNDLE_ID ?? "com.myfidpass").trim();
+  /** @type {Record<string, string>} */
+  const payloadData = { myfidpass_action: "dashboard_sync", ...data };
+  for (const k of Object.keys(payloadData)) {
+    const v = payloadData[k];
+    if (v != null && typeof v !== "string") {
+      payloadData[k] = String(v);
+    }
+  }
+  const note = new SilentNotification(deviceToken, {
+    topic: bundleId,
+    expiration: Math.floor(Date.now() / 1000) + 3600,
+    collapseId: "mfp-merchant-dash-sync",
+    data: payloadData,
+  });
+
+  return prov.send(note).then(
+    () => ({ sent: true }),
+    (err) => ({
+      sent: false,
+      error: String(err?.reason ?? err?.message ?? err),
+      rawError: err,
+    })
   );
 }
 
