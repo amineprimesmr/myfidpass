@@ -10,6 +10,7 @@ export function readFlyerStateFromForm(root) {
   return mergeFlyerState({
     headline: q("app-flyer-headline")?.value,
     ctaBanner: q("app-flyer-cta")?.value,
+    ctaBannerBgColor: q("app-flyer-cta-bg")?.value,
     step1: q("app-flyer-step1")?.value,
     step2: q("app-flyer-step2")?.value,
     step3: q("app-flyer-step3")?.value,
@@ -51,6 +52,7 @@ export function writeFlyerFormFromState(root, s) {
   };
   set("app-flyer-headline", s.headline);
   set("app-flyer-cta", s.ctaBanner);
+  set("app-flyer-cta-bg", s.ctaBannerBgColor);
   set("app-flyer-step1", s.step1);
   set("app-flyer-step2", s.step2);
   set("app-flyer-step3", s.step3);

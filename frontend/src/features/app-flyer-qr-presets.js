@@ -73,6 +73,7 @@ export function flyerTemplateMeta(id) {
  * @property {string} templateId
  * @property {string} headline
  * @property {string} ctaBanner texte pastille à gauche du QR (ex. Scanne pour jouer), vide = masqué
+ * @property {string} ctaBannerBgColor fond de la pastille (ex. rose #ec4899)
  * @property {string} step1
  * @property {string} step2
  * @property {string} step3
@@ -111,6 +112,7 @@ export function defaultFlyerState() {
     templateId: FLYER_TEMPLATE_ID,
     headline: "Fais tourner la roue",
     ctaBanner: "SCANNE POUR JOUER",
+    ctaBannerBgColor: "#ec4899",
     step1: "Scan le QR code",
     step2: "Fais tourner la roue",
     step3: "Découvre ton cadeau",
@@ -277,5 +279,6 @@ export function mergeFlyerState(raw) {
     flyerWheelLabelScalePct: clampFlyerTextScalePct(merged.flyerWheelLabelScalePct),
     flyerBgOverlayPct: clampFlyerBgOverlayPct(merged.flyerBgOverlayPct),
     flyerQrOutlineWidth: clampFlyerQrOutlineW(merged.flyerQrOutlineWidth),
+    ctaBannerBgColor: safeHex(String(merged.ctaBannerBgColor ?? ""), base.ctaBannerBgColor),
   };
 }
