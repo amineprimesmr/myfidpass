@@ -1,7 +1,12 @@
 /**
  * Rendu canvas des flyers QR (export PNG & aperçu).
  */
-import { FLYER_EXPORT, FLYER_LOGO_LAYOUT, FLYER_LAYOUT } from "./app-flyer-qr-presets.js";
+import {
+  FLYER_EXPORT,
+  FLYER_LOGO_LAYOUT,
+  FLYER_LAYOUT,
+  footerStepsForegroundResolved,
+} from "./app-flyer-qr-presets.js";
 import {
   parseFlyerSocialEntries,
   flyerSocialStripHeight,
@@ -21,14 +26,27 @@ export { FLYER_EXPORT };
  */
 export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = false;
 
-/** Bandeau « étapes » en bas du flyer (fichier dans public/). */
+/** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
+
+/**
+ * Icônes 3D des 3 étapes (PNG alpha, pas de texte dans l’image — le texte est dessiné en canvas).
+ * Priorité : si les 3 fichiers chargent → composition icônes + chiffres + libellés ; sinon repli bandeau unique ou texte seul.
+ */
+const FLYER_STEP_ICON_SRCS = [
+  "/assets/flyer-steps/icon-phone.png",
+  "/assets/flyer-steps/icon-wheel.png",
+  "/assets/flyer-steps/icon-gift.png",
+];
 
 /** Roue décorative (remplace le dessin vectoriel si le fichier est présent). */
 const FLYER_ROUE_SRC = "/assets/roue.png";
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;
+
+/** @type {HTMLImageElement[] | "fail" | null} */
+let flyerStepIconsCache = null;
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerRoueCache = null;
@@ -223,6 +241,24 @@ async function getFlyerFooterBanner() {
   }
 }
 
+/** @returns {Promise<HTMLImageElement[] | null>} */
+async function loadFooterStepIcons() {
+  if (flyerStepIconsCache === "fail") return null;
+  if (flyerStepIconsCache) return flyerStepIconsCache;
+  /** @type {HTMLImageElement[]} */
+  const imgs = [];
+  for (const src of FLYER_STEP_ICON_SRCS) {
+    try {
+      imgs.push(await loadImage(src, false));
+    } catch {
+      flyerStepIconsCache = "fail";
+      return null;
+    }
+  }
+  flyerStepIconsCache = imgs;
+  return imgs;
+}
+
 async function getFlyerRoueImage() {
   if (flyerRoueCache === "fail") return null;
   if (flyerRoueCache) return flyerRoueCache;
@@ -255,14 +291,61 @@ function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   ctx.drawImage(img, 0, yTop, drawW, drawH);
 }
 
-/** @param {import("./app-flyer-qr-presets.js").FlyerState} s @param {number} [bottomReserve] réserve bas (bande sociale). */
-function drawFooterBar(ctx, w, h, s, dark, bottomReserve = 0) {
+/**
+ * Bandeau étapes avec icônes PNG (fond transparent — aucun rectangle de fond).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} w
+ * @param {number} canvasH
+ * @param {number} bannerBottom bord bas de la zone étapes (= haut bande sociale si présente)
+ * @param {import("./app-flyer-qr-presets.js").FlyerState} s
+ * @param {HTMLImageElement[]} icons
+ */
+function drawFooterStepsWithIcons(ctx, w, canvasH, bannerBottom, s, icons) {
+  const fh = canvasH * FLYER_LAYOUT.footerStepsHeightFrac;
+  const y0 = Math.max(0, bannerBottom - fh);
+  const ft = Number(s.flyerFooterTextScalePct);
+  const fsc = Number.isFinite(ft) ? Math.max(0.7, Math.min(1.35, ft / 100)) : 1;
+  const fg = footerStepsForegroundResolved(s);
+  const steps = [s.step1, s.step2, s.step3];
+  const nums = ["1", "2", "3"];
+  const cw = w / 3;
+  const pad = cw * 0.035;
+
+  for (let i = 0; i < 3; i++) {
+    const x0 = i * cw;
+    const iconW = cw * 0.38;
+    const iconH = fh * 0.52;
+    const iconRowCy = y0 + fh * 0.34;
+    const iconX = x0 + pad;
+    const iconY = iconRowCy - iconH / 2;
+
+    drawImageContain(ctx, icons[i], iconX, iconY, iconW, iconH);
+
+    const numSize = Math.round(fh * 0.38 * fsc);
+    ctx.fillStyle = fg;
+    ctx.font = `700 ${numSize}px Outfit, system-ui, sans-serif`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    const numX = iconX + iconW + cw * 0.025;
+    ctx.fillText(nums[i], numX, iconRowCy);
+
+    const cx = x0 + cw / 2;
+    ctx.textAlign = "center";
+    const fontPx = Math.round(fh * 0.09 * fsc);
+    const lineH = Math.round(fh * 0.095 * fsc);
+    ctx.font = `600 ${fontPx}px Outfit, system-ui, sans-serif`;
+    ctx.fillStyle = fg;
+    wrapCenter(ctx, steps[i] || "", cx, y0 + fh * 0.78, cw * 0.85, lineH);
+  }
+}
+
+/** Repli : ①②③ + textes (fond transparent). */
+function drawFooterBar(ctx, w, h, s, bottomReserve = 0) {
   const fh = h * FLYER_LAYOUT.footerStepsHeightFrac;
   const y0 = Math.max(0, h - bottomReserve - fh);
   const ft = Number(s.flyerFooterTextScalePct);
   const fsc = Number.isFinite(ft) ? Math.max(0.7, Math.min(1.35, ft / 100)) : 1;
-  ctx.fillStyle = dark ? "#0a0a0a" : "#1e293b";
-  ctx.fillRect(0, y0, w, fh);
+  const fg = footerStepsForegroundResolved(s);
   const steps = [s.step1, s.step2, s.step3];
   const icons = ["①", "②", "③"];
   const cw = w / 3;
@@ -271,10 +354,9 @@ function drawFooterBar(ctx, w, h, s, dark, bottomReserve = 0) {
   for (let i = 0; i < 3; i++) {
     const cx = cw * i + cw / 2;
     const cy = y0 + fh * 0.5;
-    ctx.fillStyle = dark ? s.colorPrimary : "#94a3b8";
+    ctx.fillStyle = fg;
     ctx.font = `700 ${Math.round(fh * 0.14 * fsc)}px Outfit, system-ui, sans-serif`;
     ctx.fillText(icons[i], cx, cy - fh * 0.12);
-    ctx.fillStyle = dark ? "#f1f5f9" : "#f8fafc";
     ctx.font = `600 ${Math.round(fh * 0.09 * fsc)}px Outfit, system-ui, sans-serif`;
     const words = steps[i] || "";
     wrapCenter(ctx, words, cx, cy + fh * 0.1, cw * 0.85, Math.round(fh * 0.085 * fsc));
@@ -379,8 +461,13 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const socialEntries = parseFlyerSocialEntries(s);
   const stripH = flyerSocialStripHeight(h, socialEntries.length);
   const bannerBottom = h - stripH;
-  const footerBannerImg = await getFlyerFooterBanner();
-  if (footerBannerImg) drawFooterBanner(ctx, w, h, bannerBottom, footerBannerImg);
-  else drawFooterBar(ctx, w, h, s, true, stripH);
+  const [stepIcons, footerBannerImg] = await Promise.all([loadFooterStepIcons(), getFlyerFooterBanner()]);
+  if (stepIcons && stepIcons.length === 3) {
+    drawFooterStepsWithIcons(ctx, w, h, bannerBottom, s, stepIcons);
+  } else if (footerBannerImg) {
+    drawFooterBanner(ctx, w, h, bannerBottom, footerBannerImg);
+  } else {
+    drawFooterBar(ctx, w, h, s, stripH);
+  }
   await drawFlyerSocialStrip(ctx, w, h - stripH, stripH, socialEntries, s);
 }

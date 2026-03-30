@@ -40,7 +40,7 @@ export const FLYER_LAYOUT = Object.freeze({
   wheelCenterYFrac: 0.492,
   /** Bord supérieur du carré QR (fraction hauteur). */
   qrTopYFrac: 0.528,
-  /** Hauteur du bandeau noir « étapes » (sans la bande sociale). */
+  /** Hauteur de la zone « étapes » (sans la bande sociale), fond transparent. */
   footerStepsHeightFrac: 0.108,
   /** Hauteur max du PNG bandeau pied (fraction canvas). */
   footerBannerMaxHeightFrac: 0.132,
@@ -98,6 +98,7 @@ export function flyerTemplateMeta(id) {
  * @property {number} headlineLogoGapPct espace logo → titre (% hauteur flyer, 0–14)
  * @property {number} headlineLetterSpacing espacement lettres (0–8, px réf. export)
  * @property {number} headlineSizePct taille police titre (% largeur flyer), 5–16
+ * @property {string} footerStepsForegroundColor couleur chiffres + libellés des étapes (bas de flyer)
  * @property {number} flyerFooterTextScalePct échelle texte étapes + bande sociale, 70–130
  * @property {number} flyerWheelLabelScalePct échelle GAGNÉ/PERDU sur la roue, 70–130
  * @property {number} flyerBgOverlayPct voile sur image de fond (0–90), 0 = photo seule
@@ -110,9 +111,9 @@ export function defaultFlyerState() {
     templateId: FLYER_TEMPLATE_ID,
     headline: "Fais tourner la roue",
     ctaBanner: "SCANNEZ POUR JOUER",
-    step1: "Scannez le QR code",
-    step2: "Ajoutez la carte au Wallet",
-    step3: "Cumulez points & avantages",
+    step1: "Scan le QR code",
+    step2: "Fais tourner la roue",
+    step3: "Découvre ton cadeau",
     social1: "",
     socialUrl1: "",
     social2: "",
@@ -136,6 +137,7 @@ export function defaultFlyerState() {
     headlineLogoGapPct: 4,
     headlineLetterSpacing: 0,
     headlineSizePct: 9.2,
+    footerStepsForegroundColor: "#ffffff",
     flyerFooterTextScalePct: 100,
     flyerWheelLabelScalePct: 100,
     flyerBgOverlayPct: 52,
@@ -165,6 +167,12 @@ export function wheelSegmentColorsResolved(s) {
 function safeHex(v, fallback) {
   if (typeof v === "string" && /^#[0-9A-Fa-f]{6}$/.test(v.trim())) return v.trim();
   return fallback;
+}
+
+/** Couleur texte / chiffres du bandeau étapes (après merge). */
+export function footerStepsForegroundResolved(s) {
+  const b = defaultFlyerState();
+  return safeHex(String(s.footerStepsForegroundColor ?? ""), b.footerStepsForegroundColor);
 }
 
 function clampWheelOffsetDeg(v) {
@@ -261,6 +269,10 @@ export function mergeFlyerState(raw) {
     headlineLogoGapPct: clampHeadlineGapPct(merged.headlineLogoGapPct),
     headlineLetterSpacing: clampHeadlineLetterSpacing(merged.headlineLetterSpacing),
     headlineSizePct: clampHeadlineSizePct(merged.headlineSizePct),
+    footerStepsForegroundColor: safeHex(
+      String(merged.footerStepsForegroundColor ?? ""),
+      base.footerStepsForegroundColor,
+    ),
     flyerFooterTextScalePct: clampFlyerTextScalePct(merged.flyerFooterTextScalePct),
     flyerWheelLabelScalePct: clampFlyerTextScalePct(merged.flyerWheelLabelScalePct),
     flyerBgOverlayPct: clampFlyerBgOverlayPct(merged.flyerBgOverlayPct),
