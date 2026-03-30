@@ -343,9 +343,11 @@ router.post("/send", async (req, res) => {
         : "campaign_manual";
 
   const businessForSend = syncNotificationTextsForCampaign(business.id, title, body);
+  const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
   const result = await deliverDashboardBroadcast(businessForSend, slug, apiBase, memberIds, title, body, "passkit", {
     triggerName,
     merchantUserId: req.user?.id ?? null,
+    touchMemberLastVisit: !isBehavioralSegment,
   });
 
   const firstError = result.errors?.length > 0 ? result.errors[0].error : null;

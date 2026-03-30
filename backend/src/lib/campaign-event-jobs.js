@@ -1,8 +1,8 @@
 /**
  * Campaign event jobs:
- * - les règles event_... sont stockées dans `business.campaign_automation_json`
- * - à la création d’un membre, on planifie des jobs `run_at = now + delay`
- * - un loop backend récupère les jobs dus et envoie une notif au membre unique
+ * - règles `event_*` dans `business.campaign_automation_json`
+ * - planification à l’enregistrement PassKit (carte dans Apple Wallet), pas à la création membre seule
+ * - boucle ~1 min : jobs dus → notif membre cible (cooldown + retry si aucun canal)
  */
 
 import { randomUUID } from "crypto";
@@ -143,7 +143,7 @@ function requeueJobForLater(jobId, delayMinutes, reason) {
 export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
   const nowIso = new Date().toISOString();
   const dueJobs = await claimDueJobs({ nowIso, limit });
-  if (dueJobs.length === 0) return { ran: 0, sent: 0, skipped: 0, failed: 0 };
+  if (dueJobs.length === 0) return { ran: 0, sent: 0, skipped: 0, failed: 0, requeued: 0 };
 
   const apiBase = getApiBase();
 

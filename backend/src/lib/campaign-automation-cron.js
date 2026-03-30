@@ -118,16 +118,25 @@ export async function runCampaignAutomationCron() {
       const triggerName = ruleId.startsWith("custom_")
         ? `campaign_auto_${ruleId}`.slice(0, 96)
         : "campaign_auto";
+      const ruleTitle =
+        ruleId.startsWith("custom_") && rule.title && String(rule.title).trim()
+          ? String(rule.title).trim().slice(0, 80)
+          : null;
       try {
         const { sent } = await deliverDashboardBroadcast(
           business,
           row.slug,
           apiBase,
           memberIds,
-          null,
+          ruleTitle,
           message,
           "campaign_auto",
-          { triggerName, sendMerchantReceipt: false }
+          {
+            triggerName,
+            sendMerchantReceipt: false,
+            // Ne pas mettre à jour last_visit_at : ce n’est pas une visite magasin, sinon les segments « inactifs » se vident à tort.
+            touchMemberLastVisit: false,
+          }
         );
         sentTotal += sent;
       } catch (e) {
