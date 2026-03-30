@@ -36,10 +36,10 @@ export const FLYER_LOGO_BLOCK_BOTTOM_FRAC =
  * Composition verticale du flyer (écarts volontairement marqués pour l’aperçu + impression).
  */
 export const FLYER_LAYOUT = Object.freeze({
-  /** Centre vertical de la roue (fraction hauteur canvas). */
-  wheelCenterYFrac: 0.492,
+  /** Centre vertical de la roue (fraction hauteur canvas) — un peu plus bas pour aérer logo + accroche. */
+  wheelCenterYFrac: 0.508,
   /** Bord supérieur du carré QR (fraction hauteur). */
-  qrTopYFrac: 0.528,
+  qrTopYFrac: 0.548,
   /** Hauteur de la zone « étapes » (sans la bande sociale), fond transparent. */
   footerStepsHeightFrac: 0.108,
   /** Hauteur max du PNG bandeau pied (fraction canvas). */
@@ -136,7 +136,7 @@ export function defaultFlyerState() {
     headlineTextColor: "#ffffff",
     headlineStrokeColor: "#020617",
     headlineStrokeWidth: 5,
-    headlineLogoGapPct: 4,
+    headlineLogoGapPct: 8,
     headlineLetterSpacing: 0,
     headlineSizePct: 9.2,
     footerStepsForegroundColor: "#ffffff",
