@@ -145,9 +145,10 @@ export function parseFlyerAIBody(raw) {
 export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, styleRefCount: 0 }) {
   const concept = input.cuisine_or_concept.trim();
   const accent = input.accent_color_hex.trim();
-  const secondary = input.secondary_color_hex?.trim()
-    ? `Secondary accent color ${input.secondary_color_hex} (wheel segment fills, accents).`
-    : `Derive a clean secondary (white, cream, or deep black) that complements ${accent}.`;
+  const secondaryHex = input.secondary_color_hex?.trim();
+  const secondary = secondaryHex
+    ? `Wheel fill colors: odd-numbered segments (1,3,5,7,9) = solid ${accent}; even-numbered segments (2,4,6,8) = solid ${secondaryHex}. Two fills only — never two touching segments the same color.`
+    : `Wheel fill colors: odd segments (1,3,5,7,9) = solid ${accent}; even segments (2,4,6,8) = solid white or cream. Never two adjacent segments the same fill.`;
   const extra = input.extra_context?.trim()
     ? `Extra constraints (respect strictly): ${input.extra_context.trim().slice(0, 450)}`
     : "";
@@ -155,34 +156,37 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   const mood = MOOD_EN[input.visual_mood] || MOOD_EN.energetic;
 
   const multimodalLines = [];
+  if (multimodalHint.hasLogo) {
+    multimodalLines.push(
+      "REFERENCE IMAGE #1 = OFFICIAL BRAND LOGO. Recreate it faithfully at the TOP of the poster, horizontally CENTERED, in a compact top band (~10–14% of total image height). Same shapes, colors, and typography as the reference. Do not invent a different mark. Do not repeat the logo elsewhere on the poster."
+    );
+  }
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "INPUT IMAGES (order matters): The API sends reference image(s) before this text — use them as STYLE / MOODBOARD only: copy color palette, lighting, dish styling, and atmosphere — not their text, prices, logos, or competitor marks."
+      "Following reference image(s) (after the logo, if any): STYLE / MOODBOARD ONLY — borrow color palette, lighting, and food presentation; do NOT copy their text, prices, QR codes, or unrelated logos."
     );
   }
 
   return [
-    "TASK: One single vertical poster image (print-ready), portrait ~2:3, full bleed. This artwork is a BACKGROUND PLATE ONLY: the merchant will add logo, headline, real QR code, and legal/footer text in software later. Your job is ONLY: soft background + central prize wheel + optional food photography around the wheel.",
-    "FORBIDDEN — DO NOT DRAW ANY OF THESE (the app adds them later): any logo or brand mark; any headline or slogan (e.g. no « SCANNEZ », « CADEAU », « GAGNEZ » banners); any QR code, datamatrix, or checkerboard pattern anywhere; any footer strip, step list, icons with captions, « Scanne le QR », « tourne la roue », « cadeau » instructions; any ribbon or pill with « SCANNE » / « JOUER »; any phone mockup or app UI.",
-    "FORBIDDEN: any text on the poster EXCEPT the nine wheel segment labels specified below. No shop name, no address, no phone, no opening hours.",
-    "REFERENCE STYLE (quality bar): Premium French retail / food poster — crisp wheel graphic + photorealistic dishes; cohesive lighting; not a cluttered collage.",
-    "LAYOUT: No top header band. Start with full-bleed visual: central wheel dominates; photorealistic food cutouts or plates " +
-      (input.hero_products?.trim()
-        ? "(" + input.hero_products.trim() + ") "
-        : "") +
-      "left and/or right of the wheel matching the mood of « " +
+    "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Structure from top to bottom: (1) optional logo band at top center when a logo reference is supplied; (2) large prize wheel in the middle; (3) photorealistic food around the wheel; (4) soft background. The merchant will add ONLY the real scannable QR in software — your image must NOT contain any QR.",
+    "ABSOLUTE BAN — QR / BARCODES: Do not draw any QR code, micro-QR, Data Matrix, or square grid of black modules anywhere (not in the wheel center, not in corners, not overlaid on food). No fake checkerboard, no « finder » corner patterns, no white square with black noise. If unsure, leave areas empty or plain color.",
+    "FORBIDDEN TEXT / GRAPHICS: No headline « SCANNEZ », « GAGNEZ », « CADEAU », no slogan banners, no address, phone, hours, no footer strip with numbered steps, no « Scanne le QR », « tourne la roue », no ribbon « SCANNE POUR JOUER », no phone mockups.",
+    "FORBIDDEN: Any extra text except exactly the nine wheel words below. Do not print the internal cuisine phrase « " +
       concept +
-      " » — do NOT print the word « " +
+      " » as text on the poster.",
+    "REFERENCE STYLE: Premium French street retail — crisp wheel, photoreal food cutouts, cohesive lighting.",
+    "MID LAYOUT: Below the logo area (or from top if no logo), the wheel is the hero. Photorealistic dishes " +
+      (input.hero_products?.trim() ? "(" + input.hero_products.trim() + ") " : "") +
+      "positioned left/right of the wheel; match the mood of « " +
       concept +
-      " » as text unless it is literally the brand name (it is not required on the image).",
-    "CENTER — PRIZE WHEEL (strict): Exactly ONE roulette wheel with EXACTLY 9 wedge segments — not 8, not 10, not 12, not 16. Count segments: there must be precisely nine radial slices from center to rim. Alternate two brand colors (" +
-      accent +
-      " and a contrasting partner). Small pointer at the top center.",
-    "WHEEL TEXT (only text allowed on entire image): On each segment, exactly ONE word in French: « GAGNÉ » or « PERDU », bent along the arc radially. Going clockwise from the segment under the pointer: segment 1 = « GAGNÉ », segment 2 = « PERDU », segment 3 = « GAGNÉ », segment 4 = « PERDU », segment 5 = « GAGNÉ », segment 6 = « PERDU », segment 7 = « GAGNÉ », segment 8 = « PERDU », segment 9 = « GAGNÉ ». Never place two « GAGNÉ » or two « PERDU » next to each other.",
-    "WHEEL HUB: Empty circular center — flat white or very light cream disk only. NO QR code, NO squares with fake modules, NO « scan » text, NO button.",
+      " » visually only.",
+    "PRIZE WHEEL — GEOMETRY: Exactly ONE wheel. EXACTLY 9 equal wedge segments (verify: 9 radial dividers). Not 8, not 10. Small pointer at top center.",
     secondary,
-    "VISUAL RULES: Legible French on wheel only; no mirrored text; no watermarks; no extra decorative lettering.",
-    "QUALITY: High-resolution advertising look, sharp wheel edges, clean color grading.",
+    "WHEEL LABELS — ORDER (clockwise from segment under pointer): 1=GAGNÉ, 2=PERDU, 3=GAGNÉ, 4=PERDU, 5=GAGNÉ, 6=PERDU, 7=GAGNÉ, 8=PERDU, 9=GAGNÉ. One word per segment only.",
+    "WHEEL LABELS — ORIENTATION (critical): Set each word in RADIAL / VERTICAL layout inside its wedge — letters run along the radius from the small center hub toward the outer rim (like professional prize wheels), upright and readable within that slice. Do NOT curve text along the outer circumference tangent to the wheel; do NOT lay text horizontally around the rim.",
+    "WHEEL HUB: Only a small solid circle at the geometric center — diameter about 5–10% of the wheel diameter (small pin), white or very light cream. No QR, no thick rounded square, no button, no icon.",
+    "VISUAL RULES: French words on wheel only; no watermarks; no mirrored text.",
+    "QUALITY: Sharp print, clean segment edges, even color fills.",
     mood + ".",
     extra,
     ...multimodalLines,
@@ -354,13 +358,8 @@ async function openaiImageGenerations(apiKey, prompt) {
  * @returns {Promise<{ b64: string, revised?: string }>}
  */
 export async function openaiGenerateFlyerImage(apiKey, prompt, multimodal) {
-  let images = multimodal?.images?.length ? [...multimodal.images] : [];
-  let hasLogo = Boolean(multimodal?.hasLogo);
-  /** Ne pas envoyer le logo à l’API : sinon le modèle le recolle en en-tête (interdit pour ce flux). */
-  if (hasLogo && images.length > 0) {
-    images = images.slice(1);
-    hasLogo = false;
-  }
+  const images = multimodal?.images?.length ? [...multimodal.images] : [];
+  const hasLogo = Boolean(multimodal?.hasLogo);
   if (images.length === 0) {
     return openaiImageGenerations(apiKey, prompt);
   }
