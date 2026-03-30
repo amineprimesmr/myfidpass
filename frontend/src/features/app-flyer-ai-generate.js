@@ -92,10 +92,8 @@ export function initFlyerAiGenerate(slug, opts) {
   const refInput = document.getElementById("app-flyer-ai-ref-files");
   const brandEl = document.getElementById("app-flyer-ai-brand");
   const conceptEl = document.getElementById("app-flyer-ai-concept");
-  const taglineEl = document.getElementById("app-flyer-ai-tagline");
   const accentEl = document.getElementById("app-flyer-ai-accent");
   const secondaryEl = document.getElementById("app-flyer-ai-secondary");
-  const heroEl = document.getElementById("app-flyer-ai-hero");
   const extraEl = document.getElementById("app-flyer-ai-extra");
 
   if (!btn || !opts.dashboardApi) {
@@ -153,7 +151,7 @@ export function initFlyerAiGenerate(slug, opts) {
     if (el) el.dataset.userTouched = "1";
   }
 
-  [brandEl, conceptEl, taglineEl, accentEl, secondaryEl, heroEl, extraEl, moodSel].forEach((el) => {
+  [brandEl, conceptEl, accentEl, secondaryEl, extraEl, moodSel].forEach((el) => {
     el?.addEventListener("input", () => markTouched(el));
     el?.addEventListener("change", () => markTouched(el));
   });
@@ -202,7 +200,7 @@ export function initFlyerAiGenerate(slug, opts) {
       const secondary_color_hex = secRaw ? normalizeHex6(secRaw) : "";
 
       if (!brand_name || !cuisine_or_concept) {
-        setStatus("Renseignez au minimum le nom de marque et le type de commerce.", true);
+        setStatus("Renseignez au minimum le nom de marque et le descriptif activité / visuels.", true);
         return;
       }
 
@@ -213,8 +211,6 @@ export function initFlyerAiGenerate(slug, opts) {
         cuisine_or_concept,
         accent_color_hex,
         secondary_color_hex: secondary_color_hex || "",
-        tagline: (taglineEl?.value || "").trim() || undefined,
-        hero_products: (heroEl?.value || "").trim() || undefined,
         visual_mood,
         extra_context: (extraEl?.value || "").trim() || undefined,
       };

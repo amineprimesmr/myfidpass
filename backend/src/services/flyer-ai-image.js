@@ -25,15 +25,16 @@ const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 const bodySchema = z.object({
   brand_name: z.string().min(1, "Nom de marque requis.").max(80),
-  cuisine_or_concept: z.string().min(1, "Type de commerce / concept requis.").max(160),
-  tagline: z.string().max(140).optional(),
+  cuisine_or_concept: z
+    .string()
+    .min(1, "Description de l’activité requise.")
+    .max(400, "Description trop longue (400 caractères max)."),
   accent_color_hex: z
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/, "Couleur principale invalide (#RRVVBB)."),
   secondary_color_hex: z
     .union([z.string().regex(/^#[0-9A-Fa-f]{6}$/), z.literal("")])
     .optional(),
-  hero_products: z.string().max(220).optional(),
   visual_mood: z.enum(VISUAL_MOODS),
   extra_context: z.string().max(400).optional(),
   logo_base64: z.string().max(6_000_000).optional(),
@@ -66,14 +67,8 @@ const MOOD_EN_UNIVERSAL = {
 function buildMerchantBriefForPrompt(input) {
   const parts = [
     `Brand name: « ${input.brand_name.trim()} ».`,
-    `Business type / activity (this may be ANY sector — food, automotive, beauty, fishing, crafts, services, etc.): « ${input.cuisine_or_concept.trim()} ».`,
+    `Business sector / activity AND what to show visually around the wheel (products, services, hero imagery — any sector; interpret literally): « ${input.cuisine_or_concept.trim()} ».`,
   ];
-  if (input.hero_products?.trim()) {
-    parts.push(`Products, services, or hero visuals to feature around the wheel (interpret literally for this sector): « ${input.hero_products.trim()} ».`);
-  }
-  if (input.tagline?.trim()) {
-    parts.push(`Tagline context (do NOT render as text on the poster): « ${input.tagline.trim()} ».`);
-  }
   if (input.extra_context?.trim()) {
     parts.push(`Owner constraints: « ${input.extra_context.trim().slice(0, 400)} ».`);
   }
@@ -122,13 +117,11 @@ export function parseFlyerAIBody(raw) {
   const value = {
     brand_name: d.brand_name.trim(),
     cuisine_or_concept: d.cuisine_or_concept.trim(),
-    tagline: d.tagline?.trim() || undefined,
     accent_color_hex: d.accent_color_hex.trim(),
     secondary_color_hex:
       d.secondary_color_hex && String(d.secondary_color_hex).trim()
         ? String(d.secondary_color_hex).trim()
         : undefined,
-    hero_products: d.hero_products?.trim() || undefined,
     visual_mood: d.visual_mood,
     extra_context: d.extra_context?.trim() || undefined,
   };
@@ -185,7 +178,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Follow the VERTICAL ZONES below strictly. The merchant adds headline text, QR, and a footer strip in software — your image must NOT contain any QR or those texts.";
 
   const sideImagery =
-    "SIDE IMAGERY: Arrange visuals left/right of the wheel that clearly belong to the same business as the MERCHANT BRIEF (same sector, same offer). Use the exact subjects implied by the brief and hero line — across all industries.";
+    "SIDE IMAGERY: Arrange visuals left/right of the wheel that clearly belong to the same business as the MERCHANT BRIEF (same sector, same offer). Use the exact subjects implied by the brief — across all industries.";
 
   const referenceStyle =
     "REFERENCE STYLE: Premium multi-sector loyalty poster — crisp prize wheel, photorealistic or polished illustrative cutouts faithful to the MERCHANT BRIEF, cohesive lighting, no generic unrelated industry.";
