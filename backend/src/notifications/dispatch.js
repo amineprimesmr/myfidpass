@@ -19,6 +19,7 @@ import {
 import { sendWebPush } from "../notifications.js";
 import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import { sendMerchantAppAlert, isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
+import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
 
 function businessHasNotificationLogo(business) {
   return (
@@ -80,16 +81,26 @@ export async function deliverCustomerBroadcast({
     };
   }
 
+  // Aligne le modèle PassKit (`changeMessage`) sur ce corps / titre — sinon un envoi manuel précédent
+  // laisse un préfixe dans `notification_change_message` alors que `last_broadcast_message` vient de l’auto.
+  const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
+
   const batchId = createNotificationBatch({
     businessId: business.id,
     triggerName,
     summary: { started_at: new Date().toISOString() },
   });
 
-  const iconUrl = businessHasNotificationLogo(business)
+  const iconUrl = businessHasNotificationLogo(businessAfterSync || business)
     ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
     : null;
-  const payloadTitle = (title || business.notification_title_override || business.organization_name || "Myfidpass").trim();
+  const titleTrim = title != null ? String(title).trim() : "";
+  const payloadTitle = (
+    (titleTrim ? titleTrim : null) ||
+    (businessAfterSync?.notification_title_override && String(businessAfterSync.notification_title_override).trim()) ||
+    (businessAfterSync?.organization_name && String(businessAfterSync.organization_name).trim()) ||
+    "Myfidpass"
+  ).trim();
   const payload = {
     title: payloadTitle,
     body: bodyMessage,
