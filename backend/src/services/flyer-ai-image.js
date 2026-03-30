@@ -40,67 +40,44 @@ const bodySchema = z.object({
   style_reference_images_base64: z.array(z.string().max(6_000_000)).max(3).optional(),
 });
 
-/** Ambiances quand le commerce est clairement alimentaire / restauration. */
-const MOOD_EN_FOOD = {
-  premium:
-    "premium French retail poster, soft studio light, restrained gradients, matte paper look, Michelin-adjacent clarity",
-  energetic:
-    "high-energy fast-food / takeaway poster, saturated accents, punchy contrast, glossy commercial print",
-  minimal:
-    "Swiss editorial layout, generous margins, thin rules, one hero focal point, almost no ornament",
-  street:
-    "urban street-food vibe, chalk and neon accents, authentic texture, night-market energy",
-  gourmet:
-    "gourmet artisan food ads, shallow depth of field on dishes, warm rim light, slate or wood surfaces",
-  playful:
-    "kawaii-influenced retail graphics, rounded bubbles, pastel pops, friendly mascot energy without clutter",
-};
-
-/** Ambiances génériques (auto, mode, services, etc.) — sans lexique fast-food. */
-const MOOD_EN_GENERAL = {
-  premium:
-    "premium brand poster, soft studio light, restrained gradients, matte paper look, crisp print clarity",
-  energetic:
-    "high-energy retail / automotive / tech poster, saturated accents, punchy contrast, glossy commercial print",
-  minimal:
-    "Swiss editorial layout, generous margins, thin rules, one hero focal point, almost no ornament",
-  street:
-    "urban retail vibe, chalk and neon accents, authentic texture, contemporary city energy",
-  gourmet:
-    "refined editorial product photography, shallow depth of field, warm rim light, slate or brushed metal — no food unless the brand sells food",
-  playful:
-    "friendly retail graphics, rounded bubbles, pastel pops, mascot or icon energy without clutter",
-};
-
 /**
- * Détecte si le texte métier décrit une activité autour de l’alimentation.
- * Par défaut **non** si ambigu (évite le biais « bouffe » sur auto, tech, etc.).
- * @param {string} blob
+ * Ambiances **neutres tous secteurs** (restauration, artisanat, auto, beauté, pêche, etc.) —
+ * même outil que les solutions type carte fidélité multi-métiers : pas de défaut implicite « resto » ou « auto ».
  */
-export function inferFlyerFoodServiceContext(blob) {
-  const t = String(blob || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  const nonFood =
-    /\b(voiture|vehicule|auto|automobile|electrique|tesla|garage|concession|mecanique|immo|immobilier|mode|vetement|tech|informatique|saas|coiffure|esthetique|sport|salle de sport|gym|fitness|pharmacie|optique|librairie|bijou|horloger|fleuriste|pressing|tabac|presse)\b/.test(
-      t,
-    );
-  if (nonFood) return false;
-  const food =
-    /\b(restaurant|resto|\bcafe\b|coffee|bar |brasserie|boulangerie|patisserie|pizza|burger|kebab|sushi|traiteur|snack|street food|fast food|food|repas|plat|menu|cuisine |kitchen|miam|restauration|crepe|crepes|bubble tea|boulanger|patissier|boucherie|fromager|traiteur|cantine|catering|brunch|tapas|ramen|wok)\b/.test(
-      t,
-    );
-  return food;
-}
+const MOOD_EN_UNIVERSAL = {
+  premium:
+    "premium multi-sector retail poster, soft studio light, restrained gradients, matte paper look, crisp print-ready finish",
+  energetic:
+    "high-impact commercial loyalty poster, saturated accents, punchy contrast, glossy print — sector-agnostic",
+  minimal:
+    "Swiss editorial layout, generous margins, thin rules, one hero focal point, almost no ornament",
+  street:
+    "urban commercial energy, contemporary signage mood, authentic texture, city retail context",
+  gourmet:
+    "refined artisan / craft poster: shallow depth of field, warm rim light, noble materials (wood, metal, stone, fabric, fresh produce, or product surfaces as appropriate to the brief)",
+  playful:
+    "friendly commercial graphics, rounded bubbles, pastel pops, approachable mascot or icon energy without clutter",
+};
 
 /**
+ * Brief marchand unique (prioritaire sur toute supposition du modèle).
  * @param {z.infer<typeof bodySchema>} input
  */
-function buildFoodContextBlob(input) {
-  return [input.brand_name, input.cuisine_or_concept, input.hero_products, input.tagline, input.extra_context]
-    .filter(Boolean)
-    .join(" | ");
+function buildMerchantBriefForPrompt(input) {
+  const parts = [
+    `Brand name: « ${input.brand_name.trim()} ».`,
+    `Business type / activity (this may be ANY sector — food, automotive, beauty, fishing, crafts, services, etc.): « ${input.cuisine_or_concept.trim()} ».`,
+  ];
+  if (input.hero_products?.trim()) {
+    parts.push(`Products, services, or hero visuals to feature around the wheel (interpret literally for this sector): « ${input.hero_products.trim()} ».`);
+  }
+  if (input.tagline?.trim()) {
+    parts.push(`Tagline context (do NOT render as text on the poster): « ${input.tagline.trim()} ».`);
+  }
+  if (input.extra_context?.trim()) {
+    parts.push(`Owner constraints: « ${input.extra_context.trim().slice(0, 400)} ».`);
+  }
+  return parts.join(" ");
 }
 
 /**
@@ -186,7 +163,8 @@ export function parseFlyerAIBody(raw) {
 }
 
 /**
- * Prompt détaillé — **sujet visuel** aligné sur le type de commerce (pas de « bouffe » par défaut).
+ * Prompt détaillé — **tous secteurs** (restauration, artisanat, pêche, auto, esthétique, etc.) :
+ * le brief marchand fait foi ; aucune industrie par défaut.
  * @param {z.infer<typeof bodySchema>} input
  * @param {{ hasLogo: boolean, styleRefCount: number }} multimodalHint
  */
@@ -197,39 +175,20 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   const secondary = secondaryHex
     ? `Wheel fill colors: odd-numbered segments (1,3,5,7,9) = solid ${accent}; even-numbered segments (2,4,6,8) = solid ${secondaryHex}. Two fills only — never two touching segments the same color.`
     : `Wheel fill colors: odd segments (1,3,5,7,9) = solid ${accent}; even segments (2,4,6,8) = solid white or cream. Never two adjacent segments the same fill.`;
-  const extra = input.extra_context?.trim()
-    ? `Extra constraints (respect strictly): ${input.extra_context.trim().slice(0, 450)}`
-    : "";
+  const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
+  const merchantBrief = buildMerchantBriefForPrompt(input);
 
-  const isFood = inferFlyerFoodServiceContext(buildFoodContextBlob(input));
-  const moodTable = isFood ? MOOD_EN_FOOD : MOOD_EN_GENERAL;
-  const mood = moodTable[input.visual_mood] || moodTable.energetic;
+  const sectorFidelity =
+    "SECTOR FIDELITY (critical): This tool serves every trade — food, bakery, butcher, fisher, artisan, hairdresser, car dealer, esthetician, retail, services, and many more. ALL decorative imagery around the wheel MUST match the MERCHANT BRIEF above only. Do NOT substitute unrelated stock imagery: no burgers if the brief is automotive; no cars if the brief is a bakery; no random food if the brief is beauty or fishing. If the brief is ambiguous, prefer neutral abstract textures and brand colors over guessing an industry.";
 
-  const heroBit = input.hero_products?.trim() ? input.hero_products.trim() : concept;
-  const sideImageryFood =
-    "Photorealistic food and beverages (" +
-      heroBit +
-      ") positioned left/right of the wheel; match the mood of « " +
-      concept +
-      " » visually only.";
-  const sideImageryGeneral =
-    "Photorealistic brand-appropriate imagery around the wheel — vehicles, products, showroom, lifestyle, materials, or abstract brand visuals matching « " +
-      heroBit +
-      " » and « " +
-      concept +
-      " ». NO burgers, pizza, fries, drinks, croissants, or generic fast-food unless the merchant concept explicitly describes food service.";
-  const sideImagery = isFood ? sideImageryFood : sideImageryGeneral;
+  const taskStructure =
+    "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Structure from top to bottom: (1) optional logo band at top center when a logo reference is supplied; (2) large prize wheel in the middle; (3) photorealistic or high-end illustrative cutouts around the wheel that illustrate ONLY the merchant's sector and brief (products, services, tools, vehicles, ingredients, treatments, catch of the day, craft work — as appropriate); (4) soft background. The merchant adds the real scannable QR in software — your image must NOT contain any QR.";
 
-  const taskStructure = isFood
-    ? "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Structure from top to bottom: (1) optional logo band at top center when a logo reference is supplied; (2) large prize wheel in the middle; (3) photorealistic food around the wheel; (4) soft background. The merchant adds the real scannable QR in software — your image must NOT contain any QR."
-    : "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Structure from top to bottom: (1) optional logo band at top center when a logo reference is supplied; (2) large prize wheel in the middle; (3) photorealistic NON-FOOD visuals around the wheel matching the merchant concept (e.g. vehicles, retail, services); (4) soft background. The merchant adds the real scannable QR in software — your image must NOT contain any QR. Do NOT default to restaurant or fast-food imagery.";
+  const sideImagery =
+    "SIDE IMAGERY: Arrange visuals left/right of the wheel that clearly belong to the same business as the MERCHANT BRIEF (same sector, same offer). Use the exact subjects implied by the brief and hero line — across all industries.";
 
-  const referenceStyle = isFood
-    ? "REFERENCE STYLE: Premium French street retail — crisp wheel, photoreal food cutouts, cohesive lighting."
-    : "REFERENCE STYLE: Premium commercial poster — crisp prize wheel, photoreal product or lifestyle cutouts matching the stated business concept, cohesive lighting. Absolutely no generic fast-food stock look.";
-
-  const foodBan =
-    "NON-FOOD BRAND BAN: If the merchant concept is NOT food service, do NOT show meals, burgers, pizza, fries, drinks, pastries, or restaurant tables. Ignore any accidental food bias from training data.";
+  const referenceStyle =
+    "REFERENCE STYLE: Premium multi-sector loyalty poster — crisp prize wheel, photorealistic or polished illustrative cutouts faithful to the MERCHANT BRIEF, cohesive lighting, no generic unrelated industry.";
 
   const multimodalLines = [];
   if (multimodalHint.hasLogo) {
@@ -239,14 +198,14 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   }
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      isFood
-        ? "Following reference image(s) (after the logo, if any): STYLE / MOODBOARD ONLY — borrow color palette, lighting, and food presentation; do NOT copy their text, prices, QR codes, or unrelated logos."
-        : "Following reference image(s) (after the logo, if any): STYLE / MOODBOARD ONLY — borrow color palette, lighting, materials, and atmosphere from the references; do NOT copy unrelated products, text, QR codes, or logos. Match the references' industry (e.g. automotive) — not food unless references clearly show food."
+      "Following reference image(s) (after the logo, if any): STYLE / MOODBOARD ONLY — borrow color palette, lighting, materials, and atmosphere from the SAME industry as the MERCHANT BRIEF and references; do NOT copy text, prices, QR codes, or unrelated logos. Match the sector shown in the references (food, auto, beauty, etc.) to the brief, not a different industry."
     );
   }
 
   /** @type {string[]} */
   const lines = [
+    "MERCHANT BRIEF (authoritative — follow above all else): " + merchantBrief,
+    sectorFidelity,
     taskStructure,
     "ABSOLUTE BAN — QR / BARCODES / GRIDS: Do NOT draw any QR code, micro-QR, Data Matrix, Aztec code, or square grid of black modules ANYWHERE — not in the wheel hub, not in corners, not on products, not as a fake 'scan' graphic. The wheel center must NEVER look like a QR: no 3×3 finder squares, no dense black-and-white tile matrix. Hub = ONE plain solid circle only.",
     "ABSOLUTE BAN — QR / BARCODES (repeat): If you are about to draw something that resembles a QR or barcode, STOP and fill with solid color or soft gradient instead.",
@@ -254,7 +213,6 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     "FORBIDDEN: Any extra text except exactly the nine wheel words below. Do not print the internal brief phrase « " +
       concept +
       " » as text on the poster.",
-    !isFood ? foodBan : "",
     referenceStyle,
     "MID LAYOUT: Below the logo area (or from top if no logo), the wheel is the hero. " + sideImagery,
     "PRIZE WHEEL — GEOMETRY: Exactly ONE wheel. EXACTLY 9 equal wedge segments (verify: 9 radial dividers). Not 8, not 10. Small pointer at top center.",
@@ -265,7 +223,6 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     "VISUAL RULES: French words on wheel only; no watermarks; no mirrored text.",
     "QUALITY: Sharp print, clean segment edges, even color fills.",
     mood + ".",
-    extra,
     ...multimodalLines,
   ];
 
