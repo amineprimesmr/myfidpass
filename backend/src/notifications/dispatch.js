@@ -10,7 +10,7 @@ import {
   createNotificationBatch,
   updateNotificationBatchSummary,
   deleteWebPushSubscriptionByEndpoint,
-  touchMemberLastVisit,
+  touchMemberLastVisit as dbTouchMemberLastVisit,
   setLastBroadcastMessage,
   getMerchantDeviceTokensForUser,
   deleteMerchantPushDeviceByToken,
@@ -147,7 +147,7 @@ export async function deliverCustomerBroadcast({
       const touchedMembers = new Set();
       for (const row of passKitTokens) {
         if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-          touchMemberLastVisit(row.serial_number);
+          dbTouchMemberLastVisit(row.serial_number);
           touchedMembers.add(row.serial_number);
         }
       }
