@@ -95,7 +95,7 @@ export function drawFlyerBackgroundLayer(ctx, w, h, s, bgImg) {
   }
   drawImageCover(ctx, bgImg, 0, 0, w, h);
   const raw = Number(s.flyerBgOverlayPct);
-  const pct = Number.isFinite(raw) ? Math.max(0, Math.min(90, Math.round(raw))) : 52;
+  const pct = Number.isFinite(raw) ? Math.max(0, Math.min(90, Math.round(raw))) : 0;
   if (pct <= 0) return;
   const t = (pct / 100) * 0.88;
   const b = (pct / 100) * 0.95;

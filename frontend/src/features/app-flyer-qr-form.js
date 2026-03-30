@@ -79,7 +79,7 @@ export function writeFlyerFormFromState(root, s) {
   set("app-flyer-footer-text-scale", String(s.flyerFooterTextScalePct ?? 100));
   set("app-flyer-footer-steps-color", s.footerStepsForegroundColor);
   set("app-flyer-wheel-label-scale", String(s.flyerWheelLabelScalePct ?? 100));
-  set("app-flyer-bg-overlay", String(s.flyerBgOverlayPct ?? 52));
+  set("app-flyer-bg-overlay", String(s.flyerBgOverlayPct ?? 0));
   set("app-flyer-qr-outline", String(s.flyerQrOutlineWidth ?? 0));
 }
 

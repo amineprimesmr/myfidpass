@@ -790,7 +790,7 @@
                     </div>
                     <div id="app-flyer-bg-panel" class="app-flyer-logo-panel app-flyer-bg-panel">
                       <p class="app-flyer-chip-label">Image de fond du poster</p>
-                      <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">Remplit tout le flyer (recadrage type « cover »). Les couleurs « Fond haut / bas » ajoutent un voile pour garder titre et QR lisibles.</p>
+                      <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">Remplit tout le flyer (recadrage type « cover »). Par défaut la photo est <strong>nette</strong> (voile à 0 %). Monte le voile si le titre ou le QR manquent de contraste sur ton image.</p>
                       <div id="app-flyer-bg-gallery-wrap" class="app-flyer-bg-gallery-wrap hidden">
                         <p class="app-flyer-chip-label" style="margin:0.65rem 0 0.35rem">Fonds proposés</p>
                         <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">Un clic applique le fond (comme une image importée). Liste : <code>public/assets/flyers/manifest.json</code>.</p>
@@ -807,8 +807,11 @@
                         <img id="app-flyer-bg-preview" class="app-flyer-bg-preview" alt="" decoding="async" />
                       </div>
                       <div class="app-flyer-field app-flyer-field--compact" style="margin-top:0.65rem">
-                        <label class="app-label" for="app-flyer-bg-overlay">Intensité du voile (0 = photo seule)</label>
-                        <input type="range" id="app-flyer-bg-overlay" class="app-flyer-bg-overlay-range" min="0" max="90" step="1" value="52" data-flyer-input aria-valuemin="0" aria-valuemax="90" />
+                        <label class="app-label" for="app-flyer-bg-overlay">Voile sur la photo (0 % = net, sans assombrissement)</label>
+                        <div class="app-flyer-range-row">
+                          <input type="range" id="app-flyer-bg-overlay" class="app-flyer-bg-overlay-range" min="0" max="90" step="1" value="0" data-flyer-input aria-valuemin="0" aria-valuemax="90" />
+                          <span class="app-flyer-range-readout" id="app-flyer-bg-overlay-out" aria-hidden="true">0 %</span>
+                        </div>
                       </div>
                     </div>
                     <div id="app-flyer-ai-panel" class="app-flyer-logo-panel app-flyer-ai-panel" style="margin-top:0.75rem">

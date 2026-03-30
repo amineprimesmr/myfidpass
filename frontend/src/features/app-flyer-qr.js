@@ -364,6 +364,7 @@ export function initAppFlyerQr(slug, opts) {
   bindFlyerRangeReadout("app-flyer-headline-size", "app-flyer-headline-size-out", true);
   bindFlyerRangeReadout("app-flyer-footer-text-scale", "app-flyer-footer-text-scale-out", false);
   bindFlyerRangeReadout("app-flyer-wheel-label-scale", "app-flyer-wheel-label-scale-out", false);
+  bindFlyerRangeReadout("app-flyer-bg-overlay", "app-flyer-bg-overlay-out", false);
 
   if (panelToggle && panel) {
     panelToggle.addEventListener("click", () => {

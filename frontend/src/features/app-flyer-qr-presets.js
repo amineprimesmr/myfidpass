@@ -101,7 +101,7 @@ export function flyerTemplateMeta(id) {
  * @property {string} footerStepsForegroundColor couleur chiffres + libellés des étapes (bas de flyer)
  * @property {number} flyerFooterTextScalePct échelle texte étapes + bande sociale, 70–130
  * @property {number} flyerWheelLabelScalePct échelle GAGNÉ/PERDU sur la roue, 70–130
- * @property {number} flyerBgOverlayPct voile sur image de fond (0–90), 0 = photo seule
+ * @property {number} flyerBgOverlayPct voile sur image de fond (0–90), 0 = photo brute sans assombrissement
  * @property {number} flyerQrOutlineWidth cadre autour du QR (0 = off), 0–12
  */
 
@@ -140,7 +140,7 @@ export function defaultFlyerState() {
     footerStepsForegroundColor: "#ffffff",
     flyerFooterTextScalePct: 100,
     flyerWheelLabelScalePct: 100,
-    flyerBgOverlayPct: 52,
+    flyerBgOverlayPct: 0,
     flyerQrOutlineWidth: 5,
   };
 }
@@ -219,7 +219,7 @@ function clampFlyerTextScalePct(v) {
 
 function clampFlyerBgOverlayPct(v) {
   const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 52;
+  if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(90, Math.round(n)));
 }
 
