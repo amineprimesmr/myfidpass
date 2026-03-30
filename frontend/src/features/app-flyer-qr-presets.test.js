@@ -25,14 +25,24 @@ describe("mergeFlyerState", () => {
     expect(s.colorBgTop).toBe(base.colorBgTop);
   });
 
-  it("alterne 2 couleurs sur les 6 secteurs", () => {
+  it("alterne 2 couleurs sur les 9 secteurs", () => {
     const s = mergeFlyerState({
       wheelColorOdd: "#ff0000",
       wheelColorEven: "#00ff00",
     });
     const cols = wheelSegmentColorsResolved(s);
     expect(cols).toHaveLength(FLYER_WHEEL_SEGMENT_COUNT);
-    expect(cols).toEqual(["#ff0000", "#00ff00", "#ff0000", "#00ff00", "#ff0000", "#00ff00"]);
+    expect(cols).toEqual([
+      "#ff0000",
+      "#00ff00",
+      "#ff0000",
+      "#00ff00",
+      "#ff0000",
+      "#00ff00",
+      "#ff0000",
+      "#00ff00",
+      "#ff0000",
+    ]);
   });
 
   it("migre wheelSeg1/2 vers wheelColorOdd/Even si besoin", () => {

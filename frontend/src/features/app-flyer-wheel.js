@@ -1,5 +1,5 @@
 /**
- * Rendu roue du flyer : parts vectorielles (égales) ou image PNG teintée (6 secteurs égaux).
+ * Rendu roue du flyer : parts vectorielles (égales) ou image PNG teintée (9 secteurs égaux).
  */
 import {
   wheelSegmentColorsResolved,
@@ -63,7 +63,7 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
     const mid = base + (i + 0.5) * step;
     const tx = cx + Math.cos(mid) * labelR;
     const ty = cy + Math.sin(mid) * labelR;
-    const label = i % 2 === 0 ? "GAGNÉ !" : "PERDU !";
+    const label = i % 2 === 0 ? "GAGNÉ" : "PERDU";
 
     ctx.save();
     ctx.translate(tx, ty);
@@ -219,6 +219,16 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
  * @param {CanvasImageSource | null} roueImg
  * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
  */
+/**
+ * Libellés seuls (GAGNÉ / PERDU) par-dessus une roue déjà rendue dans l’image de fond (ex. IA sans typo).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import("./app-flyer-qr-presets.js").FlyerState} s
+ */
+export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
+  const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, FLYER_WHEEL_SEGMENT_COUNT, s);
+}
+
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;

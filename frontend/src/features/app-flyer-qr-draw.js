@@ -12,7 +12,7 @@ import {
   flyerSocialStripHeight,
   drawFlyerSocialStrip,
 } from "./app-flyer-social-strip.js";
-import { drawFlyerWheel } from "./app-flyer-wheel.js";
+import { drawFlyerWheel, drawFlyerWheelLabelsOverlay } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
 import { drawFlyerQrCardOutline } from "./app-flyer-qr-qr-frame.js";
@@ -485,13 +485,17 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     }
   }
 
+  const wheelCx = w * 0.5;
+  const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
+  const wheelR = w * 0.36;
+
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   if (logoImg) drawFlyerCommerceLogo(ctx, logoImg, w, h);
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    const wheelCx = w * 0.5;
-    const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
-    const wheelR = w * 0.36;
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
+  } else if (bgCanvasImg) {
+    /** Fond photo / IA : libellés vectoriels (9 parts) — l’image ne doit pas contenir de texte sur la roue (prompt serveur). */
+    drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR);
   }
   drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
   const qx = w * 0.515;

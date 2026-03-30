@@ -8,8 +8,8 @@ export const FLYER_STORAGE_KEY = "fidpass_flyer_prefs_v1";
 /** Dimensions export PNG (haute définition impression / zoom). */
 export const FLYER_EXPORT = { w: 2400, h: 3600 };
 
-/** Nombre de parts : 6 secteurs égaux (60°), alignés sur roue.png actuelle. */
-export const FLYER_WHEEL_SEGMENT_COUNT = 6;
+/** Nombre de parts : 9 secteurs égaux (40°), aligné sur la roulette serveur + rendu canvas des libellés. */
+export const FLYER_WHEEL_SEGMENT_COUNT = 9;
 
 /**
  * Mode PNG seulement : calage rainures quand pointeur au milieu d’une part (1re arête ~11h si 0° utilisateur).
