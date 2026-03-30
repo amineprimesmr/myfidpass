@@ -90,8 +90,6 @@ export function initFlyerAiGenerate(slug, opts) {
   const quotaEl = document.getElementById("app-flyer-ai-quota");
   const moodSel = document.getElementById("app-flyer-ai-mood");
   const refInput = document.getElementById("app-flyer-ai-ref-files");
-  const includeLogoEl = document.getElementById("app-flyer-ai-include-logo");
-
   const brandEl = document.getElementById("app-flyer-ai-brand");
   const conceptEl = document.getElementById("app-flyer-ai-concept");
   const taglineEl = document.getElementById("app-flyer-ai-tagline");
@@ -228,32 +226,6 @@ export function initFlyerAiGenerate(slug, opts) {
         } catch (e) {
           setStatus(e instanceof Error ? e.message : "Import des images impossible.", true);
           return;
-        }
-      }
-
-      if (includeLogoEl?.checked) {
-        try {
-          const base = (API_BASE || "").replace(/\/$/, "");
-          const logoUrl = `${base}/api/businesses/${encodeURIComponent(slug)}/public/logo?v=${Date.now()}`;
-          const lr = await fetch(logoUrl, { mode: "cors", credentials: "omit" });
-          if (lr.ok) {
-            const blob = await lr.blob();
-            if (blob.size > 2048) {
-              const b64 = await new Promise((resolve, reject) => {
-                const fr = new FileReader();
-                fr.onload = () => {
-                  const res = String(fr.result || "");
-                  const i = res.indexOf("base64,");
-                  resolve(i >= 0 ? res.slice(i + 7) : "");
-                };
-                fr.onerror = () => reject(new Error("Logo illisible."));
-                fr.readAsDataURL(blob);
-              });
-              if (b64) body.logo_base64 = b64;
-            }
-          }
-        } catch (_) {
-          /* pas de logo : la génération continue sans */
         }
       }
 
