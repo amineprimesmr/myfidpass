@@ -29,6 +29,7 @@ import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
 import { getIdempotencyKey, canAccessDashboard } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../../lib/merchant-dashboard-sync-push.js";
+import { scheduleCampaignEventJobsForMember } from "../../lib/campaign-event-jobs.js";
 
 const router = Router();
 
@@ -75,8 +76,11 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
       name: normName,
     });
 
-    // Automatisations événementielles « carte au Wallet » : planifiées à l’enregistrement PassKit
-    // (voir passkit-webservice.js), pas ici — sinon le délai part avant que l’iPhone ait un token push.
+    try {
+      scheduleCampaignEventJobsForMember({ business, memberId: member.id });
+    } catch (e) {
+      console.error("[campaign-event-jobs] schedule member_created failed:", e?.message || String(e));
+    }
     scheduleMerchantDashboardSyncForBusiness(business.id, "member_created");
 
     res.status(201).json({
@@ -143,6 +147,11 @@ router.post("/import", (req, res) => {
         name,
         points,
       });
+      try {
+        scheduleCampaignEventJobsForMember({ business, memberId: member.id });
+      } catch (e) {
+        console.error("[campaign-event-jobs] schedule import member_created failed:", e?.message || String(e));
+      }
       created.push({ email, name, id: member.id });
     } catch (e) {
       errors.push({ row: i + 1, email, reason: e.message || "Erreur création" });

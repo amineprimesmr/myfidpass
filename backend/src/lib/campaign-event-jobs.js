@@ -1,14 +1,13 @@
 /**
  * Campaign event jobs:
- * - règles `event_*` dans `business.campaign_automation_json`
- * - planification à l’enregistrement PassKit (carte dans Apple Wallet), pas à la création membre seule
- * - boucle ~1 min : jobs dus → notif membre cible (cooldown + retry si aucun canal)
+ * - règles `event_*` dans `business.campaign_automation_json` (`eventType` = member_created)
+ * - planification : création membre (API) + enregistrement PassKit (INSERT OR IGNORE évite les doublons)
+ * - boucle ~1 min : jobs dus → notif membre cible (pas le cooldown « anti-spam segment » ; retry si aucun canal)
  */
 
 import { randomUUID } from "crypto";
 import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
-import { filterMemberIdsExcludingRecentNotifications } from "../db/webpush.js";
 import { mergeCampaignAutomationJson } from "./campaign-automation-cron.js";
 import { deliverDashboardBroadcast } from "../routes/businesses/notifications.js";
 
@@ -38,8 +37,8 @@ function getApiBase() {
 
 /**
  * Planifie les jobs d’évènement pour un membre.
- * Déclenché à l’enregistrement PassKit (carte ajoutée dans Apple Wallet) — aligné produit « Carte ajoutée ».
- * Règles : `event_*` avec `eventType` / `event_type` = `member_created` (nom historique API, = carte prête côté client).
+ * Appelé à la création membre (dashboard / import) et à l’enregistrement PassKit.
+ * Règles : `event_*` avec `eventType` / `event_type` = `member_created`.
  */
 export function scheduleCampaignEventJobsForMember({ business, memberId }) {
   if (!business?.id || !memberId) return 0;
@@ -48,7 +47,6 @@ export function scheduleCampaignEventJobsForMember({ business, memberId }) {
   const rules = config?.rules ?? {};
 
   const now = new Date();
-  const globalCooldownDays = config?.global_cooldown_days ?? 7;
 
   let scheduled = 0;
   for (const [ruleId, rule] of Object.entries(rules)) {
@@ -77,8 +75,6 @@ export function scheduleCampaignEventJobsForMember({ business, memberId }) {
     scheduled += (res?.changes ?? 0) > 0 ? 1 : 0;
   }
 
-  // Note: on ne stocke pas le cooldown dans le job. On applique le cooldown au moment du send.
-  void globalCooldownDays;
   return scheduled;
 }
 
@@ -170,13 +166,10 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
         continue;
       }
 
-      const cooldownDays = config?.global_cooldown_days ?? 7;
-      const memberIdsAllowed = filterMemberIdsExcludingRecentNotifications(business.id, [job.member_id], cooldownDays);
-      if (memberIdsAllowed.length === 0) {
-        markJobSkipped(job.id, "Cooldown atteint");
-        skipped++;
-        continue;
-      }
+      // Ne pas appliquer le « délai min entre notifs » (global_cooldown_days) ici : il sert aux campagnes
+      // segmentées (cron 24 h). Une notif manuelle de test comptait pour le cooldown et bloquait toutes
+      // les automatisations événementielles pour ce client pendant des jours. La contrainte UNIQUE sur
+      // (business_id, member_id, event_rule_id) suffit pour n’envoyer qu’une fois par règle.
 
       const triggerName = `campaign_event_${job.event_rule_id}`.slice(0, 96);
       const title = safeTrim(job.title, 80) || null;
