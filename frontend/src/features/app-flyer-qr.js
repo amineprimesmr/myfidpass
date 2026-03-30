@@ -24,6 +24,7 @@ import {
   clearStoredFlyerCustomBg,
 } from "./app-flyer-bg-control.js";
 import { wireFlyerQrBackgroundGallery } from "./app-flyer-qr-wire-bg.js";
+import { initFlyerAiGenerate } from "./app-flyer-ai-generate.js";
 
 /** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string; dashboardApi?: (path: string, init?: RequestInit) => Promise<Response> }} FlyerQrOpts */
 
@@ -214,6 +215,16 @@ export function initAppFlyerQr(slug, opts) {
       schedulePaint();
     },
     getBgPanelApi: () => flyerBgPanelApi,
+  });
+
+  initFlyerAiGenerate(slug, {
+    dashboardApi: opts.dashboardApi,
+    onGeneratedBg: () => {
+      flyerBgDirty = true;
+      flyerBgPanelApi?.syncPreview?.();
+      schedulePaint();
+      scheduleRemoteSave();
+    },
   });
 
   async function paint() {

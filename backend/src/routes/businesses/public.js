@@ -34,6 +34,8 @@ export function publicInfo(req, res) {
     name: business.name,
     slug: business.slug,
     organizationName: business.organization_name,
+    /** Secteur d’activité (ex. fastfood, boulangerie) — pour préremplissage SaaS / flyer IA. */
+    sector: business.sector?.trim() || undefined,
     logoUrl,
     logo_updated_at: business.logo_updated_at ?? undefined,
     backgroundColor: business.background_color ?? undefined,

@@ -492,3 +492,25 @@
   margin-top: 0.25rem;
   accent-color: var(--app-accent, #2563eb);
 }
+
+#app-app .app-flyer-ai-panel {
+  padding-bottom: 0.25rem;
+  border-top: 1px dashed var(--app-border, #e8ecf1);
+  padding-top: 0.75rem;
+}
+
+#app-app .app-flyer-ai-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+#app-app .app-flyer-ai-check input {
+  margin-top: 0.2rem;
+}
+
+#app-app #app-flyer-ai-status.error {
+  color: #b91c1c;
+}
