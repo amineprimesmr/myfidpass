@@ -173,8 +173,8 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   const accent = input.accent_color_hex.trim();
   const secondaryHex = input.secondary_color_hex?.trim();
   const secondary = secondaryHex
-    ? `Wheel fill colors: odd-numbered segments (1,3,5,7,9) = solid ${accent}; even-numbered segments (2,4,6,8) = solid ${secondaryHex}. Two fills only — never two touching segments the same color.`
-    : `Wheel fill colors: odd segments (1,3,5,7,9) = solid ${accent}; even segments (2,4,6,8) = solid white or cream. Never two adjacent segments the same fill.`;
+    ? `Wheel fill colors (exactly 6 segments, clockwise from top): segments 1,3,5 = solid ${accent}; segments 2,4,6 = solid ${secondaryHex}. Only these two fills — never two adjacent segments the same color (strict alternation).`
+    : `Wheel fill colors (exactly 6 segments, clockwise from top): segments 1,3,5 = solid ${accent}; segments 2,4,6 = solid white or cream. Strict alternation — never two adjacent segments the same fill.`;
   const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
   const merchantBrief = buildMerchantBriefForPrompt(input);
 
@@ -220,10 +220,11 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
       "(3) MID HERO: The prize wheel and side imagery (sector-appropriate cutouts) sit **below** the headline reserve — wheel vertically centered in the **middle third** of the poster, not crowding the top. " +
       "(4) FOOTER SAFE ZONE: The **bottom 15–18% of the image height** must stay **clean and uncluttered** — soft background, gentle gradient, or minimal abstract wash only. **No product close-ups, no gift piles, no wheel rim, no strong diagonal cuts, no busy details** in this strip. A software footer with numbered steps will overlay here; keep this area visually quiet so nothing competes with that band. " +
       sideImagery,
-    "PRIZE WHEEL — GEOMETRY (critical): Exactly ONE wheel. EXACTLY 9 equal wedges (each 360÷9 = 40°). Count segments at the outer rim: must be 9 — not 6, 8, 10, 12, or 13. Exactly 9 radial spokes from hub to rim. Small pointer at top center.",
+    "PRIZE WHEEL — GEOMETRY (critical): Exactly ONE circular prize wheel — no second wheel, no partial arc, no oval. EXACTLY 6 equal wedges (each 360÷6 = 60°). Count wedge boundaries at the outer rim: must be 6 — not 5, 7, 8, 9, 10, or 12. Exactly 6 radial spokes from hub to rim. Small pointer or tick at top center (12 o'clock).",
+    "PRIZE WHEEL — SOFTWARE ALIGNMENT (non-negotiable — must match the export app): The wheel must be a perfect circle whose geometric center is at **50% of image width** (horizontal center) and **50.8% of image height measured from the top edge** (vertical position). The **outer colored diameter** of the wheel (rim to opposite rim) must be **72% of the image width** (not height). Do not crop the wheel oddly, shrink it into a corner, or tilt it in perspective so the circle becomes an ellipse. Keep the wheel large and centered in the middle band of the poster so labels added in software land on the wedges.",
     secondary,
-    "WHEEL — NO TEXT OR LETTERS (critical): Do NOT draw any letters, words, numbers, or typography on the wheel, inside wedges, or on the hub. Wedges = solid color fills only (alternating per rule above). The export pipeline draws crisp French labels (GAGNÉ / PERDU) in software — your image must NOT attempt text on the wheel (avoids garbled, truncated, or misspelled words like GAGNI, PERDO, GAG).",
-    "WHEEL — SELF-CHECK: Before finishing, mentally count wedge boundaries at the outer circle — there must be exactly nine. Hub = one plain solid circle only (no QR-like grid).",
+    "WHEEL — NO TEXT OR LETTERS (critical): Do NOT draw any letters, words, numbers, or typography on the wheel, inside wedges, or on the hub. Wedges = solid color fills only (strict two-color alternation per rule above). The export pipeline draws crisp French labels (GAGNÉ / PERDU) in software — your image must NOT print GAGNÉ, PERDU, WIN, LOSE, or any letters on the wheel (avoids garbled text and misalignment with software).",
+    "WHEEL — SELF-CHECK: Before finishing, count out loud: (1) wedge boundaries at the outer circle = exactly six; (2) hub = one plain solid circle only (no QR-like grid); (3) wheel center at 50% width and ~50.8% height from top; (4) wheel diameter ≈ 72% of image width.",
     "WHEEL HUB (critical): ONLY a small solid FLAT circle at the geometric center — diameter about 5–10% of the wheel diameter. Fill: white or very light cream, NO texture resembling QR modules, NO grid, NO radial black-white pattern.",
     "VISUAL RULES: No marketing text in the image (software adds headline); no watermarks; no mirrored text.",
     "QUALITY: Sharp print, clean segment edges, even color fills.",

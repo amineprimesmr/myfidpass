@@ -25,7 +25,7 @@ describe("mergeFlyerState", () => {
     expect(s.colorBgTop).toBe(base.colorBgTop);
   });
 
-  it("alterne 2 couleurs sur les 9 secteurs", () => {
+  it("alterne 2 couleurs sur les 6 secteurs", () => {
     const s = mergeFlyerState({
       wheelColorOdd: "#ff0000",
       wheelColorEven: "#00ff00",
@@ -39,9 +39,6 @@ describe("mergeFlyerState", () => {
       "#00ff00",
       "#ff0000",
       "#00ff00",
-      "#ff0000",
-      "#00ff00",
-      "#ff0000",
     ]);
   });
 

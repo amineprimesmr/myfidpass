@@ -525,7 +525,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
   } else if (bgCanvasImg) {
-    /** Fond photo / IA : libellés vectoriels (9 parts) — l’image ne doit pas contenir de texte sur la roue (prompt serveur). */
+    /** Fond photo / IA : libellés vectoriels (6 parts) — l’image ne doit pas contenir de texte sur la roue (prompt serveur). */
     drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR);
   }
   drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);

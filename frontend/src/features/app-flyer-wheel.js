@@ -1,5 +1,5 @@
 /**
- * Rendu roue du flyer : parts vectorielles (égales) ou image PNG teintée (9 secteurs égaux).
+ * Rendu roue du flyer : parts vectorielles (égales) ou image PNG teintée (6 secteurs égaux).
  */
 import {
   wheelSegmentColorsResolved,
@@ -44,14 +44,17 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
   if (n < 1) return;
   const base = -Math.PI / 2 + offsetRad(offsetDeg);
   const step = (Math.PI * 2) / n;
-  /** Milieu radial de la couronne (entre moyeu et bord extérieur). */
-  const labelR = r * 0.53;
+  /** Milieu radial de la couronne (entre moyeu et bord extérieur) — légèrement resserré pour rester dans le disque. */
+  const labelR = r * 0.5;
   const wl = Number(s.flyerWheelLabelScalePct);
   const wsc = Number.isFinite(wl) ? Math.max(0.7, Math.min(1.35, wl / 100)) : 1;
   const fontPx = Math.max(11, Math.round(r * 0.104 * wsc));
   const track = Math.round(fontPx * 0.04);
 
   ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.94, 0, Math.PI * 2);
+  ctx.clip();
   ctx.font = `800 ${fontPx}px Outfit, system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
