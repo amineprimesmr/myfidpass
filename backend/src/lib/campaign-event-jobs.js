@@ -20,6 +20,13 @@ function clampDelayMinutes(n) {
   return Math.max(1, Math.min(1440, Math.floor(v)));
 }
 
+/** JSON iOS (camelCase) ou web (snake_case). */
+function ruleEventType(rule) {
+  if (!rule || typeof rule !== "object") return "";
+  const t = rule.eventType ?? rule.event_type;
+  return t != null ? String(t).trim() : "";
+}
+
 function safeTrim(s, maxLen) {
   if (s == null) return "";
   return String(s).trim().slice(0, maxLen);
@@ -30,8 +37,9 @@ function getApiBase() {
 }
 
 /**
- * Planifie les jobs d’évènement pour un membre fraîchement créé.
- * Ne planifie que `eventType=member_created` (v1).
+ * Planifie les jobs d’évènement pour un membre.
+ * Déclenché à l’enregistrement PassKit (carte ajoutée dans Apple Wallet) — aligné produit « Carte ajoutée ».
+ * Règles : `event_*` avec `eventType` / `event_type` = `member_created` (nom historique API, = carte prête côté client).
  */
 export function scheduleCampaignEventJobsForMember({ business, memberId }) {
   if (!business?.id || !memberId) return 0;
@@ -46,9 +54,9 @@ export function scheduleCampaignEventJobsForMember({ business, memberId }) {
   for (const [ruleId, rule] of Object.entries(rules)) {
     if (!ruleId.startsWith("event_")) continue;
     if (!rule?.enabled) continue;
-    if (rule.eventType !== "member_created") continue;
+    if (ruleEventType(rule) !== "member_created") continue;
 
-    const delayMinutes = clampDelayMinutes(rule.delayMinutes);
+    const delayMinutes = clampDelayMinutes(rule.delayMinutes ?? rule.delay_minutes);
     const message = safeTrim(rule.message, 200);
     if (!message) continue;
 
@@ -117,6 +125,18 @@ function markJobFailed(jobId, reason) {
     .run(new Date().toISOString(), safeTrim(reason, 2000), jobId);
 }
 
+/** Aucun Wallet/Web : remettre en file après délai (le token PassKit peut arriver avec retard). */
+function requeueJobForLater(jobId, delayMinutes, reason) {
+  const runAt = new Date(Date.now() + Math.max(1, delayMinutes) * 60_000).toISOString();
+  db
+    .prepare(
+      `UPDATE campaign_event_jobs
+       SET status = 'queued', run_at = ?, processing_at = NULL, last_error = ?
+       WHERE id = ?`
+    )
+    .run(runAt, safeTrim(reason, 500), jobId);
+}
+
 /**
  * Exécute les jobs event dus (loop scheduler).
  */
@@ -130,6 +150,7 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
   let sent = 0;
   let skipped = 0;
   let failed = 0;
+  let requeued = 0;
 
   for (const job of dueJobs) {
     try {
@@ -161,7 +182,7 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
       const title = safeTrim(job.title, 80) || null;
       const message = safeTrim(job.message, 200);
 
-      await deliverDashboardBroadcast(
+      const delivery = await deliverDashboardBroadcast(
         business,
         business.slug,
         apiBase,
@@ -176,6 +197,23 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
         }
       );
 
+      const delivered = Number(delivery?.sent) || 0;
+      const attemptsAfterClaim = (Number(job.attempts) || 0) + 1;
+
+      if (delivered === 0) {
+        if (attemptsAfterClaim >= 24) {
+          markJobSkipped(
+            job.id,
+            "Aucun canal Wallet/Web pour ce membre après plusieurs tentatives (vérifier l’ajout de la carte ou Web Push)."
+          );
+          skipped++;
+        } else {
+          requeueJobForLater(job.id, 5, "En attente d’un canal push (Wallet/Web)");
+          requeued++;
+        }
+        continue;
+      }
+
       markJobSent(job.id);
       sent++;
     } catch (e) {
@@ -184,6 +222,6 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
     }
   }
 
-  return { ran: dueJobs.length, sent, skipped, failed };
+  return { ran: dueJobs.length, sent, skipped, failed, requeued };
 }
 

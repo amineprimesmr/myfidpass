@@ -14,6 +14,7 @@ import {
   mergeBusinessAssetsForPass,
 } from "../db.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../lib/merchant-dashboard-sync-push.js";
+import { scheduleCampaignEventJobsForMember } from "../lib/campaign-event-jobs.js";
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
 
@@ -97,6 +98,14 @@ function handleDeviceRegistration(req, res) {
     });
     if (member.business_id) {
       scheduleMerchantDashboardSyncForBusiness(member.business_id, "wallet_register");
+      try {
+        const fullBusiness = getBusinessById(member.business_id);
+        if (fullBusiness) {
+          scheduleCampaignEventJobsForMember({ business: fullBusiness, memberId: serialNumber });
+        }
+      } catch (e) {
+        console.error("[campaign-event-jobs] schedule PassKit failed:", e?.message || String(e));
+      }
     }
     console.log("[PassKit] Appareil enregistré pour le membre", serialNumber.slice(0, 8) + "...", "pushToken:", pushToken ? "oui" : "non");
     return res.status(201).send();

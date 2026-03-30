@@ -22,14 +22,12 @@ import {
   getPushTokensForMember,
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
-  getBusinessById,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
 import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
 import { getIdempotencyKey, canAccessDashboard } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
-import { scheduleCampaignEventJobsForMember } from "../../lib/campaign-event-jobs.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../../lib/merchant-dashboard-sync-push.js";
 
 const router = Router();
@@ -77,14 +75,8 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
       name: normName,
     });
 
-    // Event-based automations (event_...) :
-    // on planifie les jobs immédiatement après la création du membre (carte ajoutée).
-    try {
-      const fullBusiness = getBusinessById(business.id) ?? business;
-      scheduleCampaignEventJobsForMember({ business: fullBusiness, memberId: member.id });
-    } catch (e) {
-      console.error("[campaign-event-jobs] schedule failed:", e?.message || String(e));
-    }
+    // Automatisations événementielles « carte au Wallet » : planifiées à l’enregistrement PassKit
+    // (voir passkit-webservice.js), pas ici — sinon le délai part avant que l’iPhone ait un token push.
     scheduleMerchantDashboardSyncForBusiness(business.id, "member_created");
 
     res.status(201).json({
