@@ -7,6 +7,18 @@ import { getDb } from "./connection.js";
 import { getBusinessesByUserId } from "./businesses.js";
 import { assetsDir } from "../pass/constants.js";
 
+/** Logos / passes sur disque pour un commerce précis (hors lignes SQLite). */
+function wipeBusinessDiskAssets(businessId) {
+  if (!businessId) return;
+  const dir = join(assetsDir, "businesses", String(businessId));
+  if (!existsSync(dir)) return;
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch (e) {
+    console.error(`[deleteUserAccount] wipe assets/${businessId}:`, e?.message || e);
+  }
+}
+
 const db = getDb();
 
 /**
@@ -36,6 +48,15 @@ export function deleteUserAccount(userId) {
   const businessIds = businesses.map((b) => b.id);
   const placeholders = businessIds.map(() => "?").join(",");
   if (placeholders) {
+    for (const bid of businessIds) {
+      wipeBusinessDiskAssets(bid);
+    }
+    try {
+      db.prepare(`DELETE FROM campaign_event_jobs WHERE business_id IN (${placeholders})`).run(...businessIds);
+    } catch (_) {}
+    try {
+      db.prepare(`DELETE FROM business_assets WHERE business_id IN (${placeholders})`).run(...businessIds);
+    } catch (_) {}
     try {
       db.prepare(`DELETE FROM notification_batches WHERE business_id IN (${placeholders})`).run(...businessIds);
     } catch (_) {}
