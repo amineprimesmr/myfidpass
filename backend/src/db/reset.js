@@ -1,10 +1,30 @@
 /**
  * Reset complet des données (dev / tests). Référence : REFONTE-REGLES.md.
  */
+import { existsSync, readdirSync, rmSync } from "fs";
+import { join } from "path";
 import { getDb } from "./connection.js";
 import { getBusinessesByUserId } from "./businesses.js";
+import { assetsDir } from "../pass/constants.js";
 
 const db = getDb();
+
+/**
+ * Logos / passes sur disque (backend/assets/businesses/<id>/) — hors SQLite, donc absent du simple DELETE.
+ */
+function wipeBusinessAssetDirectories() {
+  const root = join(assetsDir, "businesses");
+  if (!existsSync(root)) return;
+  for (const ent of readdirSync(root, { withFileTypes: true })) {
+    if (!ent.isDirectory()) continue;
+    if (ent.name.startsWith(".")) continue;
+    try {
+      rmSync(join(root, ent.name), { recursive: true, force: true });
+    } catch (e) {
+      console.error(`[reset] Échec suppression assets/businesses/${ent.name}:`, e?.message || e);
+    }
+  }
+}
 
 /**
  * Supprime définitivement le compte d'un utilisateur et toutes ses données (RGPD, exigence App Store).
@@ -64,6 +84,9 @@ export function resetAllData() {
   try {
     db.exec("DELETE FROM notification_batches");
   } catch (_) {}
+  try {
+    db.exec("DELETE FROM campaign_event_jobs");
+  } catch (_) {}
   db.exec("DELETE FROM notification_log");
   db.exec("DELETE FROM reward_grants");
   db.exec("DELETE FROM game_spins");
@@ -83,8 +106,16 @@ export function resetAllData() {
   db.exec("DELETE FROM member_category_assignments");
   db.exec("DELETE FROM member_categories");
   db.exec("DELETE FROM members");
+  try {
+    db.exec("DELETE FROM business_assets");
+  } catch (_) {}
   db.exec("DELETE FROM businesses");
   db.exec("DELETE FROM password_reset_tokens");
+  try {
+    db.exec("DELETE FROM refresh_tokens");
+  } catch (_) {}
   db.exec("DELETE FROM subscriptions");
   db.exec("DELETE FROM users");
+
+  wipeBusinessAssetDirectories();
 }
