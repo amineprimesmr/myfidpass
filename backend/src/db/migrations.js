@@ -689,4 +689,30 @@ export function runMigrations(db) {
       db.exec("ALTER TABLE businesses ADD COLUMN flyer_ai_unlimited INTEGER NOT NULL DEFAULT 0"),
     );
   }
+
+  // ── v7 : campaign event jobs (envoi différé “évènement -> +délai”) ─────────
+  markMigrationApplied(db, 7, "campaign_event_jobs_table");
+  safeRun(db, () =>
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS campaign_event_jobs (
+        id TEXT PRIMARY KEY,
+        business_id TEXT NOT NULL,
+        member_id TEXT NOT NULL,
+        event_rule_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        run_at TEXT NOT NULL,
+        title TEXT,
+        message TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'queued',
+        attempts INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        processing_at TEXT,
+        processed_at TEXT,
+        last_error TEXT,
+        UNIQUE(business_id, member_id, event_rule_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_campaign_event_jobs_status_runat ON campaign_event_jobs(status, run_at);
+      CREATE INDEX IF NOT EXISTS idx_campaign_event_jobs_business_runat ON campaign_event_jobs(business_id, run_at);
+    `)
+  );
 }

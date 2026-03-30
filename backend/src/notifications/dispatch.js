@@ -53,6 +53,7 @@ export async function deliverCustomerBroadcast({
   logTypePasskit = "passkit",
   merchantUserId = null,
   sendMerchantReceipt = true,
+  touchMemberLastVisit = true,
 }) {
   const webSubscriptions =
     memberIds !== null && memberIds.length > 0
@@ -142,11 +143,13 @@ export async function deliverCustomerBroadcast({
   setLastBroadcastMessage(business.id, bodyMessage);
   let sentPassKit = 0;
   if (passKitTokens.length > 0) {
-    const touchedMembers = new Set();
-    for (const row of passKitTokens) {
-      if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-        touchMemberLastVisit(row.serial_number);
-        touchedMembers.add(row.serial_number);
+    if (touchMemberLastVisit) {
+      const touchedMembers = new Set();
+      for (const row of passKitTokens) {
+        if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+          touchMemberLastVisit(row.serial_number);
+          touchedMembers.add(row.serial_number);
+        }
       }
     }
     const waveResults = await sendPassKitPushWaves(passKitTokens);

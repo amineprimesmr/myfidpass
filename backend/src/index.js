@@ -30,6 +30,7 @@ import { generatePass } from "./pass.js";
 import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics } from "./apns.js";
 import { isEmailConfigured, getEmailTransportLabel } from "./email.js";
 import { runCampaignAutomationCron } from "./lib/campaign-automation-cron.js";
+import { runCampaignEventJobsCron } from "./lib/campaign-event-jobs.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -252,6 +253,22 @@ function scheduleCampaignAutomationLoop() {
   logger.info("[campaign-automation] planifié : 1er passage dans ~2 min, puis toutes les 24 h");
 }
 
+/** Campaign event jobs: exécution interne, toutes ~1 min. */
+function scheduleCampaignEventJobsLoop() {
+  if (process.env.NODE_ENV === "test") return;
+  const MIN_MS = 60 * 1000;
+  const run = () => {
+    runCampaignEventJobsCron({ limit: 50 }).catch((err) => {
+      logger.error({ err }, "[campaign-event-jobs] job failed");
+    });
+  };
+  setTimeout(() => {
+    run();
+    setInterval(run, MIN_MS);
+  }, 60_000);
+  logger.info("[campaign-event-jobs] planifié : 1er passage dans ~1 min, puis toutes les 1 min");
+}
+
 function startServer(port) {
   const p = Number(port) || 3001;
   const server = app.listen(p, () => {
@@ -273,6 +290,7 @@ function startServer(port) {
     logApnsStatus();
     logMerchantApnsStatus();
     scheduleCampaignAutomationLoop();
+    scheduleCampaignEventJobsLoop();
   });
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {

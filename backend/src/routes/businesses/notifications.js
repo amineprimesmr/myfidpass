@@ -82,6 +82,7 @@ export async function deliverDashboardBroadcast(
     triggerName = "campaign_manual",
     merchantUserId = null,
     sendMerchantReceipt = true,
+    touchMemberLastVisit = true,
   } = options || {};
   return deliverCustomerBroadcast({
     business,
@@ -94,6 +95,7 @@ export async function deliverDashboardBroadcast(
     logTypePasskit,
     merchantUserId,
     sendMerchantReceipt,
+    touchMemberLastVisit,
   });
 }
 

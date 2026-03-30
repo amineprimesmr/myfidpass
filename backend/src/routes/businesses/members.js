@@ -22,12 +22,14 @@ import {
   getPushTokensForMember,
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
+  getBusinessById,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
 import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
 import { getIdempotencyKey, canAccessDashboard } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
+import { scheduleCampaignEventJobsForMember } from "../../lib/campaign-event-jobs.js";
 
 const router = Router();
 
@@ -73,6 +75,16 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
       email: normEmail,
       name: normName,
     });
+
+    // Event-based automations (event_...) :
+    // on planifie les jobs immédiatement après la création du membre (carte ajoutée).
+    try {
+      const fullBusiness = getBusinessById(business.id) ?? business;
+      scheduleCampaignEventJobsForMember({ business: fullBusiness, memberId: member.id });
+    } catch (e) {
+      console.error("[campaign-event-jobs] schedule failed:", e?.message || String(e));
+    }
+
     res.status(201).json({
       memberId: member.id,
       member: {
