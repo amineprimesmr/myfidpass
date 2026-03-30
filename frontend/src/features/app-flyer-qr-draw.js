@@ -14,6 +14,13 @@ import { drawFlyerQrCardOutline } from "./app-flyer-qr-qr-frame.js";
 
 export { FLYER_EXPORT };
 
+/**
+ * Roue dessinée par le canvas (PNG/segments + libellés).
+ * Désactivé temporairement : le fond personnalisé (ex. image générée par l’IA) inclut déjà la roue ;
+ * évite un doublon visuel. Remettre à `true` si on recompose une roue uniquement vectorielle.
+ */
+export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = false;
+
 /** Bandeau « étapes » en bas du flyer (fichier dans public/). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
 
@@ -307,7 +314,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrFetchPx = Math.min(2048, Math.max(512, Math.round(qrInner * 2)));
 
   const qrImg = await loadQrAsImage(qrTargetUrl, qrFetchPx);
-  const roueImg = await getFlyerRoueImage();
+  const roueImg = FLYER_MANUAL_CANVAS_WHEEL_ENABLED ? await getFlyerRoueImage() : null;
 
   /** @type {CanvasImageSource | null} */
   let logoImg = null;
@@ -345,11 +352,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
 
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   if (logoImg) drawFlyerCommerceLogo(ctx, logoImg, w, h);
-  /* Roue avant le titre : sinon elle recouvre l’accroche. */
-  const wheelCx = w * 0.5;
-  const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
-  const wheelR = w * 0.36;
-  drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
+  if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
+    const wheelCx = w * 0.5;
+    const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
+    const wheelR = w * 0.36;
+    drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
+  }
   drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
   const qx = w * 0.515;
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
