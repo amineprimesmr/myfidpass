@@ -55,6 +55,7 @@ export function deleteUserAccount(userId) {
   db.prepare("DELETE FROM merchant_device_tokens WHERE user_id = ?").run(userId);
   db.prepare("DELETE FROM password_reset_tokens WHERE user_id = ?").run(userId);
   db.prepare("DELETE FROM subscriptions WHERE user_id = ?").run(userId);
+  try { db.prepare("DELETE FROM refresh_tokens WHERE user_id = ?").run(userId); } catch (_) {}
   db.prepare("DELETE FROM users WHERE id = ?").run(userId);
   return true;
 }
