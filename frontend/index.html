@@ -803,7 +803,12 @@
                     <div id="app-flyer-ai-panel" class="app-flyer-logo-panel app-flyer-ai-panel" style="margin-top:0.75rem">
                       <p class="app-flyer-chip-label">Génération IA du fond</p>
                       <p id="app-flyer-ai-quota" class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem" role="status"></p>
-                      <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">1) Jusqu’à <strong>3 images</strong> d’inspiration (ambiance, produits, magasin — tous secteurs). 2) Vérifie le descriptif <strong>activité + visuels</strong> et les champs préremplis. 3) Génère — le résultat remplace l’image de fond ci-dessus.</p>
+                      <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">1) <strong>Logo</strong> (optionnel, PNG/JPG/WebP) pour que l’IA le place en tête d’affiche. 2) Jusqu’à <strong>3 images</strong> d’inspiration (ambiance, produits — en plus du logo). 3) Vérifie le descriptif <strong>activité + visuels</strong>. 4) Génère — le résultat remplace l’image de fond ci-dessus.</p>
+                      <div class="app-flyer-field app-flyer-field--compact">
+                        <label class="app-label" for="app-flyer-ai-logo-file">Logo de marque (optionnel)</label>
+                        <input type="file" id="app-flyer-ai-logo-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Logo de marque pour la génération IA du fond" />
+                        <p class="app-hint" style="margin:0.35rem 0 0;font-size:0.72rem">Même fichier que votre logo officiel — l’API l’utilise en <strong>référence #1</strong> (édition multimodale).</p>
+                      </div>
                       <div class="app-flyer-field app-flyer-field--compact">
                         <label class="app-label" for="app-flyer-ai-ref-files">Images de référence (0 à 3)</label>
                         <input type="file" id="app-flyer-ai-ref-files" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" multiple aria-label="Images de référence pour l’IA" />

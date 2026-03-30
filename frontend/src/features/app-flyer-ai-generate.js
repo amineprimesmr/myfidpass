@@ -89,6 +89,7 @@ export function initFlyerAiGenerate(slug, opts) {
   const statusEl = document.getElementById("app-flyer-ai-status");
   const quotaEl = document.getElementById("app-flyer-ai-quota");
   const moodSel = document.getElementById("app-flyer-ai-mood");
+  const logoInput = document.getElementById("app-flyer-ai-logo-file");
   const refInput = document.getElementById("app-flyer-ai-ref-files");
   const brandEl = document.getElementById("app-flyer-ai-brand");
   const conceptEl = document.getElementById("app-flyer-ai-concept");
@@ -151,7 +152,7 @@ export function initFlyerAiGenerate(slug, opts) {
     if (el) el.dataset.userTouched = "1";
   }
 
-  [brandEl, conceptEl, accentEl, secondaryEl, extraEl, moodSel].forEach((el) => {
+  [brandEl, conceptEl, accentEl, secondaryEl, extraEl, moodSel, logoInput, refInput].forEach((el) => {
     el?.addEventListener("input", () => markTouched(el));
     el?.addEventListener("change", () => markTouched(el));
   });
@@ -214,6 +215,16 @@ export function initFlyerAiGenerate(slug, opts) {
         visual_mood,
         extra_context: (extraEl?.value || "").trim() || undefined,
       };
+
+      const logoFile = logoInput?.files?.[0];
+      if (logoFile) {
+        try {
+          body.logo_base64 = await fileToBase64Raw(logoFile);
+        } catch (e) {
+          setStatus(e instanceof Error ? e.message : "Import du logo impossible.", true);
+          return;
+        }
+      }
 
       const refs = refInput?.files ? Array.from(refInput.files).slice(0, 3) : [];
       if (refs.length) {
