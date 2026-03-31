@@ -15,7 +15,6 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
-import { drawFlyerQrCardOutline } from "./app-flyer-qr-qr-frame.js";
 
 export { FLYER_EXPORT };
 
@@ -399,11 +398,11 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const { line1, line2 } = splitCtaBannerLines(raw);
   if (!line1) return;
 
-  const padX = 52 * scale;
-  const padY = 36 * scale;
-  const lineGap = 10 * scale;
+  const padX = 44 * scale;
+  const padY = 28 * scale;
+  const lineGap = 8 * scale;
 
-  const fontBig = Math.round(Math.min(170, Math.max(96, qSize * 0.46)));
+  const fontBig = Math.round(Math.min(132, Math.max(78, qSize * 0.31)));
   const fontSmall = line2 ? Math.round(fontBig * 0.58) : fontBig;
 
   ctx.textAlign = "center";
@@ -422,14 +421,14 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const row2H = line2 ? fontSmall * 1.1 : 0;
   const pillH = padY * 2 + row1H + (line2 ? lineGap + row2H : 0);
 
-  const gap = 20 * scale;
+  const gap = -8 * scale;
   let pillLeft = qx - gap - pillW;
-  const pillTop = qy + qSize / 2 - pillH / 2;
+  const pillTop = qy + qSize * 0.7 - pillH / 2;
   const minX = 10 * scale;
   if (pillLeft < minX) {
     pillLeft = minX;
   }
-  const rr = Math.min(36 * scale, pillH / 2);
+  const rr = Math.min(32 * scale, pillH / 2);
   const fill = (s.ctaBannerBgColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaBannerBgColor).trim()))
     ? String(s.ctaBannerBgColor).trim()
     : "#ec4899";
@@ -473,8 +472,8 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
 
   const scale = w / FLYER_EXPORT.w;
   /** Carré QR un peu plus grand + ombre portée (relief). */
-  const qSize = w * 0.375;
-  const qrCornerR = 18 * scale;
+  const qSize = w * 0.395;
+  const qrCornerR = 26 * scale;
   const qrPad = 16 * scale;
   const qrInner = Math.max(1, qSize - 2 * qrPad);
   const qrFetchPx = Math.min(2048, Math.max(512, Math.round(qrInner * 2)));
@@ -526,32 +525,25 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
   }
   drawFlyerHeroHeadline(ctx, s, w, h, scale, false);
-  const qx = w * 0.49;
+  const qx = w * 0.472;
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
   const qCx = qx + qSize / 2;
   const qCy = qy + qSize / 2;
   /** Légère inclinaison (sens inverse des aiguilles d’une montre), ~11°. */
   const qrTiltRad = (-11 * Math.PI) / 180;
 
+  // La pastille passe légèrement derrière le QR (comme le mockup papier).
+  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
+
   ctx.save();
   ctx.translate(qCx, qCy);
   ctx.rotate(qrTiltRad);
   ctx.translate(-qCx, -qCy);
-  ctx.shadowColor = "rgba(0,0,0,0.34)";
-  ctx.shadowBlur = 22 * scale;
-  ctx.shadowOffsetX = 4 * scale;
-  ctx.shadowOffsetY = 9 * scale;
   ctx.fillStyle = "#ffffff";
   roundRect(ctx, qx, qy, qSize, qSize, qrCornerR);
   ctx.fill();
-  ctx.shadowColor = "transparent";
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
   if (qrImg) ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
-  drawFlyerQrCardOutline(ctx, qx, qy, qSize, qrCornerR, scale, s);
   ctx.restore();
-  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
   const socialEntries = parseFlyerSocialEntries(s);
   const stripH = flyerSocialStripHeight(h, socialEntries.length);
   const bannerBottom = h - stripH;
