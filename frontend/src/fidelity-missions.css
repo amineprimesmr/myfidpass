@@ -1,4 +1,4 @@
-/* Cartes missions fidélité — un style par réseau / type d’action */
+/* Cartes missions fidélité — bannières hero (gauche : titres + récompense + CTA, droite : visuel) */
 
 .fidelity-engagement-actions {
   display: flex;
@@ -17,28 +17,55 @@
 
 .fidelity-engagement-actions--rail .fidelity-mission-card {
   scroll-snap-align: start;
-  min-width: min(86vw, 300px);
-  max-width: 300px;
-  width: min(86vw, 300px);
+  min-width: min(92vw, 360px);
+  max-width: 360px;
+  width: min(92vw, 360px);
   box-sizing: border-box;
 }
 
+.fidelity-engagement-actions:not(.fidelity-engagement-actions--rail) button.fidelity-mission-card,
+.fidelity-engagement-actions:not(.fidelity-engagement-actions--rail) a.fidelity-mission-card {
+  width: 100%;
+}
+
 .fidelity-mission-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 40%);
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.15rem;
-  border-radius: 18px;
+  gap: 0.15rem 0.35rem;
+  padding: 0.95rem 0.65rem 0.95rem 1.05rem;
+  min-height: 148px;
+  border-radius: 24px;
   text-decoration: none;
   color: inherit;
   border: 1px solid transparent;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
+  box-shadow: 0 6px 28px rgba(15, 23, 42, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Grain léger (réf. visuels marketing) */
+.fidelity-mission-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+
+.fidelity-mission-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 button.fidelity-mission-card {
-  width: 100%;
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -48,7 +75,7 @@ button.fidelity-mission-card {
 
 .fidelity-mission-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.14);
 }
 
 .fidelity-mission-card:focus-visible {
@@ -56,59 +83,113 @@ button.fidelity-mission-card {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.45), 0 8px 28px rgba(15, 23, 42, 0.12);
 }
 
-.fidelity-mission-card__icon {
-  flex-shrink: 0;
-  line-height: 0;
-}
-
-.fidelity-mission-card__svg {
-  display: block;
-  width: 40px;
-  height: 40px;
-}
-
-.fidelity-mission-card__main {
-  flex: 1;
-  min-width: 0;
+.fidelity-mission-card__banner-left {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.28rem;
+  min-width: 0;
+  padding-right: 0.15rem;
 }
 
-.fidelity-mission-card__label {
-  font-weight: 700;
-  font-size: 0.94rem;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
+.fidelity-mission-card__title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.06rem;
+}
+
+.fidelity-mission-card__title-line1 {
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+.fidelity-mission-card__title-line2 {
+  font-weight: 600;
+  font-size: 0.86rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .fidelity-mission-card__reward {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
 }
 
 .fidelity-mission-card__reward-plus {
   font-weight: 800;
 }
 
-.fidelity-mission-card__cta {
-  flex-shrink: 0;
+/* CTA type « learn more » : pastille + flèche */
+.fidelity-mission-card__cta-learn {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.55rem 0.95rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  transition: background 0.15s ease, transform 0.15s ease;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.fidelity-mission-card__cta-arrow {
-  font-size: 1.05rem;
-  font-weight: 400;
-  line-height: 1;
-  opacity: 0.9;
+.fidelity-mission-card__cta-circle {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.fidelity-mission-card:hover .fidelity-mission-card__cta-circle {
+  transform: scale(1.05);
+}
+
+.fidelity-mission-card__cta-arrow-svg {
+  display: block;
+}
+
+.fidelity-mission-card__banner-art {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 120px;
+  pointer-events: none;
+}
+
+.fidelity-mission-card__banner-img {
+  display: block;
+  max-height: 132px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: bottom right;
+  filter: drop-shadow(0 6px 16px rgba(15, 23, 42, 0.12));
+  transform: translate(4px, 4px);
+}
+
+.fidelity-mission-card__banner-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 112px;
+}
+
+.fidelity-mission-card__banner-icon-wrap .fidelity-mission-card__svg {
+  width: 92px;
+  height: 92px;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15));
+}
+
+.fidelity-mission-card__svg {
+  display: block;
 }
 
 /* ── Google ── */
@@ -118,17 +199,22 @@ button.fidelity-mission-card {
   color: #202124;
 }
 
+.fidelity-mission-card--google .fidelity-mission-card__title-line2 {
+  color: #5f6368;
+  font-weight: 500;
+}
+
 .fidelity-mission-card--google .fidelity-mission-card__reward {
   color: #188038;
 }
 
-.fidelity-mission-card--google .fidelity-mission-card__cta {
+.fidelity-mission-card--google .fidelity-mission-card__cta-circle {
   background: #f1f3f4;
   color: #1967d2;
 }
 
-.fidelity-mission-card--google:hover .fidelity-mission-card__cta {
-  background: #e8f0fe;
+.fidelity-mission-card--google .fidelity-mission-card__cta-learn {
+  color: #1967d2;
 }
 
 /* ── Instagram ── */
@@ -138,19 +224,24 @@ button.fidelity-mission-card {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.fidelity-mission-card--instagram .fidelity-mission-card__title-line2 {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+}
+
 .fidelity-mission-card--instagram .fidelity-mission-card__reward {
   color: rgba(255, 255, 255, 0.92);
 }
 
-.fidelity-mission-card--instagram .fidelity-mission-card__cta {
+.fidelity-mission-card--instagram .fidelity-mission-card__cta-circle {
   background: rgba(255, 255, 255, 0.22);
   color: #fff;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
-.fidelity-mission-card--instagram:hover .fidelity-mission-card__cta {
-  background: rgba(255, 255, 255, 0.32);
+.fidelity-mission-card--instagram .fidelity-mission-card__cta-learn {
+  color: #fff;
 }
 
 /* ── Facebook ── */
@@ -160,17 +251,22 @@ button.fidelity-mission-card {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+.fidelity-mission-card--facebook .fidelity-mission-card__title-line2 {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+}
+
 .fidelity-mission-card--facebook .fidelity-mission-card__reward {
   color: rgba(255, 255, 255, 0.9);
 }
 
-.fidelity-mission-card--facebook .fidelity-mission-card__cta {
-  background: rgba(255, 255, 255, 0.2);
+.fidelity-mission-card--facebook .fidelity-mission-card__cta-circle {
+  background: rgba(255, 255, 255, 0.22);
   color: #fff;
 }
 
-.fidelity-mission-card--facebook:hover .fidelity-mission-card__cta {
-  background: rgba(255, 255, 255, 0.3);
+.fidelity-mission-card--facebook .fidelity-mission-card__cta-learn {
+  color: #fff;
 }
 
 /* ── TikTok ── */
@@ -181,17 +277,22 @@ button.fidelity-mission-card {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
+.fidelity-mission-card--tiktok .fidelity-mission-card__title-line2 {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 500;
+}
+
 .fidelity-mission-card--tiktok .fidelity-mission-card__reward {
   color: #25f4ee;
 }
 
-.fidelity-mission-card--tiktok .fidelity-mission-card__cta {
-  background: rgba(254, 44, 85, 0.9);
+.fidelity-mission-card--tiktok .fidelity-mission-card__cta-circle {
+  background: rgba(254, 44, 85, 0.95);
   color: #fff;
 }
 
-.fidelity-mission-card--tiktok:hover .fidelity-mission-card__cta {
-  background: #fe2c55;
+.fidelity-mission-card--tiktok .fidelity-mission-card__cta-learn {
+  color: #fff;
 }
 
 /* ── X (Twitter) ── */
@@ -201,17 +302,22 @@ button.fidelity-mission-card {
   border-color: #333;
 }
 
+.fidelity-mission-card--twitter .fidelity-mission-card__title-line2 {
+  color: #a3a3a3;
+  font-weight: 500;
+}
+
 .fidelity-mission-card--twitter .fidelity-mission-card__reward {
   color: #e7e9ea;
 }
 
-.fidelity-mission-card--twitter .fidelity-mission-card__cta {
+.fidelity-mission-card--twitter .fidelity-mission-card__cta-circle {
   background: #fff;
   color: #000;
 }
 
-.fidelity-mission-card--twitter:hover .fidelity-mission-card__cta {
-  background: #e7e9ea;
+.fidelity-mission-card--twitter .fidelity-mission-card__cta-learn {
+  color: #fff;
 }
 
 /* ── Trustpilot ── */
@@ -221,17 +327,22 @@ button.fidelity-mission-card {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.fidelity-mission-card--trustpilot .fidelity-mission-card__title-line2 {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
 .fidelity-mission-card--trustpilot .fidelity-mission-card__reward {
   color: rgba(255, 255, 255, 0.95);
 }
 
-.fidelity-mission-card--trustpilot .fidelity-mission-card__cta {
+.fidelity-mission-card--trustpilot .fidelity-mission-card__cta-circle {
   background: rgba(255, 255, 255, 0.95);
   color: #00b67a;
 }
 
-.fidelity-mission-card--trustpilot:hover .fidelity-mission-card__cta {
-  background: #fff;
+.fidelity-mission-card--trustpilot .fidelity-mission-card__cta-learn {
+  color: #fff;
 }
 
 /* ── Tripadvisor ── */
@@ -241,37 +352,48 @@ button.fidelity-mission-card {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.fidelity-mission-card--tripadvisor .fidelity-mission-card__title-line2 {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+}
+
 .fidelity-mission-card--tripadvisor .fidelity-mission-card__reward {
   color: rgba(255, 255, 255, 0.92);
 }
 
-.fidelity-mission-card--tripadvisor .fidelity-mission-card__cta {
+.fidelity-mission-card--tripadvisor .fidelity-mission-card__cta-circle {
   background: rgba(255, 255, 255, 0.22);
   color: #fff;
 }
 
-.fidelity-mission-card--tripadvisor:hover .fidelity-mission-card__cta {
-  background: rgba(255, 255, 255, 0.32);
+.fidelity-mission-card--tripadvisor .fidelity-mission-card__cta-learn {
+  color: #fff;
 }
 
-/* ── Profil (+1 ticket) ── */
+/* ── Profil (image asset MyFidpass) ── */
 .fidelity-mission-card--profile {
   background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 45%, #fecdd3 100%);
-  border-color: rgba(225, 29, 72, 0.2);
+  border-color: rgba(225, 29, 72, 0.22);
   color: #881337;
+}
+
+.fidelity-mission-card--profile .fidelity-mission-card__title-line2 {
+  color: #9f1239;
+  font-weight: 600;
+  opacity: 0.92;
 }
 
 .fidelity-mission-card--profile .fidelity-mission-card__reward {
   color: #be123c;
 }
 
-.fidelity-mission-card--profile .fidelity-mission-card__cta {
+.fidelity-mission-card--profile .fidelity-mission-card__cta-circle {
   background: #0f172a;
   color: #fff;
 }
 
-.fidelity-mission-card--profile:hover .fidelity-mission-card__cta {
-  background: #1e293b;
+.fidelity-mission-card--profile .fidelity-mission-card__cta-learn {
+  color: #0f172a;
 }
 
 /* ── Autres / lien ── */
@@ -281,15 +403,20 @@ button.fidelity-mission-card {
   color: #0f172a;
 }
 
+.fidelity-mission-card--generic .fidelity-mission-card__title-line2 {
+  color: #64748b;
+  font-weight: 500;
+}
+
 .fidelity-mission-card--generic .fidelity-mission-card__reward {
   color: #4f46e5;
 }
 
-.fidelity-mission-card--generic .fidelity-mission-card__cta {
+.fidelity-mission-card--generic .fidelity-mission-card__cta-circle {
   background: #0f172a;
   color: #fff;
 }
 
-.fidelity-mission-card--generic:hover .fidelity-mission-card__cta {
-  background: #1e293b;
+.fidelity-mission-card--generic .fidelity-mission-card__cta-learn {
+  color: #0f172a;
 }
