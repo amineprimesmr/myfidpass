@@ -399,11 +399,11 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const { line1, line2 } = splitCtaBannerLines(raw);
   if (!line1) return;
 
-  const padX = 28 * scale;
-  const padY = 22 * scale;
-  const lineGap = 5 * scale;
+  const padX = 40 * scale;
+  const padY = 28 * scale;
+  const lineGap = 7 * scale;
 
-  const fontBig = Math.round(Math.min(58, Math.max(36, qSize * 0.142)));
+  const fontBig = Math.round(Math.min(84, Math.max(52, qSize * 0.2)));
   const fontSmall = line2 ? Math.round(fontBig * 0.58) : fontBig;
 
   ctx.textAlign = "center";
@@ -422,14 +422,14 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const row2H = line2 ? fontSmall * 1.1 : 0;
   const pillH = padY * 2 + row1H + (line2 ? lineGap + row2H : 0);
 
-  const gap = 10 * scale;
+  const gap = 14 * scale;
   let pillLeft = qx - gap - pillW;
   const pillTop = qy + qSize / 2 - pillH / 2;
   const minX = 10 * scale;
   if (pillLeft < minX) {
     pillLeft = minX;
   }
-  const rr = Math.min(26 * scale, pillH / 2);
+  const rr = Math.min(30 * scale, pillH / 2);
   const fill = (s.ctaBannerBgColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaBannerBgColor).trim()))
     ? String(s.ctaBannerBgColor).trim()
     : "#ec4899";
@@ -521,14 +521,14 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const wheelR = w * 0.36;
 
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
-  if (logoImg) drawFlyerCommerceLogo(ctx, logoImg, w, h);
+  // Le logo de tête est désormais porté par le fond (IA / visuel importé), pas par l'éditeur flyer.
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
   } else if (bgCanvasImg) {
     /** Fond photo / IA : libellés vectoriels (6 parts) — l’image ne doit pas contenir de texte sur la roue (prompt serveur). */
     drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR);
   }
-  drawFlyerHeroHeadline(ctx, s, w, h, scale, !!logoImg);
+  drawFlyerHeroHeadline(ctx, s, w, h, scale, false);
   const qx = w * 0.515;
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
   const qCx = qx + qSize / 2;
