@@ -110,7 +110,7 @@ export function flyerTemplateMeta(id) {
 export function defaultFlyerState() {
   return {
     templateId: FLYER_TEMPLATE_ID,
-    headline: "Fais tourner la roue",
+    headline: "SCANNEZ & GAGNEZ VOTRE CADEAU !",
     ctaBanner: "SCANNE POUR JOUER",
     ctaBannerBgColor: "#ec4899",
     step1: "Scan le QR code",
@@ -136,7 +136,7 @@ export function defaultFlyerState() {
     headlineTextColor: "#ffffff",
     headlineStrokeColor: "#020617",
     headlineStrokeWidth: 5,
-    headlineLogoGapPct: 8,
+    headlineLogoGapPct: 12,
     headlineLetterSpacing: 0,
     headlineSizePct: 9.2,
     footerStepsForegroundColor: "#ffffff",
