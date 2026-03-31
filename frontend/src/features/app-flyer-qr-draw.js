@@ -12,7 +12,7 @@ import {
   flyerSocialStripHeight,
   drawFlyerSocialStrip,
 } from "./app-flyer-social-strip.js";
-import { drawFlyerWheel, drawFlyerWheelLabelsOverlay } from "./app-flyer-wheel.js";
+import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
 import { drawFlyerQrCardOutline } from "./app-flyer-qr-qr-frame.js";
@@ -399,11 +399,11 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const { line1, line2 } = splitCtaBannerLines(raw);
   if (!line1) return;
 
-  const padX = 40 * scale;
-  const padY = 28 * scale;
-  const lineGap = 7 * scale;
+  const padX = 52 * scale;
+  const padY = 36 * scale;
+  const lineGap = 10 * scale;
 
-  const fontBig = Math.round(Math.min(84, Math.max(52, qSize * 0.2)));
+  const fontBig = Math.round(Math.min(170, Math.max(96, qSize * 0.46)));
   const fontSmall = line2 ? Math.round(fontBig * 0.58) : fontBig;
 
   ctx.textAlign = "center";
@@ -422,14 +422,14 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const row2H = line2 ? fontSmall * 1.1 : 0;
   const pillH = padY * 2 + row1H + (line2 ? lineGap + row2H : 0);
 
-  const gap = 14 * scale;
+  const gap = 20 * scale;
   let pillLeft = qx - gap - pillW;
   const pillTop = qy + qSize / 2 - pillH / 2;
   const minX = 10 * scale;
   if (pillLeft < minX) {
     pillLeft = minX;
   }
-  const rr = Math.min(30 * scale, pillH / 2);
+  const rr = Math.min(36 * scale, pillH / 2);
   const fill = (s.ctaBannerBgColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaBannerBgColor).trim()))
     ? String(s.ctaBannerBgColor).trim()
     : "#ec4899";
@@ -439,7 +439,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   ctx.fill();
 
   ctx.strokeStyle = "#000000";
-  ctx.lineWidth = Math.max(2, 3 * scale);
+  ctx.lineWidth = Math.max(2.5, 4 * scale);
   roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
   ctx.stroke();
 
@@ -526,7 +526,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
   }
   drawFlyerHeroHeadline(ctx, s, w, h, scale, false);
-  const qx = w * 0.515;
+  const qx = w * 0.49;
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
   const qCx = qx + qSize / 2;
   const qCy = qy + qSize / 2;

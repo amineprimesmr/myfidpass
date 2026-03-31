@@ -84,14 +84,14 @@ describe("mergeFlyerState", () => {
       headlineTextColor: "#aabbcc",
       headlineStrokeColor: "#010203",
       headlineStrokeWidth: 99,
-      headlineLogoGapPct: 20,
+      headlineLogoGapPct: 30,
       headlineLetterSpacing: 12,
     });
     expect(s.headlineFontId).toBe("bebas");
     expect(s.headlineTextColor).toBe("#aabbcc");
     expect(s.headlineStrokeColor).toBe("#010203");
-    expect(s.headlineStrokeWidth).toBe(32);
-    expect(s.headlineLogoGapPct).toBe(14);
+    expect(s.headlineStrokeWidth).toBe(48);
+    expect(s.headlineLogoGapPct).toBe(22);
     expect(s.headlineLetterSpacing).toBe(8);
   });
 
