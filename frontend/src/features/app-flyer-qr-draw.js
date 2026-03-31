@@ -413,7 +413,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const row2H = line2 ? fontSmall * 1.1 : 0;
   const pillH = padY * 2 + row1H + (line2 ? lineGap + row2H : 0);
 
-  const gap = -8 * scale;
+  const gap = -18 * scale;
   let pillLeft = qx - gap - pillW;
   const pillTop = qy + qSize * 0.7 - pillH / 2;
   const minX = 10 * scale;
@@ -430,7 +430,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   ctx.fill();
 
   ctx.strokeStyle = "#000000";
-  ctx.lineWidth = Math.max(2.5, 4 * scale);
+  ctx.lineWidth = Math.max(3, 6 * scale);
   roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
   ctx.stroke();
 

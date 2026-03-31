@@ -67,6 +67,9 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     ? Math.max(0, Math.min(48, Number(s.headlineStrokeWidth)))
     : 8;
   const strokePx = Math.max(1.2, scale * strokeW);
+  const ctaPink = /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaBannerBgColor || "").trim())
+    ? String(s.ctaBannerBgColor).trim()
+    : "#ff4f78";
 
   const trackRaw = Number(s.headlineLetterSpacing);
   const trackPx = Number.isFinite(trackRaw)
@@ -128,7 +131,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     const giftW = ctx.measureText(giftToken).width;
     const giftCx = startX + beforeW + giftW / 2;
     const giftDrop = lineH * 0.09;
-    drawPart(giftToken, giftCx, "#ff4f78", 8, giftDrop);
+    drawPart(giftToken, giftCx, ctaPink, 8, giftDrop);
 
     if (after) {
       const afterCx = startX + beforeW + tokenW + afterW / 2;
