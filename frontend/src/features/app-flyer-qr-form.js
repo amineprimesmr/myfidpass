@@ -11,6 +11,7 @@ export function readFlyerStateFromForm(root) {
     headline: q("app-flyer-headline")?.value,
     ctaBanner: q("app-flyer-cta")?.value,
     ctaBannerBgColor: q("app-flyer-cta-bg")?.value,
+    ctaTextColor: q("app-flyer-cta-text-color")?.value,
     step1: q("app-flyer-step1")?.value,
     step2: q("app-flyer-step2")?.value,
     step3: q("app-flyer-step3")?.value,
@@ -32,6 +33,7 @@ export function readFlyerStateFromForm(root) {
     headlineFontId: q("app-flyer-headline-font")?.value,
     headlineTextColor: q("app-flyer-headline-fill")?.value,
     headlineStrokeColor: q("app-flyer-headline-stroke")?.value,
+    headlineGiftStrokeColor: q("app-flyer-headline-gift-stroke")?.value,
     headlineStrokeWidth: Number(q("app-flyer-headline-stroke-w")?.value),
     headlineLogoGapPct: Number(q("app-flyer-headline-logo-gap")?.value),
     headlineLetterSpacing: Number(q("app-flyer-headline-tracking")?.value),
@@ -53,6 +55,7 @@ export function writeFlyerFormFromState(root, s) {
   set("app-flyer-headline", s.headline);
   set("app-flyer-cta", s.ctaBanner);
   set("app-flyer-cta-bg", s.ctaBannerBgColor);
+  set("app-flyer-cta-text-color", s.ctaTextColor ?? "#ffffff");
   set("app-flyer-step1", s.step1);
   set("app-flyer-step2", s.step2);
   set("app-flyer-step3", s.step3);
@@ -74,6 +77,7 @@ export function writeFlyerFormFromState(root, s) {
   set("app-flyer-headline-font", s.headlineFontId ?? "");
   set("app-flyer-headline-fill", s.headlineTextColor);
   set("app-flyer-headline-stroke", s.headlineStrokeColor);
+  set("app-flyer-headline-gift-stroke", s.headlineGiftStrokeColor ?? s.headlineStrokeColor);
   set("app-flyer-headline-stroke-w", String(s.headlineStrokeWidth ?? 0));
   set("app-flyer-headline-logo-gap", String(s.headlineLogoGapPct ?? 0));
   set("app-flyer-headline-tracking", String(s.headlineLetterSpacing ?? 0));

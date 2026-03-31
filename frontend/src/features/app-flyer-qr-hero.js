@@ -67,6 +67,9 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     ? Math.max(0, Math.min(48, Number(s.headlineStrokeWidth)))
     : 8;
   const strokePx = Math.max(1.2, scale * strokeW);
+  const giftStrokeC = /^#[0-9A-Fa-f]{6}$/.test(String(s.headlineGiftStrokeColor || "").trim())
+    ? String(s.headlineGiftStrokeColor).trim()
+    : strokeC;
   const ctaPink = /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaBannerBgColor || "").trim())
     ? String(s.ctaBannerBgColor).trim()
     : "#ff4f78";
@@ -107,7 +110,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     const tokenW = ctx.measureText(token).width;
     const afterW = ctx.measureText(after).width;
 
-    const drawPart = (txt, cx, fillColor, tiltDeg = 0, yOffset = 0) => {
+    const drawPart = (txt, cx, fillColor, tiltDeg = 0, yOffset = 0, customStroke = strokeC) => {
       ctx.save();
       ctx.translate(cx, ly + yOffset);
       if (tiltDeg) ctx.rotate((tiltDeg * Math.PI) / 180);
@@ -121,7 +124,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
       ctx.strokeStyle = "rgba(0,0,0,0.42)";
       ctx.lineWidth = strokePx * 1.9;
       ctx.strokeText(txt, 0, 0);
-      ctx.strokeStyle = strokeC;
+      ctx.strokeStyle = customStroke;
       ctx.lineWidth = strokePx * 1.15;
       ctx.strokeText(txt, 0, 0);
       ctx.fillStyle = fillColor;
@@ -155,7 +158,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     const giftW = ctx.measureText(giftToken).width;
     const giftCx = startX + beforeW + giftW / 2;
     const giftDrop = lineH * 0.15;
-    drawPart(giftToken, giftCx, ctaPink, 8, giftDrop);
+    drawPart(giftToken, giftCx, ctaPink, 8, giftDrop, giftStrokeC);
 
     if (after) {
       const afterCx = startX + beforeW + tokenW + afterW / 2;

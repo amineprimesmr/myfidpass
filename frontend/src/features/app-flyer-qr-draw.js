@@ -424,6 +424,9 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const fill = (s.ctaBannerBgColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaBannerBgColor).trim()))
     ? String(s.ctaBannerBgColor).trim()
     : "#ec4899";
+  const textFill = (s.ctaTextColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaTextColor).trim()))
+    ? String(s.ctaTextColor).trim()
+    : "#ffffff";
 
   ctx.fillStyle = fill;
   roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
@@ -436,7 +439,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
 
   const cx = pillLeft + pillW / 2;
   let cy = pillTop + padY + row1H / 2;
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = textFill;
   ctx.font = `800 ${fontBig}px Outfit, system-ui, sans-serif`;
   ctx.strokeStyle = "#000000";
   ctx.lineWidth = Math.max(1.5, 2.8 * scale);

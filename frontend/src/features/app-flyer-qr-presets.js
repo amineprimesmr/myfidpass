@@ -74,6 +74,7 @@ export function flyerTemplateMeta(id) {
  * @property {string} headline
  * @property {string} ctaBanner texte pastille à gauche du QR (ex. Scanne pour jouer), vide = masqué
  * @property {string} ctaBannerBgColor fond de la pastille (ex. rose #ec4899)
+ * @property {string} ctaTextColor couleur du texte dans la pastille CTA
  * @property {string} step1
  * @property {string} step2
  * @property {string} step3
@@ -95,6 +96,7 @@ export function flyerTemplateMeta(id) {
  * @property {string} headlineFontId police titre (voir FLYER_HEADLINE_FONTS)
  * @property {string} headlineTextColor couleur remplissage titre
  * @property {string} headlineStrokeColor couleur contour titre
+ * @property {string} headlineGiftStrokeColor couleur contour du mot CADEAU! (penché)
  * @property {number} headlineStrokeWidth épaisseur contour (0 = aucun), 0–48
  * @property {number} headlineLogoGapPct espace logo → titre (% hauteur flyer, 0–28)
  * @property {number} headlineLetterSpacing espacement lettres (0–8, px réf. export)
@@ -113,6 +115,7 @@ export function defaultFlyerState() {
     headline: "SCANNEZ & GAGNEZ VOTRE CADEAU !",
     ctaBanner: "SCANNER POUR JOUER",
     ctaBannerBgColor: "#ec4899",
+    ctaTextColor: "#ffffff",
     step1: "Scan le QR code",
     step2: "Fais tourner la roue",
     step3: "Découvre ton cadeau",
@@ -135,6 +138,7 @@ export function defaultFlyerState() {
     headlineFontId: "fraunces",
     headlineTextColor: "#ffffff",
     headlineStrokeColor: "#020617",
+    headlineGiftStrokeColor: "#020617",
     headlineStrokeWidth: 18,
     headlineLogoGapPct: 16,
     headlineLetterSpacing: 0,
@@ -275,6 +279,10 @@ export function mergeFlyerState(raw) {
       String(merged.headlineStrokeColor ?? ""),
       base.headlineStrokeColor,
     ),
+    headlineGiftStrokeColor: safeHex(
+      String(merged.headlineGiftStrokeColor ?? ""),
+      base.headlineGiftStrokeColor,
+    ),
     headlineStrokeWidth: clampHeadlineStrokeW(merged.headlineStrokeWidth),
     headlineLogoGapPct: clampHeadlineGapPct(merged.headlineLogoGapPct),
     headlineLetterSpacing: clampHeadlineLetterSpacing(merged.headlineLetterSpacing),
@@ -288,5 +296,6 @@ export function mergeFlyerState(raw) {
     flyerBgOverlayPct: clampFlyerBgOverlayPct(merged.flyerBgOverlayPct),
     flyerQrOutlineWidth: clampFlyerQrOutlineW(merged.flyerQrOutlineWidth),
     ctaBannerBgColor: safeHex(String(merged.ctaBannerBgColor ?? ""), base.ctaBannerBgColor),
+    ctaTextColor: safeHex(String(merged.ctaTextColor ?? ""), base.ctaTextColor),
   };
 }
