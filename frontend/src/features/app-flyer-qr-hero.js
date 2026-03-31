@@ -81,7 +81,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
    * @param {number} ly
    */
   const drawHeadlineLine = (line, ly) => {
-    const m = /CADEAU!?/.exec(line);
+    const m = /CADEAU(?:\s*!+)?/.exec(line);
     if (!m) {
       ctx.strokeStyle = "rgba(0,0,0,0.42)";
       ctx.lineWidth = strokePx * 1.9;
@@ -104,9 +104,9 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     const tokenW = ctx.measureText(token).width;
     const afterW = ctx.measureText(after).width;
 
-    const drawPart = (txt, cx, fillColor, tiltDeg = 0) => {
+    const drawPart = (txt, cx, fillColor, tiltDeg = 0, yOffset = 0) => {
       ctx.save();
-      ctx.translate(cx, ly);
+      ctx.translate(cx, ly + yOffset);
       if (tiltDeg) ctx.rotate((tiltDeg * Math.PI) / 180);
       ctx.strokeStyle = "rgba(0,0,0,0.42)";
       ctx.lineWidth = strokePx * 1.9;
@@ -124,11 +124,11 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
       drawPart(before, beforeCx, fill, 0);
     }
 
-    const hasBang = token.endsWith("!");
-    const giftToken = hasBang ? "CADEAU!" : token;
+    const giftToken = token;
     const giftW = ctx.measureText(giftToken).width;
     const giftCx = startX + beforeW + giftW / 2;
-    drawPart(giftToken, giftCx, "#ff4f78", 8);
+    const giftDrop = lineH * 0.09;
+    drawPart(giftToken, giftCx, "#ff4f78", 8, giftDrop);
 
     if (after) {
       const afterCx = startX + beforeW + tokenW + afterW / 2;
