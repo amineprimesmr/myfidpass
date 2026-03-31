@@ -136,9 +136,9 @@ export function defaultFlyerState() {
     headlineTextColor: "#ffffff",
     headlineStrokeColor: "#020617",
     headlineStrokeWidth: 18,
-    headlineLogoGapPct: 14,
+    headlineLogoGapPct: 16,
     headlineLetterSpacing: 0,
-    headlineSizePct: 8,
+    headlineSizePct: 7,
     footerStepsForegroundColor: "#ffffff",
     flyerFooterTextScalePct: 100,
     flyerWheelLabelScalePct: 100,
@@ -197,7 +197,7 @@ function clampFlyerQrOutlineW(v) {
 
 function clampHeadlineGapPct(v) {
   const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 14;
+  if (!Number.isFinite(n)) return 16;
   return Math.max(0, Math.min(28, Math.round(n * 10) / 10));
 }
 
@@ -209,7 +209,7 @@ function clampHeadlineLetterSpacing(v) {
 
 function clampHeadlineSizePct(v) {
   const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 8;
+  if (!Number.isFinite(n)) return 7;
   return Math.max(5, Math.min(16, Math.round(n * 10) / 10));
 }
 

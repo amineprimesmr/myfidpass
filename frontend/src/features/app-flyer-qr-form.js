@@ -77,7 +77,7 @@ export function writeFlyerFormFromState(root, s) {
   set("app-flyer-headline-stroke-w", String(s.headlineStrokeWidth ?? 0));
   set("app-flyer-headline-logo-gap", String(s.headlineLogoGapPct ?? 0));
   set("app-flyer-headline-tracking", String(s.headlineLetterSpacing ?? 0));
-  set("app-flyer-headline-size", String(s.headlineSizePct ?? 9.2));
+  set("app-flyer-headline-size", String(s.headlineSizePct ?? 7));
   set("app-flyer-footer-text-scale", String(s.flyerFooterTextScalePct ?? 100));
   set("app-flyer-footer-steps-color", s.footerStepsForegroundColor);
   set("app-flyer-wheel-label-scale", String(s.flyerWheelLabelScalePct ?? 100));
