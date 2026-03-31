@@ -130,14 +130,31 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     };
 
     if (before) {
-      const beforeCx = startX + beforeW / 2;
-      drawPart(before, beforeCx, fill, 0);
+      const vm = /(.*?)(\bVOTRE\s*)$/i.exec(before);
+      if (vm) {
+        const pre = vm[1] || "";
+        const votreToken = vm[2] || "";
+        if (pre) {
+          const preW = ctx.measureText(pre).width;
+          const preCx = startX + preW / 2;
+          drawPart(pre, preCx, fill, 0);
+        }
+        if (votreToken) {
+          const preW = ctx.measureText(pre).width;
+          const votreW = ctx.measureText(votreToken).width;
+          const votreCx = startX + preW + votreW / 2;
+          drawPart(votreToken, votreCx, fill, -4);
+        }
+      } else {
+        const beforeCx = startX + beforeW / 2;
+        drawPart(before, beforeCx, fill, 0);
+      }
     }
 
     const giftToken = token;
     const giftW = ctx.measureText(giftToken).width;
     const giftCx = startX + beforeW + giftW / 2;
-    const giftDrop = lineH * 0.09;
+    const giftDrop = lineH * 0.15;
     drawPart(giftToken, giftCx, ctaPink, 8, giftDrop);
 
     if (after) {
