@@ -275,19 +275,11 @@ function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   const iw = img.naturalWidth || img.width;
   const ih = img.naturalHeight || img.height;
   if (!iw || !ih) return;
-  const drawW = w;
-  let drawH = (drawW * ih) / iw;
   const maxH = canvasH * FLYER_LAYOUT.footerBannerMaxHeightFrac;
-  if (drawH > maxH) {
-    drawH = maxH;
-    const drawW2 = (drawH * iw) / ih;
-    const x0 = (w - drawW2) / 2;
-    const yTop = bottomY - drawH;
-    ctx.drawImage(img, x0, yTop, drawW2, drawH);
-    return;
-  }
-  const yTop = bottomY - drawH;
-  ctx.drawImage(img, 0, yTop, drawW, drawH);
+  const bleed = Math.max(2, Math.round(w * 0.003));
+  const yTop = bottomY - maxH;
+  // Full-bleed : l'image touche bien les bords gauche/droite du flyer.
+  drawImageCover(ctx, img, -bleed, yTop, w + bleed * 2, maxH);
 }
 
 /**
@@ -548,10 +540,10 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const stripH = flyerSocialStripHeight(h, socialEntries.length);
   const bannerBottom = h - stripH;
   const [stepIcons, footerBannerImg] = await Promise.all([loadFooterStepIcons(), getFlyerFooterBanner()]);
-  if (stepIcons && stepIcons.length === 3) {
-    drawFooterStepsWithIcons(ctx, w, h, bannerBottom, s, stepIcons);
-  } else if (footerBannerImg) {
+  if (footerBannerImg) {
     drawFooterBanner(ctx, w, h, bannerBottom, footerBannerImg);
+  } else if (stepIcons && stepIcons.length === 3) {
+    drawFooterStepsWithIcons(ctx, w, h, bannerBottom, s, stepIcons);
   } else {
     drawFooterBar(ctx, w, h, s, stripH);
   }
