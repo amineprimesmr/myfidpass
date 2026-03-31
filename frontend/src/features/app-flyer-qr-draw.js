@@ -430,7 +430,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   ctx.fill();
 
   ctx.strokeStyle = "#000000";
-  ctx.lineWidth = Math.max(3, 6 * scale);
+  ctx.lineWidth = Math.max(4, 8 * scale);
   roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
   ctx.stroke();
 
@@ -438,10 +438,15 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   let cy = pillTop + padY + row1H / 2;
   ctx.fillStyle = "#ffffff";
   ctx.font = `800 ${fontBig}px Outfit, system-ui, sans-serif`;
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = Math.max(1.5, 2.8 * scale);
+  ctx.lineJoin = "round";
+  ctx.strokeText(line1, cx, cy);
   ctx.fillText(line1, cx, cy);
   if (line2) {
     cy = pillTop + padY + row1H + lineGap + row2H / 2;
     ctx.font = `700 ${fontSmall}px Outfit, system-ui, sans-serif`;
+    ctx.strokeText(line2, cx, cy);
     ctx.fillText(line2, cx, cy);
   }
 }
