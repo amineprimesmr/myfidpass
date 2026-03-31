@@ -10,6 +10,7 @@ import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
 import { mergeCampaignAutomationJson } from "./campaign-automation-cron.js";
 import { deliverDashboardBroadcast } from "../routes/businesses/notifications.js";
+import { normalizeEventTypeToken } from "../services/campaign-automation-ai.js";
 
 const db = getDb();
 
@@ -23,7 +24,7 @@ function clampDelayMinutes(n) {
 function ruleEventType(rule) {
   if (!rule || typeof rule !== "object") return "";
   const t = rule.eventType ?? rule.event_type;
-  return t != null ? String(t).trim() : "";
+  return normalizeEventTypeToken(t) || "";
 }
 
 function safeTrim(s, maxLen) {
@@ -75,6 +76,114 @@ export function scheduleCampaignEventJobsForMember({ business, memberId }) {
     scheduled += (res?.changes ?? 0) > 0 ? 1 : 0;
   }
 
+  return scheduled;
+}
+
+function baseRuleIdFromJobRuleId(ruleId) {
+  const t = String(ruleId || "");
+  const idx = t.indexOf("__daily_");
+  return idx > 0 ? t.slice(0, idx) : t;
+}
+
+function selectMemberIdsForRule(businessId, eventType) {
+  const t = String(eventType || "");
+  if (t === "first_scan") {
+    const rows = db
+      .prepare(
+        `SELECT DISTINCT m.id
+         FROM members m
+         JOIN transactions tr ON tr.member_id = m.id AND tr.business_id = m.business_id
+         WHERE m.business_id = ?`
+      )
+      .all(businessId);
+    return rows.map((r) => r.id);
+  }
+  if (t === "reward_unlocked") {
+    const rows = db.prepare("SELECT id FROM members WHERE business_id = ? AND points >= 50").all(businessId);
+    return rows.map((r) => r.id);
+  }
+  const inactive = /^inactive_days:(\d{1,3})$/.exec(t);
+  if (inactive) {
+    const days = Math.max(1, Math.min(365, Number(inactive[1]) || 30));
+    const rows = db
+      .prepare(`SELECT id FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', ?))`)
+      .all(businessId, `-${days} days`);
+    return rows.map((r) => r.id);
+  }
+  return [];
+}
+
+function shouldRunDailyNow(eventType, now = new Date()) {
+  const m = /^daily_at:(\d{2}):(\d{2})$/.exec(String(eventType || ""));
+  if (!m) return false;
+  const hh = Number(m[1]);
+  const mm = Number(m[2]);
+  return now.getUTCHours() === hh && now.getUTCMinutes() === mm;
+}
+
+function enqueueRuleForMembers({ businessId, ruleId, title, message, eventType, delayMinutes, memberIds, now = new Date() }) {
+  let scheduled = 0;
+  for (const memberId of memberIds) {
+    const runAt = new Date(now.getTime() + delayMinutes * 60_000).toISOString();
+    const jobId = randomUUID();
+    const result = db
+      .prepare(
+        `INSERT OR IGNORE INTO campaign_event_jobs
+          (id, business_id, member_id, event_rule_id, event_type, run_at, title, message, status, attempts)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'queued', 0)`
+      )
+      .run(jobId, businessId, memberId, ruleId, eventType, runAt, title || null, message);
+    scheduled += (result?.changes ?? 0) > 0 ? 1 : 0;
+  }
+  return scheduled;
+}
+
+function scheduleDerivedEventJobs({ business, now = new Date() }) {
+  const config = mergeCampaignAutomationJson(business?.campaign_automation_json ?? "");
+  const rules = config?.rules ?? {};
+  let scheduled = 0;
+  for (const [ruleId, rule] of Object.entries(rules)) {
+    if (!ruleId.startsWith("event_")) continue;
+    if (!rule?.enabled) continue;
+    const eventType = ruleEventType(rule);
+    if (!eventType || eventType === "member_created") continue;
+    const message = safeTrim(rule.message, 200);
+    if (!message) continue;
+    const title = safeTrim(rule.title, 80);
+    const delayMinutes = clampDelayMinutes(rule.delayMinutes ?? rule.delay_minutes);
+
+    if (eventType.startsWith("daily_at:")) {
+      if (!shouldRunDailyNow(eventType, now)) continue;
+      const ymd = now.toISOString().slice(0, 10).replace(/-/g, "");
+      const effectiveRuleId = `${ruleId}__daily_${ymd}`;
+      const memberRows = db.prepare("SELECT id FROM members WHERE business_id = ?").all(business.id);
+      const memberIds = memberRows.map((r) => r.id);
+      scheduled += enqueueRuleForMembers({
+        businessId: business.id,
+        ruleId: effectiveRuleId,
+        title,
+        message,
+        eventType,
+        delayMinutes,
+        memberIds,
+        now,
+      });
+      continue;
+    }
+
+    const memberIds = selectMemberIdsForRule(business.id, eventType);
+    if (!memberIds.length) continue;
+    scheduled += enqueueRuleForMembers({
+      businessId: business.id,
+      ruleId,
+      title,
+      message,
+      eventType,
+      delayMinutes,
+      memberIds,
+      now,
+    });
+  }
   return scheduled;
 }
 
@@ -137,6 +246,15 @@ function requeueJobForLater(jobId, delayMinutes, reason) {
  * Exécute les jobs event dus (loop scheduler).
  */
 export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
+  const allBusinesses = db.prepare("SELECT id, campaign_automation_json FROM businesses").all();
+  for (const b of allBusinesses) {
+    try {
+      scheduleDerivedEventJobs({ business: b });
+    } catch {
+      // no-op: on garde le cron robuste
+    }
+  }
+
   const nowIso = new Date().toISOString();
   const dueJobs = await claimDueJobs({ nowIso, limit });
   if (dueJobs.length === 0) return { ran: 0, sent: 0, skipped: 0, failed: 0, requeued: 0 };
@@ -159,7 +277,8 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
 
       // Vérifie la règle au moment du send (si elle a été désactivée côté web).
       const config = mergeCampaignAutomationJson(business.campaign_automation_json ?? "");
-      const rule = config?.rules?.[job.event_rule_id];
+      const baseRuleId = baseRuleIdFromJobRuleId(job.event_rule_id);
+      const rule = config?.rules?.[baseRuleId];
       if (!rule?.enabled) {
         markJobSkipped(job.id, "Règle désactivée");
         skipped++;

@@ -6,6 +6,7 @@ import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
 import { getMemberIdsBySegment, filterMemberIdsExcludingRecentNotifications } from "../db.js";
 import { deliverDashboardBroadcast, CAMPAIGN_SEGMENT_KEYS } from "../routes/businesses/notifications.js";
+import { normalizeEventTypeToken } from "../services/campaign-automation-ai.js";
 
 const db = getDb();
 
@@ -74,6 +75,31 @@ export function mergeCampaignAutomationJson(raw) {
         title: r.title != null ? String(r.title).trim().slice(0, 80) : "",
       };
       merged.rules[key] = safe;
+    }
+    /** Règles `event_<uuid>` : déclencheurs événementiels. */
+    for (const key of Object.keys(merged.rules)) {
+      if (!key.startsWith("event_")) continue;
+      const r = merged.rules[key];
+      if (!r || typeof r !== "object") {
+        delete merged.rules[key];
+        continue;
+      }
+      const rawEvent = r.eventType ?? r.event_type;
+      const eventType = normalizeEventTypeToken(rawEvent) || null;
+      const delay = Math.max(1, Math.min(1440, Number(r.delayMinutes ?? r.delay_minutes) || 2));
+      const message = String((r.message ?? "") || "").trim().slice(0, 200);
+      const title = r.title != null ? String(r.title).trim().slice(0, 80) : "";
+      if (!eventType || !message) {
+        delete merged.rules[key];
+        continue;
+      }
+      merged.rules[key] = {
+        enabled: !!r.enabled,
+        message,
+        title,
+        eventType,
+        delayMinutes: delay,
+      };
     }
     const cd = merged.global_cooldown_days ?? merged.globalCooldownDays;
     merged.global_cooldown_days = Math.min(90, Math.max(1, Number(cd) || 7));

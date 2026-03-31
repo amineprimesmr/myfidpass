@@ -39,6 +39,7 @@ import {
   buildFlyerImagePrompt,
   openaiGenerateFlyerImage,
 } from "../../services/flyer-ai-image.js";
+import { parseCampaignAutomationInstructionWithAI, normalizeEventTypeToken } from "../../services/campaign-automation-ai.js";
 import {
   FLYER_AI_FREE_PER_MONTH,
   currentMonthKeyUTC,
@@ -402,10 +403,10 @@ router.patch("/settings", async (req, res) => {
     if (campaign_automation_in === null) {
       updates.campaign_automation_json = null;
     } else if (typeof campaign_automation_in === "object") {
-      updates.campaign_automation_json = JSON.stringify(campaign_automation_in);
+      updates.campaign_automation_json = JSON.stringify(mergeCampaignAutomationJson(JSON.stringify(campaign_automation_in)));
     } else if (typeof campaign_automation_in === "string") {
       const t = campaign_automation_in.trim();
-      updates.campaign_automation_json = t ? t : null;
+      updates.campaign_automation_json = t ? JSON.stringify(mergeCampaignAutomationJson(t)) : null;
     }
   }
   if (engagement_rewards !== undefined) {
@@ -594,6 +595,37 @@ router.post("/flyer/ai-dev-unlock", async (req, res) => {
     flyer_ai_unlimited: unlimited,
     flyer_ai_generations_used: used,
     flyer_ai_generations_remaining: unlimited ? null : Math.max(0, FLYER_AI_FREE_PER_MONTH - used),
+  });
+});
+
+/**
+ * IA: transforme une instruction libre en règle d’automatisation exploitable.
+ * Body: { instruction: string }
+ */
+router.post("/campaign-automation/parse", async (req, res) => {
+  const instruction = String(req.body?.instruction ?? "").trim();
+  if (!instruction) {
+    return res.status(400).json({ error: "Instruction requise." });
+  }
+  const parsed = await parseCampaignAutomationInstructionWithAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    instruction,
+  });
+  if (!parsed.ok) {
+    return res.status(400).json({ error: parsed.error || "Instruction invalide." });
+  }
+  const v = parsed.value;
+  const eventTypeNorm =
+    normalizeEventTypeToken(v.eventType) ||
+    (String(v.eventType || "").startsWith("custom:") ? String(v.eventType) : "member_created");
+  return res.json({
+    mode: "event",
+    title: String(v.title || "Automatisation"),
+    message: String(v.message || "").slice(0, 200),
+    event_type: eventTypeNorm,
+    delay_minutes: Math.max(1, Math.min(1440, Number(v.delayMinutes) || 2)),
+    confidence: Math.max(0, Math.min(1, Number(v.confidence) || 0.7)),
+    source: parsed.source || "heuristic",
   });
 });
 
