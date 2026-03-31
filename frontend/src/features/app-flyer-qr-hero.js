@@ -52,7 +52,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   const maxW = w * 0.92;
   const lines = wrapCanvasTextLines(ctx, text.toUpperCase(), maxW).slice(0, 3);
 
-  const gapFrac = Math.min(22, Math.max(0, Number(s.headlineLogoGapPct) || 0)) / 100;
+  const gapFrac = Math.min(28, Math.max(0, Number(s.headlineLogoGapPct) || 0)) / 100;
   const logoBottomFrac = hasLogo ? FLYER_LOGO_BLOCK_BOTTOM_FRAC : 0.052;
   const blockTop = h * logoBottomFrac + h * gapFrac;
   const firstLineCy = blockTop + lineH * 0.5;
@@ -125,16 +125,10 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     }
 
     const hasBang = token.endsWith("!");
-    const giftToken = hasBang ? "CADEAU" : token;
+    const giftToken = hasBang ? "CADEAU!" : token;
     const giftW = ctx.measureText(giftToken).width;
     const giftCx = startX + beforeW + giftW / 2;
-    drawPart(giftToken, giftCx, "#ff4f78", -8);
-
-    if (hasBang) {
-      const bangW = ctx.measureText("!").width;
-      const bangCx = startX + beforeW + giftW + bangW / 2;
-      drawPart("!", bangCx, "#ff4f78", -8);
-    }
+    drawPart(giftToken, giftCx, "#ff4f78", 8);
 
     if (after) {
       const afterCx = startX + beforeW + tokenW + afterW / 2;

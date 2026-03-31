@@ -91,7 +91,7 @@ describe("mergeFlyerState", () => {
     expect(s.headlineTextColor).toBe("#aabbcc");
     expect(s.headlineStrokeColor).toBe("#010203");
     expect(s.headlineStrokeWidth).toBe(48);
-    expect(s.headlineLogoGapPct).toBe(22);
+    expect(s.headlineLogoGapPct).toBe(28);
     expect(s.headlineLetterSpacing).toBe(8);
   });
 

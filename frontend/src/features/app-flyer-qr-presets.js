@@ -96,7 +96,7 @@ export function flyerTemplateMeta(id) {
  * @property {string} headlineTextColor couleur remplissage titre
  * @property {string} headlineStrokeColor couleur contour titre
  * @property {number} headlineStrokeWidth épaisseur contour (0 = aucun), 0–48
- * @property {number} headlineLogoGapPct espace logo → titre (% hauteur flyer, 0–22)
+ * @property {number} headlineLogoGapPct espace logo → titre (% hauteur flyer, 0–28)
  * @property {number} headlineLetterSpacing espacement lettres (0–8, px réf. export)
  * @property {number} headlineSizePct taille police titre (% largeur flyer), 5–16
  * @property {string} footerStepsForegroundColor couleur chiffres + libellés des étapes (bas de flyer)
@@ -135,8 +135,8 @@ export function defaultFlyerState() {
     headlineFontId: "fraunces",
     headlineTextColor: "#ffffff",
     headlineStrokeColor: "#020617",
-    headlineStrokeWidth: 10,
-    headlineLogoGapPct: 15,
+    headlineStrokeWidth: 18,
+    headlineLogoGapPct: 14,
     headlineLetterSpacing: 0,
     headlineSizePct: 8,
     footerStepsForegroundColor: "#ffffff",
@@ -197,8 +197,8 @@ function clampFlyerQrOutlineW(v) {
 
 function clampHeadlineGapPct(v) {
   const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 15;
-  return Math.max(0, Math.min(22, Math.round(n * 10) / 10));
+  if (!Number.isFinite(n)) return 14;
+  return Math.max(0, Math.min(28, Math.round(n * 10) / 10));
 }
 
 function clampHeadlineLetterSpacing(v) {
