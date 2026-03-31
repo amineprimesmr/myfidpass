@@ -381,9 +381,10 @@ function splitCtaBannerLines(raw) {
   if (!t) return { line1: "", line2: "" };
   const parts = t.split(/\s+/).filter(Boolean);
   if (parts.length === 1) return { line1: parts[0].toUpperCase(), line2: "" };
+  if (parts.length === 2) return { line1: parts.join(" ").toUpperCase(), line2: "" };
   return {
-    line1: parts[0].toUpperCase(),
-    line2: parts.slice(1).join(" ").toUpperCase(),
+    line1: parts.slice(0, 2).join(" ").toUpperCase(),
+    line2: parts.slice(2).join(" ").toUpperCase(),
   };
 }
 
@@ -403,7 +404,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const padY = 28 * scale;
   const lineGap = 7 * scale;
 
-  const fontBig = Math.round(Math.min(84, Math.max(52, qSize * 0.2)));
+  const fontBig = Math.round(Math.min(120, Math.max(72, qSize * 0.3)));
   const fontSmall = line2 ? Math.round(fontBig * 0.58) : fontBig;
 
   ctx.textAlign = "center";
@@ -422,7 +423,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const row2H = line2 ? fontSmall * 1.1 : 0;
   const pillH = padY * 2 + row1H + (line2 ? lineGap + row2H : 0);
 
-  const gap = 14 * scale;
+  const gap = 18 * scale;
   let pillLeft = qx - gap - pillW;
   const pillTop = qy + qSize / 2 - pillH / 2;
   const minX = 10 * scale;
@@ -529,7 +530,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR);
   }
   drawFlyerHeroHeadline(ctx, s, w, h, scale, false);
-  const qx = w * 0.515;
+  const qx = w * 0.49;
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
   const qCx = qx + qSize / 2;
   const qCy = qy + qSize / 2;
