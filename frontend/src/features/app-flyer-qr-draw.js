@@ -465,7 +465,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const scale = w / FLYER_EXPORT.w;
   /** Carré QR un peu plus grand + ombre portée (relief). */
   const qSize = w * 0.395;
-  const qrCornerR = 26 * scale;
+  const qrCornerR = 34 * scale;
   const qrPad = 16 * scale;
   const qrInner = Math.max(1, qSize - 2 * qrPad);
   const qrFetchPx = Math.min(2048, Math.max(512, Math.round(qrInner * 2)));
