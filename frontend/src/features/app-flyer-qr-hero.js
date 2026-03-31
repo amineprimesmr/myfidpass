@@ -111,11 +111,13 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
       ctx.save();
       ctx.translate(cx, ly + yOffset);
       if (tiltDeg) ctx.rotate((tiltDeg * Math.PI) / 180);
-      // Ombre légère pour mieux détacher le titre du fond.
-      ctx.shadowColor = "rgba(0,0,0,0.22)";
-      ctx.shadowBlur = Math.max(2, strokePx * 0.9);
+      // Ombre "propre" : décalage sombre sans halo coloré.
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
       ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = Math.max(1, strokePx * 0.25);
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.fillText(txt, 0, Math.max(1, strokePx * 0.32));
       ctx.strokeStyle = "rgba(0,0,0,0.42)";
       ctx.lineWidth = strokePx * 1.9;
       ctx.strokeText(txt, 0, 0);
