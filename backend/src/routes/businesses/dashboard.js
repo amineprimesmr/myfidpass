@@ -37,8 +37,10 @@ import rateLimit from "express-rate-limit";
 import {
   parseFlyerAIBody,
   buildFlyerImagePrompt,
+  mergeServerLogoIntoMultimodal,
   openaiGenerateFlyerImage,
 } from "../../services/flyer-ai-image.js";
+import { getBusinessAssetData } from "../../db/business-assets.js";
 import { parseCampaignAutomationInstructionWithAI, normalizeEventTypeToken } from "../../services/campaign-automation-ai.js";
 import {
   FLYER_AI_FREE_PER_MONTH,
@@ -539,11 +541,12 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     });
   }
   try {
+    const multimodal = mergeServerLogoIntoMultimodal(parsed.multimodal, req.business.id, getBusinessAssetData);
     const prompt = buildFlyerImagePrompt(parsed.value, {
-      hasLogo: parsed.multimodal.hasLogo,
-      styleRefCount: parsed.multimodal.styleRefCount,
+      hasLogo: multimodal.hasLogo,
+      styleRefCount: multimodal.styleRefCount,
     });
-    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, parsed.multimodal);
+    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, multimodal);
     if (unlimited) {
       return res.json({
         image_base64: b64,

@@ -156,6 +156,29 @@ export function parseFlyerAIBody(raw) {
 }
 
 /**
+ * Si l’app n’a pas envoyé de logo mais qu’un logo carte existe en base, on l’injecte pour
+ * forcer le flux `images/edits` (meilleure fidélité du logo en tête d’affiche).
+ * @param {{ images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number }} multimodal
+ * @param {string} businessId
+ * @param {(id: string, kind: "logo") => string | null} getAssetData
+ */
+export function mergeServerLogoIntoMultimodal(multimodal, businessId, getAssetData) {
+  if (!businessId || multimodal.hasLogo) return multimodal;
+  const raw = getAssetData(String(businessId), "logo");
+  if (!raw?.trim()) return multimodal;
+  try {
+    const { dataUrl } = decodeDataUrlOrBase64(raw);
+    return {
+      images: [{ image_url: dataUrl }, ...multimodal.images],
+      hasLogo: true,
+      styleRefCount: multimodal.styleRefCount,
+    };
+  } catch {
+    return multimodal;
+  }
+}
+
+/**
  * Prompt détaillé — **tous secteurs** (restauration, artisanat, pêche, auto, esthétique, etc.) :
  * le brief marchand fait foi ; aucune industrie par défaut.
  * @param {z.infer<typeof bodySchema>} input
@@ -166,62 +189,63 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   const accent = input.accent_color_hex.trim();
   const secondaryHex = input.secondary_color_hex?.trim();
   const secondary = secondaryHex
-    ? `Wheel fill colors (exactly 6 segments, clockwise from top): segments 1,3,5 = solid ${accent}; segments 2,4,6 = solid ${secondaryHex}. Only these two fills — never two adjacent segments the same color (strict alternation).`
-    : `Wheel fill colors (exactly 6 segments, clockwise from top): segments 1,3,5 = solid ${accent}; segments 2,4,6 = solid white or cream. Strict alternation — never two adjacent segments the same fill.`;
+    ? `WHEEL PAINT (exactly 6 segments, clockwise from the top segment under the pointer): segments 1,3,5 = solid ${accent}; segments 2,4,6 = solid ${secondaryHex}. Strict alternation — adjacent segments must never share the same fill.`
+    : `WHEEL PAINT (exactly 6 segments, clockwise from the top segment under the pointer): segments 1,3,5 = solid ${accent}; segments 2,4,6 = solid white or warm cream. Strict alternation — adjacent segments must never share the same fill.`;
   const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
   const merchantBrief = buildMerchantBriefForPrompt(input);
 
   const sectorFidelity =
-    "SECTOR FIDELITY (critical): This tool serves every trade — food, bakery, butcher, fisher, artisan, hairdresser, car dealer, esthetician, retail, services, and many more. ALL decorative imagery around the wheel MUST match the MERCHANT BRIEF above only. Do NOT substitute unrelated stock imagery: no burgers if the brief is automotive; no cars if the brief is a bakery; no random food if the brief is beauty or fishing. If the brief is ambiguous, prefer neutral abstract textures and brand colors over guessing an industry.";
+    "SECTOR FIDELITY (critical): Decorative imagery MUST match the MERCHANT BRIEF only. Do NOT substitute unrelated stock subjects (no random food if the brief is automotive, etc.). If ambiguous, use brand-colored abstract shapes rather than guessing an industry.";
 
   const taskStructure =
-    "TASK: One vertical print-ready poster, portrait ~2:3, full bleed. Follow the VERTICAL ZONES below strictly. The merchant adds headline text, QR, and a footer strip in software — your image must NOT contain any QR or those texts.";
+    "TASK: Generate ONE print-ready promotional flyer image, portrait 2:3 aspect, full bleed to all edges, no outer frame, no white border. The merchant will add headline text, QR code, and footer UI in software — your image must NEVER include those.";
 
   const sideImagery =
-    "SIDE IMAGERY: Arrange visuals left/right of the wheel that clearly belong to the same business as the MERCHANT BRIEF (same sector, same offer). Use the exact subjects implied by the brief — across all industries. Keep all side visuals in the middle zone and never intrude into the strict bottom safe zone.";
+    "SIDE DECOR: Left and right of the wheel, place 1–3 rich decorative elements consistent with the MERCHANT BRIEF (products, themed objects, sector-appropriate). They may overlap the wheel rim for depth (some behind, some in front). High-quality photorealistic or polished illustration — not generic clipart. Keep all of this inside the CENTER HERO ZONE only.";
 
   const referenceStyle =
-    "REFERENCE STYLE: Premium multi-sector loyalty poster — crisp prize wheel, photorealistic or polished illustrative cutouts faithful to the MERCHANT BRIEF, cohesive lighting, no generic unrelated industry.";
+    "STYLE: Bold, vibrant, professional commercial print — cohesive lighting and shadows across all layers.";
 
   const multimodalLines = [];
   if (multimodalHint.hasLogo) {
     multimodalLines.push(
-      "REFERENCE IMAGE #1 = OFFICIAL BRAND LOGO. Recreate it faithfully at the VERY TOP, horizontally CENTERED, in a compact band only (~8–11% of total image height). Same shapes, colors, and typography as the reference. Do not invent a different mark. Do not repeat the logo elsewhere. Below the logo you MUST leave the HEADLINE RESERVE (see LAYOUT ZONES) — do not pull the wheel or props upward into that zone."
+      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO (mandatory integration). Composite this exact logo at the TOP of the flyer: horizontally centered, crisp, faithful colors/shapes/typography — do NOT invent a different mark. Size ≈ 20–25% of the image width. Add a subtle premium treatment (soft glow, light shadow, or soft circular backing) so it floats cleanly above the background. Do NOT duplicate the logo elsewhere. The logo must sit entirely inside the TOP ZONE (0–20% height) — no other graphics or text in that band except the logo treatment."
     );
   }
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "Following reference image(s) (after the logo, if any): STYLE / MOODBOARD ONLY — borrow color palette, lighting, materials, and atmosphere from the SAME industry as the MERCHANT BRIEF and references; do NOT copy text, prices, QR codes, or unrelated logos. Match the sector shown in the references (food, auto, beauty, etc.) to the brief, not a different industry."
+      "Following reference image(s) after the logo (if any): MOODBOARD / STYLE ONLY — borrow palette, lighting, materials, atmosphere; NEVER copy text, QR codes, prices, or foreign logos. Stay aligned with the MERCHANT BRIEF sector."
     );
   }
 
   /** @type {string[]} */
   const lines = [
-    "MERCHANT BRIEF (authoritative — follow above all else): " + merchantBrief,
+    "MERCHANT BRIEF (authoritative): " + merchantBrief,
     sectorFidelity,
     taskStructure,
-    "ABSOLUTE BAN — QR / BARCODES / GRIDS: Do NOT draw any QR code, micro-QR, Data Matrix, Aztec code, or square grid of black modules ANYWHERE — not in the wheel hub, not in corners, not on products, not as a fake 'scan' graphic. The wheel center must NEVER look like a QR: no 3×3 finder squares, no dense black-and-white tile matrix. Hub = ONE plain solid circle only.",
-    "ABSOLUTE BAN — QR / BARCODES (repeat): If you are about to draw something that resembles a QR or barcode, STOP and fill with solid color or soft gradient instead.",
-    "FORBIDDEN TEXT / GRAPHICS: No headline « SCANNEZ », « GAGNEZ », « CADEAU », no slogan banners, no address, phone, hours, no footer strip with numbered steps, no « Scanne le QR », « tourne la roue », no ribbon « SCANNE POUR JOUER », no phone mockups.",
-    "FORBIDDEN: Do not print the internal brief phrase « " +
-      concept +
-      " » as text on the poster (except as logo if the logo reference already contains it).",
+    "════════════════ STRICT BANS — NEVER VIOLATE ═══════════════",
+    "NEVER draw any QR code, barcode, Data Matrix, Aztec, or any square black-and-white module grid ANYWHERE (including hub, corners, products, fake 'scan' graphics).",
+    "NEVER draw text: « Scannez & Gagnez », « Scanner & Gagner », « Scan & Win », « Votre Cadeau », « Your Gift », « Scanne pour jouer », « Scan to play », or similar.",
+    "NEVER draw numbered steps (1,2,3), instruction footers, phone mockups at the bottom, gift icons in a bottom strip, or any footer strip content — these are added in software.",
+    "FORBIDDEN: Do not print the raw brief sentence « " + concept + " » as poster text (unless it already exists inside the provided logo artwork).",
+    "ABSOLUTE BAN — QR-LIKE HUB: Wheel hub = ONE plain solid circle (metal cap look OK). No QR-like grid, no 3×3 finder patterns, no dense tile matrix.",
     referenceStyle,
-    "LAYOUT ZONES (critical — portrait, top to bottom): " +
-      "(1) TOP BRAND: Logo (if reference supplied) only in the upper ~8–11% of image height, centered, compact. " +
-      "(2) HEADLINE RESERVE: Directly under the logo (or from the top if no logo), leave a **calm empty band of at least 12–16% of total image height** — soft gradient, light paper tone, or very subtle texture only. **No wheel, no wheel edge, no gift boxes, no drinks, no food, no characters, no busy cutouts** in this band. This space is reserved for a large software-rendered headline (e.g. promotional line). " +
-      "(3) MID HERO: The prize wheel and side imagery (sector-appropriate cutouts) sit **below** the headline reserve — wheel vertically centered in the **middle third** of the poster, not crowding the top. " +
-      "(4) FOOTER SAFE ZONE (HARD RULE): The **bottom 22% of the image height** must stay **clean and uncluttered** — soft background, gentle gradient, or minimal abstract wash only. **No product close-ups, no gift piles, no wheel rim, no strong diagonal cuts, no busy details, no props, no logos, no text, no objects crossing into this strip**. Keep this band almost empty because a software footer overlays here. " +
-      sideImagery,
-    "PRIZE WHEEL — GEOMETRY (critical): Exactly ONE circular prize wheel — no second wheel, no partial arc, no oval. EXACTLY 6 equal wedges (each 360÷6 = 60°). Count wedge boundaries at the outer rim: must be 6 — not 5, 7, 8, 9, 10, or 12. Exactly 6 radial spokes from hub to rim. Small pointer or tick at top center (12 o'clock).",
-    "PRIZE WHEEL — SOFTWARE ALIGNMENT (non-negotiable — must match the export app): The wheel must be a perfect circle whose geometric center is at **50% of image width** (horizontal center) and **50.8% of image height measured from the top edge** (vertical position). The **outer colored diameter** of the wheel (rim to opposite rim) must be **72% of the image width** (not height). Do not crop the wheel oddly, shrink it into a corner, or tilt it in perspective so the circle becomes an ellipse. Keep the wheel large and centered in the middle band of the poster so labels added in software land on the wedges.",
+    "════════════════ VERTICAL LAYOUT (TOP → BOTTOM) ═══════════════",
+    "ZONE A — TOP 0–20% HEIGHT: Merchant logo (when reference provided) centered; subtle halo/backing allowed; NO other text, icons, or busy objects in this band.",
+    "ZONE B — CENTER ~20% to ~82% HEIGHT (≈62%): Main composition — prize wheel + left/right decor. Wheel sits UPPER-MIDDLE of this zone (place the wheel center noticeably ABOVE the global vertical midpoint of the full image — target wheel center Y ≈ 44% of image height from top) so the wheel reads 'higher' on the page. Horizontal center X = 50% of image width.",
+    "ZONE C — BOTTOM 82–100% HEIGHT (18%): MUST remain visually clean — only background color/gradient/texture continuing from above. NO objects, NO text, NO icons, NO wheel fragments, NO props encroaching from above.",
+    sideImagery,
+    "BACKGROUND: Rich layered textured background (never flat). Primary brand hue: " +
+      accent +
+      ". Build depth with radial gradients, subtle grain/noise, soft bokeh shapes. Atmosphere: " +
+      mood +
+      ". Use at most 3–4 cohesive colors total.",
+    "PRIZE WHEEL — GEOMETRY: Exactly ONE circular wheel, perfect circle (no ellipse), no second wheel. EXACTLY 6 equal wedges (60° each). Six outer rim divisions. One small triangular pointer at 12 o'clock. Outer wheel diameter ≈ 58–62% of image WIDTH (slightly 'dezoomed' vs full width).",
     secondary,
-    "WHEEL LABELS (critical): Put text directly inside the wheel sectors. Labels must alternate exactly around the wheel: GAGNÉ, PERDU, GAGNÉ, PERDU, GAGNÉ, PERDU (clockwise). Use bold uppercase French labels only (no English). Each label must be centered inside its wedge, readable, not clipped, and fully inside the wheel.",
-    "WHEEL — SELF-CHECK: Before finishing, count out loud: (1) wedge boundaries at the outer circle = exactly six; (2) labels alternate exactly GAGNÉ/PERDU on all six wedges; (3) hub = one plain solid circle only (no QR-like grid); (4) wheel center at 50% width and ~50.8% height from top; (5) wheel diameter ≈ 72% of image width; (6) bottom 22% strip contains no objects.",
-    "WHEEL HUB (critical): ONLY a small solid FLAT circle at the geometric center — diameter about 5–10% of the wheel diameter. Fill: white or very light cream, NO texture resembling QR modules, NO grid, NO radial black-white pattern.",
-    "VISUAL RULES: No marketing text in the image (software adds headline); no watermarks; no mirrored text.",
-    "QUALITY: Sharp print, clean segment edges, even color fills.",
-    mood + ".",
+    "WHEEL LABELS (clockwise from the top wedge under the pointer): Wedge1=GAGNÉ; Wedge2=GAGNÉ; Wedge3=GAGNÉ; Wedge4=GAGNÉ; Wedge5=GAGNÉ; Wedge6=PERDU. Bold uppercase French, high contrast, radially readable inside each wedge (~70% of wedge radial length). No other text on the flyer.",
+    "WHEEL HUB: Small decorative metallic pin/cap at center — gold or silver OK. No QR-like texture.",
+    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 44% Y from top); (5) wheel diameter ≈60% of image width; (6) bottom 18% empty of objects; (7) zero QR/barcodes.",
+    "QUALITY: Crisp print, clean edges, coherent lighting, no disconnected floating artifacts.",
     ...multimodalLines,
   ];
 
