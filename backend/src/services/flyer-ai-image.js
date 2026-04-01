@@ -20,8 +20,8 @@ export { FLYER_AI_FREE_PER_MONTH as FLYER_AI_FREE_GENERATIONS } from "./flyer-ai
 
 const VISUAL_MOODS = ["premium", "energetic", "minimal", "street", "gourmet", "playful"];
 
-/** Taille max décodée par image (évite surcharge mémoire / quota). */
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+/** Taille max décodée par image (JPEG/PNG après décodage base64). Augmenté pour photos iPhone réelles. */
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const bodySchema = z.object({
   brand_name: z.string().min(1, "Nom de marque requis.").max(80),
@@ -37,8 +37,9 @@ const bodySchema = z.object({
     .optional(),
   visual_mood: z.enum(VISUAL_MOODS),
   extra_context: z.string().max(400).optional(),
-  logo_base64: z.string().max(6_000_000).optional(),
-  style_reference_images_base64: z.array(z.string().max(6_000_000)).max(3).optional(),
+  /** Base64 / data URL : ~33 % plus long que le binaire — marge pour 8 Mo décodés. */
+  logo_base64: z.string().max(14_000_000).optional(),
+  style_reference_images_base64: z.array(z.string().max(14_000_000)).max(3).optional(),
 });
 
 /**
@@ -93,7 +94,9 @@ function decodeDataUrlOrBase64(s) {
     throw new Error("Image invalide ou trop petite.");
   }
   if (buf.length > MAX_IMAGE_BYTES) {
-    throw new Error("Chaque image doit faire au plus 2 Mo (compressez ou réduisez la résolution).");
+    throw new Error(
+      `Chaque image doit faire au plus ${Math.floor(MAX_IMAGE_BYTES / (1024 * 1024))} Mo après décodage (réduisez la photo ou réessayez).`
+    );
   }
   const dataUrl = `data:${mime};base64,${buf.toString("base64")}`;
   return { dataUrl };
