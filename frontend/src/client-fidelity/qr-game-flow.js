@@ -29,14 +29,34 @@ export function openQrModalRoot(rootEl) {
   root.classList.remove("hidden");
   root.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+  root.classList.remove("fidelity-qr-modal-root--open");
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      root.classList.add("fidelity-qr-modal-root--open");
+    });
+  });
 }
 
 export function closeQrModalRoot(rootEl) {
   const root = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!root) return;
-  root.classList.add("hidden");
-  root.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
+  root.classList.remove("fidelity-qr-modal-root--open");
+  const finish = () => {
+    root.classList.add("hidden");
+    root.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  };
+  let done = false;
+  const onEnd = (e) => {
+    if (e.target !== root || e.propertyName !== "opacity") return;
+    done = true;
+    root.removeEventListener("transitionend", onEnd);
+    finish();
+  };
+  root.addEventListener("transitionend", onEnd);
+  window.setTimeout(() => {
+    if (!done) finish();
+  }, 380);
 }
 
 export function showQrGooglePanel(rootEl) {
