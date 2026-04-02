@@ -576,13 +576,17 @@ router.get("/flyer", (req, res) => {
   }
   const unlimited = isFlyerAiUnlimited(business);
   const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
-  const remaining = unlimited ? null : Math.max(0, FLYER_AI_FREE_PER_MONTH - used);
+  const bonus = Math.max(0, Math.floor(Number(business.flyer_ai_generations_bonus) || 0));
+  const allowance = FLYER_AI_FREE_PER_MONTH + bonus;
+  const remaining = unlimited ? null : Math.max(0, allowance - used);
   res.json({
     flyer_prefs,
     updated_at: business.flyer_prefs_updated_at ?? null,
     share_url: shareUrl,
     flyer_ai_unlimited: unlimited,
     flyer_ai_generations_used: used,
+    /** Générations achetées (pack) — cumul sur plusieurs mois. */
+    flyer_ai_generations_bonus: bonus,
     flyer_ai_generations_remaining: remaining,
     flyer_ai_billing_month: business.flyer_ai_billing_month ?? currentMonthKeyUTC(),
   });
@@ -617,10 +621,12 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
   let business = syncFlyerAiBillingMonth(req.business);
   const unlimited = isFlyerAiUnlimited(business);
   const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
-  if (!unlimited && used >= FLYER_AI_FREE_PER_MONTH) {
+  const bonus = Math.max(0, Math.floor(Number(business.flyer_ai_generations_bonus) || 0));
+  const allowance = FLYER_AI_FREE_PER_MONTH + bonus;
+  if (!unlimited && used >= allowance) {
     return res.status(403).json({
       error:
-        "Vous avez utilisé vos 3 générations flyer IA gratuites ce mois-ci pour ce commerce. Le quota se renouvelle chaque mois (UTC). Contactez le support MyFidpass pour aller plus loin.",
+        "Quota de générations flyer IA atteint pour ce commerce ce mois-ci (incluant vos créations gratuites et vos packs). Le compteur mensuel se renouvelle en UTC ; les packs achetés restent disponibles. Rendez-vous sur votre espace MyFidpass pour acheter des créations supplémentaires.",
       code: "FLYER_AI_LIMIT_REACHED",
     });
   }
@@ -647,7 +653,7 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
       revised_prompt: revised ?? null,
       flyer_ai_unlimited: false,
       flyer_ai_generations_used: nextUsed,
-      flyer_ai_generations_remaining: Math.max(0, FLYER_AI_FREE_PER_MONTH - nextUsed),
+      flyer_ai_generations_remaining: Math.max(0, allowance - nextUsed),
     });
   } catch (e) {
     const msg = e?.message || "Erreur lors de la génération.";
@@ -677,11 +683,13 @@ router.post("/flyer/ai-dev-unlock", async (req, res) => {
   business = getBusinessById(business.id);
   const unlimited = isFlyerAiUnlimited(business);
   const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
+  const bonus = Math.max(0, Math.floor(Number(business.flyer_ai_generations_bonus) || 0));
+  const allowance = FLYER_AI_FREE_PER_MONTH + bonus;
   return res.json({
     ok: true,
     flyer_ai_unlimited: unlimited,
     flyer_ai_generations_used: used,
-    flyer_ai_generations_remaining: unlimited ? null : Math.max(0, FLYER_AI_FREE_PER_MONTH - used),
+    flyer_ai_generations_remaining: unlimited ? null : Math.max(0, allowance - used),
   });
 });
 

@@ -769,4 +769,21 @@ export function runMigrations(db) {
       db.exec("ALTER TABLE businesses ADD COLUMN receipt_qr_tolerance_cents INTEGER NOT NULL DEFAULT 5"),
     );
   }
+
+  // ── v11 : générations flyer achetées (bonus persistant, s’ajoute aux 3 / mois) + idempotence Stripe ─
+  markMigrationApplied(db, 11, "flyer_ai_bonus_and_stripe_webhook_events");
+  const bizBonus = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizBonus.includes("flyer_ai_generations_bonus")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN flyer_ai_generations_bonus INTEGER NOT NULL DEFAULT 0"),
+    );
+  }
+  safeRun(db, () =>
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+        id TEXT PRIMARY KEY,
+        received_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `),
+  );
 }

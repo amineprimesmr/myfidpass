@@ -83,6 +83,68 @@ function userFacingFatalMessage(kind) {
   return "Nous n’avons pas pu charger votre espace. Réessayez ou revenez plus tard.";
 }
 
+/**
+ * Query `?acheter_credits_flyer=1` : ouvre la session Stripe (pack créations flyer).
+ * @param {{ id?: string }} business
+ */
+function maybeLaunchFlyerCreditsCheckout(business) {
+  if (!business?.id) return;
+  const params = new URLSearchParams(window.location.search || "");
+  if (params.get("acheter_credits_flyer") !== "1" && params.get("flyer_credits") !== "1") return;
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("acheter_credits_flyer");
+    url.searchParams.delete("flyer_credits");
+    window.history.replaceState(null, "", url.pathname + (url.search || "") + url.hash);
+  } catch (_) {
+    /* ignore */
+  }
+  (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/payment/create-flyer-pack-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ business_id: business.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error || data.code || "Impossible d'ouvrir le paiement.";
+        if (typeof window !== "undefined" && window.alert) window.alert(msg);
+        return;
+      }
+      if (data.url) window.location.href = data.url;
+    } catch (e) {
+      if (typeof window !== "undefined" && window.alert) window.alert("Erreur réseau.");
+    }
+  })();
+}
+
+/** Après retour Stripe : `?flyer_credits_success=1` */
+function maybeShowFlyerCreditsSuccessBanner() {
+  const params = new URLSearchParams(window.location.search || "");
+  if (params.get("flyer_credits_success") !== "1") return;
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("flyer_credits_success");
+    url.searchParams.delete("session_id");
+    window.history.replaceState(null, "", url.pathname + (url.search || "") + url.hash);
+  } catch (_) {
+    /* ignore */
+  }
+  const el = document.createElement("div");
+  el.setAttribute("role", "status");
+  el.textContent =
+    "Merci ! Vos créations flyer sont créditées. Rouvrez l’onglet Flyer dans l’app si le quota ne se met pas à jour tout de suite.";
+  el.style.cssText =
+    "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);max-width:min(420px,92vw);padding:12px 16px;border-radius:12px;background:#0f172a;color:#f8fafc;font-size:14px;line-height:1.4;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:99999;";
+  document.body.appendChild(el);
+  setTimeout(() => {
+    try {
+      el.remove();
+    } catch (_) {}
+  }, 9000);
+}
+
 function initAppPage() {
   wrapAppLogoutButtonsWithDirtyGuard(clearAuthToken);
   const emptyEl = document.getElementById("app-empty");
@@ -305,7 +367,10 @@ function initAppPage() {
             },
           })
         );
-        requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
+        requestAnimationFrame(() => {
+          maybeShowPostPurchaseAppModal();
+          maybeShowFlyerCreditsSuccessBanner();
+        });
         return;
       }
       document.getElementById("app-app")?.classList.remove("app-awaiting-first-business");
@@ -323,6 +388,7 @@ function initAppPage() {
       if (businessNameEl) businessNameEl.textContent = business.organization_name || business.name || business.slug;
       initAppSidebar();
       initAppDashboard(business.slug);
+      maybeLaunchFlyerCreditsCheckout(business);
       window.dispatchEvent(
         new CustomEvent("fidpass-auth-me", {
           detail: {
@@ -332,7 +398,10 @@ function initAppPage() {
           },
         })
       );
-      requestAnimationFrame(() => maybeShowPostPurchaseAppModal());
+      requestAnimationFrame(() => {
+        maybeShowPostPurchaseAppModal();
+        maybeShowFlyerCreditsSuccessBanner();
+      });
     } catch (err) {
       if (typeof console !== "undefined" && console.error) console.error("[fidpass] init /app:", err);
       const tech = err instanceof Error ? err.message : String(err);

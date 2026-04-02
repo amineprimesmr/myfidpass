@@ -171,6 +171,8 @@ export function updateBusiness(businessId, updates) {
     "flyer_ai_billing_month",
     /** 1 = générations flyer IA illimitées (équipe / test). */
     "flyer_ai_unlimited",
+    /** Générations flyer achetées (pack Stripe) — cumulables, non remises à zéro au changement de mois UTC. */
+    "flyer_ai_generations_bonus",
     /** Règles campagnes auto (JSON) — version, règles on/off, messages, cooldown. */
     "campaign_automation_json",
     /** Textes notif. pass / campagnes (doit être persisté — sinon le Wallet garde l’ancien titre affiché sur la bannière). */
@@ -197,6 +199,7 @@ export function updateBusiness(businessId, updates) {
     "wallet_pass_include_locations",
     "flyer_ai_generations_used",
     "flyer_ai_unlimited",
+    "flyer_ai_generations_bonus",
     "scan_max_passes_per_member_per_day",
     "scan_max_points_per_transaction",
     "require_receipt_qr_validation",
@@ -222,6 +225,20 @@ export function updateBusiness(businessId, updates) {
   values.push(businessId);
   db.prepare(`UPDATE businesses SET ${setClauses.join(", ")} WHERE id = ?`).run(...values);
   return getBusinessById(businessId);
+}
+
+/**
+ * Ajoute des générations flyer « bonus » (achat Stripe). Ne modifie pas `flyer_ai_generations_used`.
+ * @param {string} businessId
+ * @param {number} delta
+ */
+export function incrementFlyerAiGenerationsBonus(businessId, delta) {
+  const b = getBusinessById(businessId);
+  if (!b) return null;
+  const current = Math.max(0, Math.floor(Number(b.flyer_ai_generations_bonus) || 0));
+  const add = Math.max(0, Math.floor(Number(delta) || 0));
+  if (add <= 0) return b;
+  return updateBusiness(businessId, { flyer_ai_generations_bonus: current + add });
 }
 
 export function getBusinessByDashboardToken(token) {
