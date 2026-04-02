@@ -64,3 +64,30 @@ export function wheelSegmentAlternateDisplayLabel(segmentIndex) {
   const i = Math.floor(Number(segmentIndex)) || 0;
   return i % 2 === 0 ? "GAGNER" : "PERDU";
 }
+
+/** Image « cadeau » sur les parts GAGNER (fichier public ; remplaçable par le commerce). */
+export const WHEEL_SEGMENT_GIFT_IMG_SRC = "/assets/icons/gift.png";
+
+/**
+ * HTML d’une part de roue (texte PERDU / image cadeau pour GAGNER).
+ * @param {object} p
+ * @param {number} p.segmentIndex
+ * @param {number} p.segmentCount
+ * @param {(s: string) => string} p.escapeHtml
+ */
+export function buildWheelSegmentHtml(p) {
+  const { segmentIndex, segmentCount, escapeHtml } = p;
+  const angle = (segmentIndex + 0.5) * (360 / segmentCount);
+  const isWhite = segmentIndex % 2 === 1;
+  const segClass = isWhite
+    ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white"
+    : "fidelity-roulette-wheel-segment";
+  const labelRotateDeg = angle > 180 ? 90 : -90;
+  const showGift = segmentIndex % 2 === 0;
+  const src = escapeHtml(WHEEL_SEGMENT_GIFT_IMG_SRC);
+  const giftInner = `<span class="fidelity-roulette-segment-label fidelity-roulette-segment-label--gift-wrap" aria-hidden="true"><img class="fidelity-roulette-segment-gift-img" src="${src}" alt="" width="64" height="64" decoding="async" loading="lazy" /></span>`;
+  const textLabel = wheelSegmentAlternateDisplayLabel(segmentIndex);
+  const loseInner = `<span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(textLabel)}</span>`;
+  const anchorAttrs = showGift ? ` role="img" aria-label="Gagner"` : "";
+  return `<div class="${segClass}" style="transform: rotate(${angle}deg); --label-rotate: ${labelRotateDeg}deg;"><span class="fidelity-roulette-segment-label-anchor"${anchorAttrs}>${showGift ? giftInner : loseInner}</span></div>`;
+}

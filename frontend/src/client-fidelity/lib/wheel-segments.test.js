@@ -1,11 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  buildWheelSegmentHtml,
   DEFAULT_WHEEL_LABELS,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
   wheelSegmentAlternateDisplayLabel,
   WHEEL_SEGMENT_COUNT,
+  WHEEL_SEGMENT_GIFT_IMG_SRC,
 } from "./wheel-segments.js";
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
 describe("normalizeWheelLabelsFromSegments", () => {
   it("renvoie 8 labels par défaut si vide", () => {
@@ -50,6 +61,17 @@ describe("wheelSegmentAlternateDisplayLabel", () => {
     expect(wheelSegmentAlternateDisplayLabel(2)).toBe("GAGNER");
     expect(wheelSegmentAlternateDisplayLabel(3)).toBe("PERDU");
     expect(wheelSegmentAlternateDisplayLabel(7)).toBe("PERDU");
+  });
+});
+
+describe("buildWheelSegmentHtml", () => {
+  it("affiche l’image cadeau sur les parts paires (GAGNER) et le texte sur PERDU", () => {
+    const win = buildWheelSegmentHtml({ segmentIndex: 0, segmentCount: 8, escapeHtml: esc });
+    expect(win).toContain(WHEEL_SEGMENT_GIFT_IMG_SRC);
+    expect(win).toContain("fidelity-roulette-segment-gift-img");
+    const lose = buildWheelSegmentHtml({ segmentIndex: 1, segmentCount: 8, escapeHtml: esc });
+    expect(lose).toContain("PERDU");
+    expect(lose).not.toContain("fidelity-roulette-segment-gift-img");
   });
 });
 

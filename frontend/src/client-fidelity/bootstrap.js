@@ -8,10 +8,10 @@ import { createClientFidelityStore } from "./state/store.js";
 import { renderClientPage } from "./ui/view.js";
 import { memberStorageKey, SUCCESS_MAX_AGE_MS } from "./constants.js";
 import {
+  buildWheelSegmentHtml,
   DEFAULT_WHEEL_LABELS,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
-  wheelSegmentAlternateDisplayLabel,
 } from "./lib/wheel-segments.js";
 import { isUnlimitedTicketsDemo } from "./lib/unlimited-tickets-demo.js";
 import { bindFidelitySpaLinks } from "./fidelity-spa-nav.js";
@@ -153,15 +153,15 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     wheelEl.style.background = buildConicGradient(n);
     wheelEl.style.transform = `rotate(${currentRotation}deg)`;
 
-    const segmentHtml = wheelLabels.map((_label, i) => {
-      const angle = (i + 0.5) * (360 / n);
-      const isWhite = i % 2 === 1;
-      const segClass = isWhite ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white" : "fidelity-roulette-wheel-segment";
-      const displayLabel = wheelSegmentAlternateDisplayLabel(i);
-      // Demi-disque bas (bissectrice > 180°) : inverser la rotation du libellé pour qu’il ne soit pas à l’envers.
-      const labelRotateDeg = angle > 180 ? 90 : -90;
-      return `<div class="${segClass}" style="transform: rotate(${angle}deg); --label-rotate: ${labelRotateDeg}deg;"><span class="fidelity-roulette-segment-label-anchor"><span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(displayLabel)}</span></span></div>`;
-    }).join("");
+    const segmentHtml = wheelLabels
+      .map((_label, i) =>
+        buildWheelSegmentHtml({
+          segmentIndex: i,
+          segmentCount: n,
+          escapeHtml,
+        }),
+      )
+      .join("");
 
     let shine = wheelEl.querySelector(".fidelity-roulette-wheel-shine");
     if (!shine) {
