@@ -84,8 +84,8 @@ export function buildWheelSegmentHtml(p) {
     : "fidelity-roulette-wheel-segment";
   const labelRotateDeg = angle > 180 ? 90 : -90;
   const showGift = segmentIndex % 2 === 0;
-  const src = escapeHtml(WHEEL_SEGMENT_GIFT_IMG_SRC);
-  const giftInner = `<span class="fidelity-roulette-segment-label fidelity-roulette-segment-label--gift-wrap" aria-hidden="true"><img class="fidelity-roulette-segment-gift-img" src="${src}" alt="" width="64" height="64" decoding="async" loading="lazy" /></span>`;
+  const src = escapeHtml(`${WHEEL_SEGMENT_GIFT_IMG_SRC}?v=3`);
+  const giftInner = `<span class="fidelity-roulette-segment-label fidelity-roulette-segment-label--gift-wrap" aria-hidden="true"><img class="fidelity-roulette-segment-gift-img" src="${src}" alt="" width="64" height="64" decoding="async" fetchpriority="high" /></span>`;
   const textLabel = wheelSegmentAlternateDisplayLabel(segmentIndex);
   const loseInner = `<span class="fidelity-roulette-segment-label fidelity-roulette-segment-label-text">${escapeHtml(textLabel)}</span>`;
   const anchorAttrs = showGift ? ` role="img" aria-label="Gagner"` : "";

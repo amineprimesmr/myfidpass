@@ -1,4 +1,19 @@
-/* Roue : image cadeau sur les segments GAGNER + CTA « Jouer la partie » (parcours QR) */
+/* Roue : image cadeau (segments GAGNER) + CTA « Jouer la partie » — overflow corrigé + animations fluides */
+
+/* style.css met overflow:hidden sur .fidelity-roulette-wheel → rogne les PNG + ombres */
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel {
+  overflow: visible;
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-disc {
+  overflow: visible;
+}
+
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label--gift-wrap {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  z-index: 2;
+}
 
 .fidelity-roulette-segment-label--gift-wrap {
   position: relative;
@@ -9,31 +24,41 @@
 
 .fidelity-roulette-segment-gift-img {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: block;
-  width: clamp(26px, 10.5vmin, 54px);
+  width: clamp(28px, 11vmin, 56px);
   height: auto;
+  min-width: 24px;
+  min-height: 24px;
   object-fit: contain;
   pointer-events: none;
   transform-origin: center center;
-  animation: fidelity-gift-float 2.8s ease-in-out infinite;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 12px rgba(251, 191, 36, 0.35));
+  opacity: 1;
+  visibility: visible;
+  animation: fidelity-gift-alive 2.8s ease-in-out infinite;
 }
 
 .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white .fidelity-roulette-segment-gift-img {
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 10px rgba(251, 191, 36, 0.28));
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.25)) drop-shadow(0 0 12px rgba(251, 191, 36, 0.35));
 }
 
-@keyframes fidelity-gift-float {
+@keyframes fidelity-gift-alive {
   0%,
   100% {
     transform: translateY(0) scale(1) rotate(-2deg);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 12px rgba(251, 191, 36, 0.4));
   }
-  33% {
-    transform: translateY(-2px) scale(1.06) rotate(1deg);
+  25% {
+    transform: translateY(-2px) scale(1.1) rotate(1deg);
+    filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 18px rgba(251, 191, 36, 0.55));
   }
-  66% {
-    transform: translateY(1px) scale(1.03) rotate(-1deg);
+  50% {
+    transform: translateY(0) scale(1.14) rotate(-1deg);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 22px rgba(252, 211, 77, 0.5));
+  }
+  75% {
+    transform: translateY(2px) scale(1.05) rotate(2deg);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 14px rgba(251, 191, 36, 0.45));
   }
 }
 
@@ -42,12 +67,12 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: clamp(34px, 13vmin, 64px);
-  height: clamp(34px, 13vmin, 64px);
+  width: clamp(36px, 14vmin, 68px);
+  height: clamp(36px, 14vmin, 68px);
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.22) 0%, transparent 68%);
-  animation: fidelity-gift-halo 3.2s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.28) 0%, transparent 68%);
+  animation: fidelity-gift-halo 3s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
 }
@@ -55,19 +80,19 @@
 @keyframes fidelity-gift-halo {
   0%,
   100% {
-    opacity: 0.55;
-    transform: translate(-50%, -50%) scale(0.92);
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.88);
   }
   50% {
-    opacity: 0.95;
-    transform: translate(-50%, -50%) scale(1.08);
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.12);
   }
 }
 
 .fidelity-cta-pill--qr-play {
   position: relative;
   overflow: visible;
-  animation: fidelity-qr-play-breathe 2.75s ease-in-out infinite;
+  animation: fidelity-qr-play-magic 2.6s ease-in-out infinite;
 }
 
 .fidelity-cta-pill--qr-play::before {
@@ -78,12 +103,12 @@
   background: linear-gradient(
     120deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.45) 42%,
+    rgba(255, 255, 255, 0.5) 42%,
     rgba(255, 255, 255, 0) 78%
   );
   background-size: 220% 100%;
-  animation: fidelity-qr-play-shine 3.1s linear infinite;
-  opacity: 0.55;
+  animation: fidelity-qr-play-shine 2.8s linear infinite;
+  opacity: 0.6;
   pointer-events: none;
   z-index: 0;
 }
@@ -93,9 +118,10 @@
   z-index: 1;
 }
 
-@keyframes fidelity-qr-play-breathe {
+@keyframes fidelity-qr-play-magic {
   0%,
   100% {
+    transform: scale(1);
     box-shadow:
       0 4px 14px rgba(67, 56, 202, 0.35),
       0 1px 0 rgba(255, 255, 255, 0.12) inset,
@@ -103,11 +129,12 @@
     filter: brightness(1);
   }
   50% {
+    transform: scale(1.05);
     box-shadow:
-      0 10px 28px rgba(79, 70, 229, 0.48),
-      0 1px 0 rgba(255, 255, 255, 0.18) inset,
-      0 0 26px rgba(129, 140, 248, 0.38);
-    filter: brightness(1.07);
+      0 12px 32px rgba(79, 70, 229, 0.55),
+      0 1px 0 rgba(255, 255, 255, 0.22) inset,
+      0 0 32px rgba(129, 140, 248, 0.45);
+    filter: brightness(1.1);
   }
 }
 
