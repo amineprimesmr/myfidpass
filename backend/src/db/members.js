@@ -171,3 +171,37 @@ export function getMemberIdsBySegment(businessId, segment) {
   const rows = db.prepare(`SELECT id FROM members WHERE ${where}`).all(...params);
   return rows.map((r) => r.id);
 }
+
+/** Email réservé aux sessions invitées avant finalisation (parcours QR → roue). */
+const GUEST_EMAIL_SUFFIX = "@guest.invalid";
+
+export function isGuestPlaceholderEmail(email) {
+  return typeof email === "string" && email.toLowerCase().endsWith(GUEST_EMAIL_SUFFIX);
+}
+
+/**
+ * Remplace l’email invité par les vrais identifiants (une seule fois).
+ * @returns {{ ok: true, member: object } | { error: string, code?: string }}
+ */
+export function claimGuestMemberIdentity(businessId, memberId, { name, email }) {
+  const member = getMemberForBusiness(memberId, businessId);
+  if (!member) return { error: "Membre introuvable", code: "NOT_FOUND" };
+  if (!isGuestPlaceholderEmail(member.email)) {
+    return { error: "Ce compte est déjà finalisé.", code: "NOT_GUEST" };
+  }
+  const normEmail = String(email || "").trim().toLowerCase();
+  const normName = String(name || "").trim();
+  if (!normEmail || !normName) return { error: "Nom et email requis", code: "VALIDATION" };
+  const existing = getMemberByEmailForBusiness(businessId, normEmail);
+  if (existing && existing.id !== memberId) {
+    return { error: "Un compte existe déjà avec cet email.", code: "EMAIL_TAKEN" };
+  }
+  db.prepare("UPDATE members SET email = ?, name = ?, last_visit_at = ? WHERE id = ? AND business_id = ?").run(
+    normEmail,
+    normName,
+    nowUtcSqlWithMs(),
+    memberId,
+    businessId,
+  );
+  return { ok: true, member: getMember(memberId) };
+}

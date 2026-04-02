@@ -1,0 +1,377 @@
+/* Parcours QR : roue d’abord, modales, charte neutre (couleurs commerce via variables si présentes) */
+
+.fidpass-fidelity-route .fidelity-qr-game,
+.fidelity-page .fidelity-qr-game {
+  padding-top: 0.5rem;
+}
+
+.fidelity-qr-header .fidelity-v2-header-inner--next-reward {
+  padding-bottom: 0.35rem;
+}
+
+.fidelity-qr-hero {
+  text-align: center;
+  padding: 0.75rem 0 0.25rem;
+}
+
+.fidelity-qr-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fidelity-qr-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+}
+
+.fidelity-qr-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 4.2vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.fidelity-qr-tagline {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.35;
+  max-width: 22rem;
+}
+
+.fidelity-v2-roulette-inline--qr {
+  margin-top: 0.35rem;
+}
+
+.fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
+  justify-content: center;
+  padding-bottom: 0.65rem;
+}
+
+.fidelity-cta-wrap--qr-play {
+  width: auto !important;
+  max-width: 100%;
+}
+
+.fidelity-cta-pill--qr-play {
+  min-width: min(100%, 280px);
+  padding-left: 1.75rem !important;
+  padding-right: 1.75rem !important;
+  background: linear-gradient(180deg, #4f46e5 0%, #4338ca 55%, #312e81 100%) !important;
+  border: 2px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow:
+    0 4px 14px rgba(67, 56, 202, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.12) inset !important;
+}
+
+.fidelity-cta-wheel-line--qr {
+  gap: 0.35rem;
+}
+
+.fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fidelity-qr-footer-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 0 0.25rem 0.5rem;
+}
+
+.fidelity-qr-footer-link {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.fidelity-qr-footer-link:hover {
+  color: #0f172a;
+}
+
+.fidelity-qr-powered {
+  margin-top: 0.5rem;
+}
+
+/* Modales */
+.fidelity-qr-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 520px) {
+  .fidelity-qr-modal-root {
+    align-items: center;
+    padding: 1rem;
+  }
+}
+
+.fidelity-qr-modal-root.hidden {
+  display: none;
+}
+
+.fidelity-qr-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.fidelity-qr-modal {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 400px);
+  max-height: min(88vh, 640px);
+  overflow-y: auto;
+  margin: 0 auto;
+  padding: 1.35rem 1.25rem 1.5rem;
+  border-radius: 22px 22px 0 0;
+  background: linear-gradient(165deg, #1e293b 0%, #0f172a 100%);
+  color: #f8fafc;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
+}
+
+@media (min-width: 520px) {
+  .fidelity-qr-modal {
+    border-radius: 22px;
+  }
+}
+
+.fidelity-qr-modal-g-badge {
+  display: flex;
+  justify-content: center;
+  margin: -2.5rem auto 0.5rem;
+}
+
+.fidelity-qr-modal-g-badge svg {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+}
+
+.fidelity-qr-modal-title {
+  margin: 0 0 0.85rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.fidelity-qr-steps {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.fidelity-qr-step {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.fidelity-qr-step--accent {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.12));
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.fidelity-qr-step-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ec4899, #be185d);
+  color: #fff;
+}
+
+.fidelity-qr-stars {
+  text-align: center;
+  letter-spacing: 0.15em;
+  color: #fbbf24;
+  font-size: 1.1rem;
+  margin: 0.35rem 0 0.85rem;
+}
+
+.fidelity-qr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fidelity-qr-btn--primary {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(219, 39, 119, 0.35);
+}
+
+.fidelity-qr-btn--primary:hover {
+  transform: translateY(-1px);
+}
+
+.fidelity-qr-btn--wide {
+  margin-top: 0.35rem;
+}
+
+.fidelity-qr-modal-hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(248, 250, 252, 0.65);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.fidelity-qr-modal--verify {
+  text-align: center;
+}
+
+.fidelity-qr-verify-msg {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.fidelity-qr-verify-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #f472b6;
+  animation: fidelity-qr-spin 0.85s linear infinite;
+}
+
+@keyframes fidelity-qr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fidelity-qr-win-prize {
+  margin: 0 0 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.fidelity-qr-win-prize strong {
+  font-weight: 800;
+  color: #fde68a;
+}
+
+.fidelity-qr-claim-sub {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  color: rgba(248, 250, 252, 0.75);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.fidelity-qr-claim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.fidelity-qr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.65);
+}
+
+.fidelity-qr-input {
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.65);
+  color: #f8fafc;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.fidelity-qr-input:focus {
+  border-color: rgba(96, 165, 250, 0.6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.fidelity-qr-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.35;
+  color: rgba(248, 250, 252, 0.65);
+}
+
+.fidelity-qr-check input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.fidelity-qr-form-error {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fecaca;
+}

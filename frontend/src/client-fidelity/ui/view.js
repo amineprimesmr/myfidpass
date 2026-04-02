@@ -3,7 +3,12 @@ import { renderProfileMissionModalMarkup } from "./profile-mission-modal-markup.
 import { renderRewardsStepMarkup } from "./rewards-step-markup.js";
 import { renderWalletStepMarkup } from "./wallet-step-markup.js";
 import { renderRouletteInlineMarkup } from "./roulette-inline-markup.js";
+import { renderQrGamePage } from "./qr-game-markup.js";
 import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
+
+function isGuestPlaceholderEmail(email) {
+  return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
+}
 function esc(value) {
   return String(value == null ? "" : value)
     .replaceAll("&", "&amp;")
@@ -28,6 +33,7 @@ export function renderClientPage(root, state, _options = {}) {
   const roulette = (state.games || []).find((g) => g.game_code === "roulette");
   const showRoulette = !!(roulette && roulette.enabled && (programType === "points" || programType === "stamps"));
   const engagementActionsRaw = Array.isArray(state.engagementActions) ? state.engagementActions : [];
+  const isGuestPlaceholder = hasMember && isGuestPlaceholderEmail(state.member?.email);
   const profileEligible = !!(hasMember && state.member?.profile_ticket_eligible);
   const profileClaimed = !!state.member?.profile_bonus_claimed;
   const actionsForDisplay = engagementActionsRaw.filter((a) => {
@@ -36,11 +42,32 @@ export function renderClientPage(root, state, _options = {}) {
     }
     return true;
   });
-  const showProfileMissionModal = hasMember && profileEligible && !profileClaimed;
+  const showProfileMissionModal = hasMember && profileEligible && !profileClaimed && !isGuestPlaceholder;
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
   const headerBalanceUnit = "pts";
   const spinPtsWord = tickets === 1 ? "point" : "points";
   const spinCtaAriaLabel = `Lancer la roue — ${tickets} ${spinPtsWord} pour jouer`;
+  const qrGameFlow = Boolean(hasMember && isGuestPlaceholder && showRoulette);
+
+  if (qrGameFlow) {
+    const googleAction = engagementActionsRaw.find((a) => a.action_type === "google_review");
+    const tagline = "Participez au jeu et tentez de gagner une récompense.";
+    const rouletteHtml = renderRouletteInlineMarkup(esc, {
+      tickets,
+      spinCtaAriaLabel: "Jouer la partie — lancer la roue",
+      ticketStatusDotClass,
+      variant: "qr",
+    });
+    root.innerHTML = renderQrGamePage(esc, {
+      businessNameEsc: businessName,
+      businessTaglineEsc: esc(tagline),
+      nextRewardBannerHtml,
+      rouletteHtml,
+      googleReviewUrl: googleAction?.url || "",
+      logoUrl: state.business?.logoUrl || "",
+    });
+    return;
+  }
 
   const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;

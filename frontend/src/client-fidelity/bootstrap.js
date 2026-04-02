@@ -1,6 +1,6 @@
 /**
  * Dérogation REFONTE-REGLES (max 400 lignes) : extraction prévue vers client-fidelity/roulette/
- * — à traiter avant 2026-06-01.
+ * et client-fidelity/qr-game-flow-bindings.js — à traiter avant 2026-06-01.
  */
 import { createClientFidelityApi } from "./api/clientApi.js";
 import { messageUtilisateurPourErreur } from "./lib/client-error-fr.js";
@@ -15,6 +15,14 @@ import {
 } from "./lib/wheel-segments.js";
 import { isUnlimitedTicketsDemo } from "./lib/unlimited-tickets-demo.js";
 import { bindFidelitySpaLinks } from "./fidelity-spa-nav.js";
+import {
+  bindQrGameUi,
+  closeQrModalRoot,
+  firstNonPerduLabel,
+  isGuestMember,
+  openQrModalRoot,
+  showQrWinPanel,
+} from "./qr-game-flow.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -47,6 +55,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   let isSpinning = false;
   let wheelLabels = [...DEFAULT_WHEEL_LABELS];
   let currentRotation = 0;
+  let disposeQrUi = () => {};
+
+  fidelityDocumentListenersAbort?.abort();
+  fidelityDocumentListenersAbort = new AbortController();
+  const { signal } = fidelityDocumentListenersAbort;
 
   async function hydrateMember(memberId) {
     if (!memberId) return;
@@ -73,15 +86,31 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
   const business = await api.getBusiness(slug);
   store.patch({ business, unlimitedTicketsTest: isUnlimitedTicketsDemo() });
-  try {
+
+  async function ensureGuestSession() {
     const raw = localStorage.getItem(memberStorageKey(slug));
     if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed?.memberId && Date.now() - (parsed.createdAt || 0) < SUCCESS_MAX_AGE_MS) {
-        await hydrateMember(parsed.memberId);
-      }
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed?.memberId && Date.now() - (parsed.createdAt || 0) < SUCCESS_MAX_AGE_MS) {
+          await hydrateMember(parsed.memberId);
+          return;
+        }
+      } catch (_) {}
     }
-  } catch (_) {}
+    const email = `guest-${crypto.randomUUID()}@guest.invalid`;
+    const data = await api.createMember(slug, { name: "Invité", email });
+    const memberId = data.memberId || data.member?.id;
+    if (!memberId) throw new Error("Session invitée impossible");
+    localStorage.setItem(memberStorageKey(slug), JSON.stringify({ memberId, createdAt: Date.now() }));
+    await hydrateMember(memberId);
+  }
+
+  try {
+    await ensureGuestSession();
+  } catch (e) {
+    console.error("[fidelity] ensureGuestSession", e);
+  }
 
   function buildConicGradient(n) {
     const step = 360 / n;
@@ -327,8 +356,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const isWinStamps = result.reward?.kind === "stamps" && bonusStamps > 0;
       const isWin = isWinPoints || isWinStamps;
       const rewardLabel = isWin ? rawLabel : "PERDU";
+      const qrGuest = isGuestMember(state.member);
+      const wheelStopLabel = qrGuest && !isWin ? firstNonPerduLabel(wheelLabels) : rewardLabel;
 
-      const winIndex = pickWheelIndexForReward(wheelLabels, rewardLabel);
+      const winIndex = pickWheelIndexForReward(wheelLabels, wheelStopLabel);
 
       const n = wheelLabels.length;
       const segmentAngle = 360 / n;
@@ -342,6 +373,16 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const showOutcome = async () => {
         isSpinning = false;
         clearBusy();
+        if (qrGuest) {
+          if (feedback) feedback.classList.add("hidden");
+          const prizeLabel = isWin ? rawLabel : firstNonPerduLabel(wheelLabels);
+          showQrWinPanel(rootEl, prizeLabel);
+          openQrModalRoot(rootEl);
+          triggerConfetti();
+          await refreshMemberData();
+          releaseWillChangeSoon();
+          return;
+        }
         if (feedback) {
           const winMsg =
             programType === "stamps" && isWinStamps
@@ -445,6 +486,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   async function tryAutoClaimOnReturn() {
     const state = store.get();
     if (!state.member?.id) return;
+    if (isGuestMember(state.member)) return;
     try {
       const raw = sessionStorage.getItem(PENDING_CLAIM_KEY);
       if (!raw) return;
@@ -465,6 +507,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function bindEvents() {
+    disposeQrUi();
+    disposeQrUi = () => {};
+
     rootEl.querySelector("#fidelity-v2-form")?.addEventListener("submit", onSignupSubmit);
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
@@ -512,11 +557,18 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     });
 
     bindFidelitySpaLinks(rootEl);
-  }
 
-  fidelityDocumentListenersAbort?.abort();
-  fidelityDocumentListenersAbort = new AbortController();
-  const { signal } = fidelityDocumentListenersAbort;
+    disposeQrUi = bindQrGameUi({
+      rootEl,
+      api,
+      slug,
+      getState: () => store.get(),
+      rerender,
+      refreshMemberData,
+      messageUtilisateurPourErreur,
+      signal,
+    });
+  }
 
   document.addEventListener(
     "visibilitychange",
@@ -532,6 +584,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       if (e.key !== "Escape") return;
       const m = rootEl.querySelector("#fidelity-profile-mission-modal");
       if (m && !m.classList.contains("hidden")) closeProfileMissionModal();
+      const qr = rootEl.querySelector("#fidelity-qr-modal-root");
+      if (qr && !qr.classList.contains("hidden")) closeQrModalRoot(rootEl);
     },
     { signal }
   );

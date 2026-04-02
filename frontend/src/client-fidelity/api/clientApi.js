@@ -169,6 +169,21 @@ export function createClientFidelityApi(apiBase) {
     return data;
   }
 
+  async function claimGuestIdentity(slug, memberId, payload) {
+    const res = await fetchFidelity(
+      withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/claim-identity`),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: payload.name, email: payload.email }),
+      },
+      "Impossible d’enregistrer tes coordonnées. Réessaie.",
+    );
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.error || "Enregistrement impossible");
+    return data;
+  }
+
   async function submitProfileForTicket(slug, memberId, payload) {
     const res = await fetchFidelity(
       withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/profile-complete`),
@@ -199,6 +214,7 @@ export function createClientFidelityApi(apiBase) {
     getWalletUrls,
     getEngagementActions,
     claimEngagement,
+    claimGuestIdentity,
     submitProfileForTicket,
   };
 }

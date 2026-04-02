@@ -86,6 +86,12 @@ export const schemas = {
     birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format date invalide (YYYY-MM-DD)").optional().nullable(),
   }),
 
+  /** POST /businesses/:slug/members/:memberId/claim-identity — finalisation compte invité (QR roue). */
+  claimGuestIdentity: z.object({
+    name: z.string({ required_error: "Nom requis" }).trim().min(1, "Nom requis").max(100, "Nom trop long"),
+    email: emailSchema,
+  }),
+
   // POST /businesses/:slug/members/:memberId/points
   addPoints: z.object({
     points: z.number().int().positive().max(100_000, "Valeur trop élevée").optional(),
