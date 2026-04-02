@@ -3,6 +3,8 @@
 .fidpass-fidelity-route .fidelity-qr-game,
 .fidelity-page .fidelity-qr-game {
   padding-top: 0.75rem;
+  /* La roue déborde à gauche : le main V2 a overflow-x:hidden par défaut */
+  overflow-x: visible;
 }
 
 .fidelity-qr-hero {
@@ -51,6 +53,8 @@
   padding-left: 1rem;
   padding-right: 0.35rem;
   padding-bottom: 0.65rem;
+  position: relative;
+  z-index: 2;
 }
 
 .fidelity-cta-wrap--qr-play {
@@ -80,22 +84,25 @@
   text-transform: uppercase;
 }
 
-/* Roue plus petite (scan QR) : moins de chevauchement avec le bouton */
+/* Scan QR : roue imposante, ancrée à droite, débord à gauche (comme la roue inline classique) */
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
-  min-height: min(34vh, 52vmin);
+  position: relative;
+  z-index: 1;
+  min-height: min(48vh, 74vmin);
+  overflow: visible;
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-  width: min(78vmin, 78vw);
-  height: min(78vmin, 78vw);
-  transform: translate(-12%, -50%);
+  width: min(128vmin, 132vw);
+  height: min(128vmin, 132vw);
+  transform: translate(-30%, -50%);
 }
 
 @media (max-width: 480px) {
   .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-    width: min(72vmin, 72vw);
-    height: min(72vmin, 72vw);
-    transform: translate(-8%, -50%);
+    width: min(122vmin, 128vw);
+    height: min(122vmin, 128vw);
+    transform: translate(-34%, -50%);
   }
 }
 
