@@ -48,6 +48,7 @@ import {
   isFlyerAiUnlimited,
   DEFAULT_FLYER_AI_DEV_UNLOCK_SECRET,
 } from "../../services/flyer-ai-quota.js";
+import { signReceiptChallengeToken } from "../../lib/receipt-validation-jwt.js";
 
 const router = Router();
 
@@ -167,6 +168,36 @@ router.get("/settings", (req, res) => {
       business.scan_max_points_per_transaction != null
         ? Number(business.scan_max_points_per_transaction)
         : null,
+    /** 1 = exiger un QR ticket (JWT) pour tout crédit basé sur un montant € (scan + fiche membre). */
+    require_receipt_qr_validation:
+      business.require_receipt_qr_validation != null ? Number(business.require_receipt_qr_validation) : 0,
+    /** Tolérance en centimes entre montant saisi et montant dans le JWT (défaut 5). */
+    receipt_qr_tolerance_cents:
+      business.receipt_qr_tolerance_cents != null ? Number(business.receipt_qr_tolerance_cents) : 5,
+  });
+});
+
+/** Génère un JWT à encoder en QR sur le ticket de caisse (même montant que le panier, 15 min). */
+router.post("/receipt-challenge", (req, res) => {
+  const business = req.business;
+  const amountEur = Number(req.body?.amount_eur ?? req.body?.amountEur);
+  if (!Number.isFinite(amountEur) || amountEur <= 0) {
+    return res.status(400).json({ error: "Indiquez amount_eur (nombre > 0)." });
+  }
+  const secret = process.env.JWT_SECRET;
+  if (!secret || String(secret).length < 8) {
+    return res.status(500).json({ error: "Configuration JWT manquante." });
+  }
+  const token = signReceiptChallengeToken({
+    businessId: business.id,
+    amountEur,
+    secret,
+  });
+  const expMs = Date.now() + 15 * 60 * 1000;
+  res.json({
+    qr_payload: token,
+    expires_at: new Date(expMs).toISOString(),
+    amount_eur: Math.round(amountEur * 100) / 100,
   });
 });
 
@@ -444,6 +475,24 @@ router.patch("/settings", async (req, res) => {
       }
       updates.scan_max_points_per_transaction = n === 0 ? null : Math.min(n, 999999);
     }
+  }
+
+  const requireReceiptIn = body.require_receipt_qr_validation ?? body.requireReceiptQrValidation;
+  if (requireReceiptIn !== undefined) {
+    const on =
+      requireReceiptIn === true ||
+      requireReceiptIn === 1 ||
+      String(requireReceiptIn).toLowerCase() === "true" ||
+      String(requireReceiptIn) === "1";
+    updates.require_receipt_qr_validation = on ? 1 : 0;
+  }
+  const receiptTolIn = body.receipt_qr_tolerance_cents ?? body.receiptQrToleranceCents;
+  if (receiptTolIn !== undefined) {
+    const n = Math.floor(Number(receiptTolIn));
+    if (!Number.isFinite(n) || n < 0 || n > 500) {
+      return res.status(400).json({ error: "receipt_qr_tolerance_cents invalide (0–500)." });
+    }
+    updates.receipt_qr_tolerance_cents = n;
   }
 
   if (engagement_rewards !== undefined) {

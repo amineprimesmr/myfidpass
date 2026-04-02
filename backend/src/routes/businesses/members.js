@@ -35,6 +35,10 @@ import {
   computeRawPointsForCredit,
   enforceScanSecurityLimits,
 } from "../../lib/scan-credit-helpers.js";
+import {
+  isReceiptValidationRequiredForRequest,
+  verifyReceiptTokenForScan,
+} from "../../lib/receipt-validation-jwt.js";
 
 const router = Router();
 
@@ -334,6 +338,25 @@ router.post("/:memberId/points", async (req, res) => {
   const pointsDirect = Number(req.body?.points);
   const amountEur = Number(req.body?.amount_eur);
   const visit = req.body?.visit === true;
+  const receiptTok = String(req.body?.receipt_validation_token ?? req.body?.receiptValidationToken ?? "").trim();
+  if (isReceiptValidationRequiredForRequest(business, amountEur)) {
+    if (!receiptTok) {
+      return res.status(400).json({
+        error: "Scan du QR ticket de caisse requis (réglages sécurité).",
+        code: "RECEIPT_VALIDATION_REQUIRED",
+      });
+    }
+    const tol = business.receipt_qr_tolerance_cents != null ? Number(business.receipt_qr_tolerance_cents) : 5;
+    const v = verifyReceiptTokenForScan({
+      token: receiptTok,
+      business,
+      amountEur,
+      toleranceCents: tol,
+    });
+    if (!v.ok) {
+      return res.status(400).json({ error: v.error, code: v.code });
+    }
+  }
   const perEuro = Number(business.points_per_euro) || 1;
   const perVisit = Number(business.points_per_visit) || 0;
   const minAmount = business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : null;

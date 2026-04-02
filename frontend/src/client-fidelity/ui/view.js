@@ -47,6 +47,14 @@ export function renderClientPage(root, state, _options = {}) {
   const headerBalanceUnit = "pts";
   const spinPtsWord = tickets === 1 ? "point" : "points";
   const spinCtaAriaLabel = `Lancer la roue — ${tickets} ${spinPtsWord} pour jouer`;
+  const nextRewardBannerState = buildNextRewardBannerState({
+    hasMember,
+    business: state.business,
+    member: state.member,
+    programType,
+    balanceUnit: headerBalanceUnit,
+  });
+  const nextRewardBannerHtml = renderNextRewardBannerMarkup(esc, nextRewardBannerState, { businessNameEsc: businessName });
   const qrGameFlow = Boolean(hasMember && isGuestPlaceholder && showRoulette);
 
   if (qrGameFlow) {
@@ -91,14 +99,6 @@ export function renderClientPage(root, state, _options = {}) {
     programType,
     balanceUnit: headerBalanceUnit,
   });
-  const nextRewardBannerState = buildNextRewardBannerState({
-    hasMember,
-    business: state.business,
-    member: state.member,
-    programType,
-    balanceUnit: headerBalanceUnit,
-  });
-  const nextRewardBannerHtml = renderNextRewardBannerMarkup(esc, nextRewardBannerState, { businessNameEsc: businessName });
 
   const step2SectionHtml =
     actionsForDisplay.length > 0

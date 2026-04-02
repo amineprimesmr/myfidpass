@@ -754,4 +754,19 @@ export function runMigrations(db) {
       db.exec("ALTER TABLE businesses ADD COLUMN scan_max_points_per_transaction INTEGER"),
     );
   }
+
+  // ── v10 : validation ticket de caisse (QR JWT) ───────────────────────────
+  markMigrationApplied(db, 10, "receipt_qr_validation");
+  const bizRcp = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizRcp.includes("require_receipt_qr_validation")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN require_receipt_qr_validation INTEGER NOT NULL DEFAULT 0"),
+    );
+  }
+  const bizRcp2 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizRcp2.includes("receipt_qr_tolerance_cents")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN receipt_qr_tolerance_cents INTEGER NOT NULL DEFAULT 5"),
+    );
+  }
 }

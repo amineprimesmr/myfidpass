@@ -183,6 +183,8 @@ export function updateBusiness(businessId, updates) {
     "scan_max_passes_per_member_per_day",
     /** 0 ou NULL = illimité : plafond de points par opération de crédit. */
     "scan_max_points_per_transaction",
+    "require_receipt_qr_validation",
+    "receipt_qr_tolerance_cents",
   ];
   const numericCols = [
     "location_lat",
@@ -197,6 +199,8 @@ export function updateBusiness(businessId, updates) {
     "flyer_ai_unlimited",
     "scan_max_passes_per_member_per_day",
     "scan_max_points_per_transaction",
+    "require_receipt_qr_validation",
+    "receipt_qr_tolerance_cents",
   ];
   const setClauses = [];
   const values = [];
