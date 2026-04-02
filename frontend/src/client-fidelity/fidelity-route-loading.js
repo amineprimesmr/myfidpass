@@ -1,7 +1,7 @@
 /**
  * Écran de chargement route fidélité : voile flouté + logo commerce animé (GSAP si dispo).
  */
-import { resolveClientNotificationIconImgSrc } from "./lib/resolve-client-logo-src.js";
+import { resolveClientLogoImgSrc, resolveClientNotificationIconImgSrc } from "./lib/resolve-client-logo-src.js";
 
 const OVERLAY_ID = "fidelity-route-loading-overlay";
 
@@ -55,6 +55,14 @@ export function setFidelityRouteLoadingLogo(overlayEl, business, slug, apiBase) 
   if (!src) {
     img.classList.add("fidelity-route-loading__logo--empty");
     return;
+  }
+  const fallback = resolveClientLogoImgSrc(business, String(slug || ""), String(apiBase || ""));
+  img.onerror = null;
+  if (fallback && fallback !== src) {
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = fallback;
+    };
   }
   img.src = src;
   img.classList.remove("fidelity-route-loading__logo--empty");

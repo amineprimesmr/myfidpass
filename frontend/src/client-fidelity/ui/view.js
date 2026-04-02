@@ -5,7 +5,7 @@ import { renderWalletStepMarkup } from "./wallet-step-markup.js";
 import { renderRouletteInlineMarkup } from "./roulette-inline-markup.js";
 import { renderQrGamePage } from "./qr-game-markup.js";
 import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
-import { resolveClientNotificationIconImgSrc } from "../lib/resolve-client-logo-src.js";
+import { resolveClientLogoImgSrc, resolveClientNotificationIconImgSrc } from "../lib/resolve-client-logo-src.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -62,12 +62,14 @@ export function renderClientPage(root, state, options = {}) {
       variant: "qr",
     });
     const logoUrl = resolveClientNotificationIconImgSrc(state.business, slugForAssets, apiBase);
+    const logoUrlPublicFallback = resolveClientLogoImgSrc(state.business, slugForAssets, apiBase);
     root.innerHTML = renderQrGamePage(esc, {
       businessNameEsc: businessName,
       businessTaglineEsc: esc(tagline),
       rouletteHtml,
       googleReviewUrl: googleAction?.url || "",
       logoUrl,
+      logoUrlPublicFallback,
     });
     return;
   }

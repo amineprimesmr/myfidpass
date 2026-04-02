@@ -7,16 +7,26 @@
  * @param {object} p
  */
 export function renderQrGamePage(esc, p) {
-  const { businessNameEsc, businessTaglineEsc, rouletteHtml, googleReviewUrl, logoUrl } = p;
+  const { businessNameEsc, businessTaglineEsc, rouletteHtml, googleReviewUrl, logoUrl, logoUrlPublicFallback } = p;
 
   const hasGoogle = Boolean(googleReviewUrl);
   const googleHref = hasGoogle ? String(googleReviewUrl).replace(/"/g, "&quot;") : "";
+
+  let qrLogo = "";
+  if (logoUrl) {
+    const fb = typeof logoUrlPublicFallback === "string" ? logoUrlPublicFallback.trim() : "";
+    const useFallback =
+      fb && fb !== String(logoUrl).trim()
+        ? ` data-fid-qr-logo-fallback="${esc(fb)}" onerror="this.onerror=null;var f=this.getAttribute('data-fid-qr-logo-fallback');if(f)this.src=f"`
+        : "";
+    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="" width="120" height="120" decoding="async"${useFallback} />`;
+  }
 
   return `
     <main class="fidelity-v2-main fidelity-qr-game">
       <section class="fidelity-qr-hero" aria-label="Jeu">
         <div class="fidelity-qr-brand">
-          ${logoUrl ? `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="" width="120" height="120" decoding="async" />` : ""}
+          ${qrLogo || ""}
           <h1 class="fidelity-qr-title">${businessNameEsc}</h1>
           <p class="fidelity-qr-tagline">${businessTaglineEsc}</p>
         </div>
