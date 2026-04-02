@@ -14,8 +14,19 @@ export default {
         apiBase: API_BASE,
         rootEl: rootEl(),
       });
-    } catch {
-      showSlugError(`Entreprise « ${slug} » introuvable.`);
+    } catch (err) {
+      const raw = String(err?.message || "").trim();
+      /* getBusiness : 404 → « Entreprise introuvable » ; fetch réseau → message connexion */
+      const isNetwork =
+        /connexion|r[ée]seau|charger|fetch|Failed to fetch|NetworkError/i.test(raw) ||
+        raw.includes("Impossible de charger");
+      showSlugError(
+        isNetwork
+          ? raw || "Connexion impossible. Vérifie ta connexion ou réessaie dans un instant."
+          : raw === "Entreprise introuvable" || !raw
+            ? `Entreprise « ${slug} » introuvable.`
+            : raw,
+      );
     }
   },
 };
