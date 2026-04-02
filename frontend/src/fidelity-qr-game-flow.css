@@ -2,11 +2,7 @@
 
 .fidpass-fidelity-route .fidelity-qr-game,
 .fidelity-page .fidelity-qr-game {
-  padding-top: 0.5rem;
-}
-
-.fidelity-qr-header .fidelity-v2-header-inner--next-reward {
-  padding-bottom: 0.35rem;
+  padding-top: 0.75rem;
 }
 
 .fidelity-qr-hero {
@@ -51,7 +47,9 @@
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
-  justify-content: center;
+  justify-content: flex-end;
+  padding-left: 1rem;
+  padding-right: 0.35rem;
   padding-bottom: 0.65rem;
 }
 
@@ -82,25 +80,23 @@
   text-transform: uppercase;
 }
 
-.fidelity-qr-footer-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1.25rem;
-  padding: 0 0.25rem 0.5rem;
+/* Roue plus petite (scan QR) : moins de chevauchement avec le bouton */
+.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
+  min-height: min(34vh, 52vmin);
 }
 
-.fidelity-qr-footer-link {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #64748b;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
+  width: min(78vmin, 78vw);
+  height: min(78vmin, 78vw);
+  transform: translate(-12%, -50%);
 }
 
-.fidelity-qr-footer-link:hover {
-  color: #0f172a;
+@media (max-width: 480px) {
+  .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
+    width: min(72vmin, 72vw);
+    height: min(72vmin, 72vw);
+    transform: translate(-8%, -50%);
+  }
 }
 
 .fidelity-qr-powered {

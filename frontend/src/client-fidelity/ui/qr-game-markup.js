@@ -7,25 +7,12 @@
  * @param {object} p
  */
 export function renderQrGamePage(esc, p) {
-  const {
-    businessNameEsc,
-    businessTaglineEsc,
-    nextRewardBannerHtml,
-    rouletteHtml,
-    googleReviewUrl,
-    logoUrl,
-  } = p;
+  const { businessNameEsc, businessTaglineEsc, rouletteHtml, googleReviewUrl, logoUrl } = p;
 
   const hasGoogle = Boolean(googleReviewUrl);
   const googleHref = hasGoogle ? String(googleReviewUrl).replace(/"/g, "&quot;") : "";
 
   return `
-    <header class="fidelity-v2-header fidelity-v2-header--next-reward fidelity-qr-header">
-      <div class="fidelity-v2-header-inner fidelity-v2-header-inner--next-reward">
-        ${nextRewardBannerHtml}
-      </div>
-    </header>
-
     <main class="fidelity-v2-main fidelity-qr-game">
       <section class="fidelity-qr-hero" aria-label="Jeu">
         <div class="fidelity-qr-brand">
@@ -36,11 +23,6 @@ export function renderQrGamePage(esc, p) {
       </section>
 
       ${rouletteHtml}
-
-      <nav class="fidelity-qr-footer-nav" aria-label="Liens utiles">
-        <a class="fidelity-qr-footer-link" href="https://myfidpass.fr" target="_blank" rel="noopener noreferrer">Règlement &amp; CGU</a>
-        <a class="fidelity-qr-footer-link" href="https://myfidpass.fr" target="_blank" rel="noopener noreferrer">Espace pro</a>
-      </nav>
     </main>
 
     <div id="fidelity-qr-modal-root" class="fidelity-qr-modal-root hidden" aria-hidden="true">

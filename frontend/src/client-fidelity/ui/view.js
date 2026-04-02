@@ -5,6 +5,7 @@ import { renderWalletStepMarkup } from "./wallet-step-markup.js";
 import { renderRouletteInlineMarkup } from "./roulette-inline-markup.js";
 import { renderQrGamePage } from "./qr-game-markup.js";
 import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
+import { resolveClientLogoImgSrc } from "../lib/resolve-client-logo-src.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -18,7 +19,7 @@ function esc(value) {
     .replaceAll("'", "&#39;");
 }
 
-export function renderClientPage(root, state, _options = {}) {
+export function renderClientPage(root, state, options = {}) {
   const businessName = esc(state.business?.organizationName || state.business?.name || "Carte fidélité");
   const hasMember = !!state.member?.id;
   const showWalletStep = hasMember;
@@ -47,14 +48,8 @@ export function renderClientPage(root, state, _options = {}) {
   const headerBalanceUnit = "pts";
   const spinPtsWord = tickets === 1 ? "point" : "points";
   const spinCtaAriaLabel = `Lancer la roue — ${tickets} ${spinPtsWord} pour jouer`;
-  const nextRewardBannerState = buildNextRewardBannerState({
-    hasMember,
-    business: state.business,
-    member: state.member,
-    programType,
-    balanceUnit: headerBalanceUnit,
-  });
-  const nextRewardBannerHtml = renderNextRewardBannerMarkup(esc, nextRewardBannerState, { businessNameEsc: businessName });
+  const slugForAssets = String(options.slug || state.slug || "");
+  const apiBase = String(options.apiBase || "");
   const qrGameFlow = Boolean(hasMember && isGuestPlaceholder && showRoulette);
 
   if (qrGameFlow) {
@@ -66,16 +61,25 @@ export function renderClientPage(root, state, _options = {}) {
       ticketStatusDotClass,
       variant: "qr",
     });
+    const logoUrl = resolveClientLogoImgSrc(state.business, slugForAssets, apiBase);
     root.innerHTML = renderQrGamePage(esc, {
       businessNameEsc: businessName,
       businessTaglineEsc: esc(tagline),
-      nextRewardBannerHtml,
       rouletteHtml,
       googleReviewUrl: googleAction?.url || "",
-      logoUrl: state.business?.logoUrl || "",
+      logoUrl,
     });
     return;
   }
+
+  const nextRewardBannerState = buildNextRewardBannerState({
+    hasMember,
+    business: state.business,
+    member: state.member,
+    programType,
+    balanceUnit: headerBalanceUnit,
+  });
+  const nextRewardBannerHtml = renderNextRewardBannerMarkup(esc, nextRewardBannerState, { businessNameEsc: businessName });
 
   const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
