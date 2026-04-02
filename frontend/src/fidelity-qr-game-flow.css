@@ -46,7 +46,7 @@
 }
 
 .fidelity-v2-roulette-inline--qr {
-  margin-top: 1.35rem;
+  margin-top: 2.1rem;
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
@@ -83,17 +83,17 @@
   text-transform: uppercase;
 }
 
-/* Scan QR : roue un peu plus petite, plus haute, débord à gauche inchangé */
+/* Scan QR : roue un peu plus petite, position basse, débord à gauche inchangé */
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
   position: relative;
   z-index: 1;
-  min-height: min(36dvh, 38vh, 54vmin);
-  padding-bottom: 0.5rem;
+  min-height: min(38dvh, 40vh, 56vmin);
+  padding-bottom: 0.65rem;
   overflow: visible;
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-  top: 58%;
+  top: 62%;
   width: min(106vmin, 110vw);
   height: min(106vmin, 110vw);
   transform: translate(-30%, -50%);
@@ -101,7 +101,7 @@
 
 @media (max-width: 480px) {
   .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-    top: 59%;
+    top: 63%;
     width: min(100vmin, 104vw);
     height: min(100vmin, 104vw);
     transform: translate(-34%, -50%);
