@@ -45,7 +45,7 @@
 }
 
 .fidelity-v2-roulette-inline--qr {
-  margin-top: 0.35rem;
+  margin-top: 1.35rem;
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
@@ -88,11 +88,13 @@
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
   position: relative;
   z-index: 1;
-  min-height: min(48vh, 74vmin);
+  min-height: min(52vh, 78vmin);
+  padding-bottom: 0.75rem;
   overflow: visible;
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
+  top: 57%;
   width: min(128vmin, 132vw);
   height: min(128vmin, 132vw);
   transform: translate(-30%, -50%);
@@ -100,6 +102,7 @@
 
 @media (max-width: 480px) {
   .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
+    top: 58%;
     width: min(122vmin, 128vw);
     height: min(122vmin, 128vw);
     transform: translate(-34%, -50%);
