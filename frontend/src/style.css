@@ -710,14 +710,24 @@ body.fidpass-fidelity-route {
   margin-bottom: 0;
 }
 
-.fidelity-v2-step--play {
-  background: linear-gradient(135deg, #faf5ff 0%, #f8fafc 60%);
-  border-color: #e9d5ff;
-}
-
-.fidelity-v2-step--play .fidelity-v2-step-header,
 .fidelity-v2-step--rewards .fidelity-v2-step-header {
   margin-bottom: 1rem;
+}
+
+/* Missions : liste directement sur le fond (sans carte violette) */
+.fidelity-v2-missions-section {
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.fidelity-v2-missions-heading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0 0 0.9rem;
+  padding: 0 0.1rem;
 }
 
 /* Titres mis en avant : emoji + texte (roue 🎡, récompenses 🎁) */
@@ -765,8 +775,8 @@ body.fidpass-fidelity-route {
 
 .fidelity-v2-step-missions--rail {
   margin-top: 0;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.15rem;
 }
 
 .fidelity-v2-missions-rail {
@@ -775,16 +785,16 @@ body.fidpass-fidelity-route {
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
   scroll-padding-inline: 6px;
-  margin: 0 -0.4rem;
-  padding: 0.2rem 0.4rem 0.55rem;
+  margin: 0 -0.25rem;
+  padding: 0.15rem 0.25rem 0.45rem;
   scrollbar-width: thin;
-  scrollbar-color: rgba(15, 23, 42, 0.22) transparent;
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
 }
 
 .fidelity-v2-missions-rail:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.35);
-  border-radius: 14px;
+  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.35);
+  border-radius: 12px;
 }
 
 .fidelity-v2-missions-rail::-webkit-scrollbar {

@@ -39,7 +39,7 @@
   text-decoration: none;
   color: inherit;
   border: 1px solid transparent;
-  box-shadow: 0 6px 28px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
@@ -74,13 +74,13 @@ button.fidelity-mission-card {
 }
 
 .fidelity-mission-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.14);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08), 0 12px 32px rgba(15, 23, 42, 0.07);
 }
 
 .fidelity-mission-card:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.45), 0 8px 28px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.4), 0 4px 16px rgba(15, 23, 42, 0.08);
 }
 
 .fidelity-mission-card__banner-left {
@@ -165,13 +165,14 @@ button.fidelity-mission-card {
 
 .fidelity-mission-card__banner-img {
   display: block;
-  max-height: 132px;
+  max-height: 140px;
   width: auto;
   max-width: 100%;
   object-fit: contain;
   object-position: bottom right;
-  filter: drop-shadow(0 6px 16px rgba(15, 23, 42, 0.12));
-  transform: translate(4px, 4px);
+  filter: drop-shadow(0 4px 12px rgba(15, 23, 42, 0.08));
+  transform: translate(2px, 2px);
+  border-radius: 10px;
 }
 
 .fidelity-mission-card__banner-icon-wrap {

@@ -2,7 +2,8 @@
  * Cartes missions fidélité client — bannières type hero (texte + CTA à gauche, visuel à droite).
  */
 
-const PROFILE_HERO_IMG = "/assets/missions/profile-mission-hero.png";
+/** Cache bust quand l’asset est remplacé (évite image périmée sur CDN / navigateur). */
+const PROFILE_HERO_IMG = "/assets/missions/profile-mission-hero.png?v=20260402";
 
 function missionTheme(actionType) {
   const map = {
@@ -82,7 +83,7 @@ export function renderEngagementActionsMarkup(actions, esc) {
 
       const artInner =
         theme === "profile"
-          ? `<img class="fidelity-mission-card__banner-img" src="${PROFILE_HERO_IMG}" alt="" width="200" height="200" decoding="async" loading="lazy" />`
+          ? `<img class="fidelity-mission-card__banner-img" src="${PROFILE_HERO_IMG}" alt="" width="180" height="220" decoding="async" loading="lazy" />`
           : `<div class="fidelity-mission-card__banner-icon-wrap">${icon}</div>`;
 
       const inner = `

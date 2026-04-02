@@ -73,6 +73,45 @@ export function renderClientPage(root, state, _options = {}) {
   });
   const nextRewardBannerHtml = renderNextRewardBannerMarkup(esc, nextRewardBannerState, { businessNameEsc: businessName });
 
+  const step2SectionHtml =
+    actionsForDisplay.length > 0
+      ? `
+        <section class="fidelity-v2-missions-section" id="fidelity-v2-step-2" aria-labelledby="fidelity-missions-heading">
+          <h2 id="fidelity-missions-heading" class="fidelity-v2-missions-heading">${esc(step2Title)}</h2>
+          ${
+            showRoulette
+              ? `
+            <div class="fidelity-v2-step-missions fidelity-v2-step-missions--rail">
+              <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions" tabindex="0">
+                <div class="fidelity-engagement-actions fidelity-engagement-actions--rail" id="fidelity-v2-actions">${engagementHtml}</div>
+              </div>
+            </div>
+            `
+              : `
+            <div class="fidelity-v2-step-missions">
+              <div class="fidelity-engagement-actions" id="fidelity-v2-actions">${engagementHtml}</div>
+            </div>
+            `
+          }
+          <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
+        </section>
+        `
+      : `
+        <section class="fidelity-v2-card fidelity-v2-step" id="fidelity-v2-step-2">
+          <header class="fidelity-v2-step-header">
+            <div class="fidelity-v2-step-head-text">
+              <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
+            </div>
+          </header>
+          <div class="fidelity-v2-step-body">
+            <div class="fidelity-v2-step-body-inner">
+            ${step2Intro ? `<p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>` : ""}
+            <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
+            </div>
+          </div>
+        </section>
+        `;
+
   root.innerHTML = `
     <header class="fidelity-v2-header fidelity-v2-header--next-reward">
       <div class="fidelity-v2-header-inner fidelity-v2-header-inner--next-reward">
@@ -154,31 +193,7 @@ export function renderClientPage(root, state, _options = {}) {
           : ""}
 
         <!-- Missions / programme -->
-        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--play" id="fidelity-v2-step-2">
-          <header class="fidelity-v2-step-header">
-            <div class="fidelity-v2-step-head-text">
-              <h2 class="fidelity-v2-card-title fidelity-v2-step-title">${esc(step2Title)}</h2>
-            </div>
-          </header>
-          <div class="fidelity-v2-step-body">
-            <div class="fidelity-v2-step-body-inner">
-            ${step2Intro ? `<p class="fidelity-v2-card-desc fidelity-v2-step-desc">${step2Intro}</p>` : ""}
-            ${showRoulette && actionsForDisplay.length ? `
-            <div class="fidelity-v2-step-missions fidelity-v2-step-missions--rail">
-              <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions" tabindex="0">
-                <div class="fidelity-engagement-actions fidelity-engagement-actions--rail" id="fidelity-v2-actions">${engagementHtml}</div>
-              </div>
-            </div>
-            ` : ""}
-            ${!showRoulette && actionsForDisplay.length ? `
-            <div class="fidelity-v2-step-missions">
-              <div class="fidelity-engagement-actions" id="fidelity-v2-actions">${engagementHtml}</div>
-            </div>
-            ` : ""}
-            <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
-            </div>
-          </div>
-        </section>
+        ${step2SectionHtml}
       </div>
 
     </main>
