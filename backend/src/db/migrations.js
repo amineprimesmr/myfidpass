@@ -739,4 +739,19 @@ export function runMigrations(db) {
       CREATE INDEX IF NOT EXISTS idx_campaign_event_jobs_business_runat ON campaign_event_jobs(business_id, run_at);
     `)
   );
+
+  // ── v9 : plafonds scan / caisse (passages/jour, points par transaction) ───
+  markMigrationApplied(db, 9, "scan_security_limits_per_member");
+  const bizScan = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizScan.includes("scan_max_passes_per_member_per_day")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN scan_max_passes_per_member_per_day INTEGER"),
+    );
+  }
+  const bizScan2 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizScan2.includes("scan_max_points_per_transaction")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN scan_max_points_per_transaction INTEGER"),
+    );
+  }
 }

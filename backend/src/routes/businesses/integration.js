@@ -8,9 +8,14 @@ import {
   addPoints,
   createTransaction,
   getPushTokensForMember,
+  countMemberPointsAddsTodayUtc,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { canAccessDashboard, normalizeBarcodeToMemberId } from "./shared.js";
+import {
+  computeRawPointsForCredit,
+  enforceScanSecurityLimits,
+} from "../../lib/scan-credit-helpers.js";
 
 const router = Router();
 
@@ -64,15 +69,7 @@ router.post("/scan", async (req, res) => {
   const perVisit = Number(business.points_per_visit) || 0;
   const minAmount = business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : null;
   const programType = (business.program_type || "").toLowerCase();
-  let points = 0;
-  if (Number.isInteger(pointsDirect) && pointsDirect > 0) points += pointsDirect;
-  if (!Number.isNaN(amountEur) && amountEur > 0) {
-    if (minAmount == null || amountEur >= minAmount) {
-      points += Math.floor(amountEur * perEuro);
-    }
-  }
-  if (visit && perVisit > 0) points += perVisit;
-  if (visit && programType === "stamps" && points === 0) points = 1;
+  let points = computeRawPointsForCredit(business, { pointsDirect, amountEur, visit });
   if (points <= 0) {
     const minHint = minAmount != null ? ` Achat minimum ${minAmount} € pour gagner des points.` : "";
     const msg = perVisit === 0 && programType !== "stamps"
@@ -83,13 +80,25 @@ router.post("/scan", async (req, res) => {
       code: "NO_POINTS_SPECIFIED",
     });
   }
+  const addsToday = countMemberPointsAddsTodayUtc(business.id, member.id);
+  const secured = enforceScanSecurityLimits(business, points, addsToday);
+  if (!secured.ok) {
+    return res.status(secured.status).json({ error: secured.error, code: secured.code });
+  }
+  points = secured.points;
+  const metaBase =
+    amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit, source: "integration" } : { source: "integration" };
+  if (secured.capped) {
+    metaBase.points_capped = true;
+    metaBase.requested_points = secured.originalPoints;
+  }
   const updated = addPoints(member.id, points);
   createTransaction({
     businessId: business.id,
     memberId: member.id,
     type: "points_add",
     points,
-    metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit, source: "integration" } : { source: "integration" },
+    metadata: metaBase,
   });
   const tokens = getPushTokensForMember(member.id);
   if (tokens.length > 0) {
@@ -111,6 +120,8 @@ router.post("/scan", async (req, res) => {
     },
     points_added: points,
     new_balance: updated.points,
+    points_capped: secured.capped === true,
+    points_requested: secured.capped ? secured.originalPoints : undefined,
   });
 });
 

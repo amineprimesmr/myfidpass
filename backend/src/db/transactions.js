@@ -29,6 +29,22 @@ export function getTransactionByIdempotencyKey(businessId, idempotencyKey) {
   ).get(businessId, idempotencyKey) || null;
 }
 
+/**
+ * Compte les crédits `points_add` pour un membre sur la journée civile UTC (alignée sur `strftime` SQLite).
+ * Sert aux plafonds « passages par jour » (anti-fraude caisse).
+ */
+export function countMemberPointsAddsTodayUtc(businessId, memberId) {
+  if (!businessId || !memberId) return 0;
+  const row = db
+    .prepare(
+      `SELECT COUNT(*) as n FROM transactions
+       WHERE business_id = ? AND member_id = ? AND type = 'points_add'
+         AND strftime('%Y-%m-%d', created_at) = strftime('%Y-%m-%d', 'now')`
+    )
+    .get(businessId, memberId);
+  return Number(row?.n) || 0;
+}
+
 export function getTransactionsForBusiness(businessId, { limit = 30, offset = 0, memberId = null, days = null, type = null } = {}) {
   let where = "t.business_id = ?";
   const params = [businessId];

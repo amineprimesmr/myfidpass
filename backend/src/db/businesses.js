@@ -179,6 +179,10 @@ export function updateBusiness(businessId, updates) {
     "label_restants",
     "label_member",
     "header_right_text",
+    /** 0 ou NULL = illimité : crédits points_add max / client / jour (UTC). */
+    "scan_max_passes_per_member_per_day",
+    /** 0 ou NULL = illimité : plafond de points par opération de crédit. */
+    "scan_max_points_per_transaction",
   ];
   const numericCols = [
     "location_lat",
@@ -191,6 +195,8 @@ export function updateBusiness(businessId, updates) {
     "wallet_pass_include_locations",
     "flyer_ai_generations_used",
     "flyer_ai_unlimited",
+    "scan_max_passes_per_member_per_day",
+    "scan_max_points_per_transaction",
   ];
   const setClauses = [];
   const values = [];

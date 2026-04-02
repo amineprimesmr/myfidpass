@@ -157,6 +157,16 @@ router.get("/settings", (req, res) => {
         ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/stamp-icon`
         : undefined,
     engagement_rewards: getEngagementRewards(business.id),
+    /** 0 ou null = illimité — crédits `points_add` max par client et par jour (UTC). */
+    scan_max_passes_per_member_per_day:
+      business.scan_max_passes_per_member_per_day != null
+        ? Number(business.scan_max_passes_per_member_per_day)
+        : null,
+    /** 0 ou null = illimité — plafond de points par opération (scan / fiche membre). */
+    scan_max_points_per_transaction:
+      business.scan_max_points_per_transaction != null
+        ? Number(business.scan_max_points_per_transaction)
+        : null,
   });
 });
 
@@ -411,6 +421,31 @@ router.patch("/settings", async (req, res) => {
       updates.campaign_automation_json = t ? JSON.stringify(mergeCampaignAutomationJson(t)) : null;
     }
   }
+  const scanMaxPassesIn = body.scan_max_passes_per_member_per_day ?? body.scanMaxPassesPerMemberPerDay;
+  const scanMaxPointsIn = body.scan_max_points_per_transaction ?? body.scanMaxPointsPerTransaction;
+  if (scanMaxPassesIn !== undefined) {
+    if (scanMaxPassesIn === null || scanMaxPassesIn === "") {
+      updates.scan_max_passes_per_member_per_day = null;
+    } else {
+      const n = Math.floor(Number(scanMaxPassesIn));
+      if (!Number.isFinite(n) || n < 0) {
+        return res.status(400).json({ error: "scan_max_passes_per_member_per_day invalide (entier ≥ 0)." });
+      }
+      updates.scan_max_passes_per_member_per_day = n === 0 ? null : Math.min(n, 999);
+    }
+  }
+  if (scanMaxPointsIn !== undefined) {
+    if (scanMaxPointsIn === null || scanMaxPointsIn === "") {
+      updates.scan_max_points_per_transaction = null;
+    } else {
+      const n = Math.floor(Number(scanMaxPointsIn));
+      if (!Number.isFinite(n) || n < 0) {
+        return res.status(400).json({ error: "scan_max_points_per_transaction invalide (entier ≥ 0)." });
+      }
+      updates.scan_max_points_per_transaction = n === 0 ? null : Math.min(n, 999999);
+    }
+  }
+
   if (engagement_rewards !== undefined) {
     if (engagement_rewards === null || (typeof engagement_rewards === "object" && Object.keys(engagement_rewards).length === 0)) {
       updates.engagement_rewards = null;

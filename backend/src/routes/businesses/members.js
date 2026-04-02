@@ -14,6 +14,7 @@ import {
   resetMemberPoints,
   createTransaction,
   getTransactionByIdempotencyKey,
+  countMemberPointsAddsTodayUtc,
   getMemberTicketWallet,
   getMemberTicketHistory,
   convertPointsToTickets,
@@ -30,6 +31,10 @@ import { getIdempotencyKey, canAccessDashboard } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../../lib/merchant-dashboard-sync-push.js";
 import { scheduleCampaignEventJobsForMember } from "../../lib/campaign-event-jobs.js";
+import {
+  computeRawPointsForCredit,
+  enforceScanSecurityLimits,
+} from "../../lib/scan-credit-helpers.js";
 
 const router = Router();
 
@@ -334,19 +339,7 @@ router.post("/:memberId/points", async (req, res) => {
   const minAmount = business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : null;
   const programType = (business.program_type || "").toLowerCase();
 
-  let points = 0;
-  if (Number.isInteger(pointsDirect) && pointsDirect > 0) {
-    points += pointsDirect;
-  }
-  if (!Number.isNaN(amountEur) && amountEur > 0) {
-    if (minAmount == null || amountEur >= minAmount) {
-      points += Math.floor(amountEur * perEuro);
-    }
-  }
-  if (visit && perVisit > 0) {
-    points += perVisit;
-  }
-  if (visit && programType === "stamps" && points === 0) points = 1;
+  let points = computeRawPointsForCredit(business, { pointsDirect, amountEur, visit });
 
   if (points <= 0) {
     const minHint = minAmount != null ? ` Achat minimum ${minAmount} € pour gagner des points.` : "";
@@ -356,13 +349,22 @@ router.post("/:memberId/points", async (req, res) => {
     return res.status(400).json({ error: msg });
   }
 
+  const addsToday = countMemberPointsAddsTodayUtc(business.id, member.id);
+  const secured = enforceScanSecurityLimits(business, points, addsToday);
+  if (!secured.ok) {
+    return res.status(secured.status).json({ error: secured.error, code: secured.code });
+  }
+  points = secured.points;
+  const meta =
+    amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit } : undefined;
+
   const updated = addPoints(member.id, points);
   createTransaction({
     businessId: business.id,
     memberId: member.id,
     type: "points_add",
     points,
-    metadata: amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit } : undefined,
+    metadata: secured.capped ? { ...(meta || {}), points_capped: true, requested_points: secured.originalPoints } : meta,
     idempotencyKey: idempotencyKey || null,
   });
   const tokens = getPushTokensForMember(member.id);
@@ -375,6 +377,8 @@ router.post("/:memberId/points", async (req, res) => {
     id: updated.id,
     points: updated.points,
     points_added: points,
+    points_capped: secured.capped === true,
+    points_requested: secured.capped ? secured.originalPoints : undefined,
   });
 });
 
