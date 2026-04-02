@@ -20,3 +20,30 @@ export function resolveClientLogoImgSrc(business, slug, apiBase) {
     upd != null && String(upd).trim() !== "" ? encodeURIComponent(String(upd).trim()) : "";
   return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${v}` : srcBase;
 }
+
+/**
+ * Icône marque alignée sur l’aperçu **campagnes / notifications** (`GET …/notification-icon`),
+ * pas sur `/public/logo` (rendu bandeau Wallet). À utiliser pour le hero parcours QR et le
+ * chargement route si l’on veut la même image que le média « icône notif » du tableau de bord.
+ *
+ * @param {Record<string, unknown> | null | undefined} business
+ * @param {string} slug
+ * @param {string} apiBase
+ */
+export function resolveClientNotificationIconImgSrc(business, slug, apiBase) {
+  const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/notification-icon` : "";
+  if (!path) return "";
+  const baseTrim = String(apiBase || "").replace(/\/$/, "");
+  const apiNotifUrl = typeof business?.notificationIconUrl === "string" ? business.notificationIconUrl.trim() : "";
+  const srcBase = baseTrim ? apiNotifUrl || `${baseTrim}${path}` : path;
+  const upd =
+    business?.notification_icon_updated_at ??
+    business?.notificationIconUpdatedAt ??
+    business?.logo_icon_updated_at ??
+    business?.logoIconUpdatedAt ??
+    business?.logo_updated_at ??
+    business?.logoUpdatedAt;
+  const v =
+    upd != null && String(upd).trim() !== "" ? encodeURIComponent(String(upd).trim()) : "";
+  return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${v}` : srcBase;
+}

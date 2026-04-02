@@ -29,6 +29,8 @@ export function publicInfo(req, res) {
   }
   /* Toujours une URL : /public/logo reproduit le rendu Wallet (image, texte bandeau, repli). */
   const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/logo`;
+  /** Même ressource que l’aperçu campagnes / push (dashboard) — pas le bandeau Wallet. */
+  const notificationIconUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
   res.json({
     id: business.id,
     name: business.name,
@@ -37,7 +39,10 @@ export function publicInfo(req, res) {
     /** Secteur d’activité (ex. fastfood, boulangerie) — pour préremplissage SaaS / flyer IA. */
     sector: business.sector?.trim() || undefined,
     logoUrl,
+    notificationIconUrl,
     logo_updated_at: business.logo_updated_at ?? undefined,
+    logo_icon_updated_at: business.logo_icon_updated_at ?? undefined,
+    notification_icon_updated_at: business.notification_icon_updated_at ?? undefined,
     backgroundColor: business.background_color ?? undefined,
     foregroundColor: business.foreground_color ?? undefined,
     labelColor: business.label_color ?? undefined,
