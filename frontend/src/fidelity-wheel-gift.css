@@ -26,10 +26,10 @@
   position: relative;
   z-index: 2;
   display: block;
-  width: clamp(28px, 11vmin, 56px);
+  width: clamp(40px, 15vmin, 76px);
   height: auto;
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 36px;
+  min-height: 36px;
   object-fit: contain;
   pointer-events: none;
   transform-origin: center center;
@@ -39,53 +39,26 @@
 }
 
 .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white .fidelity-roulette-segment-gift-img {
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.25)) drop-shadow(0 0 12px rgba(251, 191, 36, 0.35));
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.28));
 }
 
 @keyframes fidelity-gift-alive {
   0%,
   100% {
     transform: translateY(0) scale(1) rotate(-2deg);
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 12px rgba(251, 191, 36, 0.4));
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
   }
   25% {
     transform: translateY(-2px) scale(1.1) rotate(1deg);
-    filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 18px rgba(251, 191, 36, 0.55));
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
   }
   50% {
     transform: translateY(0) scale(1.14) rotate(-1deg);
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 22px rgba(252, 211, 77, 0.5));
+    filter: drop-shadow(0 2px 7px rgba(0, 0, 0, 0.38));
   }
   75% {
     transform: translateY(2px) scale(1.05) rotate(2deg);
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 14px rgba(251, 191, 36, 0.45));
-  }
-}
-
-.fidelity-roulette-segment-label--gift-wrap::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: clamp(36px, 14vmin, 68px);
-  height: clamp(36px, 14vmin, 68px);
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.28) 0%, transparent 68%);
-  animation: fidelity-gift-halo 3s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-@keyframes fidelity-gift-halo {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(0.88);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.12);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
   }
 }
 
@@ -148,8 +121,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fidelity-roulette-segment-gift-img,
-  .fidelity-roulette-segment-label--gift-wrap::after {
+  .fidelity-roulette-segment-gift-img {
     animation: none;
   }
 

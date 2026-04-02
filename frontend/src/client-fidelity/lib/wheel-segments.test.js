@@ -67,7 +67,7 @@ describe("wheelSegmentAlternateDisplayLabel", () => {
 describe("buildWheelSegmentHtml", () => {
   it("affiche l’image cadeau sur les parts paires (GAGNER) et le texte sur PERDU", () => {
     const win = buildWheelSegmentHtml({ segmentIndex: 0, segmentCount: 8, escapeHtml: esc });
-    expect(win).toContain(`${WHEEL_SEGMENT_GIFT_IMG_SRC}?v=3`);
+    expect(win).toContain(`${WHEEL_SEGMENT_GIFT_IMG_SRC}?v=4`);
     expect(win).toContain("fidelity-roulette-segment-gift-img");
     const lose = buildWheelSegmentHtml({ segmentIndex: 1, segmentCount: 8, escapeHtml: esc });
     expect(lose).toContain("PERDU");
