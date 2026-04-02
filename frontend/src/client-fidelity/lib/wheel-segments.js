@@ -65,8 +65,8 @@ export function wheelSegmentAlternateDisplayLabel(segmentIndex) {
   return i % 2 === 0 ? "GAGNER" : "PERDU";
 }
 
-/** Image « cadeau » sur les parts GAGNER (fichier public ; remplaçable par le commerce). */
-export const WHEEL_SEGMENT_GIFT_IMG_SRC = "/assets/icons/gift.png";
+/** Image « cadeau » sur les parts GAGNER (fichier public). */
+export const WHEEL_SEGMENT_GIFT_IMG_SRC = "/assets/gift.png";
 
 /**
  * HTML d’une part de roue (texte PERDU / image cadeau pour GAGNER).
