@@ -23,6 +23,12 @@ import {
   openQrModalRoot,
   showQrWinPanel,
 } from "./qr-game-flow.js";
+import {
+  dismissFidelityRouteLoadingOverlay,
+  mountFidelityRouteLoadingOverlay,
+  setFidelityRouteLoadingLogo,
+  startFidelityRouteLoadingAnimations,
+} from "./fidelity-route-loading.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -61,6 +67,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   fidelityDocumentListenersAbort = new AbortController();
   const { signal } = fidelityDocumentListenersAbort;
 
+  const loadingOverlay = mountFidelityRouteLoadingOverlay();
+
+  try {
   async function hydrateMember(memberId) {
     if (!memberId) return;
     const [member, gamesData, tickets, actionsData] = await Promise.all([
@@ -86,6 +95,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
   const business = await api.getBusiness(slug);
   store.patch({ business, unlimitedTicketsTest: isUnlimitedTicketsDemo() });
+  setFidelityRouteLoadingLogo(loadingOverlay, business, slug, apiBase);
+  startFidelityRouteLoadingAnimations(loadingOverlay);
 
   async function ensureGuestSession() {
     const raw = localStorage.getItem(memberStorageKey(slug));
@@ -592,4 +603,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
   rerender();
   tryAutoClaimOnReturn();
+  } finally {
+    await dismissFidelityRouteLoadingOverlay(loadingOverlay);
+  }
 }

@@ -1,0 +1,111 @@
+/* Écran de chargement /fidelity/:slug — voile flouté + logo (animation GSAP ou CSS) */
+
+.fidelity-route-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+    max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  box-sizing: border-box;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fidelity-route-loading-overlay--visible {
+  opacity: 1;
+}
+
+.fidelity-route-loading-overlay__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    rgba(255, 250, 252, 0.72) 0%,
+    rgba(248, 250, 252, 0.78) 45%,
+    rgba(241, 245, 249, 0.82) 100%
+  );
+  backdrop-filter: blur(20px) saturate(1.15);
+  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+}
+
+.fidelity-route-loading-overlay__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fidelity-route-loading-overlay__content--in {
+  animation: fidelity-route-loading-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fidelity-route-loading-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.fidelity-route-loading__logo-ring {
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.06),
+    0 20px 50px -12px rgba(15, 23, 42, 0.2),
+    0 8px 16px -6px rgba(15, 23, 42, 0.12);
+}
+
+.fidelity-route-loading__logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 16px;
+  display: block;
+}
+
+.fidelity-route-loading__logo--empty {
+  opacity: 0.35;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+}
+
+.fidelity-route-loading-overlay--css-spin .fidelity-route-loading__logo:not(.fidelity-route-loading__logo--empty) {
+  animation: fidelity-route-loading-spin 2.8s linear infinite;
+}
+
+@keyframes fidelity-route-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fidelity-route-loading-overlay--out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.48s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fidelity-route-loading-overlay--css-spin .fidelity-route-loading__logo {
+    animation: none;
+  }
+
+  .fidelity-route-loading-overlay__content--in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
