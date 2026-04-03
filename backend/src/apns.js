@@ -221,6 +221,26 @@ function withTimeout(promise, ms, label) {
 }
 
 /**
+ * Erreur réseau / connexion HTTP2 (undici) distincte d'un refus APNs nominatif.
+ * Quand err.reason est vide, l'erreur est au niveau transport → recycler le provider.
+ */
+function isConnectionLevelError(err) {
+  if (err?.reason) return false; // APNs a répondu → connexion OK, token invalide
+  const s = String(err?.message ?? err ?? "").toLowerCase();
+  return (
+    s.includes("und_err") ||
+    s.includes("econnreset") ||
+    s.includes("econnrefused") ||
+    s.includes("etimedout") ||
+    s.includes("socket hang up") ||
+    s.includes("h2_or_hpack_error") ||
+    s.includes("network") ||
+    s.includes("timeout") ||
+    s.includes("connect")
+  );
+}
+
+/**
  * Envoie une notification "pass mis à jour" (payload vide) à un device Apple Wallet.
  * @param {string} deviceToken
  * @returns {Promise<{ sent: boolean, error?: string }>}
@@ -235,20 +255,33 @@ export function sendPassKitUpdate(deviceToken) {
 
   // Payload vide requis par Apple PassKit.
   // apns2 v12 sérialise { aps: {} } → accepté par Apple (équivalent à {}).
+  // Expiration 86400s (24h) : si le téléphone est offline, Apple retentera pendant 24h.
   const note = new Notification(deviceToken, {
     topic: passTypeId,
-    expiration: Math.floor(Date.now() / 1000) + 3600,
+    expiration: Math.floor(Date.now() / 1000) + 86400,
     aps: {},
   });
 
   const sendPromise = prov.send(note).then(
     () => ({ sent: true }),
-    (err) => ({ sent: false, error: err?.reason ?? err?.message ?? String(err) })
+    (err) => {
+      // Erreur réseau / HTTP2 : la connexion est morte. On recycle le provider
+      // pour que le prochain appel crée une nouvelle connexion undici propre.
+      if (isConnectionLevelError(err)) {
+        logger.warn({ errMsg: err?.message }, "[apns] Connexion HTTP/2 APNs morte — provider recyclé pour le prochain envoi");
+        passkitProvider = undefined;
+      }
+      return { sent: false, error: err?.reason ?? err?.message ?? String(err) };
+    }
   );
-  return withTimeout(sendPromise, PASSKIT_TIMEOUT_MS, "PassKit APNs").catch((err) => ({
-    sent: false,
-    error: err?.message ?? String(err),
-  }));
+  return withTimeout(sendPromise, PASSKIT_TIMEOUT_MS, "PassKit APNs").catch((err) => {
+    // Timeout = connexion bloquée → recycler aussi
+    if (passkitProvider !== undefined) {
+      logger.warn("[apns] Timeout APNs — provider recyclé");
+      passkitProvider = undefined;
+    }
+    return { sent: false, error: err?.message ?? String(err) };
+  });
 }
 
 // ——— App commerçant (token-based, réutilise les mêmes credentials par défaut) ———

@@ -152,8 +152,11 @@ export function initAuthPage(initialTab) {
       if (errEl) { errEl.textContent = "Les deux mots de passe ne correspondent pas."; errEl.classList.remove("hidden"); }
       return;
     }
-    if (newPassword.length < 8) {
-      if (errEl) { errEl.textContent = "Le mot de passe doit faire au moins 8 caractères."; errEl.classList.remove("hidden"); }
+    if (newPassword.length < 12) {
+      if (errEl) {
+        errEl.textContent = "Le mot de passe doit faire au moins 12 caractères.";
+        errEl.classList.remove("hidden");
+      }
       return;
     }
     if (errEl) { errEl.classList.add("hidden"); errEl.textContent = ""; }
@@ -219,8 +222,11 @@ export function initAuthPage(initialTab) {
     const email = document.getElementById("auth-register-email")?.value?.trim();
     const password = document.getElementById("auth-register-password")?.value;
     if (!email || !password) return;
-    if (password.length < 8) {
-      if (registerError) { registerError.textContent = "Le mot de passe doit faire au moins 8 caractères."; registerError.classList.remove("hidden"); }
+    if (password.length < 12) {
+      if (registerError) {
+        registerError.textContent = "Le mot de passe doit faire au moins 12 caractères (exigence du serveur).";
+        registerError.classList.remove("hidden");
+      }
       return;
     }
     if (registerError) { registerError.classList.add("hidden"); registerError.textContent = ""; }

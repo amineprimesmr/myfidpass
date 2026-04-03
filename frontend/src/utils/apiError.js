@@ -10,6 +10,9 @@ export function escapeHtmlForServer(s) {
 }
 
 export function getApiErrorMessage(res, data) {
+  if (data?.message && typeof data.message === "string" && data.message.trim()) {
+    return data.message.trim();
+  }
   if (data?.error && typeof data.error === "string") return data.error;
   if (!res) return "Erreur réseau. Vérifiez votre connexion.";
   const status = res.status;

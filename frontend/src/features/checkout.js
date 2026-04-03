@@ -361,9 +361,9 @@ export function initCheckoutPage() {
     const password = passwordInput?.value;
     const name = nameInput?.value?.trim();
     if (!email) { showError("Saisissez votre adresse e-mail à l'étape 1."); return; }
-    if (!password || String(password).length < 8) {
+    if (!password || String(password).length < 12) {
       passwordInput?.focus();
-      showError("Le mot de passe doit faire au moins 8 caractères.");
+      showError("Le mot de passe doit faire au moins 12 caractères.");
       return;
     }
     showError("");
@@ -379,7 +379,10 @@ export function initCheckoutPage() {
       });
       clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { showError(data.error || "Erreur lors de la création du compte."); return; }
+      if (!res.ok) {
+        showError(data.message || data.error || "Erreur lors de la création du compte.");
+        return;
+      }
       setAuthToken(data.token);
       if (data.refreshToken) setRefreshToken(data.refreshToken);
       showStep(3);

@@ -13,38 +13,44 @@
  */
 
 import pino from "pino";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 const isDev = process.env.NODE_ENV !== "production";
 const isTest = process.env.NODE_ENV === "test";
+const usePretty = isDev && !isTest;
 
-const logger = pino({
-  // En test on coupe les logs pour ne pas polluer la sortie vitest
-  level: isTest ? "silent" : isDev ? "debug" : "info",
+/**
+ * Stream pretty sans `transport` worker (évite erreurs Node 24+ / module introuvable).
+ * Si `pino-pretty` n’est pas installé dans backend/, repli JSON sur stdout.
+ */
+function buildDestination() {
+  if (!usePretty) return pino.destination(1);
+  try {
+    const pretty = require("pino-pretty");
+    return pretty({
+      colorize: true,
+      translateTime: "HH:MM:ss",
+      ignore: "pid,hostname",
+    });
+  } catch {
+    return pino.destination(1);
+  }
+}
 
-  // En dev : pretty-print via pino-pretty si disponible, sinon JSON
-  ...(isDev && !isTest
-    ? {
-        transport: {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-            translateTime: "HH:MM:ss",
-            ignore: "pid,hostname",
-          },
-        },
-      }
-    : {}),
-
-  // Champs de base ajoutés à chaque log
-  base: {
-    env: process.env.NODE_ENV || "development",
+const logger = pino(
+  {
+    level: isTest ? "silent" : isDev ? "debug" : "info",
+    base: {
+      env: process.env.NODE_ENV || "development",
+    },
+    serializers: {
+      err: pino.stdSerializers.err,
+      error: pino.stdSerializers.err,
+    },
   },
-
-  // Sérialisation des erreurs
-  serializers: {
-    err: pino.stdSerializers.err,
-    error: pino.stdSerializers.err,
-  },
-});
+  buildDestination(),
+);
 
 export default logger;
