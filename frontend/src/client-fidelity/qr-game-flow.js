@@ -35,6 +35,11 @@ let qrResumeListenersAbort = null;
 
 const QR_PANEL_IDS = ["#fidelity-qr-panel-google", "#fidelity-qr-panel-verify", "#fidelity-qr-panel-reward"];
 
+/** Conteneur page publique (référence passée au bootstrap peut diverger si le DOM est reconstruit). */
+function fidelityAppMount(fallback) {
+  return document.getElementById("fidelity-app") || fallback;
+}
+
 /** Durée affichée « vérification » (ms) — minimum 15 s, léger jitter pour paraître naturel */
 const QR_VERIFY_MIN_MS = 15_000;
 const QR_VERIFY_JITTER_MS = 4_000;
@@ -252,13 +257,15 @@ export function bindQrGameUi(ctx) {
             if (bar instanceof HTMLElement) bar.style.width = "100%";
             if (progress instanceof HTMLElement) progress.setAttribute("aria-valuetext", "Vérification terminée");
           }
+          /* Tout de suite : ne pas attendre closeQrModalRoot (Safari / transitionend capricieux). */
+          markQrThanksHeroDone();
+          applyQrThanksHero(fidelityAppMount(rootEl), () => ({}));
           await new Promise((r) => globalThis.setTimeout(r, 480));
-          closeQrModalRoot(rootEl, () => {
-            /* Avant toute anim ou refreshMemberData → rerender : évite de réinjecter l’accroche « Participez… ». */
-            markQrThanksHeroDone();
+          const mount = fidelityAppMount(rootEl);
+          closeQrModalRoot(mount, () => {
             void (async () => {
               try {
-                await runQrThanksHeroTransition(rootEl);
+                await runQrThanksHeroTransition(mount);
                 const raw = sessionStorage.getItem("fidelity_pending_engagement_claim");
                 if (raw) {
                   const data = JSON.parse(raw);
@@ -271,9 +278,10 @@ export function bindQrGameUi(ctx) {
                     }
                   }
                 }
+                applyQrThanksHero(fidelityAppMount(rootEl), () => ({}));
               } catch (err) {
                 console.error("[fidelity] post-verify-google", err);
-                applyQrThanksHero(rootEl, () => ({}));
+                applyQrThanksHero(fidelityAppMount(rootEl), () => ({}));
               }
             })();
           });

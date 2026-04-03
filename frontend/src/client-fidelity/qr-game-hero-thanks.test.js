@@ -20,6 +20,10 @@ describe("qr-game-hero-thanks", () => {
     document.body.innerHTML = "";
   });
 
+  it("applyQrThanksHero sans conteneur ne lève pas", () => {
+    expect(() => applyQrThanksHero(null, () => ({}))).not.toThrow();
+  });
+
   it("applyQrThanksHero met le libellé merci et la pastille succès", () => {
     const root = makeRoot();
     applyQrThanksHero(root, () => ({}));

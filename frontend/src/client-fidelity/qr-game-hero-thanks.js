@@ -38,6 +38,7 @@ function waitAnimationFallback(el, ms) {
  */
 export function applyQrThanksHero(rootEl, getState) {
   void getState;
+  if (!rootEl || typeof rootEl.querySelector !== "function") return;
   const inner = rootEl.querySelector(".fidelity-qr-hero-title-inner");
   const h1 = rootEl.querySelector("#fidelity-qr-hero-title");
   const success = rootEl.querySelector("#fidelity-qr-hero-success");

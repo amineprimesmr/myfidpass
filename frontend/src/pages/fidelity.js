@@ -9,10 +9,12 @@ export default {
     const slug = route.slug;
     if (!slug) return;
     try {
+      const app = rootEl();
+      if (!app) throw new Error("Conteneur fidélité introuvable.");
       await initClientFidelityPage({
         slug,
         apiBase: API_BASE,
-        rootEl: rootEl(),
+        rootEl: app,
       });
     } catch (err) {
       const raw = String(err?.message || "").trim();
