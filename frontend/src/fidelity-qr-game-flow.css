@@ -21,17 +21,17 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   min-height: 0;
   overflow-x: visible !important;
   overflow-y: visible !important;
-  /* Espace avant le bandeau noir : le pied descend visuellement sur l’écran */
-  margin-bottom: 1.15rem;
+  /* Espace avant le bandeau noir : laisse respirer entre la roue et le pied pro */
+  margin-bottom: 2.65rem;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
   margin-top: auto;
   flex-shrink: 0;
   width: 100%;
-  /* Peu de marge haute (évite d’« aspirer » le footer vers le contenu) ; marge basse forte = texte près du bas / safe area */
-  padding-top: 0.55rem;
-  padding-bottom: max(1.85rem, calc(env(safe-area-inset-bottom, 0px) + 1.15rem));
+  /* Marge haute pour ne pas coller au contenu ; marge basse forte = texte plus bas / safe area */
+  padding-top: 1.1rem;
+  padding-bottom: max(2.35rem, calc(env(safe-area-inset-bottom, 0px) + 1.65rem));
 }
 
 .fidpass-fidelity-route .fidelity-qr-game,
@@ -93,7 +93,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   flex-direction: column;
   overflow: visible;
   /* Espace sous la roue (bord + ombre) avant le pied de page */
-  padding-bottom: clamp(1.25rem, 8vmin, 2.5rem);
+  padding-bottom: clamp(2rem, 12vmin, 3.75rem);
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
@@ -148,7 +148,8 @@ main.fidelity-v2-main.fidelity-qr-game
   .fidelity-v2-roulette-inline--qr
   .fidelity-v2-roulette-inline-controls
   .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
-  margin-right: -1.05rem;
+  /* Décale la pastille vers la droite (aligné avec le bord visuel malgré le padding page) */
+  margin-right: -1.85rem;
 }
 
 .fidelity-cta-wheel-line--qr {
