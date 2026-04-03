@@ -79,6 +79,7 @@ export function openQrModalRoot(rootEl) {
 }
 
 export function closeQrModalRoot(rootEl) {
+  cancelQrGuestClaimReveal();
   const root = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!root) return;
   root.classList.remove("fidelity-qr-modal-root--open");
@@ -100,6 +101,45 @@ export function closeQrModalRoot(rootEl) {
   }, 380);
 }
 
+/** Timer passage automatique gain → formulaire (parcours invité QR). */
+let guestClaimRevealTimer = null;
+
+export function cancelQrGuestClaimReveal() {
+  if (guestClaimRevealTimer != null) {
+    clearTimeout(guestClaimRevealTimer);
+    guestClaimRevealTimer = null;
+  }
+}
+
+/**
+ * Après le gain : ouvre le formulaire prénom / email (annulé si l’utilisateur a déjà cliqué « Récupérer mon lot »).
+ * @param {number} delayMs
+ */
+export function scheduleQrGuestClaimReveal(rootEl, delayMs) {
+  cancelQrGuestClaimReveal();
+  guestClaimRevealTimer = window.setTimeout(() => {
+    guestClaimRevealTimer = null;
+    showQrClaimPanel(rootEl);
+    const nameInput = rootEl.querySelector("#fidelity-qr-claim-name");
+    if (nameInput instanceof HTMLElement) {
+      window.requestAnimationFrame(() => nameInput.focus());
+    }
+    if (
+      typeof window.confetti === "function" &&
+      !globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    ) {
+      window.confetti({
+        particleCount: 55,
+        spread: 58,
+        startVelocity: 28,
+        ticks: 220,
+        origin: { x: 0.5, y: 0.45 },
+        colors: ["#6366f1", "#a855f7", "#fbbf24", "#34d399"],
+      });
+    }
+  }, delayMs);
+}
+
 export function showQrGooglePanel(rootEl) {
   const g = rootEl.querySelector("#fidelity-qr-panel-google");
   const v = rootEl.querySelector("#fidelity-qr-panel-verify");
@@ -114,15 +154,23 @@ export function showQrGooglePanel(rootEl) {
 export function showQrVerifyPanel(rootEl) {
   const g = rootEl.querySelector("#fidelity-qr-panel-google");
   const v = rootEl.querySelector("#fidelity-qr-panel-verify");
+  const w = rootEl.querySelector("#fidelity-qr-panel-win");
+  const c = rootEl.querySelector("#fidelity-qr-panel-claim");
   g?.classList.add("hidden");
   v?.classList.remove("hidden");
+  w?.classList.add("hidden");
+  c?.classList.add("hidden");
 }
 
 export function showQrWinPanel(rootEl, prizeLabelPlain) {
+  const g = rootEl.querySelector("#fidelity-qr-panel-google");
   const v = rootEl.querySelector("#fidelity-qr-panel-verify");
   const w = rootEl.querySelector("#fidelity-qr-panel-win");
+  const c = rootEl.querySelector("#fidelity-qr-panel-claim");
   const prize = rootEl.querySelector("#fidelity-qr-win-prize");
+  g?.classList.add("hidden");
   v?.classList.add("hidden");
+  c?.classList.add("hidden");
   w?.classList.remove("hidden");
   if (prize) {
     prize.textContent = "";
@@ -134,8 +182,12 @@ export function showQrWinPanel(rootEl, prizeLabelPlain) {
 }
 
 export function showQrClaimPanel(rootEl) {
+  const g = rootEl.querySelector("#fidelity-qr-panel-google");
+  const v = rootEl.querySelector("#fidelity-qr-panel-verify");
   const w = rootEl.querySelector("#fidelity-qr-panel-win");
   const c = rootEl.querySelector("#fidelity-qr-panel-claim");
+  g?.classList.add("hidden");
+  v?.classList.add("hidden");
   w?.classList.add("hidden");
   c?.classList.remove("hidden");
 }
@@ -254,7 +306,8 @@ export function bindQrGameUi(ctx) {
   winCta?.addEventListener(
     "click",
     () => {
-    showQrClaimPanel(rootEl);
+      cancelQrGuestClaimReveal();
+      showQrClaimPanel(rootEl);
     },
     { signal },
   );
@@ -296,5 +349,6 @@ export function bindQrGameUi(ctx) {
 
   return () => {
     spinBtn?.removeEventListener("click", onSpinPre, true);
+    cancelQrGuestClaimReveal();
   };
 }

@@ -22,6 +22,7 @@ import {
   firstNonPerduLabel,
   isGuestMember,
   openQrModalRoot,
+  scheduleQrGuestClaimReveal,
   showQrWinPanel,
 } from "./qr-game-flow.js";
 import {
@@ -405,7 +406,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           const prizeLabel = isWin ? rawLabel : firstNonPerduLabel(wheelLabels);
           showQrWinPanel(rootEl, prizeLabel);
           openQrModalRoot(rootEl);
-          triggerConfetti();
+          triggerWinCelebrationConfetti();
+          scheduleQrGuestClaimReveal(rootEl, 2600);
           await refreshMemberData();
           releaseWillChangeSoon();
           return;
@@ -423,7 +425,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           feedback.classList.add(isWin ? "success" : "error");
           feedback.classList.remove("hidden");
         }
-        if (isWin) triggerConfetti();
+        if (isWin) triggerWinCelebrationConfetti();
         await refreshMemberData();
         releaseWillChangeSoon();
       };
@@ -486,28 +488,39 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     }
   }
 
-  function triggerConfetti() {
+  function triggerWinCelebrationConfetti() {
     if (prefersReducedMotion() || typeof window.confetti !== "function") return;
     const mobile =
       typeof globalThis.matchMedia === "function" && globalThis.matchMedia("(max-width: 520px)").matches;
-    const duration = mobile ? 1600 : 2400;
+    const duration = mobile ? 2800 : 4200;
     const end = Date.now() + duration;
-    const n = mobile ? 2 : 4;
+    const n = mobile ? 5 : 8;
+    const colors = ["#ff0055", "#f472b6", "#00ffcc", "#ffd700", "#a78bfa", "#38bdf8"];
+
+    window.confetti({
+      particleCount: mobile ? 55 : 85,
+      spread: 88,
+      startVelocity: mobile ? 38 : 45,
+      ticks: mobile ? 260 : 300,
+      origin: { x: 0.5, y: 0.35 },
+      colors,
+      scalar: mobile ? 0.95 : 1.05,
+    });
 
     (function frame() {
       window.confetti({
         particleCount: n,
         angle: 60,
-        spread: 52,
-        origin: { x: 0 },
-        colors: ["#ff0055", "#00ffcc", "#ffd700"],
+        spread: 58,
+        origin: { x: 0, y: 0.55 },
+        colors,
       });
       window.confetti({
         particleCount: n,
         angle: 120,
-        spread: 52,
-        origin: { x: 1 },
-        colors: ["#ff0055", "#00ffcc", "#ffd700"],
+        spread: 58,
+        origin: { x: 1, y: 0.55 },
+        colors,
       });
 
       if (Date.now() < end) {

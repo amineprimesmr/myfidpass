@@ -352,6 +352,14 @@
   text-align: center;
 }
 
+/* Formulaire inscription après gain : ancrage visuel */
+.fidelity-qr-modal--claim .fidelity-qr-modal-title {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #db2777 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .fidelity-qr-win-prize {
   margin: 0 0 1.1rem;
   font-size: 0.95rem;
