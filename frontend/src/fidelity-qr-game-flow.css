@@ -5,35 +5,32 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   overflow-x: hidden;
 }
 
-/* Shell #fidelity-app : colonne pleine hauteur → pied de page « pro » collé au bas de l’écran */
+/* Shell #fidelity-app : colonne ; hauteur min viewport, contenu peut grandir pour ne pas rogner la roue */
 .fidelity-page:has(> main.fidelity-qr-game) {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
   min-height: 100svh;
-  max-height: 100dvh;
-  max-height: 100svh;
   box-sizing: border-box;
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: visible;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game {
   flex: 1 1 auto;
   min-height: 0;
   overflow-x: visible !important;
-  /* Pas de scroll vertical : la roue reste dans l’écran (Safari iOS). */
-  overflow-y: hidden !important;
-  /* Espace avant le pied noir : le bandeau « pro » descend un peu sur l’écran. */
-  margin-bottom: 0.55rem;
+  overflow-y: visible !important;
+  margin-bottom: 0.35rem;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
   margin-top: auto;
   flex-shrink: 0;
   width: 100%;
-  /* Remplit la zone sous le pied (home indicator / barre Safari) sans bande claire. */
-  padding-bottom: max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem));
+  /* Texte « pro » plus bas dans le bandeau noir */
+  padding-top: 1.55rem;
+  padding-bottom: max(1.45rem, calc(env(safe-area-inset-bottom, 0px) + 0.85rem));
 }
 
 .fidpass-fidelity-route .fidelity-qr-game,
@@ -88,12 +85,14 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 }
 
 .fidelity-v2-roulette-inline--qr {
-  margin-top: 4.35rem;
+  margin-top: 3.25rem;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: visible;
+  /* Espace sous la roue (bord + ombre) avant le pied de page */
+  padding-bottom: clamp(1.25rem, 8vmin, 2.5rem);
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
@@ -171,32 +170,31 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   opacity: 0.95;
 }
 
-/* Scan QR : pas de fond sur la zone — le dégradé faisait un « bloc » blanc au milieu (fond page / client-bg). */
+/* Scan QR : pas de max-height — la roue est plus large que 46dvh et était rognée par le parent. */
 .fidelity-v2-roulette-inline.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
-  min-height: min(34dvh, 36vh, 52vmin);
-  max-height: 46dvh;
-  padding-bottom: 0.35rem;
+  min-height: min(48dvh, 56vmin, 420px);
+  padding-bottom: clamp(2rem, 14vmin, 4.5rem);
   overflow: visible;
   background: transparent;
   background-image: none;
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-  top: 71%;
-  width: min(106vmin, 110vw);
-  height: min(106vmin, 110vw);
-  transform: translate(-30%, -50%);
+  top: 68%;
+  width: min(96vmin, 100vw);
+  height: min(96vmin, 100vw);
+  transform: translate(-28%, -50%);
 }
 
 @media (max-width: 480px) {
   .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-    top: 72%;
-    width: min(100vmin, 104vw);
-    height: min(100vmin, 104vw);
-    transform: translate(-34%, -50%);
+    top: 66%;
+    width: min(92vmin, 98vw);
+    height: min(92vmin, 98vw);
+    transform: translate(-30%, -48%);
   }
 }
 
