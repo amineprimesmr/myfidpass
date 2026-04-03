@@ -91,8 +91,8 @@ export function renderQrGamePage(esc, p) {
       </div>
     </div>
 
-    <footer class="fidelity-v2-footer fidelity-qr-powered">
-      <p>Propulsé par <a href="https://myfidpass.fr" target="_blank" rel="noopener noreferrer">MyFidpass</a></p>
+    <footer class="fidelity-v2-footer fidelity-v2-footer--dark fidelity-qr-powered">
+      <p>Vous êtes un pro ?</p>
     </footer>
   `;
 }

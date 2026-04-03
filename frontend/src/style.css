@@ -1817,6 +1817,24 @@ body.fidpass-fidelity-route {
   text-underline-offset: 2px;
 }
 
+/** Pied de page sombre (CTA pro) — fond noir par défaut */
+.fidelity-v2-footer--dark {
+  background: #000000;
+  color: #e2e8f0;
+  border-top: none;
+  margin-top: 1rem;
+  padding-top: 1.1rem;
+  padding-bottom: max(1.1rem, env(safe-area-inset-bottom));
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.fidelity-v2-footer--dark p {
+  margin: 0;
+}
+
 /* ── Utility ── */
 .hidden { display: none !important; }
 

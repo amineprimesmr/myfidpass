@@ -241,8 +241,8 @@ export function renderClientPage(root, state, options = {}) {
         })
       : ""}
 
-    <footer class="fidelity-v2-footer">
-      <p>Propulsé par <a href="https://myfidpass.fr" target="_blank" rel="noopener noreferrer">MyFidpass</a></p>
+    <footer class="fidelity-v2-footer fidelity-v2-footer--dark">
+      <p>Vous êtes un pro ?</p>
     </footer>
   `;
 }

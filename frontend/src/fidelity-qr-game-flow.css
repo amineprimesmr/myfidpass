@@ -108,15 +108,9 @@
   }
 }
 
-.fidelity-qr-powered {
-  margin-top: 0.2rem;
-  padding-bottom: max(0.35rem, env(safe-area-inset-bottom));
-  font-size: 0.72rem;
-  text-align: center;
-}
-
-.fidelity-qr-powered p {
-  margin: 0;
+/* Un peu plus d’air sous la roue avant le pied de page noir */
+.fidelity-qr-powered.fidelity-v2-footer--dark {
+  margin-top: 1.25rem;
 }
 
 /* Modales : centré, fond clair, safe-area, animation entrée / sortie */
