@@ -394,18 +394,24 @@ export async function generatePass(member, business = null, options = {}) {
 
   /*
    * Message de campagne sur la **face** du pass (pas seulement au verso).
-   * Apple surface souvent les alertes Wallet / écran de verrouillage quand un champ
-   * visible change avec changeMessage ; un champ uniquement en backFields peut mettre
-   * à jour le pass sans bannière perceptible tant que l’utilisateur n’ouvre pas la carte.
+   * Apple surface les alertes Wallet quand un champ visible CHANGE DE VALEUR et a un changeMessage.
+   *
+   * CRITIQUE : le champ doit être TOUJOURS présent dans le pass, même sans campagne (valeur "—").
+   * Sinon la première campagne AJOUTE un nouveau champ au lieu de CHANGER une valeur existante.
+   * iOS traite l’ajout d’un champ comme une mise à jour structurelle → affiche "Carte de fidélité
+   * modifiée" au lieu du changeMessage personnalisé. En ayant "—" dès le début, la transition
+   * "—" → "Message campagne" est détectée comme un changement de valeur → bannière correcte.
    */
-  if (rawBroadcast) {
+  {
     const broadcastFrontField = {
       key: "broadcastFront",
       label: "Message",
-      value: lastBroadcast,
+      value: rawBroadcast ? lastBroadcast : "—",
       textAlignment: "PKTextAlignmentLeft",
-      changeMessage: normalizeChangeMessage(changeMsg, rawBroadcast),
     };
+    if (rawBroadcast) {
+      broadcastFrontField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
+    }
     if (isSectorTemplate) {
       pass.secondaryFields.push(broadcastFrontField);
     } else {

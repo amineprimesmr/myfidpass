@@ -57,33 +57,45 @@ export function pickWheelIndexForReward(wheelLabels, rewardLabel) {
 }
 
 /**
- * Texte sur la part d’index `i` : alternance fixe GAGNER / PERDU / GAGNER / …
- * (alignée sur les bandes noir/blanc de la roue, indépendante du libellé du lot en base).
+ * Lot affiché comme « gagnant » (image cadeau) : tout libellé autre que PERDU.
+ * @param {unknown} label
+ */
+export function isWinningWheelSegmentLabel(label) {
+  const s = String(label ?? "").trim().toLowerCase();
+  return s.length > 0 && s !== "perdu";
+}
+
+/**
+ * Texte sur une part perdante (les parts gagnantes utilisent l’image cadeau).
  */
 export function wheelSegmentAlternateDisplayLabel(segmentIndex) {
-  const i = Math.floor(Number(segmentIndex)) || 0;
-  return i % 2 === 0 ? "GAGNER" : "PERDU";
+  void segmentIndex;
+  return "PERDU";
 }
 
 /** Image « cadeau » sur les parts GAGNER (fichier public). */
 export const WHEEL_SEGMENT_GIFT_IMG_SRC = "/assets/gift.png";
 
 /**
- * HTML d’une part de roue (texte PERDU / image cadeau pour GAGNER).
+ * HTML d’une part de roue (texte PERDU / image cadeau selon le libellé métier, pas l’index).
  * @param {object} p
  * @param {number} p.segmentIndex
  * @param {number} p.segmentCount
  * @param {(s: string) => string} p.escapeHtml
+ * @param {string} [p.segmentLabel] — libellé du segment (ex. sortie normalizeWheelLabelsFromSegments)
  */
 export function buildWheelSegmentHtml(p) {
-  const { segmentIndex, segmentCount, escapeHtml } = p;
+  const { segmentIndex, segmentCount, escapeHtml, segmentLabel } = p;
   const angle = (segmentIndex + 0.5) * (360 / segmentCount);
   const isWhite = segmentIndex % 2 === 1;
   const segClass = isWhite
     ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white"
     : "fidelity-roulette-wheel-segment";
   const labelRotateDeg = angle > 180 ? 90 : -90;
-  const showGift = segmentIndex % 2 === 0;
+  const showGift =
+    segmentLabel !== undefined && segmentLabel !== null
+      ? isWinningWheelSegmentLabel(segmentLabel)
+      : segmentIndex % 2 === 0;
   const src = escapeHtml(`${WHEEL_SEGMENT_GIFT_IMG_SRC}?v=4`);
   const giftInner = `<span class="fidelity-roulette-segment-label fidelity-roulette-segment-label--gift-wrap" aria-hidden="true"><img class="fidelity-roulette-segment-gift-img" src="${src}" alt="" width="80" height="80" decoding="async" fetchpriority="high" /></span>`;
   const textLabel = wheelSegmentAlternateDisplayLabel(segmentIndex);

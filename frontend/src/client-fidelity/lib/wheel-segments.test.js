@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildWheelSegmentHtml,
   DEFAULT_WHEEL_LABELS,
+  isWinningWheelSegmentLabel,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
   wheelSegmentAlternateDisplayLabel,
@@ -54,24 +55,55 @@ describe("normalizeWheelLabelsFromSegments", () => {
   });
 });
 
+describe("isWinningWheelSegmentLabel", () => {
+  it("PERDU ou vide = pas gagnant", () => {
+    expect(isWinningWheelSegmentLabel("PERDU")).toBe(false);
+    expect(isWinningWheelSegmentLabel("perdu")).toBe(false);
+    expect(isWinningWheelSegmentLabel("")).toBe(false);
+    expect(isWinningWheelSegmentLabel("  ")).toBe(false);
+  });
+  it("tout autre libellé = part cadeau", () => {
+    expect(isWinningWheelSegmentLabel("+10 pts")).toBe(true);
+    expect(isWinningWheelSegmentLabel("Boisson")).toBe(true);
+  });
+});
+
 describe("wheelSegmentAlternateDisplayLabel", () => {
-  it("alterne GAGNER / PERDU selon l’index (0 = GAGNER)", () => {
-    expect(wheelSegmentAlternateDisplayLabel(0)).toBe("GAGNER");
-    expect(wheelSegmentAlternateDisplayLabel(1)).toBe("PERDU");
-    expect(wheelSegmentAlternateDisplayLabel(2)).toBe("GAGNER");
-    expect(wheelSegmentAlternateDisplayLabel(3)).toBe("PERDU");
+  it("texte affiché sur une part perdante", () => {
+    expect(wheelSegmentAlternateDisplayLabel(0)).toBe("PERDU");
     expect(wheelSegmentAlternateDisplayLabel(7)).toBe("PERDU");
   });
 });
 
 describe("buildWheelSegmentHtml", () => {
-  it("affiche l’image cadeau sur les parts paires (GAGNER) et le texte sur PERDU", () => {
+  it("sans segmentLabel, conserve l’alternance par index (rétrocompat)", () => {
     const win = buildWheelSegmentHtml({ segmentIndex: 0, segmentCount: 8, escapeHtml: esc });
-    expect(win).toContain(`${WHEEL_SEGMENT_GIFT_IMG_SRC}?v=4`);
     expect(win).toContain("fidelity-roulette-segment-gift-img");
     const lose = buildWheelSegmentHtml({ segmentIndex: 1, segmentCount: 8, escapeHtml: esc });
     expect(lose).toContain("PERDU");
     expect(lose).not.toContain("fidelity-roulette-segment-gift-img");
+  });
+
+  it("avec segmentLabel : cadeau sur un lot même en index impair (aligné sur le tirage)", () => {
+    const giftOdd = buildWheelSegmentHtml({
+      segmentIndex: 1,
+      segmentCount: 8,
+      escapeHtml: esc,
+      segmentLabel: "+10 pts",
+    });
+    expect(giftOdd).toContain(`${WHEEL_SEGMENT_GIFT_IMG_SRC}?v=4`);
+    expect(giftOdd).toContain("fidelity-roulette-segment-gift-img");
+  });
+
+  it("avec segmentLabel : PERDU même sur index pair", () => {
+    const loseEven = buildWheelSegmentHtml({
+      segmentIndex: 0,
+      segmentCount: 8,
+      escapeHtml: esc,
+      segmentLabel: "PERDU",
+    });
+    expect(loseEven).toContain("PERDU");
+    expect(loseEven).not.toContain("fidelity-roulette-segment-gift-img");
   });
 });
 
