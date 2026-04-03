@@ -47,8 +47,6 @@ export function renderClientPage(root, state, options = {}) {
   const showProfileMissionModal = hasMember && profileEligible && !profileClaimed && !isGuestPlaceholder;
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
   const headerBalanceUnit = "pts";
-  const spinPtsWord = tickets === 1 ? "point" : "points";
-  const spinCtaAriaLabel = `Lancer la roue — ${tickets} ${spinPtsWord} pour jouer`;
   const slugForAssets = String(options.slug || state.slug || "");
   const apiBase = String(options.apiBase || "");
   const qrGameFlow = Boolean(hasMember && isGuestPlaceholder && showRoulette);
@@ -84,14 +82,19 @@ export function renderClientPage(root, state, options = {}) {
     return;
   }
 
-  const nextRewardBannerState = buildNextRewardBannerState({
-    hasMember,
-    business: state.business,
-    member: state.member,
-    programType,
-    balanceUnit: headerBalanceUnit,
-  });
-  const nextRewardBannerHtml = renderNextRewardBannerMarkup(esc, nextRewardBannerState, { businessNameEsc: businessName });
+  const nextRewardBannerHtml = !hasMember
+    ? renderNextRewardBannerMarkup(
+        esc,
+        buildNextRewardBannerState({
+          hasMember,
+          business: state.business,
+          member: state.member,
+          programType,
+          balanceUnit: headerBalanceUnit,
+        }),
+        { businessNameEsc: businessName },
+      )
+    : "";
 
   const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
@@ -121,21 +124,9 @@ export function renderClientPage(root, state, options = {}) {
       ? `
         <section class="fidelity-v2-missions-section" id="fidelity-v2-step-2" aria-labelledby="fidelity-missions-heading">
           <h2 id="fidelity-missions-heading" class="fidelity-v2-missions-heading">${esc(step2Title)}</h2>
-          ${
-            showRoulette
-              ? `
-            <div class="fidelity-v2-step-missions fidelity-v2-step-missions--rail">
-              <div class="fidelity-v2-missions-rail" data-fid-missions-rail="1" role="region" aria-label="Missions" tabindex="0">
-                <div class="fidelity-engagement-actions fidelity-engagement-actions--rail" id="fidelity-v2-actions">${engagementHtml}</div>
-              </div>
-            </div>
-            `
-              : `
-            <div class="fidelity-v2-step-missions">
+          <div class="fidelity-v2-step-missions">
               <div class="fidelity-engagement-actions" id="fidelity-v2-actions">${engagementHtml}</div>
             </div>
-            `
-          }
           <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
         </section>
         `
@@ -155,12 +146,22 @@ export function renderClientPage(root, state, options = {}) {
         </section>
         `;
 
+  const memberPoints = hasMember ? Math.max(0, Math.floor(Number(state.member?.points) || 0)) : 0;
+  const balanceUnitLabel =
+    programType === "stamps" ? (headerBalanceUnit === "pts" ? "tampons" : esc(headerBalanceUnit)) : "points";
+
   root.innerHTML = `
+    ${
+      nextRewardBannerHtml
+        ? `
     <header class="fidelity-v2-header fidelity-v2-header--next-reward">
       <div class="fidelity-v2-header-inner fidelity-v2-header-inner--next-reward">
         ${nextRewardBannerHtml}
       </div>
     </header>
+    `
+        : ""
+    }
 
     <main class="fidelity-v2-main">
 
@@ -172,6 +173,10 @@ export function renderClientPage(root, state, options = {}) {
             <div>
               <h1 class="fidelity-v2-hero-title">Bonjour${memberFirstName ? ` ${memberFirstName}` : ""} !</h1>
               <p class="fidelity-v2-hero-subtitle">${memberHeroSubtitle}</p>
+              <p class="fidelity-v2-hero-balance" aria-live="polite">
+                <span class="fidelity-v2-hero-balance-value">${esc(String(memberPoints))}</span>
+                <span class="fidelity-v2-hero-balance-unit"> ${balanceUnitLabel}</span>
+              </p>
             </div>
           </div>
         </section>
@@ -227,15 +232,7 @@ export function renderClientPage(root, state, options = {}) {
           </div>
         </section>
 
-        ${showRoulette && hasMember
-          ? renderRouletteInlineMarkup(esc, {
-              tickets,
-              spinCtaAriaLabel,
-              ticketStatusDotClass,
-            })
-          : ""}
-
-        <!-- Missions / programme -->
+        <!-- Missions / programme (points via missions, sans roue dans cet espace) -->
         ${step2SectionHtml}
       </div>
 

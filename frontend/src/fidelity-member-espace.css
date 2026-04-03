@@ -1,0 +1,69 @@
+/* Espace membre fidélité (hors parcours QR invité) : scroll, blocs compacts, pas de roue */
+
+html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-qr-game)) {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 100dvh;
+  min-height: 100svh;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) {
+  display: flex;
+  flex-direction: column;
+  min-height: min(100dvh, 100%);
+  box-sizing: border-box;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) > main.fidelity-v2-main {
+  flex: 1 1 auto;
+  padding-top: 1rem;
+  padding-bottom: 1.35rem;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-member {
+  padding: 0.85rem 0 0.35rem;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-card.fidelity-v2-step--rewards .fidelity-v2-step-body-inner {
+  padding-top: 0.15rem;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-missions-heading {
+  margin-bottom: 0.5rem;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-step-missions {
+  margin-top: 0.35rem;
+}
+
+/* Solde sous le sous-titre (remplace la bannière haute supprimée) */
+.fidelity-v2-hero-balance {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #334155;
+  letter-spacing: -0.01em;
+}
+
+.fidelity-v2-hero-balance-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.fidelity-v2-hero-balance-unit {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.88em;
+}
