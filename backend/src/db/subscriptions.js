@@ -13,6 +13,12 @@ export function getSubscriptionByUserId(userId) {
   return row || null;
 }
 
+export function getSubscriptionByStripeSubscriptionId(stripeSubscriptionId) {
+  if (!stripeSubscriptionId) return null;
+  const row = db.prepare("SELECT * FROM subscriptions WHERE stripe_subscription_id = ?").get(String(stripeSubscriptionId));
+  return row || null;
+}
+
 export function hasActiveSubscription(userId) {
   const sub = getSubscriptionByUserId(userId);
   if (!sub) return false;

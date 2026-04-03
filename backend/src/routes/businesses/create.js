@@ -11,7 +11,7 @@ import {
   getBusinessBySlug,
   canCreateBusiness,
 } from "../../db.js";
-import { getApiBase, canAccessDashboard, normalizeHex } from "./shared.js";
+import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -104,9 +104,7 @@ export function createHandler(req, res) {
  */
 export function updateHandler(req, res) {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const body = req.body || {};
   const {
     backTerms,

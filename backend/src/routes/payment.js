@@ -5,7 +5,9 @@ import {
   getBusinessById,
   getBusinessesByUserId,
   incrementFlyerAiGenerationsBonus,
+  hasActiveSubscription,
 } from "../db.js";
+import { devPaymentBypass } from "../lib/dev-payment-bypass.js";
 import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/stripe-webhook-events.js";
 import { requireAuth } from "../middleware/auth.js";
 
@@ -86,6 +88,12 @@ router.post("/create-flyer-pack-session", requireAuth, async (req, res) => {
   const owned = getBusinessesByUserId(req.user.id);
   if (!owned.some((b) => b.id === businessId)) {
     return res.status(403).json({ error: "Commerce non autorisé" });
+  }
+  if (!devPaymentBypass(req) && !hasActiveSubscription(req.user.id)) {
+    return res.status(403).json({
+      error: "Abonnement actif requis pour utiliser cette fonctionnalité.",
+      code: "subscription_required",
+    });
   }
   const email = req.user.email;
   if (!email) {

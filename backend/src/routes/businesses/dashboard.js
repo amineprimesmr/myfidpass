@@ -27,7 +27,7 @@ import {
 } from "../../db.js";
 import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/member-delete.js";
 import { sendPassKitUpdate } from "../../apns.js";
-import { canAccessDashboard, getApiBase, normalizeHexForPatch, MAX_LOGO_BASE64_BYTES } from "./shared.js";
+import { ensureDashboardAccess, getApiBase, normalizeHexForPatch, MAX_LOGO_BASE64_BYTES } from "./shared.js";
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
@@ -77,9 +77,7 @@ const flyerAiGenerateLimiter = rateLimit({
 
 function requireDashboard(req, res, next) {
   if (!req.business) return res.status(404).json({ error: "Entreprise introuvable" });
-  if (!canAccessDashboard(req.business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, req.business)) return;
   next();
 }
 

@@ -11,7 +11,7 @@ import {
   countMemberPointsAddsTodayUtc,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
-import { canAccessDashboard, normalizeBarcodeToMemberId } from "./shared.js";
+import { ensureDashboardAccess, normalizeBarcodeToMemberId } from "./shared.js";
 import {
   computeRawPointsForCredit,
   enforceScanSecurityLimits,
@@ -25,9 +25,7 @@ const router = Router();
 
 router.get("/lookup", (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token ou authentification requis" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const raw = (req.query.barcode || "").trim();
   if (!raw) return res.status(400).json({ error: "Paramètre barcode requis" });
   const barcode = normalizeBarcodeToMemberId(raw);
@@ -51,9 +49,7 @@ router.get("/lookup", (req, res) => {
 
 router.post("/scan", async (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token ou authentification requis" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const raw = (req.body?.barcode || "").trim();
   if (!raw) {
     return res.status(400).json({ error: "Champ barcode requis", code: "BARCODE_MISSING" });

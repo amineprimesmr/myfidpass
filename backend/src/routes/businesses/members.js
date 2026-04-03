@@ -27,7 +27,7 @@ import {
 import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
 import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
-import { getIdempotencyKey, canAccessDashboard } from "./shared.js";
+import { getIdempotencyKey, canAccessDashboard, ensureDashboardAccess } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../../lib/merchant-dashboard-sync-push.js";
 import { scheduleCampaignEventJobsForMember } from "../../lib/campaign-event-jobs.js";
@@ -111,9 +111,7 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
 router.post("/import", (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token ou authentification requis" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const { members: rawMembers, onDuplicate = "skip" } = req.body || {};
   if (!Array.isArray(rawMembers) || rawMembers.length === 0) {
     return res.status(400).json({ error: "Body doit contenir un tableau 'members' non vide (ex: [{ email, name, points? }])" });
@@ -229,9 +227,7 @@ router.get("/:memberId/rewards", (req, res) => {
 // ——— POST /:memberId/rewards/:grantId/claim ———
 router.post("/:memberId/rewards/:grantId/claim", (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Accès non autorisé" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
   const claimed = markRewardGrantClaimed(business.id, member.id, req.params.grantId);
@@ -262,9 +258,7 @@ router.get("/:memberId", (req, res) => {
 // ——— POST /:memberId/points/remove ——— (correction caisse : retire des points sans passer par une récompense)
 router.post("/:memberId/points/remove", async (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Accès non autorisé" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
 
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
@@ -311,9 +305,7 @@ router.post("/:memberId/points/remove", async (req, res) => {
 // ——— POST /:memberId/points ———
 router.post("/:memberId/points", async (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Accès non autorisé" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
 
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
@@ -408,9 +400,7 @@ router.post("/:memberId/points", async (req, res) => {
 // ——— POST /:memberId/redeem ———
 router.post("/:memberId/redeem", async (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Accès non autorisé" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 

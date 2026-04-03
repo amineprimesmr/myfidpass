@@ -2,7 +2,8 @@
  * Helpers et middleware partagés pour les routes businesses.
  * Référence : REFONTE-REGLES.md — routes < 15 par fichier.
  */
-import { getBusinessBySlug, getBusinessByDashboardToken } from "../../db.js";
+import { getBusinessBySlug, getBusinessByDashboardToken, hasActiveSubscription } from "../../db.js";
+import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 
 export function getApiBase(req) {
   return (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
@@ -38,18 +39,51 @@ export function getIdempotencyKey(req) {
   return key.slice(0, 120);
 }
 
-export function canAccessDashboard(business, req) {
-  if (!business) return false;
+/**
+ * Accès tableau de bord / caisse : JWT ou token dashboard, puis abonnement actif (ou essai Stripe).
+ * @returns {"ok" | "no_business" | "no_access" | "subscription_required"}
+ */
+export function checkDashboardAuth(business, req) {
+  if (!business) return "no_business";
   const token = (req.query.token || req.get("X-Dashboard-Token") || "").toString().trim();
+  let allowed = false;
   if (token) {
     const byToken = getBusinessByDashboardToken(token);
-    if (byToken && byToken.id === business.id) return true;
+    if (byToken && byToken.id === business.id) allowed = true;
   }
-  if (req.user) {
+  if (!allowed && req.user) {
     const uid = req.user.id != null ? String(req.user.id).trim() : "";
     const bid = business.user_id != null ? String(business.user_id).trim() : "";
-    if (uid !== "" && bid !== "" && uid === bid) return true;
+    if (uid !== "" && bid !== "" && uid === bid) allowed = true;
   }
+  if (!allowed) return "no_access";
+  const ownerId = business.user_id != null ? String(business.user_id) : "";
+  if (ownerId && !devPaymentBypass(req) && !hasActiveSubscription(ownerId)) {
+    return "subscription_required";
+  }
+  return "ok";
+}
+
+export function canAccessDashboard(business, req) {
+  return checkDashboardAuth(business, req) === "ok";
+}
+
+/** Envoie la réponse HTTP adaptée ; retourne true si l’accès est OK. */
+export function ensureDashboardAccess(req, res, business) {
+  const r = checkDashboardAuth(business, req);
+  if (r === "ok") return true;
+  if (r === "no_business") {
+    res.status(404).json({ error: "Entreprise introuvable" });
+    return false;
+  }
+  if (r === "no_access") {
+    res.status(401).json({ error: "Token ou authentification requis" });
+    return false;
+  }
+  res.status(403).json({
+    error: "Abonnement actif requis pour utiliser cette fonctionnalité.",
+    code: "subscription_required",
+  });
   return false;
 }
 

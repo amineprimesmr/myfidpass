@@ -2,14 +2,36 @@
  * Parcours QR : déblocage après étape Google, modales vérif → gain + opt-in (prénom + email) en une seule étape.
  */
 
-import { runQrThanksHeroTransition } from "./qr-game-hero-thanks.js";
+import { applyQrThanksHero, runQrThanksHeroTransition } from "./qr-game-hero-thanks.js";
 
 export const QR_GATE_KEY = "fid_qr_spin_gate";
 export const QR_GOOGLE_PENDING_KEY = "fid_qr_google_pending";
 /** Après retour de l’avis Google : hero « Merci, bonne chance ! » (pas après « Continuer » sans Google). */
 export const QR_THANKS_HERO_KEY = "fid_qr_thanks_hero";
 
-export { applyQrThanksHero, runQrThanksHeroTransition } from "./qr-game-hero-thanks.js";
+/** Même si sessionStorage échoue (Safari privé), le prochain rerender ne doit pas réécraser le titre. */
+let qrThanksHeroMemory = false;
+
+export function markQrThanksHeroDone() {
+  qrThanksHeroMemory = true;
+  try {
+    sessionStorage.setItem(QR_THANKS_HERO_KEY, "1");
+  } catch (_) {}
+}
+
+export function shouldShowQrThanksHero() {
+  if (qrThanksHeroMemory) return true;
+  try {
+    return sessionStorage.getItem(QR_THANKS_HERO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export { applyQrThanksHero, runQrThanksHeroTransition };
+
+/** Un seul couple visibility/pageshow pour tout le module (évite N handlers après chaque rerender). */
+let qrResumeListenersAbort = null;
 
 const QR_PANEL_IDS = ["#fidelity-qr-panel-google", "#fidelity-qr-panel-verify", "#fidelity-qr-panel-reward"];
 
@@ -187,6 +209,10 @@ export function firstNonPerduLabel(wheelLabels) {
  * @param {(msg: string) => string} ctx.messageUtilisateurPourErreur
  */
 export function bindQrGameUi(ctx) {
+  /* Même sans modale QR (ex. passage espace membre), couper les anciens listeners pageshow/visibility. */
+  qrResumeListenersAbort?.abort();
+  qrResumeListenersAbort = null;
+
   const { rootEl, api, slug, getState, rerender, refreshMemberData, messageUtilisateurPourErreur, signal } = ctx;
   const modalRoot = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!modalRoot) return () => {};
@@ -198,12 +224,18 @@ export function bindQrGameUi(ctx) {
   const backdrop = rootEl.querySelector('[data-fid-qr-close="backdrop"]');
 
   let verifyUxCleanup = () => {};
+  let verifyUnlockTimer = null;
 
   function runVerifyUnlock({ tryClaim }) {
     verifyUxCleanup();
+    if (verifyUnlockTimer != null) {
+      globalThis.clearTimeout(verifyUnlockTimer);
+      verifyUnlockTimer = null;
+    }
     const durationMs = QR_VERIFY_MIN_MS + Math.floor(Math.random() * QR_VERIFY_JITTER_MS);
     verifyUxCleanup = startVerifyPanelUx(rootEl, durationMs);
-    globalThis.setTimeout(() => {
+    verifyUnlockTimer = globalThis.setTimeout(() => {
+      verifyUnlockTimer = null;
       void (async () => {
         verifyUxCleanup();
         verifyUxCleanup = () => {};
@@ -222,12 +254,11 @@ export function bindQrGameUi(ctx) {
           }
           await new Promise((r) => globalThis.setTimeout(r, 480));
           closeQrModalRoot(rootEl, () => {
+            /* Avant toute anim ou refreshMemberData → rerender : évite de réinjecter l’accroche « Participez… ». */
+            markQrThanksHeroDone();
             void (async () => {
               try {
                 await runQrThanksHeroTransition(rootEl);
-                try {
-                  sessionStorage.setItem(QR_THANKS_HERO_KEY, "1");
-                } catch (_) {}
                 const raw = sessionStorage.getItem("fidelity_pending_engagement_claim");
                 if (raw) {
                   const data = JSON.parse(raw);
@@ -240,7 +271,10 @@ export function bindQrGameUi(ctx) {
                     }
                   }
                 }
-              } catch (_) {}
+              } catch (err) {
+                console.error("[fidelity] post-verify-google", err);
+                applyQrThanksHero(rootEl, () => ({}));
+              }
             })();
           });
         } else {
@@ -293,8 +327,10 @@ export function bindQrGameUi(ctx) {
     runVerifyUnlock({ tryClaim: false });
   });
 
-  document.addEventListener("visibilitychange", resumeGoogleReviewIfPending, { signal });
-  globalThis.addEventListener("pageshow", resumeGoogleReviewIfPending, { signal });
+  qrResumeListenersAbort = new AbortController();
+  const resumeSig = qrResumeListenersAbort.signal;
+  document.addEventListener("visibilitychange", resumeGoogleReviewIfPending, { signal: resumeSig });
+  globalThis.addEventListener("pageshow", resumeGoogleReviewIfPending, { signal: resumeSig });
   globalThis.setTimeout(resumeGoogleReviewIfPending, 0);
 
   backdrop?.addEventListener(
@@ -345,5 +381,11 @@ export function bindQrGameUi(ctx) {
 
   return () => {
     spinBtn?.removeEventListener("click", onSpinPre, true);
+    qrResumeListenersAbort?.abort();
+    qrResumeListenersAbort = null;
+    if (verifyUnlockTimer != null) {
+      globalThis.clearTimeout(verifyUnlockTimer);
+      verifyUnlockTimer = null;
+    }
   };
 }

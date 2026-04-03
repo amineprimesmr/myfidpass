@@ -28,7 +28,7 @@ import { sendPassKitPushWaves, passKitWaveGapMsForDiagnostics } from "../../pass
 import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason, isLikelyInvalidDeviceTokenApnsError } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
-import { canAccessDashboard, getApiBase } from "./shared.js";
+import { ensureDashboardAccess, getApiBase } from "./shared.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
 
@@ -225,9 +225,7 @@ function enqueueMerchantTestSend(businessId, fn) {
 
 export async function notifyHandler(req, res) {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const message = (req.body?.message ?? "").trim();
   if (!message) return res.status(400).json({ error: "Le message est obligatoire" });
   const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids.filter(Boolean) : null;
@@ -276,9 +274,7 @@ const router = Router();
 
 router.post("/send", async (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const { title, message, category_ids: reqCategoryIds, segment } = req.body || {};
   const testSelfOnly = req.body?.test_self_only === true || req.body?.testSelfOnly === true;
   const body = (message || "").trim();
@@ -368,9 +364,7 @@ router.post("/send", async (req, res) => {
 
 router.get("/campaign-segments", (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const c = getCampaignSegmentCounts(business.id);
   res.json({
     inactive14: c.inactive14,
@@ -388,9 +382,7 @@ router.get("/campaign-segments", (req, res) => {
 
 router.get("/batches", (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
   const rows = getNotificationBatchesForBusiness(business.id, { limit });
   const parsed = rows.map((r) => ({
@@ -405,9 +397,7 @@ router.get("/batches", (req, res) => {
 
 router.get("/history", (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
   const rows = getNotificationLogRecentForBusiness(business.id, { limit });
   res.json({ ok: true, entries: rows });
@@ -423,9 +413,7 @@ function safeJsonParse(s) {
 
 router.get("/stats", (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const webSubscriptions = getWebPushSubscriptionsByBusiness(business.id);
   const passKitTokens = getPassKitPushTokensForBusiness(business.id);
   const passKitRegistrationsCount = getPassKitRegistrationsCountForBusiness(business.id);
@@ -486,9 +474,7 @@ router.get("/stats", (req, res) => {
 
 router.get("/test-passkit", (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const { members: membersList } = getMembersForBusiness(business.id, { limit: 1 });
   const member = membersList && membersList[0];
   if (!member) {
@@ -512,9 +498,7 @@ router.get("/test-passkit", (req, res) => {
 
 router.post("/remove-test-device", (req, res) => {
   const business = req.business;
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const removed = removeTestPassKitDevices(business.id);
   res.json({ ok: true, removed, message: removed ? "Appareil de test supprimé." : "Aucun appareil de test à supprimer." });
 });

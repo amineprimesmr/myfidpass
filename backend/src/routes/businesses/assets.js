@@ -6,7 +6,7 @@ import { Router } from "express";
 import sharp from "sharp";
 import { getLogoIconBuffer, NOTIFICATION_ICON_SIZE } from "../../notifications.js";
 import { resolvePublicWalletLogoPng } from "../../lib/resolve-public-business-logo.js";
-import { canAccessDashboard } from "./shared.js";
+import { ensureDashboardAccess } from "./shared.js";
 import { getBusinessAssetData, getAllBusinessAssetsMap } from "../../db/business-assets.js";
 
 const router = Router();
@@ -77,9 +77,7 @@ router.get("/notification-icon", async (req, res) => {
 router.get("/logo", (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const raw = getBusinessAssetData(business.id, "logo");
   if (!raw) return res.status(404).send();
   const base64Data = String(raw).replace(/^data:image\/\w+;base64,/, "");
@@ -95,9 +93,7 @@ router.get("/logo", (req, res) => {
 router.get("/logo-icon", (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const raw = getBusinessAssetData(business.id, "logo_icon");
   if (!raw) return res.status(404).send();
   const base64Data = String(raw).replace(/^data:image\/\w+;base64,/, "");
@@ -113,9 +109,7 @@ router.get("/logo-icon", (req, res) => {
 router.get("/card-background", (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const raw = getBusinessAssetData(business.id, "card_background");
   if (!raw) return res.status(404).send();
   const base64Data = String(raw).replace(/^data:image\/\w+;base64,/, "");
@@ -148,9 +142,7 @@ router.get("/fidelity-page-background", (req, res) => {
 router.get("/stamp-icon", (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  if (!canAccessDashboard(business, req)) {
-    return res.status(401).json({ error: "Token dashboard invalide ou manquant" });
-  }
+  if (!ensureDashboardAccess(req, res, business)) return;
   const raw = getBusinessAssetData(business.id, "stamp_icon");
   if (!raw) return res.status(404).send();
   const base64Data = String(raw).replace(/^data:image\/\w+;base64,/, "");
