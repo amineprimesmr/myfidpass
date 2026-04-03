@@ -9,11 +9,11 @@ import {
   getPushTokensForMember,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
-import { ensureDashboardAccess } from "./shared.js";
+import { ensureOperationalSubscription } from "./shared.js";
 
 export async function postMemberPointsRemove(req, res) {
   const business = req.business;
-  if (!ensureDashboardAccess(req, res, business)) return;
+  if (!ensureOperationalSubscription(req, res, business)) return;
 
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });

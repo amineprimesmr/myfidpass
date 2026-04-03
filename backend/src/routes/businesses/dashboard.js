@@ -27,7 +27,13 @@ import {
 } from "../../db.js";
 import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/member-delete.js";
 import { sendPassKitUpdate } from "../../apns.js";
-import { ensureDashboardAccess, getApiBase, normalizeHexForPatch, MAX_LOGO_BASE64_BYTES } from "./shared.js";
+import {
+  ensureDashboardAccess,
+  ensureOperationalSubscription,
+  getApiBase,
+  normalizeHexForPatch,
+  MAX_LOGO_BASE64_BYTES,
+} from "./shared.js";
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
@@ -184,6 +190,7 @@ router.get("/settings", (req, res) => {
 /** Génère un JWT à encoder en QR sur le ticket de caisse (même montant que le panier, 15 min). */
 router.post("/receipt-challenge", (req, res) => {
   const business = req.business;
+  if (!ensureOperationalSubscription(req, res, business)) return;
   const amountEur = Number(req.body?.amount_eur ?? req.body?.amountEur);
   if (!Number.isFinite(amountEur) || amountEur <= 0) {
     return res.status(400).json({ error: "Indiquez amount_eur (nombre > 0)." });
@@ -639,6 +646,7 @@ router.put("/flyer", (req, res) => {
 
 /** Génération d’image de fond flyer via OpenAI (DALL·E 3) — prompt construit côté serveur. */
 router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
+  if (!ensureOperationalSubscription(req, res, req.business)) return;
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey || String(apiKey).trim().length < 20) {
     return res.status(503).json({
@@ -729,6 +737,7 @@ router.post("/flyer/ai-dev-unlock", async (req, res) => {
  * Body: { instruction: string }
  */
 router.post("/campaign-automation/parse", async (req, res) => {
+  if (!ensureOperationalSubscription(req, res, req.business)) return;
   const instruction = String(req.body?.instruction ?? "").trim();
   if (!instruction) {
     return res.status(400).json({ error: "Instruction requise." });
@@ -828,6 +837,7 @@ router.get("/stats", (req, res) => {
 // ——— Members (liste + export) ———
 router.get("/members/export", (req, res) => {
   const business = req.business;
+  if (!ensureOperationalSubscription(req, res, business)) return;
   const search = req.query.search ?? "";
   const filter = ["inactive30", "inactive90", "points50"].includes(req.query.filter) ? req.query.filter : null;
   const sort = ["last_visit", "points", "name", "created"].includes(req.query.sort) ? req.query.sort : "last_visit";
@@ -861,6 +871,7 @@ router.get("/members", (req, res) => {
 /** Supprime tous les membres du commerce (cartes Wallet / Web Push, historiques). Body : { confirm: "SUPPRIMER tous les membres" } */
 router.post("/members/delete-all", async (req, res) => {
   const business = req.business;
+  if (!ensureOperationalSubscription(req, res, business)) return;
   const confirm = (req.body?.confirm ?? req.body?.confirmText ?? "").toString().trim();
   if (confirm !== "SUPPRIMER tous les membres") {
     return res.status(400).json({
@@ -875,6 +886,7 @@ router.post("/members/delete-all", async (req, res) => {
 /** Supprime un membre et sa carte (pass, transactions, abonnements push du client). */
 router.delete("/members/:memberId", async (req, res) => {
   const business = req.business;
+  if (!ensureOperationalSubscription(req, res, business)) return;
   const memberId = req.params.memberId;
   if (memberId === "delete-all") {
     return res.status(400).json({ error: "Utilisez POST /dashboard/members/delete-all pour tout supprimer.", code: "USE_DELETE_ALL" });
@@ -934,6 +946,7 @@ router.post("/members/:memberId/categories", (req, res) => {
 // ——— Transactions + export ———
 router.get("/transactions/export", (req, res) => {
   const business = req.business;
+  if (!ensureOperationalSubscription(req, res, business)) return;
   const days = [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : null;
   const type = ["points_add", "visit"].includes(req.query.type) ? req.query.type : null;
   const { transactions } = getTransactionsForBusiness(business.id, { limit: 2000, offset: 0, days, type });

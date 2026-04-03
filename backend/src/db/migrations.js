@@ -811,4 +811,32 @@ export function runMigrations(db) {
   if (!bizFidTitle.includes("fidelity_qr_hero_title")) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN fidelity_qr_hero_title TEXT"));
   }
+
+  // ── v14 : file de travaux persistante pour les campagnes de notifications ──
+  // Garantit qu'un crash entre le 202 Accepted et l'exécution de setImmediate
+  // ne perd pas la campagne — le worker reprend les jobs 'pending'/'running' orphelins.
+  markMigrationApplied(db, 14, "notification_jobs_persistent_queue");
+  safeRun(db, () => db.exec(`
+    CREATE TABLE IF NOT EXISTS notification_jobs (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      slug TEXT NOT NULL,
+      api_base TEXT NOT NULL,
+      member_ids TEXT,
+      title TEXT,
+      body TEXT NOT NULL,
+      trigger_name TEXT NOT NULL DEFAULT 'campaign_manual',
+      merchant_user_id TEXT,
+      touch_member_last_visit INTEGER NOT NULL DEFAULT 1,
+      status TEXT NOT NULL DEFAULT 'pending',
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      started_at TEXT,
+      completed_at TEXT,
+      error TEXT,
+      batch_id TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_notif_jobs_status_created
+      ON notification_jobs(status, created_at);
+  `));
 }

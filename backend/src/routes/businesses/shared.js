@@ -39,11 +39,16 @@ export function getIdempotencyKey(req) {
   return key.slice(0, 120);
 }
 
+const SUBSCRIPTION_REQUIRED_BODY = {
+  error: "Abonnement actif requis pour utiliser cette fonctionnalité.",
+  code: "subscription_required",
+};
+
 /**
- * Accès tableau de bord / caisse : JWT ou token dashboard, puis abonnement actif (ou essai Stripe).
- * @returns {"ok" | "no_business" | "no_access" | "subscription_required"}
+ * Identité tableau de bord / caisse uniquement (JWT ou token dashboard) — sans exiger l’abonnement (freemium : config).
+ * @returns {"ok" | "no_business" | "no_access"}
  */
-export function checkDashboardAuth(business, req) {
+export function checkDashboardIdentity(business, req) {
   if (!business) return "no_business";
   const token = (req.query.token || req.get("X-Dashboard-Token") || "").toString().trim();
   let allowed = false;
@@ -57,34 +62,49 @@ export function checkDashboardAuth(business, req) {
     if (uid !== "" && bid !== "" && uid === bid) allowed = true;
   }
   if (!allowed) return "no_access";
-  const ownerId = business.user_id != null ? String(business.user_id) : "";
-  if (ownerId && !devPaymentBypass(req) && !hasActiveSubscription(ownerId)) {
-    return "subscription_required";
-  }
   return "ok";
 }
 
-export function canAccessDashboard(business, req) {
-  return checkDashboardAuth(business, req) === "ok";
+/** @deprecated préférer checkDashboardIdentity — nom historique */
+export function checkDashboardAuth(business, req) {
+  return checkDashboardIdentity(business, req);
 }
 
-/** Envoie la réponse HTTP adaptée ; retourne true si l’accès est OK. */
+export function canAccessDashboard(business, req) {
+  return checkDashboardIdentity(business, req) === "ok";
+}
+
+/** Accès identité dashboard uniquement (réglages, stats, liste membres, etc.). */
 export function ensureDashboardAccess(req, res, business) {
-  const r = checkDashboardAuth(business, req);
+  const r = checkDashboardIdentity(business, req);
   if (r === "ok") return true;
   if (r === "no_business") {
     res.status(404).json({ error: "Entreprise introuvable" });
     return false;
   }
-  if (r === "no_access") {
-    res.status(401).json({ error: "Token ou authentification requis" });
+  res.status(401).json({ error: "Token ou authentification requis" });
+  return false;
+}
+
+/**
+ * Après `ensureDashboardAccess` : vérifie abonnement actif / essai (ou bypass dev).
+ * À utiliser seul si l’identité dashboard est déjà garantie.
+ */
+export function assertOperationalSubscription(req, res, business) {
+  const ownerId = business.user_id != null ? String(business.user_id).trim() : "";
+  if (!ownerId) {
+    res.status(403).json(SUBSCRIPTION_REQUIRED_BODY);
     return false;
   }
-  res.status(403).json({
-    error: "Abonnement actif requis pour utiliser cette fonctionnalité.",
-    code: "subscription_required",
-  });
+  if (devPaymentBypass(req) || hasActiveSubscription(ownerId)) return true;
+  res.status(403).json(SUBSCRIPTION_REQUIRED_BODY);
   return false;
+}
+
+/** Identité dashboard + abonnement actif (scan, crédit points, campagnes, etc.). */
+export function ensureOperationalSubscription(req, res, business) {
+  if (!ensureDashboardAccess(req, res, business)) return false;
+  return assertOperationalSubscription(req, res, business);
 }
 
 export function normalizeHexForPatch(v) {

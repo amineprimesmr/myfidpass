@@ -28,9 +28,10 @@ import { sendPassKitPushWaves, passKitWaveGapMsForDiagnostics } from "../../pass
 import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason, isLikelyInvalidDeviceTokenApnsError } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
-import { ensureDashboardAccess, getApiBase } from "./shared.js";
+import { assertOperationalSubscription, ensureDashboardAccess, getApiBase } from "./shared.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
+import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
 
 /** Segments autorisés pour POST .../notifications/send (campagne manuelle ou auto). */
 export const CAMPAIGN_SEGMENT_KEYS = [
@@ -226,6 +227,7 @@ function enqueueMerchantTestSend(businessId, fn) {
 export async function notifyHandler(req, res) {
   const business = req.business;
   if (!ensureDashboardAccess(req, res, business)) return;
+  if (!assertOperationalSubscription(req, res, business)) return;
   const message = (req.body?.message ?? "").trim();
   if (!message) return res.status(400).json({ error: "Le message est obligatoire" });
   const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids.filter(Boolean) : null;
@@ -277,6 +279,7 @@ router.post("/send", async (req, res) => {
   if (!ensureDashboardAccess(req, res, business)) return;
   const { title, message, category_ids: reqCategoryIds, segment } = req.body || {};
   const testSelfOnly = req.body?.test_self_only === true || req.body?.testSelfOnly === true;
+  if (!testSelfOnly && !assertOperationalSubscription(req, res, business)) return;
   const body = (message || "").trim();
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
@@ -322,14 +325,34 @@ router.post("/send", async (req, res) => {
         ? "campaign_manual_categories"
         : "campaign_manual";
 
-  const businessForSend = syncNotificationTextsForCampaign(business.id, title, body);
+  // Synchronise les textes de notification AVANT de créer le job, pour que le pass
+  // refetché par les iPhones contienne déjà le bon changeMessage.
+  syncNotificationTextsForCampaign(business.id, title, body);
   const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
 
   /**
-   * Envoi **hors** la durée de vie de la requête HTTP : évite timeouts iOS / proxy / Railway
-   * (« Application failed to respond ») sur « tous les inscrits » avec beaucoup de PassKit.
-   * Le détail (sent, erreurs) est dans `notification_batches` + logs.
+   * Envoi persistant via la file de travaux SQLite.
+   *
+   * POURQUOI : `setImmediate()` seul perdait la campagne si Railway redémarrait le
+   * conteneur entre le 202 et l’exécution de la microtask (déploiement, OOM, crash).
+   * Désormais, le job est écrit en base AVANT le 202 ; même sans setImmediate,
+   * le worker de notification-job-queue.js le reprend au prochain démarrage.
+   *
+   * job_id retourné dans la réponse : le client peut l’utiliser pour tracker l’envoi
+   * via GET /notifications/batches (le batch_id sera mis à jour une fois l’envoi terminé).
    */
+  const jobId = enqueueNotificationJob({
+    businessId: business.id,
+    slug,
+    apiBase,
+    memberIds,
+    title: title ?? null,
+    body,
+    triggerName,
+    merchantUserId: req.user?.id ?? null,
+    touchMemberLastVisit: !isBehavioralSegment,
+  });
+
   res.status(202).json({
     ok: true,
     accepted: true,
@@ -338,27 +361,10 @@ router.post("/send", async (req, res) => {
     sent_web_push: null,
     sent_pass_kit: null,
     sent_merchant_app: null,
-    batch_id: null,
+    job_id: jobId,
+    batch_id: null, // sera disponible dans /notifications/batches une fois terminé
     total: totalDevices,
-    message: `Envoi lancé vers ${totalDevices} appareil(s). Vous pouvez fermer l’écran : la campagne continue sur le serveur. Consultez l’historique des campagnes pour le résultat.`,
-  });
-
-  const slugForJob = slug;
-  const titleForJob = title;
-  const bodyForJob = body;
-  const memberIdsForJob = memberIds;
-  const triggerForJob = triggerName;
-  const merchantUserIdForJob = req.user?.id ?? null;
-  const touchVisitForJob = !isBehavioralSegment;
-
-  setImmediate(() => {
-    deliverDashboardBroadcast(businessForSend, slugForJob, apiBase, memberIdsForJob, titleForJob, bodyForJob, "passkit", {
-      triggerName: triggerForJob,
-      merchantUserId: merchantUserIdForJob,
-      touchMemberLastVisit: touchVisitForJob,
-    }).catch((err) => {
-      logger.error({ err, businessId: business.id, slug: slugForJob }, "[notifications/send] envoi asynchrone échoué");
-    });
+    message: `Envoi lancé vers ${totalDevices} appareil(s). Vous pouvez fermer l’écran : la campagne continue sur le serveur. Consultez l’historique des campagnes pour le résultat (job_id: ${jobId}).`,
   });
 });
 

@@ -23,11 +23,13 @@ import {
   getPushTokensForMember,
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
+  hasActiveSubscription,
 } from "../../db.js";
+import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
 import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
-import { getIdempotencyKey, canAccessDashboard, ensureDashboardAccess } from "./shared.js";
+import { getIdempotencyKey, canAccessDashboard, ensureOperationalSubscription } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../../lib/merchant-dashboard-sync-push.js";
 import { scheduleCampaignEventJobsForMember } from "../../lib/campaign-event-jobs.js";
@@ -63,6 +65,17 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
 
   const normEmail = String(email).trim().toLowerCase();
   const normName = String(name).trim();
+  if (req.user) {
+    const uid = req.user.id != null ? String(req.user.id).trim() : "";
+    const bid = business.user_id != null ? String(business.user_id).trim() : "";
+    const previewWalletEmail = normEmail.startsWith("wallet-apercu.") && normEmail.endsWith("@example.com");
+    if (uid === bid && !previewWalletEmail && !devPaymentBypass(req) && !hasActiveSubscription(uid)) {
+      return res.status(403).json({
+        error: "Abonnement actif requis pour ajouter des clients à votre programme.",
+        code: "subscription_required",
+      });
+    }
+  }
   const existing = getMemberByEmailForBusiness(business.id, normEmail);
   if (existing) {
     return res.status(200).json({
@@ -111,7 +124,7 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
 router.post("/import", (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
-  if (!ensureDashboardAccess(req, res, business)) return;
+  if (!ensureOperationalSubscription(req, res, business)) return;
   const { members: rawMembers, onDuplicate = "skip" } = req.body || {};
   if (!Array.isArray(rawMembers) || rawMembers.length === 0) {
     return res.status(400).json({ error: "Body doit contenir un tableau 'members' non vide (ex: [{ email, name, points? }])" });
@@ -227,7 +240,7 @@ router.get("/:memberId/rewards", (req, res) => {
 // ——— POST /:memberId/rewards/:grantId/claim ———
 router.post("/:memberId/rewards/:grantId/claim", (req, res) => {
   const business = req.business;
-  if (!ensureDashboardAccess(req, res, business)) return;
+  if (!ensureOperationalSubscription(req, res, business)) return;
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
   const claimed = markRewardGrantClaimed(business.id, member.id, req.params.grantId);
@@ -258,7 +271,7 @@ router.get("/:memberId", (req, res) => {
 // ——— POST /:memberId/points/remove ——— (correction caisse : retire des points sans passer par une récompense)
 router.post("/:memberId/points/remove", async (req, res) => {
   const business = req.business;
-  if (!ensureDashboardAccess(req, res, business)) return;
+  if (!ensureOperationalSubscription(req, res, business)) return;
 
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
@@ -305,7 +318,7 @@ router.post("/:memberId/points/remove", async (req, res) => {
 // ——— POST /:memberId/points ———
 router.post("/:memberId/points", async (req, res) => {
   const business = req.business;
-  if (!ensureDashboardAccess(req, res, business)) return;
+  if (!ensureOperationalSubscription(req, res, business)) return;
 
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
@@ -400,7 +413,7 @@ router.post("/:memberId/points", async (req, res) => {
 // ——— POST /:memberId/redeem ———
 router.post("/:memberId/redeem", async (req, res) => {
   const business = req.business;
-  if (!ensureDashboardAccess(req, res, business)) return;
+  if (!ensureOperationalSubscription(req, res, business)) return;
   const member = getMemberForBusiness(req.params.memberId, business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
