@@ -756,7 +756,7 @@
               <header class="app-flyer-qr-hero">
                 <p class="app-flyer-qr-eyebrow">Point de vente</p>
                 <h2 class="app-section-title">Flyer QR code</h2>
-                <p class="app-section-desc">Une affiche <strong>prête à imprimer</strong> avec le lien vers votre page carte (fidélité, Wallet). Choisissez un modèle, ajustez textes et couleurs, puis téléchargez en <strong>PNG haute définition</strong>.</p>
+                <p class="app-section-desc">Aperçu live, export <strong>PNG HD</strong>, lien public copiable.</p>
               </header>
               <div class="app-flyer-qr-layout">
                 <div class="app-flyer-qr-preview-col">
@@ -784,11 +784,9 @@
                   <button type="button" id="app-flyer-panel-toggle" class="app-flyer-panel-toggle" aria-expanded="false" aria-controls="app-flyer-panel">Personnaliser le flyer</button>
                   <div id="app-flyer-panel" class="app-flyer-panel">
                     <div id="app-flyer-bg-panel" class="app-flyer-logo-panel app-flyer-bg-panel">
-                      <p class="app-flyer-chip-label">Image de fond du poster</p>
-                      <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">Remplit tout le flyer (recadrage type « cover »). Par défaut la photo est <strong>nette</strong> (voile à 0 %). Monte le voile si le titre ou le QR manquent de contraste sur ton image.</p>
+                      <p class="app-flyer-chip-label">Image de fond</p>
                       <div id="app-flyer-bg-gallery-wrap" class="app-flyer-bg-gallery-wrap hidden">
-                        <p class="app-flyer-chip-label" style="margin:0.65rem 0 0.35rem">Fonds proposés</p>
-                        <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">Un clic applique le fond (comme une image importée). Liste : <code>public/assets/flyers/manifest.json</code>.</p>
+                        <p class="app-flyer-chip-label" style="margin:0.65rem 0 0.35rem">Modèles</p>
                         <div id="app-flyer-bg-gallery" class="app-flyer-bg-gallery" role="list"></div>
                       </div>
                       <input type="file" id="app-flyer-bg-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Importer une image de fond pour le flyer" />
@@ -801,62 +799,52 @@
                         <span class="app-flyer-logo-preview-label">Aperçu</span>
                         <img id="app-flyer-bg-preview" class="app-flyer-bg-preview" alt="" decoding="async" />
                       </div>
-                      <div class="app-flyer-field app-flyer-field--compact" style="margin-top:0.65rem">
-                        <label class="app-label" for="app-flyer-bg-overlay">Voile sur la photo (0 % = net, sans assombrissement)</label>
-                        <div class="app-flyer-range-row">
-                          <input type="range" id="app-flyer-bg-overlay" class="app-flyer-bg-overlay-range" min="0" max="90" step="1" value="0" data-flyer-input aria-valuemin="0" aria-valuemax="90" />
-                          <span class="app-flyer-range-readout" id="app-flyer-bg-overlay-out" aria-hidden="true">0 %</span>
-                        </div>
-                      </div>
                     </div>
                     <div id="app-flyer-ai-panel" class="app-flyer-logo-panel app-flyer-ai-panel" style="margin-top:0.75rem">
-                      <p class="app-flyer-chip-label">Génération IA du fond</p>
+                      <p class="app-flyer-chip-label">Fond par IA</p>
                       <p id="app-flyer-ai-quota" class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem" role="status"></p>
-                      <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">1) <strong>Logo</strong> (optionnel, PNG/JPG/WebP) pour que l’IA le place en tête d’affiche. 2) Jusqu’à <strong>3 images</strong> d’inspiration (ambiance, produits — en plus du logo). 3) Vérifie le descriptif <strong>activité + visuels</strong>. 4) Génère — le résultat remplace l’image de fond ci-dessus.</p>
                       <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-ai-logo-file">Logo de marque (optionnel)</label>
-                        <input type="file" id="app-flyer-ai-logo-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Logo de marque pour la génération IA du fond" />
-                        <p class="app-hint" style="margin:0.35rem 0 0;font-size:0.72rem">Même fichier que votre logo officiel — l’API l’utilise en <strong>référence #1</strong> (édition multimodale).</p>
+                        <label class="app-label" for="app-flyer-ai-logo-file">Logo (optionnel)</label>
+                        <input type="file" id="app-flyer-ai-logo-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Logo pour la génération IA du fond" />
                       </div>
                       <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-ai-ref-files">Images de référence (0 à 3)</label>
+                        <label class="app-label" for="app-flyer-ai-ref-files">Images d’inspiration (max 3)</label>
                         <input type="file" id="app-flyer-ai-ref-files" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" multiple aria-label="Images de référence pour l’IA" />
                       </div>
                       <div class="app-flyer-field">
-                        <label class="app-label" for="app-flyer-ai-brand">Nom de marque / établissement</label>
+                        <label class="app-label" for="app-flyer-ai-brand">Marque / établissement</label>
                         <input type="text" id="app-flyer-ai-brand" class="app-input" maxlength="80" autocomplete="organization" />
                       </div>
                       <div class="app-flyer-field">
-                        <label class="app-label" for="app-flyer-ai-concept">Votre activité et visuels à mettre en avant</label>
-                        <textarea id="app-flyer-ai-concept" class="app-input" rows="3" maxlength="400" placeholder="Ex. Boulangerie artisanale — mettre en avant croissants et viennoiseries autour de la roue. Ou : garage — SUV familial, pneus, atelier…"></textarea>
-                        <p class="app-hint" style="margin:0.35rem 0 0;font-size:0.72rem">Un seul champ : secteur + ce que l’affiche doit montrer (produits, ambiance, offre phare).</p>
+                        <label class="app-label" for="app-flyer-ai-concept">Activité & visuels</label>
+                        <textarea id="app-flyer-ai-concept" class="app-input" rows="2" maxlength="400" placeholder="Ex. boulangerie, croissants, four…"></textarea>
                       </div>
                       <div class="app-flyer-colors" style="margin-top:0.35rem">
                         <div class="app-flyer-color-row">
-                          <label for="app-flyer-ai-accent">Couleur accent (roue)</label>
+                          <label for="app-flyer-ai-accent">Accent roue</label>
                           <input type="color" id="app-flyer-ai-accent" value="#fbbf24" />
                         </div>
                         <div class="app-flyer-color-row">
-                          <label for="app-flyer-ai-secondary">Couleur secondaire (alternance)</label>
+                          <label for="app-flyer-ai-secondary">2e couleur</label>
                           <input type="color" id="app-flyer-ai-secondary" value="#1e293b" />
                         </div>
                       </div>
                       <div class="app-flyer-field">
-                        <label class="app-label" for="app-flyer-ai-mood">Ambiance visuelle</label>
+                        <label class="app-label" for="app-flyer-ai-mood">Ambiance</label>
                         <select id="app-flyer-ai-mood" class="app-input app-flyer-social-select" aria-label="Ambiance visuelle IA"></select>
                       </div>
                       <div class="app-flyer-field">
-                        <label class="app-label" for="app-flyer-ai-extra">Consignes supplémentaires (optionnel)</label>
-                        <textarea id="app-flyer-ai-extra" class="app-input" rows="2" maxlength="400" placeholder="Ex. tons chauds, bois et ardoise…"></textarea>
+                        <label class="app-label" for="app-flyer-ai-extra">Précisions (optionnel)</label>
+                        <textarea id="app-flyer-ai-extra" class="app-input" rows="2" maxlength="400" placeholder="Ex. tons chauds…"></textarea>
                       </div>
-                      <button type="button" id="app-flyer-ai-generate-btn" class="app-btn app-btn-secondary" style="margin-top:0.35rem">Générer le fond avec l’IA</button>
+                      <button type="button" id="app-flyer-ai-generate-btn" class="app-btn app-btn-secondary" style="margin-top:0.35rem">Générer</button>
                       <p id="app-flyer-ai-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
                     </div>
                     <div class="app-flyer-field">
                       <label class="app-label" for="app-flyer-headline">Accroche principale</label>
                       <textarea id="app-flyer-headline" class="app-input" rows="2" maxlength="200" data-flyer-input></textarea>
                     </div>
-                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Style du titre</p>
+                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Titre</p>
                     <div class="app-flyer-field">
                       <label class="app-label" for="app-flyer-headline-font">Police</label>
                       <select id="app-flyer-headline-font" class="app-input app-flyer-social-select" data-flyer-input aria-label="Police du titre"></select>
@@ -871,142 +859,68 @@
                         <input type="color" id="app-flyer-headline-stroke" data-flyer-input aria-label="Couleur du contour du titre" />
                       </div>
                       <div class="app-flyer-color-row">
-                        <label for="app-flyer-headline-gift-stroke">Contour du mot CADEAU!</label>
+                        <label for="app-flyer-headline-gift-stroke">Contour « CADEAU »</label>
                         <input type="color" id="app-flyer-headline-gift-stroke" value="#020617" data-flyer-input aria-label="Couleur du contour du mot CADEAU penché" />
                       </div>
                       <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-headline-stroke-w">Épaisseur du contour (0 = aucun)</label>
+                        <label class="app-label" for="app-flyer-headline-stroke-w">Épaisseur contour (0 = off)</label>
                         <input type="number" id="app-flyer-headline-stroke-w" class="app-input" min="0" max="48" step="1" value="18" data-flyer-input inputmode="numeric" />
                       </div>
                       <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-headline-logo-gap">Espace logo → titre (% hauteur)</label>
+                        <label class="app-label" for="app-flyer-headline-logo-gap">Espace logo → titre (%)</label>
                         <input type="number" id="app-flyer-headline-logo-gap" class="app-input" min="0" max="28" step="0.5" value="16" data-flyer-input inputmode="decimal" />
                       </div>
                       <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-headline-tracking">Espacement des lettres</label>
+                        <label class="app-label" for="app-flyer-headline-tracking">Lettres (tracking)</label>
                         <input type="number" id="app-flyer-headline-tracking" class="app-input" min="0" max="8" step="0.5" value="0" data-flyer-input inputmode="decimal" />
                       </div>
                       <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-headline-size">Taille du titre (% de la largeur du flyer)</label>
+                        <label class="app-label" for="app-flyer-headline-size">Taille titre (% largeur)</label>
                         <div class="app-flyer-range-row">
                           <input type="range" id="app-flyer-headline-size" min="5" max="16" step="0.5" value="7" data-flyer-input aria-valuemin="5" aria-valuemax="16" />
                           <span class="app-flyer-range-readout" id="app-flyer-headline-size-out" aria-hidden="true">7 %</span>
                         </div>
                       </div>
                     </div>
-                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Cadre QR</p>
-                    <div class="app-flyer-field app-flyer-field--compact">
-                      <label class="app-label" for="app-flyer-qr-outline">Contour du QR (0 = désactivé)</label>
-                      <input type="number" id="app-flyer-qr-outline" class="app-input" min="0" max="12" step="1" value="5" data-flyer-input inputmode="numeric" />
-                    </div>
                     <div class="app-flyer-field">
                       <label class="app-label" for="app-flyer-cta">Texte à côté du QR</label>
                       <input type="text" id="app-flyer-cta" class="app-input" maxlength="80" data-flyer-input placeholder="ex. Scanne pour jouer" />
                       <div class="app-flyer-color-row" style="margin-top:0.5rem">
-                        <label for="app-flyer-cta-bg">Couleur de la pastille</label>
+                        <label for="app-flyer-cta-bg">Pastille</label>
                         <input type="color" id="app-flyer-cta-bg" value="#ec4899" data-flyer-input aria-label="Couleur de fond du bandeau Scanne pour jouer" />
                       </div>
                       <div class="app-flyer-color-row" style="margin-top:0.5rem">
-                        <label for="app-flyer-cta-text-color">Couleur du texte CTA</label>
+                        <label for="app-flyer-cta-text-color">Texte</label>
                         <input type="color" id="app-flyer-cta-text-color" value="#ffffff" data-flyer-input aria-label="Couleur du texte du bandeau Scanne pour jouer" />
                       </div>
-                      <p class="app-hint" style="margin:0.25rem 0 0;font-size:0.78rem">Le premier mot s’affiche en grand au-dessus du reste (ex. <strong>SCANNE</strong> puis <strong>POUR JOUER</strong>). Bord noir, texte blanc. Laisser le texte vide pour masquer.</p>
                     </div>
-                    <p class="app-flyer-chip-label" style="margin-top:1rem">Étapes (bas de flyer)</p>
-                    <div class="app-flyer-color-row">
-                      <label for="app-flyer-footer-steps-color">Couleur des chiffres et des libellés</label>
-                      <input type="color" id="app-flyer-footer-steps-color" value="#ffffff" data-flyer-input aria-label="Couleur du bandeau étapes" />
-                    </div>
-                    <div class="app-flyer-field app-flyer-field--compact">
-                      <label class="app-label" for="app-flyer-footer-text-scale">Taille du texte (étapes + bande « Suivez-nous »)</label>
-                      <div class="app-flyer-range-row">
-                        <input type="range" id="app-flyer-footer-text-scale" min="70" max="130" step="5" value="100" data-flyer-input aria-valuemin="70" aria-valuemax="130" />
-                        <span class="app-flyer-range-readout" id="app-flyer-footer-text-scale-out" aria-hidden="true">100 %</span>
-                      </div>
-                    </div>
-                    <div class="app-flyer-field app-flyer-field--compact">
-                      <label class="app-label" for="app-flyer-wheel-label-scale">Taille du texte sur la roue (GAGNÉ / PERDU)</label>
-                      <div class="app-flyer-range-row">
-                        <input type="range" id="app-flyer-wheel-label-scale" min="70" max="130" step="5" value="100" data-flyer-input aria-valuemin="70" aria-valuemax="130" />
-                        <span class="app-flyer-range-readout" id="app-flyer-wheel-label-scale-out" aria-hidden="true">100 %</span>
-                      </div>
-                    </div>
-                    <div class="app-flyer-field">
-                      <label class="app-label" for="app-flyer-step1">Étape 1</label>
-                      <input type="text" id="app-flyer-step1" class="app-input" maxlength="120" data-flyer-input />
-                    </div>
-                    <div class="app-flyer-field">
-                      <label class="app-label" for="app-flyer-step2">Étape 2</label>
-                      <input type="text" id="app-flyer-step2" class="app-input" maxlength="120" data-flyer-input />
-                    </div>
-                    <div class="app-flyer-field">
-                      <label class="app-label" for="app-flyer-step3">Étape 3</label>
-                      <input type="text" id="app-flyer-step3" class="app-input" maxlength="120" data-flyer-input />
-                    </div>
-                    <p class="app-flyer-chip-label" style="margin-top:1rem">Réseaux sociaux (sous le bandeau, max 3)</p>
-                    <p class="app-hint" style="margin:-0.35rem 0 0.5rem;font-size:0.8rem">Choisis le réseau puis colle le lien (https…). Laisser « — » pour ignorer.</p>
-                    <div class="app-flyer-social-row">
-                      <select id="app-flyer-social-1-type" class="app-input app-flyer-social-select" data-flyer-input aria-label="Réseau social 1">
-                        <option value="">—</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="facebook">Facebook</option>
-                        <option value="tiktok">TikTok</option>
-                        <option value="linkedin">LinkedIn</option>
-                        <option value="youtube">YouTube</option>
-                        <option value="twitter">X (Twitter)</option>
-                        <option value="snapchat">Snapchat</option>
-                        <option value="tripadvisor">Tripadvisor</option>
-                        <option value="google">Google</option>
-                      </select>
-                      <input type="url" id="app-flyer-social-1-url" class="app-input" maxlength="500" placeholder="https://…" data-flyer-input autocomplete="url" />
-                    </div>
-                    <div class="app-flyer-social-row">
-                      <select id="app-flyer-social-2-type" class="app-input app-flyer-social-select" data-flyer-input aria-label="Réseau social 2">
-                        <option value="">—</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="facebook">Facebook</option>
-                        <option value="tiktok">TikTok</option>
-                        <option value="linkedin">LinkedIn</option>
-                        <option value="youtube">YouTube</option>
-                        <option value="twitter">X (Twitter)</option>
-                        <option value="snapchat">Snapchat</option>
-                        <option value="tripadvisor">Tripadvisor</option>
-                        <option value="google">Google</option>
-                      </select>
-                      <input type="url" id="app-flyer-social-2-url" class="app-input" maxlength="500" placeholder="https://…" data-flyer-input autocomplete="url" />
-                    </div>
-                    <div class="app-flyer-social-row">
-                      <select id="app-flyer-social-3-type" class="app-input app-flyer-social-select" data-flyer-input aria-label="Réseau social 3">
-                        <option value="">—</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="facebook">Facebook</option>
-                        <option value="tiktok">TikTok</option>
-                        <option value="linkedin">LinkedIn</option>
-                        <option value="youtube">YouTube</option>
-                        <option value="twitter">X (Twitter)</option>
-                        <option value="snapchat">Snapchat</option>
-                        <option value="tripadvisor">Tripadvisor</option>
-                        <option value="google">Google</option>
-                      </select>
-                      <input type="url" id="app-flyer-social-3-url" class="app-input" maxlength="500" placeholder="https://…" data-flyer-input autocomplete="url" />
-                    </div>
+                    <input type="hidden" id="app-flyer-footer-steps-color" value="#ffffff" data-flyer-input />
+                    <input type="hidden" id="app-flyer-footer-text-scale" value="100" data-flyer-input />
+                    <input type="hidden" id="app-flyer-wheel-label-scale" value="100" data-flyer-input />
+                    <input type="hidden" id="app-flyer-step1" value="Scan le QR code" data-flyer-input />
+                    <input type="hidden" id="app-flyer-step2" value="Fais tourner la roue" data-flyer-input />
+                    <input type="hidden" id="app-flyer-step3" value="Découvre ton cadeau" data-flyer-input />
+                    <input type="hidden" id="app-flyer-social-1-type" value="" data-flyer-input />
+                    <input type="hidden" id="app-flyer-social-1-url" value="" data-flyer-input />
+                    <input type="hidden" id="app-flyer-social-2-type" value="" data-flyer-input />
+                    <input type="hidden" id="app-flyer-social-2-url" value="" data-flyer-input />
+                    <input type="hidden" id="app-flyer-social-3-type" value="" data-flyer-input />
+                    <input type="hidden" id="app-flyer-social-3-url" value="" data-flyer-input />
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Roue</p>
                     <input type="hidden" id="app-flyer-wheel-mode" value="png" />
-                    <p class="app-hint" style="margin:0.35rem 0 0.65rem;font-size:0.78rem">Affichage <strong>image HD</strong> (<code>roue.png</code>), teintée avec vos deux couleurs. Le mode « parts plates » n’est plus utilisé.</p>
-                    <div class="app-flyer-field" style="margin-top:0.65rem">
-                      <label class="app-label" for="app-flyer-wheel-offset">Rotation découpe (°)</label>
+                    <div class="app-flyer-field" style="margin-top:0.35rem">
+                      <label class="app-label" for="app-flyer-wheel-offset">Rotation (°)</label>
                       <input type="number" id="app-flyer-wheel-offset" class="app-input" min="-180" max="180" step="0.5" value="0" data-flyer-input inputmode="decimal" />
                     </div>
                     <div id="app-flyer-wheel-segments-wrap">
-                      <p class="app-hint" style="margin:0.35rem 0 0.5rem;font-size:0.78rem"><strong>6 parts</strong> égales, <strong>2 couleurs</strong> en alternance (1·3·5 / 2·4·6). Teinte PNG en <strong>multiply</strong> (noir et couleurs foncées OK). Rotation découpe si les rainures ne tombent pas juste. Image <strong>≥ 2000 px</strong>, fond transparent.</p>
                       <div class="app-flyer-wheel-seg-grid" role="group" aria-label="Couleurs alternées de la roue">
-                        <label for="app-flyer-wheel-color-odd">Parts impaires (1, 3, 5)</label>
+                        <label for="app-flyer-wheel-color-odd">Parts 1·3·5</label>
                         <input type="color" id="app-flyer-wheel-color-odd" data-flyer-input />
-                        <label for="app-flyer-wheel-color-even">Parts paires (2, 4, 6)</label>
+                        <label for="app-flyer-wheel-color-even">Parts 2·4·6</label>
                         <input type="color" id="app-flyer-wheel-color-even" data-flyer-input />
                       </div>
                     </div>
-                    <p class="app-flyer-chip-label" style="margin-top:1rem">Couleurs (texte &amp; fond)</p>
+                    <p class="app-flyer-chip-label" style="margin-top:1rem">Couleurs</p>
                     <div class="app-flyer-colors">
                       <div class="app-flyer-color-row">
                         <label for="app-flyer-c1">Primaire</label>
@@ -1030,9 +944,8 @@
                       </div>
                     </div>
                     <div class="app-flyer-actions">
-                      <button type="button" id="app-flyer-reset" class="app-btn app-btn-secondary">Réinitialiser le modèle</button>
+                      <button type="button" id="app-flyer-reset" class="app-btn app-btn-secondary">Réinitialiser</button>
                     </div>
-                    <p class="app-hint" style="margin-top:0.75rem;margin-bottom:0">Le fond généré par l’IA intègre déjà votre identité (marque, secteur, couleurs). Le QR est ajouté sur l’aperçu à partir du lien public.</p>
                   </div>
                 </div>
               </div>

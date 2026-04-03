@@ -41,8 +41,6 @@ export function readFlyerStateFromForm(root) {
     flyerFooterTextScalePct: Number(q("app-flyer-footer-text-scale")?.value),
     footerStepsForegroundColor: q("app-flyer-footer-steps-color")?.value,
     flyerWheelLabelScalePct: Number(q("app-flyer-wheel-label-scale")?.value),
-    flyerBgOverlayPct: Number(q("app-flyer-bg-overlay")?.value),
-    flyerQrOutlineWidth: Number(q("app-flyer-qr-outline")?.value),
   });
 }
 
@@ -85,8 +83,6 @@ export function writeFlyerFormFromState(root, s) {
   set("app-flyer-footer-text-scale", String(s.flyerFooterTextScalePct ?? 100));
   set("app-flyer-footer-steps-color", s.footerStepsForegroundColor);
   set("app-flyer-wheel-label-scale", String(s.flyerWheelLabelScalePct ?? 100));
-  set("app-flyer-bg-overlay", String(s.flyerBgOverlayPct ?? 0));
-  set("app-flyer-qr-outline", String(s.flyerQrOutlineWidth ?? 0));
 }
 
 export function loadStoredFlyerState() {

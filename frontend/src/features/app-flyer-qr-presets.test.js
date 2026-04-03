@@ -65,10 +65,9 @@ describe("mergeFlyerState", () => {
     expect(s.colorPrimary).toBe("#ff00aa");
   });
 
-  it("borne l’intensité du voile sur l’image de fond", () => {
+  it("désactive le voile sur l’image (export sans assombrissement)", () => {
     expect(defaultFlyerState().flyerBgOverlayPct).toBe(0);
-    expect(mergeFlyerState({ flyerBgOverlayPct: -5 }).flyerBgOverlayPct).toBe(0);
-    expect(mergeFlyerState({ flyerBgOverlayPct: 120 }).flyerBgOverlayPct).toBe(90);
+    expect(mergeFlyerState({ flyerBgOverlayPct: 120 }).flyerBgOverlayPct).toBe(0);
   });
 
   it("retire l’ancienne clé subline du stockage", () => {
@@ -95,11 +94,9 @@ describe("mergeFlyerState", () => {
     expect(s.headlineLetterSpacing).toBe(8);
   });
 
-  it("borne l’épaisseur de cadre QR", () => {
-    const base = defaultFlyerState();
-    expect(mergeFlyerState({ flyerQrOutlineWidth: 99 }).flyerQrOutlineWidth).toBe(12);
-    expect(mergeFlyerState({ flyerQrOutlineWidth: 7 }).flyerQrOutlineWidth).toBe(7);
-    expect(mergeFlyerState({}).flyerQrOutlineWidth).toBe(base.flyerQrOutlineWidth);
+  it("désactive le cadre QR autour du code", () => {
+    expect(defaultFlyerState().flyerQrOutlineWidth).toBe(0);
+    expect(mergeFlyerState({ flyerQrOutlineWidth: 12 }).flyerQrOutlineWidth).toBe(0);
   });
 
   it("retire l’ancienne clé flyerWheelOutlineWidth du stockage", () => {

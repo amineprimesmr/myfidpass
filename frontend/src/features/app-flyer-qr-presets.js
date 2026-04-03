@@ -147,7 +147,7 @@ export function defaultFlyerState() {
     flyerFooterTextScalePct: 100,
     flyerWheelLabelScalePct: 100,
     flyerBgOverlayPct: 0,
-    flyerQrOutlineWidth: 5,
+    flyerQrOutlineWidth: 0,
   };
 }
 
@@ -193,12 +193,6 @@ function clampHeadlineStrokeW(v) {
   return Math.max(0, Math.min(48, Math.round(n)));
 }
 
-function clampFlyerQrOutlineW(v) {
-  const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 5;
-  return Math.max(0, Math.min(12, Math.round(n)));
-}
-
 function clampHeadlineGapPct(v) {
   const n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return 16;
@@ -223,32 +217,30 @@ function clampFlyerTextScalePct(v) {
   return Math.max(70, Math.min(130, Math.round(n / 5) * 5));
 }
 
-function clampFlyerBgOverlayPct(v) {
-  const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 0;
-  return Math.max(0, Math.min(90, Math.round(n)));
-}
-
 /** @param {Partial<FlyerState> | null | undefined} raw */
 export function mergeFlyerState(raw) {
   const base = defaultFlyerState();
-  if (!raw || typeof raw !== "object") return base;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return base;
+  /** @type {Record<string, unknown>} */
+  const rawClean = Object.fromEntries(
+    Object.entries(/** @type {Record<string, unknown>} */ (raw)).filter(([, v]) => v !== undefined),
+  );
   /** @type {Record<string, unknown>} */
   const merged = {
     ...base,
-    ...raw,
+    ...rawClean,
     templateId: FLYER_TEMPLATE_ID,
     wheelRenderMode: "png",
   };
   merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
-  const hasOddKey = Object.prototype.hasOwnProperty.call(raw, "wheelColorOdd");
-  const hasEvenKey = Object.prototype.hasOwnProperty.call(raw, "wheelColorEven");
+  const hasOddKey = Object.prototype.hasOwnProperty.call(rawClean, "wheelColorOdd");
+  const hasEvenKey = Object.prototype.hasOwnProperty.call(rawClean, "wheelColorEven");
   const wheelColorOdd = safeHex(
-    String(hasOddKey ? raw.wheelColorOdd ?? "" : raw.wheelSeg1 ?? ""),
+    String(hasOddKey ? rawClean.wheelColorOdd ?? "" : rawClean.wheelSeg1 ?? ""),
     base.wheelColorOdd,
   );
   const wheelColorEven = safeHex(
-    String(hasEvenKey ? raw.wheelColorEven ?? "" : raw.wheelSeg2 ?? ""),
+    String(hasEvenKey ? rawClean.wheelColorEven ?? "" : rawClean.wheelSeg2 ?? ""),
     base.wheelColorEven,
   );
   delete merged.subline;
@@ -293,8 +285,9 @@ export function mergeFlyerState(raw) {
     ),
     flyerFooterTextScalePct: clampFlyerTextScalePct(merged.flyerFooterTextScalePct),
     flyerWheelLabelScalePct: clampFlyerTextScalePct(merged.flyerWheelLabelScalePct),
-    flyerBgOverlayPct: clampFlyerBgOverlayPct(merged.flyerBgOverlayPct),
-    flyerQrOutlineWidth: clampFlyerQrOutlineW(merged.flyerQrOutlineWidth),
+    /** Pas de voile sur la photo ; pas de cadre QR (UI retirée du SaaS). */
+    flyerBgOverlayPct: 0,
+    flyerQrOutlineWidth: 0,
     ctaBannerBgColor: safeHex(String(merged.ctaBannerBgColor ?? ""), base.ctaBannerBgColor),
     ctaTextColor: safeHex(String(merged.ctaTextColor ?? ""), base.ctaTextColor),
   };

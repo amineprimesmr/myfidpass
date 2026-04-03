@@ -266,7 +266,7 @@ export function initFlyerAiGenerate(slug, opts) {
           const dataUrl = compressImageBitmapToFlyerBgDataUrl(bitmap);
           setStoredFlyerCustomBgDataUrl(dataUrl);
           opts.onGeneratedBg();
-          setStatus("Fond appliqué. Ajustez le voile ou téléchargez le PNG quand vous êtes prêt.", false);
+          setStatus("Fond appliqué. Vous pouvez télécharger le PNG.", false);
           void refreshQuota();
         } finally {
           try {
