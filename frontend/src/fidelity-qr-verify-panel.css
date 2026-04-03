@@ -105,6 +105,26 @@
   }
 }
 
+/* Court état « tout est bon » avant fermeture de la modale */
+.fidelity-qr-modal--verify.fidelity-qr-modal--verify-done .fidelity-qr-verify-msg {
+  color: #15803d;
+  font-size: 0.98rem;
+}
+
+.fidelity-qr-modal--verify.fidelity-qr-modal--verify-done .fidelity-qr-verify-spinner-label {
+  color: #16a34a;
+}
+
+.fidelity-qr-modal--verify.fidelity-qr-modal--verify-done .fidelity-qr-verify-spinner {
+  border-color: rgba(34, 197, 94, 0.35);
+  border-top-color: #22c55e;
+  animation: none;
+}
+
+.fidelity-qr-modal--verify.fidelity-qr-modal--verify-done .fidelity-qr-verify-logo {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fidelity-qr-verify-progress-bar--animate {
     animation: none;

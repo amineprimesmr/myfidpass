@@ -19,6 +19,7 @@ export function renderQrGamePage(esc, p) {
   /* Un seul titre sous l’icône : accroche jeu (ou « Merci… » après Google) — pas le nom du commerce */
   const heroTitleEsc = qrThanksHeroMode ? esc("Merci, bonne chance !") : businessTaglineEsc;
   const heroTitleClass = `fidelity-qr-title fidelity-qr-title--lead${qrThanksHeroMode ? " fidelity-qr-title--thanks" : ""}`;
+  const heroSuccessClass = qrThanksHeroMode ? " fidelity-qr-hero-success--visible" : "";
 
   const hasGoogle = Boolean(googleReviewUrl);
   const googleHref = hasGoogle ? String(googleReviewUrl).replace(/"/g, "&quot;") : "";
@@ -40,7 +41,13 @@ export function renderQrGamePage(esc, p) {
       <section class="fidelity-qr-hero" aria-label="Jeu">
         <div class="fidelity-qr-brand">
           ${qrLogo || ""}
-          <h1 class="${heroTitleClass}">${heroTitleEsc}</h1>
+          <h1 class="${heroTitleClass}" id="fidelity-qr-hero-title">
+            <span class="fidelity-qr-hero-title-inner">${heroTitleEsc}</span>
+          </h1>
+          <p id="fidelity-qr-hero-success" class="fidelity-qr-hero-success${heroSuccessClass}" role="status" aria-live="polite">
+            <span class="fidelity-qr-hero-success-check" aria-hidden="true">✓</span>
+            <span>Avis enregistré — tu peux lancer la roue.</span>
+          </p>
         </div>
       </section>
 

@@ -2,27 +2,16 @@
  * Parcours QR : déblocage après étape Google, modales vérif → gain + opt-in (prénom + email) en une seule étape.
  */
 
+import { runQrThanksHeroTransition } from "./qr-game-hero-thanks.js";
+
 export const QR_GATE_KEY = "fid_qr_spin_gate";
 export const QR_GOOGLE_PENDING_KEY = "fid_qr_google_pending";
 /** Après retour de l’avis Google : hero « Merci, bonne chance ! » (pas après « Continuer » sans Google). */
 export const QR_THANKS_HERO_KEY = "fid_qr_thanks_hero";
 
-const QR_THANKS_TITLE = "Merci, bonne chance !";
+export { applyQrThanksHero, runQrThanksHeroTransition } from "./qr-game-hero-thanks.js";
 
 const QR_PANEL_IDS = ["#fidelity-qr-panel-google", "#fidelity-qr-panel-verify", "#fidelity-qr-panel-reward"];
-
-/**
- * @param {HTMLElement} rootEl
- * @param {() => { business?: { organizationName?: string; name?: string } }} getState
- */
-export function applyQrThanksHero(rootEl, getState) {
-  void getState;
-  const h1 = rootEl.querySelector(".fidelity-qr-title");
-  if (h1) {
-    h1.textContent = QR_THANKS_TITLE;
-    h1.classList.add("fidelity-qr-title--thanks", "fidelity-qr-title--lead");
-  }
-}
 
 /** Durée affichée « vérification » (ms) — minimum 15 s, léger jitter pour paraître naturel */
 const QR_VERIFY_MIN_MS = 15_000;
@@ -97,14 +86,36 @@ export function openQrModalRoot(rootEl) {
   });
 }
 
-export function closeQrModalRoot(rootEl) {
+/**
+ * @param {HTMLElement} rootEl
+ * @param {() => void} [onClosed] — appelé une fois la modale masquée (opacity / timeout).
+ */
+export function closeQrModalRoot(rootEl, onClosed) {
   const root = rootEl.querySelector("#fidelity-qr-modal-root");
-  if (!root) return;
+  const fireClosed = () => {
+    if (typeof onClosed === "function") {
+      try {
+        onClosed();
+      } catch (e) {
+        console.error("[fidelity] closeQrModalRoot onClosed", e);
+      }
+    }
+  };
+  if (!root) {
+    fireClosed();
+    return;
+  }
+  if (root.classList.contains("hidden")) {
+    document.body.style.overflow = "";
+    fireClosed();
+    return;
+  }
   root.classList.remove("fidelity-qr-modal-root--open");
   const finish = () => {
     root.classList.add("hidden");
     root.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
+    fireClosed();
   };
   let done = false;
   const onEnd = (e) => {
@@ -114,7 +125,7 @@ export function closeQrModalRoot(rootEl) {
     finish();
   };
   root.addEventListener("transitionend", onEnd);
-  window.setTimeout(() => {
+  globalThis.setTimeout(() => {
     if (!done) finish();
   }, 380);
 }
@@ -186,31 +197,50 @@ export function bindQrGameUi(ctx) {
     verifyUxCleanup();
     const durationMs = QR_VERIFY_MIN_MS + Math.floor(Math.random() * QR_VERIFY_JITTER_MS);
     verifyUxCleanup = startVerifyPanelUx(rootEl, durationMs);
-    window.setTimeout(async () => {
-      verifyUxCleanup();
-      verifyUxCleanup = () => {};
-      setQrGateUnlocked();
-      if (tryClaim) {
-        try {
-          sessionStorage.setItem(QR_THANKS_HERO_KEY, "1");
-        } catch (_) {}
-        applyQrThanksHero(rootEl, getState);
-        try {
-          const raw = sessionStorage.getItem("fidelity_pending_engagement_claim");
-          if (raw) {
-            const data = JSON.parse(raw);
-            if (data.slug === slug && data.actionType === "google_review") {
-              sessionStorage.removeItem("fidelity_pending_engagement_claim");
-              const st = getState();
-              if (st.member?.id) {
-                await api.claimEngagement(slug, st.member.id, "google_review");
-                await refreshMemberData();
-              }
-            }
+    globalThis.setTimeout(() => {
+      void (async () => {
+        verifyUxCleanup();
+        verifyUxCleanup = () => {};
+        setQrGateUnlocked();
+        if (tryClaim) {
+          const verifyPanel = rootEl.querySelector("#fidelity-qr-panel-verify");
+          const msgEl = rootEl.querySelector("#fidelity-qr-verify-text");
+          const bar = rootEl.querySelector("#fidelity-qr-verify-progress-bar");
+          const progress = rootEl.querySelector("#fidelity-qr-verify-progress");
+          if (msgEl && verifyPanel) {
+            msgEl.textContent = "Avis bien reçu — merci !";
+            verifyPanel.classList.add("fidelity-qr-modal--verify-done");
+            bar?.classList.remove("fidelity-qr-verify-progress-bar--animate");
+            if (bar instanceof HTMLElement) bar.style.width = "100%";
+            if (progress instanceof HTMLElement) progress.setAttribute("aria-valuetext", "Vérification terminée");
           }
-        } catch (_) {}
-      }
-      closeQrModalRoot(rootEl);
+          await new Promise((r) => globalThis.setTimeout(r, 480));
+          closeQrModalRoot(rootEl, () => {
+            void (async () => {
+              try {
+                await runQrThanksHeroTransition(rootEl);
+                try {
+                  sessionStorage.setItem(QR_THANKS_HERO_KEY, "1");
+                } catch (_) {}
+                const raw = sessionStorage.getItem("fidelity_pending_engagement_claim");
+                if (raw) {
+                  const data = JSON.parse(raw);
+                  if (data.slug === slug && data.actionType === "google_review") {
+                    sessionStorage.removeItem("fidelity_pending_engagement_claim");
+                    const st = getState();
+                    if (st.member?.id) {
+                      await api.claimEngagement(slug, st.member.id, "google_review");
+                      await refreshMemberData();
+                    }
+                  }
+                }
+              } catch (_) {}
+            })();
+          });
+        } else {
+          closeQrModalRoot(rootEl);
+        }
+      })();
     }, durationMs);
   }
 

@@ -104,6 +104,14 @@ export function initFidelityClientPageSection(ctx) {
   const previewTitle = document.getElementById("app-fidelity-client-preview-title");
   const previewLogo = document.getElementById("app-fidelity-client-preview-logo");
   const previewWheel = document.getElementById("app-fidelity-client-preview-wheel");
+
+  function setPreviewHeroTitleText(text) {
+    if (!previewTitle) return;
+    const inner = previewTitle.querySelector(".fidelity-qr-hero-title-inner");
+    const v = String(text ?? "").trim() || DEFAULT_QR_HERO_TITLE;
+    if (inner) inner.textContent = v;
+    else previewTitle.textContent = v;
+  }
   const panelToggle = document.getElementById("app-fidelity-client-panel-toggle");
   const panel = document.getElementById("app-fidelity-client-panel");
 
@@ -160,7 +168,7 @@ export function initFidelityClientPageSection(ctx) {
           : "";
     const hero = String(heroRaw ?? "").trim() || DEFAULT_QR_HERO_TITLE;
 
-    if (previewTitle) previewTitle.textContent = hero;
+    setPreviewHeroTitleText(hero);
 
     if (previewLogo) {
       const hasLogo = Boolean(settingsData?.logo_url || settingsData?.logoUrl);
@@ -253,8 +261,7 @@ export function initFidelityClientPageSection(ctx) {
 
   function syncPreviewTitleFromInput() {
     if (!previewTitle || !titleInput) return;
-    const t = String(titleInput.value ?? "").trim();
-    previewTitle.textContent = t || DEFAULT_QR_HERO_TITLE;
+    setPreviewHeroTitleText(String(titleInput.value ?? "").trim());
   }
 
   async function saveHeroTitle() {
