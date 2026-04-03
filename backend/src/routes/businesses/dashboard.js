@@ -148,6 +148,7 @@ router.get("/settings", (req, res) => {
         ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background`
         : undefined,
     fidelity_page_background_updated_at: business.fidelity_page_background_updated_at ?? undefined,
+    fidelity_qr_hero_title: business.fidelity_qr_hero_title?.trim() || undefined,
     strip_color: business.strip_color ?? undefined,
     strip_display_mode: business.strip_display_mode ?? "logo",
     strip_text: business.strip_text ?? undefined,
@@ -232,6 +233,7 @@ router.patch("/settings", async (req, res) => {
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
   const fidelity_page_background_base64 =
     body.fidelity_page_background_base64 ?? body.fidelityPageBackgroundBase64;
+  const fidelity_qr_hero_title = body.fidelity_qr_hero_title ?? body.fidelityQrHeroTitle;
   const stamp_icon_base64 = body.stamp_icon_base64 ?? body.stampIconBase64;
   const strip_color = body.strip_color ?? body.stripColor;
   const strip_display_mode = body.strip_display_mode ?? body.stripDisplayMode;
@@ -417,6 +419,13 @@ router.patch("/settings", async (req, res) => {
       updates.fidelity_page_background_base64 = fidelity_page_background_base64.startsWith("data:")
         ? fidelity_page_background_base64
         : `data:image/jpeg;base64,${base64Data}`;
+    }
+  }
+  if (fidelity_qr_hero_title !== undefined) {
+    if (fidelity_qr_hero_title === null || String(fidelity_qr_hero_title).trim() === "") {
+      updates.fidelity_qr_hero_title = null;
+    } else {
+      updates.fidelity_qr_hero_title = String(fidelity_qr_hero_title).trim().slice(0, 400);
     }
   }
   const MAX_STAMP_ICON_BYTES = 512 * 1024;

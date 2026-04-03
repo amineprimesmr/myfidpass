@@ -196,6 +196,8 @@ export function updateBusiness(businessId, updates) {
     "label_restants",
     "label_member",
     "header_right_text",
+    /** Accroche h1 page jeu QR (invité) — null = texte par défaut côté client. */
+    "fidelity_qr_hero_title",
     /** 0 ou NULL = illimité : crédits points_add max / client / jour (UTC). */
     "scan_max_passes_per_member_per_day",
     /** 0 ou NULL = illimité : plafond de points par opération de crédit. */

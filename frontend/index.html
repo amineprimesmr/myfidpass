@@ -1039,35 +1039,107 @@
             </div>
           </section>
 
-          <section id="fidelity-client" class="app-section app-section-fidelity-client">
+          <section id="fidelity-client" class="app-section app-section-fidelity-client app-section-fidelity-client--flyer">
             <div class="app-fidelity-client-shell">
-              <header class="app-fidelity-client-hero">
+              <header class="app-fidelity-client-hero app-flyer-qr-hero">
                 <p class="app-flyer-qr-eyebrow">Expérience client</p>
                 <h2 class="app-section-title">Page fidélité</h2>
-                <p class="app-section-desc">Image affichée en <strong>arrière-plan</strong> sur la page publique où vos clients scannent le QR et jouent à la roue (<code>/fidelity/votre-lien</code>). PNG, JPG ou WebP — recadrage type « cover », léger voile pour garder le texte lisible.</p>
+                <p class="app-section-desc">
+                  Ce que vos clients voient sur <strong>/fidelity/votre-lien</strong> après le scan QR : personnalisez
+                  <strong>l’accroche</strong> et le <strong>fond d’écran</strong> (sans voile — image affichée telle quelle).
+                </p>
               </header>
-              <div class="app-card app-fidelity-client-card">
-                <p class="app-subsection-title">Fond d’écran</p>
-                <p class="app-hint app-fidelity-client-hint">Glissez une image, collez-la (Ctrl+V) ou choisissez un fichier. Enregistrement immédiat après import.</p>
-                <div class="app-fidelity-client-drop-outer">
-                  <div id="app-fidelity-client-bg-drop" class="app-drop-zone app-fidelity-client-bg-drop" tabindex="0" role="button" aria-label="Zone d’import : glisser-déposer ou cliquer">
-                    <input type="file" id="app-fidelity-client-bg-input" class="app-file" accept="image/png,image/jpeg,image/webp" aria-label="Choisir une image de fond pour la page fidélité" />
-                    <div class="app-logo-label app-fidelity-client-bg-label">
-                      <span class="app-fidelity-client-bg-label-main">Déposer une image ici ou cliquer pour parcourir</span>
-                      <span class="app-hint app-fidelity-client-bg-label-sub">Idéal : photo large ou texture discrète</span>
+              <div class="app-fidelity-client-layout app-flyer-qr-layout">
+                <div class="app-fidelity-client-preview-col app-flyer-qr-preview-col">
+                  <div class="app-fidelity-client-preview-frame app-flyer-qr-preview-frame">
+                    <div class="app-fidelity-client-mockup">
+                      <p class="app-fidelity-client-mockup-caption app-flyer-qr-mockup-caption">Aperçu page client</p>
+                      <div class="app-fidelity-client-mockup-scene app-flyer-qr-mockup-scene">
+                        <div class="app-fidelity-client-mockup-phone">
+                          <div class="app-fidelity-client-mockup-screen">
+                            <div id="app-fidelity-client-mockup-bg" class="app-fidelity-client-mockup-bg" aria-hidden="true"></div>
+                            <div class="app-fidelity-client-mockup-inner">
+                              <div class="app-fidelity-client-mockup-logo-ph" aria-hidden="true"></div>
+                              <p id="app-fidelity-client-mockup-title" class="app-fidelity-client-mockup-title"></p>
+                              <div class="app-fidelity-client-mockup-cta-ph" aria-hidden="true">Jouer la partie ›</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="app-fidelity-client-link-row app-flyer-qr-link-row">
+                    <label class="app-label" for="app-fidelity-client-public-url">Lien public page fidélité</label>
+                    <div class="app-fidelity-client-link-wrap app-flyer-qr-link-wrap">
+                      <input type="text" id="app-fidelity-client-public-url" class="app-input" readonly autocomplete="off" />
+                      <button type="button" id="app-fidelity-client-copy-url" class="app-btn app-btn-secondary">Copier</button>
+                    </div>
+                    <p class="app-hint" style="margin: 0.35rem 0 0; font-size: 0.78rem">
+                      Même page que celle ouverte par le QR du flyer. Rafraîchissez la page publique après enregistrement.
+                    </p>
+                  </div>
+                </div>
+                <div class="app-fidelity-client-side app-flyer-qr-side">
+                  <button
+                    type="button"
+                    id="app-fidelity-client-panel-toggle"
+                    class="app-flyer-panel-toggle"
+                    aria-expanded="false"
+                    aria-controls="app-fidelity-client-panel"
+                  >
+                    Personnaliser la page
+                  </button>
+                  <div id="app-fidelity-client-panel" class="app-flyer-panel app-fidelity-client-panel">
+                    <div class="app-flyer-logo-panel">
+                      <p class="app-flyer-chip-label">Accroche (titre)</p>
+                      <p class="app-hint" style="margin: 0 0 0.5rem; font-size: 0.78rem">
+                        Texte principal sous le logo sur la page jeu. Laisser vide pour le message par défaut Myfidpass.
+                      </p>
+                      <div class="app-flyer-field">
+                        <label class="app-label" for="app-fidelity-client-hero-title">Titre affiché sur la page</label>
+                        <textarea
+                          id="app-fidelity-client-hero-title"
+                          class="app-input"
+                          rows="3"
+                          maxlength="400"
+                          placeholder="Participez au jeu et tentez de gagner une récompense."
+                        ></textarea>
+                      </div>
+                      <p id="app-fidelity-client-title-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
+                    </div>
+                    <div class="app-flyer-logo-panel app-flyer-bg-panel" style="margin-top: 0.75rem">
+                      <p class="app-flyer-chip-label">Image de fond</p>
+                      <p class="app-hint" style="margin: 0 0 0.5rem; font-size: 0.78rem">
+                        Remplit l’arrière-plan de la page (recadrage « cover »). PNG, JPG ou WebP — enregistrement immédiat après import.
+                      </p>
+                      <div
+                        id="app-fidelity-client-bg-drop"
+                        class="app-fidelity-client-bg-drop app-drop-zone"
+                        tabindex="0"
+                        role="button"
+                        aria-label="Glisser-déposer une image ou cliquer pour parcourir"
+                      >
+                        <input
+                          type="file"
+                          id="app-fidelity-client-bg-input"
+                          class="app-flyer-logo-file-input"
+                          accept="image/png,image/jpeg,image/webp"
+                          aria-label="Importer une image de fond pour la page fidélité"
+                        />
+                        <span class="app-fidelity-client-bg-drop-text">Déposer une image ici ou utiliser « Importer »</span>
+                      </div>
+                      <div class="app-flyer-logo-panel-actions">
+                        <button type="button" id="app-fidelity-client-bg-choose" class="app-btn app-btn-secondary">Importer une image</button>
+                        <button type="button" id="app-fidelity-client-remove" class="app-btn app-btn-secondary hidden">Retirer le fond</button>
+                      </div>
+                      <p id="app-fidelity-client-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
+                      <div id="app-fidelity-client-preview-wrap" class="app-flyer-logo-preview-wrap hidden">
+                        <span class="app-flyer-logo-preview-label">Fichier actuel</span>
+                        <img id="app-fidelity-client-preview-img" class="app-fidelity-client-preview-thumb" alt="" decoding="async" />
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div id="app-fidelity-client-preview-wrap" class="app-fidelity-client-preview-wrap hidden">
-                  <p class="app-fidelity-client-preview-caption">Aperçu</p>
-                  <div class="app-fidelity-client-preview-frame">
-                    <img id="app-fidelity-client-preview-img" class="app-fidelity-client-preview-img" alt="" width="640" height="360" decoding="async" />
-                  </div>
-                </div>
-                <div class="app-fidelity-client-actions">
-                  <button type="button" id="app-fidelity-client-remove" class="app-btn app-btn-secondary hidden">Retirer le fond</button>
-                </div>
-                <p id="app-fidelity-client-status" class="app-message hidden" role="status"></p>
               </div>
             </div>
           </section>

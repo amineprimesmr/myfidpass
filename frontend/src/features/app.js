@@ -6019,7 +6019,11 @@ function initAppDashboard(slug) {
     getShareLink: () => getShareLinkForSlug(slug),
     dashboardApi: (path, init) => api(path, init),
   });
-  initFidelityClientPageSection({ api });
+  initFidelityClientPageSection({
+    api,
+    slug,
+    pageOrigin: typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "",
+  });
   initAppCardRulesGuide();
   refresh();
   loadAppNotificationStats();

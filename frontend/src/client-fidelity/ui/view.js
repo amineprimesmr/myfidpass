@@ -55,7 +55,11 @@ export function renderClientPage(root, state, options = {}) {
 
   if (qrGameFlow) {
     const googleAction = engagementActionsRaw.find((a) => a.action_type === "google_review");
-    const tagline = "Participez au jeu et tentez de gagner une récompense.";
+    const defaultQrHero = "Participez au jeu et tentez de gagner une récompense.";
+    const customHero = String(
+      state.business?.fidelityQrHeroTitle ?? state.business?.fidelity_qr_hero_title ?? "",
+    ).trim();
+    const tagline = customHero || defaultQrHero;
     const rouletteHtml = renderRouletteInlineMarkup(esc, {
       tickets,
       spinCtaAriaLabel: "Jouer la partie — lancer la roue",

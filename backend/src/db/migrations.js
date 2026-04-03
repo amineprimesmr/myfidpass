@@ -804,4 +804,11 @@ export function runMigrations(db) {
       `UPDATE businesses SET asset_fidelity_page_background_present = 1 WHERE id IN (SELECT business_id FROM business_assets WHERE kind = 'fidelity_page_background')`,
     ),
   );
+
+  // ── v13 : titre personnalisable page jeu QR (/fidelity/:slug, parcours invité) ─
+  markMigrationApplied(db, 13, "fidelity_qr_hero_title");
+  const bizFidTitle = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizFidTitle.includes("fidelity_qr_hero_title")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN fidelity_qr_hero_title TEXT"));
+  }
 }

@@ -61,6 +61,8 @@ export function publicInfo(req, res) {
     points_reward_tiers: points_reward_tiers ?? undefined,
     fidelityPageBackgroundUrl,
     fidelityPageBackgroundUpdatedAt: business.fidelity_page_background_updated_at ?? undefined,
+    /** Texte du titre principal sur la page jeu QR ; absent ou vide = défaut applicatif. */
+    fidelityQrHeroTitle: business.fidelity_qr_hero_title?.trim() || undefined,
   });
 }
 

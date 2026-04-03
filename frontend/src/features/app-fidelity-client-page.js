@@ -1,6 +1,8 @@
 /**
- * SaaS — section « Page fidélité » : fond d’écran page publique /fidelity/:slug.
+ * SaaS — section « Page fidélité » : titre + fond (même UX que Flyer QR).
  */
+
+const DEFAULT_QR_HERO_TITLE = "Participez au jeu et tentez de gagner une récompense.";
 
 function setupImageDropZone(zoneEl, onFile) {
   if (!zoneEl) return;
@@ -30,18 +32,55 @@ function setupImageDropZone(zoneEl, onFile) {
 }
 
 /**
- * @param {{ api: (path: string, opts?: RequestInit) => Promise<Response>, setupImageDropZone?: typeof setupImageDropZone }} ctx
+ * @param {{ api: (path: string, opts?: RequestInit) => Promise<Response>; slug: string; pageOrigin: string }} ctx
  */
 export function initFidelityClientPageSection(ctx) {
-  const { api } = ctx;
-  const dropSetup = ctx.setupImageDropZone || setupImageDropZone;
+  const { api, slug, pageOrigin } = ctx;
+  const origin = (pageOrigin || "").replace(/\/$/, "") || (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
+  const publicFidelityUrl = `${origin}/fidelity/${encodeURIComponent(slug)}`;
+
+  const titleInput = document.getElementById("app-fidelity-client-hero-title");
+  const titleStatus = document.getElementById("app-fidelity-client-title-status");
   const input = document.getElementById("app-fidelity-client-bg-input");
   const drop = document.getElementById("app-fidelity-client-bg-drop");
+  const chooseBtn = document.getElementById("app-fidelity-client-bg-choose");
   const previewWrap = document.getElementById("app-fidelity-client-preview-wrap");
   const previewImg = document.getElementById("app-fidelity-client-preview-img");
   const removeBtn = document.getElementById("app-fidelity-client-remove");
   const statusEl = document.getElementById("app-fidelity-client-status");
+  const urlInput = document.getElementById("app-fidelity-client-public-url");
+  const copyBtn = document.getElementById("app-fidelity-client-copy-url");
+  const mockupTitle = document.getElementById("app-fidelity-client-mockup-title");
+  const mockupBg = document.getElementById("app-fidelity-client-mockup-bg");
+  const panelToggle = document.getElementById("app-fidelity-client-panel-toggle");
+  const panel = document.getElementById("app-fidelity-client-panel");
+
   if (!input || !drop) return;
+
+  if (panel && window.matchMedia("(min-width: 961px)").matches) {
+    panel.classList.add("is-open");
+    if (panelToggle) panelToggle.setAttribute("aria-expanded", "true");
+  }
+
+  if (panelToggle && panel) {
+    panelToggle.addEventListener("click", () => {
+      const open = panel.classList.toggle("is-open");
+      panelToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  if (urlInput) urlInput.value = publicFidelityUrl;
+  if (copyBtn && urlInput) {
+    copyBtn.addEventListener("click", () => {
+      urlInput.select();
+      void navigator.clipboard.writeText(urlInput.value).then(() => {
+        copyBtn.textContent = "Copié !";
+        setTimeout(() => {
+          copyBtn.textContent = "Copier";
+        }, 1800);
+      });
+    });
+  }
 
   function setStatus(msg, isErr) {
     if (!statusEl) return;
@@ -51,7 +90,32 @@ export function initFidelityClientPageSection(ctx) {
     statusEl.classList.toggle("success", Boolean(msg) && !isErr);
   }
 
-  function syncPreviewFromUrl(url) {
+  function setTitleStatus(msg, isErr) {
+    if (!titleStatus) return;
+    titleStatus.textContent = msg || "";
+    titleStatus.classList.toggle("hidden", !msg);
+    titleStatus.classList.toggle("error", Boolean(isErr));
+    titleStatus.classList.toggle("success", Boolean(msg) && !isErr);
+  }
+
+  function syncMockupDisplay(bgUrl, heroRaw) {
+    if (mockupTitle) {
+      const t = String(heroRaw ?? "").trim() || DEFAULT_QR_HERO_TITLE;
+      mockupTitle.textContent = t;
+    }
+    if (mockupBg) {
+      if (bgUrl) {
+        const u = bgUrl.includes("?") ? `${bgUrl}&t=${Date.now()}` : `${bgUrl}?t=${Date.now()}`;
+        mockupBg.style.backgroundImage = `url("${u.replace(/"/g, "%22")}")`;
+        mockupBg.style.backgroundColor = "";
+      } else {
+        mockupBg.style.backgroundImage = "none";
+        mockupBg.style.backgroundColor = "#f8fafc";
+      }
+    }
+  }
+
+  function syncThumbFromUrl(url) {
     if (previewImg && previewWrap) {
       if (url) {
         previewImg.src = `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}`;
@@ -65,15 +129,66 @@ export function initFidelityClientPageSection(ctx) {
     }
   }
 
+  let lastLoadedHero = "";
+  let lastBgUrl = "";
+
   async function loadSettings() {
     try {
       const res = await api("/dashboard/settings");
       if (!res.ok) return;
       const data = await res.json();
       const url = data.fidelity_page_background_url || data.fidelityPageBackgroundUrl;
-      syncPreviewFromUrl(url || "");
+      const hero =
+        data.fidelity_qr_hero_title != null
+          ? String(data.fidelity_qr_hero_title)
+          : data.fidelityQrHeroTitle != null
+            ? String(data.fidelityQrHeroTitle)
+            : "";
+      lastLoadedHero = hero;
+      lastBgUrl = url || "";
+      if (titleInput) titleInput.value = hero;
+      syncThumbFromUrl(url || "");
+      syncMockupDisplay(url || "", hero);
     } catch (_) {}
   }
+
+  let titleTimer = null;
+  function scheduleTitleSave() {
+    if (!titleInput) return;
+    setTitleStatus("");
+    window.clearTimeout(titleTimer);
+    titleTimer = window.setTimeout(() => void saveHeroTitle(), 650);
+  }
+
+  async function saveHeroTitle() {
+    if (!titleInput) return;
+    const raw = titleInput.value;
+    const payload =
+      raw.trim() === "" ? { fidelity_qr_hero_title: null } : { fidelity_qr_hero_title: raw.trim().slice(0, 400) };
+    try {
+      const res = await api("/dashboard/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        lastLoadedHero = raw.trim();
+        setTitleStatus("Titre enregistré.");
+        syncMockupDisplay(lastBgUrl, lastLoadedHero);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setTitleStatus(err.error || "Enregistrement impossible.", true);
+      }
+    } catch {
+      setTitleStatus("Erreur réseau.", true);
+    }
+  }
+
+  titleInput?.addEventListener("input", scheduleTitleSave);
+  titleInput?.addEventListener("blur", () => {
+    window.clearTimeout(titleTimer);
+    void saveHeroTitle();
+  });
 
   async function uploadDataUrl(dataUrl) {
     setStatus("");
@@ -84,7 +199,7 @@ export function initFidelityClientPageSection(ctx) {
         body: JSON.stringify({ fidelity_page_background_base64: dataUrl }),
       });
       if (res.ok) {
-        setStatus("Image enregistrée. Elle apparaît sur la page fidélité client après rafraîchissement.");
+        setStatus("Image enregistrée. Elle apparaît sur la page fidélité après rafraîchissement.");
         await loadSettings();
       } else {
         const err = await res.json().catch(() => ({}));
@@ -105,8 +220,10 @@ export function initFidelityClientPageSection(ctx) {
         body: JSON.stringify({ fidelity_page_background_base64: null }),
       });
       if (res.ok) {
-        setStatus("Fond retiré. La page utilise à nouveau le fond par défaut.");
-        syncPreviewFromUrl("");
+        setStatus("Fond retiré.");
+        lastBgUrl = "";
+        syncThumbFromUrl("");
+        syncMockupDisplay("", titleInput ? titleInput.value : lastLoadedHero);
       } else {
         const err = await res.json().catch(() => ({}));
         setStatus(err.error || "Action impossible.", true);
@@ -121,6 +238,8 @@ export function initFidelityClientPageSection(ctx) {
     input.click();
   });
 
+  chooseBtn?.addEventListener("click", () => input.click());
+
   input.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -133,7 +252,7 @@ export function initFidelityClientPageSection(ctx) {
     reader.readAsDataURL(file);
   });
 
-  dropSetup(drop, (file) => {
+  setupImageDropZone(drop, (file) => {
     input.files = null;
     const dt = new DataTransfer();
     dt.items.add(file);
@@ -144,7 +263,10 @@ export function initFidelityClientPageSection(ctx) {
   removeBtn?.addEventListener("click", () => void removeImage());
 
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "fidelity-client") loadSettings();
+    if (e.detail?.sectionId === "fidelity-client") {
+      if (urlInput) urlInput.value = publicFidelityUrl;
+      void loadSettings();
+    }
   });
 
   void loadSettings();

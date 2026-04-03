@@ -452,7 +452,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   inset: 0;
   z-index: 0;
   background: var(--fidelity-client-bg) center / cover no-repeat;
-  opacity: 0.38;
+  opacity: 1;
   pointer-events: none;
 }
 /* Exclure les modales fixed : le sélecteur > * gagnait sur .fidelity-qr-modal-root et forçait position:relative → modale en bas du flux. */
