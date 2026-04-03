@@ -78,6 +78,14 @@ function issueTokenPair(userId) {
 // Nettoyage des tokens expirés au démarrage
 cleanExpiredRefreshTokens();
 
+function authSubscriptionPayload(userId) {
+  const subscription = getSubscriptionByUserId(userId);
+  return {
+    subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
+    has_active_subscription: hasActiveSubscription(userId),
+  };
+}
+
 function registerSlugFromName(name) {
   let s = String(name || "commerce")
     .trim()
@@ -227,6 +235,7 @@ router.post("/register", validate(schemas.register), async (req, res) => {
       token: accessToken,
       refreshToken,
       businesses,
+      ...authSubscriptionPayload(user.id),
     });
   } catch (e) {
     console.error("Register error:", e);
@@ -256,6 +265,7 @@ router.post("/login", validate(schemas.login), async (req, res) => {
     token: accessToken,
     refreshToken,
     businesses,
+    ...authSubscriptionPayload(user.id),
   });
 });
 
@@ -315,6 +325,7 @@ router.post("/google", async (req, res) => {
       token: accessToken,
       refreshToken,
       businesses,
+      ...authSubscriptionPayload(user.id),
     });
   } catch (e) {
     console.error("Google auth error:", e);
@@ -465,6 +476,7 @@ router.post("/apple", async (req, res) => {
       token: accessToken,
       refreshToken,
       businesses,
+      ...authSubscriptionPayload(user.id),
     });
   } catch (e) {
     console.error("Apple auth error:", e);
@@ -551,7 +563,15 @@ router.get("/apple-exchange", (req, res) => {
   if (!data || data.expiry < Date.now()) {
     return res.status(401).json({ error: "Code invalide ou expiré" });
   }
-  return res.json({ token: data.token, refreshToken: data.refreshToken, user: data.user, businesses: data.businesses });
+  const uid = data.user?.id;
+  const subPayload = uid != null ? authSubscriptionPayload(uid) : { subscription: null, has_active_subscription: false };
+  return res.json({
+    token: data.token,
+    refreshToken: data.refreshToken,
+    user: data.user,
+    businesses: data.businesses,
+    ...subPayload,
+  });
 });
 
 const PASSWORD_RESET_EXPIRY_HOURS = 1;
@@ -701,6 +721,7 @@ router.post("/refresh", (req, res) => {
     token: accessToken,
     refreshToken: newRefreshToken,
     user: { id: user.id, email: user.email, name: user.name },
+    ...authSubscriptionPayload(user.id),
   });
 });
 

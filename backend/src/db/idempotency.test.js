@@ -7,6 +7,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import request from "supertest";
 import { app } from "../index.js";
+import { createOrUpdateSubscription } from "../db.js";
 
 describe("Idempotence addPoints", () => {
   let authToken;
@@ -22,6 +23,16 @@ describe("Idempotence addPoints", () => {
       .send({ email, password, name: "Idempotency Test" });
     expect(register.status).toBe(201);
     authToken = register.body.token;
+    const userId = register.body.user?.id;
+    expect(userId).toBeDefined();
+    createOrUpdateSubscription({
+      userId,
+      stripeCustomerId: "cus_test_idempotency",
+      stripeSubscriptionId: "sub_test_idempotency",
+      planId: "starter",
+      status: "active",
+      currentPeriodEnd: new Date(Date.now() + 7 * 86400000).toISOString(),
+    });
 
     // Créer un commerce
     const biz = await request(app)

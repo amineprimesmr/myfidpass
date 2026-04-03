@@ -21,17 +21,16 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   min-height: 0;
   overflow-x: visible !important;
   overflow-y: visible !important;
-  /* Espace avant le bandeau noir : laisse respirer entre la roue et le pied pro */
-  margin-bottom: 2.65rem;
+  margin-bottom: 1.25rem;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
   margin-top: auto;
   flex-shrink: 0;
   width: 100%;
-  /* Marge haute pour ne pas coller au contenu ; marge basse forte = texte plus bas / safe area */
-  padding-top: 1.1rem;
-  padding-bottom: max(2.35rem, calc(env(safe-area-inset-bottom, 0px) + 1.65rem));
+  /* Peu de padding haut ; bas = safe-area seulement (trop de padding-bottom remonte le texte dans la bande) */
+  padding-top: 0.45rem;
+  padding-bottom: max(0.55rem, calc(env(safe-area-inset-bottom, 0px) + 0.4rem));
 }
 
 .fidpass-fidelity-route .fidelity-qr-game,
@@ -92,8 +91,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   display: flex;
   flex-direction: column;
   overflow: visible;
-  /* Espace sous la roue (bord + ombre) avant le pied de page */
-  padding-bottom: clamp(2rem, 12vmin, 3.75rem);
+  padding-bottom: clamp(1.35rem, 8vmin, 2.75rem);
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {

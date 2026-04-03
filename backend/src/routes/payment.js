@@ -6,6 +6,7 @@ import {
   getBusinessesByUserId,
   incrementFlyerAiGenerationsBonus,
   hasActiveSubscription,
+  getSubscriptionByStripeSubscriptionId,
 } from "../db.js";
 import { devPaymentBypass } from "../lib/dev-payment-bypass.js";
 import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/stripe-webhook-events.js";
@@ -144,7 +145,12 @@ export async function paymentWebhookHandler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  if (event.type !== "checkout.session.completed") {
+  const handledTypes = new Set([
+    "checkout.session.completed",
+    "customer.subscription.updated",
+    "customer.subscription.deleted",
+  ]);
+  if (!handledTypes.has(event.type)) {
     return res.json({ received: true });
   }
 
@@ -154,7 +160,24 @@ export async function paymentWebhookHandler(req, res) {
   }
 
   try {
-    await handleCheckoutSessionCompleted(event.data.object);
+    if (event.type === "checkout.session.completed") {
+      await handleCheckoutSessionCompleted(event.data.object);
+    } else if (event.type === "customer.subscription.updated") {
+      await syncSubscriptionFromStripeObject(event.data.object, null);
+    } else if (event.type === "customer.subscription.deleted") {
+      const stripeSub = event.data.object;
+      const row = getSubscriptionByStripeSubscriptionId(stripeSub.id);
+      if (row?.user_id) {
+        createOrUpdateSubscription({
+          userId: row.user_id,
+          stripeCustomerId: row.stripe_customer_id || null,
+          stripeSubscriptionId: stripeSub.id,
+          planId: row.plan_id || "starter",
+          status: "canceled",
+          currentPeriodEnd: row.current_period_end || null,
+        });
+      }
+    }
   } catch (err) {
     console.error("Stripe webhook handler error:", err);
     rollbackStripeWebhookEvent(event.id);
@@ -163,33 +186,51 @@ export async function paymentWebhookHandler(req, res) {
   return res.json({ received: true });
 }
 
+/**
+ * @param {import("stripe").Stripe.Subscription} stripeSub
+ * @param {string | null} fallbackUserId — ex. metadata checkout.session
+ */
+async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
+  if (!stripeSub?.id) return;
+  let userId = stripeSub.metadata?.user_id ? String(stripeSub.metadata.user_id).trim() : null;
+  if (!userId) {
+    const row = getSubscriptionByStripeSubscriptionId(stripeSub.id);
+    if (row?.user_id) userId = String(row.user_id);
+  }
+  if (!userId && fallbackUserId) userId = String(fallbackUserId).trim();
+  if (!userId) {
+    console.warn("[stripe webhook] subscription: cannot resolve user_id", stripeSub.id);
+    return;
+  }
+  const cust = stripeSub.customer;
+  const stripeCustomerId = typeof cust === "string" ? cust : cust?.id ?? null;
+  const end = stripeSub.current_period_end
+    ? new Date(stripeSub.current_period_end * 1000).toISOString()
+    : null;
+  const status = stripeSub.status || "incomplete";
+  const planId = stripeSub.metadata?.plan_id ? String(stripeSub.metadata.plan_id) : "starter";
+  createOrUpdateSubscription({
+    userId,
+    stripeCustomerId,
+    stripeSubscriptionId: stripeSub.id,
+    planId,
+    status,
+    currentPeriodEnd: end,
+  });
+}
+
 /** @param {Record<string, unknown>} session */
 async function handleCheckoutSessionCompleted(session) {
   const mode = session.mode;
   if (mode === "subscription") {
     const userId = session.metadata?.user_id;
-    if (!userId) {
-      console.warn("Webhook checkout.session.completed (subscription): no user_id in metadata");
+    const stripeSubscriptionId = session.subscription;
+    if (!userId || !stripeSubscriptionId) {
+      console.warn("Webhook checkout.session.completed (subscription): missing user_id or subscription id");
       return;
     }
-    let stripeSubscriptionId = session.subscription;
-    let currentPeriodEnd = null;
-    let stripeCustomerId = session.customer || null;
-    if (stripeSubscriptionId) {
-      const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
-      currentPeriodEnd = sub.current_period_end
-        ? new Date(sub.current_period_end * 1000).toISOString()
-        : null;
-      if (!stripeCustomerId && sub.customer) stripeCustomerId = sub.customer;
-    }
-    createOrUpdateSubscription({
-      userId,
-      stripeCustomerId: stripeCustomerId || null,
-      stripeSubscriptionId: stripeSubscriptionId || null,
-      planId: "starter",
-      status: "active",
-      currentPeriodEnd,
-    });
+    const sub = await stripe.subscriptions.retrieve(String(stripeSubscriptionId));
+    await syncSubscriptionFromStripeObject(sub, String(userId));
     return;
   }
 

@@ -23,7 +23,10 @@
 
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game,
 #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game {
-  margin-bottom: 3.35rem !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  /* Espace neutre avant le bandeau : ne pas gonfler le padding du footer (ça remonte le texte) */
+  margin-bottom: 1.25rem !important;
 }
 
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered,
@@ -31,13 +34,14 @@
   margin-top: auto !important;
   flex-shrink: 0 !important;
   width: 100% !important;
-  padding-top: 1.45rem !important;
-  padding-bottom: max(2.95rem, calc(env(safe-area-inset-bottom, 0px) + 1.95rem)) !important;
+  /* Peu de noir au-dessus du texte ; en dessous = surtout safe-area (un gros padding-bottom REMONTE le libellé) */
+  padding-top: 0.45rem !important;
+  padding-bottom: max(0.55rem, calc(env(safe-area-inset-bottom, 0px) + 0.4rem)) !important;
 }
 
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr,
 #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr {
-  padding-bottom: clamp(2.6rem, 14vmin, 4.5rem) !important;
+  padding-bottom: clamp(1.35rem, 8vmin, 2.75rem) !important;
 }
 
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game)
@@ -55,19 +59,21 @@
 /* Aperçu dashboard : mêmes valeurs avec la chaîne #app-app (bat la feuille app-fidelity-client-page) */
 #app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
   > main.fidelity-qr-game {
-  margin-bottom: 3.35rem !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  margin-bottom: 1.25rem !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
   > footer.fidelity-qr-powered {
   margin-top: auto !important;
-  padding-top: 1.45rem !important;
-  padding-bottom: max(2.95rem, calc(env(safe-area-inset-bottom, 0px) + 1.95rem)) !important;
+  padding-top: 0.45rem !important;
+  padding-bottom: max(0.55rem, calc(env(safe-area-inset-bottom, 0px) + 0.4rem)) !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
   .fidelity-v2-roulette-inline--qr {
-  padding-bottom: clamp(2.6rem, 14cqmin, 4.75rem) !important;
+  padding-bottom: clamp(1.35rem, 8cqmin, 2.75rem) !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)

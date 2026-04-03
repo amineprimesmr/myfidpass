@@ -14,9 +14,9 @@ describe("PATCH membre (coordonnées)", () => {
     expect(res.body.error).not.toBe("Not found");
   });
 
-  it("members : sans auth renvoie 401", async () => {
+  it("dashboard members : sans auth renvoie 401 (même chemin que l’app)", async () => {
     const res = await request(app)
-      .patch(`/api/businesses/demo/members/${randomUUID()}`)
+      .patch(`/api/businesses/demo/dashboard/members/${randomUUID()}`)
       .set("Content-Type", "application/json")
       .send({ name: "Test" });
     expect(res.status).toBe(401);
