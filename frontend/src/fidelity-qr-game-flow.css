@@ -395,12 +395,21 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   text-align: center;
 }
 
-/* Formulaire inscription après gain : ancrage visuel */
-.fidelity-qr-modal--claim .fidelity-qr-modal-title {
+/* Modale gain + opt-in (une seule étape) */
+.fidelity-qr-modal--reward .fidelity-qr-modal-title {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #db2777 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.fidelity-qr-reward-intro {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  color: #475569;
 }
 
 .fidelity-qr-win-prize {

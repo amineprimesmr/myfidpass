@@ -23,8 +23,7 @@ import {
   firstNonPerduLabel,
   isGuestMember,
   openQrModalRoot,
-  scheduleQrGuestClaimReveal,
-  showQrWinPanel,
+  showQrRewardPanel,
 } from "./qr-game-flow.js";
 import {
   dismissFidelityRouteLoadingOverlay,
@@ -391,11 +390,13 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         if (qrGuest) {
           if (feedback) feedback.classList.add("hidden");
           const prizeLabel = isWin ? rawLabel : firstNonPerduLabel(wheelLabels);
-          showQrWinPanel(rootEl, prizeLabel);
           openQrModalRoot(rootEl);
+          showQrRewardPanel(rootEl, prizeLabel);
           triggerWinCelebrationConfetti();
-          scheduleQrGuestClaimReveal(rootEl, 2600);
-          await refreshMemberData();
+          /* Ne pas appeler rerender() ici : il remplace tout le DOM et faisait disparaître la modale. */
+          try {
+            await hydrateMember(state.member.id);
+          } catch (_) {}
           releaseWillChangeSoon();
           return;
         }
@@ -622,7 +623,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const m = rootEl.querySelector("#fidelity-profile-mission-modal");
       if (m && !m.classList.contains("hidden")) closeProfileMissionModal();
       const qr = rootEl.querySelector("#fidelity-qr-modal-root");
-      if (qr && !qr.classList.contains("hidden")) closeQrModalRoot(rootEl);
+      const rewardOpen = rootEl.querySelector("#fidelity-qr-panel-reward:not(.hidden)");
+      if (qr && !qr.classList.contains("hidden") && !rewardOpen) closeQrModalRoot(rootEl);
     },
     { signal }
   );

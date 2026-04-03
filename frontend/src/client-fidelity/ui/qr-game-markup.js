@@ -102,15 +102,10 @@ export function renderQrGamePage(esc, p) {
         </div>
       </div>
 
-      <div id="fidelity-qr-panel-win" class="fidelity-qr-modal fidelity-qr-modal--win hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-win-title">
-        <h2 id="fidelity-qr-win-title" class="fidelity-qr-modal-title">Félicitations !</h2>
-        <p class="fidelity-qr-win-prize" id="fidelity-qr-win-prize"></p>
-        <button type="button" class="fidelity-qr-btn fidelity-qr-btn--primary" id="fidelity-qr-win-cta">Récupérer mon lot</button>
-      </div>
-
-      <div id="fidelity-qr-panel-claim" class="fidelity-qr-modal fidelity-qr-modal--claim hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-claim-title">
-        <h2 id="fidelity-qr-claim-title" class="fidelity-qr-modal-title">Vos coordonnées</h2>
-        <p class="fidelity-qr-claim-sub">Pour recevoir votre avantage chez ${businessNameEsc}</p>
+      <div id="fidelity-qr-panel-reward" class="fidelity-qr-modal fidelity-qr-modal--reward hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-reward-title">
+        <h2 id="fidelity-qr-reward-title" class="fidelity-qr-modal-title">Félicitations !</h2>
+        <p class="fidelity-qr-reward-intro">Vous avez gagné. Découvrez votre récompense en nous laissant vos coordonnées ci-dessous.</p>
+        <p class="fidelity-qr-win-prize" id="fidelity-qr-win-prize" aria-live="polite"></p>
         <form id="fidelity-qr-claim-form" class="fidelity-qr-claim-form" novalidate>
           <label class="fidelity-qr-field">
             <span>Prénom</span>
@@ -125,7 +120,7 @@ export function renderQrGamePage(esc, p) {
             <span>Je ne souhaite pas recevoir d’offres commerciales par email.</span>
           </label>
           <p id="fidelity-qr-claim-error" class="fidelity-qr-form-error hidden" role="alert"></p>
-          <button type="submit" class="fidelity-qr-btn fidelity-qr-btn--primary fidelity-qr-btn--wide" id="fidelity-qr-claim-submit">Valider</button>
+          <button type="submit" class="fidelity-qr-btn fidelity-qr-btn--primary fidelity-qr-btn--wide" id="fidelity-qr-claim-submit">Recevoir ma récompense</button>
         </form>
       </div>
     </div>

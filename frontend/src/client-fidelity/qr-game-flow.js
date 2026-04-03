@@ -1,5 +1,5 @@
 /**
- * Parcours QR : déblocage après étape Google, modales gain / inscription.
+ * Parcours QR : déblocage après étape Google, modales vérif → gain + opt-in (prénom + email) en une seule étape.
  */
 
 export const QR_GATE_KEY = "fid_qr_spin_gate";
@@ -9,11 +9,14 @@ export const QR_THANKS_HERO_KEY = "fid_qr_thanks_hero";
 
 const QR_THANKS_TITLE = "Merci, bonne chance !";
 
+const QR_PANEL_IDS = ["#fidelity-qr-panel-google", "#fidelity-qr-panel-verify", "#fidelity-qr-panel-reward"];
+
 /**
  * @param {HTMLElement} rootEl
  * @param {() => { business?: { organizationName?: string; name?: string } }} getState
  */
 export function applyQrThanksHero(rootEl, getState) {
+  void getState;
   const h1 = rootEl.querySelector(".fidelity-qr-title");
   if (h1) {
     h1.textContent = QR_THANKS_TITLE;
@@ -95,7 +98,6 @@ export function openQrModalRoot(rootEl) {
 }
 
 export function closeQrModalRoot(rootEl) {
-  cancelQrGuestClaimReveal();
   const root = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!root) return;
   root.classList.remove("fidelity-qr-modal-root--open");
@@ -117,95 +119,44 @@ export function closeQrModalRoot(rootEl) {
   }, 380);
 }
 
-/** Timer passage automatique gain → formulaire (parcours invité QR). */
-let guestClaimRevealTimer = null;
-
-export function cancelQrGuestClaimReveal() {
-  if (guestClaimRevealTimer != null) {
-    clearTimeout(guestClaimRevealTimer);
-    guestClaimRevealTimer = null;
+/** @param {HTMLElement} rootEl */
+function hideAllQrPanels(rootEl) {
+  for (const sel of QR_PANEL_IDS) {
+    rootEl.querySelector(sel)?.classList.add("hidden");
   }
 }
 
-/**
- * Après le gain : ouvre le formulaire prénom / email (annulé si l’utilisateur a déjà cliqué « Récupérer mon lot »).
- * @param {number} delayMs
- */
-export function scheduleQrGuestClaimReveal(rootEl, delayMs) {
-  cancelQrGuestClaimReveal();
-  guestClaimRevealTimer = window.setTimeout(() => {
-    guestClaimRevealTimer = null;
-    showQrClaimPanel(rootEl);
-    const nameInput = rootEl.querySelector("#fidelity-qr-claim-name");
-    if (nameInput instanceof HTMLElement) {
-      window.requestAnimationFrame(() => nameInput.focus());
-    }
-    if (
-      typeof window.confetti === "function" &&
-      !globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
-    ) {
-      window.confetti({
-        particleCount: 55,
-        spread: 58,
-        startVelocity: 28,
-        ticks: 220,
-        origin: { x: 0.5, y: 0.45 },
-        colors: ["#6366f1", "#a855f7", "#fbbf24", "#34d399"],
-      });
-    }
-  }, delayMs);
-}
-
 export function showQrGooglePanel(rootEl) {
-  const g = rootEl.querySelector("#fidelity-qr-panel-google");
-  const v = rootEl.querySelector("#fidelity-qr-panel-verify");
-  const w = rootEl.querySelector("#fidelity-qr-panel-win");
-  const c = rootEl.querySelector("#fidelity-qr-panel-claim");
-  g?.classList.remove("hidden");
-  v?.classList.add("hidden");
-  w?.classList.add("hidden");
-  c?.classList.add("hidden");
+  hideAllQrPanels(rootEl);
+  rootEl.querySelector("#fidelity-qr-panel-google")?.classList.remove("hidden");
 }
 
 export function showQrVerifyPanel(rootEl) {
-  const g = rootEl.querySelector("#fidelity-qr-panel-google");
-  const v = rootEl.querySelector("#fidelity-qr-panel-verify");
-  const w = rootEl.querySelector("#fidelity-qr-panel-win");
-  const c = rootEl.querySelector("#fidelity-qr-panel-claim");
-  g?.classList.add("hidden");
-  v?.classList.remove("hidden");
-  w?.classList.add("hidden");
-  c?.classList.add("hidden");
+  hideAllQrPanels(rootEl);
+  rootEl.querySelector("#fidelity-qr-panel-verify")?.classList.remove("hidden");
 }
 
-export function showQrWinPanel(rootEl, prizeLabelPlain) {
-  const g = rootEl.querySelector("#fidelity-qr-panel-google");
-  const v = rootEl.querySelector("#fidelity-qr-panel-verify");
-  const w = rootEl.querySelector("#fidelity-qr-panel-win");
-  const c = rootEl.querySelector("#fidelity-qr-panel-claim");
+/**
+ * Gain invité QR : une seule modale — félicitations + libellé du lot + formulaire prénom / email (pas de passage auto ni 2e pop-up).
+ * @param {HTMLElement} rootEl
+ * @param {string} prizeLabelPlain
+ */
+export function showQrRewardPanel(rootEl, prizeLabelPlain) {
+  hideAllQrPanels(rootEl);
+  const panel = rootEl.querySelector("#fidelity-qr-panel-reward");
   const prize = rootEl.querySelector("#fidelity-qr-win-prize");
-  g?.classList.add("hidden");
-  v?.classList.add("hidden");
-  c?.classList.add("hidden");
-  w?.classList.remove("hidden");
   if (prize) {
     prize.textContent = "";
-    prize.appendChild(document.createTextNode("Vous avez gagné : "));
+    prize.appendChild(document.createTextNode("Votre gain : "));
     const strong = document.createElement("strong");
     strong.textContent = String(prizeLabelPlain || "").trim() || "une récompense";
     prize.appendChild(strong);
   }
-}
-
-export function showQrClaimPanel(rootEl) {
-  const g = rootEl.querySelector("#fidelity-qr-panel-google");
-  const v = rootEl.querySelector("#fidelity-qr-panel-verify");
-  const w = rootEl.querySelector("#fidelity-qr-panel-win");
-  const c = rootEl.querySelector("#fidelity-qr-panel-claim");
-  g?.classList.add("hidden");
-  v?.classList.add("hidden");
-  w?.classList.add("hidden");
-  c?.classList.remove("hidden");
+  panel?.classList.remove("hidden");
+  const nameInput = rootEl.querySelector("#fidelity-qr-claim-name");
+  window.requestAnimationFrame(() => {
+    if (nameInput instanceof HTMLElement) nameInput.focus();
+  });
 }
 
 /** Premier libellé « gagnant » pour animation / fallback affichage. */
@@ -235,9 +186,8 @@ export function bindQrGameUi(ctx) {
   const spinBtn = rootEl.querySelector("#fidelity-v2-spin-btn");
   const openGoogle = rootEl.querySelector("#fidelity-qr-open-google");
   const skipGoogle = rootEl.querySelector("#fidelity-qr-skip-google");
-  const winCta = rootEl.querySelector("#fidelity-qr-win-cta");
   const claimForm = rootEl.querySelector("#fidelity-qr-claim-form");
-  const backdrop = rootEl.querySelector("[data-fid-qr-close=\"backdrop\"]");
+  const backdrop = rootEl.querySelector('[data-fid-qr-close="backdrop"]');
 
   let verifyUxCleanup = () => {};
 
@@ -317,17 +267,10 @@ export function bindQrGameUi(ctx) {
   backdrop?.addEventListener(
     "click",
     () => {
-    if (!isQrGateUnlocked() && rootEl.querySelector("#fidelity-qr-panel-verify:not(.hidden)")) return;
-    closeQrModalRoot(rootEl);
-    },
-    { signal },
-  );
-
-  winCta?.addEventListener(
-    "click",
-    () => {
-      cancelQrGuestClaimReveal();
-      showQrClaimPanel(rootEl);
+      if (!isQrGateUnlocked() && rootEl.querySelector("#fidelity-qr-panel-verify:not(.hidden)")) return;
+      const rewardOpen = rootEl.querySelector("#fidelity-qr-panel-reward:not(.hidden)");
+      if (rewardOpen) return;
+      closeQrModalRoot(rootEl);
     },
     { signal },
   );
@@ -335,40 +278,39 @@ export function bindQrGameUi(ctx) {
   claimForm?.addEventListener(
     "submit",
     async (ev) => {
-    ev.preventDefault();
-    const name = rootEl.querySelector("#fidelity-qr-claim-name")?.value?.trim();
-    const email = rootEl.querySelector("#fidelity-qr-claim-email")?.value?.trim();
-    const errEl = rootEl.querySelector("#fidelity-qr-claim-error");
-    const submitBtn = rootEl.querySelector("#fidelity-qr-claim-submit");
-    if (!name || !email) {
-      if (errEl) {
-        errEl.textContent = "Renseigne ton prénom et ton email.";
-        errEl.classList.remove("hidden");
+      ev.preventDefault();
+      const name = rootEl.querySelector("#fidelity-qr-claim-name")?.value?.trim();
+      const email = rootEl.querySelector("#fidelity-qr-claim-email")?.value?.trim();
+      const errEl = rootEl.querySelector("#fidelity-qr-claim-error");
+      const submitBtn = rootEl.querySelector("#fidelity-qr-claim-submit");
+      if (!name || !email) {
+        if (errEl) {
+          errEl.textContent = "Renseigne ton prénom et ton email.";
+          errEl.classList.remove("hidden");
+        }
+        return;
       }
-      return;
-    }
-    if (errEl) errEl.classList.add("hidden");
-    if (submitBtn) submitBtn.disabled = true;
-    try {
-      const st = getState();
-      await api.claimGuestIdentity(slug, st.member.id, { name, email });
-      closeQrModalRoot(rootEl);
-      await refreshMemberData();
-      rerender();
-    } catch (err) {
-      if (errEl) {
-        errEl.textContent = messageUtilisateurPourErreur(err, err.message || "Erreur.");
-        errEl.classList.remove("hidden");
+      if (errEl) errEl.classList.add("hidden");
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        const st = getState();
+        await api.claimGuestIdentity(slug, st.member.id, { name, email });
+        closeQrModalRoot(rootEl);
+        await refreshMemberData();
+        rerender();
+      } catch (err) {
+        if (errEl) {
+          errEl.textContent = messageUtilisateurPourErreur(err, err.message || "Erreur.");
+          errEl.classList.remove("hidden");
+        }
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
-    } finally {
-      if (submitBtn) submitBtn.disabled = false;
-    }
     },
     { signal },
   );
 
   return () => {
     spinBtn?.removeEventListener("click", onSpinPre, true);
-    cancelQrGuestClaimReveal();
   };
 }
