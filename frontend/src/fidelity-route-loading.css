@@ -1,5 +1,9 @@
 /* Écran de chargement /fidelity/:slug — voile flouté + logo (animation GSAP ou CSS) */
 
+html.fidpass-fidelity-route-loading #fidelity-app {
+  visibility: hidden !important;
+}
+
 .fidelity-route-loading-overlay {
   position: fixed;
   inset: 0;
@@ -12,7 +16,7 @@
   box-sizing: border-box;
   pointer-events: auto;
   opacity: 0;
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .fidelity-route-loading-overlay--visible {
@@ -24,12 +28,12 @@
   inset: 0;
   background: linear-gradient(
     165deg,
-    rgba(255, 250, 252, 0.72) 0%,
-    rgba(248, 250, 252, 0.78) 45%,
-    rgba(241, 245, 249, 0.82) 100%
+    rgba(255, 250, 252, 0.92) 0%,
+    rgba(248, 250, 252, 0.94) 45%,
+    rgba(241, 245, 249, 0.96) 100%
   );
-  backdrop-filter: blur(20px) saturate(1.15);
-  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+  backdrop-filter: blur(24px) saturate(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(1.1);
 }
 
 .fidelity-route-loading-overlay__content {
@@ -60,8 +64,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  background: transparent;
+  padding: 0.5rem;
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 28%;
   box-shadow: none;
 }
 
@@ -94,7 +100,7 @@
 .fidelity-route-loading-overlay--out {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.48s ease;
+  transition: opacity 0.2s ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {

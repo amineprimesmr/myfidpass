@@ -4,6 +4,8 @@
 import { resolveClientLogoImgSrc, resolveClientNotificationIconImgSrc } from "./lib/resolve-client-logo-src.js";
 
 const OVERLAY_ID = "fidelity-route-loading-overlay";
+/** Masque #fidelity-app pendant le chargement pour éviter que le flou du voile ne montre la vraie page dans le logo. */
+const HTML_LOADING_CLASS = "fidpass-fidelity-route-loading";
 
 /** @type { { kill: () => void } | null } */
 let logoSpinTween = null;
@@ -36,6 +38,7 @@ export function mountFidelityRouteLoadingOverlay() {
     </div>`;
   document.body.appendChild(el);
   document.body.setAttribute("aria-busy", "true");
+  document.documentElement.classList.add(HTML_LOADING_CLASS);
   requestAnimationFrame(() => {
     el.classList.add("fidelity-route-loading-overlay--visible");
   });
@@ -50,7 +53,7 @@ export function mountFidelityRouteLoadingOverlay() {
  */
 export function setFidelityRouteLoadingLogo(overlayEl, business, slug, apiBase) {
   const img = overlayEl?.querySelector(".fidelity-route-loading__logo");
-  if (!(img instanceof HTMLImageElement)) return;
+  if (!(img instanceof globalThis.HTMLImageElement)) return;
   const src = resolveClientNotificationIconImgSrc(business, String(slug || ""), String(apiBase || ""));
   if (!src) {
     img.classList.add("fidelity-route-loading__logo--empty");
@@ -66,6 +69,9 @@ export function setFidelityRouteLoadingLogo(overlayEl, business, slug, apiBase) 
   }
   img.src = src;
   img.classList.remove("fidelity-route-loading__logo--empty");
+  if (typeof img.decode === "function") {
+    img.decode().catch(() => {});
+  }
 }
 
 /**
@@ -80,7 +86,7 @@ export function startFidelityRouteLoadingAnimations(overlayEl) {
 
   const g = typeof globalThis.gsap !== "undefined" ? globalThis.gsap : undefined;
 
-  const logoEl = logo instanceof HTMLImageElement ? logo : null;
+  const logoEl = logo instanceof globalThis.HTMLImageElement ? logo : null;
   const hasLogo = logoEl && logoEl.src && !logoEl.classList.contains("fidelity-route-loading__logo--empty");
 
   if (g && content && !prefersReducedMotion()) {
@@ -97,45 +103,61 @@ export function startFidelityRouteLoadingAnimations(overlayEl) {
 
 /**
  * @param {HTMLElement} overlayEl
- * @param {{ minVisibleMs?: number }} [opts]
+ * @param {{ minVisibleMs?: number }} [opts] — défaut 0 : pas d’attente artificielle une fois le contenu prêt.
  */
 export async function dismissFidelityRouteLoadingOverlay(overlayEl, opts = {}) {
-  const { minVisibleMs = 950 } = opts;
+  const { minVisibleMs = 0 } = opts;
   const el = overlayEl && document.body.contains(overlayEl) ? overlayEl : document.getElementById(OVERLAY_ID);
-  if (!el) {
+
+  const cleanupHtmlClass = () => {
+    document.documentElement.classList.remove(HTML_LOADING_CLASS);
     document.body.removeAttribute("aria-busy");
+  };
+
+  if (!el) {
+    cleanupHtmlClass();
     return;
   }
 
   logoSpinTween?.kill();
   logoSpinTween = null;
-
-  const t0 = performance.now();
-  await doubleRAF();
-  await new Promise((r) => setTimeout(r, 40));
-  const elapsed = performance.now() - t0;
-  if (elapsed < minVisibleMs) {
-    await new Promise((r) => setTimeout(r, minVisibleMs - elapsed));
-  }
+  el.classList.remove("fidelity-route-loading-overlay--css-spin");
 
   const g = typeof globalThis.gsap !== "undefined" ? globalThis.gsap : undefined;
-
-  if (g) {
-    await new Promise((resolve) => {
-      g.to(el, {
-        opacity: 0,
-        duration: 0.48,
-        ease: "power2.inOut",
-        onComplete: () => {
-          el.remove();
-          resolve();
-        },
-      });
-    });
-  } else {
-    el.classList.add("fidelity-route-loading-overlay--out");
-    await new Promise((r) => setTimeout(r, 480));
-    el.remove();
+  const logoEl = el.querySelector(".fidelity-route-loading__logo");
+  if (g && logoEl instanceof HTMLElement) {
+    g.killTweensOf(logoEl);
+    g.set(logoEl, { rotation: 0, clearProps: "transform" });
   }
-  document.body.removeAttribute("aria-busy");
+
+  /* Laisser un frame peindre #fidelity-app (masqué) puis fondu court */
+  await doubleRAF();
+  if (minVisibleMs > 0) {
+    await new Promise((r) => setTimeout(r, minVisibleMs));
+  }
+
+  const OUT_MS = 0.2;
+
+  try {
+    if (g) {
+      g.killTweensOf(el);
+      await new Promise((resolve) => {
+        g.to(el, {
+          opacity: 0,
+          duration: OUT_MS,
+          ease: "power2.out",
+          onComplete: () => {
+            el.remove();
+            resolve();
+          },
+        });
+      });
+    } else {
+      el.classList.add("fidelity-route-loading-overlay--out");
+      await new Promise((r) => setTimeout(r, Math.round(OUT_MS * 1000) + 30));
+      el.remove();
+    }
+  } finally {
+    cleanupHtmlClass();
+  }
 }
