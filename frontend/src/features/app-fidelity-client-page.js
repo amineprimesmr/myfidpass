@@ -1,6 +1,16 @@
 /**
- * SaaS — section « Page fidélité » : titre + fond (même UX que Flyer QR).
+ * SaaS — section « Page fidélité » : titre + fond + aperçu aligné sur la page jeu QR (roue réelle).
  */
+
+import {
+  buildWheelConicGradient,
+  buildWheelSegmentHtml,
+  normalizeWheelLabelsFromSegments,
+} from "../client-fidelity/lib/wheel-segments.js";
+import {
+  resolveClientLogoImgSrc,
+  resolveFidelityPageBackgroundImgSrc,
+} from "../client-fidelity/lib/resolve-client-logo-src.js";
 
 const DEFAULT_QR_HERO_TITLE = "Participez au jeu et tentez de gagner une récompense.";
 
@@ -31,6 +41,45 @@ function setupImageDropZone(zoneEl, onFile) {
   });
 }
 
+function escapeHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function paintPreviewWheel(wheelEl, segments) {
+  if (!wheelEl) return;
+  const wheelLabels = normalizeWheelLabelsFromSegments(Array.isArray(segments) ? segments : []);
+  const n = wheelLabels.length;
+  wheelEl.style.background = buildWheelConicGradient(n);
+  wheelEl.style.transform = "rotate(0deg)";
+
+  const segmentHtml = wheelLabels
+    .map((_, i) =>
+      buildWheelSegmentHtml({
+        segmentIndex: i,
+        segmentCount: n,
+        escapeHtml,
+      }),
+    )
+    .join("");
+
+  let shine = wheelEl.querySelector(".fidelity-roulette-wheel-shine");
+  if (!shine) {
+    shine = document.createElement("div");
+    shine.className = "fidelity-roulette-wheel-shine";
+    shine.setAttribute("aria-hidden", "true");
+    wheelEl.insertBefore(shine, wheelEl.firstChild);
+  }
+  let disc = wheelEl.querySelector(".fidelity-roulette-wheel-disc");
+  if (!disc) {
+    disc = document.createElement("div");
+    disc.className = "fidelity-roulette-wheel-disc";
+    wheelEl.appendChild(disc);
+  }
+  disc.innerHTML = segmentHtml;
+}
+
 /**
  * @param {{ api: (path: string, opts?: RequestInit) => Promise<Response>; slug: string; pageOrigin: string }} ctx
  */
@@ -38,6 +87,7 @@ export function initFidelityClientPageSection(ctx) {
   const { api, slug, pageOrigin } = ctx;
   const origin = (pageOrigin || "").replace(/\/$/, "") || (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
   const publicFidelityUrl = `${origin}/fidelity/${encodeURIComponent(slug)}`;
+  const apiBase = origin;
 
   const titleInput = document.getElementById("app-fidelity-client-hero-title");
   const titleStatus = document.getElementById("app-fidelity-client-title-status");
@@ -50,8 +100,10 @@ export function initFidelityClientPageSection(ctx) {
   const statusEl = document.getElementById("app-fidelity-client-status");
   const urlInput = document.getElementById("app-fidelity-client-public-url");
   const copyBtn = document.getElementById("app-fidelity-client-copy-url");
-  const mockupTitle = document.getElementById("app-fidelity-client-mockup-title");
-  const mockupBg = document.getElementById("app-fidelity-client-mockup-bg");
+  const previewRoot = document.getElementById("app-fidelity-client-live-preview-root");
+  const previewTitle = document.getElementById("app-fidelity-client-preview-title");
+  const previewLogo = document.getElementById("app-fidelity-client-preview-logo");
+  const previewWheel = document.getElementById("app-fidelity-client-preview-wheel");
   const panelToggle = document.getElementById("app-fidelity-client-panel-toggle");
   const panel = document.getElementById("app-fidelity-client-panel");
 
@@ -98,21 +150,56 @@ export function initFidelityClientPageSection(ctx) {
     titleStatus.classList.toggle("success", Boolean(msg) && !isErr);
   }
 
-  function syncMockupDisplay(bgUrl, heroRaw) {
-    if (mockupTitle) {
-      const t = String(heroRaw ?? "").trim() || DEFAULT_QR_HERO_TITLE;
-      mockupTitle.textContent = t;
-    }
-    if (mockupBg) {
-      if (bgUrl) {
-        const u = bgUrl.includes("?") ? `${bgUrl}&t=${Date.now()}` : `${bgUrl}?t=${Date.now()}`;
-        mockupBg.style.backgroundImage = `url("${u.replace(/"/g, "%22")}")`;
-        mockupBg.style.backgroundColor = "";
+  function syncLivePreview(settingsData, rouletteSegments) {
+    const url = settingsData?.fidelity_page_background_url || settingsData?.fidelityPageBackgroundUrl;
+    const heroRaw =
+      settingsData?.fidelity_qr_hero_title != null
+        ? String(settingsData.fidelity_qr_hero_title)
+        : settingsData?.fidelityQrHeroTitle != null
+          ? String(settingsData.fidelityQrHeroTitle)
+          : "";
+    const hero = String(heroRaw ?? "").trim() || DEFAULT_QR_HERO_TITLE;
+
+    if (previewTitle) previewTitle.textContent = hero;
+
+    if (previewLogo) {
+      const hasLogo = Boolean(settingsData?.logo_url || settingsData?.logoUrl);
+      if (hasLogo) {
+        const logoSrc = resolveClientLogoImgSrc(
+          {
+            logoUrl: settingsData.logo_url ?? settingsData.logoUrl,
+            logo_updated_at: settingsData.logo_updated_at ?? settingsData.logoUpdatedAt,
+          },
+          slug,
+          apiBase,
+        );
+        previewLogo.src = logoSrc;
+        previewLogo.classList.remove("hidden");
       } else {
-        mockupBg.style.backgroundImage = "none";
-        mockupBg.style.backgroundColor = "#f8fafc";
+        previewLogo.removeAttribute("src");
+        previewLogo.classList.add("hidden");
       }
     }
+
+    if (previewRoot) {
+      const businessStub = {
+        fidelity_page_background_url: url || "",
+        fidelityPageBackgroundUrl: url || "",
+        fidelity_page_background_updated_at:
+          settingsData?.fidelity_page_background_updated_at ?? settingsData?.fidelityPageBackgroundUpdatedAt,
+        fidelityPageBackgroundUpdatedAt:
+          settingsData?.fidelity_page_background_updated_at ?? settingsData?.fidelityPageBackgroundUpdatedAt,
+      };
+      const resolved = resolveFidelityPageBackgroundImgSrc(businessStub, slug, apiBase);
+      previewRoot.classList.toggle("fidelity-page--client-bg", Boolean(resolved));
+      if (resolved) {
+        previewRoot.style.setProperty("--fidelity-client-bg", `url("${resolved}")`);
+      } else {
+        previewRoot.style.removeProperty("--fidelity-client-bg");
+      }
+    }
+
+    paintPreviewWheel(previewWheel, rouletteSegments);
   }
 
   function syncThumbFromUrl(url) {
@@ -129,14 +216,20 @@ export function initFidelityClientPageSection(ctx) {
     }
   }
 
-  let lastLoadedHero = "";
-  let lastBgUrl = "";
-
   async function loadSettings() {
     try {
-      const res = await api("/dashboard/settings");
-      if (!res.ok) return;
-      const data = await res.json();
+      const [settingsRes, gamesRes] = await Promise.all([api("/dashboard/settings"), api("/games")]);
+      if (!settingsRes.ok) return;
+      const data = await settingsRes.json();
+      let segments = [];
+      if (gamesRes.ok) {
+        try {
+          const g = await gamesRes.json();
+          segments = Array.isArray(g.roulette_segments) ? g.roulette_segments : [];
+        } catch (_) {
+          segments = [];
+        }
+      }
       const url = data.fidelity_page_background_url || data.fidelityPageBackgroundUrl;
       const hero =
         data.fidelity_qr_hero_title != null
@@ -144,11 +237,9 @@ export function initFidelityClientPageSection(ctx) {
           : data.fidelityQrHeroTitle != null
             ? String(data.fidelityQrHeroTitle)
             : "";
-      lastLoadedHero = hero;
-      lastBgUrl = url || "";
       if (titleInput) titleInput.value = hero;
       syncThumbFromUrl(url || "");
-      syncMockupDisplay(url || "", hero);
+      syncLivePreview(data, segments);
     } catch (_) {}
   }
 
@@ -158,6 +249,12 @@ export function initFidelityClientPageSection(ctx) {
     setTitleStatus("");
     window.clearTimeout(titleTimer);
     titleTimer = window.setTimeout(() => void saveHeroTitle(), 650);
+  }
+
+  function syncPreviewTitleFromInput() {
+    if (!previewTitle || !titleInput) return;
+    const t = String(titleInput.value ?? "").trim();
+    previewTitle.textContent = t || DEFAULT_QR_HERO_TITLE;
   }
 
   async function saveHeroTitle() {
@@ -172,9 +269,8 @@ export function initFidelityClientPageSection(ctx) {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
-        lastLoadedHero = raw.trim();
         setTitleStatus("Titre enregistré.");
-        syncMockupDisplay(lastBgUrl, lastLoadedHero);
+        await loadSettings();
       } else {
         const err = await res.json().catch(() => ({}));
         setTitleStatus(err.error || "Enregistrement impossible.", true);
@@ -184,7 +280,10 @@ export function initFidelityClientPageSection(ctx) {
     }
   }
 
-  titleInput?.addEventListener("input", scheduleTitleSave);
+  titleInput?.addEventListener("input", () => {
+    syncPreviewTitleFromInput();
+    scheduleTitleSave();
+  });
   titleInput?.addEventListener("blur", () => {
     window.clearTimeout(titleTimer);
     void saveHeroTitle();
@@ -221,9 +320,8 @@ export function initFidelityClientPageSection(ctx) {
       });
       if (res.ok) {
         setStatus("Fond retiré.");
-        lastBgUrl = "";
         syncThumbFromUrl("");
-        syncMockupDisplay("", titleInput ? titleInput.value : lastLoadedHero);
+        await loadSettings();
       } else {
         const err = await res.json().catch(() => ({}));
         setStatus(err.error || "Action impossible.", true);

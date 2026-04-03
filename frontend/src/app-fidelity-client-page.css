@@ -43,9 +43,9 @@
   max-width: 42rem;
 }
 
-/* Aperçu téléphone (page jeu QR) */
+/* Aperçu téléphone — même markup/CSS que la page jeu QR (conteneur cqw/cqh pour la roue) */
 #app-app .app-fidelity-client-mockup {
-  max-width: 320px;
+  max-width: 420px;
   margin: 0 auto;
   perspective: 1100px;
 }
@@ -66,7 +66,7 @@
 #app-app .app-fidelity-client-mockup-phone {
   position: relative;
   margin: 0 auto;
-  max-width: 280px;
+  max-width: min(404px, 100%);
   padding: 10px;
   border-radius: 28px;
   background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
@@ -86,63 +86,97 @@
 #app-app .app-fidelity-client-mockup-screen {
   position: relative;
   border-radius: 20px;
-  overflow: hidden;
-  min-height: 420px;
+  overflow-x: visible;
+  overflow-y: hidden;
+  min-height: min(780px, 72vh);
+  background: #0f172a;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport {
+  width: 100%;
+  max-width: 390px;
+  height: min(780px, 72vh);
+  margin: 0 auto;
+  container-type: size;
+  container-name: fidelity-client-prev;
+  overflow-x: visible;
+  overflow-y: auto;
+  border-radius: 16px;
   background: #f8fafc;
-}
-
-#app-app .app-fidelity-client-mockup-bg {
-  position: absolute;
-  inset: 0;
-  background-color: #f8fafc;
-  background-image: none;
-  background-size: cover;
-  background-position: center;
-  z-index: 0;
-}
-
-#app-app .app-fidelity-client-mockup-inner {
-  position: relative;
-  z-index: 1;
-  padding: 1.25rem 0.85rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  min-height: 420px;
   box-sizing: border-box;
 }
 
-#app-app .app-fidelity-client-mockup-logo-ph {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-  margin-bottom: 0.5rem;
+/* Fond page client (équivalent #fidelity-app, ::before en absolute — pas fixed) */
+#app-app .app-fidelity-client-live-preview-root.fidelity-page {
+  min-height: 100%;
+  min-height: 100cqh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
-#app-app .app-fidelity-client-mockup-title {
-  margin: 0.35rem 0 0;
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-  color: #0f172a;
-  max-width: 15em;
+#app-app .app-fidelity-client-live-preview-root.fidelity-page.fidelity-page--client-bg {
+  position: relative;
+  isolation: isolate;
 }
 
-#app-app .app-fidelity-client-mockup-cta-ph {
+#app-app .app-fidelity-client-live-preview-root.fidelity-page.fidelity-page--client-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--fidelity-client-bg) center / cover no-repeat;
+  opacity: 1;
+  pointer-events: none;
+}
+
+#app-app .app-fidelity-client-live-preview-root.fidelity-page.fidelity-page--client-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .app-fidelity-client-preview-cta {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Typo / roue : unités conteneur (le viewport fait ~390px — pas la fenêtre SaaS) */
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-title--lead {
+  margin: clamp(2.35rem, 9.5cqw, 4.25rem) 0 0;
+  font-size: clamp(1.48rem, 5.5cqw, 2.15rem);
+  max-width: min(22rem, 92cqw);
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-game {
+  padding-left: max(1rem, 12px) !important;
+  padding-right: calc(max(1.25rem, 12px) + 16px) !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
+  min-height: min(46cqh, 48cqh, 64cqmin) !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
+  top: 78% !important;
+  width: min(106cqmin, 104cqw) !important;
+  height: min(106cqmin, 104cqw) !important;
+  transform: translate(-34%, -50%) !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline .fidelity-roulette-wheel-outer {
+  transform: rotateX(9deg) scale(0.99);
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline .fidelity-roulette-indicator {
+  right: 0.35% !important;
+  width: min(10cqmin, 46px) !important;
+  height: min(12cqmin, 56px) !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
   margin-top: auto;
-  align-self: flex-end;
-  padding: 0.35rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.55rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #fff;
-  background: linear-gradient(180deg, #4f46e5 0%, #312e81 100%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 #app-app .app-fidelity-client-link-row .app-label {
@@ -222,6 +256,16 @@
   display: none !important;
 }
 
+@media (max-width: 600px) {
+  #app-app .app-fidelity-client-live-preview-viewport {
+    height: min(720px, 62vh);
+  }
+
+  #app-app .app-fidelity-client-mockup-screen {
+    min-height: min(720px, 62vh);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   #app-app .app-fidelity-client-mockup-phone {
     transform: none;
@@ -229,6 +273,10 @@
   }
 
   #app-app .app-fidelity-client-mockup:hover .app-fidelity-client-mockup-phone {
+    transform: none;
+  }
+
+  #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline .fidelity-roulette-wheel-outer {
     transform: none;
   }
 }

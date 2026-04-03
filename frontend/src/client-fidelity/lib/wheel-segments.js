@@ -4,6 +4,28 @@
  */
 export const WHEEL_SEGMENT_COUNT = 8;
 
+/**
+ * Fond conique alterné (parts sombres / claires), identique à la roue page fidélité.
+ * @param {number} n — nombre de parts (ex. 8)
+ * @returns {string}
+ */
+export function buildWheelConicGradient(n) {
+  const count = Math.max(2, Math.floor(Number(n)) || 8);
+  const step = 360 / count;
+  const stops = [];
+  for (let i = 0; i < count; i++) {
+    const a = i * step;
+    const b = (i + 1) * step;
+    const mid = a + step / 2;
+    if (i % 2 === 0) {
+      stops.push(`#080808 ${a}deg`, `#2a2a2a ${mid}deg`, `#111111 ${b}deg`);
+    } else {
+      stops.push(`#ffffff ${a}deg`, `#e6e6e6 ${mid}deg`, `#fafafa ${b}deg`);
+    }
+  }
+  return `conic-gradient(${stops.join(", ")})`;
+}
+
 /** Défaut : parts paires = lots (visuel cadeau), impaires = PERDU — alternance stricte. */
 export const DEFAULT_WHEEL_LABELS = [
   "+10 PTS",

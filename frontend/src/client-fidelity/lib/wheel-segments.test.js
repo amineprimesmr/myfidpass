@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  buildWheelConicGradient,
   buildWheelSegmentHtml,
   DEFAULT_WHEEL_LABELS,
   normalizeWheelLabelsFromSegments,
@@ -16,6 +17,14 @@ function esc(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
+
+describe("buildWheelConicGradient", () => {
+  it("produit un conic-gradient pour 8 parts", () => {
+    const g = buildWheelConicGradient(8);
+    expect(g.startsWith("conic-gradient(")).toBe(true);
+    expect(g).toContain("deg");
+  });
+});
 
 describe("normalizeWheelLabelsFromSegments", () => {
   it("renvoie 8 labels par défaut si vide", () => {

@@ -12,6 +12,7 @@ import {
   DEFAULT_WHEEL_LABELS,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
+  buildWheelConicGradient,
 } from "./lib/wheel-segments.js";
 import { isUnlimitedTicketsDemo } from "./lib/unlimited-tickets-demo.js";
 import { startRouletteSpinSound } from "./lib/roulette-spin-audio.js";
@@ -128,22 +129,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     console.error("[fidelity] ensureGuestSession", e);
   }
 
-  function buildConicGradient(n) {
-    const step = 360 / n;
-    const stops = [];
-    for (let i = 0; i < n; i++) {
-      const a = i * step;
-      const b = (i + 1) * step;
-      const mid = a + step / 2;
-      if (i % 2 === 0) {
-        stops.push(`#080808 ${a}deg`, `#2a2a2a ${mid}deg`, `#111111 ${b}deg`);
-      } else {
-        stops.push(`#ffffff ${a}deg`, `#e6e6e6 ${mid}deg`, `#fafafa ${b}deg`);
-      }
-    }
-    return `conic-gradient(${stops.join(", ")})`;
-  }
-
   function syncWheelLabelsFromStore() {
     const segs = store.get().roulette_segments;
     wheelLabels = normalizeWheelLabelsFromSegments(Array.isArray(segs) ? segs : []);
@@ -155,7 +140,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     syncWheelLabelsFromStore();
 
     const n = wheelLabels.length;
-    wheelEl.style.background = buildConicGradient(n);
+    wheelEl.style.background = buildWheelConicGradient(n);
     wheelEl.style.transform = `rotate(${currentRotation}deg)`;
 
     const segmentHtml = wheelLabels
