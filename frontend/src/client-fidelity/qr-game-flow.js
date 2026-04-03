@@ -14,16 +14,11 @@ const QR_THANKS_TITLE = "Merci, bonne chance !";
  * @param {() => { business?: { organizationName?: string; name?: string } }} getState
  */
 export function applyQrThanksHero(rootEl, getState) {
-  const st = typeof getState === "function" ? getState() : null;
-  const b = st?.business;
-  const name = String(b?.organizationName || b?.name || "").trim();
   const h1 = rootEl.querySelector(".fidelity-qr-title");
-  const tag = rootEl.querySelector(".fidelity-qr-tagline");
   if (h1) {
     h1.textContent = QR_THANKS_TITLE;
-    h1.classList.add("fidelity-qr-title--thanks");
+    h1.classList.add("fidelity-qr-title--thanks", "fidelity-qr-title--lead");
   }
-  if (tag) tag.textContent = name || "";
 }
 
 /** Durée affichée « vérification serveur » (ms) — plus réaliste qu’un flash ~2,6 s */

@@ -40,14 +40,14 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 .fidelity-qr-hero {
   text-align: center;
-  padding: 0.2rem 0 0.1rem;
+  padding: 0.35rem 0 0.5rem;
 }
 
 .fidelity-qr-brand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0;
 }
 
 .fidelity-qr-logo {
@@ -56,34 +56,30 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+  flex-shrink: 0;
 }
 
-.fidelity-qr-title {
-  margin: 0;
-  font-size: clamp(1.1rem, 3.6vw, 1.45rem);
+/* Titre unique : accroche lisible, large marge sous l’icône */
+.fidelity-qr-title--lead {
+  margin: clamp(2.35rem, 9.5vw, 4.25rem) 0 0;
+  font-size: clamp(1.22rem, 4.25vw, 1.72rem);
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.028em;
+  line-height: 1.34;
   color: #0f172a;
+  max-width: 22rem;
 }
 
 .fidelity-qr-title.fidelity-qr-title--thanks {
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: clamp(1rem, 3.2vw, 1.35rem);
-  line-height: 1.25;
-}
-
-.fidelity-qr-tagline {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #64748b;
-  line-height: 1.3;
+  letter-spacing: 0.055em;
+  font-size: clamp(1.08rem, 3.85vw, 1.48rem);
+  line-height: 1.28;
   max-width: 22rem;
 }
 
 .fidelity-v2-roulette-inline--qr {
-  margin-top: 3.75rem;
+  margin-top: 5.25rem;
   overflow: visible;
 }
 

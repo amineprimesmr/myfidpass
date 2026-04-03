@@ -16,9 +16,9 @@ export function renderQrGamePage(esc, p) {
     logoUrlPublicFallback,
     qrThanksHeroMode = false,
   } = p;
-  const heroTitleEsc = qrThanksHeroMode ? esc("Merci, bonne chance !") : businessNameEsc;
-  const heroTaglineEsc = qrThanksHeroMode ? businessNameEsc : businessTaglineEsc;
-  const heroTitleClass = `fidelity-qr-title${qrThanksHeroMode ? " fidelity-qr-title--thanks" : ""}`;
+  /* Un seul titre sous l’icône : accroche jeu (ou « Merci… » après Google) — pas le nom du commerce */
+  const heroTitleEsc = qrThanksHeroMode ? esc("Merci, bonne chance !") : businessTaglineEsc;
+  const heroTitleClass = `fidelity-qr-title fidelity-qr-title--lead${qrThanksHeroMode ? " fidelity-qr-title--thanks" : ""}`;
 
   const hasGoogle = Boolean(googleReviewUrl);
   const googleHref = hasGoogle ? String(googleReviewUrl).replace(/"/g, "&quot;") : "";
@@ -31,7 +31,7 @@ export function renderQrGamePage(esc, p) {
       fb && fb !== String(logoUrl).trim()
         ? ` data-fid-qr-logo-fallback="${esc(fb)}" onerror="this.onerror=null;var f=this.getAttribute('data-fid-qr-logo-fallback');if(f)this.src=f"`
         : "";
-    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="" width="120" height="120" decoding="async"${useFallback} />`;
+    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="${businessNameEsc}" width="120" height="120" decoding="async"${useFallback} />`;
     verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap" aria-hidden="true"><img class="fidelity-qr-verify-logo" id="fidelity-qr-verify-logo" src="${esc(logoUrl)}" alt="" width="96" height="96" decoding="async"${useFallback} /></div>`;
   }
 
@@ -41,7 +41,6 @@ export function renderQrGamePage(esc, p) {
         <div class="fidelity-qr-brand">
           ${qrLogo || ""}
           <h1 class="${heroTitleClass}">${heroTitleEsc}</h1>
-          <p class="fidelity-qr-tagline">${heroTaglineEsc}</p>
         </div>
       </section>
 
