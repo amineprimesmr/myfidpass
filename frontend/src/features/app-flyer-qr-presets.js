@@ -40,12 +40,10 @@ export const FLYER_LAYOUT = Object.freeze({
   wheelCenterYFrac: 0.508,
   /** Bord supérieur du carré QR (fraction hauteur). */
   qrTopYFrac: 0.548,
-  /** Hauteur de la zone « étapes » (sans la bande sociale), fond transparent. */
+  /** Hauteur de la zone « étapes », fond transparent. */
   footerStepsHeightFrac: 0.108,
   /** Hauteur max du PNG bandeau pied (fraction canvas). */
   footerBannerMaxHeightFrac: 0.132,
-  /** Bande « Suivez-nous » quand au moins un réseau (fraction hauteur). */
-  socialStripHeightFrac: 0.124,
 });
 
 /** Identifiant unique du gabarit flyer (ancien localStorage avec d’autres ids → normalisé au merge). */
@@ -78,12 +76,6 @@ export function flyerTemplateMeta(id) {
  * @property {string} step1
  * @property {string} step2
  * @property {string} step3
- * @property {string} social1
- * @property {string} socialUrl1
- * @property {string} social2
- * @property {string} socialUrl2
- * @property {string} social3
- * @property {string} socialUrl3
  * @property {string} colorPrimary
  * @property {string} colorSecondary
  * @property {string} colorAccent
@@ -102,7 +94,7 @@ export function flyerTemplateMeta(id) {
  * @property {number} headlineLetterSpacing espacement lettres (0–8, px réf. export)
  * @property {number} headlineSizePct taille police titre (% largeur flyer), 5–16
  * @property {string} footerStepsForegroundColor couleur chiffres + libellés des étapes (bas de flyer)
- * @property {number} flyerFooterTextScalePct échelle texte étapes + bande sociale, 70–130
+ * @property {number} flyerFooterTextScalePct échelle texte étapes, 70–130
  * @property {number} flyerWheelLabelScalePct échelle GAGNÉ/PERDU sur la roue, 70–130
  * @property {number} flyerBgOverlayPct voile sur image de fond (0–90), 0 = photo brute sans assombrissement
  * @property {number} flyerQrOutlineWidth cadre autour du QR (0 = off), 0–12
@@ -119,12 +111,6 @@ export function defaultFlyerState() {
     step1: "Scan le QR code",
     step2: "Fais tourner la roue",
     step3: "Découvre ton cadeau",
-    social1: "",
-    socialUrl1: "",
-    social2: "",
-    socialUrl2: "",
-    social3: "",
-    socialUrl3: "",
     colorPrimary: "#fbbf24",
     colorSecondary: "#f97316",
     colorAccent: "#ffffff",
@@ -245,6 +231,12 @@ export function mergeFlyerState(raw) {
   );
   delete merged.subline;
   delete merged.flyerWheelOutlineWidth;
+  delete merged.social1;
+  delete merged.socialUrl1;
+  delete merged.social2;
+  delete merged.socialUrl2;
+  delete merged.social3;
+  delete merged.socialUrl3;
   const headlineRaw = String(merged.headline ?? "").trim();
   if (!headlineRaw || /^fais\s+tourner\s+la\s+roue$/i.test(headlineRaw)) {
     merged.headline = base.headline;

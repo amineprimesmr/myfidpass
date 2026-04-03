@@ -7,11 +7,6 @@ import {
   FLYER_LAYOUT,
   footerStepsForegroundResolved,
 } from "./app-flyer-qr-presets.js";
-import {
-  parseFlyerSocialEntries,
-  flyerSocialStripHeight,
-  drawFlyerSocialStrip,
-} from "./app-flyer-social-strip.js";
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
@@ -270,7 +265,7 @@ async function getFlyerRoueImage() {
   }
 }
 
-/** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} canvasH @param {number} bottomY bord bas du bandeau (souvent h - bande sociale). @param {HTMLImageElement} img */
+/** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} canvasH @param {number} bottomY bord bas du bandeau étapes. @param {HTMLImageElement} img */
 function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   const iw = img.naturalWidth || img.width;
   const ih = img.naturalHeight || img.height;
@@ -287,7 +282,7 @@ function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} w
  * @param {number} canvasH
- * @param {number} bannerBottom bord bas de la zone étapes (= haut bande sociale si présente)
+ * @param {number} bannerBottom bord bas de la zone étapes (= bas du canvas)
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  * @param {HTMLImageElement[]} icons
  */
@@ -544,16 +539,13 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.fill();
   if (qrImg) ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
   ctx.restore();
-  const socialEntries = parseFlyerSocialEntries(s);
-  const stripH = flyerSocialStripHeight(h, socialEntries.length);
-  const bannerBottom = h - stripH;
+  const bannerBottom = h;
   const [stepIcons, footerBannerImg] = await Promise.all([loadFooterStepIcons(), getFlyerFooterBanner()]);
   if (footerBannerImg) {
     drawFooterBanner(ctx, w, h, bannerBottom, footerBannerImg);
   } else if (stepIcons && stepIcons.length === 3) {
     drawFooterStepsWithIcons(ctx, w, h, bannerBottom, s, stepIcons);
   } else {
-    drawFooterBar(ctx, w, h, s, stripH);
+    drawFooterBar(ctx, w, h, s, 0);
   }
-  await drawFlyerSocialStrip(ctx, w, h - stripH, stripH, socialEntries, s);
 }

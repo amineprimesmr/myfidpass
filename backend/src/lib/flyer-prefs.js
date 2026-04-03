@@ -40,6 +40,11 @@ export function normalizeFlyerPrefsPut(body, existingFlyerPrefsJson) {
       : {}
     : prevState;
 
+  /** Bandeau réseaux sociaux retiré du produit — ne plus persister ces clés. */
+  for (const k of ["social1", "socialUrl1", "social2", "socialUrl2", "social3", "socialUrl3"]) {
+    delete state[k];
+  }
+
   const hasLogoKey =
     Object.prototype.hasOwnProperty.call(inner, "custom_logo_data_url") ||
     Object.prototype.hasOwnProperty.call(inner, "customLogoDataUrl");

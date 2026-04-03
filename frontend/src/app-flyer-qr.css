@@ -305,15 +305,7 @@
   resize: vertical;
 }
 
-#app-app .app-flyer-social-row {
-  display: grid;
-  grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr);
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 0.65rem;
-}
-
-#app-app .app-flyer-social-select {
+#app-app .app-flyer-inline-select {
   width: 100%;
   padding: 0.45rem 0.5rem;
   font-size: 0.85rem;
