@@ -1,5 +1,25 @@
 /* Parcours QR : roue d’abord, modales, charte neutre (couleurs commerce via variables si présentes) */
 
+/* Shell #fidelity-app : colonne pleine hauteur → pied de page « pro » collé au bas de l’écran */
+.fidelity-page:has(> main.fidelity-qr-game) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-height: 100svh;
+  box-sizing: border-box;
+}
+
+.fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
+  margin-top: auto;
+  flex-shrink: 0;
+  width: 100%;
+}
+
 .fidpass-fidelity-route .fidelity-qr-game,
 .fidelity-page .fidelity-qr-game {
   padding: 0.5rem 1rem 0.35rem;
@@ -154,11 +174,6 @@
     height: min(100vmin, 104vw);
     transform: translate(-34%, -50%);
   }
-}
-
-/* Un peu plus d’air sous la roue avant le pied de page noir */
-.fidelity-qr-powered.fidelity-v2-footer--dark {
-  margin-top: 1.25rem;
 }
 
 /* Modales : centré, fond clair, safe-area, animation entrée / sortie */

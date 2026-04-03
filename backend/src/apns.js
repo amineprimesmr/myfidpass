@@ -337,14 +337,20 @@ export function getMerchantApnsUnavailableReason() {
   return merchantProvider ? null : merchantError;
 }
 
-/** Erreur APNs typique : token invalide ou révoqué — à purger côté base. */
+/**
+ * Erreur APNs typique : token device invalide ou révoqué — à purger côté base.
+ *
+ * NOTE : `invalidprovidertoken` est intentionnellement EXCLU — c'est une erreur
+ * de credentials côté serveur (clé .p8 / keyId incorrects), pas un device token
+ * invalide. L'inclure entraînerait la suppression de TOUS les tokens clients
+ * si la clé APNs expire ou est mal configurée.
+ */
 export function isLikelyInvalidDeviceTokenApnsError(err) {
   const s = String(err?.reason ?? err?.message ?? err ?? "").toLowerCase();
   return (
     s.includes("baddevicetoken") ||
     s.includes("unregistered") ||
-    s.includes("devicetokennotfortopic") ||
-    s.includes("invalidprovidertoken")
+    s.includes("devicetokennotfortopic")
   );
 }
 
@@ -382,7 +388,12 @@ export function sendMerchantAppAlert(deviceToken, payload) {
 
   return prov.send(note).then(
     () => ({ sent: true }),
-    (err) => ({ sent: false, error: String(err?.reason ?? err?.message ?? err) })
+    (err) => {
+      if (isConnectionLevelError(err)) {
+        merchantProvider = undefined;
+      }
+      return { sent: false, error: String(err?.reason ?? err?.message ?? err) };
+    }
   );
 }
 
@@ -417,11 +428,12 @@ export function sendMerchantSilentDashboardSync(deviceToken, data = {}) {
 
   return prov.send(note).then(
     () => ({ sent: true }),
-    (err) => ({
-      sent: false,
-      error: String(err?.reason ?? err?.message ?? err),
-      rawError: err,
-    })
+    (err) => {
+      if (isConnectionLevelError(err)) {
+        merchantProvider = undefined;
+      }
+      return { sent: false, error: String(err?.reason ?? err?.message ?? err), rawError: err };
+    }
   );
 }
 
