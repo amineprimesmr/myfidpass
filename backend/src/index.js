@@ -31,6 +31,7 @@ import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics } fro
 import { isEmailConfigured, getEmailTransportLabel } from "./email.js";
 import { runCampaignAutomationCron } from "./lib/campaign-automation-cron.js";
 import { runCampaignEventJobsCron } from "./lib/campaign-event-jobs.js";
+import { startNotificationJobWorker } from "./lib/notification-job-queue.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -300,6 +301,8 @@ function startServer(port) {
     logMerchantApnsStatus();
     scheduleCampaignAutomationLoop();
     scheduleCampaignEventJobsLoop();
+    // Reprend les campagnes de notification interrompues par un crash ou un redémarrage.
+    startNotificationJobWorker();
   });
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {

@@ -4,6 +4,7 @@
  * Authentification : header Authorization: ApplePass <authenticationToken>
  */
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import {
   getMember,
   getBusinessById,
@@ -19,6 +20,32 @@ import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
 
 const router = Router();
+
+/**
+ * Rate limit sur l'enregistrement de devices PassKit.
+ *
+ * POURQUOI : sans ce limiteur, un client bugué ou malveillant pourrait envoyer des
+ * milliers d'enregistrements par seconde, remplissant la table pass_registrations avec
+ * des tokens parasites et rendant les campagnes impossibles à tracer.
+ *
+ * Limite : 20 enregistrements par deviceId toutes les 5 minutes.
+ * Les iPhone légitimes n'enregistrent qu'une fois (ou lors d'un re-ajout de carte),
+ * donc cette limite est très généreuse.
+ *
+ * keyGenerator : on utilise l'IP (X-Forwarded-For via trust proxy) plutôt que le deviceId
+ * car le deviceId est dans l'URL et peut être forgé.
+ */
+const passkitRegisterLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 20,
+  message: { error: "Trop d'enregistrements depuis cette adresse. Réessayez dans 5 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { forwardedHeader: false },
+});
+
+/** Timeout maximum pour la génération d'un .pkpass (ms). */
+const GENERATE_PASS_TIMEOUT_MS = 30_000;
 
 /** Log toute requête entrante sur /api/v1 pour voir si l'iPhone nous contacte (diagnostic). */
 router.use((req, res, next) => {
@@ -115,10 +142,11 @@ function handleDeviceRegistration(req, res) {
   }
 }
 
-router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
-router.post("/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
+// Rate limit appliqué à toutes les routes d'enregistrement PassKit.
+router.post("/devices/:deviceId/registrations/:passTypeId/:serialNumber", passkitRegisterLimiter, handleDeviceRegistration);
+router.post("/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", passkitRegisterLimiter, handleDeviceRegistration);
 // Nouveaux passes (webServiceURL = .../api) : l'iPhone envoie POST /api/v1/devices/... — sans cette route l'enregistrement ne serait jamais sauvegardé → "Aucun appareil enregistré"
-router.post("/api/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", handleDeviceRegistration);
+router.post("/api/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber", passkitRegisterLimiter, handleDeviceRegistration);
 
 /**
  * GET /v1/devices/:deviceId/registrations/:passTypeId
@@ -227,7 +255,21 @@ const getPassHandler = async (req, res) => {
       strip_text: business.strip_text ?? undefined,
       card_background_base64: business.card_background_base64 ?? undefined,
     };
-    const buffer = await generatePass(member, business, opts);
+    // Timeout explicite sur la génération du pass.
+    // POURQUOI : generatePass() effectue des opérations crypto (signature X.509) et du
+    // traitement d'image (sharp resize). Sur une image de grande taille ou un pic CPU,
+    // ça peut bloquer indéfiniment. Sans timeout, le handler ne retourne jamais et Railway
+    // ferme la connexion après 30s avec une erreur 504 côté iPhone — le pass ne se met
+    // pas à jour. Avec le timeout, on retourne un 500 explicite rapidement.
+    const buffer = await Promise.race([
+      generatePass(member, business, opts),
+      new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`generatePass timeout après ${GENERATE_PASS_TIMEOUT_MS}ms — image trop lourde ou CPU surchargé`)),
+          GENERATE_PASS_TIMEOUT_MS
+        )
+      ),
+    ]);
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Content-Disposition", `inline; filename="pass.pkpass"`);
     res.setHeader("Last-Modified", lastModified);
