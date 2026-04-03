@@ -786,4 +786,22 @@ export function runMigrations(db) {
       );
     `),
   );
+
+  // ── v12 : fond d’écran page fidélité web (/fidelity/:slug) ─────────────────
+  markMigrationApplied(db, 12, "fidelity_page_background_asset");
+  const bizFidBg = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizFidBg.includes("asset_fidelity_page_background_present")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN asset_fidelity_page_background_present INTEGER NOT NULL DEFAULT 0"),
+    );
+  }
+  const bizFidBg2 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizFidBg2.includes("fidelity_page_background_updated_at")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN fidelity_page_background_updated_at TEXT"));
+  }
+  safeRun(db, () =>
+    db.exec(
+      `UPDATE businesses SET asset_fidelity_page_background_present = 1 WHERE id IN (SELECT business_id FROM business_assets WHERE kind = 'fidelity_page_background')`,
+    ),
+  );
 }

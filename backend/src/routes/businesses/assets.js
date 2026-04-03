@@ -128,6 +128,23 @@ router.get("/card-background", (req, res) => {
   res.send(buf);
 });
 
+/** Fond page /fidelity/:slug — lecture publique (affichage client sans token). */
+router.get("/fidelity-page-background", (req, res) => {
+  const business = req.business;
+  if (!business) return res.status(404).send();
+  const raw = getBusinessAssetData(business.id, "fidelity_page_background");
+  if (!raw) return res.status(404).send();
+  const base64Data = String(raw).replace(/^data:image\/\w+;base64,/, "");
+  const buf = Buffer.from(base64Data, "base64");
+  if (buf.length === 0) return res.status(404).send();
+  const isPng = raw.includes("image/png");
+  const isWebp = raw.includes("image/webp");
+  res.setHeader("Content-Type", isPng ? "image/png" : isWebp ? "image/webp" : "image/jpeg");
+  const etagKey = `${business.id}-fid-bg-${business.fidelity_page_background_updated_at || "0"}`;
+  if (setAssetCacheHeaders(res, req, etagKey)) return;
+  res.send(buf);
+});
+
 router.get("/stamp-icon", (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });

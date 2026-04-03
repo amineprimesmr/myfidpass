@@ -149,6 +149,20 @@ export function updateBusiness(businessId, updates) {
     );
     delete u.stamp_icon_base64;
   }
+  if (u.fidelity_page_background_base64 !== undefined) {
+    setBusinessAssetData(
+      businessId,
+      "fidelity_page_background",
+      u.fidelity_page_background_base64 === null || u.fidelity_page_background_base64 === ""
+        ? null
+        : String(u.fidelity_page_background_base64),
+    );
+    u.fidelity_page_background_updated_at =
+      u.fidelity_page_background_base64 === null || u.fidelity_page_background_base64 === ""
+        ? null
+        : new Date().toISOString();
+    delete u.fidelity_page_background_base64;
+  }
 
   const allowed = [
     "slug", "organization_name", "back_terms", "back_contact", "background_color", "foreground_color", "label_color",
@@ -156,6 +170,7 @@ export function updateBusiness(businessId, updates) {
     "logo_icon_updated_at",
     "notification_icon_updated_at",
     "card_background_updated_at",
+    "fidelity_page_background_updated_at",
     "strip_color",
     "strip_display_mode",
     "strip_text",

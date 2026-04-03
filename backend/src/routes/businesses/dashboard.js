@@ -143,6 +143,11 @@ router.get("/settings", (req, res) => {
     notification_icon_updated_at: business.notification_icon_updated_at ?? undefined,
     has_card_background: Number(business.asset_card_background_present) === 1,
     card_background_updated_at: business.card_background_updated_at ?? undefined,
+    fidelity_page_background_url:
+      Number(business.asset_fidelity_page_background_present) === 1
+        ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background`
+        : undefined,
+    fidelity_page_background_updated_at: business.fidelity_page_background_updated_at ?? undefined,
     strip_color: business.strip_color ?? undefined,
     strip_display_mode: business.strip_display_mode ?? "logo",
     strip_text: business.strip_text ?? undefined,
@@ -225,6 +230,8 @@ router.patch("/settings", async (req, res) => {
   const logo_icon_base64 = body.logo_icon_base64 ?? body.logoIconBase64;
   const notification_icon_base64 = body.notification_icon_base64 ?? body.notificationIconBase64;
   const card_background_base64 = body.card_background_base64 ?? body.cardBackgroundBase64;
+  const fidelity_page_background_base64 =
+    body.fidelity_page_background_base64 ?? body.fidelityPageBackgroundBase64;
   const stamp_icon_base64 = body.stamp_icon_base64 ?? body.stampIconBase64;
   const strip_color = body.strip_color ?? body.stripColor;
   const strip_display_mode = body.strip_display_mode ?? body.stripDisplayMode;
@@ -393,6 +400,23 @@ router.patch("/settings", async (req, res) => {
         return res.status(400).json({ error: "Image de fond trop volumineuse (max 4 Mo)." });
       }
       updates.card_background_base64 = card_background_base64.startsWith("data:") ? card_background_base64 : `data:image/png;base64,${base64Data}`;
+    }
+  }
+  if (fidelity_page_background_base64 !== undefined) {
+    if (
+      fidelity_page_background_base64 === null ||
+      (typeof fidelity_page_background_base64 === "string" && fidelity_page_background_base64.trim() === "")
+    ) {
+      updates.fidelity_page_background_base64 = null;
+    } else if (typeof fidelity_page_background_base64 === "string") {
+      const base64Data = String(fidelity_page_background_base64).replace(/^data:image\/\w+;base64,/, "");
+      const buf = Buffer.from(base64Data, "base64");
+      if (buf.length > MAX_LOGO_BASE64_BYTES) {
+        return res.status(400).json({ error: "Image de fond page fidélité trop volumineuse (max 4 Mo)." });
+      }
+      updates.fidelity_page_background_base64 = fidelity_page_background_base64.startsWith("data:")
+        ? fidelity_page_background_base64
+        : `data:image/jpeg;base64,${base64Data}`;
     }
   }
   const MAX_STAMP_ICON_BYTES = 512 * 1024;

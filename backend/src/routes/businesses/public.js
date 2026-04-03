@@ -31,6 +31,10 @@ export function publicInfo(req, res) {
   const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/logo`;
   /** Même ressource que l’aperçu campagnes / push (dashboard) — pas le bandeau Wallet. */
   const notificationIconUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
+  const fidelityPageBackgroundUrl =
+    Number(business.asset_fidelity_page_background_present) === 1
+      ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background`
+      : undefined;
   res.json({
     id: business.id,
     name: business.name,
@@ -55,6 +59,8 @@ export function publicInfo(req, res) {
     label_restants: business.label_restants?.trim() || undefined,
     stamp_emoji: business.stamp_emoji?.trim() || undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
+    fidelityPageBackgroundUrl,
+    fidelityPageBackgroundUpdatedAt: business.fidelity_page_background_updated_at ?? undefined,
   });
 }
 

@@ -31,6 +31,7 @@ import {
   setFidelityRouteLoadingLogo,
   startFidelityRouteLoadingAnimations,
 } from "./fidelity-route-loading.js";
+import { applyFidelityClientPageBackground } from "./lib/apply-fidelity-client-bg.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -209,6 +210,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   function rerender() {
     document.body.style.overflow = "";
     renderClientPage(rootEl, store.get(), { slug, apiBase });
+    applyFidelityClientPageBackground(store.get().business);
     bindEvents();
     if (!isSpinning) {
       initRouletteWheel();

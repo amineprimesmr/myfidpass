@@ -14,11 +14,13 @@ export const ASSET_KIND_TO_FLAG = {
   stamp_icon: "asset_stamp_icon_present",
   /** Icône dédiée campagnes / Web Push / aperçu — indépendante du logo carte et du logo carré fiche. */
   notification_icon: "asset_notification_icon_present",
+  /** Image de fond page web /fidelity/:slug (jeu QR, etc.) — publique. */
+  fidelity_page_background: "asset_fidelity_page_background_present",
 };
 
 /**
  * @param {string} businessId
- * @param {"logo"|"logo_icon"|"card_background"|"stamp_icon"|"notification_icon"} kind
+ * @param {"logo"|"logo_icon"|"card_background"|"stamp_icon"|"notification_icon"|"fidelity_page_background"} kind
  * @returns {string|null}
  */
 export function getBusinessAssetData(businessId, kind) {
@@ -29,10 +31,17 @@ export function getBusinessAssetData(businessId, kind) {
 
 /**
  * Une seule requête pour PassKit / merge (évite 4 allers-retours SQLite).
- * @returns {{ logo: string|null, logo_icon: string|null, card_background: string|null, stamp_icon: string|null, notification_icon: string|null }}
+ * @returns {{ logo: string|null, logo_icon: string|null, card_background: string|null, stamp_icon: string|null, notification_icon: string|null, fidelity_page_background: string|null }}
  */
 export function getAllBusinessAssetsMap(businessId) {
-  const empty = { logo: null, logo_icon: null, card_background: null, stamp_icon: null, notification_icon: null };
+  const empty = {
+    logo: null,
+    logo_icon: null,
+    card_background: null,
+    stamp_icon: null,
+    notification_icon: null,
+    fidelity_page_background: null,
+  };
   if (!businessId) return empty;
   const rows = db.prepare("SELECT kind, data FROM business_assets WHERE business_id = ?").all(businessId);
   const out = { ...empty };
@@ -45,7 +54,7 @@ export function getAllBusinessAssetsMap(businessId) {
 
 /**
  * @param {string} businessId
- * @param {"logo"|"logo_icon"|"card_background"|"stamp_icon"|"notification_icon"} kind
+ * @param {"logo"|"logo_icon"|"card_background"|"stamp_icon"|"notification_icon"|"fidelity_page_background"} kind
  * @param {string|null|undefined} data - data URL ou null pour supprimer
  */
 export function setBusinessAssetData(businessId, kind, data) {

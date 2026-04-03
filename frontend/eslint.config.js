@@ -32,6 +32,8 @@ const browserGlobals = {
   Image: "readonly",
   HTMLElement: "readonly",
   IntersectionObserver: "readonly",
+  FileReader: "readonly",
+  DataTransfer: "readonly",
   crypto: "readonly",
   screen: "readonly",
   // Vite

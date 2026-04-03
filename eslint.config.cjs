@@ -47,6 +47,8 @@ const browserGlobals = {
   URL: "readonly",
   crypto: "readonly",
   IntersectionObserver: "readonly",
+  FileReader: "readonly",
+  DataTransfer: "readonly",
 };
 
 module.exports = [

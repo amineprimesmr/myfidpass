@@ -41,6 +41,7 @@ import {
 } from "./app-card-rules-point-tiers.js";
 import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../utils/geocoding.js";
 import { initAppFlyerQr } from "./app-flyer-qr.js";
+import { initFidelityClientPageSection } from "./app-fidelity-client-page.js";
 
 /** En dev : front sur localhost et API_BASE vide → requêtes /api/* via proxy Vite vers le backend. */
 const IS_LOCAL_VITE_PROXY = IS_LOCAL_DEV && !API_BASE;
@@ -575,7 +576,18 @@ function initAppPage() {
   });
 }
 
-const APP_SECTION_IDS = ["dashboard", "membres", "flyer-qr", "personnaliser", "carte-perimetre", "integration", "engagement", "notifications", "profil"];
+const APP_SECTION_IDS = [
+  "dashboard",
+  "membres",
+  "flyer-qr",
+  "fidelity-client",
+  "personnaliser",
+  "carte-perimetre",
+  "integration",
+  "engagement",
+  "notifications",
+  "profil",
+];
 
 const APP_MOBILE_TITLES = {
   "dashboard": "Dashboard",
@@ -583,6 +595,7 @@ const APP_MOBILE_TITLES = {
   "notifications": "Campagnes",
   "carte-perimetre": "Emplacement",
   "flyer-qr": "Flyer QR",
+  "fidelity-client": "Page fidélité",
   "engagement": "Avis & Réseaux",
   "profil": "Profil",
 };
@@ -5998,6 +6011,7 @@ function initAppDashboard(slug) {
     getShareLink: () => getShareLinkForSlug(slug),
     dashboardApi: (path, init) => api(path, init),
   });
+  initFidelityClientPageSection({ api });
   initAppCardRulesGuide();
   refresh();
   loadAppNotificationStats();

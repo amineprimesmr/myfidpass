@@ -1,0 +1,106 @@
+/**
+ * SaaS — section « Page fidélité » (fond page publique client).
+ */
+.app-section-fidelity-client {
+  max-width: 52rem;
+}
+
+.app-fidelity-client-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.app-fidelity-client-hero .app-section-desc {
+  max-width: 40rem;
+}
+
+.app-fidelity-client-hint {
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+}
+
+.app-fidelity-client-card {
+  padding: 1.25rem 1.35rem;
+}
+
+.app-fidelity-client-drop-outer {
+  margin-top: 0.25rem;
+}
+
+.app-fidelity-client-bg-drop {
+  outline: none;
+}
+
+.app-fidelity-client-bg-drop:focus-visible .app-fidelity-client-bg-label {
+  box-shadow: 0 0 0 3px var(--app-accent);
+}
+
+.app-fidelity-client-bg-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 7.5rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 1rem 1.1rem;
+  margin: 0;
+  text-align: center;
+}
+
+.app-fidelity-client-bg-label-main {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--app-text, #0f172a);
+}
+
+.app-fidelity-client-bg-label-sub {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.app-fidelity-client-bg-drop.app-drop-zone-active .app-fidelity-client-bg-label {
+  border-color: var(--app-accent);
+  background: var(--app-accent-light);
+}
+
+.app-fidelity-client-preview-wrap {
+  margin-top: 1.1rem;
+}
+
+.app-fidelity-client-preview-wrap.hidden {
+  display: none !important;
+}
+
+.app-fidelity-client-preview-caption {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+}
+
+.app-fidelity-client-preview-frame {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  background: #f1f5f9;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+}
+
+.app-fidelity-client-preview-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-fidelity-client-actions {
+  margin-top: 0.85rem;
+}
+
+.app-fidelity-client-actions .app-btn.hidden {
+  display: none !important;
+}
