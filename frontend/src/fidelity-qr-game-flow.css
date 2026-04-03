@@ -97,7 +97,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
   justify-content: flex-end;
   padding-left: 1rem;
-  padding-right: max(0.75rem, calc(env(safe-area-inset-right, 0px) + 12px));
+  /* Plus près du bord droit (tout en gardant la safe area). */
+  padding-right: max(0.3rem, calc(env(safe-area-inset-right, 0px) + 4px));
   padding-bottom: 0.25rem;
   position: relative;
   z-index: 2;
@@ -124,6 +125,16 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   /* box-shadow animé dans fidelity-wheel-gift.css (évite conflit !important) */
 }
 
+/* Même pastille sur la roue uniquement : plus compacte (modales Google gardent la taille ci-dessus). */
+.fidelity-v2-roulette-inline--qr .fidelity-cta-pill--qr-play {
+  min-width: 0 !important;
+  max-width: min(100%, 248px);
+  padding-left: 1.28rem !important;
+  padding-right: 1.28rem !important;
+  min-height: 2.78rem !important;
+  border-width: 1.5px !important;
+}
+
 .fidelity-cta-wheel-line--qr {
   gap: 0.35rem;
 }
@@ -133,6 +144,16 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
+  font-size: 0.86rem;
+  letter-spacing: 0.035em;
+}
+
+.fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-pill-chevron {
+  font-size: 1.05em;
+  opacity: 0.95;
 }
 
 /* Scan QR : pas de fond sur la zone — le dégradé faisait un « bloc » blanc au milieu (fond page / client-bg). */
