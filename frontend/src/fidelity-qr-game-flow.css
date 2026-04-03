@@ -59,8 +59,49 @@
 }
 
 .fidelity-cta-wrap--qr-play {
+  position: relative;
   width: auto !important;
   max-width: 100%;
+}
+
+/** Halo indigo derrière le CTA (au-dessus du fond de page, sous le bouton) */
+.fidelity-cta-wrap--qr-play::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 999px;
+  background: radial-gradient(
+    65% 85% at 50% 42%,
+    rgba(165, 180, 252, 0.55) 0%,
+    rgba(99, 102, 241, 0.28) 42%,
+    transparent 72%
+  );
+  pointer-events: none;
+  z-index: 0;
+  animation: fidelity-qr-cta-aura 2.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.fidelity-cta-wrap--qr-play .fidelity-cta-pill--qr-play {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes fidelity-qr-cta-aura {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fidelity-cta-wrap--qr-play::after {
+    animation: none;
+  }
 }
 
 .fidelity-cta-pill--qr-play {
