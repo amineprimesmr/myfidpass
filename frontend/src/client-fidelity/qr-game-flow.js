@@ -137,21 +137,12 @@ export function showQrVerifyPanel(rootEl) {
 }
 
 /**
- * Gain invité QR : une seule modale — félicitations + libellé du lot + formulaire prénom / email (pas de passage auto ni 2e pop-up).
+ * Gain invité QR : une seule modale — félicitations + formulaire prénom / email (pas de passage auto ni 2e pop-up).
  * @param {HTMLElement} rootEl
- * @param {string} prizeLabelPlain
  */
-export function showQrRewardPanel(rootEl, prizeLabelPlain) {
+export function showQrRewardPanel(rootEl) {
   hideAllQrPanels(rootEl);
   const panel = rootEl.querySelector("#fidelity-qr-panel-reward");
-  const prize = rootEl.querySelector("#fidelity-qr-win-prize");
-  if (prize) {
-    prize.textContent = "";
-    prize.appendChild(document.createTextNode("Votre gain : "));
-    const strong = document.createElement("strong");
-    strong.textContent = String(prizeLabelPlain || "").trim() || "une récompense";
-    prize.appendChild(strong);
-  }
   panel?.classList.remove("hidden");
   const nameInput = rootEl.querySelector("#fidelity-qr-claim-name");
   window.requestAnimationFrame(() => {

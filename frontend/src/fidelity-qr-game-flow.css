@@ -405,27 +405,15 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   color: transparent;
 }
 
-.fidelity-qr-reward-intro {
-  margin: 0 0 0.65rem;
-  font-size: 0.88rem;
-  font-weight: 600;
-  line-height: 1.4;
+/* Sous-titre modale gain : court, lisible, espace avant le formulaire */
+.fidelity-qr-reward-lead {
+  margin: 0 0 1.15rem;
+  font-size: clamp(1rem, 3.8vw, 1.12rem);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
   text-align: center;
-  color: #475569;
-}
-
-.fidelity-qr-win-prize {
-  margin: 0 0 1.1rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.45;
-  text-align: center;
-  color: #334155;
-}
-
-.fidelity-qr-win-prize strong {
-  font-weight: 800;
-  color: #c2410c;
+  color: #1e293b;
 }
 
 .fidelity-qr-claim-sub {
@@ -469,23 +457,6 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 .fidelity-qr-input:focus {
   border-color: #818cf8;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-.fidelity-qr-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  font-size: 0.78rem;
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-  line-height: 1.35;
-  color: #475569;
-}
-
-.fidelity-qr-check input {
-  margin-top: 0.2rem;
-  flex-shrink: 0;
 }
 
 .fidelity-qr-form-error {

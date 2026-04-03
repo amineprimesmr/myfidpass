@@ -104,8 +104,7 @@ export function renderQrGamePage(esc, p) {
 
       <div id="fidelity-qr-panel-reward" class="fidelity-qr-modal fidelity-qr-modal--reward hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-reward-title">
         <h2 id="fidelity-qr-reward-title" class="fidelity-qr-modal-title">Félicitations !</h2>
-        <p class="fidelity-qr-reward-intro">Vous avez gagné. Découvrez votre récompense en nous laissant vos coordonnées ci-dessous.</p>
-        <p class="fidelity-qr-win-prize" id="fidelity-qr-win-prize" aria-live="polite"></p>
+        <p id="fidelity-qr-reward-lead" class="fidelity-qr-reward-lead" role="status">Découvrez votre récompense</p>
         <form id="fidelity-qr-claim-form" class="fidelity-qr-claim-form" novalidate>
           <label class="fidelity-qr-field">
             <span>Prénom</span>
@@ -114,10 +113,6 @@ export function renderQrGamePage(esc, p) {
           <label class="fidelity-qr-field">
             <span>Email</span>
             <input id="fidelity-qr-claim-email" class="fidelity-qr-input" type="email" autocomplete="email" required maxlength="254" />
-          </label>
-          <label class="fidelity-qr-check">
-            <input id="fidelity-qr-claim-optout" type="checkbox" />
-            <span>Je ne souhaite pas recevoir d’offres commerciales par email.</span>
           </label>
           <p id="fidelity-qr-claim-error" class="fidelity-qr-form-error hidden" role="alert"></p>
           <button type="submit" class="fidelity-qr-btn fidelity-qr-btn--primary fidelity-qr-btn--wide" id="fidelity-qr-claim-submit">Recevoir ma récompense</button>

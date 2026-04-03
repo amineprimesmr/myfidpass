@@ -389,9 +389,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         clearBusy();
         if (qrGuest) {
           if (feedback) feedback.classList.add("hidden");
-          const prizeLabel = isWin ? rawLabel : firstNonPerduLabel(wheelLabels);
           openQrModalRoot(rootEl);
-          showQrRewardPanel(rootEl, prizeLabel);
+          showQrRewardPanel(rootEl);
           triggerWinCelebrationConfetti();
           /* Ne pas appeler rerender() ici : il remplace tout le DOM et faisait disparaître la modale. */
           try {
@@ -480,36 +479,41 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     if (prefersReducedMotion() || typeof window.confetti !== "function") return;
     const mobile =
       typeof globalThis.matchMedia === "function" && globalThis.matchMedia("(max-width: 520px)").matches;
-    const duration = mobile ? 2800 : 4200;
+    const duration = mobile ? 2200 : 3400;
     const end = Date.now() + duration;
-    const n = mobile ? 5 : 8;
+    const n = mobile ? 3 : 4;
     const colors = ["#ff0055", "#f472b6", "#00ffcc", "#ffd700", "#a78bfa", "#38bdf8"];
 
     window.confetti({
-      particleCount: mobile ? 55 : 85,
-      spread: 88,
-      startVelocity: mobile ? 38 : 45,
-      ticks: mobile ? 260 : 300,
+      particleCount: mobile ? 38 : 52,
+      spread: 72,
+      startVelocity: mobile ? 34 : 40,
+      ticks: mobile ? 220 : 260,
       origin: { x: 0.5, y: 0.35 },
       colors,
-      scalar: mobile ? 0.95 : 1.05,
+      scalar: mobile ? 0.9 : 1,
     });
 
+    let tick = 0;
     (function frame() {
-      window.confetti({
-        particleCount: n,
-        angle: 60,
-        spread: 58,
-        origin: { x: 0, y: 0.55 },
-        colors,
-      });
-      window.confetti({
-        particleCount: n,
-        angle: 120,
-        spread: 58,
-        origin: { x: 1, y: 0.55 },
-        colors,
-      });
+      tick += 1;
+      /* Un frame sur deux : moins de confettis latéraux, rendu plus léger */
+      if (tick % 2 === 0) {
+        window.confetti({
+          particleCount: n,
+          angle: 60,
+          spread: 48,
+          origin: { x: 0, y: 0.55 },
+          colors,
+        });
+        window.confetti({
+          particleCount: n,
+          angle: 120,
+          spread: 48,
+          origin: { x: 1, y: 0.55 },
+          colors,
+        });
+      }
 
       if (Date.now() < end) {
         requestAnimationFrame(frame);
