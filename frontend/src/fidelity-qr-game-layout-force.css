@@ -1,0 +1,79 @@
+/**
+ * Parcours jeu QR : shell + CTA + pied — spécificité élevée (#fidelity-app, aperçu SaaS)
+ * pour que les ajustements ne soient pas neutralisés par d’autres feuilles ou l’ordre de fusion.
+ */
+
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100dvh !important;
+  min-height: 100svh !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+#app-app #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game) {
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game,
+#app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game {
+  margin-bottom: 3.35rem !important;
+}
+
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered,
+#app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
+  width: 100% !important;
+  padding-top: 1.45rem !important;
+  padding-bottom: max(2.95rem, calc(env(safe-area-inset-bottom, 0px) + 1.95rem)) !important;
+}
+
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr,
+#app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr {
+  padding-bottom: clamp(2.6rem, 14vmin, 4.5rem) !important;
+}
+
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game)
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-v2-roulette-inline-controls
+  .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full,
+#app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-v2-roulette-inline-controls
+  .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
+  margin-right: -2.85rem !important;
+  transform: translateX(14px) !important;
+}
+
+/* Aperçu dashboard : mêmes valeurs avec la chaîne #app-app (bat la feuille app-fidelity-client-page) */
+#app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
+  > main.fidelity-qr-game {
+  margin-bottom: 3.35rem !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
+  > footer.fidelity-qr-powered {
+  margin-top: auto !important;
+  padding-top: 1.45rem !important;
+  padding-bottom: max(2.95rem, calc(env(safe-area-inset-bottom, 0px) + 1.95rem)) !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
+  .fidelity-v2-roulette-inline--qr {
+  padding-bottom: clamp(2.6rem, 14cqmin, 4.75rem) !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-v2-roulette-inline-controls
+  .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
+  margin-right: -2.85rem !important;
+  transform: translateX(14px) !important;
+}
