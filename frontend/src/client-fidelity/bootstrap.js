@@ -211,7 +211,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   function rerender() {
     document.body.style.overflow = "";
     renderClientPage(rootEl, store.get(), { slug, apiBase });
-    applyFidelityClientPageBackground(store.get().business);
+    applyFidelityClientPageBackground(store.get().business, slug, apiBase);
     bindEvents();
     if (!isSpinning) {
       initRouletteWheel();

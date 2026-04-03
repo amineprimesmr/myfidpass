@@ -61,3 +61,26 @@ export function resolveClientNotificationIconImgSrc(business, slug, apiBase) {
     upd != null && String(upd).trim() !== "" ? encodeURIComponent(String(upd).trim()) : "";
   return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${v}` : srcBase;
 }
+
+/**
+ * Fond page /fidelity/:slug — même stratégie que le logo : sur myfidpass.fr, chemin relatif
+ * `/api/businesses/:slug/fidelity-page-background` (rewrite Vercel) pour éviter CORP sur l’URL API en `background-image`.
+ *
+ * @param {Record<string, unknown> | null | undefined} business
+ * @param {string} slug
+ * @param {string} apiBase
+ * @returns {string} chaîne vide si pas de fond configuré
+ */
+export function resolveFidelityPageBackgroundImgSrc(business, slug, apiBase) {
+  const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background` : "";
+  const raw =
+    business?.fidelityPageBackgroundUrl ?? business?.fidelity_page_background_url ?? "";
+  if (!path || String(raw).trim() === "") return "";
+  const baseTrim = preferSameOriginApiAssetPaths() ? "" : String(apiBase || "").replace(/\/$/, "");
+  const srcBase = baseTrim ? `${baseTrim}${path}` : path;
+  const upd =
+    business?.fidelityPageBackgroundUpdatedAt ?? business?.fidelity_page_background_updated_at;
+  const v =
+    upd != null && String(upd).trim() !== "" ? encodeURIComponent(String(upd).trim()) : "";
+  return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${v}` : srcBase;
+}

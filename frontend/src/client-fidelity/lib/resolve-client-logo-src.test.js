@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { resolveClientLogoImgSrc, resolveClientNotificationIconImgSrc } from "./resolve-client-logo-src.js";
+import {
+  resolveClientLogoImgSrc,
+  resolveClientNotificationIconImgSrc,
+  resolveFidelityPageBackgroundImgSrc,
+} from "./resolve-client-logo-src.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -66,5 +70,38 @@ describe("resolveClientNotificationIconImgSrc", () => {
     );
     expect(src).toContain("notification-icon?v=");
     expect(src).toContain("2026-04-01");
+  });
+});
+
+describe("resolveFidelityPageBackgroundImgSrc", () => {
+  it("sans URL de fond dans le JSON → vide", () => {
+    expect(resolveFidelityPageBackgroundImgSrc({}, "demo", "")).toBe("");
+    expect(resolveFidelityPageBackgroundImgSrc({ fidelityPageBackgroundUrl: "" }, "demo", "")).toBe("");
+  });
+
+  it("apiBase vide → chemin relatif fidelity-page-background", () => {
+    const src = resolveFidelityPageBackgroundImgSrc(
+      {
+        fidelityPageBackgroundUrl: "https://api.example.com/api/businesses/cafe/fidelity-page-background",
+        fidelityPageBackgroundUpdatedAt: "2026-04-03T12:00:00.000Z",
+      },
+      "cafe",
+      "",
+    );
+    expect(src.startsWith("/api/businesses/cafe/fidelity-page-background?v=")).toBe(true);
+    expect(src).toContain("2026-04-03");
+  });
+
+  it("myfidpass.fr → relatif même avec apiBase API (CSS background / CORP)", () => {
+    vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
+    const src = resolveFidelityPageBackgroundImgSrc(
+      {
+        fidelityPageBackgroundUrl: "https://api.myfidpass.fr/api/businesses/x/fidelity-page-background",
+        fidelityPageBackgroundUpdatedAt: "t1",
+      },
+      "x",
+      "https://api.myfidpass.fr",
+    );
+    expect(src.startsWith("/api/businesses/x/fidelity-page-background?v=")).toBe(true);
   });
 });
