@@ -2,7 +2,14 @@
  * Page app (/app) : espace pro, sidebar, dashboard, caisse, notifications, profil, personnaliser, engagement.
  * Dérogation : fichier > 400 lignes, à découper en sous-modules (app/notifications.js, app/caisse.js, etc.). REFONTE-REGLES.md.
  */
-import { API_BASE, getAuthHeaders, clearAuthToken, isDevBypassPayment, IS_LOCAL_DEV } from "../config.js";
+import {
+  API_BASE,
+  getAuthHeaders,
+  clearAuthToken,
+  fetchWithAuth,
+  isDevBypassPayment,
+  IS_LOCAL_DEV,
+} from "../config.js";
 import { runDevDataReset } from "../utils/dev-reset.js";
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
@@ -755,9 +762,10 @@ function initAppDashboard(slug) {
   const api = (path, opts = {}) => {
     const sep = path.includes("?") ? "&" : "?";
     const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${path}${dashboardToken ? `${sep}token=${encodeURIComponent(dashboardToken)}` : ""}`;
-    const headers = { ...opts.headers, ...getAuthHeaders() };
+    const headers = { ...opts.headers };
     if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
-    return fetch(url, { ...opts, headers });
+    /* fetchWithAuth : refresh JWT si access token expiré — sinon req.user est null côté API et le dashboard renvoie « Token dashboard invalide ». */
+    return fetchWithAuth(url, { ...opts, headers });
   };
 
   let sidebarLogoObjectUrl = null;

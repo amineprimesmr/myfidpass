@@ -62,12 +62,12 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 /* Titre unique : accroche lisible, large marge sous l’icône */
 .fidelity-qr-title--lead {
   margin: clamp(2.35rem, 9.5vw, 4.25rem) 0 0;
-  font-size: clamp(1.22rem, 4.25vw, 1.72rem);
+  font-size: clamp(1.48rem, 5.5vw, 2.15rem);
   font-weight: 800;
-  letter-spacing: -0.028em;
-  line-height: 1.34;
+  letter-spacing: -0.032em;
+  line-height: 1.28;
   color: #0f172a;
-  max-width: 22rem;
+  max-width: min(22rem, 92vw);
 }
 
 .fidelity-qr-title.fidelity-qr-title--thanks {

@@ -46,8 +46,8 @@ export function canAccessDashboard(business, req) {
     if (byToken && byToken.id === business.id) return true;
   }
   if (req.user) {
-    const uid = req.user.id != null ? String(req.user.id) : "";
-    const bid = business.user_id != null ? String(business.user_id) : "";
+    const uid = req.user.id != null ? String(req.user.id).trim() : "";
+    const bid = business.user_id != null ? String(business.user_id).trim() : "";
     if (uid !== "" && bid !== "" && uid === bid) return true;
   }
   return false;
