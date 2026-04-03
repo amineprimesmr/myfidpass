@@ -473,7 +473,10 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fidelity-qr-modal-root,
+  /* Garder une courte transition d’opacité sur le voile pour que transitionend / fermeture restent fiables */
+  .fidelity-qr-modal-root {
+    transition: opacity 0.2s ease !important;
+  }
   .fidelity-qr-modal {
     transition: none !important;
   }

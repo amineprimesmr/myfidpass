@@ -111,23 +111,29 @@ export function closeQrModalRoot(rootEl, onClosed) {
     return;
   }
   root.classList.remove("fidelity-qr-modal-root--open");
+  void root.offsetHeight;
+  let done = false;
   const finish = () => {
+    if (done) return;
+    done = true;
+    root.removeEventListener("transitionend", onEnd);
     root.classList.add("hidden");
     root.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
-    fireClosed();
+    /* Laisser la modale disparaître du paint avant hero / animations (Safari). */
+    globalThis.requestAnimationFrame(() => {
+      globalThis.requestAnimationFrame(() => {
+        fireClosed();
+      });
+    });
   };
-  let done = false;
   const onEnd = (e) => {
-    if (e.target !== root || e.propertyName !== "opacity") return;
-    done = true;
-    root.removeEventListener("transitionend", onEnd);
+    if (e.target !== root) return;
+    if (e.propertyName !== "opacity" && e.propertyName !== "") return;
     finish();
   };
   root.addEventListener("transitionend", onEnd);
-  globalThis.setTimeout(() => {
-    if (!done) finish();
-  }, 380);
+  globalThis.setTimeout(() => finish(), 480);
 }
 
 /** @param {HTMLElement} rootEl */
@@ -244,15 +250,19 @@ export function bindQrGameUi(ctx) {
     }, durationMs);
   }
 
-  function onVisibility() {
+  /**
+   * Reprise après avis Google : clé session + retour onglet, rechargement, ou BFCache.
+   * Sans ça, un reload alors que la clé est encore là ne déclenche jamais visibilitychange → aucune transition hero.
+   */
+  function resumeGoogleReviewIfPending() {
     if (document.visibilityState !== "visible") return;
+    if (!isGuestMember(getState().member) || isQrGateUnlocked()) return;
     try {
-      if (sessionStorage.getItem(QR_GOOGLE_PENDING_KEY) === "1") {
-        sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);
-        openQrModalRoot(rootEl);
-        showQrVerifyPanel(rootEl);
-        runVerifyUnlock({ tryClaim: true });
-      }
+      if (sessionStorage.getItem(QR_GOOGLE_PENDING_KEY) !== "1") return;
+      sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);
+      openQrModalRoot(rootEl);
+      showQrVerifyPanel(rootEl);
+      runVerifyUnlock({ tryClaim: true });
     } catch (_) {}
   }
 
@@ -283,7 +293,9 @@ export function bindQrGameUi(ctx) {
     runVerifyUnlock({ tryClaim: false });
   });
 
-  document.addEventListener("visibilitychange", onVisibility, { signal });
+  document.addEventListener("visibilitychange", resumeGoogleReviewIfPending, { signal });
+  globalThis.addEventListener("pageshow", resumeGoogleReviewIfPending, { signal });
+  globalThis.setTimeout(resumeGoogleReviewIfPending, 0);
 
   backdrop?.addEventListener(
     "click",
