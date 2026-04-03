@@ -72,9 +72,23 @@ export function renderQrGamePage(esc, p) {
       </div>
 
       <div id="fidelity-qr-panel-verify" class="fidelity-qr-modal fidelity-qr-modal--verify hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-verify-title">
-        <h2 id="fidelity-qr-verify-title" class="fidelity-qr-modal-title">Vérification</h2>
-        <p class="fidelity-qr-verify-msg" id="fidelity-qr-verify-text">Nous vérifions actuellement votre action…</p>
-        <div class="fidelity-qr-verify-spinner" aria-hidden="true"></div>
+        <h2 id="fidelity-qr-verify-title" class="fidelity-qr-modal-title">Vérification de votre avis</h2>
+        <p class="fidelity-qr-verify-lead">Merci de patienter — cette étape reproduit un contrôle côté serveur et peut prendre quelques secondes.</p>
+        <div
+          class="fidelity-qr-verify-progress"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuetext="Vérification en cours"
+          id="fidelity-qr-verify-progress"
+        >
+          <span class="fidelity-qr-verify-progress-bar" id="fidelity-qr-verify-progress-bar"></span>
+        </div>
+        <p class="fidelity-qr-verify-msg" id="fidelity-qr-verify-text" aria-live="polite">Nous vérifions votre avis Google…</p>
+        <div class="fidelity-qr-verify-spinner-wrap">
+          <div class="fidelity-qr-verify-spinner" aria-hidden="true"></div>
+          <span class="fidelity-qr-verify-spinner-label">Vérification</span>
+        </div>
       </div>
 
       <div id="fidelity-qr-panel-win" class="fidelity-qr-modal fidelity-qr-modal--win hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-win-title">

@@ -1,0 +1,101 @@
+/* Pop-up « Vérification avis Google » — barre de progression + messages (durée alignée sur le JS) */
+
+.fidelity-qr-modal--verify {
+  text-align: center;
+  padding-top: 1.5rem;
+}
+
+.fidelity-qr-verify-lead {
+  margin: 0 0 1rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.fidelity-qr-verify-progress {
+  height: 6px;
+  margin: 0 0 1.15rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.fidelity-qr-verify-progress-bar {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4f46e5 0%, #6366f1 45%, #818cf8 100%);
+  transform-origin: left center;
+}
+
+.fidelity-qr-verify-progress-bar--animate {
+  animation: fidelity-qr-verify-progress-fill var(--verify-duration, 5.8s) cubic-bezier(0.45, 0, 0.2, 1) forwards;
+}
+
+@keyframes fidelity-qr-verify-progress-fill {
+  from {
+    width: 0%;
+    opacity: 1;
+  }
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+.fidelity-qr-verify-msg {
+  margin: 0 0 1.1rem;
+  min-height: 2.8em;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #0f172a;
+}
+
+.fidelity-qr-verify-spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.fidelity-qr-verify-spinner-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.fidelity-qr-verify-spinner {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  margin: 0;
+  border-radius: 50%;
+  border: 3px solid #e2e8f0;
+  border-top-color: #6366f1;
+  animation: fidelity-qr-spin 0.95s linear infinite;
+}
+
+@keyframes fidelity-qr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fidelity-qr-verify-progress-bar--animate {
+    animation: none;
+    width: 100%;
+  }
+
+  .fidelity-qr-verify-spinner {
+    animation: none;
+    border-top-color: #6366f1;
+  }
+}

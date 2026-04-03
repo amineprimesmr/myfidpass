@@ -352,34 +352,6 @@
   text-align: center;
 }
 
-.fidelity-qr-modal--verify {
-  text-align: center;
-}
-
-.fidelity-qr-verify-msg {
-  margin: 0 0 1rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.4;
-  color: #0f172a;
-}
-
-.fidelity-qr-verify-spinner {
-  width: 36px;
-  height: 36px;
-  margin: 0 auto;
-  border-radius: 50%;
-  border: 3px solid #e2e8f0;
-  border-top-color: #6366f1;
-  animation: fidelity-qr-spin 0.85s linear infinite;
-}
-
-@keyframes fidelity-qr-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .fidelity-qr-win-prize {
   margin: 0 0 1.1rem;
   font-size: 0.95rem;
@@ -465,10 +437,5 @@
   .fidelity-qr-modal-root,
   .fidelity-qr-modal {
     transition: none !important;
-  }
-
-  .fidelity-qr-verify-spinner {
-    animation: none;
-    border-top-color: #6366f1;
   }
 }

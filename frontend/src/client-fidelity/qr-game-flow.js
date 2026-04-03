@@ -5,6 +5,47 @@
 export const QR_GATE_KEY = "fid_qr_spin_gate";
 export const QR_GOOGLE_PENDING_KEY = "fid_qr_google_pending";
 
+/** Durée affichée « vérification serveur » (ms) — plus réaliste qu’un flash ~2,6 s */
+const QR_VERIFY_BASE_MS = 5400;
+const QR_VERIFY_JITTER_MS = 2400;
+
+const QR_VERIFY_MESSAGES = [
+  "Nous vérifions votre avis Google…",
+  "Synchronisation avec les serveurs…",
+  "Validation auprès de l’établissement…",
+  "Dernières vérifications…",
+];
+
+/**
+ * Barre de progression + messages qui défilent (durée alignée sur le timeout).
+ * @returns {() => void}
+ */
+function startVerifyPanelUx(rootEl, durationMs) {
+  const panel = rootEl.querySelector("#fidelity-qr-panel-verify");
+  const msgEl = rootEl.querySelector("#fidelity-qr-verify-text");
+  const bar = rootEl.querySelector("#fidelity-qr-verify-progress-bar");
+  if (panel) {
+    panel.style.setProperty("--verify-duration", `${durationMs}ms`);
+  }
+  if (bar) {
+    bar.classList.remove("fidelity-qr-verify-progress-bar--animate");
+    bar.getBoundingClientRect();
+    bar.classList.add("fidelity-qr-verify-progress-bar--animate");
+  }
+  let idx = 0;
+  if (msgEl) {
+    msgEl.textContent = QR_VERIFY_MESSAGES[0];
+  }
+  const step = Math.max(1750, Math.floor(durationMs / (QR_VERIFY_MESSAGES.length + 1)));
+  const id = window.setInterval(() => {
+    idx = (idx + 1) % QR_VERIFY_MESSAGES.length;
+    if (msgEl) msgEl.textContent = QR_VERIFY_MESSAGES[idx];
+  }, step);
+  return () => {
+    window.clearInterval(id);
+  };
+}
+
 export function isGuestMember(member) {
   return typeof member?.email === "string" && member.email.toLowerCase().endsWith("@guest.invalid");
 }
@@ -130,8 +171,15 @@ export function bindQrGameUi(ctx) {
   const claimForm = rootEl.querySelector("#fidelity-qr-claim-form");
   const backdrop = rootEl.querySelector("[data-fid-qr-close=\"backdrop\"]");
 
+  let verifyUxCleanup = () => {};
+
   function runVerifyUnlock({ tryClaim }) {
+    verifyUxCleanup();
+    const durationMs = QR_VERIFY_BASE_MS + Math.floor(Math.random() * QR_VERIFY_JITTER_MS);
+    verifyUxCleanup = startVerifyPanelUx(rootEl, durationMs);
     window.setTimeout(async () => {
+      verifyUxCleanup();
+      verifyUxCleanup = () => {};
       setQrGateUnlocked();
       if (tryClaim) {
         try {
@@ -150,7 +198,7 @@ export function bindQrGameUi(ctx) {
         } catch (_) {}
       }
       closeQrModalRoot(rootEl);
-    }, 2600);
+    }, durationMs);
   }
 
   function onVisibility() {
