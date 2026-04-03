@@ -99,44 +99,9 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   max-width: 100%;
 }
 
-/** Halo indigo derrière le CTA (au-dessus du fond de page, sous le bouton) */
-.fidelity-cta-wrap--qr-play::after {
-  content: "";
-  position: absolute;
-  inset: -12px;
-  border-radius: 999px;
-  background: radial-gradient(
-    65% 85% at 50% 42%,
-    rgba(165, 180, 252, 0.55) 0%,
-    rgba(99, 102, 241, 0.28) 42%,
-    transparent 72%
-  );
-  pointer-events: none;
-  z-index: 0;
-  animation: fidelity-qr-cta-aura 2.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
 .fidelity-cta-wrap--qr-play .fidelity-cta-pill--qr-play {
   position: relative;
   z-index: 1;
-}
-
-@keyframes fidelity-qr-cta-aura {
-  0%,
-  100% {
-    transform: scale(0.9);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.06);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fidelity-cta-wrap--qr-play::after {
-    animation: none;
-  }
 }
 
 .fidelity-cta-pill--qr-play {
@@ -245,7 +210,6 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
     opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Halo du CTA type « Jouer la partie » : ne pas rogner l’aura */
 .fidelity-qr-modal.fidelity-qr-modal--google {
   overflow-x: visible;
 }
@@ -316,7 +280,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   font-weight: 800;
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: #fff;
-  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
 }
 
 .fidelity-qr-stars {
