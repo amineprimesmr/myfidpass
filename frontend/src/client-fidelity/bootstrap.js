@@ -159,11 +159,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     wheelEl.style.transform = `rotate(${currentRotation}deg)`;
 
     const segmentHtml = wheelLabels
-      .map((label, i) =>
+      .map((_, i) =>
         buildWheelSegmentHtml({
           segmentIndex: i,
           segmentCount: n,
-          segmentLabel: label,
           escapeHtml,
         }),
       )

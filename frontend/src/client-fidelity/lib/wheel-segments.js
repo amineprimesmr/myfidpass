@@ -1,12 +1,11 @@
 /**
- * La roue affiche toujours 8 parts. L’API ne renvoie qu’une entrée par lot logique
- * (souvent 4) : on duplique cycliquement pour le rendu sans changer le tirage serveur.
+ * La roue affiche toujours 8 parts. L’API renvoie souvent 4 segments : on les étend
+ * en plaçant les lots sur les parts paires (visuel cadeau) et PERDU sur les impaires.
  */
 export const WHEEL_SEGMENT_COUNT = 8;
 
-/** Défaut page jeu si l’API ne renvoie aucun segment (hors tampons : lots points). */
+/** Défaut : parts paires = lots (visuel cadeau), impaires = PERDU — alternance stricte. */
 export const DEFAULT_WHEEL_LABELS = [
-  "PERDU",
   "+10 PTS",
   "PERDU",
   "+25 PTS",
@@ -14,6 +13,7 @@ export const DEFAULT_WHEEL_LABELS = [
   "+50 PTS",
   "PERDU",
   "+10 PTS",
+  "PERDU",
 ];
 
 /**
@@ -25,11 +25,26 @@ export function normalizeWheelLabelsFromSegments(segments) {
     return [...DEFAULT_WHEEL_LABELS];
   }
   const base = segments.map((s) => String(s?.label ?? "").trim() || "PERDU");
-  if (base.length === WHEEL_SEGMENT_COUNT) return base;
-  if (base.length > WHEEL_SEGMENT_COUNT) return base.slice(0, WHEEL_SEGMENT_COUNT);
+  let expanded;
+  if (base.length >= WHEEL_SEGMENT_COUNT) {
+    expanded = base.slice(0, WHEEL_SEGMENT_COUNT);
+  } else {
+    expanded = [];
+    for (let i = 0; i < WHEEL_SEGMENT_COUNT; i++) {
+      expanded.push(base[i % base.length]);
+    }
+  }
+  const prizeSeq = expanded.filter((l) => String(l).trim().toLowerCase() !== "perdu");
+  const pool = prizeSeq.length > 0 ? prizeSeq : ["PERDU"];
   const out = [];
+  let pi = 0;
   for (let i = 0; i < WHEEL_SEGMENT_COUNT; i++) {
-    out.push(base[i % base.length]);
+    if (i % 2 === 1) {
+      out.push("PERDU");
+    } else {
+      out.push(String(pool[pi % pool.length]));
+      pi += 1;
+    }
   }
   return out;
 }
@@ -41,32 +56,34 @@ export function normalizeWheelLabelsFromSegments(segments) {
  */
 export function pickWheelIndexForReward(wheelLabels, rewardLabel) {
   const target = String(rewardLabel || "PERDU").trim().toLowerCase();
+  const isPerdu = target === "perdu";
+  /** Parts paires = visuel cadeau, impaires = visuel PERDU — on n’arrête que sur la bonne parité. */
+  const parityOk = (i) => (isPerdu ? i % 2 === 1 : i % 2 === 0);
+
   const indices = [];
   for (let i = 0; i < wheelLabels.length; i++) {
-    if (String(wheelLabels[i] || "").trim().toLowerCase() === target) indices.push(i);
+    if (String(wheelLabels[i] || "").trim().toLowerCase() === target && parityOk(i)) indices.push(i);
   }
-  if (indices.length === 0) {
-    const perdu = [];
-    for (let i = 0; i < wheelLabels.length; i++) {
-      if (String(wheelLabels[i] || "").trim().toLowerCase() === "perdu") perdu.push(i);
-    }
-    if (perdu.length) return perdu[Math.floor(Math.random() * perdu.length)];
-    return 0;
+  if (indices.length > 0) {
+    return indices[Math.floor(Math.random() * indices.length)];
   }
-  return indices[Math.floor(Math.random() * indices.length)];
+  const fallback = [];
+  for (let i = 0; i < wheelLabels.length; i++) {
+    if (String(wheelLabels[i] || "").trim().toLowerCase() === target) fallback.push(i);
+  }
+  if (fallback.length > 0) {
+    return fallback[Math.floor(Math.random() * fallback.length)];
+  }
+  const perdu = [];
+  for (let i = 0; i < wheelLabels.length; i++) {
+    if (String(wheelLabels[i] || "").trim().toLowerCase() === "perdu") perdu.push(i);
+  }
+  if (perdu.length) return perdu[Math.floor(Math.random() * perdu.length)];
+  return 0;
 }
 
 /**
- * Lot affiché comme « gagnant » (image cadeau) : tout libellé autre que PERDU.
- * @param {unknown} label
- */
-export function isWinningWheelSegmentLabel(label) {
-  const s = String(label ?? "").trim().toLowerCase();
-  return s.length > 0 && s !== "perdu";
-}
-
-/**
- * Texte sur une part perdante (les parts gagnantes utilisent l’image cadeau).
+ * Texte sur les parts impaires (visuel PERDU). Les parts paires montrent l’image cadeau.
  */
 export function wheelSegmentAlternateDisplayLabel(segmentIndex) {
   void segmentIndex;
@@ -77,25 +94,21 @@ export function wheelSegmentAlternateDisplayLabel(segmentIndex) {
 export const WHEEL_SEGMENT_GIFT_IMG_SRC = "/assets/gift.png";
 
 /**
- * HTML d’une part de roue (texte PERDU / image cadeau selon le libellé métier, pas l’index).
+ * HTML d’une part : alternance fixe — paires = image cadeau, impaires = PERDU (aligné sur normalizeWheelLabelsFromSegments).
  * @param {object} p
  * @param {number} p.segmentIndex
  * @param {number} p.segmentCount
  * @param {(s: string) => string} p.escapeHtml
- * @param {string} [p.segmentLabel] — libellé du segment (ex. sortie normalizeWheelLabelsFromSegments)
  */
 export function buildWheelSegmentHtml(p) {
-  const { segmentIndex, segmentCount, escapeHtml, segmentLabel } = p;
+  const { segmentIndex, segmentCount, escapeHtml } = p;
   const angle = (segmentIndex + 0.5) * (360 / segmentCount);
   const isWhite = segmentIndex % 2 === 1;
   const segClass = isWhite
     ? "fidelity-roulette-wheel-segment fidelity-roulette-segment-white"
     : "fidelity-roulette-wheel-segment";
   const labelRotateDeg = angle > 180 ? 90 : -90;
-  const showGift =
-    segmentLabel !== undefined && segmentLabel !== null
-      ? isWinningWheelSegmentLabel(segmentLabel)
-      : segmentIndex % 2 === 0;
+  const showGift = segmentIndex % 2 === 0;
   const src = escapeHtml(`${WHEEL_SEGMENT_GIFT_IMG_SRC}?v=4`);
   const giftInner = `<span class="fidelity-roulette-segment-label fidelity-roulette-segment-label--gift-wrap" aria-hidden="true"><img class="fidelity-roulette-segment-gift-img" src="${src}" alt="" width="80" height="80" decoding="async" fetchpriority="high" /></span>`;
   const textLabel = wheelSegmentAlternateDisplayLabel(segmentIndex);

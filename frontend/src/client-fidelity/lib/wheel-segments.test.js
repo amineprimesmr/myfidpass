@@ -2,12 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildWheelSegmentHtml,
   DEFAULT_WHEEL_LABELS,
-  isWinningWheelSegmentLabel,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
   wheelSegmentAlternateDisplayLabel,
   WHEEL_SEGMENT_COUNT,
-  WHEEL_SEGMENT_GIFT_IMG_SRC,
 } from "./wheel-segments.js";
 
 function esc(s) {
@@ -26,7 +24,7 @@ describe("normalizeWheelLabelsFromSegments", () => {
     expect(DEFAULT_WHEEL_LABELS.length).toBe(WHEEL_SEGMENT_COUNT);
   });
 
-  it("étend 4 segments en 8 par cycle", () => {
+  it("étend 4 segments en 8 : parts paires = lots, impaires = PERDU", () => {
     const segs = [
       { label: "PERDU" },
       { label: "+10 pts" },
@@ -34,14 +32,14 @@ describe("normalizeWheelLabelsFromSegments", () => {
       { label: "+50 pts" },
     ];
     expect(normalizeWheelLabelsFromSegments(segs)).toEqual([
-      "PERDU",
       "+10 pts",
+      "PERDU",
       "+25 pts",
+      "PERDU",
       "+50 pts",
       "PERDU",
       "+10 pts",
-      "+25 pts",
-      "+50 pts",
+      "PERDU",
     ]);
   });
 
@@ -49,22 +47,18 @@ describe("normalizeWheelLabelsFromSegments", () => {
     expect(DEFAULT_WHEEL_LABELS.every((l) => l === l.toUpperCase())).toBe(true);
   });
 
-  it("tronque au-delà de 8", () => {
+  it("tronque au-delà de 8 puis alterne lot / PERDU", () => {
     const segs = Array.from({ length: 10 }, (_, i) => ({ label: `L${i}` }));
-    expect(normalizeWheelLabelsFromSegments(segs)).toEqual(["L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7"]);
-  });
-});
-
-describe("isWinningWheelSegmentLabel", () => {
-  it("PERDU ou vide = pas gagnant", () => {
-    expect(isWinningWheelSegmentLabel("PERDU")).toBe(false);
-    expect(isWinningWheelSegmentLabel("perdu")).toBe(false);
-    expect(isWinningWheelSegmentLabel("")).toBe(false);
-    expect(isWinningWheelSegmentLabel("  ")).toBe(false);
-  });
-  it("tout autre libellé = part cadeau", () => {
-    expect(isWinningWheelSegmentLabel("+10 pts")).toBe(true);
-    expect(isWinningWheelSegmentLabel("Boisson")).toBe(true);
+    expect(normalizeWheelLabelsFromSegments(segs)).toEqual([
+      "L0",
+      "PERDU",
+      "L1",
+      "PERDU",
+      "L2",
+      "PERDU",
+      "L3",
+      "PERDU",
+    ]);
   });
 });
 
@@ -76,44 +70,41 @@ describe("wheelSegmentAlternateDisplayLabel", () => {
 });
 
 describe("buildWheelSegmentHtml", () => {
-  it("sans segmentLabel, conserve l’alternance par index (rétrocompat)", () => {
+  it("alternance par index : pair = cadeau, impair = PERDU", () => {
     const win = buildWheelSegmentHtml({ segmentIndex: 0, segmentCount: 8, escapeHtml: esc });
     expect(win).toContain("fidelity-roulette-segment-gift-img");
     const lose = buildWheelSegmentHtml({ segmentIndex: 1, segmentCount: 8, escapeHtml: esc });
     expect(lose).toContain("PERDU");
     expect(lose).not.toContain("fidelity-roulette-segment-gift-img");
   });
-
-  it("avec segmentLabel : cadeau sur un lot même en index impair (aligné sur le tirage)", () => {
-    const giftOdd = buildWheelSegmentHtml({
-      segmentIndex: 1,
-      segmentCount: 8,
-      escapeHtml: esc,
-      segmentLabel: "+10 pts",
-    });
-    expect(giftOdd).toContain(`${WHEEL_SEGMENT_GIFT_IMG_SRC}?v=4`);
-    expect(giftOdd).toContain("fidelity-roulette-segment-gift-img");
-  });
-
-  it("avec segmentLabel : PERDU même sur index pair", () => {
-    const loseEven = buildWheelSegmentHtml({
-      segmentIndex: 0,
-      segmentCount: 8,
-      escapeHtml: esc,
-      segmentLabel: "PERDU",
-    });
-    expect(loseEven).toContain("PERDU");
-    expect(loseEven).not.toContain("fidelity-roulette-segment-gift-img");
-  });
 });
 
 describe("pickWheelIndexForReward", () => {
-  it("choisit un index parmi les libellés identiques", () => {
+  it("choisit un index pair pour un lot (cohérent avec le visuel cadeau)", () => {
     vi.spyOn(Math, "random").mockReturnValue(0.99);
-    const labels = ["PERDU", "+10 pts", "PERDU", "+10 pts", "+10 pts", "PERDU", "+10 pts", "PERDU"];
+    const labels = ["+10 pts", "PERDU", "+10 pts", "PERDU", "+10 pts", "PERDU", "+25 pts", "PERDU"];
     const idx = pickWheelIndexForReward(labels, "+10 pts");
     expect(labels[idx]).toBe("+10 pts");
-    expect([1, 3, 4, 6].includes(idx)).toBe(true);
+    expect(idx % 2).toBe(0);
+    expect([0, 2, 4].includes(idx)).toBe(true);
+    vi.restoreAllMocks();
+  });
+
+  it("choisit un index impair pour PERDU", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const labels = ["+10 pts", "PERDU", "+10 pts", "PERDU", "+10 pts", "PERDU", "+10 pts", "PERDU"];
+    const idx = pickWheelIndexForReward(labels, "PERDU");
+    expect(labels[idx]).toBe("PERDU");
+    expect(idx % 2).toBe(1);
+    vi.restoreAllMocks();
+  });
+
+  it("repli sans parité si aucun index ne combine libellé et bonne parité", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const labels = ["PERDU", "+10 pts", "PERDU", "PERDU", "PERDU", "PERDU", "PERDU", "PERDU"];
+    const idx = pickWheelIndexForReward(labels, "+10 pts");
+    expect(labels[idx]).toBe("+10 pts");
+    expect(idx).toBe(1);
     vi.restoreAllMocks();
   });
 });
