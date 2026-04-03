@@ -76,6 +76,26 @@ body.fidpass-fidelity-route {
   background: #f8fafc;
 }
 
+/* Page jeu QR seule : pas de scroll, bandes haut/bas noires (Safari + encoches), image fond bord à bord. */
+html.fidpass-fidelity-route:has(main.fidelity-qr-game),
+body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
+  background: #000000;
+  overflow: hidden;
+  height: 100%;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+#fidelity-app:has(> main.fidelity-qr-game) {
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #000000;
+}
+
 /* ── Site banner media ── */
 .site-banner-media {
   width: 100%;

@@ -142,7 +142,7 @@
 
 /* Typo / roue : unités conteneur (le viewport fait ~390px — pas la fenêtre SaaS) */
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-title--lead {
-  margin: clamp(2.35rem, 9.5cqw, 4.25rem) 0 0;
+  margin: clamp(1rem, 5cqw, 2.75rem) 0 0;
   font-size: clamp(1.48rem, 5.5cqw, 2.15rem);
   max-width: min(22rem, 92cqw);
 }
@@ -153,13 +153,14 @@
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
-  min-height: min(46cqh, 48cqh, 64cqmin) !important;
+  min-height: min(34cqh, 36cqh, 52cqmin) !important;
+  max-height: 46cqh !important;
   background: transparent !important;
   background-image: none !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-  top: 78% !important;
+  top: 72% !important;
   width: min(106cqmin, 104cqw) !important;
   height: min(106cqmin, 104cqw) !important;
   transform: translate(-34%, -50%) !important;

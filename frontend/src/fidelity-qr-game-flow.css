@@ -2,7 +2,7 @@
 
 html.fidpass-fidelity-route:has(main.fidelity-qr-game),
 body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
-  overflow-x: visible;
+  overflow-x: hidden;
 }
 
 /* Shell #fidelity-app : colonne pleine hauteur → pied de page « pro » collé au bas de l’écran */
@@ -11,27 +11,34 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   flex-direction: column;
   min-height: 100dvh;
   min-height: 100svh;
+  max-height: 100dvh;
+  max-height: 100svh;
   box-sizing: border-box;
-  overflow-x: visible;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game {
   flex: 1 1 auto;
   min-height: 0;
   overflow-x: visible !important;
-  overflow-y: visible !important;
+  /* Pas de scroll vertical : la roue reste dans l’écran (Safari iOS). */
+  overflow-y: hidden !important;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
   margin-top: auto;
   flex-shrink: 0;
   width: 100%;
+  /* Remplit la zone sous le pied (home indicator / barre Safari) sans bande claire. */
+  padding-bottom: max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem));
 }
 
 .fidpass-fidelity-route .fidelity-qr-game,
 .fidelity-page .fidelity-qr-game {
-  padding-top: 0.5rem;
-  padding-bottom: max(0.35rem, env(safe-area-inset-bottom));
+  /* Le fond (::before) remplit jusqu’au statut barre ; le contenu respecte l’encoche ici. */
+  padding-top: 0;
+  padding-bottom: 0.2rem;
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
   /* Marge droite : halo CTA + ombres roue sans rognage au bord écran */
   padding-right: calc(max(1.25rem, env(safe-area-inset-right, 0px)) + 16px);
@@ -40,7 +47,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 .fidelity-qr-hero {
   text-align: center;
-  padding: 0.35rem 0 0.5rem;
+  padding: max(0.35rem, env(safe-area-inset-top, 0px)) 0 0.35rem;
 }
 
 .fidelity-qr-brand {
@@ -59,9 +66,9 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   flex-shrink: 0;
 }
 
-/* Titre unique : accroche lisible, large marge sous l’icône */
+/* Titre unique : accroche lisible (marge réduite pour tenir sans scroll sur petits écrans) */
 .fidelity-qr-title--lead {
-  margin: clamp(2.35rem, 9.5vw, 4.25rem) 0 0;
+  margin: clamp(1rem, 5vw, 2.75rem) 0 0;
   font-size: clamp(1.48rem, 5.5vw, 2.15rem);
   font-weight: 800;
   letter-spacing: -0.032em;
@@ -79,7 +86,11 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 }
 
 .fidelity-v2-roulette-inline--qr {
-  margin-top: 6rem;
+  margin-top: 4.35rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: visible;
 }
 
@@ -87,7 +98,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   justify-content: flex-end;
   padding-left: 1rem;
   padding-right: max(0.75rem, calc(env(safe-area-inset-right, 0px) + 12px));
-  padding-bottom: 0.4rem;
+  padding-bottom: 0.25rem;
   position: relative;
   z-index: 2;
   overflow: visible;
@@ -128,15 +139,17 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 .fidelity-v2-roulette-inline.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
   position: relative;
   z-index: 1;
-  min-height: min(46dvh, 48vh, 64vmin);
-  padding-bottom: 1.1rem;
+  flex: 1 1 auto;
+  min-height: min(34dvh, 36vh, 52vmin);
+  max-height: 46dvh;
+  padding-bottom: 0.35rem;
   overflow: visible;
   background: transparent;
   background-image: none;
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-  top: 78%;
+  top: 71%;
   width: min(106vmin, 110vw);
   height: min(106vmin, 110vw);
   transform: translate(-30%, -50%);
@@ -144,7 +157,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 @media (max-width: 480px) {
   .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-    top: 79%;
+    top: 72%;
     width: min(100vmin, 104vw);
     height: min(100vmin, 104vw);
     transform: translate(-34%, -50%);
@@ -444,13 +457,19 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   }
 }
 
-/* Fond personnalisé (SaaS) — sous le contenu */
+/* Fond personnalisé (SaaS) — sous le contenu ; déborde dans les safe areas (plus de bande blanche iOS). */
 #fidelity-app.fidelity-page.fidelity-page--client-bg { position: relative; isolation: isolate; }
 #fidelity-app.fidelity-page.fidelity-page--client-bg::before {
   content: "";
   position: fixed;
-  inset: 0;
   z-index: 0;
+  /* Au-delà du cadre layout pour couvrir encoche + home indicator (viewport-fit=cover). */
+  top: calc(-1 * env(safe-area-inset-top, 0px));
+  right: calc(-1 * env(safe-area-inset-right, 0px));
+  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+  left: calc(-1 * env(safe-area-inset-left, 0px));
+  width: auto;
+  height: auto;
   background: var(--fidelity-client-bg) center / cover no-repeat;
   opacity: 1;
   pointer-events: none;
