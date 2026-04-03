@@ -5,14 +5,6 @@
   padding-top: 1.5rem;
 }
 
-.fidelity-qr-verify-lead {
-  margin: 0 0 1rem;
-  font-size: 0.84rem;
-  font-weight: 600;
-  color: #64748b;
-  line-height: 1.45;
-}
-
 .fidelity-qr-verify-progress {
   height: 6px;
   margin: 0 0 1.15rem;
@@ -32,7 +24,7 @@
 }
 
 .fidelity-qr-verify-progress-bar--animate {
-  animation: fidelity-qr-verify-progress-fill var(--verify-duration, 5.8s) cubic-bezier(0.45, 0, 0.2, 1) forwards;
+  animation: fidelity-qr-verify-progress-fill var(--verify-duration, 15s) cubic-bezier(0.45, 0, 0.2, 1) forwards;
 }
 
 @keyframes fidelity-qr-verify-progress-fill {

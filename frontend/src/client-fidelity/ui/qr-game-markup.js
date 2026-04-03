@@ -85,7 +85,6 @@ export function renderQrGamePage(esc, p) {
 
       <div id="fidelity-qr-panel-verify" class="fidelity-qr-modal fidelity-qr-modal--verify hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-verify-title">
         <h2 id="fidelity-qr-verify-title" class="fidelity-qr-modal-title">Vérification de votre avis</h2>
-        <p class="fidelity-qr-verify-lead">Merci de patienter — cette étape reproduit un contrôle côté serveur et peut prendre quelques secondes.</p>
         <div
           class="fidelity-qr-verify-progress"
           role="progressbar"

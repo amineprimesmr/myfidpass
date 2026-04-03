@@ -1,5 +1,5 @@
 /**
- * Parcours QR : déblocage après étape Google (simulation vérif), modales gain / inscription.
+ * Parcours QR : déblocage après étape Google, modales gain / inscription.
  */
 
 export const QR_GATE_KEY = "fid_qr_spin_gate";
@@ -21,15 +21,15 @@ export function applyQrThanksHero(rootEl, getState) {
   }
 }
 
-/** Durée affichée « vérification serveur » (ms) — plus réaliste qu’un flash ~2,6 s */
-const QR_VERIFY_BASE_MS = 5400;
-const QR_VERIFY_JITTER_MS = 2400;
+/** Durée affichée « vérification » (ms) — minimum 15 s, léger jitter pour paraître naturel */
+const QR_VERIFY_MIN_MS = 15_000;
+const QR_VERIFY_JITTER_MS = 4_000;
 
 const QR_VERIFY_MESSAGES = [
   "Nous vérifions votre avis Google…",
-  "Synchronisation avec les serveurs…",
-  "Validation auprès de l’établissement…",
-  "Dernières vérifications…",
+  "Merci de patienter encore un instant…",
+  "Nous finalisons la vérification…",
+  "Presque terminé…",
 ];
 
 /**
@@ -243,7 +243,7 @@ export function bindQrGameUi(ctx) {
 
   function runVerifyUnlock({ tryClaim }) {
     verifyUxCleanup();
-    const durationMs = QR_VERIFY_BASE_MS + Math.floor(Math.random() * QR_VERIFY_JITTER_MS);
+    const durationMs = QR_VERIFY_MIN_MS + Math.floor(Math.random() * QR_VERIFY_JITTER_MS);
     verifyUxCleanup = startVerifyPanelUx(rootEl, durationMs);
     window.setTimeout(async () => {
       verifyUxCleanup();
