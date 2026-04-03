@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveClientLogoImgSrc, resolveClientNotificationIconImgSrc } from "./resolve-client-logo-src.js";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("resolveClientLogoImgSrc", () => {
   it("apiBase vide → chemin relatif (proxy Vite), ignore logoUrl absolu 127.0.0.1", () => {
@@ -18,6 +22,16 @@ describe("resolveClientLogoImgSrc", () => {
       "https://api.example.com",
     );
     expect(src).toBe("https://api.example.com/api/businesses/x/public/logo");
+  });
+
+  it("hôte myfidpass.fr → chemin relatif même si apiBase pointe vers l’API (évite CORP / img cassée)", () => {
+    vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
+    const src = resolveClientLogoImgSrc(
+      { logoUrl: "https://api.myfidpass.fr/api/businesses/x/public/logo", logo_updated_at: "1" },
+      "x",
+      "https://api.myfidpass.fr",
+    );
+    expect(src.startsWith("/api/businesses/x/public/logo?v=")).toBe(true);
   });
 
   it("cache-bust si logo_updated_at", () => {

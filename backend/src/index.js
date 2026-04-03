@@ -109,7 +109,14 @@ const allowedOrigins =
         ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
       ];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
-app.use(helmet({ contentSecurityPolicy: false }));
+// Sans cross-origin : CORP same-origin (défaut Helmet) bloque les <img src> depuis myfidpass.fr
+// vers api.myfidpass.fr (origines distinctes) → logo QR / page fidélité cassé.
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 
 // Webhook Stripe doit recevoir le body brut (pour vérification de signature)
 app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
