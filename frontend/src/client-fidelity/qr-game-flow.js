@@ -11,17 +11,34 @@ export const QR_THANKS_HERO_KEY = "fid_qr_thanks_hero";
 
 /** Même si sessionStorage échoue (Safari privé), le prochain rerender ne doit pas réécraser le titre. */
 let qrThanksHeroMemory = false;
+/** Slug commerce courant quand mark a été appelé (évite d’afficher « Merci » sur un autre /fidelity/:slug). */
+let qrThanksHeroSlug = null;
 
-export function markQrThanksHeroDone() {
+/**
+ * @param {string} [slug] — commerce courant (recommandé)
+ */
+export function markQrThanksHeroDone(slug) {
+  const s = String(slug ?? "").trim();
   qrThanksHeroMemory = true;
+  qrThanksHeroSlug = s || null;
   try {
+    if (s) sessionStorage.setItem(`${QR_THANKS_HERO_KEY}:slug:${s}`, "1");
     sessionStorage.setItem(QR_THANKS_HERO_KEY, "1");
   } catch (_) {}
 }
 
-export function shouldShowQrThanksHero() {
-  if (qrThanksHeroMemory) return true;
+/**
+ * @param {string} [forSlug] — doit correspondre au slug marké si celui-ci était renseigné
+ */
+export function shouldShowQrThanksHero(forSlug) {
+  const want = String(forSlug ?? "").trim();
+  if (qrThanksHeroMemory) {
+    if (!qrThanksHeroSlug) return true;
+    if (!want || qrThanksHeroSlug === want) return true;
+    return false;
+  }
   try {
+    if (want && sessionStorage.getItem(`${QR_THANKS_HERO_KEY}:slug:${want}`) === "1") return true;
     return sessionStorage.getItem(QR_THANKS_HERO_KEY) === "1";
   } catch {
     return false;
@@ -258,7 +275,7 @@ export function bindQrGameUi(ctx) {
             if (progress instanceof HTMLElement) progress.setAttribute("aria-valuetext", "Vérification terminée");
           }
           /* Tout de suite : ne pas attendre closeQrModalRoot (Safari / transitionend capricieux). */
-          markQrThanksHeroDone();
+          markQrThanksHeroDone(slug);
           applyQrThanksHero(fidelityAppMount(rootEl), () => ({}));
           await new Promise((r) => globalThis.setTimeout(r, 480));
           const mount = fidelityAppMount(rootEl);

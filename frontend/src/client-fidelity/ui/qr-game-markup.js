@@ -18,7 +18,9 @@ export function renderQrGamePage(esc, p) {
   } = p;
   /* Un seul titre sous l’icône : accroche jeu (ou « Merci… » après Google) — pas le nom du commerce */
   const heroTitleEsc = qrThanksHeroMode ? esc("Merci, bonne chance !") : businessTaglineEsc;
-  const heroTitleClass = `fidelity-qr-title fidelity-qr-title--lead${qrThanksHeroMode ? " fidelity-qr-title--thanks" : ""}`;
+  const heroTitleClass = qrThanksHeroMode
+    ? "fidelity-qr-title fidelity-qr-title--thanks"
+    : "fidelity-qr-title fidelity-qr-title--lead";
   const heroSuccessClass = qrThanksHeroMode ? " fidelity-qr-hero-success--visible" : "";
 
   const hasGoogle = Boolean(googleReviewUrl);

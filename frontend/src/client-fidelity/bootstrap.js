@@ -18,12 +18,14 @@ import { isUnlimitedTicketsDemo } from "./lib/unlimited-tickets-demo.js";
 import { startRouletteSpinSound } from "./lib/roulette-spin-audio.js";
 import { bindFidelitySpaLinks } from "./fidelity-spa-nav.js";
 import {
+  applyQrThanksHero,
   bindQrGameUi,
   closeQrModalRoot,
   firstNonPerduLabel,
   isGuestMember,
   openQrModalRoot,
   showQrRewardPanel,
+  shouldShowQrThanksHero,
 } from "./qr-game-flow.js";
 import {
   dismissFidelityRouteLoadingOverlay,
@@ -195,6 +197,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     document.body.style.overflow = "";
     renderClientPage(rootEl, store.get(), { slug, apiBase });
     applyFidelityClientPageBackground(store.get().business, slug, apiBase);
+    /* Après refreshMemberData le HTML est reconstruit : réaligne le hero si l’état « Merci » est actif. */
+    if (shouldShowQrThanksHero(slug) && rootEl.querySelector("main.fidelity-qr-game")) {
+      applyQrThanksHero(rootEl, () => store.get());
+    }
     bindEvents();
     if (!isSpinning) {
       initRouletteWheel();

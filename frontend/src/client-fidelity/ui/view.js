@@ -66,7 +66,7 @@ export function renderClientPage(root, state, options = {}) {
     });
     const logoUrl = resolveClientNotificationIconImgSrc(state.business, slugForAssets, apiBase);
     const logoUrlPublicFallback = resolveClientLogoImgSrc(state.business, slugForAssets, apiBase);
-    const qrThanksHeroMode = shouldShowQrThanksHero();
+    const qrThanksHeroMode = shouldShowQrThanksHero(slugForAssets);
     root.innerHTML = renderQrGamePage(esc, {
       businessNameEsc: businessName,
       businessTaglineEsc: esc(tagline),

@@ -2,6 +2,15 @@
 
 export const QR_THANKS_TITLE = "Merci, bonne chance !";
 
+/** Toujours cibler le conteneur publié (évite un rootEl de closure périmé après rerender). */
+function fidelityThanksMount(rootEl) {
+  if (typeof document !== "undefined") {
+    const byId = document.getElementById("fidelity-app");
+    if (byId) return byId;
+  }
+  return rootEl;
+}
+
 function qrPrefersReducedMotion() {
   return globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
 }
@@ -38,9 +47,10 @@ function waitAnimationFallback(el, ms) {
  */
 export function applyQrThanksHero(rootEl, getState) {
   void getState;
-  if (!rootEl || typeof rootEl.querySelector !== "function") return;
-  const inner = rootEl.querySelector(".fidelity-qr-hero-title-inner");
-  const h1 = rootEl.querySelector("#fidelity-qr-hero-title");
+  const mount = fidelityThanksMount(rootEl);
+  if (!mount || typeof mount.querySelector !== "function") return;
+  const inner = mount.querySelector(".fidelity-qr-hero-title-inner");
+  const h1 = mount.querySelector("#fidelity-qr-hero-title");
   const success = rootEl.querySelector("#fidelity-qr-hero-success");
   if (inner && h1) {
     inner.textContent = QR_THANKS_TITLE;
@@ -48,7 +58,7 @@ export function applyQrThanksHero(rootEl, getState) {
     h1.classList.remove("fidelity-qr-title--lead");
     h1.classList.add("fidelity-qr-title--thanks");
   } else {
-    const legacy = rootEl.querySelector(".fidelity-qr-title");
+    const legacy = mount.querySelector(".fidelity-qr-title");
     if (legacy) {
       legacy.textContent = QR_THANKS_TITLE;
       legacy.classList.add("fidelity-qr-title--thanks", "fidelity-qr-title--lead");
@@ -61,10 +71,11 @@ export function applyQrThanksHero(rootEl, getState) {
  * @param {HTMLElement} rootEl
  */
 export async function runQrThanksHeroTransition(rootEl) {
-  const inner = rootEl.querySelector(".fidelity-qr-hero-title-inner");
-  const h1 = rootEl.querySelector("#fidelity-qr-hero-title");
-  const hero = rootEl.querySelector(".fidelity-qr-hero");
-  const success = rootEl.querySelector("#fidelity-qr-hero-success");
+  const mount = fidelityThanksMount(rootEl);
+  const inner = mount?.querySelector(".fidelity-qr-hero-title-inner");
+  const h1 = mount?.querySelector("#fidelity-qr-hero-title");
+  const hero = mount?.querySelector(".fidelity-qr-hero");
+  const success = mount?.querySelector("#fidelity-qr-hero-success");
   if (!inner || !h1) {
     applyQrThanksHero(rootEl, () => ({}));
     return;
