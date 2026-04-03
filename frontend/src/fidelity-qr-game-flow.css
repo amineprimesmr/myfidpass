@@ -21,16 +21,17 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   min-height: 0;
   overflow-x: visible !important;
   overflow-y: visible !important;
-  margin-bottom: 0.35rem;
+  /* Espace avant le bandeau noir : le pied descend visuellement sur l’écran */
+  margin-bottom: 1.15rem;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
   margin-top: auto;
   flex-shrink: 0;
   width: 100%;
-  /* Texte « pro » plus bas dans le bandeau noir */
-  padding-top: 1.55rem;
-  padding-bottom: max(1.45rem, calc(env(safe-area-inset-bottom, 0px) + 0.85rem));
+  /* Peu de marge haute (évite d’« aspirer » le footer vers le contenu) ; marge basse forte = texte près du bas / safe area */
+  padding-top: 0.55rem;
+  padding-bottom: max(1.85rem, calc(env(safe-area-inset-bottom, 0px) + 1.15rem));
 }
 
 .fidpass-fidelity-route .fidelity-qr-game,
