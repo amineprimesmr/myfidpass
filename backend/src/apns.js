@@ -30,7 +30,7 @@ import { createSigner } from "fast-jwt";
 import { ApnsClient, Notification, SilentNotification, PushType } from "apns2";
 import logger from "./lib/logger.js";
 
-const APNS_BUILD = "2026-03-27-apns2-v12-fastjwt-validate";
+const APNS_BUILD = "2026-04-03-background-content-available-fix";
 
 /** En-tête PEM Apple Auth Key (.p8) : PKCS#8 « BEGIN PRIVATE KEY » ou legacy « BEGIN EC PRIVATE KEY ». */
 const PEM_APNS_AUTH_KEY = /-----BEGIN\s+(?:EC\s+)?PRIVATE KEY-----/;
@@ -257,6 +257,11 @@ export function sendPassKitUpdate(deviceToken) {
   // Avec le type "alert" (défaut Notification), iOS ne réveille PAS PassKit en background :
   // la notification est mise en queue et traitée de façon opportuniste (aléatoire), ce qui
   // cause les délais et la réception "seulement à l'ouverture de l'app".
+  //
+  // CRITIQUE : Apple exige content-available: 1 dans aps quand apns-push-type: background.
+  // Sans ça, APNs rejette ou drop silencieusement la notification → rien ne s'affiche.
+  // contentAvailable: true → ajoute "content-available": 1 dans le payload aps.
+  //
   // Expiration 86400s (24h) : si le téléphone est offline, Apple retentera pendant 24h.
   // priority: 10 (immediate) est le défaut de Notification — Apple autorise priority 10
   // pour les background PassKit updates (exception à la règle background=priority 5).
@@ -264,19 +269,27 @@ export function sendPassKitUpdate(deviceToken) {
     topic: passTypeId,
     expiration: Math.floor(Date.now() / 1000) + 86400,
     type: PushType.background,
+    contentAvailable: true,
     aps: {},
   });
 
+  logger.debug({ deviceToken: deviceToken.slice(-8), passTypeId }, "[apns] PassKit → envoi push background");
   const sendPromise = prov.send(note).then(
-    () => ({ sent: true }),
+    () => {
+      logger.info({ deviceToken: deviceToken.slice(-8) }, "[apns] PassKit push envoyé avec succès");
+      return { sent: true };
+    },
     (err) => {
+      const reason = err?.reason ?? err?.message ?? String(err);
       // Erreur réseau / HTTP2 : la connexion est morte. On recycle le provider
       // pour que le prochain appel crée une nouvelle connexion undici propre.
       if (isConnectionLevelError(err)) {
         logger.warn({ errMsg: err?.message }, "[apns] Connexion HTTP/2 APNs morte — provider recyclé pour le prochain envoi");
         passkitProvider = undefined;
+      } else {
+        logger.warn({ reason, deviceToken: deviceToken.slice(-8) }, "[apns] PassKit push refusé par APNs");
       }
-      return { sent: false, error: err?.reason ?? err?.message ?? String(err) };
+      return { sent: false, error: reason };
     }
   );
   return withTimeout(sendPromise, PASSKIT_TIMEOUT_MS, "PassKit APNs").catch((err) => {
