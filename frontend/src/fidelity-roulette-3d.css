@@ -342,6 +342,10 @@
   transform-style: preserve-3d;
 }
 
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel.fidelity-roulette-wheel--is-spinning {
+  filter: brightness(1.07) saturate(1.06);
+}
+
 .fidelity-v2-roulette-inline .fidelity-roulette-wheel {
   z-index: 1;
   border-width: 14px;

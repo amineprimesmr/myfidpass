@@ -240,3 +240,19 @@ export function pickWeightedReward(rewards) {
   }
   return active[active.length - 1];
 }
+
+/**
+ * Premier spin d’un membre sur la roulette : uniquement parmi les lots gagnants (points / tampons),
+ * pour aligner UX (toujours un gain la 1ʳᵉ fois) avec le tirage pondéré ensuite.
+ *
+ * @param {unknown[]} spinRewards
+ * @param {number} priorSpinCount nombre de spins déjà enregistrés avant celui-ci
+ */
+export function selectRouletteReward(spinRewards, priorSpinCount) {
+  const safe = Array.isArray(spinRewards) ? spinRewards : [];
+  if (priorSpinCount === 0) {
+    const winningOnly = safe.filter((r) => r && (r.kind === "points" || r.kind === "stamps"));
+    return pickWeightedReward(winningOnly.length > 0 ? winningOnly : safe);
+  }
+  return pickWeightedReward(safe);
+}

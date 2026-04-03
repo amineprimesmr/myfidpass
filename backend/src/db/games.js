@@ -15,6 +15,7 @@ import {
   ensureBusinessGame,
   seedDefaultGameRewards,
   pickWeightedReward,
+  selectRouletteReward,
   DEFAULT_ROULETTE_POINT_REWARDS,
   DEFAULT_ROULETTE_STAMP_REWARDS,
   businessUsesTicketBonuses,
@@ -394,7 +395,15 @@ export function spinGameForMember({
         ? (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "stamps")
         : (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points");
     const spinRewards = getGameRewardsForBusiness(businessId, gameCode).filter(kindFilter);
-    const reward = pickWeightedReward(spinRewards);
+    const priorSpinCount =
+      Number(
+        db
+          .prepare(
+            `SELECT COUNT(*) as n FROM game_spins WHERE business_id = ? AND member_id = ? AND game_id = ?`,
+          )
+          .get(businessId, memberId, game.game_id)?.n || 0,
+      ) || 0;
+    const reward = selectRouletteReward(spinRewards, priorSpinCount);
     const rawMax = business.required_stamps != null ? Number(business.required_stamps) : 10;
     const maxStamps = Number.isFinite(rawMax) && rawMax > 0 ? Math.floor(rawMax) : 10;
     let isWinning = false;

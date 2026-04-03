@@ -14,6 +14,7 @@ import {
   pickWheelIndexForReward,
 } from "./lib/wheel-segments.js";
 import { isUnlimitedTicketsDemo } from "./lib/unlimited-tickets-demo.js";
+import { startRouletteSpinSound } from "./lib/roulette-spin-audio.js";
 import { bindFidelitySpaLinks } from "./fidelity-spa-nav.js";
 import {
   bindQrGameUi,
@@ -42,9 +43,11 @@ function getFingerprint() {
   return `${ua}|${lang}|${tz}|${hw}`.slice(0, 250);
 }
 
-// Configuration roulette (roue circulaire)
-const ROULETTE_SPIN_DURATION_MS = 3400;
-const ROULETTE_EXTRA_TURNS = 5;
+// Configuration roulette : durée + easing type « vraie roue » (ralenti long en fin de courbe)
+const ROULETTE_SPIN_DURATION_MS = 6200;
+const ROULETTE_EXTRA_TURNS = 6;
+/** Courbe forte fin de course (léger dépassement puis amorti), proche d’un ease-out physique */
+const ROULETTE_SPIN_EASING = "cubic-bezier(0.05, 0.72, 0.12, 1)";
 
 function prefersReducedMotion() {
   if (typeof globalThis.matchMedia !== "function") return false;
@@ -357,6 +360,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       }, 120);
     };
 
+    let spinAudioStop = () => {};
+
     try {
       const result = await api.spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey());
       const rawLabel = (result.reward?.label || "PERDU").trim();
@@ -382,6 +387,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const targetRotation = baseRotation + finalDelta;
 
       const showOutcome = async () => {
+        spinAudioStop();
+        wheelEl.classList.remove("fidelity-roulette-wheel--is-spinning");
+        try {
+          if (
+            isWin &&
+            typeof navigator !== "undefined" &&
+            typeof navigator.vibrate === "function"
+          ) {
+            navigator.vibrate([16, 32, 20, 38, 24]);
+          }
+        } catch (_) {}
         isSpinning = false;
         clearBusy();
         if (qrGuest) {
@@ -422,11 +438,19 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         return;
       }
 
-      wheelEl.style.transition = `transform ${spinDurationMs}ms cubic-bezier(0.17, 0.82, 0.24, 1)`;
+      try {
+        const audio = await startRouletteSpinSound(spinDurationMs);
+        spinAudioStop = typeof audio?.stop === "function" ? audio.stop : () => {};
+      } catch (_) {
+        spinAudioStop = () => {};
+      }
+
+      wheelEl.classList.add("fidelity-roulette-wheel--is-spinning");
+      wheelEl.style.transition = `transform ${spinDurationMs}ms ${ROULETTE_SPIN_EASING}`;
       wheelEl.style.transform = `rotate(${targetRotation}deg)`;
 
       let completed = false;
-      const fallbackMs = spinDurationMs + 750;
+      const fallbackMs = spinDurationMs + 950;
       const t = window.setTimeout(() => {
         if (completed) return;
         completed = true;
@@ -445,6 +469,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
       wheelEl.addEventListener("transitionend", onTransitionEnd);
     } catch (err) {
+      spinAudioStop();
+      wheelEl.classList.remove("fidelity-roulette-wheel--is-spinning");
       isSpinning = false;
       clearBusy();
       wheelEl.style.willChange = "transform";
