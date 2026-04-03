@@ -1,5 +1,10 @@
 /* Parcours QR : roue d’abord, modales, charte neutre (couleurs commerce via variables si présentes) */
 
+html.fidpass-fidelity-route:has(main.fidelity-qr-game),
+body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
+  overflow-x: visible;
+}
+
 /* Shell #fidelity-app : colonne pleine hauteur → pied de page « pro » collé au bas de l’écran */
 .fidelity-page:has(> main.fidelity-qr-game) {
   display: flex;
@@ -7,11 +12,14 @@
   min-height: 100dvh;
   min-height: 100svh;
   box-sizing: border-box;
+  overflow-x: visible;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game {
   flex: 1 1 auto;
   min-height: 0;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
@@ -22,9 +30,11 @@
 
 .fidpass-fidelity-route .fidelity-qr-game,
 .fidelity-page .fidelity-qr-game {
-  padding: 0.5rem 1rem 0.35rem;
+  padding-top: 0.5rem;
   padding-bottom: max(0.35rem, env(safe-area-inset-bottom));
-  /* La roue déborde à gauche : le main V2 a overflow-x:hidden par défaut */
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  /* Marge droite : halo CTA + ombres roue sans rognage au bord écran */
+  padding-right: calc(max(1.25rem, env(safe-area-inset-right, 0px)) + 16px);
   overflow-x: visible;
 }
 
@@ -74,15 +84,17 @@
 
 .fidelity-v2-roulette-inline--qr {
   margin-top: 3.75rem;
+  overflow: visible;
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
   justify-content: flex-end;
   padding-left: 1rem;
-  padding-right: 0.75rem;
+  padding-right: max(0.75rem, calc(env(safe-area-inset-right, 0px) + 12px));
   padding-bottom: 0.4rem;
   position: relative;
   z-index: 2;
+  overflow: visible;
 }
 
 .fidelity-cta-wrap--qr-play {
@@ -158,6 +170,8 @@
   min-height: min(40dvh, 42vh, 58vmin);
   padding-bottom: 0.85rem;
   overflow: visible;
+  /* Dégradé plein largeur (évite la « lame » verticale du radial 3d au bord droit) */
+  background: linear-gradient(168deg, #e8ecf1 0%, #f1f5f9 42%, #f8fafc 100%);
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {

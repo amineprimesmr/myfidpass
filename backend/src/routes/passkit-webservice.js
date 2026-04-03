@@ -132,7 +132,13 @@ function handleGetRegistrations(req, res) {
   const passesUpdatedSince = req.query.passesUpdatedSince || null;
   try {
     const { serialNumbers, lastUpdated } = getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince);
-    if (process.env.NODE_ENV === "production" && serialNumbers.length > 0) {
+    // Spéc Apple PassKit : 204 No Content si aucun pass mis à jour depuis passesUpdatedSince.
+    // Retourner 200 avec tableau vide ferait mettre à jour le passesUpdatedSince de l'iPhone
+    // au "now()" renvoyé, décalant la baseline et pouvant manquer les notifications suivantes.
+    if (serialNumbers.length === 0) {
+      return res.status(204).send();
+    }
+    if (process.env.NODE_ENV === "production") {
       console.log("[PassKit] GET registrations: device", deviceId.slice(0, 8) + "...", "→", serialNumbers.length, "pass(es) à jour, lastUpdated:", lastUpdated);
     }
     res.json({ serialNumbers, lastUpdated });
