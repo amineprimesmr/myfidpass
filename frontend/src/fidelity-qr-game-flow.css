@@ -79,7 +79,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 }
 
 .fidelity-v2-roulette-inline--qr {
-  margin-top: 5.25rem;
+  margin-top: 6rem;
   overflow: visible;
 }
 
@@ -163,15 +163,15 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
   position: relative;
   z-index: 1;
-  min-height: min(40dvh, 42vh, 58vmin);
-  padding-bottom: 0.85rem;
+  min-height: min(46dvh, 48vh, 64vmin);
+  padding-bottom: 1.1rem;
   overflow: visible;
   /* Dégradé plein largeur (évite la « lame » verticale du radial 3d au bord droit) */
   background: linear-gradient(168deg, #e8ecf1 0%, #f1f5f9 42%, #f8fafc 100%);
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-  top: 68%;
+  top: 78%;
   width: min(106vmin, 110vw);
   height: min(106vmin, 110vw);
   transform: translate(-30%, -50%);
@@ -179,7 +179,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 @media (max-width: 480px) {
   .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-    top: 69%;
+    top: 79%;
     width: min(100vmin, 104vw);
     height: min(100vmin, 104vw);
     transform: translate(-34%, -50%);
