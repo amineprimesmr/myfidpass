@@ -2114,6 +2114,12 @@ body.fidpass-fidelity-route {
   pointer-events: none;
 }
 
+/* Texte PERDU : un peu plus vers le centre pour ne pas toucher le bord extérieur */
+.fidelity-roulette-wheel-segment.fidelity-roulette-segment-white .fidelity-roulette-segment-label-anchor {
+  transform: translate(-50%, -30vmin);
+  transform-origin: 50% 30vmin;
+}
+
 .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
 .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
   position: absolute;
