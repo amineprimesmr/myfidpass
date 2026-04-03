@@ -24,6 +24,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   overflow-x: visible !important;
   /* Pas de scroll vertical : la roue reste dans l’écran (Safari iOS). */
   overflow-y: hidden !important;
+  /* Espace avant le pied noir : le bandeau « pro » descend un peu sur l’écran. */
+  margin-bottom: 0.55rem;
 }
 
 .fidelity-page:has(> main.fidelity-qr-game) > footer.fidelity-qr-powered {
@@ -98,7 +100,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   justify-content: flex-end;
   padding-left: 1rem;
   /* Collé au bord droit (safe area) — le bouton n’est plus étiré en largeur (voir main… ci-dessous). */
-  padding-right: max(0.15rem, calc(env(safe-area-inset-right, 0px) + 2px));
+  padding-right: max(0, env(safe-area-inset-right, 0px));
   padding-bottom: 0.25rem;
   position: relative;
   z-index: 2;
@@ -145,7 +147,7 @@ main.fidelity-v2-main.fidelity-qr-game
   .fidelity-v2-roulette-inline--qr
   .fidelity-v2-roulette-inline-controls
   .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
-  margin-right: -0.45rem;
+  margin-right: -1.05rem;
 }
 
 .fidelity-cta-wheel-line--qr {
