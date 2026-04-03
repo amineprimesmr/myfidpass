@@ -135,7 +135,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
   width: auto !important;
   min-width: 0 !important;
-  max-width: min(100%, 218px);
+  /* Assez large pour « JOUER LA PARTIE » sur une ligne (uppercase + tracking) */
+  max-width: min(100%, 300px);
   padding-left: 1.05rem !important;
   padding-right: 1.05rem !important;
   min-height: 2.52rem !important;
@@ -154,6 +155,10 @@ main.fidelity-v2-main.fidelity-qr-game
   gap: 0.35rem;
 }
 
+main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr {
+  flex-wrap: nowrap;
+}
+
 .fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
   font-size: 0.95rem;
   font-weight: 800;
@@ -164,6 +169,7 @@ main.fidelity-v2-main.fidelity-qr-game
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
   font-size: 0.82rem;
   letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-pill-chevron {
