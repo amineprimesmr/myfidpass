@@ -27,7 +27,7 @@
  */
 import { createPrivateKey } from "node:crypto";
 import { createSigner } from "fast-jwt";
-import { ApnsClient, Notification, SilentNotification } from "apns2";
+import { ApnsClient, Notification, SilentNotification, PushType } from "apns2";
 import logger from "./lib/logger.js";
 
 const APNS_BUILD = "2026-03-27-apns2-v12-fastjwt-validate";
@@ -253,12 +253,17 @@ export function sendPassKitUpdate(deviceToken) {
   const passTypeId = process.env.PASS_TYPE_ID;
   if (!passTypeId) return Promise.resolve({ sent: false, error: "PASS_TYPE_ID manquant" });
 
-  // Payload vide requis par Apple PassKit.
-  // apns2 v12 sérialise { aps: {} } → accepté par Apple (équivalent à {}).
+  // PassKit Wallet : Apple exige impérativement apns-push-type: background.
+  // Avec le type "alert" (défaut Notification), iOS ne réveille PAS PassKit en background :
+  // la notification est mise en queue et traitée de façon opportuniste (aléatoire), ce qui
+  // cause les délais et la réception "seulement à l'ouverture de l'app".
   // Expiration 86400s (24h) : si le téléphone est offline, Apple retentera pendant 24h.
+  // priority: 10 (immediate) est le défaut de Notification — Apple autorise priority 10
+  // pour les background PassKit updates (exception à la règle background=priority 5).
   const note = new Notification(deviceToken, {
     topic: passTypeId,
     expiration: Math.floor(Date.now() / 1000) + 86400,
+    type: PushType.background,
     aps: {},
   });
 
