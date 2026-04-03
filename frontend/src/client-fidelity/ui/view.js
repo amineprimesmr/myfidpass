@@ -4,6 +4,7 @@ import { renderRewardsStepMarkup } from "./rewards-step-markup.js";
 import { renderWalletStepMarkup } from "./wallet-step-markup.js";
 import { renderRouletteInlineMarkup } from "./roulette-inline-markup.js";
 import { renderQrGamePage } from "./qr-game-markup.js";
+import { QR_THANKS_HERO_KEY } from "../qr-game-flow.js";
 import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
 import { resolveClientLogoImgSrc, resolveClientNotificationIconImgSrc } from "../lib/resolve-client-logo-src.js";
 
@@ -63,6 +64,10 @@ export function renderClientPage(root, state, options = {}) {
     });
     const logoUrl = resolveClientNotificationIconImgSrc(state.business, slugForAssets, apiBase);
     const logoUrlPublicFallback = resolveClientLogoImgSrc(state.business, slugForAssets, apiBase);
+    let qrThanksHeroMode = false;
+    try {
+      qrThanksHeroMode = sessionStorage.getItem(QR_THANKS_HERO_KEY) === "1";
+    } catch (_) {}
     root.innerHTML = renderQrGamePage(esc, {
       businessNameEsc: businessName,
       businessTaglineEsc: esc(tagline),
@@ -70,6 +75,7 @@ export function renderClientPage(root, state, options = {}) {
       googleReviewUrl: googleAction?.url || "",
       logoUrl,
       logoUrlPublicFallback,
+      qrThanksHeroMode,
     });
     return;
   }

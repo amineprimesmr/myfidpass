@@ -4,6 +4,27 @@
 
 export const QR_GATE_KEY = "fid_qr_spin_gate";
 export const QR_GOOGLE_PENDING_KEY = "fid_qr_google_pending";
+/** Après retour de l’avis Google : hero « Merci, bonne chance ! » (pas après « Continuer » sans Google). */
+export const QR_THANKS_HERO_KEY = "fid_qr_thanks_hero";
+
+const QR_THANKS_TITLE = "Merci, bonne chance !";
+
+/**
+ * @param {HTMLElement} rootEl
+ * @param {() => { business?: { organizationName?: string; name?: string } }} getState
+ */
+export function applyQrThanksHero(rootEl, getState) {
+  const st = typeof getState === "function" ? getState() : null;
+  const b = st?.business;
+  const name = String(b?.organizationName || b?.name || "").trim();
+  const h1 = rootEl.querySelector(".fidelity-qr-title");
+  const tag = rootEl.querySelector(".fidelity-qr-tagline");
+  if (h1) {
+    h1.textContent = QR_THANKS_TITLE;
+    h1.classList.add("fidelity-qr-title--thanks");
+  }
+  if (tag) tag.textContent = name || "";
+}
 
 /** Durée affichée « vérification serveur » (ms) — plus réaliste qu’un flash ~2,6 s */
 const QR_VERIFY_BASE_MS = 5400;
@@ -234,6 +255,10 @@ export function bindQrGameUi(ctx) {
       verifyUxCleanup = () => {};
       setQrGateUnlocked();
       if (tryClaim) {
+        try {
+          sessionStorage.setItem(QR_THANKS_HERO_KEY, "1");
+        } catch (_) {}
+        applyQrThanksHero(rootEl, getState);
         try {
           const raw = sessionStorage.getItem("fidelity_pending_engagement_claim");
           if (raw) {

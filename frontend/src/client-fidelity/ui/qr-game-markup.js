@@ -7,7 +7,18 @@
  * @param {object} p
  */
 export function renderQrGamePage(esc, p) {
-  const { businessNameEsc, businessTaglineEsc, rouletteHtml, googleReviewUrl, logoUrl, logoUrlPublicFallback } = p;
+  const {
+    businessNameEsc,
+    businessTaglineEsc,
+    rouletteHtml,
+    googleReviewUrl,
+    logoUrl,
+    logoUrlPublicFallback,
+    qrThanksHeroMode = false,
+  } = p;
+  const heroTitleEsc = qrThanksHeroMode ? esc("Merci, bonne chance !") : businessNameEsc;
+  const heroTaglineEsc = qrThanksHeroMode ? businessNameEsc : businessTaglineEsc;
+  const heroTitleClass = `fidelity-qr-title${qrThanksHeroMode ? " fidelity-qr-title--thanks" : ""}`;
 
   const hasGoogle = Boolean(googleReviewUrl);
   const googleHref = hasGoogle ? String(googleReviewUrl).replace(/"/g, "&quot;") : "";
@@ -29,8 +40,8 @@ export function renderQrGamePage(esc, p) {
       <section class="fidelity-qr-hero" aria-label="Jeu">
         <div class="fidelity-qr-brand">
           ${qrLogo || ""}
-          <h1 class="fidelity-qr-title">${businessNameEsc}</h1>
-          <p class="fidelity-qr-tagline">${businessTaglineEsc}</p>
+          <h1 class="${heroTitleClass}">${heroTitleEsc}</h1>
+          <p class="fidelity-qr-tagline">${heroTaglineEsc}</p>
         </div>
       </section>
 

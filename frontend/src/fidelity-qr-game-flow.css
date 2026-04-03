@@ -36,6 +36,13 @@
   color: #0f172a;
 }
 
+.fidelity-qr-title.fidelity-qr-title--thanks {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: clamp(1rem, 3.2vw, 1.35rem);
+  line-height: 1.25;
+}
+
 .fidelity-qr-tagline {
   margin: 0;
   font-size: 0.82rem;
