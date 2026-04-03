@@ -51,8 +51,22 @@ export function renderQrGamePage(esc, p) {
         <div class="fidelity-qr-stars" aria-hidden="true">★★★★★</div>
         ${
           hasGoogle
-            ? `<a class="fidelity-qr-btn fidelity-qr-btn--primary" id="fidelity-qr-open-google" href="${googleHref}" target="_blank" rel="noopener noreferrer">Noter sur Google</a>`
-            : `<button type="button" class="fidelity-qr-btn fidelity-qr-btn--primary" id="fidelity-qr-skip-google">Continuer</button>`
+            ? `<span class="fidelity-cta-wrap fidelity-cta-wrap--full fidelity-cta-wrap--qr-play fidelity-qr-modal-cta">
+            <a class="fidelity-cta-pill fidelity-cta-pill--wheel-cta fidelity-cta-pill--qr-play" id="fidelity-qr-open-google" href="${googleHref}" target="_blank" rel="noopener noreferrer">
+              <span class="fidelity-cta-wheel-line fidelity-cta-wheel-line--qr">
+                <span class="fidelity-cta-wheel-action">Noter sur Google</span>
+                <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+              </span>
+            </a>
+          </span>`
+            : `<span class="fidelity-cta-wrap fidelity-cta-wrap--full fidelity-cta-wrap--qr-play fidelity-qr-modal-cta">
+            <button type="button" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta fidelity-cta-pill--qr-play" id="fidelity-qr-skip-google">
+              <span class="fidelity-cta-wheel-line fidelity-cta-wheel-line--qr">
+                <span class="fidelity-cta-wheel-action">Continuer</span>
+                <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+              </span>
+            </button>
+          </span>`
         }
         <p class="fidelity-qr-modal-hint">Après votre avis, revenez ici : nous débloquons le jeu automatiquement.</p>
       </div>

@@ -213,6 +213,11 @@
     opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Halo du CTA type « Jouer la partie » : ne pas rogner l’aura */
+.fidelity-qr-modal.fidelity-qr-modal--google {
+  overflow-x: visible;
+}
+
 .fidelity-qr-modal-root.fidelity-qr-modal-root--open .fidelity-qr-modal:not(.hidden) {
   transform: translateY(0) scale(1);
   opacity: 1;
@@ -289,6 +294,15 @@
   font-size: 1.1rem;
   margin: 0.35rem 0 0.85rem;
   filter: drop-shadow(0 1px 1px rgba(245, 158, 11, 0.25));
+}
+
+/** Même pastille / animations que la roue (hors <main>, classe sur le wrap) */
+.fidelity-qr-modal-cta {
+  display: block;
+  width: 100%;
+  margin: 0 0 0.35rem;
+  padding: 2px 0 10px;
+  box-sizing: border-box;
 }
 
 .fidelity-qr-btn {
