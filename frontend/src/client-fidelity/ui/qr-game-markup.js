@@ -13,6 +13,7 @@ export function renderQrGamePage(esc, p) {
   const googleHref = hasGoogle ? String(googleReviewUrl).replace(/"/g, "&quot;") : "";
 
   let qrLogo = "";
+  let verifyLoadingVisual = `<div class="fidelity-qr-verify-spinner" aria-hidden="true"></div>`;
   if (logoUrl) {
     const fb = typeof logoUrlPublicFallback === "string" ? logoUrlPublicFallback.trim() : "";
     const useFallback =
@@ -20,6 +21,7 @@ export function renderQrGamePage(esc, p) {
         ? ` data-fid-qr-logo-fallback="${esc(fb)}" onerror="this.onerror=null;var f=this.getAttribute('data-fid-qr-logo-fallback');if(f)this.src=f"`
         : "";
     qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="" width="120" height="120" decoding="async"${useFallback} />`;
+    verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap" aria-hidden="true"><img class="fidelity-qr-verify-logo" id="fidelity-qr-verify-logo" src="${esc(logoUrl)}" alt="" width="96" height="96" decoding="async"${useFallback} /></div>`;
   }
 
   return `
@@ -86,7 +88,7 @@ export function renderQrGamePage(esc, p) {
         </div>
         <p class="fidelity-qr-verify-msg" id="fidelity-qr-verify-text" aria-live="polite">Nous vérifions votre avis Google…</p>
         <div class="fidelity-qr-verify-spinner-wrap">
-          <div class="fidelity-qr-verify-spinner" aria-hidden="true"></div>
+          ${verifyLoadingVisual}
           <span class="fidelity-qr-verify-spinner-label">Vérification</span>
         </div>
       </div>
