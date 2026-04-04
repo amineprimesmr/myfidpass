@@ -277,7 +277,9 @@ export async function notifyHandler(req, res) {
   }
 }
 
-const router = Router();
+// mergeParams: true — sans ça, req.params.slug est undefined dans ce sous-router
+// (Express 4 ne propage pas les params du parent sans cette option).
+const router = Router({ mergeParams: true });
 
 router.post("/send", async (req, res) => {
   try {
@@ -374,7 +376,7 @@ router.post("/send", async (req, res) => {
   });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[notifications] POST /send error");
-    if (!res.headersSent) res.status(500).json({ error: `Erreur interne: ${err?.message || String(err)}` });
+    if (!res.headersSent) res.status(500).json({ error: "Erreur interne lors de l'envoi de la notification. Réessayez." });
   }
 });
 

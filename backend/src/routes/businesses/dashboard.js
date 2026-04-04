@@ -57,7 +57,7 @@ import {
 import { signReceiptChallengeToken } from "../../lib/receipt-validation-jwt.js";
 import logger from "../../lib/logger.js";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 /** Remet le compteur flyer IA au mois UTC courant si besoin. */
 function syncFlyerAiBillingMonth(business) {

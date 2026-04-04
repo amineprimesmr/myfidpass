@@ -84,7 +84,7 @@ export function engagementActionsHandler(req, res) {
   res.json({ actions });
 }
 
-const engagementRouter = Router();
+const engagementRouter = Router({ mergeParams: true });
 
 engagementRouter.post("/start", (req, res) => {
   const business = req.business;
