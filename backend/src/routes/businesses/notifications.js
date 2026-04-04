@@ -225,6 +225,7 @@ function enqueueMerchantTestSend(businessId, fn) {
 }
 
 export async function notifyHandler(req, res) {
+  try {
   const business = req.business;
   if (!ensureDashboardAccess(req, res, business)) return;
   if (!assertOperationalSubscription(req, res, business)) return;
@@ -270,11 +271,16 @@ export async function notifyHandler(req, res) {
     failed: result.failed ?? 0,
     errors: result.errors,
   });
+  } catch (err) {
+    logger.error({ err, businessId: req.business?.id }, "[notifications] notifyHandler error");
+    if (!res.headersSent) res.status(500).json({ error: "Erreur interne lors de l'envoi." });
+  }
 }
 
 const router = Router();
 
 router.post("/send", async (req, res) => {
+  try {
   const business = req.business;
   if (!ensureDashboardAccess(req, res, business)) return;
   const { title, message, category_ids: reqCategoryIds, segment } = req.body || {};
@@ -366,6 +372,10 @@ router.post("/send", async (req, res) => {
     total: totalDevices,
     message: `Envoi lancé vers ${totalDevices} appareil(s). Vous pouvez fermer l’écran : la campagne continue sur le serveur. Consultez l’historique des campagnes pour le résultat (job_id: ${jobId}).`,
   });
+  } catch (err) {
+    logger.error({ err, businessId: req.business?.id }, "[notifications] POST /send error");
+    if (!res.headersSent) res.status(500).json({ error: "Erreur interne lors de l’envoi de la notification. Réessayez." });
+  }
 });
 
 router.get("/campaign-segments", (req, res) => {

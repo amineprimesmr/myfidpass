@@ -55,6 +55,7 @@ import {
   DEFAULT_FLYER_AI_DEV_UNLOCK_SECRET,
 } from "../../services/flyer-ai-quota.js";
 import { signReceiptChallengeToken } from "../../lib/receipt-validation-jwt.js";
+import logger from "../../lib/logger.js";
 
 const router = Router();
 
@@ -213,6 +214,7 @@ router.post("/receipt-challenge", (req, res) => {
 });
 
 router.patch("/settings", async (req, res) => {
+  try {
   const business = req.business;
   const body = req.body || {};
   const organization_name = body.organization_name ?? body.organizationName;
@@ -596,6 +598,10 @@ router.patch("/settings", async (req, res) => {
     }
   }
   return res.status(200).send();
+  } catch (err) {
+    logger.error({ err, businessId: req.business?.id }, "[dashboard] PATCH /settings error");
+    if (!res.headersSent) res.status(500).json({ error: "Erreur interne lors de la mise à jour des paramètres." });
+  }
 });
 
 // ——— Flyer QR (sync SaaS + app, même état que le canvas) ———
@@ -737,6 +743,7 @@ router.post("/flyer/ai-dev-unlock", async (req, res) => {
  * Body: { instruction: string }
  */
 router.post("/campaign-automation/parse", async (req, res) => {
+  try {
   if (!ensureOperationalSubscription(req, res, req.business)) return;
   const instruction = String(req.body?.instruction ?? "").trim();
   if (!instruction) {
@@ -762,6 +769,10 @@ router.post("/campaign-automation/parse", async (req, res) => {
     confidence: Math.max(0, Math.min(1, Number(v.confidence) || 0.7)),
     source: parsed.source || "heuristic",
   });
+  } catch (err) {
+    logger.error({ err }, "[dashboard] campaign-automation/parse error");
+    if (!res.headersSent) res.status(500).json({ error: "Erreur lors de l'analyse IA." });
+  }
 });
 
 // ——— Games ———
@@ -870,6 +881,7 @@ router.get("/members", (req, res) => {
 
 /** Supprime tous les membres du commerce (cartes Wallet / Web Push, historiques). Body : { confirm: "SUPPRIMER tous les membres" } */
 router.post("/members/delete-all", async (req, res) => {
+  try {
   const business = req.business;
   if (!ensureOperationalSubscription(req, res, business)) return;
   const confirm = (req.body?.confirm ?? req.body?.confirmText ?? "").toString().trim();
@@ -881,10 +893,15 @@ router.post("/members/delete-all", async (req, res) => {
   }
   const { deleted } = await deleteAllMembersForBusiness(business.id);
   res.json({ ok: true, deleted });
+  } catch (err) {
+    logger.error({ err }, "[dashboard] members/delete-all error");
+    if (!res.headersSent) res.status(500).json({ error: "Erreur lors de la suppression." });
+  }
 });
 
 /** Supprime un membre et sa carte (pass, transactions, abonnements push du client). */
 router.delete("/members/:memberId", async (req, res) => {
+  try {
   const business = req.business;
   if (!ensureOperationalSubscription(req, res, business)) return;
   const memberId = req.params.memberId;
@@ -894,6 +911,10 @@ router.delete("/members/:memberId", async (req, res) => {
   const r = await deleteMemberForBusiness(business.id, memberId);
   if (!r.ok) return res.status(404).json({ error: "Membre introuvable" });
   res.status(204).end();
+  } catch (err) {
+    logger.error({ err }, "[dashboard] DELETE member error");
+    if (!res.headersSent) res.status(500).json({ error: "Erreur lors de la suppression du membre." });
+  }
 });
 
 /** Même logique que POST /members/:id/points/remove — chemin dashboard pour éviter 404 si le sous-routeur members n’est pas à jour en prod. */
