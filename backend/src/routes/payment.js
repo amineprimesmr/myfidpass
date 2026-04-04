@@ -4,6 +4,8 @@ import {
   createOrUpdateSubscription,
   getBusinessById,
   getBusinessesByUserId,
+  getUserByEmail,
+  hasActiveSubscription,
   incrementFlyerAiGenerationsBonus,
   getSubscriptionByStripeSubscriptionId,
 } from "../db.js";
@@ -116,6 +118,52 @@ router.post("/create-flyer-pack-session", requireAuth, async (req, res) => {
 });
 
 /**
+ * POST /api/payment/reconcile-subscription
+ * Rattache au compte JWT un abonnement Stripe déjà existant pour le même email,
+ * si la base locale n’a pas été mise à jour (webhook incomplet, métadonnées absentes, etc.).
+ */
+router.post("/reconcile-subscription", requireAuth, async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({
+      error: "Paiement non configuré",
+      code: "stripe_not_configured",
+    });
+  }
+  const userId = String(req.user.id);
+  const email = (req.user.email || "").trim().toLowerCase();
+  if (!email) {
+    return res.status(400).json({ error: "Email utilisateur requis" });
+  }
+  try {
+    const customers = await stripe.customers.list({ email, limit: 10 });
+    for (const c of customers.data) {
+      const cEmail = (c.email || "").trim().toLowerCase();
+      if (cEmail !== email) continue;
+      const subs = await stripe.subscriptions.list({ customer: c.id, status: "all", limit: 20 });
+      for (const s of subs.data) {
+        const st = String(s.status || "").toLowerCase();
+        if (st === "active" || st === "trialing" || st === "past_due") {
+          await syncSubscriptionFromStripeObject(s, userId);
+          return res.json({
+            ok: true,
+            subscription_status: s.status,
+            has_active_subscription: hasActiveSubscription(userId),
+          });
+        }
+      }
+    }
+    return res.json({
+      ok: false,
+      has_active_subscription: hasActiveSubscription(userId),
+      message: "Aucun abonnement Stripe actif, en essai ou en retard de paiement trouvé pour cet email.",
+    });
+  } catch (e) {
+    console.error("[payment] reconcile-subscription:", e);
+    return res.status(500).json({ error: "Impossible de synchroniser avec Stripe." });
+  }
+});
+
+/**
  * Gestionnaire webhook Stripe (`checkout.session.completed`).
  * À enregistrer avec express.raw({ type: 'application/json' }) pour cette route uniquement.
  */
@@ -214,18 +262,63 @@ async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
   });
 }
 
+/**
+ * L’objet Checkout peut envoyer `subscription` en string (id) ou développé en objet selon la version API.
+ */
+function extractCheckoutSubscriptionId(session) {
+  const sub = session?.subscription;
+  if (!sub) return null;
+  if (typeof sub === "string") return sub;
+  if (typeof sub === "object" && sub && "id" in sub && sub.id) return String(sub.id);
+  return null;
+}
+
+function payerEmailFromCheckoutSession(session) {
+  const d = session?.customer_details;
+  const fromDetails = String(d?.email || d?.email_address || "").trim();
+  const top = String(session?.customer_email || "").trim();
+  const raw = fromDetails || top;
+  return raw ? raw.toLowerCase() : null;
+}
+
+/**
+ * Rattache l’abonnement au compte MyFidpass : metadata `user_id` (session créée par notre API), sinon email payeur.
+ */
+function resolveUserIdForSubscriptionCheckout(session) {
+  const meta = session?.metadata?.user_id;
+  if (meta != null && String(meta).trim() !== "") return String(meta).trim();
+  const email = payerEmailFromCheckoutSession(session);
+  if (!email) return null;
+  const user = getUserByEmail(email);
+  return user?.id ? String(user.id) : null;
+}
+
 /** @param {Record<string, unknown>} session */
 async function handleCheckoutSessionCompleted(session) {
   const mode = session.mode;
   if (mode === "subscription") {
-    const userId = session.metadata?.user_id;
-    const stripeSubscriptionId = session.subscription;
-    if (!userId || !stripeSubscriptionId) {
-      console.warn("Webhook checkout.session.completed (subscription): missing user_id or subscription id");
+    const stripeSubscriptionId = extractCheckoutSubscriptionId(session);
+    const userId = resolveUserIdForSubscriptionCheckout(session);
+    if (!stripeSubscriptionId) {
+      console.error("[stripe webhook] checkout.session.completed (subscription): missing subscription id", {
+        sessionId: session?.id,
+        subscriptionType: session?.subscription != null ? typeof session.subscription : "undefined",
+      });
+      return;
+    }
+    if (!userId) {
+      console.error(
+        "[stripe webhook] checkout.session.completed (subscription): cannot resolve user_id (metadata + email)",
+        {
+          sessionId: session?.id,
+          metadataUserId: session?.metadata?.user_id ?? null,
+          payerEmail: payerEmailFromCheckoutSession(session),
+        }
+      );
       return;
     }
     const sub = await stripe.subscriptions.retrieve(String(stripeSubscriptionId));
-    await syncSubscriptionFromStripeObject(sub, String(userId));
+    await syncSubscriptionFromStripeObject(sub, userId);
     return;
   }
 
