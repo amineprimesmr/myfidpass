@@ -234,7 +234,7 @@ export async function notifyHandler(req, res) {
   const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids.filter(Boolean) : null;
   const memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
   const apiBase = getApiBase(req);
-  const slug = req.params.slug;
+  const slug = req.params.slug ?? business.slug;
 
   const webSubscriptions =
     memberIds !== null
@@ -304,7 +304,7 @@ router.post("/send", async (req, res) => {
     memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
   }
   const apiBase = getApiBase(req);
-  const slug = req.params.slug;
+  const slug = req.params.slug ?? business.slug;
   const webSubscriptions =
     memberIds !== null
       ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
@@ -376,7 +376,7 @@ router.post("/send", async (req, res) => {
   });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[notifications] POST /send error");
-    if (!res.headersSent) res.status(500).json({ error: `[debug] ${err?.message || String(err)}` });
+    if (!res.headersSent) res.status(500).json({ error: "Erreur interne lors de l'envoi de la notification. Réessayez." });
   }
 });
 

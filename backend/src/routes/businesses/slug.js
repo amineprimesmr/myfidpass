@@ -15,7 +15,7 @@ import integrationRouter from "./integration.js";
 import assetsRouter from "./assets.js";
 import publicAssetsRouter from "./public-assets.js";
 
-const slugRouter = Router();
+const slugRouter = Router({ mergeParams: true });
 
 slugRouter.get("/", publicInfo);
 slugRouter.use("/games", gamesRouter);
