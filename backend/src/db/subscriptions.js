@@ -22,7 +22,11 @@ export function getSubscriptionByStripeSubscriptionId(stripeSubscriptionId) {
 export function hasActiveSubscription(userId) {
   const sub = getSubscriptionByUserId(userId);
   if (!sub) return false;
-  return sub.status === "active" || sub.status === "trialing";
+  const st = String(sub.status || "")
+    .trim()
+    .toLowerCase();
+  // past_due : carte en échec mais abonnement encore « vivant » côté Stripe (souvent période de grâce) — évite un faux « non abonné ».
+  return st === "active" || st === "trialing" || st === "past_due";
 }
 
 export function getBusinessCountByUserId(userId) {

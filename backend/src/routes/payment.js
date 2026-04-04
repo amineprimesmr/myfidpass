@@ -139,6 +139,7 @@ export async function paymentWebhookHandler(req, res) {
 
   const handledTypes = new Set([
     "checkout.session.completed",
+    "customer.subscription.created",
     "customer.subscription.updated",
     "customer.subscription.deleted",
   ]);
@@ -154,6 +155,8 @@ export async function paymentWebhookHandler(req, res) {
   try {
     if (event.type === "checkout.session.completed") {
       await handleCheckoutSessionCompleted(event.data.object);
+    } else if (event.type === "customer.subscription.created") {
+      await syncSubscriptionFromStripeObject(event.data.object, null);
     } else if (event.type === "customer.subscription.updated") {
       await syncSubscriptionFromStripeObject(event.data.object, null);
     } else if (event.type === "customer.subscription.deleted") {
