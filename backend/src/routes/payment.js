@@ -4,6 +4,7 @@ import {
   createOrUpdateSubscription,
   getBusinessById,
   getBusinessesByUserId,
+  getSubscriptionByUserId,
   getUserByEmail,
   hasActiveSubscription,
   incrementFlyerAiGenerationsBonus,
@@ -117,10 +118,15 @@ router.post("/create-flyer-pack-session", requireAuth, async (req, res) => {
   }
 });
 
+function isStripeSubscriptionStatusPaying(status) {
+  const st = String(status || "").toLowerCase();
+  return st === "active" || st === "trialing" || st === "past_due";
+}
+
 /**
  * POST /api/payment/reconcile-subscription
- * Rattache au compte JWT un abonnement Stripe déjà existant pour le même email,
- * si la base locale n’a pas été mise à jour (webhook incomplet, métadonnées absentes, etc.).
+ * Remet la ligne `subscriptions` en phase avec Stripe (webhook manquant, email ≠ client Stripe, etc.).
+ * Ordre : recherche par metadata user_id (checkout créé par notre API) → abo déjà stocké → clients avec l’email du compte.
  */
 router.post("/reconcile-subscription", requireAuth, async (req, res) => {
   if (!stripe) {
@@ -131,31 +137,72 @@ router.post("/reconcile-subscription", requireAuth, async (req, res) => {
   }
   const userId = String(req.user.id);
   const email = (req.user.email || "").trim().toLowerCase();
-  if (!email) {
-    return res.status(400).json({ error: "Email utilisateur requis" });
-  }
+
+  const jsonOk = (sub, source) =>
+    res.json({
+      ok: true,
+      source,
+      subscription_status: sub.status,
+      has_active_subscription: hasActiveSubscription(userId),
+    });
+
   try {
+    // 1) Stripe Search — metadata user_id posée par POST /create-checkout-session (ne dépend pas de l’email Stripe)
+    try {
+      const safe = userId.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+      const { data: fromSearch } = await stripe.subscriptions.search({
+        query: `metadata['user_id']:'${safe}'`,
+        limit: 20,
+      });
+      for (const s of fromSearch) {
+        if (isStripeSubscriptionStatusPaying(s.status)) {
+          await syncSubscriptionFromStripeObject(s, userId);
+          return jsonOk(s, "stripe_search_metadata");
+        }
+      }
+    } catch (searchErr) {
+      console.warn("[payment] reconcile subscription search:", searchErr?.message || searchErr);
+    }
+
+    // 2) Réutiliser stripe_subscription_id déjà en base (statut local obsolète / incomplet)
+    const existing = getSubscriptionByUserId(userId);
+    if (existing?.stripe_subscription_id) {
+      try {
+        const s = await stripe.subscriptions.retrieve(existing.stripe_subscription_id);
+        await syncSubscriptionFromStripeObject(s, userId);
+        if (hasActiveSubscription(userId)) {
+          return jsonOk(s, "stripe_retrieve_existing_row");
+        }
+      } catch (e) {
+        console.warn("[payment] reconcile retrieve by row:", e?.message || e);
+      }
+    }
+
+    // 3) Clients Stripe avec le même email que le compte MyFidpass
+    if (!email) {
+      return res.json({
+        ok: false,
+        has_active_subscription: hasActiveSubscription(userId),
+        message: "Aucun email sur le compte : impossible de chercher le client Stripe par email.",
+      });
+    }
     const customers = await stripe.customers.list({ email, limit: 10 });
     for (const c of customers.data) {
       const cEmail = (c.email || "").trim().toLowerCase();
       if (cEmail !== email) continue;
       const subs = await stripe.subscriptions.list({ customer: c.id, status: "all", limit: 20 });
       for (const s of subs.data) {
-        const st = String(s.status || "").toLowerCase();
-        if (st === "active" || st === "trialing" || st === "past_due") {
+        if (isStripeSubscriptionStatusPaying(s.status)) {
           await syncSubscriptionFromStripeObject(s, userId);
-          return res.json({
-            ok: true,
-            subscription_status: s.status,
-            has_active_subscription: hasActiveSubscription(userId),
-          });
+          return jsonOk(s, "stripe_customer_email");
         }
       }
     }
+
     return res.json({
       ok: false,
       has_active_subscription: hasActiveSubscription(userId),
-      message: "Aucun abonnement Stripe actif, en essai ou en retard de paiement trouvé pour cet email.",
+      message: "Aucun abonnement Stripe actif trouvé pour ce compte (metadata, base locale, email).",
     });
   } catch (e) {
     console.error("[payment] reconcile-subscription:", e);
