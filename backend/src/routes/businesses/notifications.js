@@ -374,7 +374,7 @@ router.post("/send", async (req, res) => {
   });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[notifications] POST /send error");
-    if (!res.headersSent) res.status(500).json({ error: "Erreur interne lors de l’envoi de la notification. Réessayez." });
+    if (!res.headersSent) res.status(500).json({ error: `Erreur interne: ${err?.message || String(err)}` });
   }
 });
 
