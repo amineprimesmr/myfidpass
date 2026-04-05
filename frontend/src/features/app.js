@@ -5913,8 +5913,9 @@ function initAppDashboard(slug) {
   }
 
   const CAMPAIGN_DEFAULTS = {
-    inactive30: "On vous a manqué ! Revenez nous voir : -10% sur votre prochaine visite.",
-    inactive90: "Ça fait longtemps ! Profitez de notre offre exclusive pour revenir.",
+    inactive30: "On vous a manqué ! Revenez nous voir : -20 % sur votre commande.",
+    inactive90:
+      "Ça fait très longtemps — profitez de -20 % sur votre commande en repassant nous voir.",
     new30: "Bienvenue chez nous ! Voici -10% sur votre première visite.",
     recurrent: "Merci pour votre fidélité ! Offre exclusive pour vous.",
     points50: "Vous avez des points à utiliser ! Venez les échanger contre une récompense.",
