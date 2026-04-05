@@ -18,10 +18,12 @@
   flex-direction: column !important;
   box-sizing: border-box !important;
   overflow-x: hidden !important;
-  /* Aperçu : hauteur fixe du viewport — pas de scroll, pas de débordement sous le mockup */
   overflow-y: hidden !important;
-  height: 100% !important;
-  max-height: 100% !important;
+  /* Remplit le static-wrap (flex) : évite la bande vide sous le footer dans le mockup */
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
 }
 
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game,
