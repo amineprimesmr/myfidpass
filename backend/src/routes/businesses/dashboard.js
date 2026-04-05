@@ -583,11 +583,18 @@ router.patch("/settings", async (req, res) => {
     locationUpdated || updates.wallet_pass_include_locations !== undefined;
   const passNotifTextsUpdated =
     updates.notification_title_override !== undefined || updates.notification_change_message !== undefined;
+  /** Icône / logos dans le .pkpass (notification Wallet utilise `icon.png` du pass, pas l’URL Web Push). */
+  const passVisualMediaUpdated =
+    updates.notification_icon_base64 !== undefined ||
+    updates.logo_icon_base64 !== undefined ||
+    updates.logo_base64 !== undefined ||
+    updates.card_background_base64 !== undefined ||
+    updates.stamp_icon_base64 !== undefined;
   updateBusiness(business.id, updates);
-  if (passNotifTextsUpdated) {
+  if (passNotifTextsUpdated || passVisualMediaUpdated) {
     bumpBusinessPassRefreshTimestamp(business.id);
   }
-  if (passWalletGeometryUpdated || passNotifTextsUpdated) {
+  if (passWalletGeometryUpdated || passNotifTextsUpdated || passVisualMediaUpdated) {
     const passKitTokens = getPassKitPushTokensForBusiness(business.id);
     if (passKitTokens.length > 0) {
       process.nextTick(() => {

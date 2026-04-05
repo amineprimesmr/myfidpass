@@ -32,17 +32,18 @@ function businessHasNotificationLogo(business) {
 }
 
 /**
- * URL d’icône pour Web Push : **toujours** un `?v=` (timestamps serveur), sinon navigateurs / OS
- * réutilisent une image en cache alors que le fichier sur l’API a changé (même chemin).
+ * URL d’icône pour Web Push : `?v=` = timestamps + **id de campagne** pour forcer un fetch à chaque envoi
+ * (sinon certains clients gardent l’image en cache même si le fichier sur l’API a changé).
  */
-function buildWebPushNotificationIconUrl(apiBase, slug, businessRow) {
+function buildWebPushNotificationIconUrl(apiBase, slug, businessRow, batchId) {
   const path = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
-  const v =
+  const base =
     businessRow?.notification_icon_updated_at ||
     businessRow?.logo_icon_updated_at ||
     businessRow?.logo_updated_at ||
     "0";
-  return `${path}?v=${encodeURIComponent(String(v))}`;
+  const v = batchId ? `${base}~${batchId}` : String(base);
+  return `${path}?v=${encodeURIComponent(v)}`;
 }
 
 /**
@@ -111,7 +112,7 @@ export async function deliverCustomerBroadcast({
   const businessFresh = getBusinessById(business.id) || businessAfterSync || business;
   const iconSource = businessAfterSync || businessFresh;
   const iconUrl = businessHasNotificationLogo(iconSource)
-    ? buildWebPushNotificationIconUrl(apiBase, slug, iconSource)
+    ? buildWebPushNotificationIconUrl(apiBase, slug, iconSource, batchId)
     : null;
   const titleTrim = title != null ? String(title).trim() : "";
   const payloadTitle = (
