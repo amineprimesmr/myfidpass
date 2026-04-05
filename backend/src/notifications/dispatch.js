@@ -6,6 +6,7 @@ import {
   getWebPushSubscriptionsByBusiness,
   getPassKitPushTokensForBusinessFiltered,
   getPassKitPushTokensForBusiness,
+  getBusinessById,
   logNotification,
   createNotificationBatch,
   updateNotificationBatchSummary,
@@ -28,6 +29,20 @@ function businessHasNotificationLogo(business) {
     Number(business?.asset_logo_present) === 1 ||
     !!(business?.logo_icon_base64 || business?.logo_base64)
   );
+}
+
+/**
+ * URL d’icône pour Web Push : **toujours** un `?v=` (timestamps serveur), sinon navigateurs / OS
+ * réutilisent une image en cache alors que le fichier sur l’API a changé (même chemin).
+ */
+function buildWebPushNotificationIconUrl(apiBase, slug, businessRow) {
+  const path = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
+  const v =
+    businessRow?.notification_icon_updated_at ||
+    businessRow?.logo_icon_updated_at ||
+    businessRow?.logo_updated_at ||
+    "0";
+  return `${path}?v=${encodeURIComponent(String(v))}`;
 }
 
 /**
@@ -91,8 +106,12 @@ export async function deliverCustomerBroadcast({
     summary: { started_at: new Date().toISOString() },
   });
 
-  const iconUrl = businessHasNotificationLogo(businessAfterSync || business)
-    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+  // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
+  // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
+  const businessFresh = getBusinessById(business.id) || businessAfterSync || business;
+  const iconSource = businessAfterSync || businessFresh;
+  const iconUrl = businessHasNotificationLogo(iconSource)
+    ? buildWebPushNotificationIconUrl(apiBase, slug, iconSource)
     : null;
   const titleTrim = title != null ? String(title).trim() : "";
   const payloadTitle = (
