@@ -597,11 +597,23 @@ router.patch("/settings", async (req, res) => {
   if (passWalletGeometryUpdated || passNotifTextsUpdated || passVisualMediaUpdated) {
     const passKitTokens = getPassKitPushTokensForBusiness(business.id);
     if (passKitTokens.length > 0) {
-      process.nextTick(() => {
-        passKitTokens.forEach((row) => {
-          sendPassKitUpdate(row.push_token).catch(() => {});
+      // Attendre l’envoi des 1ers APNs PassKit **avant** le 200 : sinon l’app iOS continue (aperçu OK)
+      // alors que le téléphone n’a pas encore reçu le push « pass mis à jour » → bannière Wallet avec **ancienne** icon.png.
+      const PAR = 40;
+      const MAX_SYNC = 300;
+      const head = passKitTokens.slice(0, MAX_SYNC);
+      for (let i = 0; i < head.length; i += PAR) {
+        const chunk = head.slice(i, i + PAR);
+        await Promise.all(chunk.map((row) => sendPassKitUpdate(row.push_token).catch(() => {})));
+      }
+      const tail = passKitTokens.slice(MAX_SYNC);
+      if (tail.length > 0) {
+        process.nextTick(() => {
+          tail.forEach((row) => {
+            sendPassKitUpdate(row.push_token).catch(() => {});
+          });
         });
-      });
+      }
     }
   }
   return res.status(200).send();
