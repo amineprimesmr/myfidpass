@@ -1,4 +1,23 @@
 /**
+ * Comparaison « même texte » pour le modèle PassKit vs le corps diffusé : casse + accents (ex. Allo / Allô).
+ * Sinon Wallet affiche « préfixe + valeur » avec %@ = le corps → doublon visuel (ex. « Allo Allô »).
+ */
+function notificationTemplateSameAsBody(template, body) {
+  const t = String(template || "").trim();
+  const b = String(body || "").trim();
+  if (!t || !b) return false;
+  if (t === b) return true;
+  const fold = (s) =>
+    s
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  return fold(t) === fold(b);
+}
+
+/**
  * Apple : changeMessage doit contenir %@ ; sans %@ on ajoute « préfixe + %@ » (ex. « Promo : %@ »).
  * Si le commerce a recopié le message diffusé comme « modèle » sans %@, éviter « texte %@ » + valeur identique
  * → « G La dalle G La dalle » dans Wallet.
@@ -11,6 +30,7 @@ export function normalizeChangeMessage(customMsg, rawBroadcast) {
   if (!c) return "%@";
   if (c.includes("%@")) return c;
   if (raw && c === raw) return "%@";
+  if (raw && notificationTemplateSameAsBody(c, raw)) return "%@";
   return `${c} %@`;
 }
 

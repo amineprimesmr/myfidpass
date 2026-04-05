@@ -18,6 +18,9 @@ describe("normalizeChangeMessage", () => {
   it("évite la duplication quand le modèle recopie le message diffusé (sans %@)", () => {
     expect(normalizeChangeMessage("G La dalle", "G La dalle")).toBe("%@");
   });
+  it("évite Allo + Allô (modèle périmètre vs corps campagne, accents)", () => {
+    expect(normalizeChangeMessage("Allo", "Allô")).toBe("%@");
+  });
 });
 
 describe("buildBroadcastUniquenessSuffix", () => {
