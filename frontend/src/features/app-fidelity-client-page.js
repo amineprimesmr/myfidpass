@@ -11,6 +11,7 @@ import {
   resolveClientLogoImgSrc,
   resolveFidelityPageBackgroundImgSrc,
 } from "../client-fidelity/lib/resolve-client-logo-src.js";
+import { wireFidelityClientLivePreviewMode } from "./app-fidelity-client-live-preview-mode.js";
 
 const DEFAULT_QR_HERO_TITLE = "Participez au jeu et tentez de gagner une récompense.";
 
@@ -88,6 +89,10 @@ export function initFidelityClientPageSection(ctx) {
   const origin = (pageOrigin || "").replace(/\/$/, "") || (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
   const publicFidelityUrl = `${origin}/fidelity/${encodeURIComponent(slug)}`;
   const apiBase = origin;
+
+  const livePreviewControls = wireFidelityClientLivePreviewMode({
+    getPublicUrl: () => publicFidelityUrl,
+  });
 
   const titleInput = document.getElementById("app-fidelity-client-hero-title");
   const titleStatus = document.getElementById("app-fidelity-client-title-status");
@@ -248,6 +253,7 @@ export function initFidelityClientPageSection(ctx) {
       if (titleInput) titleInput.value = hero;
       syncThumbFromUrl(url || "");
       syncLivePreview(data, segments);
+      livePreviewControls?.refreshLiveIframeIfLive?.();
     } catch (_) {}
   }
 

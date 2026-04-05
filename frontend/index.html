@@ -964,10 +964,40 @@
                   <div class="app-fidelity-client-preview-frame app-flyer-qr-preview-frame">
                     <div class="app-fidelity-client-mockup">
                       <p class="app-fidelity-client-mockup-caption app-flyer-qr-mockup-caption">Aperçu page client</p>
+                      <div
+                        class="app-fidelity-client-preview-mode-bar"
+                        role="group"
+                        aria-label="Mode d'aperçu de la page fidélité"
+                      >
+                        <button
+                          type="button"
+                          id="app-fidelity-client-mode-static"
+                          class="app-btn app-btn-secondary app-fidelity-client-mode-btn is-active"
+                          aria-pressed="true"
+                        >
+                          Aperçu rapide
+                        </button>
+                        <button
+                          type="button"
+                          id="app-fidelity-client-mode-live"
+                          class="app-btn app-btn-secondary app-fidelity-client-mode-btn"
+                          aria-pressed="false"
+                        >
+                          Tester le jeu
+                        </button>
+                      </div>
                       <div class="app-fidelity-client-mockup-scene app-flyer-qr-mockup-scene">
                         <div class="app-fidelity-client-mockup-phone">
                           <div class="app-fidelity-client-mockup-screen">
-                            <div class="app-fidelity-client-live-preview-viewport" aria-hidden="true">
+                            <div
+                              class="app-fidelity-client-live-preview-viewport"
+                              id="app-fidelity-client-live-preview-viewport"
+                              aria-hidden="true"
+                            >
+                              <div
+                                id="app-fidelity-client-live-preview-static-wrap"
+                                class="app-fidelity-client-live-preview-static-wrap"
+                              >
                               <div
                                 id="app-fidelity-client-live-preview-root"
                                 class="fidelity-page app-fidelity-client-live-preview-root"
@@ -1028,6 +1058,17 @@
                                   <p>Vous êtes un pro ?</p>
                                 </footer>
                               </div>
+                              </div>
+                              <div
+                                id="app-fidelity-client-live-preview-live-wrap"
+                                class="app-fidelity-client-live-preview-live-wrap"
+                              >
+                                <iframe
+                                  id="app-fidelity-client-live-iframe"
+                                  class="app-fidelity-client-live-iframe"
+                                  title="Test interactif — page fidélité publique"
+                                ></iframe>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1041,7 +1082,8 @@
                       <button type="button" id="app-fidelity-client-copy-url" class="app-btn app-btn-secondary">Copier</button>
                     </div>
                     <p class="app-hint" style="margin: 0.35rem 0 0; font-size: 0.78rem">
-                      Même page que celle ouverte par le QR du flyer. Rafraîchissez la page publique après enregistrement.
+                      Utilisez <strong>Tester le jeu</strong> pour la même page que le QR (flux réel). L’aperçu rapide
+                      reflète titre et fond sans recharger l’iframe.
                     </p>
                   </div>
                 </div>

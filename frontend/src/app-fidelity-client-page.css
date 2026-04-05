@@ -51,7 +51,26 @@
 }
 
 #app-app .app-fidelity-client-mockup-caption {
-  margin: 0 0 0.6rem;
+  margin: 0 0 0.5rem;
+}
+
+#app-app .app-fidelity-client-preview-mode-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  margin: 0 0 0.75rem;
+}
+
+#app-app .app-fidelity-client-mode-btn {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.65rem;
+}
+
+#app-app .app-fidelity-client-mode-btn.is-active {
+  border-color: var(--app-accent, #2563eb);
+  background: var(--app-accent-light, rgba(37, 99, 235, 0.12));
+  color: var(--app-accent, #2563eb);
 }
 
 #app-app .app-fidelity-client-mockup-scene {
@@ -106,6 +125,33 @@
   background: #f8fafc;
   box-sizing: border-box;
   position: relative;
+}
+
+#app-app .app-fidelity-client-live-preview-live-wrap {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport--live .app-fidelity-client-live-preview-live-wrap {
+  display: block;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport--live .app-fidelity-client-live-preview-static-wrap {
+  display: none;
+}
+
+#app-app .app-fidelity-client-live-iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  border: 0;
+  background: #f8fafc;
 }
 
 /* Fond page client (équivalent #fidelity-app, ::before en absolute — pas fixed) */
