@@ -27,6 +27,57 @@ const PRICE_ID_FLYER_PACK = process.env.STRIPE_PRICE_ID_FLYER_PACK || null;
 const FLYER_PACK_GENERATIONS = Math.max(1, parseInt(process.env.FLYER_PACK_GENERATIONS || "25", 10) || 25);
 
 /**
+ * POST /api/payment/create-portal-session
+ * Espace client Stripe (facture, moyen de paiement, résiliation) — nécessite un `stripe_customer_id` en base.
+ */
+router.post("/create-portal-session", requireAuth, async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({
+      error: "Paiement non configuré",
+      code: "stripe_not_configured",
+    });
+  }
+  const userId = String(req.user.id);
+  let sub = getSubscriptionByUserId(userId);
+  let customerId = sub?.stripe_customer_id ? String(sub.stripe_customer_id).trim() : "";
+  const subId = sub?.stripe_subscription_id ? String(sub.stripe_subscription_id).trim() : "";
+
+  if (!customerId && subId) {
+    try {
+      const stripeSub = await stripe.subscriptions.retrieve(subId);
+      await syncSubscriptionFromStripeObject(stripeSub, userId);
+      sub = getSubscriptionByUserId(userId);
+      customerId = sub?.stripe_customer_id ? String(sub.stripe_customer_id).trim() : "";
+    } catch (e) {
+      console.warn("[payment] portal: retrieve subscription for customer id:", e?.message || e);
+    }
+  }
+
+  if (!customerId) {
+    return res.status(400).json({
+      error:
+        "Aucun client Stripe lié à ce compte. Utilisez « Souscrire » pour créer l’abonnement, ou connectez-vous sur myfidpass.fr.",
+      code: "no_portal_customer",
+    });
+  }
+
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${FRONTEND_URL}/app`,
+    });
+    return res.json({ url: session.url });
+  } catch (err) {
+    console.error("Stripe billing portal session error:", err);
+    return res.status(500).json({
+      error:
+        err.message ||
+        "Impossible d’ouvrir l’espace client Stripe. Vérifiez que le portail client est activé dans le dashboard Stripe.",
+    });
+  }
+});
+
+/**
  * POST /api/payment/create-checkout-session
  * Crée une session Stripe Checkout pour l'abonnement Starter.
  * Body: { planId?: 'starter' }
