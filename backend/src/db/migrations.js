@@ -573,7 +573,7 @@ export function runMigrations(db) {
     "CREATE INDEX IF NOT EXISTS idx_engagement_completions_business_status ON engagement_completions(business_id, status, created_at DESC)"
   ));
 
-  // ── v3 : Refresh tokens (accès 15min + refresh 30j avec rotation) ─────────
+  // ── v3 : Refresh tokens (JWT + refresh avec rotation ; durées configurables côté auth.js) ─────────
   markMigrationApplied(db, 3, "refresh_tokens_table");
   safeRun(db, () => db.exec(`
     CREATE TABLE IF NOT EXISTS refresh_tokens (

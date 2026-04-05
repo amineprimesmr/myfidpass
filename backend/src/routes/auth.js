@@ -57,14 +57,20 @@ const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replac
 const SALT_ROUNDS = 10;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 
-const ACCESS_TOKEN_TTL = "15m";
-const REFRESH_TOKEN_TTL_DAYS = 30;
+/**
+ * Durées JWT : défaut longues pour que les commerçants ne subissent plus la coupure ~15 min.
+ * Sécurité : en cas de vol du JWT, la fenêtre d’abus est plus longue — la déconnexion / suppression
+ * de compte révoque toujours les refresh côté serveur. Sur Railway : JWT_ACCESS_TTL / JWT_REFRESH_TTL_DAYS.
+ */
+const ACCESS_TOKEN_TTL = String(process.env.JWT_ACCESS_TTL || "365d").trim() || "365d";
+const REFRESH_TOKEN_TTL_DAYS = Math.min(
+  3650,
+  Math.max(1, parseInt(String(process.env.JWT_REFRESH_TTL_DAYS || "365"), 10) || 365)
+);
 
 /**
- * Émet une paire access token (15min) + refresh token (30j).
- * Stocke le refresh token en base pour permettre la révocation.
- * @param {number} userId
- * @returns {{ accessToken: string, refreshToken: string }}
+ * Émet une paire access JWT + refresh opaque (durées alignées par défaut : même ordre de grandeur).
+ * Stocke le refresh en base pour révocation (logout, rotation à chaque POST /auth/refresh).
  */
 function issueTokenPair(userId) {
   const uid = userId != null && userId !== "" ? String(userId) : userId;
