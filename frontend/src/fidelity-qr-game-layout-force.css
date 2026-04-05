@@ -18,7 +18,10 @@
   flex-direction: column !important;
   box-sizing: border-box !important;
   overflow-x: hidden !important;
-  overflow-y: visible !important;
+  /* Aperçu : hauteur fixe du viewport — pas de scroll, pas de débordement sous le mockup */
+  overflow-y: hidden !important;
+  height: 100% !important;
+  max-height: 100% !important;
 }
 
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game) > main.fidelity-qr-game,
@@ -39,16 +42,12 @@
   padding-bottom: max(0.55rem, calc(env(safe-area-inset-bottom, 0px) + 0.4rem)) !important;
 }
 
-#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr,
-#app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr {
+/* vmin ici = viewport navigateur : ne pas l’appliquer à l’aperçu SaaS (voir #app-app + cqm plus bas). */
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr {
   padding-bottom: clamp(1.35rem, 8vmin, 2.75rem) !important;
 }
 
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game)
-  .fidelity-v2-roulette-inline--qr
-  .fidelity-v2-roulette-inline-controls
-  .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full,
-#app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
   .fidelity-v2-roulette-inline--qr
   .fidelity-v2-roulette-inline-controls
   .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {

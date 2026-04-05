@@ -130,13 +130,22 @@ async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishm
     const lat = result.geometry?.location?.lat;
     const lng = result.geometry?.location?.lng;
     const addr = result.formatted_address?.trim() || null;
-    if (addr || (lat != null && lng != null)) {
-      updateBusiness(biz.id, {
-        location_lat: lat ?? null,
-        location_lng: lng ?? null,
-        location_address: addr,
-      });
-    }
+    /** Même Place ID que la recherche inscription → mission « avis Google » + lien writereview sans ressaisie commerçant. */
+    const engagementFromPlace = {
+      google_review: {
+        enabled: true,
+        points: 50,
+        place_id: pid,
+        require_approval: false,
+        auto_verify_enabled: true,
+      },
+    };
+    updateBusiness(biz.id, {
+      location_lat: lat ?? null,
+      location_lng: lng ?? null,
+      location_address: addr,
+      engagement_rewards: engagementFromPlace,
+    });
   } catch (e) {
     console.error("[auth/register] tryCreateFirstBusinessFromGooglePlace:", e);
   }

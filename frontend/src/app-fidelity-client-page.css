@@ -99,20 +99,24 @@
   margin: 0 auto;
   container-type: size;
   container-name: fidelity-client-prev;
-  overflow-x: visible;
-  overflow-y: auto;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  overscroll-behavior: none;
   border-radius: 16px;
   background: #f8fafc;
   box-sizing: border-box;
+  position: relative;
 }
 
 /* Fond page client (équivalent #fidelity-app, ::before en absolute — pas fixed) */
 #app-app .app-fidelity-client-live-preview-root.fidelity-page {
-  min-height: 100%;
-  min-height: 100cqh;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 #app-app .app-fidelity-client-live-preview-root.fidelity-page.fidelity-page--client-bg {
@@ -142,29 +146,85 @@
 
 /* Typo / roue : unités conteneur (le viewport fait ~390px — pas la fenêtre SaaS) */
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-title--lead {
-  margin: clamp(1rem, 5cqw, 2.75rem) 0 0;
-  font-size: clamp(1.48rem, 5.5cqw, 2.15rem);
+  margin: clamp(0.35rem, 2.8cqw, 1.35rem) 0 0;
+  font-size: clamp(1.15rem, 4.6cqw, 1.92rem);
+  line-height: 1.22;
   max-width: min(22rem, 92cqw);
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-game {
   padding-left: max(1rem, 12px) !important;
   padding-right: calc(max(1.25rem, 12px) + 16px) !important;
+  padding-top: max(0.65rem, 10px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-hero {
+  flex-shrink: 0;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline.fidelity-v2-roulette-inline--qr {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin-top: 1.15rem !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
+  flex-shrink: 0;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
-  min-height: min(48cqh, 56cqmin, 420px) !important;
-  max-height: none !important;
-  padding-bottom: clamp(2rem, 14cqmin, 4.5rem) !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  padding-bottom: 0.5rem !important;
   background: transparent !important;
   background-image: none !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-  top: 66% !important;
-  width: min(92cqmin, 98cqw) !important;
-  height: min(92cqmin, 98cqw) !important;
-  transform: translate(-30%, -48%) !important;
+  top: 58% !important;
+  width: min(70cqmin, 94cqw) !important;
+  height: min(70cqmin, 94cqw) !important;
+  transform: translate(-26%, -46%) !important;
+}
+
+/*
+ * Les segments utilisent translate(..., -36vmin) : vmin = fenêtre SaaS, pas le mockup → PERDU hors disque.
+ * Rebasculer sur cqw/cqh du conteneur (container-type: size sur le viewport).
+ */
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-anchor {
+  transform: translate(-50%, -36cqmin) !important;
+  transform-origin: 50% 36cqmin !important;
+}
+
+#app-app
+  .app-fidelity-client-live-preview-viewport
+  .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white
+  .fidelity-roulette-segment-label-anchor {
+  transform: translate(-50%, -30cqmin) !important;
+  transform-origin: 50% 30cqmin !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label,
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-text {
+  font-size: clamp(0.72rem, 4.1cqmin, 1.28rem) !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-roulette-segment-gift-img {
+  width: clamp(32px, 13cqmin, 58px) !important;
+  height: auto !important;
+  max-height: clamp(32px, 13cqmin, 58px) !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline .fidelity-roulette-wheel-outer {
