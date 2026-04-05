@@ -27,6 +27,13 @@ import {
 } from "./point-tiers.js";
 import { normalizeChangeMessage, buildLastBroadcastFieldValue } from "./broadcast-field.js";
 
+/** Masque le nom par défaut du parcours invité (QR) sur la face du pass. */
+function walletPassMemberDisplayName(name) {
+  const t = name != null ? String(name).trim() : "";
+  if (!t || /^invité$/i.test(t)) return "—";
+  return t;
+}
+
 let _sharp = null;
 async function getSharp() {
   if (!_sharp) _sharp = (await import("sharp")).default;
@@ -272,7 +279,7 @@ export async function generatePass(member, business = null, options = {}) {
     pass.headerFields.push({
       key: "memberName",
       label: "",
-      value: member.name,
+      value: walletPassMemberDisplayName(member.name),
       textAlignment: "PKTextAlignmentRight",
     });
   }
@@ -338,7 +345,7 @@ export async function generatePass(member, business = null, options = {}) {
       pass.auxiliaryFields.push({
         key: "member",
         label: labelMember,
-        value: member.name,
+        value: walletPassMemberDisplayName(member.name),
         textAlignment: "PKTextAlignmentRight",
       });
     }
@@ -386,38 +393,13 @@ export async function generatePass(member, business = null, options = {}) {
       pass.auxiliaryFields.push({
         key: "member",
         label: labelMember,
-        value: member.name,
+        value: walletPassMemberDisplayName(member.name),
         textAlignment: "PKTextAlignmentRight",
       });
     }
   }
 
-  /*
-   * Message de campagne sur la **face** du pass (pas seulement au verso).
-   * Apple surface les alertes Wallet quand un champ visible CHANGE DE VALEUR et a un changeMessage.
-   *
-   * CRITIQUE : le champ doit être TOUJOURS présent dans le pass, même sans campagne (valeur "—").
-   * Sinon la première campagne AJOUTE un nouveau champ au lieu de CHANGER une valeur existante.
-   * iOS traite l’ajout d’un champ comme une mise à jour structurelle → affiche "Carte de fidélité
-   * modifiée" au lieu du changeMessage personnalisé. En ayant "—" dès le début, la transition
-   * "—" → "Message campagne" est détectée comme un changement de valeur → bannière correcte.
-   */
-  {
-    const broadcastFrontField = {
-      key: "broadcastFront",
-      label: "Message",
-      value: rawBroadcast ? lastBroadcast : "—",
-      textAlignment: "PKTextAlignmentLeft",
-    };
-    if (rawBroadcast) {
-      broadcastFrontField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
-    }
-    if (isSectorTemplate) {
-      pass.secondaryFields.push(broadcastFrontField);
-    } else {
-      pass.auxiliaryFields.unshift(broadcastFrontField);
-    }
-  }
+  /* Message de campagne : uniquement au **verso** (`lastMessage`), pas sur la face (demande produit). */
 
   const barcodePayload = {
     message: member.id,
@@ -451,12 +433,17 @@ export async function generatePass(member, business = null, options = {}) {
     ? `${frontendUrl}/?ref=pass&b=${encodeURIComponent(business.slug)}`
     : `${frontendUrl}/?ref=pass`;
 
+  const lastMessageBackField = { key: "lastMessage", label: "Message", value: lastBroadcast };
+  if (rawBroadcast) {
+    lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
+  }
+
   if (format === "tampons") {
     const rewardValue = stampMidRewardLabel
       ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
       : `${stampMax} tampons = ${stampRewardLabel}`;
     pass.backFields.push(
-      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg, rawBroadcast) },
+      lastMessageBackField,
       { key: "reward", label: "Récompense", value: rewardValue },
       { key: "terms", label: "Conditions", value: backTerms },
       { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
@@ -473,7 +460,7 @@ export async function generatePass(member, business = null, options = {}) {
         : "Consultez le commerce pour les paliers de récompenses.";
 
     pass.backFields.push(
-      { key: "lastMessage", label: "Message", value: lastBroadcast, changeMessage: normalizeChangeMessage(changeMsg, rawBroadcast) },
+      lastMessageBackField,
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       {
         key: "rewards",

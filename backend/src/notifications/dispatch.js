@@ -81,8 +81,8 @@ export async function deliverCustomerBroadcast({
     };
   }
 
-  // Aligne le modèle PassKit (`changeMessage`) sur ce corps / titre — sinon un envoi manuel précédent
-  // laisse un préfixe dans `notification_change_message` alors que `last_broadcast_message` vient de l’auto.
+  // Titre d’envoi optionnel → `notification_title_override` (stable). Le corps de campagne ne doit pas
+  // écraser `notification_change_message` : voir `sync-notification-texts-for-campaign.js`.
   const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
 
   const batchId = createNotificationBatch({
