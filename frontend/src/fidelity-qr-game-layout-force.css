@@ -82,3 +82,50 @@
   margin-right: -2.85rem !important;
   transform: translateX(14px) !important;
 }
+
+/*
+ * Aperçu dashboard : style.css impose 5.1vmin / 36vmin sur les segments — sur le SaaS vmin = la fenêtre,
+ * pas le mockup. Forcer cqmin + !important (cette feuille est chargée après toutes les autres).
+ */
+#app-app
+  .app-fidelity-client-live-preview-viewport
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-roulette-wheel-segment
+  .fidelity-roulette-segment-label-anchor {
+  transform: translate(-50%, -34cqmin) !important;
+  transform-origin: 50% 34cqmin !important;
+}
+
+#app-app
+  .app-fidelity-client-live-preview-viewport
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-roulette-wheel-segment.fidelity-roulette-segment-white
+  .fidelity-roulette-segment-label-anchor {
+  transform: translate(-50%, -28cqmin) !important;
+  transform-origin: 50% 28cqmin !important;
+}
+
+#app-app
+  .app-fidelity-client-live-preview-viewport
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-roulette-wheel-segment
+  .fidelity-roulette-segment-label,
+#app-app
+  .app-fidelity-client-live-preview-viewport
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-roulette-wheel-segment
+  .fidelity-roulette-segment-label-text {
+  font-size: clamp(0.52rem, 2.65cqmin, 0.95rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+}
+
+#app-app
+  .app-fidelity-client-live-preview-viewport
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-roulette-wheel-mount {
+  top: 68% !important;
+  width: min(96cqmin, 100cqw) !important;
+  height: min(96cqmin, 100cqw) !important;
+  transform: translate(-28%, -50%) !important;
+}
