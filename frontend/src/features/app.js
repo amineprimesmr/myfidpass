@@ -1515,7 +1515,9 @@ function initAppDashboard(slug) {
             : LOCATION_RADIUS_DEFAULT_M;
         const address = data.location_address || "";
         const notifTitleRaw = data.notification_title_override ?? data.notificationTitleOverride ?? "";
-        const notifMessage = data.notification_change_message ?? data.notificationChangeMessage ?? "";
+        const locMsg = String(data.location_relevant_text ?? data.locationRelevantText ?? "").trim();
+        const legacyMsg = String(data.notification_change_message ?? data.notificationChangeMessage ?? "").trim();
+        const notifMessage = locMsg || legacyMsg;
         currentAddress = address;
         const organizationName = (data.organization_name || "").trim();
         const notifTitle = String(notifTitleRaw).trim() || organizationName;
@@ -1689,7 +1691,7 @@ function initAppDashboard(slug) {
         // Envoyer organization_name vide depuis ce formulaire écrasait le nom d’établissement (Profil) et pouvait faire échouer l’API.
         const payload = {
           notification_title_override: perimetreNotifTitleEl?.value?.trim() || null,
-          notification_change_message: perimetreNotifMessageEl?.value?.trim() || null,
+          location_relevant_text: perimetreNotifMessageEl?.value?.trim() || null,
           wallet_pass_include_locations: walletIncludeLocationsEl?.checked ? 1 : 0,
         };
         if (currentLat != null && currentLng != null) {
@@ -1705,9 +1707,7 @@ function initAppDashboard(slug) {
         });
         if (res.ok || res.status === 204) {
           const bannerTitle = document.getElementById("app-notification-banner-title");
-          const bannerMessage = document.getElementById("app-notification-banner-message");
           if (bannerTitle && perimetreNotifTitleEl) bannerTitle.value = perimetreNotifTitleEl.value;
-          if (bannerMessage && perimetreNotifMessageEl) bannerMessage.value = perimetreNotifMessageEl.value;
           if (typeof updateAppNotificationPreview === "function") updateAppNotificationPreview();
           savedPerimetreState = getPerimetreDraftState();
           showSaveFeedback("Enregistré. Le périmètre et le message d'entrée sont à jour.");
