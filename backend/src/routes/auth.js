@@ -57,27 +57,18 @@ const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replac
 const SALT_ROUNDS = 10;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 
-/**
- * Durées JWT : défaut longues pour que les commerçants ne subissent plus la coupure ~15 min.
- * Sécurité : en cas de vol du JWT, la fenêtre d’abus est plus longue — la déconnexion / suppression
- * de compte révoque toujours les refresh côté serveur. Sur Railway : JWT_ACCESS_TTL / JWT_REFRESH_TTL_DAYS.
- */
-const ACCESS_TOKEN_TTL = String(process.env.JWT_ACCESS_TTL || "365d").trim() || "365d";
-const REFRESH_TOKEN_TTL_DAYS = Math.min(
-  3650,
-  Math.max(1, parseInt(String(process.env.JWT_REFRESH_TTL_DAYS || "365"), 10) || 365)
-);
+/** Date très lointaine : refresh en base sans expiration « métier » (nettoyage = logout / rotation / admin). */
+const REFRESH_TOKEN_EXPIRES_AT_FAR_FUTURE = "2099-12-31T23:59:59.999Z";
 
 /**
- * Émet une paire access JWT + refresh opaque (durées alignées par défaut : même ordre de grandeur).
- * Stocke le refresh en base pour révocation (logout, rotation à chaque POST /auth/refresh).
+ * Paire sans expiration JWT (`exp` absent) + refresh stocké sans fenêtre courte.
+ * Révocation : logout, suppression compte, rotation sur POST /auth/refresh, changement JWT_SECRET.
  */
 function issueTokenPair(userId) {
   const uid = userId != null && userId !== "" ? String(userId) : userId;
-  const accessToken = jwt.sign({ userId: uid }, getJwtSecret(), { expiresIn: ACCESS_TOKEN_TTL });
+  const accessToken = jwt.sign({ userId: uid }, getJwtSecret());
   const refreshToken = randomUUID() + "-" + randomUUID();
-  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 3600 * 1000).toISOString();
-  createRefreshToken(uid, refreshToken, expiresAt);
+  createRefreshToken(uid, refreshToken, REFRESH_TOKEN_EXPIRES_AT_FAR_FUTURE);
   return { accessToken, refreshToken };
 }
 
