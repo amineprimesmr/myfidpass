@@ -20,11 +20,7 @@ import {
   PASS_LOGO_PLACEHOLDER_TEXT,
 } from "./constants.js";
 import { radiusMetersForPass } from "../locationRadiusLimits.js";
-import {
-  parsePointRewardTiersFromBusiness,
-  frontRewardLabelFromSortedTiers,
-  formatBackRewardsFieldValue,
-} from "./point-tiers.js";
+import { parsePointRewardTiersFromBusiness, formatBackRewardsFieldValue } from "./point-tiers.js";
 import { normalizeChangeMessage, buildLastBroadcastFieldValue } from "./broadcast-field.js";
 
 /** Masque le nom par défaut du parcours invité (QR) sur la face du pass. */
@@ -322,9 +318,6 @@ export async function generatePass(member, business = null, options = {}) {
     rawProgramType !== "point" &&
     !(Number.isFinite(effectiveRequiredStamps) && effectiveRequiredStamps > 0);
   if (format === "tampons") {
-    const rewardFrontValue = stampMidRewardLabel
-      ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
-      : "Paliers en magasin";
     /* Solde texte seulement si image de fond : sinon la grille sur le strip suffit (évite doublon Tampons / 0). */
     if (hasCardBackgroundStrip) {
       pass.secondaryFields.push({
@@ -335,12 +328,7 @@ export async function generatePass(member, business = null, options = {}) {
         changeMessage: "Tu as maintenant %@ tampons !",
       });
     }
-    pass.secondaryFields.push({
-      key: "rewardsFront",
-      label: "Récompense",
-      value: rewardFrontValue,
-      textAlignment: "PKTextAlignmentLeft",
-    });
+    /* Pas de champ « Récompense » sur la face (paliers / texte récompense : verso uniquement). */
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
         key: "member",
@@ -353,7 +341,6 @@ export async function generatePass(member, business = null, options = {}) {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
     /* changeMessage obligatoire pour que Wallet affiche une alerte à chaque changement de solde. */
-    const sortedPointTiers = parsePointRewardTiersFromBusiness(business);
     if (isDecorativeImageOnlyStrip) {
       const balance = Math.floor(Number(member.points) || 0);
       const restants = Math.max(0, stampMax - Math.min(stampMax, balance));
@@ -383,12 +370,7 @@ export async function generatePass(member, business = null, options = {}) {
         changeMessage: "Tu as maintenant %@ points !",
       });
     }
-    pass.secondaryFields.push({
-      key: "rewardsFront",
-      label: "Récompense",
-      value: frontRewardLabelFromSortedTiers(sortedPointTiers),
-      textAlignment: "PKTextAlignmentLeft",
-    });
+    /* Pas de champ « Récompense » sur la face (paliers : verso « Paliers & avantages »). */
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
         key: "member",
