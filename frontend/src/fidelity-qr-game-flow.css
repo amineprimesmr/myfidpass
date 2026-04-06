@@ -122,8 +122,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 .fidelity-cta-pill--qr-play {
   min-width: min(100%, 300px);
-  padding-left: 1.75rem !important;
-  padding-right: 1.75rem !important;
+  /* Shorthand pour écraser le padding vertical 0.82rem de .fidelity-cta-pill (sinon pastille « haute »). */
+  padding: 0.48rem 1.75rem !important;
   background: linear-gradient(180deg, #4f46e5 0%, #4338ca 55%, #312e81 100%) !important;
   border: 2px solid rgba(255, 255, 255, 0.35) !important;
   /* box-shadow animé dans fidelity-wheel-gift.css (évite conflit !important) */
@@ -137,11 +137,12 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
   /* max-content : largeur du libellé ; max-width : plafond ; évite min-width:0 du flex qui rognait le texte */
   width: max-content !important;
-  max-width: min(100%, 420px) !important;
+  max-width: min(100%, 460px) !important;
   flex-shrink: 0 !important;
-  padding-left: 1.35rem !important;
-  padding-right: 1.35rem !important;
-  min-height: 2.52rem !important;
+  /* Plat verticalement, large horizontalement (ne pas réutiliser le min-height 3.2rem de la pilule standard). */
+  padding: 0.46rem 1.85rem !important;
+  min-height: 0 !important;
+  line-height: 1.15 !important;
   border-width: 1.5px !important;
   box-sizing: border-box;
 }

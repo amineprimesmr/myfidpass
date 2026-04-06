@@ -117,24 +117,25 @@
   z-index: 1;
 }
 
+/* Surtout scaleX : évite l’effet « pastille plus haute » (l’ancien scale uniforme grossissait la hauteur). */
 @keyframes fidelity-qr-play-magic {
   0%,
   100% {
-    transform: scale(1) translateY(0);
+    transform: scaleX(1) scaleY(1) translateY(0);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.14) inset,
       0 4px 14px rgba(15, 23, 42, 0.22);
     filter: brightness(1) saturate(1);
   }
   35% {
-    transform: scale(1.07) translateY(-2px);
+    transform: scaleX(1.06) scaleY(1.02) translateY(-1px);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.22) inset,
       0 10px 22px rgba(15, 23, 42, 0.28);
     filter: brightness(1.06) saturate(1.04);
   }
   70% {
-    transform: scale(1.03) translateY(1px);
+    transform: scaleX(1.03) scaleY(1.01) translateY(0);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.17) inset,
       0 6px 18px rgba(15, 23, 42, 0.24);

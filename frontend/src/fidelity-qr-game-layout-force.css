@@ -69,10 +69,11 @@
   .fidelity-cta-wrap--full.fidelity-cta-wrap--qr-play
   .fidelity-cta-pill--qr-play {
   width: max-content !important;
-  max-width: min(100%, 420px) !important;
+  max-width: min(100%, 460px) !important;
   flex-shrink: 0 !important;
-  padding-left: 1.35rem !important;
-  padding-right: 1.35rem !important;
+  padding: 0.46rem 1.85rem !important;
+  min-height: 0 !important;
+  line-height: 1.15 !important;
   box-sizing: border-box !important;
 }
 
