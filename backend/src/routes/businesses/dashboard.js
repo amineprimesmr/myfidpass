@@ -703,7 +703,24 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     const prompt = buildFlyerImagePromptBackgroundOnly(parsed.value, {
       styleRefCount: mmFlyer.styleRefCount,
     });
-    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, mmFlyer);
+    /** Fond page jeu QR (sans roue) — avant : enchaîné après le flyer → ~2× durée OpenAI et timeouts proxy (ex. « Application failed to respond »). */
+    const mmBg = multimodalForFidelityPageBackground(mmFlyer, false);
+    const promptBg = buildFidelityClientPageBackgroundPrompt(parsed.value, {
+      styleRefCount: mmBg.styleRefCount,
+    });
+
+    const t0 = Date.now();
+    const [flyerOutcome, bgOutcome] = await Promise.allSettled([
+      openaiGenerateFlyerImage(apiKey, prompt, mmFlyer),
+      openaiGenerateFlyerImage(apiKey, promptBg, mmBg),
+    ]);
+    const elapsedMs = Date.now() - t0;
+    console.log(`[flyer/ai-generate] openai parallel finished in ${elapsedMs}ms (flyer=${flyerOutcome.status} bg=${bgOutcome.status})`);
+
+    if (flyerOutcome.status === "rejected") {
+      throw flyerOutcome.reason;
+    }
+    const { b64, revised } = flyerOutcome.value;
 
     const prefsMerged = mergeFlyerPrefsWheelColorsFromGeneration(
       req.business.flyer_prefs_json,
@@ -715,22 +732,22 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
       flyer_prefs_updated_at: new Date().toISOString(),
     });
 
-    /** Même action : fond page jeu QR (sans roue), enregistré comme « Image de fond » page fidélité. */
+    /** Même action : fond page jeu QR enregistré comme « Image de fond » (échec isolé si seul le 2ᵉ appel tombe en erreur). */
     let fidelity_page_background_saved = false;
     /** @type {string | null} */
     let fidelity_page_background_error = null;
-    try {
-      const mmBg = multimodalForFidelityPageBackground(mmFlyer, false);
-      const promptBg = buildFidelityClientPageBackgroundPrompt(parsed.value, {
-        styleRefCount: mmBg.styleRefCount,
-      });
-      const { b64: b64Bg } = await openaiGenerateFlyerImage(apiKey, promptBg, mmBg);
+    if (bgOutcome.status === "fulfilled") {
+      const { b64: b64Bg } = bgOutcome.value;
       updateBusiness(business.id, {
         fidelity_page_background_base64: `data:image/png;base64,${b64Bg}`,
       });
       fidelity_page_background_saved = true;
-    } catch (e2) {
-      fidelity_page_background_error = e2?.message ? String(e2.message) : "Échec génération fond page fidélité.";
+    } else {
+      const r = bgOutcome.reason;
+      fidelity_page_background_error =
+        r && typeof r === "object" && "message" in r && r.message
+          ? String(r.message)
+          : "Échec génération fond page fidélité.";
     }
 
     if (unlimited || devFlyerQuotaBypass) {
