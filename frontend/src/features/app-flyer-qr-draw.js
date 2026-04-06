@@ -245,12 +245,39 @@ function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
   const cy = h * L.centerYFrac;
   const lx = cx - maxW / 2;
   const ly = cy - maxH / 2;
-  /** Halo clair + ombre portée : un seul `drawImage` (évite le double dessin trop opaque). */
+  const pad = Math.max(10, maxW * 0.038);
+  const rr = Math.min(pad * 1.35, maxH * 0.22);
+  /** Plaque claire : contraste sur fond IA sombre même si filtres / ombres canvas échouent (WKWebView). */
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.26)";
+  roundRect(ctx, lx - pad, ly - pad, maxW + 2 * pad, maxH + 2 * pad, rr);
+  ctx.fill();
+  ctx.restore();
+
   const glow = Math.max(14, maxW * 0.055);
   const dropY = Math.max(3, maxH * 0.04);
   const dropBlur = Math.max(8, maxW * 0.035);
+  const filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.5)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.82))`;
+
+  let drewWithFilter = false;
   ctx.save();
-  ctx.filter = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.5)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.88))`;
+  try {
+    ctx.filter = filterStr;
+    drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
+    drewWithFilter = true;
+  } catch (_) {
+    drewWithFilter = false;
+  }
+  ctx.filter = "none";
+  ctx.restore();
+
+  if (drewWithFilter) return;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(255,255,255,0.92)";
+  ctx.shadowBlur = glow;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
   drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
   ctx.restore();
 }
@@ -488,7 +515,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
  * @param {HTMLCanvasElement} canvas
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  * @param {string} qrTargetUrl
- * @param {ImageBitmap | string | null | undefined} logoInput — ImageBitmap préféré (évite blob + CORS).
+ * @param {ImageBitmap | HTMLImageElement | string | null | undefined} logoInput
  * @param {ImageBitmap | string | null | undefined} [bgInput] — image de fond (optionnel).
  */
 export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInput) {
@@ -514,6 +541,13 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** @type {CanvasImageSource | null} */
   let logoImg = null;
   if (logoInput && typeof ImageBitmap !== "undefined" && logoInput instanceof ImageBitmap) {
+    logoImg = logoInput;
+  } else if (
+    logoInput &&
+    typeof HTMLImageElement !== "undefined" &&
+    logoInput instanceof HTMLImageElement &&
+    (logoInput.complete ? logoInput.naturalWidth > 0 : true)
+  ) {
     logoImg = logoInput;
   } else if (typeof logoInput === "string" && logoInput) {
     const isBlob = logoInput.startsWith("blob:");

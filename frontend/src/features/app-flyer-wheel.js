@@ -95,6 +95,26 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
   ctx.restore();
 }
 
+/**
+ * Sous-fond vectoriel : sans PNG `rouegpt`, les parts peuvent être très sombres sur fond IA sombre.
+ * Disque clair derrière les parts pour garantir la présence visuelle (aperçu app / export).
+ */
+function drawWheelVectorBacking(ctx, cx, cy, r) {
+  ctx.save();
+  const rg = ctx.createRadialGradient(cx, cy, r * 0.04, cx, cy, r * 1.02);
+  rg.addColorStop(0, "rgba(255,255,255,0.55)");
+  rg.addColorStop(0.55, "rgba(255,255,255,0.28)");
+  rg.addColorStop(1, "rgba(255,255,255,0.08)");
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = rg;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.65)";
+  ctx.lineWidth = Math.max(3, r * 0.014);
+  ctx.stroke();
+  ctx.restore();
+}
+
 /** Ombre portée sous la roue (profondeur, flyer print). */
 function drawWheelGroundShadow(ctx, cx, cy, r) {
   ctx.save();
@@ -252,6 +272,7 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   const n = FLYER_WHEEL_SEGMENT_COUNT;
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
+  if (!usePng) drawWheelVectorBacking(ctx, wheelCx, wheelCy, wheelR);
 
   if (usePng) {
     const off = userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG;

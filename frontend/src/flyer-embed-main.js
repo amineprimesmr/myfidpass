@@ -41,6 +41,18 @@ async function loadImageInputFromHttp(url) {
     }
     return URL.createObjectURL(blob);
   } catch (_) {
+    /* Repli : certains WKWebView rejettent fetch+blob mais acceptent <img crossorigin>. */
+  }
+  try {
+    const im = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("logo img"));
+      img.src = url;
+    });
+    return /** @type {HTMLImageElement} */ (im);
+  } catch (_) {
     return null;
   }
 }
