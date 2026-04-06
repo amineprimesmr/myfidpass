@@ -169,3 +169,17 @@ export function getEmailTransportLabel() {
   if (smtpConfigured()) return "smtp";
   return "none";
 }
+
+/**
+ * GET /api/health/email — booleans seulement (aucune valeur secrète).
+ * Permet de vérifier que Railway a bien les variables attendues.
+ */
+export function getEmailEnvPresence() {
+  return {
+    RESEND_API_KEY: !!getResendKey(),
+    MAIL_FROM: !!(process.env.MAIL_FROM || "").trim(),
+    RESEND_FROM: !!(process.env.RESEND_FROM || "").trim(),
+    SMTP_HOST: !!(process.env.SMTP_HOST || "").trim(),
+    FRONTEND_URL: !!(process.env.FRONTEND_URL || "").trim(),
+  };
+}

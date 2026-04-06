@@ -13,7 +13,10 @@ export function createUser({ id: uid, email, passwordHash, name }) {
 }
 
 export function getUserByEmail(email) {
-  const row = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+  const norm = String(email ?? "").trim().toLowerCase();
+  if (!norm) return null;
+  /* Comparaison insensible à la casse : comptes créés avant normalisation stricte ou imports. */
+  const row = db.prepare("SELECT * FROM users WHERE lower(email) = ?").get(norm);
   return row || null;
 }
 

@@ -607,7 +607,7 @@ router.post("/forgot-password", validate(schemas.forgotPassword), async (req, re
   setPasswordResetToken(user.id, token, expiresAt);
   const resetLink = `${FRONTEND_URL}/login?reset=${encodeURIComponent(token)}`;
   const { sent } = await sendMail({
-    to: user.email,
+    to: emailNorm,
     subject: "Réinitialisation de votre mot de passe — Myfidpass",
     text: `Bonjour,\n\nVous avez demandé à réinitialiser votre mot de passe. Cliquez sur le lien ci-dessous (valable ${PASSWORD_RESET_EXPIRY_HOURS} h) :\n\n${resetLink}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.`,
     html: `<p>Bonjour,</p><p>Vous avez demandé à réinitialiser votre mot de passe. <a href="${resetLink}">Cliquez ici</a> (lien valable ${PASSWORD_RESET_EXPIRY_HOURS} h).</p><p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>`,
