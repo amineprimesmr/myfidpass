@@ -1871,6 +1871,9 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   font-weight: 600;
   letter-spacing: 0.02em;
   text-align: center;
+  border-top-left-radius: 1.125rem;
+  border-top-right-radius: 1.125rem;
+  overflow: hidden;
 }
 
 .fidelity-v2-footer--dark p {
