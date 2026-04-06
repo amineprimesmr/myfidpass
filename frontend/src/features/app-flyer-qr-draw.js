@@ -33,8 +33,8 @@ const FLYER_STEP_ICON_SRCS = [
   "/assets/flyer-steps/icon-gift.png",
 ];
 
-/** Roue décorative (remplace le dessin vectoriel si le fichier est présent). */
-const FLYER_ROUE_SRC = "/assets/roue.png";
+/** Roue décorative : `rouegpt.png` en priorité, puis `roue.png` (même logique que l’IA serveur). */
+const FLYER_ROUE_SRC_CANDIDATES = ["/assets/rouegpt.png", "/assets/roue.png"];
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;
@@ -256,13 +256,16 @@ async function loadFooterStepIcons() {
 async function getFlyerRoueImage() {
   if (flyerRoueCache === "fail") return null;
   if (flyerRoueCache) return flyerRoueCache;
-  try {
-    flyerRoueCache = await loadImage(FLYER_ROUE_SRC, false);
-    return flyerRoueCache;
-  } catch {
-    flyerRoueCache = "fail";
-    return null;
+  for (const src of FLYER_ROUE_SRC_CANDIDATES) {
+    try {
+      flyerRoueCache = await loadImage(src, false);
+      return flyerRoueCache;
+    } catch {
+      /* essai suivant */
+    }
   }
+  flyerRoueCache = "fail";
+  return null;
 }
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} canvasH @param {number} bottomY bord bas du bandeau étapes. @param {HTMLImageElement} img */

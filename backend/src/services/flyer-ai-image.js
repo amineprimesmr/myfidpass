@@ -20,8 +20,16 @@ import { z } from "zod";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-/** Même visuel que l’asset app `roulette` / SaaS `public/assets/roue.png` — recoloriage IA uniquement. */
-const FLYER_WHEEL_TEMPLATE_PATH = join(__dirname, "../assets/flyer-wheel-template.png");
+const FLYER_WHEEL_ASSETS_DIR = join(__dirname, "../assets");
+/** Priorité : `rouegpt.png` (roue officielle GPT / flyer), puis repli `flyer-wheel-template.png`. */
+const FLYER_WHEEL_ROUEGPT_PATH = join(FLYER_WHEEL_ASSETS_DIR, "rouegpt.png");
+const FLYER_WHEEL_TEMPLATE_FALLBACK_PATH = join(FLYER_WHEEL_ASSETS_DIR, "flyer-wheel-template.png");
+
+function resolveFlyerWheelAssetPathForAI() {
+  if (existsSync(FLYER_WHEEL_ROUEGPT_PATH)) return FLYER_WHEEL_ROUEGPT_PATH;
+  if (existsSync(FLYER_WHEEL_TEMPLATE_FALLBACK_PATH)) return FLYER_WHEEL_TEMPLATE_FALLBACK_PATH;
+  return null;
+}
 
 /** @type {string | null | undefined} */
 let cachedFlyerWheelDataUrl;
@@ -39,11 +47,12 @@ function flyerAiCanonicalWheelEnvOn() {
 export function getFlyerWheelTemplateDataUrl() {
   if (cachedFlyerWheelDataUrl !== undefined) return cachedFlyerWheelDataUrl;
   try {
-    if (!existsSync(FLYER_WHEEL_TEMPLATE_PATH)) {
+    const wheelPath = resolveFlyerWheelAssetPathForAI();
+    if (!wheelPath) {
       cachedFlyerWheelDataUrl = null;
       return null;
     }
-    const buf = readFileSync(FLYER_WHEEL_TEMPLATE_PATH);
+    const buf = readFileSync(wheelPath);
     if (buf.length < 64) {
       cachedFlyerWheelDataUrl = null;
       return null;
@@ -298,7 +307,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
     );
   }
   multimodalLines.push(
-    "FINAL REFERENCE IMAGE = CANONICAL PRIZE WHEEL ASSET (MyFidpass official). This raster is the SINGLE source of truth for wheel shape, rim, hub, pointer, segment boundaries, shadows, and ALL existing typography (GAGNÉ / PERDU and any other text already painted in the asset). ABSOLUTE RULES: (1) Do NOT draw a second wheel or alternate geometry. (2) Do NOT redraw, replace, move, warp, or re-type any letter or number — keep text pixel-stable. (3) ONLY adjust the flat fill color inside each of the six wedge regions to match the brand alternation below; preserve edge anti-aliasing and legibility. (4) Keep hub, pointer, outlines, and highlights coherent with the new fills."
+    "FINAL REFERENCE IMAGE = OFFICIAL ROUE GPT ASSET (MyFidpass « rouegpt » PNG — exact wheel master). This raster is the SINGLE source of truth for wheel shape, rim, hub, pointer, segment boundaries, shadows, and ALL existing typography (GAGNÉ / PERDU and any other text already painted in the asset). ABSOLUTE RULES: (1) Do NOT draw a second wheel or alternate geometry. (2) Do NOT redraw, replace, move, warp, or re-type any letter or number — keep text pixel-stable. (3) ONLY adjust the flat fill color inside each of the six wedge regions to match the brand alternation below; preserve edge anti-aliasing and legibility. (4) Keep hub, pointer, outlines, and highlights coherent with the new fills."
   );
 
   const lines = [
