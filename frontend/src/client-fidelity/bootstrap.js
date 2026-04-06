@@ -23,7 +23,9 @@ import {
   closeQrModalRoot,
   firstNonPerduLabel,
   isGuestMember,
+  isQrGateUnlocked,
   openQrModalRoot,
+  softDismissCarnivalQrIntroOverlay,
   showQrRewardPanel,
   shouldShowQrThanksHero,
 } from "./qr-game-flow.js";
@@ -69,6 +71,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   let wheelLabels = [...DEFAULT_WHEEL_LABELS];
   let currentRotation = 0;
   let disposeQrUi = () => {};
+  let disposeCarnivalPen = () => {};
 
   fidelityDocumentListenersAbort?.abort();
   fidelityDocumentListenersAbort = new AbortController();
@@ -194,6 +197,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function rerender() {
+    disposeCarnivalPen();
+    disposeCarnivalPen = () => {};
     document.body.style.overflow = "";
     renderClientPage(rootEl, store.get(), { slug, apiBase });
     applyFidelityClientPageBackground(store.get().business, slug, apiBase);
@@ -616,6 +621,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       messageUtilisateurPourErreur,
       signal,
     });
+
+    const carnivalMain = rootEl.querySelector("main.fidelity-qr-carnival-pen");
+    if (carnivalMain) {
+      void import("./carnival-spinner/carnival-pen-LEEORoB.js").then((mod) => {
+        if (rootEl.querySelector("main.fidelity-qr-carnival-pen") !== carnivalMain) return;
+        disposeCarnivalPen = mod.mountCarnivalPenLEEORoB({});
+        if (isQrGateUnlocked() || shouldShowQrThanksHero(slug)) {
+          globalThis.queueMicrotask(() => softDismissCarnivalQrIntroOverlay());
+        }
+      });
+    }
   }
 
   document.addEventListener(

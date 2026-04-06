@@ -1,5 +1,5 @@
 /**
- * Parcours QR : roue en premier, modales Google → vérif → gain → inscription (prénom + email).
+ * Parcours QR : scène CodePen LEEORoB (Carnival Spinner) + modales Google → vérif → gain → inscription.
  */
 
 /**
@@ -16,7 +16,6 @@ export function renderQrGamePage(esc, p) {
     logoUrlPublicFallback,
     qrThanksHeroMode = false,
   } = p;
-  /* Un seul titre sous l’icône : accroche jeu (ou « Merci… » après Google) — pas le nom du commerce */
   const heroTitleEsc = qrThanksHeroMode ? esc("Merci, bonne chance !") : businessTaglineEsc;
   const heroTitleClass = qrThanksHeroMode
     ? "fidelity-qr-title fidelity-qr-title--thanks"
@@ -38,9 +37,20 @@ export function renderQrGamePage(esc, p) {
     verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap" aria-hidden="true"><img class="fidelity-qr-verify-logo" id="fidelity-qr-verify-logo" src="${esc(logoUrl)}" alt="" width="96" height="96" decoding="async"${useFallback} /></div>`;
   }
 
+  const explanationEsc = esc(
+    "Step right up! Generate a random number from 1–10. Pull the lever to spin. Intro After Effects + scène Three.js (CodePen LEEORoB, Jared Stanley).",
+  );
+
   return `
-    <main class="fidelity-v2-main fidelity-qr-game">
-      <section class="fidelity-qr-hero" aria-label="Jeu">
+    <main class="fidelity-v2-main fidelity-qr-game fidelity-qr-carnival-pen" aria-label="Jeu">
+      <canvas class="webgl" aria-hidden="true"></canvas>
+      <div id="container">
+        <div id="lottie"></div>
+        <div id="explanation"><p>${explanationEsc}</p></div>
+        <button type="button" id="enter">enter</button>
+      </div>
+
+      <section class="fidelity-qr-hero fidelity-qr-hero--carnival" aria-label="En-tête">
         <div class="fidelity-qr-brand">
           ${qrLogo || ""}
           <h1 class="${heroTitleClass}" id="fidelity-qr-hero-title">
@@ -53,7 +63,9 @@ export function renderQrGamePage(esc, p) {
         </div>
       </section>
 
-      ${rouletteHtml}
+      <div class="fidelity-qr-carnival-bridge">
+        ${rouletteHtml}
+      </div>
     </main>
 
     <div id="fidelity-qr-modal-root" class="fidelity-qr-modal-root hidden" aria-hidden="true">
