@@ -24,11 +24,14 @@ export const FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR = 0.94;
 
 /** Zone logo (drawFlyerCommerceLogo) : bas du bloc = centerYFrac + maxHFrac/2. */
 export const FLYER_LOGO_LAYOUT = Object.freeze({
-  /** Un peu plus haut → accroche remonte (défaut flyer). */
-  centerYFrac: 0.076,
+  /** Plus haut sur le flyer → titre « SCANNEZ & GAGNEZ… » remonte. */
+  centerYFrac: 0.056,
   maxHFrac: 0.15,
   maxWFrac: 0.62,
 });
+
+/** Rayon affiché de la roue / demi-largeur canvas (aperçu + export). */
+export const FLYER_WHEEL_RADIUS_FRAC = 0.375;
 
 export const FLYER_LOGO_BLOCK_BOTTOM_FRAC =
   FLYER_LOGO_LAYOUT.centerYFrac + FLYER_LOGO_LAYOUT.maxHFrac / 2;
@@ -55,7 +58,7 @@ export function flyerLogoLayoutResolved(s) {
  * @param {boolean} hasLogo
  */
 export function flyerLogoBlockBottomFracFromState(s, hasLogo) {
-  if (!hasLogo) return 0.036;
+  if (!hasLogo) return 0.026;
   const L = flyerLogoLayoutResolved(s);
   return L.centerYFrac + L.maxHFrac / 2;
 }
@@ -64,10 +67,10 @@ export function flyerLogoBlockBottomFracFromState(s, hasLogo) {
  * Composition verticale du flyer (écarts volontairement marqués pour l’aperçu + impression).
  */
 export const FLYER_LAYOUT = Object.freeze({
-  /** Centre vertical de la roue (plus bas + plus grand disque → QR légèrement abaissé). */
-  wheelCenterYFrac: 0.54,
+  /** Centre vertical de la roue (roue un peu plus petite → léger remonté visuel). */
+  wheelCenterYFrac: 0.528,
   /** Bord supérieur du carré QR (fraction hauteur). */
-  qrTopYFrac: 0.566,
+  qrTopYFrac: 0.558,
   /** Hauteur de la zone « étapes », fond transparent. */
   footerStepsHeightFrac: 0.108,
   /** Hauteur max du PNG bandeau pied (fraction canvas). */
@@ -157,7 +160,7 @@ export function defaultFlyerState() {
     headlineStrokeColor: "#020617",
     headlineGiftStrokeColor: "#020617",
     headlineStrokeWidth: 18,
-    headlineLogoGapPct: 7,
+    headlineLogoGapPct: 4,
     headlineLetterSpacing: 0,
     headlineSizePct: 7,
     footerStepsForegroundColor: "#ffffff",
@@ -271,15 +274,18 @@ export function mergeFlyerState(raw) {
     wheelRenderMode: "png",
   };
   merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
+  /** Charte flyer : couleurs roue = primaire / secondaire si non fixées dans le JSON. */
+  const colorPrimary = safeHex(String(merged.colorPrimary ?? ""), base.colorPrimary);
+  const colorSecondary = safeHex(String(merged.colorSecondary ?? ""), base.colorSecondary);
   const hasOddKey = Object.prototype.hasOwnProperty.call(rawClean, "wheelColorOdd");
   const hasEvenKey = Object.prototype.hasOwnProperty.call(rawClean, "wheelColorEven");
   const wheelColorOdd = safeHex(
     String(hasOddKey ? rawClean.wheelColorOdd ?? "" : rawClean.wheelSeg1 ?? ""),
-    base.wheelColorOdd,
+    colorPrimary,
   );
   const wheelColorEven = safeHex(
     String(hasEvenKey ? rawClean.wheelColorEven ?? "" : rawClean.wheelSeg2 ?? ""),
-    base.wheelColorEven,
+    colorSecondary,
   );
   delete merged.subline;
   delete merged.flyerWheelOutlineWidth;
@@ -299,8 +305,8 @@ export function mergeFlyerState(raw) {
   }
   return {
     ...merged,
-    colorPrimary: safeHex(String(merged.colorPrimary ?? ""), base.colorPrimary),
-    colorSecondary: safeHex(String(merged.colorSecondary ?? ""), base.colorSecondary),
+    colorPrimary,
+    colorSecondary,
     colorAccent: safeHex(String(merged.colorAccent ?? ""), base.colorAccent),
     colorBgTop: safeHex(String(merged.colorBgTop ?? ""), base.colorBgTop),
     colorBgBottom: safeHex(String(merged.colorBgBottom ?? ""), base.colorBgBottom),

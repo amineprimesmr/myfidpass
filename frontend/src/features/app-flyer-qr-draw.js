@@ -4,6 +4,7 @@
 import {
   FLYER_EXPORT,
   FLYER_LAYOUT,
+  FLYER_WHEEL_RADIUS_FRAC,
   footerStepsForegroundResolved,
   flyerLogoLayoutResolved,
 } from "./app-flyer-qr-presets.js";
@@ -244,7 +245,43 @@ function logoSourceDimensions(img) {
 }
 
 /**
- * Cadre utile du logo (alpha) pour retirer marges PNG / canvas trop larges — pas de « cadre » visuel sur le flyer.
+ * Moyenne RGB des pixels opaques dans un rectangle (pour estimer fond blanc / gris JPEG).
+ * @param {Uint8ClampedArray} data
+ * @param {number} pw
+ * @param {number} ph
+ * @param {number} x0
+ * @param {number} y0
+ * @param {number} x1
+ * @param {number} y1
+ * @returns {{ r: number; g: number; b: number } | null}
+ */
+function sampleOpaqueAverageRgb(data, pw, ph, x0, y0, x1, y1) {
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  const xMin = Math.max(0, x0);
+  const yMin = Math.max(0, y0);
+  const xMax = Math.min(pw, x1);
+  const yMax = Math.min(ph, y1);
+  for (let y = yMin; y < yMax; y++) {
+    const row = y * pw * 4;
+    for (let x = xMin; x < xMax; x++) {
+      const i = row + x * 4;
+      if (data[i + 3] > 200) {
+        r += data[i];
+        g += data[i + 1];
+        b += data[i + 2];
+        n++;
+      }
+    }
+  }
+  if (n < 4) return null;
+  return { r: r / n, g: g / n, b: b / n };
+}
+
+/**
+ * Cadre utile du logo : alpha + retrait des fonds opaques type JPEG (bloc blanc autour du motif).
  * @param {CanvasImageSource} img
  * @returns {{ sx: number; sy: number; sw: number; sh: number } | null}
  */
@@ -272,6 +309,35 @@ function computeLogoContentBounds(img) {
   } catch {
     return null;
   }
+  const depth = Math.max(2, Math.min(14, Math.round(Math.min(pw, ph) * 0.06)));
+  const cornerTL = sampleOpaqueAverageRgb(data, pw, ph, 0, 0, depth, depth);
+  const cornerTR = sampleOpaqueAverageRgb(data, pw, ph, pw - depth, 0, pw, depth);
+  const cornerBL = sampleOpaqueAverageRgb(data, pw, ph, 0, ph - depth, depth, ph);
+  const cornerBR = sampleOpaqueAverageRgb(data, pw, ph, pw - depth, ph - depth, pw, ph);
+  /** @type {{ r: number; g: number; b: number } | null} */
+  let bg = null;
+  const corners = [cornerTL, cornerTR, cornerBL, cornerBR].filter(Boolean);
+  if (corners.length >= 2) {
+    bg = {
+      r: corners.reduce((s, p) => s + p.r, 0) / corners.length,
+      g: corners.reduce((s, p) => s + p.g, 0) / corners.length,
+      b: corners.reduce((s, p) => s + p.b, 0) / corners.length,
+    };
+  }
+  /** Écart type couleur / fond : ignore les pixels « boîte blanche » sur JPEG. */
+  const bgTol = 40;
+  const isForeground = (i) => {
+    const a = data[i + 3];
+    if (a < 12) return false;
+    if (a < 210) return true;
+    if (!bg) return a > 14;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const dist = Math.hypot(r - bg.r, g - bg.g, b - bg.b);
+    return dist > bgTol;
+  };
+
   let minX = pw;
   let minY = ph;
   let maxX = -1;
@@ -279,7 +345,8 @@ function computeLogoContentBounds(img) {
   for (let y = 0; y < ph; y++) {
     const row = y * pw * 4;
     for (let x = 0; x < pw; x++) {
-      if (data[row + x * 4 + 3] > 14) {
+      const i = row + x * 4;
+      if (isForeground(i)) {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;
@@ -388,10 +455,11 @@ function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
   if ("imageSmoothingQuality" in octx) octx.imageSmoothingQuality = "high";
   drawImageContainCropped(octx, logoImg, 0, 0, tw, th, sx, sy, srw, srh);
 
-  const glow = Math.max(12, maxW * 0.048);
-  const dropY = Math.max(2, maxH * 0.032);
-  const dropBlur = Math.max(6, maxW * 0.028);
-  const filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.42)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.55))`;
+  const glow = Math.max(8, maxW * 0.028);
+  const dropY = Math.max(2, maxH * 0.028);
+  const dropBlur = Math.max(6, maxW * 0.026);
+  /** Halo blanc très léger : évite l’effet « plaque » sur le fond du flyer. */
+  const filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.44)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.22))`;
 
   ctx.save();
   try {
@@ -707,7 +775,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
 
   const wheelCx = w * 0.5;
   const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
-  const wheelR = w * 0.42;
+  const wheelR = w * FLYER_WHEEL_RADIUS_FRAC;
 
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   const hasCommerceLogo = logoImg != null;

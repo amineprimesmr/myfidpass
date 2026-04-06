@@ -11,6 +11,23 @@ import {
 /** Léger chevauchement angulaire pour masquer les fentes anti-alias entre secteurs. */
 const SEG_OVERLAP_RAD = 0.005;
 
+/**
+ * @param {string} hex
+ * @returns {{ r: number; g: number; b: number }}
+ */
+function hexToRgb(hex) {
+  const h = String(hex || "").replace(/^#/, "");
+  if (h.length !== 6) return { r: 255, g: 255, b: 255 };
+  const n = parseInt(h, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+/** Luminance relative 0–1. */
+function lumaFromHex(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
 function offsetRad(offsetDeg) {
   return ((Number(offsetDeg) || 0) * Math.PI) / 180;
 }
@@ -39,8 +56,9 @@ function segmentAnglesEqual(i, n, offsetDeg) {
  * @param {number} offsetDeg
  * @param {number} n
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
+ * @param {string[]} segmentHexColors couleur de chaque part (alignée charte flyer)
  */
-function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
+function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColors) {
   if (n < 1) return;
   const base = -Math.PI / 2 + offsetRad(offsetDeg);
   const step = (Math.PI * 2) / n;
@@ -50,6 +68,8 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
   const wsc = Number.isFinite(wl) ? Math.max(0.7, Math.min(1.35, wl / 100)) : 1;
   const fontPx = Math.max(11, Math.round(r * 0.104 * wsc));
   const track = Math.round(fontPx * 0.04);
+  const strokeAccent = Math.max(2.2, fontPx * 0.13);
+  const strokeDark = Math.max(1.2, fontPx * 0.055);
 
   ctx.save();
   ctx.beginPath();
@@ -67,6 +87,10 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
     const tx = cx + Math.cos(mid) * labelR;
     const ty = cy + Math.sin(mid) * labelR;
     const label = i % 2 === 0 ? "GAGNÉ" : "PERDU";
+    const segHex = segmentHexColors[i] ?? "#ffffff";
+    /** Texte lisible sur part teintée : remplissage contrasté + contour couleur part (charte). */
+    const lum = lumaFromHex(segHex);
+    const fillCore = lum > 0.62 ? "#0f172a" : "#ffffff";
 
     ctx.save();
     ctx.translate(tx, ty);
@@ -75,18 +99,17 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s) {
     if (Math.sin(mid) > 0) rot += Math.PI;
     ctx.rotate(rot);
 
-    ctx.shadowColor = "rgba(0,0,0,0.55)";
-    ctx.shadowBlur = Math.round(fontPx * 0.45);
-    ctx.shadowOffsetX = Math.round(fontPx * 0.14);
-    ctx.shadowOffsetY = Math.round(fontPx * 0.26);
-    ctx.fillStyle = "rgba(252,252,252,0.98)";
-    ctx.fillText(label, 0, 0);
-
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-    ctx.fillStyle = "#ffffff";
+    ctx.lineWidth = strokeAccent + strokeDark * 1.4;
+    ctx.strokeStyle = "rgba(0,0,0,0.58)";
+    ctx.strokeText(label, 0, 0);
+    ctx.lineWidth = strokeAccent;
+    ctx.strokeStyle = segHex;
+    ctx.strokeText(label, 0, 0);
+    ctx.fillStyle = fillCore;
     ctx.fillText(label, 0, 0);
     ctx.restore();
   }
@@ -213,6 +236,15 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
     ctx.arc(cx, cy, rt, t0, t1);
     ctx.closePath();
     ctx.fill();
+    ctx.globalCompositeOperation = "soft-light";
+    ctx.globalAlpha = 0.48;
+    ctx.fillStyle = colors[i];
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, rt, t0, t1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
     ctx.restore();
   }
@@ -234,7 +266,8 @@ export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
   const pngAligned = s.wheelRenderMode !== "segments";
   const labelOff = pngAligned ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, FLYER_WHEEL_SEGMENT_COUNT, s);
+  const cols = wheelSegmentColorsResolved(s);
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, FLYER_WHEEL_SEGMENT_COUNT, s, cols);
 }
 
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
@@ -255,7 +288,7 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
-  /** GAGNÉ / PERDU au canvas (l’asset PNG peut être sans typo — teintes + texte comme avant visuellement). */
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s);
+  /** GAGNÉ / PERDU au canvas — couleurs alignées sur les parts (charte flyer). */
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
   drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }
