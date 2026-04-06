@@ -50,19 +50,6 @@ export { applyQrThanksHero, runQrThanksHeroTransition };
 /** Un seul couple visibility/pageshow pour tout le module (évite N handlers après chaque rerender). */
 let qrResumeListenersAbort = null;
 
-/**
- * Ferme l’intro Lottie sans déclencher la rotation auto du pen (`window.start3`).
- * Le clic réel sur « enter » lance encore la scène complète (comportement CodePen).
- */
-export function softDismissCarnivalQrIntroOverlay() {
-  const c = document.getElementById("container");
-  if (c) c.style.display = "none";
-  document.querySelector("main.fidelity-qr-carnival-pen")?.classList.add("fidelity-qr-carnival-intro-done");
-  try {
-    globalThis.anim?.stop();
-  } catch (_) {}
-}
-
 const QR_PANEL_IDS = ["#fidelity-qr-panel-google", "#fidelity-qr-panel-verify", "#fidelity-qr-panel-reward"];
 
 /** Conteneur page publique (référence passée au bootstrap peut diverger si le DOM est reconstruit). */
@@ -293,7 +280,6 @@ export function bindQrGameUi(ctx) {
           await new Promise((r) => globalThis.setTimeout(r, 480));
           const mount = fidelityAppMount(rootEl);
           closeQrModalRoot(mount, () => {
-            softDismissCarnivalQrIntroOverlay();
             void (async () => {
               try {
                 await runQrThanksHeroTransition(mount);
@@ -317,9 +303,7 @@ export function bindQrGameUi(ctx) {
             })();
           });
         } else {
-          closeQrModalRoot(rootEl, () => {
-            softDismissCarnivalQrIntroOverlay();
-          });
+          closeQrModalRoot(rootEl);
         }
       })();
     }, durationMs);

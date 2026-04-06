@@ -5,32 +5,17 @@ function safeJson(res) {
   return res.json().catch(() => ({}));
 }
 
-/** Évite un chargement infini si l’API ne répond pas (proxy cassé, socket pendante, etc.). */
-const FIDELITY_FETCH_TIMEOUT_MS = 28_000;
-
 /**
  * @param {string} url
  * @param {RequestInit} [init]
  * @param {string} networkFallback
  */
 async function fetchFidelity(url, init, networkFallback) {
-  const controller = new AbortController();
-  const tid = setTimeout(() => controller.abort(), FIDELITY_FETCH_TIMEOUT_MS);
-  const upstream = init?.signal;
-  if (upstream) {
-    if (upstream.aborted) controller.abort();
-    else upstream.addEventListener("abort", () => controller.abort(), { once: true });
-  }
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    return await fetch(url, init);
   } catch (e) {
-    const timedOut = e instanceof Error && e.name === "AbortError";
-    const msg = timedOut
-      ? "La requête a pris trop de temps. Vérifie ta connexion ou réessaie."
-      : messageUtilisateurPourErreur(e, networkFallback);
+    const msg = messageUtilisateurPourErreur(e, networkFallback);
     throw new Error(msg, { cause: e });
-  } finally {
-    clearTimeout(tid);
   }
 }
 
