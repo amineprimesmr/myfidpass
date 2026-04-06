@@ -673,8 +673,8 @@ router.put("/flyer", (req, res) => {
 });
 
 /** Génération d’image de fond flyer via OpenAI (DALL·E 3) — prompt construit côté serveur. */
+/** Pas d’`ensureOperationalSubscription` : identité dashboard déjà vérifiée par `requireDashboard` ; quota mensuel / packs limite l’usage (freemium : configuration). */
 router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
-  if (!ensureOperationalSubscription(req, res, req.business)) return;
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey || String(apiKey).trim().length < 20) {
     return res.status(503).json({
