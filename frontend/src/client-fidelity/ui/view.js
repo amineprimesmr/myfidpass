@@ -245,8 +245,14 @@ export function renderClientPage(root, state, options = {}) {
         })
       : ""}
 
+    ${
+      hasMember
+        ? ""
+        : `
     <footer class="fidelity-v2-footer fidelity-v2-footer--dark">
       <p>Vous êtes un pro ?</p>
     </footer>
+    `
+    }
   `;
 }

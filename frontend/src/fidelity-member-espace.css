@@ -26,12 +26,16 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
   flex: 1 1 auto;
   min-height: 0;
   padding-top: 1rem;
-  /* Réserve : hauteur du bandeau + éventuel « trou » Safari (voir --fidelity-visual-gap-bottom, JS) */
-  padding-bottom: calc(1.35rem + var(--fidelity-member-footer-bar) + var(--fidelity-visual-gap-bottom, 0px));
+  padding-bottom: 1.35rem;
   max-width: 640px;
   margin-left: auto;
   margin-right: auto;
   width: 100%;
+}
+
+/* Réserve basse seulement si le bandeau « pro » est affiché (visiteurs sans compte) */
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)):has(> footer.fidelity-v2-footer--dark) > main.fidelity-v2-main {
+  padding-bottom: calc(1.35rem + var(--fidelity-member-footer-bar) + var(--fidelity-visual-gap-bottom, 0px));
 }
 
 /*
