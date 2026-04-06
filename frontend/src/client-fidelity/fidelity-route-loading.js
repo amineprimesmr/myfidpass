@@ -105,6 +105,23 @@ export function startFidelityRouteLoadingAnimations(overlayEl) {
  * @param {HTMLElement} overlayEl
  * @param {{ minVisibleMs?: number }} [opts] — défaut 0 : pas d’attente artificielle une fois le contenu prêt.
  */
+function forceRemoveFidelityLoadingOverlayDom() {
+  const stale = document.getElementById(OVERLAY_ID);
+  if (stale) {
+    logoSpinTween?.kill();
+    logoSpinTween = null;
+    stale.remove();
+  }
+  const g = typeof globalThis.gsap !== "undefined" ? globalThis.gsap : undefined;
+  if (g) {
+    try {
+      g.killTweensOf(`#${OVERLAY_ID}`);
+    } catch (_) {}
+  }
+  document.documentElement.classList.remove(HTML_LOADING_CLASS);
+  document.body.removeAttribute("aria-busy");
+}
+
 export async function dismissFidelityRouteLoadingOverlay(overlayEl, opts = {}) {
   const { minVisibleMs = 0 } = opts;
   const el = overlayEl && document.body.contains(overlayEl) ? overlayEl : document.getElementById(OVERLAY_ID);
@@ -118,6 +135,12 @@ export async function dismissFidelityRouteLoadingOverlay(overlayEl, opts = {}) {
     cleanupHtmlClass();
     return;
   }
+
+  /* Si GSAP ou une anim ne termine jamais, on débloque quand même l’écran (sinon chargement infini). */
+  const failsafeMs = 4000;
+  const failsafeId = setTimeout(() => {
+    forceRemoveFidelityLoadingOverlayDom();
+  }, failsafeMs);
 
   logoSpinTween?.kill();
   logoSpinTween = null;
@@ -137,27 +160,35 @@ export async function dismissFidelityRouteLoadingOverlay(overlayEl, opts = {}) {
   }
 
   const OUT_MS = 0.2;
+  const animMs = Math.round(OUT_MS * 1000) + 80;
 
   try {
-    if (g) {
-      g.killTweensOf(el);
-      await new Promise((resolve) => {
-        g.to(el, {
-          opacity: 0,
-          duration: OUT_MS,
-          ease: "power2.out",
-          onComplete: () => {
-            el.remove();
-            resolve();
-          },
-        });
-      });
-    } else {
-      el.classList.add("fidelity-route-loading-overlay--out");
-      await new Promise((r) => setTimeout(r, Math.round(OUT_MS * 1000) + 30));
-      el.remove();
-    }
+    await Promise.race([
+      (async () => {
+        if (g) {
+          g.killTweensOf(el);
+          await new Promise((resolve) => {
+            g.to(el, {
+              opacity: 0,
+              duration: OUT_MS,
+              ease: "power2.out",
+              onComplete: () => {
+                el.remove();
+                resolve();
+              },
+            });
+          });
+        } else {
+          el.classList.add("fidelity-route-loading-overlay--out");
+          await new Promise((r) => setTimeout(r, animMs));
+          el.remove();
+        }
+      })(),
+      new Promise((resolve) => setTimeout(resolve, 3200)),
+    ]);
+    document.getElementById(OVERLAY_ID)?.remove();
   } finally {
+    clearTimeout(failsafeId);
     cleanupHtmlClass();
   }
 }
