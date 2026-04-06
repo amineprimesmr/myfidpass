@@ -86,8 +86,14 @@ async function renderFromCurrentBootstrap() {
     bgIn = await loadImageInputFromDataUrl(flyer_prefs.custom_bg_data_url);
   }
 
+  const slugFromPrefs =
+    flyer_prefs &&
+    typeof flyer_prefs.business_slug === "string" &&
+    flyer_prefs.business_slug.trim().length > 0
+      ? flyer_prefs.business_slug.trim()
+      : "";
   const slugMatch = share_url.match(/\/fidelity\/([^/?#]+)/);
-  const cardSlug = slugMatch ? decodeURIComponent(slugMatch[1]) : "";
+  const cardSlug = slugFromPrefs || (slugMatch ? decodeURIComponent(slugMatch[1]) : "");
   const apiBase = API_BASE || "https://api.myfidpass.fr";
   if (!logoIn && cardSlug) {
     const logoApi = `${apiBase}/api/businesses/${encodeURIComponent(cardSlug)}/public/logo`;

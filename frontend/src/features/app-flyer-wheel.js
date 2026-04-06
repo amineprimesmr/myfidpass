@@ -159,6 +159,8 @@ function drawWheelHub(ctx, cx, cy, r) {
 export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
   const n = colors.length;
   if (n < 1) return;
+  /** Sans `rouegpt.png` (souvent absent du CDN), le repli vectoriel seul : sur fond IA rose, parts claires = invisibles — contours obligatoires. */
+  const edgeW = Math.max(2.5, r * 0.009);
   for (let i = 0; i < n; i++) {
     const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
     ctx.beginPath();
@@ -167,6 +169,10 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
     ctx.closePath();
     ctx.fillStyle = colors[i];
     ctx.fill();
+    ctx.strokeStyle = "rgba(15,23,42,0.5)";
+    ctx.lineWidth = edgeW;
+    ctx.lineJoin = "round";
+    ctx.stroke();
   }
 }
 
