@@ -10,6 +10,8 @@ import {
   getBusinessesByUserId,
   getSubscriptionByUserId,
   hasActiveSubscription,
+  hasOperationalMerchantAccess,
+  getMerchantTrialEndsAtIso,
   setPasswordResetToken,
   getPasswordResetByToken,
   deletePasswordResetToken,
@@ -77,9 +79,11 @@ cleanExpiredRefreshTokens();
 
 function authSubscriptionPayload(userId) {
   const subscription = getSubscriptionByUserId(userId);
+  const paying = hasActiveSubscription(userId);
   return {
     subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
-    has_active_subscription: hasActiveSubscription(userId),
+    has_active_subscription: hasOperationalMerchantAccess(userId),
+    merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(userId),
   };
 }
 
@@ -570,7 +574,10 @@ router.get("/apple-exchange", (req, res) => {
     return res.status(401).json({ error: "Code invalide ou expiré" });
   }
   const uid = data.user?.id;
-  const subPayload = uid != null ? authSubscriptionPayload(uid) : { subscription: null, has_active_subscription: false };
+  const subPayload =
+    uid != null
+      ? authSubscriptionPayload(uid)
+      : { subscription: null, has_active_subscription: false, merchant_trial_ends_at: null };
   return res.json({
     token: data.token,
     refreshToken: data.refreshToken,
@@ -660,11 +667,13 @@ router.get("/me", (req, res, next) => {
   try {
     const businesses = getBusinessesByUserId(req.user.id);
     const subscription = getSubscriptionByUserId(req.user.id);
+    const paying = hasActiveSubscription(req.user.id);
     res.json({
       user: { id: req.user.id, email: req.user.email, name: req.user.name },
       businesses,
       subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
-      has_active_subscription: hasActiveSubscription(req.user.id),
+      has_active_subscription: hasOperationalMerchantAccess(req.user.id),
+      merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(req.user.id),
     });
   } catch (e) {
     console.error("GET /api/auth/me:", e);

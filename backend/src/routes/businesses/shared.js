@@ -2,7 +2,7 @@
  * Helpers et middleware partagés pour les routes businesses.
  * Référence : REFONTE-REGLES.md — routes < 15 par fichier.
  */
-import { getBusinessBySlug, getBusinessByDashboardToken, hasActiveSubscription } from "../../db.js";
+import { getBusinessBySlug, getBusinessByDashboardToken, hasOperationalMerchantAccess } from "../../db.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 
 export function getApiBase(req) {
@@ -40,7 +40,8 @@ export function getIdempotencyKey(req) {
 }
 
 const SUBSCRIPTION_REQUIRED_BODY = {
-  error: "Abonnement actif requis pour utiliser cette fonctionnalité.",
+  error:
+    "Abonnement actif requis (ou période d’essai gratuite expirée). Les nouveaux comptes ont 3 jours d’accès complet ; souscrivez via Stripe pour continuer.",
   code: "subscription_required",
 };
 
@@ -96,7 +97,7 @@ export function assertOperationalSubscription(req, res, business) {
     res.status(403).json(SUBSCRIPTION_REQUIRED_BODY);
     return false;
   }
-  if (devPaymentBypass(req) || hasActiveSubscription(ownerId)) return true;
+  if (devPaymentBypass(req) || hasOperationalMerchantAccess(ownerId)) return true;
   res.status(403).json(SUBSCRIPTION_REQUIRED_BODY);
   return false;
 }

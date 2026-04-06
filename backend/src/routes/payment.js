@@ -7,6 +7,7 @@ import {
   getSubscriptionByUserId,
   getUserByEmail,
   hasActiveSubscription,
+  hasOperationalMerchantAccess,
   incrementFlyerAiGenerationsBonus,
   getSubscriptionByStripeSubscriptionId,
 } from "../db.js";
@@ -194,7 +195,7 @@ router.post("/reconcile-subscription", requireAuth, async (req, res) => {
       ok: true,
       source,
       subscription_status: sub.status,
-      has_active_subscription: hasActiveSubscription(userId),
+      has_active_subscription: hasOperationalMerchantAccess(userId),
     });
 
   try {
@@ -233,7 +234,7 @@ router.post("/reconcile-subscription", requireAuth, async (req, res) => {
     if (!email) {
       return res.json({
         ok: false,
-        has_active_subscription: hasActiveSubscription(userId),
+        has_active_subscription: hasOperationalMerchantAccess(userId),
         message: "Aucun email sur le compte : impossible de chercher le client Stripe par email.",
       });
     }
@@ -252,7 +253,7 @@ router.post("/reconcile-subscription", requireAuth, async (req, res) => {
 
     return res.json({
       ok: false,
-      has_active_subscription: hasActiveSubscription(userId),
+      has_active_subscription: hasOperationalMerchantAccess(userId),
       message: "Aucun abonnement Stripe actif trouvé pour ce compte (metadata, base locale, email).",
     });
   } catch (e) {

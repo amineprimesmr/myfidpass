@@ -23,7 +23,7 @@ import {
   getPushTokensForMember,
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
-  hasActiveSubscription,
+  hasOperationalMerchantAccess,
 } from "../../db.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { sendPassKitUpdate } from "../../apns.js";
@@ -69,7 +69,7 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
     const uid = req.user.id != null ? String(req.user.id).trim() : "";
     const bid = business.user_id != null ? String(business.user_id).trim() : "";
     const previewWalletEmail = normEmail.startsWith("wallet-apercu.") && normEmail.endsWith("@example.com");
-    if (uid === bid && !previewWalletEmail && !devPaymentBypass(req) && !hasActiveSubscription(uid)) {
+    if (uid === bid && !previewWalletEmail && !devPaymentBypass(req) && !hasOperationalMerchantAccess(uid)) {
       return res.status(403).json({
         error: "Abonnement actif requis pour ajouter des clients à votre programme.",
         code: "subscription_required",

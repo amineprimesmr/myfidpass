@@ -127,11 +127,11 @@ export function initAuthPage(initialTab) {
         body: JSON.stringify({ email }),
       });
       const data = await res.json().catch(() => ({}));
-      if (successEl) {
+      if (res.ok && successEl) {
         successEl.textContent = data.message || "Si un compte existe avec cet email, vous recevrez un lien par email.";
         successEl.classList.remove("hidden");
-      }
-      if (!res.ok && errEl) {
+      } else if (!res.ok && errEl) {
+        if (successEl) successEl.classList.add("hidden");
         errEl.textContent = data.error || "Erreur. Réessayez.";
         errEl.classList.remove("hidden");
       }

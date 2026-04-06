@@ -3,8 +3,49 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { getUserById } from "./users.js";
 
 const db = getDb();
+
+/** Durée d’accès complet sans Stripe après création du compte (jours). Surcharge : `MERCHANT_TRIAL_DAYS`. */
+export function merchantTrialDurationMs() {
+  const n = parseInt(process.env.MERCHANT_TRIAL_DAYS, 10);
+  const days = Number.isFinite(n) && n >= 0 ? n : 3;
+  return days * 24 * 60 * 60 * 1000;
+}
+
+function userCreatedAtMs(user) {
+  if (!user?.created_at) return null;
+  let s = String(user.created_at).trim();
+  if (!s) return null;
+  if (!s.includes("T")) s = s.replace(" ", "T");
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += "Z";
+  const t = Date.parse(s);
+  return Number.isFinite(t) ? t : null;
+}
+
+/** Fin de la fenêtre d’essai (ISO UTC), ou `null` si date de création illisible. */
+export function getMerchantTrialEndsAtIso(userId) {
+  if (!userId) return null;
+  const user = getUserById(String(userId).trim());
+  const start = userCreatedAtMs(user);
+  if (start == null) return null;
+  return new Date(start + merchantTrialDurationMs()).toISOString();
+}
+
+/** Essai actif : pas d’abo Stripe « payant » et encore dans les N premiers jours après inscription. */
+export function isUserInMerchantTrial(userId) {
+  if (!userId || hasActiveSubscription(userId)) return false;
+  const endIso = getMerchantTrialEndsAtIso(userId);
+  if (!endIso) return false;
+  return Date.now() < Date.parse(endIso);
+}
+
+/** Accès opérationnel (scan, points, campagnes, etc.) : Stripe actif ou période d’essai gratuite. */
+export function hasOperationalMerchantAccess(userId) {
+  if (!userId) return false;
+  return hasActiveSubscription(userId) || isUserInMerchantTrial(userId);
+}
 
 export const PLANS = { starter: { max_businesses: 1 }, pro: { max_businesses: 5 } };
 
@@ -39,9 +80,9 @@ export function canCreateBusiness(userId) {
   const count = getBusinessCountByUserId(userId);
   // Premier commerce autorisé sans abonnement (inscription app / onboarding, aligné besoin revue produit).
   if (count === 0) return true;
-  if (!hasActiveSubscription(userId)) return false;
+  if (!hasOperationalMerchantAccess(userId)) return false;
   const sub = getSubscriptionByUserId(userId);
-  const plan = PLANS[sub.plan_id] || PLANS.starter;
+  const plan = PLANS[sub?.plan_id] || PLANS.starter;
   return count < plan.max_businesses;
 }
 
