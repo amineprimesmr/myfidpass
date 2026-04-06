@@ -311,6 +311,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
     "SECTOR FIDELITY (critical): Decorative imagery MUST match the MERCHANT BRIEF only. If ambiguous, use abstract brand-colored shapes.",
     "TASK: ONE portrait 2:3 BACKGROUND PLATE only, full bleed, no outer frame, no white border.",
     "NOT A FINISHED FLYER: Our software will draw on top, in fixed positions: commerce logo, prize wheel (PNG), headline text, QR code, footer steps. Your output is ONLY the wallpaper behind those layers.",
+    "Z-ORDER / REALITY: This PNG is the bottom layer only. Requests like « put a mascot above the QR » cannot be honored here — the QR is painted in software on top. Keep hero subjects, mascots, or products in side margins or upper band only; avoid the bottom-right quadrant (QR overlay) and the reserved wheel center.",
     "════════════════ ABSOLUTE BANS — NEVER VIOLATE ═══════════════",
     "NEVER draw any prize wheel, roulette, spinner, pie chart with segments, dial, or circular game divided into wedges.",
     "NEVER draw any text, letters, numbers, slogans, logos, wordmarks, or typographic mockups.",
