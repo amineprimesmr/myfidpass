@@ -100,6 +100,28 @@ async function loadQrAsImage(targetUrl, sizePx) {
 }
 
 /**
+ * Fond photo / IA très saturé : les parts de roue (multiply ou aplats) peuvent se confondre avec le centre.
+ * Disque légerement assombri derrière la roue pour garder la lecture « jeu ».
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} r
+ */
+function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
+  ctx.save();
+  const rad = r * 1.12;
+  const g = ctx.createRadialGradient(cx, cy, r * 0.1, cx, cy, rad);
+  g.addColorStop(0, "rgba(6,8,18,0.2)");
+  g.addColorStop(0.5, "rgba(6,8,18,0.14)");
+  g.addColorStop(1, "rgba(6,8,18,0)");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
  * Remplit le rectangle comme object-fit: cover (échelle uniforme, centré).
  * @param {CanvasRenderingContext2D} ctx
  * @param {CanvasImageSource} img
@@ -520,6 +542,9 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const hasCommerceLogo = logoImg != null;
   if (hasCommerceLogo) {
     drawFlyerCommerceLogo(ctx, logoImg, w, h);
+  }
+  if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
+    drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
