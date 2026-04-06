@@ -581,7 +581,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
 
   const wheelCx = w * 0.5;
   const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
-  const wheelR = w * 0.36;
+  const wheelR = w * 0.42;
 
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   const hasCommerceLogo = logoImg != null;

@@ -91,9 +91,19 @@ async function renderFromCurrentBootstrap() {
 
   let logoIn = null;
   let bgIn = null;
-  if (flyer_prefs?.custom_logo_data_url) {
-    logoIn = await loadImageInputFromDataUrl(flyer_prefs.custom_logo_data_url);
+  const prefsRaw = flyer_prefs;
+  const hasLogoKey =
+    prefsRaw != null &&
+    typeof prefsRaw === "object" &&
+    Object.prototype.hasOwnProperty.call(prefsRaw, "custom_logo_data_url");
+  const rawLogo = hasLogoKey ? /** @type {{ custom_logo_data_url?: unknown }} */ (prefsRaw).custom_logo_data_url : undefined;
+  if (typeof rawLogo === "string" && rawLogo.startsWith("data:image/")) {
+    logoIn = await loadImageInputFromDataUrl(rawLogo);
+  } else if (hasLogoKey && (rawLogo === "" || rawLogo === null)) {
+    logoIn = null;
   }
+  const skipPublicLogoFallback =
+    hasLogoKey && (rawLogo === "" || rawLogo === null);
   if (flyer_prefs?.custom_bg_data_url) {
     bgIn = await loadImageInputFromDataUrl(flyer_prefs.custom_bg_data_url);
   }
@@ -113,7 +123,7 @@ async function renderFromCurrentBootstrap() {
     rawBase ||
     (/myfidpass\.fr$/i.test(host) ? "https://api.myfidpass.fr" : "") ||
     "https://api.myfidpass.fr";
-  if (!logoIn && cardSlug) {
+  if (!logoIn && cardSlug && !skipPublicLogoFallback) {
     const logoApi = `${apiBase}/api/businesses/${encodeURIComponent(cardSlug)}/public/logo`;
     logoIn = await loadImageInputFromHttp(logoApi);
   }

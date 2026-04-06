@@ -109,9 +109,6 @@ function drawWheelVectorBacking(ctx, cx, cy, r) {
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fillStyle = rg;
   ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.65)";
-  ctx.lineWidth = Math.max(3, r * 0.014);
-  ctx.stroke();
   ctx.restore();
 }
 
@@ -128,22 +125,6 @@ function drawWheelGroundShadow(ctx, cx, cy, r) {
   ctx.beginPath();
   ctx.ellipse(cx, gy, r * 0.96, r * 0.2, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.restore();
-}
-
-/** Léger relief sur le pourtour du disque (lisibilité sur fond photo). */
-function drawWheelOuterRim(ctx, cx, cy, r) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.998, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(255,255,255,0.28)";
-  ctx.lineWidth = Math.max(1.5, r * 0.014);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.988, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(0,0,0,0.2)";
-  ctx.lineWidth = Math.max(1, r * 0.009);
-  ctx.stroke();
   ctx.restore();
 }
 
@@ -179,11 +160,7 @@ function drawWheelHub(ctx, cx, cy, r) {
 export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
   const n = colors.length;
   if (n < 1) return;
-  /**
-   * Repli sans `rouegpt.png` : parts très sombres sur fond IA sombre, ou très claires sur fond rose,
-   * + trait slate seul = roue « absente ». Double contour blanc + noir lisible partout.
-   */
-  const edgeW = Math.max(2.2, r * 0.0085);
+  /** Teintes seules : pas de contour (évite le « cerclage » ; GAGNÉ/PERDU = visuel IA ou asset PNG). */
   for (let i = 0; i < n; i++) {
     const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
     ctx.beginPath();
@@ -192,13 +169,6 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
     ctx.closePath();
     ctx.fillStyle = colors[i];
     ctx.fill();
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "rgba(255,255,255,0.92)";
-    ctx.lineWidth = edgeW * 2.35;
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(0,0,0,0.58)";
-    ctx.lineWidth = edgeW;
-    ctx.stroke();
   }
 }
 
@@ -269,7 +239,6 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
   /** Dès que `roue.png` est chargée : rendu image (trame + teintes). Sinon repli vectoriel minimal. */
   const usePng = Boolean(roueImg);
-  const n = FLYER_WHEEL_SEGMENT_COUNT;
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
   if (!usePng) drawWheelVectorBacking(ctx, wheelCx, wheelCy, wheelR);
@@ -280,8 +249,5 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
-  drawWheelOuterRim(ctx, wheelCx, wheelCy, wheelR);
-  const labelOff = usePng ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, n, s);
   drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }
