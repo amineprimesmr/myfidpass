@@ -199,6 +199,12 @@ export function initAppFlyerQr(slug, opts) {
 
   initFlyerAiGenerate(slug, {
     dashboardApi: opts.dashboardApi,
+    onFlyerAiWheelTintsSynced: (oddHex, evenHex) => {
+      const oddEl = root.querySelector("#app-flyer-wheel-color-odd");
+      const evenEl = root.querySelector("#app-flyer-wheel-color-even");
+      if (oddEl) oddEl.value = oddHex;
+      if (evenEl) evenEl.value = evenHex;
+    },
     onGeneratedBg: () => {
       flyerBgDirty = true;
       flyerBgPanelApi?.syncPreview?.();

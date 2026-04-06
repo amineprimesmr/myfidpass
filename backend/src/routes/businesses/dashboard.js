@@ -37,19 +37,17 @@ import {
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
-import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
+import { normalizeFlyerPrefsPut, mergeFlyerPrefsWheelColorsFromGeneration } from "../../lib/flyer-prefs.js";
 import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
 import rateLimit from "express-rate-limit";
 import {
   parseFlyerAIBody,
-  buildFlyerImagePrompt,
+  buildFlyerImagePromptBackgroundOnly,
+  multimodalForFlyerBackgroundOnly,
   buildFidelityClientPageBackgroundPrompt,
   multimodalForFidelityPageBackground,
-  mergeServerLogoIntoMultimodal,
-  mergeFlyerWheelTemplateMultimodal,
   openaiGenerateFlyerImage,
 } from "../../services/flyer-ai-image.js";
-import { getBusinessAssetData } from "../../db/business-assets.js";
 import { parseCampaignAutomationInstructionWithAI, normalizeEventTypeToken } from "../../services/campaign-automation-ai.js";
 import {
   FLYER_AI_FREE_PER_MONTH,
@@ -698,21 +696,29 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     });
   }
   try {
-    const multimodalLogo = mergeServerLogoIntoMultimodal(parsed.multimodal, req.business.id, getBusinessAssetData);
-    const { multimodal, hasTemplateWheel } = mergeFlyerWheelTemplateMultimodal(multimodalLogo);
-    const prompt = buildFlyerImagePrompt(parsed.value, {
-      hasLogo: multimodal.hasLogo,
-      styleRefCount: multimodal.styleRefCount,
-      hasTemplateWheel,
+    /** Fond flyer = plaque seule (pas de logo / roue / typo dans le PNG IA). Logo, roue rouegpt, titres, QR = même canvas que l’éditeur. */
+    const mmFlyer = multimodalForFlyerBackgroundOnly(parsed.multimodal);
+    const prompt = buildFlyerImagePromptBackgroundOnly(parsed.value, {
+      styleRefCount: mmFlyer.styleRefCount,
     });
-    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, multimodal);
+    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, mmFlyer);
+
+    const prefsMerged = mergeFlyerPrefsWheelColorsFromGeneration(
+      req.business.flyer_prefs_json,
+      parsed.value.accent_color_hex,
+      parsed.value.secondary_color_hex,
+    );
+    updateBusiness(req.business.id, {
+      flyer_prefs_json: prefsMerged,
+      flyer_prefs_updated_at: new Date().toISOString(),
+    });
 
     /** Même action : fond page jeu QR (sans roue), enregistré comme « Image de fond » page fidélité. */
     let fidelity_page_background_saved = false;
     /** @type {string | null} */
     let fidelity_page_background_error = null;
     try {
-      const mmBg = multimodalForFidelityPageBackground(multimodal, hasTemplateWheel);
+      const mmBg = multimodalForFidelityPageBackground(mmFlyer, false);
       const promptBg = buildFidelityClientPageBackgroundPrompt(parsed.value, {
         styleRefCount: mmBg.styleRefCount,
       });

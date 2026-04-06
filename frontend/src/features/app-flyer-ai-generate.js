@@ -82,7 +82,11 @@ function fileToBase64Raw(file) {
 
 /**
  * @param {string} slug
- * @param {{ dashboardApi?: (path: string, init?: RequestInit) => Promise<Response>; onGeneratedBg: () => void }} opts
+ * @param {{
+ *   dashboardApi?: (path: string, init?: RequestInit) => Promise<Response>;
+ *   onGeneratedBg: () => void;
+ *   onFlyerAiWheelTintsSynced?: (wheelColorOdd: string, wheelColorEven: string) => void;
+ * }} opts — `onFlyerAiWheelTintsSynced` aligne les teintes roue sur le formulaire IA (comme le serveur).
  */
 export function initFlyerAiGenerate(slug, opts) {
   const btn = document.getElementById("app-flyer-ai-generate-btn");
@@ -270,6 +274,11 @@ export function initFlyerAiGenerate(slug, opts) {
         try {
           const dataUrl = compressImageBitmapToFlyerBgDataUrl(bitmap);
           setStoredFlyerCustomBgDataUrl(dataUrl);
+          const accentRaw = accentEl?.value?.trim() || "#fbbf24";
+          const secRaw = secondaryEl?.value?.trim() || "";
+          const oddHex = /^#[0-9A-Fa-f]{6}$/i.test(accentRaw) ? accentRaw : "#fbbf24";
+          const evenHex = /^#[0-9A-Fa-f]{6}$/i.test(secRaw) ? secRaw : "#fef3c7";
+          opts.onFlyerAiWheelTintsSynced?.(oddHex, evenHex);
           opts.onGeneratedBg();
           let okMsg = "Fond flyer appliqué. Vous pouvez télécharger le PNG.";
           if (fidSaved) {

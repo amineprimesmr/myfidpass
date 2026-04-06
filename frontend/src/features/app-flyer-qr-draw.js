@@ -14,11 +14,10 @@ import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
 export { FLYER_EXPORT };
 
 /**
- * Roue dessinée par le canvas (PNG/segments + libellés).
- * Désactivé temporairement : le fond personnalisé (ex. image générée par l’IA) inclut déjà la roue ;
- * évite un doublon visuel. Remettre à `true` si on recompose une roue uniquement vectorielle.
+ * Roue dessinée par le canvas (`rouegpt.png` + teintes parts) — aligné sur l’éditeur.
+ * Le PNG IA n’est que le fond ; logo, roue, titres et QR sont toujours composés ici.
  */
-export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = false;
+export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = true;
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -518,11 +517,14 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const wheelR = w * 0.36;
 
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
-  // Le logo de tête est désormais porté par le fond (IA / visuel importé), pas par l'éditeur flyer.
+  const hasCommerceLogo = logoImg != null;
+  if (hasCommerceLogo) {
+    drawFlyerCommerceLogo(ctx, logoImg, w, h);
+  }
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
   }
-  drawFlyerHeroHeadline(ctx, s, w, h, scale, false);
+  drawFlyerHeroHeadline(ctx, s, w, h, scale, hasCommerceLogo);
   const qx = w * 0.472;
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
   const qCx = qx + qSize / 2;

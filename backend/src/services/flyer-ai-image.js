@@ -259,6 +259,71 @@ export function parseFlyerAIBody(raw) {
  * @param {string} businessId
  * @param {(id: string, kind: "logo") => string | null} getAssetData
  */
+/**
+ * Génération « fond seul » : pas de logo ni roue dans les refs OpenAI — le canvas éditeur compose logo, roue, textes, QR.
+ *
+ * @param {{ images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number }} multimodal
+ * @returns {{ images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number, hasTemplateWheel?: false }}
+ */
+export function multimodalForFlyerBackgroundOnly(multimodal) {
+  const m = multimodal || { images: [], hasLogo: false, styleRefCount: 0 };
+  const imgs = Array.isArray(m.images) ? [...m.images] : [];
+  /** Jusqu’à 3 refs (logo éventuel + inspirations) : ambiance / palette uniquement — pas de collage logo dans le prompt. */
+  const capped = imgs.slice(0, 3);
+  return {
+    images: capped,
+    hasLogo: false,
+    styleRefCount: capped.length,
+    hasTemplateWheel: false,
+  };
+}
+
+/**
+ * Prompt : plaque de fond 2:3 uniquement. Zone centrale réservée à la roue (douce, peu détaillée) — pas de roue dessinée.
+ *
+ * @param {z.infer<typeof bodySchema>} input
+ * @param {{ styleRefCount: number }} multimodalHint
+ */
+export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { styleRefCount: 0 }) {
+  const accent = input.accent_color_hex.trim();
+  const secondaryHex = input.secondary_color_hex?.trim();
+  const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
+  const merchantBrief = buildMerchantBriefForPrompt(input);
+  const colorHint = secondaryHex
+    ? `Primary hue ${accent}; secondary ${secondaryHex} — blend in gradients and decor (not flat 50/50).`
+    : `Primary hue ${accent}; support with cream, white, or deep neutral from the same family.`;
+
+  const multimodalLines = [];
+  if (multimodalHint.styleRefCount > 0) {
+    multimodalLines.push(
+      "REFERENCE IMAGE(S): moodboard / brand vibe only — palette, lighting, materials. NEVER reproduce logos, text, QR codes, or wheels from references onto the canvas. NEVER composite a readable logo mark into the output (software adds the official logo separately)."
+    );
+  }
+
+  const lines = [
+    "MERCHANT BRIEF (authoritative): " + merchantBrief,
+    "SECTOR FIDELITY (critical): Decorative imagery MUST match the MERCHANT BRIEF only. If ambiguous, use abstract brand-colored shapes.",
+    "TASK: ONE portrait 2:3 BACKGROUND PLATE only, full bleed, no outer frame, no white border.",
+    "NOT A FINISHED FLYER: Our software will draw on top, in fixed positions: commerce logo, prize wheel (PNG), headline text, QR code, footer steps. Your output is ONLY the wallpaper behind those layers.",
+    "════════════════ ABSOLUTE BANS — NEVER VIOLATE ═══════════════",
+    "NEVER draw any prize wheel, roulette, spinner, pie chart with segments, dial, or circular game divided into wedges.",
+    "NEVER draw any text, letters, numbers, slogans, logos, wordmarks, or typographic mockups.",
+    "NEVER draw QR codes, barcodes, Data Matrix, or square black-and-white module grids.",
+    "NEVER draw footer strips, numbered steps, phone mockups, or « scan to play » style phrases.",
+    "NEVER draw the merchant logo or brand mark (logo is composited in software).",
+    "════════════════ RESERVED WHEEL ZONE (empty of game UI) ═══════════════",
+    "Leave a SOFT, LOW-DETAIL circular or elliptical area centered at X=50% width and Y=48% of canvas height from top, diameter about 60–64% of image WIDTH. Inside this zone: only smooth gradient, gentle vignette, or subtle texture — NO wheel shape, NO segments, NO pointer, NO hub detail. This zone must stay visually calm so a separate wheel asset sits on top without visual clash.",
+    "Above that zone (~top 0–18%): calmer band for a logo overlay (do not draw a logo — just uncluttered background).",
+    "Below ~62% from top: richer atmosphere matching the brief; keep bottom ~14% relatively calm for footer graphics added in software.",
+    "BACKGROUND: Rich layered textured backdrop (never flat). " + colorHint + " Atmosphere: " + mood + ". At most 3–4 cohesive colors.",
+    "STYLE: Bold commercial ambience, print-ready, cohesive lighting.",
+    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay.",
+    ...multimodalLines,
+  ];
+
+  return lines.filter(Boolean).join(" ");
+}
+
 export function mergeServerLogoIntoMultimodal(multimodal, businessId, getAssetData) {
   if (!businessId || multimodal.hasLogo) return multimodal;
   const raw = getAssetData(String(businessId), "logo");

@@ -81,3 +81,43 @@ export function normalizeFlyerPrefsPut(body, existingFlyerPrefsJson) {
   }
   return { ok: true, value };
 }
+
+/**
+ * Après génération flyer IA : aligne les teintes de parts roue sur la couleur principale / secondaire du formulaire.
+ * Préserve logo, fond et le reste de `state`.
+ *
+ * @param {string | null | undefined} existingFlyerPrefsJson
+ * @param {string} accentHex — #RRGGBB
+ * @param {string | undefined} secondaryHex — #RRGGBB ou vide
+ * @returns {string}
+ */
+export function mergeFlyerPrefsWheelColorsFromGeneration(existingFlyerPrefsJson, accentHex, secondaryHex) {
+  let root = {};
+  try {
+    if (existingFlyerPrefsJson && String(existingFlyerPrefsJson).trim()) {
+      root = JSON.parse(existingFlyerPrefsJson);
+    }
+  } catch (_) {
+    root = {};
+  }
+  if (!root || typeof root !== "object" || Array.isArray(root)) root = {};
+  const prevState =
+    root.state && typeof root.state === "object" && !Array.isArray(root.state)
+      ? /** @type {Record<string, unknown>} */ ({ ...root.state })
+      : {};
+  const odd =
+    accentHex && /^#[0-9A-Fa-f]{6}$/.test(String(accentHex).trim())
+      ? String(accentHex).trim()
+      : String(prevState.wheelColorOdd || "#fbbf24");
+  const even =
+    secondaryHex && /^#[0-9A-Fa-f]{6}$/.test(String(secondaryHex).trim())
+      ? String(secondaryHex).trim()
+      : "#fef3c7";
+  prevState.wheelColorOdd = odd;
+  prevState.wheelColorEven = even;
+  return JSON.stringify({
+    state: prevState,
+    custom_logo_data_url: typeof root.custom_logo_data_url === "string" ? root.custom_logo_data_url : null,
+    custom_bg_data_url: typeof root.custom_bg_data_url === "string" ? root.custom_bg_data_url : null,
+  });
+}

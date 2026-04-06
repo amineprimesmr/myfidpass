@@ -36,10 +36,10 @@ export const FLYER_LOGO_BLOCK_BOTTOM_FRAC =
  * Composition verticale du flyer (écarts volontairement marqués pour l’aperçu + impression).
  */
 export const FLYER_LAYOUT = Object.freeze({
-  /** Centre vertical de la roue (fraction hauteur canvas) — un peu plus bas pour aérer logo + accroche. */
-  wheelCenterYFrac: 0.508,
+  /** Centre vertical de la roue — zone « milieu » flyer, calée sur la réserve IA + asset rouegpt. */
+  wheelCenterYFrac: 0.48,
   /** Bord supérieur du carré QR (fraction hauteur). */
-  qrTopYFrac: 0.548,
+  qrTopYFrac: 0.535,
   /** Hauteur de la zone « étapes », fond transparent. */
   footerStepsHeightFrac: 0.108,
   /** Hauteur max du PNG bandeau pied (fraction canvas). */
