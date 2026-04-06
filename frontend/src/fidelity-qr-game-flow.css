@@ -135,12 +135,10 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
  * le bouton dans main (pas les modales QR, hors du main).
  */
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
-  width: auto !important;
-  /* Ne pas mettre min-width:0 : le flex comprimait la pastille et rognait le libellé malgré max-width. */
-  min-width: max-content !important;
+  /* max-content : largeur du libellé ; max-width : plafond ; évite min-width:0 du flex qui rognait le texte */
+  width: max-content !important;
+  max-width: min(100%, 420px) !important;
   flex-shrink: 0 !important;
-  /* Assez large pour « JOUER LA PARTIE » sur une ligne (uppercase + tracking) */
-  max-width: min(100%, 420px);
   padding-left: 1.35rem !important;
   padding-right: 1.35rem !important;
   min-height: 2.52rem !important;

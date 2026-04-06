@@ -57,6 +57,25 @@
   transform: translateX(18px) !important;
 }
 
+/* Pastille « Jouer la partie » : priorité max (évite min-width:0 + padding serré hérités du flex / roulette-3d). */
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game)
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-cta-wrap--full.fidelity-cta-wrap--qr-play
+  .fidelity-cta-pill--qr-play,
+#app-app
+  .app-fidelity-client-live-preview-viewport
+  #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-cta-wrap--full.fidelity-cta-wrap--qr-play
+  .fidelity-cta-pill--qr-play {
+  width: max-content !important;
+  max-width: min(100%, 420px) !important;
+  flex-shrink: 0 !important;
+  padding-left: 1.35rem !important;
+  padding-right: 1.35rem !important;
+  box-sizing: border-box !important;
+}
+
 /* Aperçu dashboard : mêmes valeurs avec la chaîne #app-app (bat la feuille app-fidelity-client-page) */
 #app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
   > main.fidelity-qr-game {
