@@ -33,6 +33,33 @@ export const FLYER_LOGO_BLOCK_BOTTOM_FRAC =
   FLYER_LOGO_LAYOUT.centerYFrac + FLYER_LOGO_LAYOUT.maxHFrac / 2;
 
 /**
+ * Mise en page logo (fractions 0–1) — pilotée par l’app / JSON `flyer_prefs.state`.
+ * @param {Record<string, unknown> | null | undefined} s
+ */
+export function flyerLogoLayoutResolved(s) {
+  const base = FLYER_LOGO_LAYOUT;
+  const cy = Number(s?.flyerLogoCenterYFrac);
+  const mw = Number(s?.flyerLogoMaxWFrac);
+  const mh = Number(s?.flyerLogoMaxHFrac);
+  return {
+    centerYFrac: Number.isFinite(cy) ? Math.min(0.22, Math.max(0.04, cy)) : base.centerYFrac,
+    maxWFrac: Number.isFinite(mw) ? Math.min(0.88, Math.max(0.28, mw)) : base.maxWFrac,
+    maxHFrac: Number.isFinite(mh) ? Math.min(0.36, Math.max(0.06, mh)) : base.maxHFrac,
+  };
+}
+
+/**
+ * Bord bas du bloc logo (fraction hauteur canvas) pour caler l’accroche sous le logo.
+ * @param {Record<string, unknown> | null | undefined} s
+ * @param {boolean} hasLogo
+ */
+export function flyerLogoBlockBottomFracFromState(s, hasLogo) {
+  if (!hasLogo) return 0.052;
+  const L = flyerLogoLayoutResolved(s);
+  return L.centerYFrac + L.maxHFrac / 2;
+}
+
+/**
  * Composition verticale du flyer (écarts volontairement marqués pour l’aperçu + impression).
  */
 export const FLYER_LAYOUT = Object.freeze({
@@ -98,6 +125,9 @@ export function flyerTemplateMeta(id) {
  * @property {number} flyerWheelLabelScalePct échelle GAGNÉ/PERDU sur la roue, 70–130
  * @property {number} flyerBgOverlayPct voile sur image de fond (0–90), 0 = photo brute sans assombrissement
  * @property {number} flyerQrOutlineWidth cadre autour du QR (0 = off), 0–12
+ * @property {number} flyerLogoCenterYFrac centre vertical du logo (fraction hauteur), ~0.04–0.22
+ * @property {number} flyerLogoMaxWFrac largeur max logo / largeur canvas, ~0.28–0.88
+ * @property {number} flyerLogoMaxHFrac hauteur max logo / hauteur canvas, ~0.06–0.36
  */
 
 /** @returns {FlyerState} */
@@ -134,6 +164,9 @@ export function defaultFlyerState() {
     flyerWheelLabelScalePct: 100,
     flyerBgOverlayPct: 0,
     flyerQrOutlineWidth: 0,
+    flyerLogoCenterYFrac: FLYER_LOGO_LAYOUT.centerYFrac,
+    flyerLogoMaxWFrac: FLYER_LOGO_LAYOUT.maxWFrac,
+    flyerLogoMaxHFrac: FLYER_LOGO_LAYOUT.maxHFrac,
   };
 }
 
@@ -201,6 +234,24 @@ function clampFlyerTextScalePct(v) {
   const n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return 100;
   return Math.max(70, Math.min(130, Math.round(n / 5) * 5));
+}
+
+function clampFlyerLogoCenterYFrac(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return FLYER_LOGO_LAYOUT.centerYFrac;
+  return Math.min(0.22, Math.max(0.04, Math.round(n * 1000) / 1000));
+}
+
+function clampFlyerLogoMaxWFrac(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return FLYER_LOGO_LAYOUT.maxWFrac;
+  return Math.min(0.88, Math.max(0.28, Math.round(n * 1000) / 1000));
+}
+
+function clampFlyerLogoMaxHFrac(v) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return FLYER_LOGO_LAYOUT.maxHFrac;
+  return Math.min(0.36, Math.max(0.06, Math.round(n * 1000) / 1000));
 }
 
 /** @param {Partial<FlyerState> | null | undefined} raw */
@@ -282,5 +333,8 @@ export function mergeFlyerState(raw) {
     flyerQrOutlineWidth: 0,
     ctaBannerBgColor: safeHex(String(merged.ctaBannerBgColor ?? ""), base.ctaBannerBgColor),
     ctaTextColor: safeHex(String(merged.ctaTextColor ?? ""), base.ctaTextColor),
+    flyerLogoCenterYFrac: clampFlyerLogoCenterYFrac(merged.flyerLogoCenterYFrac),
+    flyerLogoMaxWFrac: clampFlyerLogoMaxWFrac(merged.flyerLogoMaxWFrac),
+    flyerLogoMaxHFrac: clampFlyerLogoMaxHFrac(merged.flyerLogoMaxHFrac),
   };
 }

@@ -13,6 +13,8 @@ router.get("/logo", async (req, res) => {
   try {
     const resolved = await resolvePublicWalletLogoPng(business);
     if (!resolved?.buffer?.length) return res.status(404).send();
+    /** WKWebView + flyer-embed (origine www.myfidpass.fr) : fetch cross-origin vers l’API. */
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Content-Type", resolved.contentType || "image/png");
     res.setHeader("Cache-Control", "public, max-age=3600");
     return res.send(resolved.buffer);

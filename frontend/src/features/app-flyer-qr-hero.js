@@ -1,7 +1,7 @@
 /**
  * Titre principal du flyer QR — rendu sobre (couleurs & police pilotées par l’utilisateur).
  */
-import { FLYER_LOGO_BLOCK_BOTTOM_FRAC } from "./app-flyer-qr-presets.js";
+import { flyerLogoBlockBottomFracFromState } from "./app-flyer-qr-presets.js";
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -53,7 +53,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   const lines = wrapCanvasTextLines(ctx, text.toUpperCase(), maxW).slice(0, 3);
 
   const gapFrac = Math.min(28, Math.max(0, Number(s.headlineLogoGapPct) || 0)) / 100;
-  const logoBottomFrac = hasLogo ? FLYER_LOGO_BLOCK_BOTTOM_FRAC : 0.052;
+  const logoBottomFrac = flyerLogoBlockBottomFracFromState(s, hasLogo);
   const blockTop = h * logoBottomFrac + h * gapFrac;
   const firstLineCy = blockTop + lineH * 0.5;
 

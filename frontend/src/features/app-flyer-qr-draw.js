@@ -3,9 +3,9 @@
  */
 import {
   FLYER_EXPORT,
-  FLYER_LOGO_LAYOUT,
   FLYER_LAYOUT,
   footerStepsForegroundResolved,
+  flyerLogoLayoutResolved,
 } from "./app-flyer-qr-presets.js";
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
@@ -233,12 +233,14 @@ function drawImageContain(ctx, img, dx, dy, dstW, dstH) {
  * @param {CanvasImageSource} logoImg
  * @param {number} w
  * @param {number} h
+ * @param {Record<string, unknown>} s état flyer (mise en page logo)
  */
-function drawFlyerCommerceLogo(ctx, logoImg, w, h) {
-  const maxW = w * FLYER_LOGO_LAYOUT.maxWFrac;
-  const maxH = h * FLYER_LOGO_LAYOUT.maxHFrac;
+function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
+  const L = flyerLogoLayoutResolved(s);
+  const maxW = w * L.maxWFrac;
+  const maxH = h * L.maxHFrac;
   const cx = w * 0.5;
-  const cy = h * FLYER_LOGO_LAYOUT.centerYFrac;
+  const cy = h * L.centerYFrac;
   const lx = cx - maxW / 2;
   const ly = cy - maxH / 2;
   drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
@@ -541,7 +543,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   const hasCommerceLogo = logoImg != null;
   if (hasCommerceLogo) {
-    drawFlyerCommerceLogo(ctx, logoImg, w, h);
+    drawFlyerCommerceLogo(ctx, logoImg, w, h, s);
   }
   if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
