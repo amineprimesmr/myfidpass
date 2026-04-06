@@ -84,6 +84,11 @@ if (isProduction) {
     console.error("[startup] ERREUR CRITIQUE: DEV_BYPASS_PAYMENT=true est défini en PRODUCTION. Cette variable est réservée au développement local. Supprime-la immédiatement dans Railway → Variables.");
     process.exit(1);
   }
+  if (process.env.DEV_BYPASS_FLYER_AI_QUOTA === "true") {
+    console.warn(
+      "[startup] ATTENTION: DEV_BYPASS_FLYER_AI_QUOTA=true — le quota flyer IA peut être contourné avec l’en-tête X-Dev-Bypass-Flyer-AI-Quota. À utiliser uniquement sur un environnement de dev / staging, pas sur la prod client."
+    );
+  }
   // RESET_SECRET active POST /api/dev/reset (effacement total). Dangereux mais parfois nécessaire
   // (ex. repartir de zéro sur un environnement de démo). Le wipe exige en plus le même secret dans le body.
   if (process.env.RESET_SECRET) {

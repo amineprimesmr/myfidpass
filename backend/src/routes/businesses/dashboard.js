@@ -57,6 +57,7 @@ import {
 } from "../../services/flyer-ai-quota.js";
 import { signReceiptChallengeToken } from "../../lib/receipt-validation-jwt.js";
 import logger from "../../lib/logger.js";
+import { flyerAiQuotaDevBypass } from "../../lib/flyer-ai-quota-bypass.js";
 
 const router = Router({ mergeParams: true });
 
@@ -685,10 +686,11 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
   }
   let business = syncFlyerAiBillingMonth(req.business);
   const unlimited = isFlyerAiUnlimited(business);
+  const devFlyerQuotaBypass = flyerAiQuotaDevBypass(req);
   const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
   const bonus = Math.max(0, Math.floor(Number(business.flyer_ai_generations_bonus) || 0));
   const allowance = FLYER_AI_FREE_PER_MONTH + bonus;
-  if (!unlimited && used >= allowance) {
+  if (!unlimited && !devFlyerQuotaBypass && used >= allowance) {
     return res.status(403).json({
       error:
         "Quota de générations flyer IA atteint pour ce commerce ce mois-ci (incluant vos créations gratuites et vos packs). Le compteur mensuel se renouvelle en UTC ; les packs achetés restent disponibles. Rendez-vous sur votre espace MyFidpass pour acheter des créations supplémentaires.",
@@ -731,7 +733,7 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
       fidelity_page_background_error = e2?.message ? String(e2.message) : "Échec génération fond page fidélité.";
     }
 
-    if (unlimited) {
+    if (unlimited || devFlyerQuotaBypass) {
       return res.json({
         image_base64: b64,
         revised_prompt: revised ?? null,
