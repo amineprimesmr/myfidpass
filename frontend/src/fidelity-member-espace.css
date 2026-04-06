@@ -26,8 +26,8 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
   flex: 1 1 auto;
   min-height: 0;
   padding-top: 1rem;
-  /* Réserve en bas pour le pied fixed (sinon dernière carte sous le bandeau noir) */
-  padding-bottom: calc(1.35rem + var(--fidelity-member-footer-bar));
+  /* Réserve : hauteur du bandeau + éventuel « trou » Safari (voir --fidelity-visual-gap-bottom, JS) */
+  padding-bottom: calc(1.35rem + var(--fidelity-member-footer-bar) + var(--fidelity-visual-gap-bottom, 0px));
   max-width: 640px;
   margin-left: auto;
   margin-right: auto;
@@ -35,8 +35,8 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
 }
 
 /*
- * Pied collé au bas du viewport (Safari iOS + fond fixed) : le flex + margin-top:auto ne suffit pas
- * quand svh < zone peinte ; fixed + safe-area sur le bandeau.
+ * Pied fixed en bas du layout ; sur Safari iOS la barre d’URL change le visual viewport → bande sous le noir.
+ * --fidelity-visual-gap-bottom (Visual Viewport API, bootstrap) allonge le padding pour peindre le noir jusqu’au bord visible.
  */
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) > footer.fidelity-v2-footer--dark {
   position: fixed;
@@ -48,6 +48,8 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
   flex-shrink: 0;
   width: 100%;
   box-sizing: border-box;
+  padding-top: 1.1rem;
+  padding-bottom: calc(max(1.1rem, env(safe-area-inset-bottom, 0px)) + var(--fidelity-visual-gap-bottom, 0px));
 }
 
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-member {

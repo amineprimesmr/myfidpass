@@ -36,6 +36,7 @@ import {
   startFidelityRouteLoadingAnimations,
 } from "./fidelity-route-loading.js";
 import { applyFidelityClientPageBackground } from "./lib/apply-fidelity-client-bg.js";
+import { bindFidelityMemberFooterVisualViewport } from "./lib/sync-fidelity-member-footer-visual-viewport.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -76,6 +77,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   fidelityDocumentListenersAbort?.abort();
   fidelityDocumentListenersAbort = new AbortController();
   const { signal } = fidelityDocumentListenersAbort;
+
+  bindFidelityMemberFooterVisualViewport(signal);
 
   const loadingOverlay = mountFidelityRouteLoadingOverlay();
 
