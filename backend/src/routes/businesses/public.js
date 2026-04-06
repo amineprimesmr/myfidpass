@@ -27,8 +27,8 @@ export function publicInfo(req, res) {
       points_reward_tiers = undefined;
     }
   }
-  /* Toujours une URL : /public/logo reproduit le rendu Wallet (image, texte bandeau, repli). */
-  const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/logo`;
+  /** Logo hero page jeu QR : import flyer si défini (`/public/flyer-qr-logo`), sinon bandeau Wallet. */
+  const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo`;
   /** Icône push / aperçu campagne Wallet — distincte du logo page fidélité / jeu QR. */
   const notificationIconUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
   const fidelityPageBackgroundUrl =
@@ -47,6 +47,8 @@ export function publicInfo(req, res) {
     logo_updated_at: business.logo_updated_at ?? undefined,
     logo_icon_updated_at: business.logo_icon_updated_at ?? undefined,
     notification_icon_updated_at: business.notification_icon_updated_at ?? undefined,
+    /** Invalider le cache navigateur du logo page QR quand les prefs flyer (dont logo custom) changent. */
+    flyer_prefs_updated_at: business.flyer_prefs_updated_at ?? undefined,
     backgroundColor: business.background_color ?? undefined,
     foregroundColor: business.foreground_color ?? undefined,
     labelColor: business.label_color ?? undefined,

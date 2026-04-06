@@ -15,7 +15,7 @@ function preferSameOriginApiAssetPaths() {
 /**
  * URL à mettre dans <img src> pour le logo commerce (page fidélité / jeu).
  * Quand apiBase est vide (proxy Vite), on utilise toujours un chemin **relatif**
- * `/api/businesses/:slug/public/logo` pour rester sur la même origine que la page.
+ * `/api/businesses/:slug/public/flyer-qr-logo` pour rester sur la même origine que la page.
  * Sinon le JSON peut contenir `http://127.0.0.1:3001/...` alors que la page est sur
  * `http://localhost:5174` → chargement d’image en échec → repli texte « OCALI… ».
  *
@@ -24,15 +24,18 @@ function preferSameOriginApiAssetPaths() {
  * @param {string} apiBase
  */
 export function resolveClientLogoImgSrc(business, slug, apiBase) {
-  const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
+  const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo` : "";
   if (!path) return "";
   const baseTrim = preferSameOriginApiAssetPaths() ? "" : String(apiBase || "").replace(/\/$/, "");
   const apiLogo = typeof business?.logoUrl === "string" ? business.logoUrl.trim() : "";
   const srcBase = baseTrim ? apiLogo || `${baseTrim}${path}` : path;
   const upd = business?.logo_updated_at ?? business?.logoUpdatedAt;
-  const v =
-    upd != null && String(upd).trim() !== "" ? encodeURIComponent(String(upd).trim()) : "";
-  return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${v}` : srcBase;
+  const flyerPrefsUpd = business?.flyer_prefs_updated_at ?? business?.flyerPrefsUpdatedAt;
+  const vParts = [upd, flyerPrefsUpd]
+    .filter((x) => x != null && String(x).trim() !== "")
+    .map((x) => String(x).trim());
+  const v = vParts.length ? vParts.join("|") : "";
+  return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${encodeURIComponent(v)}` : srcBase;
 }
 
 /**

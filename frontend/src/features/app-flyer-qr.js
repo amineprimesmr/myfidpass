@@ -218,7 +218,7 @@ export function initAppFlyerQr(slug, opts) {
     persistFlyerState(state);
     canvas.width = FLYER_EXPORT.w;
     canvas.height = FLYER_EXPORT.h;
-    const logoApi = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/public/logo`;
+    const logoApi = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo`;
     if (flyerLogoDirty) {
       if (flyerLogoBitmap) {
         try {

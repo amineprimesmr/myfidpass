@@ -498,21 +498,19 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   width: auto;
   height: auto;
   /*
-   * La roue QR est massive à gauche : on pousse le point focal du visuel vers la droite
-   * et légèrement vers le haut pour limiter la découpe bas / bandeaux (cover + safe areas).
+   * Roue à gauche : ancrer le sujet (food, etc.) bas-droite pour qu’il ne se retrouve pas derrière la roue.
    */
   background-image: var(--fidelity-client-bg);
   background-repeat: no-repeat;
   background-size: cover;
-  background-position: 78% 44%;
+  background-position: 92% 72%;
   opacity: 1;
   pointer-events: none;
 }
 
 @media (max-width: 480px) {
   #fidelity-app.fidelity-page.fidelity-page--client-bg::before {
-    /* Roue encore plus large en % de viewport : pousser le sujet principal plus à droite. */
-    background-position: 84% 42%;
+    background-position: 96% 78%;
   }
 }
 

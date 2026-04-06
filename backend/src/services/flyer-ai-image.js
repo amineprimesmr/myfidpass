@@ -558,7 +558,8 @@ export function buildFidelityClientPageBackgroundPrompt(
     "NEVER draw QR codes, barcodes, Data Matrix, or square black-and-white module grids.",
     "NEVER draw notification bell icons, red notification dots, lock-screen notification banners, or iOS/Android notification UI metaphors.",
     "COMPOSITION: Upper ~18% of canvas = calmer band (soft gradient or gentle vignette) so a separate logo (added in software) reads clearly when centered above the title.",
-    "Lower ~82%: richer atmosphere through smooth color and soft large shapes only — sector-appropriate silhouettes or materials may appear but must stay clean-edged; keep contrast moderate so a colorful HTML wheel remains readable on top.",
+    "LAYOUT vs HTML ROULETTE (critical): A large prize wheel will be overlaid on the LEFT side of the screen (~0–58% width, roughly mid-to-lower height). Do NOT place food, products, mascots, faces, or any strong focal subject in that left zone or behind where that wheel sits. Keep ALL recognizable subjects, dishes, and high-detail props in the RIGHT half (roughly 62–100% width) and/or BOTTOM-RIGHT quadrant only. The left third must stay visually quiet — soft gradients, abstract color washes, or very subtle texture only — so nothing important is hidden behind the wheel.",
+    "Lower ~82%: richer atmosphere through smooth color and soft large shapes; any concrete subjects stay bottom-right; keep contrast moderate so the HTML wheel remains readable on top.",
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth full-bleed wallpaper. " +
       colorHarmony +

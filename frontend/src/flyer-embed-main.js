@@ -124,7 +124,7 @@ async function renderFromCurrentBootstrap() {
     (/myfidpass\.fr$/i.test(host) ? "https://api.myfidpass.fr" : "") ||
     "https://api.myfidpass.fr";
   if (!logoIn && cardSlug && !skipPublicLogoFallback) {
-    const logoApi = `${apiBase}/api/businesses/${encodeURIComponent(cardSlug)}/public/logo`;
+    const logoApi = `${apiBase}/api/businesses/${encodeURIComponent(cardSlug)}/public/flyer-qr-logo`;
     logoIn = await loadImageInputFromHttp(logoApi);
   }
 

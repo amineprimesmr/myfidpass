@@ -16,26 +16,26 @@ describe("resolveClientLogoImgSrc", () => {
       "demo",
       "",
     );
-    expect(src).toBe("/api/businesses/demo/public/logo");
+    expect(src).toBe("/api/businesses/demo/public/flyer-qr-logo");
   });
 
   it("apiBase défini → préfère logoUrl API", () => {
     const src = resolveClientLogoImgSrc(
-      { logoUrl: "https://api.example.com/api/businesses/x/public/logo" },
+      { logoUrl: "https://api.example.com/api/businesses/x/public/flyer-qr-logo" },
       "x",
       "https://api.example.com",
     );
-    expect(src).toBe("https://api.example.com/api/businesses/x/public/logo");
+    expect(src).toBe("https://api.example.com/api/businesses/x/public/flyer-qr-logo");
   });
 
   it("hôte myfidpass.fr → chemin relatif même si apiBase pointe vers l’API (évite CORP / img cassée)", () => {
     vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
     const src = resolveClientLogoImgSrc(
-      { logoUrl: "https://api.myfidpass.fr/api/businesses/x/public/logo", logo_updated_at: "1" },
+      { logoUrl: "https://api.myfidpass.fr/api/businesses/x/public/flyer-qr-logo", logo_updated_at: "1" },
       "x",
       "https://api.myfidpass.fr",
     );
-    expect(src.startsWith("/api/businesses/x/public/logo?v=")).toBe(true);
+    expect(src.startsWith("/api/businesses/x/public/flyer-qr-logo?v=")).toBe(true);
   });
 
   it("cache-bust si logo_updated_at", () => {
@@ -44,8 +44,20 @@ describe("resolveClientLogoImgSrc", () => {
       "demo",
       "",
     );
-    expect(src).toContain("/api/businesses/demo/public/logo?v=");
+    expect(src).toContain("/api/businesses/demo/public/flyer-qr-logo?v=");
     expect(src).toContain("2026-03-22");
+  });
+
+  it("cache-bust combine logo + flyer_prefs_updated_at", () => {
+    const src = resolveClientLogoImgSrc(
+      {
+        logo_updated_at: "a",
+        flyer_prefs_updated_at: "b",
+      },
+      "demo",
+      "",
+    );
+    expect(src).toContain("v=a%7Cb");
   });
 });
 

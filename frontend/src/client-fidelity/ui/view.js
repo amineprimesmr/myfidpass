@@ -64,7 +64,7 @@ export function renderClientPage(root, state, options = {}) {
       ticketStatusDotClass,
       variant: "qr",
     });
-    /** Logo page jeu QR = même ressource que la carte / flyer (`/public/logo`), pas l’icône notification Wallet. */
+    /** Logo page jeu QR = import « Flyer IA » si enregistré (`/public/flyer-qr-logo`), sinon bandeau Wallet. */
     const logoUrl = resolveClientLogoImgSrc(state.business, slugForAssets, apiBase);
     const qrThanksHeroMode = shouldShowQrThanksHero(slugForAssets);
     root.innerHTML = renderQrGamePage(esc, {
