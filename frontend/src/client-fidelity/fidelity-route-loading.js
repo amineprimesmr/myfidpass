@@ -122,6 +122,11 @@ function forceRemoveFidelityLoadingOverlayDom() {
   document.body.removeAttribute("aria-busy");
 }
 
+/** À appeler après dismiss ou en secours : évite #fidelity-app en visibility:hidden (page « blanche »). */
+export function stripFidelityRouteLoadingUi() {
+  forceRemoveFidelityLoadingOverlayDom();
+}
+
 export async function dismissFidelityRouteLoadingOverlay(overlayEl, opts = {}) {
   const { minVisibleMs = 0 } = opts;
   const el = overlayEl && document.body.contains(overlayEl) ? overlayEl : document.getElementById(OVERLAY_ID);

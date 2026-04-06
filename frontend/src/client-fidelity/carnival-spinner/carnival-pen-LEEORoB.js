@@ -2,22 +2,40 @@
  * REFONTE dérogation max 400 L : port verbatim logique CodePen LEEORoB (Carnival Spinner) — résolution 2026-04-06.
  * Source : https://codepen.io/jaredstanley/pen/LEEORoB
  */
-/* eslint-disable prefer-const, no-unused-vars, no-useless-assignment -- logique identique au pen source */
+/* eslint-disable prefer-const, no-unused-vars -- logique identique au pen source */
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
-import Lottie from "https://esm.sh/lottie-web@5.12.2";
+import Lottie from "lottie-web";
 
 const CARNIVAL_TOUCH_OPTS = { passive: false };
 
 export function mountCarnivalPenLEEORoB(options = {}) {
   const { onIntroDismissed } = options;
   const htmlEl = document.documentElement;
-  htmlEl.classList.add("fidelity-qr-carnival-pen-route");
+  const preCanvas = document.querySelector("main.fidelity-qr-carnival-pen canvas.webgl");
+  const preLottie = document.getElementById("lottie");
+  if (!preCanvas || !preLottie) {
+    console.warn("[fidelity] Carnival : canvas ou #lottie absent — scène désactivée.");
+    return () => {};
+  }
   let rafId = 0;
   let disposed = false;
 
+  try {
+    const probeCanvas = document.createElement("canvas");
+    const probe = new THREE.WebGLRenderer({ canvas: probeCanvas, antialias: false });
+    probe.dispose();
+  } catch (e) {
+    console.warn("[fidelity] WebGL indisponible — Carnival désactivé.", e);
+    document.querySelector("main.fidelity-qr-carnival-pen")?.classList.add("fidelity-qr-carnival-intro-done");
+    const c = document.getElementById("container");
+    if (c) c.style.display = "none";
+    return () => {};
+  }
+
+  htmlEl.classList.add("fidelity-qr-carnival-pen-route");
   window.start3 = false;
   let cameraSetup = {
    cameraIsSettled: false,
@@ -41,8 +59,10 @@ export function mountCarnivalPenLEEORoB(options = {}) {
   };
   let anim = null;
   let initLottie = () => {
+   const lottieMount = document.getElementById("lottie");
+   if (!lottieMount) return;
    anim = Lottie.loadAnimation({
-   container: document.getElementById("lottie"),
+   container: lottieMount,
    renderer: "svg",
    loop: true,
    autoplay: true,

@@ -34,6 +34,7 @@ import {
   mountFidelityRouteLoadingOverlay,
   setFidelityRouteLoadingLogo,
   startFidelityRouteLoadingAnimations,
+  stripFidelityRouteLoadingUi,
 } from "./fidelity-route-loading.js";
 import { applyFidelityClientPageBackground } from "./lib/apply-fidelity-client-bg.js";
 import { bindFidelityMemberFooterVisualViewport } from "./lib/sync-fidelity-member-footer-visual-viewport.js";
@@ -627,13 +628,24 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
     const carnivalMain = rootEl.querySelector("main.fidelity-qr-carnival-pen");
     if (carnivalMain) {
-      void import("./carnival-spinner/carnival-pen-LEEORoB.js").then((mod) => {
-        if (rootEl.querySelector("main.fidelity-qr-carnival-pen") !== carnivalMain) return;
-        disposeCarnivalPen = mod.mountCarnivalPenLEEORoB({});
-        if (isQrGateUnlocked() || shouldShowQrThanksHero(slug)) {
+      void import("./carnival-spinner/carnival-pen-LEEORoB.js")
+        .then((mod) => {
+          if (rootEl.querySelector("main.fidelity-qr-carnival-pen") !== carnivalMain) return;
+          try {
+            disposeCarnivalPen = mod.mountCarnivalPenLEEORoB({});
+            if (isQrGateUnlocked() || shouldShowQrThanksHero(slug)) {
+              globalThis.queueMicrotask(() => softDismissCarnivalQrIntroOverlay());
+            }
+          } catch (e) {
+            console.error("[fidelity] mountCarnivalPenLEEORoB", e);
+            disposeCarnivalPen = () => {};
+            globalThis.queueMicrotask(() => softDismissCarnivalQrIntroOverlay());
+          }
+        })
+        .catch((e) => {
+          console.error("[fidelity] chargement module Carnival", e);
           globalThis.queueMicrotask(() => softDismissCarnivalQrIntroOverlay());
-        }
-      });
+        });
     }
   }
 
@@ -661,6 +673,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   rerender();
   tryAutoClaimOnReturn();
   } finally {
-    await dismissFidelityRouteLoadingOverlay(loadingOverlay);
+    try {
+      await dismissFidelityRouteLoadingOverlay(loadingOverlay);
+    } catch (e) {
+      console.error("[fidelity] dismissFidelityRouteLoadingOverlay", e);
+    }
+    stripFidelityRouteLoadingUi();
   }
 }

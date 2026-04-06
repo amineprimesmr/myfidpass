@@ -1,4 +1,5 @@
 import { initClientFidelityPage } from "../client-fidelity/bootstrap.js";
+import { stripFidelityRouteLoadingUi } from "../client-fidelity/fidelity-route-loading.js";
 import { API_BASE } from "../config.js";
 import { showSlugError } from "../main.js";
 
@@ -17,6 +18,7 @@ export default {
         rootEl: app,
       });
     } catch (err) {
+      stripFidelityRouteLoadingUi();
       const raw = String(err?.message || "").trim();
       /* getBusiness : 404 → « Entreprise introuvable » ; fetch réseau → message connexion */
       const isNetwork =
