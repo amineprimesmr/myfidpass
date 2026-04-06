@@ -8,20 +8,30 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
   min-height: 100svh;
 }
 
+/* 100dvh / 100svh : remplit l’écran ; éviter min(100dvh, 100%) qui peut résoudre trop petit → pied « flottant » + fond fixe visible en dessous */
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) {
   display: flex;
   flex-direction: column;
-  min-height: min(100dvh, 100%);
+  min-height: 100dvh;
+  min-height: 100svh;
   box-sizing: border-box;
 }
 
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) > main.fidelity-v2-main {
   flex: 1 1 auto;
+  min-height: 0;
   padding-top: 1rem;
   padding-bottom: 1.35rem;
   max-width: 640px;
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
+}
+
+/* Colle le bandeau « Vous êtes un pro ? » au bas du viewport quand le contenu est plus court qu’un écran */
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) > footer.fidelity-v2-footer--dark {
+  margin-top: auto;
+  flex-shrink: 0;
   width: 100%;
 }
 
