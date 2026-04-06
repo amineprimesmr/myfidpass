@@ -1,7 +1,7 @@
 /**
  * Écran de chargement route fidélité : voile flouté + logo commerce animé (GSAP si dispo).
  */
-import { resolveClientLogoImgSrc, resolveClientNotificationIconImgSrc } from "./lib/resolve-client-logo-src.js";
+import { resolveClientLogoImgSrc } from "./lib/resolve-client-logo-src.js";
 
 const OVERLAY_ID = "fidelity-route-loading-overlay";
 /** Masque #fidelity-app pendant le chargement pour éviter que le flou du voile ne montre la vraie page dans le logo. */
@@ -54,19 +54,16 @@ export function mountFidelityRouteLoadingOverlay() {
 export function setFidelityRouteLoadingLogo(overlayEl, business, slug, apiBase) {
   const img = overlayEl?.querySelector(".fidelity-route-loading__logo");
   if (!(img instanceof globalThis.HTMLImageElement)) return;
-  const src = resolveClientNotificationIconImgSrc(business, String(slug || ""), String(apiBase || ""));
+  const src = resolveClientLogoImgSrc(business, String(slug || ""), String(apiBase || ""));
   if (!src) {
     img.classList.add("fidelity-route-loading__logo--empty");
     return;
   }
-  const fallback = resolveClientLogoImgSrc(business, String(slug || ""), String(apiBase || ""));
-  img.onerror = null;
-  if (fallback && fallback !== src) {
-    img.onerror = () => {
-      img.onerror = null;
-      img.src = fallback;
-    };
-  }
+  img.onerror = () => {
+    img.onerror = null;
+    img.classList.add("fidelity-route-loading__logo--empty");
+    img.removeAttribute("src");
+  };
   img.src = src;
   img.classList.remove("fidelity-route-loading__logo--empty");
   if (typeof img.decode === "function") {

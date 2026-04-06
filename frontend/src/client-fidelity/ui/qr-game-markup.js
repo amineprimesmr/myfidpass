@@ -13,7 +13,6 @@ export function renderQrGamePage(esc, p) {
     rouletteHtml,
     googleReviewUrl,
     logoUrl,
-    logoUrlPublicFallback,
     qrThanksHeroMode = false,
   } = p;
   /* Un seul titre sous l’icône : accroche jeu (ou « Merci… » après Google) — pas le nom du commerce */
@@ -29,13 +28,10 @@ export function renderQrGamePage(esc, p) {
   let qrLogo = "";
   let verifyLoadingVisual = `<div class="fidelity-qr-verify-spinner" aria-hidden="true"></div>`;
   if (logoUrl) {
-    const fb = typeof logoUrlPublicFallback === "string" ? logoUrlPublicFallback.trim() : "";
-    const useFallback =
-      fb && fb !== String(logoUrl).trim()
-        ? ` data-fid-qr-logo-fallback="${esc(fb)}" onerror="this.onerror=null;var f=this.getAttribute('data-fid-qr-logo-fallback');if(f)this.src=f"`
-        : "";
-    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="${businessNameEsc}" width="120" height="120" decoding="async"${useFallback} />`;
-    verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap" aria-hidden="true"><img class="fidelity-qr-verify-logo" id="fidelity-qr-verify-logo" src="${esc(logoUrl)}" alt="" width="96" height="96" decoding="async"${useFallback} /></div>`;
+    const onErr =
+      'this.onerror=null;this.classList.add("fidelity-qr-logo--hidden");this.removeAttribute("src")';
+    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="${businessNameEsc}" width="120" height="120" decoding="async" onerror="${onErr}" />`;
+    verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap" aria-hidden="true"><img class="fidelity-qr-verify-logo" id="fidelity-qr-verify-logo" src="${esc(logoUrl)}" alt="" width="96" height="96" decoding="async" onerror="${onErr}" /></div>`;
   }
 
   return `

@@ -254,6 +254,11 @@ export function initFlyerAiGenerate(slug, opts) {
           setStatus("Réponse serveur inattendue.", true);
           return;
         }
+        const fidSaved = data.fidelity_page_background_saved === true;
+        const fidErr =
+          typeof data.fidelity_page_background_error === "string" && data.fidelity_page_background_error.trim()
+            ? data.fidelity_page_background_error.trim()
+            : "";
         const tmp = new Image();
         tmp.crossOrigin = "anonymous";
         await new Promise((resolve, reject) => {
@@ -266,7 +271,14 @@ export function initFlyerAiGenerate(slug, opts) {
           const dataUrl = compressImageBitmapToFlyerBgDataUrl(bitmap);
           setStoredFlyerCustomBgDataUrl(dataUrl);
           opts.onGeneratedBg();
-          setStatus("Fond appliqué. Vous pouvez télécharger le PNG.", false);
+          let okMsg = "Fond flyer appliqué. Vous pouvez télécharger le PNG.";
+          if (fidSaved) {
+            okMsg +=
+              " Le fond de la page fidélité (jeu QR) a été mis à jour : vérifiez l’onglet « Page fidélité » ou le lien public.";
+          } else if (fidErr) {
+            okMsg += ` Fond page fidélité : échec (${fidErr}). Réessayez ou importez une image dans « Page fidélité ».`;
+          }
+          setStatus(okMsg, false);
           void refreshQuota();
         } finally {
           try {

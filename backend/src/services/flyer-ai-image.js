@@ -255,6 +255,76 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   return lines.filter(Boolean).join(" ");
 }
 
+/**
+ * Multimodal pour le fond page fidélité : retire le logo (réf. #1) pour ne pas le « recoller » dans le PNG —
+ * le logo commerce reste celui de la carte / `/public/logo`, comme sur le flyer composé dans l’app.
+ *
+ * @param {{ images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number }} multimodal
+ */
+export function multimodalForFidelityPageBackground(multimodal) {
+  const m = multimodal || { images: [], hasLogo: false, styleRefCount: 0 };
+  const imgs = Array.isArray(m.images) ? [...m.images] : [];
+  if (m.hasLogo && imgs.length > 0) imgs.shift();
+  return {
+    images: imgs,
+    hasLogo: false,
+    styleRefCount: m.styleRefCount,
+  };
+}
+
+/**
+ * Fond plein écran page `/fidelity/:slug` (jeu QR) : même brief marchand + couleurs + ambiance que le flyer,
+ * sans roue ni texte — toile de fond pour la roue HTML + logo séparé.
+ *
+ * @param {z.infer<typeof bodySchema>} input
+ * @param {{ styleRefCount: number }} multimodalHint
+ */
+export function buildFidelityClientPageBackgroundPrompt(
+  input,
+  multimodalHint = { styleRefCount: 0 },
+) {
+  const accent = input.accent_color_hex.trim();
+  const secondaryHex = input.secondary_color_hex?.trim();
+  const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
+  const merchantBrief = buildMerchantBriefForPrompt(input);
+
+  const colorHarmony = secondaryHex
+    ? `Primary brand color ${accent}; secondary hue ${secondaryHex} — blend both in gradients and accents (no harsh 50/50 split).`
+    : `Primary brand color ${accent}; support with white, warm cream, or a deep neutral from the same family.`;
+
+  const sectorFidelity =
+    "SECTOR FIDELITY (critical): Atmosphere and textures MUST match the MERCHANT BRIEF only. If ambiguous, use abstract brand-colored shapes — do not substitute unrelated stock industries.";
+
+  /** @type {string[]} */
+  const multimodalLines = [];
+  if (multimodalHint.styleRefCount > 0) {
+    multimodalLines.push(
+      "REFERENCE IMAGE(S): moodboard / palette / materials / lighting only — NEVER copy text, QR codes, logos, or foreign marks from references."
+    );
+  }
+
+  /** @type {string[]} */
+  const lines = [
+    "MERCHANT BRIEF (authoritative): " + merchantBrief,
+    sectorFidelity,
+    "TASK: Generate ONE mobile-first full-bleed BACKGROUND wallpaper only, portrait 2:3 aspect, full bleed to all edges, no outer frame, no white border.",
+    "NOT A FLYER: This image is a silent backdrop. The product will overlay HTML (title, logo image, roulette). Your output must stay empty of UI chrome.",
+    "════════════════ ABSOLUTE BANS ═══════════════",
+    "NEVER draw any prize wheel, roulette, spinner, pie chart with prizes, radial wedges, dial, fortune wheel, or circular game divided into segments.",
+    "NEVER draw text, letters, numbers, logos, wordmarks, slogans, or typographic mockups.",
+    "NEVER draw QR codes, barcodes, Data Matrix, or square black-and-white module grids.",
+    "NEVER draw notification bell icons, red notification dots, lock-screen notification banners, or iOS/Android notification UI metaphors.",
+    "COMPOSITION: Upper ~18% of canvas = calmer band (soft gradient or gentle vignette) so a separate logo (added in software) reads clearly when centered above the title.",
+    "Lower ~82%: richer layered atmosphere — subtle sector-appropriate textures, soft silhouettes, or materials matching the brief; keep contrast moderate so a colorful HTML wheel remains readable on top.",
+    "BACKGROUND: Rich layered textured backdrop (never flat). " + colorHarmony + " Depth: radial gradients, subtle grain, soft bokeh. Atmosphere: " + mood + ". At most 3–4 cohesive colors total.",
+    "STYLE: Bold commercial ambience — polished and cohesive, no literal printed poster elements.",
+    ...multimodalLines,
+    "SELF-CHECK: (1) zero wheels or spinners; (2) zero text; (3) zero logos; (4) zero notification UI; (5) upper band calmer; (6) full bleed.",
+  ];
+
+  return lines.filter(Boolean).join(" ");
+}
+
 /** @returns {{ model: string, body: Record<string, unknown> }} */
 function flyerImageRequestPayload(prompt) {
   const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;

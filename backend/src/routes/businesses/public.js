@@ -29,7 +29,7 @@ export function publicInfo(req, res) {
   }
   /* Toujours une URL : /public/logo reproduit le rendu Wallet (image, texte bandeau, repli). */
   const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/logo`;
-  /** Même ressource que l’aperçu campagnes / push (dashboard) — pas le bandeau Wallet. */
+  /** Icône push / aperçu campagne Wallet — distincte du logo page fidélité / jeu QR. */
   const notificationIconUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
   const fidelityPageBackgroundUrl =
     Number(business.asset_fidelity_page_background_present) === 1

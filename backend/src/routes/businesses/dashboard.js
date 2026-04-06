@@ -43,6 +43,8 @@ import rateLimit from "express-rate-limit";
 import {
   parseFlyerAIBody,
   buildFlyerImagePrompt,
+  buildFidelityClientPageBackgroundPrompt,
+  multimodalForFidelityPageBackground,
   mergeServerLogoIntoMultimodal,
   openaiGenerateFlyerImage,
 } from "../../services/flyer-ai-image.js";
@@ -701,10 +703,31 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
       styleRefCount: multimodal.styleRefCount,
     });
     const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, multimodal);
+
+    /** Même action : fond page jeu QR (sans roue), enregistré comme « Image de fond » page fidélité. */
+    let fidelity_page_background_saved = false;
+    /** @type {string | null} */
+    let fidelity_page_background_error = null;
+    try {
+      const mmBg = multimodalForFidelityPageBackground(multimodal);
+      const promptBg = buildFidelityClientPageBackgroundPrompt(parsed.value, {
+        styleRefCount: mmBg.styleRefCount,
+      });
+      const { b64: b64Bg } = await openaiGenerateFlyerImage(apiKey, promptBg, mmBg);
+      updateBusiness(business.id, {
+        fidelity_page_background_base64: `data:image/png;base64,${b64Bg}`,
+      });
+      fidelity_page_background_saved = true;
+    } catch (e2) {
+      fidelity_page_background_error = e2?.message ? String(e2.message) : "Échec génération fond page fidélité.";
+    }
+
     if (unlimited) {
       return res.json({
         image_base64: b64,
         revised_prompt: revised ?? null,
+        fidelity_page_background_saved,
+        fidelity_page_background_error,
         flyer_ai_unlimited: true,
         flyer_ai_generations_used: used,
         flyer_ai_generations_remaining: null,
@@ -715,6 +738,8 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     return res.json({
       image_base64: b64,
       revised_prompt: revised ?? null,
+      fidelity_page_background_saved,
+      fidelity_page_background_error,
       flyer_ai_unlimited: false,
       flyer_ai_generations_used: nextUsed,
       flyer_ai_generations_remaining: Math.max(0, allowance - nextUsed),

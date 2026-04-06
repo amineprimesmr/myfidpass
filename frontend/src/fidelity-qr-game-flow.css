@@ -65,6 +65,10 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   flex-shrink: 0;
 }
 
+.fidelity-qr-logo--hidden {
+  display: none !important;
+}
+
 /* Titre unique : accroche lisible (marge réduite pour tenir sans scroll sur petits écrans) */
 .fidelity-qr-title--lead {
   margin: clamp(1rem, 5vw, 2.75rem) 0 0;
@@ -132,11 +136,13 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
  */
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
   width: auto !important;
-  min-width: 0 !important;
+  /* Ne pas mettre min-width:0 : le flex comprimait la pastille et rognait le libellé malgré max-width. */
+  min-width: max-content !important;
+  flex-shrink: 0 !important;
   /* Assez large pour « JOUER LA PARTIE » sur une ligne (uppercase + tracking) */
-  max-width: min(100%, 352px);
-  padding-left: 1.25rem !important;
-  padding-right: 1.25rem !important;
+  max-width: min(100%, 420px);
+  padding-left: 1.35rem !important;
+  padding-right: 1.35rem !important;
   min-height: 2.52rem !important;
   border-width: 1.5px !important;
   box-sizing: border-box;
@@ -169,6 +175,7 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   font-size: 0.82rem;
   letter-spacing: 0.03em;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-pill-chevron {
