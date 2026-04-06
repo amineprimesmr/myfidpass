@@ -38,4 +38,15 @@ describe("effectivePassKitRowUpdateTs (PassKit passesUpdatedSince)", () => {
     });
     expect(ts).toBe(Date.parse("2026-06-15T12:00:00Z"));
   });
+
+  it("prend en compte notification_icon_updated_at (icône bannière Wallet vs aperçu API)", () => {
+    const ts = effectivePassKitRowUpdateTs({
+      last_visit_at: null,
+      last_broadcast_at: "2026-01-01 00:00:00",
+      created_at: "2020-01-01 00:00:00",
+      notification_pass_layout_at: "2026-01-01 00:00:00",
+      notification_icon_updated_at: "2026-08-20 18:00:00.500",
+    });
+    expect(ts).toBe(Date.parse("2026-08-20T18:00:00.500Z"));
+  });
 });

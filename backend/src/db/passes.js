@@ -132,21 +132,29 @@ function parsePassUpdatedAt(str) {
 }
 
 /**
- * Instant « pass mis à jour » côté PassKit : visite en caisse, dernière diffusion, création du membre,
- * ou mise à jour des textes pass (sans confondre avec une nouvelle diffusion — voir notification_pass_layout_at).
+ * Instant « pass mis à jour » côté PassKit : aligné sur `getPassLastModified` (passkit-webservice.js).
+ * DOIT inclure les mêmes signaux que le .pkpass (icône notif, logos, fond) : sinon l’iPhone reçoit le push
+ * mais `GET registrations` renvoie 204 → **aucun refetch** → Wallet garde l’ancienne `icon.png` alors que
+ * l’aperçu app (GET /notification-icon) affiche déjà la nouvelle image.
  */
 export function effectivePassKitRowUpdateTs(row) {
-  return Math.max(
+  const parts = [
     parsePassUpdatedAt(row.last_visit_at),
     parsePassUpdatedAt(row.last_broadcast_at),
     parsePassUpdatedAt(row.created_at),
-    parsePassUpdatedAt(row.notification_pass_layout_at)
-  );
+    parsePassUpdatedAt(row.notification_pass_layout_at),
+    parsePassUpdatedAt(row.logo_updated_at),
+    parsePassUpdatedAt(row.logo_icon_updated_at),
+    parsePassUpdatedAt(row.notification_icon_updated_at),
+    parsePassUpdatedAt(row.card_background_updated_at),
+  ];
+  return Math.max(0, ...parts);
 }
 
 export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
   const base = db.prepare(
-    `SELECT pr.serial_number, m.last_visit_at, m.created_at, b.last_broadcast_at, b.notification_pass_layout_at
+    `SELECT pr.serial_number, m.last_visit_at, m.created_at, b.last_broadcast_at, b.notification_pass_layout_at,
+            b.logo_updated_at, b.logo_icon_updated_at, b.notification_icon_updated_at, b.card_background_updated_at
      FROM pass_registrations pr
      INNER JOIN members m ON m.id = pr.serial_number
      INNER JOIN businesses b ON b.id = m.business_id
