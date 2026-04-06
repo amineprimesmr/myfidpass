@@ -15,4 +15,14 @@ describe("parseFlyerPrefsCustomLogoDataUrl", () => {
     expect(r?.contentType).toBe("image/png");
     expect(r?.buffer?.length).toBeGreaterThan(20);
   });
+
+  it("accepte custom_logo_data_url imbriqué dans state (clients legacy)", () => {
+    const b64 =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+    const url = `data:image/png;base64,${b64}`;
+    const json = JSON.stringify({ state: { headline: "x" }, custom_logo_data_url: url });
+    expect(parseFlyerPrefsCustomLogoDataUrl(json)?.buffer?.length).toBeGreaterThan(20);
+    const nested = JSON.stringify({ state: { custom_logo_data_url: url } });
+    expect(parseFlyerPrefsCustomLogoDataUrl(nested)?.buffer?.length).toBeGreaterThan(20);
+  });
 });

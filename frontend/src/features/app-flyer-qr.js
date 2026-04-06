@@ -112,14 +112,30 @@ export function initAppFlyerQr(slug, opts) {
     }
   }
 
-  async function pushFlyerToServerNow() {
+  /**
+   * Envoie l’état flyer au serveur.
+   * Important : ne pas envoyer `custom_logo_data_url` / `custom_bg_data_url` quand on ne les modifie pas,
+   * sinon `normalizeFlyerPrefsPut` les force à `null` et **efface** le logo importé (page jeu QR → repli texte vert).
+   * @param {{ clearFlyerLogoOnServer?: boolean; clearFlyerBgOnServer?: boolean }} [putOpts]
+   */
+  async function pushFlyerToServerNow(putOpts = {}) {
     if (!opts.dashboardApi) return false;
     const st = readFlyerStateFromForm(root);
-    const body = {
-      state: st,
-      custom_logo_data_url: null,
-      custom_bg_data_url: getStoredFlyerCustomBgDataUrl() || null,
-    };
+    const { clearFlyerLogoOnServer = false, clearFlyerBgOnServer = false } = putOpts;
+    /** @type {Record<string, unknown>} */
+    const body = { state: st };
+    if (clearFlyerLogoOnServer) {
+      body.custom_logo_data_url = null;
+    } else {
+      const logoLocal = getStoredFlyerCustomLogoDataUrl();
+      if (logoLocal) body.custom_logo_data_url = logoLocal;
+    }
+    if (clearFlyerBgOnServer) {
+      body.custom_bg_data_url = null;
+    } else {
+      const bgLocal = getStoredFlyerCustomBgDataUrl();
+      if (bgLocal) body.custom_bg_data_url = bgLocal;
+    }
     try {
       const res = await opts.dashboardApi("/dashboard/flyer", {
         method: "PUT",
@@ -374,7 +390,7 @@ export function initAppFlyerQr(slug, opts) {
       state = mergeFlyerState(null);
       writeFlyerFormFromState(root, state);
       schedulePaint();
-      void pushFlyerToServerNow();
+      void pushFlyerToServerNow({ clearFlyerLogoOnServer: true, clearFlyerBgOnServer: true });
     });
   }
 

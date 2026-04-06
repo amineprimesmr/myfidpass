@@ -508,6 +508,14 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   pointer-events: none;
 }
 
+/*
+ * Jeu QR + fond photo : les visuels IA / intérieur sont souvent très chauds (orange/rouge).
+ * On refroidit légèrement la photo — pas de teinte « marque » imposée, seulement moins de saturation.
+ */
+#fidelity-app.fidelity-page.fidelity-page--client-bg:has(> main.fidelity-qr-game)::before {
+  filter: brightness(0.95) saturate(0.74) contrast(1.03);
+}
+
 @media (max-width: 480px) {
   #fidelity-app.fidelity-page.fidelity-page--client-bg::before {
     background-position: 96% 78%;

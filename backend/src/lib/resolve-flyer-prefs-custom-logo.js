@@ -6,6 +6,30 @@
 const MAX_DATA_URL_CHARS = 5 * 1024 * 1024;
 
 /**
+ * @param {unknown} root
+ * @returns {string | null}
+ */
+function pickCustomLogoDataUrlFromPrefsRoot(root) {
+  if (!root || typeof root !== "object" || Array.isArray(root)) return null;
+  const o = /** @type {Record<string, unknown>} */ (root);
+  const direct = o.custom_logo_data_url ?? o.customLogoDataUrl;
+  if (typeof direct === "string" && direct.startsWith("data:image/")) return direct;
+  const st = o.state;
+  if (st && typeof st === "object" && !Array.isArray(st)) {
+    const s = /** @type {Record<string, unknown>} */ (st);
+    const nested = s.custom_logo_data_url ?? s.customLogoDataUrl;
+    if (typeof nested === "string" && nested.startsWith("data:image/")) return nested;
+  }
+  const fp = o.flyer_prefs;
+  if (fp && typeof fp === "object" && !Array.isArray(fp)) {
+    const f = /** @type {Record<string, unknown>} */ (fp);
+    const w = f.custom_logo_data_url ?? f.customLogoDataUrl;
+    if (typeof w === "string" && w.startsWith("data:image/")) return w;
+  }
+  return null;
+}
+
+/**
  * @param {string | null | undefined} flyerPrefsJson
  * @returns {{ buffer: Buffer, contentType: string } | null}
  */
@@ -17,8 +41,7 @@ export function parseFlyerPrefsCustomLogoDataUrl(flyerPrefsJson) {
   } catch {
     return null;
   }
-  if (!root || typeof root !== "object" || Array.isArray(root)) return null;
-  const raw = root.custom_logo_data_url;
+  const raw = pickCustomLogoDataUrlFromPrefsRoot(root);
   if (typeof raw !== "string" || raw.length === 0 || raw.length > MAX_DATA_URL_CHARS) return null;
   if (!raw.startsWith("data:image/")) return null;
   const semi = raw.indexOf(";");
