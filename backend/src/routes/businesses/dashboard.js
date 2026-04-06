@@ -46,6 +46,7 @@ import {
   buildFidelityClientPageBackgroundPrompt,
   multimodalForFidelityPageBackground,
   mergeServerLogoIntoMultimodal,
+  mergeFlyerWheelTemplateMultimodal,
   openaiGenerateFlyerImage,
 } from "../../services/flyer-ai-image.js";
 import { getBusinessAssetData } from "../../db/business-assets.js";
@@ -697,10 +698,12 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     });
   }
   try {
-    const multimodal = mergeServerLogoIntoMultimodal(parsed.multimodal, req.business.id, getBusinessAssetData);
+    const multimodalLogo = mergeServerLogoIntoMultimodal(parsed.multimodal, req.business.id, getBusinessAssetData);
+    const { multimodal, hasTemplateWheel } = mergeFlyerWheelTemplateMultimodal(multimodalLogo);
     const prompt = buildFlyerImagePrompt(parsed.value, {
       hasLogo: multimodal.hasLogo,
       styleRefCount: multimodal.styleRefCount,
+      hasTemplateWheel,
     });
     const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, multimodal);
 
@@ -709,7 +712,7 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     /** @type {string | null} */
     let fidelity_page_background_error = null;
     try {
-      const mmBg = multimodalForFidelityPageBackground(multimodal);
+      const mmBg = multimodalForFidelityPageBackground(multimodal, hasTemplateWheel);
       const promptBg = buildFidelityClientPageBackgroundPrompt(parsed.value, {
         styleRefCount: mmBg.styleRefCount,
       });

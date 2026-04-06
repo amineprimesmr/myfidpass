@@ -13,7 +13,92 @@
 
 /** Dernier modèle image « state of the art » exposé sur POST /v1/images/generations (doc OpenAI 2025–2026). */
 const FLYER_AI_MODEL_BEST = "gpt-image-1.5";
+import { readFileSync, existsSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import { z } from "zod";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+/** Même visuel que l’asset app `roulette` / SaaS `public/assets/roue.png` — recoloriage IA uniquement. */
+const FLYER_WHEEL_TEMPLATE_PATH = join(__dirname, "../assets/flyer-wheel-template.png");
+
+/** @type {string | null | undefined} */
+let cachedFlyerWheelDataUrl;
+
+function flyerAiCanonicalWheelEnvOn() {
+  const v = process.env.FLYER_AI_USE_CANONICAL_WHEEL;
+  if (v === "0" || v === "false" || v === "no") return false;
+  return true;
+}
+
+/**
+ * Data URL PNG de la roue modèle (cache process). `null` si fichier absent.
+ * @returns {string | null}
+ */
+export function getFlyerWheelTemplateDataUrl() {
+  if (cachedFlyerWheelDataUrl !== undefined) return cachedFlyerWheelDataUrl;
+  try {
+    if (!existsSync(FLYER_WHEEL_TEMPLATE_PATH)) {
+      cachedFlyerWheelDataUrl = null;
+      return null;
+    }
+    const buf = readFileSync(FLYER_WHEEL_TEMPLATE_PATH);
+    if (buf.length < 64) {
+      cachedFlyerWheelDataUrl = null;
+      return null;
+    }
+    cachedFlyerWheelDataUrl = `data:image/png;base64,${buf.toString("base64")}`;
+    return cachedFlyerWheelDataUrl;
+  } catch {
+    cachedFlyerWheelDataUrl = null;
+    return null;
+  }
+}
+
+/**
+ * Ajoute la roue canonique en dernière image (max 4 refs OpenAI) : logo + jusqu’à 2 inspirations + roue,
+ * ou 3 inspirations + roue sans logo.
+ *
+ * @param {{ images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number }} multimodal
+ * @returns {{ multimodal: { images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number, hasTemplateWheel?: boolean }, hasTemplateWheel: boolean }}
+ */
+export function mergeFlyerWheelTemplateMultimodal(multimodal) {
+  const m = multimodal || { images: [], hasLogo: false, styleRefCount: 0 };
+  if (!flyerAiCanonicalWheelEnvOn()) {
+    return { multimodal: { ...m, hasTemplateWheel: false }, hasTemplateWheel: false };
+  }
+  const wheelUrl = getFlyerWheelTemplateDataUrl();
+  if (!wheelUrl) {
+    return { multimodal: { ...m, hasTemplateWheel: false }, hasTemplateWheel: false };
+  }
+  const hasLogo = Boolean(m.hasLogo);
+  const src = Array.isArray(m.images) ? [...m.images] : [];
+  const maxRefs = hasLogo ? 2 : 3;
+  /** @type {Array<{ image_url: string }>} */
+  const built = [];
+  if (hasLogo && src.length > 0) {
+    built.push(src[0]);
+    for (let i = 1; i < Math.min(src.length, 1 + maxRefs); i++) {
+      built.push(src[i]);
+    }
+  } else {
+    for (let i = 0; i < Math.min(src.length, maxRefs); i++) {
+      built.push(src[i]);
+    }
+  }
+  built.push({ image_url: wheelUrl });
+  const refSlots = Math.max(0, built.length - (hasLogo ? 1 : 0) - 1);
+  return {
+    multimodal: {
+      images: built,
+      hasLogo,
+      styleRefCount: refSlots,
+      hasTemplateWheel: true,
+    },
+    hasTemplateWheel: true,
+  };
+}
 
 /** @deprecated Utiliser `FLYER_AI_FREE_PER_MONTH` dans `flyer-ai-quota.js`. */
 export { FLYER_AI_FREE_PER_MONTH as FLYER_AI_FREE_GENERATIONS } from "./flyer-ai-quota.js";
@@ -182,12 +267,74 @@ export function mergeServerLogoIntoMultimodal(multimodal, businessId, getAssetDa
 }
 
 /**
- * Prompt détaillé — **tous secteurs** (restauration, artisanat, pêche, auto, esthétique, etc.) :
- * le brief marchand fait foi ; aucune industrie par défaut.
+ * Flyer IA avec **roue canonique** (PNG serveur) : l’IA recolore les parts et compose le décor ;
+ * elle ne redessine pas la roue ni les libellés GAGNÉ / PERDU.
+ *
  * @param {z.infer<typeof bodySchema>} input
  * @param {{ hasLogo: boolean, styleRefCount: number }} multimodalHint
  */
+function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: false, styleRefCount: 0 }) {
+  const accent = input.accent_color_hex.trim();
+  const secondaryHex = input.secondary_color_hex?.trim();
+  const secondary = secondaryHex
+    ? `WEDGE FILLS ONLY (six segments, clockwise from the top segment under the pointer): recolor flat fill of wedges 1,3,5 to ${accent}; wedges 2,4,6 to ${secondaryHex}. Strict alternation.`
+    : `WEDGE FILLS ONLY (six segments, clockwise from the top segment under the pointer): recolor wedges 1,3,5 to ${accent}; wedges 2,4,6 to clean white or warm cream. Strict alternation.`;
+  const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
+  const merchantBrief = buildMerchantBriefForPrompt(input);
+  const concept = input.cuisine_or_concept.trim();
+
+  const sectorFidelity =
+    "SECTOR FIDELITY (critical): Decorative imagery around the wheel MUST match the MERCHANT BRIEF only. Do NOT substitute unrelated stock subjects. If ambiguous, use brand-colored abstract shapes.";
+
+  const multimodalLines = [];
+  if (multimodalHint.hasLogo) {
+    multimodalLines.push(
+      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO. Composite at TOP of flyer (0–20% height): centered, crisp, faithful — no duplicate logo elsewhere."
+    );
+  }
+  if (multimodalHint.styleRefCount > 0) {
+    multimodalLines.push(
+      "Intermediate reference image(s) after the logo (if any): MOODBOARD / STYLE ONLY — palette, lighting, materials; NEVER copy foreign logos, QR codes, or extra wheels."
+    );
+  }
+  multimodalLines.push(
+    "FINAL REFERENCE IMAGE = CANONICAL PRIZE WHEEL ASSET (MyFidpass official). This raster is the SINGLE source of truth for wheel shape, rim, hub, pointer, segment boundaries, shadows, and ALL existing typography (GAGNÉ / PERDU and any other text already painted in the asset). ABSOLUTE RULES: (1) Do NOT draw a second wheel or alternate geometry. (2) Do NOT redraw, replace, move, warp, or re-type any letter or number — keep text pixel-stable. (3) ONLY adjust the flat fill color inside each of the six wedge regions to match the brand alternation below; preserve edge anti-aliasing and legibility. (4) Keep hub, pointer, outlines, and highlights coherent with the new fills."
+  );
+
+  const lines = [
+    "MERCHANT BRIEF (authoritative): " + merchantBrief,
+    sectorFidelity,
+    "TASK: ONE print-ready portrait 2:3 flyer, full bleed, no outer frame. Software will add headline, QR, footer — never draw those.",
+    "════════════════ STRICT BANS — NEVER VIOLATE ═══════════════",
+    "NEVER draw any QR code, barcode, Data Matrix, or square black-and-white module grid ANYWHERE.",
+    "NEVER draw footer instruction strips, numbered steps (1,2,3), phone mockups, or « Scannez & Gagnez » style slogans.",
+    "FORBIDDEN: Do not print the raw brief sentence « " + concept + " » as poster text (unless inside the provided logo).",
+    "ABSOLUTE BAN — QR-LIKE HUB: Do not turn the wheel hub into a QR-like grid.",
+    "STYLE: Bold commercial print — cohesive lighting between background decor and the composited wheel.",
+    "════════════════ LAYOUT (TOP → BOTTOM) ═══════════════",
+    "ZONE A — TOP 0–20%: Logo band when logo reference provided; calm background only otherwise.",
+    "ZONE B — CENTER ~20–82%: Composit the canonical wheel (last reference) centered at X=50%, center Y≈44% of canvas height, diameter ≈58–62% of image WIDTH — uniform scale, preserve aspect ratio. Add 1–3 decorative elements left/right per MERCHANT BRIEF; they may overlap the rim slightly.",
+    "ZONE C — BOTTOM 82–100%: Clean continuation of background only — no new objects.",
+    "BACKGROUND: Rich layered textured backdrop. Primary hue " + accent + ". Atmosphere: " + mood + ". Max 3–4 cohesive colors outside wedge recoloring.",
+    secondary,
+    "SELF-CHECK: (1) exactly one wheel (the provided asset); (2) all original wheel text unchanged; (3) only wedge fills recolored; (4) no QR anywhere; (5) bottom 18% clean.",
+    "QUALITY: Crisp print, clean edges.",
+    ...multimodalLines,
+  ];
+
+  return lines.filter(Boolean).join(" ");
+}
+
+/**
+ * Prompt détaillé — **tous secteurs** (restauration, artisanat, pêche, auto, esthétique, etc.) :
+ * le brief marchand fait foi ; aucune industrie par défaut.
+ * @param {z.infer<typeof bodySchema>} input
+ * @param {{ hasLogo: boolean, styleRefCount: number, hasTemplateWheel?: boolean }} multimodalHint
+ */
 export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, styleRefCount: 0 }) {
+  if (multimodalHint?.hasTemplateWheel) {
+    return buildFlyerImagePromptTemplateWheel(input, multimodalHint);
+  }
   const concept = input.cuisine_or_concept.trim();
   const accent = input.accent_color_hex.trim();
   const secondaryHex = input.secondary_color_hex?.trim();
@@ -258,17 +405,20 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
 /**
  * Multimodal pour le fond page fidélité : retire le logo (réf. #1) pour ne pas le « recoller » dans le PNG —
  * le logo commerce reste celui de la carte / `/public/logo`, comme sur le flyer composé dans l’app.
+ * Si `stripTemplateWheel`, retire aussi la dernière image (roue canonique flyer).
  *
  * @param {{ images: Array<{ image_url: string }>, hasLogo: boolean, styleRefCount: number }} multimodal
+ * @param {boolean} [stripTemplateWheel]
  */
-export function multimodalForFidelityPageBackground(multimodal) {
+export function multimodalForFidelityPageBackground(multimodal, stripTemplateWheel = false) {
   const m = multimodal || { images: [], hasLogo: false, styleRefCount: 0 };
   const imgs = Array.isArray(m.images) ? [...m.images] : [];
   if (m.hasLogo && imgs.length > 0) imgs.shift();
+  if (stripTemplateWheel && imgs.length > 0) imgs.pop();
   return {
     images: imgs,
     hasLogo: false,
-    styleRefCount: m.styleRefCount,
+    styleRefCount: imgs.length,
   };
 }
 
@@ -399,11 +549,13 @@ function resolveModelForFlyer(needsEdits) {
  * @param {string} prompt
  * @param {Array<{ image_url: string }>} images
  * @param {boolean} hasLogo
+ * @param {boolean} hasTemplateWheel
  * @returns {Promise<{ b64: string, revised?: string }>}
  */
-async function openaiImageEdits(apiKey, prompt, images, hasLogo) {
+async function openaiImageEdits(apiKey, prompt, images, hasLogo, hasTemplateWheel) {
   const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;
   const model = resolveModelForFlyer(true);
+  const highFidelity = Boolean(hasLogo || hasTemplateWheel);
   const body = {
     model,
     prompt: clipped,
@@ -413,7 +565,7 @@ async function openaiImageEdits(apiKey, prompt, images, hasLogo) {
     quality: "high",
     background: "opaque",
     output_format: "png",
-    input_fidelity: hasLogo ? "high" : "low",
+    input_fidelity: highFidelity ? "high" : "low",
   };
 
   const res = await fetch("https://api.openai.com/v1/images/edits", {
@@ -490,10 +642,11 @@ async function openaiImageGenerations(apiKey, prompt) {
 export async function openaiGenerateFlyerImage(apiKey, prompt, multimodal) {
   const images = multimodal?.images?.length ? [...multimodal.images] : [];
   const hasLogo = Boolean(multimodal?.hasLogo);
+  const hasTemplateWheel = Boolean(multimodal?.hasTemplateWheel);
   if (images.length === 0) {
     return openaiImageGenerations(apiKey, prompt);
   }
-  return openaiImageEdits(apiKey, prompt, images, hasLogo);
+  return openaiImageEdits(apiKey, prompt, images, hasLogo, hasTemplateWheel);
 }
 
 export { VISUAL_MOODS };

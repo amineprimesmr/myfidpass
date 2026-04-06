@@ -226,7 +226,7 @@ export function initFlyerAiGenerate(slug, opts) {
         }
       }
 
-      const refs = refInput?.files ? Array.from(refInput.files).slice(0, 3) : [];
+      const refs = refInput?.files ? Array.from(refInput.files).slice(0, 2) : [];
       if (refs.length) {
         try {
           body.style_reference_images_base64 = await Promise.all(refs.map((f) => fileToBase64Raw(f)));
