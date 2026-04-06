@@ -106,6 +106,8 @@ export function mountCarnivalPenLEEORoB(options = {}) {
   const canvas = document.querySelector("canvas.webgl");
   //
   const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xeef2f8);
+  scene.fog = new THREE.Fog(0xeef2f8, 22, 68);
   //
   const textureLoader = new THREE.TextureLoader();
   //
@@ -265,13 +267,15 @@ export function mountCarnivalPenLEEORoB(options = {}) {
   shadowTexture.flipY = false;
   shadowTexture.colorSpace = THREE.SRGBColorSpace;
   //
-  const bakedMaterial = new THREE.MeshBasicMaterial({ map: bakedTexture });
+  const bakedMaterial = new THREE.MeshBasicMaterial({
+   map: bakedTexture,
+   color: new THREE.Color(0xe8ecf4)
+  });
   const wheelMaterial = new THREE.MeshBasicMaterial({ map: wheelTexture });
-  // const shadowMaterial = new THREE.MeshBasicMaterial({ map: shadowTexture, transparent:true, opacity:0.5 })
   const shadowMaterial = new THREE.MeshBasicMaterial({
    map: shadowTexture,
    transparent: true,
-   opacity: 0.5
+   opacity: 0.28
   });
   const transpMaterial = new THREE.MeshBasicMaterial({
    color: new THREE.Color(0x000000),
@@ -299,9 +303,8 @@ export function mountCarnivalPenLEEORoB(options = {}) {
    child.material = shadowMaterial;
    // child.visible = false;
    } else if (child.name == "sign_swing") {
-   //pull sign at intro
    child.material = bakedMaterial;
-   pullSign = child;
+   child.visible = false;
    } else if (child.name == "result_panel") {
    // result animation
    child.material = bakedMaterial;

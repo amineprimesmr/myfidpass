@@ -38,7 +38,7 @@ export function renderQrGamePage(esc, p) {
   }
 
   const explanationEsc = esc(
-    "Step right up! Generate a random number from 1–10. Pull the lever to spin. Intro After Effects + scène Three.js (CodePen LEEORoB, Jared Stanley).",
+    "Bienvenue ! Tirez le levier pour faire tourner la roue. Une animation d’intro vous guide, puis vous accédez au jeu.",
   );
 
   return `
@@ -47,7 +47,7 @@ export function renderQrGamePage(esc, p) {
       <div id="container">
         <div id="lottie"></div>
         <div id="explanation"><p>${explanationEsc}</p></div>
-        <button type="button" id="enter">enter</button>
+        <button type="button" id="enter">Continuer</button>
       </div>
 
       <section class="fidelity-qr-hero fidelity-qr-hero--carnival" aria-label="En-tête">
