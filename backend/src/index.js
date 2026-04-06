@@ -28,7 +28,7 @@ import webPushRouter from "./routes/web-push.js";
 import deviceRouter from "./routes/device.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics } from "./apns.js";
-import { isEmailConfigured, getEmailTransportLabel } from "./email.js";
+import { isEmailConfigured, getEmailTransportLabel, isSmtpConfigured } from "./email.js";
 import { runCampaignAutomationCron } from "./lib/campaign-automation-cron.js";
 import { runCampaignEventJobsCron } from "./lib/campaign-event-jobs.js";
 import { startNotificationJobWorker } from "./lib/notification-job-queue.js";
@@ -180,6 +180,8 @@ app.get("/api/health/email", (req, res) => {
   res.json({
     transactionalEmailReady: isEmailConfigured(),
     provider: getEmailTransportLabel(),
+    /** Si true avec provider resend, un échec Resend peut encore partir en SMTP (secours). */
+    smtpAlsoConfigured: isSmtpConfigured(),
   });
 });
 app.get("/api/health/db", (req, res) => {

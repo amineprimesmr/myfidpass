@@ -4,6 +4,9 @@
  * Option 1 — Resend (recommandé sur Railway) : RESEND_API_KEY + MAIL_FROM (domaine vérifié chez Resend).
  * Option 2 — SMTP : SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_PORT (587 en général), MAIL_FROM optionnel.
  * Sans l’un ou l’autre, aucun mail n’est envoyé (le client reçoit quand même le message générique).
+ *
+ * Résilience : si Resend échoue (domaine / from invalide), nouvel essai avec onboarding@resend.dev ;
+ * si ça échoue encore et que SMTP est configuré, envoi via SMTP.
  */
 import nodemailer from "nodemailer";
 
@@ -53,9 +56,14 @@ function getTransporter() {
   return transporter;
 }
 
-async function sendViaResend({ to, subject, text, html }) {
+/**
+ * @param {{ to: string | string[], subject: string, text?: string, html?: string, from?: string }} p
+ */
+async function sendViaResend(p) {
   const key = getResendKey();
   if (!key) return { sent: false };
+  const { to, subject, text, html, from } = p;
+  const fromHeader = (from || fromForResend()).trim();
   const destinations = Array.isArray(to) ? to : [to];
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -64,7 +72,7 @@ async function sendViaResend({ to, subject, text, html }) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: fromForResend(),
+      from: fromHeader,
       to: destinations,
       subject,
       text: text || (html && html.replace(/<[^>]+>/g, "").trim()) || "",
@@ -72,26 +80,20 @@ async function sendViaResend({ to, subject, text, html }) {
     }),
   });
   if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    console.error("[Email] Resend HTTP", res.status, errText.slice(0, 500));
-    return { sent: false, error: errText || `HTTP ${res.status}` };
+    const raw = await res.text().catch(() => "");
+    let errMsg = raw.slice(0, 800);
+    try {
+      const j = JSON.parse(raw);
+      if (j && typeof j.message === "string") errMsg = j.message;
+      else if (j && Array.isArray(j.errors) && j.errors[0]?.message) errMsg = j.errors[0].message;
+    } catch (_) {}
+    console.error("[Email] Resend HTTP", res.status, errMsg);
+    return { sent: false, error: errMsg || `HTTP ${res.status}` };
   }
   return { sent: true };
 }
 
-/**
- * Envoie un email. Si aucun transport n’est configuré, retourne { sent: false }.
- */
-export async function sendMail({ to, subject, text, html }) {
-  if (getResendKey()) {
-    try {
-      return await sendViaResend({ to, subject, text, html });
-    } catch (err) {
-      console.error("[Email] Resend error:", err.message);
-      return { sent: false, error: err.message };
-    }
-  }
-
+async function sendViaSmtp({ to, subject, text, html }) {
   const transport = getTransporter();
   if (!transport) return { sent: false };
   try {
@@ -109,8 +111,56 @@ export async function sendMail({ to, subject, text, html }) {
   }
 }
 
+/**
+ * Envoie un email. Si aucun transport n’est configuré, retourne { sent: false }.
+ */
+export async function sendMail({ to, subject, text, html }) {
+  const opts = { to, subject, text, html };
+
+  if (getResendKey()) {
+    try {
+      const primaryFrom = fromForResend();
+      let r = await sendViaResend({ ...opts, from: primaryFrom });
+      if (r.sent) return r;
+
+      if (primaryFrom !== RESEND_FROM_FALLBACK) {
+        console.warn(
+          "[Email] Resend a échoué avec l’expéditeur configuré ; nouvel essai avec",
+          RESEND_FROM_FALLBACK,
+          "(voir docs/EMAIL-TRANSACTIONNEL.md — domaine vérifié ?)",
+        );
+        r = await sendViaResend({ ...opts, from: RESEND_FROM_FALLBACK });
+        if (r.sent) return r;
+      }
+
+      if (smtpConfigured()) {
+        console.warn("[Email] Resend indisponible ou refusé ; tentative SMTP de secours.");
+        const sm = await sendViaSmtp(opts);
+        if (sm.sent) return sm;
+      }
+
+      return r;
+    } catch (err) {
+      console.error("[Email] Resend error:", err.message);
+      if (smtpConfigured()) {
+        const sm = await sendViaSmtp(opts);
+        if (sm.sent) return sm;
+      }
+      return { sent: false, error: err.message };
+    }
+  }
+
+  if (smtpConfigured()) return sendViaSmtp(opts);
+  return { sent: false };
+}
+
 export function isEmailConfigured() {
   return !!(getResendKey() || smtpConfigured());
+}
+
+/** Diagnostic /health : SMTP utilisable (y compris comme secours si Resend échoue). */
+export function isSmtpConfigured() {
+  return smtpConfigured();
 }
 
 /** Pour diagnostic ops : "resend" | "smtp" | "none" */

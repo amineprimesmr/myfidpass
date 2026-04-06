@@ -31,4 +31,27 @@ describe("email", () => {
     expect(isEmailConfigured()).toBe(true);
     expect(getEmailTransportLabel()).toBe("resend");
   });
+
+  it("Resend : second essai avec onboarding@resend.dev si le premier appel échoue", async () => {
+    process.env.RESEND_API_KEY = "re_test_key";
+    process.env.MAIL_FROM = "noreply@unverified.example";
+    let n = 0;
+    const mockFetch = vi.fn().mockImplementation(() => {
+      n += 1;
+      if (n === 1) {
+        return Promise.resolve({
+          ok: false,
+          text: async () => JSON.stringify({ message: "Domain not verified" }),
+        });
+      }
+      return Promise.resolve({ ok: true, text: async () => "" });
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    const { sendMail } = await import("./email.js");
+    const r = await sendMail({ to: "user@example.com", subject: "Sujet", text: "Corps" });
+    expect(r.sent).toBe(true);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    const secondBody = JSON.parse(mockFetch.mock.calls[1][1].body);
+    expect(secondBody.from).toContain("onboarding@resend.dev");
+  });
 });
