@@ -201,7 +201,10 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: var(--fidelity-client-bg) center / cover no-repeat;
+  background-image: var(--fidelity-client-bg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 78% 44%;
   opacity: 1;
   pointer-events: none;
 }

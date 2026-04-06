@@ -122,8 +122,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 .fidelity-cta-pill--qr-play {
   min-width: min(100%, 300px);
-  /* Shorthand pour écraser le padding vertical 0.82rem de .fidelity-cta-pill (sinon pastille « haute »). */
-  padding: 0.48rem 1.75rem !important;
+  padding-left: 1.75rem !important;
+  padding-right: 1.75rem !important;
   background: linear-gradient(180deg, #4f46e5 0%, #4338ca 55%, #312e81 100%) !important;
   border: 2px solid rgba(255, 255, 255, 0.35) !important;
   /* box-shadow animé dans fidelity-wheel-gift.css (évite conflit !important) */
@@ -135,14 +135,13 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
  * le bouton dans main (pas les modales QR, hors du main).
  */
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
-  /* max-content : largeur du libellé ; max-width : plafond ; évite min-width:0 du flex qui rognait le texte */
-  width: max-content !important;
-  max-width: min(100%, 460px) !important;
-  flex-shrink: 0 !important;
-  /* Plat verticalement, large horizontalement (ne pas réutiliser le min-height 3.2rem de la pilule standard). */
-  padding: 0.46rem 1.85rem !important;
-  min-height: 0 !important;
-  line-height: 1.15 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  /* Assez large pour « JOUER LA PARTIE » sur une ligne (uppercase + tracking) */
+  max-width: min(100%, 352px);
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+  min-height: 2.52rem !important;
   border-width: 1.5px !important;
   box-sizing: border-box;
 }
@@ -174,7 +173,6 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   font-size: 0.82rem;
   letter-spacing: 0.03em;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-pill-chevron {
@@ -493,16 +491,31 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   position: fixed;
   z-index: 0;
   /* Au-delà du cadre layout pour couvrir encoche + home indicator (viewport-fit=cover). */
-  top: calc(-1 * env(safe-area-inset-top, 0px));
+  top: calc(-1 * env(safe-area-inset-top, 0px) - 8px);
   right: calc(-1 * env(safe-area-inset-right, 0px));
-  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+  bottom: calc(-1 * env(safe-area-inset-bottom, 0px) - 12px);
   left: calc(-1 * env(safe-area-inset-left, 0px));
   width: auto;
   height: auto;
-  background: var(--fidelity-client-bg) center / cover no-repeat;
+  /*
+   * La roue QR est massive à gauche : on pousse le point focal du visuel vers la droite
+   * et légèrement vers le haut pour limiter la découpe bas / bandeaux (cover + safe areas).
+   */
+  background-image: var(--fidelity-client-bg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 78% 44%;
   opacity: 1;
   pointer-events: none;
 }
+
+@media (max-width: 480px) {
+  #fidelity-app.fidelity-page.fidelity-page--client-bg::before {
+    /* Roue encore plus large en % de viewport : pousser le sujet principal plus à droite. */
+    background-position: 84% 42%;
+  }
+}
+
 /* Exclure les modales fixed : le sélecteur > * gagnait sur .fidelity-qr-modal-root et forçait position:relative → modale en bas du flux. */
 #fidelity-app.fidelity-page.fidelity-page--client-bg
   > *:not(#fidelity-qr-modal-root):not(#fidelity-profile-mission-modal) {
