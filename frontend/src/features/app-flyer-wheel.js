@@ -225,13 +225,16 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
  * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
  */
 /**
- * Libellés seuls (GAGNÉ / PERDU) par-dessus une roue déjà rendue dans l’image de fond (ex. IA sans typo).
+ * Libellés seuls (GAGNÉ / PERDU) par-dessus une roue déjà rendue (ex. fond IA).
+ * Même calage que le mode PNG du canvas : `wheelSegmentOffsetDeg` + décalage rainures.
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  */
 export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, FLYER_WHEEL_SEGMENT_COUNT, s);
+  const pngAligned = s.wheelRenderMode !== "segments";
+  const labelOff = pngAligned ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, FLYER_WHEEL_SEGMENT_COUNT, s);
 }
 
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
@@ -243,11 +246,16 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
   if (!usePng) drawWheelVectorBacking(ctx, wheelCx, wheelCy, wheelR);
 
+  /** Offset angulaire aligné sur les parts (PNG : même rotation que `drawPngWheelSegmentTints`). */
+  const labelOffsetDeg = usePng ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
+
   if (usePng) {
-    const off = userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG;
+    const off = labelOffsetDeg;
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
+  /** GAGNÉ / PERDU au canvas (l’asset PNG peut être sans typo — teintes + texte comme avant visuellement). */
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s);
   drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }
