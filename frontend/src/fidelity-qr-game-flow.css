@@ -117,7 +117,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 }
 
 .fidelity-cta-pill--qr-play {
-  min-width: min(100%, 280px);
+  min-width: min(100%, 300px);
   padding-left: 1.75rem !important;
   padding-right: 1.75rem !important;
   background: linear-gradient(180deg, #4f46e5 0%, #4338ca 55%, #312e81 100%) !important;
@@ -134,9 +134,9 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   width: auto !important;
   min-width: 0 !important;
   /* Assez large pour « JOUER LA PARTIE » sur une ligne (uppercase + tracking) */
-  max-width: min(100%, 300px);
-  padding-left: 1.05rem !important;
-  padding-right: 1.05rem !important;
+  max-width: min(100%, 352px);
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
   min-height: 2.52rem !important;
   border-width: 1.5px !important;
   box-sizing: border-box;
@@ -147,7 +147,7 @@ main.fidelity-v2-main.fidelity-qr-game
   .fidelity-v2-roulette-inline-controls
   .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
   /* Décale la pastille vers la droite (aligné avec le bord visuel malgré le padding page) */
-  margin-right: -1.85rem;
+  margin-right: -2.15rem;
 }
 
 .fidelity-cta-wheel-line--qr {

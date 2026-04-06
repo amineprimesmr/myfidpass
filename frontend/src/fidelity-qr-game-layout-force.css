@@ -53,8 +53,8 @@
   .fidelity-v2-roulette-inline--qr
   .fidelity-v2-roulette-inline-controls
   .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
-  margin-right: -2.85rem !important;
-  transform: translateX(14px) !important;
+  margin-right: -3.15rem !important;
+  transform: translateX(18px) !important;
 }
 
 /* Aperçu dashboard : mêmes valeurs avec la chaîne #app-app (bat la feuille app-fidelity-client-page) */
@@ -81,8 +81,8 @@
   .fidelity-v2-roulette-inline--qr
   .fidelity-v2-roulette-inline-controls
   .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
-  margin-right: -2.85rem !important;
-  transform: translateX(14px) !important;
+  margin-right: -3.15rem !important;
+  transform: translateX(18px) !important;
 }
 
 /*
