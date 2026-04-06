@@ -94,7 +94,13 @@ async function renderFromCurrentBootstrap() {
       : "";
   const slugMatch = share_url.match(/\/fidelity\/([^/?#]+)/);
   const cardSlug = slugFromPrefs || (slugMatch ? decodeURIComponent(slugMatch[1]) : "");
-  const apiBase = API_BASE || "https://api.myfidpass.fr";
+  /** Vite dev : API_BASE peut être "" → URL relative cassée dans WKWebView. Toujours viser l’API prod sur le domaine MyFidpass. */
+  const rawBase = typeof API_BASE === "string" ? API_BASE.trim().replace(/\/$/, "") : "";
+  const host = typeof window !== "undefined" && window.location?.hostname ? String(window.location.hostname) : "";
+  const apiBase =
+    rawBase ||
+    (/myfidpass\.fr$/i.test(host) ? "https://api.myfidpass.fr" : "") ||
+    "https://api.myfidpass.fr";
   if (!logoIn && cardSlug) {
     const logoApi = `${apiBase}/api/businesses/${encodeURIComponent(cardSlug)}/public/logo`;
     logoIn = await loadImageInputFromHttp(logoApi);

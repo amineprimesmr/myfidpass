@@ -109,11 +109,13 @@ async function loadQrAsImage(targetUrl, sizePx) {
  */
 function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
   ctx.save();
-  const rad = r * 1.12;
-  const g = ctx.createRadialGradient(cx, cy, r * 0.1, cx, cy, rad);
-  g.addColorStop(0, "rgba(6,8,18,0.2)");
-  g.addColorStop(0.5, "rgba(6,8,18,0.14)");
-  g.addColorStop(1, "rgba(6,8,18,0)");
+  const rad = r * 1.14;
+  /** Avant : vignette sombre → sur fond IA noir / food photo la roue disparaissait. Halo clair au centre + léger voile bord pour détacher toutes les teintes de parts. */
+  const g = ctx.createRadialGradient(cx, cy, r * 0.06, cx, cy, rad);
+  g.addColorStop(0, "rgba(255,255,255,0.34)");
+  g.addColorStop(0.35, "rgba(255,255,255,0.2)");
+  g.addColorStop(0.65, "rgba(248,250,252,0.1)");
+  g.addColorStop(1, "rgba(15,23,42,0)");
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(cx, cy, rad, 0, Math.PI * 2);
@@ -243,7 +245,14 @@ function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
   const cy = h * L.centerYFrac;
   const lx = cx - maxW / 2;
   const ly = cy - maxH / 2;
+  /** Halo clair + ombre portée : un seul `drawImage` (évite le double dessin trop opaque). */
+  const glow = Math.max(14, maxW * 0.055);
+  const dropY = Math.max(3, maxH * 0.04);
+  const dropBlur = Math.max(8, maxW * 0.035);
+  ctx.save();
+  ctx.filter = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.5)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.88))`;
   drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
+  ctx.restore();
 }
 
 async function getFlyerFooterBanner() {

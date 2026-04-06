@@ -159,8 +159,11 @@ function drawWheelHub(ctx, cx, cy, r) {
 export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
   const n = colors.length;
   if (n < 1) return;
-  /** Sans `rouegpt.png` (souvent absent du CDN), le repli vectoriel seul : sur fond IA rose, parts claires = invisibles — contours obligatoires. */
-  const edgeW = Math.max(2.5, r * 0.009);
+  /**
+   * Repli sans `rouegpt.png` : parts très sombres sur fond IA sombre, ou très claires sur fond rose,
+   * + trait slate seul = roue « absente ». Double contour blanc + noir lisible partout.
+   */
+  const edgeW = Math.max(2.2, r * 0.0085);
   for (let i = 0; i < n; i++) {
     const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
     ctx.beginPath();
@@ -169,9 +172,12 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
     ctx.closePath();
     ctx.fillStyle = colors[i];
     ctx.fill();
-    ctx.strokeStyle = "rgba(15,23,42,0.5)";
-    ctx.lineWidth = edgeW;
     ctx.lineJoin = "round";
+    ctx.strokeStyle = "rgba(255,255,255,0.92)";
+    ctx.lineWidth = edgeW * 2.35;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(0,0,0,0.58)";
+    ctx.lineWidth = edgeW;
     ctx.stroke();
   }
 }
