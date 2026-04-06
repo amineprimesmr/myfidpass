@@ -229,8 +229,125 @@ function drawImageContain(ctx, img, dx, dy, dstW, dstH) {
   }
 }
 
+/** @param {CanvasImageSource} img */
+function logoSourceDimensions(img) {
+  if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
+    return { sw: img.width, sh: img.height };
+  }
+  if (img && typeof img === "object") {
+    const o = /** @type {{ naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }} */ (img);
+    const sw = o.naturalWidth || o.width || 0;
+    const sh = o.naturalHeight || o.height || 0;
+    return { sw, sh };
+  }
+  return { sw: 0, sh: 0 };
+}
+
 /**
- * Logo commerce en tête de flyer : pas de cercle ni bord, proportions respectées.
+ * Cadre utile du logo (alpha) pour retirer marges PNG / canvas trop larges — pas de « cadre » visuel sur le flyer.
+ * @param {CanvasImageSource} img
+ * @returns {{ sx: number; sy: number; sw: number; sh: number } | null}
+ */
+function computeLogoContentBounds(img) {
+  if (typeof document === "undefined") return null;
+  const { sw, sh } = logoSourceDimensions(img);
+  if (!sw || !sh) return null;
+  const maxProbe = 480;
+  const scale = Math.min(1, maxProbe / Math.max(sw, sh));
+  const pw = Math.max(1, Math.round(sw * scale));
+  const ph = Math.max(1, Math.round(sh * scale));
+  const canv = document.createElement("canvas");
+  canv.width = pw;
+  canv.height = ph;
+  const c2 = canv.getContext("2d", { willReadFrequently: true });
+  if (!c2) return null;
+  try {
+    c2.drawImage(img, 0, 0, pw, ph);
+  } catch {
+    return null;
+  }
+  let data;
+  try {
+    data = c2.getImageData(0, 0, pw, ph).data;
+  } catch {
+    return null;
+  }
+  let minX = pw;
+  let minY = ph;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < ph; y++) {
+    const row = y * pw * 4;
+    for (let x = 0; x < pw; x++) {
+      if (data[row + x * 4 + 3] > 14) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < minX) return null;
+  const padP = Math.max(1, Math.round(Math.min(pw, ph) * 0.012));
+  minX = Math.max(0, minX - padP);
+  minY = Math.max(0, minY - padP);
+  maxX = Math.min(pw - 1, maxX + padP);
+  maxY = Math.min(ph - 1, maxY + padP);
+  const sx0 = Math.floor((minX * sw) / pw);
+  const sy0 = Math.floor((minY * sh) / ph);
+  const sx1 = Math.ceil(((maxX + 1) * sw) / pw);
+  const sy1 = Math.ceil(((maxY + 1) * sh) / ph);
+  const padS = Math.max(0, Math.round(Math.min(sw, sh) * 0.008));
+  const sx = Math.max(0, sx0 - padS);
+  const sy = Math.max(0, sy0 - padS);
+  const sww = Math.min(sw - sx, sx1 - sx0 + 2 * padS);
+  const shh = Math.min(sh - sy, sy1 - sy0 + 2 * padS);
+  if (sww < 2 || shh < 2) return null;
+  return { sx, sy, sw: sww, sh: shh };
+}
+
+/**
+ * object-fit: contain avec découpe source.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {CanvasImageSource} img
+ * @param {number} dx
+ * @param {number} dy
+ * @param {number} dstW
+ * @param {number} dstH
+ * @param {number} sx
+ * @param {number} sy
+ * @param {number} sw
+ * @param {number} sh
+ */
+function drawImageContainCropped(ctx, img, dx, dy, dstW, dstH, sx, sy, sw, sh) {
+  if (!sw || !sh) {
+    drawImageContain(ctx, img, dx, dy, dstW, dstH);
+    return;
+  }
+  const prevSmooth = ctx.imageSmoothingEnabled;
+  const prevQ = "imageSmoothingQuality" in ctx ? ctx.imageSmoothingQuality : "low";
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+  try {
+    const sc = Math.min(dstW / sw, dstH / sh);
+    const bw = sw * sc;
+    const bh = sh * sc;
+    const ox = dx + (dstW - bw) / 2;
+    const oy = dy + (dstH - bh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh, ox, oy, bw, bh);
+  } catch {
+    drawImageContain(ctx, img, dx, dy, dstW, dstH);
+  } finally {
+    ctx.imageSmoothingEnabled = prevSmooth;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = prevQ;
+  }
+}
+
+/** Sous-échantillonnage depuis une grille haute résolution → logo plus net à l’export 2400px. */
+const LOGO_DRAW_SUPER_SAMPLE = 2;
+
+/**
+ * Logo commerce en tête de flyer : sans plaque ni cadre ; détourage alpha + rendu 2× puis downscale.
  * @param {CanvasRenderingContext2D} ctx
  * @param {CanvasImageSource} logoImg
  * @param {number} w
@@ -245,40 +362,48 @@ function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
   const cy = h * L.centerYFrac;
   const lx = cx - maxW / 2;
   const ly = cy - maxH / 2;
-  const pad = Math.max(10, maxW * 0.038);
-  const rr = Math.min(pad * 1.35, maxH * 0.22);
-  /** Plaque claire : contraste sur fond IA sombre même si filtres / ombres canvas échouent (WKWebView). */
-  ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,0.26)";
-  roundRect(ctx, lx - pad, ly - pad, maxW + 2 * pad, maxH + 2 * pad, rr);
-  ctx.fill();
-  ctx.restore();
 
-  const glow = Math.max(14, maxW * 0.055);
-  const dropY = Math.max(3, maxH * 0.04);
-  const dropBlur = Math.max(8, maxW * 0.035);
-  const filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.5)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.82))`;
+  const { sw: fullW, sh: fullH } = logoSourceDimensions(logoImg);
+  const crop = computeLogoContentBounds(logoImg);
+  const sx = crop?.sx ?? 0;
+  const sy = crop?.sy ?? 0;
+  const srw = crop?.sw ?? fullW;
+  const srh = crop?.sh ?? fullH;
 
-  let drewWithFilter = false;
+  const tw = Math.max(2, Math.round(maxW * LOGO_DRAW_SUPER_SAMPLE));
+  const th = Math.max(2, Math.round(maxH * LOGO_DRAW_SUPER_SAMPLE));
+  if (typeof document === "undefined") {
+    drawImageContainCropped(ctx, logoImg, lx, ly, maxW, maxH, sx, sy, srw, srh);
+    return;
+  }
+  const off = document.createElement("canvas");
+  off.width = tw;
+  off.height = th;
+  const octx = off.getContext("2d");
+  if (!octx) {
+    drawImageContainCropped(ctx, logoImg, lx, ly, maxW, maxH, sx, sy, srw, srh);
+    return;
+  }
+  octx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in octx) octx.imageSmoothingQuality = "high";
+  drawImageContainCropped(octx, logoImg, 0, 0, tw, th, sx, sy, srw, srh);
+
+  const glow = Math.max(12, maxW * 0.048);
+  const dropY = Math.max(2, maxH * 0.032);
+  const dropBlur = Math.max(6, maxW * 0.028);
+  const filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.42)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.55))`;
+
   ctx.save();
   try {
     ctx.filter = filterStr;
-    drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
-    drewWithFilter = true;
-  } catch (_) {
-    drewWithFilter = false;
+    ctx.imageSmoothingEnabled = true;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(off, 0, 0, tw, th, lx, ly, maxW, maxH);
+  } catch {
+    ctx.filter = "none";
+    ctx.drawImage(off, 0, 0, tw, th, lx, ly, maxW, maxH);
   }
   ctx.filter = "none";
-  ctx.restore();
-
-  if (drewWithFilter) return;
-
-  ctx.save();
-  ctx.shadowColor = "rgba(255,255,255,0.92)";
-  ctx.shadowBlur = glow;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-  drawImageContain(ctx, logoImg, lx, ly, maxW, maxH);
   ctx.restore();
 }
 
@@ -528,12 +653,13 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.clearRect(0, 0, w, h);
 
   const scale = w / FLYER_EXPORT.w;
-  /** Carré QR un peu plus grand + ombre portée (relief). */
-  const qSize = w * 0.395;
-  const qrCornerR = 34 * scale;
-  const qrPad = 16 * scale;
+  /** QR un peu plus grand, coins plus ronds, QR serveur haute définition. */
+  const qSize = w * 0.42;
+  const qrCornerR = 50 * scale;
+  const qrPad = 15 * scale;
   const qrInner = Math.max(1, qSize - 2 * qrPad);
-  const qrFetchPx = Math.min(2048, Math.max(512, Math.round(qrInner * 2)));
+  /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
+  const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
 
   const qrImg = await loadQrAsImage(qrTargetUrl, qrFetchPx);
   const roueImg = FLYER_MANUAL_CANVAS_WHEEL_ENABLED ? await getFlyerRoueImage() : null;
@@ -599,8 +725,8 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
   const qCx = qx + qSize / 2;
   const qCy = qy + qSize / 2;
-  /** Légère inclinaison (sens inverse des aiguilles d’une montre), ~11°. */
-  const qrTiltRad = (-11 * Math.PI) / 180;
+  /** Inclinaison très légère (~6°). */
+  const qrTiltRad = (-6 * Math.PI) / 180;
 
   // La pastille passe légèrement derrière le QR (comme le mockup papier).
   drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);

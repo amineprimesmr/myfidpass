@@ -24,7 +24,8 @@ export const FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR = 0.94;
 
 /** Zone logo (drawFlyerCommerceLogo) : bas du bloc = centerYFrac + maxHFrac/2. */
 export const FLYER_LOGO_LAYOUT = Object.freeze({
-  centerYFrac: 0.1,
+  /** Un peu plus haut → accroche remonte (défaut flyer). */
+  centerYFrac: 0.076,
   maxHFrac: 0.15,
   maxWFrac: 0.62,
 });
@@ -54,7 +55,7 @@ export function flyerLogoLayoutResolved(s) {
  * @param {boolean} hasLogo
  */
 export function flyerLogoBlockBottomFracFromState(s, hasLogo) {
-  if (!hasLogo) return 0.052;
+  if (!hasLogo) return 0.036;
   const L = flyerLogoLayoutResolved(s);
   return L.centerYFrac + L.maxHFrac / 2;
 }
@@ -156,7 +157,7 @@ export function defaultFlyerState() {
     headlineStrokeColor: "#020617",
     headlineGiftStrokeColor: "#020617",
     headlineStrokeWidth: 18,
-    headlineLogoGapPct: 16,
+    headlineLogoGapPct: 7,
     headlineLetterSpacing: 0,
     headlineSizePct: 7,
     footerStepsForegroundColor: "#ffffff",
@@ -214,7 +215,7 @@ function clampHeadlineStrokeW(v) {
 
 function clampHeadlineGapPct(v) {
   const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 16;
+  if (!Number.isFinite(n)) return 7;
   return Math.max(0, Math.min(28, Math.round(n * 10) / 10));
 }
 
