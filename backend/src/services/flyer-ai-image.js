@@ -443,7 +443,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
   const multimodalLines = [];
   if (multimodalHint.hasLogo) {
     multimodalLines.push(
-      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO. Composite at TOP of flyer (0–20% height): centered, crisp, faithful — no duplicate logo elsewhere."
+      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO (may be transparent PNG). Composite at TOP (0–18% height): centered, crisp, faithful — preserve transparency, no opaque backing plate — no duplicate logo elsewhere."
     );
   }
   if (multimodalHint.styleRefCount > 0) {
@@ -467,7 +467,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
     "STYLE: Bold commercial print — cohesive lighting between background decor and the composited wheel.",
     "════════════════ LAYOUT (TOP → BOTTOM) ═══════════════",
     "ZONE A — TOP 0–20%: Logo band when logo reference provided; calm background only otherwise.",
-    "ZONE B — CENTER ~20–82%: Composit the canonical wheel (last reference) centered at X=50%, center Y≈44% of canvas height, diameter ≈58–62% of image WIDTH — uniform scale, preserve aspect ratio. Add 1–3 decorative elements left/right per MERCHANT BRIEF; they may overlap the rim slightly.",
+    "ZONE B — CENTER ~18–82%: Composit the canonical wheel (last reference) centered at X=50%, center Y≈48% of canvas height, diameter ≈58–62% of image WIDTH — uniform scale, preserve aspect ratio. Add 1–3 decorative elements left/right per MERCHANT BRIEF, vertically aligned with the wheel (mid-flyer), not only above it; they may overlap the rim slightly.",
     "ZONE C — BOTTOM 82–100%: Clean continuation of background only — no new objects.",
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth color fields and soft gradients around the wheel. " +
@@ -510,7 +510,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     "TASK: Generate ONE print-ready promotional flyer image, portrait 2:3 aspect, full bleed to all edges, no outer frame, no white border. The merchant will add headline text, QR code, and footer UI in software — your image must NEVER include those.";
 
   const sideImagery =
-    "SIDE DECOR: Left and right of the wheel, place 1–3 rich decorative elements consistent with the MERCHANT BRIEF (products, themed objects, sector-appropriate). They may overlap the wheel rim for depth (some behind, some in front). High-quality photorealistic or polished illustration — not generic clipart. Keep all of this inside the CENTER HERO ZONE only.";
+    "SIDE DECOR: Left and right of the wheel, place 1–3 rich decorative elements consistent with the MERCHANT BRIEF. Their vertical center of mass MUST align with the wheel center (Y≈48% from top), not bunched above the wheel. They may overlap the wheel rim for depth. High-quality photorealistic or polished illustration — not generic clipart. Keep subjects inside the mid-flyer hero band (roughly Y 32–62%).";
 
   const referenceStyle =
     "STYLE: Bold, vibrant, professional commercial print — cohesive lighting and shadows across all layers.";
@@ -518,7 +518,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   const multimodalLines = [];
   if (multimodalHint.hasLogo) {
     multimodalLines.push(
-      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO (mandatory integration). Composite this exact logo at the TOP of the flyer: horizontally centered, crisp, faithful colors/shapes/typography — do NOT invent a different mark. Size ≈ 20–25% of the image width. Add a subtle premium treatment (soft glow, light shadow, or soft circular backing) so it floats cleanly above the background. Do NOT duplicate the logo elsewhere. The logo must sit entirely inside the TOP ZONE (0–20% height) — no other graphics or text in that band except the logo treatment."
+      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO (often a transparent PNG cutout). Composite this exact mark at the TOP of the flyer (0–18% height): horizontally centered, crisp, faithful colors/shapes/typography — do NOT invent a different mark. If the reference has transparency, preserve it — do NOT add a solid rectangle behind the mark. Size ≈ 18–24% of image width. Subtle soft shadow or glow OK. Do NOT duplicate the logo elsewhere."
     );
   }
   if (multimodalHint.styleRefCount > 0) {
@@ -541,7 +541,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     referenceStyle,
     "════════════════ VERTICAL LAYOUT (TOP → BOTTOM) ═══════════════",
     "ZONE A — TOP 0–20% HEIGHT: Merchant logo (when reference provided) centered; subtle halo/backing allowed; NO other text, icons, or busy objects in this band.",
-    "ZONE B — CENTER ~20% to ~82% HEIGHT (≈62%): Main composition — prize wheel + left/right decor. Wheel sits UPPER-MIDDLE of this zone (place the wheel center noticeably ABOVE the global vertical midpoint of the full image — target wheel center Y ≈ 44% of image height from top) so the wheel reads 'higher' on the page. Horizontal center X = 50% of image width.",
+    "ZONE B — CENTER ~18% to ~82% HEIGHT: Main composition — prize wheel + left/right decor. Wheel center at X=50%, Y≈48% of full image height from top (optical middle of the flyer, NOT pushed upward). Decorative props flank the wheel at the SAME vertical level (mid-flyer). Horizontal center X = 50% of image width.",
     "ZONE C — BOTTOM 82–100% HEIGHT (18%): MUST remain visually clean — only background color/gradient/texture continuing from above. NO objects, NO text, NO icons, NO wheel fragments, NO props encroaching from above.",
     sideImagery,
     FLYER_SURFACE_CLEANLINESS_EN,
@@ -554,7 +554,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     secondary,
     "WHEEL LABELS (clockwise from the top wedge under the pointer): Wedge1=GAGNÉ; Wedge2=GAGNÉ; Wedge3=GAGNÉ; Wedge4=GAGNÉ; Wedge5=GAGNÉ; Wedge6=PERDU. Bold uppercase French, high contrast, radially readable inside each wedge (~70% of wedge radial length). No other text on the flyer.",
     "WHEEL HUB: Small decorative metallic pin/cap at center — gold or silver OK. No QR-like texture.",
-    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 44% Y from top); (5) wheel diameter ≈60% of image width; (6) bottom 18% empty of objects; (7) zero QR/barcodes.",
+    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 48% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes.",
     "QUALITY: Crisp print, clean edges, coherent lighting, no disconnected floating artifacts.",
     ...multimodalLines,
   ];
