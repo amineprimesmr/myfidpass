@@ -5904,7 +5904,12 @@ function initAppDashboard(slug) {
       const res = await api("/notifications/campaign-segments");
       if (!res.ok) return;
       const data = await res.json();
-      const ids = { inactive30: "app-campaign-count-inactive30", inactive90: "app-campaign-count-inactive90", new30: "app-campaign-count-new30", recurrent: "app-campaign-count-recurrent", points50: "app-campaign-count-points50" };
+      const ids = {
+        inactive14: "app-campaign-count-inactive14",
+        new7: "app-campaign-count-new7",
+        recurrent: "app-campaign-count-recurrent",
+        points50: "app-campaign-count-points50",
+      };
       for (const [key, id] of Object.entries(ids)) {
         const el = document.getElementById(id);
         if (el) el.textContent = data[key] ?? 0;
@@ -5913,19 +5918,16 @@ function initAppDashboard(slug) {
   }
 
   const CAMPAIGN_DEFAULTS = {
-    inactive30: "On vous a manqué ! Revenez nous voir : -20 % sur votre commande.",
-    inactive90:
-      "Ça fait très longtemps — profitez de -20 % sur votre commande en repassant nous voir.",
-    new30: "Bienvenue chez nous ! Voici -10% sur votre première visite.",
+    inactive14: "Ça fait un moment sans vous — profitez de -20 % sur votre commande en revenant nous voir.",
+    new7: "Merci de nous avoir rejoints récemment — profitez de nos avantages fidélité.",
     recurrent: "Merci pour votre fidélité ! Offre exclusive pour vous.",
     points50: "Vous avez des points à utiliser ! Venez les échanger contre une récompense.",
   };
   const CAMPAIGN_LABELS = {
-    inactive30: "Relancer les inactifs (30 j)",
-    inactive90: "Relancer les inactifs (90 j)",
-    new30: "Bienvenue aux nouveaux",
-    recurrent: "Récompenser les fidèles",
-    points50: "Proches de la récompense",
+    inactive14: "Inactif 14 jours",
+    new7: "Nouveaux (0–7 j)",
+    recurrent: "Fidèles (+10 visites / mois)",
+    points50: "Récompense prête (≥ 50 pts)",
   };
 
   let campaignModalSegment = null;
