@@ -160,7 +160,7 @@ const MOOD_EN_UNIVERSAL = {
 
 /** Ambiance par défaut quand le client envoie une palette priorisée (sans `visual_mood`). */
 const DEFAULT_FLYER_ATMOSPHERE_EN =
-  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly (first = dominant hue in large areas and main gradient; second = supporting accents and alternation partner; third optional = subtle depth only — thin rims, shadows, small highlights). Smooth blends, print-ready, sector-agnostic.";
+  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly (first = dominant hue in large areas and main gradient; second = supporting accents and alternation partner; third optional = subtle depth via color only — no gritty highlights). Flat smooth digital finish like a clean UI mockup — buttery gradients, print-ready, sector-agnostic, zero paper or film texture.";
 
 /**
  * Résout primaire / secondaire / tertiaire et le texte d’atmosphère pour les prompts image.
@@ -223,9 +223,10 @@ function buildColorPriorityHintEn(plan) {
 
 /** Exigence surface / texture (tous prompts image flyer & fond fidélité). */
 const FLYER_SURFACE_CLEANLINESS_EN =
-  "SURFACE QUALITY (mandatory): Background must look SMOOTH and PROFESSIONAL — large-scale gradients, soft vignettes, or very subtle uniform paper texture only. " +
-  "FORBIDDEN visual noise: no bokeh circles, no lens orbs, no soap bubbles, no glitter, no star sparkles, no confetti, no scattered white dots, no high-frequency grain, no speckled / noisy texture, no bubbly halftone, no 'sparkle' or 'magical particle' effects. " +
-  "If you show food or products, keep their edges clean; the surrounding color fields stay smooth and flat-to-gradient.";
+  "SURFACE QUALITY (mandatory — non-negotiable): The background must look like a CLEAN STUDIO PRINT or vector-grade poster: perfectly SMOOTH color with ONLY broad radial or linear gradients and soft vignettes. " +
+  "ABSOLUTELY NO TEXTURES OF ANY KIND: no paper grain, no canvas weave, no linen, no brushed metal, no noise, no film grain, no JPEG-like artifacts, no scratches, no dust, no watercolor paper tooth, no concrete, no plaster, no fabric macro, no wood grain, no halftone dots, no stippling, no crosshatch, no scan lines, no digital noise, no mottling, no cloudy speckle. " +
+  "FORBIDDEN visual junk: no bokeh orbs, no soap bubbles, no glitter, no star sparkles, no confetti, no scattered highlights, no high-frequency detail in empty color areas. " +
+  "Color transitions must be SILKY and continuous — like a premium app UI gradient, not a photograph of a wall. If products or food appear, their surfaces can be detailed; every EMPTY area and every backdrop field stays glass-smooth.";
 
 /**
  * Brief marchand unique (prioritaire sur toute supposition du modèle).
@@ -365,7 +366,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
   const multimodalLines = [];
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "REFERENCE IMAGE(S): moodboard / brand vibe only — palette, lighting, materials. If a reference is a transparent PNG (cutout logo), use it only for color/shape hints; NEVER paste it as an opaque rectangle onto the canvas. NEVER reproduce logos, text, QR codes, or wheels from references onto the output bitmap. NEVER composite a readable logo mark into the output (software adds the official logo separately)."
+      "REFERENCE IMAGE(S): moodboard only — extract COLOR PALETTE, overall MOOD, and lighting direction. NEVER transfer photographic grain, texture, noise, or surface detail from references onto the output background — the output must stay glass-smooth. If a reference is a transparent PNG (cutout logo), use it only for color/shape hints; NEVER paste it as an opaque rectangle onto the canvas. NEVER reproduce logos, text, QR codes, or wheels from references onto the output bitmap. NEVER composite a readable logo mark into the output (software adds the official logo separately)."
     );
   }
 
@@ -385,19 +386,19 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
     "NEVER draw QR codes, barcodes, Data Matrix, or square black-and-white module grids.",
     "NEVER draw footer strips, numbered steps, phone mockups, or « scan to play » style phrases.",
     "NEVER draw the merchant logo or brand mark (logo is composited in software).",
-    "NEVER use bokeh, glitter, bubble textures, star sparkles, confetti, or speckled noise on the background — keep color fields smooth.",
+    "NEVER use bokeh, glitter, bubbles, star sparkles, confetti, grain, paper texture, or any patterned noise on the background — color fields must be perfectly smooth.",
     "════════════════ RESERVED WHEEL ZONE (empty of game UI) ═══════════════",
-    "Leave a SOFT, LOW-DETAIL circular or elliptical area centered at X=50% width and Y=48% of canvas height from top, diameter about 60–64% of image WIDTH. Inside this zone: only smooth gradient, gentle vignette, or subtle texture — NO wheel shape, NO segments, NO pointer, NO hub detail. This zone must stay visually calm so a separate wheel asset sits on top without visual clash.",
+    "Leave a SOFT, LOW-DETAIL circular or elliptical area centered at X=50% width and Y=48% of canvas height from top, diameter about 60–64% of image WIDTH. Inside this zone: ONLY an ultra-smooth flat-to-gradient color field — ZERO texture, ZERO noise — NO wheel shape, NO segments, NO pointer, NO hub detail. This zone must stay visually calm so a separate wheel asset sits on top without visual clash.",
     "TOP 0–14%: calmer band for headline + merchant logo overlay in software (do not draw a logo — uncluttered background only).",
     "BOTTOM ~12%: relatively calm for footer UI; bottom-right stays quieter for QR (see above).",
     FLYER_SURFACE_CLEANLINESS_EN,
-    "BACKGROUND: Smooth, layered COLOR only — soft radial or linear gradients, gentle vignette, optional very subtle uniform paper feel. Not flat posterboard, but NO busy texture. " +
+    "BACKGROUND: Pure SMOOTH COLOR FIELDS only — think luxury app onboarding screen or Apple-style gradient: soft radial + linear blends, gentle vignette, NO texture layer at all. Do NOT imitate film, print stock, or « material » surfaces. " +
       colorHint +
       " Atmosphere: " +
       plan.atmosphere +
-      ". At most 3–4 cohesive colors.",
-    "STYLE: Bold commercial ambience via color and composition only; print-ready; even, coherent lighting — no decorative noise.",
-    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~44–54%) flanking the wheel, not only at the top; (7) zero bokeh/glitter/bubble noise.",
+      ". At most 3–4 cohesive colors; transitions must be buttery, not gritty.",
+    "STYLE: Bold commercial look through COLOR BLOCKS and clean composition only — print-ready, even lighting — absolutely no decorative texture or atmospheric noise.",
+    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~44–54%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient.",
     ...multimodalLines,
   ];
 
@@ -542,7 +543,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     "════════════════ VERTICAL LAYOUT (TOP → BOTTOM) ═══════════════",
     "ZONE A — TOP 0–20% HEIGHT: Merchant logo (when reference provided) centered; subtle halo/backing allowed; NO other text, icons, or busy objects in this band.",
     "ZONE B — CENTER ~18% to ~82% HEIGHT: Main composition — prize wheel + left/right decor. Wheel center at X=50%, Y≈48% of full image height from top (optical middle of the flyer, NOT pushed upward). Decorative props flank the wheel at the SAME vertical level (mid-flyer). Horizontal center X = 50% of image width.",
-    "ZONE C — BOTTOM 82–100% HEIGHT (18%): MUST remain visually clean — only background color/gradient/texture continuing from above. NO objects, NO text, NO icons, NO wheel fragments, NO props encroaching from above.",
+    "ZONE C — BOTTOM 82–100% HEIGHT (18%): MUST remain visually clean — only smooth color/gradient continuing from above (no texture). NO objects, NO text, NO icons, NO wheel fragments, NO props encroaching from above.",
     sideImagery,
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth blended color fields. " +
@@ -599,13 +600,13 @@ export function buildFidelityClientPageBackgroundPrompt(
   const colorHarmony = buildColorPriorityHintEn(plan);
 
   const sectorFidelity =
-    "SECTOR FIDELITY (critical): Atmosphere and textures MUST match the MERCHANT BRIEF only. If ambiguous, use abstract brand-colored shapes — do not substitute unrelated stock industries.";
+    "SECTOR FIDELITY (critical): Mood and subject choices MUST match the MERCHANT BRIEF only. If ambiguous, use abstract brand-colored shapes — do not substitute unrelated stock industries. Backdrop surfaces remain perfectly smooth (no photographic texture).";
 
   /** @type {string[]} */
   const multimodalLines = [];
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "REFERENCE IMAGE(S): moodboard / palette / materials / lighting only — NEVER copy text, QR codes, logos, or foreign marks from references."
+      "REFERENCE IMAGE(S): moodboard — palette and lighting only. NEVER copy grain, texture, or noise from references onto the wallpaper. NEVER copy text, QR codes, logos, or foreign marks from references."
     );
   }
 
@@ -624,14 +625,14 @@ export function buildFidelityClientPageBackgroundPrompt(
     "LAYOUT vs HTML ROULETTE (critical): A large prize wheel is overlaid on the LEFT (~0–58% width), centered vertically around the MIDDLE of the canvas (Y≈45–52% from top). Do NOT place strong focal subjects inside the wheel footprint on the left — keep that area soft. Place recognizable subjects, dishes, and props mainly in the RIGHT half (~58–100% width) with their visual weight at MID-HEIGHT (Y≈42–58% from top) — aligned with the wheel’s vertical center, not only near the bottom corner. Bottom-right (~70–100% width, ~78–100% height) stays calmer for QR readability.",
     "FORBIDDEN: stacking all hero imagery in the top 25% or only in the extreme bottom corner — it must feel anchored to the same vertical band as the wheel.",
     FLYER_SURFACE_CLEANLINESS_EN,
-    "BACKGROUND: Smooth full-bleed wallpaper. " +
+    "BACKGROUND: Smooth full-bleed wallpaper — vector-clean gradients only, like a premium mobile app screen. " +
       colorHarmony +
-      " Depth from soft gradients and gentle vignette only — no grain, no bokeh orbs, no sparkles. Atmosphere: " +
+      " Depth from soft gradients and gentle vignette only — zero paper grain, zero film noise, zero bokeh, zero sparkles, zero material textures. Atmosphere: " +
       plan.atmosphere +
       ". At most 3–4 cohesive colors total.",
-    "STYLE: Bold commercial ambience — polished, smooth, cohesive; no literal printed poster elements and no textured noise.",
+    "STYLE: Bold commercial ambience — polished, glass-smooth color fields; no printed-paper simulation and no textured noise.",
     ...multimodalLines,
-    "SELF-CHECK: (1) zero wheels or spinners; (2) zero text; (3) zero logos; (4) zero notification UI; (5) upper band calmer; (6) full bleed.",
+    "SELF-CHECK: (1) zero wheels or spinners; (2) zero text; (3) zero logos; (4) zero notification UI; (5) upper band calmer; (6) full bleed; (7) empty areas look perfectly smooth at 100% zoom — no grit.",
   ];
 
   return lines.filter(Boolean).join(" ");

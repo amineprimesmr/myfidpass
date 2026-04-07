@@ -13,12 +13,9 @@ const db = getDb();
 const RULE_TO_SEGMENT = {
   welcome_pass: "welcomeNew",
   inactive_14: "inactive14",
-  inactive_30: "inactive30",
-  inactive_60: "inactive60",
   reward_ready: "points50",
   points_near: "pointsNear50",
   loyal_boost: "recurrent",
-  new_members: "new30",
   new_week: "new7",
 };
 
@@ -26,14 +23,10 @@ const DEFAULT_MESSAGES = {
   welcome_pass: "Bienvenue ! Profitez d’une offre de bienvenue sur votre prochaine visite.",
   inactive_14:
     "Ça fait un moment sans vous — profitez de -20 % sur votre commande en revenant nous voir.",
-  inactive_30: "On vous a manqué ! Revenez nous voir : -20 % sur votre commande.",
-  inactive_60:
-    "Ça fait longtemps — profitez de -20 % sur votre commande pour votre retour.",
   reward_ready: "Votre récompense est prête — passez en magasin pour en profiter.",
   points_near: "Plus que quelques points pour débloquer votre récompense !",
   loyal_boost: "Merci pour votre fidélité — une offre rien que pour vous.",
-  new_members: "Merci de nous rejoindre ! Découvrez nos avantages fidélité.",
-  new_week: "Vous êtes nouveau ? Voici un petit coup de pouce pour votre prochaine visite.",
+  new_week: "Merci de nous avoir rejoints récemment — profitez de nos avantages fidélité.",
 };
 
 function defaultAutomationConfig() {

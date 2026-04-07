@@ -159,9 +159,11 @@ export function getMemberIdsBySegment(businessId, segment) {
       where += " AND points >= 50";
       break;
     case "recurrent":
+      // Fidèles : ≥ 10 passages (transactions) sur le **mois civil en cours** (aligné produit « +10 visites / mois »).
       where += ` AND id IN (
-        SELECT member_id FROM transactions WHERE business_id = ? AND created_at >= datetime('now', '-30 days')
-        GROUP BY member_id HAVING COUNT(*) >= 2
+        SELECT member_id FROM transactions WHERE business_id = ?
+        AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+        GROUP BY member_id HAVING COUNT(*) >= 10
       )`;
       params.push(businessId);
       break;

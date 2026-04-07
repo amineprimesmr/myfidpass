@@ -100,10 +100,10 @@ export function getDashboardStats(businessId, period = "this_month") {
     recurrentInPeriod =
       bounds.month != null
         ? db.prepare(
-            `SELECT COUNT(*) as n FROM (SELECT member_id FROM transactions WHERE business_id = ? AND strftime('%Y-%m', created_at) = ? GROUP BY member_id HAVING COUNT(*) >= 2)`
+            `SELECT COUNT(*) as n FROM (SELECT member_id FROM transactions WHERE business_id = ? AND strftime('%Y-%m', created_at) = ? GROUP BY member_id HAVING COUNT(*) >= 10)`
           ).get(businessId, bounds.month)
         : db.prepare(
-            `SELECT COUNT(*) as n FROM (SELECT member_id FROM transactions WHERE business_id = ? AND created_at >= ${bounds.since} GROUP BY member_id HAVING COUNT(*) >= 2)`
+            `SELECT COUNT(*) as n FROM (SELECT member_id FROM transactions WHERE business_id = ? AND created_at >= ${bounds.since} GROUP BY member_id HAVING COUNT(*) >= 10)`
           ).get(businessId);
   } catch (_e) {
     /* sous-requête peut varier selon SQLite */
@@ -180,7 +180,11 @@ export function getCampaignSegmentCounts(businessId) {
   let recurrentInPeriod = { n: 0 };
   try {
     recurrentInPeriod = db.prepare(
-      `SELECT COUNT(*) as n FROM (SELECT member_id FROM transactions WHERE business_id = ? AND created_at >= datetime('now', '-30 days') GROUP BY member_id HAVING COUNT(*) >= 2)`
+      `SELECT COUNT(*) as n FROM (
+        SELECT member_id FROM transactions WHERE business_id = ?
+        AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+        GROUP BY member_id HAVING COUNT(*) >= 10
+      )`
     ).get(businessId);
   } catch (_e) {
     /* */
