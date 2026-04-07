@@ -828,19 +828,22 @@
                         <label class="app-label" for="app-flyer-ai-concept">Activité & visuels</label>
                         <textarea id="app-flyer-ai-concept" class="app-input" rows="2" maxlength="400" placeholder="Ex. boulangerie, croissants, four…"></textarea>
                       </div>
+                      <p class="app-hint" style="margin:0 0 0.35rem;font-size:0.78rem">
+                        <strong>Couleurs (priorité gauche → droite)</strong> : la 1ʳᵉ domine le fond, la 2ᵉ soutient, la 3ᵉ en touches légères. Les teintes des parts de roue suivent la 1ʳᵉ et la 2ᵉ.
+                      </p>
                       <div class="app-flyer-colors" style="margin-top:0.35rem">
                         <div class="app-flyer-color-row">
-                          <label for="app-flyer-ai-accent">Accent roue</label>
+                          <label for="app-flyer-ai-accent">1 — principale</label>
                           <input type="color" id="app-flyer-ai-accent" value="#fbbf24" />
                         </div>
                         <div class="app-flyer-color-row">
-                          <label for="app-flyer-ai-secondary">2e couleur</label>
+                          <label for="app-flyer-ai-secondary">2 — secondaire</label>
                           <input type="color" id="app-flyer-ai-secondary" value="#1e293b" />
                         </div>
-                      </div>
-                      <div class="app-flyer-field">
-                        <label class="app-label" for="app-flyer-ai-mood">Ambiance</label>
-                        <select id="app-flyer-ai-mood" class="app-input app-flyer-inline-select" aria-label="Ambiance visuelle IA"></select>
+                        <div class="app-flyer-color-row">
+                          <label for="app-flyer-ai-tertiary">3 — accent léger (optionnel)</label>
+                          <input type="color" id="app-flyer-ai-tertiary" value="#64748b" />
+                        </div>
                       </div>
                       <div class="app-flyer-field">
                         <label class="app-label" for="app-flyer-ai-extra">Précisions (optionnel)</label>

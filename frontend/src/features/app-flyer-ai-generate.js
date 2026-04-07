@@ -8,15 +8,6 @@ import {
   setStoredFlyerCustomBgDataUrl,
 } from "./app-flyer-bg-control.js";
 
-const MOODS = [
-  { id: "premium", label: "Premium / sobre" },
-  { id: "energetic", label: "Énergique / pop" },
-  { id: "minimal", label: "Minimal / éditorial" },
-  { id: "street", label: "Street / urbain" },
-  { id: "gourmet", label: "Gourmand / artisan" },
-  { id: "playful", label: "Ludique / friendly" },
-];
-
 const SECTOR_CONCEPT_HINT = {
   fastfood: "Restauration rapide, vente à emporter",
   cafe: "Café, salon de thé, boissons",
@@ -34,15 +25,6 @@ function conceptFromSector(sectorRaw) {
     if (s.includes(k)) return v;
   }
   return `Commerce — secteur « ${sectorRaw.trim()} »`;
-}
-
-/** @param {string} sectorRaw */
-function moodFromSector(sectorRaw) {
-  const s = String(sectorRaw || "").toLowerCase();
-  if (s.includes("cafe") || s.includes("coffee") || s.includes("boulanger")) return "gourmet";
-  if (s.includes("fast") || s.includes("burger") || s.includes("pizza")) return "energetic";
-  if (s.includes("beauty") || s.includes("coiff") || s.includes("spa")) return "premium";
-  return "energetic";
 }
 
 /** @param {string} c */
@@ -92,28 +74,18 @@ export function initFlyerAiGenerate(slug, opts) {
   const btn = document.getElementById("app-flyer-ai-generate-btn");
   const statusEl = document.getElementById("app-flyer-ai-status");
   const quotaEl = document.getElementById("app-flyer-ai-quota");
-  const moodSel = document.getElementById("app-flyer-ai-mood");
   const logoInput = document.getElementById("app-flyer-ai-logo-file");
   const refInput = document.getElementById("app-flyer-ai-ref-files");
   const brandEl = document.getElementById("app-flyer-ai-brand");
   const conceptEl = document.getElementById("app-flyer-ai-concept");
   const accentEl = document.getElementById("app-flyer-ai-accent");
   const secondaryEl = document.getElementById("app-flyer-ai-secondary");
+  const tertiaryEl = document.getElementById("app-flyer-ai-tertiary");
   const extraEl = document.getElementById("app-flyer-ai-extra");
 
   if (!btn || !opts.dashboardApi) {
     if (btn) btn.disabled = true;
     return;
-  }
-
-  if (moodSel && moodSel.options.length === 0) {
-    MOODS.forEach((m) => {
-      const o = document.createElement("option");
-      o.value = m.id;
-      o.textContent = m.label;
-      moodSel.appendChild(o);
-    });
-    moodSel.value = "energetic";
   }
 
   let prefillDone = false;
@@ -143,9 +115,6 @@ export function initFlyerAiGenerate(slug, opts) {
       if (secondaryEl && !(secondaryEl.dataset.userTouched === "1")) {
         secondaryEl.value = normalizeHex6(j.backgroundColor || "#1e293b");
       }
-      if (moodSel && !(moodSel.dataset.userTouched === "1")) {
-        moodSel.value = moodFromSector(sectorRaw);
-      }
       prefillDone = true;
     } catch (_) {
       /* réseau */
@@ -156,7 +125,7 @@ export function initFlyerAiGenerate(slug, opts) {
     if (el) el.dataset.userTouched = "1";
   }
 
-  [brandEl, conceptEl, accentEl, secondaryEl, extraEl, moodSel, logoInput, refInput].forEach((el) => {
+  [brandEl, conceptEl, accentEl, secondaryEl, tertiaryEl, extraEl, logoInput, refInput].forEach((el) => {
     el?.addEventListener("input", () => markTouched(el));
     el?.addEventListener("change", () => markTouched(el));
   });
@@ -203,20 +172,34 @@ export function initFlyerAiGenerate(slug, opts) {
       const accent_color_hex = normalizeHex6(accentEl?.value || "#fbbf24");
       const secRaw = (secondaryEl?.value || "").trim();
       const secondary_color_hex = secRaw ? normalizeHex6(secRaw) : "";
+      const terRaw = (tertiaryEl?.value || "").trim();
+      const tertiary_color_hex = terRaw ? normalizeHex6(terRaw) : "";
 
       if (!brand_name || !cuisine_or_concept) {
         setStatus("Renseignez au minimum le nom de marque et le descriptif activité / visuels.", true);
         return;
       }
 
-      const visual_mood = moodSel?.value || "energetic";
+      /** @type {string[]} */
+      const palette_colors_hex = [accent_color_hex];
+      if (secondary_color_hex && secondary_color_hex.toLowerCase() !== accent_color_hex.toLowerCase()) {
+        palette_colors_hex.push(secondary_color_hex);
+      }
+      if (
+        tertiary_color_hex &&
+        tertiary_color_hex.toLowerCase() !== accent_color_hex.toLowerCase() &&
+        tertiary_color_hex.toLowerCase() !== (secondary_color_hex || "").toLowerCase()
+      ) {
+        palette_colors_hex.push(tertiary_color_hex);
+      }
+
       /** @type {Record<string, unknown>} */
       const body = {
         brand_name,
         cuisine_or_concept,
         accent_color_hex,
         secondary_color_hex: secondary_color_hex || "",
-        visual_mood,
+        palette_colors_hex,
         extra_context: (extraEl?.value || "").trim() || undefined,
       };
 

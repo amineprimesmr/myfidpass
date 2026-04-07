@@ -129,7 +129,10 @@ const bodySchema = z.object({
   secondary_color_hex: z
     .union([z.string().regex(/^#[0-9A-Fa-f]{6}$/), z.literal("")])
     .optional(),
-  visual_mood: z.enum(VISUAL_MOODS),
+  /** @deprecated Clients récents envoient `palette_colors_hex` (1–3 teintes ordonnées) ; si présent, il fait foi pour le brief couleur. */
+  visual_mood: z.enum(VISUAL_MOODS).optional(),
+  /** Jusqu’à 3 couleurs #RRGGBB, ordre = priorité (index 0 = dominante). */
+  palette_colors_hex: z.array(z.string().regex(/^#[0-9A-Fa-f]{6}$/)).max(3).optional(),
   extra_context: z.string().max(400).optional(),
   /** Base64 / data URL : ~33 % plus long que le binaire — marge pour 8 Mo décodés. */
   logo_base64: z.string().max(14_000_000).optional(),
@@ -154,6 +157,69 @@ const MOOD_EN_UNIVERSAL = {
   playful:
     "friendly commercial graphics: rounded flat color shapes and pastel fields — playful through COLOR and layout only; never literal bubbles, balloons-as-bokeh, glitter, or confetti",
 };
+
+/** Ambiance par défaut quand le client envoie une palette priorisée (sans `visual_mood`). */
+const DEFAULT_FLYER_ATMOSPHERE_EN =
+  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly (first = dominant hue in large areas and main gradient; second = supporting accents and alternation partner; third optional = subtle depth only — thin rims, shadows, small highlights). Smooth blends, print-ready, sector-agnostic.";
+
+/**
+ * Résout primaire / secondaire / tertiaire et le texte d’atmosphère pour les prompts image.
+ * @param {z.infer<typeof bodySchema>} input
+ */
+export function resolveFlyerColorPlan(input) {
+  const accent = String(input.accent_color_hex || "").trim();
+  const secFieldRaw = input.secondary_color_hex;
+  const secField =
+    secFieldRaw && String(secFieldRaw).trim() ? String(secFieldRaw).trim() : undefined;
+  const palRaw = input.palette_colors_hex;
+  const pal = Array.isArray(palRaw)
+    ? palRaw.map((x) => String(x).trim()).filter((x) => /^#[0-9A-Fa-f]{6}$/.test(x)).slice(0, 3)
+    : [];
+
+  const usePalette = pal.length > 0;
+  const primary = usePalette ? pal[0] : accent;
+  const secondary = usePalette ? pal[1] ?? secField : secField;
+  const tertiary = usePalette ? pal[2] : undefined;
+
+  let atmosphere = DEFAULT_FLYER_ATMOSPHERE_EN;
+  if (!usePalette && input.visual_mood && MOOD_EN_UNIVERSAL[input.visual_mood]) {
+    atmosphere = MOOD_EN_UNIVERSAL[input.visual_mood];
+  }
+
+  return { primary, secondary, tertiary, atmosphere, usedPalette: usePalette };
+}
+
+/**
+ * @param {ReturnType<typeof resolveFlyerColorPlan>} plan
+ */
+function buildColorPriorityHintEn(plan) {
+  const { primary, secondary, tertiary } = plan;
+  if (tertiary && secondary) {
+    return (
+      "COLOR PRIORITY (strict): (1) " +
+      primary +
+      " — dominant in large gradients and main background; (2) " +
+      secondary +
+      " — accents, mid-tones, wheel alternation partner; (3) " +
+      tertiary +
+      " — sparingly for depth (shadows, thin rims, small highlights). Blend smoothly — not an equal third-third-third split."
+    );
+  }
+  if (secondary) {
+    return (
+      "COLOR PRIORITY: (1) " +
+      primary +
+      " dominant; (2) " +
+      secondary +
+      " for accents, secondary masses, and alternation — smooth blends."
+    );
+  }
+  return (
+    "Primary brand hue " +
+    primary +
+    "; expand with cream, white, or a deep neutral harmonizing with that hue."
+  );
+}
 
 /** Exigence surface / texture (tous prompts image flyer & fond fidélité). */
 const FLYER_SURFACE_CLEANLINESS_EN =
@@ -226,6 +292,7 @@ export function parseFlyerAIBody(raw) {
         ? String(d.secondary_color_hex).trim()
         : undefined,
     visual_mood: d.visual_mood,
+    palette_colors_hex: d.palette_colors_hex,
     extra_context: d.extra_context?.trim() || undefined,
   };
   if (!value.brand_name.length || !value.cuisine_or_concept.length) {
@@ -291,13 +358,9 @@ export function multimodalForFlyerBackgroundOnly(multimodal) {
  * @param {{ styleRefCount: number }} multimodalHint
  */
 export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { styleRefCount: 0 }) {
-  const accent = input.accent_color_hex.trim();
-  const secondaryHex = input.secondary_color_hex?.trim();
-  const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
+  const plan = resolveFlyerColorPlan(input);
   const merchantBrief = buildMerchantBriefForPrompt(input);
-  const colorHint = secondaryHex
-    ? `Primary hue ${accent}; secondary ${secondaryHex} — blend in gradients and decor (not flat 50/50).`
-    : `Primary hue ${accent}; support with cream, white, or deep neutral from the same family.`;
+  const colorHint = buildColorPriorityHintEn(plan);
 
   const multimodalLines = [];
   if (multimodalHint.styleRefCount > 0) {
@@ -327,7 +390,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
     "BACKGROUND: Smooth, layered COLOR only — soft radial or linear gradients, gentle vignette, optional very subtle uniform paper feel. Not flat posterboard, but NO busy texture. " +
       colorHint +
       " Atmosphere: " +
-      mood +
+      plan.atmosphere +
       ". At most 3–4 cohesive colors.",
     "STYLE: Bold commercial ambience via color and composition only; print-ready; even, coherent lighting — no decorative noise.",
     "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) zero bokeh/glitter/bubble noise.",
@@ -361,12 +424,12 @@ export function mergeServerLogoIntoMultimodal(multimodal, businessId, getAssetDa
  * @param {{ hasLogo: boolean, styleRefCount: number }} multimodalHint
  */
 function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: false, styleRefCount: 0 }) {
-  const accent = input.accent_color_hex.trim();
-  const secondaryHex = input.secondary_color_hex?.trim();
+  const plan = resolveFlyerColorPlan(input);
+  const accent = plan.primary;
+  const secondaryHex = plan.secondary?.trim();
   const secondary = secondaryHex
     ? `WEDGE FILLS ONLY (six segments, clockwise from the top segment under the pointer): recolor flat fill of wedges 1,3,5 to ${accent}; wedges 2,4,6 to ${secondaryHex}. Strict alternation.`
     : `WEDGE FILLS ONLY (six segments, clockwise from the top segment under the pointer): recolor wedges 1,3,5 to ${accent}; wedges 2,4,6 to clean white or warm cream. Strict alternation.`;
-  const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
   const merchantBrief = buildMerchantBriefForPrompt(input);
   const concept = input.cuisine_or_concept.trim();
 
@@ -403,10 +466,10 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
     "ZONE B — CENTER ~20–82%: Composit the canonical wheel (last reference) centered at X=50%, center Y≈44% of canvas height, diameter ≈58–62% of image WIDTH — uniform scale, preserve aspect ratio. Add 1–3 decorative elements left/right per MERCHANT BRIEF; they may overlap the rim slightly.",
     "ZONE C — BOTTOM 82–100%: Clean continuation of background only — no new objects.",
     FLYER_SURFACE_CLEANLINESS_EN,
-    "BACKGROUND: Smooth color fields and soft gradients around the wheel. Primary hue " +
-      accent +
-      ". Atmosphere: " +
-      mood +
+    "BACKGROUND: Smooth color fields and soft gradients around the wheel. " +
+      buildColorPriorityHintEn(plan) +
+      " Atmosphere: " +
+      plan.atmosphere +
       ". Max 3–4 cohesive colors outside wedge recoloring — no speckles or bokeh orbs.",
     secondary,
     "SELF-CHECK: (1) exactly one wheel (the provided asset); (2) all original wheel text unchanged; (3) only wedge fills recolored; (4) no QR anywhere; (5) bottom 18% clean.",
@@ -428,12 +491,12 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     return buildFlyerImagePromptTemplateWheel(input, multimodalHint);
   }
   const concept = input.cuisine_or_concept.trim();
-  const accent = input.accent_color_hex.trim();
-  const secondaryHex = input.secondary_color_hex?.trim();
+  const plan = resolveFlyerColorPlan(input);
+  const accent = plan.primary;
+  const secondaryHex = plan.secondary?.trim();
   const secondary = secondaryHex
     ? `WHEEL PAINT (exactly 6 segments, clockwise from the top segment under the pointer): segments 1,3,5 = solid ${accent}; segments 2,4,6 = solid ${secondaryHex}. Strict alternation — adjacent segments must never share the same fill.`
     : `WHEEL PAINT (exactly 6 segments, clockwise from the top segment under the pointer): segments 1,3,5 = solid ${accent}; segments 2,4,6 = solid white or warm cream. Strict alternation — adjacent segments must never share the same fill.`;
-  const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
   const merchantBrief = buildMerchantBriefForPrompt(input);
 
   const sectorFidelity =
@@ -478,10 +541,10 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     "ZONE C — BOTTOM 82–100% HEIGHT (18%): MUST remain visually clean — only background color/gradient/texture continuing from above. NO objects, NO text, NO icons, NO wheel fragments, NO props encroaching from above.",
     sideImagery,
     FLYER_SURFACE_CLEANLINESS_EN,
-    "BACKGROUND: Smooth blended color fields. Primary brand hue: " +
-      accent +
-      ". Depth from large soft radial or linear gradients and gentle vignette only — NO grain, NO bokeh, NO sparkles. Atmosphere: " +
-      mood +
+    "BACKGROUND: Smooth blended color fields. " +
+      buildColorPriorityHintEn(plan) +
+      " Depth from large soft radial or linear gradients and gentle vignette only — NO grain, NO bokeh, NO sparkles. Atmosphere: " +
+      plan.atmosphere +
       ". Use at most 3–4 cohesive colors total.",
     "PRIZE WHEEL — GEOMETRY: Exactly ONE circular wheel, perfect circle (no ellipse), no second wheel. EXACTLY 6 equal wedges (60° each). Six outer rim divisions. One small triangular pointer at 12 o'clock. Outer wheel diameter ≈ 58–62% of image WIDTH (slightly 'dezoomed' vs full width).",
     secondary,
@@ -526,14 +589,10 @@ export function buildFidelityClientPageBackgroundPrompt(
   input,
   multimodalHint = { styleRefCount: 0 },
 ) {
-  const accent = input.accent_color_hex.trim();
-  const secondaryHex = input.secondary_color_hex?.trim();
-  const mood = MOOD_EN_UNIVERSAL[input.visual_mood] || MOOD_EN_UNIVERSAL.energetic;
+  const plan = resolveFlyerColorPlan(input);
   const merchantBrief = buildMerchantBriefForPrompt(input);
 
-  const colorHarmony = secondaryHex
-    ? `Primary brand color ${accent}; secondary hue ${secondaryHex} — blend both in gradients and accents (no harsh 50/50 split).`
-    : `Primary brand color ${accent}; support with white, warm cream, or a deep neutral from the same family.`;
+  const colorHarmony = buildColorPriorityHintEn(plan);
 
   const sectorFidelity =
     "SECTOR FIDELITY (critical): Atmosphere and textures MUST match the MERCHANT BRIEF only. If ambiguous, use abstract brand-colored shapes — do not substitute unrelated stock industries.";
@@ -564,7 +623,7 @@ export function buildFidelityClientPageBackgroundPrompt(
     "BACKGROUND: Smooth full-bleed wallpaper. " +
       colorHarmony +
       " Depth from soft gradients and gentle vignette only — no grain, no bokeh orbs, no sparkles. Atmosphere: " +
-      mood +
+      plan.atmosphere +
       ". At most 3–4 cohesive colors total.",
     "STYLE: Bold commercial ambience — polished, smooth, cohesive; no literal printed poster elements and no textured noise.",
     ...multimodalLines,
