@@ -365,7 +365,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
   const multimodalLines = [];
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "REFERENCE IMAGE(S): moodboard / brand vibe only — palette, lighting, materials. NEVER reproduce logos, text, QR codes, or wheels from references onto the canvas. NEVER composite a readable logo mark into the output (software adds the official logo separately)."
+      "REFERENCE IMAGE(S): moodboard / brand vibe only — palette, lighting, materials. If a reference is a transparent PNG (cutout logo), use it only for color/shape hints; NEVER paste it as an opaque rectangle onto the canvas. NEVER reproduce logos, text, QR codes, or wheels from references onto the output bitmap. NEVER composite a readable logo mark into the output (software adds the official logo separately)."
     );
   }
 
@@ -373,8 +373,12 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
     "MERCHANT BRIEF (authoritative): " + merchantBrief,
     "SECTOR FIDELITY (critical): Decorative imagery MUST match the MERCHANT BRIEF only. If ambiguous, use abstract brand-colored shapes.",
     "TASK: ONE portrait 2:3 BACKGROUND PLATE only, full bleed, no outer frame, no white border.",
-    "NOT A FINISHED FLYER: Our software will draw on top, in fixed positions: commerce logo, prize wheel (PNG), headline text, QR code, footer steps. Your output is ONLY the wallpaper behind those layers.",
-    "Z-ORDER / REALITY: This PNG is the bottom layer only. Requests like « put a mascot above the QR » cannot be honored here — the QR is painted in software on top. Keep hero subjects, mascots, or products in side margins or upper band only; avoid the bottom-right quadrant (QR overlay) and the reserved wheel center.",
+    "NOT A FINISHED FLYER: Our software will draw on top, in fixed positions: commerce logo (top band, PNG with transparency), prize wheel (PNG) centered on the page, headline text, QR code bottom-right, footer steps. Your output is ONLY the wallpaper behind those layers.",
+    "Z-ORDER / REALITY: This PNG is the bottom layer only. The QR is painted in software on top — keep the bottom-right corner (~68–100% width, ~74–100% height) visually calmer.",
+    "════════════════ COMPOSITION — MID-FLYER / WHEEL LEVEL (highest priority) ═══════════════",
+    "VERTICAL ANCHOR (critical): The prize wheel overlay in software is centered at X=50% of canvas width and Y≈48% of canvas height (measured from the TOP); its diameter is about 60% of image width. Primary decorative subjects (food, products, mascots, props that match the MERCHANT BRIEF) MUST sit at the SAME VERTICAL LEVEL as that wheel — place their visual mass around Y=44–54% (middle of the flyer), NOT squeezed into the top 0–28% « above » the wheel.",
+    "SIDE PLACEMENT: Put rich, readable hero imagery mainly in the LEFT column (~8–36% width) and RIGHT column (~64–92% width), vertically centered around Y≈48%, so it flanks the wheel at mid-height. The central soft disk (see RESERVED WHEEL ZONE) stays low-detail — no competing focal points inside it.",
+    "FORBIDDEN LAYOUT: Do NOT park all decorative interest only in the upper third of the canvas; that looks disconnected from the wheel. Do NOT float all props high above the wheel band.",
     "════════════════ ABSOLUTE BANS — NEVER VIOLATE ═══════════════",
     "NEVER draw any prize wheel, roulette, spinner, pie chart with segments, dial, or circular game divided into wedges.",
     "NEVER draw any text, letters, numbers, slogans, logos, wordmarks, or typographic mockups.",
@@ -384,8 +388,8 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
     "NEVER use bokeh, glitter, bubble textures, star sparkles, confetti, or speckled noise on the background — keep color fields smooth.",
     "════════════════ RESERVED WHEEL ZONE (empty of game UI) ═══════════════",
     "Leave a SOFT, LOW-DETAIL circular or elliptical area centered at X=50% width and Y=48% of canvas height from top, diameter about 60–64% of image WIDTH. Inside this zone: only smooth gradient, gentle vignette, or subtle texture — NO wheel shape, NO segments, NO pointer, NO hub detail. This zone must stay visually calm so a separate wheel asset sits on top without visual clash.",
-    "Above that zone (~top 0–18%): calmer band for a logo overlay (do not draw a logo — just uncluttered background).",
-    "Below ~62% from top: richer atmosphere matching the brief; keep bottom ~14% relatively calm for footer graphics added in software.",
+    "TOP 0–14%: calmer band for headline + merchant logo overlay in software (do not draw a logo — uncluttered background only).",
+    "BOTTOM ~12%: relatively calm for footer UI; bottom-right stays quieter for QR (see above).",
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth, layered COLOR only — soft radial or linear gradients, gentle vignette, optional very subtle uniform paper feel. Not flat posterboard, but NO busy texture. " +
       colorHint +
@@ -393,7 +397,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
       plan.atmosphere +
       ". At most 3–4 cohesive colors.",
     "STYLE: Bold commercial ambience via color and composition only; print-ready; even, coherent lighting — no decorative noise.",
-    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) zero bokeh/glitter/bubble noise.",
+    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~44–54%) flanking the wheel, not only at the top; (7) zero bokeh/glitter/bubble noise.",
     ...multimodalLines,
   ];
 
@@ -616,9 +620,9 @@ export function buildFidelityClientPageBackgroundPrompt(
     "NEVER draw text, letters, numbers, logos, wordmarks, slogans, or typographic mockups.",
     "NEVER draw QR codes, barcodes, Data Matrix, or square black-and-white module grids.",
     "NEVER draw notification bell icons, red notification dots, lock-screen notification banners, or iOS/Android notification UI metaphors.",
-    "COMPOSITION: Upper ~18% of canvas = calmer band (soft gradient or gentle vignette) so a separate logo (added in software) reads clearly when centered above the title.",
-    "LAYOUT vs HTML ROULETTE (critical): A large prize wheel will be overlaid on the LEFT side of the screen (~0–58% width, roughly mid-to-lower height). Do NOT place food, products, mascots, faces, or any strong focal subject in that left zone or behind where that wheel sits. Keep ALL recognizable subjects, dishes, and high-detail props in the RIGHT half (roughly 62–100% width) and/or BOTTOM-RIGHT quadrant only. The left third must stay visually quiet — soft gradients, abstract color washes, or very subtle texture only — so nothing important is hidden behind the wheel.",
-    "Lower ~82%: richer atmosphere through smooth color and soft large shapes; any concrete subjects stay bottom-right; keep contrast moderate so the HTML wheel remains readable on top.",
+    "COMPOSITION: Upper ~16% = calmer band for title + merchant logo (software); soft gradient only.",
+    "LAYOUT vs HTML ROULETTE (critical): A large prize wheel is overlaid on the LEFT (~0–58% width), centered vertically around the MIDDLE of the canvas (Y≈45–52% from top). Do NOT place strong focal subjects inside the wheel footprint on the left — keep that area soft. Place recognizable subjects, dishes, and props mainly in the RIGHT half (~58–100% width) with their visual weight at MID-HEIGHT (Y≈42–58% from top) — aligned with the wheel’s vertical center, not only near the bottom corner. Bottom-right (~70–100% width, ~78–100% height) stays calmer for QR readability.",
+    "FORBIDDEN: stacking all hero imagery in the top 25% or only in the extreme bottom corner — it must feel anchored to the same vertical band as the wheel.",
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth full-bleed wallpaper. " +
       colorHarmony +
