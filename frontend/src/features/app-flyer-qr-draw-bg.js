@@ -90,6 +90,13 @@ function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
  */
 export function drawFlyerBackgroundLayer(ctx, w, h, s, bgImg) {
   if (!bgImg) {
+    const skip =
+      typeof window !== "undefined" &&
+      window.__FIDPASS_SKIP_CANVAS_BG_FILL === true;
+    if (skip) {
+      /** Fond affiché sous la WKWebView (UIImage natif) — pas de dégradé par défaut. */
+      return;
+    }
     fillGradientVOpaque(ctx, w, h, s.colorBgTop, s.colorBgBottom);
     return;
   }
