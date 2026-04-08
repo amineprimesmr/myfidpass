@@ -231,8 +231,33 @@ export function initFlyerAiGenerate(slug, opts) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
+        let data = await res.json().catch(() => ({}));
+        if (res.status === 202 && data.job_id) {
+          const jobId = String(data.job_id);
+          setStatus("Génération lancée sur le serveur…", false);
+          const deadline = Date.now() + 6 * 60 * 1000;
+          while (Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 2000));
+            const st = await opts.dashboardApi(`/dashboard/flyer/ai-generate/jobs/${encodeURIComponent(jobId)}`, {
+              method: "GET",
+            });
+            data = await st.json().catch(() => ({}));
+            if (!st.ok) {
+              setStatus(data.error || `Erreur ${st.status}`, true);
+              return;
+            }
+            if (data.status === "done" && data.image_base64) break;
+            if (data.status === "failed") {
+              setStatus(data.error || "Échec de la génération.", true);
+              return;
+            }
+            setStatus("Génération en cours sur le serveur…", false);
+          }
+          if (!data.image_base64) {
+            setStatus("Délai dépassé. Réessayez ou rouvrez le flyer pour reprendre le suivi.", true);
+            return;
+          }
+        } else if (!res.ok) {
           setStatus(data.error || `Erreur ${res.status}`, true);
           return;
         }

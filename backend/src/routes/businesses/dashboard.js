@@ -37,18 +37,15 @@ import {
 import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
-import { normalizeFlyerPrefsPut, mergeFlyerPrefsWheelColorsFromGeneration } from "../../lib/flyer-prefs.js";
+import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
 import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
 import rateLimit from "express-rate-limit";
+import { parseFlyerAIBody } from "../../services/flyer-ai-image.js";
 import {
-  parseFlyerAIBody,
-  buildFlyerImagePromptBackgroundOnly,
-  multimodalForFlyerBackgroundOnly,
-  buildFidelityClientPageBackgroundPrompt,
-  multimodalForFidelityPageBackground,
-  openaiGenerateFlyerImage,
-  resolveFlyerColorPlan,
-} from "../../services/flyer-ai-image.js";
+  countActiveFlyerJobsForBusiness,
+  enqueueFlyerGenerationJob,
+  getFlyerJobStatusForResponse,
+} from "../../lib/flyer-generation-jobs.js";
 import { parseCampaignAutomationInstructionWithAI, normalizeEventTypeToken } from "../../services/campaign-automation-ai.js";
 import {
   FLYER_AI_FREE_PER_MONTH,
@@ -678,8 +675,19 @@ router.put("/flyer", (req, res) => {
   res.json({ ok: true, updated_at: now });
 });
 
-/** Génération d’image de fond flyer via OpenAI (DALL·E 3) — prompt construit côté serveur. */
-/** Pas d’`ensureOperationalSubscription` : identité dashboard déjà vérifiée par `requireDashboard` ; quota mensuel / packs limite l’usage (freemium : configuration). */
+/** Statut d’un job de génération flyer (polling SaaS / app iOS après 202 Accepted). */
+router.get("/flyer/ai-generate/jobs/:jobId", (req, res) => {
+  const payload = getFlyerJobStatusForResponse(req.params.jobId, req.business.id);
+  if (!payload) {
+    return res.status(404).json({ error: "Job introuvable." });
+  }
+  return res.json(payload);
+});
+
+/**
+ * Génération d’image de fond flyer via OpenAI (DALL·E 3) — traitement asynchrone : réponse 202 + job_id.
+ * Pas d’`ensureOperationalSubscription` : identité dashboard déjà vérifiée par `requireDashboard` ; quota mensuel / packs limite l’usage.
+ */
 router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey || String(apiKey).trim().length < 20) {
@@ -691,7 +699,7 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
   if (!parsed.ok) {
     return res.status(400).json({ error: parsed.error });
   }
-  let business = syncFlyerAiBillingMonth(req.business);
+  const business = syncFlyerAiBillingMonth(req.business);
   const unlimited = isFlyerAiUnlimited(business);
   const devFlyerQuotaBypass = flyerAiQuotaDevBypass(req);
   const used = Math.max(0, Math.floor(Number(business.flyer_ai_generations_used) || 0));
@@ -704,88 +712,19 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
       code: "FLYER_AI_LIMIT_REACHED",
     });
   }
-  try {
-    /** Fond flyer = plaque seule (pas de logo / roue / typo dans le PNG IA). Logo, roue rouegpt, titres, QR = même canvas que l’éditeur. */
-    const mmFlyer = multimodalForFlyerBackgroundOnly(parsed.multimodal);
-    const prompt = buildFlyerImagePromptBackgroundOnly(parsed.value, {
-      styleRefCount: mmFlyer.styleRefCount,
+  if (countActiveFlyerJobsForBusiness(req.business.id) > 0) {
+    return res.status(409).json({
+      error:
+        "Une génération flyer IA est déjà en cours pour ce commerce. Patientez jusqu’à la fin du traitement ou consultez le statut du job.",
+      code: "FLYER_AI_JOB_IN_PROGRESS",
     });
-    /** Fond page jeu QR (sans roue) — avant : enchaîné après le flyer → ~2× durée OpenAI et timeouts proxy (ex. « Application failed to respond »). */
-    const mmBg = multimodalForFidelityPageBackground(mmFlyer, false);
-    const promptBg = buildFidelityClientPageBackgroundPrompt(parsed.value, {
-      styleRefCount: mmBg.styleRefCount,
-    });
-
-    const t0 = Date.now();
-    const [flyerOutcome, bgOutcome] = await Promise.allSettled([
-      openaiGenerateFlyerImage(apiKey, prompt, mmFlyer),
-      openaiGenerateFlyerImage(apiKey, promptBg, mmBg),
-    ]);
-    const elapsedMs = Date.now() - t0;
-    console.log(`[flyer/ai-generate] openai parallel finished in ${elapsedMs}ms (flyer=${flyerOutcome.status} bg=${bgOutcome.status})`);
-
-    if (flyerOutcome.status === "rejected") {
-      throw flyerOutcome.reason;
-    }
-    const { b64, revised } = flyerOutcome.value;
-
-    const colorPlan = resolveFlyerColorPlan(parsed.value);
-    const prefsMerged = mergeFlyerPrefsWheelColorsFromGeneration(
-      req.business.flyer_prefs_json,
-      colorPlan.primary,
-      colorPlan.secondary,
-    );
-    updateBusiness(req.business.id, {
-      flyer_prefs_json: prefsMerged,
-      flyer_prefs_updated_at: new Date().toISOString(),
-    });
-
-    /** Même action : fond page jeu QR enregistré comme « Image de fond » (échec isolé si seul le 2ᵉ appel tombe en erreur). */
-    let fidelity_page_background_saved = false;
-    /** @type {string | null} */
-    let fidelity_page_background_error = null;
-    if (bgOutcome.status === "fulfilled") {
-      const { b64: b64Bg } = bgOutcome.value;
-      updateBusiness(business.id, {
-        fidelity_page_background_base64: `data:image/png;base64,${b64Bg}`,
-      });
-      fidelity_page_background_saved = true;
-    } else {
-      const r = bgOutcome.reason;
-      fidelity_page_background_error =
-        r && typeof r === "object" && "message" in r && r.message
-          ? String(r.message)
-          : "Échec génération fond page fidélité.";
-    }
-
-    if (unlimited || devFlyerQuotaBypass) {
-      return res.json({
-        image_base64: b64,
-        revised_prompt: revised ?? null,
-        fidelity_page_background_saved,
-        fidelity_page_background_error,
-        flyer_ai_unlimited: true,
-        flyer_ai_generations_used: used,
-        flyer_ai_generations_remaining: null,
-      });
-    }
-    const nextUsed = used + 1;
-    updateBusiness(business.id, { flyer_ai_generations_used: nextUsed });
-    return res.json({
-      image_base64: b64,
-      revised_prompt: revised ?? null,
-      fidelity_page_background_saved,
-      fidelity_page_background_error,
-      flyer_ai_unlimited: false,
-      flyer_ai_generations_used: nextUsed,
-      flyer_ai_generations_remaining: Math.max(0, allowance - nextUsed),
-    });
-  } catch (e) {
-    const msg = e?.message || "Erreur lors de la génération.";
-    const code = Number(e?.status);
-    const status = code === 429 ? 429 : 502;
-    return res.status(status).json({ error: String(msg) });
   }
+  const jobId = enqueueFlyerGenerationJob({
+    businessId: req.business.id,
+    body: req.body || {},
+    devFlyerQuotaBypass,
+  });
+  return res.status(202).json({ job_id: jobId, status: "queued" });
 });
 
 /**

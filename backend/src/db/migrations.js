@@ -839,4 +839,28 @@ export function runMigrations(db) {
     CREATE INDEX IF NOT EXISTS idx_notif_jobs_status_created
       ON notification_jobs(status, created_at);
   `));
+
+  // ── v15 : génération flyer IA asynchrone (202 + job_id, reprise après crash / worker) ──
+  markMigrationApplied(db, 15, "flyer_generation_jobs_async");
+  safeRun(db, () =>
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS flyer_generation_jobs (
+        id TEXT PRIMARY KEY,
+        business_id TEXT NOT NULL,
+        body_json TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'queued',
+        dev_bypass_quota INTEGER NOT NULL DEFAULT 0,
+        attempt_count INTEGER NOT NULL DEFAULT 0,
+        result_json TEXT,
+        error_text TEXT,
+        created_at TEXT NOT NULL,
+        started_at TEXT,
+        completed_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_flyer_jobs_business_status
+        ON flyer_generation_jobs(business_id, status);
+      CREATE INDEX IF NOT EXISTS idx_flyer_jobs_status_created
+        ON flyer_generation_jobs(status, created_at);
+    `),
+  );
 }
