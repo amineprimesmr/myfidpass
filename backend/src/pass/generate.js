@@ -312,14 +312,11 @@ export async function generatePass(member, business = null, options = {}) {
 
   pass.type = "storeCard";
 
-  if (isSectorTemplate) {
-    pass.headerFields.push({
-      key: "memberName",
-      label: "",
-      value: walletPassMemberDisplayName(member.name),
-      textAlignment: "PKTextAlignmentRight",
-    });
-  }
+  /*
+   * Ne pas mettre le nom du membre en headerFields : sur iOS il s’affiche sur la même ligne que
+   * « Récompenses ↗ » (coin haut droit). Le libellé membre reste en auxiliaryFields (bas de carte),
+   * aligné sur l’aperçu Ma carte / CafeDesArts.
+   */
 
   pass.headerFields.push({
     key: "headerRight",
@@ -383,14 +380,12 @@ export async function generatePass(member, business = null, options = {}) {
       textAlignment: "PKTextAlignmentLeft",
       changeMessage: "Récompense : %@",
     });
-    if (!isSectorTemplate) {
-      pass.auxiliaryFields.push({
-        key: "member",
-        label: labelMember,
-        value: walletPassMemberDisplayName(member.name),
-        textAlignment: "PKTextAlignmentRight",
-      });
-    }
+    pass.auxiliaryFields.push({
+      key: "member",
+      label: labelMember,
+      value: walletPassMemberDisplayName(member.name),
+      textAlignment: "PKTextAlignmentRight",
+    });
   } else {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
@@ -419,14 +414,12 @@ export async function generatePass(member, business = null, options = {}) {
       });
     }
     /* Pas de champ « Récompense » sur la face (paliers : verso « Paliers & avantages »). */
-    if (!isSectorTemplate) {
-      pass.auxiliaryFields.push({
-        key: "member",
-        label: labelMember,
-        value: walletPassMemberDisplayName(member.name),
-        textAlignment: "PKTextAlignmentRight",
-      });
-    }
+    pass.auxiliaryFields.push({
+      key: "member",
+      label: labelMember,
+      value: walletPassMemberDisplayName(member.name),
+      textAlignment: "PKTextAlignmentRight",
+    });
   }
 
   /* Message de campagne : uniquement au **verso** (`lastMessage`), pas sur la face (demande produit). */
