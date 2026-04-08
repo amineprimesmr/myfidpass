@@ -342,8 +342,8 @@ export function parseFlyerAIBody(raw) {
 export function multimodalForFlyerBackgroundOnly(multimodal) {
   const m = multimodal || { images: [], hasLogo: false, styleRefCount: 0 };
   const imgs = Array.isArray(m.images) ? [...m.images] : [];
-  /** Jusqu’à 3 refs (logo éventuel + inspirations) : ambiance / palette uniquement — pas de collage logo dans le prompt. */
-  const capped = imgs.slice(0, 3);
+  /** Jusqu’à 4 entrées (1 logo + 3 inspirations) — aligné sur `style_reference_images_base64` max 3 + `logo_base64`. */
+  const capped = imgs.slice(0, 4);
   return {
     images: capped,
     hasLogo: false,
