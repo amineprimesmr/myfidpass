@@ -3,6 +3,7 @@
 html.fidpass-fidelity-route:has(main.fidelity-qr-game),
 body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   overflow-x: hidden;
+  background: #f8fafc;
 }
 
 /* Shell #fidelity-app : colonne ; hauteur min viewport, contenu peut grandir pour ne pas rogner la roue */
@@ -509,15 +510,16 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 }
 
 /*
- * Jeu QR + fond photo : les visuels IA / intérieur sont souvent très chauds (orange/rouge).
- * On refroidit légèrement la photo — pas de teinte « marque » imposée, seulement moins de saturation.
+ * Jeu QR : pas de photo IA plein écran (dégradés / grain) — fond uni clair, doux (couleur carte si fournie).
  */
 #fidelity-app.fidelity-page.fidelity-page--client-bg:has(> main.fidelity-qr-game)::before {
-  filter: brightness(0.95) saturate(0.74) contrast(1.03);
+  background-image: none !important;
+  background-color: var(--fidelity-qr-shell-bg, #f8fafc);
+  filter: none !important;
 }
 
 @media (max-width: 480px) {
-  #fidelity-app.fidelity-page.fidelity-page--client-bg::before {
+  #fidelity-app.fidelity-page.fidelity-page--client-bg:not(:has(> main.fidelity-qr-game))::before {
     background-position: 96% 78%;
   }
 }
@@ -527,4 +529,15 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   > *:not(#fidelity-qr-modal-root):not(#fidelity-profile-mission-modal) {
   position: relative;
   z-index: 1;
+}
+
+/* Pied « pro » : bande claire (le shell jeu n’est plus noir). */
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) footer.fidelity-v2-footer--dark {
+  background: #e8edf3;
+  color: #334155;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) footer.fidelity-v2-footer--dark a {
+  color: #1d4ed8;
 }

@@ -27,7 +27,14 @@ export function resolveClientLogoImgSrc(business, slug, apiBase) {
   const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo` : "";
   if (!path) return "";
   const baseTrim = preferSameOriginApiAssetPaths() ? "" : String(apiBase || "").replace(/\/$/, "");
-  const apiLogo = typeof business?.logoUrl === "string" ? business.logoUrl.trim() : "";
+  const apiLogoRaw = typeof business?.logoUrl === "string" ? business.logoUrl.trim() : "";
+  /** Ne jamais suivre une URL « bandeau Wallet » : le hero jeu QR doit appeler `/public/flyer-qr-logo` (logo flyer si en base). */
+  const pathOnly = (apiLogoRaw.split("?")[0] || "").toLowerCase();
+  const apiLogoLooksWallet =
+    apiLogoRaw.length > 0 &&
+    /\/public\/logo$/i.test(pathOnly) &&
+    !/\/public\/flyer-qr-logo/i.test(pathOnly);
+  const apiLogo = apiLogoLooksWallet ? "" : apiLogoRaw;
   const srcBase = baseTrim ? apiLogo || `${baseTrim}${path}` : path;
   const upd = business?.logo_updated_at ?? business?.logoUpdatedAt;
   const flyerPrefsUpd = business?.flyer_prefs_updated_at ?? business?.flyerPrefsUpdatedAt;

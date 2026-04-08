@@ -28,6 +28,15 @@ describe("resolveClientLogoImgSrc", () => {
     expect(src).toBe("https://api.example.com/api/businesses/x/public/flyer-qr-logo");
   });
 
+  it("ignore logoUrl Wallet (/public/logo) — force repli flyer-qr-logo", () => {
+    const src = resolveClientLogoImgSrc(
+      { logoUrl: "https://api.example.com/api/businesses/x/public/logo" },
+      "x",
+      "https://api.example.com",
+    );
+    expect(src).toBe("https://api.example.com/api/businesses/x/public/flyer-qr-logo");
+  });
+
   it("hôte myfidpass.fr → chemin relatif même si apiBase pointe vers l’API (évite CORP / img cassée)", () => {
     vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
     const src = resolveClientLogoImgSrc(

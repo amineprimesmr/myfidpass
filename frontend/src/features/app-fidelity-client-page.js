@@ -210,6 +210,12 @@ export function initFidelityClientPageSection(ctx) {
       } else {
         previewRoot.style.removeProperty("--fidelity-client-bg");
       }
+      const shellHex = settingsData?.background_color ?? settingsData?.backgroundColor;
+      if (typeof shellHex === "string" && /^#[0-9A-Fa-f]{6}$/.test(shellHex.trim())) {
+        previewRoot.style.setProperty("--fidelity-qr-shell-bg", shellHex.trim());
+      } else {
+        previewRoot.style.removeProperty("--fidelity-qr-shell-bg");
+      }
     }
 
     paintPreviewWheel(previewWheel, rouletteSegments);

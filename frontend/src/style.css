@@ -76,10 +76,10 @@ body.fidpass-fidelity-route {
   background: #f8fafc;
 }
 
-/* Page jeu QR : fond noir bord à bord ; scroll léger si le contenu (roue) dépasse le viewport — évite la roue coupée. */
+/* Page jeu QR : fond clair uni (lisibilité + cohérence avec le flyer) ; scroll si la roue dépasse le viewport. */
 html.fidpass-fidelity-route:has(main.fidelity-qr-game),
 body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
-  background: #000000;
+  background: #f8fafc;
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 100dvh;
@@ -96,7 +96,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   overflow-x: hidden;
   overflow-y: visible;
   box-sizing: border-box;
-  background: #000000;
+  background: #f8fafc;
 }
 
 /* ── Site banner media ── */

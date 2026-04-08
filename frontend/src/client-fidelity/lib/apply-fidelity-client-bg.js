@@ -16,4 +16,10 @@ export function applyFidelityClientPageBackground(business, slug, apiBase) {
   } else {
     el.style.removeProperty("--fidelity-client-bg");
   }
+  const bgHex = business?.backgroundColor ?? business?.background_color;
+  if (typeof bgHex === "string" && /^#[0-9A-Fa-f]{6}$/.test(bgHex.trim())) {
+    el.style.setProperty("--fidelity-qr-shell-bg", bgHex.trim());
+  } else {
+    el.style.removeProperty("--fidelity-qr-shell-bg");
+  }
 }

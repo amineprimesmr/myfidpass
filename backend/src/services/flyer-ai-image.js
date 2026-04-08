@@ -615,6 +615,7 @@ export function buildFidelityClientPageBackgroundPrompt(
     "MERCHANT BRIEF (authoritative): " + merchantBrief,
     sectorFidelity,
     "TASK: Generate ONE mobile-first full-bleed BACKGROUND wallpaper only, portrait 2:3 aspect, full bleed to all edges, no outer frame, no white border.",
+    "LIGHT & CALM (mandatory): Overall BRIGHT, airy, and welcoming — pale off-white / soft cream / light tint of the brand hue. NEVER a dark, moody, cinematic night scene; NEVER heavy black or near-black fields; NEVER dramatic low-key lighting that reads as « sombre » on a phone.",
     "NOT A FLYER: This image is a silent backdrop. The product will overlay HTML (title, logo image, roulette). Your output must stay empty of UI chrome.",
     "════════════════ ABSOLUTE BANS ═══════════════",
     "NEVER draw any prize wheel, roulette, spinner, pie chart with prizes, radial wedges, dial, fortune wheel, or circular game divided into segments.",
