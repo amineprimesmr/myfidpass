@@ -24,8 +24,8 @@ export const FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR = 0.94;
 
 /** Zone logo (drawFlyerCommerceLogo) : bas du bloc = centerYFrac + maxHFrac/2. */
 export const FLYER_LOGO_LAYOUT = Object.freeze({
-  /** Plus haut sur le flyer → titre « SCANNEZ & GAGNEZ… » remonte. */
-  centerYFrac: 0.056,
+  /** Marge sous le bord haut : le centre du logo ne doit pas gratter le haut du flyer. */
+  centerYFrac: 0.092,
   maxHFrac: 0.15,
   maxWFrac: 0.62,
 });
@@ -46,7 +46,7 @@ export function flyerLogoLayoutResolved(s) {
   const mw = Number(s?.flyerLogoMaxWFrac);
   const mh = Number(s?.flyerLogoMaxHFrac);
   return {
-    centerYFrac: Number.isFinite(cy) ? Math.min(0.22, Math.max(0.04, cy)) : base.centerYFrac,
+    centerYFrac: Number.isFinite(cy) ? Math.min(0.22, Math.max(0.06, cy)) : base.centerYFrac,
     maxWFrac: Number.isFinite(mw) ? Math.min(0.88, Math.max(0.28, mw)) : base.maxWFrac,
     maxHFrac: Number.isFinite(mh) ? Math.min(0.36, Math.max(0.06, mh)) : base.maxHFrac,
   };
@@ -243,7 +243,7 @@ function clampFlyerTextScalePct(v) {
 function clampFlyerLogoCenterYFrac(v) {
   const n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return FLYER_LOGO_LAYOUT.centerYFrac;
-  return Math.min(0.22, Math.max(0.04, Math.round(n * 1000) / 1000));
+  return Math.min(0.22, Math.max(0.06, Math.round(n * 1000) / 1000));
 }
 
 function clampFlyerLogoMaxWFrac(v) {

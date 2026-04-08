@@ -47,6 +47,7 @@ import {
   buildFidelityClientPageBackgroundPrompt,
   multimodalForFidelityPageBackground,
   openaiGenerateFlyerImage,
+  resolveFlyerColorPlan,
 } from "../../services/flyer-ai-image.js";
 import { parseCampaignAutomationInstructionWithAI, normalizeEventTypeToken } from "../../services/campaign-automation-ai.js";
 import {
@@ -722,10 +723,11 @@ router.post("/flyer/ai-generate", flyerAiGenerateLimiter, async (req, res) => {
     }
     const { b64, revised } = flyerOutcome.value;
 
+    const colorPlan = resolveFlyerColorPlan(parsed.value);
     const prefsMerged = mergeFlyerPrefsWheelColorsFromGeneration(
       req.business.flyer_prefs_json,
-      parsed.value.accent_color_hex,
-      parsed.value.secondary_color_hex,
+      colorPlan.primary,
+      colorPlan.secondary,
     );
     updateBusiness(req.business.id, {
       flyer_prefs_json: prefsMerged,

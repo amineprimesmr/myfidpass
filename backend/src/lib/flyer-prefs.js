@@ -4,6 +4,33 @@
 const MAX_JSON_CHARS = 7 * 1024 * 1024;
 
 /**
+ * @param {string} hex
+ * @returns {number | null} luminance relative sRGB 0–1
+ */
+function relativeLuminanceFromHex(hex) {
+  const h = String(hex || "").trim();
+  if (!/^#[0-9A-Fa-f]{6}$/.test(h)) return null;
+  const r = parseInt(h.slice(1, 3), 16) / 255;
+  const g = parseInt(h.slice(3, 5), 16) / 255;
+  const b = parseInt(h.slice(5, 7), 16) / 255;
+  const lin = [r, g, b].map((c) =>
+    c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4,
+  );
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+}
+
+/**
+ * Texte lisible sur un fond plein (pastille CTA, remplissage « CADEAU » = même teinte).
+ * @param {string} bgHex
+ * @returns {string} #RRGGBB
+ */
+export function pickContrastingTextOnHexBg(bgHex) {
+  const L = relativeLuminanceFromHex(bgHex);
+  if (L == null) return "#ffffff";
+  return L > 0.55 ? "#0f172a" : "#ffffff";
+}
+
+/**
  * @param {unknown} body
  * @param {string | null | undefined} existingFlyerPrefsJson — fusion si logo/bg absents du body
  * @returns {{ ok: true, value: { state: Record<string, unknown>, custom_logo_data_url: string | null, custom_bg_data_url: string | null } } | { ok: false, error: string }}
@@ -115,6 +142,12 @@ export function mergeFlyerPrefsWheelColorsFromGeneration(existingFlyerPrefsJson,
       : "#fef3c7";
   prevState.wheelColorOdd = odd;
   prevState.wheelColorEven = even;
+  prevState.colorPrimary = odd;
+  prevState.colorSecondary = even;
+  /** Pastille « Scanner pour jouer » + mot « CADEAU » (canvas : même accent que la roue impaire). */
+  prevState.ctaBannerBgColor = odd;
+  prevState.ctaTextColor = pickContrastingTextOnHexBg(odd);
+  prevState.headlineGiftStrokeColor = pickContrastingTextOnHexBg(odd);
   return JSON.stringify({
     state: prevState,
     custom_logo_data_url: typeof root.custom_logo_data_url === "string" ? root.custom_logo_data_url : null,

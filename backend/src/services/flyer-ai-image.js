@@ -377,8 +377,8 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
     "NOT A FINISHED FLYER: Our software will draw on top, in fixed positions: commerce logo (top band, PNG with transparency), prize wheel (PNG) centered on the page, headline text, QR code bottom-right, footer steps. Your output is ONLY the wallpaper behind those layers.",
     "Z-ORDER / REALITY: This PNG is the bottom layer only. The QR is painted in software on top — keep the bottom-right corner (~68–100% width, ~74–100% height) visually calmer.",
     "════════════════ COMPOSITION — MID-FLYER / WHEEL LEVEL (highest priority) ═══════════════",
-    "VERTICAL ANCHOR (critical): The prize wheel overlay in software is centered at X=50% of canvas width and Y≈48% of canvas height (measured from the TOP); its diameter is about 60% of image width. Primary decorative subjects (food, products, mascots, props that match the MERCHANT BRIEF) MUST sit at the SAME VERTICAL LEVEL as that wheel — place their visual mass around Y=44–54% (middle of the flyer), NOT squeezed into the top 0–28% « above » the wheel.",
-    "SIDE PLACEMENT: Put rich, readable hero imagery mainly in the LEFT column (~8–36% width) and RIGHT column (~64–92% width), vertically centered around Y≈48%, so it flanks the wheel at mid-height. The central soft disk (see RESERVED WHEEL ZONE) stays low-detail — no competing focal points inside it.",
+    "VERTICAL ANCHOR (critical): The prize wheel overlay in software is centered at X=50% of canvas width and Y≈53% of canvas height (measured from the TOP); its diameter is about 60% of image width. Primary decorative subjects (food, products, mascots, props that match the MERCHANT BRIEF) MUST sit at the SAME VERTICAL LEVEL as that wheel — place their visual mass around Y=49–59% (slightly below optical center), NOT squeezed into the top 0–28% « above » the wheel.",
+    "SIDE PLACEMENT: Put rich, readable hero imagery mainly in the LEFT column (~8–36% width) and RIGHT column (~64–92% width), vertically centered around Y≈53%, so it flanks the wheel at mid-height. The central soft disk (see RESERVED WHEEL ZONE) stays low-detail — no competing focal points inside it.",
     "FORBIDDEN LAYOUT: Do NOT park all decorative interest only in the upper third of the canvas; that looks disconnected from the wheel. Do NOT float all props high above the wheel band.",
     "════════════════ ABSOLUTE BANS — NEVER VIOLATE ═══════════════",
     "NEVER draw any prize wheel, roulette, spinner, pie chart with segments, dial, or circular game divided into wedges.",
@@ -388,7 +388,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
     "NEVER draw the merchant logo or brand mark (logo is composited in software).",
     "NEVER use bokeh, glitter, bubbles, star sparkles, confetti, grain, paper texture, or any patterned noise on the background — color fields must be perfectly smooth.",
     "════════════════ RESERVED WHEEL ZONE (empty of game UI) ═══════════════",
-    "Leave a SOFT, LOW-DETAIL circular or elliptical area centered at X=50% width and Y=48% of canvas height from top, diameter about 60–64% of image WIDTH. Inside this zone: ONLY an ultra-smooth flat-to-gradient color field — ZERO texture, ZERO noise — NO wheel shape, NO segments, NO pointer, NO hub detail. This zone must stay visually calm so a separate wheel asset sits on top without visual clash.",
+    "Leave a SOFT, LOW-DETAIL circular or elliptical area centered at X=50% width and Y=53% of canvas height from top, diameter about 60–64% of image WIDTH. Inside this zone: ONLY an ultra-smooth flat-to-gradient color field — ZERO texture, ZERO noise — NO wheel shape, NO segments, NO pointer, NO hub detail. This zone must stay visually calm so a separate wheel asset sits on top without visual clash.",
     "TOP 0–14%: calmer band for headline + merchant logo overlay in software (do not draw a logo — uncluttered background only).",
     "BOTTOM ~12%: relatively calm for footer UI; bottom-right stays quieter for QR (see above).",
     FLYER_SURFACE_CLEANLINESS_EN,
@@ -398,7 +398,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
       plan.atmosphere +
       ". At most 3–4 cohesive colors; transitions must be buttery, not gritty.",
     "STYLE: Bold commercial look through COLOR BLOCKS and clean composition only — print-ready, even lighting — absolutely no decorative texture or atmospheric noise.",
-    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~44–54%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient.",
+    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~49–59%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient.",
     ...multimodalLines,
   ];
 
@@ -468,7 +468,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
     "STYLE: Bold commercial print — cohesive lighting between background decor and the composited wheel.",
     "════════════════ LAYOUT (TOP → BOTTOM) ═══════════════",
     "ZONE A — TOP 0–20%: Logo band when logo reference provided; calm background only otherwise.",
-    "ZONE B — CENTER ~18–82%: Composit the canonical wheel (last reference) centered at X=50%, center Y≈48% of canvas height, diameter ≈58–62% of image WIDTH — uniform scale, preserve aspect ratio. Add 1–3 decorative elements left/right per MERCHANT BRIEF, vertically aligned with the wheel (mid-flyer), not only above it; they may overlap the rim slightly.",
+    "ZONE B — CENTER ~18–82%: Composit the canonical wheel (last reference) centered at X=50%, center Y≈53% of canvas height, diameter ≈58–62% of image WIDTH — uniform scale, preserve aspect ratio. Add 1–3 decorative elements left/right per MERCHANT BRIEF, vertically aligned with the wheel (mid-flyer, slightly below center), not only above it; they may overlap the rim slightly.",
     "ZONE C — BOTTOM 82–100%: Clean continuation of background only — no new objects.",
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth color fields and soft gradients around the wheel. " +
@@ -511,7 +511,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     "TASK: Generate ONE print-ready promotional flyer image, portrait 2:3 aspect, full bleed to all edges, no outer frame, no white border. The merchant will add headline text, QR code, and footer UI in software — your image must NEVER include those.";
 
   const sideImagery =
-    "SIDE DECOR: Left and right of the wheel, place 1–3 rich decorative elements consistent with the MERCHANT BRIEF. Their vertical center of mass MUST align with the wheel center (Y≈48% from top), not bunched above the wheel. They may overlap the wheel rim for depth. High-quality photorealistic or polished illustration — not generic clipart. Keep subjects inside the mid-flyer hero band (roughly Y 32–62%).";
+    "SIDE DECOR: Left and right of the wheel, place 1–3 rich decorative elements consistent with the MERCHANT BRIEF. Their vertical center of mass MUST align with the wheel center (Y≈53% from top), not bunched above the wheel. They may overlap the wheel rim for depth. High-quality photorealistic or polished illustration — not generic clipart. Keep subjects inside the mid-flyer hero band (roughly Y 36–66%).";
 
   const referenceStyle =
     "STYLE: Bold, vibrant, professional commercial print — cohesive lighting and shadows across all layers.";
@@ -542,7 +542,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     referenceStyle,
     "════════════════ VERTICAL LAYOUT (TOP → BOTTOM) ═══════════════",
     "ZONE A — TOP 0–20% HEIGHT: Merchant logo (when reference provided) centered; subtle halo/backing allowed; NO other text, icons, or busy objects in this band.",
-    "ZONE B — CENTER ~18% to ~82% HEIGHT: Main composition — prize wheel + left/right decor. Wheel center at X=50%, Y≈48% of full image height from top (optical middle of the flyer, NOT pushed upward). Decorative props flank the wheel at the SAME vertical level (mid-flyer). Horizontal center X = 50% of image width.",
+    "ZONE B — CENTER ~18% to ~82% HEIGHT: Main composition — prize wheel + left/right decor. Wheel center at X=50%, Y≈53% of full image height from top (slightly below optical middle — decor must not float too high). Decorative props flank the wheel at the SAME vertical level (mid-flyer). Horizontal center X = 50% of image width.",
     "ZONE C — BOTTOM 82–100% HEIGHT (18%): MUST remain visually clean — only smooth color/gradient continuing from above (no texture). NO objects, NO text, NO icons, NO wheel fragments, NO props encroaching from above.",
     sideImagery,
     FLYER_SURFACE_CLEANLINESS_EN,
@@ -555,7 +555,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     secondary,
     "WHEEL LABELS (clockwise from the top wedge under the pointer): Wedge1=GAGNÉ; Wedge2=GAGNÉ; Wedge3=GAGNÉ; Wedge4=GAGNÉ; Wedge5=GAGNÉ; Wedge6=PERDU. Bold uppercase French, high contrast, radially readable inside each wedge (~70% of wedge radial length). No other text on the flyer.",
     "WHEEL HUB: Small decorative metallic pin/cap at center — gold or silver OK. No QR-like texture.",
-    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 48% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes.",
+    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 53% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes.",
     "QUALITY: Crisp print, clean edges, coherent lighting, no disconnected floating artifacts.",
     ...multimodalLines,
   ];
@@ -622,7 +622,7 @@ export function buildFidelityClientPageBackgroundPrompt(
     "NEVER draw QR codes, barcodes, Data Matrix, or square black-and-white module grids.",
     "NEVER draw notification bell icons, red notification dots, lock-screen notification banners, or iOS/Android notification UI metaphors.",
     "COMPOSITION: Upper ~16% = calmer band for title + merchant logo (software); soft gradient only.",
-    "LAYOUT vs HTML ROULETTE (critical): A large prize wheel is overlaid on the LEFT (~0–58% width), centered vertically around the MIDDLE of the canvas (Y≈45–52% from top). Do NOT place strong focal subjects inside the wheel footprint on the left — keep that area soft. Place recognizable subjects, dishes, and props mainly in the RIGHT half (~58–100% width) with their visual weight at MID-HEIGHT (Y≈42–58% from top) — aligned with the wheel’s vertical center, not only near the bottom corner. Bottom-right (~70–100% width, ~78–100% height) stays calmer for QR readability.",
+    "LAYOUT vs HTML ROULETTE (critical): A large prize wheel is overlaid on the LEFT (~0–58% width), centered vertically around the MIDDLE of the canvas (Y≈50–56% from top). Do NOT place strong focal subjects inside the wheel footprint on the left — keep that area soft. Place recognizable subjects, dishes, and props mainly in the RIGHT half (~58–100% width) with their visual weight at MID-HEIGHT (Y≈47–62% from top) — aligned with the wheel’s vertical center, not only near the bottom corner. Bottom-right (~70–100% width, ~78–100% height) stays calmer for QR readability.",
     "FORBIDDEN: stacking all hero imagery in the top 25% or only in the extreme bottom corner — it must feel anchored to the same vertical band as the wheel.",
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth full-bleed wallpaper — vector-clean gradients only, like a premium mobile app screen. " +
