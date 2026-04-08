@@ -14,6 +14,7 @@ import {
 } from "../../db.js";
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
+import { parseFlyerPrefsCustomBgDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 
 export function publicInfo(req, res) {
   const business = req.business;
@@ -27,7 +28,7 @@ export function publicInfo(req, res) {
       points_reward_tiers = undefined;
     }
   }
-  /** Logo hero page jeu QR : import flyer si défini (`/public/flyer-qr-logo`), sinon bandeau Wallet. */
+  /** Logo hero page jeu QR : **uniquement** logo importé Flyer IA (`/public/flyer-qr-logo`) — pas d’icône notif / Wallet. */
   const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo`;
   /** Icône push / aperçu campagne Wallet — distincte du logo page fidélité / jeu QR. */
   const notificationIconUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
@@ -35,6 +36,10 @@ export function publicInfo(req, res) {
     Number(business.asset_fidelity_page_background_present) === 1
       ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background`
       : undefined;
+  /** Repli : fond Flyer IA enregistré dans les prefs si pas d’image « Page fidélité » dédiée (ex. 2ᵉ appel OpenAI en échec). */
+  const flyerCustomBgUrl = parseFlyerPrefsCustomBgDataUrl(business.flyer_prefs_json)
+    ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/flyer-custom-bg`
+    : undefined;
   res.json({
     id: business.id,
     name: business.name,
@@ -63,6 +68,8 @@ export function publicInfo(req, res) {
     points_reward_tiers: points_reward_tiers ?? undefined,
     fidelityPageBackgroundUrl,
     fidelityPageBackgroundUpdatedAt: business.fidelity_page_background_updated_at ?? undefined,
+    /** GET image/png — même fichier que `custom_bg_data_url` dans flyer_prefs (CSS page jeu QR). */
+    flyerCustomBgUrl,
     /** Texte du titre principal sur la page jeu QR ; absent ou vide = défaut applicatif. */
     fidelityQrHeroTitle: business.fidelity_qr_hero_title?.trim() || undefined,
   });

@@ -165,6 +165,7 @@ export function initFidelityClientPageSection(ctx) {
 
   function syncLivePreview(settingsData, rouletteSegments) {
     const url = settingsData?.fidelity_page_background_url || settingsData?.fidelityPageBackgroundUrl;
+    const flyerCustomBgUrl = settingsData?.flyer_custom_bg_url ?? settingsData?.flyerCustomBgUrl;
     const heroRaw =
       settingsData?.fidelity_qr_hero_title != null
         ? String(settingsData.fidelity_qr_hero_title)
@@ -176,12 +177,16 @@ export function initFidelityClientPageSection(ctx) {
     setPreviewHeroTitleText(hero);
 
     if (previewLogo) {
-      const hasLogo = Boolean(settingsData?.logo_url || settingsData?.logoUrl);
-      if (hasLogo) {
+      const hasWalletLogo = Boolean(settingsData?.logo_url || settingsData?.logoUrl);
+      const hasFlyerPrefs = Boolean(
+        String(settingsData?.flyer_prefs_updated_at ?? settingsData?.flyerPrefsUpdatedAt ?? "").trim(),
+      );
+      if (hasWalletLogo || hasFlyerPrefs) {
         const logoSrc = resolveClientLogoImgSrc(
           {
             logoUrl: settingsData.logo_url ?? settingsData.logoUrl,
             logo_updated_at: settingsData.logo_updated_at ?? settingsData.logoUpdatedAt,
+            flyer_prefs_updated_at: settingsData?.flyer_prefs_updated_at ?? settingsData?.flyerPrefsUpdatedAt,
           },
           slug,
           apiBase,
@@ -202,6 +207,9 @@ export function initFidelityClientPageSection(ctx) {
           settingsData?.fidelity_page_background_updated_at ?? settingsData?.fidelityPageBackgroundUpdatedAt,
         fidelityPageBackgroundUpdatedAt:
           settingsData?.fidelity_page_background_updated_at ?? settingsData?.fidelityPageBackgroundUpdatedAt,
+        flyer_custom_bg_url: flyerCustomBgUrl || "",
+        flyerCustomBgUrl: flyerCustomBgUrl || "",
+        flyer_prefs_updated_at: settingsData?.flyer_prefs_updated_at ?? settingsData?.flyerPrefsUpdatedAt,
       };
       const resolved = resolveFidelityPageBackgroundImgSrc(businessStub, slug, apiBase);
       previewRoot.classList.toggle("fidelity-page--client-bg", Boolean(resolved));

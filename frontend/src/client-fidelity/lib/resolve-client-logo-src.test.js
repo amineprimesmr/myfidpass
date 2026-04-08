@@ -125,4 +125,19 @@ describe("resolveFidelityPageBackgroundImgSrc", () => {
     );
     expect(src.startsWith("/api/businesses/x/fidelity-page-background?v=")).toBe(true);
   });
+
+  it("sans asset fidélité → repli fond Flyer IA (flyer-custom-bg)", () => {
+    vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
+    const src = resolveFidelityPageBackgroundImgSrc(
+      {
+        fidelityPageBackgroundUrl: "",
+        flyerCustomBgUrl: "https://api.myfidpass.fr/api/businesses/cafe/public/flyer-custom-bg",
+        flyer_prefs_updated_at: "2026-04-07T12:00:00.000Z",
+      },
+      "cafe",
+      "https://api.myfidpass.fr",
+    );
+    expect(src.startsWith("/api/businesses/cafe/public/flyer-custom-bg?v=")).toBe(true);
+    expect(src).toContain("2026-04-07");
+  });
 });

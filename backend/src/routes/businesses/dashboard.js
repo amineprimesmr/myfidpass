@@ -59,6 +59,7 @@ import {
 import { signReceiptChallengeToken } from "../../lib/receipt-validation-jwt.js";
 import logger from "../../lib/logger.js";
 import { flyerAiQuotaDevBypass } from "../../lib/flyer-ai-quota-bypass.js";
+import { parseFlyerPrefsCustomBgDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 
 const router = Router({ mergeParams: true });
 
@@ -156,6 +157,11 @@ router.get("/settings", (req, res) => {
         ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background`
         : undefined,
     fidelity_page_background_updated_at: business.fidelity_page_background_updated_at ?? undefined,
+    /** Fond page jeu QR depuis prefs flyer (si pas d’asset fidélité dédié). */
+    flyer_custom_bg_url: parseFlyerPrefsCustomBgDataUrl(business.flyer_prefs_json)
+      ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/flyer-custom-bg`
+      : undefined,
+    flyer_prefs_updated_at: business.flyer_prefs_updated_at ?? undefined,
     fidelity_qr_hero_title: business.fidelity_qr_hero_title?.trim() || undefined,
     strip_color: business.strip_color ?? undefined,
     strip_display_mode: business.strip_display_mode ?? "logo",

@@ -1,9 +1,13 @@
 /**
- * Assets publics (sans auth) : logo pour la page fidélité client.
- * `/public/flyer-qr-logo` : logo importé flyer si présent, sinon même rendu que `/public/logo` (Wallet).
+ * Assets publics (sans auth) : logo / fond pour la page fidélité client.
+ * `/public/flyer-qr-logo` : **uniquement** le logo importé dans Flyer IA (prefs) — pas de repli Wallet
+ * (évite logo texte vert « bandeau » et mélange avec l’icône notifications).
  */
 import { Router } from "express";
-import { parseFlyerPrefsCustomLogoDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
+import {
+  parseFlyerPrefsCustomBgDataUrl,
+  parseFlyerPrefsCustomLogoDataUrl,
+} from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { resolvePublicWalletLogoPng } from "../../lib/resolve-public-business-logo.js";
 import { resizeLogoForPass } from "../../pass/images-logo.js";
 
@@ -23,9 +27,6 @@ router.get("/flyer-qr-logo", async (req, res) => {
         resolved = { buffer: fromPrefs.buffer, contentType: fromPrefs.contentType || "image/png" };
       }
     }
-    if (!resolved) {
-      resolved = await resolvePublicWalletLogoPng(business);
-    }
     if (!resolved?.buffer?.length) return res.status(404).send();
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Content-Type", resolved.contentType || "image/png");
@@ -33,6 +34,23 @@ router.get("/flyer-qr-logo", async (req, res) => {
     return res.send(resolved.buffer);
   } catch (err) {
     console.warn("[public/flyer-qr-logo]", err?.message || err);
+    return res.status(500).send();
+  }
+});
+
+/** Fond page jeu QR (sans image fidélité dédiée) : même PNG que le fond Flyer IA enregistré dans les prefs. */
+router.get("/flyer-custom-bg", async (req, res) => {
+  const business = req.business;
+  if (!business) return res.status(404).send();
+  try {
+    const parsed = parseFlyerPrefsCustomBgDataUrl(business.flyer_prefs_json);
+    if (!parsed?.buffer?.length) return res.status(404).send();
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", parsed.contentType || "image/png");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    return res.send(parsed.buffer);
+  } catch (err) {
+    console.warn("[public/flyer-custom-bg]", err?.message || err);
     return res.status(500).send();
   }
 });
