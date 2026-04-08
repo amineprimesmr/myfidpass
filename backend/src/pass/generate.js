@@ -405,18 +405,12 @@ export async function generatePass(member, business = null, options = {}) {
         textAlignment: "PKTextAlignmentLeft",
         changeMessage: "Fidélité : %@",
       });
-    } else if (hasCardBackgroundStrip) {
-      /* Image sur le strip : pas de gros solde au-dessus → Points sur la même ligne que Récompense / Membre. */
-      pass.secondaryFields.push({
-        key: "points",
-        label: "Points",
-        value: pointsValue,
-        textAlignment: "PKTextAlignmentLeft",
-        changeMessage: "Tu as maintenant %@ points !",
-      });
     } else {
-      /* Pas d’image : solde en primaryField (zone principale sous le bandeau couleur), pas en secondary. */
-      pass.primaryFields.push({
+      /*
+       * Toujours secondary (avec ou sans image perso sur le strip) : le solde reste sur la ligne champs
+       * sous le bandeau, pas en primary sur le strip par défaut — aligné app Ma carte + Wallet attendu.
+       */
+      pass.secondaryFields.push({
         key: "points",
         label: "Points",
         value: pointsValue,
