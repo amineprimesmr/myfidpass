@@ -1,7 +1,8 @@
 /**
  * Validation des préférences flyer QR (sync SaaS ↔ API ↔ app).
  */
-const MAX_JSON_CHARS = 7 * 1024 * 1024;
+/** Marge au-dessus de la somme typique logo + fond + state (plafonds par champ dans `normalizeFlyerPrefsPut`). */
+const MAX_JSON_CHARS = 8 * 1024 * 1024;
 
 /**
  * @param {string} hex
