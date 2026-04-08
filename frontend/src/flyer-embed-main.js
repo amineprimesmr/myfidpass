@@ -27,7 +27,34 @@ async function loadImageInputFromDataUrl(dataUrl) {
     });
     if (fromImg) return /** @type {HTMLImageElement} */ (fromImg);
   } catch (_) {
-    /* repli fetch ci-dessous */
+    /* repli blob / fetch ci-dessous */
+  }
+  /** Certains WKWebView rejettent les très longues data URLs sur `img.src` ; blob: fonctionne encore. */
+  try {
+    const comma = dataUrl.indexOf(",");
+    if (comma > 0) {
+      const meta = dataUrl.slice(0, comma);
+      const b64 = dataUrl.slice(comma + 1);
+      const mimeM = /data:([^;]+)/.exec(meta);
+      const mime = mimeM ? mimeM[1] : "image/png";
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mime });
+      const objUrl = URL.createObjectURL(blob);
+      const fromBlob = await new Promise((resolve) => {
+        const im = new Image();
+        im.onload = () => resolve(im);
+        im.onerror = () => resolve(null);
+        im.src = objUrl;
+      });
+      try {
+        URL.revokeObjectURL(objUrl);
+      } catch (_) {}
+      if (fromBlob) return /** @type {HTMLImageElement} */ (fromBlob);
+    }
+  } catch (_) {
+    /* ignore */
   }
   try {
     const res = await fetch(dataUrl);
