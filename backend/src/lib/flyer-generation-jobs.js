@@ -229,6 +229,13 @@ export async function processFlyerGenerationJob(jobId) {
     const { b64, revised } = flyerOutcome.value;
 
     const colorPlan = resolveFlyerColorPlan(parsed.value);
+    // Re-lire le commerce après OpenAI (30–90 s) : un PUT « Valider le flyer », un logo, etc. peut avoir
+    // mis à jour `flyer_prefs_json` pendant l’appel. Fusionner sur un snapshot périmé écrasait fond + logo.
+    business = syncFlyerAiBillingMonth(getBusinessById(business.id));
+    if (!business) {
+      markJobFailed(jobId, "Commerce introuvable.");
+      return;
+    }
     const prefsMerged = mergeFlyerPrefsWheelColorsFromGeneration(
       business.flyer_prefs_json,
       colorPlan.primary,
