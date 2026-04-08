@@ -56,6 +56,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: 0;
   width: 100%;
   max-width: 100%;
@@ -101,6 +102,10 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   font-size: clamp(1.08rem, 3.85vw, 1.48rem);
   line-height: 1.28;
   max-width: 22rem;
+  color: #0f172a;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85),
+    0 2px 14px rgba(248, 250, 252, 0.9);
 }
 
 .fidelity-v2-roulette-inline--qr {
@@ -524,11 +529,21 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 }
 
 /*
- * Jeu QR : pas de photo IA plein écran (dégradés / grain) — fond uni clair, doux (couleur carte si fournie).
+ * Jeu QR : même fond IA / page fidélité que le reste (var --fidelity-client-bg).
+ * Léger voile pour garder titre + roue lisibles sur photos très claires ou très chargées.
  */
 #fidelity-app.fidelity-page.fidelity-page--client-bg:has(> main.fidelity-qr-game)::before {
-  background-image: none !important;
-  background-color: var(--fidelity-qr-shell-bg, #f8fafc);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(248, 250, 252, 0.55) 0%,
+      rgba(248, 250, 252, 0.22) 38%,
+      rgba(248, 250, 252, 0.12) 100%
+    ),
+    var(--fidelity-client-bg);
+  background-repeat: no-repeat;
+  background-size: cover, cover;
+  background-position: center, 88% 62%;
   filter: none !important;
 }
 
@@ -536,6 +551,13 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   #fidelity-app.fidelity-page.fidelity-page--client-bg:not(:has(> main.fidelity-qr-game))::before {
     background-position: 96% 78%;
   }
+}
+
+/* Avec fond IA : ne pas remettre un grand panneau gris par-dessus la photo (zone roue). */
+#fidelity-app.fidelity-page.fidelity-page--client-bg:has(> main.fidelity-qr-game)
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-roulette-wheel-zone {
+  background: transparent;
 }
 
 /* Exclure les modales fixed : le sélecteur > * gagnait sur .fidelity-qr-modal-root et forçait position:relative → modale en bas du flux. */

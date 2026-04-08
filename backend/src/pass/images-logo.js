@@ -106,6 +106,38 @@ export async function resizeLogoForPass(inputBuffer) {
 }
 
 /**
+ * Logo `/public/flyer-qr-logo` (page jeu QR, même origine que le flyer) :
+ * le pass bandeau (400×125) tue la netteté sur un hero large — on sert jusqu’à 960×720 « inside ».
+ */
+const WEB_FLYER_QR_LOGO_MAX_W = 960;
+const WEB_FLYER_QR_LOGO_MAX_H = 720;
+
+export async function resizeLogoForWebFlyerQrHero(inputBuffer) {
+  if (!inputBuffer || inputBuffer.length === 0) return null;
+  try {
+    const sharp = await getSharp();
+    const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+    const meta = await sharp(inputBuffer).metadata();
+    const w = meta.width || 0;
+    const h = meta.height || 0;
+    if (w > 0 && h > 0 && w <= WEB_FLYER_QR_LOGO_MAX_W && h <= WEB_FLYER_QR_LOGO_MAX_H) {
+      return Buffer.from(inputBuffer);
+    }
+    return await sharp(inputBuffer)
+      .resize(WEB_FLYER_QR_LOGO_MAX_W, WEB_FLYER_QR_LOGO_MAX_H, {
+        fit: "inside",
+        withoutEnlargement: true,
+        background: transparent,
+      })
+      .png()
+      .toBuffer();
+  } catch (err) {
+    console.warn("[WebFlyerQr] resizeLogoForWebFlyerQrHero failed:", err.message);
+    return inputBuffer;
+  }
+}
+
+/**
  * Icônes 29/58/87 px pour notifications / centre de notif Wallet.
  * cover + centre : remplit le carré (logo bandeau n’est plus miniature au milieu du blanc).
  * flatten sur blanc : rend l’icône opaque comme recommandé pour les passes.

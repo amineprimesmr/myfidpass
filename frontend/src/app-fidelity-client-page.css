@@ -209,9 +209,19 @@
   pointer-events: none;
 }
 
+/* Aligné page publique : fond flyer / IA visible dans l’aperçu « Tester le jeu ». */
 #app-app .app-fidelity-client-live-preview-root.fidelity-page.fidelity-page--client-bg:has(> main.fidelity-qr-game)::before {
-  background-image: none !important;
-  background-color: var(--fidelity-qr-shell-bg, #f8fafc);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(248, 250, 252, 0.55) 0%,
+      rgba(248, 250, 252, 0.22) 38%,
+      rgba(248, 250, 252, 0.12) 100%
+    ),
+    var(--fidelity-client-bg);
+  background-repeat: no-repeat;
+  background-size: cover, cover;
+  background-position: center, 88% 62%;
 }
 
 #app-app .app-fidelity-client-live-preview-root.fidelity-page.fidelity-page--client-bg > * {

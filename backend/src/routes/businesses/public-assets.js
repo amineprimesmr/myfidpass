@@ -9,7 +9,7 @@ import {
   parseFlyerPrefsCustomLogoDataUrl,
 } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { resolvePublicWalletLogoPng } from "../../lib/resolve-public-business-logo.js";
-import { resizeLogoForPass } from "../../pass/images-logo.js";
+import { resizeLogoForWebFlyerQrHero } from "../../pass/images-logo.js";
 
 const router = Router();
 
@@ -20,9 +20,9 @@ router.get("/flyer-qr-logo", async (req, res) => {
     const fromPrefs = parseFlyerPrefsCustomLogoDataUrl(business.flyer_prefs_json);
     let resolved = null;
     if (fromPrefs?.buffer?.length) {
-      const resized = await resizeLogoForPass(fromPrefs.buffer);
-      if (resized?.logoPng2x?.length) {
-        resolved = { buffer: resized.logoPng2x, contentType: "image/png" };
+      const heroBuf = await resizeLogoForWebFlyerQrHero(fromPrefs.buffer);
+      if (heroBuf?.length) {
+        resolved = { buffer: heroBuf, contentType: "image/png" };
       } else {
         resolved = { buffer: fromPrefs.buffer, contentType: fromPrefs.contentType || "image/png" };
       }

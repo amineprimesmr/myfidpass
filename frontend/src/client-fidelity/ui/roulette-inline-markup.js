@@ -1,3 +1,5 @@
+import { buildWheelConicGradient, WHEEL_SEGMENT_COUNT } from "../lib/wheel-segments.js";
+
 /**
  * Roulette en bas de page fidélité (sans titre marketing ni page séparée).
  * @param {(s: string) => string} esc
@@ -8,6 +10,8 @@ export function renderRouletteInlineMarkup(esc, p) {
   const qr = variant === "qr";
   const t = esc(String(tickets));
   const ptsWord = tickets === 1 ? "point" : "points";
+  /** Rendu immédiat des parts (évite disque noir avant exécution de initRouletteWheel). */
+  const wheelBgEsc = esc(buildWheelConicGradient(WHEEL_SEGMENT_COUNT));
   const innerBtn = qr
     ? `<span class="fidelity-cta-wheel-line fidelity-cta-wheel-line--qr">
                 <span class="fidelity-cta-wheel-action">Jouer la partie</span>
@@ -33,7 +37,7 @@ export function renderRouletteInlineMarkup(esc, p) {
         <div class="fidelity-roulette-wheel-zone">
           <div class="fidelity-roulette-wheel-mount">
             <div class="fidelity-roulette-wheel-outer">
-              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel"></div>
+              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel" style="background-image: ${wheelBgEsc};"></div>
               <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
               <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
             </div>
