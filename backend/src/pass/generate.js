@@ -22,6 +22,7 @@ import {
 import { radiusMetersForPass } from "../locationRadiusLimits.js";
 import { parsePointRewardTiersFromBusiness, formatBackRewardsFieldValue } from "./point-tiers.js";
 import { normalizeChangeMessage, buildLastBroadcastFieldValue } from "./broadcast-field.js";
+import { stampNextRewardFaceLabelAndValue } from "./stamp-next-reward-face.js";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -189,7 +190,19 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
-  const stampMax = 10;
+  const businessReqRaw = business?.required_stamps != null ? Number(business.required_stamps) : NaN;
+  const optionReqRaw = options.required_stamps != null ? Number(options.required_stamps) : NaN;
+  const stampMax = Math.max(
+    1,
+    Math.min(
+      50,
+      Number.isFinite(optionReqRaw) && optionReqRaw > 0
+        ? optionReqRaw
+        : Number.isFinite(businessReqRaw) && businessReqRaw > 0
+          ? businessReqRaw
+          : 10
+    )
+  );
   const useTampons = options.required_stamps != null || options.stampMax != null || (business?.required_stamps != null && business?.required_stamps > 0);
   const programType = (options.program_type ?? business?.program_type)?.toLowerCase();
   const explicitFormat = programType === "points" ? "points" : programType === "stamps" ? "tampons" : null;
@@ -356,7 +369,20 @@ export async function generatePass(member, business = null, options = {}) {
         changeMessage: "Tu as maintenant %@ tampons !",
       });
     }
-    /* Pas de champ « Récompense » sur la face (paliers / texte récompense : verso uniquement). */
+    /* Prochaine récompense : label « Dans x passages », valeur = texte marchand (aligné app Ma carte). */
+    const nrFace = stampNextRewardFaceLabelAndValue({
+      stampsCollected: stamps,
+      totalStamps: stampMax,
+      midReward: stampMidRewardLabel,
+      finalReward: stampRewardLabel,
+    });
+    pass.auxiliaryFields.push({
+      key: "nextReward",
+      label: nrFace.label,
+      value: nrFace.value,
+      textAlignment: "PKTextAlignmentLeft",
+      changeMessage: "Récompense : %@",
+    });
     if (!isSectorTemplate) {
       pass.auxiliaryFields.push({
         key: "member",
