@@ -194,4 +194,25 @@ if (typeof window !== "undefined") {
   };
 }
 
-void renderFromCurrentBootstrap();
+/**
+ * Ne pas dessiner au chargement du module si le bootstrap n’est pas encore injecté
+ * (WKWebView : gros JSON uniquement via `evaluateJavaScript` après `didFinish` — voir FlyerPreviewWebView).
+ * Sinon premier rendu sans `custom_bg_data_url` → dégradé par défaut (bleu nuit) jusqu’au 2ᵉ passage.
+ */
+function shouldAutoRenderFlyerEmbedOnLoad() {
+  try {
+    const b64 =
+      typeof window.__FIDPASS_FLYER_B64__ === "string" && window.__FIDPASS_FLYER_B64__
+        ? window.__FIDPASS_FLYER_B64__
+        : "";
+    if (!b64 || b64.length < 12) return false;
+    const api = JSON.parse(atob(b64));
+    return api.flyer_prefs != null && typeof api.flyer_prefs === "object";
+  } catch {
+    return false;
+  }
+}
+
+if (shouldAutoRenderFlyerEmbedOnLoad()) {
+  void renderFromCurrentBootstrap();
+}
