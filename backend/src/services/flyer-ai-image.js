@@ -366,7 +366,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
   const multimodalLines = [];
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "REFERENCE IMAGE(S): moodboard only — extract COLOR PALETTE, overall MOOD, and lighting direction. NEVER transfer photographic grain, texture, noise, or surface detail from references onto the output background — the output must stay glass-smooth. If a reference is a transparent PNG (cutout logo), use it only for color/shape hints; NEVER paste it as an opaque rectangle onto the canvas. NEVER reproduce logos, text, QR codes, or wheels from references onto the output bitmap. NEVER composite a readable logo mark into the output (software adds the official logo separately)."
+      "REFERENCE IMAGE(S): moodboard only — extract COLOR PALETTE, overall MOOD, and lighting direction. NEVER transfer photographic grain, texture, noise, or surface detail from references onto the output background — the output must stay glass-smooth. If a reference is a transparent PNG (cutout logo), use it only for color/shape hints; NEVER paste it as an opaque rectangle onto the canvas. NEVER reproduce logos, text, QR codes, or wheels from references onto the output bitmap. NEVER composite a readable logo mark into the output — the app composites the official merchant logo separately at full resolution and sharp edges on top."
     );
   }
 
@@ -615,7 +615,7 @@ export function buildFidelityClientPageBackgroundPrompt(
     "MERCHANT BRIEF (authoritative): " + merchantBrief,
     sectorFidelity,
     "TASK: Generate ONE mobile-first full-bleed BACKGROUND wallpaper only, portrait 2:3 aspect, full bleed to all edges, no outer frame, no white border.",
-    "LIGHT & CALM (mandatory): Overall BRIGHT, airy, and welcoming — pale off-white / soft cream / light tint of the brand hue. NEVER a dark, moody, cinematic night scene; NEVER heavy black or near-black fields; NEVER dramatic low-key lighting that reads as « sombre » on a phone.",
+    "LIGHT & CALM (mandatory): Bright, airy, welcoming — use a SOFT VISIBLE TINT of the brand hue (roughly 6–14% saturation) or a gentle vertical gradient so the wallpaper is NEVER mistaken for plain #FFFFFF HTML white on a phone. NEVER a dark night scene; NEVER heavy black fields; NEVER dramatic low-key lighting.",
     "NOT A FLYER: This image is a silent backdrop. The product will overlay HTML (title, logo image, roulette). Your output must stay empty of UI chrome.",
     "════════════════ ABSOLUTE BANS ═══════════════",
     "NEVER draw any prize wheel, roulette, spinner, pie chart with prizes, radial wedges, dial, fortune wheel, or circular game divided into segments.",

@@ -47,7 +47,9 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 .fidelity-qr-hero {
   text-align: center;
-  padding: max(0.35rem, env(safe-area-inset-top, 0px)) 0 0.35rem;
+  padding: max(0.35rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-left, 0px)) 0.35rem
+    max(1rem, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
 }
 
 .fidelity-qr-brand {
@@ -55,15 +57,23 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   flex-direction: column;
   align-items: center;
   gap: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
+/* Même lecture que le flyer composé : logo large, centré, sans pastille « icône app ». */
 .fidelity-qr-logo {
-  width: 56px;
-  height: 56px;
+  display: block;
+  width: min(88vw, 20rem);
+  max-width: 100%;
+  height: auto;
+  max-height: min(28vw, 9.5rem);
   object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+  object-position: center top;
+  border-radius: 0;
+  box-shadow: none;
   flex-shrink: 0;
+  margin: 0 auto 0.35rem;
 }
 
 .fidelity-qr-logo--hidden {
@@ -72,13 +82,17 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 /* Titre unique : accroche lisible (marge réduite pour tenir sans scroll sur petits écrans) */
 .fidelity-qr-title--lead {
-  margin: clamp(1rem, 5vw, 2.75rem) 0 0;
-  font-size: clamp(1.48rem, 5.5vw, 2.15rem);
+  margin: clamp(0.65rem, 3.5vw, 1.75rem) 0 0;
+  font-size: clamp(1.22rem, 4.6vw, 1.95rem);
   font-weight: 800;
   letter-spacing: -0.032em;
   line-height: 1.28;
   color: #0f172a;
-  max-width: min(22rem, 92vw);
+  max-width: min(22rem, calc(100vw - 2rem));
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 0.25rem;
+  box-sizing: border-box;
 }
 
 .fidelity-qr-title.fidelity-qr-title--thanks {

@@ -13,6 +13,16 @@ function preferSameOriginApiAssetPaths() {
 }
 
 /**
+ * @param {string | null | undefined} s
+ * @returns {number}
+ */
+function parseIsoToMs(s) {
+  if (s == null || String(s).trim() === "") return 0;
+  const t = Date.parse(String(s));
+  return Number.isFinite(t) ? t : 0;
+}
+
+/**
  * URL à mettre dans <img src> pour le logo commerce (page fidélité / jeu).
  * Quand apiBase est vide (proxy Vite), on utilise toujours un chemin **relatif**
  * `/api/businesses/:slug/public/flyer-qr-logo` pour rester sur la même origine que la page.
@@ -74,7 +84,10 @@ export function resolveClientNotificationIconImgSrc(business, slug, apiBase) {
 /**
  * Fond page /fidelity/:slug — même stratégie que le logo : sur myfidpass.fr, chemin relatif
  * `/api/businesses/:slug/fidelity-page-background` (rewrite Vercel) pour éviter CORP sur l’URL API en `background-image`.
- * Si pas d’asset « Page fidélité » mais un fond Flyer IA enregistré : `flyerCustomBgUrl` (GET `/public/flyer-custom-bg`).
+ *
+ * Règle produit : si le commerce a **à la fois** un asset « Page fidélité » (upload / 2ᵉ image IA)
+ * **et** un fond enregistré dans les **prefs flyer** (`custom_bg_data_url`), on affiche le plus **récent**
+ * (même visuel que le flyer composé quand l’utilisateur vient de valider le flyer IA).
  *
  * @param {Record<string, unknown> | null | undefined} business
  * @param {string} slug
@@ -83,11 +96,36 @@ export function resolveClientNotificationIconImgSrc(business, slug, apiBase) {
  */
 export function resolveFidelityPageBackgroundImgSrc(business, slug, apiBase) {
   const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background` : "";
-  const raw =
-    business?.fidelityPageBackgroundUrl ?? business?.fidelity_page_background_url ?? "";
+  const flyerPath = `/api/businesses/${encodeURIComponent(slug)}/public/flyer-custom-bg`;
   const baseTrim = preferSameOriginApiAssetPaths() ? "" : String(apiBase || "").replace(/\/$/, "");
 
-  if (path && String(raw).trim() !== "") {
+  const rawFidelity =
+    business?.fidelityPageBackgroundUrl ?? business?.fidelity_page_background_url ?? "";
+  const rawFlyer =
+    business?.flyerCustomBgUrl ?? business?.flyer_custom_bg_url ?? business?.flyerCustomBgURL ?? "";
+
+  const hasFidelityAsset = path && String(rawFidelity).trim() !== "";
+  const hasFlyerBg = Boolean(slug && String(rawFlyer).trim() !== "");
+
+  if (!hasFidelityAsset && !hasFlyerBg) return "";
+
+  const fidMs = parseIsoToMs(
+    business?.fidelityPageBackgroundUpdatedAt ?? business?.fidelity_page_background_updated_at,
+  );
+  const flyerMs = parseIsoToMs(business?.flyer_prefs_updated_at ?? business?.flyerPrefsUpdatedAt);
+
+  /** Fond prefs flyer plus récent (ou égal) que l’asset page fidélité → alignement avec le flyer validé. */
+  const preferFlyer = hasFlyerBg && (!hasFidelityAsset || flyerMs >= fidMs);
+
+  if (preferFlyer) {
+    const srcBase = baseTrim ? `${baseTrim}${flyerPath}` : flyerPath;
+    const upd = business?.flyer_prefs_updated_at ?? business?.flyerPrefsUpdatedAt;
+    const v =
+      upd != null && String(upd).trim() !== "" ? encodeURIComponent(String(upd).trim()) : "";
+    return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${v}` : srcBase;
+  }
+
+  if (hasFidelityAsset) {
     const srcBase = baseTrim ? `${baseTrim}${path}` : path;
     const upd =
       business?.fidelityPageBackgroundUpdatedAt ?? business?.fidelity_page_background_updated_at;
@@ -96,10 +134,6 @@ export function resolveFidelityPageBackgroundImgSrc(business, slug, apiBase) {
     return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${v}` : srcBase;
   }
 
-  const flyerRaw =
-    business?.flyerCustomBgUrl ?? business?.flyer_custom_bg_url ?? business?.flyerCustomBgURL ?? "";
-  if (!slug || String(flyerRaw).trim() === "") return "";
-  const flyerPath = `/api/businesses/${encodeURIComponent(slug)}/public/flyer-custom-bg`;
   const srcBase = baseTrim ? `${baseTrim}${flyerPath}` : flyerPath;
   const upd = business?.flyer_prefs_updated_at ?? business?.flyerPrefsUpdatedAt;
   const v =

@@ -140,4 +140,36 @@ describe("resolveFidelityPageBackgroundImgSrc", () => {
     expect(src.startsWith("/api/businesses/cafe/public/flyer-custom-bg?v=")).toBe(true);
     expect(src).toContain("2026-04-07");
   });
+
+  it("fond flyer + asset page fidélité : préfère le flyer si prefs plus récentes ou égales", () => {
+    vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
+    const src = resolveFidelityPageBackgroundImgSrc(
+      {
+        fidelityPageBackgroundUrl: "https://api.myfidpass.fr/api/businesses/cafe/fidelity-page-background",
+        fidelityPageBackgroundUpdatedAt: "2026-04-01T12:00:00.000Z",
+        flyerCustomBgUrl: "https://api.myfidpass.fr/api/businesses/cafe/public/flyer-custom-bg",
+        flyer_prefs_updated_at: "2026-04-08T12:00:00.000Z",
+      },
+      "cafe",
+      "https://api.myfidpass.fr",
+    );
+    expect(src.startsWith("/api/businesses/cafe/public/flyer-custom-bg?v=")).toBe(true);
+    expect(src).toContain("2026-04-08");
+  });
+
+  it("fond flyer + asset page fidélité : préfère l’asset page si plus récent que les prefs flyer", () => {
+    vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
+    const src = resolveFidelityPageBackgroundImgSrc(
+      {
+        fidelityPageBackgroundUrl: "https://api.myfidpass.fr/api/businesses/cafe/fidelity-page-background",
+        fidelityPageBackgroundUpdatedAt: "2026-04-10T12:00:00.000Z",
+        flyerCustomBgUrl: "https://api.myfidpass.fr/api/businesses/cafe/public/flyer-custom-bg",
+        flyer_prefs_updated_at: "2026-04-08T12:00:00.000Z",
+      },
+      "cafe",
+      "https://api.myfidpass.fr",
+    );
+    expect(src.startsWith("/api/businesses/cafe/fidelity-page-background?v=")).toBe(true);
+    expect(src).toContain("2026-04-10");
+  });
 });

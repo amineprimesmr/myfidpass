@@ -249,6 +249,12 @@
   flex-shrink: 0;
 }
 
+/* Mockup dashboard : mêmes proportions que la page publique, contenu en cqw */
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-logo {
+  width: min(88cqw, 12rem);
+  max-height: min(26cqw, 4.25rem);
+}
+
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline.fidelity-v2-roulette-inline--qr {
   flex: 1 1 auto !important;
   min-height: 0 !important;

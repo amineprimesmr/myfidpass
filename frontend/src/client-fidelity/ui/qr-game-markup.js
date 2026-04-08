@@ -30,7 +30,7 @@ export function renderQrGamePage(esc, p) {
   if (logoUrl) {
     const onErr =
       'this.onerror=null;this.classList.add("fidelity-qr-logo--hidden");this.removeAttribute("src")';
-    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="${businessNameEsc}" width="120" height="120" decoding="async" onerror="${onErr}" />`;
+    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="${businessNameEsc}" decoding="async" onerror="${onErr}" />`;
     verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap" aria-hidden="true"><img class="fidelity-qr-verify-logo" id="fidelity-qr-verify-logo" src="${esc(logoUrl)}" alt="" width="96" height="96" decoding="async" onerror="${onErr}" /></div>`;
   }
 
