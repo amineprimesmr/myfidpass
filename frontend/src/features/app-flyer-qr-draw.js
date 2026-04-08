@@ -255,6 +255,77 @@ function logoSourceDimensions(img) {
  * @param {number} y1
  * @returns {{ r: number; g: number; b: number } | null}
  */
+/**
+ * Couleur moyenne du fond sous la zone logo (après `drawFlyerBackgroundLayer`).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {number} rw
+ * @param {number} rh
+ * @returns {{ r: number; g: number; b: number } | null}
+ */
+function sampleAverageRgbFromCtx(ctx, x, y, rw, rh) {
+  const cw = ctx.canvas.width;
+  const ch = ctx.canvas.height;
+  const ix = Math.max(0, Math.floor(x));
+  const iy = Math.max(0, Math.floor(y));
+  const iw = Math.min(cw - ix, Math.max(1, Math.ceil(rw)));
+  const ih = Math.min(ch - iy, Math.max(1, Math.ceil(rh)));
+  let data;
+  try {
+    data = ctx.getImageData(ix, iy, iw, ih).data;
+  } catch {
+    return null;
+  }
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    if (a < 8) continue;
+    r += data[i];
+    g += data[i + 1];
+    b += data[i + 2];
+    n++;
+  }
+  if (n < 8) return null;
+  return { r: r / n, g: g / n, b: b / n };
+}
+
+/**
+ * @param {{ r: number; g: number; b: number }} a
+ * @param {{ r: number; g: number; b: number }} b
+ */
+function rgbDistance(a, b) {
+  return Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
+}
+
+/**
+ * @param {Uint8ClampedArray} data
+ * @param {number} w
+ * @param {number} h
+ */
+function averageRgbFromImageDataNonTransparent(data, w, h) {
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  const row = w * 4;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * row + x * 4;
+      if (data[i + 3] < 40) continue;
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+      n++;
+    }
+  }
+  if (n < 8) return null;
+  return { r: r / n, g: g / n, b: b / n };
+}
+
 function sampleOpaqueAverageRgb(data, pw, ph, x0, y0, x1, y1) {
   let r = 0;
   let g = 0;
@@ -414,14 +485,16 @@ function drawImageContainCropped(ctx, img, dx, dy, dstW, dstH, sx, sy, sw, sh) {
 const LOGO_DRAW_SUPER_SAMPLE = 2;
 
 /**
- * Logo commerce en tête de flyer : sans plaque ni cadre ; détourage alpha + rendu 2× puis downscale.
+ * Logo commerce en tête de flyer : détourage alpha + rendu 2× puis downscale.
+ * Si le fond sous le logo est trop proche de la couleur du logo (ex. rouge sur rouge), léger fond arrondi + contour blanc pour garder la lisibilité.
  * @param {CanvasRenderingContext2D} ctx
  * @param {CanvasImageSource} logoImg
  * @param {number} w
  * @param {number} h
  * @param {Record<string, unknown>} s état flyer (mise en page logo)
+ * @param {{ r: number; g: number; b: number } | null | undefined} [bgRgbHint] moyenne RGB du canvas sous la zone logo (après fond)
  */
-function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
+function drawFlyerCommerceLogo(ctx, logoImg, w, h, s, bgRgbHint) {
   const L = flyerLogoLayoutResolved(s);
   const maxW = w * L.maxWFrac;
   const maxH = h * L.maxHFrac;
@@ -455,11 +528,49 @@ function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
   if ("imageSmoothingQuality" in octx) octx.imageSmoothingQuality = "high";
   drawImageContainCropped(octx, logoImg, 0, 0, tw, th, sx, sy, srw, srh);
 
+  let logoRgb = null;
+  try {
+    const id = octx.getImageData(0, 0, tw, th);
+    logoRgb = averageRgbFromImageDataNonTransparent(id.data, tw, th);
+  } catch {
+    logoRgb = null;
+  }
+
   const glow = Math.max(8, maxW * 0.028);
   const dropY = Math.max(2, maxH * 0.028);
   const dropBlur = Math.max(6, maxW * 0.026);
-  /** Halo blanc très léger : évite l’effet « plaque » sur le fond du flyer. */
-  const filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.44)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.22))`;
+  /** Halo blanc léger par défaut. */
+  let filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.44)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.22))`;
+
+  let lowContrast = false;
+  if (bgRgbHint && logoRgb) {
+    const d = rgbDistance(bgRgbHint, logoRgb);
+    /** Seuil : logo et fond se ressemblent (même teinte / même luminance). */
+    if (d < 112) lowContrast = true;
+  }
+
+  if (lowContrast) {
+    const pad = Math.max(6, maxW * 0.045);
+    const rr = Math.min(maxW * 0.12, maxH * 0.22);
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.26)";
+    ctx.strokeStyle = "rgba(15,23,42,0.2)";
+    ctx.lineWidth = Math.max(1.5, maxW * 0.005);
+    roundRect(ctx, lx - pad, ly - pad, maxW + pad * 2, maxH + pad * 2, rr);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    const o = Math.max(1, Math.round(maxW * 0.004));
+    filterStr = [
+      `drop-shadow(${o}px 0 0 rgba(255,255,255,0.95))`,
+      `drop-shadow(-${o}px 0 0 rgba(255,255,255,0.95))`,
+      `drop-shadow(0 ${o}px 0 rgba(255,255,255,0.95))`,
+      `drop-shadow(0 -${o}px 0 rgba(255,255,255,0.95))`,
+      `drop-shadow(0 0 ${Math.max(4, maxW * 0.014)}px rgba(0,0,0,0.55))`,
+      `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.5))`,
+    ].join(" ");
+  }
 
   ctx.save();
   try {
@@ -779,8 +890,20 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
 
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   const hasCommerceLogo = logoImg != null;
+  /** Échantillon du fond sous le logo : détecte logo « même couleur » que le fond (ex. rouge sur rouge), fond IA ou dégradé. */
+  let logoBgRgbHint = null;
   if (hasCommerceLogo) {
-    drawFlyerCommerceLogo(ctx, logoImg, w, h, s);
+    const L0 = flyerLogoLayoutResolved(s);
+    const mw = w * L0.maxWFrac;
+    const mh = h * L0.maxHFrac;
+    const cx0 = w * 0.5;
+    const cy0 = h * L0.centerYFrac;
+    const lx0 = cx0 - mw / 2;
+    const ly0 = cy0 - mh / 2;
+    logoBgRgbHint = sampleAverageRgbFromCtx(ctx, lx0, ly0, mw, mh);
+  }
+  if (hasCommerceLogo) {
+    drawFlyerCommerceLogo(ctx, logoImg, w, h, s, logoBgRgbHint);
   }
   if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
