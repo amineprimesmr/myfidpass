@@ -22,6 +22,11 @@ import {
 import { radiusMetersForPass } from "../locationRadiusLimits.js";
 import { parsePointRewardTiersFromBusiness, formatBackRewardsFieldValue } from "./point-tiers.js";
 import { normalizeChangeMessage, buildLastBroadcastFieldValue } from "./broadcast-field.js";
+import { readFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __passDir = dirname(fileURLToPath(import.meta.url));
 
 /** Masque le nom par défaut du parcours invité (QR) sur la face du pass. */
 function walletPassMemberDisplayName(name) {
@@ -50,6 +55,23 @@ async function resizeCardBackgroundToStrip(cardBgB64, sharp) {
     return await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
   } catch (e) {
     console.warn("[PassKit] card_background resize failed:", e?.message);
+    return null;
+  }
+}
+
+/**
+ * Bandeau par défaut mode points sans image perso (aligné ressource iOS `banner`).
+ * @returns {Promise<Buffer|null>}
+ */
+async function loadDefaultPointsStripBuffer(sharp) {
+  const p = join(__passDir, "assets", "default-points-strip.png");
+  if (!existsSync(p)) return null;
+  try {
+    const buf = readFileSync(p);
+    if (!buf.length) return null;
+    return await sharp(buf).resize(STRIP_W, STRIP_H).png().toBuffer();
+  } catch (e) {
+    console.warn("[PassKit] default points strip:", e?.message);
     return null;
   }
 }
@@ -218,10 +240,16 @@ export async function generatePass(member, business = null, options = {}) {
       buffers["strip.png"] = cardBgStripBuf;
       buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
     } else {
-      /* Pas d’image : strip = couleur uniquement. Les points → primaryFields (gros texte sous le strip), pas la ligne Récompense/Membre. */
-      const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
-      buffers["strip.png"] = stripBuf;
-      buffers["strip@2x.png"] = stripBuf;
+      const defaultStripBuf = await loadDefaultPointsStripBuffer(sharp);
+      if (defaultStripBuf) {
+        buffers["strip.png"] = defaultStripBuf;
+        buffers["strip@2x.png"] = await sharp(defaultStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+      } else {
+        /* Fallback : strip couleur (fichier assets manquant ou erreur). */
+        const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
+        buffers["strip.png"] = stripBuf;
+        buffers["strip@2x.png"] = stripBuf;
+      }
     }
   }
 
