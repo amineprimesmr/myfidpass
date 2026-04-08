@@ -6,9 +6,29 @@ import { API_BASE } from "./config.js";
 import { FLYER_EXPORT, mergeFlyerState } from "./features/app-flyer-qr-presets.js";
 import { renderFlyerCanvas } from "./features/app-flyer-qr-draw.js";
 
-/** @param {string} dataUrl */
+/**
+ * Chargement d’images depuis `data:image/...;base64,...` pour le canvas flyer.
+ * Important WKWebView : `fetch(dataUrl)` échoue ou tronque souvent sur les data URLs volumineuses
+ * (fond IA JPEG/PNG) → fond absent (dégradé par défaut) alors que l’aperçu « brut » fonctionne ailleurs.
+ * `new Image()` + `src = dataUrl` est le chemin fiable pour les data URLs.
+ *
+ * @param {string} dataUrl
+ * @returns {Promise<HTMLImageElement | ImageBitmap | string | null>}
+ */
 async function loadImageInputFromDataUrl(dataUrl) {
   if (!dataUrl || typeof dataUrl !== "string") return null;
+  if (!dataUrl.startsWith("data:image/")) return null;
+  try {
+    const fromImg = await new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => resolve(null);
+      im.src = dataUrl;
+    });
+    if (fromImg) return /** @type {HTMLImageElement} */ (fromImg);
+  } catch (_) {
+    /* repli fetch ci-dessous */
+  }
   try {
     const res = await fetch(dataUrl);
     if (!res.ok) return null;
