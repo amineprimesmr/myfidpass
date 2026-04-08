@@ -1,3 +1,8 @@
+# Railway / Nixpacks — fidpass-api (backend dans ./backend)
+# Node 22 LTS : évite les surprises si la plateforme bascule sur Node 24 (better-sqlite3 / moteur).
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
 # Outils nécessaires pour compiler better-sqlite3 (node-gyp) sur Railway
 # "..." = garder les paquets par défaut (Node.js) et ajouter les suivants
 [phases.setup]
