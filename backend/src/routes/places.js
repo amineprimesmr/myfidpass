@@ -45,4 +45,34 @@ router.get("/autocomplete", async (req, res) => {
   }
 });
 
+/**
+ * Détails légers d’un lieu (nom + adresse) pour préremplir l’UI quand on n’a que le place_id.
+ * GET /api/places/details?place_id=...
+ */
+router.get("/details", async (req, res) => {
+  const placeId = String(req.query.place_id || "").trim();
+  if (!placeId || placeId.length > 300) {
+    return res.status(400).json({ error: "place_id invalide" });
+  }
+  if (!GOOGLE_PLACES_API_KEY) {
+    return res.status(503).json({ error: "Service indisponible" });
+  }
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=name,formatted_address&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (data.status !== "OK" || !data.result) {
+      return res.status(404).json({ error: "Lieu introuvable", code: data.status });
+    }
+    return res.json({
+      place_id: placeId,
+      name: data.result.name || "",
+      formatted_address: data.result.formatted_address || "",
+    });
+  } catch (err) {
+    console.error("[places/details]", err);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 export default router;
