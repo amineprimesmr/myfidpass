@@ -344,7 +344,7 @@ router.patch("/settings", async (req, res) => {
     updates.required_stamps = Number.isInteger(n) && n >= 0 ? n : null;
   }
   if (stamp_emoji !== undefined) {
-    const v = stamp_emoji == null || stamp_emoji === "" ? null : String(stamp_emoji).trim().slice(0, 8);
+    const v = stamp_emoji == null || stamp_emoji === "" ? null : String(stamp_emoji).trim().slice(0, 32);
     updates.stamp_emoji = v || null;
   }
   if (stamp_reward_label !== undefined) {

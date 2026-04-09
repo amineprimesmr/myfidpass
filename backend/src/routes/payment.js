@@ -110,9 +110,9 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
       success_url: `${FRONTEND_URL}/app?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/choisir-offre`,
       metadata: { user_id: userId },
+      /** Pas d’essai Stripe ici : l’essai gratuit est géré côté app (24 h). Le tarif 1 € puis 49,99 € / mois se configure sur le Price Stripe (`STRIPE_PRICE_ID_STARTER`). */
       subscription_data: {
         metadata: { user_id: userId },
-        trial_period_days: 7,
       },
     });
     return res.json({ url: session.url });

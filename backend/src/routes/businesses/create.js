@@ -285,7 +285,7 @@ export function updateHandler(req, res) {
   }
   const stampEmoji = body.stampEmoji ?? body.stamp_emoji;
   if (stampEmoji !== undefined) {
-    const v = stampEmoji == null || stampEmoji === "" ? null : String(stampEmoji).trim().slice(0, 8);
+    const v = stampEmoji == null || stampEmoji === "" ? null : String(stampEmoji).trim().slice(0, 32);
     updates.stamp_emoji = v || null;
   }
   const stampRewardLabel = body.stampRewardLabel ?? body.stamp_reward_label;

@@ -7,11 +7,19 @@ import { getUserById } from "./users.js";
 
 const db = getDb();
 
-/** Durée d’accès complet sans Stripe après création du compte (jours). Surcharge : `MERCHANT_TRIAL_DAYS`. */
+/**
+ * Durée d’accès complet **sans abonnement Stripe payant** après création du compte.
+ * Priorité : `MERCHANT_TRIAL_HOURS` (ex. 24) puis `MERCHANT_TRIAL_DAYS`, sinon **24 h**.
+ */
 export function merchantTrialDurationMs() {
+  const hoursRaw = process.env.MERCHANT_TRIAL_HOURS;
+  if (hoursRaw !== undefined && String(hoursRaw).trim() !== "") {
+    const h = parseInt(hoursRaw, 10);
+    if (Number.isFinite(h) && h >= 0) return h * 60 * 60 * 1000;
+  }
   const n = parseInt(process.env.MERCHANT_TRIAL_DAYS, 10);
-  const days = Number.isFinite(n) && n >= 0 ? n : 3;
-  return days * 24 * 60 * 60 * 1000;
+  if (Number.isFinite(n) && n >= 0) return n * 24 * 60 * 60 * 1000;
+  return 24 * 60 * 60 * 1000;
 }
 
 function userCreatedAtMs(user) {

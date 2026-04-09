@@ -363,6 +363,7 @@ function initAppPage() {
       }
       const user = data.user;
       const isPlatformAdmin = !!(user?.is_admin ?? user?.isAdmin);
+      const merchantTrialEndsAt = data.merchant_trial_ends_at ?? data.merchantTrialEndsAt ?? null;
       const hasSubscription =
         !!(data.has_active_subscription ?? data.hasActiveSubscription) || isDevBypassPayment();
       if (!hasSubscription && !isPlatformAdmin) {
@@ -396,6 +397,7 @@ function initAppPage() {
               user,
               subscription: data.subscription || null,
               hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
+              merchant_trial_ends_at: merchantTrialEndsAt,
               awaitingFirstBusiness: true,
             },
           })
@@ -429,6 +431,7 @@ function initAppPage() {
             user,
             subscription: data.subscription || null,
             hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
+            merchant_trial_ends_at: merchantTrialEndsAt,
           },
         })
       );
@@ -3733,9 +3736,84 @@ function initAppDashboard(slug) {
 
   registerAppDiscardHandler("profil", () => loadProfil());
 
+  /** Libellé temps restant (aligné app iOS). */
+  function formatMerchantTrialRemainingLabel(isoEnd) {
+    const endMs = Date.parse(isoEnd);
+    if (!Number.isFinite(endMs)) return "—";
+    const secs = (endMs - Date.now()) / 1000;
+    if (secs <= 0) return "Essai terminé";
+    if (secs < 60) return "Moins d’1 min";
+    if (secs < 3600) {
+      const m = Math.floor(secs / 60);
+      return m <= 1 ? "1 min restante" : `${m} min restantes`;
+    }
+    if (secs < 86400) {
+      const h = Math.floor(secs / 3600);
+      return h <= 1 ? "1 h restante" : `${h} h restantes`;
+    }
+    const d = Math.floor(secs / 86400);
+    return d <= 1 ? "1 jour restant" : `${d} jours restants`;
+  }
+
+  function updateMerchantTrialSubscribePillFromDetail(d) {
+    const pill = document.getElementById("app-mobile-trial-subscribe-pill");
+    const remainEl = document.getElementById("app-mobile-trial-subscribe-pill-remaining");
+    if (!pill || !remainEl) return;
+    const user = d.user || {};
+    const isAdmin = !!(user.is_admin ?? user.isAdmin);
+    const trialEndRaw = d.merchant_trial_ends_at ?? d.merchantTrialEndsAt ?? null;
+    if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
+      clearInterval(window.__fidpassTrialPillTimer);
+      window.__fidpassTrialPillTimer = null;
+    }
+    if (isAdmin || !trialEndRaw) {
+      pill.classList.add("hidden");
+      pill.setAttribute("aria-hidden", "true");
+      return;
+    }
+    const endMs = Date.parse(trialEndRaw);
+    if (!Number.isFinite(endMs) || Date.now() >= endMs) {
+      pill.classList.add("hidden");
+      pill.setAttribute("aria-hidden", "true");
+      return;
+    }
+    const tick = () => {
+      remainEl.textContent = formatMerchantTrialRemainingLabel(trialEndRaw);
+      const t = Date.parse(trialEndRaw);
+      if (Number.isFinite(t) && Date.now() >= t) {
+        pill.classList.add("hidden");
+        pill.setAttribute("aria-hidden", "true");
+        if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
+          clearInterval(window.__fidpassTrialPillTimer);
+          window.__fidpassTrialPillTimer = null;
+        }
+      }
+    };
+    tick();
+    if (typeof window !== "undefined") {
+      window.__fidpassTrialPillTimer = setInterval(tick, 30000);
+    }
+    pill.classList.remove("hidden");
+    pill.setAttribute("aria-hidden", "false");
+  }
+
+  const trialPillEl = document.getElementById("app-mobile-trial-subscribe-pill");
+  if (trialPillEl) {
+    trialPillEl.addEventListener("click", () => {
+      window.location.href = "/choisir-offre";
+    });
+    trialPillEl.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        window.location.href = "/choisir-offre";
+      }
+    });
+  }
+
   // Renseigne les infos compte (email, abonnement) à partir de /api/auth/me (événement émis après initAppDashboard)
   window.addEventListener("fidpass-auth-me", (e) => {
     const d = e.detail || {};
+    updateMerchantTrialSubscribePillFromDetail(d);
     const user = d.user;
     const subscription = d.subscription || null;
     const hasActiveSubscription = !!(d.hasActiveSubscription ?? d.has_active_subscription);

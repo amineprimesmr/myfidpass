@@ -60,7 +60,8 @@
     margin-left: 0;
     padding: 0;
     padding-top: 60px;
-    padding-bottom: 92px;
+    /* Tab bar + marge pour la capsule essai (fixée au-dessus de la barre) */
+    padding-bottom: calc(92px + 56px + env(safe-area-inset-bottom, 0px));
     min-height: 100vh;
     background: var(--app-bg);
   }
@@ -129,6 +130,73 @@
   }
 
   /* ── Bottom tab bar ── */
+  /* Bandeau essai 24 h — capsule noire au-dessus de la tab bar */
+  .app-mobile-trial-subscribe-pill {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 4px);
+    z-index: 99;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 48px;
+    padding: 10px 10px 10px 16px;
+    border: none;
+    border-radius: 999px;
+    background: #0a0a0a;
+    color: #fff;
+    font-size: 0.94rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .app-mobile-trial-subscribe-pill:active {
+    transform: scale(0.985);
+    opacity: 0.92;
+  }
+
+  .app-mobile-trial-subscribe-pill:focus-visible {
+    outline: 2px solid var(--app-primary);
+    outline-offset: 3px;
+  }
+
+  .app-mobile-trial-subscribe-pill__cta {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .app-mobile-trial-subscribe-pill__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 0.81rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    white-space: nowrap;
+  }
+
+  .app-mobile-trial-subscribe-pill__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    flex-shrink: 0;
+  }
+
   .app-mobile-tab-bar {
     position: fixed;
     bottom: 0;
@@ -809,13 +877,15 @@
 /* ── Hide mobile-only elements on desktop ── */
 .app-mobile-header,
 .app-mobile-tab-bar,
+.app-mobile-trial-subscribe-pill,
 .app-mobile-only {
   display: none !important;
 }
 
 @media (max-width: 768px) {
   .app-mobile-header,
-  .app-mobile-tab-bar {
+  .app-mobile-tab-bar,
+  .app-mobile-trial-subscribe-pill:not(.hidden) {
     display: flex !important;
   }
 
@@ -844,6 +914,7 @@
 @media (min-width: 769px) {
   .app-mobile-header,
   .app-mobile-tab-bar,
+  .app-mobile-trial-subscribe-pill,
   .app-mobile-dashboard-hero,
   .app-mobile-message-bar-wrap,
   .app-mobile-only {
