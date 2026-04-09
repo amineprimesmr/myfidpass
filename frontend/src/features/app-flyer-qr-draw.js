@@ -3,6 +3,7 @@
  */
 import {
   FLYER_EXPORT,
+  FLYER_GIFT_OVERLAY_LAYOUT,
   FLYER_LAYOUT,
   FLYER_WHEEL_RADIUS_FRAC,
   footerStepsForegroundResolved,
@@ -36,6 +37,9 @@ const FLYER_STEP_ICON_SRCS = [
 /** Roue décorative : `rouegpt.png` en priorité, puis `roue.png` (même logique que l’IA serveur). */
 const FLYER_ROUE_SRC_CANDIDATES = ["/assets/rouegpt.png", "/assets/roue.png"];
 
+/** Illustration cadeau au-dessus de la roue, derrière titre + pastille CTA + QR (`public/assets/flyergift.png`). */
+const FLYER_GIFT_SRC_CANDIDATES = ["/assets/flyergift.png", "/assets/flyergift.jpg", "/assets/flyergift.webp"];
+
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;
 
@@ -44,6 +48,9 @@ let flyerStepIconsCache = null;
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerRoueCache = null;
+
+/** @type {HTMLImageElement | "fail" | null} */
+let flyerGiftCache = null;
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
 function roundRect(ctx, x, y, w, h, r) {
@@ -631,6 +638,43 @@ async function getFlyerRoueImage() {
   return null;
 }
 
+/** Décoration cadeau (optionnelle) — échec silencieux si aucun fichier dans `public/assets/`. */
+async function getFlyerGiftOverlayImage() {
+  if (flyerGiftCache === "fail") return null;
+  if (flyerGiftCache) return flyerGiftCache;
+  for (const src of FLYER_GIFT_SRC_CANDIDATES) {
+    try {
+      flyerGiftCache = await loadImage(src, false);
+      return flyerGiftCache;
+    } catch {
+      /* essai suivant */
+    }
+  }
+  flyerGiftCache = "fail";
+  return null;
+}
+
+/**
+ * Image « cadeau » entre la roue et le bloc QR : au-dessus de la roue, derrière l’accroche, la pastille et le QR.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} w
+ * @param {number} h
+ * @param {CanvasImageSource} giftImg
+ */
+function drawFlyerGiftOverlay(ctx, w, h, giftImg) {
+  if (!giftImg) return;
+  const L = FLYER_GIFT_OVERLAY_LAYOUT;
+  const boxW = w * L.maxWFrac;
+  const boxH = h * L.maxHFrac;
+  const cx = w * 0.5;
+  const cy = h * L.centerYFrac;
+  const x = cx - boxW / 2;
+  const y = cy - boxH / 2;
+  ctx.save();
+  drawImageContain(ctx, giftImg, x, y, boxW, boxH);
+  ctx.restore();
+}
+
 /** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} canvasH @param {number} bottomY bord bas du bandeau étapes. @param {HTMLImageElement} img */
 function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   const iw = img.naturalWidth || img.width;
@@ -840,8 +884,11 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
 
-  const qrImg = await loadQrAsImage(qrTargetUrl, qrFetchPx);
-  const roueImg = FLYER_MANUAL_CANVAS_WHEEL_ENABLED ? await getFlyerRoueImage() : null;
+  const [qrImg, roueImg, giftImg] = await Promise.all([
+    loadQrAsImage(qrTargetUrl, qrFetchPx),
+    FLYER_MANUAL_CANVAS_WHEEL_ENABLED ? getFlyerRoueImage() : Promise.resolve(null),
+    getFlyerGiftOverlayImage(),
+  ]);
 
   /** @type {CanvasImageSource | null} */
   let logoImg = null;
@@ -910,6 +957,9 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   }
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
+  }
+  if (giftImg) {
+    drawFlyerGiftOverlay(ctx, w, h, giftImg);
   }
   drawFlyerHeroHeadline(ctx, s, w, h, scale, hasCommerceLogo);
   const qx = w * 0.472;

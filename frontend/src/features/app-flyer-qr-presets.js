@@ -77,6 +77,16 @@ export const FLYER_LAYOUT = Object.freeze({
   footerBannerMaxHeightFrac: 0.132,
 });
 
+/**
+ * Illustration cadeau (`/assets/flyergift.png`) : au-dessus de la roue, derrière l’accroche, la pastille « scanner » et le QR.
+ * Centre vertical entre le centre de la roue et le haut du QR.
+ */
+export const FLYER_GIFT_OVERLAY_LAYOUT = Object.freeze({
+  centerYFrac: (FLYER_LAYOUT.wheelCenterYFrac + FLYER_LAYOUT.qrTopYFrac) / 2,
+  maxWFrac: 0.78,
+  maxHFrac: 0.2,
+});
+
 /** Identifiant unique du gabarit flyer (ancien localStorage avec d’autres ids → normalisé au merge). */
 export const FLYER_TEMPLATE_ID = "noir-or-roue";
 
