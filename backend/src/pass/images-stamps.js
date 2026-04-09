@@ -168,6 +168,21 @@ async function createEmptyStampFromIcon(iconBuf) {
     .toBuffer();
 }
 
+function rewardIconKeyForIndex(index, stampMax) {
+  if (stampMax >= 10 && index === 9) return "giftgold";
+  if (stampMax >= 5 && index === 4) return "giftsilver";
+  return null;
+}
+
+async function createEmptyRewardStampBuffer(iconBuf, stripColorHex, sharp) {
+  const square = await createDarkSquareStampBuffer(stripColorHex, sharp);
+  const fadedIcon = await createStampIconOnlyPng(iconBuf, 0.58);
+  return sharp(square)
+    .composite([{ input: fadedIcon, left: 0, top: 0 }])
+    .png()
+    .toBuffer();
+}
+
 /**
  * Grille de tampons sur le strip. customIconBase64 = image perso pour l'icône.
  */
@@ -185,6 +200,16 @@ export async function drawStampsOnStrip(
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
   const row0Y = STAMP_TOP + STAMP_R;
   const row1Y = row0Y + STAMP_SIZE + STAMP_GAP;
+  const totalStamps = Math.min(Math.max(0, Number(stampMax) || 0), 10);
+  const rewardIconByIndex = new Map();
+  if (totalStamps >= 5) {
+    const giftSilver = await fetchStampIconPng("giftsilver");
+    if (giftSilver) rewardIconByIndex.set(4, giftSilver);
+  }
+  if (totalStamps >= 10) {
+    const giftGold = await fetchStampIconPng("giftgold");
+    if (giftGold) rewardIconByIndex.set(9, giftGold);
+  }
 
   let iconBuf = null;
   if (customIconBase64 && String(customIconBase64).trim()) {
@@ -215,7 +240,7 @@ export async function drawStampsOnStrip(
 
   let emptyStampBuf = null;
   const composites = [];
-  for (let i = 0; i < Math.min(stampMax, 10); i++) {
+  for (let i = 0; i < totalStamps; i++) {
     const col = i % cols;
     const row = Math.floor(i / cols);
     const cx = Math.round(startX + col * (STAMP_SIZE + STAMP_GAP));
@@ -225,11 +250,18 @@ export async function drawStampsOnStrip(
     const filled = i < filledCount;
     let stampBuf;
     try {
+      const forcedRewardIcon = rewardIconByIndex.get(i) || null;
+      const effectiveIcon = forcedRewardIcon || iconBuf;
       if (filled) {
-        stampBuf = await createStampIconOnlyPng(iconBuf, 1);
+        stampBuf = await createStampIconOnlyPng(effectiveIcon, 1);
       } else {
-        if (emptyStampBuf === null) emptyStampBuf = await createDarkSquareStampBuffer(stripColorHex, sharp);
-        stampBuf = emptyStampBuf;
+        const rewardKey = rewardIconKeyForIndex(i, totalStamps);
+        if (rewardKey && forcedRewardIcon) {
+          stampBuf = await createEmptyRewardStampBuffer(forcedRewardIcon, stripColorHex, sharp);
+        } else {
+          if (emptyStampBuf === null) emptyStampBuf = await createDarkSquareStampBuffer(stripColorHex, sharp);
+          stampBuf = emptyStampBuf;
+        }
       }
       if (stampBuf) composites.push({ input: stampBuf, left, top });
     } catch (e) {
