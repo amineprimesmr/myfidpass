@@ -883,4 +883,16 @@ export function runMigrations(db) {
     CREATE INDEX IF NOT EXISTS idx_admin_events_stripe ON admin_events(stripe_event_id);
   `),
   );
+
+  // ── v17 : drapeaux runtime (bootstrap mot de passe admin, etc.) ─
+  markMigrationApplied(db, 17, "app_runtime_flags");
+  safeRun(db, () =>
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS app_runtime_flags (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `),
+  );
 }

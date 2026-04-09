@@ -8,20 +8,41 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import logger from "./lib/logger.js";
+import {
+  DATA_DIR_PATH,
+  DB_FILE_PATH,
+  getPassRegistrationsTotalCount,
+  syncAdminEmailsFromEnv,
+  applyAdminInitialPasswordFromEnv,
+} from "./db.js";
 
-/** Promotion admin : `ADMIN_EMAILS` (emails séparés par des virgules) — doit être exécuté après chargement DB. */
+/** Admin : `ADMIN_EMAILS`, optionnellement `ADMIN_INITIAL_PASSWORD` (une fois au boot). */
 function logAdminBootstrap() {
   try {
     const r = syncAdminEmailsFromEnv();
     if (r.applied > 0 || r.skipped > 0) {
       logger.info({ adminEmailsSync: r }, "[admin] synchronisation ADMIN_EMAILS");
     }
+    const p = applyAdminInitialPasswordFromEnv();
+    if (p.applied > 0) {
+      logger.warn(
+        { comptesMisAJour: p.applied, emailsSansCompte: p.skipped },
+        "[admin] Mot de passe initial appliqué (ADMIN_INITIAL_PASSWORD). Supprimez ADMIN_INITIAL_PASSWORD sur Railway tout de suite.",
+      );
+    } else if (p.skippedAlreadyDone && (process.env.ADMIN_INITIAL_PASSWORD || "").trim()) {
+      logger.warn(
+        "[admin] ADMIN_INITIAL_PASSWORD est encore défini alors que le bootstrap a déjà été fait. Supprimez-la (ou ADMIN_INITIAL_PASSWORD_FORCE=true pour forcer).",
+      );
+    } else if ((process.env.ADMIN_INITIAL_PASSWORD || "").trim() && p.skipped > 0 && p.applied === 0) {
+      logger.warn(
+        { emailsSansCompteEnBase: p.skipped },
+        "[admin] ADMIN_INITIAL_PASSWORD non appliqué : inscrivez-vous d'abord avec l'email ADMIN_EMAILS, puis redémarrez le service.",
+      );
+    }
   } catch (e) {
-    logger.error({ err: e }, "[admin] sync ADMIN_EMAILS échoué");
+    logger.error({ err: e }, "[admin] bootstrap admin échoué");
   }
 }
-
-import { DATA_DIR_PATH, DB_FILE_PATH, getPassRegistrationsTotalCount, syncAdminEmailsFromEnv } from "./db.js";
 
 import { optionalAuth } from "./middleware/auth.js";
 import membersRouter from "./routes/members.js";
@@ -109,6 +130,11 @@ if (isProduction) {
   if (process.env.RESET_SECRET) {
     console.warn(
       "[startup] ATTENTION: RESET_SECRET est défini — quiconque connaît ce secret peut vider la base via POST /api/dev/reset. Retirez la variable dans Railway dès que vous n’en avez plus besoin."
+    );
+  }
+  if ((process.env.ADMIN_INITIAL_PASSWORD || "").trim()) {
+    console.warn(
+      "[startup] ADMIN_INITIAL_PASSWORD est défini — retirez-la sur Railway dès que la connexion admin fonctionne (évite de laisser un mot de passe dans les variables).",
     );
   }
 }
