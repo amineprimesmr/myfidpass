@@ -259,7 +259,8 @@ export async function processFlyerGenerationJob(jobId) {
 
     const t0 = Date.now();
     const [flyerOutcome, bgOutcome] = await Promise.allSettled([
-      openaiGenerateFlyerImage(apiKey, prompt, mmFlyer),
+      // Flyer IA: on génère uniquement le calque décor/commerce (PNG transparent), le fond couleur est piloté dans l’app.
+      openaiGenerateFlyerImage(apiKey, prompt, mmFlyer, { transparentBackground: true }),
       openaiGenerateFlyerImage(apiKey, promptBg, mmBg),
     ]);
     const elapsedMs = Date.now() - t0;
@@ -272,7 +273,6 @@ export async function processFlyerGenerationJob(jobId) {
       throw flyerOutcome.reason;
     }
     const { b64, revised } = flyerOutcome.value;
-    const b64Normalized = await normalizeFlyerBackgroundLook(b64);
 
     const colorPlan = resolveFlyerColorPlan(parsed.value);
     // Re-lire le commerce après OpenAI (30–90 s) : un PUT « Valider le flyer », un logo, etc. peut avoir
@@ -312,7 +312,7 @@ export async function processFlyerGenerationJob(jobId) {
 
     if (unlimited || devBypass) {
       markJobDone(jobId, {
-        image_base64: b64Normalized,
+        image_base64: b64,
         revised_prompt: revised ?? null,
         fidelity_page_background_saved,
         fidelity_page_background_error,
@@ -326,7 +326,7 @@ export async function processFlyerGenerationJob(jobId) {
     const nextUsed = used + 1;
     updateBusiness(business.id, { flyer_ai_generations_used: nextUsed });
     markJobDone(jobId, {
-      image_base64: b64Normalized,
+      image_base64: b64,
       revised_prompt: revised ?? null,
       fidelity_page_background_saved,
       fidelity_page_background_error,

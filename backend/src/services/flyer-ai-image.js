@@ -644,7 +644,8 @@ export function buildFidelityClientPageBackgroundPrompt(
 }
 
 /** @returns {{ model: string, body: Record<string, unknown> }} */
-function flyerImageRequestPayload(prompt) {
+function flyerImageRequestPayload(prompt, options = {}) {
+  const transparentBackground = options.transparentBackground === true;
   const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;
   const envModel = process.env.FLYER_AI_IMAGE_MODEL;
   const modelRaw = (envModel && String(envModel).trim()) || FLYER_AI_MODEL_BEST;
@@ -661,7 +662,7 @@ function flyerImageRequestPayload(prompt) {
         n: 1,
         size: "1024x1536",
         quality: "high",
-        background: "opaque",
+        background: transparentBackground ? "transparent" : "opaque",
         output_format: "png",
       },
     };
@@ -691,7 +692,7 @@ function flyerImageRequestPayload(prompt) {
       n: 1,
       size: "1024x1536",
       quality: "high",
-      background: "opaque",
+      background: transparentBackground ? "transparent" : "opaque",
       output_format: "png",
     },
   };
@@ -720,8 +721,9 @@ function resolveModelForFlyer(needsEdits) {
  * @param {boolean} hasTemplateWheel
  * @returns {Promise<{ b64: string, revised?: string }>}
  */
-async function openaiImageEdits(apiKey, prompt, images, hasLogo, hasTemplateWheel) {
+async function openaiImageEdits(apiKey, prompt, images, hasLogo, hasTemplateWheel, options = {}) {
   const clipped = prompt.length > 8000 ? prompt.slice(0, 8000) : prompt;
+  const transparentBackground = options.transparentBackground === true;
   const model = resolveModelForFlyer(true);
   const highFidelity = Boolean(hasLogo || hasTemplateWheel);
   const body = {
@@ -731,7 +733,7 @@ async function openaiImageEdits(apiKey, prompt, images, hasLogo, hasTemplateWhee
     n: 1,
     size: "1024x1536",
     quality: "high",
-    background: "opaque",
+    background: transparentBackground ? "transparent" : "opaque",
     output_format: "png",
     input_fidelity: highFidelity ? "high" : "low",
   };
@@ -770,8 +772,8 @@ async function openaiImageEdits(apiKey, prompt, images, hasLogo, hasTemplateWhee
  * @param {string} prompt
  * @returns {Promise<{ b64: string, revised?: string }>}
  */
-async function openaiImageGenerations(apiKey, prompt) {
-  const { body } = flyerImageRequestPayload(prompt);
+async function openaiImageGenerations(apiKey, prompt, options = {}) {
+  const { body } = flyerImageRequestPayload(prompt, options);
   const res = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: {
@@ -807,14 +809,14 @@ async function openaiImageGenerations(apiKey, prompt) {
  * @param {{ images: Array<{ image_url: string }>, hasLogo: boolean }} [multimodal]
  * @returns {Promise<{ b64: string, revised?: string }>}
  */
-export async function openaiGenerateFlyerImage(apiKey, prompt, multimodal) {
+export async function openaiGenerateFlyerImage(apiKey, prompt, multimodal, options = {}) {
   const images = multimodal?.images?.length ? [...multimodal.images] : [];
   const hasLogo = Boolean(multimodal?.hasLogo);
   const hasTemplateWheel = Boolean(multimodal?.hasTemplateWheel);
   if (images.length === 0) {
-    return openaiImageGenerations(apiKey, prompt);
+    return openaiImageGenerations(apiKey, prompt, options);
   }
-  return openaiImageEdits(apiKey, prompt, images, hasLogo, hasTemplateWheel);
+  return openaiImageEdits(apiKey, prompt, images, hasLogo, hasTemplateWheel, options);
 }
 
 export { VISUAL_MOODS };

@@ -89,17 +89,14 @@ function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
  * @param {CanvasImageSource | null} bgImg
  */
 export function drawFlyerBackgroundLayer(ctx, w, h, s, bgImg) {
-  if (!bgImg) {
-    const skip =
-      typeof window !== "undefined" &&
-      window.__FIDPASS_SKIP_CANVAS_BG_FILL === true;
-    if (skip) {
-      /** Fond affiché sous la WKWebView (UIImage natif) — pas de dégradé par défaut. */
-      return;
-    }
+  const skip =
+    typeof window !== "undefined" &&
+    window.__FIDPASS_SKIP_CANVAS_BG_FILL === true;
+  if (!skip) {
+    // Le fond couleur est toujours piloté par l'état flyer; l'image IA (si présente) est un calque décoratif.
     fillGradientVOpaque(ctx, w, h, s.colorBgTop, s.colorBgBottom);
-    return;
   }
+  if (!bgImg) return;
   drawImageCover(ctx, bgImg, 0, 0, w, h);
   const raw = Number(s.flyerBgOverlayPct);
   const pct = Number.isFinite(raw) ? Math.max(0, Math.min(90, Math.round(raw))) : 0;
