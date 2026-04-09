@@ -259,8 +259,8 @@ export async function processFlyerGenerationJob(jobId) {
 
     const t0 = Date.now();
     const [flyerOutcome, bgOutcome] = await Promise.allSettled([
-      // Flyer IA: on génère uniquement le calque décor/commerce (PNG transparent), le fond couleur est piloté dans l’app.
-      openaiGenerateFlyerImage(apiKey, prompt, mmFlyer, { transparentBackground: true }),
+      // Rendu robuste: génération flyer complète (opaque) pour garantir des éléments visibles.
+      openaiGenerateFlyerImage(apiKey, prompt, mmFlyer),
       openaiGenerateFlyerImage(apiKey, promptBg, mmBg),
     ]);
     const elapsedMs = Date.now() - t0;
