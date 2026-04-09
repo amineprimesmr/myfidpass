@@ -9,7 +9,19 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import logger from "./lib/logger.js";
 
-import { DATA_DIR_PATH, DB_FILE_PATH, getPassRegistrationsTotalCount } from "./db.js";
+/** Promotion admin : `ADMIN_EMAILS` (emails séparés par des virgules) — doit être exécuté après chargement DB. */
+function logAdminBootstrap() {
+  try {
+    const r = syncAdminEmailsFromEnv();
+    if (r.applied > 0 || r.skipped > 0) {
+      logger.info({ adminEmailsSync: r }, "[admin] synchronisation ADMIN_EMAILS");
+    }
+  } catch (e) {
+    logger.error({ err: e }, "[admin] sync ADMIN_EMAILS échoué");
+  }
+}
+
+import { DATA_DIR_PATH, DB_FILE_PATH, getPassRegistrationsTotalCount, syncAdminEmailsFromEnv } from "./db.js";
 
 import { optionalAuth } from "./middleware/auth.js";
 import membersRouter from "./routes/members.js";
@@ -22,6 +34,7 @@ import findPlaceRouter from "./routes/find-place.js";
 import placeEnrichmentRouter from "./routes/place-enrichment.js";
 import placesRouter from "./routes/places.js";
 import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
+import adminRouter from "./routes/admin.js";
 import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
 import webPushRouter from "./routes/web-push.js";
@@ -67,6 +80,7 @@ async function handlePassDemo(req, res) {
 }
 
 dotenv.config({ path: join(__dirname, "..", ".env") });
+logAdminBootstrap();
 
 const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
@@ -242,6 +256,7 @@ app.use("/api/device", deviceRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/admin", adminRouter);
 app.use("/api/web-push", webPushRouter);
 app.use("/api/dev", devRouter);
 app.use("/api/place-photo", placePhotoRouter);

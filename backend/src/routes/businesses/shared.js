@@ -3,6 +3,7 @@
  * Référence : REFONTE-REGLES.md — routes < 15 par fichier.
  */
 import { getBusinessBySlug, getBusinessByDashboardToken, hasOperationalMerchantAccess } from "../../db.js";
+import { isUserAdmin } from "../../db/users.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 
 export function getApiBase(req) {
@@ -58,9 +59,12 @@ export function checkDashboardIdentity(business, req) {
     if (byToken && byToken.id === business.id) allowed = true;
   }
   if (!allowed && req.user) {
-    const uid = req.user.id != null ? String(req.user.id).trim() : "";
-    const bid = business.user_id != null ? String(business.user_id).trim() : "";
-    if (uid !== "" && bid !== "" && uid === bid) allowed = true;
+    if (isUserAdmin(req.user)) allowed = true;
+    else {
+      const uid = req.user.id != null ? String(req.user.id).trim() : "";
+      const bid = business.user_id != null ? String(business.user_id).trim() : "";
+      if (uid !== "" && bid !== "" && uid === bid) allowed = true;
+    }
   }
   if (!allowed) return "no_access";
   return "ok";
@@ -92,6 +96,7 @@ export function ensureDashboardAccess(req, res, business) {
  * À utiliser seul si l’identité dashboard est déjà garantie.
  */
 export function assertOperationalSubscription(req, res, business) {
+  if (req.user && isUserAdmin(req.user)) return true;
   const ownerId = business.user_id != null ? String(business.user_id).trim() : "";
   if (!ownerId) {
     res.status(403).json(SUBSCRIPTION_REQUIRED_BODY);

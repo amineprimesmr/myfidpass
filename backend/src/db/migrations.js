@@ -863,4 +863,24 @@ export function runMigrations(db) {
         ON flyer_generation_jobs(status, created_at);
     `),
   );
+
+  // ── v16 : comptes administrateur plateforme + journal événements (paiements, etc.) ─
+  markMigrationApplied(db, 16, "platform_admin_users_and_events");
+  const userColsAdmin = db.prepare("PRAGMA table_info(users)").all().map((c) => c.name);
+  if (!userColsAdmin.includes("is_admin")) {
+    safeRun(db, () => db.exec("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0"));
+  }
+  safeRun(db, () =>
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS admin_events (
+      id TEXT PRIMARY KEY,
+      event_type TEXT NOT NULL,
+      payload_json TEXT NOT NULL,
+      stripe_event_id TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_admin_events_created ON admin_events(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_admin_events_stripe ON admin_events(stripe_event_id);
+  `),
+  );
 }

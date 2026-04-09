@@ -17,6 +17,7 @@ import {
   deletePasswordResetToken,
   updateUserPassword,
   deleteUserAccount,
+  isUserAdmin,
   createBusiness,
   updateBusiness,
   getBusinessBySlug,
@@ -84,6 +85,16 @@ function authSubscriptionPayload(userId) {
     subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
     has_active_subscription: hasOperationalMerchantAccess(userId),
     merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(userId),
+  };
+}
+
+function authUserPayload(user) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    is_admin: isUserAdmin(user),
   };
 }
 
@@ -241,7 +252,7 @@ router.post("/register", validate(schemas.register), async (req, res) => {
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
     res.status(201).json({
-      user: { id: user.id, email: user.email, name: user.name },
+      user: authUserPayload(user),
       token: accessToken,
       refreshToken,
       businesses,
@@ -271,7 +282,7 @@ router.post("/login", validate(schemas.login), async (req, res) => {
   const { accessToken, refreshToken } = issueTokenPair(user.id);
   const businesses = getBusinessesByUserId(user.id);
   res.json({
-    user: { id: user.id, email: user.email, name: user.name },
+    user: authUserPayload(user),
     token: accessToken,
     refreshToken,
     businesses,
@@ -331,7 +342,7 @@ router.post("/google", async (req, res) => {
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
     return res.json({
-      user: { id: user.id, email: user.email, name: user.name },
+      user: authUserPayload(user),
       token: accessToken,
       refreshToken,
       businesses,
@@ -482,7 +493,7 @@ router.post("/apple", async (req, res) => {
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     const businesses = getBusinessesByUserId(user.id);
     return res.json({
-      user: { id: user.id, email: user.email, name: user.name },
+      user: authUserPayload(user),
       token: accessToken,
       refreshToken,
       businesses,
@@ -548,7 +559,7 @@ router.post("/apple-redirect", async (req, res) => {
     appleOneTimeCodes.set(code, {
       token: accessToken,
       refreshToken,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: authUserPayload(user),
       businesses,
       expiry: Date.now() + APPLE_CODE_TTL_MS,
     });
@@ -669,7 +680,7 @@ router.get("/me", (req, res, next) => {
     const subscription = getSubscriptionByUserId(req.user.id);
     const paying = hasActiveSubscription(req.user.id);
     res.json({
-      user: { id: req.user.id, email: req.user.email, name: req.user.name },
+      user: authUserPayload(req.user),
       businesses,
       subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
       has_active_subscription: hasOperationalMerchantAccess(req.user.id),
@@ -735,7 +746,7 @@ router.post("/refresh", (req, res) => {
   return res.json({
     token: accessToken,
     refreshToken: newRefreshToken,
-    user: { id: user.id, email: user.email, name: user.name },
+    user: authUserPayload(user),
     ...authSubscriptionPayload(user.id),
   });
 });

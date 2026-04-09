@@ -35,6 +35,40 @@ export function getBusinessById(id) {
 }
 
 /**
+ * Liste tous les commerces (admin plateforme) avec email propriétaire.
+ * @param {{ limit?: number, offset?: number, q?: string }} p
+ */
+export function listAllBusinessesForAdmin(p = {}) {
+  const limit = Math.min(Math.max(1, Number(p.limit) || 100), 500);
+  const offset = Math.max(0, Number(p.offset) || 0);
+  const q = String(p.q ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/%/g, "");
+  if (q) {
+    const like = `%${q}%`;
+    return db
+      .prepare(
+        `SELECT b.id, b.slug, b.name, b.organization_name, b.user_id, b.created_at, u.email AS owner_email
+         FROM businesses b
+         LEFT JOIN users u ON u.id = b.user_id
+         WHERE lower(b.slug) LIKE ? OR lower(b.name) LIKE ? OR lower(b.organization_name) LIKE ?
+            OR lower(COALESCE(u.email,'')) LIKE ?
+         ORDER BY datetime(b.created_at) DESC LIMIT ? OFFSET ?`,
+      )
+      .all(like, like, like, like, limit, offset);
+  }
+  return db
+    .prepare(
+      `SELECT b.id, b.slug, b.name, b.organization_name, b.user_id, b.created_at, u.email AS owner_email
+       FROM businesses b
+       LEFT JOIN users u ON u.id = b.user_id
+       ORDER BY datetime(b.created_at) DESC LIMIT ? OFFSET ?`,
+    )
+    .all(limit, offset);
+}
+
+/**
  * Programme fidélité effectif (points vs tampons), aligné sur la logique du dashboard.
  * Gère les alias (tampons), les chaînes vides / bizarres et le repli sur required_stamps > 0.
  */

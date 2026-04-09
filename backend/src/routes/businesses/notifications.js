@@ -29,6 +29,7 @@ import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason, isLikelyInvalidDeviceTokenApnsError } from "../../apns.js";
 import { getPassAuthenticationToken } from "../../pass.js";
 import { assertOperationalSubscription, ensureDashboardAccess, getApiBase } from "./shared.js";
+import { isUserAdmin } from "../../db/users.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
 import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
@@ -97,7 +98,7 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
         "Connectez-vous avec le compte commerçant (e-mail / mot de passe) dans l’app pour utiliser le mode test. Le lien avec jeton seul ne suffit pas.",
     });
   }
-  if (business.user_id !== req.user.id) {
+  if (business.user_id !== req.user.id && !isUserAdmin(req.user)) {
     return res.status(403).json({ error: "Seul le propriétaire du commerce peut utiliser ce mode test." });
   }
 

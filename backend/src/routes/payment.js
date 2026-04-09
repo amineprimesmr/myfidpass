@@ -13,6 +13,7 @@ import {
 } from "../db.js";
 import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/stripe-webhook-events.js";
 import { requireAuth } from "../middleware/auth.js";
+import { notifyAdminsPlatformEvent } from "../lib/admin-notify.js";
 
 const router = Router();
 const stripe =
@@ -301,7 +302,7 @@ export async function paymentWebhookHandler(req, res) {
 
   try {
     if (event.type === "checkout.session.completed") {
-      await handleCheckoutSessionCompleted(event.data.object);
+      await handleCheckoutSessionCompleted(event.data.object, event.id);
     } else if (event.type === "customer.subscription.created") {
       await syncSubscriptionFromStripeObject(event.data.object, null);
     } else if (event.type === "customer.subscription.updated") {
@@ -392,8 +393,11 @@ function resolveUserIdForSubscriptionCheckout(session) {
   return user?.id ? String(user.id) : null;
 }
 
-/** @param {Record<string, unknown>} session */
-async function handleCheckoutSessionCompleted(session) {
+/**
+ * @param {Record<string, unknown>} session
+ * @param {string} [stripeEventId]
+ */
+async function handleCheckoutSessionCompleted(session, stripeEventId) {
   const mode = session.mode;
   if (mode === "subscription") {
     const stripeSubscriptionId = extractCheckoutSubscriptionId(session);
@@ -418,6 +422,19 @@ async function handleCheckoutSessionCompleted(session) {
     }
     const sub = await stripe.subscriptions.retrieve(String(stripeSubscriptionId));
     await syncSubscriptionFromStripeObject(sub, userId);
+    try {
+      const u = getUserByEmail(payerEmailFromCheckoutSession(session) || "");
+      const emailLabel = u?.email || payerEmailFromCheckoutSession(session) || userId;
+      await notifyAdminsPlatformEvent({
+        eventType: "stripe_subscription_checkout_paid",
+        stripeEventId: stripeEventId || null,
+        userId,
+        description: `Nouvel abonnement (ou renouvellement checkout) — ${emailLabel}`,
+        extra: { stripe_subscription_id: stripeSubscriptionId },
+      });
+    } catch (e) {
+      console.error("[payment] admin notify subscription:", e?.message || e);
+    }
     return;
   }
 
@@ -446,6 +463,21 @@ async function handleCheckoutSessionCompleted(session) {
       generations = FLYER_PACK_GENERATIONS;
     }
     incrementFlyerAiGenerationsBonus(businessId, generations);
+    try {
+      const owner = b.user_id ? String(b.user_id) : null;
+      await notifyAdminsPlatformEvent({
+        eventType: "stripe_flyer_pack_paid",
+        stripeEventId: stripeEventId || null,
+        userId: owner,
+        businessId: String(businessId),
+        amountEur: session.amount_total != null ? Number(session.amount_total) / 100 : null,
+        currency: session.currency || "eur",
+        description: `Achat pack créations flyer — ${b.organization_name || b.name} (${b.slug})`,
+        extra: { generations, session_id: session.id },
+      });
+    } catch (e) {
+      console.error("[payment] admin notify flyer pack:", e?.message || e);
+    }
   }
 }
 

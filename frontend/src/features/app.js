@@ -240,6 +240,29 @@ function initAppPage() {
 
   resetAllBtn?.addEventListener("click", () => runDevDataReset());
 
+  /** Bandeau + stats pour les comptes `is_admin` (pilotage tous les commerces). */
+  function mountPlatformAdminStrip(user) {
+    if (!user?.is_admin && !user?.isAdmin) return;
+    const root = document.getElementById("app-app");
+    if (!root || document.getElementById("app-platform-admin-strip")) return;
+    const bar = document.createElement("div");
+    bar.id = "app-platform-admin-strip";
+    bar.className = "app-platform-admin-strip";
+    bar.setAttribute("role", "status");
+    bar.innerHTML =
+      "<strong>Admin plateforme</strong> — Accès à tous les commerces : utilisez les routes du tableau de bord avec le <em>slug</em> du commerce (ou <code>GET /api/admin/businesses</code> pour la liste).";
+    root.insertBefore(bar, root.firstChild);
+    fetch(`${API_BASE}/api/admin/overview`, { headers: getAuthHeaders() })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!j || !bar.isConnected) return;
+        const span = document.createElement("span");
+        span.textContent = ` — ${j.users_count ?? "?"} comptes, ${j.businesses_count ?? "?"} commerces.`;
+        bar.appendChild(span);
+      })
+      .catch(() => {});
+  }
+
   async function fetchAuthMe(retries = 3) {
     let lastStatus = null;
     let networkFail = false;
@@ -338,14 +361,15 @@ function initAppPage() {
         showLoadError({ technical: "Réponse /api/auth/me : corps vide ou non objet.", kind: "parse" });
         return;
       }
+      const user = data.user;
+      const isPlatformAdmin = !!(user?.is_admin ?? user?.isAdmin);
       const hasSubscription =
         !!(data.has_active_subscription ?? data.hasActiveSubscription) || isDevBypassPayment();
-      if (!hasSubscription) {
+      if (!hasSubscription && !isPlatformAdmin) {
         loadingEl?.classList.add("hidden");
         window.location.replace("/choisir-offre");
         return;
       }
-      const user = data.user;
       const businesses = data.businesses || [];
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
       const mobileProfilEmail = document.getElementById("app-mobile-profil-email");
@@ -365,6 +389,7 @@ function initAppPage() {
         if (contentEl) contentEl.classList.add("hidden");
         if (businessNameEl) businessNameEl.textContent = "Mon espace";
         initAppSidebar();
+        mountPlatformAdminStrip(user);
         window.dispatchEvent(
           new CustomEvent("fidpass-auth-me", {
             detail: {
@@ -395,6 +420,7 @@ function initAppPage() {
       const business = businesses[0];
       if (businessNameEl) businessNameEl.textContent = business.organization_name || business.name || business.slug;
       initAppSidebar();
+      mountPlatformAdminStrip(user);
       initAppDashboard(business.slug);
       maybeLaunchFlyerCreditsCheckout(business);
       window.dispatchEvent(

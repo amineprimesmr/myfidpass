@@ -48,3 +48,62 @@ export function deletePasswordResetToken(token) {
   if (!token) return;
   db.prepare("DELETE FROM password_reset_tokens WHERE token = ?").run(token);
 }
+
+/** Compte administrateur plateforme (support / pilotage tous les commerces). */
+export function isUserAdmin(user) {
+  if (!user) return false;
+  const v = user.is_admin;
+  return v === 1 || v === true || v === "1";
+}
+
+/**
+ * Synchronise le flag admin depuis `ADMIN_EMAILS` (emails séparés par des virgules).
+ * N’enlève jamais le statut admin (retrait manuel en base uniquement).
+ * @returns {{ applied: number, skipped: number }}
+ */
+export function syncAdminEmailsFromEnv() {
+  const raw = (process.env.ADMIN_EMAILS || "").trim();
+  if (!raw) return { applied: 0, skipped: 0 };
+  const emails = [...new Set(raw.split(",").map((e) => String(e).trim().toLowerCase()).filter(Boolean))];
+  let applied = 0;
+  let skipped = 0;
+  for (const email of emails) {
+    const u = getUserByEmail(email);
+    if (!u) {
+      skipped++;
+      continue;
+    }
+    if (isUserAdmin(u)) continue;
+    db.prepare("UPDATE users SET is_admin = 1 WHERE id = ?").run(u.id);
+    applied++;
+  }
+  return { applied, skipped };
+}
+
+/**
+ * Liste paginée pour le dashboard admin (recherche email / nom).
+ * @param {{ limit?: number, offset?: number, q?: string }} p
+ */
+export function listUsersForAdmin(p = {}) {
+  const limit = Math.min(Math.max(1, Number(p.limit) || 50), 200);
+  const offset = Math.max(0, Number(p.offset) || 0);
+  const q = String(p.q ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/%/g, "");
+  if (q) {
+    const like = `%${q}%`;
+    return db
+      .prepare(
+        `SELECT id, email, name, created_at, is_admin FROM users
+         WHERE lower(email) LIKE ? OR lower(COALESCE(name,'')) LIKE ?
+         ORDER BY datetime(created_at) DESC LIMIT ? OFFSET ?`,
+      )
+      .all(like, like, limit, offset);
+  }
+  return db
+    .prepare(
+      `SELECT id, email, name, created_at, is_admin FROM users ORDER BY datetime(created_at) DESC LIMIT ? OFFSET ?`,
+    )
+    .all(limit, offset);
+}
