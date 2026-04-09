@@ -552,6 +552,8 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
       " Depth from large soft radial or linear gradients and gentle vignette only — NO grain, NO bokeh, NO sparkles. Atmosphere: " +
       plan.atmosphere +
       ". Use at most 3–4 cohesive colors total.",
+    "COLOR INTENSITY GUARDRAIL (mandatory): Prefer SOFT, PASTEL, LOW-CONTRAST palettes. Avoid neon, ultra-saturated magenta/orange/blue, and avoid very dark high-contrast scenes. Keep the overall backdrop bright and print-friendly.",
+    "LUMINANCE TARGET: The global background should feel light (roughly equivalent to a bright mid/high key wallpaper), never moody-dark. If unsure, choose a lighter, less saturated variant.",
     "PRIZE WHEEL — GEOMETRY: Exactly ONE circular wheel, perfect circle (no ellipse), no second wheel. EXACTLY 6 equal wedges (60° each). Six outer rim divisions. One small triangular pointer at 12 o'clock. Outer wheel diameter ≈ 58–62% of image WIDTH (slightly 'dezoomed' vs full width).",
     secondary,
     "WHEEL LABELS (clockwise from the top wedge under the pointer): Wedge1=GAGNÉ; Wedge2=GAGNÉ; Wedge3=GAGNÉ; Wedge4=GAGNÉ; Wedge5=GAGNÉ; Wedge6=PERDU. Bold uppercase French, high contrast, radially readable inside each wedge (~70% of wedge radial length). No other text on the flyer.",
@@ -617,6 +619,7 @@ export function buildFidelityClientPageBackgroundPrompt(
     sectorFidelity,
     "TASK: Generate ONE mobile-first full-bleed BACKGROUND wallpaper only, portrait 2:3 aspect, full bleed to all edges, no outer frame, no white border.",
     "LIGHT & CALM (mandatory): Bright, airy, welcoming — use a SOFT VISIBLE TINT of the brand hue (roughly 6–14% saturation) or a gentle vertical gradient so the wallpaper is NEVER mistaken for plain #FFFFFF HTML white on a phone. NEVER a dark night scene; NEVER heavy black fields; NEVER dramatic low-key lighting.",
+    "COLOR GUARDRAIL: pastel-to-soft tones only; avoid neon-like saturation spikes and avoid over-vivid punchy color blocks.",
     "NOT A FLYER: This image is a silent backdrop. The product will overlay HTML (title, logo image, roulette). Your output must stay empty of UI chrome.",
     "════════════════ ABSOLUTE BANS ═══════════════",
     "NEVER draw any prize wheel, roulette, spinner, pie chart with prizes, radial wedges, dial, fortune wheel, or circular game divided into segments.",

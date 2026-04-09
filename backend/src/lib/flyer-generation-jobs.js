@@ -24,6 +24,11 @@ import { mergeFlyerPrefsWheelColorsFromGeneration } from "../lib/flyer-prefs.js"
 import logger from "../lib/logger.js";
 
 const db = getDb();
+let _sharp = null;
+async function getSharp() {
+  if (!_sharp) _sharp = (await import("sharp")).default;
+  return _sharp;
+}
 
 const MAX_ATTEMPTS = 3;
 const ORPHAN_THRESHOLD_MS = 15 * 60 * 1000;
@@ -117,6 +122,46 @@ function markJobDone(jobId, resultObj) {
   db.prepare(
     `UPDATE flyer_generation_jobs SET status = 'done', completed_at = ?, result_json = ? WHERE id = ?`,
   ).run(new Date().toISOString(), JSON.stringify(resultObj), jobId);
+}
+
+/**
+ * Uniformise les fonds IA (moins sombres, moins agressifs en saturation), sans dépendre uniquement du prompt.
+ * @param {string} b64
+ * @returns {Promise<string>}
+ */
+async function normalizeFlyerBackgroundLook(b64) {
+  try {
+    const sharp = await getSharp();
+    const input = Buffer.from(String(b64 || ""), "base64");
+    if (!input.length) return b64;
+    const base = sharp(input).ensureAlpha();
+    const stats = await base.stats();
+    const r = Number(stats?.channels?.[0]?.mean || 0);
+    const g = Number(stats?.channels?.[1]?.mean || 0);
+    const b = Number(stats?.channels?.[2]?.mean || 0);
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+
+    // Pilotage adaptatif : on remonte les fonds sombres et on calme les teintes trop « pétantes ».
+    const brightness =
+      luma < 130 ? 1.2 :
+      luma < 155 ? 1.14 :
+      luma < 180 ? 1.09 : 1.05;
+    const saturation =
+      chroma > 70 ? 0.62 :
+      chroma > 52 ? 0.7 :
+      chroma > 38 ? 0.78 : 0.86;
+
+    const tuned = await base
+      .modulate({ brightness, saturation })
+      .gamma(1.03)
+      .png()
+      .toBuffer();
+    if (!tuned?.length) return b64;
+    return tuned.toString("base64");
+  } catch {
+    return b64;
+  }
 }
 
 function jobRowToStatusPayload(job) {
@@ -227,6 +272,7 @@ export async function processFlyerGenerationJob(jobId) {
       throw flyerOutcome.reason;
     }
     const { b64, revised } = flyerOutcome.value;
+    const b64Normalized = await normalizeFlyerBackgroundLook(b64);
 
     const colorPlan = resolveFlyerColorPlan(parsed.value);
     // Re-lire le commerce après OpenAI (30–90 s) : un PUT « Valider le flyer », un logo, etc. peut avoir
@@ -251,8 +297,9 @@ export async function processFlyerGenerationJob(jobId) {
     let fidelity_page_background_error = null;
     if (bgOutcome.status === "fulfilled") {
       const { b64: b64Bg } = bgOutcome.value;
+      const b64BgNormalized = await normalizeFlyerBackgroundLook(b64Bg);
       updateBusiness(business.id, {
-        fidelity_page_background_base64: `data:image/png;base64,${b64Bg}`,
+        fidelity_page_background_base64: `data:image/png;base64,${b64BgNormalized}`,
       });
       fidelity_page_background_saved = true;
     } else {
@@ -265,7 +312,7 @@ export async function processFlyerGenerationJob(jobId) {
 
     if (unlimited || devBypass) {
       markJobDone(jobId, {
-        image_base64: b64,
+        image_base64: b64Normalized,
         revised_prompt: revised ?? null,
         fidelity_page_background_saved,
         fidelity_page_background_error,
@@ -279,7 +326,7 @@ export async function processFlyerGenerationJob(jobId) {
     const nextUsed = used + 1;
     updateBusiness(business.id, { flyer_ai_generations_used: nextUsed });
     markJobDone(jobId, {
-      image_base64: b64,
+      image_base64: b64Normalized,
       revised_prompt: revised ?? null,
       fidelity_page_background_saved,
       fidelity_page_background_error,
