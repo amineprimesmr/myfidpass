@@ -30,7 +30,7 @@ const DEFAULT_MESSAGES = {
   reward_ready: "Votre récompense est prête — passez en magasin pour en profiter.",
   points_near: "Plus que quelques points pour débloquer votre récompense !",
   new_week: "Merci de nous avoir rejoints récemment — profitez de nos avantages fidélité.",
-  birthday_today: "Joyeux anniversaire ! Profitez de −20 % sur votre prochaine commande.",
+  birthday_today: "Joyeux anniversaire ! Profitez de -20 % en commandant aujourd'hui.",
 };
 
 function defaultAutomationConfig() {
