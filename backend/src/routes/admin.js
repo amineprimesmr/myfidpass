@@ -75,7 +75,13 @@ router.get("/businesses", (req, res) => {
 router.get("/events", (req, res) => {
   try {
     const lim = Math.min(500, Math.max(1, parseInt(String(req.query.limit || "100"), 10) || 100));
-    const events = listAdminEvents(lim);
+    let events = listAdminEvents(lim);
+    const filter = String(req.query.filter || "")
+      .trim()
+      .toLowerCase();
+    if (filter === "payments") {
+      events = events.filter((e) => String(e.event_type || "").toLowerCase().includes("stripe"));
+    }
     res.json({ events });
   } catch (e) {
     console.error("[admin] events:", e);

@@ -45,13 +45,20 @@ export function listAllBusinessesForAdmin(p = {}) {
     .trim()
     .toLowerCase()
     .replace(/%/g, "");
+  const adminBizSelect = `
+    SELECT b.id, b.slug, b.name, b.organization_name, b.user_id, b.created_at, u.email AS owner_email,
+      (SELECT COUNT(*) FROM members m WHERE m.business_id = b.id) AS member_count,
+      s.status AS owner_subscription_status,
+      s.plan_id AS owner_plan_id
+    FROM businesses b
+    LEFT JOIN users u ON u.id = b.user_id
+    LEFT JOIN subscriptions s ON s.user_id = b.user_id
+  `;
   if (q) {
     const like = `%${q}%`;
     return db
       .prepare(
-        `SELECT b.id, b.slug, b.name, b.organization_name, b.user_id, b.created_at, u.email AS owner_email
-         FROM businesses b
-         LEFT JOIN users u ON u.id = b.user_id
+        `${adminBizSelect}
          WHERE lower(b.slug) LIKE ? OR lower(b.name) LIKE ? OR lower(b.organization_name) LIKE ?
             OR lower(COALESCE(u.email,'')) LIKE ?
          ORDER BY datetime(b.created_at) DESC LIMIT ? OFFSET ?`,
@@ -59,12 +66,7 @@ export function listAllBusinessesForAdmin(p = {}) {
       .all(like, like, like, like, limit, offset);
   }
   return db
-    .prepare(
-      `SELECT b.id, b.slug, b.name, b.organization_name, b.user_id, b.created_at, u.email AS owner_email
-       FROM businesses b
-       LEFT JOIN users u ON u.id = b.user_id
-       ORDER BY datetime(b.created_at) DESC LIMIT ? OFFSET ?`,
-    )
+    .prepare(`${adminBizSelect} ORDER BY datetime(b.created_at) DESC LIMIT ? OFFSET ?`)
     .all(limit, offset);
 }
 
