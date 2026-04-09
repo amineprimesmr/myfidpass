@@ -422,11 +422,11 @@ export function initCheckoutPage() {
       .then((data) => {
         if (data.url) { window.location.href = data.url; return; }
         showError(data.error || "Impossible de créer la session de paiement.");
-        if (paymentBtn) { paymentBtn.disabled = false; paymentBtn.textContent = "PAYER — 49 €/mois (7 jours gratuits)"; }
+        if (paymentBtn) { paymentBtn.disabled = false; paymentBtn.textContent = "PAYER — 1er mois 1 € puis 49,99 €/mois"; }
       })
       .catch(() => {
         showError("Erreur réseau. Réessayez.");
-        if (paymentBtn) { paymentBtn.disabled = false; paymentBtn.textContent = "PAYER — 49 €/mois (7 jours gratuits)"; }
+        if (paymentBtn) { paymentBtn.disabled = false; paymentBtn.textContent = "PAYER — 1er mois 1 € puis 49,99 €/mois"; }
       });
   }
 }

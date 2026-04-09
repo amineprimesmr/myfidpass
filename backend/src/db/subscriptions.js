@@ -41,7 +41,7 @@ export function getMerchantTrialEndsAtIso(userId) {
   return new Date(start + merchantTrialDurationMs()).toISOString();
 }
 
-/** Essai actif : pas d’abo Stripe « payant » et encore dans les N premiers jours après inscription. */
+/** Essai actif : pas d’abo Stripe « payant » et encore dans la fenêtre d’essai après inscription (`MERCHANT_TRIAL_HOURS`, défaut 24 h). */
 export function isUserInMerchantTrial(userId) {
   if (!userId || hasActiveSubscription(userId)) return false;
   const endIso = getMerchantTrialEndsAtIso(userId);

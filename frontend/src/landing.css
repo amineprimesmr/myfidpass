@@ -5530,7 +5530,7 @@ body.page-checkout .site-banner { display: none !important; }
   color: #666;
   margin: 0 0 1rem;
 }
-/* Bouton PAYER : Commencer pour 0 € en gros, 7 jours gratuits en sous-texte */
+/* Bouton PAYER checkout : libellé aligné offre (1er mois puis récurrent), pas d’essai Stripe 7 j. */
 .checkout-btn-payment {
   width: 100%;
   padding: 1rem 1.5rem;
