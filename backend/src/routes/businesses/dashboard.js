@@ -57,6 +57,11 @@ import { signReceiptChallengeToken } from "../../lib/receipt-validation-jwt.js";
 import logger from "../../lib/logger.js";
 import { flyerAiQuotaDevBypass } from "../../lib/flyer-ai-quota-bypass.js";
 import { parseFlyerPrefsCustomBgDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
+import {
+  buildCsvFromRows,
+  buildExportRows,
+  summarizeExportRows,
+} from "../../lib/merchant-transaction-export.js";
 
 const router = Router({ mergeParams: true });
 
@@ -987,17 +992,67 @@ router.post("/members/:memberId/categories", (req, res) => {
 router.get("/transactions/export", (req, res) => {
   const business = req.business;
   if (!ensureOperationalSubscription(req, res, business)) return;
-  const days = [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : null;
-  const type = ["points_add", "visit"].includes(req.query.type) ? req.query.type : null;
-  const { transactions } = getTransactionsForBusiness(business.id, { limit: 2000, offset: 0, days, type });
-  const header = "Client;Email;Type;Points;Date\n";
-  const csv = header + transactions.map((t) => {
-    const name = (t.member_name || "").replace(/;/g, ",").replace(/\n/g, " ");
-    const email = (t.member_email || "").replace(/;/g, ",");
-    const typeLabel = t.type === "points_add" ? (t.metadata && (t.metadata.includes("visit") ? "Passage" : "Points")) : t.type;
-    const date = t.created_at ? new Date(t.created_at).toLocaleString("fr-FR") : "";
-    return `${name};${email};${typeLabel};${t.points};${date}`;
-  }).join("\n");
+  const format = String(req.query.format || "csv").toLowerCase();
+  if (format !== "csv" && format !== "json") {
+    return res.status(400).json({ error: "Indiquez format=csv ou format=json.", code: "INVALID_EXPORT_FORMAT" });
+  }
+  const exportLimit = Math.min(Math.max(Number(req.query.limit) || 25000, 1), 25000);
+  const days = [7, 30, 90, 365].includes(Number(req.query.days)) ? Number(req.query.days) : null;
+  const fromDate = String(req.query.from || req.query.date_from || "").trim() || null;
+  const toDate = String(req.query.to || req.query.date_to || "").trim() || null;
+  const typesCsv = String(req.query.types || "").trim() || null;
+  const legacyType = [
+    "visit",
+    "points_add",
+    "reward_redeem",
+    "points_correction",
+    "points_redeem_game_tickets",
+  ].includes(req.query.type)
+    ? req.query.type
+    : null;
+  const memberId = req.query.memberId || req.query.member_id || null;
+
+  const { transactions, total } = getTransactionsForBusiness(business.id, {
+    limit: exportLimit,
+    offset: 0,
+    memberId,
+    days,
+    fromDate,
+    toDate,
+    type: typesCsv ? null : legacyType,
+    typesCsv,
+  });
+  const rows = buildExportRows(transactions);
+
+  if (format === "json") {
+    let periodLabel = "Toutes les opérations (dans la limite d’export)";
+    if (fromDate || toDate) {
+      periodLabel = `Du ${fromDate || "…"} au ${toDate || "…"}`;
+    } else if (days) {
+      periodLabel = `Roulant : ${days} derniers jours (réf. serveur UTC)`;
+    }
+    return res.json({
+      business_name: business.organization_name || business.slug,
+      slug: business.slug,
+      generated_at: new Date().toISOString(),
+      period_label: periodLabel,
+      total_matching: total,
+      returned_count: rows.length,
+      truncated: total > rows.length,
+      filters: {
+        days,
+        from: fromDate,
+        to: toDate,
+        types: typesCsv,
+        type_legacy: legacyType,
+        member_id: memberId,
+      },
+      summary: summarizeExportRows(rows),
+      transactions: rows,
+    });
+  }
+
+  const csv = buildCsvFromRows(rows);
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="transactions-${business.slug}.csv"`);
   res.send("\uFEFF" + csv);
@@ -1007,9 +1062,29 @@ router.get("/transactions", (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 30, 200);
   const offset = Number(req.query.offset) || 0;
   const memberId = req.query.memberId || null;
-  const days = [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : null;
-  const type = ["points_add", "visit"].includes(req.query.type) ? req.query.type : null;
-  const result = getTransactionsForBusiness(req.business.id, { limit, offset, memberId, days, type });
+  const days = [7, 30, 90, 365].includes(Number(req.query.days)) ? Number(req.query.days) : null;
+  const fromDate = String(req.query.from || "").trim() || null;
+  const toDate = String(req.query.to || "").trim() || null;
+  const typesCsv = String(req.query.types || "").trim() || null;
+  const legacyType = [
+    "visit",
+    "points_add",
+    "reward_redeem",
+    "points_correction",
+    "points_redeem_game_tickets",
+  ].includes(req.query.type)
+    ? req.query.type
+    : null;
+  const result = getTransactionsForBusiness(req.business.id, {
+    limit,
+    offset,
+    memberId,
+    days,
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
+    type: typesCsv ? null : legacyType,
+    typesCsv: typesCsv || undefined,
+  });
   res.json(result);
 });
 
