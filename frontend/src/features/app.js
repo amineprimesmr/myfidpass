@@ -5944,7 +5944,7 @@ function initAppDashboard(slug) {
   }
 
   const CAMPAIGN_DEFAULTS = {
-    inactive14: "Ça fait un moment sans vous — profitez de -20 % sur votre commande en revenant nous voir.",
+    inactive14: "Ça fait un moment... Revenez nous voir aujourd'hui et profitez de -10 %.",
     new7: "Merci de nous avoir rejoints récemment — profitez de nos avantages fidélité.",
     recurrent: "Merci pour votre fidélité ! Offre exclusive pour vous.",
     points50: "Vous avez des points à utiliser ! Venez les échanger contre une récompense.",

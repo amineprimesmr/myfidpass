@@ -26,7 +26,7 @@ const RULE_TO_SEGMENT = {
 const DEFAULT_MESSAGES = {
   welcome_pass: "Bienvenue ! Profitez d’une offre de bienvenue sur votre prochaine visite.",
   inactive_14:
-    "Ça fait un moment sans vous — profitez de -20 % sur votre commande en revenant nous voir.",
+    "Ça fait un moment... Revenez nous voir aujourd'hui et profitez de -10 %.",
   reward_ready: "Votre récompense est prête — passez en magasin pour en profiter.",
   points_near: "Plus que quelques points pour débloquer votre récompense !",
   new_week: "Merci de nous avoir rejoints récemment — profitez de nos avantages fidélité.",
