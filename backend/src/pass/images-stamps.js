@@ -14,35 +14,6 @@ import {
   STAMP_GAP,
   STAMP_TOP,
 } from "./constants.js";
-import {
-  hexToRgb,
-} from "./images-strip.js";
-
-/**
- * Carré plein (emplacements vides) — même rendu que l’aperçu Ma carte (pas d’icône café en creux).
- */
-async function createDarkSquareStampBuffer(stripColorHex, sharp) {
-  const raw = stripColorHex && String(stripColorHex).trim() ? String(stripColorHex).trim() : "#333333";
-  const hex = raw.startsWith("#") ? raw : `#${raw}`;
-  const rgb = hexToRgb(hex);
-  const dark = {
-    r: Math.max(0, Math.min(255, Math.round(rgb.r * 0.42))),
-    g: Math.max(0, Math.min(255, Math.round(rgb.g * 0.42))),
-    b: Math.max(0, Math.min(255, Math.round(rgb.b * 0.42))),
-  };
-  const s = STAMP_SIZE;
-  return sharp({
-    create: {
-      width: s,
-      height: s,
-      channels: 4,
-      background: { ...dark, alpha: 1 },
-    },
-  })
-    .png()
-    .toBuffer();
-}
-
 let _sharp = null;
 async function getSharp() {
   if (!_sharp) _sharp = (await import("sharp")).default;
@@ -103,14 +74,16 @@ async function fetchStampIconPng(stampIconKey) {
   return null;
 }
 
-async function createStampIconOnlyPng(iconBuf, opacity = 1) {
+async function createStampIconOnlyPng(iconBuf, opacity = 1, opts = {}) {
   const sharp = await getSharp();
   const size = STAMP_SIZE;
-  const normalized = await sharp(iconBuf)
+  let pipeline = sharp(iconBuf)
     .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .ensureAlpha()
-    .png()
-    .toBuffer();
+    .ensureAlpha();
+  if (opts.grayscale) {
+    pipeline = pipeline.grayscale();
+  }
+  const normalized = await pipeline.png().toBuffer();
   let input = normalized;
   if (opacity < 1) {
     const { data, info } = await sharp(normalized).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -132,50 +105,9 @@ async function createStampIconOnlyPng(iconBuf, opacity = 1) {
     .toBuffer();
 }
 
-async function createEmptyStampFromIcon(iconBuf) {
-  const sharp = await getSharp();
-  const size = STAMP_SIZE;
-  const padding = 2;
-  const normalized = await sharp(iconBuf)
-    .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .ensureAlpha()
-    .png()
-    .toBuffer();
-  const greyed = await sharp(normalized)
-    .grayscale()
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const { data, info } = greyed;
-  const expectedLen = info.width * info.height * 4;
-  if (data.length !== expectedLen) {
-    return sharp({
-      create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0.5 } },
-    })
-      .png()
-      .toBuffer();
-  }
-  for (let i = 3; i < data.length; i += 4) data[i] = Math.round(data[i] * 0.5);
-  const input = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
-  const transparent = await sharp({
-    create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
-  })
-    .png()
-    .toBuffer();
-  return sharp(transparent)
-    .composite([{ input, left: padding, top: padding }])
-    .png()
-    .toBuffer();
-}
-
-function rewardIconKeyForIndex(index, stampMax) {
-  if (stampMax >= 10 && index === 9) return "giftgold";
-  if (stampMax >= 5 && index === 4) return "giftsilver";
-  return null;
-}
-
 /**
  * Grille de tampons sur le strip. customIconBase64 = image perso pour l'icône.
+ * stripColorHex conservé pour compatibilité d’appel (ancien carré vide).
  */
 export async function drawStampsOnStrip(
   baseStripBuf,
@@ -186,6 +118,7 @@ export async function drawStampsOnStrip(
   customIconBase64,
   stripColorHex
 ) {
+  void stripColorHex;
   const sharp = await getSharp();
   const cols = 5;
   const startX = (STRIP_W - (cols * STAMP_SIZE + (cols - 1) * STAMP_GAP)) / 2 + STAMP_R;
@@ -229,7 +162,6 @@ export async function drawStampsOnStrip(
     return baseStripBuf;
   }
 
-  let emptyStampBuf = null;
   const composites = [];
   for (let i = 0; i < totalStamps; i++) {
     const col = i % cols;
@@ -246,14 +178,8 @@ export async function drawStampsOnStrip(
       if (filled) {
         stampBuf = await createStampIconOnlyPng(effectiveIcon, 1);
       } else {
-        const rewardKey = rewardIconKeyForIndex(i, totalStamps);
-        if (rewardKey && forcedRewardIcon) {
-          // Cases 5/10 toujours visibles sans masque carré, en opacité 100%.
-          stampBuf = await createStampIconOnlyPng(forcedRewardIcon, 1);
-        } else {
-          if (emptyStampBuf === null) emptyStampBuf = await createDarkSquareStampBuffer(stripColorHex, sharp);
-          stampBuf = emptyStampBuf;
-        }
+        // Même icône partout : passage non validé = désaturé + atténué (effet « non débloqué »).
+        stampBuf = await createStampIconOnlyPng(effectiveIcon, 0.52, { grayscale: true });
       }
       if (stampBuf) composites.push({ input: stampBuf, left, top });
     } catch (e) {
