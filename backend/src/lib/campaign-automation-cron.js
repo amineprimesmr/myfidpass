@@ -4,7 +4,11 @@
  */
 import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
-import { getMemberIdsBySegment, filterMemberIdsExcludingRecentNotifications } from "../db.js";
+import {
+  getMemberIdsBySegment,
+  filterMemberIdsExcludingRecentNotifications,
+  filterMemberIdsExcludingTriggerThisCalendarYear,
+} from "../db.js";
 import { deliverDashboardBroadcast, CAMPAIGN_SEGMENT_KEYS } from "../routes/businesses/notifications.js";
 import { normalizeEventTypeToken } from "../services/campaign-automation-ai.js";
 
@@ -17,6 +21,7 @@ const RULE_TO_SEGMENT = {
   points_near: "pointsNear50",
   loyal_boost: "recurrent",
   new_week: "new7",
+  birthday_today: "birthdayToday",
 };
 
 const DEFAULT_MESSAGES = {
@@ -27,6 +32,7 @@ const DEFAULT_MESSAGES = {
   points_near: "Plus que quelques points pour débloquer votre récompense !",
   loyal_boost: "Merci pour votre fidélité — une offre rien que pour vous.",
   new_week: "Merci de nous avoir rejoints récemment — profitez de nos avantages fidélité.",
+  birthday_today: "Joyeux anniversaire ! Profitez de −20 % sur votre prochaine commande.",
 };
 
 function defaultAutomationConfig() {
@@ -133,12 +139,19 @@ export async function runCampaignAutomationCron() {
         "";
       if (!message) continue;
       let memberIds = getMemberIdsBySegment(business.id, segment);
-      memberIds = filterMemberIdsExcludingRecentNotifications(business.id, memberIds, config.global_cooldown_days ?? 7);
+      const birthdayTrigger = "campaign_auto_birthday_today";
+      if (ruleId === "birthday_today") {
+        memberIds = filterMemberIdsExcludingTriggerThisCalendarYear(business.id, memberIds, birthdayTrigger);
+      } else {
+        memberIds = filterMemberIdsExcludingRecentNotifications(business.id, memberIds, config.global_cooldown_days ?? 7);
+      }
       if (memberIds.length === 0) continue;
       rulesRun++;
       const triggerName = ruleId.startsWith("custom_")
         ? `campaign_auto_${ruleId}`.slice(0, 96)
-        : "campaign_auto";
+        : ruleId === "birthday_today"
+          ? birthdayTrigger
+          : "campaign_auto";
       const ruleTitle =
         ruleId.startsWith("custom_") && rule.title && String(rule.title).trim()
           ? String(rule.title).trim().slice(0, 80)

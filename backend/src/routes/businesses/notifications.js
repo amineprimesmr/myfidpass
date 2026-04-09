@@ -45,6 +45,8 @@ export const CAMPAIGN_SEGMENT_KEYS = [
   "pointsNear50",
   "points50",
   "recurrent",
+  /** Profil complet (tél., ville, date de naissance) et anniversaire le jour J (UTC serveur). */
+  "birthdayToday",
 ];
 
 /**
@@ -395,6 +397,7 @@ router.get("/campaign-segments", (req, res) => {
     pointsNear50: c.pointsNear50,
     points50: c.points50,
     recurrent: c.recurrent,
+    birthdayToday: c.birthdayToday,
   });
 });
 

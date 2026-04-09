@@ -189,6 +189,13 @@ export function getCampaignSegmentCounts(businessId) {
   } catch (_e) {
     /* */
   }
+  const birthdayToday = db.prepare(
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ?
+     AND birth_date IS NOT NULL AND TRIM(birth_date) != ''
+     AND phone IS NOT NULL AND TRIM(phone) != ''
+     AND city IS NOT NULL AND TRIM(city) != ''
+     AND strftime('%m-%d', birth_date) = strftime('%m-%d', 'now')`
+  ).get(businessId);
   return {
     inactive14: inactive14?.n ?? 0,
     inactive30: inactive30d?.n ?? 0,
@@ -200,5 +207,6 @@ export function getCampaignSegmentCounts(businessId) {
     pointsNear50: pointsNear50?.n ?? 0,
     points50: points50Count?.n ?? 0,
     recurrent: recurrentInPeriod?.n ?? 0,
+    birthdayToday: birthdayToday?.n ?? 0,
   };
 }

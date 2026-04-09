@@ -167,6 +167,14 @@ export function getMemberIdsBySegment(businessId, segment) {
       )`;
       params.push(businessId);
       break;
+    /** Profil complété + date de naissance : même critère que la validation profil (tél., ville, birth_date). */
+    case "birthdayToday":
+      where +=
+        " AND birth_date IS NOT NULL AND TRIM(birth_date) != ''" +
+        " AND phone IS NOT NULL AND TRIM(phone) != ''" +
+        " AND city IS NOT NULL AND TRIM(city) != ''" +
+        " AND strftime('%m-%d', birth_date) = strftime('%m-%d', 'now')";
+      break;
     default:
       return [];
   }

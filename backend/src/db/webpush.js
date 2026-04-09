@@ -161,3 +161,20 @@ export function filterMemberIdsExcludingRecentNotifications(businessId, memberId
   const recentSet = new Set(recent.map((r) => r.member_id));
   return memberIds.filter((id) => !recentSet.has(id));
 }
+
+/**
+ * Exclut les membres ayant déjà reçu une notif avec ce `trigger_name` sur l’année civile courante (SQLite `strftime`).
+ * Utilisé pour l’automatisation anniversaire (hors cooldown marketing global).
+ */
+export function filterMemberIdsExcludingTriggerThisCalendarYear(businessId, memberIds, triggerName) {
+  if (!memberIds?.length) return [];
+  const tn = String(triggerName || "").trim();
+  if (!tn) return memberIds;
+  const cols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+  if (!cols.includes("trigger_name")) return memberIds;
+  const placeholders = memberIds.map(() => "?").join(",");
+  const sql = `SELECT DISTINCT member_id FROM notification_log WHERE business_id = ? AND trigger_name = ? AND strftime('%Y', created_at) = strftime('%Y', 'now') AND member_id IN (${placeholders})`;
+  const sent = db.prepare(sql).all(businessId, tn, ...memberIds);
+  const sentSet = new Set(sent.map((r) => r.member_id));
+  return memberIds.filter((id) => !sentSet.has(id));
+}
