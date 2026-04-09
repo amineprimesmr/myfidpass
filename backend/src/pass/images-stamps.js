@@ -174,15 +174,6 @@ function rewardIconKeyForIndex(index, stampMax) {
   return null;
 }
 
-async function createEmptyRewardStampBuffer(iconBuf, stripColorHex, sharp) {
-  const square = await createDarkSquareStampBuffer(stripColorHex, sharp);
-  const fadedIcon = await createStampIconOnlyPng(iconBuf, 0.58);
-  return sharp(square)
-    .composite([{ input: fadedIcon, left: 0, top: 0 }])
-    .png()
-    .toBuffer();
-}
-
 /**
  * Grille de tampons sur le strip. customIconBase64 = image perso pour l'icône.
  */
@@ -257,7 +248,8 @@ export async function drawStampsOnStrip(
       } else {
         const rewardKey = rewardIconKeyForIndex(i, totalStamps);
         if (rewardKey && forcedRewardIcon) {
-          stampBuf = await createEmptyRewardStampBuffer(forcedRewardIcon, stripColorHex, sharp);
+          // Cases 5/10 toujours visibles sans masque carré, en opacité 100%.
+          stampBuf = await createStampIconOnlyPng(forcedRewardIcon, 1);
         } else {
           if (emptyStampBuf === null) emptyStampBuf = await createDarkSquareStampBuffer(stripColorHex, sharp);
           stampBuf = emptyStampBuf;
