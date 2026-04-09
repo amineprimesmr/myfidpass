@@ -3,9 +3,7 @@
  * Médias lus depuis `business_assets` ; Cache-Control compatible URLCache iOS (Bearer).
  */
 import { Router } from "express";
-import sharp from "sharp";
-import { getLogoIconBuffer, NOTIFICATION_ICON_SIZE } from "../../notifications.js";
-import { resolvePublicWalletLogoPng } from "../../lib/resolve-public-business-logo.js";
+import { getLogoIconBuffer } from "../../notifications.js";
 import { ensureDashboardAccess } from "./shared.js";
 import { getBusinessAssetData, getAllBusinessAssetsMap } from "../../db/business-assets.js";
 
@@ -36,39 +34,24 @@ function setAssetCacheHeaders(res, req, etagKey) {
   return false;
 }
 
+/**
+ * Icône **campagnes / Web Push / aperçu app Notifs** uniquement.
+ * Aucun repli vers logo carte ou logo carré — le commerçant doit importer une image dédiée (PATCH `notification_icon_base64`).
+ */
 router.get("/notification-icon", async (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).send();
   const assets = business.id ? getAllBusinessAssetsMap(business.id) : null;
-  const dedicated = assets?.notification_icon;
-  const b64 =
-    dedicated ||
-    assets?.logo_icon ||
-    assets?.logo ||
-    business.logo_icon_base64 ||
-    business.logo_base64;
-
-  let buffer = b64 ? await getLogoIconBuffer(b64) : null;
-  if (!buffer) {
-    const resolved = await resolvePublicWalletLogoPng(business);
-    if (resolved?.buffer?.length) {
-      try {
-        buffer = await sharp(resolved.buffer)
-          .resize(NOTIFICATION_ICON_SIZE, NOTIFICATION_ICON_SIZE, { fit: "cover" })
-          .png({ compressionLevel: 9 })
-          .toBuffer();
-      } catch (_) {
-        buffer = null;
-      }
-    }
-  }
+  const fromAssets = assets?.notification_icon;
+  const fromRow =
+    business.notification_icon_base64 && String(business.notification_icon_base64).trim()
+      ? business.notification_icon_base64
+      : null;
+  const b64 = fromAssets || fromRow;
+  const buffer = b64 ? await getLogoIconBuffer(b64) : null;
   if (!buffer) return res.status(404).send();
 
-  const etagKey = dedicated
-    ? `${business.id}-notification-icon-${business.notification_icon_updated_at || "0"}`
-    : b64
-      ? `${business.id}-notification-icon-fb-${business.logo_icon_updated_at || business.logo_updated_at || "0"}`
-      : `${business.id}-notification-icon-wallet-${business.logo_updated_at || "0"}`;
+  const etagKey = `${business.id}-notification-icon-${business.notification_icon_updated_at || "0"}`;
   if (setAssetCacheHeaders(res, req, etagKey)) return;
   res.setHeader("Content-Type", "image/png");
   res.send(buffer);

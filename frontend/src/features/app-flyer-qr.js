@@ -89,12 +89,15 @@ export function initAppFlyerQr(slug, opts) {
     writeFlyerFormFromState(root, merged);
     persistFlyerState(merged);
     state = merged;
-    clearStoredFlyerCustomLogo();
+    // NE PAS effacer le logo local : il sera réenvoyé au prochain pushFlyerToServerNow.
+    // Effacer inconditionnellement provoquait une race condition (logo importé avant sauvegarde puis perdu).
     if (typeof p.custom_bg_data_url === "string" && p.custom_bg_data_url.startsWith("data:image/")) {
+      // Le serveur a un fond enregistré → le stocker localement
       setStoredFlyerCustomBgDataUrl(p.custom_bg_data_url);
-    } else {
-      clearStoredFlyerCustomBg();
     }
+    // NE PAS effacer le fond local si le serveur n'en a pas encore :
+    // après génération IA, le fond est stocké localement avant d'être sauvegardé (debounce 2s).
+    // Un clearStoredFlyerCustomBg() ici détruisait le fond généré si la page rechargait trop tôt.
     flyerBgPanelApi?.syncPreview();
     flyerLogoDirty = true;
     flyerBgDirty = true;
@@ -221,11 +224,27 @@ export function initAppFlyerQr(slug, opts) {
       if (oddEl) oddEl.value = oddHex;
       if (evenEl) evenEl.value = evenHex;
     },
+    onLogoApplied: () => {
+      // Le logo IA a été stocké localement → sauvegarder immédiatement sur le serveur
+      // puis recharger dans le canvas (l'API sert le logo, pas le localStorage)
+      if (!remoteBusy) {
+        remoteBusy = true;
+        pushFlyerToServerNow().then(() => {
+          flyerLogoDirty = true;
+          schedulePaint();
+        }).finally(() => { remoteBusy = false; });
+      }
+    },
     onGeneratedBg: () => {
       flyerBgDirty = true;
       flyerBgPanelApi?.syncPreview?.();
       schedulePaint();
-      scheduleRemoteSave();
+      // Save immédiat (pas de debounce) pour éviter la race condition :
+      // un rechargement de page avant les 2s du debounce ne doit pas perdre le fond IA.
+      if (!remoteBusy) {
+        remoteBusy = true;
+        pushFlyerToServerNow().finally(() => { remoteBusy = false; });
+      }
     },
   });
 

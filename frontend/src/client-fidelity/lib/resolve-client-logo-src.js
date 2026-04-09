@@ -64,18 +64,14 @@ export function resolveClientLogoImgSrc(business, slug, apiBase) {
  * @param {string} apiBase
  */
 export function resolveClientNotificationIconImgSrc(business, slug, apiBase) {
+  const apiNotifUrl = typeof business?.notificationIconUrl === "string" ? business.notificationIconUrl.trim() : "";
+  /** Pas d’URL dans le JSON public = pas d’icône dédiée (le GET ne doit plus retomber sur le logo carte). */
+  if (!apiNotifUrl) return "";
   const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/notification-icon` : "";
   if (!path) return "";
   const baseTrim = preferSameOriginApiAssetPaths() ? "" : String(apiBase || "").replace(/\/$/, "");
-  const apiNotifUrl = typeof business?.notificationIconUrl === "string" ? business.notificationIconUrl.trim() : "";
   const srcBase = baseTrim ? apiNotifUrl || `${baseTrim}${path}` : path;
-  const upd =
-    business?.notification_icon_updated_at ??
-    business?.notificationIconUpdatedAt ??
-    business?.logo_icon_updated_at ??
-    business?.logoIconUpdatedAt ??
-    business?.logo_updated_at ??
-    business?.logoUpdatedAt;
+  const upd = business?.notification_icon_updated_at ?? business?.notificationIconUpdatedAt;
   const v =
     upd != null && String(upd).trim() !== "" ? encodeURIComponent(String(upd).trim()) : "";
   return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${v}` : srcBase;

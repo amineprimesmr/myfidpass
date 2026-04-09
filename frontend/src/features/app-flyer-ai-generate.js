@@ -7,6 +7,7 @@ import {
   compressImageBitmapToFlyerBgDataUrl,
   setStoredFlyerCustomBgDataUrl,
 } from "./app-flyer-bg-control.js";
+import { setStoredFlyerCustomLogoDataUrl, compressFileToFlyerLogoDataUrl } from "./app-flyer-logo-control.js";
 
 const SECTOR_CONCEPT_HINT = {
   fastfood: "Restauration rapide, vente à emporter",
@@ -67,6 +68,7 @@ function fileToBase64Raw(file) {
  * @param {{
  *   dashboardApi?: (path: string, init?: RequestInit) => Promise<Response>;
  *   onGeneratedBg: () => void;
+ *   onLogoApplied?: () => void;
  *   onFlyerAiWheelTintsSynced?: (wheelColorOdd: string, wheelColorEven: string) => void;
  * }} opts — `onFlyerAiWheelTintsSynced` aligne les teintes roue sur le formulaire IA (comme le serveur).
  */
@@ -282,6 +284,16 @@ export function initFlyerAiGenerate(slug, opts) {
         try {
           const dataUrl = compressImageBitmapToFlyerBgDataUrl(bitmap);
           setStoredFlyerCustomBgDataUrl(dataUrl);
+          // Appliquer aussi le logo IA comme logo d'affichage du flyer (cohérence iOS / web)
+          if (logoFile) {
+            try {
+              const logoDataUrl = await compressFileToFlyerLogoDataUrl(logoFile);
+              setStoredFlyerCustomLogoDataUrl(logoDataUrl);
+              opts.onLogoApplied?.();
+            } catch (_) {
+              // Non bloquant — le canvas continuera à charger le logo serveur
+            }
+          }
           const accentRaw = accentEl?.value?.trim() || "#fbbf24";
           const secRaw = secondaryEl?.value?.trim() || "";
           const oddHex = /^#[0-9A-Fa-f]{6}$/i.test(accentRaw) ? accentRaw : "#fbbf24";

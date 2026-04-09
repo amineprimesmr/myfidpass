@@ -146,11 +146,13 @@ async function renderFromCurrentBootstrap() {
   const rawLogo = hasLogoKey ? /** @type {{ custom_logo_data_url?: unknown }} */ (prefsRaw).custom_logo_data_url : undefined;
   if (typeof rawLogo === "string" && rawLogo.startsWith("data:image/")) {
     logoIn = await loadImageInputFromDataUrl(rawLogo);
-  } else if (hasLogoKey && (rawLogo === "" || rawLogo === null)) {
+  } else if (hasLogoKey && rawLogo === "") {
+    // Chaîne vide "" = logo explicitement supprimé par l'utilisateur → pas de fallback API.
     logoIn = null;
   }
-  const skipPublicLogoFallback =
-    hasLogoKey && (rawLogo === "" || rawLogo === null);
+  // null ou absent = logo pas encore chargé/inconnu → on laisse le fallback API se charger.
+  // Seul "" (suppression explicite) bloque le fallback.
+  const skipPublicLogoFallback = hasLogoKey && rawLogo === "";
   if (flyer_prefs?.custom_bg_data_url) {
     bgIn = await loadImageInputFromDataUrl(flyer_prefs.custom_bg_data_url);
   }

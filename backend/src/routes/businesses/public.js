@@ -30,8 +30,11 @@ export function publicInfo(req, res) {
   }
   /** Logo hero page jeu QR : **uniquement** logo importé Flyer IA (`/public/flyer-qr-logo`) — pas d’icône notif / Wallet. */
   const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo`;
-  /** Icône push / aperçu campagne Wallet — distincte du logo page fidélité / jeu QR. */
-  const notificationIconUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
+  /** Icône push / aperçu campagne — uniquement si import dédié (sinon le client utilise son placeholder). */
+  const notificationIconUrl =
+    Number(business.asset_notification_icon_present) === 1
+      ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+      : undefined;
   const fidelityPageBackgroundUrl =
     Number(business.asset_fidelity_page_background_present) === 1
       ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background`

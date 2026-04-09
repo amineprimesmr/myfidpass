@@ -22,13 +22,9 @@ import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import { sendMerchantAppAlert, isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
 
+/** Icône Web Push : uniquement si média dédié « notification » (pas le logo Ma Carte). */
 function businessHasNotificationLogo(business) {
-  return (
-    Number(business?.asset_notification_icon_present) === 1 ||
-    Number(business?.asset_logo_icon_present) === 1 ||
-    Number(business?.asset_logo_present) === 1 ||
-    !!(business?.logo_icon_base64 || business?.logo_base64)
-  );
+  return Number(business?.asset_notification_icon_present) === 1;
 }
 
 /**
@@ -37,11 +33,7 @@ function businessHasNotificationLogo(business) {
  */
 function buildWebPushNotificationIconUrl(apiBase, slug, businessRow, batchId) {
   const path = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
-  const base =
-    businessRow?.notification_icon_updated_at ||
-    businessRow?.logo_icon_updated_at ||
-    businessRow?.logo_updated_at ||
-    "0";
+  const base = businessRow?.notification_icon_updated_at || "0";
   const v = batchId ? `${base}~${batchId}` : String(base);
   return `${path}?v=${encodeURIComponent(v)}`;
 }

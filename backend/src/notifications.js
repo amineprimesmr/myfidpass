@@ -28,7 +28,7 @@ export const NOTIFICATION_ICON_SIZE = 96;
 
 /**
  * Produit le buffer PNG de l’icône notification (logo redimensionné).
- * Utilisé par l’endpoint GET .../notification-icon et pour la data URL de fallback.
+ * Utilisé par l’endpoint GET .../notification-icon (média `notification_icon` uniquement).
  * @param {string|null|undefined} logoBase64 - data:image/...;base64,... ou null
  * @returns {Promise<Buffer|null>}
  */

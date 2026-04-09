@@ -80,9 +80,16 @@ describe("resolveClientNotificationIconImgSrc", () => {
     expect(src).toBe("/api/businesses/demo/notification-icon");
   });
 
-  it("cache-bust priorise notification_icon_updated_at", () => {
+  it("sans notificationIconUrl → vide (pas de repli logo carte)", () => {
+    expect(resolveClientNotificationIconImgSrc({ logo_updated_at: "2026-01-01T00:00:00.000Z" }, "demo", "")).toBe(
+      "",
+    );
+  });
+
+  it("cache-bust utilise uniquement notification_icon_updated_at", () => {
     const src = resolveClientNotificationIconImgSrc(
       {
+        notificationIconUrl: "http://127.0.0.1:3001/api/businesses/demo/notification-icon",
         notification_icon_updated_at: "2026-04-01T12:00:00.000Z",
         logo_updated_at: "2026-01-01T00:00:00.000Z",
       },
@@ -91,6 +98,7 @@ describe("resolveClientNotificationIconImgSrc", () => {
     );
     expect(src).toContain("notification-icon?v=");
     expect(src).toContain("2026-04-01");
+    expect(src).not.toContain("2026-01-01");
   });
 });
 
