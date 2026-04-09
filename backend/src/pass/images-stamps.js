@@ -105,6 +105,13 @@ async function createStampIconOnlyPng(iconBuf, opacity = 1, opts = {}) {
     .toBuffer();
 }
 
+/** Prochain palier cadeau : en couleur même si la case n’est pas encore remplie. */
+function isNextGiftMilestone(slotIndex, stampMax, filledCount) {
+  if (stampMax >= 5 && slotIndex === 4 && filledCount < 5) return true;
+  if (stampMax >= 10 && slotIndex === 9 && filledCount >= 5 && filledCount < 10) return true;
+  return false;
+}
+
 /**
  * Grille de tampons sur le strip. customIconBase64 = image perso pour l'icône.
  * stripColorHex conservé pour compatibilité d’appel (ancien carré vide).
@@ -177,8 +184,10 @@ export async function drawStampsOnStrip(
       const effectiveIcon = forcedRewardIcon || iconBuf;
       if (filled) {
         stampBuf = await createStampIconOnlyPng(effectiveIcon, 1);
+      } else if (isNextGiftMilestone(i, totalStamps, filledCount)) {
+        stampBuf = await createStampIconOnlyPng(effectiveIcon, 1);
       } else {
-        // Même icône partout : passage non validé = désaturé + atténué (effet « non débloqué »).
+        // Passage non validé = désaturé + atténué (effet « non débloqué »).
         stampBuf = await createStampIconOnlyPng(effectiveIcon, 0.52, { grayscale: true });
       }
       if (stampBuf) composites.push({ input: stampBuf, left, top });
