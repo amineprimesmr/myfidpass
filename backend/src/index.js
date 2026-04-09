@@ -24,19 +24,14 @@ function logAdminBootstrap() {
       logger.info({ adminEmailsSync: r }, "[admin] synchronisation ADMIN_EMAILS");
     }
     const p = applyAdminInitialPasswordFromEnv();
-    if (p.applied > 0) {
+    if (p.accountsCreated > 0 || p.passwordsUpdated > 0) {
       logger.warn(
-        { comptesMisAJour: p.applied, emailsSansCompte: p.skipped },
-        "[admin] Mot de passe initial appliqué (ADMIN_INITIAL_PASSWORD). Supprimez ADMIN_INITIAL_PASSWORD sur Railway tout de suite.",
+        { comptesCrees: p.accountsCreated, motsDePasseMisAJour: p.passwordsUpdated },
+        "[admin] Bootstrap admin terminé (ADMIN_INITIAL_PASSWORD). Supprimez ADMIN_INITIAL_PASSWORD sur Railway tout de suite.",
       );
     } else if (p.skippedAlreadyDone && (process.env.ADMIN_INITIAL_PASSWORD || "").trim()) {
       logger.warn(
         "[admin] ADMIN_INITIAL_PASSWORD est encore défini alors que le bootstrap a déjà été fait. Supprimez-la (ou ADMIN_INITIAL_PASSWORD_FORCE=true pour forcer).",
-      );
-    } else if ((process.env.ADMIN_INITIAL_PASSWORD || "").trim() && p.skipped > 0 && p.applied === 0) {
-      logger.warn(
-        { emailsSansCompteEnBase: p.skipped },
-        "[admin] ADMIN_INITIAL_PASSWORD non appliqué : inscrivez-vous d'abord avec l'email ADMIN_EMAILS, puis redémarrez le service.",
       );
     }
   } catch (e) {

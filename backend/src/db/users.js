@@ -86,14 +86,16 @@ const ADMIN_INITIAL_PASSWORD_FLAG = "admin_initial_password_done";
 const ADMIN_PASSWORD_SALT_ROUNDS = 10;
 
 /**
- * Si `ADMIN_INITIAL_PASSWORD` est défini : définit le mot de passe (bcrypt) pour chaque email listé dans `ADMIN_EMAILS`
- * qui existe déjà en base. **Une seule fois** (drapeau en base), sauf si `ADMIN_INITIAL_PASSWORD_FORCE=true`.
- * À utiliser pour le premier setup prod sans CLI ; retirer la variable secrète juste après succès.
- * @returns {{ applied: number, skipped: number, skippedAlreadyDone: boolean }}
+ * Si `ADMIN_INITIAL_PASSWORD` est défini :
+ * - **crée** les comptes manquants pour chaque email de `ADMIN_EMAILS` (mot de passe + `is_admin`),
+ * - met à jour le mot de passe des comptes déjà existants.
+ * **Une seule fois** (drapeau en base), sauf si `ADMIN_INITIAL_PASSWORD_FORCE=true`.
+ * Retirer `ADMIN_INITIAL_PASSWORD` de Railway après la première connexion réussie.
+ * @returns {{ accountsCreated: number, passwordsUpdated: number, skippedAlreadyDone: boolean }}
  */
 export function applyAdminInitialPasswordFromEnv() {
   const pwd = (process.env.ADMIN_INITIAL_PASSWORD || "").trim();
-  if (!pwd) return { applied: 0, skipped: 0, skippedAlreadyDone: false };
+  if (!pwd) return { accountsCreated: 0, passwordsUpdated: 0, skippedAlreadyDone: false };
 
   const forceRaw = String(process.env.ADMIN_INITIAL_PASSWORD_FORCE || "")
     .trim()
@@ -101,31 +103,44 @@ export function applyAdminInitialPasswordFromEnv() {
   const force = forceRaw === "1" || forceRaw === "true" || forceRaw === "yes";
 
   if (!force && getRuntimeFlag(ADMIN_INITIAL_PASSWORD_FLAG)) {
-    return { applied: 0, skipped: 0, skippedAlreadyDone: true };
+    return { accountsCreated: 0, passwordsUpdated: 0, skippedAlreadyDone: true };
   }
 
   const raw = (process.env.ADMIN_EMAILS || "").trim();
-  if (!raw) return { applied: 0, skipped: 0, skippedAlreadyDone: false };
+  if (!raw) return { accountsCreated: 0, passwordsUpdated: 0, skippedAlreadyDone: false };
 
   const emails = [...new Set(raw.split(",").map((e) => String(e).trim().toLowerCase()).filter(Boolean))];
-  let applied = 0;
-  let skipped = 0;
+  let accountsCreated = 0;
+  let passwordsUpdated = 0;
   const passwordHash = bcrypt.hashSync(pwd, ADMIN_PASSWORD_SALT_ROUNDS);
 
   for (const email of emails) {
-    const u = getUserByEmail(email);
+    let u = getUserByEmail(email);
     if (!u) {
-      skipped++;
+      try {
+        u = createUser({
+          email,
+          passwordHash,
+          name: "Administrateur",
+        });
+        db.prepare("UPDATE users SET is_admin = 1 WHERE id = ?").run(u.id);
+        accountsCreated++;
+      } catch (err) {
+        console.error("[admin] création compte bootstrap échouée:", email, err?.message || err);
+      }
       continue;
     }
-    if (updateUserPassword(u.id, passwordHash)) applied++;
+    if (!isUserAdmin(u)) {
+      db.prepare("UPDATE users SET is_admin = 1 WHERE id = ?").run(u.id);
+    }
+    if (updateUserPassword(u.id, passwordHash)) passwordsUpdated++;
   }
 
-  if (applied > 0) {
+  if (accountsCreated > 0 || passwordsUpdated > 0) {
     setRuntimeFlag(ADMIN_INITIAL_PASSWORD_FLAG, new Date().toISOString());
   }
 
-  return { applied, skipped, skippedAlreadyDone: false };
+  return { accountsCreated, passwordsUpdated, skippedAlreadyDone: false };
 }
 
 /**
