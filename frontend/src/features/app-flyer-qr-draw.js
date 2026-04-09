@@ -51,6 +51,10 @@ let flyerRoueCache = null;
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerGiftCache = null;
+/** Timestamp du dernier échec `flyergift` (ms epoch) pour autoriser des retries périodiques. */
+let flyerGiftLastFailAt = 0;
+/** On évite un retry à chaque frame ; on retente après ce délai. */
+const FLYER_GIFT_RETRY_AFTER_MS = 15_000;
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
 function roundRect(ctx, x, y, w, h, r) {
@@ -640,17 +644,24 @@ async function getFlyerRoueImage() {
 
 /** Décoration cadeau (optionnelle) — échec silencieux si aucun fichier dans `public/assets/`. */
 async function getFlyerGiftOverlayImage() {
-  if (flyerGiftCache === "fail") return null;
+  if (flyerGiftCache === "fail") {
+    const now = Date.now();
+    if (now - flyerGiftLastFailAt < FLYER_GIFT_RETRY_AFTER_MS) return null;
+    // Retry périodique : évite l'état "cassé" permanent après un seul raté réseau.
+    flyerGiftCache = null;
+  }
   if (flyerGiftCache) return flyerGiftCache;
   for (const src of FLYER_GIFT_SRC_CANDIDATES) {
     try {
       flyerGiftCache = await loadImage(src, false);
+      flyerGiftLastFailAt = 0;
       return flyerGiftCache;
     } catch {
       /* essai suivant */
     }
   }
   flyerGiftCache = "fail";
+  flyerGiftLastFailAt = Date.now();
   return null;
 }
 
