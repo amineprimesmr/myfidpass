@@ -311,7 +311,13 @@ export async function drawStampsOnStrip(
     iconBuf = await fetchEmojiPng(emojiForStamp);
   }
   if (!iconBuf) {
-    if (process.env.NODE_ENV === "production") console.warn("[PassKit] Strip sans icônes (fichier introuvable pour emoji)", emojiToCodepoint((stampEmoji && String(stampEmoji).trim()) || "☕"));
+    // Fallback dur : si l'emoji demandé n'a pas d'asset, on bascule sur café pour éviter une grille vide.
+    iconBuf = await fetchEmojiPng("☕");
+  }
+  if (!iconBuf) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn("[PassKit] Strip sans icônes (emoji et fallback café introuvables)", emojiToCodepoint((stampEmoji && String(stampEmoji).trim()) || "☕"));
+    }
     return baseStripBuf;
   }
 
