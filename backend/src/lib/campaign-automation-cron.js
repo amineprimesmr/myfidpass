@@ -19,7 +19,6 @@ const RULE_TO_SEGMENT = {
   inactive_14: "inactive14",
   reward_ready: "points50",
   points_near: "pointsNear50",
-  loyal_boost: "recurrent",
   new_week: "new7",
   birthday_today: "birthdayToday",
 };
@@ -30,7 +29,6 @@ const DEFAULT_MESSAGES = {
     "Ça fait un moment sans vous — profitez de -20 % sur votre commande en revenant nous voir.",
   reward_ready: "Votre récompense est prête — passez en magasin pour en profiter.",
   points_near: "Plus que quelques points pour débloquer votre récompense !",
-  loyal_boost: "Merci pour votre fidélité — une offre rien que pour vous.",
   new_week: "Merci de nous avoir rejoints récemment — profitez de nos avantages fidélité.",
   birthday_today: "Joyeux anniversaire ! Profitez de −20 % sur votre prochaine commande.",
 };
@@ -60,6 +58,8 @@ export function mergeCampaignAutomationJson(raw) {
         };
       }
     }
+    /** Ancienne règle produit retirée : ne plus exécuter ni renvoyer dans les PATCH. */
+    delete merged.rules.loyal_boost;
     /** Règles `custom_<uuid>` : ciblage libre (segment API) + message + titre d’affichage. */
     for (const key of Object.keys(merged.rules)) {
       if (!key.startsWith("custom_")) continue;
