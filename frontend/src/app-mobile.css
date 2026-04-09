@@ -171,8 +171,8 @@
     min-width: 0;
     text-align: left;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.88rem;
+    letter-spacing: -0.03em;
   }
 
   .app-mobile-trial-subscribe-pill__badge {
@@ -182,18 +182,18 @@
     flex-shrink: 0;
     padding: 8px 12px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.14);
+    background: #1c1c1e;
     font-size: 0.81rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
+    color: rgba(255, 255, 255, 0.96);
     white-space: nowrap;
   }
 
   .app-mobile-trial-subscribe-pill__dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: #ef4444;
+    background: #a3e635;
     flex-shrink: 0;
   }
 
