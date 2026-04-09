@@ -12,7 +12,8 @@
     "test:watch": "NODE_ENV=test DATA_DIR=./test-data JWT_SECRET=test-jwt-secret-do-not-use-in-production-32c STRIPE_SECRET_KEY=sk_test_12345678901234567890123456789012 STRIPE_WEBHOOK_SECRET=whsec_test_123456789012345678901234567890 npx vitest",
     "generate-vapid-keys": "web-push generate-vapid-keys",
     "test:passkit": "bash scripts/test-passkit-get.sh",
-    "seed:passkit-test": "DATA_DIR=./test-data node scripts/seed-passkit-test.js"
+    "seed:passkit-test": "DATA_DIR=./test-data node scripts/seed-passkit-test.js",
+    "set-user-password": "node scripts/set-user-password.mjs"
   },
   "dependencies": {
     "apns2": "^12.2.0",
