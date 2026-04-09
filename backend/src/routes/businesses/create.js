@@ -57,9 +57,10 @@ export function createHandler(req, res) {
       organizationName: (organizationName || name).trim(),
       backTerms: backTerms ? String(backTerms).trim() : null,
       backContact: backContact ? String(backContact).trim() : null,
-      backgroundColor: normalizeHex(backgroundColor),
-      foregroundColor: normalizeHex(foregroundColor),
-      labelColor: normalizeHex(labelColor),
+      // Défauts : fond blanc, titres noirs, textes bleus — bon contraste pour l’aperçu Ma carte / pastilles « Configurer ».
+      backgroundColor: normalizeHex(backgroundColor) ?? "#FFFFFF",
+      foregroundColor: normalizeHex(foregroundColor) ?? "#2563EB",
+      labelColor: normalizeHex(labelColor) ?? "#000000",
       userId,
     });
     const dir = join(businessAssetsDir, business.id);
