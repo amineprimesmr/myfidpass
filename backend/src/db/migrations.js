@@ -926,4 +926,26 @@ export function runMigrations(db) {
       ON social_metric_snapshots(business_id, channel, captured_at DESC);
   `),
   );
+
+  // ── v19 : connexions OAuth réseaux (Meta / Instagram, futurs fournisseurs) ──
+  markMigrationApplied(db, 19, "social_oauth_connections");
+  safeRun(db, () =>
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS social_oauth_connections (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT,
+      token_expires_at TEXT,
+      external_user_id TEXT,
+      metadata_json TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_social_oauth_business_provider
+      ON social_oauth_connections(business_id, provider);
+  `),
+  );
 }

@@ -55,6 +55,7 @@ import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
 import webPushRouter from "./routes/web-push.js";
 import deviceRouter from "./routes/device.js";
+import oauthMetaRouter from "./routes/oauth-meta.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics } from "./apns.js";
 import {
@@ -274,6 +275,7 @@ app.use(passkitWebserviceRouter);
 
 app.use("/api/auth", authRouter);
 app.use("/api/device", deviceRouter);
+app.use("/api/oauth", oauthMetaRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
 app.use("/api/payment", paymentRouter);

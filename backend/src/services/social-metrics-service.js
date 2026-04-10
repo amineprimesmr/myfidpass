@@ -9,6 +9,8 @@ import {
   getBaselineSnapshot,
   getPreviousSnapshot,
 } from "../db/social-metrics.js";
+import { getSocialOAuthConnection, PROVIDER_META_INSTAGRAM } from "../db/social-oauth.js";
+import { refreshFollowersFromStoredUserToken, isMetaOAuthConfigured } from "./meta-instagram-oauth.js";
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 const REQUEST_TIMEOUT_MS = 12000;
@@ -163,6 +165,8 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
       .reverse();
 
     const meta = CHANNEL_META[channel];
+    const oauthConnected =
+      channel === "instagram_follow" ? !!getSocialOAuthConnection(businessId, PROVIDER_META_INSTAGRAM) : false;
     channels.push({
       channel,
       label: meta.label,
@@ -174,12 +178,29 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
       delta_since_previous: deltaSincePrevious,
       history,
       google_auto_available: channel === "google_review" && !!GOOGLE_PLACES_API_KEY,
+      oauth_connected: oauthConnected,
     });
   }
 
   return {
     channels,
     google_places_configured: !!GOOGLE_PLACES_API_KEY,
+    meta_oauth_available: isMetaOAuthConfigured(),
     generated_at: new Date().toISOString(),
   };
+}
+
+/**
+ * @param {string} businessId
+ * @returns {Promise<{ ok: boolean, error?: string, followersCount?: number }>}
+ */
+export async function refreshInstagramOAuthForBusiness(businessId) {
+  const conn = getSocialOAuthConnection(businessId, PROVIDER_META_INSTAGRAM);
+  if (!conn?.access_token) return { ok: false, error: "no_oauth" };
+  const igUserId = conn.external_user_id;
+  if (!igUserId) return { ok: false, error: "no_ig_user" };
+  const r = await refreshFollowersFromStoredUserToken(conn.access_token, igUserId);
+  if (!r.ok) return r;
+  insertSocialMetricSnapshot(businessId, "instagram_follow", "oauth_meta", { followers: r.followersCount });
+  return { ok: true, followersCount: r.followersCount };
 }

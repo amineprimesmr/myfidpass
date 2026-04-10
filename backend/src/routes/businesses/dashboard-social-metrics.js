@@ -8,9 +8,11 @@ import {
   insertSocialMetricSnapshot,
   getLatestSnapshot,
 } from "../../db/social-metrics.js";
+import { getSocialOAuthConnection, PROVIDER_META_INSTAGRAM } from "../../db/social-oauth.js";
 import {
   buildSocialMetricsSummary,
   refreshGoogleSnapshotForBusiness,
+  refreshInstagramOAuthForBusiness,
   listEngagementChannelKeys,
   channelLabel,
 } from "../../services/social-metrics-service.js";
@@ -38,16 +40,38 @@ router.post("/social-metrics/refresh", refreshLimiter, async (req, res) => {
   const rewards = getEngagementRewards(business.id);
   const gr = rewards.google_review;
   const placeId = String(gr?.place_id ?? "").trim();
-  if (!gr?.enabled || !placeId) {
-    return res.status(400).json({ error: "Mission Google ou Place ID non configuré." });
+  const googleOk = !!(gr?.enabled && placeId);
+  const instagramOk = !!getSocialOAuthConnection(business.id, PROVIDER_META_INSTAGRAM);
+
+  if (!googleOk && !instagramOk) {
+    return res.status(400).json({
+      error: "Configurez Google (Place ID) ou connectez Instagram via OAuth pour rafraîchir.",
+    });
   }
+
   try {
-    const result = await refreshGoogleSnapshotForBusiness(business.id, placeId);
-    if (!result.ok) {
-      return res.status(502).json({ error: result.error || "google_fetch_failed" });
+    /** @type {{ google?: object, instagram?: object }} */
+    const refresh = {};
+    if (googleOk) {
+      refresh.google = await refreshGoogleSnapshotForBusiness(business.id, placeId);
     }
+    if (instagramOk) {
+      refresh.instagram = await refreshInstagramOAuthForBusiness(business.id);
+    }
+
+    const attemptedOk = [
+      googleOk ? refresh.google?.ok : true,
+      instagramOk ? refresh.instagram?.ok : true,
+    ].every(Boolean);
     const summary = buildSocialMetricsSummary(business.id, rewards);
-    return res.json({ ...summary, refresh: result });
+    if (!attemptedOk) {
+      return res.status(502).json({
+        error: "refresh_failed",
+        ...summary,
+        refresh,
+      });
+    }
+    return res.json({ ...summary, refresh });
   } catch (e) {
     return res.status(500).json({ error: "Erreur lors du rafraîchissement." });
   }
