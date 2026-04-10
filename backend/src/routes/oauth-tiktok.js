@@ -13,16 +13,13 @@ import {
   isTikTokOAuthConfigured,
 } from "../services/tiktok-oauth.js";
 import { syncEngagementUrlFromTikTokOAuth } from "../services/engagement-oauth-sync.js";
+import { buildNativeOAuthReturnUrl } from "../lib/oauth-native-redirect.js";
 import logger from "../lib/logger.js";
 
 const router = Router();
 
 function redirectToApp(query) {
-  const u = new URL("myfidpass://oauth-tiktok");
-  for (const [k, v] of Object.entries(query)) {
-    if (v != null && v !== "") u.searchParams.set(k, String(v));
-  }
-  return u.toString();
+  return buildNativeOAuthReturnUrl("tiktok", query);
 }
 
 router.get("/tiktok/callback", async (req, res) => {

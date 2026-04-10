@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "F2CJGJ69XU.com.myfidpass",
+        "paths": ["/oauth/*"]
+      }
+    ]
+  }
+}

@@ -15,16 +15,13 @@ import {
   isMetaOAuthConfigured,
 } from "../services/meta-instagram-oauth.js";
 import { syncEngagementUrlsFromMetaOAuth } from "../services/engagement-oauth-sync.js";
+import { buildNativeOAuthReturnUrl } from "../lib/oauth-native-redirect.js";
 import logger from "../lib/logger.js";
 
 const router = Router();
 
 function redirectToApp(query) {
-  const u = new URL("myfidpass://oauth-meta");
-  for (const [k, v] of Object.entries(query)) {
-    if (v != null && v !== "") u.searchParams.set(k, String(v));
-  }
-  return u.toString();
+  return buildNativeOAuthReturnUrl("meta", query);
 }
 
 router.get("/meta/callback", async (req, res) => {

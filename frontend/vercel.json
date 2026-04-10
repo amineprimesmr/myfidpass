@@ -1,6 +1,15 @@
 {
+  "headers": [
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://api.myfidpass.fr/api/$1" },
+    { "source": "/oauth/tiktok", "destination": "/oauth/tiktok.html" },
+    { "source": "/oauth/meta", "destination": "/oauth/meta.html" },
+    { "source": "/oauth/google-youtube", "destination": "/oauth/google-youtube.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

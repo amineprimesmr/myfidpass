@@ -13,16 +13,13 @@ import {
   isYouTubeOAuthConfigured,
 } from "../services/google-youtube-oauth.js";
 import { syncEngagementUrlFromYouTubeOAuth } from "../services/engagement-oauth-sync.js";
+import { buildNativeOAuthReturnUrl } from "../lib/oauth-native-redirect.js";
 import logger from "../lib/logger.js";
 
 const router = Router();
 
 function redirectToApp(query) {
-  const u = new URL("myfidpass://oauth-google-youtube");
-  for (const [k, v] of Object.entries(query)) {
-    if (v != null && v !== "") u.searchParams.set(k, String(v));
-  }
-  return u.toString();
+  return buildNativeOAuthReturnUrl("google-youtube", query);
 }
 
 router.get("/google-youtube/callback", async (req, res) => {
