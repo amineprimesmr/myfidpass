@@ -136,17 +136,20 @@ function parsePassUpdatedAt(str) {
  * ou mise à jour des textes pass (sans confondre avec une nouvelle diffusion — voir notification_pass_layout_at).
  */
 export function effectivePassKitRowUpdateTs(row) {
+  const passMs = Number(row.pass_last_modified_ms);
+  const passMsOk = Number.isFinite(passMs) && passMs > 0 ? passMs : 0;
   return Math.max(
     parsePassUpdatedAt(row.last_visit_at),
     parsePassUpdatedAt(row.last_broadcast_at),
     parsePassUpdatedAt(row.created_at),
-    parsePassUpdatedAt(row.notification_pass_layout_at)
+    parsePassUpdatedAt(row.notification_pass_layout_at),
+    passMsOk
   );
 }
 
 export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
   const base = db.prepare(
-    `SELECT pr.serial_number, m.last_visit_at, m.created_at, b.last_broadcast_at, b.notification_pass_layout_at
+    `SELECT pr.serial_number, m.last_visit_at, m.created_at, b.last_broadcast_at, b.notification_pass_layout_at, b.pass_last_modified_ms
      FROM pass_registrations pr
      INNER JOIN members m ON m.id = pr.serial_number
      INNER JOIN businesses b ON b.id = m.business_id

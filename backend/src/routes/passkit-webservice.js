@@ -192,6 +192,8 @@ function toTimestamp(dateStr) {
 
 /** Retourne la date HTTP la plus récente pour que l'iPhone refetch le pass (points, message, logos, icône campagne). */
 function getPassLastModified(member, business) {
+  const passMs = Number(business?.pass_last_modified_ms);
+  const passMsOk = Number.isFinite(passMs) && passMs > 0 ? passMs : null;
   const timestamps = [
     toTimestamp(member?.last_visit_at),
     toTimestamp(business?.last_broadcast_at),
@@ -200,6 +202,7 @@ function getPassLastModified(member, business) {
     toTimestamp(business?.logo_icon_updated_at),
     toTimestamp(business?.notification_icon_updated_at),
     toTimestamp(business?.card_background_updated_at),
+    passMsOk,
   ].filter((t) => t != null && Number.isFinite(t) && t > 0);
   const ts = timestamps.length > 0 ? Math.max(...timestamps) : 0;
   if (!Number.isFinite(ts) || ts <= 0) return new Date().toUTCString();

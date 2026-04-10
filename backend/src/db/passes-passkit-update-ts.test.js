@@ -38,4 +38,16 @@ describe("effectivePassKitRowUpdateTs (PassKit passesUpdatedSince)", () => {
     });
     expect(ts).toBe(Date.parse("2026-06-15T12:00:00Z"));
   });
+
+  it("prend en compte pass_last_modified_ms (icône notif / invalidation ms)", () => {
+    const iconMs = Date.parse("2026-08-20T10:00:00.500Z");
+    const ts = effectivePassKitRowUpdateTs({
+      last_visit_at: null,
+      last_broadcast_at: "2026-01-01 00:00:00",
+      notification_pass_layout_at: "2026-06-15 12:00:00",
+      created_at: "2020-01-01 00:00:00",
+      pass_last_modified_ms: iconMs,
+    });
+    expect(ts).toBe(iconMs);
+  });
 });

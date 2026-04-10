@@ -895,4 +895,16 @@ export function runMigrations(db) {
     );
   `),
   );
+
+  // Horodatage monotonique ms pour PassKit : Last-Modified HTTP n'a que la seconde — évite que
+  // deux changements (ex. icône notif) dans la même seconde ne fassent pas refetch le .pkpass.
+  const bizPassMs = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizPassMs.includes("pass_last_modified_ms")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN pass_last_modified_ms INTEGER"));
+    safeRun(db, () =>
+      db.exec(
+        `UPDATE businesses SET pass_last_modified_ms = (CAST(strftime('%s','now') AS INTEGER) * 1000) WHERE pass_last_modified_ms IS NULL`,
+      ),
+    );
+  }
 }

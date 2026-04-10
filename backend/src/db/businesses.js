@@ -129,9 +129,22 @@ export function createBusiness({
  * Invalide le cache PassKit après enregistrement des textes campagne (titre / modèle de notif),
  * sans toucher à `last_broadcast_at` (sinon le champ verso « Message » change de suffixe → alerte Wallet en boucle).
  */
+/**
+ * Incrémente un horodatage **ms** strictement croissant pour invalider PassKit (liste « passes à jour »
+ * + en-tête Last-Modified) même quand plusieurs mutations tombent dans la même seconde UTC.
+ */
+export function touchPassLastModifiedMs(businessId) {
+  if (!businessId) return;
+  const row = db.prepare("SELECT pass_last_modified_ms FROM businesses WHERE id = ?").get(businessId);
+  const prev = Number(row?.pass_last_modified_ms);
+  const next = Math.max(Date.now(), Number.isFinite(prev) ? prev : 0) + 1;
+  db.prepare("UPDATE businesses SET pass_last_modified_ms = ? WHERE id = ?").run(next, businessId);
+}
+
 export function bumpBusinessPassRefreshTimestamp(businessId) {
   if (!businessId) return;
   db.prepare("UPDATE businesses SET notification_pass_layout_at = ? WHERE id = ?").run(nowUtcSqlWithMs(), businessId);
+  touchPassLastModifiedMs(businessId);
 }
 
 export function updateBusiness(businessId, updates) {
@@ -277,6 +290,7 @@ export function updateBusiness(businessId, updates) {
   if (setClauses.length === 0) return getBusinessById(businessId);
   values.push(businessId);
   db.prepare(`UPDATE businesses SET ${setClauses.join(", ")} WHERE id = ?`).run(...values);
+  touchPassLastModifiedMs(businessId);
   return getBusinessById(businessId);
 }
 
