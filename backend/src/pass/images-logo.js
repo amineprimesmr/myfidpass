@@ -141,14 +141,32 @@ export async function resizeLogoForWebFlyerQrHero(inputBuffer) {
  * Icônes 29/58/87 px pour notifications / centre de notif Wallet.
  * cover + centre : remplit le carré (logo bandeau n’est plus miniature au milieu du blanc).
  * flatten sur blanc : rend l’icône opaque comme recommandé pour les passes.
+ *
+ * Étape intermédiaire **decode → PNG sRGB** : sans ça, certains JPEG (EXIF, profil) génèrent un PNG
+ * que Wallet affiche comme carré vide / générique sur la bannière alors que l’aperçu app (URL) est bon.
  */
 export async function resizeLogoForPassIcon(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
   const sharp = await getSharp();
   const white = { r: 255, g: 255, b: 255, alpha: 1 };
+
+  let normalized = null;
+  try {
+    const meta = await sharp(inputBuffer).metadata();
+    const hasAlpha = meta.hasAlpha === true || meta.channels === 4;
+    let pipeline = sharp(inputBuffer).rotate().toColorspace("srgb");
+    if (hasAlpha) {
+      pipeline = pipeline.flatten({ background: white });
+    }
+    normalized = await pipeline.png().toBuffer();
+  } catch (err) {
+    console.warn("[PassKit] resizeLogoForPassIcon normalisation:", err.message);
+    return null;
+  }
+  if (!normalized || normalized.length === 0) return null;
+
   const resizeOne = (size) =>
-    sharp(inputBuffer)
-      .rotate()
+    sharp(normalized)
       .resize(size, size, { fit: "cover", position: "center" })
       .flatten({ background: white })
       .png()
@@ -165,30 +183,14 @@ export async function resizeLogoForPassIcon(inputBuffer) {
     try {
       const opts = { fit: "contain", background: white };
       const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
-        sharp(inputBuffer).resize(ICON_SIZE_1X, ICON_SIZE_1X, opts).png().toBuffer(),
-        sharp(inputBuffer).resize(ICON_SIZE_2X, ICON_SIZE_2X, opts).png().toBuffer(),
-        sharp(inputBuffer).resize(ICON_SIZE_3X, ICON_SIZE_3X, opts).png().toBuffer(),
+        sharp(normalized).resize(ICON_SIZE_1X, ICON_SIZE_1X, opts).png().toBuffer(),
+        sharp(normalized).resize(ICON_SIZE_2X, ICON_SIZE_2X, opts).png().toBuffer(),
+        sharp(normalized).resize(ICON_SIZE_3X, ICON_SIZE_3X, opts).png().toBuffer(),
       ]);
       return { iconPng, iconPng2x, iconPng3x };
     } catch (err2) {
       console.warn("[PassKit] resizeLogoForPassIcon fallback failed:", err2.message);
-      try {
-        const resizeOneNoFlatten = (size) =>
-          sharp(inputBuffer)
-            .rotate()
-            .resize(size, size, { fit: "cover", position: "center" })
-            .png()
-            .toBuffer();
-        const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
-          resizeOneNoFlatten(ICON_SIZE_1X),
-          resizeOneNoFlatten(ICON_SIZE_2X),
-          resizeOneNoFlatten(ICON_SIZE_3X),
-        ]);
-        return { iconPng, iconPng2x, iconPng3x };
-      } catch (err3) {
-        console.warn("[PassKit] resizeLogoForPassIcon sans flatten failed:", err3.message);
-        return null;
-      }
+      return null;
     }
   }
 }
