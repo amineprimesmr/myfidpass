@@ -13,6 +13,7 @@ import {
   deleteWebPushSubscriptionByEndpoint,
   touchMemberLastVisit as dbTouchMemberLastVisit,
   setLastBroadcastMessage,
+  bumpBusinessPassRefreshTimestamp,
   getMerchantDeviceTokensForUser,
   deleteMerchantPushDeviceByToken,
   deletePassRegistrationsByPushToken,
@@ -164,6 +165,10 @@ export async function deliverCustomerBroadcast({
   const sentWebPush = webPushResults.filter((r) => r.ok).length;
 
   setLastBroadcastMessage(business.id, bodyMessage);
+  // Toujours pousser `notification_pass_layout_at` au moment de l’envoi : sinon le `Last-Modified`
+  // du pass peut rester cohérent avec un ancien envoi alors que l’icône notif vient d’être changée
+  // (max(timestamp) ne bat pas le cache Wallet / refetch).
+  bumpBusinessPassRefreshTimestamp(business.id);
   let sentPassKit = 0;
   if (passKitTokens.length > 0) {
     if (touchMemberLastVisit) {
