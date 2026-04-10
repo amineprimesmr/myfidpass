@@ -3,7 +3,7 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { getBusinessById } from "./businesses.js";
+import { getBusinessById, updateBusiness } from "./businesses.js";
 import { addTicketsForEngagement } from "./games-helpers.js";
 
 const db = getDb();
@@ -34,6 +34,34 @@ export function getEngagementRewards(businessId) {
   } catch (_e) {
     return { ...DEFAULT_ENGAGEMENT_REWARDS };
   }
+}
+
+/**
+ * Met à jour les URL des missions « suivre » depuis les comptes OAuth (liens profil publics).
+ * @param {string} businessId
+ * @param {Record<string, string>} urlPatch — clés : instagram_follow, facebook_follow, tiktok_follow, youtube_follow ; valeurs : URL https
+ * @returns {{ ok: boolean, updated?: boolean }}
+ */
+export function mergeEngagementRewardsUrlsFromOAuth(businessId, urlPatch) {
+  if (!businessId || !urlPatch || typeof urlPatch !== "object") return { ok: false };
+  const er = getEngagementRewards(businessId);
+  const beforeSnap = JSON.stringify(er);
+  for (const [key, raw] of Object.entries(urlPatch)) {
+    const url = typeof raw === "string" ? raw.trim() : "";
+    if (!url || !/^https:\/\//i.test(url)) continue;
+    if (!Object.prototype.hasOwnProperty.call(er, key) || typeof er[key] !== "object") continue;
+    const prev = er[key];
+    const pts = Number(prev.points);
+    er[key] = {
+      ...prev,
+      url,
+      enabled: true,
+      points: Number.isFinite(pts) && pts >= 1 ? pts : 10,
+    };
+  }
+  if (JSON.stringify(er) === beforeSnap) return { ok: true, updated: false };
+  updateBusiness(businessId, { engagement_rewards: er });
+  return { ok: true, updated: true };
 }
 
 export function hasMemberCompletedEngagementAction(businessId, memberId, actionType, cooldownMonths = 12) {

@@ -12,6 +12,7 @@ import {
   getYouTubeRedirectUri,
   isYouTubeOAuthConfigured,
 } from "../services/google-youtube-oauth.js";
+import { syncEngagementUrlFromYouTubeOAuth } from "../services/engagement-oauth-sync.js";
 import logger from "../lib/logger.js";
 
 const router = Router();
@@ -58,10 +59,18 @@ router.get("/google-youtube/callback", async (req, res) => {
       refreshToken: exchanged.refreshToken,
       tokenExpiresAt: exchanged.expiresAt,
       externalUserId: stats.channelId,
-      metadata: { channel_id: stats.channelId, channel_title: stats.channelTitle || "" },
+      metadata: {
+        channel_id: stats.channelId,
+        channel_title: stats.channelTitle || "",
+        custom_url: stats.customUrl || "",
+      },
     });
     insertSocialMetricSnapshot(business.id, "youtube_follow", "oauth_google_youtube", {
       followers: stats.subscriberCount,
+    });
+    syncEngagementUrlFromYouTubeOAuth(business.id, {
+      channelId: stats.channelId,
+      customUrl: stats.customUrl,
     });
   } catch (e) {
     logger.error({ err: e }, "[oauth-youtube] persist");

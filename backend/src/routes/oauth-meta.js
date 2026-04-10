@@ -14,6 +14,7 @@ import {
   getDefaultMetaRedirectUri,
   isMetaOAuthConfigured,
 } from "../services/meta-instagram-oauth.js";
+import { syncEngagementUrlsFromMetaOAuth } from "../services/engagement-oauth-sync.js";
 import logger from "../lib/logger.js";
 
 const router = Router();
@@ -76,6 +77,10 @@ router.get("/meta/callback", async (req, res) => {
         insertSocialMetricSnapshot(business.id, "facebook_follow", "oauth_meta", { followers: fb.fanCount });
       }
     }
+    syncEngagementUrlsFromMetaOAuth(business.id, {
+      username: ig.username,
+      facebookPageId: ig.facebookPageId,
+    });
   } catch (e) {
     logger.error({ err: e }, "[oauth-meta] persist");
     return res.redirect(302, redirectToApp({ error: "save_failed" }));

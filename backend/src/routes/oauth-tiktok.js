@@ -12,6 +12,7 @@ import {
   getTikTokRedirectUri,
   isTikTokOAuthConfigured,
 } from "../services/tiktok-oauth.js";
+import { syncEngagementUrlFromTikTokOAuth } from "../services/engagement-oauth-sync.js";
 import logger from "../lib/logger.js";
 
 const router = Router();
@@ -59,11 +60,12 @@ router.get("/tiktok/callback", async (req, res) => {
       refreshToken: exchanged.refreshToken,
       tokenExpiresAt: exchanged.expiresAt,
       externalUserId: openId,
-      metadata: { display_name: "" },
+      metadata: { username: user.username || "", display_name: "" },
     });
     insertSocialMetricSnapshot(business.id, "tiktok_follow", "oauth_tiktok", {
       followers: user.followerCount,
     });
+    syncEngagementUrlFromTikTokOAuth(business.id, { username: user.username });
   } catch (e) {
     logger.error({ err: e }, "[oauth-tiktok] persist");
     return res.redirect(302, redirectToApp({ error: "save_failed" }));

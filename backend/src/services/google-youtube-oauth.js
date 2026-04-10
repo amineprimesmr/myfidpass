@@ -120,7 +120,8 @@ export async function fetchYouTubeChannelStats(accessToken) {
   const subs = Number(ch.statistics?.subscriberCount);
   const channelId = String(ch.id || "");
   const title = String(ch.snippet?.title || "").trim();
+  const customUrl = String(ch.snippet?.customUrl || "").trim();
   if (!channelId) return { ok: false, error: "no_channel" };
   if (!Number.isFinite(subs)) return { ok: false, error: "no_subscriber_count" };
-  return { ok: true, channelId, subscriberCount: subs, channelTitle: title };
+  return { ok: true, channelId, subscriberCount: subs, channelTitle: title, customUrl };
 }

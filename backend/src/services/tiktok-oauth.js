@@ -98,23 +98,39 @@ export async function refreshTikTokAccessToken(refreshToken) {
   return { ok: true, accessToken: tok, expiresAt };
 }
 
-/**
- * @returns {Promise<{ ok: boolean, error?: string, openId?: string, followerCount?: number }>}
- */
-export async function fetchTikTokUserStats(accessToken) {
+async function fetchTikTokUserInfoRequest(accessToken, fields) {
   const u = new URL("https://open.tiktokapis.com/v2/user/info/");
-  u.searchParams.set("fields", "open_id,display_name,follower_count,following_count");
+  u.searchParams.set("fields", fields);
   const res = await fetch(u.toString(), {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const data = await res.json().catch(() => ({}));
+  return { res, data };
+}
+
+function tiktokFieldsError(data) {
+  const m = String(data?.error?.message || data?.message || data?.error?.code || "").toLowerCase();
+  return m.includes("field") || m.includes("invalid") || m.includes("scope");
+}
+
+/**
+ * @returns {Promise<{ ok: boolean, error?: string, openId?: string, followerCount?: number, username?: string }>}
+ */
+export async function fetchTikTokUserStats(accessToken) {
+  const fieldsWithUser = "open_id,display_name,username,follower_count,following_count";
+  const fieldsBasic = "open_id,display_name,follower_count,following_count";
+  let { res, data } = await fetchTikTokUserInfoRequest(accessToken, fieldsWithUser);
+  if (!res.ok && tiktokFieldsError(data)) {
+    ({ res, data } = await fetchTikTokUserInfoRequest(accessToken, fieldsBasic));
+  }
   const user = data.data?.user || data.user || data.data;
   const openId = user?.open_id || user?.union_id || data.open_id;
   const fc = user?.follower_count ?? user?.followerCount;
   const n = Number(fc);
+  const username = String(user?.username || user?.unique_id || "").trim();
   if (!res.ok || !Number.isFinite(n)) {
     logger.warn({ data }, "[tiktok-oauth] user info");
     return { ok: false, error: data.error?.message || data.message || "user_info_failed" };
   }
-  return { ok: true, openId: openId ? String(openId) : "", followerCount: n };
+  return { ok: true, openId: openId ? String(openId) : "", followerCount: n, username };
 }
