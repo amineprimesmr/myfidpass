@@ -17,6 +17,7 @@ import {
   logNotification,
   createNotificationBatch,
   setLastBroadcastMessage,
+  bumpBusinessPassRefreshTimestamp,
   touchMemberLastVisit,
   removeTestPassKitDevices,
   getCampaignSegmentCounts,
@@ -134,6 +135,9 @@ async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage
     "Myfidpass"
   ).trim();
   setLastBroadcastMessage(business.id, bodyMessage);
+  // Aligné sur `deliverCustomerBroadcast` : invalide PassKit (notification_pass_layout_at + pass_last_modified_ms)
+  // pour que l’iPhone refetch le .pkpass avant/après le push test (icône `icon.png` à jour).
+  bumpBusinessPassRefreshTimestamp(business.id);
 
   const batchId = createNotificationBatch({
     businessId: business.id,
