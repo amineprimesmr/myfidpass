@@ -144,19 +144,14 @@ export async function generatePass(member, business = null, options = {}) {
     }
   }
 
+  /**
+   * Icône Wallet (lock screen / liste) : **uniquement** `notification_icon` (PATCH dédié page Notifs).
+   * Ne pas repliquer sur logo carré ni bandeau « Ma carte » — sinon l’icône notif = visuel carte (bug produit).
+   * Sans média notif : placeholder texte (comme strip vide), jamais le logo strip.
+   */
   let passIconSourceBuf = null;
   if (business?.notification_icon_base64) {
     const d = String(business.notification_icon_base64).replace(/^data:image\/\w+;base64,/, "").trim();
-    const b = Buffer.from(d, "base64");
-    if (b.length > 0) passIconSourceBuf = b;
-  }
-  if (!passIconSourceBuf && business?.logo_icon_base64) {
-    const d = String(business.logo_icon_base64).replace(/^data:image\/\w+;base64,/, "").trim();
-    const b = Buffer.from(d, "base64");
-    if (b.length > 0) passIconSourceBuf = b;
-  }
-  if (!passIconSourceBuf && business?.logo_base64) {
-    const d = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "").trim();
     const b = Buffer.from(d, "base64");
     if (b.length > 0) passIconSourceBuf = b;
   }
@@ -167,16 +162,8 @@ export async function generatePass(member, business = null, options = {}) {
       buffers["icon@2x.png"] = iconResized.iconPng2x;
       buffers["icon@3x.png"] = iconResized.iconPng3x;
       if (process.env.NODE_ENV === "production") {
-        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis logo carré ou bandeau");
+        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon uniquement");
       }
-    }
-  } else if (buffers["logo.png"] && buffers["logo.png"].length > 0) {
-    // Même rendu que le bandeau logo (y compris [ Votre logo ] généré plus haut).
-    const iconResized = await resizeLogoForPassIcon(buffers["logo.png"]);
-    if (iconResized) {
-      buffers["icon.png"] = iconResized.iconPng;
-      buffers["icon@2x.png"] = iconResized.iconPng2x;
-      buffers["icon@3x.png"] = iconResized.iconPng3x;
     }
   } else {
     const textLogo = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
