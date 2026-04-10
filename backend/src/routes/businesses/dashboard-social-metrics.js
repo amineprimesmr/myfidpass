@@ -1,5 +1,5 @@
 /**
- * Métriques sociales & avis : historique, refresh Google Places, saisie manuelle (followers, etc.).
+ * Métriques sociales & avis : historique, refresh Google Places + OAuth (Meta, YouTube, TikTok).
  */
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
@@ -8,11 +8,19 @@ import {
   insertSocialMetricSnapshot,
   getLatestSnapshot,
 } from "../../db/social-metrics.js";
-import { getSocialOAuthConnection, PROVIDER_META_INSTAGRAM } from "../../db/social-oauth.js";
+import {
+  getSocialOAuthConnection,
+  PROVIDER_META_INSTAGRAM,
+  PROVIDER_GOOGLE_YOUTUBE,
+  PROVIDER_TIKTOK,
+} from "../../db/social-oauth.js";
 import {
   buildSocialMetricsSummary,
   refreshGoogleSnapshotForBusiness,
   refreshInstagramOAuthForBusiness,
+  refreshFacebookFanOAuthForBusiness,
+  refreshYouTubeOAuthForBusiness,
+  refreshTikTokOAuthForBusiness,
   listEngagementChannelKeys,
   channelLabel,
 } from "../../services/social-metrics-service.js";
@@ -41,30 +49,49 @@ router.post("/social-metrics/refresh", refreshLimiter, async (req, res) => {
   const gr = rewards.google_review;
   const placeId = String(gr?.place_id ?? "").trim();
   const googleOk = !!(gr?.enabled && placeId);
-  const instagramOk = !!getSocialOAuthConnection(business.id, PROVIDER_META_INSTAGRAM);
+  const metaIg = !!getSocialOAuthConnection(business.id, PROVIDER_META_INSTAGRAM);
+  const youtubeOk = !!getSocialOAuthConnection(business.id, PROVIDER_GOOGLE_YOUTUBE);
+  const tiktokOk = !!getSocialOAuthConnection(business.id, PROVIDER_TIKTOK);
 
-  if (!googleOk && !instagramOk) {
+  if (!googleOk && !metaIg && !youtubeOk && !tiktokOk) {
     return res.status(400).json({
-      error: "Configurez Google (Place ID) ou connectez Instagram via OAuth pour rafraîchir.",
+      error:
+        "Connectez au moins un réseau (Meta/Instagram, YouTube, TikTok) ou configurez Google (Place ID) pour rafraîchir.",
     });
   }
 
   try {
-    /** @type {{ google?: object, instagram?: object }} */
+    /** @type {Record<string, object>} */
     const refresh = {};
+    let failed = false;
+
     if (googleOk) {
       refresh.google = await refreshGoogleSnapshotForBusiness(business.id, placeId);
+      if (!refresh.google?.ok) failed = true;
     }
-    if (instagramOk) {
+    if (metaIg) {
       refresh.instagram = await refreshInstagramOAuthForBusiness(business.id);
+      if (!refresh.instagram?.ok) failed = true;
+      refresh.facebook = await refreshFacebookFanOAuthForBusiness(business.id);
+      if (
+        !refresh.facebook?.ok &&
+        refresh.facebook?.error !== "no_facebook_page" &&
+        refresh.facebook?.error !== "no_oauth"
+      ) {
+        failed = true;
+      }
+    }
+    if (youtubeOk) {
+      refresh.youtube = await refreshYouTubeOAuthForBusiness(business.id);
+      if (!refresh.youtube?.ok) failed = true;
+    }
+    if (tiktokOk) {
+      refresh.tiktok = await refreshTikTokOAuthForBusiness(business.id);
+      if (!refresh.tiktok?.ok) failed = true;
     }
 
-    const attemptedOk = [
-      googleOk ? refresh.google?.ok : true,
-      instagramOk ? refresh.instagram?.ok : true,
-    ].every(Boolean);
     const summary = buildSocialMetricsSummary(business.id, rewards);
-    if (!attemptedOk) {
+    if (failed) {
       return res.status(502).json({
         error: "refresh_failed",
         ...summary,
@@ -78,9 +105,16 @@ router.post("/social-metrics/refresh", refreshLimiter, async (req, res) => {
 });
 
 /**
- * POST { channel, followers? | reviews_count? | rating? }
+ * Désactivé par défaut : métriques issues des OAuth uniquement (SOCIAL_METRICS_ALLOW_MANUAL=true pour rétablir).
  */
 router.post("/social-metrics/manual", (req, res) => {
+  if (process.env.SOCIAL_METRICS_ALLOW_MANUAL !== "true") {
+    return res.status(400).json({
+      error: "saisie_manuelle_desactivee",
+      hint: "Connectez les réseaux via OAuth ou définissez SOCIAL_METRICS_ALLOW_MANUAL=true (secours).",
+    });
+  }
+
   const business = req.business;
   const body = req.body || {};
   const channel = String(body.channel || "").trim();

@@ -10,6 +10,7 @@ import {
   verifyMetaOAuthState,
   exchangeAuthorizationCode,
   fetchInstagramBusinessFromUserToken,
+  fetchFacebookPageFanCount,
   getDefaultMetaRedirectUri,
   isMetaOAuthConfigured,
 } from "../services/meta-instagram-oauth.js";
@@ -69,6 +70,12 @@ router.get("/meta/callback", async (req, res) => {
     insertSocialMetricSnapshot(business.id, "instagram_follow", "oauth_meta", {
       followers: ig.followersCount,
     });
+    if (ig.facebookPageId && ig.pageAccessToken) {
+      const fb = await fetchFacebookPageFanCount(ig.facebookPageId, ig.pageAccessToken);
+      if (fb.ok) {
+        insertSocialMetricSnapshot(business.id, "facebook_follow", "oauth_meta", { followers: fb.fanCount });
+      }
+    }
   } catch (e) {
     logger.error({ err: e }, "[oauth-meta] persist");
     return res.redirect(302, redirectToApp({ error: "save_failed" }));

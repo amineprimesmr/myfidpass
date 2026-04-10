@@ -166,3 +166,35 @@ export async function refreshFollowersFromStoredUserToken(userAccessToken, igUse
   }
   return { ok: false, error: "page_not_found_for_ig" };
 }
+
+/**
+ * Fans de la Page Facebook (Graph API) — jeton Page requis.
+ */
+export async function fetchFacebookPageFanCount(pageId, pageAccessToken) {
+  if (!pageId || !pageAccessToken) return { ok: false, error: "missing_page" };
+  const u = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/${encodeURIComponent(pageId)}`);
+  u.searchParams.set("fields", "fan_count");
+  u.searchParams.set("access_token", pageAccessToken);
+  const res = await fetchJson(u.toString());
+  const n = Number(res.data?.fan_count);
+  if (!res.ok || !Number.isFinite(n)) {
+    return { ok: false, error: res.data?.error?.message || "fan_count_failed" };
+  }
+  return { ok: true, fanCount: n };
+}
+
+/**
+ * Rafraîchit le nombre de fans Page à partir du jeton utilisateur Meta (même connexion qu’Instagram).
+ */
+export async function refreshFacebookFanFromMetaUserToken(userAccessToken, facebookPageId) {
+  const u = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/me/accounts`);
+  u.searchParams.set("fields", "id,access_token");
+  u.searchParams.set("access_token", userAccessToken);
+  const acc = await fetchJson(u.toString());
+  if (!acc.ok || !Array.isArray(acc.data?.data)) {
+    return { ok: false, error: acc.data?.error?.message || "me_accounts_failed" };
+  }
+  const page = acc.data.data.find((p) => String(p.id) === String(facebookPageId));
+  if (!page?.access_token) return { ok: false, error: "page_not_found" };
+  return fetchFacebookPageFanCount(facebookPageId, page.access_token);
+}

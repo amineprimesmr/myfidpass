@@ -63,7 +63,7 @@ import {
   summarizeExportRows,
 } from "../../lib/merchant-transaction-export.js";
 import socialMetricsRouter from "./dashboard-social-metrics.js";
-import dashboardSocialOauthMetaRouter from "./dashboard-social-oauth-meta.js";
+import dashboardSocialOauthRouter from "./dashboard-social-oauth.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 
 const router = Router({ mergeParams: true });
@@ -99,7 +99,7 @@ function requireDashboard(req, res, next) {
 
 router.use(requireDashboard);
 router.use(socialMetricsRouter);
-router.use(dashboardSocialOauthMetaRouter);
+router.use(dashboardSocialOauthRouter);
 
 // ——— Settings ———
 router.get("/settings", (req, res) => {

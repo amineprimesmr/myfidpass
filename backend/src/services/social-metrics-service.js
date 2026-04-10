@@ -1,6 +1,5 @@
 /**
- * Agrégation métriques sociales + fetch Google Places (avis / note).
- * Les autres réseaux : snapshots manuels (commerçant saisit followers, etc.).
+ * Agrégation métriques sociales + Google Places + OAuth (Meta/IG+FB, YouTube, TikTok).
  */
 import {
   insertSocialMetricSnapshot,
@@ -9,8 +8,28 @@ import {
   getBaselineSnapshot,
   getPreviousSnapshot,
 } from "../db/social-metrics.js";
-import { getSocialOAuthConnection, PROVIDER_META_INSTAGRAM } from "../db/social-oauth.js";
-import { refreshFollowersFromStoredUserToken, isMetaOAuthConfigured } from "./meta-instagram-oauth.js";
+import {
+  getSocialOAuthConnection,
+  upsertSocialOAuthConnection,
+  PROVIDER_META_INSTAGRAM,
+  PROVIDER_GOOGLE_YOUTUBE,
+  PROVIDER_TIKTOK,
+} from "../db/social-oauth.js";
+import {
+  refreshFollowersFromStoredUserToken,
+  refreshFacebookFanFromMetaUserToken,
+  isMetaOAuthConfigured,
+} from "./meta-instagram-oauth.js";
+import {
+  fetchYouTubeChannelStats,
+  refreshYouTubeAccessToken,
+  isYouTubeOAuthConfigured,
+} from "./google-youtube-oauth.js";
+import {
+  fetchTikTokUserStats,
+  refreshTikTokAccessToken,
+  isTikTokOAuthConfigured,
+} from "./tiktok-oauth.js";
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 const REQUEST_TIMEOUT_MS = 12000;
@@ -27,6 +46,15 @@ const CHANNEL_META = {
   trustpilot_review: { label: "Trustpilot", primaryMetric: "reviews_count" },
   tripadvisor_review: { label: "Tripadvisor", primaryMetric: "reviews_count" },
 };
+
+function parseConnMetadata(conn) {
+  if (!conn?.metadata_json) return {};
+  try {
+    return JSON.parse(conn.metadata_json);
+  } catch {
+    return {};
+  }
+}
 
 export function listEngagementChannelKeys() {
   return Object.keys(CHANNEL_META);
@@ -124,6 +152,11 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
   const er = engagementRewards && typeof engagementRewards === "object" ? engagementRewards : {};
   const channels = [];
 
+  const metaConn = getSocialOAuthConnection(businessId, PROVIDER_META_INSTAGRAM);
+  const ytConn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_YOUTUBE);
+  const ttConn = getSocialOAuthConnection(businessId, PROVIDER_TIKTOK);
+  const metaMeta = parseConnMetadata(metaConn);
+
   for (const channel of Object.keys(CHANNEL_META)) {
     const cfg = er[channel];
     const enabled = !!(cfg && cfg.enabled);
@@ -164,9 +197,17 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
       .filter(Boolean)
       .reverse();
 
+    let oauthConnected = false;
+    if (channel === "instagram_follow" || channel === "facebook_follow") {
+      oauthConnected = !!metaConn?.access_token;
+      if (channel === "facebook_follow" && !metaMeta.facebook_page_id) oauthConnected = false;
+    } else if (channel === "youtube_follow") {
+      oauthConnected = !!ytConn?.access_token;
+    } else if (channel === "tiktok_follow") {
+      oauthConnected = !!ttConn?.access_token;
+    }
+
     const meta = CHANNEL_META[channel];
-    const oauthConnected =
-      channel === "instagram_follow" ? !!getSocialOAuthConnection(businessId, PROVIDER_META_INSTAGRAM) : false;
     channels.push({
       channel,
       label: meta.label,
@@ -186,12 +227,13 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
     channels,
     google_places_configured: !!GOOGLE_PLACES_API_KEY,
     meta_oauth_available: isMetaOAuthConfigured(),
+    youtube_oauth_available: isYouTubeOAuthConfigured(),
+    tiktok_oauth_available: isTikTokOAuthConfigured(),
     generated_at: new Date().toISOString(),
   };
 }
 
 /**
- * @param {string} businessId
  * @returns {Promise<{ ok: boolean, error?: string, followersCount?: number }>}
  */
 export async function refreshInstagramOAuthForBusiness(businessId) {
@@ -203,4 +245,109 @@ export async function refreshInstagramOAuthForBusiness(businessId) {
   if (!r.ok) return r;
   insertSocialMetricSnapshot(businessId, "instagram_follow", "oauth_meta", { followers: r.followersCount });
   return { ok: true, followersCount: r.followersCount };
+}
+
+/**
+ * Fans Page Facebook (même OAuth Meta qu’Instagram).
+ */
+export async function refreshFacebookFanOAuthForBusiness(businessId) {
+  const conn = getSocialOAuthConnection(businessId, PROVIDER_META_INSTAGRAM);
+  if (!conn?.access_token) return { ok: false, error: "no_oauth" };
+  const meta = parseConnMetadata(conn);
+  const pageId = meta.facebook_page_id;
+  if (!pageId) return { ok: false, error: "no_facebook_page" };
+  const r = await refreshFacebookFanFromMetaUserToken(conn.access_token, pageId);
+  if (!r.ok) return r;
+  insertSocialMetricSnapshot(businessId, "facebook_follow", "oauth_meta", { followers: r.fanCount });
+  return { ok: true, fanCount: r.fanCount };
+}
+
+/**
+ * @returns {Promise<{ ok: boolean, error?: string, subscriberCount?: number }>}
+ */
+export async function refreshYouTubeOAuthForBusiness(businessId) {
+  let conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_YOUTUBE);
+  if (!conn?.access_token && !conn?.refresh_token) return { ok: false, error: "no_oauth" };
+  let accessToken = conn.access_token;
+  if (!accessToken && conn.refresh_token) {
+    const ref = await refreshYouTubeAccessToken(conn.refresh_token);
+    if (!ref.ok) return { ok: false, error: ref.error || "refresh_failed" };
+    accessToken = ref.accessToken;
+    upsertSocialOAuthConnection({
+      businessId,
+      provider: PROVIDER_GOOGLE_YOUTUBE,
+      accessToken: ref.accessToken,
+      refreshToken: conn.refresh_token,
+      tokenExpiresAt: ref.expiresAt,
+      externalUserId: conn.external_user_id,
+      metadata: parseConnMetadata(conn),
+    });
+    conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_YOUTUBE);
+  }
+  let stats = await fetchYouTubeChannelStats(accessToken);
+  if (!stats.ok && conn.refresh_token) {
+    const ref = await refreshYouTubeAccessToken(conn.refresh_token);
+    if (ref.ok) {
+      accessToken = ref.accessToken;
+      upsertSocialOAuthConnection({
+        businessId,
+        provider: PROVIDER_GOOGLE_YOUTUBE,
+        accessToken: ref.accessToken,
+        refreshToken: conn.refresh_token,
+        tokenExpiresAt: ref.expiresAt,
+        externalUserId: conn.external_user_id,
+        metadata: parseConnMetadata(conn),
+      });
+      stats = await fetchYouTubeChannelStats(accessToken);
+    }
+  }
+  if (!stats.ok) return stats;
+  insertSocialMetricSnapshot(businessId, "youtube_follow", "oauth_google_youtube", {
+    followers: stats.subscriberCount,
+  });
+  return { ok: true, subscriberCount: stats.subscriberCount };
+}
+
+/**
+ * @returns {Promise<{ ok: boolean, error?: string, followerCount?: number }>}
+ */
+export async function refreshTikTokOAuthForBusiness(businessId) {
+  let conn = getSocialOAuthConnection(businessId, PROVIDER_TIKTOK);
+  if (!conn?.access_token && !conn?.refresh_token) return { ok: false, error: "no_oauth" };
+  let accessToken = conn.access_token;
+  if (!accessToken && conn.refresh_token) {
+    const ref = await refreshTikTokAccessToken(conn.refresh_token);
+    if (!ref.ok) return { ok: false, error: ref.error || "refresh_failed" };
+    accessToken = ref.accessToken;
+    upsertSocialOAuthConnection({
+      businessId,
+      provider: PROVIDER_TIKTOK,
+      accessToken: ref.accessToken,
+      refreshToken: conn.refresh_token,
+      tokenExpiresAt: ref.expiresAt,
+      externalUserId: conn.external_user_id,
+      metadata: parseConnMetadata(conn),
+    });
+    conn = getSocialOAuthConnection(businessId, PROVIDER_TIKTOK);
+  }
+  let user = await fetchTikTokUserStats(accessToken);
+  if (!user.ok && conn.refresh_token) {
+    const ref = await refreshTikTokAccessToken(conn.refresh_token);
+    if (ref.ok) {
+      accessToken = ref.accessToken;
+      upsertSocialOAuthConnection({
+        businessId,
+        provider: PROVIDER_TIKTOK,
+        accessToken: ref.accessToken,
+        refreshToken: conn.refresh_token,
+        tokenExpiresAt: ref.expiresAt,
+        externalUserId: conn.external_user_id,
+        metadata: parseConnMetadata(conn),
+      });
+      user = await fetchTikTokUserStats(accessToken);
+    }
+  }
+  if (!user.ok) return user;
+  insertSocialMetricSnapshot(businessId, "tiktok_follow", "oauth_tiktok", { followers: user.followerCount });
+  return { ok: true, followerCount: user.followerCount };
 }

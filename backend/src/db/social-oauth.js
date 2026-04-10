@@ -7,6 +7,17 @@ import { getDb } from "./connection.js";
 const db = getDb();
 
 export const PROVIDER_META_INSTAGRAM = "meta_instagram";
+/** Même jeton Meta : métrique Page Facebook (fans) — pas de ligne OAuth séparée. */
+export const PROVIDER_GOOGLE_YOUTUBE = "google_youtube";
+export const PROVIDER_TIKTOK = "tiktok";
+
+/** Canaux dont le suivi repose sur OAuth (pas de saisie manuelle côté produit). */
+export const OAUTH_PROVIDER_BY_CHANNEL = {
+  instagram_follow: PROVIDER_META_INSTAGRAM,
+  facebook_follow: PROVIDER_META_INSTAGRAM,
+  youtube_follow: PROVIDER_GOOGLE_YOUTUBE,
+  tiktok_follow: PROVIDER_TIKTOK,
+};
 
 /**
  * @param {object} row
