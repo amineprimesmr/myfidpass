@@ -907,4 +907,23 @@ export function runMigrations(db) {
       ),
     );
   }
+
+  // ── v18 : historique métriques avis & réseaux (deltas, graphiques) ──
+  markMigrationApplied(db, 18, "social_metric_snapshots");
+  safeRun(db, () =>
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS social_metric_snapshots (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      source TEXT NOT NULL,
+      captured_at TEXT NOT NULL,
+      metrics_json TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_social_metrics_business_channel_time
+      ON social_metric_snapshots(business_id, channel, captured_at DESC);
+  `),
+  );
 }

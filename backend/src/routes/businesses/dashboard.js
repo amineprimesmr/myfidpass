@@ -62,6 +62,8 @@ import {
   buildExportRows,
   summarizeExportRows,
 } from "../../lib/merchant-transaction-export.js";
+import socialMetricsRouter from "./dashboard-social-metrics.js";
+import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 
 const router = Router({ mergeParams: true });
 
@@ -95,6 +97,7 @@ function requireDashboard(req, res, next) {
 }
 
 router.use(requireDashboard);
+router.use(socialMetricsRouter);
 
 // ——— Settings ———
 router.get("/settings", (req, res) => {
@@ -626,6 +629,22 @@ router.patch("/settings", async (req, res) => {
         });
       }
     }
+  }
+  if (updates.engagement_rewards !== undefined) {
+    const bid = business.id;
+    process.nextTick(() => {
+      (async () => {
+        try {
+          const er = getEngagementRewards(bid);
+          const pid = String(er.google_review?.place_id ?? "").trim();
+          if (er.google_review?.enabled && pid) {
+            await refreshGoogleSnapshotForBusiness(bid, pid);
+          }
+        } catch (_) {
+          /* métriques best-effort */
+        }
+      })();
+    });
   }
   return res.status(200).send();
   } catch (err) {
