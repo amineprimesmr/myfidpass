@@ -172,7 +172,23 @@ export async function resizeLogoForPassIcon(inputBuffer) {
       return { iconPng, iconPng2x, iconPng3x };
     } catch (err2) {
       console.warn("[PassKit] resizeLogoForPassIcon fallback failed:", err2.message);
-      return null;
+      try {
+        const resizeOneNoFlatten = (size) =>
+          sharp(inputBuffer)
+            .rotate()
+            .resize(size, size, { fit: "cover", position: "center" })
+            .png()
+            .toBuffer();
+        const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
+          resizeOneNoFlatten(ICON_SIZE_1X),
+          resizeOneNoFlatten(ICON_SIZE_2X),
+          resizeOneNoFlatten(ICON_SIZE_3X),
+        ]);
+        return { iconPng, iconPng2x, iconPng3x };
+      } catch (err3) {
+        console.warn("[PassKit] resizeLogoForPassIcon sans flatten failed:", err3.message);
+        return null;
+      }
     }
   }
 }

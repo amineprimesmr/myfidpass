@@ -148,22 +148,36 @@ export async function generatePass(member, business = null, options = {}) {
    * Icône Wallet (lock screen / liste) : **uniquement** `notification_icon` (PATCH dédié page Notifs).
    * Ne pas repliquer sur logo carré ni bandeau « Ma carte » — sinon l’icône notif = visuel carte (bug produit).
    * Sans média notif : placeholder texte (comme strip vide), jamais le logo strip.
+   *
+   * IMPORTANT : `buildBuffers()` pose une icône **template** (cercle) si aucun fichier disque — si on laisse
+   * ce buffer quand `resizeLogoForPassIcon` échoue, la vraie notif Wallet garde ce visuel générique au lieu
+   * de la photo (bug rapporté : aperçu app OK, bannière système = icône blanche / défaut).
    */
+  delete buffers["icon.png"];
+  delete buffers["icon@2x.png"];
+  delete buffers["icon@3x.png"];
+
   let passIconSourceBuf = null;
   if (business?.notification_icon_base64) {
     const d = String(business.notification_icon_base64).replace(/^data:image\/\w+;base64,/, "").trim();
     const b = Buffer.from(d, "base64");
     if (b.length > 0) passIconSourceBuf = b;
   }
+
+  let notificationIconResized = null;
   if (passIconSourceBuf) {
-    const iconResized = await resizeLogoForPassIcon(passIconSourceBuf);
-    if (iconResized) {
-      buffers["icon.png"] = iconResized.iconPng;
-      buffers["icon@2x.png"] = iconResized.iconPng2x;
-      buffers["icon@3x.png"] = iconResized.iconPng3x;
-      if (process.env.NODE_ENV === "production") {
-        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon uniquement");
-      }
+    notificationIconResized = await resizeLogoForPassIcon(passIconSourceBuf);
+    if (!notificationIconResized && process.env.NODE_ENV === "production") {
+      console.warn("[PassKit] notification_icon présent mais resizeLogoForPassIcon a échoué — repli placeholder texte");
+    }
+  }
+
+  if (notificationIconResized) {
+    buffers["icon.png"] = notificationIconResized.iconPng;
+    buffers["icon@2x.png"] = notificationIconResized.iconPng2x;
+    buffers["icon@3x.png"] = notificationIconResized.iconPng3x;
+    if (process.env.NODE_ENV === "production") {
+      console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon uniquement");
     }
   } else {
     const textLogo = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
