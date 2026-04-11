@@ -110,7 +110,28 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   setFidelityRouteLoadingLogo(loadingOverlay, business, slug, apiBase);
   startFidelityRouteLoadingAnimations(loadingOverlay);
 
+  /**
+   * Lien « Voir en ligne » au dos du pass : /fidelity/:slug?m=<uuid> — ouvre directement le compte web.
+   */
+  async function tryHydrateMemberFromPassLink() {
+    if (typeof window === "undefined" || typeof URLSearchParams === "undefined") return false;
+    const sp = new URLSearchParams(window.location.search);
+    const mid = (sp.get("m") || sp.get("member") || "").trim();
+    if (!mid) return false;
+    try {
+      await hydrateMember(mid);
+      localStorage.setItem(memberStorageKey(slug), JSON.stringify({ memberId: mid, createdAt: Date.now() }));
+      if (typeof history !== "undefined" && history.replaceState) {
+        history.replaceState(null, "", `/fidelity/${encodeURIComponent(slug)}${window.location.hash || ""}`);
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async function ensureGuestSession() {
+    if (await tryHydrateMemberFromPassLink()) return;
     const raw = localStorage.getItem(memberStorageKey(slug));
     if (raw) {
       try {

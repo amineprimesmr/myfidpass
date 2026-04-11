@@ -265,6 +265,18 @@ export async function initRouting() {
     return null;
   }
 
+  /* Anciens passes : verso pointait vers /?ref=pass&b=slug — renvoyer vers la vraie page client. */
+  {
+    const sp = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    if (sp.get("ref") === "pass") {
+      const b = (sp.get("b") || "").trim();
+      if (b && !/[/?#]/.test(b) && typeof window !== "undefined" && window.location?.origin) {
+        window.location.replace(`${window.location.origin}/fidelity/${encodeURIComponent(b)}`);
+        return null;
+      }
+    }
+  }
+
   document.body.classList.remove("page-builder");
   if (c.builderApp) c.builderApp.classList.add("hidden");
   if (c.landingTemplates && c.landing) {

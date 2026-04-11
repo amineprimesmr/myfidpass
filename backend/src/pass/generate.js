@@ -453,9 +453,13 @@ export async function generatePass(member, business = null, options = {}) {
 
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const frontendUrl = (process.env.FRONTEND_URL || process.env.API_URL || "https://myfidpass.fr").replace(/\/$/, "");
+  /** Page web fidélité client : /fidelity/:slug + m= pour rouvrir le compte (localStorage + hydrate). */
+  const memberIdForWeb = member?.id != null ? String(member.id).trim() : "";
   const backUrl = business?.slug
-    ? `${frontendUrl}/?ref=pass&b=${encodeURIComponent(business.slug)}`
-    : `${frontendUrl}/?ref=pass`;
+    ? memberIdForWeb
+      ? `${frontendUrl}/fidelity/${encodeURIComponent(business.slug)}?m=${encodeURIComponent(memberIdForWeb)}&ref=pass`
+      : `${frontendUrl}/fidelity/${encodeURIComponent(business.slug)}?ref=pass`
+    : `${frontendUrl}/`;
 
   const lastMessageBackField = { key: "lastMessage", label: "Message", value: lastBroadcast };
   if (rawBroadcast) {
