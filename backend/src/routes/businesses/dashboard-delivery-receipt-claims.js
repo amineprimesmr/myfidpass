@@ -8,6 +8,7 @@ import {
   getPushTokensForMember,
 } from "../../db.js";
 import {
+  devResetAllReceiptDeliveryClaimsForBusiness,
   getReceiptDeliveryClaimForBusiness,
   listReceiptDeliveryClaimsForDashboard,
   updateReceiptDeliveryClaim,
@@ -19,6 +20,7 @@ import {
 import { countMemberPointsAddsTodayUtc } from "../../db/transactions.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { ensureOperationalSubscription } from "./shared.js";
+import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 
 const router = Router({ mergeParams: true });
 
@@ -28,6 +30,7 @@ router.get("/delivery-receipt-claims", (req, res) => {
   const st = status === "pending" || status === "approved" || status === "rejected" ? status : null;
   const rows = listReceiptDeliveryClaimsForDashboard(business.id, st, 200);
   return res.json({
+    dev_reset_available: isDeliveryReceiptDevResetEnabled(),
     claims: rows.map((c) => ({
       id: c.id,
       member_id: c.member_id,
@@ -44,6 +47,40 @@ router.get("/delivery-receipt-claims", (req, res) => {
       resolved_at: c.resolved_at || null,
       resolution_note: c.resolution_note || null,
     })),
+  });
+});
+
+router.post("/delivery-receipt-claims/dev-reset", async (req, res) => {
+  if (!isDeliveryReceiptDevResetEnabled()) {
+    return res.status(404).json({ error: "Fonction non disponible.", code: "NOT_FOUND" });
+  }
+  const business = req.business;
+  const body = typeof req.body === "object" && req.body ? req.body : {};
+  const confirm = String(body.confirm ?? "").trim();
+  if (confirm !== "reset_all_delivery_receipts") {
+    return res.status(400).json({
+      error: 'Confirmation requise : corps JSON { "confirm": "reset_all_delivery_receipts" }.',
+      code: "CONFIRM_REQUIRED",
+    });
+  }
+
+  const result = devResetAllReceiptDeliveryClaimsForBusiness(business.id);
+  const memberIds = [...new Set(result.members_adjusted.map((m) => m.member_id))];
+  for (const mid of memberIds) {
+    const tokens = getPushTokensForMember(mid);
+    for (const token of tokens) {
+      try {
+        await sendPassKitUpdate(token);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+  }
+  return res.json({
+    ok: true,
+    claims_deleted: result.claims_deleted,
+    transactions_deleted: result.transactions_deleted,
+    members_adjusted: result.members_adjusted,
   });
 });
 

@@ -77,6 +77,13 @@
     grid-template-columns: 1fr;
   }
 }
+.app-delivery-claims-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
 .app-delivery-claims-list {
   margin: 0.5rem 0;
   min-height: 0.5rem;

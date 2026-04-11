@@ -1393,7 +1393,11 @@
                             <p class="app-step-label">Anciennes demandes encore « en attente »</p>
                             <p class="app-hint">Normalement vide : tout est traité automatiquement. Si une ligne apparaît (données d’avant refonte), vous pouvez encore la valider ou la refuser.</p>
                             <div id="app-delivery-claims-list" class="app-delivery-claims-list" role="list"></div>
-                            <button type="button" id="app-delivery-claims-refresh" class="app-btn app-btn-secondary">Actualiser</button>
+                            <div class="app-delivery-claims-toolbar">
+                              <button type="button" id="app-delivery-claims-refresh" class="app-btn app-btn-secondary">Actualiser</button>
+                              <button type="button" id="app-delivery-claims-dev-reset" class="app-btn app-btn-secondary hidden" title="Nécessite DELIVERY_RECEIPT_DEV_RESET=1 sur l’API">Mode dev : effacer tous les tickets livraison</button>
+                            </div>
+                            <p id="app-delivery-claims-dev-hint" class="app-hint hidden">Le bouton « mode dev » n’apparaît que si la variable <code>DELIVERY_RECEIPT_DEV_RESET=1</code> est définie sur le serveur API (ex. Railway). Pense à la retirer en exploitation.</p>
                           </div>
                         </div>
                         <div class="app-card-rules-actions">

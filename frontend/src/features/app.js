@@ -2394,6 +2394,14 @@ function initAppDashboard(slug) {
     }
   }
 
+  function updateDeliveryDevResetUi(available) {
+    const btn = document.getElementById("app-delivery-claims-dev-reset");
+    const hint = document.getElementById("app-delivery-claims-dev-hint");
+    const on = Boolean(available);
+    if (btn) btn.classList.toggle("hidden", !on);
+    if (hint) hint.classList.toggle("hidden", on);
+  }
+
   async function refreshDeliveryClaimsPending() {
     const listEl = document.getElementById("app-delivery-claims-list");
     if (!listEl) return;
@@ -2401,6 +2409,9 @@ function initAppDashboard(slug) {
       const res = await api("/dashboard/delivery-receipt-claims?status=pending");
       if (!res.ok) return;
       const data = await res.json();
+      if (typeof data.dev_reset_available === "boolean") {
+        updateDeliveryDevResetUi(data.dev_reset_available);
+      }
       const items = Array.isArray(data.claims) ? data.claims : [];
       if (!items.length) {
         listEl.innerHTML = '<p class="app-hint">Aucune demande en attente.</p>';
@@ -2476,6 +2487,9 @@ function initAppDashboard(slug) {
       if (drDay) drDay.value = String(data.delivery_receipt_max_per_member_per_day ?? data.deliveryReceiptMaxPerMemberPerDay ?? 4);
       const drMonth = document.getElementById("app-delivery-receipt-max-month");
       if (drMonth) drMonth.value = String(data.delivery_receipt_max_per_member_per_month ?? data.deliveryReceiptMaxPerMemberPerMonth ?? 25);
+      updateDeliveryDevResetUi(
+        Number(data.delivery_receipt_dev_reset_available ?? data.deliveryReceiptDevResetAvailable ?? 0) === 1,
+      );
       setLastKnownBusinessSector(data.sector ?? "");
       updatePointsTiersSectorLine();
       const tiersPayload = data.points_reward_tiers ?? data.pointsRewardTiers;
@@ -3377,6 +3391,30 @@ function initAppDashboard(slug) {
 
   document.getElementById("app-delivery-claims-refresh")?.addEventListener("click", () => {
     refreshDeliveryClaimsPending().catch(() => {});
+  });
+  document.getElementById("app-delivery-claims-dev-reset")?.addEventListener("click", async () => {
+    const ok = window.confirm(
+      "Effacer toutes les réclamations « livraison » de ce commerce, supprimer les crédits associés sur les cartes et permettre de renvoyer les mêmes photos de tickets ? Action irréversible.",
+    );
+    if (!ok) return;
+    try {
+      const res = await api("/dashboard/delivery-receipt-claims/dev-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "reset_all_delivery_receipts" }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showReglesMessage(payload.error || "Réinitialisation impossible.", true);
+        return;
+      }
+      const nC = payload.claims_deleted ?? 0;
+      const nT = payload.transactions_deleted ?? 0;
+      showReglesMessage(`Mode dev : ${nC} réclamation(s) effacée(s), ${nT} mouvement(s) supprimé(s) — tu peux retester le même ticket.`);
+    } catch (_) {
+      showReglesMessage("Erreur réseau.", true);
+    }
+    await refreshDeliveryClaimsPending();
   });
   document.getElementById("app-delivery-claims-list")?.addEventListener("click", async (ev) => {
     const t = ev.target;

@@ -65,6 +65,7 @@ import {
 import socialMetricsRouter from "./dashboard-social-metrics.js";
 import dashboardSocialOauthRouter from "./dashboard-social-oauth.js";
 import dashboardDeliveryReceiptClaimsRouter from "./dashboard-delivery-receipt-claims.js";
+import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 
 const router = Router({ mergeParams: true });
@@ -217,6 +218,8 @@ router.get("/settings", (req, res) => {
       business.delivery_receipt_max_per_member_per_month != null
         ? Number(business.delivery_receipt_max_per_member_per_month)
         : 25,
+    /** 1 = le dashboard peut appeler POST .../delivery-receipt-claims/dev-reset (variable DELIVERY_RECEIPT_DEV_RESET sur l’API). */
+    delivery_receipt_dev_reset_available: isDeliveryReceiptDevResetEnabled() ? 1 : 0,
   });
 });
 

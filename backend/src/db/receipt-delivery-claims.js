@@ -3,6 +3,7 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { deductPoints } from "./members.js";
 
 const db = getDb();
 
@@ -213,4 +214,54 @@ export function getReceiptDeliveryClaimByIdempotencyKey(businessId, key) {
       )
       .get(businessId, key) || null
   );
+}
+
+/**
+ * Mode dev uniquement (contrôlé par la route) : supprime toutes les réclamations livraison du commerce,
+ * supprime les transactions `points_add` liées, et retire aux membres les points/tampons crédités via ces réclamations approuvées.
+ * @param {string} businessId
+ * @returns {{ claims_deleted: number, transactions_deleted: number, members_adjusted: Array<{ member_id: string, points_deducted: number }> }}
+ */
+export function devResetAllReceiptDeliveryClaimsForBusiness(businessId) {
+  if (!businessId) {
+    return { claims_deleted: 0, transactions_deleted: 0, members_adjusted: [] };
+  }
+  const summarize = db
+    .prepare(
+      `SELECT member_id, SUM(COALESCE(points_credited, 0)) AS total
+       FROM receipt_delivery_claims
+       WHERE business_id = ? AND status = 'approved'
+       GROUP BY member_id`,
+    )
+    .all(businessId);
+
+  const run = db.transaction(() => {
+    const delTxStmt = db.prepare(
+      `DELETE FROM transactions
+       WHERE business_id = ?
+         AND type = 'points_add'
+         AND json_valid(metadata) = 1
+         AND json_extract(metadata, '$.source') = ?`,
+    );
+    const txResult = delTxStmt.run(businessId, "delivery_receipt_claim");
+    const transactions_deleted = Number(txResult.changes) || 0;
+
+    const claimsResult = db.prepare(`DELETE FROM receipt_delivery_claims WHERE business_id = ?`).run(businessId);
+    const claims_deleted = Number(claimsResult.changes) || 0;
+
+    /** @type {{ member_id: string, points_deducted: number }[]} */
+    const members_adjusted = [];
+    for (const row of summarize) {
+      const mid = row.member_id;
+      const total = Number(row.total) || 0;
+      const toDeduct = Math.max(0, Math.floor(total));
+      if (toDeduct > 0 && mid) {
+        deductPoints(mid, toDeduct);
+        members_adjusted.push({ member_id: String(mid), points_deducted: toDeduct });
+      }
+    }
+    return { claims_deleted, transactions_deleted, members_adjusted };
+  });
+
+  return run();
 }
