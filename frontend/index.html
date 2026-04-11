@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/fidelity-missions.css" />
     <link rel="stylesheet" href="/src/fidelity-profile-bonus.css" />
+    <link rel="stylesheet" href="/src/fidelity-delivery-receipt.css" />
     <link rel="stylesheet" href="/src/fidelity-v2-banner.css" />
     <link rel="stylesheet" href="/src/fidelity-member-espace.css" />
     <link rel="stylesheet" href="/src/fidelity-rewards-tiers.css" />
@@ -1369,6 +1370,31 @@
                               <label class="app-label" for="app-stamp-reward-label">Récompense carte complète</label>
                               <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. Menu offert" aria-label="Récompense à la 10ᵉ visite" />
                             </div>
+                          </div>
+                        </div>
+                        <div class="app-delivery-receipt-block app-field-group">
+                          <p class="app-step-label">Points livraison (Uber Eats, Deliveroo…)</p>
+                          <p class="app-hint">Vos clients envoient une <strong>photo de ticket</strong> depuis leur page fidélité. Les doublons sont bloqués ; vous validez les demandes qui nécessitent une relecture.</p>
+                          <label class="app-checkbox-label">
+                            <input type="checkbox" id="app-delivery-receipt-enabled" />
+                            <span>Activer la réclamation par photo sur la page client</span>
+                          </label>
+                          <div class="app-delivery-receipt-grid">
+                            <label class="app-label" for="app-delivery-receipt-max-age">Âge max. du ticket (jours)</label>
+                            <input type="number" id="app-delivery-receipt-max-age" class="app-input app-input-number" min="1" max="90" step="1" value="14" />
+                            <label class="app-label" for="app-delivery-receipt-auto-max-eur">Crédit auto jusqu’à (€ TTC)</label>
+                            <input type="number" id="app-delivery-receipt-auto-max-eur" class="app-input app-input-number" min="5" max="5000" step="1" value="80" />
+                            <label class="app-label" for="app-delivery-receipt-min-confidence">Confiance IA mini (0,3–0,99)</label>
+                            <input type="number" id="app-delivery-receipt-min-confidence" class="app-input app-input-number" min="0.3" max="0.99" step="0.01" value="0.72" />
+                            <label class="app-label" for="app-delivery-receipt-max-day">Max. / client / jour</label>
+                            <input type="number" id="app-delivery-receipt-max-day" class="app-input app-input-number" min="1" max="20" step="1" value="4" />
+                            <label class="app-label" for="app-delivery-receipt-max-month">Max. / client / mois</label>
+                            <input type="number" id="app-delivery-receipt-max-month" class="app-input app-input-number" min="1" max="200" step="1" value="25" />
+                          </div>
+                          <div class="app-delivery-claims-queue">
+                            <p class="app-step-label">Demandes en attente de validation</p>
+                            <div id="app-delivery-claims-list" class="app-delivery-claims-list" role="list"></div>
+                            <button type="button" id="app-delivery-claims-refresh" class="app-btn app-btn-secondary">Actualiser la file</button>
                           </div>
                         </div>
                         <div class="app-card-rules-actions">

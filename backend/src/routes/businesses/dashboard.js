@@ -64,6 +64,7 @@ import {
 } from "../../lib/merchant-transaction-export.js";
 import socialMetricsRouter from "./dashboard-social-metrics.js";
 import dashboardSocialOauthRouter from "./dashboard-social-oauth.js";
+import dashboardDeliveryReceiptClaimsRouter from "./dashboard-delivery-receipt-claims.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 
 const router = Router({ mergeParams: true });
@@ -100,6 +101,7 @@ function requireDashboard(req, res, next) {
 router.use(requireDashboard);
 router.use(socialMetricsRouter);
 router.use(dashboardSocialOauthRouter);
+router.use(dashboardDeliveryReceiptClaimsRouter);
 
 // ——— Settings ———
 router.get("/settings", (req, res) => {
@@ -201,6 +203,20 @@ router.get("/settings", (req, res) => {
     /** Tolérance en centimes entre montant saisi et montant dans le JWT (défaut 5). */
     receipt_qr_tolerance_cents:
       business.receipt_qr_tolerance_cents != null ? Number(business.receipt_qr_tolerance_cents) : 5,
+    delivery_receipt_claims_enabled:
+      business.delivery_receipt_claims_enabled != null ? Number(business.delivery_receipt_claims_enabled) : 1,
+    delivery_receipt_max_age_days:
+      business.delivery_receipt_max_age_days != null ? Number(business.delivery_receipt_max_age_days) : 14,
+    delivery_receipt_auto_max_amount_eur:
+      business.delivery_receipt_auto_max_amount_eur != null ? Number(business.delivery_receipt_auto_max_amount_eur) : 80,
+    delivery_receipt_auto_min_confidence:
+      business.delivery_receipt_auto_min_confidence != null ? Number(business.delivery_receipt_auto_min_confidence) : 0.72,
+    delivery_receipt_max_per_member_per_day:
+      business.delivery_receipt_max_per_member_per_day != null ? Number(business.delivery_receipt_max_per_member_per_day) : 4,
+    delivery_receipt_max_per_member_per_month:
+      business.delivery_receipt_max_per_member_per_month != null
+        ? Number(business.delivery_receipt_max_per_member_per_month)
+        : 25,
   });
 });
 
@@ -549,6 +565,56 @@ router.patch("/settings", async (req, res) => {
       return res.status(400).json({ error: "receipt_qr_tolerance_cents invalide (0–500)." });
     }
     updates.receipt_qr_tolerance_cents = n;
+  }
+
+  const delivEn = body.delivery_receipt_claims_enabled ?? body.deliveryReceiptClaimsEnabled;
+  if (delivEn !== undefined) {
+    const on =
+      delivEn === true ||
+      delivEn === 1 ||
+      String(delivEn).toLowerCase() === "true" ||
+      String(delivEn) === "1";
+    updates.delivery_receipt_claims_enabled = on ? 1 : 0;
+  }
+  const delivAge = body.delivery_receipt_max_age_days ?? body.deliveryReceiptMaxAgeDays;
+  if (delivAge !== undefined) {
+    const n = Math.floor(Number(delivAge));
+    if (!Number.isFinite(n) || n < 1 || n > 90) {
+      return res.status(400).json({ error: "delivery_receipt_max_age_days invalide (1–90)." });
+    }
+    updates.delivery_receipt_max_age_days = n;
+  }
+  const delivAutoMax = body.delivery_receipt_auto_max_amount_eur ?? body.deliveryReceiptAutoMaxAmountEur;
+  if (delivAutoMax !== undefined) {
+    const n = Number(delivAutoMax);
+    if (!Number.isFinite(n) || n < 5 || n > 5000) {
+      return res.status(400).json({ error: "delivery_receipt_auto_max_amount_eur invalide (5–5000)." });
+    }
+    updates.delivery_receipt_auto_max_amount_eur = n;
+  }
+  const delivConf = body.delivery_receipt_auto_min_confidence ?? body.deliveryReceiptAutoMinConfidence;
+  if (delivConf !== undefined) {
+    const n = Number(delivConf);
+    if (!Number.isFinite(n) || n < 0.3 || n > 0.99) {
+      return res.status(400).json({ error: "delivery_receipt_auto_min_confidence invalide (0.3–0.99)." });
+    }
+    updates.delivery_receipt_auto_min_confidence = n;
+  }
+  const delivDay = body.delivery_receipt_max_per_member_per_day ?? body.deliveryReceiptMaxPerMemberPerDay;
+  if (delivDay !== undefined) {
+    const n = Math.floor(Number(delivDay));
+    if (!Number.isFinite(n) || n < 1 || n > 20) {
+      return res.status(400).json({ error: "delivery_receipt_max_per_member_per_day invalide (1–20)." });
+    }
+    updates.delivery_receipt_max_per_member_per_day = n;
+  }
+  const delivMonth = body.delivery_receipt_max_per_member_per_month ?? body.deliveryReceiptMaxPerMemberPerMonth;
+  if (delivMonth !== undefined) {
+    const n = Math.floor(Number(delivMonth));
+    if (!Number.isFinite(n) || n < 1 || n > 200) {
+      return res.status(400).json({ error: "delivery_receipt_max_per_member_per_month invalide (1–200)." });
+    }
+    updates.delivery_receipt_max_per_member_per_month = n;
   }
 
   if (engagement_rewards !== undefined) {

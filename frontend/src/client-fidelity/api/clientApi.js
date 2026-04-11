@@ -203,6 +203,43 @@ export function createClientFidelityApi(apiBase) {
     return data;
   }
 
+  async function listDeliveryReceiptClaims(slug, memberId) {
+    const res = await fetchFidelity(
+      withBase(
+        `/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/delivery-receipt-claims`,
+      ),
+      { cache: "no-store" },
+      "Historique des réclamations indisponible.",
+    );
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.error || "Historique indisponible");
+    return data;
+  }
+
+  /**
+   * @param {{ image_base64: string, mime_type?: string, confirmed_amount_eur?: number, idempotency_key?: string }} payload
+   */
+  async function submitDeliveryReceiptClaim(slug, memberId, payload) {
+    const headers = { "Content-Type": "application/json" };
+    if (payload.idempotency_key) headers["Idempotency-Key"] = payload.idempotency_key;
+    const res = await fetchFidelity(
+      withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/delivery-receipt-claims`),
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          image_base64: payload.image_base64,
+          mime_type: payload.mime_type,
+          confirmed_amount_eur: payload.confirmed_amount_eur,
+        }),
+      },
+      "Envoi du ticket impossible. Vérifie ta connexion.",
+    );
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.error || "Envoi impossible");
+    return data;
+  }
+
   return {
     getBusiness,
     createMember,
@@ -216,5 +253,7 @@ export function createClientFidelityApi(apiBase) {
     claimEngagement,
     claimGuestIdentity,
     submitProfileForTicket,
+    listDeliveryReceiptClaims,
+    submitDeliveryReceiptClaim,
   };
 }

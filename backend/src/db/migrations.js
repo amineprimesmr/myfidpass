@@ -948,4 +948,79 @@ export function runMigrations(db) {
       ON social_oauth_connections(business_id, provider);
   `),
   );
+
+  // ── v20 : réclamations points livraison (ticket plateforme + IA + anti-doublon) ─
+  markMigrationApplied(db, 20, "receipt_delivery_claims");
+  safeRun(db, () =>
+    db.exec(`
+ CREATE TABLE IF NOT EXISTS receipt_delivery_claims (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      member_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      file_hash_sha256 TEXT NOT NULL,
+      claim_fingerprint TEXT NOT NULL,
+      amount_eur REAL NOT NULL,
+      points_credited INTEGER,
+      ai_extracted_json TEXT,
+      ai_confidence REAL,
+      merchant_match_ok INTEGER,
+      rejection_reason TEXT,
+      idempotency_key TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      resolved_at TEXT,
+      resolution_note TEXT,
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+      FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_rdc_business_status_created
+      ON receipt_delivery_claims(business_id, status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_rdc_business_member_created
+      ON receipt_delivery_claims(business_id, member_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_rdc_business_filehash
+      ON receipt_delivery_claims(business_id, file_hash_sha256);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rdc_idempotency
+      ON receipt_delivery_claims(business_id, idempotency_key)
+      WHERE idempotency_key IS NOT NULL AND trim(idempotency_key) != '';
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rdc_business_fp_active
+      ON receipt_delivery_claims(business_id, claim_fingerprint)
+      WHERE status IN ('pending', 'approved');
+  `),
+  );
+  const bizRdc = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizRdc.includes("delivery_receipt_claims_enabled")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN delivery_receipt_claims_enabled INTEGER NOT NULL DEFAULT 1"),
+    );
+  }
+  const bizRdc2 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizRdc2.includes("delivery_receipt_max_age_days")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN delivery_receipt_max_age_days INTEGER NOT NULL DEFAULT 14"),
+    );
+  }
+  const bizRdc3 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizRdc3.includes("delivery_receipt_auto_max_amount_eur")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN delivery_receipt_auto_max_amount_eur REAL NOT NULL DEFAULT 80"),
+    );
+  }
+  const bizRdc4 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizRdc4.includes("delivery_receipt_auto_min_confidence")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN delivery_receipt_auto_min_confidence REAL NOT NULL DEFAULT 0.72"),
+    );
+  }
+  const bizRdc5 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizRdc5.includes("delivery_receipt_max_per_member_per_day")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN delivery_receipt_max_per_member_per_day INTEGER NOT NULL DEFAULT 4"),
+    );
+  }
+  const bizRdc6 = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizRdc6.includes("delivery_receipt_max_per_member_per_month")) {
+    safeRun(db, () =>
+      db.exec("ALTER TABLE businesses ADD COLUMN delivery_receipt_max_per_member_per_month INTEGER NOT NULL DEFAULT 25"),
+    );
+  }
 }

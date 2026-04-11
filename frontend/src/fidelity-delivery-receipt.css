@@ -1,0 +1,105 @@
+/* Réclamation points livraison — espace client /fidelity/:slug */
+
+.fidelity-v2-step--delivery .fidelity-delivery-receipt-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fidelity-delivery-receipt-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.fidelity-delivery-receipt-preview-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 180px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.fidelity-delivery-receipt-preview-wrap.hidden {
+  display: none;
+}
+
+.fidelity-delivery-receipt-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 180px;
+  object-fit: contain;
+}
+
+.fidelity-delivery-receipt-amount-label {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-top: 0.25rem;
+}
+
+.fidelity-delivery-receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.fidelity-cta-pill--secondary {
+  background: transparent;
+  border: 2px solid currentColor;
+  opacity: 0.95;
+}
+
+.fidelity-delivery-receipt-legal {
+  font-size: 0.72rem;
+  opacity: 0.65;
+  line-height: 1.35;
+  margin: 0.5rem 0 0;
+}
+
+#fidelity-delivery-receipt-feedback.success {
+  color: #0a7a3a;
+}
+
+#fidelity-delivery-receipt-feedback.error {
+  color: #b00020;
+}
+
+/* Tableau de bord — file validation livraison */
+.app-delivery-receipt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+  max-width: 640px;
+}
+@media (max-width: 700px) {
+  .app-delivery-receipt-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.app-delivery-claims-list {
+  margin: 0.5rem 0;
+  min-height: 0.5rem;
+}
+.app-delivery-claim-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 0.5rem;
+}
+.app-delivery-claim-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}

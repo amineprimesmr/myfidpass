@@ -253,6 +253,12 @@ export function updateBusiness(businessId, updates) {
     "scan_max_points_per_transaction",
     "require_receipt_qr_validation",
     "receipt_qr_tolerance_cents",
+    "delivery_receipt_claims_enabled",
+    "delivery_receipt_max_age_days",
+    "delivery_receipt_auto_max_amount_eur",
+    "delivery_receipt_auto_min_confidence",
+    "delivery_receipt_max_per_member_per_day",
+    "delivery_receipt_max_per_member_per_month",
   ];
   const numericCols = [
     "location_lat",
@@ -270,6 +276,12 @@ export function updateBusiness(businessId, updates) {
     "scan_max_points_per_transaction",
     "require_receipt_qr_validation",
     "receipt_qr_tolerance_cents",
+    "delivery_receipt_claims_enabled",
+    "delivery_receipt_max_age_days",
+    "delivery_receipt_auto_max_amount_eur",
+    "delivery_receipt_auto_min_confidence",
+    "delivery_receipt_max_per_member_per_day",
+    "delivery_receipt_max_per_member_per_month",
   ];
   const setClauses = [];
   const values = [];

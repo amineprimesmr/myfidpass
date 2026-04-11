@@ -75,6 +75,11 @@ export function publicInfo(req, res) {
     flyerCustomBgUrl,
     /** Texte du titre principal sur la page jeu QR ; absent ou vide = défaut applicatif. */
     fidelityQrHeroTitle: business.fidelity_qr_hero_title?.trim() || undefined,
+    /** Réclamations points livraison (Uber Eats, Deliveroo, etc.) — espace client web. */
+    delivery_receipt_claims_enabled:
+      business.delivery_receipt_claims_enabled != null ? Number(business.delivery_receipt_claims_enabled) : 1,
+    delivery_receipt_max_age_days:
+      business.delivery_receipt_max_age_days != null ? Number(business.delivery_receipt_max_age_days) : 14,
   });
 }
 

@@ -70,6 +70,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   let wheelLabels = [...DEFAULT_WHEEL_LABELS];
   let currentRotation = 0;
   let disposeQrUi = () => {};
+  /** Photo ticket livraison (data URL) — réinitialisé à chaque `bindEvents`. */
+  let deliveryReceiptDataUrl = null;
 
   fidelityDocumentListenersAbort?.abort();
   fidelityDocumentListenersAbort = new AbortController();
@@ -560,6 +562,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   function bindEvents() {
     disposeQrUi();
     disposeQrUi = () => {};
+    deliveryReceiptDataUrl = null;
 
     rootEl.querySelector("#fidelity-v2-form")?.addEventListener("submit", onSignupSubmit);
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
@@ -587,6 +590,87 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const wallet = store.get().wallet || {};
     if (apple && wallet.apple) apple.href = wallet.apple;
     if (google && wallet.google) google.href = wallet.google;
+
+    const deliveryFile = rootEl.querySelector("#fidelity-delivery-receipt-file");
+    const deliveryPick = rootEl.querySelector("#fidelity-delivery-receipt-pick");
+    const deliverySubmit = rootEl.querySelector("#fidelity-delivery-receipt-submit");
+    const deliveryFb = rootEl.querySelector("#fidelity-delivery-receipt-feedback");
+    if (deliveryPick && deliveryFile) {
+      deliveryPick.addEventListener("click", () => deliveryFile.click());
+    }
+    if (deliveryFile) {
+      deliveryFile.addEventListener("change", (ev) => {
+        const file = ev.target?.files?.[0];
+        const wrap = rootEl.querySelector("#fidelity-delivery-receipt-preview-wrap");
+        const img = rootEl.querySelector("#fidelity-delivery-receipt-preview");
+        if (!file || !file.type.startsWith("image/")) {
+          if (deliverySubmit) deliverySubmit.disabled = true;
+          if (deliveryFb) {
+            deliveryFb.textContent = "Choisis une image (photo ou capture d’écran).";
+            deliveryFb.classList.remove("hidden");
+            deliveryFb.classList.add("error");
+          }
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          deliveryReceiptDataUrl = String(reader.result || "");
+          if (img) img.src = deliveryReceiptDataUrl;
+          if (wrap) wrap.classList.remove("hidden");
+          if (deliverySubmit) deliverySubmit.disabled = false;
+          if (deliveryFb) {
+            deliveryFb.textContent = "";
+            deliveryFb.classList.add("hidden");
+            deliveryFb.classList.remove("error", "success");
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    if (deliverySubmit) {
+      deliverySubmit.addEventListener("click", async () => {
+        const state = store.get();
+        if (!state.member?.id || !deliveryReceiptDataUrl) return;
+        const amountEl = rootEl.querySelector("#fidelity-delivery-receipt-amount");
+        const rawAmt = String(amountEl?.value || "").replace(",", ".").trim();
+        const confirmed = rawAmt ? Number(rawAmt) : undefined;
+        if (deliveryFb) {
+          deliveryFb.classList.add("hidden");
+          deliveryFb.classList.remove("error", "success");
+        }
+        deliverySubmit.disabled = true;
+        try {
+          const commaIdx = deliveryReceiptDataUrl.indexOf(",");
+          const b64 = commaIdx >= 0 ? deliveryReceiptDataUrl.slice(commaIdx + 1) : deliveryReceiptDataUrl;
+          const mimeMatch = /^data:([^;]+);/.exec(deliveryReceiptDataUrl);
+          const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+          const payload = {
+            image_base64: b64,
+            mime_type: mime,
+            idempotency_key: genIdempotencyKey(),
+          };
+          if (confirmed != null && Number.isFinite(confirmed) && confirmed > 0) {
+            payload.confirmed_amount_eur = confirmed;
+          }
+          const data = await api.submitDeliveryReceiptClaim(slug, state.member.id, payload);
+          if (data.claim?.status === "pending") {
+            const msg =
+              data.claim?.message ||
+              "Demande enregistrée. Le commerce validera sous peu — tes points seront ajoutés après validation.";
+            window.alert(msg);
+          }
+          await refreshMemberData();
+        } catch (err) {
+          if (deliveryFb) {
+            deliveryFb.textContent = messageUtilisateurPourErreur(err, err.message || "Envoi impossible.");
+            deliveryFb.classList.remove("hidden");
+            deliveryFb.classList.add("error");
+          }
+        } finally {
+          deliverySubmit.disabled = !deliveryReceiptDataUrl;
+        }
+      });
+    }
 
     rootEl.querySelector("[data-fid-missions-rail]")?.addEventListener("keydown", (e) => {
       const rail = e.currentTarget;

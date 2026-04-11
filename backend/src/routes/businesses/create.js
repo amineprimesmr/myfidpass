@@ -321,6 +321,41 @@ export function updateHandler(req, res) {
     updates.strip_color = stripColor === null || stripColor === "" ? null : normalizeHex(stripColor);
   }
 
+  const delivEn = body.delivery_receipt_claims_enabled ?? body.deliveryReceiptClaimsEnabled;
+  if (delivEn !== undefined) {
+    const on =
+      delivEn === true ||
+      delivEn === 1 ||
+      String(delivEn).toLowerCase() === "true" ||
+      String(delivEn) === "1";
+    updates.delivery_receipt_claims_enabled = on ? 1 : 0;
+  }
+  const delivAge = body.delivery_receipt_max_age_days ?? body.deliveryReceiptMaxAgeDays;
+  if (delivAge !== undefined) {
+    const n = Math.floor(Number(delivAge));
+    if (Number.isFinite(n) && n >= 1 && n <= 90) updates.delivery_receipt_max_age_days = n;
+  }
+  const delivAutoMax = body.delivery_receipt_auto_max_amount_eur ?? body.deliveryReceiptAutoMaxAmountEur;
+  if (delivAutoMax !== undefined) {
+    const n = Number(delivAutoMax);
+    if (Number.isFinite(n) && n >= 5 && n <= 5000) updates.delivery_receipt_auto_max_amount_eur = n;
+  }
+  const delivConf = body.delivery_receipt_auto_min_confidence ?? body.deliveryReceiptAutoMinConfidence;
+  if (delivConf !== undefined) {
+    const n = Number(delivConf);
+    if (Number.isFinite(n) && n >= 0.3 && n <= 0.99) updates.delivery_receipt_auto_min_confidence = n;
+  }
+  const delivDay = body.delivery_receipt_max_per_member_per_day ?? body.deliveryReceiptMaxPerMemberPerDay;
+  if (delivDay !== undefined) {
+    const n = Math.floor(Number(delivDay));
+    if (Number.isFinite(n) && n >= 1 && n <= 20) updates.delivery_receipt_max_per_member_per_day = n;
+  }
+  const delivMonth = body.delivery_receipt_max_per_member_per_month ?? body.deliveryReceiptMaxPerMemberPerMonth;
+  if (delivMonth !== undefined) {
+    const n = Math.floor(Number(delivMonth));
+    if (Number.isFinite(n) && n >= 1 && n <= 200) updates.delivery_receipt_max_per_member_per_month = n;
+  }
+
   const updated = updateBusiness(business.id, updates);
   if (!updated) return res.status(500).json({ error: "Erreur mise à jour" });
 

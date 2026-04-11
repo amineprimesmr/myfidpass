@@ -2394,6 +2394,37 @@ function initAppDashboard(slug) {
     }
   }
 
+  async function refreshDeliveryClaimsPending() {
+    const listEl = document.getElementById("app-delivery-claims-list");
+    if (!listEl) return;
+    try {
+      const res = await api("/dashboard/delivery-receipt-claims?status=pending");
+      if (!res.ok) return;
+      const data = await res.json();
+      const items = Array.isArray(data.claims) ? data.claims : [];
+      if (!items.length) {
+        listEl.innerHTML = '<p class="app-hint">Aucune demande en attente.</p>';
+        return;
+      }
+      listEl.innerHTML = items
+        .map((c) => {
+          const name = String(c.member_name || c.member_email || c.member_id || "").slice(0, 96);
+          const amt = c.amount_eur != null ? `${Number(c.amount_eur).toFixed(2)} €` : "—";
+          const cid = escapeHtmlForServer(c.id);
+          return `<div class="app-delivery-claim-row" role="listitem" data-claim-id="${cid}">
+            <div class="app-delivery-claim-meta"><strong>${escapeHtmlForServer(name)}</strong> · ${escapeHtmlForServer(amt)}</div>
+            <div class="app-delivery-claim-actions">
+              <button type="button" class="app-btn app-btn-primary app-delivery-claim-approve" data-claim-id="${cid}">Valider</button>
+              <button type="button" class="app-btn app-btn-secondary app-delivery-claim-reject" data-claim-id="${cid}">Refuser</button>
+            </div>
+          </div>`;
+        })
+        .join("");
+    } catch (_) {
+      /* silencieux */
+    }
+  }
+
   function applyDashboardSettingsToForms(data) {
     if (!data) return;
       const orgFromApi = (data.organization_name ?? data.organizationName ?? "").trim();
@@ -2435,6 +2466,18 @@ function initAppDashboard(slug) {
       else if (loyaltyModeCashEl) loyaltyModeCashEl.checked = true;
       if (pointsPerTicketEl) pointsPerTicketEl.value = data.points_per_ticket ?? data.pointsPerTicket ?? 10;
       if (pointsMinAmountEl != null) pointsMinAmountEl.value = data.points_min_amount_eur ?? data.pointsMinAmountEur ?? "";
+      const dreN = document.getElementById("app-delivery-receipt-enabled");
+      if (dreN) dreN.checked = Number(data.delivery_receipt_claims_enabled ?? data.deliveryReceiptClaimsEnabled ?? 1) === 1;
+      const drAge = document.getElementById("app-delivery-receipt-max-age");
+      if (drAge) drAge.value = String(data.delivery_receipt_max_age_days ?? data.deliveryReceiptMaxAgeDays ?? 14);
+      const drAuto = document.getElementById("app-delivery-receipt-auto-max-eur");
+      if (drAuto) drAuto.value = String(data.delivery_receipt_auto_max_amount_eur ?? data.deliveryReceiptAutoMaxAmountEur ?? 80);
+      const drConf = document.getElementById("app-delivery-receipt-min-confidence");
+      if (drConf) drConf.value = String(data.delivery_receipt_auto_min_confidence ?? data.deliveryReceiptAutoMinConfidence ?? 0.72);
+      const drDay = document.getElementById("app-delivery-receipt-max-day");
+      if (drDay) drDay.value = String(data.delivery_receipt_max_per_member_per_day ?? data.deliveryReceiptMaxPerMemberPerDay ?? 4);
+      const drMonth = document.getElementById("app-delivery-receipt-max-month");
+      if (drMonth) drMonth.value = String(data.delivery_receipt_max_per_member_per_month ?? data.deliveryReceiptMaxPerMemberPerMonth ?? 25);
       setLastKnownBusinessSector(data.sector ?? "");
       updatePointsTiersSectorLine();
       const tiersPayload = data.points_reward_tiers ?? data.pointsRewardTiers;
@@ -2630,6 +2673,9 @@ function initAppDashboard(slug) {
         })
         .catch(() => {});
     schedulePersonnaliserGroupStatusRefresh();
+    queueMicrotask(() => {
+      refreshDeliveryClaimsPending().catch(() => {});
+    });
   }
 
   async function reloadDashboardSettingsForms() {
@@ -3250,6 +3296,33 @@ function initAppDashboard(slug) {
     else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) {
       body.stampIconBase64 = personnaliserStampIconDataUrl;
     }
+    const dreN = document.getElementById("app-delivery-receipt-enabled");
+    if (dreN) body.deliveryReceiptClaimsEnabled = dreN.checked;
+    const drAge = document.getElementById("app-delivery-receipt-max-age");
+    if (drAge && drAge.value.trim() !== "") {
+      const n = parseInt(drAge.value, 10);
+      if (!Number.isNaN(n)) body.deliveryReceiptMaxAgeDays = n;
+    }
+    const drAuto = document.getElementById("app-delivery-receipt-auto-max-eur");
+    if (drAuto && drAuto.value.trim() !== "") {
+      const n = parseFloat(drAuto.value);
+      if (!Number.isNaN(n)) body.deliveryReceiptAutoMaxAmountEur = n;
+    }
+    const drConf = document.getElementById("app-delivery-receipt-min-confidence");
+    if (drConf && drConf.value.trim() !== "") {
+      const n = parseFloat(drConf.value);
+      if (!Number.isNaN(n)) body.deliveryReceiptAutoMinConfidence = n;
+    }
+    const drDay = document.getElementById("app-delivery-receipt-max-day");
+    if (drDay && drDay.value.trim() !== "") {
+      const n = parseInt(drDay.value, 10);
+      if (!Number.isNaN(n)) body.deliveryReceiptMaxPerMemberPerDay = n;
+    }
+    const drMonth = document.getElementById("app-delivery-receipt-max-month");
+    if (drMonth && drMonth.value.trim() !== "") {
+      const n = parseInt(drMonth.value, 10);
+      if (!Number.isNaN(n)) body.deliveryReceiptMaxPerMemberPerMonth = n;
+    }
     return body;
   }
 
@@ -3308,6 +3381,47 @@ function initAppDashboard(slug) {
       reglesSave.disabled = false;
     });
   }
+
+  document.getElementById("app-delivery-claims-refresh")?.addEventListener("click", () => {
+    refreshDeliveryClaimsPending().catch(() => {});
+  });
+  document.getElementById("app-delivery-claims-list")?.addEventListener("click", async (ev) => {
+    const t = ev.target;
+    if (!(t instanceof HTMLElement)) return;
+    const approveBtn = t.closest(".app-delivery-claim-approve");
+    const rejectBtn = t.closest(".app-delivery-claim-reject");
+    const id =
+      approveBtn?.getAttribute("data-claim-id") || rejectBtn?.getAttribute("data-claim-id") || "";
+    if (!id) return;
+    try {
+      if (approveBtn) {
+        const res = await api(`/dashboard/delivery-receipt-claims/${encodeURIComponent(id)}/approve`, {
+          method: "POST",
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showReglesMessage(err.error || "Validation impossible.", true);
+        } else {
+          showReglesMessage("Demande validée — points crédités.");
+        }
+      } else if (rejectBtn) {
+        const res = await api(`/dashboard/delivery-receipt-claims/${encodeURIComponent(id)}/reject`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note: "Refusée" }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showReglesMessage(err.error || "Refus impossible.", true);
+        } else {
+          showReglesMessage("Demande refusée.");
+        }
+      }
+    } catch (_) {
+      showReglesMessage("Erreur réseau.", true);
+    }
+    await refreshDeliveryClaimsPending();
+  });
 
   if (personnaliserSave) {
     personnaliserSave.addEventListener("click", async () => {
