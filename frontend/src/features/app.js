@@ -2470,8 +2470,6 @@ function initAppDashboard(slug) {
       if (dreN) dreN.checked = Number(data.delivery_receipt_claims_enabled ?? data.deliveryReceiptClaimsEnabled ?? 1) === 1;
       const drAge = document.getElementById("app-delivery-receipt-max-age");
       if (drAge) drAge.value = String(data.delivery_receipt_max_age_days ?? data.deliveryReceiptMaxAgeDays ?? 14);
-      const drAuto = document.getElementById("app-delivery-receipt-auto-max-eur");
-      if (drAuto) drAuto.value = String(data.delivery_receipt_auto_max_amount_eur ?? data.deliveryReceiptAutoMaxAmountEur ?? 80);
       const drConf = document.getElementById("app-delivery-receipt-min-confidence");
       if (drConf) drConf.value = String(data.delivery_receipt_auto_min_confidence ?? data.deliveryReceiptAutoMinConfidence ?? 0.72);
       const drDay = document.getElementById("app-delivery-receipt-max-day");
@@ -3302,11 +3300,6 @@ function initAppDashboard(slug) {
     if (drAge && drAge.value.trim() !== "") {
       const n = parseInt(drAge.value, 10);
       if (!Number.isNaN(n)) body.deliveryReceiptMaxAgeDays = n;
-    }
-    const drAuto = document.getElementById("app-delivery-receipt-auto-max-eur");
-    if (drAuto && drAuto.value.trim() !== "") {
-      const n = parseFloat(drAuto.value);
-      if (!Number.isNaN(n)) body.deliveryReceiptAutoMaxAmountEur = n;
     }
     const drConf = document.getElementById("app-delivery-receipt-min-confidence");
     if (drConf && drConf.value.trim() !== "") {

@@ -1374,7 +1374,7 @@
                         </div>
                         <div class="app-delivery-receipt-block app-field-group">
                           <p class="app-step-label">Points livraison (Uber Eats, Deliveroo…)</p>
-                          <p class="app-hint">Vos clients envoient une <strong>photo de ticket</strong> depuis leur page fidélité. Les doublons sont bloqués ; vous validez les demandes qui nécessitent une relecture.</p>
+                          <p class="app-hint">Les clients envoient une <strong>photo de ticket</strong> : le serveur et l’IA vérifient enseigne, adresse (si renseignée sur votre fiche), date et montant, puis <strong>créditent automatiquement</strong> — sans validation manuelle de votre part. Les doublons sont bloqués.</p>
                           <label class="app-checkbox-label">
                             <input type="checkbox" id="app-delivery-receipt-enabled" />
                             <span>Activer la réclamation par photo sur la page client</span>
@@ -1382,9 +1382,7 @@
                           <div class="app-delivery-receipt-grid">
                             <label class="app-label" for="app-delivery-receipt-max-age">Âge max. du ticket (jours)</label>
                             <input type="number" id="app-delivery-receipt-max-age" class="app-input app-input-number" min="1" max="90" step="1" value="14" />
-                            <label class="app-label" for="app-delivery-receipt-auto-max-eur">Crédit auto jusqu’à (€ TTC)</label>
-                            <input type="number" id="app-delivery-receipt-auto-max-eur" class="app-input app-input-number" min="5" max="5000" step="1" value="80" />
-                            <label class="app-label" for="app-delivery-receipt-min-confidence">Confiance IA mini (0,3–0,99)</label>
+                            <label class="app-label" for="app-delivery-receipt-min-confidence">Seuil confiance IA (0,48–0,58 conseillé)</label>
                             <input type="number" id="app-delivery-receipt-min-confidence" class="app-input app-input-number" min="0.3" max="0.99" step="0.01" value="0.72" />
                             <label class="app-label" for="app-delivery-receipt-max-day">Max. / client / jour</label>
                             <input type="number" id="app-delivery-receipt-max-day" class="app-input app-input-number" min="1" max="20" step="1" value="4" />
@@ -1392,9 +1390,10 @@
                             <input type="number" id="app-delivery-receipt-max-month" class="app-input app-input-number" min="1" max="200" step="1" value="25" />
                           </div>
                           <div class="app-delivery-claims-queue">
-                            <p class="app-step-label">Demandes en attente de validation</p>
+                            <p class="app-step-label">Anciennes demandes encore « en attente »</p>
+                            <p class="app-hint">Normalement vide : tout est traité automatiquement. Si une ligne apparaît (données d’avant refonte), vous pouvez encore la valider ou la refuser.</p>
                             <div id="app-delivery-claims-list" class="app-delivery-claims-list" role="list"></div>
-                            <button type="button" id="app-delivery-claims-refresh" class="app-btn app-btn-secondary">Actualiser la file</button>
+                            <button type="button" id="app-delivery-claims-refresh" class="app-btn app-btn-secondary">Actualiser</button>
                           </div>
                         </div>
                         <div class="app-card-rules-actions">

@@ -48,3 +48,30 @@ export function merchantNameLikelyMatchesBusiness(business, merchantNameOnReceip
   }
   return false;
 }
+
+/**
+ * Cohérence adresse ticket ↔ adresse enregistrée du commerce (tokens / code postal).
+ * @param {object} business
+ * @param {string} extractedAddress
+ */
+export function receiptAddressLikelyMatchesBusiness(business, extractedAddress) {
+  const bizAddr = String(business?.location_address || "").trim();
+  const ext = String(extractedAddress || "").trim();
+  if (!bizAddr || bizAddr.length < 8) return true;
+  if (!ext || ext.length < 6) return false;
+  const na = normalizeReceiptText(bizAddr);
+  const nb = normalizeReceiptText(ext);
+  const postalBiz = (bizAddr.match(/\b\d{5}\b/) || [])[0];
+  const postalExt = (ext.match(/\b\d{5}\b/) || [])[0];
+  if (postalBiz && postalExt && postalBiz !== postalExt) return false;
+  const tokens = na.split(" ").filter((t) => t.length >= 4);
+  let hits = 0;
+  for (const t of tokens) {
+    if (nb.includes(t)) hits++;
+  }
+  if (hits >= 2) return true;
+  if (hits === 1 && tokens.length <= 2) return true;
+  const digits = bizAddr.replace(/\D/g, "");
+  if (digits.length >= 4 && nb.includes(digits.slice(0, 5))) return true;
+  return false;
+}

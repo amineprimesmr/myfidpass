@@ -641,17 +641,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           const b64 = commaIdx >= 0 ? deliveryReceiptDataUrl.slice(commaIdx + 1) : deliveryReceiptDataUrl;
           const mimeMatch = /^data:([^;]+);/.exec(deliveryReceiptDataUrl);
           const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
-          const data = await api.submitDeliveryReceiptClaim(slug, state.member.id, {
+          await api.submitDeliveryReceiptClaim(slug, state.member.id, {
             image_base64: b64,
             mime_type: mime,
             idempotency_key: genIdempotencyKey(),
           });
-          if (data.claim?.status === "pending") {
-            const msg =
-              data.claim?.message ||
-              "Demande enregistrée. Le commerce validera sous peu — tes points seront ajoutés après validation.";
-            window.alert(msg);
-          }
           await refreshMemberData();
         } catch (err) {
           if (deliveryFb) {

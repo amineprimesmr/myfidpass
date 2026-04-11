@@ -229,7 +229,7 @@ export function renderClientPage(root, state, options = {}) {
           <div class="fidelity-v2-step-body">
             <div class="fidelity-v2-step-body-inner fidelity-delivery-receipt-inner">
               <p class="fidelity-v2-card-desc fidelity-v2-step-desc">
-                Tu as commandé en livraison ? Envoie une photo de ton <strong>ticket</strong> ou de ta <strong>confirmation</strong> : le <strong>montant TTC</strong> est lu sur le document, puis tes <strong>${balanceUnitLabel}</strong> sont <strong>calculés automatiquement</strong> selon les règles du programme (rien à saisir).
+                Livraison (Uber Eats, Deliveroo…) : envoie une photo <strong>nette</strong> du ticket. On vérifie automatiquement l’enseigne, le montant et la date, puis tes <strong>${balanceUnitLabel}</strong> sont <strong>ajoutés tout de suite</strong> si tout correspond — sans action du commerçant.
               </p>
               <input type="file" id="fidelity-delivery-receipt-file" class="fidelity-delivery-receipt-file-input" accept="image/*" capture="environment" aria-label="Choisir une photo du ticket" />
               <div id="fidelity-delivery-receipt-preview-wrap" class="fidelity-delivery-receipt-preview-wrap hidden">
@@ -245,7 +245,7 @@ export function renderClientPage(root, state, options = {}) {
                 </button>
               </div>
               <p id="fidelity-delivery-receipt-feedback" class="fidelity-engagement-feedback hidden" role="status"></p>
-              <p class="fidelity-delivery-receipt-legal">Traitement automatique du document ; un même ticket ne peut être utilisé qu’une fois. Réclamation soumise à validation si besoin.</p>
+              <p class="fidelity-delivery-receipt-legal">Un même ticket ne peut servir qu’une fois. Si la photo est floue ou ne correspond pas à ce commerce, la demande est refusée automatiquement.</p>
             </div>
           </div>
         </section>

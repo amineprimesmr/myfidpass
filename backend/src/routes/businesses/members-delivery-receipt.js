@@ -24,7 +24,10 @@ import {
 } from "../../db/receipt-delivery-claims.js";
 import { getIdempotencyKey } from "./shared.js";
 import { extractDeliveryReceiptWithOpenAI, MAX_SIDE_PX } from "../../services/receipt-delivery-claim-ai.js";
-import { merchantNameLikelyMatchesBusiness } from "../../lib/merchant-receipt-match.js";
+import {
+  merchantNameLikelyMatchesBusiness,
+  receiptAddressLikelyMatchesBusiness,
+} from "../../lib/merchant-receipt-match.js";
 import {
   computeRawPointsForCredit,
   enforceScanSecurityLimits,
@@ -63,6 +66,14 @@ function receiptTooOldMs(receiptDateIso, maxAgeDays) {
   const maxD = Math.max(1, Math.min(90, Math.floor(Number(maxAgeDays) || 14)));
   const cutoff = Date.now() - maxD * 86400000;
   return { unknown: false, tooOld: t < cutoff };
+}
+
+/** Date ticket dans le futur (tolérance fuseau ~1 jour). */
+function receiptTooFuture(receiptDateIso) {
+  const t = parseReceiptDateMs(receiptDateIso);
+  if (t == null) return { unknown: true };
+  const limit = Date.now() + 86400000;
+  return { unknown: false, future: t > limit };
 }
 
 function buildFingerprint({ orderReference, receiptDateIso, amountEurCents }) {
@@ -209,6 +220,11 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
     apiKey,
     imageBase64: norm.base64,
     mime: "image/jpeg",
+    businessContext: {
+      organizationName: business.organization_name || business.name || "",
+      businessName: business.name || "",
+      locationAddress: business.location_address || "",
+    },
   });
   if (!ai.ok) {
     const code = ai.code || "AI_ERROR";
@@ -225,6 +241,13 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
     return res.status(400).json({
       error: "Ticket trop ancien pour être accepté.",
       code: "RECEIPT_TOO_OLD",
+    });
+  }
+  const fut = receiptTooFuture(ex.receiptDateIso);
+  if (!fut.unknown && fut.future) {
+    return res.status(400).json({
+      error: "La date du ticket semble incorrecte (dans le futur). Vérifie la photo.",
+      code: "RECEIPT_DATE_FUTURE",
     });
   }
 
@@ -252,15 +275,65 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
     });
   }
 
-  const blobText = `${ex.merchantNameOnReceipt} ${ex.rawSummary} ${ex.deliveryPlatform || ""}`;
-  const merchantOk = merchantNameLikelyMatchesBusiness(business, ex.merchantNameOnReceipt, blobText);
-  const deliveryHint = ex.isLikelyFoodDeliveryReceipt === true || ex.deliveryPlatform != null;
+  const blobText = `${ex.merchantNameOnReceipt} ${ex.merchantAddressOnReceipt || ""} ${ex.rawSummary} ${ex.deliveryPlatform || ""}`;
+  const serverMerchantOk = merchantNameLikelyMatchesBusiness(business, ex.merchantNameOnReceipt, blobText);
+  const aiMerchantOk = ex.matchesExpectedMerchant === true;
+  const identityOk = aiMerchantOk || serverMerchantOk;
 
-  if (!merchantOk && !deliveryHint) {
+  const deliveryOk = ex.isLikelyFoodDeliveryReceipt === true || ex.deliveryPlatform != null;
+  if (!deliveryOk) {
     return res.status(400).json({
-      error: "Nous ne reconnaissons pas ce ticket comme une commande livrée pour ce commerce.",
+      error: "Ce document ne ressemble pas à un ticket de livraison valide.",
+      code: "NOT_DELIVERY_RECEIPT",
+    });
+  }
+  if (ex.receiptAppearsLegitimate !== true) {
+    return res.status(400).json({
+      error: "Le document ne peut pas être validé automatiquement. Utilise une photo nette du ticket d’achat.",
+      code: "RECEIPT_NOT_LEGITIMATE",
+    });
+  }
+
+  /** Plafond0,58 : évite les seuils SaaS trop hauts qui renvoyaient tout en « attente » avant refonte. */
+  const minConf = Math.min(
+    0.58,
+    Math.max(0.48, numOr(business, "delivery_receipt_auto_min_confidence", 0.52)),
+  );
+  if (ex.confidence < minConf) {
+    return res.status(400).json({
+      error: "Analyse du ticket trop incertaine. Reprends une photo plus nette (total et nom du commerce visibles).",
+      code: "LOW_CONFIDENCE",
+    });
+  }
+
+  if (!identityOk) {
+    return res.status(400).json({
+      error: "Ce ticket ne correspond pas à ce commerce fidélité (nom d’enseigne différent).",
       code: "MERCHANT_MISMATCH",
     });
+  }
+
+  const bizHasAddr = String(business.location_address || "").trim().length >= 10;
+  const extAddr = String(ex.merchantAddressOnReceipt || "").trim();
+  if (bizHasAddr) {
+    let addressOk = false;
+    if (!extAddr || extAddr.length < 6) {
+      /** Ticket sans adresse lisible : on exige que l’IA ait validé l’enseigne attendue. */
+      addressOk = aiMerchantOk === true;
+    } else if (ex.matchesExpectedAddress === true) {
+      addressOk = true;
+    } else if (ex.matchesExpectedAddress === false) {
+      addressOk = receiptAddressLikelyMatchesBusiness(business, extAddr);
+    } else {
+      addressOk = receiptAddressLikelyMatchesBusiness(business, extAddr);
+    }
+    if (!addressOk) {
+      return res.status(400).json({
+        error:
+          "L’adresse ou le lieu sur le ticket ne correspond pas à ce commerce. Vérifie la photo ou que c’est bien le même établissement.",
+        code: "ADDRESS_MISMATCH",
+      });
+    }
   }
 
   const points = computeRawPointsForCredit(business, {
@@ -274,10 +347,6 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
       code: "POINTS_RULE_ZERO",
     });
   }
-
-  const minConf = numOr(business, "delivery_receipt_auto_min_confidence", 0.72);
-  const autoMaxEur = Math.max(5, numOr(business, "delivery_receipt_auto_max_amount_eur", 80));
-  const canAuto = merchantOk && ex.confidence >= minConf && amountEur <= autoMaxEur;
 
   const addsToday = countMemberPointsAddsTodayUtc(business.id, member.id);
   const secured = enforceScanSecurityLimits(business, points, addsToday);
@@ -295,7 +364,7 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
         points_credited: null,
         ai_extracted_json: JSON.stringify(ex),
         ai_confidence: ex.confidence,
-        merchant_match_ok: merchantOk ? 1 : 0,
+        merchant_match_ok: identityOk ? 1 : 0,
         rejection_reason: secured.error,
         idempotency_key: idem || null,
         resolved_at: new Date().toISOString(),
@@ -314,73 +383,6 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
     });
   }
 
-  if (canAuto && secured.ok) {
-    let row;
-    try {
-      row = insertReceiptDeliveryClaim({
-        business_id: business.id,
-        member_id: member.id,
-        status: "pending",
-        file_hash_sha256: norm.fileHash,
-        claim_fingerprint: fingerprint,
-        amount_eur: amountEur,
-        points_credited: null,
-        ai_extracted_json: JSON.stringify(ex),
-        ai_confidence: ex.confidence,
-        merchant_match_ok: merchantOk ? 1 : 0,
-        rejection_reason: null,
-        idempotency_key: idem || null,
-        resolved_at: null,
-        resolution_note: null,
-      });
-    } catch (e) {
-      if (isUniqueConstraintErr(e)) {
-        return res.status(400).json({ error: "Ce ticket est déjà enregistré.", code: "DUPLICATE_TICKET" });
-      }
-      throw e;
-    }
-    const pts = secured.points;
-    const updated = addPoints(member.id, pts);
-    createTransaction({
-      businessId: business.id,
-      memberId: member.id,
-      type: "points_add",
-      points: pts,
-      metadata: {
-        source: "delivery_receipt_claim",
-        amount_eur: amountEur,
-        claim_id: row.id,
-        auto_approved: true,
-      },
-      idempotencyKey: idem ? `rdc:${idem}` : null,
-    });
-    const tokens = getPushTokensForMember(member.id);
-    for (const token of tokens) {
-      try {
-        await sendPassKitUpdate(token);
-      } catch (_) {
-        /* ignore */
-      }
-    }
-    updateReceiptDeliveryClaim(row.id, {
-      status: "approved",
-      points_credited: pts,
-      resolved_at: new Date().toISOString(),
-      resolution_note: "auto",
-    });
-    return res.status(201).json({
-      ok: true,
-      claim: {
-        id: row.id,
-        status: "approved",
-        amount_eur: amountEur,
-        points_credited: pts,
-        member_points: updated.points,
-        auto_approved: true,
-      },
-    });
-  }
-
   let row;
   try {
     row = insertReceiptDeliveryClaim({
@@ -393,7 +395,7 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
       points_credited: null,
       ai_extracted_json: JSON.stringify(ex),
       ai_confidence: ex.confidence,
-      merchant_match_ok: merchantOk ? 1 : 0,
+      merchant_match_ok: identityOk ? 1 : 0,
       rejection_reason: null,
       idempotency_key: idem || null,
       resolved_at: null,
@@ -406,15 +408,44 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
     throw e;
   }
 
-  return res.status(202).json({
+  const pts = secured.points;
+  const updated = addPoints(member.id, pts);
+  createTransaction({
+    businessId: business.id,
+    memberId: member.id,
+    type: "points_add",
+    points: pts,
+    metadata: {
+      source: "delivery_receipt_claim",
+      amount_eur: amountEur,
+      claim_id: row.id,
+      auto_approved: true,
+    },
+    idempotencyKey: idem ? `rdc:${idem}` : null,
+  });
+  const tokens = getPushTokensForMember(member.id);
+  for (const token of tokens) {
+    try {
+      await sendPassKitUpdate(token);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  updateReceiptDeliveryClaim(row.id, {
+    status: "approved",
+    points_credited: pts,
+    resolved_at: new Date().toISOString(),
+    resolution_note: "auto_ai",
+  });
+  return res.status(201).json({
     ok: true,
     claim: {
       id: row.id,
-      status: "pending",
+      status: "approved",
       amount_eur: amountEur,
-      points_estimated: secured.points,
-      message:
-        "Demande enregistrée. Le commerce validera sous peu — tes points seront ajoutés après validation.",
+      points_credited: pts,
+      member_points: updated.points,
+      auto_approved: true,
     },
   });
 });
