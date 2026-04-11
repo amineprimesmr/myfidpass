@@ -36,12 +36,6 @@
   object-fit: contain;
 }
 
-.fidelity-delivery-receipt-amount-label {
-  font-size: 0.85rem;
-  opacity: 0.9;
-  margin-top: 0.25rem;
-}
-
 .fidelity-delivery-receipt-actions {
   display: flex;
   flex-wrap: wrap;

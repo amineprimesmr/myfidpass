@@ -217,7 +217,7 @@ export function createClientFidelityApi(apiBase) {
   }
 
   /**
-   * @param {{ image_base64: string, mime_type?: string, confirmed_amount_eur?: number, idempotency_key?: string }} payload
+   * @param {{ image_base64: string, mime_type?: string, idempotency_key?: string }} payload
    */
   async function submitDeliveryReceiptClaim(slug, memberId, payload) {
     const headers = { "Content-Type": "application/json" };
@@ -230,7 +230,6 @@ export function createClientFidelityApi(apiBase) {
         body: JSON.stringify({
           image_base64: payload.image_base64,
           mime_type: payload.mime_type,
-          confirmed_amount_eur: payload.confirmed_amount_eur,
         }),
       },
       "Envoi du ticket impossible. Vérifie ta connexion.",

@@ -75,24 +75,6 @@ function buildFingerprint({ orderReference, receiptDateIso, amountEurCents }) {
   return `amt:${amountEurCents}:${d}`;
 }
 
-function agreeAmount(extractedEur, confirmedEur) {
-  if (extractedEur == null || !Number.isFinite(extractedEur) || extractedEur <= 0) {
-    if (confirmedEur != null && Number.isFinite(confirmedEur) && confirmedEur > 0) {
-      return { amount: Math.round(confirmedEur * 100) / 100, source: "confirmed_only" };
-    }
-    return null;
-  }
-  if (confirmedEur == null || !Number.isFinite(confirmedEur)) {
-    return { amount: Math.round(extractedEur * 100) / 100, source: "extracted" };
-  }
-  const d = Math.abs(extractedEur - confirmedEur);
-  const tol = Math.max(1.5, extractedEur * 0.05);
-  if (d <= tol) {
-    return { amount: Math.round(confirmedEur * 100) / 100, source: "confirmed_aligned" };
-  }
-  return null;
-}
-
 async function normalizeImageToJpegBuffer(inputBuf) {
   let img = sharp(inputBuf).rotate();
   const meta = await img.metadata();
@@ -183,8 +165,6 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
   const mimeHint = String(body.mime_type ?? body.mimeType ?? "image/jpeg").trim().toLowerCase();
   const mime =
     mimeHint === "image/png" || mimeHint === "image/webp" || mimeHint === "image/jpeg" ? mimeHint : "image/jpeg";
-  const confirmedRaw = body.confirmed_amount_eur ?? body.confirmedAmountEur;
-  const confirmedEur = confirmedRaw != null && confirmedRaw !== "" ? Number(confirmedRaw) : null;
 
   if (!imageBase64 || imageBase64.length < 100) {
     return res.status(400).json({ error: "Envoyez image_base64 (photo ou capture du ticket).", code: "INVALID_IMAGE" });
@@ -248,17 +228,15 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
     });
   }
 
-  const amountDeal = agreeAmount(ex.totalTtcEur, confirmedEur);
-  if (!amountDeal) {
+  if (ex.totalTtcEur == null || !Number.isFinite(ex.totalTtcEur) || ex.totalTtcEur <= 0) {
     return res.status(400).json({
-      error:
-        "Montant illisible ou incohérent avec la confirmation. Vérifie le total TTC sur le ticket.",
-      code: "AMOUNT_MISMATCH",
+      error: "Montant total illisible sur le ticket. Reprends une photo plus nette (total TTC visible).",
+      code: "AMOUNT_UNREADABLE",
       extracted_amount_eur: ex.totalTtcEur,
     });
   }
 
-  const amountEur = amountDeal.amount;
+  const amountEur = Math.round(ex.totalTtcEur * 100) / 100;
   const amountCents = Math.round(amountEur * 100);
   const fingerprint = buildFingerprint({
     orderReference: ex.orderReference,
@@ -299,12 +277,7 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
 
   const minConf = numOr(business, "delivery_receipt_auto_min_confidence", 0.72);
   const autoMaxEur = Math.max(5, numOr(business, "delivery_receipt_auto_max_amount_eur", 80));
-  const canAuto =
-    merchantOk &&
-    ex.confidence >= minConf &&
-    amountEur <= autoMaxEur &&
-    ex.totalTtcEur != null &&
-    amountDeal.source !== "confirmed_only";
+  const canAuto = merchantOk && ex.confidence >= minConf && amountEur <= autoMaxEur;
 
   const addsToday = countMemberPointsAddsTodayUtc(business.id, member.id);
   const secured = enforceScanSecurityLimits(business, points, addsToday);

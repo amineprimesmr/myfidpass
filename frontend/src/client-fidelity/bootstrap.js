@@ -631,9 +631,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       deliverySubmit.addEventListener("click", async () => {
         const state = store.get();
         if (!state.member?.id || !deliveryReceiptDataUrl) return;
-        const amountEl = rootEl.querySelector("#fidelity-delivery-receipt-amount");
-        const rawAmt = String(amountEl?.value || "").replace(",", ".").trim();
-        const confirmed = rawAmt ? Number(rawAmt) : undefined;
         if (deliveryFb) {
           deliveryFb.classList.add("hidden");
           deliveryFb.classList.remove("error", "success");
@@ -644,15 +641,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           const b64 = commaIdx >= 0 ? deliveryReceiptDataUrl.slice(commaIdx + 1) : deliveryReceiptDataUrl;
           const mimeMatch = /^data:([^;]+);/.exec(deliveryReceiptDataUrl);
           const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
-          const payload = {
+          const data = await api.submitDeliveryReceiptClaim(slug, state.member.id, {
             image_base64: b64,
             mime_type: mime,
             idempotency_key: genIdempotencyKey(),
-          };
-          if (confirmed != null && Number.isFinite(confirmed) && confirmed > 0) {
-            payload.confirmed_amount_eur = confirmed;
-          }
-          const data = await api.submitDeliveryReceiptClaim(slug, state.member.id, payload);
+          });
           if (data.claim?.status === "pending") {
             const msg =
               data.claim?.message ||

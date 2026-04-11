@@ -221,7 +221,7 @@ export function renderClientPage(root, state, options = {}) {
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
               <h2 id="fidelity-delivery-receipt-heading" class="fidelity-v2-card-title fidelity-v2-step-title">
-                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🛵</span>
+                <span class="fidelity-v2-step-title-emoji" aria-hidden�</span>
                 <span class="fidelity-v2-step-title-label">Livraison (Uber Eats, Deliveroo…)</span>
               </h2>
             </div>
@@ -229,16 +229,12 @@ export function renderClientPage(root, state, options = {}) {
           <div class="fidelity-v2-step-body">
             <div class="fidelity-v2-step-body-inner fidelity-delivery-receipt-inner">
               <p class="fidelity-v2-card-desc fidelity-v2-step-desc">
-                Tu as commandé en livraison ? Photographie ton <strong>ticket</strong> ou ta <strong>confirmation</strong> : nous analysons le montant et créditons tes ${balanceUnitLabel} automatiquement quand c’est possible.
+                Tu as commandé en livraison ? Envoie une photo de ton <strong>ticket</strong> ou de ta <strong>confirmation</strong> : le <strong>montant TTC</strong> est lu sur le document, puis tes <strong>${balanceUnitLabel}</strong> sont <strong>calculés automatiquement</strong> selon les règles du programme (rien à saisir).
               </p>
               <input type="file" id="fidelity-delivery-receipt-file" class="fidelity-delivery-receipt-file-input" accept="image/*" capture="environment" aria-label="Choisir une photo du ticket" />
               <div id="fidelity-delivery-receipt-preview-wrap" class="fidelity-delivery-receipt-preview-wrap hidden">
                 <img id="fidelity-delivery-receipt-preview" class="fidelity-delivery-receipt-preview" alt="Aperçu du ticket" />
               </div>
-              <label class="fidelity-delivery-receipt-amount-label" for="fidelity-delivery-receipt-amount">
-                Total TTC (€) — optionnel, aide si la photo est floue
-              </label>
-              <input id="fidelity-delivery-receipt-amount" class="fidelity-input fidelity-delivery-receipt-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="ex. 24,90" autocomplete="off" />
               <div class="fidelity-delivery-receipt-actions">
                 <button type="button" id="fidelity-delivery-receipt-pick" class="fidelity-cta-pill fidelity-cta-pill--secondary">
                   <span class="fidelity-cta-pill-label">Choisir une photo</span>
