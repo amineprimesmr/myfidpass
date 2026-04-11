@@ -221,7 +221,7 @@ export function renderClientPage(root, state, options = {}) {
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
               <h2 id="fidelity-delivery-receipt-heading" class="fidelity-v2-card-title fidelity-v2-step-title">
-                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">���</span>
+                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🛵</span>
                 <span class="fidelity-v2-step-title-label">Livraison (Uber Eats, Deliveroo…)</span>
               </h2>
             </div>
