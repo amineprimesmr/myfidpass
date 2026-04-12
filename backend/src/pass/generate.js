@@ -158,8 +158,9 @@ export async function generatePass(member, business = null, options = {}) {
   delete buffers["icon@3x.png"];
 
   let passIconSourceBuf = null;
-  if (business?.notification_icon_base64) {
-    const d = String(business.notification_icon_base64).replace(/^data:image\/\w+;base64,/, "").trim();
+  const merchantHasNotificationIcon = !!business?.notification_icon_base64;
+  if (merchantHasNotificationIcon) {
+    const d = String(business.notification_icon_base64).replace(/^data:image\/[\w+]+;base64,/, "").trim();
     const b = Buffer.from(d, "base64");
     if (b.length > 0) passIconSourceBuf = b;
   }
@@ -167,19 +168,22 @@ export async function generatePass(member, business = null, options = {}) {
   let notificationIconResized = null;
   if (passIconSourceBuf) {
     notificationIconResized = await resizeLogoForPassIcon(passIconSourceBuf);
-    if (!notificationIconResized && process.env.NODE_ENV === "production") {
-      console.warn("[PassKit] notification_icon présent mais resizeLogoForPassIcon a échoué — repli placeholder texte");
+    if (notificationIconResized) {
+      if (process.env.NODE_ENV === "production") {
+        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon");
+      }
+    } else {
+      console.warn("[PassKit] resizeLogoForPassIcon a échoué sur l'image uploadée — pass sans icône personnalisée");
     }
   }
 
   if (notificationIconResized) {
+    // Icône personnalisée du marchand
     buffers["icon.png"] = notificationIconResized.iconPng;
     buffers["icon@2x.png"] = notificationIconResized.iconPng2x;
     buffers["icon@3x.png"] = notificationIconResized.iconPng3x;
-    if (process.env.NODE_ENV === "production") {
-      console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon uniquement");
-    }
-  } else {
+  } else if (!merchantHasNotificationIcon) {
+    // Aucune icône configurée → placeholder texte neutre (jamais le fond vert sur une vraie image)
     const textLogo = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
     if (textLogo) {
       const iconResized = await resizeLogoForPassIcon(textLogo.logoPng2x);
@@ -190,6 +194,8 @@ export async function generatePass(member, business = null, options = {}) {
       }
     }
   }
+  // Si merchantHasNotificationIcon && notificationIconResized === null : on laisse icon.png absent
+  // (Wallet affiche une icône générique système — mieux que le fond vert)
 
   const businessReqRaw = business?.required_stamps != null ? Number(business.required_stamps) : NaN;
   const optionReqRaw = options.required_stamps != null ? Number(options.required_stamps) : NaN;
