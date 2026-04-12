@@ -5623,7 +5623,7 @@ function initAppDashboard(slug) {
       reader.onload = async () => {
         const dataUrl = reader.result;
         if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) return;
-        const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
+        const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/dashboard/settings${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
         const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
         if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
         try {
