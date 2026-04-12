@@ -142,35 +142,40 @@ export async function resizeLogoForWebFlyerQrHero(inputBuffer) {
  * cover + centre : remplit le carré (logo bandeau n’est plus miniature au milieu du blanc).
  * flatten sur blanc : rend l’icône opaque comme recommandé pour les passes.
  *
- * Étape intermédiaire **decode → PNG sRGB** : sans ça, certains JPEG (EXIF, profil) génèrent un PNG
- * que Wallet affiche comme carré vide / générique sur la bannière alors que l’aperçu app (URL) est bon.
+ * Normalisation decode → PNG sRGB : corrige EXIF orientation et profils ICC exotiques.
+ * Si la normalisation échoue (HEIC, EXIF corrompu, colorspace non supporté…), on continue
+ * avec le buffer brut au lieu de retourner null — l’icône sera générée quoi qu’il arrive.
  */
 export async function resizeLogoForPassIcon(inputBuffer) {
   if (!inputBuffer || inputBuffer.length === 0) return null;
   const sharp = await getSharp();
-  const white = { r: 255, g: 255, b: 255, alpha: 1 };
+  const white = { r: 255, g: 255, b: 255 };
 
-  let normalized = null;
+  // Tentative normalisation (EXIF + colorspace). Si ça échoue, on garde le buffer original.
+  let sourceBuffer = inputBuffer;
   try {
     const meta = await sharp(inputBuffer).metadata();
-    const hasAlpha = meta.hasAlpha === true || meta.channels === 4;
+    const hasAlpha = meta.hasAlpha === true || (meta.channels != null && meta.channels >= 4);
     let pipeline = sharp(inputBuffer).rotate().toColorspace("srgb");
     if (hasAlpha) {
       pipeline = pipeline.flatten({ background: white });
     }
-    normalized = await pipeline.png().toBuffer();
+    const normalized = await pipeline.png().toBuffer();
+    if (normalized && normalized.length > 0) {
+      sourceBuffer = normalized;
+    }
   } catch (err) {
-    console.warn("[PassKit] resizeLogoForPassIcon normalisation:", err.message);
-    return null;
+    console.warn("[PassKit] resizeLogoForPassIcon normalisation échouée — buffer brut utilisé:", err.message);
+    // On continue avec inputBuffer plutôt que de planter
   }
-  if (!normalized || normalized.length === 0) return null;
 
   const resizeOne = (size) =>
-    sharp(normalized)
+    sharp(sourceBuffer)
       .resize(size, size, { fit: "cover", position: "center" })
       .flatten({ background: white })
       .png()
       .toBuffer();
+
   try {
     const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
       resizeOne(ICON_SIZE_1X),
@@ -179,17 +184,18 @@ export async function resizeLogoForPassIcon(inputBuffer) {
     ]);
     return { iconPng, iconPng2x, iconPng3x };
   } catch (err) {
-    console.warn("[PassKit] resizeLogoForPassIcon failed:", err.message);
+    console.warn("[PassKit] resizeLogoForPassIcon resize échoué, repli contain:", err.message);
+    // Dernier recours sur le buffer brut avec contain (ne coupe rien)
     try {
       const opts = { fit: "contain", background: white };
       const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
-        sharp(normalized).resize(ICON_SIZE_1X, ICON_SIZE_1X, opts).png().toBuffer(),
-        sharp(normalized).resize(ICON_SIZE_2X, ICON_SIZE_2X, opts).png().toBuffer(),
-        sharp(normalized).resize(ICON_SIZE_3X, ICON_SIZE_3X, opts).png().toBuffer(),
+        sharp(inputBuffer).resize(ICON_SIZE_1X, ICON_SIZE_1X, opts).flatten({ background: white }).png().toBuffer(),
+        sharp(inputBuffer).resize(ICON_SIZE_2X, ICON_SIZE_2X, opts).flatten({ background: white }).png().toBuffer(),
+        sharp(inputBuffer).resize(ICON_SIZE_3X, ICON_SIZE_3X, opts).flatten({ background: white }).png().toBuffer(),
       ]);
       return { iconPng, iconPng2x, iconPng3x };
     } catch (err2) {
-      console.warn("[PassKit] resizeLogoForPassIcon fallback failed:", err2.message);
+      console.warn("[PassKit] resizeLogoForPassIcon repli final échoué:", err2.message);
       return null;
     }
   }
