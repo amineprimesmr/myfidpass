@@ -10,6 +10,9 @@ describe("missions-sheet-markup", () => {
     const html = renderEarnMorePointsButtonMarkup(esc);
     expect(html).toContain("fidelity-missions-sheet-open");
     expect(html).toContain("fidelity-shiny-cta");
+    expect(html).toContain("fidelity-shiny-cta--missions-gift");
+    expect(html).toContain("fidelity-shiny-cta__gift-emoji");
+    expect(html).toContain("\u{1F381}");
     expect(html).toContain('aria-controls="fidelity-missions-sheet"');
     expect(html).toContain("Gagner plus de points");
   });

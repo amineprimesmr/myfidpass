@@ -11,12 +11,15 @@ export function renderEarnMorePointsButtonMarkup(esc, programType = "points") {
             <button
               type="button"
               id="fidelity-missions-sheet-open"
-              class="fidelity-shiny-cta"
+              class="fidelity-shiny-cta fidelity-shiny-cta--missions-gift"
               aria-haspopup="dialog"
               aria-expanded="false"
               aria-controls="fidelity-missions-sheet"
             >
-              <span class="fidelity-shiny-cta__label">${esc(missionsHeroCtaLabel(programType))}</span>
+              <span class="fidelity-shiny-cta__label">
+                <span class="fidelity-shiny-cta__gift-emoji" aria-hidden="true">\u{1F381}</span>
+                <span>${esc(missionsHeroCtaLabel(programType))}</span>
+              </span>
             </button>
           </div>`;
 }
