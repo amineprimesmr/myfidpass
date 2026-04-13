@@ -1054,6 +1054,25 @@ function initAppDashboard(slug) {
     });
   }
 
+  /** Accueil mobile : tap sur l’aperçu carte → « Ma carte », section Couleur / fond (comme l’app iOS). */
+  function openPersonnaliserFromHomeCardPreview() {
+    showAppSection("personnaliser");
+    const acc = document.getElementById("app-personnaliser-accordion");
+    const step = "colors";
+    if (acc) {
+      acc.querySelectorAll("[data-personnaliser-group]").forEach((group) => {
+        const isOpen = group.getAttribute("data-personnaliser-step") === step;
+        group.classList.toggle("is-open", isOpen);
+        const toggle = group.querySelector(".app-personnaliser-group-toggle");
+        if (toggle) toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      });
+    }
+    requestAnimationFrame(() => {
+      document.getElementById("app-personnaliser-panel-colors")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      schedulePersonnaliserGroupStatusRefresh();
+    });
+  }
+
   if (shareSlugSaveBtn) {
     shareSlugSaveBtn.addEventListener("click", async () => {
       const proposed = slugify(shareSlugInputEl?.value || "");
@@ -2894,9 +2913,17 @@ function initAppDashboard(slug) {
   }, { once: false });
   if (document.getElementById("engagement")?.classList.contains("app-section-visible")) setEngagementPreviewIframeSrc();
   syncIosHomeToolbar();
-  document.getElementById("app-dash-home-header-right")?.addEventListener("click", () => {
+  document.getElementById("app-dash-home-header-right")?.addEventListener("click", (e) => {
+    e.stopPropagation();
     showAppSection("engagement");
   });
+  const dashHomeWalletCard = document.getElementById("app-dash-home-wallet-card");
+  if (dashHomeWalletCard) {
+    dashHomeWalletCard.addEventListener("click", (e) => {
+      if (e.target?.closest?.("#app-dash-home-header-right")) return;
+      openPersonnaliserFromHomeCardPreview();
+    });
+  }
 
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
   if (emojiPickerEl && stampEmojiEl) {
