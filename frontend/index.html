@@ -49,6 +49,7 @@
     <link rel="stylesheet" href="/src/app-mobile-ios-campaigns.css" />
     <link rel="stylesheet" href="/src/app-notifications-layout.css" />
     <link rel="stylesheet" href="/src/app-dashboard-ios-home.css" />
+    <link rel="stylesheet" href="/src/app-commerce-ios.css" />
     <link rel="stylesheet" href="/src/post-purchase-app-modal.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
@@ -1959,22 +1960,94 @@
             </div>
           </section>
           <!-- Section Profil : infos établissement (nom, logo, adresse) -->
-          <section id="profil" class="app-section app-section-profil">
+          <section id="profil" class="app-section app-section-profil" data-commerce-view="home">
             <div class="app-commerce-mobile-topbar app-mobile-only">
-              <div class="app-commerce-mobile-topbar__lead">
-                <img id="app-commerce-mobile-avatar-img" class="app-commerce-mobile-topbar__avatar-img hidden" alt="" width="34" height="34" decoding="async" />
-                <span id="app-commerce-mobile-initials" class="app-commerce-mobile-topbar__initials">ME</span>
+              <div class="app-commerce-topbar-main" id="app-commerce-topbar-main">
+                <div class="app-commerce-mobile-topbar__lead">
+                  <img id="app-commerce-mobile-avatar-img" class="app-commerce-mobile-topbar__avatar-img hidden" alt="" width="34" height="34" decoding="async" />
+                  <span id="app-commerce-mobile-initials" class="app-commerce-mobile-topbar__initials">ME</span>
+                </div>
+                <span id="app-commerce-mobile-name" class="app-commerce-mobile-topbar__name">Ma boutique</span>
+                <div class="app-commerce-mobile-topbar__actions">
+                  <button type="button" id="app-commerce-mobile-qr" class="app-commerce-mobile-topbar__btn" aria-label="Afficher la page fidélité">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg>
+                  </button>
+                  <button type="button" id="app-commerce-mobile-settings" class="app-commerce-mobile-topbar__btn" aria-label="Réglages">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  </button>
+                </div>
               </div>
-              <span id="app-commerce-mobile-name" class="app-commerce-mobile-topbar__name">Ma boutique</span>
-              <div class="app-commerce-mobile-topbar__actions">
-                <button type="button" id="app-commerce-mobile-qr" class="app-commerce-mobile-topbar__btn" aria-label="Afficher la page fidélité">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg>
+              <div class="app-commerce-topbar-reglages hidden" id="app-commerce-topbar-reglages" aria-hidden="true">
+                <button type="button" class="app-commerce-reglages-back" id="app-commerce-reglages-back" aria-label="Retour">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
-                <button type="button" id="app-commerce-mobile-settings" class="app-commerce-mobile-topbar__btn" aria-label="Réglages du compte">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                </button>
+                <span class="app-commerce-reglages-title">Réglages</span>
+                <span class="app-commerce-reglages-spacer" aria-hidden="true"></span>
               </div>
             </div>
+            <div class="app-commerce-ios-home app-mobile-only" id="app-commerce-ios-home">
+              <div class="app-commerce-ios-sheet">
+                <h2 class="app-commerce-ios-headline">Préparez-vous à lancer</h2>
+                <p class="app-commerce-ios-progress-pill" id="app-commerce-ios-progress-pill">0 sur 2 étapes terminées</p>
+                <button type="button" class="app-commerce-ios-step app-commerce-ios-step--pending" id="app-commerce-ios-step-flyer">
+                  <span class="app-commerce-ios-step-badge" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span class="app-commerce-ios-step-body">
+                    <span class="app-commerce-ios-step-title">Flyer QR</span>
+                    <span class="app-commerce-ios-step-desc">Créez votre flyer et téléchargez le QR pour votre vitrine.</span>
+                  </span>
+                  <span class="app-commerce-ios-step-chevron" aria-hidden="true">›</span>
+                </button>
+                <button type="button" class="app-commerce-ios-step app-commerce-ios-step--pending" id="app-commerce-ios-step-engagement">
+                  <span class="app-commerce-ios-step-num" aria-hidden="true">2</span>
+                  <span class="app-commerce-ios-step-body">
+                    <span class="app-commerce-ios-step-title">Avis &amp; réseaux</span>
+                    <span class="app-commerce-ios-step-desc">Fiche Google Maps, Instagram, TikTok, Facebook.</span>
+                  </span>
+                  <span class="app-commerce-ios-step-chevron" aria-hidden="true">›</span>
+                </button>
+                <p class="app-commerce-ios-social-heading">Réseaux</p>
+                <div class="app-commerce-ios-social-list">
+                  <button type="button" class="app-commerce-ios-social-row" id="app-commerce-ios-social-google">
+                    <span class="app-commerce-ios-social-icon app-commerce-ios-social-icon--google" aria-hidden="true">G</span>
+                    <span class="app-commerce-ios-social-text">
+                      <span class="app-commerce-ios-social-title">Google</span>
+                      <span class="app-commerce-ios-social-sub">Fiche Maps &amp; avis</span>
+                    </span>
+                    <span class="app-commerce-ios-social-cta">Configurer</span>
+                  </button>
+                  <button type="button" class="app-commerce-ios-social-row" id="app-commerce-ios-social-instagram">
+                    <span class="app-commerce-ios-social-icon app-commerce-ios-social-icon--ig" aria-hidden="true">◎</span>
+                    <span class="app-commerce-ios-social-text">
+                      <span class="app-commerce-ios-social-title">Instagram</span>
+                      <span class="app-commerce-ios-social-sub">Toucher pour connecter le compte</span>
+                    </span>
+                    <span class="app-commerce-ios-social-chevron" aria-hidden="true">›</span>
+                  </button>
+                  <button type="button" class="app-commerce-ios-social-row" id="app-commerce-ios-social-tiktok">
+                    <span class="app-commerce-ios-social-icon app-commerce-ios-social-icon--tt" aria-hidden="true">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+                    </span>
+                    <span class="app-commerce-ios-social-text">
+                      <span class="app-commerce-ios-social-title">TikTok</span>
+                      <span class="app-commerce-ios-social-sub">Toucher pour connecter le compte</span>
+                    </span>
+                    <span class="app-commerce-ios-social-chevron" aria-hidden="true">›</span>
+                  </button>
+                  <button type="button" class="app-commerce-ios-social-row" id="app-commerce-ios-social-facebook">
+                    <span class="app-commerce-ios-social-icon app-commerce-ios-social-icon--fb" aria-hidden="true">f</span>
+                    <span class="app-commerce-ios-social-text">
+                      <span class="app-commerce-ios-social-title">Facebook</span>
+                      <span class="app-commerce-ios-social-sub">Toucher pour connecter le compte</span>
+                    </span>
+                    <span class="app-commerce-ios-social-chevron" aria-hidden="true">›</span>
+                  </button>
+                </div>
+                <button type="button" class="app-commerce-ios-open-reglages" id="app-commerce-ios-open-reglages">Compte, établissement et lien public</button>
+              </div>
+            </div>
+            <div class="app-commerce-reglages-stack">
             <h2 class="app-section-title">Profil</h2>
             <div class="app-section-grid-wrap app-profil-grid">
               <div class="app-section-col-main">
@@ -2102,6 +2175,7 @@
                 Déconnexion
               </button></li>
             </ul>
+            </div>
           </section>
         </div>
       <div

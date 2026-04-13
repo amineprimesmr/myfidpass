@@ -42,6 +42,11 @@ import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../u
 import { initAppFlyerQr } from "./app-flyer-qr.js";
 import { initFidelityClientPageSection } from "./app-fidelity-client-page.js";
 import { syncDashboardHomeCardPreview } from "./dashboard-home-card-preview.js";
+import {
+  applyCommerceIosHomeState,
+  wireCommerceIosShell,
+  setCommerceView,
+} from "./commerce-ios-shell.js";
 
 /** @typedef {"network"|"server500"|"client"|"parse"|"unknown"|"unexpected"} AppLoadFailKind */
 
@@ -737,8 +742,10 @@ function initAppMobile() {
     showAppSection("fidelity-client");
   });
   document.getElementById("app-commerce-mobile-settings")?.addEventListener("click", () => {
-    document.querySelector("#profil .app-profil-account-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setCommerceView("reglages");
   });
+
+  wireCommerceIosShell({ showAppSection });
 
   document.querySelectorAll(".app-mobile-profil-item[data-section]").forEach((item) => {
     item.addEventListener("click", (e) => {
@@ -3795,6 +3802,7 @@ function initAppDashboard(slug) {
           showProfilMessage("Impossible de charger les données de l’établissement. Vérifiez la connexion ou rechargez la page.", true);
           return;
         }
+        applyCommerceIosHomeState(data);
         const orgName = (data.organization_name ?? data.organizationName ?? "").trim();
         if (profilOrg) profilOrg.value = orgName;
         propagateEstablishmentDisplayName(orgName);
