@@ -3,7 +3,7 @@ import {
   buildStampTiers,
   tierProgressState,
   buildHeroFullScaleTickMarks,
-  heroFillPercentEqualSegments,
+  heroFillPercentLinear,
 } from "../lib/tier-progress.js";
 
 /**
@@ -39,7 +39,7 @@ export function buildHeroBalanceProgressState(p) {
     const { next } = tierProgressState(tiers, pts);
     if (next) {
       nextGoal = { threshold: next.threshold, label: next.label };
-      pct = heroFillPercentEqualSegments(tiers, pts);
+      pct = heroFillPercentLinear(tiers, pts);
     } else {
       tiersComplete = true;
       pct = 100;
