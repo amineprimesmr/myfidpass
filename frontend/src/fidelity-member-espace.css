@@ -60,6 +60,13 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
   padding: 0.85rem 0 0.35rem;
 }
 
+/* Logo commerce (même source / rendu que la page jeu QR — classe fidelity-qr-logo) */
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-brand {
+  width: 100%;
+  text-align: center;
+  margin: 0 0 0.15rem;
+}
+
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-steps {
   display: flex;
   flex-direction: column;

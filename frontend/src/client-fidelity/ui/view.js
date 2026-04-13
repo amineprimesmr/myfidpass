@@ -151,6 +151,16 @@ export function renderClientPage(root, state, options = {}) {
   const deliveryReceiptEnabled =
     hasMember && Number(state.business?.delivery_receipt_claims_enabled ?? state.business?.deliveryReceiptClaimsEnabled ?? 1) === 1;
 
+  const memberLogoUrl = hasMember ? resolveClientLogoImgSrc(state.business, slugForAssets, apiBase) : "";
+  const logoOnErr =
+    "this.onerror=null;this.classList.add('fidelity-qr-logo--hidden');this.removeAttribute('src')";
+  const memberHeroLogoHtml =
+    hasMember && memberLogoUrl
+      ? `<div class="fidelity-v2-hero-brand">
+          <img class="fidelity-qr-logo" src="${esc(memberLogoUrl)}" alt="${businessName}" decoding="async" onerror="${logoOnErr}" />
+        </div>`
+      : "";
+
   root.innerHTML = `
     ${
       nextRewardBannerHtml
@@ -169,6 +179,7 @@ export function renderClientPage(root, state, options = {}) {
       ${hasMember ? `
         <!-- HERO membre existant -->
         <section class="fidelity-v2-hero fidelity-v2-hero-member">
+          ${memberHeroLogoHtml}
           <div class="fidelity-v2-hero-greeting">
             <span class="fidelity-v2-hero-wave">👋</span>
             <div>
