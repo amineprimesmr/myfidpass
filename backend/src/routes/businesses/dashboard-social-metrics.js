@@ -12,6 +12,7 @@ import {
   getSocialOAuthConnection,
   PROVIDER_META_INSTAGRAM,
   PROVIDER_GOOGLE_YOUTUBE,
+  PROVIDER_GOOGLE_BUSINESS,
   PROVIDER_TIKTOK,
 } from "../../db/social-oauth.js";
 import {
@@ -49,14 +50,16 @@ router.post("/social-metrics/refresh", refreshLimiter, async (req, res) => {
   const gr = rewards.google_review;
   const placeId = String(gr?.place_id ?? "").trim();
   const googleOk = !!(gr?.enabled && placeId);
+  const gbpConn = getSocialOAuthConnection(business.id, PROVIDER_GOOGLE_BUSINESS);
+  const googleBusinessOk = !!(gbpConn?.access_token || gbpConn?.refresh_token);
   const metaIg = !!getSocialOAuthConnection(business.id, PROVIDER_META_INSTAGRAM);
   const youtubeOk = !!getSocialOAuthConnection(business.id, PROVIDER_GOOGLE_YOUTUBE);
   const tiktokOk = !!getSocialOAuthConnection(business.id, PROVIDER_TIKTOK);
 
-  if (!googleOk && !metaIg && !youtubeOk && !tiktokOk) {
+  if (!googleOk && !googleBusinessOk && !metaIg && !youtubeOk && !tiktokOk) {
     return res.status(400).json({
       error:
-        "Connectez au moins un réseau (Meta/Instagram, YouTube, TikTok) ou configurez Google (Place ID) pour rafraîchir.",
+        "Connectez au moins un réseau (Meta/Instagram, YouTube, TikTok), liez Google Business (avis), ou configurez le Place ID Google pour rafraîchir.",
     });
   }
 
@@ -65,7 +68,7 @@ router.post("/social-metrics/refresh", refreshLimiter, async (req, res) => {
     const refresh = {};
     let failed = false;
 
-    if (googleOk) {
+    if (googleOk || googleBusinessOk) {
       refresh.google = await refreshGoogleSnapshotForBusiness(business.id, placeId);
       if (!refresh.google?.ok) failed = true;
     }

@@ -10,14 +10,16 @@ const SCHEME_PATH = {
   tiktok: "myfidpass://oauth-tiktok",
   meta: "myfidpass://oauth-meta",
   "google-youtube": "myfidpass://oauth-google-youtube",
+  "google-business": "myfidpass://oauth-google-business",
 };
 
 /**
- * @param {"tiktok"|"meta"|"google-youtube"} kind
+ * @param {"tiktok"|"meta"|"google-youtube"|"google-business"} kind
  * @param {Record<string, string | string[] | undefined>} query
  */
 export function buildNativeOAuthReturnUrl(kind, query) {
-  const pathSeg = kind === "google-youtube" ? "google-youtube" : kind;
+  const pathSeg =
+    kind === "google-youtube" ? "google-youtube" : kind === "google-business" ? "google-business" : kind;
   if (UL_BASE.startsWith("https://")) {
     const u = new URL(`${UL_BASE}/${pathSeg}`);
     for (const [k, v] of Object.entries(query)) {

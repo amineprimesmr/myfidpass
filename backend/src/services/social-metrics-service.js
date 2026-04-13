@@ -13,8 +13,14 @@ import {
   upsertSocialOAuthConnection,
   PROVIDER_META_INSTAGRAM,
   PROVIDER_GOOGLE_YOUTUBE,
+  PROVIDER_GOOGLE_BUSINESS,
   PROVIDER_TIKTOK,
 } from "../db/social-oauth.js";
+import {
+  listGoogleBusinessReviews,
+  refreshGoogleBusinessAccessToken,
+  isGoogleBusinessOAuthConfigured,
+} from "./google-business-oauth.js";
 import {
   refreshFollowersFromStoredUserToken,
   refreshFacebookFanFromMetaUserToken,
@@ -128,9 +134,9 @@ function metricsEqual(a, b) {
 }
 
 /**
- * Enregistre un snapshot Google si les valeurs ont changé (ou premier snapshot).
+ * Snapshot Google Places (note + nombre d’avis publics) — sans OAuth Business Profile.
  */
-export async function refreshGoogleSnapshotForBusiness(businessId, placeId) {
+export async function refreshGooglePlacesSnapshotFromPlaceId(businessId, placeId) {
   const fetched = await fetchGooglePlaceMetrics(placeId);
   if (!fetched.ok || !fetched.metrics) {
     return { ok: false, error: fetched.error || "fetch_failed" };
@@ -145,6 +151,78 @@ export async function refreshGoogleSnapshotForBusiness(businessId, placeId) {
 }
 
 /**
+ * Avis Google via OAuth Business Profile (données propriétaire).
+ */
+export async function refreshGoogleBusinessSnapshotForBusiness(businessId) {
+  let conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  if (!conn?.access_token && !conn?.refresh_token) return { ok: false, error: "no_oauth" };
+  let accessToken = conn.access_token;
+  if (!accessToken && conn.refresh_token) {
+    const ref = await refreshGoogleBusinessAccessToken(conn.refresh_token);
+    if (!ref.ok) return { ok: false, error: ref.error || "refresh_failed" };
+    accessToken = ref.accessToken;
+    upsertSocialOAuthConnection({
+      businessId,
+      provider: PROVIDER_GOOGLE_BUSINESS,
+      accessToken: ref.accessToken,
+      refreshToken: conn.refresh_token,
+      tokenExpiresAt: ref.expiresAt,
+      externalUserId: conn.external_user_id,
+      metadata: parseConnMetadata(conn),
+    });
+    conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  }
+  const meta = parseConnMetadata(conn);
+  const accountId = meta.account_id;
+  const locationId = meta.location_id;
+  if (!accountId || !locationId) return { ok: false, error: "no_location_meta" };
+
+  let rev = await listGoogleBusinessReviews(accessToken, accountId, locationId);
+  if (!rev.ok && conn.refresh_token) {
+    const ref = await refreshGoogleBusinessAccessToken(conn.refresh_token);
+    if (ref.ok) {
+      accessToken = ref.accessToken;
+      upsertSocialOAuthConnection({
+        businessId,
+        provider: PROVIDER_GOOGLE_BUSINESS,
+        accessToken: ref.accessToken,
+        refreshToken: conn.refresh_token,
+        tokenExpiresAt: ref.expiresAt,
+        externalUserId: conn.external_user_id,
+        metadata: parseConnMetadata(conn),
+      });
+      rev = await listGoogleBusinessReviews(accessToken, accountId, locationId);
+    }
+  }
+  if (!rev.ok) return rev;
+
+  const metrics = {
+    reviews_count: rev.reviewsCount,
+    rating: rev.rating,
+    reviews_sample: JSON.stringify(rev.samples),
+  };
+  const latest = getLatestSnapshot(businessId, "google_review");
+  const prevParsed = latest ? parseMetricsRow(latest) : null;
+  if (prevParsed && metricsEqual(prevParsed.metrics, metrics)) {
+    return { ok: true, skipped: true, metrics };
+  }
+  insertSocialMetricSnapshot(businessId, "google_review", "oauth_google_business", metrics);
+  return { ok: true, skipped: false, metrics };
+}
+
+/**
+ * Priorité : OAuth Google Business Profile si connecté, sinon Places (Place ID public).
+ */
+export async function refreshGoogleSnapshotForBusiness(businessId, placeId) {
+  const gbpConn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  if (gbpConn?.access_token || gbpConn?.refresh_token) {
+    const gbp = await refreshGoogleBusinessSnapshotForBusiness(businessId);
+    if (gbp.ok) return gbp;
+  }
+  return refreshGooglePlacesSnapshotFromPlaceId(businessId, placeId);
+}
+
+/**
  * @param {string} businessId
  * @param {object} engagementRewards - getEngagementRewards()
  */
@@ -155,6 +233,8 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
   const metaConn = getSocialOAuthConnection(businessId, PROVIDER_META_INSTAGRAM);
   const ytConn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_YOUTUBE);
   const ttConn = getSocialOAuthConnection(businessId, PROVIDER_TIKTOK);
+  const gbpConn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  const gbpOk = !!(gbpConn?.access_token || gbpConn?.refresh_token);
   const metaMeta = parseConnMetadata(metaConn);
 
   for (const channel of Object.keys(CHANNEL_META)) {
@@ -205,6 +285,22 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
       oauthConnected = !!ytConn?.access_token;
     } else if (channel === "tiktok_follow") {
       oauthConnected = !!ttConn?.access_token;
+    } else if (channel === "google_review") {
+      oauthConnected = gbpOk;
+    }
+
+    let reviewsSample = null;
+    if (channel === "google_review" && latest?.metrics) {
+      const raw = latest.metrics.reviews_sample;
+      if (typeof raw === "string") {
+        try {
+          reviewsSample = JSON.parse(raw);
+        } catch (_) {
+          reviewsSample = null;
+        }
+      } else if (Array.isArray(raw)) {
+        reviewsSample = raw;
+      }
     }
 
     const meta = CHANNEL_META[channel];
@@ -212,20 +308,23 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
       channel,
       label: meta.label,
       enabled,
-      configured: channel === "google_review" ? placeId.length > 0 : url.length > 0,
+      configured: channel === "google_review" ? placeId.length > 0 || gbpOk : url.length > 0,
       latest,
       baseline_captured_at: baseline?.captured_at ?? null,
       delta_since_baseline: deltaSinceBaseline,
       delta_since_previous: deltaSincePrevious,
       history,
-      google_auto_available: channel === "google_review" && !!GOOGLE_PLACES_API_KEY,
+      google_auto_available:
+        channel === "google_review" && (!!GOOGLE_PLACES_API_KEY || gbpOk),
       oauth_connected: oauthConnected,
+      reviews_sample: reviewsSample,
     });
   }
 
   return {
     channels,
     google_places_configured: !!GOOGLE_PLACES_API_KEY,
+    google_business_oauth_available: isGoogleBusinessOAuthConfigured(),
     meta_oauth_available: isMetaOAuthConfigured(),
     youtube_oauth_available: isYouTubeOAuthConfigured(),
     tiktok_oauth_available: isTikTokOAuthConfigured(),

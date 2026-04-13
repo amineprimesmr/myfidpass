@@ -9,6 +9,8 @@ const db = getDb();
 export const PROVIDER_META_INSTAGRAM = "meta_instagram";
 /** Même jeton Meta : métrique Page Facebook (fans) — pas de ligne OAuth séparée. */
 export const PROVIDER_GOOGLE_YOUTUBE = "google_youtube";
+/** Fiche Google Business Profile — avis en direct (API v4). */
+export const PROVIDER_GOOGLE_BUSINESS = "google_business";
 export const PROVIDER_TIKTOK = "tiktok";
 
 /** Canaux dont le suivi repose sur OAuth (pas de saisie manuelle côté produit). */

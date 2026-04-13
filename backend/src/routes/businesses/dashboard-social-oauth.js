@@ -20,6 +20,12 @@ import {
   isTikTokOAuthConfigured,
   signTikTokOAuthState,
 } from "../../services/tiktok-oauth.js";
+import {
+  buildGoogleBusinessAuthorizeUrl,
+  getGoogleBusinessRedirectUri,
+  isGoogleBusinessOAuthConfigured,
+  signGoogleBusinessOAuthState,
+} from "../../services/google-business-oauth.js";
 import { ensureDashboardAccess } from "./shared.js";
 
 const router = Router({ mergeParams: true });
@@ -67,6 +73,29 @@ router.get("/social-oauth/google-youtube/start", (req, res) => {
   res.json({
     auth_url: buildGoogleYouTubeAuthorizeUrl(redirectUri, state),
     youtube_oauth_available: true,
+    redirect_uri: redirectUri,
+  });
+});
+
+router.get("/social-oauth/google-business/start", (req, res) => {
+  if (!req.business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!ensureDashboardAccess(req, res, req.business)) return;
+  if (!isGoogleBusinessOAuthConfigured()) {
+    return res.status(503).json({
+      error: "google_business_oauth_non_configure",
+      google_business_oauth_available: false,
+      hint:
+        "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, API_URL — redirect https://…/api/oauth/google-business/callback + APIs Google Business Profile activées.",
+    });
+  }
+  const redirectUri = getGoogleBusinessRedirectUri();
+  if (!redirectUri) {
+    return res.status(503).json({ error: "api_url_manquant", google_business_oauth_available: false });
+  }
+  const state = signGoogleBusinessOAuthState({ businessId: req.business.id, slug: req.params.slug });
+  res.json({
+    auth_url: buildGoogleBusinessAuthorizeUrl(redirectUri, state),
+    google_business_oauth_available: true,
     redirect_uri: redirectUri,
   });
 });
