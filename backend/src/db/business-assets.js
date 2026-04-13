@@ -85,12 +85,16 @@ export function mergeBusinessAssetsForPass(business) {
   if (!business?.id) return business;
   const id = String(business.id);
   const a = getAllBusinessAssetsMap(id);
+  const notifTrim = a.notification_icon != null && String(a.notification_icon).trim() !== "" ? String(a.notification_icon).trim() : null;
   return {
     ...business,
     logo_base64: a.logo ?? business.logo_base64 ?? null,
     logo_icon_base64: a.logo_icon ?? business.logo_icon_base64 ?? null,
-    /** Icône dédiée campagnes / Web Push (GET /notification-icon) — distincte des logos carte dans `logo` / `logo_icon`. */
-    notification_icon_base64: a.notification_icon ?? business.notification_icon_base64 ?? null,
+    /**
+     * Uniquement `business_assets.kind = notification_icon` — jamais une colonne fantôme sur `businesses`
+     * (évite tout mélange avec le logo carte si un vieux merge ou un bug client remplissait le mauvais champ).
+     */
+    notification_icon_base64: notifTrim,
     card_background_base64: a.card_background ?? business.card_background_base64 ?? null,
     stamp_icon_base64: a.stamp_icon ?? business.stamp_icon_base64 ?? null,
   };

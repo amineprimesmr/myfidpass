@@ -19,6 +19,22 @@ async function getSharp() {
   return _sharp;
 }
 
+/**
+ * Extrait la partie base64 d’une data URL image (insensible à la casse sur le préfixe).
+ * Utilisé pour le pass (.pkpass) et GET …/notification-icon — évite un décodage vide si `;BASE64,` ou sous-type exotique.
+ * @param {string|null|undefined} input
+ * @returns {string|null} payload base64 sans espaces, ou null
+ */
+export function stripDataImageBase64Payload(input) {
+  if (input == null) return null;
+  const t = String(input).trim();
+  if (!t) return null;
+  const m = /^data:image\/[\w.+-]+;base64,(.*)$/is.exec(t);
+  if (m) return m[1].replace(/\s/g, "");
+  if (/^[a-z0-9+/=\r\n]+$/i.test(t)) return t.replace(/\s/g, "");
+  return null;
+}
+
 function escapeSvgText(s) {
   if (s == null || typeof s !== "string") return "";
   return String(s)

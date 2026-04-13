@@ -1,5 +1,6 @@
 import webPush from "web-push";
 import sharp from "sharp";
+import { stripDataImageBase64Payload } from "./pass/images-logo.js";
 
 let VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
 let VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
@@ -34,7 +35,7 @@ export const NOTIFICATION_ICON_SIZE = 96;
  */
 export async function getLogoIconBuffer(logoBase64) {
   if (!logoBase64 || typeof logoBase64 !== "string") return null;
-  const base64Data = String(logoBase64).replace(/^data:image\/\w+;base64,/, "");
+  const base64Data = stripDataImageBase64Payload(logoBase64);
   if (!base64Data) return null;
   try {
     const buf = Buffer.from(base64Data, "base64");

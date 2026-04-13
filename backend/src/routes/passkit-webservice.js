@@ -19,6 +19,7 @@ import { scheduleMerchantDashboardSyncForBusiness } from "../lib/merchant-dashbo
 import { scheduleCampaignEventJobsForMember } from "../lib/campaign-event-jobs.js";
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
+import { stripDataImageBase64Payload } from "../pass/images-logo.js";
 
 const router = Router();
 
@@ -242,7 +243,7 @@ const getPassHandler = async (req, res) => {
     const hasLogo = rawB64.length > 0;
     const logoBytes = hasLogo ? Buffer.byteLength(Buffer.from(rawB64, "base64")) : 0;
     const rawNotif = business.notification_icon_base64
-      ? String(business.notification_icon_base64).replace(/^data:image\/\w+;base64,/, "")
+      ? stripDataImageBase64Payload(String(business.notification_icon_base64)) ?? ""
       : "";
     const hasNotifIcon = rawNotif.length > 0;
     const notifIconBytes = hasNotifIcon ? Buffer.byteLength(Buffer.from(rawNotif, "base64")) : 0;

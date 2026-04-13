@@ -12,7 +12,9 @@ import {
   createPassLogoPlaceholder,
   resizeLogoForPass,
   resizeLogoForPassIcon,
+  stripDataImageBase64Payload,
 } from "./images-logo.js";
+import { getBusinessAssetData } from "../db/business-assets.js";
 import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
@@ -124,8 +126,8 @@ export async function generatePass(member, business = null, options = {}) {
       buffers["logo@2x.png"] = textLogo.logoPng2x;
     }
   } else if (business?.logo_base64) {
-    const base64Data = String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "").trim();
-    const logoBuf = Buffer.from(base64Data, "base64");
+    const base64Data = stripDataImageBase64Payload(business.logo_base64);
+    const logoBuf = base64Data ? Buffer.from(base64Data, "base64") : Buffer.alloc(0);
     if (logoBuf.length > 0) {
       const resized = await resizeLogoForPass(logoBuf);
       if (resized) {
@@ -152,26 +154,32 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   /**
-   * Icône Wallet (bannière / centre de notif) : `icon.png` du .pkpass — alignée sur la page Notifs / GET …/notification-icon.
-   * Ne pas laisser `icon` vide : iOS peut retomber sur le bandeau `logo`. Même fichier que le logo commerce : OK (marque voulue).
+   * Icône Wallet : `icon.png` du .pkpass — **même binaire source** que GET …/notification-icon (`business_assets.notification_icon`).
+   * Lecture directe de l’asset SQLite en priorité (évite tout écart avec l’objet `business` en mémoire).
    */
   delete buffers["icon.png"];
   delete buffers["icon@2x.png"];
   delete buffers["icon@3x.png"];
 
-  let passIconSourceBuf = null;
-  if (business?.notification_icon_base64) {
-    const d = String(business.notification_icon_base64).replace(/^data:image\/[\w+]+;base64,/, "").trim();
-    const b = Buffer.from(d, "base64");
-    if (b.length > 0) passIconSourceBuf = b;
+  let notificationIconRaw =
+    business?.id != null ? getBusinessAssetData(String(business.id), "notification_icon") : null;
+  if (!notificationIconRaw || !String(notificationIconRaw).trim()) {
+    notificationIconRaw = business?.notification_icon_base64 && String(business.notification_icon_base64).trim()
+      ? String(business.notification_icon_base64).trim()
+      : null;
   }
+  const notifB64Payload = notificationIconRaw ? stripDataImageBase64Payload(notificationIconRaw) : null;
+  let passIconSourceBuf =
+    notifB64Payload && Buffer.from(notifB64Payload, "base64").length > 0
+      ? Buffer.from(notifB64Payload, "base64")
+      : null;
 
   let notificationIconResized = null;
   if (passIconSourceBuf) {
     notificationIconResized = await resizeLogoForPassIcon(passIconSourceBuf);
     if (notificationIconResized) {
       if (process.env.NODE_ENV === "production") {
-        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon");
+        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon (asset DB)");
       }
     } else {
       console.warn("[PassKit] resizeLogoForPassIcon a échoué sur notification_icon — repli placeholder notif");
@@ -182,6 +190,15 @@ export async function generatePass(member, business = null, options = {}) {
     buffers["icon.png"] = notificationIconResized.iconPng;
     buffers["icon@2x.png"] = notificationIconResized.iconPng2x;
     buffers["icon@3x.png"] = notificationIconResized.iconPng3x;
+    if (
+      buffers["logo@2x.png"] &&
+      buffers["logo@2x.png"].length > 0 &&
+      buffers["logo@2x.png"].equals(notificationIconResized.iconPng2x)
+    ) {
+      console.warn(
+        "[PassKit] icon@2x et logo@2x sont identiques (octets) — l’aperçu et le Wallet montreront le même visuel que le bandeau carte.",
+      );
+    }
   } else {
     const textLogo = await createPassLogoPlaceholder();
     if (textLogo) {
