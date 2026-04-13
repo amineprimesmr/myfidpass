@@ -24,7 +24,7 @@
 }
 
 .fidelity-qr-verify-progress-bar--animate {
-  animation: fidelity-qr-verify-progress-fill var(--verify-duration, 15s) cubic-bezier(0.45, 0, 0.2, 1) forwards;
+  animation: fidelity-qr-verify-progress-fill var(--verify-duration, 1.4s) cubic-bezier(0.45, 0, 0.2, 1) forwards;
 }
 
 @keyframes fidelity-qr-verify-progress-fill {

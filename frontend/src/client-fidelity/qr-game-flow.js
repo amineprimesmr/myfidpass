@@ -57,9 +57,9 @@ function fidelityAppMount(fallback) {
   return document.getElementById("fidelity-app") || fallback;
 }
 
-/** Durée affichée « vérification » (ms) — minimum 15 s, léger jitter pour paraître naturel */
-const QR_VERIFY_MIN_MS = 15_000;
-const QR_VERIFY_JITTER_MS = 4_000;
+/** Durée affichée « vérification » (ms) — courte : illusion de traitement sans bloquer l’utilisateur */
+const QR_VERIFY_MIN_MS = 1_200;
+const QR_VERIFY_JITTER_MS = 400;
 
 const QR_VERIFY_MESSAGES = [
   "Nous vérifions votre avis Google…",
@@ -88,7 +88,7 @@ function startVerifyPanelUx(rootEl, durationMs) {
   if (msgEl) {
     msgEl.textContent = QR_VERIFY_MESSAGES[0];
   }
-  const step = Math.max(1750, Math.floor(durationMs / (QR_VERIFY_MESSAGES.length + 1)));
+  const step = Math.max(260, Math.floor(durationMs / (QR_VERIFY_MESSAGES.length + 1)));
   const id = window.setInterval(() => {
     idx = (idx + 1) % QR_VERIFY_MESSAGES.length;
     if (msgEl) msgEl.textContent = QR_VERIFY_MESSAGES[idx];
@@ -277,7 +277,7 @@ export function bindQrGameUi(ctx) {
           /* Tout de suite : ne pas attendre closeQrModalRoot (Safari / transitionend capricieux). */
           markQrThanksHeroDone(slug);
           applyQrThanksHero(fidelityAppMount(rootEl), () => ({}));
-          await new Promise((r) => globalThis.setTimeout(r, 480));
+          await new Promise((r) => globalThis.setTimeout(r, 280));
           const mount = fidelityAppMount(rootEl);
           closeQrModalRoot(mount, () => {
             void (async () => {
