@@ -35,6 +35,10 @@ import {
 } from "./fidelity-route-loading.js";
 import { applyFidelityClientPageBackground } from "./lib/apply-fidelity-client-bg.js";
 import { bindFidelityMemberFooterVisualViewport } from "./lib/sync-fidelity-member-footer-visual-viewport.js";
+import {
+  closeDeliveryReceiptScanOverlay,
+  openDeliveryReceiptScanOverlay,
+} from "./delivery-receipt-scan-overlay.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -668,6 +672,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           deliveryFb.classList.remove("error", "success");
         }
         deliverySubmit.disabled = true;
+        openDeliveryReceiptScanOverlay({ imageDataUrl: deliveryReceiptDataUrl });
         try {
           const commaIdx = deliveryReceiptDataUrl.indexOf(",");
           const b64 = commaIdx >= 0 ? deliveryReceiptDataUrl.slice(commaIdx + 1) : deliveryReceiptDataUrl;
@@ -686,6 +691,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
             deliveryFb.classList.add("error");
           }
         } finally {
+          closeDeliveryReceiptScanOverlay();
           deliverySubmit.disabled = !deliveryReceiptDataUrl;
         }
       });
