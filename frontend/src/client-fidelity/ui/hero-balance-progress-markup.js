@@ -1,6 +1,9 @@
-import { parsePointTiers, buildStampTiers, tierProgressState } from "../lib/tier-progress.js";
-
-const TICK_COUNT = 5;
+import {
+  parsePointTiers,
+  buildStampTiers,
+  tierProgressState,
+  buildHeroProgressTickMarks,
+} from "../lib/tier-progress.js";
 
 /**
  * @param {{
@@ -16,8 +19,8 @@ export function buildHeroBalanceProgressState(p) {
 
   let pct;
   let maxScale;
-  /** @type {number[]} */
-  let ticks;
+  /** @type {{ value: number; leftPct: number }[]} */
+  let tickMarks = [];
   let progressMin = 0;
   let progressMax = 1;
   /** @type {{ threshold: number; label: string } | null} */
@@ -35,28 +38,19 @@ export function buildHeroBalanceProgressState(p) {
       progressMin = prevThreshold;
       progressMax = next.threshold;
       maxScale = next.threshold;
-      const span = next.threshold - prevThreshold;
-      if (span > 0) {
-        ticks = Array.from({ length: TICK_COUNT }, (_, i) =>
-          Math.round(prevThreshold + (span * (i + 1)) / TICK_COUNT),
-        );
-      } else {
-        ticks = Array.from({ length: TICK_COUNT }, () => next.threshold);
-      }
+      tickMarks = buildHeroProgressTickMarks(tiers, progressMin, progressMax);
     } else {
       tiersComplete = true;
       pct = 100;
       maxScale = tiers[tiers.length - 1].threshold;
       progressMin = 0;
       progressMax = maxScale;
-      ticks = Array.from({ length: TICK_COUNT }, (_, i) =>
-        Math.round((maxScale * (i + 1)) / TICK_COUNT),
-      );
+      tickMarks = buildHeroProgressTickMarks(tiers, progressMin, progressMax);
     }
   } else {
     maxScale = 0;
     pct = 0;
-    ticks = [];
+    tickMarks = [];
     progressMin = 0;
     progressMax = 0;
   }
@@ -72,8 +66,7 @@ export function buildHeroBalanceProgressState(p) {
     points: pts,
     unitWord,
     pct,
-    ticks,
-    tickCount: TICK_COUNT,
+    tickMarks,
     maxScale,
     progressMin,
     progressMax,
@@ -93,8 +86,7 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
     points,
     unitWord,
     pct,
-    ticks,
-    tickCount,
+    tickMarks,
     maxScale,
     progressMin,
     progressMax,
@@ -125,10 +117,10 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
           </div>`;
   }
 
-  const tickSpans = ticks
+  const tickSpans = tickMarks
     .map(
-      (v, i) =>
-        `<span class="fidelity-hero-progress-tick" style="left:${((i + 1) / tickCount) * 100}%">${esc(String(v))}</span>`,
+      (m) =>
+        `<span class="fidelity-hero-progress-tick" style="left:${m.leftPct}%">${esc(String(m.value))}</span>`,
     )
     .join("");
 

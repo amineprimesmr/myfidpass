@@ -1,13 +1,13 @@
 /* Jauge solde hero membre — style type maquette (gradient bordeaux → orange, curseur rond) */
 
 .fidelity-hero-progress {
-  margin: 0.65rem 0 0;
+  margin: 1.15rem 0 0;
   width: 100%;
   max-width: 100%;
 }
 
 .fidelity-hero-progress-label {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.85rem;
   padding: 0;
   line-height: 1.15;
 }
@@ -35,7 +35,11 @@
 
 .fidelity-hero-progress-track-outer {
   position: relative;
-  padding: 0 14px 1.35rem;
+  width: calc(100% + 1.25rem);
+  max-width: calc(100% + 1.25rem);
+  margin-left: -0.625rem;
+  margin-right: -0.625rem;
+  padding: 0 10px 1.45rem;
   box-sizing: border-box;
 }
 

@@ -68,3 +68,53 @@ export function tierProgressState(tiers, balance) {
   pct = Math.max(0, Math.min(100, pct));
   return { next, prevThreshold, pct };
 }
+
+const MAX_HERO_TICK_LABELS = 7;
+
+/**
+ * Graduations sous la jauge hero : uniquement des seuils du programme, positionnés en % sur [progressMin → progressMax].
+ * @param {{ threshold: number }[]} tiers
+ * @param {number} progressMin
+ * @param {number} progressMax
+ * @returns {{ value: number; leftPct: number }[]}
+ */
+export function buildHeroProgressTickMarks(tiers, progressMin, progressMax) {
+  const span = progressMax - progressMin;
+  if (!tiers.length || span <= 0 || !Number.isFinite(span)) return [];
+
+  /** @type {{ value: number; leftPct: number }[]} */
+  const raw = [{ value: progressMin, leftPct: 0 }];
+  for (const t of tiers) {
+    if (t.threshold > progressMin && t.threshold < progressMax) {
+      raw.push({
+        value: t.threshold,
+        leftPct: Math.min(100, Math.max(0, ((t.threshold - progressMin) / span) * 100)),
+      });
+    }
+  }
+  raw.push({ value: progressMax, leftPct: 100 });
+
+  const seenVal = new Set();
+  const deduped = [];
+  for (const m of raw) {
+    if (seenVal.has(m.value)) continue;
+    seenVal.add(m.value);
+    deduped.push(m);
+  }
+
+  if (deduped.length <= MAX_HERO_TICK_LABELS) return deduped;
+
+  /** @type {{ value: number; leftPct: number }[]} */
+  const thinned = [];
+  const n = MAX_HERO_TICK_LABELS;
+  for (let i = 0; i < n; i += 1) {
+    const idx = Math.round((i / (n - 1)) * (deduped.length - 1));
+    thinned.push(deduped[idx]);
+  }
+  const seenFinal = new Set();
+  return thinned.filter((m) => {
+    if (seenFinal.has(m.value)) return false;
+    seenFinal.add(m.value);
+    return true;
+  });
+}
