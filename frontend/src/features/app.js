@@ -5639,18 +5639,13 @@ function initAppDashboard(slug) {
       if (lastBatchEl) {
         if (data.last_batch && data.last_batch.created_at) {
           const lb = data.last_batch;
-          const s = lb.summary || {};
-          const w = s.sentWebPush != null ? s.sentWebPush : 0;
-          const p = s.sentPassKit != null ? s.sentPassKit : 0;
-          const m = s.sentMerchantApp != null ? s.sentMerchantApp : 0;
-          const trig = lb.trigger_name ? String(lb.trigger_name) : "envoi";
           let dstr = "";
           try {
             dstr = new Date(lb.created_at).toLocaleString("fr-FR");
           } catch (_) {
             dstr = "";
           }
-          lastBatchEl.textContent = `Dernier lot : ${trig} — Wallet ${p}, Web ${w}${m ? `, accusé app ${m}` : ""}${dstr ? ` · ${dstr}` : ""}`;
+          lastBatchEl.textContent = dstr ? `Dernier envoi · ${dstr}` : "Dernier envoi enregistré.";
           lastBatchEl.classList.remove("hidden");
         } else {
           lastBatchEl.textContent = "";
@@ -5663,17 +5658,22 @@ function initAppDashboard(slug) {
         const web = data.webPushCount != null ? data.webPushCount : 0;
         const wallet = data.passKitCount != null ? data.passKitCount : 0;
         if (membersCount > 0 && total === 0) {
-          el.textContent = `Tu as ${membersCount} membre(s). La carte peut être dans le Wallet ; aucun appareil ne nous a encore envoyé son enregistrement, donc on ne peut pas envoyer de notifications push.`;
+          el.textContent = `${membersCount} membre(s) · aucun appareil prêt pour les notifications pour l’instant.`;
         } else if (total === 0) {
-          el.textContent = "Aucun appareil enregistré pour l'instant.";
+          el.textContent = "Aucun appareil enregistré.";
         } else if (membersCount > 0) {
-          el.textContent = `Tu as ${membersCount} membre(s). ${total} appareil(s) peuvent recevoir les notifications.`;
+          el.textContent = `${membersCount} membre(s) · ${total} appareil(s) pour les envois.`;
         } else if (wallet > 0 && web > 0) {
-          el.textContent = `${total} appareil(s) peuvent recevoir les notifications (dont ${wallet} Apple Wallet, ${web} navigateur).`;
+          el.textContent = `${total} appareil(s) (Wallet et navigateur).`;
         } else if (wallet > 0) {
-          el.textContent = `${total} appareil(s) peuvent recevoir les notifications (Apple Wallet).`;
+          el.textContent = `${total} appareil(s) (Apple Wallet).`;
         } else {
-          el.textContent = `${total} appareil(s) peuvent recevoir les notifications.`;
+          el.textContent = `${total} appareil(s) pour les envois.`;
+        }
+        if (total > 0 || membersCount > 0) el.classList.remove("hidden");
+        else {
+          el.classList.add("hidden");
+          el.textContent = "";
         }
         const hintEl = document.getElementById("app-notifications-members-vs-devices-hint");
         if (hintEl) {
@@ -5695,8 +5695,8 @@ function initAppDashboard(slug) {
         const membersCount = data.membersCount != null ? data.membersCount : 0;
         if (membersCount > 0 || total > 0) {
           membersSummaryEl.innerHTML = total > 0
-            ? `<strong>Campagnes :</strong> ${total} appareil(s) peuvent recevoir les push. <a href="#notifications" class="app-link-inline">Envoyer une campagne →</a>`
-            : `<strong>Campagnes :</strong> tu as ${membersCount} membre(s). La carte peut être bien dans le Wallet, mais <strong>aucun iPhone ne nous a encore envoyé son enregistrement</strong> — donc on ne peut pas envoyer de notifications push. Ce n’est pas que tu n’as pas la carte ; c’est que notre serveur n’a reçu le signal d’aucun appareil. <a href="#notifications" class="app-link-inline">Voir le diagnostic →</a>`;
+            ? `<strong>Notifications :</strong> ${total} appareil(s). <a href="#notifications" class="app-link-inline">Ouvrir Notifs →</a>`
+            : `<strong>Notifications :</strong> ${membersCount} membre(s), aucun appareil prêt. <a href="#notifications" class="app-link-inline">Voir Notifs →</a>`;
           membersSummaryEl.classList.remove("hidden");
         } else {
           membersSummaryEl.classList.add("hidden");
@@ -5717,10 +5717,6 @@ function initAppDashboard(slug) {
             html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.dataDirHint)}</p>`;
           }
           html += `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.helpWhenNoDevice)}</p>`;
-          if (data.testPasskitCurl) {
-            const curlEscaped = data.testPasskitCurl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            html += `<p class="app-notifications-diagnostic-text" style="margin-top: 0.75rem;"><strong>Test diagnostic :</strong> exécute cette commande dans un terminal (sur ton ordi). Si tu obtiens <code>HTTP 201</code>, l'API fonctionne et le blocage vient de l'iPhone ou du réseau.</p><pre class="app-notifications-curl">${curlEscaped}</pre>`;
-          }
           diagEl.innerHTML = html;
           diagEl.classList.remove("hidden");
         } else if (total === 0 && !passKitOk && data.diagnostic) {
@@ -5845,16 +5841,32 @@ function initAppDashboard(slug) {
           });
         });
       }
+      syncAppNotifsSegmentPill();
     } catch (_) {}
+  }
+
+  function syncAppNotifsSegmentPill() {
+    const cat = document.getElementById("app-notif-target-categories");
+    const label = document.getElementById("app-notifs-segment-label");
+    if (!label) return;
+    label.textContent = cat?.checked ? "Par catégorie" : "Tous les clients";
   }
 
   document.getElementById("app-notif-target-all")?.addEventListener("change", () => {
     const picks = document.getElementById("app-notif-categories-picks");
     if (picks) picks.classList.add("hidden");
+    syncAppNotifsSegmentPill();
   });
   document.getElementById("app-notif-target-categories")?.addEventListener("change", () => {
     const picks = document.getElementById("app-notif-categories-picks");
     if (picks) picks.classList.remove("hidden");
+    syncAppNotifsSegmentPill();
+  });
+
+  document.getElementById("app-notifs-open-targeting")?.addEventListener("click", () => {
+    const wrap = document.querySelector("details.app-notifs-manual-wrap");
+    if (wrap) wrap.open = true;
+    document.getElementById("app-notif-categories-block")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
 
   const notifCategoryNewName = document.getElementById("app-notif-category-new-name");

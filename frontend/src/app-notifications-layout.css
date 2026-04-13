@@ -1,0 +1,352 @@
+/**
+ * Notifications (#notifications) — refonte alignée app iOS (aperçu type Dynamic Island, pilules, carrousel).
+ * Complète app.css / app-mobile-ios-*.css sans casser les IDs métier.
+ */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#notifications.app-notifications-section {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+#notifications.app-notifications-section .app-notifs-device-summary {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+#notifications.app-notifications-section .app-notifs-compose {
+  margin-bottom: 1.75rem;
+}
+
+/* ——— Dynamic Island (aperçu sombre) ——— */
+#notifications.app-notifications-section .app-notifs-dynamic-island {
+  margin-bottom: 0.75rem;
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner {
+  margin-bottom: 0;
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-bubble {
+  align-items: flex-start;
+  min-height: 96px;
+  padding: 1rem 1.15rem;
+  background: #1c1c1e;
+  border: none;
+  border-radius: 28px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-bubble:hover {
+  transform: none;
+  box-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-icon-wrap {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-icon-fallback {
+  color: #f2f2f7;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-banner-logo-hint {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-title,
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-message {
+  color: #f2f2f7;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-text-fill-color: #f2f2f7;
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-title::placeholder,
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-message::placeholder {
+  color: rgba(242, 242, 247, 0.45);
+}
+
+#notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-time-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+#notifications.app-notifications-section .app-notifs-autosave-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+}
+
+/* ——— Pilules Tous les clients / Envoyer ——— */
+#notifications.app-notifications-section .app-notifs-pill-row {
+  display: flex;
+  gap: 0.65rem;
+  align-items: stretch;
+  margin-top: 0.85rem;
+}
+
+#notifications.app-notifications-section .app-notifs-pill {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 48px;
+  padding: 0 0.85rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  background: #f2f2f7;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+#notifications.app-notifications-section .app-notifs-pill:active {
+  transform: scale(0.98);
+}
+
+#notifications.app-notifications-section .app-notifs-pill-icon-grid {
+  display: flex;
+  color: #475569;
+}
+
+#notifications.app-notifications-section .app-notifs-pill-chevron {
+  display: flex;
+  color: #94a3b8;
+  margin-left: 0.15rem;
+}
+
+#notifications.app-notifications-section .app-notifs-pill-text {
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#notifications.app-notifications-section .app-notifs-send-wrap {
+  flex: 1;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
+#notifications.app-notifications-section .app-notifs-send-cta {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0 1rem !important;
+  border-radius: 999px !important;
+  background: #f2f2f7 !important;
+  color: #0f172a !important;
+  border: none !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+}
+
+#notifications.app-notifications-section .app-notifs-send-cta:hover:not(:disabled) {
+  background: #e8e8ed !important;
+}
+
+#notifications.app-notifications-section .app-notifs-send-cta .app-save-cta-dot {
+  display: none;
+}
+
+#notifications.app-notifications-section .app-notifs-send-arrow {
+  display: flex;
+  color: #2563eb;
+  margin-left: 0.15rem;
+}
+
+#notifications.app-notifications-section .app-notifs-feedback-block {
+  margin-top: 0.75rem;
+}
+
+/* ——— Notifs automatiques + carrousel ——— */
+#notifications.app-notifications-section .app-notifs-automatic-heading {
+  margin: 1.5rem 0 0.85rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+#notifications.app-notifications-section .app-notifs-carousel {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+#notifications.app-notifications-section .app-notifs-campaigns-scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 0.85rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0.5rem;
+  padding: 0.25rem 0.25rem 0.75rem;
+  margin: 0 -0.25rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+#notifications.app-notifications-section .app-notifs-campaigns-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+#notifications.app-notifications-section .app-notifs-campaigns-scroll .app-campaign-card {
+  flex: 0 0 min(88vw, 340px);
+  scroll-snap-align: center;
+  flex-direction: column;
+  padding: 1.25rem 1.2rem;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
+  background: #fff;
+}
+
+#notifications.app-notifications-section .app-notifs-campaigns-scroll .app-campaign-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+#notifications.app-notifications-section .app-notifs-campaigns-scroll .app-campaign-send-btn {
+  width: 100%;
+  border-radius: 999px;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+#notifications.app-notifications-section .app-notifs-carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+#notifications.app-notifications-section .app-notifs-carousel-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+#notifications.app-notifications-section .app-notifs-carousel-dots span:first-child {
+  background: #2563eb;
+  transform: scale(1.15);
+}
+
+/* ——— Ciblage (details) ——— */
+#notifications.app-notifications-section .app-notifs-manual-wrap {
+  margin-top: 0.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+#notifications.app-notifications-section .app-notifs-manual-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1rem 1.15rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: #fafafa;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+#notifications.app-notifications-section .app-notifs-manual-summary::-webkit-details-marker {
+  display: none;
+}
+
+#notifications.app-notifications-section .app-notifs-manual-wrap[open] .app-notifs-manual-summary {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+#notifications.app-notifications-section .app-notif-categories-block {
+  padding: 1rem 1.15rem 1.25rem;
+}
+
+#notifications.app-notifications-section .app-notifs-manual-title {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+#notifications.app-notifications-section .app-notifications-diagnostic {
+  margin: 0 1rem 0.75rem;
+  border-radius: 14px;
+}
+
+@media (min-width: 900px) {
+  #notifications.app-notifications-section {
+    max-width: 960px;
+  }
+
+  #notifications.app-notifications-section .app-notifs-campaigns-scroll {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow: visible;
+    scroll-snap-type: none;
+    gap: 1rem;
+    padding: 0;
+    margin: 0;
+  }
+
+  #notifications.app-notifications-section .app-notifs-campaigns-scroll .app-campaign-card {
+    flex: none;
+    width: auto;
+    min-height: 0;
+  }
+
+  #notifications.app-notifications-section .app-notifs-carousel-dots {
+    display: none;
+  }
+
+  #notifications.app-notifications-section .app-notifs-manual-wrap {
+    margin-top: 1.25rem;
+  }
+}

@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="/src/app-mobile-ios-parity.css" />
     <link rel="stylesheet" href="/src/app-mobile-ios-components.css" />
     <link rel="stylesheet" href="/src/app-mobile-ios-campaigns.css" />
+    <link rel="stylesheet" href="/src/app-notifications-layout.css" />
     <link rel="stylesheet" href="/src/post-purchase-app-modal.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
@@ -1651,22 +1652,72 @@
               </div>
             </div>
           </section>
-          <section id="notifications" class="app-section">
-            <h2 class="app-section-title">Campagnes</h2>
-            <p class="app-section-desc">Campagnes ciblées et envoi manuel. Les clients reçoivent l’alerte sur <strong>Apple Wallet</strong> (carte à jour) et/ou le <strong>navigateur</strong> (Web Push). L’<strong>app iPhone MyFidpass</strong> reçoit un accusé de résumé pour vous, pas le message client.</p>
+          <section id="notifications" class="app-section app-notifications-section">
+            <h2 class="app-section-title app-notifs-page-title visually-hidden">Notifications</h2>
             <p id="app-notifications-last-batch" class="app-hint app-notifications-last-batch hidden" role="status" aria-live="polite"></p>
+            <p id="app-notifications-stats" class="app-notifications-stats app-notifs-device-summary hidden" aria-live="polite"></p>
 
-            <div class="app-campaigns-block" role="region" aria-labelledby="app-campaigns-heading">
-              <h3 id="app-campaigns-heading" class="app-subsection-title">Campagnes suggérées</h3>
-              <p class="app-campaigns-intro">Actions ciblées basées sur le comportement de vos clients. Cliquez pour envoyer une notification au segment choisi.</p>
-              <div class="app-campaigns-grid" id="app-campaigns-grid">
+            <div class="app-notifs-compose">
+              <div class="app-notifs-dynamic-island" aria-label="Aperçu notification">
+                <div class="app-notification-preview-banner" role="region" aria-label="Aperçu et réglages de la notification">
+                  <div class="app-notification-preview-banner-bubble">
+                    <div class="app-notification-preview-banner-icon-wrap app-drop-zone" id="app-notification-banner-logo-drop" role="button" tabindex="0" aria-label="Changer le logo de la notification (glisser une image ou cliquer)">
+                      <input type="file" id="app-notification-banner-logo-input" class="app-file" accept="image/png,image/jpeg,image/jpg,image/webp" aria-hidden="true" />
+                      <div class="app-notification-preview-banner-icon" id="app-notification-banner-icon">
+                        <img id="app-notification-banner-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
+                        <span class="app-notification-preview-icon-fallback" id="app-notification-banner-icon-fallback">Logo</span>
+                      </div>
+                      <span class="app-notification-preview-icon-badge" aria-hidden="true">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                      </span>
+                      <span class="app-notification-banner-logo-hint">Changer</span>
+                    </div>
+                    <div class="app-notification-preview-banner-content">
+                      <div class="app-notification-preview-banner-headline">
+                        <input type="text" id="app-notification-banner-title" class="app-notification-preview-banner-title" placeholder="Nom de votre commerce" maxlength="80" aria-label="Nom affiché sur la notification" />
+                        <span class="app-notification-preview-time-label">maintenant</span>
+                      </div>
+                      <input type="text" id="app-notification-banner-message" class="app-notification-preview-banner-message" placeholder="Votre message…" maxlength="200" aria-label="Texte de la notification affichée sur le pass" />
+                    </div>
+                  </div>
+                  <p class="app-hint app-notification-auto-save-hint app-notifs-autosave-hint">Enregistrement automatique.</p>
+                </div>
+              </div>
+
+              <div class="app-notifs-pill-row">
+                <button type="button" class="app-notifs-pill app-notifs-pill-clients" id="app-notifs-open-targeting" aria-controls="app-notif-categories-block">
+                  <span class="app-notifs-pill-icon-grid" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  </span>
+                  <span class="app-notifs-pill-text" id="app-notifs-segment-label">Tous les clients</span>
+                  <span class="app-notifs-pill-chevron" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>
+                  </span>
+                </button>
+                <span class="app-save-cta-wrap app-save-cta-wrap--notif-send app-notifs-send-wrap">
+                  <button type="button" id="app-notification-texts-send" class="app-save-cta app-notifs-send-cta">
+                    <span class="app-save-cta-dot app-save-cta-dot--send" aria-hidden="true"></span>
+                    <span class="app-save-cta-label">Envoyer</span>
+                    <span class="app-notifs-send-arrow" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+                  </button>
+                </span>
+              </div>
+              <div class="app-notifs-feedback-block">
+                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden" role="status" aria-live="polite"></p>
+                <p id="app-notif-feedback" class="app-message hidden" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <h3 class="app-notifs-automatic-heading">Notifs automatiques</h3>
+            <div class="app-notifs-carousel" role="region" aria-label="Campagnes automatiques">
+              <div class="app-campaigns-grid app-notifs-campaigns-scroll" id="app-campaigns-grid">
                 <article class="app-campaign-card" data-segment="inactive14">
                   <div class="app-campaign-card-icon app-campaign-icon-inactive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                   <div class="app-campaign-card-body">
                     <h4 class="app-campaign-card-title">Inactif 14 jours</h4>
                     <p class="app-campaign-card-desc">Aucune visite enregistrée depuis 14 jours. Idéal pour une relance ciblée.</p>
                     <p class="app-campaign-card-count"><strong id="app-campaign-count-inactive14">0</strong> clients</p>
-                    <button type="button" class="app-campaign-send-btn" data-segment="inactive14">Envoyer maintenant</button>
+                    <button type="button" class="app-campaign-send-btn" data-segment="inactive14">Activer</button>
                   </div>
                 </article>
                 <article class="app-campaign-card" data-segment="new7">
@@ -1675,7 +1726,7 @@
                     <h4 class="app-campaign-card-title">Nouveaux (0–7 j)</h4>
                     <p class="app-campaign-card-desc">Membres inscrits dans les 7 derniers jours. Message d’accueil.</p>
                     <p class="app-campaign-card-count"><strong id="app-campaign-count-new7">0</strong> nouveaux</p>
-                    <button type="button" class="app-campaign-send-btn" data-segment="new7">Envoyer maintenant</button>
+                    <button type="button" class="app-campaign-send-btn" data-segment="new7">Activer</button>
                   </div>
                 </article>
                 <article class="app-campaign-card" data-segment="recurrent">
@@ -1684,7 +1735,7 @@
                     <h4 class="app-campaign-card-title">Fidèles (+10 visites / mois)</h4>
                     <p class="app-campaign-card-desc">Au moins 10 passages enregistrés sur le mois civil en cours.</p>
                     <p class="app-campaign-card-count"><strong id="app-campaign-count-recurrent">0</strong> clients</p>
-                    <button type="button" class="app-campaign-send-btn" data-segment="recurrent">Envoyer maintenant</button>
+                    <button type="button" class="app-campaign-send-btn" data-segment="recurrent">Activer</button>
                   </div>
                 </article>
                 <article class="app-campaign-card" data-segment="points50">
@@ -1693,46 +1744,11 @@
                     <h4 class="app-campaign-card-title">Proches de la récompense</h4>
                     <p class="app-campaign-card-desc">Clients avec 50+ points. Rappel pour venir échanger leurs points.</p>
                     <p class="app-campaign-card-count"><strong id="app-campaign-count-points50">0</strong> clients</p>
-                    <button type="button" class="app-campaign-send-btn" data-segment="points50">Envoyer maintenant</button>
+                    <button type="button" class="app-campaign-send-btn" data-segment="points50">Activer</button>
                   </div>
                 </article>
               </div>
-            </div>
-
-            <div class="app-notification-preview-banner" role="region" aria-label="Aperçu et réglages de la notification">
-              <div class="app-notification-preview-banner-bubble">
-                <div class="app-notification-preview-banner-icon-wrap app-drop-zone" id="app-notification-banner-logo-drop" role="button" tabindex="0" aria-label="Changer le logo de la notification (glisser une image ou cliquer)">
-                  <input type="file" id="app-notification-banner-logo-input" class="app-file" accept="image/png,image/jpeg,image/jpg,image/webp" aria-hidden="true" />
-                  <div class="app-notification-preview-banner-icon" id="app-notification-banner-icon">
-                    <img id="app-notification-banner-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
-                    <span class="app-notification-preview-icon-fallback" id="app-notification-banner-icon-fallback">Logo</span>
-                  </div>
-                  <span class="app-notification-preview-icon-badge" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                  </span>
-                  <span class="app-notification-banner-logo-hint">Changer</span>
-                </div>
-                <div class="app-notification-preview-banner-content">
-                  <div class="app-notification-preview-banner-headline">
-                    <input type="text" id="app-notification-banner-title" class="app-notification-preview-banner-title" placeholder="Nom de votre commerce" maxlength="80" aria-label="Nom affiché sur la notification" />
-                    <span class="app-notification-preview-time-label">maintenant</span>
-                  </div>
-                  <input type="text" id="app-notification-banner-message" class="app-notification-preview-banner-message" placeholder="message" maxlength="200" aria-label="Texte de la notification affichée sur le pass" />
-                </div>
-              </div>
-              <p class="app-hint app-notification-auto-save-hint">Le titre et le message sont enregistrés automatiquement (aperçu ci-dessus).</p>
-              <div class="app-notification-banner-actions">
-                <div class="app-notification-banner-actions-row">
-                  <span class="app-save-cta-wrap app-save-cta-wrap--notif-send">
-                    <button type="button" id="app-notification-texts-send" class="app-save-cta">
-                      <span class="app-save-cta-dot app-save-cta-dot--send" aria-hidden="true"></span>
-                      <span class="app-save-cta-label">Envoyer la notification</span>
-                    </button>
-                  </span>
-                </div>
-                <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden" role="status" aria-live="polite"></p>
-                <p id="app-notif-feedback" class="app-message hidden" role="status" aria-live="polite"></p>
-              </div>
+              <div class="app-notifs-carousel-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
             </div>
 
             <div id="app-campaign-modal" class="app-campaign-modal hidden" role="dialog" aria-modal="true" aria-labelledby="app-campaign-modal-title">
@@ -1750,8 +1766,11 @@
               </div>
             </div>
 
-            <div class="app-notif-categories-block" role="region" aria-labelledby="app-notif-categories-heading">
-              <h3 id="app-notif-categories-heading" class="app-subsection-title">Envoi manuel</h3>
+            <details class="app-notifs-manual-wrap">
+              <summary class="app-notifs-manual-summary">Ciblage des destinataires</summary>
+              <div id="app-notifications-diagnostic" class="app-notifications-diagnostic hidden"></div>
+              <div id="app-notif-categories-block" class="app-notif-categories-block" role="region" aria-labelledby="app-notif-categories-heading">
+              <h3 id="app-notif-categories-heading" class="app-subsection-title app-notifs-manual-title">Destinataires</h3>
               <div class="app-notif-target-row">
                 <label class="app-radio-label app-notif-target-option">
                   <input type="radio" name="app-notif-target" value="all" id="app-notif-target-all" checked />
@@ -1785,6 +1804,7 @@
                 </div>
               </details>
             </div>
+            </details>
           </section>
           <section id="carte-perimetre" class="app-section app-section-carte-perimetre">
             <h2 class="app-section-title">Emplacement</h2>
