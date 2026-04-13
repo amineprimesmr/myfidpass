@@ -6,6 +6,10 @@
   "framework": null,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://api.myfidpass.fr/api/$1" },
+    { "source": "/oauth/tiktok", "destination": "/oauth/tiktok.html" },
+    { "source": "/oauth/meta", "destination": "/oauth/meta.html" },
+    { "source": "/oauth/google-youtube", "destination": "/oauth/google-youtube.html" },
+    { "source": "/oauth/google-business", "destination": "/oauth/google-business.html" },
     { "source": "/((?!assets/|api/|card-beam-reversed).*)", "destination": "/index.html" }
   ]
 }
