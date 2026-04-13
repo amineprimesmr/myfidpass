@@ -1,6 +1,7 @@
 /**
  * Agrégation métriques sociales + Google Places + OAuth (Meta/IG+FB, YouTube, TikTok).
  */
+import { getEngagementRewards } from "../db.js";
 import {
   insertSocialMetricSnapshot,
   listSnapshotsForChannel,
@@ -19,6 +20,7 @@ import {
 import {
   listGoogleBusinessReviews,
   refreshGoogleBusinessAccessToken,
+  resolveGoogleBusinessLocation,
   isGoogleBusinessOAuthConfigured,
 } from "./google-business-oauth.js";
 import {
@@ -211,9 +213,86 @@ export async function refreshGoogleBusinessSnapshotForBusiness(businessId) {
 }
 
 /**
+ * Si OAuth Google a réussi mais la résolution lieu a échoué (quota), on retente ici (ex. « Rafraîchir »).
+ */
+export async function tryCompletePendingGoogleBusinessLocation(businessId) {
+  let conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  if (!conn?.access_token && !conn?.refresh_token) return { ok: false, skipped: true };
+  let meta = parseConnMetadata(conn);
+  if (!meta.location_pending) return { ok: false, skipped: true };
+
+  let accessToken = conn.access_token;
+  if (!accessToken && conn.refresh_token) {
+    const ref = await refreshGoogleBusinessAccessToken(conn.refresh_token);
+    if (!ref.ok) return { ok: false, error: ref.error || "refresh_failed" };
+    accessToken = ref.accessToken;
+    upsertSocialOAuthConnection({
+      businessId,
+      provider: PROVIDER_GOOGLE_BUSINESS,
+      accessToken: ref.accessToken,
+      refreshToken: conn.refresh_token,
+      tokenExpiresAt: ref.expiresAt,
+      externalUserId: conn.external_user_id,
+      metadata: meta,
+    });
+    conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+    meta = parseConnMetadata(conn);
+  }
+
+  const rewards = getEngagementRewards(businessId);
+  const placeId = String(rewards?.google_review?.place_id ?? "").trim();
+  const resolved = await resolveGoogleBusinessLocation(accessToken, placeId);
+  if (!resolved.ok) {
+    meta = { ...meta, last_resolve_error: String(resolved.error || "resolve_failed") };
+    upsertSocialOAuthConnection({
+      businessId,
+      provider: PROVIDER_GOOGLE_BUSINESS,
+      accessToken: conn.access_token,
+      refreshToken: conn.refresh_token,
+      tokenExpiresAt: conn.token_expires_at,
+      externalUserId: conn.external_user_id,
+      metadata: meta,
+    });
+    return { ok: false, error: resolved.error };
+  }
+
+  upsertSocialOAuthConnection({
+    businessId,
+    provider: PROVIDER_GOOGLE_BUSINESS,
+    accessToken: conn.access_token,
+    refreshToken: conn.refresh_token,
+    tokenExpiresAt: conn.token_expires_at,
+    externalUserId: resolved.locationName,
+    metadata: {
+      account_id: resolved.accountId,
+      location_id: resolved.locationId,
+      location_title: resolved.title,
+      matched_place_id: resolved.matchedPlaceId,
+    },
+  });
+
+  setImmediate(() => {
+    listGoogleBusinessReviews(accessToken, resolved.accountId, resolved.locationId)
+      .then((rev) => {
+        if (rev.ok) {
+          insertSocialMetricSnapshot(businessId, "google_review", "oauth_google_business", {
+            reviews_count: rev.reviewsCount,
+            rating: rev.rating,
+            reviews_sample: JSON.stringify(rev.samples),
+          });
+        }
+      })
+      .catch(() => {});
+  });
+
+  return { ok: true };
+}
+
+/**
  * Priorité : OAuth Google Business Profile si connecté, sinon Places (Place ID public).
  */
 export async function refreshGoogleSnapshotForBusiness(businessId, placeId) {
+  await tryCompletePendingGoogleBusinessLocation(businessId);
   const gbpConn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
   if (gbpConn?.access_token || gbpConn?.refresh_token) {
     const gbp = await refreshGoogleBusinessSnapshotForBusiness(businessId);
@@ -235,6 +314,8 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
   const ttConn = getSocialOAuthConnection(businessId, PROVIDER_TIKTOK);
   const gbpConn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
   const gbpOk = !!(gbpConn?.access_token || gbpConn?.refresh_token);
+  const gbpMeta = parseConnMetadata(gbpConn);
+  const googleBusinessLocationPending = !!(gbpOk && gbpMeta.location_pending);
   const metaMeta = parseConnMetadata(metaConn);
 
   for (const channel of Object.keys(CHANNEL_META)) {
@@ -328,6 +409,7 @@ export function buildSocialMetricsSummary(businessId, engagementRewards) {
     meta_oauth_available: isMetaOAuthConfigured(),
     youtube_oauth_available: isYouTubeOAuthConfigured(),
     tiktok_oauth_available: isTikTokOAuthConfigured(),
+    google_business_location_pending: googleBusinessLocationPending,
     generated_at: new Date().toISOString(),
   };
 }

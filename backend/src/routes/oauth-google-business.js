@@ -42,6 +42,19 @@ function compactOAuthAppError(raw) {
   return "google_api_error";
 }
 
+/** Quota / surcharge / timeout : on garde les tokens et on finalise la fiche plus tard (refresh). */
+function isRetryableGoogleBusinessResolveError(raw) {
+  const low = String(raw || "").toLowerCase();
+  return (
+    low.includes("quota exceeded") ||
+    low.includes("resource exhausted") ||
+    low.includes("rate_limit") ||
+    low.includes("rate limit") ||
+    low.includes("too many requests") ||
+    String(raw || "") === "timeout"
+  );
+}
+
 router.get("/google-business/callback", async (req, res) => {
   try {
     const { code, state, error } = req.query;
@@ -72,6 +85,29 @@ router.get("/google-business/callback", async (req, res) => {
     const resolved = await resolveGoogleBusinessLocation(exchanged.accessToken, placeId);
     if (!resolved.ok) {
       logger.warn({ err: resolved.error }, "[oauth-gbp] resolve location");
+      if (isRetryableGoogleBusinessResolveError(resolved.error)) {
+        try {
+          upsertSocialOAuthConnection({
+            businessId: business.id,
+            provider: PROVIDER_GOOGLE_BUSINESS,
+            accessToken: exchanged.accessToken,
+            refreshToken: exchanged.refreshToken,
+            tokenExpiresAt: exchanged.expiresAt,
+            externalUserId: "pending:location",
+            metadata: {
+              location_pending: true,
+              last_resolve_error: compactOAuthAppError(resolved.error || "location"),
+              pending_since: new Date().toISOString(),
+              preferred_place_id: placeId || null,
+            },
+          });
+          logger.info({ businessId: business.id }, "[oauth-gbp] tokens saved; location resolve deferred (retryable error)");
+        } catch (e) {
+          logger.error({ err: e }, "[oauth-gbp] persist pending");
+          return res.redirect(302, redirectToApp({ error: "save_failed" }));
+        }
+        return res.redirect(302, redirectToApp({ success: "1", gbp_pending: "1" }));
+      }
       return res.redirect(302, redirectToApp({ error: compactOAuthAppError(resolved.error || "location") }));
     }
 
