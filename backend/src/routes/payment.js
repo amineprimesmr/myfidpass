@@ -189,17 +189,27 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       metadata: { user_id: userId },
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.payment_intent"],
+      expand: ["latest_invoice.confirmation_secret", "latest_invoice.payment_intent", "pending_setup_intent"],
     });
 
     const clientSecret = await extractSubscriptionInvoiceClientSecret(subscription);
     if (!clientSecret) {
-      console.error("[payment] embedded subscription: missing client_secret", subscription.id);
+      const pending = subscription.pending_setup_intent;
+      const pendingId = typeof pending === "string" ? pending : pending?.id;
+      console.error("[payment] embedded subscription: missing client_secret", {
+        subscriptionId: subscription.id,
+        pendingSetupIntent: pendingId || null,
+        latestInvoice:
+          typeof subscription.latest_invoice === "string"
+            ? subscription.latest_invoice
+            : subscription.latest_invoice?.id,
+      });
       try {
         await stripe.subscriptions.cancel(subscription.id);
       } catch (_) {}
       return res.status(500).json({
-        error: "Impossible de préparer l’intention de paiement. Réessayez.",
+        error:
+          "Impossible de préparer l’intention de paiement. Vérifiez dans Stripe que le prix d’abonnement n’a pas d’essai gratuit (montant 1re facture = 0) ou contactez le support.",
         code: "missing_payment_intent",
       });
     }
@@ -224,16 +234,39 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
  */
 async function extractSubscriptionInvoiceClientSecret(subscription) {
   if (!stripe || !subscription?.latest_invoice) return null;
-  let invoice = subscription.latest_invoice;
-  if (typeof invoice === "string") {
-    invoice = await stripe.invoices.retrieve(invoice, { expand: ["payment_intent"] });
+
+  /** @type {string|null} */
+  let invoiceId =
+    typeof subscription.latest_invoice === "string"
+      ? subscription.latest_invoice
+      : subscription.latest_invoice?.id ?? null;
+  if (!invoiceId) return null;
+
+  let invoice = await stripe.invoices.retrieve(invoiceId, {
+    expand: ["payment_intent", "confirmation_secret"],
+  });
+
+  if (invoice.status === "draft") {
+    try {
+      invoice = await stripe.invoices.finalizeInvoice(invoice.id, {
+        expand: ["payment_intent", "confirmation_secret"],
+      });
+    } catch (e) {
+      console.error("[payment] finalizeInvoice:", invoice.id, e?.message || e);
+      return null;
+    }
   }
-  if (!invoice) return null;
+
+  const fromConfirm = invoice.confirmation_secret?.client_secret;
+  if (fromConfirm) return fromConfirm;
+
   let pi = invoice.payment_intent;
   if (typeof pi === "string") {
     pi = await stripe.paymentIntents.retrieve(pi);
   }
-  return pi?.client_secret || null;
+  if (pi?.client_secret) return pi.client_secret;
+
+  return null;
 }
 
 /**
