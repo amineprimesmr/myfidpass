@@ -266,6 +266,7 @@ a.fidelity-shiny-cta {
   width: 1.85rem;
   height: 1.85rem;
   display: block;
+  object-fit: contain;
 }
 
 .fidelity-apple-wallet-badge__text {

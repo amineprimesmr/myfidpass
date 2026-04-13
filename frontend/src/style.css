@@ -1169,6 +1169,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   flex-shrink: 0;
   width: 20px;
   height: 20px;
+  object-fit: contain;
 }
 
 .fidelity-v2-main .fidelity-cta-pill--compact,
@@ -1356,6 +1357,11 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+.fidelity-btn-icon.fidelity-apple-wallet-png {
+  object-fit: contain;
+  display: block;
 }
 
 .fidelity-btn:disabled {

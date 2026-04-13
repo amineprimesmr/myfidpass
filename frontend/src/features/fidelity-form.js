@@ -93,7 +93,8 @@ function setLoading(loading) {
     if (loading) {
       btnSubmit.innerHTML = "Création…";
     } else {
-      btnSubmit.innerHTML = '<span class="fidelity-btn-icon" aria-hidden="true">&#63743;</span> Créer ma carte';
+      btnSubmit.innerHTML =
+        '<img src="/assets/iconapplewallet.png" alt="" class="fidelity-btn-icon fidelity-apple-wallet-png" width="18" height="18" decoding="async" aria-hidden="true" /> Créer ma carte';
     }
   }
 }

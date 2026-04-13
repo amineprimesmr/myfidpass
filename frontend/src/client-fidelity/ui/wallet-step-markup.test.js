@@ -49,6 +49,7 @@ describe("renderWalletPassHeroShinyMarkup", () => {
     expect(html).toContain("Apple Wallet");
     expect(html).toContain("fidelity-earn-points-cta-wrap--wallet-attention");
     expect(html).toContain("fidelity-cta-pill-icon");
+    expect(html).toContain("/assets/iconapplewallet.png");
   });
 
   it("desktop avec Apple et Google : deux CTA", () => {

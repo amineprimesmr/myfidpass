@@ -27,7 +27,7 @@ export function renderWalletPassHeroShinyMarkup(esc, options = {}) {
   const shinyApple = () => `<div class="fidelity-earn-points-cta-wrap fidelity-earn-points-cta-wrap--wallet-attention">
             <a href="#" id="fidelity-v2-apple" class="fidelity-shiny-cta fidelity-shiny-cta--apple-wallet" aria-label="${esc("Ajouter à Apple Wallet")}">
               <span class="fidelity-shiny-cta__label fidelity-apple-wallet-badge">
-                <span class="fidelity-apple-wallet-badge__logo" aria-hidden="true">${appleSvg()}</span>
+                <span class="fidelity-apple-wallet-badge__logo" aria-hidden="true">${appleWalletIconImg()}</span>
                 <span class="fidelity-apple-wallet-badge__text">
                   <span class="fidelity-apple-wallet-badge__line1">${esc("Ajouter à")}</span>
                   <span class="fidelity-apple-wallet-badge__line2">${esc("Apple Wallet")}</span>
@@ -59,8 +59,10 @@ export function renderWalletPassHeroShinyMarkup(esc, options = {}) {
           </div>`;
 }
 
-function appleSvg() {
-  return `<svg class="fidelity-cta-pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>`;
+const APPLE_WALLET_ICON_SRC = "/assets/iconapplewallet.png";
+
+function appleWalletIconImg() {
+  return `<img src="${APPLE_WALLET_ICON_SRC}" alt="" class="fidelity-cta-pill-icon fidelity-apple-wallet-png" width="20" height="20" decoding="async" aria-hidden="true" />`;
 }
 
 function googleSvg() {
@@ -84,7 +86,7 @@ export function renderWalletStepMarkup(_esc, options = {}) {
   const appleOnly = `
         <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
           <a href="#" id="fidelity-v2-apple" class="fidelity-cta-pill fidelity-cta-pill--wallet-single" aria-label="Apple Wallet">
-            ${appleSvg()}
+            ${appleWalletIconImg()}
             <span class="fidelity-cta-pill-label">Apple Wallet</span>
             <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
           </a>
@@ -100,7 +102,7 @@ export function renderWalletStepMarkup(_esc, options = {}) {
   const appleDesktop = `
         <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
           <a href="#" id="fidelity-v2-apple" class="fidelity-cta-pill fidelity-cta-pill--wallet-equal" aria-label="Apple Wallet">
-            ${appleSvg()}
+            ${appleWalletIconImg()}
             <span class="fidelity-cta-pill-label">Apple Wallet</span>
             <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
           </a>
