@@ -3,6 +3,9 @@
  * (pages statiques Vercel qui redirigent vers myfidpass://) ou repli myfidpass:// direct.
  *
  * Railway : MYFIDPASS_OAUTH_RETURN_BASE=https://myfidpass.fr/oauth
+ *
+ * Google Business (app iOS) : toujours 302 vers myfidpass:// — le détour https + JS dans
+ * ASWebAuthenticationSession laisse souvent la feuille OAuth en chargement infini.
  */
 const UL_BASE = (process.env.MYFIDPASS_OAUTH_RETURN_BASE || "").trim().replace(/\/$/, "");
 
@@ -20,7 +23,8 @@ const SCHEME_PATH = {
 export function buildNativeOAuthReturnUrl(kind, query) {
   const pathSeg =
     kind === "google-youtube" ? "google-youtube" : kind === "google-business" ? "google-business" : kind;
-  if (UL_BASE.startsWith("https://")) {
+  const useHttpsBridge = UL_BASE.startsWith("https://") && kind !== "google-business";
+  if (useHttpsBridge) {
     const u = new URL(`${UL_BASE}/${pathSeg}`);
     for (const [k, v] of Object.entries(query)) {
       if (v == null || v === "") continue;
