@@ -7,6 +7,10 @@ import { renderQrGamePage } from "./qr-game-markup.js";
 import { shouldShowQrThanksHero } from "../qr-game-flow.js";
 import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
 import { resolveClientLogoImgSrc } from "../lib/resolve-client-logo-src.js";
+import {
+  buildHeroBalanceProgressState,
+  renderHeroBalanceProgressMarkup,
+} from "./hero-balance-progress-markup.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -173,10 +177,14 @@ export function renderClientPage(root, state, options = {}) {
             <div>
               <h1 class="fidelity-v2-hero-title">Bonjour${memberFirstName ? ` ${memberFirstName}` : ""} !</h1>
               <p class="fidelity-v2-hero-subtitle">${memberHeroSubtitle}</p>
-              <p class="fidelity-v2-hero-balance" aria-live="polite">
-                <span class="fidelity-v2-hero-balance-value">${esc(String(memberPoints))}</span>
-                <span class="fidelity-v2-hero-balance-unit"> ${balanceUnitLabel}</span>
-              </p>
+              ${renderHeroBalanceProgressMarkup(
+                esc,
+                buildHeroBalanceProgressState({
+                  memberPoints,
+                  programType,
+                  business: state.business,
+                }),
+              )}
             </div>
           </div>
         </section>

@@ -78,23 +78,4 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
   margin-top: 0.35rem;
 }
 
-/* Solde sous le sous-titre (remplace la bannière haute supprimée) */
-.fidelity-v2-hero-balance {
-  margin: 0.5rem 0 0;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #334155;
-  letter-spacing: -0.01em;
-}
-
-.fidelity-v2-hero-balance-value {
-  font-variant-numeric: tabular-nums;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.fidelity-v2-hero-balance-unit {
-  font-weight: 600;
-  color: #64748b;
-  font-size: 0.88em;
-}
+/* Solde : jauge gradient — voir fidelity-hero-balance-progress.css */
