@@ -11,7 +11,6 @@ import {
   ICON_SIZE_1X,
   ICON_SIZE_2X,
   ICON_SIZE_3X,
-  PASS_LOGO_PLACEHOLDER_TEXT,
 } from "./constants.js";
 
 let _sharp = null;
@@ -69,15 +68,24 @@ export async function createLogoFromText(stripColorHex, text) {
 }
 
 /**
- * Logo Wallet quand aucune image commerce : fond neutre + texte bleu (lisible sur carte blanche, pas de vert « classic » ancien).
+ * Logo Wallet quand aucune image commerce.
+ * IMPORTANT : aucune balise texte ni police — sur Railway, librsvg/sharp sans fonts affiche des « tofu » (carrés).
+ * Icône « cadre + paysage » uniquement en paths, comme un placeholder image classique.
  */
 export async function createPassLogoPlaceholder() {
-  const bg = "#EEF2FF";
-  const fg = "#2563EB";
-  const escaped = escapeSvgText(PASS_LOGO_PLACEHOLDER_TEXT);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LOGO_WIDTH_2X}" height="${LOGO_HEIGHT_2X}">
-  <rect width="100%" height="100%" fill="${bg}"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="${fg}" font-size="32" font-family="Arial, Helvetica, sans-serif" font-weight="600">${escaped}</text>
+  const w = LOGO_WIDTH_2X;
+  const h = LOGO_HEIGHT_2X;
+  const frameW = Math.round(w * 0.64);
+  const frameH = Math.round(h * 0.76);
+  const ox = Math.round((w - frameW) / 2);
+  const oy = Math.round((h - frameH) / 2);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="${w}" height="${h}" fill="#EEF2FF" rx="10"/>
+  <g transform="translate(${ox},${oy})">
+    <rect x="0" y="0" width="${frameW}" height="${frameH}" rx="12" fill="none" stroke="#2563EB" stroke-width="3.5"/>
+    <path d="M ${Math.round(frameW * 0.08)} ${frameH - 2} L ${Math.round(frameW * 0.22)} ${Math.round(frameH * 0.38)} L ${Math.round(frameW * 0.36)} ${Math.round(frameH * 0.62)} L ${Math.round(frameW * 0.5)} ${Math.round(frameH * 0.28)} L ${Math.round(frameW * 0.86)} ${frameH - 2} Z" fill="#2563EB" fill-opacity="0.22"/>
+    <circle cx="${Math.round(frameW * 0.78)}" cy="${Math.round(frameH * 0.34)}" r="${Math.round(frameH * 0.14)}" fill="#2563EB" fill-opacity="0.38"/>
+  </g>
 </svg>`;
   try {
     const sharp = await getSharp();
