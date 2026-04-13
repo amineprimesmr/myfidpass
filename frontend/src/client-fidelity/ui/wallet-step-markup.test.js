@@ -45,6 +45,8 @@ describe("renderWalletPassHeroShinyMarkup", () => {
     expect(html).toContain("fidelity-shiny-cta");
     expect(html).toContain('id="fidelity-v2-apple"');
     expect(html).toContain("Ajouter la carte");
+    expect(html).toContain("fidelity-shiny-cta__wallet-icon");
+    expect(html).toContain("fidelity-cta-pill-icon");
   });
 
   it("desktop avec Apple et Google : deux CTA", () => {

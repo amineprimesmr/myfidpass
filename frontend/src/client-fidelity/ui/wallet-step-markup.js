@@ -25,8 +25,11 @@ export function renderWalletPassHeroShinyMarkup(esc, options = {}) {
   const hasGoogleWallet = Boolean(options.hasGoogleWallet);
 
   const shinyApple = (label) => `<div class="fidelity-earn-points-cta-wrap">
-            <a href="#" id="fidelity-v2-apple" class="fidelity-shiny-cta" aria-label="${esc("Apple Wallet")}">
-              <span class="fidelity-shiny-cta__label">${esc(label)}</span>
+            <a href="#" id="fidelity-v2-apple" class="fidelity-shiny-cta fidelity-shiny-cta--apple-wallet" aria-label="${esc("Apple Wallet")}">
+              <span class="fidelity-shiny-cta__label">
+                <span class="fidelity-shiny-cta__wallet-icon" aria-hidden="true">${appleSvg()}</span>
+                ${esc(label)}
+              </span>
             </a>
           </div>`;
 

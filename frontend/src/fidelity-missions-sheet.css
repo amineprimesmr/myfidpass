@@ -96,7 +96,7 @@ a.fidelity-shiny-cta {
 
 .fidelity-shiny-cta::before,
 .fidelity-shiny-cta::after,
-.fidelity-shiny-cta span::before {
+.fidelity-shiny-cta > .fidelity-shiny-cta__label::before {
   content: "";
   pointer-events: none;
   position: absolute;
@@ -146,14 +146,18 @@ a.fidelity-shiny-cta {
   opacity: 0.6;
 }
 
-.fidelity-shiny-cta span {
+.fidelity-shiny-cta > .fidelity-shiny-cta__label {
   position: relative;
   z-index: 1;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
   text-align: center;
 }
 
-.fidelity-shiny-cta span::before {
+.fidelity-shiny-cta > .fidelity-shiny-cta__label::before {
   --size: calc(100% + 1rem);
   width: var(--size);
   height: var(--size);
@@ -170,7 +174,7 @@ a.fidelity-shiny-cta {
   animation-composition: add;
 }
 
-.fidelity-shiny-cta span::before {
+.fidelity-shiny-cta > .fidelity-shiny-cta__label::before {
   transition: opacity var(--transition);
   animation: calc(var(--duration) * 1.5) fidelity-shiny-breathe linear infinite;
 }
@@ -187,8 +191,21 @@ a.fidelity-shiny-cta {
   animation-play-state: running;
 }
 
-.fidelity-shiny-cta:is(:hover, :focus-visible) span::before {
+.fidelity-shiny-cta:is(:hover, :focus-visible) > .fidelity-shiny-cta__label::before {
   opacity: 1;
+}
+
+.fidelity-shiny-cta__wallet-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.fidelity-shiny-cta__wallet-icon .fidelity-cta-pill-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
 }
 
 .fidelity-shiny-cta:focus-visible {
@@ -377,7 +394,7 @@ body.fidelity-missions-sheet-locked {
     animation: none !important;
   }
 
-  .fidelity-shiny-cta span::before {
+  .fidelity-shiny-cta > .fidelity-shiny-cta__label::before {
     animation: none !important;
   }
 
