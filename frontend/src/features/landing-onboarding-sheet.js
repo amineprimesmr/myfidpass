@@ -1,9 +1,7 @@
 /**
  * Bottom sheet onboarding (builder) depuis la landing : ouverture via /creer-ma-carte ou CTA.
  */
-import { API_BASE } from "../config.js";
-
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
+import { API_BASE, buildStripeSaasPaymentUrl } from "../config.js";
 import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";
 import { BUILDER_DRAFT_KEY, CARD_TEMPLATES } from "../constants/builder.js";
 
@@ -68,7 +66,7 @@ export function closeOnboardingSheet() {
 }
 
 function redirectToStripe() {
-  window.location.href = STRIPE_PAYMENT_LINK;
+  window.location.href = buildStripeSaasPaymentUrl();
 }
 
 function showOnboardingInSheet(organizationName, placeId) {

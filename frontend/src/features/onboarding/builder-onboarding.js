@@ -2,12 +2,9 @@
  * Onboarding de personnalisation pour le builder (questions progressives).
  * Le module reste UI-only et délègue la persistance au parent.
  */
-import { setDevBypassPayment } from "../../config.js";
+import { setDevBypassPayment, buildStripeSaasPaymentUrl } from "../../config.js";
 
 const TOTAL_STEPS = 4;
-
-/** Lien Stripe Payment Link — redirection directe pour le paiement */
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 
 const STEP_QUESTIONS = [
   "Avez-vous un logo ?",
@@ -258,7 +255,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
       if (state.currentStep === TOTAL_STEPS - 1) {
         updateState({ completed: true });
         if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
-        window.location.href = STRIPE_PAYMENT_LINK;
+        window.location.href = buildStripeSaasPaymentUrl();
         return;
       }
       nextStep();

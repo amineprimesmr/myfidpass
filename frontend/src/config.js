@@ -51,43 +51,39 @@ const RAW_STRIPE_PUBLISHABLE_KEY =
 
 export const STRIPE_PUBLISHABLE_KEY = RAW_STRIPE_PUBLISHABLE_KEY;
 
-/** Si défini (URL `https://buy.stripe.com/...`), la page /abonnement redirige vers ce Payment Link au lieu du Payment Element. */
-const RAW_STRIPE_SUBSCRIPTION_PAYMENT_LINK =
-  typeof import.meta.env?.VITE_STRIPE_SUBSCRIPTION_PAYMENT_LINK === "string"
-    ? import.meta.env.VITE_STRIPE_SUBSCRIPTION_PAYMENT_LINK.trim()
-    : "";
+/** Payment Link Stripe unique pour le SaaS (checkout hébergé, code promo prérempli). */
+export const STRIPE_SAAS_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 
-/** Code promo client à préremplir (`prefilled_promo_code`) — ex. réduction «1er mois à 1 € » via coupon Stripe « une fois ». */
-const RAW_STRIPE_SUBSCRIPTION_PREFILLED_PROMO =
-  typeof import.meta.env?.VITE_STRIPE_SUBSCRIPTION_PREFILLED_PROMO === "string"
-    ? import.meta.env.VITE_STRIPE_SUBSCRIPTION_PREFILLED_PROMO.trim()
-    : "";
+export const STRIPE_SAAS_PAYMENT_PROMO_CODE = "MYFID1EURO";
+
+/**
+ * URL de paiement abonnement / parcours payant : toujours ce lien + `prefilled_promo_code`, email optionnel.
+ * @param {string} [prefilledEmail]
+ * @returns {string}
+ */
+export function buildStripeSaasPaymentUrl(prefilledEmail) {
+  try {
+    const u = new URL(STRIPE_SAAS_PAYMENT_LINK);
+    u.searchParams.set("prefilled_promo_code", STRIPE_SAAS_PAYMENT_PROMO_CODE);
+    const em = (prefilledEmail || "").trim();
+    if (em) u.searchParams.set("prefilled_email", em);
+    return u.toString();
+  } catch (_) {
+    return `${STRIPE_SAAS_PAYMENT_LINK}?prefilled_promo_code=${encodeURIComponent(STRIPE_SAAS_PAYMENT_PROMO_CODE)}`;
+  }
+}
 
 /** @returns {boolean} */
 export function subscriptionUsesExternalStripePaymentLink() {
-  return (
-    RAW_STRIPE_SUBSCRIPTION_PAYMENT_LINK.length > 0 &&
-    /^https?:\/\//i.test(RAW_STRIPE_SUBSCRIPTION_PAYMENT_LINK)
-  );
+  return true;
 }
 
 /**
  * @param {string} [email]
- * @returns {string|null}
+ * @returns {string}
  */
 export function buildStripeSubscriptionPaymentLinkUrl(email) {
-  if (!subscriptionUsesExternalStripePaymentLink()) return null;
-  try {
-    const u = new URL(RAW_STRIPE_SUBSCRIPTION_PAYMENT_LINK);
-    const em = (email || "").trim();
-    if (em) u.searchParams.set("prefilled_email", em);
-    if (RAW_STRIPE_SUBSCRIPTION_PREFILLED_PROMO) {
-      u.searchParams.set("prefilled_promo_code", RAW_STRIPE_SUBSCRIPTION_PREFILLED_PROMO);
-    }
-    return u.toString();
-  } catch (_) {
-    return null;
-  }
+  return buildStripeSaasPaymentUrl(email);
 }
 
 const AUTH_TOKEN_KEY = "fidpass_token";

@@ -2,16 +2,25 @@
  * Tests unitaires pour config.js (API_BASE, getAuthToken, getAuthHeaders).
  * Lancer : npm run test (dans frontend/)
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { API_BASE, getAuthToken, setAuthToken, clearAuthToken, getAuthHeaders, isDevBypassPayment } from "./config.js";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import {
+  API_BASE,
+  getAuthToken,
+  setAuthToken,
+  clearAuthToken,
+  getAuthHeaders,
+  isDevBypassPayment,
+  buildStripeSaasPaymentUrl,
+  subscriptionUsesExternalStripePaymentLink,
+} from "./config.js";
 
 describe("config", () => {
-  const origLocalStorage = global.localStorage;
-  const origLocation = global.location;
+  const origLocalStorage = globalThis.localStorage;
+  const origLocation = globalThis.location;
 
   beforeEach(() => {
     const store = {};
-    global.localStorage = {
+    globalThis.localStorage = {
       getItem: (k) => store[k] ?? null,
       setItem: (k, v) => { store[k] = String(v); },
       removeItem: (k) => { delete store[k]; },
@@ -19,12 +28,12 @@ describe("config", () => {
       key: () => null,
       length: 0,
     };
-    global.location = { hostname: "localhost", origin: "http://localhost:5174" };
+    globalThis.location = { hostname: "localhost", origin: "http://localhost:5174" };
   });
 
   afterEach(() => {
-    global.localStorage = origLocalStorage;
-    global.location = origLocation;
+    globalThis.localStorage = origLocalStorage;
+    globalThis.location = origLocation;
   });
 
   it("getAuthToken returns null when empty", () => {
@@ -56,5 +65,20 @@ describe("config", () => {
 
   it("isDevBypassPayment returns boolean", () => {
     expect(typeof isDevBypassPayment()).toBe("boolean");
+  });
+
+  it("buildStripeSaasPaymentUrl includes prefilled_promo_code", () => {
+    const u = buildStripeSaasPaymentUrl();
+    expect(u).toContain("prefilled_promo_code=MYFID1EURO");
+    expect(u.startsWith("https://buy.stripe.com/")).toBe(true);
+  });
+
+  it("buildStripeSaasPaymentUrl adds prefilled_email when provided", () => {
+    const u = buildStripeSaasPaymentUrl("  test@example.com  ");
+    expect(u).toContain("prefilled_email=test%40example.com");
+  });
+
+  it("subscriptionUsesExternalStripePaymentLink is true (Payment Link SaaS)", () => {
+    expect(subscriptionUsesExternalStripePaymentLink()).toBe(true);
   });
 });

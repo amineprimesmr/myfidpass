@@ -2,7 +2,7 @@
  * Routeur léger : getRoute, show/hide des vues, chargement dynamique des pages.
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
-import { getAuthToken } from "../config.js";
+import { getAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
 import { openOnboardingSheet } from "../features/landing-onboarding-sheet.js";
 
 export function getRoute() {
@@ -190,7 +190,7 @@ export async function initRouting() {
   }
 
   if (route.type === "redirect-stripe") {
-    window.location.href = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
+    window.location.href = buildStripeSaasPaymentUrl();
     return null;
   }
 

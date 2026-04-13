@@ -2,9 +2,7 @@
  * Page créateur de carte (templates, brouillon, panier). Dérogation temporaire : > 400 lignes, à découper. REFONTE-REGLES.md.
  */
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
-
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
-import { API_BASE, getAuthToken, setAuthToken } from "../config.js";
+import { API_BASE, getAuthToken, setAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
 import { setBuilderHeaderStep, initRouting, navigateToLanding } from "../router/index.js";
 import { initBuilderOnboarding } from "./onboarding/builder-onboarding.js";
 import { geocodeAddress } from "../utils/geocoding.js";
@@ -81,7 +79,7 @@ function initBuilderPage() {
         history.pushState({}, "", "/");
         initRouting();
       } else if (n === 3) {
-        window.location.href = STRIPE_PAYMENT_LINK;
+        window.location.href = buildStripeSaasPaymentUrl();
       }
     });
   });
@@ -512,7 +510,7 @@ function initBuilderPage() {
         state.onboarding = { ...nextOnboardingState, completed: true };
         applyOnboardingTemplatePreset(state.onboarding.stylePreset);
         saveDraft();
-        window.location.href = STRIPE_PAYMENT_LINK;
+        window.location.href = buildStripeSaasPaymentUrl();
       },
     });
   }
@@ -672,7 +670,7 @@ function initBuilderPage() {
       onboardingRoot?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    window.location.href = STRIPE_PAYMENT_LINK;
+    window.location.href = buildStripeSaasPaymentUrl();
   }
 
   btnSubmit?.addEventListener("click", goToPayment);
@@ -694,7 +692,7 @@ function initBuilderPage() {
   });
   cartContinue?.addEventListener("click", () => {
     closeCart();
-    window.location.href = STRIPE_PAYMENT_LINK;
+    window.location.href = buildStripeSaasPaymentUrl();
   });
 }
 

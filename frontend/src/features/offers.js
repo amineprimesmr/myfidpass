@@ -1,15 +1,13 @@
 /**
- * Page choix d'offre / abonnement : paiement intégré (Stripe Payment Element), sans checkout hébergé.
+ * Page choix d'offre / abonnement : redirection vers le Payment Link Stripe (checkout hébergé).
  */
 import {
   API_BASE,
   getAuthHeaders,
   isDevBypassPayment,
   setDevBypassPayment,
-  buildStripeSubscriptionPaymentLinkUrl,
-  subscriptionUsesExternalStripePaymentLink,
+  buildStripeSaasPaymentUrl,
 } from "../config.js";
-import { initEmbeddedSubscriptionCheckout } from "./embedded-subscription.js";
 
 /** Accès opérationnel sans fenêtre d’essai 24 h = abonnement Stripe payant. */
 function shouldRedirectLoggedInUserToApp(data) {
@@ -49,7 +47,7 @@ export function initOffersPage(route = {}) {
     const subEl = document.querySelector("#offers-subtitle");
     if (subEl) {
       subEl.textContent =
-        "Réglez en quelques secondes sur cette page (carte, Apple Pay ou Google Pay). Après l’essai de 24 h, ce paiement débloque votre abonnement sans quitter Myfidpass.";
+        "Vous allez être redirigé vers une page de paiement sécurisée Stripe (carte, Apple Pay ou Google Pay). Le code promo partenaire est déjà appliqué.";
     }
   } else {
     document.title = "Tarifs — Myfidpass";
@@ -58,7 +56,7 @@ export function initOffersPage(route = {}) {
     const subEl = document.querySelector("#offers-subtitle");
     if (subEl) {
       subEl.textContent =
-        "Accès complet au logiciel, aux cartes Wallet et à l’application commerçant. Paiement sécurisé ci-dessous, sans quitter le site.";
+        "Accès complet au logiciel, aux cartes Wallet et à l’application commerçant. Redirection vers le paiement sécurisé Stripe.";
     }
   }
 
@@ -82,21 +80,9 @@ export function initOffersPage(route = {}) {
         }
       }
 
-      if (subscriptionUsesExternalStripePaymentLink()) {
-        const email = meData?.user?.email != null ? String(meData.user.email).trim() : "";
-        const payUrl = buildStripeSubscriptionPaymentLinkUrl(email);
-        if (payUrl) {
-          window.location.href = payUrl;
-          return;
-        }
-      }
-
-      await initEmbeddedSubscriptionCheckout({
-        paymentElementContainerId: "offers-payment-element",
-        submitButtonId: "offers-pay-submit",
-        errorContainerId: "offers-payment-error",
-        statusContainerId: "offers-payment-status",
-      });
+      const email = meData?.user?.email != null ? String(meData.user.email).trim() : "";
+      window.location.href = buildStripeSaasPaymentUrl(email);
+      return;
     } catch (e) {
       const errEl = document.getElementById("offers-payment-error");
       if (errEl) {
