@@ -39,6 +39,7 @@ import {
   closeDeliveryReceiptScanOverlay,
   openDeliveryReceiptScanOverlay,
 } from "./delivery-receipt-scan-overlay.js";
+import { bindMissionsSheet, closeMissionsSheet } from "./missions-sheet-ui.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -717,6 +718,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     });
 
     bindFidelitySpaLinks(rootEl);
+    bindMissionsSheet(rootEl, { signal });
 
     disposeQrUi = bindQrGameUi({
       rootEl,
@@ -747,6 +749,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const qr = rootEl.querySelector("#fidelity-qr-modal-root");
       const rewardOpen = rootEl.querySelector("#fidelity-qr-panel-reward:not(.hidden)");
       if (qr && !qr.classList.contains("hidden") && !rewardOpen) closeQrModalRoot(rootEl);
+      const ms = rootEl.querySelector("#fidelity-missions-sheet");
+      if (ms?.classList.contains("fidelity-missions-sheet--open")) {
+        closeMissionsSheet(rootEl);
+      }
     },
     { signal }
   );

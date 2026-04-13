@@ -1,0 +1,249 @@
+/* CTA + sheet « Gagner plus de points » (missions) */
+
+.fidelity-earn-points-cta-wrap {
+  margin: 1rem 0 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.fidelity-earn-points-cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.15rem;
+  padding: 0.65rem 1.15rem;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  box-shadow:
+    0 4px 16px rgba(99, 102, 241, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.35) inset;
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.2, 0.64, 1),
+    box-shadow 0.32s ease;
+}
+
+.fidelity-earn-points-cta__glow {
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 210deg, #7c3aed, #ec4899, #f97316, #a855f7, #7c3aed);
+  opacity: 0.55;
+  animation: fidelity-earn-cta-rotate 5.5s linear infinite;
+}
+
+@keyframes fidelity-earn-cta-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fidelity-earn-points-cta__inner {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.15rem 0.35rem;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 45%, #c026d3 100%);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+}
+
+.fidelity-earn-points-cta__emoji {
+  font-size: 1.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.fidelity-earn-points-cta__chev {
+  margin-left: 0.15rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  opacity: 0.92;
+}
+
+.fidelity-earn-points-cta:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 8px 28px rgba(99, 102, 241, 0.38),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
+}
+
+.fidelity-earn-points-cta:active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* —— Sheet —— */
+
+.fidelity-missions-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482500;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.fidelity-missions-sheet.fidelity-missions-sheet--open {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+body.fidelity-missions-sheet-locked {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+.fidelity-missions-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fidelity-missions-sheet--open .fidelity-missions-sheet__backdrop {
+  opacity: 1;
+}
+
+.fidelity-missions-sheet__panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: min(88dvh, 640px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 14%);
+  border-radius: 26px 26px 0 0;
+  box-shadow:
+    0 -20px 50px rgba(15, 23, 42, 0.16),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  transform: translate3d(0, 105%, 0);
+  transition: transform 0.58s cubic-bezier(0.32, 1.18, 0.35, 1);
+  will-change: transform;
+}
+
+.fidelity-missions-sheet--open .fidelity-missions-sheet__panel {
+  transform: translate3d(0, 0, 0);
+}
+
+.fidelity-missions-sheet__handle-row {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0.55rem 0 0.15rem;
+}
+
+.fidelity-missions-sheet__handle {
+  width: 40px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.55);
+}
+
+.fidelity-missions-sheet__head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 1.1rem 0.65rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+.fidelity-missions-sheet__head-text {
+  min-width: 0;
+}
+
+.fidelity-missions-sheet__kicker {
+  margin: 0 0 0.15rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #818cf8;
+}
+
+.fidelity-missions-sheet__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  line-height: 1.15;
+}
+
+.fidelity-missions-sheet__sub {
+  margin: 0.35rem 0 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.fidelity-missions-sheet__close {
+  flex-shrink: 0;
+  width: 2.35rem;
+  height: 2.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(241, 245, 249, 0.95);
+  color: #475569;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.fidelity-missions-sheet__close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.fidelity-missions-sheet__close:active {
+  transform: scale(0.94);
+}
+
+.fidelity-missions-sheet__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.85rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.fidelity-missions-sheet__body .fidelity-engagement-actions {
+  gap: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fidelity-earn-points-cta__glow {
+    animation: none;
+    opacity: 0.35;
+  }
+
+  .fidelity-earn-points-cta,
+  .fidelity-missions-sheet__backdrop,
+  .fidelity-missions-sheet__panel {
+    transition-duration: 0.01ms !important;
+  }
+}

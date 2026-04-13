@@ -11,6 +11,10 @@ import {
   buildHeroBalanceProgressState,
   renderHeroBalanceProgressMarkup,
 } from "./hero-balance-progress-markup.js";
+import {
+  renderEarnMorePointsButtonMarkup,
+  renderMissionsSheetMarkup,
+} from "./missions-sheet-markup.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -119,17 +123,10 @@ export function renderClientPage(root, state, options = {}) {
     balanceUnit: headerBalanceUnit,
   });
 
+  const hasMissionsSheet = hasMember && actionsForDisplay.length > 0;
   const step2SectionHtml =
     actionsForDisplay.length > 0
-      ? `
-        <section class="fidelity-v2-missions-section" id="fidelity-v2-step-2" aria-labelledby="fidelity-missions-heading">
-          <h2 id="fidelity-missions-heading" class="fidelity-v2-missions-heading">${esc(step2Title)}</h2>
-          <div class="fidelity-v2-step-missions">
-              <div class="fidelity-engagement-actions" id="fidelity-v2-actions">${engagementHtml}</div>
-            </div>
-          <p id="fidelity-v2-action-feedback" class="fidelity-engagement-feedback hidden"></p>
-        </section>
-        `
+      ? ""
       : `
         <section class="fidelity-v2-card fidelity-v2-step" id="fidelity-v2-step-2">
           <header class="fidelity-v2-step-header">
@@ -185,6 +182,7 @@ export function renderClientPage(root, state, options = {}) {
                   business: state.business,
                 }),
               )}
+              ${hasMissionsSheet ? renderEarnMorePointsButtonMarkup(esc) : ""}
             </div>
           </div>
         </section>
@@ -291,6 +289,8 @@ export function renderClientPage(root, state, options = {}) {
       </div>
 
     </main>
+
+    ${hasMissionsSheet ? renderMissionsSheetMarkup(esc, { engagementHtml, sheetTitle: step2Title }) : ""}
 
     ${showProfileMissionModal
       ? renderProfileMissionModalMarkup(esc, {
