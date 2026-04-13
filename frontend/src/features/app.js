@@ -5635,7 +5635,6 @@ function initAppDashboard(slug) {
       const data = await res.json();
       const el = document.getElementById("app-notifications-stats");
       const lastBatchEl = document.getElementById("app-notifications-last-batch");
-      const diagEl = document.getElementById("app-notifications-diagnostic");
       if (lastBatchEl) {
         if (data.last_batch && data.last_batch.created_at) {
           const lb = data.last_batch;
@@ -5701,42 +5700,6 @@ function initAppDashboard(slug) {
         } else {
           membersSummaryEl.classList.add("hidden");
           membersSummaryEl.innerHTML = "";
-        }
-      }
-      if (diagEl) {
-        const total = data.subscriptionsCount != null ? data.subscriptionsCount : 0;
-        const passKitOk = data.passKitUrlConfigured === true;
-        if (total === 0 && data.helpWhenNoDevice) {
-          let html = "";
-          if (data.paradoxExplanation) {
-            html += `<p class="app-notifications-diagnostic-title">J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.paradoxExplanation)}</p>`;
-          } else if (data.membersVsDevicesExplanation) {
-            html += `<p class="app-notifications-diagnostic-title">Pourquoi des membres mais « 0 appareil » ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.membersVsDevicesExplanation)}</p>`;
-          }
-          if (data.dataDirHint) {
-            html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.dataDirHint)}</p>`;
-          }
-          html += `<p class="app-notifications-diagnostic-title">Pour enregistrer ton iPhone</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.helpWhenNoDevice)}</p>`;
-          diagEl.innerHTML = html;
-          diagEl.classList.remove("hidden");
-        } else if (total === 0 && !passKitOk && data.diagnostic) {
-          diagEl.classList.add("hidden");
-          diagEl.innerHTML = "";
-        } else if (total === 0 && (data.paradoxExplanation || data.membersVsDevicesExplanation || data.dataDirHint)) {
-          let html = "";
-          if (data.paradoxExplanation || data.membersVsDevicesExplanation) {
-            const text = data.paradoxExplanation || data.membersVsDevicesExplanation;
-            const title = data.paradoxExplanation ? "J'ai scanné la carte du client mais « 0 appareil » — pourquoi ?" : "Pourquoi des membres mais « 0 appareil » ?";
-            html += `<p class="app-notifications-diagnostic-title">${escapeHtmlForServer(title)}</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(text)}</p>`;
-          }
-          if (data.dataDirHint) {
-            html += `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.dataDirHint)}</p>`;
-          }
-          diagEl.innerHTML = html || `<p class="app-notifications-diagnostic-title">Les logs montrent des POST mais 0 ici ?</p><p class="app-notifications-diagnostic-text">${escapeHtmlForServer(data.dataDirHint || "")}</p>`;
-          diagEl.classList.remove("hidden");
-        } else {
-          diagEl.classList.add("hidden");
-          diagEl.innerHTML = "";
         }
       }
       const removeTestWrap = document.getElementById("app-notifications-remove-test-wrap");

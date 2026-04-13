@@ -316,9 +316,12 @@
   font-size: 1rem;
 }
 
-#notifications.app-notifications-section .app-notifications-diagnostic {
-  margin: 0 1rem 0.75rem;
-  border-radius: 14px;
+@media (max-width: 768px) {
+  #notifications.app-notifications-section .app-notifs-device-summary,
+  #notifications.app-notifications-section .app-notifications-last-batch,
+  #notifications.app-notifications-section .app-notifs-autosave-hint {
+    display: none !important;
+  }
 }
 
 @media (min-width: 900px) {

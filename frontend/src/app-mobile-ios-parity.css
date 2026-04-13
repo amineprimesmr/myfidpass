@@ -31,6 +31,15 @@
     padding-top: 0;
   }
 
+  /* Notifs : pas de barre titre ni bouton scanner (comme l’app iOS) */
+  #app-app.app-mobile[data-mobile-section="notifications"] .app-mobile-header {
+    display: none !important;
+  }
+
+  #app-app.app-mobile[data-mobile-section="notifications"] .app-main {
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+  }
+
   /* Fond accueil type Revolut (DashboardRevolutPalette clair) */
   #app-app.app-mobile[data-mobile-section="dashboard"] #dashboard.app-section-visible {
     background: linear-gradient(180deg, var(--ios-canvas) 0%, var(--ios-canvas-deep) 100%);
