@@ -629,72 +629,92 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     if (google && wallet.google) google.href = wallet.google;
 
     const deliveryFile = rootEl.querySelector("#fidelity-delivery-receipt-file");
-    const deliveryPick = rootEl.querySelector("#fidelity-delivery-receipt-pick");
-    const deliverySubmit = rootEl.querySelector("#fidelity-delivery-receipt-submit");
+    const deliveryStickyBtn = rootEl.querySelector("#fidelity-delivery-receipt-sticky-btn");
     const deliveryFb = rootEl.querySelector("#fidelity-delivery-receipt-feedback");
-    if (deliveryPick && deliveryFile) {
-      deliveryPick.addEventListener("click", () => deliveryFile.click());
+    let deliveryReceiptSubmitInFlight = false;
+
+    async function submitDeliveryReceiptClaimFlow() {
+      const state = store.get();
+      if (!state.member?.id || !deliveryReceiptDataUrl || deliveryReceiptSubmitInFlight) return;
+      deliveryReceiptSubmitInFlight = true;
+      if (deliveryStickyBtn) {
+        deliveryStickyBtn.disabled = true;
+        deliveryStickyBtn.setAttribute("aria-busy", "true");
+      }
+      if (deliveryFb) {
+        deliveryFb.classList.add("hidden");
+        deliveryFb.classList.remove("error", "success");
+      }
+      openDeliveryReceiptScanOverlay({ imageDataUrl: deliveryReceiptDataUrl });
+      try {
+        const commaIdx = deliveryReceiptDataUrl.indexOf(",");
+        const b64 = commaIdx >= 0 ? deliveryReceiptDataUrl.slice(commaIdx + 1) : deliveryReceiptDataUrl;
+        const mimeMatch = /^data:([^;]+);/.exec(deliveryReceiptDataUrl);
+        const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+        await api.submitDeliveryReceiptClaim(slug, state.member.id, {
+          image_base64: b64,
+          mime_type: mime,
+          idempotency_key: genIdempotencyKey(),
+        });
+        await refreshMemberData();
+        if (deliveryFb) {
+          deliveryFb.textContent = "Points mis à jour.";
+          deliveryFb.classList.remove("hidden");
+          deliveryFb.classList.add("success");
+          deliveryFb.classList.remove("error");
+          globalThis.setTimeout(() => {
+            if (!deliveryFb || deliveryFb.textContent !== "Points mis à jour.") return;
+            deliveryFb.classList.add("hidden");
+            deliveryFb.classList.remove("success");
+          }, 4000);
+        }
+        deliveryReceiptDataUrl = null;
+        if (deliveryFile) deliveryFile.value = "";
+      } catch (err) {
+        if (deliveryFb) {
+          deliveryFb.textContent = messageUtilisateurPourErreur(err, err.message || "Envoi impossible.");
+          deliveryFb.classList.remove("hidden");
+          deliveryFb.classList.add("error");
+          deliveryFb.classList.remove("success");
+        }
+        if (deliveryFile) deliveryFile.value = "";
+      } finally {
+        closeDeliveryReceiptScanOverlay();
+        deliveryReceiptSubmitInFlight = false;
+        if (deliveryStickyBtn) {
+          deliveryStickyBtn.disabled = false;
+          deliveryStickyBtn.removeAttribute("aria-busy");
+        }
+      }
+    }
+
+    if (deliveryStickyBtn && deliveryFile) {
+      deliveryStickyBtn.addEventListener("click", () => deliveryFile.click());
     }
     if (deliveryFile) {
       deliveryFile.addEventListener("change", (ev) => {
         const file = ev.target?.files?.[0];
-        const wrap = rootEl.querySelector("#fidelity-delivery-receipt-preview-wrap");
-        const img = rootEl.querySelector("#fidelity-delivery-receipt-preview");
         if (!file || !file.type.startsWith("image/")) {
-          if (deliverySubmit) deliverySubmit.disabled = true;
           if (deliveryFb) {
             deliveryFb.textContent = "Choisis une image (photo ou capture d’écran).";
             deliveryFb.classList.remove("hidden");
             deliveryFb.classList.add("error");
+            deliveryFb.classList.remove("success");
           }
+          ev.target.value = "";
           return;
         }
         const reader = new FileReader();
         reader.onload = () => {
           deliveryReceiptDataUrl = String(reader.result || "");
-          if (img) img.src = deliveryReceiptDataUrl;
-          if (wrap) wrap.classList.remove("hidden");
-          if (deliverySubmit) deliverySubmit.disabled = false;
           if (deliveryFb) {
             deliveryFb.textContent = "";
             deliveryFb.classList.add("hidden");
             deliveryFb.classList.remove("error", "success");
           }
+          void submitDeliveryReceiptClaimFlow();
         };
         reader.readAsDataURL(file);
-      });
-    }
-    if (deliverySubmit) {
-      deliverySubmit.addEventListener("click", async () => {
-        const state = store.get();
-        if (!state.member?.id || !deliveryReceiptDataUrl) return;
-        if (deliveryFb) {
-          deliveryFb.classList.add("hidden");
-          deliveryFb.classList.remove("error", "success");
-        }
-        deliverySubmit.disabled = true;
-        openDeliveryReceiptScanOverlay({ imageDataUrl: deliveryReceiptDataUrl });
-        try {
-          const commaIdx = deliveryReceiptDataUrl.indexOf(",");
-          const b64 = commaIdx >= 0 ? deliveryReceiptDataUrl.slice(commaIdx + 1) : deliveryReceiptDataUrl;
-          const mimeMatch = /^data:([^;]+);/.exec(deliveryReceiptDataUrl);
-          const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
-          await api.submitDeliveryReceiptClaim(slug, state.member.id, {
-            image_base64: b64,
-            mime_type: mime,
-            idempotency_key: genIdempotencyKey(),
-          });
-          await refreshMemberData();
-        } catch (err) {
-          if (deliveryFb) {
-            deliveryFb.textContent = messageUtilisateurPourErreur(err, err.message || "Envoi impossible.");
-            deliveryFb.classList.remove("hidden");
-            deliveryFb.classList.add("error");
-          }
-        } finally {
-          closeDeliveryReceiptScanOverlay();
-          deliverySubmit.disabled = !deliveryReceiptDataUrl;
-        }
       });
     }
 

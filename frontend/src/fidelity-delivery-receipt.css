@@ -1,9 +1,59 @@
-/* Réclamation points livraison — espace client /fidelity/:slug */
+/* Réclamation points livraison — barre sticky espace client /fidelity/:slug */
 
-.fidelity-v2-step--delivery .fidelity-delivery-receipt-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.fidelity-delivery-sticky {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 26;
+  pointer-events: none;
+}
+
+.fidelity-delivery-sticky__inner {
+  pointer-events: auto;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0.55rem 1rem 0;
+  padding-bottom: calc(max(0.55rem, env(safe-area-inset-bottom, 0px)) + var(--fidelity-visual-gap-bottom, 0px));
+  box-sizing: border-box;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(255, 255, 255, 0.92) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.fidelity-delivery-sticky-feedback.fidelity-engagement-feedback {
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.65rem;
+}
+
+.fidelity-delivery-sticky-btn.fidelity-cta-pill {
+  width: 100%;
+  min-height: 3.35rem;
+  font-size: 0.95rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.fidelity-delivery-sticky-btn__cam {
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.fidelity-delivery-sticky-btn__cam svg {
+  display: block;
+}
+
+.fidelity-delivery-sticky-btn__label {
+  flex: 1;
+  text-align: center;
 }
 
 .fidelity-delivery-receipt-file-input {
@@ -15,45 +65,6 @@
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
-}
-
-.fidelity-delivery-receipt-preview-wrap {
-  border-radius: 12px;
-  overflow: hidden;
-  max-height: 180px;
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.fidelity-delivery-receipt-preview-wrap.hidden {
-  display: none;
-}
-
-.fidelity-delivery-receipt-preview {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 180px;
-  object-fit: contain;
-}
-
-.fidelity-delivery-receipt-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.fidelity-cta-pill--secondary {
-  background: transparent;
-  border: 2px solid currentColor;
-  opacity: 0.95;
-}
-
-.fidelity-delivery-receipt-legal {
-  font-size: 0.72rem;
-  opacity: 0.65;
-  line-height: 1.35;
-  margin: 0.5rem 0 0;
 }
 
 #fidelity-delivery-receipt-feedback.success {

@@ -145,8 +145,6 @@ export function renderClientPage(root, state, options = {}) {
   const memberPoints = hasMember ? Math.max(0, Math.floor(Number(state.member?.points) || 0)) : 0;
   const appleWalletRegistered = hasMember && state.member?.apple_wallet_registered === true;
   const hasGoogleWallet = hasMember && Boolean(state.wallet?.google);
-  const balanceUnitLabel =
-    programType === "stamps" ? (headerBalanceUnit === "pts" ? "tampons" : esc(headerBalanceUnit)) : "points";
   const deliveryReceiptEnabled =
     hasMember && Number(state.business?.delivery_receipt_claims_enabled ?? state.business?.deliveryReceiptClaimsEnabled ?? 1) === 1;
 
@@ -238,45 +236,6 @@ export function renderClientPage(root, state, options = {}) {
             : ""
         }
 
-        ${
-          deliveryReceiptEnabled
-            ? `
-        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--delivery" id="fidelity-delivery-receipt-section" aria-labelledby="fidelity-delivery-receipt-heading">
-          <header class="fidelity-v2-step-header">
-            <div class="fidelity-v2-step-head-text">
-              <h2 id="fidelity-delivery-receipt-heading" class="fidelity-v2-card-title fidelity-v2-step-title">
-                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🧾</span>
-                <span class="fidelity-v2-step-title-label">Livraison (Uber Eats, Deliveroo…)</span>
-              </h2>
-            </div>
-          </header>
-          <div class="fidelity-v2-step-body">
-            <div class="fidelity-v2-step-body-inner fidelity-delivery-receipt-inner">
-              <p class="fidelity-v2-card-desc fidelity-v2-step-desc">
-                Livraison (Uber Eats, Deliveroo…) : envoie une photo <strong>nette</strong> du ticket. On vérifie automatiquement l’enseigne, le montant et la date, puis tes <strong>${balanceUnitLabel}</strong> sont <strong>ajoutés tout de suite</strong> si tout correspond — sans action du commerçant.
-              </p>
-              <input type="file" id="fidelity-delivery-receipt-file" class="fidelity-delivery-receipt-file-input" accept="image/*" capture="environment" aria-label="Choisir une photo du ticket" />
-              <div id="fidelity-delivery-receipt-preview-wrap" class="fidelity-delivery-receipt-preview-wrap hidden">
-                <img id="fidelity-delivery-receipt-preview" class="fidelity-delivery-receipt-preview" alt="Aperçu du ticket" />
-              </div>
-              <div class="fidelity-delivery-receipt-actions">
-                <button type="button" id="fidelity-delivery-receipt-pick" class="fidelity-cta-pill fidelity-cta-pill--secondary">
-                  <span class="fidelity-cta-pill-label">Choisir une photo</span>
-                </button>
-                <button type="button" id="fidelity-delivery-receipt-submit" class="fidelity-cta-pill" disabled>
-                  <span class="fidelity-cta-pill-dot" aria-hidden="true"></span>
-                  <span class="fidelity-cta-pill-label">Réclamer mes points</span>
-                </button>
-              </div>
-              <p id="fidelity-delivery-receipt-feedback" class="fidelity-engagement-feedback hidden" role="status"></p>
-              <p class="fidelity-delivery-receipt-legal">Un même ticket ne peut servir qu’une fois. Si la photo est floue ou ne correspond pas à ce commerce, la demande est refusée automatiquement.</p>
-            </div>
-          </div>
-        </section>
-        `
-            : ""
-        }
-
         <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--rewards" id="fidelity-v2-rewards">
           <header class="fidelity-v2-step-header">
             <div class="fidelity-v2-step-head-text">
@@ -298,6 +257,23 @@ export function renderClientPage(root, state, options = {}) {
       </div>
 
     </main>
+
+    ${
+      deliveryReceiptEnabled
+        ? `
+    <div class="fidelity-delivery-sticky" role="region" aria-label="Réclamation sur ticket de livraison">
+      <div class="fidelity-delivery-sticky__inner">
+        <input type="file" id="fidelity-delivery-receipt-file" class="fidelity-delivery-receipt-file-input" accept="image/*" capture="environment" aria-label="Photographier ou choisir une image du ticket" />
+        <p id="fidelity-delivery-receipt-feedback" class="fidelity-delivery-sticky-feedback fidelity-engagement-feedback hidden" role="status"></p>
+        <button type="button" id="fidelity-delivery-receipt-sticky-btn" class="fidelity-cta-pill fidelity-delivery-sticky-btn">
+          <span class="fidelity-delivery-sticky-btn__cam" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+          <span class="fidelity-delivery-sticky-btn__label">Réclamer mes points</span>
+        </button>
+      </div>
+    </div>
+    `
+        : ""
+    }
 
     ${hasMissionsSheet ? renderMissionsSheetMarkup(esc, { engagementHtml, sheetTitle: step2Title }) : ""}
 
