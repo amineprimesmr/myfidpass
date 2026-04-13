@@ -44,6 +44,7 @@
     <link rel="stylesheet" href="/src/app-integration-guide.css" />
     <link rel="stylesheet" href="/src/landing-integration-catalog.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
+    <link rel="stylesheet" href="/src/app-mobile-ios-parity.css" />
     <link rel="stylesheet" href="/src/post-purchase-app-modal.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
@@ -274,7 +275,7 @@
 
 
     <!-- App connectée : interface logiciel (sans bannière ni menu haut) -->
-    <div id="app-app" class="hidden app-unified-shell">
+    <div id="app-app" class="hidden app-unified-shell" data-mobile-section="dashboard">
       <aside class="app-sidebar" id="app-sidebar">
         <div class="app-sidebar-brand">
           <a href="/" class="app-sidebar-logo" aria-label="Mon commerce">
@@ -540,6 +541,9 @@
                 <button type="button" class="app-mobile-message-bar-btn" id="app-mobile-message-send" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
               </div>
             </div>
+            <button type="button" class="app-mobile-scan-fab app-mobile-only" id="app-mobile-scan-fab" aria-label="Scanner un QR code">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+            </button>
             <div id="app-overview-alerts" class="app-overview-alerts hidden"></div>
             <div class="app-dashboard-hero">
               <article class="app-dashboard-hero-card app-dashboard-hero-revenue">
@@ -1878,6 +1882,21 @@
           </section>
           <!-- Section Profil : infos établissement (nom, logo, adresse) -->
           <section id="profil" class="app-section app-section-profil">
+            <div class="app-commerce-mobile-topbar app-mobile-only">
+              <div class="app-commerce-mobile-topbar__lead">
+                <img id="app-commerce-mobile-avatar-img" class="app-commerce-mobile-topbar__avatar-img hidden" alt="" width="34" height="34" decoding="async" />
+                <span id="app-commerce-mobile-initials" class="app-commerce-mobile-topbar__initials">ME</span>
+              </div>
+              <span id="app-commerce-mobile-name" class="app-commerce-mobile-topbar__name">Ma boutique</span>
+              <div class="app-commerce-mobile-topbar__actions">
+                <button type="button" id="app-commerce-mobile-qr" class="app-commerce-mobile-topbar__btn" aria-label="Afficher la page fidélité">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg>
+                </button>
+                <button type="button" id="app-commerce-mobile-settings" class="app-commerce-mobile-topbar__btn" aria-label="Réglages du compte">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+              </div>
+            </div>
             <h2 class="app-section-title">Profil</h2>
             <div class="app-section-grid-wrap app-profil-grid">
               <div class="app-section-col-main">
@@ -2068,23 +2087,19 @@
           <span id="app-mobile-trial-subscribe-pill-remaining">—</span>
         </span>
       </div>
-      <!-- Barre d'onglets mobile (style app) -->
+      <!-- Barre d'onglets mobile — alignée app iOS : Accueil, Notifs, Commerce -->
       <nav class="app-mobile-tab-bar" id="app-mobile-tab-bar" aria-label="Navigation principale" aria-hidden="true">
         <button type="button" class="app-mobile-tab active" data-mobile-tab="dashboard" aria-current="page">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Dashboard
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Accueil
         </button>
-        <button type="button" class="app-mobile-tab" data-mobile-tab="dashboard">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-          Scanner
-        </button>
-        <button type="button" class="app-mobile-tab" data-mobile-tab="personnaliser">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg>
-          Ma Carte
+        <button type="button" class="app-mobile-tab" data-mobile-tab="notifications">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          Notifs
         </button>
         <button type="button" class="app-mobile-tab" data-mobile-tab="profil">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Profil
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          Commerce
         </button>
       </nav>
       <div id="post-purchase-app-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="post-purchase-app-modal-title" aria-hidden="true">

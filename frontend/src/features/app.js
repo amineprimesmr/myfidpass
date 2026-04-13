@@ -626,14 +626,16 @@ const APP_SECTION_IDS = [
 ];
 
 const APP_MOBILE_TITLES = {
-  "dashboard": "Dashboard",
-  "personnaliser": "Ma Carte",
-  "notifications": "Campagnes",
+  "dashboard": "Accueil",
+  "membres": "Membres",
+  "personnaliser": "Ma carte",
+  "notifications": "Notifs",
   "carte-perimetre": "Emplacement",
   "flyer-qr": "Flyer QR",
   "fidelity-client": "Page fidélité",
+  "integration": "Intégration",
   "engagement": "Avis & Réseaux",
-  "profil": "Profil",
+  "profil": "Commerce",
 };
 
 /** @type {null | (() => void)} */
@@ -665,8 +667,12 @@ function showAppSectionCore(sectionId) {
     l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === id);
   });
   document.querySelectorAll("#app-mobile-tab-bar .app-mobile-tab").forEach((t) => {
-    t.classList.toggle("active", t.getAttribute("data-mobile-tab") === id);
+    const on = t.getAttribute("data-mobile-tab") === id;
+    t.classList.toggle("active", on);
+    if (on) t.setAttribute("aria-current", "page");
+    else t.removeAttribute("aria-current");
   });
+  document.getElementById("app-app")?.setAttribute("data-mobile-section", id);
   const headerTitle = document.getElementById("app-mobile-header-title");
   if (headerTitle) headerTitle.textContent = APP_MOBILE_TITLES[id] || "Myfidpass";
   const newHash = "#" + id;
@@ -744,7 +750,24 @@ function initAppMobile() {
     const id = e.detail?.tab;
     if (id && APP_SECTION_IDS.includes(id)) showAppSection(id);
   });
-  headerScanBtn?.addEventListener("click", () => { showAppSection("dashboard"); document.getElementById("app-dashboard-scanner-wrap")?.scrollIntoView({ behavior: "smooth" }); });
+  function triggerFullscreenQrScan() {
+    const launchBtn = document.getElementById("app-scanner-launch-btn");
+    if (launchBtn) launchBtn.click();
+  }
+  headerScanBtn?.addEventListener("click", () => {
+    showAppSection("dashboard");
+    triggerFullscreenQrScan();
+  });
+  document.getElementById("app-mobile-scan-fab")?.addEventListener("click", () => {
+    showAppSection("dashboard");
+    triggerFullscreenQrScan();
+  });
+  document.getElementById("app-commerce-mobile-qr")?.addEventListener("click", () => {
+    showAppSection("fidelity-client");
+  });
+  document.getElementById("app-commerce-mobile-settings")?.addEventListener("click", () => {
+    document.querySelector("#profil .app-profil-account-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   document.querySelectorAll(".app-mobile-profil-item[data-section]").forEach((item) => {
     item.addEventListener("click", (e) => {
@@ -3682,6 +3705,30 @@ function initAppDashboard(slug) {
       else if (parts.length === 1) ini = (parts[0][0] || "?").toUpperCase();
       initialsEl.textContent = ini || "ME";
     }
+    syncCommerceMobileTopbar();
+  }
+
+  function syncCommerceMobileTopbar() {
+    const nameEl = document.getElementById("app-business-name");
+    const nameT = document.getElementById("app-commerce-mobile-name");
+    if (nameEl && nameT) {
+      const t = (nameEl.textContent || "").trim();
+      nameT.textContent = t || "Ma boutique";
+    }
+    const headerAvatar = document.getElementById("app-dashboard-profile-avatar");
+    const headerInitials = document.getElementById("app-dashboard-profile-initials");
+    const cImg = document.getElementById("app-commerce-mobile-avatar-img");
+    const cIni = document.getElementById("app-commerce-mobile-initials");
+    const src = headerAvatar?.getAttribute("src");
+    if (headerAvatar && cImg && src && !headerAvatar.classList.contains("hidden")) {
+      if (cImg.src !== headerAvatar.src) cImg.src = headerAvatar.src;
+      cImg.classList.remove("hidden");
+      cIni?.classList.add("hidden");
+    } else {
+      cImg?.classList.add("hidden");
+      cIni?.classList.remove("hidden");
+      if (headerInitials && cIni) cIni.textContent = (headerInitials.textContent || "").trim() || "ME";
+    }
   }
 
   // ——— Profil (nom, logo, adresse) ———
@@ -5601,7 +5648,10 @@ function initAppDashboard(slug) {
     } else {
       if (perimetreIconImg) perimetreIconImg.classList.add("hidden");
       if (perimetreIconFallback) perimetreIconFallback.classList.remove("hidden");
+      if (headerAvatar) headerAvatar.classList.add("hidden");
+      if (headerInitials) headerInitials.classList.remove("hidden");
     }
+    syncCommerceMobileTopbar();
   }
 
   async function refreshNotificationBannerIcon() {

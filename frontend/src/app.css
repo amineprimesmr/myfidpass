@@ -3193,7 +3193,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   opacity: 0.38;
   pointer-events: none;
 }
-.app-awaiting-first-business #app-mobile-tab-bar .app-mobile-tab:not([data-mobile-tab="personnaliser"]):not([data-mobile-tab="profil"]) {
+.app-awaiting-first-business #app-mobile-tab-bar .app-mobile-tab:not([data-mobile-tab="profil"]) {
   opacity: 0.38;
   pointer-events: none;
 }
