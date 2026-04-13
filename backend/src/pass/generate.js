@@ -6,7 +6,13 @@
  */
 import { PKPass } from "passkit-generator";
 import { getPassAuthenticationToken } from "./auth.js";
-import { sanitizeLogoText, createLogoFromText, resizeLogoForPass, resizeLogoForPassIcon } from "./images-logo.js";
+import {
+  sanitizeLogoText,
+  createLogoFromText,
+  createPassLogoPlaceholder,
+  resizeLogoForPass,
+  resizeLogoForPassIcon,
+} from "./images-logo.js";
 import { createStripBuffer, buildPassLocations } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
@@ -17,7 +23,6 @@ import {
   STRIP_H,
   PASS_HEADER_RIGHT_LABEL,
   PASS_LABEL_MEMBER,
-  PASS_LOGO_PLACEHOLDER_TEXT,
 } from "./constants.js";
 import { radiusMetersForPass } from "../locationRadiusLimits.js";
 import { parsePointRewardTiersFromBusiness, formatBackRewardsFieldValue } from "./point-tiers.js";
@@ -128,7 +133,7 @@ export async function generatePass(member, business = null, options = {}) {
           console.log("[PassKit] Logo commerce injecté dans le pass (dimensions constants.js)");
         }
       } else {
-        const textFallback = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
+        const textFallback = await createPassLogoPlaceholder();
         if (textFallback) {
           buffers["logo.png"] = textFallback.logoPng;
           buffers["logo@2x.png"] = textFallback.logoPng2x;
@@ -137,7 +142,7 @@ export async function generatePass(member, business = null, options = {}) {
       }
     }
   } else if (!useTextInStrip && !buffers["logo.png"]) {
-    const textLogo = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
+    const textLogo = await createPassLogoPlaceholder();
     if (textLogo) {
       buffers["logo.png"] = textLogo.logoPng;
       buffers["logo@2x.png"] = textLogo.logoPng2x;
@@ -183,8 +188,8 @@ export async function generatePass(member, business = null, options = {}) {
     buffers["icon@2x.png"] = notificationIconResized.iconPng2x;
     buffers["icon@3x.png"] = notificationIconResized.iconPng3x;
   } else if (!merchantHasNotificationIcon) {
-    // Aucune icône configurée → placeholder texte neutre (jamais le fond vert sur une vraie image)
-    const textLogo = await createLogoFromText(stripColorHex, PASS_LOGO_PLACEHOLDER_TEXT);
+    // Aucune icône configurée → même placeholder que le logo (couleurs neutres)
+    const textLogo = await createPassLogoPlaceholder();
     if (textLogo) {
       const iconResized = await resizeLogoForPassIcon(textLogo.logoPng2x);
       if (iconResized) {
@@ -210,10 +215,20 @@ export async function generatePass(member, business = null, options = {}) {
           : 10
     )
   );
-  const useTampons = options.required_stamps != null || options.stampMax != null || (business?.required_stamps != null && business?.required_stamps > 0);
-  const programType = (options.program_type ?? business?.program_type)?.toLowerCase();
-  const explicitFormat = programType === "points" ? "points" : programType === "stamps" ? "tampons" : null;
-  const format = options.format || explicitFormat || (useTampons ? "tampons" : "points");
+  const rawProgramForFormat = String(options.program_type ?? business?.program_type ?? "")
+    .trim()
+    .toLowerCase();
+  const normProgram =
+    rawProgramForFormat === "tampons" || rawProgramForFormat === "tampon" || rawProgramForFormat === "stamp"
+      ? "stamps"
+      : rawProgramForFormat === "point"
+        ? "points"
+        : rawProgramForFormat === "points" || rawProgramForFormat === "stamps"
+          ? rawProgramForFormat
+          : "";
+  const explicitFormat = normProgram === "points" ? "points" : normProgram === "stamps" ? "tampons" : null;
+  /** Source de vérité : `program_type` en base ; sans valeur explicite → points (tampons uniquement si program_type = stamps). */
+  const format = options.format || explicitFormat || "points";
   const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
 
   const stripStampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";

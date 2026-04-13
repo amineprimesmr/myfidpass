@@ -26,7 +26,7 @@ describe("renderRewardsStepMarkup", () => {
     expect(html).not.toContain("fid-tiers-progress-card");
   });
 
-  it("affiche paliers programme tampons (unité pts côté client)", () => {
+  it("affiche paliers programme tampons (unité tampons)", () => {
     const html = renderRewardsStepMarkup(idEsc, {
       business: {
         required_stamps: 10,
@@ -35,11 +35,11 @@ describe("renderRewardsStepMarkup", () => {
       },
       member: { points: 3 },
       programType: "stamps",
-      balanceUnit: "pts",
+      balanceUnit: "tampons",
     });
     expect(html).toContain("Viennoiserie");
     expect(html).toContain("Menu offert");
-    expect(html).toContain("5");
-    expect(html).toContain("10");
+    expect(html).toContain("5 tampons");
+    expect(html).toContain("10 tampons");
   });
 });

@@ -71,8 +71,9 @@ export function listAllBusinessesForAdmin(p = {}) {
 }
 
 /**
- * Programme fidélité effectif (points vs tampons), aligné sur la logique du dashboard.
- * Gère les alias (tampons), les chaînes vides / bizarres et le repli sur required_stamps > 0.
+ * Programme fidélité effectif (points vs tampons), aligné sur la logique du pass et du dashboard.
+ * Source de vérité : `program_type` explicite. Les commerces historiques avec seulement `required_stamps`
+ * sont migrés une fois (migrations v21) vers `program_type = stamps`.
  */
 export function resolveBusinessProgramType(business) {
   if (!business) return "points";
@@ -80,8 +81,6 @@ export function resolveBusinessProgramType(business) {
   if (pt === "tampons" || pt === "tampon" || pt === "stamp") pt = "stamps";
   if (pt === "point") pt = "points";
   if (pt === "points" || pt === "stamps") return pt;
-  const rs = business.required_stamps != null ? Number(business.required_stamps) : NaN;
-  if (Number.isFinite(rs) && rs > 0) return "stamps";
   return "points";
 }
 

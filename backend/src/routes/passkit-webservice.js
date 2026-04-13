@@ -14,6 +14,7 @@ import {
   getUpdatedPassSerialNumbersForDevice,
   mergeBusinessAssetsForPass,
 } from "../db.js";
+import { resolveBusinessProgramType } from "../db/businesses.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../lib/merchant-dashboard-sync-push.js";
 import { scheduleCampaignEventJobsForMember } from "../lib/campaign-event-jobs.js";
 import { getPassAuthenticationToken } from "../pass.js";
@@ -242,8 +243,9 @@ const getPassHandler = async (req, res) => {
     const logoBytes = hasLogo ? Buffer.byteLength(Buffer.from(rawB64, "base64")) : 0;
     // Log visible pour diagnostic icône Wallet : filtrer par "LOGO_IN_PASS" dans Railway
     console.log("[PassKit] >>> PASS ENVOYÉ —", shortId, "business:", business.slug || business.id, "points:", member.points, "LOGO_IN_PASS:", hasLogo ? "OUI" : "NON", "logo_bytes:", logoBytes, "Last-Modified:", lastModified);
+    const programKind = resolveBusinessProgramType(business);
     const opts = {
-      template: business.required_stamps != null && business.required_stamps > 0 ? "cafe" : "classic",
+      template: programKind === "stamps" ? "cafe" : "classic",
       required_stamps: business.required_stamps ?? undefined,
       program_type: business.program_type ?? undefined,
       stamp_emoji: business.stamp_emoji ?? undefined,

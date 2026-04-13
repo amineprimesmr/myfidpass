@@ -1023,4 +1023,18 @@ export function runMigrations(db) {
       db.exec("ALTER TABLE businesses ADD COLUMN delivery_receipt_max_per_member_per_month INTEGER NOT NULL DEFAULT 25"),
     );
   }
+
+  // ── v21 : tampons explicites en base pour les commerces qui avaient required_stamps > 0 sans program_type
+  // (évite de basculer ces comptes en « points » après passage au défaut program_type = points).
+  const m21 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 21").get();
+  if (!m21) {
+    safeRun(db, () =>
+      db.exec(`
+        UPDATE businesses SET program_type = 'stamps'
+        WHERE (program_type IS NULL OR TRIM(program_type) = '')
+          AND required_stamps IS NOT NULL AND required_stamps > 0
+      `),
+    );
+    markMigrationApplied(db, 21, "program_type_backfill_from_required_stamps");
+  }
 }

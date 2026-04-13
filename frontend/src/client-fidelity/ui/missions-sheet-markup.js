@@ -1,8 +1,11 @@
+import { missionsHeroCtaLabel, missionsSheetSubtext } from "../lib/program-copy.js";
+
 /**
  * Sheet « missions bonus » + CTA hero.
  * @param {(s: string) => string} esc
+ * @param {string} [programType]
  */
-export function renderEarnMorePointsButtonMarkup(esc) {
+export function renderEarnMorePointsButtonMarkup(esc, programType = "points") {
   return `
           <div class="fidelity-earn-points-cta-wrap">
             <button
@@ -13,17 +16,18 @@ export function renderEarnMorePointsButtonMarkup(esc) {
               aria-expanded="false"
               aria-controls="fidelity-missions-sheet"
             >
-              <span class="fidelity-shiny-cta__label">${esc("Gagner plus de points")}</span>
+              <span class="fidelity-shiny-cta__label">${esc(missionsHeroCtaLabel(programType))}</span>
             </button>
           </div>`;
 }
 
 /**
  * @param {(s: string) => string} esc
- * @param {{ engagementHtml: string, sheetTitle: string }} p
+ * @param {{ engagementHtml: string, sheetTitle: string, programType?: string }} p
  */
 export function renderMissionsSheetMarkup(esc, p) {
   const title = esc(String(p.sheetTitle || "Missions"));
+  const sub = esc(missionsSheetSubtext(p.programType ?? "points"));
   return `
     <div
       id="fidelity-missions-sheet"
@@ -42,7 +46,7 @@ export function renderMissionsSheetMarkup(esc, p) {
           <div class="fidelity-missions-sheet__head-text">
             <p class="fidelity-missions-sheet__kicker">${esc("Bonus fidélité")}</p>
             <h2 id="fidelity-missions-sheet-title" class="fidelity-missions-sheet__title">${title}</h2>
-            <p class="fidelity-missions-sheet__sub">${esc("Complète une action et récupère tes points.")}</p>
+            <p class="fidelity-missions-sheet__sub">${sub}</p>
           </div>
           <button
             type="button"

@@ -29,8 +29,8 @@ export const PASS_HEADER_RIGHT_LABEL = "Récompenses ↗";
 /** Libellé champ « membre » (face avant / auxiliaire) — aligné aperçu Ma carte. */
 export const PASS_LABEL_MEMBER = "MEMBRE";
 
-/** Bandeau logo Wallet quand aucune image commerce n’est fournie (aligné app iOS). */
-export const PASS_LOGO_PLACEHOLDER_TEXT = "[ Votre logo ]";
+/** Bandeau logo Wallet quand aucune image commerce n’est fournie (ASCII, sans crochets — évite les glyphes « tofu » côté sharp/svg). */
+export const PASS_LOGO_PLACEHOLDER_TEXT = "Votre logo";
 
 /** Strip Apple : 750×246. Tampons : diam. 96 px. */
 export const STRIP_W = 750;
@@ -46,7 +46,8 @@ export const METERS_PER_DEG_LAT = (Math.PI * EARTH_RADIUS_M) / 180;
 
 /** Templates de design (couleurs). */
 export const PASS_TEMPLATES = {
-  classic: { backgroundColor: "#0a7c42", foregroundColor: "#ffffff", labelColor: "#e8f5e9" },
+  /** Défaut carte non personnalisée : aligné Ma carte iOS (fond blanc, textes bleu / labels noirs). */
+  classic: { backgroundColor: "#FFFFFF", foregroundColor: "#2563EB", labelColor: "#000000" },
   modern: { backgroundColor: "#1a237e", foregroundColor: "#ffffff", labelColor: "#c5cae9" },
   dark: { backgroundColor: "#212121", foregroundColor: "#ffffff", labelColor: "#b0b0b0" },
   warm: { backgroundColor: "#bf360c", foregroundColor: "#ffffff", labelColor: "#ffccbc" },

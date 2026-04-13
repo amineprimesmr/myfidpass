@@ -40,6 +40,7 @@ import {
   openDeliveryReceiptScanOverlay,
 } from "./delivery-receipt-scan-overlay.js";
 import { bindMissionsSheet, closeMissionsSheet } from "./missions-sheet-ui.js";
+import { deliveryReceiptSuccessMessage, engagementClaimSuccessMessage } from "./lib/program-copy.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -589,7 +590,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       await refreshMemberData();
       const feedback = rootEl.querySelector("#fidelity-v2-action-feedback");
       if (feedback) {
-        feedback.textContent = "Points ajoutés à ta carte.";
+        const pt = String(store.get().business?.program_type || "points").toLowerCase();
+        feedback.textContent = engagementClaimSuccessMessage(pt);
         feedback.classList.remove("hidden");
         setTimeout(() => feedback.classList.add("hidden"), 4000);
       }
@@ -658,12 +660,14 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         });
         await refreshMemberData();
         if (deliveryFb) {
-          deliveryFb.textContent = "Points mis à jour.";
+          const pt = String(store.get().business?.program_type || "points").toLowerCase();
+          const successMsg = deliveryReceiptSuccessMessage(pt);
+          deliveryFb.textContent = successMsg;
           deliveryFb.classList.remove("hidden");
           deliveryFb.classList.add("success");
           deliveryFb.classList.remove("error");
           globalThis.setTimeout(() => {
-            if (!deliveryFb || deliveryFb.textContent !== "Points mis à jour.") return;
+            if (!deliveryFb || deliveryFb.textContent !== successMsg) return;
             deliveryFb.classList.add("hidden");
             deliveryFb.classList.remove("success");
           }, 4000);

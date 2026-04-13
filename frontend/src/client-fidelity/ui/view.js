@@ -20,6 +20,11 @@ import {
   renderEarnMorePointsButtonMarkup,
   renderMissionsSheetMarkup,
 } from "./missions-sheet-markup.js";
+import {
+  balanceUnitShort,
+  deliveryReceiptStickyCtaLabel,
+  stampsStepSectionTitle,
+} from "../lib/program-copy.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -58,7 +63,7 @@ export function renderClientPage(root, state, options = {}) {
   });
   const showProfileMissionModal = hasMember && profileEligible && !profileClaimed && !isGuestPlaceholder;
   const memberFirstName = esc((state.member?.name || "").split(" ")[0] || "");
-  const headerBalanceUnit = "pts";
+  const headerBalanceUnit = balanceUnitShort(programType);
   const slugForAssets = String(options.slug || state.slug || "");
   const apiBase = String(options.apiBase || "");
   const qrGameFlow = Boolean(hasMember && isGuestPlaceholder && showRoulette);
@@ -104,14 +109,14 @@ export function renderClientPage(root, state, options = {}) {
       )
     : "";
 
-  const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc);
+  const engagementHtml = renderEngagementActionsMarkup(actionsForDisplay, esc, programType);
   const showClassicProgram = !loyaltyGameTickets && !isStampsProgram;
   const step2Title = actionsForDisplay.length
     ? "Missions"
     : showClassicProgram
       ? "Cumule en caisse"
       : isStampsProgram
-        ? "Points & récompenses"
+        ? stampsStepSectionTitle()
         : "Programme";
   const step2Intro = actionsForDisplay.length
     ? ""
@@ -212,7 +217,7 @@ export function renderClientPage(root, state, options = {}) {
                       hasGoogleWallet,
                     })
                   : showMissionsEntry
-                    ? renderEarnMorePointsButtonMarkup(esc)
+                    ? renderEarnMorePointsButtonMarkup(esc, programType)
                     : ""
               }
             </div>
@@ -292,7 +297,7 @@ export function renderClientPage(root, state, options = {}) {
         <p id="fidelity-delivery-receipt-feedback" class="fidelity-delivery-sticky-feedback fidelity-engagement-feedback hidden" role="status"></p>
         <button type="button" id="fidelity-delivery-receipt-sticky-btn" class="fidelity-cta-pill fidelity-delivery-sticky-btn">
           <span class="fidelity-delivery-sticky-btn__cam" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
-          <span class="fidelity-delivery-sticky-btn__label">Réclamer mes points</span>
+          <span class="fidelity-delivery-sticky-btn__label">${esc(deliveryReceiptStickyCtaLabel(programType))}</span>
         </button>
       </div>
     </div>
@@ -300,7 +305,11 @@ export function renderClientPage(root, state, options = {}) {
         : ""
     }
 
-    ${showMissionsEntry ? renderMissionsSheetMarkup(esc, { engagementHtml, sheetTitle: step2Title }) : ""}
+    ${
+      showMissionsEntry
+        ? renderMissionsSheetMarkup(esc, { engagementHtml, sheetTitle: step2Title, programType })
+        : ""
+    }
 
     ${showProfileMissionModal
       ? renderProfileMissionModalMarkup(esc, {
@@ -309,6 +318,7 @@ export function renderClientPage(root, state, options = {}) {
           phone: state.member?.phone,
           city: state.member?.city,
           birth: state.member?.birth_date,
+          programType,
         })
       : ""}
 

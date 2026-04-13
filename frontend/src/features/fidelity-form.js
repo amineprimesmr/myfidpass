@@ -8,6 +8,8 @@ import { CARD_TEMPLATES } from "../constants/builder.js";
 import { escapeHtmlForServer } from "../utils/apiError.js";
 import { initClientFidelityPage } from "../client-fidelity/bootstrap.js";
 import { renderEngagementActionsMarkup } from "../client-fidelity/ui/mission-markup.js";
+import { engagementClaimSuccessMessage } from "../client-fidelity/lib/program-copy.js";
+import { STAMP_MID_DEFAULT } from "../client-fidelity/lib/tier-progress.js";
 import { applyWalletButtonsLayout } from "../utils/walletPlatform.js";
 
 const fidelityAppEl = document.getElementById("fidelity-app");
@@ -124,15 +126,19 @@ function renderFidelityRulesRecap(business) {
     el.innerHTML = "<p class=\"fidelity-rules-text\">Les points sont crédités à chaque visite. Renseignez-vous en magasin pour les détails.</p>";
     return;
   }
-  const programType = business.program_type;
+  const programType = String(business.program_type || "").toLowerCase();
   const parts = [];
   if (programType === "stamps" && business.required_stamps > 0) {
     const mid = (business.stamp_mid_reward_label || "").trim();
     const label = (business.stamp_reward_label || "1 offert").trim();
     if (mid) {
-      parts.push(`<p class="fidelity-rules-text"><strong>5 points</strong> = ${escapeHtmlForServer(mid)}</p>`);
+      parts.push(
+        `<p class="fidelity-rules-text"><strong>${STAMP_MID_DEFAULT} tampons</strong> = ${escapeHtmlForServer(mid)}</p>`,
+      );
     }
-    parts.push(`<p class="fidelity-rules-text"><strong>${business.required_stamps} points</strong> = ${escapeHtmlForServer(label)}</p>`);
+    parts.push(
+      `<p class="fidelity-rules-text"><strong>${business.required_stamps} tampons</strong> = ${escapeHtmlForServer(label)}</p>`,
+    );
   } else if (programType === "points" && Array.isArray(business.points_reward_tiers) && business.points_reward_tiers.length > 0) {
     parts.push("<p class=\"fidelity-rules-label\">Paliers de récompenses</p>");
     business.points_reward_tiers.forEach((tier) => {
@@ -142,7 +148,10 @@ function renderFidelityRulesRecap(business) {
     });
   }
   if (parts.length === 0) {
-    el.innerHTML = "<p class=\"fidelity-rules-text\">Les points sont crédités à chaque visite. Renseignez-vous en magasin pour les détails.</p>";
+    el.innerHTML =
+      programType === "stamps"
+        ? "<p class=\"fidelity-rules-text\">Les tampons sont crédités à chaque visite. Renseignez-vous en magasin pour les détails.</p>"
+        : "<p class=\"fidelity-rules-text\">Les points sont crédités à chaque visite. Renseignez-vous en magasin pour les détails.</p>";
   } else {
     el.innerHTML = "<p class=\"fidelity-rules-intro\">Règles du programme</p>" + parts.join("");
   }
@@ -300,7 +309,8 @@ function showFidelitySuccess(slug, memberId, memberName) {
       return;
     }
     engagementBlock.classList.remove("hidden");
-    engagementActionsEl.innerHTML = renderEngagementActionsMarkup(actions, escapeHtmlFidelity);
+    const programType = String(_fidelityBusiness?.program_type || "points").toLowerCase();
+    engagementActionsEl.innerHTML = renderEngagementActionsMarkup(actions, escapeHtmlFidelity, programType);
     const PENDING_CLAIM_KEY_MAIN = "fidelity_pending_engagement_claim";
     const PENDING_CLAIM_MIN_MS = 45000;
     const PENDING_CLAIM_MAX_MS = 24 * 60 * 60 * 1000;
@@ -324,7 +334,9 @@ function showFidelitySuccess(slug, memberId, memberName) {
         });
         const claimData = await claimRes.json().catch(() => ({}));
         if (claimRes.ok) {
-          setEngagementClaimFeedback(claimData.message || "Points ajoutés à ta carte.");
+          setEngagementClaimFeedback(
+            claimData.message || engagementClaimSuccessMessage(String(_fidelityBusiness?.program_type || "points")),
+          );
         }
       } catch (_) {}
     }

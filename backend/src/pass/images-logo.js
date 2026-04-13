@@ -3,7 +3,16 @@
  * Référence : REFONTE-REGLES.md — pass.js découpé.
  * sharp chargé à la demande (Node 24).
  */
-import { LOGO_WIDTH_2X, LOGO_HEIGHT_2X, LOGO_WIDTH_1X, LOGO_HEIGHT_1X, ICON_SIZE_1X, ICON_SIZE_2X, ICON_SIZE_3X } from "./constants.js";
+import {
+  LOGO_WIDTH_2X,
+  LOGO_HEIGHT_2X,
+  LOGO_WIDTH_1X,
+  LOGO_HEIGHT_1X,
+  ICON_SIZE_1X,
+  ICON_SIZE_2X,
+  ICON_SIZE_3X,
+  PASS_LOGO_PLACEHOLDER_TEXT,
+} from "./constants.js";
 
 let _sharp = null;
 async function getSharp() {
@@ -36,7 +45,7 @@ export async function createLogoFromText(stripColorHex, text) {
   const label = sanitizeLogoText(text);
   const hex = stripColorHex && /^#?[0-9A-Fa-f]{6}$/.test(String(stripColorHex).replace(/^#/, ""))
     ? (String(stripColorHex).startsWith("#") ? stripColorHex : `#${stripColorHex}`)
-    : "#0a7c42";
+    : "#2563EB";
   const escaped = escapeSvgText(label);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LOGO_WIDTH_2X}" height="${LOGO_HEIGHT_2X}">
   <rect width="100%" height="100%" fill="${hex}"/>
@@ -55,6 +64,34 @@ export async function createLogoFromText(stripColorHex, text) {
     return { logoPng: out1x, logoPng2x: out2x };
   } catch (err) {
     console.warn("[PassKit] createLogoFromText failed:", err?.message);
+    return null;
+  }
+}
+
+/**
+ * Logo Wallet quand aucune image commerce : fond neutre + texte bleu (lisible sur carte blanche, pas de vert « classic » ancien).
+ */
+export async function createPassLogoPlaceholder() {
+  const bg = "#EEF2FF";
+  const fg = "#2563EB";
+  const escaped = escapeSvgText(PASS_LOGO_PLACEHOLDER_TEXT);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LOGO_WIDTH_2X}" height="${LOGO_HEIGHT_2X}">
+  <rect width="100%" height="100%" fill="${bg}"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="${fg}" font-size="32" font-family="Arial, Helvetica, sans-serif" font-weight="600">${escaped}</text>
+</svg>`;
+  try {
+    const sharp = await getSharp();
+    const out2x = await sharp(Buffer.from(svg))
+      .resize(LOGO_WIDTH_2X, LOGO_HEIGHT_2X)
+      .png()
+      .toBuffer();
+    const out1x = await sharp(Buffer.from(svg))
+      .resize(LOGO_WIDTH_1X, LOGO_HEIGHT_1X)
+      .png()
+      .toBuffer();
+    return { logoPng: out1x, logoPng2x: out2x };
+  } catch (err) {
+    console.warn("[PassKit] createPassLogoPlaceholder failed:", err?.message);
     return null;
   }
 }

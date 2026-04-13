@@ -13,8 +13,8 @@ describe("resolveBusinessProgramType", () => {
     expect(resolveBusinessProgramType({ program_type: "tampons" })).toBe("stamps");
   });
 
-  it("infère stamps si required_stamps > 0 et type inconnu", () => {
-    expect(resolveBusinessProgramType({ program_type: "", required_stamps: 10 })).toBe("stamps");
-    expect(resolveBusinessProgramType({ program_type: "weird", required_stamps: 10 })).toBe("stamps");
+  it("sans program_type explicite, défaut points (tampons uniquement si program_type = stamps)", () => {
+    expect(resolveBusinessProgramType({ program_type: "", required_stamps: 10 })).toBe("points");
+    expect(resolveBusinessProgramType({ program_type: "weird", required_stamps: 10 })).toBe("points");
   });
 });

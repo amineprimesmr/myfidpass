@@ -31,7 +31,7 @@ export function buildBuffers(businessId, options = {}) {
     buffers["icon.png"] = createDefaultIconBuffer(options.template);
   }
   // Ne pas recopier l’icône par défaut (cercle) en logo : sinon Wallet affiche ce cercle
-  // étiré en bandeau « logo ». `generate.js` injecte le texte [ Votre logo ] si besoin.
+  // étiré en bandeau « logo ». `generate.js` injecte le placeholder « Votre logo » si besoin.
   const templateKey = options.template;
   if (!buffers["strip.png"] && templateKey && PASS_TEMPLATES[templateKey]) {
     const stripBuffer = createStripBuffer(templateKey);

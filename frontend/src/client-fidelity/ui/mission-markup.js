@@ -2,6 +2,8 @@
  * Cartes missions fidélité client — bannières type hero (texte + CTA à gauche, visuel à droite).
  */
 
+import { missionRewardSnippet } from "../lib/program-copy.js";
+
 /** Cache bust quand l’asset est remplacé (évite image périmée sur CDN / navigateur). */
 const PROFILE_HERO_IMG = "/assets/missions/profile-mission-hero.png?v=20260402";
 
@@ -65,8 +67,10 @@ function ctaArrowSvg() {
 /**
  * @param {Array<{ action_type: string, label: string, url: string }>} actions
  * @param {(s: string) => string} esc
+ * @param {string} [programType]
  */
-export function renderEngagementActionsMarkup(actions, esc) {
+export function renderEngagementActionsMarkup(actions, esc, programType = "points") {
+  const rewardSnippet = esc(missionRewardSnippet(programType));
   return actions
     .map((a, i) => {
       const theme = missionTheme(a.action_type);
@@ -89,7 +93,7 @@ export function renderEngagementActionsMarkup(actions, esc) {
       const inner = `
               <div class="fidelity-mission-card__banner-left">
                 ${titleBlock}
-                <span class="fidelity-mission-card__reward"><span class="fidelity-mission-card__reward-plus">+</span>1 point</span>
+                <span class="fidelity-mission-card__reward"><span class="fidelity-mission-card__reward-plus">+</span>${rewardSnippet}</span>
                 <span class="fidelity-mission-card__cta-learn">
                   <span class="fidelity-mission-card__cta-circle">${ctaArrowSvg()}</span>
                   <span class="fidelity-mission-card__cta-learn-text">${esc(ctaVerb)}</span>

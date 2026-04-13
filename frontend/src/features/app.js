@@ -2465,7 +2465,7 @@ function initAppDashboard(slug) {
       if (typeof setStripDisplayVisibility === "function") setStripDisplayVisibility();
       let programType = (data.program_type ?? data.programType ?? "").toLowerCase();
       if (programType !== "points" && programType !== "stamps") {
-        programType = (data.required_stamps ?? data.requiredStamps) > 0 ? "stamps" : "points";
+        programType = "points";
       }
       if (programType === "stamps" && programTypeStamps) programTypeStamps.checked = true;
       else if (programTypePoints) programTypePoints.checked = true;
@@ -4309,7 +4309,7 @@ function initAppDashboard(slug) {
         const data = await settingsRes.json();
         let pt = (data.program_type ?? data.programType ?? "").toLowerCase();
         if (pt !== "points" && pt !== "stamps") {
-          pt = (data.required_stamps ?? data.requiredStamps) > 0 ? "stamps" : "points";
+          pt = "points";
         }
         scannerProgramType = pt;
         scannerRequiredStamps = Math.max(1, parseInt(data.required_stamps ?? data.requiredStamps, 10) || 10);
@@ -5619,52 +5619,27 @@ function initAppDashboard(slug) {
     notificationBannerLogoInput.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      notificationBannerLogoInput.value = "";
-
-      // Indicateur visuel de chargement
-      notificationBannerLogoDrop.style.opacity = "0.5";
-      notificationBannerLogoDrop.style.pointerEvents = "none";
-
-      const showLogoError = (msg) => {
-        let errEl = document.getElementById("app-notification-banner-logo-error");
-        if (!errEl) {
-          errEl = document.createElement("p");
-          errEl.id = "app-notification-banner-logo-error";
-          errEl.style.cssText = "color:#e53e3e;font-size:12px;margin:4px 0 0;text-align:center;";
-          notificationBannerLogoDrop.after(errEl);
-        }
-        errEl.textContent = msg;
-        setTimeout(() => { if (errEl.parentNode) errEl.remove(); }, 5000);
-      };
-
-      try {
-        // Compression client-side : max 300×300 JPEG — évite le rejet 512 Ko côté serveur
-        const dataUrl = await resizeLogoToDataUrl(file, 300, 0.88, "jpeg");
-        if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) {
-          showLogoError("Image invalide, réessayez.");
-          return;
-        }
-        const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/dashboard/settings${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result;
+        if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) return;
+        const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
         const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
         if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
-        const res = await fetch(url, {
-          method: "PATCH",
-          headers,
-          body: JSON.stringify({ notification_icon_base64: dataUrl }),
-        });
-        if (res.ok) {
-          await refreshCampaignNotificationBannerIcon();
-          clearAppSectionDirty("notifications");
-        } else {
-          const data = await res.json().catch(() => ({}));
-          showLogoError(data?.error || "Erreur lors de l'enregistrement, réessayez.");
-        }
-      } catch (err) {
-        showLogoError("Erreur lors du traitement de l'image.");
-      } finally {
-        notificationBannerLogoDrop.style.opacity = "";
-        notificationBannerLogoDrop.style.pointerEvents = "";
-      }
+        try {
+          const res = await fetch(url, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ notification_icon_base64: dataUrl }),
+          });
+          if (res.ok) {
+            await refreshCampaignNotificationBannerIcon();
+            clearAppSectionDirty("notifications");
+          }
+        } catch (_) {}
+        notificationBannerLogoInput.value = "";
+      };
+      reader.readAsDataURL(file);
     });
     setupImageDropZone(notificationBannerLogoDrop, (file) => {
       notificationBannerLogoInput.files = null;

@@ -5,6 +5,7 @@
 import { getBusinessLogoFileForPublic } from "./business-logo-assets.js";
 import { getBusinessAssetData } from "../db/business-assets.js";
 import { buildBuffers } from "../pass/build-buffers.js";
+import { PASS_TEMPLATES } from "../pass/constants.js";
 import { createLogoFromText, sanitizeLogoText, resizeLogoForPass } from "../pass/images-logo.js";
 
 function toHexStrip(v) {
@@ -30,7 +31,7 @@ export async function resolvePublicWalletLogoPng(business) {
   const stripColorHex =
     toHexStrip(business.strip_color) ??
     toHexStrip(business.background_color) ??
-    "#0a7c42";
+    PASS_TEMPLATES.classic.backgroundColor;
 
   if (useTextInStrip) {
     const textLogo = await createLogoFromText(stripColorHex, stripText);

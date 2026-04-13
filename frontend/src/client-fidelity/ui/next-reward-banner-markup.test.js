@@ -26,7 +26,7 @@ describe("renderNextRewardBannerMarkup (ligne unique)", () => {
     expect(html).not.toMatch(/\+<strong>/);
   });
 
-  it("affiche la barre pour la prochaine récompense (programme tampons, libellé pts)", () => {
+  it("affiche la barre pour la prochaine récompense (programme tampons, unité tampons)", () => {
     const state = buildNextRewardBannerState({
       hasMember: true,
       business: {
@@ -36,12 +36,14 @@ describe("renderNextRewardBannerMarkup (ligne unique)", () => {
       },
       member: { points: 3 },
       programType: "stamps",
-      balanceUnit: "pts",
+      balanceUnit: "tampons",
     });
     expect(state.kind).toBe("next");
     const html = renderNextRewardBannerMarkup(idEsc, state, { businessNameEsc: "X" });
     expect(html).toContain("fidelity-v2-next-reward-bar-inline");
     expect(html).toContain("Viennoiserie");
+    expect(html).toContain("tampons");
+    expect(html).toContain("encore 2 tampons");
     expect(html).not.toMatch(/\+<strong>/);
   });
 });
