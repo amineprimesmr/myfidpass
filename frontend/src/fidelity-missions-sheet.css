@@ -48,30 +48,33 @@
 
 @keyframes fidelity-wallet-pass-attention-shake {
   0%,
-  78%,
+  76%,
   100% {
     transform: translate3d(0, 0, 0);
   }
+  78% {
+    transform: translate3d(-15px, -2px, 0) rotate(-2deg);
+  }
   80% {
-    transform: translate3d(-11px, 0, 0) rotate(-1.4deg);
+    transform: translate3d(15px, 2px, 0) rotate(2deg);
   }
   82% {
-    transform: translate3d(11px, 0, 0) rotate(1.4deg);
+    transform: translate3d(-12px, -1px, 0) rotate(-1.5deg);
   }
   84% {
-    transform: translate3d(-9px, 0, 0) rotate(-1deg);
+    transform: translate3d(12px, 1px, 0) rotate(1.5deg);
   }
   86% {
-    transform: translate3d(9px, 0, 0) rotate(1deg);
+    transform: translate3d(-8px, 0, 0) rotate(-1deg);
   }
   88% {
-    transform: translate3d(-5px, 0, 0) rotate(-0.5deg);
+    transform: translate3d(8px, 0, 0) rotate(1deg);
   }
   90% {
-    transform: translate3d(5px, 0, 0) rotate(0.5deg);
+    transform: translate3d(-4px, 0, 0) rotate(-0.4deg);
   }
   92% {
-    transform: translate3d(-2px, 0, 0);
+    transform: translate3d(3px, 0, 0) rotate(0.3deg);
   }
   94% {
     transform: translate3d(0, 0, 0);
