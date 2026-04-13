@@ -1,5 +1,5 @@
 /**
- * Notifications : notify (alias iOS), send, stats, test-passkit, remove-test-device.
+ * Notifications : notify (alias iOS), send, stats, batches, history.
  * Référence : REFONTE-REGLES.md — max 15 routes par fichier.
  */
 import { Router } from "express";
@@ -12,25 +12,14 @@ import {
   getPassKitPushTokensForBusinessFiltered,
   getPassKitRegistrationsCountForBusiness,
   getMembersForBusiness,
-  getUserById,
-  getMemberByEmailForBusiness,
-  logNotification,
-  createNotificationBatch,
-  setLastBroadcastMessage,
-  bumpBusinessPassRefreshTimestamp,
-  touchMemberLastVisit,
-  removeTestPassKitDevices,
   getCampaignSegmentCounts,
   getNotificationBatchesForBusiness,
   getNotificationLogRecentForBusiness,
 } from "../../db.js";
-import { deletePassRegistrationsByPushToken } from "../../db/passes.js";
-import { sendPassKitPushWaves, passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
+import { passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
 import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
-import { getMerchantApnsUnavailableReason, isLikelyInvalidDeviceTokenApnsError } from "../../apns.js";
-import { getPassAuthenticationToken } from "../../pass.js";
+import { getMerchantApnsUnavailableReason } from "../../apns.js";
 import { assertOperationalSubscription, ensureDashboardAccess, getApiBase } from "./shared.js";
-import { isUserAdmin } from "../../db/users.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
 import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
@@ -88,148 +77,6 @@ export async function deliverDashboardBroadcast(
   });
 }
 
-/**
- * Envoi « test sur mon iPhone » uniquement : même pipeline que les clients (PassKit / carte Wallet),
- * filtré sur le membre dont l’e-mail est celui du compte commerçant.
- */
-async function handleMerchantSelfTestSend(req, res, business, title, bodyMessage) {
-  if (!req.user) {
-    return res.status(401).json({
-      error:
-        "Connectez-vous avec le compte commerçant (e-mail / mot de passe) dans l’app pour utiliser le mode test. Le lien avec jeton seul ne suffit pas.",
-    });
-  }
-  if (business.user_id !== req.user.id && !isUserAdmin(req.user)) {
-    return res.status(403).json({ error: "Seul le propriétaire du commerce peut utiliser ce mode test." });
-  }
-
-  const user = getUserById(req.user.id);
-  const userEmail = user?.email?.trim();
-  if (!userEmail) {
-    return res.status(400).json({ error: "Compte sans e-mail.", code: "USER_EMAIL_MISSING" });
-  }
-
-  const member = getMemberByEmailForBusiness(business.id, userEmail);
-  if (!member) {
-    return res.status(400).json({
-      error:
-        "Aucun membre pour ce commerce avec l’e-mail de votre compte. Créez une carte (fidélité) avec le même e-mail que votre compte commerçant, puis ajoutez-la dans Apple Wallet pour tester.",
-      code: "MERCHANT_MEMBER_NOT_FOUND",
-    });
-  }
-
-  const passKitTokens = getPassKitPushTokensForBusinessFiltered(business.id, [member.id]);
-  if (passKitTokens.length === 0) {
-    return res.status(400).json({
-      error:
-        "Aucune carte Apple Wallet enregistrée pour cet e-mail. Ajoutez votre carte sur cet iPhone (lien « Partager ») avec le même e-mail que votre compte, puis réessayez.",
-      code: "MERCHANT_PASSKIT_TOKEN_MISSING",
-    });
-  }
-
-  const bSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
-  const payloadTitle = (
-    (title != null && String(title).trim() !== "" ? String(title).trim() : null) ||
-    bSync.notification_title_override ||
-    bSync.organization_name ||
-    "Myfidpass"
-  ).trim();
-  setLastBroadcastMessage(business.id, bodyMessage);
-  // Aligné sur `deliverCustomerBroadcast` : invalide PassKit (notification_pass_layout_at + pass_last_modified_ms)
-  // pour que l’iPhone refetch le .pkpass avant/après le push test (icône `icon.png` à jour).
-  bumpBusinessPassRefreshTimestamp(business.id);
-
-  const batchId = createNotificationBatch({
-    businessId: business.id,
-    triggerName: "passkit_test_self",
-    summary: { test_self: true },
-  });
-
-  const touchedMembers = new Set();
-  for (const row of passKitTokens) {
-    if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-      touchMemberLastVisit(row.serial_number);
-      touchedMembers.add(row.serial_number);
-    }
-  }
-
-  const waveResults = await sendPassKitPushWaves(passKitTokens);
-  let sentPassKit = 0;
-  const errors = [];
-  for (const { row, result } of waveResults) {
-    if (result.sent) {
-      sentPassKit++;
-      logNotification({
-        businessId: business.id,
-        memberId: row.serial_number,
-        title: payloadTitle,
-        body: bodyMessage,
-        type: "passkit_test_self",
-        batchId,
-        channel: "passkit",
-        triggerName: "passkit_test_self",
-        countsForMemberCooldown: 1,
-        status: "sent",
-      });
-    } else if (result.error) {
-      errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
-      logNotification({
-        businessId: business.id,
-        memberId: row.serial_number,
-        title: payloadTitle,
-        body: bodyMessage,
-        type: "passkit_test_self",
-        batchId,
-        channel: "passkit",
-        triggerName: "passkit_test_self",
-        countsForMemberCooldown: 1,
-        status: "failed",
-        errorDetail: result.error,
-      });
-      if (isLikelyInvalidDeviceTokenApnsError({ message: result.error })) {
-        deletePassRegistrationsByPushToken(row.push_token);
-      }
-    }
-  }
-
-  const firstError = errors.length > 0 ? errors[0].error : null;
-  if (sentPassKit === 0 && firstError) {
-    return res.status(200).json({
-      ok: true,
-      sent: 0,
-      sentWebPush: 0,
-      sentPassKit: 0,
-      sentMerchantApp: 0,
-      batch_id: batchId,
-      testSelfOnly: true,
-      message: `Échec PassKit (même canal que les clients) : ${firstError}`,
-    });
-  }
-
-  return res.json({
-    ok: true,
-    sent: sentPassKit,
-    sentWebPush: 0,
-    sentPassKit: sentPassKit,
-    sentMerchantApp: 0,
-    batch_id: batchId,
-    sentTotal: sentPassKit,
-    testSelfOnly: true,
-    message: "Test envoyé sur votre carte Apple Wallet uniquement (même système qu’une campagne). Aucun autre client n’a été notifié.",
-  });
-}
-
-/** Un seul envoi « test sur moi » à la fois par commerce (évite courses DB + APNs empilés si double tap / 2 appareils). */
-const merchantTestSendTail = new Map();
-
-function enqueueMerchantTestSend(businessId, fn) {
-  const prev = merchantTestSendTail.get(businessId) || Promise.resolve();
-  const next = prev.then(fn).catch((err) => {
-    console.error("[notifications] merchant test send queue:", err?.message || err);
-  });
-  merchantTestSendTail.set(businessId, next);
-  return next;
-}
 
 export async function notifyHandler(req, res) {
   try {
@@ -293,15 +140,10 @@ router.post("/send", async (req, res) => {
   const business = req.business;
   if (!ensureDashboardAccess(req, res, business)) return;
   const { title, message, category_ids: reqCategoryIds, segment } = req.body || {};
-  const testSelfOnly = req.body?.test_self_only === true || req.body?.testSelfOnly === true;
-  if (!testSelfOnly && !assertOperationalSubscription(req, res, business)) return;
+  if (!assertOperationalSubscription(req, res, business)) return;
   const body = (message || "").trim();
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
-  }
-  if (testSelfOnly) {
-    await enqueueMerchantTestSend(business.id, () => handleMerchantSelfTestSend(req, res, business, title, body));
-    return;
   }
   let memberIds;
   if (segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)) {
@@ -445,17 +287,8 @@ router.get("/stats", (req, res) => {
   const passKitRegistrationsCount = getPassKitRegistrationsCountForBusiness(business.id);
   const subscriptionsCount = webSubscriptions.length + passKitRegistrationsCount;
   const passKitUrlConfigured = !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
-  const noDeviceButConfigured = subscriptionsCount === 0 && !!(process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL);
-  const { members: membersList, total: membersCount } = getMembersForBusiness(business.id, { limit: 1 });
-  const member = membersList && membersList[0];
-  let testPasskitCurl = null;
-  if (noDeviceButConfigured && member) {
-    const baseUrl = (process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
-    const passTypeId = process.env.PASS_TYPE_ID || "pass.com.example.fidelity";
-    const token = getPassAuthenticationToken(member.id);
-    const url = `${baseUrl}/api/v1/devices/test-device-123/registrations/${encodeURIComponent(passTypeId)}/${encodeURIComponent(member.id)}`;
-    testPasskitCurl = `curl -X POST "${url}" -H "Authorization: ApplePass ${token}" -H "Content-Type: application/json" -d '{"pushToken":"test"}' -w "\\nHTTP %{http_code}"`;
-  }
+  const noDeviceButConfigured = subscriptionsCount === 0 && passKitUrlConfigured;
+  const { total: membersCount } = getMembersForBusiness(business.id, { limit: 1 });
   const merchantApnsReason = getMerchantApnsUnavailableReason();
   const recentBatches = getNotificationBatchesForBusiness(business.id, { limit: 3 });
   const lastBatch = recentBatches[0]
@@ -485,7 +318,6 @@ router.get("/stats", (req, res) => {
     helpWhenNoDevice: noDeviceButConfigured
       ? "1) Supprime la carte du Wallet sur ton iPhone. 2) Ouvre le lien de ta carte (copié dans « Partager ») en navigation privée. 3) Clique « Apple Wallet » pour télécharger un pass neuf. 4) Ajoute la carte au Wallet. 5) Attends 30 secondes puis rafraîchis cette page."
       : null,
-    testPasskitCurl: testPasskitCurl || undefined,
     paradoxExplanation: membersCount > 0 && subscriptionsCount === 0 && passKitUrlConfigured
       ? "Si tu as pu scanner la carte du client et lui ajouter des points, sa carte est bien dans son Wallet — mais notre serveur n'a jamais reçu l'appel d'enregistrement de son iPhone. Soit le pass qu'il a ajouté a été généré sans URL d'enregistrement (ancien lien ou cache), soit l'iPhone ou le réseau empêche l'appel. À faire : le client supprime la carte du Wallet, rouvre le lien partagé (depuis « Partager »), clique « Apple Wallet », ajoute la carte à nouveau (pass neuf). Tester en 4G si le WiFi bloque, et vérifier Réglages → Wallet sur l'iPhone."
       : null,
@@ -496,37 +328,6 @@ router.get("/stats", (req, res) => {
       ? "Les membres apparaissent dès que le client remplit le formulaire (nom, email) et crée sa carte. Les « appareils » pour les notifications sont enregistrés par l'iPhone lui‑même quand le client ajoute le pass au Wallet — c'est Apple qui doit appeler notre serveur. Si cet appel n'arrive pas (réglages iPhone, réseau, certificat), le compteur reste à 0 alors que le membre est bien en base."
       : null,
   });
-});
-
-router.get("/test-passkit", (req, res) => {
-  const business = req.business;
-  if (!ensureDashboardAccess(req, res, business)) return;
-  const { members: membersList } = getMembersForBusiness(business.id, { limit: 1 });
-  const member = membersList && membersList[0];
-  if (!member) {
-    return res.json({
-      ok: false,
-      message: "Aucun membre pour ce commerce. Créez d'abord une carte (page fidélité) puis réessayez.",
-    });
-  }
-  const baseUrl = (process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
-  const passTypeId = process.env.PASS_TYPE_ID || "pass.com.example.fidelity";
-  const token = getPassAuthenticationToken(member.id);
-  const url = `${baseUrl}/api/v1/devices/test-device-123/registrations/${encodeURIComponent(passTypeId)}/${encodeURIComponent(member.id)}`;
-  const curl = `curl -X POST "${url}" -H "Authorization: ApplePass ${token}" -H "Content-Type: application/json" -d '{"pushToken":"test"}' -w "\\nHTTP %{http_code}"`;
-  res.json({
-    ok: true,
-    message: "Exécute cette commande dans un terminal. Si tu obtiens HTTP 201, l'API d'enregistrement fonctionne (le problème vient alors de l'iPhone ou du réseau). Si tu obtiens 401/404/500 ou une erreur de connexion, le souci est côté serveur.",
-    curl,
-    memberId: member.id,
-  });
-});
-
-router.post("/remove-test-device", (req, res) => {
-  const business = req.business;
-  if (!ensureDashboardAccess(req, res, business)) return;
-  const removed = removeTestPassKitDevices(business.id);
-  res.json({ ok: true, removed, message: removed ? "Appareil de test supprimé." : "Aucun appareil de test à supprimer." });
 });
 
 export const notificationsRouter = router;

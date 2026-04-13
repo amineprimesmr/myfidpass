@@ -6,6 +6,7 @@ import { getDb } from "./connection.js";
 import { formatUtcSqlWithMs } from "./datetime-sql.js";
 
 const db = getDb();
+/** Identifiant de device fictif utilisé historiquement pour les tests de diagnostic (jamais envoyé aux vraies notifications). */
 const TEST_DEVICE_ID = "test-device-123";
 
 export function registerPassDevice({ deviceLibraryIdentifier, passTypeIdentifier, serialNumber, pushToken }) {
@@ -186,12 +187,6 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
   return { serialNumbers, lastUpdated };
 }
 
-export function removeTestPassKitDevices(businessId) {
-  const r = db.prepare(
-    "DELETE FROM pass_registrations WHERE device_library_identifier = 'test-device-123' AND serial_number IN (SELECT id FROM members WHERE business_id = ?)"
-  ).run(businessId);
-  return r.changes;
-}
 
 export function getPassKitPushTokensForBusinessFiltered(businessId, memberIds = null) {
   const base = db.prepare(
