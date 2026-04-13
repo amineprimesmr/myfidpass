@@ -23,8 +23,11 @@ export function buildHeroBalanceProgressState(p) {
   /** @type {{ threshold: number; label: string } | null} */
   let nextGoal = null;
   let tiersComplete = false;
+  /** Faux si aucun palier publié : pas d’échelle générique type 25→125. */
+  let hasProgressScale = false;
 
   if (tiers.length > 0) {
+    hasProgressScale = true;
     const { next, prevThreshold, pct: segPct } = tierProgressState(tiers, pts);
     pct = segPct;
     if (next) {
@@ -51,14 +54,11 @@ export function buildHeroBalanceProgressState(p) {
       );
     }
   } else {
-    maxScale = Math.max(125, Math.ceil(Math.max(pts, 1) / 25) * 25);
-    if (!Number.isFinite(maxScale) || maxScale < 1) maxScale = 1;
-    pct = Math.min(100, Math.max(0, (pts / maxScale) * 100));
+    maxScale = 0;
+    pct = 0;
+    ticks = [];
     progressMin = 0;
-    progressMax = maxScale;
-    ticks = Array.from({ length: TICK_COUNT }, (_, i) =>
-      Math.round((maxScale * (i + 1)) / TICK_COUNT),
-    );
+    progressMax = 0;
   }
 
   let unitWord;
@@ -80,6 +80,7 @@ export function buildHeroBalanceProgressState(p) {
     nextGoal,
     tiersComplete,
     isStamps,
+    hasProgressScale,
   };
 }
 
@@ -99,12 +100,31 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
     progressMax,
     nextGoal,
     tiersComplete,
+    hasProgressScale,
   } = st;
   const ariaText = nextGoal
     ? `Solde ${points} ${unitWord}, prochain palier à ${nextGoal.threshold} (${nextGoal.label})`
     : tiersComplete
       ? `Solde ${points} ${unitWord}, tous les paliers atteints`
-      : `Solde ${points} ${unitWord}, échelle jusqu'à ${maxScale}`;
+      : hasProgressScale
+        ? `Solde ${points} ${unitWord}, échelle jusqu'à ${maxScale}`
+        : `Solde ${points} ${unitWord}`;
+
+  const labelBlock = `
+            <p class="fidelity-hero-progress-label">
+              <span class="fidelity-hero-progress-gradient-text">
+                <span class="fidelity-hero-progress-amount">${esc(String(points))}</span>
+                <span class="fidelity-hero-progress-unit"> ${esc(unitWord)}</span>
+              </span>
+            </p>`;
+
+  if (!hasProgressScale) {
+    return `
+          <div class="fidelity-hero-progress fidelity-hero-progress--no-scale" role="region" aria-label="${esc(ariaText)}">
+            ${labelBlock}
+          </div>`;
+  }
+
   const tickSpans = ticks
     .map(
       (v, i) =>
@@ -116,12 +136,7 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
 
   return `
           <div class="fidelity-hero-progress" role="region" aria-label="${esc(ariaText)}">
-            <p class="fidelity-hero-progress-label">
-              <span class="fidelity-hero-progress-gradient-text">
-                <span class="fidelity-hero-progress-amount">${esc(String(points))}</span>
-                <span class="fidelity-hero-progress-unit"> ${esc(unitWord)}</span>
-              </span>
-            </p>
+            ${labelBlock}
             <div
               class="fidelity-hero-progress-track-outer"
               role="progressbar"

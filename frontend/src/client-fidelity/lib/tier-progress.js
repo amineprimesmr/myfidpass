@@ -7,7 +7,7 @@ export const STAMP_MID_DEFAULT = 5;
  * @returns {{ threshold: number; label: string }[]}
  */
 export function parsePointTiers(business) {
-  let raw = business?.points_reward_tiers;
+  let raw = business?.points_reward_tiers ?? business?.pointsRewardTiers;
   if (typeof raw === "string" && raw.trim()) {
     try {
       raw = JSON.parse(raw);
