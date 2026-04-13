@@ -13,7 +13,7 @@ import {
   resizeLogoForPass,
   resizeLogoForPassIcon,
 } from "./images-logo.js";
-import { createStripBuffer, buildPassLocations } from "./images-strip.js";
+import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
@@ -23,6 +23,8 @@ import {
   STRIP_H,
   PASS_HEADER_RIGHT_LABEL,
   PASS_LABEL_MEMBER,
+  ICON_SIZE_2X,
+  ICON_SIZE_3X,
 } from "./constants.js";
 import { radiusMetersForPass } from "../locationRadiusLimits.js";
 import { parsePointRewardTiersFromBusiness, formatBackRewardsFieldValue } from "./point-tiers.js";
@@ -80,6 +82,22 @@ async function loadDefaultPointsStripBuffer(sharp) {
     console.warn("[PassKit] default points strip:", e?.message);
     return null;
   }
+}
+
+/** Décode un logo / icône stocké en data URL ou base64 nu. */
+function decodeDataUrlBase64ToBuffer(dataUrlOrB64) {
+  if (dataUrlOrB64 == null || !String(dataUrlOrB64).trim()) return null;
+  const d = String(dataUrlOrB64).replace(/^data:image\/[\w+]+;base64,/, "").trim();
+  try {
+    const buf = Buffer.from(d, "base64");
+    return buf.length > 0 ? buf : null;
+  } catch {
+    return null;
+  }
+}
+
+function buffersIdentical(a, b) {
+  return Boolean(a && b && a.length === b.length && a.equals(b));
 }
 
 /**
@@ -150,24 +168,31 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   /**
-   * Icône Wallet (lock screen / liste) : **uniquement** `notification_icon` (PATCH dédié page Notifs).
-   * Ne pas repliquer sur logo carré ni bandeau « Ma carte » — sinon l’icône notif = visuel carte (bug produit).
-   * Sans média notif : placeholder texte (comme strip vide), jamais le logo strip.
-   *
-   * IMPORTANT : `buildBuffers()` pose une icône **template** (cercle) si aucun fichier disque — si on laisse
-   * ce buffer quand `resizeLogoForPassIcon` échoue, la vraie notif Wallet garde ce visuel générique au lieu
-   * de la photo (bug rapporté : aperçu app OK, bannière système = icône blanche / défaut).
+   * Icône Wallet (lock screen / liste) : fichier `icon.png` du .pkpass — **pas** le bandeau `logo`.
+   * Si `icon` manque, iOS peut utiliser le logo carte pour la vignette de notification (comportement observé).
+   * Règles : (1) utiliser `notification_icon` seulement si ce n’est pas le même fichier que le logo carte /
+   * logo carré ; (2) sinon ou si le resize échoue → placeholder neutre (jamais la photo logo strip).
    */
   delete buffers["icon.png"];
   delete buffers["icon@2x.png"];
   delete buffers["icon@3x.png"];
 
   let passIconSourceBuf = null;
-  const merchantHasNotificationIcon = !!business?.notification_icon_base64;
-  if (merchantHasNotificationIcon) {
+  if (business?.notification_icon_base64) {
     const d = String(business.notification_icon_base64).replace(/^data:image\/[\w+]+;base64,/, "").trim();
     const b = Buffer.from(d, "base64");
     if (b.length > 0) passIconSourceBuf = b;
+  }
+
+  if (passIconSourceBuf) {
+    const stripLogoRaw = !useTextInStrip ? decodeDataUrlBase64ToBuffer(business?.logo_base64) : null;
+    const logoIconRaw = decodeDataUrlBase64ToBuffer(business?.logo_icon_base64);
+    if (buffersIdentical(passIconSourceBuf, stripLogoRaw) || buffersIdentical(passIconSourceBuf, logoIconRaw)) {
+      console.warn(
+        "[PassKit] notification_icon identique au logo carte ou logo carré — ignoré pour icon.png (notifications Wallet).",
+      );
+      passIconSourceBuf = null;
+    }
   }
 
   let notificationIconResized = null;
@@ -178,17 +203,15 @@ export async function generatePass(member, business = null, options = {}) {
         console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon");
       }
     } else {
-      console.warn("[PassKit] resizeLogoForPassIcon a échoué sur l'image uploadée — pass sans icône personnalisée");
+      console.warn("[PassKit] resizeLogoForPassIcon a échoué sur notification_icon — repli placeholder notif");
     }
   }
 
   if (notificationIconResized) {
-    // Icône personnalisée du marchand
     buffers["icon.png"] = notificationIconResized.iconPng;
     buffers["icon@2x.png"] = notificationIconResized.iconPng2x;
     buffers["icon@3x.png"] = notificationIconResized.iconPng3x;
-  } else if (!merchantHasNotificationIcon) {
-    // Aucune icône configurée → même placeholder que le logo (couleurs neutres)
+  } else {
     const textLogo = await createPassLogoPlaceholder();
     if (textLogo) {
       const iconResized = await resizeLogoForPassIcon(textLogo.logoPng2x);
@@ -199,8 +222,15 @@ export async function generatePass(member, business = null, options = {}) {
       }
     }
   }
-  // Si merchantHasNotificationIcon && notificationIconResized === null : on laisse icon.png absent
-  // (Wallet affiche une icône générique système — mieux que le fond vert)
+
+  if (!buffers["icon.png"]) {
+    const sharpIcon = await getSharp();
+    const fallback1x = createDefaultIconBuffer(stripTemplateKey);
+    buffers["icon.png"] = fallback1x;
+    buffers["icon@2x.png"] = await sharpIcon(fallback1x).resize(ICON_SIZE_2X, ICON_SIZE_2X).png().toBuffer();
+    buffers["icon@3x.png"] = await sharpIcon(fallback1x).resize(ICON_SIZE_3X, ICON_SIZE_3X).png().toBuffer();
+    console.warn("[PassKit] Repli ultime : icône template cercle (évite pass sans icon.png)");
+  }
 
   const businessReqRaw = business?.required_stamps != null ? Number(business.required_stamps) : NaN;
   const optionReqRaw = options.required_stamps != null ? Number(options.required_stamps) : NaN;
