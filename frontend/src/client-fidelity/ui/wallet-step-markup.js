@@ -15,7 +15,7 @@ export function walletStepShowsAddPassCta(options = {}) {
 }
 
 /**
- * CTA hero « Ajouter la carte » — même skin `.fidelity-shiny-cta` que « Gagner plus de points ».
+ * CTA hero Apple : badge type « Ajouter à Apple Wallet » + bordure shiny.
  * @param {(s: string) => string} esc
  * @param {{ platform?: string, appleWalletRegistered?: boolean, hasGoogleWallet?: boolean }} [options]
  */
@@ -24,11 +24,14 @@ export function renderWalletPassHeroShinyMarkup(esc, options = {}) {
   const appleWalletRegistered = options.appleWalletRegistered === true;
   const hasGoogleWallet = Boolean(options.hasGoogleWallet);
 
-  const shinyApple = (label) => `<div class="fidelity-earn-points-cta-wrap">
-            <a href="#" id="fidelity-v2-apple" class="fidelity-shiny-cta fidelity-shiny-cta--apple-wallet" aria-label="${esc("Apple Wallet")}">
-              <span class="fidelity-shiny-cta__label">
-                <span class="fidelity-shiny-cta__wallet-icon" aria-hidden="true">${appleSvg()}</span>
-                ${esc(label)}
+  const shinyApple = () => `<div class="fidelity-earn-points-cta-wrap fidelity-earn-points-cta-wrap--wallet-attention">
+            <a href="#" id="fidelity-v2-apple" class="fidelity-shiny-cta fidelity-shiny-cta--apple-wallet" aria-label="${esc("Ajouter à Apple Wallet")}">
+              <span class="fidelity-shiny-cta__label fidelity-apple-wallet-badge">
+                <span class="fidelity-apple-wallet-badge__logo" aria-hidden="true">${appleSvg()}</span>
+                <span class="fidelity-apple-wallet-badge__text">
+                  <span class="fidelity-apple-wallet-badge__line1">${esc("Ajouter à")}</span>
+                  <span class="fidelity-apple-wallet-badge__line2">${esc("Apple Wallet")}</span>
+                </span>
               </span>
             </a>
           </div>`;
@@ -41,11 +44,11 @@ export function renderWalletPassHeroShinyMarkup(esc, options = {}) {
 
   const blocks = [];
   if (platform === "ios") {
-    if (!appleWalletRegistered) blocks.push(shinyApple("Ajouter la carte"));
+    if (!appleWalletRegistered) blocks.push(shinyApple());
   } else if (platform === "android") {
     if (hasGoogleWallet) blocks.push(shinyGoogle("Ajouter la carte"));
   } else {
-    if (!appleWalletRegistered) blocks.push(shinyApple("Apple Wallet"));
+    if (!appleWalletRegistered) blocks.push(shinyApple());
     if (hasGoogleWallet) blocks.push(shinyGoogle("Google Wallet"));
   }
 

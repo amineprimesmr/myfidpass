@@ -40,6 +40,38 @@
   margin-top: 0;
 }
 
+/* Secousse périodique : incite à ajouter le pass (désactivée si reduced-motion) */
+.fidelity-earn-points-cta-wrap--wallet-attention {
+  animation: fidelity-wallet-pass-attention-shake 3.2s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+@keyframes fidelity-wallet-pass-attention-shake {
+  0%,
+  80%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  82% {
+    transform: translate3d(-5px, 0, 0) rotate(-0.6deg);
+  }
+  84% {
+    transform: translate3d(5px, 0, 0) rotate(0.6deg);
+  }
+  86% {
+    transform: translate3d(-4px, 0, 0) rotate(-0.35deg);
+  }
+  88% {
+    transform: translate3d(4px, 0, 0) rotate(0.35deg);
+  }
+  90% {
+    transform: translate3d(-2px, 0, 0);
+  }
+  92% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 .fidelity-earn-points-cta-wrap {
   margin: 1rem 0 0;
   width: 100%;
@@ -195,17 +227,59 @@ a.fidelity-shiny-cta {
   opacity: 1;
 }
 
-.fidelity-shiny-cta__wallet-icon {
+/* Badge « Ajouter à Apple Wallet » (contenu centré dans le bouton shiny) */
+.fidelity-shiny-cta--apple-wallet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 1.25rem;
+  min-height: 3.45rem;
+}
+
+.fidelity-shiny-cta--apple-wallet > .fidelity-shiny-cta__label.fidelity-apple-wallet-badge {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.fidelity-apple-wallet-badge__logo {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
   line-height: 0;
 }
 
-.fidelity-shiny-cta__wallet-icon .fidelity-cta-pill-icon {
-  width: 1.35rem;
-  height: 1.35rem;
+.fidelity-apple-wallet-badge__logo .fidelity-cta-pill-icon {
+  width: 1.85rem;
+  height: 1.85rem;
   display: block;
+}
+
+.fidelity-apple-wallet-badge__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.12;
+  gap: 0.06rem;
+}
+
+.fidelity-apple-wallet-badge__line1 {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  opacity: 0.92;
+}
+
+.fidelity-apple-wallet-badge__line2 {
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .fidelity-shiny-cta:focus-visible {
@@ -395,6 +469,10 @@ body.fidelity-missions-sheet-locked {
   }
 
   .fidelity-shiny-cta > .fidelity-shiny-cta__label::before {
+    animation: none !important;
+  }
+
+  .fidelity-earn-points-cta-wrap--wallet-attention {
     animation: none !important;
   }
 

@@ -44,8 +44,10 @@ describe("renderWalletPassHeroShinyMarkup", () => {
     });
     expect(html).toContain("fidelity-shiny-cta");
     expect(html).toContain('id="fidelity-v2-apple"');
-    expect(html).toContain("Ajouter la carte");
-    expect(html).toContain("fidelity-shiny-cta__wallet-icon");
+    expect(html).toContain("fidelity-apple-wallet-badge");
+    expect(html).toContain("Ajouter à");
+    expect(html).toContain("Apple Wallet");
+    expect(html).toContain("fidelity-earn-points-cta-wrap--wallet-attention");
     expect(html).toContain("fidelity-cta-pill-icon");
   });
 
