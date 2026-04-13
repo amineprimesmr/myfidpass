@@ -1,7 +1,12 @@
 import { renderEngagementActionsMarkup } from "./mission-markup.js";
 import { renderProfileMissionModalMarkup } from "./profile-mission-modal-markup.js";
 import { renderRewardsStepMarkup } from "./rewards-step-markup.js";
-import { renderWalletStepMarkup } from "./wallet-step-markup.js";
+import {
+  renderWalletPassHeroShinyMarkup,
+  renderWalletStepMarkup,
+  walletStepShowsAddPassCta,
+} from "./wallet-step-markup.js";
+import { detectWalletPlatform } from "../../utils/walletPlatform.js";
 import { renderRouletteInlineMarkup } from "./roulette-inline-markup.js";
 import { renderQrGamePage } from "./qr-game-markup.js";
 import { shouldShowQrThanksHero } from "../qr-game-flow.js";
@@ -145,6 +150,15 @@ export function renderClientPage(root, state, options = {}) {
   const memberPoints = hasMember ? Math.max(0, Math.floor(Number(state.member?.points) || 0)) : 0;
   const appleWalletRegistered = hasMember && state.member?.apple_wallet_registered === true;
   const hasGoogleWallet = hasMember && Boolean(state.wallet?.google);
+  const walletPlatform = detectWalletPlatform();
+  const showWalletPassHero =
+    hasMember &&
+    walletStepShowsAddPassCta({
+      platform: walletPlatform,
+      appleWalletRegistered,
+      hasGoogleWallet,
+    });
+  const showMissionsEntry = hasMissionsSheet && !showWalletPassHero;
   const deliveryReceiptEnabled =
     hasMember && Number(state.business?.delivery_receipt_claims_enabled ?? state.business?.deliveryReceiptClaimsEnabled ?? 1) === 1;
 
@@ -188,7 +202,17 @@ export function renderClientPage(root, state, options = {}) {
                   business: state.business,
                 }),
               )}
-              ${hasMissionsSheet ? renderEarnMorePointsButtonMarkup(esc) : ""}
+              ${
+                showWalletPassHero
+                  ? renderWalletPassHeroShinyMarkup(esc, {
+                      platform: walletPlatform,
+                      appleWalletRegistered,
+                      hasGoogleWallet,
+                    })
+                  : showMissionsEntry
+                    ? renderEarnMorePointsButtonMarkup(esc)
+                    : ""
+              }
             </div>
           </div>
         </section>
@@ -274,7 +298,7 @@ export function renderClientPage(root, state, options = {}) {
         : ""
     }
 
-    ${hasMissionsSheet ? renderMissionsSheetMarkup(esc, { engagementHtml, sheetTitle: step2Title }) : ""}
+    ${showMissionsEntry ? renderMissionsSheetMarkup(esc, { engagementHtml, sheetTitle: step2Title }) : ""}
 
     ${showProfileMissionModal
       ? renderProfileMissionModalMarkup(esc, {

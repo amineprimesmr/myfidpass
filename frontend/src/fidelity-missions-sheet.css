@@ -28,6 +28,18 @@
   inherits: false;
 }
 
+.fidelity-wallet-hero-shiny-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.fidelity-wallet-hero-shiny-stack .fidelity-earn-points-cta-wrap {
+  margin-top: 0;
+}
+
 .fidelity-earn-points-cta-wrap {
   margin: 1rem 0 0;
   width: 100%;
@@ -37,6 +49,10 @@
   --shiny-cta-fg: #ffffff;
   --shiny-cta-highlight: blue;
   --shiny-cta-highlight-subtle: #8484ff;
+}
+
+a.fidelity-shiny-cta {
+  text-decoration: none;
 }
 
 .fidelity-shiny-cta {
