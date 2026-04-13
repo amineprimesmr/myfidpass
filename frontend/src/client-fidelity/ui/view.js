@@ -20,11 +20,8 @@ import {
   renderEarnMorePointsButtonMarkup,
   renderMissionsSheetMarkup,
 } from "./missions-sheet-markup.js";
-import {
-  balanceUnitShort,
-  deliveryReceiptStickyCtaLabel,
-  stampsStepSectionTitle,
-} from "../lib/program-copy.js";
+import { balanceUnitShort, stampsStepSectionTitle } from "../lib/program-copy.js";
+import { renderDeliveryReceiptFabAndModalMarkup } from "./delivery-receipt-intro-markup.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -288,22 +285,7 @@ export function renderClientPage(root, state, options = {}) {
 
     </main>
 
-    ${
-      deliveryReceiptEnabled
-        ? `
-    <div class="fidelity-delivery-sticky" role="region" aria-label="Réclamation sur ticket de livraison">
-      <div class="fidelity-delivery-sticky__inner">
-        <input type="file" id="fidelity-delivery-receipt-file" class="fidelity-delivery-receipt-file-input" accept="image/*" capture="environment" aria-label="Photographier ou choisir une image du ticket" />
-        <p id="fidelity-delivery-receipt-feedback" class="fidelity-delivery-sticky-feedback fidelity-engagement-feedback hidden" role="status"></p>
-        <button type="button" id="fidelity-delivery-receipt-sticky-btn" class="fidelity-cta-pill fidelity-delivery-sticky-btn">
-          <span class="fidelity-delivery-sticky-btn__cam" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
-          <span class="fidelity-delivery-sticky-btn__label">${esc(deliveryReceiptStickyCtaLabel(programType))}</span>
-        </button>
-      </div>
-    </div>
-    `
-        : ""
-    }
+    ${deliveryReceiptEnabled ? renderDeliveryReceiptFabAndModalMarkup(esc, programType) : ""}
 
     ${
       showMissionsEntry

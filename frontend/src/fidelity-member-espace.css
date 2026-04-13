@@ -35,7 +35,7 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
 
 /* Réclamation ticket (barre sticky) : évite que le contenu passe sous le bouton */
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)):has(.fidelity-delivery-sticky) > main.fidelity-v2-main {
-  padding-bottom: calc(1.35rem + 6rem + var(--fidelity-visual-gap-bottom, 0px));
+  padding-bottom: calc(1.35rem + 4.85rem + var(--fidelity-visual-gap-bottom, 0px));
 }
 
 /* Réserve basse seulement si le bandeau « pro » est affiché (visiteurs sans compte) */

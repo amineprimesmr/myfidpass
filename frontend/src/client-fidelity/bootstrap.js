@@ -229,6 +229,27 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     document.body.style.overflow = "";
   }
 
+  function openDeliveryIntroModal() {
+    const m = rootEl.querySelector("#fidelity-delivery-receipt-intro-modal");
+    const fab = rootEl.querySelector("#fidelity-delivery-receipt-fab-btn");
+    if (!m) return;
+    m.classList.remove("hidden");
+    m.setAttribute("aria-hidden", "false");
+    fab?.setAttribute("aria-expanded", "true");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeDeliveryIntroModal() {
+    const m = rootEl.querySelector("#fidelity-delivery-receipt-intro-modal");
+    const fab = rootEl.querySelector("#fidelity-delivery-receipt-fab-btn");
+    if (!m || m.classList.contains("hidden")) return;
+    m.classList.add("hidden");
+    m.setAttribute("aria-hidden", "true");
+    fab?.setAttribute("aria-expanded", "false");
+    const profileOpen = rootEl.querySelector("#fidelity-profile-mission-modal:not(.hidden)");
+    if (!profileOpen) document.body.style.overflow = "";
+  }
+
   function rerender() {
     document.body.style.overflow = "";
     renderClientPage(rootEl, store.get(), { slug, apiBase });
@@ -631,18 +652,30 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     if (google && wallet.google) google.href = wallet.google;
 
     const deliveryFile = rootEl.querySelector("#fidelity-delivery-receipt-file");
-    const deliveryStickyBtn = rootEl.querySelector("#fidelity-delivery-receipt-sticky-btn");
+    const deliveryFabBtn = rootEl.querySelector("#fidelity-delivery-receipt-fab-btn");
+    const deliveryClaimBtn = rootEl.querySelector("#fidelity-delivery-receipt-claim-btn");
+    const deliveryIntroModal = rootEl.querySelector("#fidelity-delivery-receipt-intro-modal");
     const deliveryFb = rootEl.querySelector("#fidelity-delivery-receipt-feedback");
     let deliveryReceiptSubmitInFlight = false;
+
+    function setDeliveryUiBusy(busy) {
+      if (deliveryFabBtn) {
+        deliveryFabBtn.disabled = busy;
+        if (busy) deliveryFabBtn.setAttribute("aria-busy", "true");
+        else deliveryFabBtn.removeAttribute("aria-busy");
+      }
+      if (deliveryClaimBtn) {
+        deliveryClaimBtn.disabled = busy;
+        if (busy) deliveryClaimBtn.setAttribute("aria-busy", "true");
+        else deliveryClaimBtn.removeAttribute("aria-busy");
+      }
+    }
 
     async function submitDeliveryReceiptClaimFlow() {
       const state = store.get();
       if (!state.member?.id || !deliveryReceiptDataUrl || deliveryReceiptSubmitInFlight) return;
       deliveryReceiptSubmitInFlight = true;
-      if (deliveryStickyBtn) {
-        deliveryStickyBtn.disabled = true;
-        deliveryStickyBtn.setAttribute("aria-busy", "true");
-      }
+      setDeliveryUiBusy(true);
       if (deliveryFb) {
         deliveryFb.classList.add("hidden");
         deliveryFb.classList.remove("error", "success");
@@ -685,15 +718,22 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       } finally {
         closeDeliveryReceiptScanOverlay();
         deliveryReceiptSubmitInFlight = false;
-        if (deliveryStickyBtn) {
-          deliveryStickyBtn.disabled = false;
-          deliveryStickyBtn.removeAttribute("aria-busy");
-        }
+        setDeliveryUiBusy(false);
       }
     }
 
-    if (deliveryStickyBtn && deliveryFile) {
-      deliveryStickyBtn.addEventListener("click", () => deliveryFile.click());
+    if (deliveryFabBtn) {
+      deliveryFabBtn.addEventListener("click", () => openDeliveryIntroModal());
+    }
+    if (deliveryIntroModal) {
+      deliveryIntroModal.querySelector(".fidelity-delivery-intro-modal__backdrop")?.addEventListener("click", () => closeDeliveryIntroModal());
+      deliveryIntroModal.querySelector(".fidelity-delivery-intro-modal__close")?.addEventListener("click", () => closeDeliveryIntroModal());
+    }
+    if (deliveryClaimBtn && deliveryFile) {
+      deliveryClaimBtn.addEventListener("click", () => {
+        closeDeliveryIntroModal();
+        deliveryFile.click();
+      });
     }
     if (deliveryFile) {
       deliveryFile.addEventListener("change", (ev) => {
@@ -777,6 +817,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       if (ms?.classList.contains("fidelity-missions-sheet--open")) {
         closeMissionsSheet(rootEl);
       }
+      const deliveryIntro = rootEl.querySelector("#fidelity-delivery-receipt-intro-modal");
+      if (deliveryIntro && !deliveryIntro.classList.contains("hidden")) closeDeliveryIntroModal();
     },
     { signal }
   );

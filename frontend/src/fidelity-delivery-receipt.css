@@ -1,59 +1,176 @@
-/* Réclamation points livraison — barre sticky espace client /fidelity/:slug */
+/* Réclamation points livraison — FAB + modale (espace client /fidelity/:slug) */
 
 .fidelity-delivery-sticky {
   position: fixed;
-  left: 0;
   right: 0;
   bottom: 0;
+  left: auto;
+  top: auto;
   z-index: 26;
+  pointer-events: none;
+  padding-right: max(0.85rem, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--fidelity-visual-gap-bottom, 0px));
+  box-sizing: border-box;
+}
+
+.fidelity-delivery-fab {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.65rem;
+  height: 3.65rem;
+  min-width: 3.65rem;
+  min-height: 3.65rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(145deg, #5b21b6 0%, #7c3aed 45%, #6d28d9 100%);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.12) inset,
+    0 6px 22px rgba(91, 33, 182, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.fidelity-delivery-fab:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.14) inset,
+    0 8px 26px rgba(91, 33, 182, 0.5),
+    0 3px 10px rgba(0, 0, 0, 0.14);
+}
+
+.fidelity-delivery-fab:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.fidelity-delivery-fab:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.fidelity-delivery-fab__icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.fidelity-delivery-toast.fidelity-engagement-feedback {
+  pointer-events: auto;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.55rem);
+  max-width: min(18.5rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  border-radius: 0.65rem;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.fidelity-delivery-intro-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px) + var(--fidelity-visual-gap-bottom, 0px));
+  box-sizing: border-box;
   pointer-events: none;
 }
 
-.fidelity-delivery-sticky__inner {
+.fidelity-delivery-intro-modal:not(.hidden) {
   pointer-events: auto;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 0.55rem 1rem 0;
-  padding-bottom: calc(max(0.55rem, env(safe-area-inset-bottom, 0px)) + var(--fidelity-visual-gap-bottom, 0px));
-  box-sizing: border-box;
-  background: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 0.97) 0%,
-    rgba(255, 255, 255, 0.92) 55%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
-.fidelity-delivery-sticky-feedback.fidelity-engagement-feedback {
-  margin: 0 0 0.45rem;
-  font-size: 0.8rem;
-  padding: 0.4rem 0.65rem;
+.fidelity-delivery-intro-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
-.fidelity-delivery-sticky-btn.fidelity-cta-pill {
+.fidelity-delivery-intro-modal__panel {
+  position: relative;
   width: 100%;
-  min-height: 3.35rem;
-  font-size: 0.95rem;
+  max-width: 420px;
+  max-height: min(85vh, 520px);
+  overflow: auto;
+  border-radius: 1.15rem;
+  padding: 1.15rem 1.2rem 1.25rem;
+  background: #fff;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 4px 14px rgba(0, 0, 0, 0.18);
+    0 -4px 28px rgba(0, 0, 0, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.18);
+  -webkit-overflow-scrolling: touch;
 }
 
-.fidelity-delivery-sticky-btn__cam {
-  display: inline-flex;
+.fidelity-delivery-intro-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.fidelity-delivery-intro-modal__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #0f172a;
+}
+
+.fidelity-delivery-intro-modal__close {
   flex-shrink: 0;
-  opacity: 0.95;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 999px;
+  margin: -0.2rem -0.15rem 0 0;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+  background: rgba(15, 23, 42, 0.06);
 }
 
-.fidelity-delivery-sticky-btn__cam svg {
-  display: block;
+.fidelity-delivery-intro-modal__close:hover {
+  background: rgba(15, 23, 42, 0.1);
+  color: #0f172a;
 }
 
-.fidelity-delivery-sticky-btn__label {
-  flex: 1;
-  text-align: center;
+.fidelity-delivery-intro-modal__body {
+  margin: 0 0 0.85rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.fidelity-delivery-intro-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fidelity-delivery-intro-modal__claim.fidelity-cta-pill {
+  width: 100%;
+  justify-content: center;
+  min-height: 3rem;
+  font-size: 0.95rem;
 }
 
 .fidelity-delivery-receipt-file-input {
@@ -69,10 +186,19 @@
 
 #fidelity-delivery-receipt-feedback.success {
   color: #0a7a3a;
+  background: rgba(10, 122, 58, 0.08);
 }
 
 #fidelity-delivery-receipt-feedback.error {
   color: #b00020;
+  background: rgba(176, 0, 32, 0.06);
+}
+
+@media (min-width: 480px) {
+  .fidelity-delivery-intro-modal {
+    align-items: center;
+    padding-bottom: 1rem;
+  }
 }
 
 /* Tableau de bord — file validation livraison */

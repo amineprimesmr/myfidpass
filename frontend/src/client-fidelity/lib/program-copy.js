@@ -28,6 +28,21 @@ export function deliveryReceiptStickyCtaLabel(programType) {
   return isStampsProgramType(programType) ? "Réclamer mes tampons" : "Réclamer mes points";
 }
 
+export function deliveryReceiptFabAriaLabel(programType) {
+  return isStampsProgramType(programType)
+    ? "Réclamation livraison — tampons sur ticket"
+    : "Réclamation livraison — points sur ticket";
+}
+
+export function deliveryReceiptIntroModalTitle() {
+  return "Ticket de livraison";
+}
+
+export function deliveryReceiptIntroModalBody(programType) {
+  const unit = isStampsProgramType(programType) ? "tampons" : "points";
+  return `Photographie le ticket de caisse collé sur le sac ou le carton de ta commande (livraison à domicile). Le montant et la date doivent être lisibles. Ensuite, nous créditons tes ${unit} sur ta carte.`;
+}
+
 export function deliveryReceiptSuccessMessage(programType) {
   return isStampsProgramType(programType) ? "Tampons mis à jour." : "Points mis à jour.";
 }
