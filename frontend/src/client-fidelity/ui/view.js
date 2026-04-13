@@ -54,6 +54,7 @@ export function renderClientPage(root, state, options = {}) {
   const profileEligible = !!(hasMember && state.member?.profile_ticket_eligible);
   const profileClaimed = !!state.member?.profile_bonus_claimed;
   const actionsForDisplay = engagementActionsRaw.filter((a) => {
+    if (a.action_type === "google_review") return false;
     if (a.action_type === "profile_complete") {
       return profileEligible && !profileClaimed;
     }
@@ -67,7 +68,10 @@ export function renderClientPage(root, state, options = {}) {
   const qrGameFlow = Boolean(hasMember && isGuestPlaceholder && showRoulette);
 
   if (qrGameFlow) {
-    const googleAction = engagementActionsRaw.find((a) => a.action_type === "google_review");
+    const googleReviewUrl =
+      String(state.business?.google_review_write_url || "").trim() ||
+      engagementActionsRaw.find((a) => a.action_type === "google_review")?.url ||
+      "";
     const defaultQrHero = "Participez au jeu et tentez de gagner une récompense.";
     const customHero = String(
       state.business?.fidelityQrHeroTitle ?? state.business?.fidelity_qr_hero_title ?? "",
@@ -86,7 +90,7 @@ export function renderClientPage(root, state, options = {}) {
       businessNameEsc: businessName,
       businessTaglineEsc: esc(tagline),
       rouletteHtml,
-      googleReviewUrl: googleAction?.url || "",
+      googleReviewUrl,
       logoUrl,
       qrThanksHeroMode,
     });

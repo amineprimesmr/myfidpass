@@ -38,13 +38,20 @@
   z-index: 1;
   width: 100%;
   max-width: 420px;
-  max-height: min(90vh, 640px);
+  max-height: min(90vh, 720px);
   overflow: auto;
   margin: 0;
-  padding: 1.15rem 1.25rem 1.35rem;
+  padding: 0 1.25rem 1.4rem;
   border-radius: 1.25rem 1.25rem 0 0;
   background: #fff;
   box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.18);
+}
+
+.fidelity-profile-mission-modal__accent {
+  height: 4px;
+  margin: 0 -1.25rem 0.85rem;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 55%, #db2777 100%);
 }
 
 @media (min-width: 480px) {
@@ -59,15 +66,35 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.fidelity-profile-mission-modal__head-text {
+  min-width: 0;
+}
+
+.fidelity-profile-mission-modal__kicker {
+  margin: 0 0 0.2rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
 }
 
 .fidelity-profile-mission-modal__title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.fidelity-profile-mission-modal__lead {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
 }
 
 .fidelity-profile-mission-modal__close {
@@ -114,6 +141,52 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #64748b;
+}
+
+.fidelity-profile-mission-modal__form-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.fidelity-profile-mission-modal__hint {
+  margin: -0.1rem 0 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #64748b;
+}
+
+.fidelity-profile-mission-modal__ideas {
+  margin-top: 1rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  border: 1px dashed rgba(100, 116, 139, 0.45);
+}
+
+.fidelity-profile-mission-modal__ideas-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.fidelity-profile-mission-modal__ideas-list {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.fidelity-profile-mission-modal__idea-item {
+  margin-bottom: 0.25rem;
+}
+
+.fidelity-profile-mission-modal__idea-item:last-child {
+  margin-bottom: 0;
 }
 
 .fidelity-profile-mission-modal__identity-dl {

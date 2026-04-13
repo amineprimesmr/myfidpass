@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildHeroFullScaleTickMarks, heroFillPercentLinear, parsePointTiers } from "./tier-progress.js";
+import { buildHeroFullScaleTickMarks, heroFillPercentEqualSegments, parsePointTiers } from "./tier-progress.js";
 
 describe("buildHeroFullScaleTickMarks", () => {
-  it("affiche chaque palier à une position proportionnelle au dernier seuil", () => {
+  it("affiche chaque palier avec le même écart visuel sur la barre (0 % … 100 %)", () => {
     const tiers = [
       { threshold: 25, label: "a" },
       { threshold: 50, label: "b" },
@@ -12,10 +12,10 @@ describe("buildHeroFullScaleTickMarks", () => {
     ];
     const m = buildHeroFullScaleTickMarks(tiers);
     expect(m.map((x) => x.value)).toEqual([25, 50, 75, 100, 125]);
-    expect(m.map((x) => x.leftPct)).toEqual([20, 40, 60, 80, 100]);
+    expect(m.map((x) => x.leftPct)).toEqual([0, 25, 50, 75, 100]);
   });
 
-  it("un seul palier : graduation à 100 % (fin d’échelle)", () => {
+  it("un seul palier : graduation à droite (100 %)", () => {
     const m = buildHeroFullScaleTickMarks([{ threshold: 40, label: "x" }]);
     expect(m).toEqual([{ value: 40, leftPct: 100 }]);
   });
@@ -36,14 +36,16 @@ describe("parsePointTiers", () => {
   });
 });
 
-describe("heroFillPercentLinear", () => {
-  it("remplit en proportion du solde par rapport au dernier palier", () => {
+describe("heroFillPercentEqualSegments", () => {
+  it("remplit par segments de même largeur entre paliers successifs", () => {
     const tiers = [
       { threshold: 10, label: "a" },
       { threshold: 100, label: "b" },
     ];
-    expect(heroFillPercentLinear(tiers, 0)).toBe(0);
-    expect(heroFillPercentLinear(tiers, 40)).toBe(40);
-    expect(heroFillPercentLinear(tiers, 100)).toBe(100);
+    expect(heroFillPercentEqualSegments(tiers, 0)).toBe(0);
+    expect(heroFillPercentEqualSegments(tiers, 5)).toBeCloseTo(25, 5);
+    expect(heroFillPercentEqualSegments(tiers, 10)).toBeCloseTo(50, 5);
+    expect(heroFillPercentEqualSegments(tiers, 55)).toBeCloseTo(75, 5);
+    expect(heroFillPercentEqualSegments(tiers, 100)).toBe(100);
   });
 });

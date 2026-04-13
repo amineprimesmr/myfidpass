@@ -75,19 +75,44 @@ export function tierProgressState(tiers, balance) {
 const MAX_HERO_FULLSCALE_TICKS = 12;
 
 /**
- * Remplissage jauge hero : **échelle linéaire** 0 → dernier palier (alignée sur les graduations).
+ * Remplissage jauge hero : **même largeur visuelle** entre chaque palier ; à l’intérieur d’un
+ * segment, la progression suit les seuils en points (pas une échelle 0 → dernier palier).
  * @param {{ threshold: number }[]} tiers triés, longueur ≥ 1
  * @param {number} pts
  */
-export function heroFillPercentLinear(tiers, pts) {
-  const last = tiers[tiers.length - 1]?.threshold;
-  if (!Number.isFinite(last) || last <= 0) return 0;
+export function heroFillPercentEqualSegments(tiers, pts) {
+  const n = tiers.length;
   const p = Math.max(0, pts);
-  return Math.min(100, (p / last) * 100);
+  const T = tiers.map((t) => t.threshold);
+  if (n === 0) return 0;
+
+  const first = T[0];
+  const last = T[n - 1];
+  if (!Number.isFinite(last) || last <= 0) return 0;
+  if (first <= 0) return Math.min(100, (p / last) * 100);
+
+  if (p >= last) return 100;
+  if (p <= 0) return 0;
+
+  /** Fin du segment k (0-based) sur la jauge : V(k) = (k+1)/n × 100 */
+  const V = (k) => ((k + 1) / n) * 100;
+
+  if (p < first) return (p / first) * V(0);
+
+  for (let k = 1; k < n; k += 1) {
+    if (p < T[k]) {
+      const tPrev = T[k - 1];
+      const tCur = T[k];
+      const span = tCur - tPrev;
+      if (span <= 0) continue;
+      return V(k - 1) + ((p - tPrev) / span) * (V(k) - V(k - 1));
+    }
+  }
+  return 100;
 }
 
 /**
- * Graduations jauge hero : position proportionnelle au seuil (valeur / dernier palier × 100 %).
+ * Graduations jauge hero : **espacement égal** entre chaque palier affiché (pas au prorata des points).
  * @param {{ threshold: number }[]} tiers triés par seuil croissant
  * @returns {{ value: number; leftPct: number }[]}
  */
@@ -122,9 +147,10 @@ export function buildHeroFullScaleTickMarks(tiers) {
     });
   }
 
-  if (display.length === 0) return [];
-  return display.map((value) => ({
+  const m = display.length;
+  if (m === 0) return [];
+  return display.map((value, i) => ({
     value,
-    leftPct: Math.min(100, (value / lastTh) * 100),
+    leftPct: m === 1 ? 100 : (i / (m - 1)) * 100,
   }));
 }

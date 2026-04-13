@@ -31,16 +31,7 @@ export function engagementActionsHandler(req, res) {
   const business = req.business;
   const rewards = getEngagementRewards(business.id);
   const actions = [];
-  if (rewards.google_review?.enabled && rewards.google_review?.place_id && rewards.google_review?.points > 0) {
-    actions.push({
-      action_type: "google_review",
-      label: "Laisser un avis Google",
-      points: 1,
-      url: `https://search.google.com/local/writereview?placeid=${encodeURIComponent(rewards.google_review.place_id.trim())}`,
-      require_approval: false,
-      auto_verify_enabled: rewards.google_review.auto_verify_enabled !== false,
-    });
-  }
+  /** Pas de mission « avis Google » ici : l’avis est demandé au premier tour de roue (page jeu invité). */
   if (businessUsesTicketBonuses(business.id)) {
     actions.unshift({
       action_type: "profile_complete",

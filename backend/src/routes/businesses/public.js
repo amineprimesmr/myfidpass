@@ -5,6 +5,7 @@
 import { Router } from "express";
 import {
   getBusinessGames,
+  getEngagementRewards,
   getMemberForBusiness,
   getRoulettePublicSegments,
   resolveBusinessProgramType,
@@ -62,6 +63,13 @@ export function publicInfo(req, res) {
     } catch (_) {}
   }
 
+  const engagementRewards = getEngagementRewards(business.id);
+  const gr = engagementRewards?.google_review;
+  const placeId = gr?.enabled && gr?.place_id ? String(gr.place_id).trim() : "";
+  const google_review_write_url = placeId
+    ? `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`
+    : undefined;
+
   res.json({
     id: business.id,
     name: business.name,
@@ -97,6 +105,8 @@ export function publicInfo(req, res) {
       business.delivery_receipt_claims_enabled != null ? Number(business.delivery_receipt_claims_enabled) : 1,
     delivery_receipt_max_age_days:
       business.delivery_receipt_max_age_days != null ? Number(business.delivery_receipt_max_age_days) : 14,
+    /** Lien avis Google (page jeu QR / 1er spin) — absent si non configuré côté commerce. */
+    google_review_write_url: google_review_write_url ?? undefined,
   });
 }
 

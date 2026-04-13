@@ -30,7 +30,8 @@ describe("missions-sheet-markup", () => {
     expect(html).toContain('id="fidelity-missions-sheet"');
     expect(html).toContain('id="fidelity-v2-actions"');
     expect(html).toContain("fidelity-v2-action-feedback");
-    expect(html).toContain("récupère tes points");
+    expect(html).toContain("premier tour de roue");
+    expect(html).toContain("points sur ta carte");
   });
 
   it("sous-titre tampons si programme tampons", () => {
@@ -39,6 +40,7 @@ describe("missions-sheet-markup", () => {
       sheetTitle: "Missions",
       programType: "stamps",
     });
-    expect(html).toContain("récupère tes tampons");
+    expect(html).toContain("premier tour de roue");
+    expect(html).toContain("tampons sur ta carte");
   });
 });

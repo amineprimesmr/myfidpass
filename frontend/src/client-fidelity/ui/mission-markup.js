@@ -2,7 +2,7 @@
  * Cartes missions fidélité client — bannières type hero (texte + CTA à gauche, visuel à droite).
  */
 
-import { missionRewardSnippet } from "../lib/program-copy.js";
+import { missionRewardSnippet, profileMissionCardLines } from "../lib/program-copy.js";
 
 /** Cache bust quand l’asset est remplacé (évite image périmée sur CDN / navigateur). */
 const PROFILE_HERO_IMG = "/assets/missions/profile-mission-hero.png?v=20260402";
@@ -75,8 +75,9 @@ export function renderEngagementActionsMarkup(actions, esc, programType = "point
     .map((a, i) => {
       const theme = missionTheme(a.action_type);
       const uid = `m${i}`;
-      const { line1, line2 } = missionTitleLines(a.label);
-      const ctaVerb = a.action_type === "profile_complete" ? "Remplir" : "Ouvrir";
+      const { line1, line2 } =
+        a.action_type === "profile_complete" ? profileMissionCardLines() : missionTitleLines(a.label);
+      const ctaVerb = a.action_type === "profile_complete" ? "Compléter" : "Ouvrir";
       const icon = missionIconSvg(theme, uid);
 
       const titleBlock = `

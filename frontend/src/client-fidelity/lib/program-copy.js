@@ -19,9 +19,28 @@ export function missionsHeroCtaLabel(programType) {
 }
 
 export function missionsSheetSubtext(programType) {
-  return isStampsProgramType(programType)
-    ? "Complète une action et récupère tes tampons."
-    : "Complète une action et récupère tes points.";
+  const unit = isStampsProgramType(programType) ? "tampons" : "points";
+  return `Chaque mission ci-dessous ajoute des ${unit} sur ta carte. L’avis Google n’y figure pas : il est demandé au premier tour de roue.`;
+}
+
+/** Titres carte mission « profil » (deux lignes). */
+export function profileMissionCardLines() {
+  return { line1: "Ton profil", line2: "Infos utiles" };
+}
+
+/** Libellés court / long pour la modale profil. */
+export function profileModalFormSectionTitle() {
+  return "À compléter maintenant";
+}
+
+/** Pistes d’évolution (affichage informatif, pas encore en base). */
+export function profileModalFutureIdeas() {
+  return [
+    "Code postal — offres près de chez toi",
+    "Date d’anniversaire — surprise le jour J",
+    "Préférences SMS ou e-mail pour les promos",
+    "Langue ou canal de contact préféré",
+  ];
 }
 
 export function deliveryReceiptStickyCtaLabel(programType) {
@@ -58,7 +77,7 @@ export function stampsStepSectionTitle() {
 /** Paragraphe HTML (déjà échappé morceau par morceau). */
 export function profileModalBonusParagraphHtml(esc, programType) {
   const bonus = isStampsProgramType(programType) ? "1 tampon bonus" : "1 point bonus";
-  return `${esc("Quelques infos pour le commerce — ")}<strong>${esc(bonus)}</strong>${esc(" sur ta carte (une seule fois).")}`;
+  return `${esc("Ces trois infos aident le commerce à te reconnaître et à t’envoyer des offres pertinentes. En échange : ")}<strong>${esc(bonus)}</strong>${esc(" sur ta carte, une seule fois.")}`;
 }
 
 export function profileModalSubmitLabel(programType) {

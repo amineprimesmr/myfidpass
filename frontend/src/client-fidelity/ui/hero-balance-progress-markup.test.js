@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildHeroBalanceProgressState } from "./hero-balance-progress-markup.js";
 
 describe("buildHeroBalanceProgressState", () => {
-  it("échelle complète : tous les paliers sous la barre, % = solde / dernier palier", () => {
+  it("segments égaux : graduations équidistantes, remplissage selon les seuils dans chaque segment", () => {
     const st = buildHeroBalanceProgressState({
       memberPoints: 10,
       programType: "points",
@@ -16,13 +16,13 @@ describe("buildHeroBalanceProgressState", () => {
     expect(st.progressMin).toBe(0);
     expect(st.progressMax).toBe(125);
     expect(st.nextGoal?.threshold).toBe(25);
-    expect(st.pct).toBeCloseTo((10 / 125) * 100, 5);
+    expect(st.pct).toBeCloseTo(20, 5);
     expect(st.tickMarks.map((m) => m.value)).toEqual([25, 125]);
-    expect(st.tickMarks.find((x) => x.value === 25)?.leftPct).toBeCloseTo(20, 5);
+    expect(st.tickMarks.find((x) => x.value === 25)?.leftPct).toBe(0);
     expect(st.tickMarks.find((x) => x.value === 125)?.leftPct).toBe(100);
   });
 
-  it("affiche tous les niveaux du programme sur la même règle", () => {
+  it("affiche tous les paliers avec le même écart visuel sur la jauge", () => {
     const st = buildHeroBalanceProgressState({
       memberPoints: 60,
       programType: "points",
@@ -35,7 +35,7 @@ describe("buildHeroBalanceProgressState", () => {
       },
     });
     expect(st.progressMax).toBe(100);
-    expect(st.pct).toBe(60);
+    expect(st.pct).toBeCloseTo(73.333333, 3);
     expect(st.tickMarks.map((m) => m.value)).toEqual([25, 50, 100]);
     expect(st.tickMarks.find((x) => x.value === 50)?.leftPct).toBe(50);
   });
