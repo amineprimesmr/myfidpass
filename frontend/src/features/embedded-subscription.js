@@ -165,7 +165,7 @@ export async function initEmbeddedSubscriptionCheckout(opts) {
     setLoadingVisible(false);
     showError(
       errorContainerId,
-      "Configuration de paiement incomplète (clé publique Stripe). Contactez le support Myfidpass."
+      "Clé publique Stripe absente du site. Sur Vercel : vérifiez VITE_STRIPE_PUBLISHABLE_KEY, puis Déploiements → Redeploy (obligatoire : les variables VITE_* sont lues seulement au build, pas à l’exécution)."
     );
     return;
   }
