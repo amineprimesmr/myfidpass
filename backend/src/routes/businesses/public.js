@@ -15,6 +15,11 @@ import {
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
 
+/** @param {string} v */
+function isHex6(v) {
+  return typeof v === "string" && /^#[0-9A-Fa-f]{6}$/.test(v.trim());
+}
+
 export function publicInfo(req, res) {
   const business = req.business;
   const apiBase = getApiBase(req);
@@ -34,10 +39,29 @@ export function publicInfo(req, res) {
     Number(business.asset_notification_icon_present) === 1
       ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
       : undefined;
-  const fidelityPageBackgroundUrl =
-    Number(business.asset_fidelity_page_background_present) === 1
-      ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/fidelity-page-background`
-      : undefined;
+
+  /**
+   * Couleurs flyer extraites de flyer_prefs_json.state — servent à teinter la roue et les boutons
+   * sur la page publique fidélité (fond toujours blanc, on colore uniquement les éléments UI).
+   * wheelOdd = segments cadeau (pairs), wheelEven = segments PERDU (impairs).
+   */
+  let flyerColors = null;
+  if (business.flyer_prefs_json) {
+    try {
+      const fp = JSON.parse(business.flyer_prefs_json);
+      const s = fp?.state;
+      if (s && typeof s === "object" && !Array.isArray(s)) {
+        const wheelOdd = isHex6(s.wheelColorOdd) ? s.wheelColorOdd.trim() : null;
+        const wheelEven = isHex6(s.wheelColorEven) ? s.wheelColorEven.trim() : null;
+        const ctaBg = isHex6(s.ctaBannerBgColor) ? s.ctaBannerBgColor.trim() : null;
+        const ctaText = isHex6(s.ctaTextColor) ? s.ctaTextColor.trim() : null;
+        if (wheelOdd || wheelEven || ctaBg) {
+          flyerColors = { wheelOdd, wheelEven, ctaBg, ctaText };
+        }
+      }
+    } catch (_) {}
+  }
+
   res.json({
     id: business.id,
     name: business.name,
@@ -64,8 +88,8 @@ export function publicInfo(req, res) {
     label_restants: business.label_restants?.trim() || undefined,
     stamp_emoji: business.stamp_emoji?.trim() || undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
-    fidelityPageBackgroundUrl,
-    fidelityPageBackgroundUpdatedAt: business.fidelity_page_background_updated_at ?? undefined,
+    /** Couleurs flyer pour theming page publique fidélité (roue + boutons). Fond toujours blanc. */
+    flyerColors: flyerColors ?? undefined,
     /** Texte du titre principal sur la page jeu QR ; absent ou vide = défaut applicatif. */
     fidelityQrHeroTitle: business.fidelity_qr_hero_title?.trim() || undefined,
     /** Réclamations points livraison (Uber Eats, Deliveroo, etc.) — espace client web. */

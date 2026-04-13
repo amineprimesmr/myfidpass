@@ -167,7 +167,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     syncWheelLabelsFromStore();
 
     const n = wheelLabels.length;
-    wheelEl.style.background = buildWheelConicGradient(n);
+    const fc = store.get().business?.flyerColors;
+    wheelEl.style.background = buildWheelConicGradient(n, {
+      colorOdd: fc?.wheelOdd ?? null,
+      colorEven: fc?.wheelEven ?? null,
+    });
     wheelEl.style.transform = `rotate(${currentRotation}deg)`;
 
     const segmentHtml = wheelLabels
@@ -222,7 +226,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   function rerender() {
     document.body.style.overflow = "";
     renderClientPage(rootEl, store.get(), { slug, apiBase });
-    applyFidelityClientPageBackground(store.get().business, slug, apiBase);
+    applyFidelityClientPageBackground(store.get().business);
     /* Après refreshMemberData le HTML est reconstruit : réaligne le hero si l’état « Merci » est actif. */
     if (shouldShowQrThanksHero(slug) && rootEl.querySelector("main.fidelity-qr-game")) {
       applyQrThanksHero(rootEl, () => store.get());

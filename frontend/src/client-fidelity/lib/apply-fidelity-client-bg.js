@@ -1,25 +1,29 @@
-import { resolveFidelityPageBackgroundImgSrc } from "./resolve-client-logo-src.js";
-
 /**
- * Applique le fond personnalisé commerce sur #fidelity-app (page publique fidélité).
- * @param {Record<string, unknown> | null | undefined} business — réponse GET /api/businesses/:slug
- * @param {string} slug
- * @param {string} apiBase
+ * Thème page publique fidélité.
+ * Fond : toujours blanc (#f8fafc) — pas de fond IA ni d'upload custom visible ici.
+ * Couleurs : appliquées depuis flyer_prefs (roue + bouton CTA) via CSS custom properties.
+ *
+ * @param {Record<string, unknown> | null | undefined} business
  */
-export function applyFidelityClientPageBackground(business, slug, apiBase) {
+export function applyFidelityClientPageBackground(business) {
   const el = document.getElementById("fidelity-app");
   if (!el || !el.classList.contains("fidelity-page")) return;
-  const resolved = resolveFidelityPageBackgroundImgSrc(business, String(slug || ""), String(apiBase || ""));
-  el.classList.toggle("fidelity-page--client-bg", Boolean(resolved));
-  if (resolved) {
-    el.style.setProperty("--fidelity-client-bg", `url("${resolved}")`);
+
+  // Supprimer tout fond éventuel persisté depuis une session précédente
+  el.classList.remove("fidelity-page--client-bg");
+  el.style.removeProperty("--fidelity-client-bg");
+  el.style.removeProperty("--fidelity-qr-shell-bg");
+
+  // Teinte CTA depuis flyer_prefs
+  const fc = business?.flyerColors;
+  if (fc?.ctaBg && /^#[0-9A-Fa-f]{6}$/i.test(fc.ctaBg)) {
+    el.style.setProperty("--fid-flyer-cta-bg", fc.ctaBg);
   } else {
-    el.style.removeProperty("--fidelity-client-bg");
+    el.style.removeProperty("--fid-flyer-cta-bg");
   }
-  const bgHex = business?.backgroundColor ?? business?.background_color;
-  if (typeof bgHex === "string" && /^#[0-9A-Fa-f]{6}$/.test(bgHex.trim())) {
-    el.style.setProperty("--fidelity-qr-shell-bg", bgHex.trim());
+  if (fc?.ctaText && /^#[0-9A-Fa-f]{6}$/i.test(fc.ctaText)) {
+    el.style.setProperty("--fid-flyer-cta-text", fc.ctaText);
   } else {
-    el.style.removeProperty("--fidelity-qr-shell-bg");
+    el.style.removeProperty("--fid-flyer-cta-text");
   }
 }

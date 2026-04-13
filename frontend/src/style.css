@@ -1052,6 +1052,13 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   width: 100%;
 }
 
+/* Theming flyer : bouton « Jouer » utilise la couleur accent du flyer si définie */
+.fidelity-page .fidelity-cta-pill--wheel-cta,
+.fidelity-game-page .fidelity-cta-pill--wheel-cta {
+  background: var(--fid-flyer-cta-bg, linear-gradient(180deg, #3a3a3a 0%, #222 50%, #0a0a0a 100%));
+  color: var(--fid-flyer-cta-text, #fff) !important;
+}
+
 .fidelity-v2-main .fidelity-cta-pill:hover:not(:disabled):not(.fidelity-cta-pill--qr-play),
 .fidelity-page .fidelity-cta-pill:hover:not(:disabled):not(.fidelity-cta-pill--qr-play),
 .fidelity-game-page .fidelity-cta-pill:hover:not(:disabled):not(.fidelity-cta-pill--qr-play) {

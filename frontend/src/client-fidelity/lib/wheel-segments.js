@@ -5,22 +5,59 @@
 export const WHEEL_SEGMENT_COUNT = 8;
 
 /**
- * Fond conique alterné (parts sombres / claires), identique à la roue page fidélité.
- * @param {number} n — nombre de parts (ex. 8)
+ * Assombrit légèrement une couleur hex #RRGGBB (factor < 1) pour créer un effet de gradient sur les parts.
+ * @param {string} hex
+ * @param {number} factor
  * @returns {string}
  */
-export function buildWheelConicGradient(n) {
+function hexShade(hex, factor) {
+  const h = String(hex || "").trim();
+  if (!/^#[0-9A-Fa-f]{6}$/i.test(h)) return h;
+  const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+  const r = clamp(parseInt(h.slice(1, 3), 16) * factor);
+  const g = clamp(parseInt(h.slice(3, 5), 16) * factor);
+  const b = clamp(parseInt(h.slice(5, 7), 16) * factor);
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
+/**
+ * Fond conique alterné pour la roue.
+ * Parts paires (i%2===0) = cadeau, parts impaires (i%2===1) = PERDU.
+ *
+ * @param {number} n — nombre de parts (ex. 8)
+ * @param {{ colorOdd?: string | null, colorEven?: string | null }} [opts]
+ *   colorOdd  = couleur accent flyer (segments cadeau, pairs)
+ *   colorEven = couleur secondaire flyer (segments PERDU, impairs)
+ * @returns {string}
+ */
+export function buildWheelConicGradient(n, opts = {}) {
   const count = Math.max(2, Math.floor(Number(n)) || 8);
   const step = 360 / count;
   const stops = [];
+  const isHex = (v) => typeof v === "string" && /^#[0-9A-Fa-f]{6}$/i.test(v.trim());
+  const { colorOdd, colorEven } = opts;
   for (let i = 0; i < count; i++) {
     const a = i * step;
     const b = (i + 1) * step;
     const mid = a + step / 2;
     if (i % 2 === 0) {
-      stops.push(`#080808 ${a}deg`, `#2a2a2a ${mid}deg`, `#111111 ${b}deg`);
+      // Parts cadeau (paires) — couleur accent flyer ou noir par défaut
+      if (isHex(colorOdd)) {
+        const base = colorOdd.trim();
+        const dark = hexShade(base, 0.72);
+        stops.push(`${dark} ${a}deg`, `${base} ${mid}deg`, `${dark} ${b}deg`);
+      } else {
+        stops.push(`#080808 ${a}deg`, `#2a2a2a ${mid}deg`, `#111111 ${b}deg`);
+      }
     } else {
-      stops.push(`#ffffff ${a}deg`, `#e6e6e6 ${mid}deg`, `#fafafa ${b}deg`);
+      // Parts PERDU (impaires) — couleur secondaire flyer ou blanc par défaut
+      if (isHex(colorEven)) {
+        const base = colorEven.trim();
+        const dark = hexShade(base, 0.88);
+        stops.push(`${base} ${a}deg`, `${dark} ${mid}deg`, `${base} ${b}deg`);
+      } else {
+        stops.push(`#ffffff ${a}deg`, `#e6e6e6 ${mid}deg`, `#fafafa ${b}deg`);
+      }
     }
   }
   return `conic-gradient(${stops.join(", ")})`;
