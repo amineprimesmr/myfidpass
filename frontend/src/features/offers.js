@@ -1,7 +1,14 @@
 /**
  * Page choix d'offre / abonnement : paiement intégré (Stripe Payment Element), sans checkout hébergé.
  */
-import { API_BASE, getAuthHeaders, isDevBypassPayment, setDevBypassPayment } from "../config.js";
+import {
+  API_BASE,
+  getAuthHeaders,
+  isDevBypassPayment,
+  setDevBypassPayment,
+  buildStripeSubscriptionPaymentLinkUrl,
+  subscriptionUsesExternalStripePaymentLink,
+} from "../config.js";
 import { initEmbeddedSubscriptionCheckout } from "./embedded-subscription.js";
 
 /** Accès opérationnel sans fenêtre d’essai 24 h = abonnement Stripe payant. */
@@ -66,13 +73,24 @@ export function initOffersPage(route = {}) {
   (async () => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
+      let meData = null;
       if (res.ok) {
-        const data = await res.json();
-        if (shouldRedirectLoggedInUserToApp(data)) {
+        meData = await res.json();
+        if (shouldRedirectLoggedInUserToApp(meData)) {
           window.location.replace("/app");
           return;
         }
       }
+
+      if (subscriptionUsesExternalStripePaymentLink()) {
+        const email = meData?.user?.email != null ? String(meData.user.email).trim() : "";
+        const payUrl = buildStripeSubscriptionPaymentLinkUrl(email);
+        if (payUrl) {
+          window.location.href = payUrl;
+          return;
+        }
+      }
+
       await initEmbeddedSubscriptionCheckout({
         paymentElementContainerId: "offers-payment-element",
         submitButtonId: "offers-pay-submit",

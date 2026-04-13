@@ -51,6 +51,45 @@ const RAW_STRIPE_PUBLISHABLE_KEY =
 
 export const STRIPE_PUBLISHABLE_KEY = RAW_STRIPE_PUBLISHABLE_KEY;
 
+/** Si défini (URL `https://buy.stripe.com/...`), la page /abonnement redirige vers ce Payment Link au lieu du Payment Element. */
+const RAW_STRIPE_SUBSCRIPTION_PAYMENT_LINK =
+  typeof import.meta.env?.VITE_STRIPE_SUBSCRIPTION_PAYMENT_LINK === "string"
+    ? import.meta.env.VITE_STRIPE_SUBSCRIPTION_PAYMENT_LINK.trim()
+    : "";
+
+/** Code promo client à préremplir (`prefilled_promo_code`) — ex. réduction «1er mois à 1 € » via coupon Stripe « une fois ». */
+const RAW_STRIPE_SUBSCRIPTION_PREFILLED_PROMO =
+  typeof import.meta.env?.VITE_STRIPE_SUBSCRIPTION_PREFILLED_PROMO === "string"
+    ? import.meta.env.VITE_STRIPE_SUBSCRIPTION_PREFILLED_PROMO.trim()
+    : "";
+
+/** @returns {boolean} */
+export function subscriptionUsesExternalStripePaymentLink() {
+  return (
+    RAW_STRIPE_SUBSCRIPTION_PAYMENT_LINK.length > 0 &&
+    /^https?:\/\//i.test(RAW_STRIPE_SUBSCRIPTION_PAYMENT_LINK)
+  );
+}
+
+/**
+ * @param {string} [email]
+ * @returns {string|null}
+ */
+export function buildStripeSubscriptionPaymentLinkUrl(email) {
+  if (!subscriptionUsesExternalStripePaymentLink()) return null;
+  try {
+    const u = new URL(RAW_STRIPE_SUBSCRIPTION_PAYMENT_LINK);
+    const em = (email || "").trim();
+    if (em) u.searchParams.set("prefilled_email", em);
+    if (RAW_STRIPE_SUBSCRIPTION_PREFILLED_PROMO) {
+      u.searchParams.set("prefilled_promo_code", RAW_STRIPE_SUBSCRIPTION_PREFILLED_PROMO);
+    }
+    return u.toString();
+  } catch (_) {
+    return null;
+  }
+}
+
 const AUTH_TOKEN_KEY = "fidpass_token";
 const REFRESH_TOKEN_KEY = "fidpass_refresh_token";
 
