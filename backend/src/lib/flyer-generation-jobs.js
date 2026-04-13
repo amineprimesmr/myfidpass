@@ -15,8 +15,6 @@ import {
   parseFlyerAIBody,
   buildFlyerImagePromptBackgroundOnly,
   multimodalForFlyerBackgroundOnly,
-  buildFidelityClientPageBackgroundPrompt,
-  multimodalForFidelityPageBackground,
   openaiGenerateFlyerImage,
   resolveFlyerColorPlan,
 } from "../services/flyer-ai-image.js";
@@ -24,12 +22,6 @@ import { mergeFlyerPrefsWheelColorsFromGeneration } from "../lib/flyer-prefs.js"
 import logger from "../lib/logger.js";
 
 const db = getDb();
-let _sharp = null;
-async function getSharp() {
-  if (!_sharp) _sharp = (await import("sharp")).default;
-  return _sharp;
-}
-
 const MAX_ATTEMPTS = 3;
 const ORPHAN_THRESHOLD_MS = 15 * 60 * 1000;
 const WORKER_POLL_MS = 30_000;
@@ -129,40 +121,6 @@ function markJobDone(jobId, resultObj) {
  * @param {string} b64
  * @returns {Promise<string>}
  */
-async function normalizeFlyerBackgroundLook(b64) {
-  try {
-    const sharp = await getSharp();
-    const input = Buffer.from(String(b64 || ""), "base64");
-    if (!input.length) return b64;
-    const base = sharp(input).ensureAlpha();
-    const stats = await base.stats();
-    const r = Number(stats?.channels?.[0]?.mean || 0);
-    const g = Number(stats?.channels?.[1]?.mean || 0);
-    const b = Number(stats?.channels?.[2]?.mean || 0);
-    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-
-    // Pilotage adaptatif : on remonte les fonds sombres et on calme les teintes trop « pétantes ».
-    const brightness =
-      luma < 130 ? 1.2 :
-      luma < 155 ? 1.14 :
-      luma < 180 ? 1.09 : 1.05;
-    const saturation =
-      chroma > 70 ? 0.62 :
-      chroma > 52 ? 0.7 :
-      chroma > 38 ? 0.78 : 0.86;
-
-    const tuned = await base
-      .modulate({ brightness, saturation })
-      .gamma(1.03)
-      .png()
-      .toBuffer();
-    if (!tuned?.length) return b64;
-    return tuned.toString("base64");
-  } catch {
-    return b64;
-  }
-}
 
 function jobRowToStatusPayload(job) {
   const base = { job_id: job.id, status: job.status };
@@ -252,27 +210,11 @@ export async function processFlyerGenerationJob(jobId) {
     const prompt = buildFlyerImagePromptBackgroundOnly(parsed.value, {
       styleRefCount: mmFlyer.styleRefCount,
     });
-    const mmBg = multimodalForFidelityPageBackground(mmFlyer, false);
-    const promptBg = buildFidelityClientPageBackgroundPrompt(parsed.value, {
-      styleRefCount: mmBg.styleRefCount,
-    });
 
     const t0 = Date.now();
-    const [flyerOutcome, bgOutcome] = await Promise.allSettled([
-      // Rendu robuste: génération flyer complète (opaque) pour garantir des éléments visibles.
-      openaiGenerateFlyerImage(apiKey, prompt, mmFlyer),
-      openaiGenerateFlyerImage(apiKey, promptBg, mmBg),
-    ]);
+    const { b64, revised } = await openaiGenerateFlyerImage(apiKey, prompt, mmFlyer);
     const elapsedMs = Date.now() - t0;
-    logger.info(
-      { jobId, elapsedMs, flyer: flyerOutcome.status, bg: bgOutcome.status },
-      "[flyer-gen-job] openai parallel finished",
-    );
-
-    if (flyerOutcome.status === "rejected") {
-      throw flyerOutcome.reason;
-    }
-    const { b64, revised } = flyerOutcome.value;
+    logger.info({ jobId, elapsedMs }, "[flyer-gen-job] openai finished");
 
     const colorPlan = resolveFlyerColorPlan(parsed.value);
     // Re-lire le commerce après OpenAI (30–90 s) : un PUT « Valider le flyer », un logo, etc. peut avoir
@@ -292,30 +234,10 @@ export async function processFlyerGenerationJob(jobId) {
       flyer_prefs_updated_at: new Date().toISOString(),
     });
 
-    let fidelity_page_background_saved = false;
-    /** @type {string | null} */
-    let fidelity_page_background_error = null;
-    if (bgOutcome.status === "fulfilled") {
-      const { b64: b64Bg } = bgOutcome.value;
-      const b64BgNormalized = await normalizeFlyerBackgroundLook(b64Bg);
-      updateBusiness(business.id, {
-        fidelity_page_background_base64: `data:image/png;base64,${b64BgNormalized}`,
-      });
-      fidelity_page_background_saved = true;
-    } else {
-      const r = bgOutcome.reason;
-      fidelity_page_background_error =
-        r && typeof r === "object" && "message" in r && r.message
-          ? String(r.message)
-          : "Échec génération fond page fidélité.";
-    }
-
     if (unlimited || devBypass) {
       markJobDone(jobId, {
         image_base64: b64,
         revised_prompt: revised ?? null,
-        fidelity_page_background_saved,
-        fidelity_page_background_error,
         flyer_ai_unlimited: true,
         flyer_ai_generations_used: used,
         flyer_ai_generations_remaining: null,
@@ -328,8 +250,6 @@ export async function processFlyerGenerationJob(jobId) {
     markJobDone(jobId, {
       image_base64: b64,
       revised_prompt: revised ?? null,
-      fidelity_page_background_saved,
-      fidelity_page_background_error,
       flyer_ai_unlimited: false,
       flyer_ai_generations_used: nextUsed,
       flyer_ai_generations_remaining: Math.max(0, allowance - nextUsed),

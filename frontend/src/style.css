@@ -2111,10 +2111,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   position: absolute;
   left: 0;
   top: 0;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
-  transition: transform 0.1s linear;
-  will-change: transform;
   border: 12px solid #000;
   background-color: var(--fidpass-surface);
   box-shadow:

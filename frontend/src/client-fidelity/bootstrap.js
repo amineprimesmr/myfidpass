@@ -408,6 +408,13 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const showOutcome = async () => {
         spinAudioStop();
         wheelEl.classList.remove("fidelity-roulette-wheel--is-spinning");
+        /* Normalise la rotation accumulée pour éviter la dérive de précision sur les spins successifs.
+         * targetRotation % 360 donne la même position visuelle en restant dans [0, 360). */
+        const normalizedRot = ((targetRotation % 360) + 360) % 360;
+        currentRotation = normalizedRot;
+        wheelEl.style.transition = "none";
+        void wheelEl.offsetHeight; /* force reflow avant de changer le transform */
+        wheelEl.style.transform = `rotate(${normalizedRot}deg)`;
         try {
           if (
             isWin &&

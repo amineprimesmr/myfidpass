@@ -108,10 +108,9 @@
   border-color: #050505 #1a1a1a #2e2e2e #0d0d0d;
   background-color: #0a0a0a;
   position: relative;
-  isolation: isolate;
+  overflow: visible;
   /* transition pilotée en JS uniquement (évite conflit avec style.css 0.1s linear) */
   transition: none;
-  backface-visibility: hidden;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.07) inset,
     0 22px 0 -8px rgba(0, 0, 0, 0.5),
@@ -223,6 +222,12 @@
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.75),
     0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Pause gift animations during spin to reduce compositing work */
+.fidelity-game-page .fidelity-roulette-wheel--is-spinning .fidelity-roulette-segment-gift-img {
+  animation-play-state: paused;
+  will-change: auto;
 }
 
 @media (max-width: 480px) {
@@ -343,10 +348,6 @@
   transform-style: preserve-3d;
 }
 
-.fidelity-v2-roulette-inline .fidelity-roulette-wheel.fidelity-roulette-wheel--is-spinning {
-  filter: brightness(1.07) saturate(1.06);
-}
-
 .fidelity-v2-roulette-inline .fidelity-roulette-wheel {
   z-index: 1;
   border-width: 14px;
@@ -354,10 +355,9 @@
   border-color: #050505 #1a1a1a #2e2e2e #0d0d0d;
   background-color: #0a0a0a;
   position: relative;
-  isolation: isolate;
+  overflow: visible;
   /* transition pilotée en JS uniquement (évite conflit avec style.css 0.1s linear) */
   transition: none;
-  backface-visibility: hidden;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.07) inset,
     0 18px 0 -8px rgba(0, 0, 0, 0.42),
@@ -469,6 +469,12 @@
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.75),
     0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Pause gift animations during spin to reduce compositing work */
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel--is-spinning .fidelity-roulette-segment-gift-img {
+  animation-play-state: paused;
+  will-change: auto;
 }
 
 @media (max-width: 480px) {

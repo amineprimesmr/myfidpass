@@ -236,6 +236,11 @@ export async function deliverCustomerBroadcast({
     const receiptTitle = "Campagne envoyée";
     const receiptBody = `Wallet: ${sentPassKit} · Web: ${sentWebPush}${errors.length ? ` · ${errors.length} erreur(s)` : ""}`;
     for (const tok of tokens) {
+      const hasNotifIcon = Number(business?.asset_notification_icon_present) === 1 ||
+        !!(business?.notification_icon_base64 && String(business.notification_icon_base64).trim());
+      const iconUrl = hasNotifIcon && slug && apiBase
+        ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+        : null;
       const r = await sendMerchantAppAlert(tok, {
         title: receiptTitle,
         body: receiptBody,
@@ -244,6 +249,7 @@ export async function deliverCustomerBroadcast({
           myfidpass_action: "campaign_receipt",
           batch_id: batchId,
           business_id: business.id,
+          ...(iconUrl ? { notification_icon_url: iconUrl } : {}),
         },
       });
       if (r.sent) {

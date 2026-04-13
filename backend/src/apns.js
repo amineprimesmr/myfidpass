@@ -401,6 +401,10 @@ export function sendMerchantAppAlert(deviceToken, payload) {
   }
   if (payload.data && typeof payload.data === "object") {
     opts.data = payload.data;
+    // mutable-content = 1 permet à la Notification Service Extension de joindre l'icône
+    if (typeof payload.data.notification_icon_url === "string" && payload.data.notification_icon_url) {
+      opts.mutableContent = true;
+    }
   }
   const note = new Notification(deviceToken, opts);
 

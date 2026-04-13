@@ -165,7 +165,6 @@ export function initFidelityClientPageSection(ctx) {
 
   function syncLivePreview(settingsData, rouletteSegments) {
     const url = settingsData?.fidelity_page_background_url || settingsData?.fidelityPageBackgroundUrl;
-    const flyerCustomBgUrl = settingsData?.flyer_custom_bg_url ?? settingsData?.flyerCustomBgUrl;
     const heroRaw =
       settingsData?.fidelity_qr_hero_title != null
         ? String(settingsData.fidelity_qr_hero_title)
@@ -201,15 +200,9 @@ export function initFidelityClientPageSection(ctx) {
 
     if (previewRoot) {
       const businessStub = {
-        fidelity_page_background_url: url || "",
         fidelityPageBackgroundUrl: url || "",
         fidelity_page_background_updated_at:
           settingsData?.fidelity_page_background_updated_at ?? settingsData?.fidelityPageBackgroundUpdatedAt,
-        fidelityPageBackgroundUpdatedAt:
-          settingsData?.fidelity_page_background_updated_at ?? settingsData?.fidelityPageBackgroundUpdatedAt,
-        flyer_custom_bg_url: flyerCustomBgUrl || "",
-        flyerCustomBgUrl: flyerCustomBgUrl || "",
-        flyer_prefs_updated_at: settingsData?.flyer_prefs_updated_at ?? settingsData?.flyerPrefsUpdatedAt,
       };
       const resolved = resolveFidelityPageBackgroundImgSrc(businessStub, slug, apiBase);
       previewRoot.classList.toggle("fidelity-page--client-bg", Boolean(resolved));
