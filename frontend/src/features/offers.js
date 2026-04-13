@@ -1,16 +1,48 @@
 /**
- * Page choix d'offre / abonnement (redirection si déjà abonné, bouton Stripe).
+ * Page choix d'offre / abonnement (redirection si déjà abonné payant, bouton Stripe).
  * Référence : REFONTE-REGLES.md — un module par écran.
  */
 import { API_BASE, getAuthHeaders, isDevBypassPayment, setDevBypassPayment } from "../config.js";
 
-export function initOffersPage() {
+/** Accès opérationnel sans être en fenêtre d’essai 24 h = abonnement Stripe (ou équivalent). */
+function shouldRedirectLoggedInUserToApp(data) {
+  if (isDevBypassPayment()) return true;
+  if (!data) return false;
+  const hasOp = !!(data.has_active_subscription ?? data.hasActiveSubscription);
+  if (!hasOp) return false;
+  const trialIso = data.merchant_trial_ends_at ?? data.merchantTrialEndsAt;
+  if (trialIso != null && String(trialIso).trim() !== "") return false;
+  return true;
+}
+
+/**
+ * @param {object} [route]
+ * @param {boolean} [route.subscriptionLanding] — `/abonnement` (CTA pastille app)
+ */
+export function initOffersPage(route = {}) {
+  const subscriptionLanding = route.subscriptionLanding === true;
+
+  if (subscriptionLanding) {
+    const root = document.getElementById("offers-app");
+    if (root) root.classList.add("offers-app--abonnement");
+    document.title = "Abonnement — Myfidpass";
+    const titleEl = document.querySelector("#offers-app .offers-title");
+    if (titleEl) titleEl.textContent = "Abonnez-vous pour 1 €";
+    const subEl = document.querySelector("#offers-app .offers-subtitle");
+    if (subEl) {
+      subEl.textContent =
+        "Finalisez votre abonnement en toute sécurité (Stripe). Après votre essai de 24 h, un paiement est nécessaire pour conserver l’accès complet.";
+    }
+    const btn = document.getElementById("offers-btn-starter");
+    if (btn) btn.textContent = "Payer et continuer";
+  }
+
   (async () => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
-        if (data.hasActiveSubscription || isDevBypassPayment()) {
+        if (shouldRedirectLoggedInUserToApp(data)) {
           window.location.replace("/app");
           return;
         }
@@ -54,7 +86,7 @@ export function initOffersPage() {
         window.location.replace("/app");
       }
       btnStarter.disabled = false;
-      btnStarter.textContent = "Choisir — 49 €/mois";
+      btnStarter.textContent = subscriptionLanding ? "Payer et continuer" : "Choisir — 49 €/mois";
     });
   }
 }

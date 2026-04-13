@@ -3235,6 +3235,11 @@ body.page-app .whatsapp-fab { display: none !important; }
 #offers-app.unified-shell .offers-card-amount { font-size: 1.5rem; font-weight: 800; }
 #offers-app.unified-shell .offers-footer { margin-top: 2rem; text-align: center; }
 #offers-app.unified-shell .offers-footer a { color: #1e3a8a; text-decoration: none; }
+/* Parcours /abonnement (pastille app « 1 € ») : carte un peu plus marquée */
+#offers-app.unified-shell.offers-app--abonnement .offers-card-featured {
+  border-color: #0f172a;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
+}
 .offers-dev-bypass-wrap { margin-top: 1.5rem; text-align: center; }
 .offers-dev-bypass-btn {
   background: none;

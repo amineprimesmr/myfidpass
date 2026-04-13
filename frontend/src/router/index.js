@@ -22,6 +22,7 @@ export function getRoute() {
   if (path === "/login") return { type: "auth", tab: "login" };
   if (path === "/register") return { type: "auth", tab: "register" };
   if (path === "/creer-ma-carte") return { type: "landing", openOnboarding: true };
+  if (path === "/abonnement") return { type: "offers", subscriptionLanding: true };
   if (path === "/choisir-offre") return { type: "offers" };
   if (path === "/checkout" || path === "/creation-carte") return { type: "redirect-stripe" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
@@ -204,8 +205,9 @@ export async function initRouting() {
 
 
   if (route.type === "offers") {
+    const redirectPath = route.subscriptionLanding ? "/abonnement" : "/choisir-offre";
     if (!getAuthToken()) {
-      window.location.replace("/login?redirect=/choisir-offre");
+      window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
       return null;
     }
     hideAll();

@@ -1,7 +1,7 @@
 import { initOffersPage } from "../features/offers.js";
 
 export default {
-  init() {
-    initOffersPage();
+  init(route = {}) {
+    initOffersPage(route);
   },
 };
