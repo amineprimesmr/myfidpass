@@ -10,6 +10,9 @@ import logger from "../lib/logger.js";
 const GOOGLE_CLIENT_ID = (process.env.GOOGLE_CLIENT_ID || "").trim();
 const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET || "").trim();
 
+/** Évite que le callback OAuth reste « en chargement » indéfiniment si Google ne répond pas. */
+const FETCH_TIMEOUT_MS = 25_000;
+
 const ACCOUNT_MGMT = "https://mybusinessaccountmanagement.googleapis.com/v1";
 const BUSINESS_INFO = "https://mybusinessbusinessinformation.googleapis.com/v1";
 const MY_BUSINESS_V4 = "https://mybusiness.googleapis.com/v4";
@@ -59,13 +62,22 @@ export function buildGoogleBusinessAuthorizeUrl(redirectUri, state) {
 
 async function postForm(url, params) {
   const body = new URLSearchParams(params);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
-  const data = await res.json().catch(() => ({}));
-  return { ok: res.ok, data };
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, data };
+  } catch (e) {
+    if (e?.name === "AbortError" || e?.name === "TimeoutError") {
+      logger.warn({ url }, "[gbp-oauth] postForm timeout");
+      return { ok: false, data: { error: "timeout" } };
+    }
+    throw e;
+  }
 }
 
 export async function exchangeGoogleBusinessAuthorizationCode(code, redirectUri) {
@@ -108,9 +120,20 @@ export async function refreshGoogleBusinessAccessToken(refreshToken) {
 }
 
 async function fetchJson(url, accessToken) {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-  const data = await res.json().catch(() => ({}));
-  return { ok: res.ok, status: res.status, data };
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    if (e?.name === "AbortError" || e?.name === "TimeoutError") {
+      logger.warn({ url }, "[gbp] fetch timeout");
+      return { ok: false, status: 0, data: {}, error: "timeout" };
+    }
+    throw e;
+  }
 }
 
 /** Extrait l’identifiant numérique depuis `accounts/123…`. */
@@ -124,8 +147,11 @@ export function accountResourceIdFromName(accountName) {
 export async function listGoogleBusinessAccounts(accessToken) {
   const r = await fetchJson(`${ACCOUNT_MGMT}/accounts`, accessToken);
   if (!r.ok) {
-    logger.warn({ status: r.status, data: r.data }, "[gbp] accounts.list");
-    return { ok: false, error: r.data?.error?.message || r.data?.error?.status || "accounts_failed" };
+    logger.warn({ status: r.status, data: r.data, fetchErr: r.error }, "[gbp] accounts.list");
+    return {
+      ok: false,
+      error: r.error || r.data?.error?.message || r.data?.error?.status || "accounts_failed",
+    };
   }
   const accounts = r.data.accounts || [];
   const accountNames = accounts.map((a) => a.name).filter(Boolean);
@@ -140,8 +166,11 @@ export async function listGoogleBusinessLocations(accessToken, accountName) {
   const url = `${BUSINESS_INFO}/accounts/${encodeURIComponent(id)}/locations?readMask=name,title,metadata`;
   const r = await fetchJson(url, accessToken);
   if (!r.ok) {
-    logger.warn({ id, status: r.status, data: r.data }, "[gbp] locations.list");
-    return { ok: false, error: r.data?.error?.message || r.data?.error?.status || "locations_failed" };
+    logger.warn({ id, status: r.status, data: r.data, fetchErr: r.error }, "[gbp] locations.list");
+    return {
+      ok: false,
+      error: r.error || r.data?.error?.message || r.data?.error?.status || "locations_failed",
+    };
   }
   const locations = r.data.locations || [];
   return { ok: true, locations };
@@ -171,8 +200,11 @@ export async function listGoogleBusinessReviews(accessToken, accountId, location
   u.searchParams.set("orderBy", "updateTime desc");
   const r = await fetchJson(u.toString(), accessToken);
   if (!r.ok) {
-    logger.warn({ status: r.status, data: r.data }, "[gbp] reviews.list");
-    return { ok: false, error: r.data?.error?.message || r.data?.error?.status || "reviews_failed" };
+    logger.warn({ status: r.status, data: r.data, fetchErr: r.error }, "[gbp] reviews.list");
+    return {
+      ok: false,
+      error: r.error || r.data?.error?.message || r.data?.error?.status || "reviews_failed",
+    };
   }
   const reviews = r.data.reviews || [];
   let totalCount = Number(r.data.totalReviewCount);

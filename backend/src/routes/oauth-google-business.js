@@ -69,23 +69,35 @@ router.get("/google-business/callback", async (req, res) => {
         matched_place_id: resolved.matchedPlaceId,
       },
     });
-
-    const rev = await listGoogleBusinessReviews(
-      exchanged.accessToken,
-      resolved.accountId,
-      resolved.locationId,
-    );
-    if (rev.ok) {
-      insertSocialMetricSnapshot(business.id, "google_review", "oauth_google_business", {
-        reviews_count: rev.reviewsCount,
-        rating: rev.rating,
-        reviews_sample: JSON.stringify(rev.samples),
-      });
-    }
   } catch (e) {
     logger.error({ err: e }, "[oauth-gbp] persist");
     return res.redirect(302, redirectToApp({ error: "save_failed" }));
   }
+
+  /**
+   * Ne pas bloquer la redirection utilisateur sur listGoogleBusinessReviews (peut être lent / bloquer côté Google).
+   * Sans réponse HTTP rapide, Safari / ASWebAuthenticationSession reste en « chargement » plusieurs minutes.
+   */
+  const bid = business.id;
+  const tok = exchanged.accessToken;
+  const aid = resolved.accountId;
+  const lid = resolved.locationId;
+  setImmediate(() => {
+    listGoogleBusinessReviews(tok, aid, lid)
+      .then((rev) => {
+        if (rev.ok) {
+          insertSocialMetricSnapshot(bid, "google_review", "oauth_google_business", {
+            reviews_count: rev.reviewsCount,
+            rating: rev.rating,
+            reviews_sample: JSON.stringify(rev.samples),
+          });
+        } else {
+          logger.warn({ err: rev.error }, "[oauth-gbp] async reviews skipped");
+        }
+      })
+      .catch((err) => logger.error({ err }, "[oauth-gbp] async reviews"));
+  });
+
   return res.redirect(302, redirectToApp({ success: "1" }));
 });
 
