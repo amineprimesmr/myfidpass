@@ -3888,8 +3888,15 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-dashboard-recent-header {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 1rem;
+}
+.app-dashboard-recent-header-text {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
 }
 .app-dashboard-recent-icon {
   width: 32px;
@@ -3910,7 +3917,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-dashboard-recent-headers {
   display: grid;
-  grid-template-columns: 1fr minmax(120px, auto) minmax(140px, auto);
+  grid-template-columns: 1fr minmax(110px, auto) minmax(130px, auto) minmax(72px, auto);
   gap: 1rem;
   padding: 0.6rem 1rem;
   background: #f1f5f9;
@@ -3919,6 +3926,9 @@ body.page-app .whatsapp-fab { display: none !important; }
   font-weight: 600;
   color: #64748b;
   margin-bottom: 0.5rem;
+}
+.app-dashboard-recent-col-points {
+  text-align: right;
 }
 .app-dashboard-recent-list {
   display: flex;
@@ -3929,7 +3939,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-dashboard-recent-row {
   display: grid;
-  grid-template-columns: 1fr minmax(120px, auto) minmax(140px, auto);
+  grid-template-columns: 1fr minmax(110px, auto) minmax(130px, auto) minmax(72px, auto);
   gap: 1rem;
   align-items: center;
   padding: 0.9rem 1rem;
@@ -3946,6 +3956,23 @@ body.page-app .whatsapp-fab { display: none !important; }
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+.app-dashboard-recent-name-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.app-dashboard-recent-date-inline {
+  display: none;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.app-dashboard-recent-points {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #2563eb;
+  text-align: right;
 }
 .app-dashboard-recent-avatar {
   width: 40px;
@@ -3979,10 +4006,20 @@ body.page-app .whatsapp-fab { display: none !important; }
 @media (max-width: 640px) {
   .app-dashboard-recent-headers,
   .app-dashboard-recent-row {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
   .app-dashboard-recent-col-type,
-  .app-dashboard-recent-row-type { display: none; }
+  .app-dashboard-recent-col-date,
+  .app-dashboard-recent-row-type,
+  .app-dashboard-recent-date--desktop {
+    display: none;
+  }
+  .app-dashboard-recent-date-inline {
+    display: block;
+  }
+  .app-dashboard-recent-points {
+    grid-column: auto;
+  }
 }
 
 .app-dashboard-analytics-grid {

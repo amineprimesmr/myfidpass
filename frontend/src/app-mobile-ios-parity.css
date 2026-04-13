@@ -67,6 +67,14 @@
     display: none !important;
   }
 
+  /* Accueil : masquer l’ancien hero stats, message global, FAB et panneau « plus de données » (remplacés par carte + transactions type iOS) */
+  #app-app.app-mobile #dashboard.app-section-visible .app-mobile-dashboard-hero,
+  #app-app.app-mobile #dashboard.app-section-visible .app-mobile-message-bar-wrap,
+  #app-app.app-mobile #dashboard.app-section-visible .app-mobile-scan-fab,
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-more-wrap {
+    display: none !important;
+  }
+
   /* Titre section profil : doublon avec la barre Commerce */
   #app-app.app-mobile #profil.app-section-visible > .app-section-title:first-of-type {
     display: none !important;

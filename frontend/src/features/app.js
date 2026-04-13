@@ -728,6 +728,10 @@ function initAppMobile() {
     showAppSection("dashboard");
     triggerFullscreenQrScan();
   });
+  document.getElementById("app-dashboard-recent-scan-btn")?.addEventListener("click", () => {
+    showAppSection("dashboard");
+    triggerFullscreenQrScan();
+  });
   document.getElementById("app-commerce-mobile-qr")?.addEventListener("click", () => {
     showAppSection("fidelity-client");
   });
@@ -2865,12 +2869,33 @@ function initAppDashboard(slug) {
       previewIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}` : "";
     }
   }
+  function setDashboardPassPreviewIframeSrc() {
+    const passIframe = document.getElementById("app-dashboard-pass-preview");
+    if (!passIframe || !slug) return;
+    const base = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
+    passIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}` : "about:blank";
+  }
+  function syncIosHomeToolbar() {
+    const nm = document.getElementById("app-ios-home-business-name");
+    const src = document.getElementById("app-business-name");
+    if (nm && src) nm.textContent = (src.textContent || "").trim() || "";
+  }
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId !== "engagement") return;
-    runEngagementAutoSuggest();
-    setEngagementPreviewIframeSrc();
+    if (e.detail?.sectionId === "dashboard") {
+      setDashboardPassPreviewIframeSrc();
+      syncIosHomeToolbar();
+    }
+    if (e.detail?.sectionId === "engagement") {
+      runEngagementAutoSuggest();
+      setEngagementPreviewIframeSrc();
+    }
   }, { once: false });
   if (document.getElementById("engagement")?.classList.contains("app-section-visible")) setEngagementPreviewIframeSrc();
+  setDashboardPassPreviewIframeSrc();
+  syncIosHomeToolbar();
+  document.getElementById("app-ios-home-rewards")?.addEventListener("click", () => {
+    showAppSection("engagement");
+  });
 
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
   if (emojiPickerEl && stampEmojiEl) {
@@ -3933,6 +3958,7 @@ function initAppDashboard(slug) {
   // Renseigne les infos compte (email, abonnement) à partir de /api/auth/me (événement émis après initAppDashboard)
   window.addEventListener("fidpass-auth-me", (e) => {
     const d = e.detail || {};
+    syncIosHomeToolbar();
     updateMerchantTrialSubscribePillFromDetail(d);
     const user = d.user;
     const subscription = d.subscription || null;
@@ -5052,6 +5078,18 @@ function initAppDashboard(slug) {
     return data.transactions || [];
   }
 
+  function formatDashboardTxPoints(t) {
+    const raw = t.points;
+    if (raw == null || Number.isNaN(Number(raw))) return "—";
+    const n = Number(raw);
+    if (n === 0) {
+      if (t.type === "reward_redeem") return "—";
+      return "0 pts";
+    }
+    const sign = n > 0 ? "+" : "";
+    return `${sign}${n} pts`;
+  }
+
   function renderDashboardRecentHistory(transactions) {
     const listEl = document.getElementById("app-dashboard-recent-list");
     if (!listEl) return;
@@ -5067,10 +5105,14 @@ function initAppDashboard(slug) {
       const d = new Date(iso);
       return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     };
+    const formatRecentDateShort = (iso) => {
+      const d = new Date(iso);
+      return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+    };
     const initial = (name) => (name && name.trim() ? String(name.trim()).charAt(0).toUpperCase() : "?");
     const avatarColors = ["av-0", "av-1", "av-2", "av-3", "av-4", "av-5", "av-6", "av-7"];
     if (arr.length === 0) {
-      listEl.innerHTML = '<p class="app-dashboard-recent-empty">Aucun passage récent.</p>';
+      listEl.innerHTML = '<p class="app-dashboard-recent-empty">Aucune transaction récente.</p>';
       return;
     }
     listEl.innerHTML = arr
@@ -5079,10 +5121,14 @@ function initAppDashboard(slug) {
           `<article class="app-dashboard-recent-row" role="listitem">
             <div class="app-dashboard-recent-row-name">
               <span class="app-dashboard-recent-avatar ${avatarColors[i % avatarColors.length]}" aria-hidden="true">${escapeHtml(initial(t.member_name || t.member_email))}</span>
-              <span class="app-dashboard-recent-name">${escapeHtml(t.member_name || "Sans nom")}</span>
+              <div class="app-dashboard-recent-name-stack">
+                <span class="app-dashboard-recent-name">${escapeHtml(t.member_name || "Sans nom")}</span>
+                <span class="app-dashboard-recent-date-inline">${escapeHtml(formatRecentDateShort(t.created_at))}</span>
+              </div>
             </div>
-            <span class="app-dashboard-recent-type app-dashboard-recent-row-type">${typeLabel(t)}</span>
-            <span class="app-dashboard-recent-date">${formatRecentDate(t.created_at)}</span>
+            <span class="app-dashboard-recent-type app-dashboard-recent-row-type">${escapeHtml(typeLabel(t))}</span>
+            <span class="app-dashboard-recent-date app-dashboard-recent-date--desktop">${escapeHtml(formatRecentDate(t.created_at))}</span>
+            <span class="app-dashboard-recent-points">${escapeHtml(formatDashboardTxPoints(t))}</span>
           </article>`
       )
       .join("");

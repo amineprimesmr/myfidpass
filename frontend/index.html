@@ -48,6 +48,7 @@
     <link rel="stylesheet" href="/src/app-mobile-ios-components.css" />
     <link rel="stylesheet" href="/src/app-mobile-ios-campaigns.css" />
     <link rel="stylesheet" href="/src/app-notifications-layout.css" />
+    <link rel="stylesheet" href="/src/app-dashboard-ios-home.css" />
     <link rel="stylesheet" href="/src/post-purchase-app-modal.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
@@ -516,6 +517,16 @@
               </div>
             </div>
             <div class="app-dashboard-col-main-rest">
+            <!-- Accueil mobile : aperçu carte (comme app iOS) -->
+            <div class="app-ios-home-hero app-mobile-only" id="app-ios-home-hero" aria-label="Aperçu carte fidélité">
+              <div class="app-ios-home-pass-toolbar">
+                <span class="app-ios-home-pass-brand" id="app-ios-home-business-name"></span>
+                <button type="button" class="app-ios-home-rewards" id="app-ios-home-rewards">Récompenses ↗</button>
+              </div>
+              <div class="app-ios-home-pass-frame">
+                <iframe id="app-dashboard-pass-preview" class="app-ios-home-pass-iframe" title="Aperçu de la page carte" loading="lazy" src="about:blank"></iframe>
+              </div>
+            </div>
             <!-- Hero mobile : 2 cartes + message -->
             <div class="app-mobile-dashboard-hero app-mobile-only" id="app-mobile-dashboard-hero">
               <div class="app-mobile-dashboard-card" id="app-mobile-card-members">
@@ -650,15 +661,21 @@
 
             <div class="app-dashboard-recent-history" role="region" aria-labelledby="app-dashboard-recent-heading">
               <div class="app-dashboard-recent-header">
-                <span class="app-dashboard-recent-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                </span>
-                <h3 id="app-dashboard-recent-heading" class="app-dashboard-recent-title">Historique récent</h3>
+                <div class="app-dashboard-recent-header-text">
+                  <span class="app-dashboard-recent-icon app-dashboard-recent-icon--desktop" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  </span>
+                  <h3 id="app-dashboard-recent-heading" class="app-dashboard-recent-title">Dernières transactions</h3>
+                </div>
+                <button type="button" class="app-dashboard-recent-scan-btn app-mobile-only" id="app-dashboard-recent-scan-btn" aria-label="Scanner un QR code">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+                </button>
               </div>
               <div class="app-dashboard-recent-headers">
                 <span class="app-dashboard-recent-col-name">Client</span>
                 <span class="app-dashboard-recent-col-type">Type</span>
                 <span class="app-dashboard-recent-col-date">Date</span>
+                <span class="app-dashboard-recent-col-points">Points</span>
               </div>
               <div class="app-dashboard-recent-list" id="app-dashboard-recent-list">
                 <!-- Rempli par JS -->

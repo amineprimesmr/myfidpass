@@ -1,0 +1,178 @@
+/**
+ * Accueil dashboard mobile — parité visuelle avec l’app iOS myfidpass
+ * (carte en premier, transactions type liste native).
+ */
+
+@media (max-width: 768px) {
+  #app-app.app-mobile #dashboard.app-section-visible .app-ios-home-hero {
+    margin: 0 0 1.25rem;
+  }
+
+  .app-ios-home-pass-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+    padding: 0 2px;
+  }
+
+  .app-ios-home-pass-brand {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-ios-home-rewards {
+    flex-shrink: 0;
+    border: none;
+    background: none;
+    padding: 0.25rem 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2563eb;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-ios-home-rewards:active {
+    opacity: 0.7;
+  }
+
+  .app-ios-home-pass-frame {
+    border-radius: 22px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow:
+      0 4px 24px rgba(15, 23, 42, 0.08),
+      0 1px 3px rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  .app-ios-home-pass-iframe {
+    display: block;
+    width: 100%;
+    height: min(58vh, 420px);
+    border: none;
+    background: #f8fafc;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-icon--desktop {
+    display: none !important;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-header {
+    margin-bottom: 0.85rem;
+    padding: 0 2px;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .app-dashboard-recent-scan-btn.app-mobile-only {
+    display: flex !important;
+  }
+
+  .app-dashboard-recent-scan-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e8eef7;
+    color: #1e3a8a;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-dashboard-recent-scan-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .app-dashboard-recent-scan-btn:active {
+    transform: scale(0.96);
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-history {
+    margin-top: 0.25rem;
+    padding: 1rem 1rem 1.1rem;
+    border-radius: 18px;
+    border: none;
+    box-shadow:
+      0 4px 20px rgba(15, 23, 42, 0.06),
+      0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-headers {
+    display: none !important;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.85rem 0.75rem;
+    border-radius: 14px;
+    background: #f1f5f9;
+    border: none;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-row:hover {
+    box-shadow: none;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-row-name {
+    flex: 1;
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-name {
+    font-weight: 600;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-date-inline {
+    display: block !important;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-date--desktop {
+    display: none !important;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-row-type {
+    display: none !important;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-points {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1d4ed8;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-empty {
+    background: transparent;
+    padding: 1.25rem 0.5rem;
+  }
+}
