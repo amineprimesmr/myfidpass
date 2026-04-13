@@ -525,57 +525,56 @@
                 <button type="button" class="app-ios-home-rewards" id="app-ios-home-rewards">Récompenses ↗</button>
               </div>
               <div class="app-ios-home-pass-frame">
-                <div
-                  id="app-dashboard-home-preview-root"
-                  class="fidelity-page app-fidelity-client-live-preview-root app-dashboard-home-preview-root"
-                >
-                  <main class="fidelity-v2-main fidelity-qr-game">
-                    <section class="fidelity-qr-hero" aria-label="Jeu">
-                      <div class="fidelity-qr-brand">
-                        <img
-                          id="app-dashboard-home-preview-logo"
-                          class="fidelity-qr-logo hidden"
-                          alt=""
-                          width="120"
-                          height="120"
-                          decoding="async"
-                        />
-                        <h1 id="app-dashboard-home-preview-title" class="fidelity-qr-title fidelity-qr-title--lead">
-                          <span class="fidelity-qr-hero-title-inner"></span>
-                        </h1>
+                <div id="app-dashboard-home-preview-root" class="app-dashboard-home-preview-root">
+                  <div class="builder-wallet-card app-wallet-preview-dynamic" id="app-dash-home-wallet-card">
+                    <div class="builder-wallet-card-header app-wallet-preview-header" id="app-dash-home-wallet-strip">
+                      <img id="app-dash-home-strip-img" class="app-wallet-preview-strip-img hidden" alt="" aria-hidden="true" />
+                      <span id="app-dash-home-strip-text" class="app-wallet-preview-strip-text hidden"></span>
+                      <div class="app-wallet-preview-logo-wrap" id="app-dash-home-logo-wrap">
+                        <img id="app-dash-home-wallet-logo" class="app-wallet-preview-logo hidden" alt="" />
+                        <span class="app-wallet-preview-logo-fallback" id="app-dash-home-logo-fallback">Logo</span>
                       </div>
-                    </section>
-                    <section
-                      id="app-dashboard-home-roulette-section"
-                      class="fidelity-v2-roulette-inline fidelity-v2-roulette-inline--qr"
-                      aria-label="Roulette"
-                    >
-                      <div class="fidelity-v2-roulette-inline-controls">
-                        <span class="fidelity-cta-wrap fidelity-cta-wrap--full fidelity-cta-wrap--qr-play">
-                          <button
-                            type="button"
-                            class="fidelity-cta-pill fidelity-cta-pill--wheel-cta fidelity-cta-pill--qr-play app-dashboard-home-preview-cta"
-                            tabindex="-1"
-                            aria-hidden="true"
-                          >
-                            <span class="fidelity-cta-wheel-line fidelity-cta-wheel-line--qr">
-                              <span class="fidelity-cta-wheel-action">Jouer la partie</span>
-                              <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
-                            </span>
-                          </button>
-                        </span>
-                      </div>
-                      <div class="fidelity-roulette-wheel-zone">
-                        <div class="fidelity-roulette-wheel-mount">
-                          <div class="fidelity-roulette-wheel-outer">
-                            <div id="app-dashboard-home-preview-wheel" class="fidelity-roulette-wheel"></div>
-                            <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
-                            <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
+                      <span class="app-wallet-preview-org hidden" id="app-dash-home-org" aria-hidden="true">Commerce</span>
+                      <span id="app-dash-home-header-right" class="app-wallet-preview-header-right">Récompenses ��</span>
+                    </div>
+                    <div id="app-dash-home-card-bg-banner" class="app-wallet-preview-card-bg-banner hidden" aria-hidden="true"></div>
+                    <div class="builder-wallet-card-body app-wallet-preview-body" id="app-dash-home-wallet-body">
+                      <div class="app-wallet-preview-main-block" id="app-dash-home-main-block">
+                        <div class="builder-wallet-card-pts-wrap" id="app-dash-home-pts-wrap">
+                          <span class="builder-wallet-card-pts-value">
+                            <span class="wallet-preview-emoji hidden" id="app-dash-home-pts-emoji" aria-hidden="true">⭐</span>
+                            <span id="app-dash-home-wallet-value">0</span>
+                          </span>
+                          <span class="builder-wallet-card-label" id="app-dash-home-wallet-label">points</span>
+                        </div>
+                        <div class="app-wallet-preview-bandeau hidden" id="app-dash-home-bandeau">
+                          <div class="builder-wallet-card-stamps-wrap hidden" id="app-dash-home-stamps-wrap">
+                            <div class="builder-wallet-card-stamps-grid" id="app-dash-home-stamps-grid" aria-hidden="true">
+                              <div class="builder-wallet-card-stamps-row"></div>
+                              <div class="builder-wallet-card-stamps-row"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="app-wallet-preview-bottom-row">
+                          <div class="builder-wallet-card-reward" id="app-dash-home-reward-wrap">
+                            <span class="builder-wallet-card-reward-label">Récompense</span>
+                            <span class="builder-wallet-card-reward-value" id="app-dash-home-wallet-reward">Paliers en magasin</span>
+                          </div>
+                          <div class="builder-wallet-card-restants hidden" id="app-dash-home-restants-wrap">
+                            <span class="builder-wallet-card-restants-label" id="app-dash-home-restants-label">Restants</span>
+                            <span class="builder-wallet-card-restants-value" id="app-dash-home-restants">= 10</span>
+                          </div>
+                          <div class="builder-wallet-card-member">
+                            <span class="builder-wallet-card-member-label" id="app-dash-home-member-label">Membre</span>
+                            <span class="builder-wallet-card-member-value" id="app-dash-home-member-value">—</span>
                           </div>
                         </div>
                       </div>
-                    </section>
-                  </main>
+                    </div>
+                    <div class="builder-wallet-card-qr">
+                      <img class="builder-wallet-card-qr-img" id="app-dash-home-wallet-qr" src="" alt="QR code — page fidélité" width="64" height="64" decoding="async" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
