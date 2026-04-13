@@ -43,6 +43,14 @@ export const API_BASE =
         ? "https://api.myfidpass.fr"
         : RAW_ENV_API_BASE || "";
 
+/** Clé publique Stripe (Payment Element). À définir sur Vercel : `VITE_STRIPE_PUBLISHABLE_KEY`. */
+const RAW_STRIPE_PUBLISHABLE_KEY =
+  typeof import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY === "string"
+    ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY.trim()
+    : "";
+
+export const STRIPE_PUBLISHABLE_KEY = RAW_STRIPE_PUBLISHABLE_KEY;
+
 const AUTH_TOKEN_KEY = "fidpass_token";
 const REFRESH_TOKEN_KEY = "fidpass_refresh_token";
 

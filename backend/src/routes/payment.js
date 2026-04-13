@@ -125,6 +125,118 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
 });
 
 /**
+ * POST /api/payment/create-embedded-subscription
+ * Abonnement avec Stripe Payment Element (carte, Apple Pay, Google Pay) sur myfidpass.fr — sans redirection Checkout hébergé.
+ * Réponse : { client_secret, subscription_id } pour `stripe.confirmPayment` côté navigateur.
+ */
+router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
+  if (!stripe || !PRICE_ID_STARTER) {
+    return res.status(503).json({
+      error: "Paiement non configuré",
+      code: "stripe_not_configured",
+    });
+  }
+  const userId = String(req.user.id);
+  const email = (req.user.email || "").trim();
+  if (!email) {
+    return res.status(400).json({ error: "Email utilisateur requis" });
+  }
+  if (hasActiveSubscription(userId)) {
+    return res.status(409).json({
+      error: "Un abonnement actif est déjà associé à ce compte.",
+      code: "already_subscribed",
+    });
+  }
+
+  try {
+    let customerId = "";
+    const existingRow = getSubscriptionByUserId(userId);
+    if (existingRow?.stripe_customer_id) {
+      customerId = String(existingRow.stripe_customer_id).trim();
+    }
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email,
+        metadata: { user_id: userId },
+      });
+      customerId = customer.id;
+      createOrUpdateSubscription({
+        userId,
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: existingRow?.stripe_subscription_id || null,
+        planId: existingRow?.plan_id || "starter",
+        status: existingRow?.status || "incomplete",
+        currentPeriodEnd: existingRow?.current_period_end || null,
+      });
+    }
+
+    const incomplete = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "incomplete",
+      limit: 20,
+    });
+    for (const s of incomplete.data) {
+      try {
+        await stripe.subscriptions.cancel(s.id);
+      } catch (e) {
+        console.warn("[payment] cancel incomplete sub:", s.id, e?.message || e);
+      }
+    }
+
+    const subscription = await stripe.subscriptions.create({
+      customer: customerId,
+      items: [{ price: PRICE_ID_STARTER, quantity: 1 }],
+      metadata: { user_id: userId },
+      payment_behavior: "default_incomplete",
+      payment_settings: { save_default_payment_method: "on_subscription" },
+      expand: ["latest_invoice.payment_intent"],
+    });
+
+    const clientSecret = await extractSubscriptionInvoiceClientSecret(subscription);
+    if (!clientSecret) {
+      console.error("[payment] embedded subscription: missing client_secret", subscription.id);
+      try {
+        await stripe.subscriptions.cancel(subscription.id);
+      } catch (_) {}
+      return res.status(500).json({
+        error: "Impossible de préparer l’intention de paiement. Réessayez.",
+        code: "missing_payment_intent",
+      });
+    }
+
+    await syncSubscriptionFromStripeObject(subscription, userId);
+
+    return res.json({
+      client_secret: clientSecret,
+      subscription_id: subscription.id,
+    });
+  } catch (err) {
+    console.error("Stripe embedded subscription error:", err);
+    return res.status(500).json({
+      error: err.message || "Impossible de créer l’abonnement",
+    });
+  }
+});
+
+/**
+ * @param {import("stripe").Stripe.Subscription} subscription
+ * @returns {Promise<string|null>}
+ */
+async function extractSubscriptionInvoiceClientSecret(subscription) {
+  if (!stripe || !subscription?.latest_invoice) return null;
+  let invoice = subscription.latest_invoice;
+  if (typeof invoice === "string") {
+    invoice = await stripe.invoices.retrieve(invoice, { expand: ["payment_intent"] });
+  }
+  if (!invoice) return null;
+  let pi = invoice.payment_intent;
+  if (typeof pi === "string") {
+    pi = await stripe.paymentIntents.retrieve(pi);
+  }
+  return pi?.client_secret || null;
+}
+
+/**
  * POST /api/payment/create-flyer-pack-session
  * Paiement unique (pack créations flyer IA). Webhook : crédite `flyer_ai_generations_bonus`.
  * Body: { business_id: string }
@@ -290,6 +402,7 @@ export async function paymentWebhookHandler(req, res) {
     "customer.subscription.created",
     "customer.subscription.updated",
     "customer.subscription.deleted",
+    "invoice.paid",
   ]);
   if (!handledTypes.has(event.type)) {
     return res.json({ received: true });
@@ -303,6 +416,14 @@ export async function paymentWebhookHandler(req, res) {
   try {
     if (event.type === "checkout.session.completed") {
       await handleCheckoutSessionCompleted(event.data.object, event.id);
+    } else if (event.type === "invoice.paid") {
+      const inv = event.data.object;
+      const subRef = inv?.subscription;
+      const subId = typeof subRef === "string" ? subRef : subRef?.id;
+      if (subId) {
+        const sub = await stripe.subscriptions.retrieve(String(subId));
+        await syncSubscriptionFromStripeObject(sub, null);
+      }
     } else if (event.type === "customer.subscription.created") {
       await syncSubscriptionFromStripeObject(event.data.object, null);
     } else if (event.type === "customer.subscription.updated") {

@@ -3240,6 +3240,110 @@ body.page-app .whatsapp-fab { display: none !important; }
   border-color: #0f172a;
   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
 }
+
+/* Paiement intégré (/abonnement, /choisir-offre) — Stripe Payment Element */
+#offers-app.unified-shell .offers-main--checkout {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+.offers-checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .offers-checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.offers-checkout-summary .offers-title {
+  font-size: clamp(1.65rem, 3vw, 2rem);
+  font-weight: 800;
+  margin: 0 0 0.75rem;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+.offers-checkout-summary .offers-subtitle {
+  color: #475569;
+  margin: 0 0 1.25rem;
+  line-height: 1.55;
+  font-size: 1rem;
+}
+.offers-value-list {
+  margin: 0 0 1.25rem;
+  padding-left: 1.15rem;
+  color: #334155;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+.offers-value-list li {
+  margin-bottom: 0.5rem;
+}
+.offers-plan-legal {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+.offers-checkout-panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1.5rem 1.5rem 1.35rem;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
+}
+.offers-panel-head {
+  margin-bottom: 1rem;
+}
+.offers-panel-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  color: #0f172a;
+}
+.offers-panel-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+.offers-payment-loading {
+  padding: 1.25rem 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+#offers-payment-element {
+  margin: 0.25rem 0 1rem;
+}
+.offers-payment-error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+.offers-payment-status {
+  color: #0f766e;
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+.offers-pay-submit {
+  margin-top: 0.25rem;
+  font-weight: 700;
+  padding-top: 0.95rem;
+  padding-bottom: 0.95rem;
+}
+.offers-stripe-footnote {
+  margin: 1rem 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  text-align: center;
+}
+#offers-app.unified-shell.offers-app--abonnement .offers-checkout-panel {
+  border-color: #0f172a;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.1);
+}
+
 .offers-dev-bypass-wrap { margin-top: 1.5rem; text-align: center; }
 .offers-dev-bypass-btn {
   background: none;

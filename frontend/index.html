@@ -256,16 +256,38 @@
           </nav>
         </div>
       </div>
-      <main class="unified-main offers-main">
-        <h1 class="offers-title">Choisissez votre tarif</h1>
-        <p class="offers-subtitle">Accédez à votre espace et créez vos cartes fidélité (Apple Wallet et Google Wallet).</p>
-        <div class="offers-grid" id="offers-grid">
-          <article class="offers-card offers-card-featured">
-            <h2 class="offers-card-title">Myfidpass</h2>
-            <p class="offers-card-desc">Carte de fidélité, tableau de bord, accès logiciel, application Myfidpass. Sans engagement : 24 h d’accès complet pour tout découvrir, puis abonnement.</p>
-            <p class="offers-card-price"><span class="offers-card-amount">49 €</span> / mois</p>
-            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Choisir — 49 €/mois</button>
-          </article>
+      <main class="unified-main offers-main offers-main--checkout">
+        <div class="offers-checkout-layout">
+          <section class="offers-checkout-summary" aria-labelledby="offers-title">
+            <h1 class="offers-title" id="offers-title">Abonnement Myfidpass</h1>
+            <p class="offers-subtitle">
+              Carte fidélité Apple Wallet &amp; Google Wallet, tableau de bord, campagnes, flyer QR et application commerçant — tout inclus.
+            </p>
+            <ul class="offers-value-list">
+              <li>Clients ajoutent la carte en un scan — sans appli à installer</li>
+              <li>Notifications push et statistiques en temps réel</li>
+              <li>Données hébergées en Europe (RGPD)</li>
+            </ul>
+            <p class="offers-plan-legal">
+              Tarif et premier mois affichés selon votre offre Stripe (ex. 1er mois à 1&nbsp;€ puis renouvellement mensuel). Sans engagement : résiliable depuis votre espace.
+            </p>
+          </section>
+          <section class="offers-checkout-panel" aria-label="Paiement sécurisé">
+            <div class="offers-panel-head">
+              <h2 class="offers-panel-title">Paiement sécurisé</h2>
+              <p class="offers-panel-hint">Carte bancaire, Apple&nbsp;Pay ou Google&nbsp;Pay selon votre appareil.</p>
+            </div>
+            <div id="offers-payment-loading" class="offers-payment-loading">Préparation du formulaire de paiement…</div>
+            <div id="offers-payment-element-wrap" class="hidden">
+              <div id="offers-payment-element"></div>
+            </div>
+            <p id="offers-payment-error" class="offers-payment-error hidden" role="alert"></p>
+            <p id="offers-payment-status" class="offers-payment-status hidden" role="status"></p>
+            <button type="button" id="offers-pay-submit" class="landing-btn landing-btn-primary landing-btn-block offers-pay-submit" disabled>
+              Payer et activer
+            </button>
+            <p class="offers-stripe-footnote">Traitement par Stripe (PCI-DSS) — Myfidpass ne conserve pas vos coordonnées bancaires.</p>
+          </section>
         </div>
       </main>
     </div>

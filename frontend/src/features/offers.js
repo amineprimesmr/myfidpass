@@ -1,10 +1,10 @@
 /**
- * Page choix d'offre / abonnement (redirection si déjà abonné payant, bouton Stripe).
- * Référence : REFONTE-REGLES.md — un module par écran.
+ * Page choix d'offre / abonnement : paiement intégré (Stripe Payment Element), sans checkout hébergé.
  */
 import { API_BASE, getAuthHeaders, isDevBypassPayment, setDevBypassPayment } from "../config.js";
+import { initEmbeddedSubscriptionCheckout } from "./embedded-subscription.js";
 
-/** Accès opérationnel sans être en fenêtre d’essai 24 h = abonnement Stripe (ou équivalent). */
+/** Accès opérationnel sans fenêtre d’essai 24 h = abonnement Stripe payant. */
 function shouldRedirectLoggedInUserToApp(data) {
   if (isDevBypassPayment()) return true;
   if (!data) return false;
@@ -15,26 +15,52 @@ function shouldRedirectLoggedInUserToApp(data) {
   return true;
 }
 
+function rememberAppEmbeddedFromUrl() {
+  try {
+    const u = new URL(window.location.href);
+    if (u.searchParams.get("app_embedded") === "1") {
+      sessionStorage.setItem("fidpass_app_embedded", "1");
+    }
+  } catch (_) {}
+}
+
 /**
  * @param {object} [route]
- * @param {boolean} [route.subscriptionLanding] — `/abonnement` (CTA pastille app)
+ * @param {boolean} [route.subscriptionLanding] — `/abonnement`
  */
 export function initOffersPage(route = {}) {
+  rememberAppEmbeddedFromUrl();
+
   const subscriptionLanding = route.subscriptionLanding === true;
+  const root = document.getElementById("offers-app");
 
   if (subscriptionLanding) {
-    const root = document.getElementById("offers-app");
     if (root) root.classList.add("offers-app--abonnement");
     document.title = "Abonnement — Myfidpass";
-    const titleEl = document.querySelector("#offers-app .offers-title");
+    const titleEl = document.querySelector("#offers-title");
     if (titleEl) titleEl.textContent = "Abonnez-vous pour 1 €";
-    const subEl = document.querySelector("#offers-app .offers-subtitle");
+    const subEl = document.querySelector("#offers-subtitle");
     if (subEl) {
       subEl.textContent =
-        "Finalisez votre abonnement en toute sécurité (Stripe). Après votre essai de 24 h, un paiement est nécessaire pour conserver l’accès complet.";
+        "Réglez en quelques secondes sur cette page (carte, Apple Pay ou Google Pay). Après l’essai de 24 h, ce paiement débloque votre abonnement sans quitter Myfidpass.";
     }
-    const btn = document.getElementById("offers-btn-starter");
-    if (btn) btn.textContent = "Payer et continuer";
+  } else {
+    document.title = "Tarifs — Myfidpass";
+    const titleEl = document.querySelector("#offers-title");
+    if (titleEl) titleEl.textContent = "Souscrire à Myfidpass";
+    const subEl = document.querySelector("#offers-subtitle");
+    if (subEl) {
+      subEl.textContent =
+        "Accès complet au logiciel, aux cartes Wallet et à l’application commerçant. Paiement sécurisé ci-dessous, sans quitter le site.";
+    }
+  }
+
+  const devBypassBtn = document.getElementById("offers-dev-bypass-btn");
+  if (devBypassBtn) {
+    devBypassBtn.addEventListener("click", () => {
+      setDevBypassPayment(true);
+      window.location.replace("/app");
+    });
   }
 
   (async () => {
@@ -47,46 +73,20 @@ export function initOffersPage(route = {}) {
           return;
         }
       }
-    } catch (_) {}
-  })();
-
-  const devBypassWrap = document.getElementById("offers-dev-bypass-wrap");
-  const devBypassBtn = document.getElementById("offers-dev-bypass-btn");
-  if (devBypassBtn) {
-    devBypassBtn.addEventListener("click", () => {
-      setDevBypassPayment(true);
-      window.location.replace("/app");
-    });
-  }
-
-  const btnStarter = document.getElementById("offers-btn-starter");
-  if (btnStarter) {
-    btnStarter.addEventListener("click", async () => {
-      btnStarter.disabled = true;
-      btnStarter.textContent = "Redirection…";
-      try {
-        const res = await fetch(`${API_BASE}/api/payment/create-checkout-session`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ planId: "starter" }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data.url) {
-          window.location.href = data.url;
-          return;
-        }
-        if (res.status === 503 && (data.code === "stripe_not_configured" || data.error?.includes("configuré"))) {
-          window.location.replace("/app");
-          return;
-        }
-        alert(data.error || "Impossible de créer la session de paiement. Vous pouvez accéder à l'espace directement.");
-        window.location.replace("/app");
-      } catch (_) {
-        alert("Erreur réseau. Vous pouvez accéder à l'espace directement.");
-        window.location.replace("/app");
+      await initEmbeddedSubscriptionCheckout({
+        paymentElementContainerId: "offers-payment-element",
+        submitButtonId: "offers-pay-submit",
+        errorContainerId: "offers-payment-error",
+        statusContainerId: "offers-payment-status",
+      });
+    } catch (e) {
+      const errEl = document.getElementById("offers-payment-error");
+      if (errEl) {
+        errEl.textContent = e?.message || "Erreur lors du chargement du paiement.";
+        errEl.classList.remove("hidden");
       }
-      btnStarter.disabled = false;
-      btnStarter.textContent = subscriptionLanding ? "Payer et continuer" : "Choisir — 49 €/mois";
-    });
-  }
+      const loadEl = document.getElementById("offers-payment-loading");
+      if (loadEl) loadEl.classList.add("hidden");
+    }
+  })();
 }
