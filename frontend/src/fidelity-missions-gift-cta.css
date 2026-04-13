@@ -15,13 +15,20 @@
     0 2px 14px rgba(91, 33, 182, 0.1);
 }
 
+/* Grille animée du ::before : points blancs illisibles sur fond violet clair → pastilles sombres */
 .fidelity-shiny-cta--missions-gift::before {
-  opacity: 0.18;
+  background: radial-gradient(
+      circle at var(--position) var(--position),
+      rgba(59, 7, 100, 0.38) calc(var(--position) / 3.2),
+      transparent 0
+    )
+    padding-box;
+  opacity: 0.72;
 }
 
 .fidelity-shiny-cta--missions-gift::after {
-  opacity: 0.38;
-  background: linear-gradient(-50deg, transparent, rgba(124, 58, 237, 0.45), transparent);
+  opacity: 0.48;
+  background: linear-gradient(-50deg, transparent, rgba(91, 33, 182, 0.55), transparent);
 }
 
 .fidelity-shiny-cta--missions-gift:is(:hover, :focus-visible) {
