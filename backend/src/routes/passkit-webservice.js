@@ -241,8 +241,30 @@ const getPassHandler = async (req, res) => {
     const rawB64 = business.logo_base64 ? String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "") : "";
     const hasLogo = rawB64.length > 0;
     const logoBytes = hasLogo ? Buffer.byteLength(Buffer.from(rawB64, "base64")) : 0;
-    // Log visible pour diagnostic icône Wallet : filtrer par "LOGO_IN_PASS" dans Railway
-    console.log("[PassKit] >>> PASS ENVOYÉ —", shortId, "business:", business.slug || business.id, "points:", member.points, "LOGO_IN_PASS:", hasLogo ? "OUI" : "NON", "logo_bytes:", logoBytes, "Last-Modified:", lastModified);
+    const rawNotif = business.notification_icon_base64
+      ? String(business.notification_icon_base64).replace(/^data:image\/\w+;base64,/, "")
+      : "";
+    const hasNotifIcon = rawNotif.length > 0;
+    const notifIconBytes = hasNotifIcon ? Buffer.byteLength(Buffer.from(rawNotif, "base64")) : 0;
+    // Log diagnostic : icône `icon.png` du pass = même source que GET …/notification-icon (merge business_assets).
+    console.log(
+      "[PassKit] >>> PASS ENVOYÉ —",
+      shortId,
+      "business:",
+      business.slug || business.id,
+      "points:",
+      member.points,
+      "LOGO_IN_PASS:",
+      hasLogo ? "OUI" : "NON",
+      "logo_bytes:",
+      logoBytes,
+      "NOTIF_ICON_IN_PASS:",
+      hasNotifIcon ? "OUI" : "NON",
+      "notif_icon_bytes:",
+      notifIconBytes,
+      "Last-Modified:",
+      lastModified,
+    );
     const programKind = resolveBusinessProgramType(business);
     const opts = {
       template: programKind === "stamps" ? "cafe" : "classic",

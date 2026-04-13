@@ -84,22 +84,6 @@ async function loadDefaultPointsStripBuffer(sharp) {
   }
 }
 
-/** Décode un logo / icône stocké en data URL ou base64 nu. */
-function decodeDataUrlBase64ToBuffer(dataUrlOrB64) {
-  if (dataUrlOrB64 == null || !String(dataUrlOrB64).trim()) return null;
-  const d = String(dataUrlOrB64).replace(/^data:image\/[\w+]+;base64,/, "").trim();
-  try {
-    const buf = Buffer.from(d, "base64");
-    return buf.length > 0 ? buf : null;
-  } catch {
-    return null;
-  }
-}
-
-function buffersIdentical(a, b) {
-  return Boolean(a && b && a.length === b.length && a.equals(b));
-}
-
 /**
  * Génère un fichier .pkpass (buffer) pour un membre.
  * @param {Object} member - { id, name, points }
@@ -168,10 +152,8 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   /**
-   * Icône Wallet (lock screen / liste) : fichier `icon.png` du .pkpass — **pas** le bandeau `logo`.
-   * Si `icon` manque, iOS peut utiliser le logo carte pour la vignette de notification (comportement observé).
-   * Règles : (1) utiliser `notification_icon` seulement si ce n’est pas le même fichier que le logo carte /
-   * logo carré ; (2) sinon ou si le resize échoue → placeholder neutre (jamais la photo logo strip).
+   * Icône Wallet (bannière / centre de notif) : `icon.png` du .pkpass — alignée sur la page Notifs / GET …/notification-icon.
+   * Ne pas laisser `icon` vide : iOS peut retomber sur le bandeau `logo`. Même fichier que le logo commerce : OK (marque voulue).
    */
   delete buffers["icon.png"];
   delete buffers["icon@2x.png"];
@@ -182,17 +164,6 @@ export async function generatePass(member, business = null, options = {}) {
     const d = String(business.notification_icon_base64).replace(/^data:image\/[\w+]+;base64,/, "").trim();
     const b = Buffer.from(d, "base64");
     if (b.length > 0) passIconSourceBuf = b;
-  }
-
-  if (passIconSourceBuf) {
-    const stripLogoRaw = !useTextInStrip ? decodeDataUrlBase64ToBuffer(business?.logo_base64) : null;
-    const logoIconRaw = decodeDataUrlBase64ToBuffer(business?.logo_icon_base64);
-    if (buffersIdentical(passIconSourceBuf, stripLogoRaw) || buffersIdentical(passIconSourceBuf, logoIconRaw)) {
-      console.warn(
-        "[PassKit] notification_icon identique au logo carte ou logo carré — ignoré pour icon.png (notifications Wallet).",
-      );
-      passIconSourceBuf = null;
-    }
   }
 
   let notificationIconResized = null;
