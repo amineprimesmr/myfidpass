@@ -5484,7 +5484,7 @@ body.page-checkout .site-banner { display: none !important; }
 .checkout-input:focus-visible {
   outline: none;
   border-color: #1e3a8a;
-  box-shadow: 0 0 0 3px rgba(10, 124, 66, 0.2);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 .checkout-input::placeholder { color: #999; }
 .checkout-label {
@@ -5513,7 +5513,7 @@ body.page-checkout .site-banner { display: none !important; }
 .checkout-btn-next:hover { background: #c4c4c4; }
 .checkout-btn-next:not(:disabled) { background: #1e3a8a; color: #fff; }
 .checkout-btn-next:not(:disabled):hover { background: #096b38; transform: translateY(-1px); }
-.checkout-btn-next:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(10, 124, 66, 0.4); }
+.checkout-btn-next:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4); }
 .checkout-btn-next:disabled { opacity: 0.6; cursor: not-allowed; }
 .checkout-already-logged-in {
   font-size: 0.9rem;

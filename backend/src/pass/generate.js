@@ -347,36 +347,9 @@ export async function generatePass(member, business = null, options = {}) {
     textAlignment: "PKTextAlignmentRight",
   });
 
-  const labelRestants = (options.label_restants ?? business?.label_restants)?.trim() || "Restants";
   const labelMember = (options.label_member ?? business?.label_member)?.trim() || PASS_LABEL_MEMBER;
   const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
   const stampMidRewardLabel = (options.stamp_mid_reward_label ?? business?.stamp_mid_reward_label)?.trim() || "";
-  /**
-   * Carte avec image de fond mais sans programme tampons ni points (pas de type ni paliers côté commerce).
-   * Dans ce cas seul le champ « Restants » a lieu d’être sur la face ; pas sur les cartes tampons/points classiques.
-   *
-   * Important : si `program_type` est absent en base (`""`), on ne doit PAS activer ce mode : sinon
-   * `"" !== "points"` est vrai pour tous les tests et on croit à tort que c’est « décoratif » → pas de
-   * champ Points en primary, face avant vide (bug Wallet).
-   */
-  const rawProgramType = String(options.program_type ?? business?.program_type ?? "")
-    .trim()
-    .toLowerCase();
-  const effectiveRequiredStamps =
-    options.required_stamps != null ? Number(options.required_stamps) : business?.required_stamps != null
-      ? Number(business.required_stamps)
-      : 0;
-  const isDecorativeImageOnlyStrip =
-    hasCardBackgroundStrip &&
-    format !== "points" &&
-    format !== "tampons" &&
-    rawProgramType.length > 0 &&
-    rawProgramType !== "stamps" &&
-    rawProgramType !== "points" &&
-    rawProgramType !== "tampons" &&
-    rawProgramType !== "stamp" &&
-    rawProgramType !== "point" &&
-    !(Number.isFinite(effectiveRequiredStamps) && effectiveRequiredStamps > 0);
   if (format === "tampons") {
     /* Solde texte seulement si image de fond : sinon la grille sur le strip suffit (évite doublon Tampons / 0). */
     if (hasCardBackgroundStrip) {
@@ -412,29 +385,17 @@ export async function generatePass(member, business = null, options = {}) {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
     /* changeMessage obligatoire pour que Wallet affiche une alerte à chaque changement de solde. */
-    if (isDecorativeImageOnlyStrip) {
-      const balance = Math.floor(Number(member.points) || 0);
-      const restants = Math.max(0, stampMax - Math.min(stampMax, balance));
-      pass.secondaryFields.push({
-        key: "restantsDecoratif",
-        label: "",
-        value: `${labelRestants} = ${restants}`,
-        textAlignment: "PKTextAlignmentLeft",
-        changeMessage: "Fidélité : %@",
-      });
-    } else {
-      /*
-       * Toujours secondary (avec ou sans image perso sur le strip) : le solde reste sur la ligne champs
-       * sous le bandeau, pas en primary sur le strip par défaut — aligné app Ma carte + Wallet attendu.
-       */
-      pass.secondaryFields.push({
-        key: "points",
-        label: "Points",
-        value: pointsValue,
-        textAlignment: "PKTextAlignmentLeft",
-        changeMessage: "Tu as maintenant %@ points !",
-      });
-    }
+    /*
+     * Toujours secondary (avec ou sans image perso sur le strip) : le solde reste sur la ligne champs
+     * sous le bandeau — aligné app Ma carte + Wallet attendu.
+     */
+    pass.secondaryFields.push({
+      key: "points",
+      label: "Points",
+      value: pointsValue,
+      textAlignment: "PKTextAlignmentLeft",
+      changeMessage: "Tu as maintenant %@ points !",
+    });
     /* Pas de champ « Récompense » sur la face (paliers : verso « Paliers & avantages »). */
     pass.auxiliaryFields.push({
       key: "member",

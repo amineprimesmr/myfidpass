@@ -550,7 +550,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-stat:hover {
   transform: translateY(-5px);
   box-shadow: var(--app-relief-raised-hover);
-  border-color: rgba(10, 124, 66, 0.2);
+  border-color: rgba(37, 99, 235, 0.2);
 }
 
 /* Entrée en cascade des cartes stats (quand la section est visible) */
@@ -678,8 +678,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
 }
 .app-personnaliser-group.is-open {
-  border-color: rgba(10, 124, 66, 0.35);
-  box-shadow: 0 8px 20px rgba(10, 124, 66, 0.08);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
 }
 .app-personnaliser-group-toggle {
   width: 100%;
@@ -710,19 +710,19 @@ body.page-app .whatsapp-fab { display: none !important; }
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
 .app-personnaliser-group-status.is-status-complete {
-  border: 2px solid rgba(10, 124, 66, 0.45);
-  background: #0a7c42 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.2 6.4 11l6.1-6.5' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 10px 10px no-repeat;
-  box-shadow: 0 1px 2px rgba(10, 124, 66, 0.2);
+  border: 2px solid rgba(37, 99, 235, 0.45);
+  background: #2563eb url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.2 6.4 11l6.1-6.5' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 10px 10px no-repeat;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
   transform: scale(1);
 }
 .app-personnaliser-group.is-open .app-personnaliser-group-status.is-status-complete {
-  box-shadow: 0 2px 6px rgba(10, 124, 66, 0.25);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 .app-personnaliser-group-toggle:hover {
   background: #f8fafc;
 }
 .app-personnaliser-group-toggle:focus-visible {
-  outline: 2px solid rgba(10, 124, 66, 0.35);
+  outline: 2px solid rgba(37, 99, 235, 0.35);
   outline-offset: -2px;
 }
 .app-personnaliser-group.is-open .app-personnaliser-group-toggle {
@@ -1302,7 +1302,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-notification-preview-banner-title:focus,
 .app-notification-preview-banner-message:focus {
   background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 0 2px rgba(10, 124, 66, 0.25);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
 }
 .app-notification-preview-banner-message {
   font-weight: 400;
@@ -1376,10 +1376,10 @@ body.page-app .whatsapp-fab { display: none !important; }
   user-select: none;
 }
 .app-notif-target-option:hover {
-  background: rgba(10, 124, 66, 0.08);
+  background: rgba(37, 99, 235, 0.08);
 }
 .app-notif-target-option:has(input:checked) {
-  background: rgba(10, 124, 66, 0.12);
+  background: rgba(37, 99, 235, 0.12);
 }
 .app-notif-target-option input {
   position: absolute;
@@ -1399,7 +1399,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-notif-target-option:has(input:checked) .app-notif-target-dot {
   border-color: var(--app-accent, #1e3a8a);
   background: var(--app-accent, #1e3a8a);
-  box-shadow: 0 0 0 3px rgba(10, 124, 66, 0.25);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
 }
 .app-notif-categories-picks {
   margin-top: 1rem;
@@ -1444,8 +1444,8 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-notif-category-chip:has(input:checked) {
   border-color: var(--app-accent, #1e3a8a);
-  background: rgba(10, 124, 66, 0.1);
-  box-shadow: 0 0 0 2px rgba(10, 124, 66, 0.2);
+  background: rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 .app-notif-category-chip input {
   position: absolute;
@@ -2168,7 +2168,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-membres-search-input:focus {
   outline: none;
   border-color: var(--app-accent, #1e3a8a);
-  box-shadow: 0 0 0 3px rgba(10, 124, 66, 0.15);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 .app-membres-filters {
   display: flex;
@@ -2247,7 +2247,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-membres-card:focus {
   outline: none;
-  background: rgba(10, 124, 66, 0.06);
+  background: rgba(37, 99, 235, 0.06);
 }
 .app-membres-card:focus-visible {
   box-shadow: inset 0 0 0 2px var(--app-accent, #1e3a8a);
@@ -2645,7 +2645,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   position: absolute;
   inset: 0;
   z-index: 10;
-  background: rgba(10, 124, 66, 0.92);
+  background: rgba(37, 99, 235, 0.92);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2804,7 +2804,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 
 /* Succès (client reconnu) */
 .app-scanner-result .app-scanner-state-icon {
-  background: rgba(10, 124, 66, 0.2);
+  background: rgba(37, 99, 235, 0.2);
   color: var(--app-accent);
   border: 2px solid var(--app-accent);
 }
@@ -3111,12 +3111,12 @@ body.page-app .whatsapp-fab { display: none !important; }
   background: var(--app-accent);
   color: #fff;
   transition: background var(--app-transition), box-shadow var(--app-transition), transform 0.15s ease;
-  box-shadow: 0 2px 6px rgba(10, 124, 66, 0.25);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
 .app-empty-cta:hover {
   background: var(--app-accent-hover);
-  box-shadow: 0 4px 12px rgba(10, 124, 66, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 .app-empty-cta:active { transform: scale(0.98); }
 .app-empty-fatal-actions {
@@ -3228,7 +3228,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 #offers-app.unified-shell .offers-card-featured { border-color: #1e3a8a; box-shadow: 0 0 0 1px #1e3a8a; }
-#offers-app.unified-shell .offers-card-featured:hover { box-shadow: 0 8px 24px rgba(10, 124, 66, 0.15); }
+#offers-app.unified-shell .offers-card-featured:hover { box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15); }
 #offers-app.unified-shell .offers-card-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 0.5rem; }
 #offers-app.unified-shell .offers-card-desc { color: #6b7280; font-size: 0.9rem; margin: 0 0 1rem; line-height: 1.4; }
 #offers-app.unified-shell .offers-card-price { margin: 0 0 1rem; font-size: 1rem; }
@@ -4876,7 +4876,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-carte-perimetre-card:hover {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  border-color: rgba(10, 124, 66, 0.15);
+  border-color: rgba(37, 99, 235, 0.15);
 }
 .app-carte-perimetre-card .app-subsection-title {
   margin-top: 0.35rem;
@@ -4970,8 +4970,8 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-perimetre-default-suggestion {
   margin-top: 1rem;
   padding: 1rem;
-  background: linear-gradient(135deg, rgba(10, 124, 66, 0.06) 0%, rgba(10, 124, 66, 0.02) 100%);
-  border: 1px solid rgba(10, 124, 66, 0.2);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.06) 0%, rgba(37, 99, 235, 0.02) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.2);
   border-radius: var(--app-radius-sm);
 }
 .app-perimetre-default-suggestion.hidden { display: none !important; }
@@ -5031,12 +5031,12 @@ body.page-app .whatsapp-fab { display: none !important; }
   border-radius: 50%;
   background: var(--app-accent);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(10, 124, 66, 0.35);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .app-perimetre-radius-slider::-webkit-slider-thumb:hover {
   transform: scale(1.08);
-  box-shadow: 0 3px 10px rgba(10, 124, 66, 0.4);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4);
 }
 .app-perimetre-radius-slider::-moz-range-thumb {
   width: 20px;
@@ -5045,7 +5045,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   border: none;
   background: var(--app-accent);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(10, 124, 66, 0.35);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
 }
 .app-perimetre-radius-value {
   font-weight: 700;
