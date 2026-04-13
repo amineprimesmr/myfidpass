@@ -282,7 +282,7 @@ export function renderClientPage(root, state, options = {}) {
           </div>
         </section>
 
-        <!-- Missions / programme (points via missions, sans roue dans cet espace) -->
+        <!-- Missions / programme classique ou tickets (sans roue dans cet espace) -->
         ${step2SectionHtml}
       </div>
 
