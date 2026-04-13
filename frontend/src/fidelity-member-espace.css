@@ -69,7 +69,7 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-member .fidelity-qr-logo {
   width: min(48vw, 8.75rem);
   max-height: min(14vw, 3.75rem);
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.55rem;
 }
 
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-member .fidelity-v2-hero-greeting {
@@ -80,7 +80,19 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-brand {
   width: 100%;
   text-align: center;
-  margin: 0 0 0.1rem;
+  margin: 0 0 1rem;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-member .fidelity-v2-hero-title {
+  margin-bottom: 0.05rem;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-member .fidelity-hero-progress {
+  margin-top: 0.35rem;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-hero-member .fidelity-hero-progress-label {
+  margin-bottom: 0.55rem;
 }
 
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-steps {

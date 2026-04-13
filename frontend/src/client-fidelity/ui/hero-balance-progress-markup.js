@@ -1,4 +1,10 @@
-import { parsePointTiers, buildStampTiers, tierProgressState, buildHeroFullScaleTickMarks } from "../lib/tier-progress.js";
+import {
+  parsePointTiers,
+  buildStampTiers,
+  tierProgressState,
+  buildHeroFullScaleTickMarks,
+  heroFillPercentEqualSegments,
+} from "../lib/tier-progress.js";
 
 /**
  * @param {{
@@ -29,11 +35,11 @@ export function buildHeroBalanceProgressState(p) {
     maxScale = tiers[tiers.length - 1].threshold;
     progressMin = 0;
     progressMax = Math.max(1, maxScale);
-    pct = Math.min(100, Math.max(0, (pts / progressMax) * 100));
 
     const { next } = tierProgressState(tiers, pts);
     if (next) {
       nextGoal = { threshold: next.threshold, label: next.label };
+      pct = heroFillPercentEqualSegments(tiers, pts);
     } else {
       tiersComplete = true;
       pct = 100;

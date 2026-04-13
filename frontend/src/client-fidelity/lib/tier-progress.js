@@ -72,41 +72,82 @@ export function tierProgressState(tiers, balance) {
 const MAX_HERO_FULLSCALE_TICKS = 12;
 
 /**
- * Graduations jauge hero : **tous** les paliers du programme sur l’échelle 0 → dernier seuil
- * (positions en % = valeur / dernier palier, comme une règle unique sous la barre).
+ * Remplissage jauge hero : segments visuels de même largeur entre paliers successifs
+ * (les seuils réels ne dictent que la progression à l’intérieur de chaque segment).
+ * @param {{ threshold: number }[]} tiers triés, longueur ≥ 1
+ * @param {number} pts
+ */
+export function heroFillPercentEqualSegments(tiers, pts) {
+  const n = tiers.length;
+  const p = Math.max(0, pts);
+  const T = tiers.map((t) => t.threshold);
+  if (n === 0) return 0;
+
+  const first = T[0];
+  const last = T[n - 1];
+  if (!Number.isFinite(last) || last <= 0) return 0;
+  if (first <= 0) return Math.min(100, (p / last) * 100);
+
+  if (p >= last) return 100;
+  if (p <= 0) return 0;
+
+  /** Positions cumulées fin de segment : V(k) = (k+1)/n * 100 */
+  const V = (k) => ((k + 1) / n) * 100;
+
+  if (p < first) return (p / first) * V(0);
+
+  for (let k = 1; k < n; k += 1) {
+    if (p < T[k]) {
+      const tPrev = T[k - 1];
+      const tCur = T[k];
+      const span = tCur - tPrev;
+      if (span <= 0) continue;
+      return V(k - 1) + ((p - tPrev) / span) * (V(k) - V(k - 1));
+    }
+  }
+  return 100;
+}
+
+/**
+ * Graduations jauge hero : **même espacement** entre chaque palier affiché (pas proportionnel aux valeurs).
  * @param {{ threshold: number }[]} tiers triés par seuil croissant
  * @returns {{ value: number; leftPct: number }[]}
  */
 export function buildHeroFullScaleTickMarks(tiers) {
   if (!tiers.length) return [];
-  const displayMax = tiers[tiers.length - 1].threshold;
-  if (!Number.isFinite(displayMax) || displayMax <= 0) return [];
+  const lastTh = tiers[tiers.length - 1].threshold;
+  if (!Number.isFinite(lastTh) || lastTh <= 0) return [];
 
   const seenVal = new Set();
-  /** @type {{ value: number; leftPct: number }[]} */
-  const raw = [];
+  /** @type {number[]} */
+  const values = [];
   for (const t of tiers) {
     if (seenVal.has(t.threshold)) continue;
     seenVal.add(t.threshold);
-    raw.push({
-      value: t.threshold,
-      leftPct: Math.min(100, (t.threshold / displayMax) * 100),
+    values.push(t.threshold);
+  }
+
+  let display = values;
+  if (display.length > MAX_HERO_FULLSCALE_TICKS) {
+    /** @type {number[]} */
+    const thinned = [];
+    const nMax = MAX_HERO_FULLSCALE_TICKS;
+    for (let i = 0; i < nMax; i += 1) {
+      const idx = Math.round((i / (nMax - 1)) * (values.length - 1));
+      thinned.push(values[idx]);
+    }
+    const seenFinal = new Set();
+    display = thinned.filter((v) => {
+      if (seenFinal.has(v)) return false;
+      seenFinal.add(v);
+      return true;
     });
   }
 
-  if (raw.length <= MAX_HERO_FULLSCALE_TICKS) return raw;
-
-  /** @type {{ value: number; leftPct: number }[]} */
-  const thinned = [];
-  const n = MAX_HERO_FULLSCALE_TICKS;
-  for (let i = 0; i < n; i += 1) {
-    const idx = Math.round((i / (n - 1)) * (raw.length - 1));
-    thinned.push(raw[idx]);
-  }
-  const seenFinal = new Set();
-  return thinned.filter((m) => {
-    if (seenFinal.has(m.value)) return false;
-    seenFinal.add(m.value);
-    return true;
-  });
+  const m = display.length;
+  if (m === 0) return [];
+  return display.map((value, i) => ({
+    value,
+    leftPct: m === 1 ? 100 : (i / (m - 1)) * 100,
+  }));
 }
