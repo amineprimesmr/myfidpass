@@ -1,0 +1,127 @@
+/**
+ * Mobile SaaS — dashboard pilule campagnes, grille campagnes, écran notifications.
+ * S’appuie sur les variables --ios-* définies dans app-mobile-ios-components.css (charger après).
+ */
+
+@media (max-width: 768px) {
+  /* Dashboard — pilule « Campagnes » (chip iOS) */
+  #app-app.app-mobile .app-dashboard-notif-pill {
+    background: var(--ios-card) !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+    padding: 0.45rem 0.85rem !important;
+    gap: 0.45rem !important;
+  }
+
+  #app-app.app-mobile .app-dashboard-notif-pill:hover {
+    transform: none !important;
+    border-color: rgba(37, 99, 235, 0.25) !important;
+    background: rgba(37, 99, 235, 0.04) !important;
+  }
+
+  #app-app.app-mobile .app-dashboard-notif-icon {
+    background: rgba(37, 99, 235, 0.12) !important;
+    color: var(--ios-blue) !important;
+    border-radius: 10px !important;
+  }
+
+  #app-app.app-mobile .app-dashboard-notif-label {
+    font-weight: 600 !important;
+    color: var(--ios-label) !important;
+  }
+
+  #app-app.app-mobile .app-dashboard-notif-count {
+    background: var(--ios-blue) !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    min-width: 1.35rem;
+    border-radius: 999px !important;
+  }
+
+  /* Campagnes — cartes type liste / actions */
+  #app-app.app-mobile .app-campaigns-intro {
+    background: rgba(37, 99, 235, 0.06) !important;
+    border: 1px solid rgba(37, 99, 235, 0.1) !important;
+    border-radius: var(--ios-radius-md) !important;
+    color: var(--ios-secondary) !important;
+    padding: 0.85rem 1rem !important;
+  }
+
+  #app-app.app-mobile .app-campaign-card {
+    background: var(--ios-card) !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    border-radius: var(--ios-radius-lg) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+  }
+
+  #app-app.app-mobile .app-campaign-card:hover {
+    transform: none !important;
+    border-color: rgba(37, 99, 235, 0.2) !important;
+  }
+
+  #app-app.app-mobile .app-campaign-send-btn {
+    border-radius: var(--ios-radius-md) !important;
+    font-weight: 600 !important;
+    min-height: 44px;
+    background: var(--ios-blue) !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25) !important;
+  }
+
+  #app-app.app-mobile .app-campaign-modal-box {
+    border-radius: var(--ios-radius-xl) !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18) !important;
+  }
+
+  /* Aperçu notification — bulle type push iOS */
+  #app-app.app-mobile .app-notification-preview-banner {
+    border-radius: var(--ios-radius-xl) !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    background: var(--ios-card) !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  #app-app.app-mobile .app-notification-preview-banner-bubble {
+    border-radius: var(--ios-radius-lg) !important;
+    background: var(--ios-fill) !important;
+    border: 1px solid rgba(148, 163, 184, 0.25) !important;
+  }
+
+  #app-app.app-mobile .app-notification-preview-banner-title,
+  #app-app.app-mobile .app-notification-preview-banner-message {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Cibles / catégories — radios lisibles */
+  #app-app.app-mobile .app-notif-target-option {
+    background: var(--ios-card) !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    border-radius: var(--ios-radius-md) !important;
+    padding: 0.75rem 0.9rem !important;
+  }
+
+  #app-app.app-mobile .app-notif-categories-picks {
+    background: var(--ios-fill) !important;
+    border-radius: var(--ios-radius-md) !important;
+    padding: 0.75rem !important;
+    border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  }
+
+  #app-app.app-mobile .app-notif-categories-manage-summary {
+    border-radius: var(--ios-radius-md) !important;
+    font-weight: 600 !important;
+    color: var(--ios-blue) !important;
+    list-style: none;
+  }
+
+  #app-app.app-mobile .app-notif-categories-manage-panel {
+    border-top: 0.5px solid var(--ios-separator);
+    padding-top: 0.75rem;
+  }
+}

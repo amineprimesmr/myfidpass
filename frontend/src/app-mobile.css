@@ -59,7 +59,7 @@
   #app-app.app-mobile .app-main {
     margin-left: 0;
     padding: 0;
-    padding-top: 60px;
+    padding-top: calc(52px + env(safe-area-inset-top, 0px));
     /* Tab bar + marge pour la capsule essai (fixée au-dessus de la barre) */
     padding-bottom: calc(92px + 56px + env(safe-area-inset-bottom, 0px));
     min-height: 100vh;

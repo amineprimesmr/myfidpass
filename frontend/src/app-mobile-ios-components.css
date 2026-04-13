@@ -1,0 +1,410 @@
+/**
+ * SaaS mobile — refonte visuelle alignée sur l’app iOS myfidpass
+ * (AppTheme + DashboardRevolutPalette mode clair : cartes plates, boutons type iOS, pas de néomorphisme).
+ * Tout est limité à #app-app.app-mobile en ≤768px pour ne pas toucher au desktop.
+ */
+
+@media (max-width: 768px) {
+  #app-app.app-mobile {
+    --ios-blue: #2563eb;
+    --ios-blue-press: #1d4ed8;
+    --ios-green: #10b981;
+    --ios-amber: #f59e0b;
+    --ios-label: #0f172a;
+    --ios-secondary: #64748b;
+    --ios-tertiary: #94a3b8;
+    --ios-fill: #f1f5f9;
+    --ios-separator: rgba(60, 60, 67, 0.29);
+    --ios-card: #ffffff;
+    --ios-canvas: #f5f7fc;
+    --ios-radius-sm: 10px;
+    --ios-radius-md: 12px;
+    --ios-radius-lg: 16px;
+    --ios-radius-xl: 22px;
+    --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-family: var(--ios-font);
+    letter-spacing: -0.01em;
+  }
+
+  #app-app.app-mobile .app-main,
+  #app-app.app-mobile .app-content {
+    background: var(--ios-canvas) !important;
+  }
+
+  /* Titres — style SF Rounded / headline */
+  #app-app.app-mobile .app-section-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    color: var(--ios-label);
+    margin: 0 0 0.5rem;
+  }
+
+  #app-app.app-mobile .app-section-desc {
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: var(--ios-secondary);
+    margin: 0 0 1.25rem;
+  }
+
+  #app-app.app-mobile .app-subsection-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ios-label);
+    margin: 1.25rem 0 0.65rem;
+  }
+
+  #app-app.app-mobile .app-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ios-secondary);
+    margin-bottom: 0.35rem;
+  }
+
+  #app-app.app-mobile .app-hint {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--ios-tertiary);
+  }
+
+  #app-app.app-mobile .app-step-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--ios-secondary);
+  }
+
+  /* Cartes — fond plat, rayon « continuous » iOS */
+  #app-app.app-mobile .app-card {
+    background: var(--ios-card) !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    border-radius: var(--ios-radius-xl) !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+    padding: 1.1rem 1.15rem !important;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  #app-app.app-mobile .app-card:hover {
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07), 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  #app-app.app-mobile .app-stat {
+    background: var(--ios-card) !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    border-radius: var(--ios-radius-lg) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+    padding: 1.15rem !important;
+  }
+
+  #app-app.app-mobile .app-stat:hover {
+    transform: none !important;
+    border-color: rgba(37, 99, 235, 0.2) !important;
+  }
+
+  #app-app.app-mobile .app-stat-value {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--ios-blue);
+    letter-spacing: -0.03em;
+  }
+
+  #app-app.app-mobile .app-stat-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ios-secondary);
+  }
+
+  /* Champs — style « rempli » iOS, pas d’encastrement néomorphique */
+  #app-app.app-mobile .app-input,
+  #app-app.app-mobile .app-textarea,
+  #app-app.app-mobile select.app-input {
+    max-width: none !important;
+    width: 100%;
+    min-height: 48px;
+    padding: 0.65rem 0.9rem !important;
+    font-size: 1rem !important;
+    color: var(--ios-label) !important;
+    background: var(--ios-fill) !important;
+    border: 1px solid rgba(148, 163, 184, 0.35) !important;
+    border-radius: var(--ios-radius-md) !important;
+    box-shadow: none !important;
+    margin-bottom: 0.65rem;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  #app-app.app-mobile .app-input:hover,
+  #app-app.app-mobile .app-textarea:hover {
+    box-shadow: none !important;
+    border-color: rgba(100, 116, 139, 0.45) !important;
+  }
+
+  #app-app.app-mobile .app-input:focus,
+  #app-app.app-mobile .app-textarea:focus {
+    outline: none !important;
+    background: var(--ios-card) !important;
+    border-color: var(--ios-blue) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+  }
+
+  #app-app.app-mobile .app-rules-row .app-input {
+    max-width: none !important;
+  }
+
+  #app-app.app-mobile .app-membres-search-input {
+    min-height: 48px;
+    border-radius: var(--ios-radius-md) !important;
+    background: var(--ios-fill) !important;
+    border: 1px solid rgba(148, 163, 184, 0.35) !important;
+  }
+
+  #app-app.app-mobile .app-membres-select {
+    min-height: 44px;
+    border-radius: var(--ios-radius-md) !important;
+  }
+
+  /* Boutons — remplissage iOS (bleu) / secondaire gris clair */
+  #app-app.app-mobile .app-btn {
+    min-height: 48px;
+    padding: 0.65rem 1.25rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
+    border-radius: var(--ios-radius-md) !important;
+    transition: background 0.15s ease, opacity 0.15s ease, transform 0.12s ease;
+  }
+
+  #app-app.app-mobile .app-btn:hover:not(:disabled) {
+    transform: none !important;
+  }
+
+  #app-app.app-mobile .app-btn:active:not(:disabled) {
+    transform: scale(0.98) !important;
+  }
+
+  #app-app.app-mobile .app-btn-primary {
+    background: var(--ios-blue) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.25), 0 4px 12px rgba(37, 99, 235, 0.2) !important;
+  }
+
+  #app-app.app-mobile .app-btn-primary:hover:not(:disabled) {
+    background: var(--ios-blue-press) !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3) !important;
+  }
+
+  #app-app.app-mobile .app-btn-primary:active:not(:disabled) {
+    box-shadow: none !important;
+  }
+
+  #app-app.app-mobile .app-btn-secondary {
+    background: var(--ios-card) !important;
+    color: var(--ios-blue) !important;
+    border: 1px solid rgba(37, 99, 235, 0.35) !important;
+    box-shadow: none !important;
+  }
+
+  #app-app.app-mobile .app-btn-secondary:hover:not(:disabled) {
+    background: rgba(37, 99, 235, 0.06) !important;
+    border-color: var(--ios-blue) !important;
+  }
+
+  #app-app.app-mobile .app-btn-ghost {
+    background: transparent !important;
+    border: none !important;
+    color: var(--ios-blue) !important;
+    box-shadow: none !important;
+  }
+
+  /* CTA Enregistrer — proéminent bleu iOS (plus « Wallet / Réglages » que pilule noire web) */
+  #app-app.app-mobile .app-save-cta-wrap {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  #app-app.app-mobile button.app-save-cta {
+    min-height: 50px;
+    padding: 0.7rem 1.5rem !important;
+    border-radius: var(--ios-radius-md) !important;
+    background: var(--ios-blue) !important;
+    color: #fff !important;
+    border: none !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2), 0 4px 14px rgba(37, 99, 235, 0.25) !important;
+  }
+
+  #app-app.app-mobile button.app-save-cta:hover:not(:disabled) {
+    transform: none !important;
+    background: var(--ios-blue-press) !important;
+  }
+
+  #app-app.app-mobile button.app-save-cta:active:not(:disabled) {
+    transform: scale(0.98) !important;
+  }
+
+  #app-app.app-mobile button.app-save-cta:focus-visible {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35) !important;
+  }
+
+  #app-app.app-mobile .app-save-cta-dot {
+    background: #fff !important;
+    box-shadow: none !important;
+    opacity: 0.95;
+  }
+
+  #app-app.app-mobile .app-save-cta-wrap--dirty .app-save-cta-dot {
+    background: #fef3c7 !important;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5) !important;
+  }
+
+  /* Personnaliser — groupes type liste réglages */
+  #app-app.app-mobile .app-personnaliser-group {
+    border-radius: var(--ios-radius-lg) !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    background: var(--ios-card) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  #app-app.app-mobile .app-personnaliser-group:hover {
+    transform: none !important;
+  }
+
+  #app-app.app-mobile .app-personnaliser-group-toggle {
+    background: transparent !important;
+    padding: 1rem 1.1rem !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  #app-app.app-mobile .app-personnaliser-intro {
+    border-radius: var(--ios-radius-md) !important;
+    background: rgba(37, 99, 235, 0.06) !important;
+    border: 1px solid rgba(37, 99, 235, 0.12) !important;
+  }
+
+  /* Membres — liste groupe iOS */
+  #app-app.app-mobile .app-membres-list-card {
+    background: var(--ios-card) !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    border-radius: var(--ios-radius-xl) !important;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  #app-app.app-mobile .app-membres-card {
+    padding: 0.9rem 1rem !important;
+    border-bottom-color: rgba(15, 23, 42, 0.06) !important;
+  }
+
+  #app-app.app-mobile .app-membres-card:active {
+    background: rgba(37, 99, 235, 0.06) !important;
+  }
+
+  #app-app.app-mobile .app-membres-export-btn {
+    min-height: 44px;
+    border-radius: var(--ios-radius-md) !important;
+    font-weight: 600;
+  }
+
+  /* Liste déroulante recherche client */
+  #app-app.app-mobile .app-member-list {
+    border-radius: var(--ios-radius-md) !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  }
+
+  /* Écran vide premier commerce */
+  #app-app.app-mobile .app-empty-card {
+    background: var(--ios-card) !important;
+    border-radius: var(--ios-radius-xl) !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08) !important;
+    padding: 1.5rem 1.25rem !important;
+  }
+
+  #app-app.app-mobile .app-empty-title {
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.03em !important;
+    color: var(--ios-label) !important;
+  }
+
+  #app-app.app-mobile .app-empty-cta {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  /* Header mobile — barre matériau */
+  #app-app.app-mobile .app-mobile-header {
+    background: rgba(255, 255, 255, 0.72) !important;
+    border-bottom: 0.5px solid var(--ios-separator) !important;
+    height: 52px;
+    padding-top: env(safe-area-inset-top, 0px);
+    min-height: calc(52px + env(safe-area-inset-top, 0px));
+  }
+
+  #app-app.app-mobile .app-mobile-header-title {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  #app-app.app-mobile .app-mobile-header-btn {
+    background: rgba(37, 99, 235, 0.1) !important;
+    color: var(--ios-blue) !important;
+  }
+
+  /* Tab bar — plus proche UITabBar */
+  #app-app.app-mobile .app-mobile-tab-bar {
+    background: rgba(255, 255, 255, 0.82) !important;
+    border-top: 0.5px solid var(--ios-separator) !important;
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.8) inset !important;
+  }
+
+  #app-app.app-mobile .app-mobile-tab {
+    font-size: 0.625rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    color: var(--ios-secondary) !important;
+  }
+
+  #app-app.app-mobile .app-mobile-tab.active {
+    color: var(--ios-blue) !important;
+  }
+
+  #app-app.app-mobile .app-mobile-tab svg {
+    opacity: 0.85;
+  }
+
+  /* Profil commerce — liste réglages */
+  #app-app.app-mobile .app-mobile-profil-item {
+    border-radius: var(--ios-radius-md) !important;
+    font-weight: 500;
+  }
+
+  /* Modale modifications non enregistrées */
+  #app-app.app-mobile #app-unsaved-changes-modal .app-btn,
+  #app-app.app-mobile .app-unsaved-actions .app-btn {
+    min-height: 48px;
+    border-radius: var(--ios-radius-md) !important;
+  }
+
+  /* Caisse / scanner boutons */
+  #app-app.app-mobile .app-caisse-scan-btn {
+    border-radius: var(--ios-radius-lg) !important;
+    background: var(--ios-blue) !important;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35) !important;
+  }
+
+  /* Liens texte type iOS */
+  #app-app.app-mobile a:not(.app-sidebar-link):not(.app-mobile-profil-item) {
+    color: var(--ios-blue);
+  }
+}
