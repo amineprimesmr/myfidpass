@@ -9,6 +9,7 @@ describe("missions-sheet-markup", () => {
   it("inclut le bouton d’ouverture et les attributs d’accessibilité", () => {
     const html = renderEarnMorePointsButtonMarkup(esc);
     expect(html).toContain("fidelity-missions-sheet-open");
+    expect(html).toContain("fidelity-shiny-cta");
     expect(html).toContain('aria-controls="fidelity-missions-sheet"');
   });
 
