@@ -26,6 +26,8 @@ import {
   setMemberCategories,
 } from "../../db.js";
 import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/member-delete.js";
+import { getRoulettePublicSegments } from "../../db/games.js";
+import { resolveBusinessProgramType } from "../../db/businesses.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import {
   ensureDashboardAccess,
@@ -892,7 +894,9 @@ router.post("/campaign-automation/parse", async (req, res) => {
 // ——— Games ———
 router.get("/games", (req, res) => {
   const games = getBusinessGames(req.business.id);
-  return res.json({ games });
+  const programType = resolveBusinessProgramType(req.business);
+  const roulette_segments = getRoulettePublicSegments(req.business.id, programType);
+  return res.json({ games, roulette_segments });
 });
 
 router.patch("/games/:gameCode", (req, res) => {

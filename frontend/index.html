@@ -524,7 +524,58 @@
                 <button type="button" class="app-ios-home-rewards" id="app-ios-home-rewards">Récompenses ↗</button>
               </div>
               <div class="app-ios-home-pass-frame">
-                <iframe id="app-dashboard-pass-preview" class="app-ios-home-pass-iframe" title="Aperçu de la page carte" loading="lazy" src="about:blank"></iframe>
+                <div
+                  id="app-dashboard-home-preview-root"
+                  class="fidelity-page app-fidelity-client-live-preview-root app-dashboard-home-preview-root"
+                >
+                  <main class="fidelity-v2-main fidelity-qr-game">
+                    <section class="fidelity-qr-hero" aria-label="Jeu">
+                      <div class="fidelity-qr-brand">
+                        <img
+                          id="app-dashboard-home-preview-logo"
+                          class="fidelity-qr-logo hidden"
+                          alt=""
+                          width="120"
+                          height="120"
+                          decoding="async"
+                        />
+                        <h1 id="app-dashboard-home-preview-title" class="fidelity-qr-title fidelity-qr-title--lead">
+                          <span class="fidelity-qr-hero-title-inner"></span>
+                        </h1>
+                      </div>
+                    </section>
+                    <section
+                      id="app-dashboard-home-roulette-section"
+                      class="fidelity-v2-roulette-inline fidelity-v2-roulette-inline--qr"
+                      aria-label="Roulette"
+                    >
+                      <div class="fidelity-v2-roulette-inline-controls">
+                        <span class="fidelity-cta-wrap fidelity-cta-wrap--full fidelity-cta-wrap--qr-play">
+                          <button
+                            type="button"
+                            class="fidelity-cta-pill fidelity-cta-pill--wheel-cta fidelity-cta-pill--qr-play app-dashboard-home-preview-cta"
+                            tabindex="-1"
+                            aria-hidden="true"
+                          >
+                            <span class="fidelity-cta-wheel-line fidelity-cta-wheel-line--qr">
+                              <span class="fidelity-cta-wheel-action">Jouer la partie</span>
+                              <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
+                            </span>
+                          </button>
+                        </span>
+                      </div>
+                      <div class="fidelity-roulette-wheel-zone">
+                        <div class="fidelity-roulette-wheel-mount">
+                          <div class="fidelity-roulette-wheel-outer">
+                            <div id="app-dashboard-home-preview-wheel" class="fidelity-roulette-wheel"></div>
+                            <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
+                            <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                  </main>
+                </div>
               </div>
             </div>
             <!-- Hero mobile : 2 cartes + message -->

@@ -41,6 +41,7 @@ import {
 import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../utils/geocoding.js";
 import { initAppFlyerQr } from "./app-flyer-qr.js";
 import { initFidelityClientPageSection } from "./app-fidelity-client-page.js";
+import { syncDashboardHomeCardPreview } from "./dashboard-home-card-preview.js";
 
 /** @typedef {"network"|"server500"|"client"|"parse"|"unknown"|"unexpected"} AppLoadFailKind */
 
@@ -2869,12 +2870,6 @@ function initAppDashboard(slug) {
       previewIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}` : "";
     }
   }
-  function setDashboardPassPreviewIframeSrc() {
-    const passIframe = document.getElementById("app-dashboard-pass-preview");
-    if (!passIframe || !slug) return;
-    const base = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
-    passIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}` : "about:blank";
-  }
   function syncIosHomeToolbar() {
     const nm = document.getElementById("app-ios-home-business-name");
     const src = document.getElementById("app-business-name");
@@ -2882,7 +2877,7 @@ function initAppDashboard(slug) {
   }
   window.addEventListener("app-section-change", (e) => {
     if (e.detail?.sectionId === "dashboard") {
-      setDashboardPassPreviewIframeSrc();
+      void syncDashboardHomeCardPreview({ api, slug, pageOrigin });
       syncIosHomeToolbar();
     }
     if (e.detail?.sectionId === "engagement") {
@@ -2891,7 +2886,6 @@ function initAppDashboard(slug) {
     }
   }, { once: false });
   if (document.getElementById("engagement")?.classList.contains("app-section-visible")) setEngagementPreviewIframeSrc();
-  setDashboardPassPreviewIframeSrc();
   syncIosHomeToolbar();
   document.getElementById("app-ios-home-rewards")?.addEventListener("click", () => {
     showAppSection("engagement");
@@ -5135,6 +5129,7 @@ function initAppDashboard(slug) {
   }
 
   async function refresh() {
+    void syncDashboardHomeCardPreview({ api, slug, pageOrigin });
     try {
       const stats = await loadStats();
       if (stats) renderOverviewAlerts(stats);

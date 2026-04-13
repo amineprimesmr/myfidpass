@@ -53,12 +53,17 @@
     border: 1px solid rgba(148, 163, 184, 0.2);
   }
 
-  .app-ios-home-pass-iframe {
-    display: block;
-    width: 100%;
-    height: min(58vh, 420px);
-    border: none;
-    background: #f8fafc;
+  /* Aperçu statique = même structure que « Page fidélité » (roue + titre + fond) */
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-home-preview-root {
+    min-height: min(58vh, 440px);
+    max-height: min(62vh, 480px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-home-preview-root .fidelity-v2-main {
+    padding-bottom: 0.5rem;
   }
 
   #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-icon--desktop {
