@@ -22,6 +22,7 @@ import {
 } from "./missions-sheet-markup.js";
 import { balanceUnitShort, stampsStepSectionTitle } from "../lib/program-copy.js";
 import { renderDeliveryReceiptFabAndModalMarkup } from "./delivery-receipt-intro-markup.js";
+import { renderRewardRedeemModalMarkup } from "./reward-redeem-modal-markup.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -276,6 +277,8 @@ export function renderClientPage(root, state, options = {}) {
       </div>
 
     </main>
+
+    ${hasMember ? renderRewardRedeemModalMarkup(esc) : ""}
 
     ${deliveryReceiptEnabled ? renderDeliveryReceiptFabAndModalMarkup(esc, programType) : ""}
 

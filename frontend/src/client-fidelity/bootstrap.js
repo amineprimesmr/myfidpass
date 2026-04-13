@@ -40,6 +40,7 @@ import {
   openDeliveryReceiptScanOverlay,
 } from "./delivery-receipt-scan-overlay.js";
 import { bindMissionsSheet, closeMissionsSheet } from "./missions-sheet-ui.js";
+import { bindRewardRedeemUi, closeRewardRedeemModal } from "./bind-reward-redeem-ui.js";
 import { deliveryReceiptSuccessMessage, engagementClaimSuccessMessage } from "./lib/program-copy.js";
 
 function genIdempotencyKey() {
@@ -784,6 +785,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     bindFidelitySpaLinks(rootEl);
     bindMissionsSheet(rootEl, { signal });
 
+    bindRewardRedeemUi({
+      rootEl,
+      getState: () => store.get(),
+      signal,
+    });
+
     disposeQrUi = bindQrGameUi({
       rootEl,
       api,
@@ -819,6 +826,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       }
       const deliveryIntro = rootEl.querySelector("#fidelity-delivery-receipt-intro-modal");
       if (deliveryIntro && !deliveryIntro.classList.contains("hidden")) closeDeliveryIntroModal();
+      const redeemModal = rootEl.querySelector("#fidelity-reward-redeem-modal");
+      if (redeemModal?.classList.contains("fidelity-reward-redeem-modal--open")) {
+        closeRewardRedeemModal(rootEl);
+      }
     },
     { signal }
   );

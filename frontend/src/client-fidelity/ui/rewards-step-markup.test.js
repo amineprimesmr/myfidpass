@@ -24,6 +24,8 @@ describe("renderRewardsStepMarkup", () => {
     expect(html).toContain("Menu");
     expect(html).toContain("50 points");
     expect(html).toContain("fid-reward-card");
+    expect(html).toContain("data-fid-reward-trigger");
+    expect(html).toContain("fid-reward-card__surface");
     expect(html).not.toContain("fid-tiers-track");
   });
 

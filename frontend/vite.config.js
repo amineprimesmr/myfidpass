@@ -125,7 +125,7 @@ export default defineConfig({
   },
   // Réduire la lenteur en dev : pre-bundle des grosses deps dès le démarrage
   optimizeDeps: {
-    include: ["html5-qrcode", "three", "react", "react-dom", "hls.js"],
+    include: ["html5-qrcode", "three", "react", "react-dom", "hls.js", "qrcode"],
   },
   server: {
     port: 5174,

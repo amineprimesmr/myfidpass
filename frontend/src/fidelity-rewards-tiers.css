@@ -1,4 +1,4 @@
-/* Grille récompenses — espace client (style appli type catalogue) */
+/* Grille récompenses — espace client (style appli, neutre) */
 
 .fid-rewards-block {
   margin: 0;
@@ -52,35 +52,49 @@
 }
 
 .fid-reward-card__surface {
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  width: 100%;
   height: 100%;
+  margin: 0;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   padding: 0.85rem 0.7rem 0.95rem;
   border-radius: 16px;
   background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.07);
+  border: 1px solid rgba(15, 23, 42, 0.09);
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
-    0 6px 20px rgba(15, 23, 42, 0.07);
+    0 6px 20px rgba(15, 23, 42, 0.06);
   transition:
-    box-shadow 0.2s ease,
-    transform 0.2s ease,
+    box-shadow 0.22s cubic-bezier(0.34, 1.1, 0.64, 1),
+    transform 0.22s cubic-bezier(0.34, 1.1, 0.64, 1),
     border-color 0.2s ease;
 }
 
-.fid-reward-card--next .fid-reward-card__surface {
-  border-color: rgba(124, 58, 237, 0.45);
+.fid-reward-card__surface:hover {
+  border-color: rgba(15, 23, 42, 0.14);
   box-shadow:
-    0 1px 2px rgba(124, 58, 237, 0.08),
-    0 8px 24px rgba(124, 58, 237, 0.14);
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 10px 28px rgba(15, 23, 42, 0.09);
 }
 
-.fid-reward-card--unlocked .fid-reward-card__surface {
-  border-color: rgba(16, 185, 129, 0.28);
+.fid-reward-card__surface:active {
+  transform: scale(0.985);
+}
+
+.fid-reward-card__surface:focus-visible {
+  outline: 2px solid #0f172a;
+  outline-offset: 2px;
 }
 
 .fid-reward-card__visual-ring {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
   max-height: 7.25rem;
@@ -95,7 +109,37 @@
   box-sizing: border-box;
 }
 
+/* Récompense verrouillée : voile + léger flou sur le visuel */
+.fid-reward-card--locked .fid-reward-card__visual-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(248, 250, 252, 0.72);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  pointer-events: none;
+}
+
+.fid-reward-card--locked .fid-reward-card__img,
+.fid-reward-card--locked .fid-reward-card__placeholder {
+  filter: grayscale(0.25);
+  opacity: 0.88;
+}
+
+.fid-reward-card--unlocked .fid-reward-card__visual-ring::after {
+  display: none;
+}
+
+.fid-reward-card--unlocked .fid-reward-card__img,
+.fid-reward-card--unlocked .fid-reward-card__placeholder {
+  filter: none;
+  opacity: 1;
+}
+
 .fid-reward-card__img {
+  position: relative;
+  z-index: 0;
   width: 88%;
   height: 88%;
   object-fit: contain;
@@ -103,6 +147,8 @@
 }
 
 .fid-reward-card__placeholder {
+  position: relative;
+  z-index: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -135,7 +181,7 @@
 }
 
 .fid-reward-card--locked .fid-reward-card__title {
-  color: #334155;
+  color: #475569;
 }
 
 .fid-reward-card__cost {
@@ -153,22 +199,21 @@
 .fid-reward-card__cost-icon {
   display: inline-flex;
   flex-shrink: 0;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .fid-reward-card--unlocked .fid-reward-card__cost-icon {
-  color: #10b981;
+  color: #0f172a;
 }
 
 .fid-reward-card__lock-icon--open {
-  color: #10b981;
+  color: #0f172a;
 }
 
 .fid-reward-card__cost-text {
   font-variant-numeric: tabular-nums;
 }
 
-/* Coque section : fond gris type flux appli */
 .fidelity-v2-rewards-shell {
   margin: 0;
   padding: 0;
@@ -190,5 +235,9 @@
 @media (prefers-reduced-motion: reduce) {
   .fid-reward-card__surface {
     transition: none;
+  }
+
+  .fid-reward-card__surface:active {
+    transform: none;
   }
 }
