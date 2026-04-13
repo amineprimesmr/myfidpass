@@ -9,7 +9,6 @@ import {
   setAuthToken,
   clearAuthToken,
   getAuthHeaders,
-  isDevBypassPayment,
   buildStripeSaasPaymentUrl,
   subscriptionUsesExternalStripePaymentLink,
 } from "./config.js";
@@ -61,10 +60,6 @@ describe("config", () => {
 
   it("API_BASE is string", () => {
     expect(typeof API_BASE).toBe("string");
-  });
-
-  it("isDevBypassPayment returns boolean", () => {
-    expect(typeof isDevBypassPayment()).toBe("boolean");
   });
 
   it("buildStripeSaasPaymentUrl includes prefilled_promo_code", () => {

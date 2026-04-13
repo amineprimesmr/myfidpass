@@ -69,10 +69,6 @@ export function initAuthPage(initialTab) {
 
   const defaultMode = initialTab === "register" ? "register" : "login";
   showAuthForm(defaultMode);
-  const localDbHint = document.getElementById("auth-local-db-hint");
-  if (localDbHint && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-    localDbHint.classList.remove("hidden");
-  }
   const initialForm = defaultMode === "register" ? formRegister : formLogin;
   if (initialForm) {
     initialForm.classList.add("auth-form-enter");

@@ -168,7 +168,6 @@
         <div id="auth-form-login" class="auth-form-block hidden">
           <h1 class="auth-title">Se connecter avec email</h1>
           <p class="auth-subtitle">Accédez à votre espace et gérez vos cartes fidélité. Gratuit.</p>
-          <p id="auth-local-db-hint" class="auth-hint auth-local-hint hidden" role="note">En local, la base est séparée de la prod : un compte créé sur myfidpass.fr n’existe pas ici. Créez un compte ci‑dessous ou connectez‑vous sur <a href="https://myfidpass.fr/login">myfidpass.fr</a>.</p>
           <form id="auth-login-form" class="auth-form">
             <label class="auth-label" for="auth-login-email">Email</label>
             <div class="auth-input-wrap">
@@ -273,9 +272,6 @@
       </main>
     </div>
 
-    <!-- Checkout supprimé : redirection directe vers Stripe Payment Link -->
-
-
     <!-- App connectée : interface logiciel (sans bannière ni menu haut) -->
     <div id="app-app" class="hidden app-unified-shell" data-mobile-section="dashboard">
       <aside class="app-sidebar" id="app-sidebar">
@@ -362,11 +358,6 @@
             <div id="app-empty-fatal" class="app-empty-fatal hidden" role="region" aria-label="Erreur de chargement">
               <h1 class="app-empty-title">Connexion impossible</h1>
               <p id="app-empty-fatal-desc" class="app-empty-text"></p>
-              <p id="app-empty-fatal-local-hint" class="app-empty-fatal-local-hint hidden" role="note"></p>
-              <details id="app-empty-fatal-tech" class="app-empty-fatal-tech hidden">
-                <summary class="app-empty-fatal-tech-summary">Détail technique</summary>
-                <pre id="app-empty-fatal-tech-pre" class="app-empty-fatal-pre" tabindex="0"></pre>
-              </details>
               <div class="app-empty-fatal-actions">
                 <button type="button" id="app-empty-retry-btn" class="app-btn app-btn-primary">Réessayer</button>
                 <a href="/" class="app-btn app-btn-secondary">Accueil</a>
@@ -1406,9 +1397,7 @@
                             <div id="app-delivery-claims-list" class="app-delivery-claims-list" role="list"></div>
                             <div class="app-delivery-claims-toolbar">
                               <button type="button" id="app-delivery-claims-refresh" class="app-btn app-btn-secondary">Actualiser</button>
-                              <button type="button" id="app-delivery-claims-dev-reset" class="app-btn app-btn-secondary hidden" title="Nécessite DELIVERY_RECEIPT_DEV_RESET=1 sur l’API">Mode dev : effacer tous les tickets livraison</button>
                             </div>
-                            <p id="app-delivery-claims-dev-hint" class="app-hint hidden">Le bouton « mode dev » n’apparaît que si la variable <code>DELIVERY_RECEIPT_DEV_RESET=1</code> est définie sur le serveur API (ex. Railway). Pense à la retirer en exploitation.</p>
                           </div>
                         </div>
                         <div class="app-card-rules-actions">
@@ -1922,10 +1911,6 @@
                   <p id="app-profil-subscription-status" class="app-profil-subscription-status">Chargement…</p>
                 </div>
                 <p id="app-profil-account-message" class="app-message app-profil-message hidden"></p>
-                <div class="app-profil-danger-zone">
-                  <p class="app-hint app-profil-danger-hint">Efface tous les comptes et données côté serveur (secret Railway requis).</p>
-                  <button type="button" id="app-reset-all" class="app-btn app-btn-secondary">Réinitialiser toutes les données</button>
-                </div>
               </div>
             </div>
             <div class="app-card app-profil-card">
@@ -2480,9 +2465,6 @@
             <div class="landing-footer-bottom-v3">
               <p class="landing-footer-legal-v3">Compatible Apple Wallet et Google Wallet.</p>
               <p class="landing-footer-copy-v3">© 2026 Myfidpass. Tous droits réservés.</p>
-              <div class="landing-footer-reset-wrap">
-                <button type="button" id="landing-reset-all-data" class="landing-footer-reset-btn">Réinitialiser toutes les données (admin)</button>
-              </div>
             </div>
           </div>
         </footer>

@@ -5566,20 +5566,6 @@ body.page-checkout .site-banner { display: none !important; }
   font-size: 0.875rem;
   color: #b91c1c;
 }
-.checkout-dev-bypass-wrap { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed #ccc; }
-.checkout-dev-bypass-btn {
-  display: inline-block;
-  background: #f5f5f5;
-  border: 1px solid #d0d0d0;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  color: #555;
-  cursor: pointer;
-  font-family: inherit;
-  border-radius: 6px;
-}
-.checkout-dev-bypass-btn:hover { background: #eee; color: #333; border-color: #999; }
-
 /* Panier droit : carte récap moderne */
 .checkout-order-card {
   background: var(--fidpass-surface);

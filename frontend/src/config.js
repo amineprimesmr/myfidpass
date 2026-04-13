@@ -13,8 +13,6 @@ export function isLocalDevHostname(hostname) {
 
 const IS_LOCALHOST = typeof window !== "undefined" && isLocalDevHostname(window.location.hostname);
 
-/** Export pour app.js : même règle que pour API_BASE / proxy Vite. */
-export const IS_LOCAL_DEV = IS_LOCALHOST;
 const RAW_ENV_API_BASE =
   typeof import.meta.env?.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : "";
 
@@ -182,26 +180,9 @@ export async function fetchWithAuth(url, opts = {}) {
   return fetch(url, { ...opts, headers: retryHeaders });
 }
 
-const DEV_BYPASS_PAYMENT_KEY = "fidpass_dev_paid";
-
-export function isDevBypassPayment() {
-  try {
-    if (localStorage.getItem(DEV_BYPASS_PAYMENT_KEY) === "1") return true;
-  } catch (_) {}
-  return typeof window !== "undefined" && isLocalDevHostname(window.location.hostname);
-}
-
-export function setDevBypassPayment(on) {
-  try {
-    if (on) localStorage.setItem(DEV_BYPASS_PAYMENT_KEY, "1");
-    else localStorage.removeItem(DEV_BYPASS_PAYMENT_KEY);
-  } catch (_) {}
-}
-
 export function getAuthHeaders() {
   const token = getAuthToken();
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;
-  if (isDevBypassPayment()) headers["X-Dev-Bypass-Payment"] = "1";
   return headers;
 }

@@ -141,7 +141,7 @@ export function initFlyerAiGenerate(slug, opts) {
       const rem = j.flyer_ai_generations_remaining;
       const unl = j.flyer_ai_unlimited;
       if (unl) {
-        quotaEl.textContent = "Générations IA : illimitées (mode équipe).";
+        quotaEl.textContent = "Générations IA : illimitées sur votre formule.";
       } else if (rem != null) {
         quotaEl.textContent = `Générations IA ce mois-ci : ${rem} restante(s) sur ${3}.`;
       }

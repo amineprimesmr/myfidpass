@@ -1,17 +1,10 @@
 /**
  * Page choix d'offre / abonnement : redirection vers le Payment Link Stripe (checkout hébergé).
  */
-import {
-  API_BASE,
-  getAuthHeaders,
-  isDevBypassPayment,
-  setDevBypassPayment,
-  buildStripeSaasPaymentUrl,
-} from "../config.js";
+import { API_BASE, getAuthHeaders, buildStripeSaasPaymentUrl } from "../config.js";
 
 /** Accès opérationnel sans fenêtre d’essai 24 h = abonnement Stripe payant. */
 function shouldRedirectLoggedInUserToApp(data) {
-  if (isDevBypassPayment()) return true;
   if (!data) return false;
   const hasOp = !!(data.has_active_subscription ?? data.hasActiveSubscription);
   if (!hasOp) return false;
@@ -58,14 +51,6 @@ export function initOffersPage(route = {}) {
       subEl.textContent =
         "Accès complet au logiciel, aux cartes Wallet et à l’application commerçant. Redirection vers le paiement sécurisé Stripe.";
     }
-  }
-
-  const devBypassBtn = document.getElementById("offers-dev-bypass-btn");
-  if (devBypassBtn) {
-    devBypassBtn.addEventListener("click", () => {
-      setDevBypassPayment(true);
-      window.location.replace("/app");
-    });
   }
 
   (async () => {

@@ -2,7 +2,7 @@
  * Page checkout : récap, création compte, OAuth, paiement Stripe.
  * Référence : REFONTE-REGLES.md — un module par écran.
  */
-import { API_BASE, getAuthToken, setAuthToken, setRefreshToken, clearAuthToken, getAuthHeaders, setDevBypassPayment } from "../config.js";
+import { API_BASE, getAuthToken, setAuthToken, setRefreshToken, clearAuthToken, getAuthHeaders } from "../config.js";
 import { initRouting } from "../router/index.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY, DESIGN_CATEGORY_LABELS } from "../constants/builder.js";
 
@@ -253,13 +253,13 @@ export function initCheckoutPage() {
   if (!googleClientId && appleBtn && !CHECKOUT_APPLE_SIGNIN_DISABLED) {
     const wrap = document.getElementById("checkout-google-btn");
     if (wrap && !wrap.querySelector("iframe")) {
-      wrap.innerHTML = "<span class=\"checkout-social-placeholder\">Google (configurez VITE_GOOGLE_CLIENT_ID)</span>";
+      wrap.innerHTML = "<span class=\"checkout-social-placeholder\">Connexion Google indisponible</span>";
       wrap.classList.add("checkout-social-placeholder-wrap");
     }
   }
   if (!CHECKOUT_APPLE_SIGNIN_DISABLED && !appleClientId && appleBtn) {
     appleBtn.disabled = true;
-    appleBtn.title = "Configurez VITE_APPLE_CLIENT_ID sur Vercel pour activer";
+    appleBtn.title = "Connexion Apple indisponible";
     appleBtn.classList.add("checkout-btn-social-disabled");
   }
   if (CHECKOUT_APPLE_SIGNIN_DISABLED && appleBtn) {
@@ -401,14 +401,6 @@ export function initCheckoutPage() {
   });
 
   paymentBtn?.addEventListener("click", () => initCheckoutPayment());
-
-  const checkoutDevBypassBtn = document.getElementById("checkout-dev-bypass-btn");
-  if (checkoutDevBypassBtn) {
-    checkoutDevBypassBtn.addEventListener("click", () => {
-      setDevBypassPayment(true);
-      window.location.replace("/app");
-    });
-  }
 
   function initCheckoutPayment() {
     showError("");

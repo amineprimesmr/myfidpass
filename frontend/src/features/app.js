@@ -2,15 +2,7 @@
  * Page app (/app) : espace pro, sidebar, dashboard, caisse, notifications, profil, personnaliser, engagement.
  * Dérogation : fichier > 400 lignes, à découper en sous-modules (app/notifications.js, app/caisse.js, etc.). REFONTE-REGLES.md.
  */
-import {
-  API_BASE,
-  getAuthHeaders,
-  clearAuthToken,
-  fetchWithAuth,
-  isDevBypassPayment,
-  IS_LOCAL_DEV,
-} from "../config.js";
-import { runDevDataReset } from "../utils/dev-reset.js";
+import { API_BASE, getAuthHeaders, clearAuthToken, fetchWithAuth } from "../config.js";
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
@@ -50,32 +42,13 @@ import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../u
 import { initAppFlyerQr } from "./app-flyer-qr.js";
 import { initFidelityClientPageSection } from "./app-fidelity-client-page.js";
 
-/** En dev : front sur localhost et API_BASE vide → requêtes /api/* via proxy Vite vers le backend. */
-const IS_LOCAL_VITE_PROXY = IS_LOCAL_DEV && !API_BASE;
-
 /** @typedef {"network"|"server500"|"client"|"parse"|"unknown"|"unexpected"} AppLoadFailKind */
 
 /**
- * Message principal affiché au commerçant (sans jargon dev).
+ * Message principal affiché au commerçant (sans jargon technique).
  * @param {AppLoadFailKind} kind
  */
 function userFacingFatalMessage(kind) {
-  if (IS_LOCAL_DEV && IS_LOCAL_VITE_PROXY) {
-    return [
-      "Vous êtes en local : cette page appelle l’API via Vite (proxy → port 3001). Sans processus Node sur 3001, rien ne fonctionne.",
-      "",
-      "Erreur classique : lancer seulement « npm run dev » dans le dossier frontend. Dans ce cas, l’API n’est jamais démarrée.",
-      "",
-      "À faire — terminal ouvert à la racine du dépôt (pas dans frontend/) :",
-      "  • npm run backend   → démarre uniquement l’API",
-      "  • ou npm start      → démarre API + Vite en même temps (recommandé)",
-      "",
-      "Quand le backend tourne, touchez « Réessayer ».",
-    ].join("\n");
-  }
-  if (IS_LOCAL_DEV) {
-    return "Mode développement : vérifiez VITE_API_URL dans frontend/.env et que l’API répond.";
-  }
   if (kind === "network") {
     return "Aucune réponse du serveur. Vérifiez votre connexion internet, puis réessayez.";
   }
@@ -162,15 +135,10 @@ function initAppPage() {
   const businessNameEl = document.getElementById("app-business-name");
   const userEmailEl = document.getElementById("app-user-email");
   const logoutBtn = document.getElementById("app-logout");
-  const resetAllBtn = document.getElementById("app-reset-all");
-
   const loadErrorDetailEl = document.getElementById("app-empty-load-error-detail");
   const emptyWelcomeEl = document.getElementById("app-empty-welcome");
   const emptyFatalEl = document.getElementById("app-empty-fatal");
   const emptyFatalDescEl = document.getElementById("app-empty-fatal-desc");
-  const emptyFatalLocalHintEl = document.getElementById("app-empty-fatal-local-hint");
-  const emptyFatalTechEl = document.getElementById("app-empty-fatal-tech");
-  const emptyFatalTechPreEl = document.getElementById("app-empty-fatal-tech-pre");
 
   /**
    * @param {string | { technical?: string; kind?: AppLoadFailKind }} options
@@ -200,30 +168,6 @@ function initAppPage() {
     if (emptyFatalDescEl) {
       emptyFatalDescEl.textContent = userFacingFatalMessage(kind);
     }
-    const originHint =
-      typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "";
-    if (emptyFatalLocalHintEl) {
-      const showLocal = IS_LOCAL_DEV && IS_LOCAL_VITE_PROXY && !!originHint;
-      emptyFatalLocalHintEl.classList.toggle("hidden", !showLocal);
-      if (showLocal) {
-        let t = `Test rapide : ${originHint}/api/health doit afficher un JSON avec « ok ».`;
-        if (kind === "server500") {
-          t +=
-            " Si « ok » mais cette page échoue encore : l’API plante sur /auth/me (souvent base SQLite) — regardez le terminal du backend.";
-        } else if (kind === "network") {
-          t += " Si la page ne charge pas : rien n’écoute sur 3001, lancez npm run backend à la racine.";
-        }
-        emptyFatalLocalHintEl.textContent = t;
-      }
-    }
-    const showTech = IS_LOCAL_DEV && !!technical.trim();
-    if (emptyFatalTechEl) {
-      emptyFatalTechEl.classList.toggle("hidden", !showTech);
-      emptyFatalTechEl.open = false;
-    }
-    if (emptyFatalTechPreEl) {
-      emptyFatalTechPreEl.textContent = showTech ? technical.trim() : "";
-    }
     if (technical.trim() && typeof console !== "undefined" && console.error) {
       console.error("[fidpass] Chargement /app :", technical.trim());
     }
@@ -238,8 +182,6 @@ function initAppPage() {
     window.location.replace("/");
   });
 
-  resetAllBtn?.addEventListener("click", () => runDevDataReset());
-
   /** Bandeau + stats pour les comptes `is_admin` (pilotage tous les commerces). */
   function mountPlatformAdminStrip(user) {
     if (!user?.is_admin && !user?.isAdmin) return;
@@ -250,7 +192,7 @@ function initAppPage() {
     bar.className = "app-platform-admin-strip";
     bar.setAttribute("role", "status");
     bar.innerHTML =
-      "<strong>Admin plateforme</strong> — Accès à tous les commerces : utilisez les routes du tableau de bord avec le <em>slug</em> du commerce (ou <code>GET /api/admin/businesses</code> pour la liste).";
+      "<strong>Administration plateforme</strong> — Vue d’ensemble de tous les commerces rattachés à votre compte.";
     root.insertBefore(bar, root.firstChild);
     fetch(`${API_BASE}/api/admin/overview`, { headers: getAuthHeaders() })
       .then((r) => (r.ok ? r.json() : null))
@@ -266,7 +208,6 @@ function initAppPage() {
   async function fetchAuthMe(retries = 3) {
     let lastStatus = null;
     let networkFail = false;
-    /** Dernière erreur JSON du backend (ex. détail SQLite en dev sur /api/auth/me). */
     let serverErrorLine = "";
     for (let i = 0; i <= retries; i++) {
       try {
@@ -289,28 +230,21 @@ function initAppPage() {
         if (i < retries) await new Promise((r) => setTimeout(r, 600 * (i + 1)));
       }
     }
-    const originHint =
-      typeof window !== "undefined" ? window.location.origin : "";
     /** @type {AppLoadFailKind} */
     let failKind = "unknown";
     if (networkFail && !lastStatus) failKind = "network";
     else if (lastStatus != null && lastStatus >= 500) failKind = "server500";
     else if (lastStatus != null && lastStatus >= 400) failKind = "client";
 
-    const devExtra = IS_LOCAL_DEV
-      ? IS_LOCAL_VITE_PROXY
-        ? ` (proxy Vite → API locale, pas api.myfidpass.fr ; origin ${originHint})`
-        : " Vérifiez VITE_API_URL et que l’API répond."
-      : "";
     const serverBit =
       serverErrorLine && lastStatus === 500 ? ` — réponse serveur : ${serverErrorLine}` : "";
     let technical = "";
     if (networkFail && !lastStatus) {
-      technical = `Aucune réponse HTTP après ${retries + 1} tentative(s).${devExtra}`;
+      technical = `Aucune réponse HTTP après ${retries + 1} tentative(s).`;
     } else if (lastStatus != null) {
-      technical = `HTTP ${lastStatus} après ${retries + 1} tentative(s).${serverBit}${devExtra}`;
+      technical = `HTTP ${lastStatus} après ${retries + 1} tentative(s).${serverBit}`;
     } else {
-      technical = `Échec après ${retries + 1} tentative(s).${devExtra}`;
+      technical = `Échec après ${retries + 1} tentative(s).`;
     }
     window.__fidpassAuthMeFailDetail = technical;
     window.__fidpassAuthMeFailKind = failKind;
@@ -348,11 +282,7 @@ function initAppPage() {
         data = rawMe ? JSON.parse(rawMe) : {};
       } catch (parseErr) {
         const snippet = (rawMe || "").slice(0, 120).replace(/\s+/g, " ");
-        const tech = `Réponse /api/auth/me non JSON.${snippet ? ` Début : ${snippet}…` : ""}${
-          IS_LOCAL_DEV && API_BASE
-            ? " En local : VITE_API_URL peut pointer vers une page HTML (404) au lieu de l’API."
-            : ""
-        }`;
+        const tech = `Réponse /api/auth/me non JSON.${snippet ? ` Début : ${snippet}…` : ""}`;
         showLoadError({ technical: tech, kind: "parse" });
         if (typeof console !== "undefined" && console.error) console.error("[fidpass] /api/auth/me parse:", parseErr, rawMe?.slice?.(0, 500));
         return;
@@ -364,8 +294,7 @@ function initAppPage() {
       const user = data.user;
       const isPlatformAdmin = !!(user?.is_admin ?? user?.isAdmin);
       const merchantTrialEndsAt = data.merchant_trial_ends_at ?? data.merchantTrialEndsAt ?? null;
-      const hasSubscription =
-        !!(data.has_active_subscription ?? data.hasActiveSubscription) || isDevBypassPayment();
+      const hasSubscription = !!(data.has_active_subscription ?? data.hasActiveSubscription);
       if (!hasSubscription && !isPlatformAdmin) {
         loadingEl?.classList.add("hidden");
         window.location.replace("/choisir-offre");
@@ -579,15 +508,6 @@ function initAppPage() {
           return;
         }
         if (res.status === 403 && (data.code === "subscription_required")) {
-          if (isDevBypassPayment()) {
-            if (emptyCreateError) {
-              emptyCreateError.innerHTML = IS_LOCAL_DEV
-                ? "Mode dev actif ici. En <strong>localhost</strong>, ajoute <code>DEV_BYPASS_PAYMENT=true</code> dans <code>backend/.env</code>, puis redémarre le backend (<code>npm run backend</code>)."
-                : "Mode dev actif ici. Pour autoriser la création sans paiement : <strong>Railway</strong> → service backend → <strong>Variables</strong> → <code>DEV_BYPASS_PAYMENT</code> = <code>true</code> → enregistre puis <strong>Redeploy</strong>. Pense à cliquer « Mode dev : passer le paiement » sur la page Choisir une offre avant d’arriver ici.";
-              emptyCreateError.classList.remove("hidden");
-            }
-            return;
-          }
           window.location.replace("/choisir-offre");
           return;
         }
@@ -2463,14 +2383,6 @@ function initAppDashboard(slug) {
     }
   }
 
-  function updateDeliveryDevResetUi(available) {
-    const btn = document.getElementById("app-delivery-claims-dev-reset");
-    const hint = document.getElementById("app-delivery-claims-dev-hint");
-    const on = Boolean(available);
-    if (btn) btn.classList.toggle("hidden", !on);
-    if (hint) hint.classList.toggle("hidden", on);
-  }
-
   async function refreshDeliveryClaimsPending() {
     const listEl = document.getElementById("app-delivery-claims-list");
     if (!listEl) return;
@@ -2478,9 +2390,6 @@ function initAppDashboard(slug) {
       const res = await api("/dashboard/delivery-receipt-claims?status=pending");
       if (!res.ok) return;
       const data = await res.json();
-      if (typeof data.dev_reset_available === "boolean") {
-        updateDeliveryDevResetUi(data.dev_reset_available);
-      }
       const items = Array.isArray(data.claims) ? data.claims : [];
       if (!items.length) {
         listEl.innerHTML = '<p class="app-hint">Aucune demande en attente.</p>';
@@ -2556,9 +2465,6 @@ function initAppDashboard(slug) {
       if (drDay) drDay.value = String(data.delivery_receipt_max_per_member_per_day ?? data.deliveryReceiptMaxPerMemberPerDay ?? 4);
       const drMonth = document.getElementById("app-delivery-receipt-max-month");
       if (drMonth) drMonth.value = String(data.delivery_receipt_max_per_member_per_month ?? data.deliveryReceiptMaxPerMemberPerMonth ?? 25);
-      updateDeliveryDevResetUi(
-        Number(data.delivery_receipt_dev_reset_available ?? data.deliveryReceiptDevResetAvailable ?? 0) === 1,
-      );
       setLastKnownBusinessSector(data.sector ?? "");
       updatePointsTiersSectorLine();
       const tiersPayload = data.points_reward_tiers ?? data.pointsRewardTiers;
@@ -3460,30 +3366,6 @@ function initAppDashboard(slug) {
 
   document.getElementById("app-delivery-claims-refresh")?.addEventListener("click", () => {
     refreshDeliveryClaimsPending().catch(() => {});
-  });
-  document.getElementById("app-delivery-claims-dev-reset")?.addEventListener("click", async () => {
-    const ok = window.confirm(
-      "Effacer toutes les réclamations « livraison » de ce commerce, supprimer les crédits associés sur les cartes et permettre de renvoyer les mêmes photos de tickets ? Action irréversible.",
-    );
-    if (!ok) return;
-    try {
-      const res = await api("/dashboard/delivery-receipt-claims/dev-reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: "reset_all_delivery_receipts" }),
-      });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        showReglesMessage(payload.error || "Réinitialisation impossible.", true);
-        return;
-      }
-      const nC = payload.claims_deleted ?? 0;
-      const nT = payload.transactions_deleted ?? 0;
-      showReglesMessage(`Mode dev : ${nC} réclamation(s) effacée(s), ${nT} mouvement(s) supprimé(s) — tu peux retester le même ticket.`);
-    } catch (_) {
-      showReglesMessage("Erreur réseau.", true);
-    }
-    await refreshDeliveryClaimsPending();
   });
   document.getElementById("app-delivery-claims-list")?.addEventListener("click", async (ev) => {
     const t = ev.target;

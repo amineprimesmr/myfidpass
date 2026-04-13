@@ -3,7 +3,6 @@
  * Appelé au chargement pour attacher les listeners (formulaire, menus, script Places).
  */
 import { openOnboardingSheet, initOnboardingSheet } from "./landing-onboarding-sheet.js";
-import { runDevDataReset } from "../utils/dev-reset.js";
 
 function updateLandingCtaState() {
   const input = document.getElementById("landing-etablissement");
@@ -175,5 +174,4 @@ export function initLandingShell() {
     document.head.appendChild(script);
   }
 
-  document.getElementById("landing-reset-all-data")?.addEventListener("click", () => runDevDataReset());
 }

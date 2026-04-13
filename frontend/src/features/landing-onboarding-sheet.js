@@ -126,10 +126,6 @@ function showOnboardingInSheet(organizationName, placeId) {
       saveDraftAndMaybeShowBeam(nextState);
       redirectToStripe();
     },
-    onDevBypass() {
-      closeOnboardingSheet();
-      window.location.href = "/app";
-    },
   });
 }
 

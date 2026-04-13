@@ -2,7 +2,7 @@
  * Onboarding de personnalisation pour le builder (questions progressives).
  * Le module reste UI-only et délègue la persistance au parent.
  */
-import { setDevBypassPayment, buildStripeSaasPaymentUrl } from "../../config.js";
+import { buildStripeSaasPaymentUrl } from "../../config.js";
 
 const TOTAL_STEPS = 4;
 
@@ -134,7 +134,7 @@ function normalizeState(input = {}, placeIdHint = "") {
   };
 }
 
-export function initBuilderOnboarding({ mountEl, progressEl, initialState, organizationName, apiBase, placeIdHint, onStateChange, onLogoChange, onStyleChange, onRewardChange, onComplete, onDevBypass }) {
+export function initBuilderOnboarding({ mountEl, progressEl, initialState, organizationName, apiBase, placeIdHint, onStateChange, onLogoChange, onStyleChange, onRewardChange, onComplete }) {
   if (!mountEl) return null;
   let currentPlaceIdHint = String(placeIdHint || "");
   let state = normalizeState(initialState, currentPlaceIdHint);
@@ -245,8 +245,7 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     }
     const content = renderStepContent();
     const nextBtn = `<button type="button" class="builder-onboarding-btn" data-action="next">${getNavButtonLabel()}</button>`;
-    const devBypassBtn = state.currentStep === 3 ? `<p class="builder-onboarding-dev-bypass-wrap"><button type="button" class="builder-onboarding-dev-bypass-btn" data-action="dev-bypass">Mode dev (simuler paiement)</button></p>` : "";
-    const nav = `<div class="builder-onboarding-nav">${nextBtn}${devBypassBtn}</div>`;
+    const nav = `<div class="builder-onboarding-nav">${nextBtn}</div>`;
     const dir = lastDirection;
     mountEl.innerHTML = `<section class="builder-onboarding-card" aria-label="Personnalisation de la carte"><div class="builder-onboarding-content" data-direction="${dir}"><div class="builder-onboarding-content-inner">${progressEl ? "" : progressHtml}${content}</div></div>${nav}</section>`;
     const contentEl = mountEl.querySelector(".builder-onboarding-content");
@@ -271,14 +270,6 @@ export function initBuilderOnboarding({ mountEl, progressEl, initialState, organ
     }
     mountEl.querySelectorAll("[data-style]").forEach((btn) => btn.addEventListener("click", () => { const stylePreset = btn.getAttribute("data-style") || "points"; updateState({ stylePreset }, { skipRender: true }); if (typeof onStyleChange === "function") onStyleChange(stylePreset); }));
     mountEl.querySelectorAll("[data-goal]").forEach((btn) => btn.addEventListener("click", () => { const goalId = btn.getAttribute("data-goal"); if (!goalId) return; const already = state.engagementGoals.includes(goalId); const goals = already ? state.engagementGoals.filter((id) => id !== goalId) : [...state.engagementGoals, goalId]; updateState({ engagementGoals: goals, goalConfigs: normalizeGoalConfigs(goals, state.goalConfigs, currentPlaceIdHint), goalConfigErrors: {} }, { skipRender: true }); }));
-
-    mountEl.querySelector("[data-action='dev-bypass']")?.addEventListener("click", () => {
-      updateState({ completed: true });
-      if (typeof onComplete === "function") onComplete({ ...state, completed: true, placeIdHint: currentPlaceIdHint });
-      setDevBypassPayment(true);
-      if (typeof onDevBypass === "function") onDevBypass();
-      else window.location.href = "/app";
-    });
   }
 
   render(); emitState();

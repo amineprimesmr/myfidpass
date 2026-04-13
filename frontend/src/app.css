@@ -3144,47 +3144,6 @@ body.page-app .whatsapp-fab { display: none !important; }
   max-width: 36rem;
 }
 
-.app-empty-fatal-local-hint {
-  margin: -0.5rem 0 1.25rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--app-text-muted);
-  text-align: left;
-  max-width: 28rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.app-empty-fatal-tech {
-  margin: 0 0 1.25rem;
-  text-align: left;
-  max-width: 32rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.app-empty-fatal-tech-summary {
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--app-text-muted);
-  list-style-position: outside;
-}
-
-.app-empty-fatal-pre {
-  margin: 0.65rem 0 0;
-  padding: 0.75rem 1rem;
-  font-size: 0.72rem;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: var(--app-surface-hover, #f0f2f5);
-  border: 1px solid var(--app-border, #e8ecf1);
-  border-radius: var(--app-radius-sm, 10px);
-  color: var(--app-text, #1a202c);
-  max-height: 12rem;
-  overflow: auto;
-}
 .app-personnaliser-setup {
   margin-bottom: 1.25rem;
   max-width: 38rem;
@@ -3345,19 +3304,6 @@ body.page-app .whatsapp-fab { display: none !important; }
   border-color: #0f172a;
   box-shadow: 0 16px 48px rgba(15, 23, 42, 0.1);
 }
-
-.offers-dev-bypass-wrap { margin-top: 1.5rem; text-align: center; }
-.offers-dev-bypass-btn {
-  background: none;
-  border: none;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8rem;
-  color: #6b7280;
-  text-decoration: underline;
-  cursor: pointer;
-  font-family: inherit;
-}
-.offers-dev-bypass-btn:hover { color: #2563eb; }
 
 /* Dashboard */
 .app-dashboard-shell {
@@ -5764,15 +5710,6 @@ body.page-app .whatsapp-fab { display: none !important; }
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--app-text-muted);
-}
-.app-profil-danger-zone {
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--app-border);
-}
-.app-profil-danger-hint {
-  margin-bottom: 0.65rem;
-  color: #b91c1c;
 }
 .app-profil-logo-row {
   display: flex;
