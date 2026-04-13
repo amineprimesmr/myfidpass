@@ -101,8 +101,12 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
   gap: 0.75rem;
 }
 
-#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-card.fidelity-v2-step--rewards .fidelity-v2-step-body-inner {
-  padding-top: 0.15rem;
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-main {
+  background: #eef1f5;
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-rewards-shell .fidelity-v2-rewards-shell__inner {
+  padding-top: 0.2rem;
 }
 
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) .fidelity-v2-missions-heading {

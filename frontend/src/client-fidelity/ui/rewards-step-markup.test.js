@@ -6,7 +6,7 @@ function idEsc(s) {
 }
 
 describe("renderRewardsStepMarkup", () => {
-  it("affiche la liste des paliers points", () => {
+  it("affiche une grille de cartes pour les paliers points", () => {
     const html = renderRewardsStepMarkup(idEsc, {
       business: {
         points_reward_tiers: [
@@ -18,12 +18,26 @@ describe("renderRewardsStepMarkup", () => {
       programType: "points",
       balanceUnit: "pts",
     });
-    expect(html).toContain("fid-tiers-block");
+    expect(html).toContain("fid-rewards-block");
+    expect(html).toContain("fid-rewards-grid");
     expect(html).toContain("Boisson");
     expect(html).toContain("Menu");
-    expect(html).toContain("50");
-    expect(html).toContain("fid-tiers-track");
-    expect(html).not.toContain("fid-tiers-progress-card");
+    expect(html).toContain("50 points");
+    expect(html).toContain("fid-reward-card");
+    expect(html).not.toContain("fid-tiers-track");
+  });
+
+  it("utilise image_url du palier si fourni", () => {
+    const html = renderRewardsStepMarkup(idEsc, {
+      business: {
+        points_reward_tiers: [{ points: 25, label: "Cafe", image_url: "https://example.com/cafe.png" }],
+      },
+      member: { points: 0 },
+      programType: "points",
+      balanceUnit: "pts",
+    });
+    expect(html).toContain("fid-reward-card__img");
+    expect(html).toContain("https://example.com/cafe.png");
   });
 
   it("affiche paliers programme tampons (unité tampons)", () => {

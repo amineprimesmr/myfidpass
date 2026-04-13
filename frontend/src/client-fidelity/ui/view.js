@@ -263,17 +263,9 @@ export function renderClientPage(root, state, options = {}) {
             : ""
         }
 
-        <section class="fidelity-v2-card fidelity-v2-step fidelity-v2-step--rewards" id="fidelity-v2-rewards">
-          <header class="fidelity-v2-step-header">
-            <div class="fidelity-v2-step-head-text">
-              <h2 class="fidelity-v2-card-title fidelity-v2-step-title fidelity-v2-step-title--rewards">
-                <span class="fidelity-v2-step-title-emoji" aria-hidden="true">🎁</span>
-                <span class="fidelity-v2-step-title-label">Récompenses</span>
-              </h2>
-            </div>
-          </header>
-          <div class="fidelity-v2-step-body">
-            <div class="fidelity-v2-step-body-inner">
+        <section class="fidelity-v2-step fidelity-v2-step--rewards fidelity-v2-rewards-shell" id="fidelity-v2-rewards">
+          <div class="fidelity-v2-step-body fidelity-v2-rewards-shell__body">
+            <div class="fidelity-v2-step-body-inner fidelity-v2-rewards-shell__inner">
             ${rewardsStepHtml}
             </div>
           </div>

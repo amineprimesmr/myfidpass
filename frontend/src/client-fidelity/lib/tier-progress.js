@@ -22,7 +22,10 @@ export function parsePointTiers(business) {
     const threshold = parseInt(String(t.points ?? t.points_required), 10);
     const label = String(t.label ?? "").trim() || "Récompense";
     if (Number.isNaN(threshold) || threshold < 0) continue;
-    out.push({ threshold, label });
+    const imgRaw = t.image_url ?? t.imageUrl ?? t.image;
+    const imageUrl =
+      typeof imgRaw === "string" && imgRaw.trim() ? String(imgRaw).trim() : "";
+    out.push({ threshold, label, ...(imageUrl ? { imageUrl } : {}) });
   }
   out.sort((a, b) => a.threshold - b.threshold);
   return out;

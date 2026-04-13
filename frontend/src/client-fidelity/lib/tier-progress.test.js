@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildHeroFullScaleTickMarks, heroFillPercentEqualSegments } from "./tier-progress.js";
+import { buildHeroFullScaleTickMarks, heroFillPercentEqualSegments, parsePointTiers } from "./tier-progress.js";
 
 describe("buildHeroFullScaleTickMarks", () => {
   it("affiche chaque palier avec espacement égal sur la barre (0 % … 100 %)", () => {
@@ -18,6 +18,21 @@ describe("buildHeroFullScaleTickMarks", () => {
   it("un seul palier : 100 % à droite", () => {
     const m = buildHeroFullScaleTickMarks([{ threshold: 40, label: "x" }]);
     expect(m).toEqual([{ value: 40, leftPct: 100 }]);
+  });
+});
+
+describe("parsePointTiers", () => {
+  it("expose imageUrl optionnel (image_url / imageUrl / image)", () => {
+    const tiers = parsePointTiers({
+      points_reward_tiers: [
+        { points: 10, label: "A", image_url: "https://x/a.png" },
+        { points: 20, label: "B", imageUrl: "https://x/b.png" },
+        { points: 30, label: "C", image: "https://x/c.png" },
+      ],
+    });
+    expect(tiers[0].imageUrl).toBe("https://x/a.png");
+    expect(tiers[1].imageUrl).toBe("https://x/b.png");
+    expect(tiers[2].imageUrl).toBe("https://x/c.png");
   });
 });
 
