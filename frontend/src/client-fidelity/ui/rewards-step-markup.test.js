@@ -26,6 +26,8 @@ describe("renderRewardsStepMarkup", () => {
     expect(html).toContain("fid-reward-card");
     expect(html).toContain("data-fid-reward-trigger");
     expect(html).toContain("fid-reward-card__surface");
+    expect(html).toContain("/assets/gift/gift1.png");
+    expect(html).toContain("/assets/gift/gift2.png");
     expect(html).not.toContain("fid-tiers-track");
   });
 
@@ -40,6 +42,7 @@ describe("renderRewardsStepMarkup", () => {
     });
     expect(html).toContain("fid-reward-card__img");
     expect(html).toContain("https://example.com/cafe.png");
+    expect(html).not.toContain("/assets/gift/gift1.png");
   });
 
   it("affiche paliers programme tampons (unité tampons)", () => {
