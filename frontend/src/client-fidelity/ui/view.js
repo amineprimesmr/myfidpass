@@ -178,7 +178,6 @@ export function renderClientPage(root, state, options = {}) {
         <section class="fidelity-v2-hero fidelity-v2-hero-member">
           ${memberHeroLogoHtml}
           <div class="fidelity-v2-hero-greeting">
-            <span class="fidelity-v2-hero-wave">👋</span>
             <div>
               <h1 class="fidelity-v2-hero-title">Bonjour${memberFirstName ? ` ${memberFirstName}` : ""} !</h1>
               ${renderHeroBalanceProgressMarkup(
