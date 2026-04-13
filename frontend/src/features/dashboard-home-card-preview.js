@@ -111,6 +111,7 @@ function applyDashboardHomeWalletPreview(data, slug, api, pageOrigin) {
   if (orgEl) {
     orgEl.textContent = orgName;
     orgEl.classList.toggle("hidden", useStripText);
+    orgEl.setAttribute("aria-hidden", useStripText ? "true" : "false");
   }
 
   if (stripImg) {
@@ -126,11 +127,8 @@ function applyDashboardHomeWalletPreview(data, slug, api, pageOrigin) {
       stripTextEl.classList.add("hidden");
     }
   }
-  if (logoWrap) {
-    logoWrap.style.display = useStripText ? "none" : "";
-  }
-
   const hasServerLogo = !!(data.logo_url || data.logoUrl);
+
   if (walletLogo) {
     if (hasServerLogo && !useStripText) {
       walletLogo.src = resolveClientLogoImgSrc(
@@ -148,9 +146,15 @@ function applyDashboardHomeWalletPreview(data, slug, api, pageOrigin) {
       walletLogo.classList.add("hidden");
     }
   }
+
+  /* Accueil : pas de logo serveur → pas de zone « Logo », le nom du commerce remplit l’en-tête */
+  if (logoWrap) {
+    if (useStripText) logoWrap.style.display = "none";
+    else if (!hasServerLogo) logoWrap.style.display = "none";
+    else logoWrap.style.display = "";
+  }
   if (logoFallback) {
-    const logoShown = !!(walletLogo && walletLogo.getAttribute("src") && !walletLogo.classList.contains("hidden"));
-    logoFallback.classList.toggle("hidden", !!useStripText || logoShown);
+    logoFallback.classList.add("hidden");
   }
 
   const sectorRaw = String(data.sector ?? "");

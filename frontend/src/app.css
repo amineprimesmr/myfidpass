@@ -4805,12 +4805,16 @@ body.page-app .whatsapp-fab { display: none !important; }
   min-width: 0;
   font-size: inherit;
   font-weight: 700;
-  text-align: right;
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  align-self: center;
 }
-.app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org { display: none !important; }
+/* « Ma carte » : le nom est géré ailleurs — masquer le doublon sous le logo */
+#app-personnaliser-preview .app-wallet-preview-dynamic .app-wallet-preview-header .app-wallet-preview-org {
+  display: none !important;
+}
 
 /* Blocs points vs tampons dans l’aperçu */
 .app-wallet-preview-dynamic #app-preview-pts-wrap.hidden { display: none !important; }
