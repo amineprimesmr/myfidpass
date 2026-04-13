@@ -143,6 +143,8 @@ export function renderClientPage(root, state, options = {}) {
         `;
 
   const memberPoints = hasMember ? Math.max(0, Math.floor(Number(state.member?.points) || 0)) : 0;
+  const appleWalletRegistered = hasMember && state.member?.apple_wallet_registered === true;
+  const hasGoogleWallet = hasMember && Boolean(state.wallet?.google);
   const balanceUnitLabel =
     programType === "stamps" ? (headerBalanceUnit === "pts" ? "tampons" : esc(headerBalanceUnit)) : "points";
   const deliveryReceiptEnabled =
@@ -212,7 +214,14 @@ export function renderClientPage(root, state, options = {}) {
       </section>
 
       <div class="fidelity-v2-steps ${hasMember ? "" : "hidden"}" aria-label="${esc(memberSectionsAriaLabel)}">
-        ${showWalletStep ? renderWalletStepMarkup(esc) : ""}
+        ${
+          showWalletStep
+            ? renderWalletStepMarkup(esc, {
+                appleWalletRegistered,
+                hasGoogleWallet,
+              })
+            : ""
+        }
 
         ${
           deliveryReceiptEnabled

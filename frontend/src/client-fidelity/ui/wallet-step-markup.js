@@ -11,9 +11,13 @@ function googleSvg() {
 /**
  * Boutons Wallet seuls — pas de carte / cadre.
  * @param {(s: string) => string} _esc
+ * @param {{ platform?: string, appleWalletRegistered?: boolean, hasGoogleWallet?: boolean }} [options]
  */
 export function renderWalletStepMarkup(_esc, options = {}) {
   const platform = options.platform ?? detectWalletPlatform();
+  const appleWalletRegistered = options.appleWalletRegistered === true;
+  /** Par défaut true : n’affiche pas Google que si explicitement `false` (ex. pas d’URL côté API). */
+  const hasGoogleWallet = options.hasGoogleWallet !== false;
 
   const appleOnly = `
         <span class="fidelity-cta-wrap fidelity-cta-wrap--full">
@@ -49,9 +53,17 @@ export function renderWalletStepMarkup(_esc, options = {}) {
         </span>`;
 
   let inner;
-  if (platform === "ios") inner = appleOnly;
-  else if (platform === "android") inner = googleOnly;
-  else inner = `${appleDesktop}${googleDesktop}`;
+  if (platform === "ios") {
+    inner = appleWalletRegistered ? "" : appleOnly;
+  } else if (platform === "android") {
+    inner = googleOnly;
+  } else {
+    const applePart = appleWalletRegistered ? "" : appleDesktop;
+    const googlePart = hasGoogleWallet ? googleDesktop : "";
+    inner = `${applePart}${googlePart}`;
+  }
+
+  if (!inner.trim()) return "";
 
   return `
       <div class="fidelity-v2-wallet-row" id="fidelity-v2-wallet">

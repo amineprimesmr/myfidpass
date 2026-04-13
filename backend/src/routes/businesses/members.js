@@ -21,6 +21,7 @@ import {
   getMemberRewards,
   markRewardGrantClaimed,
   getPushTokensForMember,
+  memberHasAppleWalletRegistration,
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
   hasOperationalMerchantAccess,
@@ -265,6 +266,8 @@ router.get("/:memberId", (req, res) => {
     birth_date: member.birth_date || null,
     profile_ticket_eligible: businessUsesTicketBonuses(business.id),
     profile_bonus_claimed: Number(member.profile_ticket_bonus_granted) === 1,
+    /** PassKit : au moins un appareil enregistré (ajout Apple Wallet effectif côté iOS). */
+    apple_wallet_registered: memberHasAppleWalletRegistration(member.id),
   });
 });
 

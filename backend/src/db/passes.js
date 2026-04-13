@@ -92,6 +92,21 @@ export function getPushTokensForMember(serialNumber) {
   return rows.map((r) => r.push_token).filter(Boolean);
 }
 
+/** Au moins un enregistrement PassKit réel (hors device de test) → iPhone a contacté le web service à l’ajout du pass. */
+export function memberHasAppleWalletRegistration(serialNumber) {
+  if (!serialNumber || typeof serialNumber !== "string") return false;
+  const id = serialNumber.trim();
+  if (!id) return false;
+  const row = db
+    .prepare(
+      `SELECT 1 AS ok FROM pass_registrations
+       WHERE serial_number = ? AND device_library_identifier != ?
+       LIMIT 1`,
+    )
+    .get(id, TEST_DEVICE_ID);
+  return row != null && Number(row.ok) === 1;
+}
+
 export function getPassKitPushTokensForBusiness(businessId) {
   const rows = db.prepare(
     `SELECT pr.push_token, pr.serial_number
