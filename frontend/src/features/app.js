@@ -2894,7 +2894,7 @@ function initAppDashboard(slug) {
   }, { once: false });
   if (document.getElementById("engagement")?.classList.contains("app-section-visible")) setEngagementPreviewIframeSrc();
   syncIosHomeToolbar();
-  document.getElementById("app-ios-home-rewards")?.addEventListener("click", () => {
+  document.getElementById("app-dash-home-header-right")?.addEventListener("click", () => {
     showAppSection("engagement");
   });
 

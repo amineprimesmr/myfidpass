@@ -5,42 +5,10 @@
 
 @media (max-width: 768px) {
   #app-app.app-mobile #dashboard.app-section-visible .app-ios-home-hero {
-    margin: 0 0 1.25rem;
-  }
-
-  .app-ios-home-pass-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.65rem;
-    padding: 0 2px;
-  }
-
-  .app-ios-home-pass-brand {
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    color: #0f172a;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .app-ios-home-rewards {
-    flex-shrink: 0;
-    border: none;
-    background: none;
-    padding: 0.25rem 0.35rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2563eb;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .app-ios-home-rewards:active {
-    opacity: 0.7;
+    margin: 0 auto 1.25rem;
+    padding-top: max(4px, env(safe-area-inset-top, 0px));
+    width: 100%;
+    max-width: min(304px, 86vw);
   }
 
   .app-ios-home-pass-frame {
@@ -51,14 +19,18 @@
       0 4px 24px rgba(15, 23, 42, 0.08),
       0 1px 3px rgba(15, 23, 42, 0.06);
     border: 1px solid rgba(148, 163, 184, 0.2);
+    width: 100%;
+    margin: 0 auto;
   }
 
   /* Aperçu pass Wallet — même gabarit unifié que « Ma carte » (pas de « ticket » landing) */
   #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-home-preview-root {
-    padding: 0.35rem 0.2rem 0.55rem;
+    padding: 0.45rem 0.28rem 0.6rem;
     border-radius: 0;
     container-type: inline-size;
     container-name: dash-home-preview;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   #app-app.app-mobile #dashboard.app-section-visible #app-dash-home-wallet-card {
@@ -70,7 +42,7 @@
     max-width: 100%;
     max-height: none !important;
     height: auto !important;
-    min-height: 0;
+    min-height: clamp(430px, 58vh, 580px);
     margin: 0;
     border-radius: 14px;
     overflow: hidden;
@@ -121,17 +93,20 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   #app-app.app-mobile #dashboard.app-section-visible #app-dash-home-wallet-card .app-wallet-preview-main-block {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
-    padding: 0.45rem 0.75rem 0.65rem;
+    gap: 0.55rem;
+    padding: 0.5rem 0.75rem 0.85rem;
     flex: 1 1 auto;
     min-height: 0;
     border-radius: 0;
+    justify-content: flex-start;
   }
 
   #app-app.app-mobile
@@ -156,6 +131,26 @@
     font-size: clamp(0.55rem, 5cqw, 0.75rem);
     top: 0.2rem;
     right: 0.6rem;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible #app-dash-home-wallet-card .app-dash-home-header-rewards-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    text-align: right;
+    line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible #app-dash-home-wallet-card .app-dash-home-header-rewards-btn:active {
+    opacity: 0.85;
   }
 
   #app-app.app-mobile #dashboard.app-section-visible #app-dash-home-wallet-card .app-wallet-preview-header .app-wallet-preview-org {
@@ -214,22 +209,29 @@
   #app-app.app-mobile #dashboard.app-section-visible #app-dash-home-wallet-card .builder-wallet-card-qr {
     position: static !important;
     margin: 0 !important;
+    margin-top: auto !important;
     display: flex;
     justify-content: center;
     align-items: center;
+    align-self: stretch;
     background: var(--wallet-bg) !important;
     border: none !important;
     border-radius: 0 0 14px 14px !important;
-    padding: 0.4rem 0.55rem 0.5rem;
+    padding: 0.65rem 0.75rem 0.75rem;
     width: 100%;
     box-sizing: border-box;
+    flex-shrink: 0;
   }
 
   #app-app.app-mobile #dashboard.app-section-visible #app-dash-home-wallet-card .builder-wallet-card-qr-img {
-    width: 88px !important;
-    height: 88px !important;
-    min-width: 88px;
-    min-height: 88px;
+    display: block !important;
+    width: 96px !important;
+    height: 96px !important;
+    min-width: 96px;
+    min-height: 96px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    object-position: center;
   }
 
   #app-app.app-mobile #dashboard.app-section-visible .app-dashboard-recent-icon--desktop {
