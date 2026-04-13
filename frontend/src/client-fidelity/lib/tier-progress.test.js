@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { buildHeroProgressTickMarks } from "./tier-progress.js";
+import { buildHeroFullScaleTickMarks } from "./tier-progress.js";
 
-describe("buildHeroProgressTickMarks", () => {
-  it("place chaque seuil du programme entre min et max (positions % correctes)", () => {
+describe("buildHeroFullScaleTickMarks", () => {
+  it("affiche chaque palier du programme, position = valeur / dernier palier", () => {
     const tiers = [
       { threshold: 25, label: "a" },
       { threshold: 50, label: "b" },
-      { threshold: 100, label: "c" },
+      { threshold: 75, label: "c" },
+      { threshold: 100, label: "d" },
+      { threshold: 125, label: "e" },
     ];
-    const m = buildHeroProgressTickMarks(tiers, 25, 100);
-    const vals = m.map((x) => x.value).sort((a, b) => a - b);
-    expect(vals).toEqual([25, 50, 100]);
-    const at50 = m.find((x) => x.value === 50);
-    expect(at50?.leftPct).toBeCloseTo(((50 - 25) / (100 - 25)) * 100, 5);
+    const m = buildHeroFullScaleTickMarks(tiers);
+    expect(m.map((x) => x.value)).toEqual([25, 50, 75, 100, 125]);
+    expect(m.find((x) => x.value === 25)?.leftPct).toBeCloseTo(20, 5);
+    expect(m.find((x) => x.value === 125)?.leftPct).toBe(100);
   });
 
-  it("segment 0→premier palier :0 et seuil cible", () => {
-    const tiers = [{ threshold: 40, label: "x" }];
-    const m = buildHeroProgressTickMarks(tiers, 0, 40);
-    expect(m.map((x) => x.value)).toEqual([0, 40]);
+  it("un seul palier : 100 % à droite", () => {
+    const m = buildHeroFullScaleTickMarks([{ threshold: 40, label: "x" }]);
+    expect(m).toEqual([{ value: 40, leftPct: 100 }]);
   });
 });

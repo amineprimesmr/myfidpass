@@ -69,47 +69,39 @@ export function tierProgressState(tiers, balance) {
   return { next, prevThreshold, pct };
 }
 
-const MAX_HERO_TICK_LABELS = 7;
+const MAX_HERO_FULLSCALE_TICKS = 12;
 
 /**
- * Graduations sous la jauge hero : uniquement des seuils du programme, positionnés en % sur [progressMin → progressMax].
- * @param {{ threshold: number }[]} tiers
- * @param {number} progressMin
- * @param {number} progressMax
+ * Graduations jauge hero : **tous** les paliers du programme sur l’échelle 0 → dernier seuil
+ * (positions en % = valeur / dernier palier, comme une règle unique sous la barre).
+ * @param {{ threshold: number }[]} tiers triés par seuil croissant
  * @returns {{ value: number; leftPct: number }[]}
  */
-export function buildHeroProgressTickMarks(tiers, progressMin, progressMax) {
-  const span = progressMax - progressMin;
-  if (!tiers.length || span <= 0 || !Number.isFinite(span)) return [];
-
-  /** @type {{ value: number; leftPct: number }[]} */
-  const raw = [{ value: progressMin, leftPct: 0 }];
-  for (const t of tiers) {
-    if (t.threshold > progressMin && t.threshold < progressMax) {
-      raw.push({
-        value: t.threshold,
-        leftPct: Math.min(100, Math.max(0, ((t.threshold - progressMin) / span) * 100)),
-      });
-    }
-  }
-  raw.push({ value: progressMax, leftPct: 100 });
+export function buildHeroFullScaleTickMarks(tiers) {
+  if (!tiers.length) return [];
+  const displayMax = tiers[tiers.length - 1].threshold;
+  if (!Number.isFinite(displayMax) || displayMax <= 0) return [];
 
   const seenVal = new Set();
-  const deduped = [];
-  for (const m of raw) {
-    if (seenVal.has(m.value)) continue;
-    seenVal.add(m.value);
-    deduped.push(m);
+  /** @type {{ value: number; leftPct: number }[]} */
+  const raw = [];
+  for (const t of tiers) {
+    if (seenVal.has(t.threshold)) continue;
+    seenVal.add(t.threshold);
+    raw.push({
+      value: t.threshold,
+      leftPct: Math.min(100, (t.threshold / displayMax) * 100),
+    });
   }
 
-  if (deduped.length <= MAX_HERO_TICK_LABELS) return deduped;
+  if (raw.length <= MAX_HERO_FULLSCALE_TICKS) return raw;
 
   /** @type {{ value: number; leftPct: number }[]} */
   const thinned = [];
-  const n = MAX_HERO_TICK_LABELS;
+  const n = MAX_HERO_FULLSCALE_TICKS;
   for (let i = 0; i < n; i += 1) {
-    const idx = Math.round((i / (n - 1)) * (deduped.length - 1));
-    thinned.push(deduped[idx]);
+    const idx = Math.round((i / (n - 1)) * (raw.length - 1));
+    thinned.push(raw[idx]);
   }
   const seenFinal = new Set();
   return thinned.filter((m) => {
