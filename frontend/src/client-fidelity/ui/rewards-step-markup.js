@@ -43,7 +43,7 @@ function renderRewardCard(t, unlocked, costLine, esc, displayImageUrl) {
               data-reward-label="${labelEnc}"
               data-reward-costline="${costEnc}"
               aria-label="${esc(aria)}">
-              <div class="fid-reward-card__visual-ring">
+              <div class="fid-reward-card__visual">
                 ${visual}
               </div>
               <h3 class="fid-reward-card__title">${esc(t.label)}</h3>
