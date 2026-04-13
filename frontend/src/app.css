@@ -3189,11 +3189,13 @@ body.page-app .whatsapp-fab { display: none !important; }
   margin-bottom: 1.25rem;
   max-width: 38rem;
 }
-.app-awaiting-first-business .app-sidebar-nav .app-sidebar-link[data-section]:not([data-section="personnaliser"]):not([data-section="profil"]) {
+/* Avant le 1er commerce : accès au formulaire de création (Dashboard), Ma carte, Profil — le reste est grisé (comme le flux desktop). */
+.app-awaiting-first-business .app-sidebar-nav .app-sidebar-link[data-section]:not([data-section="dashboard"]):not([data-section="personnaliser"]):not([data-section="profil"]) {
   opacity: 0.38;
   pointer-events: none;
 }
-.app-awaiting-first-business #app-mobile-tab-bar .app-mobile-tab:not([data-mobile-tab="profil"]) {
+/* Mobile : Accueil = retour au formulaire création ; Commerce = compte / établissement ; Notifs indisponibles. */
+.app-awaiting-first-business #app-mobile-tab-bar .app-mobile-tab:not([data-mobile-tab="dashboard"]):not([data-mobile-tab="profil"]) {
   opacity: 0.38;
   pointer-events: none;
 }

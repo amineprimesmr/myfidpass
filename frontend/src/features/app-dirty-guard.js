@@ -96,6 +96,7 @@ export function getAppCommittedSection() {
 function normalizeSectionId(raw, sectionIds) {
   let normalized = raw === "partager" ? "personnaliser" : raw;
   if (normalized === "regles-carte") normalized = "personnaliser";
+  if (normalized === "creer-commerce") normalized = "dashboard";
   if (normalized === "scanner" || normalized === "vue-ensemble") return "dashboard";
   return sectionIds.includes(normalized) ? normalized : "dashboard";
 }

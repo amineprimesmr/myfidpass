@@ -378,6 +378,7 @@ function initAppPage() {
       /* fidpass-auth-me : émis seulement après initAppDashboard (l’écouteur Profil y est enregistré). */
 
       if (businesses.length === 0) {
+        document.getElementById("app-app")?.classList.add("app-awaiting-first-business");
         loadingEl?.classList.add("hidden");
         if (loadErrorEl) {
           loadErrorEl.textContent = "";
@@ -646,7 +647,50 @@ function showAppSectionCore(sectionId) {
   const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
   let id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
   const awaiting = document.getElementById("app-app")?.classList.contains("app-awaiting-first-business");
-  if (awaiting && id !== "personnaliser" && id !== "profil") id = "personnaliser";
+  const contentEl = document.getElementById("app-dashboard-content");
+  const emptyEl = document.getElementById("app-empty");
+
+  if (awaiting && contentEl && emptyEl) {
+    const inMainShell = id === "profil" || id === "personnaliser";
+    if (!inMainShell) {
+      const prev = _lastShownAppSectionId;
+      if (prev === "notifications" && id !== "notifications") {
+        _flushNotificationBannerTextsRef?.();
+      }
+      _lastShownAppSectionId = "creer-commerce";
+      emptyEl.classList.remove("hidden");
+      contentEl.classList.add("hidden");
+      APP_SECTION_IDS.forEach((sid) => {
+        const el = document.getElementById(sid);
+        if (el) {
+          el.classList.remove("app-section-visible");
+          el.style.setProperty("display", "none", "important");
+        }
+      });
+      document.querySelectorAll("#app-app .app-sidebar-link[data-section]").forEach((l) => {
+        l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === "dashboard");
+      });
+      document.querySelectorAll("#app-mobile-tab-bar .app-mobile-tab").forEach((t) => {
+        const on = t.getAttribute("data-mobile-tab") === "dashboard";
+        t.classList.toggle("active", on);
+        if (on) t.setAttribute("aria-current", "page");
+        else t.removeAttribute("aria-current");
+      });
+      document.getElementById("app-app")?.setAttribute("data-mobile-section", "creer-commerce");
+      const headerTitleCreer = document.getElementById("app-mobile-header-title");
+      if (headerTitleCreer) headerTitleCreer.textContent = "Créer ma carte";
+      const hashCreer = "#creer-commerce";
+      if (window.location.hash !== hashCreer) {
+        window.history.replaceState(null, "", window.location.pathname + hashCreer);
+      }
+      window.dispatchEvent(
+        new CustomEvent("app-section-change", { detail: { sectionId: "creer-commerce", previousSectionId: prev } })
+      );
+      return;
+    }
+    emptyEl.classList.add("hidden");
+    contentEl.classList.remove("hidden");
+  }
 
   const prev = _lastShownAppSectionId;
   if (prev === "notifications" && id !== "notifications") {
@@ -719,7 +763,9 @@ function initAppSidebar() {
   }
   let sectionToShow = hashSection === "partager" ? "personnaliser" : (APP_SECTION_IDS.includes(hashSection) ? hashSection : "dashboard");
   const awaitingBiz = document.getElementById("app-app")?.classList.contains("app-awaiting-first-business");
-  if (awaitingBiz && sectionToShow !== "profil") sectionToShow = "personnaliser";
+  if (awaitingBiz && sectionToShow !== "profil" && sectionToShow !== "personnaliser") {
+    sectionToShow = "dashboard";
+  }
   showAppSection(sectionToShow);
   requestAnimationFrame(() => showAppSection(sectionToShow));
   initAppMobile();

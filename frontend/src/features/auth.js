@@ -14,6 +14,21 @@ function isAppleRedirectDevice() {
   return /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0 && window.matchMedia("(max-width: 768px)").matches);
 }
 
+/** Après login / inscription : si la cible est /app, forcer l’étape « premier commerce » (même flux que desktop). */
+function resolvePostAuthRedirect() {
+  const raw = new URLSearchParams(window.location.search).get("redirect") || "/app";
+  try {
+    const u = new URL(raw, window.location.origin);
+    if (u.pathname === "/app" || u.pathname.endsWith("/app")) {
+      u.hash = "#creer-commerce";
+      return u.pathname + u.search + u.hash;
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  return raw;
+}
+
 export function initAuthPage(initialTab) {
   const formLogin = document.getElementById("auth-form-login");
   const formRegister = document.getElementById("auth-form-register");
@@ -210,8 +225,7 @@ export function initAuthPage(initialTab) {
       }
       setAuthToken(data.token);
       if (data.refreshToken) setRefreshToken(data.refreshToken);
-      const redirect = new URLSearchParams(window.location.search).get("redirect") || "/app";
-      window.location.replace(redirect);
+      window.location.replace(resolvePostAuthRedirect());
     } catch (_) {
       showApiError(null, null, loginError);
     }
@@ -240,8 +254,7 @@ export function initAuthPage(initialTab) {
       if (!res.ok) { showApiError(res, data, registerError); return; }
       setAuthToken(data.token);
       if (data.refreshToken) setRefreshToken(data.refreshToken);
-      const redirect = new URLSearchParams(window.location.search).get("redirect") || "/app";
-      window.location.replace(redirect);
+      window.location.replace(resolvePostAuthRedirect());
     } catch (_) {
       showApiError(null, null, registerError);
     }
@@ -259,8 +272,7 @@ export function initAuthPage(initialTab) {
     if (!data?.token) return;
     setAuthToken(data.token);
     if (data.refreshToken) setRefreshToken(data.refreshToken);
-    const redirect = new URLSearchParams(window.location.search).get("redirect") || "/app";
-    window.location.replace(redirect);
+    window.location.replace(resolvePostAuthRedirect());
   }
 
   const authUrlParams = new URLSearchParams(window.location.search);

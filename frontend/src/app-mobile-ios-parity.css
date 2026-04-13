@@ -99,6 +99,10 @@
     display: none !important;
   }
 
+  #app-app.app-awaiting-first-business .app-mobile-scan-fab {
+    display: none !important;
+  }
+
   /* Barre supérieure onglet Commerce (ProfileView iOS) */
   .app-commerce-mobile-topbar {
     display: flex;
