@@ -10,6 +10,7 @@
     { "source": "/oauth/tiktok", "destination": "/oauth/tiktok.html" },
     { "source": "/oauth/meta", "destination": "/oauth/meta.html" },
     { "source": "/oauth/google-youtube", "destination": "/oauth/google-youtube.html" },
+    { "source": "/oauth/google-business", "destination": "/oauth/google-business.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
