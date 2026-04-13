@@ -160,7 +160,9 @@ export function renderClientPage(root, state, options = {}) {
     });
   const showMissionsEntry = hasMissionsSheet && !showWalletPassHero;
   const deliveryReceiptEnabled =
-    hasMember && Number(state.business?.delivery_receipt_claims_enabled ?? state.business?.deliveryReceiptClaimsEnabled ?? 1) === 1;
+    hasMember &&
+    !showWalletPassHero &&
+    Number(state.business?.delivery_receipt_claims_enabled ?? state.business?.deliveryReceiptClaimsEnabled ?? 1) === 1;
 
   const memberLogoUrl = hasMember ? resolveClientLogoImgSrc(state.business, slugForAssets, apiBase) : "";
   const logoOnErr =
