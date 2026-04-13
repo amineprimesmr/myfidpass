@@ -8,17 +8,12 @@ export function renderEarnMorePointsButtonMarkup(esc) {
             <button
               type="button"
               id="fidelity-missions-sheet-open"
-              class="fidelity-earn-points-cta"
+              class="fidelity-shiny-cta"
               aria-haspopup="dialog"
               aria-expanded="false"
               aria-controls="fidelity-missions-sheet"
             >
-              <span class="fidelity-earn-points-cta__glow" aria-hidden="true"></span>
-              <span class="fidelity-earn-points-cta__inner">
-                <span class="fidelity-earn-points-cta__emoji" aria-hidden="true">🎁</span>
-                <span class="fidelity-earn-points-cta__text">${esc("Gagner plus de points")}</span>
-                <span class="fidelity-earn-points-cta__chev" aria-hidden="true">›</span>
-              </span>
+              <span class="fidelity-shiny-cta__label">${esc("Gagner plus de points")}</span>
             </button>
           </div>`;
 }
