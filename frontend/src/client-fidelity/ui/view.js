@@ -32,7 +32,6 @@ export function renderClientPage(root, state, options = {}) {
   const businessName = esc(state.business?.organizationName || state.business?.name || "Carte fidélité");
   const hasMember = !!state.member?.id;
   const showWalletStep = hasMember;
-  const memberHeroSubtitle = `Tes avantages chez <strong>${esc(businessName)}</strong>`;
   const memberSectionsAriaLabel = "Ton espace fidélité";
   const loyaltyGameTickets = (state.business?.loyalty_mode || "points_cash") === "points_game_tickets";
   const programType = String(state.business?.program_type || "points").toLowerCase();
@@ -184,7 +183,6 @@ export function renderClientPage(root, state, options = {}) {
             <span class="fidelity-v2-hero-wave">👋</span>
             <div>
               <h1 class="fidelity-v2-hero-title">Bonjour${memberFirstName ? ` ${memberFirstName}` : ""} !</h1>
-              <p class="fidelity-v2-hero-subtitle">${memberHeroSubtitle}</p>
               ${renderHeroBalanceProgressMarkup(
                 esc,
                 buildHeroBalanceProgressState({
