@@ -78,8 +78,7 @@ export const FLYER_LAYOUT = Object.freeze({
 });
 
 /**
- * Illustration cadeau (`/assets/flyergift.png`) : au-dessus de la roue, derrière l’accroche, la pastille « scanner » et le QR.
- * Centre vertical entre le centre de la roue et le haut du QR.
+ * Réserve de mise en page (non branchée) : zone au-dessus de la roue si un calque décoratif est ajouté plus tard.
  */
 export const FLYER_GIFT_OVERLAY_LAYOUT = Object.freeze({
   centerYFrac: (FLYER_LAYOUT.wheelCenterYFrac + FLYER_LAYOUT.qrTopYFrac) / 2,

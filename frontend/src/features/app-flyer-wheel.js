@@ -151,28 +151,10 @@ function drawWheelGroundShadow(ctx, cx, cy, r) {
   ctx.restore();
 }
 
-/**
- * Disque opaque sous les libellés : efface toute illustration centrale (cadeaux, etc.) présente dans le PNG,
- * sans toucher au texte GAGNÉ/PERDU (~0,5r).
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- */
-function drawPngWheelInnerHubMask(ctx, cx, cy, r) {
-  const mr = r * 0.43;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, mr, 0, Math.PI * 2);
-  ctx.fillStyle = "#ececf0";
-  ctx.fill();
-  ctx.restore();
-}
-
 /** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
 function drawWheelHub(ctx, cx, cy, r) {
-  /** Moyeu métallique au-dessus du masque opaque (voir `drawPngWheelInnerHubMask`). */
-  const hr = r * 0.34;
+  /** Moyeu élargi : le PNG `rouegpt.png` (public) doit être sans illustration centrale parasite ; le dégradé complète le rendu. */
+  const hr = r * 0.36;
   const g = ctx.createRadialGradient(cx - hr * 0.35, cy - hr * 0.35, hr * 0.05, cx, cy, hr);
   g.addColorStop(0, "#ffffff");
   g.addColorStop(0.55, "#f4f4f5");
@@ -304,7 +286,6 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   if (usePng) {
     const off = labelOffsetDeg;
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
-    drawPngWheelInnerHubMask(ctx, wheelCx, wheelCy, wheelR);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
