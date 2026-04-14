@@ -3,7 +3,6 @@
  */
 import {
   FLYER_EXPORT,
-  FLYER_GIFT_OVERLAY_LAYOUT,
   FLYER_LAYOUT,
   FLYER_WHEEL_RADIUS_FRAC,
   footerStepsForegroundResolved,
@@ -37,9 +36,6 @@ const FLYER_STEP_ICON_SRCS = [
 /** Roue décorative : `rouegpt.png` en priorité, puis `roue.png` (même logique que l’IA serveur). */
 const FLYER_ROUE_SRC_CANDIDATES = ["/assets/rouegpt.png", "/assets/roue.png"];
 
-/** Illustration cadeau au-dessus de la roue, derrière titre + pastille CTA + QR (`public/assets/flyergift.png`). */
-const FLYER_GIFT_SRC_CANDIDATES = ["/assets/flyergift.png", "/assets/flyergift.jpg", "/assets/flyergift.webp"];
-
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;
 
@@ -48,13 +44,6 @@ let flyerStepIconsCache = null;
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerRoueCache = null;
-
-/** @type {HTMLImageElement | "fail" | null} */
-let flyerGiftCache = null;
-/** Timestamp du dernier échec `flyergift` (ms epoch) pour autoriser des retries périodiques. */
-let flyerGiftLastFailAt = 0;
-/** On évite un retry à chaque frame ; on retente après ce délai. */
-const FLYER_GIFT_RETRY_AFTER_MS = 15_000;
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
 function roundRect(ctx, x, y, w, h, r) {
@@ -531,50 +520,6 @@ async function getFlyerRoueImage() {
   return null;
 }
 
-/** Décoration cadeau (optionnelle) — échec silencieux si aucun fichier dans `public/assets/`. */
-async function getFlyerGiftOverlayImage() {
-  if (flyerGiftCache === "fail") {
-    const now = Date.now();
-    if (now - flyerGiftLastFailAt < FLYER_GIFT_RETRY_AFTER_MS) return null;
-    // Retry périodique : évite l'état "cassé" permanent après un seul raté réseau.
-    flyerGiftCache = null;
-  }
-  if (flyerGiftCache) return flyerGiftCache;
-  for (const src of FLYER_GIFT_SRC_CANDIDATES) {
-    try {
-      flyerGiftCache = await loadImage(src, false);
-      flyerGiftLastFailAt = 0;
-      return flyerGiftCache;
-    } catch {
-      /* essai suivant */
-    }
-  }
-  flyerGiftCache = "fail";
-  flyerGiftLastFailAt = Date.now();
-  return null;
-}
-
-/**
- * Image « cadeau » entre la roue et le bloc QR : au-dessus de la roue, derrière l’accroche, la pastille et le QR.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} w
- * @param {number} h
- * @param {CanvasImageSource} giftImg
- */
-function drawFlyerGiftOverlay(ctx, w, h, giftImg) {
-  if (!giftImg) return;
-  const L = FLYER_GIFT_OVERLAY_LAYOUT;
-  const boxW = w * L.maxWFrac;
-  const boxH = h * L.maxHFrac;
-  const cx = w * 0.5;
-  const cy = h * L.centerYFrac;
-  const x = cx - boxW / 2;
-  const y = cy - boxH / 2;
-  ctx.save();
-  drawImageContain(ctx, giftImg, x, y, boxW, boxH);
-  ctx.restore();
-}
-
 /** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} canvasH @param {number} bottomY bord bas du bandeau étapes. @param {HTMLImageElement} img */
 function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   const iw = img.naturalWidth || img.width;
@@ -784,10 +729,9 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
 
-  const [qrImg, roueImg, giftImg] = await Promise.all([
+  const [qrImg, roueImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
     FLYER_MANUAL_CANVAS_WHEEL_ENABLED ? getFlyerRoueImage() : Promise.resolve(null),
-    getFlyerGiftOverlayImage(),
   ]);
 
   /** @type {CanvasImageSource | null} */
@@ -845,9 +789,6 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   }
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
-  }
-  if (giftImg) {
-    drawFlyerGiftOverlay(ctx, w, h, giftImg);
   }
   drawFlyerHeroHeadline(ctx, s, w, h, scale, hasCommerceLogo);
   const qx = w * 0.472;

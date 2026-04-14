@@ -64,13 +64,52 @@ function fileToBase64Raw(file) {
 }
 
 /**
+ * Échantillonne la couleur moyenne d'une bande horizontale d'un ImageBitmap.
+ * Retourne un hex #rrggbb représentatif de la zone.
+ * @param {ImageBitmap} bitmap
+ * @param {number} yFrac  début de la bande (0–1)
+ * @param {number} hFrac  hauteur de la bande (0–1)
+ * @returns {string} couleur #rrggbb
+ */
+function sampleBitmapBandColor(bitmap, yFrac, hFrac) {
+  const fallback = "#f8fafc";
+  try {
+    const sW = 80;
+    const sH = 40;
+    const c = document.createElement("canvas");
+    c.width = sW;
+    c.height = sH;
+    const ctx = c.getContext("2d");
+    if (!ctx) return fallback;
+    const srcY = Math.round(bitmap.height * yFrac);
+    const srcH = Math.max(1, Math.round(bitmap.height * hFrac));
+    ctx.drawImage(bitmap, 0, srcY, bitmap.width, srcH, 0, 0, sW, sH);
+    const data = ctx.getImageData(0, 0, sW, sH).data;
+    let r = 0, g = 0, b = 0, count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 128) continue;
+      r += data[i]; g += data[i + 1]; b += data[i + 2];
+      count++;
+    }
+    if (!count) return fallback;
+    r = Math.round(r / count);
+    g = Math.round(g / count);
+    b = Math.round(b / count);
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+/**
  * @param {string} slug
  * @param {{
  *   dashboardApi?: (path: string, init?: RequestInit) => Promise<Response>;
  *   onGeneratedBg: () => void;
  *   onLogoApplied?: () => void;
  *   onFlyerAiWheelTintsSynced?: (wheelColorOdd: string, wheelColorEven: string) => void;
- * }} opts — `onFlyerAiWheelTintsSynced` aligne les teintes roue sur le formulaire IA (comme le serveur).
+ *   onFlyerAiBgColorsSynced?: (colorBgTop: string, colorBgBottom: string) => void;
+ * }} opts — callbacks pour synchroniser le formulaire après génération IA.
  */
 export function initFlyerAiGenerate(slug, opts) {
   const btn = document.getElementById("app-flyer-ai-generate-btn");
@@ -294,6 +333,11 @@ export function initFlyerAiGenerate(slug, opts) {
           const oddHex = /^#[0-9A-Fa-f]{6}$/i.test(accentRaw) ? accentRaw : "#fbbf24";
           const evenHex = /^#[0-9A-Fa-f]{6}$/i.test(secRaw) ? secRaw : "#fef3c7";
           opts.onFlyerAiWheelTintsSynced?.(oddHex, evenHex);
+          // Synchroniser les couleurs de fond du formulaire avec les couleurs extraites de l'image générée.
+          // On échantillonne le haut (zone logo/titre) et le bas (zone footer) du bitmap.
+          const bgTop = sampleBitmapBandColor(bitmap, 0.0, 0.18);
+          const bgBottom = sampleBitmapBandColor(bitmap, 0.82, 0.18);
+          opts.onFlyerAiBgColorsSynced?.(bgTop, bgBottom);
           opts.onGeneratedBg();
           setStatus("Fond flyer appliqué. Vous pouvez télécharger le PNG.", false);
           void refreshQuota();

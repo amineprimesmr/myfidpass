@@ -110,22 +110,44 @@ function registerSlugFromName(name) {
 
 /**
  * Crée le 1er commerce à partir d'un lieu Google (inscription app, comme la sélection Places du site).
+ * Enregistre toujours le `place_id` dans `engagement_rewards.google_review` dès qu'il est fourni.
+ * L'API Places (détails) enrichit nom / adresse / coordonnées si `GOOGLE_PLACES_API_KEY` est défini ;
+ * sinon ou si l'appel échoue, le commerce est quand même créé avec le Place ID (pas de ressaisie commerçant).
  */
 async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishmentNameHint) {
   const pid = String(placeId || "").trim();
-  if (!pid || !GOOGLE_PLACES_API_KEY) return;
-  if (!canCreateBusiness(userId)) return;
-  try {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(pid)}&fields=name,formatted_address,geometry&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
-    const r = await fetch(url);
-    const data = await r.json();
-    if (data.status !== "OK" || !data.result) {
-      console.warn("[auth/register] place details:", data.status);
-      return;
+  if (!pid || !canCreateBusiness(userId)) return;
+
+  const hint = String(establishmentNameHint || "").trim();
+  let name = hint || "Mon établissement";
+  let lat = null;
+  let lng = null;
+  let addr = null;
+
+  if (GOOGLE_PLACES_API_KEY) {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(pid)}&fields=name,formatted_address,geometry&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+      const r = await fetch(url);
+      const data = await r.json();
+      if (data.status === "OK" && data.result) {
+        const result = data.result;
+        name = (result.name || hint || "Mon établissement").trim() || name;
+        lat = result.geometry?.location?.lat ?? null;
+        lng = result.geometry?.location?.lng ?? null;
+        addr = result.formatted_address?.trim() || null;
+      } else {
+        console.warn("[auth/register] place details:", data?.status || "no result");
+      }
+    } catch (e) {
+      console.error("[auth/register] tryCreateFirstBusinessFromGooglePlace (Places fetch):", e);
     }
-    const result = data.result;
-    const hint = String(establishmentNameHint || "").trim();
-    const name = (result.name || hint || "Mon établissement").trim();
+  } else {
+    console.warn(
+      "[auth/register] GOOGLE_PLACES_API_KEY absent — 1er commerce créé avec Place ID seul (sans géocodage Google côté serveur)."
+    );
+  }
+
+  try {
     let baseSlug = registerSlugFromName(name);
     let slug = baseSlug;
     let n = 0;
@@ -139,9 +161,6 @@ async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishm
       organizationName: name,
       userId,
     });
-    const lat = result.geometry?.location?.lat;
-    const lng = result.geometry?.location?.lng;
-    const addr = result.formatted_address?.trim() || null;
     /** Même Place ID que la recherche inscription → mission « avis Google » + lien writereview sans ressaisie commerçant. */
     const engagementFromPlace = {
       google_review: {

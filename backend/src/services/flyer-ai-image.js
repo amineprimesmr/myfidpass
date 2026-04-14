@@ -145,22 +145,22 @@ const bodySchema = z.object({
  */
 const MOOD_EN_UNIVERSAL = {
   premium:
-    "premium multi-sector retail poster, soft even studio light, restrained smooth gradients, matte or satin surfaces, crisp print-ready finish — calm and expensive, never busy",
+    "premium multi-sector retail poster, soft even studio light, restrained smooth gradients on a LIGHT background, matte or satin surfaces, crisp print-ready finish — calm and expensive, never busy, never dark",
   energetic:
-    "high-impact commercial loyalty poster, saturated accent colors as CLEAN flat fields and smooth blends, strong contrast via color blocks — not glossy sparkle, sector-agnostic",
+    "high-impact commercial loyalty poster, saturated accent colors as CLEAN flat fields and smooth blends on a LIGHT pastel base — strong contrast via color blocks, not darkness; sector-agnostic, never dark backgrounds",
   minimal:
-    "Swiss editorial layout, generous margins, thin rules, one hero focal point, almost no ornament",
+    "Swiss editorial layout, generous margins, thin rules, one hero focal point, almost no ornament — predominantly white or very light background",
   street:
-    "urban commercial energy, contemporary signage mood, large flat color shapes and smooth gradients — backdrop stays clean, no gritty noise or scattered highlights",
+    "urban commercial energy, contemporary signage mood, large flat LIGHT color shapes and smooth gradients — backdrop stays clean and bright, no gritty noise or scattered highlights",
   gourmet:
-    "refined artisan / craft poster: soft even lighting, smooth backgrounds; hero food or product only where the brief asks — background remains uncluttered, no bokeh orbs or sparkle",
+    "refined artisan / craft poster: soft even lighting on a LIGHT smooth background; hero food or product only where the brief asks — background remains uncluttered and bright, no bokeh orbs or sparkle",
   playful:
-    "friendly commercial graphics: rounded flat color shapes and pastel fields — playful through COLOR and layout only; never literal bubbles, balloons-as-bokeh, glitter, or confetti",
+    "friendly commercial graphics: rounded flat color shapes and PASTEL fields on a light background — playful through COLOR and layout only; never literal bubbles, balloons-as-bokeh, glitter, or confetti",
 };
 
 /** Ambiance par défaut quand le client envoie une palette priorisée (sans `visual_mood`). */
 const DEFAULT_FLYER_ATMOSPHERE_EN =
-  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly (first = dominant hue in large areas and main gradient; second = supporting accents and alternation partner; third optional = subtle depth via color only — no gritty highlights). Flat smooth digital finish like a clean UI mockup — buttery gradients, print-ready, sector-agnostic, zero paper or film texture.";
+  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly but keep ALL large background areas LIGHT and PALE — shift provided colors toward their pastel / tinted-white equivalent for big fills; use the pure brand colors only in smaller accent shapes. Flat smooth digital finish like a clean UI mockup — buttery gradients, print-ready, sector-agnostic, zero paper or film texture.";
 
 /**
  * Résout primaire / secondaire / tertiaire et le texte d’atmosphère pour les prompts image.
@@ -227,6 +227,18 @@ const FLYER_SURFACE_CLEANLINESS_EN =
   "ABSOLUTELY NO TEXTURES OF ANY KIND: no paper grain, no canvas weave, no linen, no brushed metal, no noise, no film grain, no JPEG-like artifacts, no scratches, no dust, no watercolor paper tooth, no concrete, no plaster, no fabric macro, no wood grain, no halftone dots, no stippling, no crosshatch, no scan lines, no digital noise, no mottling, no cloudy speckle. " +
   "FORBIDDEN visual junk: no bokeh orbs, no soap bubbles, no glitter, no star sparkles, no confetti, no scattered highlights, no high-frequency detail in empty color areas. " +
   "Color transitions must be SILKY and continuous — like a premium app UI gradient, not a photograph of a wall. If products or food appear, their surfaces can be detailed; every EMPTY area and every backdrop field stays glass-smooth.";
+
+/**
+ * Règle de luminosité / saturation du fond (obligatoire, tous prompts flyer).
+ * Le fond doit rester CLAIR pour que le contenu (texte, QR, roue) ressorte bien.
+ */
+const FLYER_BACKGROUND_LIGHTNESS_EN =
+  "BACKGROUND LIGHTNESS & SATURATION (mandatory — overrides all other instructions): " +
+  "The overall background MUST be LIGHT, SOFT, and AIRY — never dark, never deep, never moody, never black or near-black. " +
+  "ALL large background areas must have HIGH luminosity (think cream, off-white, pale blush, light pastel, or softly tinted linen — luminosity above 75% in HSL). " +
+  "Colors must be DESATURATED and FADED — muted pastels, chalky tints, or washed-out fields only — NEVER vivid, punchy, neon, or fully saturated. Think a faded Polaroid or a sun-bleached poster: colors are present but gentle. " +
+  "If the provided palette contains dark colors (navy, black, deep brown, deep red, etc.), use them ONLY for thin outlines, very small accents, or subtle detail shadows — NEVER spread them over large background areas. " +
+  "Result: the background must look light enough that dark text, a dark QR code, and all overlay elements remain perfectly readable on top of it without any contrast issue.";
 
 /**
  * Brief marchand unique (prioritaire sur toute supposition du modèle).
@@ -392,6 +404,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
     "Leave a SOFT, LOW-DETAIL circular or elliptical area centered at X=50% width and Y=53% of canvas height from top, diameter about 60–64% of image WIDTH. Inside this zone: ONLY an ultra-smooth flat-to-gradient color field — ZERO texture, ZERO noise — NO wheel shape, NO segments, NO pointer, NO hub detail. This zone must stay visually calm so a separate wheel asset sits on top without visual clash.",
     "TOP 0–14%: calmer band for headline + merchant logo overlay in software (do not draw a logo — uncluttered background only).",
     "BOTTOM ~12%: relatively calm for footer UI; bottom-right stays quieter for QR (see above).",
+    FLYER_BACKGROUND_LIGHTNESS_EN,
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Pure SMOOTH COLOR FIELDS only — think luxury app onboarding screen or Apple-style gradient: soft radial + linear blends, gentle vignette, NO texture layer at all. Do NOT imitate film, print stock, or « material » surfaces. " +
       colorHint +
@@ -399,7 +412,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
       plan.atmosphere +
       ". At most 3–4 cohesive colors; transitions must be buttery, not gritty.",
     "STYLE: Bold commercial look through COLOR BLOCKS and clean composition only — print-ready, even lighting — absolutely no decorative texture or atmospheric noise.",
-    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~49–59%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient.",
+    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~49–59%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient; (8) overall background is LIGHT and PALE — never dark.",
     ...multimodalLines,
   ];
 
@@ -471,6 +484,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
     "ZONE A — TOP 0–20%: Logo band when logo reference provided; calm background only otherwise.",
     "ZONE B — CENTER ~18–82%: Composit the canonical wheel (last reference) centered at X=50%, center Y≈53% of canvas height, diameter ≈58–62% of image WIDTH — uniform scale, preserve aspect ratio. Add 1–3 decorative elements left/right per MERCHANT BRIEF; their vertical center of mass MUST sit at Y≈50–58% (same band as the wheel), flanking the wheel — NOT clustered in the top 15–35% of the canvas. Props may overlap the rim slightly for depth.",
     "ZONE C — BOTTOM 82–100%: Clean continuation of background only — no new objects.",
+    FLYER_BACKGROUND_LIGHTNESS_EN,
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth color fields and soft gradients around the wheel. " +
       buildColorPriorityHintEn(plan) +
@@ -478,7 +492,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
       plan.atmosphere +
       ". Max 3–4 cohesive colors outside wedge recoloring — no speckles or bokeh orbs.",
     secondary,
-    "SELF-CHECK: (1) exactly one wheel (the provided asset); (2) all original wheel text unchanged; (3) only wedge fills recolored; (4) no QR anywhere; (5) bottom 18% clean.",
+    "SELF-CHECK: (1) exactly one wheel (the provided asset); (2) all original wheel text unchanged; (3) only wedge fills recolored; (4) no QR anywhere; (5) bottom 18% clean; (6) overall background is LIGHT and PALE — never dark.",
     "QUALITY: Crisp print, clean edges.",
     ...multimodalLines,
   ];
@@ -546,6 +560,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     "ZONE B — CENTER ~18% to ~82% HEIGHT: Main composition — prize wheel + left/right decor. Wheel center at X=50%, Y≈53% of full image height from top (slightly below optical middle — decor must not float too high). Decorative props flank the wheel at the SAME vertical level (mid-flyer): centroid of each side prop at Y≈50–58%, never only in the top quarter of the canvas. Horizontal center X = 50% of image width.",
     "ZONE C — BOTTOM 82–100% HEIGHT (18%): MUST remain visually clean — only smooth color/gradient continuing from above (no texture). NO objects, NO text, NO icons, NO wheel fragments, NO props encroaching from above.",
     sideImagery,
+    FLYER_BACKGROUND_LIGHTNESS_EN,
     FLYER_SURFACE_CLEANLINESS_EN,
     "BACKGROUND: Smooth blended color fields. " +
       buildColorPriorityHintEn(plan) +
@@ -558,7 +573,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
     secondary,
     "WHEEL LABELS (clockwise from the top wedge under the pointer): Wedge1=GAGNÉ; Wedge2=GAGNÉ; Wedge3=GAGNÉ; Wedge4=GAGNÉ; Wedge5=GAGNÉ; Wedge6=PERDU. Bold uppercase French, high contrast, radially readable inside each wedge (~70% of wedge radial length). No other text on the flyer.",
     "WHEEL HUB: Small decorative metallic pin/cap at center — gold or silver OK. No QR-like texture.",
-    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 53% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes.",
+    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 53% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes; (9) overall background is LIGHT and PALE — never dark.",
     "QUALITY: Crisp print, clean edges, coherent lighting, no disconnected floating artifacts.",
     ...multimodalLines,
   ];

@@ -197,13 +197,48 @@ export async function generatePass(member, business = null, options = {}) {
       );
     }
   } else {
-    const textLogo = await createPassLogoPlaceholder();
-    if (textLogo) {
-      const iconResized = await resizeLogoForPassIcon(textLogo.logoPng2x);
-      if (iconResized) {
-        buffers["icon.png"] = iconResized.iconPng;
-        buffers["icon@2x.png"] = iconResized.iconPng2x;
-        buffers["icon@3x.png"] = iconResized.iconPng3x;
+    /**
+     * Repli 1 : logo principal du commerce (logo_base64 / asset "logo").
+     * Priorité : asset DB > colonne business > placeholder générique.
+     * Évite l'icône bleue generique "carte Wallet" quand le commerçant n'a pas
+     * encore configuré une icône de notification dédiée.
+     */
+    let logoFallbackResized = null;
+    const logoAssetRaw =
+      business?.id != null ? getBusinessAssetData(String(business.id), "logo") : null;
+    const logoRaw =
+      (logoAssetRaw && String(logoAssetRaw).trim())
+        ? String(logoAssetRaw).trim()
+        : (business?.logo_base64 && String(business.logo_base64).trim())
+          ? String(business.logo_base64).trim()
+          : null;
+    if (logoRaw) {
+      const logoB64 = stripDataImageBase64Payload(logoRaw);
+      const logoBuf = logoB64 ? Buffer.from(logoB64, "base64") : null;
+      if (logoBuf && logoBuf.length > 0) {
+        logoFallbackResized = await resizeLogoForPassIcon(logoBuf).catch(() => null);
+        if (logoFallbackResized) {
+          if (process.env.NODE_ENV === "production") {
+            console.log("[PassKit] Icônes Wallet (29/58/87px) depuis logo_base64 (repli notification_icon absent)");
+          }
+        }
+      }
+    }
+
+    if (logoFallbackResized) {
+      buffers["icon.png"] = logoFallbackResized.iconPng;
+      buffers["icon@2x.png"] = logoFallbackResized.iconPng2x;
+      buffers["icon@3x.png"] = logoFallbackResized.iconPng3x;
+    } else {
+      /** Repli 2 : placeholder générique bleu/blanc (dernier recours). */
+      const textLogo = await createPassLogoPlaceholder();
+      if (textLogo) {
+        const iconResized = await resizeLogoForPassIcon(textLogo.logoPng2x);
+        if (iconResized) {
+          buffers["icon.png"] = iconResized.iconPng;
+          buffers["icon@2x.png"] = iconResized.iconPng2x;
+          buffers["icon@3x.png"] = iconResized.iconPng3x;
+        }
       }
     }
   }

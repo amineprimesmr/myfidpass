@@ -10,7 +10,10 @@ import {
   updateBusiness,
   getBusinessBySlug,
   canCreateBusiness,
+  bumpBusinessPassRefreshTimestamp,
+  getPassKitPushTokensForBusiness,
 } from "../../db.js";
+import { sendPassKitUpdate } from "../../apns.js";
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 
@@ -103,7 +106,7 @@ export function createHandler(req, res) {
 /**
  * PATCH /:slug — Mise à jour design + règles. req.business déjà défini par param('slug').
  */
-export function updateHandler(req, res) {
+export async function updateHandler(req, res) {
   const business = req.business;
   if (!ensureDashboardAccess(req, res, business)) return;
   const body = req.body || {};
@@ -356,8 +359,42 @@ export function updateHandler(req, res) {
     if (Number.isFinite(n) && n >= 1 && n <= 200) updates.delivery_receipt_max_per_member_per_month = n;
   }
 
+  /** Détecter les médias visuels du pass AVANT updateBusiness (les clés sont supprimées de `updates` par updateBusiness). */
+  const passVisualMediaUpdated =
+    updates.notification_icon_base64 !== undefined ||
+    updates.logo_icon_base64 !== undefined ||
+    updates.logo_base64 !== undefined ||
+    updates.card_background_base64 !== undefined ||
+    updates.stamp_icon_base64 !== undefined;
+
   const updated = updateBusiness(business.id, updates);
   if (!updated) return res.status(500).json({ error: "Erreur mise à jour" });
+
+  /**
+   * Propager l'icône de notification aux passes existants sur les iPhones.
+   * Sans ce bloc, l'iPhone garde l'ancien icon.png dans le .pkpass même après upload
+   * d'une nouvelle icône — la bannière Wallet continue d'afficher le placeholder.
+   * Identique au comportement de POST /dashboard/settings (dashboard.js).
+   */
+  if (passVisualMediaUpdated) {
+    bumpBusinessPassRefreshTimestamp(business.id);
+    const passKitTokens = getPassKitPushTokensForBusiness(business.id);
+    if (passKitTokens.length > 0) {
+      const PAR = 40;
+      const MAX_SYNC = 300;
+      const head = passKitTokens.slice(0, MAX_SYNC);
+      for (let i = 0; i < head.length; i += PAR) {
+        const chunk = head.slice(i, i + PAR);
+        await Promise.all(chunk.map((row) => sendPassKitUpdate(row.push_token).catch(() => {})));
+      }
+      const tail = passKitTokens.slice(MAX_SYNC);
+      if (tail.length > 0) {
+        process.nextTick(() => {
+          tail.forEach((row) => { sendPassKitUpdate(row.push_token).catch(() => {}); });
+        });
+      }
+    }
+  }
 
   res.json({
     id: updated.id,
