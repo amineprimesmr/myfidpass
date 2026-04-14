@@ -80,7 +80,7 @@ export const FLYER_LAYOUT = Object.freeze({
 /**
  * Réserve de mise en page (non branchée) : zone au-dessus de la roue si un calque décoratif est ajouté plus tard.
  */
-export const FLYER_GIFT_OVERLAY_LAYOUT = Object.freeze({
+export const FLYER_DECOR_OVERLAY_LAYOUT = Object.freeze({
   centerYFrac: (FLYER_LAYOUT.wheelCenterYFrac + FLYER_LAYOUT.qrTopYFrac) / 2,
   maxWFrac: 0.78,
   maxHFrac: 0.2,
@@ -153,7 +153,7 @@ export function defaultFlyerState() {
     ctaTextColor: "#ffffff",
     step1: "Scan le QR code",
     step2: "Fais tourner la roue",
-    step3: "Découvre ton cadeau",
+    step3: "Découvre ta récompense",
     colorPrimary: "#fbbf24",
     colorSecondary: "#f97316",
     colorAccent: "#ffffff",

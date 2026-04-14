@@ -24,14 +24,9 @@ export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = true;
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
 
 /**
- * Icônes 3D des 3 étapes (PNG alpha, pas de texte dans l’image — le texte est dessiné en canvas).
- * Priorité : si les 3 fichiers chargent → composition icônes + chiffres + libellés ; sinon repli bandeau unique ou texte seul.
+ * Icônes PNG des étapes 1–2 (scan, roue). L’étape 3 est dessinée en canvas (étoile « gain ») — plus d’asset « cadeau ».
  */
-const FLYER_STEP_ICON_SRCS = [
-  "/assets/flyer-steps/icon-phone.png",
-  "/assets/flyer-steps/icon-wheel.png",
-  "/assets/flyer-steps/icon-gift.png",
-];
+const FLYER_STEP_ICON_SRCS = ["/assets/flyer-steps/icon-phone.png", "/assets/flyer-steps/icon-wheel.png"];
 
 /** Roue décorative : `rouegpt.png` en priorité, puis `roue.png` (même logique que l’IA serveur). */
 const FLYER_ROUE_SRC_CANDIDATES = ["/assets/rouegpt.png", "/assets/roue.png"];
@@ -505,6 +500,39 @@ async function loadFooterStepIcons() {
   return imgs;
 }
 
+/**
+ * Étape 3 : pictogramme vectoriel (étoile 8 branches) — remplace l’ancien PNG « cadeau ».
+ * @param {string} fgCss couleur proche du texte étapes (ex. #e2e8f0)
+ */
+function drawFlyerFooterStepVectorStar(ctx, x, y, w, h, fgCss) {
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+  const outer = Math.min(w, h) * 0.46;
+  const inner = outer * 0.42;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4 - Math.PI / 2;
+    const r = i % 2 === 0 ? outer : inner;
+    const px = Math.cos(a) * r;
+    const py = Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  const g = ctx.createRadialGradient(0, -outer * 0.2, inner * 0.1, 0, 0, outer);
+  g.addColorStop(0, "#fefce8");
+  g.addColorStop(0.45, fgCss);
+  g.addColorStop(1, "#94a3b8");
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.28)";
+  ctx.lineWidth = Math.max(1.2, outer * 0.06);
+  ctx.stroke();
+  ctx.restore();
+}
+
 async function getFlyerRoueImage() {
   if (flyerRoueCache === "fail") return null;
   if (flyerRoueCache) return flyerRoueCache;
@@ -560,7 +588,11 @@ function drawFooterStepsWithIcons(ctx, w, canvasH, bannerBottom, s, icons) {
     const iconX = x0 + pad;
     const iconY = iconRowCy - iconH / 2;
 
-    drawImageContain(ctx, icons[i], iconX, iconY, iconW, iconH);
+    if (i < 2 && icons[i]) {
+      drawImageContain(ctx, icons[i], iconX, iconY, iconW, iconH);
+    } else if (i === 2) {
+      drawFlyerFooterStepVectorStar(ctx, iconX, iconY, iconW, iconH, fg);
+    }
 
     const numSize = Math.round(fh * 0.38 * fsc);
     ctx.fillStyle = fg;
@@ -814,7 +846,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const [stepIcons, footerBannerImg] = await Promise.all([loadFooterStepIcons(), getFlyerFooterBanner()]);
   if (footerBannerImg) {
     drawFooterBanner(ctx, w, h, bannerBottom, footerBannerImg);
-  } else if (stepIcons && stepIcons.length === 3) {
+  } else if (stepIcons && stepIcons.length >= 2) {
     drawFooterStepsWithIcons(ctx, w, h, bannerBottom, s, stepIcons);
   } else {
     drawFooterBar(ctx, w, h, s, 0);
