@@ -153,7 +153,8 @@ function drawWheelGroundShadow(ctx, cx, cy, r) {
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
 function drawWheelHub(ctx, cx, cy, r) {
-  const hr = r * 0.22;
+  /** Moyeu élargi : masque l’illustration centrale (ex. cadeaux) présente dans `rouegpt.png` sans recouvrir les libellés GAGNÉ/PERDU (~0,5r). */
+  const hr = r * 0.36;
   const g = ctx.createRadialGradient(cx - hr * 0.35, cy - hr * 0.35, hr * 0.05, cx, cy, hr);
   g.addColorStop(0, "#ffffff");
   g.addColorStop(0.55, "#f4f4f5");
