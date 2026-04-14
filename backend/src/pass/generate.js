@@ -396,16 +396,19 @@ export async function generatePass(member, business = null, options = {}) {
   const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
   const stampMidRewardLabel = (options.stamp_mid_reward_label ?? business?.stamp_mid_reward_label)?.trim() || "";
   if (format === "tampons") {
-    /* Solde texte seulement si image de fond : sinon la grille sur le strip suffit (évite doublon Tampons / 0). */
-    if (hasCardBackgroundStrip) {
-      pass.secondaryFields.push({
-        key: "tamponSolde",
-        label: "Tampons",
-        value: String(stamps),
-        textAlignment: "PKTextAlignmentLeft",
-        changeMessage: "Tu as maintenant %@ tampons !",
-      });
-    }
+    /*
+     * Toujours un champ secondaire avec changeMessage (comme « Points » en mode points).
+     * Sans ça, si le strip = grille seule (pas d’image de fond), aucun champ ne portait le solde
+     * avec %@ → Wallet ne déclenchait pas l’alerte « Tu as maintenant X tampons » après un scan.
+     * La grille sur le strip reste la lecture principale ; le chiffre sous le bandeau assure la notif PassKit.
+     */
+    pass.secondaryFields.push({
+      key: "tamponSolde",
+      label: "Tampons",
+      value: String(stamps),
+      textAlignment: "PKTextAlignmentLeft",
+      changeMessage: "Tu as maintenant %@ tampons !",
+    });
     /* Prochaine récompense : label « Dans x passages », valeur = texte marchand (aligné app Ma carte). */
     const nrFace = stampNextRewardFaceLabelAndValue({
       stampsCollected: stamps,
@@ -418,7 +421,7 @@ export async function generatePass(member, business = null, options = {}) {
       label: nrFace.label,
       value: nrFace.value,
       textAlignment: "PKTextAlignmentLeft",
-      changeMessage: "Récompense : %@",
+      /** Pas de changeMessage ici : évite une 2ᵉ alerte Wallet en plus de « Tu as maintenant X tampons ». */
     });
     pass.auxiliaryFields.push({
       key: "member",

@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { getCategoryIdsForMembers } from "./categories.js";
 import { nowUtcSqlWithMs } from "./datetime-sql.js";
+import { computeStampRolloverState, normalizeStampBalance } from "../lib/stamps-cycle-math.js";
 
 const db = getDb();
 
@@ -53,6 +54,25 @@ export function addPoints(id, points) {
   const now = nowUtcSqlWithMs();
   db.prepare("UPDATE members SET points = points + ?, last_visit_at = ? WHERE id = ?").run(points, now, id);
   return getMember(id);
+}
+
+export { normalizeStampBalance, computeStampRolloverState } from "../lib/stamps-cycle-math.js";
+
+/**
+ * Ajoute des tampons (colonne `points`) avec boucle : à chaque Nᵉ tampon, récompense max atteinte → compteur repart à 0.
+ * @returns {{ member: object | null, rawAdded: number, cycleCompletions: number }}
+ */
+export function addStampsWithCycleRollover(memberId, delta, cycleSize) {
+  const m0 = getMember(memberId);
+  if (!m0) return { member: null, rawAdded: 0, cycleCompletions: 0 };
+  const { newBalance, cycleCompletions, rawAdded } = computeStampRolloverState(m0.points, delta, cycleSize);
+  if (rawAdded <= 0) return { member: m0, rawAdded: 0, cycleCompletions: 0 };
+  db.prepare("UPDATE members SET points = ?, last_visit_at = ? WHERE id = ?").run(
+    newBalance,
+    nowUtcSqlWithMs(),
+    memberId,
+  );
+  return { member: getMember(memberId), rawAdded, cycleCompletions };
 }
 
 /**

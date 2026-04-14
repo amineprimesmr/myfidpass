@@ -5,7 +5,7 @@
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { getBusinessById, resolveBusinessProgramType } from "./businesses.js";
-import { getMemberForBusiness, getMember, addPoints, addStampsCapped } from "./members.js";
+import { getMemberForBusiness, getMember, addPoints, addStampsWithCycleRollover } from "./members.js";
 import { nowUtcSqlWithMs } from "./datetime-sql.js";
 import { createTransaction } from "./transactions.js";
 import {
@@ -435,20 +435,27 @@ export function spinGameForMember({
     } else if (reward && reward.kind === "stamps") {
       const bonusStamps = Math.max(0, Math.floor(Number(reward.value?.stamps) || 0));
       if (bonusStamps > 0) {
-        const { added } = addStampsCapped(memberId, bonusStamps, maxStamps);
-        if (added > 0) {
+        const { rawAdded, cycleCompletions, member: afterStamps } = addStampsWithCycleRollover(
+          memberId,
+          bonusStamps,
+          maxStamps,
+        );
+        if (rawAdded > 0 && afterStamps) {
           isWinning = true;
           createTransaction({
             businessId,
             memberId,
             type: "points_add",
-            points: added,
+            points: rawAdded,
             metadata: {
               source: "game_spin",
               game_code: gameCode,
               reward_code: reward.code,
               reward_kind: "stamps",
-              stamps_added: added,
+              stamps_added: rawAdded,
+              ...(cycleCompletions > 0
+                ? { stamp_cycle_completed: true, stamp_cycles_completed: cycleCompletions }
+                : {}),
             },
           });
           grant = {
@@ -458,7 +465,7 @@ export function spinGameForMember({
             spin_id: spinId,
             reward_id: reward.id,
             status: "granted",
-            metadata_json: JSON.stringify({ reward_kind: "stamps", stamps: added }),
+            metadata_json: JSON.stringify({ reward_kind: "stamps", stamps: rawAdded }),
           };
         }
       }

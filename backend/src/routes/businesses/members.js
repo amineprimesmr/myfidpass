@@ -10,6 +10,7 @@ import {
   getMemberByEmailForBusiness,
   updateMember,
   addPoints,
+  addStampsWithCycleRollover,
   deductPoints,
   resetMemberPoints,
   createTransaction,
@@ -389,13 +390,35 @@ router.post("/:memberId/points", async (req, res) => {
   const meta =
     amountEur > 0 || visit ? { amount_eur: amountEur || undefined, visit } : undefined;
 
-  const updated = addPoints(member.id, points);
+  const stampCycleN =
+    business.required_stamps != null && Number(business.required_stamps) > 0
+      ? Math.floor(Number(business.required_stamps))
+      : 10;
+  let updated;
+  let metaMerged = secured.capped ? { ...(meta || {}), points_capped: true, requested_points: secured.originalPoints } : meta;
+  if (programType === "stamps") {
+    const r = addStampsWithCycleRollover(member.id, points, stampCycleN);
+    if (!r.member) {
+      return res.status(500).json({ error: "Mise à jour membre impossible." });
+    }
+    updated = r.member;
+    if (r.cycleCompletions > 0) {
+      metaMerged = {
+        ...(metaMerged || {}),
+        stamp_cycle_completed: true,
+        stamp_cycles_completed: r.cycleCompletions,
+        required_stamps: stampCycleN,
+      };
+    }
+  } else {
+    updated = addPoints(member.id, points);
+  }
   createTransaction({
     businessId: business.id,
     memberId: member.id,
     type: "points_add",
     points,
-    metadata: secured.capped ? { ...(meta || {}), points_capped: true, requested_points: secured.originalPoints } : meta,
+    metadata: metaMerged,
     idempotencyKey: idempotencyKey || null,
   });
   const tokens = getPushTokensForMember(member.id);
@@ -532,6 +555,11 @@ router.get("/:memberId/pass", async (req, res) => {
   const programTypeQuery = (req.query.program_type || "").toLowerCase();
   opts.program_type = programTypeQuery === "points" || programTypeQuery === "stamps" ? programTypeQuery : (biz?.program_type ?? undefined);
   opts.stamp_emoji = req.query.stamp_emoji ?? biz.stamp_emoji ?? undefined;
+  /** App Ma carte : aperçu = catalogue `stamp_emoji` ; sans ce flag le strip réutilisait `stamp_icon` serveur (image perso) même après choix d’icône catalogue. */
+  const catalogStampOnly = ["1", "true", "yes"].includes(String(req.query.catalog_stamp_only ?? "").trim().toLowerCase());
+  if (catalogStampOnly) {
+    opts.stamp_icon_base64 = "";
+  }
   if (req.query.required_stamps != null) {
     const n = parseInt(req.query.required_stamps, 10);
     if (Number.isInteger(n) && n > 0) opts.required_stamps = n;

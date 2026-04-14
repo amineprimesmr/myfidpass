@@ -68,8 +68,8 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
   const wsc = Number.isFinite(wl) ? Math.max(0.7, Math.min(1.35, wl / 100)) : 1;
   const fontPx = Math.max(11, Math.round(r * 0.104 * wsc));
   const track = Math.round(fontPx * 0.04);
-  const strokeAccent = Math.max(2.2, fontPx * 0.13);
-  const strokeDark = Math.max(1.2, fontPx * 0.055);
+  /** Un seul contour (pas double stroke) : deux passes épaisses + fill donnaient un effet « fantôme » / ombre boueuse. */
+  const outlineW = Math.max(1.25, Math.min(3.2, fontPx * 0.09));
 
   ctx.save();
   ctx.beginPath();
@@ -79,6 +79,7 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
+  ctx.lineCap = "round";
   ctx.miterLimit = 2;
   if ("letterSpacing" in ctx) ctx.letterSpacing = `${track}px`;
 
@@ -86,11 +87,12 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
     const mid = base + (i + 0.5) * step;
     const tx = cx + Math.cos(mid) * labelR;
     const ty = cy + Math.sin(mid) * labelR;
-    const label = i % 2 === 0 ? "GAGNÉ" : "PERDU";
+    const label = i % 2 === 0 ? "GAGNÉ !" : "PERDU !";
     const segHex = segmentHexColors[i] ?? "#ffffff";
-    /** Texte lisible sur part teintée : remplissage contrasté + contour couleur part (charte). */
+    /** Texte lisible sur part teintée : léger contour neutre + remplissage contrasté (sans 2e stroke couleur segment). */
     const lum = lumaFromHex(segHex);
     const fillCore = lum > 0.62 ? "#0f172a" : "#ffffff";
+    const strokeColor = lum > 0.62 ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.88)";
 
     ctx.save();
     ctx.translate(tx, ty);
@@ -103,11 +105,8 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-    ctx.lineWidth = strokeAccent + strokeDark * 1.4;
-    ctx.strokeStyle = "rgba(0,0,0,0.58)";
-    ctx.strokeText(label, 0, 0);
-    ctx.lineWidth = strokeAccent;
-    ctx.strokeStyle = segHex;
+    ctx.lineWidth = outlineW;
+    ctx.strokeStyle = strokeColor;
     ctx.strokeText(label, 0, 0);
     ctx.fillStyle = fillCore;
     ctx.fillText(label, 0, 0);

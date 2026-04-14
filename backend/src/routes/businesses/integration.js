@@ -6,9 +6,11 @@ import { Router } from "express";
 import {
   getMemberForBusiness,
   addPoints,
+  addStampsWithCycleRollover,
   createTransaction,
   getPushTokensForMember,
   countMemberPointsAddsTodayUtc,
+  normalizeStampBalance,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { ensureOperationalSubscription, normalizeBarcodeToMemberId } from "./shared.js";
@@ -36,12 +38,21 @@ router.get("/lookup", (req, res) => {
       code: "MEMBER_NOT_FOUND",
     });
   }
+  const pt = (business.program_type || "").toLowerCase();
+  let pointsOut = member.points;
+  if (pt === "stamps") {
+    const N =
+      business.required_stamps != null && Number(business.required_stamps) > 0
+        ? Math.floor(Number(business.required_stamps))
+        : 10;
+    pointsOut = normalizeStampBalance(member.points, N);
+  }
   res.json({
     member: {
       id: member.id,
       name: member.name,
       email: member.email,
-      points: member.points,
+      points: pointsOut,
       last_visit_at: member.last_visit_at || null,
     },
   });
@@ -111,7 +122,29 @@ router.post("/scan", async (req, res) => {
     metaBase.points_capped = true;
     metaBase.requested_points = secured.originalPoints;
   }
-  const updated = addPoints(member.id, points);
+  const stampCycleN =
+    business.required_stamps != null && Number(business.required_stamps) > 0
+      ? Math.floor(Number(business.required_stamps))
+      : 10;
+  let updated;
+  let stampCycleCompleted = false;
+  let stampCyclesCompleted = 0;
+  if (programType === "stamps") {
+    const r = addStampsWithCycleRollover(member.id, points, stampCycleN);
+    if (!r.member) {
+      return res.status(500).json({ error: "Mise à jour membre impossible.", code: "MEMBER_UPDATE_FAILED" });
+    }
+    updated = r.member;
+    stampCyclesCompleted = r.cycleCompletions;
+    stampCycleCompleted = r.cycleCompletions > 0;
+    if (stampCycleCompleted) {
+      metaBase.stamp_cycle_completed = true;
+      metaBase.stamp_cycles_completed = r.cycleCompletions;
+      metaBase.required_stamps = stampCycleN;
+    }
+  } else {
+    updated = addPoints(member.id, points);
+  }
   createTransaction({
     businessId: business.id,
     memberId: member.id,
@@ -139,6 +172,8 @@ router.post("/scan", async (req, res) => {
     new_balance: updated.points,
     points_capped: secured.capped === true,
     points_requested: secured.capped ? secured.originalPoints : undefined,
+    stamp_cycle_completed: programType === "stamps" ? stampCycleCompleted : undefined,
+    stamp_cycles_completed: programType === "stamps" && stampCyclesCompleted > 0 ? stampCyclesCompleted : undefined,
   });
 });
 
