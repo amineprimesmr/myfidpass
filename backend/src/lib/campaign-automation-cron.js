@@ -3,7 +3,6 @@
  * Appelé par le planificateur interne dans `index.js` (~2 min après démarrage, puis toutes les 24 h).
  */
 import { getDb } from "../db/connection.js";
-import { getBusinessById } from "../db/businesses.js";
 import {
   getMemberIdsBySegment,
   filterMemberIdsExcludingRecentNotifications,
@@ -116,15 +115,14 @@ export function mergeCampaignAutomationJson(raw) {
  */
 export async function runCampaignAutomationCron() {
   const apiBase = (process.env.PUBLIC_API_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
-  const rows = db.prepare("SELECT id, slug, organization_name, notification_title_override, campaign_automation_json FROM businesses").all();
+  const rows = db.prepare("SELECT * FROM businesses").all();
   let rulesRun = 0;
   let sentTotal = 0;
   const errors = [];
 
   for (const row of rows) {
     const config = mergeCampaignAutomationJson(row.campaign_automation_json);
-    const business = getBusinessById(row.id);
-    if (!business) continue;
+    const business = row;
 
     for (const [ruleId, rule] of Object.entries(config.rules || {})) {
       if (!rule?.enabled) continue;

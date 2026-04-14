@@ -1037,4 +1037,29 @@ export function runMigrations(db) {
     );
     markMigrationApplied(db, 21, "program_type_backfill_from_required_stamps");
   }
+
+  // ── v22 : index de performance pour les requêtes de segmentation campagne ──
+  // Les requêtes getMemberIdsBySegment filtrent systématiquement sur (business_id, last_visit_at),
+  // (business_id, created_at), et (business_id, points). Sans ces index composites, SQLite fait
+  // un full scan de la table members à chaque exécution du cron automatisation (toutes les 24 h).
+  safeRun(db, () =>
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_members_business_last_visit ON members(business_id, last_visit_at)",
+    ),
+  );
+  safeRun(db, () =>
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_members_business_created ON members(business_id, created_at)",
+    ),
+  );
+  safeRun(db, () =>
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_members_business_points ON members(business_id, points)",
+    ),
+  );
+  safeRun(db, () =>
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_notification_log_business_member_created ON notification_log(business_id, member_id, created_at DESC)",
+    ),
+  );
 }

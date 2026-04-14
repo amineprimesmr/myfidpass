@@ -123,9 +123,7 @@ router.post("/scan", async (req, res) => {
   if (tokens.length > 0) {
     for (const token of tokens) {
       const result = await sendPassKitUpdate(token);
-      if (result.sent) {
-        console.log("[PassKit] Push envoyée OK (scan) pour membre", member.id.slice(0, 8) + "...");
-      } else {
+      if (!result.sent) {
         console.warn("[PassKit] Push refusée (scan):", result.error || "inconnu");
       }
     }

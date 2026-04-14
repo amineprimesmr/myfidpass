@@ -5,6 +5,7 @@
  */
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
+import logger from "../lib/logger.js";
 import {
   getMember,
   getBusinessById,
@@ -19,7 +20,6 @@ import { scheduleMerchantDashboardSyncForBusiness } from "../lib/merchant-dashbo
 import { scheduleCampaignEventJobsForMember } from "../lib/campaign-event-jobs.js";
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
-import { stripDataImageBase64Payload } from "../pass/images-logo.js";
 
 const router = Router();
 
@@ -49,15 +49,7 @@ const passkitRegisterLimiter = rateLimit({
 /** Timeout maximum pour la génération d'un .pkpass (ms). */
 const GENERATE_PASS_TIMEOUT_MS = 30_000;
 
-/** Log toute requête entrante sur /api/v1 pour voir si l'iPhone nous contacte (diagnostic). */
-router.use((req, res, next) => {
-  const ua = (req.get("User-Agent") || "").slice(0, 60);
-  console.log("[PassKit] Requête reçue:", req.method, req.path, "User-Agent:", ua);
-  if ((req.method === "GET" || req.method === "HEAD") && req.path.includes("passes")) {
-    console.log("[PassKit] >>> path GET pass (exact):", JSON.stringify(req.path));
-  }
-  next();
-});
+// Diagnostic détaillé par requête supprimé (trop verbeux en production — chaque iPhone pinguait toutes les N min).
 
 /** Interception explicite /api/v1/v1/... (passes déjà en circulation avec ancienne webServiceURL) — au cas où les routes nommées ne matchent pas. */
 const V1V1_PASSES_RE = /^\/api\/v1\/v1\/passes\/([^/]+)\/([^/]+)\/?$/;
@@ -103,7 +95,6 @@ function verifyToken(serialNumber, token) {
 /** Handler POST enregistrement device (partagé pour /devices/... et /v1/devices/...). */
 function handleDeviceRegistration(req, res) {
   const { deviceId, passTypeId, serialNumber } = req.params;
-  console.log("[PassKit] Requête d'enregistrement reçue:", { deviceId: deviceId?.slice(0, 8) + "...", passTypeId, serialNumber: serialNumber?.slice(0, 8) + "..." });
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) {
     console.warn("[PassKit] Enregistrement refusé: token invalide ou manquant pour serialNumber", serialNumber?.slice(0, 8) + "...");
@@ -115,9 +106,6 @@ function handleDeviceRegistration(req, res) {
     return res.status(404).json({ error: "Pass not found" });
   }
   const pushToken = req.body?.pushToken || null;
-  if (process.env.NODE_ENV === "production") {
-    console.log("[PassKit] POST registration pushToken:", pushToken ? `présent (${String(pushToken).length} car.)` : "absent ou vide");
-  }
   try {
     registerPassDevice({
       deviceLibraryIdentifier: deviceId,
@@ -136,7 +124,6 @@ function handleDeviceRegistration(req, res) {
         console.error("[campaign-event-jobs] schedule PassKit failed:", e?.message || String(e));
       }
     }
-    console.log("[PassKit] Appareil enregistré pour le membre", serialNumber.slice(0, 8) + "...", "pushToken:", pushToken ? "oui" : "non");
     return res.status(201).send();
   } catch (e) {
     console.error("PassKit register:", e);
@@ -168,10 +155,7 @@ function handleGetRegistrations(req, res) {
     if (serialNumbers.length === 0) {
       return res.status(204).send();
     }
-    if (process.env.NODE_ENV === "production") {
-      console.log("[PassKit] GET registrations: device", deviceId.slice(0, 8) + "...", "→", serialNumbers.length, "pass(es) à jour, lastUpdated:", lastUpdated);
-    }
-    res.json({ serialNumbers, lastUpdated });
+      res.json({ serialNumbers, lastUpdated });
   } catch (e) {
     console.error("[PassKit] GET registrations:", e);
     res.status(500).json({ error: "Server error" });
@@ -218,54 +202,22 @@ function getPassLastModified(member, business) {
  */
 const getPassHandler = async (req, res) => {
   const { passTypeId, serialNumber } = req.params;
-  const shortId = serialNumber ? String(serialNumber).slice(0, 8) + "..." : "?";
-  console.log("[PassKit] GET pass: entrée handler serialNumber=", shortId);
   try {
     const token = parseApplePassAuth(req);
     if (!verifyToken(serialNumber, token)) {
-      console.log("[PassKit] GET pass: 401 Unauthorized — token invalide pour", shortId);
       return res.status(401).json({ error: "Unauthorized" });
     }
     const member = getMember(serialNumber);
     if (!member) {
-      console.log("[PassKit] GET pass: 404 — membre introuvable serialNumber=", shortId);
       return res.status(404).json({ error: "Pass not found" });
     }
     const businessRow = getBusinessById(member.business_id);
     if (!businessRow) {
-      console.log("[PassKit] GET pass: 404 — business introuvable business_id=", member.business_id, "pour", shortId);
       return res.status(404).json({ error: "Business not found" });
     }
     const business = mergeBusinessAssetsForPass(businessRow);
 
     const lastModified = getPassLastModified(member, business);
-    const rawB64 = business.logo_base64 ? String(business.logo_base64).replace(/^data:image\/\w+;base64,/, "") : "";
-    const hasLogo = rawB64.length > 0;
-    const logoBytes = hasLogo ? Buffer.byteLength(Buffer.from(rawB64, "base64")) : 0;
-    const rawNotif = business.notification_icon_base64
-      ? stripDataImageBase64Payload(String(business.notification_icon_base64)) ?? ""
-      : "";
-    const hasNotifIcon = rawNotif.length > 0;
-    const notifIconBytes = hasNotifIcon ? Buffer.byteLength(Buffer.from(rawNotif, "base64")) : 0;
-    // Log diagnostic : icône `icon.png` du pass = même source que GET …/notification-icon (merge business_assets).
-    console.log(
-      "[PassKit] >>> PASS ENVOYÉ —",
-      shortId,
-      "business:",
-      business.slug || business.id,
-      "points:",
-      member.points,
-      "LOGO_IN_PASS:",
-      hasLogo ? "OUI" : "NON",
-      "logo_bytes:",
-      logoBytes,
-      "NOTIF_ICON_IN_PASS:",
-      hasNotifIcon ? "OUI" : "NON",
-      "notif_icon_bytes:",
-      notifIconBytes,
-      "Last-Modified:",
-      lastModified,
-    );
     const programKind = resolveBusinessProgramType(business);
     const opts = {
       template: programKind === "stamps" ? "cafe" : "classic",
@@ -399,10 +351,9 @@ router.post("/api/v1/log", (req, res) => {
   res.status(200).send();
 });
 
-/** Log toute requête GET/HEAD PassKit qui n'a matché aucune route (diagnostic). Ne pas logger /api/businesses/ etc. */
 router.use((req, res, next) => {
   if ((req.method === "GET" || req.method === "HEAD") && (req.path.includes("/v1/") || req.path.startsWith("/passes") || req.path.startsWith("/devices/"))) {
-    console.log("[PassKit] Aucune route ne correspond à", req.method, req.path);
+    logger.warn({ method: req.method, path: req.path }, "[PassKit] route non trouvée");
   }
   next();
 });

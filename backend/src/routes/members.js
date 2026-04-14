@@ -76,17 +76,12 @@ router.post("/:memberId/points", async (req, res) => {
   // Envoyer une push APNs pour que l'iPhone mette à jour le pass et affiche "Tu as maintenant X points !"
   const tokens = getPushTokensForMember(member.id);
   if (tokens.length > 0) {
-    console.log("[PassKit] Après points (API members): envoi push à", tokens.length, "appareil(s) pour membre", member.id.slice(0, 8) + "...");
     for (const token of tokens) {
       const result = await sendPassKitUpdate(token);
-      if (result.sent) {
-        console.log("[PassKit] Push envoyée OK pour membre", member.id.slice(0, 8) + "...");
-      } else {
+      if (!result.sent) {
         console.warn("[PassKit] Push refusée:", result.error || "inconnu");
       }
     }
-  } else {
-    console.log("[PassKit] Aucun appareil enregistré pour ce membre — pas de push.");
   }
   res.json({
     id: member.id,

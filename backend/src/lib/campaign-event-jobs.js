@@ -7,7 +7,6 @@
 
 import { randomUUID } from "crypto";
 import { getDb } from "../db/connection.js";
-import { getBusinessById } from "../db/businesses.js";
 import { mergeCampaignAutomationJson } from "./campaign-automation-cron.js";
 import { deliverDashboardBroadcast } from "../routes/businesses/notifications.js";
 import { normalizeEventTypeToken } from "../services/campaign-automation-ai.js";
@@ -261,6 +260,14 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
 
   const apiBase = getApiBase();
 
+  // Batch-fetch de tous les businesses nécessaires en une seule requête (évite N+1).
+  const businessIds = [...new Set(dueJobs.map((j) => j.business_id).filter(Boolean))];
+  const businessRows = businessIds.length > 0
+    ? db.prepare(`SELECT * FROM businesses WHERE id IN (${businessIds.map(() => "?").join(",")})`)
+        .all(...businessIds)
+    : [];
+  const businessMap = new Map(businessRows.map((b) => [b.id, b]));
+
   let sent = 0;
   let skipped = 0;
   let failed = 0;
@@ -268,7 +275,7 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
 
   for (const job of dueJobs) {
     try {
-      const business = getBusinessById(job.business_id);
+      const business = businessMap.get(job.business_id) ?? null;
       if (!business) {
         markJobSkipped(job.id, "Business introuvable");
         skipped++;

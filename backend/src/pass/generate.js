@@ -133,9 +133,6 @@ export async function generatePass(member, business = null, options = {}) {
       if (resized) {
         buffers["logo.png"] = resized.logoPng;
         buffers["logo@2x.png"] = resized.logoPng2x;
-        if (process.env.NODE_ENV === "production") {
-          console.log("[PassKit] Logo commerce injecté dans le pass (dimensions constants.js)");
-        }
       } else {
         const textFallback = await createPassLogoPlaceholder();
         if (textFallback) {
@@ -340,13 +337,8 @@ export async function generatePass(member, business = null, options = {}) {
     const base = webServiceURL.replace(/\/$/, "");
     passOptions.webServiceURL = `${base}/api`;
     passOptions.authenticationToken = authToken;
-    if (process.env.NODE_ENV === "production") {
-      console.log("[PassKit] Pass généré avec webServiceURL:", passOptions.webServiceURL, "→ l'iPhone pourra s'enregistrer.");
-    }
   } else {
-    if (process.env.NODE_ENV === "production") {
-      console.warn("[PassKit] Pass généré SANS webServiceURL → aucun appareil ne pourra s'enregistrer. Définir PASSKIT_WEB_SERVICE_URL sur Railway (ex. https://api.myfidpass.fr).");
-    }
+    console.warn("[PassKit] Pass généré SANS webServiceURL → aucun appareil ne pourra s'enregistrer. Définir PASSKIT_WEB_SERVICE_URL sur Railway (ex. https://api.myfidpass.fr).");
   }
   const pass = new PKPass(buffers, certificates, passOptions);
 
@@ -431,9 +423,6 @@ export async function generatePass(member, business = null, options = {}) {
     messageEncoding: "iso-8859-1",
   };
   pass.setBarcodes(barcodePayload);
-  if (process.env.NODE_ENV === "production") {
-    console.log("[PassKit] Barcode format:", barcodePayload.format);
-  }
 
   const embedWalletLocations =
     business?.wallet_pass_include_locations != null && Number(business.wallet_pass_include_locations) === 1;
@@ -446,9 +435,6 @@ export async function generatePass(member, business = null, options = {}) {
       `Vous êtes près de ${organizationName}`;
     const locations = buildPassLocations(locLat, locLng, radiusM, relevantText);
     pass.setLocations(...locations);
-    if (process.env.NODE_ENV === "production") {
-      console.log("[PassKit] Pass généré avec", locations.length, "emplacements (rayon", radiusM, "m).");
-    }
   }
 
   const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
