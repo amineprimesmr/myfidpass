@@ -107,10 +107,12 @@ export default function AppSidebar() {
       <DesktopSidebar>
           <div className="app-sidebar-brand flex flex-col">
             <a href="/" className="app-sidebar-logo flex items-center gap-2" aria-label="Myfidpass">
-              <img src="/assets/logo.png?v=20260311" alt="" className="app-sidebar-logo-img h-[72px] w-[72px] max-h-[72px] max-w-[88px] shrink-0 rounded-full object-contain brightness-0 invert" onError={(e) => { e.target.style.display = "none"; e.target.nextElementSibling?.classList.remove("hidden"); }} />
+              <img src="/assets/logo.png?v=20260311" alt="" className="app-sidebar-logo-img h-12 w-12 max-h-12 max-w-[56px] shrink-0 rounded-full object-contain brightness-0 invert" onError={(e) => { e.target.style.display = "none"; e.target.nextElementSibling?.classList.remove("hidden"); }} />
               <span className="app-sidebar-logo-fallback hidden font-bold text-[var(--app-sidebar-text)]">Myfidpass</span>
             </a>
-            <p id="app-business-name" className="app-sidebar-business hidden">Mon espace</p>
+            <span id="app-business-name" className="app-business-name-hidden" aria-hidden="true">
+              Mon espace
+            </span>
           </div>
           <nav className="app-sidebar-nav flex-1 overflow-y-auto px-3 py-4" aria-label="Navigation principale">
             {APP_LINKS.map((link) => (

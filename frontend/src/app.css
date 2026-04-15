@@ -113,13 +113,27 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 
 .app-sidebar-brand {
-  padding: 1.1rem 1.25rem 1.25rem;
+  padding: 0.65rem 1rem 0.75rem;
   border-bottom: 1px solid var(--app-sidebar-border);
+}
+
+/* Nom commerce : conservé pour le JS (topbar, prévisualisations), jamais affiché */
+.app-business-name-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
 }
 
 .app-sidebar-logo {
   font-weight: 800;
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   color: var(--app-sidebar-text);
   text-decoration: none;
   display: flex;
@@ -137,13 +151,13 @@ body.page-app .whatsapp-fab { display: none !important; }
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
-/* Logo commerce (sidebar) : couleurs d’origine, plus grand ; pas de forçage blanc */
+/* Logo commerce (sidebar) : couleurs d’origine ; pas de forçage blanc */
 .app-sidebar-logo-img--commerce {
   filter: none;
-  width: 72px;
-  height: 72px;
-  max-width: min(100%, 88px);
-  max-height: 72px;
+  width: 48px;
+  height: 48px;
+  max-width: min(100%, 56px);
+  max-height: 48px;
   object-fit: contain;
   border-radius: 50%;
   flex-shrink: 0;
@@ -160,36 +174,25 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 .app-sidebar-logo-fallback.hidden { display: none; }
 
-/* Masqué visuellement : le nom reste en #app-business-name pour le JS (fallback logo, profil). */
-.app-sidebar-business {
-  display: none !important;
-  margin: 0.4rem 0 0;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--app-sidebar-text-muted);
-}
-
 .app-header-user { font-size: 0.9rem; color: rgba(255,255,255,0.9); }
 
 .app-sidebar-nav {
   flex: 1;
-  padding: 0.9rem 0.75rem;
+  padding: 0.55rem 0.6rem 0.75rem;
   overflow-y: auto;
 }
 
 .app-sidebar-link {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.65rem 1rem;
+  gap: 0.65rem;
+  padding: 0.48rem 0.85rem;
   color: var(--app-sidebar-text-muted);
   text-decoration: none;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 500;
   border-radius: var(--app-radius-sm);
-  margin-bottom: 0.12rem;
+  margin-bottom: 0.08rem;
   transition: background 0.22s ease, color 0.22s ease, transform 0.2s var(--app-ease-spring), opacity 0.2s ease;
   position: relative;
 }
@@ -225,8 +228,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.2rem;
+  height: 1.2rem;
   flex-shrink: 0;
   color: inherit;
   opacity: 0.85;
@@ -375,7 +378,6 @@ body.page-app .whatsapp-fab { display: none !important; }
   .app-sidebar-brand,
   .app-sidebar-footer { padding: 1rem 0.5rem; }
   .app-sidebar-trial-subscribe-card { display: none; }
-  .app-sidebar-business,
   .app-sidebar-link-text,
   .app-sidebar-user { display: none; }
   .app-sidebar-link {
