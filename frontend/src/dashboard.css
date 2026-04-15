@@ -108,21 +108,12 @@
   opacity: 0.85;
 }
 
-.dashboard-logo::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--dash-accent);
-  box-shadow: 0 0 12px var(--dash-accent-glow), 0 0 24px rgba(37, 99, 235, 0.15);
-  flex-shrink: 0;
-  animation: logo-pulse 3s ease-in-out infinite;
-}
-
-@keyframes logo-pulse {
-  0%, 100% { box-shadow: 0 0 8px var(--dash-accent-glow); opacity: 1; }
-  50% { box-shadow: 0 0 16px var(--dash-accent-glow), 0 0 32px rgba(37, 99, 235, 0.2); opacity: 0.9; }
+.dashboard-logo-img {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
 }
 
 .dashboard-title {

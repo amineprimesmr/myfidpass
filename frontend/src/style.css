@@ -221,10 +221,24 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   font-weight: 800;
   font-size: 1.2rem;
   letter-spacing: -0.025em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.logo:not(:has(img)) {
   background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.fidelity-header-logo-img {
+  display: block;
+  height: 36px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
 }
 
 /* ── Main ── */

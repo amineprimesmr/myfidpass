@@ -55,6 +55,14 @@
   opacity: 0.95;
 }
 
+.app-desktop-topbar__brand-img {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 7px;
+}
+
 .app-desktop-topbar__brand-text {
   font-style: italic;
   font-weight: 800;
