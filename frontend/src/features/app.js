@@ -782,6 +782,7 @@ function initAppDashboard(slug) {
     const img = document.getElementById("app-sidebar-business-logo");
     const fallback = document.getElementById("app-sidebar-logo-fallback");
     if (!img || !fallback) return;
+    const SIDEBAR_BRAND_FALLBACK_TEXT = "Myfidpass";
     const businessLabel = () => {
       const raw = (document.getElementById("app-business-name")?.textContent || "").trim();
       const name = raw || "Mon commerce";
@@ -808,14 +809,14 @@ function initAppDashboard(slug) {
         } else {
           img.removeAttribute("src");
           img.classList.add("hidden");
-          fallback.textContent = label;
+          fallback.textContent = SIDEBAR_BRAND_FALLBACK_TEXT;
           fallback.classList.remove("hidden");
         }
       })
       .catch(() => {
         img.removeAttribute("src");
         img.classList.add("hidden");
-        fallback.textContent = businessLabel();
+        fallback.textContent = SIDEBAR_BRAND_FALLBACK_TEXT;
         fallback.classList.remove("hidden");
       });
   }
@@ -823,9 +824,7 @@ function initAppDashboard(slug) {
   (function primeSidebarBrandFallback() {
     const fb = document.getElementById("app-sidebar-logo-fallback");
     if (!fb) return;
-    const raw = (document.getElementById("app-business-name")?.textContent || "").trim();
-    const name = raw || "Mon commerce";
-    fb.textContent = name.length > 26 ? `${name.slice(0, 24)}…` : name;
+    fb.textContent = "Myfidpass";
   })();
   refreshSidebarBusinessLogo();
 
