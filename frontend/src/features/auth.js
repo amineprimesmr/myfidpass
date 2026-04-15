@@ -23,8 +23,13 @@ function isAppleRedirectDevice() {
 function resolvePostAuthRedirect(authPayload) {
   const isAdmin = !!(authPayload?.user?.is_admin || authPayload?.user?.isAdmin);
   const hasSubscription = !!(authPayload?.has_active_subscription ?? authPayload?.hasActiveSubscription);
-  if (!hasSubscription && !isAdmin) return "/choisir-offre";
+  const trialEnds = authPayload?.merchant_trial_ends_at ?? authPayload?.merchantTrialEndsAt;
+  const trialEndMs = trialEnds ? Date.parse(String(trialEnds)) : NaN;
+  const inTrial = Number.isFinite(trialEndMs) && trialEndMs > Date.now();
+  const hasAccess = hasSubscription || inTrial || isAdmin;
+  if (!hasAccess) return "/choisir-offre";
   const raw = new URLSearchParams(window.location.search).get("redirect") || "/app";
+  if (raw === "/choisir-offre" || raw.startsWith("/choisir-offre?")) return "/app";
   return raw;
 }
 
