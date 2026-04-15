@@ -235,6 +235,10 @@
     justify-self: end;
     order: 3;
   }
+  /* Accueil : plus de CTA mobile — grille logo + menu seulement */
+  #landing .landing-header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
 }
 
 @media (min-width: 901px) {
