@@ -5594,6 +5594,10 @@ function initAppDashboard(slug) {
     if (perimetreIconFallback) {
       perimetreIconFallback.textContent = title.length > 14 ? title.slice(0, 12) + "…" : title || "Logo";
     }
+    const carouselSender = title.length > 22 ? title.slice(0, 20) + "…" : title;
+    document.querySelectorAll("#notifications .app-notif-auto-liquid-sender").forEach((el) => {
+      el.textContent = carouselSender;
+    });
   }
 
   /** Icône aperçu campagne / push : média serveur dédié (`notification_icon`), indépendant des logos carte & fiche. */
@@ -6190,9 +6194,7 @@ function initAppDashboard(slug) {
       const data = await res.json();
       const ids = {
         inactive14: "app-campaign-count-inactive14",
-        new7: "app-campaign-count-new7",
-        recurrent: "app-campaign-count-recurrent",
-        points50: "app-campaign-count-points50",
+        birthdayToday: "app-campaign-count-birthdayToday",
       };
       for (const [key, id] of Object.entries(ids)) {
         const el = document.getElementById(id);
@@ -6203,16 +6205,151 @@ function initAppDashboard(slug) {
 
   const CAMPAIGN_DEFAULTS = {
     inactive14: "Ça fait un moment... Revenez nous voir aujourd'hui et profitez de -10 %.",
-    new7: "Merci de nous avoir rejoints récemment — profitez de nos avantages fidélité.",
-    recurrent: "Merci pour votre fidélité ! Offre exclusive pour vous.",
-    points50: "Vous avez des points à utiliser ! Venez les échanger contre une récompense.",
+    birthdayToday: "Joyeux anniversaire ! Profitez de -20 % en commandant aujourd'hui.",
   };
   const CAMPAIGN_LABELS = {
-    inactive14: "Inactif 14 jours",
-    new7: "Nouveaux (0–7 j)",
-    recurrent: "Fidèles (+10 visites / mois)",
-    points50: "Récompense prête (≥ 50 pts)",
+    inactive14: "Client inactif +14 jours",
+    birthdayToday: "Anniversaire du jour",
   };
+
+  function refreshNotifAutoCarouselPreviews() {
+    document.querySelectorAll("[data-segment-preview]").forEach((el) => {
+      const k = el.getAttribute("data-segment-preview");
+      if (k && CAMPAIGN_DEFAULTS[k]) el.textContent = CAMPAIGN_DEFAULTS[k];
+    });
+  }
+
+  let notifCarouselPerimSaveTimer = null;
+  let notifCarouselPerimSyncGuard = false;
+
+  async function syncNotifCarouselFromSettings() {
+    const mapImg = document.getElementById("app-notif-carousel-static-map");
+    const mapFb = document.getElementById("app-notif-carousel-map-fallback");
+    const msgEl = document.getElementById("app-notif-carousel-perimeter-msg");
+    try {
+      const res = await api("/dashboard/settings");
+      if (!res.ok) return;
+      const data = await res.json();
+      const lat = data.location_lat != null ? Number(data.location_lat) : null;
+      const lng = data.location_lng != null ? Number(data.location_lng) : null;
+      const locMsg = String(data.location_relevant_text ?? data.locationRelevantText ?? "").trim();
+      const legacyMsg = String(data.notification_change_message ?? data.notificationChangeMessage ?? "").trim();
+      const notifMessage = locMsg || legacyMsg;
+      if (lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng) && mapImg) {
+        const src = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=15&size=480x200&maptype=osmarenderer&markers=${lat},${lng},red-pushpin`;
+        mapImg.onload = () => {
+          mapImg.classList.remove("hidden");
+          if (mapFb) mapFb.classList.add("hidden");
+        };
+        mapImg.onerror = () => {
+          mapImg.classList.add("hidden");
+          if (mapFb) mapFb.classList.remove("hidden");
+        };
+        mapImg.src = src;
+      } else {
+        if (mapImg) {
+          mapImg.removeAttribute("src");
+          mapImg.classList.add("hidden");
+        }
+        if (mapFb) mapFb.classList.remove("hidden");
+      }
+      if (msgEl && document.activeElement !== msgEl) {
+        notifCarouselPerimSyncGuard = true;
+        msgEl.value = notifMessage;
+        notifCarouselPerimSyncGuard = false;
+      }
+    } catch (_) { /* ignore */ }
+  }
+
+  async function persistNotifCarouselPerimeterMessage() {
+    if (notifCarouselPerimSyncGuard) return;
+    const msgEl = document.getElementById("app-notif-carousel-perimeter-msg");
+    const v = (msgEl?.value ?? "").trim() || null;
+    try {
+      const res = await api("/dashboard/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ location_relevant_text: v }),
+      });
+      if (res.ok || res.status === 204) {
+        const perMsg = document.getElementById("app-perimetre-notif-message");
+        if (perMsg) perMsg.value = v || "";
+        updateAppNotificationPreview();
+      }
+    } catch (_) { /* ignore */ }
+  }
+
+  function scheduleNotifCarouselPerimeterSave() {
+    if (notifCarouselPerimSyncGuard) return;
+    clearTimeout(notifCarouselPerimSaveTimer);
+    notifCarouselPerimSaveTimer = setTimeout(() => {
+      persistNotifCarouselPerimeterMessage();
+    }, 550);
+  }
+
+  function initNotifsAutomationCarousel() {
+    const track = document.getElementById("app-notifs-carousel-track");
+    const dotsRoot = document.getElementById("app-notifs-carousel-dots");
+    if (!track || !dotsRoot) return;
+    const slides = track.querySelectorAll(".app-notifs-carousel-slide");
+    if (slides.length === 0) return;
+    dotsRoot.textContent = "";
+    const dots = [];
+    for (let i = 0; i < slides.length; i++) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "app-notifs-carousel-dot" + (i === 0 ? " is-active" : "");
+      b.setAttribute("aria-label", `Automatisation ${i + 1} sur ${slides.length}`);
+      b.dataset.slideIndex = String(i);
+      dotsRoot.appendChild(b);
+      dots.push(b);
+      b.addEventListener("click", () => {
+        slides[i].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      });
+    }
+    function updateDotsFromScroll() {
+      const trackRect = track.getBoundingClientRect();
+      const mid = trackRect.left + trackRect.width / 2;
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      slides.forEach((slide, i) => {
+        const r = slide.getBoundingClientRect();
+        const c = r.left + r.width / 2;
+        const d = Math.abs(c - mid);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = i;
+        }
+      });
+      dots.forEach((d, j) => d.classList.toggle("is-active", j === bestIdx));
+    }
+    track.addEventListener(
+      "scroll",
+      () => {
+        window.requestAnimationFrame(updateDotsFromScroll);
+      },
+      { passive: true }
+    );
+    window.requestAnimationFrame(updateDotsFromScroll);
+
+    const openPer = () => showAppSection("carte-perimetre");
+    document.getElementById("app-notif-carousel-open-perimetre")?.addEventListener("click", openPer);
+    document.getElementById("app-notif-carousel-map-hit")?.addEventListener("click", openPer);
+
+    const perMsg = document.getElementById("app-notif-carousel-perimeter-msg");
+    perMsg?.addEventListener("input", scheduleNotifCarouselPerimeterSave);
+    perMsg?.addEventListener("blur", () => {
+      clearTimeout(notifCarouselPerimSaveTimer);
+      persistNotifCarouselPerimeterMessage();
+    });
+
+    document.querySelectorAll(".app-campaign-settings-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const seg = btn.getAttribute("data-segment");
+        if (seg) openCampaignModal(seg);
+      });
+    });
+  }
 
   let campaignModalSegment = null;
   const campaignModal = document.getElementById("app-campaign-modal");
@@ -6292,10 +6429,15 @@ function initAppDashboard(slug) {
     });
   });
 
+  initNotifsAutomationCarousel();
+  refreshNotifAutoCarouselPreviews();
+
   window.addEventListener("app-section-change", (e) => {
     if (e.detail?.sectionId === "notifications") {
       loadAppNotificationStats();
       loadCampaignSegments();
+      syncNotifCarouselFromSettings();
+      refreshNotifAutoCarouselPreviews();
       updateAppNotificationPreview();
       refreshNotificationBannerIcon();
     }
@@ -6315,6 +6457,7 @@ function initAppDashboard(slug) {
   refresh();
   loadAppNotificationStats();
   loadCampaignSegments();
+  syncNotifCarouselFromSettings();
 }
 
 export { initAppPage };
