@@ -5,7 +5,7 @@
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.js";
 import { getBusinessBySlug, ensureDefaultBusiness } from "../../db.js";
-import { createHandler, updateHandler } from "./create.js";
+import { bootstrapFromPlaceHandler, createHandler, updateHandler } from "./create.js";
 import slugRouter from "./slug.js";
 
 const router = Router();
@@ -23,6 +23,7 @@ router.param("slug", (req, res, next) => {
 });
 
 router.post("/", requireAuth, createHandler);
+router.post("/bootstrap-place", requireAuth, bootstrapFromPlaceHandler);
 
 router.use("/:slug", slugRouter);
 

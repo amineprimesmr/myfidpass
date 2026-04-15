@@ -2,7 +2,13 @@
  * Page auth : login, register, forgot/reset password, OAuth Google/Apple.
  * Référence : REFONTE-REGLES.md — un module par écran, max 400 lignes.
  */
-import { API_BASE, setAuthToken, setRefreshToken } from "../config.js";
+import {
+  API_BASE,
+  clearPendingEstablishment,
+  getPendingEstablishment,
+  setAuthToken,
+  setRefreshToken,
+} from "../config.js";
 import { getApiErrorMessage, showApiError } from "../utils/apiError.js";
 
 /** Remettre à false pour réactiver Sign in with Apple sur /login et /register. */
@@ -14,18 +20,11 @@ function isAppleRedirectDevice() {
   return /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0 && window.matchMedia("(max-width: 768px)").matches);
 }
 
-/** Après login / inscription : si la cible est /app, forcer l’étape « premier commerce » (même flux que desktop). */
-function resolvePostAuthRedirect() {
+function resolvePostAuthRedirect(authPayload) {
+  const isAdmin = !!(authPayload?.user?.is_admin || authPayload?.user?.isAdmin);
+  const hasSubscription = !!(authPayload?.has_active_subscription ?? authPayload?.hasActiveSubscription);
+  if (!hasSubscription && !isAdmin) return "/choisir-offre";
   const raw = new URLSearchParams(window.location.search).get("redirect") || "/app";
-  try {
-    const u = new URL(raw, window.location.origin);
-    if (u.pathname === "/app" || u.pathname.endsWith("/app")) {
-      u.hash = "#creer-commerce";
-      return u.pathname + u.search + u.hash;
-    }
-  } catch (_) {
-    /* ignore */
-  }
   return raw;
 }
 
@@ -39,9 +38,34 @@ export function initAuthPage(initialTab) {
   const authFooter = document.querySelector(".auth-footer");
   const loginError = document.getElementById("auth-login-error");
   const registerError = document.getElementById("auth-register-error");
+  const registerContext = document.getElementById("auth-register-establishment");
+  const registerChangeLink = document.getElementById("auth-register-change-establishment");
+  const registerSubtitle = formRegister?.querySelector(".auth-subtitle");
+
+  function getSelectedEstablishment() {
+    return getPendingEstablishment();
+  }
+
+  function syncRegisterEstablishmentContext() {
+    const pending = getSelectedEstablishment();
+    if (registerContext) {
+      if (pending) {
+        registerContext.textContent = `Établissement sélectionné : ${pending.establishment_name}`;
+        registerContext.classList.remove("hidden");
+      } else {
+        registerContext.textContent = "";
+        registerContext.classList.add("hidden");
+      }
+    }
+    if (registerSubtitle) {
+      registerSubtitle.textContent = pending
+        ? "Créez votre compte commerçant pour cet établissement. Vous pourrez ensuite activer l’offre 1 € pendant 1 mois."
+        : "Choisissez d’abord votre établissement, puis créez votre compte commerçant.";
+    }
+  }
 
   function setAuthSectionVisible(which) {
-    const showSocial = which === "login" || which === "register";
+    const showSocial = which === "login";
     if (socialDivider) socialDivider.classList.toggle("hidden", !showSocial);
     if (socialButtons) socialButtons.classList.toggle("hidden", !showSocial);
     if (authFooter) authFooter.classList.toggle("hidden", !showSocial);
@@ -69,6 +93,7 @@ export function initAuthPage(initialTab) {
 
   const defaultMode = initialTab === "register" ? "register" : "login";
   showAuthForm(defaultMode);
+  syncRegisterEstablishmentContext();
   const initialForm = defaultMode === "register" ? formRegister : formLogin;
   if (initialForm) {
     initialForm.classList.add("auth-form-enter");
@@ -120,6 +145,10 @@ export function initAuthPage(initialTab) {
 
   document.getElementById("auth-show-register")?.addEventListener("click", () => showAuthForm("register"));
   document.getElementById("auth-show-login")?.addEventListener("click", () => showAuthForm("login"));
+  registerChangeLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "/creer-ma-carte";
+  });
 
   document.getElementById("auth-forgot-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -221,7 +250,7 @@ export function initAuthPage(initialTab) {
       }
       setAuthToken(data.token);
       if (data.refreshToken) setRefreshToken(data.refreshToken);
-      window.location.replace(resolvePostAuthRedirect());
+      window.location.replace(resolvePostAuthRedirect(data));
     } catch (_) {
       showApiError(null, null, loginError);
     }
@@ -231,7 +260,18 @@ export function initAuthPage(initialTab) {
     e.preventDefault();
     const email = document.getElementById("auth-register-email")?.value?.trim();
     const password = document.getElementById("auth-register-password")?.value;
+    const pending = getSelectedEstablishment();
     if (!email || !password) return;
+    if (!pending) {
+      if (registerError) {
+        registerError.textContent = "Choisissez d'abord votre établissement avant de créer votre compte.";
+        registerError.classList.remove("hidden");
+      }
+      window.setTimeout(() => {
+        window.location.href = "/creer-ma-carte";
+      }, 500);
+      return;
+    }
     if (password.length < 12) {
       if (registerError) {
         registerError.textContent = "Le mot de passe doit faire au moins 12 caractères (exigence du serveur).";
@@ -244,13 +284,19 @@ export function initAuthPage(initialTab) {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          google_place_id: pending.google_place_id,
+          establishment_name: pending.establishment_name,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { showApiError(res, data, registerError); return; }
       setAuthToken(data.token);
       if (data.refreshToken) setRefreshToken(data.refreshToken);
-      window.location.replace(resolvePostAuthRedirect());
+      clearPendingEstablishment();
+      window.location.replace(resolvePostAuthRedirect(data));
     } catch (_) {
       showApiError(null, null, registerError);
     }
@@ -268,7 +314,10 @@ export function initAuthPage(initialTab) {
     if (!data?.token) return;
     setAuthToken(data.token);
     if (data.refreshToken) setRefreshToken(data.refreshToken);
-    window.location.replace(resolvePostAuthRedirect());
+    if (!data?.requires_business_setup) {
+      clearPendingEstablishment();
+    }
+    window.location.replace(resolvePostAuthRedirect(data));
   }
 
   const authUrlParams = new URLSearchParams(window.location.search);
@@ -276,7 +325,13 @@ export function initAuthPage(initialTab) {
   const authAppleError = authUrlParams.get("apple_error");
   if (!AUTH_APPLE_SIGNIN_DISABLED && authAppleError && authAppleClientId) {
     history.replaceState({}, "", window.location.pathname + (authUrlParams.get("redirect") ? "?redirect=" + encodeURIComponent(authUrlParams.get("redirect")) : ""));
-    authOAuthError(authAppleError === "no_email" ? "Email non fourni par Apple." : "Connexion Apple impossible. Réessayez.");
+    authOAuthError(
+      authAppleError === "no_email"
+        ? "Email non fourni par Apple."
+        : authAppleError === "missing_establishment"
+          ? "Choisissez d'abord votre établissement avant de créer un compte Apple."
+          : "Connexion Apple impossible. Réessayez."
+    );
   } else if (!AUTH_APPLE_SIGNIN_DISABLED && authAppleCode && authAppleClientId) {
     const redirectParam = authUrlParams.get("redirect");
     history.replaceState({}, "", window.location.pathname + (redirectParam ? "?redirect=" + encodeURIComponent(redirectParam) : ""));
@@ -306,7 +361,10 @@ export function initAuthPage(initialTab) {
               fetch(`${API_BASE}/api/auth/google`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ credential: res.credential }),
+                body: JSON.stringify({
+                  credential: res.credential,
+                  ...(getSelectedEstablishment() || {}),
+                }),
               })
                 .then((r) => r.json())
                 .then((data) => {
@@ -362,6 +420,7 @@ export function initAuthPage(initialTab) {
               idToken,
               name: user?.name ? [user.name.firstName, user.name.lastName].filter(Boolean).join(" ") : undefined,
               email: user?.email,
+              ...(getSelectedEstablishment() || {}),
             }),
           })
             .then((r) => r.json())

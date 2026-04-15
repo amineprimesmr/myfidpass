@@ -20,11 +20,19 @@ describe("Idempotence addPoints", () => {
     const password = "testpassword12345";
     const register = await request(app)
       .post("/api/auth/register")
-      .send({ email, password, name: "Idempotency Test" });
+      .send({
+        email,
+        password,
+        name: "Idempotency Test",
+        google_place_id: `place-idempotency-${Date.now()}`,
+        establishment_name: "Idempotency Test Shop",
+      });
     expect(register.status).toBe(201);
     authToken = register.body.token;
     const userId = register.body.user?.id;
     expect(userId).toBeDefined();
+    businessSlug = register.body.businesses?.[0]?.slug;
+    expect(businessSlug).toBeDefined();
     createOrUpdateSubscription({
       userId,
       stripeCustomerId: "cus_test_idempotency",
@@ -33,14 +41,6 @@ describe("Idempotence addPoints", () => {
       status: "active",
       currentPeriodEnd: new Date(Date.now() + 7 * 86400000).toISOString(),
     });
-
-    // Créer un commerce
-    const biz = await request(app)
-      .post("/api/businesses")
-      .set("Authorization", `Bearer ${authToken}`)
-      .send({ name: "Test Café Idempotency", slug: `test-cafe-idempotency-${Date.now()}` });
-    expect(biz.status).toBe(201);
-    businessSlug = biz.body.slug;
 
     // Créer un membre
     const member = await request(app)

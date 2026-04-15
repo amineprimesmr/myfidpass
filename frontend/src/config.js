@@ -86,6 +86,7 @@ export function buildStripeSubscriptionPaymentLinkUrl(email) {
 
 const AUTH_TOKEN_KEY = "fidpass_token";
 const REFRESH_TOKEN_KEY = "fidpass_refresh_token";
+const PENDING_ESTABLISHMENT_KEY = "fidpass_pending_establishment";
 
 export function getAuthToken() {
   try {
@@ -128,6 +129,52 @@ export function setRefreshToken(token) {
   try {
     if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
     else localStorage.removeItem(REFRESH_TOKEN_KEY);
+  } catch (_) {}
+}
+
+export function getPendingEstablishment() {
+  try {
+    const raw = localStorage.getItem(PENDING_ESTABLISHMENT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const establishmentName = String(parsed?.establishment_name || parsed?.establishmentName || "").trim();
+    const placeId = String(parsed?.google_place_id || parsed?.googlePlaceId || parsed?.place_id || parsed?.placeId || "").trim();
+    if (!establishmentName || !placeId) return null;
+    return {
+      establishment_name: establishmentName,
+      google_place_id: placeId,
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+export function setPendingEstablishment(input) {
+  const establishmentName = String(
+    input?.establishment_name || input?.establishmentName || ""
+  ).trim();
+  const placeId = String(
+    input?.google_place_id || input?.googlePlaceId || input?.place_id || input?.placeId || ""
+  ).trim();
+  if (!establishmentName || !placeId) {
+    clearPendingEstablishment();
+    return;
+  }
+  try {
+    localStorage.setItem(
+      PENDING_ESTABLISHMENT_KEY,
+      JSON.stringify({
+        establishment_name: establishmentName,
+        google_place_id: placeId,
+        saved_at: Date.now(),
+      })
+    );
+  } catch (_) {}
+}
+
+export function clearPendingEstablishment() {
+  try {
+    localStorage.removeItem(PENDING_ESTABLISHMENT_KEY);
   } catch (_) {}
 }
 

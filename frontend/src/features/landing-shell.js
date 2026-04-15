@@ -1,8 +1,8 @@
 /**
- * Shell landing : formulaire hero, Google Places, menus drawer, bottom sheet onboarding.
+ * Shell landing : formulaire hero, Google Places et menus drawer.
  * Appelé au chargement pour attacher les listeners (formulaire, menus, script Places).
  */
-import { openOnboardingSheet, initOnboardingSheet } from "./landing-onboarding-sheet.js";
+import { setPendingEstablishment } from "../config.js";
 
 function updateLandingCtaState() {
   const input = document.getElementById("landing-etablissement");
@@ -69,14 +69,6 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
 }
 
 export function initLandingShell() {
-  initOnboardingSheet();
-  function openSheet(e) {
-    e.preventDefault();
-    openOnboardingSheet();
-  }
-  document.querySelectorAll(".landing-cta-try").forEach((link) => link.addEventListener("click", openSheet));
-  document.querySelectorAll("#landing a[href*='creer-ma-carte']").forEach((link) => link.addEventListener("click", openSheet));
-
   const landingHeroForm = document.getElementById("landing-hero-form");
   if (landingHeroForm) {
     const landingEtablissementInput = document.getElementById("landing-etablissement");
@@ -123,7 +115,23 @@ export function initLandingShell() {
     updateLandingCtaState();
     landingHeroForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      openOnboardingSheet();
+      const establishmentName = landingEtablissementInput?.value?.trim() || "";
+      const placeId = landingPlaceIdInput?.value?.trim() || "";
+      if (!establishmentName) {
+        landingEtablissementInput?.focus();
+        showLandingHelper();
+        return;
+      }
+      if (!placeId) {
+        showLandingHelper();
+        landingEtablissementInput?.focus();
+        return;
+      }
+      setPendingEstablishment({
+        establishment_name: establishmentName,
+        google_place_id: placeId,
+      });
+      window.location.href = "/register?redirect=/choisir-offre";
     });
   }
 

@@ -387,40 +387,40 @@ function initAppPage() {
 
   const emptyForm = document.getElementById("app-empty-create-form");
   const emptyName = document.getElementById("app-empty-name");
-  const emptySlug = document.getElementById("app-empty-slug");
-  const emptySlugPreview = document.getElementById("app-empty-slug-preview");
+  const emptyPlaceId = document.getElementById("app-empty-place-id");
   const emptyCreateError = document.getElementById("app-empty-create-error");
 
-  function updateEmptySlugPreview() {
-    const s = slugify(emptySlug?.value || emptyName?.value || "");
-    if (emptySlugPreview) emptySlugPreview.textContent = s || "votre-lien";
-  }
-  emptyName?.addEventListener("input", () => {
-    if (!emptySlug?.dataset.manual) {
-      const s = slugify(emptyName?.value || "");
-      if (emptySlug) emptySlug.value = s;
-      updateEmptySlugPreview();
-    }
-  });
-  emptySlug?.addEventListener("input", () => {
-    if (emptySlug) emptySlug.dataset.manual = "1";
-    updateEmptySlugPreview();
-  });
-
-  (function prefillEmptyFromDraft() {
-    try {
-      const raw = localStorage.getItem(BUILDER_DRAFT_KEY);
-      if (!raw) return;
-      const d = JSON.parse(raw);
-      if (d.organizationName && emptyName && !emptyName.value?.trim()) {
-        emptyName.value = d.organizationName.trim();
-        if (emptySlug && !emptySlug.dataset.manual) {
-          emptySlug.value = slugify(d.organizationName.trim());
-          updateEmptySlugPreview();
-        }
+  (function initLegacyBusinessPlacesAutocomplete(retriesLeft = 12) {
+    if (!emptyName || emptyName.dataset.placesInit) return;
+    if (typeof google === "undefined" || !google.maps?.places) {
+      if (retriesLeft > 0) {
+        window.setTimeout(() => initLegacyBusinessPlacesAutocomplete(retriesLeft - 1), 500);
       }
+      return;
+    }
+    try {
+      const frBounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(41.0, -5.5),
+        new google.maps.LatLng(51.2, 9.6)
+      );
+      const autocomplete = new google.maps.places.Autocomplete(emptyName, {
+        types: ["establishment"],
+        fields: ["name", "formatted_address", "geometry", "place_id"],
+        bounds: frBounds,
+        strictBounds: false,
+      });
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place?.name) emptyName.value = place.name;
+        if (emptyPlaceId) emptyPlaceId.value = place?.place_id || "";
+      });
+      emptyName.dataset.placesInit = "1";
     } catch (_) {}
   })();
+
+  emptyName?.addEventListener("input", () => {
+    if (emptyPlaceId) emptyPlaceId.value = "";
+  });
 
   function buildEngagementRewardsFromOnboarding(onboarding) {
     if (!onboarding || typeof onboarding !== "object") return null;
@@ -464,8 +464,7 @@ function initAppPage() {
   emptyForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = emptyName?.value?.trim();
-    const slugRaw = emptySlug?.value?.trim() || slugify(name || "");
-    const slug = slugify(slugRaw) || slugify(name || "") || "ma-carte";
+    const placeId = emptyPlaceId?.value?.trim();
     if (!name) {
       if (emptyCreateError) {
         emptyCreateError.textContent = "Saisissez le nom de l'établissement.";
@@ -473,46 +472,26 @@ function initAppPage() {
       }
       return;
     }
-    if (emptyCreateError) emptyCreateError.classList.add("hidden");
-    let tpl = CARD_TEMPLATES.find((t) => t.id === "classic") || CARD_TEMPLATES[0];
-    let logoBase64 = null;
-    try {
-      const draftRaw = localStorage.getItem(BUILDER_DRAFT_KEY);
-      if (draftRaw) {
-        const draft = JSON.parse(draftRaw);
-        if (draft.selectedTemplateId && CARD_TEMPLATES.some((t) => t.id === draft.selectedTemplateId)) {
-          const draftTpl = CARD_TEMPLATES.find((t) => t.id === draft.selectedTemplateId);
-          if (draftTpl) tpl = draftTpl;
-        }
-        if (draft.logoDataUrl && typeof draft.logoDataUrl === "string" && draft.logoDataUrl.startsWith("data:image/")) {
-          logoBase64 = draft.logoDataUrl;
-        }
+    if (!placeId) {
+      if (emptyCreateError) {
+        emptyCreateError.textContent = "Choisissez votre établissement dans les suggestions Google.";
+        emptyCreateError.classList.remove("hidden");
       }
-    } catch (_) {}
-    const body = {
-          name,
-          slug,
-          organizationName: name,
-          backgroundColor: tpl.bg,
-          foregroundColor: tpl.fg,
-          labelColor: tpl.label,
-    };
-    if (logoBase64) body.logoBase64 = logoBase64;
+      emptyName?.focus();
+      return;
+    }
+    if (emptyCreateError) emptyCreateError.classList.add("hidden");
     try {
-      const res = await fetch(`${API_BASE}/api/businesses`, {
+      const res = await fetch(`${API_BASE}/api/businesses/bootstrap-place`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          establishment_name: name,
+          google_place_id: placeId,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        if (res.status === 409) {
-          if (emptyCreateError) {
-            emptyCreateError.textContent = "Ce lien est déjà pris. Choisissez un autre lien.";
-            emptyCreateError.classList.remove("hidden");
-          }
-          return;
-        }
         if (res.status === 403 && (data.code === "subscription_required")) {
           window.location.replace("/choisir-offre");
           return;
@@ -523,13 +502,7 @@ function initAppPage() {
         }
         return;
       }
-      await applyDraftEngagementRewards(data.slug || slug);
-      if (emptyEl) emptyEl.classList.add("hidden");
-      if (contentEl) contentEl.classList.remove("hidden");
-      document.getElementById("app-app")?.classList.remove("app-awaiting-first-business");
-      if (businessNameEl) businessNameEl.textContent = data.organization_name || data.name || data.slug;
-      initAppSidebar();
-      initAppDashboard(data.slug);
+      window.location.reload();
     } catch (err) {
       if (emptyCreateError) {
         emptyCreateError.textContent = "Erreur réseau. Réessayez.";

@@ -3,7 +3,6 @@
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
 import { getAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
-import { openOnboardingSheet } from "../features/landing-onboarding-sheet.js";
 
 export function getRoute() {
   let path = window.location.pathname.replace(/\/$/, "");
@@ -309,8 +308,11 @@ export async function initRouting() {
   const page = await loadPage("landing");
   await page.init(route);
   if (route.openOnboarding) {
-    history.replaceState(null, "", "/" + (window.location.search || ""));
-    requestAnimationFrame(() => openOnboardingSheet());
+    requestAnimationFrame(() => {
+      const input = document.getElementById("landing-etablissement");
+      input?.scrollIntoView({ behavior: "smooth", block: "center" });
+      input?.focus();
+    });
   }
   syncWhatsappFabVisibility();
   return null;

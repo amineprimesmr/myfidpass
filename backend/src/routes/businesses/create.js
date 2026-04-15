@@ -10,6 +10,7 @@ import {
   updateBusiness,
   getBusinessBySlug,
   canCreateBusiness,
+  getBusinessesByUserId,
   bumpBusinessPassRefreshTimestamp,
   getPassKitPushTokensForBusiness,
 } from "../../db.js";
@@ -19,6 +20,62 @@ import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const businessAssetsDir = join(__dirname, "..", "..", "assets", "businesses");
+
+function registerSlugFromName(name) {
+  let s = String(name || "commerce")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  s = s.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return s.slice(0, 48) || "commerce";
+}
+
+function createFirstBusinessFromSelection({
+  userId,
+  establishmentName,
+  placeId,
+  locationAddress = null,
+  locationLat = null,
+  locationLng = null,
+}) {
+  const cleanName = String(establishmentName || "").trim();
+  const cleanPlaceId = String(placeId || "").trim();
+  if (!cleanName || !cleanPlaceId) {
+    return { error: "Sélection établissement invalide" };
+  }
+  if (getBusinessesByUserId(userId).length > 0) {
+    return { error: "Un établissement existe déjà pour ce compte", code: "business_already_exists" };
+  }
+  let baseSlug = registerSlugFromName(cleanName);
+  let slug = baseSlug;
+  let suffix = 0;
+  while (getBusinessBySlug(slug)) {
+    suffix += 1;
+    slug = `${baseSlug}-${suffix}`.slice(0, 60);
+  }
+  const business = createBusiness({
+    name: cleanName,
+    slug,
+    organizationName: cleanName,
+    userId,
+  });
+  updateBusiness(business.id, {
+    location_address: locationAddress ? String(locationAddress).trim() : null,
+    location_lat: locationLat == null || locationLat === "" ? null : Number(locationLat),
+    location_lng: locationLng == null || locationLng === "" ? null : Number(locationLng),
+    engagement_rewards: {
+      google_review: {
+        enabled: true,
+        points: 50,
+        place_id: cleanPlaceId,
+        require_approval: false,
+        auto_verify_enabled: true,
+      },
+    },
+  });
+  return { business };
+}
 
 export function createHandler(req, res) {
   const {
@@ -100,6 +157,39 @@ export function createHandler(req, res) {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Erreur création entreprise" });
+  }
+}
+
+export function bootstrapFromPlaceHandler(req, res) {
+  const body = req.body || {};
+  const establishmentName = String(body.establishment_name || body.establishmentName || "").trim();
+  const placeId = String(body.google_place_id || body.googlePlaceId || body.place_id || "").trim();
+  if (!establishmentName || !placeId) {
+    return res.status(400).json({
+      error: "Sélectionnez votre établissement pour finaliser votre compte.",
+      code: "missing_establishment",
+    });
+  }
+  try {
+    const result = createFirstBusinessFromSelection({
+      userId: req.user.id,
+      establishmentName,
+      placeId,
+      locationAddress: body.location_address || body.locationAddress || null,
+      locationLat: body.location_lat ?? body.locationLat ?? null,
+      locationLng: body.location_lng ?? body.locationLng ?? null,
+    });
+    if (result.error) {
+      const status = result.code === "business_already_exists" ? 409 : 400;
+      return res.status(status).json({ error: result.error, code: result.code || "invalid_business_setup" });
+    }
+    return res.status(201).json({
+      business: result.business,
+      businesses: getBusinessesByUserId(req.user.id),
+    });
+  } catch (e) {
+    console.error("Bootstrap first business error:", e);
+    return res.status(500).json({ error: "Impossible de créer l'établissement." });
   }
 }
 

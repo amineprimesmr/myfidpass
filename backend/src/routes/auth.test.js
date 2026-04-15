@@ -6,23 +6,34 @@ describe("Auth API", () => {
   // Mot de passe >= 12 caractères (nouvelle politique)
   const testEmail = `test-${Date.now()}@example.com`;
   const testPassword = "password123456"; // 14 chars ✓
+  const selectedEstablishment = {
+    google_place_id: `place-${Date.now()}`,
+    establishment_name: "Test User Shop",
+  };
 
   it("POST /api/auth/register with valid body returns 201 and token", async () => {
     const res = await request(app)
       .post("/api/auth/register")
       .set("Content-Type", "application/json")
-      .send({ email: testEmail, password: testPassword, name: "Test User" });
+      .send({
+        email: testEmail,
+        password: testPassword,
+        name: "Test User",
+        ...selectedEstablishment,
+      });
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty("token");
     expect(res.body).toHaveProperty("user");
     expect(res.body.user.email).toBe(testEmail);
+    expect(Array.isArray(res.body.businesses)).toBe(true);
+    expect(res.body.requires_business_setup).toBe(false);
   });
 
   it("POST /api/auth/register with duplicate email returns 409", async () => {
     const res = await request(app)
       .post("/api/auth/register")
       .set("Content-Type", "application/json")
-      .send({ email: testEmail, password: testPassword });
+      .send({ email: testEmail, password: testPassword, ...selectedEstablishment });
     expect(res.status).toBe(409);
     expect(res.body.error).toBeDefined();
   });
@@ -41,10 +52,25 @@ describe("Auth API", () => {
     const res = await request(app)
       .post("/api/auth/register")
       .set("Content-Type", "application/json")
-      .send({ email: `short-pwd-${Date.now()}@example.com`, password: "short123" });
+      .send({
+        email: `short-pwd-${Date.now()}@example.com`,
+        password: "short123",
+        google_place_id: `place-short-${Date.now()}`,
+        establishment_name: "Short Password Shop",
+      });
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Validation");
     expect(res.body.details?.password).toBeDefined();
+  });
+
+  it("POST /api/auth/register without selected establishment returns 400", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .set("Content-Type", "application/json")
+      .send({ email: `no-biz-${Date.now()}@example.com`, password: testPassword });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Validation");
+    expect(res.body.details?.google_place_id).toBeDefined();
   });
 
   it("POST /api/auth/login with wrong password returns 401", async () => {

@@ -47,6 +47,9 @@ const passwordSchema = z
   .min(12, "Le mot de passe doit contenir au moins 12 caractères")
   .max(128, "Mot de passe trop long (128 caractères max)");
 
+const optionalPlaceIdSchema = z.string().trim().max(300).optional().nullable();
+const optionalEstablishmentNameSchema = z.string().trim().max(100).optional().nullable();
+
 export const schemas = {
 
   // POST /auth/register
@@ -54,10 +57,27 @@ export const schemas = {
     email: emailSchema,
     password: passwordSchema,
     name: z.string().trim().max(100, "Nom trop long (100 caractères max)").optional().nullable(),
-    google_place_id: z.string().max(300).optional().nullable(),
-    googlePlaceId: z.string().max(300).optional().nullable(),
-    establishment_name: z.string().trim().max(100).optional().nullable(),
-    establishmentName: z.string().trim().max(100).optional().nullable(),
+    google_place_id: optionalPlaceIdSchema,
+    googlePlaceId: optionalPlaceIdSchema,
+    establishment_name: optionalEstablishmentNameSchema,
+    establishmentName: optionalEstablishmentNameSchema,
+  }).superRefine((data, ctx) => {
+    const placeId = String(data.google_place_id || data.googlePlaceId || "").trim();
+    const establishmentName = String(data.establishment_name || data.establishmentName || "").trim();
+    if (!placeId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["google_place_id"],
+        message: "Sélectionnez votre établissement avant de créer votre compte.",
+      });
+    }
+    if (!establishmentName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["establishment_name"],
+        message: "Le nom de l'établissement est requis.",
+      });
+    }
   }),
 
   // POST /auth/login

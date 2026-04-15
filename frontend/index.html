@@ -54,7 +54,6 @@
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
-    <link rel="stylesheet" href="/src/landing-onboarding-sheet.css" />
     <link rel="stylesheet" href="/src/landing-testimonials-faq.css" />
     <link rel="stylesheet" href="/src/landing-footer.css" />
     <link rel="stylesheet" href="/src/fidelity-qr-game-layout-force.css" />
@@ -192,7 +191,9 @@
         </div>
         <div id="auth-form-register" class="auth-form-block hidden">
           <h1 class="auth-title">Créer un compte</h1>
-          <p class="auth-subtitle">Rejoignez Myfidpass et créez vos cartes en quelques minutes. Gratuit.</p>
+          <p class="auth-subtitle">Choisissez d’abord votre établissement, puis créez votre compte commerçant.</p>
+          <p id="auth-register-establishment" class="auth-success-msg hidden"></p>
+          <p class="auth-hint">Offre de lancement : profitez de 1 € pendant 1 mois.</p>
           <form id="auth-register-form" class="auth-form">
             <label class="auth-label" for="auth-register-email">Email</label>
             <div class="auth-input-wrap">
@@ -208,6 +209,9 @@
             <button type="submit" class="auth-btn-primary">Créer mon compte</button>
             <p class="auth-mini-switch-wrap">
               <button type="button" id="auth-show-login" class="auth-mini-switch-btn">Déjà un compte ? Connexion</button>
+            </p>
+            <p class="auth-mini-switch-wrap">
+              <a href="/creer-ma-carte" id="auth-register-change-establishment" class="auth-mini-switch-btn">Changer d’établissement</a>
             </p>
           </form>
         </div>
@@ -267,8 +271,8 @@
           <article class="offers-card offers-card-featured">
             <h2 class="offers-card-title">Myfidpass</h2>
             <p class="offers-card-desc">Carte de fidélité, tableau de bord, accès logiciel, application Myfidpass. Sans engagement : 24 h d’accès complet pour tout découvrir, puis abonnement.</p>
-            <p class="offers-card-price"><span class="offers-card-amount">49 €</span> / mois</p>
-            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Choisir — 49 €/mois</button>
+            <p class="offers-card-price"><span class="offers-card-amount">1 €</span> le 1er mois, puis 49 € / mois</p>
+            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Profiter de 1 € pendant 1 mois</button>
           </article>
         </div>
       </main>
@@ -345,15 +349,14 @@
             <p id="app-empty-load-error" class="app-message error hidden" role="alert"></p>
             <p id="app-empty-load-error-detail" class="app-empty-load-detail hidden" role="status"></p>
             <div id="app-empty-welcome" class="app-empty-welcome">
-              <h1 class="app-empty-title">Aucune carte pour l’instant</h1>
-              <p class="app-empty-text">Créez votre première carte de fidélité (Apple Wallet et Google Wallet). Nom et lien sont modifiables plus tard dans « Ma carte ».</p>
+              <h1 class="app-empty-title">Configuration établissement requise</h1>
+              <p class="app-empty-text">Votre compte existe, mais aucun établissement n’est encore rattaché. Sélectionnez votre commerce pour débloquer l’espace pro.</p>
               <form id="app-empty-create-form" class="app-empty-form">
-                <label class="app-label" for="app-empty-name">Nom de l’établissement</label>
+                <input type="hidden" id="app-empty-place-id" value="" />
+                <label class="app-label" for="app-empty-name">Établissement</label>
                 <input type="text" id="app-empty-name" class="app-input" placeholder="ex. Café NBK" autocomplete="organization" required />
-                <label class="app-label" for="app-empty-slug">Votre lien (pour la page carte et le QR)</label>
-                <input type="text" id="app-empty-slug" class="app-input app-input-slug" placeholder="cafe-nbk" autocomplete="off" />
-                <p class="app-hint">Vos clients iront sur : …/fidelity/<strong id="app-empty-slug-preview">votre-lien</strong></p>
-                <button type="submit" class="app-btn app-btn-primary app-empty-cta">Créer ma carte</button>
+                <p class="app-hint">Choisissez votre établissement dans les suggestions Google pour finaliser votre compte.</p>
+                <button type="submit" class="app-btn app-btn-primary app-empty-cta">Rattacher mon établissement</button>
                 <p id="app-empty-create-error" class="app-message error hidden"></p>
               </form>
             </div>
@@ -2304,21 +2307,6 @@
       </div>
 
       <!-- Bottom sheet onboarding (drawer depuis le bas) -->
-      <div id="landing-onboarding-sheet" class="landing-onboarding-sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="landing-onboarding-sheet-title">
-        <div class="landing-onboarding-sheet-backdrop" id="landing-onboarding-sheet-backdrop"></div>
-        <div class="landing-onboarding-sheet-drawer">
-          <div class="landing-onboarding-sheet-header">
-            <div class="landing-onboarding-sheet-header-row">
-              <button type="button" class="landing-onboarding-sheet-back" id="landing-onboarding-sheet-back" aria-label="Retour">←</button>
-              <h2 id="landing-onboarding-sheet-title" class="landing-onboarding-sheet-title">Créer ma carte</h2>
-              <div id="landing-onboarding-sheet-progress" class="landing-onboarding-sheet-progress"></div>
-            </div>
-          </div>
-          <div class="landing-onboarding-sheet-body" id="landing-onboarding-sheet-body">
-            <div id="landing-onboarding-sheet-onboarding"></div>
-          </div>
-        </div>
-      </div>
 
       <!-- Image bannière hero. Déposer hero.jpg ou hero.png dans public/assets/banner/ (voir README). -->
       <div class="site-banner-media hero-unloaded" id="site-banner-media">
