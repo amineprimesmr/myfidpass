@@ -1848,6 +1848,38 @@
   justify-content: flex-end;
 }
 
+/* CTA hero : même bloc shiny qu’« Ajouter à Apple Wallet » (espace client) */
+.landing-hero-shiny-cta-wrap {
+  margin-top: 0;
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;
+}
+
+.landing-hero-shiny-cta-wrap:has(.landing-hero-shiny-submit:disabled) {
+  animation: none;
+}
+
+.landing-hero-shiny-submit {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid transparent;
+  width: auto;
+  min-width: min(100%, 17.5rem);
+}
+
+.landing-hero-shiny-submit:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+  filter: saturate(0.65);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-shiny-cta-wrap {
+    animation: none !important;
+  }
+}
+
 .landing-hero-helper {
   font-size: 0.85rem;
   color: var(--landing-muted);
@@ -5879,9 +5911,14 @@ body.page-checkout .site-banner { display: none !important; }
     min-width: 0;
   }
 
-  .landing-hero-form-row .landing-hero-cta .landing-btn-hero {
+  .landing-hero-form-row .landing-hero-cta .landing-hero-shiny-submit {
     width: 100%;
+    min-width: 0;
     box-sizing: border-box;
+  }
+
+  .landing-hero-shiny-cta-wrap {
+    width: 100%;
   }
 
   .landing-hero-input-wrap {
