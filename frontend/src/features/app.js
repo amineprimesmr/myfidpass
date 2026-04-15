@@ -3902,10 +3902,40 @@ function initAppDashboard(slug) {
     return d <= 1 ? "1 jour restant" : `${d} jours restants`;
   }
 
+  function formatMerchantTrialEndingHeadline(isoEnd) {
+    const endMs = Date.parse(isoEnd);
+    if (!Number.isFinite(endMs)) return "L’essai prend fin bientôt";
+    const secs = (endMs - Date.now()) / 1000;
+    if (secs <= 0) return "L’essai est terminé";
+    if (secs < 60) return "L’essai prend fin dans moins d’1 min";
+    if (secs < 3600) {
+      const m = Math.floor(secs / 60);
+      return `L’essai prend fin dans ${m <= 1 ? "1 min" : `${m} min`}`;
+    }
+    if (secs < 86400) {
+      const h = Math.floor(secs / 3600);
+      return `L’essai prend fin dans ${h <= 1 ? "1 heure" : `${h} heures`}`;
+    }
+    const d = Math.floor(secs / 86400);
+    return `L’essai prend fin dans ${d <= 1 ? "1 jour" : `${d} jours`}`;
+  }
+
   function updateMerchantTrialSubscribePillFromDetail(d) {
     const pill = document.getElementById("app-mobile-trial-subscribe-pill");
     const remainEl = document.getElementById("app-mobile-trial-subscribe-pill-remaining");
-    if (!pill || !remainEl) return;
+    const sidebarCard = document.getElementById("app-sidebar-trial-subscribe-card");
+    const sidebarRemainEl = document.getElementById("app-sidebar-trial-subscribe-remaining");
+    const syncVisibility = (visible) => {
+      if (pill) {
+        pill.classList.toggle("hidden", !visible);
+        pill.setAttribute("aria-hidden", visible ? "false" : "true");
+      }
+      if (sidebarCard) {
+        sidebarCard.classList.toggle("hidden", !visible);
+        sidebarCard.setAttribute("aria-hidden", visible ? "false" : "true");
+      }
+    };
+    if (!pill && !sidebarCard) return;
     const user = d.user || {};
     const isAdmin = !!(user.is_admin ?? user.isAdmin);
     const trialEndRaw = d.merchant_trial_ends_at ?? d.merchantTrialEndsAt ?? null;
@@ -3914,22 +3944,20 @@ function initAppDashboard(slug) {
       window.__fidpassTrialPillTimer = null;
     }
     if (isAdmin || !trialEndRaw) {
-      pill.classList.add("hidden");
-      pill.setAttribute("aria-hidden", "true");
+      syncVisibility(false);
       return;
     }
     const endMs = Date.parse(trialEndRaw);
     if (!Number.isFinite(endMs) || Date.now() >= endMs) {
-      pill.classList.add("hidden");
-      pill.setAttribute("aria-hidden", "true");
+      syncVisibility(false);
       return;
     }
     const tick = () => {
-      remainEl.textContent = formatMerchantTrialRemainingLabel(trialEndRaw);
+      if (remainEl) remainEl.textContent = formatMerchantTrialRemainingLabel(trialEndRaw);
+      if (sidebarRemainEl) sidebarRemainEl.textContent = formatMerchantTrialEndingHeadline(trialEndRaw);
       const t = Date.parse(trialEndRaw);
       if (Number.isFinite(t) && Date.now() >= t) {
-        pill.classList.add("hidden");
-        pill.setAttribute("aria-hidden", "true");
+        syncVisibility(false);
         if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
           clearInterval(window.__fidpassTrialPillTimer);
           window.__fidpassTrialPillTimer = null;
@@ -3940,8 +3968,7 @@ function initAppDashboard(slug) {
     if (typeof window !== "undefined") {
       window.__fidpassTrialPillTimer = setInterval(tick, 30000);
     }
-    pill.classList.remove("hidden");
-    pill.setAttribute("aria-hidden", "false");
+    syncVisibility(true);
   }
 
   const trialPillEl = document.getElementById("app-mobile-trial-subscribe-pill");
@@ -3956,6 +3983,9 @@ function initAppDashboard(slug) {
       }
     });
   }
+  document.getElementById("app-sidebar-trial-subscribe-btn")?.addEventListener("click", () => {
+    window.location.href = "/choisir-offre";
+  });
 
   // Renseigne les infos compte (email, abonnement) à partir de /api/auth/me (événement émis après initAppDashboard)
   window.addEventListener("fidpass-auth-me", (e) => {
