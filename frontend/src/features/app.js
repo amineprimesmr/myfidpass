@@ -941,7 +941,7 @@ function initAppDashboard(slug) {
         dashboardNotifCountEl.textContent = String(newMembers);
         dashboardNotifCountEl.classList.remove("hidden");
       } else {
-        if (notifLabelEl) notifLabelEl.textContent = "Campagnes";
+        if (notifLabelEl) notifLabelEl.textContent = "Notifs";
         dashboardNotifCountEl.classList.add("hidden");
       }
     });
@@ -5736,22 +5736,25 @@ function initAppDashboard(slug) {
         const web = data.webPushCount != null ? data.webPushCount : 0;
         const wallet = data.passKitCount != null ? data.passKitCount : 0;
         if (membersCount > 0 && total === 0) {
-          el.textContent = `${membersCount} membre(s) · aucun appareil prêt pour les notifications pour l’instant.`;
-        } else if (total === 0) {
-          el.textContent = "Aucun appareil enregistré.";
-        } else if (membersCount > 0) {
-          el.textContent = `${membersCount} membre(s) · ${total} appareil(s) pour les envois.`;
-        } else if (wallet > 0 && web > 0) {
-          el.textContent = `${total} appareil(s) (Wallet et navigateur).`;
-        } else if (wallet > 0) {
-          el.textContent = `${total} appareil(s) (Apple Wallet).`;
-        } else {
-          el.textContent = `${total} appareil(s) pour les envois.`;
-        }
-        if (total > 0 || membersCount > 0) el.classList.remove("hidden");
-        else {
-          el.classList.add("hidden");
           el.textContent = "";
+          el.classList.add("hidden");
+        } else {
+          if (total === 0) {
+            el.textContent = "Aucun appareil enregistré.";
+          } else if (membersCount > 0) {
+            el.textContent = `${membersCount} membre(s) · ${total} appareil(s) pour les envois.`;
+          } else if (wallet > 0 && web > 0) {
+            el.textContent = `${total} appareil(s) (Wallet et navigateur).`;
+          } else if (wallet > 0) {
+            el.textContent = `${total} appareil(s) (Apple Wallet).`;
+          } else {
+            el.textContent = `${total} appareil(s) pour les envois.`;
+          }
+          if (total > 0 || membersCount > 0) el.classList.remove("hidden");
+          else {
+            el.classList.add("hidden");
+            el.textContent = "";
+          }
         }
         const hintEl = document.getElementById("app-notifications-members-vs-devices-hint");
         if (hintEl) {

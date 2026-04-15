@@ -73,7 +73,7 @@ const IconProfil = () => (
 const APP_LINKS = [
   { section: "dashboard", href: "#dashboard", label: "Dashboard", icon: IconDashboard },
   { section: "personnaliser", href: "#personnaliser", label: "Ma carte", icon: IconCarte },
-  { section: "notifications", href: "#notifications", label: "Campagnes", icon: IconNotifications },
+  { section: "notifications", href: "#notifications", label: "Notifs", icon: IconNotifications },
   { section: "carte-perimetre", href: "#carte-perimetre", label: "Emplacement", icon: IconMap },
   { section: "membres", href: "#membres", label: "Membres", icon: IconMembres },
   { section: "integration", href: "#integration", label: "Intégration", icon: IconIntegration },
