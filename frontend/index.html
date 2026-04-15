@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="/src/dashboard.css" />
     <link rel="stylesheet" href="/src/auth.css" />
     <link rel="stylesheet" href="/src/app.css" />
+    <link rel="stylesheet" href="/src/app-desktop-topbar.css" />
     <link rel="stylesheet" href="/src/app-member-detail.css" />
     <link rel="stylesheet" href="/src/app-member-detail-profile.css" />
     <link rel="stylesheet" href="/src/app-card-rules.css" />
@@ -280,6 +281,100 @@
 
     <!-- App connectée : interface logiciel (sans bannière ni menu haut) -->
     <div id="app-app" class="hidden app-unified-shell" data-mobile-section="dashboard">
+      <header class="app-desktop-topbar" id="app-desktop-topbar" aria-label="Navigation principale bureau">
+        <div class="app-desktop-topbar__inner">
+          <a href="/" class="app-desktop-topbar__brand" aria-label="Myfidpass — Accueil">
+            <span class="app-desktop-topbar__brand-mark" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </span>
+            <span class="app-desktop-topbar__brand-text">Myfidpass</span>
+          </a>
+          <div class="app-desktop-topbar__search-center">
+            <button type="button" class="app-desktop-topbar__search-trigger" id="app-topbar-search-open" aria-haspopup="dialog" aria-controls="app-topbar-search-dialog">
+              <span class="app-desktop-topbar__search-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
+              <span class="app-desktop-topbar__search-placeholder">Rechercher</span>
+              <span class="app-desktop-topbar__kbd" aria-hidden="true">
+                <kbd class="app-desktop-topbar__key" id="app-topbar-kbd-mod">⌘</kbd>
+                <kbd class="app-desktop-topbar__key">K</kbd>
+              </span>
+            </button>
+          </div>
+          <div class="app-desktop-topbar__actions">
+            <a href="mailto:contact@myfidpass.fr" class="app-desktop-topbar__icon-btn" aria-label="Aide et contact" title="Aide">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke-linecap="round"/></svg>
+            </a>
+            <div class="app-desktop-topbar__dropdown-wrap">
+              <button type="button" class="app-desktop-topbar__icon-btn" id="app-topbar-alerts-btn" aria-expanded="false" aria-haspopup="true" aria-controls="app-topbar-alerts-panel" title="Alertes">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="app-desktop-topbar__panel app-desktop-topbar__panel--alerts" id="app-topbar-alerts-panel" role="menu" hidden>
+                <div class="app-desktop-topbar__panel-head">
+                  <span>Alertes</span>
+                  <span class="app-desktop-topbar__panel-head-actions">
+                    <button type="button" class="app-desktop-topbar__panel-ico" disabled aria-label="Filtrer" title="Bientôt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+                    <button type="button" class="app-desktop-topbar__panel-ico" disabled aria-label="Tout lu" title="Bientôt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></button>
+                  </span>
+                </div>
+                <div class="app-desktop-topbar__panel-empty">
+                  <p>Les alertes concernant votre boutique et votre compte s’afficheront ici.</p>
+                </div>
+              </div>
+            </div>
+            <div class="app-desktop-topbar__dropdown-wrap">
+              <button type="button" class="app-desktop-topbar__store-trigger" id="app-topbar-store-btn" aria-expanded="false" aria-haspopup="true" aria-controls="app-topbar-store-panel">
+                <span class="app-desktop-topbar__store-badge" id="app-topbar-store-initials" aria-hidden="true">MF</span>
+                <span class="app-desktop-topbar__store-name" id="app-topbar-store-name">Mon commerce</span>
+                <span class="app-desktop-topbar__store-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></span>
+              </button>
+              <div class="app-desktop-topbar__panel app-desktop-topbar__panel--store" id="app-topbar-store-panel" role="menu" hidden>
+                <div class="app-desktop-topbar__store-row app-desktop-topbar__store-row--active">
+                  <span class="app-desktop-topbar__store-badge app-desktop-topbar__store-badge--sm" id="app-topbar-menu-store-initials">MF</span>
+                  <span class="app-desktop-topbar__store-row-text" id="app-topbar-menu-store-name">Mon commerce</span>
+                  <svg class="app-desktop-topbar__check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <a href="#profil" class="app-desktop-topbar__store-add" id="app-topbar-store-add-link">
+                  <span class="app-desktop-topbar__plus" aria-hidden="true">+</span>
+                  Gérer l’établissement
+                </a>
+                <hr class="app-desktop-topbar__hr" />
+                <div class="app-desktop-topbar__user-block">
+                  <span class="app-desktop-topbar__user-avatar" id="app-topbar-user-avatar">?</span>
+                  <div class="app-desktop-topbar__user-meta">
+                    <span class="app-desktop-topbar__user-name" id="app-topbar-user-name">Compte</span>
+                    <span class="app-desktop-topbar__user-email" id="app-topbar-user-email-display"></span>
+                  </div>
+                </div>
+                <hr class="app-desktop-topbar__hr" />
+                <button type="button" class="app-desktop-topbar__logout" id="app-topbar-logout-btn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Se déconnecter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="app-topbar-search-root" id="app-topbar-search-root" aria-hidden="true">
+        <div class="app-topbar-search-backdrop" id="app-topbar-search-backdrop"></div>
+        <div class="app-topbar-search-modal" id="app-topbar-search-dialog" role="dialog" aria-modal="true" aria-labelledby="app-topbar-search-title">
+          <h2 class="visually-hidden" id="app-topbar-search-title">Recherche dans l’espace</h2>
+          <div class="app-topbar-search-field-wrap">
+            <span class="app-topbar-search-field-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
+            <input type="search" id="app-topbar-search-input" class="app-topbar-search-input" placeholder="Rechercher" autocomplete="off" aria-autocomplete="list" aria-controls="app-topbar-search-results" />
+            <button type="button" class="app-topbar-search-filter" aria-label="Filtres" title="Bientôt" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+          </div>
+          <div class="app-topbar-search-chips" id="app-topbar-search-chips" role="tablist" aria-label="Filtrer par catégorie"></div>
+          <div class="app-topbar-search-body">
+            <ul class="app-topbar-search-results hidden" id="app-topbar-search-results" role="listbox"></ul>
+            <div class="app-topbar-search-empty" id="app-topbar-search-empty">
+              <div class="app-topbar-search-empty-ico" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+              <p class="app-topbar-search-empty-text" id="app-topbar-search-empty-text">Chercher dans votre espace</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <aside class="app-sidebar" id="app-sidebar">
         <div class="app-sidebar-brand">
           <a href="/" class="app-sidebar-logo" aria-label="Mon commerce">

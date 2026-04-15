@@ -47,6 +47,7 @@ import {
   wireCommerceIosShell,
   setCommerceView,
 } from "./commerce-ios-shell.js";
+import { initAppDesktopTopbar } from "./app-desktop-topbar.js";
 
 /** @typedef {"network"|"server500"|"client"|"parse"|"unknown"|"unexpected"} AppLoadFailKind */
 
@@ -635,6 +636,7 @@ function showAppSection(sectionId) {
 }
 
 let _appSidebarInitialized = false;
+let _appDesktopTopbarInited = false;
 function initAppSidebar() {
   const appRoot = document.getElementById("app-app");
   if (!appRoot) return;
@@ -668,6 +670,10 @@ function initAppSidebar() {
   showAppSection(sectionToShow);
   requestAnimationFrame(() => showAppSection(sectionToShow));
   initAppMobile();
+  if (!_appDesktopTopbarInited) {
+    _appDesktopTopbarInited = true;
+    initAppDesktopTopbar({ showAppSection });
+  }
 }
 
 function initAppMobile() {
