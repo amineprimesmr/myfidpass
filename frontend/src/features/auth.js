@@ -34,6 +34,11 @@ function resolvePostAuthRedirect(authPayload) {
 }
 
 export function initAuthPage(initialTab) {
+  if (initialTab === "register" && !getPendingEstablishment()) {
+    window.location.replace("/");
+    return;
+  }
+
   const formLogin = document.getElementById("auth-form-login");
   const formRegister = document.getElementById("auth-form-register");
   const forgotBlock = document.getElementById("auth-forgot-block");
@@ -148,7 +153,10 @@ export function initAuthPage(initialTab) {
     showAuthForm("login");
   });
 
-  document.getElementById("auth-show-register")?.addEventListener("click", () => showAuthForm("register"));
+  document.getElementById("auth-show-register")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "/";
+  });
   document.getElementById("auth-show-login")?.addEventListener("click", () => showAuthForm("login"));
   registerChangeLink?.addEventListener("click", (e) => {
     e.preventDefault();
