@@ -377,13 +377,7 @@
       </div>
 
       <aside class="app-sidebar" id="app-sidebar">
-        <div class="app-sidebar-brand">
-          <a href="/" class="app-sidebar-logo" aria-label="Accueil">
-            <img id="app-sidebar-business-logo" alt="" class="app-sidebar-logo-img app-sidebar-logo-img--commerce hidden" width="48" height="48" decoding="async">
-            <span id="app-sidebar-logo-fallback" class="app-sidebar-logo-fallback" aria-hidden="true"></span>
-          </a>
-          <span id="app-business-name" class="app-business-name-hidden" aria-hidden="true">Mon espace</span>
-        </div>
+        <span id="app-business-name" class="app-business-name-hidden" aria-hidden="true">Mon espace</span>
         <nav class="app-sidebar-nav" aria-label="Navigation principale">
           <a href="#dashboard" class="app-sidebar-link app-sidebar-link-active" data-section="dashboard">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
@@ -438,8 +432,12 @@
               S’abonner
             </button>
           </div>
-          <p class="app-sidebar-user" id="app-user-email"></p>
-          <button type="button" id="app-logout" class="app-sidebar-logout">Déconnexion</button>
+          <span id="app-user-email" class="visually-hidden" aria-hidden="true"></span>
+          <button type="button" id="app-logout" class="visually-hidden" tabindex="-1" aria-hidden="true">Déconnexion</button>
+          <a href="#profil" class="app-sidebar-link app-sidebar-footer-settings" data-section="profil">
+            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span>
+            <span class="app-sidebar-link-text">Paramètres</span>
+          </a>
         </div>
       </aside>
       <!-- Header mobile (style app) -->

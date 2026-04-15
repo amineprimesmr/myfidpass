@@ -777,69 +777,8 @@ function initAppDashboard(slug) {
     return fetchWithAuth(url, { ...opts, headers });
   };
 
-  const DEFAULT_SIDEBAR_BRAND_SRC = "/assets/icone.png?v=20260416";
-  let sidebarLogoObjectUrl = null;
-  function applySidebarDefaultBrand(img, fallback) {
-    if (fallback) {
-      fallback.textContent = "";
-      fallback.classList.add("hidden");
-    }
-    if (!img) return;
-    if (sidebarLogoObjectUrl) {
-      try {
-        URL.revokeObjectURL(sidebarLogoObjectUrl);
-      } catch (_) {
-        /* ignore */
-      }
-      sidebarLogoObjectUrl = null;
-    }
-    img.src = DEFAULT_SIDEBAR_BRAND_SRC;
-    img.alt = "";
-    img.classList.remove("hidden");
-  }
-  function refreshSidebarBusinessLogo() {
-    const img = document.getElementById("app-sidebar-business-logo");
-    const fallback = document.getElementById("app-sidebar-logo-fallback");
-    if (!img || !fallback) return;
-    const businessLabel = () => {
-      const raw = (document.getElementById("app-business-name")?.textContent || "").trim();
-      const name = raw || "Mon commerce";
-      return name.length > 26 ? `${name.slice(0, 24)}…` : name;
-    };
-    api("/logo?v=" + Date.now())
-      .then((r) => (r.ok ? r.blob() : null))
-      .then((blob) => {
-        if (sidebarLogoObjectUrl) {
-          try {
-            URL.revokeObjectURL(sidebarLogoObjectUrl);
-          } catch (_) {
-            /* ignore */
-          }
-          sidebarLogoObjectUrl = null;
-        }
-        const label = businessLabel();
-        if (blob && blob.size > 0) {
-          sidebarLogoObjectUrl = URL.createObjectURL(blob);
-          img.src = sidebarLogoObjectUrl;
-          img.classList.remove("hidden");
-          img.alt = label;
-          fallback.textContent = "";
-          fallback.classList.add("hidden");
-        } else {
-          applySidebarDefaultBrand(img, fallback);
-        }
-      })
-      .catch(() => {
-        applySidebarDefaultBrand(img, fallback);
-      });
-  }
-
-  (function primeSidebarBrand() {
-    const fb = document.getElementById("app-sidebar-logo-fallback");
-    const img = document.getElementById("app-sidebar-business-logo");
-    applySidebarDefaultBrand(img, fb);
-  })();
-  refreshSidebarBusinessLogo();
+  /** Logo retiré du menu latéral : hook conservé pour les appels existants (profil, Ma carte…). */
+  function refreshSidebarBusinessLogo() {}
 
   const statMembers = document.getElementById("app-stat-members");
   const statPoints = document.getElementById("app-stat-points");
