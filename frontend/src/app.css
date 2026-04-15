@@ -12,7 +12,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   --app-accent: #2563eb;
   --app-accent-hover: #1d4ed8;
   --app-accent-light: rgba(37, 99, 235, 0.12);
-  --app-sidebar-width: 272px;
+  --app-sidebar-width: 234px;
   --app-sidebar-bg: #000;
   --app-sidebar-text: rgba(255, 255, 255, 0.9);
   --app-sidebar-text-muted: rgba(255, 255, 255, 0.55);
@@ -113,7 +113,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 }
 
 .app-sidebar-brand {
-  padding: 0.65rem 1rem 0.75rem;
+  padding: 0.55rem 0.75rem 0.65rem;
   border-bottom: 1px solid var(--app-sidebar-border);
 }
 
@@ -179,15 +179,15 @@ body.page-app .whatsapp-fab { display: none !important; }
 
 .app-sidebar-nav {
   flex: 1;
-  padding: 0.55rem 0.6rem 0.75rem;
+  padding: 0.5rem 0.45rem 0.65rem;
   overflow-y: auto;
 }
 
 .app-sidebar-link {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.48rem 0.85rem;
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem;
   color: var(--app-sidebar-text-muted);
   text-decoration: none;
   font-size: 0.75rem;
@@ -247,7 +247,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-sidebar-link-text { flex: 1; min-width: 0; }
 
 .app-sidebar-footer {
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 0.85rem;
   border-top: 1px solid var(--app-sidebar-border);
 }
 

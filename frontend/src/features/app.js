@@ -777,12 +777,30 @@ function initAppDashboard(slug) {
     return fetchWithAuth(url, { ...opts, headers });
   };
 
+  const DEFAULT_SIDEBAR_BRAND_SRC = "/assets/icone.png?v=20260416";
   let sidebarLogoObjectUrl = null;
+  function applySidebarDefaultBrand(img, fallback) {
+    if (fallback) {
+      fallback.textContent = "";
+      fallback.classList.add("hidden");
+    }
+    if (!img) return;
+    if (sidebarLogoObjectUrl) {
+      try {
+        URL.revokeObjectURL(sidebarLogoObjectUrl);
+      } catch (_) {
+        /* ignore */
+      }
+      sidebarLogoObjectUrl = null;
+    }
+    img.src = DEFAULT_SIDEBAR_BRAND_SRC;
+    img.alt = "";
+    img.classList.remove("hidden");
+  }
   function refreshSidebarBusinessLogo() {
     const img = document.getElementById("app-sidebar-business-logo");
     const fallback = document.getElementById("app-sidebar-logo-fallback");
     if (!img || !fallback) return;
-    const SIDEBAR_BRAND_FALLBACK_TEXT = "Myfidpass";
     const businessLabel = () => {
       const raw = (document.getElementById("app-business-name")?.textContent || "").trim();
       const name = raw || "Mon commerce";
@@ -805,26 +823,21 @@ function initAppDashboard(slug) {
           img.src = sidebarLogoObjectUrl;
           img.classList.remove("hidden");
           img.alt = label;
+          fallback.textContent = "";
           fallback.classList.add("hidden");
         } else {
-          img.removeAttribute("src");
-          img.classList.add("hidden");
-          fallback.textContent = SIDEBAR_BRAND_FALLBACK_TEXT;
-          fallback.classList.remove("hidden");
+          applySidebarDefaultBrand(img, fallback);
         }
       })
       .catch(() => {
-        img.removeAttribute("src");
-        img.classList.add("hidden");
-        fallback.textContent = SIDEBAR_BRAND_FALLBACK_TEXT;
-        fallback.classList.remove("hidden");
+        applySidebarDefaultBrand(img, fallback);
       });
   }
 
-  (function primeSidebarBrandFallback() {
+  (function primeSidebarBrand() {
     const fb = document.getElementById("app-sidebar-logo-fallback");
-    if (!fb) return;
-    fb.textContent = "Myfidpass";
+    const img = document.getElementById("app-sidebar-business-logo");
+    applySidebarDefaultBrand(img, fb);
   })();
   refreshSidebarBusinessLogo();
 

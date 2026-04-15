@@ -106,9 +106,9 @@ export default function AppSidebar() {
     <Sidebar>
       <DesktopSidebar>
           <div className="app-sidebar-brand flex flex-col">
-            <a href="/" className="app-sidebar-logo flex items-center gap-2" aria-label="Myfidpass">
-              <img src="/assets/logo.png?v=20260311" alt="" className="app-sidebar-logo-img h-12 w-12 max-h-12 max-w-[56px] shrink-0 rounded-full object-contain brightness-0 invert" onError={(e) => { e.target.style.display = "none"; e.target.nextElementSibling?.classList.remove("hidden"); }} />
-              <span className="app-sidebar-logo-fallback hidden font-bold text-[var(--app-sidebar-text)]">Myfidpass</span>
+            <a href="/" className="app-sidebar-logo flex items-center gap-2" aria-label="Accueil">
+              <img src="/assets/icone.png?v=20260416" alt="" className="app-sidebar-logo-img h-10 w-10 max-h-10 max-w-[44px] shrink-0 rounded-[10px] object-contain" />
+              <span className="app-sidebar-logo-fallback hidden" aria-hidden="true" />
             </a>
             <span id="app-business-name" className="app-business-name-hidden" aria-hidden="true">
               Mon espace
