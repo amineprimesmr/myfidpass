@@ -129,6 +129,15 @@
   .app-fidelity-client-live-preview-viewport
   .fidelity-v2-roulette-inline--qr
   .fidelity-roulette-wheel-segment
+  .fidelity-roulette-segment-label-anchor:has(.fidelity-roulette-segment-gift-img) {
+  transform: translate(-50%, -31cqmin) !important;
+  transform-origin: 50% 31cqmin !important;
+}
+
+#app-app
+  .app-fidelity-client-live-preview-viewport
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-roulette-wheel-segment
   .fidelity-roulette-segment-label,
 #app-app
   .app-fidelity-client-live-preview-viewport

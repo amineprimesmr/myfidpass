@@ -39,6 +39,18 @@
   animation: fidelity-gift-alive 2.15s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
+/* Parcours QR : cadeaux un peu plus gros et moins collés au bord extérieur (ancre plus vers le centre). */
+.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-segment .fidelity-roulette-segment-label-anchor:has(.fidelity-roulette-segment-gift-img) {
+  transform: translate(-50%, -31vmin);
+  transform-origin: 50% 31vmin;
+}
+
+.fidelity-v2-roulette-inline--qr .fidelity-roulette-segment-gift-img {
+  width: clamp(46px, 16.5vmin, 84px);
+  min-width: 40px;
+  min-height: 40px;
+}
+
 /* Segments décalés : effet de vague sur la roue */
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-segment:nth-child(odd) .fidelity-roulette-segment-gift-img,
 .fidelity-v2-roulette-inline:not(.fidelity-v2-roulette-inline--qr)

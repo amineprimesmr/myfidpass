@@ -310,9 +310,9 @@
  */
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-roulette-segment-gift-img {
-  width: clamp(28px, 11cqmin, 52px) !important;
+  width: clamp(32px, 12.5cqmin, 58px) !important;
   height: auto !important;
-  max-height: clamp(28px, 11cqmin, 52px) !important;
+  max-height: clamp(32px, 12.5cqmin, 58px) !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline .fidelity-roulette-wheel-outer {
