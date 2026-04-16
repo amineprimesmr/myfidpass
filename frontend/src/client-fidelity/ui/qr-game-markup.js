@@ -101,7 +101,7 @@ export function renderQrGamePage(esc, p) {
             <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--spark">+</span>
             <img
               class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--mysterybox"
-              src="/assets/mysterybox.png?v=20260416c"
+              src="/assets/mysterybox.png?v=20260416d"
               alt=""
               width="112"
               height="112"

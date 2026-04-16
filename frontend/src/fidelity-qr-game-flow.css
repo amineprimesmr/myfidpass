@@ -244,7 +244,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   object-fit: contain;
   object-position: center;
   transform: rotate(-12deg);
-  /* PNG avec alpha : pas de fond derrière ; ombre portée côté CSS pour l’intégration au dégradé. */
+  background: transparent;
+  /* PNG avec alpha ; ombre portée côté CSS (pas de carré blanc). */
   filter: drop-shadow(0 16px 28px rgba(88, 28, 135, 0.32))
     drop-shadow(0 6px 14px rgba(15, 23, 42, 0.2));
 }
