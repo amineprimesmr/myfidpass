@@ -57,7 +57,8 @@
   .fidelity-v2-roulette-inline-controls
   .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
   margin-right: -3.15rem !important;
-  transform: translateX(18px) !important;
+  /* translateX évité ici : la secousse CTA utilise transform sur le wrap. */
+  margin-left: 18px !important;
 }
 
 /* Pastille « Jouer la partie » : priorité max (évite min-width:0 + padding serré hérités du flex / roulette-3d). */
@@ -101,7 +102,7 @@
   .fidelity-v2-roulette-inline-controls
   .fidelity-cta-wrap--qr-play.fidelity-cta-wrap--full {
   margin-right: -3.15rem !important;
-  transform: translateX(18px) !important;
+  margin-left: 18px !important;
 }
 
 /*

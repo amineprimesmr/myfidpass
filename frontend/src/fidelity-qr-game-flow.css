@@ -428,7 +428,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   max-width: 100%;
 }
 
-/* Secousse toutes les 5 s (comme le CTA wallet, autre durée) */
+/* Secousse toutes les 5 s sur le wrap (bouton shiny garde ses animations gradient internes). */
 .fidelity-cta-wrap--qr-play-attention {
   animation: fidelity-qr-play-cta-shake 5s ease-in-out infinite;
   transform-origin: center center;
