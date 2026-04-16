@@ -12,11 +12,15 @@ function renderQrLeadTitleMarkup(titleEsc) {
   let line1 = "";
   let line2 = "";
   let pill = "";
+  /** @type {string} */
+  let line1Class = "fidelity-qr-title-line--soft";
 
   if (/^participez au jeu et tentez de gagner une récompense$/i.test(title)) {
-    line1 = "PARTICIPEZ AU JEU ET";
-    line2 = "TENTEZ DE GAGNER UNE";
+    /* 2 lignes visuelles : une ligne de texte + pilule (au lieu de 3 blocs empilés). */
+    line1 = "PARTICIPEZ AU JEU ET TENTEZ DE GAGNER UNE";
+    line2 = "";
     pill = "RECOMPENSE";
+    line1Class = "fidelity-qr-title-line--lead-single";
   } else if (words.length >= 5) {
     pill = String(words.pop() || "").toUpperCase();
     const cut = Math.max(2, Math.ceil(words.length * 0.55));
@@ -28,7 +32,7 @@ function renderQrLeadTitleMarkup(titleEsc) {
   }
 
   return `<span class="fidelity-qr-title-layout">
-    ${line1 ? `<span class="fidelity-qr-title-line fidelity-qr-title-line--soft">${line1}</span>` : ""}
+    ${line1 ? `<span class="fidelity-qr-title-line ${line1Class}">${line1}</span>` : ""}
     ${line2 ? `<span class="fidelity-qr-title-line fidelity-qr-title-line--strong">${line2}</span>` : ""}
     <span class="fidelity-qr-title-pill-wrap">
       <span class="fidelity-qr-title-pill">${pill}</span>
