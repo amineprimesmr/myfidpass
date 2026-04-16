@@ -291,14 +291,17 @@
   padding-bottom: clamp(1rem, 12cqmin, 3.25rem) !important;
   background: transparent !important;
   background-image: none !important;
+  align-items: flex-end !important;
 }
 
-/* Même logique que la page publique : 96×vmin / 100vw → 96×cqmin / 100cqw (voir fidelity-qr-game-flow.css) */
+/* Même logique que la page publique : ancrage bas de zone (voir fidelity-qr-game-flow.css). */
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-  top: 68% !important;
+  top: auto !important;
+  bottom: 0 !important;
   width: min(96cqmin, 100cqw) !important;
   height: min(96cqmin, 100cqw) !important;
-  transform: translate(-28%, -50%) !important;
+  transform: translate(-26%, 0) !important;
+  transform-origin: 50% 100% !important;
 }
 
 /*
