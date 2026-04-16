@@ -866,6 +866,19 @@ router.post("/phone/send-code", validate(schemas.phoneSend), async (req, res) =>
     });
   }
 
+  /** Impossible d’envoyer un SMS vers le même numéro que l’expéditeur Twilio (confusion fréquente en test). */
+  const twilioFromRaw = (process.env.TWILIO_FROM_NUMBER || "").trim();
+  if (twilioFromRaw) {
+    const fromE164 = normalizePhoneE164(twilioFromRaw);
+    if (fromE164 && fromE164 === phoneE164) {
+      return res.status(400).json({
+        error:
+          "Indiquez le téléphone sur lequel vous voulez recevoir le code (votre mobile personnel en 06 ou 07). Vous ne pouvez pas utiliser le même numéro que celui configuré pour envoyer les SMS (numéro Twilio).",
+        code: "sms_destination_same_as_from",
+      });
+    }
+  }
+
   const existing = getPhoneOtpChallenge(phoneE164);
   if (existing?.last_sent_at) {
     const last = Date.parse(existing.last_sent_at);
