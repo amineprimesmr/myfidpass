@@ -585,15 +585,6 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   opacity: 0.52;
 }
 
-main.fidelity-v2-main.fidelity-qr-game
-  .fidelity-v2-roulette-inline--qr
-  .fidelity-shiny-cta--qr-play
-  .fidelity-shiny-cta__gift-emoji {
-  filter: drop-shadow(
-    0 1px 1px color-mix(in srgb, var(--fid-flyer-wheel-odd, #6366f1) 42%, transparent)
-  );
-}
-
 @supports not (background: color-mix(in srgb, red 50%, white)) {
   main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play {
     --shiny-cta-bg: #f3edff;

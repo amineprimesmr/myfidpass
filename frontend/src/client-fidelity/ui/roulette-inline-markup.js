@@ -14,7 +14,6 @@ export function renderRouletteInlineMarkup(esc, p) {
   const wheelBgEsc = esc(buildWheelConicGradient(WHEEL_SEGMENT_COUNT));
   const innerBtn = qr
     ? `<span class="fidelity-shiny-cta__label">
-                <span class="fidelity-shiny-cta__gift-emoji" aria-hidden="true">\u{1F381}</span>
                 <span>Jouer la partie</span>
               </span>`
     : `<span class="fidelity-cta-wheel-line">
