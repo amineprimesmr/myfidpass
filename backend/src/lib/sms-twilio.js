@@ -54,7 +54,48 @@ export async function sendSmsViaTwilio(toE164, body) {
 
   if (!res.ok) {
     const text = await res.text();
-    return { ok: false, error: text.slice(0, 200) || `Twilio HTTP ${res.status}` };
+    return { ok: false, error: text.slice(0, 2000) || `Twilio HTTP ${res.status}` };
   }
   return { ok: true };
+}
+
+/**
+ * Messages lisibles pour l’app / les logs (codes Twilio courants).
+ * @param {string} rawBody — corps JSON ou texte renvoyé par Twilio en cas d’erreur
+ */
+export function friendlyTwilioSendError(rawBody) {
+  const raw = String(rawBody || "").trim();
+  try {
+    const j = JSON.parse(raw);
+    const code = j.code != null ? Number(j.code) : NaN;
+    if (code === 21608 || code === 21614) {
+      return {
+        message:
+          "Compte Twilio en essai : vous ne pouvez envoyer des SMS qu’aux numéros ajoutés comme « numéros vérifiés » dans la console Twilio, ou passez à un compte payant.",
+        twilioCode: code,
+      };
+    }
+    if (code === 21211) {
+      return {
+        message: "Numéro de téléphone invalide ou non pris en charge pour l’envoi SMS.",
+        twilioCode: code,
+      };
+    }
+    if (code === 21610) {
+      return {
+        message: "Ce numéro est sur la liste d’exclusion SMS (STOP) ou ne peut pas recevoir ce message.",
+        twilioCode: code,
+      };
+    }
+    const msg = String(j.message || "").trim();
+    if (msg) {
+      return { message: msg.length > 280 ? `${msg.slice(0, 277)}…` : msg, twilioCode: Number.isNaN(code) ? undefined : code };
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  if (raw.length > 0 && raw.length < 400) {
+    return { message: raw };
+  }
+  return { message: "L’envoi du SMS a échoué (Twilio). Vérifiez le numéro « From », le pays et les logs Twilio." };
 }

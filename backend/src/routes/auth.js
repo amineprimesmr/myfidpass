@@ -38,7 +38,7 @@ import {
   incrementPhoneOtpAttempts,
 } from "../db/phone-otp.js";
 import { normalizePhoneE164 } from "../lib/phone-e164.js";
-import { sendSmsViaTwilio, isTwilioConfigured } from "../lib/sms-twilio.js";
+import { sendSmsViaTwilio, isTwilioConfigured, friendlyTwilioSendError } from "../lib/sms-twilio.js";
 import { requireAuth, getJwtSecret } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
@@ -893,7 +893,10 @@ router.post("/phone/send-code", validate(schemas.phoneSend), async (req, res) =>
     const sent = await sendSmsViaTwilio(phoneE164, msg);
     if (!sent.ok) {
       console.error("[phone/send-code] Twilio:", sent.error);
-      return res.status(502).json({ error: "L'envoi du SMS a échoué. Réessayez." });
+      const { message, twilioCode } = friendlyTwilioSendError(sent.error);
+      const payload = { error: message };
+      if (twilioCode != null) payload.twilio_code = twilioCode;
+      return res.status(502).json(payload);
     }
   } else {
     console.warn(`[phone/send-code] SMS non configuré — code pour ${phoneE164} : ${code}`);
