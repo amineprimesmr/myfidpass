@@ -61,18 +61,35 @@ export async function deliverCustomerBroadcast({
   sendMerchantReceipt = true,
   touchMemberLastVisit = true,
 }) {
-  const webSubscriptions =
+  const webSubscriptionsRaw =
     memberIds !== null && memberIds.length > 0
       ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
       : memberIds !== null && memberIds.length === 0
         ? []
         : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
-  const passKitTokens =
+  const passKitTokensRaw =
     memberIds !== null && memberIds.length > 0
       ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
       : memberIds !== null && memberIds.length === 0
         ? []
         : getPassKitPushTokensForBusiness(business.id);
+
+  /** Filet de sécurité si le SQL d’exclusion Web Push a raté (UUID, casse, etc.). */
+  const passKitMemberKeys = new Set(
+    passKitTokensRaw.map((r) => String(r.serial_number ?? "").trim().toLowerCase()).filter(Boolean)
+  );
+  const webSubscriptions = webSubscriptionsRaw.filter((w) => {
+    const mid = String(w.member_id ?? "").trim().toLowerCase();
+    return !passKitMemberKeys.has(mid);
+  });
+
+  const pushTokenSeen = new Set();
+  const passKitTokens = passKitTokensRaw.filter((r) => {
+    const t = String(r.push_token ?? "").trim();
+    if (!t || pushTokenSeen.has(t)) return false;
+    pushTokenSeen.add(t);
+    return true;
+  });
 
   if (webSubscriptions.length === 0 && passKitTokens.length === 0) {
     return {

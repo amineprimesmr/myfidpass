@@ -6042,6 +6042,7 @@ function initAppDashboard(slug) {
     notifyAppSectionSaveSuccess("notifications");
   });
 
+  let notificationSendInFlight = false;
   document.getElementById("app-notification-texts-send")?.addEventListener("click", async () => {
     const titleEl = document.getElementById("app-notification-banner-title");
     const messageEl = document.getElementById("app-notification-banner-message");
@@ -6049,6 +6050,7 @@ function initAppDashboard(slug) {
     const notifFeedbackEl = document.getElementById("app-notif-feedback");
     const btn = document.getElementById("app-notification-texts-send");
     const targetCategories = document.getElementById("app-notif-target-categories");
+    if (notificationSendInFlight) return;
     const message = messageEl?.value?.trim();
     if (!message) {
       if (notifFeedbackEl) {
@@ -6071,10 +6073,12 @@ function initAppDashboard(slug) {
         return;
       }
     }
+    notificationSendInFlight = true;
     if (btn) btn.disabled = true;
     if (textsFeedbackEl) textsFeedbackEl.classList.add("hidden");
     if (notifFeedbackEl) notifFeedbackEl.classList.add("hidden");
     clearNotifTextsAutoSaveTimer();
+    try {
     const savedOk = await runNotificationTextsAutoSave();
     /* Ne pas bloquer l’envoi si le PATCH settings échoue (session, réseau) : POST /notifications/send
      * applique quand même le message (setLastBroadcastMessage) et les pushes. */
@@ -6085,7 +6089,6 @@ function initAppDashboard(slug) {
         "Enregistrement des textes impossible — envoi de la campagne quand même. Vérifie la connexion ou réessaie.";
     }
 
-    try {
       const res = await api("/notifications/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -6141,6 +6144,7 @@ function initAppDashboard(slug) {
         notifFeedbackEl.classList.add("error");
       }
     }
+    notificationSendInFlight = false;
     if (btn) btn.disabled = false;
   });
 

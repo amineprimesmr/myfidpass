@@ -74,12 +74,13 @@
   .fidelity-shiny-cta--qr-play {
   width: max-content !important;
   max-width: min(100%, 580px) !important;
-  min-width: min(100%, 18rem) !important;
+  min-width: min(100%, 22rem) !important;
   flex-shrink: 0 !important;
-  padding: 0.72rem 2.35rem !important;
+  padding: 0.72rem 2.65rem !important;
   min-height: 3.45rem !important;
   line-height: 1.2 !important;
   box-sizing: border-box !important;
+  white-space: nowrap !important;
 }
 
 /* Aperçu dashboard : mêmes valeurs avec la chaîne #app-app (bat la feuille app-fidelity-client-page) */

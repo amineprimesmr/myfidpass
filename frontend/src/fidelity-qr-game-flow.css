@@ -539,13 +539,14 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
     inset 0 0 0 1px color-mix(in srgb, var(--fid-flyer-wheel-odd, #6366f1) 22%, transparent),
     0 2px 14px color-mix(in srgb, var(--fid-flyer-wheel-even, #a78bfa) 14%, transparent);
   width: auto !important;
-  min-width: min(100%, 18rem) !important;
+  min-width: min(100%, 22rem) !important;
   max-width: min(100%, 580px);
   box-sizing: border-box;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  padding: 0.72rem 2.35rem !important;
+  padding: 0.72rem 2.65rem !important;
+  white-space: nowrap;
   min-height: 3.45rem !important;
   font-size: clamp(1rem, 2.8vw, 1.12rem);
   font-weight: 600;

@@ -14,11 +14,13 @@ const PASSKIT_TEST_DEVICE_ID = "test-device-123";
  * pour la même campagne (sinon double bannière : une PWA/Safari + une Wallet, souvent avec deux icônes).
  */
 function sqlExcludeMembersWithPassKit(alias = "w") {
+  /* Comparaison normalisée : évite Web Push + Wallet pour le même membre si UUID diffère
+   * par casse / espaces (données historiques ou clients hors chemin standard). */
   return `NOT EXISTS (
     SELECT 1 FROM pass_registrations pr
-    INNER JOIN members m ON m.id = pr.serial_number
+    INNER JOIN members m ON LOWER(TRIM(m.id)) = LOWER(TRIM(pr.serial_number))
     WHERE m.business_id = ${alias}.business_id
-      AND pr.serial_number = ${alias}.member_id
+      AND LOWER(TRIM(CAST(pr.serial_number AS TEXT))) = LOWER(TRIM(CAST(${alias}.member_id AS TEXT)))
       AND pr.push_token IS NOT NULL AND TRIM(pr.push_token) != ''
       AND pr.device_library_identifier != '${PASSKIT_TEST_DEVICE_ID}'
   )`;
