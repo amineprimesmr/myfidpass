@@ -18,6 +18,20 @@ describe("normalizeFlyerPrefsPut", () => {
     expect(r.value.state.socialUrl1).toBeUndefined();
     expect(r.value.state.headline).toBe("X");
   });
+
+  it("refuse un custom_bg_data_url invalide au lieu d’écraser silencieusement le fond", () => {
+    const existing = JSON.stringify({
+      state: { headline: "H" },
+      custom_bg_data_url: "data:image/png;base64,QUJD",
+      custom_logo_data_url: null,
+    });
+    const r = normalizeFlyerPrefsPut(
+      { custom_bg_data_url: "not-a-data-url" },
+      existing,
+    );
+    expect(r.ok).toBe(false);
+    expect(r.error).toMatch(/Image de fond invalide/);
+  });
 });
 
 describe("mergeFlyerPrefsWheelColorsFromGeneration", () => {

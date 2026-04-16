@@ -16,9 +16,7 @@ import {
   buildFlyerImagePromptBackgroundOnly,
   multimodalForFlyerBackgroundOnly,
   openaiGenerateFlyerImage,
-  resolveFlyerColorPlan,
 } from "../services/flyer-ai-image.js";
-import { mergeFlyerPrefsWheelColorsFromGeneration } from "../lib/flyer-prefs.js";
 import logger from "../lib/logger.js";
 
 const db = getDb();
@@ -111,9 +109,15 @@ function markJobFailed(jobId, errorText) {
  * @param {Record<string, unknown>} resultObj
  */
 function markJobDone(jobId, resultObj) {
+  const b64 = resultObj && typeof resultObj.image_base64 === "string" ? resultObj.image_base64.trim() : "";
+  if (!b64) {
+    markJobFailed(jobId, "Génération terminée sans image valide (réponse interne invalide).");
+    logger.error({ jobId }, "[flyer-gen-job] markJobDone refusé : image_base64 vide");
+    return;
+  }
   db.prepare(
     `UPDATE flyer_generation_jobs SET status = 'done', completed_at = ?, result_json = ? WHERE id = ?`,
-  ).run(new Date().toISOString(), JSON.stringify(resultObj), jobId);
+  ).run(new Date().toISOString(), JSON.stringify({ ...resultObj, image_base64: b64 }), jobId);
 }
 
 /**
@@ -216,23 +220,11 @@ export async function processFlyerGenerationJob(jobId) {
     const elapsedMs = Date.now() - t0;
     logger.info({ jobId, elapsedMs }, "[flyer-gen-job] openai finished");
 
-    const colorPlan = resolveFlyerColorPlan(parsed.value);
-    // Re-lire le commerce après OpenAI (30–90 s) : un PUT « Valider le flyer », un logo, etc. peut avoir
-    // mis à jour `flyer_prefs_json` pendant l’appel. Fusionner sur un snapshot périmé écrasait fond + logo.
-    business = syncFlyerAiBillingMonth(getBusinessById(business.id));
-    if (!business) {
-      markJobFailed(jobId, "Commerce introuvable.");
-      return;
-    }
-    const prefsMerged = mergeFlyerPrefsWheelColorsFromGeneration(
-      business.flyer_prefs_json,
-      colorPlan.primary,
-      colorPlan.secondary,
-    );
-    updateBusiness(business.id, {
-      flyer_prefs_json: prefsMerged,
-      flyer_prefs_updated_at: new Date().toISOString(),
-    });
+    // Ne pas écrire `flyer_prefs_json` / `flyer_prefs_updated_at` ici : l’image PNG n’est pas encore dans les
+    // prefs (elle arrive via polling puis PUT app). Une mise à jour serveur des seules couleurs de roue
+    // faisait passer le commerce en « flyer enregistré » côté app (state ≠ défaut) alors que le fond IA
+    // et le logo n’étaient pas encore sauvegardés — état vide après redémarrage.
+    // Les teintes sont appliquées côté client dans `applyFlyerGenerationResult` puis enregistrées avec le fond.
 
     if (unlimited || devBypass) {
       markJobDone(jobId, {

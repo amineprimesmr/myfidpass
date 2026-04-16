@@ -94,8 +94,21 @@ export function normalizeFlyerPrefsPut(body, existingFlyerPrefsJson) {
 
   let custom_bg_data_url = prevBg;
   if (hasBgKey) {
-    custom_bg_data_url =
-      typeof bgRaw === "string" && bgRaw.startsWith("data:image/") && bgRaw.length < 6 * 1024 * 1024 ? bgRaw : null;
+    if (bgRaw === null || bgRaw === undefined) {
+      custom_bg_data_url = null;
+    } else if (
+      typeof bgRaw === "string" &&
+      bgRaw.startsWith("data:image/") &&
+      bgRaw.length < 6 * 1024 * 1024
+    ) {
+      custom_bg_data_url = bgRaw;
+    } else {
+      return {
+        ok: false,
+        error:
+          "Image de fond invalide ou trop volumineuse (data URL image, max. 6 Mo). Le fond précédent est conservé si vous réessayez.",
+      };
+    }
   }
 
   const value = { state, custom_logo_data_url, custom_bg_data_url };
