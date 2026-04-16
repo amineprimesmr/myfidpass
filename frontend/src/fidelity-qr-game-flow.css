@@ -713,6 +713,14 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   overflow-x: visible;
 }
 
+/* Libellé blanc : le thème peut définir --fid-flyer-cta-text sombre sur la pastille. */
+.fidelity-qr-modal--google .fidelity-qr-modal-cta .fidelity-cta-pill--qr-play,
+.fidelity-qr-modal--google .fidelity-qr-modal-cta .fidelity-cta-pill--qr-play:visited,
+.fidelity-qr-modal--google .fidelity-qr-modal-cta .fidelity-cta-pill--qr-play .fidelity-cta-wheel-action,
+.fidelity-qr-modal--google .fidelity-qr-modal-cta .fidelity-cta-pill--qr-play .fidelity-cta-pill-chevron {
+  color: #fff !important;
+}
+
 .fidelity-qr-modal-root.fidelity-qr-modal-root--open .fidelity-qr-modal:not(.hidden) {
   transform: translateY(0) scale(1);
   opacity: 1;
