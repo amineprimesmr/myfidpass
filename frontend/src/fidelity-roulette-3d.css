@@ -341,7 +341,7 @@
   flex: 0 0 auto;
 }
 
-/* Parcours QR : .fidelity-cta-pill--qr-play a son propre padding dans fidelity-qr-game-flow.css */
+/* Parcours QR : le CTA roulette utilise .fidelity-shiny-cta--qr-play (voir fidelity-qr-game-flow.css). */
 .fidelity-v2-roulette-inline .fidelity-cta-pill--wheel-cta:not(.fidelity-cta-pill--qr-play) {
   min-height: 2.65rem;
   padding: 0.48rem 0.85rem !important;

@@ -64,19 +64,19 @@
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game)
   .fidelity-v2-roulette-inline--qr
   .fidelity-cta-wrap--full.fidelity-cta-wrap--qr-play
-  .fidelity-cta-pill--qr-play,
+  .fidelity-shiny-cta--qr-play,
 #app-app
   .app-fidelity-client-live-preview-viewport
   #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
   .fidelity-v2-roulette-inline--qr
   .fidelity-cta-wrap--full.fidelity-cta-wrap--qr-play
-  .fidelity-cta-pill--qr-play {
+  .fidelity-shiny-cta--qr-play {
   width: max-content !important;
   max-width: min(100%, 460px) !important;
   flex-shrink: 0 !important;
-  padding: 0.58rem 2.1rem !important;
-  min-height: 3.4rem !important;
-  line-height: 1.18 !important;
+  padding: 0.72rem 1.25rem !important;
+  min-height: 3.45rem !important;
+  line-height: 1.2 !important;
   box-sizing: border-box !important;
 }
 

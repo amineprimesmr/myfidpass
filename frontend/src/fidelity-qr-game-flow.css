@@ -423,11 +423,20 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   box-shadow: none !important;
 }
 
-.fidelity-cta-wrap--qr-play .fidelity-cta-pill--qr-play {
+/* Même wrap que missions, sans marge hero (1rem) — contrôle roulette gère l’espacement. */
+.fidelity-v2-roulette-inline--qr .fidelity-earn-points-cta-wrap {
+  margin: 0;
+  width: auto;
+  max-width: 100%;
+}
+
+.fidelity-cta-wrap--qr-play .fidelity-cta-pill--qr-play,
+.fidelity-cta-wrap--qr-play .fidelity-shiny-cta--qr-play {
   position: relative;
   z-index: 1;
 }
 
+/* Modales QR + liens : pastille dégradée (le bouton roulette utilise .fidelity-shiny-cta--qr-play). */
 .fidelity-cta-pill--qr-play {
   --fid-qr-play-primary: var(--fid-flyer-wheel-odd, #18181b);
   --fid-qr-play-secondary: var(--fid-flyer-wheel-even, #f3f4f6);
@@ -453,20 +462,22 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 }
 
 /*
- * Pastille « Jouer la partie » sur la roue : style.css impose width:100% sur
- * .fidelity-page .fidelity-cta-wrap--full .fidelity-cta-pill — on cible uniquement
- * le bouton dans main (pas les modales QR, hors du main).
+ * Bouton « Jouer la partie » : même UX que « Gagner plus de points » (shiny + --missions-gift).
+ * style.css impose width:100% sur .fidelity-cta-wrap--full .fidelity-cta-pill — le shiny est hors pill.
  */
-main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
+main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play {
   width: auto !important;
   min-width: 0 !important;
   max-width: min(100%, 420px);
-  padding-left: 2.1rem !important;
-  padding-right: 2.1rem !important;
-  padding-top: 0.58rem !important;
-  padding-bottom: 0.58rem !important;
-  min-height: 3.45rem !important;
   box-sizing: border-box;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 1.35rem !important;
+  min-height: 3.45rem !important;
+  font-size: clamp(1rem, 2.8vw, 1.12rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 main.fidelity-v2-main.fidelity-qr-game
