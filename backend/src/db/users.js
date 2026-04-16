@@ -22,6 +22,32 @@ export function getUserByEmail(email) {
   return row || null;
 }
 
+/** Connexion / inscription par numéro (E.164). */
+export function getUserByPhoneE164(phoneE164) {
+  const norm = String(phoneE164 ?? "").trim();
+  if (!norm) return null;
+  const row = db.prepare("SELECT * FROM users WHERE phone_e164 = ?").get(norm);
+  return row || null;
+}
+
+/**
+ * Compte créé uniquement avec le téléphone : e-mail technique unique, mot de passe aléatoire (non utilisé).
+ */
+export function createUserWithPhone({ phoneE164, name }) {
+  const id = randomUUID();
+  const emailLocal = `${String(phoneE164).replace(/^\+/, "")}@phone.myfidpass.internal`;
+  const randomPwd = randomUUID() + randomUUID();
+  const passwordHash = bcrypt.hashSync(randomPwd, 10);
+  db.prepare("INSERT INTO users (id, email, password_hash, name, phone_e164) VALUES (?, ?, ?, ?, ?)").run(
+    id,
+    emailLocal,
+    passwordHash,
+    name || null,
+    phoneE164,
+  );
+  return getUserById(id);
+}
+
 export function getUserById(id) {
   const row = db.prepare("SELECT * FROM users WHERE id = ?").get(id);
   return row || null;

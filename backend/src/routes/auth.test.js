@@ -134,4 +134,44 @@ describe("Auth API", () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Validation");
   });
+
+  it("POST /api/auth/phone/send-code then verify creates session (OTP test = 123456)", async () => {
+    const phone = `06${String(Date.now()).slice(-8)}`;
+    const est = {
+      google_place_id: `place-phone-${Date.now()}`,
+      establishment_name: "Boutique Téléphone Test",
+    };
+
+    const send = await request(app)
+      .post("/api/auth/phone/send-code")
+      .set("Content-Type", "application/json")
+      .send({ phone });
+    expect(send.status).toBe(200);
+    expect(send.body.ok).toBe(true);
+
+    const verify = await request(app)
+      .post("/api/auth/phone/verify")
+      .set("Content-Type", "application/json")
+      .send({ phone, code: "123456", ...est });
+    expect(verify.status).toBe(201);
+    expect(verify.body.token).toBeDefined();
+    expect(verify.body.user?.phone).toMatch(/^\+33/);
+    expect(verify.body.requires_business_setup).toBe(false);
+  });
+
+  it("POST /api/auth/phone/verify without establishment returns 400", async () => {
+    const phone = `07${String(Date.now() + 1).slice(-8)}`;
+    const send = await request(app)
+      .post("/api/auth/phone/send-code")
+      .set("Content-Type", "application/json")
+      .send({ phone });
+    expect(send.status).toBe(200);
+
+    const verify = await request(app)
+      .post("/api/auth/phone/verify")
+      .set("Content-Type", "application/json")
+      .send({ phone, code: "123456" });
+    expect(verify.status).toBe(400);
+    expect(verify.body.code).toBe("missing_establishment");
+  });
 });

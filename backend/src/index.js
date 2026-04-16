@@ -206,6 +206,8 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
+app.use("/api/auth/phone/send-code", authLimiter);
+app.use("/api/auth/phone/verify", authLimiter);
 
 const placesSearchLimiter = rateLimit({
   windowMs: 60 * 1000,

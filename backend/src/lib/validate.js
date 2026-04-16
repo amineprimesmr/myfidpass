@@ -122,6 +122,26 @@ export const schemas = {
     { message: "Fournir au moins : points, amount_eur ou visit" }
   ),
 
+  /** POST /auth/phone/send-code */
+  phoneSend: z.object({
+    phone: z
+      .string({ required_error: "Numéro requis" })
+      .min(8, "Numéro trop court")
+      .max(32, "Numéro trop long"),
+  }),
+
+  /** POST /auth/phone/verify — établissement requis seulement à la création de compte (contrôlé côté route). */
+  phoneVerify: z.object({
+    phone: z.string({ required_error: "Numéro requis" }).min(8).max(32),
+    code: z
+      .string({ required_error: "Code requis" })
+      .regex(/^\d{6}$/, "Code à 6 chiffres"),
+    google_place_id: optionalPlaceIdSchema,
+    googlePlaceId: optionalPlaceIdSchema,
+    establishment_name: optionalEstablishmentNameSchema,
+    establishmentName: optionalEstablishmentNameSchema,
+  }),
+
   // POST /businesses (création)
   createBusiness: z.object({
     name: z.string({ required_error: "Nom requis" }).trim().min(1, "Nom requis").max(100, "Nom trop long"),

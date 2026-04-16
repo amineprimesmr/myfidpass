@@ -1062,4 +1062,26 @@ export function runMigrations(db) {
       "CREATE INDEX IF NOT EXISTS idx_notification_log_business_member_created ON notification_log(business_id, member_id, created_at DESC)",
     ),
   );
+
+  // ── v23 : authentification par téléphone (OTP SMS) ──
+  markMigrationApplied(db, 23, "phone_auth_otp");
+  const userColsPhone = db.prepare("PRAGMA table_info(users)").all().map((c) => c.name);
+  if (!userColsPhone.includes("phone_e164")) {
+    safeRun(db, () => db.exec("ALTER TABLE users ADD COLUMN phone_e164 TEXT"));
+  }
+  safeRun(db, () =>
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS phone_otp_challenges (
+      phone_e164 TEXT PRIMARY KEY,
+      code_hash TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      last_sent_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `),
+  );
+  safeRun(db, () =>
+    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_e164 ON users(phone_e164) WHERE phone_e164 IS NOT NULL"),
+  );
 }

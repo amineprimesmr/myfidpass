@@ -3,9 +3,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { randomUUID, createPublicKey } from "crypto";
 import { OAuth2Client } from "google-auth-library";
+import { createHmac, randomInt, timingSafeEqual } from "crypto";
 import {
   createUser,
+  createUserWithPhone,
   getUserByEmail,
+  getUserByPhoneE164,
   getUserById,
   getBusinessesByUserId,
   getSubscriptionByUserId,
@@ -28,6 +31,14 @@ import {
   deleteUserRefreshTokens,
   cleanExpiredRefreshTokens,
 } from "../db.js";
+import {
+  upsertPhoneOtpChallenge,
+  getPhoneOtpChallenge,
+  deletePhoneOtpChallenge,
+  incrementPhoneOtpAttempts,
+} from "../db/phone-otp.js";
+import { normalizePhoneE164 } from "../lib/phone-e164.js";
+import { sendSmsViaTwilio, isTwilioConfigured } from "../lib/sms-twilio.js";
 import { requireAuth, getJwtSecret } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
@@ -94,6 +105,7 @@ function authUserPayload(user) {
     id: user.id,
     email: user.email,
     name: user.name,
+    phone: user.phone_e164 ?? null,
     is_admin: isUserAdmin(user),
   };
 }
@@ -830,6 +842,143 @@ router.post("/logout", (req, res) => {
     deleteRefreshToken(token);
   }
   return res.json({ ok: true });
+});
+
+// ── Téléphone + OTP SMS (app commerçant) ───────────────────────────────────
+
+const PHONE_OTP_MAX_ATTEMPTS = 5;
+const PHONE_SEND_COOLDOWN_SEC = 60;
+
+function hashPhoneOtp(phoneE164, code) {
+  const secret = process.env.PHONE_OTP_HMAC_SECRET || process.env.JWT_SECRET || "local-dev-only";
+  return createHmac("sha256", secret).update(`${phoneE164}:${code}`).digest("hex");
+}
+
+/**
+ * POST /api/auth/phone/send-code
+ */
+router.post("/phone/send-code", validate(schemas.phoneSend), async (req, res) => {
+  const rawPhone = req.body.phone;
+  const phoneE164 = normalizePhoneE164(rawPhone);
+  if (!phoneE164) {
+    return res.status(400).json({
+      error: "Numéro invalide. Utilisez un mobile français (06 ou 07) ou un numéro au format international (+33…).",
+    });
+  }
+
+  const existing = getPhoneOtpChallenge(phoneE164);
+  if (existing?.last_sent_at) {
+    const last = Date.parse(existing.last_sent_at);
+    if (!Number.isNaN(last) && Date.now() - last < PHONE_SEND_COOLDOWN_SEC * 1000) {
+      return res.status(429).json({ error: `Attendez ${PHONE_SEND_COOLDOWN_SEC} secondes avant un nouvel envoi.` });
+    }
+  }
+
+  const code =
+    process.env.NODE_ENV === "test"
+      ? "123456"
+      : String(randomInt(100000, 999999));
+  const codeHash = hashPhoneOtp(phoneE164, code);
+  const expires = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  const now = new Date().toISOString();
+  upsertPhoneOtpChallenge(phoneE164, codeHash, expires, now);
+
+  const isProd = process.env.NODE_ENV === "production";
+  if (isProd && !isTwilioConfigured()) {
+    return res.status(503).json({ error: "Envoi SMS temporairement indisponible." });
+  }
+
+  if (isTwilioConfigured()) {
+    const msg = `MyFidpass : votre code de connexion est ${code}. Il expire dans 5 minutes.`;
+    const sent = await sendSmsViaTwilio(phoneE164, msg);
+    if (!sent.ok) {
+      console.error("[phone/send-code] Twilio:", sent.error);
+      return res.status(502).json({ error: "L'envoi du SMS a échoué. Réessayez." });
+    }
+  } else {
+    console.warn(`[phone/send-code] SMS non configuré — code pour ${phoneE164} : ${code}`);
+  }
+
+  return res.json({ ok: true });
+});
+
+/**
+ * POST /api/auth/phone/verify
+ * Compte existant : connexion. Sinon : création si établissement (lieu) fourni — même règle que l’inscription e-mail.
+ */
+router.post("/phone/verify", validate(schemas.phoneVerify), async (req, res) => {
+  const rawPhone = req.body.phone;
+  const code = String(req.body.code || "").trim();
+  const phoneE164 = normalizePhoneE164(rawPhone);
+  if (!phoneE164) {
+    return res.status(400).json({ error: "Numéro de téléphone invalide." });
+  }
+
+  const row = getPhoneOtpChallenge(phoneE164);
+  if (!row) {
+    return res.status(400).json({ error: "Aucun code en attente. Demandez un nouveau code." });
+  }
+  if (Date.parse(row.expires_at) < Date.now()) {
+    deletePhoneOtpChallenge(phoneE164);
+    return res.status(400).json({ error: "Code expiré. Demandez un nouveau code." });
+  }
+  if ((row.attempts || 0) >= PHONE_OTP_MAX_ATTEMPTS) {
+    deletePhoneOtpChallenge(phoneE164);
+    return res.status(429).json({ error: "Trop de tentatives. Demandez un nouveau code." });
+  }
+
+  const expected = row.code_hash;
+  const got = hashPhoneOtp(phoneE164, code);
+  let a;
+  let b;
+  try {
+    a = Buffer.from(expected, "hex");
+    b = Buffer.from(got, "hex");
+  } catch {
+    incrementPhoneOtpAttempts(phoneE164);
+    return res.status(401).json({ error: "Code incorrect." });
+  }
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    incrementPhoneOtpAttempts(phoneE164);
+    return res.status(401).json({ error: "Code incorrect." });
+  }
+
+  deletePhoneOtpChallenge(phoneE164);
+
+  let user = getUserByPhoneE164(phoneE164);
+  const establishmentSelection = normalizeEstablishmentSelection(req.body || {});
+
+  if (user) {
+    const { accessToken, refreshToken } = issueTokenPair(user.id);
+    return res.json({
+      ...buildAuthSuccessPayload(user),
+      token: accessToken,
+      refreshToken,
+    });
+  }
+
+  if (!hasSelectedEstablishment(establishmentSelection)) {
+    return respondMissingEstablishment(res);
+  }
+
+  try {
+    user = createUserWithPhone({ phoneE164, name: null });
+  } catch (e) {
+    console.error("[phone/verify] createUserWithPhone:", e);
+    return res.status(409).json({ error: "Ce numéro est déjà utilisé. Connectez-vous avec le code." });
+  }
+
+  const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
+  if (businessState.requires_business_setup) {
+    return respondMissingEstablishment(res);
+  }
+
+  const { accessToken, refreshToken } = issueTokenPair(user.id);
+  return res.status(201).json({
+    ...buildAuthSuccessPayload(user),
+    token: accessToken,
+    refreshToken,
+  });
 });
 
 export default router;
