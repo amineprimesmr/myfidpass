@@ -333,6 +333,7 @@ export function bindQrGameUi(ctx) {
     mysteryFloatEl = clone;
     clone.addEventListener("click", onMysteryFloatClick);
     clone.addEventListener("keydown", onMysteryFloatKeydown);
+    if (typeof el.blur === "function") el.blur();
     el.classList.add("fidelity-qr-mysterybox--ghost");
     el.setAttribute("aria-hidden", "true");
     el.setAttribute("tabindex", "-1");

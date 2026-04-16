@@ -249,7 +249,10 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  /* PNG avec alpha ; ombre portée côté CSS (pas de carré blanc). */
+}
+
+/* Ombres uniquement quand l’image est visible (évite calque résiduel une fois en .ghost). */
+.fidelity-qr-hero-decor-chip--mysterybox:not(.fidelity-qr-mysterybox--ghost) {
   filter: drop-shadow(0 16px 28px rgba(88, 28, 135, 0.32))
     drop-shadow(0 6px 14px rgba(15, 23, 42, 0.2));
 }
@@ -260,12 +263,9 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   border-radius: 12px;
 }
 
-/* Original caché pendant le jeu : pas de halo / filtre résiduel (clone déplacé à part). */
+/* Original hors rendu : plus de cadre ni ombre résiduelle (Safari / drop-shadow + calques). */
 .fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--ghost {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  filter: none !important;
+  display: none !important;
 }
 
 /* Clone flottant : micro-sauts rapides via transform (qr-game-flow.js), pas d’orbite CSS. */
