@@ -263,7 +263,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   border-radius: 12px;
 }
 
-/* Original hors rendu : plus de cadre ni ombre résiduelle (Safari / drop-shadow + calques). */
+/* Secours si .ghost sans retrait DOM (parcours normal : l’img est retirée du DOM dans qr-game-flow.js). */
 .fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--ghost {
   display: none !important;
 }

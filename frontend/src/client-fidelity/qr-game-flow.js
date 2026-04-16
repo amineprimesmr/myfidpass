@@ -246,8 +246,16 @@ export function bindQrGameUi(ctx) {
   const claimForm = rootEl.querySelector("#fidelity-qr-claim-form");
   const backdrop = rootEl.querySelector('[data-fid-qr-close="backdrop"]');
 
-  /** Clone déplacé au-dessus de la page ; l’image d’origine reste en place mais invisible (pas de « carré »). */
+  /** Clone flottant ; l’original est retiré du DOM pendant le jeu (zéro fantôme d’ombre WebKit). */
   let mysteryFloatEl = null;
+
+  function restoreMysteryBoxInHero() {
+    const mb = mysteryBox;
+    if (!(mb instanceof HTMLElement) || mb.parentNode) return;
+    const decor = rootEl.querySelector(".fidelity-qr-hero-decor");
+    const anchor = decor?.querySelector(".fidelity-qr-hero-decor-chip--mini");
+    if (decor && anchor) decor.insertBefore(mb, anchor);
+  }
 
   function disposeMysteryFloat() {
     if (mysteryFloatEl?.parentNode) {
@@ -256,6 +264,7 @@ export function bindQrGameUi(ctx) {
       mysteryFloatEl.remove();
     }
     mysteryFloatEl = null;
+    restoreMysteryBoxInHero();
     if (mysteryBox instanceof HTMLElement) {
       mysteryBox.classList.remove("fidelity-qr-mysterybox--ghost");
       mysteryBox.removeAttribute("aria-hidden");
@@ -287,9 +296,9 @@ export function bindQrGameUi(ctx) {
     const maxTx = vw - margin - w - baseL;
     const minTy = margin - baseT;
     const maxTy = vh - margin - h - baseT;
-    /* Saut net : distance angulaire (plus loin, plus lisible qu’un petit bruit x/y). */
-    const minDist = reduced ? 28 : 88;
-    const maxDist = reduced ? 56 : 165 + Math.random() * 115;
+    /* Saut net : distance angulaire — volontairement large (demande produit). */
+    const minDist = reduced ? 44 : 130;
+    const maxDist = reduced ? 96 : 260 + Math.random() * 180;
     const dist = minDist + Math.random() * (maxDist - minDist);
     const angle = Math.random() * Math.PI * 2;
     let tx = curTx + Math.cos(angle) * dist;
@@ -348,10 +357,11 @@ export function bindQrGameUi(ctx) {
     clone.addEventListener("click", onMysteryFloatClick);
     clone.addEventListener("keydown", onMysteryFloatKeydown);
     if (typeof el.blur === "function") el.blur();
-    el.classList.add("fidelity-qr-mysterybox--ghost");
     el.setAttribute("aria-hidden", "true");
     el.setAttribute("tabindex", "-1");
     el.setAttribute("aria-pressed", "true");
+    /* Retrait du DOM : plus aucun calque / drop-shadow à l’ancienne position (Safari). */
+    el.remove();
     globalThis.requestAnimationFrame(() => {
       nudgeMysteryFloat();
     });
