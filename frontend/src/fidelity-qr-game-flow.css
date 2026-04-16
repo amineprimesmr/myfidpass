@@ -3,7 +3,7 @@
 html.fidpass-fidelity-route:has(main.fidelity-qr-game),
 body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   overflow-x: hidden;
-  background: #f8fafc;
+  background: linear-gradient(180deg, #eef3ff 0%, #e7eefc 42%, #dbe8ff 100%);
 }
 
 /* Shell #fidelity-app : colonne ; hauteur min viewport, contenu peut grandir pour ne pas rogner la roue */
@@ -29,6 +29,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 .fidpass-fidelity-route .fidelity-qr-game,
 .fidelity-page .fidelity-qr-game {
   /* Le fond (::before) remplit jusqu’au statut barre ; le contenu respecte l’encoche ici. */
+  position: relative;
+  isolation: isolate;
   padding-top: 0;
   padding-bottom: 0.2rem;
   padding-left: max(1rem, env(safe-area-inset-left, 0px));
@@ -37,55 +39,246 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   overflow-x: visible;
 }
 
+.fidpass-fidelity-route .fidelity-qr-game::before,
+.fidelity-page .fidelity-qr-game::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(173, 140, 255, 0.22) 0%, transparent 18%),
+    radial-gradient(circle at 78% 82%, rgba(98, 162, 255, 0.24) 0%, transparent 24%),
+    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0) 58%),
+    linear-gradient(180deg, #eff4ff 0%, #e8f0ff 40%, #dfeaff 100%);
+}
+
+.fidpass-fidelity-route .fidelity-qr-game::after,
+.fidelity-page .fidelity-qr-game::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.26;
+  background-image:
+    radial-gradient(rgba(15, 23, 42, 0.08) 0.7px, transparent 0.7px),
+    radial-gradient(rgba(255, 255, 255, 0.42) 0.9px, transparent 0.9px);
+  background-position: 0 0, 18px 18px;
+  background-size: 24px 24px, 36px 36px;
+  pointer-events: none;
+}
+
 .fidelity-qr-hero {
   text-align: center;
-  padding: max(0.35rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-left, 0px)) 0.35rem
+  padding: max(0.2rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-left, 0px)) 0.1rem
     max(1rem, env(safe-area-inset-right, 0px));
   box-sizing: border-box;
 }
 
 .fidelity-qr-brand {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 0;
+  gap: 0.12rem;
   width: 100%;
   max-width: 100%;
 }
 
-/* Même lecture que le flyer composé : logo large, centré, sans pastille « icône app ». */
 .fidelity-qr-logo {
   display: block;
-  width: min(88vw, 20rem);
+  width: min(48vw, 8.5rem);
   max-width: 100%;
   height: auto;
-  max-height: min(28vw, 9.5rem);
+  max-height: min(12vw, 2.85rem);
   object-fit: contain;
   object-position: center top;
   border-radius: 0;
   box-shadow: none;
   flex-shrink: 0;
-  margin: 0 auto 0.35rem;
+  margin: 0 auto 0.2rem;
 }
 
 .fidelity-qr-logo--hidden {
   display: none !important;
 }
 
-/* Titre unique : accroche lisible (marge réduite pour tenir sans scroll sur petits écrans) */
 .fidelity-qr-title--lead {
-  margin: clamp(0.65rem, 3.5vw, 1.75rem) 0 0;
-  font-size: clamp(1.22rem, 4.6vw, 1.95rem);
+  position: relative;
+  margin: clamp(0.25rem, 2vw, 0.9rem) 0 0;
+  font-size: 1rem;
   font-weight: 800;
-  letter-spacing: -0.032em;
-  line-height: 1.28;
-  color: #0f172a;
-  max-width: min(22rem, calc(100vw - 2rem));
+  line-height: 1;
+  color: #020617;
+  max-width: min(25rem, calc(100vw - 1.4rem));
   margin-left: auto;
   margin-right: auto;
-  padding: 0 0.25rem;
+  padding: 0 0.15rem;
   box-sizing: border-box;
+}
+
+.fidelity-qr-title-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.2rem, 1.6vw, 0.5rem);
+}
+
+.fidelity-qr-title-line {
+  display: block;
+  text-transform: uppercase;
+  text-wrap: balance;
+  line-height: 0.94;
+}
+
+.fidelity-qr-title-line--soft {
+  font-size: clamp(2rem, 8vw, 3.3rem);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+}
+
+.fidelity-qr-title-line--strong {
+  font-size: clamp(2.1rem, 8.5vw, 3.55rem);
+  font-weight: 900;
+  letter-spacing: -0.075em;
+}
+
+.fidelity-qr-title-pill-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding-top: clamp(0.05rem, 0.8vw, 0.22rem);
+}
+
+.fidelity-qr-title-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(3.7rem, 12vw, 5.4rem);
+  padding: clamp(0.62rem, 2vw, 1rem) clamp(1.5rem, 5vw, 2.8rem);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 247, 251, 0.96) 100%);
+  box-shadow:
+    0 4px 10px rgba(255, 255, 255, 0.78) inset,
+    0 12px 22px rgba(15, 23, 42, 0.16),
+    0 6px 14px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  font-size: clamp(1.9rem, 7.2vw, 3.15rem);
+  font-weight: 500;
+  letter-spacing: -0.07em;
+  line-height: 0.95;
+  transform: rotate(-2.8deg);
+  transform-origin: center;
+}
+
+.fidelity-qr-hero-decor {
+  position: absolute;
+  inset: auto 0 auto 0;
+  top: clamp(2.9rem, 12vw, 4.8rem);
+  pointer-events: none;
+}
+
+.fidelity-qr-hero-decor-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.fidelity-qr-hero-decor-chip--cube {
+  left: clamp(0rem, 2vw, 0.7rem);
+  top: clamp(8rem, 26vw, 10rem);
+  width: clamp(2.8rem, 12vw, 4.5rem);
+  height: clamp(2.8rem, 12vw, 4.5rem);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #cfb3ff 0%, #8b5cf6 56%, #6d28d9 100%);
+  color: rgba(255, 255, 255, 0.96);
+  font-size: clamp(1.45rem, 5.6vw, 2.1rem);
+  font-weight: 900;
+  box-shadow:
+    0 14px 30px rgba(88, 28, 135, 0.28),
+    inset 0 2px 10px rgba(255, 255, 255, 0.32);
+  transform: rotate(-12deg);
+}
+
+.fidelity-qr-hero-decor-chip--spark {
+  right: clamp(1.2rem, 5vw, 2.8rem);
+  top: clamp(1.9rem, 9vw, 3.1rem);
+  color: rgba(255, 255, 255, 0.96);
+  font-size: clamp(1.25rem, 4.8vw, 1.9rem);
+  font-weight: 700;
+  text-shadow: 0 4px 12px rgba(255, 255, 255, 0.42);
+  transform: rotate(18deg);
+}
+
+.fidelity-qr-hero-decor-chip--mini {
+  right: clamp(0.2rem, 3vw, 1.4rem);
+  top: clamp(7.9rem, 28vw, 9.6rem);
+  width: clamp(0.8rem, 3vw, 1.1rem);
+  height: clamp(0.8rem, 3vw, 1.1rem);
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(191, 219, 254, 0.85) 100%);
+  box-shadow: 0 0 20px rgba(147, 197, 253, 0.7);
+}
+
+.fidelity-qr-hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(18px);
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.fidelity-qr-hero-orb--top {
+  top: clamp(1.2rem, 5vw, 2rem);
+  right: clamp(1.5rem, 7vw, 4rem);
+  width: clamp(4rem, 18vw, 6.5rem);
+  height: clamp(4rem, 18vw, 6.5rem);
+  background: radial-gradient(circle, rgba(196, 181, 253, 0.75) 0%, rgba(196, 181, 253, 0) 72%);
+}
+
+.fidelity-qr-hero-orb--bottom {
+  left: clamp(2rem, 9vw, 4.2rem);
+  top: clamp(11rem, 34vw, 14rem);
+  width: clamp(5rem, 22vw, 7.5rem);
+  height: clamp(5rem, 22vw, 7.5rem);
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.38) 0%, rgba(96, 165, 250, 0) 74%);
+}
+
+@media (max-width: 480px) {
+  .fidelity-qr-hero {
+    padding-top: max(0.15rem, env(safe-area-inset-top, 0px));
+  }
+
+  .fidelity-qr-logo {
+    width: min(42vw, 7rem);
+    max-height: 2.25rem;
+  }
+
+  .fidelity-qr-title--lead {
+    max-width: min(21rem, calc(100vw - 1rem));
+  }
+
+  .fidelity-qr-title-pill {
+    min-height: 3.45rem;
+    padding-left: 1.2rem;
+    padding-right: 1.2rem;
+  }
+
+  .fidelity-qr-hero-decor-chip--cube {
+    left: -0.15rem;
+    top: 7.3rem;
+  }
+
+  .fidelity-qr-hero-decor-chip--spark {
+    right: 0.7rem;
+    top: 1.55rem;
+  }
+
+  .fidelity-qr-hero-orb--bottom {
+    top: 9.8rem;
+  }
 }
 
 .fidelity-qr-title.fidelity-qr-title--thanks {
@@ -101,13 +294,13 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 }
 
 .fidelity-v2-roulette-inline--qr {
-  margin-top: 3.75rem;
+  margin-top: 2.2rem;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: visible;
-  padding-bottom: clamp(1.35rem, 8vmin, 2.75rem);
+  padding-bottom: clamp(1.6rem, 9vmin, 3.1rem);
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {

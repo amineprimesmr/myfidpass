@@ -3,6 +3,40 @@
  */
 
 /**
+ * @param {string} titleEsc
+ * @returns {string}
+ */
+function renderQrLeadTitleMarkup(titleEsc) {
+  const title = String(titleEsc || "").trim().replace(/\.$/, "");
+  const words = title.split(/\s+/).filter(Boolean);
+  let line1 = "";
+  let line2 = "";
+  let pill = "";
+
+  if (/^participez au jeu et tentez de gagner une récompense$/i.test(title)) {
+    line1 = "PARTICIPEZ AU JEU ET";
+    line2 = "TENTEZ DE GAGNER UNE";
+    pill = "RECOMPENSE";
+  } else if (words.length >= 5) {
+    pill = String(words.pop() || "").toUpperCase();
+    const cut = Math.max(2, Math.ceil(words.length * 0.55));
+    line1 = words.slice(0, cut).join(" ").toUpperCase();
+    line2 = words.slice(cut).join(" ").toUpperCase();
+  } else {
+    line1 = words.slice(0, -1).join(" ").toUpperCase();
+    pill = String(words.at(-1) || title).toUpperCase();
+  }
+
+  return `<span class="fidelity-qr-title-layout">
+    ${line1 ? `<span class="fidelity-qr-title-line fidelity-qr-title-line--soft">${line1}</span>` : ""}
+    ${line2 ? `<span class="fidelity-qr-title-line fidelity-qr-title-line--strong">${line2}</span>` : ""}
+    <span class="fidelity-qr-title-pill-wrap">
+      <span class="fidelity-qr-title-pill">${pill}</span>
+    </span>
+  </span>`;
+}
+
+/**
  * @param {(s: string) => string} esc
  * @param {object} p
  */
@@ -41,9 +75,16 @@ export function renderQrGamePage(esc, p) {
     <main class="fidelity-v2-main fidelity-qr-game">
       <section class="fidelity-qr-hero" aria-label="Jeu">
         <div class="fidelity-qr-brand">
+          <div class="fidelity-qr-hero-orb fidelity-qr-hero-orb--top" aria-hidden="true"></div>
+          <div class="fidelity-qr-hero-orb fidelity-qr-hero-orb--bottom" aria-hidden="true"></div>
           ${qrLogo || ""}
+          <div class="fidelity-qr-hero-decor" aria-hidden="true">
+            <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--spark">+</span>
+            <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--cube">?</span>
+            <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--mini"></span>
+          </div>
           <h1 class="${heroTitleClass}" id="fidelity-qr-hero-title">
-            <span class="fidelity-qr-hero-title-inner">${heroTitleEsc}</span>
+            <span class="fidelity-qr-hero-title-inner">${qrThanksHeroMode ? heroTitleEsc : renderQrLeadTitleMarkup(heroTitleEsc)}</span>
           </h1>
           <p id="fidelity-qr-hero-success" class="fidelity-qr-hero-success${heroSuccessClass}" role="status" aria-live="polite">
             <span class="fidelity-qr-hero-success-check" aria-hidden="true">✓</span>
