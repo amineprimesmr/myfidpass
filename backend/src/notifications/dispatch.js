@@ -2,8 +2,8 @@
  * Pipeline unique d’envoi client : Web Push + PassKit + accusé app commerçant (APNs).
  */
 import {
-  getWebPushSubscriptionsByBusinessFiltered,
-  getWebPushSubscriptionsByBusiness,
+  getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners,
+  getWebPushSubscriptionsByBusinessExcludingPassKitOwners,
   getPassKitPushTokensForBusinessFiltered,
   getPassKitPushTokensForBusiness,
   getBusinessById,
@@ -63,10 +63,10 @@ export async function deliverCustomerBroadcast({
 }) {
   const webSubscriptions =
     memberIds !== null && memberIds.length > 0
-      ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
       : memberIds !== null && memberIds.length === 0
         ? []
-        : getWebPushSubscriptionsByBusiness(business.id);
+        : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
   const passKitTokens =
     memberIds !== null && memberIds.length > 0
       ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
@@ -86,12 +86,8 @@ export async function deliverCustomerBroadcast({
     };
   }
 
-  // Déduplique : un membre qui a déjà un token PassKit ne reçoit pas aussi un Web Push
-  // pour la même campagne (évite la double notification avec deux icônes différentes).
-  const passKitMemberIds = new Set(passKitTokens.map((r) => r.serial_number).filter(Boolean));
-  const webSubscriptionsDeduped = passKitMemberIds.size > 0
-    ? webSubscriptions.filter((sub) => !passKitMemberIds.has(sub.member_id))
-    : webSubscriptions;
+  // Web Push : déjà filtré en SQL (voir getWebPushSubscriptionsByBusiness*ExcludingPassKitOwners) :
+  // un membre avec Apple Wallet actif ne reçoit pas aussi la PWA/Safari pour la même campagne.
 
   // Titre d’envoi optionnel → `notification_title_override` (stable). Le corps de campagne ne doit pas
   // écraser `notification_change_message` : voir `sync-notification-texts-for-campaign.js`.
@@ -126,7 +122,7 @@ export async function deliverCustomerBroadcast({
   const errors = [];
 
   const webPushResults = await Promise.all(
-    webSubscriptionsDeduped.map(async (sub) => {
+    webSubscriptions.map(async (sub) => {
       try {
         await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
         logNotification({

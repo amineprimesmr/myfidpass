@@ -28,7 +28,7 @@ export function renderRouletteInlineMarkup(esc, p) {
   return `
       <section class="fidelity-v2-roulette-inline ${qr ? "fidelity-v2-roulette-inline--qr" : ""}" id="fidelity-v2-roulette-block" aria-label="Roulette">
         <div class="fidelity-v2-roulette-inline-controls">
-          <span class="fidelity-cta-wrap fidelity-cta-wrap--full ${qr ? "fidelity-cta-wrap--qr-play fidelity-earn-points-cta-wrap" : ""}">
+          <span class="fidelity-cta-wrap fidelity-cta-wrap--full ${qr ? "fidelity-cta-wrap--qr-play fidelity-earn-points-cta-wrap fidelity-cta-wrap--qr-play-attention" : ""}">
             <button
               id="fidelity-v2-spin-btn"
               class="${qr ? "fidelity-shiny-cta fidelity-shiny-cta--missions-gift fidelity-shiny-cta--qr-play" : "fidelity-cta-pill fidelity-cta-pill--wheel-cta"}"

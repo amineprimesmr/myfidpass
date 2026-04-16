@@ -8,6 +8,8 @@ import {
   getMemberIdsBySegment,
   getWebPushSubscriptionsByBusiness,
   getWebPushSubscriptionsByBusinessFiltered,
+  getWebPushSubscriptionsByBusinessExcludingPassKitOwners,
+  getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners,
   getPassKitPushTokensForBusiness,
   getPassKitPushTokensForBusinessFiltered,
   getPassKitRegistrationsCountForBusiness,
@@ -92,8 +94,8 @@ export async function notifyHandler(req, res) {
 
   const webSubscriptions =
     memberIds !== null
-      ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
-      : getWebPushSubscriptionsByBusiness(business.id);
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
+      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
   const passKitTokens =
     memberIds !== null
       ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
@@ -156,8 +158,8 @@ router.post("/send", async (req, res) => {
   const slug = req.params.slug ?? business.slug;
   const webSubscriptions =
     memberIds !== null
-      ? getWebPushSubscriptionsByBusinessFiltered(business.id, memberIds)
-      : getWebPushSubscriptionsByBusiness(business.id);
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
+      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
   const passKitTokens =
     memberIds !== null
       ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
