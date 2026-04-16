@@ -125,6 +125,10 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   position: relative;
   width: auto !important;
   max-width: 100%;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .fidelity-cta-wrap--qr-play .fidelity-cta-pill--qr-play {
@@ -132,20 +136,24 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   z-index: 1;
 }
 
-.fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta) {
-  min-width: min(100%, 300px);
-  padding-left: 1.75rem !important;
-  padding-right: 1.75rem !important;
-  background: linear-gradient(180deg, #4f46e5 0%, #4338ca 55%, #312e81 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.35) !important;
-  /* box-shadow animé dans fidelity-wheel-gift.css (évite conflit !important) */
-}
-
-.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta {
-  min-width: min(100%, 300px);
-  padding-left: 1.45rem !important;
-  padding-right: 1.45rem !important;
-  border-color: transparent;
+.fidelity-cta-pill--qr-play {
+  --fid-qr-play-primary: var(--fid-flyer-wheel-odd, #18181b);
+  --fid-qr-play-secondary: var(--fid-flyer-wheel-even, #f3f4f6);
+  min-width: min(100%, 368px);
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--fid-qr-play-primary) 88%, #000 12%) 0%,
+      color-mix(in srgb, var(--fid-qr-play-primary) 58%, var(--fid-qr-play-secondary) 42%) 58%,
+      color-mix(in srgb, var(--fid-qr-play-secondary) 82%, #000 18%) 100%) !important;
+  border: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 10px 22px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset !important;
+  color: var(--fid-flyer-cta-text, #fff) !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.22);
 }
 
 /*
@@ -156,12 +164,10 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
   width: auto !important;
   min-width: 0 !important;
-  /* Assez large pour « JOUER LA PARTIE » sur une ligne (uppercase + tracking) */
-  max-width: min(100%, 352px);
-  padding-left: 1.25rem !important;
-  padding-right: 1.25rem !important;
-  min-height: 2.52rem !important;
-  border-width: 1.5px !important;
+  max-width: min(100%, 388px);
+  padding-left: 1.8rem !important;
+  padding-right: 1.8rem !important;
+  min-height: 3rem !important;
   box-sizing: border-box;
 }
 
@@ -174,7 +180,7 @@ main.fidelity-v2-main.fidelity-qr-game
 }
 
 .fidelity-cta-wheel-line--qr {
-  gap: 0.35rem;
+  gap: 0.5rem;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr {
@@ -182,21 +188,21 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 }
 
 .fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
-  font-size: 0.98rem;
+  font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   text-transform: none;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
-  font-size: 0.92rem;
+  font-size: 0.98rem;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-pill-chevron {
-  font-size: 0.9em;
-  opacity: 0.82;
+  font-size: 1rem;
+  opacity: 0.88;
 }
 
 /* Scan QR : pas de max-height — la roue est plus large que 46dvh et était rognée par le parent. */

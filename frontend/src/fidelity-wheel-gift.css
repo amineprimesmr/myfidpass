@@ -85,17 +85,17 @@
   }
 }
 
-.fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta) {
+.fidelity-cta-pill--qr-play {
   position: relative;
   overflow: visible;
-  will-change: transform, filter, box-shadow;
-  animation: fidelity-qr-play-magic 2.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, box-shadow;
+  animation: fidelity-qr-play-attention 3.4s ease-in-out infinite;
 }
 
-.fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta)::before {
+.fidelity-cta-pill--qr-play::before {
   content: "";
   position: absolute;
-  inset: -3px;
+  inset: 0;
   border-radius: 999px;
   background: linear-gradient(
     115deg,
@@ -107,7 +107,7 @@
   );
   background-size: 240% 100%;
   animation: fidelity-qr-play-shine 1.85s linear infinite;
-  opacity: 0.82;
+  opacity: 0.58;
   pointer-events: none;
   z-index: 0;
 }
@@ -117,47 +117,45 @@
   z-index: 1;
 }
 
-.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta {
+.fidelity-cta-pill--qr-play-main {
   overflow: hidden;
-  box-shadow:
-    inset 0 0 0 1px var(--shiny-cta-bg-subtle),
-    0 12px 28px rgba(15, 23, 42, 0.26);
 }
 
-.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta:is(:hover, :focus-visible) {
+.fidelity-cta-pill--qr-play-main:is(:hover, :focus-visible) {
   transform: translateY(-1px);
   box-shadow:
-    inset 0 0 0 1px var(--shiny-cta-bg-subtle),
-    0 16px 34px rgba(15, 23, 42, 0.32);
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 16px 34px rgba(15, 23, 42, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
 }
 
-.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta:active {
+.fidelity-cta-pill--qr-play-main:active {
   transform: translateY(0);
 }
 
-/* Surtout scaleX : évite l’effet « pastille plus haute » (l’ancien scale uniforme grossissait la hauteur). */
-@keyframes fidelity-qr-play-magic {
+@keyframes fidelity-qr-play-attention {
   0%,
+  72%,
   100% {
-    transform: scaleX(1) scaleY(1) translateY(0);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.14) inset,
-      0 4px 14px rgba(15, 23, 42, 0.22);
-    filter: brightness(1) saturate(1);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
-  35% {
-    transform: scaleX(1.06) scaleY(1.02) translateY(-1px);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.22) inset,
-      0 10px 22px rgba(15, 23, 42, 0.28);
-    filter: brightness(1.06) saturate(1.04);
+  76% {
+    transform: translate3d(-11px, -1px, 0) rotate(-1.6deg);
   }
-  70% {
-    transform: scaleX(1.03) scaleY(1.01) translateY(0);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.17) inset,
-      0 6px 18px rgba(15, 23, 42, 0.24);
-    filter: brightness(1.03) saturate(1.02);
+  79% {
+    transform: translate3d(10px, 1px, 0) rotate(1.4deg);
+  }
+  82% {
+    transform: translate3d(-7px, 0, 0) rotate(-1deg);
+  }
+  85% {
+    transform: translate3d(6px, 0, 0) rotate(0.8deg);
+  }
+  88% {
+    transform: translate3d(-3px, 0, 0) rotate(-0.35deg);
+  }
+  91% {
+    transform: translate3d(2px, 0, 0) rotate(0.2deg);
   }
 }
 
@@ -176,8 +174,8 @@
     will-change: auto;
   }
 
-  .fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta),
-  .fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta)::before {
+  .fidelity-cta-pill--qr-play,
+  .fidelity-cta-pill--qr-play::before {
     animation: none;
     will-change: auto;
   }

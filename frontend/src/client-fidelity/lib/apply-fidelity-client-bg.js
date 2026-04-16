@@ -26,4 +26,15 @@ export function applyFidelityClientPageBackground(business) {
   } else {
     el.style.removeProperty("--fid-flyer-cta-text");
   }
+
+  if (fc?.wheelOdd && /^#[0-9A-Fa-f]{6}$/i.test(fc.wheelOdd)) {
+    el.style.setProperty("--fid-flyer-wheel-odd", fc.wheelOdd);
+  } else {
+    el.style.removeProperty("--fid-flyer-wheel-odd");
+  }
+  if (fc?.wheelEven && /^#[0-9A-Fa-f]{6}$/i.test(fc.wheelEven)) {
+    el.style.setProperty("--fid-flyer-wheel-even", fc.wheelEven);
+  } else {
+    el.style.removeProperty("--fid-flyer-wheel-even");
+  }
 }
