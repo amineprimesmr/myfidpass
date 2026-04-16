@@ -246,38 +246,117 @@ export function bindQrGameUi(ctx) {
   const claimForm = rootEl.querySelector("#fidelity-qr-claim-form");
   const backdrop = rootEl.querySelector('[data-fid-qr-close="backdrop"]');
 
-  function syncMysteryBoxAria(el) {
-    if (!(el instanceof HTMLElement)) return;
-    el.setAttribute("aria-pressed", el.classList.contains("fidelity-qr-mysterybox--flying") ? "true" : "false");
+  /** Clone déplacé au-dessus de la page ; l’image d’origine reste en place mais invisible (pas de « carré »). */
+  let mysteryFloatEl = null;
+
+  function disposeMysteryFloat() {
+    if (mysteryFloatEl?.parentNode) {
+      mysteryFloatEl.removeEventListener("click", onMysteryFloatClick);
+      mysteryFloatEl.removeEventListener("keydown", onMysteryFloatKeydown);
+      mysteryFloatEl.remove();
+    }
+    mysteryFloatEl = null;
+    if (mysteryBox instanceof HTMLElement) {
+      mysteryBox.classList.remove("fidelity-qr-mysterybox--ghost");
+      mysteryBox.removeAttribute("aria-hidden");
+      mysteryBox.setAttribute("tabindex", "0");
+      mysteryBox.setAttribute("aria-pressed", "false");
+    }
   }
 
-  function toggleMysteryBoxFly(ev) {
+  function parsePxVar(el, name) {
+    const raw = el.style.getPropertyValue(name).trim();
+    const n = Number.parseFloat(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function nudgeMysteryFloat() {
+    const el = mysteryFloatEl;
+    if (!(el instanceof HTMLElement)) return;
+    const reduced = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    const maxHalf = reduced ? 18 : 38 + Math.random() * 34;
+    const dx = (Math.random() - 0.5) * 2 * maxHalf;
+    const dy = (Math.random() - 0.5) * 2 * maxHalf;
+    const baseL = parsePxVar(el, "--fid-mb-x");
+    const baseT = parsePxVar(el, "--fid-mb-y");
+    let tx = parsePxVar(el, "--fid-mb-tx") + dx;
+    let ty = parsePxVar(el, "--fid-mb-ty") + dy;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const margin = 10;
+    const vw = globalThis.innerWidth;
+    const vh = globalThis.innerHeight;
+    const minTx = margin - baseL;
+    const maxTx = vw - margin - w - baseL;
+    const minTy = margin - baseT;
+    const maxTy = vh - margin - h - baseT;
+    tx = Math.max(minTx, Math.min(maxTx, tx));
+    ty = Math.max(minTy, Math.min(maxTy, ty));
+    const rot = -14 + Math.random() * 28;
+    el.style.setProperty("--fid-mb-tx", `${tx}px`);
+    el.style.setProperty("--fid-mb-ty", `${ty}px`);
+    el.style.setProperty("--fid-mb-rot", `${rot}deg`);
+  }
+
+  function onMysteryFloatClick(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    nudgeMysteryFloat();
+  }
+
+  function onMysteryFloatKeydown(ev) {
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    ev.preventDefault();
+    nudgeMysteryFloat();
+  }
+
+  function activateMysteryFloat() {
+    const el = mysteryBox;
+    if (!(el instanceof HTMLElement) || mysteryFloatEl) return;
+    const r = el.getBoundingClientRect();
+    const clone = el.cloneNode(true);
+    clone.removeAttribute("id");
+    clone.id = "fidelity-qr-mysterybox-float";
+    clone.classList.add("fidelity-qr-mysterybox--flying");
+    clone.style.setProperty("--fid-mb-x", `${r.left}px`);
+    clone.style.setProperty("--fid-mb-y", `${r.top}px`);
+    clone.style.setProperty("--fid-mb-w", `${r.width}px`);
+    clone.style.setProperty("--fid-mb-tx", "0px");
+    clone.style.setProperty("--fid-mb-ty", "0px");
+    clone.style.setProperty("--fid-mb-rot", "-12deg");
+    clone.setAttribute("aria-pressed", "true");
+    clone.setAttribute("tabindex", "0");
+    const mount =
+      rootEl.querySelector("#fidelity-app") || rootEl.closest("#fidelity-app") || document.body;
+    mount.appendChild(clone);
+    mysteryFloatEl = clone;
+    clone.addEventListener("click", onMysteryFloatClick);
+    clone.addEventListener("keydown", onMysteryFloatKeydown);
+    el.classList.add("fidelity-qr-mysterybox--ghost");
+    el.setAttribute("aria-hidden", "true");
+    el.setAttribute("tabindex", "-1");
+    el.setAttribute("aria-pressed", "true");
+    globalThis.requestAnimationFrame(() => {
+      nudgeMysteryFloat();
+    });
+  }
+
+  function onMysteryBoxActivate(ev) {
     if (ev instanceof MouseEvent && ev.button !== 0) return;
     const el = mysteryBox;
     if (!(el instanceof HTMLElement)) return;
-    if (el.classList.contains("fidelity-qr-mysterybox--flying")) {
-      el.classList.remove("fidelity-qr-mysterybox--flying");
-      el.style.removeProperty("--fid-mb-x");
-      el.style.removeProperty("--fid-mb-y");
-      el.style.removeProperty("--fid-mb-w");
-      syncMysteryBoxAria(el);
-      return;
-    }
-    const r = el.getBoundingClientRect();
-    el.style.setProperty("--fid-mb-x", `${r.left}px`);
-    el.style.setProperty("--fid-mb-y", `${r.top}px`);
-    el.style.setProperty("--fid-mb-w", `${r.width}px`);
-    el.classList.add("fidelity-qr-mysterybox--flying");
-    syncMysteryBoxAria(el);
+    if (mysteryFloatEl) return;
+    activateMysteryFloat();
   }
 
   function onMysteryBoxKeydown(ev) {
     if (ev.key !== "Enter" && ev.key !== " ") return;
+    if (mysteryFloatEl) return;
     ev.preventDefault();
-    toggleMysteryBoxFly(ev);
+    onMysteryBoxActivate(ev);
   }
 
-  mysteryBox?.addEventListener("click", toggleMysteryBoxFly);
+  mysteryBox?.addEventListener("click", onMysteryBoxActivate);
   mysteryBox?.addEventListener("keydown", onMysteryBoxKeydown);
 
   let verifyUxCleanup = () => {};
@@ -441,7 +520,8 @@ export function bindQrGameUi(ctx) {
 
   return () => {
     spinBtn?.removeEventListener("click", onSpinPre, true);
-    mysteryBox?.removeEventListener("click", toggleMysteryBoxFly);
+    disposeMysteryFloat();
+    mysteryBox?.removeEventListener("click", onMysteryBoxActivate);
     mysteryBox?.removeEventListener("keydown", onMysteryBoxKeydown);
     qrResumeListenersAbort?.abort();
     qrResumeListenersAbort = null;

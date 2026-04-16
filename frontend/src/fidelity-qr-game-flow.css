@@ -260,8 +260,17 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   border-radius: 12px;
 }
 
-/* Clic : la boîte passe en fixed et suit une boucle fluide dans la fenêtre (voir qr-game-flow.js). */
-.fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying {
+/* Original caché pendant le jeu : pas de halo / filtre résiduel (clone déplacé à part). */
+.fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--ghost {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  filter: none !important;
+}
+
+/* Clone flottant : micro-sauts rapides via transform (qr-game-flow.js), pas d’orbite CSS. */
+.fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying,
+#fidelity-qr-mysterybox-float {
   position: fixed !important;
   left: var(--fid-mb-x, 0) !important;
   top: var(--fid-mb-y, 0) !important;
@@ -271,59 +280,15 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   max-width: min(7.5rem, 22vw);
   margin: 0 !important;
   z-index: 480;
-  will-change: transform;
+  transform: translate(var(--fid-mb-tx, 0px), var(--fid-mb-ty, 0px)) rotate(var(--fid-mb-rot, -12deg));
+  transition: transform 0.1s cubic-bezier(0.34, 1.35, 0.64, 1);
   filter: drop-shadow(0 18px 36px rgba(124, 58, 237, 0.45)) drop-shadow(0 8px 20px rgba(15, 23, 42, 0.28));
-  animation: fidelity-mysterybox-orbit 34s cubic-bezier(0.42, 0.02, 0.58, 0.98) infinite;
-}
-
-@keyframes fidelity-mysterybox-orbit {
-  0% {
-    transform: translate(0, 0) rotate(-12deg) scale(1);
-  }
-  11% {
-    transform: translate(min(72vw, 17.5rem), max(-2vh, -0.5rem)) rotate(10deg) scale(1.07);
-  }
-  22% {
-    transform: translate(min(78vw, 19rem), min(38vh, 12rem)) rotate(-7deg) scale(1);
-  }
-  33% {
-    transform: translate(min(44vw, 11rem), min(62vh, 18rem)) rotate(12deg) scale(1.09);
-  }
-  44% {
-    transform: translate(max(-2vw, -0.5rem), min(58vh, 17rem)) rotate(-9deg) scale(1.02);
-  }
-  55% {
-    transform: translate(10vw, max(4vh, 0.75rem)) rotate(8deg) scale(1.06);
-  }
-  66% {
-    transform: translate(min(58vw, 14rem), min(48vh, 14rem)) rotate(-11deg) scale(1);
-  }
-  77% {
-    transform: translate(min(68vw, 16rem), max(2vh, 0.5rem)) rotate(9deg) scale(1.08);
-  }
-  88% {
-    transform: translate(min(28vw, 7rem), min(28vh, 9rem)) rotate(-8deg) scale(1.03);
-  }
-  100% {
-    transform: translate(0, 0) rotate(-12deg) scale(1);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying {
-    animation: fidelity-mysterybox-breathe 4.5s ease-in-out infinite;
-  }
-}
-
-@keyframes fidelity-mysterybox-breathe {
-  0%,
-  100% {
-    opacity: 1;
-    transform: translate(0, 0) rotate(-12deg) scale(1);
-  }
-  50% {
-    opacity: 0.92;
-    transform: translate(0, 0) rotate(-12deg) scale(1.04);
+  .fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying,
+  #fidelity-qr-mysterybox-float {
+    transition: none;
   }
 }
 
