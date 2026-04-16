@@ -84,7 +84,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 .fidelity-qr-hero {
   text-align: center;
-  padding: max(0.2rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-left, 0px)) 0.1rem
+  padding: max(0.55rem, calc(env(safe-area-inset-top, 0px) + 0.35rem)) max(1rem, env(safe-area-inset-left, 0px)) 0.1rem
     max(1rem, env(safe-area-inset-right, 0px));
   box-sizing: border-box;
 }
@@ -295,7 +295,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 @media (max-width: 480px) {
   .fidelity-qr-hero {
-    padding-top: max(0.15rem, env(safe-area-inset-top, 0px));
+    padding-top: max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.32rem));
   }
 
   .fidelity-qr-logo {
