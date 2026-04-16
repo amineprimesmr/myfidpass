@@ -38,6 +38,19 @@ import { dirname, join } from "node:path";
 
 const __passDir = dirname(fileURLToPath(import.meta.url));
 
+/** Icône app par défaut pour `icon.png` du pass (logonotif) — chargée une fois en mémoire. */
+let _logonotifBuf = null;
+function getLogonotifBuf() {
+  if (_logonotifBuf) return _logonotifBuf;
+  try {
+    const p = join(__passDir, "../assets/logonotif.png");
+    if (existsSync(p)) {
+      _logonotifBuf = readFileSync(p);
+    }
+  } catch (_) {}
+  return _logonotifBuf;
+}
+
 /** Masque le nom par défaut du parcours invité (QR) sur la face du pass. */
 function walletPassMemberDisplayName(name) {
   const t = name != null ? String(name).trim() : "";
@@ -187,50 +200,26 @@ export async function generatePass(member, business = null, options = {}) {
     buffers["icon.png"] = notificationIconResized.iconPng;
     buffers["icon@2x.png"] = notificationIconResized.iconPng2x;
     buffers["icon@3x.png"] = notificationIconResized.iconPng3x;
-    if (
-      buffers["logo@2x.png"] &&
-      buffers["logo@2x.png"].length > 0 &&
-      buffers["logo@2x.png"].equals(notificationIconResized.iconPng2x)
-    ) {
-      console.warn(
-        "[PassKit] icon@2x et logo@2x sont identiques (octets) — l’aperçu et le Wallet montreront le même visuel que le bandeau carte.",
-      );
-    }
   } else {
     /**
-     * Repli 1 : logo principal du commerce (logo_base64 / asset "logo").
-     * Priorité : asset DB > colonne business > placeholder générique.
-     * Évite l'icône bleue generique "carte Wallet" quand le commerçant n'a pas
-     * encore configuré une icône de notification dédiée.
+     * Repli : logonotif (icône app myfidpass) — icône cohérente avec les push notifications.
+     * Ne pas utiliser le logo carte : cela confondrait l’icône de notification avec le visuel de la carte.
+     * Dernier recours : placeholder générique.
      */
-    let logoFallbackResized = null;
-    const logoAssetRaw =
-      business?.id != null ? getBusinessAssetData(String(business.id), "logo") : null;
-    const logoRaw =
-      (logoAssetRaw && String(logoAssetRaw).trim())
-        ? String(logoAssetRaw).trim()
-        : (business?.logo_base64 && String(business.logo_base64).trim())
-          ? String(business.logo_base64).trim()
-          : null;
-    if (logoRaw) {
-      const logoB64 = stripDataImageBase64Payload(logoRaw);
-      const logoBuf = logoB64 ? Buffer.from(logoB64, "base64") : null;
-      if (logoBuf && logoBuf.length > 0) {
-        logoFallbackResized = await resizeLogoForPassIcon(logoBuf).catch(() => null);
-        if (logoFallbackResized) {
-          if (process.env.NODE_ENV === "production") {
-            console.log("[PassKit] Icônes Wallet (29/58/87px) depuis logo_base64 (repli notification_icon absent)");
-          }
-        }
-      }
-    }
+    const logonotifBuf = getLogonotifBuf();
+    const logonotifResized = logonotifBuf
+      ? await resizeLogoForPassIcon(logonotifBuf).catch(() => null)
+      : null;
 
-    if (logoFallbackResized) {
-      buffers["icon.png"] = logoFallbackResized.iconPng;
-      buffers["icon@2x.png"] = logoFallbackResized.iconPng2x;
-      buffers["icon@3x.png"] = logoFallbackResized.iconPng3x;
+    if (logonotifResized) {
+      buffers["icon.png"] = logonotifResized.iconPng;
+      buffers["icon@2x.png"] = logonotifResized.iconPng2x;
+      buffers["icon@3x.png"] = logonotifResized.iconPng3x;
+      if (process.env.NODE_ENV === "production") {
+        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis logonotif (repli notification_icon absent)");
+      }
     } else {
-      /** Repli 2 : placeholder générique bleu/blanc (dernier recours). */
+      /** Dernier recours : placeholder générique bleu/blanc. */
       const textLogo = await createPassLogoPlaceholder();
       if (textLogo) {
         const iconResized = await resizeLogoForPassIcon(textLogo.logoPng2x);

@@ -23,16 +23,12 @@ import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import { sendMerchantAppAlert, isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
 
-/** Icône Web Push : uniquement si média dédié « notification » (pas le logo Ma Carte). */
-function businessHasNotificationLogo(business) {
-  return Number(business?.asset_notification_icon_present) === 1;
-}
-
 /**
- * URL d’icône pour Web Push : `?v=` = timestamps + **id de campagne** pour forcer un fetch à chaque envoi
- * (sinon certains clients gardent l’image en cache même si le fichier sur l’API a changé).
+ * URL d’icône pour Web Push et APNs : toujours construite — l’endpoint `/notification-icon`
+ * retourne l’icône custom du commerçant si elle existe, sinon `logonotif` (icône app par défaut).
+ * `?v=` = timestamp + id de campagne pour forcer un fetch frais à chaque envoi.
  */
-function buildWebPushNotificationIconUrl(apiBase, slug, businessRow, batchId) {
+function buildNotificationIconUrl(apiBase, slug, businessRow, batchId) {
   const path = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
   const base = businessRow?.notification_icon_updated_at || "0";
   const v = batchId ? `${base}~${batchId}` : String(base);
@@ -104,8 +100,9 @@ export async function deliverCustomerBroadcast({
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
   const businessFresh = getBusinessById(business.id) || businessAfterSync || business;
   const iconSource = businessAfterSync || businessFresh;
-  const iconUrl = businessHasNotificationLogo(iconSource)
-    ? buildWebPushNotificationIconUrl(apiBase, slug, iconSource, batchId)
+  // Toujours inclure l'URL — l'endpoint retourne logonotif quand aucune icône custom n'est configurée.
+  const iconUrl = slug && apiBase
+    ? buildNotificationIconUrl(apiBase, slug, iconSource, batchId)
     : null;
   const titleTrim = title != null ? String(title).trim() : "";
   const payloadTitle = (
@@ -236,10 +233,9 @@ export async function deliverCustomerBroadcast({
     const receiptTitle = "Campagne envoyée";
     const receiptBody = `Wallet: ${sentPassKit} · Web: ${sentWebPush}${errors.length ? ` · ${errors.length} erreur(s)` : ""}`;
     for (const tok of tokens) {
-      const hasNotifIcon = Number(business?.asset_notification_icon_present) === 1 ||
-        !!(business?.notification_icon_base64 && String(business.notification_icon_base64).trim());
-      const iconUrl = hasNotifIcon && slug && apiBase
-        ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`
+      // Toujours inclure l'URL avec ?v= pour cache-busting — l'endpoint sert logonotif si pas d'icône custom.
+      const merchantIconUrl = slug && apiBase
+        ? buildNotificationIconUrl(apiBase, slug, businessFresh, batchId)
         : null;
       const r = await sendMerchantAppAlert(tok, {
         title: receiptTitle,
@@ -249,7 +245,7 @@ export async function deliverCustomerBroadcast({
           myfidpass_action: "campaign_receipt",
           batch_id: batchId,
           business_id: business.id,
-          ...(iconUrl ? { notification_icon_url: iconUrl } : {}),
+          ...(merchantIconUrl ? { notification_icon_url: merchantIconUrl } : {}),
         },
       });
       if (r.sent) {
