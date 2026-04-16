@@ -237,8 +237,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 .fidelity-qr-hero-decor-chip--mysterybox {
   left: clamp(0rem, 2vw, 0.7rem);
   top: clamp(8rem, 26vw, 10rem);
-  width: clamp(3.35rem, 14vw, 5.35rem);
-  height: clamp(3.35rem, 14vw, 5.35rem);
+  width: clamp(3.85rem, 15.5vw, 6.1rem);
+  height: clamp(3.85rem, 15.5vw, 6.1rem);
   border-radius: 0;
   display: block;
   object-fit: contain;
