@@ -65,6 +65,7 @@ import oauthGoogleBusinessRouter from "./routes/oauth-google-business.js";
 import oauthTiktokRouter from "./routes/oauth-tiktok.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics, getRecentPassKitPushHistory } from "./apns.js";
+import { getRecentNotifIconRequests } from "./routes/businesses/assets.js";
 import {
   isEmailConfigured,
   getEmailTransportLabel,
@@ -296,9 +297,18 @@ app.get("/api/debug/notif-icon/:slug", (req, res) => {
       .slice(-20);
     const sent = recentPushes.filter((h) => h.sent).length;
     const failed = recentPushes.filter((h) => !h.sent).length;
+
+    const iconRequestsAll = getRecentNotifIconRequests(business.id);
+    const iconRequests = iconRequestsAll
+      .filter((r) => new Date(r.at).getTime() >= since)
+      .slice(-25);
+    const custom200 = iconRequests.filter((r) => r.status === 200 && r.kind === "custom").length;
+    const default200 = iconRequests.filter((r) => r.status === 200 && r.kind === "default").length;
+    const notModified304 = iconRequests.filter((r) => r.status === 304).length;
+
     res.json({
       ok: true,
-      build: "2026-04-17-notif-icon-diag",
+      build: "2026-04-17-notif-icon-req-log",
       businessId: business.id,
       organizationName: business.organization_name,
       notificationIcon: {
@@ -320,6 +330,13 @@ app.get("/api/debug/notif-icon/:slug", (req, res) => {
         sent,
         failed,
         entries: recentPushes,
+      },
+      recentIconRequests: {
+        total10min: iconRequests.length,
+        custom200,
+        default200,
+        notModified304,
+        entries: iconRequests,
       },
       apnsHealth: getApnsHealthForDiagnostics(),
     });

@@ -6,9 +6,29 @@ import { Router } from "express";
 import { readFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import { getLogoIconBuffer } from "../../notifications.js";
 import { ensureDashboardAccess } from "./shared.js";
 import { getBusinessAssetData, getAllBusinessAssetsMap } from "../../db/business-assets.js";
+
+/**
+ * Ring buffer des derniers GET `/notification-icon` (diagnostic prod).
+ * Exposé via `/api/debug/notif-icon/:slug` pour prouver quels octets ont réellement
+ * été servis au NSE iOS à chaque appel (debug du bug « l'icône ne se met pas à jour »).
+ */
+const NOTIF_ICON_REQ_LOG_MAX = 40;
+const notifIconRequestLog = [];
+export function recordNotifIconRequest(entry) {
+  notifIconRequestLog.push({ at: new Date().toISOString(), ...entry });
+  while (notifIconRequestLog.length > NOTIF_ICON_REQ_LOG_MAX) {
+    notifIconRequestLog.shift();
+  }
+}
+export function getRecentNotifIconRequests(businessId) {
+  if (!businessId) return notifIconRequestLog.slice();
+  const idStr = String(businessId);
+  return notifIconRequestLog.filter((r) => String(r.businessId) === idStr);
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /** Icône de notification par défaut (logo app) — servi quand le commerçant n'a pas uploadé d'icône dédiée. */
@@ -71,27 +91,73 @@ router.get("/notification-icon", async (req, res) => {
   const b64 = fromAssets || fromRow;
   const customBuffer = b64 ? await getLogoIconBuffer(b64) : null;
 
+  const vParam = typeof req.query?.v === "string" ? req.query.v.slice(0, 120) : null;
+  const nseNonce = typeof req.query?.["nse-nonce"] === "string" ? req.query["nse-nonce"].slice(0, 60) : null;
+  const ua = (req.headers["user-agent"] || "").toString().slice(0, 80);
+
   if (customBuffer) {
-    // Icône personnalisée.
-    // IMPORTANT : ce buffer est utilisé par la Notification Service Extension iOS et les navigateurs
-    // Web Push. Un ancien bug faisait qu'après changement d'icône, les clients voyaient encore
-    // l'ancienne image → pour être absolument sûr, on n'active un cache local qu'à condition que
-    // l'ETag contienne la version courante. L'URL APNs inclut déjà `?v=<ts>~<batchId>~<uuid>` donc
-    // chaque push utilise une URL distincte — le cache est inoffensif dans ce cas, mais on passe
-    // explicitement à `must-revalidate` pour couper toute possibilité de réutilisation stale.
+    // Icône personnalisée. L'URL APNs inclut déjà `?v=<ts>~<batchId>~<uuid>` donc chaque push a
+    // une URL unique. Garder `must-revalidate` pour couper toute réutilisation stale.
     const etagKey = `${business.id}-notification-icon-${business.notification_icon_updated_at || "0"}`;
-    if (setAssetCacheHeaders(res, req, etagKey)) return;
+    if (setAssetCacheHeaders(res, req, etagKey)) {
+      recordNotifIconRequest({
+        businessId: String(business.id),
+        slug: business.slug,
+        status: 304,
+        kind: "custom",
+        v: vParam,
+        nseNonce,
+        ua,
+      });
+      return;
+    }
     res.setHeader("Content-Type", "image/png");
     res.setHeader("Cache-Control", "private, max-age=300, must-revalidate");
+    const sha = createHash("sha256").update(customBuffer).digest("hex").slice(0, 12);
+    recordNotifIconRequest({
+      businessId: String(business.id),
+      slug: business.slug,
+      status: 200,
+      kind: "custom",
+      bytes: customBuffer.length,
+      sha256_12: sha,
+      v: vParam,
+      nseNonce,
+      ua,
+      notification_icon_updated_at: business.notification_icon_updated_at ?? null,
+    });
     return res.send(customBuffer);
   }
 
-  // Repli : logo app par défaut (logonotif) — cache court pour que l'upload d'une icône custom
-  // soit pris en compte rapidement sans cache busting manuel.
+  // Repli : logo app par défaut (logonotif).
   const defaultBuffer = await getDefaultNotifIconBuffer();
-  if (!defaultBuffer) return res.status(404).send();
+  if (!defaultBuffer) {
+    recordNotifIconRequest({
+      businessId: String(business.id),
+      slug: business.slug,
+      status: 404,
+      kind: "default_missing",
+      v: vParam,
+      nseNonce,
+      ua,
+    });
+    return res.status(404).send();
+  }
   res.setHeader("Cache-Control", "private, max-age=3600, stale-while-revalidate=300");
   res.setHeader("Content-Type", "image/png");
+  const sha = createHash("sha256").update(defaultBuffer).digest("hex").slice(0, 12);
+  recordNotifIconRequest({
+    businessId: String(business.id),
+    slug: business.slug,
+    status: 200,
+    kind: "default",
+    bytes: defaultBuffer.length,
+    sha256_12: sha,
+    v: vParam,
+    nseNonce,
+    ua,
+    notification_icon_updated_at: business.notification_icon_updated_at ?? null,
+  });
   return res.send(defaultBuffer);
 });
 
