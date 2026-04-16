@@ -425,11 +425,13 @@
           <div
             id="app-sidebar-trial-subscribe-card"
             class="app-sidebar-trial-subscribe-card hidden"
+            role="region"
+            aria-label="Essai gratuit"
             aria-hidden="true"
           >
-            <p id="app-sidebar-trial-subscribe-remaining" class="app-sidebar-trial-subscribe-card__remaining">L’essai prend fin dans —</p>
+            <p id="app-sidebar-trial-subscribe-remaining" class="app-sidebar-trial-subscribe-card__remaining" aria-live="polite">L’essai prend fin dans —</p>
             <p class="app-sidebar-trial-subscribe-card__title">S’abonner pour 1 €</p>
-            <button type="button" id="app-sidebar-trial-subscribe-btn" class="app-sidebar-trial-subscribe-card__button">
+            <button type="button" id="app-sidebar-trial-subscribe-btn" class="app-sidebar-trial-subscribe-card__button" aria-label="S’abonner pour 1 € — voir les offres">
               S’abonner
             </button>
           </div>
@@ -2343,7 +2345,7 @@
         <span class="app-mobile-trial-subscribe-pill__cta">Abonnez-vous pour 1 €</span>
         <span class="app-mobile-trial-subscribe-pill__badge">
           <span class="app-mobile-trial-subscribe-pill__dot" aria-hidden="true"></span>
-          <span id="app-mobile-trial-subscribe-pill-remaining">—</span>
+          <span id="app-mobile-trial-subscribe-pill-remaining" aria-live="polite">—</span>
         </span>
       </div>
       <!-- Barre d'onglets mobile — alignée app iOS : Accueil, Notifs, Commerce -->
