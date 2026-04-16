@@ -85,14 +85,14 @@
   }
 }
 
-.fidelity-cta-pill--qr-play {
+.fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta) {
   position: relative;
   overflow: visible;
   will-change: transform, filter, box-shadow;
   animation: fidelity-qr-play-magic 2.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-.fidelity-cta-pill--qr-play::before {
+.fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta)::before {
   content: "";
   position: absolute;
   inset: -3px;
@@ -115,6 +115,24 @@
 .fidelity-cta-pill--qr-play .fidelity-cta-wheel-line--qr {
   position: relative;
   z-index: 1;
+}
+
+.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta {
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px var(--shiny-cta-bg-subtle),
+    0 12px 28px rgba(15, 23, 42, 0.26);
+}
+
+.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta:is(:hover, :focus-visible) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 1px var(--shiny-cta-bg-subtle),
+    0 16px 34px rgba(15, 23, 42, 0.32);
+}
+
+.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta:active {
+  transform: translateY(0);
 }
 
 /* Surtout scaleX : évite l’effet « pastille plus haute » (l’ancien scale uniforme grossissait la hauteur). */
@@ -158,8 +176,8 @@
     will-change: auto;
   }
 
-  .fidelity-cta-pill--qr-play,
-  .fidelity-cta-pill--qr-play::before {
+  .fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta),
+  .fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta)::before {
     animation: none;
     will-change: auto;
   }

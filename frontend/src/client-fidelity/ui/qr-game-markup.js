@@ -24,14 +24,17 @@ export function renderQrGamePage(esc, p) {
 
   const hasGoogle = Boolean(googleReviewUrl);
   const googleHref = hasGoogle ? String(googleReviewUrl).replace(/"/g, "&quot;") : "";
+  const verifyFallbackSrcEsc = esc("/assets/chargement.png");
 
   let qrLogo = "";
-  let verifyLoadingVisual = `<div class="fidelity-qr-verify-spinner" aria-hidden="true"></div>`;
+  let verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap fidelity-qr-verify-logo-wrap--placeholder" aria-hidden="true"><img class="fidelity-qr-verify-logo fidelity-qr-verify-logo--placeholder" id="fidelity-qr-verify-logo" src="${verifyFallbackSrcEsc}" alt="" width="96" height="96" decoding="async" /></div>`;
   if (logoUrl) {
-    const onErr =
+    const logoOnErr =
       'this.onerror=null;this.classList.add("fidelity-qr-logo--hidden");this.removeAttribute("src")';
-    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="${businessNameEsc}" decoding="async" onerror="${onErr}" />`;
-    verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap" aria-hidden="true"><img class="fidelity-qr-verify-logo" id="fidelity-qr-verify-logo" src="${esc(logoUrl)}" alt="" width="96" height="96" decoding="async" onerror="${onErr}" /></div>`;
+    const verifyOnErr =
+      `this.onerror=null;this.src="${verifyFallbackSrcEsc}";this.classList.add("fidelity-qr-verify-logo--placeholder");if(this.parentNode&&this.parentNode.classList){this.parentNode.classList.add("fidelity-qr-verify-logo-wrap--placeholder");}`;
+    qrLogo = `<img class="fidelity-qr-logo" src="${esc(logoUrl)}" alt="${businessNameEsc}" decoding="async" onerror="${logoOnErr}" />`;
+    verifyLoadingVisual = `<div class="fidelity-qr-verify-logo-wrap" aria-hidden="true"><img class="fidelity-qr-verify-logo" id="fidelity-qr-verify-logo" src="${esc(logoUrl)}" alt="" width="96" height="96" decoding="async" onerror="${verifyOnErr}" /></div>`;
   }
 
   return `

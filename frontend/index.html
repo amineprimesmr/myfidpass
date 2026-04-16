@@ -425,13 +425,11 @@
           <div
             id="app-sidebar-trial-subscribe-card"
             class="app-sidebar-trial-subscribe-card hidden"
-            role="region"
-            aria-label="Essai gratuit"
             aria-hidden="true"
           >
-            <p id="app-sidebar-trial-subscribe-remaining" class="app-sidebar-trial-subscribe-card__remaining" aria-live="polite">L’essai prend fin dans —</p>
+            <p id="app-sidebar-trial-subscribe-remaining" class="app-sidebar-trial-subscribe-card__remaining">L’essai prend fin dans —</p>
             <p class="app-sidebar-trial-subscribe-card__title">S’abonner pour 1 €</p>
-            <button type="button" id="app-sidebar-trial-subscribe-btn" class="app-sidebar-trial-subscribe-card__button" aria-label="S’abonner pour 1 € — voir les offres">
+            <button type="button" id="app-sidebar-trial-subscribe-btn" class="app-sidebar-trial-subscribe-card__button">
               S’abonner
             </button>
           </div>
@@ -1796,27 +1794,27 @@
 
             <div class="app-notifs-compose">
               <div class="app-notifs-dynamic-island" aria-label="Aperçu notification">
-            <div class="app-notification-preview-banner" role="region" aria-label="Aperçu et réglages de la notification">
-              <div class="app-notification-preview-banner-bubble">
-                <div class="app-notification-preview-banner-icon-wrap app-drop-zone" id="app-notification-banner-logo-drop" role="button" tabindex="0" aria-label="Changer le logo de la notification (glisser une image ou cliquer)">
-                  <input type="file" id="app-notification-banner-logo-input" class="app-file" accept="image/png,image/jpeg,image/jpg,image/webp" aria-hidden="true" />
-                  <div class="app-notification-preview-banner-icon" id="app-notification-banner-icon">
-                    <img id="app-notification-banner-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
-                    <span class="app-notification-preview-icon-fallback" id="app-notification-banner-icon-fallback">Logo</span>
-                  </div>
-                  <span class="app-notification-preview-icon-badge" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                  </span>
-                  <span class="app-notification-banner-logo-hint">Changer</span>
-                </div>
-                <div class="app-notification-preview-banner-content">
-                  <div class="app-notification-preview-banner-headline">
-                    <input type="text" id="app-notification-banner-title" class="app-notification-preview-banner-title" placeholder="Nom de votre commerce" maxlength="80" aria-label="Nom affiché sur la notification" />
-                    <span class="app-notification-preview-time-label">maintenant</span>
-                  </div>
+                <div class="app-notification-preview-banner" role="region" aria-label="Aperçu et réglages de la notification">
+                  <div class="app-notification-preview-banner-bubble">
+                    <div class="app-notification-preview-banner-icon-wrap app-drop-zone" id="app-notification-banner-logo-drop" role="button" tabindex="0" aria-label="Changer le logo de la notification (glisser une image ou cliquer)">
+                      <input type="file" id="app-notification-banner-logo-input" class="app-file" accept="image/png,image/jpeg,image/jpg,image/webp" aria-hidden="true" />
+                      <div class="app-notification-preview-banner-icon" id="app-notification-banner-icon">
+                        <img id="app-notification-banner-icon-img" class="app-notification-preview-icon-img hidden" alt="" />
+                        <span class="app-notification-preview-icon-fallback" id="app-notification-banner-icon-fallback">Logo</span>
+                      </div>
+                      <span class="app-notification-preview-icon-badge" aria-hidden="true">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                      </span>
+                      <span class="app-notification-banner-logo-hint">Changer</span>
+                    </div>
+                    <div class="app-notification-preview-banner-content">
+                      <div class="app-notification-preview-banner-headline">
+                        <input type="text" id="app-notification-banner-title" class="app-notification-preview-banner-title" placeholder="Nom de votre commerce" maxlength="80" aria-label="Nom affiché sur la notification" />
+                        <span class="app-notification-preview-time-label">maintenant</span>
+                      </div>
                       <input type="text" id="app-notification-banner-message" class="app-notification-preview-banner-message" placeholder="Votre message…" maxlength="200" aria-label="Texte de la notification affichée sur le pass" />
-                </div>
-              </div>
+                    </div>
+                  </div>
                   <p class="app-hint app-notification-auto-save-hint app-notifs-autosave-hint">Enregistrement automatique.</p>
                 </div>
               </div>
@@ -1833,12 +1831,12 @@
                 </button>
                 <span class="app-save-cta-wrap app-save-cta-wrap--notif-send app-notifs-send-wrap">
                   <button type="button" id="app-notification-texts-send" class="app-save-cta app-notifs-send-cta">
-                      <span class="app-save-cta-dot app-save-cta-dot--send" aria-hidden="true"></span>
+                    <span class="app-save-cta-dot app-save-cta-dot--send" aria-hidden="true"></span>
                     <span class="app-save-cta-label">Envoyer</span>
                     <span class="app-notifs-send-arrow" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
-                    </button>
-                  </span>
-                </div>
+                  </button>
+                </span>
+              </div>
               <div class="app-notifs-feedback-block">
                 <p id="app-notification-texts-feedback" class="app-message app-notif-texts-feedback hidden" role="status" aria-live="polite"></p>
                 <p id="app-notif-feedback" class="app-message hidden" role="status" aria-live="polite"></p>
@@ -1858,21 +1856,21 @@
                         <div class="app-notif-auto-map-gradients" aria-hidden="true"></div>
                         <p class="app-notif-auto-map-title">Notification dans le périmètre</p>
                         <button type="button" id="app-notif-carousel-map-hit" class="app-notif-auto-map-hit" aria-label="Ouvrir la carte et le périmètre"></button>
-                      </div>
+                  </div>
                       <div class="app-notif-auto-liquid">
                         <div class="app-notif-auto-liquid-head">
                           <span class="app-notif-auto-liquid-sender">Commerce</span>
                           <span class="app-notif-auto-liquid-time">à l’entrée</span>
-                        </div>
+                  </div>
                         <label class="visually-hidden" for="app-notif-carousel-perimeter-msg">Message géolocalisation Wallet</label>
                         <input type="text" id="app-notif-carousel-perimeter-msg" class="app-notif-auto-liquid-input" maxlength="200" placeholder="Message périmètre (géolocalisation Wallet)…" autocomplete="off" />
-                      </div>
+                  </div>
                       <div class="app-notif-auto-actions app-notif-auto-actions--single">
                         <button type="button" id="app-notif-carousel-open-perimetre" class="app-notif-auto-cta app-notif-auto-cta--primary">
                           Carte &amp; périmètre
                         </button>
-                      </div>
-                    </div>
+                  </div>
+              </div>
                   </div>
                   <div class="app-notifs-carousel-slide" data-notif-slide="inactive14">
                     <div class="app-notif-auto-card app-notif-auto-card--inactive14">
@@ -2345,7 +2343,7 @@
         <span class="app-mobile-trial-subscribe-pill__cta">Abonnez-vous pour 1 €</span>
         <span class="app-mobile-trial-subscribe-pill__badge">
           <span class="app-mobile-trial-subscribe-pill__dot" aria-hidden="true"></span>
-          <span id="app-mobile-trial-subscribe-pill-remaining" aria-live="polite">—</span>
+          <span id="app-mobile-trial-subscribe-pill-remaining">—</span>
         </span>
       </div>
       <!-- Barre d'onglets mobile — alignée app iOS : Accueil, Notifs, Commerce -->

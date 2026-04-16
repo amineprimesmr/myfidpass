@@ -46,7 +46,18 @@
 
 /* vmin ici = viewport navigateur : ne pas l’appliquer à l’aperçu SaaS (voir #app-app + cqm plus bas). */
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr {
-  padding-bottom: clamp(1.35rem, 8vmin, 2.75rem) !important;
+  padding-bottom: clamp(1.65rem, 9vmin, 3.1rem) !important;
+}
+
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-zone {
+  min-height: min(57vh, 84vmin) !important;
+}
+
+#fidelity-app.fidelity-page:has(> main.fidelity-qr-game) .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
+  top: 55.5% !important;
+  width: min(144vmin, 144vw) !important;
+  height: min(144vmin, 144vw) !important;
+  transform: translate(-24%, -47%) !important;
 }
 
 #fidelity-app.fidelity-page:has(> main.fidelity-qr-game)
@@ -94,7 +105,13 @@
 
 #app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
   .fidelity-v2-roulette-inline--qr {
-  padding-bottom: clamp(1.35rem, 8cqmin, 2.75rem) !important;
+  padding-bottom: clamp(1.65rem, 9cqmin, 3.1rem) !important;
+}
+
+#app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-roulette-wheel-zone {
+  min-height: 62cqmin !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game)
@@ -146,8 +163,8 @@
   .app-fidelity-client-live-preview-viewport
   .fidelity-v2-roulette-inline--qr
   .fidelity-roulette-wheel-mount {
-  top: 68% !important;
-  width: min(96cqmin, 100cqw) !important;
-  height: min(96cqmin, 100cqw) !important;
-  transform: translate(-28%, -50%) !important;
+  top: 72% !important;
+  width: min(105cqmin, 108cqw) !important;
+  height: min(105cqmin, 108cqw) !important;
+  transform: translate(-29%, -47%) !important;
 }

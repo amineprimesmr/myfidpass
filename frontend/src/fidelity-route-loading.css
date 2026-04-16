@@ -59,39 +59,78 @@ html.fidpass-fidelity-route-loading #fidelity-app {
   }
 }
 
-/* Pas de cadre blanc : seul le visuel commerce tourne (aperçu flyer / icône) */
+/* Visuel fixe au centre, anneau animé autour */
 .fidelity-route-loading__logo-ring {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
+  width: 148px;
+  height: 148px;
+  padding: 0;
   isolation: isolate;
-  background: rgba(255, 255, 255, 0.55);
-  border-radius: 28%;
-  box-shadow: none;
+  border-radius: 50%;
+}
+
+.fidelity-route-loading__logo-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 4px;
+  background: conic-gradient(from 180deg, #4f46e5 0deg, #7c3aed 70deg, #06b6d4 155deg, #22c55e 225deg, #f59e0b 300deg, #4f46e5 360deg);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  box-shadow: 0 18px 42px rgba(79, 70, 229, 0.18);
+}
+
+.fidelity-route-loading__logo-ring::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.14), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(241, 245, 249, 0.94) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 12px 26px rgba(15, 23, 42, 0.08);
 }
 
 .fidelity-route-loading__logo {
+  position: relative;
+  z-index: 1;
   width: 120px;
   height: 120px;
   object-fit: contain;
   /* Coins arrondis type icône d’app (~superellipse CSS) */
-  border-radius: 22%;
+  border-radius: 28px;
   display: block;
   filter: drop-shadow(0 10px 28px rgba(15, 23, 42, 0.18));
 }
 
 .fidelity-route-loading__logo--empty {
-  opacity: 0.35;
-  border-radius: 22%;
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  width: 108px;
+  height: 108px;
+  padding: 16px;
+  border-radius: 32px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 10px 24px rgba(79, 70, 229, 0.12);
 }
 
-.fidelity-route-loading-overlay--css-spin .fidelity-route-loading__logo:not(.fidelity-route-loading__logo--empty) {
-  animation: fidelity-route-loading-spin 2.8s linear infinite;
+.fidelity-route-loading-overlay--css-spin .fidelity-route-loading__logo-ring::before {
+  animation: fidelity-route-loading-ring-spin 1.9s linear infinite;
 }
 
-@keyframes fidelity-route-loading-spin {
+@keyframes fidelity-route-loading-ring-spin {
   to {
     transform: rotate(360deg);
   }
@@ -104,7 +143,7 @@ html.fidpass-fidelity-route-loading #fidelity-app {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fidelity-route-loading-overlay--css-spin .fidelity-route-loading__logo {
+  .fidelity-route-loading__logo-ring::before {
     animation: none;
   }
 
