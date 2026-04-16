@@ -68,8 +68,6 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
   const wsc = Number.isFinite(wl) ? Math.max(0.7, Math.min(1.35, wl / 100)) : 1;
   const fontPx = Math.max(11, Math.round(r * 0.104 * wsc));
   const track = Math.round(fontPx * 0.04);
-  /** Un seul contour (pas double stroke) : deux passes épaisses + fill donnaient un effet « fantôme » / ombre boueuse. */
-  const outlineW = Math.max(1.25, Math.min(3.2, fontPx * 0.09));
 
   ctx.save();
   ctx.beginPath();
@@ -89,10 +87,9 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
     const ty = cy + Math.sin(mid) * labelR;
     const label = i % 2 === 0 ? "GAGNÉ !" : "PERDU !";
     const segHex = segmentHexColors[i] ?? "#ffffff";
-    /** Texte lisible sur part teintée : léger contour neutre + remplissage contrasté (sans 2e stroke couleur segment). */
+    /** Contraste fort sans double couche : le PNG `rouegpt` porte déjà le texte ; ce rendu sert au mode vectoriel seulement. */
     const lum = lumaFromHex(segHex);
     const fillCore = lum > 0.62 ? "#0f172a" : "#ffffff";
-    const strokeColor = lum > 0.62 ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.88)";
 
     ctx.save();
     ctx.translate(tx, ty);
@@ -105,9 +102,6 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-    ctx.lineWidth = outlineW;
-    ctx.strokeStyle = strokeColor;
-    ctx.strokeText(label, 0, 0);
     ctx.fillStyle = fillCore;
     ctx.fillText(label, 0, 0);
     ctx.restore();
@@ -257,24 +251,25 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
  * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
  */
 /**
- * Libellés seuls (GAGNÉ / PERDU) par-dessus une roue déjà rendue (ex. fond IA).
- * Même calage que le mode PNG du canvas : `wheelSegmentOffsetDeg` + décalage rainures.
+ * Libellés canvas (mode vectoriel uniquement). Le master PNG `rouegpt` inclut déjà la typo sur les parts.
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  */
 export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
+  if (s.wheelRenderMode === "png") return;
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  const pngAligned = s.wheelRenderMode !== "segments";
-  const labelOff = pngAligned ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
   const cols = wheelSegmentColorsResolved(s);
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, FLYER_WHEEL_SEGMENT_COUNT, s, cols);
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, FLYER_WHEEL_SEGMENT_COUNT, s, cols);
 }
 
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  /** Dès que `roue.png` est chargée : rendu image (trame + teintes). Sinon repli vectoriel minimal. */
-  const usePng = Boolean(roueImg);
+  /**
+   * PNG : l’asset officiel peint déjà GAGNÉ/PERDU — ne pas redessiner (double couche / « fantôme »).
+   * Vectoriel : pas d’image ou mode « segments » explicite.
+   */
+  const usePng = Boolean(roueImg) && s.wheelRenderMode === "png";
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
   if (!usePng) drawWheelVectorBacking(ctx, wheelCx, wheelCy, wheelR);
@@ -288,7 +283,9 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
-  /** GAGNÉ / PERDU au canvas — couleurs alignées sur les parts (charte flyer). */
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
+  /** Libellés uniquement si roue vectorielle (sinon typo déjà dans le PNG). */
+  if (!usePng) {
+    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
+  }
   drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }

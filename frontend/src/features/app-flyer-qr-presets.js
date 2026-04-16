@@ -280,7 +280,7 @@ export function mergeFlyerState(raw) {
     ...base,
     ...rawClean,
     templateId: FLYER_TEMPLATE_ID,
-    wheelRenderMode: "png",
+    wheelRenderMode: rawClean.wheelRenderMode === "segments" ? "segments" : "png",
   };
   merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
   /** Charte flyer : couleurs roue = primaire / secondaire si non fixées dans le JSON. */
