@@ -596,7 +596,7 @@ function drawFooterStepsWithIcons(ctx, w, canvasH, bannerBottom, s, icons) {
 
     const numSize = Math.round(fh * 0.38 * fsc);
     ctx.fillStyle = fg;
-    ctx.font = `700 ${numSize}px Outfit, system-ui, sans-serif`;
+    ctx.font = `700 ${numSize}px Inter, system-ui, sans-serif`;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     const numX = iconX + iconW + cw * 0.025;
@@ -606,7 +606,7 @@ function drawFooterStepsWithIcons(ctx, w, canvasH, bannerBottom, s, icons) {
     ctx.textAlign = "center";
     const fontPx = Math.round(fh * 0.09 * fsc);
     const lineH = Math.round(fh * 0.095 * fsc);
-    ctx.font = `600 ${fontPx}px Outfit, system-ui, sans-serif`;
+    ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
     ctx.fillStyle = fg;
     wrapCenter(ctx, steps[i] || "", cx, y0 + fh * 0.78, cw * 0.85, lineH);
   }
@@ -628,9 +628,9 @@ function drawFooterBar(ctx, w, h, s, bottomReserve = 0) {
     const cx = cw * i + cw / 2;
     const cy = y0 + fh * 0.5;
     ctx.fillStyle = fg;
-    ctx.font = `700 ${Math.round(fh * 0.14 * fsc)}px Outfit, system-ui, sans-serif`;
+    ctx.font = `700 ${Math.round(fh * 0.14 * fsc)}px Inter, system-ui, sans-serif`;
     ctx.fillText(icons[i], cx, cy - fh * 0.12);
-    ctx.font = `600 ${Math.round(fh * 0.09 * fsc)}px Outfit, system-ui, sans-serif`;
+    ctx.font = `600 ${Math.round(fh * 0.09 * fsc)}px Inter, system-ui, sans-serif`;
     const words = steps[i] || "";
     wrapCenter(ctx, words, cx, cy + fh * 0.1, cw * 0.85, Math.round(fh * 0.085 * fsc));
   }
@@ -683,10 +683,10 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   ctx.textBaseline = "middle";
 
   let maxW = 0;
-  ctx.font = `800 ${fontBig}px Outfit, system-ui, sans-serif`;
+  ctx.font = `800 ${fontBig}px Inter, system-ui, sans-serif`;
   maxW = Math.max(maxW, ctx.measureText(line1).width);
   if (line2) {
-    ctx.font = `700 ${fontSmall}px Outfit, system-ui, sans-serif`;
+    ctx.font = `700 ${fontSmall}px Inter, system-ui, sans-serif`;
     maxW = Math.max(maxW, ctx.measureText(line2).width);
   }
 
@@ -722,7 +722,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const cx = pillLeft + pillW / 2;
   let cy = pillTop + padY + row1H / 2;
   ctx.fillStyle = textFill;
-  ctx.font = `800 ${fontBig}px Outfit, system-ui, sans-serif`;
+  ctx.font = `800 ${fontBig}px Inter, system-ui, sans-serif`;
   ctx.strokeStyle = "#000000";
   ctx.lineWidth = Math.max(1.5, 2.8 * scale);
   ctx.lineJoin = "round";
@@ -730,7 +730,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   ctx.fillText(line1, cx, cy);
   if (line2) {
     cy = pillTop + padY + row1H + lineGap + row2H / 2;
-    ctx.font = `700 ${fontSmall}px Outfit, system-ui, sans-serif`;
+    ctx.font = `700 ${fontSmall}px Inter, system-ui, sans-serif`;
     ctx.strokeText(line2, cx, cy);
     ctx.fillText(line2, cx, cy);
   }

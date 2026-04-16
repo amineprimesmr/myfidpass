@@ -47,7 +47,7 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
   ctx.miterLimit = 2;
-  ctx.font = `900 ${fontSize}px Outfit, "Arial Black", system-ui, sans-serif`;
+  ctx.font = `900 ${fontSize}px Inter, "Arial Black", system-ui, sans-serif`;
 
   const maxW = w * 0.92;
   const lines = wrapCanvasTextLines(ctx, text.toUpperCase(), maxW).slice(0, 3);

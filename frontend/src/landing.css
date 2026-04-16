@@ -8,7 +8,7 @@
   --landing-muted: #6b7280;
   --landing-accent: #1e3a8a;
   --landing-accent-hover: #1e40af;
-  --landing-font: "Outfit", system-ui, sans-serif;
+  --landing-font: "Inter", system-ui, sans-serif;
 }
 
 #landing {
@@ -439,7 +439,7 @@
 }
 
 #landing #produit .landing-produit-headline {
-  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--landing-font);
   font-size: clamp(2rem, 5vw, 3.1rem);
   font-weight: 800;
   letter-spacing: -0.025em;
@@ -1633,7 +1633,7 @@
 }
 
 .landing-hero-title {
-  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--landing-font);
   font-size: clamp(2rem, 5vw, 3.1rem);
   font-weight: 800;
   letter-spacing: -0.025em;
@@ -2852,7 +2852,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  font-family: var(--landing-font, "Outfit", system-ui, sans-serif);
+  font-family: var(--landing-font);
   background: var(--landing-bg, #fafafa);
 }
 .builder-header-outer {
@@ -5302,7 +5302,7 @@ body.page-builder #builder-app main.landing-builder {
 
 /* ——— Checkout (style WHOOP : fond clair, cartes grises) ——— */
 .checkout-shell {
-  font-family: var(--landing-font, "Outfit", system-ui, sans-serif);
+  font-family: var(--landing-font);
   background: #f0f0f0;
   color: #1a1a1a;
   min-height: 100vh;

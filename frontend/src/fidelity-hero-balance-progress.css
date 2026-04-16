@@ -17,7 +17,7 @@
   font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  font-family: var(--fidelity-hero-progress-font, "Plus Jakarta Sans", system-ui, -apple-system, sans-serif);
+  font-family: var(--fidelity-hero-progress-font, "Inter", system-ui, sans-serif);
   background: linear-gradient(92deg, #6b1d4a 0%, #9b2248 28%, #e85d2a 72%, #ff7a2e 100%);
   -webkit-background-clip: text;
   background-clip: text;

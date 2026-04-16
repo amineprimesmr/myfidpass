@@ -75,7 +75,7 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
   ctx.beginPath();
   ctx.arc(cx, cy, r * 0.94, 0, Math.PI * 2);
   ctx.clip();
-  ctx.font = `800 ${fontPx}px Outfit, system-ui, sans-serif`;
+  ctx.font = `800 ${fontPx}px Inter, system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";

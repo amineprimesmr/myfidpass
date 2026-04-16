@@ -42,7 +42,7 @@
   --app-shadow-blue: 0 4px 16px rgba(37, 99, 235, 0.28), 0 2px 8px rgba(37, 99, 235, 0.18);
   --app-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --app-transition-bounce: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Outfit", system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   background: var(--app-bg);
   color: var(--app-text);
   -webkit-font-smoothing: antialiased;

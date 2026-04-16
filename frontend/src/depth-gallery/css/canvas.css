@@ -1,7 +1,7 @@
 /* Canvas WebGL — au-dessus du contenu landing pour être visible */
 #landing-depth-gallery-root /* Variables pour velocity-visualizer et plane-label (injectés dans body) */
 :root {
-  --ui-font: 'IBM Plex Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  --ui-font: "Inter", system-ui, sans-serif;
   --ui-tracking: 0.08em;
 }
 

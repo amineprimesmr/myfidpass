@@ -4,7 +4,7 @@
 /* ============================================================
    MyFidpass — Fidelity Client Page + Global Styles v2
    Theme: Premium dark (#0A0A0F) | Primary: #2563EB
-   Font: Outfit | Border-radius: 12px cards
+   Font: Inter | Border-radius: 12px cards
    ============================================================ */
 
 :root {
@@ -31,7 +31,7 @@
   --wallet: #000;
   --radius: 12px;
   --radius-lg: 16px;
-  --font: "Outfit", system-ui, sans-serif;
+  --font: "Inter", system-ui, sans-serif;
   --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -781,7 +781,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 .fidelity-v2-step-header .fidelity-v2-step-title--roulette .fidelity-v2-step-title-label,
 .fidelity-v2-step-header .fidelity-v2-step-title--rewards .fidelity-v2-step-title-label {
-  font-family: "Plus Jakarta Sans", var(--font, system-ui), sans-serif;
+  font-family: var(--font);
   padding-top: 0.06rem;
 }
 

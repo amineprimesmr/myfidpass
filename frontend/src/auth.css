@@ -31,7 +31,7 @@
   background: var(--auth-bg);
   position: relative;
   -webkit-font-smoothing: antialiased;
-  font-family: "Outfit", system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
 }
 
 /* Subtle dot-grid background */

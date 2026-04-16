@@ -20,6 +20,7 @@ import {
 } from "./app-flyer-bg-control.js";
 import { wireFlyerQrBackgroundGallery } from "./app-flyer-qr-wire-bg.js";
 import { initFlyerAiGenerate } from "./app-flyer-ai-generate.js";
+import { ensureFlyerDisplayFontsLoaded } from "./flyer-display-fonts-load.js";
 
 /** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string; dashboardApi?: (path: string, init?: RequestInit) => Promise<Response> }} FlyerQrOpts */
 
@@ -39,6 +40,8 @@ export function initAppFlyerQr(slug, opts) {
   const exportNote = document.getElementById("app-flyer-export-note");
 
   if (!root || !canvas || !(canvas instanceof HTMLCanvasElement)) return;
+
+  ensureFlyerDisplayFontsLoaded();
 
   const fontSel = root.querySelector("#app-flyer-headline-font");
   if (fontSel instanceof HTMLSelectElement && fontSel.options.length === 0) {

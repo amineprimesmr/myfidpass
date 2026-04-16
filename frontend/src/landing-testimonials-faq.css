@@ -29,7 +29,7 @@
 
 #landing .landing-testimonials-v2-title {
   margin: 0;
-  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   font-size: clamp(2rem, 5vw, 2.75rem);
   font-weight: 800;
   color: #111827;
@@ -173,7 +173,7 @@
 
 #landing .landing-faq-v2-title {
   margin: 0;
-  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   font-size: clamp(2rem, 5vw, 2.75rem);
   font-weight: 800;
   color: #111827;

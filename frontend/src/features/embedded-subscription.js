@@ -225,7 +225,7 @@ export async function initEmbeddedSubscriptionCheckout(opts) {
       colorBackground: "#ffffff",
       colorText: "#0f172a",
       colorDanger: "#b91c1c",
-      fontFamily: "Outfit, system-ui, -apple-system, sans-serif",
+      fontFamily: "Inter, system-ui, sans-serif",
       borderRadius: "12px",
       spacingUnit: "3px",
     },

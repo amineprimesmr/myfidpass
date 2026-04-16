@@ -273,12 +273,7 @@ body.fidelity-dr-scan-locked {
 }
 
 .fidelity-dr-scan-pill-text {
-  font-family:
-    system-ui,
-    -apple-system,
-    "SF Pro Text",
-    "Segoe UI",
-    sans-serif;
+  font-family: var(--font);
   font-size: 0.94rem;
   font-weight: 600;
   letter-spacing: 0.04em;

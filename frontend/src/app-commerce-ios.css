@@ -285,7 +285,7 @@
   .app-commerce-ios-social-icon--fb {
     background: #1877f2;
     color: #fff;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
   .app-commerce-ios-social-text {

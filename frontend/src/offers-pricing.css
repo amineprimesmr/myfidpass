@@ -11,7 +11,7 @@
   --op-accent: #3b82f6;
   --op-accent-hover: #2563eb;
   --op-accent-glow: rgba(59, 130, 246, 0.35);
-  font-family: "Outfit", system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   background: var(--op-bg);
   color: var(--op-text);
   min-height: 100vh;
