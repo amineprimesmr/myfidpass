@@ -134,7 +134,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 /* Phrase d’accroche par défaut : un peu plus bas sous le logo. */
 .fidelity-qr-title--lead:has(.fidelity-qr-title-layout--default-phrase) {
-  margin-top: clamp(0.55rem, 3.2vw, 1.35rem);
+  margin-top: clamp(0.78rem, 4vw, 1.65rem);
 }
 
 .fidelity-qr-title-layout {
@@ -165,15 +165,15 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 /* Phrase d’accroche par défaut : une ligne + pilule (2 lignes au total), typo un peu plus serrée. */
 .fidelity-qr-title-line--lead-single {
-  font-size: clamp(1.52rem, 4.65vw, 2.5rem);
-  font-weight: 600;
+  font-size: clamp(1.62rem, 4.9vw, 2.68rem);
+  font-weight: 500;
   letter-spacing: -0.05em;
   line-height: 1.06;
   text-wrap: balance;
 }
 
 .fidelity-qr-title-line--lead-single .fidelity-qr-title-line__part {
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .fidelity-qr-title-line--lead-single .fidelity-qr-title-line__emph {

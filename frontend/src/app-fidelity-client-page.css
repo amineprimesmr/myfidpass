@@ -243,7 +243,7 @@
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-title--lead:has(.fidelity-qr-title-layout--default-phrase) {
-  margin-top: clamp(0.55rem, 3.2cqw, 1.35rem);
+  margin-top: clamp(0.78rem, 4cqw, 1.65rem);
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-game {
