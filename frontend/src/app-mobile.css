@@ -149,6 +149,7 @@
     bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 4px);
     z-index: 99;
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
@@ -165,6 +166,74 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .app-mobile-trial-subscribe-pill__headline {
+    display: none;
+    margin: 0;
+  }
+
+  .app-mobile-trial-subscribe-pill__actions {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  /* Onglet Commerce : bandeau en haut, plus grande carte, angles moins arrondis (style promo type image). */
+  #app-app[data-mobile-section="profil"] .app-mobile-trial-subscribe-pill:not(.hidden) {
+    bottom: auto;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    z-index: 101;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.85rem;
+    min-height: 0;
+    padding: 1.05rem 1.1rem 1rem;
+    border-radius: 14px;
+    background: #1c1e21;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.42);
+  }
+
+  #app-app[data-mobile-section="profil"] .app-mobile-trial-subscribe-pill:not(.hidden) .app-mobile-trial-subscribe-pill__headline {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  #app-app[data-mobile-section="profil"] .app-mobile-trial-subscribe-pill:not(.hidden) .app-mobile-trial-subscribe-pill__actions {
+    flex: none;
+    width: 100%;
+  }
+
+  #app-app[data-mobile-section="profil"] .app-mobile-trial-subscribe-pill:not(.hidden) .app-mobile-trial-subscribe-pill__cta {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    background: #fff;
+    color: #0f172a;
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  #app-app[data-mobile-section="profil"] .app-mobile-trial-subscribe-pill:not(.hidden) .app-mobile-trial-subscribe-pill__badge {
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.78rem;
+  }
+
+  /* Espace sous la pastille fixe (hauteur carte + top + léger gap ; safe-area déjà dans le top de la pastille). */
+  .app-commerce-mobile-topbar.app-commerce-mobile-topbar--below-trial-pill {
+    margin-top: calc(150px + env(safe-area-inset-top, 0px));
   }
 
   .app-mobile-trial-subscribe-pill:not(.hidden) {

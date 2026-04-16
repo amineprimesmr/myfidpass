@@ -543,6 +543,23 @@ const APP_MOBILE_TITLES = {
 let _flushNotificationBannerTextsRef = null;
 let _lastShownAppSectionId = null;
 
+/** Pastille essai : texte + marge topbar Commerce quand l’onglet Profil est actif et la pastille visible. */
+function syncTrialPillCommerceLayout() {
+  const app = document.getElementById("app-app");
+  const pill = document.getElementById("app-mobile-trial-subscribe-pill");
+  const topbar = document.querySelector("#profil .app-commerce-mobile-topbar");
+  const cta = document.querySelector(".app-mobile-trial-subscribe-pill__cta");
+  if (!app) return;
+  const section = app.getAttribute("data-mobile-section") || "";
+  const trialVisible = !!(pill && !pill.classList.contains("hidden"));
+  if (cta) {
+    cta.textContent = section === "profil" ? "Profiter de l'offre" : "Abonnez-vous pour 1 €";
+  }
+  if (topbar) {
+    topbar.classList.toggle("app-commerce-mobile-topbar--below-trial-pill", section === "profil" && trialVisible);
+  }
+}
+
 function showAppSectionCore(sectionId) {
   const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
   let id = APP_SECTION_IDS.includes(normalized) ? normalized : "dashboard";
@@ -577,6 +594,7 @@ function showAppSectionCore(sectionId) {
         else t.removeAttribute("aria-current");
       });
       document.getElementById("app-app")?.setAttribute("data-mobile-section", "creer-commerce");
+      syncTrialPillCommerceLayout();
       const headerTitleCreer = document.getElementById("app-mobile-header-title");
       if (headerTitleCreer) headerTitleCreer.textContent = "Créer ma carte";
       const hashCreer = "#creer-commerce";
@@ -617,6 +635,7 @@ function showAppSectionCore(sectionId) {
     else t.removeAttribute("aria-current");
   });
   document.getElementById("app-app")?.setAttribute("data-mobile-section", id);
+  syncTrialPillCommerceLayout();
   const headerTitle = document.getElementById("app-mobile-header-title");
   if (headerTitle) headerTitle.textContent = APP_MOBILE_TITLES[id] || "Myfidpass";
   const newHash = "#" + id;
@@ -3902,11 +3921,13 @@ function initAppDashboard(slug) {
     }
     if (isAdmin || !trialEndRaw) {
       syncVisibility(false);
+      syncTrialPillCommerceLayout();
       return;
     }
     const endMs = Date.parse(trialEndRaw);
     if (!Number.isFinite(endMs) || Date.now() >= endMs) {
       syncVisibility(false);
+      syncTrialPillCommerceLayout();
       return;
     }
     const tick = () => {
@@ -3915,6 +3936,7 @@ function initAppDashboard(slug) {
       const t = Date.parse(trialEndRaw);
       if (Number.isFinite(t) && Date.now() >= t) {
         syncVisibility(false);
+        syncTrialPillCommerceLayout();
         if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
           clearInterval(window.__fidpassTrialPillTimer);
           window.__fidpassTrialPillTimer = null;
@@ -3926,6 +3948,7 @@ function initAppDashboard(slug) {
       window.__fidpassTrialPillTimer = setInterval(tick, 30000);
     }
     syncVisibility(true);
+    syncTrialPillCommerceLayout();
   }
 
   const trialPillEl = document.getElementById("app-mobile-trial-subscribe-pill");
