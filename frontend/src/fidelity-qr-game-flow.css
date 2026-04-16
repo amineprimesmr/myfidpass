@@ -347,13 +347,13 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 }
 
 .fidelity-v2-roulette-inline--qr {
-  margin-top: clamp(2.75rem, 6.5vmin, 4rem);
+  margin-top: clamp(4rem, 10vmin, 6.5rem);
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: visible;
-  padding-bottom: clamp(1.85rem, 10vmin, 3.5rem);
+  padding-bottom: clamp(2.5rem, 12vmin, 4.5rem);
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
@@ -454,21 +454,21 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   flex: 1 1 auto;
   /* Hauteur stable : la roue s’ancre en bas (position fixe dans la zone). */
   min-height: min(56dvh, 64vmin, 480px);
-  padding-bottom: clamp(3.35rem, 20vmin, 6.25rem);
+  padding-bottom: clamp(4.75rem, 26vmin, 8.5rem);
   overflow: visible;
   background: transparent;
   background-image: none;
   align-items: flex-end;
 }
 
-/* Roue ancrée en bas de la zone + décalage vers le bas de l’écran. */
+/* Roue ancrée en bas de la zone + décalage fort vers le bas de l’écran. */
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
   top: auto;
-  bottom: -1.35rem;
+  bottom: -2.85rem;
   right: 0;
   width: min(96vmin, 100vw);
   height: min(96vmin, 100vw);
-  transform: translate(-26%, min(5.5vmin, 1.85rem));
+  transform: translate(-26%, min(9.5vmin, 3.15rem));
   transform-origin: 50% 100%;
 }
 
@@ -514,10 +514,10 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 
 @media (max-width: 480px) {
   .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
-    bottom: -1.1rem;
+    bottom: -2.6rem;
     width: min(92vmin, 98vw);
     height: min(92vmin, 98vw);
-    transform: translate(-28%, min(6vmin, 1.65rem));
+    transform: translate(-28%, min(10vmin, 2.85rem));
   }
 }
 
