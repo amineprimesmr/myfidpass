@@ -2837,8 +2837,8 @@ function initAppDashboard(slug) {
       syncIosHomeToolbar();
     }
     if (e.detail?.sectionId === "engagement") {
-      runEngagementAutoSuggest();
-      setEngagementPreviewIframeSrc();
+    runEngagementAutoSuggest();
+    setEngagementPreviewIframeSrc();
     }
   }, { once: false });
   if (document.getElementById("engagement")?.classList.contains("app-section-visible")) setEngagementPreviewIframeSrc();
@@ -5111,9 +5111,9 @@ function initAppDashboard(slug) {
             <div class="app-dashboard-recent-row-name">
               <span class="app-dashboard-recent-avatar ${avatarColors[i % avatarColors.length]}" aria-hidden="true">${escapeHtml(initial(t.member_name || t.member_email))}</span>
               <div class="app-dashboard-recent-name-stack">
-                <span class="app-dashboard-recent-name">${escapeHtml(t.member_name || "Sans nom")}</span>
+              <span class="app-dashboard-recent-name">${escapeHtml(t.member_name || "Sans nom")}</span>
                 <span class="app-dashboard-recent-date-inline">${escapeHtml(formatRecentDateShort(t.created_at))}</span>
-              </div>
+            </div>
             </div>
             <span class="app-dashboard-recent-type app-dashboard-recent-row-type">${escapeHtml(typeLabel(t))}</span>
             <span class="app-dashboard-recent-date app-dashboard-recent-date--desktop">${escapeHtml(formatRecentDate(t.created_at))}</span>
@@ -5702,13 +5702,13 @@ function initAppDashboard(slug) {
         } else {
           if (total === 0) {
             el.textContent = "Aucun appareil enregistré.";
-          } else if (membersCount > 0) {
+        } else if (membersCount > 0) {
             el.textContent = `${membersCount} membre(s) · ${total} appareil(s) pour les envois.`;
-          } else if (wallet > 0 && web > 0) {
+        } else if (wallet > 0 && web > 0) {
             el.textContent = `${total} appareil(s) (Wallet et navigateur).`;
-          } else if (wallet > 0) {
+        } else if (wallet > 0) {
             el.textContent = `${total} appareil(s) (Apple Wallet).`;
-          } else {
+        } else {
             el.textContent = `${total} appareil(s) pour les envois.`;
           }
           if (total > 0 || membersCount > 0) el.classList.remove("hidden");
