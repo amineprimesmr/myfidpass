@@ -11,6 +11,7 @@ Ce projet (Fidpass) est développé **uniquement en production**. Les changement
 
 - **Déployer automatiquement** à la fin des modifications quand tu as fait des changements qui touchent le code en prod (frontend, backend, config). L’utilisateur ne doit pas avoir à redemander à chaque fois.
 - Commande : `npm run deploy` à la racine (git add, commit « Deploy: mise à jour YYYY-MM-DD », push → Vercel + Railway).
+- Si l’utilisateur dit de **déployer tout**, ou demande explicitement de **déployer automatiquement à chaque modif**, alors il faut lancer le déploiement **même si le repo contient déjà d’autres changements**. Dans ce cas, ne pas bloquer pour redemander une confirmation sur le worktree sale.
 - **Ne pas déployer** si l’utilisateur a explicitement dit de ne pas déployer, ou si les changements sont uniquement des brouillons / fichiers temporaires / docs internes.
 
 En résumé : une fois une tâche terminée avec des modifs réelles → lancer le déploiement sans attendre que l’utilisateur le demande.

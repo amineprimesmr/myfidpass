@@ -11,6 +11,7 @@ Ce projet (Fidpass) est développé **uniquement en production**. Les changement
 
 - **Déployer en fin de session** dès que des modifications (code, config) ont été faites et sont terminées. Ne pas attendre que l’utilisateur demande « déploie » à chaque fois.
 - Commande : `npm run deploy` à la racine → `git add -A`, commit, `git push origin main` → Vercel (front) et Railway (back).
+- Si l’utilisateur demande de **tout déployer** ou précise qu’il faut **déployer après chaque modification**, alors il faut exécuter le déploiement sans reposer la question, y compris si d’autres changements existent déjà dans le dépôt.
 - **Exception** : ne pas déployer si l’utilisateur a dit de ne pas déployer, ou si seuls des brouillons / fichiers temporaires ont été modifiés.
 
 Tu peux rappeler en une phrase que le déploiement a été lancé et qu’il faut attendre 1–2 min puis rafraîchir myfidpass.fr.
