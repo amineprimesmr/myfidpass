@@ -274,26 +274,40 @@ export function bindQrGameUi(ctx) {
     const el = mysteryFloatEl;
     if (!(el instanceof HTMLElement)) return;
     const reduced = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
-    /* Petit déplacement par clic (px), borné pour rester « juste un peu ». */
-    const maxHalf = reduced ? 12 : 18 + Math.random() * 24;
-    const dx = (Math.random() - 0.5) * 2 * maxHalf;
-    const dy = (Math.random() - 0.5) * 2 * maxHalf;
     const baseL = parsePxVar(el, "--fid-mb-x");
     const baseT = parsePxVar(el, "--fid-mb-y");
-    let tx = parsePxVar(el, "--fid-mb-tx") + dx;
-    let ty = parsePxVar(el, "--fid-mb-ty") + dy;
+    const curTx = parsePxVar(el, "--fid-mb-tx");
+    const curTy = parsePxVar(el, "--fid-mb-ty");
     const w = el.offsetWidth;
     const h = el.offsetHeight;
-    const margin = 10;
+    const margin = 14;
     const vw = globalThis.innerWidth;
     const vh = globalThis.innerHeight;
     const minTx = margin - baseL;
     const maxTx = vw - margin - w - baseL;
     const minTy = margin - baseT;
     const maxTy = vh - margin - h - baseT;
+    /* Saut net : distance angulaire (plus loin, plus lisible qu’un petit bruit x/y). */
+    const minDist = reduced ? 28 : 88;
+    const maxDist = reduced ? 56 : 165 + Math.random() * 115;
+    const dist = minDist + Math.random() * (maxDist - minDist);
+    const angle = Math.random() * Math.PI * 2;
+    let tx = curTx + Math.cos(angle) * dist;
+    let ty = curTy + Math.sin(angle) * dist;
     tx = Math.max(minTx, Math.min(maxTx, tx));
     ty = Math.max(minTy, Math.min(maxTy, ty));
-    const rot = -14 + Math.random() * 28;
+    /* Si le bord a trop rogné le vecteur, pousser un peu vers le centre de la zone jouable. */
+    const cx = (minTx + maxTx) / 2;
+    const cy = (minTy + maxTy) / 2;
+    if (Math.hypot(tx - curTx, ty - curTy) < minDist * 0.65) {
+      const towardCx = cx - curTx;
+      const towardCy = cy - curTy;
+      const len = Math.hypot(towardCx, towardCy) || 1;
+      const push = Math.min(minDist, Math.max(maxTx - minTx, maxTy - minTy) * 0.35);
+      tx = Math.max(minTx, Math.min(maxTx, curTx + (towardCx / len) * push));
+      ty = Math.max(minTy, Math.min(maxTy, curTy + (towardCy / len) * push));
+    }
+    const rot = -20 + Math.random() * 40;
     el.style.setProperty("--fid-mb-tx", `${tx}px`);
     el.style.setProperty("--fid-mb-ty", `${ty}px`);
     el.style.setProperty("--fid-mb-rot", `${rot}deg`);
