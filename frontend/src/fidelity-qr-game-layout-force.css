@@ -11,6 +11,8 @@
   box-sizing: border-box !important;
   overflow-x: hidden !important;
   overflow-y: visible !important;
+  /* Bat style.css / .fidelity-page : pas de panneau gris entre le dégradé global et le footer. */
+  background: transparent !important;
 }
 
 #app-app #app-fidelity-client-live-preview-root.fidelity-page:has(> main.fidelity-qr-game) {
@@ -39,7 +41,13 @@
   margin-top: auto !important;
   flex-shrink: 0 !important;
   width: 100% !important;
-  /* Peu de noir au-dessus du texte ; en dessous = surtout safe-area (un gros padding-bottom REMONTE le libellé) */
+  /* Pas de bandeau noir : le dégradé continue sous le texte « pro ». */
+  background: transparent !important;
+  color: #64748b !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.35) !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  /* Peu d’espace au-dessus du texte ; en dessous = surtout safe-area (un gros padding-bottom REMONTE le libellé) */
   padding-top: 0.45rem !important;
   padding-bottom: max(0.55rem, calc(env(safe-area-inset-bottom, 0px) + 0.4rem)) !important;
 }

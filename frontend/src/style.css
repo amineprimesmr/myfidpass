@@ -76,10 +76,9 @@ body.fidpass-fidelity-route {
   background: #f8fafc;
 }
 
-/* Page jeu QR : fond clair uni (lisibilité + cohérence avec le flyer) ; scroll si la roue dépasse le viewport. */
+/* Page jeu QR : dégradé global dans fidelity-qr-game-flow.css (html/body) ; scroll si la roue dépasse le viewport. */
 html.fidpass-fidelity-route:has(main.fidelity-qr-game),
 body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
-  background: #f8fafc;
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 100dvh;
@@ -96,7 +95,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   overflow-x: hidden;
   overflow-y: visible;
   box-sizing: border-box;
-  background: #f8fafc;
+  /* Laisse voir le dégradé html/body sur toute la hauteur (footer, safe-area, pas de bande grise). */
+  background: transparent;
 }
 
 /* ── Site banner media ── */

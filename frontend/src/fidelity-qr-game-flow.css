@@ -3,7 +3,20 @@
 html.fidpass-fidelity-route:has(main.fidelity-qr-game),
 body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   overflow-x: hidden;
-  background: linear-gradient(180deg, #eef3ff 0%, #e7eefc 42%, #dbe8ff 100%);
+  /* Même base que .fidelity-qr-game::before : fond plein viewport (haut/bas, barre navigateur, safe-area). */
+  background-color: #dfeaff;
+  background-image:
+    radial-gradient(circle at 16% 18%, rgba(173, 140, 255, 0.22) 0%, transparent 18%),
+    radial-gradient(circle at 78% 82%, rgba(98, 162, 255, 0.24) 0%, transparent 24%),
+    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0) 58%),
+    linear-gradient(180deg, #eff4ff 0%, #e8f0ff 40%, #dfeaff 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  /* Hauteur minimale : éviter bandes au-dessus/dessous du viewport (iOS, barre d’URL). */
+  min-height: 100dvh;
+  min-height: 100lvh;
+  min-height: -webkit-fill-available;
 }
 
 /* Shell #fidelity-app : colonne ; hauteur min viewport, contenu peut grandir pour ne pas rogner la roue */
