@@ -27,10 +27,10 @@
  */
 import { createPrivateKey } from "node:crypto";
 import { createSigner } from "fast-jwt";
-import { ApnsClient, Notification, SilentNotification, PushType } from "apns2";
+import { ApnsClient, Notification, SilentNotification, PushType, Priority } from "apns2";
 import logger from "./lib/logger.js";
 
-const APNS_BUILD = "2026-04-03-background-content-available-fix";
+const APNS_BUILD = "2026-04-17-background-priority-5-fix";
 
 /** En-tête PEM Apple Auth Key (.p8) : PKCS#8 « BEGIN PRIVATE KEY » ou legacy « BEGIN EC PRIVATE KEY ». */
 const PEM_APNS_AUTH_KEY = /-----BEGIN\s+(?:EC\s+)?PRIVATE KEY-----/;
@@ -263,12 +263,21 @@ export function sendPassKitUpdate(deviceToken) {
   // contentAvailable: true → ajoute "content-available": 1 dans le payload aps.
   //
   // Expiration 86400s (24h) : si le téléphone est offline, Apple retentera pendant 24h.
-  // priority: 10 (immediate) est le défaut de Notification — Apple autorise priority 10
-  // pour les background PassKit updates (exception à la règle background=priority 5).
+  //
+  // CRITIQUE — priorité 5 (throttled) :
+  //   Apple impose `apns-priority: 5` pour `apns-push-type: background`. Si on envoie
+  //   priorité 10 (défaut apns2), APNs peut renvoyer 400 BadPriority OU accepter le
+  //   200 en apparence mais DROP silencieusement la livraison côté appareil.
+  //   Symptôme observé côté commerçant : après un changement d’icône de notif, la
+  //   bannière Wallet continuait d’afficher l’ANCIEN `icon.png` parce que le silent
+  //   push n’était jamais livré et Wallet ne refetch pas le pass.
+  //   Voir https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns
+  //   (section "Create a POST request to APNs" : "Use priority 5 for background pushes").
   const note = new Notification(deviceToken, {
     topic: passTypeId,
     expiration: Math.floor(Date.now() / 1000) + 86400,
     type: PushType.background,
+    priority: Priority.throttled,
     contentAvailable: true,
     aps: {},
   });
