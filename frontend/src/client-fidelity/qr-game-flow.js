@@ -274,7 +274,8 @@ export function bindQrGameUi(ctx) {
     const el = mysteryFloatEl;
     if (!(el instanceof HTMLElement)) return;
     const reduced = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
-    const maxHalf = reduced ? 18 : 38 + Math.random() * 34;
+    /* Petit déplacement par clic (px), borné pour rester « juste un peu ». */
+    const maxHalf = reduced ? 12 : 18 + Math.random() * 24;
     const dx = (Math.random() - 0.5) * 2 * maxHalf;
     const dy = (Math.random() - 0.5) * 2 * maxHalf;
     const baseL = parsePxVar(el, "--fid-mb-x");
