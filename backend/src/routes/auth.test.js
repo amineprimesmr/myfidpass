@@ -29,6 +29,22 @@ describe("Auth API", () => {
     expect(res.body.requires_business_setup).toBe(false);
   });
 
+  it("POST /api/auth/check-email returns account_exists for known and unknown emails", async () => {
+    const known = await request(app)
+      .post("/api/auth/check-email")
+      .set("Content-Type", "application/json")
+      .send({ email: testEmail });
+    expect(known.status).toBe(200);
+    expect(known.body.account_exists).toBe(true);
+
+    const unknown = await request(app)
+      .post("/api/auth/check-email")
+      .set("Content-Type", "application/json")
+      .send({ email: `unknown-${Date.now()}@example.com` });
+    expect(unknown.status).toBe(200);
+    expect(unknown.body.account_exists).toBe(false);
+  });
+
   it("POST /api/auth/register with duplicate email returns 409", async () => {
     const res = await request(app)
       .post("/api/auth/register")

@@ -86,6 +86,11 @@ export const schemas = {
     password: z.string({ required_error: "Mot de passe requis" }).min(1, "Mot de passe requis").max(128),
   }),
 
+  // POST /auth/check-email — existence d’un compte (flux connexion / inscription app)
+  checkEmail: z.object({
+    email: emailSchema,
+  }),
+
   // POST /auth/forgot-password
   forgotPassword: z.object({
     email: emailSchema,

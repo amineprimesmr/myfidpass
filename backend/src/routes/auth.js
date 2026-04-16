@@ -313,6 +313,16 @@ async function getAppleSigningKeyPem(kid) {
 }
 
 /**
+ * POST /api/auth/check-email
+ * Body: { email } — indique si un compte existe (flux e-mail en deux étapes côté app).
+ */
+router.post("/check-email", validate(schemas.checkEmail), (req, res) => {
+  const emailNorm = req.body.email;
+  const exists = !!getUserByEmail(emailNorm);
+  return res.json({ account_exists: exists });
+});
+
+/**
  * POST /api/auth/register
  * Body: { email, password, name?, google_place_id? | googlePlaceId?, establishment_name? }
  * Si google_place_id est fourni et Places configuré, crée le premier commerce (nom + adresse Google).
