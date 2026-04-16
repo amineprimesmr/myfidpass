@@ -12,12 +12,17 @@ function renderQrLeadTitleMarkup(titleEsc) {
   let line1 = "";
   let line2 = "";
   let pill = "";
+  /** Fragment HTML statique (phrase d’accroche par défaut : emphase partielle). */
+  let line1Html = "";
   /** @type {string} */
   let line1Class = "fidelity-qr-title-line--soft";
 
   if (/^participez au jeu et tentez de gagner une récompense$/i.test(title)) {
-    /* 2 lignes visuelles : une ligne de texte + pilule (au lieu de 3 blocs empilés). */
-    line1 = "PARTICIPEZ AU JEU ET TENTEZ DE GAGNER UNE";
+    /* 2 lignes visuelles : une ligne de texte + pilule ; seuls « tentez de gagner » en gras. */
+    line1Html =
+      '<span class="fidelity-qr-title-line__part">PARTICIPEZ AU JEU ET </span>' +
+      '<strong class="fidelity-qr-title-line__emph">TENTEZ DE GAGNER</strong>' +
+      '<span class="fidelity-qr-title-line__part"> UNE</span>';
     line2 = "";
     pill = "RECOMPENSE";
     line1Class = "fidelity-qr-title-line--lead-single";
@@ -31,8 +36,18 @@ function renderQrLeadTitleMarkup(titleEsc) {
     pill = String(words.at(-1) || title).toUpperCase();
   }
 
-  return `<span class="fidelity-qr-title-layout">
-    ${line1 ? `<span class="fidelity-qr-title-line ${line1Class}">${line1}</span>` : ""}
+  const layoutClass = line1Html
+    ? "fidelity-qr-title-layout fidelity-qr-title-layout--default-phrase"
+    : "fidelity-qr-title-layout";
+
+  return `<span class="${layoutClass}">
+    ${
+      line1Html
+        ? `<span class="fidelity-qr-title-line ${line1Class}">${line1Html}</span>`
+        : line1
+          ? `<span class="fidelity-qr-title-line ${line1Class}">${line1}</span>`
+          : ""
+    }
     ${line2 ? `<span class="fidelity-qr-title-line fidelity-qr-title-line--strong">${line2}</span>` : ""}
     <span class="fidelity-qr-title-pill-wrap">
       <span class="fidelity-qr-title-pill">${pill}</span>

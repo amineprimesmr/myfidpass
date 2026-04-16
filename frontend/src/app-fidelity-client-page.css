@@ -242,6 +242,10 @@
   max-width: min(22rem, 92cqw);
 }
 
+#app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-title--lead:has(.fidelity-qr-title-layout--default-phrase) {
+  margin-top: clamp(0.55rem, 3.2cqw, 1.35rem);
+}
+
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-qr-game {
   padding-left: max(1rem, 12px) !important;
   padding-right: calc(max(1.25rem, 12px) + 16px) !important;
