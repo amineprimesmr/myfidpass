@@ -237,14 +237,16 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 .fidelity-qr-hero-decor-chip--mysterybox {
   left: clamp(0rem, 2vw, 0.7rem);
   top: clamp(8rem, 26vw, 10rem);
-  width: clamp(2.8rem, 12vw, 4.5rem);
-  height: clamp(2.8rem, 12vw, 4.5rem);
-  border-radius: 1rem;
+  width: clamp(3.35rem, 14vw, 5.35rem);
+  height: clamp(3.35rem, 14vw, 5.35rem);
+  border-radius: 0;
   display: block;
   object-fit: contain;
   object-position: center;
   transform: rotate(-12deg);
-  filter: drop-shadow(0 12px 22px rgba(88, 28, 135, 0.22));
+  /* PNG avec alpha : pas de fond derrière ; ombre portée côté CSS pour l’intégration au dégradé. */
+  filter: drop-shadow(0 16px 28px rgba(88, 28, 135, 0.32))
+    drop-shadow(0 6px 14px rgba(15, 23, 42, 0.2));
 }
 
 .fidelity-qr-hero-decor-chip--spark {
@@ -318,8 +320,8 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   }
 
   .fidelity-qr-hero-decor-chip--mysterybox {
-    left: -0.15rem;
-    top: 7.3rem;
+    left: -0.2rem;
+    top: 7.1rem;
   }
 
   .fidelity-qr-hero-decor-chip--spark {
