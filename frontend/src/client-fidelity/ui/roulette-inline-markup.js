@@ -12,6 +12,7 @@ export function renderRouletteInlineMarkup(esc, p) {
   const ptsWord = tickets === 1 ? "point" : "points";
   /** Rendu immédiat des parts (évite disque noir avant exécution de initRouletteWheel). */
   const wheelBgEsc = esc(buildWheelConicGradient(WHEEL_SEGMENT_COUNT));
+  /** Fond sur `.fidelity-roulette-wheel-bg` : même rendu que `applyWheelFaceGradient` (évite bug WebKit au spin). */
   const innerBtn = qr
     ? `<span class="fidelity-shiny-cta__label">
                 <span>Jouer la partie</span>
@@ -41,7 +42,9 @@ export function renderRouletteInlineMarkup(esc, p) {
         <div class="fidelity-roulette-wheel-zone">
           <div class="fidelity-roulette-wheel-mount">
             <div class="fidelity-roulette-wheel-outer">
-              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel" style="background-image: ${wheelBgEsc};"></div>
+              <div class="fidelity-roulette-wheel" id="fidelity-roulette-wheel">
+                <div class="fidelity-roulette-wheel-bg" aria-hidden="true" style="background: ${wheelBgEsc};"></div>
+              </div>
               <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
               <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
             </div>

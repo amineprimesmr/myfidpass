@@ -4,17 +4,12 @@
  */
 export const WHEEL_SEGMENT_COUNT = 8;
 
-/** Pastels clairs distincts par part (défaut sans couleurs flyer). */
-const DEFAULT_SEGMENT_SOLIDS = [
-  "#dbeafe",
-  "#fce7f3",
-  "#d1fae5",
-  "#fef3c7",
-  "#e0e7ff",
-  "#f3e8ff",
-  "#ccfbf1",
-  "#ffedd5",
-];
+/**
+ * Défaut sans flyer personnalisé : **2 couleurs** alternées (cadeau / PERDU) — contrastées, lisibles.
+ * Dès que le commerçant enregistre des teintes flyer (`wheelOdd` / `wheelEven`), elles remplacent ces valeurs.
+ */
+export const DEFAULT_WHEEL_COLOR_ODD = "#0f172a";
+export const DEFAULT_WHEEL_COLOR_EVEN = "#f8fafc";
 
 /**
  * Fond conique : une couleur unie par part (pas de dégradé dans une même part).
@@ -38,13 +33,33 @@ export function buildWheelConicGradient(n, opts = {}) {
     const b = (i + 1) * step;
     let color;
     if (i % 2 === 0) {
-      color = isHex(colorOdd) ? colorOdd.trim() : DEFAULT_SEGMENT_SOLIDS[i % DEFAULT_SEGMENT_SOLIDS.length];
+      color = isHex(colorOdd) ? colorOdd.trim() : DEFAULT_WHEEL_COLOR_ODD;
     } else {
-      color = isHex(colorEven) ? colorEven.trim() : DEFAULT_SEGMENT_SOLIDS[i % DEFAULT_SEGMENT_SOLIDS.length];
+      color = isHex(colorEven) ? colorEven.trim() : DEFAULT_WHEEL_COLOR_EVEN;
     }
     stops.push(`${color} ${a}deg ${b}deg`);
   }
   return `conic-gradient(${stops.join(", ")})`;
+}
+
+/**
+ * Calque interne pour le fond conique : évite sur WebKit (Safari / WKWebView) un fond « qui disparaît »
+ * quand la même couche porte `transform: rotate()` + `background: conic-gradient` pendant une longue transition.
+ * @param {HTMLElement} wheelEl — `#fidelity-roulette-wheel`
+ * @param {number} n
+ * @param {{ colorOdd?: string | null, colorEven?: string | null }} [opts]
+ */
+export function applyWheelFaceGradient(wheelEl, n, opts = {}) {
+  if (!wheelEl) return;
+  let fill = wheelEl.querySelector(".fidelity-roulette-wheel-bg");
+  if (!fill) {
+    fill = document.createElement("div");
+    fill.className = "fidelity-roulette-wheel-bg";
+    fill.setAttribute("aria-hidden", "true");
+    wheelEl.insertBefore(fill, wheelEl.firstChild);
+  }
+  fill.style.background = buildWheelConicGradient(n, opts);
+  wheelEl.style.background = "transparent";
 }
 
 /** Défaut : parts paires = lots (visuel cadeau), impaires = PERDU — alternance stricte. */

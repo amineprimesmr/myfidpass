@@ -8,11 +8,11 @@ import { createClientFidelityStore } from "./state/store.js";
 import { renderClientPage } from "./ui/view.js";
 import { memberStorageKey, SUCCESS_MAX_AGE_MS } from "./constants.js";
 import {
+  applyWheelFaceGradient,
   buildWheelSegmentHtml,
   DEFAULT_WHEEL_LABELS,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
-  buildWheelConicGradient,
 } from "./lib/wheel-segments.js";
 import { isUnlimitedTicketsDemo } from "./lib/unlimited-tickets-demo.js";
 import { startRouletteSpinSound } from "./lib/roulette-spin-audio.js";
@@ -176,7 +176,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
     const n = wheelLabels.length;
     const fc = store.get().business?.flyerColors;
-    wheelEl.style.background = buildWheelConicGradient(n, {
+    applyWheelFaceGradient(wheelEl, n, {
       colorOdd: fc?.wheelOdd ?? null,
       colorEven: fc?.wheelEven ?? null,
     });
@@ -192,12 +192,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       )
       .join("");
 
+    const fill = wheelEl.querySelector(".fidelity-roulette-wheel-bg");
     let shine = wheelEl.querySelector(".fidelity-roulette-wheel-shine");
     if (!shine) {
       shine = document.createElement("div");
       shine.className = "fidelity-roulette-wheel-shine";
       shine.setAttribute("aria-hidden", "true");
-      wheelEl.insertBefore(shine, wheelEl.firstChild);
+      if (fill) {
+        fill.after(shine);
+      } else {
+        wheelEl.insertBefore(shine, wheelEl.firstChild);
+      }
     }
     let disc = wheelEl.querySelector(".fidelity-roulette-wheel-disc");
     if (!disc) {

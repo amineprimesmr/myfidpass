@@ -3,7 +3,7 @@
  */
 
 import {
-  buildWheelConicGradient,
+  applyWheelFaceGradient,
   buildWheelSegmentHtml,
   normalizeWheelLabelsFromSegments,
 } from "../client-fidelity/lib/wheel-segments.js";
@@ -52,7 +52,7 @@ function paintPreviewWheel(wheelEl, segments) {
   if (!wheelEl) return;
   const wheelLabels = normalizeWheelLabelsFromSegments(Array.isArray(segments) ? segments : []);
   const n = wheelLabels.length;
-  wheelEl.style.background = buildWheelConicGradient(n);
+  applyWheelFaceGradient(wheelEl, n, {});
   wheelEl.style.transform = "rotate(0deg)";
 
   const segmentHtml = wheelLabels
@@ -65,12 +65,17 @@ function paintPreviewWheel(wheelEl, segments) {
     )
     .join("");
 
+  const fill = wheelEl.querySelector(".fidelity-roulette-wheel-bg");
   let shine = wheelEl.querySelector(".fidelity-roulette-wheel-shine");
   if (!shine) {
     shine = document.createElement("div");
     shine.className = "fidelity-roulette-wheel-shine";
     shine.setAttribute("aria-hidden", "true");
-    wheelEl.insertBefore(shine, wheelEl.firstChild);
+    if (fill) {
+      fill.after(shine);
+    } else {
+      wheelEl.insertBefore(shine, wheelEl.firstChild);
+    }
   }
   let disc = wheelEl.querySelector(".fidelity-roulette-wheel-disc");
   if (!disc) {

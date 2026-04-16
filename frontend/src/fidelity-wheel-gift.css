@@ -192,3 +192,20 @@
     will-change: auto;
   }
 }
+
+/* Fond conique sur calque interne : évite le fond « vide » pendant le spin (Safari / WKWebView). */
+.fidelity-roulette-wheel-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.fidelity-roulette-wheel--is-spinning .fidelity-roulette-wheel-bg {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}

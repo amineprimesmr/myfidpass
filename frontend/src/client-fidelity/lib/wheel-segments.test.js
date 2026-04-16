@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildWheelConicGradient,
   buildWheelSegmentHtml,
+  DEFAULT_WHEEL_COLOR_EVEN,
+  DEFAULT_WHEEL_COLOR_ODD,
   DEFAULT_WHEEL_LABELS,
   normalizeWheelLabelsFromSegments,
   pickWheelIndexForReward,
@@ -23,6 +25,13 @@ describe("buildWheelConicGradient", () => {
     const g = buildWheelConicGradient(8);
     expect(g.startsWith("conic-gradient(")).toBe(true);
     expect(g).toContain("deg");
+  });
+
+  it("sans couleurs flyer : alterne seulement deux teintes (pas 8 pastels)", () => {
+    const g = buildWheelConicGradient(8);
+    expect(g.split(DEFAULT_WHEEL_COLOR_ODD).length - 1).toBeGreaterThanOrEqual(4);
+    expect(g.split(DEFAULT_WHEEL_COLOR_EVEN).length - 1).toBeGreaterThanOrEqual(4);
+    expect(g).not.toContain("#dbeafe");
   });
 });
 
