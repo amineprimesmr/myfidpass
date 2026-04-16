@@ -91,6 +91,29 @@
   pointer-events: none;
 }
 
+.fidelity-game-page .fidelity-roulette-wheel-mount::before {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 10%;
+  bottom: 6%;
+  height: 18%;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(15, 23, 42, 0.28) 0%,
+      rgba(15, 23, 42, 0.2) 34%,
+      rgba(15, 23, 42, 0.08) 58%,
+      transparent 78%
+    );
+  filter: blur(20px);
+  transform: translate3d(0, 10px, -1px) scaleX(1.04);
+  transform-origin: center;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .fidelity-game-page .fidelity-roulette-wheel-outer {
   position: relative;
   width: 100%;
@@ -99,6 +122,20 @@
   top: auto;
   transform: rotateX(14deg) scale(1);
   transform-style: preserve-3d;
+}
+
+.fidelity-game-page .fidelity-roulette-wheel-outer::before {
+  content: "";
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.06) 24%, transparent 46%),
+    radial-gradient(circle at 58% 62%, rgba(15, 23, 42, 0.14) 0%, rgba(15, 23, 42, 0.08) 36%, transparent 68%);
+  filter: blur(18px);
+  opacity: 0.9;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .fidelity-game-page .fidelity-roulette-wheel {
@@ -112,11 +149,12 @@
   /* transition pilotée en JS uniquement (évite conflit avec style.css 0.1s linear) */
   transition: none;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.07) inset,
-    0 22px 0 -8px rgba(0, 0, 0, 0.5),
-    0 36px 60px rgba(0, 0, 0, 0.38),
-    inset 0 4px 16px rgba(255, 255, 255, 0.07),
-    inset 0 -12px 28px rgba(0, 0, 0, 0.42);
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 14px 22px rgba(2, 6, 23, 0.14),
+    0 30px 58px rgba(2, 6, 23, 0.19),
+    0 56px 108px rgba(2, 6, 23, 0.14),
+    inset 0 5px 18px rgba(255, 255, 255, 0.07),
+    inset 0 -16px 34px rgba(0, 0, 0, 0.34);
 }
 
 /* Reflet léger, sans mix-blend-mode (évite écran tout doré sur WebKit). */
@@ -188,7 +226,9 @@
     transparent calc(100% - 14px),
     #000 calc(100% - 12px)
   );
-  box-shadow: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.38) inset,
+    0 10px 18px rgba(0, 0, 0, 0.12);
 }
 
 /* Flèche classique (triangle vers le centre), pas le vieux « quart de pastille + point » */
@@ -231,6 +271,14 @@
 }
 
 @media (max-width: 480px) {
+  .fidelity-game-page .fidelity-roulette-wheel-mount::before {
+    left: 12%;
+    right: 8%;
+    bottom: 7%;
+    height: 17%;
+    filter: blur(16px);
+  }
+
   .fidelity-game-page .fidelity-roulette-wheel-mount {
     width: min(128vmin, 128vw);
     height: min(128vmin, 128vw);

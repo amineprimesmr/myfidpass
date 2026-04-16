@@ -86,6 +86,13 @@ export async function deliverCustomerBroadcast({
     };
   }
 
+  // Déduplique : un membre qui a déjà un token PassKit ne reçoit pas aussi un Web Push
+  // pour la même campagne (évite la double notification avec deux icônes différentes).
+  const passKitMemberIds = new Set(passKitTokens.map((r) => r.serial_number).filter(Boolean));
+  const webSubscriptionsDeduped = passKitMemberIds.size > 0
+    ? webSubscriptions.filter((sub) => !passKitMemberIds.has(sub.member_id))
+    : webSubscriptions;
+
   // Titre d’envoi optionnel → `notification_title_override` (stable). Le corps de campagne ne doit pas
   // écraser `notification_change_message` : voir `sync-notification-texts-for-campaign.js`.
   const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
@@ -119,7 +126,7 @@ export async function deliverCustomerBroadcast({
   const errors = [];
 
   const webPushResults = await Promise.all(
-    webSubscriptions.map(async (sub) => {
+    webSubscriptionsDeduped.map(async (sub) => {
       try {
         await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
         logNotification({
