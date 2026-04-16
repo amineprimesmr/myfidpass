@@ -6143,9 +6143,10 @@ function initAppDashboard(slug) {
         notifFeedbackEl.classList.remove("hidden", "success");
         notifFeedbackEl.classList.add("error");
       }
+    } finally {
+      notificationSendInFlight = false;
+      if (btn) btn.disabled = false;
     }
-    notificationSendInFlight = false;
-    if (btn) btn.disabled = false;
   });
 
   async function loadCampaignSegments() {
