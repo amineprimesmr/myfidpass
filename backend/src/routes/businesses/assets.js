@@ -72,10 +72,17 @@ router.get("/notification-icon", async (req, res) => {
   const customBuffer = b64 ? await getLogoIconBuffer(b64) : null;
 
   if (customBuffer) {
-    // Icône personnalisée : cache long, invalidé par notification_icon_updated_at
+    // Icône personnalisée.
+    // IMPORTANT : ce buffer est utilisé par la Notification Service Extension iOS et les navigateurs
+    // Web Push. Un ancien bug faisait qu'après changement d'icône, les clients voyaient encore
+    // l'ancienne image → pour être absolument sûr, on n'active un cache local qu'à condition que
+    // l'ETag contienne la version courante. L'URL APNs inclut déjà `?v=<ts>~<batchId>~<uuid>` donc
+    // chaque push utilise une URL distincte — le cache est inoffensif dans ce cas, mais on passe
+    // explicitement à `must-revalidate` pour couper toute possibilité de réutilisation stale.
     const etagKey = `${business.id}-notification-icon-${business.notification_icon_updated_at || "0"}`;
     if (setAssetCacheHeaders(res, req, etagKey)) return;
     res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "private, max-age=300, must-revalidate");
     return res.send(customBuffer);
   }
 

@@ -1,6 +1,7 @@
 /**
  * Pipeline unique d’envoi client : Web Push + PassKit + accusé app commerçant (APNs).
  */
+import { randomUUID } from "crypto";
 import {
   getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners,
   getWebPushSubscriptionsByBusinessExcludingPassKitOwners,
@@ -26,12 +27,21 @@ import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts
 /**
  * URL d’icône pour Web Push et APNs : toujours construite — l’endpoint `/notification-icon`
  * retourne l’icône custom du commerçant si elle existe, sinon `logonotif` (icône app par défaut).
- * `?v=` = timestamp + id de campagne pour forcer un fetch frais à chaque envoi.
+ * `?v=` = timestamp + id de campagne + nonce aléatoire pour forcer un fetch frais à chaque envoi.
+ *
+ * POURQUOI LE NONCE EN PLUS DU batchId :
+ *   Un client signalait qu'après un changement d'icône, la notification reçue affichait encore
+ *   l'ancienne image. Le batchId seul (UUID par campagne) suffit normalement à invalider tous les
+ *   caches HTTP, mais certains chemins (retry interne, push silencieux arrivant avant le push
+ *   "contenu", Foundation URLCache dans l'extension) peuvent réutiliser des entrées proches.
+ *   Ajouter un UUID v4 pur par APPEL à la construction d'URL garantit l'unicité absolue même en
+ *   cas de réémission ou de duplication de payload.
  */
 function buildNotificationIconUrl(apiBase, slug, businessRow, batchId) {
   const path = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/notification-icon`;
   const base = businessRow?.notification_icon_updated_at || "0";
-  const v = batchId ? `${base}~${batchId}` : String(base);
+  const nonce = randomUUID();
+  const v = batchId ? `${base}~${batchId}~${nonce}` : `${base}~${nonce}`;
   return `${path}?v=${encodeURIComponent(v)}`;
 }
 
