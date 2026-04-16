@@ -387,16 +387,24 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   --fid-qr-play-primary: var(--fid-flyer-wheel-odd, #18181b);
   --fid-qr-play-secondary: var(--fid-flyer-wheel-even, #f3f4f6);
   min-width: min(100%, 368px);
-  padding-left: 2rem !important;
-  padding-right: 2rem !important;
-  background: linear-gradient(180deg, #4f46e5 0%, #4338ca 55%, #312e81 100%) !important;
+  padding-left: 2.25rem !important;
+  padding-right: 2.25rem !important;
+  padding-top: 0.55rem !important;
+  padding-bottom: 0.55rem !important;
+  /* Couleurs alignées sur la roue (variables flyer / couleurs roue). */
+  background: linear-gradient(
+    135deg,
+    var(--fid-flyer-wheel-odd, #6366f1) 0%,
+    var(--fid-flyer-wheel-even, #a78bfa) 100%
+  ) !important;
   border: none !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 10px 22px rgba(15, 23, 42, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.14) inset !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 12px 26px rgba(15, 23, 42, 0.24),
+    0 0 0 1px rgba(255, 255, 255, 0.16) inset !important;
   color: var(--fid-flyer-cta-text, #fff) !important;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.22);
+  font-size: 1.05rem;
 }
 
 /*
@@ -407,10 +415,12 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
   width: auto !important;
   min-width: 0 !important;
-  max-width: min(100%, 388px);
-  padding-left: 1.8rem !important;
-  padding-right: 1.8rem !important;
-  min-height: 3rem !important;
+  max-width: min(100%, 420px);
+  padding-left: 2.1rem !important;
+  padding-right: 2.1rem !important;
+  padding-top: 0.58rem !important;
+  padding-bottom: 0.58rem !important;
+  min-height: 3.45rem !important;
   box-sizing: border-box;
 }
 
@@ -438,7 +448,7 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
-  font-size: 0.98rem;
+  font-size: 1.06rem;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
@@ -499,14 +509,21 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 }
 
 .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel {
+  /* Ombres plus légères : les forts inset blanc/noir faisaient « dégrader » chaque part. */
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
-    0 22px 0 -10px rgba(0, 0, 0, 0.52),
-    0 36px 56px rgba(0, 0, 0, 0.42),
-    0 48px 88px rgba(15, 23, 42, 0.35),
-    0 0 48px rgba(99, 102, 241, 0.22),
-    inset 0 5px 20px rgba(255, 255, 255, 0.1),
-    inset 0 -16px 36px rgba(0, 0, 0, 0.48) !important;
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 20px 0 -9px rgba(0, 0, 0, 0.45),
+    0 32px 52px rgba(0, 0, 0, 0.35),
+    0 40px 72px rgba(15, 23, 42, 0.28),
+    0 0 40px rgba(99, 102, 241, 0.18),
+    inset 0 1px 6px rgba(255, 255, 255, 0.06),
+    inset 0 -6px 18px rgba(0, 0, 0, 0.22) !important;
+}
+
+/* Reflet conique désactivé sur QR : couleurs de parts plates (voir wheel-segments.js). */
+.fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-shine {
+  opacity: 0 !important;
+  visibility: hidden;
 }
 
 /* Flèche : blanc métallique + relief 3D (remplace le dégradé orange du fichier roulette-3d). */

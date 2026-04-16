@@ -74,9 +74,9 @@
   width: max-content !important;
   max-width: min(100%, 460px) !important;
   flex-shrink: 0 !important;
-  padding: 0.46rem 1.85rem !important;
-  min-height: 0 !important;
-  line-height: 1.15 !important;
+  padding: 0.58rem 2.1rem !important;
+  min-height: 3.4rem !important;
+  line-height: 1.18 !important;
   box-sizing: border-box !important;
 }
 
