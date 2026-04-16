@@ -211,6 +211,23 @@ export function getApnsHealthForDiagnostics() {
 
 const PASSKIT_TIMEOUT_MS = 25_000;
 
+/**
+ * Ring buffer en mémoire des 50 derniers envois PassKit — diagnostic prod.
+ * Visible via `GET /api/debug/passkit/:slug` (route admin dashboard). Aucun secret :
+ * seuls les 8 derniers caractères du deviceToken sont conservés + le reason APNs.
+ */
+const PASSKIT_PUSH_HISTORY_MAX = 50;
+const passKitPushHistory = [];
+function recordPassKitPushResult(entry) {
+  passKitPushHistory.push({ at: new Date().toISOString(), ...entry });
+  while (passKitPushHistory.length > PASSKIT_PUSH_HISTORY_MAX) {
+    passKitPushHistory.shift();
+  }
+}
+export function getRecentPassKitPushHistory() {
+  return passKitPushHistory.slice();
+}
+
 function withTimeout(promise, ms, label) {
   return Promise.race([
     promise,
@@ -282,31 +299,36 @@ export function sendPassKitUpdate(deviceToken) {
     aps: {},
   });
 
-  logger.debug({ deviceToken: deviceToken.slice(-8), passTypeId }, "[apns] PassKit → envoi push background");
+  const tokenTail = deviceToken.slice(-8);
+  logger.info(
+    { deviceToken: tokenTail, passTypeId, priority: Priority.throttled, pushType: PushType.background },
+    "[apns] PassKit → envoi push background priority=5"
+  );
   const sendPromise = prov.send(note).then(
     () => {
-      logger.info({ deviceToken: deviceToken.slice(-8) }, "[apns] PassKit push envoyé avec succès");
+      logger.info({ deviceToken: tokenTail }, "[apns] PassKit push ACK 200 par APNs");
+      recordPassKitPushResult({ token: tokenTail, sent: true });
       return { sent: true };
     },
     (err) => {
       const reason = err?.reason ?? err?.message ?? String(err);
-      // Erreur réseau / HTTP2 : la connexion est morte. On recycle le provider
-      // pour que le prochain appel crée une nouvelle connexion undici propre.
+      const statusCode = err?.statusCode;
       if (isConnectionLevelError(err)) {
-        logger.warn({ errMsg: err?.message }, "[apns] Connexion HTTP/2 APNs morte — provider recyclé pour le prochain envoi");
+        logger.warn({ errMsg: err?.message }, "[apns] Connexion HTTP/2 APNs morte — provider recyclé");
         passkitProvider = undefined;
       } else {
-        logger.warn({ reason, deviceToken: deviceToken.slice(-8) }, "[apns] PassKit push refusé par APNs");
+        logger.warn({ reason, statusCode, deviceToken: tokenTail }, "[apns] PassKit push REFUSÉ par APNs");
       }
+      recordPassKitPushResult({ token: tokenTail, sent: false, error: reason, statusCode });
       return { sent: false, error: reason };
     }
   );
   return withTimeout(sendPromise, PASSKIT_TIMEOUT_MS, "PassKit APNs").catch((err) => {
-    // Timeout = connexion bloquée → recycler aussi
     if (passkitProvider !== undefined) {
       logger.warn("[apns] Timeout APNs — provider recyclé");
       passkitProvider = undefined;
     }
+    recordPassKitPushResult({ token: tokenTail, sent: false, error: err?.message ?? String(err), timeout: true });
     return { sent: false, error: err?.message ?? String(err) };
   });
 }
