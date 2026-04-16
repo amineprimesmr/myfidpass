@@ -84,7 +84,14 @@ export function renderQrGamePage(esc, p) {
           ${qrLogo || ""}
           <div class="fidelity-qr-hero-decor" aria-hidden="true">
             <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--spark">+</span>
-            <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--cube">?</span>
+            <img
+              class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--mysterybox"
+              src="/assets/mysterybox.png"
+              alt=""
+              width="72"
+              height="72"
+              decoding="async"
+            />
             <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--mini"></span>
           </div>
           <h1 class="${heroTitleClass}" id="fidelity-qr-hero-title">

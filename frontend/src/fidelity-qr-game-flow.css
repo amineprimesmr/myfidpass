@@ -218,20 +218,17 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   user-select: none;
 }
 
-.fidelity-qr-hero-decor-chip--cube {
+.fidelity-qr-hero-decor-chip--mysterybox {
   left: clamp(0rem, 2vw, 0.7rem);
   top: clamp(8rem, 26vw, 10rem);
   width: clamp(2.8rem, 12vw, 4.5rem);
   height: clamp(2.8rem, 12vw, 4.5rem);
   border-radius: 1rem;
-  background: linear-gradient(145deg, #cfb3ff 0%, #8b5cf6 56%, #6d28d9 100%);
-  color: rgba(255, 255, 255, 0.96);
-  font-size: clamp(1.45rem, 5.6vw, 2.1rem);
-  font-weight: 900;
-  box-shadow:
-    0 14px 30px rgba(88, 28, 135, 0.28),
-    inset 0 2px 10px rgba(255, 255, 255, 0.32);
+  display: block;
+  object-fit: contain;
+  object-position: center;
   transform: rotate(-12deg);
+  filter: drop-shadow(0 12px 22px rgba(88, 28, 135, 0.22));
 }
 
 .fidelity-qr-hero-decor-chip--spark {
@@ -304,7 +301,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
     padding-right: 1rem;
   }
 
-  .fidelity-qr-hero-decor-chip--cube {
+  .fidelity-qr-hero-decor-chip--mysterybox {
     left: -0.15rem;
     top: 7.3rem;
   }
