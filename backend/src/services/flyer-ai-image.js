@@ -467,7 +467,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
     );
   }
   multimodalLines.push(
-    "FINAL REFERENCE IMAGE = OFFICIAL ROUE GPT ASSET (MyFidpass « rouegpt » PNG — exact wheel master). This raster is the SINGLE source of truth for wheel shape, rim, hub, pointer, segment boundaries, shadows, and ALL existing typography (GAGNÉ / PERDU and any other text already painted in the asset). ABSOLUTE RULES: (1) Do NOT draw a second wheel or alternate geometry. (2) Do NOT redraw, replace, move, warp, or re-type any letter or number — keep text pixel-stable. (3) ONLY adjust the flat fill color inside each of the six wedge regions to match the brand alternation below; preserve edge anti-aliasing and legibility. (4) Keep hub, pointer, outlines, and highlights coherent with the new fills."
+    "FINAL REFERENCE IMAGE = OFFICIAL ROUE GPT ASSET (MyFidpass « rouegpt » PNG — exact wheel master). SINGLE source of truth for wheel shape, rim, hub, pointer, segment boundaries, shadows. Wedge labels (GAGNÉ / PERDU) may be composited by the app; wedges may be neutral. RULES: (1) Do NOT draw a second wheel or alternate geometry. (2) Do NOT redraw, replace, move, warp, or re-type any existing pixels that look like lettering on the reference (if any). (3) ONLY adjust the flat fill color inside each of the six wedge regions to match the brand alternation below; preserve edge anti-aliasing. (4) Keep hub, pointer, outlines, and highlights coherent with the new fills."
   );
 
   const lines = [

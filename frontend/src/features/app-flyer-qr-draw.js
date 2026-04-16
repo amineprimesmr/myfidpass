@@ -28,8 +28,13 @@ const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
  */
 const FLYER_STEP_ICON_SRCS = ["/assets/flyer-steps/icon-phone.png", "/assets/flyer-steps/icon-wheel.png"];
 
+/** Bump après remplacement de `public/assets/rouegpt.png` pour forcer le rechargement (évite vieux PNG en cache). */
+const FLYER_ROUE_ASSET_VERSION = "20260416";
 /** Roue décorative : `rouegpt.png` en priorité, puis `roue.png` (même logique que l’IA serveur). */
-const FLYER_ROUE_SRC_CANDIDATES = ["/assets/rouegpt.png", "/assets/roue.png"];
+const FLYER_ROUE_SRC_CANDIDATES = [
+  `/assets/rouegpt.png?v=${FLYER_ROUE_ASSET_VERSION}`,
+  `/assets/roue.png?v=${FLYER_ROUE_ASSET_VERSION}`,
+];
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;

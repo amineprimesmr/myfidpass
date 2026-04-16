@@ -87,7 +87,7 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
     const ty = cy + Math.sin(mid) * labelR;
     const label = i % 2 === 0 ? "GAGNÉ !" : "PERDU !";
     const segHex = segmentHexColors[i] ?? "#ffffff";
-    /** Contraste fort sans double couche : le PNG `rouegpt` porte déjà le texte ; ce rendu sert au mode vectoriel seulement. */
+    /** Texte canvas par-dessus les parts teintées (PNG vierge ou vectoriel). */
     const lum = lumaFromHex(segHex);
     const fillCore = lum > 0.62 ? "#0f172a" : "#ffffff";
 
@@ -251,24 +251,22 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
  * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
  */
 /**
- * Libellés canvas (mode vectoriel uniquement). Le master PNG `rouegpt` inclut déjà la typo sur les parts.
+ * Libellés GAGNÉ/PERDU (même calage que `drawFlyerWheel`).
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  */
 export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
-  if (s.wheelRenderMode === "png") return;
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
+  const pngAligned = s.wheelRenderMode !== "segments";
+  const labelOff = pngAligned ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
   const cols = wheelSegmentColorsResolved(s);
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, FLYER_WHEEL_SEGMENT_COUNT, s, cols);
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, FLYER_WHEEL_SEGMENT_COUNT, s, cols);
 }
 
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  /**
-   * PNG : l’asset officiel peint déjà GAGNÉ/PERDU — ne pas redessiner (double couche / « fantôme »).
-   * Vectoriel : pas d’image ou mode « segments » explicite.
-   */
+  /** PNG : trame `rouegpt` + teintes ; vectoriel : aplats sans image. */
   const usePng = Boolean(roueImg) && s.wheelRenderMode === "png";
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
@@ -283,9 +281,7 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
-  /** Libellés uniquement si roue vectorielle (sinon typo déjà dans le PNG). */
-  if (!usePng) {
-    drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
-  }
+  /** Libellés canvas (asset `rouegpt` mis à jour : parts vierges, texte géré ici). */
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
   drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }
