@@ -253,8 +253,10 @@ export function bindQrGameUi(ctx) {
     const mb = mysteryBox;
     if (!(mb instanceof HTMLElement) || mb.parentNode) return;
     const decor = rootEl.querySelector(".fidelity-qr-hero-decor");
-    const anchor = decor?.querySelector(".fidelity-qr-hero-decor-chip--mini");
-    if (decor && anchor) decor.insertBefore(mb, anchor);
+    if (!decor) return;
+    const anchor = decor.querySelector(".fidelity-qr-hero-decor-chip--mini");
+    if (anchor) decor.insertBefore(mb, anchor);
+    else decor.appendChild(mb);
   }
 
   function disposeMysteryFloat() {
@@ -350,18 +352,20 @@ export function bindQrGameUi(ctx) {
     clone.style.setProperty("--fid-mb-rot", "-12deg");
     clone.setAttribute("aria-pressed", "true");
     clone.setAttribute("tabindex", "0");
+    clone.style.setProperty("filter", "none");
+    clone.style.setProperty("-webkit-filter", "none");
     const mount =
       rootEl.querySelector("#fidelity-app") || rootEl.closest("#fidelity-app") || document.body;
-    mount.appendChild(clone);
-    mysteryFloatEl = clone;
-    clone.addEventListener("click", onMysteryFloatClick);
-    clone.addEventListener("keydown", onMysteryFloatKeydown);
     if (typeof el.blur === "function") el.blur();
     el.setAttribute("aria-hidden", "true");
     el.setAttribute("tabindex", "-1");
     el.setAttribute("aria-pressed", "true");
-    /* Retrait du DOM : plus aucun calque / drop-shadow à l’ancienne position (Safari). */
+    /* Retrait du DOM d’abord : jamais deux calques mystery au même endroit (WebKit). */
     el.remove();
+    mount.appendChild(clone);
+    mysteryFloatEl = clone;
+    clone.addEventListener("click", onMysteryFloatClick);
+    clone.addEventListener("keydown", onMysteryFloatKeydown);
     globalThis.requestAnimationFrame(() => {
       nudgeMysteryFloat();
     });

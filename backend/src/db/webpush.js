@@ -6,6 +6,24 @@ import { getDb } from "./connection.js";
 
 const db = getDb();
 
+/** Aligné sur `passes.js` — exclure les enregistrements de test du dédoublonnage. */
+const PASSKIT_TEST_DEVICE_ID = "test-device-123";
+
+/**
+ * Membres qui ont un pass Wallet actif (token APNs) : ils ne doivent pas recevoir AUSSI un Web Push
+ * pour la même campagne (sinon double bannière : une PWA/Safari + une Wallet, souvent avec deux icônes).
+ */
+function sqlExcludeMembersWithPassKit(alias = "w") {
+  return `NOT EXISTS (
+    SELECT 1 FROM pass_registrations pr
+    INNER JOIN members m ON m.id = pr.serial_number
+    WHERE m.business_id = ${alias}.business_id
+      AND pr.serial_number = ${alias}.member_id
+      AND pr.push_token IS NOT NULL AND TRIM(pr.push_token) != ''
+      AND pr.device_library_identifier != '${PASSKIT_TEST_DEVICE_ID}'
+  )`;
+}
+
 export function saveWebPushSubscription({ businessId, memberId, endpoint, p256dh, auth }) {
   const id = randomUUID();
   const now = new Date().toISOString();
@@ -20,6 +38,20 @@ export function getWebPushSubscriptionsByBusiness(businessId) {
   return db.prepare(
     "SELECT id, member_id, endpoint, p256dh, auth FROM web_push_subscriptions WHERE business_id = ?"
   ).all(businessId);
+}
+
+/**
+ * Abonnements Web Push hors membres ayant déjà Apple Wallet (PassKit actif).
+ * Évite la double notification (Web Push + Wallet) quand la comparaison JS member_id/serial_number échouait.
+ */
+export function getWebPushSubscriptionsByBusinessExcludingPassKitOwners(businessId) {
+  const sql = `
+    SELECT w.id, w.member_id, w.endpoint, w.p256dh, w.auth
+    FROM web_push_subscriptions w
+    WHERE w.business_id = ?
+      AND ${sqlExcludeMembersWithPassKit("w")}
+  `;
+  return db.prepare(sql).all(businessId);
 }
 
 export function getWebPushSubscriptionsByMemberIds(businessId, memberIds) {
@@ -144,6 +176,24 @@ export function getWebPushSubscriptionsByBusinessFiltered(businessId, memberIds 
     rows = rows.filter((r) => set.has(r.member_id));
   }
   return rows;
+}
+
+/**
+ * Comme {@link getWebPushSubscriptionsByBusinessFiltered}, mais sans les membres qui ont déjà PassKit.
+ */
+export function getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(businessId, memberIds = null) {
+  if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
+    const placeholders = memberIds.map(() => "?").join(",");
+    const sql = `
+      SELECT w.id, w.member_id, w.endpoint, w.p256dh, w.auth
+      FROM web_push_subscriptions w
+      WHERE w.business_id = ?
+        AND w.member_id IN (${placeholders})
+        AND ${sqlExcludeMembersWithPassKit("w")}
+    `;
+    return db.prepare(sql).all(businessId, ...memberIds);
+  }
+  return getWebPushSubscriptionsByBusinessExcludingPassKitOwners(businessId);
 }
 
 /**

@@ -249,12 +249,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-}
-
-/* Ombres uniquement quand l’image est visible (évite calque résiduel une fois en .ghost). */
-.fidelity-qr-hero-decor-chip--mysterybox:not(.fidelity-qr-mysterybox--ghost) {
-  filter: drop-shadow(0 16px 28px rgba(88, 28, 135, 0.32))
-    drop-shadow(0 6px 14px rgba(15, 23, 42, 0.2));
+  /* Pas de filter: drop-shadow ici : WebKit laisse souvent un rectangle / halo après retrait DOM ou clone. */
 }
 
 .fidelity-qr-hero-decor-chip--mysterybox:focus-visible {
@@ -268,7 +263,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   display: none !important;
 }
 
-/* Clone flottant : sauts pilotés en JS + transition fluide (ease-out long). */
+/* Clone flottant : pas de filter (évite fantômes de calque) — ombre via box-shadow uniquement. */
 .fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying,
 #fidelity-qr-mysterybox-float {
   position: fixed !important;
@@ -280,18 +275,21 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   max-width: min(7.5rem, 22vw);
   margin: 0 !important;
   z-index: 480;
+  isolation: isolate;
   backface-visibility: hidden;
   transform: translate3d(var(--fid-mb-tx, 0px), var(--fid-mb-ty, 0px), 0) rotate(var(--fid-mb-rot, -12deg));
-  transition:
-    transform 0.46s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.35s ease;
-  filter: drop-shadow(0 20px 40px rgba(124, 58, 237, 0.42)) drop-shadow(0 10px 24px rgba(15, 23, 42, 0.26));
+  transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: none !important;
+  -webkit-filter: none !important;
+  box-shadow:
+    0 14px 32px rgba(15, 23, 42, 0.2),
+    0 6px 14px rgba(88, 28, 135, 0.18);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying,
   #fidelity-qr-mysterybox-float {
-    transition: transform 0.2s ease-out, filter 0.2s ease;
+    transition: transform 0.2s ease-out;
   }
 }
 
