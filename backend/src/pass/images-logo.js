@@ -261,3 +261,51 @@ export async function resizeLogoForPassIcon(inputBuffer) {
     }
   }
 }
+
+/**
+ * Pipeline unique pour `icon.png` du pass ET GET …/notification-icon / Web Push.
+ * Réplique les repliques de `getLogoIconBuffer` (notifications.js) : si le pipeline
+ * PassKit renvoie null, certaines images passaient quand même en Web (sharp cover 96px)
+ * alors que Wallet tombait sur logonotif — incohérence signalée en boucle par les commerçants.
+ */
+export async function resizeLogoForPassIconUnified(inputBuffer) {
+  if (!inputBuffer || inputBuffer.length === 0) return null;
+  let r = await resizeLogoForPassIcon(inputBuffer);
+  if (r) return r;
+  const sharp = await getSharp();
+  const white = { r: 255, g: 255, b: 255 };
+  try {
+    const pre = await sharp(inputBuffer).rotate().resize(512, 512, { fit: "inside" }).png().toBuffer();
+    r = await resizeLogoForPassIcon(pre);
+    if (r) return r;
+  } catch (_) {
+    /* suivant */
+  }
+  try {
+    const forced = await sharp(inputBuffer)
+      .resize(ICON_SIZE_2X, ICON_SIZE_2X, { fit: "cover", position: "center" })
+      .png()
+      .toBuffer();
+    r = await resizeLogoForPassIcon(forced);
+    if (r) return r;
+  } catch (_) {
+    /* suivant */
+  }
+  try {
+    const resizeOne = (size) =>
+      sharp(inputBuffer)
+        .resize(size, size, { fit: "cover", position: "center" })
+        .flatten({ background: white })
+        .png()
+        .toBuffer();
+    const [iconPng, iconPng2x, iconPng3x] = await Promise.all([
+      resizeOne(ICON_SIZE_1X),
+      resizeOne(ICON_SIZE_2X),
+      resizeOne(ICON_SIZE_3X),
+    ]);
+    return { iconPng, iconPng2x, iconPng3x };
+  } catch (err) {
+    console.warn("[PassKit] resizeLogoForPassIconUnified repli ultime échoué:", err.message);
+    return null;
+  }
+}

@@ -1,6 +1,6 @@
 import webPush from "web-push";
 import sharp from "sharp";
-import { stripDataImageBase64Payload, resizeLogoForPassIcon } from "./pass/images-logo.js";
+import { stripDataImageBase64Payload, resizeLogoForPassIconUnified } from "./pass/images-logo.js";
 
 let VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
 let VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
@@ -46,7 +46,7 @@ export async function getLogoIconBuffer(logoBase64) {
     return null;
   }
   try {
-    const passIcons = await resizeLogoForPassIcon(buf);
+    const passIcons = await resizeLogoForPassIconUnified(buf);
     if (passIcons?.iconPng2x) {
       return await sharp(passIcons.iconPng2x)
         .resize(NOTIFICATION_ICON_SIZE, NOTIFICATION_ICON_SIZE, { fit: "cover", position: "center" })

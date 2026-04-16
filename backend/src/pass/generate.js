@@ -12,6 +12,7 @@ import {
   createPassLogoPlaceholder,
   resizeLogoForPass,
   resizeLogoForPassIcon,
+  resizeLogoForPassIconUnified,
   stripDataImageBase64Payload,
 } from "./images-logo.js";
 import { getBusinessAssetData } from "../db/business-assets.js";
@@ -186,13 +187,13 @@ export async function generatePass(member, business = null, options = {}) {
 
   let notificationIconResized = null;
   if (passIconSourceBuf) {
-    notificationIconResized = await resizeLogoForPassIcon(passIconSourceBuf);
+    notificationIconResized = await resizeLogoForPassIconUnified(passIconSourceBuf);
     if (notificationIconResized) {
       if (process.env.NODE_ENV === "production") {
         console.log("[PassKit] Icônes Wallet (29/58/87px) depuis notification_icon (asset DB)");
       }
     } else {
-      console.warn("[PassKit] resizeLogoForPassIcon a échoué sur notification_icon — repli placeholder notif");
+      console.warn("[PassKit] resizeLogoForPassIconUnified a échoué sur notification_icon — repli logonotif");
     }
   }
 
