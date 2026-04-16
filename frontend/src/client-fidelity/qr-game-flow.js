@@ -240,10 +240,45 @@ export function bindQrGameUi(ctx) {
   if (!modalRoot) return () => {};
 
   const spinBtn = rootEl.querySelector("#fidelity-v2-spin-btn");
+  const mysteryBox = rootEl.querySelector("#fidelity-qr-mysterybox");
   const openGoogle = rootEl.querySelector("#fidelity-qr-open-google");
   const skipGoogle = rootEl.querySelector("#fidelity-qr-skip-google");
   const claimForm = rootEl.querySelector("#fidelity-qr-claim-form");
   const backdrop = rootEl.querySelector('[data-fid-qr-close="backdrop"]');
+
+  function syncMysteryBoxAria(el) {
+    if (!(el instanceof HTMLElement)) return;
+    el.setAttribute("aria-pressed", el.classList.contains("fidelity-qr-mysterybox--flying") ? "true" : "false");
+  }
+
+  function toggleMysteryBoxFly(ev) {
+    if (ev instanceof MouseEvent && ev.button !== 0) return;
+    const el = mysteryBox;
+    if (!(el instanceof HTMLElement)) return;
+    if (el.classList.contains("fidelity-qr-mysterybox--flying")) {
+      el.classList.remove("fidelity-qr-mysterybox--flying");
+      el.style.removeProperty("--fid-mb-x");
+      el.style.removeProperty("--fid-mb-y");
+      el.style.removeProperty("--fid-mb-w");
+      syncMysteryBoxAria(el);
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--fid-mb-x", `${r.left}px`);
+    el.style.setProperty("--fid-mb-y", `${r.top}px`);
+    el.style.setProperty("--fid-mb-w", `${r.width}px`);
+    el.classList.add("fidelity-qr-mysterybox--flying");
+    syncMysteryBoxAria(el);
+  }
+
+  function onMysteryBoxKeydown(ev) {
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    ev.preventDefault();
+    toggleMysteryBoxFly(ev);
+  }
+
+  mysteryBox?.addEventListener("click", toggleMysteryBoxFly);
+  mysteryBox?.addEventListener("keydown", onMysteryBoxKeydown);
 
   let verifyUxCleanup = () => {};
   let verifyUnlockTimer = null;
@@ -406,6 +441,8 @@ export function bindQrGameUi(ctx) {
 
   return () => {
     spinBtn?.removeEventListener("click", onSpinPre, true);
+    mysteryBox?.removeEventListener("click", toggleMysteryBoxFly);
+    mysteryBox?.removeEventListener("keydown", onMysteryBoxKeydown);
     qrResumeListenersAbort?.abort();
     qrResumeListenersAbort = null;
     if (verifyUnlockTimer != null) {

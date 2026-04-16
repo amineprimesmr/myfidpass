@@ -97,17 +97,22 @@ export function renderQrGamePage(esc, p) {
           <div class="fidelity-qr-hero-orb fidelity-qr-hero-orb--top" aria-hidden="true"></div>
           <div class="fidelity-qr-hero-orb fidelity-qr-hero-orb--bottom" aria-hidden="true"></div>
           ${qrLogo || ""}
-          <div class="fidelity-qr-hero-decor" aria-hidden="true">
-            <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--spark">+</span>
+          <div class="fidelity-qr-hero-decor">
+            <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--spark" aria-hidden="true">+</span>
             <img
+              id="fidelity-qr-mysterybox"
               class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--mysterybox"
               src="/assets/mysterybox.png?v=20260416d"
               alt=""
               width="112"
               height="112"
               decoding="async"
+              role="button"
+              tabindex="0"
+              aria-pressed="false"
+              aria-label="Boîte mystère : lancer ou arrêter l’animation"
             />
-            <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--mini"></span>
+            <span class="fidelity-qr-hero-decor-chip fidelity-qr-hero-decor-chip--mini" aria-hidden="true"></span>
           </div>
           <h1 class="${heroTitleClass}" id="fidelity-qr-hero-title">
             <span class="fidelity-qr-hero-title-inner">${qrThanksHeroMode ? heroTitleEsc : renderQrLeadTitleMarkup(heroTitleEsc)}</span>
