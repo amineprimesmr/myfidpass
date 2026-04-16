@@ -6,8 +6,8 @@ MyFidpass utilise **uniquement des PNG locaux** pour les icônes des tampons et 
 
 ## Où sont les icônes
 
-- **Backend (génération du pass)** : `backend/assets/icons/`  
-  Les fichiers sont lus au moment de générer le pass. Nommage : `icon_XXXX.png` (code Unicode) ou alias : `cafe.png`, `pizza.png`, `burger.png`, etc. Voir `backend/assets/icons/README.md`.
+- **Backend (génération du pass)** : `backend/assets/icons/`
+  Les fichiers sont lus au moment de générer le pass. Nommage : `icon_XXXX.png` (code Unicode) ou alias : `cafe.png`, `pizza.png`, `burger.png`, etc.
 
 - **Frontend (grille de choix)** : `frontend/public/assets/icons/`  
   Les mêmes noms sont servis en `/assets/icons/xxx.png` pour la grille « Choisir une icône » dans Ma Carte (règles tampons).
