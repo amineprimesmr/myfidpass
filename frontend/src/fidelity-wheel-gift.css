@@ -85,14 +85,14 @@
   }
 }
 
-.fidelity-cta-pill--qr-play {
+.fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta) {
   position: relative;
   overflow: visible;
   will-change: transform, box-shadow;
   animation: fidelity-qr-play-attention 3.4s ease-in-out infinite;
 }
 
-.fidelity-cta-pill--qr-play::before {
+.fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta)::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -117,20 +117,21 @@
   z-index: 1;
 }
 
-.fidelity-cta-pill--qr-play-main {
+.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta {
   overflow: hidden;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
-.fidelity-cta-pill--qr-play-main:is(:hover, :focus-visible) {
-  transform: translateY(-1px);
+.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta:is(:hover, :focus-visible) {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    0 16px 34px rgba(15, 23, 42, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 16px 36px rgba(2, 6, 23, 0.28),
+    0 24px 58px rgba(2, 6, 23, 0.16) !important;
 }
 
-.fidelity-cta-pill--qr-play-main:active {
-  transform: translateY(0);
+.fidelity-cta-pill--qr-play-main.fidelity-shiny-cta:active {
+  translate: 0 1px;
 }
 
 @keyframes fidelity-qr-play-attention {
@@ -174,8 +175,8 @@
     will-change: auto;
   }
 
-  .fidelity-cta-pill--qr-play,
-  .fidelity-cta-pill--qr-play::before {
+  .fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta),
+  .fidelity-cta-pill--qr-play:not(.fidelity-shiny-cta)::before {
     animation: none;
     will-change: auto;
   }

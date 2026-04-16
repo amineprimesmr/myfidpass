@@ -139,21 +139,23 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 .fidelity-cta-pill--qr-play {
   --fid-qr-play-primary: var(--fid-flyer-wheel-odd, #18181b);
   --fid-qr-play-secondary: var(--fid-flyer-wheel-even, #f3f4f6);
-  min-width: min(100%, 368px);
-  padding-left: 2rem !important;
-  padding-right: 2rem !important;
-  background:
-    linear-gradient(135deg,
-      color-mix(in srgb, var(--fid-qr-play-primary) 88%, #000 12%) 0%,
-      color-mix(in srgb, var(--fid-qr-play-primary) 58%, var(--fid-qr-play-secondary) 42%) 58%,
-      color-mix(in srgb, var(--fid-qr-play-secondary) 82%, #000 18%) 100%) !important;
-  border: none !important;
+  --shiny-cta-bg: color-mix(in srgb, var(--fid-qr-play-primary) 22%, #04050a 78%);
+  --shiny-cta-bg-subtle: color-mix(in srgb, var(--fid-qr-play-primary) 14%, #17171c 86%);
+  --shiny-cta-fg: var(--fid-flyer-cta-text, #fff);
+  --shiny-cta-highlight: color-mix(in srgb, var(--fid-qr-play-primary) 68%, var(--fid-qr-play-secondary) 32%);
+  --shiny-cta-highlight-subtle: color-mix(in srgb, var(--fid-qr-play-secondary) 38%, #fff 62%);
+  width: clamp(22rem, 76vw, 29rem) !important;
+  max-width: min(100%, 29rem) !important;
+  min-width: min(100%, 22rem);
+  min-height: 4rem !important;
+  padding: 1.08rem 2.55rem !important;
+  border: 0 !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 10px 22px rgba(15, 23, 42, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.14) inset !important;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 12px 30px rgba(2, 6, 23, 0.24),
+    0 20px 54px rgba(2, 6, 23, 0.14) !important;
   color: var(--fid-flyer-cta-text, #fff) !important;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.22);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.24);
 }
 
 /*
@@ -162,12 +164,12 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
  * le bouton dans main (pas les modales QR, hors du main).
  */
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-cta-pill--qr-play {
-  width: auto !important;
+  width: clamp(22rem, 76vw, 29rem) !important;
   min-width: 0 !important;
-  max-width: min(100%, 388px);
-  padding-left: 1.8rem !important;
-  padding-right: 1.8rem !important;
-  min-height: 3rem !important;
+  max-width: min(100%, 29rem);
+  padding-left: 2.3rem !important;
+  padding-right: 2.3rem !important;
+  min-height: 4rem !important;
   box-sizing: border-box;
 }
 
@@ -180,7 +182,7 @@ main.fidelity-v2-main.fidelity-qr-game
 }
 
 .fidelity-cta-wheel-line--qr {
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr {
@@ -188,21 +190,21 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 }
 
 .fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
-  font-size: 1.02rem;
+  font-size: 1.18rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
   text-transform: none;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-wheel-action {
-  font-size: 0.98rem;
-  letter-spacing: -0.01em;
+  font-size: 1.13rem;
+  letter-spacing: -0.025em;
   white-space: nowrap;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wheel-line--qr .fidelity-cta-pill-chevron {
-  font-size: 1rem;
-  opacity: 0.88;
+  font-size: 1.18rem;
+  opacity: 0.92;
 }
 
 /* Scan QR : pas de max-height — la roue est plus large que 46dvh et était rognée par le parent. */

@@ -13,7 +13,7 @@ export function renderRouletteInlineMarkup(esc, p) {
   /** Rendu immédiat des parts (évite disque noir avant exécution de initRouletteWheel). */
   const wheelBgEsc = esc(buildWheelConicGradient(WHEEL_SEGMENT_COUNT));
   const innerBtn = qr
-    ? `<span class="fidelity-cta-wheel-line fidelity-cta-wheel-line--qr">
+    ? `<span class="fidelity-cta-wheel-line fidelity-cta-wheel-line--qr fidelity-shiny-cta__label">
                 <span class="fidelity-cta-wheel-action">Jouer la partie</span>
                 <span class="fidelity-cta-pill-chevron" aria-hidden="true">›</span>
               </span>`
@@ -29,7 +29,7 @@ export function renderRouletteInlineMarkup(esc, p) {
       <section class="fidelity-v2-roulette-inline ${qr ? "fidelity-v2-roulette-inline--qr" : ""}" id="fidelity-v2-roulette-block" aria-label="Roulette">
         <div class="fidelity-v2-roulette-inline-controls">
           <span class="fidelity-cta-wrap fidelity-cta-wrap--full ${qr ? "fidelity-cta-wrap--qr-play fidelity-earn-points-cta-wrap fidelity-earn-points-cta-wrap--wallet-attention" : ""}">
-            <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta ${qr ? "fidelity-cta-pill--qr-play fidelity-cta-pill--qr-play-main" : ""}" type="button" aria-label="${esc(spinCtaAriaLabel)}">
+            <button id="fidelity-v2-spin-btn" class="fidelity-cta-pill fidelity-cta-pill--wheel-cta ${qr ? "fidelity-cta-pill--qr-play fidelity-cta-pill--qr-play-main fidelity-shiny-cta" : ""}" type="button" aria-label="${esc(spinCtaAriaLabel)}">
               ${innerBtn}
             </button>
           </span>
