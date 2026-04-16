@@ -116,6 +116,25 @@ export function setQrGateUnlocked() {
   } catch (_) {}
 }
 
+/**
+ * Invité page jeu QR : si le serveur a déjà enregistré l’avis Google, on aligne sessionStorage.
+ * Sinon un retour Safari / WKWebView peut laisser `fid_qr_spin_gate` absent alors que les tickets
+ * sont déjà crédités → le bouton « Jouer » rouvrait la modale Google en boucle.
+ */
+export function ensureQrGateAlignedWithServer(member) {
+  if (!isGuestMember(member)) return;
+  if (member?.google_review_engagement_done === true) {
+    setQrGateUnlocked();
+  }
+}
+
+function guestQrSpinGateSatisfied(state) {
+  ensureQrGateAlignedWithServer(state?.member);
+  if (isQrGateUnlocked()) return true;
+  if (state?.member?.google_review_engagement_done === true) return true;
+  return false;
+}
+
 export function openQrModalRoot(rootEl) {
   const root = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!root) return;
@@ -236,6 +255,7 @@ export function bindQrGameUi(ctx) {
   qrResumeListenersAbort = null;
 
   const { rootEl, api, slug, getState, rerender, refreshMemberData, messageUtilisateurPourErreur, signal } = ctx;
+  ensureQrGateAlignedWithServer(getState().member);
   const modalRoot = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!modalRoot) return () => {};
 
@@ -474,7 +494,14 @@ export function bindQrGameUi(ctx) {
    */
   function resumeGoogleReviewIfPending() {
     if (document.visibilityState !== "visible") return;
-    if (!isGuestMember(getState().member) || isQrGateUnlocked()) return;
+    const state = getState();
+    if (!isGuestMember(state.member)) return;
+    if (guestQrSpinGateSatisfied(state)) {
+      try {
+        sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);
+      } catch (_) {}
+      return;
+    }
     try {
       if (sessionStorage.getItem(QR_GOOGLE_PENDING_KEY) !== "1") return;
       sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);
@@ -486,7 +513,8 @@ export function bindQrGameUi(ctx) {
 
   const onSpinPre = (e) => {
     if (!isGuestMember(getState().member)) return;
-    if (isQrGateUnlocked()) return;
+    const st = getState();
+    if (guestQrSpinGateSatisfied(st)) return;
     e.preventDefault();
     e.stopPropagation();
     openQrModalRoot(rootEl);

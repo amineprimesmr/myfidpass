@@ -26,6 +26,7 @@ import {
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
   hasOperationalMerchantAccess,
+  hasMemberCompletedEngagementAction,
 } from "../../db.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { sendPassKitUpdate } from "../../apns.js";
@@ -269,6 +270,16 @@ router.get("/:memberId", (req, res) => {
     profile_bonus_claimed: Number(member.profile_ticket_bonus_granted) === 1,
     /** PassKit : au moins un appareil enregistré (ajout Apple Wallet effectif côté iOS). */
     apple_wallet_registered: memberHasAppleWalletRegistration(member.id),
+    /**
+     * Page jeu QR invité : l’avis Google a déjà été enregistré côté serveur (engagement_completions).
+     * Le client ne doit pas se fier seul à sessionStorage (`fid_qr_spin_gate`), perdu ou désynchronisé après Safari / WKWebView.
+     */
+    google_review_engagement_done: hasMemberCompletedEngagementAction(
+      business.id,
+      member.id,
+      "google_review",
+      12,
+    ),
   });
 });
 

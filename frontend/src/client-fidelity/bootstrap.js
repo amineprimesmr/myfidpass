@@ -21,6 +21,7 @@ import {
   applyQrThanksHero,
   bindQrGameUi,
   closeQrModalRoot,
+  ensureQrGateAlignedWithServer,
   firstNonPerduLabel,
   isGuestMember,
   openQrModalRoot,
@@ -269,6 +270,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const state = store.get();
     if (!state.member?.id) return;
     await hydrateMember(state.member.id);
+    ensureQrGateAlignedWithServer(store.get().member);
     rerender();
   }
 
