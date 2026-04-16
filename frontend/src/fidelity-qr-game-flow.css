@@ -249,13 +249,21 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  /* Pas de filter: drop-shadow ici : WebKit laisse souvent un rectangle / halo après retrait DOM ou clone. */
+  -webkit-touch-callout: none;
+  /* Aucune ombre / halo navigateur (img interactive) ni filter (fantômes WebKit). */
+  outline: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
 }
 
-.fidelity-qr-hero-decor-chip--mysterybox:focus-visible {
-  outline: 2px solid rgba(99, 102, 241, 0.85);
-  outline-offset: 4px;
-  border-radius: 12px;
+.fidelity-qr-hero-decor-chip--mysterybox:focus,
+.fidelity-qr-hero-decor-chip--mysterybox:focus-visible,
+.fidelity-qr-hero-decor-chip--mysterybox:active {
+  outline: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
 }
 
 /* Secours si .ghost sans retrait DOM (parcours normal : l’img est retirée du DOM dans qr-game-flow.js). */
@@ -263,7 +271,7 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   display: none !important;
 }
 
-/* Clone flottant : pas de filter (évite fantômes de calque) — ombre via box-shadow uniquement. */
+/* Clone flottant : aucune ombre ni filter (évite halos au clic / après clone). */
 .fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying,
 #fidelity-qr-mysterybox-float {
   position: fixed !important;
@@ -281,9 +289,20 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1);
   filter: none !important;
   -webkit-filter: none !important;
-  box-shadow:
-    0 14px 32px rgba(15, 23, 42, 0.2),
-    0 6px 14px rgba(88, 28, 135, 0.18);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying:focus,
+.fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying:focus-visible,
+.fidelity-qr-hero-decor-chip--mysterybox.fidelity-qr-mysterybox--flying:active,
+#fidelity-qr-mysterybox-float:focus,
+#fidelity-qr-mysterybox-float:focus-visible,
+#fidelity-qr-mysterybox-float:active {
+  outline: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

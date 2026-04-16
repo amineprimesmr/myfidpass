@@ -107,6 +107,7 @@ export function renderQrGamePage(esc, p) {
               width="112"
               height="112"
               decoding="async"
+              draggable="false"
               role="button"
               tabindex="0"
               aria-pressed="false"

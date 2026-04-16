@@ -263,6 +263,7 @@ export function bindQrGameUi(ctx) {
     if (mysteryFloatEl?.parentNode) {
       mysteryFloatEl.removeEventListener("click", onMysteryFloatClick);
       mysteryFloatEl.removeEventListener("keydown", onMysteryFloatKeydown);
+      mysteryFloatEl.removeEventListener("mousedown", onMysteryFloatMouseDown);
       mysteryFloatEl.remove();
     }
     mysteryFloatEl = null;
@@ -330,6 +331,17 @@ export function bindQrGameUi(ctx) {
     nudgeMysteryFloat();
   }
 
+  /** Évite le focus souris (halo / encadré WebKit sur img role=button). */
+  function onMysteryBoxMouseDown(ev) {
+    if (ev instanceof MouseEvent && ev.button !== 0) return;
+    ev.preventDefault();
+  }
+
+  function onMysteryFloatMouseDown(ev) {
+    if (ev instanceof MouseEvent && ev.button !== 0) return;
+    ev.preventDefault();
+  }
+
   function onMysteryFloatKeydown(ev) {
     if (ev.key !== "Enter" && ev.key !== " ") return;
     ev.preventDefault();
@@ -354,6 +366,7 @@ export function bindQrGameUi(ctx) {
     clone.setAttribute("tabindex", "0");
     clone.style.setProperty("filter", "none");
     clone.style.setProperty("-webkit-filter", "none");
+    clone.style.setProperty("box-shadow", "none");
     const mount =
       rootEl.querySelector("#fidelity-app") || rootEl.closest("#fidelity-app") || document.body;
     if (typeof el.blur === "function") el.blur();
@@ -366,6 +379,7 @@ export function bindQrGameUi(ctx) {
     mysteryFloatEl = clone;
     clone.addEventListener("click", onMysteryFloatClick);
     clone.addEventListener("keydown", onMysteryFloatKeydown);
+    clone.addEventListener("mousedown", onMysteryFloatMouseDown);
     globalThis.requestAnimationFrame(() => {
       nudgeMysteryFloat();
     });
@@ -386,6 +400,7 @@ export function bindQrGameUi(ctx) {
     onMysteryBoxActivate(ev);
   }
 
+  mysteryBox?.addEventListener("mousedown", onMysteryBoxMouseDown);
   mysteryBox?.addEventListener("click", onMysteryBoxActivate);
   mysteryBox?.addEventListener("keydown", onMysteryBoxKeydown);
 
@@ -551,6 +566,7 @@ export function bindQrGameUi(ctx) {
   return () => {
     spinBtn?.removeEventListener("click", onSpinPre, true);
     disposeMysteryFloat();
+    mysteryBox?.removeEventListener("mousedown", onMysteryBoxMouseDown);
     mysteryBox?.removeEventListener("click", onMysteryBoxActivate);
     mysteryBox?.removeEventListener("keydown", onMysteryBoxKeydown);
     qrResumeListenersAbort?.abort();
