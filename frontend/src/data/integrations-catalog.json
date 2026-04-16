@@ -1,28 +1,10 @@
 {
   "categories": [
-    { "id": "bornes", "title": "Bornes & kiosks", "order": 1 },
-    { "id": "caisse", "title": "Caisses & terminaux", "order": 2 },
-    { "id": "commande", "title": "Commande en ligne & livraison", "order": 3 },
-    { "id": "ecommerce", "title": "E-commerce & CMS", "order": 4 },
-    { "id": "fidelite", "title": "Fidélité & marketing", "order": 5 },
-    { "id": "dev", "title": "Studio, cloud & générique", "order": 6 }
+    { "id": "bornes", "title": "Bornes & kiosks automatiques", "order": 1 },
+    { "id": "caisse", "title": "Caisses & TPE (les plus courants)", "order": 2 },
+    { "id": "dev", "title": "API & intégration sur mesure", "order": 3 }
   ],
   "integrations": [
-    {
-      "id": "api-directe",
-      "name": "API REST Myfidpass",
-      "categoryId": "dev",
-      "status": "kit",
-      "summary": "Scan QR + POST JSON — toute stack HTTP.",
-      "logo": "/assets/integration-api.svg",
-      "description": "Intégration directe : scan du QR (UUID membre) + POST JSON sur l’endpoint scan. Toute stack capable d’HTTP.",
-      "bullets": [
-        "Un seul contrat d’API pour tous les commerces",
-        "Header X-Dashboard-Token fourni par le commerçant",
-        "Documentation : format code-barres, lookup, erreurs"
-      ],
-      "tags": ["http", "rest", "api"]
-    },
     {
       "id": "borne-generique",
       "name": "Borne / kiosk (HTTP)",
@@ -124,100 +106,9 @@
       ]
     },
     {
-      "id": "toast",
-      "name": "Toast",
-      "categoryId": "caisse",
-      "status": "coming",
-      "summary": "Restauration US — écosystème partenaire.",
-      "logo": "/assets/integration-logos/toast.svg",
-      "description": "Restauration US : intégration ciblée via l’écosystème partenaire Toast.",
-      "bullets": [
-        "Scoping avec l’équipe intégration Toast si besoin",
-        "API générique Myfidpass utilisable côté serveur"
-      ]
-    },
-    {
-      "id": "revel",
-      "name": "Revel Systems",
-      "categoryId": "caisse",
-      "status": "coming",
-      "summary": "iPad POS — API Revel + worker scan.",
-      "logo": "/assets/integration-logos/revel.png",
-      "description": "iPad POS : passerelle possible via Revel API + worker scan.",
-      "bullets": [
-        "Kit API Myfidpass utilisable côté serveur dès maintenant",
-        "Mapper les événements caisse vers POST scan"
-      ]
-    },
-    {
-      "id": "shopify-pos",
-      "name": "Shopify POS",
-      "categoryId": "caisse",
-      "status": "coming",
-      "summary": "Extensions ou app custom Shopify.",
-      "logo": "/assets/integration-logos/shopify.svg",
-      "description": "Extensions Shopify ou app custom pour envoyer barcode + montant à Myfidpass.",
-      "bullets": [
-        "Shopify en ligne : voir fiche e-commerce",
-        "Barcode membre + montant dans le corps JSON scan"
-      ]
-    },
-    {
-      "id": "oracle-micros",
-      "name": "Oracle MICROS / Simphony",
-      "categoryId": "caisse",
-      "status": "coming",
-      "summary": "Hôtellerie-restauration — connecteur sur mesure.",
-      "logo": "/assets/integration-logos/oracle.svg",
-      "description": "Hôtellerie-restauration : connecteur via couche interface ou serveur fidélité.",
-      "bullets": [
-        "Projets souvent avec intégrateur",
-        "Même modèle barcode + token dashboard"
-      ]
-    },
-    {
-      "id": "ncr-aloha",
-      "name": "NCR Aloha",
-      "categoryId": "caisse",
-      "status": "coming",
-      "summary": "POS legacy — bridge local vers HTTPS.",
-      "logo": "/assets/integration-logos/ncr.svg",
-      "description": "POS legacy : souvent un bridge sur site vers HTTPS.",
-      "bullets": [
-        "Intégrateur fréquent sur ce type de site",
-        "Même modèle barcode + token"
-      ]
-    },
-    {
-      "id": "ubereats",
-      "name": "Uber Eats (Manager)",
-      "categoryId": "commande",
-      "status": "coming",
-      "summary": "Points après livraison — webhooks à définir.",
-      "logo": "/assets/integration-logos/ubereats.svg",
-      "description": "Attribuer des points après commande livraison : lien avec webhooks commande + règle métier.",
-      "bullets": [
-        "Crédit en magasin : déjà possible via API scan",
-        "Livraison : mapping commande → membre à définir"
-      ]
-    },
-    {
-      "id": "deliveroo",
-      "name": "Deliveroo",
-      "categoryId": "commande",
-      "status": "coming",
-      "summary": "Commande → fidélité (API partenaire).",
-      "logo": "/assets/integration-logos/deliveroo.svg",
-      "description": "Synchronisation commande → fidélité (à définir selon API partenaire).",
-      "bullets": [
-        "Caisse physique prioritaire pour un premier déploiement",
-        "Contrat et API Deliveroo selon votre pays"
-      ]
-    },
-    {
       "id": "hubrise",
       "name": "HubRise",
-      "categoryId": "commande",
+      "categoryId": "caisse",
       "status": "partner",
       "summary": "Hub multi-canaux — endpoint HTTPS Myfidpass.",
       "logo": "/assets/integration-logos/hubrise.svg",
@@ -229,135 +120,19 @@
       "tags": ["hub", "delivery"]
     },
     {
-      "id": "woocommerce",
-      "name": "WooCommerce",
-      "categoryId": "ecommerce",
-      "status": "kit",
-      "summary": "Plugin / webhook PHP vers l’API.",
-      "logo": "/assets/integration-logos/woocommerce.svg",
-      "description": "Plugin ou snippet PHP : après commande ou webhook, appeler l’API (lookup + crédit) selon votre règle.",
-      "bullets": [
-        "Utiliser le UUID membre (Wallet) comme identifiant stable",
-        "Jeton dashboard dans les réglages sécurisés du plugin"
-      ],
-      "tags": ["wordpress", "php"]
-    },
-    {
-      "id": "prestashop",
-      "name": "PrestaShop",
-      "categoryId": "ecommerce",
-      "status": "kit",
-      "summary": "Module ou tâche cron + API REST.",
-      "logo": "/assets/integration-logos/prestashop.svg",
-      "description": "Module léger ou tâche cron : même schéma REST Myfidpass.",
-      "bullets": ["Hooks commande", "Ne jamais exposer le token en front"]
-    },
-    {
-      "id": "shopify",
-      "name": "Shopify",
-      "categoryId": "ecommerce",
-      "status": "beta",
-      "summary": "App admin ou Flow + endpoint sécurisé.",
-      "logo": "/assets/integration-logos/shopify.svg",
-      "description": "App Shopify (admin) ou Flow + endpoint sécurisé vers scan / lookup.",
-      "bullets": [
-        "Shopify Functions / webhooks selon cas",
-        "Accompagnement bêta disponible"
-      ],
-      "tags": ["saas"]
-    },
-    {
-      "id": "magento",
-      "name": "Adobe Commerce / Magento",
-      "categoryId": "ecommerce",
-      "status": "coming",
-      "summary": "Extension ou middleware commandes.",
-      "logo": "/assets/integration-logos/magento.svg",
-      "description": "Extension ou intégration middleware pour relier les commandes aux membres Myfidpass.",
-      "bullets": [
-        "Extension ou middleware selon votre stack",
-        "Contact pour un POC ciblé"
-      ]
-    },
-    {
-      "id": "bigcommerce",
-      "name": "BigCommerce",
-      "categoryId": "ecommerce",
-      "status": "coming",
-      "summary": "Webhooks commande + mapping client.",
-      "logo": "/assets/integration-logos/bigcommerce.svg",
-      "description": "Webhooks commande + mapping client.",
-      "bullets": [
-        "Webhooks commande côté BigCommerce",
-        "Lier l’e-mail client au membre Wallet si besoin"
-      ]
-    },
-    {
-      "id": "zapier-make",
-      "name": "Zapier / Make",
-      "categoryId": "fidelite",
-      "status": "coming",
-      "summary": "Automatisations — HTTP signé recommandé.",
-      "logo": "/assets/integration-logos/zapier.svg",
-      "description": "Automatiser des crédits depuis d’autres outils (CRM, sheets) via requêtes HTTP signées.",
-      "bullets": [
-        "Connecteur dédié conseillé (sécurité du token)",
-        "Script serveur intermédiaire recommandé"
-      ],
-      "tags": ["no-code"]
-    },
-    {
-      "id": "mailchimp",
-      "name": "Klaviyo / Mailchimp",
-      "categoryId": "fidelite",
-      "status": "coming",
-      "summary": "Email marketing — lien membre / export.",
-      "logo": "/assets/integration-logos/mailchimp.svg",
-      "description": "Scénarios email : lien avec statut membre Myfidpass (export ou API future).",
-      "bullets": [
-        "Indépendant du flux scan caisse",
-        "Export ou synchro selon votre outil"
-      ]
-    },
-    {
-      "id": "webhook-generic",
-      "name": "Webhooks sortants",
+      "id": "api-directe",
+      "name": "API REST Myfidpass",
       "categoryId": "dev",
-      "status": "coming",
-      "summary": "Notifications serveur → votre URL.",
+      "status": "kit",
+      "summary": "Scan QR + POST JSON — toute stack HTTP.",
       "logo": "/assets/integration-api.svg",
-      "description": "Notification Myfidpass vers votre URL (événements membre / passage) — évolution produit.",
+      "description": "Intégration directe : scan du QR (UUID membre) + POST JSON sur l’endpoint scan. Toute stack capable d’HTTP.",
       "bullets": [
-        "En attendant : requêtes pull ou polling côté serveur",
-        "Même API scan / lookup pour les écritures"
-      ]
-    },
-    {
-      "id": "aws-lambda",
-      "name": "AWS Lambda / Cloud Functions",
-      "categoryId": "dev",
-      "status": "kit",
-      "summary": "Fonction serverless qui appelle POST scan.",
-      "logo": "/assets/integration-logos/aws-lambda.svg",
-      "description": "Fonction serverless qui reçoit le payload caisse et appelle POST /integration/scan.",
-      "bullets": [
-        "Idéal pour isoler le token hors caisse",
-        "Exemples curl / Node dans la documentation GitHub"
+        "Un seul contrat d’API pour tous les commerces",
+        "Header X-Dashboard-Token fourni par le commerçant",
+        "Documentation : format code-barres, lookup, erreurs"
       ],
-      "tags": ["cloud", "node"]
-    },
-    {
-      "id": "brink",
-      "name": "Brink POS / PAR",
-      "categoryId": "caisse",
-      "status": "coming",
-      "summary": "Fast food — franchise / API ouverte.",
-      "logo": "/assets/integration-logos/brink.svg",
-      "description": "Fast food : intégration via couche franchise ou API ouverte.",
-      "bullets": [
-        "Marché US courant",
-        "Contact partenaire pour accès API"
-      ]
+      "tags": ["http", "rest", "api"]
     }
   ]
 }
