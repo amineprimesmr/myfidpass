@@ -276,7 +276,7 @@
   overflow: visible !important;
   display: flex !important;
   flex-direction: column !important;
-  margin-top: clamp(0.85rem, 4cqh, 2.75rem) !important;
+  margin-top: clamp(1.1rem, 4.5cqh, 3rem) !important;
 }
 
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline--qr .fidelity-v2-roulette-inline-controls {
@@ -288,7 +288,7 @@
   min-height: min(42cqh, 52cqmin, 400px) !important;
   max-height: none !important;
   overflow: visible !important;
-  padding-bottom: clamp(1rem, 12cqmin, 3.25rem) !important;
+  padding-bottom: clamp(1.35rem, 14cqmin, 3.75rem) !important;
   background: transparent !important;
   background-image: none !important;
   align-items: flex-end !important;
@@ -297,10 +297,10 @@
 /* Même logique que la page publique : ancrage bas de zone (voir fidelity-qr-game-flow.css). */
 #app-app .app-fidelity-client-live-preview-viewport .fidelity-v2-roulette-inline--qr .fidelity-roulette-wheel-mount {
   top: auto !important;
-  bottom: 0 !important;
+  bottom: -1.35rem !important;
   width: min(96cqmin, 100cqw) !important;
   height: min(96cqmin, 100cqw) !important;
-  transform: translate(-26%, 0) !important;
+  transform: translate(-26%, min(5.5cqmin, 1.85rem)) !important;
   transform-origin: 50% 100% !important;
 }
 
