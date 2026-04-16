@@ -681,7 +681,10 @@ router.patch("/settings", async (req, res) => {
   if (passNotifTextsUpdated || passVisualMediaUpdated) {
     bumpBusinessPassRefreshTimestamp(business.id);
   }
-  if (passWalletGeometryUpdated || passNotifTextsUpdated || passVisualMediaUpdated) {
+  // Ne pas envoyer de vague PassKit pour les seuls changements de texte (titre/message) :
+  // ces champs sont des templates persistés en DB — la vague sera envoyée lors du POST /notifications/send
+  // qui suit immédiatement (le pre-send flush de l’app iOS appellerait sinon 2 vagues → double notif Wallet).
+  if (passWalletGeometryUpdated || passVisualMediaUpdated) {
     const passKitTokens = getPassKitPushTokensForBusiness(business.id);
     if (passKitTokens.length > 0) {
       // Attendre l’envoi des 1ers APNs PassKit **avant** le 200 : sinon l’app iOS continue (aperçu OK)
