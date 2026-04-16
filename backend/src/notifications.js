@@ -1,6 +1,6 @@
 import webPush from "web-push";
 import sharp from "sharp";
-import { stripDataImageBase64Payload } from "./pass/images-logo.js";
+import { stripDataImageBase64Payload, resizeLogoForPassIcon } from "./pass/images-logo.js";
 
 let VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
 let VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
@@ -28,18 +28,35 @@ export function getVapidPublicKey() {
 export const NOTIFICATION_ICON_SIZE = 96;
 
 /**
- * Produit le buffer PNG de l’icône notification (logo redimensionné).
- * Utilisé par l’endpoint GET .../notification-icon (média `notification_icon` uniquement).
- * @param {string|null|undefined} logoBase64 - data:image/...;base64,... ou null
- * @returns {Promise<Buffer|null>}
+ * Produit le buffer PNG de l’icône pour GET …/notification-icon et Web Push.
+ *
+ * IMPORTANT : utiliser le **même** pipeline que `icon.png` / `icon@2x` du .pkpass (`resizeLogoForPassIcon`).
+ * L’ancien code redimensionnait le JPEG brut en 96×96 sans normalisation EXIF / sRGB : l’aperçu app
+ * ne correspondait pas à l’icône réelle des notifications Wallet (qui lit `icon.png` du pass).
  */
 export async function getLogoIconBuffer(logoBase64) {
   if (!logoBase64 || typeof logoBase64 !== "string") return null;
   const base64Data = stripDataImageBase64Payload(logoBase64);
   if (!base64Data) return null;
+  let buf;
   try {
-    const buf = Buffer.from(base64Data, "base64");
+    buf = Buffer.from(base64Data, "base64");
     if (buf.length === 0) return null;
+  } catch {
+    return null;
+  }
+  try {
+    const passIcons = await resizeLogoForPassIcon(buf);
+    if (passIcons?.iconPng2x) {
+      return await sharp(passIcons.iconPng2x)
+        .resize(NOTIFICATION_ICON_SIZE, NOTIFICATION_ICON_SIZE, { fit: "cover", position: "center" })
+        .png({ compressionLevel: 9 })
+        .toBuffer();
+    }
+  } catch (_) {
+    /* repli ci-dessous */
+  }
+  try {
     return await sharp(buf)
       .resize(NOTIFICATION_ICON_SIZE, NOTIFICATION_ICON_SIZE, { fit: "cover" })
       .png({ compressionLevel: 9 })
