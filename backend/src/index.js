@@ -73,6 +73,7 @@ import {
   getEmailEnvPresence,
 } from "./email.js";
 import { runCampaignAutomationCron } from "./lib/campaign-automation-cron.js";
+import { syncAllGoogleBusinessReviews } from "./services/google-business-reviews-sync.js";
 import { runCampaignEventJobsCron } from "./lib/campaign-event-jobs.js";
 import { startNotificationJobWorker } from "./lib/notification-job-queue.js";
 import { startFlyerGenerationJobWorker } from "./lib/flyer-generation-jobs.js";
@@ -430,6 +431,22 @@ function scheduleCampaignEventJobsLoop() {
   logger.info("[campaign-event-jobs] planifié : 1er passage dans ~1 min, puis toutes les 1 min");
 }
 
+/** Google Business Profile : pull avis + push APNs nouveaux avis, toutes les 10 min. */
+function scheduleGoogleBusinessReviewsSyncLoop() {
+  if (process.env.NODE_ENV === "test") return;
+  const INTERVAL_MS = 10 * 60 * 1000;
+  const run = () => {
+    syncAllGoogleBusinessReviews().catch((err) => {
+      logger.error({ err }, "[gbp-sync] cron failed");
+    });
+  };
+  setTimeout(() => {
+    run();
+    setInterval(run, INTERVAL_MS);
+  }, 3 * 60 * 1000);
+  logger.info("[gbp-sync] planifié : 1er passage dans ~3 min, puis toutes les 10 min");
+}
+
 function startServer(port) {
   const p = Number(port) || 3001;
   const server = app.listen(p, () => {
@@ -452,6 +469,7 @@ function startServer(port) {
     logMerchantApnsStatus();
     scheduleCampaignAutomationLoop();
     scheduleCampaignEventJobsLoop();
+    scheduleGoogleBusinessReviewsSyncLoop();
     // Reprend les campagnes de notification interrompues par un crash ou un redémarrage.
     startNotificationJobWorker();
     startFlyerGenerationJobWorker();

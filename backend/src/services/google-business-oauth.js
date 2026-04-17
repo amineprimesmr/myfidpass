@@ -16,6 +16,9 @@ const FETCH_TIMEOUT_MS = 25_000;
 const ACCOUNT_MGMT = "https://mybusinessaccountmanagement.googleapis.com/v1";
 const BUSINESS_INFO = "https://mybusinessbusinessinformation.googleapis.com/v1";
 const MY_BUSINESS_V4 = "https://mybusiness.googleapis.com/v4";
+const Q_AND_A = "https://mybusinessqanda.googleapis.com/v1";
+const PERFORMANCE = "https://businessprofileperformance.googleapis.com/v1";
+const NOTIFICATIONS = "https://mybusinessnotifications.googleapis.com/v1";
 
 export function getGoogleBusinessRedirectUri() {
   const base = (process.env.API_URL || process.env.PUBLIC_API_URL || "").replace(/\/$/, "");
@@ -130,6 +133,34 @@ async function fetchJson(url, accessToken) {
   } catch (e) {
     if (e?.name === "AbortError" || e?.name === "TimeoutError") {
       logger.warn({ url }, "[gbp] fetch timeout");
+      return { ok: false, status: 0, data: {}, error: "timeout" };
+    }
+    throw e;
+  }
+}
+
+async function jsonRequest(url, accessToken, method, body) {
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const text = await res.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (_) {
+      data = { raw: text };
+    }
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    if (e?.name === "AbortError" || e?.name === "TimeoutError") {
+      logger.warn({ url, method }, "[gbp] jsonRequest timeout");
       return { ok: false, status: 0, data: {}, error: "timeout" };
     }
     throw e;
@@ -280,4 +311,309 @@ export async function resolveGoogleBusinessLocation(accessToken, preferredPlaceI
     title: String(pick.location.title || "").trim(),
     matchedPlaceId: String(pick.location.metadata?.placeId || "").trim() || null,
   };
+}
+
+// ─────────────────────────────── REVIEWS — détail + réponse ───────────────────────────────
+
+/**
+ * Liste paginée complète (avec pageToken). Retourne les reviews Google bruts + totaux.
+ */
+export async function listAllGoogleBusinessReviews(accessToken, accountId, locationId, maxPages = 6) {
+  let pageToken = "";
+  const reviews = [];
+  let total = null;
+  let avg = null;
+  for (let i = 0; i < maxPages; i += 1) {
+    const u = new URL(
+      `${MY_BUSINESS_V4}/accounts/${encodeURIComponent(accountId)}/locations/${encodeURIComponent(locationId)}/reviews`,
+    );
+    u.searchParams.set("pageSize", "50");
+    u.searchParams.set("orderBy", "updateTime desc");
+    if (pageToken) u.searchParams.set("pageToken", pageToken);
+    const r = await fetchJson(u.toString(), accessToken);
+    if (!r.ok) {
+      return {
+        ok: false,
+        error: r.error || r.data?.error?.message || r.data?.error?.status || "reviews_failed",
+        reviews,
+      };
+    }
+    if (r.data.totalReviewCount != null) total = Number(r.data.totalReviewCount);
+    if (r.data.averageRating != null) avg = Number(r.data.averageRating);
+    for (const rev of r.data.reviews || []) reviews.push(rev);
+    pageToken = String(r.data.nextPageToken || "").trim();
+    if (!pageToken) break;
+  }
+  return { ok: true, reviews, totalCount: total, averageRating: avg };
+}
+
+/**
+ * Répondre / mettre à jour la réponse à un avis.
+ * @param {string} reviewResourceName - ex. "accounts/.../locations/.../reviews/ABC123"
+ */
+export async function updateReviewReply(accessToken, reviewResourceName, comment) {
+  const url = `${MY_BUSINESS_V4}/${reviewResourceName}/reply`;
+  const r = await jsonRequest(url, accessToken, "PUT", { comment: String(comment || "") });
+  if (!r.ok) {
+    return {
+      ok: false,
+      status: r.status,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "reply_failed",
+    };
+  }
+  return {
+    ok: true,
+    replyComment: String(r.data?.comment || comment || ""),
+    replyUpdateTime: String(r.data?.updateTime || new Date().toISOString()),
+  };
+}
+
+export async function deleteReviewReply(accessToken, reviewResourceName) {
+  const url = `${MY_BUSINESS_V4}/${reviewResourceName}/reply`;
+  const r = await jsonRequest(url, accessToken, "DELETE");
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "delete_reply_failed",
+    };
+  }
+  return { ok: true };
+}
+
+// ─────────────────────────────── LOCAL POSTS ───────────────────────────────
+
+/**
+ * Liste les posts Google (What's New, Event, Offer).
+ */
+export async function listLocalPosts(accessToken, accountId, locationId, pageSize = 100) {
+  const url = `${MY_BUSINESS_V4}/accounts/${encodeURIComponent(accountId)}/locations/${encodeURIComponent(locationId)}/localPosts?pageSize=${pageSize}`;
+  const r = await fetchJson(url, accessToken);
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "posts_failed",
+    };
+  }
+  return { ok: true, posts: r.data.localPosts || [] };
+}
+
+/**
+ * Création d'un post local.
+ * @param {object} body - ex. { languageCode: "fr", summary: "...", topicType: "STANDARD" }
+ */
+export async function createLocalPost(accessToken, accountId, locationId, body) {
+  const url = `${MY_BUSINESS_V4}/accounts/${encodeURIComponent(accountId)}/locations/${encodeURIComponent(locationId)}/localPosts`;
+  const r = await jsonRequest(url, accessToken, "POST", body);
+  if (!r.ok) {
+    return {
+      ok: false,
+      status: r.status,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "create_post_failed",
+    };
+  }
+  return { ok: true, post: r.data };
+}
+
+export async function deleteLocalPost(accessToken, postResourceName) {
+  const url = `${MY_BUSINESS_V4}/${postResourceName}`;
+  const r = await jsonRequest(url, accessToken, "DELETE");
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "delete_post_failed",
+    };
+  }
+  return { ok: true };
+}
+
+// ─────────────────────────────── Q & A ───────────────────────────────
+
+/**
+ * @param {string} locationResourceName - ex. "locations/12345" (sans le préfixe accounts/)
+ * Le endpoint Q&A utilise uniquement "locations/{locationId}" pas "accounts/.../locations/..."
+ */
+export async function listQuestions(accessToken, locationId, pageSize = 50) {
+  const url = `${Q_AND_A}/locations/${encodeURIComponent(locationId)}/questions?pageSize=${pageSize}&answersPerQuestion=1`;
+  const r = await fetchJson(url, accessToken);
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "questions_failed",
+    };
+  }
+  return { ok: true, questions: r.data.questions || [] };
+}
+
+/**
+ * Répond à une question en tant que propriétaire.
+ * @param {string} questionResourceName - ex. "locations/12345/questions/ABC"
+ */
+export async function upsertOwnerAnswer(accessToken, questionResourceName, text) {
+  const url = `${Q_AND_A}/${questionResourceName}/answers:upsert`;
+  const r = await jsonRequest(url, accessToken, "POST", { answer: { text: String(text || "") } });
+  if (!r.ok) {
+    return {
+      ok: false,
+      status: r.status,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "answer_failed",
+    };
+  }
+  return { ok: true, answer: r.data };
+}
+
+export async function deleteOwnerAnswer(accessToken, questionResourceName) {
+  const url = `${Q_AND_A}/${questionResourceName}/answers:delete`;
+  const r = await jsonRequest(url, accessToken, "DELETE");
+  return r.ok ? { ok: true } : { ok: false, error: r.data?.error?.message || r.error || "delete_answer_failed" };
+}
+
+// ─────────────────────────────── INSIGHTS / PERFORMANCE ───────────────────────────────
+
+/**
+ * Performance API — multi-métriques en un appel.
+ * @param {string} locationId - juste l'ID (ex. "12345")
+ * @param {string[]} metrics - ex. ["BUSINESS_IMPRESSIONS_DESKTOP_MAPS","CALL_CLICKS",...]
+ * @param {{ year: number, month: number, day: number }} startDate
+ * @param {{ year: number, month: number, day: number }} endDate
+ */
+export async function fetchDailyMetricsTimeSeries(accessToken, locationId, metrics, startDate, endDate) {
+  const u = new URL(`${PERFORMANCE}/locations/${encodeURIComponent(locationId)}:fetchMultiDailyMetricsTimeSeries`);
+  for (const m of metrics) u.searchParams.append("dailyMetrics", m);
+  u.searchParams.set("dailyRange.startDate.year", String(startDate.year));
+  u.searchParams.set("dailyRange.startDate.month", String(startDate.month));
+  u.searchParams.set("dailyRange.startDate.day", String(startDate.day));
+  u.searchParams.set("dailyRange.endDate.year", String(endDate.year));
+  u.searchParams.set("dailyRange.endDate.month", String(endDate.month));
+  u.searchParams.set("dailyRange.endDate.day", String(endDate.day));
+  const r = await fetchJson(u.toString(), accessToken);
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "insights_failed",
+    };
+  }
+  return { ok: true, series: r.data.multiDailyMetricTimeSeries || [] };
+}
+
+// ─────────────────────────────── LOCATION INFO ───────────────────────────────
+
+const LOCATION_READ_MASK = [
+  "name",
+  "title",
+  "storefrontAddress",
+  "phoneNumbers",
+  "websiteUri",
+  "regularHours",
+  "specialHours",
+  "categories",
+  "serviceArea",
+  "labels",
+  "profile",
+  "metadata",
+  "openInfo",
+  "latlng",
+].join(",");
+
+export async function getLocationInfo(accessToken, locationId) {
+  const url = `${BUSINESS_INFO}/locations/${encodeURIComponent(locationId)}?readMask=${encodeURIComponent(LOCATION_READ_MASK)}`;
+  const r = await fetchJson(url, accessToken);
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "location_info_failed",
+    };
+  }
+  return { ok: true, location: r.data };
+}
+
+/**
+ * PATCH location. Le `updateMask` liste les champs modifiés (CSV).
+ */
+export async function patchLocationInfo(accessToken, locationId, patch, updateMask) {
+  const url = `${BUSINESS_INFO}/locations/${encodeURIComponent(locationId)}?updateMask=${encodeURIComponent(updateMask)}`;
+  const r = await jsonRequest(url, accessToken, "PATCH", patch);
+  if (!r.ok) {
+    return {
+      ok: false,
+      status: r.status,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "location_patch_failed",
+    };
+  }
+  return { ok: true, location: r.data };
+}
+
+// ─────────────────────────────── MEDIA (photos) ───────────────────────────────
+
+export async function listMedia(accessToken, accountId, locationId, pageSize = 100) {
+  const url = `${MY_BUSINESS_V4}/accounts/${encodeURIComponent(accountId)}/locations/${encodeURIComponent(locationId)}/media?pageSize=${pageSize}`;
+  const r = await fetchJson(url, accessToken);
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "media_failed",
+    };
+  }
+  return { ok: true, media: r.data.mediaItems || [] };
+}
+
+/**
+ * Crée un media depuis un sourceUrl public (Google télécharge l'image).
+ * @param {string} category - ex. "PROFILE","COVER","INTERIOR","EXTERIOR","LOGO","ADDITIONAL"
+ */
+export async function createMediaFromSourceUrl(accessToken, accountId, locationId, sourceUrl, category = "ADDITIONAL") {
+  const url = `${MY_BUSINESS_V4}/accounts/${encodeURIComponent(accountId)}/locations/${encodeURIComponent(locationId)}/media`;
+  const body = {
+    mediaFormat: "PHOTO",
+    locationAssociation: { category },
+    sourceUrl,
+  };
+  const r = await jsonRequest(url, accessToken, "POST", body);
+  if (!r.ok) {
+    return {
+      ok: false,
+      status: r.status,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "create_media_failed",
+    };
+  }
+  return { ok: true, media: r.data };
+}
+
+export async function deleteMedia(accessToken, mediaResourceName) {
+  const url = `${MY_BUSINESS_V4}/${mediaResourceName}`;
+  const r = await jsonRequest(url, accessToken, "DELETE");
+  return r.ok ? { ok: true } : { ok: false, error: r.data?.error?.message || r.error || "delete_media_failed" };
+}
+
+// ─────────────────────────────── NOTIFICATIONS PUB/SUB (Phase 2) ───────────────────────────────
+
+/**
+ * Enregistre un topic Pub/Sub pour recevoir les notifs temps réel (nouveaux avis, questions).
+ * Appelle Google pour activer l'envoi sur le topic donné.
+ *
+ * @param {string} accountId
+ * @param {string} pubsubTopic - ex. "projects/my-gcp/topics/myfidpass-gbp"
+ */
+export async function enableNotifications(accessToken, accountId, pubsubTopic) {
+  const url = `${NOTIFICATIONS}/accounts/${encodeURIComponent(accountId)}/notificationSetting?updateMask=pubsubTopic,notificationTypes`;
+  const body = {
+    pubsubTopic,
+    notificationTypes: [
+      "NEW_REVIEW",
+      "UPDATED_REVIEW",
+      "NEW_QUESTION",
+      "UPDATED_QUESTION",
+      "NEW_ANSWER",
+      "UPDATED_ANSWER",
+      "NEW_CUSTOMER_MEDIA",
+      "GOOGLE_UPDATE",
+    ],
+  };
+  const r = await jsonRequest(url, accessToken, "PATCH", body);
+  if (!r.ok) {
+    return {
+      ok: false,
+      error: r.data?.error?.message || r.data?.error?.status || r.error || "notif_enable_failed",
+    };
+  }
+  return { ok: true, setting: r.data };
 }

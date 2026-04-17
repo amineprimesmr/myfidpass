@@ -67,6 +67,7 @@ import {
 import socialMetricsRouter from "./dashboard-social-metrics.js";
 import dashboardSocialOauthRouter from "./dashboard-social-oauth.js";
 import dashboardDeliveryReceiptClaimsRouter from "./dashboard-delivery-receipt-claims.js";
+import dashboardGoogleBusinessRouter from "./dashboard-google-business.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 
@@ -105,6 +106,7 @@ router.use(requireDashboard);
 router.use(socialMetricsRouter);
 router.use(dashboardSocialOauthRouter);
 router.use(dashboardDeliveryReceiptClaimsRouter);
+router.use(dashboardGoogleBusinessRouter);
 
 // ——— Settings ———
 router.get("/settings", (req, res) => {

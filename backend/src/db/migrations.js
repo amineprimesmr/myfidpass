@@ -1084,4 +1084,150 @@ export function runMigrations(db) {
   safeRun(db, () =>
     db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_e164 ON users(phone_e164) WHERE phone_e164 IS NOT NULL"),
   );
+
+  // ── v24 : Google Business Profile — avis individuels, posts, Q&A, insights cache ──
+  const m24 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 24").get();
+  if (!m24) {
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS google_business_reviews (
+          review_id TEXT NOT NULL,
+          business_id TEXT NOT NULL,
+          location_name TEXT,
+          rating INTEGER NOT NULL DEFAULT 0,
+          author_name TEXT,
+          author_photo_url TEXT,
+          comment TEXT,
+          reply_comment TEXT,
+          reply_update_time TEXT,
+          create_time TEXT,
+          update_time TEXT,
+          first_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+          notified_at TEXT,
+          starred INTEGER NOT NULL DEFAULT 0,
+          archived INTEGER NOT NULL DEFAULT 0,
+          seen_by_merchant_at TEXT,
+          raw_json TEXT,
+          PRIMARY KEY (business_id, review_id),
+          FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+        );
+      `),
+    );
+    safeRun(db, () =>
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_gbp_reviews_business_update ON google_business_reviews(business_id, update_time DESC)",
+      ),
+    );
+    safeRun(db, () =>
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_gbp_reviews_business_unreplied ON google_business_reviews(business_id) WHERE reply_comment IS NULL OR trim(reply_comment) = ''",
+      ),
+    );
+
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS google_business_posts (
+          post_id TEXT NOT NULL,
+          business_id TEXT NOT NULL,
+          name TEXT,
+          topic_type TEXT,
+          summary TEXT,
+          language_code TEXT,
+          media_url TEXT,
+          cta_type TEXT,
+          cta_url TEXT,
+          event_title TEXT,
+          event_start TEXT,
+          event_end TEXT,
+          offer_coupon TEXT,
+          offer_redeem_online_url TEXT,
+          offer_terms TEXT,
+          state TEXT,
+          create_time TEXT,
+          update_time TEXT,
+          search_url TEXT,
+          raw_json TEXT,
+          PRIMARY KEY (business_id, post_id),
+          FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+        );
+      `),
+    );
+    safeRun(db, () =>
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_gbp_posts_business_update ON google_business_posts(business_id, update_time DESC)",
+      ),
+    );
+
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS google_business_questions (
+          question_id TEXT NOT NULL,
+          business_id TEXT NOT NULL,
+          name TEXT,
+          text TEXT,
+          author_name TEXT,
+          author_photo_url TEXT,
+          author_is_owner INTEGER NOT NULL DEFAULT 0,
+          upvote_count INTEGER NOT NULL DEFAULT 0,
+          total_answer_count INTEGER NOT NULL DEFAULT 0,
+          top_answer_text TEXT,
+          top_answer_author TEXT,
+          top_answer_update_time TEXT,
+          create_time TEXT,
+          update_time TEXT,
+          answered_by_owner INTEGER NOT NULL DEFAULT 0,
+          raw_json TEXT,
+          PRIMARY KEY (business_id, question_id),
+          FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+        );
+      `),
+    );
+    safeRun(db, () =>
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_gbp_questions_business_update ON google_business_questions(business_id, update_time DESC)",
+      ),
+    );
+
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS google_business_insights_cache (
+          business_id TEXT PRIMARY KEY,
+          cached_at TEXT NOT NULL DEFAULT (datetime('now')),
+          payload_json TEXT NOT NULL,
+          FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+        );
+      `),
+    );
+
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS google_business_location_cache (
+          business_id TEXT PRIMARY KEY,
+          cached_at TEXT NOT NULL DEFAULT (datetime('now')),
+          payload_json TEXT NOT NULL,
+          FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+        );
+      `),
+    );
+
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS google_business_media (
+          media_id TEXT NOT NULL,
+          business_id TEXT NOT NULL,
+          name TEXT,
+          media_format TEXT,
+          category TEXT,
+          google_url TEXT,
+          thumbnail_url TEXT,
+          create_time TEXT,
+          raw_json TEXT,
+          PRIMARY KEY (business_id, media_id),
+          FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+        );
+      `),
+    );
+
+    markMigrationApplied(db, 24, "google_business_reviews_posts_questions_insights");
+  }
 }
