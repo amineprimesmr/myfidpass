@@ -265,8 +265,11 @@ const getPassHandler = async (req, res) => {
     // ça peut bloquer indéfiniment. Sans timeout, le handler ne retourne jamais et Railway
     // ferme la connexion après 30s avec une erreur 504 côté iPhone — le pass ne se met
     // pas à jour. Avec le timeout, on retourne un 500 explicite rapidement.
+    // `collector` : rempli par generatePass avec sha256 des icon.png/2x/3x RÉELLEMENT embedded.
+    // Exposé via le ring buffer pour tracer en prod si la nouvelle icône est dans le pass servi.
+    const collector = {};
     const buffer = await Promise.race([
-      generatePass(member, business, opts),
+      generatePass(member, business, opts, collector),
       new Promise((_, reject) =>
         setTimeout(
           () => reject(new Error(`generatePass timeout après ${GENERATE_PASS_TIMEOUT_MS}ms — image trop lourde ou CPU surchargé`)),
@@ -296,6 +299,13 @@ const getPassHandler = async (req, res) => {
       lastModified,
       notification_icon_updated_at: business.notification_icon_updated_at ?? null,
       pass_last_modified_ms: Number(business.pass_last_modified_ms) || null,
+      // Diagnostic #1 : sha256 du icon.png RÉELLEMENT embedded dans ce pkpass (post-resize sharp).
+      // Si 2 requêtes consécutives avec notification_icon_updated_at différent donnent le même
+      // icon_sha256_12 → bug backend (asset non lu frais). Sinon → bug cache iOS `passd`.
+      icon_sha256_12: collector?.iconSha256_12 ?? null,
+      icon2x_sha256_12: collector?.icon2xSha256_12 ?? null,
+      icon3x_sha256_12: collector?.icon3xSha256_12 ?? null,
+      icon_bytes: collector?.iconBytes ?? 0,
     });
     if (process.env.NODE_ENV === "production") {
       logger.info(

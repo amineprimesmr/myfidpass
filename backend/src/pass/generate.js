@@ -20,6 +20,7 @@ import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
 import { loadCertificates } from "./certs.js";
+import { createHash } from "node:crypto";
 import {
   PASS_TEMPLATES,
   STRIP_W,
@@ -106,7 +107,7 @@ async function loadDefaultPointsStripBuffer(sharp) {
  * @param {Object} business - optionnel
  * @param {Object} options - { template, format, organizationName, ... }
  */
-export async function generatePass(member, business = null, options = {}) {
+export async function generatePass(member, business = null, options = {}, collector = null) {
   const sharp = await getSharp();
   const passTypeId = process.env.PASS_TYPE_ID;
   const teamId = process.env.TEAM_ID;
@@ -240,6 +241,27 @@ export async function generatePass(member, business = null, options = {}) {
     buffers["icon@2x.png"] = await sharpIcon(fallback1x).resize(ICON_SIZE_2X, ICON_SIZE_2X).png().toBuffer();
     buffers["icon@3x.png"] = await sharpIcon(fallback1x).resize(ICON_SIZE_3X, ICON_SIZE_3X).png().toBuffer();
     console.warn("[PassKit] Repli ultime : icône template cercle (évite pass sans icon.png)");
+  }
+
+  /*
+   * Diagnostic : exposer au caller le sha256 de icon.png RÉELLEMENT embedded dans ce pkpass.
+   * Permet de prouver en prod que le backend a bien intégré la nouvelle image (ou pas) via
+   * /api/debug/notif-icon/:slug → recentPassGets[].icon_sha256_12. Si deux générations consécutives
+   * retournent le même sha alors que l'icône source a changé → bug backend (cache sharp, asset non
+   * mis à jour, etc.). Sinon → bug côté cache iOS `passd` (miniature bannière figée).
+   */
+  if (collector && typeof collector === "object") {
+    try {
+      const iconBuf = buffers["icon.png"];
+      const icon2xBuf = buffers["icon@2x.png"];
+      const icon3xBuf = buffers["icon@3x.png"];
+      collector.iconSha256_12 = iconBuf ? createHash("sha256").update(iconBuf).digest("hex").slice(0, 12) : null;
+      collector.icon2xSha256_12 = icon2xBuf ? createHash("sha256").update(icon2xBuf).digest("hex").slice(0, 12) : null;
+      collector.icon3xSha256_12 = icon3xBuf ? createHash("sha256").update(icon3xBuf).digest("hex").slice(0, 12) : null;
+      collector.iconBytes = iconBuf ? iconBuf.length : 0;
+      collector.icon2xBytes = icon2xBuf ? icon2xBuf.length : 0;
+      collector.icon3xBytes = icon3xBuf ? icon3xBuf.length : 0;
+    } catch { /* diagnostics best-effort */ }
   }
 
   const businessReqRaw = business?.required_stamps != null ? Number(business.required_stamps) : NaN;
@@ -480,6 +502,40 @@ export async function generatePass(member, business = null, options = {}) {
     lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
   }
 
+  /*
+   * Fix #6 — invalidation forcée de la miniature de bannière Wallet (`passd`).
+   *
+   * PROBLÈME observé : après un changement de `notification_icon` (image A → image B), même si
+   *   1) `icon.png` embedded dans le nouveau .pkpass change bien byte-par-byte (resize sharp
+   *      déterministe → nouveau hash à chaque image source différente),
+   *   2) Wallet refetch bien le pass (vu dans recentPassGets),
+   *   3) `Last-Modified` et `pass_last_modified_ms` avancent,
+   * la bannière de la notification suivante affiche encore l'icône A.
+   *
+   * CAUSE : iOS `passd` conserve un snapshot pré-rendu de la miniature de bannière, keyed par
+   * empreinte structurelle du pass.json. Il ne régénère ce snapshot QUE si le pass.json lui-même
+   * change matériellement — pas uniquement quand icon.png change.
+   *
+   * FIX : ajouter un `backField` invisible (label+value vides pour ne pas s'afficher, mais dont la
+   * CLÉ varie avec `notification_icon_updated_at`). Résultat : chaque nouvelle version d'icône
+   * produit une entrée backFields différente → pass.json matériellement modifié → `passd` invalide
+   * son snapshot et régénère la miniature à partir du nouveau `icon.png`.
+   *
+   * La clé doit être STABLE pour une même version d'icône (sinon refetch inutile à chaque render)
+   * et DIFFÉRENTE entre deux versions (sinon pas d'invalidation). On dérive donc la clé d'un hash
+   * court de `notification_icon_updated_at`.
+   */
+  const iconVerSource = String(business?.notification_icon_updated_at ?? "none");
+  const iconVerHash = createHash("sha256").update(iconVerSource).digest("hex").slice(0, 10);
+  const walletCacheBustField = {
+    key: `iconVer_${iconVerHash}`,
+    label: "",
+    /** U+2060 WORD JOINER : caractère invisible zero-width, ne s'affiche pas au verso mais
+     * rend le champ "présent" structurellement → passd doit régénérer son snapshot si la CLÉ
+     * change (ce qui arrive dès que notification_icon_updated_at change). */
+    value: "\u2060",
+  };
+
   if (format === "tampons") {
     const rewardValue = stampMidRewardLabel
       ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
@@ -488,7 +544,8 @@ export async function generatePass(member, business = null, options = {}) {
       lastMessageBackField,
       { key: "reward", label: "Récompense", value: rewardValue },
       { key: "terms", label: "Conditions", value: backTerms },
-      { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
+      { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] },
+      walletCacheBustField
     );
   } else {
     const pts = Math.max(0, Math.floor(Number(member.points) || 0));
@@ -511,7 +568,8 @@ export async function generatePass(member, business = null, options = {}) {
       },
       { key: "toUnlock", label: "Pour l'obtenir", value: toUnlockText },
       { key: "terms", label: "Conditions", value: backTerms },
-      { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] }
+      { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] },
+      walletCacheBustField
     );
   }
 

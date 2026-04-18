@@ -310,7 +310,7 @@ app.get("/api/debug/notif-icon/:slug", (req, res) => {
 
     res.json({
       ok: true,
-      build: "2026-04-17-notif-icon-req-log",
+      build: "2026-04-18-icon-sha-collector",
       businessId: business.id,
       organizationName: business.organization_name,
       notificationIcon: {
@@ -345,10 +345,16 @@ app.get("/api/debug/notif-icon/:slug", (req, res) => {
         const entries = all
           .filter((r) => String(r.businessId || "") === String(business.id || ""))
           .filter((r) => new Date(r.at).getTime() >= since);
-        // Détection automatique du symptôme "sha identique sur 2 GET consécutifs alors que
-        // notification_icon_updated_at a changé entre temps" → bug serveur. Sinon → bug iOS passd.
+        // distinctSha : différents .pkpass servis (bug serveur si 1 malgré changement d'icône).
+        // distinctIconSha : différents `icon.png` embedded (→ tranche bug backend vs bug iOS passd).
+        //   - si distinctIconSha === 1 alors que notification_icon_updated_at a changé entre
+        //     deux entrées → bug SERVEUR : l'asset frais n'est pas lu / sharp a un cache.
+        //   - si distinctIconSha >= 2 et pourtant la bannière affiche l'ancienne icône → bug
+        //     iOS `passd` pur (cache miniature bannière) → Fix #6 (`walletCacheBust` backField)
+        //     devrait résoudre.
         const distinctSha = new Set(entries.map((r) => r.sha256_12)).size;
-        return { total10min: entries.length, distinctSha, entries };
+        const distinctIconSha = new Set(entries.map((r) => r.icon_sha256_12).filter(Boolean)).size;
+        return { total10min: entries.length, distinctSha, distinctIconSha, entries };
       })(),
       apnsHealth: getApnsHealthForDiagnostics(),
     });
