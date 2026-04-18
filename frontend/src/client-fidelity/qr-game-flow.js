@@ -217,13 +217,91 @@ export function showQrVerifyPanel(rootEl) {
 }
 
 /**
+ * Textes modale gain (invité QR) selon résultat API.
+ * @param {{ isWin: boolean, bonusPts: number, bonusStamps: number, rawLabel: string, programType: string }} p
+ */
+export function buildQrRewardModalCopy(p) {
+  const isWin = p.isWin !== false;
+  const pt = String(p.programType || "points").toLowerCase();
+  const bonusPts = Math.max(0, Number(p.bonusPts) || 0);
+  const bonusStamps = Math.max(0, Number(p.bonusStamps) || 0);
+  const raw = String(p.rawLabel || "").trim();
+
+  if (!isWin) {
+    return {
+      title: "Merci d’avoir joué !",
+      lead: "Pas de gain cette fois — retente ta chance plus tard. Laisse tes coordonnées pour être informé des prochains jeux.",
+      prizeHtml: "",
+      formIntro: "Pour rester informé et jouer à nouveau :",
+    };
+  }
+
+  let prizeHtml = "";
+  if (pt === "stamps" && bonusStamps > 0) {
+    prizeHtml = `<span class="fidelity-qr-reward-prize__chip fidelity-qr-reward-prize__chip--stamps"><span class="fidelity-qr-reward-prize__chip-label">Gain</span><span class="fidelity-qr-reward-prize__chip-value">+${bonusStamps} tampon${bonusStamps > 1 ? "s" : ""}</span></span>`;
+  } else if (bonusPts > 0) {
+    prizeHtml = `<span class="fidelity-qr-reward-prize__chip fidelity-qr-reward-prize__chip--pts"><span class="fidelity-qr-reward-prize__chip-label">Gain</span><span class="fidelity-qr-reward-prize__chip-value">+${bonusPts} point${bonusPts > 1 ? "s" : ""}</span></span>`;
+  } else if (raw) {
+    prizeHtml = `<span class="fidelity-qr-reward-prize__chip fidelity-qr-reward-prize__chip--gift"><span class="fidelity-qr-reward-prize__chip-label">Gain</span><span class="fidelity-qr-reward-prize__chip-value">${escapeHtmlForQrReward(raw)}</span></span>`;
+  }
+
+  return {
+    title: "Félicitations !",
+    lead: "Tu as gagné — enregistre tes infos pour créditer la récompense sur ta carte fidélité.",
+    prizeHtml,
+    formIntro: "Pour l’ajouter à ta carte, complète :",
+  };
+}
+
+/** Échappe minimal pour libellé gain dans HTML injecté. */
+function escapeHtmlForQrReward(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
  * Gain invité QR : une seule modale — félicitations + formulaire prénom / email (pas de passage auto ni 2e pop-up).
  * @param {HTMLElement} rootEl
+ * @param {Partial<{ isWin: boolean, bonusPts: number, bonusStamps: number, rawLabel: string, programType: string }>} [opts]
  */
-export function showQrRewardPanel(rootEl) {
+export function showQrRewardPanel(rootEl, opts = {}) {
   hideAllQrPanels(rootEl);
   const panel = rootEl.querySelector("#fidelity-qr-panel-reward");
   panel?.classList.remove("hidden");
+
+  const copy = buildQrRewardModalCopy({
+    isWin: opts.isWin !== false,
+    bonusPts: opts.bonusPts,
+    bonusStamps: opts.bonusStamps,
+    rawLabel: opts.rawLabel,
+    programType: opts.programType,
+  });
+
+  if (panel instanceof HTMLElement) {
+    panel.dataset.rewardState = opts.isWin === false ? "lose" : "win";
+  }
+
+  const titleEl = rootEl.querySelector("#fidelity-qr-reward-title");
+  const leadEl = rootEl.querySelector("#fidelity-qr-reward-lead");
+  const prizeEl = rootEl.querySelector("#fidelity-qr-reward-prize");
+  const introEl = rootEl.querySelector(".fidelity-qr-reward-form-intro");
+
+  if (titleEl) titleEl.textContent = copy.title;
+  if (leadEl) leadEl.textContent = copy.lead;
+  if (introEl) introEl.textContent = copy.formIntro;
+  if (prizeEl) {
+    if (copy.prizeHtml) {
+      prizeEl.innerHTML = copy.prizeHtml;
+      prizeEl.classList.remove("hidden");
+    } else {
+      prizeEl.innerHTML = "";
+      prizeEl.classList.add("hidden");
+    }
+  }
+
   const nameInput = rootEl.querySelector("#fidelity-qr-claim-name");
   window.requestAnimationFrame(() => {
     if (nameInput instanceof HTMLElement) nameInput.focus();

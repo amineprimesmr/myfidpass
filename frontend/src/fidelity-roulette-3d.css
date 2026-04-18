@@ -565,3 +565,15 @@
     perspective: none;
   }
 }
+
+/*
+ * WebKit (Safari iOS) : conic-gradient sur .fidelity-roulette-wheel-bg + transition transform 6s
+ * sur #fidelity-roulette-wheel, avec ancêtre .fidelity-roulette-wheel-outer en rotateX + preserve-3d,
+ * provoquait disparition des couleurs, aspect « noir & blanc » ou roue visuellement figée.
+ * Aplatir la perspective le temps du spin restaure un compositeur stable.
+ */
+.fidelity-v2-roulette-inline .fidelity-roulette-wheel-outer:has(.fidelity-roulette-wheel--is-spinning),
+.fidelity-game-page .fidelity-roulette-wheel-outer:has(.fidelity-roulette-wheel--is-spinning) {
+  transform: rotateX(0deg) scale(1) !important;
+  transform-style: flat !important;
+}

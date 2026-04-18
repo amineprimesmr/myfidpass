@@ -183,9 +183,21 @@ export function renderQrGamePage(esc, p) {
         </div>
       </div>
 
-      <div id="fidelity-qr-panel-reward" class="fidelity-qr-modal fidelity-qr-modal--reward hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-reward-title">
-        <h2 id="fidelity-qr-reward-title" class="fidelity-qr-modal-title">Félicitations !</h2>
-        <p id="fidelity-qr-reward-lead" class="fidelity-qr-reward-lead" role="status">Découvrez votre récompense</p>
+      <div id="fidelity-qr-panel-reward" class="fidelity-qr-modal fidelity-qr-modal--reward hidden" role="dialog" aria-modal="true" aria-labelledby="fidelity-qr-reward-title" data-reward-state="win">
+        <div class="fidelity-qr-reward-hero" aria-hidden="true">
+          <div class="fidelity-qr-reward-hero__glow"></div>
+          <div class="fidelity-qr-reward-hero__ring"></div>
+          <div class="fidelity-qr-reward-hero__sparkles">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="fidelity-qr-reward-hero__medal" role="presentation">
+            <span class="fidelity-qr-reward-hero__medal-inner">★</span>
+          </div>
+        </div>
+        <h2 id="fidelity-qr-reward-title" class="fidelity-qr-modal-title fidelity-qr-modal-title--reward">Félicitations !</h2>
+        <div id="fidelity-qr-reward-prize" class="fidelity-qr-reward-prize hidden" aria-live="polite"></div>
+        <p id="fidelity-qr-reward-lead" class="fidelity-qr-reward-lead" role="status">Ta récompense est prête.</p>
+        <p class="fidelity-qr-reward-form-intro">Pour l’ajouter à ta carte fidélité, complète tes infos :</p>
         <form id="fidelity-qr-claim-form" class="fidelity-qr-claim-form" novalidate>
           <label class="fidelity-qr-field">
             <span>Prénom</span>

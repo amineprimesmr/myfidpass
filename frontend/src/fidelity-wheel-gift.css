@@ -201,11 +201,12 @@
   z-index: 0;
   pointer-events: none;
   box-sizing: border-box;
+  /* Calque GPU stable ; ne pas utiliser backface-visibility: hidden ici : avec rotateX parent ça peut faire disparaître le dégradé. */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
 }
 
 .fidelity-roulette-wheel--is-spinning .fidelity-roulette-wheel-bg {
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 1px);
+  transform: translate3d(0, 0, 1px);
 }

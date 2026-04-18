@@ -468,8 +468,14 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         if (qrGuest) {
           if (feedback) feedback.classList.add("hidden");
           openQrModalRoot(rootEl);
-          showQrRewardPanel(rootEl);
-          triggerWinCelebrationConfetti();
+          showQrRewardPanel(rootEl, {
+            isWin,
+            bonusPts,
+            bonusStamps,
+            rawLabel,
+            programType,
+          });
+          if (isWin) triggerWinCelebrationConfetti();
           /* Ne pas appeler rerender() ici : il remplace tout le DOM et faisait disparaître la modale. */
           try {
             await hydrateMember(state.member.id);
