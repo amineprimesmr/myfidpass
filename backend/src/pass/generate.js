@@ -369,14 +369,46 @@ export async function generatePass(member, business = null, options = {}, collec
       business?.broadcast_send_seq
     );
   }
+  /*
+   * Fix #7 — invalidation FORCÉE du snapshot miniature bannière `passd`.
+   *
+   * Fix #6 (walletCacheBust sur un backField) seul ne suffit pas : en observation terrain,
+   * même quand `icon.png` embedded change byte-par-byte ET les backFields sont matériellement
+   * différents, iOS `passd` continue à afficher l'ancienne miniature dans la bannière de notif.
+   *
+   * CAUSE RACINE : passd utilise les champs TOP-LEVEL du pass.json (`organizationName`,
+   * `description`) comme clé de cache du snapshot miniature. Les backFields sont considérés
+   * comme données auxiliaires et n'invalident pas ce cache. Sans changement top-level, passd
+   * reprint la bannière depuis son snapshot cached — avec l'ancienne icône.
+   *
+   * FIX : suffixer `organizationName` et `description` avec une séquence INVISIBLE (Zero-Width
+   * Word Joiner U+2060 + Zero-Width Space U+200B) qui encode les bits d'un hash dérivé de
+   * `notification_icon_updated_at`. L'utilisateur ne voit aucune différence (caractères
+   * zero-width non rendus), mais passd détecte un changement top-level → régénère la miniature
+   * depuis le nouveau `icon.png`.
+   *
+   * Pourquoi encoder en binaire plutôt que juste append un caractère fixe ? Pour garantir que
+   * DEUX versions d'icône distinctes produisent DEUX séquences distinctes (sinon, si on met
+   * toujours le même ZWSP, passd garderait la même clé de cache). Le motif binaire encode
+   * suffisamment d'entropie (40 bits du hash) pour que la probabilité de collision soit nulle.
+   */
+  const iconVerSource = String(business?.notification_icon_updated_at ?? "none");
+  const iconVerBits = createHash("sha256").update(iconVerSource).digest("hex").slice(0, 10);
+  let invisibleCacheBust = "";
+  for (const ch of iconVerBits) {
+    const nibble = parseInt(ch, 16);
+    for (let i = 3; i >= 0; i -= 1) {
+      invisibleCacheBust += ((nibble >> i) & 1) === 1 ? "\u2060" : "\u200b";
+    }
+  }
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
-    organizationName: notifTitle,
+    organizationName: `${notifTitle}${invisibleCacheBust}`,
     /* Éviter « Carte de fidélité » dans description : iOS peut associer au libellé système de notif. */
-    description: format === "tampons"
+    description: (format === "tampons"
       ? `Tampons · ${stamps}/${stampMax}`
-      : `Fidélité · ${member.points} pts`,
+      : `Fidélité · ${member.points} pts`) + invisibleCacheBust,
     serialNumber: member.id,
     ...customColors,
   };
@@ -525,8 +557,7 @@ export async function generatePass(member, business = null, options = {}, collec
    * et DIFFÉRENTE entre deux versions (sinon pas d'invalidation). On dérive donc la clé d'un hash
    * court de `notification_icon_updated_at`.
    */
-  const iconVerSource = String(business?.notification_icon_updated_at ?? "none");
-  const iconVerHash = createHash("sha256").update(iconVerSource).digest("hex").slice(0, 10);
+  const iconVerHash = iconVerBits;
   const walletCacheBustField = {
     key: `iconVer_${iconVerHash}`,
     label: "",
