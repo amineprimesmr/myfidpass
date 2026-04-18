@@ -67,6 +67,7 @@ import { generatePass } from "./pass.js";
 import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics, getRecentPassKitPushHistory } from "./apns.js";
 import { getRecentNotifIconRequests } from "./routes/businesses/assets.js";
 import { getRecentPassGetRequests } from "./routes/passkit-webservice.js";
+import { getRecentSettingsPatches } from "./routes/businesses/dashboard.js";
 import {
   isEmailConfigured,
   getEmailTransportLabel,
@@ -310,7 +311,7 @@ app.get("/api/debug/notif-icon/:slug", (req, res) => {
 
     res.json({
       ok: true,
-      build: "2026-04-18-icon-sha-collector",
+      build: "2026-04-18-patch-log",
       businessId: business.id,
       organizationName: business.organization_name,
       notificationIcon: {
@@ -355,6 +356,18 @@ app.get("/api/debug/notif-icon/:slug", (req, res) => {
         const distinctSha = new Set(entries.map((r) => r.sha256_12)).size;
         const distinctIconSha = new Set(entries.map((r) => r.icon_sha256_12).filter(Boolean)).size;
         return { total10min: entries.length, distinctSha, distinctIconSha, entries };
+      })(),
+      recentSettingsPatches: (() => {
+        const all = getRecentSettingsPatches();
+        const mine = all.filter((p) => String(p.businessId || "") === String(business.id || ""));
+        const since = Date.now() - 15 * 60 * 1000;
+        const recent = mine.filter((p) => new Date(p.at).getTime() >= since);
+        const withIconKey = recent.filter((p) => p.hasNotificationIconKey);
+        return {
+          total15min: recent.length,
+          withNotificationIconKey: withIconKey.length,
+          entries: recent.slice(-15),
+        };
       })(),
       apnsHealth: getApnsHealthForDiagnostics(),
     });

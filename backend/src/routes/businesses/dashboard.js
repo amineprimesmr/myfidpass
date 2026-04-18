@@ -58,6 +58,7 @@ import {
 import { signReceiptChallengeToken } from "../../lib/receipt-validation-jwt.js";
 import logger from "../../lib/logger.js";
 import { flyerAiQuotaDevBypass } from "../../lib/flyer-ai-quota-bypass.js";
+import { createHash } from "node:crypto";
 import { parseFlyerPrefsCustomBgDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import {
   buildCsvFromRows,
@@ -72,6 +73,24 @@ import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 
 const router = Router({ mergeParams: true });
+
+/**
+ * Ring buffer diagnostic : chaque PATCH /settings reçu, avec l'info clé
+ * « notification_icon_base64 est-il présent dans le body et quelle est sa taille / son sha ? ».
+ * Exposé via `GET /api/debug/notif-icon/:slug` pour déboguer les cas où l'app iOS affirme
+ * avoir envoyé une nouvelle icône mais la DB n'est pas mise à jour.
+ */
+const SETTINGS_PATCH_LOG_MAX = 60;
+const settingsPatchLog = [];
+export function recordSettingsPatch(entry) {
+  settingsPatchLog.push({ at: new Date().toISOString(), ...entry });
+  while (settingsPatchLog.length > SETTINGS_PATCH_LOG_MAX) {
+    settingsPatchLog.shift();
+  }
+}
+export function getRecentSettingsPatches() {
+  return settingsPatchLog.slice();
+}
 
 /** Remet le compteur flyer IA au mois UTC courant si besoin. */
 function syncFlyerAiBillingMonth(business) {
@@ -256,6 +275,38 @@ router.patch("/settings", async (req, res) => {
   try {
   const business = req.business;
   const body = req.body || {};
+  try {
+    const niRaw = body.notification_icon_base64 ?? body.notificationIconBase64;
+    const hasKey =
+      Object.prototype.hasOwnProperty.call(body, "notification_icon_base64") ||
+      Object.prototype.hasOwnProperty.call(body, "notificationIconBase64");
+    let niBytes = 0;
+    let niSha = null;
+    let niKind = typeof niRaw;
+    if (typeof niRaw === "string" && niRaw.length > 0) {
+      const b64 = String(niRaw).replace(/^data:image\/\w+;base64,/, "");
+      try {
+        const buf = Buffer.from(b64, "base64");
+        niBytes = buf.length;
+        niSha = createHash("sha256").update(buf).digest("hex").slice(0, 12);
+      } catch {
+        niBytes = -1;
+      }
+    }
+    recordSettingsPatch({
+      slug: String(req.params?.slug || business?.slug || "").slice(0, 40),
+      businessId: String(business?.id || "").slice(0, 40),
+      ua: String(req.get("user-agent") || "").slice(0, 80),
+      contentLength: Number(req.get("content-length") || 0),
+      bodyKeyCount: Object.keys(body).length,
+      bodyKeysSample: Object.keys(body).slice(0, 30),
+      hasNotificationIconKey: hasKey,
+      notificationIconType: niKind,
+      notificationIconBase64Length: typeof niRaw === "string" ? niRaw.length : 0,
+      notificationIconDecodedBytes: niBytes,
+      notificationIconSha256_12: niSha,
+    });
+  } catch {}
   const organization_name = body.organization_name ?? body.organizationName;
   const background_color = body.background_color ?? body.backgroundColor;
   const foreground_color = body.foreground_color ?? body.foregroundColor;
