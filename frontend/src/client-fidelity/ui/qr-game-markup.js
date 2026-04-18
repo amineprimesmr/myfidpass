@@ -208,7 +208,15 @@ export function renderQrGamePage(esc, p) {
             <input id="fidelity-qr-claim-email" class="fidelity-qr-input" type="email" autocomplete="email" required maxlength="254" />
           </label>
           <p id="fidelity-qr-claim-error" class="fidelity-qr-form-error hidden" role="alert"></p>
-          <button type="submit" class="fidelity-qr-btn fidelity-qr-btn--primary fidelity-qr-btn--wide" id="fidelity-qr-claim-submit">Recevoir ma récompense</button>
+          <span class="fidelity-cta-wrap fidelity-cta-wrap--full fidelity-cta-wrap--qr-play fidelity-qr-modal-cta fidelity-qr-claim-cta-wrap">
+            <button
+              type="submit"
+              class="fidelity-shiny-cta fidelity-shiny-cta--missions-gift fidelity-shiny-cta--qr-play"
+              id="fidelity-qr-claim-submit"
+            >
+              <span class="fidelity-shiny-cta__label"><span>Recevoir ma récompense</span></span>
+            </button>
+          </span>
         </form>
       </div>
     </div>

@@ -25,6 +25,7 @@ import {
   firstNonPerduLabel,
   isGuestMember,
   openQrModalRoot,
+  resolveQrGuestRewardChipAmountsFromMerchantCard,
   showQrRewardPanel,
   shouldShowQrThanksHero,
 } from "./qr-game-flow.js";
@@ -75,6 +76,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   const store = createClientFidelityStore({ slug });
   
   let isSpinning = false;
+  /** Si un `refreshMemberData` arrive pendant la rotation, on évite `rerender()` (qui détruit la roue → WebKit perd conic-gradient / transition). */
+  let deferredRerenderAfterSpin = false;
   let wheelLabels = [...DEFAULT_WHEEL_LABELS];
   let currentRotation = 0;
   let disposeQrUi = () => {};
@@ -276,6 +279,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     if (!state.member?.id) return;
     await hydrateMember(state.member.id);
     ensureQrGateAlignedWithServer(store.get().member);
+    if (isSpinning) {
+      deferredRerenderAfterSpin = true;
+      return;
+    }
+    deferredRerenderAfterSpin = false;
+    rerender();
+  }
+
+  function flushDeferredRerenderAfterSpin() {
+    if (!deferredRerenderAfterSpin || isSpinning) return;
+    deferredRerenderAfterSpin = false;
     rerender();
   }
 
@@ -431,7 +445,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const isWin = isWinPoints || isWinStamps;
       const rewardLabel = isWin ? rawLabel : "PERDU";
       const qrGuest = isGuestMember(state.member);
-      const wheelStopLabel = qrGuest && !isWin ? firstNonPerduLabel(wheelLabels) : rewardLabel;
+      /** Invité QR : la roue s’arrête toujours sur un segment lot (libellé présent sur la roue), jamais sur PERDU. */
+      const wheelStopLabel = qrGuest ? firstNonPerduLabel(wheelLabels) : rewardLabel;
 
       const winIndex = pickWheelIndexForReward(wheelLabels, wheelStopLabel);
 
@@ -445,18 +460,21 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const targetRotation = baseRotation + finalDelta;
 
       const showOutcome = async () => {
+        const liveWheel = rootEl.querySelector("#fidelity-roulette-wheel") || wheelEl;
         spinAudioStop();
-        wheelEl.classList.remove("fidelity-roulette-wheel--is-spinning");
-        /* Normalise la rotation accumulée pour éviter la dérive de précision sur les spins successifs.
-         * targetRotation % 360 donne la même position visuelle en restant dans [0, 360). */
-        const normalizedRot = ((targetRotation % 360) + 360) % 360;
-        currentRotation = normalizedRot;
-        wheelEl.style.transition = "none";
-        void wheelEl.offsetHeight; /* force reflow avant de changer le transform */
-        wheelEl.style.transform = `rotate(${normalizedRot}deg)`;
+        if (liveWheel instanceof HTMLElement) {
+          liveWheel.classList.remove("fidelity-roulette-wheel--is-spinning");
+          /* Normalise la rotation accumulée pour éviter la dérive de précision sur les spins successifs.
+           * targetRotation % 360 donne la même position visuelle en restant dans [0, 360). */
+          const normalizedRot = ((targetRotation % 360) + 360) % 360;
+          currentRotation = normalizedRot;
+          liveWheel.style.transition = "none";
+          void liveWheel.offsetHeight; /* force reflow avant de changer le transform */
+          liveWheel.style.transform = `rotate(${normalizedRot}deg)`;
+        }
         try {
           if (
-            isWin &&
+            (qrGuest || isWin) &&
             typeof navigator !== "undefined" &&
             typeof navigator.vibrate === "function"
           ) {
@@ -465,40 +483,54 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         } catch (_) {}
         isSpinning = false;
         clearBusy();
-        if (qrGuest) {
-          if (feedback) feedback.classList.add("hidden");
-          openQrModalRoot(rootEl);
-          showQrRewardPanel(rootEl, {
-            isWin,
-            bonusPts,
-            bonusStamps,
-            rawLabel,
-            programType,
-          });
+        try {
+          if (qrGuest) {
+            if (feedback) feedback.classList.add("hidden");
+            const chipAmounts = resolveQrGuestRewardChipAmountsFromMerchantCard(
+              store.get().business,
+              programType,
+              bonusPts,
+              bonusStamps,
+            );
+            let rawForModal = rawLabel;
+            if (!chipAmounts.bonusPts && !chipAmounts.bonusStamps) {
+              rawForModal = firstNonPerduLabel(wheelLabels);
+            }
+            openQrModalRoot(rootEl);
+            showQrRewardPanel(rootEl, {
+              isWin: true,
+              bonusPts: chipAmounts.bonusPts,
+              bonusStamps: chipAmounts.bonusStamps,
+              rawLabel: rawForModal,
+              programType,
+            });
+            triggerWinCelebrationConfetti();
+            /* Ne pas appeler rerender() ici : il remplace tout le DOM et faisait disparaître la modale. */
+            try {
+              await hydrateMember(state.member.id);
+            } catch (_) {}
+            releaseWillChangeSoon();
+            return;
+          }
+          if (feedback) {
+            const winMsg =
+              programType === "stamps" && isWinStamps
+                ? `Bravo ! ${rawLabel} sur ta carte 🎉`
+                : isWinPoints
+                  ? `Bravo ! +${bonusPts} point${bonusPts > 1 ? "s" : ""} sur ta carte 🎉`
+                  : isWin
+                    ? `Bravo ! ${rawLabel} 🎉`
+                    : "";
+            feedback.textContent = isWin ? winMsg : "Dommage, essaie encore !";
+            feedback.classList.add(isWin ? "success" : "error");
+            feedback.classList.remove("hidden");
+          }
           if (isWin) triggerWinCelebrationConfetti();
-          /* Ne pas appeler rerender() ici : il remplace tout le DOM et faisait disparaître la modale. */
-          try {
-            await hydrateMember(state.member.id);
-          } catch (_) {}
+          await refreshMemberData();
           releaseWillChangeSoon();
-          return;
+        } finally {
+          flushDeferredRerenderAfterSpin();
         }
-        if (feedback) {
-          const winMsg =
-            programType === "stamps" && isWinStamps
-              ? `Bravo ! ${rawLabel} sur ta carte 🎉`
-              : isWinPoints
-                ? `Bravo ! +${bonusPts} point${bonusPts > 1 ? "s" : ""} sur ta carte 🎉`
-                : isWin
-                  ? `Bravo ! ${rawLabel} 🎉`
-                  : "";
-          feedback.textContent = isWin ? winMsg : "Dommage, essaie encore !";
-          feedback.classList.add(isWin ? "success" : "error");
-          feedback.classList.remove("hidden");
-        }
-        if (isWin) triggerWinCelebrationConfetti();
-        await refreshMemberData();
-        releaseWillChangeSoon();
       };
 
       wheelEl.offsetHeight;
@@ -511,16 +543,19 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         return;
       }
 
-      try {
-        const audio = await startRouletteSpinSound(spinDurationMs);
-        spinAudioStop = typeof audio?.stop === "function" ? audio.stop : () => {};
-      } catch (_) {
-        spinAudioStop = () => {};
-      }
-
+      /* Démarrer la transition tout de suite ; le bruitage Web Audio peut bloquer le thread (sensation de gel). */
       wheelEl.classList.add("fidelity-roulette-wheel--is-spinning");
       wheelEl.style.transition = `transform ${spinDurationMs}ms ${ROULETTE_SPIN_EASING}`;
       wheelEl.style.transform = `rotate(${targetRotation}deg)`;
+
+      void (async () => {
+        try {
+          const audio = await startRouletteSpinSound(spinDurationMs);
+          spinAudioStop = typeof audio?.stop === "function" ? audio.stop : () => {};
+        } catch (_) {
+          spinAudioStop = () => {};
+        }
+      })();
 
       let completed = false;
       const fallbackMs = spinDurationMs + 950;
@@ -550,6 +585,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       wheelEl.style.transition = reduceMotion ? "none" : "transform 0.45s cubic-bezier(0.33, 1, 0.68, 1)";
       wheelEl.style.transform = `rotate(${spinStart}deg)`;
       releaseWillChangeSoon();
+      flushDeferredRerenderAfterSpin();
 
       if (feedback) {
         feedback.textContent = messageUtilisateurPourErreur(err, "Le jeu n’a pas pu aboutir. Réessaie.");
@@ -610,6 +646,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   const PENDING_CLAIM_MAX_MS = 24 * 60 * 60 * 1000;
 
   async function tryAutoClaimOnReturn() {
+    if (isSpinning) return;
     const state = store.get();
     if (!state.member?.id) return;
     if (isGuestMember(state.member)) return;

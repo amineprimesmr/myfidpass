@@ -546,8 +546,10 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-cta-pill--qr-play .fidelity-cta
 
 /*
  * Bouton « Jouer la partie » : shiny + teintes flyer + relief 3D (biseau, tranche, ombre portée).
+ * Même rendu pour « Recevoir ma récompense » dans la modale gain (#fidelity-qr-panel-reward).
  */
-main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play {
+main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play,
+#fidelity-qr-panel-reward .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play {
   --shiny-cta-bg: color-mix(in srgb, var(--fid-flyer-wheel-odd, #6366f1) 24%, #ffffff);
   --shiny-cta-bg-subtle: color-mix(in srgb, var(--fid-flyer-wheel-even, #a78bfa) 34%, #ffffff);
   --shiny-cta-fg: #ffffff;
@@ -590,14 +592,17 @@ main.fidelity-v2-main.fidelity-qr-game
   .fidelity-v2-roulette-inline--qr
   .fidelity-shiny-cta--qr-play
   .fidelity-shiny-cta__label
-  span {
+  span,
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play .fidelity-shiny-cta__label,
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play .fidelity-shiny-cta__label span {
   color: #ffffff !important;
   text-shadow: var(--fid-qr-cta-outline);
 }
 
 main.fidelity-v2-main.fidelity-qr-game
   .fidelity-v2-roulette-inline--qr
-  .fidelity-shiny-cta--qr-play:is(:hover, :focus-visible) {
+  .fidelity-shiny-cta--qr-play:is(:hover, :focus-visible),
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play:is(:hover, :focus-visible) {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     inset 0 -3px 10px color-mix(in srgb, var(--fid-flyer-wheel-odd, #6366f1) 22%, rgba(15, 23, 42, 0.1)),
@@ -609,7 +614,8 @@ main.fidelity-v2-main.fidelity-qr-game
 
 main.fidelity-v2-main.fidelity-qr-game
   .fidelity-v2-roulette-inline--qr
-  .fidelity-shiny-cta--qr-play:active {
+  .fidelity-shiny-cta--qr-play:active,
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play:active {
   box-shadow:
     inset 0 2px 6px rgba(15, 23, 42, 0.12),
     inset 0 -1px 0 rgba(255, 255, 255, 0.35),
@@ -621,23 +627,27 @@ main.fidelity-v2-main.fidelity-qr-game
 }
 
 @media (prefers-reduced-motion: reduce) {
-  main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play {
+  main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play,
+  #fidelity-qr-panel-reward .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play {
     translate: 0 0;
   }
 
   main.fidelity-v2-main.fidelity-qr-game
     .fidelity-v2-roulette-inline--qr
-    .fidelity-shiny-cta--qr-play:is(:hover, :focus-visible) {
+    .fidelity-shiny-cta--qr-play:is(:hover, :focus-visible),
+  #fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play:is(:hover, :focus-visible) {
     translate: 0 -1px;
   }
 }
 
-main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play:focus-visible {
+main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play:focus-visible,
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--fid-flyer-wheel-odd, #6366f1) 55%, transparent);
   outline-offset: 3px;
 }
 
-main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play::before {
+main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play::before,
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play::before {
   background: radial-gradient(
       circle at var(--position) var(--position),
       color-mix(in srgb, var(--fid-flyer-wheel-odd, #6366f1) 45%, transparent) calc(var(--position) / 3.2),
@@ -646,7 +656,8 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
     padding-box;
 }
 
-main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play::after {
+main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play::after,
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play::after {
   background: linear-gradient(
     -50deg,
     transparent,
@@ -657,7 +668,8 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
 }
 
 @supports not (background: color-mix(in srgb, red 50%, white)) {
-  main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play {
+  main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play,
+  #fidelity-qr-panel-reward .fidelity-cta-wrap--full .fidelity-shiny-cta--qr-play {
     --shiny-cta-bg: #f3edff;
     --shiny-cta-bg-subtle: #e4d4ff;
     --shiny-cta-highlight: #7c3aed;
@@ -1301,6 +1313,13 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+#fidelity-qr-panel-reward .fidelity-qr-claim-cta-wrap.fidelity-cta-wrap--full {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.15rem;
 }
 
 .fidelity-qr-field {

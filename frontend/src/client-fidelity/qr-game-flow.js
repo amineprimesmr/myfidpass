@@ -3,6 +3,7 @@
  */
 
 import { applyQrThanksHero, runQrThanksHeroTransition } from "./qr-game-hero-thanks.js";
+import { buildStampTiers, parsePointTiers } from "./lib/tier-progress.js";
 
 export const QR_GATE_KEY = "fid_qr_spin_gate";
 export const QR_GOOGLE_PENDING_KEY = "fid_qr_google_pending";
@@ -214,6 +215,33 @@ export function showQrGooglePanel(rootEl) {
 export function showQrVerifyPanel(rootEl) {
   hideAllQrPanels(rootEl);
   rootEl.querySelector("#fidelity-qr-panel-verify")?.classList.remove("hidden");
+}
+
+/**
+ * Montants affichés dans le chip « Gain » (parcours invité QR) : si la carte a des paliers,
+ * on aligne sur le **premier palier** (même logique que la section récompenses), pas sur le seul montant renvoyé par le spin API.
+ * @param {unknown} business
+ * @param {string} programType
+ * @param {number} apiBonusPts
+ * @param {number} apiBonusStamps
+ * @returns {{ bonusPts: number; bonusStamps: number }}
+ */
+export function resolveQrGuestRewardChipAmountsFromMerchantCard(business, programType, apiBonusPts, apiBonusStamps) {
+  const pt = String(programType || "points").toLowerCase();
+  const apiPts = Math.max(0, Number(apiBonusPts) || 0);
+  const apiSt = Math.max(0, Number(apiBonusStamps) || 0);
+  if (pt === "stamps") {
+    const tiers = buildStampTiers(business);
+    if (tiers.length > 0) {
+      return { bonusPts: 0, bonusStamps: tiers[0].threshold };
+    }
+  } else {
+    const tiers = parsePointTiers(business);
+    if (tiers.length > 0) {
+      return { bonusPts: tiers[0].threshold, bonusStamps: 0 };
+    }
+  }
+  return { bonusPts: apiPts, bonusStamps: apiSt };
 }
 
 /**

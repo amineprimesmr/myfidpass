@@ -125,4 +125,11 @@ describe("pickWheelIndexForReward", () => {
     expect(idx).toBe(1);
     vi.restoreAllMocks();
   });
+
+  it("libellé inconnu (API ≠ texte roue) : segment lot, jamais PERDU", () => {
+    const labels = ["+10 pts", "PERDU", "+25 pts", "PERDU", "+50 pts", "PERDU", "+10 pts", "PERDU", "+25 pts"];
+    const idx = pickWheelIndexForReward(labels, "réponse api différente");
+    expect(idx % 2).toBe(0);
+    expect(String(labels[idx]).trim().toLowerCase()).not.toBe("perdu");
+  });
 });

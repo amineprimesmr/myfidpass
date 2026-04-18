@@ -108,6 +108,24 @@ export function normalizeWheelLabelsFromSegments(segments) {
 }
 
 /**
+ * Premier segment « lot » (pas PERDU) : parts paires en layout standard.
+ * @param {string[]} wheelLabels
+ * @returns {number}
+ */
+function indexOfFirstPrizeSegment(wheelLabels) {
+  const n = wheelLabels.length;
+  for (let i = 0; i < n; i += 2) {
+    const l = String(wheelLabels[i] || "").trim().toLowerCase();
+    if (l && l !== "perdu") return i;
+  }
+  for (let i = 0; i < n; i++) {
+    const l = String(wheelLabels[i] || "").trim().toLowerCase();
+    if (l && l !== "perdu") return i;
+  }
+  return 0;
+}
+
+/**
  * @param {string[]} wheelLabels
  * @param {string} rewardLabel
  * @returns {number}
@@ -136,8 +154,12 @@ export function pickWheelIndexForReward(wheelLabels, rewardLabel) {
   for (let i = 0; i < wheelLabels.length; i++) {
     if (String(wheelLabels[i] || "").trim().toLowerCase() === "perdu") perdu.push(i);
   }
-  if (perdu.length) return perdu[Math.floor(Math.random() * perdu.length)];
-  return 0;
+  if (isPerdu) {
+    if (perdu.length) return perdu[Math.floor(Math.random() * perdu.length)];
+    return 1 % Math.max(wheelLabels.length, 1);
+  }
+  /* Libellé gagnant inconnu (ex. API ≠ texte roue) : ne jamais retomber sur PERDU. */
+  return indexOfFirstPrizeSegment(wheelLabels);
 }
 
 /**
