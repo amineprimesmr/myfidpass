@@ -263,9 +263,6 @@ export async function generatePass(member, business = null, options = {}, collec
       collector.icon3xBytes = icon3xBuf ? icon3xBuf.length : 0;
     } catch { /* diagnostics best-effort */ }
   }
-  // passé à passOptions plus bas → on remplit collector.topLevel juste avant `pass.getAsBuffer`
-  // pour confirmer que notre userInfo + backgroundColor bumped sont bien dans le pass signé.
-  const collectorForTop = collector && typeof collector === "object" ? collector : null;
 
   const businessReqRaw = business?.required_stamps != null ? Number(business.required_stamps) : NaN;
   const optionReqRaw = options.required_stamps != null ? Number(options.required_stamps) : NaN;
@@ -373,53 +370,24 @@ export async function generatePass(member, business = null, options = {}, collec
     );
   }
   /*
-   * Fix #8 — invalidation nucléaire (mais invisible) du snapshot miniature `passd`.
+   * LIMITATION iOS confirmée (StackOverflow #54399616, réponse PassKit) :
+   *   « iOS caches quite aggressively and it assumes all combinations of passTypeIdentifier and
+   *     pass type will share the same icon. »
    *
-   * Historique des tentatives :
-   *   Fix #6 : backField `walletCacheBust` avec clé variable        → inefficace
-   *   Fix #7 : ZWSP dans organizationName + description              → inefficace
-   * Cause probable : Apple passkit-generator ou la pipeline signature normalise/strip les
-   * caractères zero-width, donc `pass.json` signé est identique à l'ancien.
+   * Autrement dit : iOS Wallet verrouille UN icône par `passTypeIdentifier` dès la première
+   * installation d'un pass avec ce certificat, et n'invalide JAMAIS ce cache côté OS. Aucune
+   * modification de pass.json (userInfo, backgroundColor ±1 LSB, organizationName ZWSP, etc.)
+   * ne peut forcer iOS à re-render la miniature bannière de notification Wallet.
    *
-   * Fix #8 = changement TOP-LEVEL matériel mais visuellement invisible :
-   *   1) `backgroundColor` : variation de 0 à 1 unité RGB (ΔE < 0.5 → œil humain ne distingue
-   *      pas, mais octets pass.json différents) dérivée du hash de notification_icon_updated_at.
-   *   2) `userInfo` : objet JSON custom top-level qui passd doit préserver. Contient le hash
-   *      complet → zéro ambiguïté, pass.json matériellement distinct pour chaque version.
+   * Solutions à ce niveau système : (a) 1 passTypeIdentifier par commerçant (pas scalable),
+   * (b) notification APNs classique en plus du silent PassKit, (c) informer le commerçant
+   * que la première icône est définitive.
    *
-   * passd doit re-render la miniature bannière car le HASH ENTIER de pass.json change.
+   * Les Fix #1..#5 (Last-Modified/collapse-id/retry wave/ETag/sha diagnostic) restent utiles
+   * pour la fiabilité de la chaîne push. Fix #6 (backField invisible) reste en place : il
+   * force au moins `passd` à considérer pass.json matériellement différent, ce qui peut aider
+   * pour les textes backFields. Fix #7/#8 retirés — pollution pass.json sans bénéfice réel.
    */
-  const iconVerSource = String(business?.notification_icon_updated_at ?? "none");
-  const iconVerFull = createHash("sha256").update(iconVerSource).digest("hex");
-  const iconVerBits = iconVerFull.slice(0, 10);
-  /**
-   * Perturbation RGB sub-perceptuelle du fond : on dérive 3 valeurs de 0..1 (un bit chacune)
-   * depuis le hash, et on les ajoute/retire à (R, G, B). Variation max = ±1 LSB par canal.
-   * Imperceptible visuellement, mais change le hash pass.json de manière garantie.
-   */
-  const bumpChannel = (hex2, bit) => {
-    const v = parseInt(hex2, 16);
-    if (!Number.isFinite(v)) return hex2;
-    const delta = bit ? 1 : 0;
-    const next = v >= 255 ? v - delta : v + delta;
-    return next.toString(16).padStart(2, "0");
-  };
-  const normalizeBgHex = (hex) => {
-    if (typeof hex !== "string") return null;
-    const s = hex.startsWith("#") ? hex.slice(1) : hex;
-    if (!/^[0-9a-fA-F]{6}$/.test(s)) return null;
-    return s;
-  };
-  const bgOrig = normalizeBgHex(customColors.backgroundColor);
-  if (bgOrig) {
-    const b0 = (parseInt(iconVerFull.charAt(0), 16) & 1) === 1;
-    const b1 = (parseInt(iconVerFull.charAt(1), 16) & 1) === 1;
-    const b2 = (parseInt(iconVerFull.charAt(2), 16) & 1) === 1;
-    const nr = bumpChannel(bgOrig.slice(0, 2), b0);
-    const ng = bumpChannel(bgOrig.slice(2, 4), b1);
-    const nb = bumpChannel(bgOrig.slice(4, 6), b2);
-    customColors.backgroundColor = `#${nr}${ng}${nb}`;
-  }
   const passOptions = {
     passTypeIdentifier: passTypeId,
     teamIdentifier: teamId,
@@ -429,33 +397,8 @@ export async function generatePass(member, business = null, options = {}, collec
       ? `Tampons · ${stamps}/${stampMax}`
       : `Fidélité · ${member.points} pts`,
     serialNumber: member.id,
-    /**
-     * userInfo : champ top-level JSON libre (Apple PassKit le sérialise tel quel dans pass.json).
-     * En y stockant le hash complet de notification_icon_updated_at, on garantit qu'à chaque
-     * nouvelle icône, pass.json change matériellement au niveau top-level → passd invalide son
-     * snapshot de miniature bannière et re-render à partir du nouveau icon.png.
-     */
-    userInfo: {
-      iconVersion: iconVerFull,
-      iconUpdatedAt: business?.notification_icon_updated_at ?? null,
-      passLastModifiedMs: Number(business?.pass_last_modified_ms) || null,
-    },
     ...customColors,
   };
-  if (collectorForTop) {
-    try {
-      collectorForTop.topLevel = {
-        organizationName: passOptions.organizationName,
-        description: passOptions.description,
-        backgroundColor: passOptions.backgroundColor,
-        foregroundColor: passOptions.foregroundColor,
-        userInfoIconVersion: passOptions.userInfo?.iconVersion
-          ? String(passOptions.userInfo.iconVersion).slice(0, 16)
-          : null,
-        userInfoIconUpdatedAt: passOptions.userInfo?.iconUpdatedAt ?? null,
-      };
-    } catch { /* best-effort */ }
-  }
   if (webServiceURL && business) {
     const base = webServiceURL.replace(/\/$/, "");
     passOptions.webServiceURL = `${base}/api`;
