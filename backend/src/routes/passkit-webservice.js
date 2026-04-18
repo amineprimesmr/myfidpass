@@ -306,6 +306,9 @@ const getPassHandler = async (req, res) => {
       icon2x_sha256_12: collector?.icon2xSha256_12 ?? null,
       icon3x_sha256_12: collector?.icon3xSha256_12 ?? null,
       icon_bytes: collector?.iconBytes ?? 0,
+      // Diagnostic Fix #8 : top-level fields passés à PKPass (avant signature). Permet de prouver
+      // que userInfo.iconVersion + backgroundColor modifié arrivent bien dans le pass généré.
+      topLevel: collector?.topLevel ?? null,
     });
     if (process.env.NODE_ENV === "production") {
       logger.info(

@@ -311,7 +311,7 @@ app.get("/api/debug/notif-icon/:slug", (req, res) => {
 
     res.json({
       ok: true,
-      build: "2026-04-18-fix7-toplevel-cachebust",
+      build: "2026-04-18-fix8-userinfo-rgb",
       businessId: business.id,
       organizationName: business.organization_name,
       notificationIcon: {
