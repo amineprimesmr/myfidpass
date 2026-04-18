@@ -211,23 +211,6 @@ export function getApnsHealthForDiagnostics() {
 
 const PASSKIT_TIMEOUT_MS = 25_000;
 
-/**
- * Ring buffer en mémoire des 50 derniers envois PassKit — diagnostic prod.
- * Visible via `GET /api/debug/passkit/:slug` (route admin dashboard). Aucun secret :
- * seuls les 8 derniers caractères du deviceToken sont conservés + le reason APNs.
- */
-const PASSKIT_PUSH_HISTORY_MAX = 50;
-const passKitPushHistory = [];
-function recordPassKitPushResult(entry) {
-  passKitPushHistory.push({ at: new Date().toISOString(), ...entry });
-  while (passKitPushHistory.length > PASSKIT_PUSH_HISTORY_MAX) {
-    passKitPushHistory.shift();
-  }
-}
-export function getRecentPassKitPushHistory() {
-  return passKitPushHistory.slice();
-}
-
 function withTimeout(promise, ms, label) {
   return Promise.race([
     promise,
@@ -330,7 +313,6 @@ export function sendPassKitUpdate(deviceToken, opts = {}) {
   const sendPromise = prov.send(note).then(
     () => {
       logger.info({ deviceToken: tokenTail }, "[apns] PassKit push ACK 200 par APNs");
-      recordPassKitPushResult({ token: tokenTail, sent: true });
       return { sent: true };
     },
     (err) => {
@@ -342,7 +324,6 @@ export function sendPassKitUpdate(deviceToken, opts = {}) {
       } else {
         logger.warn({ reason, statusCode, deviceToken: tokenTail }, "[apns] PassKit push REFUSÉ par APNs");
       }
-      recordPassKitPushResult({ token: tokenTail, sent: false, error: reason, statusCode });
       return { sent: false, error: reason };
     }
   );
@@ -351,7 +332,6 @@ export function sendPassKitUpdate(deviceToken, opts = {}) {
       logger.warn("[apns] Timeout APNs — provider recyclé");
       passkitProvider = undefined;
     }
-    recordPassKitPushResult({ token: tokenTail, sent: false, error: err?.message ?? String(err), timeout: true });
     return { sent: false, error: err?.message ?? String(err) };
   });
 }

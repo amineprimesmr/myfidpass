@@ -50,31 +50,6 @@ const passkitRegisterLimiter = rateLimit({
 /** Timeout maximum pour la génération d'un .pkpass (ms). */
 const GENERATE_PASS_TIMEOUT_MS = 30_000;
 
-/**
- * Ring buffer des 40 derniers GET `/passes/:passTypeId/:serial` (diagnostic prod).
- *
- * POURQUOI : le bug « l'icône de la bannière Wallet reste figée entre deux envois » peut avoir
- * deux origines très distinctes : soit le backend n'envoie pas le BON pass (bug serveur),
- * soit le backend envoie le bon pass mais iOS (`passd`) recycle sa miniature de bannière cachée
- * (bug iOS). Sans trace, impossible de distinguer les deux en prod.
- * Ce log garde pour chaque requête `GET /passes/...` :
- *   - sha256_12 du buffer .pkpass final → prouve que deux campagnes consécutives reçoivent
- *     bien des buffers distincts côté serveur ;
- *   - bytes, Last-Modified, serialNumber tronqué, tokenHash (pas de secret).
- * Accessible via `GET /api/debug/passkit-get/:slug` (route admin — à ajouter si besoin).
- */
-const PASS_GET_LOG_MAX = 40;
-const passGetRequestLog = [];
-function recordPassGetRequest(entry) {
-  passGetRequestLog.push({ at: new Date().toISOString(), ...entry });
-  while (passGetRequestLog.length > PASS_GET_LOG_MAX) {
-    passGetRequestLog.shift();
-  }
-}
-export function getRecentPassGetRequests() {
-  return passGetRequestLog.slice();
-}
-
 /** Interception explicite /api/v1/v1/... (passes déjà en circulation avec ancienne webServiceURL) — au cas où les routes nommées ne matchent pas. */
 const V1V1_PASSES_RE = /^\/api\/v1\/v1\/passes\/([^/]+)\/([^/]+)\/?$/;
 const V1V1_DEVICES_REGISTRATIONS_RE = /^\/api\/v1\/v1\/devices\/([^/]+)\/registrations\/([^/]+)$/;
@@ -259,17 +234,11 @@ const getPassHandler = async (req, res) => {
       strip_text: business.strip_text ?? undefined,
       card_background_base64: business.card_background_base64 ?? undefined,
     };
-    // Timeout explicite sur la génération du pass.
-    // POURQUOI : generatePass() effectue des opérations crypto (signature X.509) et du
-    // traitement d'image (sharp resize). Sur une image de grande taille ou un pic CPU,
-    // ça peut bloquer indéfiniment. Sans timeout, le handler ne retourne jamais et Railway
-    // ferme la connexion après 30s avec une erreur 504 côté iPhone — le pass ne se met
-    // pas à jour. Avec le timeout, on retourne un 500 explicite rapidement.
-    // `collector` : rempli par generatePass avec sha256 des icon.png/2x/3x RÉELLEMENT embedded.
-    // Exposé via le ring buffer pour tracer en prod si la nouvelle icône est dans le pass servi.
-    const collector = {};
+    // Timeout explicite sur la génération du pass — generatePass effectue des opérations crypto
+    // (signature X.509) + traitement d'image (sharp resize) qui peuvent bloquer indéfiniment sur
+    // une image lourde ou un pic CPU. Sans timeout, Railway coupe à 30s avec un 504 côté iPhone.
     const buffer = await Promise.race([
-      generatePass(member, business, opts, collector),
+      generatePass(member, business, opts),
       new Promise((_, reject) =>
         setTimeout(
           () => reject(new Error(`generatePass timeout après ${GENERATE_PASS_TIMEOUT_MS}ms — image trop lourde ou CPU surchargé`)),
@@ -277,47 +246,15 @@ const getPassHandler = async (req, res) => {
         )
       ),
     ]);
-    // sha256 du buffer final (12 hex chars) → empreinte unique de CE pass servi à CE moment.
-    // Permet de prouver en prod que le backend a bien envoyé un pass différent après un changement
-    // d'icône. Si deux requêtes consécutives retournent le même sha alors que l'icône a été
-    // changée entre-temps → bug serveur. Sinon → problème de cache iOS `passd` (miniature bannière).
+    // ETag fort dérivé du hash du buffer final — Wallet ne l'envoie pas en If-None-Match mais les
+    // proxies/CDN en amont (Railway, Cloudflare) peuvent l'utiliser pour détecter un vrai changement.
     const bufferSha12 = createHash("sha256").update(buffer).digest("hex").slice(0, 12);
-    // ETag fort basé sur le contenu réel. Apple Wallet ne l'honore pas actuellement pour l'envoyer
-    // via If-None-Match, mais les proxies/CDN en amont (Railway, Cloudflare) peuvent l'utiliser
-    // pour détecter un "vrai" changement, et ça rend le diagnostic trivial côté client.
     res.setHeader("ETag", `"${bufferSha12}"`);
     res.setHeader("Content-Type", "application/vnd.apple.pkpass");
     res.setHeader("Content-Disposition", `inline; filename="pass.pkpass"`);
     res.setHeader("Last-Modified", lastModified);
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.setHeader("Pragma", "no-cache");
-    recordPassGetRequest({
-      serial: String(serialNumber || "").slice(0, 8),
-      businessId: String(business.id || ""),
-      bytes: buffer.length,
-      sha256_12: bufferSha12,
-      lastModified,
-      notification_icon_updated_at: business.notification_icon_updated_at ?? null,
-      pass_last_modified_ms: Number(business.pass_last_modified_ms) || null,
-      // Diagnostic #1 : sha256 du icon.png RÉELLEMENT embedded dans ce pkpass (post-resize sharp).
-      // Si 2 requêtes consécutives avec notification_icon_updated_at différent donnent le même
-      // icon_sha256_12 → bug backend (asset non lu frais). Sinon → bug cache iOS `passd`.
-      icon_sha256_12: collector?.iconSha256_12 ?? null,
-      icon2x_sha256_12: collector?.icon2xSha256_12 ?? null,
-      icon3x_sha256_12: collector?.icon3xSha256_12 ?? null,
-      icon_bytes: collector?.iconBytes ?? 0,
-    });
-    if (process.env.NODE_ENV === "production") {
-      logger.info(
-        {
-          serial: String(serialNumber || "").slice(0, 8),
-          sha256_12: bufferSha12,
-          bytes: buffer.length,
-          lastModified,
-        },
-        "[PassKit] GET pass servi",
-      );
-    }
     res.send(buffer);
   } catch (err) {
     console.error("[PassKit] GET pass: erreur", err?.message || err);

@@ -14,11 +14,7 @@ import {
   getPassRegistrationsTotalCount,
   syncAdminEmailsFromEnv,
   applyAdminInitialPasswordFromEnv,
-  getBusinessBySlug,
-  getBusinessAssetData,
-  getPassKitPushTokensForBusiness,
 } from "./db.js";
-import { createHash } from "node:crypto";
 
 /** Admin : `ADMIN_EMAILS`, optionnellement `ADMIN_INITIAL_PASSWORD` (une fois au boot). */
 function logAdminBootstrap() {
@@ -64,10 +60,7 @@ import oauthGoogleYoutubeRouter from "./routes/oauth-google-youtube.js";
 import oauthGoogleBusinessRouter from "./routes/oauth-google-business.js";
 import oauthTiktokRouter from "./routes/oauth-tiktok.js";
 import { generatePass } from "./pass.js";
-import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics, getRecentPassKitPushHistory } from "./apns.js";
-import { getRecentNotifIconRequests } from "./routes/businesses/assets.js";
-import { getRecentPassGetRequests } from "./routes/passkit-webservice.js";
-import { getRecentSettingsPatches } from "./routes/businesses/dashboard.js";
+import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics } from "./apns.js";
 import {
   isEmailConfigured,
   getEmailTransportLabel,
@@ -264,118 +257,6 @@ app.get("/api/health/apns", (req, res) => {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
-/**
- * DIAGNOSTIC notification icon pour un commerce : vérifie que le DB contient la bonne image
- * ET expose l'historique récent des pushes PassKit envoyés (avec raison APNs si refus).
- *
- * POURQUOI : quand un commerçant signale "la bannière Wallet affiche une ancienne image",
- * on doit pouvoir distinguer :
- *   1) DB a l'ancienne image (upload pas arrivé) → tu le vois ici par le hash
- *   2) DB a la nouvelle mais push rejeté par APNs → visible dans `recentPushes[].error`
- *   3) DB a la nouvelle, pushs 200 ACK, mais Wallet sur l'iPhone ne fetch pas le pass
- *      (throttle iOS, iPhone offline, pass supprimé etc.) → pass_registrations est vide ou
- *      les pushes sont OK mais Wallet ne répond pas (cas typique iOS low-power).
- *
- * Pas de secret exposé : hash SHA-256 de l'image (12 car), taille, updated_at, token tail.
- */
-app.get("/api/debug/notif-icon/:slug", (req, res) => {
-  try {
-    const slug = String(req.params.slug || "").trim();
-    const business = getBusinessBySlug(slug);
-    if (!business) return res.status(404).json({ ok: false, error: "business introuvable" });
-    const data = getBusinessAssetData(String(business.id), "notification_icon");
-    let iconHash = null;
-    let iconBytes = 0;
-    if (data && typeof data === "string") {
-      const base64 = data.replace(/^data:image\/\w+;base64,/, "");
-      const buf = Buffer.from(base64, "base64");
-      iconBytes = buf.length;
-      iconHash = createHash("sha256").update(buf).digest("hex").slice(0, 12);
-    }
-    const tokens = getPassKitPushTokensForBusiness(business.id);
-    const historyAll = getRecentPassKitPushHistory();
-    const since = Date.now() - 10 * 60 * 1000;
-    const recentPushes = historyAll
-      .filter((h) => new Date(h.at).getTime() >= since)
-      .slice(-20);
-    const sent = recentPushes.filter((h) => h.sent).length;
-    const failed = recentPushes.filter((h) => !h.sent).length;
-
-    const iconRequestsAll = getRecentNotifIconRequests(business.id);
-    const iconRequests = iconRequestsAll
-      .filter((r) => new Date(r.at).getTime() >= since)
-      .slice(-25);
-    const custom200 = iconRequests.filter((r) => r.status === 200 && r.kind === "custom").length;
-    const default200 = iconRequests.filter((r) => r.status === 200 && r.kind === "default").length;
-    const notModified304 = iconRequests.filter((r) => r.status === 304).length;
-
-    res.json({
-      ok: true,
-      build: "2026-04-18-accept-ios-cache-limit",
-      businessId: business.id,
-      organizationName: business.organization_name,
-      notificationIcon: {
-        presentInDb: !!data,
-        bytes: iconBytes,
-        sha256_12: iconHash,
-        updated_at: business.notification_icon_updated_at ?? null,
-      },
-      passRefresh: {
-        notification_pass_layout_at: business.notification_pass_layout_at ?? null,
-        pass_last_modified_ms: business.pass_last_modified_ms ?? null,
-      },
-      walletRegistrations: {
-        count: tokens.length,
-        tokenTails: tokens.slice(0, 10).map((t) => String(t.push_token || "").slice(-8)),
-      },
-      recentPushes: {
-        total10min: recentPushes.length,
-        sent,
-        failed,
-        entries: recentPushes,
-      },
-      recentIconRequests: {
-        total10min: iconRequests.length,
-        custom200,
-        default200,
-        notModified304,
-        entries: iconRequests,
-      },
-      recentPassGets: (() => {
-        const all = getRecentPassGetRequests();
-        const entries = all
-          .filter((r) => String(r.businessId || "") === String(business.id || ""))
-          .filter((r) => new Date(r.at).getTime() >= since);
-        // distinctSha : différents .pkpass servis (bug serveur si 1 malgré changement d'icône).
-        // distinctIconSha : différents `icon.png` embedded (→ tranche bug backend vs bug iOS passd).
-        //   - si distinctIconSha === 1 alors que notification_icon_updated_at a changé entre
-        //     deux entrées → bug SERVEUR : l'asset frais n'est pas lu / sharp a un cache.
-        //   - si distinctIconSha >= 2 et pourtant la bannière affiche l'ancienne icône → bug
-        //     iOS `passd` pur (cache miniature bannière) → Fix #6 (`walletCacheBust` backField)
-        //     devrait résoudre.
-        const distinctSha = new Set(entries.map((r) => r.sha256_12)).size;
-        const distinctIconSha = new Set(entries.map((r) => r.icon_sha256_12).filter(Boolean)).size;
-        return { total10min: entries.length, distinctSha, distinctIconSha, entries };
-      })(),
-      recentSettingsPatches: (() => {
-        const all = getRecentSettingsPatches();
-        const mine = all.filter((p) => String(p.businessId || "") === String(business.id || ""));
-        const since = Date.now() - 15 * 60 * 1000;
-        const recent = mine.filter((p) => new Date(p.at).getTime() >= since);
-        const withIconKey = recent.filter((p) => p.hasNotificationIconKey);
-        return {
-          total15min: recent.length,
-          withNotificationIconKey: withIconKey.length,
-          entries: recent.slice(-15),
-        };
-      })(),
-      apnsHealth: getApnsHealthForDiagnostics(),
-    });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
 app.get("/api/health/passkit", (req, res) => {
   try {
     const passRegCount = getPassRegistrationsTotalCount();
