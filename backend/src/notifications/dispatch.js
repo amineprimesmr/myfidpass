@@ -196,6 +196,12 @@ export async function deliverCustomerBroadcast({
   // du pass peut rester cohérent avec un ancien envoi alors que l’icône notif vient d’être changée
   // (max(timestamp) ne bat pas le cache Wallet / refetch).
   bumpBusinessPassRefreshTimestamp(business.id);
+  // Relire la ligne commerce APRÈS bump → on capture `pass_last_modified_ms` frais pour le collapseId
+  // unique à cette campagne (évite la coalescence APNs avec un push précédent de changement d'icône).
+  const businessAfterBump = getBusinessById(business.id) || businessFresh;
+  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
+  // collapse-id court (ASCII, ≤ 64 octets) — 1 par campagne → pas de fusion avec le push post-PATCH icône.
+  const broadcastCollapseId = `bcast-${passMs}`;
   let sentPassKit = 0;
   if (passKitTokens.length > 0) {
     if (touchMemberLastVisit) {
@@ -207,7 +213,7 @@ export async function deliverCustomerBroadcast({
         }
       }
     }
-    const waveResults = await sendPassKitPushWaves(passKitTokens);
+    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
     for (const { row, result } of waveResults) {
       if (result.sent) {
         sentPassKit++;

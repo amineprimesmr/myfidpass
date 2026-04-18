@@ -259,10 +259,18 @@ function isConnectionLevelError(err) {
 
 /**
  * Envoie une notification "pass mis à jour" (payload vide) à un device Apple Wallet.
+ *
  * @param {string} deviceToken
+ * @param {{ collapseId?: string | null }} [opts]
+ *   - collapseId : valeur du header `apns-collapse-id` (≤ 64 chars ASCII). Utile pour donner
+ *     une identité unique à chaque invalidation d'asset : sans cet ID, deux silent pushes
+ *     rapprochés peuvent être fusionnés par APNs (surtout en priorité 5 / type background).
+ *     Avec un ID distinct par « raison d'update » (changement d'icône vs broadcast vs scan),
+ *     APNs traite chaque push comme distinct et Wallet refetch correctement le pass à chaque
+ *     fois → la miniature de bannière est régénérée à partir de la nouvelle `icon.png`.
  * @returns {Promise<{ sent: boolean, error?: string }>}
  */
-export function sendPassKitUpdate(deviceToken) {
+export function sendPassKitUpdate(deviceToken, opts = {}) {
   const prov = getPasskitProvider();
   if (!prov) {
     return Promise.resolve({ sent: false, error: passkitError ?? "APNs non configuré" });
@@ -290,18 +298,33 @@ export function sendPassKitUpdate(deviceToken) {
   //   push n’était jamais livré et Wallet ne refetch pas le pass.
   //   Voir https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns
   //   (section "Create a POST request to APNs" : "Use priority 5 for background pushes").
-  const note = new Notification(deviceToken, {
+  /** @type {Record<string, unknown>} */
+  const noteOptions = {
     topic: passTypeId,
     expiration: Math.floor(Date.now() / 1000) + 86400,
     type: PushType.background,
     priority: Priority.throttled,
     contentAvailable: true,
     aps: {},
-  });
+  };
+  // collapseId : Apple limite à 64 octets. Chaîne ASCII obligatoire.
+  // Règle métier : si collapseId est fourni, on l'utilise tel quel (déjà préfixé côté appelant,
+  // typiquement "icon-<ms>", "bcast-<seq>", "member-<serial>"). Sans collapseId, on laisse
+  // APNs assigner un apns-id unique (pas de coalescence agressive), c'est le comportement par défaut.
+  if (opts && typeof opts.collapseId === "string" && opts.collapseId.trim()) {
+    noteOptions.collapseId = opts.collapseId.trim().slice(0, 64);
+  }
+  const note = new Notification(deviceToken, noteOptions);
 
   const tokenTail = deviceToken.slice(-8);
   logger.info(
-    { deviceToken: tokenTail, passTypeId, priority: Priority.throttled, pushType: PushType.background },
+    {
+      deviceToken: tokenTail,
+      passTypeId,
+      priority: Priority.throttled,
+      pushType: PushType.background,
+      collapseId: noteOptions.collapseId || null,
+    },
     "[apns] PassKit → envoi push background priority=5"
   );
   const sendPromise = prov.send(note).then(

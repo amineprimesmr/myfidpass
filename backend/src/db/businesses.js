@@ -129,14 +129,47 @@ export function createBusiness({
  * sans toucher à `last_broadcast_at` (sinon le champ verso « Message » change de suffixe → alerte Wallet en boucle).
  */
 /**
- * Incrémente un horodatage **ms** strictement croissant pour invalider PassKit (liste « passes à jour »
- * + en-tête Last-Modified) même quand plusieurs mutations tombent dans la même seconde UTC.
+ * Logique pure du bump monotone à la seconde — extraite pour test unitaire.
+ *
+ * CRITIQUE — garantie à la **seconde** (pas seulement au ms) :
+ *   L'en-tête HTTP `Last-Modified` du `.pkpass` est formaté en RFC 1123 (`new Date(ts).toUTCString()`),
+ *   ce qui **écrête** la précision à la seconde. Si deux bumps tombent dans la même seconde UTC, le
+ *   `Last-Modified` est identique d'une requête à l'autre → Apple Wallet (`passd`) considère le pass
+ *   inchangé côté cache et **recycle la miniature de bannière** générée à partir de l'ANCIENNE icône,
+ *   même si le fichier `icon.png` du `.pkpass` a bien été remplacé sur disque.
+ *
+ * Symptôme utilisateur avant correctif :
+ *   Upload icône A → envoi notif 1 (icône A affichée) → upload icône B → envoi notif 2 →
+ *   la bannière affiche toujours l'icône A car les deux mutations (upload + send) tombent dans
+ *   la même seconde UTC.
+ *
+ * Correctif : on garantit que `Math.floor(next/1000) > Math.floor(prev/1000)`. Ainsi chaque bump
+ * avance le `Last-Modified` HTTP d'au moins une seconde, ce qui force Wallet à invalider la
+ * miniature cachée et à régénérer la bannière à partir du nouvel `icon.png`.
+ *
+ * @param {number | string | null | undefined} prevMsRaw - valeur courante en base
+ * @param {number} nowMs - Date.now() au moment de l'appel (injecté pour les tests)
+ * @returns {number} nouvelle valeur à stocker
+ */
+export function computeNextPassLastModifiedMs(prevMsRaw, nowMs) {
+  const prevNum = Number(prevMsRaw);
+  const prevMs = Number.isFinite(prevNum) && prevNum > 0 ? prevNum : 0;
+  const minNextFloorSec = Math.floor(prevMs / 1000) + 1;
+  const nowFloorSec = Math.floor(nowMs / 1000);
+  // On garde les millisecondes « réelles » quand on a déjà changé de seconde (précision pour les logs),
+  // sinon on saute explicitement au début de la seconde suivante pour garantir Last-Modified distinct.
+  return nowFloorSec >= minNextFloorSec ? nowMs : minNextFloorSec * 1000;
+}
+
+/**
+ * Incrémente un horodatage strictement croissant pour invalider PassKit (liste « passes à jour »
+ * + en-tête HTTP `Last-Modified`) même quand plusieurs mutations tombent dans la même seconde UTC.
+ * Voir {@link computeNextPassLastModifiedMs} pour le rationnel détaillé du saut à la seconde.
  */
 export function touchPassLastModifiedMs(businessId) {
   if (!businessId) return;
   const row = db.prepare("SELECT pass_last_modified_ms FROM businesses WHERE id = ?").get(businessId);
-  const prev = Number(row?.pass_last_modified_ms);
-  const next = Math.max(Date.now(), Number.isFinite(prev) ? prev : 0) + 1;
+  const next = computeNextPassLastModifiedMs(row?.pass_last_modified_ms, Date.now());
   db.prepare("UPDATE businesses SET pass_last_modified_ms = ? WHERE id = ?").run(next, businessId);
 }
 

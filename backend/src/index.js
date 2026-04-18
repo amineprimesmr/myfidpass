@@ -66,6 +66,7 @@ import oauthTiktokRouter from "./routes/oauth-tiktok.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics, getRecentPassKitPushHistory } from "./apns.js";
 import { getRecentNotifIconRequests } from "./routes/businesses/assets.js";
+import { getRecentPassGetRequests } from "./routes/passkit-webservice.js";
 import {
   isEmailConfigured,
   getEmailTransportLabel,
@@ -339,6 +340,16 @@ app.get("/api/debug/notif-icon/:slug", (req, res) => {
         notModified304,
         entries: iconRequests,
       },
+      recentPassGets: (() => {
+        const all = getRecentPassGetRequests();
+        const entries = all
+          .filter((r) => String(r.businessId || "") === String(business.id || ""))
+          .filter((r) => new Date(r.at).getTime() >= since);
+        // Détection automatique du symptôme "sha identique sur 2 GET consécutifs alors que
+        // notification_icon_updated_at a changé entre temps" → bug serveur. Sinon → bug iOS passd.
+        const distinctSha = new Set(entries.map((r) => r.sha256_12)).size;
+        return { total10min: entries.length, distinctSha, entries };
+      })(),
       apnsHealth: getApnsHealthForDiagnostics(),
     });
   } catch (e) {

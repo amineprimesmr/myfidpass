@@ -470,19 +470,46 @@ export async function updateHandler(req, res) {
     bumpBusinessPassRefreshTimestamp(business.id);
     const passKitTokens = getPassKitPushTokensForBusiness(business.id);
     if (passKitTokens.length > 0) {
+      // Relire le business pour capturer `pass_last_modified_ms` fraîchement bumpé et construire
+      // un `apns-collapse-id` unique par changement d'asset : évite la fusion APNs avec le push
+      // du POST /notifications/send qui peut suivre dans la même seconde.
+      // Voir dashboard.js → même logique documentée.
+      const bFresh = getBusinessById(business.id) || updated;
+      const passMs = Number(bFresh?.pass_last_modified_ms) || Date.now();
+      const assetCollapseId = `asset-${passMs}`;
+
       const PAR = 40;
       const MAX_SYNC = 300;
       const head = passKitTokens.slice(0, MAX_SYNC);
       for (let i = 0; i < head.length; i += PAR) {
         const chunk = head.slice(i, i + PAR);
-        await Promise.all(chunk.map((row) => sendPassKitUpdate(row.push_token).catch(() => {})));
+        await Promise.all(
+          chunk.map((row) =>
+            sendPassKitUpdate(row.push_token, { collapseId: assetCollapseId }).catch(() => {}),
+          ),
+        );
       }
       const tail = passKitTokens.slice(MAX_SYNC);
       if (tail.length > 0) {
         process.nextTick(() => {
-          tail.forEach((row) => { sendPassKitUpdate(row.push_token).catch(() => {}); });
+          tail.forEach((row) => {
+            sendPassKitUpdate(row.push_token, { collapseId: assetCollapseId }).catch(() => {});
+          });
         });
       }
+      // Retry 1.8 s plus tard avec collapse-id distinct : contourne le throttling silent-push
+      // (priority 5) lorsque l'appareil sort de veille juste après le PATCH.
+      const retryCollapseId = `${assetCollapseId}~retry`;
+      setTimeout(() => {
+        try {
+          const tokensNow = getPassKitPushTokensForBusiness(business.id);
+          for (const row of tokensNow) {
+            sendPassKitUpdate(row.push_token, { collapseId: retryCollapseId }).catch(() => {});
+          }
+        } catch {
+          /* retry best-effort */
+        }
+      }, 1800);
     }
   }
 

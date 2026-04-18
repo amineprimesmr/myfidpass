@@ -689,6 +689,17 @@ router.patch("/settings", async (req, res) => {
   if (passWalletGeometryUpdated || passVisualMediaUpdated) {
     const passKitTokens = getPassKitPushTokensForBusiness(business.id);
     if (passKitTokens.length > 0) {
+      // Relire la ligne commerce frais → on récupère `pass_last_modified_ms` fraîchement bumpé
+      // pour construire un `apns-collapse-id` unique. Sans collapse-id distinct, un push PATCH
+      // d'icône peut être fusionné par APNs avec le push du broadcast qui suit ≈1-5 s plus tard,
+      // et seul LE DERNIER est délivré → la 1ʳᵉ fenêtre d'invalidation de la miniature bannière
+      // côté passd est perdue, Wallet garde l'ancienne icône en cache.
+      const bFresh = getBusinessById(business.id);
+      const passMs = Number(bFresh?.pass_last_modified_ms) || Date.now();
+      // Préfixe distinct des broadcasts (`bcast-…`) pour que cette vague ne soit jamais fusionnée
+      // avec le push du POST /notifications/send qui suit presque toujours dans la foulée.
+      const assetCollapseId = `asset-${passMs}`;
+
       // Attendre l’envoi des 1ers APNs PassKit **avant** le 200 : sinon l’app iOS continue (aperçu OK)
       // alors que le téléphone n’a pas encore reçu le push « pass mis à jour » → bannière Wallet avec **ancienne** icon.png.
       const PAR = 40;
@@ -696,15 +707,38 @@ router.patch("/settings", async (req, res) => {
       const head = passKitTokens.slice(0, MAX_SYNC);
       for (let i = 0; i < head.length; i += PAR) {
         const chunk = head.slice(i, i + PAR);
-        await Promise.all(chunk.map((row) => sendPassKitUpdate(row.push_token).catch(() => {})));
+        await Promise.all(
+          chunk.map((row) =>
+            sendPassKitUpdate(row.push_token, { collapseId: assetCollapseId }).catch(() => {}),
+          ),
+        );
       }
       const tail = passKitTokens.slice(MAX_SYNC);
       if (tail.length > 0) {
         process.nextTick(() => {
           tail.forEach((row) => {
-            sendPassKitUpdate(row.push_token).catch(() => {});
+            sendPassKitUpdate(row.push_token, { collapseId: assetCollapseId }).catch(() => {});
           });
         });
+      }
+      // Retry anti-throttling : Apple peut déprioritiser / dropper un silent push background
+      // priority 5, surtout lorsque l'appareil vient de sortir de veille. Un second push 1800 ms
+      // plus tard avec un collapse-id DIFFÉRENT (`asset-…~retry`) force une seconde tentative
+      // indépendante qui ne sera pas fusionnée avec la première. Le coût est minime (quelques
+      // dizaines de pushes par PATCH d'icône) et c'est la différence entre "l'icône se met à jour"
+      // et "l'icône reste figée pour le prochain envoi".
+      if (passVisualMediaUpdated) {
+        const retryCollapseId = `${assetCollapseId}~retry`;
+        setTimeout(() => {
+          try {
+            const tokensNow = getPassKitPushTokensForBusiness(business.id);
+            for (const row of tokensNow) {
+              sendPassKitUpdate(row.push_token, { collapseId: retryCollapseId }).catch(() => {});
+            }
+          } catch {
+            /* retry best-effort */
+          }
+        }, 1800);
       }
     }
   }
