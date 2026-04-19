@@ -15,6 +15,10 @@ import {
   syncAdminEmailsFromEnv,
   applyAdminInitialPasswordFromEnv,
 } from "./db.js";
+import {
+  getRevenueCatSecretApiKey,
+  getRevenueCatWebhookAuthorizationExpected,
+} from "./lib/config.js";
 
 /** Admin : `ADMIN_EMAILS`, optionnellement `ADMIN_INITIAL_PASSWORD` (une fois au boot). */
 function logAdminBootstrap() {
@@ -50,6 +54,7 @@ import findPlaceRouter from "./routes/find-place.js";
 import placeEnrichmentRouter from "./routes/place-enrichment.js";
 import placesRouter from "./routes/places.js";
 import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
+import revenuecatWebhookRouter from "./routes/revenuecat-webhook.js";
 import adminRouter from "./routes/admin.js";
 import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
@@ -277,6 +282,21 @@ app.get("/api/health/passkit", (req, res) => {
   }
 });
 
+/**
+ * RevenueCat : présence des secrets serveur (sans fuite de valeur).
+ * L’app iOS utilise une autre clé (publique appl_ / test_) — voir myfidpass RevenueCatConfig.swift.
+ */
+app.get("/api/health/revenuecat", (req, res) => {
+  const sk = getRevenueCatSecretApiKey();
+  const webhook = getRevenueCatWebhookAuthorizationExpected();
+  res.json({
+    ok: true,
+    secretApiKeyConfigured: !!sk,
+    webhookAuthorizationConfigured: !!webhook,
+    webhookEndpoint: `${(process.env.PUBLIC_API_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "")}/api/webhooks/revenuecat`,
+  });
+});
+
 // PassKit en premier à la racine : Apple envoie GET /v1/passes/... et certains proxies laissent le chemin complet
 app.use(passkitWebserviceRouter);
 
@@ -289,6 +309,7 @@ app.use("/api/oauth", oauthTiktokRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/webhooks/revenuecat", revenuecatWebhookRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/web-push", webPushRouter);
 app.use("/api/dev", devRouter);
