@@ -1230,4 +1230,13 @@ export function runMigrations(db) {
 
     markMigrationApplied(db, 24, "google_business_reviews_posts_questions_insights");
   }
+
+  const m25 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 25").get();
+  if (!m25) {
+    const bizB = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+    if (!bizB.includes("baseline_avg_basket_eur")) {
+      safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN baseline_avg_basket_eur REAL"));
+    }
+    markMigrationApplied(db, 25, "merchant_baseline_avg_basket_eur");
+  }
 }

@@ -84,7 +84,8 @@ async function resizeCardBackgroundToStrip(cardBgB64, sharp) {
 }
 
 /**
- * Bandeau par défaut mode points sans image perso (aligné ressource iOS `banner`).
+ * Bandeau par défaut mode points sans image perso — fichier dérivé de l’asset iOS `banner`
+ * (maintenu via `npm run sync:wallet-strip` dans ce dépôt backend).
  * @returns {Promise<Buffer|null>}
  */
 async function loadDefaultPointsStripBuffer(sharp) {
@@ -98,6 +99,15 @@ async function loadDefaultPointsStripBuffer(sharp) {
     console.warn("[PassKit] default points strip:", e?.message);
     return null;
   }
+}
+
+/**
+ * PassKit : strip 750×246 @1x + @2x + @3x (iPhone Pro). Toujours dériver @2x/@3x depuis le PNG @1x pour cohérence.
+ */
+async function assignPassStripBuffers(buffers, sharp, strip1xPng) {
+  buffers["strip.png"] = strip1xPng;
+  buffers["strip@2x.png"] = await sharp(strip1xPng).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+  buffers["strip@3x.png"] = await sharp(strip1xPng).resize(STRIP_W * 3, STRIP_H * 3).png().toBuffer();
 }
 
 /**
@@ -293,8 +303,7 @@ export async function generatePass(member, business = null, options = {}) {
   if (format === "tampons") {
     /* Avec image de fond : strip = image seule (comme le mode points). Sinon : fond couleur + grille tampons dessinée sur le strip. */
     if (cardBgStripBuf) {
-      buffers["strip.png"] = cardBgStripBuf;
-      buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+      await assignPassStripBuffers(buffers, sharp, cardBgStripBuf);
     } else {
       const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
       const baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
@@ -307,23 +316,20 @@ export async function generatePass(member, business = null, options = {}) {
         stampIconBase64,
         stripColorHex
       );
-      buffers["strip.png"] = stripWithStamps;
-      buffers["strip@2x.png"] = await sharp(stripWithStamps).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+      await assignPassStripBuffers(buffers, sharp, stripWithStamps);
     }
   } else {
     if (cardBgStripBuf) {
-      buffers["strip.png"] = cardBgStripBuf;
-      buffers["strip@2x.png"] = await sharp(cardBgStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+      /* Image de fond commerce (base64) : elle prime sur l’asset Xcode / default-points-strip — la modifier côté app ou SaaS. */
+      await assignPassStripBuffers(buffers, sharp, cardBgStripBuf);
     } else {
       const defaultStripBuf = await loadDefaultPointsStripBuffer(sharp);
       if (defaultStripBuf) {
-        buffers["strip.png"] = defaultStripBuf;
-        buffers["strip@2x.png"] = await sharp(defaultStripBuf).resize(STRIP_W * 2, STRIP_H * 2).png().toBuffer();
+        await assignPassStripBuffers(buffers, sharp, defaultStripBuf);
       } else {
-        /* Fallback : strip couleur (fichier assets manquant ou erreur). */
+        /* Fallback : strip couleur (fichier default-points-strip.png manquant ou erreur). */
         const stripBuf = createStripBuffer(stripTemplateKey, stripColorHex);
-        buffers["strip.png"] = stripBuf;
-        buffers["strip@2x.png"] = stripBuf;
+        await assignPassStripBuffers(buffers, sharp, stripBuf);
       }
     }
   }

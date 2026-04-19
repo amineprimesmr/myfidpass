@@ -409,8 +409,6 @@ function initAppPage() {
         fields: ["name", "formatted_address", "geometry", "place_id"],
         bounds: frBounds,
         strictBounds: false,
-        // Évite les suggestions hors France (ex. homonymes en Suisse) pour l’onboarding myfidpass.fr
-        componentRestrictions: { country: "fr" },
       });
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();

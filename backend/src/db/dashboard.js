@@ -2,7 +2,7 @@
  * Requêtes dashboard (stats, évolution). Référence : REFONTE-REGLES.md.
  */
 import { getDb } from "./connection.js";
-import { getBusinessById } from "./businesses.js";
+import { getNotificationCampaignInsightsForBusiness } from "./webpush.js";
 
 const db = getDb();
 
@@ -17,13 +17,17 @@ function getPeriodBounds(period) {
       return { since: null, month: now.toISOString().slice(0, 7), label: "Ce mois-ci" };
     case "6m":
       return { since: "datetime('now', '-6 months')", label: "6 mois" };
+    case "12m":
+    case "1y":
+      return { since: "datetime('now', '-12 months')", label: "12 mois" };
     default:
       return { since: null, month: now.toISOString().slice(0, 7), label: "Ce mois-ci" };
   }
 }
 
 export function getDashboardStats(businessId, period = "this_month") {
-  const bounds = getPeriodBounds(period);
+  const normalizedPeriod = period === "1y" ? "12m" : period;
+  const bounds = getPeriodBounds(normalizedPeriod);
   const membersCount = db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ?").get(businessId);
   const pointsInPeriod =
     bounds.month != null
@@ -60,28 +64,24 @@ export function getDashboardStats(businessId, period = "this_month") {
     "SELECT COALESCE(ROUND(AVG(points), 0), 0) as avg FROM members WHERE business_id = ?"
   ).get(businessId);
 
-  let estimatedRevenueEur = 0;
+  /** Somme des montants € réellement enregistrés sur les transactions (`metadata.amount_eur`) — jamais dérivée des points. */
+  let declaredAmountSumEur = 0;
   try {
     if (bounds.month != null) {
       const row = db.prepare(
         `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total
          FROM transactions WHERE business_id = ? AND strftime('%Y-%m', created_at) = ? AND metadata IS NOT NULL`
       ).get(businessId, bounds.month);
-      estimatedRevenueEur = row?.total ?? 0;
+      declaredAmountSumEur = row?.total ?? 0;
     } else {
       const row = db.prepare(
         `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total
          FROM transactions WHERE business_id = ? AND created_at >= ${bounds.since} AND metadata IS NOT NULL`
       ).get(businessId);
-      estimatedRevenueEur = row?.total ?? 0;
+      declaredAmountSumEur = row?.total ?? 0;
     }
   } catch (_e) {
     /* json_extract peut échouer sur anciennes bases */
-  }
-  const business = getBusinessById(businessId);
-  const pointsPerEuro = business?.points_per_euro != null ? Number(business.points_per_euro) : 1;
-  if (estimatedRevenueEur <= 0 && (pointsInPeriod?.total ?? 0) > 0 && pointsPerEuro > 0) {
-    estimatedRevenueEur = (pointsInPeriod.total ?? 0) / pointsPerEuro;
   }
 
   const activeInPeriod =
@@ -109,22 +109,112 @@ export function getDashboardStats(businessId, period = "this_month") {
     /* sous-requête peut varier selon SQLite */
   }
 
+  const newMembersInPeriod =
+    bounds.month != null
+      ? db
+          .prepare(
+            `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND strftime('%Y-%m', created_at) = ?`,
+          )
+          .get(businessId, bounds.month)
+      : db
+          .prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= ${bounds.since}`)
+          .get(businessId);
+
+  const visitsInPeriod =
+    bounds.month != null
+      ? db
+          .prepare(
+            `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND type = 'points_add' AND strftime('%Y-%m', created_at) = ?`,
+          )
+          .get(businessId, bounds.month)
+      : db
+          .prepare(
+            `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND type = 'points_add' AND created_at >= ${bounds.since}`,
+          )
+          .get(businessId);
+
+  let rewardsRedeemed = { n: 0, pts: 0 };
+  try {
+    rewardsRedeemed =
+      bounds.month != null
+        ? db
+            .prepare(
+              `SELECT COUNT(*) as n, COALESCE(SUM(ABS(points)), 0) as pts FROM transactions WHERE business_id = ? AND type = 'reward_redeem' AND strftime('%Y-%m', created_at) = ?`,
+            )
+            .get(businessId, bounds.month)
+        : db
+            .prepare(
+              `SELECT COUNT(*) as n, COALESCE(SUM(ABS(points)), 0) as pts FROM transactions WHERE business_id = ? AND type = 'reward_redeem' AND created_at >= ${bounds.since}`,
+            )
+            .get(businessId);
+  } catch (_e) {
+    /* */
+  }
+
+  const txCount = transactionsInPeriod?.n ?? 0;
+  const declaredRounded = Math.round(declaredAmountSumEur * 100) / 100;
+  const avgBasketEur =
+    declaredRounded > 0 && txCount > 0 ? Math.round((declaredRounded / txCount) * 100) / 100 : null;
+  const activeN = activeInPeriod?.n ?? 0;
+  const visitsN = visitsInPeriod?.n ?? 0;
+  const avgVisitsPerActiveMember = activeN > 0 ? Math.round((visitsN / activeN) * 100) / 100 : null;
+
+  let googleReviewsNewInPeriod = 0;
+  try {
+    const hasTab = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='google_business_reviews'").get();
+    if (hasTab) {
+      if (bounds.month != null) {
+        const gr = db
+          .prepare(
+            `SELECT COUNT(*) as n FROM google_business_reviews
+             WHERE business_id = ? AND strftime('%Y-%m', COALESCE(first_seen_at, create_time, update_time)) = ?`,
+          )
+          .get(businessId, bounds.month);
+        googleReviewsNewInPeriod = gr?.n ?? 0;
+      } else {
+        const gr = db
+          .prepare(
+            `SELECT COUNT(*) as n FROM google_business_reviews
+             WHERE business_id = ? AND datetime(COALESCE(first_seen_at, create_time, update_time)) >= ${bounds.since}`,
+          )
+          .get(businessId);
+        googleReviewsNewInPeriod = gr?.n ?? 0;
+      }
+    }
+  } catch (_e) {
+    /* */
+  }
+
+  let notificationCampaigns = [];
+  try {
+    notificationCampaigns = getNotificationCampaignInsightsForBusiness(businessId, { limit: 12 });
+  } catch (_e) {
+    notificationCampaigns = [];
+  }
+
   return {
     period: bounds.label,
-    periodKey: period,
+    periodKey: normalizedPeriod,
     membersCount: totalMembers,
     pointsThisMonth: pointsInPeriod?.total ?? 0,
     transactionsThisMonth: transactionsInPeriod?.n ?? 0,
     newMembersLast7Days: newMembers7d?.n ?? 0,
     newMembersLast30Days: newMembers30d?.n ?? 0,
+    newMembersInPeriod: newMembersInPeriod?.n ?? 0,
     inactiveMembers30Days: inactive30d?.n ?? 0,
     inactiveMembers90Days: inactive90d?.n ?? 0,
     membersWithPoints50: points50Count?.n ?? 0,
     pointsAveragePerMember: pointsAvg?.avg ?? 0,
-    estimatedRevenueEur: Math.round(estimatedRevenueEur * 100) / 100,
     activeMembersInPeriod: activeInPeriod?.n ?? 0,
     retentionPct,
     recurrentMembersInPeriod: recurrentInPeriod?.n ?? 0,
+    visitsInPeriod: visitsN,
+    avgVisitsPerActiveMember,
+    avgBasketEur,
+    rewardsRedeemedCount: rewardsRedeemed?.n ?? 0,
+    pointsRedeemedInPeriod: Math.round(Number(rewardsRedeemed?.pts ?? 0)),
+    googleReviewsNewInPeriod,
+    notificationCampaigns,
   };
 }
 

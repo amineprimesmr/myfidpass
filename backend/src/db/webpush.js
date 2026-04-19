@@ -230,3 +230,62 @@ export function filterMemberIdsExcludingTriggerThisCalendarYear(businessId, memb
   const sentSet = new Set(sent.map((r) => r.member_id));
   return memberIds.filter((id) => !sentSet.has(id));
 }
+
+/**
+ * Dernières campagnes push + estimation des retours en magasin (1ère transaction `points_add` dans les 7 j suivant l’envoi).
+ * @param {string} businessId
+ * @param {{ limit?: number }} [opts]
+ * @returns {Array<{ batch_id: string; trigger_name: string; created_at: string; sent_total: number | null; recipients_distinct: number; returned_within_7d: number }>}
+ */
+export function getNotificationCampaignInsightsForBusiness(businessId, { limit = 12 } = {}) {
+  const batches = getNotificationBatchesForBusiness(businessId, { limit });
+  const out = [];
+  for (const b of batches) {
+    let summary = {};
+    try {
+      summary = JSON.parse(b.summary_json || "{}");
+    } catch {
+      summary = {};
+    }
+    const recipientsRow = db
+      .prepare(
+        `SELECT COUNT(DISTINCT member_id) AS n FROM notification_log
+         WHERE business_id = ? AND batch_id = ? AND status = 'sent'
+           AND member_id IS NOT NULL
+           AND IFNULL(type,'') != 'merchant_receipt'`,
+      )
+      .get(businessId, b.id);
+    const recipients = recipientsRow?.n ?? 0;
+    let returnedWithin7d = 0;
+    try {
+      const rev = db
+        .prepare(
+          `SELECT COUNT(DISTINCT t.member_id) AS n
+           FROM transactions t
+           WHERE t.business_id = ? AND t.type = 'points_add'
+             AND datetime(t.created_at) > datetime(?)
+             AND datetime(t.created_at) <= datetime(?, '+7 days')
+             AND EXISTS (
+               SELECT 1 FROM notification_log nl
+               WHERE nl.business_id = ? AND nl.batch_id = ?
+                 AND nl.member_id = t.member_id AND nl.status = 'sent'
+                 AND IFNULL(nl.type,'') != 'merchant_receipt'
+             )`,
+        )
+        .get(businessId, b.created_at, b.created_at, businessId, b.id);
+      returnedWithin7d = rev?.n ?? 0;
+    } catch (_e) {
+      returnedWithin7d = 0;
+    }
+    const sentTotal = summary.sent;
+    out.push({
+      batch_id: b.id,
+      trigger_name: b.trigger_name,
+      created_at: b.created_at,
+      sent_total: typeof sentTotal === "number" ? sentTotal : null,
+      recipients_distinct: recipients,
+      returned_within_7d: returnedWithin7d,
+    });
+  }
+  return out;
+}

@@ -13,7 +13,8 @@
     "generate-vapid-keys": "web-push generate-vapid-keys",
     "test:passkit": "bash scripts/test-passkit-get.sh",
     "seed:passkit-test": "DATA_DIR=./test-data node scripts/seed-passkit-test.js",
-    "set-user-password": "node scripts/set-user-password.mjs"
+    "set-user-password": "node scripts/set-user-password.mjs",
+    "sync:wallet-strip": "node scripts/sync-default-strip-from-myfidpass.mjs"
   },
   "dependencies": {
     "apns2": "^12.2.0",

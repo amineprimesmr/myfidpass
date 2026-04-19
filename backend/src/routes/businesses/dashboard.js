@@ -982,7 +982,8 @@ router.put("/games/:gameCode/rewards", (req, res) => {
 // ——— Stats ———
 router.get("/stats", (req, res) => {
   const business = req.business;
-  const period = ["7d", "30d", "this_month", "6m"].includes(req.query.period) ? req.query.period : "this_month";
+  const q = req.query.period;
+  const period = ["7d", "30d", "this_month", "6m", "12m", "1y"].includes(q) ? q : "this_month";
   const stats = getDashboardStats(business.id, period);
   res.json({
     period: stats.period,
@@ -992,12 +993,21 @@ router.get("/stats", (req, res) => {
     transactions_this_month: stats.transactionsThisMonth ?? 0,
     new_members_last_7_days: stats.newMembersLast7Days ?? 0,
     new_members_last_30_days: stats.newMembersLast30Days ?? 0,
+    new_members_in_period: stats.newMembersInPeriod ?? 0,
     inactive_members_30_days: stats.inactiveMembers30Days ?? 0,
+    inactive_members_90_days: stats.inactiveMembers90Days ?? 0,
+    members_with_points50: stats.membersWithPoints50 ?? 0,
     points_average_per_member: stats.pointsAveragePerMember ?? 0,
-    estimated_revenue_eur: stats.estimatedRevenueEur ?? 0,
     active_members_in_period: stats.activeMembersInPeriod ?? 0,
     retention_pct: stats.retentionPct ?? 0,
     recurrent_members_in_period: stats.recurrentMembersInPeriod ?? 0,
+    visits_in_period: stats.visitsInPeriod ?? 0,
+    avg_visits_per_active_member: stats.avgVisitsPerActiveMember ?? undefined,
+    avg_basket_eur: stats.avgBasketEur ?? undefined,
+    rewards_redeemed_count: stats.rewardsRedeemedCount ?? 0,
+    points_redeemed_in_period: stats.pointsRedeemedInPeriod ?? 0,
+    google_reviews_new_in_period: stats.googleReviewsNewInPeriod ?? 0,
+    notification_campaigns: stats.notificationCampaigns ?? [],
     business_name: business.organization_name ?? undefined,
   });
 });
@@ -1230,6 +1240,7 @@ router.get("/evolution", (req, res) => {
     else if (p === "30d") weeks = 4;
     else if (p === "this_month") weeks = 4;
     else if (p === "6m") weeks = 26;
+    else if (p === "12m" || p === "1y") weeks = 26;
     else weeks = 6;
   }
   if (!Number.isFinite(weeks)) weeks = 6;
