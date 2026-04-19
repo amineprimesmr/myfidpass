@@ -24,6 +24,7 @@ function initPlacesAutocomplete() {
       fields: ["name", "formatted_address", "place_id"],
       bounds: frBounds,
       strictBounds: false,
+      componentRestrictions: { country: "fr" },
     });
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();

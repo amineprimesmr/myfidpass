@@ -409,6 +409,8 @@ function initAppPage() {
         fields: ["name", "formatted_address", "geometry", "place_id"],
         bounds: frBounds,
         strictBounds: false,
+        // Évite les suggestions hors France (ex. homonymes en Suisse) pour l’onboarding myfidpass.fr
+        componentRestrictions: { country: "fr" },
       });
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
@@ -805,7 +807,6 @@ function initAppDashboard(slug) {
   const statNew30 = document.getElementById("app-stat-new30");
   const statInactive30 = document.getElementById("app-stat-inactive30");
   const statAvgPoints = document.getElementById("app-stat-avg-points");
-  const statRevenue = document.getElementById("app-stat-revenue");
   const statCardsActive = document.getElementById("app-stat-cards-active");
   const statRetention = document.getElementById("app-stat-retention");
   const statRecurrent = document.getElementById("app-stat-recurrent");
@@ -814,7 +815,6 @@ function initAppDashboard(slug) {
   const statFrequency = document.getElementById("app-stat-frequency");
   const statInactive30Main = document.getElementById("app-stat-inactive30-main");
   const statAvgTicket = document.getElementById("app-stat-avg-ticket");
-  const statRevenuePerActive = document.getElementById("app-stat-revenue-per-active");
   const dashboardPeriodLabelEl = document.getElementById("app-dashboard-period-label");
   const insightSummaryEl = document.getElementById("app-insight-summary");
   const insightFocusEl = document.getElementById("app-insight-focus");
@@ -4886,10 +4886,10 @@ function initAppDashboard(slug) {
 
   function getSimulatedStats(period) {
     const map = {
-      "7d": { rev: 1280, tx: 64, members: 182, retention: 44, recurrent: 29, active: 80, points: 920, new30: 21, inactive30: 34, avgPoints: 17 },
-      "30d": { rev: 5380, tx: 302, members: 182, retention: 57, recurrent: 88, active: 104, points: 2860, new30: 49, inactive30: 30, avgPoints: 24 },
-      this_month: { rev: 4620, tx: 246, members: 182, retention: 53, recurrent: 77, active: 96, points: 2390, new30: 42, inactive30: 33, avgPoints: 22 },
-      "6m": { rev: 28490, tx: 1408, members: 182, retention: 69, recurrent: 132, active: 126, points: 12480, new30: 42, inactive30: 33, avgPoints: 22 },
+      "7d": { tx: 64, members: 182, retention: 44, recurrent: 29, active: 80, points: 920, new30: 21, inactive30: 34, avgPoints: 17, avgBasket: 19.5 },
+      "30d": { tx: 302, members: 182, retention: 57, recurrent: 88, active: 104, points: 2860, new30: 49, inactive30: 30, avgPoints: 24, avgBasket: 17.8 },
+      this_month: { tx: 246, members: 182, retention: 53, recurrent: 77, active: 96, points: 2390, new30: 42, inactive30: 33, avgPoints: 22, avgBasket: 18.8 },
+      "6m": { tx: 1408, members: 182, retention: 69, recurrent: 132, active: 126, points: 12480, new30: 42, inactive30: 33, avgPoints: 22, avgBasket: 20.2 },
     };
     const base = map[period] || map.this_month;
     return {
@@ -4900,7 +4900,7 @@ function initAppDashboard(slug) {
       newMembersLast7Days: Math.max(0, Math.floor(base.new30 / 4)),
       inactiveMembers30Days: base.inactive30,
       pointsAveragePerMember: base.avgPoints,
-      estimatedRevenueEur: base.rev,
+      avgBasketEur: base.avgBasket,
       retentionPct: base.retention,
       recurrentMembersInPeriod: base.recurrent,
       activeMembersInPeriod: base.active,
@@ -4924,7 +4924,7 @@ function initAppDashboard(slug) {
     const inactive = Number(data.inactiveMembers30Days || 0);
     const recurrent = Number(data.recurrentMembersInPeriod || 0);
     const tx = Number(data.transactionsThisMonth || 0);
-    const revenue = Number(data.estimatedRevenueEur || 0);
+    const activeM = Number(data.activeMembersInPeriod || 0);
     const periodText = dashboardPeriodLabels[getDashboardPeriod()] || "la période";
 
     if (retention >= 55) {
@@ -4942,8 +4942,8 @@ function initAppDashboard(slug) {
     }
 
     let confidence = "Moyenne";
-    if (revenue > 0 && tx > 0) confidence = "Élevée";
-    if (revenue <= 0 && tx > 0) confidence = "Faible";
+    if (tx > 0 && activeM > 0) confidence = "Élevée";
+    if (tx > 0 && activeM === 0) confidence = "Faible";
     if (inactive > 20 && recurrent < 5) confidence = "À surveiller";
     insightConfidenceEl.textContent = confidence;
   }
@@ -4958,6 +4958,12 @@ function initAppDashboard(slug) {
       if (res.status === 401) throw new Error("Unauthorized");
       if (!res.ok) return null;
       const raw = await res.json();
+      const rawBasket = raw.avg_basket_eur ?? raw.avgBasketEur;
+      let avgBasketParsed = null;
+      if (rawBasket != null && rawBasket !== "") {
+        const n = Number(rawBasket);
+        if (Number.isFinite(n) && n > 0) avgBasketParsed = n;
+      }
       data = {
         membersCount: raw.members_count ?? raw.membersCount ?? 0,
         pointsThisMonth: raw.points_this_month ?? raw.pointsThisMonth ?? 0,
@@ -4966,14 +4972,14 @@ function initAppDashboard(slug) {
         newMembersLast7Days: raw.new_members_last_7_days ?? raw.newMembersLast7Days ?? 0,
         inactiveMembers30Days: raw.inactive_members_30_days ?? raw.inactiveMembers30Days ?? 0,
         pointsAveragePerMember: raw.points_average_per_member ?? raw.pointsAveragePerMember ?? 0,
-        estimatedRevenueEur: raw.estimated_revenue_eur ?? raw.estimatedRevenueEur ?? 0,
+        avgBasketEur: avgBasketParsed,
         retentionPct: raw.retention_pct ?? raw.retentionPct ?? 0,
         recurrentMembersInPeriod: raw.recurrent_members_in_period ?? raw.recurrentMembersInPeriod ?? 0,
         activeMembersInPeriod: raw.active_members_in_period ?? raw.activeMembersInPeriod ?? 0,
       };
     }
-    const avgTicket = data.transactionsThisMonth > 0 ? data.estimatedRevenueEur / data.transactionsThisMonth : 0;
-    const revenuePerActive = data.activeMembersInPeriod > 0 ? data.estimatedRevenueEur / data.activeMembersInPeriod : 0;
+    const avgTicketLabel =
+      data.avgBasketEur != null && data.avgBasketEur > 0 ? formatEuro(data.avgBasketEur) : "—";
     const frequency = data.activeMembersInPeriod > 0 ? data.transactionsThisMonth / data.activeMembersInPeriod : 0;
     if (statMembers) statMembers.textContent = data.membersCount;
     if (statMembersSegment) statMembersSegment.textContent = data.membersCount;
@@ -4989,11 +4995,8 @@ function initAppDashboard(slug) {
     if (statRecurrent) statRecurrent.textContent = data.recurrentMembersInPeriod;
     if (statActiveMembers) statActiveMembers.textContent = data.activeMembersInPeriod;
     if (statFrequency) statFrequency.textContent = frequency.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (statAvgTicket) statAvgTicket.textContent = formatEuro(avgTicket);
-    if (statRevenuePerActive) statRevenuePerActive.textContent = formatEuro(revenuePerActive);
-    const statMoreRevenue = document.getElementById("app-stat-more-revenue");
+    if (statAvgTicket) statAvgTicket.textContent = avgTicketLabel;
     const statMoreAvgTicket = document.getElementById("app-stat-more-avg-ticket");
-    const statMoreRevenuePerActive = document.getElementById("app-stat-more-revenue-per-active");
     const statMoreTransactions = document.getElementById("app-stat-more-transactions");
     const statMoreMembers = document.getElementById("app-stat-more-members");
     const statMoreNew30 = document.getElementById("app-stat-more-new30");
@@ -5001,9 +5004,7 @@ function initAppDashboard(slug) {
     const statMoreRetention = document.getElementById("app-stat-more-retention");
     const statMoreFrequency = document.getElementById("app-stat-more-frequency");
     const statMoreRecurrent = document.getElementById("app-stat-more-recurrent");
-    if (statMoreRevenue) statMoreRevenue.textContent = formatEuro(data.estimatedRevenueEur);
-    if (statMoreAvgTicket) statMoreAvgTicket.textContent = formatEuro(avgTicket);
-    if (statMoreRevenuePerActive) statMoreRevenuePerActive.textContent = formatEuro(revenuePerActive);
+    if (statMoreAvgTicket) statMoreAvgTicket.textContent = avgTicketLabel;
     if (statMoreTransactions) statMoreTransactions.textContent = data.transactionsThisMonth;
     if (statMoreMembers) statMoreMembers.textContent = data.membersCount;
     if (statMoreNew30) statMoreNew30.textContent = data.newMembersLast30Days;
