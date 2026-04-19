@@ -15,6 +15,7 @@ import logger from "../lib/logger.js";
 import {
   getSocialOAuthConnection,
   upsertSocialOAuthConnection,
+  parseSocialOAuthMetadata,
   PROVIDER_GOOGLE_BUSINESS,
 } from "../db/social-oauth.js";
 import {
@@ -36,12 +37,7 @@ import { getDb } from "../db/connection.js";
 const db = getDb();
 
 function parseMetadata(conn) {
-  if (!conn?.metadata) return {};
-  try {
-    return JSON.parse(conn.metadata) || {};
-  } catch (_) {
-    return {};
-  }
+  return parseSocialOAuthMetadata(conn);
 }
 
 /**

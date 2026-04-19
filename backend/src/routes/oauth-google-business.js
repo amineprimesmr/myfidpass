@@ -14,6 +14,7 @@ import {
   listGoogleBusinessReviews,
 } from "../services/google-business-oauth.js";
 import { buildNativeOAuthReturnUrl } from "../lib/oauth-native-redirect.js";
+import { registerGbpPubSubIfConfigured } from "../services/google-business-pubsub-register.js";
 import logger from "../lib/logger.js";
 
 const router = Router();
@@ -153,6 +154,9 @@ router.get("/google-business/callback", async (req, res) => {
           }
         })
         .catch((err) => logger.error({ err }, "[oauth-gbp] async reviews"));
+      registerGbpPubSubIfConfigured(bid, tok, aid).catch((err) =>
+        logger.warn({ err, businessId: bid }, "[oauth-gbp] pubsub register"),
+      );
     });
 
     return res.redirect(302, redirectToApp({ success: "1" }));

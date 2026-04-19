@@ -18,6 +18,7 @@ import rateLimit from "express-rate-limit";
 import {
   getSocialOAuthConnection,
   upsertSocialOAuthConnection,
+  parseSocialOAuthMetadata,
   PROVIDER_GOOGLE_BUSINESS,
 } from "../../db/social-oauth.js";
 import {
@@ -39,6 +40,7 @@ import {
 } from "../../services/google-business-oauth.js";
 import { tryCompletePendingGoogleBusinessLocation } from "../../services/social-metrics-service.js";
 import { syncReviewsForBusiness } from "../../services/google-business-reviews-sync.js";
+import { registerGbpPubSubIfConfigured } from "../../services/google-business-pubsub-register.js";
 import { generateReviewReply } from "../../services/google-business-reply-ai.js";
 import {
   listGoogleBusinessReviews,
@@ -69,12 +71,7 @@ const router = Router({ mergeParams: true });
 // ─────────────────────────── Helpers ───────────────────────────
 
 function parseMetadata(conn) {
-  if (!conn?.metadata) return {};
-  try {
-    return JSON.parse(conn.metadata) || {};
-  } catch (_) {
-    return {};
-  }
+  return parseSocialOAuthMetadata(conn);
 }
 
 /**
@@ -221,10 +218,35 @@ router.use("/google-business", heavyLimiter);
 
 // ─────────────────────────── STATUS ───────────────────────────
 
+/** Ré-enregistre le topic Pub/Sub côté Google (après changement d’URL serveur ou échec transitoire). */
+router.post("/google-business/notifications/pubsub/register", async (req, res) => {
+  const ctx = await requireGoogleBusinessContext(req, res);
+  if (!ctx) return;
+  try {
+    const r = await registerGbpPubSubIfConfigured(ctx.businessId, ctx.accessToken, ctx.accountId);
+    if (r.skipped && r.reason === "no_topic_env") {
+      return res.status(503).json({
+        error: "pubsub_topic_not_configured",
+        message: "Variable serveur GOOGLE_BUSINESS_PUBSUB_TOPIC (ou GBP_PUBSUB_TOPIC) non définie.",
+      });
+    }
+    if (r.skipped) {
+      return res.status(400).json({ error: r.error || "skipped" });
+    }
+    if (!r.ok) return res.status(502).json({ error: r.error || "register_failed" });
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "[gbp-routes] pubsub register");
+    return res.status(500).json({ error: "register_failed" });
+  }
+});
+
 router.get("/google-business/status", (req, res) => {
   const conn = getSocialOAuthConnection(req.business.id, PROVIDER_GOOGLE_BUSINESS);
   const meta = parseMetadata(conn);
   const counts = countGoogleBusinessReviews(req.business.id);
+  const pubsubRegisteredAt = meta.gbp_pubsub_registered_at ? String(meta.gbp_pubsub_registered_at) : null;
+  const pubsubErr = meta.gbp_pubsub_error ? String(meta.gbp_pubsub_error) : null;
   return res.json({
     connected: !!(conn?.access_token || conn?.refresh_token),
     location_pending: !!meta.location_pending,
@@ -232,6 +254,9 @@ router.get("/google-business/status", (req, res) => {
     account_id: meta.account_id || null,
     location_id: meta.location_id || null,
     matched_place_id: meta.matched_place_id || null,
+    pubsub_live_notifications: !!pubsubRegisteredAt && !pubsubErr,
+    pubsub_registered_at: pubsubRegisteredAt,
+    pubsub_last_error: pubsubErr,
     counts,
   });
 });

@@ -63,3 +63,32 @@ export function getSocialOAuthConnection(businessId, provider) {
 export function deleteSocialOAuthConnection(businessId, provider) {
   db.prepare(`DELETE FROM social_oauth_connections WHERE business_id = ? AND provider = ?`).run(businessId, provider);
 }
+
+/**
+ * Lit metadata_json (SQLite) ou metadata (alias éventuel).
+ * @param {object|null|undefined} conn - ligne social_oauth_connections
+ */
+export function parseSocialOAuthMetadata(conn) {
+  const raw = conn?.metadata_json ?? conn?.metadata;
+  if (raw == null || raw === "") return {};
+  if (typeof raw === "object" && !Array.isArray(raw)) return { ...raw };
+  try {
+    const o = JSON.parse(String(raw));
+    return o && typeof o === "object" ? o : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Fusionne des clés dans metadata_json sans toucher aux tokens.
+ */
+export function patchSocialOAuthConnectionMetadata(businessId, provider, patch) {
+  const conn = getSocialOAuthConnection(businessId, provider);
+  if (!conn) return null;
+  const meta = { ...parseSocialOAuthMetadata(conn), ...patch };
+  db.prepare(
+    `UPDATE social_oauth_connections SET metadata_json = ?, updated_at = datetime('now') WHERE business_id = ? AND provider = ?`,
+  ).run(JSON.stringify(meta), businessId, provider);
+  return getSocialOAuthConnection(businessId, provider);
+}

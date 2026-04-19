@@ -584,29 +584,35 @@ export async function deleteMedia(accessToken, mediaResourceName) {
   return r.ok ? { ok: true } : { ok: false, error: r.data?.error?.message || r.error || "delete_media_failed" };
 }
 
-// ─────────────────────────────── NOTIFICATIONS PUB/SUB (Phase 2) ───────────────────────────────
+// ─────────────────────────────── NOTIFICATIONS PUB/SUB (temps réel) ───────────────────────────────
 
 /**
- * Enregistre un topic Pub/Sub pour recevoir les notifs temps réel (nouveaux avis, questions).
- * Appelle Google pour activer l'envoi sur le topic donné.
- *
- * @param {string} accountId
- * @param {string} pubsubTopic - ex. "projects/my-gcp/topics/myfidpass-gbp"
+ * Topic GCP complet : `projects/PROJECT_ID/topics/TOPIC_ID`.
+ * À créer dans le même (ou un dédié) projet Cloud que l’API Business Profile, avec publish pour
+ * `mybusiness-api-pubsub@system.gserviceaccount.com`.
+ */
+export function getConfiguredGbpPubSubTopic() {
+  const t = (process.env.GOOGLE_BUSINESS_PUBSUB_TOPIC || process.env.GBP_PUBSUB_TOPIC || "").trim();
+  return t || null;
+}
+
+/**
+ * Enregistre un topic Pub/Sub pour les événements compte (nouveaux / avis modifiés).
+ * @param {string} accountId - identifiant nu (ex. chiffres), pas le préfixe `accounts/`.
+ * @param {string} pubsubTopic - ex. `projects/my-gcp/topics/myfidpass-gbp`
  */
 export async function enableNotifications(accessToken, accountId, pubsubTopic) {
-  const url = `${NOTIFICATIONS}/accounts/${encodeURIComponent(accountId)}/notificationSetting?updateMask=pubsubTopic,notificationTypes`;
+  const id = String(accountId || "").trim();
+  const topic = String(pubsubTopic || "").trim();
+  if (!id || !topic) {
+    return { ok: false, error: "missing_account_or_topic" };
+  }
+  const name = `accounts/${id}/notificationSetting`;
+  const url = `${NOTIFICATIONS}/${name}?updateMask=pubsubTopic,notificationTypes`;
   const body = {
-    pubsubTopic,
-    notificationTypes: [
-      "NEW_REVIEW",
-      "UPDATED_REVIEW",
-      "NEW_QUESTION",
-      "UPDATED_QUESTION",
-      "NEW_ANSWER",
-      "UPDATED_ANSWER",
-      "NEW_CUSTOMER_MEDIA",
-      "GOOGLE_UPDATE",
-    ],
+    name,
+    pubsubTopic: topic,
+    notificationTypes: ["NEW_REVIEW", "UPDATED_REVIEW"],
   };
   const r = await jsonRequest(url, accessToken, "PATCH", body);
   if (!r.ok) {

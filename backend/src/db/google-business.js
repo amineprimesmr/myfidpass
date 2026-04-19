@@ -6,6 +6,7 @@
  * @module db/google-business
  */
 import { getDb } from "./connection.js";
+import { PROVIDER_GOOGLE_BUSINESS } from "./social-oauth.js";
 
 const db = getDb();
 
@@ -414,4 +415,26 @@ export function listBusinessesWithGoogleBusinessOAuth() {
      WHERE c.provider = 'google_business'
        AND (c.access_token IS NOT NULL OR c.refresh_token IS NOT NULL)`,
   ).all();
+}
+
+/**
+ * Résout les commerces MyFidpass liés à une paire compte/lieu Google (notification Pub/Sub).
+ * @param {string} accountId - identifiant nu Google (segment après accounts/)
+ * @param {string} locationId - identifiant nu lieu (segment après locations/)
+ * @returns {string[]}
+ */
+export function findBusinessIdsForGoogleLocation(accountId, locationId) {
+  const aid = String(accountId || "").trim();
+  const lid = String(locationId || "").trim();
+  if (!aid || !lid) return [];
+  const rows = db
+    .prepare(
+      `SELECT business_id FROM social_oauth_connections
+       WHERE provider = ?
+         AND trim(COALESCE(json_extract(metadata_json, '$.account_id'), '')) = ?
+         AND trim(COALESCE(json_extract(metadata_json, '$.location_id'), '')) = ?`,
+    )
+    .all(PROVIDER_GOOGLE_BUSINESS, aid, lid);
+  const ids = rows.map((r) => String(r.business_id || "").trim()).filter(Boolean);
+  return [...new Set(ids)];
 }

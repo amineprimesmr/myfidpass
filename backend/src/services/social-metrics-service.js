@@ -23,6 +23,7 @@ import {
   resolveGoogleBusinessLocation,
   isGoogleBusinessOAuthConfigured,
 } from "./google-business-oauth.js";
+import { registerGbpPubSubIfConfigured } from "./google-business-pubsub-register.js";
 import {
   refreshFollowersFromStoredUserToken,
   refreshFacebookFanFromMetaUserToken,
@@ -283,6 +284,7 @@ export async function tryCompletePendingGoogleBusinessLocation(businessId) {
         }
       })
       .catch(() => {});
+    registerGbpPubSubIfConfigured(businessId, accessToken, resolved.accountId).catch(() => {});
   });
 
   return { ok: true };
