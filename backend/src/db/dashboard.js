@@ -218,6 +218,128 @@ export function getDashboardStats(businessId, period = "this_month") {
   };
 }
 
+const WEEKDAY_LABELS_FR = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+
+/**
+ * Répartition du « trafic » caisse sur la période : crédits points (`points_add`) + utilisations récompense (`reward_redeem`).
+ * Heures / jours : agrégation SQLite sur `created_at` (UTC serveur, voir `timezone_note` dans la réponse).
+ */
+export function getDashboardTrafficPatterns(businessId, period = "this_month") {
+  const normalizedPeriod = period === "1y" ? "12m" : period;
+  const bounds = getPeriodBounds(normalizedPeriod);
+  const basis = "points_add_and_reward_redeem";
+  const timezoneNote =
+    "Les créneaux horaires et les jours sont calculés en heure UTC (serveur), pas à l’heure locale du magasin.";
+  const typeFilter = `type IN ('points_add', 'reward_redeem')`;
+
+  let totalRow;
+  let hourRows;
+  let wdRows;
+
+  if (bounds.month != null) {
+    totalRow = db
+      .prepare(
+        `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND ${typeFilter} AND strftime('%Y-%m', created_at) = ?`,
+      )
+      .get(businessId, bounds.month);
+    hourRows = db
+      .prepare(
+        `SELECT CAST(strftime('%H', created_at) AS INTEGER) AS hour, COUNT(*) AS n FROM transactions WHERE business_id = ? AND ${typeFilter} AND strftime('%Y-%m', created_at) = ? GROUP BY hour`,
+      )
+      .all(businessId, bounds.month);
+    wdRows = db
+      .prepare(
+        `SELECT (CAST(strftime('%w', created_at) AS INTEGER) + 6) % 7 AS wd, COUNT(*) AS n FROM transactions WHERE business_id = ? AND ${typeFilter} AND strftime('%Y-%m', created_at) = ? GROUP BY wd`,
+      )
+      .all(businessId, bounds.month);
+  } else {
+    totalRow = db
+      .prepare(
+        `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND ${typeFilter} AND created_at >= ${bounds.since}`,
+      )
+      .get(businessId);
+    hourRows = db
+      .prepare(
+        `SELECT CAST(strftime('%H', created_at) AS INTEGER) AS hour, COUNT(*) AS n FROM transactions WHERE business_id = ? AND ${typeFilter} AND created_at >= ${bounds.since} GROUP BY hour`,
+      )
+      .all(businessId);
+    wdRows = db
+      .prepare(
+        `SELECT (CAST(strftime('%w', created_at) AS INTEGER) + 6) % 7 AS wd, COUNT(*) AS n FROM transactions WHERE business_id = ? AND ${typeFilter} AND created_at >= ${bounds.since} GROUP BY wd`,
+      )
+      .all(businessId);
+  }
+
+  const totalEvents = totalRow?.n ?? 0;
+
+  const byHourMap = new Map();
+  for (const r of hourRows || []) {
+    const h = Number(r.hour);
+    if (Number.isFinite(h)) byHourMap.set(h, r.n ?? 0);
+  }
+  const byHour = [];
+  for (let h = 0; h < 24; h++) {
+    byHour.push({ hour: h, count: byHourMap.get(h) ?? 0 });
+  }
+
+  const byWdMap = new Map();
+  for (const r of wdRows || []) {
+    const wd = Number(r.wd);
+    if (Number.isFinite(wd)) byWdMap.set(wd, r.n ?? 0);
+  }
+  const byWeekday = [];
+  for (let wd = 0; wd < 7; wd++) {
+    byWeekday.push({ weekday: wd, label: WEEKDAY_LABELS_FR[wd], count: byWdMap.get(wd) ?? 0 });
+  }
+
+  let peakHourRow = null;
+  let maxH = -1;
+  for (const row of byHour) {
+    if (row.count > maxH) {
+      maxH = row.count;
+      peakHourRow = row;
+    }
+  }
+  let peakHour = null;
+  if (totalEvents > 0 && peakHourRow && maxH > 0) {
+    peakHour = {
+      hour: peakHourRow.hour,
+      count: peakHourRow.count,
+      pct_of_total: Math.round((peakHourRow.count / totalEvents) * 1000) / 10,
+    };
+  }
+
+  let peakWeekdayRow = null;
+  let maxW = -1;
+  for (const row of byWeekday) {
+    if (row.count > maxW) {
+      maxW = row.count;
+      peakWeekdayRow = row;
+    }
+  }
+  let peakWeekday = null;
+  if (totalEvents > 0 && peakWeekdayRow && maxW > 0) {
+    peakWeekday = {
+      weekday: peakWeekdayRow.weekday,
+      label: peakWeekdayRow.label,
+      count: peakWeekdayRow.count,
+      pct_of_total: Math.round((peakWeekdayRow.count / totalEvents) * 1000) / 10,
+    };
+  }
+
+  return {
+    period: bounds.label,
+    periodKey: normalizedPeriod,
+    timezoneNote,
+    basis,
+    totalEvents,
+    byHour,
+    byWeekday,
+    peakHour,
+    peakWeekday,
+  };
+}
+
 export function getDashboardEvolution(businessId, weeks = 6) {
   const rows = [];
   for (let i = weeks - 1; i >= 0; i--) {

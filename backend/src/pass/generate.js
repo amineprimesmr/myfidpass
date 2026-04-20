@@ -59,6 +59,15 @@ function walletPassMemberDisplayName(name) {
   return t;
 }
 
+/** Pour `attributedValue` des champs verso (lien HTML Wallet iOS 15+). */
+function walletPassEscapeHtmlAttribute(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 let _sharp = null;
 async function getSharp() {
   if (!_sharp) _sharp = (await import("sharp")).default;
@@ -476,7 +485,6 @@ export async function generatePass(member, business = null, options = {}) {
     pass.setLocations(...locations);
   }
 
-  const backTerms = business?.back_terms || "1 point = 1 € de réduction. Valable en magasin.";
   const frontendUrl = (process.env.FRONTEND_URL || process.env.API_URL || "https://myfidpass.fr").replace(/\/$/, "");
   /** Page web fidélité client : /fidelity/:slug + m= pour rouvrir le compte (localStorage + hydrate). */
   const memberIdForWeb = member?.id != null ? String(member.id).trim() : "";
@@ -485,6 +493,14 @@ export async function generatePass(member, business = null, options = {}) {
       ? `${frontendUrl}/fidelity/${encodeURIComponent(business.slug)}?m=${encodeURIComponent(memberIdForWeb)}&ref=pass`
       : `${frontendUrl}/fidelity/${encodeURIComponent(business.slug)}?ref=pass`
     : `${frontendUrl}/`;
+
+  /** Verso : libellé court (plus d’URL brute) ; le lien reste cliquable via `attributedValue`. */
+  const webAccountBackField = {
+    key: "website",
+    label: "Mes récompenses",
+    value: "Mes récompenses",
+    attributedValue: `<a href="${walletPassEscapeHtmlAttribute(backUrl)}">Mes récompenses</a>`,
+  };
 
   const lastMessageBackField = { key: "lastMessage", label: "Message", value: lastBroadcast };
   if (rawBroadcast) {
@@ -498,8 +514,7 @@ export async function generatePass(member, business = null, options = {}) {
     pass.backFields.push(
       lastMessageBackField,
       { key: "reward", label: "Récompense", value: rewardValue },
-      { key: "terms", label: "Conditions", value: backTerms },
-      { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] },
+      webAccountBackField,
     );
   } else {
     const pts = Math.max(0, Math.floor(Number(member.points) || 0));
@@ -521,8 +536,7 @@ export async function generatePass(member, business = null, options = {}) {
         value: rewardsBackValue,
       },
       { key: "toUnlock", label: "Pour l'obtenir", value: toUnlockText },
-      { key: "terms", label: "Conditions", value: backTerms },
-      { key: "website", label: "Voir en ligne", value: backUrl, dataDetectorTypes: ["PKDataDetectorTypeLink"] },
+      webAccountBackField,
     );
   }
 

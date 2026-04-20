@@ -122,7 +122,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   startFidelityRouteLoadingAnimations(loadingOverlay);
 
   /**
-   * Lien « Voir en ligne » au dos du pass : /fidelity/:slug?m=<uuid> — ouvre directement le compte web.
+   * Dos du pass : champ « Mes récompenses » (lien court) → /fidelity/:slug?m=<uuid> — compte web.
    */
   async function tryHydrateMemberFromPassLink() {
     if (typeof window === "undefined" || typeof URLSearchParams === "undefined") return false;

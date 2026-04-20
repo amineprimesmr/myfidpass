@@ -14,6 +14,7 @@ import {
   getEngagementRewards,
   getPassKitPushTokensForBusiness,
   getDashboardStats,
+  getDashboardTrafficPatterns,
   getDashboardEvolution,
   getMembersForBusiness,
   getTransactionsForBusiness,
@@ -1009,6 +1010,24 @@ router.get("/stats", (req, res) => {
     google_reviews_new_in_period: stats.googleReviewsNewInPeriod ?? 0,
     notification_campaigns: stats.notificationCampaigns ?? [],
     business_name: business.organization_name ?? undefined,
+  });
+});
+
+router.get("/stats/traffic", (req, res) => {
+  const business = req.business;
+  const q = req.query.period;
+  const period = ["7d", "30d", "this_month", "6m", "12m", "1y"].includes(q) ? q : "this_month";
+  const t = getDashboardTrafficPatterns(business.id, period);
+  res.json({
+    period: t.period,
+    period_key: t.periodKey,
+    timezone_note: t.timezoneNote,
+    basis: t.basis,
+    total_events: t.totalEvents,
+    by_hour: t.byHour,
+    by_weekday: t.byWeekday,
+    peak_hour: t.peakHour,
+    peak_weekday: t.peakWeekday,
   });
 });
 
