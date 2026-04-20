@@ -30,7 +30,6 @@ import {
   ICON_SIZE_3X,
 } from "./constants.js";
 import { radiusMetersForPass } from "../locationRadiusLimits.js";
-import { parsePointRewardTiersFromBusiness, formatBackRewardsFieldValue } from "./point-tiers.js";
 import { normalizeChangeMessage, buildLastBroadcastFieldValue } from "./broadcast-field.js";
 import { stampNextRewardFaceLabelAndValue } from "./stamp-next-reward-face.js";
 import { readFileSync, existsSync } from "node:fs";
@@ -508,34 +507,13 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   if (format === "tampons") {
-    const rewardValue = stampMidRewardLabel
-      ? `5 tampons = ${stampMidRewardLabel} — ${stampMax} tampons = ${stampRewardLabel}`
-      : `${stampMax} tampons = ${stampRewardLabel}`;
-    pass.backFields.push(
-      lastMessageBackField,
-      { key: "reward", label: "Récompense", value: rewardValue },
-      webAccountBackField,
-    );
+    pass.backFields.push(lastMessageBackField, webAccountBackField);
   } else {
     const pts = Math.max(0, Math.floor(Number(member.points) || 0));
-    const tierList = parsePointRewardTiersFromBusiness(business);
-    const rewardsBackValue = formatBackRewardsFieldValue(tierList, pts);
-    const nextTier = tierList.find((t) => Number(t.points) > pts);
-    const toUnlockText = nextTier
-      ? `Encore ${Number(nextTier.points) - pts} points pour : ${(nextTier.label && String(nextTier.label).trim()) || "récompense"}.`
-      : tierList.length > 0
-        ? "Vous avez assez de points pour une récompense. Présentez cette carte en magasin."
-        : "Consultez le commerce pour les paliers de récompenses.";
 
     pass.backFields.push(
       lastMessageBackField,
       { key: "progress", label: "Votre progression", value: `${pts} points` },
-      {
-        key: "rewards",
-        label: "Paliers & avantages",
-        value: rewardsBackValue,
-      },
-      { key: "toUnlock", label: "Pour l'obtenir", value: toUnlockText },
       webAccountBackField,
     );
   }
