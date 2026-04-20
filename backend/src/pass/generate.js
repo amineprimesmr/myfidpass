@@ -506,13 +506,18 @@ export async function generatePass(member, business = null, options = {}) {
     lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
   }
 
+  const backAddress =
+    business?.location_address != null ? String(business.location_address).trim() : "";
+  const addressBackFields = backAddress.length > 0 ? [{ key: "address", label: "Adresse", value: backAddress }] : [];
+
   if (format === "tampons") {
-    pass.backFields.push(lastMessageBackField, webAccountBackField);
+    pass.backFields.push(lastMessageBackField, ...addressBackFields, webAccountBackField);
   } else {
     const pts = Math.max(0, Math.floor(Number(member.points) || 0));
 
     pass.backFields.push(
       lastMessageBackField,
+      ...addressBackFields,
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       webAccountBackField,
     );
