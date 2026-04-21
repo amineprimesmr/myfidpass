@@ -245,6 +245,36 @@ router.post("/google-business/notifications/pubsub/register", async (req, res) =
   }
 });
 
+/**
+ * Retente la résolution de fiche quand location_pending=true.
+ * Appelé explicitement par le bouton "Actualiser" de la bannière pending (ne pas bloquer sur /status).
+ */
+router.post("/google-business/retry-pending-location", async (req, res) => {
+  const businessId = req.business.id;
+  const conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  if (!conn) return res.status(409).json({ error: "google_business_not_connected" });
+
+  const meta = parseMetadata(conn);
+  if (!meta.location_pending) {
+    // Already resolved — return current status immediately
+    const counts = countGoogleBusinessReviews(businessId);
+    return res.json({ ok: true, resolved: true, location_pending: false, location_title: meta.location_title || null, counts });
+  }
+
+  const result = await tryCompletePendingGoogleBusinessLocation(businessId);
+  const updatedConn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  const updatedMeta = parseMetadata(updatedConn);
+  const counts = countGoogleBusinessReviews(businessId);
+  return res.json({
+    ok: result.ok,
+    resolved: result.ok,
+    location_pending: !!updatedMeta.location_pending,
+    location_title: updatedMeta.location_title || null,
+    last_error: result.ok ? null : (result.error || "resolve_failed"),
+    counts,
+  });
+});
+
 router.get("/google-business/status", (req, res) => {
   const conn = getSocialOAuthConnection(req.business.id, PROVIDER_GOOGLE_BUSINESS);
   const meta = parseMetadata(conn);
