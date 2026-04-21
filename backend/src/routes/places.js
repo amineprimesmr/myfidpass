@@ -19,25 +19,51 @@ router.get("/autocomplete", async (req, res) => {
     return res.status(503).json({ error: "Recherche d'établissements indisponible" });
   }
   try {
+    // Si l'input ressemble à un Place ID (alphanumérique sans espace), essayer /details directement.
+    const looksLikePlaceId = /^[A-Za-z0-9_\-]{10,}$/.test(input);
+    if (looksLikePlaceId) {
+      const detailUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(input)}&fields=name,formatted_address&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+      const dr = await fetch(detailUrl);
+      const dd = await dr.json();
+      if (dd.status === "OK" && dd.result) {
+        const name = dd.result.name || "";
+        const addr = dd.result.formatted_address || "";
+        return res.json({
+          predictions: [{
+            place_id: input,
+            description: addr ? `${name}, ${addr}` : name,
+            main_text: name,
+            secondary_text: addr,
+          }],
+        });
+      }
+    }
+
+    // Text Search — même index que Google Search, trouve toutes les branches d'une chaîne
+    // et les petits commerces récents qu'Autocomplete ignore.
     const params = new URLSearchParams({
-      input,
-      types: "establishment",
+      query: input,
+      type: "establishment",
       language: "fr",
+      region: "fr",
       key: GOOGLE_PLACES_API_KEY,
     });
-    params.append("components", "country:fr");
-    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`;
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?${params.toString()}`;
     const r = await fetch(url);
     const data = await r.json();
     if (data.status === "REQUEST_DENIED" || data.status === "OVER_QUERY_LIMIT") {
       return res.status(503).json({ error: "Service de recherche temporairement indisponible", code: data.status });
     }
-    const predictions = (data.predictions || []).slice(0, 10).map((p) => ({
-      place_id: p.place_id,
-      description: p.description || "",
-      main_text: p.structured_formatting?.main_text || "",
-      secondary_text: p.structured_formatting?.secondary_text || "",
-    }));
+    const predictions = (data.results || []).slice(0, 10).map((p) => {
+      const name = p.name || "";
+      const addr = p.formatted_address || "";
+      return {
+        place_id: p.place_id,
+        description: addr ? `${name}, ${addr}` : name,
+        main_text: name,
+        secondary_text: addr,
+      };
+    });
     return res.json({ predictions });
   } catch (err) {
     console.error("[places/autocomplete]", err);
