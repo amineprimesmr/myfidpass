@@ -19,6 +19,7 @@ import {
   getSocialOAuthConnection,
   upsertSocialOAuthConnection,
   parseSocialOAuthMetadata,
+  patchSocialOAuthConnectionMetadata,
   PROVIDER_GOOGLE_BUSINESS,
 } from "../../db/social-oauth.js";
 import {
@@ -37,6 +38,7 @@ import {
   listMedia,
   createMediaFromSourceUrl,
   deleteMedia,
+  listGoogleBusinessLocations,
 } from "../../services/google-business-oauth.js";
 import { tryCompletePendingGoogleBusinessLocation } from "../../services/social-metrics-service.js";
 import { syncReviewsForBusiness } from "../../services/google-business-reviews-sync.js";
@@ -705,6 +707,128 @@ router.delete("/google-business/media/:mediaId", async (req, res) => {
   const listR = await listMedia(ctx.accessToken, ctx.accountId, ctx.locationId);
   if (listR.ok) replaceGoogleBusinessMedia(req.business.id, listR.media.map(mapMediaFromApi));
   return res.json({ ok: true });
+});
+
+// ─────────────────────────── MULTI-ÉTABLISSEMENTS ───────────────────────────
+
+/**
+ * Liste toutes les fiches Google Business disponibles pour le compte OAuth connecté.
+ * Utilisé après un OAuth réussi pour laisser le marchand choisir la bonne fiche.
+ */
+router.get("/google-business/locations", async (req, res) => {
+  const businessId = req.business.id;
+  const conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  if (!conn) return res.status(409).json({ error: "google_business_not_connected" });
+
+  let accessToken = conn.access_token || "";
+  const expAt = conn.token_expires_at ? Date.parse(conn.token_expires_at) : NaN;
+  const needsRefresh = !accessToken || (Number.isFinite(expAt) && expAt - Date.now() < 120_000);
+  if (needsRefresh && conn.refresh_token) {
+    const r = await refreshGoogleBusinessAccessToken(conn.refresh_token);
+    if (r.ok) {
+      accessToken = r.accessToken;
+      const meta = parseSocialOAuthMetadata(conn);
+      upsertSocialOAuthConnection({
+        businessId,
+        provider: PROVIDER_GOOGLE_BUSINESS,
+        accessToken: r.accessToken,
+        refreshToken: conn.refresh_token,
+        tokenExpiresAt: r.expiresAt,
+        externalUserId: conn.external_user_id,
+        metadata: meta,
+      });
+    }
+  }
+  if (!accessToken) return res.status(401).json({ error: "token_refresh_failed" });
+
+  const meta = parseSocialOAuthMetadata(conn);
+  const accountId = String(meta.account_id || "").trim();
+  if (!accountId) return res.status(409).json({ error: "account_not_resolved" });
+
+  const r = await listGoogleBusinessLocations(accessToken, `accounts/${accountId}`);
+  if (!r.ok) return res.status(502).json({ error: r.error });
+
+  const locations = r.locations.map((loc) => {
+    const name = String(loc.name || "");
+    const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
+    const locationId = parsed ? parsed[2] : name.split("/").pop();
+    return {
+      location_id: locationId,
+      location_name: String(loc.title || "").trim(),
+      place_id: String(loc.metadata?.placeId || "").trim() || null,
+      address: String(loc.metadata?.mapsUri || "").trim() || null,
+    };
+  });
+
+  return res.json({ locations });
+});
+
+/**
+ * Sélectionne manuellement une fiche parmi celles du compte OAuth.
+ * Met à jour account_id, location_id, location_title et matched_place_id dans les métadonnées.
+ */
+router.post("/google-business/location/select", async (req, res) => {
+  const businessId = req.business.id;
+  const conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
+  if (!conn) return res.status(409).json({ error: "google_business_not_connected" });
+
+  const locationId = String(req.body?.location_id || "").trim();
+  if (!locationId) return res.status(400).json({ error: "location_id_required" });
+
+  let accessToken = conn.access_token || "";
+  const expAt = conn.token_expires_at ? Date.parse(conn.token_expires_at) : NaN;
+  const needsRefresh = !accessToken || (Number.isFinite(expAt) && expAt - Date.now() < 120_000);
+  if (needsRefresh && conn.refresh_token) {
+    const r = await refreshGoogleBusinessAccessToken(conn.refresh_token);
+    if (r.ok) {
+      accessToken = r.accessToken;
+      const meta = parseSocialOAuthMetadata(conn);
+      upsertSocialOAuthConnection({
+        businessId,
+        provider: PROVIDER_GOOGLE_BUSINESS,
+        accessToken: r.accessToken,
+        refreshToken: conn.refresh_token,
+        tokenExpiresAt: r.expiresAt,
+        externalUserId: conn.external_user_id,
+        metadata: meta,
+      });
+    }
+  }
+  if (!accessToken) return res.status(401).json({ error: "token_refresh_failed" });
+
+  const meta = parseSocialOAuthMetadata(conn);
+  const accountId = String(meta.account_id || "").trim();
+  if (!accountId) return res.status(409).json({ error: "account_not_resolved" });
+
+  const r = await listGoogleBusinessLocations(accessToken, `accounts/${accountId}`);
+  if (!r.ok) return res.status(502).json({ error: r.error });
+
+  const match = r.locations.find((loc) => {
+    const name = String(loc.name || "");
+    const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
+    return parsed ? parsed[2] === locationId : name.split("/").pop() === locationId;
+  });
+  if (!match) return res.status(404).json({ error: "location_not_found" });
+
+  const locationTitle = String(match.title || "").trim();
+  const matchedPlaceId = String(match.metadata?.placeId || "").trim() || null;
+
+  patchSocialOAuthConnectionMetadata(businessId, PROVIDER_GOOGLE_BUSINESS, {
+    account_id: accountId,
+    location_id: locationId,
+    location_title: locationTitle,
+    matched_place_id: matchedPlaceId,
+    location_pending: false,
+  });
+
+  logger.info({ businessId, accountId, locationId, locationTitle, matchedPlaceId }, "[gbp-routes] location selected");
+
+  return res.json({
+    ok: true,
+    matched_place_id: matchedPlaceId,
+    location_title: locationTitle,
+    location_id: locationId,
+  });
 });
 
 export default router;
