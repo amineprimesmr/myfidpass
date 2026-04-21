@@ -222,10 +222,12 @@ export async function tryCompletePendingGoogleBusinessLocation(businessId) {
   let meta = parseConnMetadata(conn);
   if (!meta.location_pending) return { ok: false, skipped: true };
 
-  let accessToken = conn.access_token;
-  if (!accessToken && conn.refresh_token) {
+  let accessToken = conn.access_token || "";
+  const expAt = conn.token_expires_at ? Date.parse(conn.token_expires_at) : NaN;
+  const needsRefresh = !accessToken || (Number.isFinite(expAt) && expAt - Date.now() < 120_000);
+  if (needsRefresh && conn.refresh_token) {
     const ref = await refreshGoogleBusinessAccessToken(conn.refresh_token);
-    if (!ref.ok) return { ok: false, error: ref.error || "refresh_failed" };
+    if (!ref.ok) return { ok: false, error: "token_expired_reconnect_required" };
     accessToken = ref.accessToken;
     upsertSocialOAuthConnection({
       businessId,
@@ -238,6 +240,8 @@ export async function tryCompletePendingGoogleBusinessLocation(businessId) {
     });
     conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
     meta = parseConnMetadata(conn);
+  } else if (needsRefresh) {
+    return { ok: false, error: "token_expired_reconnect_required" };
   }
 
   const rewards = getEngagementRewards(businessId);
