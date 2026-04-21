@@ -1,8 +1,8 @@
 /**
- * Shell landing : formulaire hero, Google Places et menus drawer.
- * Appelé au chargement pour attacher les listeners (formulaire, menus, script Places).
+ * Shell landing : formulaire hero, recherche d'établissement via notre backend, menus drawer.
+ * Appelé au chargement pour attacher les listeners (formulaire, menus, recherche).
  */
-import { setPendingEstablishment } from "../config.js";
+import { setPendingEstablishment, API_BASE } from "../config.js";
 
 function updateLandingCtaState() {
   const input = document.getElementById("landing-etablissement");
@@ -10,32 +10,138 @@ function updateLandingCtaState() {
   if (input && btn) btn.disabled = !input.value?.trim();
 }
 
-function initPlacesAutocomplete() {
-  if (typeof google === "undefined" || !google.maps?.places) return;
+function initBackendPlacesSearch() {
   const input = document.getElementById("landing-etablissement");
+  const hiddenPlaceId = document.getElementById("landing-place-id");
+  const helperEl = document.getElementById("landing-hero-helper");
   if (!input || input.dataset.placesInit) return;
-  try {
-    const frBounds = new google.maps.LatLngBounds(
-      new google.maps.LatLng(41.0, -5.5),
-      new google.maps.LatLng(51.2, 9.6)
-    );
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      types: ["establishment"],
-      fields: ["name", "formatted_address", "place_id"],
-      bounds: frBounds,
-      strictBounds: false,
+  input.dataset.placesInit = "1";
+
+  // Dropdown container
+  const dropdown = document.createElement("div");
+  dropdown.style.cssText = [
+    "position:absolute",
+    "z-index:9999",
+    "background:#fff",
+    "border:1px solid #e0e0e0",
+    "border-radius:8px",
+    "box-shadow:0 4px 24px rgba(0,0,0,.13)",
+    "overflow:hidden",
+    "display:none",
+    "min-width:100%",
+    "box-sizing:border-box",
+  ].join(";");
+
+  const wrap = input.closest(".landing-hero-input-wrap") || input.parentElement;
+  wrap.style.position = "relative";
+  wrap.appendChild(dropdown);
+
+  let debounce = null;
+  let currentQuery = "";
+
+  function hideDropdown() {
+    dropdown.style.display = "none";
+    dropdown.innerHTML = "";
+  }
+
+  function selectPrediction(pred) {
+    input.value = pred.main_text || pred.description;
+    if (hiddenPlaceId) hiddenPlaceId.value = pred.place_id || "";
+    if (helperEl) helperEl.classList.remove("is-visible");
+    hideDropdown();
+    updateLandingCtaState();
+  }
+
+  function renderPredictions(predictions) {
+    dropdown.innerHTML = "";
+    if (!predictions.length) {
+      dropdown.style.display = "none";
+      return;
+    }
+    predictions.forEach((pred, i) => {
+      const item = document.createElement("div");
+      item.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid #f2f2f2;";
+      if (i === predictions.length - 1) item.style.borderBottom = "none";
+      item.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9e9e9e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div style="min-width:0">
+          <div style="font-size:14px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(pred.main_text || pred.description)}</div>
+          ${pred.secondary_text ? `<div style="font-size:12px;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(pred.secondary_text)}</div>` : ""}
+        </div>`;
+      item.addEventListener("mousedown", (e) => { e.preventDefault(); selectPrediction(pred); });
+      item.addEventListener("mouseenter", () => { item.style.background = "#f7f7f7"; });
+      item.addEventListener("mouseleave", () => { item.style.background = ""; });
+      dropdown.appendChild(item);
     });
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (place.name) input.value = place.name;
-      const hidden = document.getElementById("landing-place-id");
-      if (hidden) hidden.value = place.place_id || "";
-      const helper = document.getElementById("landing-hero-helper");
-      if (helper) helper.classList.remove("is-visible");
-      updateLandingCtaState();
-    });
-    input.dataset.placesInit = "1";
-  } catch (_) {}
+    // Attribution Google obligatoire
+    const attr = document.createElement("div");
+    attr.style.cssText = "padding:6px 14px;text-align:right;font-size:11px;color:#999;border-top:1px solid #f2f2f2;background:#fafafa;";
+    attr.innerHTML = `powered by <img src="https://maps.gstatic.com/mapfiles/api-3/images/google_gray.png" alt="Google" height="10" style="vertical-align:middle;margin-left:2px">`;
+    dropdown.appendChild(attr);
+    dropdown.style.display = "block";
+  }
+
+  function escapeHtml(str) {
+    return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  async function fetchPredictions(query) {
+    try {
+      const url = `${API_BASE}/api/places/autocomplete?input=${encodeURIComponent(query)}`;
+      const r = await fetch(url);
+      if (!r.ok) return [];
+      const data = await r.json();
+      return data.predictions || [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  input.addEventListener("input", () => {
+    const query = input.value.trim();
+    if (hiddenPlaceId && hiddenPlaceId.value) hiddenPlaceId.value = "";
+    updateLandingCtaState();
+    if (debounce) clearTimeout(debounce);
+    if (query.length < 2) { hideDropdown(); return; }
+    currentQuery = query;
+    debounce = setTimeout(async () => {
+      if (input.value.trim() !== currentQuery) return;
+      const predictions = await fetchPredictions(currentQuery);
+      if (input.value.trim() === currentQuery) renderPredictions(predictions);
+    }, 300);
+  });
+
+  input.addEventListener("focus", () => {
+    if (dropdown.innerHTML && input.value.trim().length >= 2) dropdown.style.display = "block";
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target)) hideDropdown();
+  });
+
+  // Keyboard navigation
+  input.addEventListener("keydown", (e) => {
+    const items = [...dropdown.querySelectorAll("div[style*='cursor:pointer']")];
+    if (!items.length) return;
+    const active = dropdown.querySelector("[data-active]");
+    const idx = active ? items.indexOf(active) : -1;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (active) active.removeAttribute("data-active"), active.style.background = "";
+      const next = items[(idx + 1) % items.length];
+      next.setAttribute("data-active", "1"); next.style.background = "#f7f7f7";
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (active) active.removeAttribute("data-active"), active.style.background = "";
+      const prev = items[(idx - 1 + items.length) % items.length];
+      prev.setAttribute("data-active", "1"); prev.style.background = "#f7f7f7";
+    } else if (e.key === "Enter" && active) {
+      e.preventDefault();
+      active.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    } else if (e.key === "Escape") {
+      hideDropdown();
+    }
+  });
 }
 
 function initUnifiedMenu(toggleId, overlayId, closeId) {
@@ -166,20 +272,6 @@ export function initLandingShell() {
   initUnifiedMenu("auth-menu-toggle", "auth-menu-overlay", "auth-menu-close");
   initUnifiedMenu("offers-menu-toggle", "offers-menu-overlay", "offers-menu-close");
 
-  const googlePlacesApiKey = typeof import.meta.env !== "undefined" ? import.meta.env.VITE_GOOGLE_PLACES_API_KEY : "";
-  if (googlePlacesApiKey) {
-    window.__fidpassPlacesReady = () => initPlacesAutocomplete();
-    window.__fidpassPlacesError = (err) => {
-      console.warn("[Myfidpass] Google Places: chargement refusé. Vérifiez la clé, les APIs activées (Maps JavaScript API + Places API) et les restrictions.", err);
-    };
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${googlePlacesApiKey}&libraries=places&callback=__fidpassPlacesReady`;
-    script.async = true;
-    script.defer = true;
-    script.onerror = () => {
-      console.warn("[Myfidpass] Google Places: script non chargé. Vérifiez VITE_GOOGLE_PLACES_API_KEY et les restrictions de la clé.");
-    };
-    document.head.appendChild(script);
-  }
+  initBackendPlacesSearch();
 
 }
