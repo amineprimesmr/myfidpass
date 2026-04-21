@@ -16,6 +16,7 @@ import {
   getDashboardStats,
   getDashboardTrafficPatterns,
   getDashboardEvolution,
+  getDashboardEvolutionForMonth,
   getMembersForBusiness,
   getTransactionsForBusiness,
   getCategoriesForBusiness,
@@ -981,10 +982,12 @@ router.put("/games/:gameCode/rewards", (req, res) => {
 });
 
 // ——— Stats ———
+const PERIOD_OR_MONTH_RE = /^(7d|30d|this_month|6m|12m|1y|\d{4}-\d{2})$/;
+
 router.get("/stats", (req, res) => {
   const business = req.business;
-  const q = req.query.period;
-  const period = ["7d", "30d", "this_month", "6m", "12m", "1y"].includes(q) ? q : "this_month";
+  const q = String(req.query.period || "").trim();
+  const period = PERIOD_OR_MONTH_RE.test(q) ? q : "this_month";
   const stats = getDashboardStats(business.id, period);
   res.json({
     period: stats.period,
@@ -1015,8 +1018,8 @@ router.get("/stats", (req, res) => {
 
 router.get("/stats/traffic", (req, res) => {
   const business = req.business;
-  const q = req.query.period;
-  const period = ["7d", "30d", "this_month", "6m", "12m", "1y"].includes(q) ? q : "this_month";
+  const q = String(req.query.period || "").trim();
+  const period = PERIOD_OR_MONTH_RE.test(q) ? q : "this_month";
   const t = getDashboardTrafficPatterns(business.id, period);
   res.json({
     period: t.period,
@@ -1252,14 +1255,19 @@ router.get("/transactions", (req, res) => {
 
 // ——— Evolution ———
 router.get("/evolution", (req, res) => {
+  const p = String(req.query.period || "").trim();
+  if (/^\d{4}-\d{2}$/.test(p)) {
+    const evolution = getDashboardEvolutionForMonth(req.business.id, p);
+    return res.json({ evolution });
+  }
   let weeks = Number(req.query.weeks);
   if (!Number.isFinite(weeks) && req.query.period) {
-    const p = req.query.period;
-    if (p === "7d") weeks = 1;
-    else if (p === "30d") weeks = 4;
-    else if (p === "this_month") weeks = 4;
-    else if (p === "6m") weeks = 26;
-    else if (p === "12m" || p === "1y") weeks = 26;
+    const pr = req.query.period;
+    if (pr === "7d") weeks = 1;
+    else if (pr === "30d") weeks = 4;
+    else if (pr === "this_month") weeks = 4;
+    else if (pr === "6m") weeks = 26;
+    else if (pr === "12m" || pr === "1y") weeks = 26;
     else weeks = 6;
   }
   if (!Number.isFinite(weeks)) weeks = 6;

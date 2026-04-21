@@ -99,6 +99,8 @@ router.get("/google-business/callback", async (req, res) => {
               last_resolve_error: compactOAuthAppError(resolved.error || "location"),
               pending_since: new Date().toISOString(),
               preferred_place_id: placeId || null,
+              // Save account_id when available so /locations endpoint works without re-auth
+              ...(resolved.accountId ? { account_id: resolved.accountId } : {}),
             },
           });
           logger.info({ businessId: business.id }, "[oauth-gbp] tokens saved; location resolve deferred (retryable error)");

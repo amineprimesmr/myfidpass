@@ -39,6 +39,8 @@ import {
   createMediaFromSourceUrl,
   deleteMedia,
   listGoogleBusinessLocations,
+  listGoogleBusinessAccounts,
+  accountResourceIdFromName,
 } from "../../services/google-business-oauth.js";
 import { tryCompletePendingGoogleBusinessLocation } from "../../services/social-metrics-service.js";
 import { syncReviewsForBusiness } from "../../services/google-business-reviews-sync.js";
@@ -742,25 +744,58 @@ router.get("/google-business/locations", async (req, res) => {
   if (!accessToken) return res.status(401).json({ error: "token_refresh_failed" });
 
   const meta = parseSocialOAuthMetadata(conn);
-  const accountId = String(meta.account_id || "").trim();
-  if (!accountId) return res.status(409).json({ error: "account_not_resolved" });
+  let accountId = String(meta.account_id || "").trim();
 
-  const r = await listGoogleBusinessLocations(accessToken, `accounts/${accountId}`);
-  if (!r.ok) return res.status(502).json({ error: r.error });
+  // When location is pending and account_id was never saved, fetch accounts live
+  if (!accountId) {
+    const acc = await listGoogleBusinessAccounts(accessToken);
+    if (!acc.ok) return res.status(502).json({ error: acc.error || "account_not_resolved" });
+    if (!acc.accountNames.length) return res.status(409).json({ error: "no_google_business_accounts" });
+    accountId = accountResourceIdFromName(acc.accountNames[0]);
+    // Persist for future calls
+    patchSocialOAuthConnectionMetadata(businessId, PROVIDER_GOOGLE_BUSINESS, { account_id: accountId });
+  }
 
-  const locations = r.locations.map((loc) => {
-    const name = String(loc.name || "");
-    const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
-    const locationId = parsed ? parsed[2] : name.split("/").pop();
-    return {
-      location_id: locationId,
-      location_name: String(loc.title || "").trim(),
-      place_id: String(loc.metadata?.placeId || "").trim() || null,
-      address: String(loc.metadata?.mapsUri || "").trim() || null,
-    };
-  });
+  const allLocations = [];
+  // Fetch locations for every account the user has access to (not just the first)
+  const acc = await listGoogleBusinessAccounts(accessToken);
+  if (acc.ok) {
+    for (const accountName of acc.accountNames) {
+      const r = await listGoogleBusinessLocations(accessToken, accountName);
+      if (!r.ok) continue;
+      const aid = accountResourceIdFromName(accountName);
+      for (const loc of r.locations) {
+        const name = String(loc.name || "");
+        const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
+        const locId = parsed ? parsed[2] : name.split("/").pop();
+        allLocations.push({
+          location_id: locId,
+          account_id: aid,
+          location_name: String(loc.title || "").trim(),
+          place_id: String(loc.metadata?.placeId || "").trim() || null,
+          address: String(loc.metadata?.mapsUri || "").trim() || null,
+        });
+      }
+    }
+  } else {
+    // Fallback: single account from metadata
+    const r = await listGoogleBusinessLocations(accessToken, `accounts/${accountId}`);
+    if (!r.ok) return res.status(502).json({ error: r.error });
+    for (const loc of r.locations) {
+      const name = String(loc.name || "");
+      const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
+      const locId = parsed ? parsed[2] : name.split("/").pop();
+      allLocations.push({
+        location_id: locId,
+        account_id: accountId,
+        location_name: String(loc.title || "").trim(),
+        place_id: String(loc.metadata?.placeId || "").trim() || null,
+        address: String(loc.metadata?.mapsUri || "").trim() || null,
+      });
+    }
+  }
 
-  return res.json({ locations });
+  return res.json({ locations: allLocations });
 });
 
 /**
@@ -773,6 +808,8 @@ router.post("/google-business/location/select", async (req, res) => {
   if (!conn) return res.status(409).json({ error: "google_business_not_connected" });
 
   const locationId = String(req.body?.location_id || "").trim();
+  // account_id may be provided by the client (from the /locations response) to support multi-account
+  const requestedAccountId = String(req.body?.account_id || "").trim();
   if (!locationId) return res.status(400).json({ error: "location_id_required" });
 
   let accessToken = conn.access_token || "";
@@ -797,8 +834,13 @@ router.post("/google-business/location/select", async (req, res) => {
   if (!accessToken) return res.status(401).json({ error: "token_refresh_failed" });
 
   const meta = parseSocialOAuthMetadata(conn);
-  const accountId = String(meta.account_id || "").trim();
-  if (!accountId) return res.status(409).json({ error: "account_not_resolved" });
+  // Prefer account_id from request body (multi-account), fallback to metadata, then live fetch
+  let accountId = requestedAccountId || String(meta.account_id || "").trim();
+  if (!accountId) {
+    const acc = await listGoogleBusinessAccounts(accessToken);
+    if (!acc.ok || !acc.accountNames.length) return res.status(409).json({ error: "account_not_resolved" });
+    accountId = accountResourceIdFromName(acc.accountNames[0]);
+  }
 
   const r = await listGoogleBusinessLocations(accessToken, `accounts/${accountId}`);
   if (!r.ok) return res.status(502).json({ error: r.error });
@@ -822,6 +864,14 @@ router.post("/google-business/location/select", async (req, res) => {
   });
 
   logger.info({ businessId, accountId, locationId, locationTitle, matchedPlaceId }, "[gbp-routes] location selected");
+
+  setImmediate(() => {
+    syncReviewsForBusiness(businessId, { notifyNew: false, isFirstSync: true })
+      .catch((err) => logger.warn({ err, businessId }, "[gbp-routes] location select sync"));
+    registerGbpPubSubIfConfigured(businessId, accessToken, accountId).catch((err) =>
+      logger.warn({ err, businessId }, "[gbp-routes] location select pubsub"),
+    );
+  });
 
   return res.json({
     ok: true,

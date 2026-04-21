@@ -284,8 +284,11 @@ export async function resolveGoogleBusinessLocation(accessToken, preferredPlaceI
       allLocs.push({ accountName, location: L });
     }
   }
+  const firstAccountId = acc.accountNames.length > 0
+    ? accountResourceIdFromName(acc.accountNames[0])
+    : null;
   if (allLocs.length === 0) {
-    return { ok: false, error: "no_locations" };
+    return { ok: false, error: "no_locations", accountId: firstAccountId };
   }
 
   let pick = null;

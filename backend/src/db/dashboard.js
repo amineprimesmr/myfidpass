@@ -6,8 +6,21 @@ import { getNotificationCampaignInsightsForBusiness } from "./webpush.js";
 
 const db = getDb();
 
+const MONTH_KEY_RE = /^\d{4}-\d{2}$/;
+
+function monthLabelFr(yyyymm) {
+  const [y, m] = yyyymm.split("-").map(Number);
+  if (!Number.isFinite(y) || !Number.isFinite(m)) return yyyymm;
+  const d = new Date(Date.UTC(y, m - 1, 1));
+  const raw = d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  return raw.length ? raw.charAt(0).toUpperCase() + raw.slice(1) : yyyymm;
+}
+
 function getPeriodBounds(period) {
   const now = new Date();
+  if (MONTH_KEY_RE.test(period)) {
+    return { since: null, month: period, label: monthLabelFr(period) };
+  }
   switch (period) {
     case "7d":
       return { since: "datetime('now', '-7 days')", label: "7 jours" };
@@ -353,6 +366,43 @@ export function getDashboardEvolution(businessId, weeks = 6) {
     ).get(businessId);
     rows.push({
       weekIndex: i,
+      operationsCount: op?.n ?? 0,
+      membersCount: members?.n ?? 0,
+    });
+  }
+  return rows;
+}
+
+/**
+ * Évolution sur un mois civil (YYYY-MM) : 4 segments pour les graphiques (style « par quinzaine »).
+ */
+export function getDashboardEvolutionForMonth(businessId, yyyymm) {
+  if (!MONTH_KEY_RE.test(yyyymm)) return [];
+  const [yStr, mStr] = yyyymm.split("-");
+  const y = Number(yStr);
+  const m = Number(mStr);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || m < 1 || m > 12) return [];
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const nBuckets = 4;
+  const bucketSize = Math.ceil(daysInMonth / nBuckets);
+  const pad = (d) => String(d).padStart(2, "0");
+  const rows = [];
+  for (let b = 0; b < nBuckets; b++) {
+    const dayStart = b * bucketSize + 1;
+    const dayEnd = Math.min((b + 1) * bucketSize, daysInMonth);
+    const startDate = `${yStr}-${mStr}-${pad(dayStart)}`;
+    const endDate = `${yStr}-${mStr}-${pad(dayEnd)}`;
+    const op = db
+      .prepare(
+        `SELECT COUNT(*) as n FROM transactions WHERE business_id = ?
+         AND date(created_at) >= date(?) AND date(created_at) <= date(?)`,
+      )
+      .get(businessId, startDate, endDate);
+    const members = db
+      .prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND date(created_at) <= date(?)`)
+      .get(businessId, endDate);
+    rows.push({
+      weekIndex: b,
       operationsCount: op?.n ?? 0,
       membersCount: members?.n ?? 0,
     });
