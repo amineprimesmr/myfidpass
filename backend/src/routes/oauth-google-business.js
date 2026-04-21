@@ -4,15 +4,14 @@
 import { Router } from "express";
 import { getBusinessById, getEngagementRewards } from "../db.js";
 import { upsertSocialOAuthConnection, PROVIDER_GOOGLE_BUSINESS } from "../db/social-oauth.js";
-import { insertSocialMetricSnapshot } from "../db/social-metrics.js";
 import {
   verifyGoogleBusinessOAuthState,
   exchangeGoogleBusinessAuthorizationCode,
   getGoogleBusinessRedirectUri,
   isGoogleBusinessOAuthConfigured,
   resolveGoogleBusinessLocation,
-  listGoogleBusinessReviews,
 } from "../services/google-business-oauth.js";
+import { syncReviewsForBusiness } from "../services/google-business-reviews-sync.js";
 import { buildNativeOAuthReturnUrl } from "../lib/oauth-native-redirect.js";
 import { registerGbpPubSubIfConfigured } from "../services/google-business-pubsub-register.js";
 import logger from "../lib/logger.js";
@@ -133,27 +132,19 @@ router.get("/google-business/callback", async (req, res) => {
     }
 
     /**
-     * Ne pas bloquer la redirection utilisateur sur listGoogleBusinessReviews (peut être lent / bloquer côté Google).
-     * Sans réponse HTTP rapide, Safari / ASWebAuthenticationSession reste en « chargement » plusieurs minutes.
+     * Ne pas bloquer la redirection utilisateur (Safari / ASWebAuthenticationSession reste en chargement
+     * si on attend la réponse HTTP). Sync complète en arrière-plan : les avis sont visibles dans l'app
+     * dès que l'utilisateur ouvre le hub, sans attendre le prochain passage du cron.
      */
     const bid = business.id;
     const tok = exchanged.accessToken;
     const aid = resolved.accountId;
-    const lid = resolved.locationId;
     setImmediate(() => {
-      listGoogleBusinessReviews(tok, aid, lid)
-        .then((rev) => {
-          if (rev.ok) {
-            insertSocialMetricSnapshot(bid, "google_review", "oauth_google_business", {
-              reviews_count: rev.reviewsCount,
-              rating: rev.rating,
-              reviews_sample: JSON.stringify(rev.samples),
-            });
-          } else {
-            logger.warn({ err: rev.error }, "[oauth-gbp] async reviews skipped");
-          }
-        })
-        .catch((err) => logger.error({ err }, "[oauth-gbp] async reviews"));
+      // Sync complète : upsert avis individuels en DB + snapshot agrégé. isFirstSync=true → pas de push
+      // pour les avis déjà existants (évite de spammer le commerçant avec 40 notifications d'un coup).
+      syncReviewsForBusiness(bid, { notifyNew: false, isFirstSync: true })
+        .then((r) => logger.info({ businessId: bid, ...r }, "[oauth-gbp] initial sync complete"))
+        .catch((err) => logger.warn({ err, businessId: bid }, "[oauth-gbp] initial sync failed"));
       registerGbpPubSubIfConfigured(bid, tok, aid).catch((err) =>
         logger.warn({ err, businessId: bid }, "[oauth-gbp] pubsub register"),
       );
