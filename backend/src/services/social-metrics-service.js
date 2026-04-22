@@ -270,7 +270,9 @@ export async function tryCompletePendingGoogleBusinessLocation(businessId, { for
 
   const rewards = getEngagementRewards(businessId);
   const placeId = String(rewards?.google_review?.place_id ?? "").trim();
-  const resolved = await resolveGoogleBusinessLocation(accessToken, placeId);
+  // Pass knownAccountId to skip listGoogleBusinessAccounts (mybusinessaccountmanagement quota is very low)
+  const knownAccountId = String(meta.account_id || "").trim() || null;
+  const resolved = await resolveGoogleBusinessLocation(accessToken, placeId, { knownAccountId });
   if (!resolved.ok) {
     meta = { ...meta, last_resolve_error: String(resolved.error || "resolve_failed") };
     upsertSocialOAuthConnection({

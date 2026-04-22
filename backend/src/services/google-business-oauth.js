@@ -270,24 +270,38 @@ export async function listGoogleBusinessReviews(accessToken, accountId, location
 /**
  * Associe un lieu Business Profile au Place ID déjà enregistré (mission) si possible.
  * @param {string} preferredPlaceId - place_id Maps côté engagement
+ * @param {string} [knownAccountId]  - Si fourni, bypasse listGoogleBusinessAccounts
+ *   (mybusinessaccountmanagement.googleapis.com) pour éviter d'épuiser le quota.
  */
-export async function resolveGoogleBusinessLocation(accessToken, preferredPlaceId) {
+export async function resolveGoogleBusinessLocation(accessToken, preferredPlaceId, { knownAccountId } = {}) {
   const want = String(preferredPlaceId || "").trim();
-  const acc = await listGoogleBusinessAccounts(accessToken);
-  if (!acc.ok) return acc;
+
+  let accountNames;
+  if (knownAccountId) {
+    // Fast path: on connaît déjà le compte — on évite l'appel quota-limité
+    accountNames = [`accounts/${knownAccountId}`];
+  } else {
+    const acc = await listGoogleBusinessAccounts(accessToken);
+    if (!acc.ok) return acc;
+    accountNames = acc.accountNames;
+  }
 
   const allLocs = [];
-  for (const accountName of acc.accountNames) {
+  for (const accountName of accountNames) {
     const loc = await listGoogleBusinessLocations(accessToken, accountName);
     if (!loc.ok) continue;
     for (const L of loc.locations) {
       allLocs.push({ accountName, location: L });
     }
   }
-  const firstAccountId = acc.accountNames.length > 0
-    ? accountResourceIdFromName(acc.accountNames[0])
+  const firstAccountId = accountNames.length > 0
+    ? accountResourceIdFromName(accountNames[0])
     : null;
   if (allLocs.length === 0) {
+    // Si le fast path échoue (ex. mauvais account_id), retenter avec la liste complète
+    if (knownAccountId) {
+      return resolveGoogleBusinessLocation(accessToken, preferredPlaceId);
+    }
     return { ok: false, error: "no_locations", accountId: firstAccountId };
   }
 
