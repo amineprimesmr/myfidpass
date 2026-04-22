@@ -26,7 +26,6 @@ import {
   isGuestMember,
   isQrGateUnlocked,
   openQrModalRoot,
-  resolveQrGuestRewardChipAmountsFromMerchantCard,
   showQrRewardPanel,
   shouldShowQrThanksHero,
 } from "./qr-game-flow.js";
@@ -497,22 +496,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         try {
           if (qrGuest) {
             if (feedback) feedback.classList.add("hidden");
-            const chipAmounts = resolveQrGuestRewardChipAmountsFromMerchantCard(
-              store.get().business,
-              programType,
-              bonusPts,
-              bonusStamps,
-            );
-            let rawForModal = rawLabel;
-            if (!chipAmounts.bonusPts && !chipAmounts.bonusStamps) {
-              rawForModal = firstNonPerduLabel(wheelLabels);
-            }
             openQrModalRoot(rootEl);
             showQrRewardPanel(rootEl, {
               isWin: true,
-              bonusPts: chipAmounts.bonusPts,
-              bonusStamps: chipAmounts.bonusStamps,
-              rawLabel: rawForModal,
+              bonusPts: 0,
+              bonusStamps: 0,
+              rawLabel: "",
               programType,
             });
             triggerWinCelebrationConfetti();

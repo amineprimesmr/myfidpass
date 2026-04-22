@@ -1239,4 +1239,29 @@ export function runMigrations(db) {
     }
     markMigrationApplied(db, 25, "merchant_baseline_avg_basket_eur");
   }
+
+  // ── v26 : suppression du palier +10 pts (roulette + tiers programme) ──
+  // La récompense p10 était trop facile à déclencher au 1er spin et affichait "+10 points"
+  // dans le popup de gain QR, donnant l'impression d'un cadeau automatique à l'inscription.
+  const m26 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 26").get();
+  if (!m26) {
+    safeRun(db, () =>
+      db.exec("UPDATE game_rewards SET active = 0, weight = 0 WHERE code = 'p10'"),
+    );
+    safeRun(db, () => {
+      const businesses = db.prepare("SELECT id, points_reward_tiers FROM businesses WHERE points_reward_tiers IS NOT NULL AND TRIM(points_reward_tiers) != ''").all();
+      const stmt = db.prepare("UPDATE businesses SET points_reward_tiers = ? WHERE id = ?");
+      for (const biz of businesses) {
+        try {
+          const tiers = JSON.parse(biz.points_reward_tiers);
+          if (!Array.isArray(tiers)) continue;
+          const filtered = tiers.filter((t) => Number(t.points) !== 10);
+          if (filtered.length !== tiers.length) {
+            stmt.run(JSON.stringify(filtered), biz.id);
+          }
+        } catch (_) {}
+      }
+    });
+    markMigrationApplied(db, 26, "remove_p10_roulette_reward_and_tier");
+  }
 }

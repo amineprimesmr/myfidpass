@@ -202,9 +202,8 @@ export function ensureBusinessGame(businessId, gameCode = "roulette") {
 /** Lots roulette : uniquement points bonus ou « perdant » (pas de réduction / cadeau commerce). */
 export const DEFAULT_ROULETTE_POINT_REWARDS = [
   { code: "no_reward", label: "PERDU", kind: "none", weight: 65, value: null },
-  { code: "p10", label: "+10 pts", kind: "points", weight: 25, value: { points: 10 } },
-  { code: "p25", label: "+25 pts", kind: "points", weight: 8, value: { points: 25 } },
-  { code: "p50", label: "+50 pts", kind: "points", weight: 2, value: { points: 50 } },
+  { code: "p25", label: "+25 pts", kind: "points", weight: 28, value: { points: 25 } },
+  { code: "p50", label: "+50 pts", kind: "points", weight: 7, value: { points: 50 } },
 ];
 
 /** Lots roulette programme tampons : passages (même colonne `members.points` que les tampons carte). */
