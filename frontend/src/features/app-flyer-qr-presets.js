@@ -269,6 +269,16 @@ function clampFlyerLogoMaxHFrac(v) {
   return Math.min(0.36, Math.max(0.06, Math.round(n * 1000) / 1000));
 }
 
+/**
+ * @param {Record<string, unknown>} raw
+ * @returns {"segments"|"png"}
+ */
+function wheelRenderModeFromRaw(raw) {
+  const v = raw.wheelRenderMode ?? raw.wheel_render_mode;
+  if (v === undefined || v === null) return "png";
+  return String(v).trim().toLowerCase() === "segments" ? "segments" : "png";
+}
+
 /** @param {Partial<FlyerState> | null | undefined} raw */
 export function mergeFlyerState(raw) {
   const base = defaultFlyerState();
@@ -282,7 +292,7 @@ export function mergeFlyerState(raw) {
     ...base,
     ...rawClean,
     templateId: FLYER_TEMPLATE_ID,
-    wheelRenderMode: rawClean.wheelRenderMode === "segments" ? "segments" : "png",
+    wheelRenderMode: wheelRenderModeFromRaw(rawClean),
   };
   merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
   /** Charte flyer : couleurs roue = primaire / secondaire si non fixées dans le JSON. */

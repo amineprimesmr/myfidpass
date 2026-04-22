@@ -11,17 +11,17 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
-import flyerWheelTextureUrl from "../assets/flyer-wheels/spinflyer.png?url";
+import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
 
 export { FLYER_EXPORT };
 
 /**
- * Texture de roue (masque) — alignée sur l’asset `spinflyer` côté app (export 3x copié dans le bundle web).
- * Le fond IA n’est que le calque le plus bas ; logo, roue, titres et QR sont composés ici.
+ * Texture `spinflyer` (Xcode) — inlinée au build (data URL) pour l’aperçu WKWebView.
+ * Le fond IA n’est que le calque le plus bas ; le reste est composé ici.
  */
 export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = true;
 
-/** @type {HTMLImageElement | "fail" | null} */
+/** @type {HTMLImageElement | null} */
 let flyerRoueCache = null;
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
@@ -39,13 +39,23 @@ let flyerFooterBannerCache = null;
 let flyerStepIconsCache = null;
 
 async function getFlyerRoueImage() {
-  if (flyerRoueCache === "fail") return null;
   if (flyerRoueCache) return flyerRoueCache;
   try {
-    flyerRoueCache = await loadImage(flyerWheelTextureUrl, false);
+    /**
+     * Vite peut produire une data URL (`?inline`) ou une URL same-origin — ex. `/assets/spinflyer-….png?inline`.
+     * Ne pas exclure les chemins absolus `/` (c’était la cause : `roueImg` toujours null en prod).
+     */
+    const src = String(flyerWheelDataUrl || "").trim();
+    if (!src) return null;
+    const looksOk =
+      src.startsWith("data:image/") ||
+      src.startsWith("blob:") ||
+      /^https?:/i.test(src) ||
+      src.startsWith("/");
+    if (!looksOk) return null;
+    flyerRoueCache = await loadImage(src, false);
     return flyerRoueCache;
   } catch {
-    flyerRoueCache = "fail";
     return null;
   }
 }
