@@ -216,11 +216,35 @@ export async function refreshGoogleBusinessSnapshotForBusiness(businessId) {
 /**
  * Si OAuth Google a réussi mais la résolution lieu a échoué (quota), on retente ici (ex. « Rafraîchir »).
  */
-export async function tryCompletePendingGoogleBusinessLocation(businessId) {
+/** Minimum delay between automatic retries (5 min). Explicit user action bypasses this. */
+const PENDING_RETRY_COOLDOWN_MS = 5 * 60 * 1000;
+
+export async function tryCompletePendingGoogleBusinessLocation(businessId, { force = false } = {}) {
   let conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
   if (!conn?.access_token && !conn?.refresh_token) return { ok: false, skipped: true };
   let meta = parseConnMetadata(conn);
   if (!meta.location_pending) return { ok: false, skipped: true };
+
+  // Rate-limit automatic retries to avoid quota exhaustion on mybusinessaccountmanagement.googleapis.com.
+  // Explicit user-triggered retries (force=true) bypass the cooldown.
+  if (!force && meta.last_retry_at) {
+    const msSinceLast = Date.now() - Date.parse(meta.last_retry_at);
+    if (msSinceLast < PENDING_RETRY_COOLDOWN_MS) {
+      return { ok: false, skipped: true, error: meta.last_resolve_error || "retry_cooldown" };
+    }
+  }
+
+  // Record this attempt immediately to prevent concurrent retries from also proceeding
+  meta = { ...meta, last_retry_at: new Date().toISOString() };
+  upsertSocialOAuthConnection({
+    businessId,
+    provider: PROVIDER_GOOGLE_BUSINESS,
+    accessToken: conn.access_token,
+    refreshToken: conn.refresh_token,
+    tokenExpiresAt: conn.token_expires_at,
+    externalUserId: conn.external_user_id,
+    metadata: meta,
+  });
 
   let accessToken = conn.access_token || "";
   const expAt = conn.token_expires_at ? Date.parse(conn.token_expires_at) : NaN;

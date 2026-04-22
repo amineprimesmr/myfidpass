@@ -261,7 +261,8 @@ router.post("/google-business/retry-pending-location", async (req, res) => {
     return res.json({ ok: true, resolved: true, location_pending: false, location_title: meta.location_title || null, counts });
   }
 
-  const result = await tryCompletePendingGoogleBusinessLocation(businessId);
+  // force=true bypasses the 5-min cooldown — this is an explicit user action
+  const result = await tryCompletePendingGoogleBusinessLocation(businessId, { force: true });
   const updatedConn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
   const updatedMeta = parseMetadata(updatedConn);
   const counts = countGoogleBusinessReviews(businessId);
