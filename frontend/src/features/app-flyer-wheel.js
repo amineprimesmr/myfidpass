@@ -286,5 +286,10 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   }
   /** Libellés canvas (asset `rouegpt` mis à jour : parts vierges, texte géré ici). */
   drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
-  drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
+  /**
+   * Moyeu 3D (dégradé) : conçu pour compléter la texture `rouegpt` en mode PNG.
+   * En `wheelRenderMode: "segments"` (roue plate) il ne faut **pas** redessiner un disque central — c’est
+   * exactement le « rond / boule » signalé sur l’aperçu alors que seules les parts vectorielles doivent rester.
+   */
+  if (usePng) drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
 }
