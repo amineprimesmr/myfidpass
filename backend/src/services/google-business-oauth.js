@@ -194,18 +194,40 @@ export async function listGoogleBusinessAccounts(accessToken) {
  * N'appelle PAS mybusinessaccountmanagement (quota quasi-nul) — utilise
  * mybusinessinformation directement avec le token OAuth.
  */
+/**
+ * Stratégie multi-API pour lister toutes les fiches d'un compte OAuth,
+ * sans jamais dépendre de mybusinessaccountmanagement (quota=0).
+ *
+ * Ordre de tentative :
+ *   1. mybusinessinformation v1  accounts/-/locations  (wildcard, quota élevé)
+ *   2. mybusiness v4             accounts/-/locations  (deprecated mais quota prouvé)
+ */
 export async function listAllGoogleBusinessLocationsFlat(accessToken) {
-  const url = `${BUSINESS_INFO}/accounts/-/locations?readMask=name,title,metadata&pageSize=100`;
-  const r = await fetchJson(url, accessToken);
-  if (!r.ok) {
-    logger.warn({ status: r.status, data: r.data, fetchErr: r.error }, "[gbp] locations.list(wildcard)");
-    return {
-      ok: false,
-      error: r.error || r.data?.error?.message || r.data?.error?.status || "locations_failed",
-    };
+  // Tentative 1 : mybusinessinformation v1 wildcard
+  const r1 = await fetchJson(`${BUSINESS_INFO}/accounts/-/locations?readMask=name,title,metadata&pageSize=100`, accessToken);
+  if (r1.ok) {
+    return { ok: true, locations: r1.data.locations || [] };
   }
-  const locations = r.data.locations || [];
-  return { ok: true, locations };
+  logger.warn({ status: r1.status, err: r1.data?.error?.status }, "[gbp] locations.flat v1 failed, trying v4");
+
+  // Tentative 2 : mybusiness v4 wildcard (même quota que reviews — prouvé fonctionnel)
+  const r2 = await fetchJson(`${MY_BUSINESS_V4}/accounts/-/locations?pageSize=100`, accessToken);
+  if (r2.ok) {
+    // v4 format : { locations: [{ name, locationName, metadata: { placeInfo: { placeId } } }] }
+    const rawLocs = r2.data.locations || [];
+    const locations = rawLocs.map((l) => ({
+      name: String(l.name || ""),
+      title: String(l.locationName || l.name?.split("/").pop() || ""),
+      metadata: { placeId: l.metadata?.placeInfo?.placeId || l.metadata?.mapsUrl?.match(/place_id=([^&]+)/)?.[1] || "" },
+    }));
+    return { ok: true, locations };
+  }
+  logger.warn({ status: r2.status, err: r2.data?.error?.status }, "[gbp] locations.flat v4 failed");
+
+  return {
+    ok: false,
+    error: r1.data?.error?.message || r2.data?.error?.message || r1.error || r2.error || "locations_failed",
+  };
 }
 
 /**
