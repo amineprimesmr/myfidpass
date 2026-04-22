@@ -1264,4 +1264,21 @@ export function runMigrations(db) {
     });
     markMigrationApplied(db, 26, "remove_p10_roulette_reward_and_tier");
   }
+
+  // ── v27 : supprime définitivement la ligne p10 + recalibre les poids p25/p50 ──
+  // v26 ne faisait que désactiver p10 (visible dans le dashboard) et laissait p25/p50 avec
+  // leurs anciens poids (8/2) qui faussaient la distribution réelle (86%/11%/3% au lieu de 65%/28%/7%).
+  const m27 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 27").get();
+  if (!m27) {
+    safeRun(db, () =>
+      db.exec("DELETE FROM game_rewards WHERE code = 'p10'"),
+    );
+    safeRun(db, () =>
+      db.exec("UPDATE game_rewards SET weight = 28 WHERE code = 'p25' AND weight = 8"),
+    );
+    safeRun(db, () =>
+      db.exec("UPDATE game_rewards SET weight = 7 WHERE code = 'p50' AND weight = 2"),
+    );
+    markMigrationApplied(db, 27, "delete_p10_recalibrate_p25_p50_weights");
+  }
 }
