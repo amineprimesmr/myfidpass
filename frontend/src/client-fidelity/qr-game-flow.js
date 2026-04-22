@@ -622,7 +622,10 @@ export function bindQrGameUi(ctx) {
     const st = getState();
     if (guestQrSpinGateSatisfied(st)) return;
     e.preventDefault();
-    e.stopPropagation();
+    /* stopImmediatePropagation (pas stopPropagation) : empêche les listeners sur le MÊME élément
+     * (notamment onSpinRoulette enregistré en phase bubble) de se déclencher. stopPropagation ne
+     * bloque que la remontée vers les ancêtres et laisse les autres listeners du target s'exécuter. */
+    e.stopImmediatePropagation();
     openQrModalRoot(rootEl);
     showQrGooglePanel(rootEl);
   };

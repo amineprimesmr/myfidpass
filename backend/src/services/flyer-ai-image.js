@@ -458,7 +458,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
   const multimodalLines = [];
   if (multimodalHint.hasLogo) {
     multimodalLines.push(
-      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO (may be transparent PNG). Composite at TOP (0–18% height): centered, crisp, faithful — preserve transparency, no opaque backing plate — no duplicate logo elsewhere."
+      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO (may be transparent PNG). Composite at TOP (0–18% height): centered, crisp, faithful — do NOT invent a different mark. LOGO CONTRAST (mandatory): if the mark is mostly white/near-white or very pale (would vanish on the intended LIGHT flyer background), add a SUBTLE, soft, brand-appropriate backing behind ONLY the mark — e.g. a soft lozenge, gentle radial vignette, or very soft shadow — using the brand accent/secondary tints, NOT a harsh flat rectangle, NOT a second logo. If the mark already has strong color/dark parts on transparency, you may keep pure transparency. Do NOT duplicate the logo elsewhere."
     );
   }
   if (multimodalHint.styleRefCount > 0) {
@@ -534,7 +534,7 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   const multimodalLines = [];
   if (multimodalHint.hasLogo) {
     multimodalLines.push(
-      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO (often a transparent PNG cutout). Composite this exact mark at the TOP of the flyer (0–18% height): horizontally centered, crisp, faithful colors/shapes/typography — do NOT invent a different mark. If the reference has transparency, preserve it — do NOT add a solid rectangle behind the mark. Size ≈ 18–24% of image width. Subtle soft shadow or glow OK. Do NOT duplicate the logo elsewhere."
+      "REFERENCE IMAGE #1 = OFFICIAL MERCHANT LOGO (often a transparent PNG cutout). Composite this exact mark at the TOP of the flyer (0–18% height): horizontally centered, crisp, faithful colors/shapes/typography — do NOT invent a different mark. LOGO CONTRAST (mandatory): if the mark is mostly white or very light (it would disappear on a pale background), add a SUBTLE soft brand-tinted backing (soft lozenge, very gentle shadow, or light vignette) using accent/secondary colors so the mark stays legible — avoid a harsh full rectangular slab. If the mark already has enough inherent contrast on the planned background, keep transparency. Size ≈ 18–24% of image width. Do NOT duplicate the logo elsewhere."
     );
   }
   if (multimodalHint.styleRefCount > 0) {

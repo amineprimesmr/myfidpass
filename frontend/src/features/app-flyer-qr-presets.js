@@ -141,6 +141,7 @@ export function flyerTemplateMeta(id) {
  * @property {number} flyerLogoCenterYFrac centre vertical du logo (fraction hauteur), ~0.04–0.22
  * @property {number} flyerLogoMaxWFrac largeur max logo / largeur canvas, ~0.28–0.88
  * @property {number} flyerLogoMaxHFrac hauteur max logo / hauteur canvas, ~0.06–0.36
+ * @property {boolean} [flyerLogoKeepSourceBackground] conserver le fond du fichier logo (app iOS / export)
  */
 
 /** @returns {FlyerState} */
@@ -180,6 +181,7 @@ export function defaultFlyerState() {
     flyerLogoCenterYFrac: FLYER_LOGO_LAYOUT.centerYFrac,
     flyerLogoMaxWFrac: FLYER_LOGO_LAYOUT.maxWFrac,
     flyerLogoMaxHFrac: FLYER_LOGO_LAYOUT.maxHFrac,
+    flyerLogoKeepSourceBackground: false,
   };
 }
 
@@ -353,5 +355,6 @@ export function mergeFlyerState(raw) {
     flyerLogoCenterYFrac: clampFlyerLogoCenterYFrac(merged.flyerLogoCenterYFrac),
     flyerLogoMaxWFrac: clampFlyerLogoMaxWFrac(merged.flyerLogoMaxWFrac),
     flyerLogoMaxHFrac: clampFlyerLogoMaxHFrac(merged.flyerLogoMaxHFrac),
+    flyerLogoKeepSourceBackground: merged.flyerLogoKeepSourceBackground === true,
   };
 }

@@ -87,15 +87,17 @@ function grantWelcomeTicketIfEligible(businessId, memberId) {
   const ledgerCount =
     db.prepare("SELECT COUNT(*) as n FROM ticket_ledger WHERE business_id = ? AND member_id = ?").get(businessId, memberId)?.n || 0;
   if (ledgerCount > 0) return;
+  /* 2 tickets de bienvenue : 1 pour jouer + 1 de marge en cas de bug ou de refresh malencontreux. */
+  const WELCOME_TICKETS = 2;
   const tx = db.transaction(() => {
     db.prepare(
-      "UPDATE member_ticket_wallets SET ticket_balance = 1, updated_at = datetime('now') WHERE member_id = ? AND business_id = ?"
-    ).run(memberId, businessId);
+      "UPDATE member_ticket_wallets SET ticket_balance = ?, updated_at = datetime('now') WHERE member_id = ? AND business_id = ?"
+    ).run(WELCOME_TICKETS, memberId, businessId);
     db.prepare(
       `INSERT INTO ticket_ledger
        (id, business_id, member_id, source_type, delta, balance_after, reference_type, reference_id, idempotency_key, metadata_json, created_at)
-       VALUES (?, ?, ?, 'welcome', 1, 1, 'welcome', NULL, NULL, ?, datetime('now'))`
-    ).run(randomUUID(), businessId, memberId, JSON.stringify({ reason: "first_wallet" }));
+       VALUES (?, ?, ?, 'welcome', ?, ?, 'welcome', NULL, NULL, ?, datetime('now'))`
+    ).run(randomUUID(), businessId, memberId, WELCOME_TICKETS, WELCOME_TICKETS, JSON.stringify({ reason: "first_wallet" }));
   });
   tx();
 }

@@ -145,6 +145,9 @@ function spinsHandler(req, res) {
     const host = String(req.get("x-forwarded-host") || req.get("host") || "");
     const skipTicketConsumption =
       shouldSkipTicketConsumptionForLocalDev(host) || shouldSkipTicketConsumptionForLocalBrowser(req);
+    /* Invités QR (email @guest.invalid) : pas de cooldown — le solde de tickets est le seul garde-fou.
+     * Sans ça, un bug ou un refresh peut bloquer l'utilisateur même si il lui reste des tickets. */
+    const isQrGuest = typeof member.email === "string" && member.email.toLowerCase().endsWith("@guest.invalid");
     const result = spinGameForMember({
       businessId: business.id,
       memberId: member.id,
@@ -154,6 +157,7 @@ function spinsHandler(req, res) {
       deviceHash,
       riskScore: deviceHash ? 0.15 : 0.35,
       skipTicketConsumption,
+      skipCooldown: isQrGuest,
     });
     if (result?.error === "mode_disabled") return res.status(400).json({ error: "Mode jeu désactivé", code: "MODE_DISABLED" });
     if (result?.error === "game_disabled") return res.status(400).json({ error: "Jeu indisponible", code: "GAME_DISABLED" });

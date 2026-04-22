@@ -11,6 +11,8 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
+import flyerWheelRouegptUrl from "../assets/flyer-wheels/rouegpt.png?url";
+import flyerWheelRoueUrl from "../assets/flyer-wheels/roue.png?url";
 
 export { FLYER_EXPORT };
 
@@ -28,13 +30,11 @@ const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
  */
 const FLYER_STEP_ICON_SRCS = ["/assets/flyer-steps/icon-phone.png", "/assets/flyer-steps/icon-wheel.png"];
 
-/** Bump après remplacement de `public/assets/rouegpt.png` pour forcer le rechargement (évite vieux PNG en cache). */
-const FLYER_ROUE_ASSET_VERSION = "20260422";
-/** Roue décorative : `rouegpt.png` en priorité, puis `roue.png` (même logique que l’IA serveur). */
-const FLYER_ROUE_SRC_CANDIDATES = [
-  `/assets/rouegpt.png?v=${FLYER_ROUE_ASSET_VERSION}`,
-  `/assets/roue.png?v=${FLYER_ROUE_ASSET_VERSION}`,
-];
+/**
+ * Roue décorative : Vite émet des URLs hashées (contenu) — pas de `?v=` à maintenir.
+ * Fichiers source : `src/assets/flyer-wheels/rouegpt.png` puis repli `roue.png` (même idée que l’IA serveur).
+ */
+const FLYER_ROUE_SRC_CANDIDATES = [flyerWheelRouegptUrl, flyerWheelRoueUrl];
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;
@@ -255,6 +255,72 @@ function logoSourceDimensions(img) {
  * @param {number} y1
  * @returns {{ r: number; g: number; b: number } | null}
  */
+/**
+ * Luminance relative (rec. 709 / sRGB) d’un pixel RVB linéarisé, 0–1.
+ * @param {number} r
+ * @param {number} g
+ * @param {number} b
+ */
+function relativeLuminanceSrgb(r, g, b) {
+  const lin = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const R = lin(r);
+  const G = lin(g);
+  const B = lin(b);
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+}
+
+/**
+ * Luminance moyenne des pixels visibles (alpha > ~0.08), RGB dé-premultipliés — aligné sur l’heuristique iOS `FlyerLogoBackgroundPrepared`.
+ * @param {Uint8ClampedArray} data
+ * @param {number} w
+ * @param {number} h
+ * @returns {number | null}
+ */
+function meanRelativeLuminanceOfOpaquePixels(data, w, h) {
+  let sum = 0;
+  let n = 0;
+  for (let y = 0; y < h; y++) {
+    const row = y * w * 4;
+    for (let x = 0; x < w; x++) {
+      const i = row + x * 4;
+      const ap = data[i + 3] / 255;
+      if (ap < 0.08) continue;
+      const rp = data[i] / 255;
+      const gp = data[i + 1] / 255;
+      const bp = data[i + 2] / 255;
+      const r = Math.min(1, rp / ap);
+      const g = Math.min(1, gp / ap);
+      const b = Math.min(1, bp / ap);
+      sum += relativeLuminanceSrgb(r, g, b);
+      n++;
+    }
+  }
+  if (n < 8) return null;
+  return sum / n;
+}
+
+/**
+ * Fond discret sous logo trop clair : teinte tirée des couleurs de fond flyer.
+ * @param {Record<string, unknown>} s
+ */
+function flyerLogoContrastPlateStyle(s) {
+  const top = typeof s?.colorBgTop === "string" ? s.colorBgTop.trim() : "";
+  const bot = typeof s?.colorBgBottom === "string" ? s.colorBgBottom.trim() : "";
+  const hex = /^#[0-9A-Fa-f]{6}$/.test(top) ? top : /^#[0-9A-Fa-f]{6}$/.test(bot) ? bot : "";
+  if (hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${Math.round(r * 0.15 + 12)},${Math.round(g * 0.15 + 12)},${Math.round(b * 0.15 + 14)},0.92)`;
+  }
+  return "rgba(17,24,39,0.9)";
+}
+
+/**
+ * Seuil au-dessus duquel on ajoute une plaque (même logique que l’export iOS ~0.78).
+ */
+const FLYER_LOGO_LIGHT_LUMA_THRESHOLD = 0.78;
+
 function sampleOpaqueAverageRgb(data, pw, ph, x0, y0, x1, y1) {
   let r = 0;
   let g = 0;
@@ -415,12 +481,13 @@ const LOGO_DRAW_SUPER_SAMPLE = 2;
 
 /**
  * Logo commerce en tête de flyer : détourage alpha + rendu 2× puis downscale.
- * (Pas de plaque / cadre sous le logo : le halo drop-shadow suffit pour la lisibilité.)
+ * Si le motif détouré est trop clair (luminance > ~0,78), plaque arrondie discrète
+ * derrière le glyphe — cohérent avec l’abandon de détourage côté iOS pour les logos « tout blanc ».
  * @param {CanvasRenderingContext2D} ctx
  * @param {CanvasImageSource} logoImg
  * @param {number} w
  * @param {number} h
- * @param {Record<string, unknown>} s état flyer (mise en page logo)
+ * @param {Record<string, unknown>} s état flyer (mise en page logo, colorBgTop/Bottom)
  */
 function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
   const L = flyerLogoLayoutResolved(s);
@@ -455,6 +522,25 @@ function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
   octx.imageSmoothingEnabled = true;
   if ("imageSmoothingQuality" in octx) octx.imageSmoothingQuality = "high";
   drawImageContainCropped(octx, logoImg, 0, 0, tw, th, sx, sy, srw, srh);
+
+  let id;
+  try {
+    id = octx.getImageData(0, 0, tw, th);
+  } catch {
+    id = null;
+  }
+  if (id) {
+    const l = meanRelativeLuminanceOfOpaquePixels(id.data, tw, th);
+    if (l != null && l > FLYER_LOGO_LIGHT_LUMA_THRESHOLD) {
+      const m = Math.min(tw, th) * 0.04;
+      const rad = Math.min(tw, th) * 0.1;
+      octx.clearRect(0, 0, tw, th);
+      octx.fillStyle = flyerLogoContrastPlateStyle(s);
+      roundRect(octx, m, m, tw - 2 * m, th - 2 * m, rad);
+      octx.fill();
+      octx.putImageData(id, 0, 0);
+    }
+  }
 
   const glow = Math.max(8, maxW * 0.028);
   const dropY = Math.max(2, maxH * 0.028);

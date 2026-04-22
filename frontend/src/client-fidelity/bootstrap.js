@@ -24,6 +24,7 @@ import {
   ensureQrGateAlignedWithServer,
   firstNonPerduLabel,
   isGuestMember,
+  isQrGateUnlocked,
   openQrModalRoot,
   resolveQrGuestRewardChipAmountsFromMerchantCard,
   showQrRewardPanel,
@@ -381,6 +382,16 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   async function onSpinRoulette() {
     if (isSpinning) return;
     const state = store.get();
+    /* Garde défensive : si l'invité QR n'a pas encore débloqué la porte Google,
+     * ne pas déclencher le spin (la vraie protection est stopImmediatePropagation dans onSpinPre,
+     * mais cette vérification ici est un filet de sécurité supplémentaire). */
+    if (
+      isGuestMember(state.member) &&
+      !isQrGateUnlocked() &&
+      state.member?.google_review_engagement_done !== true
+    ) {
+      return;
+    }
     const wheelEl = rootEl.querySelector("#fidelity-roulette-wheel");
     const spinBtn = rootEl.querySelector("#fidelity-v2-spin-btn");
     const feedback = rootEl.querySelector("#fidelity-v2-game-feedback");

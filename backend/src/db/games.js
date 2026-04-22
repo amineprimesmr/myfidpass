@@ -296,6 +296,8 @@ export function spinGameForMember({
   riskScore = 0,
   /** Aligné front : localhost + tickets illimités — pas de débit wallet */
   skipTicketConsumption = false,
+  /** Invités QR (@guest.invalid) : pas de cooldown — leur seul garde-fou est le solde de tickets. */
+  skipCooldown = false,
 }) {
   const tx = db.transaction(() => {
     if (idempotencyKey) {
@@ -352,17 +354,19 @@ export function spinGameForMember({
           .get(businessId, memberId, game.game_id)?.n;
         if ((todayCount || 0) >= dailyLimit) return { error: "daily_limit_reached" };
       }
-      const cooldownSeconds = Math.max(0, Number(game.cooldown_seconds) || 0);
-      if (cooldownSeconds > 0) {
-        const lastSpin = db
-          .prepare(
-            `SELECT id FROM game_spins
-             WHERE business_id = ? AND member_id = ? AND game_id = ?
-               AND created_at >= datetime('now', '-' || ? || ' seconds')
-             ORDER BY created_at DESC LIMIT 1`
-          )
-          .get(businessId, memberId, game.game_id, cooldownSeconds);
-        if (lastSpin) return { error: "cooldown_active", cooldown_seconds: cooldownSeconds };
+      if (!skipCooldown) {
+        const cooldownSeconds = Math.max(0, Number(game.cooldown_seconds) || 0);
+        if (cooldownSeconds > 0) {
+          const lastSpin = db
+            .prepare(
+              `SELECT id FROM game_spins
+               WHERE business_id = ? AND member_id = ? AND game_id = ?
+                 AND created_at >= datetime('now', '-' || ? || ' seconds')
+               ORDER BY created_at DESC LIMIT 1`
+            )
+            .get(businessId, memberId, game.game_id, cooldownSeconds);
+          if (lastSpin) return { error: "cooldown_active", cooldown_seconds: cooldownSeconds };
+        }
       }
     }
 

@@ -640,10 +640,11 @@ main.fidelity-v2-main.fidelity-qr-game
   }
 }
 
+main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play:focus,
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play:focus-visible,
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play:focus,
 #fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--fid-flyer-wheel-odd, #6366f1) 55%, transparent);
-  outline-offset: 3px;
+  outline: none;
 }
 
 main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelity-shiny-cta--qr-play::before,
@@ -1429,5 +1430,9 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   > *:not(#fidelity-qr-modal-root):not(#fidelity-profile-mission-modal) {
   position: relative;
   z-index: 1;
+}
+
+main.fidelity-v2-main.fidelity-qr-game #fidelity-v2-game-feedback {
+  display: none !important;
 }
 

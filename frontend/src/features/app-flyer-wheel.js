@@ -146,7 +146,7 @@ function drawWheelGroundShadow(ctx, cx, cy, r) {
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
 function drawWheelHub(ctx, cx, cy, r) {
-  /** Moyeu élargi : le PNG `rouegpt.png` (public) doit être sans illustration centrale parasite ; le dégradé complète le rendu. */
+  /** Moyeu élargi : le PNG `rouegpt.png` (src/assets/flyer-wheels) doit être sans illustration centrale parasite ; le dégradé complète le rendu. */
   const hr = r * 0.36;
   const g = ctx.createRadialGradient(cx - hr * 0.35, cy - hr * 0.35, hr * 0.05, cx, cy, hr);
   g.addColorStop(0, "#ffffff");

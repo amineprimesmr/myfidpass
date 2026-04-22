@@ -42,5 +42,12 @@ export function messageUtilisateurPourErreur(err, fallback = "Une erreur est sur
   if (low.includes("tickets insuffisants")) return "Points insuffisants pour jouer.";
   if (low.includes("tickets indisponibles")) return "Solde indisponible. Réessaie.";
 
+  /* Codes erreur jeu (le message API contient le code entre parenthèses, ex. "(COOLDOWN_ACTIVE)"). */
+  if (low.includes("cooldown_active")) return "Patiente quelques secondes avant de rejouer.";
+  if (low.includes("daily_limit_reached")) return "Limite quotidienne atteinte. Reviens demain !";
+  if (low.includes("not_enough_tickets")) return "Points insuffisants pour jouer.";
+  if (low.includes("mode_disabled") || low.includes("game_disabled")) return "Le jeu n'est pas disponible pour le moment.";
+  if (low.includes("member_not_found")) return "Carte introuvable. Recharge la page.";
+
   return raw || fallback;
 }
