@@ -344,8 +344,9 @@ export function mergeFlyerState(raw) {
     ),
     flyerFooterTextScalePct: clampFlyerTextScalePct(merged.flyerFooterTextScalePct),
     flyerWheelLabelScalePct: clampFlyerTextScalePct(merged.flyerWheelLabelScalePct),
-    /** Pas de voile sur la photo ; pas de cadre QR (UI retirée du SaaS). */
-    flyerBgOverlayPct: 0,
+    flyerBgOverlayPct: Number.isFinite(Number(merged.flyerBgOverlayPct))
+      ? Math.max(0, Math.min(90, Math.round(Number(merged.flyerBgOverlayPct))))
+      : 0,
     flyerQrOutlineWidth: 0,
     ctaBannerBgColor: safeHex(String(merged.ctaBannerBgColor ?? ""), base.ctaBannerBgColor),
     ctaTextColor: safeHex(String(merged.ctaTextColor ?? ""), base.ctaTextColor),

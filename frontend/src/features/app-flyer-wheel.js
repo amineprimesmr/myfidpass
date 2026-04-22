@@ -190,8 +190,10 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
 }
 
 /**
- * PNG : clip disque → par secteur : clip part → image → multiply (noir & couleurs vives OK).
- * « color » cassait le noir (L=0) et pouvait laisser déborder hors du disque.
+ * PNG : clip disque → par secteur : couleur d'abord, texture PNG en multiply par-dessus.
+ * Approche inversée : on pose la teinte commerce, puis le PNG ajoute ombres/reflets metalliques.
+ * Fonctionne sur n'importe quelle base PNG (claire ou sombre) — multiply sur fond coloré
+ * préserve les ombres (zones noires du PNG restent noires) et les lumières (zones blanches = couleur pure).
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
  * @param {number} cy
@@ -222,22 +224,23 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
     ctx.arc(cx, cy, rt, t0, t1);
     ctx.closePath();
     ctx.clip();
-    drawImageCover(ctx, roueImg, lx, ly, box, box);
+
+    // Étape 1 : fond plein couleur commerce
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+
+    // Étape 2 : texture PNG par-dessus en multiply — zones sombres = ombres, zones claires = reflets colorés
     ctx.globalCompositeOperation = "multiply";
-    ctx.fillStyle = colors[i];
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, rt, t0, t1);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalCompositeOperation = "soft-light";
-    ctx.globalAlpha = 0.48;
-    ctx.fillStyle = colors[i];
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, rt, t0, t1);
-    ctx.closePath();
-    ctx.fill();
+    ctx.globalAlpha = 1;
+    drawImageCover(ctx, roueImg, lx, ly, box, box);
+
+    // Étape 3 : screen léger pour récupérer les reflets métalliques du PNG
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.18;
+    drawImageCover(ctx, roueImg, lx, ly, box, box);
+
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
     ctx.restore();
