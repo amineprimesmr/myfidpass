@@ -112,18 +112,13 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
 }
 
 /**
- * Sous-fond vectoriel : sans PNG `rouegpt`, les parts peuvent être très sombres sur fond IA sombre.
- * Dégradé **plat** (pas de point chaud central) pour éviter l’effet « boule / moyeu 3D » en roue parts.
+ * Sous-fond vectoriel : disque un léger voile (sans dégradé radial → zéro « spot » au centre).
  */
 function drawWheelVectorBacking(ctx, cx, cy, r) {
   ctx.save();
-  const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.02);
-  rg.addColorStop(0, "rgba(255,255,255,0.2)");
-  rg.addColorStop(0.6, "rgba(255,255,255,0.14)");
-  rg.addColorStop(1, "rgba(255,255,255,0.08)");
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = rg;
+  ctx.fillStyle = "rgba(255,255,255,0.1)";
   ctx.fill();
   ctx.restore();
 }
@@ -247,8 +242,8 @@ export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  /** PNG : trame `rouegpt` + teintes ; vectoriel : aplats sans image. */
-  const usePng = Boolean(roueImg) && s.wheelRenderMode === "png";
+  /** Désactivé : ne pas rebrancher le masque `rouegpt` sans nouvel asset + QA (évite moyeu / rond au centre). */
+  const usePng = false;
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
   if (!usePng) drawWheelVectorBacking(ctx, wheelCx, wheelCy, wheelR);

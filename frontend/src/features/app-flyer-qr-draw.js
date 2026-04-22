@@ -11,13 +11,11 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
-import flyerWheelRouegptUrl from "../assets/flyer-wheels/rouegpt.png?url";
-import flyerWheelRoueUrl from "../assets/flyer-wheels/roue.png?url";
 
 export { FLYER_EXPORT };
 
 /**
- * Roue dessinée par le canvas (`rouegpt.png` + teintes parts) — aligné sur l’éditeur.
+ * Roue 100 % vectorielle (secteurs) — plus de calque `rouegpt` chargé ici.
  * Le PNG IA n’est que le fond ; logo, roue, titres et QR sont toujours composés ici.
  */
 export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = true;
@@ -30,20 +28,11 @@ const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
  */
 const FLYER_STEP_ICON_SRCS = ["/assets/flyer-steps/icon-phone.png", "/assets/flyer-steps/icon-wheel.png"];
 
-/**
- * Roue décorative : Vite émet des URLs hashées (contenu) — pas de `?v=` à maintenir.
- * Fichiers source : `src/assets/flyer-wheels/rouegpt.png` puis repli `roue.png` (même idée que l’IA serveur).
- */
-const FLYER_ROUE_SRC_CANDIDATES = [flyerWheelRouegptUrl, flyerWheelRoueUrl];
-
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;
 
 /** @type {HTMLImageElement[] | "fail" | null} */
 let flyerStepIconsCache = null;
-
-/** @type {HTMLImageElement | "fail" | null} */
-let flyerRoueCache = null;
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
 function roundRect(ctx, x, y, w, h, r) {
@@ -624,21 +613,6 @@ function drawFlyerFooterStepVectorStar(ctx, x, y, w, h, fgCss) {
   ctx.restore();
 }
 
-async function getFlyerRoueImage() {
-  if (flyerRoueCache === "fail") return null;
-  if (flyerRoueCache) return flyerRoueCache;
-  for (const src of FLYER_ROUE_SRC_CANDIDATES) {
-    try {
-      flyerRoueCache = await loadImage(src, false);
-      return flyerRoueCache;
-    } catch {
-      /* essai suivant */
-    }
-  }
-  flyerRoueCache = "fail";
-  return null;
-}
-
 /** @param {CanvasRenderingContext2D} ctx @param {number} w @param {number} canvasH @param {number} bottomY bord bas du bandeau étapes. @param {HTMLImageElement} img */
 function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   const iw = img.naturalWidth || img.width;
@@ -852,10 +826,8 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
 
-  const [qrImg, roueImg] = await Promise.all([
-    loadQrAsImage(qrTargetUrl, qrFetchPx),
-    FLYER_MANUAL_CANVAS_WHEEL_ENABLED ? getFlyerRoueImage() : Promise.resolve(null),
-  ]);
+  const qrImg = await loadQrAsImage(qrTargetUrl, qrFetchPx);
+  const roueImg = null;
 
   /** @type {CanvasImageSource | null} */
   let logoImg = null;

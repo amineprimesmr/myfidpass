@@ -938,7 +938,7 @@
                       <p class="app-flyer-chip-label">Fond par IA</p>
                       <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">
                         L’IA génère <strong>uniquement le fond</strong> (décor, couleurs) — pas de roue, pas de texte, pas de QR dans l’image.
-                        La <strong>roue officielle</strong> (<code>rouegpt</code> + teintes + texte GAGNÉ/PERDU au canvas), le <strong>logo</strong>, l’<strong>accroche</strong> et le <strong>QR</strong> sont toujours ceux de l’éditeur (même rendu que l’aperçu).
+                        La <strong>roue</strong> (parts colorées + texte GAGNÉ/PERDU au canvas, sans image de masque), le <strong>logo</strong>, l’<strong>accroche</strong> et le <strong>QR</strong> sont toujours ceux de l’éditeur (même rendu que l’aperçu).
                         Les <strong>couleurs principale / secondaire</strong> règlent les <strong>teintes des parts</strong> de la roue. Jusqu’à <strong>3 images</strong> d’inspiration (+ logo optionnel comme ambiance).
                         Un second fond (page fidélité jeu QR, sans roue) est aussi généré.
                       </p>
@@ -1044,7 +1044,7 @@
                     <input type="hidden" id="app-flyer-step2" value="Fais tourner la roue" data-flyer-input />
                     <input type="hidden" id="app-flyer-step3" value="Découvre ton cadeau" data-flyer-input />
                     <p class="app-flyer-chip-label" style="margin-top:1rem">Roue</p>
-                    <input type="hidden" id="app-flyer-wheel-mode" value="png" />
+                    <input type="hidden" id="app-flyer-wheel-mode" value="segments" />
                     <div class="app-flyer-field" style="margin-top:0.35rem">
                       <label class="app-label" for="app-flyer-wheel-offset">Rotation (°)</label>
                       <input type="number" id="app-flyer-wheel-offset" class="app-input" min="-180" max="180" step="0.5" value="0" data-flyer-input inputmode="decimal" />

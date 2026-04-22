@@ -104,6 +104,11 @@ describe("mergeFlyerState", () => {
     expect(Object.prototype.hasOwnProperty.call(s, "flyerWheelOutlineWidth")).toBe(false);
   });
 
+  it("force le rendu roue en parts vectorielles (pas de masque PNG)", () => {
+    expect(defaultFlyerState().wheelRenderMode).toBe("segments");
+    expect(mergeFlyerState({ wheelRenderMode: "png" }).wheelRenderMode).toBe("segments");
+  });
+
   it("borne la taille du titre et l’échelle des textes (étapes / roue)", () => {
     const b = defaultFlyerState();
     expect(mergeFlyerState({ headlineSizePct: 22 }).headlineSizePct).toBe(16);
