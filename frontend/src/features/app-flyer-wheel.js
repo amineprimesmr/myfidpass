@@ -111,18 +111,6 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
   ctx.restore();
 }
 
-/**
- * Sous-fond vectoriel : disque un léger voile (sans dégradé radial → zéro « spot » au centre).
- */
-function drawWheelVectorBacking(ctx, cx, cy, r) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.1)";
-  ctx.fill();
-  ctx.restore();
-}
-
 /** Ombre portée sous la roue (profondeur, flyer print). */
 function drawWheelGroundShadow(ctx, cx, cy, r) {
   ctx.save();
@@ -246,7 +234,6 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   const usePng = false;
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
-  if (!usePng) drawWheelVectorBacking(ctx, wheelCx, wheelCy, wheelR);
 
   /** Offset angulaire aligné sur les parts (PNG : même rotation que `drawPngWheelSegmentTints`). */
   const labelOffsetDeg = usePng ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
@@ -256,6 +243,13 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
+    /** Point central (rayon minuscule) : les 6 arêtes anti-alias laissaient transparaître le fond / halo = « rond blanc ». */
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(wheelCx, wheelCy, Math.max(1, wheelR * 0.008), 0, Math.PI * 2);
+    ctx.fillStyle = colors[0] ?? "#000000";
+    ctx.fill();
+    ctx.restore();
   }
   /** Libellés canvas (asset `rouegpt` mis à jour : parts vierges, texte géré ici). */
   drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);

@@ -90,8 +90,8 @@ async function loadQrAsImage(targetUrl, sizePx) {
 }
 
 /**
- * Fond photo / IA très saturé : les parts de roue (multiply ou aplats) peuvent se confondre avec le centre.
- * Disque légerement assombri derrière la roue pour garder la lecture « jeu ».
+ * Fond photo / IA : léger anneau sombre **sur le bord** de la zone roue (pas de halo clair au centre).
+ * L’ancien dégradé blanc à r×0,06–0,35 sous les parts + anti-alias = « disque / moyeu » fantôme au milieu.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
  * @param {number} cy
@@ -100,12 +100,10 @@ async function loadQrAsImage(targetUrl, sizePx) {
 function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
   ctx.save();
   const rad = r * 1.14;
-  /** Avant : vignette sombre → sur fond IA noir / food photo la roue disparaissait. Halo clair au centre + léger voile bord pour détacher toutes les teintes de parts. */
-  const g = ctx.createRadialGradient(cx, cy, r * 0.06, cx, cy, rad);
-  g.addColorStop(0, "rgba(255,255,255,0.34)");
-  g.addColorStop(0.35, "rgba(255,255,255,0.2)");
-  g.addColorStop(0.65, "rgba(248,250,252,0.1)");
-  g.addColorStop(1, "rgba(15,23,42,0)");
+  const g = ctx.createRadialGradient(cx, cy, r * 0.72, cx, cy, rad);
+  g.addColorStop(0, "rgba(15,23,42,0)");
+  g.addColorStop(0.5, "rgba(15,23,42,0.06)");
+  g.addColorStop(1, "rgba(15,23,42,0.1)");
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(cx, cy, rad, 0, Math.PI * 2);
