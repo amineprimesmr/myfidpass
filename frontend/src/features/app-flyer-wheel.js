@@ -113,13 +113,13 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
 
 /**
  * Sous-fond vectoriel : sans PNG `rouegpt`, les parts peuvent être très sombres sur fond IA sombre.
- * Disque clair derrière les parts pour garantir la présence visuelle (aperçu app / export).
+ * Dégradé **plat** (pas de point chaud central) pour éviter l’effet « boule / moyeu 3D » en roue parts.
  */
 function drawWheelVectorBacking(ctx, cx, cy, r) {
   ctx.save();
-  const rg = ctx.createRadialGradient(cx, cy, r * 0.04, cx, cy, r * 1.02);
-  rg.addColorStop(0, "rgba(255,255,255,0.55)");
-  rg.addColorStop(0.55, "rgba(255,255,255,0.28)");
+  const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.02);
+  rg.addColorStop(0, "rgba(255,255,255,0.2)");
+  rg.addColorStop(0.6, "rgba(255,255,255,0.14)");
   rg.addColorStop(1, "rgba(255,255,255,0.08)");
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -142,28 +142,6 @@ function drawWheelGroundShadow(ctx, cx, cy, r) {
   ctx.ellipse(cx, gy, r * 0.96, r * 0.2, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-}
-
-/** @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r */
-function drawWheelHub(ctx, cx, cy, r) {
-  /** Moyeu élargi : le PNG `rouegpt.png` (src/assets/flyer-wheels) doit être sans illustration centrale parasite ; le dégradé complète le rendu. */
-  const hr = r * 0.36;
-  const g = ctx.createRadialGradient(cx - hr * 0.35, cy - hr * 0.35, hr * 0.05, cx, cy, hr);
-  g.addColorStop(0, "#ffffff");
-  g.addColorStop(0.55, "#f4f4f5");
-  g.addColorStop(1, "#d4d4d8");
-  ctx.beginPath();
-  ctx.arc(cx, cy, hr, 0, Math.PI * 2);
-  ctx.fillStyle = g;
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.14)";
-  ctx.lineWidth = Math.max(2, r * 0.019);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(cx, cy, hr * 0.86, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(255,255,255,0.55)";
-  ctx.lineWidth = Math.max(1, r * 0.007);
-  ctx.stroke();
 }
 
 /**
@@ -286,10 +264,5 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   }
   /** Libellés canvas (asset `rouegpt` mis à jour : parts vierges, texte géré ici). */
   drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
-  /**
-   * Moyeu 3D (dégradé) : conçu pour compléter la texture `rouegpt` en mode PNG.
-   * En `wheelRenderMode: "segments"` (roue plate) il ne faut **pas** redessiner un disque central — c’est
-   * exactement le « rond / boule » signalé sur l’aperçu alors que seules les parts vectorielles doivent rester.
-   */
-  if (usePng) drawWheelHub(ctx, wheelCx, wheelCy, wheelR);
+  /** Ne pas dessiner de moyeu canvas : c’était la « boule » gris-blanc 3D au centre (mode PNG) ; l’image `rouegpt` suffit. */
 }
