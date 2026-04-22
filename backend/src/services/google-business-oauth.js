@@ -14,7 +14,7 @@ const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET || "").trim();
 const FETCH_TIMEOUT_MS = 25_000;
 
 const ACCOUNT_MGMT = "https://mybusinessaccountmanagement.googleapis.com/v1";
-const BUSINESS_INFO = "https://mybusinessbusinessinformation.googleapis.com/v1";
+const BUSINESS_INFO = "https://mybusinessinformation.googleapis.com/v1";
 const MY_BUSINESS_V4 = "https://mybusiness.googleapis.com/v4";
 const Q_AND_A = "https://mybusinessqanda.googleapis.com/v1";
 const PERFORMANCE = "https://businessprofileperformance.googleapis.com/v1";
@@ -190,6 +190,25 @@ export async function listGoogleBusinessAccounts(accessToken) {
 }
 
 /**
+ * Liste toutes les fiches accessibles via le wildcard accounts/-.
+ * N'appelle PAS mybusinessaccountmanagement (quota quasi-nul) — utilise
+ * mybusinessinformation directement avec le token OAuth.
+ */
+export async function listAllGoogleBusinessLocationsFlat(accessToken) {
+  const url = `${BUSINESS_INFO}/accounts/-/locations?readMask=name,title,metadata&pageSize=100`;
+  const r = await fetchJson(url, accessToken);
+  if (!r.ok) {
+    logger.warn({ status: r.status, data: r.data, fetchErr: r.error }, "[gbp] locations.list(wildcard)");
+    return {
+      ok: false,
+      error: r.error || r.data?.error?.message || r.data?.error?.status || "locations_failed",
+    };
+  }
+  const locations = r.data.locations || [];
+  return { ok: true, locations };
+}
+
+/**
  * @param {string} accountName - ex. accounts/108296424811540960824
  */
 export async function listGoogleBusinessLocations(accessToken, accountName) {
@@ -269,39 +288,67 @@ export async function listGoogleBusinessReviews(accessToken, accountId, location
 
 /**
  * Associe un lieu Business Profile au Place ID déjà enregistré (mission) si possible.
+ *
+ * Stratégie (par ordre de priorité, du moins quota-consommateur au plus) :
+ *  1. Wildcard accounts/-/locations (mybusinessinformation — quota élevé, 0 appel à accountmanagement)
+ *  2. Fallback sur knownAccountId (si fourni et si le wildcard échoue)
+ *  3. Dernier recours : listGoogleBusinessAccounts (mybusinessaccountmanagement — quota limité)
+ *
  * @param {string} preferredPlaceId - place_id Maps côté engagement
- * @param {string} [knownAccountId]  - Si fourni, bypasse listGoogleBusinessAccounts
- *   (mybusinessaccountmanagement.googleapis.com) pour éviter d'épuiser le quota.
+ * @param {object} [opts]
+ * @param {string} [opts.knownAccountId] - account_id déjà connu, pour le fallback rapide
  */
 export async function resolveGoogleBusinessLocation(accessToken, preferredPlaceId, { knownAccountId } = {}) {
   const want = String(preferredPlaceId || "").trim();
 
-  let accountNames;
-  if (knownAccountId) {
-    // Fast path: on connaît déjà le compte — on évite l'appel quota-limité
-    accountNames = [`accounts/${knownAccountId}`];
-  } else {
+  // ─── Étape 1 : wildcard (pas d'appel à mybusinessaccountmanagement) ───
+  const flat = await listAllGoogleBusinessLocationsFlat(accessToken);
+  if (flat.ok && flat.locations.length > 0) {
+    const allLocs = flat.locations.map((L) => {
+      const name = String(L.name || "");
+      const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
+      return parsed ? { accountId: parsed[1], locationId: parsed[2], location: L } : null;
+    }).filter(Boolean);
+
+    let pick = null;
+    if (want) {
+      pick =
+        allLocs.find((x) => String(x.location.metadata?.placeId || "").trim() === want) ||
+        allLocs.find((x) => String(x.location.name || "").includes(want)) ||
+        null;
+    }
+    if (!pick) pick = allLocs[0];
+
+    return {
+      ok: true,
+      accountId: pick.accountId,
+      locationId: pick.locationId,
+      locationName: String(pick.location.name || ""),
+      title: String(pick.location.title || "").trim(),
+      matchedPlaceId: String(pick.location.metadata?.placeId || "").trim() || null,
+    };
+  }
+
+  // ─── Étape 2 : fallback knownAccountId ───
+  const accountNames = [];
+  if (knownAccountId) accountNames.push(`accounts/${knownAccountId}`);
+
+  // ─── Étape 3 : dernier recours via mybusinessaccountmanagement (quota limité) ───
+  if (!accountNames.length) {
     const acc = await listGoogleBusinessAccounts(accessToken);
     if (!acc.ok) return acc;
-    accountNames = acc.accountNames;
+    accountNames.push(...acc.accountNames);
   }
 
   const allLocs = [];
   for (const accountName of accountNames) {
     const loc = await listGoogleBusinessLocations(accessToken, accountName);
     if (!loc.ok) continue;
-    for (const L of loc.locations) {
-      allLocs.push({ accountName, location: L });
-    }
+    for (const L of loc.locations) allLocs.push({ accountName, location: L });
   }
-  const firstAccountId = accountNames.length > 0
-    ? accountResourceIdFromName(accountNames[0])
-    : null;
+
+  const firstAccountId = accountNames.length > 0 ? accountResourceIdFromName(accountNames[0]) : null;
   if (allLocs.length === 0) {
-    // Si le fast path échoue (ex. mauvais account_id), retenter avec la liste complète
-    if (knownAccountId) {
-      return resolveGoogleBusinessLocation(accessToken, preferredPlaceId);
-    }
     return { ok: false, error: "no_locations", accountId: firstAccountId };
   }
 

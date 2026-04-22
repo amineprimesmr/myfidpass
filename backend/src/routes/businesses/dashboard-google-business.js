@@ -40,6 +40,7 @@ import {
   deleteMedia,
   listGoogleBusinessLocations,
   listGoogleBusinessAccounts,
+  listAllGoogleBusinessLocationsFlat,
   accountResourceIdFromName,
 } from "../../services/google-business-oauth.js";
 import { tryCompletePendingGoogleBusinessLocation } from "../../services/social-metrics-service.js";
@@ -774,56 +775,28 @@ router.get("/google-business/locations", async (req, res) => {
   }
   if (!accessToken) return res.status(401).json({ error: "token_refresh_failed" });
 
-  const meta = parseSocialOAuthMetadata(conn);
-  let accountId = String(meta.account_id || "").trim();
+  // Use wildcard accounts/- to list all locations — no call to mybusinessaccountmanagement
+  const flat = await listAllGoogleBusinessLocationsFlat(accessToken);
+  if (!flat.ok) return res.status(502).json({ error: flat.error || "locations_failed" });
 
-  // When location is pending and account_id was never saved, fetch accounts live
-  if (!accountId) {
-    const acc = await listGoogleBusinessAccounts(accessToken);
-    if (!acc.ok) return res.status(502).json({ error: acc.error || "account_not_resolved" });
-    if (!acc.accountNames.length) return res.status(409).json({ error: "no_google_business_accounts" });
-    accountId = accountResourceIdFromName(acc.accountNames[0]);
-    // Persist for future calls
-    patchSocialOAuthConnectionMetadata(businessId, PROVIDER_GOOGLE_BUSINESS, { account_id: accountId });
-  }
-
-  const allLocations = [];
-  // Fetch locations for every account the user has access to (not just the first)
-  const acc = await listGoogleBusinessAccounts(accessToken);
-  if (acc.ok) {
-    for (const accountName of acc.accountNames) {
-      const r = await listGoogleBusinessLocations(accessToken, accountName);
-      if (!r.ok) continue;
-      const aid = accountResourceIdFromName(accountName);
-      for (const loc of r.locations) {
-        const name = String(loc.name || "");
-        const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
-        const locId = parsed ? parsed[2] : name.split("/").pop();
-        allLocations.push({
-          location_id: locId,
-          account_id: aid,
+  const allLocations = flat.locations.map((loc) => {
+    const name = String(loc.name || "");
+    const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
+    return parsed
+      ? {
+          location_id: parsed[2],
+          account_id: parsed[1],
           location_name: String(loc.title || "").trim(),
           place_id: String(loc.metadata?.placeId || "").trim() || null,
           address: String(loc.metadata?.mapsUri || "").trim() || null,
-        });
-      }
-    }
-  } else {
-    // Fallback: single account from metadata
-    const r = await listGoogleBusinessLocations(accessToken, `accounts/${accountId}`);
-    if (!r.ok) return res.status(502).json({ error: r.error });
-    for (const loc of r.locations) {
-      const name = String(loc.name || "");
-      const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
-      const locId = parsed ? parsed[2] : name.split("/").pop();
-      allLocations.push({
-        location_id: locId,
-        account_id: accountId,
-        location_name: String(loc.title || "").trim(),
-        place_id: String(loc.metadata?.placeId || "").trim() || null,
-        address: String(loc.metadata?.mapsUri || "").trim() || null,
-      });
-    }
+        }
+      : null;
+  }).filter(Boolean);
+
+  // Persist account_id from first result if not yet stored
+  const meta = parseSocialOAuthMetadata(conn);
+  if (!meta.account_id && allLocations.length > 0) {
+    patchSocialOAuthConnectionMetadata(businessId, PROVIDER_GOOGLE_BUSINESS, { account_id: allLocations[0].account_id });
   }
 
   return res.json({ locations: allLocations });
@@ -864,24 +837,20 @@ router.post("/google-business/location/select", async (req, res) => {
   }
   if (!accessToken) return res.status(401).json({ error: "token_refresh_failed" });
 
-  const meta = parseSocialOAuthMetadata(conn);
-  // Prefer account_id from request body (multi-account), fallback to metadata, then live fetch
-  let accountId = requestedAccountId || String(meta.account_id || "").trim();
-  if (!accountId) {
-    const acc = await listGoogleBusinessAccounts(accessToken);
-    if (!acc.ok || !acc.accountNames.length) return res.status(409).json({ error: "account_not_resolved" });
-    accountId = accountResourceIdFromName(acc.accountNames[0]);
-  }
+  // Use wildcard to find the location — avoids mybusinessaccountmanagement entirely
+  const flat = await listAllGoogleBusinessLocationsFlat(accessToken);
+  if (!flat.ok) return res.status(502).json({ error: flat.error || "locations_failed" });
 
-  const r = await listGoogleBusinessLocations(accessToken, `accounts/${accountId}`);
-  if (!r.ok) return res.status(502).json({ error: r.error });
-
-  const match = r.locations.find((loc) => {
+  const match = flat.locations.find((loc) => {
     const name = String(loc.name || "");
     const parsed = name.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
     return parsed ? parsed[2] === locationId : name.split("/").pop() === locationId;
   });
   if (!match) return res.status(404).json({ error: "location_not_found" });
+
+  const locName = String(match.name || "");
+  const parsedName = locName.match(/^accounts\/([^/]+)\/locations\/([^/]+)$/);
+  const accountId = requestedAccountId || (parsedName ? parsedName[1] : String(parseSocialOAuthMetadata(conn).account_id || "").trim());
 
   const locationTitle = String(match.title || "").trim();
   const matchedPlaceId = String(match.metadata?.placeId || "").trim() || null;
