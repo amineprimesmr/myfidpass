@@ -160,8 +160,8 @@ export function defaultFlyerState() {
     colorAccent: "#ffffff",
     colorBgTop: "#0f172a",
     colorBgBottom: "#020617",
-    /** Parts vectorielles uniquement — le masque PNG `rouegpt` est désactivé jusqu’au prochain asset. */
-    wheelRenderMode: "segments",
+    /** `png` = texture `spinflyer` (teintes) ; `segments` = aplats 2D sans image. */
+    wheelRenderMode: "png",
     wheelColorOdd: "#fbbf24",
     wheelColorEven: "#f97316",
     wheelSegmentOffsetDeg: 0,
@@ -282,8 +282,7 @@ export function mergeFlyerState(raw) {
     ...base,
     ...rawClean,
     templateId: FLYER_TEMPLATE_ID,
-    // Toujours `segments` : le rendu image (rouegpt) est coupé en prod (évite moyeu / texture au centre).
-    wheelRenderMode: "segments",
+    wheelRenderMode: rawClean.wheelRenderMode === "segments" ? "segments" : "png",
   };
   merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
   /** Charte flyer : couleurs roue = primaire / secondaire si non fixées dans le JSON. */

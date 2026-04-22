@@ -20,7 +20,7 @@ export function readFlyerStateFromForm(root) {
     colorAccent: q("app-flyer-c3")?.value,
     colorBgTop: q("app-flyer-bg1")?.value,
     colorBgBottom: q("app-flyer-bg2")?.value,
-    wheelRenderMode: "segments",
+    wheelRenderMode: q("app-flyer-wheel-mode")?.value === "segments" ? "segments" : "png",
     wheelColorOdd: q("app-flyer-wheel-color-odd")?.value,
     wheelColorEven: q("app-flyer-wheel-color-even")?.value,
     wheelSegmentOffsetDeg: Number(q("app-flyer-wheel-offset")?.value),
@@ -56,7 +56,7 @@ export function writeFlyerFormFromState(root, s) {
   set("app-flyer-c3", s.colorAccent);
   set("app-flyer-bg1", s.colorBgTop);
   set("app-flyer-bg2", s.colorBgBottom);
-  set("app-flyer-wheel-mode", "segments");
+  set("app-flyer-wheel-mode", s.wheelRenderMode === "png" ? "png" : "segments");
   set("app-flyer-wheel-color-odd", s.wheelColorOdd ?? "");
   set("app-flyer-wheel-color-even", s.wheelColorEven ?? "");
   set("app-flyer-wheel-offset", String(s.wheelSegmentOffsetDeg ?? 0));

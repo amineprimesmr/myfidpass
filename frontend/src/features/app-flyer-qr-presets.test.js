@@ -104,9 +104,10 @@ describe("mergeFlyerState", () => {
     expect(Object.prototype.hasOwnProperty.call(s, "flyerWheelOutlineWidth")).toBe(false);
   });
 
-  it("force le rendu roue en parts vectorielles (pas de masque PNG)", () => {
-    expect(defaultFlyerState().wheelRenderMode).toBe("segments");
-    expect(mergeFlyerState({ wheelRenderMode: "png" }).wheelRenderMode).toBe("segments");
+  it("normalise le mode de rendu de la roue (texture ou aplats)", () => {
+    expect(defaultFlyerState().wheelRenderMode).toBe("png");
+    expect(mergeFlyerState({ wheelRenderMode: "segments" }).wheelRenderMode).toBe("segments");
+    expect(mergeFlyerState({ wheelRenderMode: "nope" }).wheelRenderMode).toBe("png");
   });
 
   it("borne la taille du titre et l’échelle des textes (étapes / roue)", () => {

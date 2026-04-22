@@ -210,11 +210,6 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
 }
 
 /**
- * @param {import("./app-flyer-qr-presets.js").FlyerState} s
- * @param {CanvasImageSource | null} roueImg
- * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
- */
-/**
  * Libellés GAGNÉ/PERDU (même calage que `drawFlyerWheel`).
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
@@ -227,15 +222,16 @@ export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
   drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, FLYER_WHEEL_SEGMENT_COUNT, s, cols);
 }
 
+/**
+ * @param {CanvasImageSource | null} roueImg — texture chargée si `wheelRenderMode === "png"`.
+ */
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  /** Désactivé : ne pas rebrancher le masque `rouegpt` sans nouvel asset + QA (évite moyeu / rond au centre). */
-  const usePng = false;
+  const usePng = Boolean(roueImg) && s.wheelRenderMode === "png";
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
 
-  /** Offset angulaire aligné sur les parts (PNG : même rotation que `drawPngWheelSegmentTints`). */
   const labelOffsetDeg = usePng ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
 
   if (usePng) {
@@ -243,7 +239,7 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
-    /** Point central (rayon minuscule) : les 6 arêtes anti-alias laissaient transparaître le fond / halo = « rond blanc ». */
+    /** Secteurs vectoriels : scellé central anti–trou d’antialiasing (halo de fond en dessous). */
     ctx.save();
     ctx.beginPath();
     ctx.arc(wheelCx, wheelCy, Math.max(1, wheelR * 0.008), 0, Math.PI * 2);
@@ -251,7 +247,5 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
     ctx.fill();
     ctx.restore();
   }
-  /** Libellés canvas (asset `rouegpt` mis à jour : parts vierges, texte géré ici). */
   drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
-  /** Ne pas dessiner de moyeu canvas : c’était la « boule » gris-blanc 3D au centre (mode PNG) ; l’image `rouegpt` suffit. */
 }

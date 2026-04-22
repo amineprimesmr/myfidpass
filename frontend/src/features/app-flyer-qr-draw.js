@@ -11,14 +11,18 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
+import flyerWheelTextureUrl from "../assets/flyer-wheels/spinflyer.png?url";
 
 export { FLYER_EXPORT };
 
 /**
- * Roue 100 % vectorielle (secteurs) — plus de calque `rouegpt` chargé ici.
- * Le PNG IA n’est que le fond ; logo, roue, titres et QR sont toujours composés ici.
+ * Texture de roue (masque) — alignée sur l’asset `spinflyer` côté app (export 3x copié dans le bundle web).
+ * Le fond IA n’est que le calque le plus bas ; logo, roue, titres et QR sont composés ici.
  */
 export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = true;
+
+/** @type {HTMLImageElement | "fail" | null} */
+let flyerRoueCache = null;
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -33,6 +37,18 @@ let flyerFooterBannerCache = null;
 
 /** @type {HTMLImageElement[] | "fail" | null} */
 let flyerStepIconsCache = null;
+
+async function getFlyerRoueImage() {
+  if (flyerRoueCache === "fail") return null;
+  if (flyerRoueCache) return flyerRoueCache;
+  try {
+    flyerRoueCache = await loadImage(flyerWheelTextureUrl, false);
+    return flyerRoueCache;
+  } catch {
+    flyerRoueCache = "fail";
+    return null;
+  }
+}
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
 function roundRect(ctx, x, y, w, h, r) {
@@ -824,8 +840,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
 
-  const qrImg = await loadQrAsImage(qrTargetUrl, qrFetchPx);
-  const roueImg = null;
+  const [qrImg, roueImg] = await Promise.all([
+    loadQrAsImage(qrTargetUrl, qrFetchPx),
+    FLYER_MANUAL_CANVAS_WHEEL_ENABLED && s.wheelRenderMode === "png"
+      ? getFlyerRoueImage()
+      : Promise.resolve(null),
+  ]);
 
   /** @type {CanvasImageSource | null} */
   let logoImg = null;
