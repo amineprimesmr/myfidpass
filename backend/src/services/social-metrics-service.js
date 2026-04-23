@@ -216,8 +216,10 @@ export async function refreshGoogleBusinessSnapshotForBusiness(businessId) {
 /**
  * Si OAuth Google a réussi mais la résolution lieu a échoué (quota), on retente ici (ex. « Rafraîchir »).
  */
-/** Minimum delay between automatic retries (5 min). Explicit user action bypasses this. */
+/** Délai minimum entre tentatives automatiques (sans bouton « Actualiser »). */
 const PENDING_RETRY_COOLDOWN_MS = 5 * 60 * 1000;
+/** Entre deux « Actualiser » explicites — évite les rafales sur Google (aligné app iOS ~70 s). */
+const PENDING_EXPLICIT_COOLDOWN_MS = 70 * 1000;
 
 export async function tryCompletePendingGoogleBusinessLocation(businessId, { force = false } = {}) {
   let conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
@@ -225,11 +227,13 @@ export async function tryCompletePendingGoogleBusinessLocation(businessId, { for
   let meta = parseConnMetadata(conn);
   if (!meta.location_pending) return { ok: false, skipped: true };
 
-  // Rate-limit automatic retries to avoid quota exhaustion on mybusinessaccountmanagement.googleapis.com.
-  // Explicit user-triggered retries (force=true) bypass the cooldown.
-  if (!force && meta.last_retry_at) {
+  if (meta.last_retry_at) {
     const msSinceLast = Date.now() - Date.parse(meta.last_retry_at);
-    if (msSinceLast < PENDING_RETRY_COOLDOWN_MS) {
+    if (force) {
+      if (msSinceLast < PENDING_EXPLICIT_COOLDOWN_MS) {
+        return { ok: false, error: "retry_cooldown" };
+      }
+    } else if (msSinceLast < PENDING_RETRY_COOLDOWN_MS) {
       return { ok: false, skipped: true, error: meta.last_resolve_error || "retry_cooldown" };
     }
   }

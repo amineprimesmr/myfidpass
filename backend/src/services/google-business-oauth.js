@@ -139,6 +139,30 @@ async function fetchJson(url, accessToken) {
   }
 }
 
+/**
+ * Normalise 429 / RESOURCE_EXHAUSTED en code stable côté app (évite des messages aléatoires).
+ * @param {{ ok: boolean, status: number, data: object }} r
+ * @returns {"google_api_quota" | null}
+ */
+function normalizeGoogleBusinessApiError(r) {
+  if (!r || r.ok) return null;
+  const status = Number(r.status || 0);
+  const data = r.data && typeof r.data === "object" ? r.data : {};
+  const err = data.error && typeof data.error === "object" ? data.error : data;
+  const gStatus = String(err.status || data.error?.status || data.status || "").trim();
+  const msg = String(err.message || data.error_description || data.message || data.error || "").toLowerCase();
+  if (status === 429) return "google_api_quota";
+  if (gStatus === "RESOURCE_EXHAUSTED") return "google_api_quota";
+  if (gStatus === "UNAVAILABLE" && (msg.includes("quota") || msg.includes("exhausted"))) return "google_api_quota";
+  if (msg.includes("resource_exhausted") || (msg.includes("quota") && (msg.includes("exceed") || msg.includes("exhausted")))) {
+    return "google_api_quota";
+  }
+  if (/rate|too many|too_many/i.test(msg) && (status === 400 || status === 403 || status === 503)) {
+    return "google_api_quota";
+  }
+  return null;
+}
+
 async function jsonRequest(url, accessToken, method, body) {
   try {
     const res = await fetch(url, {
@@ -179,9 +203,10 @@ export async function listGoogleBusinessAccounts(accessToken) {
   const r = await fetchJson(`${ACCOUNT_MGMT}/accounts`, accessToken);
   if (!r.ok) {
     logger.warn({ status: r.status, data: r.data, fetchErr: r.error }, "[gbp] accounts.list");
+    const quota = normalizeGoogleBusinessApiError(r);
     return {
       ok: false,
-      error: r.error || r.data?.error?.message || r.data?.error?.status || "accounts_failed",
+      error: quota || r.data?.error?.message || r.data?.error?.status || "accounts_failed",
     };
   }
   const accounts = r.data.accounts || [];
@@ -224,6 +249,11 @@ export async function listAllGoogleBusinessLocationsFlat(accessToken) {
   }
   logger.warn({ status: r2.status, err: r2.data?.error?.status }, "[gbp] locations.flat v4 failed");
 
+  const quota = normalizeGoogleBusinessApiError(r1) || normalizeGoogleBusinessApiError(r2);
+  if (quota) {
+    return { ok: false, error: quota };
+  }
+
   return {
     ok: false,
     error: r1.data?.error?.message || r2.data?.error?.message || r1.error || r2.error || "locations_failed",
@@ -239,9 +269,10 @@ export async function listGoogleBusinessLocations(accessToken, accountName) {
   const r = await fetchJson(url, accessToken);
   if (!r.ok) {
     logger.warn({ id, status: r.status, data: r.data, fetchErr: r.error }, "[gbp] locations.list");
+    const quota = normalizeGoogleBusinessApiError(r);
     return {
       ok: false,
-      error: r.error || r.data?.error?.message || r.data?.error?.status || "locations_failed",
+      error: quota || r.error || r.data?.error?.message || r.data?.error?.status || "locations_failed",
     };
   }
   const locations = r.data.locations || [];
