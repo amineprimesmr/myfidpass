@@ -216,10 +216,14 @@ export async function refreshGoogleBusinessSnapshotForBusiness(businessId) {
 /**
  * Si OAuth Google a réussi mais la résolution lieu a échoué (quota), on retente ici (ex. « Rafraîchir »).
  */
-/** Délai minimum entre tentatives automatiques (sans bouton « Actualiser »). */
+/** Délai minimum entre tentatives automatiques (sync / requireGoogleBusinessContext, sans force). */
 const PENDING_RETRY_COOLDOWN_MS = 5 * 60 * 1000;
-/** Entre deux « Actualiser » explicites — évite les rafales sur Google (aligné app iOS ~70 s). */
-const PENDING_EXPLICIT_COOLDOWN_MS = 70 * 1000;
+/**
+ * Uniquement entre deux clics sur « Actualiser » (force=true). Ne doit PAS partager
+ * l’horodatage des tentatives auto (cron, sync) — sinon l’utilisateur a « trop récent »
+ * en boucle alors qu’il n’a pas re-cliqué (bug courant : last_retry_at mis par le worker 10 min).
+ */
+const PENDING_EXPLICIT_COOLDOWN_MS = 30 * 1000;
 
 export async function tryCompletePendingGoogleBusinessLocation(businessId, { force = false } = {}) {
   let conn = getSocialOAuthConnection(businessId, PROVIDER_GOOGLE_BUSINESS);
@@ -227,19 +231,27 @@ export async function tryCompletePendingGoogleBusinessLocation(businessId, { for
   let meta = parseConnMetadata(conn);
   if (!meta.location_pending) return { ok: false, skipped: true };
 
-  if (meta.last_retry_at) {
-    const msSinceLast = Date.now() - Date.parse(meta.last_retry_at);
-    if (force) {
-      if (msSinceLast < PENDING_EXPLICIT_COOLDOWN_MS) {
+  if (force) {
+    if (meta.last_explicit_retry_at) {
+      const ms = Date.now() - Date.parse(meta.last_explicit_retry_at);
+      if (ms < PENDING_EXPLICIT_COOLDOWN_MS) {
         return { ok: false, error: "retry_cooldown" };
       }
-    } else if (msSinceLast < PENDING_RETRY_COOLDOWN_MS) {
+    }
+  } else if (meta.last_retry_at) {
+    const msSinceLast = Date.now() - Date.parse(meta.last_retry_at);
+    if (msSinceLast < PENDING_RETRY_COOLDOWN_MS) {
       return { ok: false, skipped: true, error: meta.last_resolve_error || "retry_cooldown" };
     }
   }
 
-  // Record this attempt immediately to prevent concurrent retries from also proceeding
-  meta = { ...meta, last_retry_at: new Date().toISOString() };
+  // last_retry_at : toute tentative (auto) ; last_explicit_retry_at : seulement « Actualiser » (force)
+  const nowIso = new Date().toISOString();
+  meta = {
+    ...meta,
+    last_retry_at: nowIso,
+    ...(force ? { last_explicit_retry_at: nowIso } : {}),
+  };
   upsertSocialOAuthConnection({
     businessId,
     provider: PROVIDER_GOOGLE_BUSINESS,
