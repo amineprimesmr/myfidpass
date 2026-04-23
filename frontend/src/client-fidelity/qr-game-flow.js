@@ -142,10 +142,14 @@ export function openQrModalRoot(rootEl) {
   root.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
   root.classList.remove("fidelity-qr-modal-root--open");
+  /* Force un reflow synchrone : le navigateur traite le remove avant qu'on ajoute --open,
+   * ce qui déclenche la transition CSS opacity 0→1.
+   * Un seul rAF suffit ; le double-rAF original était fragile : si un rerender() survenait
+   * pendant ces 2 frames, le callback s'exécutait sur un élément détaché et pointer-events
+   * restait à none indéfiniment. */
+  void root.offsetHeight;
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      root.classList.add("fidelity-qr-modal-root--open");
-    });
+    if (root.isConnected) root.classList.add("fidelity-qr-modal-root--open");
   });
 }
 
@@ -337,6 +341,12 @@ export function bindQrGameUi(ctx) {
   ensureQrGateAlignedWithServer(getState().member);
   const modalRoot = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!modalRoot) return () => {};
+
+  /* Nettoyage défensif : si un rerender() a détruit l'ancienne modale sans passer par closeQrModalRoot,
+   * body.style.overflow peut rester "hidden" et bloquer tout scroll/interaction sur la page. */
+  if (modalRoot.classList.contains("hidden")) {
+    document.body.style.overflow = "";
+  }
 
   const spinBtn = rootEl.querySelector("#fidelity-v2-spin-btn");
   const mysteryBox = rootEl.querySelector("#fidelity-qr-mysterybox");
@@ -575,6 +585,8 @@ export function bindQrGameUi(ctx) {
     if (document.visibilityState !== "visible") return;
     const state = getState();
     if (!isGuestMember(state.member)) return;
+    /* Ne pas interrompre la reward panel si elle est déjà affichée (la clé n'aurait pas dû persister, mais par sécurité). */
+    if (rootEl.querySelector("#fidelity-qr-panel-reward:not(.hidden)")) return;
     if (guestQrSpinGateSatisfied(state)) {
       try {
         sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);

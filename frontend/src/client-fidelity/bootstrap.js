@@ -274,6 +274,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     }
   }
 
+  function isQrModalOpen() {
+    const root = rootEl.querySelector("#fidelity-qr-modal-root");
+    return root instanceof HTMLElement && !root.classList.contains("hidden");
+  }
+
   async function refreshMemberData() {
     const state = store.get();
     if (!state.member?.id) return;
@@ -283,12 +288,16 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       deferredRerenderAfterSpin = true;
       return;
     }
+    /* Ne pas remplacer le DOM pendant que la modale QR est affichée : les boutons
+     * seraient détruits et le popup disparaîtrait. Le code appelant (claimForm submit)
+     * appelle rerender() explicitement après avoir fermé la modale. */
+    if (isQrModalOpen()) return;
     deferredRerenderAfterSpin = false;
     rerender();
   }
 
   function flushDeferredRerenderAfterSpin() {
-    if (!deferredRerenderAfterSpin || isSpinning) return;
+    if (!deferredRerenderAfterSpin || isSpinning || isQrModalOpen()) return;
     deferredRerenderAfterSpin = false;
     rerender();
   }
@@ -452,7 +461,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const programType = String(state.business?.program_type || "points").toLowerCase();
       const isWinPoints = result.reward?.kind === "points" && bonusPts > 0;
       const isWinStamps = result.reward?.kind === "stamps" && bonusStamps > 0;
-      const isWin = isWinPoints || isWinStamps;
+      const isWinGift = result.reward?.kind === "gift";
+      const isWin = isWinPoints || isWinStamps || isWinGift;
       const rewardLabel = isWin ? rawLabel : "PERDU";
       const qrGuest = isGuestMember(state.member);
       /** Invité QR : la roue s’arrête toujours sur un segment lot (libellé présent sur la roue), jamais sur PERDU. */
@@ -499,9 +509,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
             openQrModalRoot(rootEl);
             showQrRewardPanel(rootEl, {
               isWin: true,
-              bonusPts: result.reward?.kind === "points" ? Math.max(0, Number(result.reward?.value?.points) || 0) : 0,
-              bonusStamps: result.reward?.kind === "stamps" ? Math.max(0, Number(result.reward?.value?.stamps) || 0) : 0,
-              rawLabel: result.reward?.kind === "gift" ? (result.reward?.label || "") : "",
+              bonusPts: 0,
+              bonusStamps: 0,
+              rawLabel: "",
               programType,
             });
             triggerWinCelebrationConfetti();
@@ -518,9 +528,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
                 ? `Bravo ! ${rawLabel} sur ta carte 🎉`
                 : isWinPoints
                   ? `Bravo ! +${bonusPts} point${bonusPts > 1 ? "s" : ""} sur ta carte 🎉`
-                  : isWin
+                  : isWinGift
                     ? `Bravo ! ${rawLabel} 🎉`
-                    : "";
+                    : isWin
+                      ? `Bravo ! ${rawLabel} 🎉`
+                      : "";
             feedback.textContent = isWin ? winMsg : "Dommage, essaie encore !";
             feedback.classList.add(isWin ? "success" : "error");
             feedback.classList.remove("hidden");
