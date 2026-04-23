@@ -499,9 +499,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
             openQrModalRoot(rootEl);
             showQrRewardPanel(rootEl, {
               isWin: true,
-              bonusPts: 0,
-              bonusStamps: 0,
-              rawLabel: "",
+              bonusPts: result.reward?.kind === "points" ? Math.max(0, Number(result.reward?.value?.points) || 0) : 0,
+              bonusStamps: result.reward?.kind === "stamps" ? Math.max(0, Number(result.reward?.value?.stamps) || 0) : 0,
+              rawLabel: result.reward?.kind === "gift" ? (result.reward?.label || "") : "",
               programType,
             });
             triggerWinCelebrationConfetti();

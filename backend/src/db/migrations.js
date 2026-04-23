@@ -1281,4 +1281,65 @@ export function runMigrations(db) {
     );
     markMigrationApplied(db, 27, "delete_p10_recalibrate_p25_p50_weights");
   }
+
+  // ── v28 : roue cadeau direct — remplace p25/p50/s1/s2 par un unique reward "cadeau" de kind="gift" ──
+  // La roue ne donne plus de points/tampons directement : elle débloque la récompense configurée
+  // par le commerçant dans sa carte (premier palier de points_reward_tiers ou label personnalisé).
+  const m28 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 28").get();
+  if (!m28) {
+    safeRun(db, () => {
+      const businesses = db.prepare("SELECT id, points_reward_tiers FROM businesses").all();
+      for (const biz of businesses) {
+        const gameRow = db.prepare(
+          `SELECT bg.id as bg_id, bg.game_id FROM business_games bg
+           INNER JOIN games g ON g.id = bg.game_id AND g.code = 'roulette'
+           WHERE bg.business_id = ? LIMIT 1`
+        ).get(biz.id);
+        if (!gameRow) continue;
+
+        /* Dérive le libellé cadeau depuis le premier palier de la carte du commerçant */
+        let giftLabel = "Cadeau offert";
+        try {
+          const tiers = JSON.parse(biz.points_reward_tiers || "[]");
+          if (Array.isArray(tiers) && tiers.length > 0 && tiers[0].label) {
+            giftLabel = String(tiers[0].label).trim().slice(0, 120) || giftLabel;
+          }
+        } catch (_) {}
+
+        /* Supprime les anciens rewards points/tampons (garde PERDU) */
+        db.prepare(
+          "DELETE FROM game_rewards WHERE business_id = ? AND game_id = ? AND kind IN ('points', 'stamps')"
+        ).run(biz.id, gameRow.game_id);
+
+        /* Supprime l'éventuel cadeau existant pour éviter les doublons */
+        db.prepare(
+          "DELETE FROM game_rewards WHERE business_id = ? AND game_id = ? AND code = 'cadeau'"
+        ).run(biz.id, gameRow.game_id);
+
+        /* Insère le reward cadeau unique */
+        db.prepare(
+          `INSERT INTO game_rewards
+           (id, business_id, game_id, code, label, kind, value_json, stock, active, weight, created_at)
+           VALUES (?, ?, ?, 'cadeau', ?, 'gift', NULL, NULL, 1, 35, datetime('now'))`
+        ).run(randomUUID(), biz.id, gameRow.game_id, giftLabel);
+
+        /* S'assure que PERDU existe avec le bon poids */
+        const perdu = db.prepare(
+          "SELECT id FROM game_rewards WHERE business_id = ? AND game_id = ? AND code = 'no_reward' LIMIT 1"
+        ).get(biz.id, gameRow.game_id);
+        if (perdu) {
+          db.prepare(
+            "UPDATE game_rewards SET weight = 65, active = 1 WHERE id = ?"
+          ).run(perdu.id);
+        } else {
+          db.prepare(
+            `INSERT INTO game_rewards
+             (id, business_id, game_id, code, label, kind, value_json, stock, active, weight, created_at)
+             VALUES (?, ?, ?, 'no_reward', 'PERDU', 'none', NULL, NULL, 1, 65, datetime('now'))`
+          ).run(randomUUID(), biz.id, gameRow.game_id);
+        }
+      }
+    });
+    markMigrationApplied(db, 28, "roulette_gift_kind_replace_points_stamps");
+  }
 }

@@ -107,8 +107,8 @@ export function ensureRoulettePointsOnlyRewards(businessId) {
   if (!bg) return;
   seedDefaultGameRewards(businessId, bg.game_id);
   const rows = getGameRewardsForBusiness(businessId, "roulette");
-  const hasForbiddenKind = rows.some((r) => r.kind !== "none" && r.kind !== "points");
-  const playable = rows.filter((r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points"));
+  const hasForbiddenKind = rows.some((r) => r.kind !== "none" && r.kind !== "points" && r.kind !== "gift");
+  const playable = rows.filter((r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points" || r.kind === "gift"));
   if (hasForbiddenKind || playable.length === 0) {
     replaceGameRewardsForBusiness(businessId, "roulette", DEFAULT_ROULETTE_POINT_REWARDS);
   }
@@ -119,8 +119,8 @@ export function ensureRouletteStampsOnlyRewards(businessId) {
   if (!bg) return;
   seedDefaultGameRewards(businessId, bg.game_id);
   const rows = getGameRewardsForBusiness(businessId, "roulette");
-  const hasForbiddenKind = rows.some((r) => r.kind !== "none" && r.kind !== "stamps");
-  const playable = rows.filter((r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "stamps"));
+  const hasForbiddenKind = rows.some((r) => r.kind !== "none" && r.kind !== "stamps" && r.kind !== "gift");
+  const playable = rows.filter((r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "stamps" || r.kind === "gift"));
   if (hasForbiddenKind || playable.length === 0) {
     replaceGameRewardsForBusiness(businessId, "roulette", DEFAULT_ROULETTE_STAMP_REWARDS);
   }
@@ -135,7 +135,9 @@ export function ensureRouletteRewardsForProgram(businessId, programType) {
 export function getRoulettePublicSegments(businessId, programType = "points") {
   const pt = String(programType || "points").toLowerCase();
   ensureRouletteRewardsForProgram(businessId, pt);
-  const kindOk = pt === "stamps" ? (k) => k === "none" || k === "stamps" : (k) => k === "none" || k === "points";
+  const kindOk = pt === "stamps"
+    ? (k) => k === "none" || k === "stamps" || k === "gift"
+    : (k) => k === "none" || k === "points" || k === "gift";
   return getGameRewardsForBusiness(businessId, "roulette")
     .filter((r) => r.active && Number(r.weight) > 0 && kindOk(r.kind))
     .map((r) => ({
@@ -160,7 +162,11 @@ export function replaceGameRewardsForBusiness(businessId, gameCode = "roulette",
       if (!code) continue;
       const label = String(reward.label || code).trim().slice(0, 120);
       const kind =
-        reward.kind === "points" ? "points" : reward.kind === "stamps" ? "stamps" : reward.kind === "none" ? "none" : null;
+        reward.kind === "points" ? "points"
+        : reward.kind === "stamps" ? "stamps"
+        : reward.kind === "none" ? "none"
+        : reward.kind === "gift" ? "gift"
+        : null;
       if (!kind) continue;
       const weight = Math.max(0, Number(reward.weight) || 0);
       const stock = reward.stock == null ? null : Math.max(0, Number(reward.stock) || 0);
@@ -170,6 +176,8 @@ export function replaceGameRewardsForBusiness(businessId, gameCode = "roulette",
         const pts = Math.floor(Number(reward.value?.points));
         if (!Number.isFinite(pts) || pts < 0) continue;
         valueJson = JSON.stringify({ points: pts });
+      } else if (kind === "gift") {
+        /* gift n'a pas de valeur numérique — le label suffit */
       } else if (kind === "stamps") {
         const st = Math.floor(Number(reward.value?.stamps));
         if (!Number.isFinite(st) || st < 1) continue;
@@ -396,8 +404,8 @@ export function spinGameForMember({
     ensureRouletteRewardsForProgram(businessId, programType);
     const kindFilter =
       programType === "stamps"
-        ? (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "stamps")
-        : (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points");
+        ? (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "stamps" || r.kind === "gift")
+        : (r) => r.active && Number(r.weight) > 0 && (r.kind === "none" || r.kind === "points" || r.kind === "gift");
     const spinRewards = getGameRewardsForBusiness(businessId, gameCode).filter(kindFilter);
     const priorSpinCount =
       Number(
@@ -473,6 +481,17 @@ export function spinGameForMember({
           };
         }
       }
+    } else if (reward && reward.kind === "gift") {
+      isWinning = true;
+      grant = {
+        id: randomUUID(),
+        business_id: businessId,
+        member_id: memberId,
+        spin_id: spinId,
+        reward_id: reward.id,
+        status: "granted",
+        metadata_json: JSON.stringify({ reward_kind: "gift", label: reward.label }),
+      };
     }
     const status = isWinning ? "won" : "lost";
 

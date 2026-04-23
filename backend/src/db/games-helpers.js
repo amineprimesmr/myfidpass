@@ -199,18 +199,16 @@ export function ensureBusinessGame(businessId, gameCode = "roulette") {
     .get(id);
 }
 
-/** Lots roulette : uniquement points bonus ou « perdant » (pas de réduction / cadeau commerce). */
+/** Lots roulette : cadeau direct (débloque la récompense carte du commerçant) ou « perdant ». */
 export const DEFAULT_ROULETTE_POINT_REWARDS = [
   { code: "no_reward", label: "PERDU", kind: "none", weight: 65, value: null },
-  { code: "p25", label: "+25 pts", kind: "points", weight: 28, value: { points: 25 } },
-  { code: "p50", label: "+50 pts", kind: "points", weight: 7, value: { points: 50 } },
+  { code: "cadeau", label: "Cadeau offert", kind: "gift", weight: 35, value: null },
 ];
 
-/** Lots roulette programme tampons : passages (même colonne `members.points` que les tampons carte). */
+/** Lots roulette programme tampons : même logique cadeau direct. */
 export const DEFAULT_ROULETTE_STAMP_REWARDS = [
   { code: "no_reward", label: "PERDU", kind: "none", weight: 65, value: null },
-  { code: "s1", label: "+1 passage", kind: "stamps", weight: 28, value: { stamps: 1 } },
-  { code: "s2", label: "+2 passages", kind: "stamps", weight: 7, value: { stamps: 2 } },
+  { code: "cadeau", label: "Cadeau offert", kind: "gift", weight: 35, value: null },
 ];
 
 export function seedDefaultGameRewards(businessId, gameId) {
