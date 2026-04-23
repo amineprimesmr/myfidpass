@@ -163,6 +163,52 @@ function normalizeGoogleBusinessApiError(r) {
   return null;
 }
 
+/**
+ * Place ID fiche (v1, v4 ou URL newReview / Maps).
+ * Sans cela, le mission « avis » ne matche jamais la fiche côté engagement.
+ */
+function extractPlaceIdFromBusinessLocation(L) {
+  if (!L || typeof L !== "object") return "";
+  const m = L.metadata && typeof L.metadata === "object" ? L.metadata : {};
+  const v4 = m.placeInfo && typeof m.placeInfo === "object" ? m.placeInfo.placeId : null;
+  if (v4) return String(v4).trim();
+  for (const k of ["placeId", "place_id"]) {
+    const v = m[k] ?? L[k];
+    if (v && !String(v).toLowerCase().includes("http")) {
+      const t = String(v).trim();
+      if (t) return t;
+    }
+  }
+  for (const u of [m.newReviewUri, m.newReviewUrl, m.mapsUri, m.mapsUrl, m.googleMapsUri]) {
+    const s = String(u || "");
+    const mm = s.match(/[?&](placeid|place_id)=([^&]+)/i);
+    if (mm) {
+      try {
+        return decodeURIComponent(mm[2]);
+      } catch {
+        return mm[2];
+      }
+    }
+  }
+  return "";
+}
+
+/** Unifie v1 + v4 pour `resolve` / routes dashboard. */
+function normalizeLocationForResolver(L) {
+  const name = String(L.name || "");
+  const title = String(L.title || L.locationName || "").trim();
+  const m = L.metadata && typeof L.metadata === "object" ? L.metadata : {};
+  const placeId = extractPlaceIdFromBusinessLocation(L) || String(m.placeId || "").trim();
+  return {
+    name,
+    title,
+    metadata: {
+      ...m,
+      ...(placeId ? { placeId } : {}),
+    },
+  };
+}
+
 async function jsonRequest(url, accessToken, method, body) {
   try {
     const res = await fetch(url, {
@@ -231,9 +277,16 @@ export async function listAllGoogleBusinessLocationsFlat(accessToken) {
   // Tentative 1 : mybusinessinformation v1 wildcard
   const r1 = await fetchJson(`${BUSINESS_INFO}/accounts/-/locations?readMask=name,title,metadata&pageSize=100`, accessToken);
   if (r1.ok) {
-    return { ok: true, locations: r1.data.locations || [] };
+    const raw = r1.data.locations || [];
+    if (raw.length > 0) {
+      return { ok: true, locations: raw.map(normalizeLocationForResolver) };
+    }
+    // Bug fréquent : v1 renvoie 200 + liste vide alors que v4 a les fiches — il fallait tenter v4
+    // sinon on retombait sur mybusinessaccountmanagement (quota ≈ 0) en boucle.
+    logger.info("[gbp] v1 accounts/-/locations empty, trying v4");
+  } else {
+    logger.warn({ status: r1.status, err: r1.data?.error?.status }, "[gbp] locations.flat v1 failed, trying v4");
   }
-  logger.warn({ status: r1.status, err: r1.data?.error?.status }, "[gbp] locations.flat v1 failed, trying v4");
 
   // Tentative 2 : mybusiness v4 wildcard (même quota que reviews — prouvé fonctionnel)
   const r2 = await fetchJson(`${MY_BUSINESS_V4}/accounts/-/locations?pageSize=100`, accessToken);
@@ -245,7 +298,7 @@ export async function listAllGoogleBusinessLocationsFlat(accessToken) {
       title: String(l.locationName || l.name?.split("/").pop() || ""),
       metadata: { placeId: l.metadata?.placeInfo?.placeId || l.metadata?.mapsUrl?.match(/place_id=([^&]+)/)?.[1] || "" },
     }));
-    return { ok: true, locations };
+    return { ok: true, locations: locations.map(normalizeLocationForResolver) };
   }
   logger.warn({ status: r2.status, err: r2.data?.error?.status }, "[gbp] locations.flat v4 failed");
 

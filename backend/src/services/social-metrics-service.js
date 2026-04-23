@@ -273,7 +273,10 @@ export async function tryCompletePendingGoogleBusinessLocation(businessId, { for
   }
 
   const rewards = getEngagementRewards(businessId);
-  const placeId = String(rewards?.google_review?.place_id ?? "").trim();
+  let placeId = String(rewards?.google_review?.place_id ?? "").trim();
+  if (!placeId) {
+    placeId = String(meta.preferred_place_id || "").trim();
+  }
   // Pass knownAccountId to skip listGoogleBusinessAccounts (mybusinessaccountmanagement quota is very low)
   const knownAccountId = String(meta.account_id || "").trim() || null;
   const resolved = await resolveGoogleBusinessLocation(accessToken, placeId, { knownAccountId });
