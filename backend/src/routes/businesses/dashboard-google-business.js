@@ -321,13 +321,31 @@ router.get("/google-business/reviews", (req, res) => {
   });
 });
 
+/* Cooldown par business pour /reviews/sync : max 1 sync Google toutes les 90 s.
+ * Évite la rafale de requêtes Google quand le commerçant appuie plusieurs fois sur "Actualiser". */
+const _syncLastAt = new Map();
+const SYNC_COOLDOWN_MS = 90_000;
+
 router.post("/google-business/reviews/sync", async (req, res) => {
+  const businessId = req.business.id;
+  const now = Date.now();
+  const lastAt = _syncLastAt.get(businessId) ?? 0;
+  const remaining = SYNC_COOLDOWN_MS - (now - lastAt);
+  if (remaining > 0) {
+    const counts = countGoogleBusinessReviews(businessId);
+    return res.json({ ok: true, throttled: true, retry_after_ms: remaining, new_count: 0, total_count: counts.total ?? 0, counts });
+  }
+  _syncLastAt.set(businessId, now);
   try {
-    const r = await syncReviewsForBusiness(req.business.id, { notifyNew: false });
-    if (!r.ok) return res.status(502).json({ error: r.error || "sync_failed" });
-    const counts = countGoogleBusinessReviews(req.business.id);
+    const r = await syncReviewsForBusiness(businessId, { notifyNew: false });
+    if (!r.ok) {
+      _syncLastAt.delete(businessId);
+      return res.status(502).json({ error: r.error || "sync_failed" });
+    }
+    const counts = countGoogleBusinessReviews(businessId);
     return res.json({ ok: true, new_count: r.newCount, total_count: r.totalCount, counts });
   } catch (err) {
+    _syncLastAt.delete(businessId);
     logger.error({ err }, "[gbp-routes] sync");
     return res.status(500).json({ error: "sync_failed" });
   }

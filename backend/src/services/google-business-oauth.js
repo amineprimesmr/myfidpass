@@ -409,6 +409,10 @@ export async function resolveGoogleBusinessLocation(accessToken, preferredPlaceI
 
   // ─── Étape 1 : wildcard (pas d'appel à mybusinessaccountmanagement) ───
   const flat = await listAllGoogleBusinessLocationsFlat(accessToken);
+  /* Quota épuisé : ne pas tenter les étapes 2/3 qui feraient encore des appels Google. */
+  if (!flat.ok && flat.error === "google_api_quota") {
+    return { ok: false, error: "google_api_quota" };
+  }
   if (flat.ok && flat.locations.length > 0) {
     const allLocs = flat.locations.map((L) => {
       const name = String(L.name || "");

@@ -44,14 +44,19 @@ function compactOAuthAppError(raw) {
 
 /** Quota / surcharge / timeout : on garde les tokens et on finalise la fiche plus tard (refresh). */
 function isRetryableGoogleBusinessResolveError(raw) {
-  const low = String(raw || "").toLowerCase();
+  const s = String(raw || "");
+  /* Forme compacte renvoyée par normalizeGoogleBusinessApiError — à tester en premier
+   * car les includes() ci-dessous ne matchent pas "google_api_quota". */
+  if (s === "google_api_quota") return true;
+  const low = s.toLowerCase();
   return (
     low.includes("quota exceeded") ||
     low.includes("resource exhausted") ||
     low.includes("rate_limit") ||
     low.includes("rate limit") ||
     low.includes("too many requests") ||
-    String(raw || "") === "timeout"
+    low.includes("google_api_quota") ||
+    s === "timeout"
   );
 }
 
