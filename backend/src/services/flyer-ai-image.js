@@ -145,7 +145,7 @@ const bodySchema = z.object({
  */
 const MOOD_EN_UNIVERSAL = {
   premium:
-    "premium multi-sector retail poster, deep rich background using the brand's dominant dark hue, soft studio lighting, restrained smooth gradients — calm, expensive, print-ready; white and light elements remain crisp against the dark field",
+    "premium multi-sector retail poster, deep rich background using the brand's dominant dark hue, soft even lighting (no film grain, no textured backdrop), restrained smooth gradients — calm, expensive, print-ready; white and light elements remain crisp against the dark field",
   energetic:
     "high-impact commercial loyalty poster, saturated deep accent colors as bold flat fields and smooth blends on a DARK base — strong contrast via vivid color blocks against dark backdrop; sector-agnostic",
   minimal:
@@ -160,7 +160,7 @@ const MOOD_EN_UNIVERSAL = {
 
 /** Ambiance par défaut quand le client envoie une palette priorisée (sans `visual_mood`). */
 const DEFAULT_FLYER_ATMOSPHERE_EN =
-  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly — use the dominant brand color as a RICH, DEEP background fill; keep large background areas at low-to-medium luminosity so that WHITE text, a white QR code, and white overlay elements remain perfectly readable on top. Flat smooth digital finish like a premium app gradient — buttery gradients, print-ready, sector-agnostic, zero paper or film texture.";
+  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly — use the dominant brand color as a RICH, DEEP background fill; keep large background areas at low-to-medium luminosity so that WHITE text, a white QR code, and white overlay elements remain perfectly readable on top. Flat smooth digital finish like a premium app gradient — clean buttery color ramps only, no film grain overlay, no paper simulation, print-ready, sector-agnostic, zero photorealistic surface noise in backdrops";
 
 /**
  * Résout primaire / secondaire / tertiaire et le texte d’atmosphère pour les prompts image.
@@ -221,12 +221,23 @@ function buildColorPriorityHintEn(plan) {
   );
 }
 
+/**
+ * Ligne en tête de prompt : les modèles image suivent souvent mal les contraintes de surface ;
+ * l’en-tête explicite « grain / speckle / diffusion » réduit le fond « granuleux ».
+ */
+const FLYER_CRITIQUE_SURFACE_LEDE_EN =
+  "CRITICAL (read first — highest priority over mood): The image must look like a COMMERCIAL DIGITAL ILLUSTRATION or a flat UI/vector poster, NOT a photograph of paper or a film still. " +
+  "The BACKGROUND and every large color field (including deep shadows) must be perfectly SMOOTH: ZERO grain, ZERO sand-like or granular texture, ZERO ISO/film/sensor noise, ZERO AI diffusion speckle or dither in flat areas, ZERO dirty mottling, ZERO subtle noise in supposedly « empty » color. " +
+  "If a region is meant to be solid or gradient, it must read as one clean RGB/gradient fill (Figma/Sketch/Keynote quality) — not textured paint.";
+
 /** Exigence surface / texture (tous prompts image flyer & fond fidélité). */
 const FLYER_SURFACE_CLEANLINESS_EN =
-  "SURFACE QUALITY (mandatory — non-negotiable): The background must look like a CLEAN STUDIO PRINT or vector-grade poster: perfectly SMOOTH color with ONLY broad radial or linear gradients and soft vignettes. " +
-  "ABSOLUTELY NO TEXTURES OF ANY KIND: no paper grain, no canvas weave, no linen, no brushed metal, no noise, no film grain, no JPEG-like artifacts, no scratches, no dust, no watercolor paper tooth, no concrete, no plaster, no fabric macro, no wood grain, no halftone dots, no stippling, no crosshatch, no scan lines, no digital noise, no mottling, no cloudy speckle. " +
-  "FORBIDDEN visual junk: no bokeh orbs, no soap bubbles, no glitter, no star sparkles, no confetti, no scattered highlights, no high-frequency detail in empty color areas. " +
-  "Color transitions must be SILKY and continuous — like a premium app UI gradient, not a photograph of a wall. If products or food appear, their surfaces can be detailed; every EMPTY area and every backdrop field stays glass-smooth.";
+  "SURFACE QUALITY (mandatory — non-negotiable): The background must look like a CLEAN VECTOR POSTER or premium app full-screen artboard: perfectly SMOOTH color with ONLY broad radial or linear gradients and soft vignettes. " +
+  "ABSOLUTELY NO « REALISTIC » GRAIN: do NOT add fake film grain, print grain, or subtle noise « for interest » — that always reads as a dirty, cheap backdrop on mobile. " +
+  "ABSOLUTELY NO TEXTURES OF ANY KIND: no paper grain, no canvas weave, no linen, no brushed metal, no noise, no film grain, no JPEG-like blockiness or blocking, no compression grit, no scratches, no dust, no watercolor paper tooth, no concrete, no plaster, no fabric macro, no wood grain, no halftone dots, no stippling, no crosshatch, no scan lines, no digital noise, no mottling, no cloudy speckle, no fine sand-like particulate in shadows. " +
+  "FORBIDDEN visual junk: no bokeh orbs, no soap bubbles, no glitter, no star sparkles, no confetti, no scattered specular specks, no high-frequency detail in empty color areas. " +
+  "Color transitions must be SILKY and continuous — like a premium iOS / App Store marketing gradient, not a photo of a wall. If products or food appear, their surfaces can be detailed; every EMPTY area and every backdrop field stays GLASS-SMOOTH and noise-free. " +
+  "FINAL ZOOM CHECK: mentally magnify a flat color region — it must stay a flat color; if you see speckle or grain, the output is WRONG — regenerate as pure smooth color.";
 
 /**
  * Règle de contraste du fond (obligatoire, tous prompts flyer).
@@ -378,11 +389,12 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
   const multimodalLines = [];
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "REFERENCE IMAGE(S): moodboard only — extract COLOR PALETTE, overall MOOD, and lighting direction. NEVER transfer photographic grain, texture, noise, or surface detail from references onto the output background — the output must stay glass-smooth. If a reference is a transparent PNG (cutout logo), use it only for color/shape hints; NEVER paste it as an opaque rectangle onto the canvas. NEVER reproduce logos, text, QR codes, or wheels from references onto the output bitmap. NEVER composite a readable logo mark into the output — the app composites the official merchant logo separately at full resolution and sharp edges on top."
+      "REFERENCE IMAGE(S): moodboard only — extract COLOR PALETTE, overall MOOD, and lighting direction. NEVER transfer photographic grain, texture, noise, heavy JPEG blocks, or surface detail from references onto the output background — the output must stay glass-smooth even if a reference is a noisy phone photo. If a reference is a transparent PNG (cutout logo), use it only for color/shape hints; NEVER paste it as an opaque rectangle onto the canvas. NEVER reproduce logos, text, QR codes, or wheels from references onto the output bitmap. NEVER composite a readable logo mark into the output — the app composites the official merchant logo separately at full resolution and sharp edges on top."
     );
   }
 
   const lines = [
+    FLYER_CRITIQUE_SURFACE_LEDE_EN,
     "MERCHANT BRIEF (authoritative): " + merchantBrief,
     "SECTOR FIDELITY (critical): Decorative imagery MUST match the MERCHANT BRIEF only. If ambiguous, use abstract brand-colored shapes.",
     "TASK: ONE portrait 2:3 BACKGROUND PLATE only, full bleed, no outer frame, no white border.",
@@ -463,7 +475,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
   }
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "Intermediate reference image(s) after the logo (if any): MOODBOARD / STYLE ONLY — palette, lighting, materials; NEVER copy foreign logos, QR codes, or extra wheels."
+      "Intermediate reference image(s) after the logo (if any): MOODBOARD / STYLE ONLY — palette, lighting, materials; NEVER copy foreign logos, QR codes, or extra wheels; NEVER copy noise or grain from references into the background."
     );
   }
   multimodalLines.push(
@@ -471,6 +483,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
   );
 
   const lines = [
+    FLYER_CRITIQUE_SURFACE_LEDE_EN,
     "MERCHANT BRIEF (authoritative): " + merchantBrief,
     sectorFidelity,
     "TASK: ONE print-ready portrait 2:3 flyer, full bleed, no outer frame. Software will add headline, QR, footer — never draw those.",
@@ -539,12 +552,13 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
   }
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "Following reference image(s) after the logo (if any): MOODBOARD / STYLE ONLY — borrow palette, lighting, materials, atmosphere; NEVER copy text, QR codes, prices, or foreign logos. Stay aligned with the MERCHANT BRIEF sector."
+      "Following reference image(s) after the logo (if any): MOODBOARD / STYLE ONLY — borrow palette, lighting, materials, atmosphere; NEVER copy text, QR codes, prices, or foreign logos; NEVER copy photographic noise, grain, or JPEG roughness from references onto the background. Stay aligned with the MERCHANT BRIEF sector."
     );
   }
 
   /** @type {string[]} */
   const lines = [
+    FLYER_CRITIQUE_SURFACE_LEDE_EN,
     "MERCHANT BRIEF (authoritative): " + merchantBrief,
     sectorFidelity,
     taskStructure,
@@ -624,12 +638,13 @@ export function buildFidelityClientPageBackgroundPrompt(
   const multimodalLines = [];
   if (multimodalHint.styleRefCount > 0) {
     multimodalLines.push(
-      "REFERENCE IMAGE(S): moodboard — palette and lighting only. NEVER copy grain, texture, or noise from references onto the wallpaper. NEVER copy text, QR codes, logos, or foreign marks from references."
+      "REFERENCE IMAGE(S): moodboard — palette and lighting only. NEVER copy grain, texture, speckle, or noise from references onto the wallpaper (even if the reference is a grainy photo). NEVER copy text, QR codes, logos, or foreign marks from references."
     );
   }
 
   /** @type {string[]} */
   const lines = [
+    FLYER_CRITIQUE_SURFACE_LEDE_EN,
     "MERCHANT BRIEF (authoritative): " + merchantBrief,
     sectorFidelity,
     "TASK: Generate ONE mobile-first full-bleed BACKGROUND wallpaper only, portrait 2:3 aspect, full bleed to all edges, no outer frame, no white border.",
