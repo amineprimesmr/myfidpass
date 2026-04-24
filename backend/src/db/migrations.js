@@ -1342,4 +1342,25 @@ export function runMigrations(db) {
     });
     markMigrationApplied(db, 28, "roulette_gift_kind_replace_points_stamps");
   }
+
+  const m29 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 29").get();
+  if (!m29) {
+    safeRun(db, () => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS business_team_members (
+          id TEXT PRIMARY KEY,
+          business_id TEXT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          role TEXT NOT NULL DEFAULT 'staff',
+          status TEXT NOT NULL DEFAULT 'active',
+          invited_by TEXT REFERENCES users(id),
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_business_team_business_user ON business_team_members(business_id, user_id);
+        CREATE INDEX IF NOT EXISTS idx_business_team_business ON business_team_members(business_id);
+        CREATE INDEX IF NOT EXISTS idx_business_team_user ON business_team_members(user_id);
+      `);
+    });
+    markMigrationApplied(db, 29, "business_team_members");
+  }
 }

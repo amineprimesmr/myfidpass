@@ -11,6 +11,7 @@ import {
   getUserByPhoneE164,
   getUserById,
   getBusinessesByUserId,
+  getBusinessesForUserId,
   getSubscriptionByUserId,
   hasActiveSubscription,
   hasOperationalMerchantAccess,
@@ -31,6 +32,11 @@ import {
   deleteUserRefreshTokens,
   cleanExpiredRefreshTokens,
 } from "../db.js";
+import {
+  getWorkspaceRoleForUser,
+  getFirstTeamBusinessOwnerId,
+  isOnlyTeamUser,
+} from "../db/business-team.js";
 import {
   upsertPhoneOtpChallenge,
   getPhoneOtpChallenge,
@@ -91,6 +97,22 @@ cleanExpiredRefreshTokens();
 
 function authSubscriptionPayload(userId) {
   const subscription = getSubscriptionByUserId(userId);
+  if (isOnlyTeamUser(userId)) {
+    const ownerId = getFirstTeamBusinessOwnerId(userId);
+    if (ownerId) {
+      const ownerAccess = hasOperationalMerchantAccess(String(ownerId).trim());
+      const paying = hasActiveSubscription(userId);
+      return {
+        subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
+        has_active_subscription: ownerAccess,
+        merchant_trial_ends_at: ownerAccess
+          ? null
+          : paying
+            ? null
+            : getMerchantTrialEndsAtIso(String(ownerId).trim()) ?? getMerchantTrialEndsAtIso(userId),
+      };
+    }
+  }
   const paying = hasActiveSubscription(userId);
   return {
     subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
@@ -107,6 +129,7 @@ function authUserPayload(user) {
     name: user.name,
     phone: user.phone_e164 ?? null,
     is_admin: isUserAdmin(user),
+    workspace_role: getWorkspaceRoleForUser(user.id),
   };
 }
 
@@ -126,7 +149,7 @@ function hasSelectedEstablishment(selection) {
 }
 
 function getMerchantBusinessState(userId) {
-  const businesses = getBusinessesByUserId(userId);
+  const businesses = getBusinessesForUserId(userId);
   return {
     businesses,
     requires_business_setup: businesses.length === 0,
@@ -764,16 +787,15 @@ router.get("/me", (req, res, next) => {
     return res.status(401).json({ error: "Session invalide ou expirée", code });
   }
   try {
-    const businesses = getBusinessesByUserId(req.user.id);
-    const subscription = getSubscriptionByUserId(req.user.id);
-    const paying = hasActiveSubscription(req.user.id);
+    const businesses = getBusinessesForUserId(req.user.id);
+    const subPayload = authSubscriptionPayload(req.user.id);
     res.json({
       user: authUserPayload(req.user),
       businesses,
       requires_business_setup: businesses.length === 0,
-      subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
-      has_active_subscription: hasOperationalMerchantAccess(req.user.id),
-      merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(req.user.id),
+      subscription: subPayload.subscription,
+      has_active_subscription: subPayload.has_active_subscription,
+      merchant_trial_ends_at: subPayload.merchant_trial_ends_at,
     });
   } catch (e) {
     console.error("GET /api/auth/me:", e);
@@ -791,7 +813,7 @@ router.get("/me", (req, res, next) => {
  * Alias pour garder une API cohérente (liste des commerces de l'utilisateur).
  */
 router.get("/me/businesses", requireAuth, (req, res) => {
-  const businesses = getBusinessesByUserId(req.user.id);
+  const businesses = getBusinessesForUserId(req.user.id);
   res.json({ businesses });
 });
 

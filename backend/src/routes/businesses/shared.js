@@ -4,6 +4,7 @@
  */
 import { getBusinessBySlug, getBusinessByDashboardToken, hasOperationalMerchantAccess } from "../../db.js";
 import { isUserAdmin } from "../../db/users.js";
+import { getTeamRoleForUserAndBusiness } from "../../db/business-team.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 
 export function getApiBase(req) {
@@ -59,15 +60,45 @@ export function checkDashboardIdentity(business, req) {
     if (byToken && byToken.id === business.id) allowed = true;
   }
   if (!allowed && req.user) {
-    if (isUserAdmin(req.user)) allowed = true;
-    else {
+    if (isUserAdmin(req.user)) {
+      allowed = true;
+      req.workspaceTeamRole = "admin";
+    } else {
       const uid = req.user.id != null ? String(req.user.id).trim() : "";
       const bid = business.user_id != null ? String(business.user_id).trim() : "";
-      if (uid !== "" && bid !== "" && uid === bid) allowed = true;
+      if (uid !== "" && bid !== "" && uid === bid) {
+        allowed = true;
+        req.workspaceTeamRole = "owner";
+      } else {
+        const tr = getTeamRoleForUserAndBusiness(business.id, req.user.id);
+        if (tr) {
+          allowed = true;
+          req.workspaceTeamRole = tr;
+        }
+      }
     }
   }
   if (!allowed) return "no_access";
   return "ok";
+}
+
+/**
+ * Bloque écriture dashboard pour comptes **employé** (accès équipe uniquement, rôle `staff`).
+ * Les mutations avec seul `X-Dashboard-Token` (sans JWT) ne sont pas bloquées ici.
+ */
+export function blockStaffDashboardWrites(req, res, business) {
+  if (!business || !req.user) return true;
+  const m = (req.method || "GET").toUpperCase();
+  if (m === "GET" || m === "HEAD" || m === "OPTIONS") return true;
+  if (req.workspaceTeamRole !== "staff") return true;
+  const bid = business.user_id != null ? String(business.user_id).trim() : "";
+  const uid = req.user.id != null ? String(req.user.id).trim() : "";
+  if (bid && uid && bid === uid) return true;
+  res.status(403).json({
+    error: "Cette action est réservée au responsable du commerce.",
+    code: "forbidden_for_staff",
+  });
+  return false;
 }
 
 /** @deprecated préférer checkDashboardIdentity — nom historique */

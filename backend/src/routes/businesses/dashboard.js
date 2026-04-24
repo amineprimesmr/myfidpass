@@ -33,6 +33,7 @@ import { resolveBusinessProgramType } from "../../db/businesses.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import {
   ensureDashboardAccess,
+  blockStaffDashboardWrites,
   ensureOperationalSubscription,
   getApiBase,
   normalizeHexForPatch,
@@ -70,6 +71,7 @@ import socialMetricsRouter from "./dashboard-social-metrics.js";
 import dashboardSocialOauthRouter from "./dashboard-social-oauth.js";
 import dashboardDeliveryReceiptClaimsRouter from "./dashboard-delivery-receipt-claims.js";
 import dashboardGoogleBusinessRouter from "./dashboard-google-business.js";
+import dashboardTeamRouter from "./dashboard-team.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 
@@ -105,6 +107,11 @@ function requireDashboard(req, res, next) {
 }
 
 router.use(requireDashboard);
+router.use((req, res, next) => {
+  if (!blockStaffDashboardWrites(req, res, req.business)) return;
+  next();
+});
+router.use("/team", dashboardTeamRouter);
 router.use(socialMetricsRouter);
 router.use(dashboardSocialOauthRouter);
 router.use(dashboardDeliveryReceiptClaimsRouter);

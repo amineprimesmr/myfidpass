@@ -3,6 +3,7 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { getTeamBusinessesForUserId } from "./business-team.js";
 import { setBusinessAssetData } from "./business-assets.js";
 import {
   DEMO_LOYALTY_MODE,
@@ -27,6 +28,24 @@ export function getBusinessesByUserId(userId) {
   return db.prepare(
     "SELECT id, name, slug, organization_name, created_at, dashboard_token FROM businesses WHERE user_id = ? ORDER BY created_at DESC"
   ).all(userId);
+}
+
+/**
+ * Commerces gérés + commerces en accès **équipe** (owner + staff/manager).
+ */
+export function getBusinessesForUserId(userId) {
+  if (!userId) return [];
+  const owned = getBusinessesByUserId(userId);
+  const fromTeam = getTeamBusinessesForUserId(userId);
+  const seen = new Set(owned.map((b) => b.id));
+  const out = [...owned];
+  for (const b of fromTeam) {
+    if (b && b.id && !seen.has(b.id)) {
+      seen.add(b.id);
+      out.push(b);
+    }
+  }
+  return out;
 }
 
 export function getBusinessById(id) {
