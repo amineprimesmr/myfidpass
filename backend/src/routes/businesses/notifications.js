@@ -21,7 +21,7 @@ import {
 import { passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
 import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
-import { assertOperationalSubscription, ensureDashboardAccess, getApiBase } from "./shared.js";
+import { assertOperationalSubscription, ensureDashboardAccess, blockStaffDashboardWrites, getApiBase } from "./shared.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
 import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
@@ -136,6 +136,11 @@ export async function notifyHandler(req, res) {
 // mergeParams: true — sans ça, req.params.slug est undefined dans ce sous-router
 // (Express 4 ne propage pas les params du parent sans cette option).
 const router = Router({ mergeParams: true });
+
+router.use((req, res, next) => {
+  if (!blockStaffDashboardWrites(req, res, req.business)) return;
+  next();
+});
 
 router.post("/send", async (req, res) => {
   try {
