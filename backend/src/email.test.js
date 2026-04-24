@@ -14,7 +14,11 @@ describe("email", () => {
   it("sendMail utilise Resend quand RESEND_API_KEY est défini", async () => {
     process.env.RESEND_API_KEY = "re_test_key";
     process.env.MAIL_FROM = "onboarding@resend.dev";
-    const mockFetch = vi.fn().mockResolvedValue({ ok: true, text: async () => "" });
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => "",
+      json: async () => ({ id: "re_test_id" }),
+    });
     vi.stubGlobal("fetch", mockFetch);
     const { sendMail } = await import("./email.js");
     const r = await sendMail({ to: "user@example.com", subject: "Sujet", text: "Corps" });
@@ -44,12 +48,17 @@ describe("email", () => {
           text: async () => JSON.stringify({ message: "Domain not verified" }),
         });
       }
-      return Promise.resolve({ ok: true, text: async () => "" });
+      return Promise.resolve({
+        ok: true,
+        text: async () => "",
+        json: async () => ({ id: "re_second_ok" }),
+      });
     });
     vi.stubGlobal("fetch", mockFetch);
     const { sendMail } = await import("./email.js");
     const r = await sendMail({ to: "user@example.com", subject: "Sujet", text: "Corps" });
     expect(r.sent).toBe(true);
+    expect(r.resendId).toBe("re_second_ok");
     expect(mockFetch).toHaveBeenCalledTimes(2);
     const secondBody = JSON.parse(mockFetch.mock.calls[1][1].body);
     expect(secondBody.from).toContain("onboarding@resend.dev");

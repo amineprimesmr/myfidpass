@@ -10,6 +10,7 @@ import { listUsersForAdmin } from "../db/users.js";
 import { listAllBusinessesForAdmin } from "../db/businesses.js";
 import { listAdminEvents } from "../db/admin-events.js";
 import { getDb } from "../db/connection.js";
+import { sendMail, isEmailConfigured } from "../email.js";
 
 const db = getDb();
 
@@ -86,6 +87,50 @@ router.get("/events", (req, res) => {
   } catch (e) {
     console.error("[admin] events:", e);
     res.status(500).json({ error: "Erreur journal événements." });
+  }
+});
+
+/**
+ * POST /api/admin/test-email — envoi un e-mail de test (diagnostic Resend/SMTP).
+ * Body: { "to": "vous@exemple.com" } — comptes admin plateforme uniquement.
+ */
+router.post("/test-email", async (req, res) => {
+  if (!isEmailConfigured()) {
+    return res.status(503).json({
+      error: "Aucun transport e-mail (RESEND_API_KEY ou SMTP) sur ce serveur.",
+      transactionalEmailReady: false,
+    });
+  }
+  const to = String(req.body?.to || "")
+    .trim()
+    .toLowerCase();
+  if (!to || !to.includes("@")) {
+    return res.status(400).json({ error: "Body JSON : { \"to\": \"email@valide.com\" } requis." });
+  }
+  const subject = "Test d'envoi — MyFidpass (API admin)";
+  const text =
+    "Si vous recevez ce message, la chaîne Resend (ou SMTP) est opérationnelle. Vérifiez aussi les courriers indésirables.";
+  const html = `<p>Si vous recevez ce message, la chaîne <strong>Resend</strong> (ou SMTP) est opérationnelle.</p><p>Pensez à vérifier les <strong>spams</strong>.</p>`;
+  try {
+    const r = await sendMail({ to, subject, text, html });
+    return res.json({
+      sent: r.sent,
+      resendId: r.resendId ?? null,
+      error: r.error ?? null,
+      provider: r.provider ?? null,
+      hints: r.sent
+        ? [
+            "Ouvrez Resend → Logs pour l'id ci-dessus (livraison / bounce).",
+            "Sans domaine vérifié, seuls certains destinataires reçoivent (voir docs/EMAIL-TRANSACTIONNEL.md).",
+          ]
+        : [
+            "Lire l'erreur ; souvent : domaine / expéditeur non vérifié, ou clé Resend invalide.",
+            "Vérifier Railway → RESEND_API_KEY (une seule ligne, sans guillemets ni retour à la ligne).",
+          ],
+    });
+  } catch (e) {
+    console.error("[admin] test-email:", e);
+    return res.status(500).json({ error: e?.message || "Échec envoi test" });
   }
 });
 

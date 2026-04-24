@@ -29,7 +29,11 @@ function fromForResend() {
 }
 
 function getResendKey() {
-  return (process.env.RESEND_API_KEY || "").trim();
+  // Copier-coller Railway peut injecter un retour ligne invisible → clé rejetée par l’API.
+  return (process.env.RESEND_API_KEY || "")
+    .replace(/\r?\n/g, "")
+    .replace(/^\uFEFF/, "")
+    .trim();
 }
 
 function smtpConfigured() {
@@ -90,7 +94,17 @@ async function sendViaResend(p) {
     console.error("[Email] Resend HTTP", res.status, errMsg);
     return { sent: false, error: errMsg || `HTTP ${res.status}` };
   }
-  return { sent: true };
+  let resendId = null;
+  try {
+    const j = await res.json();
+    if (j && typeof j.id === "string") resendId = j.id;
+  } catch (_) {}
+  if (resendId) {
+    console.log("[Email] Resend accepté, id =", resendId, "→ vérifier livraison dans Resend → Logs + boîte spam.");
+  } else {
+    console.log("[Email] Resend accepté (réponse sans id) — vérifier Resend → Logs.");
+  }
+  return { sent: true, resendId };
 }
 
 async function sendViaSmtp({ to, subject, text, html }) {
@@ -121,7 +135,7 @@ export async function sendMail({ to, subject, text, html }) {
     try {
       const primaryFrom = fromForResend();
       let r = await sendViaResend({ ...opts, from: primaryFrom });
-      if (r.sent) return r;
+      if (r.sent) return { sent: true, resendId: r.resendId, provider: "resend" };
 
       if (primaryFrom !== RESEND_FROM_FALLBACK) {
         console.warn(
@@ -130,27 +144,30 @@ export async function sendMail({ to, subject, text, html }) {
           "(voir docs/EMAIL-TRANSACTIONNEL.md — domaine vérifié ?)",
         );
         r = await sendViaResend({ ...opts, from: RESEND_FROM_FALLBACK });
-        if (r.sent) return r;
+        if (r.sent) return { sent: true, resendId: r.resendId, provider: "resend" };
       }
 
       if (smtpConfigured()) {
         console.warn("[Email] Resend indisponible ou refusé ; tentative SMTP de secours.");
         const sm = await sendViaSmtp(opts);
-        if (sm.sent) return sm;
+        if (sm.sent) return { sent: true, provider: "smtp" };
       }
 
-      return r;
+      return { sent: false, error: r.error, provider: "resend" };
     } catch (err) {
       console.error("[Email] Resend error:", err.message);
       if (smtpConfigured()) {
         const sm = await sendViaSmtp(opts);
-        if (sm.sent) return sm;
+        if (sm.sent) return { sent: true, provider: "smtp" };
       }
       return { sent: false, error: err.message };
     }
   }
 
-  if (smtpConfigured()) return sendViaSmtp(opts);
+  if (smtpConfigured()) {
+    const sm = await sendViaSmtp(opts);
+    return sm.sent ? { ...sm, provider: "smtp" } : sm;
+  }
   return { sent: false };
 }
 
@@ -175,8 +192,11 @@ export function getEmailTransportLabel() {
  * Permet de vérifier que Railway a bien les variables attendues.
  */
 export function getEmailEnvPresence() {
+  const key = getResendKey();
   return {
-    RESEND_API_KEY: !!getResendKey(),
+    RESEND_API_KEY: !!key,
+    /** false si la clé ressemble à une erreur de collage (mauvais préfixe / trop courte). */
+    resendKeyFormatOk: key.startsWith("re_") && key.length >= 10,
     MAIL_FROM: !!(process.env.MAIL_FROM || "").trim(),
     RESEND_FROM: !!(process.env.RESEND_FROM || "").trim(),
     SMTP_HOST: !!(process.env.SMTP_HOST || "").trim(),
