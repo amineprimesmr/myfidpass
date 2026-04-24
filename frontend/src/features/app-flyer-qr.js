@@ -238,6 +238,13 @@ export function initAppFlyerQr(slug, opts) {
         }).finally(() => { remoteBusy = false; });
       }
     },
+    onFlyerAiBgColorsSynced: (bgTop, bgBottom) => {
+      const bg1El = root.querySelector("#app-flyer-bg1");
+      const bg2El = root.querySelector("#app-flyer-bg2");
+      if (bg1El && bgTop) bg1El.value = bgTop;
+      if (bg2El && bgBottom) bg2El.value = bgBottom;
+      flyerBgPanelApi?.syncPreview?.();
+    },
     onGeneratedBg: () => {
       flyerBgDirty = true;
       flyerBgPanelApi?.syncPreview?.();
@@ -303,23 +310,36 @@ export function initAppFlyerQr(slug, opts) {
         flyerBgObjectUrl = null;
       }
       const bgData = getStoredFlyerCustomBgDataUrl();
-      let bgLoaded = false;
       if (bgData) {
         try {
-          const res = await fetch(bgData);
-          if (res.ok) {
-            const blob = await res.blob();
-            if (typeof createImageBitmap === "function") {
-              try {
-                flyerBgBitmap = await createImageBitmap(blob);
-                bgLoaded = !!flyerBgBitmap;
-              } catch (_) {
-                flyerBgObjectUrl = URL.createObjectURL(blob);
-                bgLoaded = true;
-              }
-            } else {
-              flyerBgObjectUrl = URL.createObjectURL(blob);
-              bgLoaded = true;
+          // Priorité new Image() — fetch() échoue sur Safari/WKWebView pour les data URLs volumineuses
+          const imgEl = await new Promise((resolve) => {
+            const im = new Image();
+            im.onload = () => resolve(im);
+            im.onerror = () => resolve(null);
+            im.src = bgData;
+          });
+          if (imgEl) {
+            flyerBgBitmap = imgEl;
+          } else if (bgData.startsWith("data:image/")) {
+            // Repli blob pour les WKWebView qui rejettent les longues data URLs sur img.src
+            const comma = bgData.indexOf(",");
+            if (comma > 0) {
+              const mimeM = /data:([^;]+)/.exec(bgData.slice(0, comma));
+              const mime = mimeM ? mimeM[1] : "image/png";
+              const bin = atob(bgData.slice(comma + 1));
+              const bytes = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+              const blob = new Blob([bytes], { type: mime });
+              const objUrl = URL.createObjectURL(blob);
+              const imgBlob = await new Promise((resolve) => {
+                const im = new Image();
+                im.onload = () => resolve(im);
+                im.onerror = () => resolve(null);
+                im.src = objUrl;
+              });
+              URL.revokeObjectURL(objUrl);
+              if (imgBlob) flyerBgBitmap = imgBlob;
             }
           }
         } catch (_) {}
