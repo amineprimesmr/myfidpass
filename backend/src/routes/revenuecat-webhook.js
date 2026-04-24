@@ -7,6 +7,7 @@
 import { Router } from "express";
 import logger from "../lib/logger.js";
 import { getRevenueCatWebhookAuthorizationExpected, IS_PRODUCTION } from "../lib/config.js";
+import { applyRevenueCatWebhookHint } from "../services/revenuecat-subscription-sync.js";
 
 const router = Router();
 
@@ -38,8 +39,10 @@ router.post("/", (req, res) => {
     "[revenuecat] webhook reçu",
   );
 
-  // Ici : synchro futur (DB) si tu veux refléter l’état abo côté serveur.
-  return res.status(200).json({ ok: true });
+  res.status(200).json({ ok: true });
+  setImmediate(() => {
+    void applyRevenueCatWebhookHint(body);
+  });
 });
 
 export default router;

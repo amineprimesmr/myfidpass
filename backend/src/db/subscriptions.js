@@ -57,6 +57,29 @@ export function hasOperationalMerchantAccess(userId) {
 
 export const PLANS = { starter: { max_businesses: 1 }, pro: { max_businesses: 5 } };
 
+/**
+ * Valeur de `stripe_subscription_id` pour un abonnement 100 % App Store (RevenueCat),
+ * distinct d’un vrai abonnement Stripe `sub_…`.
+ */
+export const REVENUECAT_STRIPE_SUB_ID_SENTINEL = "revenuecat_iap";
+
+/**
+ * Passe l’abonnement à `canceled` seulement s’il provenait d’IAP (sentinel revenuecat_…).
+ * Ne modifie pas un abonnement Stripe réel.
+ */
+export function deactivateRevenueCatOnlySubscription(userId) {
+  if (!userId) return null;
+  const s = getSubscriptionByUserId(userId);
+  if (!s) return null;
+  const subId = s.stripe_subscription_id ? String(s.stripe_subscription_id).trim() : "";
+  if (subId && !subId.startsWith("revenuecat_")) {
+    return s;
+  }
+  const now = new Date().toISOString();
+  db.prepare("UPDATE subscriptions SET status = 'canceled', updated_at = ? WHERE user_id = ?").run(now, userId);
+  return getSubscriptionByUserId(userId);
+}
+
 export function getSubscriptionByUserId(userId) {
   const row = db.prepare("SELECT * FROM subscriptions WHERE user_id = ?").get(userId);
   return row || null;
