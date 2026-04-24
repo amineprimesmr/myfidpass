@@ -10,6 +10,9 @@ import {
   getUserByEmail,
   getUserByPhoneE164,
   getUserById,
+  getUserByStaffLogin,
+  normalizeStaffLogin,
+  isReservedStaffEmailOnly,
   getBusinessesByUserId,
   getBusinessesForUserId,
   getSubscriptionByUserId,
@@ -123,13 +126,24 @@ function authSubscriptionPayload(userId) {
 
 function authUserPayload(user) {
   if (!user) return null;
-  return {
+  const base = {
     id: user.id,
-    email: user.email,
     name: user.name,
     phone: user.phone_e164 ?? null,
     is_admin: isUserAdmin(user),
     workspace_role: getWorkspaceRoleForUser(user.id),
+  };
+  if (user.staff_login) {
+    return {
+      ...base,
+      email: null,
+      staff_login: user.staff_login,
+    };
+  }
+  return {
+    ...base,
+    email: user.email,
+    staff_login: null,
   };
 }
 
@@ -346,6 +360,27 @@ router.post("/check-email", validate(schemas.checkEmail), (req, res) => {
 });
 
 /**
+ * POST /api/auth/check-identifier
+ * Body: { identifier } — e-mail ou identifiant employé (sans @). L’app unifie l’étape « compte connu ? ».
+ */
+router.post("/check-identifier", validate(schemas.checkIdentifier), (req, res) => {
+  const raw = String(req.body.identifier || "").trim();
+  if (!raw) {
+    return res.json({ account_exists: false, kind: null });
+  }
+  if (raw.includes("@")) {
+    const exists = !!getUserByEmail(raw.toLowerCase());
+    return res.json({ account_exists: exists, kind: "email" });
+  }
+  const n = normalizeStaffLogin(raw);
+  if (!n) {
+    return res.status(400).json({ error: "Identifiant invalide", code: "INVALID_STAFF_LOGIN" });
+  }
+  const exists = !!getUserByStaffLogin(n);
+  return res.json({ account_exists: exists, kind: "staff" });
+});
+
+/**
  * POST /api/auth/register
  * Body: { email, password, name?, google_place_id? | googlePlaceId?, establishment_name? }
  * Si google_place_id est fourni et Places configuré, crée le premier commerce (nom + adresse Google).
@@ -356,6 +391,9 @@ router.post("/register", validate(schemas.register), async (req, res) => {
   const establishmentSelection = normalizeEstablishmentSelection(body);
   // email et password déjà validés et normalisés par Zod (register schema)
   const emailNorm = email; // déjà toLowerCase() par le schéma
+  if (isReservedStaffEmailOnly(emailNorm)) {
+    return res.status(400).json({ error: "Adresse e-mail non autorisée." });
+  }
   if (getUserByEmail(emailNorm)) {
     return res.status(409).json({ error: "Un compte existe déjà avec cet email" });
   }
@@ -384,18 +422,33 @@ router.post("/register", validate(schemas.register), async (req, res) => {
 
 /**
  * POST /api/auth/login
- * Body: { email, password }
+ * Body: { login, password } ou **legacy** { email, password } — e-mail **ou** identifiant employé.
  */
-router.post("/login", validate(schemas.login), async (req, res) => {
-  const { email, password } = req.body || {};
-  const emailNorm = email; // déjà normalisé par Zod
-  const user = getUserByEmail(emailNorm);
+router.post("/login", validate(schemas.loginWithIdentifier), async (req, res) => {
+  const { login, password } = req.body || {};
+  const raw = String(login).trim();
+  let user;
+  if (raw.includes("@")) {
+    user = getUserByEmail(raw.toLowerCase());
+  } else {
+    const n = normalizeStaffLogin(raw);
+    if (!n) {
+      return res.status(400).json({
+        error: "Identifiant invalide (employé : 3-32 caractères, a-z, 0-9, _ et -).",
+        code: "INVALID_STAFF_LOGIN",
+      });
+    }
+    user = getUserByStaffLogin(n);
+  }
   if (!user) {
-    return res.status(404).json({ error: "Aucun compte associé à cet email. Créez votre compte sur myfidpass.fr.", code: "NO_ACCOUNT" });
+    return res.status(404).json({
+      error: "Aucun compte associé. Créez un compte commerçant sur myfidpass.fr ou utilisez l’identifiant fourni par votre employeur.",
+      code: "NO_ACCOUNT",
+    });
   }
   const ok = await bcrypt.compare(String(password), user.password_hash);
   if (!ok) {
-    return res.status(401).json({ error: "Email ou mot de passe incorrect" });
+    return res.status(401).json({ error: "Identifiant ou mot de passe incorrect" });
   }
   const { accessToken, refreshToken } = issueTokenPair(user.id);
   res.json({

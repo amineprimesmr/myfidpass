@@ -80,13 +80,26 @@ export const schemas = {
     }
   }),
 
-  // POST /auth/login
-  login: z.object({
-    email: emailSchema,
-    password: z.string({ required_error: "Mot de passe requis" }).min(1, "Mot de passe requis").max(128),
+  // POST /auth/login — e-mail **ou** identifiant employé (sans @) — voir preprocess.
+  loginWithIdentifier: z.preprocess(
+    (val) => {
+      if (!val || typeof val !== "object") return val;
+      const v = /** @type {Record<string, unknown>} */ (val);
+      const login = String(v.login ?? v.email ?? "").trim();
+      return { ...v, login, password: v.password };
+    },
+    z.object({
+      login: z.string({ required_error: "Identifiant requis" }).min(1, "Identifiant requis").max(200),
+      password: z.string({ required_error: "Mot de passe requis" }).min(1, "Mot de passe requis").max(128),
+    }),
+  ),
+
+  // POST /auth/check-identifier — e-mail ou identifiant employé
+  checkIdentifier: z.object({
+    identifier: z.string({ required_error: "Identifiant requis" }).min(1).max(200),
   }),
 
-  // POST /auth/check-email — existence d’un compte (flux connexion / inscription app)
+  // POST /auth/check-email — existence d’un compte (flux e-mail en deux étapes)
   checkEmail: z.object({
     email: emailSchema,
   }),
@@ -145,6 +158,20 @@ export const schemas = {
     googlePlaceId: optionalPlaceIdSchema,
     establishment_name: optionalEstablishmentNameSchema,
     establishmentName: optionalEstablishmentNameSchema,
+  }),
+
+  /** POST /businesses/:slug/dashboard/team/staff-accounts — compte employé (identifiant + mot de passe, sans e-mail). */
+  teamStaffAccount: z.object({
+    staff_login: z
+      .string({ required_error: "Identifiant requis" })
+      .trim()
+      .toLowerCase()
+      .min(3, "Au moins 3 caractères")
+      .max(32, "32 caractères max")
+      .regex(/^[a-z0-9][a-z0-9_-]{1,30}[a-z0-9]$/, "Lettres, chiffres, _ et - (3 à 32 caractères)"),
+    password: passwordSchema,
+    name: z.string().trim().max(100).optional().nullable(),
+    role: z.enum(["staff", "manager"]).optional(),
   }),
 
   // POST /businesses (création)

@@ -45,7 +45,7 @@ export function listTeamMembersForBusiness(businessId) {
   if (!businessId) return [];
   return db
     .prepare(
-      `SELECT m.id AS membership_id, m.user_id, u.email, u.name, m.role, m.status, m.created_at
+      `SELECT m.id AS membership_id, m.user_id, u.email, u.name, u.staff_login, m.role, m.status, m.created_at
        FROM business_team_members m
        LEFT JOIN users u ON u.id = m.user_id
        WHERE m.business_id = ? AND m.status != 'revoked'
@@ -58,7 +58,7 @@ export function listTeamMembersForBusiness(businessId) {
 export function listTeamMembersForBusinessIncludingOwner(business) {
   const businessId = business?.id;
   if (!businessId) return [];
-  const owner = db.prepare("SELECT id, email, name FROM users WHERE id = ?").get(business.user_id);
+  const owner = db.prepare("SELECT id, email, name, staff_login FROM users WHERE id = ?").get(business.user_id);
   const rows = listTeamMembersForBusiness(businessId);
   const out = [];
   if (owner) {
@@ -66,6 +66,7 @@ export function listTeamMembersForBusinessIncludingOwner(business) {
       membership_id: null,
       user_id: owner.id,
       email: owner.email,
+      staff_login: owner.staff_login ?? null,
       name: owner.name,
       role: "owner",
       status: "active",

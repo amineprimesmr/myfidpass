@@ -2,10 +2,12 @@
  * Équipe commerçant : GET /team, POST /team/invites, DELETE /team/members/:id
  */
 import { Router } from "express";
+import bcrypt from "bcryptjs";
 import { getUserByEmail, listTeamMembersForBusinessIncludingOwner, addTeamMember, findActiveTeamMembership } from "../../db/business-team.js";
-import { isUserAdmin } from "../../db/users.js";
+import { isUserAdmin, createStaffUser, getUserByStaffLogin } from "../../db/users.js";
 import { getDb } from "../../db/connection.js";
 import { sendMail, isEmailConfigured } from "../../email.js";
+import { validate, schemas } from "../../lib/validate.js";
 
 const db = getDb();
 const router = Router({ mergeParams: true });
@@ -27,17 +29,75 @@ function ensureTeamManager(req, res) {
   return false;
 }
 
+const SALT_ROUNDS = 10;
+
 function serializeMember(r) {
   return {
     membership_id: r.membership_id ?? null,
     user_id: r.user_id ?? null,
-    email: r.email ?? null,
+    email: r.staff_login ? null : (r.email ?? null),
+    staff_login: r.staff_login ?? null,
     name: r.name ?? null,
     role: r.role ?? null,
     status: r.status ?? null,
     created_at: r.created_at ?? null,
   };
 }
+
+/**
+ * POST /dashboard/team/staff-accounts
+ * Crée un compte employé (identifiant + mot de passe) sans e-mail ; rattache l’équipe au commerce courant.
+ */
+router.post("/staff-accounts", validate(schemas.teamStaffAccount), async (req, res) => {
+  if (!ensureTeamManager(req, res)) return;
+  const business = req.business;
+  const { staff_login, password, name, role } = req.body;
+  const roleR = String(role || "staff").toLowerCase() === "manager" ? "manager" : "staff";
+  if (getUserByStaffLogin(staff_login)) {
+    return res.status(409).json({ error: "Cet identifiant est déjà utilisé.", code: "staff_login_taken" });
+  }
+  let user;
+  try {
+    const passwordHash = await bcrypt.hash(String(password), SALT_ROUNDS);
+    user = createStaffUser({
+      staffLogin: staff_login,
+      passwordHash,
+      name: name ? String(name).trim() : null,
+    });
+  } catch (e) {
+    const c = e?.code;
+    if (c === "STAFF_LOGIN_TAKEN") {
+      return res.status(409).json({ error: "Cet identifiant est déjà utilisé.", code: "staff_login_taken" });
+    }
+    if (c === "STAFF_LOGIN_INVALID") {
+      return res.status(400).json({ error: "Identifiant invalide.", code: "STAFF_LOGIN_INVALID" });
+    }
+    console.error("[team] staff-accounts create:", e);
+    return res.status(500).json({ error: "Impossible de créer le compte employé." });
+  }
+  if (String(user.id) === String(business.user_id)) {
+    return res.status(400).json({ error: "Incohérence : ce compte est déjà le propriétaire." });
+  }
+  const ex = db
+    .prepare("SELECT 1 FROM business_team_members WHERE business_id = ? AND user_id = ?")
+    .get(business.id, user.id);
+  if (ex) {
+    return res.status(409).json({ error: "Cet utilisateur a déjà accès à ce commerce." });
+  }
+  addTeamMember({
+    businessId: business.id,
+    userId: user.id,
+    role: roleR,
+    invitedBy: req.user.id,
+  });
+  return res.status(201).json({
+    ok: true,
+    user_id: user.id,
+    staff_login: user.staff_login,
+    message:
+      "Compte employé créé. L’employé se connecte dans l’app avec cet identifiant et le mot de passe défini (section Connexion, « J’ai déjà un compte »).",
+  });
+});
 
 /** GET /dashboard/team */
 router.get("/", (req, res) => {

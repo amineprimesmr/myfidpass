@@ -1363,4 +1363,18 @@ export function runMigrations(db) {
     });
     markMigrationApplied(db, 29, "business_team_members");
   }
+
+  const m30 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 30").get();
+  if (!m30) {
+    const userColsStaff = db.prepare("PRAGMA table_info(users)").all().map((c) => c.name);
+    if (!userColsStaff.includes("staff_login")) {
+      safeRun(db, () => db.exec("ALTER TABLE users ADD COLUMN staff_login TEXT"));
+    }
+    safeRun(db, () =>
+      db.exec(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_staff_login ON users(staff_login) WHERE staff_login IS NOT NULL",
+      ),
+    );
+    markMigrationApplied(db, 30, "users_staff_login");
+  }
 }

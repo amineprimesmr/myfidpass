@@ -30,6 +30,63 @@ export function getUserByPhoneE164(phoneE164) {
   return row || null;
 }
 
+/** Domaine réservé pour l’e-mail technique des comptes employés (identifiant sans e-mail). */
+const STAFF_EMAIL_DOMAIN = "@staff.myfidpass.internal";
+
+/**
+ * Normalise un identifiant employé : 3-32 caractères, a-z, 0-9, _ et - (ne commence/finit pas par un tiret seul bord à respecter : lettre ou chiffre aux extrémités).
+ * @returns {string | null}
+ */
+export function normalizeStaffLogin(raw) {
+  const s = String(raw ?? "")
+    .trim()
+    .toLowerCase();
+  if (!/^[a-z0-9][a-z0-9_-]{1,30}[a-z0-9]$/.test(s)) return null;
+  return s;
+}
+
+export function isReservedStaffEmailOnly(email) {
+  return String(email ?? "")
+    .trim()
+    .toLowerCase()
+    .endsWith(STAFF_EMAIL_DOMAIN);
+}
+
+export function getUserByStaffLogin(staffLoginNorm) {
+  if (!staffLoginNorm) return null;
+  const n = String(staffLoginNorm).trim().toLowerCase();
+  const row = db.prepare("SELECT * FROM users WHERE lower(staff_login) = ?").get(n);
+  return row || null;
+}
+
+/**
+ * Compte commerçant employé : se connecte avec identifiant + mot de passe, sans e-mail réel.
+ * E-mail en base = `${staff_login}${STAFF_EMAIL_DOMAIN}` (réservé, non recevable).
+ */
+export function createStaffUser({ staffLogin, passwordHash, name }) {
+  const norm = normalizeStaffLogin(staffLogin);
+  if (!norm) {
+    const err = new Error("STAFF_LOGIN_INVALID");
+    err.code = "STAFF_LOGIN_INVALID";
+    throw err;
+  }
+  if (getUserByStaffLogin(norm) || getUserByEmail(norm + STAFF_EMAIL_DOMAIN)) {
+    const err = new Error("STAFF_LOGIN_TAKEN");
+    err.code = "STAFF_LOGIN_TAKEN";
+    throw err;
+  }
+  const id = randomUUID();
+  const email = norm + STAFF_EMAIL_DOMAIN;
+  db.prepare("INSERT INTO users (id, email, password_hash, name, staff_login) VALUES (?, ?, ?, ?, ?)").run(
+    id,
+    email,
+    passwordHash,
+    name || null,
+    norm,
+  );
+  return getUserById(id);
+}
+
 /**
  * Compte créé uniquement avec le téléphone : e-mail technique unique, mot de passe aléatoire (non utilisé).
  */
@@ -184,15 +241,15 @@ export function listUsersForAdmin(p = {}) {
     const like = `%${q}%`;
     return db
       .prepare(
-        `SELECT id, email, name, created_at, is_admin FROM users
-         WHERE lower(email) LIKE ? OR lower(COALESCE(name,'')) LIKE ?
+        `SELECT id, email, name, created_at, is_admin, staff_login FROM users
+         WHERE lower(email) LIKE ? OR lower(COALESCE(name,'')) LIKE ? OR lower(COALESCE(staff_login,'')) LIKE ?
          ORDER BY datetime(created_at) DESC LIMIT ? OFFSET ?`,
       )
-      .all(like, like, limit, offset);
+      .all(like, like, like, limit, offset);
   }
   return db
     .prepare(
-      `SELECT id, email, name, created_at, is_admin FROM users ORDER BY datetime(created_at) DESC LIMIT ? OFFSET ?`,
+      `SELECT id, email, name, created_at, is_admin, staff_login FROM users ORDER BY datetime(created_at) DESC LIMIT ? OFFSET ?`,
     )
     .all(limit, offset);
 }
