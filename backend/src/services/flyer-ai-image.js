@@ -145,22 +145,22 @@ const bodySchema = z.object({
  */
 const MOOD_EN_UNIVERSAL = {
   premium:
-    "premium multi-sector retail poster, soft even studio light, restrained smooth gradients on a LIGHT background, matte or satin surfaces, crisp print-ready finish — calm and expensive, never busy, never dark",
+    "premium multi-sector retail poster, deep rich background using the brand's dominant dark hue, soft studio lighting, restrained smooth gradients — calm, expensive, print-ready; white and light elements remain crisp against the dark field",
   energetic:
-    "high-impact commercial loyalty poster, saturated accent colors as CLEAN flat fields and smooth blends on a LIGHT pastel base — strong contrast via color blocks, not darkness; sector-agnostic, never dark backgrounds",
+    "high-impact commercial loyalty poster, saturated deep accent colors as bold flat fields and smooth blends on a DARK base — strong contrast via vivid color blocks against dark backdrop; sector-agnostic",
   minimal:
-    "Swiss editorial layout, generous margins, thin rules, one hero focal point, almost no ornament — predominantly white or very light background",
+    "Swiss editorial layout, generous margins, thin rules, one hero focal point — dark or deeply saturated background, almost no ornament; white typography-grade negative space",
   street:
-    "urban commercial energy, contemporary signage mood, large flat LIGHT color shapes and smooth gradients — backdrop stays clean and bright, no gritty noise or scattered highlights",
+    "urban commercial energy, contemporary signage mood, large flat DEEP color shapes and smooth gradients on a dark backdrop — bold, graphic, no gritty noise",
   gourmet:
-    "refined artisan / craft poster: soft even lighting on a LIGHT smooth background; hero food or product only where the brief asks — background remains uncluttered and bright, no bokeh orbs or sparkle",
+    "refined artisan / craft poster: rich deep background; hero food or product only where the brief asks — background dark and uncluttered, no bokeh orbs or sparkle",
   playful:
-    "friendly commercial graphics: rounded flat color shapes and PASTEL fields on a light background — playful through COLOR and layout only; never literal bubbles, balloons-as-bokeh, glitter, or confetti",
+    "friendly commercial graphics: rounded flat color shapes on a DEEP SATURATED background — playful through COLOR and layout only; never literal bubbles, balloons-as-bokeh, glitter, or confetti",
 };
 
 /** Ambiance par défaut quand le client envoie une palette priorisée (sans `visual_mood`). */
 const DEFAULT_FLYER_ATMOSPHERE_EN =
-  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly but keep ALL large background areas LIGHT and PALE — shift provided colors toward their pastel / tinted-white equivalent for big fills; use the pure brand colors only in smaller accent shapes. Flat smooth digital finish like a clean UI mockup — buttery gradients, print-ready, sector-agnostic, zero paper or film texture.";
+  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly — use the dominant brand color as a RICH, DEEP background fill; keep large background areas at low-to-medium luminosity so that WHITE text, a white QR code, and white overlay elements remain perfectly readable on top. Flat smooth digital finish like a premium app gradient — buttery gradients, print-ready, sector-agnostic, zero paper or film texture.";
 
 /**
  * Résout primaire / secondaire / tertiaire et le texte d’atmosphère pour les prompts image.
@@ -229,16 +229,16 @@ const FLYER_SURFACE_CLEANLINESS_EN =
   "Color transitions must be SILKY and continuous — like a premium app UI gradient, not a photograph of a wall. If products or food appear, their surfaces can be detailed; every EMPTY area and every backdrop field stays glass-smooth.";
 
 /**
- * Règle de luminosité / saturation du fond (obligatoire, tous prompts flyer).
- * Le fond doit rester CLAIR pour que le contenu (texte, QR, roue) ressorte bien.
+ * Règle de contraste du fond (obligatoire, tous prompts flyer).
+ * Le fond doit être FONCÉ / RICHE pour que le contenu blanc (texte, QR, roue) ressorte bien.
  */
 const FLYER_BACKGROUND_LIGHTNESS_EN =
-  "BACKGROUND LIGHTNESS & SATURATION (mandatory — overrides all other instructions): " +
-  "The overall background MUST be LIGHT, SOFT, and AIRY — never dark, never deep, never moody, never black or near-black. " +
-  "ALL large background areas must have HIGH luminosity (think cream, off-white, pale blush, light pastel, or softly tinted linen — luminosity above 75% in HSL). " +
-  "Colors must be DESATURATED and FADED — muted pastels, chalky tints, or washed-out fields only — NEVER vivid, punchy, neon, or fully saturated. Think a faded Polaroid or a sun-bleached poster: colors are present but gentle. " +
-  "If the provided palette contains dark colors (navy, black, deep brown, deep red, etc.), use them ONLY for thin outlines, very small accents, or subtle detail shadows — NEVER spread them over large background areas. " +
-  "Result: the background must look light enough that dark text, a dark QR code, and all overlay elements remain perfectly readable on top of it without any contrast issue.";
+  "BACKGROUND DEPTH & CONTRAST (mandatory — overrides all other instructions): " +
+  "The overall background MUST be DARK, RICH, and DEEP — never light, never pale, never washed-out, never white or near-white. " +
+  "ALL large background areas must have LOW-TO-MEDIUM luminosity (think deep navy, rich burgundy, dark forest green, charcoal, or deeply saturated brand hue — luminosity BELOW 45% in HSL). " +
+  "Colors must be SATURATED and VIVID on the dark base — deep, punchy, bold fields — NEVER chalky, pastel, or faded. Think a premium app gradient or a vibrant concert poster: colors are rich and immersive. " +
+  "If the provided palette contains light colors (cream, white, beige, light grey, etc.), use them ONLY for thin highlights, very small accents, or typography — NEVER spread them over large background areas. " +
+  "Result: the background must be dark enough that WHITE text, a white QR code, and all white overlay elements remain perfectly readable on top of it with strong contrast.";
 
 /**
  * Brief marchand unique (prioritaire sur toute supposition du modèle).
@@ -412,7 +412,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
       plan.atmosphere +
       ". At most 3–4 cohesive colors; transitions must be buttery, not gritty.",
     "STYLE: Bold commercial look through COLOR BLOCKS and clean composition only — print-ready, even lighting — absolutely no decorative texture or atmospheric noise.",
-    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~49–59%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient; (8) overall background is LIGHT and PALE — never dark.",
+    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~49–59%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient; (8) overall background is DARK and RICH — never light, never white, never pale.",
     ...multimodalLines,
   ];
 
@@ -492,7 +492,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
       plan.atmosphere +
       ". Max 3–4 cohesive colors outside wedge recoloring — no speckles or bokeh orbs.",
     secondary,
-    "SELF-CHECK: (1) exactly one wheel (the provided asset); (2) all original wheel text unchanged; (3) only wedge fills recolored; (4) no QR anywhere; (5) bottom 18% clean; (6) overall background is LIGHT and PALE — never dark.",
+    "SELF-CHECK: (1) exactly one wheel (the provided asset); (2) all original wheel text unchanged; (3) only wedge fills recolored; (4) no QR anywhere; (5) bottom 18% clean; (6) overall background is DARK and RICH — never light, never white, never pale.",
     "QUALITY: Crisp print, clean edges.",
     ...multimodalLines,
   ];
@@ -567,13 +567,13 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
       " Depth from large soft radial or linear gradients and gentle vignette only — NO grain, NO bokeh, NO sparkles. Atmosphere: " +
       plan.atmosphere +
       ". Use at most 3–4 cohesive colors total.",
-    "COLOR INTENSITY GUARDRAIL (mandatory): Prefer SOFT, PASTEL, LOW-CONTRAST palettes. Avoid neon, ultra-saturated magenta/orange/blue, and avoid very dark high-contrast scenes. Keep the overall backdrop bright and print-friendly.",
-    "LUMINANCE TARGET: The global background should feel light (roughly equivalent to a bright mid/high key wallpaper), never moody-dark. If unsure, choose a lighter, less saturated variant.",
+    "COLOR INTENSITY GUARDRAIL (mandatory): Use RICH, SATURATED, DEEP palettes on a DARK base. Avoid pastels, washed-out or chalky colors. Keep the overall backdrop dark and vivid so white text and white QR remain perfectly readable.",
+    "LUMINANCE TARGET: The global background should feel dark and immersive (roughly equivalent to a premium dark-mode app or concert poster), never pale or bright. If unsure, choose a darker, more saturated variant.",
     "PRIZE WHEEL — GEOMETRY: Exactly ONE circular wheel, perfect circle (no ellipse), no second wheel. EXACTLY 6 equal wedges (60° each). Six outer rim divisions. One small triangular pointer at 12 o'clock. Outer wheel diameter ≈ 58–62% of image WIDTH (slightly 'dezoomed' vs full width).",
     secondary,
     "WHEEL LABELS (clockwise from the top wedge under the pointer): Wedge1=GAGNÉ; Wedge2=GAGNÉ; Wedge3=GAGNÉ; Wedge4=GAGNÉ; Wedge5=GAGNÉ; Wedge6=PERDU. Bold uppercase French, high contrast, radially readable inside each wedge (~70% of wedge radial length). No other text on the flyer.",
     "WHEEL HUB: Small decorative metallic pin/cap at center — gold or silver OK. No QR-like texture.",
-    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 53% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes; (9) overall background is LIGHT and PALE — never dark.",
+    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 53% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes; (9) overall background is DARK and RICH — never light, never white, never pale.",
     "QUALITY: Crisp print, clean edges, coherent lighting, no disconnected floating artifacts.",
     ...multimodalLines,
   ];
