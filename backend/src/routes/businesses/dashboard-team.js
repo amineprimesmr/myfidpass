@@ -5,6 +5,7 @@ import { Router } from "express";
 import { getUserByEmail, listTeamMembersForBusinessIncludingOwner, addTeamMember, findActiveTeamMembership } from "../../db/business-team.js";
 import { isUserAdmin } from "../../db/users.js";
 import { getDb } from "../../db/connection.js";
+import { sendMail, isEmailConfigured } from "../../email.js";
 
 const db = getDb();
 const router = Router({ mergeParams: true });
@@ -46,7 +47,7 @@ router.get("/", (req, res) => {
 });
 
 /** POST /dashboard/team/invites */
-router.post("/invites", (req, res) => {
+router.post("/invites", async (req, res) => {
   if (!ensureTeamManager(req, res)) return;
   const email = String(req.body?.email || "")
     .trim()
@@ -86,9 +87,30 @@ router.post("/invites", (req, res) => {
       db.prepare("UPDATE users SET name = ? WHERE id = ?").run(nameHint, u.id);
     } catch (_) {}
   }
+
+  const shopName = String(
+    business.name || business.organization_name || business.slug || "Votre commerce",
+  ).trim();
+  const inviterLabel = String(req.user.name || "").trim() || req.user.email || "Le responsable";
+  const roleLabel = role === "manager" ? "gérant" : "employé";
+  const { sent: emailSent } = await sendMail({
+    to: email,
+    subject: `Accès équipe — ${shopName} (MyFidpass)`,
+    text: `Bonjour,\n\n${inviterLabel} vous a donné l’accès ${roleLabel} pour le commerce « ${shopName} » sur MyFidpass.\n\nOuvrez l’app et connectez-vous avec cet e-mail : le commerce apparaîtra dans votre espace (reconnexion ou rechargement du compte si besoin).\n\n— MyFidpass`,
+    html: `<p>Bonjour,</p><p><strong>${inviterLabel}</strong> vous a donné l’accès <strong>${roleLabel}</strong> pour le commerce « <strong>${shopName}</strong> » sur MyFidpass.</p><p>Ouvrez l’app et connectez-vous avec cet e-mail : le commerce apparaîtra dans votre espace (reconnexion ou rechargement du compte si besoin).</p><p>— MyFidpass</p>`,
+  });
+  if (!emailSent && isEmailConfigured()) {
+    console.warn("[Team] invite: échec d’envoi e-mail (voir logs [Email] Resend/SMTP)");
+  } else if (!emailSent) {
+    console.warn(
+      "[Team] invite: aucun e-mail (définir RESEND_API_KEY ou SMTP sur le serveur — voir docs/EMAIL-TRANSACTIONNEL.md)",
+    );
+  }
+
   return res.json({
     ok: true,
     message: "Accès employé activé. L’utilisateur verra le commerce après la prochaine connexion (ou rechargement du compte).",
+    email_sent: emailSent,
   });
 });
 
