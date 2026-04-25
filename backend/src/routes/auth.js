@@ -11,6 +11,7 @@ import {
   getUserByPhoneE164,
   getUserById,
   getUserByStaffLogin,
+  getUsersByStaffLogin,
   normalizeStaffLogin,
   isReservedStaffEmailOnly,
   getBusinessesByUserId,
@@ -439,7 +440,23 @@ router.post("/login", validate(schemas.loginWithIdentifier), async (req, res) =>
         code: "INVALID_STAFF_LOGIN",
       });
     }
-    user = getUserByStaffLogin(n);
+    const candidates = getUsersByStaffLogin(n);
+    if (!candidates.length) {
+      user = null;
+    } else {
+      user = null;
+      for (const candidate of candidates) {
+        // Autorise le même `staff_login` sur plusieurs commerces ; le mot de passe départage.
+        const okCandidate = await bcrypt.compare(String(password), candidate.password_hash);
+        if (okCandidate) {
+          user = candidate;
+          break;
+        }
+      }
+      if (!user) {
+        return res.status(401).json({ error: "Identifiant ou mot de passe incorrect" });
+      }
+    }
   }
   if (!user) {
     return res.status(404).json({
@@ -447,9 +464,11 @@ router.post("/login", validate(schemas.loginWithIdentifier), async (req, res) =>
       code: "NO_ACCOUNT",
     });
   }
-  const ok = await bcrypt.compare(String(password), user.password_hash);
-  if (!ok) {
-    return res.status(401).json({ error: "Identifiant ou mot de passe incorrect" });
+  if (raw.includes("@")) {
+    const ok = await bcrypt.compare(String(password), user.password_hash);
+    if (!ok) {
+      return res.status(401).json({ error: "Identifiant ou mot de passe incorrect" });
+    }
   }
   const { accessToken, refreshToken } = issueTokenPair(user.id);
   res.json({

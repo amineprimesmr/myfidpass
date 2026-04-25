@@ -55,28 +55,43 @@ export function isReservedStaffEmailOnly(email) {
 export function getUserByStaffLogin(staffLoginNorm) {
   if (!staffLoginNorm) return null;
   const n = String(staffLoginNorm).trim().toLowerCase();
-  const row = db.prepare("SELECT * FROM users WHERE lower(staff_login) = ?").get(n);
+  const row = db
+    .prepare("SELECT * FROM users WHERE lower(staff_login) = ? ORDER BY datetime(created_at) DESC")
+    .get(n);
   return row || null;
+}
+
+/**
+ * Plusieurs comptes employés peuvent partager le même identifiant (`staff_login`) sur des commerces différents.
+ * Le login départage ensuite via le mot de passe.
+ */
+export function getUsersByStaffLogin(staffLoginNorm) {
+  if (!staffLoginNorm) return [];
+  const n = String(staffLoginNorm).trim().toLowerCase();
+  return db
+    .prepare("SELECT * FROM users WHERE lower(staff_login) = ? ORDER BY datetime(created_at) DESC")
+    .all(n);
 }
 
 /**
  * Compte commerçant employé : se connecte avec identifiant + mot de passe, sans e-mail réel.
  * E-mail en base = `${staff_login}${STAFF_EMAIL_DOMAIN}` (réservé, non recevable).
  */
-export function createStaffUser({ staffLogin, passwordHash, name }) {
+export function createStaffUser({ staffLogin, passwordHash, name, businessId }) {
   const norm = normalizeStaffLogin(staffLogin);
   if (!norm) {
     const err = new Error("STAFF_LOGIN_INVALID");
     err.code = "STAFF_LOGIN_INVALID";
     throw err;
   }
-  if (getUserByStaffLogin(norm) || getUserByEmail(norm + STAFF_EMAIL_DOMAIN)) {
-    const err = new Error("STAFF_LOGIN_TAKEN");
-    err.code = "STAFF_LOGIN_TAKEN";
-    throw err;
-  }
   const id = randomUUID();
-  const email = norm + STAFF_EMAIL_DOMAIN;
+  const bizToken = String(businessId || "global")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .slice(0, 24);
+  // E-mail technique UNIQUE même si deux commerces utilisent le même `staff_login`.
+  const email = `${norm}+${bizToken || "global"}+${id.slice(0, 8)}${STAFF_EMAIL_DOMAIN}`;
   db.prepare("INSERT INTO users (id, email, password_hash, name, staff_login) VALUES (?, ?, ?, ?, ?)").run(
     id,
     email,

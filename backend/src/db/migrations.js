@@ -1377,4 +1377,16 @@ export function runMigrations(db) {
     );
     markMigrationApplied(db, 30, "users_staff_login");
   }
+
+  const m31 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 31").get();
+  if (!m31) {
+    // `staff_login` peut être partagé entre commerces ; unicité retirée (login départagé par mot de passe).
+    safeRun(db, () => db.exec("DROP INDEX IF EXISTS idx_users_staff_login"));
+    safeRun(db, () =>
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_users_staff_login_lookup ON users(lower(staff_login)) WHERE staff_login IS NOT NULL",
+      ),
+    );
+    markMigrationApplied(db, 31, "users_staff_login_non_unique");
+  }
 }

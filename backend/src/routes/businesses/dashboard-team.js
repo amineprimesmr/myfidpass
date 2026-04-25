@@ -3,9 +3,16 @@
  */
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { getUserByEmail, listTeamMembersForBusinessIncludingOwner, addTeamMember, findActiveTeamMembership } from "../../db/business-team.js";
-import { isUserAdmin, createStaffUser, getUserByStaffLogin } from "../../db/users.js";
+import {
+  getUserByEmail,
+  listTeamMembersForBusinessIncludingOwner,
+  addTeamMember,
+  findActiveTeamMembership,
+  isOnlyTeamUser,
+} from "../../db/business-team.js";
+import { isUserAdmin, createStaffUser, getUserById, isReservedStaffEmailOnly } from "../../db/users.js";
 import { getDb } from "../../db/connection.js";
+import { deleteUserAccount } from "../../db.js";
 import { sendMail, isEmailConfigured } from "../../email.js";
 import { validate, schemas } from "../../lib/validate.js";
 
@@ -53,9 +60,6 @@ router.post("/staff-accounts", validate(schemas.teamStaffAccount), async (req, r
   const business = req.business;
   const { staff_login, password, name, role } = req.body;
   const roleR = String(role || "staff").toLowerCase() === "manager" ? "manager" : "staff";
-  if (getUserByStaffLogin(staff_login)) {
-    return res.status(409).json({ error: "Cet identifiant est déjà utilisé.", code: "staff_login_taken" });
-  }
   let user;
   try {
     const passwordHash = await bcrypt.hash(String(password), SALT_ROUNDS);
@@ -63,14 +67,15 @@ router.post("/staff-accounts", validate(schemas.teamStaffAccount), async (req, r
       staffLogin: staff_login,
       passwordHash,
       name: name ? String(name).trim() : null,
+      businessId: business.id,
     });
   } catch (e) {
     const c = e?.code;
-    if (c === "STAFF_LOGIN_TAKEN") {
-      return res.status(409).json({ error: "Cet identifiant est déjà utilisé.", code: "staff_login_taken" });
-    }
     if (c === "STAFF_LOGIN_INVALID") {
       return res.status(400).json({ error: "Identifiant invalide.", code: "STAFF_LOGIN_INVALID" });
+    }
+    if (String(e?.message || "").toLowerCase().includes("unique constraint failed")) {
+      return res.status(409).json({ error: "Conflit de création du compte employé. Réessayez.", code: "staff_create_conflict" });
     }
     console.error("[team] staff-accounts create:", e);
     return res.status(500).json({ error: "Impossible de créer le compte employé." });
@@ -189,7 +194,24 @@ router.delete("/members/:id", (req, res) => {
   if (!row) {
     return res.status(404).json({ error: "Lien d’équipe introuvable" });
   }
+  const targetUserId = String(row.user_id || "").trim();
   db.prepare("DELETE FROM business_team_members WHERE id = ?").run(row.id);
+  // Si c'était un compte employé technique et qu'il n'a plus AUCUN accès, on supprime le compte.
+  if (targetUserId) {
+    const targetUser = getUserById(targetUserId);
+    if (
+      targetUser &&
+      targetUser.staff_login &&
+      isReservedStaffEmailOnly(targetUser.email) &&
+      isOnlyTeamUser(targetUserId)
+    ) {
+      try {
+        deleteUserAccount(targetUserId);
+      } catch (e) {
+        console.error("[team] delete orphan staff account:", e);
+      }
+    }
+  }
   return res.status(204).send();
 });
 
