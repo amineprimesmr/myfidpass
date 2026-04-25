@@ -279,6 +279,8 @@ export function updateBusiness(businessId, updates) {
     "required_stamps", "stamp_emoji", "points_per_euro", "points_per_visit", "program_type", "loyalty_mode",
     "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
     "sector", "engagement_rewards",
+    /** Hypothèses export comptable (valorisation, taux) — JSON objet, max ~32 Ko côté route PATCH. */
+    "accounting_prefs_json",
     "flyer_prefs_json", "flyer_prefs_updated_at",
     /** Générations flyer IA consommées sur le mois `flyer_ai_billing_month` (UTC). */
     "flyer_ai_generations_used",
@@ -340,7 +342,12 @@ export function updateBusiness(businessId, updates) {
     const col = key.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
     if (allowed.includes(col) && value !== undefined) {
       setClauses.push(`${col} = ?`);
-      if (col === "points_reward_tiers" || col === "engagement_rewards" || col === "campaign_automation_json") {
+      if (
+        col === "points_reward_tiers" ||
+        col === "engagement_rewards" ||
+        col === "campaign_automation_json" ||
+        col === "accounting_prefs_json"
+      ) {
         values.push(value == null || value === "" ? null : (typeof value === "string" ? value : JSON.stringify(value)));
       } else if (numericCols.includes(col)) {
         const n = value === null || value === "" ? null : Number(value);

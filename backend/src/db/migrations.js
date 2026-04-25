@@ -1389,4 +1389,9 @@ export function runMigrations(db) {
     );
     markMigrationApplied(db, 31, "users_staff_login_non_unique");
   }
+
+  const bizAccPrefs = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizAccPrefs.includes("accounting_prefs_json")) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN accounting_prefs_json TEXT"));
+  }
 }

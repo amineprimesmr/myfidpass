@@ -67,6 +67,7 @@ import {
   buildExportRows,
   summarizeExportRows,
 } from "../../lib/merchant-transaction-export.js";
+import { buildMerchantAccountingPack } from "../../lib/merchant-accounting-pack.js";
 import socialMetricsRouter from "./dashboard-social-metrics.js";
 import dashboardSocialOauthRouter from "./dashboard-social-oauth.js";
 import dashboardDeliveryReceiptClaimsRouter from "./dashboard-delivery-receipt-claims.js";
@@ -233,6 +234,17 @@ router.get("/settings", (req, res) => {
         : 25,
     /** 1 = le dashboard peut appeler POST .../delivery-receipt-claims/dev-reset (variable DELIVERY_RECEIPT_DEV_RESET sur l’API). */
     delivery_receipt_dev_reset_available: isDeliveryReceiptDevResetEnabled() ? 1 : 0,
+    /** Préférences export bilan (valorisation, montants nominatifs) — objet JSON ou {}. */
+    accounting_prefs: (() => {
+      const raw = business.accounting_prefs_json;
+      if (!raw || !String(raw).trim()) return {};
+      try {
+        const o = JSON.parse(raw);
+        return typeof o === "object" && o != null && !Array.isArray(o) ? o : {};
+      } catch {
+        return {};
+      }
+    })(),
   });
 });
 
@@ -654,6 +666,29 @@ router.patch("/settings", async (req, res) => {
       }
     }
   }
+
+  const accounting_prefs_in = body.accounting_prefs_json ?? body.accountingPrefsJson ?? body.accounting_prefs;
+  if (accounting_prefs_in !== undefined) {
+    if (accounting_prefs_in === null || accounting_prefs_in === "") {
+      updates.accounting_prefs_json = null;
+    } else {
+      let obj;
+      try {
+        obj = typeof accounting_prefs_in === "string" ? JSON.parse(accounting_prefs_in) : accounting_prefs_in;
+      } catch {
+        return res.status(400).json({ error: "accounting_prefs JSON invalide." });
+      }
+      if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
+        return res.status(400).json({ error: "accounting_prefs doit être un objet JSON." });
+      }
+      const str = JSON.stringify(obj);
+      if (str.length > 32000) {
+        return res.status(400).json({ error: "Préférences comptables trop volumineuses (max 32 Ko)." });
+      }
+      updates.accounting_prefs_json = str;
+    }
+  }
+
   if (logo_url && (logo_url.startsWith("http://") || logo_url.startsWith("https://"))) {
     try {
       const controller = new AbortController();
@@ -1228,6 +1263,29 @@ router.get("/transactions/export", (req, res) => {
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="transactions-${business.slug}.csv"`);
   res.send("\uFEFF" + csv);
+});
+
+/** Pack multi-fichiers (CSV + lisezmoi) pour bilan / expert-comptable — JSON UTF-8. */
+router.get("/accounting-pack", (req, res) => {
+  const business = req.business;
+  if (!ensureOperationalSubscription(req, res, business)) return;
+  const exportLimit = Math.min(Math.max(Number(req.query.limit) || 25000, 1), 25000);
+  const days = [7, 30, 90, 365].includes(Number(req.query.days)) ? Number(req.query.days) : null;
+  const fromDate = String(req.query.from || req.query.date_from || "").trim() || null;
+  const toDate = String(req.query.to || req.query.date_to || "").trim() || null;
+  try {
+    const pack = buildMerchantAccountingPack({
+      business,
+      days,
+      fromDate,
+      toDate,
+      limit: exportLimit,
+    });
+    res.json(pack);
+  } catch (err) {
+    logger.error({ err, businessId: business?.id }, "[dashboard] GET /accounting-pack");
+    res.status(500).json({ error: "Export comptable impossible.", code: "ACCOUNTING_PACK_FAILED" });
+  }
 });
 
 router.get("/transactions", (req, res) => {
