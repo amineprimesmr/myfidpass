@@ -169,7 +169,10 @@ export const schemas = {
       .min(3, "Au moins 3 caractères")
       .max(32, "32 caractères max")
       .regex(/^[a-z0-9][a-z0-9_-]{1,30}[a-z0-9]$/, "Lettres, chiffres, _ et - (3 à 32 caractères)"),
-    password: passwordSchema,
+    password: z
+      .string({ required_error: "Mot de passe requis" })
+      .min(3, "Le mot de passe doit contenir au moins 3 caractères")
+      .max(128, "Mot de passe trop long (128 caractères max)"),
     name: z.string().trim().max(100).optional().nullable(),
     role: z.enum(["staff", "manager"]).optional(),
   }),
