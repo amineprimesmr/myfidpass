@@ -98,7 +98,13 @@ export function FinTapHeroScrollSection() {
       rafRef.current = requestAnimationFrame(raf);
     };
 
-    const onResize = () => {
+    /**
+     * Ne remettre initTopRef à null que sur changement de géométrie (viewport / layout).
+     * Un reset sur « section visible » (ex. IntersectionObserver) faisait recalculer
+     * la baseline à la position courante → ratio = 0 → retour en contre-plongée au
+     * remontée du scroll ou sur iOS (rebond, barre d’adresse).
+     */
+    const invalidateBaseline = () => {
       initTopRef.current = null;
       onScroll();
     };
@@ -109,16 +115,6 @@ export function FinTapHeroScrollSection() {
       reduced.addListener(onScroll);
     }
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (!entries[0] || !entries[0].isIntersecting) return;
-        initTopRef.current = null;
-        onScroll();
-      },
-      { root: null, rootMargin: "0px", threshold: 0.01 }
-    );
-    io.observe(section);
-
     const roots = getScrollListenerRoots(section);
     const scrollOpts = { passive: true, capture: true };
     for (const r of roots) {
@@ -128,7 +124,11 @@ export function FinTapHeroScrollSection() {
         r.addEventListener("scroll", onScroll, scrollOpts);
       }
     }
-    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("resize", invalidateBaseline, { passive: true });
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener("resize", invalidateBaseline, { passive: true });
+    }
 
     run();
 
@@ -138,7 +138,9 @@ export function FinTapHeroScrollSection() {
       } else {
         reduced.removeListener(onScroll);
       }
-      io.disconnect();
+      if (vv) {
+        vv.removeEventListener("resize", invalidateBaseline);
+      }
       for (const r of roots) {
         if (r === window) {
           window.removeEventListener("scroll", onScroll, scrollOpts);
@@ -146,7 +148,9 @@ export function FinTapHeroScrollSection() {
           r.removeEventListener("scroll", onScroll, scrollOpts);
         }
       }
-      window.removeEventListener("resize", onResize, { passive: true });
+      window.removeEventListener("resize", invalidateBaseline, {
+        passive: true,
+      });
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
