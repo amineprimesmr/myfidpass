@@ -158,9 +158,9 @@ export function FinTapHeroScrollSection() {
     >
       <div className="hero__text fintap-hero-iphone__text">
         <h1 className="fintap-hero-iphone__h1">
-          UNE NOUVELLE EXPÉRIENCE
+          LA NOUVELLE EXPÉRIENCE
           <br />
-          DE FIDELITÉ
+          DE FIDÉLITÉ
         </h1>
         <p className="fintap-hero-iphone__lead">
           Une carte de fidélité simple à déployer, simple à utiliser, pensée
