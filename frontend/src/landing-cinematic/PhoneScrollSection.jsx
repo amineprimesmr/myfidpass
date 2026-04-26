@@ -81,7 +81,11 @@ export function PhoneScrollSection() {
     const t = clamp(p, 0, 1);
     if (t >= PHASE_3D_END) return 0;
     const a = t / PHASE_3D_END;
-    return ANGLE_MAX * (1 - easeInOutCubic(a));
+    // Ease-out (quadr.) : dès le scroll, l’iPhone redevient droit (0°) sans rester
+    // collé en contre-plongée. L’easeInOutCubic seul faisait garder ~l’angle max
+    // très longtemps puis donnait l’impression d’inclinaison / phase 2 bancale.
+    const s = 1 - a;
+    return ANGLE_MAX * s * s;
   });
 
   const heroOpacity = useTransform(scrollYProgress, (p) => {
