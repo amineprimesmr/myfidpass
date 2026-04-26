@@ -81,11 +81,32 @@ export function PhoneScrollSection() {
     const t = clamp(p, 0, 1);
     if (t >= PHASE_3D_END) return 0;
     const a = t / PHASE_3D_END;
-    // Ease-out (quadr.) : dès le scroll, l’iPhone redevient droit (0°) sans rester
-    // collé en contre-plongée. L’easeInOutCubic seul faisait garder ~l’angle max
-    // très longtemps puis donnait l’impression d’inclinaison / phase 2 bancale.
     const s = 1 - a;
     return ANGLE_MAX * s * s;
+  });
+
+  // Sans ça, en phase 2 rotateX=0 mais perspective + gros translate X/Y/scale
+  // donne l’impression que le mockup se “casse” / se penche (projection 3D).
+  const wrapPerspective = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t >= PHASE_3D_END) return 4000;
+    const a = easeInOutCubic(t / PHASE_3D_END);
+    return 1100 + 2900 * a;
+  });
+  const wrapPerspectiveOrigin = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t >= PHASE_3D_END) return "50% 50%";
+    const a = easeInOutCubic(t / PHASE_3D_END);
+    const yp = 12 + 40 * a;
+    return `50% ${yp}%`;
+  });
+  const phoneTransformOrigin = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t >= PHASE_3D_END) return "50% 50%";
+    const a = t / PHASE_3D_END;
+    const s = 1 - a;
+    const yPct = 100 * s * s;
+    return `50% ${yPct.toFixed(1)}%`;
   });
 
   const heroOpacity = useTransform(scrollYProgress, (p) => {
@@ -131,8 +152,11 @@ export function PhoneScrollSection() {
       id="fintap-hero"
       className="fintap-hero relative min-h-[480vh] scroll-mt-0 bg-[#fdfcf9] text-black"
     >
-      {/* overflow-y-visible : sinon overflow-hidden rogne l’iPhone dès qu’il descend → aucun effet visible */}
-      <div className="sticky top-0 h-screen overflow-x-hidden overflow-y-visible [perspective:min(85vh,1100px)] [perspective-origin:50%_12%]">
+      {/* perspective pilotée par scroll (voir wrapPerspective) : en fin de parcours, projection quasi plate = mockup “droit” */}
+      <motion.div
+        className="sticky top-0 h-screen overflow-x-hidden overflow-y-visible"
+        style={{ perspective: wrapPerspective, perspectiveOrigin: wrapPerspectiveOrigin }}
+      >
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -159,14 +183,14 @@ export function PhoneScrollSection() {
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d] [backface-visibility:hidden]"
+          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform [backface-visibility:hidden]"
           style={{
             y: phoneYFinal,
             x: phoneX,
             scale: phoneScale,
             rotateX: phoneRotateX,
-            // Pivot sur le bas = le haut du cadre part vraiment “vers l’arrière” (effet worm’s eye)
-            transformOrigin: "50% 100%",
+            transformOrigin: phoneTransformOrigin,
+            transformStyle: "preserve-3d",
           }}
         >
           <img
@@ -217,7 +241,7 @@ export function PhoneScrollSection() {
         >
           Rebuilt in React
         </p>
-      </div>
+      </motion.div>
     </section>
   );
 }
