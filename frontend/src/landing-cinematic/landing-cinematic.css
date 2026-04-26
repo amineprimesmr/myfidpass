@@ -10,6 +10,17 @@
   min-height: 100vh;
 }
 
+/* Scroll document normal (pas de hauteur verrouillée) : le long parcours type PhoneScroll est scrollable. */
+html:has(#landing-cinematic-root.landing-cinematic-shell),
+body:has(#landing-cinematic-root.landing-cinematic-shell) {
+  height: auto;
+  min-height: 100dvh;
+  min-height: 100svh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+}
+
 #landing:has(.landing-cinematic-shell) .landing-header-outer,
 #landing:has(.landing-cinematic-shell) .site-banner-media,
 #landing:has(.landing-cinematic-shell) .landing-helmet-section {

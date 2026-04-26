@@ -10,9 +10,21 @@ export function PhoneScrollSection() {
     offset: ["start start", "end end"],
   });
 
-  const phoneY = useTransform(scrollYProgress, [0, 0.34, 1], ["56vh", "14vh", "10vh"]);
+  const ZOOM_MAX = 3.1; // contre-plongée (gros plan)
+  const ZOOM_END = 0.72; // en fin de scroll
+
+  // Cadrage : un cran plus bas au départ si le scale max augmente, pour ne pas rogner trop le haut.
+  const phoneY = useTransform(scrollYProgress, (p) => {
+    const t = Math.max(0, Math.min(1, p));
+    const yVh = 79 - 69 * t; // 79vh → 10vh
+    return `${yVh}vh`;
+  });
   const phoneX = useTransform(scrollYProgress, [0, 0.58, 0.75, 1], ["0vw", "0vw", "-18vw", "-24vw"]);
-  const phoneScale = useTransform(scrollYProgress, [0, 0.34, 1], [0.68, 1, 0.9]);
+  // Dézoom linéaire en fonction du progrès de la section = même cadence de A à Z, sans à-coups.
+  const phoneScale = useTransform(scrollYProgress, (p) => {
+    const t = Math.max(0, Math.min(1, p));
+    return ZOOM_MAX - t * (ZOOM_MAX - ZOOM_END);
+  });
   // Grosse contre-plongée (rotateX) uniquement : aucun rotateY = zéro penché sur le côté.
   const phoneRotateX = useTransform(
     scrollYProgress,
@@ -77,7 +89,7 @@ export function PhoneScrollSection() {
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(46vw,420px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d] [backface-visibility:hidden]"
+          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d] [backface-visibility:hidden]"
           style={{
             y: phoneY,
             x: phoneX,

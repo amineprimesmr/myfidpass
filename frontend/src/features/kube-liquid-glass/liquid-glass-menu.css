@@ -1,41 +1,290 @@
-/* Menu type « Searchbox » (kube) : bord arrondi type pilule, contenu z-index audessus. */
+/* Desktop: une ligne, pas de retour — mobile: barre + panneau liquid glass. */
 #fidpass-liquid-menu,
-.lg-test-menu-outer {
+.lg-test-menu-outer,
+.lg-nav-lg {
   position: relative;
   z-index: 2;
-  display: flex;
-  justify-content: center;
-  padding: 0.5rem 1rem 0.25rem;
+  display: none;
+  width: 100%;
   flex-shrink: 0;
+  justify-content: center;
+  padding: 0.5rem 0.8rem 0.25rem;
   pointer-events: auto;
+  box-sizing: border-box;
 }
 
 #fidpass-liquid-menu-glass.lg-menu--native,
-#fidpass-liquid-menu-glass.lg-menu--fallback {
+#fidpass-liquid-menu-glass.lg-menu--fallback,
+#fidpass-liquid-menu-glass-bar.lg-menu--native,
+#fidpass-liquid-menu-glass-bar.lg-menu--fallback,
+#fidpass-liquid-menu-glass-panel.lg-menu--native,
+#fidpass-liquid-menu-glass-panel.lg-menu--fallback {
   position: relative;
   display: flex;
-  width: 100%;
-  max-width: min(100% - 1.5rem, 40rem);
-  min-height: 2.9rem;
-  padding: 0.35rem 0.4rem 0.35rem 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.5rem;
   box-sizing: border-box;
-  border-radius: 9999px;
-  /* Arrière plan quasi transparent: le contenu (texte) reste lisible */
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 4px 24px rgba(0, 0, 0, 0.2);
   isolation: isolate;
+  border-radius: 9999px;
 }
 
-#fidpass-liquid-menu-glass.lg-menu--fallback {
-  backdrop-filter: blur(20px) saturate(1.35) brightness(1.05);
+#fidpass-liquid-menu-glass {
+  min-height: 2.75rem;
+  width: 100%;
+  max-width: min(100% - 0.5rem, 48rem);
+  margin: 0 auto;
+  padding: 0.3rem 0.45rem 0.3rem 0.5rem;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.3rem 0.45rem;
+}
+
+#fidpass-liquid-menu-glass .lg-menu__ul {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  padding: 0 0.1rem;
+  margin: 0 0.15rem;
+}
+
+#fidpass-liquid-menu-glass .lg-menu__ul::-webkit-scrollbar {
+  height: 4px;
+}
+
+#fidpass-liquid-menu-glass .lg-menu__ul::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+
+#fidpass-liquid-menu-glass .lg-menu__a,
+#fidpass-liquid-menu-glass .lg-menu__cta {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+#fidpass-liquid-menu-glass.lg-menu--fallback,
+#fidpass-liquid-menu-glass-bar.lg-menu--fallback,
+#fidpass-liquid-menu-glass-panel.lg-menu--fallback {
   -webkit-backdrop-filter: blur(20px) saturate(1.35) brightness(1.05);
+  backdrop-filter: blur(20px) saturate(1.35) brightness(1.05);
 }
 
 #fidpass-liquid-menu-glass * {
   pointer-events: auto;
+}
+
+#fidpass-liquid-menu-glass-bar * {
+  pointer-events: auto;
+}
+
+#fidpass-liquid-menu-glass-panel * {
+  pointer-events: auto;
+}
+
+/* Mobile layout */
+.lg-nav-sm {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  display: block;
+  padding: 0.4rem 0.75rem 0;
+  box-sizing: border-box;
+}
+
+.lg-nav-sm__bar {
+  max-width: min(100% - 0.5rem, 28rem);
+  margin: 0 auto;
+}
+
+#fidpass-liquid-menu-glass-bar {
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.3rem 0.45rem 0.3rem 0.4rem;
+}
+
+#fidpass-liquid-menu-glass-bar.lg-menu--bar-ghost {
+  background: linear-gradient(180deg, rgba(20, 20, 30, 0.55), rgba(20, 20, 30, 0.35));
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  opacity: 0.9;
+}
+
+.lg-menu__brand--bar {
+  font-size: 0.85rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lg-menu__brand--bar .lg-menu__mark {
+  width: 1.45rem;
+  height: 1.45rem;
+  font-size: 0.7rem;
+}
+
+.lg-menu__burger {
+  display: inline-flex;
+  width: 2.55rem;
+  min-width: 2.55rem;
+  height: 2.3rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: rgba(15, 23, 42, 0.35);
+  color: #f1f5f9;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.lg-menu__burger:hover,
+.lg-menu__burger:focus-visible {
+  background: rgba(255, 255, 255, 0.15);
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+.lg-menu__burger-line {
+  display: block;
+  width: 1.1rem;
+  height: 2px;
+  background: #f1f5f9;
+  border-radius: 1px;
+  transition: transform 0.25s, opacity 0.2s;
+  transform-origin: center;
+}
+
+.lg-nav-sm--open .lg-menu__burger .lg-menu__burger-line:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.lg-nav-sm--open .lg-menu__burger .lg-menu__burger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.lg-nav-sm--open .lg-menu__burger .lg-menu__burger-line:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.lg-menu-panel[hidden] {
+  display: none;
+}
+
+.lg-menu-panel {
+  max-width: min(100% - 1rem, 24rem);
+  margin: 0.45rem auto 0;
+  padding: 0 0.25rem 0.5rem;
+}
+
+#fidpass-liquid-menu-glass-panel {
+  border-radius: 1.1rem;
+  min-height: 7rem;
+  width: 100%;
+  max-width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  padding: 0.85rem 0.7rem 0.95rem;
+  flex-wrap: wrap;
+}
+
+.lg-menu--stack {
+  max-height: 70dvh;
+  overflow-y: auto;
+}
+
+.lg-menu__ul--stack {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.lg-menu__a--stack {
+  display: block;
+  text-align: center;
+  padding: 0.5rem 0.65rem;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.12);
+  border: none;
+  text-decoration: none;
+  color: #f1f5f9;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 0.65rem;
+  font: inherit;
+}
+
+a.lg-menu__a--stack:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.lg-menu__cta--stack {
+  text-align: center;
+  text-decoration: none;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.8rem;
+  background: #fff;
+  border-radius: 0.7rem;
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-top: 0.15rem;
+}
+
+.lg-menu-panel.is-open {
+  animation: lgMenuDrop 0.22s ease-out;
+}
+
+@keyframes lgMenuDrop {
+  from {
+    transform: translateY(-6px);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+#liquid-glass-test-app.lg-menu-noscroll {
+  overflow: hidden;
+  max-height: 100dvh;
+  touch-action: none;
+}
+
+#liquid-glass-test-app.lg-fallback-filters .lg-menu--native {
+  -webkit-backdrop-filter: blur(20px) saturate(1.35) brightness(1.05) !important;
+  backdrop-filter: blur(20px) saturate(1.35) brightness(1.05) !important;
+}
+
+@media (min-width: 768px) {
+  .lg-nav-lg,
+  #fidpass-liquid-menu {
+    display: flex;
+  }
+
+  .lg-nav-sm {
+    display: none;
+  }
 }
 
 .lg-menu__brand {
@@ -44,7 +293,7 @@
   gap: 0.3rem;
   text-decoration: none;
   color: #f1f5f9;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   padding: 0.1rem 0.35rem;
@@ -64,61 +313,50 @@
   font-size: 0.8rem;
 }
 
-.lg-menu__ul {
+#fidpass-liquid-menu-glass .lg-menu__ul {
   display: flex;
   list-style: none;
   margin: 0;
   padding: 0 0.15rem;
-  flex: 1;
-  min-width: 0;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.15rem;
+  align-items: center;
+  gap: 0.1rem 0.15rem;
 }
 
-.lg-menu__a {
+#fidpass-liquid-menu-glass .lg-menu__a {
   display: inline-flex;
   border: none;
   background: rgba(15, 23, 42, 0.15);
   color: #e2e8f0;
   text-decoration: none;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
-  padding: 0.3rem 0.55rem;
+  padding: 0.28rem 0.5rem;
   border-radius: 9999px;
   font: inherit;
   transition: background 0.2s, color 0.2s;
   cursor: pointer;
 }
 
-a.lg-menu__a:hover,
-button.lg-menu__a:hover {
+#fidpass-liquid-menu-glass a.lg-menu__a:hover,
+#fidpass-liquid-menu-glass button.lg-menu__a:hover {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
 
-.lg-menu__cta {
+#fidpass-liquid-menu-glass .lg-menu__cta {
   text-decoration: none;
   color: #0f172a;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  padding: 0.4rem 0.85rem;
+  padding: 0.36rem 0.75rem;
   border-radius: 9999px;
   background: #fff;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
   border: none;
-  white-space: nowrap;
-  flex-shrink: 0;
   cursor: pointer;
 }
 
-.lg-menu__cta:hover {
+#fidpass-liquid-menu-glass .lg-menu__cta:hover {
   background: #f1f5f9;
-}
-
-@media (max-width: 520px) {
-  .lg-menu__a--md {
-    display: none;
-  }
 }

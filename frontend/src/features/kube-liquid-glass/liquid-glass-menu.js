@@ -1,31 +1,21 @@
 /* global ResizeObserver */
 /**
- * Menu « Liquid Glass » (kube.io) : filtre SVG + backdrop-filter: url(#…)
- * en Chrome / Chromium ; repli flou CSS ailleurs.
+ * Menu responsive : desktop une ligne, mobile barre + panneau (Liquid Glass / kube).
  */
 import {
-  SurfaceEquations,
-  calculateDisplacementMap1D,
-  calculateDisplacementMap2D,
-  calculateSpecularHighlight,
-  imageDataToDataURL,
-} from "./displacement-math.js";
+  ensureAllFiltersSvg,
+  updateFilterForGlass,
+  applyBackdropNative,
+  applyBackdropFallback,
+  clearBackdropToFallback,
+  MQL,
+  DEFAULTS,
+} from "./liquid-glass-menu-filters.js";
 import "./liquid-glass-menu.css";
 
-const FILTER_ID = "fidpassLiquidMenuFilter";
-const SVG_ID = "fidpass-liquid-menu-filter-svg";
-
-const DEFAULTS = {
-  surfaceType: "convex_squircle",
-  bezelWidth: 18,
-  glassThickness: 100,
-  refractiveIndex: 1.5,
-  refractionScale: 0.88,
-  specularOpacity: 0.28,
-  blur: 0.9,
-  saturate: 1.25,
-  specularAngle: Math.PI / 3,
-};
+const DESK = "fidpassLgDesk";
+const MBAR = "fidpassLgMbar";
+const MPAN = "fidpassLgMpan";
 
 function supportsSvgBackdropUrl() {
   if (typeof window === "undefined" || !window.chrome) return false;
@@ -34,126 +24,191 @@ function supportsSvgBackdropUrl() {
   return el.style.backdropFilter.includes("url");
 }
 
-function ensureFilterSvg() {
-  if (document.getElementById(SVG_ID)) return;
-  const host = document.body;
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `
-<svg id="${SVG_ID}" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
-  <defs>
-    <filter id="${FILTER_ID}" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
-      <feGaussianBlur id="fidpassMenuFilterBlur" in="SourceGraphic" stdDeviation="0.9" result="blurred"/>
-      <feImage id="fidpassMenuDispImg" href="" x="0" y="0" width="100" height="40" result="displacement_map" preserveAspectRatio="none"/>
-      <feDisplacementMap id="fidpassMenuDispMap" in="blurred" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
-      <feColorMatrix in="displaced" type="saturate" values="1.25" result="displaced_saturated"/>
-      <feImage id="fidpassMenuSpecImg" href="" x="0" y="0" width="100" height="40" result="specular_layer" preserveAspectRatio="none"/>
-      <feComponentTransfer in="specular_layer" result="specular_faded">
-        <feFuncA id="fidpassMenuSpecAlpha" type="linear" slope="0.28"/>
-      </feComponentTransfer>
-      <feBlend in="specular_faded" in2="displaced_saturated" mode="screen"/>
-    </filter>
-  </defs>
-</svg>`;
-  host.appendChild(wrap.firstElementChild);
+/**
+ * @param {HTMLElement} el
+ * @param {string} filterId
+ * @param {boolean} use
+ */
+function setNative(el, filterId, use) {
+  if (!el) return;
+  if (use) applyBackdropNative(el, filterId);
+  else applyBackdropFallback(el);
 }
 
 /**
- * @param {HTMLElement} glassEl
- * @param {object} opts
- * @param {() => void} [opts.onUpdate]
+ * @param {ReturnType<typeof getEls>} els
  */
-export function updateMenuLiquidFilter(glassEl, opts) {
-  const o = { ...DEFAULTS, ...opts };
-  const w = Math.max(2, Math.round(glassEl.offsetWidth));
-  const h = Math.max(2, Math.round(glassEl.offsetHeight));
-  const radius = Math.min(h / 2, w / 2);
-  if (w < 8 || h < 8) return;
+function initBurger(els) {
+  const { burger, rootSm, panelHost, onBurger } = els;
+  if (!burger || !panelHost) return;
 
-  const surfaceFn = SurfaceEquations[o.surfaceType] || SurfaceEquations.convex_squircle;
-  const pre = calculateDisplacementMap1D(o.glassThickness, o.bezelWidth, surfaceFn, o.refractiveIndex);
-  const maxD = Math.max(1, ...pre.map((x) => Math.abs(x)));
-  const disp = calculateDisplacementMap2D(w, h, w, h, radius, o.bezelWidth, maxD, pre);
-  const spec = calculateSpecularHighlight(w, h, radius, o.bezelWidth, o.specularAngle);
-  const dispUrl = imageDataToDataURL(disp);
-  const specUrl = imageDataToDataURL(spec);
-
-  const dImg = document.getElementById("fidpassMenuDispImg");
-  const sImg = document.getElementById("fidpassMenuSpecImg");
-  const dMap = document.getElementById("fidpassMenuDispMap");
-  if (!dImg || !sImg || !dMap) return;
-
-  dImg.setAttribute("href", dispUrl);
-  dImg.setAttribute("width", String(w));
-  dImg.setAttribute("height", String(h));
-  sImg.setAttribute("href", specUrl);
-  sImg.setAttribute("width", String(w));
-  sImg.setAttribute("height", String(h));
-  dMap.setAttribute("scale", String(maxD * o.refractionScale));
-
-  const blurEl = document.getElementById("fidpassMenuFilterBlur");
-  if (blurEl) blurEl.setAttribute("stdDeviation", String(o.blur));
-  const specA = document.getElementById("fidpassMenuSpecAlpha");
-  if (specA) specA.setAttribute("slope", String(o.specularOpacity));
-  if (o.onUpdate) o.onUpdate();
-}
-
-/**
- * @param {object} root
- * @param {string} [root.glassSelector] défaut: #fidpass-liquid-menu-glass
- * @param {() => void} [root.getContainer] parent pour le SVG (défaut: document.body)
- */
-export function initLiquidGlassMenu({
-  glassSelector = "#fidpass-liquid-menu-glass",
-  getContainer = null,
-} = {}) {
-  ensureFilterSvg();
-  if (getContainer) {
-    const svg = document.getElementById(SVG_ID);
-    if (svg && getContainer() && getContainer() !== document.body) {
-      getContainer().appendChild(svg);
-    }
-  }
-  const glass = document.querySelector(glassSelector);
-  if (!glass) return () => {};
-
-  const use = supportsSvgBackdropUrl();
-  glass.classList.toggle("lg-menu--native", use);
-  glass.classList.toggle("lg-menu--fallback", !use);
-  if (use) {
-    glass.style.backdropFilter = `url(#${FILTER_ID})`;
-  } else {
-    glass.style.backdropFilter = "none";
-  }
-
-  let t = 0;
-  const run = () => {
-    updateMenuLiquidFilter(glass, DEFAULTS);
+  const app = document.getElementById("liquid-glass-test-app");
+  const close = () => {
+    panelHost.classList.remove("is-open");
+    panelHost.setAttribute("hidden", "");
+    panelHost.setAttribute("aria-hidden", "true");
+    burger.setAttribute("aria-expanded", "false");
+    if (rootSm) rootSm.classList.remove("lg-nav-sm--open");
+    if (app) app.classList.remove("lg-menu-noscroll");
+    if (onBurger) onBurger();
   };
-  const schedule = () => {
-    if (t) cancelAnimationFrame(t);
-    t = requestAnimationFrame(() => {
-      t = 0;
-      run();
+
+  const open = () => {
+    panelHost.removeAttribute("hidden");
+    panelHost.setAttribute("aria-hidden", "false");
+    panelHost.classList.add("is-open");
+    burger.setAttribute("aria-expanded", "true");
+    if (rootSm) rootSm.classList.add("lg-nav-sm--open");
+    if (app) app.classList.add("lg-menu-noscroll");
+    if (onBurger) onBurger();
+  };
+
+  burger.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (burger.getAttribute("aria-expanded") === "true") close();
+    else open();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (panelHost.getAttribute("aria-hidden") === "true") return;
+    if (!rootSm || !e.target) return;
+    if (rootSm.contains(/** @type {Node} */ (e.target))) return;
+    close();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panelHost.classList.contains("is-open")) {
+      close();
+      burger.focus();
+    }
+  });
+
+  const glPanel = document.getElementById("fidpass-liquid-menu-glass-panel");
+  if (glPanel) {
+    glPanel.addEventListener("click", (e) => {
+      if (e.target && /** @type {Element} */ (e.target).closest("a[href]")) {
+        close();
+      }
+    });
+  }
+}
+
+function getEls() {
+  return {
+    desk: document.getElementById("fidpass-liquid-menu-glass"),
+    bar: document.getElementById("fidpass-liquid-menu-glass-bar"),
+    panel: document.getElementById("fidpass-liquid-menu-glass-panel"),
+    burger: document.getElementById("lg-menu-burger"),
+    panelHost: document.getElementById("lg-menu-panel"),
+    rootSm: document.getElementById("lg-nav-sm"),
+  };
+}
+
+export function initLiquidGlassMenu() {
+  ensureAllFiltersSvg();
+  const nativeOk = supportsSvgBackdropUrl();
+  if (!nativeOk) {
+    document
+      .getElementById("liquid-glass-test-app")
+      ?.classList.add("lg-fallback-filters");
+  }
+  const els = getEls();
+  if (!els.desk && !els.bar) return () => {};
+
+  const mql = window.matchMedia(MQL);
+  let drawerOpen = false;
+  const getDrawer = () => els.burger && els.burger.getAttribute("aria-expanded") === "true";
+
+  let rafT = 0;
+  const scheduleAll = () => {
+    if (rafT) cancelAnimationFrame(rafT);
+    rafT = requestAnimationFrame(() => {
+      rafT = 0;
+      drawerOpen = getDrawer();
+      if (mql.matches) {
+        if (els.desk) {
+          setNative(els.desk, DESK, nativeOk);
+          updateFilterForGlass(els.desk, "D", DEFAULTS);
+        }
+        if (els.bar) clearBackdropToFallback(els.bar);
+        if (els.panel) clearBackdropToFallback(els.panel);
+      } else {
+        if (els.desk) clearBackdropToFallback(els.desk);
+        drawerOpen = getDrawer();
+        if (drawerOpen && els.panel) {
+          setNative(els.panel, MPAN, nativeOk);
+          if (els.bar) {
+            clearBackdropToFallback(els.bar);
+            els.bar.classList.add("lg-menu--bar-ghost");
+          }
+          updateFilterForGlass(els.panel, "P", DEFAULTS);
+        } else if (els.bar) {
+          setNative(els.bar, MBAR, nativeOk);
+          els.bar.classList.remove("lg-menu--bar-ghost");
+          updateFilterForGlass(els.bar, "B", DEFAULTS);
+          if (els.panel) clearBackdropToFallback(els.panel);
+        }
+      }
     });
   };
 
-  const ro = new ResizeObserver(() => {
-    schedule();
-  });
-  ro.observe(glass);
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", schedule, { passive: true });
+  if (els.desk) {
+    if (nativeOk) {
+      setNative(els.desk, DESK, true);
+    } else {
+      applyBackdropFallback(els.desk);
+    }
   }
-  window.addEventListener("resize", schedule, { passive: true });
+  if (els.bar) {
+    if (nativeOk) {
+      setNative(els.bar, MBAR, true);
+    } else {
+      applyBackdropFallback(els.bar);
+    }
+  }
+  if (els.panel) {
+    applyBackdropFallback(els.panel);
+  }
 
-  requestAnimationFrame(run);
+  const app = document.getElementById("liquid-glass-test-app");
+  const mqlHandler = () => {
+    els.burger?.setAttribute("aria-expanded", "false");
+    if (els.panelHost) {
+      els.panelHost.setAttribute("hidden", "");
+      els.panelHost.classList.remove("is-open");
+      els.panelHost.setAttribute("aria-hidden", "true");
+    }
+    els.rootSm?.classList.remove("lg-nav-sm--open");
+    if (app) app.classList.remove("lg-menu-noscroll");
+    scheduleAll();
+  };
+  mql.addEventListener("change", mqlHandler);
+
+  initBurger({ ...els, onBurger: () => scheduleAll() });
+
+  const roD = new ResizeObserver(() => scheduleAll());
+  const roB = new ResizeObserver(() => scheduleAll());
+  const roP = new ResizeObserver(() => scheduleAll());
+  if (els.desk) roD.observe(els.desk);
+  if (els.bar) roB.observe(els.bar);
+  if (els.panel) roP.observe(els.panel);
+
+  const onWin = () => scheduleAll();
+  window.addEventListener("resize", onWin, { passive: true });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", onWin, { passive: true });
+  }
+  requestAnimationFrame(scheduleAll);
 
   return () => {
-    ro.disconnect();
-    window.removeEventListener("resize", schedule);
+    mql.removeEventListener("change", mqlHandler);
+    window.removeEventListener("resize", onWin);
     if (window.visualViewport) {
-      window.visualViewport.removeEventListener("resize", schedule);
+      window.visualViewport.removeEventListener("resize", onWin);
     }
+    roD.disconnect();
+    roB.disconnect();
+    roP.disconnect();
   };
 }
