@@ -163,7 +163,8 @@ export function FinTapHeroScrollSection() {
           DE FIDELITÉ
         </h1>
         <p className="fintap-hero-iphone__lead">
-          Transformez chaque visite en client fidelise, simplement.
+          Une carte de fidélité simple à déployer, simple à utiliser, pensée
+          pour les commerçants.
         </p>
       </div>
       <div
