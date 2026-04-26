@@ -159,7 +159,7 @@ export function PhoneScrollSection() {
             alt="Mockup iPhone FinTap"
             className="h-auto w-full max-w-full select-none drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
             onError={() => {
-              setPhoneImgIdx((i) => Math.min(i + 1, PHONE_IMAGES.length - 1));
+              setPhoneImgIdx((i) => (i < PHONE_IMAGES.length - 1 ? i + 1 : i));
             }}
             loading="eager"
             decoding="async"

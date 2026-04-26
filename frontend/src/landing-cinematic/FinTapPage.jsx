@@ -11,13 +11,13 @@ import { PhoneScrollSection } from "./PhoneScrollSection.jsx";
  */
 export function FinTapPage() {
   return (
-    <div className="fintap-landing">
+    <main className="fintap-landing" id="fintap-main" role="main">
       <PhoneScrollSection />
       <FinTapFeatureSections />
       <FinTapTestimonialsSection />
       <FinTapIntegrationsSection />
       <FinTapSecurityCtaSection />
       <FinTapFooterSection />
-    </div>
+    </main>
   );
 }

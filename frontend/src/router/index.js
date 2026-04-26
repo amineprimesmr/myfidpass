@@ -3,6 +3,10 @@
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
 import { getAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
+import {
+  runLiquidGlassMenuCleanupLanding,
+  runLiquidGlassMenuCleanupTest,
+} from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
 
 export function getRoute() {
   let path = window.location.pathname.replace(/\/$/, "");
@@ -144,12 +148,10 @@ async function loadPage(routeType) {
 export async function initRouting() {
   const route = getRoute();
   if (route.type !== "landing") {
-    const m = await import("../pages/landing.js");
-    m.cleanupLandingLiquidMenu();
+    runLiquidGlassMenuCleanupLanding();
   }
   if (route.type !== "liquid-glass-test") {
-    const m = await import("../pages/liquid-glass-test.js");
-    m.cleanupLiquidGlassTestMenu();
+    runLiquidGlassMenuCleanupTest();
   }
   const c = getContainers();
 
