@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { FadingVideo } from "./FadingVideo.jsx";
 import { BlurText } from "./BlurText.jsx";
@@ -18,6 +19,8 @@ const NAV_LINKS = [
 ];
 
 export function HeroSection() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <section className="relative flex min-h-screen flex-col overflow-hidden bg-black">
       <FadingVideo
@@ -38,7 +41,7 @@ export function HeroSection() {
           >
             <span className="font-heading text-xl italic text-white">a</span>
           </a>
-          <div className="liquid-glass hidden items-center gap-0 rounded-full px-1.5 py-1.5 lg:flex">
+          <div className="liquid-glass hidden items-center gap-0 rounded-full px-1.5 py-1.5 md:flex">
             {NAV_LINKS.map((l) => (
               <a
                 key={l.label}
@@ -56,8 +59,44 @@ export function HeroSection() {
               <IconArrowUpRight className="h-4 w-4" />
             </a>
           </div>
-          <div className="h-12 w-12 flex-shrink-0" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((s) => !s)}
+            className="liquid-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-white md:hidden"
+            aria-expanded={mobileMenuOpen}
+            aria-label="Ouvrir le menu"
+          >
+            <span className="text-lg leading-none">{mobileMenuOpen ? "×" : "☰"}</span>
+          </button>
+          <div className="hidden h-12 w-12 flex-shrink-0 md:block" aria-hidden="true" />
         </nav>
+
+        {mobileMenuOpen ? (
+          <div className="fixed left-4 right-4 top-20 z-50 md:hidden">
+            <div className="liquid-glass rounded-[1.25rem] p-3">
+              <div className="flex flex-col gap-1">
+                {NAV_LINKS.map((l) => (
+                  <a
+                    key={`m-${l.label}`}
+                    href={l.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-body rounded-full px-3 py-2 text-sm font-medium text-white/90"
+                  >
+                    {l.label}
+                  </a>
+                ))}
+                <a
+                  href="/creer-ma-carte"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-1 inline-flex items-center justify-center gap-1 rounded-full bg-white px-3 py-2 text-sm font-medium text-black"
+                >
+                  Claim a Spot
+                  <IconArrowUpRight className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="font-body flex flex-1 flex-col items-center justify-center px-4 pt-24 text-center">
           <motion.div
