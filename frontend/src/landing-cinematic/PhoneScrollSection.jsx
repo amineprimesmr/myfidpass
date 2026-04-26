@@ -3,17 +3,17 @@ import { motion, useScroll, useTransform } from "framer-motion";
 
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 
-/** Type Framer (scroll ciné) : ralenti au début + à la fin. */
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 const smoothstep = (t) => t * t * (3 - 2 * t);
 
-const PHASE_3D_END = 0.48; // 1ère moitié du scroll : 3D + gros plan → iPhone de face
-const ANGLE_MAX = 64; // contre-plongée (même ordre que le template, pas 80°+)
-const ZOOM_HERO = 2.4; // gros plan en worm’s eye (proche de la ref Framer)
-const ZOOM_HERO_NARROW = 1.9; // dézoom en contre-plongée sur iPhone / petit écran (moins de crop)
-const ZOOM_FLAT = 1.02; // iPhone quasiment face caméra en fin de phase 3D
-const ZOOM_SLIDE = 0.9; // léger dolly en phase “split” avec le texte
+const PHASE_3D_END = 0.48;
+const ANGLE_MAX = 64;
+// Zooms modérés : moins d’amplitude = le appareil reste cadrable en hauteur dans le viewport
+const ZOOM_HERO = 1.88;
+const ZOOM_HERO_NARROW = 1.48;
+const ZOOM_FLAT = 1.04;
+const ZOOM_SLIDE = 0.94;
 
 const PHONE_IMAGES = ["/assets/mockupiphone.png", "/assets/iphone-frame.png", "/assets/icone.png"];
 
@@ -31,38 +31,41 @@ function useNarrowViewport() {
   return narrow;
 }
 
+/**
+ * Cadrage 3D + scroll.
+ * Avant: top-0 + y en vh → incohérent avec scale, pivot bas et overflow → bas rogné,
+ * et sens ressenti “ça monte”.
+ * Ici: conteneur flex en bas d’écran, y de négatif → 0 = l’iPhone **descend**,
+ * hauteur max + object-contain = l’entier se révèle, pas de overflow-y sur le sticky.
+ */
 export function PhoneScrollSection() {
   const [phoneImgIdx, setPhoneImgIdx] = useState(0);
   const narrow = useNarrowViewport();
   const zoomHero = narrow ? ZOOM_HERO_NARROW : ZOOM_HERO;
+  const yLift0 = narrow ? 14 : 20; // vh — départ: mockup un peu “au-dessus” du bord bas
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"],
   });
 
-  // Cadrage vertical : translateY + = le mockup descend. Avant 78→12 (Y baissait = l’iPhone
-  // « montait ») et le bas restait en dehors du cadre. Ici 0→phaseA : l’iPhone DESCEND
-  // progressivement → bas visible, appareil entier révélé. Phase B : léger ajustement split.
-  const y0 = narrow ? 8 : 2;
-  const y1 = narrow ? 32 : 38; // fin contre-plongée / iPhone entier (bas visible)
+  // translateY: négatif = plus haut ; vers 0 = le téléphone **descend** (révèle surtout le haut, puis 0 = cadrage bas)
   const phoneY = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
     if (t < PHASE_3D_END) {
       const a = t / PHASE_3D_END;
       const s = easeInOutCubic(a);
-      return `${(y0 + (y1 - y0) * s).toFixed(2)}vh`;
+      return `${(-yLift0 * (1 - s)).toFixed(2)}vh`;
     }
-    // Même hauteur en phase split : pas de remontée, seul le X glisse
-    return `${y1.toFixed(2)}vh`;
+    return "0px";
   });
 
   const phoneX = useTransform(scrollYProgress, (p) => {
+    if (narrow) return "0vw";
     const t = clamp(p, 0, 1);
-    if (t < PHASE_3D_END) return "0";
+    if (t < PHASE_3D_END) return "0vw";
     const u = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
-    // Entrée progressive du cadrage 2 colonnes (comme la compo Framer final).
-    return `${-22 * easeInOutCubic(u)}vw`;
+    return `${-20 * easeInOutCubic(u)}vw`;
   });
 
   const phoneScale = useTransform(scrollYProgress, (p) => {
@@ -113,7 +116,7 @@ export function PhoneScrollSection() {
       id="fintap-hero"
       className="fintap-hero relative min-h-[320vh] scroll-mt-0 bg-[#fdfcf9] text-black"
     >
-      <div className="sticky top-0 h-screen overflow-hidden [perspective:min(85vh,1100px)] [perspective-origin:50%_12%]">
+      <div className="sticky top-0 z-0 h-[100dvh] max-h-[100dvh] overflow-x-clip [perspective:min(90vh,1200px)] [perspective-origin:50%_85%]">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -163,29 +166,30 @@ export function PhoneScrollSection() {
           </button>
         </motion.div>
 
-        <motion.div
-          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d] [backface-visibility:hidden]"
-          style={{
-            y: phoneY,
-            x: phoneX,
-            scale: phoneScale,
-            rotateX: phoneRotateX,
-            // Pivot sur le bas = le haut du cadre part vraiment “vers l’arrière” (effet worm’s eye)
-            transformOrigin: "50% 100%",
-          }}
-        >
-          <img
-            src={PHONE_IMAGES[phoneImgIdx] ?? PHONE_IMAGES[0]}
-            alt="Mockup iPhone FinTap"
-            className="h-auto w-full max-w-full select-none drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
-            onError={() => {
-              setPhoneImgIdx((i) => (i < PHONE_IMAGES.length - 1 ? i + 1 : i));
+        <div className="pointer-events-none absolute inset-0 z-30 flex min-h-0 select-none items-end justify-center max-md:pb-2 md:pb-0">
+          <motion.div
+            className="w-[min(90vw,560px)] max-w-full origin-bottom will-change-transform [backface-visibility:hidden] [transform-style:preserve-3d] max-md:mb-1 md:mb-[4vh]"
+            style={{
+              y: phoneY,
+              x: phoneX,
+              scale: phoneScale,
+              rotateX: phoneRotateX,
+              transformOrigin: "50% 100%",
             }}
-            loading="eager"
-            decoding="async"
-            draggable={false}
-          />
-        </motion.div>
+          >
+            <img
+              src={PHONE_IMAGES[phoneImgIdx] ?? PHONE_IMAGES[0]}
+              alt="Mockup iPhone FinTap"
+              className="mx-auto h-auto w-full max-h-[min(72dvh,560px)] object-contain object-bottom drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
+              onError={() => {
+                setPhoneImgIdx((i) => (i < PHONE_IMAGES.length - 1 ? i + 1 : i));
+              }}
+              loading="eager"
+              decoding="async"
+              draggable={false}
+            />
+          </motion.div>
+        </div>
 
         <motion.div
           className="absolute right-[8%] top-1/2 z-20 hidden max-w-[560px] -translate-y-1/2 md:block"

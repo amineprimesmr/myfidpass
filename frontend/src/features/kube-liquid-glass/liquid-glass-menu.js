@@ -104,8 +104,13 @@ function initBurger(p) {
     "click",
     (e) => {
       if (panelHost.getAttribute("aria-hidden") === "true") return;
-      if (!rootSm || !e.target) return;
-      if (rootSm.contains(/** @type {Node} */ (e.target))) return;
+      if (!e.target) return;
+      const t = /** @type {Element} */ (e.target);
+      if (t.closest?.(".lg-menu-panel__scrim")) {
+        close();
+        return;
+      }
+      if (rootSm && rootSm.contains(/** @type {Node} */ (t))) return;
       close();
     },
     { signal }
