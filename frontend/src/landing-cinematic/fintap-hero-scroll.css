@@ -21,7 +21,7 @@
 
 .fintap-hero-iphone__h1 {
   font-weight: 900;
-  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-size: clamp(2rem, 5.8vw, 3.6rem);
   line-height: 0.95;
   letter-spacing: -1px;
   text-transform: uppercase;
