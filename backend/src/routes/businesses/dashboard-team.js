@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import {
   getUserByEmail,
   listTeamMembersForBusinessIncludingOwner,
+  getLoyaltyStatsByActorForBusiness,
   addTeamMember,
   findActiveTeamMembership,
   isOnlyTeamUser,
@@ -104,11 +105,28 @@ router.post("/staff-accounts", validate(schemas.teamStaffAccount), async (req, r
   });
 });
 
-/** GET /dashboard/team */
+/** GET /dashboard/team — chaque membre inclut compteurs caisse / fidélité (si `actor_user_id` renseigné sur les transactions). */
 router.get("/", (req, res) => {
   if (!ensureTeamManager(req, res)) return;
-  const rows = listTeamMembersForBusinessIncludingOwner(req.business);
-  res.json({ members: rows.map(serializeMember) });
+  const business = req.business;
+  const rows = listTeamMembersForBusinessIncludingOwner(business);
+  const statsByUser = getLoyaltyStatsByActorForBusiness(business.id);
+  const members = rows.map((r) => {
+    const s = statsByUser.get(String(r.user_id)) || {
+      points_add_count: 0,
+      reward_redeem_count: 0,
+      points_issued: 0,
+      amount_eur_sum: 0,
+    };
+    return {
+      ...serializeMember(r),
+      points_add_count: s.points_add_count,
+      reward_redeem_count: s.reward_redeem_count,
+      points_issued: s.points_issued,
+      amount_eur_sum: s.amount_eur_sum,
+    };
+  });
+  res.json({ members });
 });
 
 /** POST /dashboard/team/invites */

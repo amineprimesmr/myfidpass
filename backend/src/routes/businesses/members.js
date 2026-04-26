@@ -314,6 +314,7 @@ router.post("/:memberId/points/remove", async (req, res) => {
     type: "points_correction",
     points: -n,
     metadata: { reason: "cashier_correction" },
+    actorUserId: req.user?.id,
   });
   const tokens = getPushTokensForMember(member.id);
   for (const token of tokens) {
@@ -431,6 +432,7 @@ router.post("/:memberId/points", async (req, res) => {
     points,
     metadata: metaMerged,
     idempotencyKey: idempotencyKey || null,
+    actorUserId: req.user?.id,
   });
   const tokens = getPushTokensForMember(member.id);
   if (tokens.length > 0) {
@@ -473,6 +475,7 @@ router.post("/:memberId/redeem", async (req, res) => {
       type: "reward_redeem",
       points: -current,
       metadata: { subtype: "stamps", required_stamps: requiredStamps },
+      actorUserId: req.user?.id,
     });
     const tokens = getPushTokensForMember(member.id);
     for (const token of tokens) {
@@ -525,6 +528,7 @@ router.post("/:memberId/redeem", async (req, res) => {
       type: "reward_redeem",
       points: -pointsToDeduct,
       metadata: { subtype: "points", points_deducted: pointsToDeduct },
+      actorUserId: req.user?.id,
     });
     const tokens = getPushTokensForMember(member.id);
     for (const token of tokens) {

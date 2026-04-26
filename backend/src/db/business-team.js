@@ -49,7 +49,7 @@ export function listTeamMembersForBusiness(businessId) {
        FROM business_team_members m
        LEFT JOIN users u ON u.id = m.user_id
        WHERE m.business_id = ? AND m.status != 'revoked'
-       ORDER BY datetime(m.created_at) ASC`,
+       ORDER BY datetime(m.created_at) DESC`,
     )
     .all(businessId);
 }
@@ -127,6 +127,48 @@ export function getFirstTeamBusinessOwnerId(userId) {
     )
     .get(userId);
   return r?.owner_id || null;
+}
+
+/**
+ * Stats « fidélité / caisse » par utilisateur dashboard ayant enregistré l’opération (`actor_user_id`).
+ */
+export function getLoyaltyStatsByActorForBusiness(businessId) {
+  if (!businessId) return new Map();
+  let rows = [];
+  try {
+    rows =
+      db
+        .prepare(
+          `SELECT
+             t.actor_user_id AS user_id,
+             SUM(CASE WHEN t.type = 'points_add' THEN 1 ELSE 0 END) AS points_add_count,
+             SUM(CASE WHEN t.type = 'reward_redeem' THEN 1 ELSE 0 END) AS reward_redeem_count,
+             COALESCE(SUM(CASE WHEN t.type = 'points_add' THEN t.points ELSE 0 END), 0) AS points_issued,
+             COALESCE(SUM(CASE
+               WHEN t.type = 'points_add' AND json_extract(t.metadata, '$.amount_eur') IS NOT NULL
+               THEN CAST(json_extract(t.metadata, '$.amount_eur') AS REAL)
+               ELSE 0
+             END), 0) AS amount_eur_sum
+           FROM transactions t
+           WHERE t.business_id = ? AND t.actor_user_id IS NOT NULL
+           GROUP BY t.actor_user_id`,
+        )
+        .all(businessId) || [];
+  } catch (_e) {
+    rows = [];
+  }
+  const m = new Map();
+  for (const r of rows) {
+    const uid = r.user_id != null ? String(r.user_id) : "";
+    if (!uid) continue;
+    m.set(uid, {
+      points_add_count: Math.floor(Number(r.points_add_count) || 0),
+      reward_redeem_count: Math.floor(Number(r.reward_redeem_count) || 0),
+      points_issued: Math.round(Number(r.points_issued) || 0),
+      amount_eur_sum: Math.round(Number(r.amount_eur_sum) * 100) / 100,
+    });
+  }
+  return m;
 }
 
 export function isOnlyTeamUser(userId) {

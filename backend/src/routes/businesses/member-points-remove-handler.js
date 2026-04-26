@@ -41,6 +41,7 @@ export async function postMemberPointsRemove(req, res) {
     type: "points_correction",
     points: -n,
     metadata: { reason: "cashier_correction" },
+    actorUserId: req.user?.id,
   });
   const tokens = getPushTokensForMember(member.id);
   for (const token of tokens) {

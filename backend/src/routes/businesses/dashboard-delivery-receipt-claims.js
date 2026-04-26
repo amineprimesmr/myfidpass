@@ -134,6 +134,7 @@ router.post("/delivery-receipt-claims/:claimId/approve", async (req, res) => {
       manual_approved: true,
     },
     idempotencyKey: null,
+    actorUserId: req.user?.id,
   });
   const tokens = getPushTokensForMember(member.id);
   for (const token of tokens) {

@@ -1390,6 +1390,22 @@ export function runMigrations(db) {
     markMigrationApplied(db, 31, "users_staff_login_non_unique");
   }
 
+  // ── v32 : acteur caisse (compte employé) sur les transactions — stats équipe / scans ──
+  const m32 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 32").get();
+  if (!m32) {
+    const txC = db.prepare("PRAGMA table_info(transactions)").all().map((c) => c.name);
+    if (!txC.includes("actor_user_id")) {
+      safeRun(db, () => db.exec("ALTER TABLE transactions ADD COLUMN actor_user_id TEXT"));
+      safeRun(
+        db,
+        () => db.exec(
+          "CREATE INDEX IF NOT EXISTS idx_tx_business_actor ON transactions(business_id, actor_user_id) WHERE actor_user_id IS NOT NULL",
+        ),
+      );
+    }
+    markMigrationApplied(db, 32, "transactions_actor_user_caisse");
+  }
+
   const bizAccPrefs = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
   if (!bizAccPrefs.includes("accounting_prefs_json")) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN accounting_prefs_json TEXT"));

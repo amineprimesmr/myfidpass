@@ -151,6 +151,7 @@ router.post("/scan", async (req, res) => {
     type: "points_add",
     points,
     metadata: metaBase,
+    actorUserId: req.user?.id,
   });
   const tokens = getPushTokensForMember(member.id);
   if (tokens.length > 0) {

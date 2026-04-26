@@ -7,12 +7,22 @@ import { scheduleMerchantDashboardSyncForBusiness } from "../lib/merchant-dashbo
 
 const db = getDb();
 
-export function createTransaction({ id, businessId, memberId, type, points, metadata, idempotencyKey }) {
+export function createTransaction({ id, businessId, memberId, type, points, metadata, idempotencyKey, actorUserId }) {
   const tid = id || randomUUID();
+  const aid = actorUserId && String(actorUserId).trim() ? String(actorUserId).trim() : null;
   db.prepare(
-    `INSERT INTO transactions (id, business_id, member_id, type, points, metadata, idempotency_key, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-  ).run(tid, businessId, memberId, type, points, metadata ? JSON.stringify(metadata) : null, idempotencyKey || null);
+    `INSERT INTO transactions (id, business_id, member_id, type, points, metadata, idempotency_key, actor_user_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+  ).run(
+    tid,
+    businessId,
+    memberId,
+    type,
+    points,
+    metadata ? JSON.stringify(metadata) : null,
+    idempotencyKey || null,
+    aid,
+  );
   const row = db.prepare("SELECT * FROM transactions WHERE id = ?").get(tid);
   scheduleMerchantDashboardSyncForBusiness(businessId, "transaction");
   return row;
