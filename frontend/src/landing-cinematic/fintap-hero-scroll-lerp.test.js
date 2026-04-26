@@ -40,7 +40,7 @@ describe("fintapHeroScrollRatio", () => {
 describe("computeFintapHeroPhoneStyle", () => {
   it("raccorde l’état initial (ratio 0) : contre-plongée, zoom + fort", () => {
     const s = computeFintapHeroPhoneStyle(0);
-    expect(s.rotateX).toBe(36);
+    expect(s.rotateX).toBe(38);
     expect(s.rotateY).toBe(0);
     expect(s.rotateZ).toBe(0);
     expect(s.scale).toBe(1.45);
