@@ -20,6 +20,8 @@ export function mountLandingCinematic() {
   const el = document.getElementById("landing-cinematic-root");
   if (!el) return;
   installDevConsoleFilter();
-  const root = createRoot(el);
+  const existingRoot = el.__landingCinematicRoot;
+  const root = existingRoot || createRoot(el);
+  if (!existingRoot) el.__landingCinematicRoot = root;
   root.render(<LandingCinematicApp />);
 }
