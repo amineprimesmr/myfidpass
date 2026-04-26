@@ -109,7 +109,7 @@ export function PhoneScrollSection() {
       id="fintap-hero"
       className="fintap-hero relative min-h-[320vh] scroll-mt-0 bg-[#fdfcf9] text-black"
     >
-      <div className="sticky top-0 z-0 h-[100dvh] max-h-[100dvh] overflow-x-clip [perspective:min(90vh,1200px)] [perspective-origin:50%_85%]">
+      <div className="sticky top-0 z-0 h-[100dvh] max-h-[100dvh] overflow-x-clip pt-6 md:pt-8 [perspective:min(90vh,1200px)] [perspective-origin:50%_85%]">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -118,28 +118,8 @@ export function PhoneScrollSection() {
           }}
         />
 
-        <div className="relative z-20 flex items-center justify-between px-6 pt-6 md:px-10">
-          <div className="rounded-full bg-white px-4 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
-            <span className="text-lg font-semibold tracking-tight">FinTap</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="rounded-full border border-[#27F3A9]/40 bg-white px-5 py-2 text-sm font-medium text-black"
-            >
-              Get the template
-            </button>
-            <button
-              type="button"
-              className="rounded-full bg-[#0a98ff] px-5 py-2 text-sm font-medium text-white"
-            >
-              Download FinTap
-            </button>
-          </div>
-        </div>
-
         <motion.div
-          className="relative z-10 mx-auto mt-10 flex max-w-5xl flex-col items-center px-4 text-center"
+          className="relative z-10 mx-auto mt-4 flex max-w-5xl flex-col items-center px-4 text-center md:mt-6"
           style={{ opacity: heroOpacity, y: heroY }}
         >
           <h2 className="text-5xl font-black uppercase leading-[0.95] tracking-[-0.02em] md:text-7xl">
