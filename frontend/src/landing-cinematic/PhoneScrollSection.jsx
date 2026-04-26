@@ -13,9 +13,12 @@ export function PhoneScrollSection() {
   const phoneY = useTransform(scrollYProgress, [0, 0.34, 1], ["56vh", "14vh", "10vh"]);
   const phoneX = useTransform(scrollYProgress, [0, 0.58, 0.75, 1], ["0vw", "0vw", "-18vw", "-24vw"]);
   const phoneScale = useTransform(scrollYProgress, [0, 0.34, 1], [0.68, 1, 0.9]);
-  const phoneRotateZ = useTransform(scrollYProgress, [0, 0.18, 0.4, 1], [-21, -14, -2, 0]);
-  const phoneRotateX = useTransform(scrollYProgress, [0, 0.28, 0.52, 1], [22, 12, 3, 0]);
-  const phoneRotateY = useTransform(scrollYProgress, [0, 0.24, 0.45, 1], [-15, -8, -2, 0]);
+  // Grosse contre-plongée (rotateX) uniquement : aucun rotateY = zéro penché sur le côté.
+  const phoneRotateX = useTransform(
+    scrollYProgress,
+    [0, 0.05, 0.14, 0.3, 0.48, 0.65, 0.82, 1],
+    [82, 76, 64, 46, 28, 12, 3, 0],
+  );
   const heroOpacity = useTransform(scrollYProgress, [0, 0.38, 0.52], [1, 1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.52], ["0px", "-36px"]);
   const rightOpacity = useTransform(scrollYProgress, [0.54, 0.72, 1], [0, 1, 1]);
@@ -23,7 +26,7 @@ export function PhoneScrollSection() {
 
   return (
     <section ref={sectionRef} className="relative min-h-[300vh] bg-[#fdfcf9] text-black">
-      <div className="sticky top-0 h-screen overflow-hidden [perspective:1400px]">
+      <div className="sticky top-0 h-screen overflow-hidden [perspective:min(72vh,640px)] [perspective-origin:50%_8%]">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -74,15 +77,14 @@ export function PhoneScrollSection() {
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(46vw,420px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d]"
+          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(46vw,420px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d] [backface-visibility:hidden]"
           style={{
             y: phoneY,
             x: phoneX,
             scale: phoneScale,
-            rotateZ: phoneRotateZ,
             rotateX: phoneRotateX,
-            rotateY: phoneRotateY,
-            transformOrigin: "50% 88%",
+            // Pivot sur le bas = le haut du cadre part vraiment “vers l’arrière” (effet worm’s eye)
+            transformOrigin: "50% 100%",
           }}
         >
           <img

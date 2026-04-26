@@ -1,0 +1,124 @@
+/* Menu type « Searchbox » (kube) : bord arrondi type pilule, contenu z-index audessus. */
+#fidpass-liquid-menu,
+.lg-test-menu-outer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 1rem 0.25rem;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+#fidpass-liquid-menu-glass.lg-menu--native,
+#fidpass-liquid-menu-glass.lg-menu--fallback {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: min(100% - 1.5rem, 40rem);
+  min-height: 2.9rem;
+  padding: 0.35rem 0.4rem 0.35rem 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  /* Arrière plan quasi transparent: le contenu (texte) reste lisible */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 4px 24px rgba(0, 0, 0, 0.2);
+  isolation: isolate;
+}
+
+#fidpass-liquid-menu-glass.lg-menu--fallback {
+  backdrop-filter: blur(20px) saturate(1.35) brightness(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(1.35) brightness(1.05);
+}
+
+#fidpass-liquid-menu-glass * {
+  pointer-events: auto;
+}
+
+.lg-menu__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-decoration: none;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+}
+
+.lg-menu__mark {
+  display: flex;
+  width: 1.65rem;
+  height: 1.65rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.45rem;
+  background: linear-gradient(145deg, #fff, #a5b4fc);
+  color: #1e1b4b;
+  font-size: 0.8rem;
+}
+
+.lg-menu__ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0 0.15rem;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.lg-menu__a {
+  display: inline-flex;
+  border: none;
+  background: rgba(15, 23, 42, 0.15);
+  color: #e2e8f0;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.3rem 0.55rem;
+  border-radius: 9999px;
+  font: inherit;
+  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+}
+
+a.lg-menu__a:hover,
+button.lg-menu__a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.lg-menu__cta {
+  text-decoration: none;
+  color: #0f172a;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  border: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.lg-menu__cta:hover {
+  background: #f1f5f9;
+}
+
+@media (max-width: 520px) {
+  .lg-menu__a--md {
+    display: none;
+  }
+}
