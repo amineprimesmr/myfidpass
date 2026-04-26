@@ -68,17 +68,17 @@ export function HeroSection() {
         >
           <a
             href="/"
-            className="liquid-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
+            className="liquid-glass z-10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-black/55"
             aria-label="Accueil"
           >
             <span className="font-heading text-xl italic text-white">a</span>
           </a>
-          <div className="liquid-glass hidden items-center gap-0 rounded-full px-1.5 py-1.5 sm:flex">
+          <div className="liquid-glass absolute left-1/2 hidden -translate-x-1/2 items-center gap-0 rounded-full bg-black/58 px-1.5 py-1.5 sm:flex">
             {NAV_LINKS.map((l) => (
               <a
                 key={l.label}
                 href={l.href}
-                className="font-body rounded-full px-3 py-2 text-sm font-medium text-white/90"
+                className="font-body rounded-full px-3 py-2 text-sm font-medium text-white"
               >
                 {l.label}
               </a>
@@ -94,7 +94,7 @@ export function HeroSection() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((s) => !s)}
-            className="liquid-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-white sm:hidden"
+            className="liquid-glass z-10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-black/55 text-white sm:hidden"
             aria-expanded={mobileMenuOpen}
             aria-label="Ouvrir le menu"
           >
