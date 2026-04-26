@@ -1,4 +1,3 @@
-/* global ImageData */
 import {
   SurfaceEquations,
   calculateDisplacementMap1D,
@@ -16,7 +15,8 @@ const DEFAULTS = {
   glassThickness: 100,
   refractiveIndex: 1.5,
   refractionScale: 0.88,
-  specularOpacity: 0.28,
+  /** Filtre feFuncA (alpha du layer spéculaire) — relevé pour un halo bien visible. */
+  specularOpacity: 0.52,
   blur: 0.9,
   specularAngle: Math.PI / 3,
 };
@@ -36,7 +36,7 @@ function oneFilter(suf, filterId) {
 <feColorMatrix in="displaced" type="saturate" values="1.25" result="saturated"/>
 <feImage id="fLg${suf}_simg" href="" x="0" y="0" width="100" height="40" result="splayer" preserveAspectRatio="none"/>
 <feComponentTransfer in="splayer" result="sf">
-<feFuncA id="fLg${suf}_slope" type="linear" slope="0.28"/>
+<feFuncA id="fLg${suf}_slope" type="linear" slope="0.52" intercept="0"/>
 </feComponentTransfer>
 <feBlend in="sf" in2="saturated" mode="screen"/>
 </filter>`;

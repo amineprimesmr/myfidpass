@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
@@ -11,30 +11,50 @@ const smoothstep = (t) => t * t * (3 - 2 * t);
 const PHASE_3D_END = 0.48; // 1ère moitié du scroll : 3D + gros plan → iPhone de face
 const ANGLE_MAX = 64; // contre-plongée (même ordre que le template, pas 80°+)
 const ZOOM_HERO = 2.4; // gros plan en worm’s eye (proche de la ref Framer)
+const ZOOM_HERO_NARROW = 1.9; // dézoom en contre-plongée sur iPhone / petit écran (moins de crop)
 const ZOOM_FLAT = 1.02; // iPhone quasiment face caméra en fin de phase 3D
 const ZOOM_SLIDE = 0.9; // léger dolly en phase “split” avec le texte
 
 const PHONE_IMAGES = ["/assets/mockupiphone.png", "/assets/iphone-frame.png", "/assets/icone.png"];
 
+function useNarrowViewport() {
+  const [narrow, setNarrow] = useState(
+    () => (typeof window !== "undefined" ? window.matchMedia("(max-width: 639px)").matches : false),
+  );
+  useEffect(() => {
+    const m = window.matchMedia("(max-width: 639px)");
+    const sync = () => setNarrow(m.matches);
+    sync();
+    m.addEventListener("change", sync);
+    return () => m.removeEventListener("change", sync);
+  }, []);
+  return narrow;
+}
+
 export function PhoneScrollSection() {
   const [phoneImgIdx, setPhoneImgIdx] = useState(0);
+  const narrow = useNarrowViewport();
+  const zoomHero = narrow ? ZOOM_HERO_NARROW : ZOOM_HERO;
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"],
   });
 
-  const yPhaseB = (t) => 12 - 2 * easeInOutCubic((t - PHASE_3D_END) / (1 - PHASE_3D_END));
-  // Phase A : 3D + dézoom (sens Framer = la majeure partie du “ciné” dans la 1ère moitié du scroll).
+  // Cadrage vertical : translateY + = le mockup descend. Avant 78→12 (Y baissait = l’iPhone
+  // « montait ») et le bas restait en dehors du cadre. Ici 0→phaseA : l’iPhone DESCEND
+  // progressivement → bas visible, appareil entier révélé. Phase B : léger ajustement split.
+  const y0 = narrow ? 8 : 2;
+  const y1 = narrow ? 32 : 38; // fin contre-plongée / iPhone entier (bas visible)
   const phoneY = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
     if (t < PHASE_3D_END) {
       const a = t / PHASE_3D_END;
       const s = easeInOutCubic(a);
-      // 78vh → 12vh : jointure avec yPhaseB(PHASE_3D_END) == 12
-      return `${(78 - 66 * s).toFixed(2)}vh`;
+      return `${(y0 + (y1 - y0) * s).toFixed(2)}vh`;
     }
-    return `${yPhaseB(t).toFixed(2)}vh`;
+    // Même hauteur en phase split : pas de remontée, seul le X glisse
+    return `${y1.toFixed(2)}vh`;
   });
 
   const phoneX = useTransform(scrollYProgress, (p) => {
@@ -49,7 +69,7 @@ export function PhoneScrollSection() {
     const t = clamp(p, 0, 1);
     if (t < PHASE_3D_END) {
       const a = t / PHASE_3D_END;
-      return ZOOM_FLAT + (ZOOM_HERO - ZOOM_FLAT) * (1 - easeInOutCubic(a));
+      return ZOOM_FLAT + (zoomHero - ZOOM_FLAT) * (1 - easeInOutCubic(a));
     }
     const b = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
     return ZOOM_FLAT + (ZOOM_SLIDE - ZOOM_FLAT) * easeInOutCubic(b);
@@ -102,8 +122,28 @@ export function PhoneScrollSection() {
           }}
         />
 
+        <div className="relative z-20 flex items-center justify-between px-6 pt-6 md:px-10">
+          <div className="rounded-full bg-white px-4 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+            <span className="text-lg font-semibold tracking-tight">FinTap</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="rounded-full border border-[#27F3A9]/40 bg-white px-5 py-2 text-sm font-medium text-black"
+            >
+              Get the template
+            </button>
+            <button
+              type="button"
+              className="rounded-full bg-[#0a98ff] px-5 py-2 text-sm font-medium text-white"
+            >
+              Download FinTap
+            </button>
+          </div>
+        </div>
+
         <motion.div
-          className="relative z-10 mx-auto mt-10 flex max-w-5xl flex-col items-center px-4 pt-6 text-center md:pt-10"
+          className="relative z-10 mx-auto mt-10 flex max-w-5xl flex-col items-center px-4 text-center"
           style={{ opacity: heroOpacity, y: heroY }}
         >
           <h2 className="text-5xl font-black uppercase leading-[0.95] tracking-[-0.02em] md:text-7xl">
@@ -115,6 +155,12 @@ export function PhoneScrollSection() {
             Local and international transfers, 1000+ types of payments, up to 3% of cashbacks and a lot
             more
           </p>
+          <button
+            type="button"
+            className="mt-5 rounded-full bg-[#0a98ff] px-6 py-3 text-base font-medium text-white"
+          >
+            Download FinTap
+          </button>
         </motion.div>
 
         <motion.div

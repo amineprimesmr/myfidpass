@@ -134,7 +134,8 @@ export function calculateSpecularHighlight(
 ) {
   const imageData = new ImageData(objectWidth, objectHeight);
   const specularVector = [Math.cos(specularAngle), Math.sin(specularAngle)];
-  const specularThickness = 1.5;
+  /** Anneau périphérique (px) : 1,5px était imperceptible sur le menu large. */
+  const specularThickness = Math.max(3, Math.min(16, (bezelWidth + radius) * 0.14 + 1.2));
   const radiusSquared = radius * radius;
   const radiusPlusOneSquared = (radius + 1) * (radius + 1);
   const radiusMinusSpecularSquared = Math.max(
@@ -173,9 +174,9 @@ export function calculateSpecularHighlight(
         const dotProduct = Math.abs(cos * specularVector[0] + sin * specularVector[1]);
         const edgeRatio = Math.max(0, Math.min(1, distanceFromSide / specularThickness));
         const sharpFalloff = Math.sqrt(1 - (1 - edgeRatio) * (1 - edgeRatio));
-        const coefficient = dotProduct * sharpFalloff;
-        const color = Math.min(255, 255 * coefficient);
-        const finalOpacity = Math.min(255, color * coefficient * opacity);
+        const coefficient = Math.min(1, dotProduct * sharpFalloff * 1.2);
+        const color = Math.min(255, 255 * (0.15 + 0.85 * coefficient));
+        const finalOpacity = Math.min(255, color * coefficient * opacity * 1.1);
 
         imageData.data[idx] = color;
         imageData.data[idx + 1] = color;

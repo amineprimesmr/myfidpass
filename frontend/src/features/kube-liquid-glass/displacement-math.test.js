@@ -14,4 +14,5 @@ describe("displacement-math (kube)", () => {
     const m = Math.max(...pre.map((x) => Math.abs(x)));
     expect(m).toBeGreaterThan(0);
   });
+
 });
