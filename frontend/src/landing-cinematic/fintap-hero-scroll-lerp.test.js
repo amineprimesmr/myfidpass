@@ -44,7 +44,7 @@ describe("computeFintapHeroPhoneStyle", () => {
     expect(s.rotateY).toBe(0);
     expect(s.rotateZ).toBe(0);
     expect(s.scale).toBe(1.15);
-    expect(s.translateY).toBe(38);
+    expect(s.translateY).toBe(-64);
   });
   it("raccorde l’état final (ratio 1)", () => {
     const s = computeFintapHeroPhoneStyle(1);

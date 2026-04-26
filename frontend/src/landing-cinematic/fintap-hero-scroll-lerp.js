@@ -30,6 +30,13 @@ const SCALE_ZOOMED = 1.15;
 const SCALE_REST = 1;
 
 /**
+ * Verticale : départ plus haut (translateY < 0), fin position de repos plus bas (0).
+ * Les px sont le déplacement appliqué sur le mockup 3D.
+ */
+const TRANSLATE_Y_START_HIGH = -64;
+const TRANSLATE_Y_END_REST = 0;
+
+/**
  * @param {number} scrollY
  * @param {number} sectionTopY
  * @param {number} [triggerDistance=TRIGGER]
@@ -78,7 +85,7 @@ export function computeFintapHeroPhoneStyle(scrollRatio) {
     rotateY: TILT_Y_DEG * (1 - t),
     rotateZ: TILT_Z_DEG * (1 - t),
     scale: lerp(SCALE_ZOOMED, SCALE_REST, t),
-    translateY: 38 * (1 - t),
+    translateY: lerp(TRANSLATE_Y_START_HIGH, TRANSLATE_Y_END_REST, t),
     shadowY: lerp(60, 20, t),
     shadowBlur: lerp(120, 50, t),
     shadowAlpha: lerp(0.25, 0.12, t),
