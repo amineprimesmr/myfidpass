@@ -968,12 +968,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrInner = Math.max(1, qSize - 2 * qrPad);
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
+  /** Tolérant côté runtime : toute valeur ≠ "segments" garde la texture spinflyer. */
+  const useTexturedWheel = FLYER_MANUAL_CANVAS_WHEEL_ENABLED && String(s?.wheelRenderMode || "png") !== "segments";
 
   const [qrImg, roueImg, giftflyerImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
-    FLYER_MANUAL_CANVAS_WHEEL_ENABLED && s.wheelRenderMode === "png"
-      ? getFlyerRoueImage()
-      : Promise.resolve(null),
+    useTexturedWheel ? getFlyerRoueImage() : Promise.resolve(null),
     getFlyerGiftflyerImage(),
   ]);
 
@@ -1031,7 +1031,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
+    drawFlyerWheel(ctx, s, useTexturedWheel ? roueImg : null, wheelCx, wheelCy, wheelR, drawImageCover);
   }
   /**
    * Bas de page (chevauchement roue) : roue → cadeau → (accroche haut) → bandeau CTA au-dessus du cadeau.
