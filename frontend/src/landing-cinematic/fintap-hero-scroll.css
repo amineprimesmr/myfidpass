@@ -5,7 +5,7 @@
   --fintap-hero-ink: #0a0a0a;
   --fintap-hero-muted: #555;
   position: relative;
-  padding: clamp(4.5rem, 10vw, 7rem) 0 clamp(2rem, 5vw, 3.5rem);
+  padding: clamp(6.5rem, 14vw, 10rem) 0 clamp(2rem, 5vw, 3.5rem);
   background: var(--fintap-hero-bg);
   font-family: "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
