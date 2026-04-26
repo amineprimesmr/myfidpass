@@ -158,9 +158,7 @@ export function FinTapHeroScrollSection() {
     >
       <div className="hero__text fintap-hero-iphone__text">
         <h1 className="fintap-hero-iphone__h1">
-          PAYMENTS AND TRANSFERS.
-          <br />
-          FAST AND SAFE.
+          LE FUTUR DE LA FIDELISATION
         </h1>
         <p className="fintap-hero-iphone__lead">
           Local and international transfers, 1000+ types of payments, secure
