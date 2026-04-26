@@ -157,6 +157,11 @@ router.get("/settings", (req, res) => {
     loyalty_mode: business.loyalty_mode ?? "points_cash",
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     points_min_amount_eur: business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : undefined,
+    /** Panier moyen « repère » saisi par le commerçant (comparaison stats / pack comptable). */
+    baseline_avg_basket_eur:
+      business.baseline_avg_basket_eur != null && Number.isFinite(Number(business.baseline_avg_basket_eur))
+        ? Math.round(Number(business.baseline_avg_basket_eur) * 100) / 100
+        : undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
     sector: business.sector ?? undefined,
     logo_url:
@@ -594,6 +599,19 @@ router.patch("/settings", async (req, res) => {
       return res.status(400).json({ error: "receipt_qr_tolerance_cents invalide (0–500)." });
     }
     updates.receipt_qr_tolerance_cents = n;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "baseline_avg_basket_eur") || Object.prototype.hasOwnProperty.call(body, "baselineAvgBasketEur")) {
+    const raw = body.baseline_avg_basket_eur ?? body.baselineAvgBasketEur;
+    if (raw === null || raw === "") {
+      updates.baseline_avg_basket_eur = null;
+    } else {
+      const n = Number(raw);
+      if (!Number.isFinite(n) || n < 0 || n > 100_000) {
+        return res.status(400).json({ error: "baseline_avg_basket_eur invalide (0 à 100 000 €)." });
+      }
+      updates.baseline_avg_basket_eur = Math.round(n * 100) / 100;
+    }
   }
 
   const delivEn = body.delivery_receipt_claims_enabled ?? body.deliveryReceiptClaimsEnabled;
@@ -1054,6 +1072,10 @@ router.get("/stats", (req, res) => {
     avg_basket_eur: stats.avgBasketEur ?? undefined,
     rewards_redeemed_count: stats.rewardsRedeemedCount ?? 0,
     rewards_redeemed_breakdown: rewardsRedeemedBreakdown.map((r) => ({ label: r.label, count: r.count })),
+    baseline_avg_basket_eur:
+      business.baseline_avg_basket_eur != null && Number.isFinite(Number(business.baseline_avg_basket_eur))
+        ? Math.round(Number(business.baseline_avg_basket_eur) * 100) / 100
+        : undefined,
     points_redeemed_in_period: stats.pointsRedeemedInPeriod ?? 0,
     google_reviews_new_in_period: stats.googleReviewsNewInPeriod ?? 0,
     notification_campaigns: stats.notificationCampaigns ?? [],

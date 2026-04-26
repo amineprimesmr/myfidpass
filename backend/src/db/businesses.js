@@ -277,7 +277,7 @@ export function updateBusiness(businessId, updates) {
     "location_lat", "location_lng", "location_relevant_text", "location_radius_meters", "location_address",
     "wallet_pass_include_locations",
     "required_stamps", "stamp_emoji", "points_per_euro", "points_per_visit", "program_type", "loyalty_mode",
-    "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "points_reward_tiers", "expiry_months",
+    "points_per_ticket", "stamp_reward_label", "stamp_mid_reward_label", "points_min_amount_eur", "baseline_avg_basket_eur", "points_reward_tiers", "expiry_months",
     "sector", "engagement_rewards",
     /** Hypothèses export comptable (valorisation, taux) — JSON objet, max ~32 Ko côté route PATCH. */
     "accounting_prefs_json",
@@ -319,6 +319,7 @@ export function updateBusiness(businessId, updates) {
     "location_radius_meters",
     "required_stamps",
     "points_min_amount_eur",
+    "baseline_avg_basket_eur",
     "expiry_months",
     "points_per_ticket",
     "wallet_pass_include_locations",
