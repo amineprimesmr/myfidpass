@@ -147,7 +147,7 @@ export function HeroSection() {
             transition={{ duration: 0.6, delay: 0.6, ease: easeOut }}
             className="mt-6 text-white"
             style={{
-              fontFamily: "'YDYoonche L', 'YDYoonche M', sans-serif",
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', 'Segoe UI', sans-serif",
               fontWeight: 300,
               letterSpacing: "-0.01em",
               lineHeight: 1.1,
