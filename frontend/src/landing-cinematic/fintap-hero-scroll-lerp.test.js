@@ -45,6 +45,7 @@ describe("computeFintapHeroPhoneStyle", () => {
     expect(s.rotateZ).toBe(0);
     expect(s.scale).toBe(1.45);
     expect(s.translateY).toBe(-64);
+    expect(s.topGap).toBe(8);
   });
   it("raccorde l’état final (ratio 1)", () => {
     const s = computeFintapHeroPhoneStyle(1);
@@ -54,6 +55,7 @@ describe("computeFintapHeroPhoneStyle", () => {
     expect(s.scale).toBe(1);
     expect(s.translateY).toBe(0);
     expect(s.shadowAlpha).toBeCloseTo(0.12);
+    expect(s.topGap).toBe(48);
   });
 });
 

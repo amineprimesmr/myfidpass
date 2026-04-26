@@ -41,6 +41,8 @@ function setPhone3d(phone, s) {
   const tf = `translate3d(0, ${s.translateY}px, 0) rotateX(${s.rotateX}deg) rotateY(${s.rotateY}deg) rotateZ(${s.rotateZ}deg) scale(${s.scale})`;
   phone.style.transform = tf;
   phone.style.boxShadow = `0 ${s.shadowY}px ${s.shadowBlur}px rgba(0,0,0,${s.shadowAlpha})`;
+  const scene = phone.parentElement;
+  if (scene) scene.style.marginTop = `${s.topGap}px`;
 }
 
 /**
