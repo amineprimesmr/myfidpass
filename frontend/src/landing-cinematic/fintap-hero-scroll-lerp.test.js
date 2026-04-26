@@ -43,7 +43,7 @@ describe("computeFintapHeroPhoneStyle", () => {
     expect(s.rotateX).toBe(32);
     expect(s.rotateY).toBe(0);
     expect(s.rotateZ).toBe(0);
-    expect(s.scale).toBe(1.15);
+    expect(s.scale).toBe(1.45);
     expect(s.translateY).toBe(-64);
   });
   it("raccorde l’état final (ratio 1)", () => {
