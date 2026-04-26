@@ -26,7 +26,7 @@ const TILT_Y_DEG = 0;
 const TILT_Z_DEG = 0;
 
 /** Zoom d’animation : départ resserré, fin taille de référence (1) */
-const SCALE_ZOOMED = 1.45;
+const SCALE_ZOOMED = 1.52;
 const SCALE_REST = 1;
 
 /**
