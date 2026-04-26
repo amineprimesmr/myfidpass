@@ -18,6 +18,28 @@ import {
 import "./liquid-glass-menu.css";
 import "./liquid-glass-menu-mobile.css";
 
+/** Lock scroll (iOS) quand le menu mobile est ouvert — évite la « section » qui bouge. */
+let _menuBodyLockY = 0;
+
+/**
+ * @param {boolean} on
+ */
+function applyBodyMenuLock(on) {
+  if (on) {
+    _menuBodyLockY = window.scrollY || 0;
+    document.body.style.setProperty("position", "fixed");
+    document.body.style.setProperty("top", `-${_menuBodyLockY}px`);
+    document.body.style.setProperty("width", "100%");
+    document.body.style.setProperty("overflow", "hidden");
+  } else {
+    document.body.style.removeProperty("position");
+    document.body.style.removeProperty("top");
+    document.body.style.removeProperty("width");
+    document.body.style.removeProperty("overflow");
+    window.scrollTo(0, _menuBodyLockY);
+  }
+}
+
 const DESK = "fidpassLgDesk";
 const MBAR = "fidpassLgMbar";
 const MPAN = "fidpassLgMpan";
@@ -33,6 +55,7 @@ function getEls(root) {
     burger: root.querySelector("[data-lg-burger]"),
     panelHost: root.querySelector("[data-lg-panel-host]"),
     rootSm: root.querySelector("[data-lg-root-sm]"),
+    navClose: root.querySelector("[data-lg-nav-close]"),
   };
 }
 
@@ -63,11 +86,12 @@ function setNative(el, filterId, use) {
  */
 function initBurger(p) {
   const { els, scrollLockEl, onBurger, signal } = p;
-  const { burger, rootSm, panelHost } = els;
+  const { burger, rootSm, panelHost, navClose } = els;
   if (!burger || !panelHost) return;
 
   const setLock = (on) => {
     if (scrollLockEl) scrollLockEl.classList.toggle("lg-menu-noscroll", on);
+    applyBodyMenuLock(on);
   };
 
   const close = () => {
@@ -139,6 +163,19 @@ function initBurger(p) {
       { signal }
     );
   }
+
+  if (navClose) {
+    navClose.addEventListener(
+      "click",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+        burger?.focus();
+      },
+      { signal }
+    );
+  }
 }
 
 /**
@@ -183,12 +220,11 @@ export function initLiquidGlassMenu(options = {}) {
       } else {
         if (els.desk) clearBackdropToFallback(els.desk);
         if (getDrawer() && els.panel) {
-          setNative(els.panel, MPAN, nativeOk);
+          clearBackdropToFallback(els.panel);
           if (els.bar) {
             clearBackdropToFallback(els.bar);
             els.bar.classList.add("lg-menu--bar-ghost");
           }
-          updateFilterForGlass(els.panel, "P", DEFAULTS);
         } else if (els.bar) {
           setNative(els.bar, MBAR, nativeOk);
           els.bar.classList.remove("lg-menu--bar-ghost");
@@ -226,6 +262,7 @@ export function initLiquidGlassMenu(options = {}) {
     }
     els.rootSm?.classList.remove("lg-nav-sm--open");
     if (scrollLockEl) scrollLockEl.classList.remove("lg-menu-noscroll");
+    applyBodyMenuLock(false);
     scheduleAll();
   };
   mql.addEventListener("change", mqlHandler);
@@ -258,6 +295,7 @@ export function initLiquidGlassMenu(options = {}) {
     roB.disconnect();
     roP.disconnect();
     if (scrollLockEl) scrollLockEl.classList.remove("lg-menu-noscroll");
+    applyBodyMenuLock(false);
     if (fallbackTarget) fallbackTarget.classList.remove("lg-fallback-filters");
   };
 }
