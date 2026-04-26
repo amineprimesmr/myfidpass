@@ -174,18 +174,16 @@ export function FinTapHeroScrollSection() {
           id="iphoneMockup"
           ref={phoneRef}
         >
-          <div className="fintap-iphone-mockup__inner">
-            <img
-              className="fintap-iphone-mockup__img"
-              src={HERO_IPHONE_IMG}
-              width={2018}
-              height={4367}
-              alt=""
-              loading="eager"
-              decoding="async"
-              draggable={false}
-            />
-          </div>
+          <img
+            className="fintap-iphone-mockup__img"
+            src={HERO_IPHONE_IMG}
+            width={2018}
+            height={4367}
+            alt=""
+            loading="eager"
+            decoding="async"
+            draggable={false}
+          />
         </div>
       </div>
     </section>
