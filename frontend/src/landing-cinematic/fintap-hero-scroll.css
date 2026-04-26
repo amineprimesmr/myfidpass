@@ -65,14 +65,6 @@
   /* pas de transition sur transform/ombre (animation pilotée en JS) */
   transition: none;
   background: transparent;
-  --fintap-iphone-web-trim: 1.6%;
-}
-
-#iphoneMockup .fintap-iphone-mockup__inner {
-  position: relative;
-  line-height: 0;
-  background: transparent;
-  isolation: isolate;
 }
 
 #iphoneMockup .fintap-iphone-mockup__img {
@@ -83,9 +75,6 @@
   user-select: none;
   -webkit-user-drag: none;
   background: transparent;
-  /* Fix web: retire le halo clair exporté autour du PNG avec une découpe minimale */
-  clip-path: inset(var(--fintap-iphone-web-trim));
-  -webkit-clip-path: inset(var(--fintap-iphone-web-trim));
 }
 
 /* État initial 3D (avant 1er run JS) : même base que ratio 0 — plus zoomé qu’en fin d’anim */
