@@ -158,9 +158,9 @@ export function FinTapHeroScrollSection() {
     >
       <div className="hero__text fintap-hero-iphone__text">
         <h1 className="fintap-hero-iphone__h1">
-          FIDELISEZ.
+          UNE NOUVELLE EXPÉRIENCE
           <br />
-          BOOSTEZ.
+          DE FIDELITÉ
         </h1>
         <p className="fintap-hero-iphone__lead">
           Transformez chaque visite en client fidelise, simplement.
