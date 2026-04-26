@@ -268,8 +268,8 @@ export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
 export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
   const colors = wheelSegmentColorsResolved(s);
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  /** Tolérant runtime : toute valeur différente de `segments` active la texture. */
-  const usePng = Boolean(roueImg) && String(s?.wheelRenderMode || "png").trim().toLowerCase() !== "segments";
+  /** Mode verrouillé: dès que la texture est chargée, on l'utilise. */
+  const usePng = Boolean(roueImg);
 
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
 

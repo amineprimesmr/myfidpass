@@ -968,8 +968,8 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrInner = Math.max(1, qSize - 2 * qrPad);
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
-  /** Tolérant côté runtime : toute valeur ≠ "segments" garde la texture spinflyer. */
-  const useTexturedWheel = FLYER_MANUAL_CANVAS_WHEEL_ENABLED && String(s?.wheelRenderMode || "png") !== "segments";
+  /** Mode verrouillé: toujours tenter la texture `spinflyer` (repli natif en secteurs si image indisponible). */
+  const useTexturedWheel = FLYER_MANUAL_CANVAS_WHEEL_ENABLED;
 
   const [qrImg, roueImg, giftflyerImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
