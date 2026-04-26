@@ -46,6 +46,14 @@ let flyerStepIconsCache = null;
 async function getFlyerRoueImage() {
   if (flyerRoueCache) return flyerRoueCache;
   try {
+    const runtimeSpin = String(globalThis?.__FIDPASS_SPINFLYER_DATA_URL || "").trim();
+    if (runtimeSpin) {
+      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeSpin);
+      if (fromRuntime) {
+        flyerRoueCache = fromRuntime;
+        return flyerRoueCache;
+      }
+    }
     /**
      * Vite peut produire une data URL (`?inline`) ou une URL same-origin — ex. `/assets/spinflyer-….png?inline`.
      * Ne pas exclure les chemins absolus `/` (c’était la cause : `roueImg` toujours null en prod).
@@ -72,6 +80,14 @@ async function getFlyerRoueImage() {
 async function getFlyerGiftflyerImage() {
   if (flyerGiftflyerCache) return flyerGiftflyerCache;
   try {
+    const runtimeGift = String(globalThis?.__FIDPASS_GIFTFLYER_DATA_URL || "").trim();
+    if (runtimeGift) {
+      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeGift);
+      if (fromRuntime) {
+        flyerGiftflyerCache = fromRuntime;
+        return flyerGiftflyerCache;
+      }
+    }
     const src = String(giftflyerDataUrl || "").trim();
     if (!src) return null;
     const looksOk =
@@ -128,7 +144,7 @@ async function loadFlyerAssetImageWithFallback(rawSrc) {
   for (const u of candidates) {
     if (u.startsWith("data:") || u.startsWith("blob:")) continue;
     try {
-      const res = await fetch(u, { mode: "cors", credentials: "omit", cache: "force-cache" });
+      const res = await fetch(u, { mode: "same-origin", credentials: "same-origin", cache: "force-cache" });
       if (!res.ok) continue;
       const blob = await res.blob();
       const obj = URL.createObjectURL(blob);
