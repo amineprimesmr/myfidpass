@@ -10,7 +10,7 @@
   min-height: 100vh;
 }
 
-/* Scroll document normal (pas de hauteur verrouillée) : le long parcours type PhoneScroll est scrollable. */
+/* Scroll document normal sur la LP cinéma. */
 html:has(#landing-cinematic-root.landing-cinematic-shell),
 body:has(#landing-cinematic-root.landing-cinematic-shell) {
   height: auto;
