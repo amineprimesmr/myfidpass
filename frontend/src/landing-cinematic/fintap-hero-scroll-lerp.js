@@ -89,6 +89,6 @@ export function computeFintapHeroPhoneStyle(scrollRatio) {
     shadowY: lerp(60, 20, t),
     shadowBlur: lerp(120, 50, t),
     shadowAlpha: lerp(0.25, 0.12, t),
-    topGap: lerp(12, 92, t),
+    topGap: lerp(16, 140, t),
   };
 }
