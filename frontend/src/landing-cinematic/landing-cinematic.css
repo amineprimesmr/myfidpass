@@ -1,8 +1,8 @@
 /* Page cinéma accueil — liquid glass, polices, reset layout #landing-main */
 
 @theme {
-  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif;
+  --font-heading: "Instrument Serif", serif;
+  --font-body: "Barlow", sans-serif;
 }
 
 #landing:has(.landing-cinematic-shell) {

@@ -1,15 +1,11 @@
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { FadingVideo } from "./FadingVideo.jsx";
+import { BlurText } from "./BlurText.jsx";
 import { IconArrowUpRight, IconClockOutline, IconGlobeOutline } from "./LandingIcons.jsx";
 
 const easeOut = [0, 0, 0.2, 1];
 const HERO_V =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_080021_d598092b-c4c2-4e53-8e46-94cf9064cd50.mp4";
-const VIDEO_HUMAN =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_090051_64ea5059-da6b-492b-a171-aa7ecc767dc3.mp4";
-const VIDEO_AI =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_093237_ff0ddc63-c068-4e29-96da-fdd0e40af133.mp4";
 
 const enter = { filter: "blur(10px)", opacity: 0, y: 20 };
 
@@ -20,35 +16,6 @@ const NAV_LINKS = [
   { href: "#capabilities", label: "Innovation" },
   { href: "/creer-ma-carte", label: "Plan Launch" },
 ];
-
-function VideoIcon({ src, size = 72 }) {
-  const videoRef = useRef(null);
-
-  useEffect(() => {
-    videoRef.current?.play().catch(() => {});
-  }, []);
-
-  return (
-    <span
-      className="inline-block shrink-0 overflow-hidden rounded-full align-middle"
-      style={{
-        width: `clamp(48px, 10vw, ${size}px)`,
-        height: `clamp(48px, 10vw, ${size}px)`,
-        flexShrink: 0,
-      }}
-    >
-      <video
-        ref={videoRef}
-        autoPlay
-        loop
-        muted
-        playsInline
-        src={src}
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-      />
-    </span>
-  );
-}
 
 export function HeroSection() {
   return (
@@ -103,58 +70,46 @@ export function HeroSection() {
             <span className="pr-1 text-sm text-white/90">Maiden Crewed Voyage to Mars Arrives 2026</span>
           </motion.div>
 
-          <motion.h1
+          <BlurText
+            className="mt-6 text-6xl font-heading italic leading-[0.8] tracking-[-4px] text-white md:text-7xl lg:max-w-2xl lg:text-[5.5rem]"
+            text="Venture Past Our Sky Across the Universe"
+          />
+
+          <motion.p
             initial={enter}
             animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6, ease: easeOut }}
-            className="mt-6 text-white"
-            style={{
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', 'Segoe UI', sans-serif",
-              fontWeight: 300,
-              letterSpacing: "-0.01em",
-              lineHeight: 1.1,
-              fontSize: "clamp(2.2rem, 7vw, 6.5rem)",
-            }}
+            transition={{ duration: 0.6, delay: 0.8, ease: easeOut }}
+            className="mt-4 max-w-2xl text-sm font-light leading-tight text-white md:text-base"
           >
-            <span
-              style={{
-                background: "linear-gradient(90deg, #333333 0%, #878787 50%, #333333 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                display: "block",
-                lineHeight: 1.1,
-                marginBottom: "-0.22em",
-              }}
-            >
-              The vision
-            </span>
-            <span
-              style={{
-                background: "linear-gradient(90deg, #333333 0%, #878787 50%, #333333 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                display: "block",
-                lineHeight: 1.1,
-              }}
-            >
-              of engineering
-            </span>
-            <span className="flex flex-wrap items-center justify-center gap-3 text-white">
-              <span style={{ color: "#555" }}>is</span>
-              <VideoIcon src={VIDEO_HUMAN} size={110} />
-              <span>human</span>
-              <span style={{ color: "#555", position: "relative", top: "0.15em", marginLeft: "0.25em" }}>
-                +
-              </span>
-              <VideoIcon src={VIDEO_AI} size={110} />
-              <span>AI</span>
-            </span>
-          </motion.h1>
+            Discover the universe in ways once unimaginable. Our pioneering vessels and breakthrough
+            engineering bring deep-space exploration within reach—secure and extraordinary.
+          </motion.p>
 
           <motion.div
             initial={enter}
             animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.0, ease: easeOut }}
+            transition={{ duration: 0.6, delay: 1.1, ease: easeOut }}
+            className="mt-6 flex items-center justify-center gap-6"
+          >
+            <a
+              href="/creer-ma-carte"
+              className="liquid-glass-strong inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white"
+            >
+              Start Your Voyage
+              <IconArrowUpRight className="h-5 w-5" />
+            </a>
+            <a href="#capabilities" className="inline-flex items-center gap-2 text-sm font-medium text-white">
+              View Liftoff
+              <svg className="h-4 w-4" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <polygon points="6 4 20 12 6 20 6 4" />
+              </svg>
+            </a>
+          </motion.div>
+
+          <motion.div
+            initial={enter}
+            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.3, ease: easeOut }}
             className="mt-8 flex flex-wrap items-stretch justify-center gap-4"
           >
             <div className="liquid-glass flex w-[220px] flex-col items-start rounded-[1.25rem] p-5 text-left">
