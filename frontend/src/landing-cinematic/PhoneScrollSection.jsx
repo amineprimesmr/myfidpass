@@ -9,7 +9,6 @@ const smoothstep = (t) => t * t * (3 - 2 * t);
 
 const PHASE_3D_END = 0.48;
 const ANGLE_MAX = 64;
-// Zooms modérés : moins d’amplitude = le appareil reste cadrable en hauteur dans le viewport
 const ZOOM_HERO = 1.88;
 const ZOOM_HERO_NARROW = 1.48;
 const ZOOM_FLAT = 1.04;
@@ -32,38 +31,32 @@ function useNarrowViewport() {
 }
 
 /**
- * Cadrage 3D + scroll.
- * Avant: top-0 + y en vh → incohérent avec scale, pivot bas et overflow → bas rogné,
- * et sens ressenti “ça monte”.
- * Ici: conteneur flex en bas d’écran, y de négatif → 0 = l’iPhone **descend**,
- * hauteur max + object-contain = l’entier se révèle, pas de overflow-y sur le sticky.
+ * Cadrage vertical: `top` en % du viewport sticky, piloté sur TOUT le scrollYProgress 0→1.
+ * Tant qu’on scroll la section, le bord haut du mockup se déplace vers le bas de l’écran.
+ * (Les essais y/flex/translate sur une demi-courbe rendaient l’iPhone « collé en haut » le reste du parcours.)
  */
 export function PhoneScrollSection() {
   const [phoneImgIdx, setPhoneImgIdx] = useState(0);
   const narrow = useNarrowViewport();
   const zoomHero = narrow ? ZOOM_HERO_NARROW : ZOOM_HERO;
-  const yLift0 = narrow ? 14 : 20; // vh — départ: mockup un peu “au-dessus” du bord bas
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"],
   });
 
-  // translateY: négatif = plus haut ; vers 0 = le téléphone **descend** (révèle surtout le haut, puis 0 = cadrage bas)
-  const phoneY = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
-    if (t < PHASE_3D_END) {
-      const a = t / PHASE_3D_END;
-      const s = easeInOutCubic(a);
-      return `${(-yLift0 * (1 - s)).toFixed(2)}vh`;
-    }
-    return "0px";
+  // % du bord haut du sticky: départ haut, arrivée beaucoup plus bas — sur tout p∈[0,1]
+  const phoneTop = useTransform(scrollYProgress, (p) => {
+    const t = easeInOutCubic(clamp(p, 0, 1));
+    const t0 = narrow ? 0.1 : 0.06; // 10% / 6%: encore visible sous le titre, pas « coin du ciel »
+    const t1 = narrow ? 0.52 : 0.5; // ~moitié du viewport: descente claire d’un bout à l’autre du scroll
+    return `${(t0 + (t1 - t0) * t) * 100}%`;
   });
 
   const phoneX = useTransform(scrollYProgress, (p) => {
-    if (narrow) return "0vw";
+    if (narrow) return "0px";
     const t = clamp(p, 0, 1);
-    if (t < PHASE_3D_END) return "0vw";
+    if (t < PHASE_3D_END) return "0px";
     const u = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
     return `${-20 * easeInOutCubic(u)}vw`;
   });
@@ -166,11 +159,21 @@ export function PhoneScrollSection() {
           </button>
         </motion.div>
 
-        <div className="pointer-events-none absolute inset-0 z-30 flex min-h-0 select-none items-end justify-center max-md:pb-2 md:pb-0">
+        {/* Cadrage: top % sur tout le scroll. Couche 3D séparée (x, scale, rotate) pour les transforms */}
+        <motion.div
+          className="absolute z-30 w-[min(90vw,560px)] max-w-full"
+          style={{
+            top: phoneTop,
+            left: 0,
+            right: 0,
+            marginLeft: "auto",
+            marginRight: "auto",
+            pointerEvents: "none",
+          }}
+        >
           <motion.div
-            className="w-[min(90vw,560px)] max-w-full origin-bottom will-change-transform [backface-visibility:hidden] [transform-style:preserve-3d] max-md:mb-1 md:mb-[4vh]"
+            className="w-full origin-bottom will-change-transform [backface-visibility:hidden] [transform-style:preserve-3d]"
             style={{
-              y: phoneY,
               x: phoneX,
               scale: phoneScale,
               rotateX: phoneRotateX,
@@ -180,7 +183,7 @@ export function PhoneScrollSection() {
             <img
               src={PHONE_IMAGES[phoneImgIdx] ?? PHONE_IMAGES[0]}
               alt="Mockup iPhone FinTap"
-              className="mx-auto h-auto w-full max-h-[min(72dvh,560px)] object-contain object-bottom drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
+              className="mx-auto h-auto w-full max-h-[min(70dvh,520px)] object-contain object-bottom select-none drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
               onError={() => {
                 setPhoneImgIdx((i) => (i < PHONE_IMAGES.length - 1 ? i + 1 : i));
               }}
@@ -189,7 +192,7 @@ export function PhoneScrollSection() {
               draggable={false}
             />
           </motion.div>
-        </div>
+        </motion.div>
 
         <motion.div
           className="absolute right-[8%] top-1/2 z-20 hidden max-w-[560px] -translate-y-1/2 md:block"

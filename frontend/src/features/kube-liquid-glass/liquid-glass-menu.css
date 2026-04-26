@@ -228,122 +228,6 @@
   overflow-y: auto;
 }
 
-/* iPhone / <768px : feuille plein écran, animation d’ouverture (plus la petite “bulle”). */
-@media (max-width: 767.98px) {
-  .lg-menu-panel[hidden] {
-    display: none !important;
-  }
-
-  .lg-menu-panel {
-    position: fixed;
-    inset: 0;
-    justify-content: flex-end;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    z-index: 25000;
-    box-sizing: border-box;
-  }
-
-  .lg-menu-panel:not([hidden]) {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .lg-menu-panel__scrim {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: rgba(2, 6, 20, 0.55);
-    -webkit-backdrop-filter: blur(5px) saturate(1.15);
-    backdrop-filter: blur(5px) saturate(1.15);
-    pointer-events: auto;
-    touch-action: manipulation;
-    opacity: 0;
-    transition: opacity 0.38s ease;
-  }
-
-  .lg-menu-panel.is-open .lg-menu-panel__scrim {
-    opacity: 1;
-  }
-
-  .lg-nav-sm {
-    position: relative;
-    z-index: 0;
-  }
-
-  .lg-nav-sm__bar {
-    position: relative;
-    z-index: 25001;
-  }
-
-  #fidpass-liquid-menu-glass-panel,
-  .lg-menu--stack.lg-menu__glass--panel,
-  .lg-menu__glass--panel.lg-menu--stack {
-    position: relative;
-    z-index: 1;
-    flex: 0 0 auto;
-    min-height: min(88dvh, 100%);
-    max-height: none;
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 1.1rem 1.15rem calc(1.4rem + env(safe-area-inset-bottom, 0px)) !important;
-    border-radius: 1.35rem 1.35rem 0 0;
-    box-sizing: border-box;
-  }
-
-  .lg-menu--stack {
-    max-height: none;
-    min-height: 0;
-  }
-
-  .lg-menu-panel.is-open #fidpass-liquid-menu-glass-panel,
-  .lg-menu-panel.is-open .lg-menu__glass--panel {
-    animation: lgMenuSheetUp 0.5s cubic-bezier(0.18, 0.86, 0.22, 1) both;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .lg-menu-panel__scrim {
-      transition: none;
-      opacity: 1;
-    }
-
-    .lg-menu-panel.is-open #fidpass-liquid-menu-glass-panel,
-    .lg-menu-panel.is-open .lg-menu__glass--panel {
-      animation: none;
-    }
-  }
-
-  .lg-menu-panel .lg-menu__a--stack {
-    text-align: left;
-    font-size: 1.1rem;
-    font-weight: 600;
-    padding: 0.8rem 0.35rem;
-  }
-
-  .lg-menu-panel .lg-menu__cta--stack {
-    width: 100%;
-    text-align: center;
-    font-size: 1rem;
-    padding: 0.85rem 1rem;
-    border-radius: 0.9rem;
-    margin-top: 0.35rem;
-  }
-}
-
-@keyframes lgMenuSheetUp {
-  from {
-    opacity: 0.25;
-    transform: translate3d(0, 18%, 0) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
 .lg-menu__ul--stack {
   list-style: none;
   display: flex;
@@ -390,8 +274,6 @@ a.lg-menu__a--stack:hover {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   margin-top: 0.15rem;
 }
-
-/* (animation d’ouverture mobile = lgMenuSheetUp dans @media) */
 
 .lg-menu-noscroll {
   overflow: hidden;

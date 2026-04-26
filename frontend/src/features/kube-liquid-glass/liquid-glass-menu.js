@@ -16,6 +16,7 @@ import {
   DEFAULTS,
 } from "./liquid-glass-menu-filters.js";
 import "./liquid-glass-menu.css";
+import "./liquid-glass-menu-mobile.css";
 
 const DESK = "fidpassLgDesk";
 const MBAR = "fidpassLgMbar";
