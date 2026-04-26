@@ -75,7 +75,7 @@ function spaFallback() {
     apply: "serve",
     configureServer(server) {
       const root = server.config.root || __dirname;
-      const handler = (req, res, next) => {
+      const handler = async (req, res, next) => {
         if (req.method !== "GET" || req.url == null) return next();
         if (res.headersSent) return next();
         const path = req.url.split("?")[0];
@@ -87,8 +87,9 @@ function spaFallback() {
         try {
           // Relecture a chaque requete pour refléter immédiatement les modifs de index.html.
           const indexHtml = readFileSync(join(root, "index.html"), "utf-8");
+          const transformed = await server.transformIndexHtml(path, indexHtml, req.originalUrl);
           res.setHeader("Content-Type", "text/html; charset=utf-8");
-          res.end(indexHtml);
+          res.end(transformed);
         } catch (e) {
           next(e);
         }
