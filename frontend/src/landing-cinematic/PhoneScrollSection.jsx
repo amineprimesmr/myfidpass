@@ -7,16 +7,13 @@ const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 /
 
 const smoothstep = (t) => t * t * (3 - 2 * t);
 
-/** Fin de la 3D + début de la “carte” 2D (image de face) — le reste du scroll n’a plus de perspective. */
-const FLAT_AT = 0.36;
-const LAYOUT_SPLIT_AT = 0.48; // cadrage 2 colonnes (même frise qu’avant, mais sans 3D après FLAT_AT)
+/** 0 = intro “carte” ; 1 = cadrage final. Si l’effet te semble inversé, c’est ici que p et (1-p) s’inversent. */
+const FACE_REACHED = 0.4;
+const SPLIT_END = 0.55;
 
-// Intro légère : l’exagération (2.4×, 64°, 720px de push) donnait l’impression d’une plongée qui empire.
-const ANGLE_INTRO = 18;
-const ZOOM_INTRO = 1.2;
-const ZOOM_FACE = 1;
-const ZOOM_LATE = 0.94;
-const NARROW_INTRO = 1.1;
+const ZOOM_IN = 1.12;
+const NARROW_IN = 1.06;
+const FACE = 1;
 
 const PHONE_IMAGES = ["/assets/iphone.png", "/assets/mockupiphone.png", "/assets/iphone-frame.png", "/assets/icone.png"];
 
@@ -34,75 +31,47 @@ function useNarrowViewport() {
   return narrow;
 }
 
+/**
+ * p : 0 = haut de section, 1 = on a scrolle jusqu’en bas (offset start/end classique).
+ * Plus p augmente, plus l’iPhone se rapproche d’une image 2D de face (scale 1, pas de 3D).
+ */
 export function PhoneScrollSection() {
   const [phoneImgIdx, setPhoneImgIdx] = useState(0);
   const narrow = useNarrowViewport();
-  const zoomIntro = narrow ? NARROW_INTRO : ZOOM_INTRO;
+  const zoomIn = narrow ? NARROW_IN : ZOOM_IN;
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start start", "end end"],
+    // Bas du bloc aligne le haut du viewport en fin = p va bien de “debut de scroll” a “apres le hero”
+    offset: ["start start", "end start"],
   });
-
-  // Phase 2 (après LAYOUT_SPLIT_AT) : position en Y uniquement, sans 3D.
-  const yPhaseB = (t) => {
-    const u = (t - LAYOUT_SPLIT_AT) / (1 - LAYOUT_SPLIT_AT);
-    const s = easeInOutCubic(Math.max(0, Math.min(1, u)));
-    return 10 + 30 * s;
-  };
 
   const phoneY = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < LAYOUT_SPLIT_AT) {
-      const a = t / LAYOUT_SPLIT_AT;
-      const s = easeInOutCubic(a);
-      return `${(32 - 22 * s).toFixed(2)}vh`;
-    }
-    return `${yPhaseB(t).toFixed(2)}vh`;
+    const a = t < SPLIT_END ? t / SPLIT_END : 1;
+    const s = easeInOutCubic(a);
+    return `${(30 - 18 * s).toFixed(2)}vh`;
   });
 
   const phoneX = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < LAYOUT_SPLIT_AT) return "0";
-    const u = (t - LAYOUT_SPLIT_AT) / (1 - LAYOUT_SPLIT_AT);
-    return `${-18 * easeInOutCubic(u)}vw`;
+    if (t < SPLIT_END) return "0";
+    const u = (t - SPLIT_END) / (1 - SPLIT_END);
+    return `${-16 * easeInOutCubic(u)}vw`;
   });
 
   const phoneScale = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < FLAT_AT) {
-      const a = t / FLAT_AT;
+    if (t < FACE_REACHED) {
+      const a = t / FACE_REACHED;
       const s = 1 - (1 - a) * (1 - a);
-      return zoomIntro + (ZOOM_FACE - zoomIntro) * s;
+      return zoomIn + (FACE - zoomIn) * s;
     }
-    if (t < LAYOUT_SPLIT_AT) {
-      return ZOOM_FACE;
+    if (t < SPLIT_END) {
+      return FACE;
     }
-    const b = (t - LAYOUT_SPLIT_AT) / (1 - LAYOUT_SPLIT_AT);
-    return ZOOM_FACE + (ZOOM_LATE - ZOOM_FACE) * easeInOutCubic(b);
-  });
-
-  // 0° au moment FLAT_AT : dès là, image de face, plus de plongée 3D.
-  const phoneRotateX = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
-    if (t >= FLAT_AT) return 0;
-    const a = 1 - t / FLAT_AT;
-    return ANGLE_INTRO * a * a;
-  });
-
-  const wrapPerspective = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
-    if (t >= FLAT_AT) return 1e6;
-    const a = t / FLAT_AT;
-    return 900 + 2000 * easeInOutCubic(a);
-  });
-
-  const wrapPerspectiveOrigin = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
-    if (t >= FLAT_AT) return "50% 50%";
-    const a = t / FLAT_AT;
-    const yp = 20 + 25 * easeInOutCubic(a);
-    return `50% ${yp}%`;
+    const b = (t - SPLIT_END) / (1 - SPLIT_END);
+    return FACE + (0.96 - FACE) * easeInOutCubic(b);
   });
 
   const heroOpacity = useTransform(scrollYProgress, (p) => {
@@ -136,10 +105,7 @@ export function PhoneScrollSection() {
       id="fintap-hero"
       className="fintap-hero relative min-h-[480vh] scroll-mt-0 bg-[#fdfcf9] text-black"
     >
-      <motion.div
-        className="sticky top-0 h-screen overflow-x-hidden overflow-y-visible"
-        style={{ perspective: wrapPerspective, perspectiveOrigin: wrapPerspectiveOrigin }}
-      >
+      <div className="sticky top-0 h-screen overflow-x-hidden overflow-y-visible">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -166,15 +132,8 @@ export function PhoneScrollSection() {
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform [backface-visibility:hidden]"
-          style={{
-            y: phoneY,
-            x: phoneX,
-            scale: phoneScale,
-            rotateX: phoneRotateX,
-            transformOrigin: "50% 50%",
-            transformStyle: "preserve-3d",
-          }}
+          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform"
+          style={{ y: phoneY, x: phoneX, scale: phoneScale }}
         >
           <img
             src={PHONE_IMAGES[phoneImgIdx] ?? PHONE_IMAGES[0]}
@@ -224,7 +183,7 @@ export function PhoneScrollSection() {
         >
           Rebuilt in React
         </p>
-      </motion.div>
+      </div>
     </section>
   );
 }
