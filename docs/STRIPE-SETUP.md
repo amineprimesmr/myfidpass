@@ -1,46 +1,39 @@
 # Configurer Stripe pour Myfidpass
 
-L’**essai gratuit commerçant** (accès complet sans payer) est géré par **l’application** sur **24 h** après inscription (`MERCHANT_TRIAL_HOURS`, défaut 24). Le tarif **« 1er mois à 1 € puis 49,99 € / mois »** côté Stripe ne tient en général **pas** dans un seul `Price` récurrent : un prix mensuel est **un seul montant par cycle**. Pour obtenir 1 € puis 49,99 €, utilisez l’une des options ci‑dessous.
+L’**essai gratuit commerçant** sur le **compte** (accès complet avant abonnement payant) est géré côté API : **3 j** par défaut (`MERCHANT_TRIAL_DAYS` / `MERCHANT_TRIAL_HOURS`) — aligné avec l’**essai Stripe** sur l’abonnement (`STRIPE_SUBSCRIPTION_TRIAL_DAYS`, défaut **3**).
+
+**Offre cible (site + alignement app) :**
+
+- **Mensuel** : 3 j d’essai Stripe, puis **1,00 €** le 1er mois, puis **49,99 €/mois** (coupon **une fois** sur le 1er prélèvement, voir ci‑dessous).
+- **Annuel** : 3 j d’essai Stripe, puis **399,00 €/an**.
+
+Le `/abonnement` (Payment Element) appelle `POST /api/payment/create-embedded-subscription` avec `{ "plan": "monthly" | "annual" }` et les `price_…` ci‑dessous.
 
 ---
 
-## 1. Produit et prix dans Stripe (production)
+## 1. Produits et prix (production)
 
-1. Tableau de bord Stripe → **Produits** → créer ou ouvrir le produit d’abonnement.
-2. Créer un **prix récurrent** mensuel à **49,99 €** (montant « normal » après l’offre de lancement).
-3. Copier l’**ID du prix** (`price_…`) pour `STRIPE_PRICE_ID_STARTER` (checkout API / Payment Element).
+1. **Produits** → abonnement **mensuel** : prix récurrent **49,99 €/mois** → noter `STRIPE_PRICE_ID_MONTHLY` (ou conserver l’existant en `STRIPE_PRICE_ID_STARTER`).
+2. Même **produit** ou produit distinct **annuel** : **399,00 €/an** → `STRIPE_PRICE_ID_ANNUAL`.
 
-### 1 bis. « 1 € le premier mois » avec un **Payment Link** (`buy.stripe.com`)
+### 1er mois à 1,00 € (mensuel)
 
-1. Garde le **Price** à **49,99 € / mois** sur le lien (comme aujourd’hui sur ta capture).
-2. **Produits** → **Coupons** → **Nouveau coupon** :
-   - **Montant fixe** : **48,99 €** de réduction (si le prix est **49,99 €**, la première facture devient **1,00 €**).
-   - **Durée** : **Une seule fois** (`once`) — la réduction ne s’applique qu’à la **première** facture, les mois suivants sont à 49,99 €.
-3. Depuis ce coupon, crée un **code promotionnel** (ex. `MYFID1EURO`) utilisable en caisse.
-4. Dans l’URL du Payment Link, Stripe autorise le paramètre **`prefilled_promo_code`** (voir doc *Payment Links* → promotions).
-5. Sur **Vercel**, pour tester la redirection depuis `/abonnement` :
-   - `VITE_STRIPE_SUBSCRIPTION_PAYMENT_LINK=https://buy.stripe.com/ton_lien`
-   - `VITE_STRIPE_SUBSCRIPTION_PREFILLED_PROMO=MYFID1EURO` (le code **client**, pas l’id interne).
-6. **Redeploy** le frontend après avoir ajouté ces variables.
-
-**Limite :** le Payment Link ne passe pas `metadata.user_id` comme `create-checkout-session`. Le rattachement compte Myfidpass repose surtout sur **l’email** payeur (webhook / reconcile) — l’utilisateur doit payer avec le **même email** que son compte, ou utiliser le flux API intégré.
-
-**Alternative API (sans coupon) :** *Subscription schedules* (phases :1 mois à 1 € puis 49,99 €) — configuration plus avancée, hors Payment Link statique.
+1. **Coupons** : montant fixe **48,99 €** de remise, durée **Une seule fois** — la **première** facture payante (après l’essai) est donc **1,00 €** sur un tarif 49,99 €.
+2. Variable Railway : `STRIPE_COUPON_ID_FIRST_MONTH_1_EUR` = **id** du coupon (ex. `jTxxx...`), pas le code client.
+3. (Option) Code promotionnel `MYFID1EURO` pour **Payment Link** hébergé (lien en tête de site) — le flux principal est le **Payment Element** sur `/abonnement`.
 
 ---
 
 ## 2. Clé secrète
 
-**Développeurs** → **Clés API** : utiliser la clé secrète **live** `sk_live_…` en production (Railway).
+**Développeurs** → **Clés API** : `sk_live_…` en production (Railway).
 
 ---
 
 ## 3. Webhook
 
-1. **Développeurs** → **Webhooks** → **Ajouter un endpoint**.
-2. **URL** : `https://<votre-api>/api/payment/webhook` (ex. votre URL Railway publique).
-3. Événement : **`checkout.session.completed`**.
-4. Copier le **signing secret** `whsec_…` → variable `STRIPE_WEBHOOK_SECRET`.
+**Développeurs** → **Webhooks** → URL `https://<api>/api/payment/webhook`  
+Événements utiles : `customer.subscription.*`, `invoice.paid`, `setup_intent.succeeded`, `checkout.session.completed` (selon parcours).
 
 ---
 
@@ -50,22 +43,23 @@ L’**essai gratuit commerçant** (accès complet sans payer) est géré par **l
 |-----|------|
 | `STRIPE_SECRET_KEY` | `sk_live_…` |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` |
-| `STRIPE_PRICE_ID_STARTER` | `price_…` (offre 1 € puis 49,99 € / mois) |
-| `MERCHANT_TRIAL_HOURS` | Optionnel, ex. `24` (sinon défaut 24 h dans le code) |
+| `STRIPE_PRICE_ID_MONTHLY` ou `STRIPE_PRICE_ID_STARTER` | `price_…` mensuel 49,99 € |
+| `STRIPE_PRICE_ID_ANNUAL` | `price_…` annuel 399,00 € |
+| `STRIPE_SUBSCRIPTION_TRIAL_DAYS` | `3` (0 = pas d’essai Stripe sur la souscription) |
+| `STRIPE_COUPON_ID_FIRST_MONTH_1_EUR` | Id coupon **once** (mensuel uniquement) |
+| `MERCHANT_TRIAL_DAYS` | Optionnel — défaut **3** j (essai compte API) |
 
 ---
 
 ## 5. Comportement
 
-- **Paiement intégré** (`/abonnement` par défaut) : `POST /api/payment/create-embedded-subscription` + Payment Element.
-- **Redirection Payment Link** (test) : si `VITE_STRIPE_SUBSCRIPTION_PAYMENT_LINK` est défini, `/abonnement` envoie vers ce lien (email + code promo optionnels).
-- **Checkout API** : `POST /api/payment/create-checkout-session` crée une session **abonnement** avec `metadata.user_id`.
-- Après paiement : webhooks (**`checkout.session.completed`**, **`invoice.paid`**, abonnements…) → mise à jour de la table `subscriptions`.
+- **`/abonnement`** : choix mensuel / annuel → **Payment Element** ; période d’essai = prélèvement 0 + souvent **SetupIntent** (carte enregistrée pour la fin d’essai) — le front gère `confirm_mode` `setup` vs `payment`.
+- **Vercel** : `VITE_STRIPE_PUBLISHABLE_KEY=pk_live_…` (rebuild obligatoire après changement).
 
 ---
 
 ## Résumé
 
-1. Price Stripe conforme à l’offre → `STRIPE_PRICE_ID_STARTER`.
-2. `sk_live_…` + webhook `whsec_…` sur `/api/payment/webhook`.
-3. Redéployer le backend après toute modification des variables.
+1. Deux `price_…` (mensuel + annuel) + coupon **once** pour le 1er mois à 1 €.  
+2. `STRIPE_SUBSCRIPTION_TRIAL_DAYS=3` + `STRIPE_COUPON_ID_FIRST_MONTH_1_EUR` + essai compte `MERCHANT_TRIAL_DAYS=3`.  
+3. Redéployer le backend / le frontend après modification des variables.

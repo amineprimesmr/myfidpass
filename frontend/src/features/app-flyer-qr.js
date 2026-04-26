@@ -190,6 +190,8 @@ export function initAppFlyerQr(slug, opts) {
   if (linkInput) linkInput.value = shareUrl();
 
   let paintTimer = null;
+  /** Dernier `paint()` async gagnant (évite un blit obsolète si un autre render a commencé entre-temps). */
+  let flyerpaintGen = 0;
   function schedulePaint() {
     if (paintTimer) cancelAnimationFrame(paintTimer);
     paintTimer = requestAnimationFrame(() => {
@@ -259,10 +261,15 @@ export function initAppFlyerQr(slug, opts) {
   });
 
   async function paint() {
+    const gen = ++flyerpaintGen;
     state = readFlyerStateFromForm(root);
     persistFlyerState(state);
-    canvas.width = FLYER_EXPORT.w;
-    canvas.height = FLYER_EXPORT.h;
+    const wNeed = FLYER_EXPORT.w;
+    const hNeed = FLYER_EXPORT.h;
+    if (canvas.width !== wNeed || canvas.height !== hNeed) {
+      canvas.width = wNeed;
+      canvas.height = hNeed;
+    }
     const logoApi = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo`;
     if (flyerLogoDirty) {
       if (flyerLogoBitmap) {
@@ -349,7 +356,9 @@ export function initAppFlyerQr(slug, opts) {
     const logoForCanvas = flyerLogoBitmap ?? flyerLogoObjectUrl;
     const bgForCanvas = flyerBgBitmap ?? flyerBgObjectUrl;
     try {
-      await renderFlyerCanvas(canvas, state, shareUrl(), logoForCanvas, bgForCanvas);
+      await renderFlyerCanvas(canvas, state, shareUrl(), logoForCanvas, bgForCanvas, {
+        shouldBlit: () => gen === flyerpaintGen,
+      });
     } catch (e) {
       if (typeof console !== "undefined" && console.warn) console.warn("[flyer-qr] render", e);
     }

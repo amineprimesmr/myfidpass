@@ -121,11 +121,15 @@ function parseBootstrap() {
   }
 }
 
+/** Incrémenté à chaque `__FIDPASS_FLYER_APPLY__` : le dernier rendu async gagne, les blits obsolètes sont ignorés. */
+let __flyerEmbedApplyGen = 0;
+
 /**
  * Rendu complet depuis `window.__FIDPASS_FLYER_B64__` (WKWebView / injection live).
  * Exposé sur `window` pour mises à jour sans recharger la page (évite flash noir).
  */
 async function renderFromCurrentBootstrap() {
+  const gen = ++__flyerEmbedApplyGen;
   const { flyer_prefs, share_url } = parseBootstrap();
   const canvas = document.getElementById("fidpass-flyer-canvas");
   if (!canvas || !(canvas instanceof HTMLCanvasElement)) return;
@@ -181,10 +185,16 @@ async function renderFromCurrentBootstrap() {
     share_url.trim() ||
     (cardSlug ? `${typeof window !== "undefined" ? window.location.origin : ""}/fidelity/${cardSlug}` : "");
 
-  canvas.width = FLYER_EXPORT.w;
-  canvas.height = FLYER_EXPORT.h;
+  const wNeed = FLYER_EXPORT.w;
+  const hNeed = FLYER_EXPORT.h;
+  if (canvas.width !== wNeed || canvas.height !== hNeed) {
+    canvas.width = wNeed;
+    canvas.height = hNeed;
+  }
   try {
-    await renderFlyerCanvas(canvas, state, targetUrl || "https://myfidpass.fr", logoIn, bgIn);
+    await renderFlyerCanvas(canvas, state, targetUrl || "https://myfidpass.fr", logoIn, bgIn, {
+      shouldBlit: () => gen === __flyerEmbedApplyGen,
+    });
   } catch (e) {
     if (typeof console !== "undefined" && console.warn) console.warn("[flyer-embed]", e);
   }

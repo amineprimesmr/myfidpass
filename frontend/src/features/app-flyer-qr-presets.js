@@ -20,7 +20,8 @@ export const FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG = -30;
 /**
  * Rayon des teintes PNG / clip = ce facteur × rayon affiché (bord 3D blanc plus étroit que le disque logique).
  */
-export const FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR = 0.94;
+/** @deprecated Marge extérieure des teintes gérée dans `app-flyer-wheel.js` (`WHEEL_COLOR_OUTER_R_FRAC`). */
+export const FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR = 0.9;
 
 /** Zone logo (drawFlyerCommerceLogo) : bas du bloc = centerYFrac + maxHFrac/2. */
 export const FLYER_LOGO_LAYOUT = Object.freeze({

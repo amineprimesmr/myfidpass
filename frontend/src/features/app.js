@@ -553,7 +553,7 @@ function syncTrialPillCommerceLayout() {
   const section = app.getAttribute("data-mobile-section") || "";
   const trialVisible = !!(pill && !pill.classList.contains("hidden"));
   if (cta) {
-    cta.textContent = section === "profil" ? "Profiter de l'offre" : "Abonnez-vous pour 1 €";
+    cta.textContent = section === "profil" ? "Profiter de l'offre" : "S’abonner (3 j + 1 € / 399 €)";
   }
   if (topbar) {
     topbar.classList.toggle("app-commerce-mobile-topbar--below-trial-pill", section === "profil" && trialVisible);

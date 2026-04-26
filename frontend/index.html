@@ -197,7 +197,7 @@
           <h1 class="auth-title">Créer un compte</h1>
           <p class="auth-subtitle">Choisissez d’abord votre établissement, puis créez votre compte commerçant.</p>
           <p id="auth-register-establishment" class="auth-success-msg hidden"></p>
-          <p class="auth-hint">Offre de lancement : profitez de 1 € pendant 1 mois.</p>
+          <p class="auth-hint">3 j offerts, puis 1,00 € le 1er mois (mensuel) ou 399,00 €/an (annuel) — abonnement sans engagement.</p>
           <form id="auth-register-form" class="auth-form">
             <label class="auth-label" for="auth-register-email">Email</label>
             <div class="auth-input-wrap">
@@ -269,16 +269,50 @@
         </div>
       </div>
       <main class="unified-main offers-main">
-        <h1 class="offers-title">Choisissez votre tarif</h1>
-        <p class="offers-subtitle">Accédez à votre espace et créez vos cartes fidélité (Apple Wallet et Google Wallet).</p>
-        <div class="offers-grid" id="offers-grid">
+        <h1 class="offers-title" id="offers-title">Choisissez votre forfait</h1>
+        <p class="offers-subtitle" id="offers-subtitle">3 jours gratuits, sans engagement. Cartes Wallet, appli, tableau de bord.</p>
+        <div class="offers-grid offers-grid--two" id="offers-grid">
           <article class="offers-card offers-card-featured">
-            <h2 class="offers-card-title">Myfidpass</h2>
-            <p class="offers-card-desc">Carte de fidélité, tableau de bord, accès logiciel, application Myfidpass. Sans engagement : 24 h d’accès complet pour tout découvrir, puis abonnement.</p>
-            <p class="offers-card-price"><span class="offers-card-amount">1 €</span> le 1er mois, puis 49 € / mois</p>
-            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-starter">Profiter de 1 € pendant 1 mois</button>
+            <h2 class="offers-card-title">Mensuel</h2>
+            <p class="offers-card-desc">3 jours d’essai, puis 1,00 € le 1er mois, ensuite 49,99 €/mois — sans engagement.</p>
+            <p class="offers-card-price"><span class="offers-card-amount">49,99 €</span> / mois <span class="offers-card-note">(après essai + 1er mois à 1 €)</span></p>
+            <ul class="offers-card-bullets">
+              <li>3 j offerts</li>
+              <li>1er mois : 1,00 €</li>
+              <li>Renouvellement 49,99 €/mois</li>
+            </ul>
+            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-monthly" data-fidpass-plan="monthly">Souscrire au mensuel</button>
+          </article>
+          <article class="offers-card">
+            <h2 class="offers-card-title">Annuel</h2>
+            <p class="offers-card-desc">3 jours d’essai, puis 399,00 €/an (≈ 33,25 €/mois) — payé en une fois.</p>
+            <p class="offers-card-price"><span class="offers-card-amount">399,00 €</span> <span class="offers-card-note">/ an</span></p>
+            <ul class="offers-card-bullets">
+              <li>3 j offerts</li>
+              <li>399,00 € facturés l’année en cours</li>
+              <li>Économies vs. mensualisé 12 mois</li>
+            </ul>
+            <button type="button" class="landing-btn landing-btn-block landing-btn-secondary" id="offers-btn-annual" data-fidpass-plan="annual">Souscrire à l’annuel</button>
           </article>
         </div>
+
+        <section id="offers-checkout-section" class="offers-checkout hidden" aria-live="polite">
+          <h2 class="offers-checkout__title" id="offers-checkout-title">Paiement sécurisé</h2>
+          <p class="offers-checkout__lead" id="offers-selected-plan-hint">Choisissez d’abord un forfait.</p>
+          <p class="offers-trial-legal" id="offers-trial-legal">
+            Essai 3 jours côté Stripe, puis 1,00 € le 1er mois (offre mensuelle) ou 399,00 €/an (annuel) selon l’offre, comme décrit. Carte, Apple Pay ou Google Pay.
+          </p>
+          <div id="offers-payment-loading" class="offers-payment-state">Chargement du moyen de paiement…</div>
+          <p id="offers-payment-error" class="offers-error hidden" role="alert"></p>
+          <div id="offers-payment-element-wrap" class="offers-element-wrap hidden">
+            <div id="offers-payment-element"></div>
+            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-pay-submit" disabled>
+              Valider le moyen de paiement
+            </button>
+            <p id="offers-payment-status" class="offers-payment-state hidden" aria-live="assertive"></p>
+          </div>
+          <p class="offers-repick"><button type="button" class="offers-repick__btn" id="offers-change-plan">← Changer de forfait</button></p>
+        </section>
       </main>
     </div>
 
@@ -528,7 +562,7 @@
             aria-hidden="true"
           >
             <p id="app-sidebar-trial-subscribe-remaining" class="app-sidebar-trial-subscribe-card__remaining">L’essai prend fin dans —</p>
-            <p class="app-sidebar-trial-subscribe-card__title">S’abonner pour 1 €</p>
+            <p class="app-sidebar-trial-subscribe-card__title">S’abonner (3 j + 1 € / 399 €/an)</p>
             <button type="button" id="app-sidebar-trial-subscribe-btn" class="app-sidebar-trial-subscribe-card__button">
               S’abonner
             </button>
@@ -2425,17 +2459,17 @@
         </div>
       </div>
       </main>
-      <!-- Essai gratuit 24 h : capsule au-dessus de la barre d’onglets (mobile) -->
+      <!-- Essai 3 j : capsule au-dessus de la barre d’onglets (mobile) -->
       <div
         id="app-mobile-trial-subscribe-pill"
         class="app-mobile-trial-subscribe-pill hidden"
         role="button"
         tabindex="0"
-        aria-label="Abonnez-vous pour 1 euro, temps restant sur l’essai gratuit"
+        aria-label="S’abonner : 3 jours offerts puis 1,00 € le 1er mois ou 399,00 € par an. Temps restant sur l’essai."
       >
-        <p class="app-mobile-trial-subscribe-pill__headline">Profitez de 1 € pendant 1 mois</p>
+        <p class="app-mobile-trial-subscribe-pill__headline">3 j gratuits, puis 1,00 € le 1er mois (mensuel) ou 399,00 €/an</p>
         <div class="app-mobile-trial-subscribe-pill__actions">
-          <span class="app-mobile-trial-subscribe-pill__cta">Abonnez-vous pour 1 €</span>
+          <span class="app-mobile-trial-subscribe-pill__cta">S’abonner</span>
           <span class="app-mobile-trial-subscribe-pill__badge">
             <span class="app-mobile-trial-subscribe-pill__dot" aria-hidden="true"></span>
             <span id="app-mobile-trial-subscribe-pill-remaining">—</span>

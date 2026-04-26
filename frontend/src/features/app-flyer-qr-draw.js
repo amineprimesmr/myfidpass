@@ -12,6 +12,8 @@ import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
 import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
+/** Même stratégie que `spinflyer` : en `?url` le hash Vite n’existe souvent pas dans l’aperçu WK (embed) → chargement en échec, cadeau absent. */
+import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
 
 export { FLYER_EXPORT };
 
@@ -23,6 +25,9 @@ export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = true;
 
 /** @type {HTMLImageElement | null} */
 let flyerRoueCache = null;
+
+/** @type {HTMLImageElement | null} */
+let flyerGiftflyerCache = null;
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -57,6 +62,56 @@ async function getFlyerRoueImage() {
     return flyerRoueCache;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Même visuel que l’ancien calque iOS : cadeau en bas à gauche, chevauchement zone roue.
+ * Chargé une seule fois (export + aperçu WKWebView).
+ */
+async function getFlyerGiftflyerImage() {
+  if (flyerGiftflyerCache) return flyerGiftflyerCache;
+  try {
+    const src = String(giftflyerDataUrl || "").trim();
+    if (!src) return null;
+    const looksOk =
+      src.startsWith("data:image/") ||
+      src.startsWith("blob:") ||
+      /^https?:/i.test(src) ||
+      src.startsWith("/");
+    if (!looksOk) return null;
+    flyerGiftflyerCache = await loadImage(src, false);
+    return flyerGiftflyerCache;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Calque cadeau : **au-dessus** de la roue, **sous** le bandeau « Scanne pour jouer » (dessiné après).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} w
+ * @param {number} h
+ * @param {number} scale
+ * @param {HTMLImageElement} img
+ */
+function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
+  if (!img) return;
+  const sw = img.naturalWidth || img.width;
+  const sh = img.naturalHeight || img.height;
+  if (!sw || !sh) return;
+  const giftW = w * 0.4;
+  const giftH = (giftW * sh) / sw;
+  const lead = Math.max(8 * scale, w * 0.028);
+  const bottomPad = Math.max(6 * scale, h * 0.028);
+  /** Légèrement plus haut que l’ex-offset iOS (-0,08·h) pour mieux cadrer sur la roue. */
+  const lift = h * 0.12;
+  const x = lead;
+  const y = h - bottomPad - lift - giftH;
+  try {
+    ctx.drawImage(img, x, y, giftW, giftH);
+  } catch (_) {
+    /* WebKit / blob */
   }
 }
 
@@ -826,20 +881,26 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas
+ * @param {HTMLCanvasElement} canvas — surface visible ; mise à jour en un seul blit à la fin (évite le flash en WKWebView).
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  * @param {string} qrTargetUrl
  * @param {ImageBitmap | HTMLImageElement | string | null | undefined} logoInput
  * @param {ImageBitmap | string | null | undefined} [bgInput] — image de fond (optionnel).
+ * @param {object} [options]
+ * @param {() => boolean} [options.shouldBlit] — si la fonction retourne `false` au moment du blit, on n’écrase pas l’image (render obsolète).
  */
-export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInput) {
+export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInput, options) {
   const w = canvas.width;
   const h = canvas.height;
-  const ctx = canvas.getContext("2d");
+  if (w <= 0 || h <= 0) return;
+  /** Tout le dessin sur un buffer : pas de `clearRect` sur le canvas visible pendant les `await` (évite l’écran vide). */
+  const work = /** @type {HTMLCanvasElement} */ (document.createElement("canvas"));
+  work.width = w;
+  work.height = h;
+  const ctx = work.getContext("2d");
   if (!ctx) return;
   ctx.imageSmoothingEnabled = true;
   if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
-  ctx.clearRect(0, 0, w, h);
 
   const scale = w / FLYER_EXPORT.w;
   /** QR un peu plus grand, coins plus ronds, QR serveur haute définition. */
@@ -850,11 +911,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
 
-  const [qrImg, roueImg] = await Promise.all([
+  const [qrImg, roueImg, giftflyerImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
     FLYER_MANUAL_CANVAS_WHEEL_ENABLED && s.wheelRenderMode === "png"
       ? getFlyerRoueImage()
       : Promise.resolve(null),
+    getFlyerGiftflyerImage(),
   ]);
 
   /** @type {CanvasImageSource | null} */
@@ -913,6 +975,11 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
   }
+  /**
+   * Bas de page (chevauchement roue) : roue → cadeau → (accroche haut) → bandeau CTA au-dessus du cadeau.
+   * L’accroche est au centre/haut, sans recouvrir l’illustration sur les maquettes par défaut.
+   */
+  drawFlyerGiftflyerPromo(ctx, w, h, scale, giftflyerImg);
   drawFlyerHeroHeadline(ctx, s, w, h, scale, hasCommerceLogo);
   const qx = w * 0.472;
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
@@ -921,7 +988,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** Inclinaison très légère (~6°). */
   const qrTiltRad = (-6 * Math.PI) / 180;
 
-  // La pastille passe légèrement derrière le QR (comme le mockup papier).
+  // Pastille **au-dessus** de l’illustration cadeau ; légèrement derrière le QR.
   drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
 
   ctx.save();
@@ -942,4 +1009,14 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   } else {
     drawFooterBar(ctx, w, h, s, 0);
   }
+
+  if (options && typeof options.shouldBlit === "function" && !options.shouldBlit()) {
+    return;
+  }
+  const vctx = canvas.getContext("2d");
+  if (!vctx) return;
+  vctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in vctx) vctx.imageSmoothingQuality = "high";
+  vctx.clearRect(0, 0, w, h);
+  vctx.drawImage(work, 0, 0, w, h, 0, 0, w, h);
 }

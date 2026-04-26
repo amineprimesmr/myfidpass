@@ -9,7 +9,7 @@ const db = getDb();
 
 /**
  * Durée d’accès complet **sans abonnement Stripe payant** après création du compte.
- * Priorité : `MERCHANT_TRIAL_HOURS` (ex. 24) puis `MERCHANT_TRIAL_DAYS`, sinon **24 h**.
+ * Priorité : `MERCHANT_TRIAL_HOURS` puis `MERCHANT_TRIAL_DAYS`, sinon **3 j** (aligné offre 3 j gratuits).
  */
 export function merchantTrialDurationMs() {
   const hoursRaw = process.env.MERCHANT_TRIAL_HOURS;
@@ -19,7 +19,7 @@ export function merchantTrialDurationMs() {
   }
   const n = parseInt(process.env.MERCHANT_TRIAL_DAYS, 10);
   if (Number.isFinite(n) && n >= 0) return n * 24 * 60 * 60 * 1000;
-  return 24 * 60 * 60 * 1000;
+  return 3 * 24 * 60 * 60 * 1000;
 }
 
 function userCreatedAtMs(user) {
@@ -41,7 +41,7 @@ export function getMerchantTrialEndsAtIso(userId) {
   return new Date(start + merchantTrialDurationMs()).toISOString();
 }
 
-/** Essai actif : pas d’abo Stripe « payant » et encore dans la fenêtre d’essai après inscription (`MERCHANT_TRIAL_HOURS`, défaut 24 h). */
+/** Essai actif : pas d’abo Stripe / IAP « payant » et encore dans la fenêtre d’essai après inscription (`MERCHANT_TRIAL_DAYS`, défaut 3 j). */
 export function isUserInMerchantTrial(userId) {
   if (!userId || hasActiveSubscription(userId)) return false;
   const endIso = getMerchantTrialEndsAtIso(userId);

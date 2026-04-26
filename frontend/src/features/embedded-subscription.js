@@ -108,7 +108,8 @@ async function finalizeSuccess(pathnameForHistoryClean, statusId) {
 
 async function handleConfirmReturn(stripe, url, pathnameBase, statusId, errorId) {
   const redirectStatus = url.searchParams.get("redirect_status");
-  const clientSecret = url.searchParams.get("payment_intent_client_secret");
+  const paymentIntentClientSecret = url.searchParams.get("payment_intent_client_secret");
+  const setupIntentClientSecret = url.searchParams.get("setup_intent_client_secret");
 
   if (redirectStatus === "failed") {
     showError(errorId, "Le paiement a échoué ou a été annulé.");
@@ -118,8 +119,31 @@ async function handleConfirmReturn(stripe, url, pathnameBase, statusId, errorId)
     return;
   }
 
-  if (clientSecret) {
-    const { error, paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
+  if (setupIntentClientSecret) {
+    const { error, setupIntent } = await stripe.retrieveSetupIntent(setupIntentClientSecret);
+    if (error) {
+      showError(errorId, error.message);
+      try {
+        window.history.replaceState({}, "", pathnameBase);
+      } catch (_) {}
+      return;
+    }
+    if (setupIntent?.status !== "succeeded" && setupIntent?.status !== "processing") {
+      showError(
+        errorId,
+        "Enregistrement du moyen de paiement non confirmé. Réessayez ou utilisez un autre moyen."
+      );
+      try {
+        window.history.replaceState({}, "", pathnameBase);
+      } catch (_) {}
+      return;
+    }
+    await finalizeSuccess(pathnameBase, statusId);
+    return;
+  }
+
+  if (paymentIntentClientSecret) {
+    const { error, paymentIntent } = await stripe.retrievePaymentIntent(paymentIntentClientSecret);
     if (error) {
       showError(errorId, error.message);
       try {
@@ -189,10 +213,17 @@ export async function initEmbeddedSubscriptionCheckout(opts) {
 
   clearError(errorContainerId);
 
+  const plan = opts.plan || (() => {
+    try {
+      return sessionStorage.getItem("fidpass_checkout_plan") || "monthly";
+    } catch (_) {
+      return "monthly";
+    }
+  })();
   const res = await fetch(`${API_BASE}/api/payment/create-embedded-subscription`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-    body: JSON.stringify({}),
+    body: JSON.stringify({ plan: plan === "annual" ? "annual" : "monthly" }),
   });
   const data = await res.json().catch(() => ({}));
 
@@ -212,6 +243,7 @@ export async function initEmbeddedSubscriptionCheckout(opts) {
   }
 
   const clientSecret = data.client_secret;
+  const confirmMode = data.confirm_mode === "setup" ? "setup" : "payment";
   if (!clientSecret) {
     setLoadingVisible(false);
     showError(errorContainerId, "Réponse serveur incomplète.");
@@ -262,6 +294,19 @@ export async function initEmbeddedSubscriptionCheckout(opts) {
       submitBtn.disabled = true;
       clearError(errorContainerId);
       const returnUrl = `${window.location.origin}${pathnameBase}?subscription_confirm=1`;
+      if (confirmMode === "setup") {
+        const { error } = await stripe.confirmSetup({
+          elements,
+          confirmParams: {
+            return_url: returnUrl,
+          },
+        });
+        if (error) {
+          showError(errorContainerId, error.message);
+          submitBtn.disabled = false;
+        }
+        return;
+      }
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {

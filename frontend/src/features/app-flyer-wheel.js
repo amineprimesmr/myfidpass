@@ -5,11 +5,28 @@ import {
   wheelSegmentColorsResolved,
   FLYER_WHEEL_SEGMENT_COUNT,
   FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG,
-  FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR,
 } from "./app-flyer-qr-presets.js";
 
 /** Léger chevauchement angulaire pour masquer les fentes anti-alias entre secteurs. */
 const SEG_OVERLAP_RAD = 0.005;
+
+/**
+ * Rayon extérieur des teintes / parts, relatif à la roue — **inset** bord
+ * (les teintes ne vont plus jusqu’au bord visuel de la texture).
+ */
+const WHEEL_COLOR_OUTER_R_FRAC = 0.72;
+
+/**
+ * Rayon intérieur de la couronne colorée : au-delà, **aucune** teinte (moyeu blanc, centre neutre).
+ * 0,065 était trop petit : sur la texture PNG, le moyeu métallique se retrouvait teinté — il faut un moyeu large.
+ * Les couleurs ne s’appliquent qu’entre `WHEEL_HUB_R_FRAC * r` et `WHEEL_COLOR_OUTER_R_FRAC * r`.
+ */
+const WHEEL_HUB_R_FRAC = 0.2;
+
+/**
+ * Cercle de **clip** pour les libellés (légèrement à l’intérieur de l’anneau de couleur).
+ */
+const WHEEL_LABEL_CLIP_R_FRAC = 0.7;
 
 /**
  * @param {string} hex
@@ -48,6 +65,21 @@ function segmentAnglesEqual(i, n, offsetDeg) {
 }
 
 /**
+ * Secteur de couronne (donut) : entre rInner et rOuter.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} t0
+ * @param {number} t1
+ */
+function pathAnnulusSector(ctx, cx, cy, rInner, rOuter, t0, t1) {
+  ctx.beginPath();
+  ctx.moveTo(cx + Math.cos(t0) * rOuter, cy + Math.sin(t0) * rOuter);
+  ctx.arc(cx, cy, rOuter, t0, t1, false);
+  ctx.lineTo(cx + Math.cos(t1) * rInner, cy + Math.sin(t1) * rInner);
+  ctx.arc(cx, cy, rInner, t1, t0, true);
+  ctx.closePath();
+}
+
+/**
  * Libellés le long du rayon de chaque part (axe centre → bord), alternés GAGNÉ / PERDU.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
@@ -71,7 +103,7 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
 
   ctx.save();
   ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.94, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r * WHEEL_LABEL_CLIP_R_FRAC, 0, Math.PI * 2);
   ctx.clip();
   ctx.font = `800 ${fontPx}px Inter, system-ui, sans-serif`;
   ctx.textAlign = "center";
@@ -138,16 +170,19 @@ function drawWheelGroundShadow(ctx, cx, cy, r) {
 export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
   const n = colors.length;
   if (n < 1) return;
-  /** Teintes seules : pas de contour (évite le « cerclage » ; GAGNÉ/PERDU = visuel IA ou asset PNG). */
+  const rOut = r * WHEEL_COLOR_OUTER_R_FRAC;
+  const rIn = r * WHEEL_HUB_R_FRAC;
+  /** Secteurs en couronne (pas de couleur jusqu’au centre ; moyeu = blanc ensuite). */
   for (let i = 0; i < n; i++) {
     const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, t0, t1);
-    ctx.closePath();
+    pathAnnulusSector(ctx, cx, cy, rIn, rOut, t0, t1);
     ctx.fillStyle = colors[i];
     ctx.fill();
   }
+  ctx.beginPath();
+  ctx.arc(cx, cy, rIn, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
 }
 
 /**
@@ -170,26 +205,26 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
   const box = r * 2;
   const lx = cx - r;
   const ly = cy - r;
-  const rt = r * FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR;
+  const rOut = r * WHEEL_COLOR_OUTER_R_FRAC;
+  const rIn = r * WHEEL_HUB_R_FRAC;
 
   ctx.save();
+  /** Rien ne doit dépasser l’inset bord. */
   ctx.beginPath();
-  ctx.arc(cx, cy, rt, 0, Math.PI * 2);
+  ctx.arc(cx, cy, rOut, 0, Math.PI * 2);
   ctx.clip();
 
   for (let i = 0; i < n; i++) {
     const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
     ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, rt, t0, t1);
-    ctx.closePath();
+    pathAnnulusSector(ctx, cx, cy, rIn, rOut, t0, t1);
     ctx.clip();
 
     // Étape 1 : fond plein couleur commerce
     ctx.globalCompositeOperation = "source-over";
     ctx.globalAlpha = 1;
     ctx.fillStyle = colors[i];
+    pathAnnulusSector(ctx, cx, cy, rIn, rOut, t0, t1);
     ctx.fill();
 
     // Étape 2 : texture PNG par-dessus en multiply — zones sombres = ombres, zones claires = reflets colorés
@@ -206,6 +241,11 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
     ctx.globalCompositeOperation = "source-over";
     ctx.restore();
   }
+  /** Moyeu blanc : pas de teintes part au centre. */
+  ctx.beginPath();
+  ctx.arc(cx, cy, rIn, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
   ctx.restore();
 }
 
@@ -239,13 +279,6 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
-    /** Secteurs vectoriels : scellé central anti–trou d’antialiasing (halo de fond en dessous). */
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(wheelCx, wheelCy, Math.max(1, wheelR * 0.008), 0, Math.PI * 2);
-    ctx.fillStyle = colors[0] ?? "#000000";
-    ctx.fill();
-    ctx.restore();
   }
   drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
 }

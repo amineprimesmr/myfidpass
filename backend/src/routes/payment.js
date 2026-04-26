@@ -22,11 +22,26 @@ const stripe =
     : null;
 
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
-const PRICE_ID_STARTER = process.env.STRIPE_PRICE_ID_STARTER || null;
+/** Prix mensuel (renouvellement 49,99 € / mois) — rétrocompat : `STRIPE_PRICE_ID_STARTER`. */
+const PRICE_ID_MONTHLY = process.env.STRIPE_PRICE_ID_MONTHLY || process.env.STRIPE_PRICE_ID_STARTER || null;
+/** Facturation annuelle 399 € / an (même essai 3 j que le mensuel). */
+const PRICE_ID_ANNUAL = process.env.STRIPE_PRICE_ID_ANNUAL || null;
+/** Rétrocompat : anciens scripts qui lisent `PRICE_ID_STARTER`. */
+const PRICE_ID_STARTER = PRICE_ID_MONTHLY;
+const STRIPE_SUBSCRIPTION_TRIAL_DAYS = Math.max(0, parseInt(String(process.env.STRIPE_SUBSCRIPTION_TRIAL_DAYS || "3"), 10) || 0);
+/** Coupon Stripe (durée `once`) : réduit le 1er prélèvement post-essai à 1 € sur le prix mensuel (ex. 48,99 € de remise sur 49,99 €). */
+const STRIPE_COUPON_ID_FIRST_MONTH_1_EUR = process.env.STRIPE_COUPON_ID_FIRST_MONTH_1_EUR
+  ? String(process.env.STRIPE_COUPON_ID_FIRST_MONTH_1_EUR).trim() || null
+  : null;
 /** Prix Stripe (mode paiement unique) — pack « créations flyer ». */
 const PRICE_ID_FLYER_PACK = process.env.STRIPE_PRICE_ID_FLYER_PACK || null;
 /** Nombre de générations créditées par achat (surcharge possible via metadata session). */
 const FLYER_PACK_GENERATIONS = Math.max(1, parseInt(process.env.FLYER_PACK_GENERATIONS || "25", 10) || 25);
+
+function buildStripeSubscriptionTrialConfig() {
+  if (STRIPE_SUBSCRIPTION_TRIAL_DAYS <= 0) return {};
+  return { trial_period_days: STRIPE_SUBSCRIPTION_TRIAL_DAYS };
+}
 
 /**
  * POST /api/payment/create-portal-session
@@ -97,24 +112,31 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
   if (!email) {
     return res.status(400).json({ error: "Email utilisateur requis" });
   }
+  const plan = String(req.body?.plan || req.query?.plan || "monthly").toLowerCase() === "annual" ? "annual" : "monthly";
+  if (plan === "annual" && !PRICE_ID_ANNUAL) {
+    return res.status(503).json({
+      error: "Prix annuel non configuré (STRIPE_PRICE_ID_ANNUAL).",
+      code: "stripe_not_configured",
+    });
+  }
+  const priceId = plan === "annual" ? PRICE_ID_ANNUAL : PRICE_ID_MONTHLY;
   try {
-    const session = await stripe.checkout.sessions.create({
+    const sessionPayload = {
       mode: "subscription",
       customer_email: email,
-      line_items: [
-        {
-          price: PRICE_ID_STARTER,
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${FRONTEND_URL}/app?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/choisir-offre`,
-      metadata: { user_id: userId },
-      /** Pas d’essai Stripe ici : l’essai gratuit est géré côté app (24 h). Le tarif 1 € puis 49,99 € / mois se configure sur le Price Stripe (`STRIPE_PRICE_ID_STARTER`). */
+      metadata: { user_id: String(userId), plan },
       subscription_data: {
-        metadata: { user_id: userId },
+        metadata: { user_id: String(userId), plan },
+        ...buildStripeSubscriptionTrialConfig(),
       },
-    });
+    };
+    if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
+      sessionPayload.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
+    }
+    const session = await stripe.checkout.sessions.create(sessionPayload);
     return res.json({ url: session.url });
   } catch (err) {
     console.error("Stripe checkout session error:", err);
@@ -127,12 +149,12 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
 /**
  * POST /api/payment/create-embedded-subscription
  * Abonnement avec Stripe Payment Element (carte, Apple Pay, Google Pay) sur myfidpass.fr — sans redirection Checkout hébergé.
- * Réponse : { client_secret, subscription_id } pour `stripe.confirmPayment` côté navigateur.
+ * Réponse : { client_secret, confirm_mode, subscription_id } — `confirm_mode` = "payment" | "setup" (période d'essai Stripe = SetupIntent $0).
  */
 router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
-  if (!stripe || !PRICE_ID_STARTER) {
+  if (!stripe || !PRICE_ID_MONTHLY) {
     return res.status(503).json({
-      error: "Paiement non configuré",
+      error: "Paiement non configuré (STRIPE_PRICE_ID_MONTHLY ou STRIPE_PRICE_ID_STARTER).",
       code: "stripe_not_configured",
     });
   }
@@ -147,6 +169,15 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       code: "already_subscribed",
     });
   }
+
+  const plan = String(req.body?.plan || "monthly").toLowerCase() === "annual" ? "annual" : "monthly";
+  if (plan === "annual" && !PRICE_ID_ANNUAL) {
+    return res.status(503).json({
+      error: "Prix annuel non configuré (STRIPE_PRICE_ID_ANNUAL).",
+      code: "stripe_not_configured",
+    });
+  }
+  const priceId = plan === "annual" ? PRICE_ID_ANNUAL : PRICE_ID_MONTHLY;
 
   try {
     let customerId = "";
@@ -183,21 +214,32 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       }
     }
 
-    const subscription = await stripe.subscriptions.create({
+    const subscriptionParams = {
       customer: customerId,
-      items: [{ price: PRICE_ID_STARTER, quantity: 1 }],
-      metadata: { user_id: userId },
+      items: [{ price: priceId, quantity: 1 }],
+      metadata: { user_id: userId, plan },
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.confirmation_secret", "latest_invoice.payment_intent", "pending_setup_intent"],
-    });
+      ...buildStripeSubscriptionTrialConfig(),
+      expand: [
+        "latest_invoice.confirmation_secret",
+        "latest_invoice.payment_intent",
+        "pending_setup_intent",
+      ],
+    };
+    if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
+      subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
+    }
+    const subscription = await stripe.subscriptions.create(subscriptionParams);
 
-    const clientSecret = await extractSubscriptionInvoiceClientSecret(subscription);
-    if (!clientSecret) {
+    const secretResult = await getClientSecretForEmbeddedSubscription(subscription);
+    if (!secretResult?.clientSecret) {
       const pending = subscription.pending_setup_intent;
       const pendingId = typeof pending === "string" ? pending : pending?.id;
       console.error("[payment] embedded subscription: missing client_secret", {
         subscriptionId: subscription.id,
+        plan,
+        trialDays: STRIPE_SUBSCRIPTION_TRIAL_DAYS,
         pendingSetupIntent: pendingId || null,
         latestInvoice:
           typeof subscription.latest_invoice === "string"
@@ -209,7 +251,7 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       } catch (_) {}
       return res.status(500).json({
         error:
-          "Impossible de préparer l’intention de paiement. Vérifiez dans Stripe que le prix d’abonnement n’a pas d’essai gratuit (montant 1re facture = 0) ou contactez le support.",
+          "Impossible de préparer le paiement (essai : SetupIntent / sinon facture). Vérifiez STRIPE_SUBSCRIPTION_TRIAL_DAYS, les price_id et, si besoin, STRIPE_COUPON_ID_FIRST_MONTH_1_EUR côté Stripe.",
         code: "missing_payment_intent",
       });
     }
@@ -217,7 +259,8 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
     await syncSubscriptionFromStripeObject(subscription, userId);
 
     return res.json({
-      client_secret: clientSecret,
+      client_secret: secretResult.clientSecret,
+      confirm_mode: secretResult.mode,
       subscription_id: subscription.id,
     });
   } catch (err) {
@@ -227,6 +270,32 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
     });
   }
 });
+
+/**
+ * Période d'essai Stripe = facture 0 € : souvent `pending_setup_intent` (saisir CB pour la fin d'essai) ;
+ * sinon `PaymentIntent` / `confirmation_secret` sur la facture.
+ * @param {import("stripe").Stripe.Subscription} subscription
+ * @returns {Promise<{ clientSecret: string, mode: "payment" | "setup" }|null>}
+ */
+async function getClientSecretForEmbeddedSubscription(subscription) {
+  if (!stripe || !subscription) return null;
+  let pSetup = subscription.pending_setup_intent;
+  if (typeof pSetup === "string" && pSetup) {
+    try {
+      pSetup = await stripe.setupIntents.retrieve(pSetup);
+    } catch (e) {
+      pSetup = null;
+    }
+  }
+  if (pSetup && typeof pSetup === "object" && pSetup.client_secret) {
+    return { clientSecret: pSetup.client_secret, mode: "setup" };
+  }
+  const fromInvoice = await extractSubscriptionInvoiceClientSecret(subscription);
+  if (fromInvoice) {
+    return { clientSecret: fromInvoice, mode: "payment" };
+  }
+  return null;
+}
 
 /**
  * @param {import("stripe").Stripe.Subscription} subscription
