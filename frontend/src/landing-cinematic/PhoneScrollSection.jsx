@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
-const PHONE_IMAGE = "/assets/mockup.png";
+const PHONE_IMAGE = "/assets/iphone.png";
 
 export function PhoneScrollSection() {
   const sectionRef = useRef(null);
@@ -10,10 +10,12 @@ export function PhoneScrollSection() {
     offset: ["start start", "end end"],
   });
 
-  const phoneY = useTransform(scrollYProgress, [0, 0.35, 1], ["48vh", "10vh", "8vh"]);
-  const phoneX = useTransform(scrollYProgress, [0, 0.58, 0.75, 1], ["0vw", "0vw", "-22vw", "-28vw"]);
-  const phoneScale = useTransform(scrollYProgress, [0, 0.35, 1], [0.72, 1, 0.9]);
-  const phoneRotate = useTransform(scrollYProgress, [0, 0.18, 0.38, 1], [-17, -12, -1.5, 0]);
+  const phoneY = useTransform(scrollYProgress, [0, 0.34, 1], ["56vh", "14vh", "10vh"]);
+  const phoneX = useTransform(scrollYProgress, [0, 0.58, 0.75, 1], ["0vw", "0vw", "-18vw", "-24vw"]);
+  const phoneScale = useTransform(scrollYProgress, [0, 0.34, 1], [0.68, 1, 0.9]);
+  const phoneRotateZ = useTransform(scrollYProgress, [0, 0.18, 0.4, 1], [-21, -14, -2, 0]);
+  const phoneRotateX = useTransform(scrollYProgress, [0, 0.28, 0.52, 1], [22, 12, 3, 0]);
+  const phoneRotateY = useTransform(scrollYProgress, [0, 0.24, 0.45, 1], [-15, -8, -2, 0]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.38, 0.52], [1, 1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.52], ["0px", "-36px"]);
   const rightOpacity = useTransform(scrollYProgress, [0.54, 0.72, 1], [0, 1, 1]);
@@ -21,7 +23,7 @@ export function PhoneScrollSection() {
 
   return (
     <section ref={sectionRef} className="relative min-h-[300vh] bg-[#fdfcf9] text-black">
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="sticky top-0 h-screen overflow-hidden [perspective:1400px]">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -72,13 +74,21 @@ export function PhoneScrollSection() {
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(46vw,420px)] -translate-x-1/2 will-change-transform"
-          style={{ y: phoneY, x: phoneX, scale: phoneScale, rotate: phoneRotate, transformOrigin: "50% 76%" }}
+          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(46vw,420px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d]"
+          style={{
+            y: phoneY,
+            x: phoneX,
+            scale: phoneScale,
+            rotateZ: phoneRotateZ,
+            rotateX: phoneRotateX,
+            rotateY: phoneRotateY,
+            transformOrigin: "50% 88%",
+          }}
         >
           <img
             src={PHONE_IMAGE}
             alt="Mockup iPhone FinTap"
-            className="h-auto w-full drop-shadow-[0_34px_54px_rgba(0,0,0,0.22)]"
+            className="h-auto w-full drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
           />
         </motion.div>
 
