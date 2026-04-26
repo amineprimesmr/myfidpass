@@ -35,6 +35,27 @@ export function fintapHeroScrollRatio(
 }
 
 /**
+ * Ratio 0 = section à la position « initiale » (réf. viewport) ; 1 = décalage ≈ 400px vers le haut.
+ * Fonctionne que le scroll soit sur window ou un conteneur.
+ *
+ * @param {number} initialSectionTop
+ * @param {number} currentSectionTop
+ * @param {number} [triggerDistance=TRIGGER]
+ * @returns {number} entre 0 et 1
+ */
+export function fintapHeroScrollRatioFromViewport(
+  initialSectionTop,
+  currentSectionTop,
+  triggerDistance = TRIGGER
+) {
+  return clamp(
+    (initialSectionTop - currentSectionTop) / triggerDistance,
+    0,
+    1
+  );
+}
+
+/**
  * @param {number} scrollRatio
  * @returns {{
  *   rotateX: number, rotateY: number, rotateZ: number, scale: number, translateY: number,

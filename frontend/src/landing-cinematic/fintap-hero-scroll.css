@@ -37,7 +37,7 @@
   margin: 0 auto;
 }
 
-/* perspective sur le parent (pas sur le mockup) */
+/* perspective sur le parent (obligatoire y compris mobile, sinon le rotateX ne “mord” pas) */
 #phoneWrapper.fintap-hero-iphone__scene,
 .fintap-hero-iphone__scene {
   margin: 0 auto;
@@ -45,9 +45,11 @@
   justify-content: center;
   overflow: visible;
   padding: 0.5rem 0 2.5rem;
+  min-height: min(48vh, 400px);
   perspective: 1200px;
   perspective-origin: 50% 50%;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
 #iphoneMockup.iphone-mockup.fintap-iphone-mockup,
@@ -73,24 +75,21 @@
   -webkit-user-drag: none;
 }
 
-/* État initial 3D (avant/entre frames JS) — desktop uniquement */
-@media (min-width: 768px) {
-  #iphoneMockup.fintap-iphone-mockup {
-    transform: translate3d(0, 30px, 0) rotateX(18deg) rotateY(-6deg) rotateZ(2deg)
-      scale(0.88);
-    box-shadow: 0 60px 120px rgba(0, 0, 0, 0.25);
-  }
+/* État initial 3D (avant 1er run JS) — toutes largeurs : même base que ratio 0 */
+#iphoneMockup.fintap-iphone-mockup {
+  transform: translate3d(0, 30px, 0) rotateX(18deg) rotateY(-6deg) rotateZ(2deg) scale(0.88);
+  box-shadow: 0 60px 120px rgba(0, 0, 0, 0.25);
+}
 
+@media (min-width: 768px) {
   .fintap-hero-iphone__scene {
     min-height: min(58vh, 480px);
   }
 }
 
-/* Mobile : téléphone droit, pas d’effet 3D */
-@media (max-width: 767.98px) {
+@media (prefers-reduced-motion: reduce) {
   .fintap-hero-iphone__scene {
     perspective: none;
-    min-height: auto;
   }
 
   #iphoneMockup.fintap-iphone-mockup {

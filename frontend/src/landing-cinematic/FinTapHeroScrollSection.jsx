@@ -1,13 +1,36 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import {
   computeFintapHeroPhoneStyle,
-  fintapHeroScrollRatio,
+  fintapHeroScrollRatioFromViewport,
 } from "./fintap-hero-scroll-lerp.js";
 import "./fintap-hero-scroll.css";
 
 const HERO_IPHONE_IMG = "/assets/iphone.png";
-
 const TRIGGER_PX = 400;
+
+/**
+ * Ancêtres qui reçoivent vraiment le scroll (page ou panneau scrollable).
+ * @param {Element | null} from
+ * @returns {(Window | Element)[]}
+ */
+function getScrollListenerRoots(from) {
+  const out = [window];
+  if (!from) return out;
+  let p = from.parentElement;
+  while (p) {
+    const s = getComputedStyle(p);
+    if (
+      p.scrollHeight > p.clientHeight + 1 &&
+      (s.overflowY === "auto" ||
+        s.overflowY === "scroll" ||
+        s.overflowY === "overlay")
+    ) {
+      out.push(p);
+    }
+    p = p.parentElement;
+  }
+  return out;
+}
 
 /**
  * @param {HTMLElement | null} phone
@@ -23,36 +46,41 @@ function setPhone3d(phone, s) {
 /**
  * @param {HTMLElement | null} phone
  */
-function setPhoneFlat(phone) {
+function setPhoneStaticFront(phone) {
   if (!phone) return;
-  phone.style.removeProperty("transform");
-  phone.style.removeProperty("box-shadow");
+  setPhone3d(phone, computeFintapHeroPhoneStyle(1));
 }
 
 /**
- * Parcours hero FinTap : contre-plongée → droit (scroll) sur desktop.
+ * Parcours hero FinTap : contre-plongée → droit (scroll).
  */
 export function FinTapHeroScrollSection() {
   const sectionRef = useRef(null);
   const phoneRef = useRef(null);
   const rafRef = useRef(0);
+  const initTopRef = useRef(/** @type {number | null} */ (null));
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const section = sectionRef.current;
     const phone = phoneRef.current;
     if (!section || !phone) return;
 
-    const mql = window.matchMedia("(min-width: 768px)");
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
 
     const run = () => {
-      if (!mql.matches) {
-        setPhoneFlat(phone);
+      if (reduced.matches) {
+        setPhoneStaticFront(phone);
         return;
       }
-      const top = section.getBoundingClientRect().top + window.scrollY;
-      const ratio = fintapHeroScrollRatio(
-        window.scrollY,
-        top,
+      if (initTopRef.current == null) {
+        initTopRef.current = section.getBoundingClientRect().top;
+      }
+      const y = section.getBoundingClientRect().top;
+      const ratio = fintapHeroScrollRatioFromViewport(
+        initTopRef.current,
+        y,
         TRIGGER_PX
       );
       setPhone3d(phone, computeFintapHeroPhoneStyle(ratio));
@@ -68,33 +96,55 @@ export function FinTapHeroScrollSection() {
       rafRef.current = requestAnimationFrame(raf);
     };
 
-    const onResize = onScroll;
-
-    const onMq = () => {
-      if (mql.matches) onScroll();
-      else setPhoneFlat(phone);
+    const onResize = () => {
+      initTopRef.current = null;
+      onScroll();
     };
 
-    mql.addEventListener("change", onMq);
+    if (reduced.addEventListener) {
+      reduced.addEventListener("change", onScroll);
+    } else {
+      reduced.addListener(onScroll);
+    }
 
     const io = new IntersectionObserver(
-      () => {
+      (entries) => {
+        if (!entries[0] || !entries[0].isIntersecting) return;
+        initTopRef.current = null;
         onScroll();
       },
-      { root: null, rootMargin: "80px 0px", threshold: [0, 0.01, 0.1] }
+      { root: null, rootMargin: "0px", threshold: 0.01 }
     );
     io.observe(section);
 
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const roots = getScrollListenerRoots(section);
+    const scrollOpts = { passive: true, capture: true };
+    for (const r of roots) {
+      if (r === window) {
+        window.addEventListener("scroll", onScroll, scrollOpts);
+      } else {
+        r.addEventListener("scroll", onScroll, scrollOpts);
+      }
+    }
     window.addEventListener("resize", onResize, { passive: true });
 
-    onScroll();
+    run();
 
     return () => {
-      mql.removeEventListener("change", onMq);
+      if (reduced.removeEventListener) {
+        reduced.removeEventListener("change", onScroll);
+      } else {
+        reduced.removeListener(onScroll);
+      }
       io.disconnect();
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
+      for (const r of roots) {
+        if (r === window) {
+          window.removeEventListener("scroll", onScroll, scrollOpts);
+        } else {
+          r.removeEventListener("scroll", onScroll, scrollOpts);
+        }
+      }
+      window.removeEventListener("resize", onResize, { passive: true });
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);

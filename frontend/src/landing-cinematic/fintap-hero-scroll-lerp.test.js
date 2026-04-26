@@ -3,8 +3,24 @@ import {
   clamp,
   computeFintapHeroPhoneStyle,
   fintapHeroScrollRatio,
+  fintapHeroScrollRatioFromViewport,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
+
+describe("fintapHeroScrollRatioFromViewport", () => {
+  it("0 quand la section n’a pas bougé (viewport)", () => {
+    expect(fintapHeroScrollRatioFromViewport(200, 200, 400)).toBe(0);
+  });
+  it("0.5 après 200px de défilement (section monte)", () => {
+    expect(fintapHeroScrollRatioFromViewport(200, 0, 400)).toBe(0.5);
+  });
+  it("1 après 400px (section monte de 400px en coordonnées vues)", () => {
+    expect(fintapHeroScrollRatioFromViewport(400, 0, 400)).toBe(1);
+  });
+  it("plafonne", () => {
+    expect(fintapHeroScrollRatioFromViewport(0, -1000, 400)).toBe(1);
+  });
+});
 
 describe("fintapHeroScrollRatio", () => {
   it("retourne 0 en haut de section", () => {
