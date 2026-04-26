@@ -71,7 +71,7 @@ export function HeroSection() {
           >
             <span className="font-heading text-xl italic text-white">a</span>
           </a>
-          <div className="liquid-glass hidden items-center gap-0 rounded-full px-1.5 py-1.5 lg:flex">
+          <div className="liquid-glass hidden items-center gap-0 rounded-full px-1.5 py-1.5 md:flex">
             {NAV_LINKS.map((l) => (
               <a
                 key={l.label}
