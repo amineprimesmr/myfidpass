@@ -52,17 +52,15 @@ describe("computeFintapHeroPhoneStyle", () => {
     expect(s.rotateZ).toBe(0);
     expect(s.scale).toBe(1.52);
     expect(s.translateY).toBe(-64);
-    expect(s.topGap).toBe(24);
   });
-  it("raccorde l’état final (ratio 1)", () => {
+  it("raccorde l’état final (ratio 1) — translateY inclut l’ex-écart 24→200 (176px) via GPU", () => {
     const s = computeFintapHeroPhoneStyle(1);
     expect(s.rotateX).toBe(0);
     expect(s.rotateY).toBe(0);
     expect(s.rotateZ).toBe(0);
     expect(s.scale).toBe(1);
-    expect(s.translateY).toBe(0);
+    expect(s.translateY).toBe(176);
     expect(s.shadowAlpha).toBeCloseTo(0.12);
-    expect(s.topGap).toBe(200);
   });
 });
 

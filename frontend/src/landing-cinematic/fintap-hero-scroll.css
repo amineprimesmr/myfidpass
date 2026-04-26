@@ -40,7 +40,8 @@
 /* perspective sur le parent (obligatoire y compris mobile, sinon le rotateX ne “mord” pas) */
 #phoneWrapper.fintap-hero-iphone__scene,
 .fintap-hero-iphone__scene {
-  margin: 0 auto;
+  /* Marge fixe : l’espace 24→200px du scroll est intégré au translate3d du mockup (compositing) */
+  margin: 24px auto 0;
   display: flex;
   justify-content: center;
   overflow: visible;
@@ -61,7 +62,9 @@
   line-height: 0;
   z-index: 0;
   transform-origin: center bottom;
-  will-change: transform;
+  will-change: transform, box-shadow;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   /* pas de transition sur transform/ombre (animation pilotée en JS) */
   transition: none;
   background: transparent;

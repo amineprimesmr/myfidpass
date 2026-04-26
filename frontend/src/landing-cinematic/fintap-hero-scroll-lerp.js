@@ -35,6 +35,9 @@ const SCALE_REST = 1;
  */
 const TRANSLATE_Y_START_HIGH = -64;
 const TRANSLATE_Y_END_REST = 0;
+/** Marge haute de la scène (fixe en CSS) — l’ancienne animation marginTop 24→200 est dans le translateY. */
+const FINTAP_SCENE_LAYOUT_MARGIN_PX = 24;
+const GAP_MOTION_PX = 200 - FINTAP_SCENE_LAYOUT_MARGIN_PX;
 
 /**
  * @param {number} scrollY scroll courant
@@ -84,7 +87,7 @@ export function fintapHeroScrollRatioFromViewport(
  * @param {number} scrollRatio
  * @returns {{
  *   rotateX: number, rotateY: number, rotateZ: number, scale: number, translateY: number,
- *   shadowY: number, shadowBlur: number, shadowAlpha: number, topGap: number
+ *   shadowY: number, shadowBlur: number, shadowAlpha: number
  * }}
  */
 export function computeFintapHeroPhoneStyle(scrollRatio) {
@@ -94,10 +97,11 @@ export function computeFintapHeroPhoneStyle(scrollRatio) {
     rotateY: TILT_Y_DEG * (1 - t),
     rotateZ: TILT_Z_DEG * (1 - t),
     scale: lerp(SCALE_ZOOMED, SCALE_REST, t),
-    translateY: lerp(TRANSLATE_Y_START_HIGH, TRANSLATE_Y_END_REST, t),
+    translateY:
+      lerp(TRANSLATE_Y_START_HIGH, TRANSLATE_Y_END_REST, t) +
+      lerp(0, GAP_MOTION_PX, t),
     shadowY: lerp(60, 20, t),
     shadowBlur: lerp(120, 50, t),
     shadowAlpha: lerp(0.25, 0.12, t),
-    topGap: lerp(24, 200, t),
   };
 }
