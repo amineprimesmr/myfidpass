@@ -42,9 +42,11 @@ export function PhoneScrollSection() {
     target: sectionRef,
     offset: ["start start", "end start"],
   });
+  // Motion: p=0 haut de section, p=1 fin — si l’effet visuel est à l’envers, on branche tout sur 1-p.
+  const p = useTransform(scrollYProgress, (v) => clamp(1 - v, 0, 1));
 
-  const phoneY = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const phoneY = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t < FLAT_AT) {
       const a = t / FLAT_AT;
       const s = easeInOutCubic(a);
@@ -58,8 +60,8 @@ export function PhoneScrollSection() {
     return `${(10 + 32 * s).toFixed(2)}vh`;
   });
 
-  const phoneX = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const phoneX = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t < SPLIT_END) {
       return "0";
     }
@@ -67,8 +69,8 @@ export function PhoneScrollSection() {
     return `${-16 * easeInOutCubic(u)}vw`;
   });
 
-  const phoneScale = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const phoneScale = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t < FLAT_AT) {
       const a = t / FLAT_AT;
       const s = 1 - (1 - a) * (1 - a);
@@ -81,8 +83,8 @@ export function PhoneScrollSection() {
     return FACE + (ZOOM_LATE - FACE) * easeInOutCubic(b);
   });
 
-  const phoneRotateX = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const phoneRotateX = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t >= FLAT_AT) {
       return 0;
     }
@@ -90,8 +92,8 @@ export function PhoneScrollSection() {
     return ANGLE_MAX * a * a;
   });
 
-  const wrapPerspective = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const wrapPerspective = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t >= FLAT_AT) {
       return 1e6;
     }
@@ -99,8 +101,8 @@ export function PhoneScrollSection() {
     return 850 + 2400 * easeInOutCubic(a);
   });
 
-  const wrapPerspectiveOrigin = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const wrapPerspectiveOrigin = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t >= FLAT_AT) {
       return "50% 50%";
     }
@@ -109,8 +111,8 @@ export function PhoneScrollSection() {
     return `50% ${yp}%`;
   });
 
-  const phoneTransformOrigin = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const phoneTransformOrigin = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t >= FLAT_AT) {
       return "50% 50%";
     }
@@ -119,8 +121,8 @@ export function PhoneScrollSection() {
     return `50% ${yp.toFixed(1)}%`;
   });
 
-  const heroOpacity = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const heroOpacity = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t <= 0.2) {
       return 1;
     }
@@ -129,8 +131,8 @@ export function PhoneScrollSection() {
     }
     return 1 - smoothstep((t - 0.2) / 0.2);
   });
-  const heroY = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const heroY = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t <= 0.22) {
       return 0;
     }
@@ -139,8 +141,8 @@ export function PhoneScrollSection() {
     }
     return -32 * smoothstep((t - 0.22) / 0.22);
   });
-  const rightOpacity = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const rightOpacity = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t < 0.32) {
       return 0;
     }
@@ -149,8 +151,8 @@ export function PhoneScrollSection() {
     }
     return smoothstep((t - 0.32) / 0.28);
   });
-  const rightY = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
+  const rightY = useTransform(p, (r) => {
+    const t = clamp(r, 0, 1);
     if (t < 0.32) {
       return 24;
     }
