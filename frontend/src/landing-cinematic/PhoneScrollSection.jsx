@@ -3,17 +3,20 @@ import { motion, useScroll, useTransform } from "framer-motion";
 
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 
-/** Type Framer (scroll ciné) : ralenti au début + à la fin. */
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 const smoothstep = (t) => t * t * (3 - 2 * t);
 
-const PHASE_3D_END = 0.48; // 1ère moitié du scroll : 3D + gros plan → iPhone de face
-const ANGLE_MAX = 64; // contre-plongée (même ordre que le template, pas 80°+)
-const ZOOM_HERO = 2.4; // gros plan en worm’s eye (proche de la ref Framer)
-const ZOOM_HERO_NARROW = 1.9; // dézoom en contre-plongée sur iPhone / petit écran (moins de crop)
-const ZOOM_FLAT = 1.02; // iPhone quasiment face caméra en fin de phase 3D
-const ZOOM_SLIDE = 0.9; // léger dolly en phase “split” avec le texte
+/** Fin de la 3D + début de la “carte” 2D (image de face) — le reste du scroll n’a plus de perspective. */
+const FLAT_AT = 0.36;
+const LAYOUT_SPLIT_AT = 0.48; // cadrage 2 colonnes (même frise qu’avant, mais sans 3D après FLAT_AT)
+
+// Intro légère : l’exagération (2.4×, 64°, 720px de push) donnait l’impression d’une plongée qui empire.
+const ANGLE_INTRO = 18;
+const ZOOM_INTRO = 1.2;
+const ZOOM_FACE = 1;
+const ZOOM_LATE = 0.94;
+const NARROW_INTRO = 1.1;
 
 const PHONE_IMAGES = ["/assets/iphone.png", "/assets/mockupiphone.png", "/assets/iphone-frame.png", "/assets/icone.png"];
 
@@ -34,79 +37,72 @@ function useNarrowViewport() {
 export function PhoneScrollSection() {
   const [phoneImgIdx, setPhoneImgIdx] = useState(0);
   const narrow = useNarrowViewport();
-  const zoomHero = narrow ? ZOOM_HERO_NARROW : ZOOM_HERO;
+  const zoomIntro = narrow ? NARROW_INTRO : ZOOM_INTRO;
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"],
   });
 
-  // Phase B : iPhone descend nettement (vraie marge visuelle vs le texte — le padding du hero est sous le z-index phone).
+  // Phase 2 (après LAYOUT_SPLIT_AT) : position en Y uniquement, sans 3D.
   const yPhaseB = (t) => {
-    const u = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
+    const u = (t - LAYOUT_SPLIT_AT) / (1 - LAYOUT_SPLIT_AT);
     const s = easeInOutCubic(Math.max(0, Math.min(1, u)));
-    return 12 + 34 * s; // 12vh → 46vh en fin de scroll dans la section
+    return 10 + 30 * s;
   };
-  // Phase A : 3D + dézoom (sens Framer = la majeure partie du “ciné” dans la 1ère moitié du scroll).
+
   const phoneY = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < PHASE_3D_END) {
-      const a = t / PHASE_3D_END;
+    if (t < LAYOUT_SPLIT_AT) {
+      const a = t / LAYOUT_SPLIT_AT;
       const s = easeInOutCubic(a);
-      // Départ plus haut (~2/3 du mockup visibles) : 55vh → 12vh (jointure yPhaseB == 12)
-      return `${(55 - 43 * s).toFixed(2)}vh`;
+      return `${(32 - 22 * s).toFixed(2)}vh`;
     }
     return `${yPhaseB(t).toFixed(2)}vh`;
   });
 
   const phoneX = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < PHASE_3D_END) return "0";
-    const u = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
-    // Entrée progressive du cadrage 2 colonnes (comme la compo Framer final).
-    return `${-22 * easeInOutCubic(u)}vw`;
+    if (t < LAYOUT_SPLIT_AT) return "0";
+    const u = (t - LAYOUT_SPLIT_AT) / (1 - LAYOUT_SPLIT_AT);
+    return `${-18 * easeInOutCubic(u)}vw`;
   });
 
   const phoneScale = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < PHASE_3D_END) {
-      const a = t / PHASE_3D_END;
-      return ZOOM_FLAT + (zoomHero - ZOOM_FLAT) * (1 - easeInOutCubic(a));
+    if (t < FLAT_AT) {
+      const a = t / FLAT_AT;
+      const s = 1 - (1 - a) * (1 - a);
+      return zoomIntro + (ZOOM_FACE - zoomIntro) * s;
     }
-    const b = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
-    return ZOOM_FLAT + (ZOOM_SLIDE - ZOOM_FLAT) * easeInOutCubic(b);
+    if (t < LAYOUT_SPLIT_AT) {
+      return ZOOM_FACE;
+    }
+    const b = (t - LAYOUT_SPLIT_AT) / (1 - LAYOUT_SPLIT_AT);
+    return ZOOM_FACE + (ZOOM_LATE - ZOOM_FACE) * easeInOutCubic(b);
   });
 
+  // 0° au moment FLAT_AT : dès là, image de face, plus de plongée 3D.
   const phoneRotateX = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t >= PHASE_3D_END) return 0;
-    const a = t / PHASE_3D_END;
-    const s = 1 - a;
-    return ANGLE_MAX * s * s;
+    if (t >= FLAT_AT) return 0;
+    const a = 1 - t / FLAT_AT;
+    return ANGLE_INTRO * a * a;
   });
 
-  // Sans ça, en phase 2 rotateX=0 mais perspective + gros translate X/Y/scale
-  // donne l’impression que le mockup se “casse” / se penche (projection 3D).
   const wrapPerspective = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t >= PHASE_3D_END) return 4000;
-    const a = easeInOutCubic(t / PHASE_3D_END);
-    return 1100 + 2900 * a;
+    if (t >= FLAT_AT) return 1e6;
+    const a = t / FLAT_AT;
+    return 900 + 2000 * easeInOutCubic(a);
   });
+
   const wrapPerspectiveOrigin = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t >= PHASE_3D_END) return "50% 50%";
-    const a = easeInOutCubic(t / PHASE_3D_END);
-    const yp = 12 + 40 * a;
+    if (t >= FLAT_AT) return "50% 50%";
+    const a = t / FLAT_AT;
+    const yp = 20 + 25 * easeInOutCubic(a);
     return `50% ${yp}%`;
-  });
-  const phoneTransformOrigin = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
-    if (t >= PHASE_3D_END) return "50% 50%";
-    const a = t / PHASE_3D_END;
-    const s = 1 - a;
-    const yPct = 100 * s * s;
-    return `50% ${yPct.toFixed(1)}%`;
   });
 
   const heroOpacity = useTransform(scrollYProgress, (p) => {
@@ -120,18 +116,6 @@ export function PhoneScrollSection() {
     if (t <= 0.22) return 0;
     if (t >= 0.44) return -32;
     return -32 * smoothstep((t - 0.22) / 0.22);
-  });
-  // Poussée additionnelle (px) en fin de parcours : écart texte ↔ mockup (fusionné dans y, calc + transform).
-  const phonePushPx = useTransform(scrollYProgress, (p) => {
-    const t = clamp(p, 0, 1);
-    if (t < 0.28) return 0;
-    const u = (t - 0.28) / 0.72;
-    return Math.round(720 * easeInOutCubic(u));
-  });
-  const phoneYFinal = useTransform([phoneY, phonePushPx], ([yv, push]) => {
-    const yStr = typeof yv === "string" ? yv : `${yv}`;
-    const px = typeof push === "number" ? push : 0;
-    return px ? `calc(${yStr} + ${px}px)` : yStr;
   });
   const rightOpacity = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
@@ -152,7 +136,6 @@ export function PhoneScrollSection() {
       id="fintap-hero"
       className="fintap-hero relative min-h-[480vh] scroll-mt-0 bg-[#fdfcf9] text-black"
     >
-      {/* perspective pilotée par scroll (voir wrapPerspective) : en fin de parcours, projection quasi plate = mockup “droit” */}
       <motion.div
         className="sticky top-0 h-screen overflow-x-hidden overflow-y-visible"
         style={{ perspective: wrapPerspective, perspectiveOrigin: wrapPerspectiveOrigin }}
@@ -185,11 +168,11 @@ export function PhoneScrollSection() {
         <motion.div
           className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform [backface-visibility:hidden]"
           style={{
-            y: phoneYFinal,
+            y: phoneY,
             x: phoneX,
             scale: phoneScale,
             rotateX: phoneRotateX,
-            transformOrigin: phoneTransformOrigin,
+            transformOrigin: "50% 50%",
             transformStyle: "preserve-3d",
           }}
         >
