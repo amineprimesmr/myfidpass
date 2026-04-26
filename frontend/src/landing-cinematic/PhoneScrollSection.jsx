@@ -3,18 +3,19 @@ import { motion, useScroll, useTransform } from "framer-motion";
 
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 
+/** Type Framer (scroll ciné) : ralenti au début + à la fin. */
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 const smoothstep = (t) => t * t * (3 - 2 * t);
 
-const PHASE_3D_END = 0.48;
-const ANGLE_MAX = 64;
-const ZOOM_HERO = 1.88;
-const ZOOM_HERO_NARROW = 1.48;
-const ZOOM_FLAT = 1.04;
-const ZOOM_SLIDE = 0.94;
+const PHASE_3D_END = 0.48; // 1ère moitié du scroll : 3D + gros plan → iPhone de face
+const ANGLE_MAX = 64; // contre-plongée (même ordre que le template, pas 80°+)
+const ZOOM_HERO = 2.4; // gros plan en worm’s eye (proche de la ref Framer)
+const ZOOM_HERO_NARROW = 1.9; // dézoom en contre-plongée sur iPhone / petit écran (moins de crop)
+const ZOOM_FLAT = 1.02; // iPhone quasiment face caméra en fin de phase 3D
+const ZOOM_SLIDE = 0.9; // léger dolly en phase “split” avec le texte
 
-const PHONE_IMAGES = ["/assets/mockupiphone.png", "/assets/iphone-frame.png", "/assets/icone.png"];
+const PHONE_IMAGES = ["/assets/iphone.png", "/assets/mockupiphone.png", "/assets/iphone-frame.png", "/assets/icone.png"];
 
 function useNarrowViewport() {
   const [narrow, setNarrow] = useState(
@@ -30,11 +31,6 @@ function useNarrowViewport() {
   return narrow;
 }
 
-/**
- * Cadrage vertical: `top` en % du viewport sticky, piloté sur TOUT le scrollYProgress 0→1.
- * Tant qu’on scroll la section, le bord haut du mockup se déplace vers le bas de l’écran.
- * (Les essais y/flex/translate sur une demi-courbe rendaient l’iPhone « collé en haut » le reste du parcours.)
- */
 export function PhoneScrollSection() {
   const [phoneImgIdx, setPhoneImgIdx] = useState(0);
   const narrow = useNarrowViewport();
@@ -45,20 +41,30 @@ export function PhoneScrollSection() {
     offset: ["start start", "end end"],
   });
 
-  // % du bord haut du sticky: départ haut, arrivée beaucoup plus bas — sur tout p∈[0,1]
-  const phoneTop = useTransform(scrollYProgress, (p) => {
-    const t = easeInOutCubic(clamp(p, 0, 1));
-    const t0 = narrow ? 0.1 : 0.06; // 10% / 6%: encore visible sous le titre, pas « coin du ciel »
-    const t1 = narrow ? 0.52 : 0.5; // ~moitié du viewport: descente claire d’un bout à l’autre du scroll
-    return `${(t0 + (t1 - t0) * t) * 100}%`;
+  // Phase B : iPhone descend nettement (vraie marge visuelle vs le texte — le padding du hero est sous le z-index phone).
+  const yPhaseB = (t) => {
+    const u = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
+    const s = easeInOutCubic(Math.max(0, Math.min(1, u)));
+    return 12 + 34 * s; // 12vh → 46vh en fin de scroll dans la section
+  };
+  // Phase A : 3D + dézoom (sens Framer = la majeure partie du “ciné” dans la 1ère moitié du scroll).
+  const phoneY = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t < PHASE_3D_END) {
+      const a = t / PHASE_3D_END;
+      const s = easeInOutCubic(a);
+      // Départ plus haut (~2/3 du mockup visibles) : 55vh → 12vh (jointure yPhaseB == 12)
+      return `${(55 - 43 * s).toFixed(2)}vh`;
+    }
+    return `${yPhaseB(t).toFixed(2)}vh`;
   });
 
   const phoneX = useTransform(scrollYProgress, (p) => {
-    if (narrow) return "0px";
     const t = clamp(p, 0, 1);
-    if (t < PHASE_3D_END) return "0px";
+    if (t < PHASE_3D_END) return "0";
     const u = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
-    return `${-20 * easeInOutCubic(u)}vw`;
+    // Entrée progressive du cadrage 2 colonnes (comme la compo Framer final).
+    return `${-22 * easeInOutCubic(u)}vw`;
   });
 
   const phoneScale = useTransform(scrollYProgress, (p) => {
@@ -90,6 +96,18 @@ export function PhoneScrollSection() {
     if (t >= 0.44) return -32;
     return -32 * smoothstep((t - 0.22) / 0.22);
   });
+  // Poussée additionnelle (px) en fin de parcours : écart texte ↔ mockup (fusionné dans y, calc + transform).
+  const phonePushPx = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t < 0.28) return 0;
+    const u = (t - 0.28) / 0.72;
+    return Math.round(720 * easeInOutCubic(u));
+  });
+  const phoneYFinal = useTransform([phoneY, phonePushPx], ([yv, push]) => {
+    const yStr = typeof yv === "string" ? yv : `${yv}`;
+    const px = typeof push === "number" ? push : 0;
+    return px ? `calc(${yStr} + ${px}px)` : yStr;
+  });
   const rightOpacity = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
     if (t < 0.32) return 0;
@@ -107,9 +125,10 @@ export function PhoneScrollSection() {
     <section
       ref={sectionRef}
       id="fintap-hero"
-      className="fintap-hero relative min-h-[320vh] scroll-mt-0 bg-[#fdfcf9] text-black"
+      className="fintap-hero relative min-h-[480vh] scroll-mt-0 bg-[#fdfcf9] text-black"
     >
-      <div className="sticky top-0 z-0 h-[100dvh] max-h-[100dvh] overflow-x-clip pt-6 md:pt-8 [perspective:min(90vh,1200px)] [perspective-origin:50%_85%]">
+      {/* overflow-y-visible : sinon overflow-hidden rogne l’iPhone dès qu’il descend → aucun effet visible */}
+      <div className="sticky top-0 h-screen overflow-x-hidden overflow-y-visible [perspective:min(85vh,1100px)] [perspective-origin:50%_12%]">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -119,59 +138,44 @@ export function PhoneScrollSection() {
         />
 
         <motion.div
-          className="relative z-10 mx-auto mt-4 flex max-w-5xl flex-col items-center px-4 text-center md:mt-6"
+          className="relative z-10 mx-auto mt-16 flex w-full max-w-5xl flex-col items-center px-12 pt-10 text-center sm:mt-20 sm:px-16 sm:pt-12 md:mt-24 md:px-28 md:pt-16 lg:px-36 xl:px-44 2xl:px-52"
           style={{ opacity: heroOpacity, y: heroY }}
         >
-          <h2 className="text-5xl font-black uppercase leading-[0.95] tracking-[-0.02em] md:text-7xl">
+          <h2 className="text-4xl font-black uppercase leading-[0.95] tracking-[-0.02em] sm:text-5xl md:text-6xl">
             Payments and transfers.
             <br />
             Fast and safe.
           </h2>
-          <p className="mt-4 max-w-xl text-xl text-[#636363]">
-            Local and international transfers, 1000+ types of payments, up to 3% of cashbacks and a lot
-            more
-          </p>
-          <button
-            type="button"
-            className="mt-5 rounded-full bg-[#0a98ff] px-6 py-3 text-base font-medium text-white"
-          >
-            Download FinTap
-          </button>
+          <div className="mx-auto mt-4 w-full max-w-lg px-6 sm:px-10 md:px-14">
+            <p className="text-center text-[0.8125rem] font-medium leading-snug tracking-tight text-[#636363] sm:text-sm md:text-[0.875rem] md:leading-[1.35]">
+              Local and international transfers, 1000+ types of payments, up to 3% of cashbacks and a lot
+              more
+            </p>
+          </div>
         </motion.div>
 
-        {/* Cadrage: top % sur tout le scroll. Couche 3D séparée (x, scale, rotate) pour les transforms */}
         <motion.div
-          className="absolute z-30 w-[min(90vw,560px)] max-w-full"
+          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d] [backface-visibility:hidden]"
           style={{
-            top: phoneTop,
-            left: 0,
-            right: 0,
-            marginLeft: "auto",
-            marginRight: "auto",
-            pointerEvents: "none",
+            y: phoneYFinal,
+            x: phoneX,
+            scale: phoneScale,
+            rotateX: phoneRotateX,
+            // Pivot sur le bas = le haut du cadre part vraiment “vers l’arrière” (effet worm’s eye)
+            transformOrigin: "50% 100%",
           }}
         >
-          <motion.div
-            className="w-full origin-bottom will-change-transform [backface-visibility:hidden] [transform-style:preserve-3d]"
-            style={{
-              x: phoneX,
-              scale: phoneScale,
-              rotateX: phoneRotateX,
-              transformOrigin: "50% 100%",
+          <img
+            src={PHONE_IMAGES[phoneImgIdx] ?? PHONE_IMAGES[0]}
+            alt="Mockup iPhone FinTap"
+            className="h-auto w-full max-w-full select-none drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
+            onError={() => {
+              setPhoneImgIdx((i) => (i < PHONE_IMAGES.length - 1 ? i + 1 : i));
             }}
-          >
-            <img
-              src={PHONE_IMAGES[phoneImgIdx] ?? PHONE_IMAGES[0]}
-              alt="Mockup iPhone FinTap"
-              className="mx-auto h-auto w-full max-h-[min(70dvh,520px)] object-contain object-bottom select-none drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
-              onError={() => {
-                setPhoneImgIdx((i) => (i < PHONE_IMAGES.length - 1 ? i + 1 : i));
-              }}
-              loading="eager"
-              decoding="async"
-              draggable={false}
-            />
-          </motion.div>
+            loading="eager"
+            decoding="async"
+            draggable={false}
+          />
         </motion.div>
 
         <motion.div

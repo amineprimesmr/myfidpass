@@ -231,6 +231,97 @@ export function getDashboardStats(businessId, period = "this_month") {
   };
 }
 
+/**
+ * Libellés + occurrences des `reward_redeem` sur la période (alignée sur `getDashboardStats`).
+ * Tampons : libellé carte ; points : libellé du palier si `points_reward_tiers` matche `points_deducted`.
+ */
+export function getDashboardRewardsRedeemedBreakdown(businessId, period = "this_month", business = {}) {
+  const normalizedPeriod = period === "1y" ? "12m" : period;
+  const bounds = getPeriodBounds(normalizedPeriod);
+  let tiers = business.points_reward_tiers;
+  if (typeof tiers === "string" && tiers.trim()) {
+    try {
+      tiers = JSON.parse(tiers);
+    } catch {
+      tiers = [];
+    }
+  }
+  if (!Array.isArray(tiers)) tiers = [];
+  const stampLabel = (business.stamp_reward_label && String(business.stamp_reward_label).trim()) || "Récompense tampons";
+
+  let rows;
+  if (bounds.month != null) {
+    rows = db
+      .prepare(
+        `SELECT metadata, points FROM transactions
+         WHERE business_id = ? AND type = 'reward_redeem' AND strftime('%Y-%m', created_at) = ?`,
+      )
+      .all(businessId, bounds.month);
+  } else {
+    rows = db
+      .prepare(
+        `SELECT metadata, points FROM transactions
+         WHERE business_id = ? AND type = 'reward_redeem' AND created_at >= ${bounds.since}`,
+      )
+      .all(businessId);
+  }
+
+  const tierLabelForPoints = (pts) => {
+    const n = Number(pts);
+    if (!Number.isFinite(n) || n <= 0) return `${pts} pts`;
+    for (const t of tiers) {
+      if (Number(t?.points) === n) {
+        const lab = String(t?.label || "").trim();
+        return lab || `${n} pts`;
+      }
+    }
+    return `${n} pts`;
+  };
+
+  /** @type {Map<string, { label: string, count: number }>} */
+  const map = new Map();
+
+  for (const row of rows || []) {
+    let meta = {};
+    if (row.metadata) {
+      try {
+        meta = typeof row.metadata === "string" ? JSON.parse(row.metadata) : row.metadata;
+      } catch {
+        meta = {};
+      }
+    }
+    const subtype = String(meta.subtype || "")
+      .toLowerCase()
+      .trim();
+    const absPts = Math.abs(Number(row.points) || 0);
+
+    if (subtype === "stamps") {
+      const key = "stamps";
+      const prev = map.get(key) || { label: stampLabel, count: 0 };
+      prev.count += 1;
+      map.set(key, prev);
+    } else if (subtype === "points" || subtype === "") {
+      const pts =
+        meta.points_deducted != null && Number.isFinite(Number(meta.points_deducted))
+          ? Number(meta.points_deducted)
+          : absPts;
+      const key = `points:${pts}`;
+      const label = tierLabelForPoints(pts);
+      const prev = map.get(key) || { label, count: 0 };
+      prev.count += 1;
+      map.set(key, prev);
+    } else {
+      const key = `other:${subtype}`;
+      const label = `Récompense (${subtype})`;
+      const prev = map.get(key) || { label, count: 0 };
+      prev.count += 1;
+      map.set(key, prev);
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.count - a.count);
+}
+
 const WEEKDAY_LABELS_FR = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 
 /**

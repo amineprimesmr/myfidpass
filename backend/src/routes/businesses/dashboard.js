@@ -14,6 +14,7 @@ import {
   getEngagementRewards,
   getPassKitPushTokensForBusiness,
   getDashboardStats,
+  getDashboardRewardsRedeemedBreakdown,
   getDashboardTrafficPatterns,
   getDashboardEvolution,
   getDashboardEvolutionForMonth,
@@ -1031,6 +1032,7 @@ router.get("/stats", (req, res) => {
   const q = String(req.query.period || "").trim();
   const period = PERIOD_OR_MONTH_RE.test(q) ? q : "this_month";
   const stats = getDashboardStats(business.id, period);
+  const rewardsRedeemedBreakdown = getDashboardRewardsRedeemedBreakdown(business.id, period, business);
   res.json({
     period: stats.period,
     period_key: stats.periodKey,
@@ -1051,6 +1053,7 @@ router.get("/stats", (req, res) => {
     avg_visits_per_active_member: stats.avgVisitsPerActiveMember ?? undefined,
     avg_basket_eur: stats.avgBasketEur ?? undefined,
     rewards_redeemed_count: stats.rewardsRedeemedCount ?? 0,
+    rewards_redeemed_breakdown: rewardsRedeemedBreakdown.map((r) => ({ label: r.label, count: r.count })),
     points_redeemed_in_period: stats.pointsRedeemedInPeriod ?? 0,
     google_reviews_new_in_period: stats.googleReviewsNewInPeriod ?? 0,
     notification_campaigns: stats.notificationCampaigns ?? [],
