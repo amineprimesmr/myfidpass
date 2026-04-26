@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FadingVideo } from "./FadingVideo.jsx";
-import { BlurText } from "./BlurText.jsx";
-import { IconArrowUpRight, IconClockOutline, IconGlobeOutline, IconPlay } from "./LandingIcons.jsx";
+import { IconArrowUpRight, IconClockOutline, IconGlobeOutline } from "./LandingIcons.jsx";
 
 const easeOut = [0, 0, 0.2, 1];
 const HERO_V =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_080021_d598092b-c4c2-4e53-8e46-94cf9064cd50.mp4";
+const VIDEO_HUMAN =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_090051_64ea5059-da6b-492b-a171-aa7ecc767dc3.mp4";
+const VIDEO_AI =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_093237_ff0ddc63-c068-4e29-96da-fdd0e40af133.mp4";
 
 const enter = { filter: "blur(10px)", opacity: 0, y: 20 };
 
@@ -17,6 +20,35 @@ const NAV_LINKS = [
   { href: "#capabilities", label: "Innovation" },
   { href: "/creer-ma-carte", label: "Plan Launch" },
 ];
+
+function VideoIcon({ src, size = 72 }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    videoRef.current?.play().catch(() => {});
+  }, []);
+
+  return (
+    <span
+      className="inline-block shrink-0 overflow-hidden rounded-full align-middle"
+      style={{
+        width: `clamp(48px, 10vw, ${size}px)`,
+        height: `clamp(48px, 10vw, ${size}px)`,
+        flexShrink: 0,
+      }}
+    >
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted
+        playsInline
+        src={src}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+      />
+    </span>
+  );
+}
 
 export function HeroSection() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -109,40 +141,94 @@ export function HeroSection() {
             <span className="pr-1 text-sm text-white/90">Maiden Crewed Voyage to Mars Arrives 2026</span>
           </motion.div>
 
-          <BlurText
-            className="mt-6 text-6xl font-heading text-white leading-[0.8] tracking-[-4px] md:text-7xl lg:max-w-2xl lg:text-[5.5rem]"
-            text="Venture Past Our Sky Across the Universe"
-          />
+          <motion.h1
+            initial={enter}
+            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6, ease: easeOut }}
+            className="mt-6 text-white"
+            style={{
+              fontFamily: "'YDYoonche L', 'YDYoonche M', sans-serif",
+              fontWeight: 300,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.1,
+              fontSize: "clamp(2.2rem, 7vw, 6.5rem)",
+            }}
+          >
+            <span
+              style={{
+                background: "linear-gradient(90deg, #333333 0%, #878787 50%, #333333 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                display: "block",
+                lineHeight: 1.1,
+                marginBottom: "-0.22em",
+              }}
+            >
+              The vision
+            </span>
+            <span
+              style={{
+                background: "linear-gradient(90deg, #333333 0%, #878787 50%, #333333 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                display: "block",
+                lineHeight: 1.1,
+              }}
+            >
+              of engineering
+            </span>
+            <span className="flex flex-wrap items-center justify-center gap-3 text-white">
+              <span style={{ color: "#555" }}>is</span>
+              <VideoIcon src={VIDEO_HUMAN} size={110} />
+              <span>human</span>
+              <span style={{ color: "#555", position: "relative", top: "0.15em", marginLeft: "0.25em" }}>
+                +
+              </span>
+              <VideoIcon src={VIDEO_AI} size={110} />
+              <span>AI</span>
+            </span>
+          </motion.h1>
 
           <motion.p
             initial={enter}
             animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8, ease: easeOut }}
-            className="font-body mt-4 max-w-2xl text-sm font-light leading-tight text-white md:text-base"
+            className="mt-4 max-w-xl px-2 text-center"
+            style={{
+              fontSize: "clamp(0.95rem, 2.2vw, 1.2rem)",
+              color: "#888",
+              lineHeight: 1.4,
+              fontWeight: 400,
+            }}
           >
-            Discover the universe in ways once unimaginable. Our pioneering vessels and breakthrough
-            engineering bring deep-space exploration within reach—secure and extraordinary.
+            We help you map the talent you need, track the talent you have, and close your gaps to
+            thrive in a GenAI world.
           </motion.p>
 
           <motion.div
             initial={enter}
             animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.1, ease: easeOut }}
-            className="mt-6 flex items-center justify-center gap-6"
+            className="mt-6 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0px_6px_32px_8px_rgba(39,243,169,0.22)] active:scale-[0.98]"
           >
             <a
               href="/creer-ma-carte"
-              className="liquid-glass-strong inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white"
+              style={{
+                padding: "12px 28px",
+                background: "#000",
+                boxShadow: "0px 6px 24px 6px rgba(39, 243, 169, 0.15)",
+                borderRadius: 8,
+                outline: "1px solid #30463C",
+                outlineOffset: -1,
+                border: "none",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+              }}
             >
-              Start Your Voyage
-              <IconArrowUpRight className="h-5 w-5" />
-            </a>
-            <a
-              href="#capabilities"
-              className="font-body inline-flex items-center gap-2 text-sm font-medium text-white"
-            >
-              View Liftoff
-              <IconPlay className="h-4 w-4" />
+              <span style={{ color: "#fff", fontSize: 14, fontWeight: 400 }}>Join The Movement!</span>
             </a>
           </motion.div>
 
