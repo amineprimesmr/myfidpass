@@ -1,6 +1,7 @@
 import "../liquid-glass-test.css";
 
-const IFRAME_SRC = "/liquid-glass-test.html";
+/** Démonstration complète kube.io (SVG) — `public/vendor/kube-liquid-glass/`. */
+const IFRAME_SRC = "/vendor/kube-liquid-glass/index.html";
 
 export default {
   init() {

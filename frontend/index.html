@@ -281,15 +281,21 @@
       </main>
     </div>
 
-    <!-- Test effet liquidGL (iframe, document isolé) — /test-liquid-glass -->
+    <!-- Test Liquid Glass (kube.io, SVG) — /test-liquid-glass — Chrome recommandé pour backdrop-filter URL -->
     <div id="liquid-glass-test-app" class="hidden" data-liquid-glass-app>
       <div class="liquid-glass-test-bar">
         <a href="/" class="liquid-glass-test-back">← Accueil</a>
-        <span class="liquid-glass-test-title">Test liquidGL</span>
+        <p class="liquid-glass-test-title">
+          <span class="liquid-glass-test-title-main">Liquid Glass</span>
+          <span class="liquid-glass-test-title-sub">kube.io · SVG + refraction</span>
+        </p>
       </div>
+      <p class="liquid-glass-test-hint" aria-hidden="true">
+        Article : kube.io/blog/liquid-glass-css-svg/ — idéalement ouvrir dans Chrome (filtres SVG en backdrop-filter).
+      </p>
       <iframe
         class="liquid-glass-test-iframe"
-        title="Démonstration effet verre liquidGL"
+        title="Démonstration Liquid Glass (kube.io, refraction CSS et SVG)"
         loading="lazy"
       ></iframe>
     </div>
