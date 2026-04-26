@@ -54,7 +54,7 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
   padding: 0 0.1rem;
   margin: 0 0.15rem;
 }
@@ -66,7 +66,7 @@
 
 #fidpass-liquid-menu-glass .lg-menu__ul::-webkit-scrollbar-thumb,
 .lg-menu__glass--desk .lg-menu__ul::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 }
 
@@ -141,6 +141,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #0a0a0a;
+  text-decoration: none;
 }
 
 .lg-menu__brand--bar .lg-menu__mark {
@@ -156,8 +158,8 @@
   height: 2.3rem;
   border: none;
   border-radius: 0.6rem;
-  background: rgba(15, 23, 42, 0.35);
-  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.45);
+  color: #0a0a0a;
   align-items: center;
   justify-content: center;
   flex-direction: column;
@@ -171,7 +173,7 @@
 
 .lg-menu__burger:hover,
 .lg-menu__burger:focus-visible {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.65);
   outline: 2px solid #60a5fa;
   outline-offset: 2px;
 }
@@ -180,7 +182,7 @@
   display: block;
   width: 1.1rem;
   height: 2px;
-  background: #f1f5f9;
+  background: #0a0a0a;
   border-radius: 1px;
   transition: transform 0.25s, opacity 0.2s;
   transform-origin: center;
@@ -239,21 +241,23 @@
 .lg-menu__a--stack {
   display: block;
   text-align: center;
-  padding: 0.5rem 0.65rem;
+  padding: 0.45rem 0.5rem;
   width: 100%;
-  background: rgba(15, 23, 42, 0.12);
+  background: transparent;
   border: none;
   text-decoration: none;
-  color: #f1f5f9;
+  color: #0a0a0a;
   font-size: 0.9rem;
   font-weight: 500;
-  border-radius: 0.65rem;
+  border-radius: 0;
   font: inherit;
 }
 
 a.lg-menu__a--stack:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: transparent;
+  color: #0a0a0a;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 .lg-menu__cta--stack {
@@ -313,7 +317,7 @@ a.lg-menu__a--stack:hover {
   align-items: center;
   gap: 0.3rem;
   text-decoration: none;
-  color: #f1f5f9;
+  color: #0a0a0a;
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -347,16 +351,17 @@ a.lg-menu__a--stack:hover {
 #fidpass-liquid-menu-glass .lg-menu__a,
 .lg-menu__glass--desk .lg-menu__a {
   display: inline-flex;
+  align-items: center;
   border: none;
-  background: rgba(15, 23, 42, 0.15);
-  color: #e2e8f0;
+  background: transparent;
+  color: #0a0a0a;
   text-decoration: none;
   font-size: 0.78rem;
   font-weight: 500;
-  padding: 0.28rem 0.5rem;
-  border-radius: 9999px;
+  padding: 0.25rem 0.45rem;
+  border-radius: 0;
   font: inherit;
-  transition: background 0.2s, color 0.2s;
+  transition: color 0.2s, text-decoration 0.2s;
   cursor: pointer;
 }
 
@@ -364,8 +369,10 @@ a.lg-menu__a--stack:hover {
 #fidpass-liquid-menu-glass button.lg-menu__a:hover,
 .lg-menu__glass--desk a.lg-menu__a:hover,
 .lg-menu__glass--desk button.lg-menu__a:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: transparent;
+  color: #0a0a0a;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 #fidpass-liquid-menu-glass .lg-menu__cta,
