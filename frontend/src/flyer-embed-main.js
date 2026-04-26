@@ -183,8 +183,10 @@ async function renderFromCurrentBootstrap() {
 
   canvas.width = FLYER_EXPORT.w;
   canvas.height = FLYER_EXPORT.h;
+  const skipCtaPill =
+    typeof window.__FIDPASS_SKIP_CTA_PILL_IN_CANVAS === "boolean" && window.__FIDPASS_SKIP_CTA_PILL_IN_CANVAS;
   try {
-    await renderFlyerCanvas(canvas, state, targetUrl || "https://myfidpass.fr", logoIn, bgIn);
+    await renderFlyerCanvas(canvas, state, targetUrl || "https://myfidpass.fr", logoIn, bgIn, { skipCtaPill });
   } catch (e) {
     if (typeof console !== "undefined" && console.warn) console.warn("[flyer-embed]", e);
   }
