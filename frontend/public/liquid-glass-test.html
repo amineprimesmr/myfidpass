@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test liquidGL — Myfidpass</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+      defer
+    ></script>
+    <script src="/scripts/liquidGL.js" defer></script>
+    <link rel="stylesheet" href="/liquid-glass-test-frame.css" />
+  </head>
+  <body>
+    <div class="lgt-gradient" aria-hidden="true"></div>
+    <div class="lgt-orb lgt-orb--a" aria-hidden="true"></div>
+    <div class="lgt-orb lgt-orb--b" aria-hidden="true"></div>
+    <header class="lgt-hero" aria-hidden="true">
+      <h1>Fidélisez en 3 secondes</h1>
+      <p>Contenu d’arrière-plan réfracté par la vitre (liquidGL · WebGL).</p>
+    </header>
+    <div class="lgt-card liquidGL" role="region" aria-label="Démonstration effet verre">
+      <div class="content">
+        <h2>Effet &laquo; Liquid Glass &raquo;</h2>
+        <p>
+          Déplacez la souris : verre, biseau et lumière spéculaire. Cette page est un extrait
+          de la librairie
+          <a
+            href="https://github.com/naughtyduk/liquidGL"
+            rel="noreferrer"
+            target="_blank"
+            style="color: inherit; font-weight: 600"
+            >naughtyduk/liquidGL</a
+          >.
+        </p>
+      </div>
+    </div>
+    <p class="lgt-credit">
+      <a href="https://github.com/naughtyduk/liquidGL" rel="noreferrer" target="_blank">MIT · NaughtyDuk</a>
+    </p>
+    <script src="/liquid-glass-test-frame.js" defer></script>
+  </body>
+</html>

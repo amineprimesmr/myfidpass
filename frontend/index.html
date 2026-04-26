@@ -57,6 +57,7 @@
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
     <link rel="stylesheet" href="/src/landing-testimonials-faq.css" />
+    <link rel="stylesheet" href="/src/liquid-glass-test.css" />
     <link rel="stylesheet" href="/src/landing-footer.css" />
     <link rel="stylesheet" href="/src/fidelity-qr-game-layout-force.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -278,6 +279,19 @@
           </article>
         </div>
       </main>
+    </div>
+
+    <!-- Test effet liquidGL (iframe, document isolé) — /test-liquid-glass -->
+    <div id="liquid-glass-test-app" class="hidden" data-liquid-glass-app>
+      <div class="liquid-glass-test-bar">
+        <a href="/" class="liquid-glass-test-back">← Accueil</a>
+        <span class="liquid-glass-test-title">Test liquidGL</span>
+      </div>
+      <iframe
+        class="liquid-glass-test-iframe"
+        title="Démonstration effet verre liquidGL"
+        loading="lazy"
+      ></iframe>
     </div>
 
     <!-- App connectée : interface logiciel (sans bannière ni menu haut) -->
