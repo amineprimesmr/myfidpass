@@ -64,6 +64,17 @@
   will-change: transform;
   /* pas de transition sur transform/ombre (animation pilotée en JS) */
   transition: none;
+  background: transparent;
+}
+
+#iphoneMockup .fintap-iphone-mockup__inner {
+  position: relative;
+  overflow: hidden;
+  line-height: 0;
+  background: transparent;
+  /* Rogne le « mat » clair/rectangle souvent laissé par l’export PNG autour du device */
+  border-radius: 0.5px;
+  isolation: isolate;
 }
 
 #iphoneMockup .fintap-iphone-mockup__img {
@@ -73,6 +84,9 @@
   height: auto;
   user-select: none;
   -webkit-user-drag: none;
+  /* Zoom ~5 % par côté pour éliminer la zone clair autour du phone dans le visuel */
+  transform: scale(1.1);
+  transform-origin: center center;
 }
 
 /* État initial 3D (avant 1er run JS) — toutes largeurs : même base que ratio 0 (X seul, face caméra) */
