@@ -189,53 +189,10 @@ export function HeroSection() {
             </span>
           </motion.h1>
 
-          <motion.p
-            initial={enter}
-            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8, ease: easeOut }}
-            className="mt-4 max-w-xl px-2 text-center"
-            style={{
-              fontSize: "clamp(0.95rem, 2.2vw, 1.2rem)",
-              color: "#888",
-              lineHeight: 1.4,
-              fontWeight: 400,
-            }}
-          >
-            We help you map the talent you need, track the talent you have, and close your gaps to
-            thrive in a GenAI world.
-          </motion.p>
-
           <motion.div
             initial={enter}
             animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.1, ease: easeOut }}
-            className="mt-6 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0px_6px_32px_8px_rgba(39,243,169,0.22)] active:scale-[0.98]"
-          >
-            <a
-              href="/creer-ma-carte"
-              style={{
-                padding: "12px 28px",
-                background: "#000",
-                boxShadow: "0px 6px 24px 6px rgba(39, 243, 169, 0.15)",
-                borderRadius: 8,
-                outline: "1px solid #30463C",
-                outlineOffset: -1,
-                border: "none",
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-              }}
-            >
-              <span style={{ color: "#fff", fontSize: 14, fontWeight: 400 }}>Join The Movement!</span>
-            </a>
-          </motion.div>
-
-          <motion.div
-            initial={enter}
-            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.3, ease: easeOut }}
+            transition={{ duration: 0.6, delay: 1.0, ease: easeOut }}
             className="mt-8 flex flex-wrap items-stretch justify-center gap-4"
           >
             <div className="liquid-glass flex w-[220px] flex-col items-start rounded-[1.25rem] p-5 text-left">
