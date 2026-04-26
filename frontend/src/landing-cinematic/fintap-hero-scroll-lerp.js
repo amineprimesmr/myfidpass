@@ -20,6 +20,11 @@ export function clamp(n, min, max) {
 
 const TRIGGER = 400;
 
+/** Contre-plongée (vue du bas) — uniquement rotateX, pas d’inclinaison latérale */
+const TILT_X_DEG = 32;
+const TILT_Y_DEG = 0;
+const TILT_Z_DEG = 0;
+
 /**
  * @param {number} scrollY
  * @param {number} sectionTopY
@@ -65,11 +70,11 @@ export function fintapHeroScrollRatioFromViewport(
 export function computeFintapHeroPhoneStyle(scrollRatio) {
   const t = clamp(scrollRatio, 0, 1);
   return {
-    rotateX: 18 * (1 - t),
-    rotateY: t >= 1 ? 0 : -6 * (1 - t),
-    rotateZ: 2 * (1 - t),
-    scale: 0.88 + 0.12 * t,
-    translateY: 30 * (1 - t),
+    rotateX: TILT_X_DEG * (1 - t),
+    rotateY: TILT_Y_DEG * (1 - t),
+    rotateZ: TILT_Z_DEG * (1 - t),
+    scale: 0.86 + 0.14 * t,
+    translateY: 38 * (1 - t),
     shadowY: lerp(60, 20, t),
     shadowBlur: lerp(120, 50, t),
     shadowAlpha: lerp(0.25, 0.12, t),

@@ -38,13 +38,13 @@ describe("fintapHeroScrollRatio", () => {
 });
 
 describe("computeFintapHeroPhoneStyle", () => {
-  it("raccorde l’état initial (ratio 0) au prompt", () => {
+  it("raccorde l’état initial (ratio 0) : contre-plongée X, pas de penché Y/Z", () => {
     const s = computeFintapHeroPhoneStyle(0);
-    expect(s.rotateX).toBe(18);
-    expect(s.rotateY).toBe(-6);
-    expect(s.rotateZ).toBe(2);
-    expect(s.scale).toBe(0.88);
-    expect(s.translateY).toBe(30);
+    expect(s.rotateX).toBe(32);
+    expect(s.rotateY).toBe(0);
+    expect(s.rotateZ).toBe(0);
+    expect(s.scale).toBe(0.86);
+    expect(s.translateY).toBe(38);
   });
   it("raccorde l’état final (ratio 1)", () => {
     const s = computeFintapHeroPhoneStyle(1);
