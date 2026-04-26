@@ -86,8 +86,7 @@ export function fintapHeroScrollRatioFromViewport(
 /**
  * @param {number} scrollRatio
  * @returns {{
- *   rotateX: number, rotateY: number, rotateZ: number, scale: number, translateY: number,
- *   shadowY: number, shadowBlur: number, shadowAlpha: number
+ *   rotateX: number, rotateY: number, rotateZ: number, scale: number, translateY: number
  * }}
  */
 export function computeFintapHeroPhoneStyle(scrollRatio) {
@@ -100,8 +99,5 @@ export function computeFintapHeroPhoneStyle(scrollRatio) {
     translateY:
       lerp(TRANSLATE_Y_START_HIGH, TRANSLATE_Y_END_REST, t) +
       lerp(0, GAP_MOTION_PX, t),
-    shadowY: lerp(60, 20, t),
-    shadowBlur: lerp(120, 50, t),
-    shadowAlpha: lerp(0.25, 0.12, t),
   };
 }

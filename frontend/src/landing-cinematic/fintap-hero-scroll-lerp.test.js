@@ -60,7 +60,6 @@ describe("computeFintapHeroPhoneStyle", () => {
     expect(s.rotateZ).toBe(0);
     expect(s.scale).toBe(1);
     expect(s.translateY).toBe(176);
-    expect(s.shadowAlpha).toBeCloseTo(0.12);
   });
 });
 
