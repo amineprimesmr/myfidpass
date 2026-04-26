@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
-import { FinTapHeroIphoneContent } from "./FinTapHeroIphoneContent.jsx";
 import {
   computeFintapHeroPhoneStyle,
   fintapHeroScrollRatio,
 } from "./fintap-hero-scroll-lerp.js";
 import "./fintap-hero-scroll.css";
+
+const HERO_IPHONE_IMG = "/assets/iphone.png";
 
 const TRIGGER_PX = 400;
 
@@ -123,9 +124,16 @@ export function FinTapHeroScrollSection() {
           id="iphoneMockup"
           ref={phoneRef}
         >
-          <div className="fintap-iphone-mockup__inner">
-            <FinTapHeroIphoneContent />
-          </div>
+          <img
+            className="fintap-iphone-mockup__img"
+            src={HERO_IPHONE_IMG}
+            width={2018}
+            height={4367}
+            alt=""
+            loading="eager"
+            decoding="async"
+            draggable={false}
+          />
         </div>
       </div>
     </section>
