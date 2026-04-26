@@ -15,7 +15,7 @@
 .fintap-hero-iphone__text {
   text-align: center;
   margin: 0 auto 2.25rem;
-  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+  padding: 0 clamp(2.25rem, 8vw, 6rem);
   max-width: 1200px;
 }
 
