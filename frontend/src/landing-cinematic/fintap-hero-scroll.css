@@ -89,9 +89,9 @@
   transform-origin: center center;
 }
 
-/* État initial 3D (avant 1er run JS) — toutes largeurs : même base que ratio 0 (X seul, face caméra) */
+/* État initial 3D (avant 1er run JS) : même base que ratio 0 — plus zoomé qu’en fin d’anim */
 #iphoneMockup.fintap-iphone-mockup {
-  transform: translate3d(0, 38px, 0) rotateX(32deg) rotateY(0deg) rotateZ(0deg) scale(0.86);
+  transform: translate3d(0, 38px, 0) rotateX(32deg) rotateY(0deg) rotateZ(0deg) scale(1.15);
   box-shadow: 0 60px 120px rgba(0, 0, 0, 0.25);
 }
 

@@ -25,6 +25,10 @@ const TILT_X_DEG = 32;
 const TILT_Y_DEG = 0;
 const TILT_Z_DEG = 0;
 
+/** Zoom d’animation : départ resserré, fin taille de référence (1) */
+const SCALE_ZOOMED = 1.15;
+const SCALE_REST = 1;
+
 /**
  * @param {number} scrollY
  * @param {number} sectionTopY
@@ -73,7 +77,7 @@ export function computeFintapHeroPhoneStyle(scrollRatio) {
     rotateX: TILT_X_DEG * (1 - t),
     rotateY: TILT_Y_DEG * (1 - t),
     rotateZ: TILT_Z_DEG * (1 - t),
-    scale: 0.86 + 0.14 * t,
+    scale: lerp(SCALE_ZOOMED, SCALE_REST, t),
     translateY: 38 * (1 - t),
     shadowY: lerp(60, 20, t),
     shadowBlur: lerp(120, 50, t),
