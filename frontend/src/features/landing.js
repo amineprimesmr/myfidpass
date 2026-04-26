@@ -107,6 +107,9 @@ function initLandingHeroAnim() {
 }
 
 export function initLandingAnimations() {
+  if (document.getElementById("landing-cinematic-root")) {
+    return;
+  }
   initLandingReveal();
   if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
     initLandingHeroAnim();

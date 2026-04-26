@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/fidelity-missions.css" />
     <link rel="stylesheet" href="/src/fidelity-missions-sheet.css" />
@@ -2405,239 +2406,19 @@
       <!-- Bottom sheet onboarding (drawer depuis le bas) -->
 
       <!-- Image bannière hero. Déposer hero.jpg ou hero.png dans public/assets/banner/ (voir docs/BANNIERE-SITE.md). -->
-      <div class="site-banner-media hero-unloaded" id="site-banner-media">
+      <div class="site-banner-media hero-unloaded hidden" id="site-banner-media" aria-hidden="true">
         <img src="/assets/banner/hero.jpg" alt="" class="site-banner-media-img" loading="eager"
              onerror="var el=this.closest('.site-banner-media'); if(this.dataset.tried){ if(el) el.classList.add('hero-unloaded'); this.style.display='none'; } else { this.dataset.tried='1'; this.src='/assets/banner/hero.png'; }"
              onload="this.closest('.site-banner-media')?.classList.remove('hero-unloaded')" />
       </div>
 
       <!-- Scroll-Driven 3D Image Tube (helmet) — hors de main pour full viewport -->
-      <section id="landing-helmet-section" class="landing-helmet-section">
+      <section id="landing-helmet-section" class="landing-helmet-section hidden" aria-hidden="true">
         <div id="landing-helmet-root"></div>
       </section>
 
-      <main id="landing-main" class="landing-main landing-main-v2">
-        <section class="landing-hero landing-hero-visible landing-hero-v2">
-          <div class="landing-hero-grid">
-            <div class="landing-hero-copy">
-              <h1 class="landing-hero-title">
-                <span class="landing-hero-title-line1">Faites revenir vos clients</span>
-                <span class="landing-hero-title-line2">avec une carte fidélité digitale simple</span>
-              </h1>
-              <div class="landing-hero-microproof">
-                <a href="https://www.trustpilot.com/review/myfidpass.fr" target="_blank" rel="noopener noreferrer" class="landing-hero-trustpilot-badge" aria-label="Voir les avis Trustpilot">
-                  <span class="landing-hero-trustpilot-badge-text">Excellent</span>
-                  <span class="landing-hero-trustpilot-badge-dot" aria-hidden="true">•</span>
-                  <span class="landing-hero-trustpilot-badge-text">4.9 sur 5</span>
-                  <span class="landing-hero-trustpilot-badge-dot" aria-hidden="true">•</span>
-                  <img src="/assets/logos/trustpilot.png" alt="" class="landing-hero-trustpilot-badge-logo" width="14" height="14" />
-                  <span class="landing-hero-trustpilot-badge-text landing-hero-trustpilot-badge-brand">Trustpilot</span>
-                </a>
-              </div>
-              <form id="landing-hero-form" class="landing-hero-form">
-                <input type="hidden" id="landing-place-id" name="place_id" value="" />
-                <div class="landing-hero-form-row">
-                  <div class="landing-hero-input-wrap">
-                    <img src="/assets/logos/google.png" alt="Google" class="landing-hero-google-logo" width="32" height="32" />
-                    <input type="text" id="landing-etablissement" class="landing-hero-input" placeholder="Nom de votre établissement" autocomplete="organization" />
-                  </div>
-                  <div class="landing-hero-cta">
-                    <div class="fidelity-earn-points-cta-wrap fidelity-earn-points-cta-wrap--wallet-attention landing-hero-shiny-cta-wrap">
-                      <button type="submit" class="fidelity-shiny-cta landing-hero-shiny-submit" id="landing-hero-submit" disabled aria-label="Commencer">
-                        <span class="fidelity-shiny-cta__label">Commencer</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <p class="landing-hero-helper" id="landing-hero-helper" aria-live="polite">Aucun résultat ? Indiquez le nom, la ville et le code postal.</p>
-              </form>
-            </div>
-
-          </div>
-
-          <section id="landing-gradient-carousel" class="landing-gradient-carousel" aria-label="Exemples de cartes par secteur">
-            <canvas id="landing-gradient-carousel-bg" class="landing-gradient-carousel-bg" aria-hidden="true"></canvas>
-            <div id="landing-gradient-carousel-track" class="landing-gradient-carousel-track"></div>
-          </section>
-        </section>
-
-        <div class="landing-bandeau-hero" aria-hidden="true"></div>
-
-        <section id="produit" class="landing-section-block landing-story-section landing-reveal" data-reveal>
-          <h2 class="landing-produit-headline">Envoyez des notifications à tous vos clients</h2>
-          <div class="landing-produit-mockup-wrap">
-            <div class="landing-produit-mockup-inner">
-              <img src="/assets/mockup.png?v=20260319" alt="Aperçu du tableau de bord Myfidpass" class="landing-produit-mockup-img" loading="lazy" />
-              <div class="landing-produit-notif" id="landing-produit-notif" aria-hidden="true">
-                <div class="landing-produit-notif-icon">
-                  <img src="/assets/icone.png?v=20260416" alt="" width="22" height="22" />
-                </div>
-                <div class="landing-produit-notif-body">
-                  <div class="landing-produit-notif-header">
-                    <span class="landing-produit-notif-app">Fidpass</span>
-                    <span class="landing-produit-notif-time">maintenant</span>
-                  </div>
-                  <p class="landing-produit-notif-msg">Votre carte de fidélité est prête !</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="landing-card-beam" class="landing-card-beam landing-reveal" data-reveal>
-          <div class="landing-card-beam-frame-wrap">
-            <iframe
-              class="landing-card-beam-frame"
-              src="https://codepen.io/blacklead-studio/full/xbwaqxE"
-              title="Card Beam Animation"
-              loading="lazy"
-              referrerpolicy="strict-origin-when-cross-origin"
-            ></iframe>
-          </div>
-        </section>
-
-
-        <!-- Section Témoignages -->
-        <section id="temoignages" class="landing-testimonials-v2 landing-reveal" data-reveal>
-          <div class="landing-bandeau" aria-hidden="true"></div>
-          <div class="landing-testimonials-v2-inner">
-            <div class="landing-testimonials-v2-header">
-              <div>
-                <h2 class="landing-testimonials-v2-title">S'ils l'ont fait,</h2>
-                <h2 class="landing-testimonials-v2-title landing-testimonials-v2-title-muted">pourquoi pas vous ?</h2>
-              </div>
-              <div class="landing-faq-v2-cta-wrap">
-                <a href="#landing-hero-form" class="landing-faq-v2-cta landing-cta-try">
-                  <span class="landing-faq-v2-cta-dot" aria-hidden="true"></span>
-                  <span class="landing-faq-v2-cta-text">Commencer</span>
-                  <span class="landing-faq-v2-cta-chevron" aria-hidden="true">›</span>
-                </a>
-              </div>
-            </div>
-            <div class="landing-testimonials-v2-grid">
-              <article class="landing-testimonial-v2-card">
-                <div class="landing-testimonial-v2-stars" aria-hidden="true">★★★★★</div>
-                <p class="landing-testimonial-v2-text">La carte dans le Wallet, c’est génial. Mes clients n’oublient plus leur carte et les scans sont instantanés. On a doublé les passages en 3 mois.</p>
-                <div class="landing-testimonial-v2-author">
-                  <span class="landing-testimonial-v2-avatar" aria-hidden="true">M</span>
-                  <div>
-                    <strong class="landing-testimonial-v2-name">Marie L.</strong>
-                    <span class="landing-testimonial-v2-role">Boulangerie Le Pain Doré</span>
-                  </div>
-                </div>
-              </article>
-              <article class="landing-testimonial-v2-card">
-                <div class="landing-testimonial-v2-stars" aria-hidden="true">★★★★★</div>
-                <p class="landing-testimonial-v2-text">Simple à mettre en place, beau résultat. Mes clientes adorent avoir la carte sur leur téléphone. Fini les cartes en papier qui s’abîment.</p>
-                <div class="landing-testimonial-v2-author">
-                  <span class="landing-testimonial-v2-avatar" aria-hidden="true">S</span>
-                  <div>
-                    <strong class="landing-testimonial-v2-name">Sophie</strong>
-                    <span class="landing-testimonial-v2-role">Institut Beauté</span>
-                  </div>
-                </div>
-              </article>
-              <article class="landing-testimonial-v2-card">
-                <div class="landing-testimonial-v2-stars" aria-hidden="true">★★★★★</div>
-                <p class="landing-testimonial-v2-text">Le tableau de bord est clair, les notifications push marchent nickel. Je recommande à tous les commerces qui veulent fidéliser sans se prendre la tête.</p>
-                <div class="landing-testimonial-v2-author">
-                  <span class="landing-testimonial-v2-avatar" aria-hidden="true">T</span>
-                  <div>
-                    <strong class="landing-testimonial-v2-name">Thomas</strong>
-                    <span class="landing-testimonial-v2-role">Café des Arts</span>
-                  </div>
-                </div>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        <!-- Section FAQ -->
-        <section id="faq" class="landing-faq-v2 landing-reveal" data-reveal>
-          <div class="landing-faq-v2-inner">
-            <div class="landing-faq-v2-header">
-              <div>
-                <h2 class="landing-faq-v2-title">Vos questions.</h2>
-                <h2 class="landing-faq-v2-title landing-faq-v2-title-muted">Nos réponses</h2>
-              </div>
-              <p class="landing-faq-v2-subtitle">Vous ne trouvez pas ce que vous cherchez ? <a href="https://wa.me/33782637720" target="_blank" rel="noopener noreferrer">Contactez-nous</a> ou réservez un appel.</p>
-              <div class="landing-faq-v2-cta-wrap">
-              <a href="https://wa.me/33782637720" class="landing-faq-v2-cta" target="_blank" rel="noopener noreferrer">
-                <span class="landing-faq-v2-cta-dot" aria-hidden="true"></span>
-                <span class="landing-faq-v2-cta-text">Contactez-nous</span>
-                <span class="landing-faq-v2-cta-chevron" aria-hidden="true">›</span>
-              </a>
-            </div>
-            </div>
-            <ul class="landing-faq-v2-list" role="list">
-              <li class="landing-faq-item landing-faq-v2-item">
-                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-1" id="faq-q1">
-                  <span>Comment mes clients ajoutent-ils la carte à leur téléphone ?</span>
-                  <span class="landing-faq-icon" aria-hidden="true">+</span>
-                </button>
-                <div class="landing-faq-answer" id="faq-1" role="region" aria-labelledby="faq-q1" aria-hidden="true">
-                  <p>Vos clients scannent le QR code affiché (caisse, vitrine, reçu) ou cliquent sur un lien. La carte s’ajoute directement dans Apple Wallet ou Google Wallet. Aucune app à télécharger.</p>
-                </div>
-              </li>
-              <li class="landing-faq-item landing-faq-v2-item">
-                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-2" id="faq-q2">
-                  <span>Quels types de commerces peuvent utiliser Myfidpass ?</span>
-                  <span class="landing-faq-icon" aria-hidden="true">+</span>
-                </button>
-                <div class="landing-faq-answer" id="faq-2" role="region" aria-labelledby="faq-q2" aria-hidden="true">
-                  <p>Restaurants, cafés, boulangeries, coiffeurs, instituts de beauté, boucheries… Tout commerce avec une clientèle récurrente. Vous choisissez le système (points ou tampons) et le design adapté à votre secteur.</p>
-                </div>
-              </li>
-              <li class="landing-faq-item landing-faq-v2-item">
-                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-3" id="faq-q3">
-                  <span>Faut-il un logiciel de caisse spécifique ?</span>
-                  <span class="landing-faq-icon" aria-hidden="true">+</span>
-                </button>
-                <div class="landing-faq-answer" id="faq-3" role="region" aria-labelledby="faq-q3" aria-hidden="true">
-                  <p>Non. Vous pouvez scanner le QR code avec n’importe quel lecteur ou smartphone. Pour une intégration automatique (caisse, borne), nous fournissons une API et une documentation.</p>
-                </div>
-              </li>
-              <li class="landing-faq-item landing-faq-v2-item">
-                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-4" id="faq-q4">
-                  <span>Quelle est la durée de l’essai gratuit ?</span>
-                  <span class="landing-faq-icon" aria-hidden="true">+</span>
-                </button>
-                <div class="landing-faq-answer" id="faq-4" role="region" aria-labelledby="faq-q4" aria-hidden="true">
-                  <p>24 h gratuites, sans engagement. Vous créez votre carte, testez le tableau de bord et les scans. Ensuite vous pouvez souscrire à l’offre (1er mois à 1 € puis tarif mensuel) ou arrêter sans frais.</p>
-                </div>
-              </li>
-              <li class="landing-faq-item landing-faq-v2-item">
-                <button type="button" class="landing-faq-question" aria-expanded="false" aria-controls="faq-5" id="faq-q5">
-                  <span>Les données de mes clients sont-elles sécurisées ?</span>
-                  <span class="landing-faq-icon" aria-hidden="true">+</span>
-                </button>
-                <div class="landing-faq-answer" id="faq-5" role="region" aria-labelledby="faq-q5" aria-hidden="true">
-                  <p>Oui. Nous collectons uniquement les données nécessaires au service (identifiant membre, points/tampons). Les données sont hébergées en Europe et respectent le RGPD.</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="landing-cta-final landing-cta-final-v2 landing-reveal" data-reveal>
-          <div class="landing-cta-final-card">
-            <div class="landing-cta-final-trust">
-              <div class="landing-cta-final-avatars" aria-hidden="true">
-                <span></span><span></span><span></span><span></span><span></span>
-              </div>
-              <span class="landing-cta-final-trust-text">Utilisé par des centaines de commerces</span>
-            </div>
-            <h2 class="landing-cta-final-title">Êtes-vous prêt à lancer ?</h2>
-            <p class="landing-cta-final-text">Une experience plus propre, plus rapide et plus naturelle pour vos clients.</p>
-            <div class="landing-faq-v2-cta-wrap">
-              <a href="#landing-hero-form" class="landing-faq-v2-cta landing-cta-try">
-                <span class="landing-faq-v2-cta-dot" aria-hidden="true"></span>
-                <span class="landing-faq-v2-cta-text">Commencer</span>
-                <span class="landing-faq-v2-cta-chevron" aria-hidden="true">›</span>
-              </a>
-            </div>
-          </div>
-        </section>
+      <main id="landing-main" class="landing-main landing-main-cinematic">
+        <div id="landing-cinematic-root" class="landing-cinematic-shell"></div>
       </main>
 
       <footer class="landing-footer landing-footer-v3">
@@ -2658,17 +2439,17 @@
               <nav class="landing-footer-col-v3" aria-label="Entreprise">
                 <h3 class="landing-footer-col-title-v3">Entreprise</h3>
                 <a href="/creer-ma-carte">Commencer</a>
-                <a href="#produit">Produit</a>
+                <a href="#capabilities">Produit</a>
                 <a href="/choisir-offre">Tarifs</a>
                 <a href="/integration">Intégration</a>
               </nav>
               <nav class="landing-footer-col-v3" aria-label="Fonctionnalités">
                 <h3 class="landing-footer-col-title-v3">Fonctionnalités</h3>
-                <a href="#produit">Cartes Wallet</a>
-                <a href="#produit">Notifications push</a>
-                <a href="#produit">Tableau de bord</a>
-                <a href="#produit">Statistiques</a>
-                <a href="#produit">QR code</a>
+                <a href="#capabilities">Cartes Wallet</a>
+                <a href="#capabilities">Notifications push</a>
+                <a href="#capabilities">Tableau de bord</a>
+                <a href="#capabilities">Statistiques</a>
+                <a href="#capabilities">QR code</a>
               </nav>
               <nav class="landing-footer-col-v3" aria-label="Cas d'usage">
                 <h3 class="landing-footer-col-title-v3">Cas d'usage</h3>

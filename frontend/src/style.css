@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./landing-cinematic/landing-cinematic.css";
 @import "./wallet-platform.css";
 
 /* ============================================================
