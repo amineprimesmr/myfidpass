@@ -37,17 +37,26 @@ const TRANSLATE_Y_START_HIGH = -64;
 const TRANSLATE_Y_END_REST = 0;
 
 /**
- * @param {number} scrollY
- * @param {number} sectionTopY
+ * @param {number} scrollY scroll courant
+ * @param {number} scrollYAtRatio0 scroll à partir duquel l’effet vaut ratio 0
+ *   (défini une fois, pas d’invalider sur resize iOS hauteur / barre d’adresse)
  * @param {number} [triggerDistance=TRIGGER]
  * @returns {number} entre 0 et 1
  */
 export function fintapHeroScrollRatio(
   scrollY,
-  sectionTopY,
+  scrollYAtRatio0,
   triggerDistance = TRIGGER
 ) {
-  return clamp((scrollY - sectionTopY) / triggerDistance, 0, 1);
+  return clamp((scrollY - scrollYAtRatio0) / triggerDistance, 0, 1);
+}
+
+/**
+ * @returns {number} scroll Y global (document)
+ */
+export function getPageScrollY() {
+  if (typeof window === "undefined") return 0;
+  return window.scrollY ?? window.pageYOffset ?? 0;
 }
 
 /**

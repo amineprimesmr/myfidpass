@@ -4,6 +4,7 @@ import {
   computeFintapHeroPhoneStyle,
   fintapHeroScrollRatio,
   fintapHeroScrollRatioFromViewport,
+  getPageScrollY,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
 
@@ -19,6 +20,12 @@ describe("fintapHeroScrollRatioFromViewport", () => {
   });
   it("plafonne", () => {
     expect(fintapHeroScrollRatioFromViewport(0, -1000, 400)).toBe(1);
+  });
+});
+
+describe("getPageScrollY", () => {
+  it("retourne un nombre (0 en environnement test)", () => {
+    expect(typeof getPageScrollY()).toBe("number");
   });
 });
 

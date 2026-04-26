@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 import {
   computeFintapHeroPhoneStyle,
-  fintapHeroScrollRatioFromViewport,
+  fintapHeroScrollRatio,
+  getPageScrollY,
 } from "./fintap-hero-scroll-lerp.js";
 import "./fintap-hero-scroll.css";
 
@@ -9,13 +10,16 @@ const HERO_IPHONE_IMG = "/assets/iphone2.png";
 const TRIGGER_PX = 400;
 
 /**
- * Ancêtres qui reçoivent vraiment le scroll (page ou panneau scrollable).
+ * Ancêtres qui reçoivent vraiment le scroll (page ou conteneur scrollable).
  * @param {Element | null} from
- * @returns {(Window | Element)[]}
+ * @returns {(Window | EventTarget)[]}
  */
 function getScrollListenerRoots(from) {
-  const out = [window];
+  const out = [/** @type {Window} */ (window)];
+  if (typeof document !== "undefined")
+    out.push(/** @type {EventTarget} */ (document));
   if (!from) return out;
+  const seen = new Set(out);
   let p = from.parentElement;
   while (p) {
     const s = getComputedStyle(p);
@@ -25,7 +29,10 @@ function getScrollListenerRoots(from) {
         s.overflowY === "scroll" ||
         s.overflowY === "overlay")
     ) {
-      out.push(p);
+      if (!seen.has(p)) {
+        out.push(p);
+        seen.add(p);
+      }
     }
     p = p.parentElement;
   }
@@ -55,57 +62,64 @@ function setPhoneStaticFront(phone) {
 
 /**
  * Parcours hero FinTap : contre-plongée → droit (scroll).
+ * Ratio = f(scrollY) : stable sur iOS (pas d’invalider sur resize hauteur / barre d’adresse).
  */
 export function FinTapHeroScrollSection() {
   const sectionRef = useRef(null);
   const phoneRef = useRef(null);
   const rafRef = useRef(0);
-  const initTopRef = useRef(/** @type {number | null} */ (null));
+  /** Scroll document au moment où l’effet = ratio 0 (fixé, sauf changement de largeur). */
+  const scroll0Ref = useRef(/** @type {number | null} */ (null));
+  const lastInnerWidthRef = useRef(/** @type {number | null} */ (null));
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
     const phone = phoneRef.current;
     if (!section || !phone) return;
 
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    );
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const run = () => {
       if (reduced.matches) {
         setPhoneStaticFront(phone);
         return;
       }
-      if (initTopRef.current == null) {
-        initTopRef.current = section.getBoundingClientRect().top;
+      if (scroll0Ref.current == null) {
+        scroll0Ref.current = getPageScrollY();
       }
-      const y = section.getBoundingClientRect().top;
-      const ratio = fintapHeroScrollRatioFromViewport(
-        initTopRef.current,
-        y,
+      const sy = getPageScrollY();
+      const ratio = fintapHeroScrollRatio(
+        sy,
+        scroll0Ref.current,
         TRIGGER_PX
       );
       setPhone3d(phone, computeFintapHeroPhoneStyle(ratio));
     };
 
-    const raf = () => {
+    const tick = () => {
       rafRef.current = 0;
       run();
     };
 
     const onScroll = () => {
       if (rafRef.current) return;
-      rafRef.current = requestAnimationFrame(raf);
+      rafRef.current = requestAnimationFrame(tick);
     };
 
     /**
-     * Ne remettre initTopRef à null que sur changement de géométrie (viewport / layout).
-     * Un reset sur « section visible » (ex. IntersectionObserver) faisait recalculer
-     * la baseline à la position courante → ratio = 0 → retour en contre-plongée au
-     * remontée du scroll ou sur iOS (rebond, barre d’adresse).
+     * Ne pas réagir à la hauteur du viewport (iOS, barre d’adresse) : cela
+     * provoquait des rebasculages aléatoires. Uniquement largeur = rotation
+     * / breakpoint réel.
      */
-    const invalidateBaseline = () => {
-      initTopRef.current = null;
+    const onResizeWidthOnly = () => {
+      const w = window.innerWidth;
+      if (lastInnerWidthRef.current == null) {
+        lastInnerWidthRef.current = w;
+        return;
+      }
+      if (w === lastInnerWidthRef.current) return;
+      lastInnerWidthRef.current = w;
+      scroll0Ref.current = null;
       onScroll();
     };
 
@@ -115,22 +129,23 @@ export function FinTapHeroScrollSection() {
       reduced.addListener(onScroll);
     }
 
+    lastInnerWidthRef.current = window.innerWidth;
     const roots = getScrollListenerRoots(section);
-    const scrollOpts = { passive: true, capture: true };
+    const scrollOpts = { passive: true };
     for (const r of roots) {
       if (r === window) {
         window.addEventListener("scroll", onScroll, scrollOpts);
       } else {
-        r.addEventListener("scroll", onScroll, scrollOpts);
+        (/** @type {EventTarget} */ (r)).addEventListener("scroll", onScroll, scrollOpts);
       }
     }
-    window.addEventListener("resize", invalidateBaseline, { passive: true });
+    window.addEventListener("resize", onResizeWidthOnly, { passive: true });
     const vv = window.visualViewport;
     if (vv) {
-      vv.addEventListener("resize", invalidateBaseline, { passive: true });
+      vv.addEventListener("scroll", onScroll, { passive: true });
     }
 
-    run();
+    onScroll();
 
     return () => {
       if (reduced.removeEventListener) {
@@ -139,16 +154,20 @@ export function FinTapHeroScrollSection() {
         reduced.removeListener(onScroll);
       }
       if (vv) {
-        vv.removeEventListener("resize", invalidateBaseline);
+        vv.removeEventListener("scroll", onScroll);
       }
       for (const r of roots) {
         if (r === window) {
           window.removeEventListener("scroll", onScroll, scrollOpts);
         } else {
-          r.removeEventListener("scroll", onScroll, scrollOpts);
+          (/** @type {EventTarget} */ (r)).removeEventListener(
+            "scroll",
+            onScroll,
+            scrollOpts
+          );
         }
       }
-      window.removeEventListener("resize", invalidateBaseline, {
+      window.removeEventListener("resize", onResizeWidthOnly, {
         passive: true,
       });
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
