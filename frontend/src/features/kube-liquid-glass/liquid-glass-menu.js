@@ -82,8 +82,8 @@ function initBurger(p) {
 
   const open = () => {
     panelHost.removeAttribute("hidden");
-    panelHost.setAttribute("aria-hidden", "false");
     panelHost.classList.add("is-open");
+    panelHost.setAttribute("aria-hidden", "false");
     burger.setAttribute("aria-expanded", "true");
     if (rootSm) rootSm.classList.add("lg-nav-sm--open");
     setLock(true);
