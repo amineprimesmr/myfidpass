@@ -163,8 +163,7 @@ export function FinTapHeroScrollSection() {
           LA FIDELISATION
         </h1>
         <p className="fintap-hero-iphone__lead">
-          Local and international transfers, 1000+ types of payments, secure
-          spending history — all in one app.
+          Transformez chaque visite en client fidelise, simplement.
         </p>
       </div>
       <div
