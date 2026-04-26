@@ -145,22 +145,22 @@ const bodySchema = z.object({
  */
 const MOOD_EN_UNIVERSAL = {
   premium:
-    "premium multi-sector retail poster, deep rich background using the brand's dominant dark hue, soft even lighting (no film grain, no textured backdrop), restrained smooth gradients — calm, expensive, print-ready; white and light elements remain crisp against the dark field",
+    "premium multi-sector retail poster, bright airy background with a soft visible tint of the brand hue, soft even lighting (no film grain, no textured backdrop), restrained smooth gradients — calm, expensive, print-ready; dark text, wheel, and UI overlays read clearly on the light field",
   energetic:
-    "high-impact commercial loyalty poster, saturated deep accent colors as bold flat fields and smooth blends on a DARK base — strong contrast via vivid color blocks against dark backdrop; sector-agnostic",
+    "high-impact commercial loyalty poster, saturated VIVID accent colors as smooth blends and bold color blocks on a BRIGHT, LIGHT, welcoming base — strong but clean, never gloomy, never a dark night scene; sector-agnostic",
   minimal:
-    "Swiss editorial layout, generous margins, thin rules, one hero focal point — dark or deeply saturated background, almost no ornament; white typography-grade negative space",
+    "Swiss editorial layout, generous margins, thin rules, one hero focal point — light, almost-white, or very soft pastel background, almost no ornament; crisp negative space for overlay UI",
   street:
-    "urban commercial energy, contemporary signage mood, large flat DEEP color shapes and smooth gradients on a dark backdrop — bold, graphic, no gritty noise",
+    "urban commercial energy, contemporary signage mood, large flat BRIGHT color shapes and smooth gradients on a light, vivid backdrop — bold, graphic, no gritty noise, no oppressive black fields",
   gourmet:
-    "refined artisan / craft poster: rich deep background; hero food or product only where the brief asks — background dark and uncluttered, no bokeh orbs or sparkle",
+    "refined artisan / craft poster: light, uncluttered, appetizing background wash; hero food or product only where the brief asks — keep the wallpaper bright and clean, no bokeh orbs or sparkle",
   playful:
-    "friendly commercial graphics: rounded flat color shapes on a DEEP SATURATED background — playful through COLOR and layout only; never literal bubbles, balloons-as-bokeh, glitter, or confetti",
+    "friendly commercial graphics: rounded flat color shapes on a BRIGHT, CANDY-LIKE, light-saturated background — playful through COLOR and layout only; never literal bubbles, balloons-as-bokeh, glitter, or confetti",
 };
 
 /** Ambiance par défaut quand le client envoie une palette priorisée (sans `visual_mood`). */
 const DEFAULT_FLYER_ATMOSPHERE_EN =
-  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly — use the dominant brand color as a RICH, DEEP background fill; keep large background areas at low-to-medium luminosity so that WHITE text, a white QR code, and white overlay elements remain perfectly readable on top. Flat smooth digital finish like a premium app gradient — clean buttery color ramps only, no film grain overlay, no paper simulation, print-ready, sector-agnostic, zero photorealistic surface noise in backdrops";
+  "polished commercial loyalty creative: honor the COLOR PRIORITY strictly — use the dominant brand color as a BRIGHT, VIVID, LIGHT-LEANING background wash (pastel-to-vivid, high luminosity, clean saturation), blended with white and soft off-white; the app overlays headlines, wheel, and QR in software — the wallpaper must feel sunny, modern, and inviting, never a dark navy void. Flat smooth digital finish like a premium iOS light-mode app gradient — clean buttery color ramps only, no film grain, print-ready, sector-agnostic, zero photorealistic surface noise in backdrops";
 
 /**
  * Résout primaire / secondaire / tertiaire et le texte d’atmosphère pour les prompts image.
@@ -217,7 +217,7 @@ function buildColorPriorityHintEn(plan) {
   return (
     "Primary brand hue " +
     primary +
-    "; expand with cream, white, or a deep neutral harmonizing with that hue."
+    "; expand with white, warm cream, and soft pastel tints of that hue — keep the board BRIGHT and cheerful, not a dark void."
   );
 }
 
@@ -240,16 +240,15 @@ const FLYER_SURFACE_CLEANLINESS_EN =
   "FINAL ZOOM CHECK: mentally magnify a flat color region — it must stay a flat color; if you see speckle or grain, the output is WRONG — regenerate as pure smooth color.";
 
 /**
- * Règle de contraste du fond (obligatoire, tous prompts flyer).
- * Le fond doit être FONCÉ / RICHE pour que le contenu blanc (texte, QR, roue) ressorte bien.
+ * Règle de fond (tous prompts flyer) : clair, vif, accueillant — aligné produit (app iOS) et dégradé local.
  */
 const FLYER_BACKGROUND_LIGHTNESS_EN =
-  "BACKGROUND DEPTH & CONTRAST (mandatory — overrides all other instructions): " +
-  "The overall background MUST be DARK, RICH, and DEEP — never light, never pale, never washed-out, never white or near-white. " +
-  "ALL large background areas must have LOW-TO-MEDIUM luminosity (think deep navy, rich burgundy, dark forest green, charcoal, or deeply saturated brand hue — luminosity BELOW 45% in HSL). " +
-  "Colors must be SATURATED and VIVID on the dark base — deep, punchy, bold fields — NEVER chalky, pastel, or faded. Think a premium app gradient or a vibrant concert poster: colors are rich and immersive. " +
-  "If the provided palette contains light colors (cream, white, beige, light grey, etc.), use them ONLY for thin highlights, very small accents, or typography — NEVER spread them over large background areas. " +
-  "Result: the background must be dark enough that WHITE text, a white QR code, and all white overlay elements remain perfectly readable on top of it with strong contrast.";
+  "BACKGROUND LIGHTNESS & VIBRANCE (mandatory — overrides any legacy « dark mode » habit): " +
+  "The overall background MUST be BRIGHT, AIRY, and inviting — use HIGH luminosity (roughly 65–98% in HSL for large color fields) with VIVID, clean saturation. " +
+  "Think premium app light mode, summer campaign, or sweet-shop candy gradients: soft peach, sky, mint, cream, or punchy light tints of the brand hues — NOT deep navy, NOT near-black, NOT a gloomy night scene, NOT a dark concert poster. " +
+  "If the brand palette includes dark hex codes, translate them into LIGHT tints and pastel-candy versions for the wallpaper; reserve any deep shade only for tiny shadows or thin accent rims if needed. " +
+  "The software stack draws dark text, a dark QR, and a full-color wheel on top — keep the bottom band and bottom-right calmer and LIGHT enough for good contrast, not a black void. " +
+  "NEVER fill most of the canvas with dark blue, charcoal, or black; NEVER output a default « night mode » look.";
 
 /**
  * Brief marchand unique (prioritaire sur toute supposition du modèle).
@@ -424,7 +423,7 @@ export function buildFlyerImagePromptBackgroundOnly(input, multimodalHint = { st
       plan.atmosphere +
       ". At most 3–4 cohesive colors; transitions must be buttery, not gritty.",
     "STYLE: Bold commercial look through COLOR BLOCKS and clean composition only — print-ready, even lighting — absolutely no decorative texture or atmospheric noise.",
-    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~49–59%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient; (8) overall background is DARK and RICH — never light, never white, never pale.",
+    "SELF-CHECK: (1) zero wheels; (2) zero text; (3) zero QR; (4) zero logos; (5) central zone soft for overlay; (6) hero decor at mid-flyer (Y~49–59%) flanking the wheel; (7) zoom mentally: empty regions must look perfectly smooth — if you see grain or texture, regenerate mentally to a clean gradient; (8) overall background is BRIGHT, VIVID, and LIGHT-LEANING — never a default dark navy void, never oppressive near-black.",
     ...multimodalLines,
   ];
 
@@ -505,7 +504,7 @@ function buildFlyerImagePromptTemplateWheel(input, multimodalHint = { hasLogo: f
       plan.atmosphere +
       ". Max 3–4 cohesive colors outside wedge recoloring — no speckles or bokeh orbs.",
     secondary,
-    "SELF-CHECK: (1) exactly one wheel (the provided asset); (2) all original wheel text unchanged; (3) only wedge fills recolored; (4) no QR anywhere; (5) bottom 18% clean; (6) overall background is DARK and RICH — never light, never white, never pale.",
+    "SELF-CHECK: (1) exactly one wheel (the provided asset); (2) all original wheel text unchanged; (3) only wedge fills recolored; (4) no QR anywhere; (5) bottom 18% clean; (6) overall background is BRIGHT and VIVID (light-leaning) — not a default dark night scene, not a heavy black field behind decor.",
     "QUALITY: Crisp print, clean edges.",
     ...multimodalLines,
   ];
@@ -581,13 +580,13 @@ export function buildFlyerImagePrompt(input, multimodalHint = { hasLogo: false, 
       " Depth from large soft radial or linear gradients and gentle vignette only — NO grain, NO bokeh, NO sparkles. Atmosphere: " +
       plan.atmosphere +
       ". Use at most 3–4 cohesive colors total.",
-    "COLOR INTENSITY GUARDRAIL (mandatory): Use RICH, SATURATED, DEEP palettes on a DARK base. Avoid pastels, washed-out or chalky colors. Keep the overall backdrop dark and vivid so white text and white QR remain perfectly readable.",
-    "LUMINANCE TARGET: The global background should feel dark and immersive (roughly equivalent to a premium dark-mode app or concert poster), never pale or bright. If unsure, choose a darker, more saturated variant.",
+    "COLOR INTENSITY GUARDRAIL (mandatory): Use RICH, VIVID color on a BRIGHT, LIGHT, welcoming base (pastel-to-candy saturation). Avoid muddy brown-grey, avoid a single dominant dark blue slab. The app may draw dark text and a dark QR — the wallpaper should stay **light and cheerful**, not a dark void.",
+    "LUMINANCE TARGET: The global background should feel BRIGHT, SUNNY, and print-fresh (like a top App Store / premium retail light mode), with generous white and cream in the mix. If unsure, choose a lighter, more vivid pastel variant, not a darker one.",
     "PRIZE WHEEL — GEOMETRY: Exactly ONE circular wheel, perfect circle (no ellipse), no second wheel. EXACTLY 6 equal wedges (60° each). Six outer rim divisions. One small triangular pointer at 12 o'clock. Outer wheel diameter ≈ 58–62% of image WIDTH (slightly 'dezoomed' vs full width).",
     secondary,
     "WHEEL LABELS (clockwise from the top wedge under the pointer): Wedge1=GAGNÉ; Wedge2=GAGNÉ; Wedge3=GAGNÉ; Wedge4=GAGNÉ; Wedge5=GAGNÉ; Wedge6=PERDU. Bold uppercase French, high contrast, radially readable inside each wedge (~70% of wedge radial length). No other text on the flyer.",
     "WHEEL HUB: Small decorative metallic pin/cap at center — gold or silver OK. No QR-like texture.",
-    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 53% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes; (9) overall background is DARK and RICH — never light, never white, never pale.",
+    "SELF-CHECK: (1) six wedges only; (2) labels exactly as specified; (3) hub not QR-like; (4) wheel center ≈(50% X, 53% Y from top); (5) wheel diameter ≈60% of image width; (6) side decor at mid-flyer height, not only above the wheel; (7) bottom 18% empty of objects; (8) zero QR/barcodes; (9) overall background is BRIGHT, VIVID, light-leaning — never the default MyFidpass ‘dark night’ look.",
     "QUALITY: Crisp print, clean edges, coherent lighting, no disconnected floating artifacts.",
     ...multimodalLines,
   ];
