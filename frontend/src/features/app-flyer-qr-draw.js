@@ -831,10 +831,8 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
  * @param {string} qrTargetUrl
  * @param {ImageBitmap | HTMLImageElement | string | null | undefined} logoInput
  * @param {ImageBitmap | string | null | undefined} [bgInput] — image de fond (optionnel).
- * @param {{ skipCtaPill?: boolean }} [opts] — Aperçu iOS : pastille CTA en calque natif (WK) au-dessus de `giftflyer`.
  */
-export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInput, opts) {
-  const skipCtaPill = Boolean(opts && opts.skipCtaPill);
+export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInput) {
   const w = canvas.width;
   const h = canvas.height;
   const ctx = canvas.getContext("2d");
@@ -924,9 +922,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrTiltRad = (-6 * Math.PI) / 180;
 
   // La pastille passe légèrement derrière le QR (comme le mockup papier).
-  if (!skipCtaPill) {
-    drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
-  }
+  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
 
   ctx.save();
   ctx.translate(qCx, qCy);
