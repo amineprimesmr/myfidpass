@@ -4,9 +4,27 @@ import { initLiquidGlassMenu } from "../features/kube-liquid-glass/liquid-glass-
 /** Démonstration complète kube.io (SVG) — `public/vendor/kube-liquid-glass/`. */
 const IFRAME_SRC = "/vendor/kube-liquid-glass/index.html";
 
+let disposeLg = null;
+
+export function cleanupLiquidGlassTestMenu() {
+  if (disposeLg) {
+    disposeLg();
+    disposeLg = null;
+  }
+}
+
 export default {
   init() {
-    initLiquidGlassMenu();
+    cleanupLiquidGlassTestMenu();
+    const testApp = document.getElementById("liquid-glass-test-app");
+    const root = testApp?.querySelector("[data-liquid-glass-menu-root]");
+    if (root && testApp) {
+      disposeLg = initLiquidGlassMenu({
+        root,
+        scrollLockEl: testApp,
+        fallbackClassTarget: testApp,
+      });
+    }
     const iframe = document.querySelector("#liquid-glass-test-app .liquid-glass-test-iframe");
     if (iframe) {
       iframe.src = `${IFRAME_SRC}?t=${Date.now()}`;

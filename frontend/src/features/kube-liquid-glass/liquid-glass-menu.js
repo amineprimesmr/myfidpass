@@ -1,6 +1,10 @@
 /* global ResizeObserver */
 /**
  * Menu responsive : desktop une ligne, mobile barre + panneau (Liquid Glass / kube).
+ * @param {object} [options]
+ * @param {ParentNode} [options.root] Conteneur des nœuds data-lg-* (obligatoire, un menu par instance)
+ * @param {Element} [options.scrollLockEl] Élément recevant .lg-menu-noscroll (ex. #landing, #liquid-glass-test-app)
+ * @param {Element} [options.fallbackClassTarget] Cible pour .lg-fallback-filters (défaut: scrollLockEl)
  */
 import {
   ensureAllFiltersSvg,
@@ -16,6 +20,20 @@ import "./liquid-glass-menu.css";
 const DESK = "fidpassLgDesk";
 const MBAR = "fidpassLgMbar";
 const MPAN = "fidpassLgMpan";
+
+/**
+ * @param {ParentNode} root
+ */
+function getEls(root) {
+  return {
+    desk: root.querySelector("[data-lg-desk]"),
+    bar: root.querySelector("[data-lg-bar]"),
+    panel: root.querySelector("[data-lg-panel]"),
+    burger: root.querySelector("[data-lg-burger]"),
+    panelHost: root.querySelector("[data-lg-panel-host]"),
+    rootSm: root.querySelector("[data-lg-root-sm]"),
+  };
+}
 
 function supportsSvgBackdropUrl() {
   if (typeof window === "undefined" || !window.chrome) return false;
@@ -36,20 +54,28 @@ function setNative(el, filterId, use) {
 }
 
 /**
- * @param {ReturnType<typeof getEls>} els
+ * @param {object} p
+ * @param {ReturnType<typeof getEls>} p.els
+ * @param {Element | null | undefined} p.scrollLockEl
+ * @param {() => void} [p.onBurger]
+ * @param {AbortSignal} p.signal
  */
-function initBurger(els) {
-  const { burger, rootSm, panelHost, onBurger } = els;
+function initBurger(p) {
+  const { els, scrollLockEl, onBurger, signal } = p;
+  const { burger, rootSm, panelHost } = els;
   if (!burger || !panelHost) return;
 
-  const app = document.getElementById("liquid-glass-test-app");
+  const setLock = (on) => {
+    if (scrollLockEl) scrollLockEl.classList.toggle("lg-menu-noscroll", on);
+  };
+
   const close = () => {
     panelHost.classList.remove("is-open");
     panelHost.setAttribute("hidden", "");
     panelHost.setAttribute("aria-hidden", "true");
     burger.setAttribute("aria-expanded", "false");
     if (rootSm) rootSm.classList.remove("lg-nav-sm--open");
-    if (app) app.classList.remove("lg-menu-noscroll");
+    setLock(false);
     if (onBurger) onBurger();
   };
 
@@ -59,65 +85,81 @@ function initBurger(els) {
     panelHost.classList.add("is-open");
     burger.setAttribute("aria-expanded", "true");
     if (rootSm) rootSm.classList.add("lg-nav-sm--open");
-    if (app) app.classList.add("lg-menu-noscroll");
+    setLock(true);
     if (onBurger) onBurger();
   };
 
-  burger.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (burger.getAttribute("aria-expanded") === "true") close();
-    else open();
-  });
+  burger.addEventListener(
+    "click",
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (burger.getAttribute("aria-expanded") === "true") close();
+      else open();
+    },
+    { signal }
+  );
 
-  document.addEventListener("click", (e) => {
-    if (panelHost.getAttribute("aria-hidden") === "true") return;
-    if (!rootSm || !e.target) return;
-    if (rootSm.contains(/** @type {Node} */ (e.target))) return;
-    close();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && panelHost.classList.contains("is-open")) {
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (panelHost.getAttribute("aria-hidden") === "true") return;
+      if (!rootSm || !e.target) return;
+      if (rootSm.contains(/** @type {Node} */ (e.target))) return;
       close();
-      burger.focus();
-    }
-  });
+    },
+    { signal }
+  );
 
-  const glPanel = document.getElementById("fidpass-liquid-menu-glass-panel");
-  if (glPanel) {
-    glPanel.addEventListener("click", (e) => {
-      if (e.target && /** @type {Element} */ (e.target).closest("a[href]")) {
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Escape" && panelHost.classList.contains("is-open")) {
         close();
+        burger.focus();
       }
-    });
+    },
+    { signal }
+  );
+
+  if (els.panel) {
+    els.panel.addEventListener(
+      "click",
+      (e) => {
+        if (e.target && /** @type {Element} */ (e.target).closest("a[href]")) {
+          close();
+        }
+      },
+      { signal }
+    );
   }
 }
 
-function getEls() {
-  return {
-    desk: document.getElementById("fidpass-liquid-menu-glass"),
-    bar: document.getElementById("fidpass-liquid-menu-glass-bar"),
-    panel: document.getElementById("fidpass-liquid-menu-glass-panel"),
-    burger: document.getElementById("lg-menu-burger"),
-    panelHost: document.getElementById("lg-menu-panel"),
-    rootSm: document.getElementById("lg-nav-sm"),
-  };
-}
+/**
+ * @param {object} [options]
+ * @param {ParentNode} [options.root]
+ * @param {Element} [options.scrollLockEl]
+ * @param {Element} [options.fallbackClassTarget]
+ * @returns {() => void}
+ */
+export function initLiquidGlassMenu(options = {}) {
+  const root = options.root;
+  if (!root || typeof (/** @type {ParentNode} */ (root)).querySelector !== "function") {
+    return () => {};
+  }
 
-export function initLiquidGlassMenu() {
   ensureAllFiltersSvg();
   const nativeOk = supportsSvgBackdropUrl();
-  if (!nativeOk) {
-    document
-      .getElementById("liquid-glass-test-app")
-      ?.classList.add("lg-fallback-filters");
+  const scrollLockEl = options.scrollLockEl || null;
+  const fallbackTarget = options.fallbackClassTarget || scrollLockEl;
+  if (!nativeOk && fallbackTarget) {
+    fallbackTarget.classList.add("lg-fallback-filters");
   }
-  const els = getEls();
+
+  const els = getEls(root);
   if (!els.desk && !els.bar) return () => {};
 
   const mql = window.matchMedia(MQL);
-  let drawerOpen = false;
   const getDrawer = () => els.burger && els.burger.getAttribute("aria-expanded") === "true";
 
   let rafT = 0;
@@ -125,7 +167,6 @@ export function initLiquidGlassMenu() {
     if (rafT) cancelAnimationFrame(rafT);
     rafT = requestAnimationFrame(() => {
       rafT = 0;
-      drawerOpen = getDrawer();
       if (mql.matches) {
         if (els.desk) {
           setNative(els.desk, DESK, nativeOk);
@@ -135,8 +176,7 @@ export function initLiquidGlassMenu() {
         if (els.panel) clearBackdropToFallback(els.panel);
       } else {
         if (els.desk) clearBackdropToFallback(els.desk);
-        drawerOpen = getDrawer();
-        if (drawerOpen && els.panel) {
+        if (getDrawer() && els.panel) {
           setNative(els.panel, MPAN, nativeOk);
           if (els.bar) {
             clearBackdropToFallback(els.bar);
@@ -171,7 +211,6 @@ export function initLiquidGlassMenu() {
     applyBackdropFallback(els.panel);
   }
 
-  const app = document.getElementById("liquid-glass-test-app");
   const mqlHandler = () => {
     els.burger?.setAttribute("aria-expanded", "false");
     if (els.panelHost) {
@@ -180,12 +219,13 @@ export function initLiquidGlassMenu() {
       els.panelHost.setAttribute("aria-hidden", "true");
     }
     els.rootSm?.classList.remove("lg-nav-sm--open");
-    if (app) app.classList.remove("lg-menu-noscroll");
+    if (scrollLockEl) scrollLockEl.classList.remove("lg-menu-noscroll");
     scheduleAll();
   };
   mql.addEventListener("change", mqlHandler);
 
-  initBurger({ ...els, onBurger: () => scheduleAll() });
+  const ac = new AbortController();
+  initBurger({ els, scrollLockEl, onBurger: () => scheduleAll(), signal: ac.signal });
 
   const roD = new ResizeObserver(() => scheduleAll());
   const roB = new ResizeObserver(() => scheduleAll());
@@ -202,6 +242,7 @@ export function initLiquidGlassMenu() {
   requestAnimationFrame(scheduleAll);
 
   return () => {
+    ac.abort();
     mql.removeEventListener("change", mqlHandler);
     window.removeEventListener("resize", onWin);
     if (window.visualViewport) {
@@ -210,5 +251,7 @@ export function initLiquidGlassMenu() {
     roD.disconnect();
     roB.disconnect();
     roP.disconnect();
+    if (scrollLockEl) scrollLockEl.classList.remove("lg-menu-noscroll");
+    if (fallbackTarget) fallbackTarget.classList.remove("lg-fallback-filters");
   };
 }

@@ -143,6 +143,14 @@ async function loadPage(routeType) {
  */
 export async function initRouting() {
   const route = getRoute();
+  if (route.type !== "landing") {
+    const m = await import("../pages/landing.js");
+    m.cleanupLandingLiquidMenu();
+  }
+  if (route.type !== "liquid-glass-test") {
+    const m = await import("../pages/liquid-glass-test.js");
+    m.cleanupLiquidGlassTestMenu();
+  }
   const c = getContainers();
 
   document.body.classList.toggle("page-app", route.type === "app");

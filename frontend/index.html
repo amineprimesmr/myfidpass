@@ -58,6 +58,7 @@
     <link rel="stylesheet" href="/src/landing-card-beam.css" />
     <link rel="stylesheet" href="/src/landing-testimonials-faq.css" />
     <link rel="stylesheet" href="/src/liquid-glass-test.css" />
+    <link rel="stylesheet" href="/src/landing-liquid-nav.css" />
     <link rel="stylesheet" href="/src/landing-footer.css" />
     <link rel="stylesheet" href="/src/fidelity-qr-game-layout-force.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -290,14 +291,18 @@
           <span class="liquid-glass-test-title-sub">kube.io · SVG + refraction</span>
         </p>
       </div>
-      <div class="lg-test-scene" id="lg-test-scene">
-        <div class="lg-test-backdrop" aria-hidden="true"></div>
+      <div class="lg-test-scene lg-menu-scene" id="lg-test-scene" data-liquid-glass-menu-root>
+        <div class="lg-test-backdrop lg-menu-scene-backdrop" aria-hidden="true"></div>
         <nav
           class="lg-nav-lg"
           id="fidpass-liquid-menu"
           aria-label="Menu démonstration Liquid Glass (kube)"
         >
-          <div id="fidpass-liquid-menu-glass" class="lg-menu lg-menu--desktop">
+          <div
+            id="fidpass-liquid-menu-glass"
+            class="lg-menu lg-menu--desktop lg-menu__glass--desk"
+            data-lg-desk
+          >
             <a href="/" class="lg-menu__brand" id="lg-menu-brand"
               ><span class="lg-menu__mark" aria-hidden="true">M</span> Myfidpass</a
             >
@@ -309,11 +314,12 @@
             <a href="/creer-ma-carte" class="lg-menu__cta">Créer la carte</a>
           </div>
         </nav>
-        <div class="lg-nav-sm" id="lg-nav-sm">
+        <div class="lg-nav-sm" id="lg-nav-sm" data-lg-root-sm>
           <div class="lg-nav-sm__bar">
             <div
               id="fidpass-liquid-menu-glass-bar"
-              class="lg-menu lg-menu--bar"
+              class="lg-menu lg-menu--bar lg-menu__glass--bar"
+              data-lg-bar
             >
               <a href="/" class="lg-menu__brand lg-menu__brand--bar"
                 ><span class="lg-menu__mark" aria-hidden="true">M</span> Myfidpass</a
@@ -322,6 +328,7 @@
                 type="button"
                 class="lg-menu__burger"
                 id="lg-menu-burger"
+                data-lg-burger
                 aria-controls="lg-menu-panel"
                 aria-expanded="false"
                 aria-label="Ouvrir le menu"
@@ -335,6 +342,7 @@
           <div
             class="lg-menu-panel"
             id="lg-menu-panel"
+            data-lg-panel-host
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navigation"
@@ -343,7 +351,8 @@
           >
             <div
               id="fidpass-liquid-menu-glass-panel"
-              class="lg-menu lg-menu--stack"
+              class="lg-menu lg-menu--stack lg-menu__glass--panel"
+              data-lg-panel
             >
               <ul class="lg-menu__ul lg-menu__ul--stack" role="list">
                 <li><a href="/" class="lg-menu__a lg-menu__a--stack">Accueil</a></li>
@@ -2459,32 +2468,102 @@
       </div>
     </div>
 
-    <!-- Landing Myfidpass (visible sur /) -->
+    <!-- Landing Myfidpass (visible sur /) — menu kube Liquid Glass -->
     <div id="landing">
-      <div class="landing-header-outer">
-        <header class="landing-header landing-header-bar" id="landing-header">
-          <div class="landing-header-inner">
-            <a href="/" class="landing-logo"><img src="/assets/icone.png?v=20260416" alt="Myfidpass" class="landing-logo-img"></a>
-            <nav class="landing-nav landing-nav-desk"></nav>
-            <button type="button" class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
-              <span class="landing-menu-toggle-bar"></span>
-              <span class="landing-menu-toggle-bar"></span>
-              <span class="landing-menu-toggle-bar"></span>
-            </button>
+      <div id="landing-liquid-glass" class="landing-liquid-nav-host">
+        <div class="lg-menu-scene" data-liquid-glass-menu-root>
+          <div class="lg-menu-scene-backdrop" aria-hidden="true"></div>
+          <nav
+            class="lg-nav-lg"
+            aria-label="Navigation principale"
+          >
+            <div
+              class="lg-menu lg-menu--desktop lg-menu__glass--desk"
+              data-lg-desk
+            >
+              <a href="/" class="lg-menu__brand"
+                ><span class="lg-menu__mark" aria-hidden="true">M</span> Myfidpass</a
+              >
+              <ul class="lg-menu__ul" role="list">
+                <li><a href="/" class="lg-menu__a">Accueil</a></li>
+                <li><a href="/abonnement" class="lg-menu__a">Tarifs</a></li>
+                <li><a href="/integration" class="lg-menu__a">Intégrations</a></li>
+                <li>
+                  <a
+                    href="/login?redirect=/app"
+                    class="lg-menu__a landing-nav-login-link"
+                    >Se connecter</a
+                  >
+                </li>
+              </ul>
+              <a href="/creer-ma-carte" class="lg-menu__cta">Créer la carte</a>
+            </div>
+          </nav>
+          <div class="lg-nav-sm" data-lg-root-sm>
+            <div class="lg-nav-sm__bar">
+              <div
+                class="lg-menu lg-menu--bar lg-menu__glass--bar"
+                data-lg-bar
+              >
+                <a href="/" class="lg-menu__brand lg-menu__brand--bar"
+                  ><span class="lg-menu__mark" aria-hidden="true">M</span> Myfidpass</a
+                >
+                <button
+                  type="button"
+                  class="lg-menu__burger"
+                  data-lg-burger
+                  aria-controls="lg-menu-panel-landing"
+                  aria-expanded="false"
+                  aria-label="Ouvrir le menu"
+                >
+                  <span class="lg-menu__burger-line" aria-hidden="true"></span>
+                  <span class="lg-menu__burger-line" aria-hidden="true"></span>
+                  <span class="lg-menu__burger-line" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <div
+              class="lg-menu-panel"
+              id="lg-menu-panel-landing"
+              data-lg-panel-host
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu de navigation"
+              hidden
+              aria-hidden="true"
+            >
+              <div
+                class="lg-menu lg-menu--stack lg-menu__glass--panel"
+                data-lg-panel
+              >
+                <ul class="lg-menu__ul lg-menu__ul--stack" role="list">
+                  <li><a href="/" class="lg-menu__a lg-menu__a--stack">Accueil</a></li>
+                  <li>
+                    <a href="/abonnement" class="lg-menu__a lg-menu__a--stack"
+                      >Tarifs</a
+                    >
+                  </li>
+                  <li>
+                    <a href="/integration" class="lg-menu__a lg-menu__a--stack"
+                      >Intégrations</a
+                    >
+                  </li>
+                  <li>
+                    <a
+                      href="/login?redirect=/app"
+                      class="lg-menu__a lg-menu__a--stack landing-nav-login-link landing-menu-drawer-login"
+                      >Se connecter</a
+                    >
+                  </li>
+                </ul>
+                <a
+                  href="/creer-ma-carte"
+                  class="lg-menu__cta lg-menu__cta--stack"
+                  >Créer la carte</a
+                >
+              </div>
+            </div>
           </div>
-        </header>
-      </div>
-
-      <!-- Menu mobile (style référence) -->
-      <div class="landing-menu-overlay" id="landing-menu-overlay" aria-hidden="true">
-        <div class="landing-menu-drawer">
-          <div class="landing-menu-drawer-header">
-            <span class="landing-menu-drawer-title">Menu</span>
-            <button type="button" class="landing-menu-close" id="landing-menu-close" aria-label="Fermer le menu">
-              <span aria-hidden="true">×</span>
-            </button>
-          </div>
-          <nav class="landing-menu-drawer-nav"></nav>
         </div>
       </div>
 

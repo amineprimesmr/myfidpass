@@ -1,13 +1,5 @@
-import { HeroSection } from "./HeroSection.jsx";
-import { CapabilitiesSection } from "./CapabilitiesSection.jsx";
-import { PhoneScrollSection } from "./PhoneScrollSection.jsx";
+import { FinTapPage } from "./FinTapPage.jsx";
 
 export function LandingCinematicApp() {
-  return (
-    <>
-      <HeroSection />
-      <CapabilitiesSection />
-      <PhoneScrollSection />
-    </>
-  );
+  return <FinTapPage />;
 }

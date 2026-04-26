@@ -9,14 +9,6 @@ const HERO_V =
 
 const enter = { filter: "blur(10px)", opacity: 0, y: 20 };
 
-const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "#capabilities", label: "Voyages" },
-  { href: "#capabilities", label: "Worlds" },
-  { href: "#capabilities", label: "Innovation" },
-  { href: "/creer-ma-carte", label: "Plan Launch" },
-];
-
 export function HeroSection() {
   return (
     <section className="relative flex min-h-screen flex-col overflow-hidden bg-black">
@@ -27,32 +19,7 @@ export function HeroSection() {
       />
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        <nav
-          className="fixed top-4 z-50 flex w-full items-center justify-between px-8 lg:px-16"
-          aria-label="Principale"
-        >
-          <div className="liquid-glass hidden items-center gap-0 rounded-full px-1.5 py-1.5 lg:flex">
-            {NAV_LINKS.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className="font-body rounded-full px-3 py-2 text-sm font-medium text-white/90"
-              >
-                {l.label}
-              </a>
-            ))}
-            <a
-              href="/creer-ma-carte"
-              className="ml-1 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-white px-3 py-2 text-sm font-medium text-black"
-            >
-              Claim a Spot
-              <IconArrowUpRight className="h-4 w-4" />
-            </a>
-          </div>
-          <div className="h-12 w-12 flex-shrink-0" aria-hidden="true" />
-        </nav>
-
-        <div className="font-body flex flex-1 flex-col items-center justify-center px-4 pt-24 text-center">
+        <div className="font-body flex flex-1 flex-col items-center justify-center px-4 pt-28 text-center">
           <motion.div
             initial={enter}
             animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}

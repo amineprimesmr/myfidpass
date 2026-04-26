@@ -1,0 +1,47 @@
+/* Menu kube Liquid Glass — accueil / (fixe au-dessus du hero cinéma) */
+.landing-liquid-nav-host {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  padding: 0.6rem 0.75rem 0;
+  box-sizing: border-box;
+}
+
+.landing-liquid-nav-host * {
+  pointer-events: auto;
+}
+
+.landing-liquid-nav-host .lg-menu-scene {
+  position: relative;
+  width: 100%;
+  max-width: 72rem;
+  min-height: 4.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.15rem 0 0.1rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.landing-liquid-nav-host .lg-menu-scene-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(100% 120% at 15% 20%, #6366f1 0%, transparent 50%),
+    radial-gradient(90% 100% at 90% 15%, #ec4899 0%, transparent 48%),
+    radial-gradient(100% 80% at 50% 100%, #06b6d4 0%, transparent 45%),
+    linear-gradient(160deg, #0f0a1a 0%, #1e1b4b 45%, #0c1220 100%);
+  pointer-events: none;
+  border-radius: 0 0 1.25rem 1.25rem;
+}
+
+#landing:has(.landing-cinematic-shell) .landing-liquid-nav-host {
+  z-index: 100;
+}

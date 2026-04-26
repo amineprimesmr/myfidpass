@@ -6,7 +6,7 @@
 }
 
 #landing:has(.landing-cinematic-shell) {
-  background: #000;
+  background: #fdfcf9;
   min-height: 100vh;
 }
 

@@ -1,44 +1,99 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
-const PHONE_IMAGE = "/assets/iphone.png";
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+
+/** Type Framer (scroll ciné) : ralenti au début + à la fin. */
+const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+
+const smoothstep = (t) => t * t * (3 - 2 * t);
+
+const PHASE_3D_END = 0.48; // 1ère moitié du scroll : 3D + gros plan → iPhone de face
+const ANGLE_MAX = 64; // contre-plongée (même ordre que le template, pas 80°+)
+const ZOOM_HERO = 2.4; // gros plan en worm’s eye (proche de la ref Framer)
+const ZOOM_FLAT = 1.02; // iPhone quasiment face caméra en fin de phase 3D
+const ZOOM_SLIDE = 0.9; // léger dolly en phase “split” avec le texte
+
+const PHONE_IMAGES = ["/assets/mockupiphone.png", "/assets/iphone-frame.png", "/assets/icone.png"];
 
 export function PhoneScrollSection() {
+  const [phoneImgIdx, setPhoneImgIdx] = useState(0);
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"],
   });
 
-  const ZOOM_MAX = 3.1; // contre-plongée (gros plan)
-  const ZOOM_END = 0.72; // en fin de scroll
-
-  // Cadrage : un cran plus bas au départ si le scale max augmente, pour ne pas rogner trop le haut.
+  const yPhaseB = (t) => 12 - 2 * easeInOutCubic((t - PHASE_3D_END) / (1 - PHASE_3D_END));
+  // Phase A : 3D + dézoom (sens Framer = la majeure partie du “ciné” dans la 1ère moitié du scroll).
   const phoneY = useTransform(scrollYProgress, (p) => {
-    const t = Math.max(0, Math.min(1, p));
-    const yVh = 79 - 69 * t; // 79vh → 10vh
-    return `${yVh}vh`;
+    const t = clamp(p, 0, 1);
+    if (t < PHASE_3D_END) {
+      const a = t / PHASE_3D_END;
+      const s = easeInOutCubic(a);
+      // 78vh → 12vh : jointure avec yPhaseB(PHASE_3D_END) == 12
+      return `${(78 - 66 * s).toFixed(2)}vh`;
+    }
+    return `${yPhaseB(t).toFixed(2)}vh`;
   });
-  const phoneX = useTransform(scrollYProgress, [0, 0.58, 0.75, 1], ["0vw", "0vw", "-18vw", "-24vw"]);
-  // Dézoom linéaire en fonction du progrès de la section = même cadence de A à Z, sans à-coups.
+
+  const phoneX = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t < PHASE_3D_END) return "0";
+    const u = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
+    // Entrée progressive du cadrage 2 colonnes (comme la compo Framer final).
+    return `${-22 * easeInOutCubic(u)}vw`;
+  });
+
   const phoneScale = useTransform(scrollYProgress, (p) => {
-    const t = Math.max(0, Math.min(1, p));
-    return ZOOM_MAX - t * (ZOOM_MAX - ZOOM_END);
+    const t = clamp(p, 0, 1);
+    if (t < PHASE_3D_END) {
+      const a = t / PHASE_3D_END;
+      return ZOOM_FLAT + (ZOOM_HERO - ZOOM_FLAT) * (1 - easeInOutCubic(a));
+    }
+    const b = (t - PHASE_3D_END) / (1 - PHASE_3D_END);
+    return ZOOM_FLAT + (ZOOM_SLIDE - ZOOM_FLAT) * easeInOutCubic(b);
   });
-  // Grosse contre-plongée (rotateX) uniquement : aucun rotateY = zéro penché sur le côté.
-  const phoneRotateX = useTransform(
-    scrollYProgress,
-    [0, 0.05, 0.14, 0.3, 0.48, 0.65, 0.82, 1],
-    [82, 76, 64, 46, 28, 12, 3, 0],
-  );
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.38, 0.52], [1, 1, 0]);
-  const heroY = useTransform(scrollYProgress, [0, 0.52], ["0px", "-36px"]);
-  const rightOpacity = useTransform(scrollYProgress, [0.54, 0.72, 1], [0, 1, 1]);
-  const rightY = useTransform(scrollYProgress, [0.54, 0.72], ["20px", "0px"]);
+
+  const phoneRotateX = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t >= PHASE_3D_END) return 0;
+    const a = t / PHASE_3D_END;
+    return ANGLE_MAX * (1 - easeInOutCubic(a));
+  });
+
+  const heroOpacity = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t <= 0.2) return 1;
+    if (t >= 0.4) return 0;
+    return 1 - smoothstep((t - 0.2) / 0.2);
+  });
+  const heroY = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t <= 0.22) return 0;
+    if (t >= 0.44) return -32;
+    return -32 * smoothstep((t - 0.22) / 0.22);
+  });
+  const rightOpacity = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t < 0.32) return 0;
+    if (t > 0.6) return 1;
+    return smoothstep((t - 0.32) / 0.28);
+  });
+  const rightY = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t < 0.32) return 24;
+    if (t > 0.58) return 0;
+    return 24 * (1 - smoothstep((t - 0.32) / 0.26));
+  });
 
   return (
-    <section ref={sectionRef} className="relative min-h-[300vh] bg-[#fdfcf9] text-black">
-      <div className="sticky top-0 h-screen overflow-hidden [perspective:min(72vh,640px)] [perspective-origin:50%_8%]">
+    <section
+      ref={sectionRef}
+      id="fintap-hero"
+      className="fintap-hero relative min-h-[320vh] scroll-mt-0 bg-[#fdfcf9] text-black"
+    >
+      <div className="sticky top-0 h-screen overflow-hidden [perspective:min(85vh,1100px)] [perspective-origin:50%_12%]">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -77,7 +132,7 @@ export function PhoneScrollSection() {
             Fast and safe.
           </h2>
           <p className="mt-4 max-w-xl text-xl text-[#636363]">
-            Local and international transfers, 100+ types of payments, up to 3% of cashbacks and a lot
+            Local and international transfers, 1000+ types of payments, up to 3% of cashbacks and a lot
             more
           </p>
           <button
@@ -100,9 +155,15 @@ export function PhoneScrollSection() {
           }}
         >
           <img
-            src={PHONE_IMAGE}
+            src={PHONE_IMAGES[phoneImgIdx] ?? PHONE_IMAGES[0]}
             alt="Mockup iPhone FinTap"
-            className="h-auto w-full drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
+            className="h-auto w-full max-w-full select-none drop-shadow-[0_40px_80px_rgba(0,0,0,0.28)]"
+            onError={() => {
+              setPhoneImgIdx((i) => Math.min(i + 1, PHONE_IMAGES.length - 1));
+            }}
+            loading="eager"
+            decoding="async"
+            draggable={false}
           />
         </motion.div>
 
@@ -115,11 +176,32 @@ export function PhoneScrollSection() {
             <br />
             <span className="text-[#0a98ff]">5 000 000 people</span>
           </h3>
-          <div className="mt-8 flex gap-4">
-            <div className="rounded-full border border-black/10 bg-white px-6 py-3 text-lg">App Store ★ 4.9</div>
-            <div className="rounded-full border border-black/10 bg-white px-6 py-3 text-lg">Google Play ★ 4.8</div>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="https://apps.apple.com"
+              className="rounded-full border border-black/10 bg-white px-6 py-3 text-base font-medium shadow-sm transition hover:border-black/20"
+              rel="noreferrer"
+              target="_blank"
+            >
+              App Store ★ 4.9
+            </a>
+            <a
+              href="https://play.google.com"
+              className="rounded-full border border-black/10 bg-white px-6 py-3 text-base font-medium shadow-sm transition hover:border-black/20"
+              rel="noreferrer"
+              target="_blank"
+            >
+              Google Play ★ 4.8
+            </a>
           </div>
         </motion.div>
+
+        <p
+          className="pointer-events-none absolute bottom-5 right-5 z-20 text-[0.7rem] font-medium text-black/30"
+          aria-hidden="true"
+        >
+          Rebuilt in React
+        </p>
       </div>
     </section>
   );

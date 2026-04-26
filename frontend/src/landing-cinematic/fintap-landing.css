@@ -1,0 +1,419 @@
+/* FinTap — page complète (réf. fintap.framer.website) */
+
+.fintap-landing {
+  --fintap-bg: #fdfcf9;
+  --fintap-blue: #0a98ff;
+  --fintap-mint: #27f3a9;
+  --fintap-ink: #0a0a0a;
+  --fintap-muted: #636363;
+  --fintap-line: rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  width: 100%;
+  color: var(--fintap-ink);
+  background: var(--fintap-bg);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.fintap-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.fintap-landing h1,
+.fintap-landing h2,
+.fintap-landing h3 {
+  text-wrap: balance;
+}
+
+.fintap-section {
+  position: relative;
+  padding: clamp(4rem, 9vw, 7rem) 0;
+}
+
+.fintap-section-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.fintap-section--tint {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+}
+
+.fintap-kicker {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--fintap-muted);
+  margin-bottom: 0.75rem;
+}
+
+.fintap-h2 {
+  font-size: clamp(1.9rem, 4.2vw, 3.1rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  max-width: 20ch;
+}
+
+.fintap-h2--centre {
+  text-align: center;
+  max-width: none;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fintap-h2--sec {
+  max-width: none;
+  font-size: clamp(2.2rem, 5.5vw, 4rem);
+  margin: 0.2rem 0 1rem;
+}
+
+.fintap-h2-em {
+  font-style: normal;
+  color: var(--fintap-ink);
+}
+
+.fintap-h2-em--blue {
+  color: var(--fintap-blue);
+}
+
+.fintap-h3 {
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-align: center;
+  max-width: 22ch;
+  margin: 0 auto 2.5rem;
+}
+
+.fintap-h3--int {
+  max-width: 32ch;
+}
+
+.fintap-lead {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--fintap-muted);
+  max-width: 44ch;
+}
+
+.fintap-section-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .fintap-section-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 3.5rem 4rem;
+  }
+
+  .fintap-section-grid--rev .fintap-section-copy {
+    order: 2;
+  }
+
+  .fintap-section-grid--rev .fintap-section-visual {
+    order: 1;
+  }
+}
+
+/* Téléphone « produit » (features) */
+.fintap-phone {
+  position: relative;
+  width: min(100%, 300px);
+  border-radius: 2.4rem;
+  background: #101010;
+  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  padding: 0.55rem;
+  margin: 0 auto;
+}
+
+.fintap-phone-notch {
+  position: absolute;
+  left: 50%;
+  top: 0.5rem;
+  z-index: 2;
+  width: 4.2rem;
+  height: 1.35rem;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: #0b0b0b;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.fintap-screen {
+  position: relative;
+  z-index: 0;
+  min-height: 420px;
+  border-radius: 2rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  overflow: hidden;
+}
+
+/* Témoignages */
+.fintap-section--testimonials {
+  background: linear-gradient(180deg, #fff7fb 0%, #fdfcf9 40%, #f5fbff 100%);
+}
+
+.fintap-t-head {
+  margin-bottom: 2.5rem;
+}
+
+.fintap-t-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .fintap-t-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .fintap-t-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.fintap-t-card-wrap {
+  height: 100%;
+}
+
+.fintap-t-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 10rem;
+  margin: 0;
+  padding: 1.35rem 1.4rem 1.25rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--fintap-line);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.fintap-t-quote {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #1e1e1e;
+  margin: 0 0 1rem;
+}
+
+.fintap-t-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.fintap-t-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #a5b4fc, #c4b5fd, #f9a8d4);
+}
+
+.fintap-t-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.fintap-t-role {
+  font-size: 0.78rem;
+  color: var(--fintap-muted);
+  margin: 0.1rem 0 0;
+}
+
+/* Intégrations */
+.fintap-section--integrations {
+  padding-top: 2rem;
+}
+
+.fintap-int-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .fintap-int-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .fintap-int-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.fintap-int-card {
+  padding: 1.3rem 1.35rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--fintap-line);
+  background: #fff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.fintap-int-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08);
+}
+
+.fintap-int-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+  margin: 0 0 0.4rem;
+}
+
+.fintap-int-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--fintap-muted);
+}
+
+/* Sécurité + CTA */
+.fintap-section--security {
+  background: #fff;
+}
+
+.fintap-security-inner {
+  text-align: center;
+}
+
+.fintap-security-copy .fintap-lead {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 52ch;
+}
+
+.fintap-h2--sec,
+.fintap-security-copy .fintap-kicker {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fintap-section--cta {
+  background: linear-gradient(180deg, #fff, #f6fcff 100%);
+  border-top: 1px solid var(--fintap-line);
+}
+
+.fintap-cta-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: start;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+@media (min-width: 800px) {
+  .fintap-cta-grid {
+    grid-template-columns: 1.1fr 1fr;
+  }
+}
+
+.fintap-cta-qr {
+  text-align: center;
+}
+
+.fintap-cta-sub {
+  color: var(--fintap-muted);
+  font-size: 0.95rem;
+  max-width: 32ch;
+  margin: 0.4rem auto 1.1rem;
+}
+
+.fintap-qr {
+  width: 140px;
+  height: 140px;
+  margin: 0.5rem auto 0;
+  border-radius: 1.25rem;
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  background: repeating-conic-gradient(#e8e8e8 0% 25%, #fff 0% 50%) 50% / 16px 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+}
+
+.fintap-cta-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  text-align: left;
+}
+
+.fintap-cta-li {
+  padding-left: 1.1rem;
+  position: relative;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #222;
+}
+
+.fintap-cta-li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: var(--fintap-blue);
+}
+
+.fintap-footer {
+  border-top: 1px solid var(--fintap-line);
+  padding: 2.5rem 0 4rem;
+  background: #f8f6f1;
+}
+
+.fintap-footer-disclaimer {
+  font-size: 0.78rem;
+  line-height: 1.65;
+  color: #4b5563;
+  max-width: 80ch;
+  margin: 0 0 1.25rem;
+}
+
+.fintap-footer-legal {
+  font-size: 0.85rem;
+  color: var(--fintap-muted);
+  max-width: 70ch;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.fintap-link {
+  color: var(--fintap-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.fintap-link:hover {
+  opacity: 0.9;
+}
