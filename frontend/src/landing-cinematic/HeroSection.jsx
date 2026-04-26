@@ -31,13 +31,6 @@ export function HeroSection() {
           className="fixed top-4 z-50 flex w-full items-center justify-between px-8 lg:px-16"
           aria-label="Principale"
         >
-          <a
-            href="/"
-            className="liquid-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
-            aria-label="Accueil"
-          >
-            <span className="font-heading text-xl italic text-white">a</span>
-          </a>
           <div className="liquid-glass hidden items-center gap-0 rounded-full px-1.5 py-1.5 lg:flex">
             {NAV_LINKS.map((l) => (
               <a
