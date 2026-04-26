@@ -58,7 +58,7 @@ async function getFlyerRoueImage() {
       /^https?:/i.test(src) ||
       src.startsWith("/");
     if (!looksOk) return null;
-    flyerRoueCache = await loadImage(src, false);
+    flyerRoueCache = await loadFlyerAssetImageWithFallback(src);
     return flyerRoueCache;
   } catch {
     return null;
@@ -80,11 +80,69 @@ async function getFlyerGiftflyerImage() {
       /^https?:/i.test(src) ||
       src.startsWith("/");
     if (!looksOk) return null;
-    flyerGiftflyerCache = await loadImage(src, false);
+    flyerGiftflyerCache = await loadFlyerAssetImageWithFallback(src);
     return flyerGiftflyerCache;
   } catch {
     return null;
   }
+}
+
+/**
+ * WKWebView peut échouer sur une URL d'asset Vite (`/assets/...png?inline`) selon cache/baseURL.
+ * On tente d'abord la source brute, puis la version absolue, puis un fetch blob.
+ * @param {string} rawSrc
+ * @returns {Promise<HTMLImageElement | null>}
+ */
+async function loadFlyerAssetImageWithFallback(rawSrc) {
+  const src = String(rawSrc || "").trim();
+  if (!src) return null;
+
+  /** @type {string[]} */
+  const candidates = [src];
+  if (src.startsWith("/")) {
+    try {
+      const abs = new URL(src, window.location.origin).toString();
+      if (!candidates.includes(abs)) candidates.push(abs);
+    } catch (_) {}
+  }
+  if (!/^https?:/i.test(src) && !src.startsWith("data:") && !src.startsWith("blob:")) {
+    try {
+      const abs = new URL(src, window.location.href).toString();
+      if (!candidates.includes(abs)) candidates.push(abs);
+    } catch (_) {}
+  }
+
+  for (const u of candidates) {
+    const isBlob = u.startsWith("blob:");
+    try {
+      return await loadImage(u, !isBlob);
+    } catch (_) {
+      if (!isBlob) {
+        try {
+          return await loadImage(u, false);
+        } catch (_e) {}
+      }
+    }
+  }
+
+  for (const u of candidates) {
+    if (u.startsWith("data:") || u.startsWith("blob:")) continue;
+    try {
+      const res = await fetch(u, { mode: "cors", credentials: "omit", cache: "force-cache" });
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      const obj = URL.createObjectURL(blob);
+      try {
+        const img = await loadImage(obj, false);
+        return img;
+      } finally {
+        try {
+          URL.revokeObjectURL(obj);
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+  return null;
 }
 
 /**
