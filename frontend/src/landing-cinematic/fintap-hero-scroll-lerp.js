@@ -21,7 +21,7 @@ export function clamp(n, min, max) {
 const TRIGGER = 400;
 
 /** Contre-plongée (vue du bas) — uniquement rotateX, pas d’inclinaison latérale */
-const TILT_X_DEG = 32;
+const TILT_X_DEG = 44;
 const TILT_Y_DEG = 0;
 const TILT_Z_DEG = 0;
 
