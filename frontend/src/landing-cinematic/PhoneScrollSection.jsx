@@ -7,13 +7,15 @@ const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 /
 
 const smoothstep = (t) => t * t * (3 - 2 * t);
 
-/** 0 = intro “carte” ; 1 = cadrage final. Si l’effet te semble inversé, c’est ici que p et (1-p) s’inversent. */
-const FACE_REACHED = 0.4;
+/** Fin 3D → iPhone de face (rotateX=0) ; après SPLIT la mise en page 2 colonnes. */
+const FLAT_AT = 0.42;
 const SPLIT_END = 0.55;
 
-const ZOOM_IN = 1.12;
-const NARROW_IN = 1.06;
+const ANGLE_MAX = 56; // contre-plongée
+const ZOOM_HERO = 2.2;
+const ZOOM_HERO_NARROW = 1.75;
 const FACE = 1;
+const ZOOM_LATE = 0.94;
 
 const PHONE_IMAGES = ["/assets/iphone.png", "/assets/mockupiphone.png", "/assets/iphone-frame.png", "/assets/icone.png"];
 
@@ -31,71 +33,130 @@ function useNarrowViewport() {
   return narrow;
 }
 
-/**
- * p : 0 = haut de section, 1 = on a scrolle jusqu’en bas (offset start/end classique).
- * Plus p augmente, plus l’iPhone se rapproche d’une image 2D de face (scale 1, pas de 3D).
- */
 export function PhoneScrollSection() {
   const [phoneImgIdx, setPhoneImgIdx] = useState(0);
   const narrow = useNarrowViewport();
-  const zoomIn = narrow ? NARROW_IN : ZOOM_IN;
+  const zoomHero = narrow ? ZOOM_HERO_NARROW : ZOOM_HERO;
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    // Bas du bloc aligne le haut du viewport en fin = p va bien de “debut de scroll” a “apres le hero”
     offset: ["start start", "end start"],
   });
 
   const phoneY = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    const a = t < SPLIT_END ? t / SPLIT_END : 1;
-    const s = easeInOutCubic(a);
-    return `${(30 - 18 * s).toFixed(2)}vh`;
+    if (t < FLAT_AT) {
+      const a = t / FLAT_AT;
+      const s = easeInOutCubic(a);
+      return `${(52 - 42 * s).toFixed(2)}vh`;
+    }
+    if (t < SPLIT_END) {
+      return "10.00vh";
+    }
+    const u = (t - SPLIT_END) / (1 - SPLIT_END);
+    const s = easeInOutCubic(u);
+    return `${(10 + 32 * s).toFixed(2)}vh`;
   });
 
   const phoneX = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < SPLIT_END) return "0";
+    if (t < SPLIT_END) {
+      return "0";
+    }
     const u = (t - SPLIT_END) / (1 - SPLIT_END);
     return `${-16 * easeInOutCubic(u)}vw`;
   });
 
   const phoneScale = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < FACE_REACHED) {
-      const a = t / FACE_REACHED;
+    if (t < FLAT_AT) {
+      const a = t / FLAT_AT;
       const s = 1 - (1 - a) * (1 - a);
-      return zoomIn + (FACE - zoomIn) * s;
+      return zoomHero + (FACE - zoomHero) * s;
     }
     if (t < SPLIT_END) {
       return FACE;
     }
     const b = (t - SPLIT_END) / (1 - SPLIT_END);
-    return FACE + (0.96 - FACE) * easeInOutCubic(b);
+    return FACE + (ZOOM_LATE - FACE) * easeInOutCubic(b);
+  });
+
+  const phoneRotateX = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t >= FLAT_AT) {
+      return 0;
+    }
+    const a = 1 - t / FLAT_AT;
+    return ANGLE_MAX * a * a;
+  });
+
+  const wrapPerspective = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t >= FLAT_AT) {
+      return 1e6;
+    }
+    const a = t / FLAT_AT;
+    return 850 + 2400 * easeInOutCubic(a);
+  });
+
+  const wrapPerspectiveOrigin = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t >= FLAT_AT) {
+      return "50% 50%";
+    }
+    const a = t / FLAT_AT;
+    const yp = 12 + 35 * easeInOutCubic(a);
+    return `50% ${yp}%`;
+  });
+
+  const phoneTransformOrigin = useTransform(scrollYProgress, (p) => {
+    const t = clamp(p, 0, 1);
+    if (t >= FLAT_AT) {
+      return "50% 50%";
+    }
+    const a = t / FLAT_AT;
+    const yp = 100 - 50 * easeInOutCubic(a);
+    return `50% ${yp.toFixed(1)}%`;
   });
 
   const heroOpacity = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t <= 0.2) return 1;
-    if (t >= 0.4) return 0;
+    if (t <= 0.2) {
+      return 1;
+    }
+    if (t >= 0.4) {
+      return 0;
+    }
     return 1 - smoothstep((t - 0.2) / 0.2);
   });
   const heroY = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t <= 0.22) return 0;
-    if (t >= 0.44) return -32;
+    if (t <= 0.22) {
+      return 0;
+    }
+    if (t >= 0.44) {
+      return -32;
+    }
     return -32 * smoothstep((t - 0.22) / 0.22);
   });
   const rightOpacity = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < 0.32) return 0;
-    if (t > 0.6) return 1;
+    if (t < 0.32) {
+      return 0;
+    }
+    if (t > 0.6) {
+      return 1;
+    }
     return smoothstep((t - 0.32) / 0.28);
   });
   const rightY = useTransform(scrollYProgress, (p) => {
     const t = clamp(p, 0, 1);
-    if (t < 0.32) return 24;
-    if (t > 0.58) return 0;
+    if (t < 0.32) {
+      return 24;
+    }
+    if (t > 0.58) {
+      return 0;
+    }
     return 24 * (1 - smoothstep((t - 0.32) / 0.26));
   });
 
@@ -105,7 +166,10 @@ export function PhoneScrollSection() {
       id="fintap-hero"
       className="fintap-hero relative min-h-[480vh] scroll-mt-0 bg-[#fdfcf9] text-black"
     >
-      <div className="sticky top-0 h-screen overflow-x-hidden overflow-y-visible">
+      <motion.div
+        className="sticky top-0 h-screen overflow-x-hidden overflow-y-visible"
+        style={{ perspective: wrapPerspective, perspectiveOrigin: wrapPerspectiveOrigin }}
+      >
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -132,8 +196,14 @@ export function PhoneScrollSection() {
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform"
-          style={{ y: phoneY, x: phoneX, scale: phoneScale }}
+          className="pointer-events-none absolute left-1/2 top-0 z-30 w-[min(62vw,560px)] -translate-x-1/2 will-change-transform [transform-style:preserve-3d]"
+          style={{
+            y: phoneY,
+            x: phoneX,
+            scale: phoneScale,
+            rotateX: phoneRotateX,
+            transformOrigin: phoneTransformOrigin,
+          }}
         >
           <img
             src={PHONE_IMAGES[phoneImgIdx] ?? PHONE_IMAGES[0]}
@@ -183,7 +253,7 @@ export function PhoneScrollSection() {
         >
           Rebuilt in React
         </p>
-      </div>
+      </motion.div>
     </section>
   );
 }
