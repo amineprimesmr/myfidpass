@@ -11,9 +11,8 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
-import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
-/** Même stratégie que `spinflyer` : en `?url` le hash Vite n’existe souvent pas dans l’aperçu WK (embed) → chargement en échec, cadeau absent. */
-import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
+import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?url";
+import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?url";
 
 export { FLYER_EXPORT };
 
@@ -164,7 +163,7 @@ async function loadAssetViaFetchBlobCandidates(candidates) {
   for (const u of candidates) {
     if (u.startsWith("data:") || u.startsWith("blob:")) continue;
     try {
-      const res = await fetch(u, { mode: "same-origin", credentials: "same-origin", cache: "force-cache" });
+      const res = await fetch(u, { mode: "same-origin", credentials: "same-origin", cache: "no-cache" });
       if (!res.ok) continue;
       const blob = await res.blob();
       const obj = URL.createObjectURL(blob);
