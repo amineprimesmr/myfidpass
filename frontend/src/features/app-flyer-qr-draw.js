@@ -376,16 +376,6 @@ function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
  */
 function drawPremiumWheelFinishing(ctx, cx, cy, r) {
   ctx.save();
-  // Ombre de contact globale pour asseoir la roue dans la scène.
-  const contact = ctx.createRadialGradient(cx, cy + r * 0.78, r * 0.16, cx, cy + r * 0.78, r * 1.04);
-  contact.addColorStop(0, "rgba(0,0,0,0.28)");
-  contact.addColorStop(0.55, "rgba(0,0,0,0.1)");
-  contact.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = contact;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + r * 0.78, r * 0.92, r * 0.22, 0, 0, Math.PI * 2);
-  ctx.fill();
-
   // Rim light sur le quart haut-gauche.
   const rim = ctx.createRadialGradient(cx - r * 0.28, cy - r * 0.32, r * 0.08, cx, cy, r * 1.05);
   rim.addColorStop(0, "rgba(255,255,255,0.24)");
