@@ -17,11 +17,11 @@ const SEG_OVERLAP_RAD = 0.005;
 const WHEEL_COLOR_OUTER_R_FRAC = 0.72;
 
 /**
- * Rayon intérieur de la couronne colorée : au-delà, **aucune** teinte (moyeu blanc, centre neutre).
- * 0,065 était trop petit : sur la texture PNG, le moyeu métallique se retrouvait teinté — il faut un moyeu large.
+ * Rayon intérieur de la couronne colorée : au-delà, **aucune** teinte (moyeu / texture PNG au centre).
+ * Trop bas (~0,065) : le multiply teinte le moyeu métallique ; trop haut : « trou » trop large.
  * Les couleurs ne s’appliquent qu’entre `WHEEL_HUB_R_FRAC * r` et `WHEEL_COLOR_OUTER_R_FRAC * r`.
  */
-const WHEEL_HUB_R_FRAC = 0.185;
+const WHEEL_HUB_R_FRAC = 0.125;
 
 /**
  * Cercle de **clip** pour les libellés (légèrement à l’intérieur de l’anneau de couleur).
