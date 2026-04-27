@@ -518,6 +518,64 @@ function sampleOpaqueAverageRgb(data, pw, ph, x0, y0, x1, y1) {
 }
 
 /**
+ * Détourage côté canvas (aperçu + export) : rend transparent tout pixel proche de la
+ * moyenne des 4 coins — même quand l’iOS a envoyé un JPEG sans alpha (aligné sur le
+ * passage « global bord clair » côté app).
+ * @param {ImageData} id
+ * @param {number} w
+ * @param {number} h
+ */
+function applyFlyerCommerceLogoBackgroundKnockoutFromImageData(id, w, h) {
+  const d = id.data;
+  const depth = Math.max(2, Math.min(14, Math.round(Math.min(w, h) * 0.06)));
+  const cornerTL = sampleOpaqueAverageRgb(d, w, h, 0, 0, depth, depth);
+  const cornerTR = sampleOpaqueAverageRgb(d, w, h, w - depth, 0, w, depth);
+  const cornerBL = sampleOpaqueAverageRgb(d, w, h, 0, h - depth, depth, h);
+  const cornerBR = sampleOpaqueAverageRgb(d, w, h, w - depth, h - depth, w, h);
+  const corners = [cornerTL, cornerTR, cornerBL, cornerBR].filter(Boolean);
+  if (corners.length < 2) return;
+  const bg = {
+    r: corners.reduce((s, p) => s + p.r, 0) / corners.length,
+    g: corners.reduce((s, p) => s + p.g, 0) / corners.length,
+    b: corners.reduce((s, p) => s + p.b, 0) / corners.length,
+  };
+  if (bg.r + bg.g + bg.b < 400) return;
+  const tol = 48;
+  let edgeN = 0;
+  let edgeM = 0;
+  for (let x = 0; x < w; x++) {
+    for (const y of [0, h - 1]) {
+      const i = (y * w + x) * 4;
+      if (d[i + 3] < 10) continue;
+      edgeN += 1;
+      if (Math.hypot(d[i] - bg.r, d[i + 1] - bg.g, d[i + 2] - bg.b) < tol) edgeM += 1;
+    }
+  }
+  for (let y = 1; y < h - 1; y++) {
+    for (const x of [0, w - 1]) {
+      const i = (y * w + x) * 4;
+      if (d[i + 3] < 10) continue;
+      edgeN += 1;
+      if (Math.hypot(d[i] - bg.r, d[i + 1] - bg.g, d[i + 2] - bg.b) < tol) edgeM += 1;
+    }
+  }
+  if (edgeN < 8) return;
+  if (edgeM / edgeN < 0.18) return;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const o = (y * w + x) * 4;
+      if (d[o + 3] < 8) continue;
+      if (Math.hypot(d[o] - bg.r, d[o + 1] - bg.g, d[o + 2] - bg.b) < tol) {
+        d[o] = 0;
+        d[o + 1] = 0;
+        d[o + 2] = 0;
+        d[o + 3] = 0;
+      }
+    }
+  }
+}
+
+/**
  * Cadre utile du logo : alpha + retrait des fonds opaques type JPEG (bloc blanc autour du motif).
  * @param {CanvasImageSource} img
  * @returns {{ sx: number; sy: number; sw: number; sh: number } | null}
@@ -701,6 +759,8 @@ function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
     id = null;
   }
   if (id) {
+    applyFlyerCommerceLogoBackgroundKnockoutFromImageData(id, tw, th);
+    octx.putImageData(id, 0, 0);
     const l = meanRelativeLuminanceOfOpaquePixels(id.data, tw, th);
     if (l != null && l > FLYER_LOGO_LIGHT_LUMA_THRESHOLD) {
       const m = Math.min(tw, th) * 0.04;
