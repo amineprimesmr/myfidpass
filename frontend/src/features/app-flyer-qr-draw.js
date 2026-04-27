@@ -1242,10 +1242,11 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
+  // Priorité texture: flyergame (demandé), sinon texture roue standard.
+  const wheelTexture = flyergameImg || roueImg;
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    drawFlyerWheel(ctx, s, useTexturedWheel ? roueImg : null, wheelCx, wheelCy, wheelR, drawImageCover);
+    drawFlyerWheel(ctx, s, useTexturedWheel ? wheelTexture : null, wheelCx, wheelCy, wheelR, drawImageCover);
   }
-  drawFlyergameCenter(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
   drawPremiumWheelFinishing(ctx, wheelCx, wheelCy, wheelR);
   /**
    * Bas de page (chevauchement roue) : roue → cadeau → (accroche haut) → bandeau CTA au-dessus du cadeau.
