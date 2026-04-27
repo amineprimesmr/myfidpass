@@ -172,17 +172,14 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
   if (n < 1) return;
   const rOut = r * WHEEL_COLOR_OUTER_R_FRAC;
   const rIn = r * WHEEL_HUB_R_FRAC;
-  /** Secteurs en couronne (pas de couleur jusqu’au centre ; moyeu = blanc ensuite). */
+  /** Secteurs en couronne (pas de couleur au centre ; aucun moyeu blanc). */
   for (let i = 0; i < n; i++) {
     const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
     pathAnnulusSector(ctx, cx, cy, rIn, rOut, t0, t1);
     ctx.fillStyle = colors[i];
     ctx.fill();
   }
-  ctx.beginPath();
-  ctx.arc(cx, cy, rIn, 0, Math.PI * 2);
-  ctx.fillStyle = "#ffffff";
-  ctx.fill();
+  // Centre volontairement laissé transparent pour éviter le rond blanc.
 }
 
 /**
@@ -241,11 +238,7 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
     ctx.globalCompositeOperation = "source-over";
     ctx.restore();
   }
-  /** Moyeu blanc : pas de teintes part au centre. */
-  ctx.beginPath();
-  ctx.arc(cx, cy, rIn, 0, Math.PI * 2);
-  ctx.fillStyle = "#ffffff";
-  ctx.fill();
+  /** Centre laissé transparent (pas de rond blanc). */
   ctx.restore();
 }
 
