@@ -16,6 +16,20 @@ function hexToRgba(hex, a) {
 }
 
 /**
+ * @param {{ colorPrimary?: string; colorBgTop?: string; colorBgBottom?: string }} s
+ * @returns {string}
+ */
+function resolveFlyerBaseBgHex(s) {
+  const primary = String(s?.colorPrimary || "").trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(primary)) return primary;
+  const top = String(s?.colorBgTop || "").trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(top)) return top;
+  const bot = String(s?.colorBgBottom || "").trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(bot)) return bot;
+  return "#1f2937";
+}
+
+/**
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} w
  * @param {number} h
@@ -23,22 +37,20 @@ function hexToRgba(hex, a) {
  * @param {string} bot
  */
 function fillGradientVOpaque(ctx, w, h, top, bot) {
-  const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, top);
-  g.addColorStop(1, bot);
-  ctx.fillStyle = g;
+  const base = /^#[0-9A-Fa-f]{6}$/.test(String(top || "").trim()) ? top : bot;
+  ctx.fillStyle = base || "#1f2937";
   ctx.fillRect(0, 0, w, h);
-  // Centre légèrement plus lumineux pour une UX douce, sans perdre la profondeur.
-  const centerGlow = ctx.createRadialGradient(w * 0.5, h * 0.42, h * 0.06, w * 0.5, h * 0.42, h * 0.62);
-  centerGlow.addColorStop(0, "rgba(255,255,255,0.15)");
-  centerGlow.addColorStop(0.55, "rgba(255,255,255,0.08)");
+  // Centre légèrement plus lumineux.
+  const centerGlow = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.06, w * 0.5, h * 0.5, h * 0.62);
+  centerGlow.addColorStop(0, "rgba(255,255,255,0.13)");
+  centerGlow.addColorStop(0.55, "rgba(255,255,255,0.06)");
   centerGlow.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = centerGlow;
   ctx.fillRect(0, 0, w, h);
-  // Vignette subtile : bords un peu plus foncés (haut/bas + latéraux).
-  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.48, Math.min(w, h) * 0.24, w * 0.5, h * 0.48, Math.max(w, h) * 0.82);
+  // Vignette globale : bords plus foncés tout autour.
+  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.22, w * 0.5, h * 0.5, Math.max(w, h) * 0.84);
   edgeShade.addColorStop(0, "rgba(0,0,0,0)");
-  edgeShade.addColorStop(1, "rgba(0,0,0,0.13)");
+  edgeShade.addColorStop(1, "rgba(0,0,0,0.20)");
   ctx.fillStyle = edgeShade;
   ctx.fillRect(0, 0, w, h);
 }
@@ -110,7 +122,8 @@ export function drawFlyerBackgroundLayer(ctx, w, h, s, bgImg) {
       /** Fond affiché sous la WKWebView (UIImage natif) — pas de dégradé par défaut. */
       return;
     }
-    fillGradientVOpaque(ctx, w, h, s.colorBgTop, s.colorBgBottom);
+    const base = resolveFlyerBaseBgHex(s);
+    fillGradientVOpaque(ctx, w, h, base, base);
     return;
   }
   drawImageCover(ctx, bgImg, 0, 0, w, h);
