@@ -145,8 +145,8 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
   const giftH = (giftW * sh) / sw;
   const lead = Math.max(8 * scale, w * 0.028);
   const bottomPad = Math.max(6 * scale, h * 0.028);
-  /** Plus haut et plus visible comme demandé par l’utilisateur. */
-  const lift = h * 0.27;
+  /** Moins de « lift » depuis le bas → illustration plus bas (proche roue / pied). */
+  const lift = h * 0.19;
   const x = lead;
   const y = h - bottomPad - lift - giftH;
   try {
