@@ -14,7 +14,6 @@ import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
 import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
 /** Même stratégie que `spinflyer` : en `?url` le hash Vite n’existe souvent pas dans l’aperçu WK (embed) → chargement en échec, cadeau absent. */
 import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
-import wheelIconFallbackDataUrl from "../assets/flyer-steps/icon-wheel.png?inline";
 
 export { FLYER_EXPORT };
 
@@ -68,12 +67,6 @@ async function getFlyerRoueImage() {
       src.startsWith("/");
     if (!looksOk) return null;
     flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
-    if (!flyerRoueCache) {
-      const fallback = String(wheelIconFallbackDataUrl || "").trim();
-      if (fallback) {
-        flyerRoueCache = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: false });
-      }
-    }
     return flyerRoueCache;
   } catch {
     return null;
