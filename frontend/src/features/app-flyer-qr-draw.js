@@ -178,8 +178,8 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
   const giftH = (giftW * sh) / sw;
   const lead = Math.max(8 * scale, w * 0.028);
   const bottomPad = Math.max(6 * scale, h * 0.028);
-  /** Légèrement plus haut que l’ex-offset iOS (-0,08·h) pour mieux cadrer sur la roue. */
-  const lift = h * 0.12;
+  /** Un peu plus haut pour dégager le cadeau du bas de page tout en gardant le chevauchement roue. */
+  const lift = h * 0.15;
   const x = lead;
   const y = h - bottomPad - lift - giftH;
   try {
