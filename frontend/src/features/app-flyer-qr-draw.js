@@ -12,7 +12,7 @@ import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
 import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
-import flyergameDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
+import flyergameDataUrl from "../assets/flyer-wheels/flyergame.png?inline";
 /** Même stratégie que `spinflyer` : en `?url` le hash Vite n’existe souvent pas dans l’aperçu WK (embed) → chargement en échec, cadeau absent. */
 import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
 import wheelIconFallbackDataUrl from "../assets/flyer-steps/icon-wheel.png?inline";
