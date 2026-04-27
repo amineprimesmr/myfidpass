@@ -14,6 +14,7 @@ import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
 import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
 /** Même stratégie que `spinflyer` : en `?url` le hash Vite n’existe souvent pas dans l’aperçu WK (embed) → chargement en échec, cadeau absent. */
 import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
+import wheelIconFallbackDataUrl from "../assets/flyer-steps/icon-wheel.png?inline";
 
 export { FLYER_EXPORT };
 
@@ -67,6 +68,12 @@ async function getFlyerRoueImage() {
       src.startsWith("/");
     if (!looksOk) return null;
     flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
+    if (!flyerRoueCache) {
+      const fallback = String(wheelIconFallbackDataUrl || "").trim();
+      if (fallback) {
+        flyerRoueCache = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: false });
+      }
+    }
     return flyerRoueCache;
   } catch {
     return null;
@@ -136,10 +143,13 @@ async function loadFlyerAssetImageWithFallback(rawSrc, options) {
 
   for (const u of candidates) {
     const isBlob = u.startsWith("blob:");
+    const isData = u.startsWith("data:");
+    const isHttp = /^https?:/i.test(u);
     try {
-      return await loadImage(u, !isBlob);
+      // WKWebView: `crossOrigin` sur `data:` peut casser le decode image silencieusement.
+      return await loadImage(u, isHttp && !isBlob && !isData);
     } catch (_) {
-      if (!isBlob) {
+      if (!isBlob && !isData) {
         try {
           return await loadImage(u, false);
         } catch (_e) {}
