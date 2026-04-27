@@ -15,7 +15,6 @@ import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
 import flyergameDataUrl from "../assets/flyer-wheels/flyergame.png?inline";
 /** Même stratégie que `spinflyer` : en `?url` le hash Vite n’existe souvent pas dans l’aperçu WK (embed) → chargement en échec, cadeau absent. */
 import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
-import wheelIconFallbackDataUrl from "../assets/flyer-steps/icon-wheel.png?inline";
 
 export { FLYER_EXPORT };
 
@@ -33,6 +32,10 @@ let flyerGiftflyerCache = null;
 
 /** @type {HTMLImageElement | null} */
 let flyergameCenterCache = null;
+
+const FLYERGAME_PUBLIC_SRC = "/assets/flyergame.png";
+const FLYERGAME_PUBLIC_SPIN_FALLBACK = "/assets/flyer-wheels/spinflyer.png";
+const WHEEL_ICON_FALLBACK_SRC = "/assets/flyer-steps/icon-wheel.png";
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -73,7 +76,7 @@ async function getFlyerRoueImage() {
     if (!looksOk) return null;
     flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
     if (!flyerRoueCache) {
-      const fallback = String(wheelIconFallbackDataUrl || "").trim();
+      const fallback = String(WHEEL_ICON_FALLBACK_SRC || "").trim();
       if (fallback) {
         flyerRoueCache = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: false });
       }
@@ -130,14 +133,22 @@ async function getFlyergameCenterImage() {
       }
     }
     const src = String(flyergameDataUrl || "").trim();
-    if (!src) return null;
-    const looksOk =
-      src.startsWith("data:image/") ||
-      src.startsWith("blob:") ||
-      /^https?:/i.test(src) ||
-      src.startsWith("/");
-    if (!looksOk) return null;
-    flyergameCenterCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
+    const candidates = [src, FLYERGAME_PUBLIC_SRC, FLYERGAME_PUBLIC_SPIN_FALLBACK]
+      .map((v) => String(v || "").trim())
+      .filter(Boolean);
+    for (const c of candidates) {
+      const looksOk =
+        c.startsWith("data:image/") ||
+        c.startsWith("blob:") ||
+        /^https?:/i.test(c) ||
+        c.startsWith("/");
+      if (!looksOk) continue;
+      const loaded = await loadFlyerAssetImageWithFallback(c, { preferBlobFetch: true });
+      if (loaded) {
+        flyergameCenterCache = loaded;
+        return flyergameCenterCache;
+      }
+    }
     return flyergameCenterCache;
   } catch {
     return null;
