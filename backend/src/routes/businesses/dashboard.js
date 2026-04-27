@@ -76,8 +76,23 @@ import dashboardGoogleBusinessRouter from "./dashboard-google-business.js";
 import dashboardTeamRouter from "./dashboard-team.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
+import { removeLogoBackgroundWithRemoveBg } from "../../services/flyer-logo-remove-bg.js";
 
 const router = Router({ mergeParams: true });
+
+/** `data:image/(png|jpeg|…);base64,…` → Buffer — pour détourage logo (remove.bg). */
+function bufferFromImageDataUrl(s) {
+  if (typeof s !== "string") return null;
+  const t = s.trim();
+  const m = /^data:image\/(?:png|jpeg|jpg|webp);base64,(.+)$/i.exec(t);
+  if (!m) return null;
+  try {
+    const b64 = m[1].replace(/\s+/g, "");
+    return Buffer.from(b64, "base64");
+  } catch {
+    return null;
+  }
+}
 
 /** Remet le compteur flyer IA au mois UTC courant si besoin. */
 function syncFlyerAiBillingMonth(business) {
@@ -872,6 +887,36 @@ router.put("/flyer", (req, res) => {
     flyer_prefs_updated_at: now,
   });
   res.json({ ok: true, updated_at: now });
+});
+
+/**
+ * Détourage fond logo (remove.bg côté serveur, clé `REMOVEBG_API_KEY`).
+ * Body : `{ "image_data_url": "data:image/jpeg;base64,..." }`
+ * Réponse 200 : `{ ok: true, png_data_url: "data:image/png;base64,..." }` ou `{ ok: false, code, message? }`
+ */
+router.post("/flyer/remove-logo-background", async (req, res) => {
+  const raw = req.body?.image_data_url;
+  if (typeof raw !== "string" || raw.length < 40) {
+    return res.status(400).json({ error: "image_data_url requis (data URL base64)." });
+  }
+  const buf = bufferFromImageDataUrl(raw);
+  if (!buf || buf.length < 32) {
+    return res.status(400).json({ error: "image_data_url invalide ou trop court." });
+  }
+  if (buf.length > 12_000_000) {
+    return res.status(413).json({ error: "Image trop volumineuse." });
+  }
+  try {
+    const r = await removeLogoBackgroundWithRemoveBg(buf);
+    if (!r.ok) {
+      return res.status(200).json({ ok: false, code: r.code, message: r.message });
+    }
+    const b64 = r.png.toString("base64");
+    return res.json({ ok: true, png_data_url: `data:image/png;base64,${b64}` });
+  } catch (err) {
+    logger.error({ err, businessId: req.business?.id }, "[dashboard] remove-logo-background");
+    return res.status(500).json({ error: "Erreur lors du détourage du logo." });
+  }
 });
 
 /** Statut d’un job de génération flyer (polling SaaS / app iOS après 202 Accepted). */
