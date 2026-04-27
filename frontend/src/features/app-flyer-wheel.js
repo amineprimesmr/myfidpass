@@ -130,16 +130,11 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
     if (Math.sin(mid) > 0) rot += Math.PI;
     ctx.rotate(rot);
 
-    ctx.fillStyle = fillCore;
-    ctx.shadowColor = "rgba(0,0,0,0.28)";
-    ctx.shadowBlur = Math.max(2, r * 0.04);
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = Math.max(0.5, r * 0.008);
-    ctx.fillText(label, 0, 0);
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-    /** Repasse nette par-dessus l’ombre (lisibilité). */
+    ctx.fillStyle = fillCore;
     ctx.fillText(label, 0, 0);
     ctx.restore();
   }
@@ -148,92 +143,19 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
   ctx.restore();
 }
 
-/**
- * Ombre + contact : deux passes pour ancrer la roue (affiche 3D).
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- */
+/** Ombre portée sous la roue (une seule couche, discrète). */
 function drawWheelGroundShadow(ctx, cx, cy, r) {
-  const gy = cy + r * 0.78;
   ctx.save();
-  // 1) Très large, très léger (pénombre)
-  ctx.globalAlpha = 0.35;
-  const g0 = ctx.createRadialGradient(cx, gy, r * 0.25, cx, gy, r * 1.45);
-  g0.addColorStop(0, "rgba(0,0,0,0.15)");
-  g0.addColorStop(0.4, "rgba(0,0,0,0.08)");
-  g0.addColorStop(0.75, "rgba(0,0,0,0.02)");
-  g0.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = g0;
-  ctx.beginPath();
-  ctx.ellipse(cx, gy, r * 1.2, r * 0.34, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // 2) Diffuse
   ctx.globalAlpha = 0.42;
-  const g1 = ctx.createRadialGradient(cx, gy, r * 0.1, cx, gy, r * 1.18);
-  g1.addColorStop(0, "rgba(0,0,0,0.32)");
-  g1.addColorStop(0.35, "rgba(0,0,0,0.12)");
-  g1.addColorStop(0.65, "rgba(0,0,0,0.04)");
-  g1.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = g1;
+  const gy = cy + r * 0.74;
+  const grd = ctx.createRadialGradient(cx, gy, r * 0.08, cx, gy, r * 1.02);
+  grd.addColorStop(0, "rgba(0,0,0,0.55)");
+  grd.addColorStop(0.55, "rgba(0,0,0,0.14)");
+  grd.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = grd;
   ctx.beginPath();
-  ctx.ellipse(cx, gy, r * 1.0, r * 0.24, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, gy, r * 0.96, r * 0.2, 0, 0, Math.PI * 2);
   ctx.fill();
-  // 3) Sous-roue (noir jamais plein : dégradé doux)
-  ctx.globalAlpha = 0.4;
-  const g2 = ctx.createRadialGradient(cx, gy, r * 0.12, cx, gy, r * 0.58);
-  g2.addColorStop(0, "rgba(0,0,0,0.38)");
-  g2.addColorStop(0.5, "rgba(0,0,0,0.12)");
-  g2.addColorStop(0.88, "rgba(0,0,0,0.02)");
-  g2.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = g2;
-  ctx.beginPath();
-  ctx.ellipse(cx, gy, r * 0.88, r * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-/**
- * Halo chaud / lumière ambiante autour de la couronne (avant la texture).
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- */
-function drawWheelBacklightHalo(ctx, cx, cy, r) {
-  ctx.save();
-  const hx = cx - r * 0.22;
-  const hy = cy - r * 0.2;
-  const h = ctx.createRadialGradient(hx, hy, r * 0.2, cx, cy, r * 1.42);
-  h.addColorStop(0, "rgba(255, 248, 220, 0.18)");
-  h.addColorStop(0.25, "rgba(255, 230, 200, 0.1)");
-  h.addColorStop(0.5, "rgba(255, 200, 170, 0.04)");
-  h.addColorStop(0.75, "rgba(140, 120, 220, 0.04)");
-  h.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = h;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 1.2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-/** Bord brillant (haut de la jante) : relief verre / chrome. */
-function drawWheelOuterRimGloss(ctx, cx, cy, r) {
-  const rOut = r * 0.88;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, rOut, -Math.PI * 0.92, -Math.PI * 0.18, false);
-  const g = ctx.createLinearGradient(cx - rOut, cy - rOut, cx + rOut * 0.2, cy - rOut * 0.3);
-  g.addColorStop(0, "rgba(255,255,255,0.04)");
-  g.addColorStop(0.3, "rgba(255,255,255,0.14)");
-  g.addColorStop(0.55, "rgba(255,255,255,0.1)");
-  g.addColorStop(0.8, "rgba(255,255,255,0.03)");
-  g.addColorStop(1, "rgba(255,255,255,0.02)");
-  ctx.strokeStyle = g;
-  ctx.lineWidth = Math.max(1.1, r * 0.016);
-  ctx.lineCap = "round";
-  ctx.stroke();
   ctx.restore();
 }
 
@@ -309,7 +231,7 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
 
     // Étape 3 : screen : reflets métal / relief de la texture
     ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.26;
+    ctx.globalAlpha = 0.18;
     drawImageCover(ctx, roueImg, lx, ly, box, box);
 
     ctx.globalAlpha = 1;
@@ -346,9 +268,8 @@ function drawWheelHubTexture(ctx, cx, cy, r, roueImg, drawImageCover) {
   ctx.globalAlpha = 0.28;
   drawImageCover(ctx, roueImg, lx, ly, box, box);
   const hubShade = ctx.createRadialGradient(cx, cy, hubR * 0.1, cx, cy, hubR);
-  hubShade.addColorStop(0, "rgba(15,23,42,0.1)");
-  hubShade.addColorStop(0.5, "rgba(15,23,42,0.16)");
-  hubShade.addColorStop(1, "rgba(6,8,20,0.3)");
+  hubShade.addColorStop(0, "rgba(15,23,42,0.08)");
+  hubShade.addColorStop(1, "rgba(15,23,42,0.22)");
   ctx.globalCompositeOperation = "source-over";
   ctx.globalAlpha = 1;
   ctx.fillStyle = hubShade;
@@ -380,7 +301,6 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   /** Mode verrouillé: dès que la texture est chargée, on l'utilise. */
   const usePng = Boolean(roueImg);
 
-  drawWheelBacklightHalo(ctx, wheelCx, wheelCy, wheelR);
   drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
 
   const labelOffsetDeg = usePng ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
@@ -392,6 +312,5 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
-  drawWheelOuterRimGloss(ctx, wheelCx, wheelCy, wheelR);
   drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
 }

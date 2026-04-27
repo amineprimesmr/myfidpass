@@ -64,31 +64,22 @@ function darkenHex(hex, amount = 0.24) {
 function fillGradientVOpaque(ctx, w, h, top, bot) {
   const baseHex = resolveFlyerBaseBgHex({ colorPrimary: top || bot, colorBgTop: top, colorBgBottom: bot });
   const coreHex = lightenHex(baseHex, 0.14);
-  const edgeHex = darkenHex(baseHex, 0.30);
-  const rg = ctx.createRadialGradient(w * 0.5, h * 0.48, Math.min(w, h) * 0.04, w * 0.5, h * 0.5, Math.max(w, h) * 0.88);
+  const edgeHex = darkenHex(baseHex, 0.3);
+  const rg = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.05, w * 0.5, h * 0.5, Math.max(w, h) * 0.84);
   rg.addColorStop(0, coreHex);
-  rg.addColorStop(0.22, baseHex);
-  rg.addColorStop(0.48, baseHex);
-  rg.addColorStop(0.82, edgeHex);
+  rg.addColorStop(0.38, baseHex);
   rg.addColorStop(1, edgeHex);
   ctx.fillStyle = rg;
   ctx.fillRect(0, 0, w, h);
-  // Foyer : transition longue, pas de pic blanc dur
-  const centerGlow = ctx.createRadialGradient(w * 0.46, h * 0.4, h * 0.06, w * 0.5, h * 0.5, h * 0.62);
-  centerGlow.addColorStop(0, "rgba(255,255,255,0.18)");
-  centerGlow.addColorStop(0.3, "rgba(255,255,255,0.1)");
-  centerGlow.addColorStop(0.55, "rgba(255,255,255,0.04)");
-  centerGlow.addColorStop(0.82, "rgba(255,255,255,0.01)");
+  const centerGlow = ctx.createRadialGradient(w * 0.5, h * 0.48, h * 0.03, w * 0.5, h * 0.48, h * 0.54);
+  centerGlow.addColorStop(0, "rgba(255,255,255,0.2)");
+  centerGlow.addColorStop(0.52, "rgba(255,255,255,0.09)");
   centerGlow.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = centerGlow;
   ctx.fillRect(0, 0, w, h);
-  // Vignette : estompage progressif sur tout le pourtour
-  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.52, Math.min(w, h) * 0.08, w * 0.5, h * 0.52, Math.max(w, h) * 0.96);
+  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.9);
   edgeShade.addColorStop(0, "rgba(0,0,0,0)");
-  edgeShade.addColorStop(0.4, "rgba(0,0,0,0.03)");
-  edgeShade.addColorStop(0.65, "rgba(0,0,0,0.08)");
-  edgeShade.addColorStop(0.85, "rgba(0,0,0,0.14)");
-  edgeShade.addColorStop(1, "rgba(0,0,0,0.2)");
+  edgeShade.addColorStop(1, "rgba(0,0,0,0.25)");
   ctx.fillStyle = edgeShade;
   ctx.fillRect(0, 0, w, h);
 }
