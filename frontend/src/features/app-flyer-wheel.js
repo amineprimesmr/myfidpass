@@ -21,7 +21,7 @@ const WHEEL_COLOR_OUTER_R_FRAC = 0.72;
  * 0,065 était trop petit : sur la texture PNG, le moyeu métallique se retrouvait teinté — il faut un moyeu large.
  * Les couleurs ne s’appliquent qu’entre `WHEEL_HUB_R_FRAC * r` et `WHEEL_COLOR_OUTER_R_FRAC * r`.
  */
-const WHEEL_HUB_R_FRAC = 0.2;
+const WHEEL_HUB_R_FRAC = 0.185;
 
 /**
  * Cercle de **clip** pour les libellés (légèrement à l’intérieur de l’anneau de couleur).
