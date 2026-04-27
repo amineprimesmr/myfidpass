@@ -11,8 +11,11 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
-const flyerWheelDataUrl = "/assets/flyer-wheels/spinflyer.png";
-const giftflyerDataUrl = "/assets/flyer-wheels/giftflyer.png";
+import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
+import flyergameDataUrl from "../assets/flyer-wheels/spinflyer.png?inline";
+/** Même stratégie que `spinflyer` : en `?url` le hash Vite n’existe souvent pas dans l’aperçu WK (embed) → chargement en échec, cadeau absent. */
+import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
+import wheelIconFallbackDataUrl from "../assets/flyer-steps/icon-wheel.png?inline";
 
 export { FLYER_EXPORT };
 
@@ -27,6 +30,9 @@ let flyerRoueCache = null;
 
 /** @type {HTMLImageElement | null} */
 let flyerGiftflyerCache = null;
+
+/** @type {HTMLImageElement | null} */
+let flyergameCenterCache = null;
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -66,6 +72,12 @@ async function getFlyerRoueImage() {
       src.startsWith("/");
     if (!looksOk) return null;
     flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
+    if (!flyerRoueCache) {
+      const fallback = String(wheelIconFallbackDataUrl || "").trim();
+      if (fallback) {
+        flyerRoueCache = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: false });
+      }
+    }
     return flyerRoueCache;
   } catch {
     return null;
@@ -97,6 +109,36 @@ async function getFlyerGiftflyerImage() {
     if (!looksOk) return null;
     flyerGiftflyerCache = await loadFlyerAssetImageWithFallback(src);
     return flyerGiftflyerCache;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Calque central `flyergame` : affiché au milieu du flyer pour garantir la présence visuelle
+ * même si la texture de roue n'est pas retenue par une autre branche de rendu.
+ */
+async function getFlyergameCenterImage() {
+  if (flyergameCenterCache) return flyergameCenterCache;
+  try {
+    const runtimeFlyergame = String(globalThis?.__FIDPASS_FLYERGAME_DATA_URL || "").trim();
+    if (runtimeFlyergame) {
+      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeFlyergame, { preferBlobFetch: true });
+      if (fromRuntime) {
+        flyergameCenterCache = fromRuntime;
+        return flyergameCenterCache;
+      }
+    }
+    const src = String(flyergameDataUrl || "").trim();
+    if (!src) return null;
+    const looksOk =
+      src.startsWith("data:image/") ||
+      src.startsWith("blob:") ||
+      /^https?:/i.test(src) ||
+      src.startsWith("/");
+    if (!looksOk) return null;
+    flyergameCenterCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
+    return flyergameCenterCache;
   } catch {
     return null;
   }
@@ -163,7 +205,7 @@ async function loadAssetViaFetchBlobCandidates(candidates) {
   for (const u of candidates) {
     if (u.startsWith("data:") || u.startsWith("blob:")) continue;
     try {
-      const res = await fetch(u, { mode: "same-origin", credentials: "same-origin", cache: "no-cache" });
+      const res = await fetch(u, { mode: "same-origin", credentials: "same-origin", cache: "force-cache" });
       if (!res.ok) continue;
       const blob = await res.blob();
       const obj = URL.createObjectURL(blob);
@@ -206,6 +248,33 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
   } catch (_) {
     /* WebKit / blob */
   }
+}
+
+/**
+ * Dessine `flyergame` au centre exact de la roue pour un rendu stable.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} wheelR
+ * @param {HTMLImageElement | null} img
+ */
+function drawFlyergameCenter(ctx, cx, cy, wheelR, img) {
+  if (!img) return;
+  const sw = img.naturalWidth || img.width;
+  const sh = img.naturalHeight || img.height;
+  if (!sw || !sh) return;
+  const targetW = wheelR * 1.82;
+  const targetH = (targetW * sh) / sw;
+  const x = cx - targetW / 2;
+  const y = cy - targetH / 2;
+  ctx.save();
+  ctx.globalAlpha = 1;
+  try {
+    ctx.drawImage(img, x, y, targetW, targetH);
+  } catch (_) {
+    /* WebKit / blob */
+  }
+  ctx.restore();
 }
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
@@ -1006,10 +1075,11 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** Mode verrouillé: toujours tenter la texture `spinflyer` (repli natif en secteurs si image indisponible). */
   const useTexturedWheel = FLYER_MANUAL_CANVAS_WHEEL_ENABLED;
 
-  const [qrImg, roueImg, giftflyerImg] = await Promise.all([
+  const [qrImg, roueImg, giftflyerImg, flyergameImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
     useTexturedWheel ? getFlyerRoueImage() : Promise.resolve(null),
     getFlyerGiftflyerImage(),
+    getFlyergameCenterImage(),
   ]);
 
   /** @type {CanvasImageSource | null} */
@@ -1068,6 +1138,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, useTexturedWheel ? roueImg : null, wheelCx, wheelCy, wheelR, drawImageCover);
   }
+  drawFlyergameCenter(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
   /**
    * Bas de page (chevauchement roue) : roue → cadeau → (accroche haut) → bandeau CTA au-dessus du cadeau.
    * L’accroche est au centre/haut, sans recouvrir l’illustration sur les maquettes par défaut.
