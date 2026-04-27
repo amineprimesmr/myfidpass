@@ -34,8 +34,6 @@ let flyerGiftflyerCache = null;
 let flyergameCenterCache = null;
 
 const FLYERGAME_PUBLIC_SRC = "/assets/flyergame.png";
-const FLYERGAME_PUBLIC_SPIN_FALLBACK = "/assets/flyer-wheels/spinflyer.png";
-const WHEEL_ICON_FALLBACK_SRC = "/assets/flyer-steps/icon-wheel.png";
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -54,14 +52,6 @@ let flyerStepIconsCache = null;
 async function getFlyerRoueImage() {
   if (flyerRoueCache) return flyerRoueCache;
   try {
-    const runtimeSpin = String(globalThis?.__FIDPASS_SPINFLYER_DATA_URL || "").trim();
-    if (runtimeSpin) {
-      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeSpin, { preferBlobFetch: true });
-      if (fromRuntime) {
-        flyerRoueCache = fromRuntime;
-        return flyerRoueCache;
-      }
-    }
     /**
      * Vite peut produire une data URL (`?inline`) ou une URL same-origin — ex. `/assets/spinflyer-….png?inline`.
      * Ne pas exclure les chemins absolus `/` (c’était la cause : `roueImg` toujours null en prod).
@@ -74,13 +64,7 @@ async function getFlyerRoueImage() {
       /^https?:/i.test(src) ||
       src.startsWith("/");
     if (!looksOk) return null;
-    flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
-    if (!flyerRoueCache) {
-      const fallback = String(WHEEL_ICON_FALLBACK_SRC || "").trim();
-      if (fallback) {
-        flyerRoueCache = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: false });
-      }
-    }
+    flyerRoueCache = await loadImage(src, false);
     return flyerRoueCache;
   } catch {
     return null;
@@ -94,14 +78,6 @@ async function getFlyerRoueImage() {
 async function getFlyerGiftflyerImage() {
   if (flyerGiftflyerCache) return flyerGiftflyerCache;
   try {
-    const runtimeGift = String(globalThis?.__FIDPASS_GIFTFLYER_DATA_URL || "").trim();
-    if (runtimeGift) {
-      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeGift);
-      if (fromRuntime) {
-        flyerGiftflyerCache = fromRuntime;
-        return flyerGiftflyerCache;
-      }
-    }
     const src = String(giftflyerDataUrl || "").trim();
     if (!src) return null;
     const looksOk =
@@ -110,7 +86,7 @@ async function getFlyerGiftflyerImage() {
       /^https?:/i.test(src) ||
       src.startsWith("/");
     if (!looksOk) return null;
-    flyerGiftflyerCache = await loadFlyerAssetImageWithFallback(src);
+    flyerGiftflyerCache = await loadImage(src, false);
     return flyerGiftflyerCache;
   } catch {
     return null;
@@ -118,119 +94,38 @@ async function getFlyerGiftflyerImage() {
 }
 
 /**
- * Calque central `flyergame` : affiché au milieu du flyer pour garantir la présence visuelle
- * même si la texture de roue n'est pas retenue par une autre branche de rendu.
+ * Image centrale flyergame (PNG transparent) : source dédiée + fallback public stable.
  */
 async function getFlyergameCenterImage() {
   if (flyergameCenterCache) return flyergameCenterCache;
   try {
     const runtimeFlyergame = String(globalThis?.__FIDPASS_FLYERGAME_DATA_URL || "").trim();
     if (runtimeFlyergame) {
-      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeFlyergame, { preferBlobFetch: true });
+      const fromRuntime = await loadImage(runtimeFlyergame, false);
       if (fromRuntime) {
         flyergameCenterCache = fromRuntime;
         return flyergameCenterCache;
       }
     }
-    const src = String(flyergameDataUrl || "").trim();
-    const candidates = [src, FLYERGAME_PUBLIC_SRC, FLYERGAME_PUBLIC_SPIN_FALLBACK]
+    const candidates = [String(flyergameDataUrl || "").trim(), FLYERGAME_PUBLIC_SRC]
       .map((v) => String(v || "").trim())
       .filter(Boolean);
-    for (const c of candidates) {
+    for (const src of candidates) {
       const looksOk =
-        c.startsWith("data:image/") ||
-        c.startsWith("blob:") ||
-        /^https?:/i.test(c) ||
-        c.startsWith("/");
+        src.startsWith("data:image/") ||
+        src.startsWith("blob:") ||
+        /^https?:/i.test(src) ||
+        src.startsWith("/");
       if (!looksOk) continue;
-      const loaded = await loadFlyerAssetImageWithFallback(c, { preferBlobFetch: true });
-      if (loaded) {
-        flyergameCenterCache = loaded;
-        return flyergameCenterCache;
-      }
+      try {
+        flyergameCenterCache = await loadImage(src, false);
+        if (flyergameCenterCache) return flyergameCenterCache;
+      } catch (_) {}
     }
-    return flyergameCenterCache;
+    return null;
   } catch {
     return null;
   }
-}
-
-/**
- * WKWebView peut échouer sur une URL d'asset Vite (`/assets/...png?inline`) selon cache/baseURL.
- * On tente d'abord la source brute, puis la version absolue, puis un fetch blob.
- * @param {string} rawSrc
- * @param {{ preferBlobFetch?: boolean }} [options]
- * @returns {Promise<HTMLImageElement | null>}
- */
-async function loadFlyerAssetImageWithFallback(rawSrc, options) {
-  const src = String(rawSrc || "").trim();
-  if (!src) return null;
-
-  /** @type {string[]} */
-  const candidates = [src];
-  if (src.startsWith("/")) {
-    try {
-      const abs = new URL(src, window.location.origin).toString();
-      if (!candidates.includes(abs)) candidates.push(abs);
-    } catch (_) {}
-  }
-  if (!/^https?:/i.test(src) && !src.startsWith("data:") && !src.startsWith("blob:")) {
-    try {
-      const abs = new URL(src, window.location.href).toString();
-      if (!candidates.includes(abs)) candidates.push(abs);
-    } catch (_) {}
-  }
-
-  if (options?.preferBlobFetch) {
-    const viaBlob = await loadAssetViaFetchBlobCandidates(candidates);
-    if (viaBlob) return viaBlob;
-  }
-
-  for (const u of candidates) {
-    const isBlob = u.startsWith("blob:");
-    const isData = u.startsWith("data:");
-    const isHttp = /^https?:/i.test(u);
-    try {
-      // WKWebView: `crossOrigin` sur `data:` peut casser le decode image silencieusement.
-      return await loadImage(u, isHttp && !isBlob && !isData);
-    } catch (_) {
-      if (!isBlob && !isData) {
-        try {
-          return await loadImage(u, false);
-        } catch (_e) {}
-      }
-    }
-  }
-
-  const viaBlob = await loadAssetViaFetchBlobCandidates(candidates);
-  if (viaBlob) return viaBlob;
-
-  return null;
-}
-
-/**
- * @param {string[]} candidates
- * @returns {Promise<HTMLImageElement | null>}
- */
-async function loadAssetViaFetchBlobCandidates(candidates) {
-  for (const u of candidates) {
-    if (u.startsWith("data:") || u.startsWith("blob:")) continue;
-    try {
-      const res = await fetch(u, { mode: "same-origin", credentials: "same-origin", cache: "force-cache" });
-      if (!res.ok) continue;
-      const blob = await res.blob();
-      const obj = URL.createObjectURL(blob);
-      try {
-        const img = await loadImage(obj, false);
-        return img;
-      } finally {
-        try {
-          URL.revokeObjectURL(obj);
-        } catch (_) {}
-      }
-    } catch (_) {}
-  }
-  return null;
 }
 
 /**
@@ -246,12 +141,12 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
   const sw = img.naturalWidth || img.width;
   const sh = img.naturalHeight || img.height;
   if (!sw || !sh) return;
-  const giftW = w * 0.4;
+  const giftW = w * 0.5;
   const giftH = (giftW * sh) / sw;
   const lead = Math.max(8 * scale, w * 0.028);
   const bottomPad = Math.max(6 * scale, h * 0.028);
-  /** Un peu plus haut pour dégager le cadeau du bas de page tout en gardant le chevauchement roue. */
-  const lift = h * 0.24;
+  /** Plus haut et plus visible comme demandé par l’utilisateur. */
+  const lift = h * 0.27;
   const x = lead;
   const y = h - bottomPad - lift - giftH;
   try {
@@ -262,7 +157,8 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
 }
 
 /**
- * Dessine `flyergame` au centre exact de la roue pour un rendu stable.
+ * Calque central `flyergame` (PNG transparent), limité à la roue.
+ * Les couleurs/labels des parts sont dessinés ensuite au-dessus.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
  * @param {number} cy
@@ -274,17 +170,19 @@ function drawFlyergameCenter(ctx, cx, cy, wheelR, img) {
   const sw = img.naturalWidth || img.width;
   const sh = img.naturalHeight || img.height;
   if (!sw || !sh) return;
-  const targetW = wheelR * 1.82;
+  const targetW = wheelR * 1.78;
   const targetH = (targetW * sh) / sw;
   const x = cx - targetW / 2;
   const y = cy - targetH / 2;
   ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, wheelR * 0.98, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.globalCompositeOperation = "source-over";
   ctx.globalAlpha = 1;
   try {
-    ctx.drawImage(img, x, y, targetW, targetH);
-  } catch (_) {
-    /* WebKit / blob */
-  }
+    drawImageContain(ctx, img, x, y, targetW, targetH);
+  } catch (_) {}
   ctx.restore();
 }
 
@@ -362,100 +260,6 @@ function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
   ctx.beginPath();
   ctx.arc(cx, cy, rad, 0, Math.PI * 2);
   ctx.fill();
-  ctx.restore();
-}
-
-/**
- * Finitions locales sur la roue (profondeur + reflets) sans casser la lisibilité.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- */
-function drawPremiumWheelFinishing(ctx, cx, cy, r) {
-  ctx.save();
-  // Ombre de contact globale pour asseoir la roue dans la scène.
-  const contact = ctx.createRadialGradient(cx, cy + r * 0.78, r * 0.16, cx, cy + r * 0.78, r * 1.04);
-  contact.addColorStop(0, "rgba(0,0,0,0.28)");
-  contact.addColorStop(0.55, "rgba(0,0,0,0.1)");
-  contact.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = contact;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + r * 0.78, r * 0.92, r * 0.22, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Rim light sur le quart haut-gauche.
-  const rim = ctx.createRadialGradient(cx - r * 0.28, cy - r * 0.32, r * 0.08, cx, cy, r * 1.05);
-  rim.addColorStop(0, "rgba(255,255,255,0.24)");
-  rim.addColorStop(0.45, "rgba(255,255,255,0.08)");
-  rim.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = rim;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 1.04, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-/**
- * Grain très fin pour éviter l’effet "plat numérique" et le banding.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} w
- * @param {number} h
- */
-function drawSubtleGrainOverlay(ctx, w, h) {
-  const spacing = Math.max(2, Math.round(Math.min(w, h) / 900));
-  ctx.save();
-  for (let y = 0; y < h; y += spacing) {
-    for (let x = (y / spacing) % 2 === 0 ? 0 : spacing; x < w; x += spacing * 2) {
-      const a = ((x * 13 + y * 7) % 100) / 100;
-      ctx.fillStyle = a > 0.5 ? "rgba(255,255,255,0.015)" : "rgba(0,0,0,0.018)";
-      ctx.fillRect(x, y, 1, 1);
-    }
-  }
-  ctx.restore();
-}
-
-/**
- * Finitions globales (vignette, souffle lumineux, micro-particules) tout en gardant le QR lisible.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} w
- * @param {number} h
- * @param {number} wheelCx
- * @param {number} wheelCy
- * @param {number} wheelR
- * @param {number} qx
- * @param {number} qy
- * @param {number} qSize
- */
-function drawPremiumGlobalFinishing(ctx, w, h, wheelCx, wheelCy, wheelR, qx, qy, qSize) {
-  ctx.save();
-  const centerBoost = ctx.createRadialGradient(w * 0.5, h * 0.48, h * 0.08, w * 0.5, h * 0.48, h * 0.72);
-  centerBoost.addColorStop(0, "rgba(255,255,255,0.055)");
-  centerBoost.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = centerBoost;
-  ctx.fillRect(0, 0, w, h);
-
-  const edge = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.88);
-  edge.addColorStop(0, "rgba(0,0,0,0)");
-  edge.addColorStop(1, "rgba(0,0,0,0.15)");
-  ctx.fillStyle = edge;
-  ctx.fillRect(0, 0, w, h);
-
-  // Micro-particules autour de la roue, pas sur le QR.
-  for (let i = 0; i < 28; i++) {
-    const t = (i / 28) * Math.PI * 2;
-    const rr = wheelR * (0.88 + (i % 5) * 0.07);
-    const px = wheelCx + Math.cos(t) * rr;
-    const py = wheelCy + Math.sin(t) * rr;
-    if (px > qx - 20 && px < qx + qSize + 20 && py > qy - 20 && py < qy + qSize + 20) continue;
-    const pr = i % 7 === 0 ? 2 : 1.2;
-    ctx.fillStyle = i % 3 === 0 ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.12)";
-    ctx.beginPath();
-    ctx.arc(px, py, pr, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  drawSubtleGrainOverlay(ctx, w, h);
   ctx.restore();
 }
 
@@ -1177,12 +981,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrInner = Math.max(1, qSize - 2 * qrPad);
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
-  /** Mode verrouillé: toujours tenter la texture `spinflyer` (repli natif en secteurs si image indisponible). */
-  const useTexturedWheel = FLYER_MANUAL_CANVAS_WHEEL_ENABLED;
 
   const [qrImg, roueImg, giftflyerImg, flyergameImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
-    useTexturedWheel ? getFlyerRoueImage() : Promise.resolve(null),
+    FLYER_MANUAL_CANVAS_WHEEL_ENABLED && s.wheelRenderMode === "png"
+      ? getFlyerRoueImage()
+      : Promise.resolve(null),
     getFlyerGiftflyerImage(),
     getFlyergameCenterImage(),
   ]);
@@ -1240,11 +1044,10 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
-  if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    drawFlyerWheel(ctx, s, useTexturedWheel ? roueImg : null, wheelCx, wheelCy, wheelR, drawImageCover);
-  }
   drawFlyergameCenter(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
-  drawPremiumWheelFinishing(ctx, wheelCx, wheelCy, wheelR);
+  if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
+    drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover);
+  }
   /**
    * Bas de page (chevauchement roue) : roue → cadeau → (accroche haut) → bandeau CTA au-dessus du cadeau.
    * L’accroche est au centre/haut, sans recouvrir l’illustration sur les maquettes par défaut.
@@ -1279,7 +1082,6 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   } else {
     drawFooterBar(ctx, w, h, s, 0);
   }
-  drawPremiumGlobalFinishing(ctx, w, h, wheelCx, wheelCy, wheelR, qx, qy, qSize);
 
   if (options && typeof options.shouldBlit === "function" && !options.shouldBlit()) {
     return;
