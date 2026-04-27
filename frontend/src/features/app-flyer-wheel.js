@@ -17,11 +17,9 @@ const SEG_OVERLAP_RAD = 0.005;
 const WHEEL_COLOR_OUTER_R_FRAC = 0.86;
 
 /**
- * Rayon intérieur de la couronne colorée : au-delà, **aucune** teinte (moyeu / texture PNG au centre).
- * Trop bas : le multiply teinte le moyeu métallique ; trop haut : couronne colorée étroite.
- * Les couleurs ne s’appliquent qu’entre `WHEEL_HUB_R_FRAC * r` et `WHEEL_COLOR_OUTER_R_FRAC * r`.
+ * Rayon intérieur des parts (0 = secteurs pleins jusqu’au centre, **pas** de « trou » sans teinte).
  */
-const WHEEL_HUB_R_FRAC = 0.098;
+const WHEEL_HUB_R_FRAC = 0;
 
 /**
  * Cercle de **clip** pour les libellés — suit un peu l’anneau élargi pour ne pas rogner les textes.
@@ -77,6 +75,18 @@ function pathAnnulusSector(ctx, cx, cy, rInner, rOuter, t0, t1) {
   ctx.lineTo(cx + Math.cos(t1) * rInner, cy + Math.sin(t1) * rInner);
   ctx.arc(cx, cy, rInner, t1, t0, true);
   ctx.closePath();
+}
+
+/** Secteur coloré : part pleine (centre → bord) si `rInner` ≈ 0, sinon couronne. */
+function pathWheelSector(ctx, cx, cy, rInner, rOuter, t0, t1) {
+  if (rInner <= 0.5) {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, rOuter, t0, t1, false);
+    ctx.closePath();
+  } else {
+    pathAnnulusSector(ctx, cx, cy, rInner, rOuter, t0, t1);
+  }
 }
 
 /**
@@ -172,14 +182,12 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
   if (n < 1) return;
   const rOut = r * WHEEL_COLOR_OUTER_R_FRAC;
   const rIn = r * WHEEL_HUB_R_FRAC;
-  /** Secteurs en couronne (pas de couleur au centre ; aucun moyeu blanc). */
   for (let i = 0; i < n; i++) {
     const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
-    pathAnnulusSector(ctx, cx, cy, rIn, rOut, t0, t1);
+    pathWheelSector(ctx, cx, cy, rIn, rOut, t0, t1);
     ctx.fillStyle = colors[i];
     ctx.fill();
   }
-  // Centre volontairement laissé transparent pour éviter le rond blanc.
 }
 
 /**
@@ -214,14 +222,14 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
   for (let i = 0; i < n; i++) {
     const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
     ctx.save();
-    pathAnnulusSector(ctx, cx, cy, rIn, rOut, t0, t1);
+    pathWheelSector(ctx, cx, cy, rIn, rOut, t0, t1);
     ctx.clip();
 
     // Étape 1 : fond plein couleur commerce
     ctx.globalCompositeOperation = "source-over";
     ctx.globalAlpha = 1;
     ctx.fillStyle = colors[i];
-    pathAnnulusSector(ctx, cx, cy, rIn, rOut, t0, t1);
+    pathWheelSector(ctx, cx, cy, rIn, rOut, t0, t1);
     ctx.fill();
 
     // Étape 2 : texture PNG par-dessus en multiply — zones sombres = ombres, zones claires = reflets colorés
@@ -238,44 +246,6 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
     ctx.globalCompositeOperation = "source-over";
     ctx.restore();
   }
-  /** Centre laissé transparent (pas de rond blanc). */
-  ctx.restore();
-}
-
-/**
- * Restaure une texture au moyeu pour éviter tout disque blanc.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- * @param {CanvasImageSource} roueImg
- * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
- */
-function drawWheelHubTexture(ctx, cx, cy, r, roueImg, drawImageCover) {
-  const box = r * 2;
-  const lx = cx - r;
-  const ly = cy - r;
-  /** Même rayon que l’arête intérieure des parts (rIn) + léger chevauchement : évite l’anneau vide / fond qui transparaît. */
-  const hubR = Math.max(2, r * WHEEL_HUB_R_FRAC * 1.012);
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, hubR, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.globalCompositeOperation = "source-over";
-  ctx.globalAlpha = 0.96;
-  drawImageCover(ctx, roueImg, lx, ly, box, box);
-  ctx.globalCompositeOperation = "multiply";
-  ctx.globalAlpha = 0.28;
-  drawImageCover(ctx, roueImg, lx, ly, box, box);
-  const hubShade = ctx.createRadialGradient(cx, cy, hubR * 0.1, cx, cy, hubR);
-  hubShade.addColorStop(0, "rgba(15,23,42,0.08)");
-  hubShade.addColorStop(1, "rgba(15,23,42,0.22)");
-  ctx.globalCompositeOperation = "source-over";
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = hubShade;
-  ctx.beginPath();
-  ctx.arc(cx, cy, hubR, 0, Math.PI * 2);
-  ctx.fill();
   ctx.restore();
 }
 
@@ -308,7 +278,6 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   if (usePng) {
     const off = labelOffsetDeg;
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
-    drawWheelHubTexture(ctx, wheelCx, wheelCy, wheelR, roueImg, drawImageCover);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }
