@@ -244,49 +244,6 @@ async function loadQrAsImage(targetUrl, sizePx) {
 }
 
 /**
- * Fond photo / IA : léger anneau sombre **sur le bord** de la zone roue (pas de halo clair au centre).
- * L’ancien dégradé blanc à r×0,06–0,35 sous les parts + anti-alias = « disque / moyeu » fantôme au milieu.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- */
-function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
-  ctx.save();
-  const rad = r * 1.14;
-  const g = ctx.createRadialGradient(cx, cy, r * 0.72, cx, cy, rad);
-  g.addColorStop(0, "rgba(15,23,42,0)");
-  g.addColorStop(0.5, "rgba(15,23,42,0.06)");
-  g.addColorStop(1, "rgba(15,23,42,0.1)");
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(cx, cy, rad, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-/**
- * Zone roue (tous les fonds) : halo pour séparer la couronne du fond, même sans photo chargée.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- */
-function drawFlyerWheelZoneVignette(ctx, cx, cy, r) {
-  ctx.save();
-  const ri = r * 1.22;
-  const g = ctx.createRadialGradient(cx, cy, r * 0.88, cx, cy, ri);
-  g.addColorStop(0, "rgba(0,0,0,0)");
-  g.addColorStop(0.6, "rgba(0,0,0,0.03)");
-  g.addColorStop(1, "rgba(0,0,0,0.08)");
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(cx, cy, ri, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-/**
  * Remplit le rectangle comme object-fit: cover (échelle uniforme, centré).
  * @param {CanvasRenderingContext2D} ctx
  * @param {CanvasImageSource} img
@@ -1155,12 +1112,6 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const hasCommerceLogo = logoImg != null;
   if (hasCommerceLogo) {
     drawFlyerCommerceLogo(ctx, logoImg, w, h, s);
-  }
-  if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    drawFlyerWheelZoneVignette(ctx, wheelCx, wheelCy, wheelR);
-  }
-  if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
   drawFlyergameCenter(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {

@@ -153,22 +153,6 @@ function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColor
   ctx.restore();
 }
 
-/** Ombre portée sous la roue (une seule couche, discrète). */
-function drawWheelGroundShadow(ctx, cx, cy, r) {
-  ctx.save();
-  ctx.globalAlpha = 0.42;
-  const gy = cy + r * 0.74;
-  const grd = ctx.createRadialGradient(cx, gy, r * 0.08, cx, gy, r * 1.02);
-  grd.addColorStop(0, "rgba(0,0,0,0.55)");
-  grd.addColorStop(0.55, "rgba(0,0,0,0.14)");
-  grd.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = grd;
-  ctx.beginPath();
-  ctx.ellipse(cx, gy, r * 0.96, r * 0.2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
 /**
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
@@ -270,8 +254,6 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
   /** Mode verrouillé: dès que la texture est chargée, on l'utilise. */
   const usePng = Boolean(roueImg);
-
-  drawWheelGroundShadow(ctx, wheelCx, wheelCy, wheelR);
 
   const labelOffsetDeg = usePng ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
 
