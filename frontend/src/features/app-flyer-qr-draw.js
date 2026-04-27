@@ -34,8 +34,6 @@ let flyerGiftflyerCache = null;
 let flyergameCenterCache = null;
 
 const FLYERGAME_PUBLIC_SRC = "/assets/flyergame.png";
-const WHEEL_ICON_FALLBACK_SRC = "/assets/flyer-steps/icon-wheel.png";
-let didWarnMissingWheelTexture = false;
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -54,14 +52,6 @@ let flyerStepIconsCache = null;
 async function getFlyerRoueImage() {
   if (flyerRoueCache) return flyerRoueCache;
   try {
-    const runtimeSpin = String(globalThis?.__FIDPASS_SPINFLYER_DATA_URL || "").trim();
-    if (runtimeSpin) {
-      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeSpin, { preferBlobFetch: true });
-      if (fromRuntime) {
-        flyerRoueCache = fromRuntime;
-        return flyerRoueCache;
-      }
-    }
     /**
      * Vite peut produire une data URL (`?inline`) ou une URL same-origin — ex. `/assets/spinflyer-….png?inline`.
      * Ne pas exclure les chemins absolus `/` (c’était la cause : `roueImg` toujours null en prod).
@@ -74,17 +64,7 @@ async function getFlyerRoueImage() {
       /^https?:/i.test(src) ||
       src.startsWith("/");
     if (!looksOk) return null;
-    flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
-    if (!flyerRoueCache) {
-      const wheelFallbackCandidates = [String(WHEEL_ICON_FALLBACK_SRC || "").trim()].filter(Boolean);
-      for (const fallback of wheelFallbackCandidates) {
-        const loaded = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: true });
-        if (loaded) {
-          flyerRoueCache = loaded;
-          break;
-        }
-      }
-    }
+    flyerRoueCache = await loadImage(src, false);
     return flyerRoueCache;
   } catch {
     return null;
@@ -98,14 +78,6 @@ async function getFlyerRoueImage() {
 async function getFlyerGiftflyerImage() {
   if (flyerGiftflyerCache) return flyerGiftflyerCache;
   try {
-    const runtimeGift = String(globalThis?.__FIDPASS_GIFTFLYER_DATA_URL || "").trim();
-    if (runtimeGift) {
-      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeGift);
-      if (fromRuntime) {
-        flyerGiftflyerCache = fromRuntime;
-        return flyerGiftflyerCache;
-      }
-    }
     const src = String(giftflyerDataUrl || "").trim();
     if (!src) return null;
     const looksOk =
@@ -114,7 +86,7 @@ async function getFlyerGiftflyerImage() {
       /^https?:/i.test(src) ||
       src.startsWith("/");
     if (!looksOk) return null;
-    flyerGiftflyerCache = await loadFlyerAssetImageWithFallback(src);
+    flyerGiftflyerCache = await loadImage(src, false);
     return flyerGiftflyerCache;
   } catch {
     return null;
@@ -122,122 +94,38 @@ async function getFlyerGiftflyerImage() {
 }
 
 /**
- * Calque central `flyergame` : affiché au milieu du flyer pour garantir la présence visuelle
- * même si la texture de roue n'est pas retenue par une autre branche de rendu.
+ * Image centrale flyergame (PNG transparent) : source dédiée + fallback public stable.
  */
 async function getFlyergameCenterImage() {
   if (flyergameCenterCache) return flyergameCenterCache;
   try {
     const runtimeFlyergame = String(globalThis?.__FIDPASS_FLYERGAME_DATA_URL || "").trim();
-    // N'accepter la variable runtime que si elle pointe explicitement vers flyergame
-    // (évite d'afficher par erreur la texture spinflyer opaque en fallback).
-    const runtimeLooksLikeFlyergame = runtimeFlyergame.includes("flyergame");
-    if (runtimeFlyergame && runtimeLooksLikeFlyergame) {
-      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeFlyergame, { preferBlobFetch: true });
+    if (runtimeFlyergame) {
+      const fromRuntime = await loadImage(runtimeFlyergame, false);
       if (fromRuntime) {
         flyergameCenterCache = fromRuntime;
         return flyergameCenterCache;
       }
     }
-    const src = String(flyergameDataUrl || "").trim();
-    const candidates = [src, FLYERGAME_PUBLIC_SRC]
+    const candidates = [String(flyergameDataUrl || "").trim(), FLYERGAME_PUBLIC_SRC]
       .map((v) => String(v || "").trim())
       .filter(Boolean);
-    for (const c of candidates) {
+    for (const src of candidates) {
       const looksOk =
-        c.startsWith("data:image/") ||
-        c.startsWith("blob:") ||
-        /^https?:/i.test(c) ||
-        c.startsWith("/");
+        src.startsWith("data:image/") ||
+        src.startsWith("blob:") ||
+        /^https?:/i.test(src) ||
+        src.startsWith("/");
       if (!looksOk) continue;
-      const loaded = await loadFlyerAssetImageWithFallback(c, { preferBlobFetch: true });
-      if (loaded) {
-        flyergameCenterCache = loaded;
-        return flyergameCenterCache;
-      }
+      try {
+        flyergameCenterCache = await loadImage(src, false);
+        if (flyergameCenterCache) return flyergameCenterCache;
+      } catch (_) {}
     }
-    return flyergameCenterCache;
+    return null;
   } catch {
     return null;
   }
-}
-
-/**
- * WKWebView peut échouer sur une URL d'asset Vite (`/assets/...png?inline`) selon cache/baseURL.
- * On tente d'abord la source brute, puis la version absolue, puis un fetch blob.
- * @param {string} rawSrc
- * @param {{ preferBlobFetch?: boolean }} [options]
- * @returns {Promise<HTMLImageElement | null>}
- */
-async function loadFlyerAssetImageWithFallback(rawSrc, options) {
-  const src = String(rawSrc || "").trim();
-  if (!src) return null;
-
-  /** @type {string[]} */
-  const candidates = [src];
-  if (src.startsWith("/")) {
-    try {
-      const abs = new URL(src, window.location.origin).toString();
-      if (!candidates.includes(abs)) candidates.push(abs);
-    } catch (_) {}
-  }
-  if (!/^https?:/i.test(src) && !src.startsWith("data:") && !src.startsWith("blob:")) {
-    try {
-      const abs = new URL(src, window.location.href).toString();
-      if (!candidates.includes(abs)) candidates.push(abs);
-    } catch (_) {}
-  }
-
-  if (options?.preferBlobFetch) {
-    const viaBlob = await loadAssetViaFetchBlobCandidates(candidates);
-    if (viaBlob) return viaBlob;
-  }
-
-  for (const u of candidates) {
-    const isBlob = u.startsWith("blob:");
-    const isData = u.startsWith("data:");
-    const isHttp = /^https?:/i.test(u);
-    try {
-      // WKWebView: `crossOrigin` sur `data:` peut casser le decode image silencieusement.
-      return await loadImage(u, isHttp && !isBlob && !isData);
-    } catch (_) {
-      if (!isBlob && !isData) {
-        try {
-          return await loadImage(u, false);
-        } catch (_e) {}
-      }
-    }
-  }
-
-  const viaBlob = await loadAssetViaFetchBlobCandidates(candidates);
-  if (viaBlob) return viaBlob;
-
-  return null;
-}
-
-/**
- * @param {string[]} candidates
- * @returns {Promise<HTMLImageElement | null>}
- */
-async function loadAssetViaFetchBlobCandidates(candidates) {
-  for (const u of candidates) {
-    if (u.startsWith("data:") || u.startsWith("blob:")) continue;
-    try {
-      const res = await fetch(u, { mode: "same-origin", credentials: "same-origin", cache: "force-cache" });
-      if (!res.ok) continue;
-      const blob = await res.blob();
-      const obj = URL.createObjectURL(blob);
-      try {
-        const img = await loadImage(obj, false);
-        return img;
-      } finally {
-        try {
-          URL.revokeObjectURL(obj);
-        } catch (_) {}
-      }
-    } catch (_) {}
-  }
-  return null;
 }
 
 /**
@@ -253,12 +141,12 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
   const sw = img.naturalWidth || img.width;
   const sh = img.naturalHeight || img.height;
   if (!sw || !sh) return;
-  const giftW = w * 0.47;
+  const giftW = w * 0.5;
   const giftH = (giftW * sh) / sw;
   const lead = Math.max(8 * scale, w * 0.028);
   const bottomPad = Math.max(6 * scale, h * 0.028);
-  /** Un peu plus haut pour dégager le cadeau du bas de page tout en gardant le chevauchement roue. */
-  const lift = h * 0.215;
+  /** Plus haut et plus visible comme demandé par l’utilisateur. */
+  const lift = h * 0.27;
   const x = lead;
   const y = h - bottomPad - lift - giftH;
   try {
@@ -269,7 +157,8 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
 }
 
 /**
- * Dessine `flyergame` au centre exact de la roue pour un rendu stable.
+ * Calque central `flyergame` (PNG transparent), limité à la roue.
+ * Les couleurs/labels des parts sont dessinés ensuite au-dessus.
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} cx
  * @param {number} cy
@@ -281,55 +170,18 @@ function drawFlyergameCenter(ctx, cx, cy, wheelR, img) {
   const sw = img.naturalWidth || img.width;
   const sh = img.naturalHeight || img.height;
   if (!sw || !sh) return;
-  const targetW = wheelR * 1.82;
-  const targetH = (targetW * sh) / sw;
+  const fitBox = wheelR * 1.96;
+  const targetW = fitBox;
+  const targetH = fitBox;
   const x = cx - targetW / 2;
   const y = cy - targetH / 2;
   ctx.save();
+  ctx.globalCompositeOperation = "source-over";
   ctx.globalAlpha = 1;
   try {
-    ctx.drawImage(img, x, y, targetW, targetH);
-  } catch (_) {
-    /* WebKit / blob */
-  }
+    drawImageWithFlyergameFit(ctx, img, x, y, targetW, targetH, "contain");
+  } catch (_) {}
   ctx.restore();
-}
-
-/**
- * Superpose les détails de `flyergame` sur la roue déjà teintée.
- * Conserve les couleurs des parts tout en rendant l'illustration visible.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} wheelR
- * @param {HTMLImageElement | null} img
- */
-function drawFlyergameDetailsOverlay(ctx, cx, cy, wheelR, img) {
-  if (!img) return;
-  const sw = img.naturalWidth || img.width;
-  const sh = img.naturalHeight || img.height;
-  if (!sw || !sh) return;
-  const targetW = wheelR * 1.78;
-  const targetH = (targetW * sh) / sw;
-  const x = cx - targetW / 2;
-  const y = cy - targetH / 2;
-  ctx.save();
-  // Même zone utile que la roue colorée (évite de polluer le fond autour).
-  ctx.beginPath();
-  ctx.arc(cx, cy, wheelR * 0.72, 0, Math.PI * 2);
-  ctx.clip();
-  try {
-    // Relief/ombres: pas de passe "screen" ici pour eviter tout halo clair parasite.
-    ctx.globalCompositeOperation = "multiply";
-    ctx.globalAlpha = 0.42;
-    drawImageContain(ctx, img, x, y, targetW, targetH);
-  } catch (_) {
-    /* no-op */
-  } finally {
-    ctx.globalCompositeOperation = "source-over";
-    ctx.globalAlpha = 1;
-    ctx.restore();
-  }
 }
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
@@ -350,6 +202,9 @@ function loadImage(url, cors = true) {
     const im = new Image();
     if (cors) im.crossOrigin = "anonymous";
     im.onload = () => {
+      try {
+        im.__fidelitySourceTag = String(url || "");
+      } catch (_) {}
       const done = () => resolve(im);
       if (typeof im.decode === "function") im.decode().then(done).catch(done);
       else done();
@@ -406,90 +261,6 @@ function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
   ctx.beginPath();
   ctx.arc(cx, cy, rad, 0, Math.PI * 2);
   ctx.fill();
-  ctx.restore();
-}
-
-/**
- * Finitions locales sur la roue (profondeur + reflets) sans casser la lisibilité.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- */
-function drawPremiumWheelFinishing(ctx, cx, cy, r) {
-  ctx.save();
-  // Rim light sur le quart haut-gauche.
-  const rim = ctx.createRadialGradient(cx - r * 0.28, cy - r * 0.32, r * 0.08, cx, cy, r * 1.05);
-  rim.addColorStop(0, "rgba(255,255,255,0.24)");
-  rim.addColorStop(0.45, "rgba(255,255,255,0.08)");
-  rim.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = rim;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 1.04, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-/**
- * Grain très fin pour éviter l’effet "plat numérique" et le banding.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} w
- * @param {number} h
- */
-function drawSubtleGrainOverlay(ctx, w, h) {
-  const spacing = Math.max(2, Math.round(Math.min(w, h) / 900));
-  ctx.save();
-  for (let y = 0; y < h; y += spacing) {
-    for (let x = (y / spacing) % 2 === 0 ? 0 : spacing; x < w; x += spacing * 2) {
-      const a = ((x * 13 + y * 7) % 100) / 100;
-      ctx.fillStyle = a > 0.5 ? "rgba(255,255,255,0.015)" : "rgba(0,0,0,0.018)";
-      ctx.fillRect(x, y, 1, 1);
-    }
-  }
-  ctx.restore();
-}
-
-/**
- * Finitions globales (vignette, souffle lumineux, micro-particules) tout en gardant le QR lisible.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} w
- * @param {number} h
- * @param {number} wheelCx
- * @param {number} wheelCy
- * @param {number} wheelR
- * @param {number} qx
- * @param {number} qy
- * @param {number} qSize
- */
-function drawPremiumGlobalFinishing(ctx, w, h, wheelCx, wheelCy, wheelR, qx, qy, qSize) {
-  ctx.save();
-  const centerBoost = ctx.createRadialGradient(w * 0.5, h * 0.48, h * 0.08, w * 0.5, h * 0.48, h * 0.72);
-  centerBoost.addColorStop(0, "rgba(255,255,255,0.055)");
-  centerBoost.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = centerBoost;
-  ctx.fillRect(0, 0, w, h);
-
-  const edge = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.88);
-  edge.addColorStop(0, "rgba(0,0,0,0)");
-  edge.addColorStop(1, "rgba(0,0,0,0.15)");
-  ctx.fillStyle = edge;
-  ctx.fillRect(0, 0, w, h);
-
-  // Micro-particules autour de la roue, pas sur le QR.
-  for (let i = 0; i < 28; i++) {
-    const t = (i / 28) * Math.PI * 2;
-    const rr = wheelR * (0.88 + (i % 5) * 0.07);
-    const px = wheelCx + Math.cos(t) * rr;
-    const py = wheelCy + Math.sin(t) * rr;
-    if (px > qx - 20 && px < qx + qSize + 20 && py > qy - 20 && py < qy + qSize + 20) continue;
-    const pr = i % 7 === 0 ? 2 : 1.2;
-    ctx.fillStyle = i % 3 === 0 ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.12)";
-    ctx.beginPath();
-    ctx.arc(px, py, pr, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  drawSubtleGrainOverlay(ctx, w, h);
   ctx.restore();
 }
 
@@ -597,6 +368,37 @@ function drawImageContain(ctx, img, dx, dy, dstW, dstH) {
     ctx.imageSmoothingEnabled = prevSmooth;
     if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = prevQ;
   }
+}
+
+/**
+ * Détection centrale de la source flyergame.
+ * @param {CanvasImageSource | string | null | undefined} src
+ */
+function isFlyergameTextureSource(src) {
+  if (!src) return false;
+  if (typeof src === "string") return src.toLowerCase().includes("flyergame");
+  if (typeof src !== "object") return false;
+  const o = /** @type {{ currentSrc?: string; src?: string; __fidelitySourceTag?: string }} */ (src);
+  const candidates = [o.__fidelitySourceTag, o.currentSrc, o.src].filter(Boolean);
+  return candidates.some((v) => String(v).toLowerCase().includes("flyergame"));
+}
+
+/**
+ * Fit explicite: toute source flyergame passe en contain.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {CanvasImageSource} img
+ * @param {number} dx
+ * @param {number} dy
+ * @param {number} dstW
+ * @param {number} dstH
+ * @param {"cover" | "contain"} [defaultFit]
+ */
+function drawImageWithFlyergameFit(ctx, img, dx, dy, dstW, dstH, defaultFit = "cover") {
+  if (defaultFit === "contain" || isFlyergameTextureSource(img)) {
+    drawImageContain(ctx, img, dx, dy, dstW, dstH);
+    return;
+  }
+  drawImageCover(ctx, img, dx, dy, dstW, dstH);
 }
 
 /** @param {CanvasImageSource} img */
@@ -1211,12 +1013,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrInner = Math.max(1, qSize - 2 * qrPad);
   /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
   const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
-  /** Mode verrouillé: toujours tenter la texture `spinflyer` (repli natif en secteurs si image indisponible). */
-  const useTexturedWheel = FLYER_MANUAL_CANVAS_WHEEL_ENABLED;
 
   const [qrImg, roueImg, giftflyerImg, flyergameImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
-    useTexturedWheel ? getFlyerRoueImage() : Promise.resolve(null),
+    FLYER_MANUAL_CANVAS_WHEEL_ENABLED && s.wheelRenderMode === "png"
+      ? getFlyerRoueImage()
+      : Promise.resolve(null),
     getFlyerGiftflyerImage(),
     getFlyergameCenterImage(),
   ]);
@@ -1274,23 +1076,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
-  // Pipeline stable:
-  // 1) roue teintée + labels (mécanique standard),
-  // 2) détails flyergame superposés pour garantir sa présence visuelle.
-  const preferredWheelTexture = roueImg || null;
-  if (!preferredWheelTexture && !didWarnMissingWheelTexture) {
-    didWarnMissingWheelTexture = true;
-    try {
-      console.warn("[flyer-wheel] texture indisponible (spinflyer), fallback segments seuls");
-    } catch (_) {}
-  }
+  drawFlyergameCenter(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    drawFlyerWheel(ctx, s, useTexturedWheel ? preferredWheelTexture : null, wheelCx, wheelCy, wheelR, drawImageCover);
+    const drawWheelTextureFit = (drawCtx, img, dx, dy, dw, dh) =>
+      drawImageWithFlyergameFit(drawCtx, img, dx, dy, dw, dh, "cover");
+    drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawWheelTextureFit);
   }
-  if (flyergameImg) {
-    drawFlyergameDetailsOverlay(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
-  }
-  drawPremiumWheelFinishing(ctx, wheelCx, wheelCy, wheelR);
   /**
    * Bas de page (chevauchement roue) : roue → cadeau → (accroche haut) → bandeau CTA au-dessus du cadeau.
    * L’accroche est au centre/haut, sans recouvrir l’illustration sur les maquettes par défaut.
@@ -1325,7 +1116,6 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   } else {
     drawFooterBar(ctx, w, h, s, 0);
   }
-  drawPremiumGlobalFinishing(ctx, w, h, wheelCx, wheelCy, wheelR, qx, qy, qSize);
 
   if (options && typeof options.shouldBlit === "function" && !options.shouldBlit()) {
     return;
