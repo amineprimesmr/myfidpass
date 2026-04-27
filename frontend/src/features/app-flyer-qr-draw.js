@@ -1293,7 +1293,9 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     } catch (_) {}
   }
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    drawFlyerWheel(ctx, s, useTexturedWheel ? preferredWheelTexture : null, wheelCx, wheelCy, wheelR, drawImageCover);
+    const useContainForWheelTexture = preferredWheelTexture != null && preferredWheelTexture === flyergameImg;
+    const wheelTextureDraw = useContainForWheelTexture ? drawImageContain : drawImageCover;
+    drawFlyerWheel(ctx, s, useTexturedWheel ? preferredWheelTexture : null, wheelCx, wheelCy, wheelR, wheelTextureDraw);
   }
   if (flyergameImg) {
     drawFlyergameDetailsOverlay(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
