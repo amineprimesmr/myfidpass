@@ -290,6 +290,47 @@ function drawFlyergameCenter(ctx, cx, cy, wheelR, img) {
   ctx.restore();
 }
 
+/**
+ * Superpose les détails de `flyergame` sur la roue déjà teintée.
+ * Conserve les couleurs des parts tout en rendant l'illustration visible.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} wheelR
+ * @param {HTMLImageElement | null} img
+ */
+function drawFlyergameDetailsOverlay(ctx, cx, cy, wheelR, img) {
+  if (!img) return;
+  const sw = img.naturalWidth || img.width;
+  const sh = img.naturalHeight || img.height;
+  if (!sw || !sh) return;
+  const targetW = wheelR * 1.78;
+  const targetH = (targetW * sh) / sw;
+  const x = cx - targetW / 2;
+  const y = cy - targetH / 2;
+  ctx.save();
+  // Même zone utile que la roue colorée (évite de polluer le fond autour).
+  ctx.beginPath();
+  ctx.arc(cx, cy, wheelR * 0.72, 0, Math.PI * 2);
+  ctx.clip();
+  try {
+    // Relief/ombres
+    ctx.globalCompositeOperation = "multiply";
+    ctx.globalAlpha = 0.42;
+    drawImageContain(ctx, img, x, y, targetW, targetH);
+    // Reprise des hautes lumières
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.22;
+    drawImageContain(ctx, img, x, y, targetW, targetH);
+  } catch (_) {
+    /* no-op */
+  } finally {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+}
+
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
 function roundRect(ctx, x, y, w, h, r) {
   const rr = Math.min(r, w / 2, h / 2);
@@ -1232,11 +1273,15 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
-  // Pipeline stable: utiliser flyergame comme texture de roue prioritaire,
-  // puis appliquer les teintes/labels par-dessus via drawFlyerWheel.
-  const preferredWheelTexture = flyergameImg || roueImg || null;
+  // Pipeline stable:
+  // 1) roue teintée + labels (mécanique standard),
+  // 2) détails flyergame superposés pour garantir sa présence visuelle.
+  const preferredWheelTexture = roueImg || null;
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, useTexturedWheel ? preferredWheelTexture : null, wheelCx, wheelCy, wheelR, drawImageCover);
+  }
+  if (flyergameImg) {
+    drawFlyergameDetailsOverlay(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
   }
   drawPremiumWheelFinishing(ctx, wheelCx, wheelCy, wheelR);
   /**
