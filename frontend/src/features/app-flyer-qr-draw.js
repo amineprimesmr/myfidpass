@@ -11,8 +11,8 @@ import {
 import { drawFlyerWheel } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline, wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawFlyerBackgroundLayer } from "./app-flyer-qr-draw-bg.js";
-import flyerWheelDataUrl from "../assets/flyer-wheels/spinflyer.png?url";
-import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?url";
+const flyerWheelDataUrl = "/assets/flyer-wheels/spinflyer.png";
+const giftflyerDataUrl = "/assets/flyer-wheels/giftflyer.png";
 
 export { FLYER_EXPORT };
 
