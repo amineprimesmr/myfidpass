@@ -1064,7 +1064,8 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     }
   }
 
-  const wheelCx = w * 0.5;
+  /** Centre roue / moyeu : très léger décalage vers la droite (alignement visuel sur la texture). */
+  const wheelCx = w * (0.5 + 0.0065);
   const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
   const wheelR = w * FLYER_WHEEL_RADIUS_FRAC;
 

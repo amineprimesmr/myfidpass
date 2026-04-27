@@ -21,7 +21,7 @@ const WHEEL_COLOR_OUTER_R_FRAC = 0.86;
  * Trop bas (~0,065) : le multiply teinte le moyeu métallique ; trop haut : « trou » trop large.
  * Les couleurs ne s’appliquent qu’entre `WHEEL_HUB_R_FRAC * r` et `WHEEL_COLOR_OUTER_R_FRAC * r`.
  */
-const WHEEL_HUB_R_FRAC = 0.125;
+const WHEEL_HUB_R_FRAC = 0.118;
 
 /**
  * Cercle de **clip** pour les libellés — suit un peu l’anneau élargi pour ne pas rogner les textes.
