@@ -90,9 +90,9 @@ export function drawFlyerHeroHeadline(ctx, s, w, h, scale, hasLogo) {
     const m = /CADEAU(?:\s*!+)?/.exec(line);
     if (!m) {
       ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.28)";
-      ctx.shadowBlur = Math.max(2.5, scale * 3.5);
-      ctx.shadowOffsetY = Math.max(1.5, scale * 1.8);
+      ctx.shadowColor = "rgba(0,0,0,0.16)";
+      ctx.shadowBlur = Math.max(4, scale * 5);
+      ctx.shadowOffsetY = Math.max(1.2, scale * 1.4);
       ctx.strokeStyle = "rgba(0,0,0,0.42)";
       ctx.lineWidth = strokePx * 1.9;
       ctx.strokeText(line, w / 2, ly);

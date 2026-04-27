@@ -150,10 +150,10 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
   const x = lead;
   const y = h - bottomPad - lift - giftH;
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.4)";
-  ctx.shadowBlur = Math.max(14, w * 0.022);
+  ctx.shadowColor = "rgba(0,0,0,0.22)";
+  ctx.shadowBlur = Math.max(22, w * 0.038);
   ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = Math.max(5, w * 0.012);
+  ctx.shadowOffsetY = Math.max(4, w * 0.01);
   try {
     ctx.drawImage(img, x, y, giftW, giftH);
   } catch (_) {
@@ -259,20 +259,22 @@ async function loadQrAsImage(targetUrl, sizePx) {
  */
 function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
   ctx.save();
-  const rad = r * 1.2;
-  const g = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, rad);
+  const rad = r * 1.22;
+  const g = ctx.createRadialGradient(cx, cy, r * 0.4, cx, cy, rad);
   g.addColorStop(0, "rgba(8,10,24,0)");
-  g.addColorStop(0.4, "rgba(8,10,24,0.08)");
-  g.addColorStop(0.78, "rgba(5,5,12,0.16)");
-  g.addColorStop(1, "rgba(3,3,8,0.2)");
+  g.addColorStop(0.35, "rgba(8,10,24,0.04)");
+  g.addColorStop(0.65, "rgba(5,5,12,0.1)");
+  g.addColorStop(0.9, "rgba(3,3,8,0.14)");
+  g.addColorStop(1, "rgba(2,2,6,0.16)");
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(cx, cy, rad, 0, Math.PI * 2);
   ctx.fill();
-  ctx.globalAlpha = 0.4;
-  const w = ctx.createRadialGradient(cx - r * 0.1, cy - r * 0.15, r * 0.1, cx, cy, r * 1.05);
-  w.addColorStop(0, "rgba(255, 245, 230, 0.2)");
-  w.addColorStop(0.5, "rgba(255, 200, 150, 0.05)");
+  ctx.globalAlpha = 0.45;
+  const w = ctx.createRadialGradient(cx - r * 0.1, cy - r * 0.15, r * 0.15, cx, cy, r * 1.1);
+  w.addColorStop(0, "rgba(255, 245, 230, 0.1)");
+  w.addColorStop(0.4, "rgba(255, 220, 190, 0.04)");
+  w.addColorStop(0.75, "rgba(255, 200, 160, 0.02)");
   w.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = w;
   ctx.beginPath();
@@ -290,20 +292,23 @@ function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
  */
 function drawFlyerWheelZoneVignette(ctx, cx, cy, r) {
   ctx.save();
-  const ri = r * 1.38;
-  const g = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, ri);
+  const ri = r * 1.42;
+  const g = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, ri);
   g.addColorStop(0, "rgba(0,0,0,0)");
-  g.addColorStop(0.55, "rgba(0,0,0,0.04)");
-  g.addColorStop(1, "rgba(0,0,0,0.12)");
+  g.addColorStop(0.4, "rgba(0,0,0,0.02)");
+  g.addColorStop(0.7, "rgba(0,0,0,0.06)");
+  g.addColorStop(0.9, "rgba(0,0,0,0.08)");
+  g.addColorStop(1, "rgba(0,0,0,0.1)");
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(cx, cy, ri, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = 0.5;
-  const h = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r * 1.25);
-  h.addColorStop(0, "rgba(255, 240, 210, 0.14)");
-  h.addColorStop(0.5, "rgba(255, 200, 160, 0.04)");
+  ctx.globalAlpha = 0.4;
+  const h = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.18, cx, cy, r * 1.3);
+  h.addColorStop(0, "rgba(255, 240, 210, 0.1)");
+  h.addColorStop(0.4, "rgba(255, 220, 180, 0.04)");
+  h.addColorStop(0.7, "rgba(255, 200, 170, 0.02)");
   h.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = h;
   ctx.beginPath();
@@ -821,10 +826,10 @@ function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
     }
   }
 
-  const glow = Math.max(8, maxW * 0.028);
-  const dropY = Math.max(2, maxH * 0.028);
-  const dropBlur = Math.max(6, maxW * 0.026);
-  const filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.44)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.22))`;
+  const glow = Math.max(12, maxW * 0.04);
+  const dropY = Math.max(2, maxH * 0.022);
+  const dropBlur = Math.max(14, maxW * 0.045);
+  const filterStr = `drop-shadow(0 ${dropY}px ${dropBlur}px rgba(0,0,0,0.22)) drop-shadow(0 0 ${glow}px rgba(255,255,255,0.1))`;
 
   ctx.save();
   try {
@@ -1066,9 +1071,9 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
     : "#ffffff";
 
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.45)";
-  ctx.shadowBlur = Math.max(10, 16 * scale);
-  ctx.shadowOffsetY = Math.max(4, 6 * scale);
+  ctx.shadowColor = "rgba(0,0,0,0.24)";
+  ctx.shadowBlur = Math.max(18, 24 * scale);
+  ctx.shadowOffsetY = Math.max(3, 5 * scale);
   ctx.fillStyle = fill;
   roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
   ctx.fill();
@@ -1220,9 +1225,9 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.rotate(qrTiltRad);
   ctx.translate(-qCx, -qCy);
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.45)";
-  ctx.shadowBlur = Math.max(12, 18 * scale);
-  ctx.shadowOffsetY = Math.max(5, 8 * scale);
+  ctx.shadowColor = "rgba(0,0,0,0.22)";
+  ctx.shadowBlur = Math.max(20, 28 * scale);
+  ctx.shadowOffsetY = Math.max(4, 6 * scale);
   ctx.fillStyle = "#ffffff";
   roundRect(ctx, qx, qy, qSize, qSize, qrCornerR);
   ctx.fill();
