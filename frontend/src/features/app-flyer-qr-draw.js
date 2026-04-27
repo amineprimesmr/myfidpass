@@ -248,12 +248,12 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
   const sw = img.naturalWidth || img.width;
   const sh = img.naturalHeight || img.height;
   if (!sw || !sh) return;
-  const giftW = w * 0.4;
+  const giftW = w * 0.47;
   const giftH = (giftW * sh) / sw;
   const lead = Math.max(8 * scale, w * 0.028);
   const bottomPad = Math.max(6 * scale, h * 0.028);
   /** Un peu plus haut pour dégager le cadeau du bas de page tout en gardant le chevauchement roue. */
-  const lift = h * 0.24;
+  const lift = h * 0.215;
   const x = lead;
   const y = h - bottomPad - lift - giftH;
   try {
