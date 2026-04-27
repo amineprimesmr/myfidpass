@@ -11,10 +11,10 @@ import {
 const SEG_OVERLAP_RAD = 0.005;
 
 /**
- * Rayon extérieur des teintes / parts, relatif à la roue — **inset** bord
- * (les teintes ne vont plus jusqu’au bord visuel de la texture).
+ * Rayon extérieur des teintes / parts, relatif au rayon logique `wheelR`.
+ * Plus haut = couleurs plus près du bord visuel de la texture ; trop haut = risque sur le jante métal.
  */
-const WHEEL_COLOR_OUTER_R_FRAC = 0.72;
+const WHEEL_COLOR_OUTER_R_FRAC = 0.86;
 
 /**
  * Rayon intérieur de la couronne colorée : au-delà, **aucune** teinte (moyeu / texture PNG au centre).
@@ -24,9 +24,9 @@ const WHEEL_COLOR_OUTER_R_FRAC = 0.72;
 const WHEEL_HUB_R_FRAC = 0.125;
 
 /**
- * Cercle de **clip** pour les libellés (légèrement à l’intérieur de l’anneau de couleur).
+ * Cercle de **clip** pour les libellés — suit un peu l’anneau élargi pour ne pas rogner les textes.
  */
-const WHEEL_LABEL_CLIP_R_FRAC = 0.7;
+const WHEEL_LABEL_CLIP_R_FRAC = 0.82;
 
 /**
  * @param {string} hex
