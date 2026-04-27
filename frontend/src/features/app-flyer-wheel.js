@@ -243,6 +243,42 @@ function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, dr
 }
 
 /**
+ * Restaure une texture au moyeu pour éviter tout disque blanc.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} r
+ * @param {CanvasImageSource} roueImg
+ * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
+ */
+function drawWheelHubTexture(ctx, cx, cy, r, roueImg, drawImageCover) {
+  const box = r * 2;
+  const lx = cx - r;
+  const ly = cy - r;
+  const hubR = Math.max(2, r * (WHEEL_HUB_R_FRAC * 0.98));
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubR, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = 0.96;
+  drawImageCover(ctx, roueImg, lx, ly, box, box);
+  ctx.globalCompositeOperation = "multiply";
+  ctx.globalAlpha = 0.28;
+  drawImageCover(ctx, roueImg, lx, ly, box, box);
+  const hubShade = ctx.createRadialGradient(cx, cy, hubR * 0.1, cx, cy, hubR);
+  hubShade.addColorStop(0, "rgba(15,23,42,0.08)");
+  hubShade.addColorStop(1, "rgba(15,23,42,0.22)");
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = hubShade;
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
  * Libellés GAGNÉ/PERDU (même calage que `drawFlyerWheel`).
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
@@ -271,6 +307,7 @@ export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawIm
   if (usePng) {
     const off = labelOffsetDeg;
     drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
+    drawWheelHubTexture(ctx, wheelCx, wheelCy, wheelR, roueImg, drawImageCover);
   } else {
     drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
   }

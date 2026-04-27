@@ -35,6 +35,7 @@ let flyergameCenterCache = null;
 
 const FLYERGAME_PUBLIC_SRC = "/assets/flyergame.png";
 const WHEEL_ICON_FALLBACK_SRC = "/assets/flyer-steps/icon-wheel.png";
+let didWarnMissingWheelTexture = false;
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -75,9 +76,17 @@ async function getFlyerRoueImage() {
     if (!looksOk) return null;
     flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
     if (!flyerRoueCache) {
-      const fallback = String(WHEEL_ICON_FALLBACK_SRC || "").trim();
-      if (fallback) {
-        flyerRoueCache = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: false });
+      const wheelFallbackCandidates = [
+        String(flyergameDataUrl || "").trim(),
+        String(FLYERGAME_PUBLIC_SRC || "").trim(),
+        String(WHEEL_ICON_FALLBACK_SRC || "").trim(),
+      ].filter(Boolean);
+      for (const fallback of wheelFallbackCandidates) {
+        const loaded = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: true });
+        if (loaded) {
+          flyerRoueCache = loaded;
+          break;
+        }
       }
     }
     return flyerRoueCache;
@@ -1276,7 +1285,13 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   // Pipeline stable:
   // 1) roue teintée + labels (mécanique standard),
   // 2) détails flyergame superposés pour garantir sa présence visuelle.
-  const preferredWheelTexture = roueImg || null;
+  const preferredWheelTexture = roueImg || flyergameImg || null;
+  if (!preferredWheelTexture && !didWarnMissingWheelTexture) {
+    didWarnMissingWheelTexture = true;
+    try {
+      console.warn("[flyer-wheel] texture indisponible (spinflyer/flyergame), fallback segments seuls");
+    } catch (_) {}
+  }
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheel(ctx, s, useTexturedWheel ? preferredWheelTexture : null, wheelCx, wheelCy, wheelR, drawImageCover);
   }
