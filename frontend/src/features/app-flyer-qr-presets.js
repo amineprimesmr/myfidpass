@@ -32,7 +32,7 @@ export const FLYER_LOGO_LAYOUT = Object.freeze({
 });
 
 /** Rayon affiché de la roue / demi-largeur canvas (aperçu + export). */
-export const FLYER_WHEEL_RADIUS_FRAC = 0.375;
+export const FLYER_WHEEL_RADIUS_FRAC = 0.435;
 
 export const FLYER_LOGO_BLOCK_BOTTOM_FRAC =
   FLYER_LOGO_LAYOUT.centerYFrac + FLYER_LOGO_LAYOUT.maxHFrac / 2;
@@ -68,8 +68,8 @@ export function flyerLogoBlockBottomFracFromState(s, hasLogo) {
  * Composition verticale du flyer (écarts volontairement marqués pour l’aperçu + impression).
  */
 export const FLYER_LAYOUT = Object.freeze({
-  /** Centre vertical de la roue (roue un peu plus petite → léger remonté visuel). */
-  wheelCenterYFrac: 0.528,
+  /** Centre vertical de la roue (légèrement remontée si rayon ↑ pour l’air pied de page). */
+  wheelCenterYFrac: 0.522,
   /** Bord supérieur du carré QR (fraction hauteur). */
   qrTopYFrac: 0.558,
   /** Hauteur de la zone « étapes », fond transparent. */

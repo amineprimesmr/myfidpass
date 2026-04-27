@@ -170,7 +170,8 @@ function drawFlyergameCenter(ctx, cx, cy, wheelR, img) {
   const sw = img.naturalWidth || img.width;
   const sh = img.naturalHeight || img.height;
   if (!sw || !sh) return;
-  const fitBox = wheelR * 1.96;
+  /** Légèrement < diamètre logique : reste proche bords visuels de la texture roue (roue un peu + grande → facteur un peu + haut). */
+  const fitBox = wheelR * 2.04;
   const targetW = fitBox;
   const targetH = fitBox;
   const x = cx - targetW / 2;
