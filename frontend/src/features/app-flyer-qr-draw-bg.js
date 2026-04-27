@@ -37,20 +37,32 @@ function resolveFlyerBaseBgHex(s) {
  * @param {string} bot
  */
 function fillGradientVOpaque(ctx, w, h, top, bot) {
-  const base = /^#[0-9A-Fa-f]{6}$/.test(String(top || "").trim()) ? top : bot;
-  ctx.fillStyle = base || "#1f2937";
+  const topHex = /^#[0-9A-Fa-f]{6}$/.test(String(top || "").trim()) ? top : "#334155";
+  const botHex = /^#[0-9A-Fa-f]{6}$/.test(String(bot || "").trim()) ? bot : "#0f172a";
+  const g = ctx.createLinearGradient(w * 0.1, 0, w * 0.9, h);
+  g.addColorStop(0, topHex);
+  g.addColorStop(0.45, topHex);
+  g.addColorStop(1, botHex);
+  ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
-  // Centre légèrement plus lumineux.
-  const centerGlow = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.06, w * 0.5, h * 0.5, h * 0.62);
-  centerGlow.addColorStop(0, "rgba(255,255,255,0.13)");
-  centerGlow.addColorStop(0.55, "rgba(255,255,255,0.06)");
+  // Glow principal centré/haut pour profondeur.
+  const centerGlow = ctx.createRadialGradient(w * 0.52, h * 0.44, h * 0.04, w * 0.52, h * 0.44, h * 0.66);
+  centerGlow.addColorStop(0, "rgba(255,255,255,0.2)");
+  centerGlow.addColorStop(0.5, "rgba(255,255,255,0.09)");
   centerGlow.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = centerGlow;
   ctx.fillRect(0, 0, w, h);
+  // Halo diagonal pour casser l'effet "plat".
+  const diagGlow = ctx.createLinearGradient(w * 0.08, h * 0.02, w * 0.92, h * 0.98);
+  diagGlow.addColorStop(0, "rgba(255,255,255,0.07)");
+  diagGlow.addColorStop(0.5, "rgba(255,255,255,0)");
+  diagGlow.addColorStop(1, "rgba(0,0,0,0.07)");
+  ctx.fillStyle = diagGlow;
+  ctx.fillRect(0, 0, w, h);
   // Vignette globale : bords plus foncés tout autour.
-  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.22, w * 0.5, h * 0.5, Math.max(w, h) * 0.84);
+  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.86);
   edgeShade.addColorStop(0, "rgba(0,0,0,0)");
-  edgeShade.addColorStop(1, "rgba(0,0,0,0.20)");
+  edgeShade.addColorStop(1, "rgba(0,0,0,0.28)");
   ctx.fillStyle = edgeShade;
   ctx.fillRect(0, 0, w, h);
 }
@@ -123,7 +135,7 @@ export function drawFlyerBackgroundLayer(ctx, w, h, s, bgImg) {
       return;
     }
     const base = resolveFlyerBaseBgHex(s);
-    fillGradientVOpaque(ctx, w, h, base, base);
+    fillGradientVOpaque(ctx, w, h, s?.colorBgTop || base, s?.colorBgBottom || base);
     return;
   }
   drawImageCover(ctx, bgImg, 0, 0, w, h);
