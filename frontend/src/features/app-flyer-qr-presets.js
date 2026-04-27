@@ -164,7 +164,7 @@ export function defaultFlyerState() {
     /** `png` = texture `spinflyer` (teintes) ; `segments` = aplats 2D sans image. */
     wheelRenderMode: "png",
     wheelColorOdd: "#fbbf24",
-    wheelColorEven: "#f97316",
+    wheelColorEven: "#ffffff",
     wheelSegmentOffsetDeg: 0,
     headlineFontId: "fraunces",
     headlineTextColor: "#ffffff",
