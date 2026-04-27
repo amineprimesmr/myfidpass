@@ -36,6 +36,8 @@ let flyergameCenterCache = null;
 const FLYERGAME_PUBLIC_SRC = "/assets/flyergame.png";
 const WHEEL_ICON_FALLBACK_SRC = "/assets/flyer-steps/icon-wheel.png";
 let didWarnMissingWheelTexture = false;
+/** @type {WeakMap<CanvasImageSource, string>} */
+const wheelTextureSourceHints = new WeakMap();
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -51,6 +53,39 @@ let flyerFooterBannerCache = null;
 /** @type {HTMLImageElement[] | "fail" | null} */
 let flyerStepIconsCache = null;
 
+/**
+ * @param {CanvasImageSource | null} img
+ * @param {string} sourceHint
+ */
+function tagWheelTextureSource(img, sourceHint) {
+  if (!img || !sourceHint) return;
+  if (typeof img !== "object") return;
+  try {
+    wheelTextureSourceHints.set(img, String(sourceHint || "").trim());
+  } catch (_) {}
+}
+
+/**
+ * @param {string} sourceHint
+ * @returns {boolean}
+ */
+function sourceHintLooksLikeFlyergame(sourceHint) {
+  return String(sourceHint || "").toLowerCase().includes("flyergame");
+}
+
+/**
+ * Règle centrale anti-crop: toute texture identifiée `flyergame` doit être dessinée en contain.
+ * @param {CanvasImageSource | null} texture
+ * @returns {boolean}
+ */
+function shouldContainWheelTexture(texture) {
+  if (!texture || typeof texture !== "object") return false;
+  const hinted = wheelTextureSourceHints.get(texture);
+  if (sourceHintLooksLikeFlyergame(hinted || "")) return true;
+  const o = /** @type {{ currentSrc?: string; src?: string }} */ (texture);
+  return sourceHintLooksLikeFlyergame(o.currentSrc || o.src || "");
+}
+
 async function getFlyerRoueImage() {
   if (flyerRoueCache) return flyerRoueCache;
   try {
@@ -58,6 +93,7 @@ async function getFlyerRoueImage() {
     if (runtimeSpin) {
       const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeSpin, { preferBlobFetch: true });
       if (fromRuntime) {
+        tagWheelTextureSource(fromRuntime, runtimeSpin);
         flyerRoueCache = fromRuntime;
         return flyerRoueCache;
       }
@@ -75,6 +111,7 @@ async function getFlyerRoueImage() {
       src.startsWith("/");
     if (!looksOk) return null;
     flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
+    if (flyerRoueCache) tagWheelTextureSource(flyerRoueCache, src);
     if (!flyerRoueCache) {
       const wheelFallbackCandidates = [
         String(flyergameDataUrl || "").trim(),
@@ -84,6 +121,7 @@ async function getFlyerRoueImage() {
       for (const fallback of wheelFallbackCandidates) {
         const loaded = await loadFlyerAssetImageWithFallback(fallback, { preferBlobFetch: true });
         if (loaded) {
+          tagWheelTextureSource(loaded, fallback);
           flyerRoueCache = loaded;
           break;
         }
@@ -139,6 +177,7 @@ async function getFlyergameCenterImage() {
     if (runtimeFlyergame && runtimeLooksLikeFlyergame) {
       const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeFlyergame, { preferBlobFetch: true });
       if (fromRuntime) {
+        tagWheelTextureSource(fromRuntime, runtimeFlyergame);
         flyergameCenterCache = fromRuntime;
         return flyergameCenterCache;
       }
@@ -156,6 +195,7 @@ async function getFlyergameCenterImage() {
       if (!looksOk) continue;
       const loaded = await loadFlyerAssetImageWithFallback(c, { preferBlobFetch: true });
       if (loaded) {
+        tagWheelTextureSource(loaded, c);
         flyergameCenterCache = loaded;
         return flyergameCenterCache;
       }
@@ -1293,7 +1333,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     } catch (_) {}
   }
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    const useContainForWheelTexture = preferredWheelTexture != null && preferredWheelTexture === flyergameImg;
+    const useContainForWheelTexture = shouldContainWheelTexture(preferredWheelTexture);
     const wheelTextureDraw = useContainForWheelTexture ? drawImageContain : drawImageCover;
     drawFlyerWheel(ctx, s, useTexturedWheel ? preferredWheelTexture : null, wheelCx, wheelCy, wheelR, wheelTextureDraw);
   }
