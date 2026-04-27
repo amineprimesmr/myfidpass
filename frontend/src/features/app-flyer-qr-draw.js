@@ -355,6 +355,100 @@ function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
 }
 
 /**
+ * Finitions locales sur la roue (profondeur + reflets) sans casser la lisibilité.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} r
+ */
+function drawPremiumWheelFinishing(ctx, cx, cy, r) {
+  ctx.save();
+  // Ombre de contact globale pour asseoir la roue dans la scène.
+  const contact = ctx.createRadialGradient(cx, cy + r * 0.78, r * 0.16, cx, cy + r * 0.78, r * 1.04);
+  contact.addColorStop(0, "rgba(0,0,0,0.28)");
+  contact.addColorStop(0.55, "rgba(0,0,0,0.1)");
+  contact.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = contact;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + r * 0.78, r * 0.92, r * 0.22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rim light sur le quart haut-gauche.
+  const rim = ctx.createRadialGradient(cx - r * 0.28, cy - r * 0.32, r * 0.08, cx, cy, r * 1.05);
+  rim.addColorStop(0, "rgba(255,255,255,0.24)");
+  rim.addColorStop(0.45, "rgba(255,255,255,0.08)");
+  rim.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = rim;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.04, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Grain très fin pour éviter l’effet "plat numérique" et le banding.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} w
+ * @param {number} h
+ */
+function drawSubtleGrainOverlay(ctx, w, h) {
+  const spacing = Math.max(2, Math.round(Math.min(w, h) / 900));
+  ctx.save();
+  for (let y = 0; y < h; y += spacing) {
+    for (let x = (y / spacing) % 2 === 0 ? 0 : spacing; x < w; x += spacing * 2) {
+      const a = ((x * 13 + y * 7) % 100) / 100;
+      ctx.fillStyle = a > 0.5 ? "rgba(255,255,255,0.015)" : "rgba(0,0,0,0.018)";
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+  ctx.restore();
+}
+
+/**
+ * Finitions globales (vignette, souffle lumineux, micro-particules) tout en gardant le QR lisible.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} w
+ * @param {number} h
+ * @param {number} wheelCx
+ * @param {number} wheelCy
+ * @param {number} wheelR
+ * @param {number} qx
+ * @param {number} qy
+ * @param {number} qSize
+ */
+function drawPremiumGlobalFinishing(ctx, w, h, wheelCx, wheelCy, wheelR, qx, qy, qSize) {
+  ctx.save();
+  const centerBoost = ctx.createRadialGradient(w * 0.5, h * 0.48, h * 0.08, w * 0.5, h * 0.48, h * 0.72);
+  centerBoost.addColorStop(0, "rgba(255,255,255,0.055)");
+  centerBoost.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = centerBoost;
+  ctx.fillRect(0, 0, w, h);
+
+  const edge = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.88);
+  edge.addColorStop(0, "rgba(0,0,0,0)");
+  edge.addColorStop(1, "rgba(0,0,0,0.15)");
+  ctx.fillStyle = edge;
+  ctx.fillRect(0, 0, w, h);
+
+  // Micro-particules autour de la roue, pas sur le QR.
+  for (let i = 0; i < 28; i++) {
+    const t = (i / 28) * Math.PI * 2;
+    const rr = wheelR * (0.88 + (i % 5) * 0.07);
+    const px = wheelCx + Math.cos(t) * rr;
+    const py = wheelCy + Math.sin(t) * rr;
+    if (px > qx - 20 && px < qx + qSize + 20 && py > qy - 20 && py < qy + qSize + 20) continue;
+    const pr = i % 7 === 0 ? 2 : 1.2;
+    ctx.fillStyle = i % 3 === 0 ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.12)";
+    ctx.beginPath();
+    ctx.arc(px, py, pr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  drawSubtleGrainOverlay(ctx, w, h);
+  ctx.restore();
+}
+
+/**
  * Remplit le rectangle comme object-fit: cover (échelle uniforme, centré).
  * @param {CanvasRenderingContext2D} ctx
  * @param {CanvasImageSource} img
@@ -1139,6 +1233,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
     drawFlyerWheel(ctx, s, useTexturedWheel ? roueImg : null, wheelCx, wheelCy, wheelR, drawImageCover);
   }
   drawFlyergameCenter(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
+  drawPremiumWheelFinishing(ctx, wheelCx, wheelCy, wheelR);
   /**
    * Bas de page (chevauchement roue) : roue → cadeau → (accroche haut) → bandeau CTA au-dessus du cadeau.
    * L’accroche est au centre/haut, sans recouvrir l’illustration sur les maquettes par défaut.
@@ -1173,6 +1268,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   } else {
     drawFooterBar(ctx, w, h, s, 0);
   }
+  drawPremiumGlobalFinishing(ctx, w, h, wheelCx, wheelCy, wheelR, qx, qy, qSize);
 
   if (options && typeof options.shouldBlit === "function" && !options.shouldBlit()) {
     return;
