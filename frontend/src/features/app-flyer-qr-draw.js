@@ -48,7 +48,7 @@ async function getFlyerRoueImage() {
   try {
     const runtimeSpin = String(globalThis?.__FIDPASS_SPINFLYER_DATA_URL || "").trim();
     if (runtimeSpin) {
-      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeSpin);
+      const fromRuntime = await loadFlyerAssetImageWithFallback(runtimeSpin, { preferBlobFetch: true });
       if (fromRuntime) {
         flyerRoueCache = fromRuntime;
         return flyerRoueCache;
@@ -66,7 +66,7 @@ async function getFlyerRoueImage() {
       /^https?:/i.test(src) ||
       src.startsWith("/");
     if (!looksOk) return null;
-    flyerRoueCache = await loadFlyerAssetImageWithFallback(src);
+    flyerRoueCache = await loadFlyerAssetImageWithFallback(src, { preferBlobFetch: true });
     return flyerRoueCache;
   } catch {
     return null;
@@ -107,9 +107,10 @@ async function getFlyerGiftflyerImage() {
  * WKWebView peut échouer sur une URL d'asset Vite (`/assets/...png?inline`) selon cache/baseURL.
  * On tente d'abord la source brute, puis la version absolue, puis un fetch blob.
  * @param {string} rawSrc
+ * @param {{ preferBlobFetch?: boolean }} [options]
  * @returns {Promise<HTMLImageElement | null>}
  */
-async function loadFlyerAssetImageWithFallback(rawSrc) {
+async function loadFlyerAssetImageWithFallback(rawSrc, options) {
   const src = String(rawSrc || "").trim();
   if (!src) return null;
 
@@ -128,6 +129,11 @@ async function loadFlyerAssetImageWithFallback(rawSrc) {
     } catch (_) {}
   }
 
+  if (options?.preferBlobFetch) {
+    const viaBlob = await loadAssetViaFetchBlobCandidates(candidates);
+    if (viaBlob) return viaBlob;
+  }
+
   for (const u of candidates) {
     const isBlob = u.startsWith("blob:");
     try {
@@ -141,6 +147,17 @@ async function loadFlyerAssetImageWithFallback(rawSrc) {
     }
   }
 
+  const viaBlob = await loadAssetViaFetchBlobCandidates(candidates);
+  if (viaBlob) return viaBlob;
+
+  return null;
+}
+
+/**
+ * @param {string[]} candidates
+ * @returns {Promise<HTMLImageElement | null>}
+ */
+async function loadAssetViaFetchBlobCandidates(candidates) {
   for (const u of candidates) {
     if (u.startsWith("data:") || u.startsWith("blob:")) continue;
     try {
