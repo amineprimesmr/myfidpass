@@ -63,33 +63,25 @@ function darkenHex(hex, amount = 0.24) {
  */
 function fillGradientVOpaque(ctx, w, h, top, bot) {
   const baseHex = resolveFlyerBaseBgHex({ colorPrimary: top || bot, colorBgTop: top, colorBgBottom: bot });
-  const topHex = lightenHex(baseHex, 0.14);
-  const midHex = lightenHex(baseHex, 0.04);
-  const botHex = darkenHex(baseHex, 0.26);
-  const g = ctx.createLinearGradient(w * 0.1, 0, w * 0.9, h);
-  g.addColorStop(0, topHex);
-  g.addColorStop(0.42, midHex);
-  g.addColorStop(1, botHex);
-  ctx.fillStyle = g;
+  const coreHex = lightenHex(baseHex, 0.08);
+  const edgeHex = darkenHex(baseHex, 0.22);
+  const rg = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.06, w * 0.5, h * 0.5, Math.max(w, h) * 0.82);
+  rg.addColorStop(0, coreHex);
+  rg.addColorStop(0.42, baseHex);
+  rg.addColorStop(1, edgeHex);
+  ctx.fillStyle = rg;
   ctx.fillRect(0, 0, w, h);
-  // Glow principal centré/haut pour profondeur.
-  const centerGlow = ctx.createRadialGradient(w * 0.52, h * 0.44, h * 0.04, w * 0.52, h * 0.44, h * 0.66);
-  centerGlow.addColorStop(0, "rgba(255,255,255,0.2)");
-  centerGlow.addColorStop(0.5, "rgba(255,255,255,0.09)");
+  // Glow centré doux pour une lumière propre.
+  const centerGlow = ctx.createRadialGradient(w * 0.5, h * 0.48, h * 0.04, w * 0.5, h * 0.48, h * 0.56);
+  centerGlow.addColorStop(0, "rgba(255,255,255,0.16)");
+  centerGlow.addColorStop(0.5, "rgba(255,255,255,0.07)");
   centerGlow.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = centerGlow;
   ctx.fillRect(0, 0, w, h);
-  // Halo diagonal pour casser l'effet "plat".
-  const diagGlow = ctx.createLinearGradient(w * 0.08, h * 0.02, w * 0.92, h * 0.98);
-  diagGlow.addColorStop(0, "rgba(255,255,255,0.07)");
-  diagGlow.addColorStop(0.5, "rgba(255,255,255,0)");
-  diagGlow.addColorStop(1, "rgba(0,0,0,0.07)");
-  ctx.fillStyle = diagGlow;
-  ctx.fillRect(0, 0, w, h);
-  // Vignette globale : bords plus foncés tout autour.
-  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.86);
+  // Vignette progressive sur les côtés/bords.
+  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.22, w * 0.5, h * 0.5, Math.max(w, h) * 0.88);
   edgeShade.addColorStop(0, "rgba(0,0,0,0)");
-  edgeShade.addColorStop(1, "rgba(0,0,0,0.28)");
+  edgeShade.addColorStop(1, "rgba(0,0,0,0.2)");
   ctx.fillStyle = edgeShade;
   ctx.fillRect(0, 0, w, h);
 }
