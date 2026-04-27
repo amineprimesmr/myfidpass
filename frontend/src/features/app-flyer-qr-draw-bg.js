@@ -71,17 +71,19 @@ function fillGradientVOpaque(ctx, w, h, top, bot) {
   rg.addColorStop(1, edgeHex);
   ctx.fillStyle = rg;
   ctx.fillRect(0, 0, w, h);
-  // Glow centré doux pour une lumière propre.
-  const centerGlow = ctx.createRadialGradient(w * 0.5, h * 0.48, h * 0.03, w * 0.5, h * 0.48, h * 0.54);
-  centerGlow.addColorStop(0, "rgba(255,255,255,0.20)");
-  centerGlow.addColorStop(0.52, "rgba(255,255,255,0.09)");
+  // Foyer lumineux (affiche éclairée).
+  const centerGlow = ctx.createRadialGradient(w * 0.48, h * 0.44, h * 0.04, w * 0.5, h * 0.48, h * 0.58);
+  centerGlow.addColorStop(0, "rgba(255,255,255,0.32)");
+  centerGlow.addColorStop(0.45, "rgba(255,255,255,0.12)");
+  centerGlow.addColorStop(0.8, "rgba(255,255,255,0.03)");
   centerGlow.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = centerGlow;
   ctx.fillRect(0, 0, w, h);
-  // Vignette progressive sur les côtés/bords.
-  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.9);
+  // Vignette cadrage (profondeur).
+  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.16, w * 0.5, h * 0.5, Math.max(w, h) * 0.92);
   edgeShade.addColorStop(0, "rgba(0,0,0,0)");
-  edgeShade.addColorStop(1, "rgba(0,0,0,0.25)");
+  edgeShade.addColorStop(0.72, "rgba(0,0,0,0.12)");
+  edgeShade.addColorStop(1, "rgba(0,0,0,0.32)");
   ctx.fillStyle = edgeShade;
   ctx.fillRect(0, 0, w, h);
 }

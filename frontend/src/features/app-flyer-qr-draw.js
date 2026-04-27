@@ -149,11 +149,17 @@ function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
   const lift = h * 0.19;
   const x = lead;
   const y = h - bottomPad - lift - giftH;
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.4)";
+  ctx.shadowBlur = Math.max(14, w * 0.022);
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = Math.max(5, w * 0.012);
   try {
     ctx.drawImage(img, x, y, giftW, giftH);
   } catch (_) {
     /* WebKit / blob */
   }
+  ctx.restore();
 }
 
 /**
@@ -253,14 +259,55 @@ async function loadQrAsImage(targetUrl, sizePx) {
  */
 function drawFlyerWheelBackdropForBusyBg(ctx, cx, cy, r) {
   ctx.save();
-  const rad = r * 1.14;
-  const g = ctx.createRadialGradient(cx, cy, r * 0.72, cx, cy, rad);
-  g.addColorStop(0, "rgba(15,23,42,0)");
-  g.addColorStop(0.5, "rgba(15,23,42,0.06)");
-  g.addColorStop(1, "rgba(15,23,42,0.1)");
+  const rad = r * 1.2;
+  const g = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, rad);
+  g.addColorStop(0, "rgba(8,10,24,0)");
+  g.addColorStop(0.4, "rgba(8,10,24,0.08)");
+  g.addColorStop(0.78, "rgba(5,5,12,0.16)");
+  g.addColorStop(1, "rgba(3,3,8,0.2)");
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.4;
+  const w = ctx.createRadialGradient(cx - r * 0.1, cy - r * 0.15, r * 0.1, cx, cy, r * 1.05);
+  w.addColorStop(0, "rgba(255, 245, 230, 0.2)");
+  w.addColorStop(0.5, "rgba(255, 200, 150, 0.05)");
+  w.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = w;
+  ctx.beginPath();
+  ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Zone roue (tous les fonds) : halo pour séparer la couronne du fond, même sans photo chargée.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} r
+ */
+function drawFlyerWheelZoneVignette(ctx, cx, cy, r) {
+  ctx.save();
+  const ri = r * 1.38;
+  const g = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, ri);
+  g.addColorStop(0, "rgba(0,0,0,0)");
+  g.addColorStop(0.55, "rgba(0,0,0,0.04)");
+  g.addColorStop(1, "rgba(0,0,0,0.12)");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(cx, cy, ri, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = 0.5;
+  const h = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r * 1.25);
+  h.addColorStop(0, "rgba(255, 240, 210, 0.14)");
+  h.addColorStop(0.5, "rgba(255, 200, 160, 0.04)");
+  h.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = h;
+  ctx.beginPath();
+  ctx.arc(cx, cy, ri, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -1018,9 +1065,14 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
     ? String(s.ctaTextColor).trim()
     : "#ffffff";
 
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = Math.max(10, 16 * scale);
+  ctx.shadowOffsetY = Math.max(4, 6 * scale);
   ctx.fillStyle = fill;
   roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
   ctx.fill();
+  ctx.restore();
 
   ctx.strokeStyle = "#000000";
   ctx.lineWidth = Math.max(4, 8 * scale);
@@ -1135,6 +1187,9 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (hasCommerceLogo) {
     drawFlyerCommerceLogo(ctx, logoImg, w, h, s);
   }
+  if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
+    drawFlyerWheelZoneVignette(ctx, wheelCx, wheelCy, wheelR);
+  }
   if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
@@ -1164,9 +1219,14 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.translate(qCx, qCy);
   ctx.rotate(qrTiltRad);
   ctx.translate(-qCx, -qCy);
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = Math.max(12, 18 * scale);
+  ctx.shadowOffsetY = Math.max(5, 8 * scale);
   ctx.fillStyle = "#ffffff";
   roundRect(ctx, qx, qy, qSize, qSize, qrCornerR);
   ctx.fill();
+  ctx.restore();
   if (qrImg) ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
   ctx.restore();
   const bannerBottom = h;
