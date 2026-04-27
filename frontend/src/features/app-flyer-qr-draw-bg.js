@@ -29,6 +29,31 @@ function resolveFlyerBaseBgHex(s) {
   return "#1f2937";
 }
 
+function hexToRgbTuple(hex) {
+  const h = String(hex || "").trim();
+  if (!/^#[0-9A-Fa-f]{6}$/.test(h)) return [31, 41, 55];
+  return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+}
+
+function rgbToHex(r, g, b) {
+  const rr = Math.max(0, Math.min(255, Math.round(r)));
+  const gg = Math.max(0, Math.min(255, Math.round(g)));
+  const bb = Math.max(0, Math.min(255, Math.round(b)));
+  return `#${rr.toString(16).padStart(2, "0")}${gg.toString(16).padStart(2, "0")}${bb.toString(16).padStart(2, "0")}`;
+}
+
+function lightenHex(hex, amount = 0.16) {
+  const [r, g, b] = hexToRgbTuple(hex);
+  const a = Math.max(0, Math.min(0.45, amount));
+  return rgbToHex(r + (255 - r) * a, g + (255 - g) * a, b + (255 - b) * a);
+}
+
+function darkenHex(hex, amount = 0.24) {
+  const [r, g, b] = hexToRgbTuple(hex);
+  const a = Math.max(0, Math.min(0.55, amount));
+  return rgbToHex(r * (1 - a), g * (1 - a), b * (1 - a));
+}
+
 /**
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} w
@@ -37,11 +62,13 @@ function resolveFlyerBaseBgHex(s) {
  * @param {string} bot
  */
 function fillGradientVOpaque(ctx, w, h, top, bot) {
-  const topHex = /^#[0-9A-Fa-f]{6}$/.test(String(top || "").trim()) ? top : "#334155";
-  const botHex = /^#[0-9A-Fa-f]{6}$/.test(String(bot || "").trim()) ? bot : "#0f172a";
+  const baseHex = resolveFlyerBaseBgHex({ colorPrimary: top || bot, colorBgTop: top, colorBgBottom: bot });
+  const topHex = lightenHex(baseHex, 0.14);
+  const midHex = lightenHex(baseHex, 0.04);
+  const botHex = darkenHex(baseHex, 0.26);
   const g = ctx.createLinearGradient(w * 0.1, 0, w * 0.9, h);
   g.addColorStop(0, topHex);
-  g.addColorStop(0.45, topHex);
+  g.addColorStop(0.42, midHex);
   g.addColorStop(1, botHex);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
@@ -135,7 +162,7 @@ export function drawFlyerBackgroundLayer(ctx, w, h, s, bgImg) {
       return;
     }
     const base = resolveFlyerBaseBgHex(s);
-    fillGradientVOpaque(ctx, w, h, s?.colorBgTop || base, s?.colorBgBottom || base);
+    fillGradientVOpaque(ctx, w, h, base, base);
     return;
   }
   drawImageCover(ctx, bgImg, 0, 0, w, h);
