@@ -1232,15 +1232,11 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   if (bgCanvasImg && FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     drawFlyerWheelBackdropForBusyBg(ctx, wheelCx, wheelCy, wheelR);
   }
-  // Pipeline corrigé:
-  // 1) flyergame reste visible comme base (image entière)
-  // 2) couleurs + labels sont superposés ensuite (mode segments)
-  // Cela évite de "perdre" flyergame quand la teinte de roue est activée.
-  if (flyergameImg) {
-    drawFlyergameCenter(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
-    drawFlyerWheel(ctx, s, null, wheelCx, wheelCy, wheelR, drawImageCover);
-  } else if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
-    drawFlyerWheel(ctx, s, useTexturedWheel ? roueImg : null, wheelCx, wheelCy, wheelR, drawImageCover);
+  // Pipeline stable: utiliser flyergame comme texture de roue prioritaire,
+  // puis appliquer les teintes/labels par-dessus via drawFlyerWheel.
+  const preferredWheelTexture = flyergameImg || roueImg || null;
+  if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
+    drawFlyerWheel(ctx, s, useTexturedWheel ? preferredWheelTexture : null, wheelCx, wheelCy, wheelR, drawImageCover);
   }
   drawPremiumWheelFinishing(ctx, wheelCx, wheelCy, wheelR);
   /**
