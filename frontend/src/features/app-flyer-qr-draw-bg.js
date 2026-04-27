@@ -28,6 +28,19 @@ function fillGradientVOpaque(ctx, w, h, top, bot) {
   g.addColorStop(1, bot);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
+  // Centre légèrement plus lumineux pour une UX douce, sans perdre la profondeur.
+  const centerGlow = ctx.createRadialGradient(w * 0.5, h * 0.42, h * 0.06, w * 0.5, h * 0.42, h * 0.62);
+  centerGlow.addColorStop(0, "rgba(255,255,255,0.15)");
+  centerGlow.addColorStop(0.55, "rgba(255,255,255,0.08)");
+  centerGlow.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = centerGlow;
+  ctx.fillRect(0, 0, w, h);
+  // Vignette subtile : bords un peu plus foncés (haut/bas + latéraux).
+  const edgeShade = ctx.createRadialGradient(w * 0.5, h * 0.48, Math.min(w, h) * 0.24, w * 0.5, h * 0.48, Math.max(w, h) * 0.82);
+  edgeShade.addColorStop(0, "rgba(0,0,0,0)");
+  edgeShade.addColorStop(1, "rgba(0,0,0,0.13)");
+  ctx.fillStyle = edgeShade;
+  ctx.fillRect(0, 0, w, h);
 }
 
 /**
