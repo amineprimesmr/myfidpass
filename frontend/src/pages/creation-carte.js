@@ -49,8 +49,8 @@ export default {
               <img src="/assets/icone.png" alt="" class="creation-carte-signup__brand-icon" />
             </span>
           </div>
-          <h1 class="creation-carte-signup__title">Commencer votre essai gratuit</h1>
-          <p class="creation-carte-signup__subtitle">3 jours gratuits, puis le premier mois à 1€</p>
+          <h1 class="creation-carte-signup__title">Commencez à fidéliser pour 1€</h1>
+          <p class="creation-carte-signup__subtitle">Premier mois à 1€, puis 49,99€ sans engagement</p>
           ${
             commerce
               ? `<p class="creation-carte-signup__commerce">Commerce sélectionné : <strong>${escapeHtml(commerce)}</strong></p>`
