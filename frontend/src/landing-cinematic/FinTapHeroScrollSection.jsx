@@ -5,10 +5,13 @@ import {
   getPageScrollY,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
+import { API_BASE } from "../config.js";
 import "./fintap-hero-scroll.css";
 
 const HERO_IPHONE_IMG = "/assets/iphone-custom-clean.png";
 const TRIGGER_PX = 400;
+const DESKTOP_SCROLL_BRAKE_START_RATIO = 0.62;
+const DESKTOP_SCROLL_BRAKE_FACTOR = 0.45;
 
 /**
  * Ancêtres qui reçoivent vraiment le scroll (page ou conteneur scrollable).
@@ -73,11 +76,30 @@ export function FinTapHeroScrollSection() {
   const currentRatioRef = useRef(0);
   const lastAppliedRatioRef = useRef(-1);
   const ctaVisibleRef = useRef(false);
+  const ctaHoldUntilRef = useRef(0);
   const [ctaVisible, setCtaVisible] = useState(false);
   const [shopQuery, setShopQuery] = useState("");
   const [shopPlaceId, setShopPlaceId] = useState("");
+  const [placePredictions, setPlacePredictions] = useState([]);
+  const [predictionsOpen, setPredictionsOpen] = useState(false);
   const searchInputRef = useRef(null);
-  const autocompleteInitRef = useRef(false);
+  const searchWrapRef = useRef(null);
+
+  /**
+   * En desktop, on freine la progression après un certain point pour
+   * demander plus de scroll et laisser le temps de lire la section CTA.
+   * @param {number} scrollDelta
+   * @returns {number}
+   */
+  const computeDesktopBrakedRatio = (scrollDelta) => {
+    const slowStartPx = TRIGGER_PX * DESKTOP_SCROLL_BRAKE_START_RATIO;
+    if (scrollDelta <= slowStartPx) {
+      return fintapHeroScrollRatio(scrollDelta, 0, TRIGGER_PX);
+    }
+    const slowedDeltaPx =
+      slowStartPx + (scrollDelta - slowStartPx) * DESKTOP_SCROLL_BRAKE_FACTOR;
+    return fintapHeroScrollRatio(slowedDeltaPx, 0, TRIGGER_PX);
+  };
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -99,11 +121,12 @@ export function FinTapHeroScrollSection() {
         scroll0Ref.current = getPageScrollY();
       }
       const sy = getPageScrollY();
-      targetRatioRef.current = fintapHeroScrollRatio(
-        sy,
-        scroll0Ref.current,
-        TRIGGER_PX
-      );
+      const delta = sy - scroll0Ref.current;
+      if (window.innerWidth >= 1024) {
+        targetRatioRef.current = computeDesktopBrakedRatio(delta);
+      } else {
+        targetRatioRef.current = fintapHeroScrollRatio(sy, scroll0Ref.current, TRIGGER_PX);
+      }
     };
 
     const paint = (ratio) => {
@@ -125,7 +148,27 @@ export function FinTapHeroScrollSection() {
       const target = targetRatioRef.current;
       const current = currentRatioRef.current;
       const next = current + (target - current) * 0.18;
-      const nextCtaVisible = next >= 0.9995 || target >= 0.9995;
+      let nextCtaVisible;
+      if (window.innerWidth >= 1024) {
+        const showThreshold = 0.68;
+        const hideThreshold = 0.24;
+        const progress = Math.max(next, target);
+        if (ctaVisibleRef.current) {
+          nextCtaVisible = progress > hideThreshold;
+        } else {
+          nextCtaVisible = progress >= showThreshold;
+        }
+        const now = performance.now();
+        if (nextCtaVisible && !ctaVisibleRef.current) {
+          // Laisser le temps de lire le bloc CTA en desktop, même en scroll rapide.
+          ctaHoldUntilRef.current = now + 2200;
+        } else if (!nextCtaVisible && ctaVisibleRef.current && now < ctaHoldUntilRef.current) {
+          nextCtaVisible = true;
+        }
+      } else {
+        const ctaThreshold = 0.9995;
+        nextCtaVisible = next >= ctaThreshold || target >= ctaThreshold;
+      }
       if (nextCtaVisible !== ctaVisibleRef.current) {
         ctaVisibleRef.current = nextCtaVisible;
         setCtaVisible(nextCtaVisible);
@@ -220,44 +263,51 @@ export function FinTapHeroScrollSection() {
 
   useEffect(() => {
     if (!ctaVisible) return;
-    if (autocompleteInitRef.current) return;
-    const inputEl = searchInputRef.current;
-    if (!(inputEl instanceof HTMLInputElement)) return;
-
-    let retryTimer = 0;
-    const tryInit = (retriesLeft = 12) => {
-      if (typeof window.google === "undefined" || !window.google.maps?.places) {
-        if (retriesLeft > 0) {
-          retryTimer = window.setTimeout(() => tryInit(retriesLeft - 1), 500);
-        }
-        return;
-      }
+    const query = shopQuery.trim();
+    if (query.length < 2) {
+      setPlacePredictions([]);
+      setPredictionsOpen(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
       try {
-        const frBounds = new window.google.maps.LatLngBounds(
-          new window.google.maps.LatLng(41.0, -5.5),
-          new window.google.maps.LatLng(51.2, 9.6)
-        );
-        const autocomplete = new window.google.maps.places.Autocomplete(inputEl, {
-          types: ["establishment"],
-          fields: ["name", "formatted_address", "geometry", "place_id"],
-          bounds: frBounds,
-          strictBounds: false,
-        });
-        autocomplete.addListener("place_changed", () => {
-          const place = autocomplete.getPlace();
-          const name = String(place?.name || "");
-          setShopQuery(name);
-          setShopPlaceId(String(place?.place_id || ""));
-        });
-        autocompleteInitRef.current = true;
-      } catch (_) {}
-    };
-
-    tryInit();
+        const url = `${API_BASE}/api/places/autocomplete?input=${encodeURIComponent(query)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("autocomplete_failed");
+        const data = await res.json();
+        if (cancelled) return;
+        const list = Array.isArray(data?.predictions) ? data.predictions.slice(0, 8) : [];
+        setPlacePredictions(list);
+        setPredictionsOpen(list.length > 0);
+      } catch (_) {
+        if (cancelled) return;
+        setPlacePredictions([]);
+        setPredictionsOpen(false);
+      }
+    }, 220);
     return () => {
-      if (retryTimer) window.clearTimeout(retryTimer);
+      cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [ctaVisible]);
+  }, [shopQuery, ctaVisible]);
+
+  useEffect(() => {
+    const onClickOutside = (event) => {
+      const root = searchWrapRef.current;
+      if (!root) return;
+      if (root.contains(event.target)) return;
+      setPredictionsOpen(false);
+    };
+    document.addEventListener("click", onClickOutside);
+    return () => document.removeEventListener("click", onClickOutside);
+  }, []);
+
+  const selectPrediction = (pred) => {
+    setShopQuery(String(pred?.main_text || pred?.description || ""));
+    setShopPlaceId(String(pred?.place_id || ""));
+    setPredictionsOpen(false);
+  };
 
   const startHref = shopPlaceId
     ? `/creer-ma-carte?place_id=${encodeURIComponent(shopPlaceId)}&name=${encodeURIComponent(shopQuery)}`
@@ -310,7 +360,7 @@ export function FinTapHeroScrollSection() {
             <br />
             votre commerce ?
           </p>
-          <label className="fintap-hero-iphone__search" aria-label="Nom de votre commerce">
+          <label className="fintap-hero-iphone__search" aria-label="Nom de votre commerce" ref={searchWrapRef}>
             <span className="fintap-hero-iphone__search-icon" aria-hidden="true">
               <img src="/assets/logos/google.png" alt="" width="18" height="18" loading="lazy" />
             </span>
@@ -321,6 +371,9 @@ export function FinTapHeroScrollSection() {
               placeholder="Nom de votre commerce"
               autoComplete="organization"
               value={shopQuery}
+              onFocus={() => {
+                if (placePredictions.length > 0) setPredictionsOpen(true);
+              }}
               onChange={(e) => {
                 setShopQuery(e.target.value);
                 setShopPlaceId("");
@@ -343,6 +396,28 @@ export function FinTapHeroScrollSection() {
                 />
               </svg>
             </a>
+            {predictionsOpen && placePredictions.length > 0 ? (
+              <div className="fintap-hero-iphone__search-dropdown" role="listbox" aria-label="Suggestions commerces">
+                {placePredictions.map((pred, idx) => (
+                  <button
+                    key={`${pred.place_id || pred.description || "pred"}-${idx}`}
+                    type="button"
+                    className="fintap-hero-iphone__search-option"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      selectPrediction(pred);
+                    }}
+                  >
+                    <span className="fintap-hero-iphone__search-option-main">
+                      {pred.main_text || pred.description}
+                    </span>
+                    {pred.secondary_text ? (
+                      <span className="fintap-hero-iphone__search-option-sub">{pred.secondary_text}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </label>
           <a href={startHref} className="fintap-hero-iphone__btn fintap-hero-iphone__btn--primary">
             Commencer

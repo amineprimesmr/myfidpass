@@ -140,6 +140,50 @@
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
+.fintap-hero-iphone__search-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0.95rem;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+  z-index: 30;
+}
+
+.fintap-hero-iphone__search-option {
+  width: 100%;
+  border: 0;
+  background: #fff;
+  text-align: left;
+  padding: 0.6rem 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  cursor: pointer;
+}
+
+.fintap-hero-iphone__search-option + .fintap-hero-iphone__search-option {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.fintap-hero-iphone__search-option:hover {
+  background: #f8fafc;
+}
+
+.fintap-hero-iphone__search-option-main {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.fintap-hero-iphone__search-option-sub {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
 .fintap-hero-iphone__search-icon {
   width: 1.55rem;
   height: 1.55rem;
