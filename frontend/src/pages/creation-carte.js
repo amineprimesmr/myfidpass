@@ -112,9 +112,12 @@ export default {
               <label class="creation-carte-signup__login-label" for="creation-carte-login-email">E-mail</label>
               <input
                 id="creation-carte-login-email"
+                name="email"
                 type="email"
                 class="creation-carte-signup__email"
+                placeholder="Adresse e-mail"
                 autocomplete="email"
+                required
               />
 
               <button type="button" class="creation-carte-signup__btn creation-carte-signup__btn--primary" id="creation-carte-login-submit">
