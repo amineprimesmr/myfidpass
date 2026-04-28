@@ -689,6 +689,8 @@ router.post("/apple", async (req, res) => {
  * crée un code à usage unique, redirige vers le frontend avec ce code.
  */
 router.post("/apple-redirect", async (req, res) => {
+  const getFrontendApplePath = (mode) =>
+    mode === "auth" ? "/login" : mode === "creation_carte" ? "/creer-ma-carte" : "/checkout";
   if (!APPLE_CLIENT_ID) {
     return res.redirect(FRONTEND_URL + "/checkout?apple_error=config");
   }
@@ -701,12 +703,12 @@ router.post("/apple-redirect", async (req, res) => {
     if (userStr && typeof userStr === "string") userPayload = JSON.parse(decodeURIComponent(userStr));
   } catch (_) { /* ignore */ }
   if (!idToken) {
-    return res.redirect(FRONTEND_URL + (stateMode === "auth" ? "/login" : "/checkout") + "?apple_error=no_token");
+    return res.redirect(FRONTEND_URL + getFrontendApplePath(stateMode) + "?apple_error=no_token");
   }
   try {
     const decoded = jwt.decode(idToken, { complete: true });
     const kid = decoded?.header?.kid;
-    if (!kid) return res.redirect(FRONTEND_URL + "/checkout?apple_error=invalid");
+    if (!kid) return res.redirect(FRONTEND_URL + getFrontendApplePath(stateMode) + "?apple_error=invalid");
     const publicKeyPem = await getAppleSigningKeyPem(kid);
     const verified = jwt.verify(idToken, publicKeyPem, {
       algorithms: ["RS256"],
@@ -714,12 +716,12 @@ router.post("/apple-redirect", async (req, res) => {
       issuer: "https://appleid.apple.com",
     });
     const email = (verified.email || (userPayload?.email) || "").trim().toLowerCase();
-    if (!email) return res.redirect(FRONTEND_URL + "/checkout?apple_error=no_email");
+    if (!email) return res.redirect(FRONTEND_URL + getFrontendApplePath(stateMode) + "?apple_error=no_email");
     let user = getUserByEmail(email);
     const isNewUser = !user;
     const establishmentSelection = normalizeEstablishmentSelection(stateData || {});
     if (isNewUser && !hasSelectedEstablishment(establishmentSelection)) {
-      const basePath = stateMode === "auth" ? "/login" : "/checkout";
+      const basePath = getFrontendApplePath(stateMode);
       return res.redirect(302, FRONTEND_URL + basePath + "?apple_error=missing_establishment");
     }
     if (!user) {
@@ -732,7 +734,7 @@ router.post("/apple-redirect", async (req, res) => {
     if (isNewUser) {
       const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
       if (businessState.requires_business_setup) {
-        const basePath = stateMode === "auth" ? "/login" : "/checkout";
+        const basePath = getFrontendApplePath(stateMode);
         return res.redirect(302, FRONTEND_URL + basePath + "?apple_error=missing_establishment");
       }
     }
@@ -747,11 +749,11 @@ router.post("/apple-redirect", async (req, res) => {
       businesses: businessState.businesses,
       expiry: Date.now() + APPLE_CODE_TTL_MS,
     });
-    const basePath = stateMode === "auth" ? "/login" : "/checkout";
+    const basePath = getFrontendApplePath(stateMode);
     return res.redirect(302, FRONTEND_URL + basePath + "?apple_code=" + encodeURIComponent(code));
   } catch (e) {
     console.error("Apple redirect error:", e);
-    return res.redirect(FRONTEND_URL + "/checkout?apple_error=invalid");
+    return res.redirect(FRONTEND_URL + getFrontendApplePath(stateMode) + "?apple_error=invalid");
   }
 });
 

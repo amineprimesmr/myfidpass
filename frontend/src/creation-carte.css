@@ -1,11 +1,25 @@
 .creation-carte-signup {
+  position: absolute;
+  inset: 0;
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  position: relative;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   color: #f8fafc;
+  touch-action: none;
+}
+
+html:has(.creation-carte-signup),
+body:has(.creation-carte-signup) {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+body.page-builder #builder-app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
 }
 
 .creation-carte-signup .hidden {
@@ -30,6 +44,10 @@
   align-items: center;
   text-align: center;
   animation: creationSignupIn 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.page-builder {
+  overflow: hidden;
 }
 
 .creation-carte-signup__brand {
@@ -219,6 +237,26 @@
   background: #e5e7eb;
   padding: 0.56rem 0.78rem 0.52rem;
   text-align: left;
+}
+
+.creation-carte-signup__locked-field {
+  border-radius: 0.72rem;
+  background: #e5e7eb;
+  padding: 0.52rem 0.78rem;
+  text-align: left;
+  margin-bottom: 0.44rem;
+}
+
+.creation-carte-signup__locked-label {
+  font-size: 0.68rem;
+  color: #6b7280;
+}
+
+.creation-carte-signup__locked-value {
+  margin-top: 0.08rem;
+  font-size: 0.9rem;
+  color: #111827;
+  font-weight: 600;
 }
 
 .creation-carte-signup__email-review-label {

@@ -24,6 +24,14 @@ function buildSignupUrl(email) {
   }
 }
 
+function encodeAppleState(payload) {
+  try {
+    return btoa(JSON.stringify(payload));
+  } catch (_) {
+    return "creation_carte";
+  }
+}
+
 export default {
   init() {
     const root = document.getElementById("builder-app");
@@ -83,6 +91,11 @@ export default {
             </div>
 
             <div class="creation-carte-signup__step creation-carte-signup__step--password hidden" id="creation-carte-step-password">
+              <div class="creation-carte-signup__locked-field">
+                <div class="creation-carte-signup__locked-label">Commerce</div>
+                <div class="creation-carte-signup__locked-value" id="creation-carte-commerce-review"></div>
+              </div>
+
               <div class="creation-carte-signup__email-review">
                 <div class="creation-carte-signup__email-review-label">Adresse e-mail</div>
                 <div class="creation-carte-signup__email-review-value" id="creation-carte-email-review"></div>
@@ -126,6 +139,7 @@ export default {
     const stepEmail = root.querySelector("#creation-carte-step-email");
     const stepPassword = root.querySelector("#creation-carte-step-password");
     const emailReview = root.querySelector("#creation-carte-email-review");
+    const commerceReview = root.querySelector("#creation-carte-commerce-review");
     const emailEdit = root.querySelector("#creation-carte-email-edit");
     const passwordSubmit = root.querySelector("#creation-carte-password-submit");
     const passwordEye = root.querySelector("#creation-carte-password-eye");
@@ -138,6 +152,9 @@ export default {
 
     const establishmentName = String(commerce || "").trim();
     const placeId = String(params.get("place_id") || "").trim();
+    if (commerceReview instanceof HTMLElement) {
+      commerceReview.textContent = establishmentName || "Commerce non renseigné";
+    }
     if (establishmentName && placeId) {
       setPendingEstablishment({
         establishment_name: establishmentName,
@@ -151,6 +168,10 @@ export default {
           google_place_id: placeId,
         }
       : {};
+    const oauthState = encodeAppleState({
+      mode: "creation_carte",
+      ...oauthPayload,
+    });
 
     const showOAuthError = (msg) => {
       if (!(oauthError instanceof HTMLElement)) return;
@@ -168,6 +189,25 @@ export default {
       setRefreshToken(data.refreshToken || null);
       window.location.href = "/app";
     };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const appleCode = urlParams.get("apple_code");
+    const appleError = urlParams.get("apple_error");
+    if (appleError) {
+      showOAuthError(appleError === "no_email" ? "Apple n'a pas fourni d'email." : "Connexion Apple impossible.");
+    } else if (appleCode) {
+      fetch(`${API_BASE}/api/auth/apple-exchange?code=${encodeURIComponent(appleCode)}`)
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (ok) handleOAuthSuccess(data);
+          else showOAuthError(data?.error || "Session Apple expirée.");
+        })
+        .catch(() => showOAuthError("Erreur réseau lors de la connexion Apple."));
+      const cleaned = new URL(window.location.href);
+      cleaned.searchParams.delete("apple_code");
+      cleaned.searchParams.delete("apple_error");
+      window.history.replaceState({}, "", cleaned.pathname + cleaned.search);
+    }
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -310,6 +350,18 @@ export default {
         appleBtn.disabled = true;
         appleBtn.title = "Connexion Apple indisponible";
       } else {
+        const buildAppleRedirectUrl = () =>
+          "https://appleid.apple.com/auth/authorize?" +
+          new URLSearchParams({
+            client_id: appleClientId,
+            redirect_uri: `${API_BASE}/api/auth/apple-redirect`,
+            response_type: "id_token code",
+            scope: "name email",
+            response_mode: "form_post",
+            state: oauthState,
+            nonce: Math.random().toString(36).slice(2) + Date.now().toString(36),
+          }).toString();
+
         const initAppleScript = () => {
           if (window.__fidpassCreationAppleScriptLoaded) return;
           window.__fidpassCreationAppleScriptLoaded = true;
@@ -335,7 +387,7 @@ export default {
         appleBtn.addEventListener("click", () => {
           showOAuthError("");
           if (typeof AppleID === "undefined" || !AppleID?.auth) {
-            showOAuthError("Apple Sign In indisponible sur ce navigateur.");
+            window.location.href = buildAppleRedirectUrl();
             return;
           }
           AppleID.auth
@@ -368,6 +420,10 @@ export default {
             })
             .catch((err) => {
               const msg = err?.error || err?.message || "Connexion Apple annulée.";
+              if (msg.toLowerCase().includes("popup") || msg.toLowerCase().includes("blocked")) {
+                window.location.href = buildAppleRedirectUrl();
+                return;
+              }
               showOAuthError(msg);
             });
         });
