@@ -24,6 +24,12 @@ export default {
 
     const params = new URLSearchParams(window.location.search);
     const commerce = params.get("name") || "";
+    const mode = String(params.get("mode") || "").trim().toLowerCase();
+    const initialEmail = String(params.get("email") || "").trim();
+    const redirectRaw = String(params.get("redirect") || "").trim();
+    const redirectPath = redirectRaw.startsWith("/") && !redirectRaw.startsWith("//")
+      ? redirectRaw
+      : "/app";
 
     root.innerHTML = `
       <section class="creation-carte-signup" aria-label="Inscription commerçant">
@@ -119,9 +125,19 @@ export default {
                 autocomplete="email"
                 required
               />
+              <label class="creation-carte-signup__login-label" for="creation-carte-login-password">Mot de passe</label>
+              <input
+                id="creation-carte-login-password"
+                type="password"
+                class="creation-carte-signup__email"
+                placeholder="Mot de passe"
+                autocomplete="current-password"
+                minlength="1"
+                required
+              />
 
               <button type="button" class="creation-carte-signup__btn creation-carte-signup__btn--primary" id="creation-carte-login-submit">
-                Continuer avec l’e-mail
+                Se connecter
               </button>
               <p class="creation-carte-signup__oauth-error hidden" id="creation-carte-login-error" aria-live="polite"></p>
 
@@ -165,6 +181,7 @@ export default {
     const openLoginBtn = root.querySelector("#creation-carte-open-login");
     const closeLoginBtn = root.querySelector("#creation-carte-close-login");
     const loginEmailInput = root.querySelector("#creation-carte-login-email");
+    const loginPasswordInput = root.querySelector("#creation-carte-login-password");
     const loginSubmitBtn = root.querySelector("#creation-carte-login-submit");
     const oauthError = root.querySelector("#creation-carte-oauth-error");
     const registerError = root.querySelector("#creation-carte-register-error");
@@ -227,7 +244,7 @@ export default {
       }
       setAuthToken(data.token);
       setRefreshToken(data.refreshToken || null);
-      window.location.href = "/app";
+      window.location.href = redirectPath;
     };
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -292,14 +309,45 @@ export default {
 
     loginSubmitBtn?.addEventListener("click", () => {
       const value = loginEmailInput instanceof HTMLInputElement ? loginEmailInput.value.trim() : "";
+      const password = loginPasswordInput instanceof HTMLInputElement ? loginPasswordInput.value : "";
       showInlineError(loginError, "");
       if (!value || !loginEmailInput?.checkValidity()) {
         showInlineError(loginError, "Entrez une adresse e-mail valide.");
         loginEmailInput?.focus();
         return;
       }
-      const qs = `?email=${encodeURIComponent(value)}`;
-      window.location.href = `/login${qs}`;
+      if (!password.trim()) {
+        showInlineError(loginError, "Entrez votre mot de passe.");
+        loginPasswordInput?.focus();
+        return;
+      }
+      const btnLabel = loginSubmitBtn.textContent;
+      loginSubmitBtn.disabled = true;
+      loginSubmitBtn.textContent = "Connexion...";
+      fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ login: value, password }),
+      })
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok) {
+            showInlineError(loginError, data?.error || "Connexion impossible pour le moment.");
+            return;
+          }
+          if (!data?.token) {
+            showInlineError(loginError, "Connexion réussie mais session invalide.");
+            return;
+          }
+          setAuthToken(data.token);
+          setRefreshToken(data.refreshToken || null);
+          window.location.href = redirectPath;
+        })
+        .catch(() => showInlineError(loginError, "Erreur réseau lors de la connexion."))
+        .finally(() => {
+          loginSubmitBtn.disabled = false;
+          loginSubmitBtn.textContent = btnLabel || "Se connecter";
+        });
     });
 
     passwordEye?.addEventListener("click", () => {
@@ -545,6 +593,23 @@ export default {
         });
         loginAppleBtn?.addEventListener("click", () => appleBtn.click());
       }
+    }
+
+    if (initialEmail) {
+      emailInput.value = initialEmail;
+      if (loginEmailInput instanceof HTMLInputElement) loginEmailInput.value = initialEmail;
+    }
+    if (mode === "login") {
+      if (stepEmail instanceof HTMLElement) stepEmail.classList.add("hidden");
+      if (stepPassword instanceof HTMLElement) stepPassword.classList.add("hidden");
+      if (stepLogin instanceof HTMLElement) stepLogin.classList.remove("hidden");
+      signupContent?.classList.add("is-login-mode");
+      window.setTimeout(() => {
+        if (loginEmailInput instanceof HTMLInputElement && !loginEmailInput.value.trim() && emailInput.value.trim()) {
+          loginEmailInput.value = emailInput.value.trim();
+        }
+        loginEmailInput?.focus();
+      }, 40);
     }
   },
 };

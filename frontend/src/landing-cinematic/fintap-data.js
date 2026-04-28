@@ -106,17 +106,6 @@ export const FINTAP = {
       quote: "FinTap streamlines financial transactions effortlessly, a real asset for a busy software engineer like me.",
     },
   ],
-  integrations: [
-    { name: "Zapier", desc: "Automate finance tasks by integrating our app with Zapier's capabilities" },
-    { name: "Framer", desc: "Enhance app prototypes with our fintech app's integration in Framer" },
-    { name: "Airtable", desc: "Streamline data management and syncing our app with Airtable" },
-    { name: "Figma", desc: "Collaborate and design seamlessly with our app's integration in Figma" },
-    { name: "Telegram", desc: "Integrate our app with Telegram for instant financial updates and alerts" },
-    { name: "Twitter", desc: "Connect our app with Twitter for real-time financial news and insights" },
-    { name: "ChatGPT", desc: "Enhance customer interaction using our app's integration with ChatGPT" },
-    { name: "Stripe", desc: "Efficient payment processing through our app's seamless Stripe integration" },
-    { name: "Lemon Squeezy", desc: "Simplify digital sales and subscriptions with Lemon Squeezy integration" },
-  ],
   security: {
     line1: "Comprehensive security",
     line2: "of anti-fraud",

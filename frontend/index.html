@@ -38,13 +38,9 @@
     <link rel="stylesheet" href="/src/app-member-detail.css" />
     <link rel="stylesheet" href="/src/app-member-detail-profile.css" />
     <link rel="stylesheet" href="/src/app-card-rules.css" />
-    <link rel="stylesheet" href="/src/app-integration.css" />
     <link rel="stylesheet" href="/src/app-flyer-qr.css" />
     <link rel="stylesheet" href="/src/app-flyer-qr-typography.css" />
     <link rel="stylesheet" href="/src/app-flyer-bg-gallery.css" />
-    <link rel="stylesheet" href="/src/app-fidelity-client-page.css" />
-    <link rel="stylesheet" href="/src/app-integration-guide.css" />
-    <link rel="stylesheet" href="/src/landing-integration-catalog.css" />
     <link rel="stylesheet" href="/src/app-mobile.css" />
     <link rel="stylesheet" href="/src/app-mobile-ios-parity.css" />
     <link rel="stylesheet" href="/src/app-mobile-ios-components.css" />
@@ -343,7 +339,6 @@
             <ul class="lg-menu__ul" role="list">
               <li><a href="/" class="lg-menu__a">Accueil</a></li>
               <li><a href="/abonnement" class="lg-menu__a">Tarifs</a></li>
-              <li><a href="/integration" class="lg-menu__a">Intégrations</a></li>
             </ul>
             <a href="/creer-ma-carte" class="lg-menu__cta">Créer la carte</a>
           </div>
@@ -400,7 +395,6 @@
               <ul class="lg-menu__ul lg-menu__ul--stack" role="list">
                 <li><a href="/" class="lg-menu__a lg-menu__a--stack">Accueil</a></li>
                 <li><a href="/abonnement" class="lg-menu__a lg-menu__a--stack">Tarifs</a></li>
-                <li><a href="/integration" class="lg-menu__a lg-menu__a--stack">Intégrations</a></li>
               </ul>
               <a href="/creer-ma-carte" class="lg-menu__cta lg-menu__cta--stack">Créer la carte</a>
             </div>
@@ -540,14 +534,6 @@
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg></span>
             <span class="app-sidebar-link-text">Flyer QR</span>
           </a>
-          <a href="#fidelity-client" class="app-sidebar-link" data-section="fidelity-client">
-            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>
-            <span class="app-sidebar-link-text">Page fidélité</span>
-          </a>
-          <a href="#integration" class="app-sidebar-link" data-section="integration">
-            <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-4"/><path d="M12 18a2 2 0 0 1-2-2V8a2 2 0 0 1 4 0v8a2 2 0 0 1-2 2z"/><path d="M8 6l4-4 4 4"/><path d="M8 6h8"/></svg></span>
-            <span class="app-sidebar-link-text">Intégration</span>
-          </a>
           <a href="#engagement" class="app-sidebar-link" data-section="engagement">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
             <span class="app-sidebar-link-text">Avis & Réseaux</span>
@@ -566,9 +552,9 @@
             aria-hidden="true"
           >
             <p id="app-sidebar-trial-subscribe-remaining" class="app-sidebar-trial-subscribe-card__remaining">L’essai prend fin dans —</p>
-            <p class="app-sidebar-trial-subscribe-card__title">S’abonner (3 j + 1 € / 399 €/an)</p>
+            <p class="app-sidebar-trial-subscribe-card__title">S’abonner pour 1€</p>
             <button type="button" id="app-sidebar-trial-subscribe-btn" class="app-sidebar-trial-subscribe-card__button">
-              S’abonner
+              S’abonner pour 1€
             </button>
           </div>
         </div>
@@ -1227,209 +1213,6 @@
             </div>
           </section>
 
-          <section id="fidelity-client" class="app-section app-section-fidelity-client app-section-fidelity-client--flyer">
-            <div class="app-fidelity-client-shell">
-              <header class="app-fidelity-client-hero app-flyer-qr-hero">
-                <p class="app-flyer-qr-eyebrow">Expérience client</p>
-                <h2 class="app-section-title">Page fidélité</h2>
-                <p class="app-section-desc">
-                  Ce que vos clients voient sur <strong>/fidelity/votre-lien</strong> après le scan QR : personnalisez
-                  <strong>l’accroche</strong> et le <strong>fond d’écran</strong> (sans voile — image affichée telle quelle).
-                </p>
-              </header>
-              <div class="app-fidelity-client-layout app-flyer-qr-layout">
-                <div class="app-fidelity-client-preview-col app-flyer-qr-preview-col">
-                  <div class="app-fidelity-client-preview-frame app-flyer-qr-preview-frame">
-                    <div class="app-fidelity-client-mockup">
-                      <p class="app-fidelity-client-mockup-caption app-flyer-qr-mockup-caption">Aperçu page client</p>
-                      <div
-                        class="app-fidelity-client-preview-mode-bar"
-                        role="group"
-                        aria-label="Mode d'aperçu de la page fidélité"
-                      >
-                        <button
-                          type="button"
-                          id="app-fidelity-client-mode-static"
-                          class="app-btn app-btn-secondary app-fidelity-client-mode-btn is-active"
-                          aria-pressed="true"
-                        >
-                          Aperçu rapide
-                        </button>
-                        <button
-                          type="button"
-                          id="app-fidelity-client-mode-live"
-                          class="app-btn app-btn-secondary app-fidelity-client-mode-btn"
-                          aria-pressed="false"
-                        >
-                          Tester le jeu
-                        </button>
-                      </div>
-                      <div class="app-fidelity-client-mockup-scene app-flyer-qr-mockup-scene">
-                        <div class="app-fidelity-client-mockup-phone">
-                          <div class="app-fidelity-client-mockup-screen">
-                            <div
-                              class="app-fidelity-client-live-preview-viewport"
-                              id="app-fidelity-client-live-preview-viewport"
-                              aria-hidden="true"
-                            >
-                              <div
-                                id="app-fidelity-client-live-preview-static-wrap"
-                                class="app-fidelity-client-live-preview-static-wrap"
-                              >
-                              <div
-                                id="app-fidelity-client-live-preview-root"
-                                class="fidelity-page app-fidelity-client-live-preview-root"
-                              >
-                                <main class="fidelity-v2-main fidelity-qr-game">
-                                  <section class="fidelity-qr-hero" aria-label="Jeu">
-                                    <div class="fidelity-qr-brand">
-                                      <img
-                                        id="app-fidelity-client-preview-logo"
-                                        class="fidelity-qr-logo hidden"
-                                        alt=""
-                                        width="120"
-                                        height="120"
-                                        decoding="async"
-                                      />
-                                      <h1
-                                        id="app-fidelity-client-preview-title"
-                                        class="fidelity-qr-title fidelity-qr-title--lead"
-                                      >
-                                        <span class="fidelity-qr-hero-title-inner"></span>
-                                      </h1>
-                                    </div>
-                                  </section>
-                                  <section
-                                    class="fidelity-v2-roulette-inline fidelity-v2-roulette-inline--qr"
-                                    aria-label="Roulette"
-                                  >
-                                    <div class="fidelity-v2-roulette-inline-controls">
-                                      <span
-                                        class="fidelity-cta-wrap fidelity-cta-wrap--full fidelity-cta-wrap--qr-play fidelity-earn-points-cta-wrap fidelity-cta-wrap--qr-play-attention"
-                                      >
-                                        <button
-                                          type="button"
-                                          class="fidelity-shiny-cta fidelity-shiny-cta--missions-gift fidelity-shiny-cta--qr-play app-fidelity-client-preview-cta"
-                                          tabindex="-1"
-                                          aria-hidden="true"
-                                        >
-                                          <span class="fidelity-shiny-cta__label">
-                                            <span>Jouer la partie</span>
-                                          </span>
-                                        </button>
-                                      </span>
-                                    </div>
-                                    <div class="fidelity-roulette-wheel-zone">
-                                      <div class="fidelity-roulette-wheel-mount">
-                                        <div class="fidelity-roulette-wheel-outer">
-                                          <div
-                                            class="fidelity-roulette-wheel"
-                                            id="app-fidelity-client-preview-wheel"
-                                          ></div>
-                                          <div class="fidelity-roulette-wheel-rim" aria-hidden="true"></div>
-                                          <div class="fidelity-roulette-indicator" aria-hidden="true"></div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </section>
-                                </main>
-                                <footer class="fidelity-v2-footer fidelity-v2-footer--dark fidelity-qr-powered">
-                                  <p>Vous êtes un pro ?</p>
-                                </footer>
-                              </div>
-                              </div>
-                              <div
-                                id="app-fidelity-client-live-preview-live-wrap"
-                                class="app-fidelity-client-live-preview-live-wrap"
-                              >
-                                <iframe
-                                  id="app-fidelity-client-live-iframe"
-                                  class="app-fidelity-client-live-iframe"
-                                  title="Test interactif — page fidélité publique"
-                                ></iframe>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="app-fidelity-client-link-row app-flyer-qr-link-row">
-                    <label class="app-label" for="app-fidelity-client-public-url">Lien public page fidélité</label>
-                    <div class="app-fidelity-client-link-wrap app-flyer-qr-link-wrap">
-                      <input type="text" id="app-fidelity-client-public-url" class="app-input" readonly autocomplete="off" />
-                      <button type="button" id="app-fidelity-client-copy-url" class="app-btn app-btn-secondary">Copier</button>
-                    </div>
-                    <p class="app-hint" style="margin: 0.35rem 0 0; font-size: 0.78rem">
-                      Utilisez <strong>Tester le jeu</strong> pour la même page que le QR (flux réel). L’aperçu rapide
-                      reflète titre et fond sans recharger l’iframe.
-                    </p>
-                  </div>
-                </div>
-                <div class="app-fidelity-client-side app-flyer-qr-side">
-                  <button
-                    type="button"
-                    id="app-fidelity-client-panel-toggle"
-                    class="app-flyer-panel-toggle"
-                    aria-expanded="false"
-                    aria-controls="app-fidelity-client-panel"
-                  >
-                    Personnaliser la page
-                  </button>
-                  <div id="app-fidelity-client-panel" class="app-flyer-panel app-fidelity-client-panel">
-                    <div class="app-flyer-logo-panel">
-                      <p class="app-flyer-chip-label">Accroche (titre)</p>
-                      <p class="app-hint" style="margin: 0 0 0.5rem; font-size: 0.78rem">
-                        Texte principal sous le logo sur la page jeu. Laisser vide pour le message par défaut Myfidpass.
-                      </p>
-                      <div class="app-flyer-field">
-                        <label class="app-label" for="app-fidelity-client-hero-title">Titre affiché sur la page</label>
-                        <textarea
-                          id="app-fidelity-client-hero-title"
-                          class="app-input"
-                          rows="3"
-                          maxlength="400"
-                          placeholder="Participez au jeu et tentez de gagner une récompense."
-                        ></textarea>
-                      </div>
-                      <p id="app-fidelity-client-title-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
-                    </div>
-                    <div class="app-flyer-logo-panel app-flyer-bg-panel" style="margin-top: 0.75rem">
-                      <p class="app-flyer-chip-label">Image de fond</p>
-                      <p class="app-hint" style="margin: 0 0 0.5rem; font-size: 0.78rem">
-                        Remplit l’arrière-plan de la page (recadrage « cover »). PNG, JPG ou WebP — enregistrement immédiat après import.
-                      </p>
-                      <div
-                        id="app-fidelity-client-bg-drop"
-                        class="app-fidelity-client-bg-drop app-drop-zone"
-                        tabindex="0"
-                        role="button"
-                        aria-label="Glisser-déposer une image ou cliquer pour parcourir"
-                      >
-                        <input
-                          type="file"
-                          id="app-fidelity-client-bg-input"
-                          class="app-flyer-logo-file-input"
-                          accept="image/png,image/jpeg,image/webp"
-                          aria-label="Importer une image de fond pour la page fidélité"
-                        />
-                        <span class="app-fidelity-client-bg-drop-text">Déposer une image ici ou utiliser « Importer »</span>
-                      </div>
-                      <div class="app-flyer-logo-panel-actions">
-                        <button type="button" id="app-fidelity-client-bg-choose" class="app-btn app-btn-secondary">Importer une image</button>
-                        <button type="button" id="app-fidelity-client-remove" class="app-btn app-btn-secondary hidden">Retirer le fond</button>
-                      </div>
-                      <p id="app-fidelity-client-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
-                      <div id="app-fidelity-client-preview-wrap" class="app-flyer-logo-preview-wrap hidden">
-                        <span class="app-flyer-logo-preview-label">Fichier actuel</span>
-                        <img id="app-fidelity-client-preview-img" class="app-fidelity-client-preview-thumb" alt="" decoding="async" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
 
           <section id="personnaliser" class="app-section">
             <div id="app-personnaliser-editor-wrap">
@@ -1774,50 +1557,6 @@
               </div>
             </div>
             </div>
-            </div>
-          </section>
-                    <section id="integration" class="app-section">
-            <div id="app-integration-catalog-view">
-              <h2 class="app-section-title">Intégration technique</h2>
-              <p class="app-section-desc">Cet espace s’adresse à l’<strong>intégrateur / prestataire</strong> qui branche Myfidpass. Choisissez le type d’environnement, ouvrez le guide : tout est expliqué de votre point de vue (identifiants, appel API).</p>
-              <div class="app-integration-page">
-                <div class="app-integration-hero app-integration-hero--simple">
-                  <h3 class="app-integration-hero-title">Intégrations</h3>
-                  <p class="app-integration-hero-desc">Recherchez un logiciel ou un scénario (Zelty, Shopify, borne, API…), puis ouvrez la fiche pour le détail technique.</p>
-                </div>
-                <div class="app-integration-toolbar">
-                  <span class="app-integration-toolbar-label" id="app-integration-search-label">Recherche</span>
-                  <input type="search" id="app-integration-search" class="app-input" placeholder="Ex. Zelty, Shopify, borne, API…" autocomplete="off" aria-labelledby="app-integration-search-label" />
-                </div>
-                <div id="app-integration-hub-root" aria-label="Catalogue des intégrations"></div>
-                <p class="app-integration-footnote">Une seule API pour tous les cas : le slug, l’URL d’API et l’exemple cURL correspondent au <strong>commerce dont l’espace est ouvert ici</strong> (session actuelle).</p>
-              </div>
-            </div>
-            <div id="app-integration-guide-view" class="hidden" aria-hidden="true" role="region" aria-label="Fiche intégration">
-              <div class="app-int-guide-panel">
-                <div class="app-int-guide-topbar">
-                  <button type="button" class="app-int-guide-back" id="app-int-guide-back">← Retour au catalogue</button>
-                  <p class="app-int-sheet-kicker" id="app-int-sheet-kicker" hidden></p>
-                  <div class="app-int-sheet-title-row">
-                    <h3 id="app-int-sheet-title" class="app-int-sheet-title">—</h3>
-                    <span id="app-int-sheet-badge-wrap"></span>
-                  </div>
-                </div>
-                <div class="app-int-sheet-progress" id="app-int-sheet-progress" aria-label="Progression"></div>
-                <div class="app-int-sheet-body" id="app-int-sheet-body"></div>
-                <div class="app-int-sheet-footer">
-                  <button type="button" class="app-btn app-btn-secondary" id="app-int-sheet-prev">Précédent</button>
-                  <button type="button" class="app-btn app-btn-primary" id="app-int-sheet-next">Suivant</button>
-                </div>
-              </div>
-            </div>
-            <!-- Champs remplis par app.js (hors écran) : le guide lit les valeurs pour les étapes « copier » -->
-            <div class="app-integration-tech-sr" aria-hidden="true">
-              <input type="text" id="app-integration-prestataire-link" class="app-input" readonly tabindex="-1" />
-              <a href="#" id="app-integration-open-page" target="_blank" rel="noopener" tabindex="-1"></a>
-              <input type="text" id="app-integration-base-url" readonly tabindex="-1" />
-              <input type="text" id="app-integration-slug" readonly tabindex="-1" />
-              <pre id="app-integration-curl" class="app-integration-curl"></pre>
             </div>
           </section>
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
@@ -2396,10 +2135,6 @@
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg></span>
                 Flyer QR
               </a></li>
-              <li><a href="#fidelity-client" class="app-mobile-profil-item" data-section="fidelity-client">
-                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>
-                Page fidélité
-              </a></li>
               <li><a href="#engagement" class="app-mobile-profil-item" data-section="engagement">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
                 Avis & Réseaux
@@ -2407,10 +2142,6 @@
               <li><a href="#personnaliser" class="app-mobile-profil-item" data-section="personnaliser">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></span>
                 Ma carte
-              </a></li>
-              <li><a href="#integration" class="app-mobile-profil-item" data-section="integration">
-                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-                Intégration
               </a></li>
               <li><button type="button" class="app-mobile-profil-item logout" id="app-mobile-logout" style="width:100%;text-align:left;border:none;">
                 <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
@@ -2529,7 +2260,6 @@
               <ul class="lg-menu__ul" role="list">
                 <li><a href="/" class="lg-menu__a">Accueil</a></li>
                 <li><a href="/abonnement" class="lg-menu__a">Tarifs</a></li>
-                <li><a href="/integration" class="lg-menu__a">Intégrations</a></li>
                 <li>
                   <a
                     href="/login?redirect=/app"
@@ -2595,11 +2325,6 @@
                     >
                   </li>
                   <li>
-                    <a href="/integration" class="lg-menu__a lg-menu__a--stack"
-                      >Intégrations</a
-                    >
-                  </li>
-                  <li>
                     <a
                       href="/login?redirect=/app"
                       class="lg-menu__a lg-menu__a--stack landing-nav-login-link landing-menu-drawer-login"
@@ -2656,7 +2381,6 @@
                 <a href="/creer-ma-carte">Commencer</a>
                 <a href="#capabilities">Produit</a>
                 <a href="/choisir-offre">Tarifs</a>
-                <a href="/integration">Intégration</a>
               </nav>
               <nav class="landing-footer-col-v3" aria-label="Fonctionnalités">
                 <h3 class="landing-footer-col-title-v3">Fonctionnalités</h3>
@@ -2696,44 +2420,6 @@
           <a href="/" class="landing-btn landing-btn-secondary" style="margin-bottom: 1.5rem;">← Retour</a>
           <div id="landing-legal-content"></div>
         </div>
-      </main>
-
-      <main id="landing-integration" class="landing-legal landing-integration-page hidden">
-        <div class="landing-legal-inner">
-          <a href="/" class="landing-btn landing-btn-secondary" style="margin-bottom: 1.5rem;">← Retour</a>
-          <h1 class="integration-page-title">Intégration Myfidpass — Caisses et bornes</h1>
-          <p class="integration-page-subtitle">Documentation pour connecter Myfidpass à votre logiciel de caisse, borne de commande ou terminal.</p>
-
-          <section class="integration-block integration-catalog-block">
-            <h2>Écosystème compatible (aperçu)</h2>
-            <p>La même API s’utilise avec les caisses, bornes et outils listés ci-dessous (kits prêts, bêta, partenaires ou feuille de route). Le détail technique est identique pour tous les commerces Myfidpass.</p>
-            <div id="landing-integration-catalog-root" aria-label="Aperçu des intégrations"></div>
-          </section>
-
-          <section class="integration-block integration-block-merchant">
-            <h2>Vous êtes commerçant ?</h2>
-            <p>Vous n'avez pas besoin de faire la technique. Transmettez <strong>cette page</strong> (ou le lien ci-dessous) à la personne qui gère votre caisse ou votre borne : votre installateur, le support de votre logiciel de caisse, ou votre prestataire informatique. Ils disposeront de toute la documentation pour connecter Myfidpass à votre système.</p>
-            <p>Vous devrez leur communiquer également votre <strong>token d'accès</strong>, visible dans votre espace Myfidpass (section Intégration caisse / borne), ou dans l’URL de votre tableau de bord (<code>?token=...</code>).</p>
-          </section>
-
-          <section class="integration-block">
-            <h2>Pour le prestataire / intégrateur</h2>
-            <p>Myfidpass expose une <strong>API REST</strong>. Tout système qui peut scanner le QR code de la carte Myfidpass (Wallet ou écran) et envoyer une requête HTTP peut s’intégrer.</p>
-            <p><strong>QR code</strong> : la valeur lue est l’identifiant unique du membre (UUID). À envoyer dans l’API sous le nom <code>barcode</code>.</p>
-            <p><strong>Authentification</strong> : header <code>X-Dashboard-Token: VOTRE_TOKEN</code> (token fourni par le commerçant).</p>
-            <p><strong>Endpoint principal (scan + crédit en un appel)</strong> :</p>
-            <pre class="integration-pre">POST {BASE_URL}/api/businesses/{slug}/integration/scan
-Content-Type: application/json
-X-Dashboard-Token: TOKEN
-
-{"barcode": "UUID-DU-MEMBRE", "amount_eur": 12.50}</pre>
-            <p>Remplacer <code>{BASE_URL}</code> par l’URL de l’API Myfidpass (fournie par le commerçant), <code>{slug}</code> par l’identifiant du commerce.</p>
-            <p><strong>Documentation complète</strong> (endpoints lookup, erreurs, exemples) : disponible dans l'espace commerçant (section Intégration) ou sur demande. Fichier détaillé : <a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/INTEGRATION-API-BORNES-CAISSES.md" target="_blank" rel="noopener">INTEGRATION-API-BORNES-CAISSES.md</a>.</p>
-            <p><strong>Exemple de script</strong> (Node.js) pour tester l’intégration : <a href="https://github.com/amineprimesmr/myfidpass/blob/main/docs/examples/fidpass-scan-example.js" target="_blank" rel="noopener">fidpass-scan-example.js</a> (dans <code>docs/examples/</code>).</p>
-          </section>
-
-          <p id="integration-page-slug-hint" class="integration-slug-hint hidden"></p>
-          </div>
       </main>
 
     </div>

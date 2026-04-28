@@ -10,7 +10,6 @@ import {
   LOCATION_RADIUS_DEFAULT_M,
   clampLocationRadiusMetersClient,
 } from "../constants/locationRadius.js";
-import { initIntegrationHub } from "./integration-hub.js";
 import { maybeShowPostPurchaseAppModal } from "./post-purchase-app-modal.js";
 import {
   initAppDirtyGuard,
@@ -40,7 +39,6 @@ import {
 } from "./app-card-rules-point-tiers.js";
 import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../utils/geocoding.js";
 import { initAppFlyerQr } from "./app-flyer-qr.js";
-import { initFidelityClientPageSection } from "./app-fidelity-client-page.js";
 import { syncDashboardHomeCardPreview } from "./dashboard-home-card-preview.js";
 import {
   applyCommerceIosHomeState,
@@ -273,7 +271,7 @@ function initAppPage() {
         const body = await res.json().catch(() => ({}));
         clearAuthToken();
         const code = body.code || "invalid";
-        window.location.replace("/login?redirect=/app&session=" + code);
+        window.location.replace("/creer-ma-carte?mode=login&redirect=/app&session=" + code);
         return;
       }
       if (!res.ok) {
@@ -517,10 +515,8 @@ const APP_SECTION_IDS = [
   "dashboard",
   "membres",
   "flyer-qr",
-  "fidelity-client",
   "personnaliser",
   "carte-perimetre",
-  "integration",
   "engagement",
   "notifications",
   "profil",
@@ -533,8 +529,6 @@ const APP_MOBILE_TITLES = {
   "notifications": "Notifs",
   "carte-perimetre": "Emplacement",
   "flyer-qr": "Flyer QR",
-  "fidelity-client": "Page fidélité",
-  "integration": "Intégration",
   "engagement": "Avis & Réseaux",
   "profil": "Commerce",
 };
@@ -549,11 +543,15 @@ function syncTrialPillCommerceLayout() {
   const pill = document.getElementById("app-mobile-trial-subscribe-pill");
   const topbar = document.querySelector("#profil .app-commerce-mobile-topbar");
   const cta = document.querySelector(".app-mobile-trial-subscribe-pill__cta");
+  const sidebarTitle = document.querySelector(".app-sidebar-trial-subscribe-card__title");
+  const sidebarButton = document.getElementById("app-sidebar-trial-subscribe-btn");
   if (!app) return;
   const section = app.getAttribute("data-mobile-section") || "";
   const trialVisible = !!(pill && !pill.classList.contains("hidden"));
+  if (sidebarTitle) sidebarTitle.textContent = "S’abonner pour 1€";
+  if (sidebarButton) sidebarButton.textContent = "S’abonner pour 1€";
   if (cta) {
-    cta.textContent = section === "profil" ? "Profiter de l'offre" : "S’abonner (3 j + 1 € / 399 €)";
+    cta.textContent = section === "profil" ? "Profiter de l'offre" : "S’abonner pour 1€";
   }
   if (topbar) {
     topbar.classList.toggle("app-commerce-mobile-topbar--below-trial-pill", section === "profil" && trialVisible);
@@ -737,7 +735,7 @@ function initAppMobile() {
     triggerFullscreenQrScan();
   });
   document.getElementById("app-commerce-mobile-qr")?.addEventListener("click", () => {
-    showAppSection("fidelity-client");
+    showAppSection("personnaliser");
   });
   document.getElementById("app-commerce-mobile-settings")?.addEventListener("click", () => {
     setCommerceView("reglages");
@@ -1078,53 +1076,13 @@ function initAppDashboard(slug) {
     });
   }
 
-  const integrationBaseUrlEl = document.getElementById("app-integration-base-url");
-  const integrationSlugEl = document.getElementById("app-integration-slug");
-  const integrationCurlEl = document.getElementById("app-integration-curl");
-  const integrationPrestataireLinkEl = document.getElementById("app-integration-prestataire-link");
   const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "";
-  if (integrationBaseUrlEl) integrationBaseUrlEl.value = API_BASE || "https://api.myfidpass.fr";
-  if (integrationSlugEl) integrationSlugEl.value = slug || "";
-  const prestatairePageUrl = `${origin}/integration?slug=${encodeURIComponent(slug || "")}`;
-  if (integrationPrestataireLinkEl) integrationPrestataireLinkEl.value = prestatairePageUrl;
-  const integrationOpenPageEl = document.getElementById("app-integration-open-page");
-  if (integrationOpenPageEl) integrationOpenPageEl.href = prestatairePageUrl;
   const walletPreviewQr = document.getElementById("app-wallet-preview-qr");
   if (walletPreviewQr && currentShareSlug) {
     const fullShareLink = getShareLinkForSlug(currentShareSlug);
     walletPreviewQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullShareLink)}`;
     walletPreviewQr.alt = "QR code — scannez pour ajouter la carte à Apple Wallet";
   }
-  if (integrationCurlEl) {
-    integrationCurlEl.textContent = `curl -X POST "${API_BASE || "https://api.myfidpass.fr"}/api/businesses/${slug || "VOTRE_SLUG"}/integration/scan" \\
-  -H "Content-Type: application/json" \\
-  -H "X-Dashboard-Token: VOTRE_TOKEN" \\
-  -d '{"barcode":"UUID-DU-MEMBRE","amount_eur":12.50}'`;
-  }
-  document.getElementById("app-integration-copy-base")?.addEventListener("click", () => {
-    if (!integrationBaseUrlEl) return;
-    integrationBaseUrlEl.select();
-    navigator.clipboard.writeText(integrationBaseUrlEl.value);
-  });
-  document.getElementById("app-integration-copy-prestataire-link")?.addEventListener("click", () => {
-    if (!integrationPrestataireLinkEl) return;
-    integrationPrestataireLinkEl.select();
-    navigator.clipboard.writeText(integrationPrestataireLinkEl.value).then(() => {
-      const btn = document.getElementById("app-integration-copy-prestataire-link");
-      if (btn) { btn.textContent = "Copié !"; setTimeout(() => { btn.textContent = "Copier le lien"; }, 2000); }
-    });
-  });
-  document.getElementById("app-integration-copy-curl")?.addEventListener("click", () => {
-    if (!integrationCurlEl) return;
-    navigator.clipboard.writeText(integrationCurlEl.textContent);
-  });
-
-  initIntegrationHub({
-    slug: slug || "",
-    apiBase: API_BASE || "https://api.myfidpass.fr",
-    origin,
-  });
-
   // ——— Carte & périmètre ———
   (function initCartePerimetre() {
     const mapEl = document.getElementById("app-perimetre-map");
@@ -6431,11 +6389,6 @@ function initAppDashboard(slug) {
     pageOrigin,
     getShareLink: () => getShareLinkForSlug(slug),
     dashboardApi: (path, init) => api(path, init),
-  });
-  initFidelityClientPageSection({
-    api,
-    slug,
-    pageOrigin: typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "",
   });
   initAppCardRulesGuide();
   refresh();

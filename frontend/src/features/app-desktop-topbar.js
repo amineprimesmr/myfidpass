@@ -9,8 +9,6 @@ const SEARCH_INDEX = [
   { id: "personnaliser", label: "Ma carte", hint: "Design de la carte", chips: ["carte", "tous"] },
   { id: "carte-perimetre", label: "Emplacement", hint: "Carte & périmètre", chips: ["emplacement", "tous"] },
   { id: "flyer-qr", label: "Flyer QR", hint: "QR à imprimer", chips: ["marketing", "tous"] },
-  { id: "fidelity-client", label: "Page fidélité", hint: "Page publique clients", chips: ["web", "tous"] },
-  { id: "integration", label: "Intégration", hint: "API & outils", chips: ["tech", "tous"] },
   { id: "engagement", label: "Avis & Réseaux", hint: "Réseaux sociaux", chips: ["social", "tous"] },
   { id: "profil", label: "Profil", hint: "Établissement & compte", chips: ["compte", "tous"] },
 ];

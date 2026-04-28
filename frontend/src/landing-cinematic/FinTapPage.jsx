@@ -2,7 +2,6 @@ import "./fintap-landing.css";
 import { FinTapHeroScrollSection } from "./FinTapHeroScrollSection.jsx";
 import { FinTapFeatureSections } from "./FinTapFeatureSections.jsx";
 import { FinTapTestimonialsSection } from "./FinTapTestimonialsSection.jsx";
-import { FinTapIntegrationsSection } from "./FinTapIntegrationsSection.jsx";
 import { FinTapSecurityCtaSection } from "./FinTapSecurityCtaSection.jsx";
 import { FinTapFooterSection } from "./FinTapFooterSection.jsx";
 
@@ -15,7 +14,6 @@ export function FinTapPage() {
       <FinTapHeroScrollSection />
       <FinTapFeatureSections />
       <FinTapTestimonialsSection />
-      <FinTapIntegrationsSection />
       <FinTapSecurityCtaSection />
       <FinTapFooterSection />
     </main>

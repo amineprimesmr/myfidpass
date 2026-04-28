@@ -73,7 +73,7 @@ export function initOffersPage(route = {}) {
         }
       } else {
         const redirectPath = subscriptionLanding ? "/abonnement" : "/choisir-offre";
-        window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+        window.location.replace(`/creer-ma-carte?mode=login&redirect=${encodeURIComponent(redirectPath)}`);
         return;
       }
     } catch (e) {

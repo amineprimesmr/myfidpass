@@ -12,7 +12,6 @@ import membersProfileBonusRouter from "./members-profile-bonus.js";
 import membersGuestClaimRouter from "./members-guest-claim.js";
 import membersDeliveryReceiptRouter from "./members-delivery-receipt.js";
 import membersRouter from "./members.js";
-import integrationRouter from "./integration.js";
 import assetsRouter from "./assets.js";
 import publicAssetsRouter from "./public-assets.js";
 
@@ -29,7 +28,6 @@ slugRouter.use("/members", membersProfileBonusRouter);
 slugRouter.use("/members", membersDeliveryReceiptRouter);
 slugRouter.use("/members", membersRouter);
 slugRouter.use("/dashboard", dashboardRouter);
-slugRouter.use("/integration", integrationRouter);
 slugRouter.use("/public", publicAssetsRouter);
 slugRouter.use("/", assetsRouter);
 slugRouter.patch("/", updateHandler);

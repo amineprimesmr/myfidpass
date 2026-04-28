@@ -237,7 +237,7 @@ export function initLandingShell() {
         establishment_name: establishmentName,
         google_place_id: placeId,
       });
-      window.location.href = "/register?redirect=/app";
+      window.location.href = "/creer-ma-carte?redirect=/app";
     });
   }
 

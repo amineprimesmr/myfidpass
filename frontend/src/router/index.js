@@ -22,8 +22,8 @@ export function getRoute() {
   if (match) return { type: "fidelity", slug: match[1] };
   if (path === "/dashboard") return { type: "dashboard" };
   if (path === "/app") return { type: "app" };
-  if (path === "/login") return { type: "auth", tab: "login" };
-  if (path === "/register") return { type: "auth", tab: "register" };
+  if (path === "/login") return { type: "legacy-auth-redirect", tab: "login" };
+  if (path === "/register") return { type: "legacy-auth-redirect", tab: "register" };
   if (path === "/creer-ma-carte") return { type: "creation-carte" };
   if (path === "/abonnement") return { type: "offers", subscriptionLanding: true };
   if (path === "/choisir-offre") return { type: "offers" };
@@ -34,7 +34,6 @@ export function getRoute() {
   if (path === "/cgv") return { type: "legal", page: "cgv" };
   if (path === "/cookies") return { type: "legal", page: "cookies" };
   if (path === "/supprimer-compte") return { type: "legal", page: "delete-account" };
-  if (path === "/integration") return { type: "integration" };
   if (path === "/test-liquid-glass") return { type: "liquid-glass-test" };
   if (path === "") return { type: "landing" };
   return { type: "404" };
@@ -46,7 +45,6 @@ function getContainers() {
     builderApp: document.getElementById("builder-app"),
     fidelityApp: document.getElementById("fidelity-app"),
     dashboardApp: document.getElementById("dashboard-app"),
-    authApp: document.getElementById("auth-app"),
     appApp: document.getElementById("app-app"),
     offersApp: document.getElementById("offers-app"),
     builderHeader: document.getElementById("builder-header"),
@@ -55,7 +53,6 @@ function getContainers() {
     landingLegal: document.getElementById("landing-legal"),
     landingTemplates: document.getElementById("landing-templates"),
     legalContent: document.getElementById("landing-legal-content"),
-    landingIntegration: document.getElementById("landing-integration"),
     liquidGlassTest: document.getElementById("liquid-glass-test-app"),
   };
 }
@@ -98,7 +95,7 @@ export function triggerRouteViewEnter(el) {
 export function updateAuthNavLinks() {
   const isLoggedIn = !!getAuthToken();
   const label = isLoggedIn ? "Mon espace" : "Se connecter";
-  const landingHref = isLoggedIn ? "/app" : "/login?redirect=/app";
+  const landingHref = isLoggedIn ? "/app" : "/creer-ma-carte?mode=login&redirect=/app";
   document.querySelectorAll(".landing-nav-login-link, .landing-menu-drawer-login").forEach((a) => {
     a.textContent = label;
     a.href = landingHref;
@@ -106,7 +103,7 @@ export function updateAuthNavLinks() {
   const builderLogin = document.getElementById("builder-header-login");
   if (builderLogin) {
     builderLogin.textContent = label;
-    builderLogin.href = isLoggedIn ? "/app" : "/login?redirect=/creer-ma-carte";
+    builderLogin.href = isLoggedIn ? "/app" : "/creer-ma-carte?mode=login&redirect=/creer-ma-carte";
   }
 }
 
@@ -163,7 +160,7 @@ export async function initRouting() {
   if (c.page404) c.page404.classList.add("hidden");
 
   const hideAll = () => {
-    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.authApp, c.appApp, c.offersApp, c.liquidGlassTest].forEach((el) => {
+    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.appApp, c.offersApp, c.liquidGlassTest].forEach((el) => {
       if (el) el.classList.add("hidden");
     });
     if (c.builderHeader) c.builderHeader.classList.add("hidden");
@@ -180,7 +177,7 @@ export async function initRouting() {
 
   if (route.type === "app") {
     if (!getAuthToken()) {
-      window.location.replace("/login?redirect=/app");
+      window.location.replace("/creer-ma-carte?mode=login&redirect=/app");
       return null;
     }
     hideAll();
@@ -191,12 +188,22 @@ export async function initRouting() {
     return null;
   }
 
-  if (route.type === "auth") {
-    hideAll();
-    if (c.authApp) c.authApp.classList.remove("hidden");
-    const page = await loadPage("auth");
-    await page.init(route);
-    syncWhatsappFabVisibility();
+  if (route.type === "legacy-auth-redirect") {
+    const from = new URLSearchParams(window.location.search);
+    const to = new URLSearchParams();
+    to.set("mode", route.tab === "register" ? "register" : "login");
+    const redirect = String(from.get("redirect") || "").trim();
+    if (redirect) to.set("redirect", redirect);
+    const email = String(from.get("email") || "").trim();
+    if (email) to.set("email", email);
+    const name = String(from.get("name") || "").trim();
+    if (name) to.set("name", name);
+    const placeId = String(from.get("place_id") || "").trim();
+    if (placeId) to.set("place_id", placeId);
+    const session = String(from.get("session") || "").trim();
+    if (session) to.set("session", session);
+    const target = `/creer-ma-carte?${to.toString()}`;
+    window.location.replace(target);
     return null;
   }
 
@@ -228,7 +235,7 @@ export async function initRouting() {
   if (route.type === "offers") {
     const redirectPath = route.subscriptionLanding ? "/abonnement" : "/choisir-offre";
     if (!getAuthToken()) {
-      window.location.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+      window.location.replace(`/creer-ma-carte?mode=login&redirect=${encodeURIComponent(redirectPath)}`);
       return null;
     }
     hideAll();
@@ -244,7 +251,6 @@ export async function initRouting() {
     if (c.landing) c.landing.classList.remove("hidden");
     if (c.landingMain) c.landingMain.classList.add("hidden");
     if (c.landingTemplates) c.landingTemplates.classList.add("hidden");
-    if (c.landingIntegration) c.landingIntegration.classList.add("hidden");
     c.landingLegal.classList.remove("hidden");
     const page = await loadPage("legal");
     await page.init(route);
@@ -261,32 +267,10 @@ export async function initRouting() {
     return null;
   }
 
-  if (route.type === "integration") {
-    hideAll();
-    if (c.landing) c.landing.classList.remove("hidden");
-    c.landingMain?.classList.add("hidden");
-    if (c.landingTemplates) c.landingTemplates.classList.add("hidden");
-    if (c.landingLegal) c.landingLegal.classList.add("hidden");
-    if (c.landingIntegration) {
-      c.landingIntegration.classList.remove("hidden");
-      const slugHint = document.getElementById("integration-page-slug-hint");
-      const slug = new URLSearchParams(window.location.search).get("slug");
-      if (slugHint && slug) {
-        slugHint.textContent = "Commerce concerné : " + slug;
-        slugHint.classList.remove("hidden");
-      }
-    }
-    const page = await loadPage("integration");
-    await page.init(route);
-    syncWhatsappFabVisibility();
-    return null;
-  }
-
   if (route.type === "404") {
     hideAll();
     if (c.landingMain) c.landingMain?.classList.add("hidden");
     if (c.landingLegal) c.landingLegal?.classList.add("hidden");
-    if (c.landingIntegration) c.landingIntegration?.classList.add("hidden");
     if (c.landingTemplates) c.landingTemplates?.classList.add("hidden");
     if (c.page404) {
       c.page404.classList.remove("hidden");
@@ -334,7 +318,6 @@ export async function initRouting() {
     triggerRouteViewEnter(c.landingMain);
   }
   if (c.landingLegal) c.landingLegal?.classList.add("hidden");
-  if (c.landingIntegration) c.landingIntegration?.classList.add("hidden");
   if (c.landingTemplates) c.landingTemplates?.classList.add("hidden");
   updateAuthNavLinks();
 

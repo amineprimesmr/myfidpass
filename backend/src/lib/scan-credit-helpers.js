@@ -1,6 +1,6 @@
 /**
  * Calcul des points (scan / caisse) et plafonds anti-fraude (réglages commerce).
- * Utilisé par integration/scan et members POST .../points.
+ * Utilisé par les endpoints de scan membre.
  */
 
 /**

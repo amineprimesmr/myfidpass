@@ -244,29 +244,6 @@
   margin: 0.1rem 0 0;
 }
 
-/* Intégrations */
-.fintap-section--integrations {
-  padding-top: 2rem;
-}
-
-.fintap-int-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.85rem 1.25rem;
-}
-
-@media (min-width: 640px) {
-  .fintap-int-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 900px) {
-  .fintap-int-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 .fintap-int-card {
   padding: 1.3rem 1.35rem;
   border-radius: 1.1rem;
