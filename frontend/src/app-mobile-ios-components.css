@@ -220,6 +220,91 @@
     box-shadow: none !important;
   }
 
+  /* Dashboard iOS: densité et hiérarchie proches de l’app */
+  #app-app.app-mobile #dashboard.app-section-visible .app-subsection-title {
+    font-size: 1rem;
+    margin-top: 0.9rem;
+    margin-bottom: 0.55rem;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-section-desc {
+    margin-bottom: 0.75rem;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-stats {
+    gap: 10px !important;
+    margin-bottom: 0.7rem;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-stat {
+    padding: 0.8rem 0.8rem !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  #app-app.app-mobile #dashboard.app-section-visible .app-stat-value {
+    font-size: 1.35rem;
+  }
+
+  /* Notifications: liste compacte style iOS Settings */
+  #app-app.app-mobile #notifications.app-section-visible .app-card {
+    border-radius: 12px !important;
+    padding: 0.8rem !important;
+  }
+
+  #app-app.app-mobile #notifications.app-section-visible .app-rules-row {
+    margin-bottom: 0.55rem;
+  }
+
+  #app-app.app-mobile #notifications.app-section-visible .app-notif-target-option {
+    min-height: 42px;
+    border-radius: 10px !important;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Membres: cartes plus natives et lisibles */
+  #app-app.app-mobile #membres.app-section-visible .app-membres-card {
+    border-radius: 10px !important;
+    margin-bottom: 0.35rem;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+  }
+
+  #app-app.app-mobile #membres.app-section-visible .app-membres-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  #app-app.app-mobile #membres.app-section-visible .app-membres-meta {
+    font-size: 0.76rem;
+    color: var(--ios-secondary);
+  }
+
+  /* Commerce / Profil: groupes réglages façon iOS list cards */
+  #app-app.app-mobile #profil.app-section-visible .app-mobile-profil-item {
+    min-height: 52px;
+    border-radius: 10px !important;
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+
+  #app-app.app-mobile #profil.app-section-visible .app-mobile-profil-item-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+  }
+
+  /* Flyer / Ma carte / Emplacement: surface uniforme */
+  #app-app.app-mobile #flyer-qr.app-section-visible .app-flyer-qr-preview-frame,
+  #app-app.app-mobile #personnaliser.app-section-visible .app-card,
+  #app-app.app-mobile #carte-perimetre.app-section-visible .app-carte-perimetre-panel,
+  #app-app.app-mobile #engagement.app-section-visible .app-card {
+    border-radius: 14px !important;
+    border: 1px solid rgba(15, 23, 42, 0.07) !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.06) !important;
+    background: #fff !important;
+  }
+
   /* CTA Enregistrer — proéminent bleu iOS (plus « Wallet / Réglages » que pilule noire web) */
   #app-app.app-mobile .app-save-cta-wrap {
     padding: 0 !important;
@@ -294,12 +379,12 @@
   #app-app.app-mobile .app-membres-list-card {
     background: var(--ios-card) !important;
     border: 1px solid rgba(15, 23, 42, 0.06) !important;
-    border-radius: var(--ios-radius-xl) !important;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 8px rgba(15, 23, 42, 0.05) !important;
   }
 
   #app-app.app-mobile .app-membres-card {
-    padding: 0.9rem 1rem !important;
+    padding: 0.8rem 0.92rem !important;
     border-bottom-color: rgba(15, 23, 42, 0.06) !important;
   }
 
@@ -351,8 +436,8 @@
   }
 
   #app-app.app-mobile .app-mobile-header-title {
-    font-size: 1.05rem !important;
-    font-weight: 700 !important;
+    font-size: 1rem !important;
+    font-weight: 650 !important;
     letter-spacing: -0.03em !important;
   }
 
@@ -369,8 +454,8 @@
   }
 
   #app-app.app-mobile .app-mobile-tab {
-    font-size: 0.625rem !important;
-    font-weight: 600 !important;
+    font-size: 0.6rem !important;
+    font-weight: 550 !important;
     letter-spacing: 0.01em !important;
     color: var(--ios-secondary) !important;
   }

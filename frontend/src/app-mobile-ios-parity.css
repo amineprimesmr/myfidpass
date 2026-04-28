@@ -206,4 +206,120 @@
     width: 17px;
     height: 17px;
   }
+
+  /* ============================================================
+     Refonte globale mobile SaaS -> alignement iOS complet
+     ============================================================ */
+
+  #app-app.app-mobile {
+    --ios-font-stack: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    --ios-card-border: rgba(15, 23, 42, 0.07);
+    --ios-elev-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.06);
+    --ios-highlight: rgba(37, 99, 235, 0.16);
+    font-family: var(--ios-font-stack) !important;
+    text-rendering: optimizeLegibility;
+  }
+
+  #app-app.app-mobile .app-main {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  #app-app.app-mobile .app-content {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  #app-app.app-mobile .app-section {
+    padding: 0.15rem 0 0.35rem !important;
+    animation: none !important;
+  }
+
+  #app-app.app-mobile .app-section-title {
+    font-size: 1.28rem !important;
+    margin-bottom: 0.35rem !important;
+  }
+
+  #app-app.app-mobile .app-section-desc {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.95rem !important;
+  }
+
+  #app-app.app-mobile .app-card,
+  #app-app.app-mobile .app-stat,
+  #app-app.app-mobile .app-member-list,
+  #app-app.app-mobile .app-campaign-card,
+  #app-app.app-mobile .app-membres-list-card {
+    border-radius: 16px !important;
+    border: 1px solid var(--ios-card-border) !important;
+    box-shadow: var(--ios-elev-1) !important;
+    background: #fff !important;
+  }
+
+  #app-app.app-mobile .app-input,
+  #app-app.app-mobile .app-textarea,
+  #app-app.app-mobile select.app-input {
+    min-height: 46px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(148, 163, 184, 0.32) !important;
+    background: #f8fafc !important;
+    padding: 0.62rem 0.86rem !important;
+  }
+
+  #app-app.app-mobile .app-btn {
+    min-height: 46px !important;
+    border-radius: 12px !important;
+    font-size: 0.97rem !important;
+  }
+
+  #app-app.app-mobile .app-btn-primary,
+  #app-app.app-mobile button.app-save-cta {
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.24), 0 8px 22px rgba(37, 99, 235, 0.22) !important;
+  }
+
+  #app-app.app-mobile .app-mobile-header {
+    height: 50px !important;
+    min-height: calc(50px + env(safe-area-inset-top, 0px)) !important;
+    box-shadow: none !important;
+  }
+
+  #app-app.app-mobile .app-mobile-tab {
+    border-radius: 12px !important;
+  }
+
+  #app-app.app-mobile .app-mobile-tab.active::before {
+    display: none !important;
+  }
+
+  #app-app.app-mobile .app-mobile-tab.active {
+    background: rgba(37, 99, 235, 0.08) !important;
+  }
+
+  #app-app.app-mobile .app-mobile-tab.active .app-mobile-tab-icon-wrap {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  #app-app.app-mobile .app-mobile-profil-item {
+    border-radius: 12px !important;
+    border: 1px solid var(--ios-card-border) !important;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05) !important;
+    background: #fff !important;
+  }
+
+  #app-app.app-mobile .app-mobile-message-bar {
+    border-radius: 14px !important;
+    border: 1px solid var(--ios-card-border) !important;
+    box-shadow: var(--ios-elev-1) !important;
+    background: #fff !important;
+  }
+
+  /* Moins d’animations flashy pour un ressenti natif iOS. */
+  #app-app.app-mobile .app-mobile-dashboard-card,
+  #app-app.app-mobile .app-mobile-profil-item,
+  #app-app.app-mobile .app-card,
+  #app-app.app-mobile .app-stat,
+  #app-app.app-mobile .app-section {
+    animation: none !important;
+  }
 }

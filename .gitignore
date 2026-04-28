@@ -39,3 +39,4 @@ backend/railway-vapid-keys.txt
 
 # Fichiers temporaires Vite générés localement
 frontend/vite.config.js.timestamp-*.mjs
+.vercel

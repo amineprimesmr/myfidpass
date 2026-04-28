@@ -1149,7 +1149,7 @@ function initAppDashboard(slug) {
         address: normalizePerimetreText((addressInput?.value ?? currentAddress) || ""),
         notifTitle: normalizePerimetreText(perimetreNotifTitleEl?.value),
         notifMessage: normalizePerimetreText(perimetreNotifMessageEl?.value),
-        walletIncludeLocations: !!(walletIncludeLocationsEl && walletIncludeLocationsEl.checked),
+        walletIncludeLocations: true,
       };
     }
 
@@ -1475,12 +1475,10 @@ function initAppDashboard(slug) {
         currentAddress = address;
         const organizationName = (data.organization_name || "").trim();
         const notifTitle = String(notifTitleRaw).trim() || organizationName;
-        const walletLoc =
-          data.wallet_pass_include_locations != null ? Number(data.wallet_pass_include_locations) : 0;
         if (addressInput) addressInput.value = address;
         if (perimetreNotifTitleEl) perimetreNotifTitleEl.value = notifTitle;
         if (perimetreNotifMessageEl) perimetreNotifMessageEl.value = notifMessage;
-        if (walletIncludeLocationsEl) walletIncludeLocationsEl.checked = walletLoc === 1;
+        if (walletIncludeLocationsEl) walletIncludeLocationsEl.checked = true;
         updateRadiusUI(radius);
         if (lat != null && lng != null) {
           currentLat = lat;
@@ -1635,8 +1633,6 @@ function initAppDashboard(slug) {
 
     perimetreNotifTitleEl?.addEventListener("input", refreshPerimetreSaveButtonState);
     perimetreNotifMessageEl?.addEventListener("input", refreshPerimetreSaveButtonState);
-    walletIncludeLocationsEl?.addEventListener("change", refreshPerimetreSaveButtonState);
-
     saveBtn.addEventListener("click", async () => {
       saveBtn.disabled = true;
       if (saveFeedback) saveFeedback.classList.add("hidden");
@@ -1646,7 +1642,7 @@ function initAppDashboard(slug) {
         const payload = {
           notification_title_override: perimetreNotifTitleEl?.value?.trim() || null,
           location_relevant_text: perimetreNotifMessageEl?.value?.trim() || null,
-          wallet_pass_include_locations: walletIncludeLocationsEl?.checked ? 1 : 0,
+          wallet_pass_include_locations: 1,
         };
         if (currentLat != null && currentLng != null) {
           payload.location_lat = currentLat;
