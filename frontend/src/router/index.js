@@ -24,7 +24,7 @@ export function getRoute() {
   if (path === "/app") return { type: "app" };
   if (path === "/login") return { type: "auth", tab: "login" };
   if (path === "/register") return { type: "auth", tab: "register" };
-  if (path === "/creer-ma-carte") return { type: "landing", openOnboarding: true };
+  if (path === "/creer-ma-carte") return { type: "creation-carte" };
   if (path === "/abonnement") return { type: "offers", subscriptionLanding: true };
   if (path === "/choisir-offre") return { type: "offers" };
   if (path === "/checkout" || path === "/creation-carte") return { type: "redirect-stripe" };
@@ -209,6 +209,16 @@ export async function initRouting() {
     hideAll();
     if (c.dashboardApp) c.dashboardApp.classList.remove("hidden");
     const page = await loadPage("dashboard");
+    await page.init(route);
+    syncWhatsappFabVisibility();
+    return null;
+  }
+
+  if (route.type === "creation-carte") {
+    hideAll();
+    document.body.classList.add("page-builder");
+    if (c.builderApp) c.builderApp.classList.remove("hidden");
+    const page = await loadPage("creation-carte");
     await page.init(route);
     syncWhatsappFabVisibility();
     return null;

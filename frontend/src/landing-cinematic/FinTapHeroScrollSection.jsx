@@ -419,9 +419,6 @@ export function FinTapHeroScrollSection() {
               </div>
             ) : null}
           </label>
-          <a href={startHref} className="fintap-hero-iphone__btn fintap-hero-iphone__btn--primary">
-            Commencer
-          </a>
         </div>
       </div>
     </section>
