@@ -54,6 +54,10 @@
   -webkit-transform-style: preserve-3d;
 }
 
+.fintap-hero-iphone__experience {
+  width: 100%;
+}
+
 .fintap-hero-iphone__actions {
   display: flex;
   gap: 0.7rem;
@@ -254,12 +258,48 @@
 /* État initial 3D (avant 1er run JS) : même base que ratio 0 — plus zoomé qu’en fin d’anim */
 #iphoneMockup.fintap-iphone-mockup {
   transform: translate3d(0, -64px, 0) rotateX(38deg) rotateY(0deg) rotateZ(0deg) scale(1.52);
-  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.16);
+  box-shadow: none;
 }
 
 @media (min-width: 768px) {
   .fintap-hero-iphone__scene {
     min-height: min(58vh, 480px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .fintap-hero-iphone__experience {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
+    position: relative;
+    min-height: 700px;
+  }
+
+  .fintap-hero-iphone__scene {
+    margin: 24px auto 0;
+    justify-content: center;
+    min-height: 560px;
+    padding-bottom: 2rem;
+  }
+
+  .fintap-hero-iphone__actions {
+    position: absolute;
+    right: clamp(1rem, 4vw, 3rem);
+    top: 58%;
+    margin: 0;
+    max-width: 460px;
+    padding: 0;
+    width: min(42vw, 460px);
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .fintap-hero-iphone__actions-title {
+    text-align: left !important;
+    align-self: flex-start !important;
+    font-size: clamp(2.1rem, 3.5vw, 3rem);
   }
 }
 
@@ -271,7 +311,7 @@
   #iphoneMockup.fintap-iphone-mockup {
     will-change: auto;
     transform: translate3d(0, 0, 0) rotateX(0) rotateY(0) rotateZ(0) scale(1);
-    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.16);
+    box-shadow: none;
   }
 
   .fintap-hero-iphone__actions {

@@ -3,10 +3,11 @@ import {
   computeFintapHeroPhoneStyle,
   fintapHeroScrollRatio,
   getPageScrollY,
+  lerp,
 } from "./fintap-hero-scroll-lerp.js";
 import "./fintap-hero-scroll.css";
 
-const HERO_IPHONE_IMG = "/assets/iphone-custom.png";
+const HERO_IPHONE_IMG = "/assets/iphone-custom-clean.png";
 const TRIGGER_PX = 400;
 
 /**
@@ -43,7 +44,8 @@ function getScrollListenerRoots(from) {
  */
 function setPhone3d(phone, s) {
   if (!phone) return;
-  const tf = `translate3d(0, ${s.translateY}px, 0) rotateX(${s.rotateX}deg) rotateY(${s.rotateY}deg) rotateZ(${s.rotateZ}deg) scale(${s.scale})`;
+  const tx = Number.isFinite(s.translateX) ? s.translateX : 0;
+  const tf = `translate3d(${tx}px, ${s.translateY}px, 0) rotateX(${s.rotateX}deg) rotateY(${s.rotateY}deg) rotateZ(${s.rotateZ}deg) scale(${s.scale})`;
   phone.style.transform = tf;
 }
 
@@ -107,7 +109,15 @@ export function FinTapHeroScrollSection() {
     const paint = (ratio) => {
       if (Math.abs(ratio - lastAppliedRatioRef.current) < 0.0009) return;
       lastAppliedRatioRef.current = ratio;
-      setPhone3d(phone, computeFintapHeroPhoneStyle(ratio));
+      const style = computeFintapHeroPhoneStyle(ratio);
+      if (window.innerWidth >= 1024) {
+        style.translateX = lerp(0, -260, ratio);
+        style.scale = lerp(4.45, 1, ratio);
+        style.translateY += lerp(1020, 0, ratio);
+      } else {
+        style.translateX = 0;
+      }
+      setPhone3d(phone, style);
     };
 
     const animate = () => {
@@ -269,73 +279,75 @@ export function FinTapHeroScrollSection() {
           pour les commerçants.
         </p>
       </div>
-      <div
-        className="hero__phone-wrapper fintap-hero-iphone__scene"
-        id="phoneWrapper"
-      >
+      <div className="fintap-hero-iphone__experience">
         <div
-          className="iphone-mockup fintap-iphone-mockup"
-          id="iphoneMockup"
-          ref={phoneRef}
+          className="hero__phone-wrapper fintap-hero-iphone__scene"
+          id="phoneWrapper"
         >
-          <img
-            className="fintap-iphone-mockup__img"
-            src={HERO_IPHONE_IMG}
-            width={3881}
-            height={8399}
-            alt=""
-            loading="eager"
-            decoding="async"
-            draggable={false}
-          />
-        </div>
-      </div>
-      <div
-        className={`fintap-hero-iphone__actions${ctaVisible ? " is-visible" : ""}`}
-        aria-hidden={ctaVisible ? "false" : "true"}
-      >
-        <p className="fintap-hero-iphone__actions-title">
-          Quel est le nom de
-          <br />
-          votre commerce ?
-        </p>
-        <label className="fintap-hero-iphone__search" aria-label="Nom de votre commerce">
-          <span className="fintap-hero-iphone__search-icon" aria-hidden="true">
-            <img src="/assets/logos/google.png" alt="" width="18" height="18" loading="lazy" />
-          </span>
-          <input
-            ref={searchInputRef}
-            type="text"
-            className="fintap-hero-iphone__search-input"
-            placeholder="Nom de votre commerce"
-            autoComplete="organization"
-            value={shopQuery}
-            onChange={(e) => {
-              setShopQuery(e.target.value);
-              setShopPlaceId("");
-            }}
-          />
-          <a
-            href={startHref}
-            className="fintap-hero-iphone__search-cta"
-            aria-label="Commencer"
-            title="Commencer"
+          <div
+            className="iphone-mockup fintap-iphone-mockup"
+            id="iphoneMockup"
+            ref={phoneRef}
           >
-            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-              <path
-                d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <img
+              className="fintap-iphone-mockup__img"
+              src={HERO_IPHONE_IMG}
+              width={3881}
+              height={8399}
+              alt=""
+              loading="eager"
+              decoding="async"
+              draggable={false}
+            />
+          </div>
+        </div>
+        <div
+          className={`fintap-hero-iphone__actions${ctaVisible ? " is-visible" : ""}`}
+          aria-hidden={ctaVisible ? "false" : "true"}
+        >
+          <p className="fintap-hero-iphone__actions-title">
+            Quel est le nom de
+            <br />
+            votre commerce ?
+          </p>
+          <label className="fintap-hero-iphone__search" aria-label="Nom de votre commerce">
+            <span className="fintap-hero-iphone__search-icon" aria-hidden="true">
+              <img src="/assets/logos/google.png" alt="" width="18" height="18" loading="lazy" />
+            </span>
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="fintap-hero-iphone__search-input"
+              placeholder="Nom de votre commerce"
+              autoComplete="organization"
+              value={shopQuery}
+              onChange={(e) => {
+                setShopQuery(e.target.value);
+                setShopPlaceId("");
+              }}
+            />
+            <a
+              href={startHref}
+              className="fintap-hero-iphone__search-cta"
+              aria-label="Commencer"
+              title="Commencer"
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path
+                  d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </a>
+          </label>
+          <a href={startHref} className="fintap-hero-iphone__btn fintap-hero-iphone__btn--primary">
+            Commencer
           </a>
-        </label>
-        <a href={startHref} className="fintap-hero-iphone__btn fintap-hero-iphone__btn--primary">
-          Commencer
-        </a>
+        </div>
       </div>
     </section>
   );
