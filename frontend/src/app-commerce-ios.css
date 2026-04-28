@@ -79,22 +79,117 @@
   .app-commerce-ios-sheet {
     background: #fff;
     border-radius: 24px 24px 0 0;
-    padding: 20px 16px 24px;
+    padding: 14px 14px 24px;
     box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.1);
   }
 
+  .app-commerce-ios-block {
+    background: #fff;
+    border: 1px solid rgba(60, 60, 67, 0.14);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .app-commerce-ios-block--kpis {
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+  }
+
+  .app-commerce-ios-block-head {
+    margin-bottom: 10px;
+  }
+
   .app-commerce-ios-headline {
-    margin: 0 0 12px;
-    font-size: 1.38rem;
+    margin: 0;
+    font-size: 1.05rem;
     font-weight: 700;
-    letter-spacing: -0.03em;
-    color: #0a0a0a;
-    line-height: 1.18;
+    letter-spacing: -0.02em;
+    color: #111827;
+    line-height: 1.2;
+  }
+
+  .app-commerce-ios-subline {
+    margin: 4px 0 0;
+    font-size: 0.76rem;
+    color: #6b7280;
+  }
+
+  .app-commerce-ios-section-title {
+    margin: 0 0 9px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+  }
+
+  .app-commerce-ios-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .app-commerce-ios-kpi-card {
+    border-radius: 12px;
+    background: #f7f8fb;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    padding: 10px 10px 9px;
+    min-height: 67px;
+  }
+
+  .app-commerce-ios-kpi-label {
+    margin: 0 0 5px;
+    font-size: 0.72rem;
+    color: #667085;
+  }
+
+  .app-commerce-ios-kpi-value {
+    margin: 0;
+    font-size: 1.16rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .app-commerce-ios-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .app-commerce-ios-action {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 12px;
+    padding: 10px 10px 9px;
+    background: #fff;
+    text-align: left;
+    min-height: 64px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-commerce-ios-action:active {
+    transform: scale(0.99);
+    background: #f8fafc;
+  }
+
+  .app-commerce-ios-action-title {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 650;
+    color: #111827;
+  }
+
+  .app-commerce-ios-action-sub {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.72rem;
+    color: #6b7280;
   }
 
   .app-commerce-ios-progress-pill {
     display: inline-block;
-    margin: 0 0 14px;
+    margin: 0 0 10px;
     padding: 5px 11px;
     border-radius: 999px;
     font-size: 0.75rem;
@@ -211,15 +306,6 @@
     line-height: 1;
   }
 
-  .app-commerce-ios-social-heading {
-    margin: 14px 0 8px;
-    font-size: 0.69rem;
-    font-weight: 650;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #8e8e93;
-  }
-
   .app-commerce-ios-social-list {
     display: flex;
     flex-direction: column;
@@ -235,9 +321,7 @@
     border: none;
     border-radius: 14px;
     background: #fff;
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.06),
-      0 3px 10px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.32);
     cursor: pointer;
     text-align: left;
     -webkit-tap-highlight-color: transparent;
@@ -245,6 +329,11 @@
 
   .app-commerce-ios-social-row:active {
     transform: scale(0.99);
+  }
+
+  .app-commerce-ios-social-row--connected {
+    border-color: rgba(34, 197, 94, 0.35);
+    background: linear-gradient(180deg, #ffffff 0%, #f7fff9 100%);
   }
 
   .app-commerce-ios-social-icon {
@@ -326,7 +415,7 @@
 
   .app-commerce-ios-open-reglages {
     width: 100%;
-    margin-top: 16px;
+    margin-top: 8px;
     padding: 12px 14px;
     border-radius: 12px;
     border: 1px solid rgba(60, 60, 67, 0.12);

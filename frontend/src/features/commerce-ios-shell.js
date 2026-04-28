@@ -24,6 +24,35 @@ function isEngagementStepDone(er) {
   return false;
 }
 
+function isSocialConnected(entry) {
+  return Boolean(entry && entry.enabled && String(entry.url || "").trim());
+}
+
+function setSocialRowState(id, connected, connectedText = "Connecté") {
+  const row = document.getElementById(`app-commerce-ios-social-${id}`);
+  if (!row) return;
+  const sub = row.querySelector(".app-commerce-ios-social-sub");
+  const cta = row.querySelector(".app-commerce-ios-social-cta");
+  if (sub) sub.textContent = connected ? connectedText : "Non connecté";
+  if (cta) cta.textContent = connected ? "Modifier" : "Configurer";
+  row.classList.toggle("app-commerce-ios-social-row--connected", connected);
+}
+
+function setStatValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const n = Number(value);
+  el.textContent = Number.isFinite(n) ? String(n) : "0";
+}
+
+export function applyCommerceIosStats(stats) {
+  if (!stats || typeof stats !== "object") return;
+  setStatValue("app-commerce-ios-stat-members", stats.membersCount ?? 0);
+  setStatValue("app-commerce-ios-stat-scans", stats.transactionsThisMonth ?? 0);
+  setStatValue("app-commerce-ios-stat-active", stats.activeMembersInPeriod ?? 0);
+  setStatValue("app-commerce-ios-stat-inactive", stats.inactiveMembers30Days ?? 0);
+}
+
 /**
  * @param {Record<string, unknown>} settingsData — réponse GET /dashboard/settings
  */
@@ -70,6 +99,11 @@ export function applyCommerceIosHomeState(settingsData) {
   const gr = er.google_review;
   const googleConfigured = Boolean(gr && gr.enabled && String(gr.place_id || "").trim());
   if (googleLabel) googleLabel.textContent = googleConfigured ? "Modif." : "Configurer";
+
+  setSocialRowState("google", googleConfigured, "Fiche configurée");
+  setSocialRowState("instagram", isSocialConnected(er.instagram_follow));
+  setSocialRowState("tiktok", isSocialConnected(er.tiktok_follow));
+  setSocialRowState("facebook", isSocialConnected(er.facebook_follow));
 }
 
 /**
@@ -110,6 +144,20 @@ export function wireCommerceIosShell(ctx) {
     setCommerceView("reglages");
   });
 
+  document.getElementById("app-commerce-ios-action-scan")?.addEventListener("click", () => {
+    showAppSection("dashboard");
+    document.getElementById("app-scanner-launch-btn")?.click();
+  });
+  document.getElementById("app-commerce-ios-action-members")?.addEventListener("click", () => {
+    showAppSection("membres");
+  });
+  document.getElementById("app-commerce-ios-action-notifs")?.addEventListener("click", () => {
+    showAppSection("notifications");
+  });
+  document.getElementById("app-commerce-ios-action-card")?.addEventListener("click", () => {
+    showAppSection("personnaliser");
+  });
+
   window.addEventListener("app-section-change", (e) => {
     if (e.detail?.sectionId === "profil") setCommerceView("home");
   });
@@ -127,7 +175,7 @@ export function wireCommerceIosShell(ctx) {
     });
   });
 
-  document.getElementById("app-commerce-ios-logout")?.addEventListener("click", () => {
-    document.getElementById("app-mobile-logout")?.click();
+  window.addEventListener("fidpass-dashboard-stats", (e) => {
+    applyCommerceIosStats(e.detail?.stats || {});
   });
 }
