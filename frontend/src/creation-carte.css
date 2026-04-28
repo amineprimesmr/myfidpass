@@ -38,12 +38,17 @@ body.page-builder #builder-app {
 .creation-carte-signup__content {
   position: relative;
   z-index: 1;
-  width: min(95vw, 446px);
+  width: min(96vw, 520px);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   animation: creationSignupIn 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.creation-carte-signup__content.is-login-mode .creation-carte-signup__title,
+.creation-carte-signup__content.is-login-mode .creation-carte-signup__subtitle {
+  display: none;
 }
 
 body.page-builder {
@@ -99,7 +104,7 @@ body.page-builder {
   width: 100%;
   background: #f4f5f7;
   border-radius: 1.08rem;
-  padding: 0.84rem;
+  padding: 1.15rem;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.36);
 }
 
@@ -178,7 +183,7 @@ body.page-builder {
 }
 
 .creation-carte-signup__btn--primary {
-  margin-top: 0.56rem;
+  margin-top: 0.72rem;
   background: #02131f;
   color: #ffffff;
   box-shadow: 0 6px 14px rgba(2, 19, 31, 0.24);
@@ -196,6 +201,21 @@ body.page-builder {
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.09em;
+}
+
+.creation-carte-signup__sep--lines {
+  margin: 1.05rem 0 0.95rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.66rem;
+}
+
+.creation-carte-signup__sep--lines::before,
+.creation-carte-signup__sep--lines::after {
+  content: "";
+  height: 1px;
+  background: #d3d8de;
 }
 
 .creation-carte-signup__sep::before,
@@ -219,10 +239,39 @@ body.page-builder {
   color: #4b5563;
 }
 
+.creation-carte-signup__icon-img {
+  width: 1rem;
+  height: 1rem;
+  object-fit: contain;
+  display: block;
+}
+
 .creation-carte-signup__foot {
   margin: 0.9rem 0 0.2rem;
   font-size: 0.79rem;
   color: #6b7280;
+}
+
+.creation-carte-signup__foot--login {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.creation-carte-signup__linklike {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  color: #0f172a;
+  text-decoration: underline;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.creation-carte-signup__linklike--cta {
+  color: #1f4fbf;
+  text-decoration: none;
+  font-weight: 700;
 }
 
 .creation-carte-signup__oauth-error {
@@ -341,6 +390,58 @@ body.page-builder {
   border-radius: inherit;
   background: #202b34;
   transition: width 0.22s ease, background-color 0.22s ease;
+}
+
+.creation-carte-signup__login-title {
+  margin: 0;
+  text-align: left;
+  color: #111827;
+  font-size: 1.45rem;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.creation-carte-signup__login-subtitle {
+  margin: 0.18rem 0 1rem;
+  text-align: left;
+  color: #4b5563;
+  font-size: 0.94rem;
+}
+
+.creation-carte-signup__login-label {
+  display: block;
+  text-align: left;
+  color: #111827;
+  margin-bottom: 0.46rem;
+  font-size: 0.9rem;
+}
+
+.creation-carte-signup__social-row {
+  margin-top: 0.72rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.56rem;
+}
+
+.creation-carte-signup__btn--social-mini {
+  min-height: 3rem;
+  font-size: 1.9rem;
+}
+
+.creation-carte-signup__icon-img--mini {
+  width: 1.6rem;
+  height: 1.6rem;
+  margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+  .creation-carte-signup__content {
+    width: min(96vw, 462px);
+  }
+
+  .creation-carte-signup__card {
+    padding: 0.95rem;
+  }
 }
 
 .creation-carte-signup__password-meter-fill.is-ok {

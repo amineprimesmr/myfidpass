@@ -1,27 +1,12 @@
 import "./../creation-carte.css";
 import { API_BASE, setAuthToken, setRefreshToken, setPendingEstablishment } from "../config.js";
 
-const MYFIDPASS_SIGNUP_URL = "https://accounts.shopify.com/signup";
-
 function escapeHtml(str) {
   return String(str || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-function buildSignupUrl(email) {
-  const value = String(email || "").trim();
-  if (!value) return MYFIDPASS_SIGNUP_URL;
-  try {
-    const u = new URL(MYFIDPASS_SIGNUP_URL);
-    u.searchParams.set("email", value);
-    u.searchParams.set("signup_strategy", "password");
-    return u.toString();
-  } catch (_) {
-    return MYFIDPASS_SIGNUP_URL;
-  }
 }
 
 function encodeAppleState(payload) {
@@ -51,12 +36,6 @@ export default {
           </div>
           <h1 class="creation-carte-signup__title">Commencez à fidéliser pour 1€</h1>
           <p class="creation-carte-signup__subtitle">Premier mois à 1€, puis 49,99€ sans engagement</p>
-          ${
-            commerce
-              ? `<p class="creation-carte-signup__commerce">Commerce sélectionné : <strong>${escapeHtml(commerce)}</strong></p>`
-              : ""
-          }
-
           <form class="creation-carte-signup__card" id="creation-carte-signup-form" novalidate>
             <div class="creation-carte-signup__step creation-carte-signup__step--email" id="creation-carte-step-email">
               <label class="creation-carte-signup__sr-only" for="creation-carte-email">Adresse e-mail</label>
@@ -76,7 +55,7 @@ export default {
               <div class="creation-carte-signup__sep"><span>OU</span></div>
 
               <button type="button" id="creation-carte-google-btn" class="creation-carte-signup__btn creation-carte-signup__btn--social" data-provider="google">
-                <span class="creation-carte-signup__icon">G</span>
+                <span class="creation-carte-signup__icon"><img src="/assets/logos/google.png" alt="" class="creation-carte-signup__icon-img" /></span>
                 <span>Continuer avec Google</span>
               </button>
               <button type="button" id="creation-carte-apple-btn" class="creation-carte-signup__btn creation-carte-signup__btn--social" data-provider="apple">
@@ -86,7 +65,7 @@ export default {
               <p class="creation-carte-signup__oauth-error hidden" id="creation-carte-oauth-error" aria-live="polite"></p>
 
               <p class="creation-carte-signup__foot">
-                Vous avez déjà un compte Myfidpass ? <a href="${MYFIDPASS_SIGNUP_URL}">Se connecter</a>
+                Vous avez déjà un compte Myfidpass ? <button type="button" class="creation-carte-signup__linklike" id="creation-carte-open-login">Se connecter</button>
               </p>
             </div>
 
@@ -110,7 +89,7 @@ export default {
                   class="creation-carte-signup__password"
                   placeholder="Créer un mot de passe"
                   autocomplete="new-password"
-                  minlength="8"
+                  minlength="12"
                   required
                 />
                 <button type="button" class="creation-carte-signup__password-eye" id="creation-carte-password-eye" aria-label="Afficher/Masquer mot de passe">◌</button>
@@ -118,11 +97,41 @@ export default {
               <div class="creation-carte-signup__password-meter" aria-hidden="true">
                 <span class="creation-carte-signup__password-meter-fill" id="creation-carte-password-meter-fill"></span>
               </div>
-              <p class="creation-carte-signup__password-hint" id="creation-carte-password-hint">Doit contenir au moins 8 caractères.</p>
+              <p class="creation-carte-signup__password-hint" id="creation-carte-password-hint">Doit contenir au moins 12 caractères.</p>
+              <p class="creation-carte-signup__oauth-error hidden" id="creation-carte-register-error" aria-live="polite"></p>
 
               <button type="button" class="creation-carte-signup__btn creation-carte-signup__btn--primary creation-carte-signup__btn--arrow" id="creation-carte-password-submit" aria-label="Continuer">
                 <span>Créer un compte</span>
               </button>
+            </div>
+
+            <div class="creation-carte-signup__step creation-carte-signup__step--login hidden" id="creation-carte-step-login">
+              <h2 class="creation-carte-signup__login-title">Se connecter</h2>
+              <p class="creation-carte-signup__login-subtitle">Continuer vers Myfidpass</p>
+
+              <label class="creation-carte-signup__login-label" for="creation-carte-login-email">E-mail</label>
+              <input
+                id="creation-carte-login-email"
+                type="email"
+                class="creation-carte-signup__email"
+                autocomplete="email"
+              />
+
+              <button type="button" class="creation-carte-signup__btn creation-carte-signup__btn--primary" id="creation-carte-login-submit">
+                Continuer avec l’e-mail
+              </button>
+              <p class="creation-carte-signup__oauth-error hidden" id="creation-carte-login-error" aria-live="polite"></p>
+
+              <div class="creation-carte-signup__social-row">
+                <button type="button" class="creation-carte-signup__btn creation-carte-signup__btn--social creation-carte-signup__btn--social-mini" id="creation-carte-login-apple"></button>
+                <button type="button" class="creation-carte-signup__btn creation-carte-signup__btn--social creation-carte-signup__btn--social-mini" id="creation-carte-login-google">
+                  <img src="/assets/logos/google.png" alt="" class="creation-carte-signup__icon-img creation-carte-signup__icon-img--mini" />
+                </button>
+              </div>
+
+              <p class="creation-carte-signup__foot creation-carte-signup__foot--login">
+                Nouveau sur Myfidpass ? <button type="button" class="creation-carte-signup__linklike creation-carte-signup__linklike--cta" id="creation-carte-close-login">Démarrer →</button>
+              </p>
             </div>
           </form>
 
@@ -138,6 +147,7 @@ export default {
     const passwordInput = root.querySelector("#creation-carte-password");
     const stepEmail = root.querySelector("#creation-carte-step-email");
     const stepPassword = root.querySelector("#creation-carte-step-password");
+    const stepLogin = root.querySelector("#creation-carte-step-login");
     const emailReview = root.querySelector("#creation-carte-email-review");
     const commerceReview = root.querySelector("#creation-carte-commerce-review");
     const emailEdit = root.querySelector("#creation-carte-email-edit");
@@ -147,7 +157,16 @@ export default {
     const passwordMeterFill = root.querySelector("#creation-carte-password-meter-fill");
     const googleBtn = root.querySelector("#creation-carte-google-btn");
     const appleBtn = root.querySelector("#creation-carte-apple-btn");
+    const loginGoogleBtn = root.querySelector("#creation-carte-login-google");
+    const loginAppleBtn = root.querySelector("#creation-carte-login-apple");
+    const openLoginBtn = root.querySelector("#creation-carte-open-login");
+    const closeLoginBtn = root.querySelector("#creation-carte-close-login");
+    const loginEmailInput = root.querySelector("#creation-carte-login-email");
+    const loginSubmitBtn = root.querySelector("#creation-carte-login-submit");
     const oauthError = root.querySelector("#creation-carte-oauth-error");
+    const registerError = root.querySelector("#creation-carte-register-error");
+    const loginError = root.querySelector("#creation-carte-login-error");
+    const signupContent = root.querySelector(".creation-carte-signup__content");
     if (!(form instanceof HTMLFormElement) || !(emailInput instanceof HTMLInputElement)) return;
 
     const establishmentName = String(commerce || "").trim();
@@ -178,6 +197,24 @@ export default {
       const txt = String(msg || "").trim();
       oauthError.textContent = txt;
       oauthError.classList.toggle("hidden", !txt);
+    };
+    const showInlineError = (target, msg) => {
+      if (!(target instanceof HTMLElement)) return;
+      const txt = String(msg || "").trim();
+      target.textContent = txt;
+      target.classList.toggle("hidden", !txt);
+    };
+
+    const transitionStep = (fromStep, toStep) => {
+      if (!(fromStep instanceof HTMLElement) || !(toStep instanceof HTMLElement)) return;
+      fromStep.classList.add("is-leaving");
+      window.setTimeout(() => {
+        fromStep.classList.add("hidden");
+        fromStep.classList.remove("is-leaving");
+        toStep.classList.remove("hidden");
+        toStep.classList.add("is-entering");
+        window.setTimeout(() => toStep.classList.remove("is-entering"), 340);
+      }, 180);
     };
 
     const handleOAuthSuccess = (data) => {
@@ -211,6 +248,7 @@ export default {
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      showInlineError(registerError, "");
       emailInput.classList.remove("is-invalid");
       if (!emailInput.value.trim() || !emailInput.checkValidity()) {
         emailInput.classList.add("is-invalid");
@@ -220,26 +258,45 @@ export default {
       if (emailReview instanceof HTMLElement) {
         emailReview.textContent = emailInput.value.trim();
       }
-      stepEmail?.classList.add("is-leaving");
+      transitionStep(stepEmail, stepPassword);
       window.setTimeout(() => {
-        stepEmail?.classList.add("hidden");
-        stepEmail?.classList.remove("is-leaving");
-        stepPassword?.classList.remove("hidden");
-        stepPassword?.classList.add("is-entering");
-        window.setTimeout(() => stepPassword?.classList.remove("is-entering"), 340);
         if (passwordInput instanceof HTMLInputElement) passwordInput.focus();
-      }, 180);
+      }, 220);
     });
 
     emailEdit?.addEventListener("click", () => {
-      stepPassword?.classList.add("is-leaving");
+      transitionStep(stepPassword, stepEmail);
+      window.setTimeout(() => emailInput.focus(), 220);
+    });
+
+    openLoginBtn?.addEventListener("click", () => {
+      showInlineError(loginError, "");
+      transitionStep(stepEmail, stepLogin);
+      signupContent?.classList.add("is-login-mode");
       window.setTimeout(() => {
-        stepPassword?.classList.add("hidden");
-        stepPassword?.classList.remove("is-leaving");
-        stepEmail?.classList.remove("hidden");
-        stepEmail?.classList.remove("is-leaving");
-        emailInput.focus();
-      }, 160);
+        if (loginEmailInput instanceof HTMLInputElement) {
+          loginEmailInput.value = emailInput.value.trim();
+          loginEmailInput.focus();
+        }
+      }, 220);
+    });
+
+    closeLoginBtn?.addEventListener("click", () => {
+      transitionStep(stepLogin, stepEmail);
+      signupContent?.classList.remove("is-login-mode");
+      window.setTimeout(() => emailInput.focus(), 220);
+    });
+
+    loginSubmitBtn?.addEventListener("click", () => {
+      const value = loginEmailInput instanceof HTMLInputElement ? loginEmailInput.value.trim() : "";
+      showInlineError(loginError, "");
+      if (!value || !loginEmailInput?.checkValidity()) {
+        showInlineError(loginError, "Entrez une adresse e-mail valide.");
+        loginEmailInput?.focus();
+        return;
+      }
+      const qs = `?email=${encodeURIComponent(value)}`;
+      window.location.href = `/login${qs}`;
     });
 
     passwordEye?.addEventListener("click", () => {
@@ -259,28 +316,83 @@ export default {
       }
       if (!(passwordHint instanceof HTMLElement)) return;
       if (len === 0) {
-        passwordHint.textContent = "Doit contenir au moins 8 caractères.";
+        passwordHint.textContent = "Doit contenir au moins 12 caractères.";
         passwordHint.classList.remove("is-ok");
-      } else if (len < 8) {
-        passwordHint.textContent = `Encore ${8 - len} caractère${8 - len > 1 ? "s" : ""} minimum.`;
+      } else if (len < 12) {
+        passwordHint.textContent = `Encore ${12 - len} caractère${12 - len > 1 ? "s" : ""} minimum.`;
         passwordHint.classList.remove("is-ok");
       } else {
         passwordHint.textContent = "Bien. Vous pouvez ajouter des caractères ou des symboles pour le renforcer davantage.";
         passwordHint.classList.add("is-ok");
       }
-      passwordMeterFill?.classList.toggle("is-ok", len >= 8);
+      passwordMeterFill?.classList.toggle("is-ok", len >= 12);
     };
 
     passwordInput?.addEventListener("input", updatePasswordMeter);
     updatePasswordMeter();
 
-    passwordSubmit?.addEventListener("click", () => {
+    passwordSubmit?.addEventListener("click", async () => {
       if (!(passwordInput instanceof HTMLInputElement)) return;
+      showInlineError(registerError, "");
       if (!passwordInput.value.trim() || !passwordInput.checkValidity()) {
+        showInlineError(registerError, "Le mot de passe doit contenir au moins 12 caractères.");
         passwordInput.focus();
         return;
       }
-      window.location.href = buildSignupUrl(emailInput.value);
+      const email = emailInput.value.trim().toLowerCase();
+      if (!email || !emailInput.checkValidity()) {
+        showInlineError(registerError, "Adresse e-mail invalide.");
+        transitionStep(stepPassword, stepEmail);
+        window.setTimeout(() => emailInput.focus(), 220);
+        return;
+      }
+      if (!establishmentName || !placeId) {
+        showInlineError(registerError, "Sélectionnez d'abord votre commerce depuis la page précédente.");
+        return;
+      }
+      const passwordSubmitLabel = passwordSubmit.querySelector("span");
+      const oldLabel = passwordSubmitLabel instanceof HTMLElement
+        ? passwordSubmitLabel.textContent
+        : passwordSubmit.textContent;
+      passwordSubmit.disabled = true;
+      if (passwordSubmitLabel instanceof HTMLElement) passwordSubmitLabel.textContent = "Création en cours...";
+      else passwordSubmit.textContent = "Création en cours...";
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password: passwordInput.value,
+            establishment_name: establishmentName,
+            google_place_id: placeId,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const fallback = response.status === 409
+            ? "Un compte existe déjà avec cet e-mail. Utilisez Se connecter."
+            : "Impossible de créer le compte pour le moment.";
+          showInlineError(registerError, data?.error || fallback);
+          if (response.status === 409) {
+            window.setTimeout(() => {
+              showInlineError(registerError, "");
+              transitionStep(stepPassword, stepLogin);
+              signupContent?.classList.add("is-login-mode");
+              if (loginEmailInput instanceof HTMLInputElement) loginEmailInput.value = email;
+            }, 250);
+          }
+          return;
+        }
+        handleOAuthSuccess(data);
+      } catch (_) {
+        showInlineError(registerError, "Erreur réseau. Vérifiez votre connexion puis réessayez.");
+      } finally {
+        passwordSubmit.disabled = false;
+        const nextLabel = oldLabel || "Créer un compte";
+        if (passwordSubmitLabel instanceof HTMLElement) passwordSubmitLabel.textContent = nextLabel;
+        else passwordSubmit.textContent = nextLabel;
+      }
     });
 
     if (googleBtn instanceof HTMLButtonElement) {
@@ -338,6 +450,7 @@ export default {
           }
           window.google.accounts.id.prompt();
         });
+        loginGoogleBtn?.addEventListener("click", () => googleBtn.click());
       }
     }
 
@@ -427,6 +540,7 @@ export default {
               showOAuthError(msg);
             });
         });
+        loginAppleBtn?.addEventListener("click", () => appleBtn.click());
       }
     }
   },
