@@ -312,15 +312,13 @@ a.lg-menu__a--stack:hover {
 }
 
 .lg-menu__mark {
-  display: flex;
+  display: block;
   width: 1.65rem;
   height: 1.65rem;
-  align-items: center;
-  justify-content: center;
   border-radius: 0.45rem;
-  background: linear-gradient(145deg, #fff, #a5b4fc);
-  color: #1e1b4b;
-  font-size: 0.8rem;
+  object-fit: cover;
+  background: transparent;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.16);
 }
 
 #fidpass-liquid-menu-glass .lg-menu__ul,

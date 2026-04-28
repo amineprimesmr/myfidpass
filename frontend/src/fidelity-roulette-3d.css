@@ -577,3 +577,34 @@
   transform: rotateX(0deg) scale(1) !important;
   transform-style: flat !important;
 }
+
+/* iPhone/mobile réel: alléger les couches GPU coûteuses (blur/drop-shadow/conic shine). */
+html.fidpass-low-perf-mobile .fidelity-v2-roulette-inline .fidelity-roulette-wheel-shine,
+html.fidpass-low-perf-mobile .fidelity-game-page .fidelity-roulette-wheel-shine,
+#fidelity-app.fidelity-spin-performance-mode .fidelity-roulette-wheel-shine {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+html.fidpass-low-perf-mobile .fidelity-v2-roulette-inline .fidelity-roulette-wheel-mount::before,
+html.fidpass-low-perf-mobile .fidelity-game-page .fidelity-roulette-wheel-mount::before,
+html.fidpass-low-perf-mobile .fidelity-game-page .fidelity-roulette-wheel-outer::before,
+#fidelity-app.fidelity-spin-performance-mode .fidelity-roulette-wheel-mount::before,
+#fidelity-app.fidelity-spin-performance-mode .fidelity-roulette-wheel-outer::before {
+  filter: none !important;
+  opacity: 0.45;
+}
+
+html.fidpass-low-perf-mobile .fidelity-v2-roulette-inline .fidelity-roulette-indicator,
+html.fidpass-low-perf-mobile .fidelity-game-page .fidelity-roulette-indicator,
+#fidelity-app.fidelity-spin-performance-mode .fidelity-roulette-indicator {
+  filter: none !important;
+}
+
+#fidelity-app.fidelity-spin-performance-mode .fidelity-roulette-wheel,
+html.fidpass-low-perf-mobile .fidelity-v2-roulette-inline .fidelity-roulette-wheel,
+html.fidpass-low-perf-mobile .fidelity-game-page .fidelity-roulette-wheel {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 16px 34px rgba(2, 6, 23, 0.2) !important;
+}

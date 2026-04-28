@@ -340,6 +340,11 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   opacity: 0.55;
 }
 
+html.fidpass-low-perf-mobile .fidelity-qr-hero-orb {
+  filter: blur(8px);
+  opacity: 0.4;
+}
+
 .fidelity-qr-hero-orb--top {
   top: clamp(1.2rem, 5vw, 2rem);
   right: clamp(1.5rem, 7vw, 4rem);
@@ -862,6 +867,11 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
 }
 
+html.fidpass-low-perf-mobile .fidelity-qr-modal-backdrop {
+  backdrop-filter: blur(4px) saturate(1.02);
+  -webkit-backdrop-filter: blur(4px) saturate(1.02);
+}
+
 .fidelity-qr-modal {
   position: relative;
   z-index: 1;
@@ -1095,6 +1105,12 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   animation: fidelity-qr-reward-glow 2.8s ease-in-out infinite;
 }
 
+html.fidpass-low-perf-mobile .fidelity-qr-reward-hero__glow {
+  animation: none;
+  filter: none;
+  opacity: 0.75;
+}
+
 .fidelity-qr-modal--reward[data-reward-state="lose"] .fidelity-qr-reward-hero__glow {
   background: radial-gradient(
     circle at 50% 45%,
@@ -1175,6 +1191,12 @@ main.fidelity-v2-main.fidelity-qr-game .fidelity-v2-roulette-inline--qr .fidelit
   box-shadow: 0 0 10px rgba(251, 191, 36, 0.9);
   opacity: 0.85;
   animation: fidelity-qr-sparkle 2.2s ease-in-out infinite;
+}
+
+html.fidpass-low-perf-mobile .fidelity-qr-reward-hero__sparkles span {
+  animation: none;
+  box-shadow: none;
+  opacity: 0.45;
 }
 
 .fidelity-qr-reward-hero__sparkles span:nth-child(1) {

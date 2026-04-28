@@ -3,7 +3,7 @@ body.page-app .site-banner { display: none !important; }
 body.page-app .whatsapp-fab { display: none !important; }
 
 #app-app {
-  --app-bg: #0d0d0d;
+  --app-bg: transparent;
   --app-surface: var(--fidpass-surface);
   --app-surface-hover: #f0f2f5;
   --app-border: #e8ecf1;

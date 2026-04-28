@@ -14,7 +14,9 @@
   --fidpass-brand-light: #2563eb;
   /* Fond « blanc » du site : gris très clair (section FAQ). Quand on dit « blanc », utiliser cette couleur. */
   --fidpass-surface: #f5f5f7;
-  --bg: #0A0A0F;
+  --fidpass-site-bg:
+    radial-gradient(120% 70% at 50% -10%, #ffffff 0%, #f9fbff 45%, #f4f7fb 100%);
+  --bg: #f7f9fc;
   --surface: #111118;
   --surface-2: #16161F;
   --border: #1E1E2A;
@@ -65,16 +67,42 @@ html {
 body {
   margin: 0;
   font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
+  background: var(--fidpass-site-bg);
+  color: #0f172a;
   min-height: 100vh;
   line-height: 1.5;
+}
+
+/* Typographie globale Apple sur tout le site. */
+body,
+body button,
+body input,
+body select,
+body textarea,
+body a,
+body p,
+body span,
+body li,
+body label,
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6 {
+  font-family: var(--font) !important;
+}
+
+#app,
+#landing,
+#fidelity-app {
+  background: transparent;
 }
 
 /* Routes /fidelity/* : le body global est sombre ; éviter bandes noires (overscroll, safe-area). */
 html.fidpass-fidelity-route,
 body.fidpass-fidelity-route {
-  background: #f8fafc;
+  background: var(--fidpass-site-bg);
 }
 
 /* Page jeu QR : dégradé global dans fidelity-qr-game-flow.css (html/body) ; scroll si la roue dépasse le viewport. */

@@ -33,3 +33,24 @@
 #landing:has(.landing-cinematic-shell) .landing-liquid-nav-host {
   z-index: 100;
 }
+
+/* iPhone/perf: quand le menu mobile est ouvert, geler les couches cinématiques lourdes derrière. */
+@media (max-width: 767.98px) and (pointer: coarse) {
+  #landing.lg-menu-noscroll .landing-cinematic-shell canvas,
+  #landing.lg-menu-noscroll .landing-cinematic-shell video {
+    visibility: hidden !important;
+  }
+
+  #landing.lg-menu-noscroll .landing-cinematic-shell *,
+  #landing.lg-menu-noscroll .landing-cinematic-shell *::before,
+  #landing.lg-menu-noscroll .landing-cinematic-shell *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  #landing.lg-menu-noscroll .landing-cinematic-shell .liquid-glass,
+  #landing.lg-menu-noscroll .landing-cinematic-shell .liquid-glass-strong {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}

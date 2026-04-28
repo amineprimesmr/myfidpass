@@ -6,7 +6,7 @@
 }
 
 #landing:has(.landing-cinematic-shell) {
-  background: #fdfcf9;
+  background: var(--fidpass-site-bg);
   min-height: 100vh;
 }
 

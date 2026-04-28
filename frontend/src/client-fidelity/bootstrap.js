@@ -59,6 +59,7 @@ function getFingerprint() {
 
 // Configuration roulette : durée + easing type « vraie roue » (ralenti long en fin de courbe)
 const ROULETTE_SPIN_DURATION_MS = 6200;
+const ROULETTE_SPIN_DURATION_LOW_PERF_MOBILE_MS = 4200;
 const ROULETTE_EXTRA_TURNS = 6;
 /** Courbe forte fin de course (léger dépassement puis amorti), proche d’un ease-out physique */
 const ROULETTE_SPIN_EASING = "cubic-bezier(0.05, 0.72, 0.12, 1)";
@@ -68,12 +69,27 @@ function prefersReducedMotion() {
   return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function isLikelyLowPerfMobile() {
+  if (typeof navigator === "undefined" || typeof globalThis.matchMedia !== "function") return false;
+  const coarsePointer = globalThis.matchMedia("(pointer: coarse)").matches;
+  if (!coarsePointer) return false;
+  const ua = String(navigator.userAgent || "");
+  const isIphone = /iPhone|iPod/i.test(ua);
+  const isIpadTouch = /iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+  const cores = Number(navigator.hardwareConcurrency || 0);
+  const memory = Number(navigator.deviceMemory || 0);
+  const constrainedDevice = (Number.isFinite(cores) && cores > 0 && cores <= 4) || (Number.isFinite(memory) && memory > 0 && memory <= 4);
+  return isIphone || isIpadTouch || constrainedDevice;
+}
+
 /** Annule les écouteurs document de la session précédente (évite doublons à chaque navigation SPA). */
 let fidelityDocumentListenersAbort = null;
 
 export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   const api = createClientFidelityApi(apiBase);
   const store = createClientFidelityStore({ slug });
+  const lowPerfMobile = isLikelyLowPerfMobile();
+  document.documentElement.classList.toggle("fidpass-low-perf-mobile", lowPerfMobile);
   
   let isSpinning = false;
   /** Si un `refreshMemberData` arrive pendant la rotation, on évite `rerender()` (qui détruit la roue → WebKit perd conic-gradient / transition). */
@@ -427,7 +443,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     }
 
     const reduceMotion = prefersReducedMotion();
-    const spinDurationMs = reduceMotion ? 0 : ROULETTE_SPIN_DURATION_MS;
+    const spinDurationMs = reduceMotion
+      ? 0
+      : lowPerfMobile
+        ? ROULETTE_SPIN_DURATION_LOW_PERF_MOBILE_MS
+        : ROULETTE_SPIN_DURATION_MS;
     const spinStart = currentRotation;
 
     isSpinning = true;
@@ -481,6 +501,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
       const showOutcome = async () => {
         const liveWheel = rootEl.querySelector("#fidelity-roulette-wheel") || wheelEl;
+        rootEl.classList.remove("fidelity-spin-performance-mode");
         spinAudioStop();
         if (liveWheel instanceof HTMLElement) {
           liveWheel.classList.remove("fidelity-roulette-wheel--is-spinning");
@@ -557,6 +578,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
       /* Démarrer la transition tout de suite ; le bruitage Web Audio peut bloquer le thread (sensation de gel). */
       wheelEl.classList.add("fidelity-roulette-wheel--is-spinning");
+      if (lowPerfMobile) {
+        rootEl.classList.add("fidelity-spin-performance-mode");
+      }
       wheelEl.style.transition = `transform ${spinDurationMs}ms ${ROULETTE_SPIN_EASING}`;
       wheelEl.style.transform = `rotate(${targetRotation}deg)`;
 
@@ -590,6 +614,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       wheelEl.addEventListener("transitionend", onTransitionEnd);
     } catch (err) {
       spinAudioStop();
+      rootEl.classList.remove("fidelity-spin-performance-mode");
       wheelEl.classList.remove("fidelity-roulette-wheel--is-spinning");
       isSpinning = false;
       clearBusy();
@@ -609,6 +634,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
   function triggerWinCelebrationConfetti() {
     if (prefersReducedMotion() || typeof window.confetti !== "function") return;
+    if (lowPerfMobile) return;
     const mobile =
       typeof globalThis.matchMedia === "function" && globalThis.matchMedia("(max-width: 520px)").matches;
     const duration = mobile ? 2200 : 3400;

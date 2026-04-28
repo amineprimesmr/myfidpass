@@ -60,10 +60,29 @@ function getEls(root) {
 }
 
 function supportsSvgBackdropUrl() {
-  if (typeof window === "undefined" || !window.chrome) return false;
+  if (typeof window === "undefined" || typeof CSS === "undefined") return false;
+  const cssSupports =
+    CSS.supports?.("backdrop-filter", "url(#x)") ||
+    CSS.supports?.("-webkit-backdrop-filter", "url(#x)") ||
+    false;
+  if (!cssSupports) return false;
   const el = document.createElement("div");
   el.style.backdropFilter = "url(#x)";
-  return el.style.backdropFilter.includes("url");
+  el.style.webkitBackdropFilter = "url(#x)";
+  return (
+    String(el.style.backdropFilter || "").includes("url") ||
+    String(el.style.webkitBackdropFilter || "").includes("url")
+  );
+}
+
+function isLowPerfGlassDevice() {
+  if (typeof navigator === "undefined" || typeof globalThis.matchMedia !== "function") return false;
+  const ua = String(navigator.userAgent || "");
+  const coarsePointer = globalThis.matchMedia("(pointer: coarse)").matches;
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+  const cores = Number(navigator.hardwareConcurrency || 0);
+  const lowCores = Number.isFinite(cores) && cores > 0 && cores <= 4;
+  return coarsePointer && (isIOS || lowCores);
 }
 
 /**
@@ -192,11 +211,18 @@ export function initLiquidGlassMenu(options = {}) {
   }
 
   ensureAllFiltersSvg();
-  const nativeOk = supportsSvgBackdropUrl();
+  const lowPerfGlass = isLowPerfGlassDevice();
+  const nativeOk = supportsSvgBackdropUrl() && !lowPerfGlass;
   const scrollLockEl = options.scrollLockEl || null;
   const fallbackTarget = options.fallbackClassTarget || scrollLockEl;
   if (!nativeOk && fallbackTarget) {
     fallbackTarget.classList.add("lg-fallback-filters");
+  }
+  if (nativeOk && fallbackTarget) {
+    fallbackTarget.classList.add("lg-native-filters");
+  }
+  if (lowPerfGlass && fallbackTarget) {
+    fallbackTarget.classList.add("lg-ios-glass-mode");
   }
 
   const els = getEls(root);
@@ -297,5 +323,7 @@ export function initLiquidGlassMenu(options = {}) {
     if (scrollLockEl) scrollLockEl.classList.remove("lg-menu-noscroll");
     applyBodyMenuLock(false);
     if (fallbackTarget) fallbackTarget.classList.remove("lg-fallback-filters");
+    if (fallbackTarget) fallbackTarget.classList.remove("lg-native-filters");
+    if (fallbackTarget) fallbackTarget.classList.remove("lg-ios-glass-mode");
   };
 }

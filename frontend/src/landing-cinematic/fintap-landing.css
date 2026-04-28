@@ -1,7 +1,7 @@
 /* FinTap — page complète (réf. fintap.framer.website) */
 
 .fintap-landing {
-  --fintap-bg: #fdfcf9;
+  --fintap-bg: transparent;
   --fintap-blue: #0a98ff;
   --fintap-mint: #27f3a9;
   --fintap-ink: #0a0a0a;
@@ -41,7 +41,7 @@
 }
 
 .fintap-section--tint {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+  background: transparent;
 }
 
 .fintap-kicker {
@@ -162,7 +162,7 @@
 
 /* Témoignages */
 .fintap-section--testimonials {
-  background: linear-gradient(180deg, #fff7fb 0%, #fdfcf9 40%, #f5fbff 100%);
+  background: transparent;
 }
 
 .fintap-t-head {
@@ -296,7 +296,7 @@
 
 /* Sécurité + CTA */
 .fintap-section--security {
-  background: #fff;
+  background: transparent;
 }
 
 .fintap-security-inner {
@@ -317,7 +317,7 @@
 }
 
 .fintap-section--cta {
-  background: linear-gradient(180deg, #fff, #f6fcff 100%);
+  background: transparent;
   border-top: 1px solid var(--fintap-line);
 }
 
@@ -389,7 +389,7 @@
 .fintap-footer {
   border-top: 1px solid var(--fintap-line);
   padding: 2.5rem 0 4rem;
-  background: #f8f6f1;
+  background: transparent;
 }
 
 .fintap-footer-disclaimer {

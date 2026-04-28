@@ -97,16 +97,19 @@ export function applyBackdropNative(el, filterId) {
   el.classList.add("lg-menu--native");
   el.classList.remove("lg-menu--fallback");
   el.style.backdropFilter = `url(#${filterId})`;
+  el.style.webkitBackdropFilter = `url(#${filterId})`;
 }
 
 export function applyBackdropFallback(el) {
   el.classList.remove("lg-menu--native");
   el.classList.add("lg-menu--fallback");
   el.style.backdropFilter = "none";
+  el.style.webkitBackdropFilter = "none";
 }
 
 export function clearBackdropToFallback(el) {
   el.classList.remove("lg-menu--native");
   el.classList.add("lg-menu--fallback");
   el.style.backdropFilter = "";
+  el.style.webkitBackdropFilter = "";
 }
