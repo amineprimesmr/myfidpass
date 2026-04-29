@@ -17,6 +17,11 @@ import {
   applySaaSFrcMessaging,
 } from "./app-saas-welcome-shell.js";
 import {
+  isDashIntroRevealDone,
+  scheduleDashboardOnboardingReveal,
+  initSaasFrcScrollCollapse,
+} from "./saas-dashboard-intro.js";
+import {
   initAppDirtyGuard,
   markAppSectionDirty,
   clearAppSectionDirty,
@@ -823,8 +828,39 @@ function initAppDashboard(slug) {
 
   const dashboardOnboardingGate = document.getElementById("app-dashboard-onboarding-gate");
   const dashboardShellMain = document.getElementById("app-dashboard-shell-main");
+  const dashboardReadySplash = document.getElementById("app-dashboard-ready-splash");
   const dashboardOnboardingCardStatus = document.getElementById("app-dashboard-onboarding-card-status");
   const dashboardOnboardingFlyerStatus = document.getElementById("app-dashboard-onboarding-flyer-status");
+
+  let dashboardIntroRevealPending = false;
+
+  function revealDashboardOnboardingFromIntro() {
+    dashboardReadySplash?.classList.add("hidden");
+    if (dashboardReadySplash) dashboardReadySplash.setAttribute("aria-hidden", "true");
+
+    dashboardOnboardingGate?.classList.remove("hidden");
+    dashboardOnboardingGate?.classList.add("app-dashboard-onboarding-gate--enter");
+
+    dashboardOnboardingGate?.addEventListener(
+      "animationend",
+      () => {
+        dashboardOnboardingGate?.classList.remove("app-dashboard-onboarding-gate--enter");
+      },
+      { once: true }
+    );
+
+    dashboardShellMain?.classList.add("hidden");
+    syncSaaSWelcomeChrome();
+  }
+
+  function tryScheduleDashboardIntroReveal() {
+    if (dashboardIntroRevealPending) return;
+    dashboardIntroRevealPending = true;
+    scheduleDashboardOnboardingReveal(() => {
+      dashboardIntroRevealPending = false;
+      revealDashboardOnboardingFromIntro();
+    });
+  }
 
   function isFlyerConfigured(settings) {
     if (!settings || typeof settings !== "object") return false;
@@ -848,11 +884,14 @@ function initAppDashboard(slug) {
     );
   }
 
+  /** @returns {boolean} onboarding actif (gate ou splash intro) : stats dashboard différées tant que « true ». */
   async function syncDashboardOnboardingGate() {
     if (!dashboardOnboardingGate || !dashboardShellMain) return false;
     try {
       const res = await api("/dashboard/settings");
       if (!res.ok) {
+        dashboardReadySplash?.classList.add("hidden");
+        dashboardReadySplash?.setAttribute("aria-hidden", "true");
         dashboardOnboardingGate.classList.add("hidden");
         dashboardShellMain.classList.remove("hidden");
         return false;
@@ -871,10 +910,32 @@ function initAppDashboard(slug) {
         dashboardOnboardingFlyerStatus.classList.toggle("is-ready", flyerDone);
       }
 
-      dashboardOnboardingGate.classList.toggle("hidden", allDone);
-      dashboardShellMain.classList.toggle("hidden", !allDone);
-      return !allDone;
+      if (allDone) {
+        dashboardReadySplash?.classList.add("hidden");
+        dashboardReadySplash?.setAttribute("aria-hidden", "true");
+        dashboardOnboardingGate.classList.add("hidden");
+        dashboardShellMain.classList.remove("hidden");
+        return false;
+      }
+
+      const introDone = isDashIntroRevealDone();
+      if (!introDone) {
+        dashboardReadySplash?.classList.remove("hidden");
+        dashboardReadySplash?.setAttribute("aria-hidden", "false");
+        dashboardOnboardingGate.classList.add("hidden");
+        dashboardShellMain.classList.add("hidden");
+        tryScheduleDashboardIntroReveal();
+        return true;
+      }
+
+      dashboardReadySplash?.classList.add("hidden");
+      dashboardReadySplash?.setAttribute("aria-hidden", "true");
+      dashboardOnboardingGate.classList.remove("hidden");
+      dashboardShellMain.classList.add("hidden");
+      return true;
     } catch (_) {
+      dashboardReadySplash?.classList.add("hidden");
+      dashboardReadySplash?.setAttribute("aria-hidden", "true");
       dashboardOnboardingGate.classList.add("hidden");
       dashboardShellMain.classList.remove("hidden");
       return false;
@@ -6312,6 +6373,7 @@ function initAppDashboard(slug) {
     dashboardApi: (path, init) => api(path, init),
   });
   initAppCardRulesGuide();
+  initSaasFrcScrollCollapse();
   refresh();
   loadAppNotificationStats();
   loadCampaignSegments();

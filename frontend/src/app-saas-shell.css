@@ -20,17 +20,24 @@
 #app-app.app-saas-welcome-active {
   --saas-frc-on: 1;
   isolation: isolate;
+  /* Dégradé léger partagé — topbar + cluster (alignement visuel sans « couture » verte) */
+  --saas-frc-shell-bg:
+    radial-gradient(ellipse 150% 130% at 50% -35%, rgba(45, 62, 72, 0.16) 0%, transparent 62%),
+    linear-gradient(182deg, #010102 0%, #0c0d0f 55%, #141518 100%);
 }
 
 #app-app.app-saas-welcome-active .app-main {
   background: #f6f6f7;
 }
 
-/* Héros sous la topbar fixe : décalage + alignement colonne principale (≥901px) */
+/* Héros : aligné au flux — le dégradé commun est sur .app-saas-frc-cluster */
 #app-app.app-saas-welcome-active .app-saas-frc-cluster {
-  padding-top: var(--app-topbar-height, 0px);
+  padding-top: 0;
+  margin-top: 0;
   position: relative;
   z-index: 1;
+  background: var(--saas-frc-shell-bg);
+  background-repeat: no-repeat;
 }
 
 @media (min-width: 901px) {
@@ -41,11 +48,9 @@
   }
 }
 
-/* Top bar : même ambiance que le héros (réf. Shopify mobile) */
+/* Top bar : même dégradé léger que la zone héros */
 #app-app.app-saas-welcome-active .app-desktop-topbar {
-  background:
-    radial-gradient(ellipse 140% 120% at 52% -30%, rgba(0, 120, 100, 0.35) 0%, transparent 58%),
-    linear-gradient(180deg, #020203 0%, #090b0b 100%);
+  background: var(--saas-frc-shell-bg);
   border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
@@ -68,12 +73,14 @@
 .app-saas-frc-hero {
   position: relative;
   padding: clamp(1.35rem, 5vw, 2.4rem) 1.35rem clamp(2rem, 7vw, 3.75rem);
-  background:
-    radial-gradient(ellipse 140% 100% at 50% -20%, rgba(0, 128, 96, 0.28), transparent 62%),
-    radial-gradient(circle at 80% 0%, rgba(0, 200, 150, 0.12), transparent 45%),
-    linear-gradient(180deg, #050807 0%, var(--saas-frc-teal-glow) 42%, var(--saas-frc-dark) 100%);
+  background: transparent;
   color: var(--saas-frc-text-on-dark);
   overflow: hidden;
+  transition:
+    max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.38s ease,
+    padding 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: min(520px, 92vh);
 }
 
 .app-saas-frc-hero::after {
@@ -83,8 +90,8 @@
   width: clamp(240px, 55vw, 420px);
   height: clamp(240px, 55vw, 420px);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 255, 180, 0.09) 0%, transparent 70%);
-  filter: blur(2px);
+  background: radial-gradient(circle, rgba(140, 165, 175, 0.06) 0%, transparent 72%);
+  filter: blur(4px);
   pointer-events: none;
 }
 
@@ -165,7 +172,7 @@
   text-underline-offset: 2px;
 }
 
-/* Bandeau compact « S'abonner… » — même famille de dégradés que le héros */
+/* Bandeau compact — même lecture que le fond (gris-bleu, peu de vert) */
 .app-saas-frc-strip {
   display: flex;
   flex-direction: row;
@@ -174,8 +181,7 @@
   flex-wrap: nowrap;
   margin: 0;
   padding: 0.7rem 1rem 0.8rem;
-  background:
-    linear-gradient(180deg, rgba(15, 45, 38, 0.95) 0%, rgba(5, 8, 7, 0.98) 100%);
+  background: linear-gradient(180deg, rgba(26, 30, 34, 0.98) 0%, rgba(12, 14, 16, 0.99) 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   border-bottom: 1px solid rgba(0, 0, 0, 0.35);
   color: rgba(255, 255, 255, 0.9);

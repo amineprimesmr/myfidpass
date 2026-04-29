@@ -15,6 +15,7 @@ function mockHead() {
         </div>
         <div id="app-dashboard-content" class="hidden">
           <section id="dashboard">
+            <div id="app-dashboard-ready-splash" class="hidden"></div>
             <div id="app-dashboard-onboarding-gate" class="hidden"></div>
           </section>
         </div>
@@ -63,6 +64,21 @@ describe("app-saas-welcome-shell", () => {
     empty?.classList.remove("hidden");
     welcome?.classList.remove("hidden");
     fatal?.classList.add("hidden");
+    syncSaaSWelcomeChrome();
+    const cluster = document.getElementById("app-saas-frc-cluster");
+    expect(cluster?.classList.contains("hidden")).toBe(false);
+    expect(document.getElementById("app-app")?.classList.contains("app-saas-welcome-active")).toBe(true);
+  });
+
+  it("syncSaaSWelcomeChrome active le cluster quand le splash pré-onboarding dashboard est visible", () => {
+    const empty = document.getElementById("app-empty");
+    const welcome = document.getElementById("app-empty-welcome");
+    const fatal = document.getElementById("app-empty-fatal");
+    empty?.classList.add("hidden");
+    welcome?.classList.remove("hidden");
+    fatal?.classList.add("hidden");
+    const splash = document.getElementById("app-dashboard-ready-splash");
+    splash?.classList.remove("hidden");
     syncSaaSWelcomeChrome();
     const cluster = document.getElementById("app-saas-frc-cluster");
     expect(cluster?.classList.contains("hidden")).toBe(false);

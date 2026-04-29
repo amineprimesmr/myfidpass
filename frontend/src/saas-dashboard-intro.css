@@ -1,0 +1,57 @@
+/**
+ * Intro dashboard : splash « Tout est prêt », animation gate, répli héros au scroll (aligné ref. Shopify mobile).
+ */
+
+.app-dashboard-ready-splash {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(46vh, 400px);
+  padding: clamp(1.75rem, 10vh, 4rem) clamp(1rem, 3vw, 1.5rem) clamp(1.5rem, 5vh, 2.5rem);
+}
+
+.app-dashboard-ready-splash__text {
+  margin: 0;
+  font-size: clamp(1.1rem, 3.3vw, 1.45rem);
+  font-weight: 720;
+  letter-spacing: -0.032em;
+  color: #0f172a;
+}
+
+@keyframes dashGateRevealIntro {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#app-dashboard-onboarding-gate.app-saas-frc-sheet-onboarding-wrap.app-dashboard-onboarding-gate--enter {
+  animation: dashGateRevealIntro 0.58s cubic-bezier(0.16, 1, 0.38, 1) both;
+}
+
+/* Après scroll descendant : héros absorbé, bandeau façon admin mobile */
+#app-app.app-saas-welcome-active.app-saas-frc-scroll-dense .app-saas-frc-hero {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin: 0;
+  pointer-events: none;
+}
+
+#app-app.app-saas-welcome-active.app-saas-frc-scroll-dense .app-saas-frc-hero::after {
+  opacity: 0;
+}
+
+#app-app.app-saas-welcome-active.app-saas-frc-scroll-dense #app-saas-frc-strip:not(.hidden) {
+  position: sticky;
+  top: calc(var(--app-admin-strip-h, 0px) + var(--app-topbar-height, 0px));
+  z-index: 34;
+  box-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}

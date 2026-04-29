@@ -76,6 +76,7 @@
     <link rel="stylesheet" href="/src/app.css" />
     <link rel="stylesheet" href="/src/app-desktop-topbar.css" />
     <link rel="stylesheet" href="/src/app-saas-shell.css" />
+    <link rel="stylesheet" href="/src/saas-dashboard-intro.css" />
     <link rel="stylesheet" href="/src/app-member-detail.css" />
     <link rel="stylesheet" href="/src/app-member-detail-profile.css" />
     <link rel="stylesheet" href="/src/app-card-rules.css" />
@@ -510,6 +511,16 @@
         </div>
         <div id="app-dashboard-content" class="app-content hidden">
           <section id="dashboard" class="app-section app-section-overview">
+            <div
+              id="app-dashboard-ready-splash"
+              class="app-dashboard-ready-splash app-saas-frc-sheet hidden"
+              role="region"
+              aria-label="Introduction"
+              aria-live="polite"
+              aria-hidden="true"
+            >
+              <p class="app-dashboard-ready-splash__text">Tout est prêt !</p>
+            </div>
             <div
               id="app-dashboard-onboarding-gate"
               class="app-dashboard-onboarding hidden app-saas-frc-sheet app-saas-frc-sheet-onboarding-wrap"

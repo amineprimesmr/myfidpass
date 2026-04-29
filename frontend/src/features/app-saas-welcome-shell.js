@@ -19,6 +19,7 @@ export function syncSaaSWelcomeChrome() {
   const welcome = document.getElementById("app-empty-welcome");
   const fatal = document.getElementById("app-empty-fatal");
   const gate = document.getElementById("app-dashboard-onboarding-gate");
+  const readySplash = document.getElementById("app-dashboard-ready-splash");
 
   const emptyVisible =
     empty &&
@@ -29,7 +30,8 @@ export function syncSaaSWelcomeChrome() {
     fatal.classList.contains("hidden");
 
   const gateVisible = gate && !gate.classList.contains("hidden");
-  const show = !!(emptyVisible || gateVisible);
+  const readyVisible = readySplash && !readySplash.classList.contains("hidden");
+  const show = !!(emptyVisible || gateVisible || readyVisible);
 
   if (cluster) {
     cluster.classList.toggle("hidden", !show);
