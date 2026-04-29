@@ -1,0 +1,337 @@
+/**
+ * Bloc « Lancez-vous rapidement » — référence visuelle Shopify FR (landing).
+ */
+
+.landing-launch-sf {
+  --ls-bg: #051911;
+  --ls-num: #00ff92;
+  --ls-accent-b: #008060;
+  --ls-text: #ffffff;
+  --ls-muted: rgba(255, 255, 255, 0.68);
+  --ls-rule: rgba(255, 255, 255, 0.2);
+
+  margin: 0 calc(-50vw + 50%) 0;
+  padding: clamp(3rem, 7vw, 5rem) max(1.25rem, calc(50vw - 672px)) clamp(2.5rem, 5vw, 4rem);
+  width: 100vw;
+  max-width: 100vw;
+  box-sizing: border-box;
+
+  border-radius: 40px 40px 0 0;
+  background-color: var(--ls-bg);
+
+  font-family:
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+
+  font-feature-settings:
+    "cv02",
+    "cv03",
+    "cv04",
+    "salt" 1;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow: clip;
+}
+
+.landing-launch-sf-inner {
+  max-width: 1344px;
+  margin: 0 auto;
+}
+
+/* Titre bloc — léger comme la ref. */
+.landing-launch-sf-heading {
+  margin: 0 0 clamp(2.5rem, 5vw, 3.75rem);
+  text-align: center;
+  font-size: clamp(1.875rem, 4.2vw, 3rem);
+  font-weight: 430;
+  letter-spacing: -0.038em;
+  line-height: 1.06;
+  color: var(--ls-text);
+}
+
+.landing-launch-sf-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: start;
+}
+
+/* Colonne visuelle : deux vignettes chevauchées */
+.landing-launch-sf-visual {
+  position: relative;
+  margin: 0 auto 0 0;
+  width: min(100%, 480px);
+  min-height: min(560px, 72vw);
+}
+
+.landing-launch-sf-fig {
+  position: absolute;
+  margin: 0;
+  overflow: hidden;
+  border-radius: clamp(14px, 2vw, 20px);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.landing-launch-sf-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.landing-launch-sf-fig--primary {
+  top: 0;
+  left: 0;
+  width: clamp(176px, 46%, 238px);
+  aspect-ratio: 3 / 4.05;
+  z-index: 1;
+}
+
+.landing-launch-sf-fig--overlap {
+  right: min(12%, 0);
+  bottom: 0;
+  width: clamp(196px, 52%, 270px);
+  aspect-ratio: 3 / 3.92;
+  z-index: 2;
+}
+
+.landing-launch-sf-fig--overlap .landing-launch-sf-img {
+  object-position: 50% 36%;
+}
+
+.landing-launch-sf-fig--primary .landing-launch-sf-img {
+  object-position: 52% 40%;
+}
+
+/* Étapes — numéros vert néon (#00FF80) lisibles comme la capture */
+.landing-launch-sf-steps-wrap {
+  min-width: 0;
+}
+
+.landing-launch-sf-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-launch-sf-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(0.95rem, 2.2vw, 1.4rem);
+  align-items: baseline;
+  padding: clamp(1.15rem, 2.2vw, 1.55rem) 0 clamp(1.05rem, 2vw, 1.35rem);
+  border-bottom: 1px solid var(--ls-rule);
+}
+
+.landing-launch-sf-row:first-child {
+  padding-top: 0;
+}
+
+.landing-launch-sf-num {
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(0.95rem, 1.85vw, 1.0625rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ls-num);
+  text-shadow:
+    0 0 20px rgba(0, 255, 146, 0.25),
+    0 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.landing-launch-sf-num--soft {
+  color: var(--ls-accent-b);
+  text-shadow: none;
+}
+
+.landing-launch-sf-step-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.85vw, 1.9375rem);
+  font-weight: 650;
+  letter-spacing: -0.036em;
+  line-height: 1.06;
+  color: var(--ls-text);
+}
+
+.landing-launch-sf-row--dim .landing-launch-sf-step-title {
+  opacity: 0.78;
+}
+
+/* CTA pill */
+.landing-launch-sf-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: clamp(1.85rem, 4vw, 2.85rem);
+
+  padding: 0.75rem clamp(2.2rem, 4vw, 2.95rem);
+  min-height: 48px;
+
+  border-radius: 999px;
+  border: none;
+  background: #ffffff;
+  color: #0a0d0f;
+  font: inherit;
+  font-size: 0.9625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.2s ease;
+}
+
+.landing-launch-sf-cta:hover {
+  filter: brightness(1.02);
+}
+
+.landing-launch-sf-cta:active {
+  transform: scale(0.985);
+}
+
+/* Mini vignette vidéo (ref. Shopify) — position relative au bloc */
+.landing-launch-sf-video-tease {
+  position: absolute;
+  right: max(0.85rem, calc(50vw - 672px - 1rem));
+  bottom: max(1.25rem, 3vw);
+
+  width: clamp(232px, 28vw, 302px);
+
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  text-decoration: none;
+}
+
+.landing-launch-sf-video-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+
+  padding: 0.5rem;
+  padding-right: 0.72rem;
+
+  border-radius: 12px;
+
+  background: rgba(5, 17, 13, 0.58);
+  backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 8px 26px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+
+  outline: none;
+}
+
+.landing-launch-sf-video-inner:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.landing-launch-sf-video-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.landing-launch-sf-video-thumb {
+  display: block;
+  width: 72px;
+  height: 48px;
+
+  border-radius: 8px;
+  overflow: hidden;
+  object-fit: cover;
+}
+
+.landing-launch-sf-video-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 32px;
+  height: 32px;
+
+  margin: -16px 0 0 -16px;
+
+  border-radius: 50%;
+
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 #fff;
+
+  pointer-events: none;
+}
+
+.landing-launch-sf-video-play::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-40%, -50%);
+
+  border-style: solid;
+  border-width: 6px 0 6px 9px;
+  border-color: transparent transparent transparent #000;
+}
+
+.landing-launch-sf-video-cap {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+@media (max-width: 900px) {
+  .landing-launch-sf-grid {
+    grid-template-columns: 1fr;
+    gap: clamp(2.5rem, 7vw, 3.5rem);
+  }
+
+  .landing-launch-sf-visual {
+    width: min(100%, 420px);
+    min-height: min(480px, 95vw);
+    margin: 0 auto;
+  }
+
+  .landing-launch-sf-fig--primary {
+    width: min(48%, 220px);
+  }
+
+  .landing-launch-sf-fig--overlap {
+    width: min(54%, 240px);
+  }
+
+  .landing-launch-sf-video-tease {
+    position: static;
+    width: 100%;
+    margin-top: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-launch-sf-cta {
+    transition: none;
+  }
+
+  .landing-launch-sf-cta:active {
+    transform: none;
+  }
+}

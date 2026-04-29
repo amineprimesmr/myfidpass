@@ -2,7 +2,8 @@
  * Footer accueil — référence visuelle pied de page type Shopify FR (noir total, grille, barre inférieure).
  */
 
-#landing main + .landing-footer {
+#landing main + .landing-footer,
+#landing #landing-main + .landing-launch-sf + .landing-footer {
   margin-top: 0 !important;
 }
 
