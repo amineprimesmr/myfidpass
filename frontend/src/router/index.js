@@ -3,10 +3,7 @@
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
 import { getAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
-import {
-  runLiquidGlassMenuCleanupLanding,
-  runLiquidGlassMenuCleanupTest,
-} from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
+import { runLiquidGlassMenuCleanupLanding } from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
 
 export function getRoute() {
   let path = window.location.pathname.replace(/\/$/, "");
@@ -33,7 +30,6 @@ export function getRoute() {
   if (path === "/cgv") return { type: "legal", page: "cgv" };
   if (path === "/cookies") return { type: "legal", page: "cookies" };
   if (path === "/supprimer-compte") return { type: "legal", page: "delete-account" };
-  if (path === "/test-liquid-glass") return { type: "liquid-glass-test" };
   if (path === "") return { type: "landing" };
   return { type: "404" };
 }
@@ -49,9 +45,7 @@ function getContainers() {
     page404: document.getElementById("page-404"),
     landingMain: document.getElementById("landing-main"),
     landingLegal: document.getElementById("landing-legal"),
-    landingTemplates: document.getElementById("landing-templates"),
     legalContent: document.getElementById("landing-legal-content"),
-    liquidGlassTest: document.getElementById("liquid-glass-test-app"),
   };
 }
 
@@ -145,9 +139,6 @@ export async function initRouting() {
   if (route.type !== "landing") {
     runLiquidGlassMenuCleanupLanding();
   }
-  if (route.type !== "liquid-glass-test") {
-    runLiquidGlassMenuCleanupTest();
-  }
   const c = getContainers();
 
   document.body.classList.toggle("page-app", route.type === "app");
@@ -158,7 +149,7 @@ export async function initRouting() {
   if (c.page404) c.page404.classList.add("hidden");
 
   const hideAll = () => {
-    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.appApp, c.liquidGlassTest].forEach((el) => {
+    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.appApp].forEach((el) => {
       if (el) el.classList.add("hidden");
     });
     if (c.builderHeader) c.builderHeader.classList.add("hidden");
@@ -236,21 +227,10 @@ export async function initRouting() {
 
 
   if (route.type === "legal" && c.landingMain && c.landingLegal && c.legalContent) {
-    if (c.liquidGlassTest) c.liquidGlassTest.classList.add("hidden");
     if (c.landing) c.landing.classList.remove("hidden");
     if (c.landingMain) c.landingMain.classList.add("hidden");
-    if (c.landingTemplates) c.landingTemplates.classList.add("hidden");
     c.landingLegal.classList.remove("hidden");
     const page = await loadPage("legal");
-    await page.init(route);
-    syncWhatsappFabVisibility();
-    return null;
-  }
-
-  if (route.type === "liquid-glass-test") {
-    hideAll();
-    if (c.liquidGlassTest) c.liquidGlassTest.classList.remove("hidden");
-    const page = await loadPage("liquid-glass-test");
     await page.init(route);
     syncWhatsappFabVisibility();
     return null;
@@ -260,7 +240,6 @@ export async function initRouting() {
     hideAll();
     if (c.landingMain) c.landingMain?.classList.add("hidden");
     if (c.landingLegal) c.landingLegal?.classList.add("hidden");
-    if (c.landingTemplates) c.landingTemplates?.classList.add("hidden");
     if (c.page404) {
       c.page404.classList.remove("hidden");
       c.page404.setAttribute("aria-hidden", "false");
@@ -285,10 +264,6 @@ export async function initRouting() {
 
   document.body.classList.remove("page-builder");
   if (c.builderApp) c.builderApp.classList.add("hidden");
-  if (c.liquidGlassTest) c.liquidGlassTest.classList.add("hidden");
-  if (c.landingTemplates && c.landing) {
-    c.landing.appendChild(c.landingTemplates);
-  }
   if (c.landing) {
     c.landing.classList.remove("hidden");
   }
@@ -307,7 +282,6 @@ export async function initRouting() {
     triggerRouteViewEnter(c.landingMain);
   }
   if (c.landingLegal) c.landingLegal?.classList.add("hidden");
-  if (c.landingTemplates) c.landingTemplates?.classList.add("hidden");
   updateAuthNavLinks();
 
   const page = await loadPage("landing");

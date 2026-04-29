@@ -3,7 +3,7 @@
  * Menu responsive : desktop une ligne, mobile barre + panneau (Liquid Glass / kube).
  * @param {object} [options]
  * @param {ParentNode} [options.root] Conteneur des nœuds data-lg-* (obligatoire, un menu par instance)
- * @param {Element} [options.scrollLockEl] Élément recevant .lg-menu-noscroll (ex. #landing, #liquid-glass-test-app)
+ * @param {Element} [options.scrollLockEl] Élément recevant .lg-menu-noscroll (ex. #landing)
  * @param {Element} [options.fallbackClassTarget] Cible pour .lg-fallback-filters (défaut: scrollLockEl)
  */
 import {

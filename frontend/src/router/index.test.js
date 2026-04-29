@@ -9,12 +9,12 @@ describe("getRoute", () => {
     vi.unstubAllGlobals();
   });
 
-  it("reconnaît /test-liquid-glass", () => {
+  it("redirige les anciennes routes de test vers 404", () => {
     vi.stubGlobal("location", {
       pathname: "/test-liquid-glass",
       search: "",
       hash: "",
     });
-    expect(getRoute().type).toBe("liquid-glass-test");
+    expect(getRoute().type).toBe("404");
   });
 });
