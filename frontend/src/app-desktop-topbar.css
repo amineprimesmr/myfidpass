@@ -768,6 +768,7 @@
     bottom: 0 !important;
     top: var(--app-topbar-height) !important;
     height: calc(100vh - var(--app-topbar-height)) !important;
+    height: calc(100dvh - var(--app-topbar-height)) !important;
     width: min(64vw, 248px) !important;
     min-width: min(64vw, 248px) !important;
     display: flex !important;
@@ -840,21 +841,24 @@
     z-index: 130;
     display: block;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
     transition: opacity 0.24s ease;
   }
 
   .app-sidebar-overlay.is-open {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
   }
 
   .app-main {
     margin-top: var(--app-topbar-height) !important;
     margin-left: 0 !important;
-    margin-right: 10px !important;
-    min-height: calc(100vh - var(--app-topbar-height) - 10px) !important;
-    padding: 1rem 0.9rem 2.5rem !important;
+    margin-right: 0 !important;
+    min-height: calc(100vh - var(--app-topbar-height)) !important;
+    min-height: calc(100dvh - var(--app-topbar-height)) !important;
+    padding: 1rem 1rem calc(2.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 

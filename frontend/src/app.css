@@ -10,8 +10,18 @@ body.page-app .whatsapp-fab { display: none !important; }
   display: none !important;
 }
 
+/* Safari iOS : bande grise / « masque » sous la barre du bas = écart layout vs viewport visuel. */
+body.page-app {
+  background-color: #f3f4f6;
+}
+
+html:has(body.page-app) {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
 #app-app {
-  --app-bg: transparent;
+  --app-bg: #f3f4f6;
   --app-surface: var(--fidpass-surface);
   --app-surface-hover: #f0f2f5;
   --app-border: #e8ecf1;
@@ -85,6 +95,8 @@ body.page-app .whatsapp-fab { display: none !important; }
   background: var(--app-bg);
   color: var(--app-text);
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
   scroll-behavior: smooth;
