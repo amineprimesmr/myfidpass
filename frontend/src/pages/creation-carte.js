@@ -1,5 +1,11 @@
 import "./../creation-carte.css";
 import { API_BASE, setAuthToken, setRefreshToken, setPendingEstablishment } from "../config.js";
+import {
+  showOAuthConnectingOverlay,
+  hideOAuthConnectingOverlay,
+  markGoogleCredentialFlowStarted,
+  handleGooglePromptMoment,
+} from "../oauth-connecting-overlay.js";
 
 function escapeHtml(str) {
   return String(str || "")
@@ -253,13 +259,15 @@ export default {
     if (appleError) {
       showOAuthError(appleError === "no_email" ? "Apple n'a pas fourni d'email." : "Connexion Apple impossible.");
     } else if (appleCode) {
+      showOAuthConnectingOverlay("apple");
       fetch(`${API_BASE}/api/auth/apple-exchange?code=${encodeURIComponent(appleCode)}`)
         .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
           if (ok) handleOAuthSuccess(data);
           else showOAuthError(data?.error || "Session Apple expirée.");
         })
-        .catch(() => showOAuthError("Erreur réseau lors de la connexion Apple."));
+        .catch(() => showOAuthError("Erreur réseau lors de la connexion Apple."))
+        .finally(() => hideOAuthConnectingOverlay());
       const cleaned = new URL(window.location.href);
       cleaned.searchParams.delete("apple_code");
       cleaned.searchParams.delete("apple_error");
@@ -462,6 +470,7 @@ export default {
             client_id: googleClientId,
             callback: (res) => {
               if (!res?.credential) return;
+              markGoogleCredentialFlowStarted();
               showOAuthError("");
               fetch(`${API_BASE}/api/auth/google`, {
                 method: "POST",
@@ -476,7 +485,8 @@ export default {
                   if (ok) handleOAuthSuccess(data);
                   else showOAuthError(data?.error || "Erreur de connexion Google.");
                 })
-                .catch(() => showOAuthError("Erreur réseau lors de la connexion Google."));
+                .catch(() => showOAuthError("Erreur réseau lors de la connexion Google."))
+                .finally(() => hideOAuthConnectingOverlay());
             },
           });
           googleReady = true;
@@ -499,7 +509,8 @@ export default {
             showOAuthError("Google n'est pas encore prêt. Réessayez.");
             return;
           }
-          window.google.accounts.id.prompt();
+          showOAuthConnectingOverlay("google");
+          window.google.accounts.id.prompt(handleGooglePromptMoment);
         });
         loginGoogleBtn?.addEventListener("click", () => googleBtn.click());
       }
@@ -550,6 +561,7 @@ export default {
 
         appleBtn.addEventListener("click", () => {
           showOAuthError("");
+          showOAuthConnectingOverlay("apple");
           if (typeof AppleID === "undefined" || !AppleID?.auth) {
             window.location.href = buildAppleRedirectUrl();
             return;
@@ -560,6 +572,7 @@ export default {
               const idToken = res?.authorization?.id_token;
               const user = res?.user;
               if (!idToken) {
+                hideOAuthConnectingOverlay();
                 showOAuthError("Token Apple manquant.");
                 return;
               }
@@ -580,7 +593,8 @@ export default {
                   if (ok) handleOAuthSuccess(data);
                   else showOAuthError(data?.error || "Erreur de connexion Apple.");
                 })
-                .catch(() => showOAuthError("Erreur réseau lors de la connexion Apple."));
+                .catch(() => showOAuthError("Erreur réseau lors de la connexion Apple."))
+                .finally(() => hideOAuthConnectingOverlay());
             })
             .catch((err) => {
               const msg = err?.error || err?.message || "Connexion Apple annulée.";
@@ -588,6 +602,7 @@ export default {
                 window.location.href = buildAppleRedirectUrl();
                 return;
               }
+              hideOAuthConnectingOverlay();
               showOAuthError(msg);
             });
         });

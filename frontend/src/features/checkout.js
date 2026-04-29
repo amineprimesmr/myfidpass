@@ -3,6 +3,7 @@
  * Référence : REFONTE-REGLES.md — un module par écran.
  */
 import { API_BASE, getAuthToken, setAuthToken, setRefreshToken, clearAuthToken, getAuthHeaders } from "../config.js";
+import { showOAuthConnectingOverlay, hideOAuthConnectingOverlay } from "../oauth-connecting-overlay.js";
 import { initRouting } from "../router/index.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY, DESIGN_CATEGORY_LABELS } from "../constants/builder.js";
 
@@ -119,13 +120,15 @@ export function initCheckoutPage() {
     handleOAuthError(msg);
   } else if (!CHECKOUT_APPLE_SIGNIN_DISABLED && appleCode && appleClientId) {
     history.replaceState({}, "", window.location.pathname);
+    showOAuthConnectingOverlay("apple");
     fetch(`${API_BASE}/api/auth/apple-exchange?code=${encodeURIComponent(appleCode)}`)
       .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
       .then(({ ok, data }) => {
         if (ok && data?.token) handleOAuthSuccess(data);
         else handleOAuthError(data?.error || "Session expirée. Réessayez.");
       })
-      .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."));
+      .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."))
+      .finally(() => hideOAuthConnectingOverlay());
   }
 
   if (googleClientId) {
@@ -141,6 +144,7 @@ export function initCheckoutPage() {
             client_id: googleClientId,
             callback: (res) => {
               if (!res?.credential) return;
+              showOAuthConnectingOverlay("google");
               showOAuthError("");
               fetch(`${API_BASE}/api/auth/google`, {
                 method: "POST",
@@ -152,7 +156,8 @@ export function initCheckoutPage() {
                   if (ok && data?.token) handleOAuthSuccess(data);
                   else handleOAuthError(data?.error || "Erreur lors de la connexion Google. Réessayez.");
                 })
-                .catch(() => handleOAuthError("Erreur réseau ou API inaccessible. Vérifiez que le backend est en ligne."));
+                .catch(() => handleOAuthError("Erreur réseau ou API inaccessible. Vérifiez que le backend est en ligne."))
+                .finally(() => hideOAuthConnectingOverlay());
             },
           });
           google.accounts.id.renderButton(googleBtnContainer, {
@@ -185,6 +190,7 @@ export function initCheckoutPage() {
         nonce: Math.random().toString(36).slice(2) + Date.now().toString(36),
       }).toString();
     appleBtn.addEventListener("click", () => {
+      showOAuthConnectingOverlay("apple");
       showOAuthError("");
       if (isAppleRedirectDevice() || typeof AppleID === "undefined" || !AppleID?.auth) {
         window.location.href = buildAppleRedirectUrl();
@@ -194,7 +200,11 @@ export function initCheckoutPage() {
         .then((res) => {
           const idToken = res?.authorization?.id_token;
           const user = res?.user;
-          if (!idToken) { handleOAuthError("Token Apple manquant"); return; }
+          if (!idToken) {
+            hideOAuthConnectingOverlay();
+            handleOAuthError("Token Apple manquant");
+            return;
+          }
           fetch(`${API_BASE}/api/auth/apple`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -209,10 +219,12 @@ export function initCheckoutPage() {
               if (ok && data?.token) handleOAuthSuccess(data);
               else handleOAuthError(data?.error || "Erreur lors de la connexion Apple. Réessayez.");
             })
-            .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."));
+            .catch(() => handleOAuthError("Erreur réseau ou API inaccessible."))
+            .finally(() => hideOAuthConnectingOverlay());
         })
         .catch((err) => {
           const msg = err?.error || err?.message || (err && String(err));
+          hideOAuthConnectingOverlay();
           if (msg && (msg.includes("popup") || msg.includes("blocked") || msg.includes("fenêtre")))
             handleOAuthError("Autorisez les fenêtres pop-up pour ce site puis réessayez.");
           else if (msg && msg.toLowerCase().includes("invalid"))
