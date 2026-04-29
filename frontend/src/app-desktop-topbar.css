@@ -669,6 +669,7 @@
 
 @media (min-width: 901px) {
   #app-app {
+    --app-main-sheet-pull: 12px;
     --app-topbar-height: 52px;
   }
 
@@ -681,14 +682,33 @@
     height: calc(100vh - var(--app-admin-strip-h, 0px) - var(--app-topbar-height));
   }
 
-  .app-main {
-    margin-top: calc(var(--app-admin-strip-h, 0px) + var(--app-topbar-height));
-    min-height: calc(100vh - var(--app-admin-strip-h, 0px) - var(--app-topbar-height) - 12px);
+  body.page-app #app-app .app-main {
+    margin-top: calc(
+      var(--app-admin-strip-h, 0px) + var(--app-topbar-height) - var(--app-main-sheet-pull, 12px)
+    );
+    min-height: calc(
+      100vh - var(--app-admin-strip-h, 0px) - var(--app-topbar-height) - 12px + var(--app-main-sheet-pull, 12px)
+    );
+    min-height: calc(
+      100dvh - var(--app-admin-strip-h, 0px) - var(--app-topbar-height) - 12px +
+        var(--app-main-sheet-pull, 12px)
+    );
+
+    border-top-left-radius: clamp(17px, 1.85vw, 22px);
+    border-top-right-radius: clamp(17px, 1.85vw, 22px);
+    overflow: clip;
+    position: relative;
+    z-index: 6;
+
+    box-shadow:
+      0 -12px 40px rgba(0, 0, 0, 0.1),
+      0 -2px 0 rgba(255, 255, 255, 0.35) inset;
   }
 }
 
 @media (max-width: 900px) {
   #app-app {
+    --app-main-sheet-pull: 16px;
     --app-topbar-height: 56px;
   }
 
@@ -852,13 +872,27 @@
     pointer-events: auto;
   }
 
-  .app-main {
-    margin-top: var(--app-topbar-height) !important;
+  body.page-app #app-app .app-main {
+    margin-top: calc(var(--app-topbar-height) - var(--app-main-sheet-pull, 16px)) !important;
+
     margin-left: 0 !important;
     margin-right: 0 !important;
-    min-height: calc(100vh - var(--app-topbar-height)) !important;
-    min-height: calc(100dvh - var(--app-topbar-height)) !important;
+
+    min-height: calc(100vh - var(--app-topbar-height) + var(--app-main-sheet-pull, 16px)) !important;
+    min-height: calc(100dvh - var(--app-topbar-height) + var(--app-main-sheet-pull, 16px)) !important;
+
     padding: 1rem 1rem calc(2.5rem + env(safe-area-inset-bottom, 0px)) !important;
+
+    border-top-left-radius: clamp(18px, 5vw, 24px);
+    border-top-right-radius: clamp(18px, 5vw, 24px);
+    overflow: clip;
+
+    position: relative;
+    z-index: 6;
+
+    box-shadow:
+      0 -14px 44px rgba(0, 0, 0, 0.16),
+      0 -4px 0 rgba(255, 255, 255, 0.22) inset;
   }
 }
 

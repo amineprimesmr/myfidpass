@@ -245,6 +245,14 @@
   transform: scale(0.95);
 }
 
+/* Feuille blanche : rayon porté par .app-main → pas de double carte */
+body.page-app #app-app .app-main .app-saas-frc-sheet {
+  margin-top: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  box-shadow: none !important;
+}
+
 /* Feuille blanche : chevauche le bloc sombre puis recouvre au scroll */
 .app-saas-frc-sheet {
   position: relative;
