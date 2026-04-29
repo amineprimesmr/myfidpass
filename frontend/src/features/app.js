@@ -6,6 +6,7 @@ import { API_BASE, getAuthHeaders, clearAuthToken, fetchWithAuth } from "../conf
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
+import { detectWalletPlatform } from "../utils/walletPlatform.js";
 import {
   LOCATION_RADIUS_DEFAULT_M,
   clampLocationRadiusMetersClient,
@@ -1025,18 +1026,30 @@ function initAppDashboard(slug) {
   const shareSlugInputEl = document.getElementById("app-share-slug-input");
   const shareSlugSaveBtn = document.getElementById("app-share-slug-save");
   const shareSlugMessageEl = document.getElementById("app-share-slug-message");
+  const personnaliserWalletTestBtn = document.getElementById("app-personnaliser-wallet-test");
 
   const pageOrigin = (typeof window !== "undefined" && window.location.origin ? window.location.origin.replace(/\/$/, "") : "");
   function getShareLinkForSlug(value) {
     return `${pageOrigin}/fidelity/${value}`;
   }
   let currentShareSlug = slug || "";
+  function refreshPersonnaliserWalletTestLabel() {
+    if (!personnaliserWalletTestBtn) return;
+    const labelEl = personnaliserWalletTestBtn.querySelector(".app-save-cta-label");
+    const platform = detectWalletPlatform();
+    let label = "Tester sur mobile";
+    if (platform === "ios") label = "Tester sur Apple Wallet";
+    else if (platform === "android") label = "Tester sur Google Wallet";
+    if (labelEl) labelEl.textContent = label;
+  }
+
   function renderShareCard(value) {
     if (!value) return;
     const fullShareLink = getShareLinkForSlug(value);
     if (shareLinkEl) shareLinkEl.value = fullShareLink;
     if (shareQrEl) shareQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=" + encodeURIComponent(fullShareLink);
     if (shareSlugInputEl) shareSlugInputEl.value = value;
+    refreshPersonnaliserWalletTestLabel();
   }
   function setShareSlugMessage(text, isError = false) {
     if (!shareSlugMessageEl) return;
@@ -1046,6 +1059,9 @@ function initAppDashboard(slug) {
     shareSlugMessageEl.classList.toggle("success", !!(text && !isError));
   }
   renderShareCard(currentShareSlug);
+  if (typeof window !== "undefined") {
+    window.addEventListener("resize", refreshPersonnaliserWalletTestLabel, { passive: true });
+  }
   if (shareCopyBtn) {
     shareCopyBtn.addEventListener("click", () => {
       if (!shareLinkEl) return;
@@ -1057,6 +1073,13 @@ function initAppDashboard(slug) {
     });
   }
   const shareDownloadQrBtn = document.getElementById("app-share-download-qr");
+  if (personnaliserWalletTestBtn) {
+    personnaliserWalletTestBtn.addEventListener("click", () => {
+      const targetSlug = (shareSlugInputEl?.value || currentShareSlug || slug || "").trim();
+      if (!targetSlug) return;
+      window.location.href = getShareLinkForSlug(targetSlug);
+    });
+  }
 
   // Raccourcis discrets en haut du dashboard : scroll vers scanner / recherche client
   if (dashboardScanCta) {
@@ -5739,15 +5762,15 @@ function initAppDashboard(slug) {
     } catch (_) {}
   }
 
-  const NOTIF_CATEGORY_COLORS = ["#1e3a8a", "#2563eb", "#b45309", "#7c3aed", "#dc2626", "#0891b2"];
+  const NOTIF_FIXED_CATEGORIES = [
+    { id: "inactive_14d", name: "Client inactif depuis plus de 14 jours", color_hex: "#f59e0b" },
+    { id: "loyal_10_visits_month", name: "Client fidèle (+10 visites/mois)", color_hex: "#2563eb" },
+  ];
   let notifCategoriesCache = [];
 
   async function loadAppNotificationCategories() {
     try {
-      const res = await api("/dashboard/categories");
-      if (!res.ok) return;
-      const data = await res.json();
-      const categories = data.categories || [];
+      const categories = NOTIF_FIXED_CATEGORIES;
       notifCategoriesCache = categories;
 
       const targetAll = document.getElementById("app-notif-target-all");
@@ -5755,13 +5778,12 @@ function initAppDashboard(slug) {
       const targetCategoriesLabel = document.getElementById("app-notif-target-categories-label");
       const picksWrap = document.getElementById("app-notif-categories-picks");
       const picksList = document.getElementById("app-notif-categories-list");
-      const manageList = document.getElementById("app-notif-categories-manage-list");
 
       if (targetCategoriesLabel) {
-        targetCategoriesLabel.classList.toggle("hidden", categories.length === 0);
-        targetCategoriesLabel.style.display = categories.length === 0 ? "none" : "";
+        targetCategoriesLabel.classList.remove("hidden");
+        targetCategoriesLabel.style.display = "";
       }
-      if (targetCategories) targetCategories.disabled = categories.length === 0;
+      if (targetCategories) targetCategories.disabled = false;
 
       if (picksList) {
         picksList.innerHTML = categories
@@ -5776,136 +5798,63 @@ function initAppDashboard(slug) {
           })
           .join("");
       }
-      if (picksWrap) picksWrap.classList.toggle("hidden", !targetCategories?.checked);
-      if (targetAll?.checked) picksWrap?.classList.add("hidden");
-
-      if (manageList) {
-        manageList.innerHTML = categories
-          .map((c) => {
-            const color = c.color_hex || c.colorHex || "#94a3b8";
-            return `<div class="app-notif-category-manage-item" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}">
-              <span class="app-notif-category-chip-color" style="background:${color}"></span>
-              <input type="text" class="app-input app-notif-category-input" value="${escapeHtml(c.name)}" maxlength="64" data-id="${escapeHtml(c.id)}" aria-label="Nom de la catégorie" />
-              <div class="app-notif-category-manage-item-actions">
-                <button type="button" class="app-notif-category-save" data-id="${escapeHtml(c.id)}" aria-label="Enregistrer">OK</button>
-                <button type="button" class="app-notif-category-delete" data-id="${escapeHtml(c.id)}" aria-label="Supprimer">Supprimer</button>
-              </div>
-            </div>`;
-          })
-          .join("");
-        manageList.querySelectorAll(".app-notif-category-manage-item").forEach((row) => {
-          const id = row.dataset.id;
-          const input = row.querySelector(".app-notif-category-input");
-          const saveBtn = row.querySelector(".app-notif-category-save");
-          const delBtn = row.querySelector(".app-notif-category-delete");
-          const save = async () => {
-            const name = input?.value?.trim();
-            if (!name) return;
-            try {
-              const r = await api(`/dashboard/categories/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-              if (r.ok) {
-                row.dataset.name = name;
-                const chipName = document.querySelector(`.app-notif-category-chip[data-id="${id}"] .app-notif-category-chip-name`);
-                if (chipName) chipName.textContent = name;
-                notifCategoriesCache.find((c) => c.id === id).name = name;
-              }
-            } catch (_) {}
-          };
-          input?.addEventListener("blur", save);
-          input?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); save(); } });
-          saveBtn?.addEventListener("click", save);
-          delBtn?.addEventListener("click", async () => {
-            if (!confirm("Supprimer cette catégorie ? Les membres ne seront plus associés à celle-ci.")) return;
-            try {
-              const r = await api(`/dashboard/categories/${id}`, { method: "DELETE" });
-              if (r.ok) {
-                row.style.animation = "none";
-                row.offsetHeight;
-                row.style.animation = "app-notif-category-item-out 0.25s ease forwards";
-                row.addEventListener("animationend", () => row.remove());
-                notifCategoriesCache = notifCategoriesCache.filter((c) => c.id !== id);
-                const chip = document.querySelector(`.app-notif-category-chip[data-id="${id}"]`);
-                if (chip) chip.remove();
-              }
-            } catch (_) {}
-          });
-        });
+      if (picksWrap) {
+        picksWrap.classList.remove("hidden");
+        picksWrap.setAttribute("aria-hidden", "false");
       }
       syncAppNotifsSegmentPill();
     } catch (_) {}
   }
 
   function syncAppNotifsSegmentPill() {
-    const cat = document.getElementById("app-notif-target-categories");
+    const checked = document.querySelectorAll(".app-notif-category-cb:checked");
     const label = document.getElementById("app-notifs-segment-label");
     if (!label) return;
-    label.textContent = cat?.checked ? "Par catégorie" : "Tous les clients";
+    if (checked.length > 0) {
+      label.textContent = checked.length > 1 ? `Par catégorie (${checked.length})` : "Par catégorie";
+      return;
+    }
+    label.textContent = "Tous les clients";
   }
 
   document.getElementById("app-notif-target-all")?.addEventListener("change", () => {
-    const picks = document.getElementById("app-notif-categories-picks");
-    if (picks) picks.classList.add("hidden");
+    document.querySelectorAll(".app-notif-category-cb:checked").forEach((cb) => {
+      cb.checked = false;
+    });
     syncAppNotifsSegmentPill();
   });
   document.getElementById("app-notif-target-categories")?.addEventListener("change", () => {
-    const picks = document.getElementById("app-notif-categories-picks");
-    if (picks) picks.classList.remove("hidden");
+    syncAppNotifsSegmentPill();
+  });
+  document.getElementById("app-notif-categories-list")?.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || !target.classList.contains("app-notif-category-cb")) return;
+    const targetAll = document.getElementById("app-notif-target-all");
+    const targetCategories = document.getElementById("app-notif-target-categories");
+    const checkedCount = document.querySelectorAll(".app-notif-category-cb:checked").length;
+    if (checkedCount > 0) {
+      if (targetCategories) targetCategories.checked = true;
+    } else if (targetAll) {
+      targetAll.checked = true;
+    }
     syncAppNotifsSegmentPill();
   });
 
-  document.getElementById("app-notifs-open-targeting")?.addEventListener("click", () => {
-    const wrap = document.querySelector("details.app-notifs-manual-wrap");
-    if (wrap) wrap.open = true;
-    document.getElementById("app-notif-categories-block")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  });
+  const notifTargetingModal = document.getElementById("app-notif-targeting-modal");
+  const openNotifTargetingModal = () => {
+    if (!notifTargetingModal) return;
+    notifTargetingModal.classList.remove("hidden");
+  };
+  const closeNotifTargetingModal = () => {
+    if (!notifTargetingModal) return;
+    notifTargetingModal.classList.add("hidden");
+  };
 
-  const notifCategoryNewName = document.getElementById("app-notif-category-new-name");
-  const notifCategoryAddBtn = document.getElementById("app-notif-category-add-btn");
-  const notifCategoriesManageFeedback = document.getElementById("app-notif-categories-manage-feedback");
-  async function addNotifCategory() {
-    const name = notifCategoryNewName?.value?.trim();
-    if (!name) return;
-    if (notifCategoryAddBtn) notifCategoryAddBtn.disabled = true;
-    if (notifCategoriesManageFeedback) { notifCategoriesManageFeedback.classList.add("hidden"); notifCategoriesManageFeedback.textContent = ""; }
-    try {
-      const colorHex = NOTIF_CATEGORY_COLORS[notifCategoriesCache.length % NOTIF_CATEGORY_COLORS.length];
-      const res = await api("/dashboard/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, color_hex: colorHex }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.id) {
-        notifCategoryNewName.value = "";
-        notifCategoriesCache.push({ id: data.id, name: data.name || name, color_hex: colorHex });
-        await loadAppNotificationCategories();
-        if (notifCategoriesManageFeedback) {
-          notifCategoriesManageFeedback.textContent = "Catégorie ajoutée.";
-          notifCategoriesManageFeedback.classList.remove("hidden", "error");
-          notifCategoriesManageFeedback.classList.add("success");
-          setTimeout(() => { notifCategoriesManageFeedback.classList.add("hidden"); }, 2000);
-        }
-        document.getElementById("app-notif-target-categories-label")?.classList.remove("hidden");
-        document.getElementById("app-notif-target-categories-label").style.display = "";
-        document.getElementById("app-notif-target-categories").disabled = false;
-      } else {
-        if (notifCategoriesManageFeedback) {
-          notifCategoriesManageFeedback.textContent = data.error || "Erreur";
-          notifCategoriesManageFeedback.classList.remove("hidden", "success");
-          notifCategoriesManageFeedback.classList.add("error");
-        }
-      }
-    } catch (_) {
-      if (notifCategoriesManageFeedback) {
-        notifCategoriesManageFeedback.textContent = "Erreur réseau.";
-        notifCategoriesManageFeedback.classList.remove("hidden", "success");
-        notifCategoriesManageFeedback.classList.add("error");
-      }
-    }
-    if (notifCategoryAddBtn) notifCategoryAddBtn.disabled = false;
-  }
-  notifCategoryAddBtn?.addEventListener("click", addNotifCategory);
-  notifCategoryNewName?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addNotifCategory(); } });
+  document.getElementById("app-notifs-open-targeting")?.addEventListener("click", () => {
+    openNotifTargetingModal();
+  });
+  document.getElementById("app-notif-targeting-close")?.addEventListener("click", closeNotifTargetingModal);
+  document.getElementById("app-notif-targeting-backdrop")?.addEventListener("click", closeNotifTargetingModal);
 
   document.getElementById("app-notifications-remove-test-btn")?.addEventListener("click", async () => {
     const btn = document.getElementById("app-notifications-remove-test-btn");
@@ -6168,6 +6117,24 @@ function initAppDashboard(slug) {
   let notifCarouselPerimSaveTimer = null;
   let notifCarouselPerimSyncGuard = false;
 
+  function buildPerimeterStaticMapUrl(lat, lng, radiusM) {
+    const zoom =
+      Number.isFinite(radiusM) && radiusM > 0
+        ? radiusM <= 35
+          ? 16
+          : radiusM <= 60
+            ? 15
+            : 14
+        : 15;
+
+    if (mapboxToken) {
+      const marker = `pin-s+1e3a8a(${lng},${lat})`;
+      return `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${marker}/${lng},${lat},${zoom},0/480x200@2x?access_token=${encodeURIComponent(mapboxToken)}`;
+    }
+
+    return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=${zoom}&size=480x200&maptype=osmarenderer&markers=${lat},${lng},red-pushpin`;
+  }
+
   async function syncNotifCarouselFromSettings() {
     const mapImg = document.getElementById("app-notif-carousel-static-map");
     const mapFb = document.getElementById("app-notif-carousel-map-fallback");
@@ -6178,11 +6145,14 @@ function initAppDashboard(slug) {
       const data = await res.json();
       const lat = data.location_lat != null ? Number(data.location_lat) : null;
       const lng = data.location_lng != null ? Number(data.location_lng) : null;
+      const radiusM = clampLocationRadiusMetersClient(
+        data.location_radius_m ?? data.locationRadiusM ?? LOCATION_RADIUS_DEFAULT_M
+      );
       const locMsg = String(data.location_relevant_text ?? data.locationRelevantText ?? "").trim();
       const legacyMsg = String(data.notification_change_message ?? data.notificationChangeMessage ?? "").trim();
       const notifMessage = locMsg || legacyMsg;
       if (lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng) && mapImg) {
-        const src = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=15&size=480x200&maptype=osmarenderer&markers=${lat},${lng},red-pushpin`;
+        const src = buildPerimeterStaticMapUrl(lat, lng, radiusM);
         mapImg.onload = () => {
           mapImg.classList.remove("hidden");
           if (mapFb) mapFb.classList.add("hidden");

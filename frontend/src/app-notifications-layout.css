@@ -32,12 +32,14 @@
 }
 
 #notifications.app-notifications-section .app-notifs-compose {
+  margin-top: 1rem;
   margin-bottom: 1.75rem;
 }
 
 /* ——— Dynamic Island (aperçu sombre) ——— */
 #notifications.app-notifications-section .app-notifs-dynamic-island {
-  margin-bottom: 0.75rem;
+  margin-top: 0.45rem;
+  margin-bottom: 1rem;
 }
 
 #notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner {
@@ -46,23 +48,19 @@
 
 #notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-bubble {
   align-items: flex-start;
-  min-height: 96px;
-  padding: 1rem 1.15rem;
+  min-height: 118px;
+  padding: 1.2rem 1.35rem;
   background: #1c1c1e;
   border: none;
   border-radius: 28px;
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
 #notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-bubble:hover {
   transform: none;
-  box-shadow:
-    0 6px 28px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  box-shadow: none;
 }
 
 #notifications.app-notifications-section .app-notifs-dynamic-island .app-notification-preview-banner-icon-wrap {
@@ -127,13 +125,18 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   color: #0f172a;
-  background: #f2f2f7;
-  border: none;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.16);
   border-radius: 999px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s ease, transform 0.12s ease;
+  transition: background 0.15s ease, transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#notifications.app-notifications-section .app-notifs-pill:hover {
+  border-color: rgba(15, 23, 42, 0.26);
+  box-shadow: 0 7px 16px rgba(15, 23, 42, 0.16);
 }
 
 #notifications.app-notifications-section .app-notifs-pill:active {
@@ -166,6 +169,12 @@
   background: transparent !important;
   box-shadow: none !important;
   margin: 0 !important;
+}
+
+#notifications.app-notifications-section .app-notifs-send-wrap .app-save-cta-wrap {
+  border: 1px solid rgba(15, 23, 42, 0.16) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12) !important;
 }
 
 #notifications.app-notifications-section .app-notifs-send-cta {

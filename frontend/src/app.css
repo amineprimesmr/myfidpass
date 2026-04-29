@@ -1744,19 +1744,20 @@ html:has(body.page-app) {
 }
 .app-notif-categories-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 .app-notif-category-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 999px;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   background: var(--fidpass-surface);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.94rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .app-notif-category-chip:hover {
@@ -1795,6 +1796,9 @@ html:has(body.page-app) {
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+.app-notif-category-chip-name {
+  flex: 1;
 }
 
 /* Gérer les catégories (details/summary) */
@@ -4418,6 +4422,11 @@ html:has(body.page-app) {
   backdrop-filter: blur(4px);
   transition: opacity var(--app-transition);
 }
+
+#app-notif-targeting-modal .app-modal-backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
 .app-modal-content {
   position: relative;
   background: linear-gradient(180deg, var(--fidpass-surface) 0%, #fefefe 30%, #fafafa 100%);
@@ -4509,7 +4518,10 @@ html:has(body.page-app) {
 #app-dashboard-content #personnaliser.app-section.app-section-visible {
   display: block;
   overflow: visible;
-  background: transparent;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0),
+    linear-gradient(160deg, #f8fafc 0%, #eef2ff 45%, #faf5ff 100%);
+  background-size: 18px 18px, 100% 100%;
   margin: 0;
   padding: 0;
   border-radius: 0;
