@@ -52,10 +52,6 @@
   overflow: hidden;
 }
 
-.app-saas-frc-cluster:not(.hidden) + * {
-  animation: inherit;
-}
-
 .app-saas-frc-hero::after {
   content: "";
   position: absolute;
