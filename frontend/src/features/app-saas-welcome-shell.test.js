@@ -45,7 +45,9 @@ describe("app-saas-welcome-shell", () => {
   it("applySaaSFrcMessaging affiche le mode essai actif", () => {
     const future = new Date(Date.now() + 864e5 * 3).toISOString();
     applySaaSFrcMessaging({
-      trialStripeVisible: true,
+      paid: false,
+      trialHero: true,
+      showSubscribeStrip: true,
       trialEndRaw: future,
       formatEndingHeadline: () => "L’essai prend fin dans 3 jours",
     });

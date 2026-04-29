@@ -19,10 +19,34 @@
 
 #app-app.app-saas-welcome-active {
   --saas-frc-on: 1;
+  isolation: isolate;
 }
 
 #app-app.app-saas-welcome-active .app-main {
   background: #f6f6f7;
+}
+
+/* Héros sous la topbar fixe : décalage + alignement colonne principale (≥901px) */
+#app-app.app-saas-welcome-active .app-saas-frc-cluster {
+  padding-top: var(--app-topbar-height, 0px);
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 901px) {
+  #app-app.app-saas-welcome-active .app-saas-frc-cluster {
+    margin-left: var(--app-sidebar-width);
+    width: calc(100% - var(--app-sidebar-width));
+    box-sizing: border-box;
+  }
+}
+
+/* Top bar : même ambiance que le héros (réf. Shopify mobile) */
+#app-app.app-saas-welcome-active .app-desktop-topbar {
+  background:
+    radial-gradient(ellipse 140% 120% at 52% -30%, rgba(0, 120, 100, 0.35) 0%, transparent 58%),
+    linear-gradient(180deg, #020203 0%, #090b0b 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 .app-saas-frc-cluster {
@@ -141,32 +165,42 @@
   text-underline-offset: 2px;
 }
 
-/* Bandeau secondaire type admin mobile */
+/* Bandeau compact « S'abonner… » — même famille de dégradés que le héros */
 .app-saas-frc-strip {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 0.55rem;
-  flex-wrap: wrap;
+  gap: 0.65rem;
+  flex-wrap: nowrap;
   margin: 0;
-  padding: 0.65rem 1rem 0.75rem;
-  background: #2a2e2e;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.88);
+  padding: 0.7rem 1rem 0.8rem;
+  background:
+    linear-gradient(180deg, rgba(15, 45, 38, 0.95) 0%, rgba(5, 8, 7, 0.98) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  transition: background 0.22s ease;
+  transition:
+    filter 0.22s ease,
+    background 0.22s ease;
 }
 
 .app-saas-frc-strip:hover {
-  background: #323737;
+  filter: brightness(1.06);
 }
 
 .app-saas-frc-strip-main {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.app-saas-frc-strip-subrow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .app-saas-frc-strip-strong {
@@ -185,16 +219,17 @@
 }
 
 .app-saas-frc-strip-status {
-  flex: 1 1 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.65);
   line-height: 1.35;
 }
 
 .app-saas-frc-strip-arrow {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   border: none;
   background: #fff;
   color: #0a0a0a;
@@ -210,17 +245,17 @@
   transform: scale(0.95);
 }
 
-/* Feuille blanche contenu */
+/* Feuille blanche : chevauche le bloc sombre puis recouvre au scroll */
 .app-saas-frc-sheet {
   position: relative;
-  margin-top: -18px;
+  margin-top: -26px;
   padding: 0 0 2.5rem;
   background: var(--saas-frc-sheet-muted);
   border-radius: 22px 22px 0 0;
   box-shadow:
-    0 -12px 40px rgba(0, 0, 0, 0.2),
-    0 -1px 0 rgba(15, 23, 42, 0.05);
-  z-index: 2;
+    0 -16px 48px rgba(0, 0, 0, 0.26),
+    0 -4px 0 rgba(255, 255, 255, 0.04) inset;
+  z-index: 4;
 }
 
 .app-saas-frc-sheet--empty {

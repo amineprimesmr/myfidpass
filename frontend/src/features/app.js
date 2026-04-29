@@ -161,57 +161,93 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
   const sidebarCard = document.getElementById("app-sidebar-trial-subscribe-card");
   const sidebarRemainEl = document.getElementById("app-sidebar-trial-subscribe-remaining");
   const stripStatus = document.getElementById("app-saas-frc-strip-status");
-  const syncVisibility = (visible) => {
-    if (sidebarCard) {
-      sidebarCard.classList.toggle("hidden", !visible);
-      sidebarCard.setAttribute("aria-hidden", visible ? "false" : "true");
-    }
-  };
-  const trialEndRaw = d?.merchant_trial_ends_at ?? d?.merchantTrialEndsAt ?? null;
+  const hasSubscription = !!(d.has_active_subscription ?? d.hasActiveSubscription);
   const user = d?.user || {};
   const isAdmin = !!(user.is_admin ?? user.isAdmin);
+  const trialEndRaw = d?.merchant_trial_ends_at ?? d?.merchantTrialEndsAt ?? null;
+
+  const fallbackTitle = "Configurez votre espace Myfidpass";
+  const fallbackSubtitle = "Indiquez votre commerce, puis créez votre carte et votre flyer QR.";
 
   if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
     clearInterval(window.__fidpassTrialPillTimer);
     window.__fidpassTrialPillTimer = null;
   }
 
-  const clearTrialUi = () => {
+  /** @param {boolean} sidebarVisible */
+  const syncSidebar = (sidebarVisible) => {
+    if (sidebarCard) {
+      sidebarCard.classList.toggle("hidden", !sidebarVisible);
+      sidebarCard.setAttribute("aria-hidden", sidebarVisible ? "false" : "true");
+    }
+  };
+
+  /** Abonnement actif ou compte équipe : masque toute monetization */
+  const clearSubscribeChrome = () => {
+    syncSidebar(false);
     applySaaSFrcMessaging({
-      trialStripeVisible: false,
+      paid: true,
+      trialHero: false,
+      showSubscribeStrip: false,
       trialEndRaw: trialEndRaw ?? null,
       formatEndingHeadline: formatMerchantTrialEndingHeadline,
-      fallbackTitle: "Configurez votre espace Myfidpass",
-      fallbackSubtitle: "Indiquez votre commerce, puis créez votre carte et votre flyer QR.",
+      fallbackTitle,
+      fallbackSubtitle,
     });
   };
 
-  if (isAdmin || !trialEndRaw) {
-    syncVisibility(false);
-    clearTrialUi();
+  if (isAdmin || hasSubscription) {
+    clearSubscribeChrome();
     return;
   }
-  const endMs = Date.parse(trialEndRaw);
-  if (!Number.isFinite(endMs) || Date.now() >= endMs) {
-    syncVisibility(false);
-    clearTrialUi();
-    return;
-  }
+
+  const trialEndMs = trialEndRaw ? Date.parse(trialEndRaw) : NaN;
+  const trialActive = !!(Number.isFinite(trialEndMs) && Date.now() < trialEndMs);
+
+  syncSidebar(true);
 
   applySaaSFrcMessaging({
-    trialStripeVisible: true,
-    trialEndRaw,
+    paid: false,
+    trialHero: trialActive,
+    showSubscribeStrip: true,
+    trialEndRaw: trialActive ? trialEndRaw : null,
     formatEndingHeadline: formatMerchantTrialEndingHeadline,
+    fallbackTitle,
+    fallbackSubtitle,
   });
 
+  const subscriptionLineFallback = () =>
+    "1er mois à 1 € — activez votre abonnement sans engagement.";
+
   const tick = () => {
+    if (!trialEndRaw) {
+      const line = subscriptionLineFallback();
+      if (sidebarRemainEl) sidebarRemainEl.textContent = line;
+      if (stripStatus) stripStatus.textContent = line;
+      return;
+    }
+    const end = Date.parse(trialEndRaw);
+    if (!Number.isFinite(end)) {
+      const line = subscriptionLineFallback();
+      if (sidebarRemainEl) sidebarRemainEl.textContent = line;
+      if (stripStatus) stripStatus.textContent = line;
+      return;
+    }
     const headline = formatMerchantTrialEndingHeadline(trialEndRaw);
     if (sidebarRemainEl) sidebarRemainEl.textContent = headline;
     if (stripStatus) stripStatus.textContent = headline;
-    const t = Date.parse(trialEndRaw);
-    if (Number.isFinite(t) && Date.now() >= t) {
-      syncVisibility(false);
-      clearTrialUi();
+
+    if (Date.now() >= end) {
+      applySaaSFrcMessaging({
+        paid: false,
+        trialHero: false,
+        showSubscribeStrip: true,
+        trialEndRaw: null,
+        formatEndingHeadline: formatMerchantTrialEndingHeadline,
+        fallbackTitle,
+        fallbackSubtitle,
+      });
+      if (stripStatus) stripStatus.textContent = headline;
       if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
         clearInterval(window.__fidpassTrialPillTimer);
         window.__fidpassTrialPillTimer = null;
@@ -219,14 +255,9 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
     }
   };
 
-  if (sidebarCard) {
-    tick();
-    if (typeof window !== "undefined") {
-      window.__fidpassTrialPillTimer = setInterval(tick, 30000);
-    }
-    syncVisibility(true);
-  } else {
-    tick();
+  tick();
+  if (typeof window !== "undefined") {
+    window.__fidpassTrialPillTimer = setInterval(tick, 30000);
   }
 }
 

@@ -9,7 +9,7 @@ function appShell() {
 }
 
 /**
- * Sync l’état « parcours premier accès façon Shopify » (héros + classe globale).
+ * Sync l'état « parcours premier accès façon Shopify » (héros + classe globale).
  * À appeler après affichage app-empty bienvenue, onboarding gate, ou navigation.
  */
 export function syncSaaSWelcomeChrome() {
@@ -38,12 +38,27 @@ export function syncSaaSWelcomeChrome() {
   root?.classList.toggle("app-saas-welcome-active", show);
 }
 
-/** @typedef {{ trialStripeVisible: boolean, trialEndRaw?: string|null, formatEndingHeadline: (iso: string)=>string }} SaaSFrcMsgOpts */
+/**
+ * @typedef {(iso: string) => string} FormatEndingHeadline
+ */
 
 /**
- * Copie marketing héros + bandeau (réutilise les mêmes règles que la carte essai sidebar).
- * @param {SaaSFrcMsgOpts & { fallbackTitle?: string, fallbackSubtitle?: string }} opts
+ * @param {{
+ *   paid?: boolean;
+ *   trialHero?: boolean;
+ *   showSubscribeStrip?: boolean;
+ *   trialEndRaw?: string | null;
+ *   formatEndingHeadline?: FormatEndingHeadline;
+ *   fallbackTitle?: string;
+ *   fallbackSubtitle?: string;
+ * }} opts
  */
+const SUPPORT_PAID_HTML =
+  'Une question ? <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a> · <a href="mailto:contact@myfidpass.fr">contact@myfidpass.fr</a>';
+const SUPPORT_TRIAL_HERO_HTML =
+  'Nous sommes là si vous avez besoin de nous <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a>';
+const SUPPORT_CONFIGURE_HTML = SUPPORT_PAID_HTML;
+
 export function applySaaSFrcMessaging(opts) {
   const cluster = document.getElementById("app-saas-frc-cluster");
   const hero = document.querySelector(".app-saas-frc-hero");
@@ -52,17 +67,44 @@ export function applySaaSFrcMessaging(opts) {
   const cta = document.getElementById("app-saas-frc-cta");
   const strip = document.getElementById("app-saas-frc-strip");
   const stripStatus = document.getElementById("app-saas-frc-strip-status");
+  const supportEl = document.getElementById("app-saas-frc-support");
 
-  const trialStripeVisible = !!opts.trialStripeVisible;
-  const raw = opts.trialEndRaw || "";
+  const paid = !!opts.paid;
+  const trialHero = !!opts.trialHero;
+  const showSubscribeStrip = !!opts.showSubscribeStrip;
 
-  cluster?.classList.toggle("app-saas-frc-cluster--trial", trialStripeVisible);
-  hero?.classList.toggle("app-saas-frc-hero--trial", trialStripeVisible);
+  cluster?.classList.toggle("app-saas-frc-cluster--paid", paid);
+  cluster?.classList.toggle("app-saas-frc-cluster--unpaid", !paid);
+  cluster?.classList.toggle("app-saas-frc-cluster--trial", trialHero);
+  hero?.classList.toggle("app-saas-frc-hero--trial", trialHero);
+
+  if (paid) {
+    if (cta) {
+      cta.classList.add("hidden");
+      cta.setAttribute("aria-hidden", "true");
+    }
+    if (strip) {
+      strip.classList.add("hidden");
+      strip.classList.remove("app-saas-frc-strip--visible");
+      strip.setAttribute("aria-hidden", "true");
+    }
+    if (titleEl && subtitleEl) {
+      titleEl.textContent =
+        opts.fallbackTitle != null ? opts.fallbackTitle : "Configurez votre espace Myfidpass";
+      subtitleEl.textContent =
+        opts.fallbackSubtitle != null && opts.fallbackSubtitle !== ""
+          ? opts.fallbackSubtitle
+          : "Indiquez votre commerce, puis créez votre carte et votre flyer QR.";
+    }
+    supportEl?.classList.remove("app-saas-frc-support--trial-hero");
+    if (supportEl) supportEl.innerHTML = SUPPORT_PAID_HTML;
+    return;
+  }
 
   if (titleEl && subtitleEl) {
-    if (trialStripeVisible) {
+    if (trialHero) {
       titleEl.textContent = "Votre essai a commencé";
-      subtitleEl.textContent = "3 jours gratuits, puis 1 €/mois pour continuer.";
+      subtitleEl.textContent = "3 jours gratuits, puis 1 €/mois pour continuer à créer.";
     } else {
       titleEl.textContent =
         opts.fallbackTitle != null ? opts.fallbackTitle : "Configurez votre espace Myfidpass";
@@ -73,17 +115,31 @@ export function applySaaSFrcMessaging(opts) {
     }
   }
 
+  supportEl?.classList.toggle("app-saas-frc-support--trial-hero", trialHero);
+  if (supportEl) {
+    supportEl.innerHTML = trialHero ? SUPPORT_TRIAL_HERO_HTML : SUPPORT_CONFIGURE_HTML;
+  }
+
   if (cta) {
-    cta.classList.toggle("hidden", !trialStripeVisible);
-    cta.setAttribute("aria-hidden", trialStripeVisible ? "false" : "true");
+    cta.classList.toggle("hidden", !trialHero);
+    cta.setAttribute("aria-hidden", trialHero ? "false" : "true");
   }
 
   if (strip && stripStatus) {
-    strip.classList.toggle("hidden", !trialStripeVisible);
-    strip.classList.toggle("app-saas-frc-strip--visible", trialStripeVisible);
-    strip.setAttribute("aria-hidden", trialStripeVisible ? "false" : "true");
-    if (trialStripeVisible && typeof opts.formatEndingHeadline === "function" && raw) {
-      stripStatus.textContent = opts.formatEndingHeadline(raw);
+    strip.classList.toggle("hidden", !showSubscribeStrip);
+    strip.classList.toggle("app-saas-frc-strip--visible", showSubscribeStrip);
+    strip.setAttribute("aria-hidden", showSubscribeStrip ? "false" : "true");
+
+    if (showSubscribeStrip) {
+      const raw = opts.trialEndRaw ?? null;
+      const fmt = opts.formatEndingHeadline;
+      if (trialHero && raw && typeof fmt === "function") {
+        stripStatus.textContent = fmt(raw);
+      } else if (trialHero && raw) {
+        stripStatus.textContent = "L’essai se termine bientôt";
+      } else {
+        stripStatus.textContent = "1er mois à 1 € — activez votre abonnement sans engagement.";
+      }
     }
   }
 }
