@@ -652,10 +652,6 @@ function initAppDashboard(slug) {
   const dashboardOnboardingCardStatus = document.getElementById("app-dashboard-onboarding-card-status");
   const dashboardOnboardingFlyerStatus = document.getElementById("app-dashboard-onboarding-flyer-status");
 
-  function isDesktopViewport() {
-    return typeof window !== "undefined" && window.matchMedia("(min-width: 769px)").matches;
-  }
-
   function isFlyerConfigured(settings) {
     if (!settings || typeof settings !== "object") return false;
     return Boolean(
@@ -680,11 +676,6 @@ function initAppDashboard(slug) {
 
   async function syncDashboardOnboardingGate() {
     if (!dashboardOnboardingGate || !dashboardShellMain) return false;
-    if (!isDesktopViewport()) {
-      dashboardOnboardingGate.classList.add("hidden");
-      dashboardShellMain.classList.remove("hidden");
-      return false;
-    }
     try {
       const res = await api("/dashboard/settings");
       if (!res.ok) {
