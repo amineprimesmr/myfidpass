@@ -294,11 +294,6 @@
               </span>
             </button>
         </div>
-          <div class="app-desktop-topbar__pre-actions" aria-hidden="false">
-            <button type="button" class="app-desktop-topbar__ghost-btn" id="app-topbar-mask-btn" title="Centre d’aide" aria-label="Centre d’aide">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 10h.01M15 10h.01"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3a9 9 0 019 9c0 6-9 13-9 13s-9-7-9-13a9 9 0 019-9z"/></svg>
-            </button>
-          </div>
           <div class="app-desktop-topbar__actions">
             <div class="app-desktop-topbar__dropdown-wrap">
               <button type="button" class="app-desktop-topbar__icon-btn" id="app-topbar-alerts-btn" aria-expanded="false" aria-haspopup="true" aria-controls="app-topbar-alerts-panel" title="Alertes">
@@ -347,37 +342,36 @@
                   Se déconnecter
                 </button>
               </div>
+          </div>
+        </div>
+        </div>
+        <!-- Intro SaaS : même section header, sous la rangée menu/recherche/actions -->
+        <div id="app-saas-frc-cluster" class="app-saas-frc-cluster hidden" aria-hidden="true">
+          <div class="app-saas-frc-hero">
+            <div class="app-saas-frc-hero-inner">
+              <p class="app-saas-frc-kicker">Myfidpass</p>
+              <h2 id="app-saas-frc-title" class="app-saas-frc-title">Votre essai a commencé</h2>
+              <p id="app-saas-frc-subtitle" class="app-saas-frc-subtitle">3 jours gratuits, puis 1 €/mois pour continuer à créer.</p>
+              <button type="button" id="app-saas-frc-cta" class="app-saas-frc-btn-primary">S’abonner pour 1 €</button>
+              <p id="app-saas-frc-support" class="app-saas-frc-support">
+                Une question ? <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a> · <a href="mailto:contact@myfidpass.fr">contact@myfidpass.fr</a>
+              </p>
             </div>
+          </div>
+          <div id="app-saas-frc-strip" class="app-saas-frc-strip hidden" aria-hidden="true">
+            <div class="app-saas-frc-strip-main">
+              <span class="app-saas-frc-strip-strong">S’abonner pour 1 €</span>
+              <div class="app-saas-frc-strip-subrow">
+                <span class="app-saas-frc-strip-dot" aria-hidden="true"></span>
+                <span id="app-saas-frc-strip-status" class="app-saas-frc-strip-status">—</span>
+              </div>
+            </div>
+            <button type="button" class="app-saas-frc-strip-arrow" aria-label="Voir l’abonnement Stripe">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
           </div>
         </div>
       </header>
-
-      <!-- Premier accès : héros + bandeau (collé à la topbar, dégradé commun — voir app-saas-shell.css) -->
-      <div id="app-saas-frc-cluster" class="app-saas-frc-cluster hidden" aria-hidden="true">
-        <div class="app-saas-frc-hero">
-          <div class="app-saas-frc-hero-inner">
-            <p class="app-saas-frc-kicker">Myfidpass</p>
-            <h2 id="app-saas-frc-title" class="app-saas-frc-title">Votre essai a commencé</h2>
-            <p id="app-saas-frc-subtitle" class="app-saas-frc-subtitle">3 jours gratuits, puis 1 €/mois pour continuer à créer.</p>
-            <button type="button" id="app-saas-frc-cta" class="app-saas-frc-btn-primary">S’abonner pour 1 €</button>
-            <p id="app-saas-frc-support" class="app-saas-frc-support">
-              Une question ? <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a> · <a href="mailto:contact@myfidpass.fr">contact@myfidpass.fr</a>
-            </p>
-          </div>
-        </div>
-        <div id="app-saas-frc-strip" class="app-saas-frc-strip hidden" aria-hidden="true">
-          <div class="app-saas-frc-strip-main">
-            <span class="app-saas-frc-strip-strong">S’abonner pour 1 €</span>
-            <div class="app-saas-frc-strip-subrow">
-              <span class="app-saas-frc-strip-dot" aria-hidden="true"></span>
-              <span id="app-saas-frc-strip-status" class="app-saas-frc-strip-status">—</span>
-            </div>
-          </div>
-          <button type="button" class="app-saas-frc-strip-arrow" aria-label="Voir l’abonnement Stripe">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-      </div>
 
       <button
         type="button"
@@ -542,7 +536,12 @@
                   <h3 class="app-dashboard-onboarding-card-title">Créer votre carte client</h3>
                   <p class="app-dashboard-onboarding-text">Personnalisez le design, les règles de points/tampons et le contenu visible dans Apple Wallet.</p>
                   <div class="app-dashboard-onboarding-actions">
-                    <button type="button" id="app-dashboard-onboarding-card-btn" class="app-btn app-btn-primary">Créer ma carte</button>
+                    <span class="app-save-cta-wrap app-dashboard-onboarding-cta-wrap">
+                      <button type="button" id="app-dashboard-onboarding-card-btn" class="app-save-cta app-dashboard-onboarding-cta">
+                        <span class="app-save-cta-dot" aria-hidden="true"></span>
+                        <span class="app-save-cta-label">Créer ma carte</span>
+                      </button>
+                    </span>
                   </div>
                   <p class="app-dashboard-onboarding-status" id="app-dashboard-onboarding-card-status">Non configuré</p>
                 </article>
@@ -558,7 +557,12 @@
                   <h3 class="app-dashboard-onboarding-card-title">Créer votre flyer QR</h3>
                   <p class="app-dashboard-onboarding-text">Générez un visuel prêt à imprimer avec votre QR code pour activer l’acquisition en boutique.</p>
                   <div class="app-dashboard-onboarding-actions">
-                    <button type="button" id="app-dashboard-onboarding-flyer-btn" class="app-btn app-btn-secondary">Créer mon flyer</button>
+                    <span class="app-save-cta-wrap app-dashboard-onboarding-cta-wrap">
+                      <button type="button" id="app-dashboard-onboarding-flyer-btn" class="app-save-cta app-dashboard-onboarding-cta">
+                        <span class="app-save-cta-dot" aria-hidden="true"></span>
+                        <span class="app-save-cta-label">Créer mon flyer</span>
+                      </button>
+                    </span>
                   </div>
                   <p class="app-dashboard-onboarding-status" id="app-dashboard-onboarding-flyer-status">Non configuré</p>
                 </article>
@@ -2055,27 +2059,6 @@
             </div>
           </div>
         </div>
-        <a
-          class="landing-launch-sf-video-tease"
-          href="/#testimonials"
-          aria-label="Découvrir Myfidpass en vidéo"
-        >
-          <span class="landing-launch-sf-video-inner">
-            <span class="landing-launch-sf-video-thumb-wrap">
-              <img
-                class="landing-launch-sf-video-thumb"
-                src="/assets/mockup.png?v=20260319"
-                width="192"
-                height="128"
-                loading="lazy"
-                decoding="async"
-                alt=""
-              />
-              <span class="landing-launch-sf-video-play" aria-hidden="true"></span>
-            </span>
-            <span class="landing-launch-sf-video-cap">Pourquoi nous avons créé Myfidpass</span>
-          </span>
-        </a>
       </section>
 
       <footer id="site-footer-myfidpass" class="landing-footer landing-footer--sf">

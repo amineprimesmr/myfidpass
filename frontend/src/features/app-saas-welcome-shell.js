@@ -55,11 +55,19 @@ export function syncSaaSWelcomeChrome() {
  *   fallbackSubtitle?: string;
  * }} opts
  */
-const SUPPORT_PAID_HTML =
-  'Une question ? <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a> · <a href="mailto:contact@myfidpass.fr">contact@myfidpass.fr</a>';
+const HERO_TITLE = "Votre essai a commencé";
+const HERO_SUBTITLE = "3 jours gratuits, puis 1 €/mois pour continuer à créer";
 const SUPPORT_TRIAL_HERO_HTML =
   'Nous sommes là si vous avez besoin de nous <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a>';
-const SUPPORT_CONFIGURE_HTML = SUPPORT_PAID_HTML;
+const TRIAL_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
+
+function isTrialHeroPermanentlyCollapsed() {
+  try {
+    return localStorage.getItem(TRIAL_HERO_COLLAPSED_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
 
 export function applySaaSFrcMessaging(opts) {
   const cluster = document.getElementById("app-saas-frc-cluster");
@@ -73,58 +81,27 @@ export function applySaaSFrcMessaging(opts) {
 
   const paid = !!opts.paid;
   const trialHero = !!opts.trialHero;
-  const showSubscribeStrip = !!opts.showSubscribeStrip;
+  const persistedCompact = isTrialHeroPermanentlyCollapsed();
+  const showSubscribeStrip = persistedCompact || !!opts.showSubscribeStrip;
 
   cluster?.classList.toggle("app-saas-frc-cluster--paid", paid);
   cluster?.classList.toggle("app-saas-frc-cluster--unpaid", !paid);
   cluster?.classList.toggle("app-saas-frc-cluster--trial", trialHero);
   hero?.classList.toggle("app-saas-frc-hero--trial", trialHero);
 
-  if (paid) {
-    if (cta) {
-      cta.classList.add("hidden");
-      cta.setAttribute("aria-hidden", "true");
-    }
-    if (strip) {
-      strip.classList.add("hidden");
-      strip.classList.remove("app-saas-frc-strip--visible");
-      strip.setAttribute("aria-hidden", "true");
-    }
-    if (titleEl && subtitleEl) {
-      titleEl.textContent =
-        opts.fallbackTitle != null ? opts.fallbackTitle : "Configurez votre espace Myfidpass";
-      subtitleEl.textContent =
-        opts.fallbackSubtitle != null && opts.fallbackSubtitle !== ""
-          ? opts.fallbackSubtitle
-          : "Indiquez votre commerce, puis créez votre carte et votre flyer QR.";
-    }
-    supportEl?.classList.remove("app-saas-frc-support--trial-hero");
-    if (supportEl) supportEl.innerHTML = SUPPORT_PAID_HTML;
-    return;
-  }
-
   if (titleEl && subtitleEl) {
-    if (trialHero) {
-      titleEl.textContent = "Votre essai a commencé";
-      subtitleEl.textContent = "3 jours gratuits, puis 1 €/mois pour continuer à créer.";
-    } else {
-      titleEl.textContent =
-        opts.fallbackTitle != null ? opts.fallbackTitle : "Configurez votre espace Myfidpass";
-      subtitleEl.textContent =
-        opts.fallbackSubtitle != null && opts.fallbackSubtitle !== ""
-          ? opts.fallbackSubtitle
-          : "Indiquez votre commerce, puis créez votre carte et votre flyer QR.";
-    }
+    titleEl.textContent = HERO_TITLE;
+    subtitleEl.textContent = HERO_SUBTITLE;
   }
 
-  supportEl?.classList.toggle("app-saas-frc-support--trial-hero", trialHero);
+  supportEl?.classList.add("app-saas-frc-support--trial-hero");
   if (supportEl) {
-    supportEl.innerHTML = trialHero ? SUPPORT_TRIAL_HERO_HTML : SUPPORT_CONFIGURE_HTML;
+    supportEl.innerHTML = SUPPORT_TRIAL_HERO_HTML;
   }
 
   if (cta) {
-    cta.classList.toggle("hidden", !trialHero);
-    cta.setAttribute("aria-hidden", trialHero ? "false" : "true");
+    cta.classList.toggle("hidden", paid);
+    cta.setAttribute("aria-hidden", paid ? "true" : "false");
   }
 
   if (strip && stripStatus) {
@@ -135,12 +112,12 @@ export function applySaaSFrcMessaging(opts) {
     if (showSubscribeStrip) {
       const raw = opts.trialEndRaw ?? null;
       const fmt = opts.formatEndingHeadline;
-      if (trialHero && raw && typeof fmt === "function") {
+      if (raw && typeof fmt === "function") {
         stripStatus.textContent = fmt(raw);
-      } else if (trialHero && raw) {
+      } else if (raw) {
         stripStatus.textContent = "L’essai se termine bientôt";
       } else {
-        stripStatus.textContent = "1er mois à 1 € — activez votre abonnement sans engagement.";
+        stripStatus.textContent = "L’essai se termine bientôt";
       }
     }
   }

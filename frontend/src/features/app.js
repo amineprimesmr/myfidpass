@@ -146,20 +146,20 @@ let fidpassCachedUserEmail = "";
 /** @param {string} isoEnd */
 function formatMerchantTrialEndingHeadline(isoEnd) {
   const endMs = Date.parse(isoEnd);
-  if (!Number.isFinite(endMs)) return "L’essai prend fin bientôt";
+  if (!Number.isFinite(endMs)) return "L’essai se termine bientôt";
   const secs = (endMs - Date.now()) / 1000;
   if (secs <= 0) return "L’essai est terminé";
-  if (secs < 60) return "L’essai prend fin dans moins d’1 min";
+  if (secs < 60) return "L’essai se termine dans moins d’1 min";
   if (secs < 3600) {
     const m = Math.floor(secs / 60);
-    return `L’essai prend fin dans ${m <= 1 ? "1 min" : `${m} min`}`;
+    return `L’essai se termine dans ${m <= 1 ? "1 min" : `${m} min`}`;
   }
   if (secs < 86400) {
     const h = Math.floor(secs / 3600);
-    return `L’essai prend fin dans ${h <= 1 ? "1 heure" : `${h} heures`}`;
+    return `L’essai se termine dans ${h <= 1 ? "1 heure" : `${h} heures`}`;
   }
   const d = Math.floor(secs / 86400);
-  return `L’essai prend fin dans ${d <= 1 ? "1 jour" : `${d} jours`}`;
+  return `L’essai se termine dans ${d <= 1 ? "1 jour" : `${d} jours`}`;
 }
 
 function updateMerchantTrialSubscribePillFromDetail(d) {
@@ -221,8 +221,7 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
     fallbackSubtitle,
   });
 
-  const subscriptionLineFallback = () =>
-    "1er mois à 1 € — activez votre abonnement sans engagement.";
+  const subscriptionLineFallback = () => "L’essai se termine bientôt";
 
   const tick = () => {
     if (!trialEndRaw) {
@@ -651,6 +650,7 @@ function initAppPage() {
     }
   });
   wireSaaSWelcomeStripeHandlers(() => fidpassCachedUserEmail);
+  initSaasFrcScrollCollapse();
   syncSaaSWelcomeChrome();
   document.getElementById("app-saas-frc-shop-edit")?.addEventListener("click", () => {
     document.getElementById("app-empty-name")?.focus();
@@ -831,6 +831,8 @@ function initAppDashboard(slug) {
   const dashboardReadySplash = document.getElementById("app-dashboard-ready-splash");
   const dashboardOnboardingCardStatus = document.getElementById("app-dashboard-onboarding-card-status");
   const dashboardOnboardingFlyerStatus = document.getElementById("app-dashboard-onboarding-flyer-status");
+  const dashboardOnboardingCardBtn = document.getElementById("app-dashboard-onboarding-card-btn");
+  const dashboardOnboardingFlyerBtn = document.getElementById("app-dashboard-onboarding-flyer-btn");
 
   let dashboardIntroRevealPending = false;
 
@@ -884,6 +886,24 @@ function initAppDashboard(slug) {
     );
   }
 
+  /**
+   * @param {HTMLButtonElement | null} btn
+   * @param {boolean} done
+   * @param {string} todoLabel
+   * @param {string} doneLabel
+   */
+  function syncOnboardingCtaLabel(btn, done, todoLabel, doneLabel) {
+    if (!btn) return;
+    const labelEl = btn.querySelector(".app-save-cta-label");
+    const dotEl = btn.querySelector(".app-save-cta-dot");
+    if (labelEl) labelEl.textContent = done ? doneLabel : todoLabel;
+    if (dotEl) {
+      dotEl.style.background = done ? "#22c55e" : "transparent";
+      dotEl.style.boxShadow = done ? "0 0 10px 3px rgba(34, 197, 94, 0.55)" : "none";
+      dotEl.style.border = done ? "none" : "1.6px solid #94a3b8";
+    }
+  }
+
   /** @returns {boolean} onboarding actif (gate ou splash intro) : stats dashboard différées tant que « true ». */
   async function syncDashboardOnboardingGate() {
     if (!dashboardOnboardingGate || !dashboardShellMain) return false;
@@ -909,6 +929,8 @@ function initAppDashboard(slug) {
         dashboardOnboardingFlyerStatus.textContent = flyerDone ? "Configuré" : "Non configuré";
         dashboardOnboardingFlyerStatus.classList.toggle("is-ready", flyerDone);
       }
+      syncOnboardingCtaLabel(dashboardOnboardingCardBtn, cardDone, "Créer ma carte", "Carte créée");
+      syncOnboardingCtaLabel(dashboardOnboardingFlyerBtn, flyerDone, "Créer mon flyer", "Flyer créé");
 
       if (allDone) {
         dashboardReadySplash?.classList.add("hidden");

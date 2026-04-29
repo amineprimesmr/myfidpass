@@ -3,7 +3,7 @@
  */
 
 .landing-launch-sf {
-  --ls-bg: #051911;
+  --ls-bg: #030808;
   --ls-num: #00ff92;
   --ls-accent-b: #008060;
   --ls-text: #ffffff;
@@ -17,7 +17,10 @@
   box-sizing: border-box;
 
   border-radius: 40px 40px 0 0;
-  background-color: var(--ls-bg);
+  background:
+    radial-gradient(120% 95% at 18% 10%, rgba(33, 34, 42, 0.55) 0%, rgba(33, 34, 42, 0) 56%),
+    radial-gradient(95% 80% at 86% 68%, rgba(33, 34, 42, 0.42) 0%, rgba(33, 34, 42, 0) 62%),
+    linear-gradient(128deg, #030808 0%, #0b1014 38%, #171d24 64%, #21222a 100%);
 
   font-family:
     "Inter",
@@ -38,6 +41,17 @@
   -webkit-font-smoothing: antialiased;
   position: relative;
   overflow: clip;
+}
+
+.landing-launch-sf::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(96px, 16vw, 170px);
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(3, 8, 8, 0) 0%, #000 100%);
 }
 
 .landing-launch-sf-inner {
@@ -229,7 +243,7 @@
 
   border-radius: 12px;
 
-  background: rgba(5, 17, 13, 0.58);
+  background: rgba(10, 12, 16, 0.62);
   backdrop-filter: blur(10px);
 
   box-shadow:

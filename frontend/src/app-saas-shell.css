@@ -31,16 +31,36 @@
 }
 
 /* Héros : aligné au flux — le dégradé commun est sur .app-saas-frc-cluster */
+#app-app.app-saas-welcome-active .app-desktop-topbar {
+  position: fixed;
+  top: var(--app-admin-strip-h, 0px);
+  left: 0;
+  right: 0;
+  z-index: 220;
+  height: auto !important;
+}
+
+#app-app.app-saas-welcome-active .app-desktop-topbar__inner {
+  min-height: var(--app-topbar-height, 56px);
+}
+
 #app-app.app-saas-welcome-active .app-saas-frc-cluster {
+  /* Bloc réellement intégré au header/topbar */
   padding-top: 0;
-  margin-top: 0;
+  margin-top: -1px;
   position: relative;
+  top: auto;
   z-index: 1;
   background: var(--saas-frc-shell-bg);
   background-repeat: no-repeat;
+  box-shadow: none;
 }
 
 @media (min-width: 901px) {
+  #app-app.app-saas-welcome-active #app-saas-frc-strip {
+    display: none !important;
+  }
+
   #app-app.app-saas-welcome-active .app-saas-frc-cluster {
     margin-left: var(--app-sidebar-width);
     width: calc(100% - var(--app-sidebar-width));
@@ -51,12 +71,33 @@
 /* Top bar : même dégradé léger que la zone héros */
 #app-app.app-saas-welcome-active .app-desktop-topbar {
   background: var(--saas-frc-shell-bg);
-  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
 .app-saas-frc-cluster {
   opacity: 0;
   animation: saasfrcReveal 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (max-width: 900px) {
+  body.page-app #app-app.app-saas-welcome-active .app-main {
+    margin-top: calc(
+      var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 56px)) -
+        var(--app-main-sheet-pull, 16px)
+    ) !important;
+    padding-top: 1.35rem !important;
+  }
+}
+
+@media (min-width: 901px) {
+  body.page-app #app-app.app-saas-welcome-active .app-main {
+    margin-top: calc(
+      var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 52px)) -
+        var(--app-main-sheet-pull, 12px)
+    ) !important;
+    padding-top: 1rem !important;
+  }
 }
 
 @keyframes saasfrcReveal {
@@ -104,12 +145,7 @@
 }
 
 .app-saas-frc-kicker {
-  margin: 0 0 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  display: none;
 }
 
 .app-saas-frc-title {
@@ -181,14 +217,15 @@
   flex-wrap: nowrap;
   margin: 0;
   padding: 0.7rem 1rem 0.8rem;
-  background: linear-gradient(180deg, rgba(26, 30, 34, 0.98) 0%, rgba(12, 14, 16, 0.99) 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--saas-frc-shell-bg);
+  border-top: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.35);
   color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
   transition:
     filter 0.22s ease,
     background 0.22s ease;
+  box-shadow: none;
 }
 
 .app-saas-frc-strip:hover {

@@ -1,6 +1,7 @@
 /** Intro dashboard : premier écran « Tout est prêt ! », puis révélation onboarding + scroll façon Shopify. */
 
 const INTRO_STORAGE_KEY = "fidpass_dash_onboarding_reveal_v2";
+const TRIAL_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
 
 export function isDashIntroRevealDone() {
   try {
@@ -13,6 +14,20 @@ export function isDashIntroRevealDone() {
 export function markDashIntroRevealDone() {
   try {
     localStorage.setItem(INTRO_STORAGE_KEY, "1");
+  } catch (_) {}
+}
+
+function isTrialHeroPermanentlyCollapsed() {
+  try {
+    return localStorage.getItem(TRIAL_HERO_COLLAPSED_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function markTrialHeroPermanentlyCollapsed() {
+  try {
+    localStorage.setItem(TRIAL_HERO_COLLAPSED_KEY, "1");
   } catch (_) {}
 }
 
@@ -55,23 +70,79 @@ export function initSaasFrcScrollCollapse() {
   const root = document.getElementById("app-app");
   if (!root || scrollCollapseWired) return;
   scrollCollapseWired = true;
+  const topbar = document.getElementById("app-desktop-topbar");
+  const strip = document.getElementById("app-saas-frc-strip");
+  const cluster = document.getElementById("app-saas-frc-cluster");
+  const main = document.querySelector("#app-app .app-main");
+  let permanentlyCollapsed = isTrialHeroPermanentlyCollapsed();
 
   const opts = { passive: true };
   let raf = 0;
+  let forcedVisible = false;
+
+  const currentScrollY = () => {
+    const mainY = main instanceof HTMLElement ? main.scrollTop : 0;
+    if (mainY > 0) return mainY;
+    return window.scrollY || document.documentElement?.scrollTop || 0;
+  };
 
   const tick = () => {
     raf = 0;
-    const y = window.scrollY || document.documentElement?.scrollTop || 0;
-    root.classList.toggle("app-saas-frc-scroll-dense", y > 36);
+    const y = currentScrollY();
+    let dense = y > 36;
+    if (permanentlyCollapsed) dense = true;
+    root.classList.toggle("app-saas-frc-scroll-dense", dense);
+
+    // Première descente : on verrouille le mode compact pour les prochains accès.
+    if (dense && !permanentlyCollapsed) {
+      markTrialHeroPermanentlyCollapsed();
+      permanentlyCollapsed = true;
+    }
+
+    // Scroll compact: toujours afficher le bandeau quand on descend.
+    if (strip) {
+      if (dense && strip.classList.contains("hidden")) {
+        strip.classList.remove("hidden");
+        strip.classList.add("app-saas-frc-strip--visible");
+        strip.setAttribute("aria-hidden", "false");
+        forcedVisible = true;
+      } else if (!dense && forcedVisible && !permanentlyCollapsed) {
+        strip.classList.add("hidden");
+        strip.classList.remove("app-saas-frc-strip--visible");
+        strip.setAttribute("aria-hidden", "true");
+        forcedVisible = false;
+      }
+    }
+
+    cluster?.classList.toggle("app-saas-frc-cluster--dense", dense);
+
+    // Source unique de vérité : hauteur réelle du top affiché (évite tout contenu caché dessous).
+    if (topbar instanceof HTMLElement) {
+      const h = Math.max(0, Math.round(topbar.getBoundingClientRect().height));
+      root.style.setProperty("--saas-frc-header-total-h", `${h}px`);
+    }
   };
 
-  window.addEventListener(
-    "scroll",
-    () => {
-      if (raf) cancelAnimationFrame(raf);
-      raf = window.requestAnimationFrame(tick);
-    },
-    opts
-  );
+  const onAnyScroll = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = window.requestAnimationFrame(tick);
+  };
+
+  window.addEventListener("scroll", onAnyScroll, opts);
+  main?.addEventListener("scroll", onAnyScroll, opts);
+  window.addEventListener("resize", onAnyScroll, opts);
+
+  // Recalcule immédiatement quand le shell SaaS change d'état (hidden/visible, dense, etc.).
+  const watchedNodes = [root, topbar, cluster, strip].filter(Boolean);
+  if (typeof MutationObserver !== "undefined" && watchedNodes.length > 0) {
+    const observer = new MutationObserver(() => onAnyScroll());
+    watchedNodes.forEach((node) => {
+      observer.observe(node, {
+        attributes: true,
+        attributeFilter: ["class", "style", "aria-hidden"],
+      });
+    });
+  }
+
   tick();
 }

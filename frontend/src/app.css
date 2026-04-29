@@ -326,17 +326,91 @@ html:has(body.page-app) {
 .app-dashboard-onboarding-actions {
   display: flex;
   gap: .6rem;
+  justify-content: center;
+}
+
+.app-dashboard-onboarding-actions .app-dashboard-onboarding-cta-wrap .app-save-cta-dot {
+  background: transparent;
+  border: 1.6px solid #94a3b8;
+  box-shadow: none;
+}
+
+.app-dashboard-onboarding-actions .app-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.82rem 1.65rem;
+  min-height: 3.2rem;
+  box-sizing: border-box;
+  width: auto;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, #3a3a3a 0%, #222 50%, #0a0a0a 100%);
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 0.93rem;
+  line-height: 1.2;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 10px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-dashboard-onboarding-actions .app-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 8px 24px rgba(0, 0, 0, 0.38);
+}
+
+.app-dashboard-onboarding-actions .app-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.app-dashboard-onboarding-actions .app-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 10px rgba(0, 0, 0, 0.22);
 }
 
 .app-dashboard-onboarding-status {
-  margin: .75rem 0 0;
-  font-size: .84rem;
-  font-weight: 600;
-  color: #b45309;
+  display: none;
+}
+
+.app-dashboard-onboarding-status::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.6px solid #94a3b8;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
 }
 
 .app-dashboard-onboarding-status.is-ready {
   color: #047857;
+}
+
+.app-dashboard-onboarding-status.is-ready::before {
+  border-color: #16a34a;
+  background: #22c55e;
+  box-shadow:
+    0 0 10px 2px rgba(34, 197, 94, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 @keyframes appOnboardingIn {
@@ -4428,22 +4502,17 @@ html:has(body.page-app) {
 /* Historique toolbar */
 .app-histoire-toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
 
-/* Personnaliser (Ma carte) — 2 colonnes : gauche = réglages, droite = aperçu iPhone (sans débordement) */
+/* Personnaliser (Ma carte) — 2 colonnes : gauche = réglages, droite = aperçu iPhone */
 #app-dashboard-content:has(#personnaliser.app-section-visible) {
-  max-width: 1200px;
-  padding-right: 1rem;
-  overflow-x: hidden;
+  max-width: 1140px;
 }
 #app-dashboard-content #personnaliser.app-section.app-section-visible {
   display: block;
-  overflow-x: hidden;
-  background:
-    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0),
-    linear-gradient(160deg, #f8fafc 0%, #eef2ff 45%, #faf5ff 100%);
-  background-size: 18px 18px, 100% 100%;
-  margin: -2rem -1.75rem -4rem;
-  padding: 2rem 1.75rem 4rem;
-  border-radius: 18px;
+  overflow: visible;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
 }
 #app-dashboard-content #personnaliser .app-section-title {
   margin-bottom: 0;
@@ -4480,16 +4549,16 @@ html:has(body.page-app) {
 }
 @media (max-width: 900px) {
   #app-dashboard-content #personnaliser.app-section.app-section-visible {
-    margin: -1.5rem -1rem -3.5rem;
-    padding: 1.5rem 1rem 3.5rem;
-    border-radius: 14px;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
   }
 }
 @media (max-width: 600px) {
   #app-dashboard-content #personnaliser.app-section.app-section-visible {
-    margin: -1.25rem -1rem -2.5rem;
-    padding: 1.25rem 1rem 2.5rem;
-    border-radius: 12px;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
   }
 }
 .app-personnaliser-col-left .app-card {
@@ -4555,8 +4624,7 @@ html:has(body.page-app) {
   height: auto;
   max-height: 84%;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   border-radius: 12px;
   background: transparent;
   display: flex;

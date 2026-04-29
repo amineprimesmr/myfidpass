@@ -48,10 +48,15 @@
 }
 
 #app-app.app-saas-welcome-active.app-saas-frc-scroll-dense #app-saas-frc-strip:not(.hidden) {
-  position: sticky;
-  top: calc(var(--app-admin-strip-h, 0px) + var(--app-topbar-height, 0px));
-  z-index: 34;
-  box-shadow:
-    0 6px 28px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  top: auto;
+  z-index: 1;
+  min-height: 64px;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  box-shadow: none;
+}
+
+#app-app.app-saas-welcome-active.app-saas-frc-scroll-dense .app-saas-frc-strip-strong {
+  font-size: 1.02rem;
 }

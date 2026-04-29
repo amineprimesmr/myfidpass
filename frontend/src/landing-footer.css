@@ -20,9 +20,7 @@
   max-width: 100vw;
   margin-left: calc(-50vw + 50%);
   box-sizing: border-box;
-  background:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(0, 128, 96, 0.12) 0%, transparent 55%),
-    linear-gradient(180deg, #050807 0%, var(--sf-bg) 28%, var(--sf-bg) 100%);
+  background: #000000;
   color: var(--sf-text);
   font-family:
     "Inter",
