@@ -4,6 +4,7 @@
  */
 import { getAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
 import { runLiquidGlassMenuCleanupLanding } from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
+import { syncSmartAppBanner } from "../smart-app-banner.js";
 
 export function getRoute() {
   let path = window.location.pathname.replace(/\/$/, "");
@@ -136,6 +137,7 @@ async function loadPage(routeType) {
  */
 export async function initRouting() {
   const route = getRoute();
+  syncSmartAppBanner();
   if (route.type !== "landing") {
     runLiquidGlassMenuCleanupLanding();
   }

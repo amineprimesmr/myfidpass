@@ -18,6 +18,25 @@
         if (appLike) root.classList.add("app-route-app");
       })();
     </script>
+    <script>
+      (function () {
+        try {
+          var path = (window.location.pathname || "").replace(/\/?$/, "") || "/";
+          if (path !== "/app") return;
+          if (!window.localStorage || !window.localStorage.getItem("fidpass_token")) return;
+          if (document.getElementById("fidpass-smart-banner-meta")) return;
+          var meta = document.createElement("meta");
+          meta.id = "fidpass-smart-banner-meta";
+          meta.setAttribute("name", "apple-itunes-app");
+          meta.setAttribute(
+            "content",
+            "app-id=6759921605, app-argument=" +
+              encodeURIComponent(String(window.location.href.split("#")[0]))
+          );
+          document.head.appendChild(meta);
+        } catch (_) {}
+      })();
+    </script>
     <style>
       .hidden { display: none !important; }
       html.app-route-app #landing { display: none !important; }
