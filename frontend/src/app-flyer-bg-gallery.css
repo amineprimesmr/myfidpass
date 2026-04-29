@@ -5,13 +5,49 @@
   margin-bottom: 0.65rem;
 }
 
+#app-app .app-flyer-bg-carousel {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#app-app .app-flyer-bg-nav {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--app-border, #e8ecf1);
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#app-app .app-flyer-bg-nav:hover {
+  border-color: var(--app-accent, #2563eb);
+  color: var(--app-accent, #2563eb);
+}
+
 #app-app .app-flyer-bg-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(84px, 84px);
   gap: 0.5rem;
   list-style: none;
   margin: 0;
   padding: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+#app-app .app-flyer-bg-gallery::-webkit-scrollbar {
+  display: none;
 }
 
 #app-app .app-flyer-bg-gallery-item {
@@ -27,6 +63,7 @@
   background-size: cover;
   background-position: center;
   transition: border-color 0.2s ease, transform 0.15s ease;
+  scroll-snap-align: start;
 }
 
 #app-app .app-flyer-bg-gallery-item:hover {

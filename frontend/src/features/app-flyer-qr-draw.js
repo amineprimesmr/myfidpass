@@ -26,14 +26,13 @@ export const FLYER_MANUAL_CANVAS_WHEEL_ENABLED = true;
 
 /** @type {HTMLImageElement | null} */
 let flyerRoueCache = null;
-
 /** @type {HTMLImageElement | null} */
 let flyerGiftflyerCache = null;
-
 /** @type {HTMLImageElement | null} */
 let flyergameCenterCache = null;
 
 const FLYERGAME_PUBLIC_SRC = "/assets/flyergame.png";
+
 
 /** Bandeau « étapes » pleine largeur (PNG, optionnel — fond transparent recommandé). */
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
@@ -71,10 +70,6 @@ async function getFlyerRoueImage() {
   }
 }
 
-/**
- * Même visuel que l’ancien calque iOS : cadeau en bas à gauche, chevauchement zone roue.
- * Chargé une seule fois (export + aperçu WKWebView).
- */
 async function getFlyerGiftflyerImage() {
   if (flyerGiftflyerCache) return flyerGiftflyerCache;
   try {
@@ -93,9 +88,6 @@ async function getFlyerGiftflyerImage() {
   }
 }
 
-/**
- * Image centrale flyergame (PNG transparent) : source dédiée + fallback public stable.
- */
 async function getFlyergameCenterImage() {
   if (flyergameCenterCache) return flyergameCenterCache;
   try {
@@ -126,63 +118,6 @@ async function getFlyergameCenterImage() {
   } catch {
     return null;
   }
-}
-
-/**
- * Calque cadeau : **au-dessus** de la roue, **sous** le bandeau « Scanne pour jouer » (dessiné après).
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} w
- * @param {number} h
- * @param {number} scale
- * @param {HTMLImageElement} img
- */
-function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
-  if (!img) return;
-  const sw = img.naturalWidth || img.width;
-  const sh = img.naturalHeight || img.height;
-  if (!sw || !sh) return;
-  const giftW = w * 0.5;
-  const giftH = (giftW * sh) / sw;
-  const lead = Math.max(8 * scale, w * 0.028);
-  const bottomPad = Math.max(6 * scale, h * 0.028);
-  /** Moins de « lift » depuis le bas → illustration plus bas (proche roue / pied). */
-  const lift = h * 0.19;
-  const x = lead;
-  const y = h - bottomPad - lift - giftH;
-  try {
-    ctx.drawImage(img, x, y, giftW, giftH);
-  } catch (_) {
-    /* WebKit / blob */
-  }
-}
-
-/**
- * Calque central `flyergame` (PNG transparent), limité à la roue.
- * Les couleurs/labels des parts sont dessinés ensuite au-dessus.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} wheelR
- * @param {HTMLImageElement | null} img
- */
-function drawFlyergameCenter(ctx, cx, cy, wheelR, img) {
-  if (!img) return;
-  const sw = img.naturalWidth || img.width;
-  const sh = img.naturalHeight || img.height;
-  if (!sw || !sh) return;
-  /** Légèrement < diamètre logique : reste proche bords visuels de la texture roue (roue un peu + grande → facteur un peu + haut). */
-  const fitBox = wheelR * 2.04;
-  const targetW = fitBox;
-  const targetH = fitBox;
-  const x = cx - targetW / 2;
-  const y = cy - targetH / 2;
-  ctx.save();
-  ctx.globalCompositeOperation = "source-over";
-  ctx.globalAlpha = 1;
-  try {
-    drawImageWithFlyergameFit(ctx, img, x, y, targetW, targetH, "contain");
-  } catch (_) {}
-  ctx.restore();
 }
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
@@ -378,6 +313,41 @@ function drawImageWithFlyergameFit(ctx, img, dx, dy, dstW, dstH, defaultFit = "c
     return;
   }
   drawImageCover(ctx, img, dx, dy, dstW, dstH);
+}
+
+function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
+  if (!img) return;
+  const sw = img.naturalWidth || img.width;
+  const sh = img.naturalHeight || img.height;
+  if (!sw || !sh) return;
+  const giftW = w * 0.42;
+  const giftH = (giftW * sh) / sw;
+  const lead = Math.max(8 * scale, w * 0.028);
+  const bottomPad = Math.max(4 * scale, h * 0.01);
+  const x = lead;
+  const y = h - bottomPad - giftH;
+  try {
+    ctx.drawImage(img, x, y, giftW, giftH);
+  } catch (_) {}
+}
+
+function drawFlyergameCenter(ctx, cx, cy, wheelR, img) {
+  if (!img) return;
+  const sw = img.naturalWidth || img.width;
+  const sh = img.naturalHeight || img.height;
+  if (!sw || !sh) return;
+  const fitBox = wheelR * 0.92;
+  const targetW = fitBox;
+  const targetH = fitBox;
+  const x = cx - targetW / 2;
+  const y = cy - targetH / 2;
+  ctx.save();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = 0.96;
+  try {
+    drawImageWithFlyergameFit(ctx, img, x, y, targetW, targetH, "contain");
+  } catch (_) {}
+  ctx.restore();
 }
 
 /** @param {CanvasImageSource} img */
@@ -1107,22 +1077,23 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const wheelCx = w * (0.5 + 0.013);
   const wheelCy = h * FLYER_LAYOUT.wheelCenterYFrac;
   const wheelR = w * FLYER_WHEEL_RADIUS_FRAC;
+  /**
+   * FIX HARD: parts limitées au disque central uniquement.
+   * Rayon volontairement borné pour empêcher toute teinte du décor arrière.
+   */
+  const spinnerR = Math.max(120 * scale, Math.min(wheelR * 0.22, w * 0.155));
 
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   const hasCommerceLogo = logoImg != null;
   if (hasCommerceLogo) {
     drawFlyerCommerceLogo(ctx, logoImg, w, h, s);
   }
-  drawFlyergameCenter(ctx, wheelCx, wheelCy, wheelR, flyergameImg);
   if (FLYER_MANUAL_CANVAS_WHEEL_ENABLED) {
     const drawWheelTextureFit = (drawCtx, img, dx, dy, dw, dh) =>
       drawImageWithFlyergameFit(drawCtx, img, dx, dy, dw, dh, "cover");
-    drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawWheelTextureFit);
+    drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, spinnerR, drawWheelTextureFit);
   }
-  /**
-   * Bas de page (chevauchement roue) : roue → cadeau → (accroche haut) → bandeau CTA au-dessus du cadeau.
-   * L’accroche est au centre/haut, sans recouvrir l’illustration sur les maquettes par défaut.
-   */
+  drawFlyergameCenter(ctx, wheelCx, wheelCy, spinnerR, flyergameImg);
   drawFlyerGiftflyerPromo(ctx, w, h, scale, giftflyerImg);
   drawFlyerHeroHeadline(ctx, s, w, h, scale, hasCommerceLogo);
   const qx = w * 0.472;

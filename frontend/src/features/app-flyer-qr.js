@@ -9,9 +9,12 @@ import {
   loadStoredFlyerState,
   persistFlyerState,
 } from "./app-flyer-qr-form.js";
-import { FLYER_HEADLINE_FONTS } from "./app-flyer-qr-headline-fonts.js";
 import { renderFlyerCanvas } from "./app-flyer-qr-draw.js";
-import { getStoredFlyerCustomLogoDataUrl, clearStoredFlyerCustomLogo } from "./app-flyer-logo-control.js";
+import {
+  getStoredFlyerCustomLogoDataUrl,
+  clearStoredFlyerCustomLogo,
+  initFlyerLogoControl,
+} from "./app-flyer-logo-control.js";
 import {
   getStoredFlyerCustomBgDataUrl,
   setStoredFlyerCustomBgDataUrl,
@@ -19,7 +22,6 @@ import {
   clearStoredFlyerCustomBg,
 } from "./app-flyer-bg-control.js";
 import { wireFlyerQrBackgroundGallery } from "./app-flyer-qr-wire-bg.js";
-import { initFlyerAiGenerate } from "./app-flyer-ai-generate.js";
 import { ensureFlyerDisplayFontsLoaded } from "./flyer-display-fonts-load.js";
 
 /** @typedef {{ slug: string; pageOrigin: string; getShareLink: () => string; dashboardApi?: (path: string, init?: RequestInit) => Promise<Response> }} FlyerQrOpts */
@@ -43,15 +45,70 @@ export function initAppFlyerQr(slug, opts) {
 
   ensureFlyerDisplayFontsLoaded();
 
-  const fontSel = root.querySelector("#app-flyer-headline-font");
-  if (fontSel instanceof HTMLSelectElement && fontSel.options.length === 0) {
-    FLYER_HEADLINE_FONTS.forEach((f) => {
-      const o = document.createElement("option");
-      o.value = f.id;
-      o.textContent = f.label;
-      fontSel.appendChild(o);
-    });
-  }
+  const accentPicker = root.querySelector("#app-flyer-accent-unified");
+  const bgPicker = root.querySelector("#app-flyer-bg-solid");
+
+  const pickContrastingTextOnHexBg = (hex) => {
+    const h = String(hex || "").trim();
+    if (!/^#[0-9A-Fa-f]{6}$/.test(h)) return "#ffffff";
+    const r = parseInt(h.slice(1, 3), 16) / 255;
+    const g = parseInt(h.slice(3, 5), 16) / 255;
+    const b = parseInt(h.slice(5, 7), 16) / 255;
+    const lin = [r, g, b].map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    const l = 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+    return l > 0.55 ? "#0f172a" : "#ffffff";
+  };
+  const darkenHex = (hex, amount = 0.22) => {
+    const h = String(hex || "").trim();
+    if (!/^#[0-9A-Fa-f]{6}$/.test(h)) return "#cbd5e1";
+    const r = parseInt(h.slice(1, 3), 16);
+    const g = parseInt(h.slice(3, 5), 16);
+    const b = parseInt(h.slice(5, 7), 16);
+    const a = Math.max(0, Math.min(0.6, amount));
+    const rr = Math.max(0, Math.min(255, Math.round(r * (1 - a))));
+    const gg = Math.max(0, Math.min(255, Math.round(g * (1 - a))));
+    const bb = Math.max(0, Math.min(255, Math.round(b * (1 - a))));
+    return `#${rr.toString(16).padStart(2, "0")}${gg.toString(16).padStart(2, "0")}${bb.toString(16).padStart(2, "0")}`;
+  };
+
+  const setInputValue = (id, value) => {
+    const el = root.querySelector(`#${id}`);
+    if (el && "value" in el) el.value = value;
+  };
+
+  const syncLockedControlsFromPickers = () => {
+    const accent =
+      accentPicker && "value" in accentPicker && /^#[0-9A-Fa-f]{6}$/.test(String(accentPicker.value).trim())
+        ? String(accentPicker.value).trim()
+        : "#fbbf24";
+    const bg =
+      bgPicker && "value" in bgPicker && /^#[0-9A-Fa-f]{6}$/.test(String(bgPicker.value).trim())
+        ? String(bgPicker.value).trim()
+        : "#0f172a";
+    const contrast = pickContrastingTextOnHexBg(accent);
+    const accentAlt = darkenHex(accent, 0.26);
+
+    setInputValue("app-flyer-headline", "SCANNEZ & GAGNEZ VOTRE CADEAU !");
+    setInputValue("app-flyer-cta", "SCANNER POUR JOUER");
+    setInputValue("app-flyer-headline-font", "fraunces");
+    setInputValue("app-flyer-headline-fill", "#ffffff");
+    setInputValue("app-flyer-headline-stroke", "#020617");
+    setInputValue("app-flyer-headline-gift-stroke", contrast);
+    setInputValue("app-flyer-headline-stroke-w", "18");
+    setInputValue("app-flyer-headline-logo-gap", "4");
+    setInputValue("app-flyer-headline-tracking", "0");
+    setInputValue("app-flyer-headline-size", "7");
+    setInputValue("app-flyer-wheel-offset", "0");
+
+    setInputValue("app-flyer-c1", accent);
+    setInputValue("app-flyer-c2", accentAlt);
+    setInputValue("app-flyer-wheel-color-odd", accent);
+    setInputValue("app-flyer-wheel-color-even", accentAlt);
+    setInputValue("app-flyer-cta-bg", accent);
+    setInputValue("app-flyer-cta-text-color", contrast);
+    setInputValue("app-flyer-bg1", bg);
+    setInputValue("app-flyer-bg2", bg);
+  };
 
   if (panel && window.matchMedia("(min-width: 961px)").matches) {
     panel.classList.add("is-open");
@@ -89,7 +146,18 @@ export function initAppFlyerQr(slug, opts) {
         ? /** @type {import("./app-flyer-qr-presets.js").FlyerState} */ (p.state)
         : null,
     );
+    if (accentPicker && "value" in accentPicker) {
+      accentPicker.value = /^#[0-9A-Fa-f]{6}$/.test(String(merged.colorPrimary || "").trim())
+        ? String(merged.colorPrimary).trim()
+        : "#fbbf24";
+    }
+    if (bgPicker && "value" in bgPicker) {
+      bgPicker.value = /^#[0-9A-Fa-f]{6}$/.test(String(merged.colorBgTop || "").trim())
+        ? String(merged.colorBgTop).trim()
+        : "#0f172a";
+    }
     writeFlyerFormFromState(root, merged);
+    syncLockedControlsFromPickers();
     persistFlyerState(merged);
     state = merged;
     // NE PAS effacer le logo local : il sera réenvoyé au prochain pushFlyerToServerNow.
@@ -99,7 +167,7 @@ export function initAppFlyerQr(slug, opts) {
       setStoredFlyerCustomBgDataUrl(p.custom_bg_data_url);
     }
     // NE PAS effacer le fond local si le serveur n'en a pas encore :
-    // après génération IA, le fond est stocké localement avant d'être sauvegardé (debounce 2s).
+    // un fond choisi localement peut exister avant la sauvegarde distante (debounce 2s).
     // Un clearStoredFlyerCustomBg() ici détruisait le fond généré si la page rechargait trop tôt.
     flyerBgPanelApi?.syncPreview();
     flyerLogoDirty = true;
@@ -187,6 +255,9 @@ export function initAppFlyerQr(slug, opts) {
   }
 
   writeFlyerFormFromState(root, state);
+  if (accentPicker && "value" in accentPicker) accentPicker.value = state.colorPrimary;
+  if (bgPicker && "value" in bgPicker) bgPicker.value = state.colorBgTop;
+  syncLockedControlsFromPickers();
   if (linkInput) linkInput.value = shareUrl();
 
   let paintTimer = null;
@@ -221,42 +292,11 @@ export function initAppFlyerQr(slug, opts) {
     getBgPanelApi: () => flyerBgPanelApi,
   });
 
-  initFlyerAiGenerate(slug, {
-    dashboardApi: opts.dashboardApi,
-    onFlyerAiWheelTintsSynced: (oddHex, evenHex) => {
-      const oddEl = root.querySelector("#app-flyer-wheel-color-odd");
-      const evenEl = root.querySelector("#app-flyer-wheel-color-even");
-      if (oddEl) oddEl.value = oddHex;
-      if (evenEl) evenEl.value = evenHex;
-    },
-    onLogoApplied: () => {
-      // Le logo IA a été stocké localement → sauvegarder immédiatement sur le serveur
-      // puis recharger dans le canvas (l'API sert le logo, pas le localStorage)
-      if (!remoteBusy) {
-        remoteBusy = true;
-        pushFlyerToServerNow().then(() => {
-          flyerLogoDirty = true;
-          schedulePaint();
-        }).finally(() => { remoteBusy = false; });
-      }
-    },
-    onFlyerAiBgColorsSynced: (bgTop, bgBottom) => {
-      const bg1El = root.querySelector("#app-flyer-bg1");
-      const bg2El = root.querySelector("#app-flyer-bg2");
-      if (bg1El && bgTop) bg1El.value = bgTop;
-      if (bg2El && bgBottom) bg2El.value = bgBottom;
-      flyerBgPanelApi?.syncPreview?.();
-    },
-    onGeneratedBg: () => {
-      flyerBgDirty = true;
-      flyerBgPanelApi?.syncPreview?.();
+  initFlyerLogoControl({
+    onCustomLogoChange: () => {
+      flyerLogoDirty = true;
       schedulePaint();
-      // Save immédiat (pas de debounce) pour éviter la race condition :
-      // un rechargement de page avant les 2s du debounce ne doit pas perdre le fond IA.
-      if (!remoteBusy) {
-        remoteBusy = true;
-        pushFlyerToServerNow().finally(() => { remoteBusy = false; });
-      }
+      scheduleRemoteSave();
     },
   });
 
@@ -280,26 +320,31 @@ export function initAppFlyerQr(slug, opts) {
       }
       if (flyerLogoObjectUrl) {
         try {
-          URL.revokeObjectURL(flyerLogoObjectUrl);
+          if (flyerLogoObjectUrl.startsWith("blob:")) URL.revokeObjectURL(flyerLogoObjectUrl);
         } catch (_) {}
         flyerLogoObjectUrl = null;
       }
-      try {
-        const res = await fetch(logoApi, { mode: "cors", credentials: "omit" });
-        if (res.ok) {
-          const blob = await res.blob();
-          if (typeof createImageBitmap === "function") {
-            try {
-              flyerLogoBitmap = await createImageBitmap(blob);
-            } catch (_) {
+      const localLogo = getStoredFlyerCustomLogoDataUrl();
+      if (localLogo) {
+        flyerLogoObjectUrl = localLogo;
+      } else {
+        try {
+          const res = await fetch(logoApi, { mode: "cors", credentials: "omit" });
+          if (res.ok) {
+            const blob = await res.blob();
+            if (typeof createImageBitmap === "function") {
+              try {
+                flyerLogoBitmap = await createImageBitmap(blob);
+              } catch (_) {
+                flyerLogoObjectUrl = URL.createObjectURL(blob);
+              }
+            } else {
               flyerLogoObjectUrl = URL.createObjectURL(blob);
             }
-          } else {
-            flyerLogoObjectUrl = URL.createObjectURL(blob);
           }
+        } catch (_) {
+          /* pas de logo */
         }
-      } catch (_) {
-        /* pas de logo */
       }
       flyerLogoDirty = false;
     }
@@ -366,29 +411,25 @@ export function initAppFlyerQr(slug, opts) {
 
   root.querySelectorAll("[data-flyer-input]").forEach((el) => {
     el.addEventListener("input", () => {
+      syncLockedControlsFromPickers();
       schedulePaint();
       scheduleRemoteSave();
     });
     el.addEventListener("change", () => {
+      syncLockedControlsFromPickers();
       schedulePaint();
       scheduleRemoteSave();
     });
   });
 
-  /** @param {string} rangeId @param {string} outId @param {boolean} [commaDecimal] */
-  function bindFlyerRangeReadout(rangeId, outId, commaDecimal = false) {
-    const r = root.querySelector(`#${rangeId}`);
-    const o = root.querySelector(`#${outId}`);
-    if (!r || !o || !("value" in r)) return;
-    const sync = () => {
-      let v = String(/** @type {HTMLInputElement} */ (r).value);
-      if (commaDecimal) v = v.replace(".", ",");
-      o.textContent = `${v} %`;
-    };
-    r.addEventListener("input", sync);
-    sync();
+  if (accentPicker) {
+    accentPicker.addEventListener("input", syncLockedControlsFromPickers);
+    accentPicker.addEventListener("change", syncLockedControlsFromPickers);
   }
-  bindFlyerRangeReadout("app-flyer-headline-size", "app-flyer-headline-size-out", true);
+  if (bgPicker) {
+    bgPicker.addEventListener("input", syncLockedControlsFromPickers);
+    bgPicker.addEventListener("change", syncLockedControlsFromPickers);
+  }
 
   if (panelToggle && panel) {
     panelToggle.addEventListener("click", () => {

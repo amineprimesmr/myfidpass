@@ -27,6 +27,8 @@ async function bootstrap() {
         <pre style="margin-top: 1rem; padding: 0.75rem; border-radius: 0.5rem; background: #fff; color: #991b1b; white-space: pre-wrap; word-break: break-word;">${details}</pre>
       </div>
     `;
+  } finally {
+    document.documentElement.classList.remove("app-booting");
   }
 }
 

@@ -74,12 +74,11 @@ export function initFlyerLogoControl(opts) {
   const root = document.getElementById("app-flyer-logo-panel");
   const fileInput = document.getElementById("app-flyer-logo-file");
   const chooseBtn = document.getElementById("app-flyer-logo-choose");
-  const defaultBtn = document.getElementById("app-flyer-logo-use-default");
   const preview = document.getElementById("app-flyer-logo-preview");
   const previewWrap = document.getElementById("app-flyer-logo-preview-wrap");
   const statusEl = document.getElementById("app-flyer-logo-status");
 
-  if (!root || !fileInput || !chooseBtn || !defaultBtn) return undefined;
+  if (!root || !fileInput || !chooseBtn) return undefined;
 
   function setStatus(msg) {
     if (statusEl) {
@@ -119,13 +118,6 @@ export function initFlyerLogoControl(opts) {
         setStatus(m);
       }
     })();
-  });
-
-  defaultBtn.addEventListener("click", () => {
-    clearStoredFlyerCustomLogo();
-    setStatus("");
-    syncPreview();
-    opts.onCustomLogoChange();
   });
 
   syncPreview();

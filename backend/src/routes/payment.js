@@ -126,7 +126,7 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${FRONTEND_URL}/app?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${FRONTEND_URL}/choisir-offre`,
+      cancel_url: `${FRONTEND_URL}/app`,
       metadata: { user_id: String(userId), plan },
       subscription_data: {
         metadata: { user_id: String(userId), plan },

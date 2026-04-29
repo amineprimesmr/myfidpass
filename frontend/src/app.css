@@ -2,6 +2,14 @@
 body.page-app .site-banner { display: none !important; }
 body.page-app .whatsapp-fab { display: none !important; }
 
+/* Unification UI : suppression définitive de l'ancienne variante mobile dédiée. */
+.app-mobile-header,
+.app-mobile-tab-bar,
+.app-mobile-trial-subscribe-pill,
+.app-mobile-only {
+  display: none !important;
+}
+
 #app-app {
   --app-bg: transparent;
   --app-surface: var(--fidpass-surface);
@@ -82,19 +90,7 @@ body.page-app .whatsapp-fab { display: none !important; }
   scroll-behavior: smooth;
 }
 
-#app-app .app-main { padding-top: 1.5rem; }
-
-/* Bandeau compte administrateur plateforme */
-.app-platform-admin-strip {
-  padding: 0.65rem 1rem;
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.14), rgba(37, 99, 235, 0.05));
-  border-bottom: 1px solid rgba(37, 99, 235, 0.28);
-  font-size: 0.875rem;
-  color: var(--app-text);
-}
-.app-platform-admin-strip code {
-  font-size: 0.8em;
-}
+#app-app .app-main { padding-top: 0; }
 
 /* Sidebar — fond noir, style app moderne */
 .app-sidebar {
@@ -174,6 +170,179 @@ body.page-app .whatsapp-fab { display: none !important; }
   white-space: nowrap;
 }
 .app-sidebar-logo-fallback.hidden { display: none; }
+
+/* Onboarding dashboard desktop (avant configuration carte + flyer) */
+.app-dashboard-onboarding {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.35rem 0.25rem 0.8rem;
+  animation: appOnboardingIn 480ms var(--app-ease-spring);
+}
+
+.app-dashboard-onboarding-head {
+  margin-bottom: 0.85rem;
+}
+
+.app-dashboard-onboarding-title {
+  margin: 0;
+  font-size: 1.45rem;
+  letter-spacing: -0.025em;
+}
+
+.app-dashboard-onboarding-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--app-text-muted);
+}
+
+.app-dashboard-onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.app-dashboard-onboarding-card {
+  border-radius: 18px;
+  border: 1px solid #e4e8ef;
+  background: linear-gradient(180deg, #fbfcff 0%, #f6f8fc 100%);
+  padding: 1rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  transform: translateY(0);
+  transition: transform .28s var(--app-ease-spring), box-shadow .28s ease, border-color .28s ease;
+}
+
+.app-dashboard-onboarding-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+  border-color: rgba(37, 99, 235, 0.24);
+}
+
+.app-dashboard-onboarding-visual {
+  border-radius: 14px;
+  background: #f0f3f8;
+  border: 1px solid #e1e7ef;
+  min-height: 170px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.app-dashboard-onboarding-mock {
+  width: 180px;
+  height: 115px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px dashed #cfd7e4;
+  position: relative;
+}
+
+.app-dashboard-onboarding-mock--wallet::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f8fafc, #eef2f7);
+}
+
+.app-dashboard-onboarding-mock--flyer::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  width: 68px;
+  height: 88px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px dashed #cfd7e4;
+}
+
+.app-dashboard-onboarding-chip,
+.app-dashboard-onboarding-line,
+.app-dashboard-onboarding-qr {
+  position: absolute;
+  display: block;
+}
+
+.app-dashboard-onboarding-chip {
+  left: 20px;
+  top: 20px;
+  width: 70px;
+  height: 26px;
+  border-radius: 999px;
+  background: #e8edf5;
+}
+
+.app-dashboard-onboarding-line {
+  left: 20px;
+  bottom: 20px;
+  width: 130px;
+  height: 12px;
+  border-radius: 8px;
+  background: #d8e0ec;
+}
+
+.app-dashboard-onboarding-qr {
+  right: 18px;
+  top: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 9px;
+  border: 1px dashed #cfd7e4;
+  background: #fff;
+}
+
+.app-dashboard-onboarding-kicker {
+  margin: 0 0 .35rem;
+  color: #64748b;
+  font-size: .78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.app-dashboard-onboarding-card-title {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.app-dashboard-onboarding-text {
+  margin: .45rem 0 .9rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.app-dashboard-onboarding-actions {
+  display: flex;
+  gap: .6rem;
+}
+
+.app-dashboard-onboarding-status {
+  margin: .75rem 0 0;
+  font-size: .84rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.app-dashboard-onboarding-status.is-ready {
+  color: #047857;
+}
+
+@keyframes appOnboardingIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  /* Mobile = même parcours que desktop : on garde l'onboarding carte + flyer visible. */
+  .app-dashboard-onboarding {
+    display: block !important;
+    padding: 0.25rem 0 0.8rem;
+  }
+  .app-dashboard-onboarding-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+}
 
 .app-header-user { font-size: 0.9rem; color: rgba(255,255,255,0.9); }
 
@@ -354,24 +523,21 @@ body.page-app .whatsapp-fab { display: none !important; }
   text-decoration: underline;
 }
 
-/* Main content — zone blanche relief 3D (style app, aligné landing) */
+/* Main content — fond uni simple (sans effet section encapsulée) */
 .app-main {
   flex: 1;
   margin-left: var(--app-sidebar-width);
-  margin-top: 12px;
+  margin-top: 0;
   transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   margin-right: 12px;
   margin-bottom: 12px;
-  min-height: calc(100vh - 24px);
+  min-height: calc(100vh - 12px);
   padding: 2rem 1.75rem 4rem;
-  background: linear-gradient(180deg, var(--fidpass-surface) 0%, #fefefe 30%, #fafafa 100%);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: var(--app-relief-raised);
-  transition: box-shadow var(--app-transition), transform var(--app-transition);
-}
-.app-main:hover {
-  box-shadow: var(--app-relief-raised-hover);
+  background: #f3f4f6;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  transition: none;
 }
 
 @media (max-width: 900px) {
@@ -395,9 +561,9 @@ body.page-app .whatsapp-fab { display: none !important; }
   .app-main {
     margin-left: 72px;
     margin-right: 10px;
-    margin-top: 10px;
+    margin-top: 0;
     margin-bottom: 10px;
-    min-height: calc(100vh - 20px);
+    min-height: calc(100vh - 10px);
     padding: 1.5rem 1rem;
     border-radius: 16px;
   }
@@ -452,7 +618,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 
 /* Sections — entrée fluide */
 .app-content {
-  max-width: 920px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -510,12 +676,14 @@ body.page-app .whatsapp-fab { display: none !important; }
 #app-dashboard-content > .app-section {
   display: none !important;
   margin-bottom: 0;
-  min-height: 60vh;
+  min-height: auto;
+  content-visibility: auto;
+  contain-intrinsic-size: 900px;
 }
 
 #app-dashboard-content > .app-section.app-section-visible {
   display: block !important;
-  animation: app-section-enter 0.5s var(--app-ease-out) forwards;
+  animation: none;
 }
 
 @keyframes app-section-enter {
@@ -531,13 +699,13 @@ body.page-app .whatsapp-fab { display: none !important; }
 
 /* Entrée en cascade des blocs à l’intérieur d’une section (fluidité) */
 #app-dashboard-content .app-section.app-section-visible .app-section-title {
-  animation: app-fade-slide-up 0.4s var(--app-ease-out) 0.05s backwards;
+  animation: none;
 }
 #app-dashboard-content .app-section.app-section-visible .app-section-desc {
-  animation: app-fade-slide-up 0.4s var(--app-ease-out) 0.1s backwards;
+  animation: none;
 }
 #app-dashboard-content .app-section.app-section-visible .app-subsection-title {
-  animation: app-fade-slide-up 0.4s var(--app-ease-out) 0.08s backwards;
+  animation: none;
 }
 @keyframes app-fade-slide-up {
   from {
@@ -552,6 +720,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 
 .app-section {
   scroll-margin-top: 1rem;
+  contain: layout paint;
 }
 
 .app-section-title {
@@ -653,6 +822,24 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--app-relief-raised-hover);
+}
+
+/* Desktop cleanup: rendu plat, sans ombres/masques visuels parasites */
+@media (min-width: 901px) {
+  #app-app .app-card,
+  #app-app .app-stat {
+    background: #ffffff;
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  #app-app .app-card:hover,
+  #app-app .app-stat:hover {
+    transform: none;
+    box-shadow: none !important;
+    border-color: #d1d5db;
+  }
 }
 
 .app-step-label {
@@ -3201,170 +3388,9 @@ body.page-app .whatsapp-fab { display: none !important; }
   opacity: 0.38;
   pointer-events: none;
 }
-/* Mobile : Accueil = retour au formulaire création ; Commerce = compte / établissement ; Notifs indisponibles. */
-.app-awaiting-first-business #app-mobile-tab-bar .app-mobile-tab:not([data-mobile-tab="dashboard"]):not([data-mobile-tab="profil"]) {
-  opacity: 0.38;
-  pointer-events: none;
-}
-
 @media (max-width: 600px) {
   .app-caisse-row { flex-direction: column; align-items: stretch; }
   .app-input-amount { max-width: none; }
-}
-
-/* Page Choisir une offre (/choisir-offre) */
-.offers-page {
-  font-family: var(--font);
-  background: var(--app-bg, #0c0c0c);
-  color: var(--app-text, #fafafa);
-  min-height: 100vh;
-}
-/* Offres : dans le shell unifié (fond clair, même style que landing) */
-#offers-app.unified-shell .offers-main { max-width: 720px; margin: 0 auto; }
-#offers-app.unified-shell .offers-title { font-size: 1.75rem; font-weight: 800; margin: 0 0 0.5rem; color: #1a1a1a; }
-#offers-app.unified-shell .offers-subtitle { color: #6b7280; margin: 0 0 2rem; }
-#offers-app.unified-shell .offers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
-#offers-app.unified-shell .offers-card {
-  background: var(--fidpass-surface);
-  border: 1px solid #e5e5e5;
-  border-radius: 16px;
-  padding: 1.5rem;
-  color: #1a1a1a;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.2s ease;
-}
-#offers-app.unified-shell .offers-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-#offers-app.unified-shell .offers-card-featured { border-color: #1e3a8a; box-shadow: 0 0 0 1px #1e3a8a; }
-#offers-app.unified-shell .offers-card-featured:hover { box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15); }
-#offers-app.unified-shell .offers-card-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 0.5rem; }
-#offers-app.unified-shell .offers-card-desc { color: #6b7280; font-size: 0.9rem; margin: 0 0 1rem; line-height: 1.4; }
-#offers-app.unified-shell .offers-card-price { margin: 0 0 1rem; font-size: 1rem; }
-#offers-app.unified-shell .offers-card-amount { font-size: 1.5rem; font-weight: 800; }
-#offers-app.unified-shell .offers-card-note { font-size: 0.8rem; color: #6b7280; font-weight: 500; margin-left: 0.2rem; }
-#offers-app.unified-shell .offers-card-bullets { margin: 0 0 1rem; padding-left: 1.15rem; color: #4b5563; font-size: 0.86rem; line-height: 1.45; }
-#offers-app.unified-shell .landing-btn-secondary { background: #fff; color: #0f172a; border: 1px solid #d1d5db; }
-#offers-app.unified-shell .landing-btn-secondary:hover { background: #f3f4f6; }
-#offers-app.unified-shell .offers-checkout { margin-top: 2.25rem; padding: 1.4rem; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 16px; }
-#offers-app.unified-shell .offers-checkout.hidden { display: none; }
-#offers-app.unified-shell .offers-checkout__title { font-size: 1.2rem; margin: 0 0 0.4rem; color: #0f172a; }
-#offers-app.unified-shell .offers-checkout__lead { color: #374151; font-size: 0.9rem; margin: 0 0 0.5rem; line-height: 1.45; }
-#offers-app.unified-shell .offers-trial-legal { font-size: 0.78rem; color: #6b7280; margin: 0 0 1rem; line-height: 1.4; }
-#offers-app.unified-shell .offers-error { color: #b91c1c; }
-#offers-app.unified-shell .offers-element-wrap { margin-top: 0.5rem; }
-#offers-app.unified-shell .offers-repick { margin: 1rem 0 0; text-align: center; }
-#offers-app.unified-shell .offers-repick__btn { background: none; border: none; color: #1e3a8a; cursor: pointer; font: inherit; text-decoration: underline; }
-#offers-app.unified-shell .offers-payment-state { color: #6b7280; font-size: 0.9rem; margin: 0 0 0.5rem; }
-#offers-app.unified-shell .offers-footer { margin-top: 2rem; text-align: center; }
-#offers-app.unified-shell .offers-footer a { color: #1e3a8a; text-decoration: none; }
-/* Parcours /abonnement (pastille app « 1 € ») : carte un peu plus marquée */
-#offers-app.unified-shell.offers-app--abonnement .offers-card-featured {
-  border-color: #0f172a;
-  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
-}
-
-/* Paiement intégré (/abonnement, /choisir-offre) — Stripe Payment Element */
-#offers-app.unified-shell .offers-main--checkout {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding-bottom: 3rem;
-}
-.offers-checkout-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  align-items: start;
-}
-@media (max-width: 900px) {
-  .offers-checkout-layout {
-    grid-template-columns: 1fr;
-  }
-}
-.offers-checkout-summary .offers-title {
-  font-size: clamp(1.65rem, 3vw, 2rem);
-  font-weight: 800;
-  margin: 0 0 0.75rem;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-}
-.offers-checkout-summary .offers-subtitle {
-  color: #475569;
-  margin: 0 0 1.25rem;
-  line-height: 1.55;
-  font-size: 1rem;
-}
-.offers-value-list {
-  margin: 0 0 1.25rem;
-  padding-left: 1.15rem;
-  color: #334155;
-  line-height: 1.6;
-  font-size: 0.95rem;
-}
-.offers-value-list li {
-  margin-bottom: 0.5rem;
-}
-.offers-plan-legal {
-  font-size: 0.82rem;
-  color: #64748b;
-  line-height: 1.5;
-  margin: 0;
-}
-.offers-checkout-panel {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 1.5rem 1.5rem 1.35rem;
-  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
-}
-.offers-panel-head {
-  margin-bottom: 1rem;
-}
-.offers-panel-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin: 0 0 0.35rem;
-  color: #0f172a;
-}
-.offers-panel-hint {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #64748b;
-}
-.offers-payment-loading {
-  padding: 1.25rem 0;
-  color: #64748b;
-  font-size: 0.95rem;
-}
-#offers-payment-element {
-  margin: 0.25rem 0 1rem;
-}
-.offers-payment-error {
-  color: #b91c1c;
-  font-size: 0.9rem;
-  margin: 0 0 0.75rem;
-}
-.offers-payment-status {
-  color: #0f766e;
-  font-size: 0.9rem;
-  margin: 0 0 0.75rem;
-}
-.offers-pay-submit {
-  margin-top: 0.25rem;
-  font-weight: 700;
-  padding-top: 0.95rem;
-  padding-bottom: 0.95rem;
-}
-.offers-stripe-footnote {
-  margin: 1rem 0 0;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  line-height: 1.45;
-  text-align: center;
-}
-#offers-app.unified-shell.offers-app--abonnement .offers-checkout-panel {
-  border-color: #0f172a;
-  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.1);
 }
 
 /* Dashboard */
@@ -4360,6 +4386,13 @@ body.page-app .whatsapp-fab { display: none !important; }
 #app-dashboard-content #personnaliser.app-section.app-section-visible {
   display: block;
   overflow-x: hidden;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0),
+    linear-gradient(160deg, #f8fafc 0%, #eef2ff 45%, #faf5ff 100%);
+  background-size: 18px 18px, 100% 100%;
+  margin: -2rem -1.75rem -4rem;
+  padding: 2rem 1.75rem 4rem;
+  border-radius: 18px;
 }
 #app-dashboard-content #personnaliser .app-section-title {
   margin-bottom: 0;
@@ -4393,6 +4426,20 @@ body.page-app .whatsapp-fab { display: none !important; }
   padding-left: 0.5rem;
   /* Remonter l’aperçu pour l’aligner visuellement avec le panneau gauche */
   margin-top: -0.35rem;
+}
+@media (max-width: 900px) {
+  #app-dashboard-content #personnaliser.app-section.app-section-visible {
+    margin: -1.5rem -1rem -3.5rem;
+    padding: 1.5rem 1rem 3.5rem;
+    border-radius: 14px;
+  }
+}
+@media (max-width: 600px) {
+  #app-dashboard-content #personnaliser.app-section.app-section-visible {
+    margin: -1.25rem -1rem -2.5rem;
+    padding: 1.25rem 1rem 2.5rem;
+    border-radius: 12px;
+  }
 }
 .app-personnaliser-col-left .app-card {
   padding: 1.5rem 1.75rem;
@@ -5830,6 +5877,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 .app-profil-message.error { color: #dc2626; }
 .app-profil-save-spinner { display: inline-block; width: 1.25rem; height: 1.25rem; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: app-spin 0.7s linear infinite; }
 .app-profil-save-spinner.hidden { display: none !important; }
+
 @keyframes app-spin { to { transform: rotate(360deg); } }
 .app-btn-ghost { background: transparent; color: var(--app-text-muted); border: 1px solid var(--app-border); }
 .app-btn-ghost:hover { background: var(--app-surface-hover); color: var(--app-text); }

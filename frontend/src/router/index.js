@@ -25,8 +25,7 @@ export function getRoute() {
   if (path === "/login") return { type: "legacy-auth-redirect", tab: "login" };
   if (path === "/register") return { type: "legacy-auth-redirect", tab: "register" };
   if (path === "/creer-ma-carte") return { type: "creation-carte" };
-  if (path === "/abonnement") return { type: "offers", subscriptionLanding: true };
-  if (path === "/choisir-offre") return { type: "offers" };
+  if (path === "/abonnement" || path === "/choisir-offre") return { type: "legacy-subscription-redirect" };
   if (path === "/checkout" || path === "/creation-carte") return { type: "redirect-stripe" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
@@ -46,7 +45,6 @@ function getContainers() {
     fidelityApp: document.getElementById("fidelity-app"),
     dashboardApp: document.getElementById("dashboard-app"),
     appApp: document.getElementById("app-app"),
-    offersApp: document.getElementById("offers-app"),
     builderHeader: document.getElementById("builder-header"),
     page404: document.getElementById("page-404"),
     landingMain: document.getElementById("landing-main"),
@@ -160,7 +158,7 @@ export async function initRouting() {
   if (c.page404) c.page404.classList.add("hidden");
 
   const hideAll = () => {
-    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.appApp, c.offersApp, c.liquidGlassTest].forEach((el) => {
+    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.appApp, c.liquidGlassTest].forEach((el) => {
       if (el) el.classList.add("hidden");
     });
     if (c.builderHeader) c.builderHeader.classList.add("hidden");
@@ -207,6 +205,11 @@ export async function initRouting() {
     return null;
   }
 
+  if (route.type === "legacy-subscription-redirect") {
+    window.location.replace("/app");
+    return null;
+  }
+
   if (route.type === "redirect-stripe") {
     window.location.href = buildStripeSaasPaymentUrl();
     return null;
@@ -231,20 +234,6 @@ export async function initRouting() {
     return null;
   }
 
-
-  if (route.type === "offers") {
-    const redirectPath = route.subscriptionLanding ? "/abonnement" : "/choisir-offre";
-    if (!getAuthToken()) {
-      window.location.replace(`/creer-ma-carte?mode=login&redirect=${encodeURIComponent(redirectPath)}`);
-      return null;
-    }
-    hideAll();
-    if (c.offersApp) c.offersApp.classList.remove("hidden");
-    const page = await loadPage("offers");
-    await page.init(route);
-    syncWhatsappFabVisibility();
-    return null;
-  }
 
   if (route.type === "legal" && c.landingMain && c.landingLegal && c.legalContent) {
     if (c.liquidGlassTest) c.liquidGlassTest.classList.add("hidden");

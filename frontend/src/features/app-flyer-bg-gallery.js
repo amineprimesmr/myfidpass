@@ -53,6 +53,8 @@ export function parseFlyerBgManifestJson(jsonText) {
 export async function initFlyerBgGallery(root, opts) {
   const wrap = root?.querySelector("#app-flyer-bg-gallery-wrap");
   const grid = root?.querySelector("#app-flyer-bg-gallery");
+  const prevBtn = root?.querySelector("#app-flyer-bg-prev");
+  const nextBtn = root?.querySelector("#app-flyer-bg-next");
   if (!wrap || !grid) return;
 
   let entries;
@@ -100,4 +102,13 @@ export async function initFlyerBgGallery(root, opts) {
     });
     grid.appendChild(btn);
   }
+
+  const scrollByCard = (dir) => {
+    const first = grid.querySelector(".app-flyer-bg-gallery-item");
+    const cardW = first instanceof HTMLElement ? first.offsetWidth : 84;
+    const gap = 8;
+    grid.scrollBy({ left: dir * (cardW + gap) * 2, behavior: "smooth" });
+  };
+  prevBtn?.addEventListener("click", () => scrollByCard(-1));
+  nextBtn?.addEventListener("click", () => scrollByCard(1));
 }

@@ -97,6 +97,9 @@ export function initAppDesktopTopbar({ showAppSection }) {
   const searchEmptyText = document.getElementById("app-topbar-search-empty-text");
   const logoutTop = document.getElementById("app-topbar-logout-btn");
   const storeAddLink = document.getElementById("app-topbar-store-add-link");
+  const sidebar = document.getElementById("app-sidebar");
+  const menuToggle = document.getElementById("app-topbar-menu-toggle");
+  const sidebarOverlay = document.getElementById("app-sidebar-overlay");
 
   let activeChip = "tous";
   let highlightIdx = 0;
@@ -146,8 +149,34 @@ export function initAppDesktopTopbar({ showAppSection }) {
     if (e.key === "Escape") {
       closeAllDropdowns();
       closeSearch();
+      closeMobileMenu();
     }
   });
+
+  function closeMobileMenu() {
+    sidebar?.classList.remove("is-mobile-open");
+    sidebarOverlay?.classList.remove("is-open");
+    menuToggle?.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("app-mobile-menu-open");
+  }
+
+  function toggleMobileMenu() {
+    if (!window.matchMedia("(max-width: 900px)").matches) return;
+    const nextOpen = !sidebar?.classList.contains("is-mobile-open");
+    sidebar?.classList.toggle("is-mobile-open", nextOpen);
+    sidebarOverlay?.classList.toggle("is-open", nextOpen);
+    menuToggle?.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+    document.body.classList.toggle("app-mobile-menu-open", nextOpen);
+  }
+
+  menuToggle?.addEventListener("click", toggleMobileMenu);
+  sidebarOverlay?.addEventListener("click", closeMobileMenu);
+  window.addEventListener("resize", () => {
+    if (!window.matchMedia("(max-width: 900px)").matches) closeMobileMenu();
+  });
+  document.querySelectorAll("#app-sidebar .app-sidebar-link").forEach((el) =>
+    el.addEventListener("click", () => closeMobileMenu()),
+  );
 
   storeAddLink?.addEventListener("click", () => {
     closeAllDropdowns();

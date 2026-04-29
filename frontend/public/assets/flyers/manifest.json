@@ -1,1 +1,7 @@
-[]
+[
+  { "file": "template1.png", "label": "Template 1" },
+  { "file": "template2.png", "label": "Template 2" },
+  { "file": "template3.png", "label": "Template 3" },
+  { "file": "template4.png", "label": "Template 4" },
+  { "file": "template5.png", "label": "Template 5" }
+]

@@ -102,9 +102,7 @@
   position: relative;
   padding: 0.5rem 1.1rem 2.35rem;
   border-radius: 22px;
-  background:
-    linear-gradient(165deg, rgba(255, 255, 255, 0.42) 0%, transparent 52%),
-    radial-gradient(ellipse 88% 42% at 50% 100%, rgba(15, 23, 42, 0.14) 0%, transparent 70%);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 #app-app .app-flyer-qr-mockup-poster {
@@ -113,20 +111,16 @@
   padding: 12px;
   max-width: 400px;
   border-radius: 14px;
-  background: linear-gradient(150deg, #f8fafc 0%, #e8edf4 55%, #dce3ee 100%);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.95) inset,
-    0 28px 56px -16px rgba(15, 23, 42, 0.38),
-    0 12px 24px -12px rgba(15, 23, 42, 0.22),
-    0 0 0 1px rgba(15, 23, 42, 0.07);
-  transform: rotateY(-5.5deg) rotateX(2.5deg);
-  transform-style: preserve-3d;
+  background: #f8fafc;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 0 0 1px rgba(15, 23, 42, 0.07);
+  transform: none;
+  transform-style: flat;
   transform-origin: 50% 50%;
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: none;
 }
 
 #app-app .app-flyer-qr-mockup:hover .app-flyer-qr-mockup-poster {
-  transform: rotateY(-2deg) rotateX(1deg);
+  transform: none;
 }
 
 #app-app .app-flyer-qr-mockup-poster .app-flyer-canvas {
@@ -138,11 +132,7 @@
   margin: 0;
   border-radius: 8px;
   /* Liseré type affiche : filet sombre + léger rebord clair sur le pourtour du visuel */
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
-    0 0 0 3px #0f172a,
-    0 0 0 5px rgba(241, 245, 249, 0.95),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55) inset, 0 0 0 1px rgba(15, 23, 42, 0.12);
 }
 
 @media (max-width: 600px) {
@@ -173,7 +163,7 @@
   height: auto;
   margin: 0 auto;
   border-radius: 12px;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
 }
 
 #app-app .app-flyer-qr-link-row .app-label {
@@ -269,8 +259,8 @@
   padding: 1.25rem;
   border-radius: var(--app-radius-lg, 18px);
   border: 1px solid var(--app-border, #e8ecf1);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: var(--app-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.06));
+  background: #ffffff;
+  box-shadow: none;
   max-height: min(78vh, 880px);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -485,24 +475,3 @@
   accent-color: var(--app-accent, #2563eb);
 }
 
-#app-app .app-flyer-ai-panel {
-  padding-bottom: 0.25rem;
-  border-top: 1px dashed var(--app-border, #e8ecf1);
-  padding-top: 0.75rem;
-}
-
-#app-app .app-flyer-ai-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-#app-app .app-flyer-ai-check input {
-  margin-top: 0.2rem;
-}
-
-#app-app #app-flyer-ai-status.error {
-  color: #b91c1c;
-}

@@ -3,6 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      (function () {
+        var path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
+        var appLike =
+          path === "/app" ||
+          path === "/dashboard" ||
+          path === "/abonnement" ||
+          path === "/choisir-offre" ||
+          path === "/checkout" ||
+          path === "/creation-carte";
+        var root = document.documentElement;
+        root.classList.add("app-booting");
+        if (appLike) root.classList.add("app-route-app");
+      })();
+    </script>
+    <style>
+      .hidden { display: none !important; }
+      html.app-route-app #landing { display: none !important; }
+      html.app-booting #landing { visibility: hidden; }
+      html.app-booting.app-route-app #app-app { visibility: visible; }
+    </style>
     <meta name="description" content="Myfidpass — Carte de fidélité Apple Wallet et Google Wallet pour votre commerce. Fidélisez vos clients en 3 secondes. Tous téléphones. Sans carte en plastique." />
     <meta name="theme-color" content="#f5f5f7" />
     <link rel="icon" type="image/png" href="/assets/icone.png?v=20260416" />
@@ -39,15 +60,8 @@
     <link rel="stylesheet" href="/src/app-member-detail-profile.css" />
     <link rel="stylesheet" href="/src/app-card-rules.css" />
     <link rel="stylesheet" href="/src/app-flyer-qr.css" />
-    <link rel="stylesheet" href="/src/app-flyer-qr-typography.css" />
     <link rel="stylesheet" href="/src/app-flyer-bg-gallery.css" />
-    <link rel="stylesheet" href="/src/app-mobile.css" />
-    <link rel="stylesheet" href="/src/app-mobile-ios-parity.css" />
-    <link rel="stylesheet" href="/src/app-mobile-ios-components.css" />
-    <link rel="stylesheet" href="/src/app-mobile-ios-campaigns.css" />
     <link rel="stylesheet" href="/src/app-notifications-layout.css" />
-    <link rel="stylesheet" href="/src/app-dashboard-ios-home.css" />
-    <link rel="stylesheet" href="/src/app-commerce-ios.css" />
     <link rel="stylesheet" href="/src/post-purchase-app-modal.css" />
     <link rel="stylesheet" href="/src/helmet/helmet.css" />
     <link rel="stylesheet" href="/src/landing-gradient-carousel.css" />
@@ -230,88 +244,6 @@
       </main>
     </div>
 
-    <!-- Choisir une offre : même UX barre flottante que landing -->
-    <div id="offers-app" class="hidden unified-shell">
-      <div class="landing-header-outer">
-        <header class="landing-header landing-header-bar">
-          <div class="landing-header-inner">
-            <button type="button" class="landing-menu-toggle" id="offers-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
-              <span class="landing-menu-toggle-bar"></span>
-              <span class="landing-menu-toggle-bar"></span>
-              <span class="landing-menu-toggle-bar"></span>
-            </button>
-            <a href="/" class="landing-logo"><img src="/assets/icone.png?v=20260416" alt="Myfidpass" class="landing-logo-img"></a>
-            <nav class="landing-nav landing-nav-desk">
-              <a href="/app">Mon espace</a>
-              <a href="/">Accueil</a>
-            </nav>
-            <div class="landing-header-ctas">
-              <a href="/app" class="landing-cta landing-cta-primary landing-cta-desk">Mon espace</a>
-            </div>
-          </div>
-        </header>
-      </div>
-      <div class="landing-menu-overlay" id="offers-menu-overlay" aria-hidden="true">
-        <div class="landing-menu-drawer">
-          <div class="landing-menu-drawer-header">
-            <button type="button" class="landing-menu-close" id="offers-menu-close" aria-label="Fermer le menu"><span aria-hidden="true">×</span></button>
-            <a href="/" class="landing-menu-drawer-logo"><img src="/assets/icone.png?v=20260416" alt="Myfidpass" class="landing-logo-img"></a>
-          </div>
-          <nav class="landing-menu-drawer-nav">
-            <a href="/app">Mon espace</a>
-            <a href="/">Accueil</a>
-            <a href="/app" class="landing-menu-drawer-login">Mon espace</a>
-          </nav>
-        </div>
-      </div>
-      <main class="unified-main offers-main">
-        <h1 class="offers-title" id="offers-title">Choisissez votre forfait</h1>
-        <p class="offers-subtitle" id="offers-subtitle">3 jours gratuits, sans engagement. Cartes Wallet, appli, tableau de bord.</p>
-        <div class="offers-grid offers-grid--two" id="offers-grid">
-          <article class="offers-card offers-card-featured">
-            <h2 class="offers-card-title">Mensuel</h2>
-            <p class="offers-card-desc">3 jours d’essai, puis 1,00 € le 1er mois, ensuite 49,99 €/mois — sans engagement.</p>
-            <p class="offers-card-price"><span class="offers-card-amount">49,99 €</span> / mois <span class="offers-card-note">(après essai + 1er mois à 1 €)</span></p>
-            <ul class="offers-card-bullets">
-              <li>3 j offerts</li>
-              <li>1er mois : 1,00 €</li>
-              <li>Renouvellement 49,99 €/mois</li>
-            </ul>
-            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-btn-monthly" data-fidpass-plan="monthly">Souscrire au mensuel</button>
-          </article>
-          <article class="offers-card">
-            <h2 class="offers-card-title">Annuel</h2>
-            <p class="offers-card-desc">3 jours d’essai, puis 399,00 €/an (≈ 33,25 €/mois) — payé en une fois.</p>
-            <p class="offers-card-price"><span class="offers-card-amount">399,00 €</span> <span class="offers-card-note">/ an</span></p>
-            <ul class="offers-card-bullets">
-              <li>3 j offerts</li>
-              <li>399,00 € facturés l’année en cours</li>
-              <li>Économies vs. mensualisé 12 mois</li>
-            </ul>
-            <button type="button" class="landing-btn landing-btn-block landing-btn-secondary" id="offers-btn-annual" data-fidpass-plan="annual">Souscrire à l’annuel</button>
-          </article>
-        </div>
-
-        <section id="offers-checkout-section" class="offers-checkout hidden" aria-live="polite">
-          <h2 class="offers-checkout__title" id="offers-checkout-title">Paiement sécurisé</h2>
-          <p class="offers-checkout__lead" id="offers-selected-plan-hint">Choisissez d’abord un forfait.</p>
-          <p class="offers-trial-legal" id="offers-trial-legal">
-            Essai 3 jours côté Stripe, puis 1,00 € le 1er mois (offre mensuelle) ou 399,00 €/an (annuel) selon l’offre, comme décrit. Carte, Apple Pay ou Google Pay.
-          </p>
-          <div id="offers-payment-loading" class="offers-payment-state">Chargement du moyen de paiement…</div>
-          <p id="offers-payment-error" class="offers-error hidden" role="alert"></p>
-          <div id="offers-payment-element-wrap" class="offers-element-wrap hidden">
-            <div id="offers-payment-element"></div>
-            <button type="button" class="landing-btn landing-btn-primary landing-btn-block" id="offers-pay-submit" disabled>
-              Valider le moyen de paiement
-            </button>
-            <p id="offers-payment-status" class="offers-payment-state hidden" aria-live="assertive"></p>
-          </div>
-          <p class="offers-repick"><button type="button" class="offers-repick__btn" id="offers-change-plan">← Changer de forfait</button></p>
-        </section>
-      </main>
-    </div>
-
     <!-- Test Liquid Glass (kube.io, SVG) — /test-liquid-glass — Chrome recommandé pour backdrop-filter URL -->
     <div id="liquid-glass-test-app" class="hidden" data-liquid-glass-app>
       <div class="liquid-glass-test-bar">
@@ -415,6 +347,16 @@
     <div id="app-app" class="hidden app-unified-shell" data-mobile-section="dashboard">
       <header class="app-desktop-topbar" id="app-desktop-topbar" aria-label="Navigation principale bureau">
         <div class="app-desktop-topbar__inner">
+          <button
+            type="button"
+            class="app-desktop-topbar__menu-btn"
+            id="app-topbar-menu-toggle"
+            aria-label="Ouvrir le menu"
+            aria-controls="app-sidebar"
+            aria-expanded="false"
+          >
+            <span></span><span></span><span></span>
+          </button>
           <a href="/" class="app-desktop-topbar__brand" aria-label="Myfidpass — Accueil">
             <span class="app-desktop-topbar__brand-mark" aria-hidden="true">
               <img src="/assets/icone.png?v=20260416" alt="" class="app-desktop-topbar__brand-img" width="28" height="28" decoding="async" />
@@ -432,9 +374,6 @@
             </button>
         </div>
           <div class="app-desktop-topbar__actions">
-            <a href="mailto:contact@myfidpass.fr" class="app-desktop-topbar__icon-btn" aria-label="Aide et contact" title="Aide">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke-linecap="round"/></svg>
-            </a>
             <div class="app-desktop-topbar__dropdown-wrap">
               <button type="button" class="app-desktop-topbar__icon-btn" id="app-topbar-alerts-btn" aria-expanded="false" aria-haspopup="true" aria-controls="app-topbar-alerts-panel" title="Alertes">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -486,6 +425,13 @@
           </div>
         </div>
       </header>
+      <button
+        type="button"
+        class="app-sidebar-overlay"
+        id="app-sidebar-overlay"
+        aria-label="Fermer le menu"
+        aria-hidden="true"
+      ></button>
 
       <div class="app-topbar-search-root" id="app-topbar-search-root" aria-hidden="true">
         <div class="app-topbar-search-backdrop" id="app-topbar-search-backdrop"></div>
@@ -512,7 +458,7 @@
         <nav class="app-sidebar-nav" aria-label="Navigation principale">
           <a href="#dashboard" class="app-sidebar-link app-sidebar-link-active" data-section="dashboard">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
-            <span class="app-sidebar-link-text">Dashboard</span>
+            <span class="app-sidebar-link-text">Accueil</span>
           </a>
           <a href="#personnaliser" class="app-sidebar-link" data-section="personnaliser">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></span>
@@ -559,13 +505,6 @@
           </div>
         </div>
       </aside>
-      <!-- Header mobile (style app) -->
-      <header class="app-mobile-header" id="app-mobile-header" aria-hidden="true">
-        <h1 class="app-mobile-header-title" id="app-mobile-header-title">Tableau de bord</h1>
-        <button type="button" class="app-mobile-header-btn" id="app-mobile-scan-btn" aria-label="Ouvrir le scanner">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9"/></svg>
-        </button>
-      </header>
       <main class="app-main">
         <div id="app-main-loading" class="app-main-loading" aria-live="polite">Chargement…</div>
         <div id="app-empty" class="app-empty hidden" aria-live="polite">
@@ -596,11 +535,50 @@
         </div>
         <div id="app-dashboard-content" class="app-content hidden">
           <section id="dashboard" class="app-section app-section-overview">
-            <div class="app-dashboard-shell app-section-grid-wrap">
+            <div id="app-dashboard-onboarding-gate" class="app-dashboard-onboarding hidden" aria-live="polite">
+              <div class="app-dashboard-onboarding-head">
+                <h2 class="app-dashboard-onboarding-title">Configurer votre espace commerçant</h2>
+                <p class="app-dashboard-onboarding-subtitle">Finalisez votre carte de fidélité et votre flyer pour débloquer le dashboard complet.</p>
+              </div>
+              <div class="app-dashboard-onboarding-grid">
+                <article class="app-dashboard-onboarding-card" id="app-dashboard-onboarding-card-card">
+                  <div class="app-dashboard-onboarding-visual" aria-hidden="true">
+                    <div class="app-dashboard-onboarding-mock app-dashboard-onboarding-mock--wallet">
+                      <span class="app-dashboard-onboarding-chip"></span>
+                      <span class="app-dashboard-onboarding-line"></span>
+                    </div>
+                  </div>
+                  <p class="app-dashboard-onboarding-kicker">Carte fidélité</p>
+                  <h3 class="app-dashboard-onboarding-card-title">Créer votre carte client</h3>
+                  <p class="app-dashboard-onboarding-text">Personnalisez le design, les règles de points/tampons et le contenu visible dans Apple Wallet.</p>
+                  <div class="app-dashboard-onboarding-actions">
+                    <button type="button" id="app-dashboard-onboarding-card-btn" class="app-btn app-btn-primary">Créer ma carte</button>
+                  </div>
+                  <p class="app-dashboard-onboarding-status" id="app-dashboard-onboarding-card-status">Non configuré</p>
+                </article>
+
+                <article class="app-dashboard-onboarding-card" id="app-dashboard-onboarding-card-flyer">
+                  <div class="app-dashboard-onboarding-visual" aria-hidden="true">
+                    <div class="app-dashboard-onboarding-mock app-dashboard-onboarding-mock--flyer">
+                      <span class="app-dashboard-onboarding-qr"></span>
+                      <span class="app-dashboard-onboarding-line"></span>
+                    </div>
+                  </div>
+                  <p class="app-dashboard-onboarding-kicker">Flyer vitrine</p>
+                  <h3 class="app-dashboard-onboarding-card-title">Créer votre flyer QR</h3>
+                  <p class="app-dashboard-onboarding-text">Générez un visuel prêt à imprimer avec votre QR code pour activer l’acquisition en boutique.</p>
+                  <div class="app-dashboard-onboarding-actions">
+                    <button type="button" id="app-dashboard-onboarding-flyer-btn" class="app-btn app-btn-secondary">Créer mon flyer</button>
+                  </div>
+                  <p class="app-dashboard-onboarding-status" id="app-dashboard-onboarding-flyer-status">Non configuré</p>
+                </article>
+              </div>
+            </div>
+            <div id="app-dashboard-shell-main" class="app-dashboard-shell app-section-grid-wrap">
               <div class="app-section-col-main">
               <div class="app-dashboard-header">
                 <div class="app-dashboard-header-main">
-                  <h1 class="app-section-title">Votre Dashboard</h1>
+                  <h1 class="app-section-title">Votre accueil</h1>
                 </div>
                 <div class="app-dashboard-controls">
                   <div class="app-dashboard-secondary-actions">
@@ -713,84 +691,6 @@
               </div>
             </div>
             <div class="app-dashboard-col-main-rest">
-            <!-- Accueil mobile : aperçu carte (comme app iOS) -->
-            <div class="app-ios-home-hero app-mobile-only" id="app-ios-home-hero" aria-label="Aperçu carte fidélité">
-              <div class="app-ios-home-pass-frame">
-                <div id="app-dashboard-home-preview-root" class="app-dashboard-home-preview-root">
-                  <div class="builder-wallet-card app-wallet-preview-dynamic" id="app-dash-home-wallet-card">
-                    <div class="builder-wallet-card-header app-wallet-preview-header" id="app-dash-home-wallet-strip">
-                      <img id="app-dash-home-strip-img" class="app-wallet-preview-strip-img hidden" alt="" aria-hidden="true" />
-                      <span id="app-dash-home-strip-text" class="app-wallet-preview-strip-text hidden"></span>
-                      <div class="app-wallet-preview-logo-wrap" id="app-dash-home-logo-wrap">
-                        <img id="app-dash-home-wallet-logo" class="app-wallet-preview-logo hidden" alt="" />
-                        <span class="app-wallet-preview-logo-fallback" id="app-dash-home-logo-fallback">Logo</span>
-                      </div>
-                      <span class="app-wallet-preview-org hidden" id="app-dash-home-org">Commerce</span>
-                      <button type="button" id="app-dash-home-header-right" class="app-wallet-preview-header-right app-dash-home-header-rewards-btn">Récompenses &#8599;</button>
-                    </div>
-                    <div id="app-dash-home-card-bg-banner" class="app-wallet-preview-card-bg-banner hidden" aria-hidden="true"></div>
-                    <div class="builder-wallet-card-body app-wallet-preview-body" id="app-dash-home-wallet-body">
-                      <div class="app-wallet-preview-main-block" id="app-dash-home-main-block">
-                        <div class="builder-wallet-card-pts-wrap" id="app-dash-home-pts-wrap">
-                          <span class="builder-wallet-card-pts-value">
-                            <span class="wallet-preview-emoji hidden" id="app-dash-home-pts-emoji" aria-hidden="true">⭐</span>
-                            <span id="app-dash-home-wallet-value">0</span>
-                          </span>
-                          <span class="builder-wallet-card-label" id="app-dash-home-wallet-label">points</span>
-                        </div>
-                        <div class="app-wallet-preview-bandeau hidden" id="app-dash-home-bandeau">
-                          <div class="builder-wallet-card-stamps-wrap hidden" id="app-dash-home-stamps-wrap">
-                            <div class="builder-wallet-card-stamps-grid" id="app-dash-home-stamps-grid" aria-hidden="true">
-                              <div class="builder-wallet-card-stamps-row"></div>
-                              <div class="builder-wallet-card-stamps-row"></div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="app-wallet-preview-bottom-row">
-                          <div class="builder-wallet-card-reward" id="app-dash-home-reward-wrap">
-                            <span class="builder-wallet-card-reward-label">Récompense</span>
-                            <span class="builder-wallet-card-reward-value" id="app-dash-home-wallet-reward">Paliers en magasin</span>
-                          </div>
-                          <div class="builder-wallet-card-restants hidden" id="app-dash-home-restants-wrap">
-                            <span class="builder-wallet-card-restants-label" id="app-dash-home-restants-label">Restants</span>
-                            <span class="builder-wallet-card-restants-value" id="app-dash-home-restants">= 10</span>
-                          </div>
-                          <div class="builder-wallet-card-member">
-                            <span class="builder-wallet-card-member-label" id="app-dash-home-member-label">Membre</span>
-                            <span class="builder-wallet-card-member-value" id="app-dash-home-member-value">—</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="builder-wallet-card-qr">
-                      <img class="builder-wallet-card-qr-img" id="app-dash-home-wallet-qr" src="" alt="QR code — page fidélité" width="64" height="64" decoding="async" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Hero mobile : 2 cartes + message -->
-            <div class="app-mobile-dashboard-hero app-mobile-only" id="app-mobile-dashboard-hero">
-              <div class="app-mobile-dashboard-card" id="app-mobile-card-members">
-                <div class="app-mobile-dashboard-card-icon members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-                <span class="app-mobile-dashboard-card-value" id="app-mobile-stat-members">0</span>
-                <span class="app-mobile-dashboard-card-label">Cartes actives</span>
-              </div>
-              <div class="app-mobile-dashboard-card" id="app-mobile-card-scans">
-                <div class="app-mobile-dashboard-card-icon scans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-                <span class="app-mobile-dashboard-card-value" id="app-mobile-stat-scans">0</span>
-                <span class="app-mobile-dashboard-card-label">Opérations</span>
-              </div>
-            </div>
-            <div class="app-mobile-message-bar-wrap app-mobile-only" id="app-mobile-message-bar-wrap">
-              <div class="app-mobile-message-bar">
-                <input type="text" id="app-mobile-message-input" placeholder="Message pour tous les membres..." aria-label="Message pour les membres" />
-                <button type="button" class="app-mobile-message-bar-btn" id="app-mobile-message-send" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
-              </div>
-            </div>
-            <button type="button" class="app-mobile-scan-fab app-mobile-only" id="app-mobile-scan-fab" aria-label="Scanner un QR code">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
-            </button>
             <div id="app-overview-alerts" class="app-overview-alerts hidden"></div>
             <div class="app-dashboard-hero">
               <article class="app-dashboard-hero-card app-dashboard-hero-revenue">
@@ -901,9 +801,6 @@
                 </span>
                   <h3 id="app-dashboard-recent-heading" class="app-dashboard-recent-title">Dernières transactions</h3>
                 </div>
-                <button type="button" class="app-dashboard-recent-scan-btn app-mobile-only" id="app-dashboard-recent-scan-btn" aria-label="Scanner un QR code">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
-                </button>
               </div>
               <div class="app-dashboard-recent-headers">
                 <span class="app-dashboard-recent-col-name">Client</span>
@@ -1012,7 +909,6 @@
           <section id="flyer-qr" class="app-section app-section-flyer-qr">
             <div class="app-flyer-qr-shell">
               <header class="app-flyer-qr-hero">
-                <p class="app-flyer-qr-eyebrow">Point de vente</p>
                 <h2 class="app-section-title">Flyer QR code</h2>
                 <p class="app-section-desc">Aperçu live, export <strong>PNG HD</strong>, lien public copiable.</p>
               </header>
@@ -1028,24 +924,31 @@
                       </div>
                     </div>
                   </div>
-                  <div class="app-flyer-qr-link-row">
-                    <label class="app-label" for="app-flyer-link">Lien de la page carte</label>
-                    <div class="app-flyer-qr-link-wrap">
-                      <input type="text" id="app-flyer-link" class="app-input" readonly autocomplete="off" />
-                      <button type="button" id="app-flyer-copy-link" class="app-btn app-btn-secondary">Copier</button>
-                    </div>
-                    <button type="button" id="app-flyer-download" class="app-btn app-btn-primary app-flyer-download-main">Télécharger le flyer (PNG HD)</button>
-                    <p id="app-flyer-export-note" class="app-hint hidden" role="status"></p>
-                  </div>
                 </div>
                 <div class="app-flyer-qr-side">
                   <button type="button" id="app-flyer-panel-toggle" class="app-flyer-panel-toggle" aria-expanded="false" aria-controls="app-flyer-panel">Personnaliser le flyer</button>
                   <div id="app-flyer-panel" class="app-flyer-panel">
+                    <div id="app-flyer-logo-panel" class="app-flyer-logo-panel">
+                      <p class="app-flyer-chip-label">Logo du flyer</p>
+                      <input type="file" id="app-flyer-logo-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Importer un logo pour le flyer" />
+                      <div class="app-flyer-logo-panel-actions">
+                        <button type="button" id="app-flyer-logo-choose" class="app-btn app-btn-secondary">Importer un logo</button>
+                      </div>
+                      <p id="app-flyer-logo-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
+                      <div id="app-flyer-logo-preview-wrap" class="app-flyer-logo-preview-wrap hidden">
+                        <span class="app-flyer-logo-preview-label">Aperçu</span>
+                        <img id="app-flyer-logo-preview" class="app-flyer-logo-preview" alt="" decoding="async" />
+                      </div>
+                    </div>
                     <div id="app-flyer-bg-panel" class="app-flyer-logo-panel app-flyer-bg-panel">
                       <p class="app-flyer-chip-label">Image de fond</p>
                       <div id="app-flyer-bg-gallery-wrap" class="app-flyer-bg-gallery-wrap hidden">
                         <p class="app-flyer-chip-label" style="margin:0.65rem 0 0.35rem">Modèles</p>
-                        <div id="app-flyer-bg-gallery" class="app-flyer-bg-gallery" role="list"></div>
+                        <div class="app-flyer-bg-carousel">
+                          <button type="button" id="app-flyer-bg-prev" class="app-flyer-bg-nav app-flyer-bg-nav--prev" aria-label="Template précédent">‹</button>
+                          <div id="app-flyer-bg-gallery" class="app-flyer-bg-gallery" role="list"></div>
+                          <button type="button" id="app-flyer-bg-next" class="app-flyer-bg-nav app-flyer-bg-nav--next" aria-label="Template suivant">›</button>
+                        </div>
                       </div>
                       <input type="file" id="app-flyer-bg-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Importer une image de fond pour le flyer" />
                       <div class="app-flyer-logo-panel-actions">
@@ -1058,151 +961,52 @@
                         <img id="app-flyer-bg-preview" class="app-flyer-bg-preview" alt="" decoding="async" />
                       </div>
                     </div>
-                    <div id="app-flyer-ai-panel" class="app-flyer-logo-panel app-flyer-ai-panel" style="margin-top:0.75rem">
-                      <p class="app-flyer-chip-label">Fond par IA</p>
-                      <p class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem">
-                        L’IA génère <strong>uniquement le fond</strong> (décor, couleurs) — pas de roue, pas de texte, pas de QR dans l’image.
-                        La <strong>roue</strong> (texture <code>spinflyer</code> teintée aux couleurs + texte GAGNÉ/PERDU, ou <strong>roue plate</strong> en pur aplats), le <strong>logo</strong>, l’<strong>accroche</strong> et le <strong>QR</strong> restent calés sur l’éditeur.
-                        Les <strong>couleurs principale / secondaire</strong> règlent les <strong>teintes des parts</strong> de la roue. Jusqu’à <strong>3 images</strong> d’inspiration (+ logo optionnel comme ambiance).
-                        Un second fond (page fidélité jeu QR, sans roue) est aussi généré.
-                      </p>
-                      <p id="app-flyer-ai-quota" class="app-hint" style="margin:0 0 0.5rem;font-size:0.78rem" role="status"></p>
-                      <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-ai-logo-file">Logo (optionnel)</label>
-                        <input type="file" id="app-flyer-ai-logo-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Logo pour la génération IA du fond" />
-                      </div>
-                      <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-ai-ref-files">Images d’inspiration (max 3)</label>
-                        <input type="file" id="app-flyer-ai-ref-files" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" multiple aria-label="Images de référence pour l’IA" />
-                      </div>
-                      <div class="app-flyer-field">
-                        <label class="app-label" for="app-flyer-ai-brand">Marque / établissement</label>
-                        <input type="text" id="app-flyer-ai-brand" class="app-input" maxlength="80" autocomplete="organization" />
-                      </div>
-                      <div class="app-flyer-field">
-                        <label class="app-label" for="app-flyer-ai-concept">Activité & visuels</label>
-                        <textarea id="app-flyer-ai-concept" class="app-input" rows="2" maxlength="400" placeholder="Ex. boulangerie, croissants, four…"></textarea>
-                      </div>
-                      <p class="app-hint" style="margin:0 0 0.35rem;font-size:0.78rem">
-                        <strong>Couleurs (priorité gauche → droite)</strong> : la 1ʳᵉ domine le fond, la 2ᵉ soutient, la 3ᵉ en touches légères. Les teintes des parts de roue suivent la 1ʳᵉ et la 2ᵉ.
-                      </p>
-                      <div class="app-flyer-colors" style="margin-top:0.35rem">
-                        <div class="app-flyer-color-row">
-                          <label for="app-flyer-ai-accent">1 — principale</label>
-                          <input type="color" id="app-flyer-ai-accent" value="#fbbf24" />
-                        </div>
-                        <div class="app-flyer-color-row">
-                          <label for="app-flyer-ai-secondary">2 — secondaire</label>
-                          <input type="color" id="app-flyer-ai-secondary" value="#1e293b" />
-                        </div>
-                        <div class="app-flyer-color-row">
-                          <label for="app-flyer-ai-tertiary">3 — accent léger (optionnel)</label>
-                          <input type="color" id="app-flyer-ai-tertiary" value="#64748b" />
-                        </div>
-                      </div>
-                      <div class="app-flyer-field">
-                        <label class="app-label" for="app-flyer-ai-extra">Précisions (optionnel)</label>
-                        <textarea id="app-flyer-ai-extra" class="app-input" rows="2" maxlength="400" placeholder="Ex. tons chauds…"></textarea>
-                      </div>
-                      <button type="button" id="app-flyer-ai-generate-btn" class="app-btn app-btn-secondary" style="margin-top:0.35rem">Générer</button>
-                      <p id="app-flyer-ai-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
-                    </div>
-                    <div class="app-flyer-field">
-                      <label class="app-label" for="app-flyer-headline">Accroche principale</label>
-                      <textarea id="app-flyer-headline" class="app-input" rows="2" maxlength="200" data-flyer-input></textarea>
-                    </div>
-                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Titre</p>
-                    <div class="app-flyer-field">
-                      <label class="app-label" for="app-flyer-headline-font">Police</label>
-                      <select id="app-flyer-headline-font" class="app-input app-flyer-inline-select" data-flyer-input aria-label="Police du titre"></select>
-                    </div>
-                    <div class="app-flyer-headline-style-grid">
+                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Couleurs</p>
+                    <div class="app-flyer-colors">
                       <div class="app-flyer-color-row">
-                        <label for="app-flyer-headline-fill">Couleur du texte</label>
-                        <input type="color" id="app-flyer-headline-fill" data-flyer-input aria-label="Couleur du texte du titre" />
+                        <label for="app-flyer-bg-solid">Fond</label>
+                        <input type="color" id="app-flyer-bg-solid" value="#0f172a" data-flyer-input />
                       </div>
                       <div class="app-flyer-color-row">
-                        <label for="app-flyer-headline-stroke">Contour du texte</label>
-                        <input type="color" id="app-flyer-headline-stroke" data-flyer-input aria-label="Couleur du contour du titre" />
-                      </div>
-                      <div class="app-flyer-color-row">
-                        <label for="app-flyer-headline-gift-stroke">Contour « CADEAU »</label>
-                        <input type="color" id="app-flyer-headline-gift-stroke" value="#020617" data-flyer-input aria-label="Couleur du contour du mot CADEAU penché" />
-                      </div>
-                      <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-headline-stroke-w">Épaisseur contour (0 = off)</label>
-                        <input type="number" id="app-flyer-headline-stroke-w" class="app-input" min="0" max="48" step="1" value="18" data-flyer-input inputmode="numeric" />
-                      </div>
-                      <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-headline-logo-gap">Espace logo → titre (%)</label>
-                        <input type="number" id="app-flyer-headline-logo-gap" class="app-input" min="0" max="28" step="0.5" value="16" data-flyer-input inputmode="decimal" />
-                      </div>
-                      <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-headline-tracking">Lettres (tracking)</label>
-                        <input type="number" id="app-flyer-headline-tracking" class="app-input" min="0" max="8" step="0.5" value="0" data-flyer-input inputmode="decimal" />
-                      </div>
-                      <div class="app-flyer-field app-flyer-field--compact">
-                        <label class="app-label" for="app-flyer-headline-size">Taille titre (% largeur)</label>
-                        <div class="app-flyer-range-row">
-                          <input type="range" id="app-flyer-headline-size" min="5" max="16" step="0.5" value="7" data-flyer-input aria-valuemin="5" aria-valuemax="16" />
-                          <span class="app-flyer-range-readout" id="app-flyer-headline-size-out" aria-hidden="true">7 %</span>
-                        </div>
+                        <label for="app-flyer-accent-unified">Couleur roue + cadeau + bandeau</label>
+                        <input type="color" id="app-flyer-accent-unified" value="#fbbf24" data-flyer-input />
                       </div>
                     </div>
-                    <div class="app-flyer-field">
-                      <label class="app-label" for="app-flyer-cta">Texte à côté du QR</label>
-                      <input type="text" id="app-flyer-cta" class="app-input" maxlength="80" data-flyer-input placeholder="ex. Scanne pour jouer" />
-                      <div class="app-flyer-color-row" style="margin-top:0.5rem">
-                        <label for="app-flyer-cta-bg">Pastille</label>
-                        <input type="color" id="app-flyer-cta-bg" value="#ec4899" data-flyer-input aria-label="Couleur de fond du bandeau Scanne pour jouer" />
-                      </div>
-                      <div class="app-flyer-color-row" style="margin-top:0.5rem">
-                        <label for="app-flyer-cta-text-color">Texte</label>
-                        <input type="color" id="app-flyer-cta-text-color" value="#ffffff" data-flyer-input aria-label="Couleur du texte du bandeau Scanne pour jouer" />
-                      </div>
-                    </div>
+                    <input type="hidden" id="app-flyer-headline" value="SCANNEZ &amp; GAGNEZ VOTRE CADEAU !" data-flyer-input />
+                    <input type="hidden" id="app-flyer-headline-font" value="fraunces" data-flyer-input />
+                    <input type="hidden" id="app-flyer-headline-fill" value="#ffffff" data-flyer-input />
+                    <input type="hidden" id="app-flyer-headline-stroke" value="#020617" data-flyer-input />
+                    <input type="hidden" id="app-flyer-headline-gift-stroke" value="#020617" data-flyer-input />
+                    <input type="hidden" id="app-flyer-headline-stroke-w" value="18" data-flyer-input />
+                    <input type="hidden" id="app-flyer-headline-logo-gap" value="4" data-flyer-input />
+                    <input type="hidden" id="app-flyer-headline-tracking" value="0" data-flyer-input />
+                    <input type="hidden" id="app-flyer-headline-size" value="7" data-flyer-input />
+                    <input type="hidden" id="app-flyer-cta" value="SCANNER POUR JOUER" data-flyer-input />
+                    <input type="hidden" id="app-flyer-cta-bg" value="#ec4899" data-flyer-input />
+                    <input type="hidden" id="app-flyer-cta-text-color" value="#ffffff" data-flyer-input />
                     <input type="hidden" id="app-flyer-footer-steps-color" value="#ffffff" data-flyer-input />
                     <input type="hidden" id="app-flyer-footer-text-scale" value="100" data-flyer-input />
                     <input type="hidden" id="app-flyer-wheel-label-scale" value="100" data-flyer-input />
                     <input type="hidden" id="app-flyer-step1" value="Scan le QR code" data-flyer-input />
                     <input type="hidden" id="app-flyer-step2" value="Fais tourner la roue" data-flyer-input />
                     <input type="hidden" id="app-flyer-step3" value="Découvre ton cadeau" data-flyer-input />
-                    <p class="app-flyer-chip-label" style="margin-top:1rem">Roue</p>
                     <input type="hidden" id="app-flyer-wheel-mode" value="png" />
-                    <div class="app-flyer-field" style="margin-top:0.35rem">
-                      <label class="app-label" for="app-flyer-wheel-offset">Rotation (°)</label>
-                      <input type="number" id="app-flyer-wheel-offset" class="app-input" min="-180" max="180" step="0.5" value="0" data-flyer-input inputmode="decimal" />
-                    </div>
-                    <div id="app-flyer-wheel-segments-wrap">
-                      <div class="app-flyer-wheel-seg-grid" role="group" aria-label="Couleurs alternées de la roue">
-                        <label for="app-flyer-wheel-color-odd">Parts 1·3·5</label>
-                        <input type="color" id="app-flyer-wheel-color-odd" data-flyer-input />
-                        <label for="app-flyer-wheel-color-even">Parts 2·4·6</label>
-                        <input type="color" id="app-flyer-wheel-color-even" data-flyer-input />
+                    <input type="hidden" id="app-flyer-wheel-offset" value="0" data-flyer-input />
+                    <input type="hidden" id="app-flyer-wheel-color-odd" value="#fbbf24" data-flyer-input />
+                    <input type="hidden" id="app-flyer-wheel-color-even" value="#fbbf24" data-flyer-input />
+                    <input type="hidden" id="app-flyer-c1" value="#fbbf24" data-flyer-input />
+                    <input type="hidden" id="app-flyer-c2" value="#fbbf24" data-flyer-input />
+                    <input type="hidden" id="app-flyer-c3" value="#ffffff" data-flyer-input />
+                    <input type="hidden" id="app-flyer-bg1" value="#0f172a" data-flyer-input />
+                    <input type="hidden" id="app-flyer-bg2" value="#0f172a" data-flyer-input />
+                    <div class="app-flyer-qr-link-row">
+                      <label class="app-label" for="app-flyer-link">Lien de la page carte</label>
+                      <div class="app-flyer-qr-link-wrap">
+                        <input type="text" id="app-flyer-link" class="app-input" readonly autocomplete="off" />
+                        <button type="button" id="app-flyer-copy-link" class="app-btn app-btn-secondary">Copier</button>
                       </div>
-                    </div>
-                    <p class="app-flyer-chip-label" style="margin-top:1rem">Couleurs</p>
-                    <div class="app-flyer-colors">
-                      <div class="app-flyer-color-row">
-                        <label for="app-flyer-c1">Primaire</label>
-                        <input type="color" id="app-flyer-c1" data-flyer-input />
-                      </div>
-                      <div class="app-flyer-color-row">
-                        <label for="app-flyer-c2">Secondaire</label>
-                        <input type="color" id="app-flyer-c2" data-flyer-input />
-                      </div>
-                      <div class="app-flyer-color-row">
-                        <label for="app-flyer-c3">Texte clair</label>
-                        <input type="color" id="app-flyer-c3" data-flyer-input />
-                      </div>
-                      <div class="app-flyer-color-row">
-                        <label for="app-flyer-bg1">Fond haut</label>
-                        <input type="color" id="app-flyer-bg1" data-flyer-input />
-                      </div>
-                      <div class="app-flyer-color-row" style="grid-column:1/-1">
-                        <label for="app-flyer-bg2">Fond bas</label>
-                        <input type="color" id="app-flyer-bg2" data-flyer-input />
-                      </div>
+                      <button type="button" id="app-flyer-download" class="app-btn app-btn-primary app-flyer-download-main">Télécharger le flyer (PNG HD)</button>
+                      <p id="app-flyer-export-note" class="app-hint hidden" role="status"></p>
                     </div>
                     <div class="app-flyer-actions">
                       <button type="button" id="app-flyer-reset" class="app-btn app-btn-secondary">Réinitialiser</button>
@@ -1930,145 +1734,6 @@
           </section>
           <!-- Section Profil : infos établissement (nom, logo, adresse) -->
           <section id="profil" class="app-section app-section-profil" data-commerce-view="home">
-            <div class="app-commerce-mobile-topbar app-mobile-only">
-              <div class="app-commerce-topbar-main" id="app-commerce-topbar-main">
-                <div class="app-commerce-mobile-topbar__lead">
-                  <img id="app-commerce-mobile-avatar-img" class="app-commerce-mobile-topbar__avatar-img hidden" alt="" width="34" height="34" decoding="async" />
-                  <span id="app-commerce-mobile-initials" class="app-commerce-mobile-topbar__initials">ME</span>
-                </div>
-                <span id="app-commerce-mobile-name" class="app-commerce-mobile-topbar__name">Ma boutique</span>
-                <div class="app-commerce-mobile-topbar__actions">
-                  <button type="button" id="app-commerce-mobile-qr" class="app-commerce-mobile-topbar__btn" aria-label="Afficher la page fidélité">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg>
-                  </button>
-                  <button type="button" id="app-commerce-mobile-settings" class="app-commerce-mobile-topbar__btn" aria-label="Réglages">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                  </button>
-                </div>
-              </div>
-              <div class="app-commerce-topbar-reglages hidden" id="app-commerce-topbar-reglages" aria-hidden="true">
-                <button type="button" class="app-commerce-reglages-back" id="app-commerce-reglages-back" aria-label="Retour">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-                </button>
-                <span class="app-commerce-reglages-title">Réglages</span>
-                <span class="app-commerce-reglages-spacer" aria-hidden="true"></span>
-              </div>
-            </div>
-            <div class="app-commerce-ios-home app-mobile-only" id="app-commerce-ios-home">
-              <div class="app-commerce-ios-sheet">
-                <section class="app-commerce-ios-block app-commerce-ios-block--kpis" aria-label="Performances du mois">
-                  <header class="app-commerce-ios-block-head">
-                    <h2 class="app-commerce-ios-headline">Performance du commerce</h2>
-                    <p class="app-commerce-ios-subline">Vue rapide alignée sur l’app</p>
-                  </header>
-                  <div class="app-commerce-ios-kpi-grid">
-                    <article class="app-commerce-ios-kpi-card">
-                      <p class="app-commerce-ios-kpi-label">Cartes actives</p>
-                      <p class="app-commerce-ios-kpi-value" id="app-commerce-ios-stat-members">0</p>
-                    </article>
-                    <article class="app-commerce-ios-kpi-card">
-                      <p class="app-commerce-ios-kpi-label">Opérations</p>
-                      <p class="app-commerce-ios-kpi-value" id="app-commerce-ios-stat-scans">0</p>
-                    </article>
-                    <article class="app-commerce-ios-kpi-card">
-                      <p class="app-commerce-ios-kpi-label">Clients actifs</p>
-                      <p class="app-commerce-ios-kpi-value" id="app-commerce-ios-stat-active">0</p>
-                    </article>
-                    <article class="app-commerce-ios-kpi-card">
-                      <p class="app-commerce-ios-kpi-label">À relancer</p>
-                      <p class="app-commerce-ios-kpi-value" id="app-commerce-ios-stat-inactive">0</p>
-                    </article>
-                  </div>
-                </section>
-
-                <section class="app-commerce-ios-block" aria-label="Actions rapides">
-                  <h3 class="app-commerce-ios-section-title">Actions rapides</h3>
-                  <div class="app-commerce-ios-actions-grid">
-                    <button type="button" class="app-commerce-ios-action" id="app-commerce-ios-action-scan">
-                      <span class="app-commerce-ios-action-title">Scanner</span>
-                      <span class="app-commerce-ios-action-sub">QR client</span>
-                    </button>
-                    <button type="button" class="app-commerce-ios-action" id="app-commerce-ios-action-members">
-                      <span class="app-commerce-ios-action-title">Clients</span>
-                      <span class="app-commerce-ios-action-sub">Base membres</span>
-                    </button>
-                    <button type="button" class="app-commerce-ios-action" id="app-commerce-ios-action-notifs">
-                      <span class="app-commerce-ios-action-title">Notifs</span>
-                      <span class="app-commerce-ios-action-sub">Campagnes</span>
-                    </button>
-                    <button type="button" class="app-commerce-ios-action" id="app-commerce-ios-action-card">
-                      <span class="app-commerce-ios-action-title">Ma carte</span>
-                      <span class="app-commerce-ios-action-sub">Design & règles</span>
-                    </button>
-                  </div>
-                </section>
-
-                <section class="app-commerce-ios-block" aria-label="Checklist de lancement">
-                  <h3 class="app-commerce-ios-section-title">Checklist de lancement</h3>
-                  <p class="app-commerce-ios-progress-pill" id="app-commerce-ios-progress-pill">0 sur 2 étapes terminées</p>
-                  <button type="button" class="app-commerce-ios-step app-commerce-ios-step--pending" id="app-commerce-ios-step-flyer">
-                    <span class="app-commerce-ios-step-badge" aria-hidden="true">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    <span class="app-commerce-ios-step-body">
-                      <span class="app-commerce-ios-step-title">Flyer QR</span>
-                      <span class="app-commerce-ios-step-desc">Créez votre flyer et téléchargez le QR vitrine.</span>
-                    </span>
-                    <span class="app-commerce-ios-step-chevron" aria-hidden="true">›</span>
-                  </button>
-                  <button type="button" class="app-commerce-ios-step app-commerce-ios-step--pending" id="app-commerce-ios-step-engagement">
-                    <span class="app-commerce-ios-step-num" aria-hidden="true">2</span>
-                    <span class="app-commerce-ios-step-body">
-                      <span class="app-commerce-ios-step-title">Avis &amp; réseaux</span>
-                      <span class="app-commerce-ios-step-desc">Google, Instagram, TikTok, Facebook.</span>
-                    </span>
-                    <span class="app-commerce-ios-step-chevron" aria-hidden="true">›</span>
-                  </button>
-                </section>
-
-                <section class="app-commerce-ios-block" aria-label="Canaux connectés">
-                  <h3 class="app-commerce-ios-section-title">Canaux connectés</h3>
-                  <div class="app-commerce-ios-social-list">
-                    <button type="button" class="app-commerce-ios-social-row" id="app-commerce-ios-social-google">
-                      <span class="app-commerce-ios-social-icon app-commerce-ios-social-icon--google" aria-hidden="true">G</span>
-                      <span class="app-commerce-ios-social-text">
-                        <span class="app-commerce-ios-social-title">Google</span>
-                        <span class="app-commerce-ios-social-sub">Fiche Maps &amp; avis</span>
-                      </span>
-                      <span class="app-commerce-ios-social-cta">Configurer</span>
-                    </button>
-                    <button type="button" class="app-commerce-ios-social-row" id="app-commerce-ios-social-instagram">
-                      <span class="app-commerce-ios-social-icon app-commerce-ios-social-icon--ig" aria-hidden="true">◎</span>
-                      <span class="app-commerce-ios-social-text">
-                        <span class="app-commerce-ios-social-title">Instagram</span>
-                        <span class="app-commerce-ios-social-sub">Non connecté</span>
-                      </span>
-                      <span class="app-commerce-ios-social-chevron" aria-hidden="true">›</span>
-                    </button>
-                    <button type="button" class="app-commerce-ios-social-row" id="app-commerce-ios-social-tiktok">
-                      <span class="app-commerce-ios-social-icon app-commerce-ios-social-icon--tt" aria-hidden="true">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
-                      </span>
-                      <span class="app-commerce-ios-social-text">
-                        <span class="app-commerce-ios-social-title">TikTok</span>
-                        <span class="app-commerce-ios-social-sub">Non connecté</span>
-                      </span>
-                      <span class="app-commerce-ios-social-chevron" aria-hidden="true">›</span>
-                    </button>
-                    <button type="button" class="app-commerce-ios-social-row" id="app-commerce-ios-social-facebook">
-                      <span class="app-commerce-ios-social-icon app-commerce-ios-social-icon--fb" aria-hidden="true">f</span>
-                      <span class="app-commerce-ios-social-text">
-                        <span class="app-commerce-ios-social-title">Facebook</span>
-                        <span class="app-commerce-ios-social-sub">Non connecté</span>
-                      </span>
-                      <span class="app-commerce-ios-social-chevron" aria-hidden="true">›</span>
-                    </button>
-                  </div>
-                </section>
-
-                <button type="button" class="app-commerce-ios-open-reglages" id="app-commerce-ios-open-reglages">Compte, établissement et lien public</button>
-              </div>
-            </div>
             <div class="app-commerce-reglages-stack">
             <h2 class="app-section-title">Profil</h2>
             <div class="app-section-grid-wrap app-profil-grid">
@@ -2166,29 +1831,6 @@
                 </div>
               </div>
             </div>
-            <p class="app-mobile-profil-user app-mobile-only" id="app-mobile-profil-email"></p>
-            <ul class="app-mobile-profil-list app-mobile-only">
-              <li><a href="#membres" class="app-mobile-profil-item" data-section="membres">
-                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                Tous les membres
-              </a></li>
-              <li><a href="#flyer-qr" class="app-mobile-profil-item" data-section="flyer-qr">
-                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M3 14h4v4H3z"/></svg></span>
-                Flyer QR
-              </a></li>
-              <li><a href="#engagement" class="app-mobile-profil-item" data-section="engagement">
-                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
-                Avis & Réseaux
-              </a></li>
-              <li><a href="#personnaliser" class="app-mobile-profil-item" data-section="personnaliser">
-                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg></span>
-                Ma carte
-              </a></li>
-              <li><button type="button" class="app-mobile-profil-item logout" id="app-mobile-logout" style="width:100%;text-align:left;border:none;">
-                <span class="app-mobile-profil-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
-                Déconnexion
-              </button></li>
-            </ul>
             </div>
           </section>
         </div>
@@ -2235,38 +1877,6 @@
         </div>
       </div>
       </main>
-      <!-- Essai 3 j : capsule au-dessus de la barre d’onglets (mobile) -->
-      <div
-        id="app-mobile-trial-subscribe-pill"
-        class="app-mobile-trial-subscribe-pill hidden"
-        role="button"
-        tabindex="0"
-        aria-label="S’abonner : 3 jours offerts puis 1,00 € le 1er mois ou 399,00 € par an. Temps restant sur l’essai."
-      >
-        <p class="app-mobile-trial-subscribe-pill__headline">3 j gratuits, puis 1,00 € le 1er mois (mensuel) ou 399,00 €/an</p>
-        <div class="app-mobile-trial-subscribe-pill__actions">
-          <span class="app-mobile-trial-subscribe-pill__cta">S’abonner</span>
-          <span class="app-mobile-trial-subscribe-pill__badge">
-            <span class="app-mobile-trial-subscribe-pill__dot" aria-hidden="true"></span>
-            <span id="app-mobile-trial-subscribe-pill-remaining">—</span>
-          </span>
-        </div>
-      </div>
-      <!-- Barre d'onglets mobile — alignée app iOS : Accueil, Notifs, Commerce -->
-      <nav class="app-mobile-tab-bar" id="app-mobile-tab-bar" aria-label="Navigation principale" aria-hidden="true">
-        <button type="button" class="app-mobile-tab active" data-mobile-tab="dashboard" aria-current="page">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          Accueil
-        </button>
-        <button type="button" class="app-mobile-tab" data-mobile-tab="notifications">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-          Notifs
-        </button>
-        <button type="button" class="app-mobile-tab" data-mobile-tab="profil">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          Commerce
-        </button>
-      </nav>
       <div id="post-purchase-app-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="post-purchase-app-modal-title" aria-hidden="true">
         <div class="post-purchase-app-modal__sheet">
           <button type="button" class="post-purchase-app-modal__close" id="post-purchase-app-modal-close" aria-label="Fermer">×</button>
@@ -2421,7 +2031,7 @@
                 <h3 class="landing-footer-col-title-v3">Entreprise</h3>
                 <a href="/creer-ma-carte">Commencer</a>
                 <a href="#capabilities">Produit</a>
-                <a href="/choisir-offre">Tarifs</a>
+                <a href="/abonnement">Tarifs</a>
               </nav>
               <nav class="landing-footer-col-v3" aria-label="Fonctionnalités">
                 <h3 class="landing-footer-col-title-v3">Fonctionnalités</h3>

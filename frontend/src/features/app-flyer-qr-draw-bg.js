@@ -20,12 +20,12 @@ function hexToRgba(hex, a) {
  * @returns {string}
  */
 function resolveFlyerBaseBgHex(s) {
-  const primary = String(s?.colorPrimary || "").trim();
-  if (/^#[0-9A-Fa-f]{6}$/.test(primary)) return primary;
   const top = String(s?.colorBgTop || "").trim();
   if (/^#[0-9A-Fa-f]{6}$/.test(top)) return top;
   const bot = String(s?.colorBgBottom || "").trim();
   if (/^#[0-9A-Fa-f]{6}$/.test(bot)) return bot;
+  const primary = String(s?.colorPrimary || "").trim();
+  if (/^#[0-9A-Fa-f]{6}$/.test(primary)) return primary;
   return "#1f2937";
 }
 

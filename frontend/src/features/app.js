@@ -39,7 +39,6 @@ import {
 } from "./app-card-rules-point-tiers.js";
 import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../utils/geocoding.js";
 import { initAppFlyerQr } from "./app-flyer-qr.js";
-import { syncDashboardHomeCardPreview } from "./dashboard-home-card-preview.js";
 import {
   applyCommerceIosHomeState,
   wireCommerceIosShell,
@@ -187,29 +186,6 @@ function initAppPage() {
     window.location.replace("/");
   });
 
-  /** Bandeau + stats pour les comptes `is_admin` (pilotage tous les commerces). */
-  function mountPlatformAdminStrip(user) {
-    if (!user?.is_admin && !user?.isAdmin) return;
-    const root = document.getElementById("app-app");
-    if (!root || document.getElementById("app-platform-admin-strip")) return;
-    const bar = document.createElement("div");
-    bar.id = "app-platform-admin-strip";
-    bar.className = "app-platform-admin-strip";
-    bar.setAttribute("role", "status");
-    bar.innerHTML =
-      "<strong>Administration plateforme</strong> — Vue d’ensemble de tous les commerces rattachés à votre compte.";
-    root.insertBefore(bar, root.firstChild);
-    fetch(`${API_BASE}/api/admin/overview`, { headers: getAuthHeaders() })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (!j || !bar.isConnected) return;
-        const span = document.createElement("span");
-        span.textContent = ` — ${j.users_count ?? "?"} comptes, ${j.businesses_count ?? "?"} commerces.`;
-        bar.appendChild(span);
-      })
-      .catch(() => {});
-  }
-
   async function fetchAuthMe(retries = 3) {
     let lastStatus = null;
     let networkFail = false;
@@ -297,18 +273,10 @@ function initAppPage() {
         return;
       }
       const user = data.user;
-      const isPlatformAdmin = !!(user?.is_admin ?? user?.isAdmin);
       const merchantTrialEndsAt = data.merchant_trial_ends_at ?? data.merchantTrialEndsAt ?? null;
       const hasSubscription = !!(data.has_active_subscription ?? data.hasActiveSubscription);
-      if (!hasSubscription && !isPlatformAdmin) {
-        loadingEl?.classList.add("hidden");
-        window.location.replace("/choisir-offre");
-        return;
-      }
       const businesses = data.businesses || [];
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
-      const mobileProfilEmail = document.getElementById("app-mobile-profil-email");
-      if (mobileProfilEmail) mobileProfilEmail.textContent = user?.email || "";
       /* fidpass-auth-me : émis seulement après initAppDashboard (l’écouteur Profil y est enregistré). */
 
       if (businesses.length === 0) {
@@ -325,7 +293,6 @@ function initAppPage() {
         if (contentEl) contentEl.classList.add("hidden");
         if (businessNameEl) businessNameEl.textContent = "Mon espace";
         initAppSidebar();
-        mountPlatformAdminStrip(user);
         window.dispatchEvent(
           new CustomEvent("fidpass-auth-me", {
             detail: {
@@ -357,7 +324,6 @@ function initAppPage() {
       const business = businesses[0];
       if (businessNameEl) businessNameEl.textContent = business.organization_name || business.name || business.slug;
       initAppSidebar();
-      mountPlatformAdminStrip(user);
       initAppDashboard(business.slug);
       maybeLaunchFlyerCreditsCheckout(business);
       window.dispatchEvent(
@@ -492,7 +458,11 @@ function initAppPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (res.status === 403 && (data.code === "subscription_required")) {
-          window.location.replace("/choisir-offre");
+          if (emptyCreateError) {
+            emptyCreateError.textContent =
+              "Votre compte n'a pas encore d'abonnement actif. Contactez le support pour activer votre accès.";
+            emptyCreateError.classList.remove("hidden");
+          }
           return;
         }
         if (emptyCreateError) {
@@ -522,41 +492,9 @@ const APP_SECTION_IDS = [
   "profil",
 ];
 
-const APP_MOBILE_TITLES = {
-  "dashboard": "Accueil",
-  "membres": "Membres",
-  "personnaliser": "Ma carte",
-  "notifications": "Notifs",
-  "carte-perimetre": "Emplacement",
-  "flyer-qr": "Flyer QR",
-  "engagement": "Avis & Réseaux",
-  "profil": "Commerce",
-};
-
 /** @type {null | (() => void)} */
 let _flushNotificationBannerTextsRef = null;
 let _lastShownAppSectionId = null;
-
-/** Pastille essai : texte + marge topbar Commerce quand l’onglet Profil est actif et la pastille visible. */
-function syncTrialPillCommerceLayout() {
-  const app = document.getElementById("app-app");
-  const pill = document.getElementById("app-mobile-trial-subscribe-pill");
-  const topbar = document.querySelector("#profil .app-commerce-mobile-topbar");
-  const cta = document.querySelector(".app-mobile-trial-subscribe-pill__cta");
-  const sidebarTitle = document.querySelector(".app-sidebar-trial-subscribe-card__title");
-  const sidebarButton = document.getElementById("app-sidebar-trial-subscribe-btn");
-  if (!app) return;
-  const section = app.getAttribute("data-mobile-section") || "";
-  const trialVisible = !!(pill && !pill.classList.contains("hidden"));
-  if (sidebarTitle) sidebarTitle.textContent = "S’abonner pour 1€";
-  if (sidebarButton) sidebarButton.textContent = "S’abonner pour 1€";
-  if (cta) {
-    cta.textContent = section === "profil" ? "Profiter de l'offre" : "S’abonner pour 1€";
-  }
-  if (topbar) {
-    topbar.classList.toggle("app-commerce-mobile-topbar--below-trial-pill", section === "profil" && trialVisible);
-  }
-}
 
 function showAppSectionCore(sectionId) {
   const normalized = sectionId === "partager" ? "personnaliser" : sectionId;
@@ -585,16 +523,7 @@ function showAppSectionCore(sectionId) {
       document.querySelectorAll("#app-app .app-sidebar-link[data-section]").forEach((l) => {
         l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === "dashboard");
       });
-      document.querySelectorAll("#app-mobile-tab-bar .app-mobile-tab").forEach((t) => {
-        const on = t.getAttribute("data-mobile-tab") === "dashboard";
-        t.classList.toggle("active", on);
-        if (on) t.setAttribute("aria-current", "page");
-        else t.removeAttribute("aria-current");
-      });
       document.getElementById("app-app")?.setAttribute("data-mobile-section", "creer-commerce");
-      syncTrialPillCommerceLayout();
-      const headerTitleCreer = document.getElementById("app-mobile-header-title");
-      if (headerTitleCreer) headerTitleCreer.textContent = "Créer ma carte";
       const hashCreer = "#creer-commerce";
       if (window.location.hash !== hashCreer) {
         window.history.replaceState(null, "", window.location.pathname + hashCreer);
@@ -626,16 +555,7 @@ function showAppSectionCore(sectionId) {
   links.forEach((l) => {
     l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === id);
   });
-  document.querySelectorAll("#app-mobile-tab-bar .app-mobile-tab").forEach((t) => {
-    const on = t.getAttribute("data-mobile-tab") === id;
-    t.classList.toggle("active", on);
-    if (on) t.setAttribute("aria-current", "page");
-    else t.removeAttribute("aria-current");
-  });
   document.getElementById("app-app")?.setAttribute("data-mobile-section", id);
-  syncTrialPillCommerceLayout();
-  const headerTitle = document.getElementById("app-mobile-header-title");
-  if (headerTitle) headerTitle.textContent = APP_MOBILE_TITLES[id] || "Myfidpass";
   const newHash = "#" + id;
   if (window.location.hash !== newHash) {
     window.history.replaceState(null, "", window.location.pathname + newHash);
@@ -695,80 +615,13 @@ function initAppSidebar() {
 
 function initAppMobile() {
   const appEl = document.getElementById("app-app");
-  const tabBar = document.getElementById("app-mobile-tab-bar");
-  const headerScanBtn = document.getElementById("app-mobile-scan-btn");
-  const mobileLogout = document.getElementById("app-mobile-logout");
-  const mobileMessageInput = document.getElementById("app-mobile-message-input");
-  const mobileMessageSend = document.getElementById("app-mobile-message-send");
 
   function setMobileMode(isMobile) {
-    appEl?.classList.toggle("app-mobile", isMobile);
+    appEl?.classList.toggle("app-mobile", false);
   }
   const mq = window.matchMedia("(max-width: 768px)");
-  setMobileMode(mq.matches);
-  mq.addEventListener("change", (e) => setMobileMode(e.matches));
-
-  tabBar?.querySelectorAll(".app-mobile-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const id = tab.getAttribute("data-mobile-tab");
-      if (id && APP_SECTION_IDS.includes(id)) showAppSection(id);
-    });
-  });
-  window.addEventListener("fidpass-mobile-tab", (e) => {
-    const id = e.detail?.tab;
-    if (id && APP_SECTION_IDS.includes(id)) showAppSection(id);
-  });
-  function triggerFullscreenQrScan() {
-    const launchBtn = document.getElementById("app-scanner-launch-btn");
-    if (launchBtn) launchBtn.click();
-  }
-  headerScanBtn?.addEventListener("click", () => {
-    showAppSection("dashboard");
-    triggerFullscreenQrScan();
-  });
-  document.getElementById("app-mobile-scan-fab")?.addEventListener("click", () => {
-    showAppSection("dashboard");
-    triggerFullscreenQrScan();
-  });
-  document.getElementById("app-dashboard-recent-scan-btn")?.addEventListener("click", () => {
-    showAppSection("dashboard");
-    triggerFullscreenQrScan();
-  });
-  document.getElementById("app-commerce-mobile-qr")?.addEventListener("click", () => {
-    showAppSection("personnaliser");
-  });
-  document.getElementById("app-commerce-mobile-settings")?.addEventListener("click", () => {
-    setCommerceView("reglages");
-  });
-
-  wireCommerceIosShell({ showAppSection });
-
-  document.querySelectorAll(".app-mobile-profil-item[data-section]").forEach((item) => {
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
-      const id = item.getAttribute("data-section");
-      if (id) showAppSection(id);
-    });
-  });
-  mobileLogout?.addEventListener("click", () => {
-    clearAuthToken();
-    window.location.replace("/");
-  });
-
-  if (mobileMessageSend && mobileMessageInput) {
-    mobileMessageSend.addEventListener("click", () => {
-      const text = (mobileMessageInput.value || "").trim();
-      if (text) {
-        showAppSection("notifications");
-        const bannerMsg = document.getElementById("app-notification-banner-message");
-        if (bannerMsg) bannerMsg.value = text;
-      }
-    });
-  }
-
-  const profileEmailEl = document.getElementById("app-mobile-profil-email");
-  const userEmailEl = document.getElementById("app-user-email");
-  if (profileEmailEl && userEmailEl) profileEmailEl.textContent = userEmailEl.textContent || "";
+  setMobileMode(false);
+  mq.addEventListener("change", () => setMobileMode(false));
 }
 
 const DASHBOARD_TOKEN_STORAGE_KEY = "fidpass_dashboard_token";
@@ -793,6 +646,82 @@ function initAppDashboard(slug) {
     /* fetchWithAuth : refresh JWT si access token expiré — sinon req.user est null côté API et le dashboard renvoie « Token dashboard invalide ». */
     return fetchWithAuth(url, { ...opts, headers });
   };
+
+  const dashboardOnboardingGate = document.getElementById("app-dashboard-onboarding-gate");
+  const dashboardShellMain = document.getElementById("app-dashboard-shell-main");
+  const dashboardOnboardingCardStatus = document.getElementById("app-dashboard-onboarding-card-status");
+  const dashboardOnboardingFlyerStatus = document.getElementById("app-dashboard-onboarding-flyer-status");
+
+  function isDesktopViewport() {
+    return typeof window !== "undefined" && window.matchMedia("(min-width: 769px)").matches;
+  }
+
+  function isFlyerConfigured(settings) {
+    if (!settings || typeof settings !== "object") return false;
+    return Boolean(
+      settings.flyer_prefs_updated_at ||
+      settings.flyerPrefsUpdatedAt ||
+      settings.flyer_custom_bg_url ||
+      settings.flyerCustomBgUrl
+    );
+  }
+
+  function isCardConfigured(settings) {
+    if (!settings || typeof settings !== "object") return false;
+    return Boolean(
+      settings.logo_url ||
+      settings.logoUrl ||
+      settings.has_card_background ||
+      settings.hasCardBackground ||
+      settings.has_stamp_icon ||
+      settings.hasStampIcon
+    );
+  }
+
+  async function syncDashboardOnboardingGate() {
+    if (!dashboardOnboardingGate || !dashboardShellMain) return false;
+    if (!isDesktopViewport()) {
+      dashboardOnboardingGate.classList.add("hidden");
+      dashboardShellMain.classList.remove("hidden");
+      return false;
+    }
+    try {
+      const res = await api("/dashboard/settings");
+      if (!res.ok) {
+        dashboardOnboardingGate.classList.add("hidden");
+        dashboardShellMain.classList.remove("hidden");
+        return false;
+      }
+      const settings = await res.json();
+      const cardDone = isCardConfigured(settings);
+      const flyerDone = isFlyerConfigured(settings);
+      const allDone = cardDone && flyerDone;
+
+      if (dashboardOnboardingCardStatus) {
+        dashboardOnboardingCardStatus.textContent = cardDone ? "Configuré" : "Non configuré";
+        dashboardOnboardingCardStatus.classList.toggle("is-ready", cardDone);
+      }
+      if (dashboardOnboardingFlyerStatus) {
+        dashboardOnboardingFlyerStatus.textContent = flyerDone ? "Configuré" : "Non configuré";
+        dashboardOnboardingFlyerStatus.classList.toggle("is-ready", flyerDone);
+      }
+
+      dashboardOnboardingGate.classList.toggle("hidden", allDone);
+      dashboardShellMain.classList.toggle("hidden", !allDone);
+      return !allDone;
+    } catch (_) {
+      dashboardOnboardingGate.classList.add("hidden");
+      dashboardShellMain.classList.remove("hidden");
+      return false;
+    }
+  }
+
+  document.getElementById("app-dashboard-onboarding-card-btn")?.addEventListener("click", () => {
+    showAppSection("personnaliser");
+  });
+  document.getElementById("app-dashboard-onboarding-flyer-btn")?.addEventListener("click", () => {
+    showAppSection("flyer-qr");
+  });
 
   /** Logo retiré du menu latéral : hook conservé pour les appels existants (profil, Ma carte…). */
   function refreshSidebarBusinessLogo() {}
@@ -995,25 +924,6 @@ function initAppDashboard(slug) {
         "Vérifiez le lien proposé puis cliquez sur « Mettre à jour ». Attention : les anciens QR et liens cesseront de fonctionner.",
         false
       );
-      schedulePersonnaliserGroupStatusRefresh();
-    });
-  }
-
-  /** Accueil mobile : tap sur l’aperçu carte → « Ma carte », section Couleur / fond (comme l’app iOS). */
-  function openPersonnaliserFromHomeCardPreview() {
-    showAppSection("personnaliser");
-    const acc = document.getElementById("app-personnaliser-accordion");
-    const step = "colors";
-    if (acc) {
-      acc.querySelectorAll("[data-personnaliser-group]").forEach((group) => {
-        const isOpen = group.getAttribute("data-personnaliser-step") === step;
-        group.classList.toggle("is-open", isOpen);
-        const toggle = group.querySelector(".app-personnaliser-group-toggle");
-        if (toggle) toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      });
-    }
-    requestAnimationFrame(() => {
-      document.getElementById("app-personnaliser-panel-colors")?.scrollIntoView({ behavior: "smooth", block: "start" });
       schedulePersonnaliserGroupStatusRefresh();
     });
   }
@@ -2797,34 +2707,13 @@ function initAppDashboard(slug) {
       previewIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}` : "";
     }
   }
-  function syncIosHomeToolbar() {
-    const nm = document.getElementById("app-ios-home-business-name");
-    const src = document.getElementById("app-business-name");
-    if (nm && src) nm.textContent = (src.textContent || "").trim() || "";
-  }
   window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId === "dashboard") {
-      void syncDashboardHomeCardPreview({ api, slug, pageOrigin });
-      syncIosHomeToolbar();
-    }
     if (e.detail?.sectionId === "engagement") {
     runEngagementAutoSuggest();
     setEngagementPreviewIframeSrc();
     }
   }, { once: false });
   if (document.getElementById("engagement")?.classList.contains("app-section-visible")) setEngagementPreviewIframeSrc();
-  syncIosHomeToolbar();
-  document.getElementById("app-dash-home-header-right")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    showAppSection("engagement");
-  });
-  const dashHomeWalletCard = document.getElementById("app-dash-home-wallet-card");
-  if (dashHomeWalletCard) {
-    dashHomeWalletCard.addEventListener("click", (e) => {
-      if (e.target?.closest?.("#app-dash-home-header-right")) return;
-      openPersonnaliserFromHomeCardPreview();
-    });
-  }
 
   const emojiPickerEl = document.getElementById("app-stamp-emoji-picker");
   if (emojiPickerEl && stampEmojiEl) {
@@ -3849,21 +3738,15 @@ function initAppDashboard(slug) {
   }
 
   function updateMerchantTrialSubscribePillFromDetail(d) {
-    const pill = document.getElementById("app-mobile-trial-subscribe-pill");
-    const remainEl = document.getElementById("app-mobile-trial-subscribe-pill-remaining");
     const sidebarCard = document.getElementById("app-sidebar-trial-subscribe-card");
     const sidebarRemainEl = document.getElementById("app-sidebar-trial-subscribe-remaining");
     const syncVisibility = (visible) => {
-      if (pill) {
-        pill.classList.toggle("hidden", !visible);
-        pill.setAttribute("aria-hidden", visible ? "false" : "true");
-      }
       if (sidebarCard) {
         sidebarCard.classList.toggle("hidden", !visible);
         sidebarCard.setAttribute("aria-hidden", visible ? "false" : "true");
       }
     };
-    if (!pill && !sidebarCard) return;
+    if (!sidebarCard) return;
     const user = d.user || {};
     const isAdmin = !!(user.is_admin ?? user.isAdmin);
     const trialEndRaw = d.merchant_trial_ends_at ?? d.merchantTrialEndsAt ?? null;
@@ -3873,22 +3756,18 @@ function initAppDashboard(slug) {
     }
     if (isAdmin || !trialEndRaw) {
       syncVisibility(false);
-      syncTrialPillCommerceLayout();
       return;
     }
     const endMs = Date.parse(trialEndRaw);
     if (!Number.isFinite(endMs) || Date.now() >= endMs) {
       syncVisibility(false);
-      syncTrialPillCommerceLayout();
       return;
     }
     const tick = () => {
-      if (remainEl) remainEl.textContent = formatMerchantTrialRemainingLabel(trialEndRaw);
       if (sidebarRemainEl) sidebarRemainEl.textContent = formatMerchantTrialEndingHeadline(trialEndRaw);
       const t = Date.parse(trialEndRaw);
       if (Number.isFinite(t) && Date.now() >= t) {
         syncVisibility(false);
-        syncTrialPillCommerceLayout();
         if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
           clearInterval(window.__fidpassTrialPillTimer);
           window.__fidpassTrialPillTimer = null;
@@ -3900,29 +3779,14 @@ function initAppDashboard(slug) {
       window.__fidpassTrialPillTimer = setInterval(tick, 30000);
     }
     syncVisibility(true);
-    syncTrialPillCommerceLayout();
-  }
-
-  const trialPillEl = document.getElementById("app-mobile-trial-subscribe-pill");
-  if (trialPillEl) {
-    trialPillEl.addEventListener("click", () => {
-      window.location.href = "/choisir-offre";
-    });
-    trialPillEl.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " ") {
-        ev.preventDefault();
-        window.location.href = "/choisir-offre";
-      }
-    });
   }
   document.getElementById("app-sidebar-trial-subscribe-btn")?.addEventListener("click", () => {
-    window.location.href = "/choisir-offre";
+    window.location.href = "/app";
   });
 
   // Renseigne les infos compte (email, abonnement) à partir de /api/auth/me (événement émis après initAppDashboard)
   window.addEventListener("fidpass-auth-me", (e) => {
     const d = e.detail || {};
-    syncIosHomeToolbar();
     updateMerchantTrialSubscribePillFromDetail(d);
     const user = d.user;
     const subscription = d.subscription || null;
@@ -4970,10 +4834,6 @@ function initAppDashboard(slug) {
     // Broadcast des stats pour d'autres composants (ex: badge notifications)
     window.dispatchEvent(new CustomEvent("fidpass-dashboard-stats", { detail: { stats: data } }));
 
-    const mobileStatMembers = document.getElementById("app-mobile-stat-members");
-    const mobileStatScans = document.getElementById("app-mobile-stat-scans");
-    if (mobileStatMembers) mobileStatMembers.textContent = data.membersCount;
-    if (mobileStatScans) mobileStatScans.textContent = data.transactionsThisMonth;
     syncDashboardPeriodUI(period);
     renderDashboardInsights(data);
     return data;
@@ -5100,7 +4960,8 @@ function initAppDashboard(slug) {
   }
 
   async function refresh() {
-    void syncDashboardHomeCardPreview({ api, slug, pageOrigin });
+    const gateVisible = await syncDashboardOnboardingGate();
+    if (gateVisible) return;
     try {
       const stats = await loadStats();
       if (stats) renderOverviewAlerts(stats);
