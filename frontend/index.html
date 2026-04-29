@@ -431,7 +431,21 @@
         </div>
       </aside>
       <main class="app-main">
-        <div id="app-main-loading" class="app-main-loading" aria-live="polite">Chargement…</div>
+        <div
+          id="app-main-loading"
+          class="app-main-loading"
+          aria-live="polite"
+          aria-busy="true"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuetext="Chargement de votre espace"
+        >
+          <div class="app-main-loading__track" aria-hidden="true">
+            <div class="app-main-loading__fill" id="app-main-loading-fill"></div>
+          </div>
+          <span class="visually-hidden">Chargement de votre espace</span>
+        </div>
 
         <!-- Premier accès : héros + bandeau essai (voir app-saas-shell.css) -->
         <div id="app-saas-frc-cluster" class="app-saas-frc-cluster hidden" aria-hidden="true">

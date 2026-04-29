@@ -29,6 +29,7 @@ import {
 } from "./app-dirty-guard.js";
 import { initAppCardRulesGuide, refreshCardRulesChecklist } from "./app-card-rules-guide.js";
 import { updatePersonnaliserGroupStatusIndicators } from "./app-personnaliser-groups-status.js";
+import { startAppLoadingProgress, finishAppLoadingProgress } from "./app-shell-top-progress.js";
 import {
   setLastKnownBusinessSector,
   getLastKnownBusinessSector,
@@ -267,6 +268,7 @@ function initAppPage() {
   const emptyEl = document.getElementById("app-empty");
   const contentEl = document.getElementById("app-dashboard-content");
   const loadingEl = document.getElementById("app-main-loading");
+  startAppLoadingProgress(loadingEl);
   const loadErrorEl = document.getElementById("app-empty-load-error");
   const businessNameEl = document.getElementById("app-business-name");
   const userEmailEl = document.getElementById("app-user-email");
@@ -288,7 +290,7 @@ function initAppPage() {
       technical = options.technical ?? "";
       kind = options.kind ?? "unknown";
     }
-    if (loadingEl) loadingEl.classList.add("hidden");
+    finishAppLoadingProgress(loadingEl, { immediate: true });
     if (emptyEl) emptyEl.classList.remove("hidden");
     if (contentEl) contentEl.classList.add("hidden");
     emptyWelcomeEl?.classList.add("hidden");
@@ -375,7 +377,7 @@ function initAppPage() {
         return;
       }
       if (res.status === 401) {
-        loadingEl?.classList.add("hidden");
+        finishAppLoadingProgress(loadingEl, { immediate: true });
         const body = await res.json().catch(() => ({}));
         clearAuthToken();
         const code = body.code || "invalid";
@@ -413,7 +415,7 @@ function initAppPage() {
 
       if (businesses.length === 0) {
         document.getElementById("app-app")?.classList.add("app-awaiting-first-business");
-        loadingEl?.classList.add("hidden");
+        finishAppLoadingProgress(loadingEl);
         if (loadErrorEl) {
           loadErrorEl.textContent = "";
           loadErrorEl.classList.add("hidden");
@@ -444,7 +446,7 @@ function initAppPage() {
         return;
       }
       document.getElementById("app-app")?.classList.remove("app-awaiting-first-business");
-      loadingEl?.classList.add("hidden");
+      finishAppLoadingProgress(loadingEl);
       if (loadErrorEl) {
         loadErrorEl.textContent = "";
         loadErrorEl.classList.add("hidden");
