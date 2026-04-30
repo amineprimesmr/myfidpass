@@ -4,12 +4,15 @@ import {
   createOrUpdateSubscription,
   getBusinessById,
   getBusinessesByUserId,
+  getBusinessSubscriptionByStripeSubscriptionId,
+  getBusinessSubscriptionForUserBusiness,
   getSubscriptionByUserId,
   getUserByEmail,
   hasActiveSubscription,
   hasOperationalMerchantAccess,
   incrementFlyerAiGenerationsBonus,
   getSubscriptionByStripeSubscriptionId,
+  upsertBusinessSubscription,
 } from "../db.js";
 import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/stripe-webhook-events.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -37,6 +40,19 @@ const STRIPE_COUPON_ID_FIRST_MONTH_1_EUR = process.env.STRIPE_COUPON_ID_FIRST_MO
 const PRICE_ID_FLYER_PACK = process.env.STRIPE_PRICE_ID_FLYER_PACK || null;
 /** Nombre de générations créditées par achat (surcharge possible via metadata session). */
 const FLYER_PACK_GENERATIONS = Math.max(1, parseInt(process.env.FLYER_PACK_GENERATIONS || "25", 10) || 25);
+
+function normalizeBusinessSplitInterval(input) {
+  return String(input || "month").trim().toLowerCase() === "year" ? "year" : "month";
+}
+
+function resolveBusinessSplitAmountCents(totalBusinesses, businessIndexZeroBased) {
+  const total = Math.max(1, Math.floor(Number(totalBusinesses) || 1));
+  if (total <= 2) {
+    // 89,99 € total pour 2 commerces : on split en 45,00 + 44,99.
+    return businessIndexZeroBased % 2 === 0 ? 4500 : 4499;
+  }
+  return 3499;
+}
 
 function buildStripeSubscriptionTrialConfig() {
   if (STRIPE_SUBSCRIPTION_TRIAL_DAYS <= 0) return {};
@@ -267,6 +283,121 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
     console.error("Stripe embedded subscription error:", err);
     return res.status(500).json({
       error: err.message || "Impossible de créer l’abonnement",
+    });
+  }
+});
+
+/**
+ * POST /api/payment/create-business-checkout-session
+ * Abonnement Stripe dédié à un commerce (carte séparée par établissement).
+ * Body: { business_slug?: string, business_id?: string, interval?: "month"|"year" }
+ */
+router.post("/create-business-checkout-session", requireAuth, async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({
+      error: "Paiement non configuré",
+      code: "stripe_not_configured",
+    });
+  }
+  const userId = String(req.user.id);
+  const email = (req.user.email || "").trim().toLowerCase();
+  if (!email) {
+    return res.status(400).json({ error: "Email utilisateur requis" });
+  }
+
+  const ownedBusinesses = getBusinessesByUserId(userId);
+  if (!ownedBusinesses.length) {
+    return res.status(404).json({ error: "Aucun commerce disponible pour ce compte." });
+  }
+
+  const bodyBusinessId = String(req.body?.business_id || req.body?.businessId || "").trim();
+  const bodySlug = String(req.body?.business_slug || req.body?.businessSlug || "").trim().toLowerCase();
+  const targetBusiness =
+    ownedBusinesses.find((b) => b.id === bodyBusinessId) ||
+    ownedBusinesses.find((b) => String(b.slug || "").trim().toLowerCase() === bodySlug) ||
+    ownedBusinesses[0];
+
+  if (!targetBusiness?.id) {
+    return res.status(404).json({ error: "Commerce introuvable pour ce compte." });
+  }
+
+  const ordered = [...ownedBusinesses].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  const businessIndex = Math.max(0, ordered.findIndex((b) => b.id === targetBusiness.id));
+  const amountCents = resolveBusinessSplitAmountCents(ownedBusinesses.length, businessIndex);
+  const interval = normalizeBusinessSplitInterval(req.body?.interval);
+
+  try {
+    const existing = getBusinessSubscriptionForUserBusiness(userId, targetBusiness.id);
+    let customerId = existing?.stripe_customer_id ? String(existing.stripe_customer_id).trim() : "";
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email,
+        metadata: {
+          user_id: userId,
+          business_id: String(targetBusiness.id),
+          business_slug: String(targetBusiness.slug || ""),
+          billing_mode: "per_business",
+        },
+      });
+      customerId = customer.id;
+    }
+
+    upsertBusinessSubscription({
+      userId,
+      businessId: targetBusiness.id,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: existing?.stripe_subscription_id || null,
+      status: existing?.status || "incomplete",
+      amountCents,
+      interval,
+    });
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: `Abonnement commerce — ${targetBusiness.name || targetBusiness.slug || "Commerce"}`,
+            },
+            recurring: { interval },
+            unit_amount: amountCents,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${FRONTEND_URL}/app?business_subscription_paid=1&business_id=${encodeURIComponent(String(targetBusiness.id))}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${FRONTEND_URL}/app?business_subscription_cancel=1&business_id=${encodeURIComponent(String(targetBusiness.id))}`,
+      metadata: {
+        user_id: userId,
+        business_id: String(targetBusiness.id),
+        business_slug: String(targetBusiness.slug || ""),
+        billing_mode: "per_business",
+        amount_cents: String(amountCents),
+      },
+      subscription_data: {
+        metadata: {
+          user_id: userId,
+          business_id: String(targetBusiness.id),
+          business_slug: String(targetBusiness.slug || ""),
+          billing_mode: "per_business",
+          amount_cents: String(amountCents),
+        },
+      },
+    });
+    return res.json({
+      url: session.url,
+      business_id: targetBusiness.id,
+      business_slug: targetBusiness.slug,
+      amount_cents: amountCents,
+      interval,
+    });
+  } catch (err) {
+    console.error("Stripe business checkout session error:", err);
+    return res.status(500).json({
+      error: err.message || "Impossible de créer la session de paiement commerce.",
     });
   }
 });
@@ -543,6 +674,18 @@ export async function paymentWebhookHandler(req, res) {
           currentPeriodEnd: row.current_period_end || null,
         });
       }
+      const businessRow = getBusinessSubscriptionByStripeSubscriptionId(stripeSub.id);
+      if (businessRow?.user_id && businessRow?.business_id) {
+        upsertBusinessSubscription({
+          userId: String(businessRow.user_id),
+          businessId: String(businessRow.business_id),
+          stripeCustomerId: businessRow.stripe_customer_id || null,
+          stripeSubscriptionId: stripeSub.id,
+          status: "canceled",
+          amountCents: businessRow.amount_cents ?? null,
+          interval: businessRow.interval || "month",
+        });
+      }
     }
   } catch (err) {
     console.error("Stripe webhook handler error:", err);
@@ -583,6 +726,24 @@ async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
     status,
     currentPeriodEnd: end,
   });
+
+  const businessIdRaw = stripeSub.metadata?.business_id ? String(stripeSub.metadata.business_id).trim() : "";
+  const billingMode = String(stripeSub.metadata?.billing_mode || "").trim().toLowerCase();
+  if (businessIdRaw && billingMode === "per_business") {
+    const items = stripeSub.items?.data || [];
+    const firstItem = items[0] || null;
+    const amountCents = firstItem?.price?.unit_amount ?? null;
+    const interval = normalizeBusinessSplitInterval(firstItem?.price?.recurring?.interval || "month");
+    upsertBusinessSubscription({
+      userId,
+      businessId: businessIdRaw,
+      stripeCustomerId,
+      stripeSubscriptionId: stripeSub.id,
+      status,
+      amountCents,
+      interval,
+    });
+  }
 }
 
 /**

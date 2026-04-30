@@ -33,7 +33,7 @@ const SCALE_REST = 1;
  * Verticale : départ plus haut (translateY < 0), fin position de repos plus bas (0).
  * Les px sont le déplacement appliqué sur le mockup 3D.
  */
-const TRANSLATE_Y_START_HIGH = -64;
+const TRANSLATE_Y_START_HIGH = -44;
 const TRANSLATE_Y_END_REST = 0;
 /** Marge haute de la scène (fixe en CSS) — l’ancienne animation marginTop 24→200 est dans le translateY. */
 const FINTAP_SCENE_LAYOUT_MARGIN_PX = 24;

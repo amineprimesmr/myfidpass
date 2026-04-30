@@ -77,6 +77,22 @@ export function runSchema(db) {
   );
   CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
 
+  CREATE TABLE IF NOT EXISTS merchant_business_subscriptions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    business_id TEXT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
+    status TEXT NOT NULL DEFAULT 'incomplete',
+    amount_cents INTEGER,
+    interval TEXT NOT NULL DEFAULT 'month',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id, business_id)
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_merchant_business_subs_stripe_sub ON merchant_business_subscriptions(stripe_subscription_id);
+  CREATE INDEX IF NOT EXISTS idx_merchant_business_subs_user_status ON merchant_business_subscriptions(user_id, status);
+
   CREATE TABLE IF NOT EXISTS merchant_entitlements (
     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     allowed_businesses INTEGER NOT NULL DEFAULT 1,

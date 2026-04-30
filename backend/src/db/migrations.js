@@ -1457,4 +1457,31 @@ export function runMigrations(db) {
     );
     markMigrationApplied(db, 33, "merchant_entitlements_multi_business");
   }
+
+  // ── v34 : abonnements Stripe par commerce (cartes séparées) ──
+  const m34 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 34").get();
+  if (!m34) {
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS merchant_business_subscriptions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          business_id TEXT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+          stripe_customer_id TEXT,
+          stripe_subscription_id TEXT,
+          status TEXT NOT NULL DEFAULT 'incomplete',
+          amount_cents INTEGER,
+          interval TEXT NOT NULL DEFAULT 'month',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, business_id)
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_merchant_business_subs_stripe_sub
+          ON merchant_business_subscriptions(stripe_subscription_id);
+        CREATE INDEX IF NOT EXISTS idx_merchant_business_subs_user_status
+          ON merchant_business_subscriptions(user_id, status);
+      `),
+    );
+    markMigrationApplied(db, 34, "merchant_business_subscriptions_split_cards");
+  }
 }

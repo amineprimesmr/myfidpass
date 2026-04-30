@@ -123,6 +123,7 @@ export function deleteUserAccount(userId) {
     safeDeleteByUser("merchant_device_tokens");
     safeDeleteByUser("password_reset_tokens");
     safeDeleteByUser("subscriptions");
+    safeDeleteByUser("merchant_business_subscriptions");
     safeDeleteByUser("refresh_tokens");
     safeDeleteByUser("merchant_entitlements");
     safeDeleteByUser("business_team_members");
@@ -168,6 +169,12 @@ export function resetAllData() {
   db.exec("DELETE FROM password_reset_tokens");
   try {
     db.exec("DELETE FROM refresh_tokens");
+  } catch (_) {}
+  try {
+    db.exec("DELETE FROM merchant_business_subscriptions");
+  } catch (_) {}
+  try {
+    db.exec("DELETE FROM merchant_entitlements");
   } catch (_) {}
   db.exec("DELETE FROM subscriptions");
   db.exec("DELETE FROM users");

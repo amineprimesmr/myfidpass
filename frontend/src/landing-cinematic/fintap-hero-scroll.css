@@ -284,6 +284,7 @@
   will-change: transform;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  transform: translateZ(0);
   /* pas de transition sur transform/ombre (animation pilotée en JS) */
   transition: none;
   background: transparent;
@@ -297,11 +298,15 @@
   user-select: none;
   -webkit-user-drag: none;
   background: transparent;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* État initial 3D (avant 1er run JS) : même base que ratio 0 — plus zoomé qu’en fin d’anim */
 #iphoneMockup.fintap-iphone-mockup {
-  transform: translate3d(0, -64px, 0) rotateX(38deg) rotateY(0deg) rotateZ(0deg) scale(1.52);
+  transform: translate3d(0, -44px, 0) rotateX(38deg) rotateY(0deg) rotateZ(0deg) scale(1.52);
   box-shadow: none;
 }
 

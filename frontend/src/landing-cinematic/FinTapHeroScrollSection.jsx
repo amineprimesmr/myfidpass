@@ -9,37 +9,12 @@ import { API_BASE } from "../config.js";
 import "./fintap-hero-scroll.css";
 
 const HERO_IPHONE_IMG = "/assets/iphone-custom-clean.png";
+const HERO_IPHONE_IMG_MOBILE = "/assets/iphone-custom-clean-mobile.png";
 const TRIGGER_PX = 400;
+const IOS_MOBILE_TRIGGER_PX = 560;
 const DESKTOP_SCROLL_BRAKE_START_RATIO = 0.62;
 const DESKTOP_SCROLL_BRAKE_FACTOR = 0.45;
-
-/**
- * Ancêtres qui reçoivent vraiment le scroll (page ou conteneur scrollable).
- * @param {Element | null} from
- * @returns {(Window | EventTarget)[]}
- */
-function getScrollListenerRoots(from) {
-  const out = [/** @type {Window} */ (window)];
-  if (!from) return out;
-  const seen = new Set(out);
-  let p = from.parentElement;
-  while (p) {
-    const s = getComputedStyle(p);
-    if (
-      p.scrollHeight > p.clientHeight + 1 &&
-      (s.overflowY === "auto" ||
-        s.overflowY === "scroll" ||
-        s.overflowY === "overlay")
-    ) {
-      if (!seen.has(p)) {
-        out.push(p);
-        seen.add(p);
-      }
-    }
-    p = p.parentElement;
-  }
-  return out;
-}
+const IOS_MOBILE_UA_RE = /iP(hone|ad|od)|Macintosh.*Mobile/i;
 
 /**
  * @param {HTMLElement | null} phone
@@ -67,7 +42,6 @@ function setPhoneStaticFront(phone) {
 export function FinTapHeroScrollSection() {
   const sectionRef = useRef(null);
   const phoneRef = useRef(null);
-  const rafRef = useRef(0);
   const loopRef = useRef(0);
   /** Scroll document au moment où l’effet = ratio 0 (fixé, sauf changement de largeur). */
   const scroll0Ref = useRef(/** @type {number | null} */ (null));
@@ -84,6 +58,9 @@ export function FinTapHeroScrollSection() {
   const [predictionsOpen, setPredictionsOpen] = useState(false);
   const searchInputRef = useRef(null);
   const searchWrapRef = useRef(null);
+  const isIosMobileRef = useRef(
+    typeof navigator !== "undefined" && IOS_MOBILE_UA_RE.test(navigator.userAgent)
+  );
 
   /**
    * En desktop, on freine la progression après un certain point pour
@@ -100,6 +77,7 @@ export function FinTapHeroScrollSection() {
       slowStartPx + (scrollDelta - slowStartPx) * DESKTOP_SCROLL_BRAKE_FACTOR;
     return fintapHeroScrollRatio(slowedDeltaPx, 0, TRIGGER_PX);
   };
+  const smoothstep = (t) => t * t * (3 - 2 * t);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -125,7 +103,10 @@ export function FinTapHeroScrollSection() {
       if (window.innerWidth >= 1024) {
         targetRatioRef.current = computeDesktopBrakedRatio(delta);
       } else {
-        targetRatioRef.current = fintapHeroScrollRatio(sy, scroll0Ref.current, TRIGGER_PX);
+        const triggerPx = isIosMobileRef.current ? IOS_MOBILE_TRIGGER_PX : TRIGGER_PX;
+        const raw = fintapHeroScrollRatio(sy, scroll0Ref.current, triggerPx);
+        const eased = isIosMobileRef.current ? smoothstep(raw) : raw;
+        targetRatioRef.current = eased;
       }
     };
 
@@ -139,15 +120,21 @@ export function FinTapHeroScrollSection() {
         style.translateY += lerp(1020, 0, ratio);
       } else {
         style.translateX = 0;
+        if (isIosMobileRef.current) {
+          // Courbe iPhone réelle: moins de tilt/zoom, animation plus “continue” au doigt.
+          style.rotateX = lerp(24, 0, ratio);
+          style.scale = lerp(1.26, 1, ratio);
+        }
       }
       setPhone3d(phone, style);
     };
 
     const animate = () => {
-      loopRef.current = 0;
+      run();
       const target = targetRatioRef.current;
       const current = currentRatioRef.current;
-      const next = current + (target - current) * 0.18;
+      const smoothing = window.innerWidth >= 1024 ? 0.18 : 0.26;
+      const next = current + (target - current) * smoothing;
       let nextCtaVisible;
       if (window.innerWidth >= 1024) {
         const showThreshold = 0.68;
@@ -176,27 +163,12 @@ export function FinTapHeroScrollSection() {
       if (Math.abs(target - next) < 0.0012) {
         currentRatioRef.current = target;
         paint(target);
+        loopRef.current = requestAnimationFrame(animate);
         return;
       }
       currentRatioRef.current = next;
       paint(next);
       loopRef.current = requestAnimationFrame(animate);
-    };
-
-    const startLoopIfNeeded = () => {
-      if (loopRef.current) return;
-      loopRef.current = requestAnimationFrame(animate);
-    };
-
-    const tick = () => {
-      rafRef.current = 0;
-      run();
-      startLoopIfNeeded();
-    };
-
-    const onScroll = () => {
-      if (rafRef.current) return;
-      rafRef.current = requestAnimationFrame(tick);
     };
 
     /**
@@ -213,50 +185,29 @@ export function FinTapHeroScrollSection() {
       if (w === lastInnerWidthRef.current) return;
       lastInnerWidthRef.current = w;
       scroll0Ref.current = null;
-      onScroll();
+      run();
     };
 
     if (reduced.addEventListener) {
-      reduced.addEventListener("change", onScroll);
+      reduced.addEventListener("change", run);
     } else {
-      reduced.addListener(onScroll);
+      reduced.addListener(run);
     }
 
     lastInnerWidthRef.current = window.innerWidth;
-    const roots = getScrollListenerRoots(section);
-    const scrollOpts = { passive: true };
-    for (const r of roots) {
-      if (r === window) {
-        window.addEventListener("scroll", onScroll, scrollOpts);
-      } else {
-        (/** @type {EventTarget} */ (r)).addEventListener("scroll", onScroll, scrollOpts);
-      }
-    }
     window.addEventListener("resize", onResizeWidthOnly, { passive: true });
-
-    onScroll();
+    run();
+    loopRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (reduced.removeEventListener) {
-        reduced.removeEventListener("change", onScroll);
+        reduced.removeEventListener("change", run);
       } else {
-        reduced.removeListener(onScroll);
-      }
-      for (const r of roots) {
-        if (r === window) {
-          window.removeEventListener("scroll", onScroll, scrollOpts);
-        } else {
-          (/** @type {EventTarget} */ (r)).removeEventListener(
-            "scroll",
-            onScroll,
-            scrollOpts
-          );
-        }
+        reduced.removeListener(run);
       }
       window.removeEventListener("resize", onResizeWidthOnly, {
         passive: true,
       });
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (loopRef.current) cancelAnimationFrame(loopRef.current);
     };
   }, []);
@@ -342,8 +293,10 @@ export function FinTapHeroScrollSection() {
             <img
               className="fintap-iphone-mockup__img"
               src={HERO_IPHONE_IMG}
-              width={3881}
-              height={8399}
+              srcSet={`${HERO_IPHONE_IMG_MOBILE} 434w, ${HERO_IPHONE_IMG} 838w`}
+              sizes="(max-width: 767px) 280px, 320px"
+              width={838}
+              height={1736}
               alt=""
               loading="eager"
               decoding="async"

@@ -83,6 +83,94 @@ export function getMerchantEntitlementByUserId(userId) {
   return row || null;
 }
 
+export function getBusinessSubscriptionByStripeSubscriptionId(stripeSubscriptionId) {
+  if (!stripeSubscriptionId) return null;
+  const row = db
+    .prepare(
+      `SELECT id, user_id, business_id, stripe_customer_id, stripe_subscription_id, status, amount_cents, interval, created_at, updated_at
+       FROM merchant_business_subscriptions
+       WHERE stripe_subscription_id = ?`,
+    )
+    .get(String(stripeSubscriptionId).trim());
+  return row || null;
+}
+
+export function getBusinessSubscriptionsByUserId(userId) {
+  if (!userId) return [];
+  return db
+    .prepare(
+      `SELECT id, user_id, business_id, stripe_customer_id, stripe_subscription_id, status, amount_cents, interval, created_at, updated_at
+       FROM merchant_business_subscriptions
+       WHERE user_id = ?
+       ORDER BY datetime(created_at) DESC`,
+    )
+    .all(userId);
+}
+
+export function getBusinessSubscriptionForUserBusiness(userId, businessId) {
+  if (!userId || !businessId) return null;
+  const row = db
+    .prepare(
+      `SELECT id, user_id, business_id, stripe_customer_id, stripe_subscription_id, status, amount_cents, interval, created_at, updated_at
+       FROM merchant_business_subscriptions
+       WHERE user_id = ? AND business_id = ?`,
+    )
+    .get(userId, businessId);
+  return row || null;
+}
+
+export function upsertBusinessSubscription({
+  userId,
+  businessId,
+  stripeCustomerId = null,
+  stripeSubscriptionId = null,
+  status = "incomplete",
+  amountCents = null,
+  interval = "month",
+}) {
+  if (!userId || !businessId) return null;
+  const now = new Date().toISOString();
+  const amount = Number.isFinite(Number(amountCents)) ? Math.max(0, Math.floor(Number(amountCents))) : null;
+  const safeInterval = String(interval || "month").trim().toLowerCase() === "year" ? "year" : "month";
+  db.prepare(
+    `INSERT INTO merchant_business_subscriptions
+      (id, user_id, business_id, stripe_customer_id, stripe_subscription_id, status, amount_cents, interval, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(user_id, business_id) DO UPDATE SET
+       stripe_customer_id = COALESCE(excluded.stripe_customer_id, merchant_business_subscriptions.stripe_customer_id),
+       stripe_subscription_id = COALESCE(excluded.stripe_subscription_id, merchant_business_subscriptions.stripe_subscription_id),
+       status = excluded.status,
+       amount_cents = COALESCE(excluded.amount_cents, merchant_business_subscriptions.amount_cents),
+       interval = COALESCE(excluded.interval, merchant_business_subscriptions.interval),
+       updated_at = excluded.updated_at`,
+  ).run(
+    randomUUID(),
+    userId,
+    businessId,
+    stripeCustomerId || null,
+    stripeSubscriptionId || null,
+    status || "incomplete",
+    amount,
+    safeInterval,
+    now,
+    now,
+  );
+  return getBusinessSubscriptionForUserBusiness(userId, businessId);
+}
+
+export function countActiveBusinessSubscriptionsByUserId(userId) {
+  if (!userId) return 0;
+  const row = db
+    .prepare(
+      `SELECT COUNT(*) AS c
+       FROM merchant_business_subscriptions
+       WHERE user_id = ?
+         AND lower(trim(COALESCE(status, ''))) IN ('active', 'trialing', 'past_due')`,
+    )
+    .get(userId);
+  return Number(row?.c || 0);
+}
+
 export function upsertMerchantEntitlement({
   userId,
   allowedBusinesses,
@@ -126,9 +214,13 @@ export function resolveEffectiveAllowedBusinesses(userId) {
   if (isUserInMerchantTrial(userId)) {
     return 999;
   }
+  const businessSplitPaidCount = countActiveBusinessSubscriptionsByUserId(userId);
   const entitlement = getMerchantEntitlementByUserId(userId);
-  if (entitlement) {
-    return Math.max(1, Math.floor(Number(entitlement.allowed_businesses) || 1));
+  const entitlementAllowed = entitlement
+    ? Math.max(1, Math.floor(Number(entitlement.allowed_businesses) || 1))
+    : null;
+  if (entitlementAllowed != null || businessSplitPaidCount > 0) {
+    return Math.max(1, entitlementAllowed || 1, businessSplitPaidCount);
   }
   const sub = getSubscriptionByUserId(userId);
   return getDefaultAllowedBusinessesFromLegacyPlan(sub?.plan_id);
