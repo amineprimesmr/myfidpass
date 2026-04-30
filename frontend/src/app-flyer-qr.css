@@ -334,6 +334,24 @@
   gap: 0.65rem;
   margin-bottom: 1rem;
 }
+#app-app .app-flyer-colors.hidden {
+  display: none !important;
+}
+
+#app-app .app-flyer-colors-toggle {
+  width: 100%;
+  margin: 0.75rem 0 0.55rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid var(--app-border, #e8ecf1);
+  background: #fff;
+  color: var(--app-text, #1a202c);
+  text-align: left;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
 
 #app-app .app-flyer-color-row {
   display: flex;
@@ -361,6 +379,16 @@
 }
 #app-app .app-flyer-color-row .app-flyer-swatches {
   margin-left: 0.15rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  overflow: hidden;
+  row-gap: 0.3rem;
+}
+
+#app-app .app-flyer-panel {
+  overflow-x: hidden;
 }
 
 #app-app .app-flyer-headline-style-grid {

@@ -919,7 +919,6 @@
                   </div>
                 </div>
                 <div class="app-flyer-qr-side">
-                  <button type="button" id="app-flyer-panel-toggle" class="app-flyer-panel-toggle" aria-expanded="false" aria-controls="app-flyer-panel">Personnaliser le flyer</button>
                   <div id="app-flyer-panel" class="app-flyer-panel">
                     <div id="app-flyer-logo-panel" class="app-flyer-logo-panel">
                       <p class="app-flyer-chip-label">Logo du flyer</p>
@@ -947,15 +946,17 @@
                       <input type="file" id="app-flyer-bg-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Importer une image de fond pour le flyer" />
                       <p id="app-flyer-bg-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
                     </div>
-                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Couleurs du flyer</p>
-                    <div class="app-flyer-colors">
+                    <div class="app-flyer-colors-block">
+                      <button type="button" id="app-flyer-colors-toggle" class="app-flyer-colors-toggle" aria-expanded="false" aria-controls="app-flyer-colors-panel">Couleurs du flyer</button>
+                      <div id="app-flyer-colors-panel" class="app-flyer-colors hidden">
                       <div class="app-flyer-color-row">
-                        <label for="app-flyer-bg-solid">Fond</label>
+                        <label for="app-flyer-bg-solid" class="hidden" aria-hidden="true">Fond</label>
                         <input type="color" id="app-flyer-bg-solid" value="#0f172a" data-flyer-input />
                       </div>
                       <div class="app-flyer-color-row">
                         <label for="app-flyer-accent-unified" class="hidden" aria-hidden="true">Couleur roue + cadeau + bandeau</label>
                         <input type="color" id="app-flyer-accent-unified" value="#fbbf24" data-flyer-input />
+                      </div>
                       </div>
                     </div>
                     <input type="hidden" id="app-flyer-headline" value="SCANNEZ &amp; GAGNEZ VOTRE CADEAU !" data-flyer-input />
@@ -1008,67 +1009,6 @@
             <div class="app-personnaliser-col-left">
             <div class="app-card app-personnaliser-card">
               <div class="app-personnaliser-accordion" id="app-personnaliser-accordion">
-                <section class="app-personnaliser-group" data-personnaliser-group data-personnaliser-step="colors">
-                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-colors">
-                    <span class="app-personnaliser-group-status is-status-pending" role="img" aria-label="À compléter"></span>
-                    <span class="app-personnaliser-group-title" id="app-personnaliser-colors-group-title">Couleurs et image</span>
-                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
-                  </button>
-                  <div id="app-personnaliser-panel-colors" class="app-personnaliser-group-panel">
-                    <div class="app-personnaliser-group-panel-inner">
-              <div class="app-personnaliser-colors">
-                <div class="app-color-row">
-                  <label class="app-label" for="app-personnaliser-bg" id="app-logo-colors-aria-bg">Fond</label>
-                  <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#ffffff" />
-                  <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
-                  <div id="app-logo-colors-swatches-bg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-bg"></div>
-                </div>
-                <div class="app-color-row">
-                  <label class="app-label" for="app-personnaliser-label" id="app-logo-colors-aria-lbl">Titre</label>
-                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#000000" />
-                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#000000" maxlength="7" />
-                  <div id="app-logo-colors-swatches-label" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-lbl"></div>
-                </div>
-                <div class="app-color-row">
-                  <label class="app-label" for="app-personnaliser-fg" id="app-logo-colors-aria-fg">Texte</label>
-                  <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#0f172a" />
-                  <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#0f172a" maxlength="7" />
-                  <div id="app-logo-colors-swatches-fg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-fg"></div>
-                </div>
-                <input type="hidden" id="app-personnaliser-strip" value="#ffffff" />
-                <input type="hidden" id="app-personnaliser-strip-hex" value="#ffffff" />
-              </div>
-                      <div id="app-personnaliser-card-bg-wrap">
-                      <p class="app-step-label">Image de fond de carte</p>
-                      <div class="app-personnaliser-card-bg">
-                        <div class="app-drop-zone app-personnaliser-card-bg-zone app-media-drop-wrap" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
-                          <input type="file" id="app-personnaliser-card-bg" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                          <label for="app-personnaliser-card-bg" class="app-logo-label">
-                            <span id="app-personnaliser-card-bg-placeholder">+ Choisir une image de fond (glisser une image, cliquer ou coller Ctrl+V)</span>
-                            <img id="app-personnaliser-card-bg-preview" class="app-logo-preview hidden" alt="" />
-                          </label>
-                          <button type="button" id="app-personnaliser-card-bg-clear" class="app-media-drop-clear hidden" aria-label="Supprimer l'image de fond" title="Supprimer">×</button>
-                        </div>
-                      </div>
-                      </div>
-                      <div id="app-personnaliser-stamp-icon-wrap" class="hidden" aria-hidden="true">
-                        <p class="app-step-label">Icône tampons</p>
-                        <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône">
-                          <div class="app-stamp-icon-custom-wrap">
-                            <div class="app-drop-zone app-stamp-icon-custom app-media-drop-wrap" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
-                              <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                              <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
-                                <span id="app-stamp-icon-placeholder">+</span>
-                                <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
-                              </label>
-                              <button type="button" id="app-stamp-icon-remove" class="app-media-drop-clear app-media-drop-clear--compact hidden" aria-label="Supprimer l'icône personnalisée" title="Supprimer">×</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
                 <section class="app-personnaliser-group" data-personnaliser-group data-personnaliser-step="logo">
                   <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-logo">
                     <span class="app-personnaliser-group-status is-status-pending" role="img" aria-label="À compléter"></span>
@@ -1098,6 +1038,77 @@
                 </div>
               </div>
                 </section>
+                <section class="app-personnaliser-group" data-personnaliser-group data-personnaliser-step="media">
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-media">
+                    <span class="app-personnaliser-group-status is-status-pending" role="img" aria-label="À compléter"></span>
+                    <span class="app-personnaliser-group-title" id="app-personnaliser-media-group-title">Image de fond</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-media" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
+                      <div id="app-personnaliser-card-bg-wrap">
+                      <div class="app-personnaliser-card-bg">
+                        <div class="app-drop-zone app-personnaliser-card-bg-zone app-media-drop-wrap" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                          <input type="file" id="app-personnaliser-card-bg" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                          <label for="app-personnaliser-card-bg" class="app-logo-label">
+                            <span id="app-personnaliser-card-bg-placeholder">+ Choisir une image de fond (glisser une image, cliquer ou coller Ctrl+V)</span>
+                            <img id="app-personnaliser-card-bg-preview" class="app-logo-preview hidden" alt="" />
+                          </label>
+                          <button type="button" id="app-personnaliser-card-bg-clear" class="app-media-drop-clear hidden" aria-label="Supprimer l'image de fond" title="Supprimer">×</button>
+                        </div>
+                      </div>
+                      </div>
+                      <div id="app-personnaliser-stamp-icon-wrap" class="hidden" aria-hidden="true">
+                        <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône">
+                          <div class="app-stamp-icon-custom-wrap">
+                            <div class="app-drop-zone app-stamp-icon-custom app-media-drop-wrap" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                              <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                              <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
+                                <span id="app-stamp-icon-placeholder">+</span>
+                                <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
+                              </label>
+                              <button type="button" id="app-stamp-icon-remove" class="app-media-drop-clear app-media-drop-clear--compact hidden" aria-label="Supprimer l'icône personnalisée" title="Supprimer">×</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="app-personnaliser-group" data-personnaliser-group data-personnaliser-step="colors">
+                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-colors">
+                    <span class="app-personnaliser-group-status is-status-pending" role="img" aria-label="À compléter"></span>
+                    <span class="app-personnaliser-group-title" id="app-personnaliser-colors-group-title">Couleurs</span>
+                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
+                  </button>
+                  <div id="app-personnaliser-panel-colors" class="app-personnaliser-group-panel">
+                    <div class="app-personnaliser-group-panel-inner">
+              <div class="app-personnaliser-colors">
+                <div class="app-color-row">
+                  <label class="app-label" for="app-personnaliser-bg" id="app-logo-colors-aria-bg">Fond</label>
+                  <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#ffffff" />
+                  <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
+                  <div id="app-logo-colors-swatches-bg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-bg"></div>
+                </div>
+                <div class="app-color-row">
+                  <label class="app-label" for="app-personnaliser-label" id="app-logo-colors-aria-lbl">Titre</label>
+                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#000000" />
+                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#000000" maxlength="7" />
+                  <div id="app-logo-colors-swatches-label" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-lbl"></div>
+                </div>
+                <div class="app-color-row">
+                  <label class="app-label" for="app-personnaliser-fg" id="app-logo-colors-aria-fg">Texte</label>
+                  <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#0f172a" />
+                  <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#0f172a" maxlength="7" />
+                  <div id="app-logo-colors-swatches-fg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-fg"></div>
+                </div>
+                <input type="hidden" id="app-personnaliser-strip" value="#ffffff" />
+                <input type="hidden" id="app-personnaliser-strip-hex" value="#ffffff" />
+                <button type="button" id="app-personnaliser-colors-more-toggle" class="app-btn app-btn-secondary app-personnaliser-colors-more-toggle">Voir plus</button>
+              </div>
+                    </div>
+                  </div>
+                </section>
                 <section class="app-personnaliser-group" data-personnaliser-group data-personnaliser-step="rules">
                   <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-rules">
                     <span class="app-personnaliser-group-status is-status-pending" role="img" aria-label="À compléter"></span>
@@ -1121,35 +1132,36 @@
                               <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line hidden" aria-hidden="true"></p>
                               <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector hidden" aria-hidden="true" tabindex="-1">Réappliquer les exemples du secteur</button>
                               <div class="app-points-tier-row">
-                                <label class="app-label" for="app-points-tier-0-points">Palier 1</label>
+                                <label class="app-label visually-hidden" for="app-points-tier-0-points">Récompense 1</label>
                                 <div class="app-points-tier-fields">
                                   <input type="number" id="app-points-tier-0-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 1 — points" />
                                   <input type="text" id="app-points-tier-0-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Palier 1 — récompense" />
                                 </div>
                               </div>
                               <div class="app-points-tier-row">
-                                <label class="app-label" for="app-points-tier-1-points">Palier 2</label>
+                                <label class="app-label visually-hidden" for="app-points-tier-1-points">Récompense 2</label>
                                 <div class="app-points-tier-fields">
                                   <input type="number" id="app-points-tier-1-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 2 — points" />
                                   <input type="text" id="app-points-tier-1-label" class="app-input" maxlength="120" placeholder="ex. Dessert offert" aria-label="Palier 2 — récompense" />
                                 </div>
                               </div>
                               <div class="app-points-tier-row">
-                                <label class="app-label" for="app-points-tier-2-points">Palier 3</label>
+                                <label class="app-label visually-hidden" for="app-points-tier-2-points">Récompense 3</label>
                                 <div class="app-points-tier-fields">
                                   <input type="number" id="app-points-tier-2-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 3 — points" />
                                   <input type="text" id="app-points-tier-2-label" class="app-input" maxlength="120" placeholder="ex. Menu du jour" aria-label="Palier 3 — récompense" />
                                 </div>
                               </div>
                               <div class="app-points-tier-row">
-                                <label class="app-label" for="app-points-tier-3-points">Palier 4</label>
+                                <label class="app-label visually-hidden" for="app-points-tier-3-points">Récompense 4</label>
                                 <div class="app-points-tier-fields">
                                   <input type="number" id="app-points-tier-3-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 4 — points" />
                                   <input type="text" id="app-points-tier-3-label" class="app-input" maxlength="120" placeholder="ex. Menu complet" aria-label="Palier 4 — récompense" />
                                 </div>
                               </div>
-                              <div class="app-points-tier-row">
-                                <label class="app-label" for="app-points-tier-4-points">Palier 5</label>
+                              <button type="button" id="app-points-tier-add" class="app-btn app-btn-secondary app-points-tier-add">+ Ajouter une récompense</button>
+                              <div class="app-points-tier-row hidden" id="app-points-tier-row-4">
+                                <label class="app-label visually-hidden" for="app-points-tier-4-points">Récompense 5</label>
                                 <div class="app-points-tier-fields">
                                   <input type="number" id="app-points-tier-4-points" class="app-input app-input-number" min="0" step="1" inputmode="numeric" aria-label="Palier 5 — points" />
                                   <input type="text" id="app-points-tier-4-label" class="app-input" maxlength="120" placeholder="ex. Formule premium" aria-label="Palier 5 — récompense" />
@@ -1170,8 +1182,6 @@
                             </div>
                           </div>
                           <div id="app-rules-stamps" class="app-rules-panel hidden app-rewards-panel">
-                            <p class="app-step-label">Configuration tampons</p>
-                            <p class="app-hint">Choisissez l’icône tampon et vos récompenses à la 5e puis 10e visite.</p>
                             <input type="hidden" id="app-stamp-emoji" value="✅" />
                             <div class="app-stamp-tier-block">
                               <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5e tampon</span></div>
@@ -1179,7 +1189,7 @@
                                 <input type="checkbox" id="app-stamp-skip-mid" />
                                 <span>Pas de récompense à la 5e visite</span>
                               </label>
-                              <label class="app-label" for="app-stamp-reward-mid-label">Récompense intermédiaire</label>
+                              <label class="app-label visually-hidden" for="app-stamp-reward-mid-label">Récompense intermédiaire</label>
                               <input type="text" id="app-stamp-reward-mid-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Récompense à la 5e visite" />
                             </div>
                             <div class="app-stamp-tier-block">

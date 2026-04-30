@@ -63,6 +63,86 @@ export const PLANS = { starter: { max_businesses: 1 }, pro: { max_businesses: 5 
  */
 export const REVENUECAT_STRIPE_SUB_ID_SENTINEL = "revenuecat_iap";
 
+export function getDefaultAllowedBusinessesFromLegacyPlan(planId) {
+  const key = String(planId || "starter")
+    .trim()
+    .toLowerCase();
+  const plan = PLANS[key] || PLANS.starter;
+  return Math.max(1, Number(plan.max_businesses) || 1);
+}
+
+export function getMerchantEntitlementByUserId(userId) {
+  if (!userId) return null;
+  const row = db
+    .prepare(
+      `SELECT user_id, allowed_businesses, billing_provider, status, source, effective_from, effective_to, created_at, updated_at
+       FROM merchant_entitlements
+       WHERE user_id = ?`,
+    )
+    .get(userId);
+  return row || null;
+}
+
+export function upsertMerchantEntitlement({
+  userId,
+  allowedBusinesses,
+  billingProvider,
+  status = "active",
+  source = null,
+  effectiveFrom = null,
+  effectiveTo = null,
+}) {
+  if (!userId) return null;
+  const now = new Date().toISOString();
+  const allowed = Math.max(1, Math.floor(Number(allowedBusinesses) || 1));
+  db.prepare(
+    `INSERT INTO merchant_entitlements
+      (user_id, allowed_businesses, billing_provider, status, source, effective_from, effective_to, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET
+       allowed_businesses = excluded.allowed_businesses,
+       billing_provider = COALESCE(excluded.billing_provider, merchant_entitlements.billing_provider),
+       status = excluded.status,
+       source = COALESCE(excluded.source, merchant_entitlements.source),
+       effective_from = COALESCE(excluded.effective_from, merchant_entitlements.effective_from),
+       effective_to = excluded.effective_to,
+       updated_at = excluded.updated_at`,
+  ).run(
+    userId,
+    allowed,
+    billingProvider || null,
+    status || "active",
+    source || null,
+    effectiveFrom || now,
+    effectiveTo || null,
+    now,
+    now,
+  );
+  return getMerchantEntitlementByUserId(userId);
+}
+
+export function resolveEffectiveAllowedBusinesses(userId) {
+  const entitlement = getMerchantEntitlementByUserId(userId);
+  if (entitlement) {
+    return Math.max(1, Math.floor(Number(entitlement.allowed_businesses) || 1));
+  }
+  const sub = getSubscriptionByUserId(userId);
+  return getDefaultAllowedBusinessesFromLegacyPlan(sub?.plan_id);
+}
+
+export function getMerchantBusinessEntitlements(userId) {
+  const usedBusinesses = getBusinessCountByUserId(userId);
+  const allowedBusinesses = resolveEffectiveAllowedBusinesses(userId);
+  const ent = getMerchantEntitlementByUserId(userId);
+  const provider = ent?.billing_provider || null;
+  return {
+    allowed_businesses: allowedBusinesses,
+    used_businesses: usedBusinesses,
+    can_create_business: usedBusinesses < allowedBusinesses,
+    billing_provider: provider,
+  };
+}
+
 /**
  * Passe l’abonnement à `canceled` seulement s’il provenait d’IAP (sentinel revenuecat_…).
  * Ne modifie pas un abonnement Stripe réel.
@@ -112,9 +192,8 @@ export function canCreateBusiness(userId) {
   // Premier commerce autorisé sans abonnement (inscription app / onboarding, aligné besoin revue produit).
   if (count === 0) return true;
   if (!hasOperationalMerchantAccess(userId)) return false;
-  const sub = getSubscriptionByUserId(userId);
-  const plan = PLANS[sub?.plan_id] || PLANS.starter;
-  return count < plan.max_businesses;
+  const allowed = resolveEffectiveAllowedBusinesses(userId);
+  return count < allowed;
 }
 
 export function createOrUpdateSubscription({ userId, stripeCustomerId, stripeSubscriptionId, planId, status, currentPeriodEnd }) {

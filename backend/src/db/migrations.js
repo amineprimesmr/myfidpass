@@ -1410,4 +1410,51 @@ export function runMigrations(db) {
   if (!bizAccPrefs.includes("accounting_prefs_json")) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN accounting_prefs_json TEXT"));
   }
+
+  // ── v33 : entitlements multi-commerce (source quota commerces) ──
+  const m33 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 33").get();
+  if (!m33) {
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS merchant_entitlements (
+          user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+          allowed_businesses INTEGER NOT NULL DEFAULT 1,
+          billing_provider TEXT,
+          status TEXT NOT NULL DEFAULT 'active',
+          source TEXT,
+          effective_from TEXT,
+          effective_to TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_merchant_entitlements_status ON merchant_entitlements(status);
+      `),
+    );
+    safeRun(db, () =>
+      db.exec(`
+        INSERT INTO merchant_entitlements (user_id, allowed_businesses, billing_provider, status, source, effective_from, updated_at)
+        SELECT
+          s.user_id,
+          CASE
+            WHEN lower(trim(COALESCE(s.plan_id, 'starter'))) = 'pro' THEN 5
+            ELSE 1
+          END AS allowed_businesses,
+          CASE
+            WHEN lower(trim(COALESCE(s.stripe_subscription_id, ''))) LIKE 'revenuecat_%' THEN 'apple'
+            ELSE 'stripe'
+          END AS billing_provider,
+          CASE
+            WHEN lower(trim(COALESCE(s.status, 'active'))) IN ('active', 'trialing', 'past_due') THEN 'active'
+            ELSE 'inactive'
+          END AS status,
+          'subscriptions_backfill' AS source,
+          datetime('now') AS effective_from,
+          datetime('now') AS updated_at
+        FROM subscriptions s
+        WHERE s.user_id IS NOT NULL
+        ON CONFLICT(user_id) DO NOTHING
+      `),
+    );
+    markMigrationApplied(db, 33, "merchant_entitlements_multi_business");
+  }
 }

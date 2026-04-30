@@ -1,4 +1,4 @@
-/** Paliers points simplifiés (5 lignes) + suggestions selon le secteur du commerce. */
+/** Paliers points simplifiés (4 visibles + 1 optionnel) selon le secteur du commerce. */
 
 export const POINT_TIER_COUNT = 5;
 
@@ -43,53 +43,46 @@ export function getDefaultPointTiersBySector(sector) {
   const key = normalizeBusinessSector(sector) || "default";
   const presets = {
     fastfood: [
-      { points: 20, label: "Boisson offerte" },
+      { points: 0, label: "Début du jeu" },
       { points: 50, label: "Menu enfant ou dessert offert" },
       { points: 100, label: "Burger / sandwich offert" },
       { points: 200, label: "Menu complet offert" },
-      { points: 400, label: "Menu famille ou formule premium" },
     ],
     cafe: [
-      { points: 30, label: "Café ou thé offert" },
+      { points: 0, label: "Début du jeu" },
       { points: 60, label: "Viennoiserie offerte" },
       { points: 120, label: "Petit-déjeuner offert" },
       { points: 200, label: "Boisson + pâtisserie offertes" },
-      { points: 350, label: "Carte cadeau 10 €" },
     ],
     beauty: [
-      { points: 40, label: "Soin express offert" },
+      { points: 0, label: "Début du jeu" },
       { points: 100, label: "Soin visage découverte" },
       { points: 180, label: "Modelage ou soin corps" },
       { points: 300, label: "Forfait beauté du mois" },
-      { points: 500, label: "Journée bien-être" },
     ],
     coiffure: [
-      { points: 50, label: "Shampoing soin offert" },
+      { points: 0, label: "Début du jeu" },
       { points: 120, label: "Brushing ou barbe offert" },
       { points: 200, label: "Coupe enfant offerte" },
       { points: 350, label: "Coupe + soin" },
-      { points: 600, label: "Mise en beauté complète" },
     ],
     boulangerie: [
-      { points: 25, label: "Viennoiserie au choix" },
+      { points: 0, label: "Début du jeu" },
       { points: 60, label: "Baguette + pâtisserie" },
       { points: 120, label: "Gâteau individuel offert" },
       { points: 200, label: "Plateau brunch" },
-      { points: 400, label: "Commande sur mesure offerte" },
     ],
     boucherie: [
-      { points: 40, label: "Saucisse ou chipolata offerte" },
+      { points: 0, label: "Début du jeu" },
       { points: 100, label: "Viande hachée ou panés offerts" },
       { points: 180, label: "Colis découverte" },
       { points: 300, label: "Grillade pour 2" },
-      { points: 500, label: "Panier viande premium" },
     ],
     default: [
-      { points: 50, label: "5 € de réduction" },
+      { points: 0, label: "Début du jeu" },
       { points: 100, label: "10 € de réduction" },
       { points: 200, label: "20 € de réduction" },
       { points: 350, label: "35 € de réduction" },
-      { points: 500, label: "50 € de réduction" },
     ],
   };
   const list = presets[key] || presets.default;

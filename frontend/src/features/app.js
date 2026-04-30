@@ -2030,7 +2030,7 @@ function initAppDashboard(slug) {
   const cardModePillStamps = document.getElementById("app-card-mode-pill-stamps");
   const rulesPanelPoints = document.getElementById("app-rules-points");
   const rulesPanelStamps = document.getElementById("app-rules-stamps");
-  const personnaliserColorsGroupTitle = document.getElementById("app-personnaliser-colors-group-title");
+  const personnaliserMediaGroupTitle = document.getElementById("app-personnaliser-media-group-title");
   const personnaliserCardBgWrap = document.getElementById("app-personnaliser-card-bg-wrap");
   const personnaliserStampIconWrap = document.getElementById("app-personnaliser-stamp-icon-wrap");
   const pointsPerEuroEl = document.getElementById("app-points-per-euro");
@@ -2049,6 +2049,8 @@ function initAppDashboard(slug) {
   const stampSkipMidEl = document.getElementById("app-stamp-skip-mid");
   const stampMidRewardLabelEl = document.getElementById("app-stamp-reward-mid-label");
   const personnaliserAccordion = document.getElementById("app-personnaliser-accordion");
+  const personnaliserColorsWrap = document.querySelector("#app-personnaliser-panel-colors .app-personnaliser-colors");
+  const personnaliserColorsMoreToggle = document.getElementById("app-personnaliser-colors-more-toggle");
 
   /** Déclaré avant tout appel à schedulePersonnaliserGroupStatusRefresh (évite TDZ sur let). */
   let personnaliserStatusRaf = 0;
@@ -2072,22 +2074,8 @@ function initAppDashboard(slug) {
       if (toggle) toggle.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
     }
 
-    // Par défaut: tout fermé. Si une section a explicitement "is-open", on la respecte.
-    const initiallyOpen = groups.find((group) => group.classList.contains("is-open")) || null;
-    groups.forEach((group) => setOpen(group, group === initiallyOpen));
-
-    groups.forEach((group) => {
-      const toggle = group.querySelector(".app-personnaliser-group-toggle");
-      if (!toggle) return;
-      toggle.addEventListener("click", () => {
-        const isCurrentlyOpen = group.classList.contains("is-open");
-        if (isCurrentlyOpen) {
-          setOpen(group, false);
-          return;
-        }
-        groups.forEach((item) => setOpen(item, item === group));
-      });
-    });
+    // UX demandée: sections toujours ouvertes (même logique visuelle que la page Flyer).
+    groups.forEach((group) => setOpen(group, true));
   }
   initPersonnaliserAccordion();
   schedulePersonnaliserGroupStatusRefresh();
@@ -2114,8 +2102,8 @@ function initAppDashboard(slug) {
     const isStamps = programTypeStamps && programTypeStamps.checked;
     if (rulesPanelPoints) rulesPanelPoints.classList.toggle("hidden", !!isStamps);
     if (rulesPanelStamps) rulesPanelStamps.classList.toggle("hidden", !isStamps);
-    if (personnaliserColorsGroupTitle) {
-      personnaliserColorsGroupTitle.textContent = isStamps ? "Couleur et tampons" : "Couleurs et image";
+    if (personnaliserMediaGroupTitle) {
+      personnaliserMediaGroupTitle.textContent = isStamps ? "Icône tampons" : "Image de fond";
     }
     if (personnaliserCardBgWrap) {
       personnaliserCardBgWrap.classList.toggle("hidden", !!isStamps);
@@ -2155,6 +2143,7 @@ function initAppDashboard(slug) {
         writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
         markAppSectionDirty("personnaliser");
       }
+      syncPointsTierExtraRowVisibility();
       updatePersonnaliserPreview();
       refreshCardRulesChecklist();
     });
@@ -2247,6 +2236,18 @@ function initAppDashboard(slug) {
   bindPersonnaliserColor(personnaliserBg, personnaliserBgHex);
   bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
   bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
+  function syncPersonnaliserColorsMoreToggle() {
+    if (!personnaliserColorsWrap || !personnaliserColorsMoreToggle) return;
+    const expanded = personnaliserColorsWrap.classList.contains("is-expanded");
+    personnaliserColorsMoreToggle.textContent = expanded ? "Voir moins" : "Voir plus";
+    personnaliserColorsMoreToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+  personnaliserColorsMoreToggle?.addEventListener("click", () => {
+    if (!personnaliserColorsWrap) return;
+    personnaliserColorsWrap.classList.toggle("is-expanded");
+    syncPersonnaliserColorsMoreToggle();
+  });
+  syncPersonnaliserColorsMoreToggle();
   [personnaliserBg, personnaliserFg, personnaliserLabel, personnaliserBgHex, personnaliserFgHex, personnaliserLabelHex]
     .forEach((el) => el?.addEventListener("input", () => window.syncLogoColorSwatchSelection?.()));
   [personnaliserBg, personnaliserFg, personnaliserLabel, personnaliserBgHex, personnaliserFgHex, personnaliserLabelHex]
@@ -2524,9 +2525,20 @@ function initAppDashboard(slug) {
   for (let ti = 0; ti < POINT_TIER_COUNT; ti++) {
     document.getElementById(`app-points-tier-${ti}-points`)?.addEventListener("input", updatePersonnaliserPreview);
     document.getElementById(`app-points-tier-${ti}-label`)?.addEventListener("input", updatePersonnaliserPreview);
+    document.getElementById(`app-points-tier-${ti}-points`)?.addEventListener("input", syncPointsTierExtraRowVisibility);
+    document.getElementById(`app-points-tier-${ti}-label`)?.addEventListener("input", syncPointsTierExtraRowVisibility);
   }
+  document.getElementById("app-points-tier-add")?.addEventListener("click", () => {
+    const addBtn = document.getElementById("app-points-tier-add");
+    if (addBtn) addBtn.dataset.forceVisible = "1";
+    syncPointsTierExtraRowVisibility();
+  });
+  syncPointsTierExtraRowVisibility();
   document.getElementById("app-points-tiers-reset-sector")?.addEventListener("click", () => {
     writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
+    const addBtn = document.getElementById("app-points-tier-add");
+    if (addBtn) delete addBtn.dataset.forceVisible;
+    syncPointsTierExtraRowVisibility();
     markAppSectionDirty("personnaliser");
     updatePersonnaliserPreview();
     refreshCardRulesChecklist();
@@ -2695,6 +2707,19 @@ function initAppDashboard(slug) {
     }
   }
 
+  function syncPointsTierExtraRowVisibility() {
+    const addBtn = document.getElementById("app-points-tier-add");
+    const extraRow = document.getElementById("app-points-tier-row-4");
+    const extraPoints = document.getElementById("app-points-tier-4-points");
+    const extraLabel = document.getElementById("app-points-tier-4-label");
+    if (!addBtn || !extraRow) return;
+    const hasExtraValue = !!(String(extraPoints?.value || "").trim() || String(extraLabel?.value || "").trim());
+    const shouldShowExtra = hasExtraValue || addBtn.dataset.forceVisible === "1";
+    extraRow.classList.toggle("hidden", !shouldShowExtra);
+    addBtn.classList.toggle("hidden", shouldShowExtra);
+    addBtn.setAttribute("aria-hidden", shouldShowExtra ? "true" : "false");
+  }
+
   async function refreshDeliveryClaimsPending() {
     const listEl = document.getElementById("app-delivery-claims-list");
     if (!listEl) return;
@@ -2787,6 +2812,9 @@ function initAppDashboard(slug) {
         } else {
           writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
         }
+        const addBtn = document.getElementById("app-points-tier-add");
+        if (addBtn) delete addBtn.dataset.forceVisible;
+        syncPointsTierExtraRowVisibility();
       }
       // En mode tampons : toujours 10 (champ supprimé). En mode points on ne modifie pas requiredStamps.
       if (stampEmojiEl) stampEmojiEl.value = data.stamp_emoji ?? data.stampEmoji ?? "";
@@ -3303,7 +3331,7 @@ function initAppDashboard(slug) {
   }
 
   const IOS_LIKE_CARD_COLORS = [
-    "#ffffff", "#34c759", "#0a84ff", "#5856d6", "#af52de", "#ff2d55", "#ff9500", "#ffcc00", "#30b0c7", "#8e8e93", "#000000",
+    "#ffffff", "#34c759", "#0a84ff", "#5856d6", "#af52de", "#ff2d55", "#ff9500", "#ffcc00", "#8e8e93", "#000000",
   ];
 
   function hideLogoColorSwatchRows() {

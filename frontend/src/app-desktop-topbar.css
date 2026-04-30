@@ -682,6 +682,7 @@
   .app-sidebar {
     top: calc(var(--app-admin-strip-h, 0px) + var(--app-topbar-height));
     height: calc(100vh - var(--app-admin-strip-h, 0px) - var(--app-topbar-height));
+    z-index: 220;
   }
 
   body.page-app #app-app .app-main {

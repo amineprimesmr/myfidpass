@@ -55,6 +55,8 @@ export function initAppFlyerQr(slug, opts) {
 
   const accentPicker = root.querySelector("#app-flyer-accent-unified");
   const bgPicker = root.querySelector("#app-flyer-bg-solid");
+  const colorsToggleBtn = root.querySelector("#app-flyer-colors-toggle");
+  const colorsPanel = root.querySelector("#app-flyer-colors-panel");
   function syncFlyerBgColorRowVisibility() {
     if (!bgPicker) return;
     const bgRow = bgPicker.closest(".app-flyer-color-row");
@@ -64,7 +66,7 @@ export function initAppFlyerQr(slug, opts) {
     bgRow.setAttribute("aria-hidden", hasBackgroundImage ? "true" : "false");
   }
 
-  const flyerPalette = ["#ffffff", "#34c759", "#0a84ff", "#5856d6", "#af52de", "#ff2d55", "#ff9500", "#ffcc00", "#30b0c7", "#8e8e93", "#000000"];
+  const flyerPalette = ["#ffffff", "#34c759", "#0a84ff", "#5856d6", "#af52de", "#ff2d55", "#ff9500", "#ffcc00", "#8e8e93", "#000000"];
 
   function normalizeHex(value, fallback) {
     const v = String(value || "").trim();
@@ -156,6 +158,13 @@ export function initAppFlyerQr(slug, opts) {
 
   wireFlyerSwatches(bgPicker, "fond");
   wireFlyerSwatches(accentPicker, "roue, cadeau, bandeau");
+  if (colorsToggleBtn && colorsPanel) {
+    colorsToggleBtn.addEventListener("click", () => {
+      colorsPanel.classList.toggle("hidden");
+      const expanded = !colorsPanel.classList.contains("hidden");
+      colorsToggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    });
+  }
 
   const pickContrastingTextOnHexBg = (hex) => {
     const h = String(hex || "").trim();

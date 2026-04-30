@@ -77,6 +77,19 @@ export function runSchema(db) {
   );
   CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
 
+  CREATE TABLE IF NOT EXISTS merchant_entitlements (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    allowed_businesses INTEGER NOT NULL DEFAULT 1,
+    billing_provider TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    source TEXT,
+    effective_from TEXT,
+    effective_to TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_merchant_entitlements_status ON merchant_entitlements(status);
+
   CREATE TABLE IF NOT EXISTS pass_registrations (
     device_library_identifier TEXT NOT NULL,
     pass_type_identifier TEXT NOT NULL,
