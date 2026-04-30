@@ -59,6 +59,8 @@ import {
 } from "./commerce-ios-shell.js";
 import { initAppDesktopTopbar } from "./app-desktop-topbar.js";
 
+const ACTIVE_BUSINESS_SLUG_STORAGE_KEY = "fidpass_active_business_slug";
+
 /** @typedef {"network"|"server500"|"client"|"parse"|"unknown"|"unexpected"} AppLoadFailKind */
 
 /**
@@ -449,6 +451,7 @@ function initAppPage() {
       const merchantTrialEndsAt = data.merchant_trial_ends_at ?? data.merchantTrialEndsAt ?? null;
       const hasSubscription = !!(data.has_active_subscription ?? data.hasActiveSubscription);
       const businesses = data.businesses || [];
+      const entitlements = data.entitlements || null;
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
       /* fidpass-auth-me : émis seulement après initAppDashboard (l’écouteur Profil y est enregistré). */
 
@@ -470,9 +473,12 @@ function initAppPage() {
           new CustomEvent("fidpass-auth-me", {
             detail: {
               user,
+            businesses,
+            active_business_slug: null,
               subscription: data.subscription || null,
               hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
               merchant_trial_ends_at: merchantTrialEndsAt,
+            entitlements,
               awaitingFirstBusiness: true,
             },
           })
@@ -495,7 +501,13 @@ function initAppPage() {
       emptyFatalEl?.classList.add("hidden");
       if (emptyEl) emptyEl.classList.add("hidden");
       if (contentEl) contentEl.classList.remove("hidden");
-      const business = businesses[0];
+      const savedSlug = String(localStorage.getItem(ACTIVE_BUSINESS_SLUG_STORAGE_KEY) || "").trim();
+      const business = businesses.find((b) => b?.slug === savedSlug) || businesses[0];
+      if (business?.slug) {
+        try {
+          localStorage.setItem(ACTIVE_BUSINESS_SLUG_STORAGE_KEY, business.slug);
+        } catch (_) {}
+      }
       if (businessNameEl) businessNameEl.textContent = business.organization_name || business.name || business.slug;
       initAppSidebar();
       initAppDashboard(business.slug);
@@ -504,9 +516,12 @@ function initAppPage() {
         new CustomEvent("fidpass-auth-me", {
           detail: {
             user,
+            businesses,
+            active_business_slug: business?.slug || null,
             subscription: data.subscription || null,
             hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
             merchant_trial_ends_at: merchantTrialEndsAt,
+            entitlements,
           },
         })
       );

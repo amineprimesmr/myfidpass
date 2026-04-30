@@ -30,6 +30,7 @@ import {
   updateBusiness,
   getBusinessBySlug,
   canCreateBusiness,
+  getMerchantBusinessEntitlements,
   createRefreshToken,
   getRefreshToken,
   deleteRefreshToken,
@@ -102,6 +103,7 @@ cleanExpiredRefreshTokens();
 
 function authSubscriptionPayload(userId) {
   const subscription = getSubscriptionByUserId(userId);
+  const entitlements = getMerchantBusinessEntitlements(userId);
   if (isOnlyTeamUser(userId)) {
     const ownerId = getFirstTeamBusinessOwnerId(userId);
     if (ownerId) {
@@ -110,6 +112,7 @@ function authSubscriptionPayload(userId) {
       return {
         subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
         has_active_subscription: ownerAccess,
+        entitlements,
         merchant_trial_ends_at: ownerAccess
           ? null
           : paying
@@ -122,6 +125,7 @@ function authSubscriptionPayload(userId) {
   return {
     subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
     has_active_subscription: hasOperationalMerchantAccess(userId),
+    entitlements,
     merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(userId),
   };
 }
@@ -774,7 +778,17 @@ router.get("/apple-exchange", (req, res) => {
   const subPayload =
     uid != null
       ? authSubscriptionPayload(uid)
-      : { subscription: null, has_active_subscription: false, merchant_trial_ends_at: null };
+      : {
+          subscription: null,
+          has_active_subscription: false,
+          entitlements: {
+            allowed_businesses: 1,
+            used_businesses: 0,
+            can_create_business: true,
+            billing_provider: null,
+          },
+          merchant_trial_ends_at: null,
+        };
   return res.json({
     token: data.token,
     refreshToken: data.refreshToken,
@@ -870,6 +884,7 @@ router.get("/me", (req, res, next) => {
       requires_business_setup: businesses.length === 0,
       subscription: subPayload.subscription,
       has_active_subscription: subPayload.has_active_subscription,
+      entitlements: subPayload.entitlements,
       merchant_trial_ends_at: subPayload.merchant_trial_ends_at,
     });
   } catch (e) {

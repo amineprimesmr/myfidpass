@@ -11,6 +11,7 @@ import {
   getBusinessBySlug,
   canCreateBusiness,
   getBusinessesByUserId,
+  getMerchantBusinessEntitlements,
   bumpBusinessPassRefreshTimestamp,
   getPassKitPushTokensForBusiness,
 } from "../../db.js";
@@ -96,9 +97,11 @@ export function createHandler(req, res) {
     process.env.DEV_BYPASS_PAYMENT === "true" &&
     req.get("X-Dev-Bypass-Payment") === "1";
   if (!devBypass && !canCreateBusiness(req.user.id)) {
+    const entitlements = getMerchantBusinessEntitlements(req.user.id);
     return res.status(403).json({
       error: "Abonnement requis ou limite de cartes atteinte",
-      code: "subscription_required",
+      code: "business_quota_reached",
+      entitlements,
     });
   }
   const normalizedSlug = String(slug).trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");

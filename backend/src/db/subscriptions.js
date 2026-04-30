@@ -133,6 +133,9 @@ export function resolveEffectiveAllowedBusinesses(userId) {
 export function getMerchantBusinessEntitlements(userId) {
   const usedBusinesses = getBusinessCountByUserId(userId);
   const allowedBusinesses = resolveEffectiveAllowedBusinesses(userId);
+  if (usedBusinesses > allowedBusinesses) {
+    console.warn("[entitlements] quota_incoherence", { userId, usedBusinesses, allowedBusinesses });
+  }
   const ent = getMerchantEntitlementByUserId(userId);
   const provider = ent?.billing_provider || null;
   return {

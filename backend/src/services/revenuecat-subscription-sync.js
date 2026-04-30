@@ -15,6 +15,7 @@ import {
   getSubscriptionByUserId,
   deactivateRevenueCatOnlySubscription,
   REVENUECAT_STRIPE_SUB_ID_SENTINEL,
+  upsertMerchantEntitlement,
 } from "../db/subscriptions.js";
 
 function parseExpiresToIso(ent) {
@@ -47,6 +48,24 @@ function pickEntitlement(subscriber) {
   return m[id] ?? null;
 }
 
+function resolveAllowedBusinessesFromRevenueCat(ent) {
+  const configured = Number(process.env.REVENUECAT_ALLOWED_BUSINESSES_DEFAULT || 2);
+  const fallback = Number.isFinite(configured) && configured >= 1 ? Math.floor(configured) : 2;
+  const productId = String(ent?.product_identifier || "")
+    .trim()
+    .toLowerCase();
+  if (!productId) return fallback;
+  if (productId.includes("unlimited") || productId.includes("illim")) return 999;
+  const m =
+    productId.match(/(\d+)\s*business/) ||
+    productId.match(/business[_-]?(\d+)/) ||
+    productId.match(/slot[s]?[_-]?(\d+)/);
+  if (!m || !m[1]) return fallback;
+  const n = Math.floor(Number(m[1]));
+  if (!Number.isFinite(n) || n < 1) return fallback;
+  return Math.min(999, n);
+}
+
 /**
  * Synchronise la base à partir de l’API REST RevenueCat (source de vérité).
  * @param {string} appUserId — en général `user.id` MyFidpass (idempot).
@@ -69,6 +88,13 @@ export async function syncPremiumFromRevenueCatAppUserId(appUserId) {
   const ent = pickEntitlement(data.subscriber);
   if (!ent || !isEntitlementActiveFromPayload(ent)) {
     deactivateRevenueCatOnlySubscription(userId);
+    upsertMerchantEntitlement({
+      userId,
+      allowedBusinesses: 1,
+      billingProvider: "apple",
+      status: "inactive",
+      source: "revenuecat_sync",
+    });
     return { ok: true, active: false };
   }
 
@@ -81,6 +107,15 @@ export async function syncPremiumFromRevenueCatAppUserId(appUserId) {
     planId: "pro",
     status: "active",
     currentPeriodEnd: periodEnd,
+  });
+  upsertMerchantEntitlement({
+    userId,
+    allowedBusinesses: resolveAllowedBusinessesFromRevenueCat(ent),
+    billingProvider: "apple",
+    status: "active",
+    source: "revenuecat_sync",
+    effectiveFrom: new Date().toISOString(),
+    effectiveTo: periodEnd || null,
   });
   return { ok: true, active: true };
 }

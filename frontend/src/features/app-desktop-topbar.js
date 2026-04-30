@@ -27,6 +27,8 @@ const CHIP_DEFS = [
   { id: "compte", label: "Compte" },
 ];
 
+const ACTIVE_BUSINESS_SLUG_STORAGE_KEY = "fidpass_active_business_slug";
+
 function norm(s) {
   return String(s || "")
     .toLowerCase()
@@ -97,6 +99,8 @@ export function initAppDesktopTopbar({ showAppSection }) {
   const searchEmptyText = document.getElementById("app-topbar-search-empty-text");
   const logoutTop = document.getElementById("app-topbar-logout-btn");
   const storeAddLink = document.getElementById("app-topbar-store-add-link");
+  const storeList = document.getElementById("app-topbar-store-list");
+  const entitlementsLine = document.getElementById("app-topbar-entitlements-line");
   const sidebar = document.getElementById("app-sidebar");
   const menuToggle = document.getElementById("app-topbar-menu-toggle");
   const sidebarOverlay = document.getElementById("app-sidebar-overlay");
@@ -104,6 +108,9 @@ export function initAppDesktopTopbar({ showAppSection }) {
   let activeChip = "tous";
   let highlightIdx = 0;
   let filteredItems = [];
+  let authBusinesses = [];
+  let activeBusinessSlug = "";
+  let authEntitlements = null;
 
   function closeAllDropdowns() {
     [storeBtn, alertsBtn].forEach((b) => b?.setAttribute("aria-expanded", "false"));
@@ -210,8 +217,45 @@ export function initAppDesktopTopbar({ showAppSection }) {
     if (nm) nm.textContent = displayNameFromEmail(email);
   }
 
+  function renderBusinessList() {
+    if (!storeList) return;
+    storeList.textContent = "";
+    if (!Array.isArray(authBusinesses) || authBusinesses.length === 0) return;
+    authBusinesses.forEach((b) => {
+      if (!b?.slug) return;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "app-desktop-topbar__store-switch" + (b.slug === activeBusinessSlug ? " is-active" : "");
+      btn.textContent = b.organization_name || b.name || b.slug;
+      btn.addEventListener("click", () => {
+        try {
+          localStorage.setItem(ACTIVE_BUSINESS_SLUG_STORAGE_KEY, b.slug);
+        } catch (_) {}
+        window.location.reload();
+      });
+      storeList.appendChild(btn);
+    });
+    if (entitlementsLine) {
+      const used = Number(authEntitlements?.used_businesses);
+      const allowed = Number(authEntitlements?.allowed_businesses);
+      if (Number.isFinite(used) && Number.isFinite(allowed) && allowed > 0) {
+        entitlementsLine.textContent = `Quota commerces: ${used}/${allowed}`;
+      } else {
+        entitlementsLine.textContent = "Quota commerces: --";
+      }
+    }
+  }
+
   syncStoreAndUser();
+  renderBusinessList();
   window.addEventListener("app-section-change", () => window.requestAnimationFrame(syncStoreAndUser));
+  window.addEventListener("fidpass-auth-me", (e) => {
+    const d = e?.detail || {};
+    authBusinesses = Array.isArray(d.businesses) ? d.businesses : [];
+    activeBusinessSlug = String(d.active_business_slug || "").trim();
+    authEntitlements = d.entitlements || null;
+    renderBusinessList();
+  });
   const bizNameEl = document.getElementById("app-business-name");
   const userEmailElObs = document.getElementById("app-user-email");
   if (bizNameEl) {
