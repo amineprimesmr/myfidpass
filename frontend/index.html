@@ -1030,24 +1030,24 @@
               <div class="app-personnaliser-colors">
                 <div class="app-color-row">
                   <label class="app-label" for="app-personnaliser-bg" id="app-logo-colors-aria-bg">Fond</label>
-                  <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#1e3a8a" />
-                  <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#1e3a8a" maxlength="7" />
+                  <input type="color" id="app-personnaliser-bg" class="app-color-input" value="#ffffff" />
+                  <input type="text" id="app-personnaliser-bg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
                   <div id="app-logo-colors-swatches-bg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-bg"></div>
                 </div>
                 <div class="app-color-row">
                   <label class="app-label" for="app-personnaliser-fg" id="app-logo-colors-aria-fg">Texte</label>
-                  <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#ffffff" />
-                  <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#ffffff" maxlength="7" />
+                  <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#0f172a" />
+                  <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#0f172a" maxlength="7" />
                   <div id="app-logo-colors-swatches-fg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-fg"></div>
                 </div>
                 <div class="app-color-row">
                   <label class="app-label" for="app-personnaliser-label" id="app-logo-colors-aria-lbl">Labels</label>
-                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#dbeafe" />
-                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#dbeafe" maxlength="7" />
+                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#000000" />
+                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#000000" maxlength="7" />
                   <div id="app-logo-colors-swatches-label" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-lbl"></div>
                 </div>
-                <input type="hidden" id="app-personnaliser-strip" value="#1e3a8a" />
-                <input type="hidden" id="app-personnaliser-strip-hex" value="#1e3a8a" />
+                <input type="hidden" id="app-personnaliser-strip" value="#ffffff" />
+                <input type="hidden" id="app-personnaliser-strip-hex" value="#ffffff" />
               </div>
                       <p class="app-step-label">Image de fond de carte</p>
                       <p class="app-hint">Bandeau Wallet (ratio 750×246 px, optionnel). Ajouter, modifier ou supprimer.</p>
@@ -1095,49 +1095,28 @@
                 </div>
               </div>
                 </section>
-                <section class="app-personnaliser-group" data-personnaliser-group data-personnaliser-step="labels">
-                  <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-labels">
-                    <span class="app-personnaliser-group-status is-status-pending" role="img" aria-label="À compléter"></span>
-                    <span class="app-personnaliser-group-title">Libellés de la carte</span>
-                    <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
-                  </button>
-                  <div id="app-personnaliser-panel-labels" class="app-personnaliser-group-panel">
-                    <div class="app-personnaliser-group-panel-inner">
-                      <p class="app-step-label">Label « Restants » (mode tampons)</p>
-                      <input type="text" id="app-personnaliser-label-restants" class="app-input" maxlength="32" placeholder="Restants" />
-                      <p class="app-hint">Ex. Restants, RESTANTS, Tampons restants…</p>
-                      <p class="app-step-label">Label « Membre » (fixe)</p>
-                      <p class="app-hint app-personnaliser-member-fixed" aria-live="polite">Toujours affiché : <strong>Membre</strong> (même texte sur l’aperçu et dans Apple Wallet ; le nom du client reste dynamique).</p>
-                      <p class="app-step-label">Lien en haut à droite (fixe)</p>
-                      <p class="app-hint app-personnaliser-header-right-fixed" aria-live="polite">Toujours affiché : <strong>Récompenses ↗</strong> (même texte sur la carte et dans Apple Wallet).</p>
-                </div>
-                </div>
-                </section>
                 <section class="app-personnaliser-group" data-personnaliser-group data-personnaliser-step="rules">
                   <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-rules">
                     <span class="app-personnaliser-group-status is-status-pending" role="img" aria-label="À compléter"></span>
-                    <span class="app-personnaliser-group-title">Règles du programme</span>
+                    <span class="app-personnaliser-group-title">Récompenses</span>
                     <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
                   </button>
                   <div id="app-personnaliser-panel-rules" class="app-personnaliser-group-panel">
                     <div class="app-personnaliser-group-panel-inner">
                       <div id="regles-carte" class="app-personnaliser-rules-embed">
-                        <div class="app-card-rules-form-card">
-                          <p class="app-step-label">Formulaire</p>
-                          <div class="app-rules-type">
-                            <label class="app-radio-label"><input type="radio" name="app-program-type" value="points" id="app-program-type-points" checked /> Points (ex. 1 pt par €, paliers de récompenses)</label>
-                            <label class="app-radio-label"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> Tampons (ex. 1 tampon par visite, 10 tampons = 1 café offert)</label>
+                        <div class="app-card-rules-form-card app-rewards-form-card">
+                          <div class="app-rewards-mode-switch">
+                            <label class="app-rewards-mode-pill"><input type="radio" name="app-program-type" value="points" id="app-program-type-points" checked /> <span>Mode Points</span></label>
+                            <label class="app-rewards-mode-pill"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> <span>Mode Tampons</span></label>
                           </div>
-                          <div id="app-rules-points" class="app-rules-panel hidden">
-                            <p class="app-step-label">Mode fidélité (programme points)</p>
-                            <p class="app-hint">La <strong>roue</strong> est disponible en programme <strong>points</strong> ou <strong>tampons</strong> (lots adaptés : bonus points ou passages). Les <strong>tickets</strong> viennent surtout des objectifs avis &amp; réseaux ; le mode <strong>Points jeu</strong> ajoute en plus la <strong>conversion points → tickets</strong> (programme points uniquement).</p>
+                          <div id="app-rules-points" class="app-rules-panel hidden app-rewards-panel">
+                            <p class="app-step-label">Configuration points</p>
+                            <p class="app-hint">Définissez vos paliers de récompense (seuil + intitulé) comme dans le modificateur iOS.</p>
                             <div class="app-rules-type app-loyalty-mode-row">
                               <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points caisse</label>
                               <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points jeu</label>
                             </div>
                             <div class="app-points-tiers-simple">
-                              <p class="app-step-label">Récompenses par paliers</p>
-                              <p class="app-hint">Jusqu’à <strong>5 niveaux</strong> : seuil de points + texte affiché sur la carte. Des <strong>exemples</strong> sont proposés selon le <strong>secteur d’activité</strong> connu pour votre commerce (ex. fast-food, coiffure…) ; sinon réductions génériques.</p>
                               <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line"></p>
                               <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector">Réappliquer les exemples du secteur</button>
                               <div class="app-points-tier-row">
@@ -1189,35 +1168,35 @@
                               <textarea id="app-game-rewards-json" class="app-input app-textarea" rows="2" tabindex="-1"></textarea>
                             </div>
                           </div>
-                          <div id="app-rules-stamps" class="app-rules-panel hidden">
+                          <div id="app-rules-stamps" class="app-rules-panel hidden app-rewards-panel">
+                            <p class="app-step-label">Configuration tampons</p>
+                            <p class="app-hint">Choisissez l’icône tampon et vos récompenses à la 5e puis 10e visite.</p>
                             <input type="hidden" id="app-stamp-emoji" value="☕" />
                             <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône">
                               <div class="app-stamp-icon-custom-wrap">
-                              <div class="app-drop-zone app-stamp-icon-custom app-media-drop-wrap" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
-                                <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                                <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
-                                  <span id="app-stamp-icon-placeholder">+</span>
-                                  <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
-                                </label>
-                                <button type="button" id="app-stamp-icon-remove" class="app-media-drop-clear app-media-drop-clear--compact hidden" aria-label="Supprimer l'icône personnalisée" title="Supprimer">×</button>
+                                <div class="app-drop-zone app-stamp-icon-custom app-media-drop-wrap" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                                  <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                                  <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
+                                    <span id="app-stamp-icon-placeholder">+</span>
+                                    <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
+                                  </label>
+                                  <button type="button" id="app-stamp-icon-remove" class="app-media-drop-clear app-media-drop-clear--compact hidden" aria-label="Supprimer l'icône personnalisée" title="Supprimer">×</button>
+                                </div>
                               </div>
                             </div>
-                            </div>
-                            <p class="app-step-label">Récompenses tampons</p>
-                            <p class="app-hint">La grille compte <strong>10 tampons</strong> par carte. Vous définissez ce qui est offert à la <strong>5ᵉ</strong> et à la <strong>10ᵉ</strong> visite (tampon).</p>
                             <div class="app-stamp-tier-block">
-                              <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5ᵉ tampon</span></div>
+                              <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5e tampon</span></div>
                               <label class="app-checkbox-label app-stamp-skip-mid-label">
                                 <input type="checkbox" id="app-stamp-skip-mid" />
-                                <span>Pas de récompense à la 5ᵉ visite</span>
+                                <span>Pas de récompense à la 5e visite</span>
                               </label>
                               <label class="app-label" for="app-stamp-reward-mid-label">Récompense intermédiaire</label>
-                              <input type="text" id="app-stamp-reward-mid-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Récompense à la 5ᵉ visite" />
+                              <input type="text" id="app-stamp-reward-mid-label" class="app-input" maxlength="120" placeholder="ex. Boisson offerte" aria-label="Récompense à la 5e visite" />
                             </div>
                             <div class="app-stamp-tier-block">
-                              <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">10ᵉ tampon</span></div>
+                              <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">10e tampon</span></div>
                               <label class="app-label" for="app-stamp-reward-label">Récompense carte complète</label>
-                              <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. Menu offert" aria-label="Récompense à la 10ᵉ visite" />
+                              <input type="text" id="app-stamp-reward-label" class="app-input" maxlength="120" placeholder="ex. Menu offert" aria-label="Récompense à la 10e visite" />
                             </div>
                           </div>
                         </div>
@@ -1252,7 +1231,7 @@
                           <span class="app-save-cta-wrap">
                             <button type="button" id="app-regles-save" class="app-save-cta">
                               <span class="app-save-cta-dot" aria-hidden="true"></span>
-                              <span class="app-save-cta-label">Enregistrer les règles de la carte</span>
+                              <span class="app-save-cta-label">Enregistrer les récompenses</span>
                             </button>
                           </span>
                         </div>
@@ -1280,6 +1259,26 @@
             </div>
             </div>
             <div class="app-personnaliser-live-preview-wrap">
+              <div class="app-card-mode-switch" role="tablist" aria-label="Mode de carte">
+                <button
+                  type="button"
+                  id="app-card-mode-pill-points"
+                  class="app-card-mode-pill is-active"
+                  role="tab"
+                  aria-selected="true"
+                >
+                  Points
+                </button>
+                <button
+                  type="button"
+                  id="app-card-mode-pill-stamps"
+                  class="app-card-mode-pill"
+                  role="tab"
+                  aria-selected="false"
+                >
+                  Tampons
+                </button>
+              </div>
               <div id="app-personnaliser-preview" class="app-personnaliser-preview builder-phone-mockup" role="img" aria-label="Aperçu de la carte fidélité">
                 <div class="builder-phone-frame">
                   <img src="/assets/iphone-frame.png" alt="" class="builder-phone-frame-img" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='/assets/mockupiphone.png';return;} this.style.display='none'" loading="lazy" />

@@ -2026,6 +2026,8 @@ function initAppDashboard(slug) {
   let hasStampIconFromServer = false;
   const programTypePoints = document.getElementById("app-program-type-points");
   const programTypeStamps = document.getElementById("app-program-type-stamps");
+  const cardModePillPoints = document.getElementById("app-card-mode-pill-points");
+  const cardModePillStamps = document.getElementById("app-card-mode-pill-stamps");
   const rulesPanelPoints = document.getElementById("app-rules-points");
   const rulesPanelStamps = document.getElementById("app-rules-stamps");
   const pointsPerEuroEl = document.getElementById("app-points-per-euro");
@@ -2109,8 +2111,29 @@ function initAppDashboard(slug) {
     const isStamps = programTypeStamps && programTypeStamps.checked;
     if (rulesPanelPoints) rulesPanelPoints.classList.toggle("hidden", !!isStamps);
     if (rulesPanelStamps) rulesPanelStamps.classList.toggle("hidden", !isStamps);
+    const isPoints = !!(programTypePoints && programTypePoints.checked);
+    if (cardModePillPoints) {
+      cardModePillPoints.classList.toggle("is-active", isPoints);
+      cardModePillPoints.setAttribute("aria-selected", isPoints ? "true" : "false");
+    }
+    if (cardModePillStamps) {
+      cardModePillStamps.classList.toggle("is-active", !isPoints);
+      cardModePillStamps.setAttribute("aria-selected", !isPoints ? "true" : "false");
+    }
     refreshCardRulesChecklist();
   }
+  cardModePillPoints?.addEventListener("click", () => {
+    if (!programTypePoints) return;
+    if (programTypePoints.checked) return;
+    programTypePoints.checked = true;
+    programTypePoints.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  cardModePillStamps?.addEventListener("click", () => {
+    if (!programTypeStamps) return;
+    if (programTypeStamps.checked) return;
+    programTypeStamps.checked = true;
+    programTypeStamps.dispatchEvent(new Event("change", { bubbles: true }));
+  });
   if (programTypePoints) {
     programTypePoints.addEventListener("change", () => {
       setRulesPanelVisibility();
@@ -2211,7 +2234,7 @@ function initAppDashboard(slug) {
   bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
   bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
   function syncStripToBg() {
-    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#1e3a8a";
+    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#ffffff";
     const hex = bg.startsWith("#") ? bg : "#" + bg;
     if (personnaliserStrip) personnaliserStrip.value = hex;
     if (personnaliserStripHex) personnaliserStripHex.value = hex;
@@ -2244,6 +2267,8 @@ function initAppDashboard(slug) {
     if (personnaliserLogoWrap) personnaliserLogoWrap.classList.toggle("hidden", !!isText);
   }
   function updatePersonnaliserPreview() {
+    const DEFAULT_PREVIEW_BANNER_URL = "/assets/banner.png";
+    const DEFAULT_PREVIEW_LOGO_URL = "/assets/votrelogo.png";
     const card = document.getElementById("app-personnaliser-preview-card");
     const stripEl = document.getElementById("app-wallet-preview-strip");
     const stripTextPreview = document.getElementById("app-wallet-preview-strip-text");
@@ -2258,9 +2283,9 @@ function initAppDashboard(slug) {
     const restantsValueEl = document.getElementById("app-wallet-preview-restants");
     const ptsEmojiEl = document.getElementById("app-preview-pts-emoji");
     if (!card || !orgEl) return;
-    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#1e3a8a";
+    const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#ffffff";
     const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
-    const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#dbeafe";
+    const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#000000";
     const bgHex = bg.startsWith("#") ? bg : "#" + bg;
     if (personnaliserStrip) personnaliserStrip.value = bgHex;
     if (personnaliserStripHex) personnaliserStripHex.value = bgHex;
@@ -2301,13 +2326,23 @@ function initAppDashboard(slug) {
         bodyEl.style.removeProperty("background-size");
         bodyEl.style.removeProperty("background-position");
         bodyEl.style.removeProperty("background-repeat");
+        const shouldShowDefaultBanner = !!(programTypePoints && programTypePoints.checked);
         if (cardBgBannerEl) {
-          cardBgBannerEl.classList.add("hidden");
-          cardBgBannerEl.setAttribute("aria-hidden", "true");
-          cardBgBannerEl.style.backgroundImage = "none";
-          cardBgBannerEl.style.removeProperty("background-size");
-          cardBgBannerEl.style.removeProperty("background-position");
-          cardBgBannerEl.style.removeProperty("background-repeat");
+          if (shouldShowDefaultBanner) {
+            cardBgBannerEl.classList.remove("hidden");
+            cardBgBannerEl.setAttribute("aria-hidden", "false");
+            cardBgBannerEl.style.backgroundImage = `url(${DEFAULT_PREVIEW_BANNER_URL})`;
+            cardBgBannerEl.style.backgroundSize = "cover";
+            cardBgBannerEl.style.backgroundPosition = "center";
+            cardBgBannerEl.style.backgroundRepeat = "no-repeat";
+          } else {
+            cardBgBannerEl.classList.add("hidden");
+            cardBgBannerEl.setAttribute("aria-hidden", "true");
+            cardBgBannerEl.style.backgroundImage = "none";
+            cardBgBannerEl.style.removeProperty("background-size");
+            cardBgBannerEl.style.removeProperty("background-position");
+            cardBgBannerEl.style.removeProperty("background-repeat");
+          }
         }
         if (mainBlockEl) mainBlockEl.style.removeProperty("background");
       }
@@ -2342,6 +2377,8 @@ function initAppDashboard(slug) {
     const headerRightEl = document.getElementById("app-wallet-preview-header-right");
     if (headerRightEl) headerRightEl.textContent = "Récompenses ↗";
     const rewardValueEl = document.getElementById("app-wallet-preview-reward");
+    const rewardLabelEl = card.querySelector(".builder-wallet-card-reward-label");
+    if (rewardLabelEl) rewardLabelEl.textContent = isStamps ? "Récompense" : "Points";
     if (rewardValueEl && !isStamps) {
       const sorted = readPointTierInputs(document);
       const first = sorted[0];
@@ -2379,6 +2416,9 @@ function initAppDashboard(slug) {
     const useStripText = stripDisplayText && stripDisplayText.checked;
     const stripImg = document.getElementById("app-wallet-preview-strip-img");
     const hasLogoUrl = personnaliserLogoDataUrl && personnaliserLogoDataUrl.length > 0;
+    const previewLogoUrl = useStripText
+      ? ""
+      : (hasLogoUrl ? personnaliserLogoDataUrl : DEFAULT_PREVIEW_LOGO_URL);
     if (stripImg) {
       stripImg.removeAttribute("src");
       stripImg.classList.add("hidden");
@@ -2398,12 +2438,11 @@ function initAppDashboard(slug) {
       else logoWrap.style.display = "";
     }
     const walletLogo = document.getElementById("app-wallet-preview-logo");
-    if (walletLogo && hasLogoUrl && !useStripText) {
-      walletLogo.src = personnaliserLogoDataUrl;
-      walletLogo.classList.remove("hidden");
-    } else if (walletLogo) {
-      if (useStripText) walletLogo.classList.add("hidden");
-      else if (!hasLogoUrl) {
+    if (walletLogo) {
+      if (previewLogoUrl) {
+        walletLogo.src = previewLogoUrl;
+        walletLogo.classList.remove("hidden");
+      } else {
         walletLogo.removeAttribute("src");
         walletLogo.classList.add("hidden");
       }
@@ -2630,9 +2669,9 @@ function initAppDashboard(slug) {
       if (personnaliserOrg && orgFromApi) personnaliserOrg.value = orgFromApi;
       const sideBizName = document.getElementById("app-business-name");
       if (sideBizName) sideBizName.textContent = orgFromApi || slug || "Mon espace";
-      const bg = data.background_color ?? data.backgroundColor ?? "#1e3a8a";
+      const bg = data.background_color ?? data.backgroundColor ?? "#ffffff";
       const fg = data.foreground_color ?? data.foregroundColor ?? "#ffffff";
-      const label = data.label_color ?? data.labelColor ?? "#dbeafe";
+      const label = data.label_color ?? data.labelColor ?? "#000000";
       if (personnaliserBg) personnaliserBg.value = bg;
       if (personnaliserBgHex) personnaliserBgHex.value = bg;
       if (personnaliserFg) personnaliserFg.value = fg;
@@ -3617,9 +3656,9 @@ function initAppDashboard(slug) {
 
   if (personnaliserSave) {
     personnaliserSave.addEventListener("click", async () => {
-      const backgroundColor = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#1e3a8a";
-      const foregroundColor = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
-      const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#dbeafe";
+      const backgroundColor = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#ffffff";
+      const foregroundColor = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#0f172a";
+      const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#000000";
       const toHex = (v) => {
         const s = (v || "").trim();
         if (/^#[0-9A-Fa-f]{6}$/.test(s)) return s;
