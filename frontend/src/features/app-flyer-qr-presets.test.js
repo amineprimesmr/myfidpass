@@ -104,10 +104,11 @@ describe("mergeFlyerState", () => {
     expect(Object.prototype.hasOwnProperty.call(s, "flyerWheelOutlineWidth")).toBe(false);
   });
 
-  it("normalise le mode de rendu de la roue (texture ou aplats)", () => {
-    expect(defaultFlyerState().wheelRenderMode).toBe("png");
-    expect(mergeFlyerState({ wheelRenderMode: "segments" }).wheelRenderMode).toBe("segments");
-    expect(mergeFlyerState({ wheelRenderMode: "nope" }).wheelRenderMode).toBe("png");
+  it("retire les anciennes clés de mode de rendu", () => {
+    const s1 = mergeFlyerState({ wheelRenderMode: "segments" });
+    const s2 = mergeFlyerState({ wheel_render_mode: "png" });
+    expect(Object.prototype.hasOwnProperty.call(s1, "wheelRenderMode")).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(s2, "wheelRenderMode")).toBe(false);
   });
 
   it("borne la taille du titre et l’échelle des textes (étapes / roue)", () => {

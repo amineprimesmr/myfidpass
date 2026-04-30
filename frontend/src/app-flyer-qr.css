@@ -305,11 +305,6 @@
   color: var(--app-text, #1a202c);
 }
 
-#app-app .app-flyer-wheel-mode-select {
-  width: 100%;
-  margin-bottom: 0.35rem;
-}
-
 #app-app .app-flyer-wheel-seg-grid {
   display: grid;
   grid-template-columns: minmax(0, 4.5rem) 44px;

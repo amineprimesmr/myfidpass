@@ -11,18 +11,6 @@ export const FLYER_EXPORT = { w: 2400, h: 3600 };
 /** Nombre de parts : 6 secteurs égaux (60°) — flyer + libellés canvas alignés sur la même géométrie. */
 export const FLYER_WHEEL_SEGMENT_COUNT = 6;
 
-/**
- * Mode PNG seulement : calage rainures quand pointeur au milieu d’une part (1re arête ~11h si 0° utilisateur).
- * Mode vectoriel : pas ce décalage (rotation utilisateur seule).
- */
-export const FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG = -30;
-
-/**
- * Rayon des teintes PNG / clip = ce facteur × rayon affiché (bord 3D blanc plus étroit que le disque logique).
- */
-/** @deprecated Marge extérieure des teintes gérée dans `app-flyer-wheel.js` (`WHEEL_COLOR_OUTER_R_FRAC`). */
-export const FLYER_WHEEL_PNG_TINT_RADIUS_FACTOR = 0.9;
-
 /** Zone logo (drawFlyerCommerceLogo) : bas du bloc = centerYFrac + maxHFrac/2. */
 export const FLYER_LOGO_LAYOUT = Object.freeze({
   /** Marge sous le bord haut : le centre du logo ne doit pas gratter le haut du flyer. */
@@ -122,7 +110,6 @@ export function flyerTemplateMeta(id) {
  * @property {string} colorAccent
  * @property {string} colorBgTop
  * @property {string} colorBgBottom
- * @property {"segments"|"png"} wheelRenderMode
  * @property {string} wheelColorOdd parts impaires (1, 3, 5…)
  * @property {string} wheelColorEven parts paires (2, 4…)
  * @property {number} wheelSegmentOffsetDeg rotation découpe PNG / parts (°)
@@ -161,10 +148,8 @@ export function defaultFlyerState() {
     colorAccent: "#ffffff",
     colorBgTop: "#0f172a",
     colorBgBottom: "#020617",
-    /** `png` = texture `spinflyer` (teintes) ; `segments` = aplats 2D sans image. */
-    wheelRenderMode: "png",
     wheelColorOdd: "#fbbf24",
-    wheelColorEven: "#ffffff",
+    wheelColorEven: "#f59e0b",
     wheelSegmentOffsetDeg: 0,
     headlineFontId: "fraunces",
     headlineTextColor: "#ffffff",
@@ -270,16 +255,6 @@ function clampFlyerLogoMaxHFrac(v) {
   return Math.min(0.36, Math.max(0.06, Math.round(n * 1000) / 1000));
 }
 
-/**
- * @param {Record<string, unknown>} raw
- * @returns {"segments"|"png"}
- */
-function wheelRenderModeFromRaw(raw) {
-  const v = raw.wheelRenderMode ?? raw.wheel_render_mode;
-  if (v === undefined || v === null) return "png";
-  return String(v).trim().toLowerCase() === "segments" ? "segments" : "png";
-}
-
 /** @param {Partial<FlyerState> | null | undefined} raw */
 export function mergeFlyerState(raw) {
   const base = defaultFlyerState();
@@ -293,7 +268,6 @@ export function mergeFlyerState(raw) {
     ...base,
     ...rawClean,
     templateId: FLYER_TEMPLATE_ID,
-    wheelRenderMode: wheelRenderModeFromRaw(rawClean),
   };
   merged.wheelSegmentOffsetDeg = clampWheelOffsetDeg(merged.wheelSegmentOffsetDeg);
   /** Charte flyer : couleurs roue = primaire / secondaire si non fixées dans le JSON. */
@@ -317,6 +291,8 @@ export function mergeFlyerState(raw) {
   delete merged.socialUrl2;
   delete merged.social3;
   delete merged.socialUrl3;
+  delete merged.wheelRenderMode;
+  delete merged.wheel_render_mode;
   const headlineRaw = String(merged.headline ?? "").trim();
   if (!headlineRaw || /^fais\s+tourner\s+la\s+roue$/i.test(headlineRaw)) {
     merged.headline = base.headline;

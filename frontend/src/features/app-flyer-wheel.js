@@ -1,20 +1,16 @@
 /**
- * Rendu roue du flyer : parts vectorielles (égales) ou image PNG teintée (6 secteurs égaux).
+ * Rendu roue du flyer : mode vectoriel unique (segments propres).
  */
-import {
-  wheelSegmentColorsResolved,
-  FLYER_WHEEL_SEGMENT_COUNT,
-  FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG,
-} from "./app-flyer-qr-presets.js";
+import { wheelSegmentColorsResolved, FLYER_WHEEL_SEGMENT_COUNT } from "./app-flyer-qr-presets.js";
 
 /** Léger chevauchement angulaire pour masquer les fentes anti-alias entre secteurs. */
-const SEG_OVERLAP_RAD = 0.005;
+const SEG_OVERLAP_RAD = 0.003;
 
 /**
  * Rayon extérieur des teintes / parts, relatif au rayon logique `wheelR`.
  * Plus haut = couleurs plus près du bord visuel de la texture ; trop haut = risque sur le jante métal.
  */
-const WHEEL_COLOR_OUTER_R_FRAC = 0.86;
+const WHEEL_COLOR_OUTER_R_FRAC = 1;
 
 /**
  * Rayon intérieur des parts (0 = secteurs pleins jusqu’au centre, **pas** de « trou » sans teinte).
@@ -25,6 +21,11 @@ const WHEEL_HUB_R_FRAC = 0;
  * Cercle de **clip** pour les libellés — suit un peu l’anneau élargi pour ne pas rogner les textes.
  */
 const WHEEL_LABEL_CLIP_R_FRAC = 0.82;
+const CLEAN_ODD = "#fbbf24";
+const CLEAN_EVEN = "#f59e0b";
+/** Petit recalage global des parts couleur sur la texture gameflyer. */
+const WHEEL_MASK_ALIGNMENT_OFFSET_DEG = -30;
+const WHEEL_EVEN_VERY_LIGHT = "#f8fafc";
 
 /**
  * @param {string} hex
@@ -43,6 +44,20 @@ function lumaFromHex(hex) {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
 
+/**
+ * Évite les couleurs trop claires/sales dans la roue (ex: blanc pur).
+ * @param {string[]} colors
+ * @returns {string[]}
+ */
+function normalizeWheelColors(colors) {
+  return colors.map((hex, i) => {
+    if (i % 2 === 1) return WHEEL_EVEN_VERY_LIGHT;
+    const lum = lumaFromHex(hex);
+    if (lum > 0.9) return CLEAN_ODD;
+    return hex || CLEAN_ODD;
+  });
+}
+
 function offsetRad(offsetDeg) {
   return ((Number(offsetDeg) || 0) * Math.PI) / 180;
 }
@@ -54,7 +69,7 @@ function offsetRad(offsetDeg) {
  * @param {number} offsetDeg
  */
 function segmentAnglesEqual(i, n, offsetDeg) {
-  const base = -Math.PI / 2 + offsetRad(offsetDeg);
+  const base = -Math.PI / 2 + offsetRad(offsetDeg + WHEEL_MASK_ALIGNMENT_OFFSET_DEG);
   const step = (Math.PI * 2) / n;
   return {
     t0: base + i * step - SEG_OVERLAP_RAD,
@@ -102,7 +117,7 @@ function pathWheelSector(ctx, cx, cy, rInner, rOuter, t0, t1) {
  */
 function drawWheelSegmentLabels(ctx, cx, cy, r, offsetDeg, n, s, segmentHexColors) {
   if (n < 1) return;
-  const base = -Math.PI / 2 + offsetRad(offsetDeg);
+  const base = -Math.PI / 2 + offsetRad(offsetDeg + WHEEL_MASK_ALIGNMENT_OFFSET_DEG);
   const step = (Math.PI * 2) / n;
   /** Milieu radial de la couronne (entre moyeu et bord extérieur) — légèrement resserré pour rester dans le disque. */
   const labelR = r * 0.5;
@@ -175,93 +190,19 @@ export function drawWheelSegments(ctx, cx, cy, r, colors, offsetDeg = 0) {
 }
 
 /**
- * PNG : clip disque → par secteur : couleur d'abord, texture PNG en multiply par-dessus.
- * Approche inversée : on pose la teinte commerce, puis le PNG ajoute ombres/reflets metalliques.
- * Fonctionne sur n'importe quelle base PNG (claire ou sombre) — multiply sur fond coloré
- * préserve les ombres (zones noires du PNG restent noires) et les lumières (zones blanches = couleur pure).
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- * @param {CanvasImageSource} roueImg
- * @param {string[]} colors
- * @param {number} offsetDeg
- * @param {(ctx: CanvasRenderingContext2D, img: CanvasImageSource, dx: number, dy: number, dw: number, dh: number) => void} drawImageCover
- */
-function drawPngWheelSegmentTints(ctx, cx, cy, r, roueImg, colors, offsetDeg, drawImageCover) {
-  const n = colors.length;
-  if (n < 1) return;
-  const box = r * 2;
-  const lx = cx - r;
-  const ly = cy - r;
-  const rOut = r * WHEEL_COLOR_OUTER_R_FRAC;
-  const rIn = r * WHEEL_HUB_R_FRAC;
-
-  ctx.save();
-  /** Rien ne doit dépasser l’inset bord. */
-  ctx.beginPath();
-  ctx.arc(cx, cy, rOut, 0, Math.PI * 2);
-  ctx.clip();
-
-  for (let i = 0; i < n; i++) {
-    const { t0, t1 } = segmentAnglesEqual(i, n, offsetDeg);
-    ctx.save();
-    pathWheelSector(ctx, cx, cy, rIn, rOut, t0, t1);
-    ctx.clip();
-
-    // Étape 1 : fond plein couleur commerce
-    ctx.globalCompositeOperation = "source-over";
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = colors[i];
-    pathWheelSector(ctx, cx, cy, rIn, rOut, t0, t1);
-    ctx.fill();
-
-    // Étape 2 : texture PNG par-dessus en multiply — zones sombres = ombres, zones claires = reflets colorés
-    ctx.globalCompositeOperation = "multiply";
-    ctx.globalAlpha = 1;
-    drawImageCover(ctx, roueImg, lx, ly, box, box);
-
-    // Étape 3 : screen : reflets métal / relief de la texture
-    ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.18;
-    drawImageCover(ctx, roueImg, lx, ly, box, box);
-
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = "source-over";
-    ctx.restore();
-  }
-  ctx.restore();
-}
-
-/**
  * Libellés GAGNÉ/PERDU (même calage que `drawFlyerWheel`).
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  */
 export function drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, wheelR) {
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  const pngAligned = s.wheelRenderMode !== "segments";
-  const labelOff = pngAligned ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
-  const cols = wheelSegmentColorsResolved(s);
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOff, FLYER_WHEEL_SEGMENT_COUNT, s, cols);
+  const cols = normalizeWheelColors(wheelSegmentColorsResolved(s));
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, FLYER_WHEEL_SEGMENT_COUNT, s, cols);
 }
 
-/**
- * @param {CanvasImageSource | null} roueImg — texture chargée si `wheelRenderMode === "png"`.
- */
-export function drawFlyerWheel(ctx, s, roueImg, wheelCx, wheelCy, wheelR, drawImageCover) {
-  const colors = wheelSegmentColorsResolved(s);
+export function drawFlyerWheel(ctx, s, wheelCx, wheelCy, wheelR) {
+  const colors = normalizeWheelColors(wheelSegmentColorsResolved(s));
   const userOff = typeof s.wheelSegmentOffsetDeg === "number" ? s.wheelSegmentOffsetDeg : 0;
-  /** Mode verrouillé: dès que la texture est chargée, on l'utilise. */
-  const usePng = Boolean(roueImg);
-
-  const labelOffsetDeg = usePng ? userOff + FLYER_WHEEL_PNG_EXTRA_OFFSET_DEG : userOff;
-
-  if (usePng) {
-    const off = labelOffsetDeg;
-    drawPngWheelSegmentTints(ctx, wheelCx, wheelCy, wheelR, roueImg, colors, off, drawImageCover);
-  } else {
-    drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
-  }
-  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, labelOffsetDeg, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
+  drawWheelSegments(ctx, wheelCx, wheelCy, wheelR, colors, userOff);
+  drawWheelSegmentLabels(ctx, wheelCx, wheelCy, wheelR, userOff, FLYER_WHEEL_SEGMENT_COUNT, s, colors);
 }

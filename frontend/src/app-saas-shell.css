@@ -123,13 +123,33 @@
   body.page-app #app-app.app-saas-welcome-active .app-main {
     margin-top: calc(
       var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 52px)) -
-        var(--app-main-sheet-pull, 12px) + 8px
+        var(--app-main-sheet-pull, 12px) + 2px
     ) !important;
     padding-top: 1rem !important;
+    height: auto !important;
+    min-height: calc(
+      100vh - (var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 52px)) - 4px)
+    ) !important;
+    overflow: visible;
   }
 
   body.page-app #app-app.app-saas-welcome-active.app-saas-frc-scroll-dense .app-main {
-    margin-top: calc(var(--app-admin-strip-h, 0px) + var(--app-topbar-height, 52px) + 44px) !important;
+    margin-top: calc(var(--app-admin-strip-h, 0px) + var(--app-topbar-height, 52px) + 16px) !important;
+    height: calc(100vh - (var(--app-admin-strip-h, 0px) + var(--app-topbar-height, 52px) + 16px)) !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+
+  body.page-app:has(#app-app.app-saas-welcome-active.app-saas-frc-scroll-dense) {
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  #app-app.app-saas-welcome-active.app-saas-frc-scroll-dense {
+    height: 100vh;
+    overflow: hidden;
   }
 }
 

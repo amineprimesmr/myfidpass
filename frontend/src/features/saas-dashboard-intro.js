@@ -90,6 +90,11 @@ export function initSaasFrcScrollCollapse() {
   let forcedVisible = false;
   let baseY = -1;
   let wasDense = false;
+  let userInteracted = permanentlyCollapsed;
+
+  const markUserInteraction = () => {
+    userInteracted = true;
+  };
 
   const currentScrollY = () => {
     const mainY = main instanceof HTMLElement ? main.scrollTop : 0;
@@ -102,26 +107,22 @@ export function initSaasFrcScrollCollapse() {
     const y = currentScrollY();
     if (baseY < 0) baseY = y;
     const scrollDelta = Math.max(0, y - baseY);
-    const userStartedScroll = scrollDelta > 1;
+    const userStartedScroll = userInteracted && scrollDelta > 1;
     const isMobile = typeof window !== "undefined" && window.matchMedia?.("(max-width: 900px)").matches;
     const collapseStart = isMobile ? 6 : 18;
     const collapseEnd = isMobile ? 122 : 44;
     const progressRaw = (scrollDelta - collapseStart) / Math.max(1, collapseEnd - collapseStart);
-    const progress = userStartedScroll ? Math.max(0, Math.min(1, progressRaw)) : 0;
+    const progress =
+      userInteracted || permanentlyCollapsed ? Math.max(0, Math.min(1, progressRaw)) : 0;
     root.style.setProperty("--saas-frc-collapse-progress", progress.toFixed(3));
 
-    let dense = progress >= 1;
+    let dense = (userInteracted && progress >= 1) || permanentlyCollapsed;
     if (permanentlyCollapsed) dense = true;
     root.classList.toggle("app-saas-frc-scroll-dense", dense);
 
-    // Évite le "saut auto" quand on bascule vers le mode compact:
-    // on transfère le reliquat de scroll dans le conteneur interne, puis on fige le viewport.
-    if (!wasDense && dense && isMobile && main instanceof HTMLElement) {
-      const carry = Math.max(0, scrollDelta - collapseEnd);
-      main.scrollTop = carry;
-      if (typeof window !== "undefined" && window.scrollY > 0) {
-        window.scrollTo(0, 0);
-      }
+    // Desktop: ne jamais auto-déclencher un scroll programmatique.
+    if (!isMobile && !wasDense && dense && main instanceof HTMLElement) {
+      main.scrollTop = 0;
     }
 
     // Première descente complète : on verrouille le mode compact pour les prochains accès.
@@ -193,6 +194,15 @@ export function initSaasFrcScrollCollapse() {
   window.addEventListener("scroll", onAnyScroll, opts);
   main?.addEventListener("scroll", onAnyScroll, opts);
   window.addEventListener("resize", onAnyScroll, opts);
+  window.addEventListener("wheel", markUserInteraction, opts);
+  main?.addEventListener("wheel", markUserInteraction, opts);
+  window.addEventListener("touchmove", markUserInteraction, opts);
+  main?.addEventListener("touchmove", markUserInteraction, opts);
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " " || e.key === "End") {
+      markUserInteraction();
+    }
+  });
 
   // Recalcule immédiatement quand le shell SaaS change d'état (hidden/visible, dense, etc.).
   const watchedNodes = [root, topbar, cluster, strip].filter(Boolean);
