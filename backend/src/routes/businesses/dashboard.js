@@ -206,6 +206,9 @@ router.get("/settings", (req, res) => {
     flyer_custom_bg_url: parseFlyerPrefsCustomBgDataUrl(business.flyer_prefs_json)
       ? `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/flyer-custom-bg`
       : undefined,
+    has_flyer_prefs:
+      typeof business.flyer_prefs_json === "string" &&
+      business.flyer_prefs_json.trim().length > 0,
     flyer_prefs_updated_at: business.flyer_prefs_updated_at ?? undefined,
     fidelity_qr_hero_title: business.fidelity_qr_hero_title?.trim() || undefined,
     strip_color: business.strip_color ?? undefined,

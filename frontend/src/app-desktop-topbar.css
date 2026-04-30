@@ -875,7 +875,7 @@
   }
 
   body.page-app #app-app .app-main {
-    margin-top: calc(var(--app-topbar-height) - var(--app-main-sheet-pull, 16px) + 10px) !important;
+    margin-top: calc(var(--app-topbar-height) - var(--app-main-sheet-pull, 16px) + 20px) !important;
 
     margin-left: 0 !important;
     margin-right: 0 !important;

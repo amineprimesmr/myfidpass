@@ -873,6 +873,8 @@ function initAppDashboard(slug) {
     return Boolean(
       settings.flyer_prefs_updated_at ||
       settings.flyerPrefsUpdatedAt ||
+      settings.has_flyer_prefs ||
+      settings.hasFlyerPrefs ||
       settings.flyer_custom_bg_url ||
       settings.flyerCustomBgUrl
     );
@@ -881,6 +883,10 @@ function initAppDashboard(slug) {
   function isCardConfigured(settings) {
     if (!settings || typeof settings !== "object") return false;
     return Boolean(
+      settings.organization_name ||
+      settings.organizationName ||
+      settings.program_type ||
+      settings.programType ||
       settings.logo_url ||
       settings.logoUrl ||
       settings.has_card_background ||
@@ -1036,13 +1042,20 @@ function initAppDashboard(slug) {
     return `${pageOrigin}/fidelity/${value}`;
   }
   let currentShareSlug = slug || "";
+  const personnaliserWalletTestWrap = personnaliserWalletTestBtn?.closest(".app-save-cta-wrap") || null;
+  function isMobileWalletPlatform(platform) {
+    return platform === "ios" || platform === "android";
+  }
   function refreshPersonnaliserWalletTestLabel() {
     if (!personnaliserWalletTestBtn) return;
-    const labelEl = personnaliserWalletTestBtn.querySelector(".app-save-cta-label");
     const platform = detectWalletPlatform();
-    let label = "Tester sur mobile";
-    if (platform === "ios") label = "Tester sur Apple Wallet";
-    else if (platform === "android") label = "Tester sur Google Wallet";
+    const isMobile = isMobileWalletPlatform(platform);
+    if (personnaliserWalletTestWrap) {
+      personnaliserWalletTestWrap.classList.toggle("hidden", !isMobile);
+    }
+    if (!isMobile) return;
+    const labelEl = personnaliserWalletTestBtn.querySelector(".app-save-cta-label");
+    const label = platform === "ios" ? "Tester sur Apple Wallet" : "Tester sur Google Wallet";
     if (labelEl) labelEl.textContent = label;
   }
 
@@ -1077,10 +1090,56 @@ function initAppDashboard(slug) {
   }
   const shareDownloadQrBtn = document.getElementById("app-share-download-qr");
   if (personnaliserWalletTestBtn) {
-    personnaliserWalletTestBtn.addEventListener("click", () => {
-      const targetSlug = (shareSlugInputEl?.value || currentShareSlug || slug || "").trim();
-      if (!targetSlug) return;
-      window.location.href = getShareLinkForSlug(targetSlug);
+    personnaliserWalletTestBtn.addEventListener("click", async () => {
+      const platform = detectWalletPlatform();
+      if (!isMobileWalletPlatform(platform)) return;
+      const targetSlug = (currentShareSlug || slug || "").trim();
+      if (!targetSlug) {
+        showPersonnaliserMessage("Lien de carte introuvable pour le test Wallet.", true);
+        return;
+      }
+      personnaliserWalletTestBtn.disabled = true;
+      showPersonnaliserMessage("Préparation du test Wallet…", false);
+      try {
+        const guestEmail = `wallet-test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@guest.invalid`;
+        const createRes = await fetch(
+          `${API_BASE}/api/businesses/${encodeURIComponent(targetSlug)}/members`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: "Test Wallet", email: guestEmail }),
+          }
+        );
+        const createData = await createRes.json().catch(() => ({}));
+        if (!createRes.ok) {
+          throw new Error(createData?.error || "Impossible de créer une carte de test.");
+        }
+        const memberId = String(createData?.memberId || createData?.member?.id || "").trim();
+        if (!memberId) throw new Error("Identifiant de carte test manquant.");
+        if (platform === "ios") {
+          window.location.assign(
+            `${API_BASE}/api/businesses/${encodeURIComponent(targetSlug)}/members/${encodeURIComponent(memberId)}/pass`
+          );
+          return;
+        }
+        const googleRes = await fetch(
+          `${API_BASE}/api/businesses/${encodeURIComponent(targetSlug)}/members/${encodeURIComponent(memberId)}/google-wallet-url`,
+          { cache: "no-store" }
+        );
+        const googleData = await googleRes.json().catch(() => ({}));
+        const googleUrl = String(googleData?.url || "").trim();
+        if (!googleRes.ok || !googleUrl) {
+          throw new Error(
+            googleData?.error || "Google Wallet n'est pas disponible pour cette carte."
+          );
+        }
+        window.location.assign(googleUrl);
+      } catch (e) {
+        const msg = e?.message || "Ouverture Wallet impossible.";
+        showPersonnaliserMessage(msg, true);
+      } finally {
+        personnaliserWalletTestBtn.disabled = false;
+      }
     });
   }
 

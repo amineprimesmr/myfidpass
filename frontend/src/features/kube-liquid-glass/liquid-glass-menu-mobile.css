@@ -95,8 +95,8 @@
 
   .lg-fallback-filters .lg-nav-sm__dropdown .lg-mobile-liquid-sheet.lg-menu--fallback,
   .lg-fallback-filters .lg-nav-sm__dropdown #fidpass-liquid-menu-glass-panel.lg-menu--fallback {
-    -webkit-backdrop-filter: blur(18px) saturate(1.2);
-    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
+    backdrop-filter: blur(18px) saturate(1.2) !important;
   }
 
   .lg-nav-sm__dropdown .lg-mobile-liquid-sheet::before,

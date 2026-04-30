@@ -80,9 +80,9 @@
 /* Colonne visuelle : deux vignettes chevauchées */
 .landing-launch-sf-visual {
   position: relative;
-  margin: 0 auto 0 0;
-  width: min(100%, 480px);
-  min-height: min(560px, 72vw);
+  margin: 0 calc(50% - 50vw) 0 0;
+  width: min(88vw, 1040px);
+  min-height: clamp(620px, 72vw, 980px);
 }
 
 .landing-launch-sf-fig {
@@ -104,10 +104,14 @@
 
 .landing-launch-sf-fig--primary {
   top: 0;
-  left: 0;
-  width: clamp(176px, 46%, 238px);
+  right: 0;
+  left: auto;
+  width: clamp(500px, 88%, 980px);
   aspect-ratio: 3 / 4.05;
   z-index: 1;
+  overflow: visible;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .landing-launch-sf-fig--overlap {
@@ -123,7 +127,8 @@
 }
 
 .landing-launch-sf-fig--primary .landing-launch-sf-img {
-  object-position: 52% 40%;
+  object-fit: contain;
+  object-position: 100% 50%;
 }
 
 /* Étapes — numéros vert néon (#00FF80) lisibles comme la capture */
@@ -337,29 +342,40 @@
 }
 
 @media (max-width: 900px) {
+  .landing-launch-sf {
+    padding-top: clamp(1.1rem, 3vw, 1.8rem);
+    padding-bottom: clamp(0.7rem, 2.4vw, 1.2rem);
+  }
+
+  .landing-launch-sf-heading {
+    margin-bottom: clamp(0.55rem, 2vw, 0.95rem);
+  }
+
   .landing-launch-sf-grid {
     grid-template-columns: 1fr;
-    gap: clamp(2.5rem, 7vw, 3.5rem);
+    gap: clamp(0.3rem, 1.4vw, 0.6rem);
   }
 
   .landing-launch-sf-visual {
-    width: min(100%, 420px);
-    min-height: min(480px, 95vw);
-    margin: 0 auto;
+    width: min(100vw, 760px);
+    min-height: min(660px, 140vw);
+    margin: 0 calc(50% - 50vw) 0 0;
   }
 
   .landing-launch-sf-fig--primary {
-    width: min(48%, 220px);
+    width: min(100%, 760px);
+    right: 0;
+    left: auto;
   }
 
   .landing-launch-sf-fig--overlap {
-    width: min(54%, 240px);
+    display: none;
   }
 
   .landing-launch-sf-video-tease {
     position: static;
     width: 100%;
-    margin-top: 1.5rem;
+    margin-top: 0.2rem;
   }
 
   .landing-launch-sf-cta {
