@@ -49,6 +49,18 @@ const passwordSchema = z
 
 const optionalPlaceIdSchema = z.string().trim().max(300).optional().nullable();
 const optionalEstablishmentNameSchema = z.string().trim().max(100).optional().nullable();
+const establishmentsArraySchema = z
+  .array(
+    z.object({
+      google_place_id: optionalPlaceIdSchema,
+      googlePlaceId: optionalPlaceIdSchema,
+      establishment_name: optionalEstablishmentNameSchema,
+      establishmentName: optionalEstablishmentNameSchema,
+    }),
+  )
+  .max(20)
+  .optional()
+  .nullable();
 
 export const schemas = {
 
@@ -61,17 +73,24 @@ export const schemas = {
     googlePlaceId: optionalPlaceIdSchema,
     establishment_name: optionalEstablishmentNameSchema,
     establishmentName: optionalEstablishmentNameSchema,
+    establishments: establishmentsArraySchema,
   }).superRefine((data, ctx) => {
     const placeId = String(data.google_place_id || data.googlePlaceId || "").trim();
     const establishmentName = String(data.establishment_name || data.establishmentName || "").trim();
-    if (!placeId) {
+    const list = Array.isArray(data.establishments) ? data.establishments : [];
+    const hasListEntry = list.some((item) => {
+      const pid = String(item?.google_place_id || item?.googlePlaceId || "").trim();
+      const nm = String(item?.establishment_name || item?.establishmentName || "").trim();
+      return !!pid && !!nm;
+    });
+    if (!placeId && !hasListEntry) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["google_place_id"],
         message: "Sélectionnez votre établissement avant de créer votre compte.",
       });
     }
-    if (!establishmentName) {
+    if (!establishmentName && !hasListEntry) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["establishment_name"],
@@ -158,6 +177,7 @@ export const schemas = {
     googlePlaceId: optionalPlaceIdSchema,
     establishment_name: optionalEstablishmentNameSchema,
     establishmentName: optionalEstablishmentNameSchema,
+    establishments: establishmentsArraySchema,
   }),
 
   /** POST /businesses/:slug/dashboard/team/staff-accounts — compte employé (identifiant + mot de passe, sans e-mail). */

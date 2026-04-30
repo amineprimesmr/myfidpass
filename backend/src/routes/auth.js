@@ -154,13 +154,37 @@ function authUserPayload(user) {
 }
 
 function normalizeEstablishmentSelection(source = {}) {
-  return {
+  const primary = {
     googlePlaceId: String(
       source.google_place_id || source.googlePlaceId || source.place_id || source.placeId || ""
     ).trim(),
     establishmentName: String(
       source.establishment_name || source.establishmentName || ""
     ).trim(),
+  };
+  const rawList = Array.isArray(source?.establishments) ? source.establishments : [];
+  const list = rawList
+    .map((item) => ({
+      googlePlaceId: String(
+        item?.google_place_id || item?.googlePlaceId || item?.place_id || item?.placeId || ""
+      ).trim(),
+      establishmentName: String(
+        item?.establishment_name || item?.establishmentName || ""
+      ).trim(),
+    }))
+    .filter((item) => item.googlePlaceId && item.establishmentName);
+  const merged = [];
+  const seen = new Set();
+  for (const item of [primary, ...list]) {
+    if (!item?.googlePlaceId || !item?.establishmentName) continue;
+    const key = item.googlePlaceId.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(item);
+  }
+  return {
+    ...primary,
+    establishments: merged,
   };
 }
 
@@ -193,11 +217,16 @@ function respondMissingEstablishment(res) {
 }
 
 async function ensureInitialBusinessForUser(userId, selection) {
-  if (!hasSelectedEstablishment(selection)) return getMerchantBusinessState(userId);
-  await tryCreateFirstBusinessFromGooglePlace(userId, selection.googlePlaceId, selection.establishmentName);
-  const businessesAfterPlace = getBusinessesByUserId(userId);
-  if (businessesAfterPlace.length === 0) {
-    await tryCreateFirstBusinessFromNameOnly(userId, selection.establishmentName);
+  const picks = Array.isArray(selection?.establishments) ? selection.establishments : [];
+  if (picks.length === 0 && !hasSelectedEstablishment(selection)) return getMerchantBusinessState(userId);
+  const targets = picks.length > 0 ? picks : [selection];
+  for (const target of targets) {
+    const beforeCount = getBusinessesByUserId(userId).length;
+    await tryCreateFirstBusinessFromGooglePlace(userId, target.googlePlaceId, target.establishmentName);
+    const businessesAfterPlace = getBusinessesByUserId(userId);
+    if (businessesAfterPlace.length <= beforeCount) {
+      await tryCreateFirstBusinessFromNameOnly(userId, target.establishmentName);
+    }
   }
   return getMerchantBusinessState(userId);
 }
