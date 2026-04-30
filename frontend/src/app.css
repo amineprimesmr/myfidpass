@@ -5024,6 +5024,7 @@ html:has(body.page-app) {
   margin-left: 0;
   font-size: 0.5rem;
   font-weight: 600;
+  color: #0f172a;
   opacity: 0.95;
   white-space: nowrap;
   flex-shrink: 0;

@@ -2030,6 +2030,8 @@ function initAppDashboard(slug) {
   const cardModePillStamps = document.getElementById("app-card-mode-pill-stamps");
   const rulesPanelPoints = document.getElementById("app-rules-points");
   const rulesPanelStamps = document.getElementById("app-rules-stamps");
+  const personnaliserCardBgWrap = document.getElementById("app-personnaliser-card-bg-wrap");
+  const personnaliserStampIconWrap = document.getElementById("app-personnaliser-stamp-icon-wrap");
   const pointsPerEuroEl = document.getElementById("app-points-per-euro");
   const pointsPerVisitEl = document.getElementById("app-points-per-visit");
   const loyaltyModeCashEl = document.getElementById("app-loyalty-mode-cash");
@@ -2111,6 +2113,14 @@ function initAppDashboard(slug) {
     const isStamps = programTypeStamps && programTypeStamps.checked;
     if (rulesPanelPoints) rulesPanelPoints.classList.toggle("hidden", !!isStamps);
     if (rulesPanelStamps) rulesPanelStamps.classList.toggle("hidden", !isStamps);
+    if (personnaliserCardBgWrap) {
+      personnaliserCardBgWrap.classList.toggle("hidden", !!isStamps);
+      personnaliserCardBgWrap.setAttribute("aria-hidden", isStamps ? "true" : "false");
+    }
+    if (personnaliserStampIconWrap) {
+      personnaliserStampIconWrap.classList.toggle("hidden", !isStamps);
+      personnaliserStampIconWrap.setAttribute("aria-hidden", isStamps ? "false" : "true");
+    }
     const isPoints = !!(programTypePoints && programTypePoints.checked);
     if (cardModePillPoints) {
       cardModePillPoints.classList.toggle("is-active", isPoints);
@@ -2284,7 +2294,7 @@ function initAppDashboard(slug) {
     const ptsEmojiEl = document.getElementById("app-preview-pts-emoji");
     if (!card || !orgEl) return;
     const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#ffffff";
-    const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#ffffff";
+    const fg = personnaliserFgHex?.value?.trim() || personnaliserFg?.value || "#0f172a";
     const labelColor = personnaliserLabelHex?.value?.trim() || personnaliserLabel?.value || "#000000";
     const bgHex = bg.startsWith("#") ? bg : "#" + bg;
     if (personnaliserStrip) personnaliserStrip.value = bgHex;
@@ -2351,41 +2361,66 @@ function initAppDashboard(slug) {
     const requiredStamps = 10;
     const useStripImage = stripDisplayLogo && stripDisplayLogo.checked;
     const showPointsOrStamps = !hasCardBgUrl;
-    if (ptsWrap) ptsWrap.classList.toggle("hidden", !!isStamps || !showPointsOrStamps);
-    if (stampsWrap) stampsWrap.classList.toggle("hidden", !isStamps || !showPointsOrStamps);
+    if (ptsWrap) {
+      /* Nettoyage demandé : on retire le gros compteur points dans les 2 modes. */
+      ptsWrap.classList.add("hidden");
+      ptsWrap.style.visibility = "hidden";
+      ptsWrap.setAttribute("aria-hidden", "true");
+    }
+    if (stampsWrap) {
+      const showStampsStrip = !!(isStamps && showPointsOrStamps);
+      stampsWrap.classList.toggle("hidden", !showStampsStrip);
+      stampsWrap.style.visibility = showStampsStrip ? "visible" : "hidden";
+      stampsWrap.setAttribute("aria-hidden", showStampsStrip ? "false" : "true");
+    }
     if (bandeauEl) {
       if (isStamps && showPointsOrStamps) {
         bandeauEl.classList.remove("hidden");
+        bandeauEl.style.visibility = "visible";
         bandeauEl.style.background = bgHex;
         bandeauEl.style.backgroundImage = "none";
         bandeauEl.style.removeProperty("background-size");
         bandeauEl.style.removeProperty("background-position");
       } else {
-        bandeauEl.style.backgroundImage = "none";
         bandeauEl.classList.add("hidden");
+        bandeauEl.style.visibility = "hidden";
+        bandeauEl.style.backgroundImage = "none";
+        bandeauEl.style.background = "transparent";
       }
     }
     const rewardWrap = document.getElementById("app-preview-reward-wrap");
-    if (rewardWrap) rewardWrap.classList.toggle("hidden", !!isStamps);
-    if (restantsWrap) restantsWrap.classList.toggle("hidden", !isStamps || !showPointsOrStamps);
-    if (restantsValueEl && isStamps) restantsValueEl.textContent = "= " + String(requiredStamps);
+    if (rewardWrap) rewardWrap.classList.remove("hidden");
+    if (restantsWrap) restantsWrap.classList.add("hidden");
     const restantsLabelEl = document.getElementById("app-wallet-preview-restants-label");
     const memberLabelEl = document.getElementById("app-wallet-preview-member-label");
+    const memberValueEl = card.querySelector(".builder-wallet-card-member-value");
     const labelRestantsVal = document.getElementById("app-personnaliser-label-restants")?.value?.trim();
     if (restantsLabelEl) restantsLabelEl.textContent = labelRestantsVal || "Restants";
     if (memberLabelEl) memberLabelEl.textContent = "Membre";
+    if (memberValueEl) memberValueEl.textContent = "Amine";
     const headerRightEl = document.getElementById("app-wallet-preview-header-right");
-    if (headerRightEl) headerRightEl.textContent = "Récompenses ↗";
+    if (headerRightEl) headerRightEl.textContent = "Récompenses ⤴︎";
     const rewardValueEl = document.getElementById("app-wallet-preview-reward");
     const rewardLabelEl = card.querySelector(".builder-wallet-card-reward-label");
-    if (rewardLabelEl) rewardLabelEl.textContent = isStamps ? "Récompense" : "Points";
-    if (rewardValueEl && !isStamps) {
-      const sorted = readPointTierInputs(document);
-      const first = sorted[0];
-      rewardValueEl.textContent = first?.label?.trim() || "Paliers en magasin";
+    if (isStamps) {
+      const skipMid = !!(stampSkipMidEl && stampSkipMidEl.checked);
+      const midReward = stampMidRewardLabelEl?.value?.trim() || "Récompense au 5e passage";
+      const finalReward = stampRewardLabelEl?.value?.trim() || "Récompense à la carte complète";
+      const nextIn = skipMid ? requiredStamps : Math.max(1, Math.ceil(requiredStamps / 2));
+      if (rewardLabelEl) rewardLabelEl.textContent = `Dans ${nextIn} passage${nextIn > 1 ? "s" : ""}`;
+      if (rewardValueEl) rewardValueEl.textContent = skipMid ? finalReward : midReward;
+      if (restantsValueEl) restantsValueEl.textContent = skipMid ? finalReward : midReward;
+      if (restantsLabelEl) restantsLabelEl.textContent = `Dans ${nextIn} passage${nextIn > 1 ? "s" : ""}`;
+    } else {
+      const pointsValue = "0";
+      if (rewardLabelEl) rewardLabelEl.textContent = "Points";
+      if (rewardValueEl) rewardValueEl.textContent = `${pointsValue} points`;
+      if (valueEl) valueEl.textContent = pointsValue;
     }
-    if (valueEl) valueEl.textContent = isStamps ? "" : "0";
-    if (labelEl) labelEl.textContent = isStamps ? "Tampons" : "Points";
+    if (isStamps && valueEl) valueEl.textContent = "0";
+    if (labelEl) {
+      labelEl.textContent = isStamps ? "Tampons" : "";
+    }
     if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
     if (stampsGridEl && isStamps && showPointsOrStamps) {
       const hasCustomStampIcon = personnaliserStampIconDataUrl && personnaliserStampIconDataUrl.length > 0;
@@ -2670,7 +2705,7 @@ function initAppDashboard(slug) {
       const sideBizName = document.getElementById("app-business-name");
       if (sideBizName) sideBizName.textContent = orgFromApi || slug || "Mon espace";
       const bg = data.background_color ?? data.backgroundColor ?? "#ffffff";
-      const fg = data.foreground_color ?? data.foregroundColor ?? "#ffffff";
+      const fg = data.foreground_color ?? data.foregroundColor ?? "#0f172a";
       const label = data.label_color ?? data.labelColor ?? "#000000";
       if (personnaliserBg) personnaliserBg.value = bg;
       if (personnaliserBgHex) personnaliserBgHex.value = bg;

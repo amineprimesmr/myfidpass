@@ -1035,22 +1035,22 @@
                   <div id="app-logo-colors-swatches-bg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-bg"></div>
                 </div>
                 <div class="app-color-row">
+                  <label class="app-label" for="app-personnaliser-label" id="app-logo-colors-aria-lbl">Titre</label>
+                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#000000" />
+                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#000000" maxlength="7" />
+                  <div id="app-logo-colors-swatches-label" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-lbl"></div>
+                </div>
+                <div class="app-color-row">
                   <label class="app-label" for="app-personnaliser-fg" id="app-logo-colors-aria-fg">Texte</label>
                   <input type="color" id="app-personnaliser-fg" class="app-color-input" value="#0f172a" />
                   <input type="text" id="app-personnaliser-fg-hex" class="app-input app-input-hex" value="#0f172a" maxlength="7" />
                   <div id="app-logo-colors-swatches-fg" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-fg"></div>
                 </div>
-                <div class="app-color-row">
-                  <label class="app-label" for="app-personnaliser-label" id="app-logo-colors-aria-lbl">Labels</label>
-                  <input type="color" id="app-personnaliser-label" class="app-color-input" value="#000000" />
-                  <input type="text" id="app-personnaliser-label-hex" class="app-input app-input-hex" value="#000000" maxlength="7" />
-                  <div id="app-logo-colors-swatches-label" class="app-logo-colors-swatches app-logo-colors-swatches--inline hidden" role="group" aria-labelledby="app-logo-colors-aria-lbl"></div>
-                </div>
                 <input type="hidden" id="app-personnaliser-strip" value="#ffffff" />
                 <input type="hidden" id="app-personnaliser-strip-hex" value="#ffffff" />
               </div>
+                      <div id="app-personnaliser-card-bg-wrap">
                       <p class="app-step-label">Image de fond de carte</p>
-                      <p class="app-hint">Bandeau Wallet (ratio 750×246 px, optionnel). Ajouter, modifier ou supprimer.</p>
                       <div class="app-personnaliser-card-bg">
                         <div class="app-drop-zone app-personnaliser-card-bg-zone app-media-drop-wrap" id="app-card-bg-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
                           <input type="file" id="app-personnaliser-card-bg" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
@@ -1059,6 +1059,22 @@
                             <img id="app-personnaliser-card-bg-preview" class="app-logo-preview hidden" alt="" />
                           </label>
                           <button type="button" id="app-personnaliser-card-bg-clear" class="app-media-drop-clear hidden" aria-label="Supprimer l'image de fond" title="Supprimer">×</button>
+                        </div>
+                      </div>
+                      </div>
+                      <div id="app-personnaliser-stamp-icon-wrap" class="hidden" aria-hidden="true">
+                        <p class="app-step-label">Icône tampons</p>
+                        <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône">
+                          <div class="app-stamp-icon-custom-wrap">
+                            <div class="app-drop-zone app-stamp-icon-custom app-media-drop-wrap" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
+                              <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
+                              <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
+                                <span id="app-stamp-icon-placeholder">+</span>
+                                <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
+                              </label>
+                              <button type="button" id="app-stamp-icon-remove" class="app-media-drop-clear app-media-drop-clear--compact hidden" aria-label="Supprimer l'icône personnalisée" title="Supprimer">×</button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1072,10 +1088,9 @@
                   </button>
                   <div id="app-personnaliser-panel-logo" class="app-personnaliser-group-panel">
                     <div class="app-personnaliser-group-panel-inner">
-                      <p class="app-step-label">Affichage de l’en-tête</p>
-              <div class="app-rules-type">
-                <label class="app-radio-label"><input type="radio" name="app-strip-display" value="logo" id="app-strip-display-logo" checked /> Logo (image)</label>
-                <label class="app-radio-label"><input type="radio" name="app-strip-display" value="text" id="app-strip-display-text" /> Texte à la place du logo</label>
+              <div class="hidden" aria-hidden="true">
+                <input type="radio" name="app-strip-display" value="logo" id="app-strip-display-logo" checked />
+                <input type="radio" name="app-strip-display" value="text" id="app-strip-display-text" />
               </div>
               <div id="app-strip-text-wrap" class="hidden">
                 <p class="app-step-label">Texte affiché dans le bandeau</p>
@@ -1105,20 +1120,18 @@
                     <div class="app-personnaliser-group-panel-inner">
                       <div id="regles-carte" class="app-personnaliser-rules-embed">
                         <div class="app-card-rules-form-card app-rewards-form-card">
-                          <div class="app-rewards-mode-switch">
-                            <label class="app-rewards-mode-pill"><input type="radio" name="app-program-type" value="points" id="app-program-type-points" checked /> <span>Mode Points</span></label>
-                            <label class="app-rewards-mode-pill"><input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" /> <span>Mode Tampons</span></label>
+                          <div class="hidden" aria-hidden="true">
+                            <input type="radio" name="app-program-type" value="points" id="app-program-type-points" checked />
+                            <input type="radio" name="app-program-type" value="stamps" id="app-program-type-stamps" />
                           </div>
                           <div id="app-rules-points" class="app-rules-panel hidden app-rewards-panel">
-                            <p class="app-step-label">Configuration points</p>
-                            <p class="app-hint">Définissez vos paliers de récompense (seuil + intitulé) comme dans le modificateur iOS.</p>
-                            <div class="app-rules-type app-loyalty-mode-row">
-                              <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked /> Points caisse</label>
-                              <label class="app-radio-label"><input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" /> Points jeu</label>
+                            <div class="hidden" aria-hidden="true">
+                              <input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked />
+                              <input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" />
                             </div>
                             <div class="app-points-tiers-simple">
-                              <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line"></p>
-                              <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector">Réappliquer les exemples du secteur</button>
+                              <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line hidden" aria-hidden="true"></p>
+                              <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector hidden" aria-hidden="true" tabindex="-1">Réappliquer les exemples du secteur</button>
                               <div class="app-points-tier-row">
                                 <label class="app-label" for="app-points-tier-0-points">Palier 1</label>
                                 <div class="app-points-tier-fields">
@@ -1172,18 +1185,6 @@
                             <p class="app-step-label">Configuration tampons</p>
                             <p class="app-hint">Choisissez l’icône tampon et vos récompenses à la 5e puis 10e visite.</p>
                             <input type="hidden" id="app-stamp-emoji" value="☕" />
-                            <div id="app-stamp-emoji-picker" class="app-emoji-picker" aria-label="Choisir une icône">
-                              <div class="app-stamp-icon-custom-wrap">
-                                <div class="app-drop-zone app-stamp-icon-custom app-media-drop-wrap" id="app-stamp-icon-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
-                                  <input type="file" id="app-stamp-icon-input" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
-                                  <label for="app-stamp-icon-input" class="app-stamp-icon-custom-label">
-                                    <span id="app-stamp-icon-placeholder">+</span>
-                                    <img id="app-stamp-icon-preview" class="app-stamp-icon-preview hidden" alt="" />
-                                  </label>
-                                  <button type="button" id="app-stamp-icon-remove" class="app-media-drop-clear app-media-drop-clear--compact hidden" aria-label="Supprimer l'icône personnalisée" title="Supprimer">×</button>
-                                </div>
-                              </div>
-                            </div>
                             <div class="app-stamp-tier-block">
                               <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5e tampon</span></div>
                               <label class="app-checkbox-label app-stamp-skip-mid-label">
@@ -1200,41 +1201,16 @@
                             </div>
                           </div>
                         </div>
-                        <div class="app-delivery-receipt-block app-field-group">
-                          <p class="app-step-label">Points livraison (Uber Eats, Deliveroo…)</p>
-                          <p class="app-hint">Les clients envoient une <strong>photo de ticket</strong> : le serveur et l’IA vérifient enseigne, adresse (si renseignée sur votre fiche), date et montant, puis <strong>créditent automatiquement</strong> — sans validation manuelle de votre part. Les doublons sont bloqués.</p>
-                          <label class="app-checkbox-label">
-                            <input type="checkbox" id="app-delivery-receipt-enabled" />
-                            <span>Activer la réclamation par photo sur la page client</span>
-                          </label>
-                          <div class="app-delivery-receipt-grid">
-                            <label class="app-label" for="app-delivery-receipt-max-age">Âge max. du ticket (jours)</label>
-                            <input type="number" id="app-delivery-receipt-max-age" class="app-input app-input-number" min="1" max="90" step="1" value="14" />
-                            <label class="app-label" for="app-delivery-receipt-min-confidence">Seuil confiance IA (0,48–0,58 conseillé)</label>
-                            <input type="number" id="app-delivery-receipt-min-confidence" class="app-input app-input-number" min="0.3" max="0.99" step="0.01" value="0.72" />
-                            <label class="app-label" for="app-delivery-receipt-max-day">Max. / client / jour</label>
-                            <input type="number" id="app-delivery-receipt-max-day" class="app-input app-input-number" min="1" max="20" step="1" value="4" />
-                            <label class="app-label" for="app-delivery-receipt-max-month">Max. / client / mois</label>
-                            <input type="number" id="app-delivery-receipt-max-month" class="app-input app-input-number" min="1" max="200" step="1" value="25" />
-                          </div>
-                          <div class="app-delivery-claims-queue">
-                            <p class="app-step-label">Anciennes demandes encore « en attente »</p>
-                            <p class="app-hint">Normalement vide : tout est traité automatiquement. Si une ligne apparaît (données d’avant refonte), vous pouvez encore la valider ou la refuser.</p>
-                            <div id="app-delivery-claims-list" class="app-delivery-claims-list" role="list"></div>
-                            <div class="app-delivery-claims-toolbar">
-                              <button type="button" id="app-delivery-claims-refresh" class="app-btn app-btn-secondary">Actualiser</button>
-                            </div>
-                          </div>
+                        <div class="hidden" aria-hidden="true">
+                          <input type="checkbox" id="app-delivery-receipt-enabled" />
+                          <input type="number" id="app-delivery-receipt-max-age" class="app-input app-input-number" min="1" max="90" step="1" value="14" />
+                          <input type="number" id="app-delivery-receipt-min-confidence" class="app-input app-input-number" min="0.3" max="0.99" step="0.01" value="0.72" />
+                          <input type="number" id="app-delivery-receipt-max-day" class="app-input app-input-number" min="1" max="20" step="1" value="4" />
+                          <input type="number" id="app-delivery-receipt-max-month" class="app-input app-input-number" min="1" max="200" step="1" value="25" />
+                          <div id="app-delivery-claims-list" class="app-delivery-claims-list" role="list"></div>
+                          <button type="button" id="app-delivery-claims-refresh" class="app-btn app-btn-secondary" tabindex="-1">Actualiser</button>
                         </div>
-                        <div class="app-card-rules-actions">
-                          <div id="app-regles-message" class="app-message hidden" role="status"></div>
-                          <span class="app-save-cta-wrap">
-                            <button type="button" id="app-regles-save" class="app-save-cta">
-                              <span class="app-save-cta-dot" aria-hidden="true"></span>
-                              <span class="app-save-cta-label">Enregistrer les récompenses</span>
-                            </button>
-                          </span>
-                        </div>
+                        <div id="app-regles-message" class="app-message hidden" role="status"></div>
           
                       </div>
                     </div>
@@ -1292,7 +1268,7 @@
                           <span class="app-wallet-preview-logo-fallback" id="app-wallet-preview-logo-fallback">Logo</span>
                         </div>
                         <span class="app-wallet-preview-org hidden" id="app-personnaliser-preview-org" aria-hidden="true">Votre commerce</span>
-                        <span id="app-wallet-preview-header-right" class="app-wallet-preview-header-right">Récompenses ↗</span>
+                        <span id="app-wallet-preview-header-right" class="app-wallet-preview-header-right">Récompenses ⤴︎</span>
                       </div>
                       <div id="app-wallet-preview-card-bg-banner" class="app-wallet-preview-card-bg-banner hidden" aria-hidden="true"></div>
                       <div class="builder-wallet-card-body app-wallet-preview-body">
