@@ -38,7 +38,7 @@
   top: var(--app-admin-strip-h, 0px);
   left: 0;
   right: 0;
-  z-index: auto;
+  z-index: 320;
   height: auto !important;
 }
 

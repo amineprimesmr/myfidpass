@@ -194,6 +194,11 @@ html:has(body.page-app) {
   animation: appOnboardingIn 480ms var(--app-ease-spring);
 }
 
+.app-dashboard-onboarding.app-dashboard-onboarding-gate--exit {
+  animation: appOnboardingOut 280ms ease forwards;
+  pointer-events: none;
+}
+
 .app-dashboard-onboarding-head {
   margin-bottom: 0.85rem;
 }
@@ -419,6 +424,11 @@ html:has(body.page-app) {
 @keyframes appOnboardingIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes appOnboardingOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(8px); }
 }
 
 @media (max-width: 768px) {

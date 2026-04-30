@@ -198,6 +198,9 @@ export function initAppFlyerQr(slug, opts) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      if (res.ok && typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+        window.dispatchEvent(new CustomEvent("fidpass:flyer-saved"));
+      }
       return res.ok;
     } catch (_) {
       return false;

@@ -839,6 +839,36 @@ function initAppDashboard(slug) {
   const dashboardOnboardingFlyerBtn = document.getElementById("app-dashboard-onboarding-flyer-btn");
 
   let dashboardIntroRevealPending = false;
+  let onboardingGateSyncTimer = 0;
+
+  function hideDashboardOnboardingGate() {
+    if (!dashboardOnboardingGate) return;
+    if (dashboardOnboardingGate.classList.contains("hidden")) {
+      dashboardShellMain?.classList.remove("hidden");
+      return;
+    }
+    if (dashboardOnboardingGate.classList.contains("app-dashboard-onboarding-gate--exit")) return;
+    dashboardOnboardingGate.classList.add("app-dashboard-onboarding-gate--exit");
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      dashboardOnboardingGate.classList.add("hidden");
+      dashboardOnboardingGate.classList.remove("app-dashboard-onboarding-gate--exit");
+      dashboardShellMain?.classList.remove("hidden");
+      syncSaaSWelcomeChrome();
+    };
+    dashboardOnboardingGate.addEventListener("animationend", finish, { once: true });
+    setTimeout(finish, 320);
+  }
+
+  function scheduleOnboardingGateSync() {
+    if (onboardingGateSyncTimer) clearTimeout(onboardingGateSyncTimer);
+    onboardingGateSyncTimer = setTimeout(() => {
+      onboardingGateSyncTimer = 0;
+      void syncDashboardOnboardingGate();
+    }, 260);
+  }
 
   function revealDashboardOnboardingFromIntro() {
     dashboardReadySplash?.classList.add("hidden");
@@ -945,8 +975,7 @@ function initAppDashboard(slug) {
       if (allDone) {
         dashboardReadySplash?.classList.add("hidden");
         dashboardReadySplash?.setAttribute("aria-hidden", "true");
-        dashboardOnboardingGate.classList.add("hidden");
-        dashboardShellMain.classList.remove("hidden");
+        hideDashboardOnboardingGate();
         return false;
       }
 
@@ -981,6 +1010,9 @@ function initAppDashboard(slug) {
   });
   document.getElementById("app-dashboard-onboarding-flyer-btn")?.addEventListener("click", () => {
     showAppSection("flyer-qr");
+  });
+  window.addEventListener("fidpass:flyer-saved", () => {
+    scheduleOnboardingGateSync();
   });
 
   /** Logo retiré du menu latéral : hook conservé pour les appels existants (profil, Ma carte…). */
@@ -3656,6 +3688,7 @@ function initAppDashboard(slug) {
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           showPersonnaliserMessage("Modifications enregistrées.");
+          scheduleOnboardingGateSync();
           notifyAppSectionSaveSuccess("personnaliser");
           showReglesMessage("");
           if (rulesPatch.stampIconBase64 === "") {
@@ -4747,6 +4780,9 @@ function initAppDashboard(slug) {
   });
   window.addEventListener("app-section-change", (e) => {
     if (e.detail?.sectionId !== "dashboard") stopFullscreenScanner();
+    if (e.detail?.sectionId === "dashboard") {
+      void refresh();
+    }
   });
 
   let allMembers = [];
