@@ -55,6 +55,107 @@ export function initAppFlyerQr(slug, opts) {
 
   const accentPicker = root.querySelector("#app-flyer-accent-unified");
   const bgPicker = root.querySelector("#app-flyer-bg-solid");
+  function syncFlyerBgColorRowVisibility() {
+    if (!bgPicker) return;
+    const bgRow = bgPicker.closest(".app-flyer-color-row");
+    if (!bgRow) return;
+    const hasBackgroundImage = !!getStoredFlyerCustomBgDataUrl();
+    bgRow.classList.toggle("hidden", hasBackgroundImage);
+    bgRow.setAttribute("aria-hidden", hasBackgroundImage ? "true" : "false");
+  }
+
+  const flyerPalette = ["#ffffff", "#34c759", "#0a84ff", "#5856d6", "#af52de", "#ff2d55", "#ff9500", "#ffcc00", "#30b0c7", "#8e8e93", "#000000"];
+
+  function normalizeHex(value, fallback) {
+    const v = String(value || "").trim();
+    return /^#[0-9A-Fa-f]{6}$/.test(v) ? v.toLowerCase() : fallback.toLowerCase();
+  }
+
+  function applyFlyerPickerValue(inputEl, hex) {
+    if (!inputEl) return;
+    inputEl.value = normalizeHex(hex, String(inputEl.value || "#000000"));
+    inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+    inputEl.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function openPreciseColorPicker(anchorBtn, inputEl) {
+    if (!anchorBtn || !inputEl) return;
+    const picker = document.createElement("input");
+    picker.type = "color";
+    picker.value = normalizeHex(inputEl.value, "#000000");
+    const rect = anchorBtn.getBoundingClientRect();
+    picker.style.position = "fixed";
+    picker.style.left = `${Math.max(0, rect.left + rect.width / 2)}px`;
+    picker.style.top = `${Math.max(0, rect.top + rect.height / 2)}px`;
+    picker.style.width = "1px";
+    picker.style.height = "1px";
+    picker.style.opacity = "0";
+    picker.style.pointerEvents = "none";
+    picker.style.zIndex = "9999";
+    document.body.appendChild(picker);
+    const cleanup = () => {
+      picker.removeEventListener("input", onInput);
+      picker.removeEventListener("change", onChange);
+      picker.removeEventListener("blur", cleanup);
+      picker.remove();
+    };
+    const onInput = () => applyFlyerPickerValue(inputEl, picker.value);
+    const onChange = () => {
+      applyFlyerPickerValue(inputEl, picker.value);
+      cleanup();
+    };
+    picker.addEventListener("input", onInput);
+    picker.addEventListener("change", onChange);
+    picker.addEventListener("blur", cleanup);
+    picker.click();
+    window.setTimeout(cleanup, 15000);
+  }
+
+  function wireFlyerSwatches(inputEl, labelText) {
+    if (!inputEl) return;
+    const row = inputEl.closest(".app-flyer-color-row");
+    if (!row) return;
+    const container = document.createElement("div");
+    container.className = "app-logo-colors-swatches app-logo-colors-swatches--inline app-flyer-swatches";
+    container.setAttribute("role", "group");
+    container.setAttribute("aria-label", `Couleurs ${labelText}`);
+
+    const plusBtn = document.createElement("button");
+    plusBtn.type = "button";
+    plusBtn.className = "app-logo-color-swatch app-logo-color-swatch--plus";
+    plusBtn.textContent = "+";
+    plusBtn.title = "Choisir une couleur précise";
+    plusBtn.setAttribute("aria-label", `Choisir une couleur précise pour ${labelText}`);
+    plusBtn.addEventListener("click", () => openPreciseColorPicker(plusBtn, inputEl));
+    container.appendChild(plusBtn);
+
+    flyerPalette.forEach((hex) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "app-logo-color-swatch";
+      btn.style.background = hex;
+      btn.setAttribute("data-hex", hex.toLowerCase());
+      btn.setAttribute("aria-label", `Appliquer ${hex} à ${labelText}`);
+      btn.addEventListener("click", () => applyFlyerPickerValue(inputEl, hex));
+      container.appendChild(btn);
+    });
+
+    const sync = () => {
+      const current = normalizeHex(inputEl.value, "#000000");
+      container.querySelectorAll(".app-logo-color-swatch[data-hex]").forEach((btn) => {
+        const sw = String(btn.getAttribute("data-hex") || "").toLowerCase();
+        btn.classList.toggle("is-selected", sw === current);
+      });
+    };
+
+    row.appendChild(container);
+    inputEl.addEventListener("input", sync);
+    inputEl.addEventListener("change", sync);
+    sync();
+  }
+
+  wireFlyerSwatches(bgPicker, "fond");
+  wireFlyerSwatches(accentPicker, "roue, cadeau, bandeau");
 
   const pickContrastingTextOnHexBg = (hex) => {
     const h = String(hex || "").trim();
@@ -250,6 +351,7 @@ export function initAppFlyerQr(slug, opts) {
   flyerBgPanelApi = initFlyerBgControl({
     onBgChange: () => {
       markBgDirty(flyerAssets);
+      syncFlyerBgColorRowVisibility();
       schedulePaint();
       scheduleRemoteSave();
     },
@@ -258,6 +360,7 @@ export function initAppFlyerQr(slug, opts) {
   wireFlyerQrBackgroundGallery(root, {
     markBgDirtyAndPaint: () => {
       markBgDirty(flyerAssets);
+      syncFlyerBgColorRowVisibility();
       schedulePaint();
     },
     getBgPanelApi: () => flyerBgPanelApi,
@@ -290,6 +393,7 @@ export function initAppFlyerQr(slug, opts) {
       await renderFlyerCanvas(canvas, state, shareUrl(), logoForCanvas, bgForCanvas, {
         shouldBlit: () => gen === flyerpaintGen,
       });
+      syncFlyerBgColorRowVisibility();
     } catch (e) {
       if (typeof console !== "undefined" && console.warn) console.warn("[flyer-qr] render", e);
     }
@@ -377,6 +481,7 @@ export function initAppFlyerQr(slug, opts) {
       writeFlyerFormFromState(root, state);
       if (accentPicker && "value" in accentPicker) accentPicker.value = state.colorPrimary;
       if (bgPicker && "value" in bgPicker) bgPicker.value = state.colorBgTop;
+      syncFlyerBgColorRowVisibility();
       syncThemeControlsFromPickers();
       schedulePaint();
       void pushFlyerToServerNow({ clearFlyerLogoOnServer: true, clearFlyerBgOnServer: true });
@@ -393,5 +498,6 @@ export function initAppFlyerQr(slug, opts) {
   });
 
   void hydrateFromServer();
+  syncFlyerBgColorRowVisibility();
   schedulePaint();
 }

@@ -923,45 +923,38 @@
                   <div id="app-flyer-panel" class="app-flyer-panel">
                     <div id="app-flyer-logo-panel" class="app-flyer-logo-panel">
                       <p class="app-flyer-chip-label">Logo du flyer</p>
-                      <input type="file" id="app-flyer-logo-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Importer un logo pour le flyer" />
-                      <div class="app-flyer-logo-panel-actions">
-                        <button type="button" id="app-flyer-logo-choose" class="app-btn app-btn-secondary">Importer un logo</button>
+                      <div id="app-flyer-logo-preview-wrap" class="app-personnaliser-logo app-drop-zone app-media-drop-wrap">
+                        <input type="file" id="app-flyer-logo-file" class="app-file" accept="image/png,image/jpeg,image/webp" aria-label="Importer un logo pour le flyer" />
+                        <label for="app-flyer-logo-file" class="app-logo-label">
+                          <span id="app-flyer-logo-placeholder">+ Changer le logo (glisser une image, cliquer ou coller Ctrl+V)</span>
+                          <img id="app-flyer-logo-preview" class="app-logo-preview hidden" alt="" decoding="async" />
+                        </label>
+                        <button type="button" id="app-flyer-logo-clear" class="app-media-drop-clear hidden" aria-label="Supprimer le logo" title="Supprimer">×</button>
+                      </div>
+                      <div class="app-flyer-logo-panel-actions hidden" aria-hidden="true">
+                        <button type="button" id="app-flyer-logo-choose" class="app-btn app-btn-secondary" tabindex="-1">Importer un logo</button>
                       </div>
                       <p id="app-flyer-logo-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
-                      <div id="app-flyer-logo-preview-wrap" class="app-flyer-logo-preview-wrap hidden">
-                        <span class="app-flyer-logo-preview-label">Aperçu</span>
-                        <img id="app-flyer-logo-preview" class="app-flyer-logo-preview" alt="" decoding="async" />
-                      </div>
                     </div>
                     <div id="app-flyer-bg-panel" class="app-flyer-logo-panel app-flyer-bg-panel">
                       <p class="app-flyer-chip-label">Image de fond</p>
                       <div id="app-flyer-bg-gallery-wrap" class="app-flyer-bg-gallery-wrap hidden">
-                        <p class="app-flyer-chip-label" style="margin:0.65rem 0 0.35rem">Modèles</p>
                         <div class="app-flyer-bg-carousel">
-                          <button type="button" id="app-flyer-bg-prev" class="app-flyer-bg-nav app-flyer-bg-nav--prev" aria-label="Template précédent">‹</button>
                           <div id="app-flyer-bg-gallery" class="app-flyer-bg-gallery" role="list"></div>
                           <button type="button" id="app-flyer-bg-next" class="app-flyer-bg-nav app-flyer-bg-nav--next" aria-label="Template suivant">›</button>
                         </div>
                       </div>
                       <input type="file" id="app-flyer-bg-file" class="app-flyer-logo-file-input" accept="image/png,image/jpeg,image/webp" aria-label="Importer une image de fond pour le flyer" />
-                      <div class="app-flyer-logo-panel-actions">
-                        <button type="button" id="app-flyer-bg-choose" class="app-btn app-btn-secondary">Importer une image</button>
-                        <button type="button" id="app-flyer-bg-remove" class="app-btn app-btn-secondary">Sans image de fond</button>
-                      </div>
                       <p id="app-flyer-bg-status" class="app-hint app-flyer-logo-status hidden" role="status"></p>
-                      <div id="app-flyer-bg-preview-wrap" class="app-flyer-logo-preview-wrap app-flyer-bg-preview-wrap hidden">
-                        <span class="app-flyer-logo-preview-label">Aperçu</span>
-                        <img id="app-flyer-bg-preview" class="app-flyer-bg-preview" alt="" decoding="async" />
-                      </div>
                     </div>
-                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Couleurs</p>
+                    <p class="app-flyer-chip-label" style="margin-top:0.75rem">Couleurs du flyer</p>
                     <div class="app-flyer-colors">
                       <div class="app-flyer-color-row">
                         <label for="app-flyer-bg-solid">Fond</label>
                         <input type="color" id="app-flyer-bg-solid" value="#0f172a" data-flyer-input />
                       </div>
                       <div class="app-flyer-color-row">
-                        <label for="app-flyer-accent-unified">Couleur roue + cadeau + bandeau</label>
+                        <label for="app-flyer-accent-unified" class="hidden" aria-hidden="true">Couleur roue + cadeau + bandeau</label>
                         <input type="color" id="app-flyer-accent-unified" value="#fbbf24" data-flyer-input />
                       </div>
                     </div>
@@ -993,16 +986,12 @@
                     <input type="hidden" id="app-flyer-bg1" value="#0f172a" data-flyer-input />
                     <input type="hidden" id="app-flyer-bg2" value="#0f172a" data-flyer-input />
                     <div class="app-flyer-qr-link-row">
-                      <label class="app-label" for="app-flyer-link">Lien de la page carte</label>
-                      <div class="app-flyer-qr-link-wrap">
-                        <input type="text" id="app-flyer-link" class="app-input" readonly autocomplete="off" />
-                        <button type="button" id="app-flyer-copy-link" class="app-btn app-btn-secondary">Copier</button>
-                      </div>
-                      <button type="button" id="app-flyer-download" class="app-btn app-btn-primary app-flyer-download-main">Télécharger le flyer (PNG HD)</button>
-                      <p id="app-flyer-export-note" class="app-hint hidden" role="status"></p>
-                    </div>
-                    <div class="app-flyer-actions">
-                      <button type="button" id="app-flyer-reset" class="app-btn app-btn-secondary">Réinitialiser</button>
+                      <span class="app-save-cta-wrap app-save-cta-wrap--flyer-download">
+                        <button type="button" id="app-flyer-download" class="app-save-cta">
+                          <span class="app-save-cta-dot" aria-hidden="true"></span>
+                          <span class="app-save-cta-label">Télécharger</span>
+                        </button>
+                      </span>
                     </div>
                   </div>
                 </div>

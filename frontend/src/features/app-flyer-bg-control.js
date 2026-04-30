@@ -115,7 +115,7 @@ export function initFlyerBgControl(opts) {
   const previewWrap = document.getElementById("app-flyer-bg-preview-wrap");
   const statusEl = document.getElementById("app-flyer-bg-status");
 
-  if (!fileInput || !chooseBtn || !removeBtn) return undefined;
+  if (!fileInput) return undefined;
 
   function setStatus(msg) {
     if (statusEl) {
@@ -134,10 +134,18 @@ export function initFlyerBgControl(opts) {
         preview.removeAttribute("src");
         previewWrap.classList.add("hidden");
       }
+    } else if (preview) {
+      if (data) {
+        preview.src = data;
+        preview.classList.remove("hidden");
+      } else {
+        preview.removeAttribute("src");
+        preview.classList.add("hidden");
+      }
     }
   }
 
-  chooseBtn.addEventListener("click", () => fileInput.click());
+  chooseBtn?.addEventListener("click", () => fileInput.click());
 
   fileInput.addEventListener("change", () => {
     const f = fileInput.files?.[0];
@@ -157,7 +165,7 @@ export function initFlyerBgControl(opts) {
     })();
   });
 
-  removeBtn.addEventListener("click", () => {
+  removeBtn?.addEventListener("click", () => {
     clearStoredFlyerCustomBg();
     setStatus("");
     syncPreview();

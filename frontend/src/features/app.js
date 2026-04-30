@@ -2432,7 +2432,24 @@ function initAppDashboard(slug) {
     if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
     if (stampsGridEl && isStamps && showPointsOrStamps) {
       const hasCustomStampIcon = personnaliserStampIconDataUrl && personnaliserStampIconDataUrl.length > 0;
-      const emojiToIcon = { "☕": "cafe", "🍔": "burger", "🍕": "pizza", "🥐": "croissant", "🥩": "steak", "🍣": "sushi", "🥗": "salade", "🍚": "riz", "🥖": "baguette", "💄": "giftsilver", "✂️": "giftsilver", "✅": "checkvert" };
+      const emojiToIcon = {
+        "🍔": "burger",
+        "🍕": "pizza",
+        "🥐": "croissant",
+        "🥩": "steak",
+        "🍣": "sushi",
+        "🥗": "salade",
+        "🍚": "riz",
+        "🥖": "baguette",
+        "🌮": "kebab",
+        "💈": "coiffeur",
+        "💅": "ongle",
+        "🪒": "sourcil",
+        "🧖": "spa",
+        "💄": "giftsilver",
+        "✂️": "giftsilver",
+        "✅": "checkvert",
+      };
       const iconName = emojiToIcon[stampEmoji] || "checkvert";
       const iconSrc = hasCustomStampIcon ? personnaliserStampIconDataUrl : "/assets/icons/" + iconName + ".png";
       const midRewardIconSrc = "/assets/icons/giftsilver.png";
@@ -3172,16 +3189,19 @@ function initAppDashboard(slug) {
   if (emojiPickerEl && stampEmojiEl) {
     const ASSETS_ICONS = "/assets/icons";
     const CUSTOM_ICON_PATHS = {
-      "2615": "cafe.png", "1f355": "pizza.png", "1f354": "burger.png", "1f32e": "kebab.png",
+      "1f355": "pizza.png", "1f354": "burger.png", "1f32e": "kebab.png",
       "1f363": "sushi.png", "1f957": "salade.png", "1f950": "croissant.png", "1f356": "steak.png",
       "1f35e": "riz.png", "1f956": "baguette.png", "1f381": "giftgold.png", "2705": "checkvert.png",
+      "1f488": "coiffeur.png", "1f485": "ongle.png", "1fa92": "sourcil.png", "1f9d6": "spa.png",
     };
     const STAMP_ICONS = [
-      { emoji: "☕", hexcode: "2615", annotation: "Café" }, { emoji: "🍕", hexcode: "1f355", annotation: "Pizza" },
+      { emoji: "🍕", hexcode: "1f355", annotation: "Pizza" },
       { emoji: "🍔", hexcode: "1f354", annotation: "Burger" }, { emoji: "🥐", hexcode: "1f950", annotation: "Croissant" },
       { emoji: "🥗", hexcode: "1f957", annotation: "Salade" }, { emoji: "🍣", hexcode: "1f363", annotation: "Sushi" },
       { emoji: "🌮", hexcode: "1f32e", annotation: "Taco" }, { emoji: "🍗", hexcode: "1f356", annotation: "Steak" },
       { emoji: "🍚", hexcode: "1f35e", annotation: "Riz" }, { emoji: "🥖", hexcode: "1f956", annotation: "Baguette" },
+      { emoji: "💈", hexcode: "1f488", annotation: "Coiffeur" }, { emoji: "💅", hexcode: "1f485", annotation: "Ongles" },
+      { emoji: "🪒", hexcode: "1fa92", annotation: "Sourcils" }, { emoji: "🧖", hexcode: "1f9d6", annotation: "Spa" },
       { emoji: "🎁", hexcode: "1f381", annotation: "Cadeau" }, { emoji: "✅", hexcode: "2705", annotation: "Validé" },
     ];
     function renderPicker(list) {

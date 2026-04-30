@@ -183,12 +183,12 @@
   font-size: 0.85rem;
 }
 
-#app-app .app-flyer-download-main {
+#app-app .app-save-cta-wrap--flyer-download {
   width: 100%;
-  justify-content: center;
-  font-weight: 700;
-  padding: 0.85rem 1.25rem;
-  margin-bottom: 0.5rem;
+}
+
+#app-app .app-save-cta-wrap--flyer-download .app-save-cta {
+  width: 100%;
 }
 
 #app-app .app-flyer-qr-side {
@@ -330,15 +330,9 @@
 
 #app-app .app-flyer-colors {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.65rem;
   margin-bottom: 1rem;
-}
-
-@media (max-width: 400px) {
-  #app-app .app-flyer-colors {
-    grid-template-columns: 1fr;
-  }
 }
 
 #app-app .app-flyer-color-row {
@@ -361,6 +355,12 @@
   border: 1px solid var(--app-border, #e8ecf1);
   border-radius: 8px;
   cursor: pointer;
+}
+#app-app .app-flyer-color-row input[type="color"] {
+  display: none !important;
+}
+#app-app .app-flyer-color-row .app-flyer-swatches {
+  margin-left: 0.15rem;
 }
 
 #app-app .app-flyer-headline-style-grid {

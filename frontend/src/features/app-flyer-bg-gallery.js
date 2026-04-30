@@ -3,6 +3,7 @@
  */
 import {
   compressFetchedImageToFlyerBgDataUrl,
+  clearStoredFlyerCustomBg,
   setStoredFlyerCustomBgDataUrl,
 } from "./app-flyer-bg-control.js";
 
@@ -53,8 +54,8 @@ export function parseFlyerBgManifestJson(jsonText) {
 export async function initFlyerBgGallery(root, opts) {
   const wrap = root?.querySelector("#app-flyer-bg-gallery-wrap");
   const grid = root?.querySelector("#app-flyer-bg-gallery");
-  const prevBtn = root?.querySelector("#app-flyer-bg-prev");
   const nextBtn = root?.querySelector("#app-flyer-bg-next");
+  const bgFileInput = root?.querySelector("#app-flyer-bg-file");
   if (!wrap || !grid) return;
 
   let entries;
@@ -77,6 +78,23 @@ export async function initFlyerBgGallery(root, opts) {
 
   wrap.classList.remove("hidden");
   grid.replaceChildren();
+  /** @type {HTMLButtonElement | null} */
+  let selectedItem = null;
+
+  function setSelectedItem(next) {
+    if (selectedItem && selectedItem !== next) selectedItem.classList.remove("is-selected");
+    selectedItem = next;
+    if (selectedItem) selectedItem.classList.add("is-selected");
+  }
+
+  const uploadBtn = document.createElement("button");
+  uploadBtn.type = "button";
+  uploadBtn.className = "app-flyer-bg-gallery-item app-flyer-bg-gallery-item--upload";
+  uploadBtn.setAttribute("role", "listitem");
+  uploadBtn.setAttribute("aria-label", "Importer une image de fond");
+  uploadBtn.innerHTML = '<span class="app-flyer-bg-gallery-upload-plus">+</span><span class="app-flyer-bg-gallery-upload-label">Importer</span>';
+  uploadBtn.addEventListener("click", () => bgFileInput?.click());
+  grid.appendChild(uploadBtn);
 
   for (const ent of entries) {
     const src = `${FLYER_BG_ASSETS_BASE}/${encodeURIComponent(ent.file)}`;
@@ -86,6 +104,22 @@ export async function initFlyerBgGallery(root, opts) {
     btn.setAttribute("role", "listitem");
     btn.setAttribute("aria-label", `Utiliser le fond ${ent.label}`);
     btn.style.backgroundImage = `url("${src}")`;
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "app-flyer-bg-gallery-remove";
+    removeBtn.setAttribute("aria-label", "Retirer ce template");
+    removeBtn.title = "Retirer le template";
+    removeBtn.textContent = "×";
+    removeBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      clearStoredFlyerCustomBg();
+      opts.setStatus("");
+      opts.syncPreview();
+      opts.onBgChange();
+      setSelectedItem(null);
+    });
+    btn.appendChild(removeBtn);
     btn.addEventListener("click", () => {
       void (async () => {
         try {
@@ -94,6 +128,7 @@ export async function initFlyerBgGallery(root, opts) {
           opts.setStatus("");
           opts.syncPreview();
           opts.onBgChange();
+          setSelectedItem(btn);
         } catch (e) {
           const m = e instanceof Error ? e.message : "Fond indisponible.";
           opts.setStatus(m);
@@ -109,6 +144,5 @@ export async function initFlyerBgGallery(root, opts) {
     const gap = 8;
     grid.scrollBy({ left: dir * (cardW + gap) * 2, behavior: "smooth" });
   };
-  prevBtn?.addEventListener("click", () => scrollByCard(-1));
   nextBtn?.addEventListener("click", () => scrollByCard(1));
 }

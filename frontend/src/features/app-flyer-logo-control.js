@@ -76,9 +76,11 @@ export function initFlyerLogoControl(opts) {
   const chooseBtn = document.getElementById("app-flyer-logo-choose");
   const preview = document.getElementById("app-flyer-logo-preview");
   const previewWrap = document.getElementById("app-flyer-logo-preview-wrap");
+  const placeholder = document.getElementById("app-flyer-logo-placeholder");
+  const clearBtn = document.getElementById("app-flyer-logo-clear");
   const statusEl = document.getElementById("app-flyer-logo-status");
 
-  if (!root || !fileInput || !chooseBtn) return undefined;
+  if (!root || !fileInput) return undefined;
 
   function setStatus(msg) {
     if (statusEl) {
@@ -89,18 +91,23 @@ export function initFlyerLogoControl(opts) {
 
   function syncPreview() {
     const data = getStoredFlyerCustomLogoDataUrl();
-    if (preview && previewWrap) {
+    if (preview) {
       if (data) {
         preview.src = data;
-        previewWrap.classList.remove("hidden");
+        preview.classList.remove("hidden");
+        if (placeholder) placeholder.classList.add("hidden");
+        if (clearBtn) clearBtn.classList.remove("hidden");
       } else {
         preview.removeAttribute("src");
-        previewWrap.classList.add("hidden");
+        preview.classList.add("hidden");
+        if (placeholder) placeholder.classList.remove("hidden");
+        if (clearBtn) clearBtn.classList.add("hidden");
       }
     }
+    previewWrap?.classList.remove("hidden");
   }
 
-  chooseBtn.addEventListener("click", () => fileInput.click());
+  chooseBtn?.addEventListener("click", () => fileInput.click());
 
   fileInput.addEventListener("change", () => {
     const f = fileInput.files?.[0];
@@ -118,6 +125,13 @@ export function initFlyerLogoControl(opts) {
         setStatus(m);
       }
     })();
+  });
+
+  clearBtn?.addEventListener("click", () => {
+    setStoredFlyerCustomLogoDataUrl("");
+    setStatus("");
+    syncPreview();
+    opts.onCustomLogoChange();
   });
 
   syncPreview();
