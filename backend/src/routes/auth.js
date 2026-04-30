@@ -932,8 +932,11 @@ router.get("/me/businesses", requireAuth, (req, res) => {
  */
 router.delete("/account", requireAuth, (req, res) => {
   try {
-    deleteUserAccount(req.user.id);
-    return res.json({ ok: true, message: "Compte supprimé" });
+    const deleted = deleteUserAccount(req.user.id);
+    if (!deleted) {
+      return res.status(404).json({ error: "Compte déjà supprimé.", code: "account_already_deleted" });
+    }
+    return res.json({ ok: true, message: "Compte supprimé", deleted_user_id: req.user.id });
   } catch (e) {
     console.error("Delete account error:", e);
     return res.status(500).json({ error: "Erreur lors de la suppression du compte." });
