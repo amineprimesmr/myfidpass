@@ -221,29 +221,34 @@ html:has(body.page-app) {
 }
 
 .app-dashboard-onboarding-card {
-  border-radius: 18px;
-  border: 1px solid #e4e8ef;
-  background: linear-gradient(180deg, #fbfcff 0%, #f6f8fc 100%);
-  padding: 1rem;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  border-radius: 22px;
+  border: 1px solid #dbe3ef;
+  background: linear-gradient(180deg, #f7f9fd 0%, #f1f4fa 100%);
+  padding: 1.15rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 8px 24px rgba(15, 23, 42, 0.08);
   transform: translateY(0);
   transition: transform .28s var(--app-ease-spring), box-shadow .28s ease, border-color .28s ease;
 }
 
 .app-dashboard-onboarding-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
-  border-color: rgba(37, 99, 235, 0.24);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 14px 34px rgba(15, 23, 42, 0.12);
+  border-color: #d0dbeb;
 }
 
 .app-dashboard-onboarding-visual {
-  border-radius: 14px;
-  background: #f0f3f8;
-  border: 1px solid #e1e7ef;
-  min-height: 170px;
+  border-radius: 18px;
+  background: #eef2f8;
+  border: 1px solid #dde5f0;
+  min-height: 178px;
   display: grid;
   place-items: center;
-  margin-bottom: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 0.35rem;
 }
 
 .app-dashboard-onboarding-mock {
@@ -311,35 +316,40 @@ html:has(body.page-app) {
 }
 
 .app-dashboard-onboarding-kicker {
-  margin: 0 0 .35rem;
-  color: #64748b;
-  font-size: .78rem;
-  font-weight: 600;
+  margin: 0 0 .42rem;
+  color: #64758e;
+  font-size: .72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .1em;
 }
 
 .app-dashboard-onboarding-card-title {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 2.65rem;
+  line-height: 1.08;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .app-dashboard-onboarding-text {
-  margin: .45rem 0 .9rem;
-  color: #475569;
-  line-height: 1.5;
+  margin: .58rem 0 1.05rem;
+  color: #495a72;
+  line-height: 1.42;
+  font-size: 1.02rem;
+  max-width: 40ch;
 }
 
 .app-dashboard-onboarding-actions {
   display: flex;
   gap: .6rem;
   justify-content: center;
+  padding: 0.1rem 0 0.35rem;
 }
 
 .app-dashboard-onboarding-actions .app-dashboard-onboarding-cta-wrap .app-save-cta-dot {
   background: transparent;
-  border: 1.6px solid #94a3b8;
+  border: 1.5px solid #92a4bc;
   box-shadow: none;
 }
 
@@ -440,6 +450,18 @@ html:has(body.page-app) {
   .app-dashboard-onboarding-grid {
     grid-template-columns: 1fr;
     gap: 0.85rem;
+  }
+
+  .app-dashboard-onboarding-card {
+    padding: 1rem;
+  }
+
+  .app-dashboard-onboarding-card-title {
+    font-size: 2.2rem;
+  }
+
+  .app-dashboard-onboarding-text {
+    font-size: 0.97rem;
   }
 }
 
