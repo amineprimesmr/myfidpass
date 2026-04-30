@@ -686,7 +686,7 @@
 
   body.page-app #app-app .app-main {
     margin-top: calc(
-      var(--app-admin-strip-h, 0px) + var(--app-topbar-height) - var(--app-main-sheet-pull, 12px) + 8px
+      var(--app-admin-strip-h, 0px) + var(--app-topbar-height) - var(--app-main-sheet-pull, 12px) + 16px
     );
     min-height: calc(
       100vh - var(--app-admin-strip-h, 0px) - var(--app-topbar-height) - 12px + var(--app-main-sheet-pull, 12px)

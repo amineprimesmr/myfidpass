@@ -631,7 +631,7 @@ html:has(body.page-app) {
   margin-right: 12px;
   margin-bottom: 12px;
   min-height: calc(100vh - 12px);
-  padding: 2rem 1.75rem 4rem;
+  padding: 2.25rem 1.75rem 4rem;
   background: var(--app-main-sheet-bg);
   border-top-left-radius: clamp(18px, 3.2vw, 24px);
   border-top-right-radius: clamp(18px, 3.2vw, 24px);
@@ -1197,6 +1197,19 @@ html:has(body.page-app) {
 .app-logo-color-swatch { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--app-border); cursor: pointer; flex-shrink: 0; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 .app-logo-color-swatch:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .app-logo-color-swatch:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--app-accent); }
+.app-personnaliser-colors .app-color-row .app-color-input,
+.app-personnaliser-colors .app-color-row .app-input-hex { display: none !important; }
+.app-logo-color-swatch.is-selected { box-shadow: 0 0 0 3px #111827, 0 0 0 5px rgba(255,255,255,0.92); }
+.app-logo-color-swatch--plus {
+  background: #ffffff;
+  color: #111827;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+}
 .app-personnaliser-logo { margin-bottom: 0.5rem; }
 .app-personnaliser-card-bg { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
 .app-location-hint { font-size: 0.88rem; color: var(--app-text-muted); margin: 0 0 0.5rem; line-height: 1.4; }
@@ -2336,7 +2349,7 @@ html:has(body.page-app) {
 .app-emoji-picker-btn.selected { box-shadow: var(--app-relief-inset-focus); background: rgba(37, 99, 235, 0.12); }
 .app-emoji-picker-btn img { display: block; width: 100%; height: 100%; object-fit: contain; }
 
-.app-stamp-icon-custom-wrap { position: relative; flex-shrink: 0; order: 999; }
+.app-stamp-icon-custom-wrap { position: relative; flex-shrink: 0; order: -1; }
 .app-stamp-icon-custom {
   display: flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; padding: 4px;
@@ -4616,7 +4629,7 @@ html:has(body.page-app) {
 
 /* Personnaliser (Ma carte) — 2 colonnes : gauche = réglages, droite = aperçu iPhone */
 #app-dashboard-content:has(#personnaliser.app-section-visible) {
-  max-width: 1140px;
+  max-width: none;
 }
 #app-dashboard-content #personnaliser.app-section.app-section-visible {
   display: block;
@@ -4625,9 +4638,10 @@ html:has(body.page-app) {
     radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0),
     linear-gradient(160deg, #f8fafc 0%, #eef2ff 45%, #faf5ff 100%);
   background-size: 18px 18px, 100% 100%;
-  margin: 0;
-  padding: 0;
-  border-radius: 0;
+  margin: -1rem -1.75rem -4rem;
+  padding: 2.25rem 1.75rem 4rem;
+  border-radius: 18px;
+  min-height: 100dvh;
 }
 #app-dashboard-content #personnaliser .app-section-title {
   margin-bottom: 0;
@@ -4665,16 +4679,18 @@ html:has(body.page-app) {
 }
 @media (max-width: 900px) {
   #app-dashboard-content #personnaliser.app-section.app-section-visible {
-    margin: 0;
-    padding: 0;
-    border-radius: 0;
+    margin: -1.5rem -1rem -3.5rem;
+    padding: 1.5rem 1rem 3.5rem;
+    border-radius: 14px;
+    min-height: 100dvh;
   }
 }
 @media (max-width: 600px) {
   #app-dashboard-content #personnaliser.app-section.app-section-visible {
-    margin: 0;
-    padding: 0;
-    border-radius: 0;
+    margin: -1.25rem -1rem -2.5rem;
+    padding: 1.25rem 1rem 2.5rem;
+    border-radius: 12px;
+    min-height: 100dvh;
   }
 }
 .app-personnaliser-col-left .app-card {
@@ -4965,20 +4981,30 @@ html:has(body.page-app) {
 }
 
 @media (min-width: 981px) {
-  /* Ma carte : grille 2 colonnes dans .app-personnaliser-grid (formulaire à gauche, aperçu à droite) */
+  /* Ma carte desktop : même organisation que Flyer (aperçu gauche, panneau droite). */
   #app-dashboard-content #personnaliser .app-personnaliser-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+    gap: 2rem;
+    align-items: start;
+  }
+  #app-dashboard-content #personnaliser .app-personnaliser-col-left {
+    order: 2;
+    position: sticky;
+    top: 1rem;
   }
   #app-dashboard-content #personnaliser .app-personnaliser-live-preview-wrap {
-    justify-content: flex-end;
+    order: 1;
+    justify-content: flex-start;
+    align-items: center;
     padding-right: 0;
-    margin-top: -1.1rem;
+    padding-left: 0;
+    margin-top: 0;
+    margin-bottom: 0;
   }
   .app-personnaliser-preview.builder-phone-mockup {
-    width: 310px;
-    max-width: 340px;
-    margin-right: 0;
+    width: min(340px, 100%);
+    max-width: 360px;
+    margin-right: auto;
     margin-left: auto;
   }
 }
@@ -5764,6 +5790,91 @@ html:has(body.page-app) {
   .app-carte-perimetre-overlay-bottom {
     bottom: 10px;
     padding: 0 10px;
+  }
+}
+
+/* Emplacement — fond plein écran = carte, UI en surcouche */
+body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visible) {
+  overflow: hidden;
+}
+body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visible) #app-app,
+body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visible) #app-app .app-main {
+  height: 100dvh;
+  overflow: hidden !important;
+}
+body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visible) #app-app .app-main {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+#app-dashboard-content:has(#carte-perimetre.app-section-carte-perimetre.app-section-visible) {
+  max-width: none;
+  height: 100%;
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible {
+  position: relative;
+  overflow: hidden;
+  min-height: 100%;
+  height: 100%;
+  margin: -2.25rem -1.75rem 0;
+  padding: 2.25rem 1.75rem 0;
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-wrap.app-carte-perimetre-wrap-v2 {
+  position: absolute;
+  inset: 0 0 -36px 0;
+  margin-top: 0;
+  z-index: 0;
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-stage,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-map {
+  width: 100%;
+  height: calc(100% + 36px);
+  min-height: calc(100% + 36px);
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-section-title,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-address-block,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-top-actions {
+  position: relative;
+  z-index: 7;
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-section-title {
+  color: #f8fafc;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  margin-bottom: 0.55rem;
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-address-block {
+  width: min(720px, 100%);
+  padding: 0.9rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px) saturate(1.08);
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-address-block .app-label,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-hint {
+  color: #f8fafc;
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-top-actions {
+  margin-top: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible {
+    margin: -1.5rem -1rem 0;
+    padding: 1.5rem 1rem 0;
+  }
+  #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible {
+    min-height: 100%;
+    height: 100%;
+  }
+  #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-address-block {
+    width: 100%;
+    padding: 0.75rem;
   }
 }
 

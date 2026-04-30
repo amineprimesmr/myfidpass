@@ -123,12 +123,12 @@
   body.page-app #app-app.app-saas-welcome-active .app-main {
     margin-top: calc(
       var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 52px)) -
-        var(--app-main-sheet-pull, 12px) + 2px
+        var(--app-main-sheet-pull, 12px) + 12px
     ) !important;
-    padding-top: 1rem !important;
+    padding-top: 1.15rem !important;
     height: auto !important;
     min-height: calc(
-      100vh - (var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 52px)) - 4px)
+      100vh - (var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 52px)) + 8px)
     ) !important;
     overflow: visible;
   }

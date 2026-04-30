@@ -2030,6 +2030,7 @@ function initAppDashboard(slug) {
   const cardModePillStamps = document.getElementById("app-card-mode-pill-stamps");
   const rulesPanelPoints = document.getElementById("app-rules-points");
   const rulesPanelStamps = document.getElementById("app-rules-stamps");
+  const personnaliserColorsGroupTitle = document.getElementById("app-personnaliser-colors-group-title");
   const personnaliserCardBgWrap = document.getElementById("app-personnaliser-card-bg-wrap");
   const personnaliserStampIconWrap = document.getElementById("app-personnaliser-stamp-icon-wrap");
   const pointsPerEuroEl = document.getElementById("app-points-per-euro");
@@ -2113,6 +2114,9 @@ function initAppDashboard(slug) {
     const isStamps = programTypeStamps && programTypeStamps.checked;
     if (rulesPanelPoints) rulesPanelPoints.classList.toggle("hidden", !!isStamps);
     if (rulesPanelStamps) rulesPanelStamps.classList.toggle("hidden", !isStamps);
+    if (personnaliserColorsGroupTitle) {
+      personnaliserColorsGroupTitle.textContent = isStamps ? "Couleur et tampons" : "Couleurs et image";
+    }
     if (personnaliserCardBgWrap) {
       personnaliserCardBgWrap.classList.toggle("hidden", !!isStamps);
       personnaliserCardBgWrap.setAttribute("aria-hidden", isStamps ? "true" : "false");
@@ -2243,6 +2247,10 @@ function initAppDashboard(slug) {
   bindPersonnaliserColor(personnaliserBg, personnaliserBgHex);
   bindPersonnaliserColor(personnaliserFg, personnaliserFgHex);
   bindPersonnaliserColor(personnaliserLabel, personnaliserLabelHex);
+  [personnaliserBg, personnaliserFg, personnaliserLabel, personnaliserBgHex, personnaliserFgHex, personnaliserLabelHex]
+    .forEach((el) => el?.addEventListener("input", () => window.syncLogoColorSwatchSelection?.()));
+  [personnaliserBg, personnaliserFg, personnaliserLabel, personnaliserBgHex, personnaliserFgHex, personnaliserLabelHex]
+    .forEach((el) => el?.addEventListener("change", () => window.syncLogoColorSwatchSelection?.()));
   function syncStripToBg() {
     const bg = personnaliserBgHex?.value?.trim() || personnaliserBg?.value || "#ffffff";
     const hex = bg.startsWith("#") ? bg : "#" + bg;
@@ -2357,7 +2365,7 @@ function initAppDashboard(slug) {
         if (mainBlockEl) mainBlockEl.style.removeProperty("background");
       }
     }
-    const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "☕";
+    const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "✅";
     const requiredStamps = 10;
     const useStripImage = stripDisplayLogo && stripDisplayLogo.checked;
     const showPointsOrStamps = !hasCardBgUrl;
@@ -2424,9 +2432,11 @@ function initAppDashboard(slug) {
     if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
     if (stampsGridEl && isStamps && showPointsOrStamps) {
       const hasCustomStampIcon = personnaliserStampIconDataUrl && personnaliserStampIconDataUrl.length > 0;
-      const emojiToIcon = { "☕": "cafe", "🍔": "burger", "🍕": "pizza", "🥐": "croissant", "🥩": "steak", "🍣": "sushi", "🥗": "salade", "🍚": "riz", "🥖": "baguette", "💄": "giftsilver", "✂️": "giftsilver" };
-      const iconName = emojiToIcon[stampEmoji] || "cafe";
+      const emojiToIcon = { "☕": "cafe", "🍔": "burger", "🍕": "pizza", "🥐": "croissant", "🥩": "steak", "🍣": "sushi", "🥗": "salade", "🍚": "riz", "🥖": "baguette", "💄": "giftsilver", "✂️": "giftsilver", "✅": "checkvert" };
+      const iconName = emojiToIcon[stampEmoji] || "checkvert";
       const iconSrc = hasCustomStampIcon ? personnaliserStampIconDataUrl : "/assets/icons/" + iconName + ".png";
+      const midRewardIconSrc = "/assets/icons/giftsilver.png";
+      const finalRewardIconSrc = "/assets/icons/giftgold.png";
       const filledCount = 0;
       const rows = stampsGridEl.querySelectorAll(".builder-wallet-card-stamps-row");
       let index = 0;
@@ -2438,7 +2448,9 @@ function initAppDashboard(slug) {
           span.className = "stamp stamp-img" + (isFilled ? " filled" : "");
           span.setAttribute("aria-hidden", "true");
           const img = document.createElement("img");
-          img.src = iconSrc;
+          if (index === 4) img.src = midRewardIconSrc; // 5e tampon
+          else if (index === 9) img.src = finalRewardIconSrc; // 10e tampon
+          else img.src = iconSrc;
           img.alt = "";
           img.width = 48;
           img.height = 48;
@@ -3219,8 +3231,8 @@ function initAppDashboard(slug) {
       emojiPickerEl.querySelectorAll(".app-emoji-picker-btn").forEach((b) => b.classList.remove("selected"));
       let current = (stampEmojiEl.value || "").trim();
       if (!current) {
-        stampEmojiEl.value = "☕";
-        current = "☕";
+        stampEmojiEl.value = "✅";
+        current = "✅";
       }
       const match = emojiPickerEl.querySelector(`.app-emoji-picker-btn[data-emoji="${current.replace(/"/g, "\\\"")}"]`);
       if (match) match.classList.add("selected");
@@ -3228,7 +3240,7 @@ function initAppDashboard(slug) {
         const firstBtn = emojiPickerEl.querySelector(".app-emoji-picker-btn");
         if (firstBtn) {
           firstBtn.classList.add("selected");
-          stampEmojiEl.value = firstBtn.dataset.emoji || "☕";
+          stampEmojiEl.value = firstBtn.dataset.emoji || "✅";
         }
       }
     };
@@ -3270,6 +3282,10 @@ function initAppDashboard(slug) {
     });
   }
 
+  const IOS_LIKE_CARD_COLORS = [
+    "#ffffff", "#34c759", "#0a84ff", "#5856d6", "#af52de", "#ff2d55", "#ff9500", "#ffcc00", "#30b0c7", "#8e8e93", "#000000",
+  ];
+
   function hideLogoColorSwatchRows() {
     const ids = ["app-logo-colors-swatches-bg", "app-logo-colors-swatches-fg", "app-logo-colors-swatches-label"];
     ids.forEach((id) => {
@@ -3281,7 +3297,7 @@ function initAppDashboard(slug) {
     });
   }
 
-  function renderLogoColorSwatches(colors) {
+  function renderLogoColorSwatches(colors = IOS_LIKE_CARD_COLORS) {
     const cBg = document.getElementById("app-logo-colors-swatches-bg");
     const cFg = document.getElementById("app-logo-colors-swatches-fg");
     const cLbl = document.getElementById("app-logo-colors-swatches-label");
@@ -3298,28 +3314,97 @@ function initAppDashboard(slug) {
       fg: "au texte de la carte",
       label: "aux labels de la carte",
     };
+    function getCurrentTargetHex(targetKey) {
+      if (targetKey === "bg") return (personnaliserBg?.value || personnaliserBgHex?.value || "").trim().toLowerCase();
+      if (targetKey === "fg") return (personnaliserFg?.value || personnaliserFgHex?.value || "").trim().toLowerCase();
+      return (personnaliserLabel?.value || personnaliserLabelHex?.value || "").trim().toLowerCase();
+    }
+
+    function openPreciseColorPicker(targetKey, anchorBtn) {
+      const current = getCurrentTargetHex(targetKey) || "#000000";
+      const picker = document.createElement("input");
+      picker.type = "color";
+      picker.value = current;
+      const rect = anchorBtn.getBoundingClientRect();
+      picker.style.position = "fixed";
+      picker.style.left = `${Math.max(0, rect.left + rect.width / 2)}px`;
+      picker.style.top = `${Math.max(0, rect.top + rect.height / 2)}px`;
+      picker.style.width = "1px";
+      picker.style.height = "1px";
+      picker.style.opacity = "0";
+      picker.style.pointerEvents = "none";
+      picker.style.zIndex = "9999";
+      document.body.appendChild(picker);
+      const close = () => {
+        picker.removeEventListener("blur", close);
+        picker.removeEventListener("change", onChange);
+        picker.removeEventListener("input", onInput);
+        if (picker.parentNode) picker.parentNode.removeChild(picker);
+      };
+      const onInput = () => applyTargetColor(targetKey, picker.value);
+      const onChange = () => {
+        applyTargetColor(targetKey, picker.value);
+        close();
+      };
+      picker.addEventListener("input", onInput);
+      picker.addEventListener("change", onChange);
+      picker.addEventListener("blur", close);
+      picker.click();
+      window.setTimeout(close, 15000);
+    }
+
+    function syncSelectedSwatches() {
+      [cBg, cFg, cLbl].forEach((container) => {
+        container.querySelectorAll(".app-logo-color-swatch[data-target][data-hex]").forEach((btn) => {
+          const targetKey = btn.getAttribute("data-target");
+          const swHex = (btn.getAttribute("data-hex") || "").trim().toLowerCase();
+          const currentHex = getCurrentTargetHex(targetKey);
+          btn.classList.toggle("is-selected", !!swHex && !!currentHex && swHex === currentHex);
+        });
+      });
+    }
+
+    function applyTargetColor(targetKey, rawHex) {
+      const h = rawHex.startsWith("#") ? rawHex : "#" + rawHex;
+      if (targetKey === "bg") {
+        if (personnaliserBg) personnaliserBg.value = h;
+        if (personnaliserBgHex) personnaliserBgHex.value = h;
+        syncStripToBg();
+      } else if (targetKey === "fg") {
+        if (personnaliserFg) personnaliserFg.value = h;
+        if (personnaliserFgHex) personnaliserFgHex.value = h;
+      } else {
+        if (personnaliserLabel) personnaliserLabel.value = h;
+        if (personnaliserLabelHex) personnaliserLabelHex.value = h;
+      }
+      syncSelectedSwatches();
+      updatePersonnaliserPreview();
+    }
+
     function fillRow(container, targetKey) {
+      const plusBtn = document.createElement("button");
+      plusBtn.type = "button";
+      plusBtn.className = "app-logo-color-swatch app-logo-color-swatch--plus";
+      plusBtn.textContent = "+";
+      plusBtn.title = "Choisir une couleur précise";
+      plusBtn.setAttribute("aria-label", "Choisir une couleur précise");
+      plusBtn.addEventListener("click", () => {
+        openPreciseColorPicker(targetKey, plusBtn);
+      });
+      container.appendChild(plusBtn);
+
       colors.forEach((hex) => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "app-logo-color-swatch";
         btn.style.background = hex;
         btn.title = hex;
+        const normalizedHex = (hex.startsWith("#") ? hex : "#" + hex).toLowerCase();
+        btn.setAttribute("data-target", targetKey);
+        btn.setAttribute("data-hex", normalizedHex);
         btn.setAttribute("aria-label", "Appliquer " + hex + " " + ariaTarget[targetKey]);
         btn.addEventListener("click", () => {
-          const h = hex.startsWith("#") ? hex : "#" + hex;
-          if (targetKey === "bg") {
-            if (personnaliserBg) personnaliserBg.value = h;
-            if (personnaliserBgHex) personnaliserBgHex.value = h;
-            syncStripToBg();
-          } else if (targetKey === "fg") {
-            if (personnaliserFg) personnaliserFg.value = h;
-            if (personnaliserFgHex) personnaliserFgHex.value = h;
-          } else {
-            if (personnaliserLabel) personnaliserLabel.value = h;
-            if (personnaliserLabelHex) personnaliserLabelHex.value = h;
-          }
-          updatePersonnaliserPreview();
+          applyTargetColor(targetKey, hex);
         });
         container.appendChild(btn);
       });
@@ -3327,6 +3412,8 @@ function initAppDashboard(slug) {
     fillRow(cBg, "bg");
     fillRow(cFg, "fg");
     fillRow(cLbl, "label");
+    syncSelectedSwatches();
+    window.syncLogoColorSwatchSelection = syncSelectedSwatches;
     cBg.classList.remove("hidden");
     cFg.classList.remove("hidden");
     cLbl.classList.remove("hidden");
@@ -3334,10 +3421,10 @@ function initAppDashboard(slug) {
 
   function extractAndShowLogoColors(imageSource) {
     if (!imageSource) {
-      hideLogoColorSwatchRows();
+      renderLogoColorSwatches();
       return;
     }
-    getDominantColorsFromImage(imageSource, 4).then((colors) => renderLogoColorSwatches(colors));
+    renderLogoColorSwatches();
   }
 
   async function applyLogoFromFile(file) {

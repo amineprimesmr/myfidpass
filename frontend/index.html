@@ -1022,7 +1022,7 @@
                 <section class="app-personnaliser-group" data-personnaliser-group data-personnaliser-step="colors">
                   <button type="button" class="app-personnaliser-group-toggle" aria-expanded="false" aria-controls="app-personnaliser-panel-colors">
                     <span class="app-personnaliser-group-status is-status-pending" role="img" aria-label="À compléter"></span>
-                    <span class="app-personnaliser-group-title">Couleur / Image de fond</span>
+                    <span class="app-personnaliser-group-title" id="app-personnaliser-colors-group-title">Couleurs et image</span>
                     <span class="app-personnaliser-group-icon" aria-hidden="true">⌄</span>
                   </button>
                   <div id="app-personnaliser-panel-colors" class="app-personnaliser-group-panel">
@@ -1097,7 +1097,6 @@
                 <input type="text" id="app-strip-text" class="app-input" maxlength="120" placeholder="ex. Mon Commerce" />
               </div>
               <div id="app-personnaliser-logo-wrap">
-              <p class="app-step-label">Logo (format 160×50 pt — ex. 320×100 px @2x)</p>
                         <div class="app-personnaliser-logo app-drop-zone app-media-drop-wrap" id="app-logo-drop-zone" role="button" tabindex="0" aria-label="Glisser-déposer une image, cliquer ou coller (Ctrl+V)">
                 <input type="file" id="app-personnaliser-logo" class="app-file" accept="image/png,image/jpeg,image/jpg" aria-hidden="true" />
                 <label for="app-personnaliser-logo" class="app-logo-label">
@@ -1184,7 +1183,7 @@
                           <div id="app-rules-stamps" class="app-rules-panel hidden app-rewards-panel">
                             <p class="app-step-label">Configuration tampons</p>
                             <p class="app-hint">Choisissez l’icône tampon et vos récompenses à la 5e puis 10e visite.</p>
-                            <input type="hidden" id="app-stamp-emoji" value="☕" />
+                            <input type="hidden" id="app-stamp-emoji" value="✅" />
                             <div class="app-stamp-tier-block">
                               <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5e tampon</span></div>
                               <label class="app-checkbox-label app-stamp-skip-mid-label">
