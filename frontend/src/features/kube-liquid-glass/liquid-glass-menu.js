@@ -1,9 +1,9 @@
 /* global ResizeObserver */
 /**
- * Menu responsive : desktop une ligne, mobile barre + panneau (Liquid Glass / kube).
+ * Menu responsive : desktop une ligne, mobile barre + panneau dépliant sous la pilule (sans overlay page).
  * @param {object} [options]
  * @param {ParentNode} [options.root] Conteneur des nœuds data-lg-* (obligatoire, un menu par instance)
- * @param {Element} [options.scrollLockEl] Élément recevant .lg-menu-noscroll (ex. #landing)
+ * @param {Element} [options.scrollLockEl] Réservé compat (non utilisé : pas de verrou scroll sur mobile)
  * @param {Element} [options.fallbackClassTarget] Cible pour .lg-fallback-filters (défaut: scrollLockEl)
  */
 import {
@@ -13,32 +13,9 @@ import {
   applyBackdropFallback,
   clearBackdropToFallback,
   MQL,
-  DEFAULTS,
 } from "./liquid-glass-menu-filters.js";
 import "./liquid-glass-menu.css";
 import "./liquid-glass-menu-mobile.css";
-
-/** Lock scroll (iOS) quand le menu mobile est ouvert — évite la « section » qui bouge. */
-let _menuBodyLockY = 0;
-
-/**
- * @param {boolean} on
- */
-function applyBodyMenuLock(on) {
-  if (on) {
-    _menuBodyLockY = window.scrollY || 0;
-    document.body.style.setProperty("position", "fixed");
-    document.body.style.setProperty("top", `-${_menuBodyLockY}px`);
-    document.body.style.setProperty("width", "100%");
-    document.body.style.setProperty("overflow", "hidden");
-  } else {
-    document.body.style.removeProperty("position");
-    document.body.style.removeProperty("top");
-    document.body.style.removeProperty("width");
-    document.body.style.removeProperty("overflow");
-    window.scrollTo(0, _menuBodyLockY);
-  }
-}
 
 const DESK = "fidpassLgDesk";
 const MBAR = "fidpassLgMbar";
@@ -99,37 +76,33 @@ function setNative(el, filterId, use) {
 /**
  * @param {object} p
  * @param {ReturnType<typeof getEls>} p.els
- * @param {Element | null | undefined} p.scrollLockEl
  * @param {() => void} [p.onBurger]
  * @param {AbortSignal} p.signal
  */
 function initBurger(p) {
-  const { els, scrollLockEl, onBurger, signal } = p;
-  const { burger, rootSm, panelHost, navClose } = els;
+  const { els, onBurger, signal } = p;
+  const { burger, rootSm, panelHost } = els;
   if (!burger || !panelHost) return;
 
-  const setLock = (on) => {
-    if (scrollLockEl) scrollLockEl.classList.toggle("lg-menu-noscroll", on);
-    applyBodyMenuLock(on);
-  };
+  const shell = /** @type {HTMLElement | null} */ (panelHost.closest("[data-lg-shell]"));
 
   const close = () => {
     panelHost.classList.remove("is-open");
-    panelHost.setAttribute("hidden", "");
     panelHost.setAttribute("aria-hidden", "true");
+    panelHost.setAttribute("inert", "");
     burger.setAttribute("aria-expanded", "false");
     if (rootSm) rootSm.classList.remove("lg-nav-sm--open");
-    setLock(false);
+    shell?.classList.remove("lg-nav-sm__shell--open");
     if (onBurger) onBurger();
   };
 
   const open = () => {
-    panelHost.removeAttribute("hidden");
+    panelHost.removeAttribute("inert");
     panelHost.classList.add("is-open");
     panelHost.setAttribute("aria-hidden", "false");
     burger.setAttribute("aria-expanded", "true");
     if (rootSm) rootSm.classList.add("lg-nav-sm--open");
-    setLock(true);
+    shell?.classList.add("lg-nav-sm__shell--open");
     if (onBurger) onBurger();
   };
 
@@ -150,10 +123,6 @@ function initBurger(p) {
       if (panelHost.getAttribute("aria-hidden") === "true") return;
       if (!e.target) return;
       const t = /** @type {Element} */ (e.target);
-      if (t.closest?.(".lg-menu-panel__scrim")) {
-        close();
-        return;
-      }
       if (rootSm && rootSm.contains(/** @type {Node} */ (t))) return;
       close();
     },
@@ -183,8 +152,8 @@ function initBurger(p) {
     );
   }
 
-  if (navClose) {
-    navClose.addEventListener(
+  if (els.navClose) {
+    els.navClose.addEventListener(
       "click",
       (e) => {
         e.preventDefault();
@@ -239,22 +208,24 @@ export function initLiquidGlassMenu(options = {}) {
       if (mql.matches) {
         if (els.desk) {
           setNative(els.desk, DESK, nativeOk);
-          updateFilterForGlass(els.desk, "D", DEFAULTS);
+          updateFilterForGlass(els.desk, "D");
         }
         if (els.bar) clearBackdropToFallback(els.bar);
         if (els.panel) clearBackdropToFallback(els.panel);
       } else {
         if (els.desk) clearBackdropToFallback(els.desk);
         if (getDrawer() && els.panel) {
-          clearBackdropToFallback(els.panel);
-          if (els.bar) {
-            clearBackdropToFallback(els.bar);
-            els.bar.classList.add("lg-menu--bar-ghost");
+          if (nativeOk) {
+            setNative(els.panel, MPAN, true);
+            updateFilterForGlass(els.panel, "P");
+            requestAnimationFrame(() => updateFilterForGlass(els.panel, "P"));
+          } else {
+            applyBackdropFallback(els.panel);
           }
+          if (els.bar) applyBackdropFallback(els.bar);
         } else if (els.bar) {
           setNative(els.bar, MBAR, nativeOk);
-          els.bar.classList.remove("lg-menu--bar-ghost");
-          updateFilterForGlass(els.bar, "B", DEFAULTS);
+          updateFilterForGlass(els.bar, "B");
           if (els.panel) clearBackdropToFallback(els.panel);
         }
       }
@@ -282,19 +253,20 @@ export function initLiquidGlassMenu(options = {}) {
   const mqlHandler = () => {
     els.burger?.setAttribute("aria-expanded", "false");
     if (els.panelHost) {
-      els.panelHost.setAttribute("hidden", "");
       els.panelHost.classList.remove("is-open");
       els.panelHost.setAttribute("aria-hidden", "true");
+      els.panelHost.setAttribute("inert", "");
     }
+    const shell = /** @type {HTMLElement | null} */ (els.panelHost?.closest("[data-lg-shell]"));
+    shell?.classList.remove("lg-nav-sm__shell--open");
     els.rootSm?.classList.remove("lg-nav-sm--open");
     if (scrollLockEl) scrollLockEl.classList.remove("lg-menu-noscroll");
-    applyBodyMenuLock(false);
     scheduleAll();
   };
   mql.addEventListener("change", mqlHandler);
 
   const ac = new AbortController();
-  initBurger({ els, scrollLockEl, onBurger: () => scheduleAll(), signal: ac.signal });
+  initBurger({ els, onBurger: () => scheduleAll(), signal: ac.signal });
 
   const roD = new ResizeObserver(() => scheduleAll());
   const roB = new ResizeObserver(() => scheduleAll());
@@ -321,7 +293,6 @@ export function initLiquidGlassMenu(options = {}) {
     roB.disconnect();
     roP.disconnect();
     if (scrollLockEl) scrollLockEl.classList.remove("lg-menu-noscroll");
-    applyBodyMenuLock(false);
     if (fallbackTarget) fallbackTarget.classList.remove("lg-fallback-filters");
     if (fallbackTarget) fallbackTarget.classList.remove("lg-native-filters");
     if (fallbackTarget) fallbackTarget.classList.remove("lg-ios-glass-mode");

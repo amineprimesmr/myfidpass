@@ -8,6 +8,7 @@ import { syncSmartAppBanner } from "../smart-app-banner.js";
 
 export function getRoute() {
   let path = window.location.pathname.replace(/\/$/, "");
+  const params = new URLSearchParams(window.location.search);
   const legacyJeux = path.match(/^\/fidelity\/([^/]+)\/jeu$/);
   if (legacyJeux) {
     const slug = legacyJeux[1];
@@ -31,7 +32,12 @@ export function getRoute() {
   if (path === "/cgv") return { type: "legal", page: "cgv" };
   if (path === "/cookies") return { type: "legal", page: "cookies" };
   if (path === "/supprimer-compte") return { type: "legal", page: "delete-account" };
-  if (path === "") return { type: "landing" };
+  if (path === "") {
+    const openOnboarding = ["1", "true", "yes"].includes(
+      String(params.get("openOnboarding") || "").toLowerCase()
+    );
+    return { type: "landing", openOnboarding };
+  }
   return { type: "404" };
 }
 
@@ -291,8 +297,17 @@ export async function initRouting() {
   if (route.openOnboarding) {
     requestAnimationFrame(() => {
       const input = document.getElementById("landing-etablissement");
+      const wrap = input?.closest(".landing-hero-input-wrap");
       input?.scrollIntoView({ behavior: "smooth", block: "center" });
       input?.focus();
+      if (wrap instanceof HTMLElement) {
+        wrap.classList.remove("is-guided-focus");
+        void wrap.offsetWidth;
+        wrap.classList.add("is-guided-focus");
+        window.setTimeout(() => {
+          wrap.classList.remove("is-guided-focus");
+        }, 1400);
+      }
     });
   }
   syncWhatsappFabVisibility();

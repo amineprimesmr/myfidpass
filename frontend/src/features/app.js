@@ -21,6 +21,7 @@ import {
   isDashIntroRevealDone,
   scheduleDashboardOnboardingReveal,
   initSaasFrcScrollCollapse,
+  resetSaasIntroForRefreshTesting,
 } from "./saas-dashboard-intro.js";
 import {
   initAppDirtyGuard,
@@ -215,7 +216,8 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
   applySaaSFrcMessaging({
     paid: false,
     trialHero: trialActive,
-    showSubscribeStrip: true,
+    // Premier affichage: bloc héros complet, puis passage en bandeau compact au scroll.
+    showSubscribeStrip: false,
     trialEndRaw: trialActive ? trialEndRaw : null,
     formatEndingHeadline: formatMerchantTrialEndingHeadline,
     fallbackTitle,
@@ -300,6 +302,7 @@ function ensureFidpassAuthMeMerchantListener() {
 ensureFidpassAuthMeMerchantListener();
 
 function initAppPage() {
+  resetSaasIntroForRefreshTesting();
   wrapAppLogoutButtonsWithDirtyGuard(clearAuthToken);
   const emptyEl = document.getElementById("app-empty");
   const contentEl = document.getElementById("app-dashboard-content");

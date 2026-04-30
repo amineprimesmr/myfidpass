@@ -3,6 +3,14 @@
 const INTRO_STORAGE_KEY = "fidpass_dash_onboarding_reveal_v2";
 const TRIAL_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
 
+/** Mode test: force le parcours "première visite" à chaque refresh. */
+export function resetSaasIntroForRefreshTesting() {
+  try {
+    localStorage.removeItem(INTRO_STORAGE_KEY);
+    localStorage.removeItem(TRIAL_HERO_COLLAPSED_KEY);
+  } catch (_) {}
+}
+
 export function isDashIntroRevealDone() {
   try {
     return localStorage.getItem(INTRO_STORAGE_KEY) === "1";
@@ -73,12 +81,15 @@ export function initSaasFrcScrollCollapse() {
   const topbar = document.getElementById("app-desktop-topbar");
   const strip = document.getElementById("app-saas-frc-strip");
   const cluster = document.getElementById("app-saas-frc-cluster");
+  const hero = document.querySelector(".app-saas-frc-hero");
   const main = document.querySelector("#app-app .app-main");
   let permanentlyCollapsed = isTrialHeroPermanentlyCollapsed();
 
   const opts = { passive: true };
   let raf = 0;
   let forcedVisible = false;
+  let baseY = -1;
+  let wasDense = false;
 
   const currentScrollY = () => {
     const mainY = main instanceof HTMLElement ? main.scrollTop : 0;
@@ -89,38 +100,89 @@ export function initSaasFrcScrollCollapse() {
   const tick = () => {
     raf = 0;
     const y = currentScrollY();
-    let dense = y > 36;
+    if (baseY < 0) baseY = y;
+    const scrollDelta = Math.max(0, y - baseY);
+    const userStartedScroll = scrollDelta > 1;
+    const isMobile = typeof window !== "undefined" && window.matchMedia?.("(max-width: 900px)").matches;
+    const collapseStart = isMobile ? 6 : 18;
+    const collapseEnd = isMobile ? 122 : 44;
+    const progressRaw = (scrollDelta - collapseStart) / Math.max(1, collapseEnd - collapseStart);
+    const progress = userStartedScroll ? Math.max(0, Math.min(1, progressRaw)) : 0;
+    root.style.setProperty("--saas-frc-collapse-progress", progress.toFixed(3));
+
+    let dense = progress >= 1;
     if (permanentlyCollapsed) dense = true;
     root.classList.toggle("app-saas-frc-scroll-dense", dense);
 
-    // Première descente : on verrouille le mode compact pour les prochains accès.
-    if (dense && !permanentlyCollapsed) {
+    // Évite le "saut auto" quand on bascule vers le mode compact:
+    // on transfère le reliquat de scroll dans le conteneur interne, puis on fige le viewport.
+    if (!wasDense && dense && isMobile && main instanceof HTMLElement) {
+      const carry = Math.max(0, scrollDelta - collapseEnd);
+      main.scrollTop = carry;
+      if (typeof window !== "undefined" && window.scrollY > 0) {
+        window.scrollTo(0, 0);
+      }
+    }
+
+    // Première descente complète : on verrouille le mode compact pour les prochains accès.
+    if (scrollDelta >= collapseEnd && dense && !permanentlyCollapsed) {
       markTrialHeroPermanentlyCollapsed();
       permanentlyCollapsed = true;
     }
 
-    // Scroll compact: toujours afficher le bandeau quand on descend.
+    if (hero) {
+      if (dense) {
+        hero.style.opacity = "0";
+        hero.style.maxHeight = "0px";
+        hero.style.transform = "translateY(-8px)";
+        hero.style.pointerEvents = "none";
+      } else {
+        const heroOpacity = 1 - progress;
+        hero.style.opacity = String(Math.max(0, heroOpacity));
+        hero.style.maxHeight = `${Math.round(520 * (1 - progress))}px`;
+        hero.style.transform = `translateY(${Math.round(-8 * progress)}px)`;
+        hero.style.pointerEvents = heroOpacity < 0.12 ? "none" : "";
+      }
+    }
+
+    // Bandeau trial: affichage uniquement une fois la transition terminée (pas de chevauchement).
     if (strip) {
-      if (dense && strip.classList.contains("hidden")) {
+      const stripShouldShow = dense;
+      const shouldExposeAria = dense;
+      if (stripShouldShow && strip.classList.contains("hidden")) {
         strip.classList.remove("hidden");
         strip.classList.add("app-saas-frc-strip--visible");
-        strip.setAttribute("aria-hidden", "false");
-        forcedVisible = true;
-      } else if (!dense && forcedVisible && !permanentlyCollapsed) {
+        strip.setAttribute("aria-hidden", shouldExposeAria ? "false" : "true");
+      } else if (!stripShouldShow && forcedVisible && !permanentlyCollapsed) {
         strip.classList.add("hidden");
         strip.classList.remove("app-saas-frc-strip--visible");
         strip.setAttribute("aria-hidden", "true");
-        forcedVisible = false;
       }
+      forcedVisible = stripShouldShow;
+      strip.setAttribute("aria-hidden", shouldExposeAria ? "false" : "true");
+      strip.style.pointerEvents = dense ? "" : "none";
+      strip.style.removeProperty("opacity");
+      strip.style.removeProperty("transform");
     }
 
     cluster?.classList.toggle("app-saas-frc-cluster--dense", dense);
 
     // Source unique de vérité : hauteur réelle du top affiché (évite tout contenu caché dessous).
     if (topbar instanceof HTMLElement) {
-      const h = Math.max(0, Math.round(topbar.getBoundingClientRect().height));
-      root.style.setProperty("--saas-frc-header-total-h", `${h}px`);
+      const styles = window.getComputedStyle(root);
+      const baseTopbarRaw = Number.parseInt(styles.getPropertyValue("--app-topbar-height"), 10);
+      const baseTopbar = Number.isFinite(baseTopbarRaw) && baseTopbarRaw > 0 ? baseTopbarRaw : isMobile ? 56 : 52;
+      if (dense) {
+        // Hauteur fixe en mode compact pour éviter tout saut de page à l’apparition du strip.
+        const denseExtra = isMobile ? 68 : 44;
+        root.style.setProperty("--saas-frc-header-total-h", `${baseTopbar + denseExtra}px`);
+      } else {
+        const h = Math.max(0, Math.round(topbar.getBoundingClientRect().height));
+        root.style.setProperty("--saas-frc-header-total-h", `${h}px`);
+      }
     }
+
+    wasDense = dense;
   };
 
   const onAnyScroll = () => {

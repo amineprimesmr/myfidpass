@@ -1,4 +1,4 @@
-/* Desktop: une ligne, pas de retour — mobile: barre + panneau liquid glass. */
+/* Desktop: une ligne — mobile: pilule + menu dépliant dans le flux (sans overlay plein écran). */
 #fidpass-liquid-menu,
 .lg-test-menu-outer,
 .lg-nav-lg {
@@ -128,13 +128,6 @@
   padding: 0.3rem 0.45rem 0.3rem 0.4rem;
 }
 
-#fidpass-liquid-menu-glass-bar.lg-menu--bar-ghost,
-.lg-menu__glass--bar.lg-menu--bar-ghost {
-  background: linear-gradient(180deg, rgba(20, 20, 30, 0.55), rgba(20, 20, 30, 0.35));
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
-  opacity: 0.9;
-}
-
 .lg-menu__brand--bar {
   font-size: 0.85rem;
   min-width: 0;
@@ -200,14 +193,8 @@
   transform: translateY(-6px) rotate(-45deg);
 }
 
-.lg-menu-panel[hidden] {
-  display: none;
-}
-
-.lg-menu-panel {
-  max-width: min(100% - 1rem, 24rem);
-  margin: 0.45rem auto 0;
-  padding: 0 0.25rem 0.5rem;
+.lg-nav-sm__dropdown {
+  box-sizing: border-box;
 }
 
 #fidpass-liquid-menu-glass-panel,

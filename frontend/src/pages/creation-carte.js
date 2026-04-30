@@ -1,5 +1,11 @@
 import "./../creation-carte.css";
-import { API_BASE, setAuthToken, setRefreshToken, setPendingEstablishment } from "../config.js";
+import {
+  API_BASE,
+  getPendingEstablishment,
+  setAuthToken,
+  setRefreshToken,
+  setPendingEstablishment,
+} from "../config.js";
 import {
   showOAuthConnectingOverlay,
   hideOAuthConnectingOverlay,
@@ -29,7 +35,7 @@ export default {
     if (!root) return;
 
     const params = new URLSearchParams(window.location.search);
-    const commerce = params.get("name") || "";
+    const commerce = params.get("name") || params.get("etablissement") || "";
     const mode = String(params.get("mode") || "").trim().toLowerCase();
     const initialEmail = String(params.get("email") || "").trim();
     const redirectRaw = String(params.get("redirect") || "").trim();
@@ -50,6 +56,10 @@ export default {
           <p class="creation-carte-signup__subtitle">Premier mois à 1€, puis 49,99€ sans engagement</p>
           <form class="creation-carte-signup__card" id="creation-carte-signup-form" novalidate>
             <div class="creation-carte-signup__step creation-carte-signup__step--email" id="creation-carte-step-email">
+              <div class="creation-carte-signup__locked-field">
+                <div class="creation-carte-signup__locked-label">Commerce</div>
+                <div class="creation-carte-signup__locked-value" id="creation-carte-commerce-inline"></div>
+              </div>
               <label class="creation-carte-signup__sr-only" for="creation-carte-email">Adresse e-mail</label>
               <input
                 id="creation-carte-email"
@@ -175,6 +185,7 @@ export default {
     const stepLogin = root.querySelector("#creation-carte-step-login");
     const emailReview = root.querySelector("#creation-carte-email-review");
     const commerceReview = root.querySelector("#creation-carte-commerce-review");
+    const commerceInline = root.querySelector("#creation-carte-commerce-inline");
     const emailEdit = root.querySelector("#creation-carte-email-edit");
     const passwordSubmit = root.querySelector("#creation-carte-password-submit");
     const passwordEye = root.querySelector("#creation-carte-password-eye");
@@ -195,10 +206,18 @@ export default {
     const signupContent = root.querySelector(".creation-carte-signup__content");
     if (!(form instanceof HTMLFormElement) || !(emailInput instanceof HTMLInputElement)) return;
 
-    const establishmentName = String(commerce || "").trim();
-    const placeId = String(params.get("place_id") || "").trim();
+    const pendingEstablishment = getPendingEstablishment();
+    const establishmentName = String(
+      commerce || pendingEstablishment?.establishment_name || ""
+    ).trim();
+    const placeId = String(
+      params.get("place_id") || pendingEstablishment?.google_place_id || ""
+    ).trim();
     if (commerceReview instanceof HTMLElement) {
       commerceReview.textContent = establishmentName || "Commerce non renseigné";
+    }
+    if (commerceInline instanceof HTMLElement) {
+      commerceInline.textContent = establishmentName || "Commerce non renseigné";
     }
     if (establishmentName && placeId) {
       setPendingEstablishment({

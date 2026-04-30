@@ -11,9 +11,9 @@
   left: 0;
   right: 0;
   top: var(--app-admin-strip-h, 0px);
-  z-index: 220;
+  z-index: auto;
   height: var(--app-topbar-height, 52px);
-  background: #000;
+  background: var(--app-shell-top-bg-solid, #0b0d10);
   border-bottom: none;
   box-sizing: border-box;
 }
@@ -27,6 +27,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  position: relative;
+  z-index: 260;
 }
 
 .app-desktop-topbar__brand {
@@ -684,7 +686,7 @@
 
   body.page-app #app-app .app-main {
     margin-top: calc(
-      var(--app-admin-strip-h, 0px) + var(--app-topbar-height) - var(--app-main-sheet-pull, 12px)
+      var(--app-admin-strip-h, 0px) + var(--app-topbar-height) - var(--app-main-sheet-pull, 12px) + 8px
     );
     min-height: calc(
       100vh - var(--app-admin-strip-h, 0px) - var(--app-topbar-height) - 12px + var(--app-main-sheet-pull, 12px)
@@ -698,7 +700,7 @@
     border-top-right-radius: clamp(17px, 1.85vw, 22px);
     overflow: clip;
     position: relative;
-    z-index: 6;
+    z-index: 140;
 
     box-shadow:
       0 -12px 40px rgba(0, 0, 0, 0.1),
@@ -715,7 +717,7 @@
   .app-desktop-topbar {
     display: block;
     height: var(--app-topbar-height);
-    z-index: 120;
+    z-index: auto;
   }
 
   .app-desktop-topbar__menu-btn {
@@ -873,7 +875,7 @@
   }
 
   body.page-app #app-app .app-main {
-    margin-top: calc(var(--app-topbar-height) - var(--app-main-sheet-pull, 16px)) !important;
+    margin-top: calc(var(--app-topbar-height) - var(--app-main-sheet-pull, 16px) + 10px) !important;
 
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -888,7 +890,7 @@
     overflow: clip;
 
     position: relative;
-    z-index: 6;
+    z-index: 140;
 
     box-shadow:
       0 -14px 44px rgba(0, 0, 0, 0.16),

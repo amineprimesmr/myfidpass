@@ -12,7 +12,7 @@ body.page-app .whatsapp-fab { display: none !important; }
 
 /* Safari iOS : bande grise / « masque » sous la barre du bas = écart layout vs viewport visuel. */
 body.page-app {
-  background-color: #f3f4f6;
+  background-color: #0b0d10;
 }
 
 html:has(body.page-app) {
@@ -21,7 +21,10 @@ html:has(body.page-app) {
 }
 
 #app-app {
-  --app-bg: #f3f4f6;
+  --app-shell-top-bg: linear-gradient(180deg, #070809 0%, #111317 100%);
+  --app-shell-top-bg-solid: #0b0d10;
+  --app-main-sheet-bg: #f3f4f6;
+  --app-bg: var(--app-shell-top-bg);
   --app-surface: var(--fidpass-surface);
   --app-surface-hover: #f0f2f5;
   --app-border: #e8ecf1;
@@ -99,7 +102,7 @@ html:has(body.page-app) {
   min-height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 #app-app .app-main { padding-top: 0; }
@@ -619,8 +622,11 @@ html:has(body.page-app) {
   margin-bottom: 12px;
   min-height: calc(100vh - 12px);
   padding: 2rem 1.75rem 4rem;
-  background: #f3f4f6;
-  border-radius: 0;
+  background: var(--app-main-sheet-bg);
+  border-top-left-radius: clamp(18px, 3.2vw, 24px);
+  border-top-right-radius: clamp(18px, 3.2vw, 24px);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
   border: none;
   box-shadow: none;
   transition: none;
@@ -651,7 +657,10 @@ html:has(body.page-app) {
     margin-bottom: 10px;
     min-height: calc(100vh - 10px);
     padding: 1.5rem 1rem;
-    border-radius: 16px;
+    border-top-left-radius: clamp(18px, 5vw, 24px);
+    border-top-right-radius: clamp(18px, 5vw, 24px);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 }
 
@@ -660,7 +669,10 @@ html:has(body.page-app) {
   .app-main {
     margin: 0;
     min-height: 60vh;
-    border-radius: 0;
+    border-top-left-radius: clamp(18px, 5vw, 24px);
+    border-top-right-radius: clamp(18px, 5vw, 24px);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
     box-shadow: none;
   }
   .app-sidebar {

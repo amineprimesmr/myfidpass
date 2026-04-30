@@ -31,7 +31,8 @@ export function syncSaaSWelcomeChrome() {
 
   const gateVisible = gate && !gate.classList.contains("hidden");
   const readyVisible = readySplash && !readySplash.classList.contains("hidden");
-  const show = !!(emptyVisible || gateVisible || readyVisible);
+  const trialChromeVisible = !!root?.classList.contains("app-saas-trial-chrome-active");
+  const show = !!(emptyVisible || gateVisible || readyVisible || trialChromeVisible);
 
   if (cluster) {
     cluster.classList.toggle("hidden", !show);
@@ -70,6 +71,7 @@ function isTrialHeroPermanentlyCollapsed() {
 }
 
 export function applySaaSFrcMessaging(opts) {
+  const root = appShell();
   const cluster = document.getElementById("app-saas-frc-cluster");
   const hero = document.querySelector(".app-saas-frc-hero");
   const titleEl = document.getElementById("app-saas-frc-title");
@@ -83,6 +85,7 @@ export function applySaaSFrcMessaging(opts) {
   const trialHero = !!opts.trialHero;
   const persistedCompact = isTrialHeroPermanentlyCollapsed();
   const showSubscribeStrip = persistedCompact || !!opts.showSubscribeStrip;
+  root?.classList.toggle("app-saas-trial-chrome-active", !paid && (trialHero || showSubscribeStrip));
 
   cluster?.classList.toggle("app-saas-frc-cluster--paid", paid);
   cluster?.classList.toggle("app-saas-frc-cluster--unpaid", !paid);

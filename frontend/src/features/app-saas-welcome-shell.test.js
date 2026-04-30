@@ -24,7 +24,19 @@ function mockHead() {
 }
 
 describe("app-saas-welcome-shell", () => {
+  const originalMatchMedia = globalThis.matchMedia;
+
   beforeEach(() => {
+    globalThis.matchMedia = (query) => ({
+      matches: query.includes("max-width: 900px"),
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    });
     mockHead();
     const hero = document.createElement("div");
     hero.innerHTML = `
@@ -40,6 +52,7 @@ describe("app-saas-welcome-shell", () => {
   });
 
   afterEach(() => {
+    globalThis.matchMedia = originalMatchMedia;
     document.body.innerHTML = "";
   });
 
@@ -55,6 +68,7 @@ describe("app-saas-welcome-shell", () => {
     const cta = document.getElementById("app-saas-frc-cta");
     expect(cta?.classList.contains("hidden")).toBe(false);
     expect(document.getElementById("app-saas-frc-strip-status")?.textContent).toContain("3 jours");
+    expect(document.getElementById("app-app")?.classList.contains("app-saas-trial-chrome-active")).toBe(true);
   });
 
   it("syncSaaSWelcomeChrome active le cluster quand l’accueil sans établissement est visible", () => {
@@ -83,5 +97,14 @@ describe("app-saas-welcome-shell", () => {
     const cluster = document.getElementById("app-saas-frc-cluster");
     expect(cluster?.classList.contains("hidden")).toBe(false);
     expect(document.getElementById("app-app")?.classList.contains("app-saas-welcome-active")).toBe(true);
+  });
+
+  it("syncSaaSWelcomeChrome garde le cluster actif quand le chrome trial est forcé", () => {
+    const root = document.getElementById("app-app");
+    root?.classList.add("app-saas-trial-chrome-active");
+    syncSaaSWelcomeChrome();
+    const cluster = document.getElementById("app-saas-frc-cluster");
+    expect(cluster?.classList.contains("hidden")).toBe(false);
+    expect(root?.classList.contains("app-saas-welcome-active")).toBe(true);
   });
 });

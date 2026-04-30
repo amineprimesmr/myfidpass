@@ -28,6 +28,8 @@
 
 #app-app.app-saas-welcome-active .app-main {
   background: #f6f6f7;
+  position: relative;
+  z-index: 140;
 }
 
 /* Héros : aligné au flux — le dégradé commun est sur .app-saas-frc-cluster */
@@ -36,12 +38,14 @@
   top: var(--app-admin-strip-h, 0px);
   left: 0;
   right: 0;
-  z-index: 220;
+  z-index: auto;
   height: auto !important;
 }
 
 #app-app.app-saas-welcome-active .app-desktop-topbar__inner {
   min-height: var(--app-topbar-height, 56px);
+  position: relative;
+  z-index: 260;
 }
 
 #app-app.app-saas-welcome-active .app-saas-frc-cluster {
@@ -50,7 +54,7 @@
   margin-top: -1px;
   position: relative;
   top: auto;
-  z-index: 1;
+  z-index: 60;
   background: var(--saas-frc-shell-bg);
   background-repeat: no-repeat;
   box-shadow: none;
@@ -81,12 +85,37 @@
 }
 
 @media (max-width: 900px) {
+  body.page-app:has(#app-app.app-saas-welcome-active.app-saas-frc-scroll-dense) {
+    overflow: hidden;
+    height: 100dvh;
+  }
+
+  #app-app.app-saas-welcome-active.app-saas-frc-scroll-dense {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   body.page-app #app-app.app-saas-welcome-active .app-main {
     margin-top: calc(
-      var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 56px)) -
-        var(--app-main-sheet-pull, 16px)
+      var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 56px)) + 2px
     ) !important;
     padding-top: 1.35rem !important;
+    height: auto !important;
+    min-height: calc(
+      100dvh - (var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 56px)) + 2px)
+    ) !important;
+    overflow: visible;
+  }
+
+  body.page-app #app-app.app-saas-welcome-active.app-saas-frc-scroll-dense .app-main {
+    height: calc(
+      100dvh - (var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 56px)) + 2px)
+    ) !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -94,9 +123,13 @@
   body.page-app #app-app.app-saas-welcome-active .app-main {
     margin-top: calc(
       var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 52px)) -
-        var(--app-main-sheet-pull, 12px)
+        var(--app-main-sheet-pull, 12px) + 8px
     ) !important;
     padding-top: 1rem !important;
+  }
+
+  body.page-app #app-app.app-saas-welcome-active.app-saas-frc-scroll-dense .app-main {
+    margin-top: calc(var(--app-admin-strip-h, 0px) + var(--app-topbar-height, 52px) + 44px) !important;
   }
 }
 
@@ -226,10 +259,20 @@
     filter 0.22s ease,
     background 0.22s ease;
   box-shadow: none;
+  opacity: 1;
+  transform: none;
 }
 
 .app-saas-frc-strip:hover {
   filter: brightness(1.06);
+}
+
+.app-saas-frc-strip.app-saas-frc-strip--visible {
+  opacity: 1;
+  transform: none;
+  transition:
+    filter 0.22s ease,
+    background 0.22s ease;
 }
 
 .app-saas-frc-strip-main {
@@ -307,6 +350,16 @@ body.page-app #app-app .app-main .app-saas-frc-sheet {
     0 -16px 48px rgba(0, 0, 0, 0.26),
     0 -4px 0 rgba(255, 255, 255, 0.04) inset;
   z-index: 4;
+  transition:
+    margin-top 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 900px) {
+  #app-app.app-saas-welcome-active.app-saas-frc-scroll-dense .app-saas-frc-sheet {
+    margin-top: -34px;
+    border-radius: 18px 18px 0 0;
+  }
 }
 
 .app-saas-frc-sheet--empty {

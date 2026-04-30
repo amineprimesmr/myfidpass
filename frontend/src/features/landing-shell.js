@@ -10,7 +10,7 @@ function updateLandingCtaState() {
   if (input && btn) btn.disabled = !input.value?.trim();
 }
 
-function initBackendPlacesSearch() {
+function initBackendPlacesSearch({ onPredictionSelected } = {}) {
   const input = document.getElementById("landing-etablissement");
   const hiddenPlaceId = document.getElementById("landing-place-id");
   const helperEl = document.getElementById("landing-hero-helper");
@@ -45,11 +45,16 @@ function initBackendPlacesSearch() {
   }
 
   function selectPrediction(pred) {
-    input.value = pred.main_text || pred.description;
-    if (hiddenPlaceId) hiddenPlaceId.value = pred.place_id || "";
+    const establishmentName = String(pred.main_text || pred.description || "").trim();
+    const placeId = String(pred.place_id || "").trim();
+    input.value = establishmentName;
+    if (hiddenPlaceId) hiddenPlaceId.value = placeId;
     if (helperEl) helperEl.classList.remove("is-visible");
     hideDropdown();
     updateLandingCtaState();
+    if (typeof onPredictionSelected === "function" && establishmentName && placeId) {
+      onPredictionSelected({ establishmentName, placeId });
+    }
   }
 
   function renderPredictions(predictions) {
@@ -175,7 +180,47 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
 }
 
 export function initLandingShell() {
+  function focusOnboardingField() {
+    const input = document.getElementById("landing-etablissement");
+    const wrap = input?.closest(".landing-hero-input-wrap");
+    if (!(input instanceof HTMLElement)) return false;
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => input.focus(), 220);
+    if (wrap instanceof HTMLElement) {
+      wrap.classList.remove("is-guided-focus");
+      void wrap.offsetWidth;
+      wrap.classList.add("is-guided-focus");
+      window.setTimeout(() => wrap.classList.remove("is-guided-focus"), 1400);
+    }
+    return true;
+  }
+
+  document.querySelectorAll("a[data-scroll-to-onboarding='1']").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const ok = focusOnboardingField();
+      if (!ok) {
+        window.location.href = "/?openOnboarding=1";
+      }
+    });
+  });
+
   const landingHeroForm = document.getElementById("landing-hero-form");
+  function proceedToCreationCard(establishmentName, placeId) {
+    const name = String(establishmentName || "").trim();
+    const pid = String(placeId || "").trim();
+    if (!name || !pid) return;
+    setPendingEstablishment({
+      establishment_name: name,
+      google_place_id: pid,
+    });
+    const nextUrl = new URL("/creer-ma-carte", window.location.origin);
+    nextUrl.searchParams.set("redirect", "/app");
+    nextUrl.searchParams.set("name", name);
+    nextUrl.searchParams.set("place_id", pid);
+    window.location.href = `${nextUrl.pathname}${nextUrl.search}`;
+  }
+
   if (landingHeroForm) {
     const landingEtablissementInput = document.getElementById("landing-etablissement");
     const landingPlaceIdInput = document.getElementById("landing-place-id");
@@ -233,11 +278,7 @@ export function initLandingShell() {
         landingEtablissementInput?.focus();
         return;
       }
-      setPendingEstablishment({
-        establishment_name: establishmentName,
-        google_place_id: placeId,
-      });
-      window.location.href = "/creer-ma-carte?redirect=/app";
+      proceedToCreationCard(establishmentName, placeId);
     });
   }
 
@@ -272,6 +313,11 @@ export function initLandingShell() {
   initUnifiedMenu("auth-menu-toggle", "auth-menu-overlay", "auth-menu-close");
   initUnifiedMenu("offers-menu-toggle", "offers-menu-overlay", "offers-menu-close");
 
-  initBackendPlacesSearch();
+  initBackendPlacesSearch({
+    onPredictionSelected({ establishmentName, placeId }) {
+      if (!landingHeroForm) return;
+      proceedToCreationCard(establishmentName, placeId);
+    },
+  });
 
 }

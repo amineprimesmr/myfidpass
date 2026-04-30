@@ -144,7 +144,7 @@
               <a href="/">Accueil</a>
             </nav>
             <div class="landing-header-ctas">
-              <a href="/creer-ma-carte" class="landing-cta landing-cta-primary landing-cta-desk">Obtenir ma carte</a>
+              <a href="#landing-etablissement" class="landing-cta landing-cta-primary landing-cta-desk" data-scroll-to-onboarding="1">Obtenir ma carte</a>
             </div>
           </div>
         </header>
@@ -158,7 +158,7 @@
           <nav class="landing-menu-drawer-nav">
             <a href="/creer-ma-carte">Créer ma carte</a>
             <a href="/">Accueil</a>
-            <a href="/creer-ma-carte" class="landing-menu-drawer-login">Obtenir ma carte</a>
+            <a href="/?openOnboarding=1" class="landing-menu-drawer-login">Obtenir ma carte</a>
           </nav>
         </div>
       </div>
@@ -1904,10 +1904,11 @@
                   >
                 </li>
               </ul>
-              <a href="/creer-ma-carte" class="lg-menu__cta">Créer la carte</a>
+              <a href="#landing-etablissement" class="lg-menu__cta" data-scroll-to-onboarding="1">Créer la carte</a>
             </div>
           </nav>
           <div class="lg-nav-sm" data-lg-root-sm>
+            <div class="lg-nav-sm__shell" data-lg-shell>
             <div class="lg-nav-sm__bar">
               <div
                 class="lg-menu lg-menu--bar lg-menu__glass--bar"
@@ -1931,49 +1932,44 @@
               </div>
             </div>
             <div
-              class="lg-menu-panel"
+              class="lg-menu-panel lg-nav-sm__dropdown"
               id="lg-menu-panel-landing"
               data-lg-panel-host
-              role="dialog"
-              aria-modal="true"
-              aria-label="Menu de navigation"
-              hidden
+              role="region"
+              aria-label="Menu de navigation mobile"
               aria-hidden="true"
+              inert
             >
               <div
-                class="lg-menu-panel__scrim"
-                aria-hidden="true"
-                tabindex="-1"
-              ></div>
-              <div
-                class="lg-menu lg-menu--stack lg-menu__glass--panel"
+                class="lg-mobile-liquid-sheet lg-menu lg-menu--stack lg-menu__glass--panel"
+                id="fidpass-liquid-menu-glass-panel"
                 data-lg-panel
               >
-                <div class="lg-mnav__header">
-                  <span class="lg-mnav__title">Menu</span>
-                  <button type="button" class="lg-mnav__close" data-lg-nav-close aria-label="Fermer le menu"><span aria-hidden="true">×</span></button>
+                <nav class="lg-mobile-liquid-sheet__nav" aria-label="Menu principal">
+                  <ul class="lg-mobile-liquid-sheet__list" role="list">
+                    <li>
+                      <a href="/" class="lg-mobile-liquid-sheet__link">Accueil</a>
+                    </li>
+                    <li>
+                      <a href="/abonnement" class="lg-mobile-liquid-sheet__link">Tarifs</a>
+                    </li>
+                  </ul>
+                </nav>
+                <div class="lg-mobile-liquid-sheet__actions">
+                  <a
+                    href="/login?redirect=/app"
+                    class="lg-mobile-liquid-sheet__btn lg-mobile-liquid-sheet__btn--accent landing-nav-login-link landing-menu-drawer-login"
+                    >Se connecter</a
+                  >
+                  <a
+                    href="#landing-etablissement"
+                    class="lg-mobile-liquid-sheet__btn lg-mobile-liquid-sheet__btn--glass"
+                    data-scroll-to-onboarding="1"
+                    >Créer la carte</a
+                  >
                 </div>
-                <ul class="lg-menu__ul lg-menu__ul--stack" role="list">
-                  <li><a href="/" class="lg-menu__a lg-menu__a--stack">Accueil</a></li>
-                  <li>
-                    <a href="/abonnement" class="lg-menu__a lg-menu__a--stack"
-                      >Tarifs</a
-                    >
-                  </li>
-                  <li>
-                    <a
-                      href="/login?redirect=/app"
-                      class="lg-menu__a lg-menu__a--stack landing-nav-login-link landing-menu-drawer-login"
-                      >Se connecter</a
-                    >
-                  </li>
-                </ul>
-                <a
-                  href="/creer-ma-carte"
-                  class="lg-menu__cta lg-menu__cta--stack"
-                  >Créer la carte</a
-                >
               </div>
+            </div>
             </div>
           </div>
         </div>
@@ -2011,20 +2007,9 @@
               <figure class="landing-launch-sf-fig landing-launch-sf-fig--primary">
                 <img
                   class="landing-launch-sf-img"
-                  src="/tube/img3.jpg"
+                  src="/assets/iphonepied.png"
                   width="400"
                   height="530"
-                  loading="lazy"
-                  decoding="async"
-                  alt=""
-                />
-              </figure>
-              <figure class="landing-launch-sf-fig landing-launch-sf-fig--overlap">
-                <img
-                  class="landing-launch-sf-img"
-                  src="/tube/img8.jpg"
-                  width="420"
-                  height="520"
                   loading="lazy"
                   decoding="async"
                   alt=""
@@ -2046,7 +2031,7 @@
                   <h3 class="landing-launch-sf-step-title">Diffusez votre flyer de jeu</h3>
                 </li>
               </ol>
-              <a class="landing-launch-sf-cta" href="/creer-ma-carte">Essayez maintenant</a>
+              <a class="landing-launch-sf-cta" href="#landing-etablissement" data-scroll-to-onboarding="1">Essayez maintenant</a>
             </div>
           </div>
         </div>

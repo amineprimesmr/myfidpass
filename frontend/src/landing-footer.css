@@ -33,6 +33,9 @@
     Arial,
     sans-serif;
   -webkit-font-smoothing: antialiased;
+  border-top: none !important;
+  box-shadow: none !important;
+  margin-top: -1px;
 }
 
 .landing-footer-sf-inner {
