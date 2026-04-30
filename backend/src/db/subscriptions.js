@@ -122,6 +122,10 @@ export function upsertMerchantEntitlement({
 }
 
 export function resolveEffectiveAllowedBusinesses(userId) {
+  // Pendant l'essai gratuit commerçant, on autorise l'ajout de commerces sans plafond strict.
+  if (isUserInMerchantTrial(userId)) {
+    return 999;
+  }
   const entitlement = getMerchantEntitlementByUserId(userId);
   if (entitlement) {
     return Math.max(1, Math.floor(Number(entitlement.allowed_businesses) || 1));
