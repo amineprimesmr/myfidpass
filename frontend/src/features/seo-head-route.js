@@ -50,6 +50,22 @@ export function getSeoByRoute(route) {
         jsonLd: [getLandingJsonLd({ canonical, description: pageDesc }), ...getMyFidPassBrandPageJsonLd(canonical, pageDesc)],
       };
     }
+    if (page === "carte-fidelite-digitale") {
+      return {
+        ...indexable,
+        title: "Carte fidelite digitale: Apple Wallet et Google Wallet | MyFidPass",
+        description:
+          "Carte fidelite digitale pour commerce local: QR code, parcours client sans appli, points/tampons et suivi commercant.",
+      };
+    }
+    if (page === "logiciel-carte-fidelite") {
+      return {
+        ...indexable,
+        title: "Logiciel carte de fidelite pour commerces | MyFidPass",
+        description:
+          "Logiciel carte de fidelite wallet: creation rapide, suivi clients, programme points/tampons et integrations caisse.",
+      };
+    }
     if (page === "solution-carte-fidelite-digitale") {
       return {
         ...indexable,

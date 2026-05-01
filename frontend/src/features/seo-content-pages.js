@@ -74,6 +74,70 @@ const SEO_CONTENT_PAGES = {
       ],
     },
   },
+  "carte-fidelite-digitale": {
+    title: "Carte de fidelite digitale (Apple Wallet & Google Wallet)",
+    intro:
+      "Cette page repond a la recherche principale carte fidelite digitale: MyFidPass permet de lancer un programme wallet sans application client, avec QR code et suivi commercant.",
+    sections: [
+      {
+        heading: "Ce que veut un commerce local",
+        paragraphs: [
+          "Un parcours client tres simple, un usage fluide en caisse et des indicateurs concrets pour suivre les retours en magasin.",
+        ],
+        items: [
+          "Ajout carte via lien ou QR code",
+          "Apple Wallet et Google Wallet",
+          "Points, tampons et recompenses",
+        ],
+      },
+      {
+        heading: "Resultat attendu",
+        paragraphs: [
+          "La carte reste dans le telephone du client et facilite la repetition d'achat. Le commercant suit ses performances sans passer par des outils complexes.",
+        ],
+      },
+    ],
+    cta: {
+      heading: "Demarrer maintenant",
+      text: "Lancez votre carte digitale et mesurez les retours clients des la premiere semaine.",
+      links: [
+        { href: "/creer-ma-carte", label: "Creer ma carte" },
+        { href: "/prix-carte-fidelite-digitale", label: "Voir prix et ROI" },
+      ],
+    },
+  },
+  "logiciel-carte-fidelite": {
+    title: "Logiciel carte de fidelite pour commerce",
+    intro:
+      "Un logiciel carte de fidelite doit etre utile en caisse et simple pour le client. MyFidPass combine creation de carte wallet, programme points/tampons et pilotage commercant.",
+    sections: [
+      {
+        heading: "Fonctions essentielles",
+        paragraphs: [
+          "L'objectif n'est pas d'ajouter des options inutiles, mais de fiabiliser l'adoption client et le suivi business.",
+        ],
+        items: [
+          "Creation de carte en quelques minutes",
+          "Parcours client sans telechargement",
+          "Suivi des membres et passages",
+        ],
+      },
+      {
+        heading: "Deploiement progressif",
+        paragraphs: [
+          "Commencez en mode simple (QR + validation manuelle), puis connectez votre caisse via API si vous voulez automatiser.",
+        ],
+      },
+    ],
+    cta: {
+      heading: "Voir la solution complete",
+      text: "Comparez les usages puis lancez votre propre programme.",
+      links: [
+        { href: "/solution-carte-fidelite-digitale", label: "Voir la solution" },
+        { href: "/integration-caisse-fidelite-wallet", label: "Integration caisse" },
+      ],
+    },
+  },
   "solution-carte-fidelite-digitale": {
     title: "Carte de fidelite digitale pour commerces",
     intro:
