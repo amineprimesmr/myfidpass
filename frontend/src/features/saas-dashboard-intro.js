@@ -25,6 +25,20 @@ export function markDashIntroRevealDone() {
   } catch (_) {}
 }
 
+function isTrialHeroPermanentlyCollapsed() {
+  try {
+    return localStorage.getItem(TRIAL_HERO_COLLAPSED_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function markTrialHeroPermanentlyCollapsed() {
+  try {
+    localStorage.setItem(TRIAL_HERO_COLLAPSED_KEY, "1");
+  } catch (_) {}
+}
+
 /**
  * Après délai ou premier scroll descendant : une seule exécution.
  * Garde contre les appels doubles : utiliser depuis app avec un indicateur avant appel si besoin.
@@ -69,14 +83,14 @@ export function initSaasFrcScrollCollapse() {
   const cluster = document.getElementById("app-saas-frc-cluster");
   const hero = document.querySelector(".app-saas-frc-hero");
   const main = document.querySelector("#app-app .app-main");
-  let permanentlyCollapsed = false;
+  let permanentlyCollapsed = isTrialHeroPermanentlyCollapsed();
 
   const opts = { passive: true };
   let raf = 0;
   let forcedVisible = false;
   let baseY = -1;
   let wasDense = false;
-  let userInteracted = false;
+  let userInteracted = permanentlyCollapsed;
 
   const markUserInteraction = () => {
     userInteracted = true;
@@ -102,12 +116,19 @@ export function initSaasFrcScrollCollapse() {
       userInteracted || permanentlyCollapsed ? Math.max(0, Math.min(1, progressRaw)) : 0;
     root.style.setProperty("--saas-frc-collapse-progress", progress.toFixed(3));
 
-    const dense = userInteracted && progress >= 1;
+    let dense = (userInteracted && progress >= 1) || permanentlyCollapsed;
+    if (permanentlyCollapsed) dense = true;
     root.classList.toggle("app-saas-frc-scroll-dense", dense);
 
     // Desktop: ne jamais auto-déclencher un scroll programmatique.
     if (!isMobile && !wasDense && dense && main instanceof HTMLElement) {
       main.scrollTop = 0;
+    }
+
+    // Première descente complète : on verrouille le mode compact pour les prochains accès.
+    if (scrollDelta >= collapseEnd && dense && !permanentlyCollapsed) {
+      markTrialHeroPermanentlyCollapsed();
+      permanentlyCollapsed = true;
     }
 
     if (hero) {
@@ -133,7 +154,7 @@ export function initSaasFrcScrollCollapse() {
         strip.classList.remove("hidden");
         strip.classList.add("app-saas-frc-strip--visible");
         strip.setAttribute("aria-hidden", shouldExposeAria ? "false" : "true");
-      } else if (!stripShouldShow && forcedVisible) {
+      } else if (!stripShouldShow && forcedVisible && !permanentlyCollapsed) {
         strip.classList.add("hidden");
         strip.classList.remove("app-saas-frc-strip--visible");
         strip.setAttribute("aria-hidden", "true");

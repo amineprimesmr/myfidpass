@@ -60,6 +60,15 @@ const HERO_TITLE = "Votre essai a commencé";
 const HERO_SUBTITLE = "3 jours gratuits, puis 1 €/mois pour continuer à créer";
 const SUPPORT_TRIAL_HERO_HTML =
   'Nous sommes là si vous avez besoin de nous <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a>';
+const TRIAL_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
+
+function isTrialHeroPermanentlyCollapsed() {
+  try {
+    return localStorage.getItem(TRIAL_HERO_COLLAPSED_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
 
 export function applySaaSFrcMessaging(opts) {
   const root = appShell();
@@ -74,7 +83,8 @@ export function applySaaSFrcMessaging(opts) {
 
   const paid = !!opts.paid;
   const trialHero = !!opts.trialHero;
-  const showSubscribeStrip = !!opts.showSubscribeStrip;
+  const persistedCompact = isTrialHeroPermanentlyCollapsed();
+  const showSubscribeStrip = persistedCompact || !!opts.showSubscribeStrip;
   root?.classList.toggle("app-saas-trial-chrome-active", !paid && (trialHero || showSubscribeStrip));
 
   cluster?.classList.toggle("app-saas-frc-cluster--paid", paid);
