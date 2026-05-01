@@ -305,6 +305,38 @@ export function getSeoByRoute(route) {
           "Comparer une approche wallet native pour la fidelite locale: adoption client, simplicite caisse, pilotage et integrations.",
       };
     }
+    if (page === "comparatif-loyoly-alternative") {
+      return {
+        ...indexable,
+        title: "Alternative Loyoly: fidelite Apple Wallet / Google Wallet | Myfidpass",
+        description:
+          "Page de comparaison (criteres): adoption wallet, simplicite en caisse, pilotage commercant, integrations et ROI pour commerce local.",
+      };
+    }
+    if (page === "comparatif-heypongo-alternative") {
+      return {
+        ...indexable,
+        title: "Alternative HeyPongo: fidelite wallet vs CRM marketing | Myfidpass",
+        description:
+          "Comparer une approche wallet-first pour la repetition en magasin vs une stack marketing plus large: criteres, deploiement et mesure.",
+      };
+    }
+    if (page === "comparatif-fiplink-alternative") {
+      return {
+        ...indexable,
+        title: "Alternative Fiplink: fidelite digitale simple en point de vente | Myfidpass",
+        description:
+          "Comparer gamification et mecaniques simples: adoption client, comprehension en caisse, et iteration hebdomadaire pour commerces locaux.",
+      };
+    }
+    if (page === "comparatif-stampeo-alternative") {
+      return {
+        ...indexable,
+        title: "Alternative Stampeo: carte tampon digitale wallet | Myfidpass",
+        description:
+          "Comparer les solutions de cartes tampons digitales Apple Wallet / Google Wallet: adoption, branding, pilotage et integrations.",
+      };
+    }
     if (page === "guide-fidelisation-client-commerce") {
       return {
         ...indexable,

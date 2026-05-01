@@ -1,3 +1,4 @@
+import { renderComparativeSeoPage } from "./seo-content-comparative-pages.js";
 import { renderSeoExtraPage } from "./seo-content-extra-pages.js";
 import { renderLocalCarteFideliteDigitalePage } from "./seo-local-pages.js";
 
@@ -250,6 +251,9 @@ export function getSeoContentPageHtml(pageSlug, route) {
 
   const page = SEO_CONTENT_PAGES[pageSlug];
   if (page) return wrapSeoPage(page);
+
+  const comparative = renderComparativeSeoPage(pageSlug);
+  if (comparative) return comparative;
 
   return renderSeoExtraPage(pageSlug);
 }

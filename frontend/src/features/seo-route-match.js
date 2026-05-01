@@ -18,6 +18,10 @@ const SEO_STATIC_SLUGS = new Set([
   "carte-fidelite-qr-code",
   "comparatif-stamp-me-alternative",
   "comparatif-sumup-loyalty-alternative",
+  "comparatif-loyoly-alternative",
+  "comparatif-heypongo-alternative",
+  "comparatif-fiplink-alternative",
+  "comparatif-stampeo-alternative",
 ]);
 
 /** Slugs URL -> libellé ville (SEO local). */
