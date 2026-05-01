@@ -770,6 +770,8 @@ function showAppSectionCore(sectionId) {
       el.style.setProperty("display", show ? "block" : "none", "important");
     }
   });
+  const appRootEl = document.getElementById("app-app");
+  appRootEl?.classList.toggle("app-settings-sheet-open", id === "profil");
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   links.forEach((l) => {
     l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === id);
@@ -810,6 +812,9 @@ function initAppSidebar() {
     });
     window.addEventListener("hashchange", () => {
       appDirtyNav.onAppHashChange();
+    });
+    window.addEventListener("app-settings-close-request", () => {
+      showAppSection("dashboard");
     });
   }
   let hashSection = (window.location.hash || "#dashboard").slice(1);

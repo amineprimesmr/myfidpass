@@ -1667,11 +1667,24 @@
           </section>
           <!-- Section Profil : infos établissement (nom, logo, adresse) -->
           <section id="profil" class="app-section app-section-profil" data-commerce-view="home">
-            <div class="app-commerce-reglages-stack">
-            <h2 class="app-section-title">Profil</h2>
-            <div class="app-section-grid-wrap app-profil-grid">
+            <div class="app-settings-sheet-head">
+              <div>
+                <h2 class="app-section-title">Réglages</h2>
+                <p class="app-section-desc">Configuration du compte et de la boutique</p>
+              </div>
+              <button type="button" id="app-settings-close" class="app-btn app-btn-secondary">Fermer</button>
+            </div>
+            <div class="app-commerce-reglages-stack app-settings-shopify-shell">
+            <aside class="app-settings-shopify-nav" aria-label="Navigation réglages">
+              <a href="#app-settings-account-card" class="app-settings-shopify-nav-link">Mon compte</a>
+              <a href="#app-settings-establishment-card" class="app-settings-shopify-nav-link">Mon établissement</a>
+              <a href="#app-settings-notifs-card" class="app-settings-shopify-nav-link">Notifications</a>
+              <a href="#app-settings-location-card" class="app-settings-shopify-nav-link">Localisation</a>
+              <a href="#app-settings-security-card" class="app-settings-shopify-nav-link">Sécurité caisse & scan</a>
+            </aside>
+            <div class="app-section-grid-wrap app-profil-grid app-settings-shopify-content">
               <div class="app-section-col-main">
-            <div class="app-card app-profil-account-card">
+            <div class="app-card app-profil-account-card" id="app-settings-account-card">
               <h3 class="app-subsection-title">Mon compte</h3>
               <div class="app-profil-form">
                 <div class="app-rules-row">
@@ -1701,7 +1714,7 @@
                 <p id="app-profil-account-message" class="app-message app-profil-message hidden"></p>
               </div>
             </div>
-            <div class="app-card app-profil-card">
+            <div class="app-card app-profil-card" id="app-settings-establishment-card">
               <h3 class="app-subsection-title">Mon établissement</h3>
               <div class="app-profil-form">
                 <div class="app-rules-row">
@@ -1762,7 +1775,7 @@
                 </span>
               </div>
             </div>
-            <div class="app-card app-profil-card app-settings-notifs-card">
+            <div class="app-card app-profil-card app-settings-notifs-card" id="app-settings-notifs-card">
               <h3 class="app-subsection-title">Notifications clients</h3>
               <div class="app-profil-form">
                 <div class="app-rules-row">
@@ -1777,14 +1790,14 @@
                 <p id="app-settings-notif-feedback" class="app-message app-profil-message hidden"></p>
               </div>
             </div>
-            <div class="app-card app-profil-card app-settings-location-card">
+            <div class="app-card app-profil-card app-settings-location-card" id="app-settings-location-card">
               <h3 class="app-subsection-title">Localisation</h3>
               <p class="app-hint">Ouvrez l’adresse actuelle dans Plans pour vérifier la zone d’arrivée client.</p>
               <div class="app-settings-inline-actions">
                 <button type="button" id="app-settings-location-open-maps" class="app-btn app-btn-secondary">Ouvrir dans Plans</button>
               </div>
             </div>
-            <div class="app-card app-profil-card app-settings-security-card">
+            <div class="app-card app-profil-card app-settings-security-card" id="app-settings-security-card">
               <h3 class="app-subsection-title">Sécurité caisse & scan</h3>
               <div class="app-profil-form">
                 <div class="app-rules-row">
@@ -1823,7 +1836,8 @@
                     <span id="app-profil-logo-icon-placeholder" class="app-profil-logo-placeholder app-profil-logo-icon-placeholder">Aucun logo carré</span>
                   </div>
                 </div>
-              </div>
+            </div>
+            </div>
             </div>
             </div>
           </section>

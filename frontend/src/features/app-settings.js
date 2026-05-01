@@ -283,6 +283,9 @@ export function initAppSettings(deps) {
     setFeedback: setAccountFeedback,
   });
   els.openSlugEditor?.addEventListener("click", () => deps.openSlugEditor(String(els.org?.value || "").trim()));
+  document.getElementById("app-settings-close")?.addEventListener("click", () => {
+    window.dispatchEvent(new CustomEvent("app-settings-close-request"));
+  });
 
   window.addEventListener("app-section-change", (event) => {
     if (event.detail?.sectionId !== "profil") return;
