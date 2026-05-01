@@ -169,6 +169,10 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   }
   const ctx = work.getContext("2d");
   if (!ctx) return;
+  // Important pour le mode app iOS (underlay natif): quand le fond canvas est volontairement
+  // ignoré (__FIDPASS_SKIP_CANVAS_BG_FILL=true), on doit repartir d'une surface transparente.
+  // Sinon les pixels de la frame précédente restent et s'accumulent (ombres/voiles qui montent).
+  ctx.clearRect(0, 0, w, h);
   ctx.imageSmoothingEnabled = true;
   if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
 
