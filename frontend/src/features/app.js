@@ -771,14 +771,7 @@ function showAppSectionCore(sectionId) {
     }
   });
   const appRootEl = document.getElementById("app-app");
-  const settingsOpen = id === "profil";
-  appRootEl?.classList.toggle("app-settings-sheet-open", settingsOpen);
-  document.body.classList.toggle("app-settings-sheet-open", settingsOpen);
-  if (settingsOpen) {
-    document.getElementById("app-sidebar")?.classList.remove("is-mobile-open");
-    document.getElementById("app-sidebar-overlay")?.classList.remove("is-open");
-    document.body.classList.remove("app-mobile-menu-open");
-  }
+  appRootEl?.classList.toggle("app-settings-sheet-open", id === "profil");
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   links.forEach((l) => {
     l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === id);

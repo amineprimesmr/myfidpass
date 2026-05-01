@@ -6351,7 +6351,7 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   bottom: 0;
   top: auto;
   height: min(92dvh, 980px);
-  z-index: 20020;
+  z-index: 1600;
   background: #f3f4f6;
   border-radius: 24px 24px 0 0;
   border: 1px solid #e5e7eb;
@@ -6360,22 +6360,11 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
-#app-app.app-settings-sheet-open::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.42);
-  backdrop-filter: blur(2px);
-  z-index: 20010;
-}
 #app-app.app-settings-sheet-open #app-dashboard-content > #profil.app-section.app-section-visible {
   transform: translateY(0);
 }
 #app-app.app-settings-sheet-open #app-dashboard-content > .app-section.app-section-visible:not(#profil) {
   display: none !important;
-}
-body.app-settings-sheet-open {
-  overflow: hidden;
 }
 .app-settings-sheet-head {
   display: flex;
