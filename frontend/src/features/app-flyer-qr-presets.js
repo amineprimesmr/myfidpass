@@ -5,6 +5,15 @@ import { normalizeHeadlineFontId } from "./app-flyer-qr-headline-fonts.js";
 
 export const FLYER_STORAGE_KEY = "fidpass_flyer_prefs_v1";
 
+/**
+ * Clé localStorage scindée par business pour éviter les fuites d'un commerce à l'autre.
+ * @param {string} scope
+ */
+export function scopedFlyerStorageKey(scope) {
+  const id = String(scope || "").trim();
+  return id ? `${FLYER_STORAGE_KEY}:${id}` : FLYER_STORAGE_KEY;
+}
+
 /** Dimensions export PNG (haute définition impression / zoom). */
 export const FLYER_EXPORT = { w: 2400, h: 3600 };
 

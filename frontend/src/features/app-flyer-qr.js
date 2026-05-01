@@ -2,7 +2,7 @@
  * Page Flyer QR — aperçu canvas, personnalisation, export PNG.
  */
 import { API_BASE } from "../config.js";
-import { FLYER_EXPORT, FLYER_STORAGE_KEY, mergeFlyerState } from "./app-flyer-qr-presets.js";
+import { FLYER_EXPORT, mergeFlyerState, scopedFlyerStorageKey } from "./app-flyer-qr-presets.js";
 import {
   readFlyerStateFromForm,
   writeFlyerFormFromState,
@@ -14,12 +14,14 @@ import {
   getStoredFlyerCustomLogoDataUrl,
   clearStoredFlyerCustomLogo,
   initFlyerLogoControl,
+  scopedFlyerCustomLogoStorageKey,
 } from "./app-flyer-logo-control.js";
 import {
   getStoredFlyerCustomBgDataUrl,
   setStoredFlyerCustomBgDataUrl,
   initFlyerBgControl,
   clearStoredFlyerCustomBg,
+  scopedFlyerCustomBgStorageKey,
 } from "./app-flyer-bg-control.js";
 import { wireFlyerQrBackgroundGallery } from "./app-flyer-qr-wire-bg.js";
 import { ensureFlyerDisplayFontsLoaded } from "./flyer-display-fonts-load.js";
@@ -57,11 +59,15 @@ export function initAppFlyerQr(slug, opts) {
   const bgPicker = root.querySelector("#app-flyer-bg-solid");
   const colorsToggleBtn = root.querySelector("#app-flyer-colors-toggle");
   const colorsPanel = root.querySelector("#app-flyer-colors-panel");
+  const flyerStorageKey = scopedFlyerStorageKey(slug);
+  const flyerCustomLogoStorageKey = scopedFlyerCustomLogoStorageKey(slug);
+  const flyerCustomBgStorageKey = scopedFlyerCustomBgStorageKey(slug);
+
   function syncFlyerBgColorRowVisibility() {
     if (!bgPicker) return;
     const bgRow = bgPicker.closest(".app-flyer-color-row");
     if (!bgRow) return;
-    const hasBackgroundImage = !!getStoredFlyerCustomBgDataUrl();
+    const hasBackgroundImage = !!getStoredFlyerCustomBgDataUrl(flyerCustomBgStorageKey);
     bgRow.classList.toggle("hidden", hasBackgroundImage);
     bgRow.setAttribute("aria-hidden", hasBackgroundImage ? "true" : "false");
   }
@@ -224,7 +230,7 @@ export function initAppFlyerQr(slug, opts) {
 
   const shareUrl = () => (opts.getShareLink ? opts.getShareLink() : `${opts.pageOrigin}/fidelity/${slug}`);
 
-  let state = loadStoredFlyerState();
+  let state = loadStoredFlyerState(flyerStorageKey);
   const flyerAssets = createFlyerAssetState();
 
   /** @type {{ syncPreview: () => void } | undefined} */
@@ -250,13 +256,13 @@ export function initAppFlyerQr(slug, opts) {
         : "#0f172a";
     }
     writeFlyerFormFromState(root, merged);
-    persistFlyerState(merged);
+    persistFlyerState(merged, flyerStorageKey);
     state = merged;
     // NE PAS effacer le logo local : il sera réenvoyé au prochain pushFlyerToServerNow.
     // Effacer inconditionnellement provoquait une race condition (logo importé avant sauvegarde puis perdu).
     if (typeof p.custom_bg_data_url === "string" && p.custom_bg_data_url.startsWith("data:image/")) {
       // Le serveur a un fond enregistré → le stocker localement
-      setStoredFlyerCustomBgDataUrl(p.custom_bg_data_url);
+      setStoredFlyerCustomBgDataUrl(p.custom_bg_data_url, flyerCustomBgStorageKey);
     }
     // NE PAS effacer le fond local si le serveur n'en a pas encore :
     // un fond choisi localement peut exister avant la sauvegarde distante (debounce 2s).
@@ -264,18 +270,6 @@ export function initAppFlyerQr(slug, opts) {
     flyerBgPanelApi?.syncPreview();
     markLogoDirty(flyerAssets);
     markBgDirty(flyerAssets);
-  }
-
-  function shouldMigrateLocalFlyerToServer() {
-    if (getStoredFlyerCustomLogoDataUrl() || getStoredFlyerCustomBgDataUrl()) return true;
-    try {
-      const raw = localStorage.getItem(FLYER_STORAGE_KEY);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw);
-      return JSON.stringify(mergeFlyerState(parsed)) !== JSON.stringify(mergeFlyerState(null));
-    } catch (_) {
-      return false;
-    }
   }
 
   /**
@@ -293,13 +287,13 @@ export function initAppFlyerQr(slug, opts) {
     if (clearFlyerLogoOnServer) {
       body.custom_logo_data_url = null;
     } else {
-      const logoLocal = getStoredFlyerCustomLogoDataUrl();
+      const logoLocal = getStoredFlyerCustomLogoDataUrl(flyerCustomLogoStorageKey);
       if (logoLocal) body.custom_logo_data_url = logoLocal;
     }
     if (clearFlyerBgOnServer) {
       body.custom_bg_data_url = null;
     } else {
-      const bgLocal = getStoredFlyerCustomBgDataUrl();
+      const bgLocal = getStoredFlyerCustomBgDataUrl(flyerCustomBgStorageKey);
       if (bgLocal) body.custom_bg_data_url = bgLocal;
     }
     try {
@@ -332,8 +326,6 @@ export function initAppFlyerQr(slug, opts) {
       const j = await res.json();
       if (j.flyer_prefs && typeof j.flyer_prefs === "object") {
         applyServerFlyerPrefs(j.flyer_prefs);
-      } else if (shouldMigrateLocalFlyerToServer()) {
-        await pushFlyerToServerNow();
       }
       schedulePaint();
     } catch (_) {
@@ -358,6 +350,7 @@ export function initAppFlyerQr(slug, opts) {
   }
 
   flyerBgPanelApi = initFlyerBgControl({
+    storageKey: flyerCustomBgStorageKey,
     onBgChange: () => {
       markBgDirty(flyerAssets);
       syncFlyerBgColorRowVisibility();
@@ -376,6 +369,7 @@ export function initAppFlyerQr(slug, opts) {
   });
 
   initFlyerLogoControl({
+    storageKey: flyerCustomLogoStorageKey,
     onCustomLogoChange: () => {
       markLogoDirty(flyerAssets);
       schedulePaint();
@@ -386,7 +380,7 @@ export function initAppFlyerQr(slug, opts) {
   async function paint() {
     const gen = ++flyerpaintGen;
     state = readFlyerStateFromForm(root);
-    persistFlyerState(state);
+    persistFlyerState(state, flyerStorageKey);
     const wNeed = FLYER_EXPORT.w;
     const hNeed = FLYER_EXPORT.h;
     if (canvas.width !== wNeed || canvas.height !== hNeed) {
@@ -394,8 +388,12 @@ export function initAppFlyerQr(slug, opts) {
       canvas.height = hNeed;
     }
     const logoApi = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo`;
-    await refreshLogoAsset(flyerAssets, logoApi, getStoredFlyerCustomLogoDataUrl);
-    await refreshBgAsset(flyerAssets, getStoredFlyerCustomBgDataUrl);
+    await refreshLogoAsset(
+      flyerAssets,
+      logoApi,
+      () => getStoredFlyerCustomLogoDataUrl(flyerCustomLogoStorageKey),
+    );
+    await refreshBgAsset(flyerAssets, () => getStoredFlyerCustomBgDataUrl(flyerCustomBgStorageKey));
     const logoForCanvas = flyerAssets.logoBitmap ?? flyerAssets.logoObjectUrl;
     const bgForCanvas = flyerAssets.bgBitmap ?? flyerAssets.bgObjectUrl;
     try {
@@ -481,8 +479,8 @@ export function initAppFlyerQr(slug, opts) {
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
       if (!confirm("Réinitialiser le flyer aux textes et couleurs par défaut ?")) return;
-      clearStoredFlyerCustomLogo();
-      clearStoredFlyerCustomBg();
+      clearStoredFlyerCustomLogo(flyerCustomLogoStorageKey);
+      clearStoredFlyerCustomBg(flyerCustomBgStorageKey);
       flyerBgPanelApi?.syncPreview();
       markLogoDirty(flyerAssets);
       markBgDirty(flyerAssets);

@@ -71,9 +71,10 @@ export function writeFlyerFormFromState(root, s) {
   set("app-flyer-wheel-label-scale", String(s.flyerWheelLabelScalePct ?? 100));
 }
 
-export function loadStoredFlyerState() {
+/** @param {string} [storageKey] */
+export function loadStoredFlyerState(storageKey = FLYER_STORAGE_KEY) {
   try {
-    const raw = localStorage.getItem(FLYER_STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return mergeFlyerState(null);
     return mergeFlyerState(JSON.parse(raw));
   } catch (_) {
@@ -81,9 +82,12 @@ export function loadStoredFlyerState() {
   }
 }
 
-/** @param {import("./app-flyer-qr-presets.js").FlyerState} s */
-export function persistFlyerState(s) {
+/**
+ * @param {import("./app-flyer-qr-presets.js").FlyerState} s
+ * @param {string} [storageKey]
+ */
+export function persistFlyerState(s, storageKey = FLYER_STORAGE_KEY) {
   try {
-    localStorage.setItem(FLYER_STORAGE_KEY, JSON.stringify(s));
+    localStorage.setItem(storageKey, JSON.stringify(s));
   } catch (_) {}
 }

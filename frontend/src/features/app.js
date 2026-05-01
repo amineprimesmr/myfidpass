@@ -918,8 +918,6 @@ function initAppDashboard(slug) {
     return Boolean(
       settings.flyer_prefs_updated_at ||
       settings.flyerPrefsUpdatedAt ||
-      settings.has_flyer_prefs ||
-      settings.hasFlyerPrefs ||
       settings.flyer_custom_bg_url ||
       settings.flyerCustomBgUrl
     );
@@ -928,10 +926,6 @@ function initAppDashboard(slug) {
   function isCardConfigured(settings) {
     if (!settings || typeof settings !== "object") return false;
     return Boolean(
-      settings.organization_name ||
-      settings.organizationName ||
-      settings.program_type ||
-      settings.programType ||
       settings.logo_url ||
       settings.logoUrl ||
       settings.has_card_background ||

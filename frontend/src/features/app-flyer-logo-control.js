@@ -3,13 +3,21 @@
  */
 export const FLYER_CUSTOM_LOGO_STORAGE_KEY = "fidpass_flyer_custom_logo_v1";
 
+/**
+ * @param {string} scope
+ */
+export function scopedFlyerCustomLogoStorageKey(scope) {
+  const id = String(scope || "").trim();
+  return id ? `${FLYER_CUSTOM_LOGO_STORAGE_KEY}:${id}` : FLYER_CUSTOM_LOGO_STORAGE_KEY;
+}
+
 const MAX_FILE_BYTES = 3 * 1024 * 1024;
 const MAX_EXPORT_EDGE = 900;
 
 /** @returns {string} data URL ou "" */
-export function getStoredFlyerCustomLogoDataUrl() {
+export function getStoredFlyerCustomLogoDataUrl(storageKey = FLYER_CUSTOM_LOGO_STORAGE_KEY) {
   try {
-    const v = localStorage.getItem(FLYER_CUSTOM_LOGO_STORAGE_KEY);
+    const v = localStorage.getItem(storageKey);
     return typeof v === "string" && v.startsWith("data:image/") ? v : "";
   } catch (_) {
     return "";
@@ -17,19 +25,19 @@ export function getStoredFlyerCustomLogoDataUrl() {
 }
 
 /** @param {string} dataUrl vide = supprimer */
-export function setStoredFlyerCustomLogoDataUrl(dataUrl) {
+export function setStoredFlyerCustomLogoDataUrl(dataUrl, storageKey = FLYER_CUSTOM_LOGO_STORAGE_KEY) {
   try {
     if (dataUrl && dataUrl.startsWith("data:image/")) {
-      localStorage.setItem(FLYER_CUSTOM_LOGO_STORAGE_KEY, dataUrl);
+      localStorage.setItem(storageKey, dataUrl);
     } else {
-      localStorage.removeItem(FLYER_CUSTOM_LOGO_STORAGE_KEY);
+      localStorage.removeItem(storageKey);
     }
   } catch (_) {}
 }
 
-export function clearStoredFlyerCustomLogo() {
+export function clearStoredFlyerCustomLogo(storageKey = FLYER_CUSTOM_LOGO_STORAGE_KEY) {
   try {
-    localStorage.removeItem(FLYER_CUSTOM_LOGO_STORAGE_KEY);
+    localStorage.removeItem(storageKey);
   } catch (_) {}
 }
 
@@ -68,7 +76,7 @@ export async function compressFileToFlyerLogoDataUrl(file) {
 }
 
 /**
- * @param {{ onCustomLogoChange: () => void }} opts
+ * @param {{ onCustomLogoChange: () => void; storageKey?: string }} opts
  */
 export function initFlyerLogoControl(opts) {
   const root = document.getElementById("app-flyer-logo-panel");
@@ -90,7 +98,7 @@ export function initFlyerLogoControl(opts) {
   }
 
   function syncPreview() {
-    const data = getStoredFlyerCustomLogoDataUrl();
+    const data = getStoredFlyerCustomLogoDataUrl(opts.storageKey);
     if (preview) {
       if (data) {
         preview.src = data;
@@ -116,7 +124,7 @@ export function initFlyerLogoControl(opts) {
     void (async () => {
       try {
         const dataUrl = await compressFileToFlyerLogoDataUrl(f);
-        setStoredFlyerCustomLogoDataUrl(dataUrl);
+        setStoredFlyerCustomLogoDataUrl(dataUrl, opts.storageKey);
         setStatus("");
         syncPreview();
         opts.onCustomLogoChange();
@@ -128,7 +136,7 @@ export function initFlyerLogoControl(opts) {
   });
 
   clearBtn?.addEventListener("click", () => {
-    setStoredFlyerCustomLogoDataUrl("");
+    setStoredFlyerCustomLogoDataUrl("", opts.storageKey);
     setStatus("");
     syncPreview();
     opts.onCustomLogoChange();

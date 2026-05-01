@@ -3,14 +3,22 @@
  */
 export const FLYER_CUSTOM_BG_STORAGE_KEY = "fidpass_flyer_custom_bg_v1";
 
+/**
+ * @param {string} scope
+ */
+export function scopedFlyerCustomBgStorageKey(scope) {
+  const id = String(scope || "").trim();
+  return id ? `${FLYER_CUSTOM_BG_STORAGE_KEY}:${id}` : FLYER_CUSTOM_BG_STORAGE_KEY;
+}
+
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 /** Réduit le poids pour tenir dans localStorage tout en restant net en 2400×3600 export. */
 const MAX_LONG_EDGE = 2000;
 
 /** @returns {string} data URL ou "" */
-export function getStoredFlyerCustomBgDataUrl() {
+export function getStoredFlyerCustomBgDataUrl(storageKey = FLYER_CUSTOM_BG_STORAGE_KEY) {
   try {
-    const v = localStorage.getItem(FLYER_CUSTOM_BG_STORAGE_KEY);
+    const v = localStorage.getItem(storageKey);
     return typeof v === "string" && v.startsWith("data:image/") ? v : "";
   } catch (_) {
     return "";
@@ -18,19 +26,19 @@ export function getStoredFlyerCustomBgDataUrl() {
 }
 
 /** @param {string} dataUrl vide = supprimer */
-export function setStoredFlyerCustomBgDataUrl(dataUrl) {
+export function setStoredFlyerCustomBgDataUrl(dataUrl, storageKey = FLYER_CUSTOM_BG_STORAGE_KEY) {
   try {
     if (dataUrl && dataUrl.startsWith("data:image/")) {
-      localStorage.setItem(FLYER_CUSTOM_BG_STORAGE_KEY, dataUrl);
+      localStorage.setItem(storageKey, dataUrl);
     } else {
-      localStorage.removeItem(FLYER_CUSTOM_BG_STORAGE_KEY);
+      localStorage.removeItem(storageKey);
     }
   } catch (_) {}
 }
 
-export function clearStoredFlyerCustomBg() {
+export function clearStoredFlyerCustomBg(storageKey = FLYER_CUSTOM_BG_STORAGE_KEY) {
   try {
-    localStorage.removeItem(FLYER_CUSTOM_BG_STORAGE_KEY);
+    localStorage.removeItem(storageKey);
   } catch (_) {}
 }
 
@@ -105,7 +113,7 @@ export async function compressFetchedImageToFlyerBgDataUrl(url) {
 }
 
 /**
- * @param {{ onBgChange: () => void }} opts
+ * @param {{ onBgChange: () => void; storageKey?: string }} opts
  */
 export function initFlyerBgControl(opts) {
   const fileInput = document.getElementById("app-flyer-bg-file");
@@ -125,7 +133,7 @@ export function initFlyerBgControl(opts) {
   }
 
   function syncPreview() {
-    const data = getStoredFlyerCustomBgDataUrl();
+    const data = getStoredFlyerCustomBgDataUrl(opts.storageKey);
     if (preview && previewWrap) {
       if (data) {
         preview.src = data;
@@ -154,7 +162,7 @@ export function initFlyerBgControl(opts) {
     void (async () => {
       try {
         const dataUrl = await compressFileToFlyerBgDataUrl(f);
-        setStoredFlyerCustomBgDataUrl(dataUrl);
+        setStoredFlyerCustomBgDataUrl(dataUrl, opts.storageKey);
         setStatus("");
         syncPreview();
         opts.onBgChange();
@@ -166,7 +174,7 @@ export function initFlyerBgControl(opts) {
   });
 
   removeBtn?.addEventListener("click", () => {
-    clearStoredFlyerCustomBg();
+    clearStoredFlyerCustomBg(opts.storageKey);
     setStatus("");
     syncPreview();
     opts.onBgChange();
