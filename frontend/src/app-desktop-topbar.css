@@ -848,7 +848,7 @@
     padding: 0 !important;
     transform: translateX(-105%);
     transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-    z-index: 260 !important;
+    z-index: 1400 !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: none;
   }
@@ -909,7 +909,7 @@
     border: none;
     padding: 0;
     margin: 0;
-    z-index: 250;
+    z-index: 1300;
     display: block;
     opacity: 0;
     visibility: hidden;
