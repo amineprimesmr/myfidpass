@@ -365,7 +365,9 @@ export function initAppFlyerQr(slug, opts) {
       syncFlyerBgColorRowVisibility();
       schedulePaint();
     },
+    scheduleRemoteSave,
     getBgPanelApi: () => flyerBgPanelApi,
+    storageKey: flyerCustomBgStorageKey,
   });
 
   initFlyerLogoControl({

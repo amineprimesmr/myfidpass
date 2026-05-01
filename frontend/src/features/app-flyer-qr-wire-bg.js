@@ -5,7 +5,12 @@ import { initFlyerBgGallery } from "./app-flyer-bg-gallery.js";
 
 /**
  * @param {ParentNode} root
- * @param {{ markBgDirtyAndPaint: () => void; getBgPanelApi: () => { syncPreview?: () => void } | undefined }} hooks
+ * @param {{
+ *   markBgDirtyAndPaint: () => void;
+ *   scheduleRemoteSave?: () => void;
+ *   getBgPanelApi: () => { syncPreview?: () => void } | undefined;
+ *   storageKey?: string;
+ * }} hooks
  */
 export function wireFlyerQrBackgroundGallery(root, hooks) {
   function setFlyerBgStatus(msg) {
@@ -16,8 +21,12 @@ export function wireFlyerQrBackgroundGallery(root, hooks) {
   }
 
   void initFlyerBgGallery(root, {
-    onBgChange: () => hooks.markBgDirtyAndPaint(),
+    onBgChange: () => {
+      hooks.markBgDirtyAndPaint();
+      hooks.scheduleRemoteSave?.();
+    },
     syncPreview: () => hooks.getBgPanelApi()?.syncPreview?.(),
     setStatus: setFlyerBgStatus,
+    storageKey: hooks.storageKey,
   });
 }

@@ -58,6 +58,7 @@ import {
   setCommerceView,
 } from "./commerce-ios-shell.js";
 import { initAppDesktopTopbar } from "./app-desktop-topbar.js";
+import { initAppSettings } from "./app-settings.js";
 
 const ACTIVE_BUSINESS_SLUG_STORAGE_KEY = "fidpass_active_business_slug";
 
@@ -288,6 +289,8 @@ function ensureFidpassAuthMeMerchantListener() {
       const hasActiveSubscription = !!(d.hasActiveSubscription ?? d.has_active_subscription);
       if (profilEmailEl && user?.email) profilEmailEl.value = user.email;
       const profilSubscriptionStatusEl = document.getElementById("app-profil-subscription-status");
+      const profilAuthProviderEl = document.getElementById("app-profil-auth-provider");
+      const profilActiveBusinessEl = document.getElementById("app-profil-active-business");
       if (profilSubscriptionStatusEl) {
         let text = "Aucun abonnement actif";
         if (hasActiveSubscription) {
@@ -295,6 +298,24 @@ function ensureFidpassAuthMeMerchantListener() {
           if (subscription?.plan_id) text += ` — ${subscription.plan_id}`;
         }
         profilSubscriptionStatusEl.textContent = text;
+      }
+      if (profilAuthProviderEl) {
+        const providerRaw = String(user?.provider || user?.auth_provider || "").toLowerCase();
+        const providerLabel =
+          providerRaw === "apple"
+            ? "Apple"
+            : providerRaw === "google"
+              ? "Google"
+              : providerRaw === "sms"
+                ? "SMS"
+                : providerRaw
+                  ? "Email"
+                  : "—";
+        profilAuthProviderEl.textContent = providerLabel;
+      }
+      if (profilActiveBusinessEl) {
+        const businessName = String(d.business?.name || d.businessName || "").trim();
+        profilActiveBusinessEl.textContent = businessName || "—";
       }
     },
     false
@@ -4088,421 +4109,19 @@ function initAppDashboard(slug) {
     }
   }
 
-  // ——— Profil (nom, logo, adresse) ———
-  const profilOrg = document.getElementById("app-profil-org");
-  const profilAddress = document.getElementById("app-profil-address");
-  const profilLogoPreview = document.getElementById("app-profil-logo-preview");
-  const profilLogoPlaceholder = document.getElementById("app-profil-logo-placeholder");
-  const profilLogoInput = document.getElementById("app-profil-logo-input");
-  const profilLogoRemove = document.getElementById("app-profil-logo-remove");
-  const profilLogoIconPreview = document.getElementById("app-profil-logo-icon-preview");
-  const profilLogoIconPlaceholder = document.getElementById("app-profil-logo-icon-placeholder");
-  const profilLogoIconInput = document.getElementById("app-profil-logo-icon-input");
-  const profilLogoIconRemove = document.getElementById("app-profil-logo-icon-remove");
-  const profilSlugDisplay = document.getElementById("app-profil-slug-display");
-  const profilMessage = document.getElementById("app-profil-message");
-  const profilSave = document.getElementById("app-profil-save");
-  const profilSaveText = document.getElementById("app-profil-save-text");
-  const profilSaveSpinner = document.getElementById("app-profil-save-spinner");
-  const profilEmailInput = document.getElementById("app-profil-email");
-  const profilAccountMessage = document.getElementById("app-profil-account-message");
-  const profilChangePasswordBtn = document.getElementById("app-profil-change-password");
-  let profilLogoDataUrl = "";
-  let profilLogoRemoved = false;
-  let profilLogoIconDataUrl = "";
-  let profilLogoIconRemoved = false;
-  const profilAddressSuggestions = document.getElementById("app-profil-address-suggestions");
-  let profilAddrDebounce = null;
-
-  function hideProfilAddressSuggestions() {
-    if (profilAddressSuggestions) {
-      profilAddressSuggestions.classList.add("hidden");
-      profilAddressSuggestions.innerHTML = "";
-    }
-    profilAddress?.setAttribute("aria-expanded", "false");
-  }
-
-  function escapeHtmlProfilAddr(s) {
-    const div = document.createElement("div");
-    div.textContent = String(s);
-    return div.innerHTML;
-  }
-
-  if (profilAddress && profilAddressSuggestions) {
-    profilAddress.addEventListener("input", () => {
-      if (profilAddrDebounce) clearTimeout(profilAddrDebounce);
-      const q = (profilAddress.value || "").trim();
-      markAppSectionDirty("profil");
-      if (q.length < 2) {
-        hideProfilAddressSuggestions();
-        return;
-      }
-      profilAddrDebounce = setTimeout(async () => {
-        const features = await photonGeocodeFeatures(q, 8);
-        profilAddressSuggestions.innerHTML = "";
-        if (!features.length) {
-          hideProfilAddressSuggestions();
-          return;
-        }
-        features.forEach((f) => {
-          const coords = f.geometry?.coordinates;
-          if (!coords || coords.length < 2) return;
-          const props = f.properties || {};
-          const displayAddr = formatPhotonAddress(props);
-          const main = props.name || [props.street, props.housenumber].filter(Boolean).join(" ") || "Adresse";
-          const sub = [props.postcode, props.city, props.country].filter(Boolean).join(", ");
-          const li = document.createElement("li");
-          li.setAttribute("role", "option");
-          li.innerHTML = sub
-            ? `${escapeHtmlProfilAddr(main)}<small>${escapeHtmlProfilAddr(sub)}</small>`
-            : escapeHtmlProfilAddr(main);
-          li.addEventListener("click", () => {
-            if (profilAddress) profilAddress.value = displayAddr;
-            hideProfilAddressSuggestions();
-            markAppSectionDirty("profil");
-          });
-          profilAddressSuggestions.appendChild(li);
-        });
-        profilAddressSuggestions.classList.remove("hidden");
-        profilAddress.setAttribute("aria-expanded", "true");
-      }, 320);
-    });
-
-    profilAddress.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") hideProfilAddressSuggestions();
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!profilAddressSuggestions || profilAddressSuggestions.classList.contains("hidden")) return;
-      const t = /** @type {Node} */ (e.target);
-      if (profilAddress?.contains(t) || profilAddressSuggestions.contains(t)) return;
-      hideProfilAddressSuggestions();
-    });
-  }
-
-  function showProfilMessage(text, isError = false) {
-    if (!profilMessage) return;
-    profilMessage.textContent = text || "";
-    profilMessage.classList.toggle("hidden", !text);
-    profilMessage.classList.toggle("success", text && !isError);
-    profilMessage.classList.toggle("error", text && isError);
-  }
-
-  function showProfilAccountMessage(text, isError = false) {
-    if (!profilAccountMessage) return;
-    profilAccountMessage.textContent = text || "";
-    profilAccountMessage.classList.toggle("hidden", !text);
-    profilAccountMessage.classList.toggle("success", text && !isError);
-    profilAccountMessage.classList.toggle("error", text && isError);
-  }
-
-  function loadProfil() {
-    return api("/dashboard/settings")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data) {
-          showProfilMessage("Impossible de charger les données de l’établissement. Vérifiez la connexion ou rechargez la page.", true);
-          return;
-        }
-        applyCommerceIosHomeState(data);
-        const orgName = (data.organization_name ?? data.organizationName ?? "").trim();
-        if (profilOrg) profilOrg.value = orgName;
-        propagateEstablishmentDisplayName(orgName);
-        if (profilAddress) profilAddress.value = (data.location_address ?? data.locationAddress ?? "").trim();
-        hideProfilAddressSuggestions();
-        const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin.replace(/\/$/, "") : "";
-        if (profilSlugDisplay) {
-          profilSlugDisplay.textContent = base ? `${base}/fidelity/${slug}` : `/fidelity/${slug}`;
-          const link = document.createElement("a");
-          link.href = base ? `${base}/fidelity/${slug}` : "#";
-          link.target = "_blank";
-          link.rel = "noopener";
-          link.textContent = base ? `${base}/fidelity/${slug}` : slug;
-          link.style.color = "inherit";
-          profilSlugDisplay.innerHTML = "";
-          profilSlugDisplay.appendChild(link);
-        }
-        profilLogoDataUrl = "";
-        if (profilLogoPreview) {
-          profilLogoPreview.src = "";
-          profilLogoPreview.classList.add("hidden");
-        }
-        if (profilLogoPlaceholder) {
-          profilLogoPlaceholder.textContent = "Aucun logo";
-          profilLogoPlaceholder.classList.remove("hidden");
-        }
-        if (profilLogoRemove) profilLogoRemove.classList.add("hidden");
-        profilLogoRemoved = false;
-        if (profilLogoIconPreview) {
-          profilLogoIconPreview.src = "";
-          profilLogoIconPreview.classList.add("hidden");
-        }
-        if (profilLogoIconPlaceholder) {
-          profilLogoIconPlaceholder.textContent = "Aucun logo carré";
-          profilLogoIconPlaceholder.classList.remove("hidden");
-        }
-        if (profilLogoIconRemove) profilLogoIconRemove.classList.add("hidden");
-        profilLogoIconRemoved = false;
-        profilLogoIconDataUrl = "";
-        if (data.logo_url ?? data.logoUrl) {
-          api("/logo?v=" + Date.now())
-            .then((r) => (r.ok ? r.blob() : null))
-            .then((blob) => {
-              if (blob && profilLogoPreview) {
-                const url = URL.createObjectURL(blob);
-                profilLogoPreview.src = url;
-                profilLogoPreview.classList.remove("hidden");
-                if (profilLogoPlaceholder) profilLogoPlaceholder.classList.add("hidden");
-                if (profilLogoRemove) profilLogoRemove.classList.remove("hidden");
-              }
-              refreshSidebarBusinessLogo();
-            })
-            .catch(() => {
-              refreshSidebarBusinessLogo();
-            });
-        } else {
-          refreshSidebarBusinessLogo();
-        }
-        if (data.logo_icon_url ?? data.logoIconUrl) {
-          api("/logo-icon?v=" + Date.now())
-            .then((r) => (r.ok ? r.blob() : null))
-            .then((blob) => {
-              if (blob && profilLogoIconPreview) {
-                const url = URL.createObjectURL(blob);
-                profilLogoIconPreview.src = url;
-                profilLogoIconPreview.classList.remove("hidden");
-                if (profilLogoIconPlaceholder) profilLogoIconPlaceholder.classList.add("hidden");
-                if (profilLogoIconRemove) profilLogoIconRemove.classList.remove("hidden");
-              }
-            })
-            .catch(() => {});
-        }
-      })
-      .catch(() => {
-        showProfilMessage("Erreur réseau lors du chargement du profil.", true);
-      });
-  }
-
-  registerAppDiscardHandler("profil", () => loadProfil());
-
-  if (profilLogoInput) {
-    profilLogoInput.addEventListener("change", async (e) => {
-      const file = e.target?.files?.[0];
-      if (!file) return;
-      try {
-        if (typeof resizeLogoToDataUrl === "function") {
-          profilLogoDataUrl = await resizeLogoToDataUrl(file, 640, 0.9, "auto");
-        } else {
-          const reader = new FileReader();
-          profilLogoDataUrl = await new Promise((res, rej) => {
-            reader.onload = () => res(reader.result);
-            reader.onerror = rej;
-            reader.readAsDataURL(file);
-          });
-        }
-        if (profilLogoPreview) {
-          profilLogoPreview.src = profilLogoDataUrl;
-          profilLogoPreview.classList.remove("hidden");
-        }
-        if (profilLogoPlaceholder) profilLogoPlaceholder.classList.add("hidden");
-        if (profilLogoRemove) profilLogoRemove.classList.remove("hidden");
-      } catch (err) {
-        showProfilMessage("Impossible de charger l'image. Choisissez un fichier JPG ou PNG.", true);
-      }
-      profilLogoInput.value = "";
-    });
-  }
-  if (profilLogoRemove) {
-    profilLogoRemove.addEventListener("click", () => {
-      profilLogoDataUrl = "";
-      profilLogoRemoved = true;
-      if (profilLogoPreview) {
-        profilLogoPreview.src = "";
-        profilLogoPreview.classList.add("hidden");
-      }
-      if (profilLogoPlaceholder) {
-        profilLogoPlaceholder.textContent = "Aucun logo";
-        profilLogoPlaceholder.classList.remove("hidden");
-      }
-      profilLogoRemove.classList.add("hidden");
-      showProfilMessage("");
-    });
-  }
-
-  if (profilLogoIconInput) {
-    profilLogoIconInput.addEventListener("change", async (e) => {
-      const file = e.target?.files?.[0];
-      if (!file) return;
-      try {
-        if (typeof resizeLogoToDataUrl === "function") {
-          profilLogoIconDataUrl = await resizeLogoToDataUrl(file, 512, 0.88, "auto");
-        } else {
-          const reader = new FileReader();
-          profilLogoIconDataUrl = await new Promise((res, rej) => {
-            reader.onload = () => res(reader.result);
-            reader.onerror = rej;
-            reader.readAsDataURL(file);
-          });
-        }
-        if (profilLogoIconPreview) {
-          profilLogoIconPreview.src = profilLogoIconDataUrl;
-          profilLogoIconPreview.classList.remove("hidden");
-        }
-        if (profilLogoIconPlaceholder) profilLogoIconPlaceholder.classList.add("hidden");
-        if (profilLogoIconRemove) profilLogoIconRemove.classList.remove("hidden");
-        profilLogoIconRemoved = false;
-      } catch (err) {
-        showProfilMessage("Impossible de charger l’image du logo carré. Choisissez un JPG ou PNG.", true);
-      }
-      profilLogoIconInput.value = "";
-    });
-  }
-  if (profilLogoIconRemove) {
-    profilLogoIconRemove.addEventListener("click", () => {
-      profilLogoIconDataUrl = "";
-      profilLogoIconRemoved = true;
-      if (profilLogoIconPreview) {
-        profilLogoIconPreview.src = "";
-        profilLogoIconPreview.classList.add("hidden");
-      }
-      if (profilLogoIconPlaceholder) {
-        profilLogoIconPlaceholder.textContent = "Aucun logo carré";
-        profilLogoIconPlaceholder.classList.remove("hidden");
-      }
-      profilLogoIconRemove.classList.add("hidden");
-      showProfilMessage("");
-    });
-  }
-
-  document.getElementById("app-profil-open-slug-editor")?.addEventListener("click", () => {
-    const name = profilOrg?.value?.trim() || "";
-    openPersonnaliserShareWithSuggestedSlug(name);
+  // ——— Parametres (compte, etablissement, notifications, localisation, securite) ———
+  initAppSettings({
+    api,
+    slug,
+    markDirty: () => markAppSectionDirty("profil"),
+    notifySaveSuccess: () => notifyAppSectionSaveSuccess("profil"),
+    registerDiscardHandler: (handler) => registerAppDiscardHandler("profil", handler),
+    propagateEstablishmentDisplayName,
+    refreshSidebarBusinessLogo,
+    applyCommerceIosHomeState,
+    openSlugEditor: (name) => openPersonnaliserShareWithSuggestedSlug(name),
+    resizeLogoToDataUrl,
   });
-
-  if (profilSave) {
-    profilSave.addEventListener("click", async () => {
-      const organizationName = profilOrg?.value?.trim() || "";
-      const addressVal = profilAddress?.value?.trim() || "";
-      const body = {
-        organization_name: organizationName || undefined,
-        location_address: addressVal || undefined,
-      };
-      if (profilLogoRemoved) {
-        body.logo_base64 = null;
-      } else if (profilLogoDataUrl && typeof profilLogoDataUrl === "string" && profilLogoDataUrl.startsWith("data:")) {
-        body.logo_base64 = profilLogoDataUrl;
-      }
-      if (profilLogoIconRemoved) {
-        body.logo_icon_base64 = null;
-      } else if (profilLogoIconDataUrl && typeof profilLogoIconDataUrl === "string" && profilLogoIconDataUrl.startsWith("data:")) {
-        body.logo_icon_base64 = profilLogoIconDataUrl;
-      }
-      if (addressVal) {
-        try {
-          const coords = await geocodeAddress(addressVal);
-          if (coords) {
-            body.location_lat = coords.lat;
-            body.location_lng = coords.lng;
-          }
-        } catch (_) {}
-      }
-      profilSave.disabled = true;
-      if (profilSaveText) profilSaveText.classList.add("hidden");
-      if (profilSaveSpinner) profilSaveSpinner.classList.remove("hidden");
-      showProfilMessage("");
-      const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
-      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
-      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
-      try {
-        const res = await fetch(url, { method: "PATCH", headers, body: JSON.stringify(body) });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-          showProfilMessage("Modifications enregistrées.");
-          notifyAppSectionSaveSuccess("profil");
-          profilLogoRemoved = false;
-          propagateEstablishmentDisplayName(organizationName);
-          refreshSidebarBusinessLogo();
-          if (body.logo_base64 && profilLogoPreview?.src?.startsWith("data:")) {
-            profilLogoDataUrl = "";
-          }
-          if (body.logo_base64 === null) {
-            if (profilLogoPreview) {
-              profilLogoPreview.src = "";
-              profilLogoPreview.classList.add("hidden");
-            }
-            if (profilLogoPlaceholder) {
-              profilLogoPlaceholder.textContent = "Aucun logo";
-              profilLogoPlaceholder.classList.remove("hidden");
-            }
-            if (profilLogoRemove) profilLogoRemove.classList.add("hidden");
-          }
-          profilLogoIconRemoved = false;
-          if (body.logo_icon_base64 && profilLogoIconPreview?.src?.startsWith("data:")) {
-            profilLogoIconDataUrl = "";
-          }
-          if (body.logo_icon_base64 === null) {
-            if (profilLogoIconPreview) {
-              profilLogoIconPreview.src = "";
-              profilLogoIconPreview.classList.add("hidden");
-            }
-            if (profilLogoIconPlaceholder) {
-              profilLogoIconPlaceholder.textContent = "Aucun logo carré";
-              profilLogoIconPlaceholder.classList.remove("hidden");
-            }
-            if (profilLogoIconRemove) profilLogoIconRemove.classList.add("hidden");
-          }
-        } else {
-          showProfilMessage(data.error || "Erreur lors de l'enregistrement.", true);
-        }
-      } catch (_) {
-        showProfilMessage("Erreur réseau. Réessayez.", true);
-      }
-      profilSave.disabled = false;
-      if (profilSaveText) profilSaveText.classList.remove("hidden");
-      if (profilSaveSpinner) profilSaveSpinner.classList.add("hidden");
-    });
-  }
-
-  if (profilChangePasswordBtn) {
-    profilChangePasswordBtn.addEventListener("click", async () => {
-      const email = profilEmailInput?.value?.trim();
-      if (!email) {
-        showProfilAccountMessage("Email inconnu. Rechargez la page ou reconnectez-vous.", true);
-        return;
-      }
-      showProfilAccountMessage("");
-      profilChangePasswordBtn.disabled = true;
-      try {
-        const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-          showProfilAccountMessage(
-            data.message || "Si un compte existe avec cet email, vous allez recevoir un lien pour choisir un nouveau mot de passe.",
-            false
-          );
-        } else {
-          showProfilAccountMessage(data.error || "Impossible d'envoyer l'e-mail. Réessayez plus tard.", true);
-        }
-      } catch (_) {
-        showProfilAccountMessage("Erreur réseau. Vérifiez votre connexion et réessayez.", true);
-      }
-      profilChangePasswordBtn.disabled = false;
-    });
-  }
-
-  window.addEventListener("app-section-change", (e) => {
-    if (e.detail?.sectionId !== "profil") return;
-    loadProfil();
-    const sidebarEmail = document.getElementById("app-user-email")?.textContent?.trim();
-    if (profilEmailInput && sidebarEmail && !profilEmailInput.value?.trim()) {
-      profilEmailInput.value = sidebarEmail;
-    }
-  });
-  if (document.getElementById("profil")?.classList.contains("app-section-visible")) loadProfil();
 
   // ——— Scanner (caméra) ———
   const caisseChoose = document.getElementById("app-caisse-choose");

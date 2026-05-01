@@ -6321,3 +6321,24 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
 .app-btn-ghost { background: transparent; color: var(--app-text-muted); border: 1px solid var(--app-border); }
 .app-btn-ghost:hover { background: var(--app-surface-hover); color: var(--app-text); }
 .app-profil-form .app-btn-primary { margin-top: 0.35rem; }
+.app-settings-textarea {
+  width: 100%;
+  min-height: 104px;
+  resize: vertical;
+}
+.app-settings-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.65rem;
+}
+.app-settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+.app-settings-toggle-row input[type="checkbox"] {
+  width: 19px;
+  height: 19px;
+}

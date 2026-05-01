@@ -1690,6 +1690,14 @@
                   <label class="app-label">Abonnement</label>
                   <p id="app-profil-subscription-status" class="app-profil-subscription-status">Chargement…</p>
                 </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Connexion</label>
+                  <p id="app-profil-auth-provider" class="app-profil-subscription-status">—</p>
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label">Commerce actif</label>
+                  <p id="app-profil-active-business" class="app-profil-subscription-status">—</p>
+                </div>
                 <p id="app-profil-account-message" class="app-message app-profil-message hidden"></p>
               </div>
             </div>
@@ -1728,6 +1736,14 @@
                   <p class="app-hint">Suggestions automatiques (OpenStreetMap). Vous pouvez aussi coller une adresse complète puis enregistrer.</p>
                 </div>
                 <div class="app-rules-row">
+                  <label class="app-label" for="app-settings-contact-email">E-mail de contact établissement</label>
+                  <input type="email" id="app-settings-contact-email" class="app-input" placeholder="contact@moncommerce.fr" autocomplete="email" />
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label" for="app-settings-contact-phone">Téléphone établissement</label>
+                  <input type="tel" id="app-settings-contact-phone" class="app-input" placeholder="+33 6 00 00 00 00" autocomplete="tel" />
+                </div>
+                <div class="app-rules-row">
                   <label class="app-label">Lien public de la page carte (identifiant dans l’URL)</label>
                   <p id="app-profil-slug-display" class="app-profil-slug-display"></p>
                   <p class="app-hint"><strong>Nom affiché</strong> ≠ texte dans l’URL : le lien utilise un <strong>slug</strong> (ex. <code>mon-cafe</code>) pour rester stable si vous changez seulement le nom sur la carte. Les anciens QR restent valides tant que vous ne changez pas le slug.</p>
@@ -1744,6 +1760,51 @@
                     <span id="app-profil-save-spinner" class="app-profil-save-spinner hidden"></span>
                   </button>
                 </span>
+              </div>
+            </div>
+            <div class="app-card app-profil-card app-settings-notifs-card">
+              <h3 class="app-subsection-title">Notifications clients</h3>
+              <div class="app-profil-form">
+                <div class="app-rules-row">
+                  <label class="app-label" for="app-settings-notif-message">Message campagne</label>
+                  <textarea id="app-settings-notif-message" class="app-input app-settings-textarea" rows="4" maxlength="180" placeholder="Ex. Merci pour votre visite, -10% aujourd’hui sur la carte fidélité."></textarea>
+                  <p class="app-hint">Même logique que l’app iOS: message sauvegardé puis envoi immédiat possible.</p>
+                </div>
+                <div class="app-settings-inline-actions">
+                  <button type="button" id="app-settings-notif-save" class="app-btn app-btn-secondary">Enregistrer le message</button>
+                  <button type="button" id="app-settings-notif-send" class="app-btn app-btn-primary">Envoyer aux clients</button>
+                </div>
+                <p id="app-settings-notif-feedback" class="app-message app-profil-message hidden"></p>
+              </div>
+            </div>
+            <div class="app-card app-profil-card app-settings-location-card">
+              <h3 class="app-subsection-title">Localisation</h3>
+              <p class="app-hint">Ouvrez l’adresse actuelle dans Plans pour vérifier la zone d’arrivée client.</p>
+              <div class="app-settings-inline-actions">
+                <button type="button" id="app-settings-location-open-maps" class="app-btn app-btn-secondary">Ouvrir dans Plans</button>
+              </div>
+            </div>
+            <div class="app-card app-profil-card app-settings-security-card">
+              <h3 class="app-subsection-title">Sécurité caisse & scan</h3>
+              <div class="app-profil-form">
+                <div class="app-rules-row">
+                  <label class="app-label" for="app-settings-security-max-passes">Passages max / client / jour</label>
+                  <input type="number" id="app-settings-security-max-passes" class="app-input" min="0" max="999" step="1" />
+                  <p class="app-hint">0 = illimité.</p>
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label" for="app-settings-security-max-points">Points max / opération</label>
+                  <input type="number" id="app-settings-security-max-points" class="app-input" min="0" max="999999" step="1" />
+                  <p class="app-hint">0 = illimité.</p>
+                </div>
+                <div class="app-rules-row app-settings-toggle-row">
+                  <label class="app-label" for="app-settings-security-require-receipt">Validation ticket de caisse requise</label>
+                  <input type="checkbox" id="app-settings-security-require-receipt" />
+                </div>
+                <div class="app-rules-row">
+                  <label class="app-label" for="app-settings-security-tolerance">Tolérance montant ticket (centimes)</label>
+                  <input type="number" id="app-settings-security-tolerance" class="app-input" min="0" max="500" step="1" />
+                </div>
               </div>
             </div>
               </div>

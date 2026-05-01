@@ -44,7 +44,12 @@ export function parseFlyerBgManifestJson(jsonText) {
 }
 
 /**
- * @typedef {{ onBgChange: () => void; syncPreview: () => void; setStatus: (msg: string) => void }} FlyerBgGalleryOpts
+ * @typedef {{
+ *   onBgChange: () => void;
+ *   syncPreview: () => void;
+ *   setStatus: (msg: string) => void;
+ *   storageKey?: string;
+ * }} FlyerBgGalleryOpts
  */
 
 /**
@@ -52,6 +57,7 @@ export function parseFlyerBgManifestJson(jsonText) {
  * @param {FlyerBgGalleryOpts} opts
  */
 export async function initFlyerBgGallery(root, opts) {
+  const storageKey = opts.storageKey;
   const wrap = root?.querySelector("#app-flyer-bg-gallery-wrap");
   const grid = root?.querySelector("#app-flyer-bg-gallery");
   const nextBtn = root?.querySelector("#app-flyer-bg-next");
@@ -113,7 +119,7 @@ export async function initFlyerBgGallery(root, opts) {
     removeBtn.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      clearStoredFlyerCustomBg();
+      clearStoredFlyerCustomBg(storageKey);
       opts.setStatus("");
       opts.syncPreview();
       opts.onBgChange();
@@ -124,7 +130,7 @@ export async function initFlyerBgGallery(root, opts) {
       void (async () => {
         try {
           const dataUrl = await compressFetchedImageToFlyerBgDataUrl(src);
-          setStoredFlyerCustomBgDataUrl(dataUrl);
+          setStoredFlyerCustomBgDataUrl(dataUrl, storageKey);
           opts.setStatus("");
           opts.syncPreview();
           opts.onBgChange();
