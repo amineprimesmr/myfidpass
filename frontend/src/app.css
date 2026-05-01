@@ -6365,6 +6365,7 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(2px);
   z-index: 20010;
 }
 #app-app.app-settings-sheet-open #app-dashboard-content > #profil.app-section.app-section-visible {
