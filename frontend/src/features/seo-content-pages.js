@@ -1,3 +1,6 @@
+import { renderSeoExtraPage } from "./seo-content-extra-pages.js";
+import { renderLocalCarteFideliteDigitalePage } from "./seo-local-pages.js";
+
 function wrapSeoPage({ title, intro, sections, cta }) {
   const sectionsHtml = sections
     .map(
@@ -71,6 +74,7 @@ const SEO_CONTENT_PAGES = {
       links: [
         { href: "/creer-ma-carte", label: "Creer ma carte" },
         { href: "/prix-carte-fidelite-digitale", label: "Voir prix et ROI" },
+        { href: "/carte-fidelite-digitale-paris", label: "Exemple local: Paris" },
       ],
     },
   },
@@ -239,8 +243,13 @@ const SEO_CONTENT_PAGES = {
   },
 };
 
-export function getSeoContentPageHtml(pageSlug) {
+export function getSeoContentPageHtml(pageSlug, route) {
+  if (pageSlug === "local-carte-fidelite-digitale") {
+    return renderLocalCarteFideliteDigitalePage(route?.citySlug || "");
+  }
+
   const page = SEO_CONTENT_PAGES[pageSlug];
-  if (!page) return "";
-  return wrapSeoPage(page);
+  if (page) return wrapSeoPage(page);
+
+  return renderSeoExtraPage(pageSlug);
 }

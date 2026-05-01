@@ -5,6 +5,7 @@
 import { getAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
 import { runLiquidGlassMenuCleanupLanding } from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
 import { applyRouteSeoHead } from "../features/seo-head.js";
+import { matchSeoContentRoute } from "../features/seo-route-match.js";
 import { syncSmartAppBanner } from "../smart-app-banner.js";
 
 export function getRoute() {
@@ -33,24 +34,8 @@ export function getRoute() {
   if (path === "/cgv") return { type: "legal", page: "cgv" };
   if (path === "/cookies") return { type: "legal", page: "cookies" };
   if (path === "/supprimer-compte") return { type: "legal", page: "delete-account" };
-  if (path === "/solution-carte-fidelite-digitale") {
-    return { type: "seo-content", page: "solution-carte-fidelite-digitale" };
-  }
-  if (path === "/logiciel-fidelite-restaurant") {
-    return { type: "seo-content", page: "logiciel-fidelite-restaurant" };
-  }
-  if (path === "/programme-fidelite-salon-beaute") {
-    return { type: "seo-content", page: "programme-fidelite-salon-beaute" };
-  }
-  if (path === "/prix-carte-fidelite-digitale") {
-    return { type: "seo-content", page: "prix-carte-fidelite-digitale" };
-  }
-  if (path === "/guide-fidelisation-client-commerce") {
-    return { type: "seo-content", page: "guide-fidelisation-client-commerce" };
-  }
-  if (path === "/alternative-carte-fidelite-papier") {
-    return { type: "seo-content", page: "alternative-carte-fidelite-papier" };
-  }
+  const seoRoute = matchSeoContentRoute(path);
+  if (seoRoute) return seoRoute;
   if (path === "") {
     const openOnboarding = ["1", "true", "yes"].includes(
       String(params.get("openOnboarding") || "").toLowerCase()

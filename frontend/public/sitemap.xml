@@ -1,62 +1,120 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://myfidpass.fr/</loc>
+    <loc>https://www.myfidpass.fr/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/solution-carte-fidelite-digitale</loc>
+    <loc>https://www.myfidpass.fr/solution-carte-fidelite-digitale</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/logiciel-fidelite-restaurant</loc>
+    <loc>https://www.myfidpass.fr/logiciel-fidelite-restaurant</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/programme-fidelite-salon-beaute</loc>
+    <loc>https://www.myfidpass.fr/programme-fidelite-salon-beaute</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/prix-carte-fidelite-digitale</loc>
+    <loc>https://www.myfidpass.fr/prix-carte-fidelite-digitale</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/guide-fidelisation-client-commerce</loc>
+    <loc>https://www.myfidpass.fr/guide-fidelisation-client-commerce</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/alternative-carte-fidelite-papier</loc>
+    <loc>https://www.myfidpass.fr/alternative-carte-fidelite-papier</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/mentions-legales</loc>
+    <loc>https://www.myfidpass.fr/logiciel-fidelite-boulangerie</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.myfidpass.fr/logiciel-fidelite-boucherie</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.myfidpass.fr/programme-fidelite-coiffure</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.myfidpass.fr/programme-fidelite-cafe</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.myfidpass.fr/integration-caisse-fidelite-wallet</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.myfidpass.fr/carte-fidelite-qr-code</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.myfidpass.fr/comparatif-stamp-me-alternative</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.myfidpass.fr/comparatif-sumup-loyalty-alternative</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-paris</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-lyon</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-marseille</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-toulouse</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-nice</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-nantes</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-strasbourg</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-montpellier</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-bordeaux</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-lille</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-rennes</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-reims</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-le-havre</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-grenoble</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-dijon</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://www.myfidpass.fr/carte-fidelite-digitale-angers</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
+
+  <url>
+    <loc>https://www.myfidpass.fr/mentions-legales</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/politique-confidentialite</loc>
+    <loc>https://www.myfidpass.fr/politique-confidentialite</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/cgu</loc>
+    <loc>https://www.myfidpass.fr/cgu</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/cgv</loc>
+    <loc>https://www.myfidpass.fr/cgv</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://myfidpass.fr/cookies</loc>
+    <loc>https://www.myfidpass.fr/cookies</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
