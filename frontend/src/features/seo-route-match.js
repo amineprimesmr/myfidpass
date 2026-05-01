@@ -4,6 +4,7 @@
  */
 
 const SEO_STATIC_SLUGS = new Set([
+  "myfidpass",
   "solution-carte-fidelite-digitale",
   "logiciel-fidelite-restaurant",
   "programme-fidelite-salon-beaute",

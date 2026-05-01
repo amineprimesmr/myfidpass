@@ -52,7 +52,7 @@ function setJsonLd(json) {
 export function applyRouteSeoHead(route) {
   if (typeof document === "undefined") return;
   const seo = getSeoByRoute(route);
-  const title = seo.title || "Myfidpass";
+  const title = seo.title || "MyFidPass";
   const description = seo.description || "";
   const canonical = seo.canonical || siteOrigin();
   const robots = seo.robots || "index,follow";
@@ -64,7 +64,7 @@ export function applyRouteSeoHead(route) {
   upsertCanonical(canonical);
 
   upsertMeta({ property: "og:type", content: "website" });
-  upsertMeta({ property: "og:site_name", content: "Myfidpass" });
+  upsertMeta({ property: "og:site_name", content: "MyFidPass" });
   upsertMeta({ property: "og:title", content: title });
   upsertMeta({ property: "og:description", content: description });
   upsertMeta({ property: "og:url", content: canonical });

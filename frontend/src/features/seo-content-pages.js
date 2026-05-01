@@ -40,6 +40,40 @@ function wrapSeoPage({ title, intro, sections, cta }) {
 }
 
 const SEO_CONTENT_PAGES = {
+  myfidpass: {
+    title: "MyFidPass — site officiel myfidpass.fr",
+    intro:
+      "Vous cherchez la marque MyFidPass ou le site myfidpass.fr : vous êtes au bon endroit. MyFidPass est une solution française de carte de fidélité digitale pour commerces, avec Apple Wallet, Google Wallet et un espace commerçant.",
+    sections: [
+      {
+        heading: "Pourquoi cette page existe",
+        paragraphs: [
+          "Certaines recherches mélangent des noms proches ou des domaines différents. Cette page confirme l’URL officielle et le périmètre produit : fidélisation digitale pour points de vente en France.",
+        ],
+        items: [
+          "Site officiel : https://www.myfidpass.fr",
+          "Produit : carte de fidélité digitale (wallet)",
+          "Cible : commerces locaux et indépendants",
+        ],
+      },
+      {
+        heading: "En deux phrases",
+        paragraphs: [
+          "Le client ajoute sa carte dans Apple Wallet ou Google Wallet via un lien ou un QR code, sans application à installer.",
+          "Le commerçant crée sa carte, suit les membres et peut faire évoluer son programme (points, tampons, intégration caisse).",
+        ],
+      },
+    ],
+    cta: {
+      heading: "Suite logique",
+      text: "Créez votre carte ou lisez la page solution pour le détail des fonctionnalités.",
+      links: [
+        { href: "/creer-ma-carte", label: "Créer ma carte" },
+        { href: "/solution-carte-fidelite-digitale", label: "Voir la solution" },
+        { href: "/", label: "Accueil" },
+      ],
+    },
+  },
   "solution-carte-fidelite-digitale": {
     title: "Carte de fidelite digitale pour commerces",
     intro:
