@@ -1,4 +1,5 @@
 node_modules/
+rembg-venv/
 .env
 certs/*.pem
 certs/*.p12

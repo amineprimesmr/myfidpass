@@ -912,6 +912,10 @@ router.post("/flyer/remove-logo-background", async (req, res) => {
   try {
     const r = await removeLogoBackgroundWithRemoveBg(buf);
     if (!r.ok) {
+      logger.warn(
+        { code: r.code, businessId: req.business?.id, message: r.message },
+        "[dashboard] remove-logo-background failed (voir fidpass-api / rembg-venv)"
+      );
       return res.status(200).json({ ok: false, code: r.code, message: r.message });
     }
     const b64 = r.png.toString("base64");

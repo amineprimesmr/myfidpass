@@ -5,7 +5,7 @@ NIXPACKS_NODE_VERSION = "22"
 
 # Outils nécessaires pour compiler better-sqlite3 (node-gyp) sur Railway
 # Un seul paquet **python3** : n’ajoute pas `python311` en plus — Nix fusionne les chemins et casse sur `bin/idle3` (3.11 vs 3.13).
-# `python3` Nix : `python3 -m venv` fournit pip dans le venv (pas besoin de get-pip / curl).
+# `python3` Nix : `python3 -m venv` fournit pip dans le venv (pas besoin de get-pip / curl). Venv cible : `backend/rembg-venv/`.
 # "..." = garder les paquets par défaut (Node.js) et ajouter les suivants
 [phases.setup]
 nixPkgs = ["...", "python3", "gcc", "gnumake"]

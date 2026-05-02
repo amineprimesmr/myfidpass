@@ -3,6 +3,7 @@ node_modules/
 
 # venv rembg (créé au build Railway / en local ; ne pas versionner)
 rembg-venv/
+backend/rembg-venv/
 
 # Environment
 .env

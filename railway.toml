@@ -3,8 +3,9 @@
 
 [build]
 builder = "nixpacks"
-# PEP 668 : le Python Nix refuse `pip install --user` → venv à la racine du repo (hors `backend/`), puis pip dans ce venv.
-buildCommand = "cd backend && npm install && python3 -m venv ../rembg-venv && ../rembg-venv/bin/pip install --upgrade pip && ../rembg-venv/bin/pip install \"rembg[cli]\""
+# PEP 668 : venv + pip dans ce venv. Le dossier **doit** rester sous `backend/` : si Railway « Root Directory » = `backend`,
+# un venv dans `../rembg-venv` n’est pas inclus dans l’image → rembg absent en prod (réponses JSON courtes `ok: false`).
+buildCommand = "cd backend && npm install && python3 -m venv ./rembg-venv && ./rembg-venv/bin/pip install --upgrade pip && ./rembg-venv/bin/pip install \"rembg[cli]\""
 
 [deploy]
 startCommand = "cd backend && node src/index.js"
