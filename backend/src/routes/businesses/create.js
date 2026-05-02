@@ -231,9 +231,9 @@ export async function createFromPlaceHandler(req, res) {
   }
 }
 
-export function bootstrapFromPlaceHandler(req, res) {
+export async function bootstrapFromPlaceHandler(req, res) {
   const body = req.body || {};
-  const establishmentName = String(body.establishment_name || body.establishmentName || "").trim();
+  let establishmentName = String(body.establishment_name || body.establishmentName || "").trim();
   const placeId = String(body.google_place_id || body.googlePlaceId || body.place_id || "").trim();
   if (!establishmentName || !placeId) {
     return res.status(400).json({
@@ -241,14 +241,31 @@ export function bootstrapFromPlaceHandler(req, res) {
       code: "missing_establishment",
     });
   }
+  let locationAddress = body.location_address || body.locationAddress || null;
+  let locationLat = body.location_lat ?? body.locationLat ?? null;
+  let locationLng = body.location_lng ?? body.locationLng ?? null;
+  const addrTrim = locationAddress != null ? String(locationAddress).trim() : "";
+  const hasAddr = addrTrim.length > 0;
+  const hasCoords =
+    locationLat != null &&
+    locationLat !== "" &&
+    locationLng != null &&
+    locationLng !== "";
+  if (!hasAddr && !hasCoords) {
+    const e = await fetchGooglePlaceBusinessEnrichment(placeId, establishmentName);
+    establishmentName = (e.name || establishmentName).trim() || establishmentName;
+    locationAddress = e.addr ?? locationAddress;
+    locationLat = e.lat ?? locationLat;
+    locationLng = e.lng ?? locationLng;
+  }
   try {
     const result = createFirstBusinessFromSelection({
       userId: req.user.id,
       establishmentName,
       placeId,
-      locationAddress: body.location_address || body.locationAddress || null,
-      locationLat: body.location_lat ?? body.locationLat ?? null,
-      locationLng: body.location_lng ?? body.locationLng ?? null,
+      locationAddress,
+      locationLat,
+      locationLng,
     });
     if (result.error) {
       const status = result.code === "business_already_exists" ? 409 : 400;
