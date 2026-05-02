@@ -3,6 +3,7 @@
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
 import { getAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
+import { ensureLandingLiquidNav } from "../features/landing-liquid-nav-bootstrap.js";
 import { runLiquidGlassMenuCleanupLanding } from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
 import { applyRouteSeoHead } from "../features/seo-head.js";
 import { matchSeoContentRoute } from "../features/seo-route-match.js";
@@ -147,6 +148,10 @@ async function loadPage(routeType) {
  */
 export async function initRouting() {
   const route = getRoute();
+  document.body.classList.toggle(
+    "page-landing-subpage",
+    route.type === "legal" || route.type === "seo-content"
+  );
   applyRouteSeoHead(route);
   syncSmartAppBanner();
   if (route.type !== "landing") {
@@ -245,6 +250,8 @@ export async function initRouting() {
     c.landingLegal.classList.remove("hidden");
     const page = await loadPage("legal");
     await page.init(route);
+    ensureLandingLiquidNav();
+    updateAuthNavLinks();
     syncWhatsappFabVisibility();
     return null;
   }
@@ -255,6 +262,8 @@ export async function initRouting() {
     c.landingLegal.classList.remove("hidden");
     const page = await loadPage("seo-content");
     await page.init(route);
+    ensureLandingLiquidNav();
+    updateAuthNavLinks();
     syncWhatsappFabVisibility();
     return null;
   }

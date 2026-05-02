@@ -36,6 +36,7 @@
 
 #fidpass-liquid-menu-glass,
 .lg-menu__glass--desk {
+  display: flex;
   min-height: 2.75rem;
   width: 100%;
   max-width: min(100% - 0.5rem, 48rem);
@@ -120,6 +121,7 @@
 
 #fidpass-liquid-menu-glass-bar,
 .lg-menu__glass--bar {
+  display: flex;
   align-items: center;
   flex-wrap: nowrap;
   justify-content: space-between;

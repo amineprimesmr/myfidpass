@@ -1,0 +1,27 @@
+/**
+ * Pages statiques sous #landing (légales, SEO) : ordre visuel article → pied de page,
+ * retrait de la section « Lancez-vous » qui ne s’applique qu’à l’accueil.
+ */
+body.page-landing-subpage #landing {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+body.page-landing-subpage #lancez-vous-rapidement {
+  display: none !important;
+}
+
+body.page-landing-subpage #landing-legal {
+  order: 1;
+  flex: 1 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  /* Espace sous le menu fixe (.landing-liquid-nav-host) */
+  padding-top: max(5.75rem, calc(env(safe-area-inset-top, 0px) + 4.5rem));
+}
+
+body.page-landing-subpage #site-footer-myfidpass {
+  order: 2;
+  margin-top: 0;
+}
