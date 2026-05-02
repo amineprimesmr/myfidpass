@@ -196,6 +196,21 @@ export function FinTapHeroScrollSection() {
 
     lastInnerWidthRef.current = window.innerWidth;
     window.addEventListener("resize", onResizeWidthOnly, { passive: true });
+
+    /** Après retour d’onglet : rAF ralenti / layout figé → resync ratio téléphone + CTA. */
+    const onBecameVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      requestAnimationFrame(() => {
+        run();
+        const target = targetRatioRef.current;
+        currentRatioRef.current = target;
+        lastAppliedRatioRef.current = -1;
+        paint(target);
+      });
+    };
+    document.addEventListener("visibilitychange", onBecameVisible);
+    window.addEventListener("pageshow", onBecameVisible);
+
     run();
     loopRef.current = requestAnimationFrame(animate);
 
@@ -208,6 +223,8 @@ export function FinTapHeroScrollSection() {
       window.removeEventListener("resize", onResizeWidthOnly, {
         passive: true,
       });
+      document.removeEventListener("visibilitychange", onBecameVisible);
+      window.removeEventListener("pageshow", onBecameVisible);
       if (loopRef.current) cancelAnimationFrame(loopRef.current);
     };
   }, []);

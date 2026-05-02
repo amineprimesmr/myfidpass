@@ -32,6 +32,13 @@
   z-index: 140;
 }
 
+/* La feuille (.app-main) ne doit pas recouvrir la barre de navigation fixe (chevauchement visuel). */
+@media (min-width: 901px) {
+  #app-app.app-saas-welcome-active .app-sidebar {
+    z-index: 280;
+  }
+}
+
 /* Héros : aligné au flux — le dégradé commun est sur .app-saas-frc-cluster */
 #app-app.app-saas-welcome-active .app-desktop-topbar {
   position: fixed;
@@ -121,6 +128,7 @@
 
 @media (min-width: 901px) {
   body.page-app #app-app.app-saas-welcome-active .app-main {
+    margin-left: var(--app-sidebar-width) !important;
     margin-top: calc(
       var(--app-admin-strip-h, 0px) + var(--saas-frc-header-total-h, var(--app-topbar-height, 52px)) -
         var(--app-main-sheet-pull, 12px) + 12px

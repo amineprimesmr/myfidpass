@@ -2,24 +2,34 @@
   position: absolute;
   inset: 0;
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: calc(env(safe-area-inset-top, 0px) + 4.5rem) max(0.65rem, env(safe-area-inset-right, 0px))
+    max(1rem, env(safe-area-inset-bottom, 0px)) max(0.65rem, env(safe-area-inset-left, 0px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   color: #f8fafc;
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 html:has(.creation-carte-signup),
 body:has(.creation-carte-signup) {
-  overflow: hidden !important;
-  overscroll-behavior: none;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
 body.page-builder #builder-app {
   position: fixed;
   inset: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .creation-carte-signup .hidden {
@@ -38,7 +48,9 @@ body.page-builder #builder-app {
 .creation-carte-signup__content {
   position: relative;
   z-index: 1;
-  width: min(96vw, 520px);
+  width: 100%;
+  max-width: min(32rem, 100%);
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -79,24 +91,20 @@ body.page-builder {
 
 .creation-carte-signup__title {
   margin: 0;
-  font-size: clamp(1.7rem, 4.1vw, 2.2rem);
-  line-height: 1.06;
+  max-width: 100%;
+  font-size: clamp(1.35rem, 5.2vw, 2.2rem);
+  line-height: 1.12;
   letter-spacing: -0.018em;
   font-weight: 470;
-  white-space: nowrap;
+  text-wrap: balance;
 }
 
 .creation-carte-signup__subtitle {
   margin: 0.5rem 0 0;
+  max-width: 26rem;
   color: rgba(230, 236, 243, 0.82);
-  font-size: 1.06rem;
-  line-height: 1.3;
-}
-
-.creation-carte-signup__commerce {
-  margin: 0.78rem 0 0;
-  font-size: 0.88rem;
-  color: rgba(230, 236, 243, 0.74);
+  font-size: clamp(0.9rem, 3.4vw, 1.06rem);
+  line-height: 1.35;
 }
 
 .creation-carte-signup__card {
@@ -141,7 +149,7 @@ body.page-builder {
   background: #ffffff;
   color: #0f172a;
   padding: 0 0.92rem;
-  font-size: 0.98rem;
+  font-size: max(1rem, 0.98rem);
   outline: none;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -167,7 +175,10 @@ body.page-builder {
   gap: 0.56rem;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: clamp(0.86rem, 3.2vw, 0.95rem);
+  line-height: 1.25;
+  text-align: center;
+  padding-inline: 0.6rem;
   cursor: pointer;
   transition: transform 0.17s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
@@ -203,31 +214,12 @@ body.page-builder {
   letter-spacing: 0.09em;
 }
 
-.creation-carte-signup__sep--lines {
-  margin: 1.05rem 0 0.95rem;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 0.66rem;
-}
-
-.creation-carte-signup__sep--lines::before,
-.creation-carte-signup__sep--lines::after {
-  content: "";
-  height: 1px;
-  background: #d3d8de;
-}
-
-.creation-carte-signup__sep::before,
-.creation-carte-signup__sep::after {
-  content: none;
-}
-
 .creation-carte-signup__btn--social {
   margin-top: 0.45rem;
   background: #ffffff;
   color: #111827;
   border-color: rgba(15, 23, 42, 0.07);
+  white-space: normal;
 }
 
 .creation-carte-signup__icon {
@@ -281,7 +273,11 @@ body.page-builder {
 }
 
 .creation-carte-signup__email-review {
-  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0.12rem 0.5rem;
+  align-items: start;
   border-radius: 0.72rem;
   background: #e5e7eb;
   padding: 0.56rem 0.78rem 0.52rem;
@@ -306,24 +302,29 @@ body.page-builder {
   font-size: 0.9rem;
   color: #111827;
   font-weight: 600;
+  word-break: break-word;
 }
 
 .creation-carte-signup__email-review-label {
+  grid-column: 1;
+  grid-row: 1;
   font-size: 0.68rem;
   color: #6b7280;
 }
 
 .creation-carte-signup__email-review-value {
-  margin-top: 0.08rem;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: 0;
   font-size: 0.9rem;
   color: #111827;
+  word-break: break-word;
 }
 
 .creation-carte-signup__email-edit {
-  position: absolute;
-  right: 0.72rem;
-  top: 50%;
-  transform: translateY(-50%);
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
   border: 0;
   background: transparent;
   color: #111827;
@@ -331,6 +332,7 @@ body.page-builder {
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .creation-carte-signup__password-wrap {
@@ -346,7 +348,7 @@ body.page-builder {
   background: #fff;
   color: #0f172a;
   padding: 0 2.25rem 0 0.72rem;
-  font-size: 0.9rem;
+  font-size: max(1rem, 0.9rem);
   outline: none;
 }
 
@@ -390,6 +392,9 @@ body.page-builder {
   border-radius: inherit;
   background: #202b34;
   transition: width 0.22s ease, background-color 0.22s ease;
+}
+.creation-carte-signup__password-meter-fill.is-ok {
+  background: #17853d;
 }
 
 .creation-carte-signup__login-title {
@@ -435,17 +440,18 @@ body.page-builder {
 }
 
 @media (max-width: 600px) {
-  .creation-carte-signup__content {
-    width: min(96vw, 462px);
-  }
-
   .creation-carte-signup__card {
-    padding: 0.95rem;
+    padding: 0.85rem;
+    border-radius: 0.95rem;
   }
-}
 
-.creation-carte-signup__password-meter-fill.is-ok {
-  background: #17853d;
+  .creation-carte-signup__foot {
+    font-size: 0.76rem;
+  }
+
+  .creation-carte-signup__login-title {
+    font-size: clamp(1.15rem, 5vw, 1.35rem);
+  }
 }
 
 .creation-carte-signup__foot a {
@@ -465,34 +471,14 @@ body.page-builder {
 }
 
 @keyframes creationSignupIn {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
 @keyframes creationStepIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.99);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
 @keyframes creationStepOut {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.99);
-  }
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-8px) scale(0.99); }
 }

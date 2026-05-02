@@ -3155,6 +3155,72 @@ body.page-builder #builder-app main.landing-builder {
   padding-top: 6.1rem;
 }
 
+@media (max-width: 640px) {
+  body.page-builder #builder-app main.landing-builder {
+    padding-top: max(5rem, env(safe-area-inset-top, 0px) + 4.25rem);
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
+  .landing-builder.builder-onboarding-active .builder-step-1-content {
+    max-width: 100%;
+  }
+
+  .builder-step-1-heading .builder-title {
+    font-size: clamp(1.35rem, 5.5vw, 1.85rem);
+    line-height: 1.15;
+    padding-inline: 0.15rem;
+  }
+
+  .builder-step-1-heading .builder-subtitle {
+    font-size: clamp(0.88rem, 3.5vw, 1rem);
+    max-width: 100%;
+  }
+
+  .landing-builder {
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+
+  body.page-builder #builder-app .builder-header-outer {
+    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+  }
+
+  .builder-header-inner {
+    gap: 0.45rem;
+  }
+
+  .builder-header-login {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .builder-header-inner {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.4rem;
+  }
+
+  .builder-header-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: space-between;
+  }
+
+  .builder-header-steps {
+    order: 3;
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .builder-header-right {
+    flex-shrink: 0;
+  }
+}
+
 .builder-steps {
   display: flex;
   align-items: center;

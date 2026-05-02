@@ -720,6 +720,7 @@
   }
 
   body.page-app #app-app .app-main {
+    margin-left: var(--app-sidebar-width) !important;
     margin-top: calc(
       var(--app-admin-strip-h, 0px) + var(--app-topbar-height) - var(--app-main-sheet-pull, 12px) + 16px
     );
@@ -744,9 +745,12 @@
 }
 
 @media (max-width: 900px) {
+  /* Tablette : réserver la colonne menu (évite la feuille sous la sidebar). Téléphone ≤480px : variables réinitialisées plus bas. */
   #app-app {
     --app-main-sheet-pull: 16px;
     --app-topbar-height: 56px;
+    --app-main-ml: var(--app-sidebar-width);
+    --app-sidebar-tx: 0;
   }
 
   .app-desktop-topbar {
@@ -846,7 +850,7 @@
     flex-direction: column !important;
     flex-wrap: nowrap !important;
     padding: 0 !important;
-    transform: translateX(-105%);
+    transform: translateX(var(--app-sidebar-tx));
     transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 1400 !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -926,7 +930,7 @@
   body.page-app #app-app .app-main {
     margin-top: calc(var(--app-topbar-height) - var(--app-main-sheet-pull, 16px) + 20px) !important;
 
-    margin-left: 0 !important;
+    margin-left: var(--app-main-ml) !important;
     margin-right: 0 !important;
 
     min-height: calc(100vh - var(--app-topbar-height) + var(--app-main-sheet-pull, 16px)) !important;
@@ -944,6 +948,13 @@
     box-shadow:
       0 -14px 44px rgba(0, 0, 0, 0.16),
       0 -4px 0 rgba(255, 255, 255, 0.22) inset;
+  }
+}
+
+@media (max-width: 480px) {
+  #app-app {
+    --app-main-ml: 0;
+    --app-sidebar-tx: -105%;
   }
 }
 

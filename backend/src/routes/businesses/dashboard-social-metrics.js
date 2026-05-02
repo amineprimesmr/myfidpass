@@ -2,7 +2,7 @@
  * Métriques sociales & avis : historique, refresh Google Places + OAuth (Meta, YouTube, TikTok).
  */
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { getEngagementRewards } from "../../db.js";
 import {
   insertSocialMetricSnapshot,
@@ -33,7 +33,8 @@ const refreshLimiter = rateLimit({
   max: 40,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `social-metrics-refresh:${req.business?.id ?? req.ip}`,
+  keyGenerator: (req) =>
+    `social-metrics-refresh:${req.business?.id ?? ipKeyGenerator(req.ip ?? "127.0.0.1")}`,
   message: { error: "Trop de rafraîchissements. Réessayez plus tard." },
 });
 

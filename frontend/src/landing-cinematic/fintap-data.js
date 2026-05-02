@@ -120,9 +120,4 @@ export const FINTAP = {
       "Designed for wise control of your money.",
     ],
   },
-  footer: {
-    disclaimer:
-      "Fintap is a company specializing in financial technology, not a traditional bank. Its banking services are offered through Piermont Bank, which is an FDIC member. The mobile app screens used in this website is taken from open source behance.",
-    legal: "Get real-time notifications about all your transactions",
-  },
 };

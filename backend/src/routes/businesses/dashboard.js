@@ -45,7 +45,7 @@ import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
 import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { parseFlyerAIBody } from "../../services/flyer-ai-image.js";
 import {
   countActiveFlyerJobsForBusiness,
@@ -113,7 +113,7 @@ const flyerAiGenerateLimiter = rateLimit({
   max: 8,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `flyer-ai:${req.business?.id ?? req.ip}`,
+  keyGenerator: (req) => `flyer-ai:${req.business?.id ?? ipKeyGenerator(req.ip ?? "127.0.0.1")}`,
   message: { error: "Limite horaire atteinte. Réessayez dans un moment." },
 });
 

@@ -14,7 +14,7 @@
  * @module routes/businesses/dashboard-google-business
  */
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import {
   getSocialOAuthConnection,
   upsertSocialOAuthConnection,
@@ -206,7 +206,7 @@ const heavyLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `gbp:${req.business?.id ?? req.ip}`,
+  keyGenerator: (req) => `gbp:${req.business?.id ?? ipKeyGenerator(req.ip ?? "127.0.0.1")}`,
   message: { error: "Trop de requêtes Google Business. Patientez une minute." },
 });
 
@@ -215,7 +215,7 @@ const aiReplyLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `gbp-ai:${req.business?.id ?? req.ip}`,
+  keyGenerator: (req) => `gbp-ai:${req.business?.id ?? ipKeyGenerator(req.ip ?? "127.0.0.1")}`,
   message: { error: "Trop de générations IA. Patientez une minute." },
 });
 

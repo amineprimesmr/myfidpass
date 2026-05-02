@@ -363,34 +363,3 @@
   background: var(--fintap-blue);
 }
 
-.fintap-footer {
-  border-top: 1px solid var(--fintap-line);
-  padding: 2.5rem 0 4rem;
-  background: transparent;
-}
-
-.fintap-footer-disclaimer {
-  font-size: 0.78rem;
-  line-height: 1.65;
-  color: #4b5563;
-  max-width: 80ch;
-  margin: 0 0 1.25rem;
-}
-
-.fintap-footer-legal {
-  font-size: 0.85rem;
-  color: var(--fintap-muted);
-  max-width: 70ch;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.fintap-link {
-  color: var(--fintap-blue);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.fintap-link:hover {
-  opacity: 0.9;
-}

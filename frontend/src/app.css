@@ -1,6 +1,6 @@
 /* Interface logiciel (/app) — refonte UX complète. Dérogation REFONTE-REGLES : > 500 lignes, à découper par blocs logiques (@media, sections). */
 body.page-app .site-banner { display: none !important; }
-body.page-app .whatsapp-fab { display: none !important; }
+body.page-app .whatsapp-fab-wrap { display: none !important; }
 
 /* Unification UI : suppression définitive de l'ancienne variante mobile dédiée. */
 .app-mobile-header,
