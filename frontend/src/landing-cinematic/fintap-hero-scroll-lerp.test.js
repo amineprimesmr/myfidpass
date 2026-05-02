@@ -4,6 +4,7 @@ import {
   computeFintapHeroPhoneStyle,
   fintapHeroScrollRatio,
   fintapHeroScrollRatioFromViewport,
+  getFintapCommerceScrollDelta,
   getPageScrollY,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
@@ -26,6 +27,18 @@ describe("fintapHeroScrollRatioFromViewport", () => {
 describe("getPageScrollY", () => {
   it("retourne un nombre (0 en environnement test)", () => {
     expect(typeof getPageScrollY()).toBe("number");
+  });
+});
+
+describe("getFintapCommerceScrollDelta", () => {
+  it("desktop : delta suffisant pour un ratio proche de la fin d’animation", () => {
+    const d = getFintapCommerceScrollDelta(1280, false);
+    expect(d).toBeGreaterThan(200);
+    expect(d).toBeLessThan(900);
+  });
+  it("mobile : dépend du trigger (iOS vs standard)", () => {
+    expect(getFintapCommerceScrollDelta(390, false)).toBeGreaterThan(400);
+    expect(getFintapCommerceScrollDelta(390, true)).toBeGreaterThan(550);
   });
 });
 

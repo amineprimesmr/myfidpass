@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   computeFintapHeroPhoneStyle,
   fintapHeroScrollRatio,
+  FINTAP_SCROLL_TO_COMMERCE_EVENT,
+  getFintapCommerceScrollDelta,
   getPageScrollY,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
@@ -245,6 +247,40 @@ export function FinTapHeroScrollSection() {
     document.addEventListener("visibilitychange", scheduleHeroResync);
     window.addEventListener("pageshow", onPageShow);
 
+    const scrollToCommerceOnboarding = () => {
+      if (reduced.matches) {
+        document.getElementById("fintap-commerce-onboarding")?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        window.setTimeout(() => {
+          searchInputRef.current?.focus({ preventScroll: true });
+        }, 400);
+        return;
+      }
+      if (scroll0Ref.current == null) {
+        scroll0Ref.current = getPageScrollY();
+      }
+      const base = scroll0Ref.current;
+      const isIosMobile =
+        typeof navigator !== "undefined" && IOS_MOBILE_UA_RE.test(navigator.userAgent);
+      const delta = getFintapCommerceScrollDelta(window.innerWidth, isIosMobile);
+      const doc = document.scrollingElement || document.documentElement;
+      const maxTop = Math.max(0, (doc?.scrollHeight ?? 0) - window.innerHeight);
+      const top = Math.min(base + delta, maxTop);
+      window.scrollTo({ top, behavior: "smooth" });
+      let focusDone = false;
+      const tryFocus = () => {
+        if (focusDone) return;
+        focusDone = true;
+        searchInputRef.current?.focus({ preventScroll: true });
+      };
+      window.addEventListener("scrollend", tryFocus, { once: true });
+      window.setTimeout(tryFocus, 1000);
+    };
+
+    window.addEventListener(FINTAP_SCROLL_TO_COMMERCE_EVENT, scrollToCommerceOnboarding);
+
     run();
     loopRef.current = requestAnimationFrame(animate);
 
@@ -259,6 +295,7 @@ export function FinTapHeroScrollSection() {
       });
       document.removeEventListener("visibilitychange", scheduleHeroResync);
       window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener(FINTAP_SCROLL_TO_COMMERCE_EVENT, scrollToCommerceOnboarding);
       if (loopRef.current) cancelAnimationFrame(loopRef.current);
     };
   }, []);
@@ -417,6 +454,7 @@ export function FinTapHeroScrollSection() {
           </div>
         </div>
         <div
+          id="fintap-commerce-onboarding"
           className={`fintap-hero-iphone__actions${ctaVisible ? " is-visible" : ""}`}
           aria-hidden={ctaVisible ? "false" : "true"}
         >

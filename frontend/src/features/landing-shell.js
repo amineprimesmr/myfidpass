@@ -3,6 +3,7 @@
  * Appelé au chargement pour attacher les listeners (formulaire, menus, recherche).
  */
 import { setPendingEstablishment, API_BASE, getAuthToken } from "../config.js";
+import { FINTAP_SCROLL_TO_COMMERCE_EVENT } from "../landing-cinematic/fintap-hero-scroll-lerp.js";
 
 function updateLandingCtaState() {
   const input = document.getElementById("landing-etablissement");
@@ -283,6 +284,11 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
 
 export function initLandingShell() {
   function focusOnboardingField() {
+    const finCommerce = document.getElementById("fintap-commerce-onboarding");
+    if (finCommerce instanceof HTMLElement) {
+      window.dispatchEvent(new CustomEvent(FINTAP_SCROLL_TO_COMMERCE_EVENT));
+      return true;
+    }
     const input = document.getElementById("landing-etablissement");
     const wrap = input?.closest(".landing-hero-input-wrap");
     if (!(input instanceof HTMLElement)) return false;

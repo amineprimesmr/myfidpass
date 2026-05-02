@@ -65,6 +65,35 @@ export function getPageScrollY() {
   return Number(el?.scrollTop) || 0;
 }
 
+/** Clics nav / `?openOnboarding=1` — écouteur dans FinTapHeroScrollSection. */
+export const FINTAP_SCROLL_TO_COMMERCE_EVENT = "fidpass:scroll-to-fintap-commerce";
+
+/** Aligné sur FinTapHeroScrollSection — desktop frein + mobile trigger. */
+const FINTAP_DESKTOP_BRAKE_START = 0.62;
+const FINTAP_DESKTOP_BRAKE_FACTOR = 0.45;
+const FINTAP_IOS_MOBILE_TRIGGER = 560;
+
+/**
+ * Delta de scroll (px) depuis `scroll0` pour afficher le bloc « nom du commerce »
+ * (ratio téléphone + CTA cohérents avec la boucle d’animation).
+ * @param {number} viewportWidth
+ * @param {boolean} [isIosMobile]
+ */
+export function getFintapCommerceScrollDelta(viewportWidth, isIosMobile = false) {
+  if (viewportWidth >= 1024) {
+    const slowStartPx = TRIGGER * FINTAP_DESKTOP_BRAKE_START;
+    for (let delta = 0; delta <= 1400; delta += 1) {
+      const slowedDeltaPx =
+        delta <= slowStartPx ? delta : slowStartPx + (delta - slowStartPx) * FINTAP_DESKTOP_BRAKE_FACTOR;
+      const ratio = clamp(slowedDeltaPx / TRIGGER, 0, 1);
+      if (ratio >= 0.74) return delta + 40;
+    }
+    return 480;
+  }
+  const trig = isIosMobile ? FINTAP_IOS_MOBILE_TRIGGER : TRIGGER;
+  return Math.ceil(trig * 1.05);
+}
+
 /**
  * Ratio 0 = section à la position « initiale » (réf. viewport) ; 1 = décalage ≈ 400px vers le haut.
  * Fonctionne que le scroll soit sur window ou un conteneur.

@@ -8,6 +8,7 @@ import { runLiquidGlassMenuCleanupLanding } from "../features/kube-liquid-glass/
 import { applyRouteSeoHead } from "../features/seo-head.js";
 import { matchSeoContentRoute } from "../features/seo-route-match.js";
 import { syncSmartAppBanner } from "../smart-app-banner.js";
+import { FINTAP_SCROLL_TO_COMMERCE_EVENT } from "../landing-cinematic/fintap-hero-scroll-lerp.js";
 
 export function getRoute() {
   let path = window.location.pathname.replace(/\/$/, "");
@@ -319,11 +320,21 @@ export async function initRouting() {
   const page = await loadPage("landing");
   await page.init(route);
   if (route.openOnboarding) {
-    requestAnimationFrame(() => {
+    let openOnboardingDone = false;
+    const runOpenOnboarding = () => {
+      if (openOnboardingDone) return;
+      const fin = document.getElementById("fintap-commerce-onboarding");
+      if (fin) {
+        openOnboardingDone = true;
+        window.dispatchEvent(new CustomEvent(FINTAP_SCROLL_TO_COMMERCE_EVENT));
+        return;
+      }
       const input = document.getElementById("landing-etablissement");
-      const wrap = input?.closest(".landing-hero-input-wrap");
-      input?.scrollIntoView({ behavior: "smooth", block: "center" });
-      input?.focus();
+      if (!(input instanceof HTMLElement)) return;
+      openOnboardingDone = true;
+      const wrap = input.closest(".landing-hero-input-wrap");
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
+      input.focus();
       if (wrap instanceof HTMLElement) {
         wrap.classList.remove("is-guided-focus");
         void wrap.offsetWidth;
@@ -332,7 +343,15 @@ export async function initRouting() {
           wrap.classList.remove("is-guided-focus");
         }, 1400);
       }
-    });
+    };
+    window.setTimeout(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(runOpenOnboarding);
+      });
+    }, 0);
+    window.setTimeout(() => {
+      if (!openOnboardingDone) runOpenOnboarding();
+    }, 280);
   }
   syncWhatsappFabVisibility();
   return null;

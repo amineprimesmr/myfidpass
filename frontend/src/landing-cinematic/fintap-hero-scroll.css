@@ -58,6 +58,11 @@
   width: 100%;
 }
 
+/* Ancrage nav / deep link : marge sous la barre Liquid Glass */
+#fintap-commerce-onboarding {
+  scroll-margin-top: max(5.5rem, calc(env(safe-area-inset-top, 0px) + 4.25rem));
+}
+
 .fintap-hero-iphone__actions {
   display: flex;
   gap: 0.7rem;

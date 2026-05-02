@@ -41,7 +41,12 @@ function getPeriodBounds(period) {
 export function getDashboardStats(businessId, period = "this_month") {
   const normalizedPeriod = period === "1y" ? "12m" : period;
   const bounds = getPeriodBounds(normalizedPeriod);
-  const membersCount = db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ?").get(businessId);
+  const currentMonthKey = new Date().toISOString().slice(0, 7);
+  const isHistoricalMonth = bounds.month != null && bounds.month < currentMonthKey;
+  const membersCount =
+    bounds.month != null
+      ? db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND strftime('%Y-%m', created_at) <= ?").get(businessId, bounds.month)
+      : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ?").get(businessId);
   const pointsInPeriod =
     bounds.month != null
       ? db.prepare(
@@ -58,24 +63,24 @@ export function getDashboardStats(businessId, period = "this_month") {
       : db.prepare(
           `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND created_at >= ${bounds.since}`
         ).get(businessId);
-  const newMembers7d = db.prepare(
-    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-7 days')"
-  ).get(businessId);
-  const newMembers30d = db.prepare(
-    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-30 days')"
-  ).get(businessId);
-  const inactive30d = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))`
-  ).get(businessId);
-  const inactive90d = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))`
-  ).get(businessId);
-  const points50Count = db.prepare(
-    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 50"
-  ).get(businessId);
-  const pointsAvg = db.prepare(
-    "SELECT COALESCE(ROUND(AVG(points), 0), 0) as avg FROM members WHERE business_id = ?"
-  ).get(businessId);
+  const newMembers7d = isHistoricalMonth
+    ? { n: 0 }
+    : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-7 days')").get(businessId);
+  const newMembers30d = isHistoricalMonth
+    ? { n: 0 }
+    : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-30 days')").get(businessId);
+  const inactive30d = isHistoricalMonth
+    ? { n: 0 }
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))`).get(businessId);
+  const inactive90d = isHistoricalMonth
+    ? { n: 0 }
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))`).get(businessId);
+  const points50Count = isHistoricalMonth
+    ? { n: 0 }
+    : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 50").get(businessId);
+  const pointsAvg = isHistoricalMonth
+    ? { avg: 0 }
+    : db.prepare("SELECT COALESCE(ROUND(AVG(points), 0), 0) as avg FROM members WHERE business_id = ?").get(businessId);
 
   /** Somme des montants € réellement enregistrés sur les transactions (`metadata.amount_eur`) — jamais dérivée des points. */
   let declaredAmountSumEur = 0;
@@ -200,7 +205,11 @@ export function getDashboardStats(businessId, period = "this_month") {
 
   let notificationCampaigns = [];
   try {
-    notificationCampaigns = getNotificationCampaignInsightsForBusiness(businessId, { limit: 12 });
+    const allCampaigns = getNotificationCampaignInsightsForBusiness(businessId, { limit: 12 });
+    notificationCampaigns =
+      bounds.month != null
+        ? allCampaigns.filter((c) => c.created_at && c.created_at.slice(0, 7) === bounds.month)
+        : allCampaigns;
   } catch (_e) {
     notificationCampaigns = [];
   }
