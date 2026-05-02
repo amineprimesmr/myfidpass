@@ -233,7 +233,10 @@ export function FinTapHeroScrollSection() {
   }, []);
 
   useEffect(() => {
-    if (!ctaVisible) return;
+    if (!ctaVisible) {
+      setPlacesSearching(false);
+      return;
+    }
     const query = shopQuery.trim();
     if (query.length < 2) {
       setPlacePredictions([]);
@@ -252,9 +255,9 @@ export function FinTapHeroScrollSection() {
       emptyHintTimerRef.current = 0;
     }
     setNoSuggestionsVisible(false);
+    setPlacesSearching(true);
     const debounce = window.setTimeout(async () => {
       if (cancelled) return;
-      setPlacesSearching(true);
       try {
         const url = `${API_BASE}/api/places/autocomplete?input=${encodeURIComponent(query)}`;
         const res = await fetch(url);
@@ -289,7 +292,10 @@ export function FinTapHeroScrollSection() {
           emptyHintTimerRef.current = 0;
         }, 2000);
       } finally {
-        setPlacesSearching(false);
+        if (!cancelled) {
+          const still = String(searchInputRef.current?.value || "").trim() === query;
+          if (still) setPlacesSearching(false);
+        }
       }
     }, 300);
     return () => {

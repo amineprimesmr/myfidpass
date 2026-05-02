@@ -186,13 +186,20 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
       return;
     }
     currentQuery = query;
+    setSpinner(true);
     debounce = setTimeout(async () => {
-      if (input.value.trim() !== currentQuery) return;
-      setSpinner(true);
+      if (input.value.trim() !== currentQuery) {
+        setSpinner(false);
+        return;
+      }
+      const q = currentQuery;
       hideEmptyHint();
-      const predictions = await fetchPredictions(currentQuery);
+      const predictions = await fetchPredictions(q);
+      if (input.value.trim() !== q) {
+        if (input.value.trim().length < 2) setSpinner(false);
+        return;
+      }
       setSpinner(false);
-      if (input.value.trim() !== currentQuery) return;
       renderPredictions(predictions);
       if (!predictions.length && input.value.trim() === currentQuery && currentQuery.length >= 2) {
         clearEmptyHintTimer();
