@@ -5,7 +5,7 @@ import {
   getPageScrollY,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
-import { API_BASE } from "../config.js";
+import { API_BASE, setPendingEstablishment } from "../config.js";
 import "./fintap-hero-scroll.css";
 
 const HERO_IPHONE_IMG = "/assets/iphone-custom-clean.png";
@@ -56,8 +56,11 @@ export function FinTapHeroScrollSection() {
   const [shopPlaceId, setShopPlaceId] = useState("");
   const [placePredictions, setPlacePredictions] = useState([]);
   const [predictionsOpen, setPredictionsOpen] = useState(false);
+  const [placesSearching, setPlacesSearching] = useState(false);
+  const [noSuggestionsVisible, setNoSuggestionsVisible] = useState(false);
   const searchInputRef = useRef(null);
   const searchWrapRef = useRef(null);
+  const emptyHintTimerRef = useRef(0);
   const isIosMobileRef = useRef(
     typeof navigator !== "undefined" && IOS_MOBILE_UA_RE.test(navigator.userAgent)
   );
@@ -235,10 +238,23 @@ export function FinTapHeroScrollSection() {
     if (query.length < 2) {
       setPlacePredictions([]);
       setPredictionsOpen(false);
+      setPlacesSearching(false);
+      setNoSuggestionsVisible(false);
+      if (emptyHintTimerRef.current) {
+        window.clearTimeout(emptyHintTimerRef.current);
+        emptyHintTimerRef.current = 0;
+      }
       return;
     }
     let cancelled = false;
-    const timer = window.setTimeout(async () => {
+    if (emptyHintTimerRef.current) {
+      window.clearTimeout(emptyHintTimerRef.current);
+      emptyHintTimerRef.current = 0;
+    }
+    setNoSuggestionsVisible(false);
+    const debounce = window.setTimeout(async () => {
+      if (cancelled) return;
+      setPlacesSearching(true);
       try {
         const url = `${API_BASE}/api/places/autocomplete?input=${encodeURIComponent(query)}`;
         const res = await fetch(url);
@@ -248,15 +264,41 @@ export function FinTapHeroScrollSection() {
         const list = Array.isArray(data?.predictions) ? data.predictions.slice(0, 8) : [];
         setPlacePredictions(list);
         setPredictionsOpen(list.length > 0);
+        if (list.length > 0) {
+          if (emptyHintTimerRef.current) {
+            window.clearTimeout(emptyHintTimerRef.current);
+            emptyHintTimerRef.current = 0;
+          }
+          setNoSuggestionsVisible(false);
+        } else {
+          emptyHintTimerRef.current = window.setTimeout(() => {
+            if (cancelled) return;
+            const still = String(searchInputRef.current?.value || "").trim() === query;
+            if (still) setNoSuggestionsVisible(true);
+            emptyHintTimerRef.current = 0;
+          }, 2000);
+        }
       } catch (_) {
         if (cancelled) return;
         setPlacePredictions([]);
         setPredictionsOpen(false);
+        emptyHintTimerRef.current = window.setTimeout(() => {
+          if (cancelled) return;
+          const still = String(searchInputRef.current?.value || "").trim() === query;
+          if (still) setNoSuggestionsVisible(true);
+          emptyHintTimerRef.current = 0;
+        }, 2000);
+      } finally {
+        setPlacesSearching(false);
       }
-    }, 220);
+    }, 300);
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
+      window.clearTimeout(debounce);
+      if (emptyHintTimerRef.current) {
+        window.clearTimeout(emptyHintTimerRef.current);
+        emptyHintTimerRef.current = 0;
+      }
     };
   }, [shopQuery, ctaVisible]);
 
@@ -271,15 +313,28 @@ export function FinTapHeroScrollSection() {
     return () => document.removeEventListener("click", onClickOutside);
   }, []);
 
-  const selectPrediction = (pred) => {
-    setShopQuery(String(pred?.main_text || pred?.description || ""));
-    setShopPlaceId(String(pred?.place_id || ""));
-    setPredictionsOpen(false);
+  const navigateWithPrediction = (pred) => {
+    const name = String(pred?.main_text || pred?.description || "").trim();
+    const pid = String(pred?.place_id || "").trim();
+    if (!name || !pid) return;
+    setPendingEstablishment({ establishment_name: name, google_place_id: pid });
+    const u = new URL("/creer-ma-carte", window.location.origin);
+    u.searchParams.set("redirect", "/app");
+    u.searchParams.set("name", name);
+    u.searchParams.set("place_id", pid);
+    window.location.assign(`${u.pathname}${u.search}`);
   };
 
   const startHref = shopPlaceId
-    ? `/creer-ma-carte?place_id=${encodeURIComponent(shopPlaceId)}&name=${encodeURIComponent(shopQuery)}`
+    ? `/creer-ma-carte?redirect=${encodeURIComponent("/app")}&place_id=${encodeURIComponent(shopPlaceId)}&name=${encodeURIComponent(shopQuery.trim())}`
     : "/creer-ma-carte";
+
+  const onStartCtaClick = () => {
+    if (!shopPlaceId) return;
+    const name = shopQuery.trim();
+    if (!name) return;
+    setPendingEstablishment({ establishment_name: name, google_place_id: shopPlaceId });
+  };
 
   return (
     <section
@@ -347,25 +402,38 @@ export function FinTapHeroScrollSection() {
               onChange={(e) => {
                 setShopQuery(e.target.value);
                 setShopPlaceId("");
+                setNoSuggestionsVisible(false);
               }}
             />
-            <a
-              href={startHref}
-              className="fintap-hero-iphone__search-cta"
-              aria-label="Commencer"
-              title="Commencer"
-            >
-              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                <path
-                  d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </a>
+            {placesSearching ? (
+              <span
+                className="fintap-hero-iphone__search-cta fintap-hero-iphone__search-cta--busy"
+                aria-live="polite"
+                aria-label="Recherche en cours"
+                role="status"
+              >
+                <span className="fintap-hero-iphone__search-cta__spinner" aria-hidden="true" />
+              </span>
+            ) : (
+              <a
+                href={startHref}
+                className="fintap-hero-iphone__search-cta"
+                aria-label="Commencer"
+                title="Commencer"
+                onClick={onStartCtaClick}
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                  <path
+                    d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </a>
+            )}
             {predictionsOpen && placePredictions.length > 0 ? (
               <div className="fintap-hero-iphone__search-dropdown" role="listbox" aria-label="Suggestions commerces">
                 {placePredictions.map((pred, idx) => (
@@ -373,9 +441,9 @@ export function FinTapHeroScrollSection() {
                     key={`${pred.place_id || pred.description || "pred"}-${idx}`}
                     type="button"
                     className="fintap-hero-iphone__search-option"
-                    onMouseDown={(e) => {
+                    onPointerDown={(e) => {
                       e.preventDefault();
-                      selectPrediction(pred);
+                      navigateWithPrediction(pred);
                     }}
                   >
                     <span className="fintap-hero-iphone__search-option-main">
@@ -389,6 +457,12 @@ export function FinTapHeroScrollSection() {
               </div>
             ) : null}
           </label>
+          {noSuggestionsVisible && shopQuery.trim().length >= 2 && !placesSearching ? (
+            <p className="fintap-hero-iphone__search-empty-hint" role="status">
+              Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion
+              dans la liste.
+            </p>
+          ) : null}
         </div>
       </div>
     </section>

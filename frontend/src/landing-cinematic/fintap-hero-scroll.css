@@ -63,7 +63,7 @@
   gap: 0.7rem;
   justify-content: center;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   margin: 2.2rem auto 0;
   padding: 0 max(0.85rem, env(safe-area-inset-left)) 0.75rem max(0.85rem, env(safe-area-inset-right));
   width: 100%;
@@ -238,6 +238,41 @@
   width: 1rem;
   height: 1rem;
   display: block;
+}
+
+.fintap-hero-iphone__search-cta--busy {
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.fintap-hero-iphone__search-cta__spinner {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: fintapHeroCtaSpin 0.72s linear infinite;
+}
+
+@keyframes fintapHeroCtaSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fintap-hero-iphone__search-empty-hint {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0.35rem auto 0;
+  padding: 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #64748b;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .fintap-hero-iphone__btn--primary {

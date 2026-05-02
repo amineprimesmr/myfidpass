@@ -36,12 +36,77 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
   wrap.style.position = "relative";
   wrap.appendChild(dropdown);
 
+  const spinner = document.createElement("span");
+  spinner.className = "landing-hero-places-spinner";
+  spinner.setAttribute("aria-hidden", "true");
+  spinner.style.cssText = [
+    "display:none",
+    "position:absolute",
+    "right:2.75rem",
+    "top:50%",
+    "transform:translateY(-50%)",
+    "width:1.1rem",
+    "height:1.1rem",
+    "border:2px solid rgba(15,23,42,.2)",
+    "border-top-color:#1e3a8a",
+    "border-radius:50%",
+    "box-sizing:border-box",
+    "animation:landingPlacesSpin .65s linear infinite",
+    "pointer-events:none",
+    "z-index:3",
+  ].join(";");
+  wrap.appendChild(spinner);
+  if (!document.getElementById("landing-places-spin-keyframes")) {
+    const st = document.createElement("style");
+    st.id = "landing-places-spin-keyframes";
+    st.textContent =
+      "@keyframes landingPlacesSpin{from{transform:translateY(-50%) rotate(0)}to{transform:translateY(-50%) rotate(360deg)}}";
+    document.head.appendChild(st);
+  }
+
+  const emptyHint = document.createElement("p");
+  emptyHint.className = "landing-hero-places-empty-hint";
+  emptyHint.setAttribute("role", "status");
+  emptyHint.style.cssText = [
+    "display:none",
+    "margin:0.55rem auto 0",
+    "max-width:22rem",
+    "padding:0 0.5rem",
+    "font-size:0.82rem",
+    "line-height:1.45",
+    "color:#64748b",
+    "text-align:center",
+    "box-sizing:border-box",
+  ].join(";");
+  emptyHint.textContent =
+    "Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion dans la liste.";
+  wrap.insertAdjacentElement("afterend", emptyHint);
+
   let debounce = null;
+  let emptyHintTimer = null;
   let currentQuery = "";
+  /** @type {unknown[]} */
+  let lastPredictions = [];
 
   function hideDropdown() {
     dropdown.style.display = "none";
     dropdown.innerHTML = "";
+  }
+
+  function setSpinner(on) {
+    spinner.style.display = on ? "block" : "none";
+  }
+
+  function clearEmptyHintTimer() {
+    if (emptyHintTimer) {
+      clearTimeout(emptyHintTimer);
+      emptyHintTimer = null;
+    }
+  }
+
+  function hideEmptyHint() {
+    clearEmptyHintTimer();
+    emptyHint.style.display = "none";
   }
 
   function selectPrediction(pred) {
@@ -50,6 +115,7 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
     input.value = establishmentName;
     if (hiddenPlaceId) hiddenPlaceId.value = placeId;
     if (helperEl) helperEl.classList.remove("is-visible");
+    hideEmptyHint();
     hideDropdown();
     updateLandingCtaState();
     if (typeof onPredictionSelected === "function" && establishmentName && placeId) {
@@ -59,12 +125,15 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
 
   function renderPredictions(predictions) {
     dropdown.innerHTML = "";
+    hideEmptyHint();
+    lastPredictions = Array.isArray(predictions) ? predictions.slice() : [];
     if (!predictions.length) {
       dropdown.style.display = "none";
       return;
     }
     predictions.forEach((pred, i) => {
       const item = document.createElement("div");
+      item.dataset.predItem = "1";
       item.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid #f2f2f2;";
       if (i === predictions.length - 1) item.style.borderBottom = "none";
       item.innerHTML = `
@@ -73,7 +142,10 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
           <div style="font-size:14px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(pred.main_text || pred.description)}</div>
           ${pred.secondary_text ? `<div style="font-size:12px;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(pred.secondary_text)}</div>` : ""}
         </div>`;
-      item.addEventListener("mousedown", (e) => { e.preventDefault(); selectPrediction(pred); });
+      item.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        selectPrediction(pred);
+      });
       item.addEventListener("mouseenter", () => { item.style.background = "#f7f7f7"; });
       item.addEventListener("mouseleave", () => { item.style.background = ""; });
       dropdown.appendChild(item);
@@ -106,13 +178,31 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
     const query = input.value.trim();
     if (hiddenPlaceId && hiddenPlaceId.value) hiddenPlaceId.value = "";
     updateLandingCtaState();
+    hideEmptyHint();
     if (debounce) clearTimeout(debounce);
-    if (query.length < 2) { hideDropdown(); return; }
+    if (query.length < 2) {
+      hideDropdown();
+      setSpinner(false);
+      return;
+    }
     currentQuery = query;
     debounce = setTimeout(async () => {
       if (input.value.trim() !== currentQuery) return;
+      setSpinner(true);
+      hideEmptyHint();
       const predictions = await fetchPredictions(currentQuery);
-      if (input.value.trim() === currentQuery) renderPredictions(predictions);
+      setSpinner(false);
+      if (input.value.trim() !== currentQuery) return;
+      renderPredictions(predictions);
+      if (!predictions.length && input.value.trim() === currentQuery && currentQuery.length >= 2) {
+        clearEmptyHintTimer();
+        emptyHintTimer = setTimeout(() => {
+          emptyHintTimer = null;
+          if (input.value.trim() === currentQuery && !dropdown.querySelector("[data-pred-item]")) {
+            emptyHint.style.display = "block";
+          }
+        }, 2000);
+      }
     }, 300);
   });
 
@@ -126,7 +216,7 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
 
   // Keyboard navigation
   input.addEventListener("keydown", (e) => {
-    const items = [...dropdown.querySelectorAll("div[style*='cursor:pointer']")];
+    const items = [...dropdown.querySelectorAll("[data-pred-item]")];
     if (!items.length) return;
     const active = dropdown.querySelector("[data-active]");
     const idx = active ? items.indexOf(active) : -1;
@@ -142,7 +232,9 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
       prev.setAttribute("data-active", "1"); prev.style.background = "#f7f7f7";
     } else if (e.key === "Enter" && active) {
       e.preventDefault();
-      active.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      const i = items.indexOf(active);
+      const pred = lastPredictions[i];
+      if (pred && typeof pred === "object") selectPrediction(pred);
     } else if (e.key === "Escape") {
       hideDropdown();
     }
