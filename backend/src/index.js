@@ -48,6 +48,7 @@ import membersRouter from "./routes/members.js";
 import businessesRouter from "./routes/businesses.js";
 import authRouter from "./routes/auth.js";
 import devRouter from "./routes/dev.js";
+import { warmupRemoveBgModel } from "./services/flyer-logo-remove-bg.js";
 import placePhotoRouter from "./routes/place-photo.js";
 import placeCategoryRouter from "./routes/place-category.js";
 import findPlaceRouter from "./routes/find-place.js";
@@ -407,6 +408,8 @@ function startServer(port) {
     // Reprend les campagnes de notification interrompues par un crash ou un redémarrage.
     startNotificationJobWorker();
     startFlyerGenerationJobWorker();
+    // Pré-charge le modèle ONNX de détourage en arrière-plan (évite le cold-start au premier appel).
+    warmupRemoveBgModel();
   });
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {

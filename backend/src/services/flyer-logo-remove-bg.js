@@ -14,6 +14,26 @@ const IMGLY_CONFIG = {
   output: { format: "image/png", quality: 1.0 },
 };
 
+/** PNG 1×1 transparent (base64) — seule charge utile nécessaire pour télécharger + cacher le modèle ONNX. */
+const WARMUP_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII=",
+  "base64"
+);
+
+/**
+ * Télécharge et met en cache le modèle ONNX dès le démarrage.
+ * Fire-and-forget — ne doit pas bloquer le `listen()`.
+ */
+export async function warmupRemoveBgModel() {
+  try {
+    const blob = await removeBackground(WARMUP_PNG, IMGLY_CONFIG);
+    await blob.arrayBuffer();
+    console.info("[flyer-remove-bg] ✓ Modèle ONNX pré-chargé.");
+  } catch (e) {
+    console.warn("[flyer-remove-bg] Pré-chauffe échouée (premier appel utilisateur sera plus lent) :", e?.message ?? e);
+  }
+}
+
 /**
  * @param {Buffer} input — PNG ou JPEG
  * @returns {Promise<{ ok: true, png: Buffer } | { ok: false, code: string, message?: string }>}
