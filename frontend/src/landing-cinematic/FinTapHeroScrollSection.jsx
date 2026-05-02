@@ -142,7 +142,8 @@ export function FinTapHeroScrollSection() {
       if (window.innerWidth >= 1024) {
         const showThreshold = 0.68;
         const hideThreshold = 0.24;
-        const progress = Math.max(next, target);
+        /** Uniquement `next` (ratio lerp = ce qui est peint) — évite CTA visible pendant que `target` a déjà sauté au scroll programmé. */
+        const progress = next;
         let nextCtaVisible;
         if (ctaVisibleRef.current) {
           nextCtaVisible = progress > hideThreshold;
@@ -157,7 +158,8 @@ export function FinTapHeroScrollSection() {
         return nextCtaVisible;
       }
       const ctaThreshold = 0.9995;
-      return next >= ctaThreshold || target >= ctaThreshold;
+      /** Pas de `|| target` : au scroll smooth / `openOnboarding`, `target` peut être à 1 alors que le mockup est encore animé. */
+      return next >= ctaThreshold;
     };
 
     const flushCtaVisible = (nextCtaVisible) => {
