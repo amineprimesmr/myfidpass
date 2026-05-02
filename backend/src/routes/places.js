@@ -1,13 +1,24 @@
 /**
  * Proxy Google Places (autocomplete) pour l'app iOS et le web — clé API côté serveur uniquement.
  * GET /api/places/autocomplete?input=...
+ * Avec `Authorization: Bearer`, les lieux déjà liés au compte (propriétaire) sont retirés des suggestions.
  */
 import { Router } from "express";
+import { optionalAuth } from "../middleware/auth.js";
+import { getOwnedGooglePlaceIdsByUserId } from "../db.js";
 
 const router = Router();
+
+function filterPredictionsExcludeOwnedPlaces(predictions, userId) {
+  if (!userId || !Array.isArray(predictions) || predictions.length === 0) return predictions;
+  const owned = getOwnedGooglePlaceIdsByUserId(userId);
+  if (!owned.length) return predictions;
+  const skip = new Set(owned);
+  return predictions.filter((p) => !skip.has(String(p.place_id || "").trim()));
+}
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
 
-router.get("/autocomplete", async (req, res) => {
+router.get("/autocomplete", optionalAuth, async (req, res) => {
   const input = String(req.query.input || "").trim();
   if (input.length < 2) {
     return res.status(400).json({ error: "Saisissez au moins 2 caractères" });
@@ -28,14 +39,18 @@ router.get("/autocomplete", async (req, res) => {
       if (dd.status === "OK" && dd.result) {
         const name = dd.result.name || "";
         const addr = dd.result.formatted_address || "";
-        return res.json({
-          predictions: [{
-            place_id: input,
-            description: addr ? `${name}, ${addr}` : name,
-            main_text: name,
-            secondary_text: addr,
-          }],
-        });
+        const single = filterPredictionsExcludeOwnedPlaces(
+          [
+            {
+              place_id: input,
+              description: addr ? `${name}, ${addr}` : name,
+              main_text: name,
+              secondary_text: addr,
+            },
+          ],
+          req.user?.id,
+        );
+        return res.json({ predictions: single });
       }
     }
 
@@ -54,16 +69,19 @@ router.get("/autocomplete", async (req, res) => {
     if (data.status === "REQUEST_DENIED" || data.status === "OVER_QUERY_LIMIT") {
       return res.status(503).json({ error: "Service de recherche temporairement indisponible", code: data.status });
     }
-    const predictions = (data.results || []).slice(0, 10).map((p) => {
-      const name = p.name || "";
-      const addr = p.formatted_address || "";
-      return {
-        place_id: p.place_id,
-        description: addr ? `${name}, ${addr}` : name,
-        main_text: name,
-        secondary_text: addr,
-      };
-    });
+    const predictions = filterPredictionsExcludeOwnedPlaces(
+      (data.results || []).slice(0, 10).map((p) => {
+        const name = p.name || "";
+        const addr = p.formatted_address || "";
+        return {
+          place_id: p.place_id,
+          description: addr ? `${name}, ${addr}` : name,
+          main_text: name,
+          secondary_text: addr,
+        };
+      }),
+      req.user?.id,
+    );
     return res.json({ predictions });
   } catch (err) {
     console.error("[places/autocomplete]", err);

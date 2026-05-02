@@ -5,7 +5,7 @@ import {
   getPageScrollY,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
-import { API_BASE, setPendingEstablishment } from "../config.js";
+import { API_BASE, getAuthToken, setPendingEstablishment } from "../config.js";
 import "./fintap-hero-scroll.css";
 
 const HERO_IPHONE_IMG = "/assets/iphone-custom-clean.png";
@@ -260,7 +260,10 @@ export function FinTapHeroScrollSection() {
       if (cancelled) return;
       try {
         const url = `${API_BASE}/api/places/autocomplete?input=${encodeURIComponent(query)}`;
-        const res = await fetch(url);
+        const headers = {};
+        const t = getAuthToken();
+        if (t) headers.Authorization = `Bearer ${t}`;
+        const res = await fetch(url, { headers });
         if (!res.ok) throw new Error("autocomplete_failed");
         const data = await res.json();
         if (cancelled) return;

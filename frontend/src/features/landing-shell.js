@@ -2,7 +2,7 @@
  * Shell landing : formulaire hero, recherche d'établissement via notre backend, menus drawer.
  * Appelé au chargement pour attacher les listeners (formulaire, menus, recherche).
  */
-import { setPendingEstablishment, API_BASE } from "../config.js";
+import { setPendingEstablishment, API_BASE, getAuthToken } from "../config.js";
 
 function updateLandingCtaState() {
   const input = document.getElementById("landing-etablissement");
@@ -165,7 +165,10 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
   async function fetchPredictions(query) {
     try {
       const url = `${API_BASE}/api/places/autocomplete?input=${encodeURIComponent(query)}`;
-      const r = await fetch(url);
+      const headers = {};
+      const t = getAuthToken();
+      if (t) headers.Authorization = `Bearer ${t}`;
+      const r = await fetch(url, { headers });
       if (!r.ok) return [];
       const data = await r.json();
       return data.predictions || [];
