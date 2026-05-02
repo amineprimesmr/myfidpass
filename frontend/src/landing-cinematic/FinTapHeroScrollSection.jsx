@@ -132,37 +132,67 @@ export function FinTapHeroScrollSection() {
       setPhone3d(phone, style);
     };
 
+    /**
+     * Même logique que la boucle rAF — utilisée aussi après retour onglet / pageshow (bfcache)
+     * pour éviter que le bloc CTA reste en `is-visible` alors que le ratio téléphone ne correspond plus.
+     */
+    const computeNextCtaVisible = (next, target, now) => {
+      if (window.innerWidth >= 1024) {
+        const showThreshold = 0.68;
+        const hideThreshold = 0.24;
+        const progress = Math.max(next, target);
+        let nextCtaVisible;
+        if (ctaVisibleRef.current) {
+          nextCtaVisible = progress > hideThreshold;
+        } else {
+          nextCtaVisible = progress >= showThreshold;
+        }
+        if (nextCtaVisible && !ctaVisibleRef.current) {
+          ctaHoldUntilRef.current = now + 2200;
+        } else if (!nextCtaVisible && ctaVisibleRef.current && now < ctaHoldUntilRef.current) {
+          nextCtaVisible = true;
+        }
+        return nextCtaVisible;
+      }
+      const ctaThreshold = 0.9995;
+      return next >= ctaThreshold || target >= ctaThreshold;
+    };
+
+    const flushCtaVisible = (nextCtaVisible) => {
+      if (nextCtaVisible !== ctaVisibleRef.current) {
+        ctaVisibleRef.current = nextCtaVisible;
+        setCtaVisible(nextCtaVisible);
+      }
+    };
+
+    const resyncHeroFromScroll = () => {
+      run();
+      const target = targetRatioRef.current;
+      currentRatioRef.current = target;
+      lastAppliedRatioRef.current = -1;
+      paint(target);
+      const now = performance.now();
+      flushCtaVisible(computeNextCtaVisible(target, target, now));
+    };
+
+    const scheduleHeroResync = () => {
+      if (document.visibilityState !== "visible") return;
+      requestAnimationFrame(() => {
+        resyncHeroFromScroll();
+        requestAnimationFrame(() => {
+          resyncHeroFromScroll();
+        });
+      });
+    };
+
     const animate = () => {
       run();
       const target = targetRatioRef.current;
       const current = currentRatioRef.current;
       const smoothing = window.innerWidth >= 1024 ? 0.18 : 0.26;
       const next = current + (target - current) * smoothing;
-      let nextCtaVisible;
-      if (window.innerWidth >= 1024) {
-        const showThreshold = 0.68;
-        const hideThreshold = 0.24;
-        const progress = Math.max(next, target);
-        if (ctaVisibleRef.current) {
-          nextCtaVisible = progress > hideThreshold;
-        } else {
-          nextCtaVisible = progress >= showThreshold;
-        }
-        const now = performance.now();
-        if (nextCtaVisible && !ctaVisibleRef.current) {
-          // Laisser le temps de lire le bloc CTA en desktop, même en scroll rapide.
-          ctaHoldUntilRef.current = now + 2200;
-        } else if (!nextCtaVisible && ctaVisibleRef.current && now < ctaHoldUntilRef.current) {
-          nextCtaVisible = true;
-        }
-      } else {
-        const ctaThreshold = 0.9995;
-        nextCtaVisible = next >= ctaThreshold || target >= ctaThreshold;
-      }
-      if (nextCtaVisible !== ctaVisibleRef.current) {
-        ctaVisibleRef.current = nextCtaVisible;
-        setCtaVisible(nextCtaVisible);
-      }
+      const now = performance.now();
+      flushCtaVisible(computeNextCtaVisible(next, target, now));
       if (Math.abs(target - next) < 0.0012) {
         currentRatioRef.current = target;
         paint(target);
@@ -200,19 +230,20 @@ export function FinTapHeroScrollSection() {
     lastInnerWidthRef.current = window.innerWidth;
     window.addEventListener("resize", onResizeWidthOnly, { passive: true });
 
-    /** Après retour d’onglet : rAF ralenti / layout figé → resync ratio téléphone + CTA. */
-    const onBecameVisible = () => {
-      if (document.visibilityState !== "visible") return;
-      requestAnimationFrame(() => {
-        run();
-        const target = targetRatioRef.current;
-        currentRatioRef.current = target;
-        lastAppliedRatioRef.current = -1;
-        paint(target);
-      });
+    /**
+     * Retour onglet, bouton Précédent, bfcache : le rAF est bridé hors page, React peut garder
+     * `ctaVisible` alors que le téléphone n’est plus peint au bon ratio — on resynchronise.
+     */
+    const onPageShow = (e) => {
+      scheduleHeroResync();
+      if (e.persisted) {
+        window.setTimeout(() => {
+          if (document.visibilityState === "visible") resyncHeroFromScroll();
+        }, 0);
+      }
     };
-    document.addEventListener("visibilitychange", onBecameVisible);
-    window.addEventListener("pageshow", onBecameVisible);
+    document.addEventListener("visibilitychange", scheduleHeroResync);
+    window.addEventListener("pageshow", onPageShow);
 
     run();
     loopRef.current = requestAnimationFrame(animate);
@@ -226,8 +257,8 @@ export function FinTapHeroScrollSection() {
       window.removeEventListener("resize", onResizeWidthOnly, {
         passive: true,
       });
-      document.removeEventListener("visibilitychange", onBecameVisible);
-      window.removeEventListener("pageshow", onBecameVisible);
+      document.removeEventListener("visibilitychange", scheduleHeroResync);
+      window.removeEventListener("pageshow", onPageShow);
       if (loopRef.current) cancelAnimationFrame(loopRef.current);
     };
   }, []);

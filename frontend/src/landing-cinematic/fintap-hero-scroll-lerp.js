@@ -59,7 +59,10 @@ export function fintapHeroScrollRatio(
  */
 export function getPageScrollY() {
   if (typeof window === "undefined") return 0;
-  return window.scrollY ?? window.pageYOffset ?? 0;
+  const y = window.scrollY ?? window.pageYOffset;
+  if (typeof y === "number" && Number.isFinite(y)) return y;
+  const el = document.scrollingElement || document.documentElement;
+  return Number(el?.scrollTop) || 0;
 }
 
 /**
