@@ -54,6 +54,7 @@ import { requireAuth, getJwtSecret } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
 import { syncPremiumFromRevenueCatAppUserId } from "../services/revenuecat-subscription-sync.js";
+import { fetchGooglePlaceBusinessEnrichment } from "../lib/google-place-business-enrichment.js";
 
 const router = Router();
 
@@ -81,8 +82,6 @@ const APPLE_BUNDLE_ID = process.env.APPLE_BUNDLE_ID || "com.myfidpass";
 const APPLE_JWT_AUDIENCES = [...new Set([APPLE_CLIENT_ID, APPLE_BUNDLE_ID].filter(Boolean))];
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
 const SALT_ROUNDS = 10;
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || "";
-
 /** Date très lointaine : refresh en base sans expiration « métier » (nettoyage = logout / rotation / admin). */
 const REFRESH_TOKEN_EXPIRES_AT_FAR_FUTURE = "2099-12-31T23:59:59.999Z";
 
@@ -256,41 +255,14 @@ function registerSlugFromName(name) {
 /**
  * Crée le 1er commerce à partir d'un lieu Google (inscription app, comme la sélection Places du site).
  * Enregistre toujours le `place_id` dans `engagement_rewards.google_review` dès qu'il est fourni.
- * L'API Places (détails) enrichit nom / adresse / coordonnées si `GOOGLE_PLACES_API_KEY` est défini ;
+ * L'API Places (détails) enrichit nom / adresse / coordonnées via `fetchGooglePlaceBusinessEnrichment` ;
  * sinon ou si l'appel échoue, le commerce est quand même créé avec le Place ID (pas de ressaisie commerçant).
  */
 async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishmentNameHint) {
   const pid = String(placeId || "").trim();
   if (!pid || !canCreateBusiness(userId)) return;
 
-  const hint = String(establishmentNameHint || "").trim();
-  let name = hint || "Mon établissement";
-  let lat = null;
-  let lng = null;
-  let addr = null;
-
-  if (GOOGLE_PLACES_API_KEY) {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(pid)}&fields=name,formatted_address,geometry&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
-      const r = await fetch(url);
-      const data = await r.json();
-      if (data.status === "OK" && data.result) {
-        const result = data.result;
-        name = (result.name || hint || "Mon établissement").trim() || name;
-        lat = result.geometry?.location?.lat ?? null;
-        lng = result.geometry?.location?.lng ?? null;
-        addr = result.formatted_address?.trim() || null;
-      } else {
-        console.warn("[auth/register] place details:", data?.status || "no result");
-      }
-    } catch (e) {
-      console.error("[auth/register] tryCreateFirstBusinessFromGooglePlace (Places fetch):", e);
-    }
-  } else {
-    console.warn(
-      "[auth/register] GOOGLE_PLACES_API_KEY absent — 1er commerce créé avec Place ID seul (sans géocodage Google côté serveur)."
-    );
-  }
+  const { name, lat, lng, addr } = await fetchGooglePlaceBusinessEnrichment(pid, establishmentNameHint);
 
   try {
     let baseSlug = registerSlugFromName(name);

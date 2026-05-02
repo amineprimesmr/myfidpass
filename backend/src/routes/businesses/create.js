@@ -18,6 +18,7 @@ import {
 import { sendPassKitUpdate } from "../../apns.js";
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
+import { fetchGooglePlaceBusinessEnrichment } from "../../lib/google-place-business-enrichment.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const businessAssetsDir = join(__dirname, "..", "..", "assets", "businesses");
@@ -163,7 +164,7 @@ export function createHandler(req, res) {
   }
 }
 
-export function createFromPlaceHandler(req, res) {
+export async function createFromPlaceHandler(req, res) {
   const body = req.body || {};
   const establishmentName = String(body.establishment_name || body.establishmentName || "").trim();
   const placeId = String(body.google_place_id || body.googlePlaceId || "").trim();
@@ -181,7 +182,14 @@ export function createFromPlaceHandler(req, res) {
       entitlements,
     });
   }
-  let baseSlug = registerSlugFromName(establishmentName);
+
+  const { name: enrichedName, lat, lng, addr } = await fetchGooglePlaceBusinessEnrichment(
+    placeId,
+    establishmentName
+  );
+  const displayName = (enrichedName || establishmentName).trim() || establishmentName;
+
+  let baseSlug = registerSlugFromName(displayName);
   let slug = baseSlug;
   let suffix = 0;
   while (getBusinessBySlug(slug)) {
@@ -190,12 +198,15 @@ export function createFromPlaceHandler(req, res) {
   }
   try {
     const business = createBusiness({
-      name: establishmentName,
+      name: displayName,
       slug,
-      organizationName: establishmentName,
+      organizationName: displayName,
       userId: req.user.id,
     });
     updateBusiness(business.id, {
+      location_lat: lat ?? null,
+      location_lng: lng ?? null,
+      location_address: addr,
       engagement_rewards: {
         google_review: {
           enabled: true,
