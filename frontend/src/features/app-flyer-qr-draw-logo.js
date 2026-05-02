@@ -295,7 +295,11 @@ export function drawFlyerCommerceLogo(ctx, logoImg, w, h, s) {
     applyFlyerCommerceLogoBackgroundKnockoutFromImageData(id, tw, th);
     octx.putImageData(id, 0, 0);
     const l = meanRelativeLuminanceOfOpaquePixels(id.data, tw, th);
-    if (l != null && l > FLYER_LOGO_LIGHT_LUMA_THRESHOLD) {
+    // Pastille de contraste : utile pour un logo **photo opaque** sur fond clair (`flyerLogoKeepSourceBackground: true`).
+    // Si `false` (détourage app / PNG transparent), ne pas dessiner de plaque : `flyerLogoContrastPlateStyle` reprend
+    // `colorBgTop` / `colorBgBottom` — avec un dégradé noir (réglage utilisateur) on obtenait un **carré noir** derrière le logo.
+    const keepSourceBg = s?.flyerLogoKeepSourceBackground === true;
+    if (keepSourceBg && l != null && l > FLYER_LOGO_LIGHT_LUMA_THRESHOLD) {
       const m = Math.min(tw, th) * 0.04;
       const rad = Math.min(tw, th) * 0.1;
       octx.clearRect(0, 0, tw, th);
