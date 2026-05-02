@@ -49,13 +49,20 @@ function pickEntitlement(subscriber) {
 }
 
 function resolveAllowedBusinessesFromRevenueCat(ent) {
-  const configured = Number(process.env.REVENUECAT_ALLOWED_BUSINESSES_DEFAULT || 2);
-  const fallback = Number.isFinite(configured) && configured >= 1 ? Math.floor(configured) : 2;
+  const configured = Number(process.env.REVENUECAT_ALLOWED_BUSINESSES_DEFAULT || 1);
+  const fallback = Number.isFinite(configured) && configured >= 1 ? Math.floor(configured) : 1;
   const productId = String(ent?.product_identifier || "")
     .trim()
     .toLowerCase();
   if (!productId) return fallback;
   if (productId.includes("unlimited") || productId.includes("illim")) return 999;
+  // App Store Connect — groupe MyFidpass Pro (mensuel 1 commerce + paliers 2–5).
+  if (productId === "mfpmensuel" || productId === "mfpannuel") return 1;
+  const slotsSeg = productId.match(/\.slots(\d+)\./);
+  if (slotsSeg && slotsSeg[1]) {
+    const n = Math.floor(Number(slotsSeg[1]));
+    if (Number.isFinite(n) && n >= 1) return Math.min(5, n);
+  }
   const m =
     productId.match(/(\d+)\s*business/) ||
     productId.match(/business[_-]?(\d+)/) ||
