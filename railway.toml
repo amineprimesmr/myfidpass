@@ -3,7 +3,7 @@
 
 [build]
 builder = "nixpacks"
-buildCommand = "cd backend && npm install"
+buildCommand = "cd backend && npm install && PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --user \"rembg[cli]\""
 
 [deploy]
 startCommand = "cd backend && node src/index.js"

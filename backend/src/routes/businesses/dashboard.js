@@ -80,7 +80,7 @@ import { removeLogoBackgroundWithRemoveBg } from "../../services/flyer-logo-remo
 
 const router = Router({ mergeParams: true });
 
-/** `data:image/(png|jpeg|…);base64,…` → Buffer — pour détourage logo (remove.bg). */
+/** `data:image/(png|jpeg|…);base64,…` → Buffer — pour détourage logo (rembg CLI ; secours remove.bg si clé). */
 function bufferFromImageDataUrl(s) {
   if (typeof s !== "string") return null;
   const t = s.trim();
@@ -893,7 +893,7 @@ router.put("/flyer", (req, res) => {
 });
 
 /**
- * Détourage fond logo (remove.bg côté serveur, clé `REMOVEBG_API_KEY`).
+ * Détourage fond logo : **rembg** (danielgatis/rembg) en priorité ; secours **remove.bg** si `REMOVEBG_API_KEY` est défini.
  * Body : `{ "image_data_url": "data:image/jpeg;base64,..." }`
  * Réponse 200 : `{ ok: true, png_data_url: "data:image/png;base64,..." }` ou `{ ok: false, code, message? }`
  */

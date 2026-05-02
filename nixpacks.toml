@@ -4,6 +4,7 @@
 NIXPACKS_NODE_VERSION = "22"
 
 # Outils nécessaires pour compiler better-sqlite3 (node-gyp) sur Railway
+# python3 : pip install rembg[cli] au build (détourage logo flyer, voir railway.toml).
 # "..." = garder les paquets par défaut (Node.js) et ajouter les suivants
 [phases.setup]
 nixPkgs = ["...", "python3", "gcc", "gnumake"]
