@@ -1,23 +1,18 @@
 /**
- * Détourage logo flyer via **rembg** (https://github.com/danielgatis/rembg) — CLI installée au build (pip).
- * Repli optionnel remove.bg si `REMOVEBG_API_KEY` est défini et que rembg échoue (migration / secours).
+ * Détourage logo flyer — @imgly/background-removal-node (ONNX ISNET, gratuit, 100 % Node.js).
+ * Aucune dépendance Python, aucun appel API payant.
+ * Repli optionnel remove.bg uniquement si REMOVEBG_API_KEY est défini (secours).
  */
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { homedir, tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
-
-/** `backend/` (ne pas dépendre de `process.cwd()` — Railway / scripts peuvent varier). */
-const BACKEND_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const REMBG_VENV_BIN_DIR = join(BACKEND_ROOT, "rembg-venv", "bin");
-const REMBG_VENV_CLI = join(REMBG_VENV_BIN_DIR, "rembg");
-
-const execFileAsync = promisify(execFile);
+import { removeBackground } from "@imgly/background-removal-node";
 
 const REMOVE_BG_URL = "https://api.remove.bg/v1.0/removebg";
+
+/** isnet_quant (~12 MB) : bon compromis qualité/vitesse pour Railway (cold-start minimal). */
+const IMGLY_CONFIG = {
+  model: "isnet_quant",
+  output: { format: "image/png", quality: 1.0 },
+};
 
 /**
  * @param {Buffer} input — PNG ou JPEG
@@ -35,9 +30,10 @@ export async function removeLogoBackgroundWithRemoveBg(input) {
     return { ok: false, code: "IMAGE_DECODE_FAILED", message: String(e?.message || e) };
   }
 
-  const rembg = await removeWithRembgCli(pngBuf);
-  if (rembg.ok) return rembg;
+  const imgly = await removeWithImglyNode(pngBuf);
+  if (imgly.ok) return imgly;
 
+  // Repli remove.bg (uniquement si clé configurée)
   const key = (process.env.REMOVEBG_API_KEY || "").trim();
   if (key.length >= 8) {
     const fallback = await removeWithRemoveBgApi(pngBuf);
@@ -45,86 +41,33 @@ export async function removeLogoBackgroundWithRemoveBg(input) {
     return {
       ok: false,
       code: "LOGO_BACKGROUND_REMOVAL_FAILED",
-      message: [`rembg: ${rembg.message || rembg.code}`, `remove.bg: ${fallback.message || fallback.code}`]
+      message: [`imgly: ${imgly.message || imgly.code}`, `remove.bg: ${fallback.message || fallback.code}`]
         .join(" — ")
         .slice(0, 900),
     };
   }
 
-  return rembg;
+  return imgly;
 }
 
 /**
  * @param {Buffer} pngBuf — PNG déjà normalisé par sharp
  */
-async function removeWithRembgCli(pngBuf) {
-  const rembgPath = await resolveRembgExecutable();
-  if (!rembgPath) {
-    return {
-      ok: false,
-      code: "REMBG_NOT_INSTALLED",
-      message:
-        "CLI rembg introuvable. Build : `backend/rembg-venv` + `pip install rembg[cli]` (voir railway.toml). Vérifier que le venv est sous `backend/` si Root Directory Railway = `backend`.",
-    };
-  }
-
-  const pathEnv = [REMBG_VENV_BIN_DIR, join(homedir(), ".local", "bin"), "/usr/local/bin", process.env.PATH || ""].filter(Boolean).join(":");
-  const env = { ...process.env, PATH: pathEnv };
-
-  let workDir;
+async function removeWithImglyNode(pngBuf) {
   try {
-    workDir = await mkdtemp(join(tmpdir(), "flyer-rembg-"));
-    const inPath = join(workDir, "in.png");
-    const outPath = join(workDir, "out.png");
-    await writeFile(inPath, pngBuf);
-
-    await execFileAsync(rembgPath, ["i", inPath, outPath], {
-      env,
-      maxBuffer: 50 * 1024 * 1024,
-      timeout: 180_000,
-    });
-
-    const out = await readFile(outPath);
+    const blob = await removeBackground(pngBuf, IMGLY_CONFIG);
+    const out = Buffer.from(await blob.arrayBuffer());
     if (!out || out.length < 32) {
-      return { ok: false, code: "REMBG_EMPTY_OUTPUT", message: "Sortie rembg trop courte." };
+      return { ok: false, code: "IMGLY_EMPTY_OUTPUT", message: "Sortie vide." };
     }
     return { ok: true, png: out };
   } catch (e) {
-    const stderr = e?.stderr ? String(e.stderr) : "";
-    const stdout = e?.stdout ? String(e.stdout) : "";
-    const msg = [stderr, stdout, e?.message].filter(Boolean).join(" | ").slice(0, 900);
-    return { ok: false, code: "REMBG_CLI_FAILED", message: msg || String(e) };
-  } finally {
-    if (workDir) {
-      await rm(workDir, { recursive: true, force: true }).catch(() => {});
-    }
+    return { ok: false, code: "IMGLY_FAILED", message: String(e?.message || e).slice(0, 900) };
   }
-}
-
-async function resolveRembgExecutable() {
-  const explicit = (process.env.REMBG_COMMAND || "").trim();
-  if (explicit) return explicit;
-
-  const candidates = [REMBG_VENV_CLI, join(homedir(), ".local", "bin", "rembg"), "rembg"];
-  const pathEnv = [REMBG_VENV_BIN_DIR, join(homedir(), ".local", "bin"), "/usr/local/bin", process.env.PATH || ""].filter(Boolean).join(":");
-
-  for (const cmd of candidates) {
-    try {
-      await execFileAsync(cmd, ["--help"], {
-        env: { ...process.env, PATH: pathEnv },
-        timeout: 25_000,
-      });
-      return cmd;
-    } catch {
-      /* essai suivant */
-    }
-  }
-
-  return null;
 }
 
 /**
- * Ancien fournisseur payant — uniquement si `REMOVEBG_API_KEY` est présent (secours).
+ * Ancien fournisseur payant — uniquement si REMOVEBG_API_KEY est présent (secours).
  * @param {Buffer} pngBuf
  */
 async function removeWithRemoveBgApi(pngBuf) {
@@ -142,16 +85,10 @@ async function removeWithRemoveBgApi(pngBuf) {
   });
   if (!res.ok) {
     const t = (await res.text().catch(() => "")).slice(0, 500);
-    return {
-      ok: false,
-      code: "REMOVEBG_HTTP_ERROR",
-      message: `status ${res.status} ${t}`,
-    };
+    return { ok: false, code: "REMOVEBG_HTTP_ERROR", message: `status ${res.status} ${t}` };
   }
   const ab = await res.arrayBuffer();
   const out = Buffer.from(ab);
-  if (out.length < 32) {
-    return { ok: false, code: "REMOVEBG_EMPTY" };
-  }
+  if (out.length < 32) return { ok: false, code: "REMOVEBG_EMPTY" };
   return { ok: true, png: out };
 }
