@@ -6351,17 +6351,53 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   bottom: 0;
   top: auto;
   height: min(92dvh, 980px);
-  z-index: 1600;
+  z-index: 24000;
   background: #f3f4f6;
   border-radius: 24px 24px 0 0;
   border: 1px solid #e5e7eb;
   box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.28);
   transform: translateY(105%);
+  opacity: 0;
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
+.app-settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 23000;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: rgba(15, 23, 42, 0.36);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+.app-settings-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+#app-app.app-settings-sheet-closing .app-settings-backdrop {
+  opacity: 0;
+  pointer-events: none;
+}
+#app-app.app-settings-sheet-open .app-sidebar,
+#app-app.app-settings-sheet-open .app-sidebar-overlay,
+#app-app.app-settings-sheet-open .app-desktop-topbar {
+  z-index: 120 !important;
+}
 #app-app.app-settings-sheet-open #app-dashboard-content > #profil.app-section.app-section-visible {
   transform: translateY(0);
+  opacity: 1;
+  animation: app-settings-sheet-enter 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+#app-app.app-settings-sheet-closing #app-dashboard-content > #profil.app-section.app-section-visible {
+  transform: translateY(105%);
+  opacity: 0;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.22s ease;
 }
 #app-app.app-settings-sheet-open #app-dashboard-content > .app-section.app-section-visible:not(#profil) {
   display: none !important;
@@ -6374,6 +6410,25 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   padding: 1rem 1rem 0.75rem;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
+}
+.app-settings-sheet-head,
+.app-settings-shopify-content {
+  opacity: 0;
+  transform: translateY(8px);
+}
+#app-app.app-settings-sheet-open #profil.app-section.app-section-visible .app-settings-sheet-head,
+#app-app.app-settings-sheet-open #profil.app-section.app-section-visible .app-settings-shopify-content {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.22s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+#app-app.app-settings-sheet-open #profil.app-section.app-section-visible .app-settings-sheet-head {
+  transition-delay: 0.04s;
+}
+#app-app.app-settings-sheet-open #profil.app-section.app-section-visible .app-settings-shopify-content {
+  transition-delay: 0.08s;
 }
 .app-settings-sheet-head .app-section-title {
   font-size: 1.35rem;
@@ -6437,5 +6492,16 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   }
   .app-settings-shopify-nav-link {
     flex: 0 0 auto;
+  }
+}
+
+@keyframes app-settings-sheet-enter {
+  from {
+    transform: translateY(105%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }

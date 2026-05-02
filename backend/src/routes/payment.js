@@ -13,7 +13,13 @@ import {
   incrementFlyerAiGenerationsBonus,
   getSubscriptionByStripeSubscriptionId,
   upsertBusinessSubscription,
+  upsertMerchantEntitlement,
 } from "../db.js";
+import {
+  multiBusinessAnnualTotalCents,
+  multiBusinessMonthlyTotalCents,
+  resolveBusinessSplitAmountCents,
+} from "../lib/merchant-multi-pricing.js";
 import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/stripe-webhook-events.js";
 import { requireAuth } from "../middleware/auth.js";
 import { notifyAdminsPlatformEvent } from "../lib/admin-notify.js";
@@ -45,13 +51,12 @@ function normalizeBusinessSplitInterval(input) {
   return String(input || "month").trim().toLowerCase() === "year" ? "year" : "month";
 }
 
-function resolveBusinessSplitAmountCents(totalBusinesses, businessIndexZeroBased) {
-  const total = Math.max(1, Math.floor(Number(totalBusinesses) || 1));
-  if (total <= 2) {
-    // 89,99 € total pour 2 commerces : on split en 45,00 + 44,99.
-    return businessIndexZeroBased % 2 === 0 ? 4500 : 4499;
-  }
-  return 3499;
+/** @param {Record<string, unknown>} body */
+function parseMerchantSlotCount(body) {
+  const raw = body?.slots ?? body?.business_count ?? body?.merchant_slots;
+  const n = parseInt(String(raw ?? "1"), 10);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(5, Math.floor(n));
 }
 
 function buildStripeSubscriptionTrialConfig() {
@@ -168,9 +173,9 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
  * Réponse : { client_secret, confirm_mode, subscription_id } — `confirm_mode` = "payment" | "setup" (période d'essai Stripe = SetupIntent $0).
  */
 router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
-  if (!stripe || !PRICE_ID_MONTHLY) {
+  if (!stripe) {
     return res.status(503).json({
-      error: "Paiement non configuré (STRIPE_PRICE_ID_MONTHLY ou STRIPE_PRICE_ID_STARTER).",
+      error: "Paiement non configuré",
       code: "stripe_not_configured",
     });
   }
@@ -187,12 +192,23 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
   }
 
   const plan = String(req.body?.plan || "monthly").toLowerCase() === "annual" ? "annual" : "monthly";
-  if (plan === "annual" && !PRICE_ID_ANNUAL) {
+  const slots = parseMerchantSlotCount(req.body);
+  if (slots === 1 && plan === "monthly" && !PRICE_ID_MONTHLY) {
+    return res.status(503).json({
+      error: "Paiement non configuré (STRIPE_PRICE_ID_MONTHLY ou STRIPE_PRICE_ID_STARTER).",
+      code: "stripe_not_configured",
+    });
+  }
+  if (slots === 1 && plan === "annual" && !PRICE_ID_ANNUAL) {
     return res.status(503).json({
       error: "Prix annuel non configuré (STRIPE_PRICE_ID_ANNUAL).",
       code: "stripe_not_configured",
     });
   }
+
+  const planIdForMetadata = slots > 1 ? "pro" : "starter";
+  const billingModeMeta = slots > 1 ? "unified_multi" : "unified_single";
+  const useCatalogPrice = slots === 1;
   const priceId = plan === "annual" ? PRICE_ID_ANNUAL : PRICE_ID_MONTHLY;
 
   try {
@@ -230,10 +246,18 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       }
     }
 
+    const baseMeta = {
+      user_id: userId,
+      plan,
+      plan_id: planIdForMetadata,
+      merchant_slots: String(slots),
+      billing_mode: billingModeMeta,
+    };
+
+    /** @type {import("stripe").Stripe.SubscriptionCreateParams} */
     const subscriptionParams = {
       customer: customerId,
-      items: [{ price: priceId, quantity: 1 }],
-      metadata: { user_id: userId, plan },
+      metadata: baseMeta,
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
       ...buildStripeSubscriptionTrialConfig(),
@@ -243,9 +267,34 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
         "pending_setup_intent",
       ],
     };
-    if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
-      subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
+
+    if (useCatalogPrice) {
+      subscriptionParams.items = [{ price: priceId, quantity: 1 }];
+      if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
+        subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
+      }
+    } else {
+      const unitAmount =
+        plan === "annual" ? multiBusinessAnnualTotalCents(slots) : multiBusinessMonthlyTotalCents(slots);
+      const interval = plan === "annual" ? "year" : "month";
+      subscriptionParams.items = [
+        {
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name:
+                slots > 1
+                  ? `MyFidpass — ${slots} commerces (${plan === "annual" ? "annuel" : "mensuel"})`
+                  : `MyFidpass (${plan === "annual" ? "annuel" : "mensuel"})`,
+            },
+            recurring: { interval },
+            unit_amount: unitAmount,
+          },
+          quantity: 1,
+        },
+      ];
     }
+
     const subscription = await stripe.subscriptions.create(subscriptionParams);
 
     const secretResult = await getClientSecretForEmbeddedSubscription(subscription);
@@ -323,8 +372,8 @@ router.post("/create-business-checkout-session", requireAuth, async (req, res) =
 
   const ordered = [...ownedBusinesses].sort((a, b) => String(a.id).localeCompare(String(b.id)));
   const businessIndex = Math.max(0, ordered.findIndex((b) => b.id === targetBusiness.id));
-  const amountCents = resolveBusinessSplitAmountCents(ownedBusinesses.length, businessIndex);
   const interval = normalizeBusinessSplitInterval(req.body?.interval);
+  const amountCents = resolveBusinessSplitAmountCents(ownedBusinesses.length, businessIndex, interval);
 
   try {
     const existing = getBusinessSubscriptionForUserBusiness(userId, targetBusiness.id);
@@ -717,15 +766,27 @@ async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
     ? new Date(stripeSub.current_period_end * 1000).toISOString()
     : null;
   const status = stripeSub.status || "incomplete";
-  const planId = stripeSub.metadata?.plan_id ? String(stripeSub.metadata.plan_id) : "starter";
+  const planId = stripeSub.metadata?.plan_id ? String(stripeSub.metadata.plan_id).trim() : "starter";
   createOrUpdateSubscription({
     userId,
     stripeCustomerId,
     stripeSubscriptionId: stripeSub.id,
-    planId,
+    planId: planId || "starter",
     status,
     currentPeriodEnd: end,
   });
+
+  const slotsMeta = stripeSub.metadata?.merchant_slots;
+  if (slotsMeta != null && String(slotsMeta).trim() !== "") {
+    const slots = Math.min(5, Math.max(1, parseInt(String(slotsMeta), 10) || 1));
+    upsertMerchantEntitlement({
+      userId,
+      allowedBusinesses: slots,
+      billingProvider: "stripe",
+      status: isStripeSubscriptionStatusPaying(status) ? "active" : "inactive",
+      source: "stripe_unified_subscription",
+    });
+  }
 
   const businessIdRaw = stripeSub.metadata?.business_id ? String(stripeSub.metadata.business_id).trim() : "";
   const billingMode = String(stripeSub.metadata?.billing_mode || "").trim().toLowerCase();

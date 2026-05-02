@@ -771,7 +771,11 @@ function showAppSectionCore(sectionId) {
     }
   });
   const appRootEl = document.getElementById("app-app");
-  appRootEl?.classList.toggle("app-settings-sheet-open", id === "profil");
+  const settingsBackdropEl = document.getElementById("app-settings-backdrop");
+  const settingsOpen = id === "profil";
+  appRootEl?.classList.toggle("app-settings-sheet-open", settingsOpen);
+  settingsBackdropEl?.classList.toggle("hidden", !settingsOpen);
+  settingsBackdropEl?.classList.toggle("is-open", settingsOpen);
   const links = document.querySelectorAll("#app-app .app-sidebar-link[data-section]");
   links.forEach((l) => {
     l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === id);
@@ -814,7 +818,20 @@ function initAppSidebar() {
       appDirtyNav.onAppHashChange();
     });
     window.addEventListener("app-settings-close-request", () => {
-      showAppSection("dashboard");
+      const root = document.getElementById("app-app");
+      if (!root || !root.classList.contains("app-settings-sheet-open")) {
+        showAppSection("dashboard");
+        return;
+      }
+      if (root.classList.contains("app-settings-sheet-closing")) return;
+      root.classList.add("app-settings-sheet-closing");
+      window.setTimeout(() => {
+        root.classList.remove("app-settings-sheet-closing");
+        showAppSection("dashboard");
+      }, 310);
+    });
+    document.getElementById("app-settings-backdrop")?.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("app-settings-close-request"));
     });
   }
   let hashSection = (window.location.hash || "#dashboard").slice(1);
