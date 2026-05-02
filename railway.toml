@@ -3,7 +3,8 @@
 
 [build]
 builder = "nixpacks"
-buildCommand = "cd backend && npm install && curl -fsSL https://bootstrap.pypa.io/get-pip.py | python3 - --user && python3 -m pip install --user \"rembg[cli]\""
+# PEP 668 : le Python Nix refuse `pip install --user` → venv à la racine du repo (hors `backend/`), puis pip dans ce venv.
+buildCommand = "cd backend && npm install && python3 -m venv ../rembg-venv && ../rembg-venv/bin/pip install --upgrade pip && ../rembg-venv/bin/pip install \"rembg[cli]\""
 
 [deploy]
 startCommand = "cd backend && node src/index.js"

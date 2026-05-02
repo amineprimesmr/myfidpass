@@ -5,6 +5,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { homedir, tmpdir } from "node:os";
+import { cwd } from "node:process";
 import { join } from "node:path";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
@@ -57,11 +58,13 @@ async function removeWithRembgCli(pngBuf) {
     return {
       ok: false,
       code: "REMBG_NOT_INSTALLED",
-      message: "CLI rembg introuvable. Build: python3 -m pip install --user \"rembg[cli]\" (voir railway.toml).",
+      message:
+        "CLI rembg introuvable. Build Railway : venv `../rembg-venv` + `pip install rembg[cli]` (voir railway.toml). CWD attendu : dossier `backend/`.",
     };
   }
 
-  const pathEnv = [join(homedir(), ".local", "bin"), "/usr/local/bin", process.env.PATH || ""].filter(Boolean).join(":");
+  const venvBin = join(cwd(), "..", "rembg-venv", "bin");
+  const pathEnv = [venvBin, join(homedir(), ".local", "bin"), "/usr/local/bin", process.env.PATH || ""].filter(Boolean).join(":");
   const env = { ...process.env, PATH: pathEnv };
 
   let workDir;
@@ -98,8 +101,10 @@ async function resolveRembgExecutable() {
   const explicit = (process.env.REMBG_COMMAND || "").trim();
   if (explicit) return explicit;
 
-  const candidates = [join(homedir(), ".local", "bin", "rembg"), "rembg"];
-  const pathEnv = [join(homedir(), ".local", "bin"), "/usr/local/bin", process.env.PATH || ""].filter(Boolean).join(":");
+  const venvRembg = join(cwd(), "..", "rembg-venv", "bin", "rembg");
+  const candidates = [venvRembg, join(homedir(), ".local", "bin", "rembg"), "rembg"];
+  const venvBin = join(cwd(), "..", "rembg-venv", "bin");
+  const pathEnv = [venvBin, join(homedir(), ".local", "bin"), "/usr/local/bin", process.env.PATH || ""].filter(Boolean).join(":");
 
   for (const cmd of candidates) {
     try {
