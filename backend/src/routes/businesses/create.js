@@ -163,6 +163,63 @@ export function createHandler(req, res) {
   }
 }
 
+export function createFromPlaceHandler(req, res) {
+  const body = req.body || {};
+  const establishmentName = String(body.establishment_name || body.establishmentName || "").trim();
+  const placeId = String(body.google_place_id || body.googlePlaceId || "").trim();
+  if (!establishmentName || !placeId) {
+    return res.status(400).json({ error: "Nom et identifiant Google requis.", code: "missing_fields" });
+  }
+  const devBypass =
+    process.env.DEV_BYPASS_PAYMENT === "true" &&
+    req.get("X-Dev-Bypass-Payment") === "1";
+  if (!devBypass && !canCreateBusiness(req.user.id)) {
+    const entitlements = getMerchantBusinessEntitlements(req.user.id);
+    return res.status(403).json({
+      error: "Abonnement requis ou limite de cartes atteinte",
+      code: "business_quota_reached",
+      entitlements,
+    });
+  }
+  let baseSlug = registerSlugFromName(establishmentName);
+  let slug = baseSlug;
+  let suffix = 0;
+  while (getBusinessBySlug(slug)) {
+    suffix += 1;
+    slug = `${baseSlug}-${suffix}`.slice(0, 60);
+  }
+  try {
+    const business = createBusiness({
+      name: establishmentName,
+      slug,
+      organizationName: establishmentName,
+      userId: req.user.id,
+    });
+    updateBusiness(business.id, {
+      engagement_rewards: {
+        google_review: {
+          enabled: true,
+          points: 50,
+          place_id: placeId,
+          require_approval: false,
+          auto_verify_enabled: true,
+        },
+      },
+    });
+    return res.status(201).json({
+      id: business.id,
+      name: business.name,
+      slug: business.slug,
+      organizationName: business.organization_name,
+      dashboardToken: business.dashboard_token,
+      businesses: getBusinessesByUserId(req.user.id),
+    });
+  } catch (e) {
+    console.error("createFromPlace error:", e);
+    return res.status(500).json({ error: "Impossible de créer l'établissement." });
+  }
+}
+
 export function bootstrapFromPlaceHandler(req, res) {
   const body = req.body || {};
   const establishmentName = String(body.establishment_name || body.establishmentName || "").trim();
