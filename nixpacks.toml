@@ -4,8 +4,8 @@
 NIXPACKS_NODE_VERSION = "22"
 
 # Outils nécessaires pour compiler better-sqlite3 (node-gyp) sur Railway
-# python311 : rembg exige Python ≥ 3.11 ; le `python3` Nix seul n’embarque pas `pip` → bootstrap via get-pip (railway.toml).
-# curl : téléchargement get-pip.py au build.
+# Un seul paquet **python3** : n’ajoute pas `python311` en plus — Nix fusionne les chemins et casse sur `bin/idle3` (3.11 vs 3.13).
+# `python3` Nix (≥ 3.11 en pratique) n’a pas `pip` → bootstrap get-pip dans railway.toml. `curl` pour le télécharger.
 # "..." = garder les paquets par défaut (Node.js) et ajouter les suivants
 [phases.setup]
-nixPkgs = ["...", "python3", "python311", "curl", "gcc", "gnumake"]
+nixPkgs = ["...", "python3", "curl", "gcc", "gnumake"]

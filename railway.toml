@@ -3,7 +3,7 @@
 
 [build]
 builder = "nixpacks"
-buildCommand = "cd backend && npm install && command -v python3.11 && curl -fsSL https://bootstrap.pypa.io/get-pip.py | python3.11 - --user && python3.11 -m pip install --user \"rembg[cli]\""
+buildCommand = "cd backend && npm install && curl -fsSL https://bootstrap.pypa.io/get-pip.py | python3 - --user && python3 -m pip install --user \"rembg[cli]\""
 
 [deploy]
 startCommand = "cd backend && node src/index.js"
