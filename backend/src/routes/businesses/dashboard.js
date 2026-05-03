@@ -1435,9 +1435,16 @@ router.post("/suggest-rewards", rewardSuggestLimiter, async (req, res) => {
   const requiredStamps = Number(req.body?.requiredStamps ?? req.body?.required_stamps ?? business?.required_stamps) || 10;
   const welcomeBonusAmount = Number(req.body?.welcomeBonusAmount ?? req.body?.welcome_bonus_amount ?? business?.welcome_bonus_amount) || 10;
 
+  // engagement_rewards pour en extraire le google place_id si disponible
+  const engagementRewardsRaw = (() => {
+    try { return JSON.stringify(getEngagementRewards(business.id)); } catch { return null; }
+  })();
+  const businessCtx = { ...business, engagement_rewards: engagementRewardsRaw };
+
   try {
     const result = await generateRewardSuggestions({
       apiKey,
+      business: businessCtx,
       sector,
       programType,
       loyaltyMode,
@@ -1447,7 +1454,7 @@ router.post("/suggest-rewards", rewardSuggestLimiter, async (req, res) => {
     if (!result.ok) return res.status(503).json({ error: result.error });
     return res.json(result.data);
   } catch (e) {
-    logger.warn({ err: e, sector, programType }, "[suggest-rewards] erreur IA");
+    logger.warn({ err: e, sector, programType, bizId: business?.id }, "[suggest-rewards] erreur IA");
     return res.status(500).json({ error: "Erreur lors de la génération des suggestions." });
   }
 });
