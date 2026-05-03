@@ -77,6 +77,7 @@ import dashboardTeamRouter from "./dashboard-team.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 import { removeLogoBackgroundWithRemoveBg } from "../../services/flyer-logo-remove-bg.js";
+import { setBusinessAssetData } from "../../db/business-assets.js";
 
 const router = Router({ mergeParams: true });
 
@@ -919,7 +920,10 @@ router.post("/flyer/remove-logo-background", async (req, res) => {
       return res.status(200).json({ ok: false, code: r.code, message: r.message });
     }
     const b64 = r.png.toString("base64");
-    return res.json({ ok: true, png_data_url: `data:image/png;base64,${b64}` });
+    const pngDataUrl = `data:image/png;base64,${b64}`;
+    // Persistance : réutilisable dans le modificateur logo de la carte (0 jeton supplémentaire).
+    try { setBusinessAssetData(req.business.id, "logo_nobg", pngDataUrl); } catch (_) {}
+    return res.json({ ok: true, png_data_url: pngDataUrl });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[dashboard] remove-logo-background");
     return res.status(500).json({ error: "Erreur lors du détourage du logo." });

@@ -153,6 +153,21 @@ router.get("/fidelity-page-background", (req, res) => {
   res.send(buf);
 });
 
+router.get("/logo-nobg", (req, res) => {
+  const business = req.business;
+  if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
+  if (!ensureDashboardAccess(req, res, business)) return;
+  const raw = getBusinessAssetData(business.id, "logo_nobg");
+  if (!raw) return res.status(404).send();
+  const base64Data = String(raw).replace(/^data:image\/\w+;base64,/, "");
+  const buf = Buffer.from(base64Data, "base64");
+  if (buf.length === 0) return res.status(404).send();
+  const etagKey = `${business.id}-logo-nobg-${String(raw).length}`;
+  if (setAssetCacheHeaders(res, req, etagKey)) return;
+  res.setHeader("Content-Type", "image/png");
+  res.send(buf);
+});
+
 router.get("/stamp-icon", (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });

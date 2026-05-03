@@ -1484,4 +1484,11 @@ export function runMigrations(db) {
     );
     markMigrationApplied(db, 34, "merchant_business_subscriptions_split_cards");
   }
+
+  // ── v35 : logo sans fond (remove.bg) stocké séparément des assets carte ──
+  const m35 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 35").get();
+  if (!m35) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN asset_logo_nobg_present INTEGER NOT NULL DEFAULT 0"));
+    markMigrationApplied(db, 35, "asset_logo_nobg");
+  }
 }

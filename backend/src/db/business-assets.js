@@ -16,6 +16,8 @@ export const ASSET_KIND_TO_FLAG = {
   notification_icon: "asset_notification_icon_present",
   /** Image de fond page web /fidelity/:slug (jeu QR, etc.) — publique. */
   fidelity_page_background: "asset_fidelity_page_background_present",
+  /** Logo sans fond produit par remove.bg (réutilisé dans le modificateur logo de la carte). */
+  logo_nobg: "asset_logo_nobg_present",
 };
 
 /**
