@@ -7,6 +7,7 @@ import {
   readPointTierInputs,
   writePointTierInputs,
   normalizeBusinessSector,
+  DEFAULT_REWARD_EXAMPLE_TIERS,
 } from "./app-card-rules-point-tiers.js";
 
 function mountTierInputs() {
@@ -31,16 +32,19 @@ describe("app-card-rules-point-tiers", () => {
     expect(normalizeBusinessSector("inconnu")).toBe("");
   });
 
-  it("getDefaultPointTiersBySector fastfood propose 5 paliers", () => {
+  it("getDefaultPointTiersBySector renvoie les exemples fixes (5 paliers)", () => {
     const t = getDefaultPointTiersBySector("fastfood");
     expect(t).toHaveLength(5);
-    expect(t[0].points).toBe(20);
-    expect(t[0].label).toMatch(/boisson/i);
+    expect(t).toEqual(DEFAULT_REWARD_EXAMPLE_TIERS);
+    expect(t[0].points).toBe(0);
+    expect(t[0].label).toBe("Début du jeu");
+    expect(t[1].label).toMatch(/boisson/i);
+    expect(getDefaultPointTiersBySector("inconnu")).toEqual(DEFAULT_REWARD_EXAMPLE_TIERS);
   });
 
-  it("tampons : libellés par défaut fastfood", () => {
-    expect(getDefaultStampMidLabelBySector("fastfood")).toMatch(/boisson/i);
-    expect(getDefaultStampFinalLabelBySector("fastfood")).toMatch(/menu|burger/i);
+  it("tampons : libellés d’exemple fixes", () => {
+    expect(getDefaultStampMidLabelBySector("fastfood")).toBe("Dessert offert");
+    expect(getDefaultStampFinalLabelBySector("cafe")).toBe("Menu offert");
   });
 
   it("tiersFromApiPayload parse un tableau", () => {

@@ -45,10 +45,10 @@ import {
   writePointTierInputs,
   readPointTierInputs,
   arePointTierInputsEmpty,
-  normalizeBusinessSector,
   POINT_TIER_COUNT,
   getDefaultStampMidLabelBySector,
   getDefaultStampFinalLabelBySector,
+  applyDefaultStampRewardFields,
 } from "./app-card-rules-point-tiers.js";
 import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../utils/geocoding.js";
 import { initAppFlyerQr } from "./app-flyer-qr.js";
@@ -2586,11 +2586,19 @@ function initAppDashboard(slug) {
     syncPointsTierExtraRowVisibility();
   });
   syncPointsTierExtraRowVisibility();
+  updatePointsTiersSectorLine();
   document.getElementById("app-points-tiers-reset-sector")?.addEventListener("click", () => {
     writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
     const addBtn = document.getElementById("app-points-tier-add");
     if (addBtn) delete addBtn.dataset.forceVisible;
     syncPointsTierExtraRowVisibility();
+    markAppSectionDirty("personnaliser");
+    updatePersonnaliserPreview();
+    refreshCardRulesChecklist();
+  });
+  document.getElementById("app-stamp-rewards-apply-examples")?.addEventListener("click", () => {
+    applyDefaultStampRewardFields(document);
+    syncStampMidUi();
     markAppSectionDirty("personnaliser");
     updatePersonnaliserPreview();
     refreshCardRulesChecklist();
@@ -2737,25 +2745,20 @@ function initAppDashboard(slug) {
     runEngagementAutoSuggest({ forceFeedback: true });
   });
 
-  const SECTOR_HINT_FR = {
-    fastfood: "restauration rapide",
-    cafe: "café / salon de thé",
-    beauty: "beauté / spa",
-    coiffure: "salon de coiffure",
-    boulangerie: "boulangerie — pâtisserie",
-    boucherie: "boucherie — charcuterie",
-  };
   function updatePointsTiersSectorLine() {
-    const el = document.getElementById("app-points-tiers-sector-line");
-    if (!el) return;
-    const raw = getLastKnownBusinessSector();
-    const key = normalizeBusinessSector(raw);
-    if (key) {
-      el.textContent = `Exemples suggérés pour un commerce de type « ${SECTOR_HINT_FR[key] || key} ».`;
-    } else if (String(raw || "").trim()) {
-      el.textContent = `Secteur enregistré « ${String(raw).trim()} » : si ce n’est pas une catégorie reconnue, nous affichons des libellés génériques.`;
-    } else {
-      el.textContent = "Secteur d’activité inconnu pour ce commerce : exemples génériques (réductions en €).";
+    const line = document.getElementById("app-points-tiers-sector-line");
+    const btn = document.getElementById("app-points-tiers-reset-sector");
+    const text =
+      "Exemples type restauration : Boisson offerte, Dessert offert, Cheese offert, Menu offert. Ajustez les seuils à votre convenance.";
+    if (line) {
+      line.textContent = text;
+      line.classList.remove("hidden");
+      line.setAttribute("aria-hidden", "false");
+    }
+    if (btn) {
+      btn.classList.remove("hidden");
+      btn.setAttribute("aria-hidden", "false");
+      btn.removeAttribute("tabindex");
     }
   }
 
@@ -2854,6 +2857,15 @@ function initAppDashboard(slug) {
       if (drDay) drDay.value = String(data.delivery_receipt_max_per_member_per_day ?? data.deliveryReceiptMaxPerMemberPerDay ?? 4);
       const drMonth = document.getElementById("app-delivery-receipt-max-month");
       if (drMonth) drMonth.value = String(data.delivery_receipt_max_per_member_per_month ?? data.deliveryReceiptMaxPerMemberPerMonth ?? 25);
+      // Bonus d'inscription
+      const welcEnabled = document.getElementById("app-welcome-bonus-enabled");
+      const welcAmount = document.getElementById("app-welcome-bonus-amount");
+      const welcStampsEnabled = document.getElementById("app-welcome-bonus-stamps-enabled");
+      const welcEnabledVal = data.welcome_bonus_enabled ?? data.welcomeBonusEnabled ?? 1;
+      const welcAmountVal = data.welcome_bonus_amount ?? data.welcomeBonusAmount ?? 10;
+      if (welcEnabled) welcEnabled.checked = Number(welcEnabledVal) === 1;
+      if (welcAmount) welcAmount.value = String(welcAmountVal);
+      if (welcStampsEnabled) welcStampsEnabled.checked = Number(welcEnabledVal) === 1;
       setLastKnownBusinessSector(data.sector ?? "");
       updatePointsTiersSectorLine();
       const tiersPayload = data.points_reward_tiers ?? data.pointsRewardTiers;
@@ -3753,6 +3765,18 @@ function initAppDashboard(slug) {
     if (personnaliserStampIconRemoveRequested) body.stampIconBase64 = "";
     else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) {
       body.stampIconBase64 = personnaliserStampIconDataUrl;
+    }
+    // Bonus d'inscription
+    const welcEnabledEl = isStamps
+      ? document.getElementById("app-welcome-bonus-stamps-enabled")
+      : document.getElementById("app-welcome-bonus-enabled");
+    body.welcomeBonusEnabled = welcEnabledEl?.checked ?? true;
+    if (!isStamps) {
+      const welcAmtEl = document.getElementById("app-welcome-bonus-amount");
+      const n = parseInt(welcAmtEl?.value || "10", 10);
+      body.welcomeBonusAmount = Number.isNaN(n) || n < 0 ? 10 : n;
+    } else {
+      body.welcomeBonusAmount = 1;
     }
     const dreN = document.getElementById("app-delivery-receipt-enabled");
     if (dreN) body.deliveryReceiptClaimsEnabled = dreN.checked;

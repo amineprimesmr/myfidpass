@@ -53,7 +53,6 @@ import {
   getFlyerJobStatusForResponse,
 } from "../../lib/flyer-generation-jobs.js";
 import { parseCampaignAutomationInstructionWithAI, normalizeEventTypeToken } from "../../services/campaign-automation-ai.js";
-import { generateRewardSuggestions } from "../../services/reward-suggestions-ai.js";
 import {
   FLYER_AI_FREE_PER_MONTH,
   currentMonthKeyUTC,
@@ -78,7 +77,6 @@ import dashboardTeamRouter from "./dashboard-team.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 import { removeLogoBackgroundWithRemoveBg } from "../../services/flyer-logo-remove-bg.js";
-import { setBusinessAssetData } from "../../db/business-assets.js";
 
 const router = Router({ mergeParams: true });
 
@@ -180,8 +178,6 @@ router.get("/settings", (req, res) => {
         ? Math.round(Number(business.baseline_avg_basket_eur) * 100) / 100
         : undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
-    welcome_bonus_enabled: business.welcome_bonus_enabled != null ? Number(business.welcome_bonus_enabled) : 1,
-    welcome_bonus_amount: business.welcome_bonus_amount != null ? Number(business.welcome_bonus_amount) : 10,
     sector: business.sector ?? undefined,
     logo_url:
       Number(business.asset_logo_present) === 1
@@ -321,8 +317,6 @@ router.patch("/settings", async (req, res) => {
   const points_per_ticket = body.points_per_ticket ?? body.pointsPerTicket;
   const points_min_amount_eur = body.points_min_amount_eur ?? body.pointsMinAmountEur;
   const points_reward_tiers = body.points_reward_tiers ?? body.pointsRewardTiers;
-  const welcome_bonus_enabled = body.welcome_bonus_enabled ?? body.welcomeBonusEnabled;
-  const welcome_bonus_amount = body.welcome_bonus_amount ?? body.welcomeBonusAmount;
   const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const logo_icon_base64 = body.logo_icon_base64 ?? body.logoIconBase64;
@@ -416,15 +410,6 @@ router.patch("/settings", async (req, res) => {
         updates.points_reward_tiers = null;
       }
     }
-  }
-  if (welcome_bonus_enabled !== undefined) {
-    const v = welcome_bonus_enabled;
-    updates.welcome_bonus_enabled =
-      v === true || v === 1 || String(v).toLowerCase() === "true" || String(v) === "1" ? 1 : 0;
-  }
-  if (welcome_bonus_amount !== undefined) {
-    const n = Number(welcome_bonus_amount);
-    updates.welcome_bonus_amount = Number.isInteger(n) && n >= 0 ? n : 10;
   }
   if (sector !== undefined) updates.sector = sector ? String(sector).trim().slice(0, 64) : null;
   if (required_stamps !== undefined) {
@@ -934,10 +919,7 @@ router.post("/flyer/remove-logo-background", async (req, res) => {
       return res.status(200).json({ ok: false, code: r.code, message: r.message });
     }
     const b64 = r.png.toString("base64");
-    const pngDataUrl = `data:image/png;base64,${b64}`;
-    // Persistance : réutilisable dans le modificateur logo de la carte (0 jeton supplémentaire).
-    try { setBusinessAssetData(req.business.id, "logo_nobg", pngDataUrl); } catch (_) {}
-    return res.json({ ok: true, png_data_url: pngDataUrl });
+    return res.json({ ok: true, png_data_url: `data:image/png;base64,${b64}` });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[dashboard] remove-logo-background");
     return res.status(500).json({ error: "Erreur lors du détourage du logo." });
@@ -1411,52 +1393,6 @@ router.get("/transactions", (req, res) => {
     typesCsv: typesCsv || undefined,
   });
   res.json(result);
-});
-
-// ——— Suggestions récompenses IA ———
-
-const rewardSuggestLimiter = rateLimit({
-  windowMs: 60_000,
-  max: 6,
-  keyGenerator: ipKeyGenerator,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-router.post("/suggest-rewards", rewardSuggestLimiter, async (req, res) => {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || String(apiKey).trim().length < 20) {
-    return res.status(503).json({ error: "Suggestions IA non configurées sur ce serveur." });
-  }
-  const business = req.business;
-  const sector = String(req.body?.sector || business?.sector || "").trim().slice(0, 64) || "commerce";
-  const programType = String(req.body?.programType || req.body?.program_type || business?.program_type || "points").toLowerCase();
-  const loyaltyMode = String(req.body?.loyaltyMode || req.body?.loyalty_mode || business?.loyalty_mode || "points_cash").toLowerCase();
-  const requiredStamps = Number(req.body?.requiredStamps ?? req.body?.required_stamps ?? business?.required_stamps) || 10;
-  const welcomeBonusAmount = Number(req.body?.welcomeBonusAmount ?? req.body?.welcome_bonus_amount ?? business?.welcome_bonus_amount) || 10;
-
-  // engagement_rewards pour en extraire le google place_id si disponible
-  const engagementRewardsRaw = (() => {
-    try { return JSON.stringify(getEngagementRewards(business.id)); } catch { return null; }
-  })();
-  const businessCtx = { ...business, engagement_rewards: engagementRewardsRaw };
-
-  try {
-    const result = await generateRewardSuggestions({
-      apiKey,
-      business: businessCtx,
-      sector,
-      programType,
-      loyaltyMode,
-      requiredStamps,
-      welcomeBonusAmount,
-    });
-    if (!result.ok) return res.status(503).json({ error: result.error });
-    return res.json(result.data);
-  } catch (e) {
-    logger.warn({ err: e, sector, programType, bizId: business?.id }, "[suggest-rewards] erreur IA");
-    return res.status(500).json({ error: "Erreur lors de la génération des suggestions." });
-  }
 });
 
 // ——— Evolution ———

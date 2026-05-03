@@ -31,7 +31,6 @@ import {
   getBusinessBySlug,
   canCreateBusiness,
   getMerchantBusinessEntitlements,
-  userOwnsBusinessWithGooglePlaceId,
   createRefreshToken,
   getRefreshToken,
   deleteRefreshToken,
@@ -262,7 +261,6 @@ function registerSlugFromName(name) {
 async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishmentNameHint) {
   const pid = String(placeId || "").trim();
   if (!pid || !canCreateBusiness(userId)) return;
-  if (userOwnsBusinessWithGooglePlaceId(userId, pid)) return;
 
   const { name, lat, lng, addr } = await fetchGooglePlaceBusinessEnrichment(pid, establishmentNameHint);
 

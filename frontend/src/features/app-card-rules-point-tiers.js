@@ -1,4 +1,4 @@
-/** Paliers points simplifiés (4 visibles + 1 optionnel) selon le secteur du commerce. */
+/** Paliers points : exemples fixes + lecture / écriture des champs du formulaire. */
 
 export const POINT_TIER_COUNT = 5;
 
@@ -35,58 +35,53 @@ export function normalizeBusinessSector(raw) {
   return mapped && KNOWN_SECTORS.includes(mapped) ? mapped : "";
 }
 
+/** Exemples visibles dans l’espace pro (points + tampons) — indépendant du secteur. */
+export const DEFAULT_REWARD_EXAMPLE_TIERS = [
+  { points: 0, label: "Début du jeu" },
+  { points: 50, label: "Boisson offerte" },
+  { points: 100, label: "Dessert offert" },
+  { points: 150, label: "Cheese offert" },
+  { points: 200, label: "Menu offert" },
+];
+
+const DEFAULT_STAMP_MID_LABEL = "Dessert offert";
+const DEFAULT_STAMP_FINAL_LABEL = "Menu offert";
+
 /**
- * @param {string} sector
+ * @param {string} [_sector] conservé pour compatibilité d’appel ; ignoré.
  * @returns {{ points: number; label: string }[]}
  */
-export function getDefaultPointTiersBySector(sector) {
-  const key = normalizeBusinessSector(sector) || "default";
-  const presets = {
-    fastfood: [
-      { points: 0, label: "Début du jeu" },
-      { points: 50, label: "Menu enfant ou dessert offert" },
-      { points: 100, label: "Burger / sandwich offert" },
-      { points: 200, label: "Menu complet offert" },
-    ],
-    cafe: [
-      { points: 0, label: "Début du jeu" },
-      { points: 60, label: "Viennoiserie offerte" },
-      { points: 120, label: "Petit-déjeuner offert" },
-      { points: 200, label: "Boisson + pâtisserie offertes" },
-    ],
-    beauty: [
-      { points: 0, label: "Début du jeu" },
-      { points: 100, label: "Soin visage découverte" },
-      { points: 180, label: "Modelage ou soin corps" },
-      { points: 300, label: "Forfait beauté du mois" },
-    ],
-    coiffure: [
-      { points: 0, label: "Début du jeu" },
-      { points: 120, label: "Brushing ou barbe offert" },
-      { points: 200, label: "Coupe enfant offerte" },
-      { points: 350, label: "Coupe + soin" },
-    ],
-    boulangerie: [
-      { points: 0, label: "Début du jeu" },
-      { points: 60, label: "Baguette + pâtisserie" },
-      { points: 120, label: "Gâteau individuel offert" },
-      { points: 200, label: "Plateau brunch" },
-    ],
-    boucherie: [
-      { points: 0, label: "Début du jeu" },
-      { points: 100, label: "Viande hachée ou panés offerts" },
-      { points: 180, label: "Colis découverte" },
-      { points: 300, label: "Grillade pour 2" },
-    ],
-    default: [
-      { points: 0, label: "Début du jeu" },
-      { points: 100, label: "10 € de réduction" },
-      { points: 200, label: "20 € de réduction" },
-      { points: 350, label: "35 € de réduction" },
-    ],
-  };
-  const list = presets[key] || presets.default;
-  return list.map((t) => ({ points: t.points, label: t.label }));
+export function getDefaultPointTiersBySector(_sector) {
+  return DEFAULT_REWARD_EXAMPLE_TIERS.map((t) => ({ points: t.points, label: t.label }));
+}
+
+/**
+ * @param {string} [_sector] conservé pour compatibilité d’appel ; ignoré.
+ * @returns {string}
+ */
+export function getDefaultStampMidLabelBySector(_sector) {
+  return DEFAULT_STAMP_MID_LABEL;
+}
+
+/**
+ * @param {string} [_sector] conservé pour compatibilité d’appel ; ignoré.
+ * @returns {string}
+ */
+export function getDefaultStampFinalLabelBySector(_sector) {
+  return DEFAULT_STAMP_FINAL_LABEL;
+}
+
+/**
+ * Remplit les champs tampons (5e / 10e) avec les exemples fixes et réactive la récompense intermédiaire.
+ * @param {Document} [doc]
+ */
+export function applyDefaultStampRewardFields(doc = document) {
+  const skip = doc.getElementById("app-stamp-skip-mid");
+  const mid = doc.getElementById("app-stamp-reward-mid-label");
+  const fin = doc.getElementById("app-stamp-reward-label");
+  if (skip) skip.checked = false;
+  if (mid) mid.value = DEFAULT_STAMP_MID_LABEL;
+  if (fin) fin.value = DEFAULT_STAMP_FINAL_LABEL;
 }
 
 /**
@@ -163,34 +158,4 @@ export function arePointTierInputsEmpty(doc = document) {
     if (doc.getElementById(`app-points-tier-${i}-label`)?.value?.trim()) return false;
   }
   return true;
-}
-
-/** Tampons (5ᵉ / 10ᵉ) : libellés d’exemple selon secteur. */
-
-export function getDefaultStampMidLabelBySector(sector) {
-  const key = normalizeBusinessSector(sector) || "default";
-  const m = {
-    fastfood: "Boisson offerte",
-    cafe: "Viennoiserie ou café offert",
-    beauty: "Soin découverte offert",
-    coiffure: "Shampoing offert",
-    boulangerie: "Viennoiserie au choix",
-    boucherie: "Saucisse ou chipolata offerte",
-    default: "Petite récompense offerte",
-  };
-  return m[key] || m.default;
-}
-
-export function getDefaultStampFinalLabelBySector(sector) {
-  const key = normalizeBusinessSector(sector) || "default";
-  const m = {
-    fastfood: "Menu ou burger offert",
-    cafe: "Petit-déjeuner complet offert",
-    beauty: "Soin visage offert",
-    coiffure: "Coupe ou barbe offerte",
-    boulangerie: "Gâteau ou tarte offert(e)",
-    boucherie: "Colis viande offert",
-    default: "Récompense principale offerte",
-  };
-  return m[key] || m.default;
 }

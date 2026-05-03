@@ -14,7 +14,6 @@ import {
   getMerchantBusinessEntitlements,
   bumpBusinessPassRefreshTimestamp,
   getPassKitPushTokensForBusiness,
-  userOwnsBusinessWithGooglePlaceId,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
@@ -181,12 +180,6 @@ export async function createFromPlaceHandler(req, res) {
       error: "Abonnement requis ou limite de cartes atteinte",
       code: "business_quota_reached",
       entitlements,
-    });
-  }
-  if (userOwnsBusinessWithGooglePlaceId(req.user.id, placeId)) {
-    return res.status(409).json({
-      error: "Ce commerce est déjà lié à votre compte.",
-      code: "business_place_already_linked",
     });
   }
 

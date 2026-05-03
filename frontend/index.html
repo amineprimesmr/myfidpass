@@ -1132,9 +1132,22 @@
                               <input type="radio" name="app-loyalty-mode" value="points_cash" id="app-loyalty-mode-cash" checked />
                               <input type="radio" name="app-loyalty-mode" value="points_game_tickets" id="app-loyalty-mode-game" />
                             </div>
+                            <div class="app-welcome-bonus-block" id="app-welcome-bonus-points-block">
+                              <div class="app-welcome-bonus-row">
+                                <label class="app-checkbox-label">
+                                  <input type="checkbox" id="app-welcome-bonus-enabled" checked />
+                                  <span><strong>Bonus à l'inscription</strong></span>
+                                </label>
+                              </div>
+                              <div class="app-welcome-bonus-amount-row" id="app-welcome-bonus-amount-row">
+                                <label class="app-label" for="app-welcome-bonus-amount">Points offerts à l'ajout Wallet</label>
+                                <input type="number" id="app-welcome-bonus-amount" class="app-input app-input-number" min="1" max="9999" step="1" value="10" style="width:80px" />
+                              </div>
+                              <p class="app-hint">Crédités automatiquement la 1re fois que le client ajoute la carte sur son iPhone. Recommandé&nbsp;: configurer la 1re récompense au même seuil.</p>
+                            </div>
                             <div class="app-points-tiers-simple">
-                              <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line hidden" aria-hidden="true"></p>
-                              <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector hidden" aria-hidden="true" tabindex="-1">Réappliquer les exemples du secteur</button>
+                              <p id="app-points-tiers-sector-line" class="app-hint app-points-tiers-sector-line"></p>
+                              <button type="button" id="app-points-tiers-reset-sector" class="app-btn app-btn-secondary app-points-tiers-reset-sector">Appliquer les exemples</button>
                               <div class="app-points-tier-row">
                                 <label class="app-label visually-hidden" for="app-points-tier-0-points">Récompense 1</label>
                                 <div class="app-points-tier-fields">
@@ -1186,6 +1199,17 @@
                             </div>
                           </div>
                           <div id="app-rules-stamps" class="app-rules-panel hidden app-rewards-panel">
+                            <div class="app-welcome-bonus-block" id="app-welcome-bonus-stamps-block">
+                              <label class="app-checkbox-label">
+                                <input type="checkbox" id="app-welcome-bonus-stamps-enabled" checked />
+                                <span><strong>Tampon de bienvenue</strong> — 1 tampon offert à l'ajout Wallet</span>
+                              </label>
+                              <p class="app-hint">Le 1er tampon est crédité automatiquement la 1re fois que le client ajoute sa carte sur son iPhone.</p>
+                            </div>
+                            <div class="app-points-tiers-simple app-stamp-rewards-examples">
+                              <p class="app-hint">Exemples : Boisson offerte · Dessert offert · Cheese offert · Menu offert.</p>
+                              <button type="button" id="app-stamp-rewards-apply-examples" class="app-btn app-btn-secondary">Appliquer les exemples</button>
+                            </div>
                             <input type="hidden" id="app-stamp-emoji" value="✅" />
                             <div class="app-stamp-tier-block">
                               <div class="app-stamp-tier-head"><span class="app-stamp-tier-badge">5e tampon</span></div>
