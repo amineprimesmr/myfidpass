@@ -21,6 +21,7 @@ import { scheduleMerchantDashboardSyncForBusiness } from "../lib/merchant-dashbo
 import { scheduleCampaignEventJobsForMember } from "../lib/campaign-event-jobs.js";
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
+import { grantWelcomeBonusIfEligible } from "../db/welcome-bonus.js";
 
 const router = Router();
 
@@ -118,6 +119,18 @@ function handleDeviceRegistration(req, res) {
         const fullBusiness = getBusinessById(member.business_id);
         if (fullBusiness) {
           scheduleCampaignEventJobsForMember({ business: fullBusiness, memberId: serialNumber });
+          // Bonus d'inscription : accordé une seule fois à la première registration Wallet.
+          try {
+            const granted = grantWelcomeBonusIfEligible(fullBusiness, serialNumber);
+            if (granted) {
+              logger.info(
+                { memberId: serialNumber, businessId: member.business_id, granted },
+                "[welcome-bonus] bonus inscription accordé",
+              );
+            }
+          } catch (e) {
+            logger.warn({ err: e }, "[welcome-bonus] erreur bonus inscription (non bloquant)");
+          }
         }
       } catch (e) {
         console.error("[campaign-event-jobs] schedule PassKit failed:", e?.message || String(e));

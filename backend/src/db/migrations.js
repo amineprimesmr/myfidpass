@@ -1491,4 +1491,12 @@ export function runMigrations(db) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN asset_logo_nobg_present INTEGER NOT NULL DEFAULT 0"));
     markMigrationApplied(db, 35, "asset_logo_nobg");
   }
+
+  // ── v36 : bonus d'inscription (points ou tampon à l'ajout Wallet) ──
+  const m36 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 36").get();
+  if (!m36) {
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN welcome_bonus_enabled INTEGER NOT NULL DEFAULT 1"));
+    safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN welcome_bonus_amount INTEGER NOT NULL DEFAULT 10"));
+    markMigrationApplied(db, 36, "welcome_bonus");
+  }
 }

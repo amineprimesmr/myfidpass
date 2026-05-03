@@ -179,6 +179,8 @@ router.get("/settings", (req, res) => {
         ? Math.round(Number(business.baseline_avg_basket_eur) * 100) / 100
         : undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
+    welcome_bonus_enabled: business.welcome_bonus_enabled != null ? Number(business.welcome_bonus_enabled) : 1,
+    welcome_bonus_amount: business.welcome_bonus_amount != null ? Number(business.welcome_bonus_amount) : 10,
     sector: business.sector ?? undefined,
     logo_url:
       Number(business.asset_logo_present) === 1
@@ -318,6 +320,8 @@ router.patch("/settings", async (req, res) => {
   const points_per_ticket = body.points_per_ticket ?? body.pointsPerTicket;
   const points_min_amount_eur = body.points_min_amount_eur ?? body.pointsMinAmountEur;
   const points_reward_tiers = body.points_reward_tiers ?? body.pointsRewardTiers;
+  const welcome_bonus_enabled = body.welcome_bonus_enabled ?? body.welcomeBonusEnabled;
+  const welcome_bonus_amount = body.welcome_bonus_amount ?? body.welcomeBonusAmount;
   const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const logo_icon_base64 = body.logo_icon_base64 ?? body.logoIconBase64;
@@ -411,6 +415,15 @@ router.patch("/settings", async (req, res) => {
         updates.points_reward_tiers = null;
       }
     }
+  }
+  if (welcome_bonus_enabled !== undefined) {
+    const v = welcome_bonus_enabled;
+    updates.welcome_bonus_enabled =
+      v === true || v === 1 || String(v).toLowerCase() === "true" || String(v) === "1" ? 1 : 0;
+  }
+  if (welcome_bonus_amount !== undefined) {
+    const n = Number(welcome_bonus_amount);
+    updates.welcome_bonus_amount = Number.isInteger(n) && n >= 0 ? n : 10;
   }
   if (sector !== undefined) updates.sector = sector ? String(sector).trim().slice(0, 64) : null;
   if (required_stamps !== undefined) {
