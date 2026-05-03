@@ -76,7 +76,11 @@ export async function compressFileToFlyerLogoDataUrl(file) {
 }
 
 /**
- * @param {{ onCustomLogoChange: () => void; storageKey?: string }} opts
+ * @param {{
+ *   onCustomLogoChange: () => void;
+ *   storageKey?: string;
+ *   removeBgApi?: (dataUrl: string) => Promise<string | null>;
+ * }} opts
  */
 export function initFlyerLogoControl(opts) {
   const root = document.getElementById("app-flyer-logo-panel");
@@ -124,10 +128,30 @@ export function initFlyerLogoControl(opts) {
     void (async () => {
       try {
         const dataUrl = await compressFileToFlyerLogoDataUrl(f);
+        // Affichage immédiat du logo brut pendant le détourage
         setStoredFlyerCustomLogoDataUrl(dataUrl, opts.storageKey);
-        setStatus("");
         syncPreview();
         opts.onCustomLogoChange();
+
+        if (opts.removeBgApi) {
+          setStatus("✨ Suppression du fond en cours…");
+          try {
+            const stripped = await opts.removeBgApi(dataUrl);
+            if (stripped && stripped.startsWith("data:image/")) {
+              setStoredFlyerCustomLogoDataUrl(stripped, opts.storageKey);
+              syncPreview();
+              opts.onCustomLogoChange();
+              setStatus("✅ Fond supprimé automatiquement");
+              setTimeout(() => setStatus(""), 2800);
+            } else {
+              setStatus("");
+            }
+          } catch (_) {
+            setStatus("");
+          }
+        } else {
+          setStatus("");
+        }
       } catch (e) {
         const m = e instanceof Error ? e.message : "Import impossible.";
         setStatus(m);

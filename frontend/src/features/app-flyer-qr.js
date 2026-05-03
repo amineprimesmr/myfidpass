@@ -377,6 +377,22 @@ export function initAppFlyerQr(slug, opts) {
       schedulePaint();
       scheduleRemoteSave();
     },
+    removeBgApi: opts.dashboardApi
+      ? async (dataUrl) => {
+          try {
+            const res = await opts.dashboardApi("/dashboard/flyer/remove-logo-background", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ image_data_url: dataUrl }),
+            });
+            if (!res.ok) return null;
+            const json = await res.json();
+            return json?.ok && json.png_data_url ? json.png_data_url : null;
+          } catch (_) {
+            return null;
+          }
+        }
+      : undefined,
   });
 
   async function paint() {
