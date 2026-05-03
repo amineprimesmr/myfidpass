@@ -34,7 +34,6 @@
     "nodemailer": "^8.0.2",
     "passkit-generator": "^3.5.7",
     "pngjs": "^7.0.0",
-    "@imgly/background-removal-node": "^1.4.5",
     "sharp": "^0.34.5",
     "stripe": "^20.4.0",
     "web-push": "^3.6.7"
