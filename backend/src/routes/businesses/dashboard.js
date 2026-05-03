@@ -53,6 +53,7 @@ import {
   getFlyerJobStatusForResponse,
 } from "../../lib/flyer-generation-jobs.js";
 import { parseCampaignAutomationInstructionWithAI, normalizeEventTypeToken } from "../../services/campaign-automation-ai.js";
+import { generateRewardSuggestions } from "../../services/reward-suggestions-ai.js";
 import {
   FLYER_AI_FREE_PER_MONTH,
   currentMonthKeyUTC,
@@ -1410,6 +1411,45 @@ router.get("/transactions", (req, res) => {
     typesCsv: typesCsv || undefined,
   });
   res.json(result);
+});
+
+// ——— Suggestions récompenses IA ———
+
+const rewardSuggestLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 6,
+  keyGenerator: ipKeyGenerator,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post("/suggest-rewards", rewardSuggestLimiter, async (req, res) => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || String(apiKey).trim().length < 20) {
+    return res.status(503).json({ error: "Suggestions IA non configurées sur ce serveur." });
+  }
+  const business = req.business;
+  const sector = String(req.body?.sector || business?.sector || "").trim().slice(0, 64) || "commerce";
+  const programType = String(req.body?.programType || req.body?.program_type || business?.program_type || "points").toLowerCase();
+  const loyaltyMode = String(req.body?.loyaltyMode || req.body?.loyalty_mode || business?.loyalty_mode || "points_cash").toLowerCase();
+  const requiredStamps = Number(req.body?.requiredStamps ?? req.body?.required_stamps ?? business?.required_stamps) || 10;
+  const welcomeBonusAmount = Number(req.body?.welcomeBonusAmount ?? req.body?.welcome_bonus_amount ?? business?.welcome_bonus_amount) || 10;
+
+  try {
+    const result = await generateRewardSuggestions({
+      apiKey,
+      sector,
+      programType,
+      loyaltyMode,
+      requiredStamps,
+      welcomeBonusAmount,
+    });
+    if (!result.ok) return res.status(503).json({ error: result.error });
+    return res.json(result.data);
+  } catch (e) {
+    logger.warn({ err: e, sector, programType }, "[suggest-rewards] erreur IA");
+    return res.status(500).json({ error: "Erreur lors de la génération des suggestions." });
+  }
 });
 
 // ——— Evolution ———
