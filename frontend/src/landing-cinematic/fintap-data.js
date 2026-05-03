@@ -1,123 +1,130 @@
-/** Contenu et structure (réf. fintap.framer.website). */
+/** Contenu marketing Myfidpass (fidélité / Wallet) — français. */
 export const FINTAP = {
   nav: {
-    brand: "FinTap",
-    ctaTemplate: "Get the template",
-    ctaApp: "Download FinTap",
+    brand: "Myfidpass",
+    ctaTemplate: "Voir les tarifs",
+    ctaApp: "Espace commerçant",
   },
   featureBlocks: [
     {
       id: "analytics",
       phone: "chart",
-      kicker: "Analytics",
-      title: "Keep track of all your",
-      titleEm: "incomes and outcomes.",
-      body: "Real-time insights across accounts so you always know what moves your balance.",
+      kicker: "Pilotage",
+      title: "Suivez visites, points et récompenses",
+      titleEm: "dans un tableau de bord en direct.",
+      body: "Visualisez les utilisations, vos campagnes et l’activité des membres pour savoir ce qui ramène vos clients.",
     },
     {
       id: "finance",
       phone: "cards",
-      kicker: "All your finance",
-      title: "Build all your financial future",
-      titleEm: "in one place",
-      body: "Investments, savings, cards and daily spend—connected in one clear overview.",
+      kicker: "Apple & Google Wallet",
+      title: "Une carte que vos clients gardent",
+      titleEm: "dans le téléphone.",
+      body: "Passes à votre image pour Apple Wallet et Google Wallet — sans plastique, sans appli à installer pour vos invités.",
     },
     {
       id: "actions",
       phone: "ai",
-      kicker: "Quick actions",
-      title: "Our AI will analyze your transactions and",
-      titleEm: "sort out most frequent ones for you.",
-      body: "Smart suggestions for payments, top-ups, and the routines you use every day.",
+      kicker: "Engagement",
+      title: "Récompensez les avis Google, les réseaux,",
+      titleEm: "et bien plus depuis un seul endroit.",
+      body: "Configurez missions, points et tampons. Envoyez des notifications push quand vous lancez une promo ou changez l’offre.",
     },
     {
       id: "subscriptions",
       phone: "subs",
-      kicker: "Subscriptions",
-      title: "Your subscription management",
-      titleEm: "in your hands.",
-      body: "One hub to see renewals, cancel, or switch plans before they charge you.",
+      kicker: "Offres qui évoluent",
+      title: "Commencez petit, ajoutez des adresses",
+      titleEm: "quand vous grandissez.",
+      body: "Tarifs adaptés aux indépendants et petites enseignes — passez au niveau supérieur quand vous avez besoin de plus de cartes ou d’automatisation.",
     },
   ],
   testimonials: [
     {
-      name: "Ravshan Ismoilov",
-      role: "Engineer",
-      quote: "FinTap is efficient, user-friendly, and secure - exactly what we need for streamlined and safe transactions. A must-have in our toolkit!",
+      name: "Camille R.",
+      role: "Café, Lyon",
+      quote:
+        "Les clients présentent le téléphone en caisse — plus de cartes oubliées. La mission avis Google a dépassé tout ce qu’on imaginait.",
     },
     {
-      name: "Xayrulla Hamidov",
-      role: "Sports commentator",
-      quote: "FinTap combines speed and simplicity, making financial management as smooth and efficient as a pro sports move. A true fintech winner",
+      name: "Jordan M.",
+      role: "Salon de coiffure",
+      quote:
+        "Mise en ligne en une après-midi. Le pass Wallet est soigné et les clientes utilisent enfin la carte tampons.",
     },
     {
-      name: "Lehman Cozy",
-      role: "Artist",
-      quote: "FinTap simplifies my financial transactions as an artist, letting me focus more on creativity. Fast, easy, and reliable!",
+      name: "Amina K.",
+      role: "Restauration rapide",
+      quote:
+        "Stats multi-sites au même endroit. Le support a répondu vite quand on a ajusté les paliers avant l’ouverture.",
     },
     {
-      name: "Jack Grealish",
-      role: "Butcher",
-      quote: "FinTap makes managing payments a breeze in my butcher shop. Quick, efficient, and hassle-free - exactly what I need!",
+      name: "Thomas B.",
+      role: "Boulangerie",
+      quote:
+        "Les rappels push pour les jours double points, c’est or. Les semaines calmes, c’est fini — on voit l’effet le jour même.",
     },
     {
-      name: "Eddie Howe",
-      role: "Microbiologist",
-      quote: "FinTap streamlines my financial tasks, allowing me to devote more time to research. It's quick, simple, and dependable.",
+      name: "Léa D.",
+      role: "Boutique",
+      quote:
+        "Pas de matériel imposé. L’équipe scanne depuis une tablette et les habitués adorent l’expérience Apple Wallet.",
     },
     {
-      name: "Elizabeth Harmon",
-      role: "Teacher",
-      quote: "FinTap has been a fantastic tool for managing my finances as a teacher. It's quick, user-friendly, and super reliable - a real time-saver!",
+      name: "Nicolas P.",
+      role: "Salle de sport",
+      quote:
+        "Les entrées sont plus fluides et on a enfin des données claires sur qui est actif ou inactif.",
     },
     {
-      name: "Philipp Foden",
-      role: "Architect",
-      quote: "FinTap efficiently handles my financial transactions, allowing me to focus more on designing. It's quick, user-friendly, and reliable.",
+      name: "Sarah L.",
+      role: "Spa",
+      quote:
+        "Le parcours flyer QR a amené des nouveaux qui sont devenus membres — la mise en place était simple.",
     },
     {
-      name: "Taylor Swift",
-      role: "Singer",
-      quote: "FinTap streamlines my financial transactions effortlessly as a singer, making payments quick and simple so I can focus on my music.",
+      name: "Mehdi H.",
+      role: "Restaurant",
+      quote:
+        "On a remplacé un programme plastique galère en un week-end. Les clients comprennent tout de suite.",
     },
     {
-      name: "Ilkay Gündogan",
-      role: "Painter",
-      quote: "FinTap simplifies transactions for me as a painter, allowing more time to focus on my art. It's efficient, easy to use, and very reliable.",
+      name: "Clara V.",
+      role: "Librairie",
+      quote:
+        "La fidélité fait enfin moderne. Moins d’explications en caisse sur les règles.",
     },
     {
-      name: "Fatima Usman",
-      role: "3D Artist",
-      quote: "As a 3D artist, where precision and detail are key, FinTap stands out for its streamlined and efficient approach to finance.",
+      name: "Julien F.",
+      role: "Barbier",
+      quote:
+        "Tampons + coupe gratuite — simple pour les clients, facile pour nous à suivre.",
     },
     {
-      name: "Cody Gakpo",
-      role: "Sportsman",
-      quote: "FinTap offers a hassle-free way for me as a sportsman to manage payments and transfers. It's fast, efficient, and keeps up with my active lifestyle.",
+      name: "Emma W.",
+      role: "Fleuriste",
+      quote:
+        "Campagne fête des mères avec palier bonus sans toucher au code — un vrai soulagement.",
     },
     {
-      name: "Alexandra McLean",
-      role: "Chef",
-      quote: "FinTap makes handling payments in my busy kitchen as a chef straightforward and quick. It's efficient and user-friendly, exactly what I need!",
-    },
-    {
-      name: "Linus Torvalds",
-      role: "Software Engineer",
-      quote: "FinTap streamlines financial transactions effortlessly, a real asset for a busy software engineer like me.",
+      name: "David C.",
+      role: "Caviste",
+      quote:
+        "Google Wallet et Apple Wallet : nos clients plus âgés comme les touristes sont couverts.",
     },
   ],
   security: {
-    line1: "Comprehensive security",
-    line2: "of anti-fraud",
-    lead: "An extensive security system has been implemented for privacy of your money.",
+    line1: "Sécurité pensée dès la conception",
+    line2: "pour les données clients",
+    lead: "Chiffrement des échanges, droits d’accès par rôle pour l’équipe, et choix d’infrastructure alignés avec les exigences des plateformes Wallet.",
   },
   ctaBand: {
-    title: "See what you'll discover",
-    subtitle: "Scan the QR to download FinTap today on iOS and Android",
+    title: "Prêt à lancer votre carte ?",
+    subtitle: "Créez votre pass, choisissez vos récompenses et invitez vos premiers membres dès aujourd’hui.",
     bullets: [
-      "Low percent commission for transfers",
-      "Buy now, pay later. Make purchases now and pay in small, easy parts later. Great for big buys, making them easy to afford without paying all at once.",
-      "Designed for wise control of your money.",
+      "Passes Apple Wallet & Google Wallet à votre image",
+      "Flyers QR et parcours en magasin pour embarquer vos clients en quelques secondes",
+      "Une équipe humaine quand vous avez besoin d’un coup de main pour la config ou les campagnes",
     ],
   },
 };

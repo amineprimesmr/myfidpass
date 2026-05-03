@@ -23,7 +23,7 @@ export function FinTapSecurityCtaSection() {
             <ScrollReveal className="fintap-cta-qr">
               <p className="fintap-kicker">{c.title}</p>
               <p className="fintap-cta-sub">{c.subtitle}</p>
-              <div className="fintap-qr" role="img" aria-label="QR code placeholder" />
+              <div className="fintap-qr" role="img" aria-label="Zone code QR" />
             </ScrollReveal>
             <ScrollReveal className="fintap-cta-bullets" delay={0.1}>
               <ul className="fintap-cta-list">

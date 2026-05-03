@@ -214,6 +214,16 @@ const authLimiter = rateLimit({
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 app.use("/api/auth/check-email", authLimiter);
+/** Même logique que check-email mais route utilisée par l’app iOS — plafond plus large pour éviter les faux « pas de compte » au flux e-mail (10/15 min sur login suffit). */
+const authCheckIdentifierLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === "test" ? 1000 : 90,
+  message: { error: "Trop de vérifications. Réessayez dans 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { forwardedHeader: false },
+});
+app.use("/api/auth/check-identifier", authCheckIdentifierLimiter);
 app.use("/api/auth/phone/send-code", authLimiter);
 app.use("/api/auth/phone/verify", authLimiter);
 
