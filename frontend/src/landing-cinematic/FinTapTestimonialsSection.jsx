@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FINTAP } from "./fintap-data.js";
+import { scrollProgressThroughSection } from "./fintap-testimonials-scroll.js";
 import "./fintap-testimonials-marquee.css";
 
 const KICKER_ICON = "/assets/fintap-testimonials-kicker.png";
@@ -12,21 +13,6 @@ const AVATAR_BACKGROUNDS = [
   "linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 45%, #c084fc 100%)",
   "linear-gradient(135deg, #bae6fd 0%, #7dd3fc 45%, #38bdf8 100%)",
 ];
-
-/**
- * @param {HTMLElement | null} el
- * @returns {number} 0–1 progression du scroll à travers la section
- */
-function scrollProgressThroughSection(el) {
-  if (!el) return 0;
-  const rect = el.getBoundingClientRect();
-  const vh = window.innerHeight || 1;
-  const start = vh * 0.95;
-  const range = vh * 0.55 + rect.height * 0.75;
-  const x = start - rect.top;
-  if (range <= 0) return 0;
-  return Math.max(0, Math.min(1, x / range));
-}
 
 /** @param {{ t: { name: string; role: string; quote: string }; i: number }} props */
 function TestimonialCard({ t, i }) {
@@ -47,9 +33,18 @@ function TestimonialCard({ t, i }) {
 
 export function FinTapTestimonialsSection() {
   const sectionRef = useRef(null);
+  const topTrackRef = useRef(null);
+  const bottomTrackRef = useRef(null);
+  /** Décalage de base = −1/3 de la piste (triplet) pour toujours avoir du contenu à gauche du viewport */
+  const [topSegmentPx, setTopSegmentPx] = useState(0);
+  const [bottomSegmentPx, setBottomSegmentPx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [maxShift, setMaxShift] = useState(280);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 
   const { rowTop, rowBottom } = useMemo(() => {
     const list = FINTAP.testimonials;
@@ -58,6 +53,30 @@ export function FinTapTestimonialsSection() {
   }, []);
 
   const triple = useCallback((arr) => [...arr, ...arr, ...arr], []);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const topEl = topTrackRef.current;
+      const botEl = bottomTrackRef.current;
+      if (topEl && topEl.scrollWidth > 0) {
+        setTopSegmentPx(-Math.round(topEl.scrollWidth / 3));
+      }
+      if (botEl && botEl.scrollWidth > 0) {
+        setBottomSegmentPx(-Math.round(botEl.scrollWidth / 3));
+      }
+    };
+    measure();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    if (ro) {
+      if (topTrackRef.current) ro.observe(topTrackRef.current);
+      if (bottomTrackRef.current) ro.observe(bottomTrackRef.current);
+    }
+    window.addEventListener("resize", measure, { passive: true });
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+    };
+  }, [rowTop, rowBottom]);
 
   const updateShiftCap = useCallback(() => {
     setMaxShift(Math.min(420, Math.round((typeof window !== "undefined" ? window.innerWidth : 1200) * 0.28)));
@@ -92,8 +111,8 @@ export function FinTapTestimonialsSection() {
   }, [tick]);
 
   const p = reducedMotion ? 0 : progress;
-  const shiftTop = p * maxShift;
-  const shiftBottom = -p * maxShift;
+  const shiftTop = topSegmentPx + p * maxShift;
+  const shiftBottom = bottomSegmentPx - p * maxShift;
 
   return (
     <section
@@ -112,15 +131,16 @@ export function FinTapTestimonialsSection() {
           decoding="async"
         />
         <h2 id="fintap-testimonials-heading" className="fintap-t-marquee-title">
-          <span className="fintap-t-marquee-title-line">Ce que disent</span>
+          Ce que disent
           <br />
-          <span className="fintap-t-marquee-title-line fintap-t-marquee-title-line--accent">nos clients</span>
+          nos clients
         </h2>
       </header>
 
       <div className="fintap-t-marquee-rows" aria-hidden={false}>
         <div className="fintap-t-marquee-mask">
           <div
+            ref={topTrackRef}
             className="fintap-t-marquee-track fintap-t-marquee-track--top"
             style={{ transform: `translate3d(${shiftTop}px, 0, 0)` }}
           >
@@ -131,6 +151,7 @@ export function FinTapTestimonialsSection() {
         </div>
         <div className="fintap-t-marquee-mask fintap-t-marquee-mask--stagger">
           <div
+            ref={bottomTrackRef}
             className="fintap-t-marquee-track fintap-t-marquee-track--bottom"
             style={{ transform: `translate3d(${shiftBottom}px, 0, 0)` }}
           >

@@ -41,6 +41,12 @@ export const FINTAP = {
   ],
   testimonials: [
     {
+      name: "Sophie T.",
+      role: "Salon d’ongles, Paris",
+      quote:
+        "On voulait une carte classe sans appli à télécharger : les clientes ajoutent le pass en 10 secondes et reviennent plus souvent.",
+    },
+    {
       name: "Camille R.",
       role: "Café, Lyon",
       quote:
