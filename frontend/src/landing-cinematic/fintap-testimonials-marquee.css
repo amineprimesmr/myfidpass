@@ -96,6 +96,28 @@
   gap: 0.72rem;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fintap-t-marquee-card {
+      position: relative;
+      transition:
+        transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1),
+        box-shadow 0.4s ease,
+        border-color 0.35s ease;
+    }
+
+    .fintap-t-marquee-card:hover {
+      transform: translate3d(0, -5px, 0);
+      border-color: rgba(10, 152, 255, 0.22);
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.06),
+        0 16px 36px rgba(0, 0, 0, 0.09),
+        0 0 0 1px rgba(39, 243, 169, 0.12);
+      z-index: 2;
+    }
+  }
+}
+
 .fintap-t-marquee-avatar {
   width: 2.45rem;
   height: 2.45rem;
