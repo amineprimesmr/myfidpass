@@ -26,7 +26,6 @@ import {
   listEngagementChannelKeys,
   channelLabel,
 } from "../../services/social-metrics-service.js";
-import { getLatestSnapshot } from "../../db/social-metrics.js";
 
 const router = Router({ mergeParams: true });
 
