@@ -31,5 +31,6 @@ export const fintapFeaturesGridItems = [
     description:
       "Suivez les performances de votre commerce et le comportement d’achat avec un suivi clair et exploitable.",
     imageSrc: FINTAP_FEATURES_PLACEHOLDER_IMG,
+    imageFadeBottom: true,
   },
 ];
