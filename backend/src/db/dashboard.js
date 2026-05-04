@@ -280,6 +280,28 @@ export function getDashboardStats(businessId, period = "this_month") {
     rewardsRedeemedCount: rewardsRedeemed?.n ?? 0,
     pointsRedeemedInPeriod: Math.round(Number(rewardsRedeemed?.pts ?? 0)),
     googleReviewsNewInPeriod,
+    socialFollowsClaimed: (() => {
+      const networks = { instagram: "instagram_follow", tiktok: "tiktok_follow", facebook: "facebook_follow", twitter: "twitter_follow" };
+      const out = {};
+      for (const [net, actionType] of Object.entries(networks)) {
+        try {
+          let n = 0;
+          if (bounds.month != null) {
+            const r = db.prepare(
+              `SELECT COUNT(*) as n FROM engagement_completions WHERE business_id = ? AND action_type = ? AND status = 'approved' AND strftime('%Y-%m', created_at) = ?`
+            ).get(businessId, actionType, bounds.month);
+            n = r?.n ?? 0;
+          } else {
+            const r = db.prepare(
+              `SELECT COUNT(*) as n FROM engagement_completions WHERE business_id = ? AND action_type = ? AND status = 'approved' AND datetime(created_at) >= ${bounds.since}`
+            ).get(businessId, actionType);
+            n = r?.n ?? 0;
+          }
+          out[net] = n;
+        } catch { out[net] = 0; }
+      }
+      return out;
+    })(),
     notificationCampaigns,
   };
 }

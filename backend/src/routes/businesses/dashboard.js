@@ -71,6 +71,7 @@ import {
 import { buildMerchantAccountingPack } from "../../lib/merchant-accounting-pack.js";
 import socialMetricsRouter from "./dashboard-social-metrics.js";
 import dashboardSocialOauthRouter from "./dashboard-social-oauth.js";
+import dashboardSocialMissionsRouter from "./dashboard-social-missions.js";
 import dashboardDeliveryReceiptClaimsRouter from "./dashboard-delivery-receipt-claims.js";
 import dashboardGoogleBusinessRouter from "./dashboard-google-business.js";
 import dashboardTeamRouter from "./dashboard-team.js";
@@ -131,6 +132,7 @@ router.use((req, res, next) => {
 router.use("/team", dashboardTeamRouter);
 router.use(socialMetricsRouter);
 router.use(dashboardSocialOauthRouter);
+router.use(dashboardSocialMissionsRouter);
 router.use(dashboardDeliveryReceiptClaimsRouter);
 router.use(dashboardGoogleBusinessRouter);
 
