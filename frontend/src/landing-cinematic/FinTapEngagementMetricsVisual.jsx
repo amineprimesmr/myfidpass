@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { IconBrandGoogle, IconBrandInstagram, IconBrandTiktok } from "@tabler/icons-react";
+import { IconBrandGoogle } from "@tabler/icons-react";
+
+const LOGO_INSTAGRAM = "/assets/logos/instagram.png?v=20260504";
+const LOGO_TIKTOK = "/assets/logos/tiktok.png?v=20260504";
 import { useInView, useReducedMotion } from "framer-motion";
 import "./fintap-engagement-metrics-visual.css";
 
@@ -140,7 +143,7 @@ export function FinTapEngagementMetricsVisual() {
 
       <div className="fintap-engagement-visual__row">
         <div className="fintap-engagement-visual__brand fintap-engagement-visual__brand--insta" aria-hidden>
-          <IconBrandInstagram size={ICON} stroke={1.35} />
+          <img className="fintap-engagement-visual__brand-logo" src={LOGO_INSTAGRAM} alt="" width={64} height={64} decoding="async" />
         </div>
         <div className="fintap-engagement-visual__body">
           <p className="fintap-engagement-visual__label">Instagram</p>
@@ -161,7 +164,7 @@ export function FinTapEngagementMetricsVisual() {
 
       <div className="fintap-engagement-visual__row">
         <div className="fintap-engagement-visual__brand fintap-engagement-visual__brand--tiktok" aria-hidden>
-          <IconBrandTiktok size={ICON} stroke={1.35} />
+          <img className="fintap-engagement-visual__brand-logo" src={LOGO_TIKTOK} alt="" width={64} height={64} decoding="async" />
         </div>
         <div className="fintap-engagement-visual__body">
           <p className="fintap-engagement-visual__label">TikTok</p>

@@ -70,11 +70,6 @@
   background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
 }
 
-.fintap-features-grid__visual--engagement {
-  min-height: clamp(11.5rem, 34vw, 15.5rem);
-  padding: clamp(0.65rem, 1.8vw, 1rem) clamp(0.5rem, 1.5vw, 0.85rem);
-}
-
 .fintap-features-grid__img {
   width: 100%;
   max-width: min(100%, 420px);
