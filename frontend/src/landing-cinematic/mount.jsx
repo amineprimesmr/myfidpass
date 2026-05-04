@@ -24,4 +24,13 @@ export function mountLandingCinematic() {
   const root = existingRoot || createRoot(el);
   if (!existingRoot) el.__landingCinematicRoot = root;
   root.render(<LandingCinematicApp />);
+  // Notify hero scroll component that landing is now visible so it can snap to correct position.
+  // Two rAF frames give the browser time to finish scroll restoration before resyncing.
+  if (existingRoot) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new CustomEvent("fidpass:landing-visible"));
+      });
+    });
+  }
 }

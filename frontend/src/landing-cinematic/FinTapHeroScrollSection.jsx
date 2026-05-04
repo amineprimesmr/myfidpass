@@ -191,6 +191,13 @@ export function FinTapHeroScrollSection() {
     };
 
     const animate = () => {
+      // Pause lerp while the landing is hidden by the SPA router (display:none ancestor).
+      // Without this guard the loop accumulates ratio=0 while another route is active,
+      // causing the phone to re-animate from the tilted position when the user comes back.
+      if (sectionRef.current?.closest(".hidden")) {
+        loopRef.current = requestAnimationFrame(animate);
+        return;
+      }
       run();
       const target = targetRatioRef.current;
       const current = currentRatioRef.current;
@@ -249,6 +256,8 @@ export function FinTapHeroScrollSection() {
     };
     document.addEventListener("visibilitychange", scheduleHeroResync);
     window.addEventListener("pageshow", onPageShow);
+    // SPA routing: landing container was hidden then shown again — resync phone position.
+    window.addEventListener("fidpass:landing-visible", scheduleHeroResync);
 
     const scrollToCommerceOnboarding = () => {
       if (reduced.matches) {
@@ -298,6 +307,7 @@ export function FinTapHeroScrollSection() {
       });
       document.removeEventListener("visibilitychange", scheduleHeroResync);
       window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("fidpass:landing-visible", scheduleHeroResync);
       window.removeEventListener(FINTAP_SCROLL_TO_COMMERCE_EVENT, scrollToCommerceOnboarding);
       if (loopRef.current) cancelAnimationFrame(loopRef.current);
     };
