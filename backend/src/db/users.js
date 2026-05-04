@@ -131,6 +131,20 @@ export function updateUserPassword(userId, passwordHash) {
   return info.changes > 0;
 }
 
+export function getUserByAppleSub(sub) {
+  const s = String(sub ?? "").trim();
+  if (!s) return null;
+  return db.prepare("SELECT * FROM users WHERE apple_sub = ?").get(s) || null;
+}
+
+export function setUserAppleSub(userId, sub) {
+  const s = String(sub ?? "").trim();
+  if (!userId || !s) return;
+  try {
+    db.prepare("UPDATE users SET apple_sub = ? WHERE id = ? AND apple_sub IS NULL").run(s, userId);
+  } catch { /* ignore duplicate sub conflict */ }
+}
+
 export function setPasswordResetToken(userId, token, expiresAt) {
   db.prepare("DELETE FROM password_reset_tokens WHERE user_id = ?").run(userId);
   db.prepare("INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)").run(token, userId, expiresAt);

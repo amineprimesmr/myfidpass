@@ -10,6 +10,8 @@ import {
   getUserByEmail,
   getUserByPhoneE164,
   getUserById,
+  getUserByAppleSub,
+  setUserAppleSub,
   getUserByStaffLogin,
   getUsersByStaffLogin,
   normalizeStaffLogin,
@@ -649,10 +651,15 @@ router.post("/apple", async (req, res) => {
       issuer: "https://appleid.apple.com",
     });
     const email = (verified.email || bodyEmail || "").trim().toLowerCase();
-    if (!email) {
+    const appleSub = String(verified.sub || "").trim();
+    // Sur les connexions suivantes Apple ne renvoie plus l'email dans le JWT — lookup par sub stocké.
+    let user = email ? getUserByEmail(email) : null;
+    if (!user && appleSub) {
+      user = getUserByAppleSub(appleSub);
+    }
+    if (!email && !user) {
       return res.status(400).json({ error: "Email non fourni par Apple. Réautorisez l'application pour partager votre email." });
     }
-    let user = getUserByEmail(email);
     const isNewUser = !user;
     if (isNewUser && !hasSelectedEstablishment(establishmentSelection)) {
       return respondMissingEstablishment(res);
@@ -672,6 +679,8 @@ router.post("/apple", async (req, res) => {
         return respondMissingEstablishment(res);
       }
     }
+    // Stocker le sub Apple pour les reconnexions sans email
+    if (appleSub) setUserAppleSub(user.id, appleSub);
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     return res.json({
       ...buildAuthSuccessPayload(user),
@@ -1144,6 +1153,41 @@ router.post("/phone/verify", validate(schemas.phoneVerify), async (req, res) => 
     token: accessToken,
     refreshToken,
   });
+});
+
+/**
+ * POST /api/auth/ensure-demo
+ * Crée ou réinitialise le compte démo pour l'examen App Store Review.
+ * Appelé une fois après chaque déploiement via curl (secret partagé).
+ */
+router.post("/ensure-demo", async (req, res) => {
+  const DEMO_EMAIL = "aminennasri@outlook.com";
+  const DEMO_PASSWORD = "Meysann35!";
+  const DEMO_NAME = "Demo MyFidPass";
+  const secret = String(req.headers["x-demo-secret"] || req.body?.secret || "").trim();
+  const validSecret = process.env.DEMO_SECRET || "myfidpass-appstore-review-2026";
+  if (secret !== validSecret) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  try {
+    const hash = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
+    let user = getUserByEmail(DEMO_EMAIL);
+    if (user) {
+      updateUserPassword(user.id, hash);
+    } else {
+      user = createUser({ email: DEMO_EMAIL, passwordHash: hash, name: DEMO_NAME });
+      const businesses = getBusinessesByUserId(user.id);
+      if (!businesses || businesses.length === 0) {
+        await ensureInitialBusinessForUser(user.id, {
+          establishments: [{ googlePlaceId: null, establishmentName: "MyFidPass Demo" }],
+        });
+      }
+    }
+    return res.json({ ok: true, email: DEMO_EMAIL });
+  } catch (e) {
+    console.error("[ensure-demo] error:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 export default router;

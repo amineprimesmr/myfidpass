@@ -1499,4 +1499,14 @@ export function runMigrations(db) {
     safeRun(db, () => db.exec("ALTER TABLE businesses ADD COLUMN welcome_bonus_amount INTEGER NOT NULL DEFAULT 10"));
     markMigrationApplied(db, 36, "welcome_bonus");
   }
+
+  // ── v37 : apple_sub (identifiant stable Apple ID — lookup sans email sur reconnexions) ──
+  const m37 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 37").get();
+  if (!m37) {
+    safeRun(db, () => db.exec("ALTER TABLE users ADD COLUMN apple_sub TEXT"));
+    safeRun(db, () => db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_sub ON users(apple_sub) WHERE apple_sub IS NOT NULL"
+    ));
+    markMigrationApplied(db, 37, "apple_sub");
+  }
 }
