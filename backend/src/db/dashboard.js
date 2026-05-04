@@ -236,6 +236,9 @@ export function getDashboardStats(businessId, period = "this_month") {
             const totalBefore = Number(baselineMetrics.reviews_count) || 0;
             const delta = Math.max(0, totalNow - totalBefore);
             if (delta > 0) googleReviewsNewInPeriod = delta;
+          } else {
+            // Pas de baseline avant la période → premier mois de suivi : on expose le total actuel.
+            googleReviewsNewInPeriod = totalNow;
           }
         }
       }

@@ -18,6 +18,7 @@ import {
 import {
   buildSocialMetricsSummary,
   refreshGoogleSnapshotForBusiness,
+  refreshGooglePlacesSnapshotFromPlaceId,
   refreshInstagramOAuthForBusiness,
   refreshFacebookFanOAuthForBusiness,
   refreshYouTubeOAuthForBusiness,
@@ -25,6 +26,7 @@ import {
   listEngagementChannelKeys,
   channelLabel,
 } from "../../services/social-metrics-service.js";
+import { getLatestSnapshot } from "../../db/social-metrics.js";
 
 const router = Router({ mergeParams: true });
 
@@ -41,6 +43,18 @@ const refreshLimiter = rateLimit({
 router.get("/social-metrics", (req, res) => {
   const business = req.business;
   const rewards = getEngagementRewards(business.id);
+
+  // Auto-déclenche un snapshot Places si le place_id est configuré mais aucun snapshot n'existe.
+  // Couvre les comptes créés avant l'ajout du déclencheur automatique à la création.
+  const placeId = String(rewards?.google_review?.place_id ?? "").trim();
+  if (placeId) {
+    const existing = getLatestSnapshot(business.id, "google_review");
+    if (!existing) {
+      const bizId = business.id;
+      setImmediate(() => { refreshGooglePlacesSnapshotFromPlaceId(bizId, placeId).catch(() => {}); });
+    }
+  }
+
   const summary = buildSocialMetricsSummary(business.id, rewards);
   return res.json(summary);
 });
