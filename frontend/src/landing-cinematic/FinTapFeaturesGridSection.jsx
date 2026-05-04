@@ -24,7 +24,13 @@ export function FinTapFeaturesGridSection() {
         <ul className="fintap-features-grid__list">
           {fintapFeaturesGridItems.map((item) => (
             <li key={item.id} className="fintap-features-grid__card">
-              <div className="fintap-features-grid__visual" aria-hidden="true">
+              <div
+                className={
+                  "fintap-features-grid__visual" +
+                  (item.imageFadeBottom ? " fintap-features-grid__visual--fade-bottom" : "")
+                }
+                aria-hidden="true"
+              >
                 <img
                   className="fintap-features-grid__img"
                   src={item.imageSrc}

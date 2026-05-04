@@ -78,6 +78,32 @@
   vertical-align: middle;
 }
 
+/* Fondu progressif du bas de l’image vers transparent (carte avec `imageFadeBottom`). */
+.fintap-features-grid__visual--fade-bottom .fintap-features-grid__img {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 52%,
+    rgba(0, 0, 0, 0.88) 68%,
+    rgba(0, 0, 0, 0.45) 84%,
+    rgba(0, 0, 0, 0.12) 94%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 52%,
+    rgba(0, 0, 0, 0.88) 68%,
+    rgba(0, 0, 0, 0.45) 84%,
+    rgba(0, 0, 0, 0.12) 94%,
+    transparent 100%
+  );
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
 .fintap-features-grid__copy {
   flex: 1 1 auto;
   padding: clamp(1rem, 2.5vw, 1.5rem) clamp(0.5rem, 1.5vw, 0.75rem) clamp(1.25rem, 2.5vw, 1.75rem);

@@ -8,6 +8,8 @@ export const fintapFeaturesGridItems = [
     description:
       "Gardez le contact avec vos clients en envoyant des notifications push instantanées, sans plafond.",
     imageSrc: "/assets/site/A.png?v=20260505",
+    /** Fondu du bas de l’image vers transparent (masque CSS sur la carte). */
+    imageFadeBottom: true,
   },
   {
     id: "ca",
