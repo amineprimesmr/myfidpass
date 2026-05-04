@@ -27,7 +27,7 @@ export const fintapFeaturesGridItems = [
   },
   {
     id: "data",
-    title: "Pilotage par la data",
+    title: "Analysez vos performances",
     description:
       "Suivez les performances de votre commerce et le comportement d’achat avec un suivi clair et exploitable.",
     imageSrc: FINTAP_FEATURES_PLACEHOLDER_IMG,
