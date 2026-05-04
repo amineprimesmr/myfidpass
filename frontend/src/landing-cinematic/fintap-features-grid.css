@@ -1,0 +1,101 @@
+/* Grille fonctionnalités — fond gris clair, cartes blanches type référence */
+
+.fintap-features-grid {
+  --fintap-features-bg: #f5f5f7;
+  --fintap-features-card-radius: clamp(1.25rem, 2.5vw, 1.75rem);
+  --fintap-features-gap: clamp(1.25rem, 3vw, 2rem);
+  /* Même ancrage typo / couleur intro que `.fintap-steps-scroll` */
+  --fintap-steps-muted: #5c5c5c;
+  --fintap-steps-nav-clear: max(6.5rem, calc(env(safe-area-inset-top, 0px) + 5.35rem));
+  position: relative;
+  overflow: visible;
+  padding: clamp(3.25rem, 8vw, 5.5rem) 0;
+  background: var(--fintap-features-bg);
+  scroll-margin-top: var(--fintap-steps-nav-clear);
+}
+
+.fintap-features-grid__inner {
+  max-width: 1120px;
+}
+
+.fintap-features-grid__header {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* Espace titre → grille : un peu plus d’air qu’entre intro et rail chez les étapes */
+.fintap-features-grid__header .fintap-features-grid__intro {
+  margin-bottom: clamp(2rem, 5vw, 3rem);
+  max-width: min(38ch, 100%);
+}
+
+.fintap-features-grid__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fintap-features-gap);
+}
+
+@media (min-width: 768px) {
+  .fintap-features-grid__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fintap-features-grid__card {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: clamp(1.1rem, 2.2vw, 1.35rem);
+  background: #fff;
+  border-radius: var(--fintap-features-card-radius);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.fintap-features-grid__visual {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(10rem, 28vw, 14rem);
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  border-radius: calc(var(--fintap-features-card-radius) - 6px);
+  background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+}
+
+.fintap-features-grid__img {
+  width: 100%;
+  max-width: min(100%, 420px);
+  height: auto;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.fintap-features-grid__copy {
+  flex: 1 1 auto;
+  padding: clamp(1rem, 2.5vw, 1.5rem) clamp(0.5rem, 1.5vw, 0.75rem) clamp(1.25rem, 2.5vw, 1.75rem);
+  text-align: center;
+}
+
+.fintap-features-grid__card-title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.05rem, 2.1vw, 1.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--fintap-ink, #0a0a0a);
+}
+
+.fintap-features-grid__card-desc {
+  margin: 0;
+  font-size: clamp(0.9rem, 1.6vw, 0.98rem);
+  line-height: 1.55;
+  color: var(--fintap-muted, #636363);
+}

@@ -9,6 +9,7 @@ import {
 } from "./fintap-hero-scroll-lerp.js";
 import { API_BASE, getAuthToken, setPendingEstablishment } from "../config.js";
 import "./fintap-hero-scroll.css";
+import "./fintap-hero-blue-surface.css";
 
 const HERO_IPHONE_IMG = "/assets/iphone-custom-clean.png";
 const HERO_IPHONE_IMG_MOBILE = "/assets/iphone-custom-clean-mobile.png";

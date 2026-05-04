@@ -1,16 +1,19 @@
 /* FinTap — page complète (réf. fintap.framer.website) */
 
 .fintap-landing {
-  --fintap-bg: transparent;
+  --fintap-bg: #ffffff;
   --fintap-blue: #0a98ff;
   --fintap-mint: #27f3a9;
   --fintap-ink: #0a0a0a;
   --fintap-muted: #636363;
   --fintap-line: rgba(0, 0, 0, 0.08);
+  /* Marge de sécurité pour ombres larges (mockup 50–100px, cartes, halos) */
+  --fintap-shadow-bleed: clamp(2.75rem, 10vw, 7.5rem);
   position: relative;
   z-index: 1;
   min-height: 100dvh;
   width: 100%;
+  overflow: visible;
   color: var(--fintap-ink);
   background: var(--fintap-bg);
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -31,17 +34,15 @@
 
 .fintap-section {
   position: relative;
-  padding: clamp(4rem, 9vw, 7rem) 0;
+  overflow: visible;
+  padding: calc(clamp(4rem, 9vw, 7rem) + var(--fintap-shadow-bleed)) 0;
 }
 
 .fintap-section-inner {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 2.5rem);
-}
-
-.fintap-section--tint {
-  background: transparent;
+  overflow: visible;
 }
 
 .fintap-kicker {
@@ -83,108 +84,12 @@
   color: var(--fintap-blue);
 }
 
-.fintap-h3 {
-  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  text-align: center;
-  max-width: 22ch;
-  margin: 0 auto 2.5rem;
-}
-
-.fintap-h3--int {
-  max-width: 32ch;
-}
-
 .fintap-lead {
   margin-top: 1rem;
   font-size: 1.1rem;
   line-height: 1.6;
   color: var(--fintap-muted);
   max-width: 44ch;
-}
-
-.fintap-section-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2.5rem;
-  align-items: center;
-}
-
-@media (min-width: 900px) {
-  .fintap-section-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 3.5rem 4rem;
-  }
-
-  .fintap-section-grid--rev .fintap-section-copy {
-    order: 2;
-  }
-
-  .fintap-section-grid--rev .fintap-section-visual {
-    order: 1;
-  }
-}
-
-/* Téléphone « produit » (features) */
-.fintap-phone {
-  position: relative;
-  width: min(100%, 300px);
-  border-radius: 2.4rem;
-  background: #101010;
-  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  padding: 0.55rem;
-  margin: 0 auto;
-}
-
-.fintap-phone-notch {
-  position: absolute;
-  left: 50%;
-  top: 0.5rem;
-  z-index: 2;
-  width: 4.2rem;
-  height: 1.35rem;
-  transform: translateX(-50%);
-  border-radius: 9999px;
-  background: #0b0b0b;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-
-.fintap-screen {
-  position: relative;
-  z-index: 0;
-  min-height: 420px;
-  border-radius: 2rem;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  overflow: hidden;
-}
-
-.fintap-int-card {
-  padding: 1.3rem 1.35rem;
-  border-radius: 1.1rem;
-  border: 1px solid var(--fintap-line);
-  background: #fff;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.fintap-int-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08);
-}
-
-.fintap-int-name {
-  font-weight: 800;
-  font-size: 1.05rem;
-  margin: 0 0 0.4rem;
-}
-
-.fintap-int-desc {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: var(--fintap-muted);
 }
 
 /* Sécurité + CTA */

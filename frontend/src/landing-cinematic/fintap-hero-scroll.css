@@ -4,8 +4,9 @@
   --fintap-hero-bg: transparent;
   --fintap-hero-ink: #0a0a0a;
   --fintap-hero-muted: #555;
+  --fintap-hero-bottom-bleed: clamp(2.75rem, 8vw, 6.5rem);
   position: relative;
-  padding: clamp(6.5rem, 14vw, 10rem) 0 clamp(2rem, 5vw, 3.5rem);
+  padding: clamp(6.5rem, 14vw, 10rem) 0 calc(clamp(2rem, 5vw, 3.5rem) + var(--fintap-hero-bottom-bleed));
   background: var(--fintap-hero-bg);
   font-family: "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -46,7 +47,7 @@
   display: flex;
   justify-content: center;
   overflow: visible;
-  padding: 0.5rem 0 2.5rem;
+  padding: 0.5rem 0 clamp(2.75rem, 7vw, 5.5rem);
   min-height: min(48vh, 400px);
   perspective: 1200px;
   perspective-origin: 50% 50%;
@@ -369,7 +370,7 @@
     margin: 24px auto 0;
     justify-content: center;
     min-height: 560px;
-    padding-bottom: 2rem;
+    padding-bottom: clamp(3rem, 8vw, 6rem);
   }
 
   .fintap-hero-iphone__actions {

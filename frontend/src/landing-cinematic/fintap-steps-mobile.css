@@ -1,0 +1,30 @@
+/* Mobile (largeur max 900px) : étapes empilées, scroll document normal */
+
+.fintap-steps-scroll__mobile {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(1.75rem, 5vw, 2.5rem) clamp(1.25rem, 4vw, 2.5rem) clamp(2.25rem, 6vw, 3.25rem);
+  box-sizing: border-box;
+}
+
+.fintap-steps-mobile__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 6vw, 2.75rem);
+}
+
+.fintap-steps-mobile__step {
+  margin: 0;
+  padding: 0;
+}
+
+.fintap-steps-mobile__grey-panel {
+  border-radius: 1.35rem;
+}
+
+.fintap-steps-mobile__card-title {
+  font-size: 1.05rem;
+}

@@ -1,23 +1,27 @@
-import { initLiquidGlassMenu } from "./kube-liquid-glass/liquid-glass-menu.js";
+import switcherMarkup from "../landing-cinematic/fooontic-kwp-ragr-switcher.fragment.html?raw";
+import "../landing-cinematic/fooontic-kwp-ragr-switcher.css";
+import { runFooonticKwpRaGrSwitcherPen } from "../landing-cinematic/fooontic-kwp-ragr-switcher.pen.js";
 import {
   runLiquidGlassMenuCleanupLanding,
   setLiquidGlassMenuDisposeLanding,
 } from "./kube-liquid-glass/liquid-glass-menu-dispose.js";
 
 /**
- * Initialise le menu Liquid Glass du bloc #landing (accueil, pages SEO, légales).
- * Sans cet appel, le HTML du menu reste sans les classes / filtres appliqués par le JS → mise en page cassée.
+ * Monte le switcher « Liquid Glass » (CodePen fooontic/KwpRaGr) dans #landing-liquid-glass.
  */
 export function ensureLandingLiquidNav() {
   runLiquidGlassMenuCleanupLanding();
-  const root = document.querySelector("#landing-liquid-glass [data-liquid-glass-menu-root]");
+
+  const host = document.getElementById("landing-liquid-glass");
   const landing = document.getElementById("landing");
-  if (!root || !landing) return;
-  setLiquidGlassMenuDisposeLanding(
-    initLiquidGlassMenu({
-      root,
-      scrollLockEl: landing,
-      fallbackClassTarget: landing,
-    })
-  );
+  if (!host || !landing) return;
+
+  host.classList.add("landing-fooontic-switcher-host");
+  host.innerHTML = switcherMarkup;
+  runFooonticKwpRaGrSwitcherPen();
+
+  setLiquidGlassMenuDisposeLanding(() => {
+    host.innerHTML = "";
+    host.classList.remove("landing-fooontic-switcher-host");
+  });
 }

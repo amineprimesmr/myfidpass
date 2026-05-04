@@ -1,0 +1,45 @@
+/* Visuels « 3 étapes » : images dans le panneau gris */
+
+.fintap-steps-mock {
+  width: 100%;
+}
+
+.fintap-steps-mock--etape {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fondu bas vers le fond gris du panneau */
+.fintap-steps-mock-etape__frame {
+  overflow: hidden;
+  line-height: 0;
+  border-radius: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 48%,
+    rgba(0, 0, 0, 0.5) 70%,
+    rgba(0, 0, 0, 0.08) 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 48%,
+    rgba(0, 0, 0, 0.5) 70%,
+    rgba(0, 0, 0, 0.08) 90%,
+    transparent 100%
+  );
+}
+
+.fintap-steps-mock-etape__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  vertical-align: middle;
+}

@@ -10,6 +10,10 @@
   min-height: 100vh;
 }
 
+#landing-cinematic-root.landing-cinematic-shell {
+  overflow: visible;
+}
+
 /* Scroll document normal sur la LP cinéma. */
 html:has(#landing-cinematic-root.landing-cinematic-shell),
 body:has(#landing-cinematic-root.landing-cinematic-shell) {
@@ -34,6 +38,7 @@ body:has(#landing-cinematic-root.landing-cinematic-shell) {
   width: 100%;
   margin: 0;
   padding: 0;
+  overflow: visible;
 }
 
 #landing .landing-main-cinematic::before {

@@ -1,44 +1,5 @@
 /** Contenu marketing Myfidpass (fidélité / Wallet) — français. */
 export const FINTAP = {
-  nav: {
-    brand: "Myfidpass",
-    ctaTemplate: "Voir les tarifs",
-    ctaApp: "Espace commerçant",
-  },
-  featureBlocks: [
-    {
-      id: "analytics",
-      phone: "chart",
-      kicker: "Pilotage",
-      title: "Suivez visites, points et récompenses",
-      titleEm: "dans un tableau de bord en direct.",
-      body: "Visualisez les utilisations, vos campagnes et l’activité des membres pour savoir ce qui ramène vos clients.",
-    },
-    {
-      id: "finance",
-      phone: "cards",
-      kicker: "Apple & Google Wallet",
-      title: "Une carte que vos clients gardent",
-      titleEm: "dans le téléphone.",
-      body: "Passes à votre image pour Apple Wallet et Google Wallet — sans plastique, sans appli à installer pour vos invités.",
-    },
-    {
-      id: "actions",
-      phone: "ai",
-      kicker: "Engagement",
-      title: "Récompensez les avis Google, les réseaux,",
-      titleEm: "et bien plus depuis un seul endroit.",
-      body: "Configurez missions, points et tampons. Envoyez des notifications push quand vous lancez une promo ou changez l’offre.",
-    },
-    {
-      id: "subscriptions",
-      phone: "subs",
-      kicker: "Offres qui évoluent",
-      title: "Commencez petit, ajoutez des adresses",
-      titleEm: "quand vous grandissez.",
-      body: "Tarifs adaptés aux indépendants et petites enseignes — passez au niveau supérieur quand vous avez besoin de plus de cartes ou d’automatisation.",
-    },
-  ],
   testimonials: [
     {
       name: "Sophie T.",
