@@ -3,10 +3,9 @@ import { FinTapHeroScrollSection } from "./FinTapHeroScrollSection.jsx";
 import { FinTapFeaturesGridSection } from "./FinTapFeaturesGridSection.jsx";
 import { FinTapStepsScrollSection } from "./FinTapStepsScrollSection.jsx";
 import { FinTapTestimonialsSection } from "./FinTapTestimonialsSection.jsx";
-import { FinTapSecurityCtaSection } from "./FinTapSecurityCtaSection.jsx";
 
 /**
- * Landing cinéma : hero, étapes scroll, témoignages, sécurité + CTA. Footer global #landing.
+ * Landing cinéma : hero, grille fonctionnalités, étapes scroll, témoignages. Footer global #landing.
  */
 export function FinTapPage() {
   return (
@@ -15,7 +14,6 @@ export function FinTapPage() {
       <FinTapFeaturesGridSection />
       <FinTapStepsScrollSection />
       <FinTapTestimonialsSection />
-      <FinTapSecurityCtaSection />
     </main>
   );
 }

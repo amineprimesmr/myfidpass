@@ -80,18 +80,4 @@ export const FINTAP = {
         "Google Wallet et Apple Wallet : nos clients plus âgés comme les touristes sont couverts.",
     },
   ],
-  security: {
-    line1: "Sécurité pensée dès la conception",
-    line2: "pour les données clients",
-    lead: "Chiffrement des échanges, droits d’accès par rôle pour l’équipe, et choix d’infrastructure alignés avec les exigences des plateformes Wallet.",
-  },
-  ctaBand: {
-    title: "Prêt à lancer votre carte ?",
-    subtitle: "Créez votre pass, choisissez vos récompenses et invitez vos premiers membres dès aujourd’hui.",
-    bullets: [
-      "Passes Apple Wallet & Google Wallet à votre image",
-      "Flyers QR et parcours en magasin pour embarquer vos clients en quelques secondes",
-      "Une équipe humaine quand vous avez besoin d’un coup de main pour la config ou les campagnes",
-    ],
-  },
 };

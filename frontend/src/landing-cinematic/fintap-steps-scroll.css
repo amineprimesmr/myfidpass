@@ -119,67 +119,80 @@
   max-width: min(40ch, 100%);
 }
 
-/* ─── Desktop : piste longue + sticky + carte unique à droite ─── */
+/* ─── Desktop : flex stretch — gauche + rail sticky, droite en scroll réel ─── */
 @media (min-width: 901px) {
   .fintap-steps-scroll__track {
     position: relative;
     width: 100%;
     box-sizing: border-box;
-    /* Piste longue (voir TRACK_VIEWPORT_MULT dans FinTapStepsScrollDesktop.jsx) — fallback si pas de JS */
-    min-height: calc(100dvh * 6);
-    min-height: calc(100svh * 6);
   }
 
-  .fintap-steps-scroll__sticky {
-    position: -webkit-sticky;
-    position: sticky;
-    top: var(--fintap-steps-nav-clear);
-    z-index: 2;
-    width: 100%;
-    box-sizing: border-box;
+  .fintap-steps-scroll__desktop-row {
     display: flex;
-    align-items: flex-start;
-    padding: clamp(1.5rem, 4vw, 2.75rem) 0 clamp(2rem, 5vw, 3.5rem);
-    min-height: calc(100dvh - var(--fintap-steps-nav-clear));
-    min-height: calc(100svh - var(--fintap-steps-nav-clear));
-  }
-
-  .fintap-steps-scroll__grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 3.25rem minmax(0, 1.05fr);
+    align-items: stretch;
     gap: clamp(1.25rem, 4vw, 2.75rem);
-    align-items: start;
     width: 100%;
     max-width: 1180px;
     margin: 0 auto;
-    padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+    padding: clamp(1.5rem, 4vw, 2.75rem) clamp(1.25rem, 4vw, 2.5rem) clamp(2rem, 5vw, 3.5rem);
     box-sizing: border-box;
   }
 
-  /* Colonne gauche : haut de grille (le bloc parent est déjà sticky — pas de double sticky). */
-  .fintap-steps-scroll__left {
-    align-self: start;
+  .fintap-steps-scroll__left-col {
+    flex: 1 1 0;
+    min-width: 0;
     max-width: min(100%, 26rem);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-sizing: border-box;
+  }
+
+  /* Bloc titre + intro : ancrage piloté en JS (flow → fixed → absolute bas). */
+  .fintap-steps-scroll__left-sticky {
+    position: relative;
+    z-index: 4;
+    width: 100%;
+    max-width: min(100%, 26rem);
+    box-sizing: border-box;
     padding-top: 0.15rem;
   }
 
-  .fintap-steps-scroll__left .fintap-steps-scroll__h2 {
+  .fintap-steps-scroll__left-sticky.is-left-pinned {
+    background: var(--fintap-steps-bg);
+    padding-right: 0.35rem;
+    margin-right: -0.35rem;
+    box-shadow: 8px 0 20px -6px color-mix(in srgb, var(--fintap-steps-bg) 88%, transparent);
+  }
+
+  .fintap-steps-scroll__left-sticky.is-left-docked {
+    background: var(--fintap-steps-bg);
+  }
+
+  .fintap-steps-scroll__left {
+    max-width: min(100%, 26rem);
+  }
+
+  .fintap-steps-scroll__left-sticky .fintap-steps-scroll__h2 {
     margin-left: 0;
     margin-right: 0;
     text-align: left;
   }
 
-  .fintap-steps-scroll__left .fintap-steps-scroll__intro {
+  .fintap-steps-scroll__left-sticky .fintap-steps-scroll__intro {
     margin-left: 0;
     margin-right: 0;
+    margin-bottom: 0;
     text-align: left;
     max-width: min(38ch, 100%);
   }
 
   .fintap-steps-scroll__rail {
+    flex: 0 0 3.25rem;
     position: relative;
     align-self: stretch;
-    min-height: min(62vh, 520px);
+    min-height: 100%;
   }
 
   .fintap-steps-scroll__rail-line {
@@ -194,12 +207,12 @@
   }
 
   .fintap-steps-scroll__badge {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    position: -webkit-sticky;
+    position: sticky;
+    top: clamp(7rem, 36vh, 20rem);
     width: 2.75rem;
     height: 2.75rem;
+    margin: 0 auto;
     border-radius: 50%;
     background: #0a0a0a;
     color: #fff;
@@ -210,44 +223,47 @@
     justify-content: center;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
     z-index: 1;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.25s ease;
   }
 
   .fintap-steps-scroll__right {
+    flex: 1.08 1 0;
     min-width: 0;
   }
 
   .fintap-steps-scroll__cards {
-    position: relative;
-    min-height: min(62vh, 540px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.25rem, 5vh, 3.75rem);
     width: 100%;
   }
 
-  .fintap-steps-card {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
+  .fintap-steps-scroll__right .fintap-steps-card {
+    position: relative;
     margin: 0 auto;
     max-width: 460px;
-    opacity: 0;
-    transform: translateY(22px);
-    pointer-events: none;
-    transition:
-      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 100%;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    scroll-margin-top: calc(var(--fintap-steps-nav-clear) + 0.75rem);
+    min-height: min(78vh, 620px);
+    transition: box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .fintap-steps-card.is-active {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-    z-index: 1;
+  .fintap-steps-scroll__right .fintap-steps-card.is-active .fintap-steps-card__grey-panel {
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.04),
+      0 12px 40px rgba(0, 0, 0, 0.1);
   }
 }
 
 @media (min-width: 901px) and (prefers-reduced-motion: reduce) {
-  .fintap-steps-card {
-    transition: opacity 0.2s ease;
+  .fintap-steps-scroll__right .fintap-steps-card {
+    transition: none;
+  }
+
+  .fintap-steps-scroll__badge {
+    transition: none;
   }
 }

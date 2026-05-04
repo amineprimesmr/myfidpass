@@ -42,6 +42,15 @@
 
 
 .switcher {
+ /* Piste utile = largeur − paddings − gaps ; pilule et translate suivent la même formule (y compris si max-width réduit la barre). */
+ --sw-pad-x: 8px;
+ --sw-pad-y: 4px;
+ --sw-pad-yb: 4px;
+ --sw-gap: 6px;
+ --sw-track: calc(100% - 2 * var(--sw-pad-x) - 2 * var(--sw-gap));
+ --sw-slot: calc(var(--sw-track) / 3);
+ --sw-shift: calc(var(--sw-slot) + var(--sw-gap));
+
  position: fixed;
  z-index: 1;
  top: 40px;
@@ -49,23 +58,23 @@
  translate: -50%;
  display: flex;
  align-items: center;
- gap: 8px;
- width: 244px;
- max-width: 244px;
- height: 70px;
+ gap: var(--sw-gap);
+ width: min(304px, calc(100vw - 1.5rem));
+ max-width: min(304px, calc(100vw - 1.5rem));
+ height: 44px;
  box-sizing: border-box;
- padding: 8px 12px 10px;
+ padding: var(--sw-pad-y) var(--sw-pad-x) var(--sw-pad-yb);
  margin: 0 auto;
  border: none;
  border-radius: 99em;
  font-size: var(--fz);
- /* Calque interne stable : évite que le pseudo « pilule » sous backdrop soit rogné ou mal composité. */
  isolation: isolate;
- overflow: visible;
+ overflow: hidden;
  min-inline-size: 0;
  background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
- backdrop-filter: blur(8px) url(#switcher) saturate(var(--saturation));
- -webkit-backdrop-filter: blur(8px) saturate(var(--saturation));
+ /* Sans url(#switcher) : le displacement SVG + overflow:hidden déformaient/coupaient le fond et les icônes. */
+ backdrop-filter: blur(10px) saturate(var(--saturation));
+ -webkit-backdrop-filter: blur(10px) saturate(var(--saturation));
  box-shadow: 
  inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
  inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
@@ -109,7 +118,10 @@
 
 .switcher__icon {
  display: block;
- width: 100%;
+ flex-shrink: 0;
+ width: 1.35rem;
+ height: 1.35rem;
+ margin: 0 auto;
  transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
 }
 
@@ -124,11 +136,12 @@
  --c: var(--c-content);
  position: relative;
  z-index: 1;
+ flex: 1 1 0;
+ min-width: 0;
  display: flex;
  justify-content: center;
  align-items: center;
- padding: 0 16px;
- width: 68px;
+ padding: 0 4px;
  height: 100%;
  box-sizing: border-box;
  border-radius: 99em;
@@ -157,11 +170,11 @@
 .switcher::after {
  content: '';
  position: absolute;
- left: 4px;
- top: 4px;
- display: block;
- width: 84px;
- height: calc(100% - 10px);
+ left: var(--sw-pad-x);
+ top: var(--sw-pad-y);
+ bottom: var(--sw-pad-yb);
+ width: var(--sw-slot);
+ box-sizing: border-box;
  border-radius: 99em;
  background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
  z-index: 0;
@@ -176,26 +189,26 @@
 }
 
 .switcher:has(input[c-option="1"]:checked)::after {
- translate: 0 0;
+ left: var(--sw-pad-x);
  transform-origin: right;
  transition: 
  background-color 400ms 
  cubic-bezier(1, 0.0, 0.4, 1),
  box-shadow 400ms
  cubic-bezier(1, 0.0, 0.4, 1),
- translate 400ms 
+ left 400ms 
  cubic-bezier(1, 0.0, 0.4, 1);
  animation: scaleToggle 440ms ease; 
 }
 
 .switcher:has(input[c-option="2"]:checked)::after {
- translate: 76px 0;
+ left: calc(var(--sw-pad-x) + var(--sw-shift));
  transition: 
  background-color 400ms 
  cubic-bezier(1, 0.0, 0.4, 1),
  box-shadow 400ms
  cubic-bezier(1, 0.0, 0.4, 1),
- translate 400ms 
+ left 400ms 
  cubic-bezier(1, 0.0, 0.4, 1);
  animation: scaleToggle2 440ms ease; 
 }
@@ -209,14 +222,14 @@
 }
 
 .switcher:has(input[c-option="3"]:checked)::after {
- translate: 152px 0;
+ left: calc(var(--sw-pad-x) + 2 * var(--sw-shift));
  transform-origin: left;
  transition: 
  background-color 400ms 
  cubic-bezier(1, 0.0, 0.4, 1),
  box-shadow 400ms
  cubic-bezier(1, 0.0, 0.4, 1),
- translate 400ms 
+ left 400ms 
  cubic-bezier(1, 0.0, 0.4, 1);
  animation: scaleToggle3 440ms ease; 
 }
