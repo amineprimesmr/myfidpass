@@ -1132,6 +1132,7 @@ router.get("/stats", (req, res) => {
         : undefined,
     points_redeemed_in_period: stats.pointsRedeemedInPeriod ?? 0,
     google_reviews_new_in_period: stats.googleReviewsNewInPeriod ?? 0,
+    social_follows_claimed: stats.socialFollowsClaimed ?? { instagram: 0, tiktok: 0, facebook: 0, twitter: 0 },
     notification_campaigns: stats.notificationCampaigns ?? [],
     business_name: business.organization_name ?? undefined,
   });
