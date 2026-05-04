@@ -203,6 +203,47 @@ export function getDashboardStats(businessId, period = "this_month") {
     /* */
   }
 
+  // Fallback via social_metric_snapshots quand google_business_reviews est vide (pas de GBP OAuth ou sync en attente).
+  if (googleReviewsNewInPeriod === 0) {
+    try {
+      const latestSnap = db
+        .prepare(
+          `SELECT metrics_json FROM social_metric_snapshots
+           WHERE business_id = ? AND channel = 'google_review'
+           ORDER BY captured_at DESC LIMIT 1`,
+        )
+        .get(businessId);
+      if (latestSnap) {
+        const latestMetrics = JSON.parse(latestSnap.metrics_json || "{}");
+        const totalNow = Number(latestMetrics.reviews_count) || 0;
+        if (totalNow > 0) {
+          let periodStart;
+          if (bounds.month) {
+            periodStart = `${bounds.month}-01T00:00:00.000Z`;
+          } else {
+            const days = { "7d": 7, "30d": 30, "6m": 182, "12m": 365 }[normalizedPeriod] ?? 30;
+            periodStart = new Date(Date.now() - days * 86400000).toISOString();
+          }
+          const baselineSnap = db
+            .prepare(
+              `SELECT metrics_json FROM social_metric_snapshots
+               WHERE business_id = ? AND channel = 'google_review' AND captured_at < ?
+               ORDER BY captured_at DESC LIMIT 1`,
+            )
+            .get(businessId, periodStart);
+          if (baselineSnap) {
+            const baselineMetrics = JSON.parse(baselineSnap.metrics_json || "{}");
+            const totalBefore = Number(baselineMetrics.reviews_count) || 0;
+            const delta = Math.max(0, totalNow - totalBefore);
+            if (delta > 0) googleReviewsNewInPeriod = delta;
+          }
+        }
+      }
+    } catch (_e) {
+      /* */
+    }
+  }
+
   let notificationCampaigns = [];
   try {
     const allCampaigns = getNotificationCampaignInsightsForBusiness(businessId, { limit: 12 });
