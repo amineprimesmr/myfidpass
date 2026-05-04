@@ -50,7 +50,8 @@ router.post("/social-metrics/refresh", refreshLimiter, async (req, res) => {
   const rewards = getEngagementRewards(business.id);
   const gr = rewards.google_review;
   const placeId = String(gr?.place_id ?? "").trim();
-  const googleOk = !!(gr?.enabled && placeId);
+  // `enabled` contrôle uniquement la récompense (points), pas l'affichage des métriques.
+  const googleOk = !!placeId;
   const gbpConn = getSocialOAuthConnection(business.id, PROVIDER_GOOGLE_BUSINESS);
   const googleBusinessOk = !!(gbpConn?.access_token || gbpConn?.refresh_token);
   const metaIg = !!getSocialOAuthConnection(business.id, PROVIDER_META_INSTAGRAM);

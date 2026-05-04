@@ -95,7 +95,63 @@ function deltaNum(current, previous, key) {
   return Math.round((a - b) * 1000) / 1000;
 }
 
+/** Construit un reviews_sample JSON depuis des avis bruts (format legacy ou API v1). */
+function buildReviewsSampleJson(reviews, format = "legacy") {
+  if (!Array.isArray(reviews) || reviews.length === 0) return null;
+  const sample = reviews.slice(0, 5).map((rv) => {
+    if (format === "v1") {
+      return {
+        author: String(rv.authorAttribution?.displayName || "").trim() || null,
+        text: String(rv.text?.text || rv.originalText?.text || "").trim() || null,
+        rating: Number.isFinite(Number(rv.rating)) ? Number(rv.rating) : null,
+        update_time: rv.publishTime || null,
+      };
+    }
+    return {
+      author: String(rv.author_name || "").trim() || null,
+      text: String(rv.text || "").trim() || null,
+      rating: Number.isFinite(Number(rv.rating)) ? Number(rv.rating) : null,
+      update_time: rv.time ? new Date(Number(rv.time) * 1000).toISOString() : null,
+    };
+  }).filter((rv) => rv.author || rv.text);
+  return sample.length > 0 ? JSON.stringify(sample) : null;
+}
+
+/** Fallback : nouvelle Places API v1 (https://places.googleapis.com/v1/places/{id}). */
+async function fetchGooglePlaceMetricsV1(pid) {
+  const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(pid)}`;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: {
+        "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+        "X-Goog-FieldMask": "rating,userRatingCount,reviews",
+        "X-Goog-Language-Code": "fr",
+      },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+      return { ok: false, error: data.error?.message || `HTTP ${res.status}` };
+    }
+    const metrics = {};
+    if (Number.isFinite(Number(data.rating))) metrics.rating = Math.round(Number(data.rating) * 100) / 100;
+    if (Number.isFinite(Number(data.userRatingCount))) metrics.reviews_count = Number(data.userRatingCount);
+    const sample = buildReviewsSampleJson(data.reviews, "v1");
+    if (sample) metrics.reviews_sample = sample;
+    return { ok: true, metrics };
+  } catch (e) {
+    return { ok: false, error: e?.name === "AbortError" ? "timeout" : "fetch_error" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
+ * Récupère note + nb d'avis + aperçu texte depuis Google Places.
+ * Tentative 1 : Places Details API legacy (rating, user_ratings_total, reviews).
+ * Fallback    : Places API v1 si la legacy est refusée ou indisponible.
  * @param {string} placeId
  * @returns {Promise<{ ok: boolean, error?: string, metrics?: object }>}
  */
@@ -103,24 +159,38 @@ export async function fetchGooglePlaceMetrics(placeId) {
   const pid = String(placeId || "").trim();
   if (!pid) return { ok: false, error: "place_id_manquant" };
   if (!GOOGLE_PLACES_API_KEY) return { ok: false, error: "google_places_non_configure" };
-  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(pid)}&fields=rating,user_ratings_total&language=fr&key=${encodeURIComponent(GOOGLE_PLACES_API_KEY)}`;
+
+  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(pid)}&fields=rating,user_ratings_total,reviews&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: ctrl.signal, redirect: "follow" });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.status !== "OK" || !data.result) {
-      const msg = data.error_message || data.status || "places_error";
-      return { ok: false, error: String(msg) };
+    if (res.ok && data.status === "OK" && data.result) {
+      const r = data.result;
+      const reviewsCount = Number(r.user_ratings_total);
+      const rating = r.rating != null ? Number(r.rating) : null;
+      const metrics = {};
+      if (Number.isFinite(reviewsCount)) metrics.reviews_count = reviewsCount;
+      if (Number.isFinite(rating)) metrics.rating = Math.round(rating * 100) / 100;
+      const sample = buildReviewsSampleJson(r.reviews, "legacy");
+      if (sample) metrics.reviews_sample = sample;
+      return { ok: true, metrics };
     }
-    const r = data.result;
-    const reviewsCount = Number(r.user_ratings_total);
-    const rating = r.rating != null ? Number(r.rating) : null;
-    const metrics = {};
-    if (Number.isFinite(reviewsCount)) metrics.reviews_count = reviewsCount;
-    if (Number.isFinite(rating)) metrics.rating = Math.round(rating * 100) / 100;
-    return { ok: true, metrics };
+    // Legacy refusée ou quota dépassé → essayer la nouvelle API v1
+    if (!res.ok || data.status === "REQUEST_DENIED" || data.status === "OVER_QUERY_LIMIT") {
+      clearTimeout(timer);
+      const v1 = await fetchGooglePlaceMetricsV1(pid);
+      if (v1.ok) return v1;
+    }
+    const msg = data.error_message || data.status || "places_error";
+    return { ok: false, error: String(msg) };
   } catch (e) {
+    if (e?.name !== "AbortError") {
+      clearTimeout(timer);
+      const v1 = await fetchGooglePlaceMetricsV1(pid);
+      if (v1.ok) return v1;
+    }
     return { ok: false, error: e?.name === "AbortError" ? "timeout" : "fetch_error" };
   } finally {
     clearTimeout(timer);
@@ -131,7 +201,11 @@ function metricsEqual(a, b) {
   if (!a || !b) return false;
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
   for (const k of keys) {
-    if (Number(a[k]) !== Number(b[k])) return false;
+    if (k === "reviews_sample") {
+      if (String(a[k] ?? "") !== String(b[k] ?? "")) return false;
+    } else {
+      if (Number(a[k]) !== Number(b[k])) return false;
+    }
   }
   return true;
 }

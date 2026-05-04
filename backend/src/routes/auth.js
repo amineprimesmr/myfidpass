@@ -55,6 +55,7 @@ import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
 import { syncPremiumFromRevenueCatAppUserId } from "../services/revenuecat-subscription-sync.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../lib/google-place-business-enrichment.js";
+import { refreshGooglePlacesSnapshotFromPlaceId } from "../services/social-metrics-service.js";
 
 const router = Router();
 
@@ -294,6 +295,9 @@ async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishm
       location_address: addr,
       engagement_rewards: engagementFromPlace,
     });
+    // Snapshot Places immédiat → données disponibles dès la 1ère ouverture de la page stats.
+    const bizId = biz.id;
+    setImmediate(() => { refreshGooglePlacesSnapshotFromPlaceId(bizId, pid).catch(() => {}); });
   } catch (e) {
     console.error("[auth/register] tryCreateFirstBusinessFromGooglePlace:", e);
   }

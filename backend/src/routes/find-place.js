@@ -19,7 +19,8 @@ router.get("/", async (req, res) => {
     return;
   }
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(name)}&inputtype=textquery&fields=place_id,name&language=fr&key=${GOOGLE_PLACES_API_KEY}`;
+    // locationbias=rectangle couvre la France métropolitaine (bounding box SW→NE).
+    const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(name)}&inputtype=textquery&fields=place_id,name&language=fr&locationbias=rectangle:41.3,-5.3|51.1,9.7&key=${GOOGLE_PLACES_API_KEY}`;
     const r = await fetch(url);
     const data = await r.json();
     if (data.status === "REQUEST_DENIED" || data.status === "OVER_QUERY_LIMIT") {

@@ -19,6 +19,7 @@ import { sendPassKitUpdate } from "../../apns.js";
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../../lib/google-place-business-enrichment.js";
+import { refreshGooglePlacesSnapshotFromPlaceId } from "../../services/social-metrics-service.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const businessAssetsDir = join(__dirname, "..", "..", "assets", "businesses");
@@ -217,6 +218,9 @@ export async function createFromPlaceHandler(req, res) {
         },
       },
     });
+    // Snapshot Places immédiat → données disponibles dès la 1ère ouverture de la page stats.
+    const bizId = business.id;
+    setImmediate(() => { refreshGooglePlacesSnapshotFromPlaceId(bizId, placeId).catch(() => {}); });
     return res.status(201).json({
       id: business.id,
       name: business.name,
@@ -271,6 +275,9 @@ export async function bootstrapFromPlaceHandler(req, res) {
       const status = result.code === "business_already_exists" ? 409 : 400;
       return res.status(status).json({ error: result.error, code: result.code || "invalid_business_setup" });
     }
+    // Snapshot Places immédiat → données disponibles dès la 1ère ouverture de la page stats.
+    const bizId = result.business.id;
+    setImmediate(() => { refreshGooglePlacesSnapshotFromPlaceId(bizId, placeId).catch(() => {}); });
     return res.status(201).json({
       business: result.business,
       businesses: getBusinessesByUserId(req.user.id),

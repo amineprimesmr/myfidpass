@@ -56,11 +56,14 @@ router.get("/autocomplete", optionalAuth, async (req, res) => {
 
     // Text Search — même index que Google Search, trouve toutes les branches d'une chaîne
     // et les petits commerces récents qu'Autocomplete ignore.
+    // location + radius biasent fortement vers la France (centre géographique + 550 km couvrant la métropole).
     const params = new URLSearchParams({
       query: input,
       type: "establishment",
       language: "fr",
       region: "fr",
+      location: "46.2276,2.2137",
+      radius: "550000",
       key: GOOGLE_PLACES_API_KEY,
     });
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?${params.toString()}`;
@@ -69,17 +72,23 @@ router.get("/autocomplete", optionalAuth, async (req, res) => {
     if (data.status === "REQUEST_DENIED" || data.status === "OVER_QUERY_LIMIT") {
       return res.status(503).json({ error: "Service de recherche temporairement indisponible", code: data.status });
     }
+    const isFrenchAddress = (addr) =>
+      /,\s*France$/i.test(addr) || /\b(France|FR)\b/.test(addr);
+    const mapped = (data.results || []).slice(0, 15).map((p) => {
+      const name = p.name || "";
+      const addr = p.formatted_address || "";
+      return {
+        place_id: p.place_id,
+        description: addr ? `${name}, ${addr}` : name,
+        main_text: name,
+        secondary_text: addr,
+        _isFr: isFrenchAddress(addr),
+      };
+    });
+    // Résultats français en premier, les autres en dernier.
+    mapped.sort((a, b) => (b._isFr ? 1 : 0) - (a._isFr ? 1 : 0));
     const predictions = filterPredictionsExcludeOwnedPlaces(
-      (data.results || []).slice(0, 10).map((p) => {
-        const name = p.name || "";
-        const addr = p.formatted_address || "";
-        return {
-          place_id: p.place_id,
-          description: addr ? `${name}, ${addr}` : name,
-          main_text: name,
-          secondary_text: addr,
-        };
-      }),
+      mapped.slice(0, 10).map(({ _isFr: _unused, ...rest }) => rest),
       req.user?.id,
     );
     return res.json({ predictions });
