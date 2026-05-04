@@ -6,7 +6,7 @@ export const fintapFeaturesGridItems = [
     id: "notifications",
     title: "Notifications illimitées",
     description:
-      "Gardez le contact avec vos clients en envoyant des notifications push instantanées, sans plafond.",
+      "Envoyez des messages à vos clients quand vous voulez : notifications push instantanées, sans plafond.",
     imageSrc: "/assets/site/A.png?v=20260505",
     /** Fondu du bas de l’image vers transparent (masque CSS sur la carte). */
     imageFadeBottom: true,
