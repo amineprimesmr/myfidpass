@@ -21,6 +21,7 @@ import {
   resolveBusinessSplitAmountCents,
 } from "../lib/merchant-multi-pricing.js";
 import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/stripe-webhook-events.js";
+import { convertReferralForUser } from "../db/referrals.js";
 import { requireAuth } from "../middleware/auth.js";
 import { notifyAdminsPlatformEvent } from "../lib/admin-notify.js";
 
@@ -775,6 +776,10 @@ async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
     status,
     currentPeriodEnd: end,
   });
+
+  if (isStripeSubscriptionStatusPaying(status)) {
+    try { convertReferralForUser(userId); } catch (_) {}
+  }
 
   const slotsMeta = stripeSub.metadata?.merchant_slots;
   if (slotsMeta != null && String(slotsMeta).trim() !== "") {

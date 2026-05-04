@@ -436,6 +436,7 @@ export default {
       if (passwordSubmitLabel instanceof HTMLElement) passwordSubmitLabel.textContent = "Création en cours...";
       else passwordSubmit.textContent = "Création en cours...";
       try {
+        const refCode = sessionStorage.getItem("fidpass_ref") || "";
         const response = await fetch(`${API_BASE}/api/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -444,8 +445,10 @@ export default {
             password: passwordInput.value,
             establishment_name: establishmentName,
             google_place_id: placeId,
+            ...(refCode ? { referral_code: refCode } : {}),
           }),
         });
+        if (refCode) sessionStorage.removeItem("fidpass_ref");
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           const fallback = response.status === 409

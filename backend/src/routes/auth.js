@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { randomUUID, createPublicKey } from "crypto";
 import { OAuth2Client } from "google-auth-library";
 import { createHmac, randomInt, timingSafeEqual } from "crypto";
+import { getUserIdByReferralCode, recordReferral } from "../db/referrals.js";
 import {
   createUser,
   createUserWithPhone,
@@ -400,7 +401,7 @@ router.post("/check-identifier", validate(schemas.checkIdentifier), (req, res) =
  */
 router.post("/register", validate(schemas.register), async (req, res) => {
   const body = req.body || {};
-  const { email, password, name } = body;
+  const { email, password, name, referral_code } = body;
   const establishmentSelection = normalizeEstablishmentSelection(body);
   // email et password déjà validés et normalisés par Zod (register schema)
   const emailNorm = email; // déjà toLowerCase() par le schéma
@@ -420,6 +421,17 @@ router.post("/register", validate(schemas.register), async (req, res) => {
     const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
     if (businessState.requires_business_setup) {
       return respondMissingEstablishment(res);
+    }
+    if (referral_code) {
+      try {
+        const refCode = String(referral_code).trim().toUpperCase();
+        const referrerUserId = getUserIdByReferralCode(refCode);
+        if (referrerUserId && referrerUserId !== user.id) {
+          recordReferral(referrerUserId, user.id);
+        }
+      } catch (refErr) {
+        console.warn("[auth/register] referral application failed:", refErr.message);
+      }
     }
     const { accessToken, refreshToken } = issueTokenPair(user.id);
     res.status(201).json({

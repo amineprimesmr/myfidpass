@@ -74,6 +74,7 @@ export const schemas = {
     establishment_name: optionalEstablishmentNameSchema,
     establishmentName: optionalEstablishmentNameSchema,
     establishments: establishmentsArraySchema,
+    referral_code: z.string().trim().max(16).optional().nullable(),
   }).superRefine((data, ctx) => {
     const placeId = String(data.google_place_id || data.googlePlaceId || "").trim();
     const establishmentName = String(data.establishment_name || data.establishmentName || "").trim();

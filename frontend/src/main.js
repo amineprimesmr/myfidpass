@@ -13,6 +13,12 @@ window.addEventListener("popstate", () => {
 });
 
 async function bootstrap() {
+  // Capture referral code from URL (?ref=CODE) into sessionStorage
+  const refParam = new URLSearchParams(window.location.search).get("ref");
+  if (refParam && /^[A-Z2-9]{4,16}$/i.test(refParam)) {
+    sessionStorage.setItem("fidpass_ref", refParam.toUpperCase());
+  }
+
   initLandingShell();
   try {
     await initRouting();

@@ -1509,4 +1509,44 @@ export function runMigrations(db) {
     ));
     markMigrationApplied(db, 37, "apple_sub");
   }
+
+  // ── v38 : système de parrainage commerçant-à-commerçant ──
+  const m38 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 38").get();
+  if (!m38) {
+    safeRun(db, () => db.exec(`
+      CREATE TABLE IF NOT EXISTS merchant_referral_codes (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        code TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_merchant_referral_codes_code
+        ON merchant_referral_codes(code);
+
+      CREATE TABLE IF NOT EXISTS merchant_referrals (
+        id TEXT PRIMARY KEY,
+        referrer_user_id TEXT NOT NULL REFERENCES users(id),
+        referred_user_id TEXT NOT NULL UNIQUE REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        converted_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_merchant_referrals_referrer
+        ON merchant_referrals(referrer_user_id);
+
+      CREATE TABLE IF NOT EXISTS merchant_referral_discounts (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        referral_id TEXT REFERENCES merchant_referrals(id),
+        discount_type TEXT NOT NULL,
+        discount_pct INTEGER NOT NULL DEFAULT 50,
+        months_total INTEGER NOT NULL DEFAULT 1,
+        months_used INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_merchant_referral_discounts_user
+        ON merchant_referral_discounts(user_id, status);
+    `));
+    markMigrationApplied(db, 38, "merchant_referral_system");
+  }
 }

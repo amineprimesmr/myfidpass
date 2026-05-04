@@ -15,6 +15,7 @@ import membersRouter from "./members.js";
 import assetsRouter from "./assets.js";
 import publicAssetsRouter from "./public-assets.js";
 import integrationRouter from "./integration.js";
+import dashboardReferralRouter from "./dashboard-referral.js";
 
 const slugRouter = Router({ mergeParams: true });
 
@@ -28,6 +29,7 @@ slugRouter.use("/members", membersGuestClaimRouter);
 slugRouter.use("/members", membersProfileBonusRouter);
 slugRouter.use("/members", membersDeliveryReceiptRouter);
 slugRouter.use("/members", membersRouter);
+slugRouter.use("/dashboard/referral", dashboardReferralRouter);
 slugRouter.use("/dashboard", dashboardRouter);
 slugRouter.use("/integration", integrationRouter);
 slugRouter.use("/public", publicAssetsRouter);

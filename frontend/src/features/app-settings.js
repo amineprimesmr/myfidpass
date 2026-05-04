@@ -5,6 +5,7 @@ import { bindSettingsNotifications } from "./app-settings-notifications.js";
 import { bindSettingsLocation } from "./app-settings-location.js";
 import { bindSettingsSecurity } from "./app-settings-security.js";
 import { bindSettingsEstablishment } from "./app-settings-establishment.js";
+import { initSettingsReferral } from "./app-settings-referral.js";
 
 /**
  * @param {{
@@ -286,6 +287,7 @@ export function initAppSettings(deps) {
   document.getElementById("app-settings-close")?.addEventListener("click", () => {
     window.dispatchEvent(new CustomEvent("app-settings-close-request"));
   });
+  initSettingsReferral({ api: deps.api });
 
   window.addEventListener("app-section-change", (event) => {
     if (event.detail?.sectionId !== "profil") return;

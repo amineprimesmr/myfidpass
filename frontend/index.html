@@ -1692,7 +1692,120 @@
             </div>
           </section>
           <!-- Section Profil : infos établissement (nom, logo, adresse) -->
-          <section id="profil" class="app-section app-section-profil" data-commerce-view="home">
+          <section id="profil" class="app-section app-section-profil" data-commerce-view="home" style="position:relative;overflow:hidden;">
+            <!-- ── Page Récompenses (overlay interne) ── -->
+            <div id="app-referral-panel" class="app-referral-panel hidden" aria-label="Récompenses parrainage">
+              <header class="app-referral-panel__header">
+                <button type="button" id="app-referral-back" class="app-referral-panel__back" aria-label="Retour">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <span class="app-referral-panel__title">Récompenses</span>
+                <button type="button" class="app-referral-panel__people-btn" aria-label="Parrainages">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </button>
+              </header>
+
+              <!-- Carte holographique -->
+              <div class="app-referral-hero">
+                <div class="app-referral-holo-card">
+                  <div class="app-referral-holo-card__logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  </div>
+                  <span class="app-referral-holo-card__label">Passe de parrainage</span>
+                </div>
+              </div>
+
+              <!-- État chargement -->
+              <p id="app-referral-loading" class="app-referral-loading">Chargement…</p>
+
+              <!-- État verrouillé (pas d'abonnement) -->
+              <div id="app-referral-locked" class="app-referral-locked hidden">
+                <div class="app-referral-locked__icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <p class="app-referral-locked__title">Disponible dès votre premier mois</p>
+                <p class="app-referral-locked__sub">Le parrainage s'active après votre premier paiement à 1 €.</p>
+              </div>
+
+              <!-- Contenu principal -->
+              <div id="app-referral-content" class="hidden">
+                <div class="app-referral-intro">
+                  <h2 class="app-referral-intro__title">Invitez et gagnez des récompenses</h2>
+                  <p class="app-referral-intro__sub">Parrainez un autre commerçant : il démarre à 1 € puis profite d'un mois à −50 %, et vous gagnez 2 mois à −50 %.</p>
+                </div>
+
+                <div class="app-referral-link-section">
+                  <h3 class="app-referral-link-section__heading">Votre lien de parrainage</h3>
+                  <div class="app-referral-link-box">
+                    <span id="app-referral-link-url" class="app-referral-link-url">Chargement…</span>
+                    <button type="button" id="app-referral-copy-btn" class="app-referral-link-copy" aria-label="Copier le lien">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
+                  </div>
+                  <button type="button" id="app-referral-share-btn" class="app-referral-share-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                    Partager votre lien de parrainage
+                  </button>
+                  <p class="app-referral-legal">En utilisant notre programme de parrainage, vous acceptez nos conditions d'utilisation.</p>
+                </div>
+
+                <!-- Réductions actives -->
+                <div id="app-referral-discounts"></div>
+
+                <div class="app-referral-rewards-section">
+                  <h3 class="app-referral-rewards-section__heading">Vos récompenses</h3>
+                  <p class="app-referral-rewards-section__desc">Parrainez un autre commerçant. Il bénéficiera d'un 1er mois à 1 € puis d'un mois à −50 %, et vous recevrez 2 mois à −50 % par parrainage converti.</p>
+
+                  <!-- Carte récompense parrain -->
+                  <div class="app-referral-reward-card">
+                    <div class="app-referral-reward-card__icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    </div>
+                    <div class="app-referral-reward-card__body">
+                      <p class="app-referral-reward-card__tier">1 parrainage</p>
+                      <p class="app-referral-reward-card__title">2 mois à −50 %</p>
+                      <div class="app-referral-reward-card__progress">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <span id="app-referral-progress">0 / 0 converti</span>
+                      </div>
+                    </div>
+                    <div class="app-referral-reward-card__action">
+                      <button type="button" class="app-referral-reward-card__btn" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Automatique
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Carte récompense filleul (informationnelle) -->
+                  <div class="app-referral-reward-card">
+                    <div class="app-referral-reward-card__icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="app-referral-reward-card__body">
+                      <p class="app-referral-reward-card__tier">Votre filleul reçoit</p>
+                      <p class="app-referral-reward-card__title">1er mois à 1 € + 1 mois à −50 %</p>
+                      <div class="app-referral-reward-card__progress">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                        Offre de bienvenue automatique
+                      </div>
+                    </div>
+                    <div class="app-referral-reward-card__action">
+                      <button type="button" class="app-referral-reward-card__btn" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Automatique
+                      </button>
+                    </div>
+                  </div>
+
+                  <p style="font-size:0.75rem;color:#aaa;line-height:1.5;margin-top:0.5rem;">Les réductions sont vérifiées après conversion de chaque parrainage. Myfidpass se réserve le droit de révoquer les avantages en cas d'abus.</p>
+                </div>
+              </div>
+
+              <!-- Toast copie -->
+              <div id="app-referral-copied-toast" class="app-referral-copied-toast" role="status" aria-live="polite"></div>
+            </div>
+
             <div class="app-settings-sheet-head">
               <div>
                 <h2 class="app-section-title">Réglages</h2>
@@ -1700,6 +1813,25 @@
               </div>
               <button type="button" id="app-settings-close" class="app-btn app-btn-secondary">Fermer</button>
             </div>
+
+            <!-- Bannière parrainage -->
+            <button type="button" id="app-referral-banner" class="app-referral-banner hidden" aria-label="Ouvrir le programme de parrainage" style="border:none;width:100%;text-align:left;padding:0 1.5rem 0 0;margin:0 0 0.5rem;">
+              <span class="app-referral-banner__avatars" aria-hidden="true">
+                <span class="app-referral-banner__avatar">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <span class="app-referral-banner__avatar">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+              </span>
+              <span class="app-referral-banner__bg-num" aria-hidden="true">%</span>
+              <span class="app-referral-banner__body">
+                <span class="app-referral-banner__title">Invitez et gagnez des récompenses</span>
+                <span class="app-referral-banner__sub">Parrainez un commerçant et gagnez 2 mois à −50 %.</span>
+              </span>
+              <span class="app-referral-banner__chevron" aria-hidden="true">›</span>
+            </button>
+
             <div class="app-commerce-reglages-stack app-settings-shopify-shell">
             <aside class="app-settings-shopify-nav" aria-label="Navigation réglages">
               <a href="#app-settings-account-card" class="app-settings-shopify-nav-link">Mon compte</a>
