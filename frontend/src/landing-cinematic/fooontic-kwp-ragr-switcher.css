@@ -1,7 +1,7 @@
 /**
  * CodePen fooontic/KwpRaGr — styles du switcher uniquement.
- * Les variables et :has sont scopés à #landing-liquid-glass pour ne pas
- * polluer #landing ni le hero (évite les règles globales h1/img/a du pen).
+ * Variables couleur scopées sur #landing-liquid-glass pour ne pas
+ * polluer #landing ni le hero.
  */
 #landing-liquid-glass {
   --c-glass: #bbbbbc;
@@ -16,33 +16,9 @@
   --fz: 1rem;
 }
 
-#landing-liquid-glass:has(input[value="dark"]:checked) {
-  --c-glass: #bbbbbc;
-  --c-light: #fff;
-  --c-dark: #000;
-  --c-content: #e1e1e1;
-  --c-action: #03d5ff;
-  --c-bg: #1b1b1d;
-  --glass-reflex-dark: 2;
-  --glass-reflex-light: 0.3;
-  --saturation: 150%;
-}
-
-#landing-liquid-glass:has(input[value="dim"]:checked) {
-  --c-light: #99deff;
-  --c-dark: #20001b;
-  --c-glass: hsl(335 250% 74% / 1);
-  --c-content: #d5dbe2;
-  --c-action: #ff48a9;
-  --c-bg: #152433;
-  --glass-reflex-dark: 2;
-  --glass-reflex-light: 0.7;
-  --saturation: 200%;
-}
-
-
 .switcher {
- /* Piste utile = largeur − paddings − gaps ; pilule et translate suivent la même formule (y compris si max-width réduit la barre). */
+ /* Le menu ne change pas le thème du site : uniquement la pilule (CSS c-option). */
+ /* Piste utile = largeur − paddings − gaps ; pilule alignée sur les 3 colonnes flex. */
  --sw-pad-x: 8px;
  --sw-pad-y: 4px;
  --sw-pad-yb: 4px;
@@ -64,7 +40,7 @@
  height: 44px;
  box-sizing: border-box;
  padding: var(--sw-pad-y) var(--sw-pad-x) var(--sw-pad-yb);
- margin: 0 auto;
+ margin: 0;
  border: none;
  border-radius: 99em;
  font-size: var(--fz);
@@ -113,6 +89,10 @@
  width: 1px;
  overflow: hidden;
  position: absolute;
+ left: 50%;
+ top: 50%;
+ translate: -50% -50%;
+ margin: 0;
  white-space: nowrap;
 }
 
@@ -121,7 +101,7 @@
  flex-shrink: 0;
  width: 1.35rem;
  height: 1.35rem;
- margin: 0 auto;
+ margin: 0;
  transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
 }
 
@@ -141,7 +121,7 @@
  display: flex;
  justify-content: center;
  align-items: center;
- padding: 0 4px;
+ padding: 0;
  height: 100%;
  box-sizing: border-box;
  border-radius: 99em;

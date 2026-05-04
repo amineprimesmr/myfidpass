@@ -27,7 +27,7 @@
   z-index: 100;
 }
 
-/* CodePen KwpRaGr : le fieldset est en position fixed avec z-index 1 dans le pen — on le remonte au-dessus du hero. */
+/* CodePen KwpRaGr : la barre .switcher est en position fixed — on la remonte au-dessus du hero. */
 #landing-liquid-glass .switcher {
   z-index: 110;
 }
