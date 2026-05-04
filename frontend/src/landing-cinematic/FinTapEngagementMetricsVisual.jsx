@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { IconBrandGoogle } from "@tabler/icons-react";
-
-const LOGO_INSTAGRAM = "/assets/logos/instagram.png?v=20260504";
-const LOGO_TIKTOK = "/assets/logos/tiktok.png?v=20260504";
 import { useInView, useReducedMotion } from "framer-motion";
 import "./fintap-engagement-metrics-visual.css";
+
+const LOGO_GOOGLE = "/assets/logos/google.png?v=20260504";
+const LOGO_INSTAGRAM = "/assets/logos/instagram.png?v=20260504";
+const LOGO_TIKTOK = "/assets/logos/tiktok.png?v=20260504";
 
 function easeOutCubic(t) {
   return 1 - (1 - t) ** 3;
@@ -83,8 +83,6 @@ const G = { start: 118, end: 247 };
 const IG = { start: 1240, end: 2840 };
 const TK = { start: 890, end: 6120 };
 
-const ICON = 30;
-
 /**
  * Illustration animée : avis Google + abonnés réseaux (démonstration marketing).
  */
@@ -114,7 +112,7 @@ export function FinTapEngagementMetricsVisual() {
     >
       <div className="fintap-engagement-visual__row">
         <div className="fintap-engagement-visual__brand fintap-engagement-visual__brand--google" aria-hidden>
-          <IconBrandGoogle size={ICON} stroke={1.35} />
+          <img className="fintap-engagement-visual__brand-logo" src={LOGO_GOOGLE} alt="" width={64} height={64} decoding="async" />
         </div>
         <div className="fintap-engagement-visual__body">
           <p className="fintap-engagement-visual__label">Avis Google</p>

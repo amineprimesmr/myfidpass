@@ -51,10 +51,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.fintap-engagement-visual__brand--google {
-  color: #4285f4;
-}
-
+.fintap-engagement-visual__brand--google,
 .fintap-engagement-visual__brand--insta,
 .fintap-engagement-visual__brand--tiktok {
   background: transparent;

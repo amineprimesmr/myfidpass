@@ -60,7 +60,8 @@
 }
 
 .fintap-features-grid__visual {
-  flex: 0 0 auto;
+  /* Grandit avec la ligne de grille pour aligner la zone grise avec la carte voisine */
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,6 +69,16 @@
   padding: clamp(0.75rem, 2vw, 1.25rem);
   border-radius: calc(var(--fintap-features-card-radius) - 6px);
   background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+}
+
+.fintap-features-grid__visual--engagement {
+  align-items: stretch;
+}
+
+.fintap-features-grid__visual--engagement .fintap-engagement-visual {
+  flex: 1 1 auto;
+  width: 100%;
+  justify-content: center;
 }
 
 .fintap-features-grid__img {
@@ -105,7 +116,7 @@
 }
 
 .fintap-features-grid__copy {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   padding: clamp(1rem, 2.5vw, 1.5rem) clamp(0.5rem, 1.5vw, 0.75rem) clamp(1.25rem, 2.5vw, 1.75rem);
   text-align: center;
 }
