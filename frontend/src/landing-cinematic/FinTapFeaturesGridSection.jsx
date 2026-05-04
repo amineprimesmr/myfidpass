@@ -1,5 +1,6 @@
 import { fintapFeaturesGridItems } from "./fintap-features-data.js";
 import { FinTapEngagementMetricsVisual } from "./FinTapEngagementMetricsVisual.jsx";
+import { ScrollReveal } from "./ScrollReveal.jsx";
 import "./fintap-features-grid.css";
 
 /**
@@ -14,17 +15,28 @@ export function FinTapFeaturesGridSection() {
     >
       <div className="fintap-section-inner fintap-features-grid__inner">
         <header className="fintap-features-grid__header">
-          <h2 id="fintap-features-grid-heading" className="fintap-steps-scroll__h2">
-            Tout ce qu’il faut pour fidéliser et vendre plus
-          </h2>
-          <p className="fintap-steps-scroll__intro fintap-features-grid__intro">
-            Des notifications illimitées à la fidélité et à la data : tout est pensé pour vous faire gagner du temps et
-            garder vos clients engagés.
-          </p>
+          <ScrollReveal>
+            <h2 id="fintap-features-grid-heading" className="fintap-steps-scroll__h2">
+              Tout ce qu'il faut pour fidéliser et vendre plus
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal delay={0.1}>
+            <p className="fintap-steps-scroll__intro fintap-features-grid__intro">
+              Des notifications illimitées à la fidélité et à la data : tout est pensé pour vous faire gagner du temps et
+              garder vos clients engagés.
+            </p>
+          </ScrollReveal>
         </header>
+
         <ul className="fintap-features-grid__list">
-          {fintapFeaturesGridItems.map((item) => (
-            <li key={item.id} className="fintap-features-grid__card">
+          {fintapFeaturesGridItems.map((item, idx) => (
+            <ScrollReveal
+              key={item.id}
+              tag="li"
+              className="fintap-features-grid__card"
+              variant="scale-up"
+              delay={0.07 * idx}
+            >
               <div
                 className={
                   "fintap-features-grid__visual" +
@@ -51,7 +63,7 @@ export function FinTapFeaturesGridSection() {
                 <h3 className="fintap-features-grid__card-title">{item.title}</h3>
                 <p className="fintap-features-grid__card-desc">{item.description}</p>
               </div>
-            </li>
+            </ScrollReveal>
           ))}
         </ul>
       </div>

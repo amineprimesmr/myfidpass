@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FINTAP_STEPS } from "./fintap-steps-data.js";
 import { StepVisualByIndex } from "./FinTapStepsScrollVisuals.jsx";
+import { ScrollReveal } from "./ScrollReveal.jsx";
 
 /**
  * Desktop ≥901px : texte gauche ancré (fixed simulé) pendant le défilement des cartes,
@@ -154,13 +155,17 @@ export function FinTapStepsScrollDesktop({ measureRef }) {
         >
           <div ref={panelRef} className="fintap-steps-scroll__left-sticky">
             <div className="fintap-steps-scroll__left">
-              <h2 id="fintap-steps-heading" className="fintap-steps-scroll__h2">
-                Lancez-vous en 3 étapes simples.
-              </h2>
-              <p className="fintap-steps-scroll__intro">
-                Du commerce à la carte Wallet : tout est pensé pour vous faire gagner du temps et garder vos clients
-                engagés.
-              </p>
+              <ScrollReveal variant="slide-left">
+                <h2 id="fintap-steps-heading" className="fintap-steps-scroll__h2">
+                  Lancez-vous en 3 étapes simples.
+                </h2>
+              </ScrollReveal>
+              <ScrollReveal variant="slide-left" delay={0.1}>
+                <p className="fintap-steps-scroll__intro">
+                  Du commerce à la carte Wallet : tout est pensé pour vous faire gagner du temps et garder vos clients
+                  engagés.
+                </p>
+              </ScrollReveal>
             </div>
           </div>
         </div>
@@ -173,13 +178,18 @@ export function FinTapStepsScrollDesktop({ measureRef }) {
         <div ref={rightRef} className="fintap-steps-scroll__right">
           <div className="fintap-steps-scroll__cards" role="list" aria-live="polite">
             {FINTAP_STEPS.map((step, i) => (
-              <article
+              <ScrollReveal
                 key={step.cardTitle}
+                tag="article"
                 className={`fintap-steps-card fintap-steps-card--etape-media${active === i ? " is-active" : ""}`}
-                role="listitem"
-                aria-current={active === i ? "step" : undefined}
+                variant="fade-up"
+                delay={0.06 * i}
               >
-                <div className="fintap-steps-card__grey-panel">
+                <div
+                  className="fintap-steps-card__grey-panel"
+                  role="listitem"
+                  aria-current={active === i ? "step" : undefined}
+                >
                   <span className="fintap-steps-card__footer-num" aria-hidden="true">
                     {i + 1}
                   </span>
@@ -189,7 +199,7 @@ export function FinTapStepsScrollDesktop({ measureRef }) {
                   <h3 className="fintap-steps-card__title">{step.cardTitle}</h3>
                   <p className="fintap-steps-card__desc">{step.cardDesc}</p>
                 </div>
-              </article>
+              </ScrollReveal>
             ))}
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FINTAP } from "./fintap-data.js";
 import { scrollProgressThroughSection } from "./fintap-testimonials-scroll.js";
+import { ScrollReveal } from "./ScrollReveal.jsx";
 import "./fintap-testimonials-marquee.css";
 
 const KICKER_ICON = "/assets/fintap-testimonials-kicker.png";
@@ -122,19 +123,23 @@ export function FinTapTestimonialsSection() {
       aria-labelledby="fintap-testimonials-heading"
     >
       <header className="fintap-t-marquee-head">
-        <img
-          src={KICKER_ICON}
-          width={52}
-          height={52}
-          className="fintap-t-marquee-icon"
-          alt=""
-          decoding="async"
-        />
-        <h2 id="fintap-testimonials-heading" className="fintap-t-marquee-title">
-          Ce que disent
-          <br />
-          nos clients
-        </h2>
+        <ScrollReveal variant="scale-up">
+          <img
+            src={KICKER_ICON}
+            width={52}
+            height={52}
+            className="fintap-t-marquee-icon"
+            alt=""
+            decoding="async"
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={0.08}>
+          <h2 id="fintap-testimonials-heading" className="fintap-t-marquee-title">
+            Ce que disent
+            <br />
+            nos clients
+          </h2>
+        </ScrollReveal>
       </header>
 
       <div className="fintap-t-marquee-rows" aria-hidden={false}>

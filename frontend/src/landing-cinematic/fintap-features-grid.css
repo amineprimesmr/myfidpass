@@ -137,32 +137,42 @@
   color: var(--fintap-muted, #636363);
 }
 
-/* Survol souris : léger relief + halo marque (désactivé tactile / reduced motion) */
+/* Survol souris : relief + halo marque + zoom image (désactivé tactile / reduced motion) */
 @media (hover: hover) and (pointer: fine) {
   @media (prefers-reduced-motion: no-preference) {
     .fintap-features-grid__card {
       position: relative;
       transition:
-        transform 0.45s cubic-bezier(0.34, 1.2, 0.64, 1),
-        box-shadow 0.45s ease;
+        transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1),
+        box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
     }
 
     .fintap-features-grid__card .fintap-features-grid__img {
-      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
     }
 
     .fintap-features-grid__card:hover {
-      transform: translate3d(0, -7px, 0);
+      transform: translate3d(0, -10px, 0);
       box-shadow:
-        0 2px 6px rgba(0, 0, 0, 0.05),
-        0 18px 42px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(10, 152, 255, 0.14),
-        0 0 28px rgba(39, 243, 169, 0.12);
+        0 2px 6px rgba(0, 0, 0, 0.04),
+        0 24px 56px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(10, 152, 255, 0.16),
+        0 0 40px rgba(39, 243, 169, 0.1);
       z-index: 2;
     }
 
     .fintap-features-grid__card:hover .fintap-features-grid__img {
-      transform: scale(1.025);
+      transform: scale(1.035);
+    }
+
+    .fintap-features-grid__card:hover .fintap-features-grid__visual {
+      background: linear-gradient(180deg, #f5f5f5 0%, #eaeaea 100%);
+    }
+
+    .fintap-features-grid__visual {
+      transition: background 0.45s ease;
     }
   }
 }

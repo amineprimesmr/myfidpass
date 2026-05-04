@@ -1,21 +1,45 @@
 import { motion, useReducedMotion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
-const def = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0 } };
+const EASE = [0.22, 1, 0.36, 1];
+
+const VARIANTS = {
+  "fade-up": {
+    hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
+    show:   { opacity: 1, y: 0,  filter: "blur(0px)" },
+  },
+  "fade-in": {
+    hidden: { opacity: 0 },
+    show:   { opacity: 1 },
+  },
+  "scale-up": {
+    hidden: { opacity: 0, scale: 0.92, filter: "blur(4px)" },
+    show:   { opacity: 1, scale: 1,    filter: "blur(0px)" },
+  },
+  "slide-left": {
+    hidden: { opacity: 0, x: -48, filter: "blur(4px)" },
+    show:   { opacity: 1, x: 0,   filter: "blur(0px)" },
+  },
+  "slide-right": {
+    hidden: { opacity: 0, x: 48, filter: "blur(4px)" },
+    show:   { opacity: 1, x: 0,  filter: "blur(0px)" },
+  },
+};
 
 /**
- * Révélation au scroll — évite whileInView seul : au retour d’onglet l’IntersectionObserver
- * peut laisser des blocs en état « hidden » (chevauchement / opacité) jusqu’au refresh.
+ * Révélation au scroll avec variants d'animation.
  *
- * @param {object} props
+ * @param {object}  props
  * @param {import("react").ReactNode} props.children
- * @param {string} [props.className]
- * @param {number} [props.delay]
+ * @param {string}  [props.className]
+ * @param {number}  [props.delay]      délai en secondes
+ * @param {"fade-up"|"fade-in"|"scale-up"|"slide-left"|"slide-right"} [props.variant]
+ * @param {string}  [props.tag]        tag HTML cible (div, li, section, …)
  */
-export function ScrollReveal({ children, className, delay = 0 }) {
+export function ScrollReveal({ children, className, delay = 0, variant = "fade-up", tag = "div" }) {
   const reduce = useReducedMotion();
-  const ref = useRef(null);
-  const inView = useInView(ref, { amount: 0.2, margin: "0px 0px -12% 0px" });
+  const ref    = useRef(null);
+  const inView = useInView(ref, { amount: 0.15, margin: "0px 0px -8% 0px" });
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -23,42 +47,46 @@ export function ScrollReveal({ children, className, delay = 0 }) {
     if (inView) setVisible(true);
   }, [inView, reduce]);
 
+  // Snap si l'élément est déjà visible au retour d'onglet / pageshow (bfcache)
   useEffect(() => {
     if (reduce) return;
-    const snapIfIntersecting = () => {
+    const snap = () => {
       if (document.visibilityState !== "visible") return;
       requestAnimationFrame(() => {
         const el = ref.current;
         if (!el) return;
         const r = el.getBoundingClientRect();
         const h = window.innerHeight || 1;
-        if (r.top < h * 0.93 && r.bottom > h * 0.07) {
-          setVisible(true);
-        }
+        if (r.top < h * 0.95 && r.bottom > h * 0.05) setVisible(true);
       });
     };
-    document.addEventListener("visibilitychange", snapIfIntersecting);
-    window.addEventListener("pageshow", snapIfIntersecting);
+    document.addEventListener("visibilitychange", snap);
+    window.addEventListener("pageshow", snap);
     return () => {
-      document.removeEventListener("visibilitychange", snapIfIntersecting);
-      window.removeEventListener("pageshow", snapIfIntersecting);
+      document.removeEventListener("visibilitychange", snap);
+      window.removeEventListener("pageshow", snap);
     };
   }, [reduce]);
 
+  const vars = VARIANTS[variant] ?? VARIANTS["fade-up"];
+
   if (reduce) {
-    return <div className={className}>{children}</div>;
+    const Plain = tag;
+    return <Plain className={className}>{children}</Plain>;
   }
 
+  const Tag = motion[tag] ?? motion.div;
+
   return (
-    <motion.div
+    <Tag
       ref={ref}
       className={className}
-      variants={def}
+      variants={vars}
       initial="hidden"
       animate={visible ? "show" : "hidden"}
-      transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1], delay: visible ? delay : 0 }}
+      transition={{ duration: 0.7, ease: EASE, delay: visible ? delay : 0 }}
     >
       {children}
-    </motion.div>
+    </Tag>
   );
 }
