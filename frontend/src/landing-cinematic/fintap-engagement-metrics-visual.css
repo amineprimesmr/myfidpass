@@ -1,0 +1,207 @@
+/* Visuel « engagement » : avis Google + réseaux — animations au scroll dans la carte */
+
+.fintap-engagement-visual {
+  width: 100%;
+  max-width: min(100%, 400px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.65rem, 2vw, 0.85rem);
+  padding: clamp(0.15rem, 0.5vw, 0.35rem) 0;
+}
+
+.fintap-engagement-visual__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: clamp(0.55rem, 1.8vw, 0.85rem);
+  padding: clamp(0.55rem, 1.5vw, 0.7rem) clamp(0.6rem, 1.6vw, 0.85rem);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 248, 250, 0.98) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 4px 14px rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.15, 0.64, 1),
+    box-shadow 0.35s ease,
+    border-color 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fintap-engagement-visual__row:hover {
+      transform: translateY(-2px);
+      border-color: rgba(10, 152, 255, 0.18);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.95) inset,
+        0 8px 22px rgba(10, 152, 255, 0.08),
+        0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+.fintap-engagement-visual__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.85);
+  color: #5f6368;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.fintap-engagement-visual__brand--google {
+  color: #4285f4;
+}
+
+.fintap-engagement-visual__brand--insta {
+  color: #e4405f;
+}
+
+.fintap-engagement-visual__brand--tiktok {
+  color: #0a0a0a;
+}
+
+.fintap-engagement-visual__body {
+  min-width: 0;
+  text-align: left;
+}
+
+.fintap-engagement-visual__label {
+  margin: 0 0 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.45);
+}
+
+.fintap-engagement-visual__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.65rem;
+}
+
+.fintap-engagement-visual__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.fintap-engagement-visual__stars {
+  font-size: 0.72rem;
+  letter-spacing: -0.06em;
+  background: linear-gradient(110deg, #fbbf24 0%, #f59e0b 45%, #ea580c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.fintap-engagement-visual__rating-num {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0a0a0a;
+  font-variant-numeric: tabular-nums;
+}
+
+.fintap-engagement-visual__count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(10, 10, 10, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+
+.fintap-engagement-visual__big {
+  margin: 0.1rem 0 0;
+  font-size: clamp(1rem, 2.4vw, 1.12rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0a0a0a;
+  font-variant-numeric: tabular-nums;
+}
+
+.fintap-engagement-visual__bar {
+  margin-top: 0.45rem;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.fintap-engagement-visual__bar-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.08s linear;
+  will-change: transform;
+}
+
+.fintap-engagement-visual__bar-fill--google {
+  background: linear-gradient(90deg, #4285f4 0%, #34a853 100%);
+}
+
+.fintap-engagement-visual__bar-fill--insta {
+  background: linear-gradient(90deg, #f09433 0%, #e6683c 40%, #bc1888 100%);
+}
+
+.fintap-engagement-visual__bar-fill--tiktok {
+  background: linear-gradient(90deg, #25f4ee 0%, #fe2c55 55%, #0a0a0a 100%);
+}
+
+.fintap-engagement-visual__delta {
+  flex-shrink: 0;
+  padding: 0.28rem 0.45rem;
+  border-radius: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0a7a4a;
+  background: rgba(39, 243, 169, 0.14);
+  border: 1px solid rgba(39, 243, 169, 0.35);
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  transform: translateX(6px) scale(0.96);
+  transition:
+    opacity 0.35s ease,
+    transform 0.45s cubic-bezier(0.34, 1.2, 0.64, 1),
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.fintap-engagement-visual__delta.is-visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.fintap-engagement-visual__delta.is-hot {
+  color: #0a5c8f;
+  background: rgba(10, 152, 255, 0.12);
+  border-color: rgba(10, 152, 255, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintap-engagement-visual__row {
+    transition: none;
+  }
+
+  .fintap-engagement-visual__row:hover {
+    transform: none;
+  }
+
+  .fintap-engagement-visual__bar-fill {
+    transition: none;
+  }
+
+  .fintap-engagement-visual__delta {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

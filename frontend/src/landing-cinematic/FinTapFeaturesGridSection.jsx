@@ -1,4 +1,5 @@
 import { fintapFeaturesGridItems } from "./fintap-features-data.js";
+import { FinTapEngagementMetricsVisual } from "./FinTapEngagementMetricsVisual.jsx";
 import "./fintap-features-grid.css";
 
 /**
@@ -27,19 +28,24 @@ export function FinTapFeaturesGridSection() {
               <div
                 className={
                   "fintap-features-grid__visual" +
-                  (item.imageFadeBottom ? " fintap-features-grid__visual--fade-bottom" : "")
+                  (item.imageFadeBottom ? " fintap-features-grid__visual--fade-bottom" : "") +
+                  (item.visualKind === "engagement" ? " fintap-features-grid__visual--engagement" : "")
                 }
-                aria-hidden="true"
+                {...(item.visualKind !== "engagement" ? { "aria-hidden": true } : {})}
               >
-                <img
-                  className="fintap-features-grid__img"
-                  src={item.imageSrc}
-                  alt=""
-                  width={560}
-                  height={360}
-                  loading="lazy"
-                  decoding="async"
-                />
+                {item.visualKind === "engagement" ? (
+                  <FinTapEngagementMetricsVisual />
+                ) : (
+                  <img
+                    className="fintap-features-grid__img"
+                    src={item.imageSrc}
+                    alt=""
+                    width={560}
+                    height={360}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                )}
               </div>
               <div className="fintap-features-grid__copy">
                 <h3 className="fintap-features-grid__card-title">{item.title}</h3>

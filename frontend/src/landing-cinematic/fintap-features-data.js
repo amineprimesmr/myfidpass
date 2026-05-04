@@ -13,10 +13,10 @@ export const fintapFeaturesGridItems = [
   },
   {
     id: "ca",
-    title: "Boostez votre chiffre d’affaires",
+    title: "Boostez l'engagement",
     description:
-      "Augmentez le panier moyen et la fréquence d’achat grâce à des programmes de fidélité qui récompensent vraiment.",
-    imageSrc: FINTAP_FEATURES_PLACEHOLDER_IMG,
+      "Faites monter vos avis Google et votre communauté sur Instagram, TikTok… Une visibilité locale qui convertit.",
+    visualKind: "engagement",
   },
   {
     id: "reputation",
