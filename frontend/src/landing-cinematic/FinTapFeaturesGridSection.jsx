@@ -22,8 +22,7 @@ export function FinTapFeaturesGridSection() {
           </ScrollReveal>
           <ScrollReveal delay={0.1}>
             <p className="fintap-steps-scroll__intro fintap-features-grid__intro">
-              Des notifications illimitées à la fidélité et à la data : tout est pensé pour vous faire gagner du temps et
-              garder vos clients engagés.
+            100% automatisé, pensé pour vous faire gagner du temps et garder vos clients engagés.
             </p>
           </ScrollReveal>
         </header>
