@@ -6,30 +6,30 @@ export const fintapFeaturesGridItems = [
     id: "notifications",
     title: "Notifications illimitées",
     description:
-      "Envoyez des messages à vos clients quand vous voulez : notifications push instantanées, sans plafond.",
+      "Envoyez des messages à vos clients à tout moment, en quelques secondes.",
     imageSrc: "/assets/site/A.png?v=20260505",
     /** Fondu du bas de l’image vers transparent (masque CSS sur la carte). */
     imageFadeBottom: true,
   },
   {
     id: "ca",
-    title: "Boostez l'engagement",
+    title: "Boostez votre visibilité",
     description:
       "Faites monter vos avis Google et votre communauté sur Instagram, TikTok… Une visibilité locale qui convertit.",
     visualKind: "engagement",
   },
   {
     id: "reputation",
-    title: "E-réputation et visibilité",
+    title: "Flyers intelligents avec QR code",
     description:
-      "Collectez plus d’avis Google et renforcez votre présence sur les réseaux sociaux, de façon naturelle.",
-    imageSrc: FINTAP_FEATURES_PLACEHOLDER_IMG,
+      "Diffusez votre offre partout : un scan et le client rejoint votre programme en quelques secondes.",
+    imageSrc: "/assets/site/C.png?v=20260505",
   },
   {
     id: "data",
     title: "Analysez vos performances",
     description:
-      "Suivez les performances de votre commerce et le comportement d’achat avec un suivi clair et exploitable.",
+      "Découvrez les habitudes de vos clients et comprenez enfin ce qui fait revenir vos meilleurs acheteurs.",
     imageSrc: FINTAP_FEATURES_PLACEHOLDER_IMG,
     imageFadeBottom: true,
   },

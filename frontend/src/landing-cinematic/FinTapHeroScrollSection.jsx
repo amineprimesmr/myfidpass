@@ -84,6 +84,12 @@ export function FinTapHeroScrollSection() {
     return fintapHeroScrollRatio(slowedDeltaPx, 0, TRIGGER_PX);
   };
   const smoothstep = (t) => t * t * (3 - 2 * t);
+  const getHeroSectionStartY = () => {
+    const el = sectionRef.current;
+    if (!el) return getPageScrollY();
+    const rect = el.getBoundingClientRect();
+    return getPageScrollY() + rect.top;
+  };
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -102,13 +108,20 @@ export function FinTapHeroScrollSection() {
         return;
       }
       if (scroll0Ref.current == null) {
-        scroll0Ref.current = getPageScrollY();
+        // Ancrer l'animation à la position réelle de la section hero, pas à la position
+        // de scroll courante. Sinon, après retour SPA avec restauration du scroll,
+        // le ratio repart de 0 au mauvais endroit et le mockup paraît "figé".
+        scroll0Ref.current = getHeroSectionStartY();
       }
       const sy = getPageScrollY();
-      const delta = sy - scroll0Ref.current;
       if (window.innerWidth >= 1024) {
-        targetRatioRef.current = computeDesktopBrakedRatio(delta);
+        // Desktop: progression basée sur la position réelle de la section dans le viewport.
+        // Évite les états "figés" après retour SPA/back-forward quand une base scroll est périmée.
+        const rectTop = section.getBoundingClientRect().top;
+        const progressed = Math.max(0, -rectTop);
+        targetRatioRef.current = computeDesktopBrakedRatio(progressed);
       } else {
+        const delta = sy - scroll0Ref.current;
         const triggerPx = isIosMobileRef.current ? IOS_MOBILE_TRIGGER_PX : TRIGGER_PX;
         const raw = fintapHeroScrollRatio(sy, scroll0Ref.current, triggerPx);
         const eased = isIosMobileRef.current ? smoothstep(raw) : raw;
@@ -257,7 +270,13 @@ export function FinTapHeroScrollSection() {
     document.addEventListener("visibilitychange", scheduleHeroResync);
     window.addEventListener("pageshow", onPageShow);
     // SPA routing: landing container was hidden then shown again — resync phone position.
-    window.addEventListener("fidpass:landing-visible", scheduleHeroResync);
+    const onLandingVisible = () => {
+      // Retour SPA vers la landing: recalculer le "scroll 0" avec la position actuelle.
+      // Sinon on peut réutiliser une base ancienne et garder le mockup dans un état figé/intermédiaire.
+      scroll0Ref.current = null;
+      scheduleHeroResync();
+    };
+    window.addEventListener("fidpass:landing-visible", onLandingVisible);
 
     const scrollToCommerceOnboarding = () => {
       if (reduced.matches) {
@@ -271,7 +290,7 @@ export function FinTapHeroScrollSection() {
         return;
       }
       if (scroll0Ref.current == null) {
-        scroll0Ref.current = getPageScrollY();
+        scroll0Ref.current = getHeroSectionStartY();
       }
       const base = scroll0Ref.current;
       const isIosMobile =
@@ -307,7 +326,7 @@ export function FinTapHeroScrollSection() {
       });
       document.removeEventListener("visibilitychange", scheduleHeroResync);
       window.removeEventListener("pageshow", onPageShow);
-      window.removeEventListener("fidpass:landing-visible", scheduleHeroResync);
+      window.removeEventListener("fidpass:landing-visible", onLandingVisible);
       window.removeEventListener(FINTAP_SCROLL_TO_COMMERCE_EVENT, scrollToCommerceOnboarding);
       if (loopRef.current) cancelAnimationFrame(loopRef.current);
     };

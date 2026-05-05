@@ -40,7 +40,8 @@ export function FinTapFeaturesGridSection() {
                 className={
                   "fintap-features-grid__visual" +
                   (item.imageFadeBottom ? " fintap-features-grid__visual--fade-bottom" : "") +
-                  (item.visualKind === "engagement" ? " fintap-features-grid__visual--engagement" : "")
+                  (item.visualKind === "engagement" ? " fintap-features-grid__visual--engagement" : "") +
+                  (item.id === "reputation" ? " fintap-features-grid__visual--flush-x" : "")
                 }
                 {...(item.visualKind !== "engagement" ? { "aria-hidden": true } : {})}
               >
@@ -48,7 +49,9 @@ export function FinTapFeaturesGridSection() {
                   <FinTapEngagementMetricsVisual />
                 ) : (
                   <img
-                    className="fintap-features-grid__img"
+                    className={
+                      "fintap-features-grid__img" + (item.id === "reputation" ? " fintap-features-grid__img--flush-x" : "")
+                    }
                     src={item.imageSrc}
                     alt=""
                     width={560}
