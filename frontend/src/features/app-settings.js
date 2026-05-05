@@ -288,6 +288,7 @@ export function initAppSettings(deps) {
     window.dispatchEvent(new CustomEvent("app-settings-close-request"));
   });
   initSettingsReferral({ api: deps.api });
+  initDevSimulatePayment({ api: deps.api });
 
   window.addEventListener("app-section-change", (event) => {
     if (event.detail?.sectionId !== "profil") return;
@@ -299,4 +300,49 @@ export function initAppSettings(deps) {
   if (settingsRoot.classList.contains("app-section-visible")) {
     void hydrateForm().catch(() => setFeedback("Erreur reseau lors du chargement.", true));
   }
+}
+
+/**
+ * Bouton dev : simule un abonnement actif sans passer par Stripe.
+ * @param {{ api: (path: string, init?: RequestInit) => Promise<Response> }} deps
+ */
+function initDevSimulatePayment({ api }) {
+  const btn = document.getElementById("app-dev-simulate-payment-btn");
+  const statusEl = document.getElementById("app-dev-simulate-payment-status");
+  if (!btn) return;
+
+  async function checkState() {
+    try {
+      const res = await api("/dashboard/dev-simulate-payment");
+      if (!res.ok) return;
+      const data = await res.json();
+      const isSimulated = data.simulated === true;
+      btn.textContent = isSimulated ? "Désactiver la simulation" : "Simuler le paiement";
+      btn.style.background = isSimulated ? "#6b7280" : "#b45309";
+      if (statusEl) statusEl.textContent = isSimulated ? "Simulation active" : "";
+    } catch (_) {}
+  }
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    if (statusEl) statusEl.textContent = "…";
+    try {
+      const stateRes = await api("/dashboard/dev-simulate-payment");
+      const state = stateRes.ok ? await stateRes.json() : {};
+      const method = state.simulated ? "DELETE" : "POST";
+      const res = await api("/dashboard/dev-simulate-payment", { method });
+      if (res.ok) {
+        if (statusEl) statusEl.textContent = state.simulated ? "Simulation retirée. Rechargement…" : "Simulation activée ! Rechargement…";
+        setTimeout(() => window.location.reload(), 700);
+      } else {
+        if (statusEl) statusEl.textContent = "Erreur";
+        btn.disabled = false;
+      }
+    } catch (_) {
+      if (statusEl) statusEl.textContent = "Erreur réseau";
+      btn.disabled = false;
+    }
+  });
+
+  void checkState();
 }

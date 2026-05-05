@@ -286,6 +286,7 @@
             <span class="app-desktop-topbar__brand-text">Myfidpass</span>
           </a>
           <div class="app-desktop-topbar__search-center">
+            <span id="app-topbar-trial-countdown" class="app-desktop-topbar__trial-countdown hidden" aria-label="Compte à rebours offre en cours">—</span>
             <button type="button" class="app-desktop-topbar__search-trigger" id="app-topbar-search-open" aria-haspopup="dialog" aria-controls="app-topbar-search-dialog">
               <span class="app-desktop-topbar__search-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
               <span class="app-desktop-topbar__search-placeholder">Rechercher</span>
@@ -294,6 +295,10 @@
                 <kbd class="app-desktop-topbar__key">K</kbd>
               </span>
             </button>
+            <span class="app-desktop-topbar__trial-cta-wrap hidden" id="app-topbar-trial-cta-wrap">
+              <button type="button" id="app-topbar-trial-cta" class="app-desktop-topbar__trial-cta">Profiter de l’offre</button>
+              <span class="app-desktop-topbar__trial-badge">-98%</span>
+            </span>
         </div>
           <div class="app-desktop-topbar__actions">
             <div class="app-desktop-topbar__dropdown-wrap">
@@ -1995,6 +2000,19 @@
                 </div>
               </div>
             </div>
+
+            <!-- Carte dev : simulation de paiement -->
+            <div class="app-card app-profil-card" id="app-settings-dev-card" style="border:1.5px dashed #e5a000;background:#fffbf0;">
+              <h3 class="app-subsection-title" style="color:#b45309;">⚡ Mode développeur</h3>
+              <p class="app-hint" style="margin-bottom:0.9rem;">Simule un abonnement actif pour tester toutes les fonctionnalités payantes sans passer par Stripe.</p>
+              <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                <button type="button" id="app-dev-simulate-payment-btn" class="app-btn" style="background:#b45309;color:#fff;border:none;">
+                  Simuler le paiement
+                </button>
+                <span id="app-dev-simulate-payment-status" style="font-size:0.82rem;color:#92400e;"></span>
+              </div>
+            </div>
+
               </div>
               <div class="app-section-col-aside">
                 <div class="app-card app-profil-aside-card">
