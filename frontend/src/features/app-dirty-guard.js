@@ -40,6 +40,25 @@ const SAVE_BUTTON_IDS_BY_SECTION = {
   profil: ["app-profil-save"],
 };
 
+const SAVE_BUTTON_SAVED_LABELS = {
+  "app-personnaliser-save": "Modifications enregistrées",
+  "app-regles-save": "Modifications enregistrées",
+  "app-engagement-save": "Modifications enregistrées",
+  "app-perimetre-save": "Modifications enregistrées",
+  "app-profil-save": "Modifications enregistrées",
+  "app-notification-texts-send": "Modifications enregistrées",
+};
+
+function syncSaveButtonLabel(btn, dirty) {
+  if (!btn) return;
+  const labelEl = btn.querySelector(".app-save-cta-label");
+  if (!labelEl) return;
+  if (!btn.dataset.defaultLabel) btn.dataset.defaultLabel = labelEl.textContent || "";
+  const defaultLabel = btn.dataset.defaultLabel || "";
+  const savedLabel = SAVE_BUTTON_SAVED_LABELS[btn.id] || "Modifications enregistrées";
+  labelEl.textContent = dirty ? defaultLabel : savedLabel;
+}
+
 /** Enregistrement depuis la modale « modifications non enregistrées » (ex. campagnes / textes notif). */
 const modalSectionSaveHandlers = new Map();
 
@@ -55,6 +74,7 @@ function updateSaveCtaDirtyVisual(sectionId) {
     const btn = document.getElementById(btnId);
     const wrap = btn?.closest(".app-save-cta-wrap");
     if (wrap) wrap.classList.toggle("app-save-cta-wrap--dirty", dirty);
+    syncSaveButtonLabel(btn, dirty);
   }
 }
 

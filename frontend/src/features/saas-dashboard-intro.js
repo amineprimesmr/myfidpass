@@ -109,6 +109,7 @@ export function initSaasFrcScrollCollapse() {
     const y = currentScrollY();
     if (baseY < 0) baseY = y;
     const scrollDelta = Math.max(0, y - baseY);
+    if (scrollDelta > 1) userInteracted = true;
     const userStartedScroll = userInteracted && scrollDelta > 1;
     const isMobile = typeof window !== "undefined" && window.matchMedia?.("(max-width: 900px)").matches;
     const collapseStart = isMobile ? 6 : 18;
@@ -122,7 +123,7 @@ export function initSaasFrcScrollCollapse() {
     if (permanentlyCollapsed) dense = true;
     root.classList.toggle("app-saas-frc-scroll-dense", dense);
     const trialChromeVisible = root.classList.contains("app-saas-trial-chrome-active");
-    const showTopbarTrial = !isMobile && dense && trialChromeVisible;
+    const showTopbarTrial = !isMobile && (permanentlyCollapsed || (trialChromeVisible && dense));
     topbarTrialCountdown?.classList.toggle("hidden", !showTopbarTrial);
     topbarTrialCtaWrap?.classList.toggle("hidden", !showTopbarTrial);
 
@@ -131,10 +132,13 @@ export function initSaasFrcScrollCollapse() {
       main.scrollTop = 0;
     }
 
-    // Première descente complète : on verrouille le mode compact pour les prochains accès.
-    if (scrollDelta >= collapseEnd && dense && !permanentlyCollapsed) {
+    // Première vraie interaction de scroll vers le bas : on verrouille le mode compact
+    // pour tous les prochains accès (même après rechargement).
+    if (!permanentlyCollapsed && scrollDelta >= collapseStart) {
       markTrialHeroPermanentlyCollapsed();
       permanentlyCollapsed = true;
+      dense = true;
+      root.classList.add("app-saas-frc-scroll-dense");
     }
 
     if (hero) {

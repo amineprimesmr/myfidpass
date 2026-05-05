@@ -1,6 +1,8 @@
 /**
  * Image de fond du flyer uniquement (localStorage) — indépendante du logo et de la fiche.
  */
+import { openImageCropModalFromFile } from "./image-crop-modal.js";
+
 export const FLYER_CUSTOM_BG_STORAGE_KEY = "fidpass_flyer_custom_bg_v1";
 
 /**
@@ -161,7 +163,16 @@ export function initFlyerBgControl(opts) {
     if (!f) return;
     void (async () => {
       try {
-        const dataUrl = await compressFileToFlyerBgDataUrl(f);
+        const cropped = await openImageCropModalFromFile(f, {
+          title: "Recadrer l'image de fond flyer",
+          aspectRatio: 2400 / 3600,
+          exportWidth: 2000,
+          exportHeight: 3000,
+          outputType: "image/jpeg",
+          quality: 0.9,
+        });
+        if (!cropped) return;
+        const dataUrl = cropped;
         setStoredFlyerCustomBgDataUrl(dataUrl, opts.storageKey);
         setStatus("");
         syncPreview();

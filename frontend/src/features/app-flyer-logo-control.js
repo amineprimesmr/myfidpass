@@ -1,6 +1,8 @@
 /**
  * Logo du flyer uniquement (localStorage) — ne modifie pas le logo commerce / autres pages.
  */
+import { openImageCropModalFromFile } from "./image-crop-modal.js";
+
 export const FLYER_CUSTOM_LOGO_STORAGE_KEY = "fidpass_flyer_custom_logo_v1";
 
 /**
@@ -127,7 +129,15 @@ export function initFlyerLogoControl(opts) {
     if (!f) return;
     void (async () => {
       try {
-        const dataUrl = await compressFileToFlyerLogoDataUrl(f);
+        const cropped = await openImageCropModalFromFile(f, {
+          title: "Recadrer le logo du flyer",
+          aspectRatio: (2400 * 0.56) / (3600 * 0.18),
+          exportWidth: 2000,
+          exportHeight: Math.round(2000 / ((2400 * 0.56) / (3600 * 0.18))),
+          outputType: "image/png",
+        });
+        if (!cropped) return;
+        const dataUrl = cropped;
         // Affichage immédiat du logo brut pendant le détourage
         setStoredFlyerCustomLogoDataUrl(dataUrl, opts.storageKey);
         syncPreview();

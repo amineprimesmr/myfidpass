@@ -228,7 +228,7 @@ export function initAppSettings(deps) {
     deps.propagateEstablishmentDisplayName(String(state.organizationName).trim());
     deps.refreshSidebarBusinessLogo();
     deps.notifySaveSuccess();
-    setFeedback("Paramètres enregistrés.");
+    setFeedback("");
   }
 
   els.contactEmail?.addEventListener("input", deps.markDirty);

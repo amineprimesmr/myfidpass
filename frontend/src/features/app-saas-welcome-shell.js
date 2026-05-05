@@ -105,6 +105,23 @@ function renderCompactCountdownText(totalMs) {
   return `${days}j ${p2(hours)}h ${p2(minutes)}m`;
 }
 
+function renderTopbarCountdownHTML(totalMs) {
+  const totalSec = Math.max(0, Math.floor(totalMs / 1000));
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  const p2 = (n) => String(n).padStart(2, "0");
+  return `
+    <span class="app-topbar-trial-countdown-grid" aria-hidden="true">
+      <span class="app-topbar-trial-countdown-cell"><strong>${days}</strong><em>jours</em></span>
+      <span class="app-topbar-trial-countdown-cell"><strong>${p2(hours)}</strong><em>heures</em></span>
+      <span class="app-topbar-trial-countdown-cell"><strong>${p2(minutes)}</strong><em>min</em></span>
+      <span class="app-topbar-trial-countdown-cell"><strong>${p2(seconds)}</strong><em>sec</em></span>
+    </span>
+  `;
+}
+
 function setupHeroCountdown(subtitleEl, trialEndRaw) {
   if (!subtitleEl) return;
   clearHeroCountdownTimer();
@@ -116,7 +133,10 @@ function setupHeroCountdown(subtitleEl, trialEndRaw) {
     subtitleEl.innerHTML = renderCountdownHTML(left);
     const compact = renderCompactCountdownText(left);
     if (stripStatusEl) stripStatusEl.textContent = compact;
-    if (topbarCountdownEl) topbarCountdownEl.textContent = compact;
+    if (topbarCountdownEl) {
+      topbarCountdownEl.innerHTML = renderTopbarCountdownHTML(left);
+      topbarCountdownEl.setAttribute("aria-label", compact);
+    }
     if (left <= 0) clearHeroCountdownTimer();
   };
   tick();

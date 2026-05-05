@@ -28,7 +28,6 @@ import {
   isDashIntroRevealDone,
   scheduleDashboardOnboardingReveal,
   initSaasFrcScrollCollapse,
-  resetSaasIntroForRefreshTesting,
 } from "./saas-dashboard-intro.js";
 import {
   initAppDirtyGuard,
@@ -67,6 +66,7 @@ import {
 import { initAppDesktopTopbar } from "./app-desktop-topbar.js";
 import { initAppSettings } from "./app-settings.js";
 import { applyEngagementStatsFromSettings, wireEngagementStatsSection } from "./app-engagement-stats.js";
+import { openImageCropModalFromFile } from "./image-crop-modal.js";
 
 const ACTIVE_BUSINESS_SLUG_STORAGE_KEY = "fidpass_active_business_slug";
 
@@ -387,7 +387,6 @@ function initAppPage() {
     }, 350);
   }
 
-  resetSaasIntroForRefreshTesting();
   wrapAppLogoutButtonsWithDirtyGuard(clearAuthToken);
   const emptyEl = document.getElementById("app-empty");
   const contentEl = document.getElementById("app-dashboard-content");
@@ -1229,11 +1228,35 @@ function initAppDashboard(slug) {
     }
   }
 
-  document.getElementById("app-dashboard-onboarding-card-btn")?.addEventListener("click", () => {
-    showAppSection("personnaliser");
+  function runOnboardingLaunchTransition(buttonEl, targetSectionId) {
+    const btn = buttonEl instanceof HTMLElement ? buttonEl : null;
+    if (!btn) {
+      showAppSection(targetSectionId);
+      return;
+    }
+    if (btn.dataset.launching === "1") return;
+    btn.dataset.launching = "1";
+    btn.disabled = true;
+
+    const card = btn.closest(".app-dashboard-onboarding-card--card-builder");
+    const hero = card?.querySelector(".app-dashboard-card-builder-hero");
+    if (hero) hero.classList.add("app-dashboard-card-builder-hero--launching");
+    if (card) card.classList.add("app-dashboard-onboarding-card--launching");
+
+    window.setTimeout(() => {
+      showAppSection(targetSectionId);
+      btn.dataset.launching = "0";
+      btn.disabled = false;
+      if (hero) hero.classList.remove("app-dashboard-card-builder-hero--launching");
+      if (card) card.classList.remove("app-dashboard-onboarding-card--launching");
+    }, 360);
+  }
+
+  document.getElementById("app-dashboard-onboarding-card-btn")?.addEventListener("click", (e) => {
+    runOnboardingLaunchTransition(e.currentTarget, "personnaliser");
   });
-  document.getElementById("app-dashboard-onboarding-flyer-btn")?.addEventListener("click", () => {
-    showAppSection("flyer-qr");
+  document.getElementById("app-dashboard-onboarding-flyer-btn")?.addEventListener("click", (e) => {
+    runOnboardingLaunchTransition(e.currentTarget, "flyer-qr");
   });
   window.addEventListener("fidpass:flyer-saved", () => {
     scheduleOnboardingGateSync();
@@ -2161,7 +2184,7 @@ function initAppDashboard(slug) {
           if (bannerTitle && perimetreNotifTitleEl) bannerTitle.value = perimetreNotifTitleEl.value;
           if (typeof updateAppNotificationPreview === "function") updateAppNotificationPreview();
           savedPerimetreState = getPerimetreDraftState();
-          showSaveFeedback("Enregistré. Le périmètre et le message d'entrée sont à jour.");
+          showSaveFeedback("");
           notifyAppSectionSaveSuccess("carte-perimetre");
         } else {
           const data = await res.json().catch(() => ({}));
@@ -2273,7 +2296,8 @@ function initAppDashboard(slug) {
   const stampSkipMidEl = document.getElementById("app-stamp-skip-mid");
   const stampMidRewardLabelEl = document.getElementById("app-stamp-reward-mid-label");
   const personnaliserAccordion = document.getElementById("app-personnaliser-accordion");
-  const personnaliserColorsWrap = document.querySelector("#app-personnaliser-panel-colors .app-personnaliser-colors");
+  const personnaliserColorsWrap = document.getElementById("app-personnaliser-colors-block");
+  const personnaliserColorsToggle = document.getElementById("app-personnaliser-colors-toggle");
   const personnaliserColorsMoreToggle = document.getElementById("app-personnaliser-colors-more-toggle");
 
   /** Déclaré avant tout appel à schedulePersonnaliserGroupStatusRefresh (évite TDZ sur let). */
@@ -2470,6 +2494,12 @@ function initAppDashboard(slug) {
     if (!personnaliserColorsWrap) return;
     personnaliserColorsWrap.classList.toggle("is-expanded");
     syncPersonnaliserColorsMoreToggle();
+  });
+  personnaliserColorsToggle?.addEventListener("click", () => {
+    if (!personnaliserColorsWrap) return;
+    const willOpen = personnaliserColorsWrap.classList.contains("hidden");
+    personnaliserColorsWrap.classList.toggle("hidden", !willOpen);
+    personnaliserColorsToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
   });
   syncPersonnaliserColorsMoreToggle();
   [personnaliserBg, personnaliserFg, personnaliserLabel, personnaliserBgHex, personnaliserFgHex, personnaliserLabelHex]
@@ -3302,7 +3332,7 @@ function initAppDashboard(slug) {
     try {
       const res = await api("/dashboard/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ engagement_rewards }) });
       if (!res.ok) throw new Error("Erreur enregistrement");
-      if (feedback) { feedback.textContent = "Enregistré."; feedback.classList.remove("hidden", "error"); feedback.classList.add("success"); }
+      if (feedback) { feedback.textContent = ""; feedback.classList.add("hidden"); feedback.classList.remove("success", "error"); }
       applyEngagementStatsFromSettings({ engagement_rewards });
       setTimeout(() => { if (feedback) feedback.classList.add("hidden"); }, 3000);
       notifyAppSectionSaveSuccess("engagement");
@@ -3425,9 +3455,9 @@ function initAppDashboard(slug) {
         if (!rewardsRes.ok) throw new Error("Erreur sauvegarde récompenses");
       }
       if (feedback) {
-        feedback.textContent = "Configuration jeu enregistrée.";
-        feedback.classList.remove("hidden", "error");
-        feedback.classList.add("success");
+        feedback.textContent = "";
+        feedback.classList.add("hidden");
+        feedback.classList.remove("success", "error");
       }
       notifyAppSectionSaveSuccess("personnaliser");
     } catch (err) {
@@ -3721,8 +3751,16 @@ function initAppDashboard(slug) {
         return;
       }
       try {
+        const cropped = await openImageCropModalFromFile(file, {
+          title: "Recadrer le logo",
+          aspectRatio: 16 / 5,
+          exportWidth: 800,
+          exportHeight: 250,
+          outputType: "image/png",
+        });
+        if (!cropped) return;
         personnaliserLogoRemoveRequested = false;
-        personnaliserLogoDataUrl = await resizeLogoToDataUrl(file, 640, 0.9, "auto");
+        personnaliserLogoDataUrl = cropped;
         if (personnaliserLogoPreview) {
           personnaliserLogoPreview.src = personnaliserLogoDataUrl;
           personnaliserLogoPreview.classList.remove("hidden");
@@ -3742,8 +3780,17 @@ function initAppDashboard(slug) {
       return;
     }
     try {
+      const cropped = await openImageCropModalFromFile(file, {
+        title: "Recadrer l'image de fond carte",
+        aspectRatio: 750 / 246,
+        exportWidth: 1500,
+        exportHeight: 492,
+        outputType: "image/jpeg",
+        quality: 0.9,
+      });
+      if (!cropped) return;
       personnaliserCardBgRemoveRequested = false;
-      personnaliserCardBgDataUrl = await resizeLogoToDataUrl(file, 750, 0.85, "jpeg");
+      personnaliserCardBgDataUrl = cropped;
       if (personnaliserCardBgPreview) {
         personnaliserCardBgPreview.src = personnaliserCardBgDataUrl;
         personnaliserCardBgPreview.classList.remove("hidden");
@@ -3762,8 +3809,16 @@ function initAppDashboard(slug) {
       return;
     }
     try {
+      const cropped = await openImageCropModalFromFile(file, {
+        title: "Recadrer l'icône tampon",
+        aspectRatio: 1,
+        exportWidth: 512,
+        exportHeight: 512,
+        outputType: "image/png",
+      });
+      if (!cropped) return;
       personnaliserStampIconRemoveRequested = false;
-      personnaliserStampIconDataUrl = await resizeLogoToDataUrl(file, 256, 0.9, "auto");
+      personnaliserStampIconDataUrl = cropped;
       if (personnaliserStampIconPreview) {
         personnaliserStampIconPreview.src = personnaliserStampIconDataUrl;
         personnaliserStampIconPreview.classList.remove("hidden");
@@ -3992,7 +4047,7 @@ function initAppDashboard(slug) {
         const res = await fetch(url, { method: "PATCH", headers, body: JSON.stringify(body) });
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
-          showReglesMessage("Règles enregistrées.");
+          showReglesMessage("");
           notifyAppSectionSaveSuccess("personnaliser");
           updatePersonnaliserPreview();
           if (body.stampIconBase64 === "") {
@@ -4148,7 +4203,7 @@ function initAppDashboard(slug) {
         const res = await fetch(url, { method: "PATCH", headers, body: JSON.stringify(body) });
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
-          showPersonnaliserMessage("Modifications enregistrées.");
+          showPersonnaliserMessage("");
           scheduleOnboardingGateSync();
           notifyAppSectionSaveSuccess("personnaliser");
           showReglesMessage("");
@@ -5733,27 +5788,32 @@ function initAppDashboard(slug) {
     notificationBannerLogoInput.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const dataUrl = reader.result;
-        if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) return;
-        const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
-        const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
-        if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
-        try {
-          const res = await fetch(url, {
-            method: "PATCH",
-            headers,
-            body: JSON.stringify({ notification_icon_base64: dataUrl }),
-          });
-          if (res.ok) {
-            await refreshCampaignNotificationBannerIcon();
-            clearAppSectionDirty("notifications");
-          }
-        } catch (_) {}
+      const dataUrl = await openImageCropModalFromFile(file, {
+        title: "Recadrer l'icône notifications",
+        aspectRatio: 1,
+        exportWidth: 512,
+        exportHeight: 512,
+        outputType: "image/png",
+      });
+      if (!dataUrl || !dataUrl.startsWith("data:image/")) {
         notificationBannerLogoInput.value = "";
-      };
-      reader.readAsDataURL(file);
+        return;
+      }
+      const url = `${API_BASE}/api/businesses/${encodeURIComponent(slug)}${dashboardToken ? `?token=${encodeURIComponent(dashboardToken)}` : ""}`;
+      const headers = { "Content-Type": "application/json", ...getAuthHeaders() };
+      if (dashboardToken) headers["X-Dashboard-Token"] = dashboardToken;
+      try {
+        const res = await fetch(url, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ notification_icon_base64: dataUrl }),
+        });
+        if (res.ok) {
+          await refreshCampaignNotificationBannerIcon();
+          clearAppSectionDirty("notifications");
+        }
+      } catch (_) {}
+      notificationBannerLogoInput.value = "";
     });
     setupImageDropZone(notificationBannerLogoDrop, (file) => {
       notificationBannerLogoInput.files = null;
@@ -6007,13 +6067,9 @@ function initAppDashboard(slug) {
           clearTimeout(notifTextsFeedbackHideTimer);
           notifTextsFeedbackHideTimer = null;
         }
-        textsFeedbackEl.classList.remove("hidden", "error");
-        textsFeedbackEl.classList.add("success");
-        textsFeedbackEl.textContent = "Enregistré.";
-        notifTextsFeedbackHideTimer = window.setTimeout(() => {
-          notifTextsFeedbackHideTimer = null;
-          textsFeedbackEl.classList.add("hidden");
-        }, 2200);
+        textsFeedbackEl.classList.add("hidden");
+        textsFeedbackEl.classList.remove("success", "error");
+        textsFeedbackEl.textContent = "";
       }
       return true;
     } catch (_) {

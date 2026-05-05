@@ -37,11 +37,11 @@ export function normalizeBusinessSector(raw) {
 
 /** Exemples visibles dans l’espace pro (points + tampons) — indépendant du secteur. */
 export const DEFAULT_REWARD_EXAMPLE_TIERS = [
-  { points: 0, label: "Début du jeu" },
-  { points: 50, label: "Boisson offerte" },
-  { points: 100, label: "Dessert offert" },
-  { points: 150, label: "Cheese offert" },
-  { points: 200, label: "Menu offert" },
+  { points: 10, label: "Boisson offerte" },
+  { points: 50, label: "Dessert offert" },
+  { points: 100, label: "Cheese offert" },
+  { points: 150, label: "Menu offert" },
+  { points: 200, label: "Formule premium" },
 ];
 
 const DEFAULT_STAMP_MID_LABEL = "Dessert offert";
@@ -94,8 +94,9 @@ export function tiersFromApiPayload(tiers) {
     const out = [];
     for (const t of tiers) {
       if (t && typeof t === "object" && "points" in t) {
-        const pts = parseInt(String(t.points), 10);
+        let pts = parseInt(String(t.points), 10);
         const label = String(t.label ?? "").trim();
+        if (out.length === 0 && !Number.isNaN(pts) && pts < 10) pts = 10;
         if (!Number.isNaN(pts) && pts >= 0 && label) out.push({ points: pts, label });
       }
     }
@@ -124,7 +125,11 @@ export function writePointTierInputs(doc, tiers) {
   const arr = Array.isArray(tiers) ? tiers.slice(0, POINT_TIER_COUNT) : [];
   while (arr.length < POINT_TIER_COUNT) arr.push({ points: "", label: "" });
   for (let i = 0; i < POINT_TIER_COUNT; i++) {
-    const t = arr[i] || {};
+    const base = arr[i] || {};
+    const t =
+      i === 0
+        ? { points: 10, label: base.label || DEFAULT_REWARD_EXAMPLE_TIERS[0].label }
+        : base;
     const pi = doc.getElementById(`app-points-tier-${i}-points`);
     const li = doc.getElementById(`app-points-tier-${i}-label`);
     const p = t.points;
@@ -142,7 +147,8 @@ export function readPointTierInputs(doc = document) {
   for (let i = 0; i < POINT_TIER_COUNT; i++) {
     const pi = doc.getElementById(`app-points-tier-${i}-points`);
     const li = doc.getElementById(`app-points-tier-${i}-label`);
-    const pts = parseInt(pi?.value, 10);
+    const rawPts = parseInt(pi?.value, 10);
+    const pts = i === 0 ? 10 : rawPts;
     const label = li?.value?.trim() ?? "";
     if (!Number.isNaN(pts) && pts >= 0 && label) out.push({ points: pts, label });
   }
