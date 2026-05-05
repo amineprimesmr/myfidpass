@@ -18,6 +18,23 @@
   color: #0f172a;
 }
 
+@keyframes dashReadySplashExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+    filter: blur(3px);
+  }
+}
+
+.app-dashboard-ready-splash.app-dashboard-ready-splash--exit {
+  animation: dashReadySplashExit 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @keyframes dashGateRevealIntro {
   from {
     opacity: 0;

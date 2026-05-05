@@ -1,7 +1,7 @@
 /* Section témoignages — deux rangées type FinTap + défilement lié au scroll */
 
 .fintap-section.fintap-section--testimonials {
-  background: var(--fidpass-site-bg);
+  background: #f5f5f7;
   overflow: visible;
   /* Moins d’air vertical que les autres blocs FinTap : les deux rangées sont resserrées */
   padding-top: calc(clamp(2.25rem, 5vw, 3.75rem) + var(--fintap-shadow-bleed, 2rem));

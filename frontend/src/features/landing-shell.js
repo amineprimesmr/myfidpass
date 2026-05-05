@@ -322,10 +322,8 @@ export function initLandingShell() {
       establishment_name: name,
       google_place_id: pid,
     });
-    const nextUrl = new URL("/creer-ma-carte", window.location.origin);
-    nextUrl.searchParams.set("redirect", "/app");
-    nextUrl.searchParams.set("name", name);
-    nextUrl.searchParams.set("place_id", pid);
+    const nextUrl = new URL("/app", window.location.origin);
+    nextUrl.searchParams.set("fromLandingOnboarding", "1");
     window.location.href = `${nextUrl.pathname}${nextUrl.search}`;
   }
 

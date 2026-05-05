@@ -185,7 +185,21 @@ export async function initRouting() {
 
   if (route.type === "app") {
     if (!getAuthToken()) {
-      window.location.replace("/creer-ma-carte?mode=login&redirect=/app");
+      const current = new URL(window.location.href);
+      const fromLandingOnboarding =
+        String(current.searchParams.get("fromLandingOnboarding") || "").trim() === "1";
+      if (fromLandingOnboarding) {
+        hideAll();
+        if (c.appApp) c.appApp.classList.remove("hidden");
+        const page = await loadPage("app");
+        await page.init(route);
+        syncWhatsappFabVisibility();
+        return null;
+      }
+      const redirectTarget = fromLandingOnboarding ? "/app?fromLandingOnboarding=1" : "/app";
+      window.location.replace(
+        `/creer-ma-carte?mode=login&redirect=${encodeURIComponent(redirectTarget)}`
+      );
       return null;
     }
     hideAll();

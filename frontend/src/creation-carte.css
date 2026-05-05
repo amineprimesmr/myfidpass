@@ -72,12 +72,12 @@ body.page-builder {
 }
 
 .creation-carte-signup__brand-bag {
-  width: 3.3rem;
-  height: 3.3rem;
+  width: 4.1rem;
+  height: 4.1rem;
   border-radius: 0.8rem;
   display: inline-grid;
   place-items: center;
-  background: #ffffff;
+  background: transparent;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
   overflow: hidden;
 }
@@ -85,7 +85,7 @@ body.page-builder {
 .creation-carte-signup__brand-icon {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -421,6 +421,10 @@ body.page-builder {
   font-size: 0.9rem;
 }
 
+.creation-carte-signup__step--login .creation-carte-signup__email + .creation-carte-signup__email {
+  margin-top: 0.62rem;
+}
+
 .creation-carte-signup__social-row {
   margin-top: 0.72rem;
   display: grid;
@@ -481,4 +485,79 @@ body.page-builder {
 @keyframes creationStepOut {
   from { opacity: 1; transform: translateY(0) scale(1); }
   to { opacity: 0; transform: translateY(-8px) scale(0.99); }
+}
+
+.creation-carte-signup--embed {
+  position: static;
+  inset: auto;
+  min-height: 100dvh;
+  min-height: 100svh;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.creation-carte-signup--embed .creation-carte-signup__bg,
+.creation-carte-signup--embed .creation-carte-signup__brand,
+.creation-carte-signup--embed > .creation-carte-signup__content > .creation-carte-signup__locale {
+  display: none;
+}
+
+.creation-carte-signup__content--embed {
+  gap: 0;
+  padding: 0;
+  max-width: 100%;
+}
+
+.creation-carte-signup__card--embed {
+  position: relative;
+  width: min(560px, 92vw);
+  margin: 0 auto;
+  padding-top: 5.1rem;
+}
+
+.creation-carte-signup__embed-top {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.creation-carte-signup__brand-bag--embed {
+  width: 60px;
+  height: 60px;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.creation-carte-signup__embed-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.6rem;
+}
+
+.creation-carte-signup__locale--embed {
+  margin-top: 0;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%),
+    rgba(10, 16, 30, 0.34);
+  color: rgba(247, 250, 255, 0.96);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+}
+
+body.page-builder.page-builder-embed,
+body.page-builder.page-builder-embed #builder-app,
+body.page-builder.page-builder-embed .creation-carte-signup,
+body.page-builder.page-builder-embed .creation-carte-signup__content {
+  background: transparent !important;
 }

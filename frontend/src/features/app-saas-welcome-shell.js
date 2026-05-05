@@ -57,10 +57,68 @@ export function syncSaaSWelcomeChrome() {
  * }} opts
  */
 const HERO_TITLE = "Votre essai a commencé";
-const HERO_SUBTITLE = "3 jours gratuits, puis 1 €/mois pour continuer à créer";
 const SUPPORT_TRIAL_HERO_HTML =
-  'Nous sommes là si vous avez besoin de nous <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a>';
+  '<span class="app-saas-frc-support-cta-wrap"><a href="#" id="app-saas-frc-support-cta" class="app-saas-frc-support-cta">Profiter de l’offre</a><span class="app-saas-frc-support-badge">-98%</span></span>';
 const TRIAL_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
+let heroCountdownTimer = 0;
+
+function clearHeroCountdownTimer() {
+  if (heroCountdownTimer) {
+    window.clearInterval(heroCountdownTimer);
+    heroCountdownTimer = 0;
+  }
+}
+
+function parseTrialEndMs(raw) {
+  const parsed = raw ? Date.parse(raw) : NaN;
+  if (Number.isFinite(parsed)) return parsed;
+  // Fallback visuel demandé : compte à rebours 3 jours.
+  return Date.now() + 3 * 24 * 60 * 60 * 1000;
+}
+
+function renderCountdownHTML(totalMs) {
+  const totalSec = Math.max(0, Math.floor(totalMs / 1000));
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  const p2 = (n) => String(n).padStart(2, "0");
+  return `
+    <span class="app-saas-frc-countdown" aria-label="Compte à rebours de l'offre en cours">
+      <span class="app-saas-frc-countdown__item"><strong>${days}</strong><em>jours</em></span>
+      <span class="app-saas-frc-countdown__sep">:</span>
+      <span class="app-saas-frc-countdown__item"><strong>${p2(hours)}</strong><em>heures</em></span>
+      <span class="app-saas-frc-countdown__sep">:</span>
+      <span class="app-saas-frc-countdown__item"><strong>${p2(minutes)}</strong><em>min</em></span>
+      <span class="app-saas-frc-countdown__sep">:</span>
+      <span class="app-saas-frc-countdown__item"><strong>${p2(seconds)}</strong><em>sec</em></span>
+    </span>
+  `;
+}
+
+function renderCompactCountdownText(totalMs) {
+  const totalSec = Math.max(0, Math.floor(totalMs / 1000));
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const p2 = (n) => String(n).padStart(2, "0");
+  return `${days}j ${p2(hours)}h ${p2(minutes)}m`;
+}
+
+function setupHeroCountdown(subtitleEl, trialEndRaw) {
+  if (!subtitleEl) return;
+  clearHeroCountdownTimer();
+  const stripStatusEl = document.getElementById("app-saas-frc-strip-status");
+  const endMs = parseTrialEndMs(trialEndRaw);
+  const tick = () => {
+    const left = Math.max(0, endMs - Date.now());
+    subtitleEl.innerHTML = renderCountdownHTML(left);
+    if (stripStatusEl) stripStatusEl.textContent = renderCompactCountdownText(left);
+    if (left <= 0) clearHeroCountdownTimer();
+  };
+  tick();
+  heroCountdownTimer = window.setInterval(tick, 1000);
+}
 
 function isTrialHeroPermanentlyCollapsed() {
   try {
@@ -94,7 +152,7 @@ export function applySaaSFrcMessaging(opts) {
 
   if (titleEl && subtitleEl) {
     titleEl.textContent = HERO_TITLE;
-    subtitleEl.textContent = HERO_SUBTITLE;
+    setupHeroCountdown(subtitleEl, opts.trialEndRaw ?? null);
   }
 
   supportEl?.classList.add("app-saas-frc-support--trial-hero");
@@ -111,18 +169,6 @@ export function applySaaSFrcMessaging(opts) {
     strip.classList.toggle("hidden", !showSubscribeStrip);
     strip.classList.toggle("app-saas-frc-strip--visible", showSubscribeStrip);
     strip.setAttribute("aria-hidden", showSubscribeStrip ? "false" : "true");
-
-    if (showSubscribeStrip) {
-      const raw = opts.trialEndRaw ?? null;
-      const fmt = opts.formatEndingHeadline;
-      if (raw && typeof fmt === "function") {
-        stripStatus.textContent = fmt(raw);
-      } else if (raw) {
-        stripStatus.textContent = "L’essai se termine bientôt";
-      } else {
-        stripStatus.textContent = "L’essai se termine bientôt";
-      }
-    }
   }
 }
 
@@ -135,12 +181,13 @@ export function navigateToSaaSStripeCheckout(prefilledEmail) {
 export function wireSaaSWelcomeStripeHandlers(getUserEmail) {
   const emailFn = typeof getUserEmail === "function" ? getUserEmail : () => "";
 
-  const ids = ["app-sidebar-trial-subscribe-btn", "app-saas-frc-cta"];
+  const ids = ["app-sidebar-trial-subscribe-btn", "app-saas-frc-cta", "app-saas-frc-support-cta", "app-saas-frc-strip-cta"];
   ids.forEach((id) => {
     const btn = document.getElementById(id);
     if (!btn || btn.dataset.fidpassStripeSubscribeWired === "1") return;
     btn.dataset.fidpassStripeSubscribeWired = "1";
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
+      if (btn.tagName === "A") e.preventDefault();
       navigateToSaaSStripeCheckout(emailFn());
     });
   });

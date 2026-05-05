@@ -37,6 +37,10 @@ export default {
     const params = new URLSearchParams(window.location.search);
     const commerce = params.get("name") || params.get("etablissement") || "";
     const mode = String(params.get("mode") || "").trim().toLowerCase();
+    const isEmbed = ["1", "true", "yes"].includes(
+      String(params.get("embed") || "").trim().toLowerCase()
+    );
+    document.body.classList.toggle("page-builder-embed", isEmbed);
     const initialEmail = String(params.get("email") || "").trim();
     const redirectRaw = String(params.get("redirect") || "").trim();
     const redirectPath = redirectRaw.startsWith("/") && !redirectRaw.startsWith("//")
@@ -44,17 +48,24 @@ export default {
       : "/app";
 
     root.innerHTML = `
-      <section class="creation-carte-signup" aria-label="Inscription commerçant">
+      <section class="creation-carte-signup${isEmbed ? " creation-carte-signup--embed" : ""}" aria-label="Inscription commerçant">
         <div class="creation-carte-signup__bg" aria-hidden="true"></div>
-        <div class="creation-carte-signup__content">
+        <div class="creation-carte-signup__content${isEmbed ? " creation-carte-signup__content--embed" : ""}">
           <div class="creation-carte-signup__brand" aria-hidden="true">
             <span class="creation-carte-signup__brand-bag">
               <img src="/assets/icone.png" alt="" class="creation-carte-signup__brand-icon" />
             </span>
           </div>
-          <h1 class="creation-carte-signup__title">Commencez à fidéliser pour 1€</h1>
-          <p class="creation-carte-signup__subtitle">Premier mois à 1€, puis 49,99€ sans engagement</p>
-          <form class="creation-carte-signup__card" id="creation-carte-signup-form" novalidate>
+          ${isEmbed ? "" : `<h1 class="creation-carte-signup__title">Commencez à fidéliser pour 1€</h1>`}
+          ${isEmbed ? "" : `<p class="creation-carte-signup__subtitle">Premier mois à 1€, puis 49,99€ sans engagement</p>`}
+          <form class="creation-carte-signup__card${isEmbed ? " creation-carte-signup__card--embed" : ""}" id="creation-carte-signup-form" novalidate>
+            ${isEmbed ? `
+              <div class="creation-carte-signup__embed-top" aria-hidden="true">
+                <span class="creation-carte-signup__brand-bag creation-carte-signup__brand-bag--embed">
+                  <img src="/assets/icone.png" alt="" class="creation-carte-signup__brand-icon" />
+                </span>
+              </div>
+            ` : ""}
             <div class="creation-carte-signup__step creation-carte-signup__step--email" id="creation-carte-step-email">
               <div class="creation-carte-signup__locked-field">
                 <div class="creation-carte-signup__locked-label">Commerce</div>
@@ -131,7 +142,6 @@ export default {
               <h2 class="creation-carte-signup__login-title">Se connecter</h2>
               <p class="creation-carte-signup__login-subtitle">Continuer vers Myfidpass</p>
 
-              <label class="creation-carte-signup__login-label" for="creation-carte-login-email">E-mail</label>
               <input
                 id="creation-carte-login-email"
                 name="email"
@@ -141,7 +151,6 @@ export default {
                 autocomplete="email"
                 required
               />
-              <label class="creation-carte-signup__login-label" for="creation-carte-login-password">Mot de passe</label>
               <input
                 id="creation-carte-login-password"
                 type="password"
@@ -168,6 +177,13 @@ export default {
                 Nouveau sur Myfidpass ? <button type="button" class="creation-carte-signup__linklike creation-carte-signup__linklike--cta" id="creation-carte-close-login">Démarrer →</button>
               </p>
             </div>
+            ${isEmbed ? `
+              <div class="creation-carte-signup__embed-footer">
+                <span class="creation-carte-signup__locale creation-carte-signup__locale--embed" aria-label="Pays sélectionné">
+                  🇫🇷 France
+                </span>
+              </div>
+            ` : ""}
           </form>
 
           <button type="button" class="creation-carte-signup__locale" aria-label="Pays sélectionné">

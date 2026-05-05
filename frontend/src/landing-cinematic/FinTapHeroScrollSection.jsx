@@ -427,16 +427,12 @@ export function FinTapHeroScrollSection() {
     const pid = String(pred?.place_id || "").trim();
     if (!name || !pid) return;
     setPendingEstablishment({ establishment_name: name, google_place_id: pid });
-    const u = new URL("/creer-ma-carte", window.location.origin);
-    u.searchParams.set("redirect", "/app");
-    u.searchParams.set("name", name);
-    u.searchParams.set("place_id", pid);
+    const u = new URL("/app", window.location.origin);
+    u.searchParams.set("fromLandingOnboarding", "1");
     window.location.assign(`${u.pathname}${u.search}`);
   };
 
-  const startHref = shopPlaceId
-    ? `/creer-ma-carte?redirect=${encodeURIComponent("/app")}&place_id=${encodeURIComponent(shopPlaceId)}&name=${encodeURIComponent(shopQuery.trim())}`
-    : "/creer-ma-carte";
+  const startHref = "/app?fromLandingOnboarding=1";
 
   const onStartCtaClick = () => {
     if (!shopPlaceId) return;

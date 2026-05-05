@@ -50,7 +50,7 @@ function ensureOverlay() {
       <p class="fidpass-oauth-connecting__sub">Cela ne prendra qu’un instant…</p>
       <div class="fidpass-oauth-connecting__row">
         <div class="fidpass-oauth-connecting__brand">
-          <img src="/assets/icone.png" alt="" width="36" height="36" decoding="async" />
+          <img src="/assets/icone.png" alt="" width="46" height="46" decoding="async" />
         </div>
         <span class="fidpass-oauth-connecting__dash fidpass-oauth-connecting__dash--l" aria-hidden="true"></span>
         <div class="fidpass-oauth-connecting__spin-wrap">

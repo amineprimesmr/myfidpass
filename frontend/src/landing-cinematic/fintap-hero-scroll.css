@@ -97,7 +97,7 @@
   margin: 0 0 0.35rem;
   text-align: center !important;
   align-self: center !important;
-  font-size: clamp(1.9rem, 6.8vw, 3.05rem);
+  font-size: clamp(2.15rem, 7.3vw, 3.45rem);
   font-weight: 560;
   letter-spacing: -0.025em;
   line-height: 1.08;
@@ -129,10 +129,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: 3rem;
+  min-height: 3.25rem;
   flex: 1 1 auto;
-  width: min(100%, 372px);
-  max-width: 372px;
+  width: min(100%, 420px);
+  max-width: 420px;
   min-width: 0;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(15, 23, 42, 0.14);
@@ -197,8 +197,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: transparent;
+  border: none;
   flex-shrink: 0;
 }
 
@@ -206,13 +206,15 @@
   display: block;
   width: 16px;
   height: 16px;
+  /* Le fichier icone.png contient encore un mat blanc : ce blend le neutralise visuellement ici. */
+  mix-blend-mode: multiply;
 }
 
 .fintap-hero-iphone__search-input {
   border: none;
   background: transparent;
   width: 100%;
-  font-size: 0.9rem;
+  font-size: 0.98rem;
   color: #0f172a;
   outline: none;
   font-family: inherit;

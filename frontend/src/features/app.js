@@ -2,7 +2,14 @@
  * Page app (/app) : espace pro, sidebar, dashboard, caisse, notifications, profil, personnaliser, engagement.
  * Dérogation : fichier > 400 lignes, à découper en sous-modules (app/notifications.js, app/caisse.js, etc.). REFONTE-REGLES.md.
  */
-import { API_BASE, getAuthHeaders, clearAuthToken, fetchWithAuth } from "../config.js";
+import {
+  API_BASE,
+  getAuthHeaders,
+  clearAuthToken,
+  fetchWithAuth,
+  getAuthToken,
+  getPendingEstablishment,
+} from "../config.js";
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
@@ -325,6 +332,48 @@ function ensureFidpassAuthMeMerchantListener() {
 ensureFidpassAuthMeMerchantListener();
 
 function initAppPage() {
+  const appUrl = new URL(window.location.href);
+  const fromLandingOnboarding = appUrl.searchParams.get("fromLandingOnboarding") === "1";
+  const authOverlayDone = appUrl.searchParams.get("authOverlayDone") === "1";
+  const onboardingGuestPreview = fromLandingOnboarding && !getAuthToken();
+  const ONBOARDING_AUTH_OVERLAY_DELAY_MS = 1000;
+
+  if (authOverlayDone) {
+    appUrl.searchParams.delete("authOverlayDone");
+    if (window.history?.replaceState) {
+      window.history.replaceState({}, "", appUrl.pathname + appUrl.search + appUrl.hash);
+    }
+  }
+
+  function mountAuthOverlayForOnboarding() {
+    const existing = document.getElementById("app-auth-onboarding-overlay");
+    if (existing) return;
+    const root = document.createElement("div");
+    root.id = "app-auth-onboarding-overlay";
+    root.className = "app-auth-onboarding-overlay";
+    root.innerHTML = `
+      <div class="app-auth-onboarding-overlay__backdrop" aria-hidden="true"></div>
+      <div class="app-auth-onboarding-overlay__dialog" role="dialog" aria-modal="true" aria-label="Connexion ou création de compte">
+        <iframe class="app-auth-onboarding-overlay__frame" title="Création de compte Myfidpass" src="/creer-ma-carte?mode=register&embed=1&redirect=%2Fapp%3FauthOverlayDone%3D1"></iframe>
+      </div>
+    `;
+    document.body.appendChild(root);
+
+    const close = () => {
+      root.remove();
+      window.location.replace("/");
+    };
+    root.querySelector(".app-auth-onboarding-overlay__backdrop")?.addEventListener("click", close);
+
+    const watch = window.setInterval(() => {
+      if (getAuthToken()) {
+        window.clearInterval(watch);
+        root.remove();
+        window.location.replace("/app?authOverlayDone=1");
+      }
+    }, 350);
+  }
+
   resetSaasIntroForRefreshTesting();
   wrapAppLogoutButtonsWithDirtyGuard(clearAuthToken);
   const emptyEl = document.getElementById("app-empty");
@@ -440,6 +489,31 @@ function initAppPage() {
       }
       if (res.status === 401) {
         finishAppLoadingProgress(loadingEl, { immediate: true });
+        if (onboardingGuestPreview) {
+          const pending = getPendingEstablishment();
+          const guestBusinessName = String(
+            pending?.establishment_name || pending?.name || "Mon commerce"
+          ).trim();
+          document.getElementById("app-app")?.classList.remove("app-awaiting-first-business");
+          if (loadErrorEl) {
+            loadErrorEl.textContent = "";
+            loadErrorEl.classList.add("hidden");
+          }
+          loadErrorDetailEl?.classList.add("hidden");
+          emptyWelcomeEl?.classList.add("hidden");
+          emptyFatalEl?.classList.add("hidden");
+          if (emptyEl) emptyEl.classList.add("hidden");
+          if (contentEl) contentEl.classList.remove("hidden");
+          if (businessNameEl) businessNameEl.textContent = guestBusinessName || "Mon commerce";
+          initAppSidebar();
+          showAppSection("dashboard");
+          requestAnimationFrame(() => showAppSection("dashboard"));
+          syncSaaSWelcomeChrome();
+          window.setTimeout(() => {
+            mountAuthOverlayForOnboarding();
+          }, ONBOARDING_AUTH_OVERLAY_DELAY_MS);
+          return;
+        }
         const body = await res.json().catch(() => ({}));
         clearAuthToken();
         const code = body.code || "invalid";
@@ -866,9 +940,22 @@ function initAppMobile() {
 }
 
 const DASHBOARD_TOKEN_STORAGE_KEY = "fidpass_dashboard_token";
+const LANDING_ONBOARDING_FLAG_KEY = "fidpass_landing_onboarding_after_enter_v1";
+const LANDING_ONBOARDING_DELAY_MS = 1000;
 
 function initAppDashboard(slug) {
   const urlParams = new URLSearchParams(window.location.search);
+  const fromLandingOnboarding = String(urlParams.get("fromLandingOnboarding") || "").trim() === "1";
+  if (fromLandingOnboarding) {
+    try {
+      sessionStorage.setItem(LANDING_ONBOARDING_FLAG_KEY, "1");
+    } catch (_) {}
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete("fromLandingOnboarding");
+    if (window.history?.replaceState) {
+      window.history.replaceState({}, "", cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+    }
+  }
   let dashboardToken = urlParams.get("token");
   if (dashboardToken) {
     try {
@@ -897,7 +984,38 @@ function initAppDashboard(slug) {
   const dashboardOnboardingFlyerBtn = document.getElementById("app-dashboard-onboarding-flyer-btn");
 
   let dashboardIntroRevealPending = false;
+  let dashboardIntroRevealRunning = false;
+  let dashboardIntroRevealDone = false;
   let onboardingGateSyncTimer = 0;
+  let landingOnboardingDelayScheduled = false;
+  let landingOnboardingDelayActive = false;
+  try {
+    landingOnboardingDelayActive = sessionStorage.getItem(LANDING_ONBOARDING_FLAG_KEY) === "1";
+  } catch (_) {}
+
+  function clearLandingOnboardingDelayFlag() {
+    landingOnboardingDelayActive = false;
+    landingOnboardingDelayScheduled = false;
+    try {
+      sessionStorage.removeItem(LANDING_ONBOARDING_FLAG_KEY);
+    } catch (_) {}
+  }
+
+  function scheduleLandingOnboardingGateReveal() {
+    if (!landingOnboardingDelayActive || landingOnboardingDelayScheduled) return;
+    if (!dashboardOnboardingGate || !dashboardShellMain) return;
+    landingOnboardingDelayScheduled = true;
+    window.setTimeout(() => {
+      landingOnboardingDelayScheduled = false;
+      if (!landingOnboardingDelayActive) return;
+      dashboardReadySplash?.classList.add("hidden");
+      dashboardReadySplash?.setAttribute("aria-hidden", "true");
+      dashboardOnboardingGate.classList.remove("hidden");
+      dashboardShellMain.classList.add("hidden");
+      clearLandingOnboardingDelayFlag();
+      syncSaaSWelcomeChrome();
+    }, LANDING_ONBOARDING_DELAY_MS);
+  }
 
   function hideDashboardOnboardingGate() {
     if (!dashboardOnboardingGate) return;
@@ -929,26 +1047,43 @@ function initAppDashboard(slug) {
   }
 
   function revealDashboardOnboardingFromIntro() {
-    dashboardReadySplash?.classList.add("hidden");
-    if (dashboardReadySplash) dashboardReadySplash.setAttribute("aria-hidden", "true");
+    if (dashboardIntroRevealDone || dashboardIntroRevealRunning) return;
+    dashboardIntroRevealRunning = true;
 
-    dashboardOnboardingGate?.classList.remove("hidden");
-    dashboardOnboardingGate?.classList.add("app-dashboard-onboarding-gate--enter");
+    const showGate = () => {
+      if (dashboardIntroRevealDone) return;
+      dashboardIntroRevealDone = true;
+      dashboardReadySplash?.classList.add("hidden");
+      if (dashboardReadySplash) {
+        dashboardReadySplash.setAttribute("aria-hidden", "true");
+        dashboardReadySplash.classList.remove("app-dashboard-ready-splash--exit");
+        dashboardReadySplash.dataset.introRevealed = "1";
+      }
 
-    dashboardOnboardingGate?.addEventListener(
-      "animationend",
-      () => {
-        dashboardOnboardingGate?.classList.remove("app-dashboard-onboarding-gate--enter");
-      },
-      { once: true }
-    );
+      dashboardOnboardingGate?.classList.remove("hidden");
 
-    dashboardShellMain?.classList.add("hidden");
-    syncSaaSWelcomeChrome();
+      dashboardShellMain?.classList.add("hidden");
+      dashboardIntroRevealRunning = false;
+      syncSaaSWelcomeChrome();
+    };
+
+    if (!dashboardReadySplash || dashboardReadySplash.classList.contains("hidden")) {
+      showGate();
+      return;
+    }
+    if (dashboardReadySplash.dataset.introRevealed === "1") {
+      showGate();
+      return;
+    }
+
+    dashboardReadySplash.classList.add("app-dashboard-ready-splash--exit");
+    const finish = () => showGate();
+    dashboardReadySplash.addEventListener("animationend", finish, { once: true });
+    setTimeout(finish, 340);
   }
 
   function tryScheduleDashboardIntroReveal() {
-    if (dashboardIntroRevealPending) return;
+    if (dashboardIntroRevealPending || dashboardIntroRevealDone || dashboardIntroRevealRunning) return;
     dashboardIntroRevealPending = true;
     scheduleDashboardOnboardingReveal(() => {
       dashboardIntroRevealPending = false;
@@ -1028,7 +1163,23 @@ function initAppDashboard(slug) {
         dashboardReadySplash?.classList.add("hidden");
         dashboardReadySplash?.setAttribute("aria-hidden", "true");
         hideDashboardOnboardingGate();
+        clearLandingOnboardingDelayFlag();
         return false;
+      }
+
+      // Pendant la transition splash -> gate, ne pas réappliquer d'état visuel en parallèle
+      // (évite un effet de "page qui se ré-affiche" 2 fois).
+      if (dashboardIntroRevealRunning) {
+        return true;
+      }
+
+      if (landingOnboardingDelayActive) {
+        dashboardReadySplash?.classList.add("hidden");
+        dashboardReadySplash?.setAttribute("aria-hidden", "true");
+        dashboardOnboardingGate.classList.add("hidden");
+        dashboardShellMain.classList.remove("hidden");
+        scheduleLandingOnboardingGateReveal();
+        return true;
       }
 
       const introDone = isDashIntroRevealDone();
