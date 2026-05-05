@@ -1097,7 +1097,7 @@ router.put("/games/:gameCode/rewards", (req, res) => {
 });
 
 // ——— Stats ———
-const PERIOD_OR_MONTH_RE = /^(7d|30d|this_month|6m|12m|1y|\d{4}-\d{2})$/;
+const PERIOD_OR_MONTH_RE = /^(today|this_week|7d|30d|this_month|6m|12m|1y|\d{4}-\d{2})$/;
 
 router.get("/stats", (req, res) => {
   const business = req.business;

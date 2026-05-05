@@ -22,6 +22,13 @@ function getPeriodBounds(period) {
     return { since: null, month: period, label: monthLabelFr(period) };
   }
   switch (period) {
+    case "today":
+      return { since: "datetime('now', 'start of day')", label: "Aujourd'hui" };
+    case "this_week":
+      return {
+        since: "datetime('now', '-' || ((CAST(strftime('%w','now') AS INTEGER) + 6) % 7) || ' days', 'start of day')",
+        label: "Cette semaine",
+      };
     case "7d":
       return { since: "datetime('now', '-7 days')", label: "7 jours" };
     case "30d":

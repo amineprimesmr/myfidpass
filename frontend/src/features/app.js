@@ -1292,7 +1292,11 @@ function initAppDashboard(slug) {
   const dashboardPeriodSelect = document.getElementById("app-dashboard-period-select");
   const dashboardPeriodPills = Array.from(document.querySelectorAll(".app-dashboard-period-pill"));
   const dashboardPeriodDisplay = document.getElementById("app-dashboard-period-display");
-  let dashboardUseSimulatedData = false;
+  const isLocalTestCommerce = () => {
+    const name = String(document.getElementById("app-business-name")?.textContent || "").trim().toLowerCase();
+    return name.includes("commerce test local") || slug.toLowerCase().includes("test");
+  };
+  let dashboardUseSimulatedData = isLocalTestCommerce();
   const memberSearchInput = document.getElementById("app-member-search");
   const memberListEl = document.getElementById("app-member-list");
   const amountInput = document.getElementById("app-amount");
@@ -5026,21 +5030,25 @@ function initAppDashboard(slug) {
   }
 
   function getDashboardPeriod() {
-    return (dashboardPeriodSelect && dashboardPeriodSelect.value) || "this_month";
+    return (dashboardPeriodSelect && dashboardPeriodSelect.value) || "today";
   }
 
   function getDashboardPeriodRange(period) {
     const now = new Date();
     let start = new Date(now);
     let end = new Date(now);
-    if (period === "7d") {
-      start.setDate(end.getDate() - 6);
-    } else if (period === "30d") {
-      start.setDate(end.getDate() - 29);
+    if (period === "today") {
+      start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    } else if (period === "this_week") {
+      const day = (end.getDay() + 6) % 7;
+      start.setDate(end.getDate() - day);
     } else if (period === "6m") {
       start.setMonth(end.getMonth() - 6);
     } else if (period === "this_month") {
       start = new Date(end.getFullYear(), end.getMonth(), 1);
+    }
+    if (period === "today") {
+      return end.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
     }
     const sameYear = start.getFullYear() === end.getFullYear();
     const optsStart = { day: "2-digit", month: "short" };
@@ -5050,10 +5058,15 @@ function initAppDashboard(slug) {
     return `${startStr} - ${endStr}`;
   }
 
+  function getCurrentMonthLabel() {
+    const raw = new Date().toLocaleDateString("fr-FR", { month: "long" });
+    return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "Ce mois";
+  }
+
   const dashboardPeriodLabels = {
-    "7d": "7 derniers jours",
-    "30d": "30 derniers jours",
-    this_month: "ce mois",
+    today: "aujourd'hui",
+    this_week: "cette semaine",
+    this_month: getCurrentMonthLabel(),
     "6m": "6 derniers mois",
   };
 
@@ -5065,6 +5078,8 @@ function initAppDashboard(slug) {
     if (dashboardPeriodSelect && dashboardPeriodSelect.value !== period) {
       dashboardPeriodSelect.value = period;
     }
+    const monthOpt = dashboardPeriodSelect?.querySelector('option[value="this_month"]');
+    if (monthOpt) monthOpt.textContent = getCurrentMonthLabel();
     dashboardPeriodPills.forEach((pill) => {
       pill.classList.toggle("active", pill.dataset.period === period);
     });
@@ -5084,8 +5099,8 @@ function initAppDashboard(slug) {
 
   function getSimulatedStats(period) {
     const map = {
-      "7d": { tx: 64, members: 182, retention: 44, recurrent: 29, active: 80, points: 920, new30: 21, inactive30: 34, avgPoints: 17, avgBasket: 19.5 },
-      "30d": { tx: 302, members: 182, retention: 57, recurrent: 88, active: 104, points: 2860, new30: 49, inactive30: 30, avgPoints: 24, avgBasket: 17.8 },
+      today: { tx: 12, members: 182, retention: 35, recurrent: 11, active: 34, points: 140, new30: 7, inactive30: 34, avgPoints: 17, avgBasket: 19.5 },
+      this_week: { tx: 64, members: 182, retention: 44, recurrent: 29, active: 80, points: 920, new30: 21, inactive30: 34, avgPoints: 17, avgBasket: 19.5 },
       this_month: { tx: 246, members: 182, retention: 53, recurrent: 77, active: 96, points: 2390, new30: 42, inactive30: 33, avgPoints: 22, avgBasket: 18.8 },
       "6m": { tx: 1408, members: 182, retention: 69, recurrent: 132, active: 126, points: 12480, new30: 42, inactive30: 33, avgPoints: 22, avgBasket: 20.2 },
     };
@@ -5107,14 +5122,31 @@ function initAppDashboard(slug) {
 
   function getSimulatedEvolution(period) {
     const byPeriod = {
-      "7d": [14],
-      "30d": [42, 57, 74, 69],
+      today: [12],
+      this_week: [14],
       this_month: [39, 61, 70, 76],
       "6m": [28, 37, 44, 52, 49, 58, 63, 69, 64, 72, 79, 81, 75, 84, 92, 88, 95, 101, 97, 109, 116, 110, 122, 126, 119, 132],
     };
     const values = byPeriod[period] || byPeriod.this_month;
     return values.map((v, idx) => ({ weekIndex: idx, operationsCount: v }));
   }
+
+  const DEMO_MEMBERS = [
+    { id: "demo-1", name: "Amine B.", email: "amine@example.com", points: 126, created_at: "2026-04-02T10:22:00.000Z", last_visit_at: "2026-05-05T10:10:00.000Z", city: "Paris", phone: "06 11 22 33 44" },
+    { id: "demo-2", name: "Sarah L.", email: "sarah@example.com", points: 64, created_at: "2026-03-14T12:40:00.000Z", last_visit_at: "2026-05-04T16:45:00.000Z", city: "Lyon", phone: "06 55 10 20 30" },
+    { id: "demo-3", name: "Nadia T.", email: "nadia@example.com", points: 44, created_at: "2026-02-20T08:05:00.000Z", last_visit_at: "2026-04-22T15:00:00.000Z", city: "Marseille", phone: "07 22 11 99 88" },
+    { id: "demo-4", name: "Lucas M.", email: "lucas@example.com", points: 12, created_at: "2026-05-01T09:15:00.000Z", last_visit_at: "2026-05-03T11:35:00.000Z", city: "Nice", phone: "06 66 88 77 55" },
+    { id: "demo-5", name: "Claire P.", email: "claire@example.com", points: 182, created_at: "2026-01-11T14:20:00.000Z", last_visit_at: "2026-05-01T18:20:00.000Z", city: "Bordeaux", phone: "06 78 45 12 90" },
+  ];
+
+  const DEMO_TRANSACTIONS = [
+    { id: "dtx-1", member_id: "demo-1", member_name: "Amine B.", member_email: "amine@example.com", type: "points_add", points: 20, metadata: "{\"visit\":true}", created_at: "2026-05-05T10:10:00.000Z" },
+    { id: "dtx-2", member_id: "demo-2", member_name: "Sarah L.", member_email: "sarah@example.com", type: "points_add", points: 14, metadata: "{\"visit\":true}", created_at: "2026-05-04T16:45:00.000Z" },
+    { id: "dtx-3", member_id: "demo-5", member_name: "Claire P.", member_email: "claire@example.com", type: "reward_redeem", points: 0, metadata: "Dessert offert", created_at: "2026-05-03T13:12:00.000Z" },
+    { id: "dtx-4", member_id: "demo-4", member_name: "Lucas M.", member_email: "lucas@example.com", type: "points_correction", points: -3, metadata: "Erreur caisse", created_at: "2026-05-03T11:37:00.000Z" },
+    { id: "dtx-5", member_id: "demo-3", member_name: "Nadia T.", member_email: "nadia@example.com", type: "points_add", points: 8, metadata: "{\"visit\":true}", created_at: "2026-05-02T09:02:00.000Z" },
+    { id: "dtx-6", member_id: "demo-5", member_name: "Claire P.", member_email: "claire@example.com", type: "points_add", points: 24, metadata: "{\"visit\":true}", created_at: "2026-05-01T18:20:00.000Z" },
+  ];
 
   function renderDashboardInsights(data) {
     if (!insightSummaryEl || !insightFocusEl || !insightActionEl || !insightConfidenceEl) return;
@@ -5233,6 +5265,26 @@ function initAppDashboard(slug) {
   const membersFilterEl = document.getElementById("app-members-filter");
   const membersSortEl = document.getElementById("app-members-sort");
   async function loadMembers(search = "", filter = "", sort = "last_visit") {
+    if (isLocalTestCommerce()) {
+      const q = String(search || "").trim().toLowerCase();
+      const now = Date.now();
+      let members = DEMO_MEMBERS.filter((m) => {
+        if (!q) return true;
+        return String(m.name || "").toLowerCase().includes(q) || String(m.email || "").toLowerCase().includes(q);
+      });
+      if (filter === "inactive30") {
+        members = members.filter((m) => !m.last_visit_at || now - new Date(m.last_visit_at).getTime() >= 30 * 86400000);
+      } else if (filter === "inactive90") {
+        members = members.filter((m) => !m.last_visit_at || now - new Date(m.last_visit_at).getTime() >= 90 * 86400000);
+      } else if (filter === "points50") {
+        members = members.filter((m) => Number(m.points || 0) >= 50);
+      }
+      if (sort === "points") members.sort((a, b) => Number(b.points || 0) - Number(a.points || 0));
+      else if (sort === "name") members.sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "fr"));
+      else if (sort === "created") members.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      else members.sort((a, b) => new Date(b.last_visit_at || 0) - new Date(a.last_visit_at || 0));
+      return { members, total: members.length };
+    }
     const params = new URLSearchParams({ limit: 100 });
     if (search) params.set("search", search);
     if (filter) params.set("filter", filter);
@@ -5259,10 +5311,16 @@ function initAppDashboard(slug) {
     if (empty) empty.classList.add("hidden");
     const lastVisitLabel = (m) => (m.last_visit_at ? formatDate(m.last_visit_at) : "Jamais");
     const initial = (name) => (name && name.trim() ? String(name.trim()).charAt(0).toUpperCase() : "?");
+    const memberKey = (m) => {
+      if (m?.id != null && String(m.id).trim() !== "") return String(m.id);
+      if (m?.member_id != null && String(m.member_id).trim() !== "") return String(m.member_id);
+      if (m?.email != null && String(m.email).trim() !== "") return String(m.email).trim().toLowerCase();
+      return "";
+    };
     list.innerHTML = arr
       .map(
         (m) =>
-          `<article class="app-membres-card" role="listitem" data-member-id="${escapeHtml(m.id)}" tabindex="0">
+          `<article class="app-membres-card" role="listitem" data-member-id="${escapeHtml(memberKey(m))}" tabindex="0">
             <span class="app-membres-card-avatar" aria-hidden="true">${escapeHtml(initial(m.name || m.email))}</span>
             <div class="app-membres-card-body">
               <h3 class="app-membres-card-name">${escapeHtml(m.name || "Sans nom")}</h3>
@@ -5279,10 +5337,14 @@ function initAppDashboard(slug) {
   }
 
   async function loadDashboardRecentHistory() {
+    if (isLocalTestCommerce()) return DEMO_TRANSACTIONS.slice(0, 8);
     const res = await api("/dashboard/transactions?limit=8");
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.transactions || [];
+    const data = await res.json().catch(() => ({}));
+    if (Array.isArray(data?.transactions)) return data.transactions;
+    if (Array.isArray(data?.rows)) return data.rows;
+    if (Array.isArray(data?.items)) return data.items;
+    return [];
   }
 
   function formatDashboardTxPoints(t) {
@@ -5347,9 +5409,13 @@ function initAppDashboard(slug) {
     try {
       const stats = await loadStats();
       if (stats) renderOverviewAlerts(stats);
+    } catch (_) {}
+    try {
       const recentTx = await loadDashboardRecentHistory();
       renderDashboardRecentHistory(recentTx);
-    } catch (_) { return; }
+    } catch (_) {
+      renderDashboardRecentHistory([]);
+    }
     const membersData = await loadMembers(membersSearchInput?.value || "", membersFilterEl?.value || "", membersSortEl?.value || "last_visit");
     allMembers = membersData.members || [];
     renderMembers(allMembers);
@@ -5494,10 +5560,10 @@ function initAppDashboard(slug) {
     });
   }
 
-  const memberDetailModal = document.getElementById("app-member-detail-modal");
+  const memberDetailModal = document.getElementById("app-member-detail-drawer");
   const memberDetailBody = document.getElementById("app-member-detail-body");
-  const memberDetailClose = memberDetailModal?.querySelector(".app-modal-close");
-  const memberDetailBackdrop = memberDetailModal?.querySelector(".app-modal-backdrop");
+  const memberDetailClose = document.getElementById("app-member-drawer-close");
+  const memberDetailBackdrop = document.getElementById("app-member-drawer-scrim");
   let memberDetailOpenId = null;
 
   function formatMemberTransactionLine(t) {
@@ -5551,6 +5617,11 @@ function initAppDashboard(slug) {
     if (!memberDetailOpenId || !memberDetailBody) return;
     const member = allMembers.find((x) => x.id === memberDetailOpenId);
     const base = member || { id: memberDetailOpenId };
+    if (isLocalTestCommerce()) {
+      const tx = DEMO_TRANSACTIONS.filter((t) => t.member_id === memberDetailOpenId).slice(0, 20);
+      memberDetailBody.innerHTML = memberDetailMarkup(base, tx);
+      return;
+    }
     try {
       const [full, data] = await Promise.all([
         api(`/members/${encodeURIComponent(memberDetailOpenId)}`).then((r) => (r.ok ? r.json() : base)),
@@ -5571,6 +5642,12 @@ function initAppDashboard(slug) {
     memberDetailOpenId = member.id;
     memberDetailBody.innerHTML = "<p>Chargement…</p>";
     memberDetailModal.classList.remove("hidden");
+    memberDetailModal.setAttribute("aria-hidden", "false");
+    if (isLocalTestCommerce()) {
+      const tx = DEMO_TRANSACTIONS.filter((t) => t.member_id === member.id).slice(0, 20);
+      memberDetailBody.innerHTML = memberDetailMarkup(member, tx);
+      return;
+    }
     Promise.all([
       api(`/members/${encodeURIComponent(member.id)}`).then((r) => (r.ok ? r.json() : member)),
       api(`/dashboard/transactions?memberId=${encodeURIComponent(member.id)}&limit=20`).then((r) =>
@@ -5589,6 +5666,7 @@ function initAppDashboard(slug) {
   function closeMemberDetail() {
     memberDetailOpenId = null;
     memberDetailModal?.classList.add("hidden");
+    memberDetailModal?.setAttribute("aria-hidden", "true");
   }
 
   memberDetailModal?.addEventListener("click", async (e) => {
@@ -5669,11 +5747,20 @@ function initAppDashboard(slug) {
   });
   memberDetailClose?.addEventListener("click", closeMemberDetail);
   memberDetailBackdrop?.addEventListener("click", closeMemberDetail);
+  function findMemberFromCard(card) {
+    const key = String(card?.getAttribute("data-member-id") || "").trim();
+    if (!key) return null;
+    return (
+      allMembers.find((m) => String(m?.id ?? "").trim() === key) ||
+      allMembers.find((m) => String(m?.member_id ?? "").trim() === key) ||
+      allMembers.find((m) => String(m?.email ?? "").trim().toLowerCase() === key.toLowerCase()) ||
+      null
+    );
+  }
   membersListEl?.addEventListener("click", (e) => {
     const card = e.target.closest(".app-membres-card[data-member-id]");
     if (!card) return;
-    const id = card.getAttribute("data-member-id");
-    const member = allMembers.find((m) => m.id === id);
+    const member = findMemberFromCard(card);
     if (member) openMemberDetail(member);
   });
   membersListEl?.addEventListener("keydown", (e) => {
@@ -5681,8 +5768,7 @@ function initAppDashboard(slug) {
     const card = e.target.closest(".app-membres-card[data-member-id]");
     if (!card) return;
     e.preventDefault();
-    const id = card.getAttribute("data-member-id");
-    const member = allMembers.find((m) => m.id === id);
+    const member = findMemberFromCard(card);
     if (member) openMemberDetail(member);
   });
 
