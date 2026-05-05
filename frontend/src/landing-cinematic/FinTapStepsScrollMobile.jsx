@@ -25,7 +25,7 @@ export function FinTapStepsScrollMobile() {
             delay={0.1 * i}
           >
             <div className="fintap-steps-card__grey-panel fintap-steps-mobile__grey-panel">
-              <span className="fintap-steps-card__footer-num" aria-hidden="true">
+              <span className="fintap-steps-card__footer-num fintap-steps-mobile__badge" aria-hidden="true">
                 {i + 1}
               </span>
               <div className="fintap-steps-card__grey-panel-media">

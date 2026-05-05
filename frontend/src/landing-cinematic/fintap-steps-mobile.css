@@ -28,3 +28,8 @@
 .fintap-steps-mobile__card-title {
   font-size: 1.05rem;
 }
+
+/* Force l'affichage du badge 1/2/3 en mobile uniquement. */
+.fintap-steps-mobile__badge {
+  display: flex !important;
+}
