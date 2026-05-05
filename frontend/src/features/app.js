@@ -354,10 +354,18 @@ function initAppPage() {
     root.innerHTML = `
       <div class="app-auth-onboarding-overlay__backdrop" aria-hidden="true"></div>
       <div class="app-auth-onboarding-overlay__dialog" role="dialog" aria-modal="true" aria-label="Connexion ou création de compte">
-        <iframe class="app-auth-onboarding-overlay__frame" title="Création de compte Myfidpass" src="/creer-ma-carte?mode=register&embed=1&redirect=%2Fapp%3FauthOverlayDone%3D1"></iframe>
+        <iframe class="app-auth-onboarding-overlay__frame" title="Création de compte Myfidpass" src="/creer-ma-carte?mode=register&embed=1&onboardingMulti=1&redirect=%2Fapp%3FauthOverlayDone%3D1"></iframe>
       </div>
     `;
     document.body.appendChild(root);
+    requestAnimationFrame(() => {
+      root.classList.add("is-visible");
+    });
+
+    const frame = root.querySelector(".app-auth-onboarding-overlay__frame");
+    frame?.addEventListener("load", () => {
+      root.classList.add("is-frame-ready");
+    }, { once: true });
 
     const close = () => {
       root.remove();

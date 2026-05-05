@@ -6198,6 +6198,7 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  pointer-events: none;
 }
 
 .app-auth-onboarding-overlay__backdrop {
@@ -6205,6 +6206,8 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   inset: 0;
   background: rgba(2, 8, 23, 0.62);
   backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 220ms ease;
 }
 
 .app-auth-onboarding-overlay__dialog {
@@ -6216,6 +6219,11 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   overflow: visible;
   box-shadow: none;
   background: transparent;
+  opacity: 0;
+  transform: translateY(12px) scale(0.985);
+  transition:
+    opacity 240ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .app-auth-onboarding-overlay__frame {
@@ -6224,6 +6232,8 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   border: none;
   display: block;
   background: transparent;
+  opacity: 0;
+  transition: opacity 180ms ease;
 }
 
 .app-auth-onboarding-overlay__close {
@@ -6240,6 +6250,23 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   line-height: 1;
   cursor: pointer;
   z-index: 2;
+}
+
+.app-auth-onboarding-overlay.is-visible {
+  pointer-events: auto;
+}
+
+.app-auth-onboarding-overlay.is-visible .app-auth-onboarding-overlay__backdrop {
+  opacity: 1;
+}
+
+.app-auth-onboarding-overlay.is-visible .app-auth-onboarding-overlay__dialog {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.app-auth-onboarding-overlay.is-frame-ready .app-auth-onboarding-overlay__frame {
+  opacity: 1;
 }
 /* Legacy (formulaire caché) + pending */
 .app-engagement-form { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }

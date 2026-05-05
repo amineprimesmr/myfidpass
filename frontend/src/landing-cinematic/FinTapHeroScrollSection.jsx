@@ -7,7 +7,13 @@ import {
   getPageScrollY,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
-import { API_BASE, getAuthToken, setPendingEstablishment } from "../config.js";
+import {
+  API_BASE,
+  getAuthToken,
+  getPendingEstablishments,
+  setPendingEstablishment,
+  setPendingEstablishments,
+} from "../config.js";
 import "./fintap-hero-scroll.css";
 import "./fintap-hero-blue-surface.css";
 
@@ -57,6 +63,9 @@ export function FinTapHeroScrollSection() {
   const [ctaVisible, setCtaVisible] = useState(false);
   const [shopQuery, setShopQuery] = useState("");
   const [shopPlaceId, setShopPlaceId] = useState("");
+  const [selectedEstablishments, setSelectedEstablishments] = useState(() =>
+    getPendingEstablishments()
+  );
   const [placePredictions, setPlacePredictions] = useState([]);
   const [predictionsOpen, setPredictionsOpen] = useState(false);
   const [placesSearching, setPlacesSearching] = useState(false);
@@ -422,24 +431,65 @@ export function FinTapHeroScrollSection() {
     return () => document.removeEventListener("click", onClickOutside);
   }, []);
 
-  const navigateWithPrediction = (pred) => {
+  const applyPrediction = (pred) => {
     const name = String(pred?.main_text || pred?.description || "").trim();
     const pid = String(pred?.place_id || "").trim();
     if (!name || !pid) return;
-    setPendingEstablishment({ establishment_name: name, google_place_id: pid });
-    const u = new URL("/app", window.location.origin);
-    u.searchParams.set("fromLandingOnboarding", "1");
-    window.location.assign(`${u.pathname}${u.search}`);
+    setShopQuery(name);
+    setShopPlaceId(pid);
+    setPredictionsOpen(false);
   };
 
   const startHref = "/app?fromLandingOnboarding=1";
 
-  const onStartCtaClick = () => {
-    if (!shopPlaceId) return;
+  const onStartCtaClick = (event) => {
+    if (!shopPlaceId) {
+      event.preventDefault();
+      return;
+    }
     const name = shopQuery.trim();
-    if (!name) return;
-    setPendingEstablishment({ establishment_name: name, google_place_id: shopPlaceId });
+    if (!name) {
+      event.preventDefault();
+      return;
+    }
+    const primary = { establishment_name: name, google_place_id: shopPlaceId };
+    setPendingEstablishment(primary);
+    const exists = selectedEstablishments.some(
+      (entry) => entry.google_place_id === primary.google_place_id
+    );
+    const next = exists ? selectedEstablishments : [...selectedEstablishments, primary];
+    setSelectedEstablishments(next);
+    setPendingEstablishments(next);
   };
+
+  const addSelectedEstablishment = () => {
+    const name = shopQuery.trim();
+    const pid = String(shopPlaceId || "").trim();
+    if (!name || !pid) return;
+    const exists = selectedEstablishments.some((entry) => entry.google_place_id === pid);
+    if (exists) return;
+    const next = [
+      ...selectedEstablishments,
+      { establishment_name: name, google_place_id: pid },
+    ];
+    setSelectedEstablishments(next);
+    setPendingEstablishments(next);
+  };
+
+  const removeSelectedEstablishment = (pid) => {
+    const placeId = String(pid || "").trim();
+    if (!placeId) return;
+    const next = selectedEstablishments.filter(
+      (entry) => entry.google_place_id !== placeId
+    );
+    setSelectedEstablishments(next);
+    setPendingEstablishments(next);
+  };
+
+  const canAddSelected =
+    !!shopPlaceId &&
+    !!shopQuery.trim() &&
+    !selectedEstablishments.some((entry) => entry.google_place_id === shopPlaceId);
 
   return (
     <section
@@ -549,7 +599,7 @@ export function FinTapHeroScrollSection() {
                     className="fintap-hero-iphone__search-option"
                     onPointerDown={(e) => {
                       e.preventDefault();
-                      navigateWithPrediction(pred);
+                      applyPrediction(pred);
                     }}
                   >
                     <span className="fintap-hero-iphone__search-option-main">
@@ -563,6 +613,32 @@ export function FinTapHeroScrollSection() {
               </div>
             ) : null}
           </label>
+          {canAddSelected ? (
+            <button
+              type="button"
+              className="fintap-hero-iphone__add-business-btn"
+              onClick={addSelectedEstablishment}
+            >
+              Ajouter un commerce
+            </button>
+          ) : null}
+          {selectedEstablishments.length > 0 ? (
+            <div className="fintap-hero-iphone__selected-businesses" aria-label="Commerces ajoutés">
+              {selectedEstablishments.map((entry) => (
+                <span key={entry.google_place_id} className="fintap-hero-iphone__selected-business-chip">
+                  <span>{entry.establishment_name}</span>
+                  <button
+                    type="button"
+                    className="fintap-hero-iphone__selected-business-remove"
+                    aria-label={`Retirer ${entry.establishment_name}`}
+                    onClick={() => removeSelectedEstablishment(entry.google_place_id)}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          ) : null}
           {noSuggestionsVisible && shopQuery.trim().length >= 2 && !placesSearching ? (
             <p className="fintap-hero-iphone__search-empty-hint" role="status">
               Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion

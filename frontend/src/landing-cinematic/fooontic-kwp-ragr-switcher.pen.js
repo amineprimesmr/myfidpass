@@ -5,6 +5,7 @@ import { getAuthToken } from "../config.js";
 export function runFooonticKwpRaGrSwitcherPen() {
   const switcher = document.querySelector(".switcher");
   if (!switcher) return;
+  switcher.classList.toggle("switcher--authed", !!getAuthToken());
 
   const SCROLL_ACTIONS = {
     "1": () => window.scrollTo({ top: 0, behavior: "smooth" }), // home → top of page
