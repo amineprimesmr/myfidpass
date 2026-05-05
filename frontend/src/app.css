@@ -272,14 +272,16 @@ html:has(body.page-app) {
 
 .app-dashboard-onboarding-card--card-builder {
   overflow: hidden;
+  padding: 0.75rem;
 }
 
 .app-dashboard-onboarding-visual--card-builder {
-  border-radius: 22px;
+  border-radius: 20px;
   border: 1px solid #3a4558;
   background: linear-gradient(168deg, #0e1219 0%, #0f1724 52%, #111925 100%);
-  min-height: 248px;
-  padding: 0.55rem;
+  min-height: 300px;
+  margin-bottom: 0;
+  padding: 0.45rem;
 }
 
 .app-dashboard-card-builder-hero {
@@ -290,7 +292,7 @@ html:has(body.page-app) {
   gap: 0.35rem;
   min-height: 236px;
   border-radius: 18px;
-  padding: 0.95rem 0.4rem 0.85rem 1.15rem;
+  padding: 1rem 0.35rem 1rem 1rem;
   overflow: hidden;
   background:
     radial-gradient(86% 120% at 42% 100%, rgba(0, 169, 225, 0.2) 0%, rgba(0, 169, 225, 0) 62%),
@@ -309,7 +311,7 @@ html:has(body.page-app) {
 .app-dashboard-card-builder-eyebrow {
   margin: 0;
   color: #f6f9ff;
-  font-size: 2.82rem;
+  font-size: 2.7rem;
   line-height: 0.94;
   letter-spacing: -0.032em;
   font-weight: 650;
@@ -323,26 +325,17 @@ html:has(body.page-app) {
   max-width: 18ch;
 }
 
-.app-dashboard-card-builder-btn {
-  margin-top: 1.55rem;
-  border: 0;
-  border-radius: 17px;
-  background: #f3f5f8;
-  color: #161d29;
-  height: 61px;
-  min-width: 238px;
-  padding: 0 1.55rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.app-dashboard-card-builder-actions {
+  margin-top: 1.5rem;
+}
+
+.app-dashboard-card-builder-actions .app-dashboard-onboarding-cta {
+  min-width: 235px;
+  min-height: 62px;
+  border-radius: 999px;
   font-size: 2rem;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  font-weight: 620;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 12px 26px rgba(2, 8, 20, 0.28);
-  pointer-events: none;
+  font-weight: 650;
+  padding: 0 1.55rem;
 }
 
 .app-dashboard-card-builder-carousel {
@@ -395,6 +388,10 @@ html:has(body.page-app) {
   opacity: 0.78;
   filter: saturate(0.88) brightness(0.9);
   animation: appCardStackShift 12s infinite 8s;
+}
+
+.app-dashboard-onboarding-card--card-builder .app-dashboard-onboarding-status {
+  display: none !important;
 }
 
 @keyframes appCardStackShift {
@@ -635,7 +632,7 @@ html:has(body.page-app) {
   }
 
   .app-dashboard-onboarding-visual--card-builder {
-    min-height: 210px;
+    min-height: 218px;
   }
 
   .app-dashboard-card-builder-hero {
@@ -652,12 +649,11 @@ html:has(body.page-app) {
     font-size: 0.68rem;
   }
 
-  .app-dashboard-card-builder-btn {
-    min-width: 126px;
-    height: 44px;
-    margin-top: 1rem;
-    border-radius: 12px;
-    font-size: 1.05rem;
+  .app-dashboard-card-builder-actions .app-dashboard-onboarding-cta {
+    min-width: 138px;
+    min-height: 44px;
+    margin-top: 0.15rem;
+    font-size: 1.04rem;
     padding: 0 1rem;
   }
 
