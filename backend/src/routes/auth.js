@@ -539,6 +539,7 @@ router.post("/google", async (req, res) => {
   // Clients iOS (JSONEncoder convertToSnakeCase) envoient `id_token` ; le web envoie souvent `idToken`.
   const idToken = req.body?.idToken || req.body?.id_token || req.body?.credential;
   const establishmentSelection = normalizeEstablishmentSelection(req.body || {});
+  const authIntent = String(req.body?.auth_intent || req.body?.authIntent || "").trim().toLowerCase();
   if (!idToken || GOOGLE_AUDIENCES.length === 0 || !googleClient) {
     return res.status(400).json({ error: "Connexion Google non configurée ou token manquant" });
   }
@@ -554,6 +555,12 @@ router.post("/google", async (req, res) => {
     }
     let user = getUserByEmail(email);
     const isNewUser = !user;
+    if (!isNewUser && (authIntent === "sign_up" || authIntent === "signup")) {
+      return res.status(409).json({
+        error: "Un compte existe déjà avec cet identifiant Google. Utilisez Se connecter.",
+        code: "account_already_exists_social",
+      });
+    }
     if (isNewUser && !hasSelectedEstablishment(establishmentSelection)) {
       return respondMissingEstablishment(res);
     }
@@ -639,6 +646,10 @@ router.get("/google-oauth-callback", async (req, res) => {
     let user = getUserByEmail(email);
     const isNewUser = !user;
     const establishmentSelection = normalizeEstablishmentSelection(stateData || {});
+    const authIntent = String(stateData?.mode || "").trim().toLowerCase();
+    if (!isNewUser && (authIntent === "sign_up" || authIntent === "signup")) {
+      return res.redirect(302, `${redirectApp}?error=account_exists`);
+    }
     if (isNewUser && !hasSelectedEstablishment(establishmentSelection)) {
       return res.redirect(302, `${redirectApp}?error=missing_establishment`);
     }
@@ -683,6 +694,7 @@ router.post("/apple", async (req, res) => {
   const bodyName = body.name;
   const bodyEmail = body.email;
   const establishmentSelection = normalizeEstablishmentSelection(body);
+  const authIntent = String(body.auth_intent || body.authIntent || "").trim().toLowerCase();
   if (!rawToken || APPLE_JWT_AUDIENCES.length === 0) {
     return res.status(400).json({ error: "Connexion Apple non configurée ou token manquant" });
   }
@@ -710,6 +722,12 @@ router.post("/apple", async (req, res) => {
       return res.status(400).json({ error: "Email non fourni par Apple. Réautorisez l'application pour partager votre email." });
     }
     const isNewUser = !user;
+    if (!isNewUser && (authIntent === "sign_up" || authIntent === "signup")) {
+      return res.status(409).json({
+        error: "Un compte existe déjà avec cet identifiant Apple. Utilisez Se connecter.",
+        code: "account_already_exists_social",
+      });
+    }
     if (isNewUser && !hasSelectedEstablishment(establishmentSelection)) {
       return respondMissingEstablishment(res);
     }
