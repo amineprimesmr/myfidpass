@@ -226,7 +226,7 @@
         </div>
         <div id="auth-form-register" class="auth-form-block hidden">
           <h1 class="auth-title">Créer un compte</h1>
-          <p class="auth-subtitle">Choisissez d’abord votre établissement, puis créez votre compte commerçant.</p>
+          <p class="auth-subtitle">Choisissez d’abord votre commerce, puis créez votre compte commerçant.</p>
           <p id="auth-register-establishment" class="auth-success-msg hidden"></p>
           <p class="auth-hint">3 j offerts, puis 1,00 € le 1er mois (mensuel) ou 399,00 €/an (annuel) — abonnement sans engagement.</p>
           <form id="auth-register-form" class="auth-form">
@@ -246,7 +246,7 @@
               <button type="button" id="auth-show-login" class="auth-mini-switch-btn">Déjà un compte ? Connexion</button>
             </p>
             <p class="auth-mini-switch-wrap">
-              <a href="/creer-ma-carte" id="auth-register-change-establishment" class="auth-mini-switch-btn">Changer d’établissement</a>
+              <a href="/creer-ma-carte" id="auth-register-change-establishment" class="auth-mini-switch-btn">Changer de commerce</a>
             </p>
           </form>
         </div>
@@ -326,10 +326,10 @@
                   <svg class="app-desktop-topbar__check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                 </div>
                 <div id="app-topbar-store-list" class="app-desktop-topbar__store-list" role="menu" aria-label="Commerces"></div>
-                <div id="app-topbar-entitlements-line" class="app-desktop-topbar__store-entitlements">Quota commerces: --</div>
+                <div id="app-topbar-entitlements-line" class="app-desktop-topbar__store-entitlements hidden"></div>
                 <a href="#profil" class="app-desktop-topbar__store-add" id="app-topbar-store-add-link">
                   <span class="app-desktop-topbar__plus" aria-hidden="true">+</span>
-                  Gérer l’établissement
+                  Ajouter un commerce
                 </a>
                 <hr class="app-desktop-topbar__hr" />
                 <div class="app-desktop-topbar__user-block">
@@ -409,6 +409,12 @@
 
       <aside class="app-sidebar" id="app-sidebar">
         <span id="app-business-name" class="app-business-name-hidden" aria-hidden="true">Mon espace</span>
+        <div class="app-sidebar-brand">
+          <a href="/app#dashboard" class="app-sidebar-logo" aria-label="Myfidpass">
+            <img src="/assets/icone.png?v=20260416" alt="" class="app-sidebar-logo-img app-sidebar-logo-img--brand" width="26" height="26" decoding="async" />
+            <span class="app-sidebar-logo-text">Myfidpass</span>
+          </a>
+        </div>
         <nav class="app-sidebar-nav" aria-label="Navigation principale">
           <a href="#dashboard" class="app-sidebar-link app-sidebar-link-active" data-section="dashboard">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
@@ -488,13 +494,13 @@
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 4l4 4-9 9-4 1 1-4 8-10z"/></svg>
                 </button>
               </div>
-              <p class="app-empty-text">Votre compte est prêt. Indiquez l’établissement où vous distribuez la carte fidélité pour poursuivre.</p>
+              <p class="app-empty-text">Votre compte est prêt. Indiquez le commerce où vous distribuez la carte fidélité pour poursuivre.</p>
               <form id="app-empty-create-form" class="app-empty-form">
                 <input type="hidden" id="app-empty-place-id" value="" />
-                <label class="app-label" for="app-empty-name">Établissement</label>
+                <label class="app-label" for="app-empty-name">Commerce</label>
                 <input type="text" id="app-empty-name" class="app-input" placeholder="ex. Café NBK" autocomplete="organization" required />
-                <p class="app-hint">Choisissez votre établissement dans les suggestions Google pour finaliser votre compte.</p>
-                <button type="submit" class="app-btn app-btn-primary app-empty-cta">Rattacher mon établissement</button>
+                <p class="app-hint">Choisissez votre commerce dans les suggestions Google pour finaliser votre compte.</p>
+                <button type="submit" class="app-btn app-btn-primary app-empty-cta">Ajouter mon commerce</button>
                 <p id="app-empty-create-error" class="app-message error hidden"></p>
               </form>
             </div>
@@ -1694,21 +1700,22 @@
               
             </div>
           </section>
-          <!-- Section Profil : infos établissement (nom, logo, adresse) -->
+          <!-- Section Profil : infos commerce (nom, logo, adresse) -->
           <section id="profil" class="app-section app-section-profil" data-commerce-view="home" style="position:relative;overflow:hidden;">
             <!-- ── Page Récompenses (overlay interne) ── -->
             <div id="app-referral-panel" class="app-referral-panel hidden" aria-label="Récompenses parrainage">
+              <!-- Header sticky façon iOS -->
               <header class="app-referral-panel__header">
                 <button type="button" id="app-referral-back" class="app-referral-panel__back" aria-label="Retour">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <span class="app-referral-panel__title">Récompenses</span>
                 <button type="button" class="app-referral-panel__people-btn" aria-label="Parrainages">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </button>
               </header>
 
-              <!-- Carte holographique -->
+              <!-- Hero lavande + carte holographique -->
               <div class="app-referral-hero">
                 <div class="app-referral-holo-card">
                   <div class="app-referral-holo-card__logo">
@@ -1716,12 +1723,13 @@
                   </div>
                   <span class="app-referral-holo-card__label">Passe de parrainage</span>
                 </div>
+                <span class="app-referral-hero__caption">Invitez · Gagnez · Profitez</span>
               </div>
 
-              <!-- État chargement -->
+              <!-- Chargement -->
               <p id="app-referral-loading" class="app-referral-loading">Chargement…</p>
 
-              <!-- État verrouillé (pas d'abonnement) -->
+              <!-- Verrouillé (sans abonnement actif) -->
               <div id="app-referral-locked" class="app-referral-locked hidden">
                 <div class="app-referral-locked__icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -1731,12 +1739,15 @@
               </div>
 
               <!-- Contenu principal -->
-              <div id="app-referral-content" class="hidden">
+              <div id="app-referral-content" class="app-referral-content-wrap hidden">
+
+                <!-- Intro -->
                 <div class="app-referral-intro">
                   <h2 class="app-referral-intro__title">Invitez et gagnez des récompenses</h2>
-                  <p class="app-referral-intro__sub">Parrainez un autre commerçant : il démarre à 1 € puis profite d'un mois à −50 %, et vous gagnez 2 mois à −50 %.</p>
+                  <p class="app-referral-intro__sub">Parrainez un commerçant — il démarre à 1 €, profite d'un mois à −50 %. Vous gagnez 2 mois à −50 % par parrainage converti.</p>
                 </div>
 
+                <!-- Lien de parrainage -->
                 <div class="app-referral-link-section">
                   <h3 class="app-referral-link-section__heading">Votre lien de parrainage</h3>
                   <div class="app-referral-link-box">
@@ -1747,25 +1758,24 @@
                   </div>
                   <button type="button" id="app-referral-share-btn" class="app-referral-share-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                    Partager votre lien de parrainage
+                    Partager votre lien
                   </button>
-                  <p class="app-referral-legal">En utilisant notre programme de parrainage, vous acceptez nos conditions d'utilisation.</p>
+                  <p class="app-referral-legal">En participant, vous acceptez nos conditions d'utilisation du programme de parrainage.</p>
                 </div>
 
-                <!-- Réductions actives -->
-                <div id="app-referral-discounts"></div>
+                <!-- Réductions actives (injectées dynamiquement) -->
+                <div id="app-referral-discounts" style="padding:0 1.4rem;"></div>
 
+                <!-- Récompenses -->
                 <div class="app-referral-rewards-section">
                   <h3 class="app-referral-rewards-section__heading">Vos récompenses</h3>
-                  <p class="app-referral-rewards-section__desc">Parrainez un autre commerçant. Il bénéficiera d'un 1er mois à 1 € puis d'un mois à −50 %, et vous recevrez 2 mois à −50 % par parrainage converti.</p>
+                  <p class="app-referral-rewards-section__desc">Chaque parrainage converti vous rapporte automatiquement 2 mois à −50 % sur votre abonnement.</p>
 
-                  <!-- Carte récompense parrain -->
+                  <!-- Parrain -->
                   <div class="app-referral-reward-card">
-                    <div class="app-referral-reward-card__icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                    </div>
+                    <div class="app-referral-reward-card__icon app-referral-reward-card__icon--parrain" aria-hidden="true">🎁</div>
                     <div class="app-referral-reward-card__body">
-                      <p class="app-referral-reward-card__tier">1 parrainage</p>
+                      <p class="app-referral-reward-card__tier">Vous parrainez</p>
                       <p class="app-referral-reward-card__title">2 mois à −50 %</p>
                       <div class="app-referral-reward-card__progress">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -1774,35 +1784,33 @@
                     </div>
                     <div class="app-referral-reward-card__action">
                       <button type="button" class="app-referral-reward-card__btn" disabled>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        Automatique
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Échanger
                       </button>
                     </div>
                   </div>
 
-                  <!-- Carte récompense filleul (informationnelle) -->
+                  <!-- Filleul -->
                   <div class="app-referral-reward-card">
-                    <div class="app-referral-reward-card__icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
+                    <div class="app-referral-reward-card__icon app-referral-reward-card__icon--filleul" aria-hidden="true">⭐️</div>
                     <div class="app-referral-reward-card__body">
                       <p class="app-referral-reward-card__tier">Votre filleul reçoit</p>
                       <p class="app-referral-reward-card__title">1er mois à 1 € + 1 mois à −50 %</p>
                       <div class="app-referral-reward-card__progress">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         Offre de bienvenue automatique
                       </div>
                     </div>
                     <div class="app-referral-reward-card__action">
                       <button type="button" class="app-referral-reward-card__btn" disabled>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         Automatique
                       </button>
                     </div>
                   </div>
-
-                  <p style="font-size:0.75rem;color:#aaa;line-height:1.5;margin-top:0.5rem;">Les réductions sont vérifiées après conversion de chaque parrainage. Myfidpass se réserve le droit de révoquer les avantages en cas d'abus.</p>
                 </div>
+
+                <p class="app-referral-disclaimer">Les avantages sont calculés après chaque conversion et appliqués à la prochaine facture. Myfidpass se réserve le droit de révoquer les récompenses en cas d'abus.</p>
               </div>
 
               <!-- Toast copie -->
@@ -1818,7 +1826,8 @@
             </div>
 
             <!-- Bannière parrainage -->
-            <button type="button" id="app-referral-banner" class="app-referral-banner hidden" aria-label="Ouvrir le programme de parrainage" style="border:none;width:100%;text-align:left;padding:0 1.5rem 0 0;margin:0 0 0.5rem;">
+            <button type="button" id="app-referral-banner" class="app-referral-banner hidden" aria-label="Ouvrir le programme de parrainage">
+              <!-- Avatars empilés -->
               <span class="app-referral-banner__avatars" aria-hidden="true">
                 <span class="app-referral-banner__avatar">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1827,18 +1836,23 @@
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </span>
               </span>
-              <span class="app-referral-banner__bg-num" aria-hidden="true">%</span>
+              <!-- Grand chiffre fantôme -->
+              <span class="app-referral-banner__bg-num" aria-hidden="true">−50%</span>
+              <!-- Corps texte -->
               <span class="app-referral-banner__body">
                 <span class="app-referral-banner__title">Invitez et gagnez des récompenses</span>
-                <span class="app-referral-banner__sub">Parrainez un commerçant et gagnez 2 mois à −50 %.</span>
+                <span class="app-referral-banner__sub">Parrainez un commerçant, gagnez 2 mois à −50 %.</span>
               </span>
+              <!-- Chevron -->
               <span class="app-referral-banner__chevron" aria-hidden="true">›</span>
+              <!-- Emoji cadeau -->
+              <span class="app-referral-banner__gift" aria-hidden="true">🎁</span>
             </button>
 
             <div class="app-commerce-reglages-stack app-settings-shopify-shell">
             <aside class="app-settings-shopify-nav" aria-label="Navigation réglages">
               <a href="#app-settings-account-card" class="app-settings-shopify-nav-link">Mon compte</a>
-              <a href="#app-settings-establishment-card" class="app-settings-shopify-nav-link">Mon établissement</a>
+              <a href="#app-settings-establishment-card" class="app-settings-shopify-nav-link">Mon commerce</a>
               <a href="#app-settings-notifs-card" class="app-settings-shopify-nav-link">Notifications</a>
               <a href="#app-settings-location-card" class="app-settings-shopify-nav-link">Localisation</a>
               <a href="#app-settings-security-card" class="app-settings-shopify-nav-link">Sécurité caisse & scan</a>
@@ -1876,7 +1890,7 @@
               </div>
             </div>
             <div class="app-card app-profil-card" id="app-settings-establishment-card">
-              <h3 class="app-subsection-title">Mon établissement</h3>
+              <h3 class="app-subsection-title">Mon commerce</h3>
               <div class="app-profil-form">
                 <div class="app-rules-row">
                   <label class="app-label" for="app-profil-org">Nom affiché</label>
@@ -1910,11 +1924,11 @@
                   <p class="app-hint">Suggestions automatiques (OpenStreetMap). Vous pouvez aussi coller une adresse complète puis enregistrer.</p>
                 </div>
                 <div class="app-rules-row">
-                  <label class="app-label" for="app-settings-contact-email">E-mail de contact établissement</label>
+                  <label class="app-label" for="app-settings-contact-email">E-mail de contact commerce</label>
                   <input type="email" id="app-settings-contact-email" class="app-input" placeholder="contact@moncommerce.fr" autocomplete="email" />
                 </div>
                 <div class="app-rules-row">
-                  <label class="app-label" for="app-settings-contact-phone">Téléphone établissement</label>
+                  <label class="app-label" for="app-settings-contact-phone">Téléphone commerce</label>
                   <input type="tel" id="app-settings-contact-phone" class="app-input" placeholder="+33 6 00 00 00 00" autocomplete="tel" />
                 </div>
                 <div class="app-rules-row">
