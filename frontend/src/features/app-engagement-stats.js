@@ -17,6 +17,40 @@ function percent(active, total) {
   return Math.max(0, Math.min(100, Math.round((active / total) * 100)));
 }
 
+function prefersReducedMotion() {
+  return typeof window !== "undefined"
+    && typeof window.matchMedia === "function"
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function animateNumber(el, target, { duration = 620, formatter = (v) => String(v), decimals = 0 } = {}) {
+  if (!el) return;
+  const targetSafe = Number(target);
+  if (!Number.isFinite(targetSafe)) {
+    el.textContent = formatter(target);
+    return;
+  }
+  if (prefersReducedMotion()) {
+    el.textContent = formatter(targetSafe);
+    return;
+  }
+  const currentRaw = String(el.textContent || "").replace(/[^\d.,-]/g, "").replace(",", ".");
+  const current = Number.parseFloat(currentRaw);
+  const from = Number.isFinite(current) ? current : 0;
+  const start = performance.now();
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  const frame = (now) => {
+    const p = Math.min(1, (now - start) / duration);
+    const value = from + (targetSafe - from) * ease(p);
+    const rounded = decimals > 0
+      ? Number(value.toFixed(decimals))
+      : Math.round(value);
+    el.textContent = formatter(rounded);
+    if (p < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
 function getHiddenRefs(channel) {
   if (channel === "google_review") {
     return {
@@ -106,24 +140,60 @@ function renderOverview(overview) {
     if (el) el.textContent = String(value);
   };
   setText("app-engagement-stats-active-pct", `${activePct}%`);
-  setText("app-engagement-stats-active-count", overview.active.toLocaleString("fr-FR"));
-  setText("app-engagement-stats-inactive-count", overview.inactive.toLocaleString("fr-FR"));
   setText("app-engagement-stats-inactive-pct", `${inactivePct}%`);
-  setText("app-engagement-stats-points", overview.points.toLocaleString("fr-FR"));
-  setText("app-engagement-stats-members", overview.members.toLocaleString("fr-FR"));
-  setText("app-engagement-stats-new-members", `+${Math.max(0, Math.round(overview.newMembers))}`);
-  setText(
-    "app-engagement-stats-basket",
-    `${overview.avgBasket.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}€`,
+  animateNumber(
+    document.getElementById("app-engagement-stats-active-count"),
+    overview.active,
+    { formatter: (v) => Number(v).toLocaleString("fr-FR") },
   );
-  setText(
-    "app-engagement-stats-frequency",
-    overview.avgVisits.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+  animateNumber(
+    document.getElementById("app-engagement-stats-inactive-count"),
+    overview.inactive,
+    { formatter: (v) => Number(v).toLocaleString("fr-FR") },
+  );
+  animateNumber(
+    document.getElementById("app-engagement-stats-points"),
+    overview.points,
+    { formatter: (v) => Number(v).toLocaleString("fr-FR") },
+  );
+  animateNumber(
+    document.getElementById("app-engagement-stats-members"),
+    overview.members,
+    { formatter: (v) => Number(v).toLocaleString("fr-FR") },
+  );
+  animateNumber(
+    document.getElementById("app-engagement-stats-new-members"),
+    Math.max(0, Math.round(overview.newMembers)),
+    { formatter: (v) => `+${Number(v).toLocaleString("fr-FR")}` },
+  );
+  animateNumber(
+    document.getElementById("app-engagement-stats-basket"),
+    overview.avgBasket,
+    {
+      decimals: 1,
+      formatter: (v) => `${Number(v).toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}€`,
+    },
+  );
+  animateNumber(
+    document.getElementById("app-engagement-stats-frequency"),
+    overview.avgVisits,
+    {
+      decimals: 1,
+      formatter: (v) => Number(v).toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+    },
   );
   setText("app-engagement-stats-basket-delta", `+${Math.max(0, Math.round(overview.basketDelta * 10) / 10).toLocaleString("fr-FR")}%`);
   setText("app-engagement-stats-frequency-delta", `+${Math.max(0, Math.round(overview.freqDelta * 10) / 10).toLocaleString("fr-FR")}%`);
-  setText("app-engagement-stats-reviews", `+${overview.configuredCount + 4}`);
-  setText("app-engagement-stats-reviews-total", overview.scans.toLocaleString("fr-FR"));
+  animateNumber(
+    document.getElementById("app-engagement-stats-reviews"),
+    overview.configuredCount + 4,
+    { formatter: (v) => `+${Number(v).toLocaleString("fr-FR")}` },
+  );
+  animateNumber(
+    document.getElementById("app-engagement-stats-reviews-total"),
+    overview.scans,
+    { formatter: (v) => Number(v).toLocaleString("fr-FR") },
+  );
   const bar = document.getElementById("app-engagement-stats-active-bar");
   if (bar) bar.style.width = `${activePct}%`;
   const barInactive = document.getElementById("app-engagement-stats-inactive-bar");
@@ -165,6 +235,10 @@ export function applyEngagementStatsFromSettings(settingsData = {}, latestStats 
 }
 
 export function wireEngagementStatsSection({ markDirty }) {
+  const wrapper = document.querySelector(".app-engagement-stats");
+  if (wrapper && !wrapper.classList.contains("is-ready")) {
+    requestAnimationFrame(() => wrapper.classList.add("is-ready"));
+  }
   const rows = readVisualRows();
   const suggest = document.getElementById("app-engagement-auto-suggest");
   rows.forEach((row) => {
