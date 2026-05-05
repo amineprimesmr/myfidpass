@@ -399,6 +399,13 @@ body.page-home .whatsapp-fab-wrap {
   height: 32px;
 }
 
+/* Accueil cinéma mobile : remonter le FAB au-dessus du switcher fixé en bas */
+@media (max-width: 767.98px) {
+  body.page-home:has(#landing-cinematic-root.landing-cinematic-shell) .whatsapp-fab-wrap {
+    bottom: max(5.35rem, calc(env(safe-area-inset-bottom, 0px) + 4.2rem));
+  }
+}
+
 @media (min-width: 768px) {
   .whatsapp-fab-wrap {
     bottom: max(1.35rem, env(safe-area-inset-bottom, 0px));

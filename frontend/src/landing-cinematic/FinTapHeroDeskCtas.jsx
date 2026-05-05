@@ -12,7 +12,7 @@ function iosAppStoreUrl() {
 }
 
 /**
- * Boutons hero desktop : dans le panneau bleu, scrollent avec le hero (pas fixed).
+ * Boutons hero (mobile + desktop) : dans le panneau bleu, scrollent avec le hero (pas fixed).
  */
 export function FinTapHeroDeskCtas() {
   useLayoutEffect(() => {

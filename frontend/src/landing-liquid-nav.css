@@ -32,6 +32,14 @@
   z-index: 110;
 }
 
+/* Mobile LP cinéma : laisser de la place au switcher fixé en bas lors des scrollIntoView */
+@media (max-width: 767.98px) {
+  #landing:has(.landing-cinematic-shell) #comment-ca-marche,
+  #landing:has(.landing-cinematic-shell) #testimonials {
+    scroll-margin-bottom: max(4.75rem, calc(env(safe-area-inset-bottom, 0px) + 3.85rem));
+  }
+}
+
 /* iPhone/perf: quand le menu mobile est ouvert, geler les couches cinématiques lourdes derrière. */
 @media (max-width: 767.98px) and (pointer: coarse) {
   #landing.lg-menu-noscroll .landing-cinematic-shell canvas,

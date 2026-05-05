@@ -64,6 +64,13 @@
   scroll-margin-top: max(5.5rem, calc(env(safe-area-inset-top, 0px) + 4.25rem));
 }
 
+@media (max-width: 767.98px) {
+  #fintap-commerce-onboarding {
+    scroll-margin-top: 0.75rem;
+    scroll-margin-bottom: max(4.75rem, calc(env(safe-area-inset-bottom, 0px) + 3.85rem));
+  }
+}
+
 .fintap-hero-iphone__actions {
   display: flex;
   gap: 0.7rem;
