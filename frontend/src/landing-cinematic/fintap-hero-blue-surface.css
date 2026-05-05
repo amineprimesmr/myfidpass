@@ -18,7 +18,7 @@
     radial-gradient(ellipse 100% 85% at 50% -30%, rgba(255, 255, 255, 0.5) 0%, transparent 55%),
     radial-gradient(ellipse 72% 58% at 0% 5%, rgba(120, 210, 255, 0.55) 0%, transparent 58%),
     radial-gradient(ellipse 72% 58% at 100% 5%, rgba(95, 190, 255, 0.48) 0%, transparent 56%),
-    linear-gradient(180deg, #38a1ff 0%, #5ab8ff 18%, #7ec8ff 38%, #9ed6ff 58%, #b2dff6 78%, #c8e9fa 100%);
+    linear-gradient(180deg, #84d0ff 0%, #73c8ff 24%, #67c0ff 48%, #5dbbff 74%, #58b8ff 100%);
   box-shadow:
     0 10px 40px rgba(12, 80, 140, 0.12),
     0 1px 0 rgba(255, 255, 255, 0.4) inset;

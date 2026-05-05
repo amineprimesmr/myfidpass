@@ -86,7 +86,8 @@ export function getFintapCommerceScrollDelta(viewportWidth, isIosMobile = false)
       const slowedDeltaPx =
         delta <= slowStartPx ? delta : slowStartPx + (delta - slowStartPx) * FINTAP_DESKTOP_BRAKE_FACTOR;
       const ratio = clamp(slowedDeltaPx / TRIGGER, 0, 1);
-      if (ratio >= 0.74) return delta + 40;
+      // Positionner la zone onboarding nettement plus bas dans le viewport.
+      if (ratio >= 0.74) return delta + 220;
     }
     return 480;
   }
