@@ -6212,7 +6212,7 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
 .app-auth-onboarding-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: 2600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6227,6 +6227,7 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   backdrop-filter: blur(6px);
   opacity: 0;
   transition: opacity 220ms ease;
+  z-index: 0;
 }
 
 .app-auth-onboarding-overlay__dialog {
@@ -6243,6 +6244,13 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   transition:
     opacity 240ms ease,
     transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (max-width: 900px) {
+  .app-auth-onboarding-overlay {
+    z-index: 3000;
+    display: flex !important;
+  }
 }
 
 .app-auth-onboarding-overlay__frame {

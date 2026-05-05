@@ -348,6 +348,10 @@ function initAppPage() {
   function mountAuthOverlayForOnboarding() {
     const existing = document.getElementById("app-auth-onboarding-overlay");
     if (existing) return;
+    document.body.classList.remove("app-mobile-menu-open");
+    document.getElementById("app-sidebar")?.classList.remove("is-mobile-open");
+    document.getElementById("app-sidebar-overlay")?.classList.remove("is-open");
+    document.getElementById("app-topbar-menu-toggle")?.setAttribute("aria-expanded", "false");
     const root = document.createElement("div");
     root.id = "app-auth-onboarding-overlay";
     root.className = "app-auth-onboarding-overlay";
