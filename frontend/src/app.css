@@ -317,7 +317,7 @@ html:has(body.page-app) {
 .app-dashboard-card-builder-eyebrow {
   margin: 0;
   color: #f6f9ff;
-  font-size: 2.78rem;
+  font-size: 2.22rem;
   line-height: 0.94;
   letter-spacing: -0.032em;
   font-weight: 650;
@@ -676,7 +676,7 @@ html:has(body.page-app) {
   }
 
   .app-dashboard-card-builder-eyebrow {
-    font-size: 1.74rem;
+    font-size: 1.42rem;
   }
 
   .app-dashboard-card-builder-lead {
