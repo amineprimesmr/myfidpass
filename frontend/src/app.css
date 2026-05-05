@@ -333,6 +333,9 @@ html:has(body.page-app) {
 
 .app-dashboard-card-builder-actions {
   margin-top: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .app-dashboard-card-builder-actions .app-dashboard-onboarding-cta {
@@ -342,6 +345,23 @@ html:has(body.page-app) {
   font-size: 2.28rem;
   font-weight: 650;
   padding: 0 1.8rem;
+}
+
+.app-dashboard-card-builder-actions .app-save-cta-wrap {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  max-width: none;
+  padding: 2px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+  line-height: 0;
+}
+
+.app-dashboard-card-builder-actions .app-save-cta-wrap .app-save-cta {
+  margin: 0;
 }
 
 .app-dashboard-card-builder-carousel {
