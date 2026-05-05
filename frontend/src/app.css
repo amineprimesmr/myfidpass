@@ -4270,18 +4270,64 @@ html:has(body.page-app) {
   padding: 0.5rem 0.85rem 0.5rem 0.9rem;
   min-height: 48px;
   border-radius: 999px;
-  background: #f3f4f6;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background:
+    radial-gradient(120% 160% at 14% 10%, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0) 58%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(14px) saturate(165%);
+  -webkit-backdrop-filter: blur(14px) saturate(165%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.18),
+    0 10px 28px rgba(15, 23, 42, 0.12);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.app-dashboard-period-pill-main::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08));
+  opacity: 0.7;
+}
+.app-dashboard-period-pill-main::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  top: -48%;
+  width: 52%;
+  height: 132%;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.44) 0%, rgba(255, 255, 255, 0) 72%);
+}
+.app-dashboard-period-pill-main:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.66),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+    0 12px 30px rgba(15, 23, 42, 0.15);
+}
+.app-dashboard-period-pill-main:active {
+  transform: scale(0.99);
 }
 .app-dashboard-period-icon {
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.68);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #6b7280;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
 }
 .app-dashboard-period-text {
   display: flex;
@@ -4314,12 +4360,17 @@ html:has(body.page-app) {
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: var(--fidpass-surface);
+  background: rgba(255, 255, 255, 0.68);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #6b7280;
   margin-left: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
 }
 .app-dashboard-period-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .app-dashboard-period-pill {
