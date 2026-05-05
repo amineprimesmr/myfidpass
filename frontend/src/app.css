@@ -6404,6 +6404,7 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
 #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-radius-vertical,
 #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-address-block,
 #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-top-actions,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-section-title,
 #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible #app-perimetre-map-hint,
 #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-save-feedback {
   display: none !important;
