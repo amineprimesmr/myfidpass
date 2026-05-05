@@ -235,11 +235,13 @@ html:has(body.page-app) {
 
 .app-dashboard-onboarding-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.15rem;
 }
 
 .app-dashboard-onboarding-card {
+  width: min(100%, 1120px);
+  margin: 0 auto;
   border-radius: 22px;
   border: 1px solid #dbe3ef;
   background: linear-gradient(180deg, #f7f9fd 0%, #f1f4fa 100%);
@@ -279,7 +281,7 @@ html:has(body.page-app) {
   border-radius: 20px;
   border: 1px solid #3a4558;
   background: linear-gradient(168deg, #0e1219 0%, #0f1724 52%, #111925 100%);
-  min-height: 300px;
+  min-height: 350px;
   margin-bottom: 0;
   padding: 0.45rem;
 }
@@ -287,12 +289,12 @@ html:has(body.page-app) {
 .app-dashboard-card-builder-hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 338px;
+  grid-template-columns: minmax(0, 1fr) 412px;
   align-items: center;
   gap: 0.35rem;
-  min-height: 236px;
+  min-height: 334px;
   border-radius: 18px;
-  padding: 1rem 0.35rem 1rem 1rem;
+  padding: 1.2rem 0.5rem 1.2rem 1.25rem;
   overflow: hidden;
   background:
     radial-gradient(86% 120% at 42% 100%, rgba(0, 169, 225, 0.2) 0%, rgba(0, 169, 225, 0) 62%),
@@ -311,7 +313,7 @@ html:has(body.page-app) {
 .app-dashboard-card-builder-eyebrow {
   margin: 0;
   color: #f6f9ff;
-  font-size: 2.7rem;
+  font-size: 3.45rem;
   line-height: 0.94;
   letter-spacing: -0.032em;
   font-weight: 650;
@@ -320,9 +322,9 @@ html:has(body.page-app) {
 .app-dashboard-card-builder-lead {
   margin: 0.72rem 0 0;
   color: rgba(210, 220, 236, 0.72);
-  font-size: 0.72rem;
+  font-size: 0.94rem;
   line-height: 1.35;
-  max-width: 18ch;
+  max-width: 20ch;
 }
 
 .app-dashboard-card-builder-actions {
@@ -330,12 +332,12 @@ html:has(body.page-app) {
 }
 
 .app-dashboard-card-builder-actions .app-dashboard-onboarding-cta {
-  min-width: 235px;
-  min-height: 62px;
+  min-width: 285px;
+  min-height: 72px;
   border-radius: 999px;
-  font-size: 2rem;
+  font-size: 2.28rem;
   font-weight: 650;
-  padding: 0 1.55rem;
+  padding: 0 1.8rem;
 }
 
 .app-dashboard-card-builder-carousel {
@@ -344,22 +346,22 @@ html:has(body.page-app) {
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 202px;
+  min-height: 286px;
   perspective: 1100px;
 }
 
 .app-dashboard-card-builder-track {
   position: relative;
-  width: 325px;
-  height: 204px;
+  width: 392px;
+  height: 286px;
 }
 
 .app-dashboard-card-builder-media {
   position: absolute;
-  right: -18px;
+  right: -12px;
   top: 50%;
-  width: 244px;
-  height: 202px;
+  width: 322px;
+  height: 266px;
   object-fit: cover;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -617,6 +619,10 @@ html:has(body.page-app) {
   .app-dashboard-onboarding-grid {
     grid-template-columns: 1fr;
     gap: 0.85rem;
+  }
+
+  .app-dashboard-onboarding-card {
+    width: 100%;
   }
 
   .app-dashboard-onboarding-card {
