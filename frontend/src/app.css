@@ -6400,6 +6400,25 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   margin-top: 0.65rem;
 }
 
+/* Emplacement: masquer les éléments UI demandés sur la carte */
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-radius-vertical,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-address-block,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-top-actions,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible #app-perimetre-map-hint,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-perimetre-save-feedback {
+  display: none !important;
+}
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap .leaflet-control-zoom,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap .mapboxgl-ctrl-top-right,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap .mapboxgl-ctrl-top-left,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap .mapboxgl-ctrl-bottom-left,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap .mapboxgl-ctrl-bottom-right,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap .mapboxgl-ctrl-logo,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap .mapboxgl-ctrl-attrib,
+#app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible .app-carte-perimetre-map-wrap .mapbox-improve-map {
+  display: none !important;
+}
+
 @media (max-width: 900px) {
   #app-dashboard-content #carte-perimetre.app-section-carte-perimetre.app-section-visible {
     margin: -1.5rem -1rem 0;
