@@ -1,3 +1,4 @@
+import deskHeroCtasMarkup from "./landing-desk-hero-ctas.fragment.html?raw";
 import switcherMarkup from "../landing-cinematic/fooontic-kwp-ragr-switcher.fragment.html?raw";
 import "../landing-cinematic/fooontic-kwp-ragr-switcher.css";
 import { runFooonticKwpRaGrSwitcherPen } from "../landing-cinematic/fooontic-kwp-ragr-switcher.pen.js";
@@ -17,7 +18,7 @@ export function ensureLandingLiquidNav() {
   if (!host || !landing) return;
 
   host.classList.add("landing-fooontic-switcher-host");
-  host.innerHTML = switcherMarkup;
+  host.innerHTML = `${deskHeroCtasMarkup}${switcherMarkup}`;
   runFooonticKwpRaGrSwitcherPen();
 
   setLiquidGlassMenuDisposeLanding(() => {
