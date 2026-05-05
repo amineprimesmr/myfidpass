@@ -190,9 +190,6 @@ export function FinTapStepsScrollDesktop({ measureRef }) {
                   role="listitem"
                   aria-current={active === i ? "step" : undefined}
                 >
-                  <span className="fintap-steps-card__footer-num" aria-hidden="true">
-                    {i + 1}
-                  </span>
                   <div className="fintap-steps-card__grey-panel-media">
                     <StepVisualByIndex index={i} />
                   </div>
