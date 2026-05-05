@@ -10,7 +10,7 @@ const SEARCH_INDEX = [
   { id: "carte-perimetre", label: "Emplacement", hint: "Carte & périmètre", chips: ["emplacement", "tous"] },
   { id: "flyer-qr", label: "Flyer QR", hint: "QR à imprimer", chips: ["marketing", "tous"] },
   { id: "engagement", label: "Avis & Réseaux", hint: "Réseaux sociaux", chips: ["social", "tous"] },
-  { id: "profil", label: "Profil", hint: "Établissement & compte", chips: ["compte", "tous"] },
+  { id: "profil", label: "Profil", hint: "Commerce & compte", chips: ["compte", "tous"] },
 ];
 
 const CHIP_DEFS = [
@@ -110,7 +110,6 @@ export function initAppDesktopTopbar({ showAppSection }) {
   let filteredItems = [];
   let authBusinesses = [];
   let activeBusinessSlug = "";
-  let authEntitlements = null;
 
   function closeAllDropdowns() {
     [storeBtn, alertsBtn].forEach((b) => b?.setAttribute("aria-expanded", "false"));
@@ -185,9 +184,11 @@ export function initAppDesktopTopbar({ showAppSection }) {
     el.addEventListener("click", () => closeMobileMenu()),
   );
 
-  storeAddLink?.addEventListener("click", () => {
+  storeAddLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    storeAddLink.blur();
     closeAllDropdowns();
-    showAppSection("profil");
+    window.dispatchEvent(new CustomEvent("app-open-create-commerce"));
   });
 
   logoutTop?.addEventListener("click", () => {
@@ -235,15 +236,7 @@ export function initAppDesktopTopbar({ showAppSection }) {
       });
       storeList.appendChild(btn);
     });
-    if (entitlementsLine) {
-      const used = Number(authEntitlements?.used_businesses);
-      const allowed = Number(authEntitlements?.allowed_businesses);
-      if (Number.isFinite(used) && Number.isFinite(allowed) && allowed > 0) {
-        entitlementsLine.textContent = `Quota commerces: ${used}/${allowed}`;
-      } else {
-        entitlementsLine.textContent = "Quota commerces: --";
-      }
-    }
+    if (entitlementsLine) entitlementsLine.classList.add("hidden");
   }
 
   syncStoreAndUser();
@@ -253,7 +246,6 @@ export function initAppDesktopTopbar({ showAppSection }) {
     const d = e?.detail || {};
     authBusinesses = Array.isArray(d.businesses) ? d.businesses : [];
     activeBusinessSlug = String(d.active_business_slug || "").trim();
-    authEntitlements = d.entitlements || null;
     renderBusinessList();
   });
   const bizNameEl = document.getElementById("app-business-name");

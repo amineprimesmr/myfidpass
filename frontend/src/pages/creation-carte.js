@@ -42,6 +42,13 @@ export default {
     const isEmbed = ["1", "true", "yes"].includes(
       String(params.get("embed") || "").trim().toLowerCase()
     );
+    const isInsideIframe = (() => {
+      try {
+        return window.top !== window.self;
+      } catch (_) {
+        return true;
+      }
+    })();
     const shouldSyncMultiBusinesses = ["1", "true", "yes"].includes(
       String(params.get("onboardingMulti") || "").trim().toLowerCase()
     );
@@ -331,7 +338,15 @@ export default {
     const appleCode = urlParams.get("apple_code");
     const appleError = urlParams.get("apple_error");
     if (appleError) {
-      showOAuthError(appleError === "no_email" ? "Apple n'a pas fourni d'email." : "Connexion Apple impossible.");
+      if (appleError === "no_email") {
+        showOAuthError("Apple n'a pas fourni d'email.");
+      } else if (appleError === "missing_establishment") {
+        showOAuthError("Sélectionnez d'abord votre commerce avant de continuer avec Apple.");
+      } else if (appleError === "no_token") {
+        showOAuthError("Session Apple expirée. Réessayez.");
+      } else {
+        showOAuthError("Connexion Apple impossible.");
+      }
     } else if (appleCode) {
       showOAuthConnectingOverlay("apple");
       fetch(`${API_BASE}/api/auth/apple-exchange?code=${encodeURIComponent(appleCode)}`)
@@ -507,7 +522,7 @@ export default {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           const fallback = response.status === 409
-            ? "Un compte existe déjà avec cet e-mail. Utilisez Se connecter."
+            ? `Un compte existe déjà avec cet e-mail (${email}). Utilisez Se connecter.`
             : "Impossible de créer le compte pour le moment.";
           showInlineError(registerError, data?.error || fallback);
           if (response.status === 409) {
@@ -636,11 +651,25 @@ export default {
         };
         initAppleScript();
 
+        const openAppleInTopWindow = () => {
+          const targetUrl = buildAppleRedirectUrl();
+          if (isInsideIframe && window.top?.location) {
+            window.top.location.href = targetUrl;
+          } else {
+            window.location.href = targetUrl;
+          }
+        };
+
         appleBtn.addEventListener("click", () => {
           showOAuthError("");
           showOAuthConnectingOverlay("apple");
+          // Apple Sign-In ne fonctionne pas en iframe (X-Frame-Options / CSP côté Apple).
+          if (isEmbed || isInsideIframe) {
+            openAppleInTopWindow();
+            return;
+          }
           if (typeof AppleID === "undefined" || !AppleID?.auth) {
-            window.location.href = buildAppleRedirectUrl();
+            openAppleInTopWindow();
             return;
           }
           AppleID.auth
@@ -676,7 +705,7 @@ export default {
             .catch((err) => {
               const msg = err?.error || err?.message || "Connexion Apple annulée.";
               if (msg.toLowerCase().includes("popup") || msg.toLowerCase().includes("blocked")) {
-                window.location.href = buildAppleRedirectUrl();
+                openAppleInTopWindow();
                 return;
               }
               hideOAuthConnectingOverlay();

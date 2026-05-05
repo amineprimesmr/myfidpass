@@ -80,6 +80,8 @@ export function initSaasFrcScrollCollapse() {
   scrollCollapseWired = true;
   const topbar = document.getElementById("app-desktop-topbar");
   const strip = document.getElementById("app-saas-frc-strip");
+  const topbarTrialCountdown = document.getElementById("app-topbar-trial-countdown");
+  const topbarTrialCtaWrap = document.getElementById("app-topbar-trial-cta-wrap");
   const cluster = document.getElementById("app-saas-frc-cluster");
   const hero = document.querySelector(".app-saas-frc-hero");
   const main = document.querySelector("#app-app .app-main");
@@ -119,6 +121,10 @@ export function initSaasFrcScrollCollapse() {
     let dense = (userInteracted && progress >= 1) || permanentlyCollapsed;
     if (permanentlyCollapsed) dense = true;
     root.classList.toggle("app-saas-frc-scroll-dense", dense);
+    const trialChromeVisible = root.classList.contains("app-saas-trial-chrome-active");
+    const showTopbarTrial = !isMobile && dense && trialChromeVisible;
+    topbarTrialCountdown?.classList.toggle("hidden", !showTopbarTrial);
+    topbarTrialCtaWrap?.classList.toggle("hidden", !showTopbarTrial);
 
     // Desktop: ne jamais auto-déclencher un scroll programmatique.
     if (!isMobile && !wasDense && dense && main instanceof HTMLElement) {

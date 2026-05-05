@@ -35,6 +35,19 @@
   max-width: 22rem;
 }
 
+.fidpass-oauth-connecting--embed {
+  background: transparent;
+}
+
+.fidpass-oauth-connecting--embed .fidpass-oauth-connecting__inner {
+  width: min(560px, 92vw);
+  min-height: min(640px, 88vh);
+  border-radius: 18px;
+  background: #000;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  justify-content: center;
+}
+
 .fidpass-oauth-connecting__title {
   margin: 0;
   font-size: 1.25rem;

@@ -124,7 +124,7 @@ html:has(body.page-app) {
 }
 
 .app-sidebar-brand {
-  padding: 0.55rem 0.75rem 0.65rem;
+  padding: 0.24rem 0.75rem 0.65rem;
   border-bottom: 1px solid var(--app-sidebar-border);
 }
 
@@ -162,6 +162,25 @@ html:has(body.page-app) {
   width: auto;
   object-fit: contain;
   filter: brightness(0) invert(1);
+}
+
+.app-sidebar-logo-img--brand {
+  filter: none;
+}
+.app-sidebar-logo-text {
+  margin-left: 0.5rem;
+}
+
+@media (min-width: 901px) {
+  .app-desktop-topbar__brand {
+    display: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-sidebar-brand {
+    display: none !important;
+  }
 }
 /* Logo commerce (sidebar) : couleurs d’origine ; pas de forçage blanc */
 .app-sidebar-logo-img--commerce {

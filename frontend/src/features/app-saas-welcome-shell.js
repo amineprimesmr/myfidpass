@@ -109,11 +109,14 @@ function setupHeroCountdown(subtitleEl, trialEndRaw) {
   if (!subtitleEl) return;
   clearHeroCountdownTimer();
   const stripStatusEl = document.getElementById("app-saas-frc-strip-status");
+  const topbarCountdownEl = document.getElementById("app-topbar-trial-countdown");
   const endMs = parseTrialEndMs(trialEndRaw);
   const tick = () => {
     const left = Math.max(0, endMs - Date.now());
     subtitleEl.innerHTML = renderCountdownHTML(left);
-    if (stripStatusEl) stripStatusEl.textContent = renderCompactCountdownText(left);
+    const compact = renderCompactCountdownText(left);
+    if (stripStatusEl) stripStatusEl.textContent = compact;
+    if (topbarCountdownEl) topbarCountdownEl.textContent = compact;
     if (left <= 0) clearHeroCountdownTimer();
   };
   tick();
@@ -138,6 +141,8 @@ export function applySaaSFrcMessaging(opts) {
   const strip = document.getElementById("app-saas-frc-strip");
   const stripStatus = document.getElementById("app-saas-frc-strip-status");
   const supportEl = document.getElementById("app-saas-frc-support");
+  const topbarCountdownEl = document.getElementById("app-topbar-trial-countdown");
+  const topbarCtaWrap = document.getElementById("app-topbar-trial-cta-wrap");
 
   const paid = !!opts.paid;
   const trialHero = !!opts.trialHero;
@@ -165,6 +170,10 @@ export function applySaaSFrcMessaging(opts) {
     cta.setAttribute("aria-hidden", paid ? "true" : "false");
   }
 
+  const showTopbarTrialUi = !paid;
+  topbarCountdownEl?.classList.toggle("hidden", !showTopbarTrialUi);
+  topbarCtaWrap?.classList.toggle("hidden", !showTopbarTrialUi);
+
   if (strip && stripStatus) {
     strip.classList.toggle("hidden", !showSubscribeStrip);
     strip.classList.toggle("app-saas-frc-strip--visible", showSubscribeStrip);
@@ -181,7 +190,7 @@ export function navigateToSaaSStripeCheckout(prefilledEmail) {
 export function wireSaaSWelcomeStripeHandlers(getUserEmail) {
   const emailFn = typeof getUserEmail === "function" ? getUserEmail : () => "";
 
-  const ids = ["app-sidebar-trial-subscribe-btn", "app-saas-frc-cta", "app-saas-frc-support-cta", "app-saas-frc-strip-cta"];
+  const ids = ["app-sidebar-trial-subscribe-btn", "app-saas-frc-cta", "app-saas-frc-support-cta", "app-saas-frc-strip-cta", "app-topbar-trial-cta"];
   ids.forEach((id) => {
     const btn = document.getElementById(id);
     if (!btn || btn.dataset.fidpassStripeSubscribeWired === "1") return;

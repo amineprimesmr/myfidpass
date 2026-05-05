@@ -647,6 +647,34 @@ function initAppPage() {
   const emptyPlaceId = document.getElementById("app-empty-place-id");
   const emptyCreateError = document.getElementById("app-empty-create-error");
 
+  const openCreateCommerceFlow = () => {
+    const prev = _lastShownAppSectionId;
+    if (prev === "notifications") _flushNotificationBannerTextsRef?.();
+    _lastShownAppSectionId = "creer-commerce";
+    emptyEl?.classList.remove("hidden");
+    contentEl?.classList.add("hidden");
+    APP_SECTION_IDS.forEach((sid) => {
+      const el = document.getElementById(sid);
+      if (!el) return;
+      el.classList.remove("app-section-visible");
+      el.style.setProperty("display", "none", "important");
+    });
+    document.querySelectorAll("#app-app .app-sidebar-link[data-section]").forEach((l) => {
+      l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === "dashboard");
+    });
+    document.getElementById("app-app")?.setAttribute("data-mobile-section", "creer-commerce");
+    const hashCreer = "#creer-commerce";
+    if (window.location.hash !== hashCreer) {
+      window.history.replaceState(null, "", window.location.pathname + hashCreer);
+    }
+    window.dispatchEvent(
+      new CustomEvent("app-section-change", { detail: { sectionId: "creer-commerce", previousSectionId: prev } })
+    );
+    emptyName?.focus();
+  };
+
+  window.addEventListener("app-open-create-commerce", openCreateCommerceFlow);
+
   (function initLegacyBusinessPlacesAutocomplete(retriesLeft = 12) {
     if (!emptyName || emptyName.dataset.placesInit) return;
     if (typeof google === "undefined" || !google.maps?.places) {
@@ -724,14 +752,14 @@ function initAppPage() {
     const placeId = emptyPlaceId?.value?.trim();
     if (!name) {
       if (emptyCreateError) {
-        emptyCreateError.textContent = "Saisissez le nom de l'établissement.";
+        emptyCreateError.textContent = "Saisissez le nom du commerce.";
         emptyCreateError.classList.remove("hidden");
       }
       return;
     }
     if (!placeId) {
       if (emptyCreateError) {
-        emptyCreateError.textContent = "Choisissez votre établissement dans les suggestions Google.";
+        emptyCreateError.textContent = "Choisissez votre commerce dans les suggestions Google.";
         emptyCreateError.classList.remove("hidden");
       }
       emptyName?.focus();
@@ -807,31 +835,7 @@ function showAppSectionCore(sectionId) {
   if (awaiting && contentEl && emptyEl) {
     const inMainShell = id === "profil" || id === "personnaliser";
     if (!inMainShell) {
-      const prev = _lastShownAppSectionId;
-      if (prev === "notifications" && id !== "notifications") {
-        _flushNotificationBannerTextsRef?.();
-      }
-      _lastShownAppSectionId = "creer-commerce";
-      emptyEl.classList.remove("hidden");
-      contentEl.classList.add("hidden");
-      APP_SECTION_IDS.forEach((sid) => {
-        const el = document.getElementById(sid);
-        if (el) {
-          el.classList.remove("app-section-visible");
-          el.style.setProperty("display", "none", "important");
-        }
-      });
-      document.querySelectorAll("#app-app .app-sidebar-link[data-section]").forEach((l) => {
-        l.classList.toggle("app-sidebar-link-active", l.getAttribute("data-section") === "dashboard");
-      });
-      document.getElementById("app-app")?.setAttribute("data-mobile-section", "creer-commerce");
-      const hashCreer = "#creer-commerce";
-      if (window.location.hash !== hashCreer) {
-        window.history.replaceState(null, "", window.location.pathname + hashCreer);
-      }
-      window.dispatchEvent(
-        new CustomEvent("app-section-change", { detail: { sectionId: "creer-commerce", previousSectionId: prev } })
-      );
+      openCreateCommerceFlow();
       return;
     }
     emptyEl.classList.add("hidden");
@@ -865,7 +869,11 @@ function showAppSectionCore(sectionId) {
   document.getElementById("app-app")?.setAttribute("data-mobile-section", id);
   const newHash = "#" + id;
   if (window.location.hash !== newHash) {
-    window.history.replaceState(null, "", window.location.pathname + newHash);
+    if (window.history?.pushState) {
+      window.history.pushState(null, "", window.location.pathname + newHash);
+    } else {
+      window.history.replaceState(null, "", window.location.pathname + newHash);
+    }
   }
   window.dispatchEvent(new CustomEvent("app-section-change", { detail: { sectionId: id, previousSectionId: prev } }));
 }
@@ -2873,7 +2881,7 @@ function initAppDashboard(slug) {
     ).trim();
     const placeId = (engagementGooglePlaceIdEl?.value || "").trim();
     if (!name && !placeId) {
-      if (forceFeedback) setEngagementAutoFeedback("Ajoutez d’abord un nom d’établissement dans Profil.");
+      if (forceFeedback) setEngagementAutoFeedback("Ajoutez d’abord un nom de commerce dans Profil.");
       return;
     }
     try {

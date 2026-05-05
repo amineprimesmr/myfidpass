@@ -96,6 +96,10 @@ export function handleGooglePromptMoment(notification) {
 export function showOAuthConnectingOverlay(provider) {
   const root = ensureOverlay();
   applyProvider(root, provider === "apple" ? "apple" : "google");
+  const isEmbed =
+    typeof document !== "undefined" &&
+    document.body?.classList?.contains("page-builder-embed");
+  root.classList.toggle("fidpass-oauth-connecting--embed", !!isEmbed);
   clearSafetyTimer();
   safetyTimer = window.setTimeout(() => {
     hideOAuthConnectingOverlay();
