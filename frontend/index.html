@@ -547,14 +547,15 @@
                   <div class="app-dashboard-onboarding-visual app-dashboard-onboarding-visual--card-builder" aria-hidden="true">
                     <div class="app-dashboard-card-builder-hero">
                       <div class="app-dashboard-card-builder-copy">
-                        <p class="app-dashboard-card-builder-eyebrow">Créer votre carte</p>
-                        <p class="app-dashboard-card-builder-lead">Construisez une carte fidélité premium en quelques clics.</p>
+                        <p class="app-dashboard-card-builder-eyebrow">Generate Image</p>
+                        <p class="app-dashboard-card-builder-lead">Describe an image and click generate</p>
+                        <button type="button" class="app-dashboard-card-builder-btn">Start Creating</button>
                       </div>
                       <div class="app-dashboard-card-builder-carousel" aria-hidden="true">
                         <div class="app-dashboard-card-builder-track">
-                          <img src="/assets/cartefid1.png" alt="" class="app-dashboard-card-builder-media" loading="lazy" decoding="async" />
-                          <img src="/assets/cartefid2.png" alt="" class="app-dashboard-card-builder-media" loading="lazy" decoding="async" />
-                          <img src="/assets/cartefid3.png" alt="" class="app-dashboard-card-builder-media" loading="lazy" decoding="async" />
+                          <img src="/assets/cartefid1.png" alt="" class="app-dashboard-card-builder-media app-dashboard-card-builder-media--a" loading="lazy" decoding="async" />
+                          <img src="/assets/cartefid2.png" alt="" class="app-dashboard-card-builder-media app-dashboard-card-builder-media--b" loading="lazy" decoding="async" />
+                          <img src="/assets/cartefid3.png" alt="" class="app-dashboard-card-builder-media app-dashboard-card-builder-media--c" loading="lazy" decoding="async" />
                         </div>
                       </div>
                     </div>
@@ -1366,24 +1367,6 @@
                 <p>Fidélité</p>
               </article>
 
-              <article class="app-engagement-stats__card app-engagement-stats__card--members">
-                <h3>Membres</h3>
-                <strong class="app-engagement-stats__big" id="app-engagement-stats-members">3 920</strong>
-                <p><span id="app-engagement-stats-new-members">+62</span> nouveaux</p>
-              </article>
-
-              <article class="app-engagement-stats__card">
-                <h3>Panier moyen</h3>
-                <strong class="app-engagement-stats__big app-engagement-stats__big--small" id="app-engagement-stats-basket">22,5€</strong>
-                <p><span id="app-engagement-stats-basket-delta">+12,5%</span> vs repère</p>
-              </article>
-
-              <article class="app-engagement-stats__card">
-                <h3>Fréquence d’achat</h3>
-                <strong class="app-engagement-stats__big app-engagement-stats__big--small" id="app-engagement-stats-frequency">2,6</strong>
-                <p><span id="app-engagement-stats-frequency-delta">+14%</span> par mois</p>
-              </article>
-
               <article class="app-engagement-stats__card">
                 <h3>Récompenses utilisées</h3>
                 <ul id="app-engagement-stats-rewards" class="app-engagement-stats__rewards">
@@ -1482,6 +1465,14 @@
               <button type="button" id="app-engagement-auto-suggest" class="app-btn app-btn-secondary">Rafraîchir les suggestions</button>
               <p id="app-engagement-auto-feedback" class="app-message hidden" aria-live="polite"></p>
             </div>
+            <p class="app-hint app-engagement-fidelity-url-wrap"><strong>Page client :</strong> <a id="app-engagement-fidelity-url" href="#" target="_blank" rel="noopener">—</a></p>
+            <span class="app-save-cta-wrap">
+              <button type="button" id="app-engagement-save" class="app-save-cta">
+                <span class="app-save-cta-dot" aria-hidden="true"></span>
+                <span class="app-save-cta-label">Enregistrer</span>
+              </button>
+            </span>
+            <p id="app-engagement-save-feedback" class="app-message hidden"></p>
           </section>
           <section id="notifications" class="app-section app-notifications-section">
             <h2 class="app-section-title app-notifs-page-title visually-hidden">Notifications</h2>
