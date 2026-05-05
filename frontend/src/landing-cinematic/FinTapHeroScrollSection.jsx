@@ -16,6 +16,7 @@ import {
 } from "../config.js";
 import "./fintap-hero-scroll.css";
 import "./fintap-hero-blue-surface.css";
+import { FinTapHeroDeskCtas } from "./FinTapHeroDeskCtas.jsx";
 
 const HERO_IPHONE_IMG = "/assets/iphone-custom-clean.png";
 const HERO_IPHONE_IMG_MOBILE = "/assets/iphone-custom-clean-mobile.png";
@@ -496,6 +497,7 @@ export function FinTapHeroScrollSection() {
       className="hero fintap-hero-iphone fintap-hero-iphone--scroll"
       ref={sectionRef}
     >
+      <FinTapHeroDeskCtas />
       <div className="hero__text fintap-hero-iphone__text">
         <h1 className="fintap-hero-iphone__h1">
           LA NOUVELLE EXPÉRIENCE
