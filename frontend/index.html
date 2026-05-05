@@ -1830,6 +1830,15 @@
               <button type="button" id="app-settings-close" class="app-btn app-btn-secondary">Fermer</button>
             </div>
 
+            <!-- Bouton dev simulation paiement -->
+            <div id="app-settings-dev-card" style="margin:0 0 0.75rem;padding:0.85rem 1.1rem;background:#fffbf0;border:1.5px dashed #e5a000;border-radius:1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+              <span style="font-size:0.88rem;font-weight:700;color:#b45309;">⚡ Dev</span>
+              <button type="button" id="app-dev-simulate-payment-btn" style="padding:0.45rem 1rem;background:#b45309;color:#fff;border:none;border-radius:0.6rem;font-size:0.85rem;font-weight:600;cursor:pointer;">
+                Simuler le paiement
+              </button>
+              <span id="app-dev-simulate-payment-status" style="font-size:0.8rem;color:#92400e;"></span>
+            </div>
+
             <!-- Bannière parrainage -->
             <button type="button" id="app-referral-banner" class="app-referral-banner hidden" aria-label="Ouvrir le programme de parrainage">
               <!-- Avatars empilés -->
@@ -1998,18 +2007,6 @@
                   <label class="app-label" for="app-settings-security-tolerance">Tolérance montant ticket (centimes)</label>
                   <input type="number" id="app-settings-security-tolerance" class="app-input" min="0" max="500" step="1" />
                 </div>
-              </div>
-            </div>
-
-            <!-- Carte dev : simulation de paiement -->
-            <div class="app-card app-profil-card" id="app-settings-dev-card" style="border:1.5px dashed #e5a000;background:#fffbf0;">
-              <h3 class="app-subsection-title" style="color:#b45309;">⚡ Mode développeur</h3>
-              <p class="app-hint" style="margin-bottom:0.9rem;">Simule un abonnement actif pour tester toutes les fonctionnalités payantes sans passer par Stripe.</p>
-              <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-                <button type="button" id="app-dev-simulate-payment-btn" class="app-btn" style="background:#b45309;color:#fff;border:none;">
-                  Simuler le paiement
-                </button>
-                <span id="app-dev-simulate-payment-status" style="font-size:0.82rem;color:#92400e;"></span>
               </div>
             </div>
 
