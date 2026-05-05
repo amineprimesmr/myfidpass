@@ -543,11 +543,20 @@
                 <p class="app-dashboard-onboarding-subtitle">Commencez par votre carte et votre flyer de jeu : deux étapes suffisent pour être prêt à l’emploi.</p>
               </div>
               <div class="app-dashboard-onboarding-grid">
-                <article class="app-dashboard-onboarding-card" id="app-dashboard-onboarding-card-card">
-                  <div class="app-dashboard-onboarding-visual" aria-hidden="true">
-                    <div class="app-dashboard-onboarding-mock app-dashboard-onboarding-mock--wallet">
-                      <span class="app-dashboard-onboarding-chip"></span>
-                      <span class="app-dashboard-onboarding-line"></span>
+                <article class="app-dashboard-onboarding-card app-dashboard-onboarding-card--card-builder" id="app-dashboard-onboarding-card-card">
+                  <div class="app-dashboard-onboarding-visual app-dashboard-onboarding-visual--card-builder" aria-hidden="true">
+                    <div class="app-dashboard-card-builder-hero">
+                      <div class="app-dashboard-card-builder-copy">
+                        <p class="app-dashboard-card-builder-eyebrow">Créer votre carte</p>
+                        <p class="app-dashboard-card-builder-lead">Construisez une carte fidélité premium en quelques clics.</p>
+                      </div>
+                      <div class="app-dashboard-card-builder-carousel" aria-hidden="true">
+                        <div class="app-dashboard-card-builder-track">
+                          <img src="/assets/cartefid1.png" alt="" class="app-dashboard-card-builder-media" loading="lazy" decoding="async" />
+                          <img src="/assets/cartefid2.png" alt="" class="app-dashboard-card-builder-media" loading="lazy" decoding="async" />
+                          <img src="/assets/cartefid3.png" alt="" class="app-dashboard-card-builder-media" loading="lazy" decoding="async" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <p class="app-dashboard-onboarding-kicker">Carte fidélité</p>
@@ -1332,100 +1341,146 @@
           </section>
           <!-- Carte & périmètre : géolocalisation et notifications à l’entrée dans la zone -->
           <section id="engagement" class="app-section">
-            <h2 class="app-section-title">Avis & Réseaux</h2>
-            <p class="app-section-desc">Offrez des tickets à vos clients en échange d'un avis ou d'un follow (1 ticket = 1 tour de roue). Ajoutez un objectif puis enregistrez. La roue fonctionne avec un programme <strong>points</strong> ou <strong>tampons</strong> (récompenses : points ou passages). Activez la roulette dans la config jeu si besoin.</p>
-            <div class="app-engagement-cadeo-wrap">
-              <div class="app-engagement-left">
-                <h3 class="app-engagement-objectives-title">Ajouter un objectif</h3>
-                <div class="app-engagement-objectives-grid" id="app-engagement-objectives-grid">
-                  <button type="button" class="app-engagement-objective-card" data-action="google_review" data-input-label="Place ID Google" data-placeholder="ex. ChIJ...">
-                    <span class="app-engagement-objective-icon app-engagement-icon-svg" aria-hidden="true"><img src="/assets/logos/google.png" alt="" width="24" height="24" loading="lazy" /></span>
-                    <span class="app-engagement-objective-label">Booster les avis Google</span>
-                    <span class="app-engagement-objective-arrow" aria-hidden="true">›</span>
-                  </button>
-                  <button type="button" class="app-engagement-objective-card" data-action="instagram_follow" data-input-label="URL Instagram" data-placeholder="https://instagram.com/...">
-                    <span class="app-engagement-objective-icon app-engagement-icon-svg" aria-hidden="true"><img src="/assets/logos/instagram.png" alt="" width="24" height="24" loading="lazy" /></span>
-                    <span class="app-engagement-objective-label">Booster les followers sur Instagram</span>
-                    <span class="app-engagement-objective-arrow" aria-hidden="true">›</span>
-                  </button>
-                  <button type="button" class="app-engagement-objective-card app-engagement-coming-soon" data-action="trustpilot" disabled title="Bientôt disponible">
-                    <span class="app-engagement-objective-icon app-engagement-icon-svg" aria-hidden="true"><img src="/assets/logos/trustpilot.png" alt="" width="24" height="24" loading="lazy" /></span>
-                    <span class="app-engagement-objective-label">Booster les avis TrustPilot</span>
-                    <span class="app-engagement-objective-arrow" aria-hidden="true">›</span>
-                  </button>
-                  <button type="button" class="app-engagement-objective-card" data-action="tiktok_follow" data-input-label="URL TikTok" data-placeholder="https://www.tiktok.com/@">
-                    <span class="app-engagement-objective-icon app-engagement-icon-svg" aria-hidden="true"><img src="/assets/logos/tiktok.png" alt="" width="24" height="24" loading="lazy" /></span>
-                    <span class="app-engagement-objective-label">Booster les followers sur TikTok</span>
-                    <span class="app-engagement-objective-arrow" aria-hidden="true">›</span>
-                  </button>
-                  <button type="button" class="app-engagement-objective-card" data-action="facebook_follow" data-input-label="URL Facebook" data-placeholder="https://facebook.com/...">
-                    <span class="app-engagement-objective-icon app-engagement-icon-svg" aria-hidden="true"><img src="/assets/logos/facebook.png" alt="" width="24" height="24" loading="lazy" /></span>
-                    <span class="app-engagement-objective-label">Booster les followers sur Facebook</span>
-                    <span class="app-engagement-objective-arrow" aria-hidden="true">›</span>
-                  </button>
-                  <button type="button" class="app-engagement-objective-card app-engagement-coming-soon" data-action="tripadvisor" disabled title="Bientôt disponible">
-                    <span class="app-engagement-objective-icon app-engagement-icon-svg" aria-hidden="true"><img src="/assets/logos/tripadvisor.png" alt="" width="24" height="24" loading="lazy" /></span>
-                    <span class="app-engagement-objective-label">Booster les avis Tripadvisor</span>
-                    <span class="app-engagement-objective-arrow" aria-hidden="true">›</span>
-                  </button>
-                  <button type="button" class="app-engagement-objective-card app-engagement-coming-soon" data-action="snapchat" disabled title="Bientôt disponible">
-                    <span class="app-engagement-objective-icon app-engagement-icon-svg" aria-hidden="true"><img src="/assets/logos/snapchat.png" alt="" width="24" height="24" loading="lazy" /></span>
-                    <span class="app-engagement-objective-label">Booster les followers sur Snapchat</span>
-                    <span class="app-engagement-objective-arrow" aria-hidden="true">›</span>
-                  </button>
-                  <button type="button" class="app-engagement-objective-card app-engagement-coming-soon" data-action="linkedin" disabled title="Bientôt disponible">
-                    <span class="app-engagement-objective-icon app-engagement-icon-svg" aria-hidden="true"><img src="/assets/logos/linkedin.png" alt="" width="24" height="24" loading="lazy" /></span>
-                    <span class="app-engagement-objective-label">Booster les followers sur LinkedIn</span>
-                    <span class="app-engagement-objective-arrow" aria-hidden="true">›</span>
-                  </button>
+            <h2 class="app-section-title">Votre commerce</h2>
+            <p class="app-section-desc">Version web inspirée de l’app iOS : vue statistiques, avis Google, réseaux sociaux et configuration des missions.</p>
+            <div class="app-engagement-stats">
+              <article class="app-engagement-stats__card app-engagement-stats__card--kpi">
+                <header>
+                  <h3><span id="app-engagement-stats-active-pct">98%</span> actifs</h3>
+                </header>
+                <div class="app-engagement-stats__line">
+                  <span>Clients actifs</span>
+                  <strong><span id="app-engagement-stats-active-count">3 832</span> <em>98%</em></strong>
                 </div>
-                <div id="app-engagement-form" class="app-engagement-form-hidden">
-                  <input type="checkbox" id="app-engagement-google-enable" />
-                  <input type="number" id="app-engagement-google-points" min="1" max="10" value="2" aria-label="Tickets avis Google" />
-                  <input type="text" id="app-engagement-google-place-id" />
-                  <input type="checkbox" id="app-engagement-instagram-enable" />
-                  <input type="number" id="app-engagement-instagram-points" min="1" max="10" value="1" aria-label="Tickets Instagram" />
-                  <input type="url" id="app-engagement-instagram-url" />
-                  <input type="checkbox" id="app-engagement-tiktok-enable" />
-                  <input type="number" id="app-engagement-tiktok-points" min="1" max="10" value="1" aria-label="Tickets TikTok" />
-                  <input type="url" id="app-engagement-tiktok-url" />
-                  <input type="checkbox" id="app-engagement-facebook-enable" />
-                  <input type="number" id="app-engagement-facebook-points" min="1" max="10" value="1" aria-label="Tickets Facebook" />
-                  <input type="url" id="app-engagement-facebook-url" />
+                <div class="app-engagement-stats__bar"><i id="app-engagement-stats-active-bar"></i></div>
+                <div class="app-engagement-stats__line">
+                  <span>Clients inactifs</span>
+                  <strong><span id="app-engagement-stats-inactive-count">88</span> <em id="app-engagement-stats-inactive-pct">2%</em></strong>
                 </div>
-                <div class="app-engagement-actions-row">
-                  <button type="button" id="app-engagement-auto-suggest" class="app-btn app-btn-secondary">Rafraîchir les suggestions</button>
-                  <p id="app-engagement-auto-feedback" class="app-message hidden" aria-live="polite"></p>
+                <div class="app-engagement-stats__bar app-engagement-stats__bar--inactive"><i id="app-engagement-stats-inactive-bar"></i></div>
+              </article>
+
+              <article class="app-engagement-stats__card">
+                <h3>Points attribués</h3>
+                <strong class="app-engagement-stats__big" id="app-engagement-stats-points">2 200</strong>
+                <p>Fidélité</p>
+              </article>
+
+              <article class="app-engagement-stats__card app-engagement-stats__card--members">
+                <h3>Membres</h3>
+                <strong class="app-engagement-stats__big" id="app-engagement-stats-members">3 920</strong>
+                <p><span id="app-engagement-stats-new-members">+62</span> nouveaux</p>
+              </article>
+
+              <article class="app-engagement-stats__card">
+                <h3>Panier moyen</h3>
+                <strong class="app-engagement-stats__big app-engagement-stats__big--small" id="app-engagement-stats-basket">22,5€</strong>
+                <p><span id="app-engagement-stats-basket-delta">+12,5%</span> vs repère</p>
+              </article>
+
+              <article class="app-engagement-stats__card">
+                <h3>Fréquence d’achat</h3>
+                <strong class="app-engagement-stats__big app-engagement-stats__big--small" id="app-engagement-stats-frequency">2,6</strong>
+                <p><span id="app-engagement-stats-frequency-delta">+14%</span> par mois</p>
+              </article>
+
+              <article class="app-engagement-stats__card">
+                <h3>Récompenses utilisées</h3>
+                <ul id="app-engagement-stats-rewards" class="app-engagement-stats__rewards">
+                  <li><strong>5</strong><span>Boisson offerte</span></li>
+                  <li><strong>5</strong><span>Dessert au choix</span></li>
+                  <li><strong>1</strong><span>Récompense tampons</span></li>
+                </ul>
+              </article>
+
+              <article class="app-engagement-stats__card app-engagement-stats__card--google">
+                <div class="app-engagement-stats__network-head">
+                  <img src="/assets/logos/google.png" alt="" width="28" height="28" loading="lazy" />
+                  <div>
+                    <h3>Avis Google (nouveaux)</h3>
+                    <p>Suivi mensuel des nouveaux avis</p>
+                  </div>
                 </div>
-                <p class="app-hint app-engagement-fidelity-url-wrap"><strong>Page client :</strong> <a id="app-engagement-fidelity-url" href="#" target="_blank" rel="noopener">—</a></p>
-                <span class="app-save-cta-wrap">
-                  <button type="button" id="app-engagement-save" class="app-save-cta">
-                    <span class="app-save-cta-dot" aria-hidden="true"></span>
-                    <span class="app-save-cta-label">Enregistrer</span>
-                  </button>
-                </span>
-                <p id="app-engagement-save-feedback" class="app-message hidden"></p>
-              </div>
-              <div class="app-engagement-right">
-                <div class="app-engagement-personalise-bar">
-                  <button type="button" class="app-engagement-personalise-btn" onclick="document.querySelector('[data-section=personnaliser]')?.click()"><span class="app-engagement-personalise-icon">✎</span> Personnaliser</button>
+                <strong class="app-engagement-stats__big" id="app-engagement-stats-reviews">+4</strong>
+                <p>Cumul depuis mai : <strong id="app-engagement-stats-reviews-total">734</strong></p>
+              </article>
+
+              <div class="app-engagement-stats__social-title">Réseaux sociaux</div>
+
+              <article class="app-engagement-stats__network-card" data-engagement-channel="instagram_follow">
+                <div class="app-engagement-stats__network-head">
+                  <img src="/assets/logos/instagram.png" alt="" width="28" height="28" loading="lazy" />
+                  <div><h3>Instagram</h3><p>Nouveaux abonnés via mission</p></div>
                 </div>
-                <div class="app-engagement-preview-wrap">
-                  <iframe id="app-engagement-preview-iframe" class="app-engagement-preview-iframe" title="Aperçu page carte" src="about:blank"></iframe>
+                <div class="app-engagement-stats__controls">
+                  <label><input type="checkbox" data-role="enabled" /> Activé</label>
+                  <label>Points <input type="number" min="1" max="10" value="1" data-role="points" /></label>
+                  <input type="url" placeholder="https://instagram.com/..." data-role="value" />
                 </div>
-              </div>
+              </article>
+
+              <article class="app-engagement-stats__network-card" data-engagement-channel="tiktok_follow">
+                <div class="app-engagement-stats__network-head">
+                  <img src="/assets/logos/tiktok.png" alt="" width="28" height="28" loading="lazy" />
+                  <div><h3>TikTok</h3><p>Nouveaux abonnés via mission</p></div>
+                </div>
+                <div class="app-engagement-stats__controls">
+                  <label><input type="checkbox" data-role="enabled" /> Activé</label>
+                  <label>Points <input type="number" min="1" max="10" value="1" data-role="points" /></label>
+                  <input type="url" placeholder="https://www.tiktok.com/@" data-role="value" />
+                </div>
+              </article>
+
+              <article class="app-engagement-stats__network-card" data-engagement-channel="facebook_follow">
+                <div class="app-engagement-stats__network-head">
+                  <img src="/assets/logos/facebook.png" alt="" width="28" height="28" loading="lazy" />
+                  <div><h3>Facebook</h3><p>Nouveaux abonnés via mission</p></div>
+                </div>
+                <div class="app-engagement-stats__controls">
+                  <label><input type="checkbox" data-role="enabled" /> Activé</label>
+                  <label>Points <input type="number" min="1" max="10" value="1" data-role="points" /></label>
+                  <input type="url" placeholder="https://facebook.com/..." data-role="value" />
+                </div>
+              </article>
+
+              <article class="app-engagement-stats__network-card" data-engagement-channel="google_review">
+                <div class="app-engagement-stats__network-head">
+                  <img src="/assets/logos/google.png" alt="" width="28" height="28" loading="lazy" />
+                  <div><h3>Google Review</h3><p>Mission avis Google Maps</p></div>
+                </div>
+                <div class="app-engagement-stats__controls">
+                  <label><input type="checkbox" data-role="enabled" /> Activé</label>
+                  <label>Points <input type="number" min="1" max="10" value="2" data-role="points" /></label>
+                  <input type="text" placeholder="Place ID Google (ChIJ...)" data-role="value" />
+                </div>
+              </article>
+
+              <article class="app-engagement-stats__card">
+                <h3>Notifications envoyées</h3>
+                <ul class="app-engagement-stats__notifications">
+                  <li><strong>Happy hour 17h</strong><span>Membres touchés 320</span></li>
+                  <li><strong>C’est le week-end</strong><span>Membres touchés 480</span></li>
+                </ul>
+              </article>
             </div>
-            <div id="app-engagement-modal" class="app-engagement-modal hidden" aria-modal="true" role="dialog" aria-labelledby="app-engagement-modal-title">
-              <div class="app-engagement-modal-backdrop" id="app-engagement-modal-backdrop"></div>
-              <div class="app-engagement-modal-box">
-                <button type="button" class="app-engagement-modal-close" id="app-engagement-modal-close" aria-label="Fermer">×</button>
-                <h4 class="app-engagement-modal-title" id="app-engagement-modal-title">Ajouter un objectif</h4>
-                <label class="app-engagement-modal-label" id="app-engagement-modal-input-label">URL</label>
-                <input type="text" id="app-engagement-modal-input" class="app-engagement-modal-input" placeholder="" />
-                <label class="app-engagement-modal-label">Tickets</label>
-                <input type="number" id="app-engagement-modal-points" class="app-engagement-modal-input" min="1" max="10" value="1" aria-label="Nombre de tickets" />
-                <button type="button" id="app-engagement-modal-submit" class="app-engagement-modal-btn">Ajouter</button>
-              </div>
+
+            <div id="app-engagement-form" class="app-engagement-form-hidden">
+              <input type="checkbox" id="app-engagement-google-enable" />
+              <input type="number" id="app-engagement-google-points" min="1" max="10" value="2" aria-label="Tickets avis Google" />
+              <input type="text" id="app-engagement-google-place-id" />
+              <input type="checkbox" id="app-engagement-instagram-enable" />
+              <input type="number" id="app-engagement-instagram-points" min="1" max="10" value="1" aria-label="Tickets Instagram" />
+              <input type="url" id="app-engagement-instagram-url" />
+              <input type="checkbox" id="app-engagement-tiktok-enable" />
+              <input type="number" id="app-engagement-tiktok-points" min="1" max="10" value="1" aria-label="Tickets TikTok" />
+              <input type="url" id="app-engagement-tiktok-url" />
+              <input type="checkbox" id="app-engagement-facebook-enable" />
+              <input type="number" id="app-engagement-facebook-points" min="1" max="10" value="1" aria-label="Tickets Facebook" />
+              <input type="url" id="app-engagement-facebook-url" />
+            </div>
+            <div class="app-engagement-actions-row">
+              <button type="button" id="app-engagement-auto-suggest" class="app-btn app-btn-secondary">Rafraîchir les suggestions</button>
+              <p id="app-engagement-auto-feedback" class="app-message hidden" aria-live="polite"></p>
             </div>
           </section>
           <section id="notifications" class="app-section app-notifications-section">

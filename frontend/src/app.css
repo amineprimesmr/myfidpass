@@ -270,6 +270,111 @@ html:has(body.page-app) {
   padding: 0.35rem;
 }
 
+.app-dashboard-onboarding-card--card-builder {
+  overflow: hidden;
+}
+
+.app-dashboard-onboarding-visual--card-builder {
+  border-radius: 22px;
+  border: 1px solid rgba(129, 143, 171, 0.28);
+  background:
+    radial-gradient(120% 140% at 66% 100%, rgba(6, 112, 174, 0.26) 0%, rgba(10, 17, 31, 0) 45%),
+    linear-gradient(145deg, #171c24 0%, #141b24 56%, #121a23 100%);
+  min-height: 240px;
+  padding: 0.7rem;
+}
+
+.app-dashboard-card-builder-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 188px;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 222px;
+  border-radius: 18px;
+  padding: 1.15rem 1.05rem 1.05rem 1.15rem;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -20px 36px rgba(0, 0, 0, 0.2);
+}
+
+.app-dashboard-card-builder-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 25ch;
+}
+
+.app-dashboard-card-builder-eyebrow {
+  margin: 0;
+  color: #f6f8fd;
+  font-size: 2.32rem;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.app-dashboard-card-builder-lead {
+  margin: 0.64rem 0 0;
+  color: rgba(228, 234, 248, 0.86);
+  font-size: 0.93rem;
+  line-height: 1.35;
+}
+
+.app-dashboard-card-builder-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 190px;
+  perspective: 980px;
+}
+
+.app-dashboard-card-builder-track {
+  position: relative;
+  width: 145px;
+  height: 185px;
+}
+
+.app-dashboard-card-builder-media {
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  width: 145px;
+  height: 185px;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow: 0 18px 32px rgba(4, 9, 18, 0.46);
+  transform-origin: center center;
+  transform: translateY(-50%) rotate(-7deg) scale(0.95);
+  opacity: 0;
+  animation: appCardBuilderSlides 12s infinite;
+  background: linear-gradient(180deg, #273246 0%, #1b2433 100%);
+}
+
+.app-dashboard-card-builder-media:nth-child(1) { animation-delay: 0s; }
+.app-dashboard-card-builder-media:nth-child(2) { animation-delay: 4s; }
+.app-dashboard-card-builder-media:nth-child(3) { animation-delay: 8s; }
+
+@keyframes appCardBuilderSlides {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) translateX(26px) rotate(-9deg) scale(0.9);
+  }
+  8%,
+  28% {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0) rotate(-6deg) scale(1);
+  }
+  34%,
+  100% {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-16px) rotate(-3deg) scale(0.94);
+  }
+}
+
 .app-dashboard-onboarding-mock {
   width: 180px;
   height: 115px;
@@ -481,6 +586,35 @@ html:has(body.page-app) {
 
   .app-dashboard-onboarding-text {
     font-size: 0.97rem;
+  }
+
+  .app-dashboard-onboarding-visual--card-builder {
+    min-height: 206px;
+  }
+
+  .app-dashboard-card-builder-hero {
+    grid-template-columns: minmax(0, 1fr) 138px;
+    min-height: 186px;
+    padding: 0.95rem 0.8rem 0.9rem 0.9rem;
+  }
+
+  .app-dashboard-card-builder-eyebrow {
+    font-size: 1.82rem;
+  }
+
+  .app-dashboard-card-builder-lead {
+    font-size: 0.85rem;
+  }
+
+  .app-dashboard-card-builder-track {
+    width: 114px;
+    height: 154px;
+  }
+
+  .app-dashboard-card-builder-media {
+    width: 114px;
+    height: 154px;
+    border-radius: 14px;
   }
 }
 
@@ -6331,6 +6465,196 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
 .app-engagement-pending-type { font-size: 0.9rem; color: var(--app-text-muted); }
 .app-engagement-pending-date { font-size: 0.85rem; color: var(--app-text-muted); margin-left: auto; }
 .app-engagement-pending-actions { display: flex; gap: 0.5rem; }
+
+/* Refonte stats commerce (web aligné iOS) */
+.app-engagement-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.app-engagement-stats__card,
+.app-engagement-stats__network-card {
+  background: #f4f5f8;
+  border: 1px solid #e4e6ee;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(12, 23, 48, 0.06);
+}
+
+.app-engagement-stats__card h3,
+.app-engagement-stats__network-card h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  color: #161a28;
+}
+
+.app-engagement-stats__card p,
+.app-engagement-stats__network-card p {
+  margin: 4px 0 0;
+  color: #6d7387;
+  font-size: 0.92rem;
+}
+
+.app-engagement-stats__card--kpi {
+  grid-column: 1 / -1;
+}
+
+.app-engagement-stats__line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  color: #2b3248;
+  font-size: 0.95rem;
+}
+
+.app-engagement-stats__line strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.app-engagement-stats__line em {
+  color: #5edcb7;
+  font-style: normal;
+  font-size: 0.84rem;
+}
+
+.app-engagement-stats__bar {
+  margin-top: 6px;
+  width: 100%;
+  height: 11px;
+  border-radius: 999px;
+  background: #e6f8f2;
+  overflow: hidden;
+}
+
+.app-engagement-stats__bar i {
+  display: block;
+  height: 100%;
+  width: 98%;
+  background: linear-gradient(90deg, #52e1b9, #74f0cc);
+}
+
+.app-engagement-stats__bar--inactive {
+  background: #ffe9ec;
+}
+
+.app-engagement-stats__bar--inactive i {
+  width: 8%;
+  background: linear-gradient(90deg, #ff6d87, #ff9cab);
+}
+
+.app-engagement-stats__big {
+  display: block;
+  margin-top: 6px;
+  font-size: 2.2rem;
+  line-height: 1;
+  color: #121625;
+}
+
+.app-engagement-stats__rewards,
+.app-engagement-stats__notifications {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.app-engagement-stats__rewards li,
+.app-engagement-stats__notifications li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e5e8f1;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.app-engagement-stats__rewards li strong {
+  font-size: 1.6rem;
+  color: #161a28;
+}
+
+.app-engagement-stats__network-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-engagement-stats__network-head img {
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.app-engagement-stats__social-title {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.app-engagement-stats__controls {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 10px;
+}
+
+.app-engagement-stats__controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2f3650;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.app-engagement-stats__controls input[type="url"],
+.app-engagement-stats__controls input[type="text"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  border: 1px solid #d9deea;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #fff;
+}
+
+.app-engagement-stats__controls input[type="number"] {
+  width: 72px;
+  border: 1px solid #d9deea;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.app-engagement-stats__network-card--connected {
+  border-color: #6ee3bf;
+  box-shadow: 0 8px 24px rgba(43, 190, 142, 0.18);
+}
+
+.app-engagement-stats__card--google {
+  grid-column: 1 / -1;
+}
+
+.app-engagement-stats__card--members {
+  grid-column: 1 / -1;
+}
+
+.app-engagement-stats__big--small {
+  font-size: 1.95rem;
+}
+
+@media (max-width: 1024px) {
+  .app-engagement-stats {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Profil — Mon établissement */
 .app-profil-card { padding: 1.5rem; margin-bottom: 1.5rem; }

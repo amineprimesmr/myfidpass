@@ -66,6 +66,7 @@ import {
 } from "./commerce-ios-shell.js";
 import { initAppDesktopTopbar } from "./app-desktop-topbar.js";
 import { initAppSettings } from "./app-settings.js";
+import { applyEngagementStatsFromSettings, wireEngagementStatsSection } from "./app-engagement-stats.js";
 
 const ACTIVE_BUSINESS_SLUG_STORAGE_KEY = "fidpass_active_business_slug";
 
@@ -3119,6 +3120,7 @@ function initAppDashboard(slug) {
       if (fbEnable) fbEnable.checked = !!fb.enabled;
       if (fbPoints) fbPoints.value = fb.points ?? 1;
       if (fbUrl) fbUrl.value = fb.url ?? "";
+      applyEngagementStatsFromSettings(data);
       runEngagementAutoSuggest({ settingsData: data });
       const fidelityUrlEl = document.getElementById("app-engagement-fidelity-url");
       if (fidelityUrlEl && slug) {
@@ -3258,6 +3260,8 @@ function initAppDashboard(slug) {
     root.addEventListener("change", m, true);
   });
 
+  wireEngagementStatsSection({ markDirty: markAppSectionDirty });
+
   const notificationsRoot = document.getElementById("notifications");
   if (notificationsRoot) {
     const notifDirty = (ev) => {
@@ -3299,6 +3303,7 @@ function initAppDashboard(slug) {
       const res = await api("/dashboard/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ engagement_rewards }) });
       if (!res.ok) throw new Error("Erreur enregistrement");
       if (feedback) { feedback.textContent = "Enregistré."; feedback.classList.remove("hidden", "error"); feedback.classList.add("success"); }
+      applyEngagementStatsFromSettings({ engagement_rewards });
       setTimeout(() => { if (feedback) feedback.classList.add("hidden"); }, 3000);
       notifyAppSectionSaveSuccess("engagement");
     } catch (e) {
