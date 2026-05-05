@@ -14,6 +14,7 @@ import {
   getMerchantBusinessEntitlements,
   bumpBusinessPassRefreshTimestamp,
   getPassKitPushTokensForBusiness,
+  getAnyBusinessLinkedToGooglePlaceId,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
@@ -46,6 +47,13 @@ function createFirstBusinessFromSelection({
   const cleanPlaceId = String(placeId || "").trim();
   if (!cleanName || !cleanPlaceId) {
     return { error: "Sélection établissement invalide" };
+  }
+  const linked = getAnyBusinessLinkedToGooglePlaceId(cleanPlaceId);
+  if (linked) {
+    return {
+      error: "Ce commerce est déjà utilisé. Connectez-vous au compte existant ou choisissez un autre commerce.",
+      code: "business_place_already_linked",
+    };
   }
   if (getBusinessesByUserId(userId).length > 0) {
     return { error: "Un établissement existe déjà pour ce compte", code: "business_already_exists" };
@@ -172,6 +180,13 @@ export async function createFromPlaceHandler(req, res) {
   if (!establishmentName || !placeId) {
     return res.status(400).json({ error: "Nom et identifiant Google requis.", code: "missing_fields" });
   }
+  const linked = getAnyBusinessLinkedToGooglePlaceId(placeId);
+  if (linked) {
+    return res.status(409).json({
+      error: "Ce commerce est déjà utilisé. Connectez-vous au compte existant ou choisissez un autre commerce.",
+      code: "business_place_already_linked",
+    });
+  }
   const devBypass =
     process.env.DEV_BYPASS_PAYMENT === "true" &&
     req.get("X-Dev-Bypass-Payment") === "1";
@@ -272,7 +287,7 @@ export async function bootstrapFromPlaceHandler(req, res) {
       locationLng,
     });
     if (result.error) {
-      const status = result.code === "business_already_exists" ? 409 : 400;
+      const status = (result.code === "business_already_exists" || result.code === "business_place_already_linked") ? 409 : 400;
       return res.status(status).json({ error: result.error, code: result.code || "invalid_business_setup" });
     }
     // Snapshot Places immédiat → données disponibles dès la 1ère ouverture de la page stats.

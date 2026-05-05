@@ -68,4 +68,18 @@ describe("Doublon place_id / create-from-place", () => {
     expect(again.status).toBe(409);
     expect(again.body.code).toBe("business_place_already_linked");
   });
+
+  it("refuse aussi la création d'un autre compte avec le même commerce (POST /auth/register)", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({
+        email: `dup-place-second-owner-${Date.now()}@example.com`,
+        password: "testpassword12345",
+        name: "Second Owner",
+        google_place_id: placeA,
+        establishment_name: "Shop A clone",
+      });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe("business_place_already_linked");
+  });
 });

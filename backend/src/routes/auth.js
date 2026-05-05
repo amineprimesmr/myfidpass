@@ -34,6 +34,7 @@ import {
   getBusinessBySlug,
   canCreateBusiness,
   getMerchantBusinessEntitlements,
+  getAnyBusinessLinkedToGooglePlaceId,
   createRefreshToken,
   getRefreshToken,
   deleteRefreshToken,
@@ -225,7 +226,18 @@ async function ensureInitialBusinessForUser(userId, selection) {
   const targets = picks.length > 0 ? picks : [selection];
   for (const target of targets) {
     const beforeCount = getBusinessesByUserId(userId).length;
-    await tryCreateFirstBusinessFromGooglePlace(userId, target.googlePlaceId, target.establishmentName);
+    const placeCreateResult = await tryCreateFirstBusinessFromGooglePlace(
+      userId,
+      target.googlePlaceId,
+      target.establishmentName
+    );
+    if (placeCreateResult?.error) {
+      return {
+        ...getMerchantBusinessState(userId),
+        setup_error_code: placeCreateResult.code || "business_setup_failed",
+        setup_error_message: placeCreateResult.error,
+      };
+    }
     const businessesAfterPlace = getBusinessesByUserId(userId);
     if (businessesAfterPlace.length <= beforeCount) {
       await tryCreateFirstBusinessFromNameOnly(userId, target.establishmentName);
@@ -264,7 +276,15 @@ function registerSlugFromName(name) {
  */
 async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishmentNameHint) {
   const pid = String(placeId || "").trim();
-  if (!pid || !canCreateBusiness(userId)) return;
+  if (!pid || !canCreateBusiness(userId)) return { ok: false };
+  const linked = getAnyBusinessLinkedToGooglePlaceId(pid);
+  if (linked) {
+    return {
+      ok: false,
+      code: "business_place_already_linked",
+      error: "Ce commerce est déjà utilisé. Connectez-vous au compte existant ou choisissez un autre commerce.",
+    };
+  }
 
   const { name, lat, lng, addr } = await fetchGooglePlaceBusinessEnrichment(pid, establishmentNameHint);
 
@@ -301,8 +321,10 @@ async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishm
     // Snapshot Places immédiat → données disponibles dès la 1ère ouverture de la page stats.
     const bizId = biz.id;
     setImmediate(() => { refreshGooglePlacesSnapshotFromPlaceId(bizId, pid).catch(() => {}); });
+    return { ok: true };
   } catch (e) {
     console.error("[auth/register] tryCreateFirstBusinessFromGooglePlace:", e);
+    return { ok: false, code: "business_setup_failed", error: "Impossible de créer l'établissement." };
   }
 }
 
@@ -419,6 +441,12 @@ router.post("/register", validate(schemas.register), async (req, res) => {
       name: name ? String(name).trim() : null,
     });
     const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
+    if (businessState.setup_error_code) {
+      return res.status(409).json({
+        error: businessState.setup_error_message || "Impossible de créer l'établissement.",
+        code: businessState.setup_error_code,
+      });
+    }
     if (businessState.requires_business_setup) {
       return respondMissingEstablishment(res);
     }
@@ -544,6 +572,12 @@ router.post("/google", async (req, res) => {
     }
     if (isNewUser) {
       const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
+      if (businessState.setup_error_code) {
+        return res.status(409).json({
+          error: businessState.setup_error_message || "Impossible de créer l'établissement.",
+          code: businessState.setup_error_code,
+        });
+      }
       if (businessState.requires_business_setup) {
         return respondMissingEstablishment(res);
       }
@@ -623,6 +657,9 @@ router.get("/google-oauth-callback", async (req, res) => {
     }
     if (isNewUser) {
       const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
+      if (businessState.setup_error_code) {
+        return res.redirect(302, `${redirectApp}?error=${businessState.setup_error_code}`);
+      }
       if (businessState.requires_business_setup) {
         return res.redirect(302, `${redirectApp}?error=missing_establishment`);
       }
@@ -687,6 +724,12 @@ router.post("/apple", async (req, res) => {
     }
     if (isNewUser) {
       const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
+      if (businessState.setup_error_code) {
+        return res.status(409).json({
+          error: businessState.setup_error_message || "Impossible de créer l'établissement.",
+          code: businessState.setup_error_code,
+        });
+      }
       if (businessState.requires_business_setup) {
         return respondMissingEstablishment(res);
       }
@@ -763,6 +806,10 @@ router.post("/apple-redirect", async (req, res) => {
     }
     if (isNewUser) {
       const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
+      if (businessState.setup_error_code) {
+        const basePath = getFrontendApplePath(stateMode);
+        return res.redirect(302, FRONTEND_URL + basePath + "?apple_error=" + encodeURIComponent(businessState.setup_error_code));
+      }
       if (businessState.requires_business_setup) {
         const basePath = getFrontendApplePath(stateMode);
         return res.redirect(302, FRONTEND_URL + basePath + "?apple_error=missing_establishment");
@@ -1155,6 +1202,12 @@ router.post("/phone/verify", validate(schemas.phoneVerify), async (req, res) => 
   }
 
   const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
+  if (businessState.setup_error_code) {
+    return res.status(409).json({
+      error: businessState.setup_error_message || "Impossible de créer l'établissement.",
+      code: businessState.setup_error_code,
+    });
+  }
   if (businessState.requires_business_setup) {
     return respondMissingEstablishment(res);
   }
