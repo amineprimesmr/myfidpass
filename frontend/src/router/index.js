@@ -29,6 +29,14 @@ export function getRoute() {
   if (path === "/register") return { type: "legacy-auth-redirect", tab: "register" };
   if (path === "/creer-ma-carte") return { type: "creation-carte" };
   if (path === "/abonnement" || path === "/choisir-offre") return { type: "legacy-subscription-redirect" };
+  if (
+    path === "/paiement" ||
+    path === "/offre-pro" ||
+    path === "/abonnement-pro" ||
+    path === "/plan-pro"
+  ) {
+    return { type: "saas-pro-payment" };
+  }
   if (path === "/checkout" || path === "/creation-carte") return { type: "redirect-stripe" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
   if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
@@ -54,6 +62,7 @@ function getContainers() {
     fidelityApp: document.getElementById("fidelity-app"),
     dashboardApp: document.getElementById("dashboard-app"),
     appApp: document.getElementById("app-app"),
+    saasProPayment: document.getElementById("saas-pro-payment-app"),
     builderHeader: document.getElementById("builder-header"),
     page404: document.getElementById("page-404"),
     landingMain: document.getElementById("landing-main"),
@@ -164,15 +173,26 @@ export async function initRouting() {
   document.body.classList.remove("page-builder");
   document.documentElement.classList.toggle("fidpass-fidelity-route", route.type === "fidelity");
   document.body.classList.toggle("fidpass-fidelity-route", route.type === "fidelity");
+  document.body.classList.toggle("page-saas-pro-payment", route.type === "saas-pro-payment");
 
   if (c.page404) c.page404.classList.add("hidden");
 
   const hideAll = () => {
-    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.appApp].forEach((el) => {
+    [c.landing, c.builderApp, c.fidelityApp, c.dashboardApp, c.appApp, c.saasProPayment].forEach((el) => {
       if (el) el.classList.add("hidden");
     });
+    if (c.saasProPayment) c.saasProPayment.setAttribute("aria-hidden", "true");
     if (c.builderHeader) c.builderHeader.classList.add("hidden");
   };
+
+  if (route.type === "saas-pro-payment") {
+    hideAll();
+    if (c.saasProPayment) c.saasProPayment.classList.remove("hidden");
+    const page = await loadPage("saas-pro-payment");
+    await page.init(route);
+    syncWhatsappFabVisibility();
+    return null;
+  }
 
   if (route.type === "fidelity") {
     hideAll();

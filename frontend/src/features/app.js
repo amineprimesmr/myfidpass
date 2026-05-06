@@ -803,7 +803,7 @@ function initAppPage() {
       }
     }
   });
-  wireSaaSWelcomeStripeHandlers(() => fidpassCachedUserEmail);
+  wireSaaSWelcomeStripeHandlers();
   initSaasFrcScrollCollapse();
   syncSaaSWelcomeChrome();
   document.getElementById("app-saas-frc-shop-edit")?.addEventListener("click", () => {
@@ -5206,6 +5206,10 @@ function initAppDashboard(slug) {
         retentionPct: raw.retention_pct ?? raw.retentionPct ?? 0,
         recurrentMembersInPeriod: raw.recurrent_members_in_period ?? raw.recurrentMembersInPeriod ?? 0,
         activeMembersInPeriod: raw.active_members_in_period ?? raw.activeMembersInPeriod ?? 0,
+        rewardsRedeemedCount: raw.rewards_redeemed_count ?? raw.rewardsRedeemedCount ?? 0,
+        notificationCampaignsCount: Array.isArray(raw.notification_campaigns)
+          ? raw.notification_campaigns.length
+          : (raw.notification_campaigns_count ?? raw.notificationCampaignsCount ?? 0),
       };
     }
     const avgTicketLabel =
@@ -5226,22 +5230,16 @@ function initAppDashboard(slug) {
     if (statActiveMembers) statActiveMembers.textContent = data.activeMembersInPeriod;
     if (statFrequency) statFrequency.textContent = frequency.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (statAvgTicket) statAvgTicket.textContent = avgTicketLabel;
-    const statMoreAvgTicket = document.getElementById("app-stat-more-avg-ticket");
-    const statMoreTransactions = document.getElementById("app-stat-more-transactions");
-    const statMoreMembers = document.getElementById("app-stat-more-members");
-    const statMoreNew30 = document.getElementById("app-stat-more-new30");
-    const statMoreInactive30 = document.getElementById("app-stat-more-inactive30");
-    const statMoreRetention = document.getElementById("app-stat-more-retention");
-    const statMoreFrequency = document.getElementById("app-stat-more-frequency");
-    const statMoreRecurrent = document.getElementById("app-stat-more-recurrent");
-    if (statMoreAvgTicket) statMoreAvgTicket.textContent = avgTicketLabel;
-    if (statMoreTransactions) statMoreTransactions.textContent = data.transactionsThisMonth;
-    if (statMoreMembers) statMoreMembers.textContent = data.membersCount;
-    if (statMoreNew30) statMoreNew30.textContent = data.newMembersLast30Days;
-    if (statMoreInactive30) statMoreInactive30.textContent = data.inactiveMembers30Days;
-    if (statMoreRetention) statMoreRetention.textContent = `${data.retentionPct} %`;
-    if (statMoreFrequency) statMoreFrequency.textContent = frequency.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (statMoreRecurrent) statMoreRecurrent.textContent = data.recurrentMembersInPeriod;
+    const statMoreActive = document.getElementById("app-stat-more-active");
+    const statMoreInactive = document.getElementById("app-stat-more-inactive");
+    const statMorePoints = document.getElementById("app-stat-more-points");
+    const statMoreRewardsUsed = document.getElementById("app-stat-more-rewards-used");
+    const statMoreNotifications = document.getElementById("app-stat-more-notifications");
+    if (statMoreActive) statMoreActive.textContent = data.activeMembersInPeriod;
+    if (statMoreInactive) statMoreInactive.textContent = data.inactiveMembers30Days;
+    if (statMorePoints) statMorePoints.textContent = data.pointsThisMonth;
+    if (statMoreRewardsUsed) statMoreRewardsUsed.textContent = data.rewardsRedeemedCount;
+    if (statMoreNotifications) statMoreNotifications.textContent = data.notificationCampaignsCount;
     if (dashboardPeriodDisplay) {
       dashboardPeriodDisplay.textContent = getDashboardPeriodRange(period);
     }

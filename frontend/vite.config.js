@@ -130,7 +130,8 @@ export default defineConfig({
   },
   server: {
     port: 5174,
-    host: true,
+    /* 127.0.0.1 évite host:true → énumération des interfaces (erreurs uv_interface_addresses / serveur fantôme). */
+    host: "127.0.0.1",
     proxy: {
       "/api": {
         target: apiProxyTarget,

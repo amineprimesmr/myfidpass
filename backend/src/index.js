@@ -1,3 +1,4 @@
+/** Référence contrat HTTP avec les apps : repo « myfidpass » (`Services/API/APIEndpoint.swift`, Kotlin `MyfidpassApi.kt`) — préfixe `/api`. */
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";

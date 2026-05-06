@@ -746,9 +746,9 @@ html:has(body.page-app) {
 }
 
 @media (max-width: 768px) {
-  /* Mobile = même parcours que desktop : on garde l'onboarding carte + flyer visible. */
-  .app-dashboard-onboarding {
-    display: block !important;
+  /* Mobile : layout onboarding — sans forcer display quand .hidden (sinon le !important bat .hidden et la gate reste visible). */
+  .app-dashboard-onboarding:not(.hidden) {
+    display: block;
     padding: 0.25rem 0 0.8rem;
   }
   .app-dashboard-onboarding-grid {
@@ -4264,68 +4264,80 @@ html:has(body.page-app) {
   position: relative;
 }
 .app-dashboard-period-pill-main {
+  --c-glass: #bbbbbc;
+  --c-light: #fff;
+  --c-dark: #000;
+  --saturation: 150%;
+  --glass-reflex-dark: 1;
+  --glass-reflex-light: 1;
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.5rem 0.85rem 0.5rem 0.9rem;
   min-height: 48px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  background:
-    radial-gradient(120% 160% at 14% 10%, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0) 58%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(14px) saturate(165%);
-  -webkit-backdrop-filter: blur(14px) saturate(165%);
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+  background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(var(--saturation));
+  backdrop-filter: blur(10px) saturate(var(--saturation));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.18),
-    0 10px 28px rgba(15, 23, 42, 0.12);
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+    inset 1.8px 3px 0 -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
+    inset -2px -2px 0 -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent),
+    inset -3px -8px 1px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
+    inset -0.3px -1px 4px 0 color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    inset -1.5px 2.5px 0 -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 0 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 2px -6.5px 1px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+    0 1px 5px 0 color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+    0 6px 16px 0 color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+  isolation: isolate;
   position: relative;
-  overflow: hidden;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-}
-.app-dashboard-period-pill-main::before {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08));
-  opacity: 0.7;
-}
-.app-dashboard-period-pill-main::after {
-  content: "";
-  position: absolute;
-  left: 14%;
-  top: -48%;
-  width: 52%;
-  height: 132%;
-  border-radius: 999px;
-  pointer-events: none;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.44) 0%, rgba(255, 255, 255, 0) 72%);
+  overflow: visible;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.35s cubic-bezier(1, 0, 0.4, 1),
+    background-color 0.35s cubic-bezier(1, 0, 0.4, 1);
 }
 .app-dashboard-period-pill-main:hover {
-  border-color: rgba(255, 255, 255, 0.6);
+  background-color: color-mix(in srgb, var(--c-glass) 16%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.66),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
-    0 12px 30px rgba(15, 23, 42, 0.15);
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 14%), transparent),
+    inset 1.8px 3px 0 -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 92%), transparent),
+    inset -2px -2px 0 -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 82%), transparent),
+    inset -3px -8px 1px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 62%), transparent),
+    inset -0.3px -1px 4px 0 color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 14%), transparent),
+    inset -1.5px 2.5px 0 -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 22%), transparent),
+    inset 0 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 22%), transparent),
+    inset 2px -6.5px 1px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    0 2px 8px 0 color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    0 8px 22px 0 color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent);
 }
 .app-dashboard-period-pill-main:active {
   transform: scale(0.99);
+}
+.app-dashboard-period-pill-main:focus-visible {
+  outline: 2px solid #0052f5;
+  outline-offset: 3px;
 }
 .app-dashboard-period-icon {
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.68);
+  background-color: color-mix(in srgb, var(--c-glass) 22%, transparent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
-  border: 1px solid rgba(255, 255, 255, 0.48);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  color: #64748b;
+  border: 1px solid color-mix(in srgb, #fff 12%, transparent);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+  backdrop-filter: blur(8px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 35%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--c-dark) 6%, transparent);
   position: relative;
   z-index: 1;
 }
@@ -4360,15 +4372,18 @@ html:has(body.page-app) {
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.68);
+  background-color: color-mix(in srgb, var(--c-glass) 22%, transparent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: #64748b;
   margin-left: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.48);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in srgb, #fff 12%, transparent);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+  backdrop-filter: blur(8px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 35%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #000 6%, transparent);
   position: relative;
   z-index: 1;
 }
@@ -4528,53 +4543,53 @@ html:has(body.page-app) {
 .app-dashboard-more-inner {
   min-height: 0;
   overflow: hidden;
-  padding-top: 1.25rem;
-}
-.app-dashboard-more-category {
-  margin-bottom: 1.35rem;
-}
-.app-dashboard-more-category:last-child {
-  margin-bottom: 0;
+  padding-top: 1rem;
 }
 .app-dashboard-more-category-title {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #64748b;
-  margin: 0 0 0.65rem;
+  color: #475569;
+  margin: 0 0 0.8rem;
   padding: 0;
 }
 .app-dashboard-more-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.65rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
 }
-@media (min-width: 520px) {
+@media (max-width: 980px) {
   .app-dashboard-more-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .app-dashboard-more-grid {
+    grid-template-columns: 1fr;
   }
 }
 .app-dashboard-more-card {
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
-  background: #f8fafc;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 16px;
+  padding: 0.95rem 1rem 0.9rem;
+  background:
+    radial-gradient(120% 180% at 8% -15%, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 58%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.36));
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 10px 22px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(8px) saturate(135%);
+  -webkit-backdrop-filter: blur(8px) saturate(135%);
+  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
 }
 .app-dashboard-more-wrap.is-open .app-dashboard-more-card {
   animation: app-more-card-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(1) .app-dashboard-more-card:nth-child(1) { animation-delay: 0.06s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(1) .app-dashboard-more-card:nth-child(2) { animation-delay: 0.1s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(1) .app-dashboard-more-card:nth-child(3) { animation-delay: 0.14s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(1) .app-dashboard-more-card:nth-child(4) { animation-delay: 0.18s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(2) .app-dashboard-more-card:nth-child(1) { animation-delay: 0.22s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(2) .app-dashboard-more-card:nth-child(2) { animation-delay: 0.26s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(2) .app-dashboard-more-card:nth-child(3) { animation-delay: 0.3s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(3) .app-dashboard-more-card:nth-child(1) { animation-delay: 0.34s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(3) .app-dashboard-more-card:nth-child(2) { animation-delay: 0.38s; }
-.app-dashboard-more-wrap.is-open .app-dashboard-more-category:nth-child(3) .app-dashboard-more-card:nth-child(3) { animation-delay: 0.42s; }
+.app-dashboard-more-wrap.is-open .app-dashboard-more-card:nth-child(1) { animation-delay: 0.06s; }
+.app-dashboard-more-wrap.is-open .app-dashboard-more-card:nth-child(2) { animation-delay: 0.12s; }
+.app-dashboard-more-wrap.is-open .app-dashboard-more-card:nth-child(3) { animation-delay: 0.18s; }
+.app-dashboard-more-wrap.is-open .app-dashboard-more-card:nth-child(4) { animation-delay: 0.24s; }
 @keyframes app-more-card-in {
   from {
     opacity: 0;
@@ -4586,23 +4601,66 @@ html:has(body.page-app) {
   }
 }
 .app-dashboard-more-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(148, 163, 184, 0.35);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 14px 24px rgba(15, 23, 42, 0.12);
+}
+.app-dashboard-more-kicker {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(148, 163, 184, 0.25);
 }
 .app-dashboard-more-value {
   display: block;
-  font-size: 1.25rem;
-  font-weight: 700;
+  margin-top: 0.4rem;
+  font-size: 1.55rem;
+  font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
+  line-height: 1.12;
 }
 .app-dashboard-more-label {
   display: block;
-  margin-top: 0.15rem;
+  margin-top: 0.35rem;
   font-size: 0.72rem;
-  color: #64748b;
+  color: #475569;
   font-weight: 500;
+  line-height: 1.35;
+}
+.app-dashboard-more-card--members {
+  border-color: rgba(59, 130, 246, 0.24);
+}
+.app-dashboard-more-card--members .app-dashboard-more-kicker {
+  color: #1d4ed8;
+}
+.app-dashboard-more-card--points {
+  border-color: rgba(14, 165, 233, 0.24);
+}
+.app-dashboard-more-card--points .app-dashboard-more-kicker {
+  color: #0369a1;
+}
+.app-dashboard-more-card--rewards {
+  border-color: rgba(168, 85, 247, 0.24);
+}
+.app-dashboard-more-card--rewards .app-dashboard-more-kicker {
+  color: #7e22ce;
+}
+.app-dashboard-more-card--notifications {
+  border-color: rgba(16, 185, 129, 0.24);
+}
+.app-dashboard-more-card--notifications .app-dashboard-more-kicker {
+  color: #047857;
 }
 
 .app-dashboard-indicators {

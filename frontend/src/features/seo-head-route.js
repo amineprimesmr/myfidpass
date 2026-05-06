@@ -365,6 +365,18 @@ export function getSeoByRoute(route) {
     }
   }
 
+  if (route?.type === "saas-pro-payment") {
+    const desc =
+      "Plan Pro MyFidPass : 49,99 €/mois ou 399 €/an, premier mois à 1 €. Passez au plan Pro pour votre carte fidélité digitale.";
+    return {
+      title: "Plan Pro — Tarifs (49,99 €/mois ou 399 €/an) | MyFidPass",
+      description: desc,
+      robots: "index,follow",
+      canonical,
+      jsonLd: null,
+    };
+  }
+
   if (route?.type === "fidelity") {
     return {
       title: "Carte fidelite client | MyFidPass",

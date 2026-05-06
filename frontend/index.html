@@ -767,52 +767,28 @@
               </button>
               <div class="app-dashboard-more-panel" id="app-dashboard-more-panel" role="region" aria-labelledby="app-dashboard-more-label" aria-hidden="true">
                 <div class="app-dashboard-more-inner">
-                  <div class="app-dashboard-more-category">
-                    <h4 class="app-dashboard-more-category-title">Activité</h4>
-                    <div class="app-dashboard-more-grid">
-                      <article class="app-dashboard-more-card">
-                        <span class="app-dashboard-more-value" id="app-stat-more-transactions">0</span>
-                        <span class="app-dashboard-more-label">Opérations</span>
-                      </article>
-                      <article class="app-dashboard-more-card">
-                        <span class="app-dashboard-more-value" id="app-stat-more-avg-ticket">—</span>
-                        <span class="app-dashboard-more-label">Panier moyen (montants saisis)</span>
-                      </article>
-                    </div>
-                  </div>
-                  <div class="app-dashboard-more-category">
-                    <h4 class="app-dashboard-more-category-title">Clients</h4>
-                    <div class="app-dashboard-more-grid">
-                      <article class="app-dashboard-more-card">
-                        <span class="app-dashboard-more-value" id="app-stat-more-members">0</span>
-                        <span class="app-dashboard-more-label">Total membres</span>
-                      </article>
-                      <article class="app-dashboard-more-card">
-                        <span class="app-dashboard-more-value" id="app-stat-more-new30">0</span>
-                        <span class="app-dashboard-more-label">Nouveaux (30 j)</span>
-                      </article>
-                      <article class="app-dashboard-more-card">
-                        <span class="app-dashboard-more-value" id="app-stat-more-inactive30">0</span>
-                        <span class="app-dashboard-more-label">Inactifs (30 j)</span>
-                      </article>
-                    </div>
-                  </div>
-                  <div class="app-dashboard-more-category">
-                    <h4 class="app-dashboard-more-category-title">Fidélité</h4>
-                    <div class="app-dashboard-more-grid">
-                      <article class="app-dashboard-more-card">
-                        <span class="app-dashboard-more-value" id="app-stat-more-retention">0 %</span>
-                        <span class="app-dashboard-more-label">Taux de rétention</span>
-                      </article>
-                      <article class="app-dashboard-more-card">
-                        <span class="app-dashboard-more-value" id="app-stat-more-frequency">0,00</span>
-                        <span class="app-dashboard-more-label">Fréquence de retour</span>
-                      </article>
-                      <article class="app-dashboard-more-card">
-                        <span class="app-dashboard-more-value" id="app-stat-more-recurrent">0</span>
-                        <span class="app-dashboard-more-label">Récurrents</span>
-                      </article>
-                    </div>
+                  <h4 class="app-dashboard-more-category-title">Vue détaillée</h4>
+                  <div class="app-dashboard-more-grid">
+                    <article class="app-dashboard-more-card app-dashboard-more-card--members">
+                      <span class="app-dashboard-more-kicker">Actifs / Inactifs</span>
+                      <span class="app-dashboard-more-value"><span id="app-stat-more-active">0</span> / <span id="app-stat-more-inactive">0</span></span>
+                      <span class="app-dashboard-more-label">Membres sur la période et inactifs 30 j</span>
+                    </article>
+                    <article class="app-dashboard-more-card app-dashboard-more-card--points">
+                      <span class="app-dashboard-more-kicker">Points attribués</span>
+                      <span class="app-dashboard-more-value" id="app-stat-more-points">0</span>
+                      <span class="app-dashboard-more-label">Points distribués sur la période</span>
+                    </article>
+                    <article class="app-dashboard-more-card app-dashboard-more-card--rewards">
+                      <span class="app-dashboard-more-kicker">Récompenses utilisées</span>
+                      <span class="app-dashboard-more-value" id="app-stat-more-rewards-used">0</span>
+                      <span class="app-dashboard-more-label">Récompenses consommées par vos membres</span>
+                    </article>
+                    <article class="app-dashboard-more-card app-dashboard-more-card--notifications">
+                      <span class="app-dashboard-more-kicker">Notifications</span>
+                      <span class="app-dashboard-more-value" id="app-stat-more-notifications">0</span>
+                      <span class="app-dashboard-more-label">Campagnes envoyées sur la période</span>
+                    </article>
                   </div>
                 </div>
               </div>
@@ -2287,6 +2263,8 @@
     </div>
 
     <!-- App Carte Wallet (visible sur /fidelity/:slug) -->
+    <div id="saas-pro-payment-app" class="hidden page-saas-pro-payment-host" aria-hidden="true"></div>
+
     <div id="fidelity-app" class="hidden fidelity-page">
       <header class="header">
         <div class="header-inner">

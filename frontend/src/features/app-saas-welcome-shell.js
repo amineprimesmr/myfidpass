@@ -1,7 +1,7 @@
 /**
  * Shell visuel onboarding SaaS (héros + bandeau essai + feuille) — coordination affichage.
  */
-import { buildStripeSaasPaymentUrl } from "../config.js";
+import { initRouting } from "../router/index.js";
 
 /** @returns {HTMLElement | null} */
 function appShell() {
@@ -58,7 +58,7 @@ export function syncSaaSWelcomeChrome() {
  */
 const HERO_TITLE = "Votre essai a commencé";
 const SUPPORT_TRIAL_HERO_HTML =
-  '<span class="app-saas-frc-support-cta-wrap"><a href="#" id="app-saas-frc-support-cta" class="app-saas-frc-support-cta">Profiter de l’offre</a><span class="app-saas-frc-support-badge">-98%</span></span>';
+  '<span class="app-saas-frc-support-cta-wrap"><a href="/paiement" id="app-saas-frc-support-cta" class="app-saas-frc-support-cta">Profiter de l’offre</a><span class="app-saas-frc-support-badge">-98%</span></span>';
 const TRIAL_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
 let heroCountdownTimer = 0;
 
@@ -201,15 +201,19 @@ export function applySaaSFrcMessaging(opts) {
   }
 }
 
-/** Branche checkout Stripe SaaS — Payment Link (+ email prérempli si dispo). */
-export function navigateToSaaSStripeCheckout(prefilledEmail) {
-  window.location.href = buildStripeSaasPaymentUrl(prefilledEmail);
+/** Page de paiement / offre Pro (SPA, route `/paiement`). */
+export function navigateToSaaSPaymentPage() {
+  try {
+    history.pushState({}, "", "/paiement");
+  } catch (_) {
+    window.location.href = "/paiement";
+    return;
+  }
+  void initRouting().catch((err) => console.error("Routing error:", err));
 }
 
 /** Écouteurs boutons / bandeaux subscribe — idempotent. */
-export function wireSaaSWelcomeStripeHandlers(getUserEmail) {
-  const emailFn = typeof getUserEmail === "function" ? getUserEmail : () => "";
-
+export function wireSaaSWelcomeStripeHandlers() {
   const ids = ["app-sidebar-trial-subscribe-btn", "app-saas-frc-cta", "app-saas-frc-support-cta", "app-saas-frc-strip-cta", "app-topbar-trial-cta"];
   ids.forEach((id) => {
     const btn = document.getElementById(id);
@@ -217,7 +221,7 @@ export function wireSaaSWelcomeStripeHandlers(getUserEmail) {
     btn.dataset.fidpassStripeSubscribeWired = "1";
     btn.addEventListener("click", (e) => {
       if (btn.tagName === "A") e.preventDefault();
-      navigateToSaaSStripeCheckout(emailFn());
+      navigateToSaaSPaymentPage();
     });
   });
 
@@ -232,7 +236,7 @@ export function wireSaaSWelcomeStripeHandlers(getUserEmail) {
       ) {
         return;
       }
-      navigateToSaaSStripeCheckout(emailFn());
+      navigateToSaaSPaymentPage();
     });
   }
 }
