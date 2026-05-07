@@ -118,6 +118,111 @@ export function clearAuthToken() {
   }
 }
 
+/** Dispatche après restauration session (hash ou natif) pour relancer le checkout embarqué. */
+export const FIDPASS_AUTH_RESTORED_EVENT = "fidpass-auth-restored";
+
+/**
+ * Lit `#fid_auth=` / `#fid_refresh=` (fragment, non envoyé au serveur), enregistre les tokens puis nettoie l’URL.
+ * À utiliser quand la page paiement s’ouvre hors du même contexte de stockage que l’app (Safari, autre WebView, nouvelle fenêtre).
+ * @returns {boolean} true si au moins un token a été importé
+ */
+export function consumeAuthTransferFromHash() {
+  if (typeof window === "undefined") return false;
+  try {
+    const hashRaw = window.location.hash.replace(/^#/, "").trim();
+    if (!hashRaw) return false;
+    const sp = new URLSearchParams(hashRaw);
+    const access =
+      sp.get("fid_auth") || sp.get("access_token") || sp.get("token");
+    const refresh = sp.get("fid_refresh") || sp.get("refresh_token");
+    let consumed = false;
+    if (access && access.trim()) {
+      setAuthToken(access.trim());
+      consumed = true;
+    }
+    if (refresh && refresh.trim()) {
+      setRefreshToken(refresh.trim());
+      consumed = true;
+    }
+    if (consumed && typeof window.history?.replaceState === "function") {
+      const clean = `${window.location.pathname}${window.location.search}`;
+      window.history.replaceState(null, "", clean);
+    }
+    if (consumed && typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new CustomEvent(FIDPASS_AUTH_RESTORED_EVENT));
+    }
+    return consumed;
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Origines autorisées pour le pont natif → Web (postMessage). */
+function isAllowedMyfidpassOrigin(origin) {
+  const o = String(origin || "");
+  if (/^https:\/\/(www\.)?myfidpass\.fr$/i.test(o)) return true;
+  if (/^http:\/\/localhost(?::\d+)?$/i.test(o)) return true;
+  if (/^http:\/\/127\.0\.0\.1(?::\d+)?$/i.test(o)) return true;
+  return false;
+}
+
+/**
+ * Écoute `postMessage` depuis un wrapper natif (WKWebView, etc.) pour injecter la session.
+ * Payload attendu : `{ type: "FIDPASS_AUTH", accessToken: string, refreshToken?: string }`
+ * ou `{ source: "fidpass-native", accessToken, refreshToken }`.
+ */
+export function wireNativeAuthBridge() {
+  if (typeof window === "undefined") return;
+  if (window.__fidpassNativeAuthBridgeWired) return;
+  window.__fidpassNativeAuthBridgeWired = true;
+  window.addEventListener("message", (event) => {
+    if (!isAllowedMyfidpassOrigin(event.origin)) return;
+    const d = event.data;
+    if (!d || typeof d !== "object") return;
+    const okBridge =
+      d.type === "FIDPASS_AUTH" ||
+      d.source === "fidpass-native" ||
+      d.source === "MyFidPassNative";
+    if (!okBridge) return;
+    const at =
+      d.accessToken ||
+      d.token ||
+      d.access_token ||
+      (d.payload && (d.payload.accessToken || d.payload.token));
+    const rt =
+      d.refreshToken ||
+      d.refresh_token ||
+      (d.payload && (d.payload.refreshToken || d.payload.refresh_token));
+    let wrote = false;
+    if (at && typeof at === "string") {
+      setAuthToken(at.trim());
+      wrote = true;
+    }
+    if (rt && typeof rt === "string") {
+      setRefreshToken(rt.trim());
+      wrote = true;
+    }
+    if (wrote && typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new CustomEvent(FIDPASS_AUTH_RESTORED_EVENT));
+    }
+  });
+}
+
+/**
+ * Chemin pour ouvrir le paiement avec transfert explicite des tokens (nouvelle WebView / même onglet après navigation SPA).
+ * @param {string} [basePath="/paiement"]
+ * @returns {string}
+ */
+export function buildPaymentPathWithAuthHandoff(basePath = "/paiement") {
+  const path = basePath.startsWith("/") ? basePath : `/${basePath}`;
+  const t = getAuthToken();
+  if (!t) return path;
+  const rt = getRefreshToken();
+  let frag = `fid_auth=${encodeURIComponent(t)}`;
+  if (rt) frag += `&fid_refresh=${encodeURIComponent(rt)}`;
+  return `${path}#${frag}`;
+}
+
 export function getRefreshToken() {
   try {
     return localStorage.getItem(REFRESH_TOKEN_KEY);

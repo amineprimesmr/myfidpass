@@ -11,7 +11,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
-import { API_BASE, STRIPE_PUBLISHABLE_KEY, getAuthToken } from "../config.js";
+import { API_BASE, STRIPE_PUBLISHABLE_KEY, FIDPASS_AUTH_RESTORED_EVENT, getAuthToken } from "../config.js";
 
 const COUNTRIES = [
   { code: "FR", label: "France" },
@@ -114,6 +114,13 @@ export default function SaasProPaymentPage() {
   const expiryMountRef = useRef(null);
   const cvcMountRef = useRef(null);
   const liquidGlassSwitcherRef = useRef(null);
+  const [authHandoffTick, setAuthHandoffTick] = useState(0);
+
+  useEffect(() => {
+    const bump = () => setAuthHandoffTick((n) => n + 1);
+    window.addEventListener(FIDPASS_AUTH_RESTORED_EVENT, bump);
+    return () => window.removeEventListener(FIDPASS_AUTH_RESTORED_EVENT, bump);
+  }, []);
 
   useEffect(() => {
     wireLiquidGlassTrackPrevious(liquidGlassSwitcherRef.current);
@@ -237,7 +244,7 @@ export default function SaasProPaymentPage() {
         cvcElementRef.current?.destroy();
       } catch (_) {}
     };
-  }, [isPaymentRoute, annual]);
+  }, [isPaymentRoute, annual, authHandoffTick]);
 
   useEffect(() => {
     setElementsReady(Boolean(cardState.number && cardState.expiry && cardState.cvc));
@@ -267,12 +274,15 @@ export default function SaasProPaymentPage() {
     const renewAnchor = new Date(now);
     if (annual) renewAnchor.setFullYear(renewAnchor.getFullYear() + 1);
     else renewAnchor.setMonth(renewAnchor.getMonth() + 1);
-    const renewAmount = annual ? "399,99 € /an" : "49,99 € /mois";
+    const renewSubtitle = annual
+      ? "Soit 399\u00a0€ facturés annuellement,\u00a0sans\u00a0engagement."
+      : "Sans engagement, annulable à tout moment\u202f!";
+    const renewAmount = annual ? "34 € /mois" : "49,99 € /mois";
     return [
       { title: "Aujourd’hui", subtitle: "Offre premier mois", amount: "Payez 1€", icon: "lock" },
       {
         title: formatDateFr(renewAnchor),
-        subtitle: "Sans engagement, annulable à tout moment !",
+        subtitle: renewSubtitle,
         amount: renewAmount,
         icon: "check",
       },

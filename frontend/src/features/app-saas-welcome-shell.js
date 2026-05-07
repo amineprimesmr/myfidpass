@@ -2,6 +2,7 @@
  * Shell visuel onboarding SaaS (héros + bandeau essai + feuille) — coordination affichage.
  */
 import { initRouting } from "../router/index.js";
+import { buildPaymentPathWithAuthHandoff } from "../config.js";
 
 /** @returns {HTMLElement | null} */
 function appShell() {
@@ -203,10 +204,11 @@ export function applySaaSFrcMessaging(opts) {
 
 /** Page de paiement / offre Pro (SPA, route `/paiement`). */
 export function navigateToSaaSPaymentPage() {
+  const path = buildPaymentPathWithAuthHandoff("/paiement");
   try {
-    history.pushState({}, "", "/paiement");
+    history.pushState({}, "", path);
   } catch (_) {
-    window.location.href = "/paiement";
+    window.location.href = path;
     return;
   }
   void initRouting().catch((err) => console.error("Routing error:", err));

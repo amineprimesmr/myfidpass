@@ -11,11 +11,14 @@ import {
   getAuthHeaders,
   buildStripeSaasPaymentUrl,
   subscriptionUsesExternalStripePaymentLink,
+  consumeAuthTransferFromHash,
+  buildPaymentPathWithAuthHandoff,
 } from "./config.js";
 
 describe("config", () => {
   const origLocalStorage = globalThis.localStorage;
   const origLocation = globalThis.location;
+  const origHistory = globalThis.history;
 
   beforeEach(() => {
     const store = {};
@@ -33,6 +36,7 @@ describe("config", () => {
   afterEach(() => {
     globalThis.localStorage = origLocalStorage;
     globalThis.location = origLocation;
+    globalThis.history = origHistory;
   });
 
   it("getAuthToken returns null when empty", () => {
@@ -75,5 +79,35 @@ describe("config", () => {
 
   it("subscriptionUsesExternalStripePaymentLink is true (Payment Link SaaS)", () => {
     expect(subscriptionUsesExternalStripePaymentLink()).toBe(true);
+  });
+
+  it("consumeAuthTransferFromHash imports fid_auth and clears hash from URL", () => {
+    clearAuthToken();
+    let replacedUrl = "";
+    globalThis.history = {
+      replaceState(_a, _b, url) {
+        replacedUrl = url;
+      },
+    };
+    const jwt = "eyJ.part.sig";
+    globalThis.location = {
+      hostname: "myfidpass.fr",
+      origin: "https://myfidpass.fr",
+      pathname: "/paiement",
+      search: "",
+      hash: `#fid_auth=${encodeURIComponent(jwt)}`,
+    };
+    expect(consumeAuthTransferFromHash()).toBe(true);
+    expect(getAuthToken()).toBe(jwt);
+    expect(replacedUrl).toBe("/paiement");
+  });
+
+  it("buildPaymentPathWithAuthHandoff appends encoded fragment when token set", () => {
+    setAuthToken("tok.ab.cd");
+    const p = buildPaymentPathWithAuthHandoff("/paiement");
+    expect(p.startsWith("/paiement#fid_auth=")).toBe(true);
+    expect(p).toContain(encodeURIComponent("tok.ab.cd"));
+    clearAuthToken();
+    expect(buildPaymentPathWithAuthHandoff("/paiement")).toBe("/paiement");
   });
 });

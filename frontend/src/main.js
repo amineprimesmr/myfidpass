@@ -5,6 +5,7 @@
 import { showSlugError } from "./features/fidelity-form.js";
 import { initLandingShell } from "./features/landing-shell.js";
 import { initRouting } from "./router/index.js";
+import { consumeAuthTransferFromHash, wireNativeAuthBridge } from "./config.js";
 
 export { showSlugError };
 
@@ -18,6 +19,9 @@ async function bootstrap() {
   if (refParam && /^[A-Z2-9]{4,16}$/i.test(refParam)) {
     sessionStorage.setItem("fidpass_ref", refParam.toUpperCase());
   }
+
+  consumeAuthTransferFromHash();
+  wireNativeAuthBridge();
 
   initLandingShell();
   try {

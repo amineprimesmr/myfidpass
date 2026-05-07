@@ -2,7 +2,7 @@
  * Routeur léger : getRoute, show/hide des vues, chargement dynamique des pages.
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
-import { getAuthToken, buildStripeSaasPaymentUrl } from "../config.js";
+import { getAuthToken, buildStripeSaasPaymentUrl, consumeAuthTransferFromHash } from "../config.js";
 import { ensureLandingLiquidNav } from "../features/landing-liquid-nav-bootstrap.js";
 import { runLiquidGlassMenuCleanupLanding } from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
 import { applyRouteSeoHead } from "../features/seo-head.js";
@@ -161,6 +161,7 @@ async function loadPage(routeType) {
  * Affiche la vue correspondant à la route et charge le module de la page (init).
  */
 export async function initRouting() {
+  consumeAuthTransferFromHash();
   const route = getRoute();
   document.body.classList.toggle(
     "page-landing-subpage",
