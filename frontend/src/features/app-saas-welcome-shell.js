@@ -204,7 +204,18 @@ export function applySaaSFrcMessaging(opts) {
 
 /** Page de paiement / offre Pro (SPA, route `/paiement`). */
 export function navigateToSaaSPaymentPage() {
-  const path = buildPaymentPathWithAuthHandoff("/paiement");
+  let path = buildPaymentPathWithAuthHandoff("/paiement");
+  const hashIdx = path.indexOf("#");
+  const pathWithoutHash = hashIdx >= 0 ? path.slice(0, hashIdx) : path;
+  const hash = hashIdx >= 0 ? path.slice(hashIdx) : "";
+  try {
+    const u = new URL(pathWithoutHash || "/paiement", window.location.origin);
+    u.searchParams.set("app_embed", "1");
+    path = `${u.pathname}${u.search}${hash}`;
+  } catch (_) {
+    const sep = pathWithoutHash.includes("?") ? "&" : "?";
+    path = `${pathWithoutHash}${sep}app_embed=1${hash}`;
+  }
   try {
     history.pushState({}, "", path);
   } catch (_) {

@@ -709,6 +709,11 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   font-size: 0.88rem;
 }
 
+/* WebView / shell natif (?app_embed=1) : descendre un peu la « feuille » sous la barre système / encoche */
+body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas-pay-checkout-main {
+  padding-top: calc(max(0.95rem, env(safe-area-inset-top)) + 14px);
+}
+
 .saas-pay-checkout-head {
   display: flex;
   flex-direction: column;

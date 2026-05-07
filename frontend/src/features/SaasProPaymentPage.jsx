@@ -531,7 +531,9 @@ export default function SaasProPaymentPage() {
   };
 
   return (
-    <div className="saas-pay saas-pay-checkout">
+    <div
+      className={`saas-pay saas-pay-checkout${isAppEmbed ? " saas-pay-checkout--app-embed" : ""}`}
+    >
       <main className="saas-pay-checkout-main">
         <header className="saas-pay-checkout-head">
           {!isAppEmbed ? (
