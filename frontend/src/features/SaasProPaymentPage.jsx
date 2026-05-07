@@ -755,7 +755,7 @@ export default function SaasProPaymentPage() {
                   : initializing
                     ? "Chargement du module..."
                     : !annual || stripeTrialDays === 0
-                      ? "Payer 1€"
+                      ? "Premier mois à 1€"
                       : "Continuer"}
               </button>
             </>
