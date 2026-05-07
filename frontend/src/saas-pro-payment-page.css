@@ -1240,6 +1240,24 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
   letter-spacing: 0.02em;
 }
 
+.saas-pay-wallet-ios-hint {
+  margin: 0 0 0.65rem;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #aeb6c8;
+  text-align: left;
+  background: rgba(18, 24, 33, 0.92);
+  border: 1px solid #2a3342;
+  border-radius: 0.65rem;
+}
+
+.saas-pay-wallet-ios-hint__code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  color: #c9cfda;
+}
+
 .saas-pay-method label {
   display: block;
   margin: 0.55rem 0 0.4rem;

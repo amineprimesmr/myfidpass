@@ -145,6 +145,8 @@ export default function SaasProPaymentPage() {
 
   /** True uniquement après `CardElement.mount()` réussi — évite placeholders « 1234… » sans iframe Stripe (illisible / non cliquable). */
   const [stripeFieldsLive, setStripeFieldsLive] = useState(false);
+  /** Apple/Google Pay montés (`false` = navigateur ou WebView ne propose pas le wallet). */
+  const [walletBtnMounted, setWalletBtnMounted] = useState(null);
 
   const loginThenPayHref =
     typeof window !== "undefined"
@@ -172,6 +174,7 @@ export default function SaasProPaymentPage() {
       setSessionReady(false);
       setStripeTrialDays(null);
       setStripeFieldsLive(false);
+      setWalletBtnMounted(null);
 
       consumeAuthTransferFromHash();
       const token = getAuthToken();
@@ -354,6 +357,10 @@ export default function SaasProPaymentPage() {
         });
 
         const canWallet = await paymentRequest.canMakePayment();
+        if (import.meta.env?.DEV) {
+          console.info("[saas-pay] paymentRequest.canMakePayment()", canWallet);
+        }
+        let prMounted = false;
         if (!cancelled && canWallet && paymentRequestButtonMountRef.current) {
           try {
             const prBtn = elements.create("paymentRequestButton", {
@@ -368,10 +375,12 @@ export default function SaasProPaymentPage() {
             });
             prBtn.mount(paymentRequestButtonMountRef.current);
             paymentRequestButtonElementRef.current = prBtn;
+            prMounted = true;
           } catch (prErr) {
             console.warn("[saas-pay] payment request button:", prErr?.message || prErr);
           }
         }
+        if (!cancelled) setWalletBtnMounted(prMounted);
 
         setSessionReady(true);
       } catch (err) {
@@ -388,6 +397,7 @@ export default function SaasProPaymentPage() {
     return () => {
       cancelled = true;
       setStripeFieldsLive(false);
+      setWalletBtnMounted(null);
       try {
         numberElementRef.current?.destroy();
         expiryElementRef.current?.destroy();
@@ -684,6 +694,19 @@ export default function SaasProPaymentPage() {
           ) : (
             <>
               <div ref={paymentRequestButtonMountRef} className="saas-pay-wallet-mount" />
+              {isAppEmbed &&
+              walletBtnMounted === false &&
+              stripeFieldsLive &&
+              !initializing &&
+              !busy ? (
+                <p className="saas-pay-wallet-ios-hint" role="note">
+                  Apple&nbsp;Pay / Google&nbsp;Pay ne sont pas disponibles dans cette fenêtre. Utilise la carte
+                  ci‑dessous, ou ouvre{" "}
+                  <strong>{typeof window !== "undefined" ? window.location.hostname : "myfidpass.fr"}</strong> dans{" "}
+                  <strong>Safari</strong> après avoir vérifié le domaine pour Apple&nbsp;Pay dans Stripe (fichier{" "}
+                  <code className="saas-pay-wallet-ios-hint__code">.well-known</code> sur ton site).
+                </p>
+              ) : null}
               <p className="saas-pay-wallet-divider">ou payer par carte</p>
 
               <label>Numéro de carte</label>
