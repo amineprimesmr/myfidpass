@@ -238,13 +238,6 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
   }
   // Anciennes lignes IAP / RevenueCat / synchros sans vrai `sub_…` : on les annule pour pouvoir créer l’abo Stripe web.
   cancelNonStripeBackedSubscriptionRow(userId);
-  subRow = getSubscriptionByUserId(userId);
-  if (hasStripeBackedActiveSubscription(userId)) {
-    return res.status(409).json({
-      error: "Un abonnement actif est déjà associé à ce compte.",
-      code: "already_subscribed",
-    });
-  }
 
   const plan = String(req.body?.plan || "monthly").toLowerCase() === "annual" ? "annual" : "monthly";
   const slots = parseMerchantSlotCount(req.body);
@@ -288,17 +281,14 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       });
     }
 
-    const incomplete = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "incomplete",
-      limit: 20,
-    });
-    for (const s of incomplete.data) {
-      try {
-        await stripe.subscriptions.cancel(s.id);
-      } catch (e) {
-        console.warn("[payment] cancel incomplete sub:", s.id, e?.message || e);
-      }
+    await cancelAbandonedEmbeddedCheckoutSubscriptions(customerId);
+    await resyncSubscriptionRowFromStripeIfNeeded(userId);
+
+    if (hasStripeBackedActiveSubscription(userId)) {
+      return res.status(409).json({
+        error: "Un abonnement actif est déjà associé à ce compte.",
+        code: "already_subscribed",
+      });
     }
 
     const baseMeta = {
@@ -633,6 +623,109 @@ function isStripeSubscriptionStatusPaying(status) {
 }
 
 /**
+ * Stripe renvoie souvent `trialing` dès `subscriptions.create` alors que le Payment Element / SetupIntent n’est pas encore terminé.
+ * Tant que ce n’est pas le cas, on persiste `incomplete` pour ne pas bloquer un nouveau `/paiement` ni faire croire à l’app que l’abo est actif.
+ * @param {import("stripe").Stripe.Subscription} stripeSub
+ */
+function subscriptionRowStatusFromStripeObject(stripeSub) {
+  const raw = String(stripeSub?.status || "incomplete").toLowerCase();
+  if (raw !== "trialing") return raw;
+  const dpm = stripeSub.default_payment_method;
+  if (dpm != null && String(dpm).trim() !== "") return "trialing";
+  const psi = stripeSub.pending_setup_intent;
+  if (typeof psi === "object" && psi) {
+    if (psi.status === "succeeded") return "trialing";
+    return "incomplete";
+  }
+  const inv = stripeSub.latest_invoice;
+  const invObj = typeof inv === "object" && inv ? inv : null;
+  const pi = invObj?.payment_intent;
+  const piObj = typeof pi === "object" && pi ? pi : null;
+  if (piObj) {
+    if (piObj.status === "succeeded") return "trialing";
+    return "incomplete";
+  }
+  if (psi == null && invObj == null) return raw;
+  return "incomplete";
+}
+
+/**
+ * Annule les abonnements Stripe « abandonnés » (page paiement ouverte puis fermée sans CB).
+ * Les essais `trialing` sans moyen de paiement ne sont pas listés en `incomplete` — il faut les annuler séparément.
+ * @param {string} customerId
+ */
+async function cancelAbandonedEmbeddedCheckoutSubscriptions(customerId) {
+  if (!stripe || !customerId) return;
+  const cid = String(customerId).trim();
+
+  const incomplete = await stripe.subscriptions.list({ customer: cid, status: "incomplete", limit: 50 });
+  for (const s of incomplete.data) {
+    try {
+      await stripe.subscriptions.cancel(s.id);
+    } catch (e) {
+      console.warn("[payment] cancel incomplete sub:", s.id, e?.message || e);
+    }
+  }
+
+  const trialing = await stripe.subscriptions.list({ customer: cid, status: "trialing", limit: 50 });
+  for (const s of trialing.data) {
+    let sub = s;
+    const dpm = sub.default_payment_method;
+    if (dpm != null && String(dpm).trim() !== "") continue;
+
+    if (typeof sub.pending_setup_intent !== "object" || sub.pending_setup_intent == null) {
+      try {
+        sub = await stripe.subscriptions.retrieve(s.id, {
+          expand: ["pending_setup_intent", "latest_invoice.payment_intent"],
+        });
+      } catch (e) {
+        console.warn("[payment] retrieve trialing sub for cleanup:", s.id, e?.message || e);
+        continue;
+      }
+    }
+
+    const psi = sub.pending_setup_intent;
+    const psiObj = typeof psi === "object" && psi ? psi : null;
+    if (psiObj?.status === "succeeded") continue;
+
+    const inv = sub.latest_invoice;
+    const invObj = typeof inv === "object" && inv ? inv : null;
+    const pi = invObj?.payment_intent;
+    const piObj = typeof pi === "object" && pi ? pi : null;
+    if (piObj?.status === "succeeded") continue;
+
+    try {
+      await stripe.subscriptions.cancel(s.id);
+    } catch (e) {
+      console.warn("[payment] cancel abandoned trialing sub:", s.id, e?.message || e);
+    }
+  }
+}
+
+async function resyncSubscriptionRowFromStripeIfNeeded(userId) {
+  if (!stripe || !userId) return;
+  const row = getSubscriptionByUserId(userId);
+  const sid = row?.stripe_subscription_id ? String(row.stripe_subscription_id).trim() : "";
+  if (!/^sub_[A-Za-z0-9]+$/.test(sid)) return;
+  try {
+    const s = await stripe.subscriptions.retrieve(sid, {
+      expand: ["pending_setup_intent", "latest_invoice.payment_intent"],
+    });
+    await syncSubscriptionFromStripeObject(s, userId);
+  } catch (e) {
+    console.warn("[payment] resync subscription row: Stripe retrieve failed:", sid, e?.message || e);
+    createOrUpdateSubscription({
+      userId,
+      stripeCustomerId: row?.stripe_customer_id || null,
+      stripeSubscriptionId: null,
+      planId: row?.plan_id || "starter",
+      status: "canceled",
+      currentPeriodEnd: row?.current_period_end || null,
+    });
+  }
+}
+
+/**
  * POST /api/payment/reconcile-subscription
  * Remet la ligne `subscriptions` en phase avec Stripe (webhook manquant, email ≠ client Stripe, etc.).
  * Ordre : recherche par metadata user_id (checkout créé par notre API) → abo déjà stocké → clients avec l’email du compte.
@@ -812,27 +905,44 @@ export async function paymentWebhookHandler(req, res) {
  */
 async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
   if (!stripeSub?.id) return;
-  let userId = stripeSub.metadata?.user_id ? String(stripeSub.metadata.user_id).trim() : null;
+  let working = stripeSub;
+
+  if (
+    stripe &&
+    String(stripeSub.status || "").toLowerCase() === "trialing" &&
+    !stripeSub.default_payment_method &&
+    (typeof stripeSub.pending_setup_intent !== "object" || stripeSub.pending_setup_intent == null)
+  ) {
+    try {
+      working = await stripe.subscriptions.retrieve(stripeSub.id, {
+        expand: ["pending_setup_intent", "latest_invoice.payment_intent"],
+      });
+    } catch (e) {
+      console.warn("[stripe sync] retrieve subscription for status:", stripeSub.id, e?.message || e);
+    }
+  }
+
+  let userId = working.metadata?.user_id ? String(working.metadata.user_id).trim() : null;
   if (!userId) {
-    const row = getSubscriptionByStripeSubscriptionId(stripeSub.id);
+    const row = getSubscriptionByStripeSubscriptionId(working.id);
     if (row?.user_id) userId = String(row.user_id);
   }
   if (!userId && fallbackUserId) userId = String(fallbackUserId).trim();
   if (!userId) {
-    console.warn("[stripe webhook] subscription: cannot resolve user_id", stripeSub.id);
+    console.warn("[stripe webhook] subscription: cannot resolve user_id", working.id);
     return;
   }
-  const cust = stripeSub.customer;
+  const cust = working.customer;
   const stripeCustomerId = typeof cust === "string" ? cust : cust?.id ?? null;
-  const end = stripeSub.current_period_end
-    ? new Date(stripeSub.current_period_end * 1000).toISOString()
+  const end = working.current_period_end
+    ? new Date(working.current_period_end * 1000).toISOString()
     : null;
-  const status = stripeSub.status || "incomplete";
-  const planId = stripeSub.metadata?.plan_id ? String(stripeSub.metadata.plan_id).trim() : "starter";
+  const status = subscriptionRowStatusFromStripeObject(working);
+  const planId = working.metadata?.plan_id ? String(working.metadata.plan_id).trim() : "starter";
   createOrUpdateSubscription({
     userId,
     stripeCustomerId,
-    stripeSubscriptionId: stripeSub.id,
+    stripeSubscriptionId: working.id,
     planId: planId || "starter",
     status,
     currentPeriodEnd: end,
@@ -842,7 +952,7 @@ async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
     try { convertReferralForUser(userId); } catch (_) {}
   }
 
-  const slotsMeta = stripeSub.metadata?.merchant_slots;
+  const slotsMeta = working.metadata?.merchant_slots;
   if (slotsMeta != null && String(slotsMeta).trim() !== "") {
     const slots = Math.min(5, Math.max(1, parseInt(String(slotsMeta), 10) || 1));
     upsertMerchantEntitlement({
@@ -854,10 +964,10 @@ async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
     });
   }
 
-  const businessIdRaw = stripeSub.metadata?.business_id ? String(stripeSub.metadata.business_id).trim() : "";
-  const billingMode = String(stripeSub.metadata?.billing_mode || "").trim().toLowerCase();
+  const businessIdRaw = working.metadata?.business_id ? String(working.metadata.business_id).trim() : "";
+  const billingMode = String(working.metadata?.billing_mode || "").trim().toLowerCase();
   if (businessIdRaw && billingMode === "per_business") {
-    const items = stripeSub.items?.data || [];
+    const items = working.items?.data || [];
     const firstItem = items[0] || null;
     const amountCents = firstItem?.price?.unit_amount ?? null;
     const interval = normalizeBusinessSplitInterval(firstItem?.price?.recurring?.interval || "month");
@@ -865,7 +975,7 @@ async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
       userId,
       businessId: businessIdRaw,
       stripeCustomerId,
-      stripeSubscriptionId: stripeSub.id,
+      stripeSubscriptionId: working.id,
       status,
       amountCents,
       interval,
