@@ -71,6 +71,25 @@ export function FinTapHeroScrollSection() {
   const [predictionsOpen, setPredictionsOpen] = useState(false);
   const [placesSearching, setPlacesSearching] = useState(false);
   const [noSuggestionsVisible, setNoSuggestionsVisible] = useState(false);
+  const upsertSelectedEstablishment = (name, pid) => {
+    if (!name || !pid) return [];
+    const normalizedName = String(name).trim();
+    const normalizedPid = String(pid).trim();
+    if (!normalizedName || !normalizedPid) return [];
+    const exists = selectedEstablishments.some(
+      (entry) => entry.google_place_id === normalizedPid
+    );
+    const next = exists
+      ? selectedEstablishments
+      : [
+          ...selectedEstablishments,
+          { establishment_name: normalizedName, google_place_id: normalizedPid },
+        ];
+    setSelectedEstablishments(next);
+    setPendingEstablishments(next);
+    return next;
+  };
+
   const searchInputRef = useRef(null);
   const searchWrapRef = useRef(null);
   const emptyHintTimerRef = useRef(0);
@@ -348,6 +367,17 @@ export function FinTapHeroScrollSection() {
       return;
     }
     const query = shopQuery.trim();
+    if (shopPlaceId && query.length >= 2) {
+      setPredictionsOpen(false);
+      setPlacePredictions([]);
+      setPlacesSearching(false);
+      setNoSuggestionsVisible(false);
+      if (emptyHintTimerRef.current) {
+        window.clearTimeout(emptyHintTimerRef.current);
+        emptyHintTimerRef.current = 0;
+      }
+      return;
+    }
     if (query.length < 2) {
       setPlacePredictions([]);
       setPredictionsOpen(false);
@@ -419,7 +449,7 @@ export function FinTapHeroScrollSection() {
         emptyHintTimerRef.current = 0;
       }
     };
-  }, [shopQuery, ctaVisible]);
+  }, [shopQuery, ctaVisible, shopPlaceId]);
 
   useEffect(() => {
     const onClickOutside = (event) => {
@@ -438,59 +468,41 @@ export function FinTapHeroScrollSection() {
     if (!name || !pid) return;
     setShopQuery(name);
     setShopPlaceId(pid);
+    upsertSelectedEstablishment(name, pid);
     setPredictionsOpen(false);
+    setPlacePredictions([]);
+    setNoSuggestionsVisible(false);
   };
 
   const startHref = "/app?fromLandingOnboarding=1";
 
   const onStartCtaClick = (event) => {
-    if (!shopPlaceId) {
+    const selectedName = shopQuery.trim();
+    const selectedPid = String(shopPlaceId || "").trim();
+    const fallback = selectedEstablishments[0] || null;
+    const primary = selectedName && selectedPid
+      ? { establishment_name: selectedName, google_place_id: selectedPid }
+      : fallback;
+    if (!primary?.establishment_name || !primary?.google_place_id) {
       event.preventDefault();
       return;
     }
-    const name = shopQuery.trim();
-    if (!name) {
-      event.preventDefault();
-      return;
-    }
-    const primary = { establishment_name: name, google_place_id: shopPlaceId };
     setPendingEstablishment(primary);
-    const exists = selectedEstablishments.some(
-      (entry) => entry.google_place_id === primary.google_place_id
-    );
-    const next = exists ? selectedEstablishments : [...selectedEstablishments, primary];
-    setSelectedEstablishments(next);
-    setPendingEstablishments(next);
+    upsertSelectedEstablishment(primary.establishment_name, primary.google_place_id);
   };
 
-  const addSelectedEstablishment = () => {
-    const name = shopQuery.trim();
-    const pid = String(shopPlaceId || "").trim();
-    if (!name || !pid) return;
-    const exists = selectedEstablishments.some((entry) => entry.google_place_id === pid);
-    if (exists) return;
-    const next = [
-      ...selectedEstablishments,
-      { establishment_name: name, google_place_id: pid },
-    ];
-    setSelectedEstablishments(next);
-    setPendingEstablishments(next);
+  const startAddingAnotherEstablishment = () => {
+    setShopQuery("");
+    setShopPlaceId("");
+    setPlacePredictions([]);
+    setPredictionsOpen(false);
+    setNoSuggestionsVisible(false);
+    window.setTimeout(() => {
+      searchInputRef.current?.focus({ preventScroll: true });
+    }, 0);
   };
 
-  const removeSelectedEstablishment = (pid) => {
-    const placeId = String(pid || "").trim();
-    if (!placeId) return;
-    const next = selectedEstablishments.filter(
-      (entry) => entry.google_place_id !== placeId
-    );
-    setSelectedEstablishments(next);
-    setPendingEstablishments(next);
-  };
-
-  const canAddSelected =
-    !!shopPlaceId &&
-    !!shopQuery.trim() &&
-    !selectedEstablishments.some((entry) => entry.google_place_id === shopPlaceId);
+  const canAddAnother = selectedEstablishments.length > 0;
 
   return (
     <section
@@ -615,31 +627,14 @@ export function FinTapHeroScrollSection() {
               </div>
             ) : null}
           </label>
-          {canAddSelected ? (
+          {canAddAnother ? (
             <button
               type="button"
               className="fintap-hero-iphone__add-business-btn"
-              onClick={addSelectedEstablishment}
+              onClick={startAddingAnotherEstablishment}
             >
               Ajouter un commerce
             </button>
-          ) : null}
-          {selectedEstablishments.length > 0 ? (
-            <div className="fintap-hero-iphone__selected-businesses" aria-label="Commerces ajoutés">
-              {selectedEstablishments.map((entry) => (
-                <span key={entry.google_place_id} className="fintap-hero-iphone__selected-business-chip">
-                  <span>{entry.establishment_name}</span>
-                  <button
-                    type="button"
-                    className="fintap-hero-iphone__selected-business-remove"
-                    aria-label={`Retirer ${entry.establishment_name}`}
-                    onClick={() => removeSelectedEstablishment(entry.google_place_id)}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
           ) : null}
           {noSuggestionsVisible && shopQuery.trim().length >= 2 && !placesSearching ? (
             <p className="fintap-hero-iphone__search-empty-hint" role="status">

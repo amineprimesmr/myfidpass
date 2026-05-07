@@ -24,7 +24,7 @@
   font-family: "Inter", system-ui, sans-serif !important;
   font-weight: 900;
   font-size: clamp(2.5rem, 7.2vw, 4.8rem);
-  line-height: 0.95;
+  line-height: 0.98;
   letter-spacing: -1px;
   text-transform: uppercase;
   color: var(--fintap-hero-ink);
@@ -237,16 +237,16 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
   background: linear-gradient(180deg, #111827 0%, #020617 100%);
   color: #fff !important;
   text-decoration: none;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 600;
   white-space: nowrap;
-  box-shadow: 0 3px 10px rgba(2, 6, 23, 0.22);
+  box-shadow: 0 2px 6px rgba(2, 6, 23, 0.16);
 }
 
 .fintap-hero-iphone__search-cta svg {
@@ -291,15 +291,18 @@
 }
 
 .fintap-hero-iphone__add-business-btn {
-  border: 1px solid rgba(15, 23, 42, 0.16);
-  background: rgba(255, 255, 255, 0.85);
-  color: #0f172a;
+  border: 1px solid #020617;
+  background: #020617;
+  color: #fff;
   border-radius: 999px;
-  min-height: 2.15rem;
-  padding: 0 0.85rem;
-  font-size: 0.8rem;
+  min-height: 2.2rem;
+  padding: 0.42rem 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.2);
 }
 
 .fintap-hero-iphone__selected-businesses {
