@@ -1,5 +1,5 @@
 /**
- * Actions section Mon compte.
+ * Actions section Profil (compte).
  * @param {{
  * changePasswordBtn: HTMLButtonElement | null;
  * emailInput: HTMLInputElement | null;

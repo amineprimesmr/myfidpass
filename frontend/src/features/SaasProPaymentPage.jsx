@@ -79,6 +79,15 @@ function formatDateFr(date) {
   }).format(date);
 }
 
+/** Dans l’app iOS (WKWebView), la fermeture du sheet repose sur `myfidpass://subscription-paid` — pas sur une navigation `/app`. */
+function navigateAfterSuccessfulPayment(isAppEmbed) {
+  if (isAppEmbed) {
+    window.location.href = "myfidpass://subscription-paid";
+    return;
+  }
+  window.location.href = "/app?subscription_paid=1";
+}
+
 /** Montant affiché dans la feuille Apple Pay / Google Pay (centimes), aligné sur « Total à payer » du parcours. */
 function walletSheetAmountCents(isAnnual, trialDaysResolved) {
   if (!isAnnual) return 100;
@@ -204,7 +213,13 @@ export default function SaasProPaymentPage() {
           body: JSON.stringify({ plan: annual ? "annual" : "monthly", save_card: saveCard }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data?.error || "Impossible de préparer le paiement.");
+        if (!res.ok) {
+          if (res.status === 409 && String(data?.code || "").toLowerCase() === "already_subscribed" && isAppEmbed) {
+            window.location.href = "myfidpass://subscription-paid";
+            return;
+          }
+          throw new Error(data?.error || "Impossible de préparer le paiement.");
+        }
         const clientSecret = String(data?.client_secret || "");
         const nextMode = String(data?.confirm_mode || "payment");
         if (!clientSecret) throw new Error("Client secret manquant.");
@@ -346,7 +361,7 @@ export default function SaasProPaymentPage() {
             ev.complete("success");
             setSuccess("Paiement validé. Activation du plan Pro en cours...");
             window.setTimeout(() => {
-              window.location.href = "/app?subscription_paid=1";
+              navigateAfterSuccessfulPayment(isAppEmbed);
             }, 900);
           } catch (e) {
             ev.complete("fail");
@@ -531,7 +546,7 @@ export default function SaasProPaymentPage() {
 
       setSuccess("Paiement validé. Activation du plan Pro en cours...");
       window.setTimeout(() => {
-        window.location.href = "/app?subscription_paid=1";
+        navigateAfterSuccessfulPayment(isAppEmbed);
       }, 900);
     } catch (err) {
       setError(err?.message || "Le paiement a échoué.");

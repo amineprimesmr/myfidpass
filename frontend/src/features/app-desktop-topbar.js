@@ -54,10 +54,10 @@ function initialsFromEmail(email) {
 
 function displayNameFromEmail(email) {
   const e = String(email || "").trim();
-  if (!e) return "Compte";
+  if (!e) return "Profil";
   const local = e.split("@")[0] || "";
   const cleaned = local.replace(/[._-]+/g, " ").trim();
-  if (!cleaned) return "Compte";
+  if (!cleaned) return "Profil";
   return cleaned
     .split(/\s+/)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())

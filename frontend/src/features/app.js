@@ -3157,10 +3157,25 @@ function initAppDashboard(slug) {
       applyEngagementStatsFromSettings(data);
       runEngagementAutoSuggest({ settingsData: data });
       const fidelityUrlEl = document.getElementById("app-engagement-fidelity-url");
+      const fidelityGameOrigin =
+        typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://myfidpass.fr";
+      const fidelityPublicGameUrl = slug ? `${fidelityGameOrigin}/fidelity/${encodeURIComponent(slug)}` : "";
       if (fidelityUrlEl && slug) {
-        const base = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin : "https://myfidpass.fr";
-        fidelityUrlEl.href = `${base}/fidelity/${encodeURIComponent(slug)}`;
-        fidelityUrlEl.textContent = `${base}/fidelity/${slug}`;
+        fidelityUrlEl.href = fidelityPublicGameUrl;
+        fidelityUrlEl.textContent = `${fidelityGameOrigin}/fidelity/${slug}`;
+      }
+      for (const el of [
+        document.getElementById("app-sidebar-fidelity-program-link"),
+        document.getElementById("app-settings-fidelity-program-link"),
+      ]) {
+        if (!el) continue;
+        if (slug) {
+          el.href = fidelityPublicGameUrl;
+          el.removeAttribute("aria-disabled");
+        } else {
+          el.href = "#";
+          el.setAttribute("aria-disabled", "true");
+        }
       }
       if (personnaliserAddress && (data.location_address ?? data.locationAddress) != null) personnaliserAddress.value = data.location_address ?? data.locationAddress ?? "";
       updateCoordsDisplay(data.location_lat ?? data.locationLat, data.location_lng ?? data.locationLng);
