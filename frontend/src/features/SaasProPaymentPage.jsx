@@ -74,6 +74,11 @@ function formatDateFr(date) {
 }
 
 export default function SaasProPaymentPage() {
+  const isAppEmbed = (() => {
+    if (typeof window === "undefined") return false;
+    const v = String(new URLSearchParams(window.location.search).get("app_embed") || "").toLowerCase();
+    return v === "1" || v === "true" || v === "yes";
+  })();
   const isPaymentRoute =
     typeof window !== "undefined" &&
     /^\/(?:paiement|offre-pro|abonnement-pro|plan-pro)(?:\/checkout)?\/?$/i.test(window.location.pathname);
@@ -346,10 +351,12 @@ export default function SaasProPaymentPage() {
     <div className="saas-pay saas-pay-checkout">
       <main className="saas-pay-checkout-main">
         <header className="saas-pay-checkout-head">
-          <a className="saas-pay-checkout-back" href="/app" id="saas-pro-payment-back">
-            <ArrowLeft size={16} strokeWidth={2.4} />
-            Retour
-          </a>
+          {!isAppEmbed ? (
+            <a className="saas-pay-checkout-back" href="/app" id="saas-pro-payment-back">
+              <ArrowLeft size={16} strokeWidth={2.4} />
+              Retour
+            </a>
+          ) : null}
           <h1>DÉBLOQUEZ TOUT</h1>
           <p className="saas-pay-checkout-trust-lead">
             Commencez à fidéliser dès aujourd&apos;hui pour 1&nbsp;€
