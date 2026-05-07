@@ -512,7 +512,7 @@ export default function SaasProPaymentPage() {
 
         <section className="saas-pay-total">
           <div className="saas-pay-summary-row">
-            <span>Total à payer aujourd'hui</span>
+            <span>Total à payer</span>
             <strong className="saas-pay-total-amount">
               {!annual ? <span className="saas-pay-total-old-price">49,99€</span> : null}
               <span>{totals.totalToday}</span>
@@ -548,40 +548,10 @@ export default function SaasProPaymentPage() {
             ) : null}
             <div className="saas-pay-card-brands" aria-hidden="true">
               <img
-                className="saas-pay-card-brand-logo"
-                src="https://cdn.worldvectorlogo.com/logos/mastercard-4.svg"
-                alt="Mastercard"
+                className="saas-pay-card-brand-logo saas-pay-card-brand-logo--sheet"
+                src="/assets/badges.png?v=2"
+                alt=""
                 loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-              <img
-                className="saas-pay-card-brand-logo"
-                src="https://cdn.worldvectorlogo.com/logos/visa-10.svg"
-                alt="Visa"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-              <img
-                className="saas-pay-card-brand-logo"
-                src="https://cdn.worldvectorlogo.com/logos/google-pay-1.svg"
-                alt="Google Pay"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-              <img
-                className="saas-pay-card-brand-logo"
-                src="https://cdn.worldvectorlogo.com/logos/apple-pay-2.svg"
-                alt="Apple Pay"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
               />
             </div>
           </div>

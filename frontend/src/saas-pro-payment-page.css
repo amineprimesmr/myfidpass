@@ -698,13 +698,13 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   align-items: center;
   justify-content: center;
   position: relative;
-  margin-bottom: 1rem;
+  margin-bottom: 1.45rem;
 }
 
 .saas-pay-checkout-head h1 {
   margin: 0;
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .saas-pay-checkout-back {
@@ -741,7 +741,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 
 .saas-pay-summary-row strong {
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .saas-pay-total-amount {
@@ -849,7 +849,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 
 .saas-pay-timeline-copy p {
   margin: 0;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.88rem;
 }
 
@@ -862,7 +862,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 
 .saas-pay-timeline-row strong {
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -919,7 +919,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   min-height: 3.2rem;
   font-size: 1.35rem;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 600;
   color: #072011;
   background: linear-gradient(180deg, #16f088, #09d670);
   transition: transform 0.18s ease, filter 0.2s ease;
@@ -941,7 +941,8 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 
 .saas-pay-method h2 {
   margin: 0 0 0.7rem;
-  font-size: 1.42rem;
+  font-size: 1.18rem;
+  font-weight: 600;
 }
 
 .saas-pay-method label {
@@ -963,11 +964,13 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 
 .saas-pay-card-number-field {
   position: relative;
-  padding-right: 9.2rem;
+  padding-right: 8.1rem;
 }
 
 .saas-pay-card-number-input {
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .saas-pay-field-placeholder {
@@ -989,6 +992,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   display: inline-flex;
   gap: 0.22rem;
   pointer-events: none;
+  z-index: 3;
 }
 
 .saas-pay-card-brand-logo {
@@ -1000,6 +1004,13 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   border: none;
   padding: 0;
   filter: none;
+}
+
+.saas-pay-card-brand-logo--sheet {
+  width: 7.2rem;
+  height: 1.05rem;
+  object-fit: contain;
+  display: block;
 }
 
 .saas-pay-expiry-field,
@@ -1101,7 +1112,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 .saas-pay-due p {
   margin: 0;
   font-size: 1.12rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .saas-pay-due small {
@@ -1116,7 +1127,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 .saas-pay-due-amount strong {
   display: block;
   font-size: 1.14rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .saas-pay-feedback {
@@ -1141,7 +1152,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   background: #c8f80f;
   color: #121212;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
