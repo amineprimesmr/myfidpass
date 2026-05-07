@@ -57,10 +57,7 @@ export function hasOperationalMerchantAccess(userId) {
 
 export const PLANS = { starter: { max_businesses: 1 }, pro: { max_businesses: 5 } };
 
-/**
- * Valeur de `stripe_subscription_id` pour un abonnement 100 % App Store (RevenueCat),
- * distinct d’un vrai abonnement Stripe `sub_…`.
- */
+/** Ancienne valeur IAP / RevenueCat en base (lecture seule — nouvelles souscriptions = Stripe web uniquement). */
 export const REVENUECAT_STRIPE_SUB_ID_SENTINEL = "revenuecat_iap";
 
 export function getDefaultAllowedBusinessesFromLegacyPlan(planId) {
@@ -257,6 +254,15 @@ export function deactivateRevenueCatOnlySubscription(userId) {
   const now = new Date().toISOString();
   db.prepare("UPDATE subscriptions SET status = 'canceled', updated_at = ? WHERE user_id = ?").run(now, userId);
   return getSubscriptionByUserId(userId);
+}
+
+/** Réinitialise les quotas IAP après abandon RevenueCat / App Store (passage Stripe web uniquement). */
+export function resetMerchantEntitlementAfterLegacyIapRemoval(userId) {
+  if (!userId) return;
+  const now = new Date().toISOString();
+  db.prepare(
+    `UPDATE merchant_entitlements SET allowed_businesses = 1, status = 'inactive', billing_provider = NULL, source = ?, updated_at = ? WHERE user_id = ?`,
+  ).run("stripe_web_only_migration", now, userId);
 }
 
 export function getSubscriptionByUserId(userId) {

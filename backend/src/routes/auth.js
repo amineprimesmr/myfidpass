@@ -57,7 +57,6 @@ import { sendSmsViaTwilio, isTwilioConfigured, friendlyTwilioSendError } from ".
 import { requireAuth, getJwtSecret } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
-import { syncPremiumFromRevenueCatAppUserId } from "../services/revenuecat-subscription-sync.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../lib/google-place-business-enrichment.js";
 import { refreshGooglePlacesSnapshotFromPlaceId } from "../services/social-metrics-service.js";
 
@@ -985,25 +984,6 @@ router.get("/me", (req, res, next) => {
       error: "Impossible de charger le compte.",
       code: "me_failed",
       ...(!isProd && e?.message ? { detail: String(e.message) } : {}),
-    });
-  }
-});
-
-/**
- * POST /api/auth/revenuecat-sync
- * Après achat in-app, force la mise à jour de `subscriptions` depuis l’API RevenueCat (serveur).
- * L’app appelle ceci juste après un achat / restore pour que les routes API (403) voient l’état payant sans attendre le webhook.
- */
-router.post("/revenuecat-sync", requireAuth, async (req, res) => {
-  try {
-    await syncPremiumFromRevenueCatAppUserId(String(req.user.id).trim());
-    const subPayload = authSubscriptionPayload(req.user.id);
-    return res.json({ ok: true, ...subPayload });
-  } catch (e) {
-    console.error("[auth] revenuecat-sync", e);
-    return res.status(500).json({
-      error: "Synchro abonnement App Store impossible.",
-      code: "revenuecat_sync_failed",
     });
   }
 });

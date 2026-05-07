@@ -14,6 +14,8 @@ import {
   getSubscriptionByStripeSubscriptionId,
   upsertBusinessSubscription,
   upsertMerchantEntitlement,
+  deactivateRevenueCatOnlySubscription,
+  resetMerchantEntitlementAfterLegacyIapRemoval,
 } from "../db.js";
 import {
   multiBusinessAnnualTotalCents,
@@ -96,7 +98,7 @@ function isDevSimulatedSubscriptionRow(row) {
   return sid === "dev_simulated" || sid.startsWith("dev_simulated_") || cid === "cus_dev_simulated";
 }
 
-function isRevenueCatSubscriptionRow(row) {
+function isLegacyRevenueCatSubscriptionRow(row) {
   return subscriptionIdOf(row).toLowerCase().startsWith("revenuecat_");
 }
 
@@ -239,15 +241,16 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
     });
     subRow = getSubscriptionByUserId(userId);
   }
+  // Ancienne synchro App Store / RevenueCat : annulation locale pour permettre uniquement Stripe (myfidpass.fr/paiement).
+  if (subRow && isLegacyRevenueCatSubscriptionRow(subRow) && hasActiveSubscription(userId)) {
+    deactivateRevenueCatOnlySubscription(userId);
+    resetMerchantEntitlementAfterLegacyIapRemoval(userId);
+    subRow = getSubscriptionByUserId(userId);
+  }
   if (hasActiveSubscription(userId)) {
-    const activeSource = isRevenueCatSubscriptionRow(subRow) ? "apple_iap" : "stripe_or_legacy";
     return res.status(409).json({
-      error:
-        activeSource === "apple_iap"
-          ? "Un abonnement App Store actif est déjà associé à ce compte."
-          : "Un abonnement actif est déjà associé à ce compte.",
+      error: "Un abonnement actif est déjà associé à ce compte.",
       code: "already_subscribed",
-      active_source: activeSource,
     });
   }
 

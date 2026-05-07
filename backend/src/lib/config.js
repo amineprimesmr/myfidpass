@@ -49,25 +49,3 @@ export const IS_PRODUCTION = process.env.NODE_ENV === "production";
  * URL du frontend (pour CORS, redirections Apple OAuth, etc.)
  */
 export const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
-
-/**
- * Clé secrète RevenueCat (sk_…) — **API REST serveur uniquement** (jamais dans l’app iOS).
- * Retourne null si absente (le serveur fonctionne sans, sauf routes qui en dépendent).
- */
-let _revenueCatSecretApiKey = undefined;
-export function getRevenueCatSecretApiKey() {
-  if (_revenueCatSecretApiKey !== undefined) return _revenueCatSecretApiKey;
-  const k = (process.env.REVENUECAT_SECRET_API_KEY || "").trim();
-  _revenueCatSecretApiKey = k.length > 0 && k.startsWith("sk_") ? k : null;
-  return _revenueCatSecretApiKey;
-}
-
-/**
- * Valeur exacte de l’en-tête `Authorization` attendue pour POST /api/webhooks/revenuecat
- * (copier la même chaîne dans RevenueCat → Project → Webhooks → Authorization).
- * Ex. : `Bearer un_secret_long_aleatoire`
- */
-export function getRevenueCatWebhookAuthorizationExpected() {
-  const v = (process.env.REVENUECAT_WEBHOOK_AUTHORIZATION || "").trim();
-  return v.length > 0 ? v : null;
-}
