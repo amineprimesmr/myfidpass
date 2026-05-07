@@ -543,14 +543,14 @@ export default function SaasProPaymentPage() {
             <div>
               <label>Date d'expiration</label>
               <div className="saas-pay-field saas-pay-expiry-field">
-                <div ref={expiryMountRef} />
+                <div className="saas-pay-stripe-mount" ref={expiryMountRef} />
                 {cardUi.expiryEmpty ? <span className="saas-pay-field-placeholder">MM / AA</span> : null}
               </div>
             </div>
             <div>
               <label>Code de sécurité</label>
               <div className="saas-pay-field saas-pay-cvc-field">
-                <div ref={cvcMountRef} />
+                <div className="saas-pay-stripe-mount" ref={cvcMountRef} />
                 {cardUi.cvcEmpty ? <span className="saas-pay-field-placeholder">CVC</span> : null}
                 <span className="saas-pay-cvc-icon" aria-hidden="true">
                   123

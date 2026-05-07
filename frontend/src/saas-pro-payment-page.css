@@ -1227,6 +1227,18 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   z-index: 1;
 }
 
+/* Conteneur Stripe (cardExpiry / cardCvc) : sans largeur explicite, le div vide peut rester à 0 px en flex → iframes non cliquables (Safari / iOS). */
+.saas-pay-stripe-mount {
+  flex: 1;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 1.35rem;
+  position: relative;
+  /* Au-dessus du faux placeholder : évite iOS/WebKit où pointer-events:none ne libère pas toujours les clics vers l’iframe Stripe. */
+  z-index: 2;
+}
+
 .saas-pay-field-placeholder {
   position: absolute;
   left: 1rem;
@@ -1236,7 +1248,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   font-size: 0.72rem;
   pointer-events: none;
   user-select: none;
-  z-index: 2;
+  z-index: 1;
 }
 
 .saas-pay-card-brands {
@@ -1296,6 +1308,8 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .saas-pay-link-auth {
