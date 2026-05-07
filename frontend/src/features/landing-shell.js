@@ -289,18 +289,7 @@ export function initLandingShell() {
       window.dispatchEvent(new CustomEvent(FINTAP_SCROLL_TO_COMMERCE_EVENT));
       return true;
     }
-    const input = document.getElementById("landing-etablissement");
-    const wrap = input?.closest(".landing-hero-input-wrap");
-    if (!(input instanceof HTMLElement)) return false;
-    input.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => input.focus(), 220);
-    if (wrap instanceof HTMLElement) {
-      wrap.classList.remove("is-guided-focus");
-      void wrap.offsetWidth;
-      wrap.classList.add("is-guided-focus");
-      window.setTimeout(() => wrap.classList.remove("is-guided-focus"), 1400);
-    }
-    return true;
+    return false;
   }
 
   document.querySelectorAll("a[data-scroll-to-onboarding='1']").forEach((link) => {
@@ -308,7 +297,7 @@ export function initLandingShell() {
       event.preventDefault();
       const ok = focusOnboardingField();
       if (!ok) {
-        window.location.href = "/?openOnboarding=1";
+        window.location.href = "/creer-ma-carte?mode=login&redirect=/app";
       }
     });
   });

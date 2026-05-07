@@ -10,9 +10,9 @@ import {
 import {
   API_BASE,
   getAuthToken,
-  getPendingEstablishments,
+  clearPendingEstablishments,
+  getPendingEstablishment,
   setPendingEstablishment,
-  setPendingEstablishments,
 } from "../config.js";
 import "./fintap-hero-scroll.css";
 import "./fintap-hero-blue-surface.css";
@@ -62,34 +62,18 @@ export function FinTapHeroScrollSection() {
   const ctaVisibleRef = useRef(false);
   const ctaHoldUntilRef = useRef(0);
   const [ctaVisible, setCtaVisible] = useState(false);
-  const [shopQuery, setShopQuery] = useState("");
-  const [shopPlaceId, setShopPlaceId] = useState("");
-  const [selectedEstablishments, setSelectedEstablishments] = useState(() =>
-    getPendingEstablishments()
+  const pendingShopInit =
+    typeof window !== "undefined" ? getPendingEstablishment() : null;
+  const [shopQuery, setShopQuery] = useState(
+    () => String(pendingShopInit?.establishment_name || "").trim()
+  );
+  const [shopPlaceId, setShopPlaceId] = useState(
+    () => String(pendingShopInit?.google_place_id || "").trim()
   );
   const [placePredictions, setPlacePredictions] = useState([]);
   const [predictionsOpen, setPredictionsOpen] = useState(false);
   const [placesSearching, setPlacesSearching] = useState(false);
   const [noSuggestionsVisible, setNoSuggestionsVisible] = useState(false);
-  const upsertSelectedEstablishment = (name, pid) => {
-    if (!name || !pid) return [];
-    const normalizedName = String(name).trim();
-    const normalizedPid = String(pid).trim();
-    if (!normalizedName || !normalizedPid) return [];
-    const exists = selectedEstablishments.some(
-      (entry) => entry.google_place_id === normalizedPid
-    );
-    const next = exists
-      ? selectedEstablishments
-      : [
-          ...selectedEstablishments,
-          { establishment_name: normalizedName, google_place_id: normalizedPid },
-        ];
-    setSelectedEstablishments(next);
-    setPendingEstablishments(next);
-    return next;
-  };
-
   const searchInputRef = useRef(null);
   const searchWrapRef = useRef(null);
   const emptyHintTimerRef = useRef(0);
@@ -361,6 +345,11 @@ export function FinTapHeroScrollSection() {
     };
   }, []);
 
+  /** Ancienne liste multi-commerces (localStorage) : retirée du parcours landing — un seul lieu ici, le reste dans le SaaS. */
+  useEffect(() => {
+    clearPendingEstablishments();
+  }, []);
+
   useEffect(() => {
     if (!ctaVisible) {
       setPlacesSearching(false);
@@ -468,7 +457,10 @@ export function FinTapHeroScrollSection() {
     if (!name || !pid) return;
     setShopQuery(name);
     setShopPlaceId(pid);
-    upsertSelectedEstablishment(name, pid);
+    setPendingEstablishment({
+      establishment_name: name,
+      google_place_id: pid,
+    });
     setPredictionsOpen(false);
     setPlacePredictions([]);
     setNoSuggestionsVisible(false);
@@ -479,30 +471,15 @@ export function FinTapHeroScrollSection() {
   const onStartCtaClick = (event) => {
     const selectedName = shopQuery.trim();
     const selectedPid = String(shopPlaceId || "").trim();
-    const fallback = selectedEstablishments[0] || null;
-    const primary = selectedName && selectedPid
-      ? { establishment_name: selectedName, google_place_id: selectedPid }
-      : fallback;
-    if (!primary?.establishment_name || !primary?.google_place_id) {
+    if (!selectedName || !selectedPid) {
       event.preventDefault();
       return;
     }
-    setPendingEstablishment(primary);
-    upsertSelectedEstablishment(primary.establishment_name, primary.google_place_id);
+    setPendingEstablishment({
+      establishment_name: selectedName,
+      google_place_id: selectedPid,
+    });
   };
-
-  const startAddingAnotherEstablishment = () => {
-    setShopQuery("");
-    setShopPlaceId("");
-    setPlacePredictions([]);
-    setPredictionsOpen(false);
-    setNoSuggestionsVisible(false);
-    window.setTimeout(() => {
-      searchInputRef.current?.focus({ preventScroll: true });
-    }, 0);
-  };
-
-  const canAddAnother = selectedEstablishments.length > 0;
 
   return (
     <section
@@ -627,15 +604,6 @@ export function FinTapHeroScrollSection() {
               </div>
             ) : null}
           </label>
-          {canAddAnother ? (
-            <button
-              type="button"
-              className="fintap-hero-iphone__add-business-btn"
-              onClick={startAddingAnotherEstablishment}
-            >
-              Ajouter un commerce
-            </button>
-          ) : null}
           {noSuggestionsVisible && shopQuery.trim().length >= 2 && !placesSearching ? (
             <p className="fintap-hero-iphone__search-empty-hint" role="status">
               Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion

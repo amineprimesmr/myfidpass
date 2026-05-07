@@ -11,7 +11,13 @@ import {
   Wallet,
 } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
-import { API_BASE, STRIPE_PUBLISHABLE_KEY, FIDPASS_AUTH_RESTORED_EVENT, getAuthToken } from "../config.js";
+import {
+  API_BASE,
+  STRIPE_PUBLISHABLE_KEY,
+  FIDPASS_AUTH_RESTORED_EVENT,
+  consumeAuthTransferFromHash,
+  getAuthToken,
+} from "../config.js";
 
 const COUNTRIES = [
   { code: "FR", label: "France" },
@@ -73,6 +79,13 @@ function formatDateFr(date) {
   }).format(date);
 }
 
+/** Montant affiché dans la feuille Apple Pay / Google Pay (centimes), aligné sur « Total à payer » du parcours. */
+function walletSheetAmountCents(isAnnual, trialDaysResolved) {
+  if (!isAnnual) return 100;
+  if (trialDaysResolved === 0) return 100;
+  return 0;
+}
+
 export default function SaasProPaymentPage() {
   const isAppEmbed = (() => {
     if (typeof window === "undefined") return false;
@@ -118,10 +131,22 @@ export default function SaasProPaymentPage() {
   const numberMountRef = useRef(null);
   const expiryMountRef = useRef(null);
   const cvcMountRef = useRef(null);
+  /** Conteneur du bouton Apple Pay / Google Pay (Stripe Payment Request Button). */
+  const paymentRequestButtonMountRef = useRef(null);
+  const paymentRequestButtonElementRef = useRef(null);
   const liquidGlassSwitcherRef = useRef(null);
   const [authHandoffTick, setAuthHandoffTick] = useState(0);
   /** Jours d’essai Stripe renvoyés par l’API (`null` = pas encore chargé). */
   const [stripeTrialDays, setStripeTrialDays] = useState(null);
+  /** Sans JWT : pas d’appel Stripe — évite d’afficher des champs « fantômes » non montés. */
+  const [needsLoginForPayment, setNeedsLoginForPayment] = useState(() =>
+    typeof window !== "undefined" && isPaymentRoute ? !getAuthToken() : false
+  );
+
+  const loginThenPayHref =
+    typeof window !== "undefined"
+      ? `/creer-ma-carte?mode=login&redirect=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`
+      : "/creer-ma-carte?mode=login";
 
   useEffect(() => {
     const bump = () => setAuthHandoffTick((n) => n + 1);
@@ -143,9 +168,19 @@ export default function SaasProPaymentPage() {
       setElementsReady(false);
       setSessionReady(false);
       setStripeTrialDays(null);
+
+      consumeAuthTransferFromHash();
+      const token = getAuthToken();
+      if (!token) {
+        if (!cancelled) {
+          setNeedsLoginForPayment(true);
+          setInitializing(false);
+        }
+        return;
+      }
+      if (!cancelled) setNeedsLoginForPayment(false);
+
       try {
-        const token = getAuthToken();
-        if (!token) throw new Error("Connecte-toi avant de finaliser le paiement.");
         const stripePromiseLocal = getStripeInstance();
         if (!stripePromiseLocal) throw new Error("Stripe n'est pas configuré sur le frontend.");
         const stripe = await stripePromiseLocal;
@@ -172,11 +207,16 @@ export default function SaasProPaymentPage() {
         if (typeof data.trial_days === "number" && !Number.isNaN(data.trial_days)) {
           setStripeTrialDays(data.trial_days);
         }
+        const trialDaysResolved =
+          typeof data.trial_days === "number" && !Number.isNaN(data.trial_days) ? data.trial_days : null;
+        const confirmModeForSession = nextMode;
 
         try {
           numberElementRef.current?.destroy();
           expiryElementRef.current?.destroy();
           cvcElementRef.current?.destroy();
+          paymentRequestButtonElementRef.current?.destroy();
+          paymentRequestButtonElementRef.current = null;
         } catch (_) {}
 
         const elements = stripe.elements({
@@ -237,6 +277,80 @@ export default function SaasProPaymentPage() {
         numberElementRef.current = number;
         expiryElementRef.current = expiry;
         cvcElementRef.current = cvc;
+
+        /**
+         * Apple Pay / Google Pay (Stripe Payment Request Button).
+         * Prérequis prod : Dashboard Stripe → Paramètres → Moyens de paiement → Apple Pay → enregistrer le domaine `myfidpass.fr`.
+         * Safari iOS / macOS ; pas garanti dans une WebView tierce (ex. navigateur intégré d’app).
+         */
+        const walletCents = walletSheetAmountCents(annual, trialDaysResolved);
+        const paymentRequest = stripe.paymentRequest({
+          country: "FR",
+          currency: "eur",
+          total: {
+            label: "MyFidpass Pro",
+            amount: walletCents,
+          },
+          requestPayerEmail: false,
+        });
+
+        paymentRequest.on("paymentmethod", async (ev) => {
+          if (cancelled) {
+            ev.complete("fail");
+            return;
+          }
+          setBusy(true);
+          setError("");
+          try {
+            let confirmResult;
+            const cs = clientSecretRef.current;
+            if (confirmModeForSession === "setup") {
+              confirmResult = await stripe.confirmCardSetup(cs, {
+                payment_method: ev.paymentMethod.id,
+              });
+            } else {
+              confirmResult = await stripe.confirmCardPayment(cs, {
+                payment_method: ev.paymentMethod.id,
+              });
+            }
+            if (confirmResult?.error) {
+              ev.complete("fail");
+              setError(confirmResult.error.message || "Paiement refusé.");
+              return;
+            }
+            ev.complete("success");
+            setSuccess("Paiement validé. Activation du plan Pro en cours...");
+            window.setTimeout(() => {
+              window.location.href = "/app?subscription_paid=1";
+            }, 900);
+          } catch (e) {
+            ev.complete("fail");
+            setError(e?.message || "Le paiement a échoué.");
+          } finally {
+            setBusy(false);
+          }
+        });
+
+        const canWallet = await paymentRequest.canMakePayment();
+        if (!cancelled && canWallet && paymentRequestButtonMountRef.current) {
+          try {
+            const prBtn = elements.create("paymentRequestButton", {
+              paymentRequest,
+              style: {
+                paymentRequestButton: {
+                  type: "default",
+                  theme: "dark",
+                  height: "48px",
+                },
+              },
+            });
+            prBtn.mount(paymentRequestButtonMountRef.current);
+            paymentRequestButtonElementRef.current = prBtn;
+          } catch (prErr) {
+            console.warn("[saas-pay] payment request button:", prErr?.message || prErr);
+          }
+        }
+
         setSessionReady(true);
       } catch (err) {
         if (!cancelled) {
@@ -254,9 +368,11 @@ export default function SaasProPaymentPage() {
         numberElementRef.current?.destroy();
         expiryElementRef.current?.destroy();
         cvcElementRef.current?.destroy();
+        paymentRequestButtonElementRef.current?.destroy();
+        paymentRequestButtonElementRef.current = null;
       } catch (_) {}
     };
-  }, [isPaymentRoute, annual, authHandoffTick]);
+  }, [isPaymentRoute, annual, saveCard, authHandoffTick]);
 
   useEffect(() => {
     setElementsReady(Boolean(cardState.number && cardState.expiry && cardState.cvc));
@@ -525,69 +641,93 @@ export default function SaasProPaymentPage() {
         </section>
 
         <section className="saas-pay-method">
-          <label>Numéro de carte</label>
-          <div className="saas-pay-field saas-pay-card-number-field">
-            <div className="saas-pay-card-number-input" ref={numberMountRef} />
-            {cardUi.numberEmpty ? <span className="saas-pay-field-placeholder">1234 1234 1234 1234</span> : null}
-            <div className="saas-pay-card-brands" aria-hidden="true">
-              <img
-                className="saas-pay-card-brand-logo saas-pay-card-brand-logo--sheet"
-                src="/assets/badges.png?v=2"
-                alt=""
-                loading="lazy"
-              />
+          {needsLoginForPayment ? (
+            <div className="saas-pay-auth-gate">
+              <p className="saas-pay-auth-gate__lead">
+                Connecte-toi pour charger Stripe et saisir ta carte (ou Apple&nbsp;Pay sur Safari). Sans session, les
+                champs ne peuvent pas s&apos;afficher.
+              </p>
+              <a className="saas-pay-continue saas-pay-continue--link" href={loginThenPayHref}>
+                Se connecter
+              </a>
+              <p className="saas-pay-auth-gate__hint">
+                Depuis l&apos;app, utilise le lien « payer » qui inclut ta session, ou ouvre cette page après connexion sur
+                le même navigateur.
+              </p>
             </div>
-          </div>
+          ) : (
+            <>
+              <div ref={paymentRequestButtonMountRef} className="saas-pay-wallet-mount" />
+              <p className="saas-pay-wallet-divider">ou payer par carte</p>
 
-          <div className="saas-pay-inline">
-            <div>
-              <label>Date d'expiration</label>
-              <div className="saas-pay-field saas-pay-expiry-field">
-                <div className="saas-pay-stripe-mount" ref={expiryMountRef} />
-                {cardUi.expiryEmpty ? <span className="saas-pay-field-placeholder">MM / AA</span> : null}
+              <label>Numéro de carte</label>
+              <div className="saas-pay-field saas-pay-card-number-field">
+                <div
+                  className="saas-pay-card-number-input saas-pay-stripe-mount"
+                  ref={numberMountRef}
+                />
+                {cardUi.numberEmpty ? <span className="saas-pay-field-placeholder">1234 1234 1234 1234</span> : null}
+                <div className="saas-pay-card-brands" aria-hidden="true">
+                  <img
+                    className="saas-pay-card-brand-logo saas-pay-card-brand-logo--sheet"
+                    src="/assets/badges.png?v=2"
+                    alt=""
+                    loading="lazy"
+                  />
+                </div>
               </div>
-            </div>
-            <div>
-              <label>Code de sécurité</label>
-              <div className="saas-pay-field saas-pay-cvc-field">
-                <div className="saas-pay-stripe-mount" ref={cvcMountRef} />
-                {cardUi.cvcEmpty ? <span className="saas-pay-field-placeholder">CVC</span> : null}
-                <span className="saas-pay-cvc-icon" aria-hidden="true">
-                  123
-                </span>
+
+              <div className="saas-pay-inline">
+                <div>
+                  <label>Date d'expiration</label>
+                  <div className="saas-pay-field saas-pay-expiry-field">
+                    <div className="saas-pay-stripe-mount" ref={expiryMountRef} />
+                    {cardUi.expiryEmpty ? <span className="saas-pay-field-placeholder">MM / AA</span> : null}
+                  </div>
+                </div>
+                <div>
+                  <label>Code de sécurité</label>
+                  <div className="saas-pay-field saas-pay-cvc-field">
+                    <div className="saas-pay-stripe-mount" ref={cvcMountRef} />
+                    {cardUi.cvcEmpty ? <span className="saas-pay-field-placeholder">CVC</span> : null}
+                    <span className="saas-pay-cvc-icon" aria-hidden="true">
+                      123
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <label>Pays</label>
-          <div className="saas-pay-select-wrap">
-            <select value={country} onChange={(e) => setCountry(e.target.value)}>
-              {COUNTRIES.map((entry) => (
-                <option key={entry.code} value={entry.code}>
-                  {entry.label}
-                </option>
-              ))}
-            </select>
-          </div>
+              <label>Pays</label>
+              <div className="saas-pay-select-wrap">
+                <select value={country} onChange={(e) => setCountry(e.target.value)}>
+                  {COUNTRIES.map((entry) => (
+                    <option key={entry.code} value={entry.code}>
+                      {entry.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {error ? <p className="saas-pay-feedback is-error">{error}</p> : null}
-          {success ? <p className="saas-pay-feedback is-success">{success}</p> : null}
+              {error ? <p className="saas-pay-feedback is-error">{error}</p> : null}
+              {success ? <p className="saas-pay-feedback is-success">{success}</p> : null}
 
-          <button
-            type="button"
-            className="saas-pay-continue"
-            onClick={handlePay}
-            disabled={busy || initializing || !elementsReady}
-          >
-            <LockKeyhole size={18} />
-            {busy
-              ? "Paiement en cours..."
-              : initializing
-                ? "Chargement du module..."
-                : !annual || stripeTrialDays === 0
-                  ? "Payer 1€"
-                  : "Continuer"}
-          </button>
+              <button
+                type="button"
+                className="saas-pay-continue"
+                onClick={handlePay}
+                disabled={busy || initializing || !elementsReady}
+              >
+                <LockKeyhole size={18} />
+                {busy
+                  ? "Paiement en cours..."
+                  : initializing
+                    ? "Chargement du module..."
+                    : !annual || stripeTrialDays === 0
+                      ? "Payer 1€"
+                      : "Continuer"}
+              </button>
+            </>
+          )}
         </section>
       </main>
     </div>

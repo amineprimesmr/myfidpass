@@ -2,8 +2,6 @@ import "./../creation-carte.css";
 import {
   API_BASE,
   getPendingEstablishment,
-  getPendingEstablishments,
-  clearPendingEstablishments,
   setAuthToken,
   setRefreshToken,
   setPendingEstablishment,
@@ -49,9 +47,6 @@ export default {
         return true;
       }
     })();
-    const shouldSyncMultiBusinesses = ["1", "true", "yes"].includes(
-      String(params.get("onboardingMulti") || "").trim().toLowerCase()
-    );
     document.body.classList.toggle("page-builder-embed", isEmbed);
     const initialEmail = String(params.get("email") || "").trim();
     const redirectRaw = String(params.get("redirect") || "").trim();
@@ -235,14 +230,8 @@ export default {
     if (!(form instanceof HTMLFormElement) || !(emailInput instanceof HTMLInputElement)) return;
 
     const pendingEstablishment = getPendingEstablishment();
-    const pendingEstablishments = getPendingEstablishments();
-    const primaryFromList = pendingEstablishments[0] || null;
-    const establishmentName = String(
-      commerce || pendingEstablishment?.establishment_name || primaryFromList?.establishment_name || ""
-    ).trim();
-    const placeId = String(
-      params.get("place_id") || pendingEstablishment?.google_place_id || primaryFromList?.google_place_id || ""
-    ).trim();
+    const establishmentName = String(commerce || pendingEstablishment?.establishment_name || "").trim();
+    const placeId = String(params.get("place_id") || pendingEstablishment?.google_place_id || "").trim();
     if (commerceReview instanceof HTMLElement) {
       commerceReview.textContent = establishmentName || "Commerce non renseigné";
     }
@@ -292,37 +281,6 @@ export default {
       }, 180);
     };
 
-    const syncPendingBusinessesAfterAuth = async (token, primaryPlaceId) => {
-      if (!shouldSyncMultiBusinesses || !token) return;
-      const primary = String(primaryPlaceId || "").trim();
-      const all = getPendingEstablishments();
-      if (!Array.isArray(all) || all.length === 0) return;
-      const candidates = all.filter(
-        (entry) =>
-          entry?.establishment_name &&
-          entry?.google_place_id &&
-          entry.google_place_id !== primary
-      );
-      for (const entry of candidates) {
-        try {
-          await fetch(`${API_BASE}/api/businesses/bootstrap-place`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              establishment_name: entry.establishment_name,
-              google_place_id: entry.google_place_id,
-            }),
-          });
-        } catch (_) {
-          // On ne bloque jamais la connexion principale.
-        }
-      }
-      clearPendingEstablishments();
-    };
-
     const handleOAuthSuccess = async (data) => {
       if (!data?.token) {
         showOAuthError("Connexion réussie mais session invalide.");
@@ -330,7 +288,6 @@ export default {
       }
       setAuthToken(data.token);
       setRefreshToken(data.refreshToken || null);
-      await syncPendingBusinessesAfterAuth(data.token, placeId);
       window.location.href = redirectPath;
     };
 

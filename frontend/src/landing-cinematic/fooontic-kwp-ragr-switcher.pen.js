@@ -1,4 +1,3 @@
-import { FINTAP_SCROLL_TO_COMMERCE_EVENT } from "./fintap-hero-scroll-lerp.js";
 import { getAuthToken } from "../config.js";
 
 /** CodePen fooontic/KwpRaGr — logique init (appelée après injection du HTML). */
@@ -6,6 +5,8 @@ export function runFooonticKwpRaGrSwitcherPen() {
   const switcher = document.querySelector(".switcher");
   if (!switcher) return;
   switcher.classList.toggle("switcher--authed", !!getAuthToken());
+
+  const SAAS_LOGIN = "/creer-ma-carte?mode=login&redirect=/app";
 
   const SCROLL_ACTIONS = {
     "1": () => window.scrollTo({ top: 0, behavior: "smooth" }), // home → top of page
@@ -18,13 +19,11 @@ export function runFooonticKwpRaGrSwitcherPen() {
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     },
     "4": () => {
-      // Si l'utilisateur est déjà connecté, l'envoyer directement vers le SaaS.
       if (getAuthToken()) {
         window.location.assign("/app");
         return;
       }
-      // Sinon, déclencher le scroll animé piloté par la section hero vers l'onboarding commerce.
-      window.dispatchEvent(new CustomEvent(FINTAP_SCROLL_TO_COMMERCE_EVENT));
+      window.location.assign(SAAS_LOGIN);
     },
   };
 
