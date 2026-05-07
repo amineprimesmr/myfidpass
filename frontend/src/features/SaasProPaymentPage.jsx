@@ -143,6 +143,9 @@ export default function SaasProPaymentPage() {
     typeof window !== "undefined" && isPaymentRoute ? !getAuthToken() : false
   );
 
+  /** True uniquement après `CardElement.mount()` réussi — évite placeholders « 1234… » sans iframe Stripe (illisible / non cliquable). */
+  const [stripeFieldsLive, setStripeFieldsLive] = useState(false);
+
   const loginThenPayHref =
     typeof window !== "undefined"
       ? `/creer-ma-carte?mode=login&redirect=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`
@@ -168,6 +171,7 @@ export default function SaasProPaymentPage() {
       setElementsReady(false);
       setSessionReady(false);
       setStripeTrialDays(null);
+      setStripeFieldsLive(false);
 
       consumeAuthTransferFromHash();
       const token = getAuthToken();
@@ -271,12 +275,30 @@ export default function SaasProPaymentPage() {
           setCardUi((s) => ({ ...s, cvcEmpty: !!event.empty }));
           if (event?.error?.message) setError(event.error.message);
         });
-        number.mount(numberMountRef.current);
-        expiry.mount(expiryMountRef.current);
-        cvc.mount(cvcMountRef.current);
+
+        /** Attendre le commit React des champs (refs non null), sinon mount(undefined) = pas d’iframe → impossible de saisir. */
+        await Promise.resolve();
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+        if (cancelled) return;
+
+        const nm = numberMountRef.current;
+        const em = expiryMountRef.current;
+        const cm = cvcMountRef.current;
+        if (!nm || !em || !cm) {
+          throw new Error(
+            "Les champs carte ne sont pas encore disponibles. Recharge la page ou reconnecte-toi puis réessaie."
+          );
+        }
+
+        number.mount(nm);
+        expiry.mount(em);
+        cvc.mount(cm);
         numberElementRef.current = number;
         expiryElementRef.current = expiry;
         cvcElementRef.current = cvc;
+        setStripeFieldsLive(true);
 
         /**
          * Apple Pay / Google Pay (Stripe Payment Request Button).
@@ -355,6 +377,7 @@ export default function SaasProPaymentPage() {
       } catch (err) {
         if (!cancelled) {
           setStripeTrialDays(null);
+          setStripeFieldsLive(false);
           setError(err?.message || "Impossible de charger le module de paiement sécurisé.");
         }
       } finally {
@@ -364,6 +387,7 @@ export default function SaasProPaymentPage() {
     setupEmbeddedCheckout();
     return () => {
       cancelled = true;
+      setStripeFieldsLive(false);
       try {
         numberElementRef.current?.destroy();
         expiryElementRef.current?.destroy();
@@ -666,7 +690,9 @@ export default function SaasProPaymentPage() {
                   className="saas-pay-card-number-input saas-pay-stripe-mount"
                   ref={numberMountRef}
                 />
-                {cardUi.numberEmpty ? <span className="saas-pay-field-placeholder">1234 1234 1234 1234</span> : null}
+                {stripeFieldsLive && cardUi.numberEmpty ? (
+                  <span className="saas-pay-field-placeholder">1234 1234 1234 1234</span>
+                ) : null}
                 <div className="saas-pay-card-brands" aria-hidden="true">
                   <img
                     className="saas-pay-card-brand-logo saas-pay-card-brand-logo--sheet"
@@ -682,14 +708,18 @@ export default function SaasProPaymentPage() {
                   <label>Date d'expiration</label>
                   <div className="saas-pay-field saas-pay-expiry-field">
                     <div className="saas-pay-stripe-mount" ref={expiryMountRef} />
-                    {cardUi.expiryEmpty ? <span className="saas-pay-field-placeholder">MM / AA</span> : null}
+                    {stripeFieldsLive && cardUi.expiryEmpty ? (
+                      <span className="saas-pay-field-placeholder">MM / AA</span>
+                    ) : null}
                   </div>
                 </div>
                 <div>
                   <label>Code de sécurité</label>
                   <div className="saas-pay-field saas-pay-cvc-field">
                     <div className="saas-pay-stripe-mount" ref={cvcMountRef} />
-                    {cardUi.cvcEmpty ? <span className="saas-pay-field-placeholder">CVC</span> : null}
+                    {stripeFieldsLive && cardUi.cvcEmpty ? (
+                      <span className="saas-pay-field-placeholder">CVC</span>
+                    ) : null}
                     <span className="saas-pay-cvc-icon" aria-hidden="true">
                       123
                     </span>

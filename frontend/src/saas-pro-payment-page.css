@@ -872,10 +872,11 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   margin-top: 0.7rem;
 }
 
-/* Au-dessus de la timeline (z-index: 2) : sinon toute la colonne timeline reste « au-dessus » des blocs suivants et vole les clics (iframes Stripe). */
+/* Au-dessus de la timeline : éviter qu’un bloc « passe au-dessus » et intercepte les clics vers les iframes Stripe. */
 .saas-pay-checkout .saas-pay-total,
 .saas-pay-checkout .saas-pay-method {
   position: relative;
+  isolation: isolate;
   z-index: 3;
 }
 
