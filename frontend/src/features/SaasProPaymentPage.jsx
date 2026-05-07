@@ -83,9 +83,9 @@ export default function SaasProPaymentPage() {
     typeof window !== "undefined" &&
     /^\/(?:paiement|offre-pro|abonnement-pro|plan-pro)(?:\/checkout)?\/?$/i.test(window.location.pathname);
   const initialPlanAnnual = (() => {
-    if (typeof window === "undefined") return true;
+    if (typeof window === "undefined") return false;
     const planParam = new URLSearchParams(window.location.search).get("plan");
-    return String(planParam || "").toLowerCase() === "monthly" ? false : true;
+    return String(planParam || "").toLowerCase() === "annual";
   })();
   const [annual, setAnnual] = useState(initialPlanAnnual);
   const [expanded, setExpanded] = useState(false);
@@ -120,6 +120,8 @@ export default function SaasProPaymentPage() {
   const cvcMountRef = useRef(null);
   const liquidGlassSwitcherRef = useRef(null);
   const [authHandoffTick, setAuthHandoffTick] = useState(0);
+  /** Jours d’essai Stripe renvoyés par l’API (`null` = pas encore chargé). */
+  const [stripeTrialDays, setStripeTrialDays] = useState(null);
 
   useEffect(() => {
     const bump = () => setAuthHandoffTick((n) => n + 1);
@@ -140,6 +142,7 @@ export default function SaasProPaymentPage() {
       setSuccess("");
       setElementsReady(false);
       setSessionReady(false);
+      setStripeTrialDays(null);
       try {
         const token = getAuthToken();
         if (!token) throw new Error("Connecte-toi avant de finaliser le paiement.");
@@ -166,6 +169,9 @@ export default function SaasProPaymentPage() {
         if (cancelled) return;
         clientSecretRef.current = clientSecret;
         setConfirmMode(nextMode);
+        if (typeof data.trial_days === "number" && !Number.isNaN(data.trial_days)) {
+          setStripeTrialDays(data.trial_days);
+        }
 
         try {
           numberElementRef.current?.destroy();
@@ -234,6 +240,7 @@ export default function SaasProPaymentPage() {
         setSessionReady(true);
       } catch (err) {
         if (!cancelled) {
+          setStripeTrialDays(null);
           setError(err?.message || "Impossible de charger le module de paiement sécurisé.");
         }
       } finally {
@@ -255,25 +262,33 @@ export default function SaasProPaymentPage() {
     setElementsReady(Boolean(cardState.number && cardState.expiry && cardState.cvc));
   }, [cardState]);
 
-  const totals = useMemo(
-    () =>
-      annual
-        ? {
-            planLabel: "Pro annuel",
-            planAmount: "399,99€",
-            promoLabel: "Promo lancement (1er mois)",
-            promoAmount: "-398,99€",
-            totalToday: "1,00€",
-          }
-        : {
-            planLabel: "Pro mensuel",
-            planAmount: "49,99€",
-            promoLabel: "Promo lancement (1er mois)",
-            promoAmount: "-48,99€ (-98%)",
-            totalToday: "1,00€",
-          },
-    [annual]
-  );
+  const totals = useMemo(() => {
+    if (!annual) {
+      return {
+        planLabel: "Pro mensuel",
+        planAmount: "49,99€",
+        promoLabel: "Promo lancement (1er mois)",
+        promoAmount: "-48,99€ (-98%)",
+        totalToday: "1€",
+      };
+    }
+    if (stripeTrialDays === 0) {
+      return {
+        planLabel: "Pro annuel",
+        planAmount: "399€",
+        promoLabel: "Promo lancement",
+        promoAmount: "-398€",
+        totalToday: "1€",
+      };
+    }
+    return {
+      planLabel: "Pro annuel",
+      planAmount: "399€",
+      promoLabel: "Période d’essai",
+      promoAmount: "Sans prélèvement",
+      totalToday: "0€",
+    };
+  }, [annual, stripeTrialDays]);
   const billingTimeline = useMemo(() => {
     const now = new Date();
     const renewAnchor = new Date(now);
@@ -283,8 +298,36 @@ export default function SaasProPaymentPage() {
       ? "Soit 399\u00a0€ facturés annuellement,\u00a0sans\u00a0engagement."
       : "Sans engagement, annulable à tout moment\u202f!";
     const renewAmount = annual ? "34 € /mois" : "49,99 € /mois";
+
+    if (!annual) {
+      return [
+        { title: "Aujourd’hui", subtitle: "Offre premier mois", amount: "Payez 1€", icon: "lock" },
+        {
+          title: formatDateFr(renewAnchor),
+          subtitle: renewSubtitle,
+          amount: renewAmount,
+          icon: "check",
+        },
+      ];
+    }
+    if (stripeTrialDays === 0) {
+      return [
+        { title: "Aujourd’hui", subtitle: "Offre premier mois", amount: "Payez 1€", icon: "lock" },
+        {
+          title: formatDateFr(renewAnchor),
+          subtitle: renewSubtitle,
+          amount: renewAmount,
+          icon: "check",
+        },
+      ];
+    }
     return [
-      { title: "Aujourd’hui", subtitle: "Offre premier mois", amount: "Payez 1€", icon: "lock" },
+      {
+        title: "Aujourd’hui",
+        subtitle: "Essai gratuit — enregistrement de carte, aucun prélèvement",
+        amount: "0€",
+        icon: "lock",
+      },
       {
         title: formatDateFr(renewAnchor),
         subtitle: renewSubtitle,
@@ -292,10 +335,10 @@ export default function SaasProPaymentPage() {
         icon: "check",
       },
     ];
-  }, [annual]);
+  }, [annual, stripeTrialDays]);
 
   const priceLine = annual
-    ? { main: "399,99€", detail: "facturé annuellement" }
+    ? { main: "399€", detail: "facturé annuellement" }
     : { main: "49,99€", detail: "par mois" };
   const compareRows = expanded ? [...BASE_COMPARE, ...EXTRA_COMPARE] : BASE_COMPARE;
 
@@ -359,7 +402,19 @@ export default function SaasProPaymentPage() {
           ) : null}
           <h1>DÉBLOQUEZ TOUT</h1>
           <p className="saas-pay-checkout-trust-lead">
-            Commencez à fidéliser dès aujourd&apos;hui pour 1&nbsp;€
+            {annual ? (
+              stripeTrialDays === 0 ? (
+                <>
+                  Commencez pour <strong>1&nbsp;€</strong>, puis <strong>399&nbsp;€&nbsp;/&nbsp;an</strong>
+                </>
+              ) : (
+                <>
+                  Essai gratuit, puis <strong>399&nbsp;€&nbsp;/&nbsp;an</strong>
+                </>
+              )
+            ) : (
+              <>Commencez à fidéliser dès aujourd&apos;hui pour 1&nbsp;€</>
+            )}
           </p>
           <div className="saas-pay-checkout-trust-badge" role="status">
             <div className="saas-pay-checkout-trust-badge__stack" aria-hidden="true">
@@ -463,7 +518,7 @@ export default function SaasProPaymentPage() {
           <div className="saas-pay-summary-row">
             <span>Total à payer</span>
             <strong className="saas-pay-total-amount">
-              <span className="saas-pay-total-old-price">{annual ? "399,99€" : "49,99€"}</span>
+              <span className="saas-pay-total-old-price">{annual ? "399€" : "49,99€"}</span>
               <span>{totals.totalToday}</span>
             </strong>
           </div>
@@ -529,7 +584,9 @@ export default function SaasProPaymentPage() {
               ? "Paiement en cours..."
               : initializing
                 ? "Chargement du module..."
-                : "Payer 1€"}
+                : !annual || stripeTrialDays === 0
+                  ? "Payer 1€"
+                  : "Continuer"}
           </button>
         </section>
       </main>

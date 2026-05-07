@@ -5,7 +5,8 @@ L’**essai gratuit commerçant** sur le **compte** (accès complet avant abonne
 **Offre cible (site + alignement app) :**
 
 - **Mensuel** : 3 j d’essai Stripe, puis **1,00 €** le 1er mois, puis **49,99 €/mois** (coupon **une fois** sur le 1er prélèvement, voir ci‑dessous).
-- **Annuel** : 3 j d’essai Stripe, puis **399,00 €/an**.
+- **Annuel (recommandé)** : essai Stripe **plus long** (`STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL`, ex. **30** j ≈ 1er mois sans prélèvement), puis **399,00 €/an** à la **première** facturation puis aux renouvellements — **sans** réduire toute la première année à 1 €.
+- **Annuel (alternatif rare)** : pas d’essai (`STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL=0`) + coupon **once** **398 €** → première **facture annuelle** à **1 €** (toute la 1ʳᵉ année à 1 €, pas « seulement le 1er mois »).
 
 Le `/abonnement` (Payment Element) appelle `POST /api/payment/create-embedded-subscription` avec `{ "plan": "monthly" | "annual" }` et les `price_…` ci‑dessous.
 
@@ -14,13 +15,31 @@ Le `/abonnement` (Payment Element) appelle `POST /api/payment/create-embedded-su
 ## 1. Produits et prix (production)
 
 1. **Produits** → abonnement **mensuel** : prix récurrent **49,99 €/mois** → noter `STRIPE_PRICE_ID_MONTHLY` (ou conserver l’existant en `STRIPE_PRICE_ID_STARTER`).
-2. Même **produit** ou produit distinct **annuel** : **399,00 €/an** → `STRIPE_PRICE_ID_ANNUAL`.
+2. Même **produit** ou produit distinct **annuel** : **399,00 €/an** → `STRIPE_PRICE_ID_ANNUAL` (ex. `price_1TUPHO…`).
 
-### 1er mois à 1,00 € (mensuel)
+Sur la fiche **prix** Stripe, tu peux laisser **« Jours d’essai » vide** : l’essai gratuit est posé par l’API (`STRIPE_SUBSCRIPTION_TRIAL_DAYS`), pas par le prix catalogue.
 
-1. **Coupons** : montant fixe **48,99 €** de remise, durée **Une seule fois** — la **première** facture payante (après l’essai) est donc **1,00 €** sur un tarif 49,99 €.
-2. Variable Railway : `STRIPE_COUPON_ID_FIRST_MONTH_1_EUR` = **id** du coupon (ex. `jTxxx...`), pas le code client.
-3. (Option) Code promotionnel `MYFID1EURO` pour **Payment Link** hébergé (lien en tête de site) — le flux principal est le **Payment Element** sur `/abonnement`.
+### 1er prélèvement à 1,00 € (mensuel)
+
+1. **Coupons** : montant fixe **48,99 €** de remise, durée **Une seule fois** — la **première** facture payante (après l’essai) est **1,00 €** sur **49,99 €**.
+2. Railway : `STRIPE_COUPON_ID_FIRST_MONTH_1_EUR` = **id** du coupon (`jTX…` / `XXXX`), pas le code client affiché au payeur.
+
+### Essai « premier mois » sur l’annuel (sans coupon)
+
+1. Garde `STRIPE_PRICE_ID_ANNUAL` sur ton prix **399,00 €/an**.
+2. Mensuel : `STRIPE_SUBSCRIPTION_TRIAL_DAYS=3` (inchangé).
+3. Annuel : **`STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL=30`** (ou **31**) — pendant cet essai, **aucun prélèvement** du montant annuel ; à la fin, Stripe facture **399 €** pour la période annuelle suivante.
+4. **Ne définis pas** `STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR` dans ce scénario (sinon tu retombes sur une 1ʳᵉ facture à 1 € pour **toute** la période annuelle).
+
+### Alternative : 1 € sur la première facture annuelle entière (coupon)
+
+À n’utiliser que si tu acceptes que la **première année** soit facturée **1 € au total** (ce n’est pas « 1 € le premier mois puis 399 € »).
+
+1. Coupon séparé du mensuel : remise fixe **398,00 €**, durée **Une seule fois**.
+2. Railway : `STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR` = id du coupon **et** **`STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL=0`** (sinon le coupon annuel est ignoré par l’API tant qu’un essai > 0 est configuré).
+3. Si le prix annuel ≠ **399,00 €**, remise = `tarif − 1 €`.
+
+(Option) Code promo `MYFID1EURO` pour **Payment Link** hébergé — le flux principal est le **Payment Element** sur `/paiement` / `/abonnement`.
 
 ---
 
@@ -45,8 +64,10 @@ Le `/abonnement` (Payment Element) appelle `POST /api/payment/create-embedded-su
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` |
 | `STRIPE_PRICE_ID_MONTHLY` ou `STRIPE_PRICE_ID_STARTER` | `price_…` mensuel 49,99 € |
 | `STRIPE_PRICE_ID_ANNUAL` | `price_…` annuel 399,00 € |
-| `STRIPE_SUBSCRIPTION_TRIAL_DAYS` | `3` (0 = pas d’essai Stripe sur la souscription) |
-| `STRIPE_COUPON_ID_FIRST_MONTH_1_EUR` | Id coupon **once** (mensuel uniquement) |
+| `STRIPE_SUBSCRIPTION_TRIAL_DAYS` | Essai **mensuel** (défaut `3`). `0` = pas d’essai |
+| `STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL` | Optionnel — essai **annuel** ; si vide = même valeur que la ligne du dessus. Ex. `30` |
+| `STRIPE_COUPON_ID_FIRST_MONTH_1_EUR` | Id coupon **once** — 1 € sur **première** facture mensuelle |
+| `STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR` | Optionnel — uniquement si **pas** d’essai annuel (`…_ANNUAL=0`) : 1 € sur la **1ʳᵉ facture annuelle** |
 | `MERCHANT_TRIAL_DAYS` | Optionnel — défaut **3** j (essai compte API) |
 
 ---
@@ -60,6 +81,7 @@ Le `/abonnement` (Payment Element) appelle `POST /api/payment/create-embedded-su
 
 ## Résumé
 
-1. Deux `price_…` (mensuel + annuel) + coupon **once** pour le 1er mois à 1 €.  
-2. `STRIPE_SUBSCRIPTION_TRIAL_DAYS=3` + `STRIPE_COUPON_ID_FIRST_MONTH_1_EUR` + essai compte `MERCHANT_TRIAL_DAYS=3`.  
-3. Redéployer le backend / le frontend après modification des variables.
+1. Deux `price_…` (mensuel + annuel) ; coupon mensuel **48,99 €** once pour le **1 €** post-essai court.  
+2. Annuel type « 1er mois gratuit » : **`STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL=30`** sans coupon annuel (ou coupon annuel seulement si essai annuel = **0**).  
+3. `STRIPE_SUBSCRIPTION_TRIAL_DAYS` + essai compte `MERCHANT_TRIAL_DAYS=3`.  
+4. Redéployer le backend / le frontend après modification des variables.

@@ -39,9 +39,15 @@ const PRICE_ID_ANNUAL = process.env.STRIPE_PRICE_ID_ANNUAL || null;
 /** Rétrocompat : anciens scripts qui lisent `PRICE_ID_STARTER`. */
 const PRICE_ID_STARTER = PRICE_ID_MONTHLY;
 const STRIPE_SUBSCRIPTION_TRIAL_DAYS = Math.max(0, parseInt(String(process.env.STRIPE_SUBSCRIPTION_TRIAL_DAYS || "3"), 10) || 0);
+/** Essai sur l’offre annuelle (jours). Si non défini → même valeur que `STRIPE_SUBSCRIPTION_TRIAL_DAYS`. Ex. `30` ≈ 1er mois sans prélèvement puis 399 €/an. */
+const RAW_STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL = process.env.STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL;
 /** Coupon Stripe (durée `once`) : réduit le 1er prélèvement post-essai à 1 € sur le prix mensuel (ex. 48,99 € de remise sur 49,99 €). */
 const STRIPE_COUPON_ID_FIRST_MONTH_1_EUR = process.env.STRIPE_COUPON_ID_FIRST_MONTH_1_EUR
   ? String(process.env.STRIPE_COUPON_ID_FIRST_MONTH_1_EUR).trim() || null
+  : null;
+/** Coupon Stripe (durée `once`) : 1ère facture annuelle à 1 € sur un prix 399,00 €/an (remise fixe 398,00 €). */
+const STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR = process.env.STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR
+  ? String(process.env.STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR).trim() || null
   : null;
 /** Prix Stripe (mode paiement unique) — pack « créations flyer ». */
 const PRICE_ID_FLYER_PACK = process.env.STRIPE_PRICE_ID_FLYER_PACK || null;
@@ -60,9 +66,20 @@ function parseMerchantSlotCount(body) {
   return Math.min(5, Math.floor(n));
 }
 
-function buildStripeSubscriptionTrialConfig() {
-  if (STRIPE_SUBSCRIPTION_TRIAL_DAYS <= 0) return {};
-  return { trial_period_days: STRIPE_SUBSCRIPTION_TRIAL_DAYS };
+function getTrialDaysForPlan(plan) {
+  const p = String(plan || "").toLowerCase();
+  if (p !== "annual") return STRIPE_SUBSCRIPTION_TRIAL_DAYS;
+  const raw = RAW_STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL;
+  if (raw === undefined || raw === null || String(raw).trim() === "") {
+    return STRIPE_SUBSCRIPTION_TRIAL_DAYS;
+  }
+  return Math.max(0, parseInt(String(raw), 10) || 0);
+}
+
+function buildStripeSubscriptionTrialConfig(plan) {
+  const days = getTrialDaysForPlan(plan);
+  if (days <= 0) return {};
+  return { trial_period_days: days };
 }
 
 function subscriptionIdOf(row) {
@@ -170,11 +187,17 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
       metadata: { user_id: String(userId), plan },
       subscription_data: {
         metadata: { user_id: String(userId), plan },
-        ...buildStripeSubscriptionTrialConfig(),
+        ...buildStripeSubscriptionTrialConfig(plan),
       },
     };
     if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
       sessionPayload.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
+    } else if (
+      plan === "annual" &&
+      STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR &&
+      getTrialDaysForPlan("annual") <= 0
+    ) {
+      sessionPayload.discounts = [{ coupon: STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR }];
     }
     const session = await stripe.checkout.sessions.create(sessionPayload);
     return res.json({ url: session.url });
@@ -297,7 +320,7 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       metadata: baseMeta,
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
-      ...buildStripeSubscriptionTrialConfig(),
+      ...buildStripeSubscriptionTrialConfig(plan),
       expand: [
         "latest_invoice.confirmation_secret",
         "latest_invoice.payment_intent",
@@ -307,8 +330,14 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
 
     if (useCatalogPrice) {
       subscriptionParams.items = [{ price: priceId, quantity: 1 }];
-      if (STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
+      if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
         subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
+      } else if (
+        plan === "annual" &&
+        STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR &&
+        getTrialDaysForPlan("annual") <= 0
+      ) {
+        subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR }];
       }
     } else {
       const unitAmount =
@@ -341,7 +370,7 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       console.error("[payment] embedded subscription: missing client_secret", {
         subscriptionId: subscription.id,
         plan,
-        trialDays: STRIPE_SUBSCRIPTION_TRIAL_DAYS,
+        trialDays: getTrialDaysForPlan(plan),
         pendingSetupIntent: pendingId || null,
         latestInvoice:
           typeof subscription.latest_invoice === "string"
@@ -353,7 +382,7 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       } catch (_) {}
       return res.status(500).json({
         error:
-          "Impossible de préparer le paiement (essai : SetupIntent / sinon facture). Vérifiez STRIPE_SUBSCRIPTION_TRIAL_DAYS, les price_id et, si besoin, STRIPE_COUPON_ID_FIRST_MONTH_1_EUR côté Stripe.",
+          "Impossible de préparer le paiement (essai : SetupIntent / sinon facture). Vérifiez STRIPE_SUBSCRIPTION_TRIAL_DAYS, STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL, les price_id et les coupons côté Stripe.",
         code: "missing_payment_intent",
       });
     }
@@ -364,6 +393,7 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       client_secret: secretResult.clientSecret,
       confirm_mode: secretResult.mode,
       subscription_id: subscription.id,
+      trial_days: getTrialDaysForPlan(plan),
     });
   } catch (err) {
     console.error("Stripe embedded subscription error:", err);
