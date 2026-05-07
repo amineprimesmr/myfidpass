@@ -284,7 +284,7 @@ export default function SaasProPaymentPage() {
       ];
     }
     return [
-      { title: "Aujourd’hui", subtitle: "Offre lancement", amount: "1,00 €", icon: "check" },
+      { title: "Aujourd’hui", subtitle: "Premier mois", amount: "1,00 €", icon: "check" },
       { title: formatDateFr(nextMonth), subtitle: "Facturation mensuelle", amount: "49,99 € /mois", icon: "lock" },
       { title: "Toujours", subtitle: "Annulable à tout moment", amount: "Sans engagement", icon: "star" },
     ];
