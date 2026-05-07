@@ -77,8 +77,19 @@ function getTrialDaysForPlan(plan) {
   return Math.max(0, parseInt(String(raw), 10) || 0);
 }
 
+/**
+ * Jours d’essai Stripe réellement attachés à la souscription créée.
+ * **Mensuel : toujours 0** — le premier cycle est une facture immédiate (coupon premier mois à 1 €), pas un SetupIntent à 0 €.
+ * Annuel : selon `STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL` / `STRIPE_SUBSCRIPTION_TRIAL_DAYS`.
+ */
+function stripeTrialDaysOnSubscription(plan) {
+  const p = String(plan || "").toLowerCase();
+  if (p === "monthly") return 0;
+  return getTrialDaysForPlan(plan);
+}
+
 function buildStripeSubscriptionTrialConfig(plan) {
-  const days = getTrialDaysForPlan(plan);
+  const days = stripeTrialDaysOnSubscription(plan);
   if (days <= 0) return {};
   return { trial_period_days: days };
 }
@@ -209,7 +220,7 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
 /**
  * POST /api/payment/create-embedded-subscription
  * Abonnement avec Stripe Payment Element (carte, Apple Pay, Google Pay) sur myfidpass.fr — sans redirection Checkout hébergé.
- * Réponse : { client_secret, confirm_mode, subscription_id } — `confirm_mode` = "payment" | "setup" (période d'essai Stripe = SetupIntent $0).
+ * Réponse : { client_secret, confirm_mode, subscription_id } — `confirm_mode` = "payment" | "setup" (essai Stripe seulement sur l’annuel si jours > 0 : SetupIntent 0 €).
  */
 router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
   if (!stripe) {
@@ -355,7 +366,7 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       console.error("[payment] embedded subscription: missing client_secret", {
         subscriptionId: subscription.id,
         plan,
-        trialDays: getTrialDaysForPlan(plan),
+        trialDays: stripeTrialDaysOnSubscription(plan),
         pendingSetupIntent: pendingId || null,
         latestInvoice:
           typeof subscription.latest_invoice === "string"
@@ -378,7 +389,7 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       client_secret: secretResult.clientSecret,
       confirm_mode: secretResult.mode,
       subscription_id: subscription.id,
-      trial_days: getTrialDaysForPlan(plan),
+      trial_days: stripeTrialDaysOnSubscription(plan),
     });
   } catch (err) {
     console.error("Stripe embedded subscription error:", err);
