@@ -271,7 +271,7 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
 
     if (useCatalogPrice) {
       subscriptionParams.items = [{ price: priceId, quantity: 1 }];
-      if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
+      if (STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
         subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
       }
     } else {

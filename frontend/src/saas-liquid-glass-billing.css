@@ -1,58 +1,64 @@
-/* Liquid Glass switcher — CodePen fooontic/KwpRaGr (FreeFrontend css-liquid-glass). Filter url(#saasPayLgSwitcher). */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap');
-
-/* Theme vars + shell — CodePen dark preset */
+/**
+ * Switcher facturation — même principe que fooontic-kwp-ragr-switcher.css (menu accueil),
+ * avec 2 créneaux (Mensuel / Annuel), scopé sous .saas-pay-billing-liquid.
+ */
 .saas-pay .saas-pay-billing-liquid fieldset.switcher {
   --c-glass: #bbbbbc;
   --c-light: #fff;
   --c-dark: #000;
-  --c-content: #e1e1e1;
+  --c-content: #e4e6ec;
   --c-action: #03d5ff;
   --glass-reflex-dark: 2;
-  --glass-reflex-light: 0.3;
+  --glass-reflex-light: 0.35;
   --saturation: 150%;
-  font-size: 20px;
-  font-family: "DM Sans", sans-serif;
-  font-optical-sizing: auto;
+  --fz: 0.8125rem;
+
+  --sw-pad-x: 8px;
+  --sw-pad-y: 4px;
+  --sw-pad-yb: 4px;
+  --sw-gap: 6px;
+  --sw-track: calc(100% - 2 * var(--sw-pad-x) - 1 * var(--sw-gap));
+  --sw-slot: calc(var(--sw-track) / 2);
+  --sw-shift: calc(var(--sw-slot) + var(--sw-gap));
+
   position: relative;
   z-index: 1;
-  top: auto;
-  left: auto;
-  translate: none;
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 168px;
-  max-width: 168px;
-  height: 70px;
+  gap: var(--sw-gap);
+  width: min(272px, calc(100vw - 2rem));
+  max-width: min(272px, calc(100vw - 2rem));
+  height: 44px;
   box-sizing: border-box;
-  padding: 8px 12px 10px;
+  padding: var(--sw-pad-y) var(--sw-pad-x) var(--sw-pad-yb);
   margin: 0 auto;
   border: none;
   border-radius: 99em;
   font-size: var(--fz);
+  font-family: inherit;
+  isolation: isolate;
+  overflow: hidden;
+  min-inline-size: 0;
   background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
-  backdrop-filter: blur(8px) url(#saasPayLgSwitcher) saturate(var(--saturation));
-  -webkit-backdrop-filter: blur(8px) saturate(var(--saturation));
-  box-shadow: 
+  backdrop-filter: blur(10px) saturate(var(--saturation));
+  -webkit-backdrop-filter: blur(10px) saturate(var(--saturation));
+  box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-    inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-    inset -2px -2px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-    inset -3px -8px 1px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-    inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
-    inset -1.5px 2.5px 0px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-    inset 0px 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-    inset 2px -6.5px 1px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-    0px 1px 5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+    inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
+    inset -2px -2px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent),
+    inset -3px -8px 1px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
+    inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    inset -1.5px 2.5px 0px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 0px 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 2px -6.5px 1px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+    0px 1px 5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
     0px 6px 16px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-  transition: 
-    background-color 400ms 
-      cubic-bezier(1, 0.0, 0.4, 1),
-    box-shadow 400ms
-      cubic-bezier(1, 0.0, 0.4, 1);
+  transition:
+    background-color 400ms cubic-bezier(1, 0, 0.4, 1),
+    box-shadow 400ms cubic-bezier(1, 0, 0.4, 1);
 }
 
-.saas-pay .saas-pay-billing-liquid .switcher__legend {
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__legend {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -60,43 +66,42 @@
   border: 0;
   padding: 0;
   white-space: nowrap;
-  -webkit-clip-path: inset(100%);
-          clip-path: inset(100%);
+  clip-path: inset(100%);
   clip: rect(0 0 0 0);
   overflow: hidden;
 }
 
-.saas-pay .saas-pay-billing-liquid .switcher__input {
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__input {
   clip: rect(0 0 0 0);
-  -webkit-clip-path: inset(100%);
-          clip-path: inset(100%);
+  clip-path: inset(100%);
   height: 1px;
   width: 1px;
   overflow: hidden;
   position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  margin: 0;
   white-space: nowrap;
 }
 
-.saas-pay .saas-pay-billing-liquid .switcher__icon {
-  display: block;
-  width: 100%;
-  transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
-}
-
-.saas-pay .saas-pay-billing-liquid .switcher__filter {
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__filter {
   position: absolute;
   width: 0;
   height: 0;
   z-index: -1;
 }
 
-.saas-pay .saas-pay-billing-liquid .switcher__option {
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__option {
   --c: var(--c-content);
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 16px;
-  width: 68px;
+  padding: 0 6px;
   height: 100%;
   box-sizing: border-box;
   border-radius: 99em;
@@ -104,97 +109,105 @@
   transition: all 160ms;
 }
 
-.saas-pay .saas-pay-billing-liquid .switcher__option:hover {
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__option:hover {
   --c: var(--c-action);
   cursor: pointer;
 }
 
-.saas-pay .saas-pay-billing-liquid .switcher__option:hover .switcher__icon {
-  scale: 1.2;
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__option:hover .switcher__text {
+  scale: 1.03;
 }
 
-.saas-pay .saas-pay-billing-liquid .switcher__option:has(input:checked) {
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__option:has(input:checked) {
   --c: var(--c-content);
-  cursor: auto;
+  cursor: default;
 }
 
-.saas-pay .saas-pay-billing-liquid .switcher__option:has(input:checked) .switcher__icon {
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__option:has(input:checked) .switcher__text {
   scale: 1;
 }
 
-.saas-pay .saas-pay-billing-liquid fieldset.switcher::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 4px;
+.saas-pay .saas-pay-billing-liquid fieldset.switcher .switcher__text {
   display: block;
-  width: 84px;
-  height: calc(100% - 10px);
+  font-size: var(--fz);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: var(--c);
+  white-space: nowrap;
+  transition:
+    color 160ms,
+    scale 200ms cubic-bezier(0.5, 0, 0, 1);
+}
+
+.saas-pay .saas-pay-billing-liquid fieldset.switcher::after {
+  content: "";
+  position: absolute;
+  left: var(--sw-pad-x);
+  top: var(--sw-pad-y);
+  bottom: var(--sw-pad-yb);
+  width: var(--sw-slot);
+  box-sizing: border-box;
   border-radius: 99em;
   background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
-  z-index: -1;
-  box-shadow: 
+  z-index: 0;
+  box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-    inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-    inset -1.5px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-    inset -2px -6px 1px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-    inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-    inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+    inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
+    inset -1.5px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent),
+    inset -2px -6px 1px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
+    inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
     0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
 }
 
 .saas-pay .saas-pay-billing-liquid fieldset.switcher:has(input[c-option="1"]:checked)::after {
-  translate: 0 0;
+  left: var(--sw-pad-x);
   transform-origin: right;
-  transition: 
-    background-color 400ms 
-      cubic-bezier(1, 0.0, 0.4, 1),
-    box-shadow 400ms
-      cubic-bezier(1, 0.0, 0.4, 1),
-    translate 400ms 
-      cubic-bezier(1, 0.0, 0.4, 1);
-  -webkit-animation: scaleToggle 440ms ease;
-          animation: scaleToggle 440ms ease; 
+  transition:
+    background-color 400ms cubic-bezier(1, 0, 0.4, 1),
+    box-shadow 400ms cubic-bezier(1, 0, 0.4, 1),
+    left 400ms cubic-bezier(1, 0, 0.4, 1);
+  animation: saasBillingScaleToggle 440ms ease;
 }
 
 .saas-pay .saas-pay-billing-liquid fieldset.switcher:has(input[c-option="2"]:checked)::after {
-  translate: 76px 0;
-  transition: 
-    background-color 400ms 
-      cubic-bezier(1, 0.0, 0.4, 1),
-    box-shadow 400ms
-      cubic-bezier(1, 0.0, 0.4, 1),
-    translate 400ms 
-      cubic-bezier(1, 0.0, 0.4, 1);
-  -webkit-animation: scaleToggle2 440ms ease;
-          animation: scaleToggle2 440ms ease; 
+  left: calc(var(--sw-pad-x) + var(--sw-shift));
+  transition:
+    background-color 400ms cubic-bezier(1, 0, 0.4, 1),
+    box-shadow 400ms cubic-bezier(1, 0, 0.4, 1),
+    left 400ms cubic-bezier(1, 0, 0.4, 1);
+  animation: saasBillingScaleToggle2 440ms ease;
 }
 
 .saas-pay .saas-pay-billing-liquid fieldset.switcher[c-previous="1"]:has(input[c-option="2"]:checked)::after {
   transform-origin: left;
 }
 
-@-webkit-keyframes scaleToggle {
-  0% { scale: 1 1; }
-  50% { scale: 1.1 1; }
-  100% { scale: 1 1; }
+.saas-pay .saas-pay-billing-liquid fieldset.switcher[c-previous="2"]:has(input[c-option="1"]:checked)::after {
+  transform-origin: right;
 }
 
-
-@keyframes scaleToggle {
-  0% { scale: 1 1; }
-  50% { scale: 1.1 1; }
-  100% { scale: 1 1; }
+@keyframes saasBillingScaleToggle {
+  0% {
+    scale: 1 1;
+  }
+  50% {
+    scale: 1.08 1;
+  }
+  100% {
+    scale: 1 1;
+  }
 }
 
-@-webkit-keyframes scaleToggle2{
-  0% { scale: 1 1; }
-  50% { scale: 1.2 1; }
-  100% { scale: 1 1; }
-}
-
-@keyframes scaleToggle2{
-  0% { scale: 1 1; }
-  50% { scale: 1.2 1; }
-  100% { scale: 1 1; }
+@keyframes saasBillingScaleToggle2 {
+  0% {
+    scale: 1 1;
+  }
+  50% {
+    scale: 1.12 1;
+  }
+  100% {
+    scale: 1 1;
+  }
 }
