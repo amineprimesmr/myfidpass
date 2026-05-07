@@ -8,14 +8,13 @@ import {
   getBusinessSubscriptionForUserBusiness,
   getSubscriptionByUserId,
   getUserByEmail,
-  hasActiveSubscription,
+  hasStripeBackedActiveSubscription,
   hasOperationalMerchantAccess,
   incrementFlyerAiGenerationsBonus,
   getSubscriptionByStripeSubscriptionId,
   upsertBusinessSubscription,
   upsertMerchantEntitlement,
-  deactivateRevenueCatOnlySubscription,
-  resetMerchantEntitlementAfterLegacyIapRemoval,
+  cancelNonStripeBackedSubscriptionRow,
 } from "../db.js";
 import {
   multiBusinessAnnualTotalCents,
@@ -96,10 +95,6 @@ function isDevSimulatedSubscriptionRow(row) {
   const sid = subscriptionIdOf(row).toLowerCase();
   const cid = customerIdOf(row).toLowerCase();
   return sid === "dev_simulated" || sid.startsWith("dev_simulated_") || cid === "cus_dev_simulated";
-}
-
-function isLegacyRevenueCatSubscriptionRow(row) {
-  return subscriptionIdOf(row).toLowerCase().startsWith("revenuecat_");
 }
 
 /**
@@ -241,13 +236,10 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
     });
     subRow = getSubscriptionByUserId(userId);
   }
-  // Ancienne synchro App Store / RevenueCat : annulation locale pour permettre uniquement Stripe (myfidpass.fr/paiement).
-  if (subRow && isLegacyRevenueCatSubscriptionRow(subRow) && hasActiveSubscription(userId)) {
-    deactivateRevenueCatOnlySubscription(userId);
-    resetMerchantEntitlementAfterLegacyIapRemoval(userId);
-    subRow = getSubscriptionByUserId(userId);
-  }
-  if (hasActiveSubscription(userId)) {
+  // Anciennes lignes IAP / RevenueCat / synchros sans vrai `sub_…` : on les annule pour pouvoir créer l’abo Stripe web.
+  cancelNonStripeBackedSubscriptionRow(userId);
+  subRow = getSubscriptionByUserId(userId);
+  if (hasStripeBackedActiveSubscription(userId)) {
     return res.status(409).json({
       error: "Un abonnement actif est déjà associé à ce compte.",
       code: "already_subscribed",
@@ -687,7 +679,7 @@ router.post("/reconcile-subscription", requireAuth, async (req, res) => {
       try {
         const s = await stripe.subscriptions.retrieve(existing.stripe_subscription_id);
         await syncSubscriptionFromStripeObject(s, userId);
-        if (hasActiveSubscription(userId)) {
+        if (hasStripeBackedActiveSubscription(userId)) {
           return jsonOk(s, "stripe_retrieve_existing_row");
         }
       } catch (e) {

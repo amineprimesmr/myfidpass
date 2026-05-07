@@ -4,7 +4,7 @@
  */
 import { Router } from "express";
 import { ensureDashboardAccess } from "./shared.js";
-import { hasActiveSubscription } from "../../db/subscriptions.js";
+import { hasStripeBackedActiveSubscription } from "../../db/subscriptions.js";
 import { getOrCreateReferralCode, getReferralInfo } from "../../db/referrals.js";
 
 const router = Router({ mergeParams: true });
@@ -15,7 +15,7 @@ router.get("/", ensureDashboardAccess, (req, res) => {
   const userId = req.user?.id ? String(req.user.id) : null;
   if (!userId) return res.status(401).json({ error: "Non authentifié" });
 
-  if (!hasActiveSubscription(userId)) {
+  if (!hasStripeBackedActiveSubscription(userId)) {
     return res.status(403).json({
       error: "Le parrainage est disponible dès votre premier mois à 1 €.",
       code: "subscription_required",

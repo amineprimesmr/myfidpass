@@ -20,7 +20,7 @@ import {
   getBusinessesByUserId,
   getBusinessesForUserId,
   getSubscriptionByUserId,
-  hasActiveSubscription,
+  hasStripeBackedActiveSubscription,
   hasOperationalMerchantAccess,
   getMerchantTrialEndsAtIso,
   setPasswordResetToken,
@@ -104,32 +104,44 @@ function issueTokenPair(userId) {
 // Nettoyage des tokens expirés au démarrage
 cleanExpiredRefreshTokens();
 
+function subscriptionPayloadForAuth(userId, subscriptionRow) {
+  if (!subscriptionRow) return null;
+  if (hasStripeBackedActiveSubscription(userId)) {
+    return { status: subscriptionRow.status, plan_id: subscriptionRow.plan_id };
+  }
+  return { status: "inactive", plan_id: subscriptionRow.plan_id };
+}
+
 function authSubscriptionPayload(userId) {
   const subscription = getSubscriptionByUserId(userId);
+  const subPayload = subscriptionPayloadForAuth(userId, subscription);
   const entitlements = getMerchantBusinessEntitlements(userId);
   if (isOnlyTeamUser(userId)) {
     const ownerId = getFirstTeamBusinessOwnerId(userId);
     if (ownerId) {
-      const ownerAccess = hasOperationalMerchantAccess(String(ownerId).trim());
-      const paying = hasActiveSubscription(userId);
+      const ownerIdStr = String(ownerId).trim();
+      const ownerSubRow = getSubscriptionByUserId(ownerIdStr);
+      const ownerSubPayload = subscriptionPayloadForAuth(ownerIdStr, ownerSubRow);
+      const ownerAccess = hasOperationalMerchantAccess(ownerIdStr);
+      const ownerPayingStripe = hasStripeBackedActiveSubscription(ownerIdStr);
       return {
-        subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
+        subscription: ownerSubPayload,
         has_active_subscription: ownerAccess,
         entitlements,
         merchant_trial_ends_at: ownerAccess
           ? null
-          : paying
+          : ownerPayingStripe
             ? null
-            : getMerchantTrialEndsAtIso(String(ownerId).trim()) ?? getMerchantTrialEndsAtIso(userId),
+            : getMerchantTrialEndsAtIso(ownerIdStr) ?? getMerchantTrialEndsAtIso(userId),
       };
     }
   }
-  const paying = hasActiveSubscription(userId);
+  const payingStripe = hasStripeBackedActiveSubscription(userId);
   return {
-    subscription: subscription ? { status: subscription.status, plan_id: subscription.plan_id } : null,
+    subscription: subPayload,
     has_active_subscription: hasOperationalMerchantAccess(userId),
     entitlements,
-    merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(userId),
+    merchant_trial_ends_at: payingStripe ? null : getMerchantTrialEndsAtIso(userId),
   };
 }
 

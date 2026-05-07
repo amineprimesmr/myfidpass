@@ -41,18 +41,18 @@ export function getMerchantTrialEndsAtIso(userId) {
   return new Date(start + merchantTrialDurationMs()).toISOString();
 }
 
-/** Essai actif : pas d’abo Stripe / IAP « payant » et encore dans la fenêtre d’essai après inscription (`MERCHANT_TRIAL_DAYS`, défaut 3 j). */
+/** Essai actif : pas d’abo Stripe réel (`sub_…`) et encore dans la fenêtre d’essai après inscription (`MERCHANT_TRIAL_DAYS`, défaut 3 j). */
 export function isUserInMerchantTrial(userId) {
-  if (!userId || hasActiveSubscription(userId)) return false;
+  if (!userId || hasStripeBackedActiveSubscription(userId)) return false;
   const endIso = getMerchantTrialEndsAtIso(userId);
   if (!endIso) return false;
   return Date.now() < Date.parse(endIso);
 }
 
-/** Accès opérationnel (scan, points, campagnes, etc.) : Stripe actif ou période d’essai gratuite. */
+/** Accès opérationnel (scan, points, campagnes, etc.) : Stripe réel ou période d’essai gratuite — pas les anciennes lignes IAP sans `sub_…`. */
 export function hasOperationalMerchantAccess(userId) {
   if (!userId) return false;
-  return hasActiveSubscription(userId) || isUserInMerchantTrial(userId);
+  return hasStripeBackedActiveSubscription(userId) || isUserInMerchantTrial(userId);
 }
 
 export const PLANS = { starter: { max_businesses: 1 }, pro: { max_businesses: 5 } };
@@ -284,6 +284,44 @@ export function hasActiveSubscription(userId) {
     .toLowerCase();
   // past_due : carte en échec mais abonnement encore « vivant » côté Stripe (souvent période de grâce) — évite un faux « non abonné ».
   return st === "active" || st === "trialing" || st === "past_due";
+}
+
+/**
+ * Abonnement réellement provisionné chez Stripe (`sub_…`). Les anciennes lignes IAP / RevenueCat (`revenuecat_…`, sans id, etc.)
+ * peuvent encore avoir le statut `active` en base : elles ne doivent pas bloquer `/paiement` ni masquer l’essai via `merchant_trial_ends_at`.
+ */
+export function hasStripeBackedActiveSubscription(userId) {
+  const sub = getSubscriptionByUserId(userId);
+  if (!sub) return false;
+  const st = String(sub.status || "")
+    .trim()
+    .toLowerCase();
+  if (!(st === "active" || st === "trialing" || st === "past_due")) return false;
+  const sid = sub.stripe_subscription_id ? String(sub.stripe_subscription_id).trim() : "";
+  return /^sub_[A-Za-z0-9]+$/.test(sid);
+}
+
+/**
+ * Annule en base une ligne « payante » sans id Stripe `sub_…` (IAP, synchros cassées, placeholders).
+ * Appeler avant de créer un nouvel abonnement Stripe embarqué.
+ */
+export function cancelNonStripeBackedSubscriptionRow(userId) {
+  if (!userId) return null;
+  const s = getSubscriptionByUserId(userId);
+  if (!s) return null;
+  const sid = s.stripe_subscription_id ? String(s.stripe_subscription_id).trim() : "";
+  const st = String(s.status || "")
+    .trim()
+    .toLowerCase();
+  const looksPaying = st === "active" || st === "trialing" || st === "past_due";
+  if (!looksPaying) return s;
+  if (/^sub_[A-Za-z0-9]+$/.test(sid)) return s;
+  const now = new Date().toISOString();
+  db.prepare(
+    "UPDATE subscriptions SET status = 'canceled', stripe_subscription_id = NULL, updated_at = ? WHERE user_id = ?",
+  ).run(now, userId);
+  resetMerchantEntitlementAfterLegacyIapRemoval(userId);
+  return getSubscriptionByUserId(userId);
 }
 
 export function getBusinessCountByUserId(userId) {
