@@ -65,6 +65,24 @@ function buildStripeSubscriptionTrialConfig() {
   return { trial_period_days: STRIPE_SUBSCRIPTION_TRIAL_DAYS };
 }
 
+function subscriptionIdOf(row) {
+  return row?.stripe_subscription_id ? String(row.stripe_subscription_id).trim() : "";
+}
+
+function customerIdOf(row) {
+  return row?.stripe_customer_id ? String(row.stripe_customer_id).trim() : "";
+}
+
+function isDevSimulatedSubscriptionRow(row) {
+  const sid = subscriptionIdOf(row).toLowerCase();
+  const cid = customerIdOf(row).toLowerCase();
+  return sid === "dev_simulated" || sid.startsWith("dev_simulated_") || cid === "cus_dev_simulated";
+}
+
+function isRevenueCatSubscriptionRow(row) {
+  return subscriptionIdOf(row).toLowerCase().startsWith("revenuecat_");
+}
+
 /**
  * POST /api/payment/create-portal-session
  * Espace client Stripe (facture, moyen de paiement, résiliation) — nécessite un `stripe_customer_id` en base.
@@ -185,10 +203,28 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
   if (!email) {
     return res.status(400).json({ error: "Email utilisateur requis" });
   }
+  // Auto-réparation: anciens bypass dev peuvent laisser une ligne `active` qui bloque la souscription Stripe en prod.
+  let subRow = getSubscriptionByUserId(userId);
+  if (isDevSimulatedSubscriptionRow(subRow)) {
+    createOrUpdateSubscription({
+      userId,
+      stripeCustomerId: customerIdOf(subRow) || null,
+      stripeSubscriptionId: subscriptionIdOf(subRow) || null,
+      planId: subRow?.plan_id || "starter",
+      status: "canceled",
+      currentPeriodEnd: subRow?.current_period_end || null,
+    });
+    subRow = getSubscriptionByUserId(userId);
+  }
   if (hasActiveSubscription(userId)) {
+    const activeSource = isRevenueCatSubscriptionRow(subRow) ? "apple_iap" : "stripe_or_legacy";
     return res.status(409).json({
-      error: "Un abonnement actif est déjà associé à ce compte.",
+      error:
+        activeSource === "apple_iap"
+          ? "Un abonnement App Store actif est déjà associé à ce compte."
+          : "Un abonnement actif est déjà associé à ce compte.",
       code: "already_subscribed",
+      active_source: activeSource,
     });
   }
 
