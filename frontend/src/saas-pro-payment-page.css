@@ -872,7 +872,14 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   margin-top: 0.7rem;
 }
 
-/* Total à payer — bloc mise en avant (checkout uniquement) */
+/* Au-dessus de la timeline (z-index: 2) : sinon toute la colonne timeline reste « au-dessus » des blocs suivants et vole les clics (iframes Stripe). */
+.saas-pay-checkout .saas-pay-total,
+.saas-pay-checkout .saas-pay-method {
+  position: relative;
+  z-index: 3;
+}
+
+/* ── Total à payer — bloc mise en avant (checkout uniquement) */
 @keyframes saasPayTotalBorderFlow {
   0%,
   100% {
