@@ -33,7 +33,11 @@ export function getRoute() {
     path === "/paiement" ||
     path === "/offre-pro" ||
     path === "/abonnement-pro" ||
-    path === "/plan-pro"
+    path === "/plan-pro" ||
+    path === "/paiement/checkout" ||
+    path === "/offre-pro/checkout" ||
+    path === "/abonnement-pro/checkout" ||
+    path === "/plan-pro/checkout"
   ) {
     return { type: "saas-pro-payment" };
   }

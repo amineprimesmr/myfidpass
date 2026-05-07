@@ -677,3 +677,491 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
+
+/* New embedded checkout design */
+.saas-pay-checkout {
+  background: #06090e;
+  color: #f5f7fb;
+  min-height: 100dvh;
+}
+
+.saas-pay-checkout-main {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: max(0.95rem, env(safe-area-inset-top)) 1rem calc(2rem + env(safe-area-inset-bottom));
+  animation: saasPayFadeIn 0.36s ease;
+}
+
+.saas-pay-checkout-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.saas-pay-checkout-head h1 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+.saas-pay-checkout-back {
+  position: absolute;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #8f97a9;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.saas-pay-summary,
+.saas-pay-total,
+.saas-pay-method,
+.saas-pay-timeline {
+  background: #151920;
+  border: 1px solid #242a34;
+  border-radius: 1rem;
+}
+
+.saas-pay-summary,
+.saas-pay-total {
+  padding: 0.95rem 0.9rem;
+}
+
+.saas-pay-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.saas-pay-summary-row strong {
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.saas-pay-total-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.saas-pay-total-old-price {
+  color: #9ca3b4;
+  font-size: 0.92rem;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.saas-pay-summary-row p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.saas-pay-summary-row small {
+  color: #8f97a9;
+}
+
+.saas-pay-summary-sep {
+  height: 1px;
+  background: #242a34;
+  margin: 0.8rem 0;
+}
+
+.saas-pay-summary-row .is-red {
+  color: #ff4d5f;
+}
+
+.saas-pay-total {
+  margin-top: 0.7rem;
+}
+
+.saas-pay-timeline {
+  padding: 0.95rem 0.9rem;
+}
+
+.saas-pay-timeline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.92rem;
+}
+
+.saas-pay-timeline-row + .saas-pay-timeline-row {
+  margin-top: 0.7rem;
+}
+
+.saas-pay-timeline-marker {
+  width: 2rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.02rem;
+  flex-shrink: 0;
+}
+
+.saas-pay-timeline-dot {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: #1b2029;
+  color: #d7deed;
+  border: 1px solid rgba(176, 186, 206, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.saas-pay-timeline-marker.is-active .saas-pay-timeline-dot {
+  background: #f4f7ff;
+  color: #0f141f;
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.saas-pay-timeline-marker.is-focus .saas-pay-timeline-dot {
+  background: #f4f7ff;
+  color: #0f141f;
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.2),
+    0 0 0 7px rgba(255, 255, 255, 0.08);
+}
+
+.saas-pay-timeline-stem {
+  width: 4px;
+  height: 2.05rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(163, 180, 212, 0.68) 0%, rgba(78, 90, 114, 0.34) 100%);
+  margin-top: 0.08rem;
+}
+
+.saas-pay-timeline-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.saas-pay-timeline-copy p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.08rem;
+}
+
+.saas-pay-timeline-copy small {
+  display: block;
+  margin-top: 0.18rem;
+  color: #97a0b5;
+  font-size: 0.95rem;
+}
+
+.saas-pay-timeline-row strong {
+  font-size: 1.03rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.saas-pay-save-line {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(114, 15, 23, 0.55);
+  color: #ff5465;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.75rem;
+  font-size: 0.94rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.saas-pay-currency {
+  margin-top: 0.85rem;
+}
+
+.saas-pay-currency button {
+  width: calc(50% - 0.3rem);
+  border: 1px solid #242a34;
+  background: #12161d;
+  color: #cfd5e3;
+  border-radius: 0.7rem;
+  min-height: 3rem;
+  font-weight: 700;
+  margin-bottom: 0.55rem;
+}
+
+.saas-pay-currency button + button {
+  margin-left: 0.6rem;
+}
+
+.saas-pay-currency button.is-active {
+  background: #1a1f29;
+  border-color: #2b3340;
+  color: #fff;
+}
+
+.saas-pay-currency p {
+  margin: 0.3rem 0 0;
+  color: #8f97a9;
+  font-size: 0.94rem;
+}
+
+.saas-pay-link-btn {
+  margin-top: 0.95rem;
+  width: 100%;
+  border: none;
+  border-radius: 0.8rem;
+  min-height: 3.2rem;
+  font-size: 1.9rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #072011;
+  background: linear-gradient(180deg, #16f088, #09d670);
+  transition: transform 0.18s ease, filter 0.2s ease;
+}
+
+.saas-pay-link-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.saas-pay-link-btn:disabled {
+  opacity: 0.65;
+}
+
+.saas-pay-method {
+  margin-top: 0.85rem;
+  padding: 1rem 0.9rem;
+}
+
+.saas-pay-method h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.85rem;
+}
+
+.saas-pay-method label {
+  display: block;
+  margin: 0.55rem 0 0.4rem;
+  color: #e9ecf3;
+  font-size: 0.95rem;
+}
+
+.saas-pay-field {
+  background: #131821;
+  border: 1px solid #262d3a;
+  border-radius: 0.7rem;
+  min-height: 3.2rem;
+  padding: 0.84rem 0.78rem;
+  display: flex;
+  align-items: center;
+}
+
+.saas-pay-card-number-field {
+  position: relative;
+  padding-right: 9.2rem;
+}
+
+.saas-pay-card-number-input {
+  width: 100%;
+}
+
+.saas-pay-field-placeholder {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6f7481;
+  font-size: 0.72rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.saas-pay-card-brands {
+  position: absolute;
+  right: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  gap: 0.22rem;
+  pointer-events: none;
+}
+
+.saas-pay-card-brand-logo {
+  width: 2.75rem;
+  height: 1.25rem;
+  object-fit: contain;
+  border-radius: 0.2rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  filter: none;
+}
+
+.saas-pay-expiry-field,
+.saas-pay-cvc-field {
+  position: relative;
+}
+
+.saas-pay-expiry-field .saas-pay-field-placeholder,
+.saas-pay-cvc-field .saas-pay-field-placeholder {
+  font-size: 0.72rem;
+  left: 0.78rem;
+}
+
+.saas-pay-cvc-field {
+  padding-right: 3.2rem;
+}
+
+.saas-pay-cvc-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.8rem;
+  height: 1.15rem;
+  border: 1px solid rgba(143, 151, 169, 0.55);
+  border-radius: 0.26rem;
+  color: #8f97a9;
+  font-size: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.saas-pay-link-auth {
+  min-height: 3.2rem;
+  align-items: stretch;
+}
+
+.saas-pay-payment-element {
+  min-height: 11.5rem;
+  align-items: stretch;
+}
+
+.saas-pay-inline {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.saas-pay-inline > div {
+  flex: 1;
+}
+
+.saas-pay-select-wrap {
+  position: relative;
+}
+
+.saas-pay-select-wrap select {
+  width: 100%;
+  background: #131821;
+  border: 1px solid #262d3a;
+  color: #f4f5f8;
+  border-radius: 0.7rem;
+  min-height: 3rem;
+  padding: 0 0.75rem;
+  font-size: 1rem;
+}
+
+.saas-pay-check {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-top: 0.8rem !important;
+}
+
+.saas-pay-check input {
+  margin-top: 0.14rem;
+}
+
+.saas-pay-check span {
+  color: #c5cad7;
+  line-height: 1.35;
+}
+
+.saas-pay-disclaimer {
+  color: #8f97a9;
+  margin: 0.8rem 0 0;
+  line-height: 1.35;
+}
+
+.saas-pay-due {
+  margin-top: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.saas-pay-due p {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+.saas-pay-due small {
+  color: #8f97a9;
+  font-size: 0.88rem;
+}
+
+.saas-pay-due-amount {
+  text-align: right;
+}
+
+.saas-pay-due-amount strong {
+  display: block;
+  font-size: 1.14rem;
+  font-weight: 800;
+}
+
+.saas-pay-feedback {
+  margin: 0.8rem 0 0;
+  font-size: 0.94rem;
+}
+
+.saas-pay-feedback.is-error {
+  color: #ff6d7c;
+}
+
+.saas-pay-feedback.is-success {
+  color: #2be58e;
+}
+
+.saas-pay-continue {
+  margin-top: 0.85rem;
+  width: 100%;
+  border: none;
+  min-height: 3.25rem;
+  border-radius: 0.8rem;
+  background: #c8f80f;
+  color: #121212;
+  font-size: 1.34rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition: transform 0.16s ease;
+}
+
+.saas-pay-continue:hover {
+  transform: translateY(-1px);
+}
+
+.saas-pay-continue:disabled {
+  opacity: 0.6;
+}
+
+@keyframes saasPayFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
