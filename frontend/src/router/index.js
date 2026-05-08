@@ -53,6 +53,7 @@ export function getRoute() {
   if (path === "/cgv") return { type: "legal", page: "cgv" };
   if (path === "/cookies") return { type: "legal", page: "cookies" };
   if (path === "/supprimer-compte") return { type: "legal", page: "delete-account" };
+  if (path === "/contact") return { type: "contact" };
   const seoRoute = matchSeoContentRoute(path);
   if (seoRoute) return seoRoute;
   if (path === "") {
@@ -175,7 +176,7 @@ export async function initRouting() {
   }
   document.body.classList.toggle(
     "page-landing-subpage",
-    route.type === "legal" || route.type === "seo-content"
+    route.type === "legal" || route.type === "seo-content" || route.type === "contact"
   );
   applyRouteSeoHead(route);
   syncSmartAppBanner();
@@ -302,6 +303,18 @@ export async function initRouting() {
     if (c.landingMain) c.landingMain.classList.add("hidden");
     c.landingLegal.classList.remove("hidden");
     const page = await loadPage("legal");
+    await page.init(route);
+    ensureLandingLiquidNav();
+    updateAuthNavLinks();
+    syncWhatsappFabVisibility();
+    return null;
+  }
+
+  if (route.type === "contact" && c.landingMain && c.landingLegal && c.legalContent) {
+    if (c.landing) c.landing.classList.remove("hidden");
+    if (c.landingMain) c.landingMain.classList.add("hidden");
+    c.landingLegal.classList.remove("hidden");
+    const page = await loadPage("contact");
     await page.init(route);
     ensureLandingLiquidNav();
     updateAuthNavLinks();

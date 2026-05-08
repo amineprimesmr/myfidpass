@@ -398,6 +398,31 @@ export function getSeoByRoute(route) {
     };
   }
 
+  if (route?.type === "contact") {
+    const description =
+      "Contacter MyFidPass : support commercants et clients pour carte fidelite digitale, Apple Wallet, Google Wallet et espace marchand.";
+    return {
+      title: "Contact | MyFidPass",
+      description,
+      robots: "index,follow",
+      canonical,
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "ContactPage",
+        name: "Contact MyFidPass",
+        url: canonical,
+        description,
+        mainEntity: {
+          "@type": "Organization",
+          name: "MyFidPass",
+          url: siteOrigin(),
+          email: "contact@myfidpass.fr",
+          telephone: "+33-805-980-685",
+        },
+      },
+    };
+  }
+
   return {
     title: "MyFidPass",
     description: defaultDescription,
