@@ -63,19 +63,6 @@ export function computeMerchantSetupState(settings, slug) {
  * @param {{ commerceDone: boolean; cardDone: boolean; flyerDone: boolean; printDone: boolean; allDone: boolean }} state
  */
 function animateStepIfNew(prev, state) {
-  const root = document.getElementById("app-merchant-setup-checklist");
-  if (state.allDone && !prev.allDone && root) {
-    root.classList.remove("app-merchant-setup-checklist--celebrate");
-    void root.offsetWidth;
-    root.classList.add("app-merchant-setup-checklist--celebrate");
-    root.addEventListener(
-      "animationend",
-      () => {
-        root.classList.remove("app-merchant-setup-checklist--celebrate");
-      },
-      { once: true },
-    );
-  }
   const pairs = [
     ["commerce", state.commerceDone, prev.commerceDone],
     ["card", state.cardDone, prev.cardDone],
@@ -138,6 +125,13 @@ export function syncMerchantSetupChecklistFromSettings(settings, slug) {
     flyerDone: state.flyerDone,
     printDone: state.printDone,
   };
+
+  const hideWhenComplete = state.allDone;
+  root.classList.toggle("hidden", hideWhenComplete);
+  root.setAttribute("aria-hidden", hideWhenComplete ? "true" : "false");
+  if (hideWhenComplete) {
+    root.classList.remove("app-merchant-setup-checklist--celebrate");
+  }
 
   root.classList.toggle("app-merchant-setup-checklist--complete", state.allDone);
   const prog = document.getElementById("app-merchant-setup-progress-fill");

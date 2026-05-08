@@ -52,3 +52,8 @@
 .fintap-hero-iphone.fintap-hero-iphone--scroll .fintap-hero-iphone__search-empty-hint {
   color: rgba(255, 255, 255, 0.92);
 }
+
+.fintap-hero-iphone.fintap-hero-iphone--scroll .fintap-hero-iphone__search-conflict {
+  color: #fecaca;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+}

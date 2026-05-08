@@ -124,6 +124,23 @@ export const schemas = {
     email: emailSchema,
   }),
 
+  // POST /auth/check-google-place — lieu Google déjà lié à un commerce (inscription)
+  checkGooglePlace: z
+    .object({
+      google_place_id: optionalPlaceIdSchema,
+      googlePlaceId: optionalPlaceIdSchema,
+    })
+    .superRefine((data, ctx) => {
+      const pid = String(data.google_place_id || data.googlePlaceId || "").trim();
+      if (!pid) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["google_place_id"],
+          message: "google_place_id requis",
+        });
+      }
+    }),
+
   // POST /auth/forgot-password
   forgotPassword: z.object({
     email: emailSchema,

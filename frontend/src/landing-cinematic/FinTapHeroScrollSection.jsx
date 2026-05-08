@@ -13,6 +13,7 @@ import {
   clearPendingEstablishments,
   getPendingEstablishment,
   setPendingEstablishment,
+  checkGooglePlaceAvailable,
 } from "../config.js";
 import "./fintap-hero-scroll.css";
 import "./fintap-hero-blue-surface.css";
@@ -74,6 +75,8 @@ export function FinTapHeroScrollSection() {
   const [predictionsOpen, setPredictionsOpen] = useState(false);
   const [placesSearching, setPlacesSearching] = useState(false);
   const [noSuggestionsVisible, setNoSuggestionsVisible] = useState(false);
+  const [placeProbeBusy, setPlaceProbeBusy] = useState(false);
+  const [shopPlaceConflictError, setShopPlaceConflictError] = useState("");
   const searchInputRef = useRef(null);
   const searchWrapRef = useRef(null);
   const emptyHintTimerRef = useRef(0);
@@ -451,34 +454,62 @@ export function FinTapHeroScrollSection() {
     return () => document.removeEventListener("click", onClickOutside);
   }, []);
 
-  const applyPrediction = (pred) => {
+  const applyPrediction = async (pred) => {
     const name = String(pred?.main_text || pred?.description || "").trim();
     const pid = String(pred?.place_id || "").trim();
     if (!name || !pid) return;
-    setShopQuery(name);
-    setShopPlaceId(pid);
-    setPendingEstablishment({
-      establishment_name: name,
-      google_place_id: pid,
-    });
-    setPredictionsOpen(false);
-    setPlacePredictions([]);
-    setNoSuggestionsVisible(false);
+    setShopPlaceConflictError("");
+    setPlaceProbeBusy(true);
+    try {
+      const res = await checkGooglePlaceAvailable(pid);
+      if (!res.ok) {
+        setShopPlaceConflictError(res.message);
+        return;
+      }
+      setShopQuery(name);
+      setShopPlaceId(pid);
+      setPendingEstablishment({
+        establishment_name: name,
+        google_place_id: pid,
+      });
+      setPredictionsOpen(false);
+      setPlacePredictions([]);
+      setNoSuggestionsVisible(false);
+    } catch {
+      setShopPlaceConflictError("Impossible de vérifier ce commerce. Réessayez.");
+    } finally {
+      setPlaceProbeBusy(false);
+    }
   };
 
   const startHref = "/app?fromLandingOnboarding=1";
 
-  const onStartCtaClick = (event) => {
+  const onStartCtaClick = async (event) => {
     const selectedName = shopQuery.trim();
     const selectedPid = String(shopPlaceId || "").trim();
     if (!selectedName || !selectedPid) {
       event.preventDefault();
       return;
     }
-    setPendingEstablishment({
-      establishment_name: selectedName,
-      google_place_id: selectedPid,
-    });
+    event.preventDefault();
+    setShopPlaceConflictError("");
+    setPlaceProbeBusy(true);
+    try {
+      const res = await checkGooglePlaceAvailable(selectedPid);
+      if (!res.ok) {
+        setShopPlaceConflictError(res.message);
+        return;
+      }
+      setPendingEstablishment({
+        establishment_name: selectedName,
+        google_place_id: selectedPid,
+      });
+      window.location.assign(startHref);
+    } catch {
+      setShopPlaceConflictError("Impossible de vérifier ce commerce. Réessayez.");
+    } finally {
+      setPlaceProbeBusy(false);
+    }
   };
 
   return (
@@ -550,9 +581,10 @@ export function FinTapHeroScrollSection() {
                 setShopQuery(e.target.value);
                 setShopPlaceId("");
                 setNoSuggestionsVisible(false);
+                setShopPlaceConflictError("");
               }}
             />
-            {placesSearching ? (
+            {placesSearching || placeProbeBusy ? (
               <span
                 className="fintap-hero-iphone__search-cta fintap-hero-iphone__search-cta--busy"
                 aria-live="polite"
@@ -604,6 +636,11 @@ export function FinTapHeroScrollSection() {
               </div>
             ) : null}
           </label>
+          {shopPlaceConflictError ? (
+            <p className="fintap-hero-iphone__search-conflict" role="alert">
+              {shopPlaceConflictError}
+            </p>
+          ) : null}
           {noSuggestionsVisible && shopQuery.trim().length >= 2 && !placesSearching ? (
             <p className="fintap-hero-iphone__search-empty-hint" role="status">
               Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion

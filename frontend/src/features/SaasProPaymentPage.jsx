@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Apple,
   ArrowLeft,
   Bell,
   Check,
@@ -475,6 +476,14 @@ export default function SaasProPaymentPage() {
     : { main: "49,99€", detail: "par mois" };
   const compareRows = expanded ? [...BASE_COMPARE, ...EXTRA_COMPARE] : BASE_COMPARE;
 
+  /** Libellé au-dessus du bouton wallet (aligné sur `walletSheetAmountCents`). */
+  const walletHeroCaption = useMemo(() => {
+    const trial =
+      typeof stripeTrialDays === "number" && !Number.isNaN(stripeTrialDays) ? stripeTrialDays : null;
+    const cents = walletSheetAmountCents(annual, trial);
+    return cents === 0 ? "Continuer avec" : "Payer 1 € avec";
+  }, [annual, stripeTrialDays]);
+
   const handlePay = async () => {
     if (busy) return;
     setError("");
@@ -658,6 +667,15 @@ export default function SaasProPaymentPage() {
                 initializing || walletBtnMounted === null ? " saas-pay-wallet-hero__glass--loading" : ""
               }`}
             >
+              <div className="saas-pay-wallet-hero__head">
+                <span className="saas-pay-wallet-hero__caption">{walletHeroCaption}</span>
+                <span className="saas-pay-wallet-hero__apple-pay-mark" role="img" aria-label="Apple Pay">
+                  <Apple className="saas-pay-wallet-hero__apple-icon" size={22} strokeWidth={1.65} aria-hidden />
+                  <span className="saas-pay-wallet-hero__pay-word" aria-hidden>
+                    Pay
+                  </span>
+                </span>
+              </div>
               <div
                 ref={paymentRequestButtonMountRef}
                 className="saas-pay-wallet-mount saas-pay-wallet-mount--hero"

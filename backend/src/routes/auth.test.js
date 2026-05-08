@@ -29,6 +29,26 @@ describe("Auth API", () => {
     expect(res.body.requires_business_setup).toBe(false);
   });
 
+  it("POST /api/auth/check-google-place returns place_available true for unused place", async () => {
+    const res = await request(app)
+      .post("/api/auth/check-google-place")
+      .set("Content-Type", "application/json")
+      .send({ google_place_id: `place-unused-${Date.now()}` });
+    expect(res.status).toBe(200);
+    expect(res.body.place_available).toBe(true);
+  });
+
+  it("POST /api/auth/check-google-place returns place_available false when place already linked", async () => {
+    const res = await request(app)
+      .post("/api/auth/check-google-place")
+      .set("Content-Type", "application/json")
+      .send({ google_place_id: selectedEstablishment.google_place_id });
+    expect(res.status).toBe(200);
+    expect(res.body.place_available).toBe(false);
+    expect(res.body.code).toBe("business_place_already_linked");
+    expect(res.body.error).toContain("déjà utilisé");
+  });
+
   it("POST /api/auth/check-email returns account_exists for known and unknown emails", async () => {
     const known = await request(app)
       .post("/api/auth/check-email")

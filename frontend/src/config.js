@@ -297,6 +297,42 @@ export function setPendingEstablishment(input) {
   } catch (_) {}
 }
 
+const BUSINESS_PLACE_ALREADY_LINKED_HINT =
+  "Ce commerce est déjà utilisé. Connectez-vous au compte existant ou choisissez un autre commerce.";
+
+/**
+ * Vérifie côté API si un lieu Google peut servir à une nouvelle inscription (pas déjà lié à un commerce).
+ * @param {string} googlePlaceId
+ * @returns {Promise<{ ok: boolean, message: string }>}
+ */
+export async function checkGooglePlaceAvailable(googlePlaceId) {
+  const pid = String(googlePlaceId || "").trim();
+  if (!pid) return { ok: false, message: BUSINESS_PLACE_ALREADY_LINKED_HINT };
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/check-google-place`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ google_place_id: pid }),
+    });
+    const data = await res.json().catch(() => (/** @type {Record<string, unknown>} */ ({})));
+    if (!res.ok) {
+      const msg =
+        String(/** @type {string | undefined} */ (data?.message || data?.error) || "").trim() ||
+        "Impossible de vérifier ce commerce. Réessayez.";
+      return { ok: false, message: msg };
+    }
+    if (data.place_available === false) {
+      const msg =
+        String(/** @type {string | undefined} */ (data?.error || data?.message) || "").trim() ||
+        BUSINESS_PLACE_ALREADY_LINKED_HINT;
+      return { ok: false, message: msg };
+    }
+    return { ok: true, message: "" };
+  } catch (_) {
+    return { ok: false, message: "Impossible de vérifier ce commerce. Réessayez." };
+  }
+}
+
 export function clearPendingEstablishment() {
   try {
     localStorage.removeItem(PENDING_ESTABLISHMENT_KEY);

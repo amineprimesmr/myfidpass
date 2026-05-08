@@ -5,6 +5,7 @@ import {
   setAuthToken,
   setRefreshToken,
   setPendingEstablishment,
+  checkGooglePlaceAvailable,
 } from "../config.js";
 import {
   showOAuthConnectingOverlay,
@@ -245,6 +246,60 @@ export default {
       });
     }
 
+    const needsPlaceProbe = mode !== "login" && establishmentName && placeId;
+    const primarySubmitBtn = form.querySelector('button[type="submit"]');
+
+    const setRegisterStepDisabled = (disabled) => {
+      emailInput.disabled = disabled;
+      if (primarySubmitBtn instanceof HTMLButtonElement) primarySubmitBtn.disabled = disabled;
+      if (googleBtn instanceof HTMLButtonElement && !String(googleBtn.title || "").includes("indisponible")) {
+        googleBtn.disabled = disabled;
+      }
+      if (appleBtn instanceof HTMLButtonElement && !String(appleBtn.title || "").includes("indisponible")) {
+        appleBtn.disabled = disabled;
+      }
+    };
+
+    const blockRegisterBecausePlaceTaken = (msg) => {
+      form.dataset.placeBlocked = "1";
+      delete form.dataset.placeChecking;
+      showOAuthError(msg);
+      emailInput.disabled = true;
+      if (googleBtn instanceof HTMLButtonElement) googleBtn.disabled = true;
+      if (appleBtn instanceof HTMLButtonElement) appleBtn.disabled = true;
+      if (primarySubmitBtn instanceof HTMLButtonElement) primarySubmitBtn.disabled = true;
+    };
+
+    if (needsPlaceProbe) {
+      form.dataset.placeChecking = "1";
+      setRegisterStepDisabled(true);
+      void (async () => {
+        const res = await checkGooglePlaceAvailable(placeId);
+        delete form.dataset.placeChecking;
+        if (!res.ok) {
+          blockRegisterBecausePlaceTaken(res.message);
+          return;
+        }
+        setRegisterStepDisabled(false);
+        const gc =
+          typeof import.meta.env?.VITE_GOOGLE_CLIENT_ID === "string"
+            ? import.meta.env.VITE_GOOGLE_CLIENT_ID.trim()
+            : "";
+        if (googleBtn instanceof HTMLButtonElement && !gc) {
+          googleBtn.disabled = true;
+          googleBtn.title = "Connexion Google indisponible";
+        }
+        const ac =
+          typeof import.meta.env?.VITE_APPLE_CLIENT_ID === "string"
+            ? import.meta.env.VITE_APPLE_CLIENT_ID.trim()
+            : "";
+        if (appleBtn instanceof HTMLButtonElement && !ac) {
+          appleBtn.disabled = true;
+          appleBtn.title = "Connexion Apple indisponible";
+        }
+      })();
+    }
+
     const oauthPayload = establishmentName && placeId
       ? {
           establishment_name: establishmentName,
@@ -322,6 +377,7 @@ export default {
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (form.dataset.placeChecking === "1" || form.dataset.placeBlocked === "1") return;
       showInlineError(registerError, "");
       emailInput.classList.remove("is-invalid");
       if (!emailInput.value.trim() || !emailInput.checkValidity()) {
@@ -519,6 +575,10 @@ export default {
             client_id: googleClientId,
             callback: (res) => {
               if (!res?.credential) return;
+              if (form.dataset.placeChecking === "1" || form.dataset.placeBlocked === "1") {
+                hideOAuthConnectingOverlay();
+                return;
+              }
               markGoogleCredentialFlowStarted();
               showOAuthError("");
               fetch(`${API_BASE}/api/auth/google`, {
@@ -553,6 +613,11 @@ export default {
         }
 
         googleBtn.addEventListener("click", () => {
+          if (form.dataset.placeChecking === "1") {
+            showOAuthError("Vérification du commerce en cours…");
+            return;
+          }
+          if (form.dataset.placeBlocked === "1") return;
           showOAuthError("");
           if (!googleReady || typeof window.google === "undefined" || !window.google.accounts?.id) {
             showOAuthError("Google n'est pas encore prêt. Réessayez.");
@@ -618,6 +683,15 @@ export default {
         };
 
         appleBtn.addEventListener("click", () => {
+          if (form.dataset.placeChecking === "1") {
+            showOAuthError("Vérification du commerce en cours…");
+            hideOAuthConnectingOverlay();
+            return;
+          }
+          if (form.dataset.placeBlocked === "1") {
+            hideOAuthConnectingOverlay();
+            return;
+          }
           showOAuthError("");
           showOAuthConnectingOverlay("apple");
           // Apple Sign-In ne fonctionne pas en iframe (X-Frame-Options / CSP côté Apple).

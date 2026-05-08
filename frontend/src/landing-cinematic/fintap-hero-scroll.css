@@ -290,6 +290,19 @@
   box-sizing: border-box;
 }
 
+.fintap-hero-iphone__search-conflict {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0.35rem auto 0;
+  padding: 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #b91c1c;
+  text-align: center;
+  box-sizing: border-box;
+}
+
 .fintap-hero-iphone__btn--primary {
   background: linear-gradient(180deg, #111827 0%, #020617 100%);
   color: #fff !important;

@@ -1923,6 +1923,9 @@
   margin-top: 0.5rem;
   animation: landing-helper-in 0.4s ease forwards;
 }
+.landing-hero-helper.is-error {
+  color: #b91c1c;
+}
 @keyframes landing-helper-in {
   from {
     opacity: 0;

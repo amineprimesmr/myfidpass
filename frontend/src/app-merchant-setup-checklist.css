@@ -12,6 +12,10 @@
   transition: box-shadow 0.45s ease, border-color 0.35s ease;
 }
 
+.app-merchant-setup-checklist.hidden {
+  display: none !important;
+}
+
 .app-merchant-setup-checklist--celebrate {
   animation: app-merchant-setup-celebrate 0.75s cubic-bezier(0.22, 1, 0.36, 1);
 }

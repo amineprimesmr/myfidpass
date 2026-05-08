@@ -89,6 +89,10 @@ const SALT_ROUNDS = 10;
 /** Date très lointaine : refresh en base sans expiration « métier » (nettoyage = logout / rotation / admin). */
 const REFRESH_TOKEN_EXPIRES_AT_FAR_FUTURE = "2099-12-31T23:59:59.999Z";
 
+/** Message aligné inscription / OAuth quand le lieu Google est déjà lié à un commerce. */
+const BUSINESS_PLACE_ALREADY_LINKED_MESSAGE =
+  "Ce commerce est déjà utilisé. Connectez-vous au compte existant ou choisissez un autre commerce.";
+
 /**
  * Paire sans expiration JWT (`exp` absent) + refresh stocké sans fenêtre courte.
  * Révocation : logout, suppression compte, rotation sur POST /auth/refresh, changement JWT_SECRET.
@@ -293,7 +297,7 @@ async function tryCreateFirstBusinessFromGooglePlace(userId, placeId, establishm
     return {
       ok: false,
       code: "business_place_already_linked",
-      error: "Ce commerce est déjà utilisé. Connectez-vous au compte existant ou choisissez un autre commerce.",
+      error: BUSINESS_PLACE_ALREADY_LINKED_MESSAGE,
     };
   }
 
@@ -425,6 +429,25 @@ router.post("/check-identifier", validate(schemas.checkIdentifier), (req, res) =
   }
   const exists = !!getUserByStaffLogin(n);
   return res.json({ account_exists: exists, kind: "staff" });
+});
+
+/**
+ * POST /api/auth/check-google-place
+ * Body: { google_place_id | googlePlaceId } — indique si le lieu peut être utilisé pour une nouvelle inscription.
+ */
+router.post("/check-google-place", validate(schemas.checkGooglePlace), (req, res) => {
+  const pid = String(req.body.google_place_id || req.body.googlePlaceId || "").trim();
+  if (!pid) {
+    return res.status(400).json({ error: "Validation", message: "google_place_id requis" });
+  }
+  if (getAnyBusinessLinkedToGooglePlaceId(pid)) {
+    return res.json({
+      place_available: false,
+      code: "business_place_already_linked",
+      error: BUSINESS_PLACE_ALREADY_LINKED_MESSAGE,
+    });
+  }
+  return res.json({ place_available: true });
 });
 
 /**

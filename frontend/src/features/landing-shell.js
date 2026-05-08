@@ -2,7 +2,7 @@
  * Shell landing : formulaire hero, recherche d'établissement via notre backend, menus drawer.
  * Appelé au chargement pour attacher les listeners (formulaire, menus, recherche).
  */
-import { setPendingEstablishment, API_BASE, getAuthToken } from "../config.js";
+import { setPendingEstablishment, API_BASE, getAuthToken, checkGooglePlaceAvailable } from "../config.js";
 import { FINTAP_SCROLL_TO_COMMERCE_EVENT } from "../landing-cinematic/fintap-hero-scroll-lerp.js";
 
 function updateLandingCtaState() {
@@ -12,6 +12,8 @@ function updateLandingCtaState() {
 }
 
 function initBackendPlacesSearch({ onPredictionSelected } = {}) {
+  const placeTakenFallback =
+    "Ce commerce est déjà utilisé. Connectez-vous au compte existant ou choisissez un autre commerce.";
   const input = document.getElementById("landing-etablissement");
   const hiddenPlaceId = document.getElementById("landing-place-id");
   const helperEl = document.getElementById("landing-hero-helper");
@@ -83,6 +85,22 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
     "Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion dans la liste.";
   wrap.insertAdjacentElement("afterend", emptyHint);
 
+  const conflictHint = document.createElement("p");
+  conflictHint.className = "landing-hero-places-conflict-hint";
+  conflictHint.setAttribute("role", "alert");
+  conflictHint.style.cssText = [
+    "display:none",
+    "margin:0.55rem auto 0",
+    "max-width:22rem",
+    "padding:0 0.5rem",
+    "font-size:0.82rem",
+    "line-height:1.45",
+    "color:#b91c1c",
+    "text-align:center",
+    "box-sizing:border-box",
+  ].join(";");
+  wrap.insertAdjacentElement("afterend", conflictHint);
+
   let debounce = null;
   let emptyHintTimer = null;
   let currentQuery = "";
@@ -105,22 +123,46 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
     }
   }
 
+  function hideConflictHint() {
+    conflictHint.style.display = "none";
+    conflictHint.textContent = "";
+  }
+
+  function showConflictHint(message) {
+    conflictHint.textContent = String(message || "").trim() || placeTakenFallback;
+    conflictHint.style.display = "block";
+  }
+
   function hideEmptyHint() {
     clearEmptyHintTimer();
     emptyHint.style.display = "none";
   }
 
-  function selectPrediction(pred) {
+  async function selectPrediction(pred) {
     const establishmentName = String(pred.main_text || pred.description || "").trim();
     const placeId = String(pred.place_id || "").trim();
-    input.value = establishmentName;
-    if (hiddenPlaceId) hiddenPlaceId.value = placeId;
-    if (helperEl) helperEl.classList.remove("is-visible");
-    hideEmptyHint();
-    hideDropdown();
-    updateLandingCtaState();
-    if (typeof onPredictionSelected === "function" && establishmentName && placeId) {
-      onPredictionSelected({ establishmentName, placeId });
+    if (!establishmentName || !placeId) return;
+    hideConflictHint();
+    setSpinner(true);
+    try {
+      const probe = await checkGooglePlaceAvailable(placeId);
+      if (!probe.ok) {
+        showConflictHint(probe.message);
+        return;
+      }
+      input.value = establishmentName;
+      if (hiddenPlaceId) hiddenPlaceId.value = placeId;
+      if (helperEl) helperEl.classList.remove("is-visible");
+      hideEmptyHint();
+      hideDropdown();
+      updateLandingCtaState();
+      if (typeof onPredictionSelected === "function") {
+        onPredictionSelected({ establishmentName, placeId });
+      }
+    } catch {
+      showConflictHint("Impossible de vérifier ce commerce. Réessayez.");
+    } finally {
+      setSpinner(false);
     }
   }
 
@@ -181,6 +223,7 @@ function initBackendPlacesSearch({ onPredictionSelected } = {}) {
   input.addEventListener("input", () => {
     const query = input.value.trim();
     if (hiddenPlaceId && hiddenPlaceId.value) hiddenPlaceId.value = "";
+    hideConflictHint();
     updateLandingCtaState();
     hideEmptyHint();
     if (debounce) clearTimeout(debounce);
@@ -283,6 +326,9 @@ function initUnifiedMenu(toggleId, overlayId, closeId) {
 }
 
 export function initLandingShell() {
+  const LANDING_HERO_HELPER_DEFAULT =
+    "Saisissez le nom de votre commerce puis choisissez le bon résultat dans la liste.";
+
   function focusOnboardingField() {
     const finCommerce = document.getElementById("fintap-commerce-onboarding");
     if (finCommerce instanceof HTMLElement) {
@@ -303,10 +349,20 @@ export function initLandingShell() {
   });
 
   const landingHeroForm = document.getElementById("landing-hero-form");
-  function proceedToCreationCard(establishmentName, placeId) {
+  async function proceedToCreationCard(establishmentName, placeId) {
     const name = String(establishmentName || "").trim();
     const pid = String(placeId || "").trim();
     if (!name || !pid) return;
+    const probe = await checkGooglePlaceAvailable(pid);
+    if (!probe.ok) {
+      const helper = document.getElementById("landing-hero-helper");
+      if (helper) {
+        helper.textContent = probe.message;
+        helper.classList.add("is-visible", "is-error");
+      }
+      return;
+    }
+    document.getElementById("landing-hero-helper")?.classList.remove("is-error");
     setPendingEstablishment({
       establishment_name: name,
       google_place_id: pid,
@@ -336,6 +392,10 @@ export function initLandingShell() {
       } catch (_) {}
       let helperDebounce = null;
       landingEtablissementInput.addEventListener("input", () => {
+        if (landingHelperEl) {
+          landingHelperEl.classList.remove("is-error");
+          landingHelperEl.textContent = LANDING_HERO_HELPER_DEFAULT;
+        }
         updateLandingCtaState();
         const text = (landingEtablissementInput.value?.trim() || "");
         if (text.length === 0) {
@@ -359,10 +419,11 @@ export function initLandingShell() {
       });
     }
     updateLandingCtaState();
-    landingHeroForm.addEventListener("submit", (e) => {
+    landingHeroForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const establishmentName = landingEtablissementInput?.value?.trim() || "";
       const placeId = landingPlaceIdInput?.value?.trim() || "";
+      const submitBtn = landingHeroForm.querySelector("[type='submit']");
       if (!establishmentName) {
         landingEtablissementInput?.focus();
         showLandingHelper();
@@ -373,7 +434,12 @@ export function initLandingShell() {
         landingEtablissementInput?.focus();
         return;
       }
-      proceedToCreationCard(establishmentName, placeId);
+      if (submitBtn instanceof HTMLButtonElement) submitBtn.disabled = true;
+      try {
+        await proceedToCreationCard(establishmentName, placeId);
+      } finally {
+        if (submitBtn instanceof HTMLButtonElement) submitBtn.disabled = false;
+      }
     });
   }
 
@@ -409,9 +475,9 @@ export function initLandingShell() {
   initUnifiedMenu("offers-menu-toggle", "offers-menu-overlay", "offers-menu-close");
 
   initBackendPlacesSearch({
-    onPredictionSelected({ establishmentName, placeId }) {
+    async onPredictionSelected({ establishmentName, placeId }) {
       if (!landingHeroForm) return;
-      proceedToCreationCard(establishmentName, placeId);
+      await proceedToCreationCard(establishmentName, placeId);
     },
   });
 

@@ -219,6 +219,7 @@ const authAccountProbeLimiter = rateLimit({
 });
 app.use("/api/auth/check-email", authAccountProbeLimiter);
 app.use("/api/auth/check-identifier", authAccountProbeLimiter);
+app.use("/api/auth/check-google-place", authAccountProbeLimiter);
 app.use("/api/auth/phone/send-code", authLimiter);
 app.use("/api/auth/phone/verify", authLimiter);
 
