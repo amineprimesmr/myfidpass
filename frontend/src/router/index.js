@@ -2,7 +2,12 @@
  * Routeur léger : getRoute, show/hide des vues, chargement dynamique des pages.
  * Référence : REFONTE-REGLES.md — un module par écran, import() dynamique.
  */
-import { getAuthToken, buildStripeSaasPaymentUrl, consumeAuthTransferFromHash } from "../config.js";
+import {
+  getAuthToken,
+  buildStripeSaasPaymentUrl,
+  consumeAuthTransferFromHash,
+  warmStripeJs,
+} from "../config.js";
 import { ensureLandingLiquidNav } from "../features/landing-liquid-nav-bootstrap.js";
 import { runLiquidGlassMenuCleanupLanding } from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
 import { applyRouteSeoHead } from "../features/seo-head.js";
@@ -191,6 +196,7 @@ export async function initRouting() {
   };
 
   if (route.type === "saas-pro-payment") {
+    warmStripeJs();
     hideAll();
     if (c.saasProPayment) c.saasProPayment.classList.remove("hidden");
     const page = await loadPage("saas-pro-payment");

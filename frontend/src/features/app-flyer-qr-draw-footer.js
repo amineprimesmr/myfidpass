@@ -7,11 +7,14 @@ import { drawImageContain, drawImageCover, loadImage } from "./app-flyer-qr-draw
 
 const FLYER_FOOTER_BANNER_SRC = "/assets/flyer-footer-banner.png";
 const FLYER_STEP_ICON_SRCS = ["/assets/flyer-steps/icon-phone.png", "/assets/flyer-steps/icon-wheel.png"];
+const MYFIDPASS_FLYER_LOGO_SRC = "/assets/icone.png?v=20260416";
 
 /** @type {HTMLImageElement | "fail" | null} */
 let flyerFooterBannerCache = null;
 /** @type {HTMLImageElement[] | "fail" | null} */
 let flyerStepIconsCache = null;
+/** @type {HTMLImageElement | "fail" | null} */
+let myfidpassFlyerLogoCache = null;
 
 async function getFlyerFooterBanner() {
   if (flyerFooterBannerCache === "fail") return null;
@@ -21,6 +24,19 @@ async function getFlyerFooterBanner() {
     return flyerFooterBannerCache;
   } catch {
     flyerFooterBannerCache = "fail";
+    return null;
+  }
+}
+
+/** @returns {Promise<HTMLImageElement | null>} */
+async function getMyfidpassFlyerLogo() {
+  if (myfidpassFlyerLogoCache === "fail") return null;
+  if (myfidpassFlyerLogoCache) return myfidpassFlyerLogoCache;
+  try {
+    myfidpassFlyerLogoCache = await loadImage(MYFIDPASS_FLYER_LOGO_SRC, false);
+    return myfidpassFlyerLogoCache;
+  } catch {
+    myfidpassFlyerLogoCache = "fail";
     return null;
   }
 }
@@ -162,11 +178,61 @@ export async function drawFlyerFooter(ctx, w, h, s) {
   const [stepIcons, footerBannerImg] = await Promise.all([loadFooterStepIcons(), getFlyerFooterBanner()]);
   if (footerBannerImg) {
     drawFooterBanner(ctx, w, h, h, footerBannerImg);
-    return;
-  }
-  if (stepIcons && stepIcons.length >= 2) {
+  } else if (stepIcons && stepIcons.length >= 2) {
     drawFooterStepsWithIcons(ctx, w, h, h, s, stepIcons);
-    return;
+  } else {
+    drawFooterBar(ctx, w, h, s, 0);
   }
-  drawFooterBar(ctx, w, h, s, 0);
+  await drawFlyerPoweredByBadge(ctx, w, h);
+}
+
+/**
+ * Mention discrète Myfidpass en bas du flyer (export PNG / aperçu).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} w
+ * @param {number} h
+ */
+export async function drawFlyerPoweredByBadge(ctx, w, h) {
+  const img = await getMyfidpassFlyerLogo();
+  const scale = w / 2400;
+  const bottomPad = Math.max(10 * scale, h * 0.004);
+  const yBase = h - bottomPad;
+  const fontPx = Math.max(10, Math.round(20 * scale));
+  const gap = Math.max(6 * scale, w * 0.008);
+  const iconH = Math.max(14, Math.round(26 * scale));
+
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = `500 ${fontPx}px Inter, system-ui, sans-serif`;
+  const label = "Propulsé par ";
+  const brand = "Myfidpass";
+  const labelW = ctx.measureText(label).width;
+  ctx.font = `700 ${fontPx}px Inter, system-ui, sans-serif`;
+  const brandW = ctx.measureText(brand).width;
+  const imgW = img ? (iconH * ((img.naturalWidth || img.width) / (img.naturalHeight || img.height || 1))) : 0;
+  const totalW = (img ? imgW + gap : 0) + labelW + brandW;
+  let x = (w - totalW) / 2;
+  const yMid = yBase - fontPx * 0.45;
+
+  if (img && imgW > 0) {
+    try {
+      ctx.globalAlpha = 0.58;
+      ctx.drawImage(img, x, yMid - iconH / 2, imgW, iconH);
+    } catch (_) {}
+    x += imgW + gap;
+  }
+
+  ctx.globalAlpha = 0.52;
+  ctx.font = `500 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "#475569";
+  ctx.textAlign = "left";
+  ctx.fillText(label, x, yMid);
+  x += labelW;
+  ctx.globalAlpha = 0.62;
+  ctx.font = `700 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "#334155";
+  ctx.fillText(brand, x, yMid);
+  ctx.restore();
 }

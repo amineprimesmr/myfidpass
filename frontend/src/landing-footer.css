@@ -402,7 +402,13 @@ body.page-home .whatsapp-fab-wrap {
 /* Accueil cinéma mobile : remonter le FAB au-dessus du switcher fixé en bas */
 @media (max-width: 767.98px) {
   body.page-home:has(#landing-cinematic-root.landing-cinematic-shell) .whatsapp-fab-wrap {
-    bottom: max(5.35rem, calc(env(safe-area-inset-bottom, 0px) + 4.2rem));
+    /* Au-dessus du switcher bas agrandi + marge */
+    bottom: max(6.15rem, calc(env(safe-area-inset-bottom, 0px) + 5.05rem));
+  }
+
+  /* Pastille « 1 conseiller disponible » : trop chargée sur petit écran — garder uniquement le bouton WhatsApp */
+  .whatsapp-fab-hint {
+    display: none !important;
   }
 }
 

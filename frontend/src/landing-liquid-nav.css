@@ -36,7 +36,7 @@
 @media (max-width: 767.98px) {
   #landing:has(.landing-cinematic-shell) #comment-ca-marche,
   #landing:has(.landing-cinematic-shell) #testimonials {
-    scroll-margin-bottom: max(4.75rem, calc(env(safe-area-inset-bottom, 0px) + 3.85rem));
+    scroll-margin-bottom: max(5.55rem, calc(env(safe-area-inset-bottom, 0px) + 4.55rem));
   }
 }
 

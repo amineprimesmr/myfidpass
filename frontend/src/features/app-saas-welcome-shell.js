@@ -2,7 +2,7 @@
  * Shell visuel onboarding SaaS (héros + bandeau essai + feuille) — coordination affichage.
  */
 import { initRouting } from "../router/index.js";
-import { buildPaymentPathWithAuthHandoff } from "../config.js";
+import { buildPaymentPathWithAuthHandoff, warmStripeJs } from "../config.js";
 
 /** @returns {HTMLElement | null} */
 function appShell() {
@@ -204,6 +204,7 @@ export function applySaaSFrcMessaging(opts) {
 
 /** Page de paiement / offre Pro (SPA, route `/paiement`). */
 export function navigateToSaaSPaymentPage() {
+  warmStripeJs();
   let path = buildPaymentPathWithAuthHandoff("/paiement");
   const hashIdx = path.indexOf("#");
   const pathWithoutHash = hashIdx >= 0 ? path.slice(0, hashIdx) : path;

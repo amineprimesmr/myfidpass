@@ -295,11 +295,34 @@
  100% { scale: 1 1; }
 }
 
-/* Mobile : barre de navigation en bas (safe area home indicator) */
+/* Mobile : barre de navigation en bas (safe area) — plus grande et plus décollée du bord */
 @media (max-width: 767.98px) {
   #landing-liquid-glass .switcher {
     top: auto;
-    bottom: max(0.55rem, env(safe-area-inset-bottom, 0px));
+    bottom: max(1.15rem, calc(env(safe-area-inset-bottom, 0px) + 0.62rem));
     translate: -50% 0;
+    --sw-pad-x: 11px;
+    --sw-pad-y: 7px;
+    --sw-pad-yb: 7px;
+    --sw-gap: 9px;
+    --fz: 1.0625rem;
+    width: min(352px, calc(100vw - 2rem));
+    max-width: min(352px, calc(100vw - 2rem));
+    height: 54px;
+  }
+
+  #landing-liquid-glass .switcher__icon {
+    width: 1.52rem;
+    height: 1.52rem;
+  }
+
+  #landing-liquid-glass .switcher__icon--play {
+    width: 1.32rem;
+    height: 1.32rem;
+  }
+
+  #landing-liquid-glass .switcher__icon--profile {
+    width: 1.38rem;
+    height: 1.38rem;
   }
 }

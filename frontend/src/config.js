@@ -49,6 +49,25 @@ const RAW_STRIPE_PUBLISHABLE_KEY =
 
 export const STRIPE_PUBLISHABLE_KEY = RAW_STRIPE_PUBLISHABLE_KEY;
 
+/** Promise partagée : évite de re-télécharger stripe.js à chaque montage du checkout. */
+let stripeJsPromise = null;
+
+/**
+ * @returns {Promise<import("@stripe/stripe-js").Stripe | null> | null}
+ */
+export function getStripeJs() {
+  if (!STRIPE_PUBLISHABLE_KEY || typeof window === "undefined") return null;
+  if (!stripeJsPromise) {
+    stripeJsPromise = import("@stripe/stripe-js").then(({ loadStripe }) => loadStripe(STRIPE_PUBLISHABLE_KEY));
+  }
+  return stripeJsPromise;
+}
+
+/** Lance le chargement réseau de stripe.js dès que la route paiement est connue (chevauche React + fetch API). */
+export function warmStripeJs() {
+  void getStripeJs();
+}
+
 /** Payment Link Stripe unique pour le SaaS (checkout hébergé, code promo prérempli). */
 export const STRIPE_SAAS_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 

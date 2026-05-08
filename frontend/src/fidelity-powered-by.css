@@ -1,0 +1,92 @@
+/* Badge « Propulsé par Myfidpass » — fidélité client + jeu QR */
+
+.fidelity-powered-by {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.fidelity-powered-by__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0 auto;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+
+.fidelity-powered-by__link:hover {
+  color: #475569;
+}
+
+.fidelity-powered-by__link:active {
+  opacity: 0.85;
+}
+
+.fidelity-powered-by__logo {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+.fidelity-powered-by__brand {
+  font-weight: 700;
+  color: #334155;
+}
+
+.fidelity-powered-by__link:hover .fidelity-powered-by__brand {
+  color: #1e293b;
+}
+
+/* Variante espace membre / récompenses : discret, centré, dans le flux */
+.fidelity-powered-by--member {
+  text-align: center;
+  padding: 0.65rem 1rem 1rem;
+  flex-shrink: 0;
+}
+
+.fidelity-powered-by--member .fidelity-powered-by__link {
+  opacity: 0.92;
+}
+
+/* À l’intérieur du pied fixe « pro » (visiteurs) */
+.fidelity-powered-by--in-pro-footer {
+  padding: 0 1rem 0.5rem;
+  text-align: center;
+}
+
+.fidelity-powered-by--in-pro-footer .fidelity-powered-by__link {
+  color: rgba(248, 250, 252, 0.72);
+  font-size: 0.68rem;
+}
+
+.fidelity-powered-by--in-pro-footer .fidelity-powered-by__brand {
+  color: rgba(248, 250, 252, 0.95);
+}
+
+.fidelity-powered-by--in-pro-footer .fidelity-powered-by__link:hover {
+  color: rgba(248, 250, 252, 0.88);
+}
+
+.fidelity-powered-by--in-pro-footer .fidelity-powered-by__link:hover .fidelity-powered-by__brand {
+  color: #fff;
+}
+
+/* Jeu QR : fusion avec les règles .fidelity-qr-powered (bord sup., safe area) */
+footer.fidelity-powered-by.fidelity-qr-powered {
+  padding-top: 0.35rem !important;
+}
+
+footer.fidelity-powered-by.fidelity-qr-powered .fidelity-powered-by__link {
+  padding-bottom: 0.1rem;
+}

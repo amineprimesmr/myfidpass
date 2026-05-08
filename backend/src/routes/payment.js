@@ -292,8 +292,10 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       });
     }
 
-    await cancelAbandonedEmbeddedCheckoutSubscriptions(customerId);
-    await resyncSubscriptionRowFromStripeIfNeeded(userId);
+    await Promise.all([
+      cancelAbandonedEmbeddedCheckoutSubscriptions(customerId),
+      resyncSubscriptionRowFromStripeIfNeeded(userId),
+    ]);
 
     if (hasStripeBackedActiveSubscription(userId)) {
       return res.status(409).json({

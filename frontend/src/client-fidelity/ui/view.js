@@ -23,6 +23,7 @@ import {
 import { balanceUnitShort, stampsStepSectionTitle } from "../lib/program-copy.js";
 import { renderDeliveryReceiptFabAndModalMarkup } from "./delivery-receipt-intro-markup.js";
 import { renderRewardRedeemModalMarkup } from "./reward-redeem-modal-markup.js";
+import { renderPoweredByMyfidpassMarkup } from "./powered-by-markup.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -282,6 +283,8 @@ export function renderClientPage(root, state, options = {}) {
 
     </main>
 
+    ${hasMember ? renderPoweredByMyfidpassMarkup(esc, "fidelity-powered-by--member") : ""}
+
     ${hasMember ? renderRewardRedeemModalMarkup(esc) : ""}
 
     ${deliveryReceiptEnabled ? renderDeliveryReceiptFabAndModalMarkup(esc, programType) : ""}
@@ -309,6 +312,7 @@ export function renderClientPage(root, state, options = {}) {
         : `
     <footer class="fidelity-v2-footer fidelity-v2-footer--dark">
       <p>Vous êtes un pro ?</p>
+      ${renderPoweredByMyfidpassMarkup(esc, "fidelity-powered-by--in-pro-footer", "div")}
     </footer>
     `
     }

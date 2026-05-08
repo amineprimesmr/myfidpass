@@ -102,10 +102,10 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
 
 .fidelity-qr-logo {
   display: block;
-  width: min(48vw, 8.5rem);
+  width: min(62vw, 10.75rem);
   max-width: 100%;
   height: auto;
-  max-height: min(12vw, 2.85rem);
+  max-height: min(18vw, 3.85rem);
   object-fit: contain;
   object-position: center top;
   border-radius: 0;
@@ -367,8 +367,8 @@ html.fidpass-low-perf-mobile .fidelity-qr-hero-orb {
   }
 
   .fidelity-qr-logo {
-    width: min(42vw, 7rem);
-    max-height: 2.25rem;
+    width: min(58vw, 9.5rem);
+    max-height: min(22vw, 3.45rem);
   }
 
   .fidelity-qr-title--lead {
@@ -602,6 +602,16 @@ main.fidelity-v2-main.fidelity-qr-game
 #fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play .fidelity-shiny-cta__label span {
   color: #ffffff !important;
   text-shadow: var(--fid-qr-cta-outline);
+}
+
+/* Évite le halo rectangulaire derrière le libellé (pseudo du shiny CTA, visible au tap / focus sur mobile). */
+main.fidelity-v2-main.fidelity-qr-game
+  .fidelity-v2-roulette-inline--qr
+  .fidelity-shiny-cta--qr-play
+  > .fidelity-shiny-cta__label::before,
+#fidelity-qr-panel-reward .fidelity-shiny-cta--qr-play > .fidelity-shiny-cta__label::before {
+  content: none;
+  display: none;
 }
 
 main.fidelity-v2-main.fidelity-qr-game

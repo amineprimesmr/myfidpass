@@ -2,6 +2,8 @@
  * Parcours QR : roue en premier, modales Google → vérif → gain → inscription (prénom + email).
  */
 
+import { renderPoweredByMyfidpassMarkup } from "./powered-by-markup.js";
+
 /**
  * @param {string} titleEsc
  * @returns {string}
@@ -127,6 +129,8 @@ export function renderQrGamePage(esc, p) {
 
       ${rouletteHtml}
     </main>
+
+    ${renderPoweredByMyfidpassMarkup(esc, "fidelity-qr-powered")}
 
     <div id="fidelity-qr-modal-root" class="fidelity-qr-modal-root hidden" aria-hidden="true">
       <div class="fidelity-qr-modal-backdrop" data-fid-qr-close="backdrop"></div>

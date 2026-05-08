@@ -488,6 +488,14 @@ export async function generatePass(member, business = null, options = {}) {
     attributedValue: `<a href="${walletPassEscapeHtmlAttribute(backUrl)}">Mes récompenses</a>`,
   };
 
+  const poweredByPassUrl = `${frontendUrl}/`;
+  const poweredByBackField = {
+    key: "poweredByMyfidpass",
+    label: " ",
+    value: "Propulsé par Myfidpass",
+    attributedValue: `<a href="${walletPassEscapeHtmlAttribute(poweredByPassUrl)}">Propulsé par Myfidpass</a>`,
+  };
+
   const lastMessageBackField = { key: "lastMessage", label: "Message", value: lastBroadcast };
   if (rawBroadcast) {
     lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
@@ -498,7 +506,7 @@ export async function generatePass(member, business = null, options = {}) {
   const addressBackFields = backAddress.length > 0 ? [{ key: "address", label: "Adresse", value: backAddress }] : [];
 
   if (format === "tampons") {
-    pass.backFields.push(lastMessageBackField, ...addressBackFields, webAccountBackField);
+    pass.backFields.push(lastMessageBackField, ...addressBackFields, webAccountBackField, poweredByBackField);
   } else {
     const pts = Math.max(0, Math.floor(Number(member.points) || 0));
 
@@ -507,6 +515,7 @@ export async function generatePass(member, business = null, options = {}) {
       ...addressBackFields,
       { key: "progress", label: "Votre progression", value: `${pts} points` },
       webAccountBackField,
+      poweredByBackField,
     );
   }
 

@@ -10,13 +10,12 @@ import {
   Sparkles,
   Wallet,
 } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   API_BASE,
-  STRIPE_PUBLISHABLE_KEY,
   FIDPASS_AUTH_RESTORED_EVENT,
   consumeAuthTransferFromHash,
   getAuthToken,
+  getStripeJs,
 } from "../config.js";
 
 const COUNTRIES = [
@@ -43,13 +42,6 @@ const EXTRA_COMPARE = [
   { name: "Caisse & points", tag: "Scan QR & recherche client", value: "Inclus", Icon: Check },
   { name: "Missions avis & réseaux", tag: "Bonus points configurables", value: "Activable", Icon: Sparkles },
 ];
-
-let stripePromise = null;
-function getStripeInstance() {
-  if (!STRIPE_PUBLISHABLE_KEY) return null;
-  if (!stripePromise) stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
-  return stripePromise;
-}
 
 function wireLiquidGlassTrackPrevious(switcherEl) {
   if (!switcherEl || switcherEl.dataset.liquidGlassTrackWired === "1") return;
@@ -197,14 +189,10 @@ export default function SaasProPaymentPage() {
       if (!cancelled) setNeedsLoginForPayment(false);
 
       try {
-        const stripePromiseLocal = getStripeInstance();
+        const stripePromiseLocal = getStripeJs();
         if (!stripePromiseLocal) throw new Error("Stripe n'est pas configuré sur le frontend.");
-        const stripe = await stripePromiseLocal;
-        if (!stripe) throw new Error("Impossible de charger Stripe.");
-        if (cancelled) return;
-        stripeRef.current = stripe;
 
-        const res = await fetch(`${API_BASE}/api/payment/create-embedded-subscription`, {
+        const fetchPromise = fetch(`${API_BASE}/api/payment/create-embedded-subscription`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -212,6 +200,12 @@ export default function SaasProPaymentPage() {
           },
           body: JSON.stringify({ plan: annual ? "annual" : "monthly", save_card: saveCard }),
         });
+
+        const [stripe, res] = await Promise.all([stripePromiseLocal, fetchPromise]);
+        if (!stripe) throw new Error("Impossible de charger Stripe.");
+        if (cancelled) return;
+        stripeRef.current = stripe;
+
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           if (res.status === 409 && String(data?.code || "").toLowerCase() === "already_subscribed" && isAppEmbed) {
@@ -294,11 +288,8 @@ export default function SaasProPaymentPage() {
           if (event?.error?.message) setError(event.error.message);
         });
 
-        /** Attendre le commit React des champs (refs non null), sinon mount(undefined) = pas d’iframe → impossible de saisir. */
         await Promise.resolve();
-        await new Promise((resolve) => {
-          requestAnimationFrame(() => requestAnimationFrame(resolve));
-        });
+        await new Promise((resolve) => requestAnimationFrame(resolve));
         if (cancelled) return;
 
         const nm = numberMountRef.current;
@@ -317,87 +308,92 @@ export default function SaasProPaymentPage() {
         expiryElementRef.current = expiry;
         cvcElementRef.current = cvc;
         setStripeFieldsLive(true);
-
-        /**
-         * Apple Pay / Google Pay (Stripe Payment Request Button).
-         * Prérequis prod : Dashboard Stripe → Paramètres → Moyens de paiement → Apple Pay → enregistrer le domaine `myfidpass.fr`.
-         * Safari iOS / macOS ; pas garanti dans une WebView tierce (ex. navigateur intégré d’app).
-         */
-        const walletCents = walletSheetAmountCents(annual, trialDaysResolved);
-        const paymentRequest = stripe.paymentRequest({
-          country: "FR",
-          currency: "eur",
-          total: {
-            label: "MyFidpass Pro",
-            amount: walletCents,
-          },
-          requestPayerEmail: false,
-        });
-
-        paymentRequest.on("paymentmethod", async (ev) => {
-          if (cancelled) {
-            ev.complete("fail");
-            return;
-          }
-          setBusy(true);
-          setError("");
-          try {
-            let confirmResult;
-            const cs = clientSecretRef.current;
-            if (confirmModeForSession === "setup") {
-              confirmResult = await stripe.confirmCardSetup(cs, {
-                payment_method: ev.paymentMethod.id,
-              });
-            } else {
-              confirmResult = await stripe.confirmCardPayment(cs, {
-                payment_method: ev.paymentMethod.id,
-              });
-            }
-            if (confirmResult?.error) {
-              ev.complete("fail");
-              setError(confirmResult.error.message || "Paiement refusé.");
-              return;
-            }
-            ev.complete("success");
-            setSuccess("Paiement validé. Activation du plan Pro en cours...");
-            window.setTimeout(() => {
-              navigateAfterSuccessfulPayment(isAppEmbed);
-            }, 900);
-          } catch (e) {
-            ev.complete("fail");
-            setError(e?.message || "Le paiement a échoué.");
-          } finally {
-            setBusy(false);
-          }
-        });
-
-        const canWallet = await paymentRequest.canMakePayment();
-        if (import.meta.env?.DEV) {
-          console.info("[saas-pay] paymentRequest.canMakePayment()", canWallet);
-        }
-        let prMounted = false;
-        if (!cancelled && canWallet && paymentRequestButtonMountRef.current) {
-          try {
-            const prBtn = elements.create("paymentRequestButton", {
-              paymentRequest,
-              style: {
-                paymentRequestButton: {
-                  type: "default",
-                  theme: "dark",
-                  height: "48px",
-                },
-              },
-            });
-            prBtn.mount(paymentRequestButtonMountRef.current);
-            paymentRequestButtonElementRef.current = prBtn;
-            prMounted = true;
-          } catch (prErr) {
-            console.warn("[saas-pay] payment request button:", prErr?.message || prErr);
-          }
-        }
-        if (!cancelled) setWalletBtnMounted(prMounted);
-
         setSessionReady(true);
+
+        const mountAppleGooglePayWhenReady = async () => {
+          try {
+            const walletCents = walletSheetAmountCents(annual, trialDaysResolved);
+            const paymentRequest = stripe.paymentRequest({
+              country: "FR",
+              currency: "eur",
+              total: {
+                label: "MyFidpass Pro",
+                amount: walletCents,
+              },
+              requestPayerEmail: false,
+            });
+
+            paymentRequest.on("paymentmethod", async (ev) => {
+              if (cancelled) {
+                ev.complete("fail");
+                return;
+              }
+              setBusy(true);
+              setError("");
+              try {
+                let confirmResult;
+                const cs = clientSecretRef.current;
+                if (confirmModeForSession === "setup") {
+                  confirmResult = await stripe.confirmCardSetup(cs, {
+                    payment_method: ev.paymentMethod.id,
+                  });
+                } else {
+                  confirmResult = await stripe.confirmCardPayment(cs, {
+                    payment_method: ev.paymentMethod.id,
+                  });
+                }
+                if (confirmResult?.error) {
+                  ev.complete("fail");
+                  setError(confirmResult.error.message || "Paiement refusé.");
+                  return;
+                }
+                ev.complete("success");
+                setSuccess("Paiement validé. Activation du plan Pro en cours...");
+                window.setTimeout(() => {
+                  navigateAfterSuccessfulPayment(isAppEmbed);
+                }, 900);
+              } catch (e) {
+                ev.complete("fail");
+                setError(e?.message || "Le paiement a échoué.");
+              } finally {
+                setBusy(false);
+              }
+            });
+
+            const canWallet = await paymentRequest.canMakePayment();
+            if (import.meta.env?.DEV) {
+              console.info("[saas-pay] paymentRequest.canMakePayment()", canWallet);
+            }
+            if (cancelled) return;
+            let prMounted = false;
+            const mountEl = paymentRequestButtonMountRef.current;
+            if (canWallet && mountEl) {
+              try {
+                const prBtn = elements.create("paymentRequestButton", {
+                  paymentRequest,
+                  style: {
+                    paymentRequestButton: {
+                      type: "default",
+                      theme: "dark",
+                      height: "48px",
+                    },
+                  },
+                });
+                prBtn.mount(mountEl);
+                paymentRequestButtonElementRef.current = prBtn;
+                prMounted = true;
+              } catch (prErr) {
+                console.warn("[saas-pay] payment request button:", prErr?.message || prErr);
+              }
+            }
+            if (!cancelled) setWalletBtnMounted(prMounted);
+          } catch (wErr) {
+            if (!cancelled) setWalletBtnMounted(false);
+            if (import.meta.env?.DEV) console.warn("[saas-pay] wallet setup:", wErr);
+          }
+        };
+
+        void mountAppleGooglePayWhenReady();
       } catch (err) {
         if (!cancelled) {
           setStripeTrialDays(null);
