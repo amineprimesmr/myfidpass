@@ -116,6 +116,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         landingAiAgency: resolve(__dirname, "landing-ai-agency.html"),
         flyerEmbed: resolve(__dirname, "flyer-embed.html"),
+        qrGameEmbed: resolve(__dirname, "qr-game-embed.html"),
       },
     },
   },
