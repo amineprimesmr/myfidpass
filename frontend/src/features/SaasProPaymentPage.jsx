@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Apple,
   ArrowLeft,
   Bell,
   Check,
@@ -668,13 +667,24 @@ export default function SaasProPaymentPage() {
               }`}
             >
               <div className="saas-pay-wallet-hero__head">
-                <span className="saas-pay-wallet-hero__caption">{walletHeroCaption}</span>
-                <span className="saas-pay-wallet-hero__apple-pay-mark" role="img" aria-label="Apple Pay">
-                  <Apple className="saas-pay-wallet-hero__apple-icon" size={22} strokeWidth={1.65} aria-hidden />
-                  <span className="saas-pay-wallet-hero__pay-word" aria-hidden>
-                    Pay
+                <p
+                  className="saas-pay-wallet-hero__wallet-line"
+                  aria-label={`${walletHeroCaption} Apple Pay`}
+                >
+                  <span className="saas-pay-wallet-hero__caption-text" aria-hidden="true">
+                    {walletHeroCaption}
                   </span>
-                </span>
+                  <img
+                    className="saas-pay-wallet-hero__apple-pay-logo"
+                    src="/assets/apple-pay-mark-white.svg"
+                    alt=""
+                    width={54}
+                    height={22}
+                    decoding="async"
+                    fetchPriority="low"
+                    aria-hidden="true"
+                  />
+                </p>
               </div>
               <div
                 ref={paymentRequestButtonMountRef}

@@ -950,12 +950,21 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem 0.5rem;
   margin-bottom: 0.82rem;
   text-align: center;
 }
 
-.saas-pay-wallet-hero__caption {
+.saas-pay-wallet-hero__wallet-line {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.45rem;
+  margin: 0;
+  max-width: 100%;
+}
+
+.saas-pay-wallet-hero__caption-text {
   color: #f5f5f7;
   font-size: clamp(1.05rem, 3.5vw, 1.2rem);
   font-weight: 800;
@@ -963,30 +972,14 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
   line-height: 1.2;
 }
 
-.saas-pay-wallet-hero__apple-pay-mark {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.05rem;
-  color: #fff;
-}
-
-.saas-pay-wallet-hero__apple-icon {
+.saas-pay-wallet-hero__apple-pay-logo {
   flex-shrink: 0;
-  stroke: currentColor;
-}
-
-.saas-pay-wallet-hero__pay-word {
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF Pro Display",
-    "Segoe UI",
-    system-ui,
-    sans-serif;
-  font-size: clamp(1.12rem, 3.7vw, 1.28rem);
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1;
+  height: clamp(1.05rem, 3.4vw, 1.22rem);
+  width: auto;
+  vertical-align: middle;
+  object-fit: contain;
+  /* Hauteur du mot : le logo suit visuellement la phrase */
+  transform: translateY(0.04em);
 }
 
 .saas-pay-wallet-hero__glass .saas-pay-wallet-mount--hero {
