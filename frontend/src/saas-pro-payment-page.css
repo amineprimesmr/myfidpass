@@ -1470,47 +1470,63 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
   border: none;
   min-height: 3.25rem;
   border-radius: 0.8rem;
-  background: #c8f80f;
-  color: #121212;
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: inherit;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  transition: transform 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    box-shadow 400ms cubic-bezier(1, 0, 0.4, 1),
+    background-color 400ms cubic-bezier(1, 0, 0.4, 1);
   flex-wrap: wrap;
   text-align: center;
   line-height: 1.25;
   padding: 0.5rem 0.75rem;
+  cursor: pointer;
 }
 
-.saas-pay-continue-pricing {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.2rem 0.35rem;
-  max-width: 100%;
-  font-size: clamp(0.78rem, 2.4vw, 0.95rem);
-  font-weight: 600;
+/* Bouton principal paiement : liquid glass (même esprit que le switcher Mensuel / Annuel) */
+.saas-pay-checkout .saas-pay-method > button.saas-pay-continue {
+  --c-glass: #bbbbbc;
+  --c-light: #fff;
+  --c-dark: #000;
+  --c-content: #e4e6ec;
+  --glass-reflex-dark: 2;
+  --glass-reflex-light: 0.35;
+  --saturation: 150%;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 3.45rem;
+  border-radius: 999px;
+  padding: 0.65rem 1.25rem;
+  background-color: color-mix(in srgb, var(--c-glass) 14%, transparent);
+  backdrop-filter: blur(10px) saturate(var(--saturation));
+  -webkit-backdrop-filter: blur(10px) saturate(var(--saturation));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+    inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
+    inset -2px -2px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent),
+    inset -3px -8px 1px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
+    inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    inset -1.5px 2.5px 0px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 0px 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 2px -6.5px 1px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+    0px 1px 5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    0px 8px 22px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent);
+  color: var(--c-content);
+  font-size: clamp(0.92rem, 3.1vw, 1.02rem);
+  font-weight: 700;
 }
 
-.saas-pay-continue-pricing__label {
-  font-weight: 600;
-  color: #121212;
-}
-
-.saas-pay-continue-pricing__strike {
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-  color: rgba(18, 18, 18, 0.55);
-  font-weight: 600;
-}
-
-.saas-pay-continue-pricing__due {
+.saas-pay-checkout .saas-pay-method > button.saas-pay-continue .saas-pay-continue-label {
+  font-size: clamp(1.08rem, 3.85vw, 1.38rem);
   font-weight: 800;
-  color: #121212;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  text-shadow: 0 1px 12px color-mix(in srgb, var(--c-dark) 35%, transparent);
 }
 
 .saas-pay-continue:hover {
@@ -1518,7 +1534,9 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
 }
 
 .saas-pay-continue:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .saas-pay-auth-gate {
@@ -1546,6 +1564,10 @@ a.saas-pay-continue--link {
   text-decoration: none;
   box-sizing: border-box;
   cursor: pointer;
+  background: #c8f80f;
+  color: #121212;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 a.saas-pay-continue--link:hover {

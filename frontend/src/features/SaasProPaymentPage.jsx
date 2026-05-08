@@ -422,33 +422,6 @@ export default function SaasProPaymentPage() {
     setElementsReady(Boolean(cardState.number && cardState.expiry && cardState.cvc));
   }, [cardState]);
 
-  const totals = useMemo(() => {
-    if (!annual) {
-      return {
-        planLabel: "Pro mensuel",
-        planAmount: "49,99€",
-        promoLabel: "Promo lancement (1er mois)",
-        promoAmount: "-48,99€ (-98%)",
-        totalToday: "1€",
-      };
-    }
-    if (stripeTrialDays === 0) {
-      return {
-        planLabel: "Pro annuel",
-        planAmount: "399€",
-        promoLabel: "Promo lancement",
-        promoAmount: "-398€",
-        totalToday: "1€",
-      };
-    }
-    return {
-      planLabel: "Pro annuel",
-      planAmount: "399€",
-      promoLabel: "Période d’essai",
-      promoAmount: "Sans prélèvement",
-      totalToday: "0€",
-    };
-  }, [annual, stripeTrialDays]);
   const billingTimeline = useMemo(() => {
     const now = new Date();
     const renewAnchor = new Date(now);
@@ -790,23 +763,14 @@ export default function SaasProPaymentPage() {
                 onClick={handlePay}
                 disabled={busy || initializing || !elementsReady}
               >
-                <LockKeyhole size={18} />
                 {busy ? (
                   "Paiement en cours..."
                 ) : initializing ? (
                   "Chargement du module..."
                 ) : annual && stripeTrialDays !== 0 && stripeTrialDays !== null ? (
-                  "Commencer le mois offert"
+                  <span className="saas-pay-continue-label">Commencer le mois offert</span>
                 ) : (
-                  <span className="saas-pay-continue-pricing">
-                    <span className="saas-pay-continue-pricing__label">Total à payer :</span>{" "}
-                    <span className="saas-pay-continue-pricing__strike">
-                      {annual ? "399€" : "49,99€"}
-                    </span>{" "}
-                    <strong className="saas-pay-continue-pricing__due">
-                      {annual && stripeTrialDays !== 0 ? totals.totalToday : "1€"}
-                    </strong>
-                  </span>
+                  <span className="saas-pay-continue-label">Commencer pour 1€</span>
                 )}
               </button>
             </>
