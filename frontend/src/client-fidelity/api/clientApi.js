@@ -124,20 +124,47 @@ export function createClientFidelityApi(apiBase) {
 
   async function getWalletUrls(slug, memberId) {
     let googleRes = null;
-    try {
-      googleRes = await fetchFidelity(
-        withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/google-wallet-url`),
-        { cache: "no-store" },
-        "Wallet Google indisponible pour le moment.",
-      );
-    } catch {
-      /* Apple reste disponible ; Google seulement si OK */
+    const googleUrlPath = `/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/google-wallet-url`;
+    /** Deux essais : échec transitoire réseau trop fréquent sur mobile. */
+    for (let attempt = 0; attempt < 2 && googleRes == null; attempt += 1) {
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, 380));
+      }
+      try {
+        googleRes = await fetchFidelity(withBase(googleUrlPath), { cache: "no-store" }, "");
+      } catch {
+        googleRes = null;
+      }
     }
     const googleData = googleRes ? await safeJson(googleRes) : {};
     return {
       apple: withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/pass`),
       google: googleRes && googleRes.ok ? (googleData.url || "") : "",
     };
+  }
+
+  /**
+   * À l’appui sur « Google Wallet » : récupère l’URL de save (ou le motif d’échec).
+   * @returns {Promise<{ ok: true, url: string } | { ok: false, code?: string, error: string }>}
+   */
+  async function getGoogleWalletSaveLink(slug, memberId) {
+    try {
+      const res = await fetchFidelity(
+        withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/google-wallet-url`),
+        { cache: "no-store" },
+        "Impossible de joindre le serveur. Vérifie ta connexion.",
+      );
+      const data = await safeJson(res);
+      if (res.ok && data.url) return { ok: true, url: String(data.url) };
+      return {
+        ok: false,
+        code: data.code ? String(data.code) : "",
+        error: data.error ? String(data.error) : "Impossible d’ouvrir Google Wallet.",
+      };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erreur réseau.";
+      return { ok: false, code: "", error: msg };
+    }
   }
 
   async function getEngagementActions(slug) {
@@ -248,6 +275,7 @@ export function createClientFidelityApi(apiBase) {
     convertTickets,
     spin,
     getWalletUrls,
+    getGoogleWalletSaveLink,
     getEngagementActions,
     claimEngagement,
     claimGuestIdentity,

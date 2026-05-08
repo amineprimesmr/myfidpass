@@ -739,6 +739,31 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const wallet = store.get().wallet || {};
     if (apple && wallet.apple) apple.href = wallet.apple;
     if (google && wallet.google) google.href = wallet.google;
+    if (google) {
+      google.addEventListener(
+        "click",
+        async (e) => {
+          const href = (google.getAttribute("href") || "").trim();
+          if (href && href !== "#") return;
+          e.preventDefault();
+          const mid = store.get().member?.id;
+          if (!mid) return;
+          const result = await api.getGoogleWalletSaveLink(slug, mid);
+          if (result.ok) {
+            store.patch({ wallet: { ...store.get().wallet, google: result.url } });
+            google.setAttribute("href", result.url);
+            window.location.href = result.url;
+            return;
+          }
+          const message =
+            result.code === "google_wallet_unavailable"
+              ? "Google Wallet n’est pas activé pour ce commerce. Réessaie plus tard ou contacte le magasin."
+              : result.error || "Impossible d’ouvrir Google Wallet.";
+          globalThis.alert(message);
+        },
+        { signal },
+      );
+    }
 
     const deliveryFile = rootEl.querySelector("#fidelity-delivery-receipt-file");
     const deliveryFabBtn = rootEl.querySelector("#fidelity-delivery-receipt-fab-btn");

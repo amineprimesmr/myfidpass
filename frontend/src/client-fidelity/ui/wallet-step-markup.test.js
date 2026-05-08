@@ -22,9 +22,9 @@ describe("walletStepShowsAddPassCta", () => {
     ).toBe(true);
   });
 
-  it("Android : false sans URL Google", () => {
+  it("Android : true même sans URL Google préchargée (hero + résolution au tap)", () => {
     expect(walletStepShowsAddPassCta({ platform: "android", appleWalletRegistered: false, hasGoogleWallet: false })).toBe(
-      false,
+      true,
     );
   });
 
@@ -50,6 +50,16 @@ describe("renderWalletPassHeroShinyMarkup", () => {
     expect(html).toContain("fidelity-earn-points-cta-wrap--wallet-attention");
     expect(html).toContain("fidelity-cta-pill-icon");
     expect(html).toContain("/assets/iconapplewallet.png");
+  });
+
+  it("Android sans URL préchargée : CTA Google « Ajouter la carte » au hero", () => {
+    const html = renderWalletPassHeroShinyMarkup(esc, {
+      platform: "android",
+      appleWalletRegistered: false,
+      hasGoogleWallet: false,
+    });
+    expect(html).toContain('id="fidelity-v2-google"');
+    expect(html).toContain("Ajouter la carte");
   });
 
   it("desktop avec Apple et Google : deux CTA", () => {
@@ -95,6 +105,15 @@ describe("renderWalletStepMarkup", () => {
     const html = renderWalletStepMarkup(esc, {
       platform: "desktop",
       appleWalletRegistered: true,
+      hasGoogleWallet: false,
+    });
+    expect(html.trim()).toBe("");
+  });
+
+  it("Android : pas de rangée wallet dupliquée — le hero porte déjà « Ajouter la carte »", () => {
+    const html = renderWalletStepMarkup(esc, {
+      platform: "android",
+      appleWalletRegistered: false,
       hasGoogleWallet: false,
     });
     expect(html.trim()).toBe("");

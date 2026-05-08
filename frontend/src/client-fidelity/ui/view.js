@@ -166,10 +166,12 @@ export function renderClientPage(root, state, options = {}) {
       appleWalletRegistered,
       hasGoogleWallet,
     });
-  const showMissionsEntry = hasMissionsSheet && !showWalletPassHero;
+  /** iOS : pas de rail missions tant que le hero affiche le wallet. Android : wallet au hero mais missions toujours ouvrables. */
+  const showMissionsEntry =
+    hasMissionsSheet && (!showWalletPassHero || walletPlatform === "android");
   const deliveryReceiptEnabled =
     hasMember &&
-    !showWalletPassHero &&
+    (!showWalletPassHero || walletPlatform === "android") &&
     Number(state.business?.delivery_receipt_claims_enabled ?? state.business?.deliveryReceiptClaimsEnabled ?? 1) === 1;
 
   const memberLogoUrl = hasMember ? resolveClientLogoImgSrc(state.business, slugForAssets, apiBase) : "";

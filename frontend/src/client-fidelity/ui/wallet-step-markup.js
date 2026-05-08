@@ -10,7 +10,9 @@ export function walletStepShowsAddPassCta(options = {}) {
   const hasGoogleWallet = Boolean(options.hasGoogleWallet);
 
   if (platform === "ios") return !appleWalletRegistered;
-  if (platform === "android") return hasGoogleWallet;
+  /** Android : même priorité qu’Apple avant enregistrement — le hero doit montrer « Ajouter la carte », pas les missions.
+   * L’URL Google peut être résolue au tap (`getGoogleWalletSaveLink`) si le préchargement a échoué. */
+  if (platform === "android") return true;
   return !appleWalletRegistered || hasGoogleWallet;
 }
 
@@ -46,7 +48,7 @@ export function renderWalletPassHeroShinyMarkup(esc, options = {}) {
   if (platform === "ios") {
     if (!appleWalletRegistered) blocks.push(shinyApple());
   } else if (platform === "android") {
-    if (hasGoogleWallet) blocks.push(shinyGoogle("Ajouter la carte"));
+    blocks.push(shinyGoogle("Ajouter la carte"));
   } else {
     if (!appleWalletRegistered) blocks.push(shinyApple());
     if (hasGoogleWallet) blocks.push(shinyGoogle("Google Wallet"));
@@ -120,7 +122,8 @@ export function renderWalletStepMarkup(_esc, options = {}) {
   if (platform === "ios") {
     inner = appleWalletRegistered ? "" : appleOnly;
   } else if (platform === "android") {
-    inner = hasGoogleWallet ? googleOnly : "";
+    /** Toujours afficher le CTA sur Android : l’URL est résolue au tap si le préchargement a échoué. */
+    inner = googleOnly;
   } else {
     const applePart = appleWalletRegistered ? "" : appleDesktop;
     const googlePart = hasGoogleWallet ? googleDesktop : "";
