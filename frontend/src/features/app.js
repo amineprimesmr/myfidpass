@@ -24,6 +24,7 @@ import {
   wireSaaSWelcomeStripeHandlers,
   applySaaSFrcMessaging,
 } from "./app-saas-welcome-shell.js";
+import { syncMerchantSetupChecklistFromSettings, initMerchantSetupChecklist } from "./app-merchant-setup-checklist.js";
 import {
   isDashIntroRevealDone,
   scheduleDashboardOnboardingReveal,
@@ -187,6 +188,10 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
   const fallbackTitle = "Configurez votre espace Myfidpass";
   const fallbackSubtitle = "Indiquez votre commerce, puis créez votre carte et votre flyer QR.";
 
+  if (typeof window !== "undefined") {
+    window.__fidpassLastAuthMeDetail = d;
+  }
+
   if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
     clearInterval(window.__fidpassTrialPillTimer);
     window.__fidpassTrialPillTimer = null;
@@ -216,6 +221,23 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
 
   if (isAdmin || hasSubscription) {
     clearSubscribeChrome();
+    return;
+  }
+
+  const merchantSetupBlocking =
+    typeof window !== "undefined" && window.__fidpassMerchantSetupComplete === false;
+  if (merchantSetupBlocking) {
+    syncSidebar(false);
+    applySaaSFrcMessaging({
+      paid: false,
+      trialHero: false,
+      showSubscribeStrip: false,
+      hideTrialChrome: true,
+      trialEndRaw: null,
+      formatEndingHeadline: formatMerchantTrialEndingHeadline,
+      fallbackTitle,
+      fallbackSubtitle,
+    });
     return;
   }
 
@@ -256,10 +278,13 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
     if (stripStatus) stripStatus.textContent = headline;
 
     if (Date.now() >= end) {
+      const blocking =
+        typeof window !== "undefined" && window.__fidpassMerchantSetupComplete === false;
       applySaaSFrcMessaging({
         paid: false,
         trialHero: false,
-        showSubscribeStrip: true,
+        showSubscribeStrip: !blocking,
+        hideTrialChrome: blocking,
         trialEndRaw: null,
         formatEndingHeadline: formatMerchantTrialEndingHeadline,
         fallbackTitle,
@@ -331,6 +356,11 @@ function ensureFidpassAuthMeMerchantListener() {
 }
 
 ensureFidpassAuthMeMerchantListener();
+
+window.addEventListener("fidpass-merchant-setup-updated", () => {
+  const d = typeof window !== "undefined" ? window.__fidpassLastAuthMeDetail : null;
+  if (d && typeof d === "object") updateMerchantTrialSubscribePillFromDetail(d);
+});
 
 function initAppPage() {
   const appUrl = new URL(window.location.href);
@@ -994,6 +1024,27 @@ function initAppDashboard(slug) {
     /* fetchWithAuth : refresh JWT si access token expiré — sinon req.user est null côté API et le dashboard renvoie « Token dashboard invalide ». */
     return fetchWithAuth(url, { ...opts, headers });
   };
+
+  if (typeof window !== "undefined") {
+    const prev = window.__fidpassFlyerSaveHandler;
+    if (typeof prev === "function") {
+      window.removeEventListener("fidpass:flyer-saved", prev);
+    }
+    /** @param {Event} _ev */
+    const onFlyerSaved = async (_ev) => {
+      try {
+        const res = await api("/dashboard/settings");
+        if (!res.ok) return;
+        const data = await res.json();
+        window.__fidpassLastDashboardSettings = data;
+        syncMerchantSetupChecklistFromSettings(data, slug);
+        const d = window.__fidpassLastAuthMeDetail;
+        if (d && typeof d === "object") updateMerchantTrialSubscribePillFromDetail(d);
+      } catch (_) {}
+    };
+    window.__fidpassFlyerSaveHandler = onFlyerSaved;
+    window.addEventListener("fidpass:flyer-saved", onFlyerSaved);
+  }
 
   const dashboardOnboardingGate = document.getElementById("app-dashboard-onboarding-gate");
   const dashboardShellMain = document.getElementById("app-dashboard-shell-main");
@@ -3014,8 +3065,11 @@ function initAppDashboard(slug) {
 
   function applyDashboardSettingsToForms(data) {
     if (!data) return;
-      const orgFromApi = (data.organization_name ?? data.organizationName ?? "").trim();
-      currentOrganizationName = orgFromApi || "Votre commerce";
+    if (typeof window !== "undefined") {
+      window.__fidpassLastDashboardSettings = data;
+    }
+    const orgFromApi = (data.organization_name ?? data.organizationName ?? "").trim();
+    currentOrganizationName = orgFromApi || "Votre commerce";
       if (personnaliserOrg && orgFromApi) personnaliserOrg.value = orgFromApi;
       const sideBizName = document.getElementById("app-business-name");
       if (sideBizName) sideBizName.textContent = orgFromApi || slug || "Mon espace";
@@ -3286,6 +3340,7 @@ function initAppDashboard(slug) {
         })
         .catch(() => {});
     schedulePersonnaliserGroupStatusRefresh();
+    syncMerchantSetupChecklistFromSettings(data, slug);
     queueMicrotask(() => {
       refreshDeliveryClaimsPending().catch(() => {});
     });
@@ -4418,6 +4473,7 @@ function initAppDashboard(slug) {
     openSlugEditor: (name) => openPersonnaliserShareWithSuggestedSlug(name),
     resizeLogoToDataUrl,
   });
+  initMerchantSetupChecklist({ slug });
 
   // ——— Scanner (caméra) ———
   const caisseChoose = document.getElementById("app-caisse-choose");

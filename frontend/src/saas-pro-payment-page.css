@@ -817,6 +817,7 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
 
 .saas-pay-summary,
 .saas-pay-total,
+.saas-pay-wallet-hero,
 .saas-pay-method,
 .saas-pay-timeline {
   background: #151920;
@@ -878,15 +879,24 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
 }
 
 /* Au-dessus de la timeline : éviter qu’un bloc « passe au-dessus » et intercepte les clics vers les iframes Stripe. */
-.saas-pay-checkout .saas-pay-total,
+.saas-pay-checkout .saas-pay-wallet-hero,
 .saas-pay-checkout .saas-pay-method {
   position: relative;
   isolation: isolate;
   z-index: 3;
 }
 
-/* ── Total à payer — bloc mise en avant (checkout uniquement) */
-@keyframes saasPayTotalBorderFlow {
+/* ── Apple / Google Pay — bloc liquid glass noir (remplace l’ancien « Total à payer ») */
+@keyframes saasPayWalletHeroShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes saasPayWalletHeroBorderFlow {
   0%,
   100% {
     background-position: 0% 50%;
@@ -896,129 +906,113 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
   }
 }
 
-@keyframes saasPayTotalGlowPulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 0.72;
-  }
-}
-
-.saas-pay-checkout .saas-pay-total {
+.saas-pay-checkout .saas-pay-wallet-hero {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
+  margin-top: 0.7rem;
+  padding: 0;
   border: none;
   border-radius: 1.05rem;
-  padding: 1.05rem 1rem;
-  background: linear-gradient(
-    90deg,
-    #040d17 0%,
-    #071928 14%,
-    #0c2744 28%,
-    #134067 40%,
-    #174e80 50%,
-    #134067 60%,
-    #0c2744 72%,
-    #071928 86%,
-    #040d17 100%
-  );
-  box-shadow:
-    0 6px 28px rgba(2, 12, 27, 0.55),
-    0 0 0 1px rgba(59, 130, 246, 0.08),
-    0 0 48px rgba(37, 99, 235, 0.14);
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
 }
 
-.saas-pay-checkout .saas-pay-total::before {
+.saas-pay-checkout .saas-pay-wallet-hero[hidden] {
+  display: none !important;
+}
+
+.saas-pay-wallet-hero__glass {
+  position: relative;
+  border-radius: 1.05rem;
+  padding: 0.85rem 0.9rem;
+  background: linear-gradient(
+    145deg,
+    rgba(12, 12, 14, 0.92) 0%,
+    rgba(6, 8, 11, 0.96) 45%,
+    rgba(4, 5, 8, 0.98) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.saas-pay-wallet-hero__glass::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1.5px;
+  padding: 1px;
   background: linear-gradient(
-    95deg,
-    #1e40af,
-    #2563eb,
-    #38bdf8,
-    #60a5fa,
-    #2563eb,
-    #3b82f6
+    120deg,
+    rgba(255, 255, 255, 0.14),
+    rgba(120, 120, 130, 0.04) 32%,
+    rgba(80, 80, 92, 0.08) 50%,
+    rgba(120, 120, 130, 0.04) 68%,
+    rgba(255, 255, 255, 0.1)
   );
   background-size: 240% 100%;
-  animation: saasPayTotalBorderFlow 9s ease-in-out infinite;
+  animation: saasPayWalletHeroBorderFlow 10s ease-in-out infinite;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
   z-index: 0;
+  opacity: 0.75;
 }
 
-.saas-pay-checkout .saas-pay-total::after {
+.saas-pay-wallet-hero__glass--loading::after {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(
-      ellipse 132% 58% at 50% 52%,
-      rgba(147, 197, 253, 0.13) 0%,
-      rgba(59, 130, 246, 0.04) 48%,
-      transparent 68%
-    ),
-    linear-gradient(
-      90deg,
-      transparent 2%,
-      rgba(96, 165, 250, 0.035) 38%,
-      rgba(186, 230, 253, 0.065) 50%,
-      rgba(96, 165, 250, 0.035) 62%,
-      transparent 98%
-    );
-  animation: saasPayTotalGlowPulse 5s ease-in-out infinite;
-  pointer-events: none;
   z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    95deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 42%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 58%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: saasPayWalletHeroShimmer 1.35s ease-in-out infinite;
+  pointer-events: none;
 }
 
-.saas-pay-checkout .saas-pay-total .saas-pay-summary-row {
+.saas-pay-wallet-hero__glass .saas-pay-wallet-mount--hero {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
-.saas-pay-checkout .saas-pay-total .saas-pay-summary-row > span:first-child {
-  color: #e8f1fc;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-shadow: 0 1px 14px rgba(0, 8, 20, 0.45);
+.saas-pay-wallet-mount.saas-pay-wallet-mount--hero:empty {
+  display: block;
+  min-height: 48px;
 }
 
-.saas-pay-checkout .saas-pay-total .saas-pay-total-amount {
-  color: #f4f8ff;
-  font-size: 1.02rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-shadow:
-    0 0 28px rgba(96, 165, 250, 0.35),
-    0 1px 10px rgba(0, 10, 24, 0.4);
-}
-
-.saas-pay-checkout .saas-pay-total .saas-pay-total-old-price {
-  color: rgba(198, 211, 236, 0.62);
+.saas-pay-wallet-mount.saas-pay-wallet-mount--hero:not(:empty) {
+  margin-bottom: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .saas-pay-checkout .saas-pay-total::before,
-  .saas-pay-checkout .saas-pay-total::after {
+  .saas-pay-wallet-hero__glass::before,
+  .saas-pay-wallet-hero__glass--loading::after {
     animation: none;
   }
 
-  .saas-pay-checkout .saas-pay-total::before {
-    background-position: 40% 40%;
+  .saas-pay-wallet-hero__glass::before {
+    opacity: 0.45;
   }
+}
 
-  .saas-pay-checkout .saas-pay-total::after {
-    opacity: 0.5;
-  }
+.saas-pay-wallet-ios-hint--below-hero {
+  margin-top: 0.65rem;
+  margin-bottom: 0;
 }
 
 .saas-pay-timeline {
@@ -1485,6 +1479,38 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
   justify-content: center;
   gap: 0.45rem;
   transition: transform 0.16s ease;
+  flex-wrap: wrap;
+  text-align: center;
+  line-height: 1.25;
+  padding: 0.5rem 0.75rem;
+}
+
+.saas-pay-continue-pricing {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.2rem 0.35rem;
+  max-width: 100%;
+  font-size: clamp(0.78rem, 2.4vw, 0.95rem);
+  font-weight: 600;
+}
+
+.saas-pay-continue-pricing__label {
+  font-weight: 600;
+  color: #121212;
+}
+
+.saas-pay-continue-pricing__strike {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: rgba(18, 18, 18, 0.55);
+  font-weight: 600;
+}
+
+.saas-pay-continue-pricing__due {
+  font-weight: 800;
+  color: #121212;
 }
 
 .saas-pay-continue:hover {

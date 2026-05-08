@@ -288,7 +288,6 @@ export default function SaasProPaymentPage() {
           if (event?.error?.message) setError(event.error.message);
         });
 
-        await Promise.resolve();
         await new Promise((resolve) => requestAnimationFrame(resolve));
         if (cancelled) return;
 
@@ -571,9 +570,7 @@ export default function SaasProPaymentPage() {
                   Commencez pour <strong>1&nbsp;€</strong>, puis <strong>399&nbsp;€&nbsp;/&nbsp;an</strong>
                 </>
               ) : (
-                <>
-                  Essai gratuit, puis <strong>399&nbsp;€&nbsp;/&nbsp;an</strong>
-                </>
+                <>Essayez gratuitement pendant 1&nbsp;mois</>
               )
             ) : (
               <>Commencez à fidéliser dès aujourd&apos;hui pour 1&nbsp;€</>
@@ -677,15 +674,39 @@ export default function SaasProPaymentPage() {
           ))}
         </section>
 
-        <section className="saas-pay-total">
-          <div className="saas-pay-summary-row">
-            <span>Total à payer</span>
-            <strong className="saas-pay-total-amount">
-              <span className="saas-pay-total-old-price">{annual ? "399€" : "49,99€"}</span>
-              <span>{totals.totalToday}</span>
-            </strong>
-          </div>
-        </section>
+        {!needsLoginForPayment ? (
+          <section
+            className="saas-pay-wallet-hero"
+            aria-label="Paiement express"
+            hidden={walletBtnMounted === false && !initializing}
+          >
+            <div
+              className={`saas-pay-wallet-hero__glass${
+                initializing || walletBtnMounted === null ? " saas-pay-wallet-hero__glass--loading" : ""
+              }`}
+            >
+              <div
+                ref={paymentRequestButtonMountRef}
+                className="saas-pay-wallet-mount saas-pay-wallet-mount--hero"
+              />
+            </div>
+          </section>
+        ) : null}
+
+        {isAppEmbed &&
+        !needsLoginForPayment &&
+        walletBtnMounted === false &&
+        stripeFieldsLive &&
+        !initializing &&
+        !busy ? (
+          <p className="saas-pay-wallet-ios-hint saas-pay-wallet-ios-hint--below-hero" role="note">
+            Apple&nbsp;Pay / Google&nbsp;Pay ne sont pas disponibles dans cette fenêtre. Utilise la carte
+            ci‑dessous, ou ouvre{" "}
+            <strong>{typeof window !== "undefined" ? window.location.hostname : "myfidpass.fr"}</strong> dans{" "}
+            <strong>Safari</strong> après avoir vérifié le domaine pour Apple&nbsp;Pay dans Stripe (fichier{" "}
+            <code className="saas-pay-wallet-ios-hint__code">.well-known</code> sur ton site).
+          </p>
+        ) : null}
 
         <section className="saas-pay-method">
           {needsLoginForPayment ? (
@@ -704,20 +725,6 @@ export default function SaasProPaymentPage() {
             </div>
           ) : (
             <>
-              <div ref={paymentRequestButtonMountRef} className="saas-pay-wallet-mount" />
-              {isAppEmbed &&
-              walletBtnMounted === false &&
-              stripeFieldsLive &&
-              !initializing &&
-              !busy ? (
-                <p className="saas-pay-wallet-ios-hint" role="note">
-                  Apple&nbsp;Pay / Google&nbsp;Pay ne sont pas disponibles dans cette fenêtre. Utilise la carte
-                  ci‑dessous, ou ouvre{" "}
-                  <strong>{typeof window !== "undefined" ? window.location.hostname : "myfidpass.fr"}</strong> dans{" "}
-                  <strong>Safari</strong> après avoir vérifié le domaine pour Apple&nbsp;Pay dans Stripe (fichier{" "}
-                  <code className="saas-pay-wallet-ios-hint__code">.well-known</code> sur ton site).
-                </p>
-              ) : null}
               <p className="saas-pay-wallet-divider">ou payer par carte</p>
 
               <label>Numéro de carte</label>
@@ -784,13 +791,23 @@ export default function SaasProPaymentPage() {
                 disabled={busy || initializing || !elementsReady}
               >
                 <LockKeyhole size={18} />
-                {busy
-                  ? "Paiement en cours..."
-                  : initializing
-                    ? "Chargement du module..."
-                    : !annual || stripeTrialDays === 0
-                      ? "Premier mois à 1€"
-                      : "Continuer"}
+                {busy ? (
+                  "Paiement en cours..."
+                ) : initializing ? (
+                  "Chargement du module..."
+                ) : annual && stripeTrialDays !== 0 && stripeTrialDays !== null ? (
+                  "Commencer le mois offert"
+                ) : (
+                  <span className="saas-pay-continue-pricing">
+                    <span className="saas-pay-continue-pricing__label">Total à payer :</span>{" "}
+                    <span className="saas-pay-continue-pricing__strike">
+                      {annual ? "399€" : "49,99€"}
+                    </span>{" "}
+                    <strong className="saas-pay-continue-pricing__due">
+                      {annual && stripeTrialDays !== 0 ? totals.totalToday : "1€"}
+                    </strong>
+                  </span>
+                )}
               </button>
             </>
           )}

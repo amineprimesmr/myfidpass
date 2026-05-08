@@ -5,7 +5,13 @@
 import { showSlugError } from "./features/fidelity-form.js";
 import { initLandingShell } from "./features/landing-shell.js";
 import { initRouting } from "./router/index.js";
-import { consumeAuthTransferFromHash, wireNativeAuthBridge } from "./config.js";
+import { consumeAuthTransferFromHash, warmStripeJs, wireNativeAuthBridge } from "./config.js";
+
+function isSaasProPaymentPath() {
+  if (typeof window === "undefined") return false;
+  const p = window.location.pathname.replace(/\/$/, "");
+  return /^\/(?:paiement|offre-pro|abonnement-pro|plan-pro)(?:\/checkout)?$/i.test(p);
+}
 
 export { showSlugError };
 
@@ -14,6 +20,7 @@ window.addEventListener("popstate", () => {
 });
 
 async function bootstrap() {
+  if (isSaasProPaymentPath()) warmStripeJs();
   // Capture referral code from URL (?ref=CODE) into sessionStorage
   const refParam = new URLSearchParams(window.location.search).get("ref");
   if (refParam && /^[A-Z2-9]{4,16}$/i.test(refParam)) {

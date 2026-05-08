@@ -78,6 +78,7 @@
     <link rel="stylesheet" href="/src/app.css" />
     <link rel="stylesheet" href="/src/app-desktop-topbar.css" />
     <link rel="stylesheet" href="/src/app-saas-shell.css" />
+    <link rel="stylesheet" href="/src/app-merchant-setup-checklist.css" />
     <link rel="stylesheet" href="/src/saas-dashboard-intro.css" />
     <link rel="stylesheet" href="/src/app-member-detail.css" />
     <link rel="stylesheet" href="/src/app-member-detail-profile.css" />
@@ -460,7 +461,7 @@
           <button type="button" id="app-logout" class="visually-hidden" tabindex="-1" aria-hidden="true">Déconnexion</button>
           <a href="#profil" class="app-sidebar-link app-sidebar-footer-settings" data-section="profil">
             <span class="app-sidebar-icon" aria-hidden="true"><svg class="app-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-            <span class="app-sidebar-link-text">Paramètres</span>
+            <span class="app-sidebar-link-text">Compte</span>
           </a>
           <div
             id="app-sidebar-trial-subscribe-card"
@@ -525,7 +526,7 @@
           </div>
           </div>
         </div>
-        <button type="button" id="app-settings-backdrop" class="app-settings-backdrop hidden" aria-label="Fermer les réglages"></button>
+        <button type="button" id="app-settings-backdrop" class="app-settings-backdrop hidden" aria-label="Fermer le compte"></button>
         <div id="app-dashboard-content" class="app-content hidden">
           <section id="dashboard" class="app-section app-section-overview">
             <div
@@ -1817,10 +1818,83 @@
 
             <div class="app-settings-sheet-head">
               <div>
-                <h2 class="app-section-title">Réglages</h2>
+                <h2 class="app-section-title">Compte</h2>
                 <p class="app-section-desc">Configuration du compte et de la boutique</p>
               </div>
               <button type="button" id="app-settings-close" class="app-btn app-btn-secondary">Fermer</button>
+            </div>
+
+            <div id="app-merchant-setup-checklist" class="app-card app-merchant-setup-checklist" aria-label="Étapes de configuration">
+              <div class="app-merchant-setup-checklist__head">
+                <div class="app-merchant-setup-checklist__title-row">
+                  <h3 class="app-merchant-setup-checklist__title">Votre lancement</h3>
+                  <span id="app-merchant-setup-counter" class="app-merchant-setup-checklist__counter">0 / 4 étapes</span>
+                </div>
+                <p class="app-merchant-setup-checklist__sub">Complétez ces étapes pour activer toute l’expérience — dont l’offre du premier mois à 1 € dans ces réglages.</p>
+                <div class="app-merchant-setup-checklist__track" aria-hidden="true">
+                  <span id="app-merchant-setup-progress-fill" class="app-merchant-setup-checklist__fill"></span>
+                </div>
+              </div>
+              <ol class="app-merchant-setup-steps">
+                <li class="app-merchant-setup-step" data-step="commerce">
+                  <span class="app-merchant-setup-step__idx" aria-hidden="true">1</span>
+                  <div class="app-merchant-setup-step__body">
+                    <p class="app-merchant-setup-step__title">Connecter votre commerce</p>
+                    <p class="app-merchant-setup-step__desc">Nom officiel et adresse (ou position sur la carte).</p>
+                    <button type="button" class="app-btn app-btn-secondary app-merchant-setup-step__cta" data-merchant-setup-go="profil-commerce" data-merchant-setup-scroll="#app-settings-establishment-card">Ouvrir Mon commerce</button>
+                  </div>
+                  <span class="app-merchant-setup-step__check" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                </li>
+                <li class="app-merchant-setup-step" data-step="card">
+                  <span class="app-merchant-setup-step__idx" aria-hidden="true">2</span>
+                  <div class="app-merchant-setup-step__body">
+                    <p class="app-merchant-setup-step__title">Personnaliser la carte de fidélité</p>
+                    <p class="app-merchant-setup-step__desc">Logo, couleurs ou image de fond — l’aperçu Wallet se met à jour tout de suite.</p>
+                    <button type="button" class="app-btn app-btn-secondary app-merchant-setup-step__cta" data-merchant-setup-go="personnaliser">Ouvrir Ma carte</button>
+                  </div>
+                  <span class="app-merchant-setup-step__check" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                </li>
+                <li class="app-merchant-setup-step" data-step="flyer">
+                  <span class="app-merchant-setup-step__idx" aria-hidden="true">3</span>
+                  <div class="app-merchant-setup-step__body">
+                    <p class="app-merchant-setup-step__title">Créer le flyer de jeu</p>
+                    <p class="app-merchant-setup-step__desc">Roue, message et QR — prêt à exporter en haute définition.</p>
+                    <button type="button" class="app-btn app-btn-secondary app-merchant-setup-step__cta" data-merchant-setup-go="flyer-qr">Ouvrir Flyer de jeu</button>
+                  </div>
+                  <span class="app-merchant-setup-step__check" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                </li>
+                <li class="app-merchant-setup-step" data-step="print">
+                  <span class="app-merchant-setup-step__idx" aria-hidden="true">4</span>
+                  <div class="app-merchant-setup-step__body">
+                    <p class="app-merchant-setup-step__title">Imprimer et afficher le flyer</p>
+                    <p class="app-merchant-setup-step__desc">Téléchargez le PDF ou PNG depuis l’éditeur, imprimez-le et placez-le en boutique.</p>
+                    <div class="app-merchant-setup-step__row">
+                      <button type="button" class="app-btn app-btn-secondary app-merchant-setup-step__cta" data-merchant-setup-go="flyer-qr">Vers le flyer</button>
+                      <button type="button" id="app-merchant-setup-ack-print" class="app-btn app-btn-primary app-merchant-setup-step__cta">C’est affiché ✓</button>
+                    </div>
+                  </div>
+                  <span class="app-merchant-setup-step__check" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                </li>
+              </ol>
+            </div>
+
+            <div id="app-settings-subscribe-promo" class="app-card app-settings-subscribe-promo hidden" aria-hidden="true">
+              <div class="app-settings-subscribe-promo__inner">
+                <span class="app-settings-subscribe-promo__badge" aria-hidden="true">−98 %</span>
+                <div>
+                  <h3 class="app-settings-subscribe-promo__title">Profitez du premier mois à 1 €</h3>
+                  <p class="app-settings-subscribe-promo__sub">Votre espace est prêt — activez l’offre pour continuer sans limite.</p>
+                </div>
+                <button type="button" id="app-settings-subscribe-promo-cta" class="app-btn app-btn-primary app-settings-subscribe-promo__cta">S’abonner pour 1 €</button>
+              </div>
             </div>
 
             <!-- Bouton dev simulation paiement -->
@@ -1857,8 +1931,8 @@
             </button>
 
             <div class="app-commerce-reglages-stack app-settings-shopify-shell">
-            <aside class="app-settings-shopify-nav" aria-label="Navigation réglages">
-              <a href="#app-settings-account-card" class="app-settings-shopify-nav-link">Profil</a>
+            <aside class="app-settings-shopify-nav" aria-label="Navigation compte">
+              <a href="#app-settings-account-card" class="app-settings-shopify-nav-link">Compte</a>
               <a href="#app-settings-establishment-card" class="app-settings-shopify-nav-link">Mon commerce</a>
               <a href="#app-settings-notifs-card" class="app-settings-shopify-nav-link">Notifications</a>
               <a href="#app-settings-location-card" class="app-settings-shopify-nav-link">Localisation</a>
@@ -1869,7 +1943,7 @@
             <div class="app-section-grid-wrap app-profil-grid app-settings-shopify-content">
               <div class="app-section-col-main">
             <div class="app-card app-profil-account-card" id="app-settings-account-card">
-              <h3 class="app-subsection-title">Profil</h3>
+              <h3 class="app-subsection-title">Compte</h3>
               <div class="app-profil-form">
                 <div class="app-rules-row">
                   <label class="app-label" for="app-profil-email">Adresse e-mail</label>
@@ -1896,6 +1970,10 @@
                   <p id="app-profil-active-business" class="app-profil-subscription-status">—</p>
                 </div>
                 <p id="app-profil-account-message" class="app-message app-profil-message hidden"></p>
+                <div class="app-rules-row app-profil-delete-account-row">
+                  <a href="/supprimer-compte" class="app-profil-delete-account">Supprimer mon compte</a>
+                  <p class="app-hint">Demande irréversible — procédure et délais décrits sur la page dédiée.</p>
+                </div>
               </div>
             </div>
             <div class="app-card app-profil-card" id="app-settings-establishment-card">

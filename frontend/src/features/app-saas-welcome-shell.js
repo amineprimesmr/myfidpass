@@ -191,7 +191,8 @@ export function applySaaSFrcMessaging(opts) {
     cta.setAttribute("aria-hidden", paid ? "true" : "false");
   }
 
-  const showTopbarTrialUi = !paid;
+  const hideTrialChrome = !!opts.hideTrialChrome;
+  const showTopbarTrialUi = hideTrialChrome ? false : !paid;
   topbarCountdownEl?.classList.toggle("hidden", !showTopbarTrialUi);
   topbarCtaWrap?.classList.toggle("hidden", !showTopbarTrialUi);
 
@@ -228,7 +229,14 @@ export function navigateToSaaSPaymentPage() {
 
 /** Écouteurs boutons / bandeaux subscribe — idempotent. */
 export function wireSaaSWelcomeStripeHandlers() {
-  const ids = ["app-sidebar-trial-subscribe-btn", "app-saas-frc-cta", "app-saas-frc-support-cta", "app-saas-frc-strip-cta", "app-topbar-trial-cta"];
+  const ids = [
+    "app-sidebar-trial-subscribe-btn",
+    "app-saas-frc-cta",
+    "app-saas-frc-support-cta",
+    "app-saas-frc-strip-cta",
+    "app-topbar-trial-cta",
+    "app-settings-subscribe-promo-cta",
+  ];
   ids.forEach((id) => {
     const btn = document.getElementById(id);
     if (!btn || btn.dataset.fidpassStripeSubscribeWired === "1") return;

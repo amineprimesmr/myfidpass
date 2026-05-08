@@ -10,7 +10,7 @@ const SEARCH_INDEX = [
   { id: "carte-perimetre", label: "Emplacement", hint: "Carte & périmètre", chips: ["emplacement", "tous"] },
   { id: "flyer-qr", label: "Flyer QR", hint: "QR à imprimer", chips: ["marketing", "tous"] },
   { id: "engagement", label: "Avis & Réseaux", hint: "Réseaux sociaux", chips: ["social", "tous"] },
-  { id: "profil", label: "Profil", hint: "Commerce & compte", chips: ["compte", "tous"] },
+  { id: "profil", label: "Compte", hint: "Commerce & compte", chips: ["compte", "tous"] },
 ];
 
 const CHIP_DEFS = [

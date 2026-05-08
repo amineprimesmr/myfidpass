@@ -1,0 +1,273 @@
+/* Checklist configuration marchand — Réglages */
+
+.app-merchant-setup-checklist {
+  margin: 0 0 1.25rem;
+  padding: 1.15rem 1.25rem 1.35rem;
+  border-radius: 1.15rem;
+  background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 48%, #eef2ff 100%);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 14px 40px rgba(15, 23, 42, 0.06);
+  transition: box-shadow 0.45s ease, border-color 0.35s ease;
+}
+
+.app-merchant-setup-checklist--celebrate {
+  animation: app-merchant-setup-celebrate 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes app-merchant-setup-celebrate {
+  0% {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.9) inset,
+      0 14px 40px rgba(15, 23, 42, 0.06);
+  }
+  40% {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.95) inset,
+      0 20px 56px rgba(99, 102, 241, 0.22);
+    border-color: rgba(129, 140, 248, 0.65);
+  }
+  100% {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.9) inset,
+      0 14px 40px rgba(15, 23, 42, 0.06);
+  }
+}
+
+.app-merchant-setup-checklist--complete .app-merchant-setup-checklist__title {
+  color: #0f172a;
+}
+
+.app-merchant-setup-checklist__head {
+  margin-bottom: 1rem;
+}
+
+.app-merchant-setup-checklist__title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.app-merchant-setup-checklist__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #1e293b;
+}
+
+.app-merchant-setup-checklist__counter {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.app-merchant-setup-checklist__sub {
+  margin: 0.45rem 0 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.app-merchant-setup-checklist__track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+.app-merchant-setup-checklist__fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
+  transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-merchant-setup-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.app-merchant-setup-step {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.65rem 0.85rem;
+  align-items: start;
+  padding: 0.72rem 0.85rem;
+  border-radius: 0.95rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  transition:
+    background 0.35s ease,
+    border-color 0.35s ease,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-merchant-setup-step--pop {
+  animation: app-merchant-setup-step-pop 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes app-merchant-setup-step-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.02);
+    border-color: rgba(129, 140, 248, 0.75);
+    background: rgba(238, 242, 255, 0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.app-merchant-setup-step--done {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(240, 253, 244, 0.85);
+}
+
+.app-merchant-setup-step__idx {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+.app-merchant-setup-step--done .app-merchant-setup-step__idx {
+  background: #22c55e;
+  color: #fff;
+  border-color: transparent;
+}
+
+.app-merchant-setup-step__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.app-merchant-setup-step__desc {
+  margin: 0.2rem 0 0.55rem;
+  font-size: 0.8rem;
+  line-height: 1.42;
+  color: #64748b;
+}
+
+.app-merchant-setup-step__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.app-merchant-setup-step__cta {
+  font-size: 0.8rem !important;
+  padding: 0.4rem 0.85rem !important;
+}
+
+.app-merchant-setup-step__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: transparent;
+  border: 2px solid rgba(148, 163, 184, 0.45);
+  transition:
+    color 0.35s ease,
+    background 0.35s ease,
+    border-color 0.35s ease,
+    transform 0.35s ease;
+}
+
+.app-merchant-setup-step--done .app-merchant-setup-step__check {
+  color: #fff;
+  background: #22c55e;
+  border-color: #16a34a;
+  transform: scale(1.04);
+}
+
+/* Carte abonnement 1 € — Réglages uniquement après checklist */
+.app-settings-subscribe-promo {
+  margin: 0 0 1.25rem;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: linear-gradient(135deg, #312e81 0%, #4c1d95 45%, #5b21b6 100%);
+  box-shadow: 0 16px 40px rgba(76, 29, 149, 0.28);
+}
+
+.app-settings-subscribe-promo__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.1rem 1.2rem 1.15rem;
+}
+
+@media (min-width: 520px) {
+  .app-settings-subscribe-promo__inner {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .app-settings-subscribe-promo__cta {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
+
+.app-settings-subscribe-promo__badge {
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #ede9fe;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.app-settings-subscribe-promo__title {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.app-settings-subscribe-promo__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: rgba(237, 233, 254, 0.92);
+}
+
+.app-settings-subscribe-promo__cta {
+  font-weight: 700 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+}

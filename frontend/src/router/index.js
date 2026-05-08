@@ -168,6 +168,11 @@ async function loadPage(routeType) {
 export async function initRouting() {
   consumeAuthTransferFromHash();
   const route = getRoute();
+  const saasProPaymentPagePromise =
+    route.type === "saas-pro-payment" ? loadPage("saas-pro-payment") : null;
+  if (route.type === "saas-pro-payment") {
+    warmStripeJs();
+  }
   document.body.classList.toggle(
     "page-landing-subpage",
     route.type === "legal" || route.type === "seo-content"
@@ -196,10 +201,12 @@ export async function initRouting() {
   };
 
   if (route.type === "saas-pro-payment") {
-    warmStripeJs();
     hideAll();
-    if (c.saasProPayment) c.saasProPayment.classList.remove("hidden");
-    const page = await loadPage("saas-pro-payment");
+    if (c.saasProPayment) {
+      c.saasProPayment.classList.remove("hidden");
+      c.saasProPayment.removeAttribute("aria-hidden");
+    }
+    const page = await saasProPaymentPagePromise;
     await page.init(route);
     syncWhatsappFabVisibility();
     return null;

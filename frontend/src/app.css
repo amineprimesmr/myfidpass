@@ -7022,6 +7022,20 @@ body.page-app:has(#carte-perimetre.app-section-carte-perimetre.app-section-visib
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
+.app-profil-delete-account-row {
+  margin-top: 0.35rem;
+}
+.app-profil-delete-account {
+  display: inline-block;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #b91c1c;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.app-profil-delete-account:hover {
+  color: #991b1b;
+}
 .app-profil-password-row {
   display: flex;
   flex-wrap: wrap;
