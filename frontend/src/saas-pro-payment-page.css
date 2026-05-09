@@ -1,4 +1,9 @@
 /* Page Plan Pro — thème dark (maquettes paiement SaaS). */
+body.page-saas-pro-payment {
+  /* Même graphite que l’éditeur flyer si le viewport dépasse le contenu. */
+  background-color: #0e1113;
+}
+
 body.page-saas-pro-payment .whatsapp-fab-wrap {
   display: none !important;
 }
@@ -8,9 +13,12 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 }
 
 .saas-pay {
-  --saas-bg: #050506;
+  /* Fond = éditeur flyer (iOS `FlyerEditorSurfaceColors`) : canvas #0e1113 + halo #242d3b */
+  --flyer-canvas: #0e1113;
+  --flyer-glow-depth: rgb(36, 45, 59);
+  --saas-bg: var(--flyer-canvas);
   --saas-card: #151518;
-  --saas-card-deep: #0e0e12;
+  --saas-card-deep: #13181d;
   --saas-muted: #8b8b96;
   --saas-lime: #c8ff3d;
   --saas-hot-pink: #ff4d8d;
@@ -19,7 +27,14 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   --saas-sheet-radius: clamp(26px, 7vw, 36px);
 
   font-family: Inter, system-ui, -apple-system, sans-serif;
-  background: var(--saas-bg);
+  background:
+    radial-gradient(
+      ellipse 130% 95% at 50% 6%,
+      color-mix(in srgb, var(--flyer-glow-depth) 65%, transparent) 0%,
+      color-mix(in srgb, var(--flyer-glow-depth) 28%, transparent) 42%,
+      rgba(14, 17, 19, 0) 68%
+    ),
+    var(--saas-bg);
   color: #fff;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
@@ -47,8 +62,13 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(80% 60% at 50% 100%, rgba(5, 5, 6, 0.2), rgba(5, 5, 6, 1)),
-    linear-gradient(to bottom, rgba(5, 5, 6, 0.35), rgba(5, 5, 6, 0.85)),
+    radial-gradient(
+      ellipse 130% 90% at 50% 8%,
+      color-mix(in srgb, var(--flyer-glow-depth) 58%, transparent) 0%,
+      color-mix(in srgb, var(--flyer-glow-depth) 24%, transparent) 45%,
+      rgba(14, 17, 19, 0) 70%
+    ),
+    linear-gradient(to bottom, rgba(14, 17, 19, 0.88), rgba(14, 17, 19, 0.97)),
     var(--saas-hero-img, none);
   background-size: cover;
   background-position: center 40%;
@@ -129,7 +149,7 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
 .saas-pay-sheet {
   position: relative;
   margin-top: -26px;
-  background: linear-gradient(180deg, #080809 0%, #050506 12%);
+  background: linear-gradient(180deg, rgba(14, 17, 19, 0.98) 0%, var(--flyer-canvas) 14%);
   border-radius: var(--saas-sheet-radius) var(--saas-sheet-radius) 0 0;
   padding: 28px 18px 100px;
   box-shadow:
@@ -694,9 +714,16 @@ body.page-saas-pro-payment .whatsapp-fab-wrap {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
-/* New embedded checkout design */
+/* New embedded checkout design — même fond que /flyer (canvas + halo, pas le gris-bleu #06090e). */
 .saas-pay-checkout {
-  background: #06090e;
+  background:
+    radial-gradient(
+      ellipse 130% 95% at 50% 6%,
+      color-mix(in srgb, var(--flyer-glow-depth) 65%, transparent) 0%,
+      color-mix(in srgb, var(--flyer-glow-depth) 28%, transparent) 42%,
+      rgba(14, 17, 19, 0) 68%
+    ),
+    var(--flyer-canvas);
   color: #f5f7fb;
   min-height: 100dvh;
 }
