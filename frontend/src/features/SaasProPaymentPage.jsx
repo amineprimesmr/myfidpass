@@ -428,7 +428,7 @@ export default function SaasProPaymentPage() {
     if (annual) renewAnchor.setFullYear(renewAnchor.getFullYear() + 1);
     else renewAnchor.setMonth(renewAnchor.getMonth() + 1);
     const renewSubtitle = annual
-      ? "Soit 399\u00a0€ facturés annuellement,\u00a0sans\u00a0engagement."
+      ? "Soit 399\u00a0€ facturés\u00a0annuellement,\u00a0sans\u00a0engagement."
       : "Sans engagement, annulable à tout moment\u202f!";
     const renewAmount = annual ? "34 € /mois" : "49,99 € /mois";
 
@@ -474,14 +474,6 @@ export default function SaasProPaymentPage() {
     ? { main: "399€", detail: "facturé annuellement" }
     : { main: "49,99€", detail: "par mois" };
   const compareRows = expanded ? [...BASE_COMPARE, ...EXTRA_COMPARE] : BASE_COMPARE;
-
-  /** Libellé au-dessus du bouton wallet (aligné sur `walletSheetAmountCents`). */
-  const walletHeroCaption = useMemo(() => {
-    const trial =
-      typeof stripeTrialDays === "number" && !Number.isNaN(stripeTrialDays) ? stripeTrialDays : null;
-    const cents = walletSheetAmountCents(annual, trial);
-    return cents === 0 ? "Continuer avec" : "Payer 1 € avec";
-  }, [annual, stripeTrialDays]);
 
   const handlePay = async () => {
     if (busy) return;
@@ -666,26 +658,6 @@ export default function SaasProPaymentPage() {
                 initializing || walletBtnMounted === null ? " saas-pay-wallet-hero__glass--loading" : ""
               }`}
             >
-              <div className="saas-pay-wallet-hero__head">
-                <p
-                  className="saas-pay-wallet-hero__wallet-line"
-                  aria-label={`${walletHeroCaption} Apple Pay`}
-                >
-                  <span className="saas-pay-wallet-hero__caption-text" aria-hidden="true">
-                    {walletHeroCaption}
-                  </span>
-                  <img
-                    className="saas-pay-wallet-hero__apple-pay-logo"
-                    src="/assets/apple-pay-mark-white.svg"
-                    alt=""
-                    width={54}
-                    height={22}
-                    decoding="async"
-                    fetchPriority="low"
-                    aria-hidden="true"
-                  />
-                </p>
-              </div>
               <div
                 ref={paymentRequestButtonMountRef}
                 className="saas-pay-wallet-mount saas-pay-wallet-mount--hero"

@@ -3,5 +3,11 @@
   { "file": "template2.png", "label": "Template 2" },
   { "file": "template3.png", "label": "Template 3" },
   { "file": "template4.png", "label": "Template 4" },
-  { "file": "template5.png", "label": "Template 5" }
+  { "file": "template5.png", "label": "Template 5" },
+  { "file": "template6.png", "label": "Template 6" },
+  { "file": "template7.png", "label": "Template 7" },
+  { "file": "template8.png", "label": "Template 8" },
+  { "file": "template9.png", "label": "Template 9" },
+  { "file": "template10.png", "label": "Template 10" },
+  { "file": "template11.png", "label": "Template 11" }
 ]
