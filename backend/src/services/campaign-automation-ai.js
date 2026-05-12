@@ -19,6 +19,17 @@ export function normalizeEventTypeToken(raw) {
     const mm = Math.max(0, Math.min(59, Number(mDaily[2]) || 0));
     return `daily_at:${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
   }
+  /** Ponctuel : une exécution à une date+minute UTC (YYYY-MM-DDTHH:MM). */
+  const mOnce = /^once_at:(\d{4})-(\d{2})-(\d{2})t(\d{2}):(\d{2})$/.exec(t);
+  if (mOnce) {
+    const y = Number(mOnce[1]);
+    const mo = Number(mOnce[2]);
+    const d = Number(mOnce[3]);
+    const hh = Math.max(0, Math.min(23, Number(mOnce[4]) || 0));
+    const mm = Math.max(0, Math.min(59, Number(mOnce[5]) || 0));
+    if (y < 2000 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+    return `once_at:${String(y).padStart(4, "0")}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  }
   return null;
 }
 

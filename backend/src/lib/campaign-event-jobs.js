@@ -120,6 +120,23 @@ function shouldRunDailyNow(eventType, now = new Date()) {
   return now.getUTCHours() === hh && now.getUTCMinutes() === mm;
 }
 
+function shouldRunOnceNow(eventType, now = new Date()) {
+  const m = /^once_at:(\d{4})-(\d{2})-(\d{2})[tT](\d{2}):(\d{2})$/.exec(String(eventType || ""));
+  if (!m) return false;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const hh = Number(m[4]);
+  const mm = Number(m[5]);
+  return (
+    now.getUTCFullYear() === y &&
+    now.getUTCMonth() + 1 === mo &&
+    now.getUTCDate() === d &&
+    now.getUTCHours() === hh &&
+    now.getUTCMinutes() === mm
+  );
+}
+
 function enqueueRuleForMembers({ businessId, ruleId, title, message, eventType, delayMinutes, memberIds, now = new Date() }) {
   let scheduled = 0;
   for (const memberId of memberIds) {
@@ -150,6 +167,25 @@ function scheduleDerivedEventJobs({ business, now = new Date() }) {
     if (!message) continue;
     const title = safeTrim(rule.title, 80);
     const delayMinutes = clampDelayMinutes(rule.delayMinutes ?? rule.delay_minutes);
+
+    if (eventType.startsWith("once_at:")) {
+      if (!shouldRunOnceNow(eventType, now)) continue;
+      const slot = String(eventType).replace(/^once_at:/i, "").replace(/[^0-9T-]/g, "");
+      const effectiveRuleId = `${ruleId}__once_${slot}`.slice(0, 180);
+      const memberRows = db.prepare("SELECT id FROM members WHERE business_id = ?").all(business.id);
+      const memberIds = memberRows.map((r) => r.id);
+      scheduled += enqueueRuleForMembers({
+        businessId: business.id,
+        ruleId: effectiveRuleId,
+        title,
+        message,
+        eventType,
+        delayMinutes,
+        memberIds,
+        now,
+      });
+      continue;
+    }
 
     if (eventType.startsWith("daily_at:")) {
       if (!shouldRunDailyNow(eventType, now)) continue;
