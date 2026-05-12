@@ -14,6 +14,7 @@ import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
 import { detectWalletPlatform } from "../utils/walletPlatform.js";
+import { setQrCodeImageSrc } from "../utils/qrCode.js";
 import {
   LOCATION_RADIUS_DEFAULT_M,
   clampLocationRadiusMetersClient,
@@ -1397,7 +1398,8 @@ function initAppDashboard(slug) {
     if (!value) return;
     const fullShareLink = getShareLinkForSlug(value);
     if (shareLinkEl) shareLinkEl.value = fullShareLink;
-    if (shareQrEl) shareQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=" + encodeURIComponent(fullShareLink);
+    // QR généré en local (lib `qrcode`) — fini la fuite vers qrserver.com.
+    if (shareQrEl) setQrCodeImageSrc(shareQrEl, fullShareLink, { size: 256 });
     if (shareSlugInputEl) shareSlugInputEl.value = value;
     refreshPersonnaliserWalletTestLabel();
   }
@@ -1659,7 +1661,7 @@ function initAppDashboard(slug) {
   const walletPreviewQr = document.getElementById("app-wallet-preview-qr");
   if (walletPreviewQr && currentShareSlug) {
     const fullShareLink = getShareLinkForSlug(currentShareSlug);
-    walletPreviewQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullShareLink)}`;
+    setQrCodeImageSrc(walletPreviewQr, fullShareLink, { size: 200 });
     walletPreviewQr.alt = "QR code — scannez pour ajouter la carte à Apple Wallet";
   }
   // ——— Carte & périmètre ———
