@@ -6,6 +6,8 @@
 import jwt from "jsonwebtoken";
 
 const GOOGLE_SAVE_BASE = "https://pay.google.com/gp/v/save";
+const DEFAULT_CLASS_SUFFIX = "myfidpass_loyalty";
+const DEFAULT_PROGRAM_LOGO_URL = "https://myfidpass.fr/assets/icone.png?v=20260416";
 
 function getConfig() {
   const issuerId = process.env.GOOGLE_WALLET_ISSUER_ID?.trim();
@@ -42,30 +44,34 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin) {
   if (!config) return null;
 
   const { issuerId, clientEmail, privateKey } = config;
-  const classSuffix = "fidpass_" + safeSuffix(business?.id || "default");
+  // Une classe Google Wallet doit être approuvée par Google. Ne pas en créer une par commerce :
+  // une seule classe MyFidpass approuvée permet ensuite d'émettre les objets clients.
+  const configuredClassId = process.env.GOOGLE_WALLET_CLASS_ID?.trim();
+  const classSuffix = DEFAULT_CLASS_SUFFIX;
   const classId = `${issuerId}.${classSuffix}`;
   const objectId = `${issuerId}.${safeSuffix(member.id)}`;
 
-  const programName = business?.organization_name || "Carte fidélité";
+  const programName = "MyFidpass Fidélité";
   const accountName = (member.name || member.email || "Client").slice(0, 20);
   const accountId = (member.email || member.id).slice(0, 20);
 
   const loyaltyClass = {
-    id: classId,
+    id: configuredClassId || classId,
     issuerName: "Myfidpass",
     programName,
     reviewStatus: "UNDER_REVIEW",
+    hexBackgroundColor: "#2563EB",
     programLogo: {
       sourceUri: {
-        uri: "https://storage.googleapis.com/wallet-lab-tools-codelab-artifacts-public/pass_google_logo.jpg",
+        uri: DEFAULT_PROGRAM_LOGO_URL,
       },
-      contentDescription: { defaultValue: { language: "fr-FR", value: "Logo" } },
+      contentDescription: { defaultValue: { language: "fr-FR", value: "Logo MyFidpass" } },
     },
   };
 
   const loyaltyObject = {
     id: objectId,
-    classId,
+    classId: loyaltyClass.id,
     state: "ACTIVE",
     accountName,
     accountId,
@@ -91,7 +97,7 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin) {
     iat: Math.floor(Date.now() / 1000),
     origins,
     payload: {
-      loyaltyClasses: [loyaltyClass],
+      ...(configuredClassId ? {} : { loyaltyClasses: [loyaltyClass] }),
       loyaltyObjects: [loyaltyObject],
     },
   };

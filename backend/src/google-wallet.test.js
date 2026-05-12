@@ -88,9 +88,10 @@ describe("google-wallet", () => {
 
     const inner = decoded.payload;
     const [loyaltyClass] = inner.loyaltyClasses;
-    expect(loyaltyClass.id).toBe("3388000000000000001.fidpass_bus_xyz");
-    expect(loyaltyClass.programName).toBe("Café Test");
+    expect(loyaltyClass.id).toBe("3388000000000000001.myfidpass_loyalty");
+    expect(loyaltyClass.programName).toBe("MyFidpass Fidélité");
     expect(loyaltyClass.reviewStatus).toBe("UNDER_REVIEW");
+    expect(loyaltyClass.programLogo.sourceUri.uri).toBe("https://myfidpass.fr/assets/icone.png?v=20260416");
 
     const [loyaltyObject] = inner.loyaltyObjects;
     expect(loyaltyObject.classId).toBe(loyaltyClass.id);
@@ -100,7 +101,7 @@ describe("google-wallet", () => {
     expect(loyaltyObject.barcode.value).toBe("mem_abc-1");
   });
 
-  it("sanitizes business id for class suffix and defaults origin", () => {
+  it("uses one stable loyalty class and defaults origin", () => {
     const { url } = getGoogleWalletSaveUrl(
       { id: "m1", points: 0 },
       { id: "café 🎉", organization_name: "X" },
@@ -110,6 +111,20 @@ describe("google-wallet", () => {
     const decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
     expect(decoded.origins).toEqual(["https://myfidpass.fr"]);
     const [cls] = decoded.payload.loyaltyClasses;
-    expect(cls.id).toBe("3388000000000000001.fidpass_caf____");
+    expect(cls.id).toBe("3388000000000000001.myfidpass_loyalty");
+  });
+
+  it("can reference an already approved class without embedding a new class", () => {
+    process.env.GOOGLE_WALLET_CLASS_ID = "3388000000000000001.approved_class";
+    const { url } = getGoogleWalletSaveUrl(
+      { id: "m1", points: 0 },
+      { id: "b1", organization_name: "X" },
+      "https://myfidpass.fr"
+    );
+    const token = url.slice("https://pay.google.com/gp/v/save/".length);
+    const decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+    expect(decoded.payload.loyaltyClasses).toBeUndefined();
+    expect(decoded.payload.loyaltyObjects[0].classId).toBe("3388000000000000001.approved_class");
+    delete process.env.GOOGLE_WALLET_CLASS_ID;
   });
 });
