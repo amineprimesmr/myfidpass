@@ -403,6 +403,29 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     }
   }
 
+  function isNotEnoughTicketsError(err) {
+    const msg = String(err?.message || err || "").toLowerCase();
+    return msg.includes("not_enough_tickets") || msg.includes("tickets insuffisants");
+  }
+
+  async function spinQrGuestWithAutoClaim(memberId) {
+    try {
+      return await api.spin(slug, "roulette", memberId, getFingerprint(), genIdempotencyKey());
+    } catch (err) {
+      if (!isNotEnoughTicketsError(err)) throw err;
+      try {
+        await api.claimEngagement(slug, memberId, "google_review");
+      } catch (claimErr) {
+        const msg = String(claimErr?.message || claimErr || "").toLowerCase();
+        if (!msg.includes("déjà") && !msg.includes("already_done")) throw err;
+      }
+      try {
+        await hydrateMember(memberId);
+      } catch (_) {}
+      return api.spin(slug, "roulette", memberId, getFingerprint(), genIdempotencyKey());
+    }
+  }
+
   async function onSpinRoulette() {
     if (isSpinning) return;
     const state = store.get();
@@ -481,8 +504,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     let spinAudioStop = () => {};
 
     try {
-      const spinOutcomePromise = api
-        .spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey())
+      const spinOutcomePromise = (qrGuest
+        ? spinQrGuestWithAutoClaim(state.member.id)
+        : api.spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey()))
         .then((result) => ({ ok: true, result }))
         .catch((err) => ({ ok: false, err }));
       const spinOutcome = qrGuest ? null : await spinOutcomePromise;
