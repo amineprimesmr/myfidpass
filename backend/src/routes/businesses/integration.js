@@ -11,9 +11,11 @@ import {
   getPushTokensForMember,
   countMemberPointsAddsTodayUtc,
   normalizeStampBalance,
+  mergeBusinessAssetsForPass,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
-import { ensureOperationalSubscription, normalizeBarcodeToMemberId } from "./shared.js";
+import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
+import { ensureOperationalSubscription, getApiBase, normalizeBarcodeToMemberId } from "./shared.js";
 import {
   computeRawPointsForCredit,
   enforceScanSecurityLimits,
@@ -24,6 +26,29 @@ import {
 } from "../../lib/receipt-validation-jwt.js";
 
 const router = Router();
+
+async function syncGoogleWalletAfterMemberMutation(member, business, req, context) {
+  const walletBusiness = mergeBusinessAssetsForPass(business);
+  try {
+    const result = await syncGoogleWalletObjectForMember(member, walletBusiness, getApiBase(req));
+    if (!result.ok) {
+      console.warn("[Google Wallet] sync intégration échouée:", {
+        context,
+        slug: walletBusiness?.slug,
+        memberId: member?.id,
+        googleStatus: result.googleStatus,
+        googleError: result.googleError?.message || result.error,
+      });
+    }
+  } catch (e) {
+    console.warn("[Google Wallet] sync intégration exception:", {
+      context,
+      slug: walletBusiness?.slug,
+      memberId: member?.id,
+      error: e?.message || String(e),
+    });
+  }
+}
 
 router.get("/lookup", (req, res) => {
   const business = req.business;
@@ -165,6 +190,7 @@ router.post("/scan", async (req, res) => {
       }
     }
   }
+  await syncGoogleWalletAfterMemberMutation(updated, business, req, "integration_scan");
   res.json({
     member: {
       id: updated.id,

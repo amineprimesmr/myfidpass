@@ -11,6 +11,7 @@ import {
   createTransaction,
   getPushTokensForMember,
   hasOperationalMerchantAccess,
+  mergeBusinessAssetsForPass,
 } from "../../db.js";
 import {
   insertReceiptDeliveryClaim,
@@ -22,7 +23,7 @@ import {
   getReceiptDeliveryClaimByIdempotencyKey,
   updateReceiptDeliveryClaim,
 } from "../../db/receipt-delivery-claims.js";
-import { getIdempotencyKey } from "./shared.js";
+import { getApiBase, getIdempotencyKey } from "./shared.js";
 import { extractDeliveryReceiptWithOpenAI, MAX_SIDE_PX } from "../../services/receipt-delivery-claim-ai.js";
 import {
   merchantNameLikelyMatchesBusiness,
@@ -35,8 +36,30 @@ import {
 import { countMemberPointsAddsTodayUtc } from "../../db/transactions.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
+import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 
 const router = Router({ mergeParams: true });
+
+async function syncGoogleWalletAfterMemberMutation(member, business, req) {
+  const walletBusiness = mergeBusinessAssetsForPass(business);
+  try {
+    const result = await syncGoogleWalletObjectForMember(member, walletBusiness, getApiBase(req));
+    if (!result.ok) {
+      console.warn("[Google Wallet] sync ticket client échouée:", {
+        slug: walletBusiness?.slug,
+        memberId: member?.id,
+        googleStatus: result.googleStatus,
+        googleError: result.googleError?.message || result.error,
+      });
+    }
+  } catch (e) {
+    console.warn("[Google Wallet] sync ticket client exception:", {
+      slug: walletBusiness?.slug,
+      memberId: member?.id,
+      error: e?.message || String(e),
+    });
+  }
+}
 
 const claimPostLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -431,6 +454,7 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
       /* ignore */
     }
   }
+  await syncGoogleWalletAfterMemberMutation(updated, business, req);
   updateReceiptDeliveryClaim(row.id, {
     status: "approved",
     points_credited: pts,

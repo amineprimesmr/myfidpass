@@ -10,6 +10,7 @@ import {
 } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { resolvePublicWalletLogoPng } from "../../lib/resolve-public-business-logo.js";
 import { resizeLogoForWebFlyerQrHero } from "../../pass/images-logo.js";
+import { mergeBusinessAssetsForPass } from "../../db.js";
 
 const router = Router();
 
@@ -74,7 +75,7 @@ router.get("/logo", async (req, res) => {
 
 /** Image de fond carte Wallet exposée publiquement pour Google Wallet `heroImage`. */
 router.get("/wallet-card-background", async (req, res) => {
-  const business = req.business;
+  const business = mergeBusinessAssetsForPass(req.business);
   if (!business) return res.status(404).send();
   try {
     const raw = business.card_background_base64;
@@ -90,6 +91,28 @@ router.get("/wallet-card-background", async (req, res) => {
     return res.send(buffer);
   } catch (err) {
     console.warn("[public/wallet-card-background]", err?.message || err);
+    return res.status(500).send();
+  }
+});
+
+/** Icône tampon personnalisée exposée publiquement pour les détails Google Wallet. */
+router.get("/stamp-icon", async (req, res) => {
+  const business = mergeBusinessAssetsForPass(req.business);
+  if (!business) return res.status(404).send();
+  try {
+    const raw = business.stamp_icon_base64;
+    if (!raw || !String(raw).trim()) return res.status(404).send();
+    const base64Data = String(raw).replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+    if (!buffer.length) return res.status(404).send();
+    const isPng = String(raw).includes("image/png");
+    const isWebp = String(raw).includes("image/webp");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", isPng ? "image/png" : isWebp ? "image/webp" : "image/jpeg");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    return res.send(buffer);
+  } catch (err) {
+    console.warn("[public/stamp-icon]", err?.message || err);
     return res.status(500).send();
   }
 });

@@ -10,6 +10,7 @@ import {
 } from "../db.js";
 import { generatePass } from "../pass.js";
 import { sendPassKitUpdate } from "../apns.js";
+import { syncGoogleWalletObjectForMember } from "../google-wallet.js";
 import { randomUUID } from "crypto";
 
 const router = Router();
@@ -80,6 +81,25 @@ router.post("/:memberId/points", async (req, res) => {
       const result = await sendPassKitUpdate(token);
       if (!result.sent) {
         console.warn("[PassKit] Push refusée:", result.error || "inconnu");
+      }
+    }
+  }
+  if (member.business_id) {
+    const business = mergeBusinessAssetsForPass(getBusinessById(member.business_id));
+    if (business) {
+      try {
+        const apiBase = (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
+        const result = await syncGoogleWalletObjectForMember(member, business, apiBase);
+        if (!result.ok) {
+          console.warn("[Google Wallet] sync membre rétrocompat échouée:", {
+            slug: business?.slug,
+            memberId: member?.id,
+            googleStatus: result.googleStatus,
+            googleError: result.googleError?.message || result.error,
+          });
+        }
+      } catch (e) {
+        console.warn("[Google Wallet] sync membre rétrocompat exception:", e?.message || String(e));
       }
     }
   }

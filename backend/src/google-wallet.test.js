@@ -6,6 +6,7 @@ import { getGoogleWalletSaveUrl, isGoogleWalletConfigured } from "./google-walle
 describe("google-wallet", () => {
   const prevIssuer = process.env.GOOGLE_WALLET_ISSUER_ID;
   const prevJson = process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON;
+  const prevClassId = process.env.GOOGLE_WALLET_CLASS_ID;
 
   let publicKey;
   let serviceAccountJson;
@@ -30,6 +31,8 @@ describe("google-wallet", () => {
     else process.env.GOOGLE_WALLET_ISSUER_ID = prevIssuer;
     if (prevJson === undefined) delete process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON;
     else process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON = prevJson;
+    if (prevClassId === undefined) delete process.env.GOOGLE_WALLET_CLASS_ID;
+    else process.env.GOOGLE_WALLET_CLASS_ID = prevClassId;
   });
 
   it("isGoogleWalletConfigured is true when issuer and JSON are valid", () => {
@@ -88,20 +91,22 @@ describe("google-wallet", () => {
 
     const inner = decoded.payload;
     const [loyaltyClass] = inner.loyaltyClasses;
-    expect(loyaltyClass.id).toBe("3388000000000000001.myfidpass_loyalty");
-    expect(loyaltyClass.programName).toBe("MyFidpass Fidélité");
+    expect(loyaltyClass.id).toBe("3388000000000000001.business_bus_xyz");
+    expect(loyaltyClass.programName).toBe("Café Test");
     expect(loyaltyClass.reviewStatus).toBe("UNDER_REVIEW");
     expect(loyaltyClass.programLogo.sourceUri.uri).toBe("https://myfidpass.fr/assets/icone.png?v=20260416");
+    expect(loyaltyClass.classTemplateInfo.cardTemplateOverride.cardRowTemplateInfos.length).toBeGreaterThan(0);
 
     const [loyaltyObject] = inner.loyaltyObjects;
     expect(loyaltyObject.classId).toBe(loyaltyClass.id);
-    expect(loyaltyObject.id).toBe("3388000000000000001.mem_abc-1");
+    expect(loyaltyObject.id).toBe("3388000000000000001.business_bus_xyz_mem_abc-1");
     expect(loyaltyObject.loyaltyPoints.balance.int).toBe(42);
+    expect(loyaltyObject.secondaryLoyaltyPoints.balance.string).toContain("Récompense");
     expect(loyaltyObject.barcode.type).toBe("QR_CODE");
     expect(loyaltyObject.barcode.value).toBe("mem_abc-1");
   });
 
-  it("uses one stable loyalty class and defaults origin", () => {
+  it("uses a business-scoped loyalty class and defaults origin", () => {
     const { url } = getGoogleWalletSaveUrl(
       { id: "m1", points: 0 },
       { id: "café 🎉", organization_name: "X" },
@@ -111,7 +116,7 @@ describe("google-wallet", () => {
     const decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
     expect(decoded.origins).toEqual(["https://myfidpass.fr"]);
     const [cls] = decoded.payload.loyaltyClasses;
-    expect(cls.id).toBe("3388000000000000001.myfidpass_loyalty");
+    expect(cls.id).toBe("3388000000000000001.business_caf____");
   });
 
   it("can reference an already approved class without embedding a new class", () => {

@@ -6,6 +6,7 @@ import {
   addPoints,
   createTransaction,
   getPushTokensForMember,
+  mergeBusinessAssetsForPass,
 } from "../../db.js";
 import {
   devResetAllReceiptDeliveryClaimsForBusiness,
@@ -19,10 +20,32 @@ import {
 } from "../../lib/scan-credit-helpers.js";
 import { countMemberPointsAddsTodayUtc } from "../../db/transactions.js";
 import { sendPassKitUpdate } from "../../apns.js";
-import { ensureOperationalSubscription } from "./shared.js";
+import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
+import { ensureOperationalSubscription, getApiBase } from "./shared.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 
 const router = Router({ mergeParams: true });
+
+async function syncGoogleWalletAfterMemberMutation(member, business, req) {
+  const walletBusiness = mergeBusinessAssetsForPass(business);
+  try {
+    const result = await syncGoogleWalletObjectForMember(member, walletBusiness, getApiBase(req));
+    if (!result.ok) {
+      console.warn("[Google Wallet] sync ticket livraison échouée:", {
+        slug: walletBusiness?.slug,
+        memberId: member?.id,
+        googleStatus: result.googleStatus,
+        googleError: result.googleError?.message || result.error,
+      });
+    }
+  } catch (e) {
+    console.warn("[Google Wallet] sync ticket livraison exception:", {
+      slug: walletBusiness?.slug,
+      memberId: member?.id,
+      error: e?.message || String(e),
+    });
+  }
+}
 
 router.get("/delivery-receipt-claims", (req, res) => {
   const business = req.business;
@@ -75,6 +98,8 @@ router.post("/delivery-receipt-claims/dev-reset", async (req, res) => {
         /* ignore */
       }
     }
+    const adjustedMember = getMemberForBusiness(mid, business.id);
+    if (adjustedMember) await syncGoogleWalletAfterMemberMutation(adjustedMember, business, req);
   }
   return res.json({
     ok: true,
@@ -144,6 +169,7 @@ router.post("/delivery-receipt-claims/:claimId/approve", async (req, res) => {
       /* ignore */
     }
   }
+  await syncGoogleWalletAfterMemberMutation(updated, business, req);
   updateReceiptDeliveryClaim(claim.id, {
     status: "approved",
     points_credited: pts,

@@ -36,6 +36,7 @@ import {
   ensureGoogleWalletObjectForMember,
   getGoogleWalletDefaultClassId,
   getGoogleWalletSaveUrl,
+  syncGoogleWalletObjectForMember,
 } from "../../google-wallet.js";
 import { getApiBase, getIdempotencyKey, canAccessDashboard, ensureOperationalSubscription } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
@@ -51,6 +52,29 @@ import {
 } from "../../lib/receipt-validation-jwt.js";
 
 const router = Router();
+
+async function syncGoogleWalletAfterMemberMutation(member, business, req, context) {
+  const walletBusiness = mergeBusinessAssetsForPass(business);
+  try {
+    const result = await syncGoogleWalletObjectForMember(member, walletBusiness, getApiBase(req));
+    if (!result.ok) {
+      console.warn("[Google Wallet] sync membre échouée:", {
+        context,
+        slug: walletBusiness?.slug,
+        memberId: member?.id,
+        googleStatus: result.googleStatus,
+        googleError: result.googleError?.message || result.error,
+      });
+    }
+  } catch (e) {
+    console.warn("[Google Wallet] sync membre exception:", {
+      context,
+      slug: walletBusiness?.slug,
+      memberId: member?.id,
+      error: e?.message || String(e),
+    });
+  }
+}
 
 const membersCreateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -329,6 +353,7 @@ router.post("/:memberId/points/remove", async (req, res) => {
       /* ignore */
     }
   }
+  await syncGoogleWalletAfterMemberMutation(updated, business, req, "points_remove");
   res.json({
     id: updated.id,
     points: updated.points,
@@ -445,6 +470,7 @@ router.post("/:memberId/points", async (req, res) => {
       await sendPassKitUpdate(token);
     }
   }
+  await syncGoogleWalletAfterMemberMutation(updated, business, req, "points_add");
   res.json({
     id: updated.id,
     points: updated.points,
@@ -486,6 +512,7 @@ router.post("/:memberId/redeem", async (req, res) => {
     for (const token of tokens) {
       try { await sendPassKitUpdate(token); } catch (_) { /* ignore */ }
     }
+    await syncGoogleWalletAfterMemberMutation({ ...member, points: 0 }, business, req, "redeem_stamps");
     return res.json({
       ok: true,
       type: "stamps",
@@ -539,6 +566,7 @@ router.post("/:memberId/redeem", async (req, res) => {
     for (const token of tokens) {
       try { await sendPassKitUpdate(token); } catch (_) { /* ignore */ }
     }
+    await syncGoogleWalletAfterMemberMutation(updated, business, req, "redeem_points");
     return res.json({
       ok: true,
       type: "points",
@@ -627,7 +655,7 @@ router.get("/:memberId/google-wallet-url", async (req, res) => {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
-    const business = req.business;
+    const business = mergeBusinessAssetsForPass(req.business);
     const member = getMemberForBusiness(req.params.memberId, business.id);
     if (!member) return res.status(404).json({ error: "Membre introuvable" });
 

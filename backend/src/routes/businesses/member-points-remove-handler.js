@@ -7,9 +7,32 @@ import {
   deductPoints,
   createTransaction,
   getPushTokensForMember,
+  mergeBusinessAssetsForPass,
 } from "../../db.js";
 import { sendPassKitUpdate } from "../../apns.js";
-import { ensureOperationalSubscription } from "./shared.js";
+import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
+import { ensureOperationalSubscription, getApiBase } from "./shared.js";
+
+async function syncGoogleWalletAfterMemberMutation(member, business, req) {
+  const walletBusiness = mergeBusinessAssetsForPass(business);
+  try {
+    const result = await syncGoogleWalletObjectForMember(member, walletBusiness, getApiBase(req));
+    if (!result.ok) {
+      console.warn("[Google Wallet] sync correction échouée:", {
+        slug: walletBusiness?.slug,
+        memberId: member?.id,
+        googleStatus: result.googleStatus,
+        googleError: result.googleError?.message || result.error,
+      });
+    }
+  } catch (e) {
+    console.warn("[Google Wallet] sync correction exception:", {
+      slug: walletBusiness?.slug,
+      memberId: member?.id,
+      error: e?.message || String(e),
+    });
+  }
+}
 
 export async function postMemberPointsRemove(req, res) {
   const business = req.business;
@@ -51,6 +74,7 @@ export async function postMemberPointsRemove(req, res) {
       /* ignore */
     }
   }
+  await syncGoogleWalletAfterMemberMutation(updated, business, req);
   res.json({
     id: updated.id,
     points: updated.points,
