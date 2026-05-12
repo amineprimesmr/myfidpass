@@ -777,20 +777,18 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const google = rootEl.querySelector("#fidelity-v2-google");
     const wallet = store.get().wallet || {};
     if (apple && wallet.apple) apple.href = wallet.apple;
-    if (google && wallet.google) google.href = wallet.google;
+    // Google Wallet links are signed JWTs. Always fetch a fresh one on click so design/class
+    // changes are not stuck behind an old href already rendered in the page.
+    if (google) google.href = "#";
     if (google) {
       google.addEventListener(
         "click",
         async (e) => {
-          const href = (google.getAttribute("href") || "").trim();
-          if (href && href !== "#") return;
           e.preventDefault();
           const mid = store.get().member?.id;
           if (!mid) return;
           const result = await api.getGoogleWalletSaveLink(slug, mid);
           if (result.ok) {
-            store.patch({ wallet: { ...store.get().wallet, google: result.url } });
-            google.setAttribute("href", result.url);
             window.location.href = result.url;
             return;
           }
