@@ -48,7 +48,13 @@ export function getRoute() {
   }
   if (path === "/checkout" || path === "/creation-carte") return { type: "redirect-stripe" };
   if (path === "/mentions-legales") return { type: "legal", page: "mentions" };
-  if (path === "/politique-confidentialite") return { type: "legal", page: "politique" };
+  if (
+    path === "/politique-confidentialite" ||
+    path === "/confidentialite" ||
+    path === "/confidentialité"
+  ) {
+    return { type: "legal", page: "politique" };
+  }
   if (path === "/cgu") return { type: "legal", page: "cgu" };
   if (path === "/cgv") return { type: "legal", page: "cgv" };
   if (path === "/cookies") return { type: "legal", page: "cookies" };

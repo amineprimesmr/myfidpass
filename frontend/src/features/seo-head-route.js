@@ -389,6 +389,18 @@ export function getSeoByRoute(route) {
   }
 
   if (route?.type === "legal") {
+    const page = route.page || "";
+    if (page === "politique") {
+      const description =
+        "Politique de confidentialité MyFidPass (RGPD) : données personnelles, TikTok et réseaux sociaux liés aux missions, droits, hébergement et contact DPO.";
+      return {
+        title: "Politique de confidentialité (RGPD) | MyFidPass",
+        description,
+        robots: "index,follow",
+        canonical,
+        jsonLd: null,
+      };
+    }
     return {
       title: "Mentions legales et politiques | MyFidPass",
       description: "Pages legales MyFidPass: mentions legales, RGPD, cookies, CGU et CGV.",

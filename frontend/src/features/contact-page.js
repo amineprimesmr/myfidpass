@@ -88,7 +88,7 @@ export function getContactPageHtml() {
 
   <nav class="landing-legal-nav contact-page__nav" aria-label="Pages liées">
     <a href="/mentions-legales">Mentions légales</a>
-    <a href="/politique-confidentialité">Politique de confidentialité</a>
+    <a href="/politique-confidentialite">Politique de confidentialité</a>
     <a href="/cgu">CGU</a>
     <a href="/">Retour à l’accueil</a>
   </nav>

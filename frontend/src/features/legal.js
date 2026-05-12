@@ -48,6 +48,8 @@ export function getPolitiqueConfidentialiteHtml() {
     <p>Accès, rectification, effacement, limitation du traitement, portabilité, opposition. Pour exercer vos droits : <a href="mailto:${e.contact}">${e.contact}</a>. Vous pouvez introduire une réclamation auprès de la CNIL.</p>
     <h2>Transferts et sous-traitants</h2>
     <p>Les données peuvent être hébergées ou traitées par des sous-traitants (hébergeur, paiement, envoi d'emails). Nous choisissons des acteurs conformes au RGPD.</p>
+    <h2>Connexions réseaux sociaux (commerçants)</h2>
+    <p>Pour des fonctions optionnelles (missions fidélité, indicateurs d’audience), vous pouvez lier des comptes tiers dont TikTok via les mécanismes officiels de la plateforme (OAuth). Nous traitons uniquement les données nécessaires au service (identifiants techniques, statistiques ou abonnés autorisés par vous et par la plateforme). Vous pouvez retirer la connexion dans l’application ou le tableau de bord ; les politiques de confidentialité des réseaux concernés s’appliquent en complément.</p>
     <nav class="landing-legal-nav">
       <a href="/mentions-legales">Mentions légales</a>
       <a href="/cgu">CGU</a>

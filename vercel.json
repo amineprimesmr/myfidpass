@@ -5,7 +5,17 @@
   "installCommand": "npm install && cd frontend && npm install",
   "framework": null,
   "redirects": [
-    { "source": "/ios", "destination": "https://apps.apple.com/app/id6759921605", "permanent": true }
+    { "source": "/ios", "destination": "https://apps.apple.com/app/id6759921605", "permanent": true },
+    {
+      "source": "/confidentialite",
+      "destination": "/politique-confidentialite",
+      "permanent": true
+    },
+    {
+      "source": "/confidentialité",
+      "destination": "/politique-confidentialite",
+      "permanent": true
+    }
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://api.myfidpass.fr/api/$1" },
