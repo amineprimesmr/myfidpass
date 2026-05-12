@@ -11,6 +11,8 @@ import { listAllBusinessesForAdmin } from "../db/businesses.js";
 import { listAdminEvents } from "../db/admin-events.js";
 import { getDb } from "../db/connection.js";
 import { sendMail, isEmailConfigured } from "../email.js";
+import { getQueueStats, requeueDeadJob } from "../lib/notification-job-queue.js";
+import { getFlyerQueueStats } from "../lib/flyer-generation-jobs.js";
 
 const db = getDb();
 
@@ -131,6 +133,38 @@ router.post("/test-email", async (req, res) => {
   } catch (e) {
     console.error("[admin] test-email:", e);
     return res.status(500).json({ error: e?.message || "Échec envoi test" });
+  }
+});
+
+/**
+ * GET /api/admin/queues — stats temps réel des files notif/flyer pour audit/monitoring.
+ */
+router.get("/queues", (_req, res) => {
+  try {
+    res.json({
+      notifications: getQueueStats(),
+      flyer: getFlyerQueueStats(),
+    });
+  } catch (e) {
+    console.error("[admin] queues:", e);
+    res.status(500).json({ error: e?.message || "Impossible de lire les files" });
+  }
+});
+
+/**
+ * POST /api/admin/notifications/jobs/:id/requeue — relance un job campagne mort (DLQ).
+ * Body vide. Utilisé par le support pour relancer une campagne échouée 4×.
+ */
+router.post("/notifications/jobs/:id/requeue", (req, res) => {
+  const jobId = String(req.params.id || "").trim();
+  if (!jobId) return res.status(400).json({ error: "id manquant" });
+  try {
+    const ok = requeueDeadJob(jobId);
+    if (!ok) return res.status(404).json({ error: "Job introuvable" });
+    return res.json({ ok: true, jobId });
+  } catch (e) {
+    console.error("[admin] requeue:", e);
+    return res.status(500).json({ error: e?.message || "Échec requeue" });
   }
 });
 

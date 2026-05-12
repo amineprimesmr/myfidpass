@@ -71,8 +71,10 @@ import {
 import { runCampaignAutomationCron } from "./lib/campaign-automation-cron.js";
 import { syncAllGoogleBusinessReviews } from "./services/google-business-reviews-sync.js";
 import { runCampaignEventJobsCron } from "./lib/campaign-event-jobs.js";
-import { startNotificationJobWorker } from "./lib/notification-job-queue.js";
+import { startNotificationJobWorker, getQueueStats as getNotificationQueueStats } from "./lib/notification-job-queue.js";
 import { startFlyerGenerationJobWorker } from "./lib/flyer-generation-jobs.js";
+import { withCronLock, cleanExpiredCronLocks } from "./lib/cron-lock.js";
+import { checkpointWAL } from "./db/connection.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -146,8 +148,16 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const app = express();
 // Derrière un proxy (Railway, etc.) : Express doit faire confiance à X-Forwarded-For pour que
 // req.ip soit la vraie IP client et que express-rate-limit ne logue pas ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+//
+// SÉCURITÉ : `trust proxy: 1` accepte X-Forwarded-For depuis le 1er proxy en amont.
+// Sur Railway il y a un seul proxy edge → 1 est correct. Si tu changes d'hébergeur,
+// adapte ce nombre (Cloudflare devant Railway = 2, etc.). NE PAS mettre `true` (n'importe qui peut spoof).
 if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
+  const trustProxyHops = Math.max(
+    1,
+    parseInt(String(process.env.TRUST_PROXY_HOPS || "1"), 10) || 1,
+  );
+  app.set("trust proxy", trustProxyHops);
 }
 // CORS : en prod = domaines myfidpass uniquement ; en dev = localhost Vite uniquement (plus de wildcard)
 const allowedOrigins =
@@ -161,13 +171,63 @@ const allowedOrigins =
         // Accès depuis un iPhone en local (IP réseau) : ajouter FRONTEND_URL dans .env si nécessaire
         ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
       ];
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+// CORS hardening : méthodes/headers explicites (au lieu du défaut "tout").
+// `maxAge` réduit le nombre de preflights OPTIONS → moins de hits API.
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Authorization",
+      "Content-Type",
+      "Accept",
+      "X-Dashboard-Token",
+      "X-Dev-Bypass-Payment",
+      "X-Dev-Bypass-Flyer-AI-Quota",
+      "X-Demo-Secret",
+      "X-Requested-With",
+      "If-Modified-Since",
+      "If-None-Match",
+    ],
+    exposedHeaders: ["X-Notification-Job-Id", "X-Flyer-Job-Id", "RateLimit-Remaining", "RateLimit-Reset"],
+    maxAge: 86400, // 24h cache CORS preflight
+  }),
+);
 // Sans cross-origin : CORP same-origin (défaut Helmet) bloque les <img src> depuis myfidpass.fr
 // vers api.myfidpass.fr (origines distinctes) → logo QR / page fidélité cassé.
+//
+// CSP basique pour /api : on n'expose pas de pages HTML interactives, donc une CSP très restrictive
+// est sûre. Les routes qui retournent du HTML (rare : page de retour OAuth) sont préfixées
+// `/api/oauth/*` et marquées spécifiquement si besoin.
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy:
+      process.env.NODE_ENV === "production"
+        ? {
+            useDefaults: true,
+            directives: {
+              "default-src": ["'none'"],
+              // Apple PassKit / fidelity img sur /api/businesses/.../logo
+              "img-src": ["'self'", "data:", "https:"],
+              "script-src": ["'self'"],
+              "style-src": ["'self'", "'unsafe-inline'"],
+              "connect-src": ["'self'"],
+              "frame-ancestors": ["'none'"],
+              "form-action": ["'self'"],
+              "base-uri": ["'self'"],
+              "object-src": ["'none'"],
+              "upgrade-insecure-requests": [],
+            },
+          }
+        : false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
+    // HSTS : 1 an + preload (uniquement en prod, pas en dev où l'on est en HTTP)
+    hsts:
+      process.env.NODE_ENV === "production"
+        ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+        : false,
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
   }),
 );
 
@@ -180,18 +240,42 @@ app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "64kb" }));
 
 // Logging structuré HTTP (toutes les requêtes) — JSON en prod, pretty en dev
-// Exclure les health checks pour ne pas polluer les logs
+// Exclure les health checks + sampling 10% sur GET 2xx hot paths pour ne pas saturer les logs
+// (à 50 RPS, 100% des logs = ~1.5 GB/jour, problème Railway).
+const HTTP_LOG_SAMPLE_RATE = Math.min(
+  1,
+  Math.max(0.01, parseFloat(String(process.env.HTTP_LOG_SAMPLE_RATE || "0.1")) || 0.1),
+);
+function shouldIgnoreHttpRequest(req, res) {
+  if (req.url === "/health" || req.url === "/api/health") return true;
+  if (req.url?.startsWith("/api/health/")) return true;
+  // En prod, sample 10 % des GET 2xx (succès attendus). On garde 100 % des erreurs (>= 400).
+  if (process.env.NODE_ENV === "production") {
+    const isSuccessGet = req.method === "GET" && res && res.statusCode < 400;
+    if (isSuccessGet && Math.random() > HTTP_LOG_SAMPLE_RATE) return true;
+  }
+  return false;
+}
 if (process.env.NODE_ENV !== "test") {
   app.use(
     pinoHttp({
       logger,
-      // Pas de log pour les health checks (Railway poll toutes les 30s)
-      autoLogging: {
-        ignore: (req) => req.url === "/health" || req.url === "/api/health",
-      },
-      // Enrichir chaque log avec userId si disponible
+      autoLogging: { ignore: shouldIgnoreHttpRequest },
       customSuccessMessage: (req, res) => `${req.method} ${req.url} ${res.statusCode}`,
       customErrorMessage: (req, res, err) => `${req.method} ${req.url} ${res.statusCode} — ${err.message}`,
+      // Redact des champs sensibles si jamais ils apparaissent dans des logs custom
+      redact: {
+        paths: [
+          "req.headers.authorization",
+          "req.headers['x-dashboard-token']",
+          "req.headers.cookie",
+          'req.headers["x-demo-secret"]',
+          "req.body.password",
+          "req.body.newPassword",
+          "req.body.refreshToken",
+        ],
+        censor: "[REDACTED]",
+      },
     })
   );
 }
@@ -261,6 +345,14 @@ app.get("/api/health/db", (req, res) => {
     hint: "Sur Railway, le volume doit être monté exactement au chemin /data et DATA_DIR=/data.",
   });
 });
+/** File campagnes : stats temps réel (pending/running/done/failed/dead, oldest). */
+app.get("/api/health/notifications", (req, res) => {
+  try {
+    res.json({ ok: true, queue: getNotificationQueueStats() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 /** APNs PassKit : clé .p8 + JWT (sans fuite de secret — longueurs seulement). */
 app.get("/api/health/apns", (req, res) => {
   try {
@@ -323,52 +415,71 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Une erreur interne est survenue." });
 });
 
-/** Campagnes auto Wallet : exécution dans le processus (pas de CRON_SECRET ni cron externe). */
+/**
+ * Tous les crons in-process passent par un verrou distribué SQLite : si tu mets à l'échelle
+ * à 2+ instances Railway, un seul process exécutera chaque cron à un instant T (pas de
+ * doublons d'envoi de campagne / mail / push). Le TTL est calé sur 5× la durée estimée du job.
+ */
+
+/** Campagnes auto Wallet : exécution dans le processus, toutes les 24 h. */
 function scheduleCampaignAutomationLoop() {
   if (process.env.NODE_ENV === "test") return;
   const DAY_MS = 24 * 60 * 60 * 1000;
+  const LOCK_TTL_MS = 60 * 60 * 1000; // 1h — un run typique dure < 10 min
   const run = () => {
-    runCampaignAutomationCron().catch((err) => {
-      logger.error({ err }, "[campaign-automation] job failed");
-    });
+    withCronLock("campaign-automation", LOCK_TTL_MS, () => runCampaignAutomationCron())
+      .catch((err) => logger.error({ err }, "[campaign-automation] job failed"));
   };
   setTimeout(() => {
     run();
     setInterval(run, DAY_MS);
   }, 120_000);
-  logger.info("[campaign-automation] planifié : 1er passage dans ~2 min, puis toutes les 24 h");
+  logger.info("[campaign-automation] planifié : 1er passage dans ~2 min, puis toutes les 24 h (verrou distribué)");
 }
 
 /** Campaign event jobs: exécution interne, toutes ~1 min. */
 function scheduleCampaignEventJobsLoop() {
   if (process.env.NODE_ENV === "test") return;
   const MIN_MS = 60 * 1000;
+  const LOCK_TTL_MS = 5 * 60 * 1000; // 5 min — un run dépasse rarement 30 s
   const run = () => {
-    runCampaignEventJobsCron({ limit: 50 }).catch((err) => {
-      logger.error({ err }, "[campaign-event-jobs] job failed");
-    });
+    withCronLock("campaign-event-jobs", LOCK_TTL_MS, () => runCampaignEventJobsCron({ limit: 50 }))
+      .catch((err) => logger.error({ err }, "[campaign-event-jobs] job failed"));
   };
   setTimeout(() => {
     run();
     setInterval(run, MIN_MS);
   }, 60_000);
-  logger.info("[campaign-event-jobs] planifié : 1er passage dans ~1 min, puis toutes les 1 min");
+  logger.info("[campaign-event-jobs] planifié : 1er passage dans ~1 min, puis toutes les 1 min (verrou distribué)");
 }
 
 /** Google Business Profile : pull avis + push APNs nouveaux avis, toutes les 10 min. */
 function scheduleGoogleBusinessReviewsSyncLoop() {
   if (process.env.NODE_ENV === "test") return;
   const INTERVAL_MS = 10 * 60 * 1000;
+  const LOCK_TTL_MS = 8 * 60 * 1000; // 8 min — un sync complet dure 1-3 min
   const run = () => {
-    syncAllGoogleBusinessReviews().catch((err) => {
-      logger.error({ err }, "[gbp-sync] cron failed");
-    });
+    withCronLock("gbp-reviews-sync", LOCK_TTL_MS, () => syncAllGoogleBusinessReviews())
+      .catch((err) => logger.error({ err }, "[gbp-sync] cron failed"));
   };
   setTimeout(() => {
     run();
     setInterval(run, INTERVAL_MS);
   }, 3 * 60 * 1000);
-  logger.info("[gbp-sync] planifié : 1er passage dans ~3 min, puis toutes les 10 min");
+  logger.info("[gbp-sync] planifié : 1er passage dans ~3 min, puis toutes les 10 min (verrou distribué)");
+}
+
+/** Maintenance SQLite : checkpoint WAL + nettoyage locks orphelins, toutes les heures. */
+function scheduleMaintenanceLoop() {
+  if (process.env.NODE_ENV === "test") return;
+  const HOUR_MS = 60 * 60 * 1000;
+  const run = () => {
+    try { checkpointWAL(); } catch (_) {}
+    try { cleanExpiredCronLocks(); } catch (_) {}
+  };
+  setTimeout(run, 10 * 60 * 1000); // 10 min après démarrage
+  setInterval(run, HOUR_MS);
+  logger.info("[maintenance] WAL checkpoint + cron-lock GC planifié (1 h)");
 }
 
 function startServer(port) {
@@ -394,10 +505,22 @@ function startServer(port) {
     scheduleCampaignAutomationLoop();
     scheduleCampaignEventJobsLoop();
     scheduleGoogleBusinessReviewsSyncLoop();
+    scheduleMaintenanceLoop();
     // Reprend les campagnes de notification interrompues par un crash ou un redémarrage.
     startNotificationJobWorker();
     startFlyerGenerationJobWorker();
   });
+
+  // Shutdown gracieux : checkpoint WAL avant exit (sauvegarde les écritures pending).
+  const gracefulShutdown = (signal) => {
+    logger.info({ signal }, "[shutdown] arrêt gracieux — checkpoint WAL");
+    try { checkpointWAL(); } catch (_) {}
+    server.close(() => process.exit(0));
+    // Garantie : si server.close() prend > 10 s, on force.
+    setTimeout(() => process.exit(0), 10_000).unref();
+  };
+  process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.once("SIGINT", () => gracefulShutdown("SIGINT"));
   server.on("error", (err) => {
     if (err.code === "EADDRINUSE") {
       logger.fatal({ port: p }, `Port ${p} déjà utilisé. Arrêter l’ancien processus (lsof -nP -iTCP:${p} -sTCP:LISTEN)`);

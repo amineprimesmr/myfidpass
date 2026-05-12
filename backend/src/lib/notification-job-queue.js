@@ -12,22 +12,36 @@
  *   (crash pendant traitement) toutes les 30 secondes au démarrage du serveur.
  *
  * CYCLE DE VIE D'UN JOB :
- *   pending → running → done       (chemin nominal)
- *   pending → running → failed     (erreur après MAX_ATTEMPTS tentatives)
+ *   pending → running → done                 (chemin nominal)
+ *   pending → running → failed               (erreur — automatiquement retentée jusqu'à MAX_ATTEMPTS)
+ *   pending → running → failed → dead        (DLQ après MAX_ATTEMPTS atteintes, alerte admin envoyée)
  *   running (orphelin) → running → done/failed  (repris par le worker après redémarrage)
+ *
+ * BACKOFF ENTRE TENTATIVES :
+ *   tentative 1 → immédiat
+ *   tentative 2 → +1 min (next_attempt_at)
+ *   tentative 3 → +5 min
+ *   tentative 4 → +30 min puis DEAD si échec
+ *
+ * SÉCURITÉS AJOUTÉES :
+ *   - Lock atomique (`UPDATE ... WHERE status = 'pending' RETURNING`) : évite que 2 workers
+ *     traitent le même job en concurrent (multi-instance Railway = doublons d'envoi de campagne sinon).
+ *   - `last_heartbeat_at` mis à jour pendant l'exécution → détection orphelin fine.
+ *   - Métriques exposées via `getQueueStats()` pour `/api/health/notifications`.
  */
 import { randomUUID } from "crypto";
 import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
 import { deliverCustomerBroadcast } from "../notifications/dispatch.js";
+import { notifyAdminsPlatformEvent } from "./admin-notify.js";
 import logger from "./logger.js";
 
 const db = getDb();
 
 // ── Constantes ──────────────────────────────────────────────────────────────
 
-/** Nombre max de tentatives avant d'abandonner un job. */
-const MAX_ATTEMPTS = 3;
+/** Nombre max de tentatives avant d'abandonner un job (passe en `dead`). */
+const MAX_ATTEMPTS = 4;
 
 /** Intervalle du worker de récupération (ms). */
 const WORKER_POLL_MS = 30_000;
@@ -35,14 +49,23 @@ const WORKER_POLL_MS = 30_000;
 /** Conservation des jobs terminés (jours). */
 const JOB_RETENTION_DAYS = 7;
 
+/** Conservation des jobs `dead` (DLQ) — plus long pour permettre audit. */
+const DEAD_JOB_RETENTION_DAYS = 30;
+
 /**
- * Un job `running` depuis plus de 5 minutes est considéré orphelin (crash du process
- * précédent). Le worker le reprend.
+ * Un job `running` qui n'a pas envoyé de heartbeat depuis ce seuil est considéré orphelin
+ * (crash du process précédent ou tâche infinie). Le worker le reprend.
  */
 const ORPHAN_THRESHOLD_MS = 5 * 60 * 1000;
 
+/**
+ * Backoff cumulé en ms : index = attempt_count *avant* la tentative qui vient d'échouer.
+ * Donc après 0 tentative (job neuf) → next_attempt_at = maintenant.
+ * Après 1 tentative échouée → +60s. Après 2 → +300s. Après 3 → +1800s.
+ */
+const RETRY_BACKOFF_MS = [0, 60_000, 300_000, 1_800_000];
+
 // ── Schema (idempotent) ─────────────────────────────────────────────────────
-// Créé ici en plus de migrations.js pour garantir l'existence sur toute base fraîche.
 db.exec(`
   CREATE TABLE IF NOT EXISTS notification_jobs (
     id TEXT PRIMARY KEY,
@@ -66,6 +89,23 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_notif_jobs_status_created
     ON notification_jobs(status, created_at);
 `);
+
+// Migrations idempotentes pour les colonnes ajoutées (next_attempt_at + last_heartbeat_at).
+const existingCols = db.prepare("PRAGMA table_info(notification_jobs)").all().map((c) => c.name);
+if (!existingCols.includes("next_attempt_at")) {
+  try {
+    db.exec("ALTER TABLE notification_jobs ADD COLUMN next_attempt_at TEXT");
+  } catch (_) {}
+}
+if (!existingCols.includes("last_heartbeat_at")) {
+  try {
+    db.exec("ALTER TABLE notification_jobs ADD COLUMN last_heartbeat_at TEXT");
+  } catch (_) {}
+}
+// Index complémentaire pour la requête de pickup atomique (par next_attempt_at).
+try {
+  db.exec("CREATE INDEX IF NOT EXISTS idx_notif_jobs_pending_next ON notification_jobs(status, next_attempt_at, created_at)");
+} catch (_) {}
 
 // ── Écriture ────────────────────────────────────────────────────────────────
 
@@ -97,11 +137,12 @@ export function createNotificationJob({
   touchMemberLastVisit = true,
 }) {
   const id = randomUUID();
+  const now = new Date().toISOString();
   db.prepare(`
     INSERT INTO notification_jobs
       (id, business_id, slug, api_base, member_ids, title, body,
-       trigger_name, merchant_user_id, touch_member_last_visit, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+       trigger_name, merchant_user_id, touch_member_last_visit, status, created_at, next_attempt_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
   `).run(
     id,
     businessId,
@@ -113,7 +154,8 @@ export function createNotificationJob({
     triggerName,
     merchantUserId ?? null,
     touchMemberLastVisit ? 1 : 0,
-    new Date().toISOString(),
+    now,
+    now,
   );
   logger.debug({ jobId: id, businessId, slug, triggerName }, "[notif-job-queue] job créé");
   return id;
@@ -121,28 +163,79 @@ export function createNotificationJob({
 
 // ── Transitions d'état ──────────────────────────────────────────────────────
 
-function markJobRunning(id) {
-  db.prepare(`
+/**
+ * Tente d'atteindre le statut `running` de manière ATOMIQUE depuis pending|failed.
+ * Utilise SQLite UPDATE ... WHERE pour garantir qu'un seul worker prend le job.
+ * Retourne true si le pickup a réussi (le worker peut exécuter), false si un autre
+ * worker a gagné la course (le job est déjà running ailleurs).
+ *
+ * Pourquoi atomique : sans ça, deux instances Railway exécuteraient la même
+ * campagne en doublon → 2 push par client = très mauvaise UX + plainte CNIL possible.
+ */
+function tryAcquireJob(id) {
+  const now = new Date().toISOString();
+  // SQLite ne supporte pas RETURNING dans tous les builds — on fait UPDATE puis SELECT.
+  const result = db.prepare(`
     UPDATE notification_jobs
-    SET status = 'running', started_at = ?, attempt_count = attempt_count + 1
+    SET status = 'running', started_at = COALESCE(started_at, ?), last_heartbeat_at = ?,
+        attempt_count = attempt_count + 1
     WHERE id = ?
-  `).run(new Date().toISOString(), id);
+      AND status IN ('pending', 'failed')
+      AND (next_attempt_at IS NULL OR next_attempt_at <= ?)
+  `).run(now, now, id, now);
+  return result.changes === 1;
+}
+
+function heartbeat(id) {
+  try {
+    db.prepare(`UPDATE notification_jobs SET last_heartbeat_at = ? WHERE id = ?`).run(new Date().toISOString(), id);
+  } catch (_) {}
 }
 
 function markJobDone(id, batchId) {
+  const now = new Date().toISOString();
   db.prepare(`
     UPDATE notification_jobs
-    SET status = 'done', completed_at = ?, batch_id = ?
+    SET status = 'done', completed_at = ?, batch_id = ?, last_heartbeat_at = ?, error = NULL
     WHERE id = ?
-  `).run(new Date().toISOString(), batchId ?? null, id);
+  `).run(now, batchId ?? null, now, id);
 }
 
-function markJobFailed(id, errorMsg) {
+/**
+ * Marque le job en `failed` + planifie la prochaine tentative (backoff).
+ * Si max tentatives atteint → status `dead` (DLQ) + alerte admin.
+ */
+function markJobFailedOrDead(id, attemptCount, errorMsg) {
+  const now = new Date().toISOString();
+  const safeMsg = String(errorMsg ?? "unknown").slice(0, 500);
+  if (attemptCount >= MAX_ATTEMPTS) {
+    db.prepare(`
+      UPDATE notification_jobs
+      SET status = 'dead', completed_at = ?, error = ?, last_heartbeat_at = ?
+      WHERE id = ?
+    `).run(now, safeMsg, now, id);
+    // Alerte admin (fire-and-forget — ne pas bloquer le worker)
+    Promise.resolve()
+      .then(() => {
+        const job = getJobById(id);
+        return notifyAdminsPlatformEvent({
+          type: "notification_job_dead",
+          subject: `[MyFidpass] Campagne en échec définitif (${job?.slug ?? "?"})`,
+          body: `Job ${id} pour le commerce ${job?.business_id ?? "?"} (slug ${job?.slug ?? "?"}) a échoué ${attemptCount} fois et est passé en DLQ.\n\nErreur : ${safeMsg}\n\nDernière tentative : ${now}`,
+        });
+      })
+      .catch((err) => logger.warn({ err, jobId: id }, "[notif-job-queue] alerte admin DLQ a échoué"));
+    return "dead";
+  }
+  // Backoff : index = attempt_count (= nombre de tentatives écoulées avant celle-ci)
+  const backoffMs = RETRY_BACKOFF_MS[Math.min(attemptCount, RETRY_BACKOFF_MS.length - 1)] || 60_000;
+  const nextAttemptAt = new Date(Date.now() + backoffMs).toISOString();
   db.prepare(`
     UPDATE notification_jobs
-    SET status = 'failed', completed_at = ?, error = ?
+    SET status = 'failed', completed_at = ?, error = ?, last_heartbeat_at = ?, next_attempt_at = ?
     WHERE id = ?
-  `).run(new Date().toISOString(), String(errorMsg ?? "unknown"), id);
+  `).run(now, safeMsg, now, nextAttemptAt, id);
+  return "failed";
 }
 
 // ── Lecture ─────────────────────────────────────────────────────────────────
@@ -152,53 +245,94 @@ function getJobById(id) {
 }
 
 /**
- * Retourne les jobs `pending` + les jobs `running` orphelins (démarrés il y a > 5 min,
- * signe d'un crash pendant le traitement).
+ * Retourne les jobs prêts à exécuter :
+ *  - `pending` (jamais traités, dont next_attempt_at est passé)
+ *  - `failed` retentables (next_attempt_at <= now, attempt_count < MAX_ATTEMPTS)
+ *  - `running` orphelins (last_heartbeat_at > ORPHAN_THRESHOLD_MS — crash worker)
  */
 function getPendingOrOrphanedJobs(limit = 5) {
+  const now = new Date().toISOString();
   const orphanThreshold = new Date(Date.now() - ORPHAN_THRESHOLD_MS).toISOString();
   return db.prepare(`
     SELECT * FROM notification_jobs
     WHERE
-      (status = 'pending')
-      OR (status = 'running' AND started_at < ?)
+      (status IN ('pending','failed') AND attempt_count < ? AND (next_attempt_at IS NULL OR next_attempt_at <= ?))
+      OR (status = 'running' AND COALESCE(last_heartbeat_at, started_at) < ?)
     ORDER BY created_at ASC
     LIMIT ?
-  `).all(orphanThreshold, limit);
+  `).all(MAX_ATTEMPTS, now, orphanThreshold, limit);
 }
 
 function cleanOldJobs() {
-  const cutoff = new Date(Date.now() - JOB_RETENTION_DAYS * 24 * 3600 * 1000).toISOString();
-  const r = db.prepare(`
+  const cutoffActive = new Date(Date.now() - JOB_RETENTION_DAYS * 24 * 3600 * 1000).toISOString();
+  const cutoffDead = new Date(Date.now() - DEAD_JOB_RETENTION_DAYS * 24 * 3600 * 1000).toISOString();
+  const r1 = db.prepare(`
     DELETE FROM notification_jobs
     WHERE status IN ('done', 'failed') AND created_at < ?
-  `).run(cutoff);
-  if (r.changes > 0) {
-    logger.info({ deleted: r.changes }, "[notif-job-queue] anciens jobs supprimés");
+  `).run(cutoffActive);
+  const r2 = db.prepare(`
+    DELETE FROM notification_jobs
+    WHERE status = 'dead' AND created_at < ?
+  `).run(cutoffDead);
+  if (r1.changes + r2.changes > 0) {
+    logger.info({ deletedActive: r1.changes, deletedDead: r2.changes }, "[notif-job-queue] anciens jobs supprimés");
+  }
+}
+
+/**
+ * Statistiques de file pour `/api/health/notifications` et monitoring.
+ * Lecture O(1) — utilise les index existants.
+ */
+export function getQueueStats() {
+  try {
+    const rows = db.prepare(`
+      SELECT status, COUNT(*) as n FROM notification_jobs
+      GROUP BY status
+    `).all();
+    const out = { pending: 0, running: 0, done: 0, failed: 0, dead: 0 };
+    for (const r of rows) {
+      if (r.status in out) out[r.status] = Number(r.n) || 0;
+    }
+    // Job le plus ancien encore en attente
+    const oldestPending = db.prepare(`
+      SELECT created_at FROM notification_jobs
+      WHERE status IN ('pending','failed') AND attempt_count < ?
+      ORDER BY created_at ASC LIMIT 1
+    `).get(MAX_ATTEMPTS);
+    return {
+      ...out,
+      oldest_pending_created_at: oldestPending?.created_at ?? null,
+      worker_alive: !workerBusy ? "idle" : "busy",
+    };
+  } catch (e) {
+    return { error: String(e?.message ?? e) };
   }
 }
 
 // ── Exécution d'un job ──────────────────────────────────────────────────────
 
 async function runJob(job) {
-  // Abandon si trop de tentatives (évite une boucle infinie sur erreur permanente).
-  if (job.attempt_count >= MAX_ATTEMPTS) {
-    markJobFailed(job.id, `Abandon après ${MAX_ATTEMPTS} tentatives`);
-    logger.warn({ jobId: job.id, businessId: job.business_id }, "[notif-job-queue] job abandonné (max tentatives)");
+  // Acquisition ATOMIQUE : si un autre worker a déjà pris ce job, on abandonne (pas d'envoi double).
+  if (!tryAcquireJob(job.id)) {
+    logger.debug({ jobId: job.id }, "[notif-job-queue] job déjà pris par un autre worker (skip)");
     return;
   }
-
-  markJobRunning(job.id);
+  const currentAttempt = (job.attempt_count ?? 0) + 1;
   logger.info(
-    { jobId: job.id, businessId: job.business_id, slug: job.slug, attempt: job.attempt_count + 1 },
+    { jobId: job.id, businessId: job.business_id, slug: job.slug, attempt: currentAttempt },
     "[notif-job-queue] exécution job"
   );
+
+  // Heartbeat périodique pendant l'exécution (évite faux orphelin sur jobs longs).
+  const heartbeatInterval = setInterval(() => heartbeat(job.id), 60_000);
 
   try {
     const business = getBusinessById(job.business_id);
     if (!business) {
-      markJobFailed(job.id, `Commerce introuvable : ${job.business_id}`);
-      logger.warn({ jobId: job.id, businessId: job.business_id }, "[notif-job-queue] commerce introuvable");
+      clearInterval(heartbeatInterval);
+      // Commerce supprimé : ce n'est PAS une erreur retentable → mort direct.
+      markJobFailedOrDead(job.id, MAX_ATTEMPTS, `Commerce introuvable : ${job.business_id}`);
+      logger.warn({ jobId: job.id, businessId: job.business_id }, "[notif-job-queue] commerce introuvable — DLQ");
       return;
     }
 
@@ -222,6 +356,7 @@ async function runJob(job) {
       touchMemberLastVisit: job.touch_member_last_visit === 1,
     });
 
+    clearInterval(heartbeatInterval);
     markJobDone(job.id, result.batchId ?? null);
     logger.info(
       {
@@ -235,8 +370,12 @@ async function runJob(job) {
       "[notif-job-queue] job terminé"
     );
   } catch (err) {
-    markJobFailed(job.id, err?.message ?? String(err));
-    logger.error({ err, jobId: job.id, businessId: job.business_id }, "[notif-job-queue] job échoué");
+    clearInterval(heartbeatInterval);
+    const newStatus = markJobFailedOrDead(job.id, currentAttempt, err?.message ?? String(err));
+    logger.error(
+      { err, jobId: job.id, businessId: job.business_id, attempt: currentAttempt, status: newStatus },
+      "[notif-job-queue] job échoué"
+    );
   }
 }
 
@@ -262,12 +401,18 @@ async function workerTick() {
   }
 }
 
+let workerStarted = false;
+let cleanupIntervalRef = null;
+let workerIntervalRef = null;
+
 /**
  * Démarre le worker de récupération.
- * À appeler UNE FOIS dans `startServer()` de index.js.
+ * À appeler UNE FOIS dans `startServer()` de index.js. Idempotent.
  */
 export function startNotificationJobWorker() {
   if (process.env.NODE_ENV === "test") return;
+  if (workerStarted) return;
+  workerStarted = true;
 
   // Nettoyage au démarrage (synchrone, silencieux).
   try { cleanOldJobs(); } catch (_) {}
@@ -275,10 +420,27 @@ export function startNotificationJobWorker() {
   // Premier passage 5 secondes après le démarrage (laisse les connexions DB s'établir).
   setTimeout(workerTick, 5_000);
 
-  // Passage régulier (filet de sécurité uniquement — le chemin nominal est setImmediate).
-  setInterval(workerTick, WORKER_POLL_MS);
+  // Passage régulier (filet de sécurité + retentatives backoff).
+  workerIntervalRef = setInterval(workerTick, WORKER_POLL_MS);
 
-  logger.info("[notif-job-queue] worker démarré (1er passage dans 5s, puis toutes les 30s)");
+  // Cleanup périodique des vieux jobs (1× par heure).
+  cleanupIntervalRef = setInterval(() => {
+    try { cleanOldJobs(); } catch (_) {}
+  }, 60 * 60 * 1000);
+
+  logger.info(
+    { pollMs: WORKER_POLL_MS, maxAttempts: MAX_ATTEMPTS, orphanThresholdMs: ORPHAN_THRESHOLD_MS },
+    "[notif-job-queue] worker démarré"
+  );
+}
+
+/**
+ * Arrêt gracieux (pour les tests ou shutdown propre).
+ */
+export function stopNotificationJobWorker() {
+  if (workerIntervalRef) { clearInterval(workerIntervalRef); workerIntervalRef = null; }
+  if (cleanupIntervalRef) { clearInterval(cleanupIntervalRef); cleanupIntervalRef = null; }
+  workerStarted = false;
 }
 
 // ── API publique ────────────────────────────────────────────────────────────
@@ -298,9 +460,11 @@ export function enqueueNotificationJob(params) {
 
   // Chemin rapide : exécution dans la prochaine itération de la boucle d'événements.
   // Évite de bloquer la réponse HTTP tout en restant quasi-instantané.
+  // L'acquisition atomique dans `runJob` empêche un double-run si le worker tick
+  // démarre simultanément.
   setImmediate(async () => {
     const job = getJobById(jobId);
-    if (!job || job.status !== "pending") return; // Déjà traité (ex: worker rapide)
+    if (!job) return;
     try {
       await runJob(job);
     } catch (err) {
@@ -309,4 +473,28 @@ export function enqueueNotificationJob(params) {
   });
 
   return jobId;
+}
+
+/**
+ * Force la réémission d'un job `dead` ou `failed` (admin/support).
+ * Remet à zéro `attempt_count` et `next_attempt_at` puis enqueue.
+ */
+export function requeueDeadJob(jobId) {
+  const job = db.prepare("SELECT * FROM notification_jobs WHERE id = ?").get(jobId);
+  if (!job) return false;
+  db.prepare(`
+    UPDATE notification_jobs
+    SET status = 'pending', attempt_count = 0, next_attempt_at = ?, error = NULL,
+        completed_at = NULL, last_heartbeat_at = NULL, started_at = NULL, batch_id = NULL
+    WHERE id = ?
+  `).run(new Date().toISOString(), jobId);
+  // Relance setImmediate
+  setImmediate(async () => {
+    const refreshed = db.prepare("SELECT * FROM notification_jobs WHERE id = ?").get(jobId);
+    if (refreshed) {
+      try { await runJob(refreshed); }
+      catch (err) { logger.error({ err, jobId }, "[notif-job-queue] requeue runJob err"); }
+    }
+  });
+  return true;
 }

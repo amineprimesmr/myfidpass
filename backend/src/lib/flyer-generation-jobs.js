@@ -326,15 +326,49 @@ async function workerTick() {
   }
 }
 
+let flyerWorkerStarted = false;
+let flyerWorkerIntervalRef = null;
+let flyerCleanupIntervalRef = null;
+
 /**
- * À appeler une fois au démarrage (index.js), comme notification-job-queue.
+ * À appeler une fois au démarrage (index.js), comme notification-job-queue. Idempotent.
  */
 export function startFlyerGenerationJobWorker() {
   if (process.env.NODE_ENV === "test") return;
+  if (flyerWorkerStarted) return;
+  flyerWorkerStarted = true;
   try {
     cleanOldJobs();
   } catch (_) {}
   setTimeout(workerTick, 5_000);
-  setInterval(workerTick, WORKER_POLL_MS);
-  logger.info("[flyer-gen-job] worker démarré (1er passage dans 5s, puis toutes les 30s)");
+  flyerWorkerIntervalRef = setInterval(workerTick, WORKER_POLL_MS);
+  flyerCleanupIntervalRef = setInterval(() => {
+    try { cleanOldJobs(); } catch (_) {}
+  }, 60 * 60 * 1000);
+  logger.info(
+    { pollMs: WORKER_POLL_MS, maxAttempts: MAX_ATTEMPTS, orphanThresholdMs: ORPHAN_THRESHOLD_MS },
+    "[flyer-gen-job] worker démarré"
+  );
+}
+
+export function stopFlyerGenerationJobWorker() {
+  if (flyerWorkerIntervalRef) { clearInterval(flyerWorkerIntervalRef); flyerWorkerIntervalRef = null; }
+  if (flyerCleanupIntervalRef) { clearInterval(flyerCleanupIntervalRef); flyerCleanupIntervalRef = null; }
+  flyerWorkerStarted = false;
+}
+
+/** Stats temps réel (pour /api/health/flyer-jobs si besoin). */
+export function getFlyerQueueStats() {
+  try {
+    const rows = db.prepare(`
+      SELECT status, COUNT(*) as n FROM flyer_generation_jobs GROUP BY status
+    `).all();
+    const out = { queued: 0, running: 0, done: 0, failed: 0 };
+    for (const r of rows) {
+      if (r.status in out) out[r.status] = Number(r.n) || 0;
+    }
+    return out;
+  } catch (e) {
+    return { error: String(e?.message ?? e) };
+  }
 }

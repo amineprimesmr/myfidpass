@@ -23,6 +23,7 @@ import { sendWebPush } from "../notifications.js";
 import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import { sendMerchantAppAlert, isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
+import logger from "../lib/logger.js";
 
 /**
  * URL d’icône pour Web Push et APNs : toujours construite — l’endpoint `/notification-icon`
@@ -112,6 +113,19 @@ export async function deliverCustomerBroadcast({
       batchId: null,
     };
   }
+
+  const dispatchStartedAt = Date.now();
+  logger.info(
+    {
+      businessId: business.id,
+      slug,
+      triggerName,
+      webPushCount: webSubscriptions.length,
+      passKitCount: passKitTokens.length,
+      memberFilter: memberIds === null ? "all" : `${memberIds.length} ids`,
+    },
+    "[dispatch] début de campagne"
+  );
 
   // Web Push : déjà filtré en SQL (voir getWebPushSubscriptionsByBusiness*ExcludingPassKitOwners) :
   // un membre avec Apple Wallet actif ne reçoit pas aussi la PWA/Safari pour la même campagne.
@@ -321,5 +335,24 @@ export async function deliverCustomerBroadcast({
   }
 
   updateNotificationBatchSummary(batchId, summary);
+
+  const elapsedMs = Date.now() - dispatchStartedAt;
+  logger.info(
+    {
+      businessId: business.id,
+      slug,
+      batchId,
+      sent,
+      sentWebPush,
+      sentPassKit,
+      sentMerchantApp,
+      failed: errors.length,
+      elapsedMs,
+      // Métrique utile : nombre de subs invalides qui ont été GC pendant ce batch
+      // (= différence entre rows initiaux et envois tentés). Approximation.
+    },
+    "[dispatch] campagne terminée"
+  );
+
   return { ...summary, batchId };
 }

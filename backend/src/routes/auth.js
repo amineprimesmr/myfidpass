@@ -54,7 +54,7 @@ import {
 } from "../db/phone-otp.js";
 import { normalizePhoneE164 } from "../lib/phone-e164.js";
 import { sendSmsViaTwilio, isTwilioConfigured, friendlyTwilioSendError } from "../lib/sms-twilio.js";
-import { requireAuth, getJwtSecret } from "../middleware/auth.js";
+import { requireAuth, getJwtSecret, invalidateAuthUserCache } from "../middleware/auth.js";
 import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../lib/google-place-business-enrichment.js";
@@ -86,22 +86,43 @@ const APPLE_BUNDLE_ID = process.env.APPLE_BUNDLE_ID || "com.myfidpass";
 const APPLE_JWT_AUDIENCES = [...new Set([APPLE_CLIENT_ID, APPLE_BUNDLE_ID].filter(Boolean))];
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
 const SALT_ROUNDS = 10;
-/** Date très lointaine : refresh en base sans expiration « métier » (nettoyage = logout / rotation / admin). */
-const REFRESH_TOKEN_EXPIRES_AT_FAR_FUTURE = "2099-12-31T23:59:59.999Z";
+/**
+ * Durée de vie access token (JWT). Courte → si fuite (logs, proxy, MITM), exposition limitée.
+ * Le client iOS refresh proactivement 120 s avant expiration (`ensureValidAccessToken`).
+ */
+const ACCESS_TOKEN_TTL_SECONDS = Math.max(
+  60,
+  parseInt(String(process.env.ACCESS_TOKEN_TTL_SECONDS || "900"), 10) || 900,
+);
+/**
+ * Durée de vie refresh token (rotation à chaque usage côté serveur si tu actives la rotation).
+ * 60 jours par défaut, surchargeable. Avant : `2099-12-31` = jamais expiré → si fuite, persistance illimitée.
+ */
+const REFRESH_TOKEN_TTL_DAYS = Math.max(
+  1,
+  parseInt(String(process.env.REFRESH_TOKEN_TTL_DAYS || "60"), 10) || 60,
+);
+function computeRefreshTokenExpiresAtIso() {
+  const ms = Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 3600 * 1000;
+  return new Date(ms).toISOString();
+}
 
 /** Message aligné inscription / OAuth quand le lieu Google est déjà lié à un commerce. */
 const BUSINESS_PLACE_ALREADY_LINKED_MESSAGE =
   "Ce commerce est déjà utilisé. Connectez-vous au compte existant ou choisissez un autre commerce.";
 
 /**
- * Paire sans expiration JWT (`exp` absent) + refresh stocké sans fenêtre courte.
+ * Paire access JWT (expire après `ACCESS_TOKEN_TTL_SECONDS`) + refresh opaque (expire après `REFRESH_TOKEN_TTL_DAYS`).
+ * Le client iOS lit `exp` dans le JWT pour rafraîchir 120 s avant expiration (zero-friction).
  * Révocation : logout, suppression compte, rotation sur POST /auth/refresh, changement JWT_SECRET.
  */
 function issueTokenPair(userId) {
   const uid = userId != null && userId !== "" ? String(userId) : userId;
-  const accessToken = jwt.sign({ userId: uid }, getJwtSecret());
+  const accessToken = jwt.sign({ userId: uid }, getJwtSecret(), {
+    expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+  });
   const refreshToken = randomUUID() + "-" + randomUUID();
-  createRefreshToken(uid, refreshToken, REFRESH_TOKEN_EXPIRES_AT_FAR_FUTURE);
+  createRefreshToken(uid, refreshToken, computeRefreshTokenExpiresAtIso());
   return { accessToken, refreshToken };
 }
 
@@ -983,6 +1004,10 @@ router.post("/reset-password", validate(schemas.resetPassword), async (req, res)
     const passwordHash = await bcrypt.hash(String(newPassword), SALT_ROUNDS);
     updateUserPassword(user.id, passwordHash);
     deletePasswordResetToken(tokenStr);
+    // Sécurité : invalider le cache user (évite qu'un attaquant garde l'ancien password effet 30 s)
+    invalidateAuthUserCache(user.id);
+    // Sécurité : invalider toutes les sessions de l'utilisateur après changement de password
+    try { deleteUserRefreshTokens(user.id); } catch (_) {}
     return res.json({ message: "Mot de passe mis à jour. Vous pouvez vous connecter." });
   } catch (e) {
     console.error("Reset password error:", e);
@@ -1038,11 +1063,13 @@ router.get("/me/businesses", requireAuth, (req, res) => {
  */
 router.delete("/account", requireAuth, (req, res) => {
   try {
-    const deleted = deleteUserAccount(req.user.id);
+    const userId = req.user.id;
+    const deleted = deleteUserAccount(userId);
+    invalidateAuthUserCache(userId);
     if (!deleted) {
       return res.status(404).json({ error: "Compte déjà supprimé.", code: "account_already_deleted" });
     }
-    return res.json({ ok: true, message: "Compte supprimé", deleted_user_id: req.user.id });
+    return res.json({ ok: true, message: "Compte supprimé", deleted_user_id: userId });
   } catch (e) {
     console.error("Delete account error:", e);
     return res.status(500).json({ error: "Erreur lors de la suppression du compte." });
