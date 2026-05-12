@@ -562,19 +562,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         clearBusy();
         try {
           if (qrGuest) {
-            const finalSpinOutcome = await spinOutcomePromise;
-            if (!finalSpinOutcome.ok) {
-              if (feedback) {
-                feedback.textContent = messageUtilisateurPourErreur(finalSpinOutcome.err, "Le jeu n’a pas pu aboutir. Réessaie.");
-                feedback.classList.add("error");
-                feedback.classList.remove("hidden", "success");
-              }
-              try {
-                await hydrateMember(state.member.id);
-              } catch (_) {}
-              releaseWillChangeSoon();
-              return;
-            }
             if (feedback) feedback.classList.add("hidden");
             openQrModalRoot(rootEl);
             showQrRewardPanel(rootEl, {
@@ -585,10 +572,13 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
               programType,
             });
             triggerWinCelebrationConfetti();
-            /* Ne pas appeler rerender() ici : il remplace tout le DOM et faisait disparaître la modale. */
-            try {
-              await hydrateMember(state.member.id);
-            } catch (_) {}
+            /* Parcours QR : la popup d'inscription doit s'ouvrir même si /spins est lent ou refusé.
+             * La synchronisation serveur se fait en arrière-plan pour ne jamais casser le flux client. */
+            void spinOutcomePromise.then(async () => {
+              try {
+                await hydrateMember(state.member.id);
+              } catch (_) {}
+            });
             releaseWillChangeSoon();
             return;
           }
