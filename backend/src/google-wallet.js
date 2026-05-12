@@ -110,6 +110,43 @@ function buildLoyaltyClass(classId, business = null, apiBase = null) {
   };
 }
 
+function buildLoyaltyObject(objectId, classId, member, business, apiBase = null) {
+  const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
+  const balanceLabel = programType === "stamps" ? "Tampons" : "Points";
+  const accountName = (member.name || member.email || "Client").slice(0, 20);
+  const accountId = (member.email || member.id).slice(0, 20);
+  const loyaltyClass = buildLoyaltyClass(classId, business, apiBase);
+  return {
+    id: objectId,
+    classId,
+    state: "ACTIVE",
+    accountName,
+    accountId,
+    loyaltyPoints: {
+      label: balanceLabel,
+      balance: { int: Math.max(0, Math.floor(Number(member.points) || 0)) },
+    },
+    barcode: {
+      type: "QR_CODE",
+      value: member.id,
+      alternateText: member.id,
+    },
+    ...(loyaltyClass.heroImage ? { heroImage: loyaltyClass.heroImage } : {}),
+    textModulesData: [
+      {
+        header: "Commerce",
+        body: displayNameForBusiness(business),
+        id: "merchant",
+      },
+      {
+        header: "Carte client",
+        body: "Présentez le QR code en caisse pour créditer votre fidélité.",
+        id: "scan_hint",
+      },
+    ],
+  };
+}
+
 async function googleWalletAccessToken(config) {
   const auth = new GoogleAuth({
     credentials: config.serviceAccountJson,
@@ -218,6 +255,50 @@ export async function ensureGoogleWalletClassForBusiness(business, apiBase) {
   };
 }
 
+export async function ensureGoogleWalletObjectForMember(member, business, apiBase, classId) {
+  const config = getConfig();
+  if (!config) return { ok: false, configured: false, error: "Google Wallet non configuré" };
+  const objectId = `${config.issuerId}.${safeSuffix(member.id)}`;
+  const objectDef = buildLoyaltyObject(objectId, classId, member, business, apiBase);
+  const getPath = `/loyaltyObject/${encodeURIComponent(objectId)}`;
+  const current = await googleWalletApiRequest(config, "GET", getPath);
+  if (current.ok) {
+    const patch = await googleWalletApiRequest(config, "PATCH", getPath, objectDef);
+    return {
+      ok: patch.ok,
+      configured: true,
+      objectId,
+      classId,
+      exists: true,
+      patched: patch.ok,
+      googleStatus: patch.status,
+      googleError: patch.ok ? undefined : (patch.data?.error || patch.data),
+    };
+  }
+  if (current.status !== 404) {
+    return {
+      ok: false,
+      configured: true,
+      objectId,
+      classId,
+      exists: false,
+      googleStatus: current.status,
+      googleError: current.data?.error || current.data,
+    };
+  }
+  const inserted = await googleWalletApiRequest(config, "POST", "/loyaltyObject", objectDef);
+  return {
+    ok: inserted.ok,
+    configured: true,
+    objectId,
+    classId,
+    exists: inserted.ok,
+    created: inserted.ok,
+    googleStatus: inserted.status,
+    googleError: inserted.ok ? undefined : (inserted.data?.error || inserted.data),
+  };
+}
+
 /**
  * Génère l'URL "Add to Google Wallet" pour un membre.
  * @param {Object} member - { id, name, email, points }
@@ -232,44 +313,11 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin, options
   const { issuerId, clientEmail, privateKey } = config;
   const configuredClassId = process.env.GOOGLE_WALLET_CLASS_ID?.trim();
   const classId = options.classId || getBusinessClassId(issuerId, business);
-  const objectId = `${issuerId}.${safeSuffix(member.id)}`;
-
-  const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
-  const balanceLabel = programType === "stamps" ? "Tampons" : "Points";
-  const accountName = (member.name || member.email || "Client").slice(0, 20);
-  const accountId = (member.email || member.id).slice(0, 20);
-
+  const objectId = options.objectId || `${issuerId}.${safeSuffix(member.id)}`;
   const loyaltyClass = buildLoyaltyClass(classId, business, options.apiBase);
-
-  const loyaltyObject = {
-    id: objectId,
-    classId: loyaltyClass.id,
-    state: "ACTIVE",
-    accountName,
-    accountId,
-    loyaltyPoints: {
-      label: balanceLabel,
-      balance: { int: Math.max(0, Math.floor(Number(member.points) || 0)) },
-    },
-    barcode: {
-      type: "QR_CODE",
-      value: member.id,
-      alternateText: member.id,
-    },
-    ...(loyaltyClass.heroImage ? { heroImage: loyaltyClass.heroImage } : {}),
-    textModulesData: [
-      {
-        header: "Commerce",
-        body: displayNameForBusiness(business),
-        id: "merchant",
-      },
-      {
-        header: "Carte client",
-        body: "Présentez le QR code en caisse pour créditer votre fidélité.",
-        id: "scan_hint",
-      },
-    ],
-  };
+  const loyaltyObject = options.existingObject
+    ? { id: objectId, classId }
+    : buildLoyaltyObject(objectId, classId, member, business, options.apiBase);
 
   const origins = [];
   if (frontendOrigin) origins.push(frontendOrigin.replace(/\/$/, ""));

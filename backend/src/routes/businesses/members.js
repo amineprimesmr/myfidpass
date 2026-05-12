@@ -33,6 +33,7 @@ import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
 import {
   ensureGoogleWalletClassForBusiness,
+  ensureGoogleWalletObjectForMember,
   getGoogleWalletDefaultClassId,
   getGoogleWalletSaveUrl,
 } from "../../google-wallet.js";
@@ -645,10 +646,27 @@ router.get("/:memberId/google-wallet-url", async (req, res) => {
         code: "google_wallet_unavailable",
       });
     }
+    const objectReady = await ensureGoogleWalletObjectForMember(member, business, apiBase, classId);
+    if (!objectReady.ok) {
+      console.warn("[Google Wallet] objet indisponible:", {
+        slug: business.slug,
+        memberId: member.id,
+        classId,
+        googleStatus: objectReady.googleStatus,
+        googleError: objectReady.googleError?.message || objectReady.error,
+      });
+      return res.status(503).json({
+        error: "Google Wallet indisponible pour cette carte",
+        code: "google_wallet_object_unavailable",
+        detail: objectReady.googleError?.message || objectReady.error || undefined,
+      });
+    }
     const result = getGoogleWalletSaveUrl(member, business, frontendOrigin, {
       apiBase,
       classId,
+      objectId: objectReady.objectId,
       omitClass: true,
+      existingObject: true,
     });
     if (!result) {
       return res.status(503).json({
