@@ -299,7 +299,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const state = store.get();
     if (!state.member?.id) return;
     await hydrateMember(state.member.id);
-    ensureQrGateAlignedWithServer(store.get().member);
+    ensureQrGateAlignedWithServer(store.get().member, slug);
     if (isSpinning) {
       deferredRerenderAfterSpin = true;
       return;
@@ -406,13 +406,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   async function onSpinRoulette() {
     if (isSpinning) return;
     const state = store.get();
+    if (isGuestMember(state.member)) {
+      ensureQrGateAlignedWithServer(state.member, slug);
+    }
     /* Garde défensive : si l'invité QR n'a pas encore débloqué la porte Google,
      * ne pas déclencher le spin (la vraie protection est stopImmediatePropagation dans onSpinPre,
      * mais cette vérification ici est un filet de sécurité supplémentaire). */
     if (
       isGuestMember(state.member) &&
       !isQrGateUnlocked() &&
-      state.member?.google_review_engagement_done !== true
+      state.member?.google_review_engagement_done !== true &&
+      !shouldShowQrThanksHero(slug)
     ) {
       return;
     }

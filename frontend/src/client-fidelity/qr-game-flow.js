@@ -120,16 +120,29 @@ export function setQrGateUnlocked() {
  * Invité page jeu QR : si le serveur a déjà enregistré l’avis Google, on aligne sessionStorage.
  * Sinon un retour Safari / WKWebView peut laisser `fid_qr_spin_gate` absent alors que les tickets
  * sont déjà crédités → le bouton « Jouer » rouvrait la modale Google en boucle.
+ *
+ * **Désalignement hero « Merci / avis enregistré » vs gate** : le HTML peut afficher l’état
+ * « tu peux lancer la roue » via `shouldShowQrThanksHero` alors que `fid_qr_spin_gate` n’a pas
+ * été écrit (quota sessionStorage, onglet, ordre async). Dans ce cas `onSpinPre` faisait
+ * `stopImmediatePropagation` et **aucun** spin ne partait — d’où roue figée.
+ *
+ * @param {object} [member]
+ * @param {string} [slug] — commerce courant ; recommandé pour le test slug-scopé du hero Merci.
  */
-export function ensureQrGateAlignedWithServer(member) {
+export function ensureQrGateAlignedWithServer(member, slug) {
   if (!isGuestMember(member)) return;
   if (member?.google_review_engagement_done === true) {
+    setQrGateUnlocked();
+    return;
+  }
+  const s = String(slug || "").trim();
+  if (shouldShowQrThanksHero(s || undefined)) {
     setQrGateUnlocked();
   }
 }
 
-function guestQrSpinGateSatisfied(state) {
-  ensureQrGateAlignedWithServer(state?.member);
+function guestQrSpinGateSatisfied(state, slug) {
+  ensureQrGateAlignedWithServer(state?.member, slug);
   if (isQrGateUnlocked()) return true;
   if (state?.member?.google_review_engagement_done === true) return true;
   return false;
@@ -338,7 +351,7 @@ export function bindQrGameUi(ctx) {
   qrResumeListenersAbort = null;
 
   const { rootEl, api, slug, getState, rerender, refreshMemberData, messageUtilisateurPourErreur, signal } = ctx;
-  ensureQrGateAlignedWithServer(getState().member);
+  ensureQrGateAlignedWithServer(getState().member, slug);
   const modalRoot = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!modalRoot) return () => {};
 
@@ -587,7 +600,7 @@ export function bindQrGameUi(ctx) {
     if (!isGuestMember(state.member)) return;
     /* Ne pas interrompre la reward panel si elle est déjà affichée (la clé n'aurait pas dû persister, mais par sécurité). */
     if (rootEl.querySelector("#fidelity-qr-panel-reward:not(.hidden)")) return;
-    if (guestQrSpinGateSatisfied(state)) {
+    if (guestQrSpinGateSatisfied(state, slug)) {
       try {
         sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);
       } catch (_) {}
@@ -605,7 +618,7 @@ export function bindQrGameUi(ctx) {
   const onSpinPre = (e) => {
     if (!isGuestMember(getState().member)) return;
     const st = getState();
-    if (guestQrSpinGateSatisfied(st)) return;
+    if (guestQrSpinGateSatisfied(st, slug)) return;
     e.preventDefault();
     /* stopImmediatePropagation (pas stopPropagation) : empêche les listeners sur le MÊME élément
      * (notamment onSpinRoulette enregistré en phase bubble) de se déclencher. stopPropagation ne
