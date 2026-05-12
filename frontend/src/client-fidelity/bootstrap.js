@@ -426,6 +426,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
     if (!wheelEl || !spinBtn) return;
 
+    const qrGuest = isGuestMember(state.member);
     const tickets = state.unlimitedTicketsTest ? 999 : Number(state.tickets?.ticket_balance ?? 0);
     const spinCost = Number((state.games || []).find((g) => g.game_code === "roulette")?.ticket_cost ?? 1);
 
@@ -437,7 +438,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       }
       return;
     }
-    if (tickets < spinCost) {
+    /* Parcours QR invité : juste après l'avis Google, le solde local peut être en retard sur le claim serveur.
+     * Ne pas bloquer le clic côté front : l'API /spins reste la source de vérité et renverra un message si besoin. */
+    if (!qrGuest && tickets < spinCost) {
       if (feedback) {
         feedback.textContent = `Il te faut ${spinCost} point${spinCost > 1 ? "s" : ""} pour jouer. Gagne des points via les missions ou convertis tes points sur la page carte.`;
         feedback.classList.add("error");
@@ -478,7 +481,13 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     let spinAudioStop = () => {};
 
     try {
-      const result = await api.spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey());
+      const spinOutcomePromise = api
+        .spin(slug, "roulette", state.member.id, getFingerprint(), genIdempotencyKey())
+        .then((result) => ({ ok: true, result }))
+        .catch((err) => ({ ok: false, err }));
+      const spinOutcome = qrGuest ? null : await spinOutcomePromise;
+      if (spinOutcome && !spinOutcome.ok) throw spinOutcome.err;
+      const result = spinOutcome?.result || { reward: { label: firstNonPerduLabel(wheelLabels), kind: "gift", value: {} } };
       const rawLabel = (result.reward?.label || "PERDU").trim();
       const bonusPts = Math.max(0, Number(result.reward?.value?.points) || 0);
       const bonusStamps = Math.max(0, Number(result.reward?.value?.stamps) || 0);
@@ -488,7 +497,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const isWinGift = result.reward?.kind === "gift";
       const isWin = isWinPoints || isWinStamps || isWinGift;
       const rewardLabel = isWin ? rawLabel : "PERDU";
-      const qrGuest = isGuestMember(state.member);
       /** Invité QR : la roue s’arrête toujours sur un segment lot (libellé présent sur la roue), jamais sur PERDU. */
       const wheelStopLabel = qrGuest ? firstNonPerduLabel(wheelLabels) : rewardLabel;
 
@@ -530,6 +538,19 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         clearBusy();
         try {
           if (qrGuest) {
+            const finalSpinOutcome = await spinOutcomePromise;
+            if (!finalSpinOutcome.ok) {
+              if (feedback) {
+                feedback.textContent = messageUtilisateurPourErreur(finalSpinOutcome.err, "Le jeu n’a pas pu aboutir. Réessaie.");
+                feedback.classList.add("error");
+                feedback.classList.remove("hidden", "success");
+              }
+              try {
+                await hydrateMember(state.member.id);
+              } catch (_) {}
+              releaseWillChangeSoon();
+              return;
+            }
             if (feedback) feedback.classList.add("hidden");
             openQrModalRoot(rootEl);
             showQrRewardPanel(rootEl, {
