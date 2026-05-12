@@ -141,10 +141,16 @@ export function ensureQrGateAlignedWithServer(member, slug) {
   }
 }
 
-function guestQrSpinGateSatisfied(state, slug) {
+/** Exposé pour les tests : doit rester aligné avec la garde capture-phase du bouton spin. */
+export function guestQrSpinGateSatisfied(state, slug) {
   ensureQrGateAlignedWithServer(state?.member, slug);
   if (isQrGateUnlocked()) return true;
   if (state?.member?.google_review_engagement_done === true) return true;
+  /* Même logique que le filet `onSpinRoulette` : le hero « Merci / avis enregistré » peut reposer sur
+   * la mémoire module + applyQrThanksHero alors que `fid_qr_spin_gate` n’a jamais été persisté
+   * (sessionStorage refusé / quota). Sinon onSpinPre fait stopImmediatePropagation et la roue ne part jamais. */
+  const s = String(slug ?? "").trim();
+  if (shouldShowQrThanksHero(s || undefined)) return true;
   return false;
 }
 
