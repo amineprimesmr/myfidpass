@@ -39,6 +39,7 @@ export function shouldShowQrThanksHero(forSlug) {
   }
   try {
     if (want && sessionStorage.getItem(`${QR_THANKS_HERO_KEY}:slug:${want}`) === "1") return true;
+    if (want) return false;
     return sessionStorage.getItem(QR_THANKS_HERO_KEY) === "1";
   } catch {
     return false;

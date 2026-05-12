@@ -458,8 +458,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     spinBtn.disabled = true;
     spinBtn.setAttribute("aria-busy", "true");
     if (feedback) {
-      feedback.classList.add("hidden");
-      feedback.classList.remove("success", "error");
+      feedback.textContent = "Lancement de la roue…";
+      feedback.classList.remove("hidden", "success", "error");
     }
 
     wheelEl.style.willChange = "transform";

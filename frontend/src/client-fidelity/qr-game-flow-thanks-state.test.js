@@ -30,6 +30,13 @@ describe("Merci hero — persistance rendu", () => {
     expect(sessionStorage.getItem(`${QR_THANKS_HERO_KEY}:slug:café-demo`)).toBe("1");
   });
 
+  it("slug : l'ancienne clé globale ne déverrouille pas un autre commerce", async () => {
+    const { shouldShowQrThanksHero, QR_THANKS_HERO_KEY } = await import("./qr-game-flow.js");
+    sessionStorage.setItem(QR_THANKS_HERO_KEY, "1");
+    expect(shouldShowQrThanksHero()).toBe(true);
+    expect(shouldShowQrThanksHero("autre-commerce")).toBe(false);
+  });
+
   it("guestQrSpinGateSatisfied : merci hero suffit si la clé session spin gate ne persiste pas", async () => {
     const { QR_GATE_KEY, guestQrSpinGateSatisfied, markQrThanksHeroDone } = await import("./qr-game-flow.js");
     const origSetItem = sessionStorage.setItem.bind(sessionStorage);
