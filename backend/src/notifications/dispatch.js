@@ -8,6 +8,8 @@ import {
   getPassKitPushTokensForBusinessFiltered,
   getPassKitPushTokensForBusiness,
   getBusinessById,
+  getMemberForBusiness,
+  getMembersForBusiness,
   logNotification,
   createNotificationBatch,
   updateNotificationBatchSummary,
@@ -18,10 +20,12 @@ import {
   getMerchantDeviceTokensForUser,
   deleteMerchantPushDeviceByToken,
   deletePassRegistrationsByPushToken,
+  mergeBusinessAssetsForPass,
 } from "../db.js";
 import { sendWebPush } from "../notifications.js";
 import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import { sendMerchantAppAlert, isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
+import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
 import logger from "../lib/logger.js";
 
@@ -44,6 +48,32 @@ function buildNotificationIconUrl(apiBase, slug, businessRow, batchId) {
   const nonce = randomUUID();
   const v = batchId ? `${base}~${batchId}~${nonce}` : `${base}~${nonce}`;
   return `${path}?v=${encodeURIComponent(v)}`;
+}
+
+function targetedGoogleWalletMembers(businessId, memberIds) {
+  if (memberIds !== null && memberIds.length === 0) return [];
+  if (Array.isArray(memberIds) && memberIds.length > 0) {
+    return memberIds
+      .map((memberId) => getMemberForBusiness(memberId, businessId))
+      .filter(Boolean);
+  }
+  const { members } = getMembersForBusiness(businessId, { limit: 100000, offset: 0, sort: "created_desc" });
+  return members;
+}
+
+async function mapWithConcurrency(items, limit, mapper) {
+  const out = [];
+  let next = 0;
+  const workerCount = Math.min(Math.max(1, limit), items.length);
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (next < items.length) {
+        const index = next++;
+        out[index] = await mapper(items[index], index);
+      }
+    }),
+  );
+  return out;
 }
 
 /**
@@ -84,6 +114,7 @@ export async function deliverCustomerBroadcast({
       : memberIds !== null && memberIds.length === 0
         ? []
         : getPassKitPushTokensForBusiness(business.id);
+  const googleWalletMembers = targetedGoogleWalletMembers(business.id, memberIds);
 
   /** Filet de sécurité si le SQL d’exclusion Web Push a raté (UUID, casse, etc.). */
   const passKitMemberKeys = new Set(
@@ -102,11 +133,12 @@ export async function deliverCustomerBroadcast({
     return true;
   });
 
-  if (webSubscriptions.length === 0 && passKitTokens.length === 0) {
+  if (webSubscriptions.length === 0 && passKitTokens.length === 0 && googleWalletMembers.length === 0) {
     return {
       sent: 0,
       sentWebPush: 0,
       sentPassKit: 0,
+      sentGoogleWallet: 0,
       sentMerchantApp: 0,
       failed: 0,
       errors: [],
@@ -122,6 +154,7 @@ export async function deliverCustomerBroadcast({
       triggerName,
       webPushCount: webSubscriptions.length,
       passKitCount: passKitTokens.length,
+      googleWalletCandidates: googleWalletMembers.length,
       memberFilter: memberIds === null ? "all" : `${memberIds.length} ids`,
     },
     "[dispatch] début de campagne"
@@ -143,6 +176,7 @@ export async function deliverCustomerBroadcast({
   // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
   const businessFresh = getBusinessById(business.id) || businessAfterSync || business;
+  const googleWalletBusiness = mergeBusinessAssetsForPass(businessFresh);
   const iconSource = businessAfterSync || businessFresh;
   // Toujours inclure l'URL — l'endpoint retourne logonotif quand aucune icône custom n'est configurée.
   const iconUrl = slug && apiBase
@@ -265,13 +299,85 @@ export async function deliverCustomerBroadcast({
     }
   }
 
-  const sent = sentWebPush + sentPassKit;
+  let sentGoogleWallet = 0;
+  let skippedGoogleWallet = 0;
+  let failedGoogleWallet = 0;
+  if (googleWalletMembers.length > 0) {
+    const googleResults = await mapWithConcurrency(googleWalletMembers, 5, async (member) => {
+      try {
+        const result = await addGoogleWalletNotificationMessageForMember(member, googleWalletBusiness, {
+          title: payloadTitle,
+          body: bodyMessage,
+          batchId,
+        });
+        if (result.sent > 0) {
+          logNotification({
+            businessId: business.id,
+            memberId: member.id,
+            title: payloadTitle,
+            body: bodyMessage,
+            type: "google_wallet",
+            batchId,
+            channel: "google_wallet",
+            triggerName,
+            countsForMemberCooldown: 1,
+            status: "sent",
+          });
+          return { ok: true, sent: result.sent, skipped: result.skipped || 0, failed: 0 };
+        }
+        if (result.failed > 0) {
+          const detail = result.errors?.[0]?.error?.message || result.errors?.[0]?.error || result.error || "Google Wallet addMessage failed";
+          logNotification({
+            businessId: business.id,
+            memberId: member.id,
+            title: payloadTitle,
+            body: bodyMessage,
+            type: "google_wallet",
+            batchId,
+            channel: "google_wallet",
+            triggerName,
+            countsForMemberCooldown: 1,
+            status: "failed",
+            errorDetail: typeof detail === "string" ? detail : JSON.stringify(detail),
+          });
+          errors.push({ type: "google_wallet", memberId: member.id, error: typeof detail === "string" ? detail : JSON.stringify(detail) });
+          return { ok: false, sent: 0, skipped: result.skipped || 0, failed: result.failed || 1 };
+        }
+        return { ok: true, sent: 0, skipped: result.skipped || 1, failed: 0 };
+      } catch (err) {
+        const detail = err?.message || String(err);
+        logNotification({
+          businessId: business.id,
+          memberId: member.id,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: "google_wallet",
+          batchId,
+          channel: "google_wallet",
+          triggerName,
+          countsForMemberCooldown: 1,
+          status: "failed",
+          errorDetail: detail,
+        });
+        errors.push({ type: "google_wallet", memberId: member.id, error: detail });
+        return { ok: false, sent: 0, skipped: 0, failed: 1 };
+      }
+    });
+    sentGoogleWallet = googleResults.reduce((sum, r) => sum + (r?.sent || 0), 0);
+    skippedGoogleWallet = googleResults.reduce((sum, r) => sum + (r?.skipped || 0), 0);
+    failedGoogleWallet = googleResults.reduce((sum, r) => sum + (r?.failed || 0), 0);
+  }
+
+  const sent = sentWebPush + sentPassKit + sentGoogleWallet;
   let sentMerchantApp = 0;
 
   const summary = {
     sent,
     sentWebPush,
     sentPassKit,
+    sentGoogleWallet,
+    skippedGoogleWallet,
+    failedGoogleWallet,
     sentMerchantApp: 0,
     failed: errors.length,
     errors: errors.length > 0 ? errors : undefined,
@@ -281,7 +387,7 @@ export async function deliverCustomerBroadcast({
   if (sendMerchantReceipt && merchantUserId) {
     const tokens = getMerchantDeviceTokensForUser(merchantUserId);
     const receiptTitle = "Campagne envoyée";
-    const receiptBody = `Wallet: ${sentPassKit} · Web: ${sentWebPush}${errors.length ? ` · ${errors.length} erreur(s)` : ""}`;
+    const receiptBody = `Apple Wallet: ${sentPassKit} · Google Wallet: ${sentGoogleWallet} · Web: ${sentWebPush}${errors.length ? ` · ${errors.length} erreur(s)` : ""}`;
     for (const tok of tokens) {
       // Toujours inclure l'URL avec ?v= pour cache-busting — l'endpoint sert logonotif si pas d'icône custom.
       const merchantIconUrl = slug && apiBase
@@ -345,6 +451,9 @@ export async function deliverCustomerBroadcast({
       sent,
       sentWebPush,
       sentPassKit,
+      sentGoogleWallet,
+      skippedGoogleWallet,
+      failedGoogleWallet,
       sentMerchantApp,
       failed: errors.length,
       elapsedMs,

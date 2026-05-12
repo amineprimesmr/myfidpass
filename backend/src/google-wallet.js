@@ -71,6 +71,16 @@ function getBusinessObjectId(issuerId, member, business) {
   return `${issuerId}.business_${businessSuffix}_${memberSuffix}`;
 }
 
+function googleWalletObjectIdsForMember(issuerId, member, business) {
+  const ids = [getBusinessObjectId(issuerId, member, business), getLegacyObjectId(issuerId, member)];
+  return [...new Set(ids.filter(Boolean))];
+}
+
+function truncateGoogleText(value, max) {
+  const clean = String(value || "").replace(/\s+/g, " ").trim();
+  return clean.length > max ? `${clean.slice(0, Math.max(0, max - 1)).trim()}…` : clean;
+}
+
 function imageVersionParam(value) {
   const raw = String(value || "").trim();
   return raw ? `?v=${encodeURIComponent(raw).slice(0, 80)}` : "";
@@ -493,6 +503,66 @@ export async function syncGoogleWalletObjectForMember(member, business, apiBase)
     objectId: objectReady.objectId,
     googleStatus: objectReady.googleStatus || legacyObjectReady.googleStatus,
     googleError: objectReady.googleError || legacyObjectReady.googleError,
+  };
+}
+
+export async function addGoogleWalletNotificationMessageForMember(member, business, {
+  title,
+  body,
+  batchId = null,
+} = {}) {
+  const config = getConfig();
+  if (!config) return { ok: false, configured: false, sent: 0, skipped: 0, failed: 0, error: "Google Wallet non configuré" };
+
+  const header = truncateGoogleText(title || displayNameForBusiness(business), 60);
+  const messageBody = truncateGoogleText(body, 400);
+  if (!messageBody) return { ok: false, configured: true, sent: 0, skipped: 0, failed: 0, error: "Message vide" };
+
+  const objectIds = googleWalletObjectIdsForMember(config.issuerId, member, business);
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+  const errors = [];
+
+  for (const objectId of objectIds) {
+    const getPath = `/loyaltyObject/${encodeURIComponent(objectId)}`;
+    const current = await googleWalletApiRequest(config, "GET", getPath);
+    if (current.status === 404) {
+      skipped++;
+      continue;
+    }
+    if (!current.ok) {
+      failed++;
+      errors.push({ objectId, status: current.status, error: current.data?.error || current.data });
+      continue;
+    }
+
+    const messageIdSource = batchId || `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const messageId = safeSuffix(`notif_${messageIdSource}_${member.id}`).slice(0, 120);
+    const add = await googleWalletApiRequest(config, "POST", `${getPath}/addMessage`, {
+      message: {
+        id: messageId,
+        header,
+        body: messageBody,
+        messageType: "TEXT_AND_NOTIFY",
+      },
+    });
+    if (add.ok) {
+      sent++;
+      break;
+    } else {
+      failed++;
+      errors.push({ objectId, status: add.status, error: add.data?.error || add.data });
+    }
+  }
+
+  return {
+    ok: failed === 0,
+    configured: true,
+    sent,
+    skipped,
+    failed,
+    errors,
   };
 }
 

@@ -100,9 +100,13 @@ export async function notifyHandler(req, res) {
     memberIds !== null
       ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
       : getPassKitPushTokensForBusiness(business.id);
-  const totalDevices = webSubscriptions.length + passKitTokens.length;
+  const googleWalletCandidates =
+    memberIds !== null
+      ? memberIds.length
+      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
+  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
   if (totalDevices === 0) {
-    return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0, sentMerchantApp: 0, batch_id: null });
+    return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0, sentGoogleWallet: 0, sentMerchantApp: 0, batch_id: null });
   }
 
   const result = await deliverCustomerBroadcast({
@@ -122,6 +126,7 @@ export async function notifyHandler(req, res) {
     sent: result.sent,
     sentWebPush: result.sentWebPush,
     sentPassKit: result.sentPassKit,
+    sentGoogleWallet: result.sentGoogleWallet ?? 0,
     sentMerchantApp: result.sentMerchantApp ?? 0,
     batch_id: result.batchId,
     failed: result.failed ?? 0,
@@ -169,16 +174,21 @@ router.post("/send", async (req, res) => {
     memberIds !== null
       ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
       : getPassKitPushTokensForBusiness(business.id);
-  const totalDevices = webSubscriptions.length + passKitTokens.length;
+  const googleWalletCandidates =
+    memberIds !== null
+      ? memberIds.length
+      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
+  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
   if (totalDevices === 0) {
     return res.json({
       ok: true,
       sent: 0,
       sentWebPush: 0,
       sentPassKit: 0,
+      sentGoogleWallet: 0,
       sentMerchantApp: 0,
       batch_id: null,
-      message: "Aucun appareil enregistré. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
+      message: "Aucun client ciblé. Les clients qui ajoutent la carte (Apple Wallet, Google Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
 
@@ -224,6 +234,7 @@ router.post("/send", async (req, res) => {
     sent: null,
     sent_web_push: null,
     sent_pass_kit: null,
+    sent_google_wallet: null,
     sent_merchant_app: null,
     job_id: jobId,
     batch_id: null, // sera disponible dans /notifications/batches une fois terminé
