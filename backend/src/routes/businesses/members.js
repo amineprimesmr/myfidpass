@@ -624,6 +624,9 @@ router.get("/:memberId/pass", async (req, res) => {
 // ——— GET /:memberId/google-wallet-url ———
 router.get("/:memberId/google-wallet-url", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     const business = req.business;
     const member = getMemberForBusiness(req.params.memberId, business.id);
     if (!member) return res.status(404).json({ error: "Membre introuvable" });
