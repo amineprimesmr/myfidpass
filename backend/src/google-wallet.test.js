@@ -58,6 +58,22 @@ describe("google-wallet", () => {
     expect(getGoogleWalletSaveUrl({ id: "m1" }, { id: "b1" }, "https://x.fr")).toBeNull();
   });
 
+  it("accepts service account private keys stored with escaped newlines", () => {
+    process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON = JSON.stringify({
+      client_email: "wallet-test@project.iam.gserviceaccount.com",
+      private_key: serviceAccountJson
+        ? JSON.parse(serviceAccountJson).private_key.replace(/\n/g, "\\n")
+        : "",
+    });
+
+    const result = getGoogleWalletSaveUrl(
+      { id: "mem_escape", name: "Jean Dupont", email: "j@ex.fr", points: 3 },
+      { id: "bus_escape", organization_name: "Café Test" },
+      "https://myfidpass.fr"
+    );
+    expect(result?.url.startsWith("https://pay.google.com/gp/v/save/")).toBe(true);
+  });
+
   it("getGoogleWalletSaveUrl returns a save URL and a JWT Google can parse structurally", () => {
     const member = { id: "mem_abc-1", name: "Jean Dupont", email: "j@ex.fr", points: "42" };
     const business = { id: "bus_xyz", organization_name: "Café Test" };

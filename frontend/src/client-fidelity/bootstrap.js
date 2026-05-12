@@ -796,7 +796,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           }
           const message =
             result.code === "google_wallet_unavailable"
-              ? "Google Wallet n’est pas activé pour ce commerce. Réessaie plus tard ou contacte le magasin."
+              ? "Google Wallet est temporairement indisponible. Réessaie plus tard ou contacte le magasin."
               : result.error || "Impossible d’ouvrir Google Wallet.";
           globalThis.alert(message);
         },

@@ -18,7 +18,9 @@ function getConfig() {
     return null;
   }
   if (!key.client_email || !key.private_key) return null;
-  return { issuerId, clientEmail: key.client_email, privateKey: key.private_key };
+  const privateKey = String(key.private_key).replace(/\\n/g, "\n").trim();
+  if (!privateKey.includes("-----BEGIN PRIVATE KEY-----")) return null;
+  return { issuerId, clientEmail: key.client_email, privateKey };
 }
 
 /**
