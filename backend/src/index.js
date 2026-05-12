@@ -62,6 +62,7 @@ import oauthGoogleBusinessRouter from "./routes/oauth-google-business.js";
 import oauthTiktokRouter from "./routes/oauth-tiktok.js";
 import { generatePass } from "./pass.js";
 import { logApnsStatus, logMerchantApnsStatus, getApnsHealthForDiagnostics } from "./apns.js";
+import { ensureGoogleWalletClassForDiagnostics } from "./google-wallet.js";
 import {
   isEmailConfigured,
   getEmailTransportLabel,
@@ -378,6 +379,14 @@ app.get("/api/health/passkit", (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
+  }
+});
+app.get("/api/health/google-wallet", async (req, res) => {
+  try {
+    const result = await ensureGoogleWalletClassForDiagnostics();
+    res.status(result.ok ? 200 : 500).json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
   }
 });
 
