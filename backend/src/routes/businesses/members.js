@@ -31,8 +31,8 @@ import {
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
-import { getGoogleWalletSaveUrl } from "../../google-wallet.js";
-import { getIdempotencyKey, canAccessDashboard, ensureOperationalSubscription } from "./shared.js";
+import { ensureGoogleWalletClassForBusiness, getGoogleWalletSaveUrl } from "../../google-wallet.js";
+import { getApiBase, getIdempotencyKey, canAccessDashboard, ensureOperationalSubscription } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../../lib/merchant-dashboard-sync-push.js";
 import { scheduleCampaignEventJobsForMember } from "../../lib/campaign-event-jobs.js";
@@ -617,20 +617,41 @@ router.get("/:memberId/pass", async (req, res) => {
 });
 
 // ——— GET /:memberId/google-wallet-url ———
-router.get("/:memberId/google-wallet-url", (req, res) => {
-  const business = req.business;
-  const member = getMemberForBusiness(req.params.memberId, business.id);
-  if (!member) return res.status(404).json({ error: "Membre introuvable" });
+router.get("/:memberId/google-wallet-url", async (req, res) => {
+  try {
+    const business = req.business;
+    const member = getMemberForBusiness(req.params.memberId, business.id);
+    if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
-  const frontendOrigin = req.get("Origin") || req.get("Referer")?.replace(/\/[^/]*$/, "") || process.env.FRONTEND_URL;
-  const result = getGoogleWalletSaveUrl(member, business, frontendOrigin);
-  if (!result) {
+    const frontendOrigin = req.get("Origin") || req.get("Referer")?.replace(/\/[^/]*$/, "") || process.env.FRONTEND_URL;
+    const apiBase = getApiBase(req);
+    const ensured = await ensureGoogleWalletClassForBusiness(business, apiBase);
+    if (!ensured.ok) {
+      return res.status(503).json({
+        error: "Google Wallet non configuré pour ce commerce",
+        code: "google_wallet_class_unavailable",
+        detail: ensured.googleError?.message || ensured.error || undefined,
+      });
+    }
+    const result = getGoogleWalletSaveUrl(member, business, frontendOrigin, {
+      apiBase,
+      classId: ensured.classId,
+      omitClass: true,
+    });
+    if (!result) {
+      return res.status(503).json({
+        error: "Google Wallet non configuré",
+        code: "google_wallet_unavailable",
+      });
+    }
+    res.json(result);
+  } catch (e) {
+    console.error("[Google Wallet] génération URL:", e);
     return res.status(503).json({
-      error: "Google Wallet non configuré",
+      error: "Google Wallet indisponible",
       code: "google_wallet_unavailable",
     });
   }
-  res.json(result);
 });
 
 export default router;

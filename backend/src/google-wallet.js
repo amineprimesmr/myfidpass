@@ -33,22 +33,52 @@ function safeSuffix(s) {
   return String(s).replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-function getClassId(issuerId) {
+function normalizeHexColor(value, fallback = "#2563EB") {
+  const raw = String(value || "").trim();
+  const withHash = raw ? (raw.startsWith("#") ? raw : `#${raw}`) : "";
+  return /^#[0-9a-fA-F]{6}$/.test(withHash) ? withHash.toUpperCase() : fallback;
+}
+
+function displayNameForBusiness(business) {
+  const raw = business?.organization_name || business?.name || "MyFidpass Fidélité";
+  const clean = String(raw).trim();
+  return clean || "MyFidpass Fidélité";
+}
+
+function getDefaultClassId(issuerId) {
   return process.env.GOOGLE_WALLET_CLASS_ID?.trim() || `${issuerId}.${DEFAULT_CLASS_SUFFIX}`;
 }
 
-function buildLoyaltyClass(classId) {
+function getBusinessClassId(issuerId, business) {
+  if (process.env.GOOGLE_WALLET_CLASS_ID?.trim()) return process.env.GOOGLE_WALLET_CLASS_ID.trim();
+  const suffixSource = business?.slug || business?.id || DEFAULT_CLASS_SUFFIX;
+  return `${issuerId}.business_${safeSuffix(suffixSource).slice(0, 80)}`;
+}
+
+function publicLogoUrlForBusiness(apiBase, business) {
+  const slug = business?.slug ? encodeURIComponent(String(business.slug)) : "";
+  const base = String(apiBase || "https://api.myfidpass.fr").replace(/\/$/, "");
+  if (!slug) return DEFAULT_PROGRAM_LOGO_URL;
+  return `${base}/api/businesses/${slug}/public/logo`;
+}
+
+function buildLoyaltyClass(classId, business = null, apiBase = null) {
+  const merchantName = displayNameForBusiness(business);
   return {
     id: classId,
-    issuerName: "Myfidpass",
-    programName: "MyFidpass Fidélité",
+    issuerName: merchantName.slice(0, 20),
+    programName: merchantName.slice(0, 50),
     reviewStatus: "UNDER_REVIEW",
-    hexBackgroundColor: "#2563EB",
+    hexBackgroundColor: normalizeHexColor(business?.background_color, "#2563EB"),
     programLogo: {
       sourceUri: {
-        uri: DEFAULT_PROGRAM_LOGO_URL,
+        uri: business ? publicLogoUrlForBusiness(apiBase, business) : DEFAULT_PROGRAM_LOGO_URL,
       },
-      contentDescription: { defaultValue: { language: "fr-FR", value: "Logo MyFidpass" } },
+      contentDescription: { defaultValue: { language: "fr-FR", value: `Logo ${merchantName}` } },
+    },
+    homepageUri: {
+      uri: business?.slug ? `https://myfidpass.fr/fidelity/${encodeURIComponent(String(business.slug))}` : "https://myfidpass.fr",
+      description: "Carte fidélité",
     },
   };
 }
@@ -85,21 +115,30 @@ async function googleWalletApiRequest(config, method, path, body) {
   return { ok: res.ok, status: res.status, data };
 }
 
-export async function ensureGoogleWalletClassForDiagnostics() {
-  const config = getConfig();
-  if (!config) {
-    return { ok: false, configured: false, error: "GOOGLE_WALLET_ISSUER_ID ou GOOGLE_WALLET_SERVICE_ACCOUNT_JSON invalide" };
-  }
-  const classId = getClassId(config.issuerId);
-  const getPath = `/loyaltyClass/${encodeURIComponent(classId)}`;
+async function ensureGoogleWalletClass(classDef, config) {
+  const getPath = `/loyaltyClass/${encodeURIComponent(classDef.id)}`;
   const current = await googleWalletApiRequest(config, "GET", getPath);
   if (current.ok) {
+    const currentLogo = current.data?.programLogo?.sourceUri?.uri || "";
+    const nextLogo = classDef.programLogo?.sourceUri?.uri || "";
+    const needsPatch =
+      current.data?.programName !== classDef.programName ||
+      current.data?.issuerName !== classDef.issuerName ||
+      current.data?.hexBackgroundColor !== classDef.hexBackgroundColor ||
+      currentLogo !== nextLogo;
+    let patched = false;
+    let patchStatus = null;
+    if (needsPatch) {
+      const patch = await googleWalletApiRequest(config, "PATCH", getPath, classDef);
+      patched = patch.ok;
+      patchStatus = patch.status;
+    }
     return {
       ok: true,
-      configured: true,
-      classId,
-      serviceAccountEmail: config.clientEmail,
+      classId: classDef.id,
       exists: true,
+      patched,
+      patchStatus,
       reviewStatus: current.data?.reviewStatus,
       classState: current.data?.classState,
     };
@@ -107,26 +146,48 @@ export async function ensureGoogleWalletClassForDiagnostics() {
   if (current.status !== 404) {
     return {
       ok: false,
-      configured: true,
-      classId,
-      serviceAccountEmail: config.clientEmail,
+      classId: classDef.id,
       exists: false,
       googleStatus: current.status,
       googleError: current.data?.error || current.data,
     };
   }
-  const inserted = await googleWalletApiRequest(config, "POST", "/loyaltyClass", buildLoyaltyClass(classId));
+  const inserted = await googleWalletApiRequest(config, "POST", "/loyaltyClass", classDef);
   return {
     ok: inserted.ok,
-    configured: true,
-    classId,
-    serviceAccountEmail: config.clientEmail,
+    classId: classDef.id,
     exists: inserted.ok,
     created: inserted.ok,
     reviewStatus: inserted.data?.reviewStatus,
     classState: inserted.data?.classState,
     googleStatus: inserted.status,
     googleError: inserted.ok ? undefined : (inserted.data?.error || inserted.data),
+  };
+}
+
+export async function ensureGoogleWalletClassForDiagnostics() {
+  const config = getConfig();
+  if (!config) {
+    return { ok: false, configured: false, error: "GOOGLE_WALLET_ISSUER_ID ou GOOGLE_WALLET_SERVICE_ACCOUNT_JSON invalide" };
+  }
+  const classId = getDefaultClassId(config.issuerId);
+  const ensured = await ensureGoogleWalletClass(buildLoyaltyClass(classId), config);
+  return {
+    ...ensured,
+    configured: true,
+    serviceAccountEmail: config.clientEmail,
+  };
+}
+
+export async function ensureGoogleWalletClassForBusiness(business, apiBase) {
+  const config = getConfig();
+  if (!config) return { ok: false, configured: false, error: "Google Wallet non configuré" };
+  const classId = getBusinessClassId(config.issuerId, business);
+  const ensured = await ensureGoogleWalletClass(buildLoyaltyClass(classId, business, apiBase), config);
+  return {
+    ...ensured,
+    configured: true,
+    serviceAccountEmail: config.clientEmail,
   };
 }
 
@@ -137,22 +198,21 @@ export async function ensureGoogleWalletClassForDiagnostics() {
  * @param {string} frontendOrigin - origine autorisée (ex. https://myfidpass.fr)
  * @returns {{ url: string } | null }
  */
-export function getGoogleWalletSaveUrl(member, business, frontendOrigin) {
+export function getGoogleWalletSaveUrl(member, business, frontendOrigin, options = {}) {
   const config = getConfig();
   if (!config) return null;
 
   const { issuerId, clientEmail, privateKey } = config;
-  // Une classe Google Wallet doit être approuvée par Google. Ne pas en créer une par commerce :
-  // une seule classe MyFidpass approuvée permet ensuite d'émettre les objets clients.
   const configuredClassId = process.env.GOOGLE_WALLET_CLASS_ID?.trim();
-  const classId = getClassId(issuerId);
+  const classId = options.classId || getBusinessClassId(issuerId, business);
   const objectId = `${issuerId}.${safeSuffix(member.id)}`;
 
-  const programName = "MyFidpass Fidélité";
+  const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
+  const balanceLabel = programType === "stamps" ? "Tampons" : "Points";
   const accountName = (member.name || member.email || "Client").slice(0, 20);
   const accountId = (member.email || member.id).slice(0, 20);
 
-  const loyaltyClass = buildLoyaltyClass(classId);
+  const loyaltyClass = buildLoyaltyClass(classId, business, options.apiBase);
 
   const loyaltyObject = {
     id: objectId,
@@ -161,7 +221,7 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin) {
     accountName,
     accountId,
     loyaltyPoints: {
-      label: "Points",
+      label: balanceLabel,
       balance: { int: Math.max(0, Math.floor(Number(member.points) || 0)) },
     },
     barcode: {
@@ -169,6 +229,18 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin) {
       value: member.id,
       alternateText: member.id,
     },
+    textModulesData: [
+      {
+        header: "Commerce",
+        body: displayNameForBusiness(business),
+        id: "merchant",
+      },
+      {
+        header: "Carte client",
+        body: "Présentez le QR code en caisse pour créditer votre fidélité.",
+        id: "scan_hint",
+      },
+    ],
   };
 
   const origins = [];
@@ -182,7 +254,7 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin) {
     iat: Math.floor(Date.now() / 1000),
     origins,
     payload: {
-      ...(configuredClassId ? {} : { loyaltyClasses: [loyaltyClass] }),
+      ...(configuredClassId || options.omitClass ? {} : { loyaltyClasses: [loyaltyClass] }),
       loyaltyObjects: [loyaltyObject],
     },
   };
