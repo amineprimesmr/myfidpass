@@ -62,23 +62,64 @@ function publicLogoUrlForBusiness(apiBase, business) {
   return `${base}/api/businesses/${slug}/public/logo`;
 }
 
+function publicHeroImageUrlForBusiness(apiBase, business) {
+  const slug = business?.slug ? encodeURIComponent(String(business.slug)) : "";
+  const base = String(apiBase || "https://api.myfidpass.fr").replace(/\/$/, "");
+  if (!slug || Number(business?.asset_card_background_present) !== 1) return null;
+  return `${base}/api/businesses/${slug}/public/wallet-card-background`;
+}
+
+function localizedString(value, language = "fr-FR") {
+  return { defaultValue: { language, value } };
+}
+
+function googleImage(uri, description) {
+  return {
+    sourceUri: { uri },
+    contentDescription: localizedString(description),
+  };
+}
+
 function buildLoyaltyClass(classId, business = null, apiBase = null) {
   const merchantName = displayNameForBusiness(business);
+  const logoUrl = business ? publicLogoUrlForBusiness(apiBase, business) : DEFAULT_PROGRAM_LOGO_URL;
+  const heroUrl = business ? publicHeroImageUrlForBusiness(apiBase, business) : null;
+  const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
+  const pointsLabel = programType === "stamps" ? "Tampons" : "Points";
   return {
     id: classId,
     issuerName: merchantName.slice(0, 20),
     programName: merchantName.slice(0, 50),
     reviewStatus: "UNDER_REVIEW",
     hexBackgroundColor: normalizeHexColor(business?.background_color, "#2563EB"),
-    programLogo: {
-      sourceUri: {
-        uri: business ? publicLogoUrlForBusiness(apiBase, business) : DEFAULT_PROGRAM_LOGO_URL,
-      },
-      contentDescription: { defaultValue: { language: "fr-FR", value: `Logo ${merchantName}` } },
-    },
+    accountNameLabel: "Client",
+    accountIdLabel: "Carte",
+    programLogo: googleImage(logoUrl, `Logo ${merchantName}`),
+    wideProgramLogo: googleImage(logoUrl, `Logo ${merchantName}`),
+    ...(heroUrl ? { heroImage: googleImage(heroUrl, `Carte ${merchantName}`) } : {}),
+    textModulesData: [
+      { id: "merchant", header: "Commerce", body: merchantName },
+      { id: "balance", header: pointsLabel, body: `Solde ${pointsLabel.toLowerCase()}` },
+    ],
     homepageUri: {
       uri: business?.slug ? `https://myfidpass.fr/fidelity/${encodeURIComponent(String(business.slug))}` : "https://myfidpass.fr",
       description: "Carte fidélité",
+    },
+    classTemplateInfo: {
+      cardBarcodeSectionDetails: {
+        firstTopDetail: {
+          fieldSelector: {
+            fields: [{ fieldPath: "class.textModulesData['merchant']" }],
+          },
+        },
+      },
+      listTemplateOverride: {
+        firstRowOption: {
+          fieldOption: {
+            fields: [{ fieldPath: "class.textModulesData['merchant']" }],
+          },
+        },
+      },
     },
   };
 }
@@ -229,6 +270,7 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin, options
       value: member.id,
       alternateText: member.id,
     },
+    ...(loyaltyClass.heroImage ? { heroImage: loyaltyClass.heroImage } : {}),
     textModulesData: [
       {
         header: "Commerce",
