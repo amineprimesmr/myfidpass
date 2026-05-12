@@ -49,6 +49,12 @@ function getDefaultClassId(issuerId) {
   return process.env.GOOGLE_WALLET_CLASS_ID?.trim() || `${issuerId}.${DEFAULT_CLASS_SUFFIX}`;
 }
 
+export function getGoogleWalletDefaultClassId() {
+  const config = getConfig();
+  if (!config) return null;
+  return getDefaultClassId(config.issuerId);
+}
+
 function getBusinessClassId(issuerId, business) {
   if (process.env.GOOGLE_WALLET_CLASS_ID?.trim()) return process.env.GOOGLE_WALLET_CLASS_ID.trim();
   const suffixSource = business?.slug || business?.id || DEFAULT_CLASS_SUFFIX;
@@ -56,10 +62,7 @@ function getBusinessClassId(issuerId, business) {
 }
 
 function publicLogoUrlForBusiness(apiBase, business) {
-  const slug = business?.slug ? encodeURIComponent(String(business.slug)) : "";
-  const base = String(apiBase || "https://api.myfidpass.fr").replace(/\/$/, "");
-  if (!slug) return DEFAULT_PROGRAM_LOGO_URL;
-  return `${base}/api/businesses/${slug}/public/logo`;
+  return DEFAULT_PROGRAM_LOGO_URL;
 }
 
 function publicHeroImageUrlForBusiness(apiBase, business) {
@@ -95,7 +98,6 @@ function buildLoyaltyClass(classId, business = null, apiBase = null) {
     accountNameLabel: "Client",
     accountIdLabel: "Carte",
     programLogo: googleImage(logoUrl, `Logo ${merchantName}`),
-    wideProgramLogo: googleImage(logoUrl, `Logo ${merchantName}`),
     ...(heroUrl ? { heroImage: googleImage(heroUrl, `Carte ${merchantName}`) } : {}),
     textModulesData: [
       { id: "merchant", header: "Commerce", body: merchantName },
@@ -104,22 +106,6 @@ function buildLoyaltyClass(classId, business = null, apiBase = null) {
     homepageUri: {
       uri: business?.slug ? `https://myfidpass.fr/fidelity/${encodeURIComponent(String(business.slug))}` : "https://myfidpass.fr",
       description: "Carte fidélité",
-    },
-    classTemplateInfo: {
-      cardBarcodeSectionDetails: {
-        firstTopDetail: {
-          fieldSelector: {
-            fields: [{ fieldPath: "class.textModulesData['merchant']" }],
-          },
-        },
-      },
-      listTemplateOverride: {
-        firstRowOption: {
-          fieldOption: {
-            fields: [{ fieldPath: "class.textModulesData['merchant']" }],
-          },
-        },
-      },
     },
   };
 }

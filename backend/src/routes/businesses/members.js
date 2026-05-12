@@ -31,7 +31,11 @@ import {
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { sendPassKitUpdate } from "../../apns.js";
 import { generatePass } from "../../pass.js";
-import { ensureGoogleWalletClassForBusiness, getGoogleWalletSaveUrl } from "../../google-wallet.js";
+import {
+  ensureGoogleWalletClassForBusiness,
+  getGoogleWalletDefaultClassId,
+  getGoogleWalletSaveUrl,
+} from "../../google-wallet.js";
 import { getApiBase, getIdempotencyKey, canAccessDashboard, ensureOperationalSubscription } from "./shared.js";
 import { validate, schemas } from "../../lib/validate.js";
 import { scheduleMerchantDashboardSyncForBusiness } from "../../lib/merchant-dashboard-sync-push.js";
@@ -626,16 +630,24 @@ router.get("/:memberId/google-wallet-url", async (req, res) => {
     const frontendOrigin = req.get("Origin") || req.get("Referer")?.replace(/\/[^/]*$/, "") || process.env.FRONTEND_URL;
     const apiBase = getApiBase(req);
     const ensured = await ensureGoogleWalletClassForBusiness(business, apiBase);
+    const classId = ensured.ok ? ensured.classId : getGoogleWalletDefaultClassId();
     if (!ensured.ok) {
+      console.warn("[Google Wallet] classe commerce indisponible, repli classe globale:", {
+        slug: business.slug,
+        classId: ensured.classId,
+        googleStatus: ensured.googleStatus,
+        googleError: ensured.googleError?.message || ensured.error,
+      });
+    }
+    if (!classId) {
       return res.status(503).json({
-        error: "Google Wallet non configuré pour ce commerce",
-        code: "google_wallet_class_unavailable",
-        detail: ensured.googleError?.message || ensured.error || undefined,
+        error: "Google Wallet non configuré",
+        code: "google_wallet_unavailable",
       });
     }
     const result = getGoogleWalletSaveUrl(member, business, frontendOrigin, {
       apiBase,
-      classId: ensured.classId,
+      classId,
       omitClass: true,
     });
     if (!result) {
