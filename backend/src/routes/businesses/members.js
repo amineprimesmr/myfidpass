@@ -21,7 +21,6 @@ import {
   convertPointsToTickets,
   getMemberRewards,
   markRewardGrantClaimed,
-  getPushTokensForMember,
   memberHasAppleWalletRegistration,
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
@@ -29,7 +28,7 @@ import {
   hasMemberCompletedEngagementAction,
 } from "../../db.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { generatePass } from "../../pass.js";
 import {
   ensureGoogleWalletClassForBusiness,
@@ -345,14 +344,7 @@ router.post("/:memberId/points/remove", async (req, res) => {
     metadata: { reason: "cashier_correction" },
     actorUserId: req.user?.id,
   });
-  const tokens = getPushTokensForMember(member.id);
-  for (const token of tokens) {
-    try {
-      await sendPassKitUpdate(token);
-    } catch (_) {
-      /* ignore */
-    }
-  }
+  await pushPassKitUpdateForMember(business.id, member.id, "points_remove");
   await syncGoogleWalletAfterMemberMutation(updated, business, req, "points_remove");
   res.json({
     id: updated.id,
@@ -464,12 +456,7 @@ router.post("/:memberId/points", async (req, res) => {
     idempotencyKey: idempotencyKey || null,
     actorUserId: req.user?.id,
   });
-  const tokens = getPushTokensForMember(member.id);
-  if (tokens.length > 0) {
-    for (const token of tokens) {
-      await sendPassKitUpdate(token);
-    }
-  }
+  await pushPassKitUpdateForMember(business.id, member.id, "points_add");
   await syncGoogleWalletAfterMemberMutation(updated, business, req, "points_add");
   res.json({
     id: updated.id,
@@ -508,10 +495,7 @@ router.post("/:memberId/redeem", async (req, res) => {
       metadata: { subtype: "stamps", required_stamps: requiredStamps },
       actorUserId: req.user?.id,
     });
-    const tokens = getPushTokensForMember(member.id);
-    for (const token of tokens) {
-      try { await sendPassKitUpdate(token); } catch (_) { /* ignore */ }
-    }
+    await pushPassKitUpdateForMember(business.id, member.id, "redeem_stamps");
     await syncGoogleWalletAfterMemberMutation({ ...member, points: 0 }, business, req, "redeem_stamps");
     return res.json({
       ok: true,
@@ -562,10 +546,7 @@ router.post("/:memberId/redeem", async (req, res) => {
       metadata: { subtype: "points", points_deducted: pointsToDeduct },
       actorUserId: req.user?.id,
     });
-    const tokens = getPushTokensForMember(member.id);
-    for (const token of tokens) {
-      try { await sendPassKitUpdate(token); } catch (_) { /* ignore */ }
-    }
+    await pushPassKitUpdateForMember(business.id, member.id, "redeem_points");
     await syncGoogleWalletAfterMemberMutation(updated, business, req, "redeem_points");
     return res.json({
       ok: true,

@@ -8,12 +8,11 @@ import {
   addPoints,
   addStampsWithCycleRollover,
   createTransaction,
-  getPushTokensForMember,
   countMemberPointsAddsTodayUtc,
   normalizeStampBalance,
   mergeBusinessAssetsForPass,
 } from "../../db.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase, normalizeBarcodeToMemberId } from "./shared.js";
 import {
@@ -181,15 +180,7 @@ router.post("/scan", async (req, res) => {
     metadata: metaBase,
     actorUserId: req.user?.id,
   });
-  const tokens = getPushTokensForMember(member.id);
-  if (tokens.length > 0) {
-    for (const token of tokens) {
-      const result = await sendPassKitUpdate(token);
-      if (!result.sent) {
-        console.warn("[PassKit] Push refusée (scan):", result.error || "inconnu");
-      }
-    }
-  }
+  await pushPassKitUpdateForMember(business.id, member.id, "integration_scan");
   await syncGoogleWalletAfterMemberMutation(updated, business, req, "integration_scan");
   res.json({
     member: {

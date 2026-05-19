@@ -789,35 +789,6 @@ export default function SaasProPaymentPage() {
             </>
           )}
         </section>
-
-        <footer className="saas-pay-legal" aria-label="Informations sur l’abonnement">
-          <p className="saas-pay-legal__title">MyFidpass Pro — abonnement auto-renouvelable</p>
-          <p className="saas-pay-legal__line">
-            {annual ? (
-              <>
-                <strong>Durée :</strong> 1 an, renouvellement automatique chaque année.{" "}
-                <strong>Prix :</strong> 1&nbsp;€ le premier mois, puis 399&nbsp;€&nbsp;/&nbsp;an (soit 34&nbsp;€&nbsp;/&nbsp;mois).
-              </>
-            ) : (
-              <>
-                <strong>Durée :</strong> 1 mois, renouvellement automatique chaque mois.{" "}
-                <strong>Prix :</strong> 1&nbsp;€ le premier mois, puis 49,99&nbsp;€&nbsp;/&nbsp;mois.
-              </>
-            )}
-          </p>
-          <p className="saas-pay-legal__line saas-pay-legal__line--muted">
-            Sans engagement. Résiliation à tout moment depuis Réglages dans l’app ou sur myfidpass.fr. Paiement sécurisé via Stripe.
-          </p>
-          <p className="saas-pay-legal__links">
-            <a href="https://myfidpass.fr/confidentialite" target="_blank" rel="noopener noreferrer">
-              Politique de confidentialité
-            </a>
-            <span aria-hidden="true"> · </span>
-            <a href="https://myfidpass.fr/cgu" target="_blank" rel="noopener noreferrer">
-              Conditions d’utilisation (CGU)
-            </a>
-          </p>
-        </footer>
       </main>
     </div>
   );

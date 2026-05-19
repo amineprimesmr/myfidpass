@@ -220,16 +220,20 @@ export function updateBusiness(businessId, updates) {
     delete u.logo_icon_base64;
   }
   if (u.notification_icon_base64 !== undefined) {
-    setBusinessAssetData(
-      businessId,
-      "notification_icon",
-      u.notification_icon_base64 === null || u.notification_icon_base64 === "" ? null : String(u.notification_icon_base64),
-    );
-    u.notification_icon_updated_at =
-      u.notification_icon_base64 == null || u.notification_icon_base64 === ""
+    const iconPayload =
+      u.notification_icon_base64 === null || u.notification_icon_base64 === ""
         ? null
-        : new Date().toISOString();
+        : String(u.notification_icon_base64);
+    setBusinessAssetData(businessId, "notification_icon", iconPayload);
+    u.notification_icon_updated_at = iconPayload == null ? null : new Date().toISOString();
     delete u.notification_icon_base64;
+    if (iconPayload != null) {
+      queueMicrotask(() => {
+        import("../lib/notification-icon-recovery.js")
+          .then((m) => m.recoverNotificationsAfterIconUpload(businessId))
+          .catch((e) => console.warn("[notification-icon-recovery] failed:", e?.message || String(e)));
+      });
+    }
   }
   if (u.card_background_base64 !== undefined) {
     setBusinessAssetData(

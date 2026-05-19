@@ -338,10 +338,16 @@ async function runJob(job) {
     }
     if (!businessHasCustomNotificationIcon(business)) {
       clearInterval(heartbeatInterval);
-      markJobDone(job.id, null);
+      const waitUntil = new Date(Date.now() + 5 * 60_000).toISOString();
+      db.prepare(
+        `UPDATE notification_jobs
+         SET status = 'pending', started_at = NULL, last_heartbeat_at = NULL,
+             error = ?, next_attempt_at = ?, attempt_count = MAX(0, attempt_count - 1)
+         WHERE id = ?`
+      ).run("Icône notification requise — en attente", waitUntil, job.id);
       logger.warn(
         { jobId: job.id, businessId: job.business_id },
-        "[notif-job-queue] job annulé — icône de notification personnalisée absente"
+        "[notif-job-queue] job en attente — icône de notification personnalisée absente"
       );
       return;
     }

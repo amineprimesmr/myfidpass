@@ -405,6 +405,14 @@ export async function generatePass(member, business = null, options = {}) {
   const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
   const stampMidRewardLabel = (options.stamp_mid_reward_label ?? business?.stamp_mid_reward_label)?.trim() || "";
   if (format === "tampons") {
+    /* changeMessage sur le solde tampons : alerte Wallet à chaque scan (comme le champ Points). */
+    pass.secondaryFields.push({
+      key: "stamps",
+      label: "Tampons",
+      value: String(stamps),
+      textAlignment: "PKTextAlignmentLeft",
+      changeMessage: "Tu as maintenant %@ tampons !",
+    });
     /* Prochaine récompense : label « Dans x passages », valeur = texte marchand (aligné app Ma carte). */
     const nrFace = stampNextRewardFaceLabelAndValue({
       stampsCollected: stamps,
@@ -417,7 +425,6 @@ export async function generatePass(member, business = null, options = {}) {
       label: nrFace.label,
       value: nrFace.value,
       textAlignment: "PKTextAlignmentLeft",
-      /** Pas de changeMessage ici : évite une 2ᵉ alerte Wallet en plus de « Tu as maintenant X tampons ». */
     });
     pass.auxiliaryFields.push({
       key: "member",
