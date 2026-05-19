@@ -14,6 +14,7 @@ import {
   API_BASE,
   FIDPASS_AUTH_RESTORED_EVENT,
   consumeAuthTransferFromHash,
+  ensureWebSessionFresh,
   getAuthToken,
   getStripeJs,
 } from "../config.js";
@@ -178,7 +179,7 @@ export default function SaasProPaymentPage() {
       setWalletBtnMounted(null);
 
       consumeAuthTransferFromHash();
-      const token = getAuthToken();
+      let token = await ensureWebSessionFresh();
       if (!token) {
         if (!cancelled) {
           setNeedsLoginForPayment(true);
@@ -192,16 +193,28 @@ export default function SaasProPaymentPage() {
         const stripePromiseLocal = getStripeJs();
         if (!stripePromiseLocal) throw new Error("Stripe n'est pas configuré sur le frontend.");
 
-        const fetchPromise = fetch(`${API_BASE}/api/payment/create-embedded-subscription`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ plan: annual ? "annual" : "monthly", save_card: saveCard }),
-        });
+        const fetchEmbeddedSubscription = async (bearer) =>
+          fetch(`${API_BASE}/api/payment/create-embedded-subscription`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${bearer}`,
+            },
+            body: JSON.stringify({ plan: annual ? "annual" : "monthly", save_card: saveCard }),
+          });
 
-        const [stripe, res] = await Promise.all([stripePromiseLocal, fetchPromise]);
+        let fetchPromise = fetchEmbeddedSubscription(token);
+        let res = await fetchPromise;
+        if (res.status === 401) {
+          token = await ensureWebSessionFresh({ forceRefresh: true });
+          if (!token) {
+            throw new Error("Session expirée. Fermez cette page, reconnectez-vous dans l’app puis réessayez.");
+          }
+          res = await fetchEmbeddedSubscription(token);
+        }
+        const fetchPromiseResolved = Promise.resolve(res);
+
+        const [stripe, res] = await Promise.all([stripePromiseLocal, fetchPromiseResolved]);
         if (!stripe) throw new Error("Impossible de charger Stripe.");
         if (cancelled) return;
         stripeRef.current = stripe;

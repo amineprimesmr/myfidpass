@@ -257,6 +257,96 @@ export function setRefreshToken(token) {
   } catch (_) {}
 }
 
+/** @param {string | null | undefined} token */
+function parseJwtExpMs(token) {
+  if (!token || typeof token !== "string") return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  try {
+    let payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const pad = payload.length % 4;
+    if (pad) payload += "=".repeat(4 - pad);
+    const json = JSON.parse(atob(payload));
+    const exp = json?.exp;
+    if (typeof exp === "number" && Number.isFinite(exp)) return exp * 1000;
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/** Une seule rotation refresh web à la fois (évite d’invalider le refresh côté serveur en parallèle avec l’app native). */
+let webRefreshInFlight = null;
+
+/**
+ * JWT encore valide (marge 120 s) → retourne l’access token.
+ * Sinon POST /api/auth/refresh avec le refresh stocké en localStorage.
+ * @param {{ forceRefresh?: boolean }} [opts]
+ * @returns {Promise<string|null>}
+ */
+export async function ensureWebSessionFresh(opts = {}) {
+  const { forceRefresh = false } = opts;
+  if (typeof window === "undefined") return getAuthToken();
+
+  const current = getAuthToken();
+  const expMs = parseJwtExpMs(current);
+  const leewayMs = 120_000;
+  if (!forceRefresh && current && expMs && expMs - Date.now() > leewayMs) {
+    return current;
+  }
+
+  if (webRefreshInFlight) return webRefreshInFlight;
+
+  webRefreshInFlight = (async () => {
+    const rt = getRefreshToken();
+    if (!rt) return current || null;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ refreshToken: rt }),
+      });
+      const data = await res.json().catch(() => (/** @type {Record<string, unknown>} */ ({})));
+      if (!res.ok) {
+        if (res.status === 401) clearAuthToken();
+        return null;
+      }
+      const access = String(data?.token || data?.access_token || "").trim();
+      if (!access) return null;
+      setAuthToken(access);
+      const newRt = String(data?.refreshToken || data?.refresh_token || "").trim();
+      if (newRt) setRefreshToken(newRt);
+      if (typeof window.dispatchEvent === "function") {
+        window.dispatchEvent(new CustomEvent(FIDPASS_AUTH_RESTORED_EVENT));
+      }
+      return access;
+    } catch (_) {
+      return current || null;
+    } finally {
+      webRefreshInFlight = null;
+    }
+  })();
+
+  return webRefreshInFlight;
+}
+
+/**
+ * Injection session depuis l’app native (WKWebView) — mêmes clés que `getAuthToken` / `setAuthToken`.
+ * @param {string} accessToken
+ * @param {string} [refreshToken]
+ */
+export function applyAuthTokensToWebStorage(accessToken, refreshToken) {
+  const access = String(accessToken || "").trim();
+  if (access) setAuthToken(access);
+  const refresh = String(refreshToken || "").trim();
+  if (refresh) setRefreshToken(refresh);
+  if (access || refresh) {
+    if (typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new CustomEvent(FIDPASS_AUTH_RESTORED_EVENT));
+    }
+  }
+}
+
 export function getPendingEstablishment() {
   try {
     const raw = localStorage.getItem(PENDING_ESTABLISHMENT_KEY);
