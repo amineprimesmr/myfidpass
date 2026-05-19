@@ -27,6 +27,7 @@ import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import { sendMerchantAppAlert, isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
 import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
+import { businessHasCustomNotificationIcon } from "../lib/notification-icon-gate.js";
 import logger from "../lib/logger.js";
 
 /**
@@ -102,6 +103,23 @@ export async function deliverCustomerBroadcast({
   sendMerchantReceipt = true,
   touchMemberLastVisit = true,
 }) {
+  if (!businessHasCustomNotificationIcon(business)) {
+    logger.warn(
+      { businessId: business.id, slug, triggerName },
+      "[dispatch] envoi bloqué — icône de notification personnalisée absente"
+    );
+    return {
+      sent: 0,
+      sentWebPush: 0,
+      sentPassKit: 0,
+      sentGoogleWallet: 0,
+      sentMerchantApp: 0,
+      failed: 0,
+      errors: [],
+      batchId: null,
+    };
+  }
+
   const webSubscriptionsRaw =
     memberIds !== null && memberIds.length > 0
       ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)

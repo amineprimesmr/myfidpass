@@ -10,6 +10,7 @@ import {
 } from "../db.js";
 import { deliverDashboardBroadcast, CAMPAIGN_SEGMENT_KEYS } from "../routes/businesses/notifications.js";
 import { normalizeEventTypeToken } from "../services/campaign-automation-ai.js";
+import { businessHasCustomNotificationIcon } from "./notification-icon-gate.js";
 
 const db = getDb();
 
@@ -121,6 +122,7 @@ export async function runCampaignAutomationCron() {
   const errors = [];
 
   for (const row of rows) {
+    if (!businessHasCustomNotificationIcon(row)) continue;
     const config = mergeCampaignAutomationJson(row.campaign_automation_json);
     const business = row;
 

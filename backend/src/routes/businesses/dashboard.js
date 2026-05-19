@@ -45,6 +45,7 @@ import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
 import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
+import { campaignAutomationConfigWithIconGate } from "../../lib/notification-icon-gate.js";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { parseFlyerAIBody } from "../../services/flyer-ai-image.js";
 import {
@@ -221,7 +222,10 @@ router.get("/settings", (req, res) => {
     header_right_text: business.header_right_text ?? undefined,
     notification_title_override: business.notification_title_override ?? undefined,
     notification_change_message: business.notification_change_message ?? undefined,
-    campaign_automation: mergeCampaignAutomationJson(business.campaign_automation_json ?? ""),
+    campaign_automation: campaignAutomationConfigWithIconGate(
+      business,
+      mergeCampaignAutomationJson(business.campaign_automation_json ?? "")
+    ),
     has_stamp_icon: Number(business.asset_stamp_icon_present) === 1,
     stamp_icon_url:
       Number(business.asset_stamp_icon_present) === 1
@@ -572,10 +576,14 @@ router.patch("/settings", async (req, res) => {
     if (campaign_automation_in === null) {
       updates.campaign_automation_json = null;
     } else if (typeof campaign_automation_in === "object") {
-      updates.campaign_automation_json = JSON.stringify(mergeCampaignAutomationJson(JSON.stringify(campaign_automation_in)));
+      const merged = mergeCampaignAutomationJson(JSON.stringify(campaign_automation_in));
+      updates.campaign_automation_json = JSON.stringify(campaignAutomationConfigWithIconGate(business, merged));
     } else if (typeof campaign_automation_in === "string") {
       const t = campaign_automation_in.trim();
-      updates.campaign_automation_json = t ? JSON.stringify(mergeCampaignAutomationJson(t)) : null;
+      const merged = t ? mergeCampaignAutomationJson(t) : null;
+      updates.campaign_automation_json = merged
+        ? JSON.stringify(campaignAutomationConfigWithIconGate(business, merged))
+        : null;
     }
   }
   const scanMaxPassesIn = body.scan_max_passes_per_member_per_day ?? body.scanMaxPassesPerMemberPerDay;

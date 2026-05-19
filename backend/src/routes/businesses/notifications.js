@@ -25,6 +25,10 @@ import { assertOperationalSubscription, ensureDashboardAccess, blockStaffDashboa
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
 import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
+import {
+  assertCustomNotificationIconForBroadcast,
+  notificationIconRequiredHttpBody,
+} from "../../lib/notification-icon-gate.js";
 
 /** Segments autorisés pour POST .../notifications/send (campagne manuelle ou auto). */
 export const CAMPAIGN_SEGMENT_KEYS = [
@@ -87,6 +91,11 @@ export async function notifyHandler(req, res) {
   if (!assertOperationalSubscription(req, res, business)) return;
   const message = (req.body?.message ?? "").trim();
   if (!message) return res.status(400).json({ error: "Le message est obligatoire" });
+  try {
+    assertCustomNotificationIconForBroadcast(business);
+  } catch (e) {
+    return res.status(e.statusCode || 422).json(notificationIconRequiredHttpBody());
+  }
   const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids.filter(Boolean) : null;
   const memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
   const apiBase = getApiBase(req);
@@ -156,6 +165,11 @@ router.post("/send", async (req, res) => {
   const body = (message || "").trim();
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
+  }
+  try {
+    assertCustomNotificationIconForBroadcast(business);
+  } catch (e) {
+    return res.status(e.statusCode || 422).json(notificationIconRequiredHttpBody());
   }
   let memberIds;
   if (segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)) {

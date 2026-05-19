@@ -34,6 +34,7 @@ import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
 import { deliverCustomerBroadcast } from "../notifications/dispatch.js";
 import { notifyAdminsPlatformEvent } from "./admin-notify.js";
+import { businessHasCustomNotificationIcon } from "./notification-icon-gate.js";
 import logger from "./logger.js";
 
 const db = getDb();
@@ -333,6 +334,15 @@ async function runJob(job) {
       // Commerce supprimé : ce n'est PAS une erreur retentable → mort direct.
       markJobFailedOrDead(job.id, MAX_ATTEMPTS, `Commerce introuvable : ${job.business_id}`);
       logger.warn({ jobId: job.id, businessId: job.business_id }, "[notif-job-queue] commerce introuvable — DLQ");
+      return;
+    }
+    if (!businessHasCustomNotificationIcon(business)) {
+      clearInterval(heartbeatInterval);
+      markJobDone(job.id, null);
+      logger.warn(
+        { jobId: job.id, businessId: job.business_id },
+        "[notif-job-queue] job annulé — icône de notification personnalisée absente"
+      );
       return;
     }
 

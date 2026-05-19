@@ -10,6 +10,7 @@ import { getDb } from "../db/connection.js";
 import { mergeCampaignAutomationJson } from "./campaign-automation-cron.js";
 import { deliverDashboardBroadcast } from "../routes/businesses/notifications.js";
 import { normalizeEventTypeToken } from "../services/campaign-automation-ai.js";
+import { businessHasCustomNotificationIcon } from "./notification-icon-gate.js";
 
 const db = getDb();
 
@@ -42,6 +43,7 @@ function getApiBase() {
  */
 export function scheduleCampaignEventJobsForMember({ business, memberId }) {
   if (!business?.id || !memberId) return 0;
+  if (!businessHasCustomNotificationIcon(business)) return 0;
 
   const config = mergeCampaignAutomationJson(business.campaign_automation_json ?? "");
   const rules = config?.rules ?? {};
@@ -155,6 +157,7 @@ function enqueueRuleForMembers({ businessId, ruleId, title, message, eventType, 
 }
 
 function scheduleDerivedEventJobs({ business, now = new Date() }) {
+  if (!businessHasCustomNotificationIcon(business)) return 0;
   const config = mergeCampaignAutomationJson(business?.campaign_automation_json ?? "");
   const rules = config?.rules ?? {};
   let scheduled = 0;
@@ -324,6 +327,11 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
       const rule = config?.rules?.[baseRuleId];
       if (!rule?.enabled) {
         markJobSkipped(job.id, "Règle désactivée");
+        skipped++;
+        continue;
+      }
+      if (!businessHasCustomNotificationIcon(business)) {
+        markJobSkipped(job.id, "Icône de notification personnalisée requise");
         skipped++;
         continue;
       }
