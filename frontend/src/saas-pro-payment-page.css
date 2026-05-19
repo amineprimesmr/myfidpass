@@ -1564,3 +1564,48 @@ a.saas-pay-continue--link:hover {
     transform: translateY(0);
   }
 }
+
+/* Guideline 3.1.2 — titre, durée, prix, liens CGU / confidentialité */
+.saas-pay-legal {
+  margin: 1.25rem 0 1.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+.saas-pay-legal__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.saas-pay-legal__line {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.saas-pay-legal__line--muted {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.saas-pay-legal__links {
+  margin: 0.55rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.saas-pay-legal__links a {
+  color: rgba(200, 248, 15, 0.95);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.saas-pay-legal__links a:hover {
+  color: #e8ff6a;
+}
