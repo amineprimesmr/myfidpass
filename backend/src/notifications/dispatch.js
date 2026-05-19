@@ -31,8 +31,8 @@ import { businessHasCustomNotificationIcon } from "../lib/notification-icon-gate
 import logger from "../lib/logger.js";
 
 /**
- * URL d’icône pour Web Push et APNs : toujours construite — l’endpoint `/notification-icon`
- * retourne l’icône custom du commerçant si elle existe, sinon `logonotif` (icône app par défaut).
+ * URL d’icône pour Web Push et APNs — uniquement si icône notif personnalisée (sinon pas d’envoi dispatch).
+ * L’endpoint `/notification-icon` renvoie 404 sans icône dédiée (pas de repli logo).
  * `?v=` = timestamp + id de campagne + nonce aléatoire pour forcer un fetch frais à chaque envoi.
  *
  * POURQUOI LE NONCE EN PLUS DU batchId :

@@ -21,6 +21,11 @@ export function businessHasCustomNotificationIcon(business) {
   return false;
 }
 
+/** Alertes écran verrouillé Wallet (`changeMessage`) et push PassKit après scan / campagne. */
+export function businessAllowsWalletCustomerAlerts(business) {
+  return businessHasCustomNotificationIcon(business);
+}
+
 export function notificationIconRequiredHttpBody() {
   return {
     error: NOTIFICATION_ICON_REQUIRED_MESSAGE,

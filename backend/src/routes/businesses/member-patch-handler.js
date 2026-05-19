@@ -8,7 +8,7 @@ import {
   getPushTokensForMember,
   businessUsesTicketBonuses,
 } from "../../db.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { ensureDashboardAccess } from "./shared.js";
 
 export async function patchMemberProfile(req, res) {
@@ -46,14 +46,7 @@ export async function patchMemberProfile(req, res) {
   const updated = updateMember(member.id, updatePayload);
   if (!updated) return res.status(404).json({ error: "Membre introuvable" });
 
-  const tokens = getPushTokensForMember(member.id);
-  for (const token of tokens) {
-    try {
-      await sendPassKitUpdate(token);
-    } catch (_) {
-      /* ignore */
-    }
-  }
+  await pushPassKitUpdateForMember(business.id, member.id, "member_patch");
 
   res.json({
     id: updated.id,

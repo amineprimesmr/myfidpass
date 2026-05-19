@@ -34,7 +34,7 @@ import {
   enforceScanSecurityLimits,
 } from "../../lib/scan-credit-helpers.js";
 import { countMemberPointsAddsTodayUtc } from "../../db/transactions.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 
@@ -446,14 +446,7 @@ router.post("/:memberId/delivery-receipt-claims", claimPostLimiter, async (req, 
     },
     idempotencyKey: idem ? `rdc:${idem}` : null,
   });
-  const tokens = getPushTokensForMember(member.id);
-  for (const token of tokens) {
-    try {
-      await sendPassKitUpdate(token);
-    } catch (_) {
-      /* ignore */
-    }
-  }
+  await pushPassKitUpdateForMember(business.id, member.id, "delivery_receipt_auto");
   await syncGoogleWalletAfterMemberMutation(updated, business, req);
   updateReceiptDeliveryClaim(row.id, {
     status: "approved",

@@ -3,28 +3,10 @@
  * Médias lus depuis `business_assets` ; Cache-Control compatible URLCache iOS (Bearer).
  */
 import { Router } from "express";
-import { readFile } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { getLogoIconBuffer } from "../../notifications.js";
 import { ensureDashboardAccess } from "./shared.js";
 import { getBusinessAssetData, getAllBusinessAssetsMap } from "../../db/business-assets.js";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-/** Icône de notification par défaut (logo app) — servi quand le commerçant n'a pas uploadé d'icône dédiée. */
-const LOGONOTIF_PATH = resolve(__dirname, "../../assets/logonotif.png");
-
-/** Buffer mis en mémoire une seule fois au premier appel pour éviter des lectures disque répétées. */
-let _logonotifBuffer = null;
-async function getDefaultNotifIconBuffer() {
-  if (_logonotifBuffer) return _logonotifBuffer;
-  try {
-    _logonotifBuffer = await readFile(LOGONOTIF_PATH);
-    return _logonotifBuffer;
-  } catch {
-    return null;
-  }
-}
+import { businessHasCustomNotificationIcon } from "../../lib/notification-icon-gate.js";
 
 const router = Router();
 
@@ -55,12 +37,14 @@ function setAssetCacheHeaders(res, req, etagKey) {
 
 /**
  * Icône **campagnes / Web Push / aperçu app Notifs** uniquement.
- * Repli : icône app `logonotif.png` quand aucun média dédié n'est configuré (évite 404 et l'image
- * du logo carte dans les notifications).
+ * Sans icône personnalisée : 404 (pas de repli logo app / logo carte — évite une fausse icône figée).
  */
 router.get("/notification-icon", async (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).send();
+  if (!businessHasCustomNotificationIcon(business)) {
+    return res.status(404).send();
+  }
 
   const assets = business.id ? getAllBusinessAssetsMap(business.id) : null;
   const fromAssets = assets?.notification_icon;
@@ -71,21 +55,13 @@ router.get("/notification-icon", async (req, res) => {
   const b64 = fromAssets || fromRow;
   const customBuffer = b64 ? await getLogoIconBuffer(b64) : null;
 
-  if (customBuffer) {
-    // Icône personnalisée. L'URL APNs inclut déjà `?v=<ts>~<batchId>~<uuid>` donc chaque push a
-    // une URL unique. Garder `must-revalidate` pour couper toute réutilisation stale.
-    const etagKey = `${business.id}-notification-icon-${business.notification_icon_updated_at || "0"}`;
-    if (setAssetCacheHeaders(res, req, etagKey)) return;
-    res.setHeader("Content-Type", "image/png");
-    res.setHeader("Cache-Control", "private, max-age=300, must-revalidate");
-    return res.send(customBuffer);
-  }
+  if (!customBuffer) return res.status(404).send();
 
-  const defaultBuffer = await getDefaultNotifIconBuffer();
-  if (!defaultBuffer) return res.status(404).send();
-  res.setHeader("Cache-Control", "private, max-age=3600, stale-while-revalidate=300");
+  const etagKey = `${business.id}-notification-icon-${business.notification_icon_updated_at || "0"}`;
+  if (setAssetCacheHeaders(res, req, etagKey)) return;
   res.setHeader("Content-Type", "image/png");
-  return res.send(defaultBuffer);
+  res.setHeader("Cache-Control", "private, max-age=300, must-revalidate");
+  return res.send(customBuffer);
 });
 
 router.get("/logo", (req, res) => {

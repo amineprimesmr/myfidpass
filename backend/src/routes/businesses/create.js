@@ -12,11 +12,13 @@ import {
   canCreateBusiness,
   getBusinessesByUserId,
   getMerchantBusinessEntitlements,
+  getBusinessById,
   bumpBusinessPassRefreshTimestamp,
   getPassKitPushTokensForBusiness,
   getAnyBusinessLinkedToGooglePlaceId,
 } from "../../db.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { sendPassKitUpdateIfCustomerAlertsAllowed } from "../../lib/passkit-member-push.js";
+import { businessAllowsWalletCustomerAlerts } from "../../lib/notification-icon-gate.js";
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../../lib/google-place-business-enrichment.js";
@@ -585,7 +587,8 @@ export async function updateHandler(req, res) {
       // du POST /notifications/send qui peut suivre dans la même seconde.
       // Voir dashboard.js → même logique documentée.
       const bFresh = getBusinessById(business.id) || updated;
-      const passMs = Number(bFresh?.pass_last_modified_ms) || Date.now();
+      if (bFresh && businessAllowsWalletCustomerAlerts(bFresh)) {
+      const passMs = Number(bFresh.pass_last_modified_ms) || Date.now();
       const assetCollapseId = `asset-${passMs}`;
 
       const PAR = 40;
@@ -595,7 +598,9 @@ export async function updateHandler(req, res) {
         const chunk = head.slice(i, i + PAR);
         await Promise.all(
           chunk.map((row) =>
-            sendPassKitUpdate(row.push_token, { collapseId: assetCollapseId }).catch(() => {}),
+            sendPassKitUpdateIfCustomerAlertsAllowed(bFresh, row.push_token, {
+              collapseId: assetCollapseId,
+            }).catch(() => {}),
           ),
         );
       }
@@ -603,7 +608,9 @@ export async function updateHandler(req, res) {
       if (tail.length > 0) {
         process.nextTick(() => {
           tail.forEach((row) => {
-            sendPassKitUpdate(row.push_token, { collapseId: assetCollapseId }).catch(() => {});
+            sendPassKitUpdateIfCustomerAlertsAllowed(bFresh, row.push_token, {
+              collapseId: assetCollapseId,
+            }).catch(() => {});
           });
         });
       }
@@ -613,13 +620,18 @@ export async function updateHandler(req, res) {
       setTimeout(() => {
         try {
           const tokensNow = getPassKitPushTokensForBusiness(business.id);
+          const bRetry = getBusinessById(business.id);
+          if (!bRetry || !businessAllowsWalletCustomerAlerts(bRetry)) return;
           for (const row of tokensNow) {
-            sendPassKitUpdate(row.push_token, { collapseId: retryCollapseId }).catch(() => {});
+            sendPassKitUpdateIfCustomerAlertsAllowed(bRetry, row.push_token, {
+              collapseId: retryCollapseId,
+            }).catch(() => {});
           }
         } catch {
           /* retry best-effort */
         }
       }, 1800);
+      }
     }
   }
 

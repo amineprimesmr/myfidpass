@@ -19,7 +19,7 @@ import {
   enforceScanSecurityLimits,
 } from "../../lib/scan-credit-helpers.js";
 import { countMemberPointsAddsTodayUtc } from "../../db/transactions.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase } from "./shared.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
@@ -90,14 +90,7 @@ router.post("/delivery-receipt-claims/dev-reset", async (req, res) => {
   const result = devResetAllReceiptDeliveryClaimsForBusiness(business.id);
   const memberIds = [...new Set(result.members_adjusted.map((m) => m.member_id))];
   for (const mid of memberIds) {
-    const tokens = getPushTokensForMember(mid);
-    for (const token of tokens) {
-      try {
-        await sendPassKitUpdate(token);
-      } catch (_) {
-        /* ignore */
-      }
-    }
+    await pushPassKitUpdateForMember(business.id, mid, "delivery_receipt_reset");
     const adjustedMember = getMemberForBusiness(mid, business.id);
     if (adjustedMember) await syncGoogleWalletAfterMemberMutation(adjustedMember, business, req);
   }
@@ -161,14 +154,7 @@ router.post("/delivery-receipt-claims/:claimId/approve", async (req, res) => {
     idempotencyKey: null,
     actorUserId: req.user?.id,
   });
-  const tokens = getPushTokensForMember(member.id);
-  for (const token of tokens) {
-    try {
-      await sendPassKitUpdate(token);
-    } catch (_) {
-      /* ignore */
-    }
-  }
+  await pushPassKitUpdateForMember(business.id, member.id, "delivery_receipt_claim_approve");
   await syncGoogleWalletAfterMemberMutation(updated, business, req);
   updateReceiptDeliveryClaim(claim.id, {
     status: "approved",

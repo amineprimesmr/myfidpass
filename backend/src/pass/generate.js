@@ -16,6 +16,7 @@ import {
   stripDataImageBase64Payload,
 } from "./images-logo.js";
 import { getBusinessAssetData } from "../db/business-assets.js";
+import { businessAllowsWalletCustomerAlerts } from "../lib/notification-icon-gate.js";
 import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
@@ -37,19 +38,6 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __passDir = dirname(fileURLToPath(import.meta.url));
-
-/** Icône app par défaut pour `icon.png` du pass (logonotif) — chargée une fois en mémoire. */
-let _logonotifBuf = null;
-function getLogonotifBuf() {
-  if (_logonotifBuf) return _logonotifBuf;
-  try {
-    const p = join(__passDir, "../assets/logonotif.png");
-    if (existsSync(p)) {
-      _logonotifBuf = readFileSync(p);
-    }
-  } catch (_) {}
-  return _logonotifBuf;
-}
 
 /** Masque le nom par défaut du parcours invité (QR) sur la face du pass. */
 function walletPassMemberDisplayName(name) {
@@ -221,33 +209,11 @@ export async function generatePass(member, business = null, options = {}) {
     buffers["icon@3x.png"] = notificationIconResized.iconPng3x;
   } else {
     /**
-     * Repli : logonotif (icône app myfidpass) — icône cohérente avec les push notifications.
-     * Ne pas utiliser le logo carte : cela confondrait l’icône de notification avec le visuel de la carte.
-     * Dernier recours : placeholder générique.
+     * Sans icône notif dédiée : icône PassKit neutre (template) uniquement — pas de logonotif,
+     * pas de logo carte ni placeholder « logo » (sinon iOS fige cette image dans les alertes Wallet).
      */
-    const logonotifBuf = getLogonotifBuf();
-    const logonotifResized = logonotifBuf
-      ? await resizeLogoForPassIcon(logonotifBuf).catch(() => null)
-      : null;
-
-    if (logonotifResized) {
-      buffers["icon.png"] = logonotifResized.iconPng;
-      buffers["icon@2x.png"] = logonotifResized.iconPng2x;
-      buffers["icon@3x.png"] = logonotifResized.iconPng3x;
-      if (process.env.NODE_ENV === "production") {
-        console.log("[PassKit] Icônes Wallet (29/58/87px) depuis logonotif (repli notification_icon absent)");
-      }
-    } else {
-      /** Dernier recours : placeholder générique bleu/blanc. */
-      const textLogo = await createPassLogoPlaceholder();
-      if (textLogo) {
-        const iconResized = await resizeLogoForPassIcon(textLogo.logoPng2x);
-        if (iconResized) {
-          buffers["icon.png"] = iconResized.iconPng;
-          buffers["icon@2x.png"] = iconResized.iconPng2x;
-          buffers["icon@3x.png"] = iconResized.iconPng3x;
-        }
-      }
+    if (process.env.NODE_ENV === "production") {
+      console.log("[PassKit] Icônes Wallet : template neutre (icône notification personnalisée absente)");
     }
   }
 
@@ -404,14 +370,14 @@ export async function generatePass(member, business = null, options = {}) {
   const labelMember = (options.label_member ?? business?.label_member)?.trim() || PASS_LABEL_MEMBER;
   const stampRewardLabel = (options.stamp_reward_label ?? business?.stamp_reward_label)?.trim() || "1 offert";
   const stampMidRewardLabel = (options.stamp_mid_reward_label ?? business?.stamp_mid_reward_label)?.trim() || "";
+  const walletAlerts = businessAllowsWalletCustomerAlerts(business);
   if (format === "tampons") {
-    /* changeMessage sur le solde tampons : alerte Wallet à chaque scan (comme le champ Points). */
     pass.secondaryFields.push({
       key: "stamps",
       label: "Tampons",
       value: String(stamps),
       textAlignment: "PKTextAlignmentLeft",
-      changeMessage: "Tu as maintenant %@ tampons !",
+      ...(walletAlerts ? { changeMessage: "Tu as maintenant %@ tampons !" } : {}),
     });
     /* Prochaine récompense : label « Dans x passages », valeur = texte marchand (aligné app Ma carte). */
     const nrFace = stampNextRewardFaceLabelAndValue({
@@ -435,17 +401,12 @@ export async function generatePass(member, business = null, options = {}) {
   } else {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
-    /* changeMessage obligatoire pour que Wallet affiche une alerte à chaque changement de solde. */
-    /*
-     * Toujours secondary (avec ou sans image perso sur le strip) : le solde reste sur la ligne champs
-     * sous le bandeau — aligné app Ma carte + Wallet attendu.
-     */
     pass.secondaryFields.push({
       key: "points",
       label: "Points",
       value: pointsValue,
       textAlignment: "PKTextAlignmentLeft",
-      changeMessage: "Tu as maintenant %@ points !",
+      ...(walletAlerts ? { changeMessage: "Tu as maintenant %@ points !" } : {}),
     });
     /* Pas de champ « Récompense » sur la face (paliers : verso « Paliers & avantages »). */
     pass.auxiliaryFields.push({
@@ -504,7 +465,7 @@ export async function generatePass(member, business = null, options = {}) {
   };
 
   const lastMessageBackField = { key: "lastMessage", label: "Message", value: lastBroadcast };
-  if (rawBroadcast) {
+  if (rawBroadcast && walletAlerts) {
     lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
   }
 

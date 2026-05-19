@@ -31,7 +31,7 @@ import {
 import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/member-delete.js";
 import { getRoulettePublicSegments } from "../../db/games.js";
 import { resolveBusinessProgramType } from "../../db/businesses.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { sendPassKitUpdateIfCustomerAlertsAllowed } from "../../lib/passkit-member-push.js";
 import {
   ensureDashboardAccess,
   blockStaffDashboardWrites,
@@ -45,7 +45,10 @@ import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
 import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
-import { campaignAutomationConfigWithIconGate } from "../../lib/notification-icon-gate.js";
+import {
+  businessAllowsWalletCustomerAlerts,
+  campaignAutomationConfigWithIconGate,
+} from "../../lib/notification-icon-gate.js";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { parseFlyerAIBody } from "../../services/flyer-ai-image.js";
 import {
@@ -786,7 +789,8 @@ router.patch("/settings", async (req, res) => {
       // et seul LE DERNIER est délivré → la 1ʳᵉ fenêtre d'invalidation de la miniature bannière
       // côté passd est perdue, Wallet garde l'ancienne icône en cache.
       const bFresh = getBusinessById(business.id);
-      const passMs = Number(bFresh?.pass_last_modified_ms) || Date.now();
+      if (bFresh && businessAllowsWalletCustomerAlerts(bFresh)) {
+      const passMs = Number(bFresh.pass_last_modified_ms) || Date.now();
       // Préfixe distinct des broadcasts (`bcast-…`) pour que cette vague ne soit jamais fusionnée
       // avec le push du POST /notifications/send qui suit presque toujours dans la foulée.
       const assetCollapseId = `asset-${passMs}`;
@@ -800,7 +804,9 @@ router.patch("/settings", async (req, res) => {
         const chunk = head.slice(i, i + PAR);
         await Promise.all(
           chunk.map((row) =>
-            sendPassKitUpdate(row.push_token, { collapseId: assetCollapseId }).catch(() => {}),
+            sendPassKitUpdateIfCustomerAlertsAllowed(bFresh, row.push_token, {
+              collapseId: assetCollapseId,
+            }).catch(() => {}),
           ),
         );
       }
@@ -808,7 +814,9 @@ router.patch("/settings", async (req, res) => {
       if (tail.length > 0) {
         process.nextTick(() => {
           tail.forEach((row) => {
-            sendPassKitUpdate(row.push_token, { collapseId: assetCollapseId }).catch(() => {});
+            sendPassKitUpdateIfCustomerAlertsAllowed(bFresh, row.push_token, {
+              collapseId: assetCollapseId,
+            }).catch(() => {});
           });
         });
       }
@@ -823,13 +831,18 @@ router.patch("/settings", async (req, res) => {
         setTimeout(() => {
           try {
             const tokensNow = getPassKitPushTokensForBusiness(business.id);
+            const bRetry = getBusinessById(business.id);
+            if (!bRetry || !businessAllowsWalletCustomerAlerts(bRetry)) return;
             for (const row of tokensNow) {
-              sendPassKitUpdate(row.push_token, { collapseId: retryCollapseId }).catch(() => {});
+              sendPassKitUpdateIfCustomerAlertsAllowed(bRetry, row.push_token, {
+                collapseId: retryCollapseId,
+              }).catch(() => {});
             }
           } catch {
             /* retry best-effort */
           }
         }, 1800);
+      }
       }
     }
   }

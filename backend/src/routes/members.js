@@ -9,7 +9,7 @@ import {
   mergeBusinessAssetsForPass,
 } from "../db.js";
 import { generatePass } from "../pass.js";
-import { sendPassKitUpdate } from "../apns.js";
+import { pushPassKitUpdateForMember } from "../lib/passkit-member-push.js";
 import { syncGoogleWalletObjectForMember } from "../google-wallet.js";
 import { randomUUID } from "crypto";
 
@@ -74,16 +74,7 @@ router.post("/:memberId/points", async (req, res) => {
   if (!member) {
     return res.status(404).json({ error: "Membre introuvable" });
   }
-  // Envoyer une push APNs pour que l'iPhone mette à jour le pass et affiche "Tu as maintenant X points !"
-  const tokens = getPushTokensForMember(member.id);
-  if (tokens.length > 0) {
-    for (const token of tokens) {
-      const result = await sendPassKitUpdate(token);
-      if (!result.sent) {
-        console.warn("[PassKit] Push refusée:", result.error || "inconnu");
-      }
-    }
-  }
+  await pushPassKitUpdateForMember(member.business_id, member.id, "legacy_points_add");
   if (member.business_id) {
     const business = mergeBusinessAssetsForPass(getBusinessById(member.business_id));
     if (business) {

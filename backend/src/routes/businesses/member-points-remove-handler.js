@@ -9,7 +9,7 @@ import {
   getPushTokensForMember,
   mergeBusinessAssetsForPass,
 } from "../../db.js";
-import { sendPassKitUpdate } from "../../apns.js";
+import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase } from "./shared.js";
 
@@ -66,14 +66,7 @@ export async function postMemberPointsRemove(req, res) {
     metadata: { reason: "cashier_correction" },
     actorUserId: req.user?.id,
   });
-  const tokens = getPushTokensForMember(member.id);
-  for (const token of tokens) {
-    try {
-      await sendPassKitUpdate(token);
-    } catch (_) {
-      /* ignore */
-    }
-  }
+  await pushPassKitUpdateForMember(business.id, member.id, "points_remove");
   await syncGoogleWalletAfterMemberMutation(updated, business, req);
   res.json({
     id: updated.id,
