@@ -7,12 +7,21 @@ import {
   createOrUpdateSubscription,
   upsertMerchantEntitlement,
   getSubscriptionByUserId,
+  getMerchantEntitlementByUserId,
 } from "../db/subscriptions.js";
 
 export const APPLE_IAP_SUBSCRIPTION_PREFIX = "apple_iap:";
 
 const DEFAULT_MONTHLY_PRODUCT_IDS = ["MFPmensuel", "com.myfidpass.pro.monthly"];
 const DEFAULT_ANNUAL_PRODUCT_IDS = ["MFPannuel", "com.myfidpass.pro.annual"];
+
+/** Forfaits multi-commerces (mensuel uniquement sur App Store Connect). */
+const APPLE_IAP_SLOTS_PRODUCT_IDS = {
+  "com.myfidpass.merchant.slots2": 2,
+  "com.myfidpass.merchant.slots3": 3,
+  "com.myfidpass.merchant.slots4": 4,
+  "com.myfidpass.merchant.slots5": 5,
+};
 
 function configuredProductIds(envKey, defaults) {
   const raw = process.env[envKey];
@@ -118,7 +127,23 @@ function planIdFromProductId(productId) {
   const pid = String(productId || "").trim();
   if (appleIapAnnualProductIds().includes(pid)) return "pro";
   if (appleIapMonthlyProductIds().includes(pid)) return "pro";
+  if (APPLE_IAP_SLOTS_PRODUCT_IDS[pid]) return "pro";
   return "pro";
+}
+
+/**
+ * Nombre de commerces autorisés selon le produit IAP Apple acheté.
+ * @param {string} productId
+ * @returns {number} 1–5
+ */
+export function allowedBusinessesFromAppleProductId(productId) {
+  const pid = String(productId || "").trim();
+  const slots = APPLE_IAP_SLOTS_PRODUCT_IDS[pid];
+  if (slots != null) return slots;
+  if (appleIapMonthlyProductIds().includes(pid) || appleIapAnnualProductIds().includes(pid)) {
+    return 1;
+  }
+  return 1;
 }
 
 function assertBundleMatches(payload) {
@@ -181,9 +206,13 @@ export async function applyAppleTransactionToUser(userId, payload) {
     currentPeriodEnd,
   });
   if (status === "active" || status === "trialing" || status === "past_due") {
+    const fromProduct = allowedBusinessesFromAppleProductId(payload.productId);
+    const existing = getMerchantEntitlementByUserId(userId);
+    const prior = existing ? Math.max(0, Math.floor(Number(existing.allowed_businesses) || 0)) : 0;
+    const allowedBusinesses = Math.max(fromProduct, prior);
     upsertMerchantEntitlement({
       userId,
-      allowedBusinesses: 5,
+      allowedBusinesses,
       billingProvider: "apple",
       status: "active",
       source: "apple_iap",
