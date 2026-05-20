@@ -11,8 +11,8 @@ import {
 
 export const APPLE_IAP_SUBSCRIPTION_PREFIX = "apple_iap:";
 
-const DEFAULT_MONTHLY_PRODUCT_IDS = ["com.myfidpass.pro.monthly", "myfidpass_pro_monthly"];
-const DEFAULT_ANNUAL_PRODUCT_IDS = ["com.myfidpass.pro.annual", "com.myfidpass.pro.yearly", "myfidpass_pro_annual"];
+const DEFAULT_MONTHLY_PRODUCT_IDS = ["MFPmensuel", "com.myfidpass.pro.monthly"];
+const DEFAULT_ANNUAL_PRODUCT_IDS = ["MFPannuel", "com.myfidpass.pro.annual"];
 
 function configuredProductIds(envKey, defaults) {
   const raw = process.env[envKey];
