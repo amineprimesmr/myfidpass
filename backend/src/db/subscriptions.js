@@ -41,24 +41,27 @@ export function getMerchantTrialEndsAtIso(userId) {
   return new Date(start + merchantTrialDurationMs()).toISOString();
 }
 
-/** Essai actif : pas d’abo Stripe réel (`sub_…`) et encore dans la fenêtre d’essai après inscription (`MERCHANT_TRIAL_DAYS`, défaut 3 j). */
+/** Essai actif : pas d’abo payant (Stripe `sub_…` ou App Store `apple_iap:…`) et encore dans la fenêtre d’essai. */
 export function isUserInMerchantTrial(userId) {
-  if (!userId || hasStripeBackedActiveSubscription(userId)) return false;
+  if (!userId || hasPaidMerchantSubscription(userId)) return false;
   const endIso = getMerchantTrialEndsAtIso(userId);
   if (!endIso) return false;
   return Date.now() < Date.parse(endIso);
 }
 
-/** Accès opérationnel (scan, points, campagnes, etc.) : Stripe réel ou période d’essai gratuite — pas les anciennes lignes IAP sans `sub_…`. */
+/** Accès opérationnel (scan, points, campagnes, etc.) : abo payant (Stripe ou App Store) ou essai gratuit. */
 export function hasOperationalMerchantAccess(userId) {
   if (!userId) return false;
-  return hasStripeBackedActiveSubscription(userId) || isUserInMerchantTrial(userId);
+  return hasPaidMerchantSubscription(userId) || isUserInMerchantTrial(userId);
 }
 
 export const PLANS = { starter: { max_businesses: 1 }, pro: { max_businesses: 5 } };
 
-/** Ancienne valeur IAP / RevenueCat en base (lecture seule — nouvelles souscriptions = Stripe web uniquement). */
+/** Ancienne valeur IAP / RevenueCat en base (lecture seule). */
 export const REVENUECAT_STRIPE_SUB_ID_SENTINEL = "revenuecat_iap";
+
+/** Préfixe des abonnements App Store (StoreKit 2) dans `stripe_subscription_id`. */
+export const APPLE_IAP_SUBSCRIPTION_PREFIX = "apple_iap:";
 
 export function getDefaultAllowedBusinessesFromLegacyPlan(planId) {
   const key = String(planId || "starter")
@@ -299,6 +302,23 @@ export function hasStripeBackedActiveSubscription(userId) {
   if (!(st === "active" || st === "trialing" || st === "past_due")) return false;
   const sid = sub.stripe_subscription_id ? String(sub.stripe_subscription_id).trim() : "";
   return /^sub_[A-Za-z0-9]+$/.test(sid);
+}
+
+/** Abonnement App Store actif (`apple_iap:<originalTransactionId>`). */
+export function hasAppleBackedActiveSubscription(userId) {
+  const sub = getSubscriptionByUserId(userId);
+  if (!sub) return false;
+  const st = String(sub.status || "")
+    .trim()
+    .toLowerCase();
+  if (!(st === "active" || st === "trialing" || st === "past_due")) return false;
+  const sid = sub.stripe_subscription_id ? String(sub.stripe_subscription_id).trim() : "";
+  return sid.startsWith(APPLE_IAP_SUBSCRIPTION_PREFIX);
+}
+
+/** Abonnement encaissé (Stripe ou App Store), hors seule période d’essai application. */
+export function hasPaidMerchantSubscription(userId) {
+  return hasStripeBackedActiveSubscription(userId) || hasAppleBackedActiveSubscription(userId);
 }
 
 /**

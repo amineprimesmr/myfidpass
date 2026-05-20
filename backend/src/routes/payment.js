@@ -10,11 +10,13 @@ import {
   getUserByEmail,
   hasStripeBackedActiveSubscription,
   hasOperationalMerchantAccess,
+  isUserInMerchantTrial,
   incrementFlyerAiGenerationsBonus,
   getSubscriptionByStripeSubscriptionId,
   upsertBusinessSubscription,
   upsertMerchantEntitlement,
   cancelNonStripeBackedSubscriptionRow,
+  hasPaidMerchantSubscription,
 } from "../db.js";
 import {
   multiBusinessAnnualTotalCents,
@@ -25,6 +27,11 @@ import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/st
 import { convertReferralForUser } from "../db/referrals.js";
 import { requireAuth } from "../middleware/auth.js";
 import { notifyAdminsPlatformEvent } from "../lib/admin-notify.js";
+import {
+  syncAppleSubscriptionForUser,
+  hasAppleBackedActiveSubscription,
+  isAppStoreServerApiConfigured,
+} from "../lib/apple-iap.js";
 
 const router = Router();
 const stripe =
@@ -1114,5 +1121,81 @@ async function handleCheckoutSessionCompleted(session, stripeEventId) {
     }
   }
 }
+
+/**
+ * POST /api/payment/apple/sync-transaction
+ * Body: { signed_transaction_info?, transaction_id? } — StoreKit 2 (JWS + id transaction).
+ */
+router.post("/apple/sync-transaction", requireAuth, async (req, res) => {
+  const signed = req.body?.signed_transaction_info ?? req.body?.signedTransactionInfo;
+  const transactionId = req.body?.transaction_id ?? req.body?.transactionId;
+  if (!signed && !transactionId) {
+    return res.status(400).json({
+      error: "signed_transaction_info ou transaction_id requis",
+      code: "missing_apple_transaction",
+    });
+  }
+  try {
+    const result = await syncAppleSubscriptionForUser(req.user.id, {
+      signedTransactionInfo: signed,
+      transactionId,
+    });
+    return res.json({
+      ok: true,
+      source: isAppStoreServerApiConfigured() ? "app_store_server_api" : "storekit_jws",
+      subscription_status: result.subscription_status,
+      has_active_subscription: result.has_active_subscription,
+      original_transaction_id: result.original_transaction_id,
+    });
+  } catch (e) {
+    const code = e?.code || "apple_sync_failed";
+    console.error("[payment] apple/sync-transaction:", e?.message || e);
+    if (code === "apple_bundle_mismatch" || code === "transaction_id_mismatch") {
+      return res.status(400).json({ error: "Transaction Apple non valide pour cette app.", code });
+    }
+    if (code === "apple_transaction_invalid") {
+      return res.status(400).json({ error: e.message || "Transaction illisible.", code });
+    }
+    return res.status(500).json({ error: "Impossible de valider l’abonnement App Store.", code });
+  }
+});
+
+/**
+ * POST /api/payment/apple/reconcile-subscription
+ * Réaligne l’accès sur la dernière transaction Apple déjà stockée (restauration achats).
+ */
+router.post("/apple/reconcile-subscription", requireAuth, async (req, res) => {
+  if (hasAppleBackedActiveSubscription(req.user.id)) {
+    return res.json({
+      ok: true,
+      has_active_subscription: hasOperationalMerchantAccess(req.user.id),
+      source: "local_row",
+    });
+  }
+  const signed = req.body?.signed_transaction_info ?? req.body?.signedTransactionInfo;
+  const transactionId = req.body?.transaction_id ?? req.body?.transactionId;
+  if (!signed && !transactionId) {
+    return res.json({
+      ok: false,
+      has_active_subscription: hasPaidMerchantSubscription(req.user.id) || isUserInMerchantTrial(req.user.id),
+      message: "Aucune transaction Apple à synchroniser.",
+    });
+  }
+  try {
+    const result = await syncAppleSubscriptionForUser(req.user.id, {
+      signedTransactionInfo: signed,
+      transactionId,
+    });
+    return res.json({
+      ok: true,
+      has_active_subscription: result.has_active_subscription,
+      source: "apple_sync",
+      subscription_status: result.subscription_status,
+    });
+  } catch (e) {
+    console.error("[payment] apple/reconcile-subscription:", e?.message || e);
+    return res.status(500).json({ error: "Impossible de synchroniser avec l’App Store." });
+  }
+});
 
 export default router;
