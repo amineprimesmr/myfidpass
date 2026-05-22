@@ -17,6 +17,11 @@ const DEFAULT_ANNUAL_PRODUCT_IDS = ["MFPannuel", "com.myfidpass.pro.annual"];
 
 /** Forfaits multi-commerces (mensuel uniquement sur App Store Connect). */
 const APPLE_IAP_SLOTS_PRODUCT_IDS = {
+  "com.myfidpass.merchant.slots2.monthly": 2,
+  "com.myfidpass.merchant.slots3.monthly": 3,
+  "com.myfidpass.merchant.slots4.monthly": 4,
+  "com.myfidpass.merchant.slots5.monthly": 5,
+  // Alias legacy (StoreKit local / anciennes builds — jamais approuvés sur Connect).
   "com.myfidpass.merchant.slots2": 2,
   "com.myfidpass.merchant.slots3": 3,
   "com.myfidpass.merchant.slots4": 4,
