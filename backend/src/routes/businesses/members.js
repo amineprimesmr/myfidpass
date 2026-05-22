@@ -24,7 +24,6 @@ import {
   memberHasAppleWalletRegistration,
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
-  hasOperationalMerchantAccess,
   hasMemberCompletedEngagementAction,
 } from "../../db.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
@@ -97,14 +96,9 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
   const normEmail = String(email).trim().toLowerCase();
   const normName = String(name).trim();
   if (req.user) {
-    const uid = req.user.id != null ? String(req.user.id).trim() : "";
-    const bid = business.user_id != null ? String(business.user_id).trim() : "";
     const previewWalletEmail = normEmail.startsWith("wallet-apercu.") && normEmail.endsWith("@example.com");
-    if (uid === bid && !previewWalletEmail && !devPaymentBypass(req) && !hasOperationalMerchantAccess(uid)) {
-      return res.status(403).json({
-        error: "Abonnement actif requis pour ajouter des clients à votre programme.",
-        code: "subscription_required",
-      });
+    if (!previewWalletEmail && !devPaymentBypass(req)) {
+      if (!ensureOperationalSubscription(req, res, business)) return;
     }
   }
   const existing = getMemberByEmailForBusiness(business.id, normEmail);

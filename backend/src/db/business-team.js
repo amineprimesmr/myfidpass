@@ -123,7 +123,9 @@ export function getFirstTeamBusinessOwnerId(userId) {
     .prepare(
       `SELECT b.user_id as owner_id FROM business_team_members m
       JOIN businesses b ON b.id = m.business_id
-      WHERE m.user_id = ? AND m.status = 'active' LIMIT 1`,
+      WHERE m.user_id = ? AND m.status = 'active'
+      ORDER BY datetime(m.created_at) ASC
+      LIMIT 1`,
     )
     .get(userId);
   return r?.owner_id || null;
@@ -187,7 +189,10 @@ export function getWorkspaceRoleForUser(userId) {
   const own = db.prepare("SELECT 1 FROM businesses WHERE user_id = ? LIMIT 1").get(userId);
   if (own) return "owner";
   const row = db
-    .prepare("SELECT role FROM business_team_members WHERE user_id = ? AND status = 'active' LIMIT 1")
+    .prepare(
+      `SELECT role FROM business_team_members WHERE user_id = ? AND status = 'active'
+       ORDER BY datetime(created_at) ASC LIMIT 1`,
+    )
     .get(userId);
   if (!row) {
     const user = db.prepare("SELECT staff_login FROM users WHERE id = ?").get(userId);
