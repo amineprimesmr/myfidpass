@@ -20,6 +20,7 @@ import {
 import { sendPassKitUpdateIfCustomerAlertsAllowed } from "../../lib/passkit-member-push.js";
 import { businessAllowsWalletCustomerAlerts } from "../../lib/notification-icon-gate.js";
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
+import { isOnlyTeamUser } from "../../db/business-team.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../../lib/google-place-business-enrichment.js";
 import { refreshGooglePlacesSnapshotFromPlaceId } from "../../services/social-metrics-service.js";
@@ -104,6 +105,12 @@ export function createHandler(req, res) {
   } = req.body || {};
   if (!name || !slug) {
     return res.status(400).json({ error: "name et slug requis" });
+  }
+  if (isOnlyTeamUser(req.user.id)) {
+    return res.status(403).json({
+      error: "Seul le commerçant propriétaire peut créer un commerce",
+      code: "team_member_cannot_create_business",
+    });
   }
   const devBypass =
     process.env.DEV_BYPASS_PAYMENT === "true" &&

@@ -150,10 +150,14 @@ function authSubscriptionPayload(userId) {
       const ownerSubPayload = subscriptionPayloadForAuth(ownerIdStr, ownerSubRow);
       const ownerAccess = hasOperationalMerchantAccess(ownerIdStr);
       const ownerPaying = hasPaidMerchantSubscription(ownerIdStr);
+      const ownerEntitlements = getMerchantBusinessEntitlements(ownerIdStr);
       return {
         subscription: ownerSubPayload,
         has_active_subscription: ownerAccess,
-        entitlements,
+        entitlements: {
+          ...ownerEntitlements,
+          can_create_business: false,
+        },
         merchant_trial_ends_at: ownerAccess
           ? null
           : ownerPaying

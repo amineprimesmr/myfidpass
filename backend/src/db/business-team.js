@@ -189,7 +189,11 @@ export function getWorkspaceRoleForUser(userId) {
   const row = db
     .prepare("SELECT role FROM business_team_members WHERE user_id = ? AND status = 'active' LIMIT 1")
     .get(userId);
-  if (!row) return "owner";
+  if (!row) {
+    const user = db.prepare("SELECT staff_login FROM users WHERE id = ?").get(userId);
+    if (user?.staff_login) return "staff";
+    return "owner";
+  }
   const r = String(row.role || "staff").toLowerCase();
   return r === "manager" ? "manager" : "staff";
 }
