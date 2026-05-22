@@ -127,6 +127,12 @@ function issueTokenPair(userId) {
   return { accessToken, refreshToken };
 }
 
+/** Body refresh/logout : camelCase (contrat) ou snake_case (clients JSONEncoder convertToSnakeCase). */
+function readRefreshTokenFromBody(body) {
+  const token = body?.refreshToken ?? body?.refresh_token;
+  return typeof token === "string" && token.trim() ? token.trim() : null;
+}
+
 // Nettoyage des tokens expirés au démarrage
 cleanExpiredRefreshTokens();
 
@@ -1088,8 +1094,8 @@ router.delete("/account", requireAuth, (req, res) => {
  * L'ancien refresh token est immédiatement invalidé.
  */
 router.post("/refresh", (req, res) => {
-  const token = req.body?.refreshToken;
-  if (!token || typeof token !== "string") {
+  const token = readRefreshTokenFromBody(req.body);
+  if (!token) {
     return res.status(400).json({ error: "refreshToken manquant", code: "missing_refresh_token" });
   }
   const stored = getRefreshToken(token);
@@ -1119,8 +1125,8 @@ router.post("/refresh", (req, res) => {
  * Sans refresh token, donne quand même un 200 (stateless — le client supprime son access token).
  */
 router.post("/logout", (req, res) => {
-  const token = req.body?.refreshToken;
-  if (token && typeof token === "string") {
+  const token = readRefreshTokenFromBody(req.body);
+  if (token) {
     deleteRefreshToken(token);
   }
   return res.json({ ok: true });
