@@ -11,6 +11,7 @@ import {
   getAuthHeaders,
   buildStripeSaasPaymentUrl,
   subscriptionUsesExternalStripePaymentLink,
+  isSaasPaymentEmbeddedInNativeApp,
   consumeAuthTransferFromHash,
   buildPaymentPathWithAuthHandoff,
 } from "./config.js";
@@ -77,8 +78,27 @@ describe("config", () => {
     expect(u).toContain("prefilled_email=test%40example.com");
   });
 
-  it("subscriptionUsesExternalStripePaymentLink is true (Payment Link SaaS)", () => {
+  it("subscriptionUsesExternalStripePaymentLink is true on SaaS web (Payment Link)", () => {
+    globalThis.location = {
+      hostname: "myfidpass.fr",
+      origin: "https://www.myfidpass.fr",
+      pathname: "/app",
+      search: "",
+      hash: "",
+    };
     expect(subscriptionUsesExternalStripePaymentLink()).toBe(true);
+  });
+
+  it("subscriptionUsesExternalStripePaymentLink is false in iOS embed (?app_embed=1)", () => {
+    globalThis.location = {
+      hostname: "myfidpass.fr",
+      origin: "https://www.myfidpass.fr",
+      pathname: "/paiement",
+      search: "?app_embed=1",
+      hash: "",
+    };
+    expect(isSaasPaymentEmbeddedInNativeApp()).toBe(true);
+    expect(subscriptionUsesExternalStripePaymentLink()).toBe(false);
   });
 
   it("consumeAuthTransferFromHash imports fid_auth and clears hash from URL", () => {

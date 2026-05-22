@@ -7,6 +7,8 @@ import {
   buildStripeSaasPaymentUrl,
   consumeAuthTransferFromHash,
   warmStripeJs,
+  subscriptionUsesExternalStripePaymentLink,
+  redirectToStripeSaasPayment,
 } from "../config.js";
 import { ensureLandingLiquidNav } from "../features/landing-liquid-nav-bootstrap.js";
 import { runLiquidGlassMenuCleanupLanding } from "../features/kube-liquid-glass/liquid-glass-menu-dispose.js";
@@ -175,6 +177,15 @@ async function loadPage(routeType) {
 export async function initRouting() {
   consumeAuthTransferFromHash();
   const route = getRoute();
+
+  if (
+    subscriptionUsesExternalStripePaymentLink() &&
+    (route.type === "saas-pro-payment" || route.type === "redirect-stripe")
+  ) {
+    redirectToStripeSaasPayment();
+    return null;
+  }
+
   const saasProPaymentPagePromise =
     route.type === "saas-pro-payment" ? loadPage("saas-pro-payment") : null;
   if (route.type === "saas-pro-payment") {
@@ -275,12 +286,16 @@ export async function initRouting() {
   }
 
   if (route.type === "legacy-subscription-redirect") {
-    window.location.replace("/app");
+    if (subscriptionUsesExternalStripePaymentLink()) {
+      redirectToStripeSaasPayment();
+    } else {
+      window.location.replace("/app");
+    }
     return null;
   }
 
   if (route.type === "redirect-stripe") {
-    window.location.href = buildStripeSaasPaymentUrl();
+    redirectToStripeSaasPayment();
     return null;
   }
 

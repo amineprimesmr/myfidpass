@@ -2,7 +2,14 @@
  * Shell visuel onboarding SaaS (héros + bandeau essai + feuille) — coordination affichage.
  */
 import { initRouting } from "../router/index.js";
-import { buildPaymentPathWithAuthHandoff, warmStripeJs } from "../config.js";
+import {
+  buildPaymentPathWithAuthHandoff,
+  buildStripeSaasPaymentUrl,
+  warmStripeJs,
+  subscriptionUsesExternalStripePaymentLink,
+  redirectToStripeSaasPayment,
+  resolveSaasSubscriptionPaymentUrl,
+} from "../config.js";
 
 /** @returns {HTMLElement | null} */
 function appShell() {
@@ -58,8 +65,10 @@ export function syncSaaSWelcomeChrome() {
  * }} opts
  */
 const HERO_TITLE = "Votre essai a commencé";
-const SUPPORT_TRIAL_HERO_HTML =
-  '<span class="app-saas-frc-support-cta-wrap"><a href="/paiement" id="app-saas-frc-support-cta" class="app-saas-frc-support-cta">Profiter de l’offre</a><span class="app-saas-frc-support-badge">-98%</span></span>';
+function trialHeroSupportHtml() {
+  const href = resolveSaasSubscriptionPaymentUrl();
+  return `<span class="app-saas-frc-support-cta-wrap"><a href="${href}" id="app-saas-frc-support-cta" class="app-saas-frc-support-cta">Profiter de l’offre</a><span class="app-saas-frc-support-badge">-98%</span></span>`;
+}
 const TRIAL_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
 let heroCountdownTimer = 0;
 
@@ -183,7 +192,7 @@ export function applySaaSFrcMessaging(opts) {
 
   supportEl?.classList.add("app-saas-frc-support--trial-hero");
   if (supportEl) {
-    supportEl.innerHTML = SUPPORT_TRIAL_HERO_HTML;
+    supportEl.innerHTML = trialHeroSupportHtml();
   }
 
   if (cta) {
@@ -203,8 +212,12 @@ export function applySaaSFrcMessaging(opts) {
   }
 }
 
-/** Page de paiement / offre Pro (SPA, route `/paiement`). */
+/** Page de paiement : Payment Link Stripe (1er mois 1 €) ou fallback SPA `/paiement`. */
 export function navigateToSaaSPaymentPage() {
+  if (subscriptionUsesExternalStripePaymentLink()) {
+    redirectToStripeSaasPayment();
+    return;
+  }
   warmStripeJs();
   let path = buildPaymentPathWithAuthHandoff("/paiement");
   const hashIdx = path.indexOf("#");

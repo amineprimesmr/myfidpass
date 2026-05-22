@@ -21,6 +21,27 @@
     <script>
       (function () {
         try {
+          var qs = window.location.search || "";
+          if (qs.indexOf("app_embed=1") !== -1) return;
+          var path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
+          var isPay =
+            path === "/paiement" ||
+            path === "/offre-pro" ||
+            path === "/abonnement-pro" ||
+            path === "/plan-pro" ||
+            path === "/abonnement" ||
+            path === "/choisir-offre" ||
+            path === "/checkout";
+          if (!isPay) return;
+          var url =
+            "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01?prefilled_promo_code=MYFID1EURO";
+          window.location.replace(url);
+        } catch (_) {}
+      })();
+    </script>
+    <script>
+      (function () {
+        try {
           var path = (window.location.pathname || "").replace(/\/?$/, "") || "/";
           if (path !== "/app") return;
           if (!window.localStorage || !window.localStorage.getItem("fidpass_token")) return;

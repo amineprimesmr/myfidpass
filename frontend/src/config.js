@@ -90,9 +90,30 @@ export function buildStripeSaasPaymentUrl(prefilledEmail) {
   }
 }
 
-/** @returns {boolean} */
+/** WebView iOS (`?app_embed=1`) : page `/paiement` intégrée — pas le Payment Link hébergé. */
+export function isSaasPaymentEmbeddedInNativeApp() {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).get("app_embed") === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+/** SaaS navigateur (PC) → Payment Link Stripe ; embed app native → checkout intégré `/paiement`. */
 export function subscriptionUsesExternalStripePaymentLink() {
-  return true;
+  return !isSaasPaymentEmbeddedInNativeApp();
+}
+
+/**
+ * URL cible abonnement SaaS : Payment Link + MYFID1EURO (PC) ou `/paiement?app_embed=1` (iOS).
+ * @param {string} [prefilledEmail]
+ */
+export function resolveSaasSubscriptionPaymentUrl(prefilledEmail) {
+  if (subscriptionUsesExternalStripePaymentLink()) {
+    return buildStripeSaasPaymentUrl(prefilledEmail);
+  }
+  return buildPaymentPathWithAuthHandoff("/paiement?app_embed=1");
 }
 
 /**
@@ -101,6 +122,25 @@ export function subscriptionUsesExternalStripePaymentLink() {
  */
 export function buildStripeSubscriptionPaymentLinkUrl(email) {
   return buildStripeSaasPaymentUrl(email);
+}
+
+/** E-mail connecté affiché dans l’app (`#app-user-email`) pour préremplir Stripe Checkout. */
+export function guessLoggedInUserEmailForStripe() {
+  if (typeof document === "undefined") return "";
+  try {
+    const el = document.getElementById("app-user-email");
+    const t = (el?.textContent || "").trim();
+    if (t && t.includes("@")) return t;
+  } catch (_) {}
+  return "";
+}
+
+/** Redirection abonnement SaaS (Payment Link PC ou page intégrée iOS). */
+export function redirectToStripeSaasPayment(email) {
+  if (typeof window === "undefined") return;
+  const em =
+    (email && String(email).trim()) || guessLoggedInUserEmailForStripe();
+  window.location.href = resolveSaasSubscriptionPaymentUrl(em);
 }
 
 const AUTH_TOKEN_KEY = "fidpass_token";
