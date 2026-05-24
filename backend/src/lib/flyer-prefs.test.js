@@ -32,6 +32,31 @@ describe("normalizeFlyerPrefsPut", () => {
     expect(r.ok).toBe(false);
     expect(r.error).toMatch(/Image de fond invalide/);
   });
+
+  it("conserve le state existant quand le PUT envoie state: {}", () => {
+    const existing = JSON.stringify({
+      state: { colorBgTop: "#ff00aa", wheelColorOdd: "#112233" },
+      custom_bg_data_url: null,
+      custom_logo_data_url: null,
+    });
+    const r = normalizeFlyerPrefsPut({ state: {} }, existing);
+    expect(r.ok).toBe(true);
+    expect(r.value.state.colorBgTop).toBe("#ff00aa");
+    expect(r.value.state.wheelColorOdd).toBe("#112233");
+  });
+
+  it("fusionne un patch partiel de state sans effacer les autres clés", () => {
+    const existing = JSON.stringify({
+      state: { colorBgTop: "#111111", wheelColorOdd: "#222222", headline: "Ancien" },
+      custom_bg_data_url: null,
+      custom_logo_data_url: null,
+    });
+    const r = normalizeFlyerPrefsPut({ state: { colorBgTop: "#abcdef" } }, existing);
+    expect(r.ok).toBe(true);
+    expect(r.value.state.colorBgTop).toBe("#abcdef");
+    expect(r.value.state.wheelColorOdd).toBe("#222222");
+    expect(r.value.state.headline).toBe("Ancien");
+  });
 });
 
 describe("mergeFlyerPrefsWheelColorsFromGeneration", () => {

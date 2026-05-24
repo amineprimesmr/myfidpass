@@ -62,10 +62,18 @@ export function normalizeFlyerPrefsPut(body, existingFlyerPrefsJson) {
   const prevState =
     ex.state && typeof ex.state === "object" && !Array.isArray(ex.state) ? /** @type {Record<string, unknown>} */ (ex.state) : {};
   /** @type {Record<string, unknown>} */
-  const state = hasStateKey
-    ? stateRaw && typeof stateRaw === "object" && !Array.isArray(stateRaw)
+  const incomingState =
+    hasStateKey &&
+    stateRaw &&
+    typeof stateRaw === "object" &&
+    !Array.isArray(stateRaw)
       ? /** @type {Record<string, unknown>} */ (stateRaw)
-      : {}
+      : null;
+  /** Fusion : `{}` ou patch partiel ne doit pas effacer les teintes / textes déjà enregistrés. */
+  const state = incomingState
+    ? Object.keys(incomingState).length === 0
+      ? prevState
+      : { ...prevState, ...incomingState }
     : prevState;
 
   /** Bandeau réseaux sociaux retiré du produit — ne plus persister ces clés. */
