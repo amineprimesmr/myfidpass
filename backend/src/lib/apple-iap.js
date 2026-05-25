@@ -241,7 +241,16 @@ export async function syncAppleSubscriptionForUser(userId, { signedTransactionIn
   const tid = String(transactionId || "").trim();
 
   if (isAppStoreServerApiConfigured() && tid) {
-    payload = await fetchSignedTransactionFromAppStore(tid);
+    try {
+      payload = await fetchSignedTransactionFromAppStore(tid);
+    } catch (e) {
+      console.warn(
+        "[apple-iap] App Store Server API indisponible pour transaction",
+        tid,
+        "— repli JWS client:",
+        e?.message || e,
+      );
+    }
   }
   if (!payload && signed) {
     payload = decodeStoreKitJwsPayload(signed);
