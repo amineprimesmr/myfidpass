@@ -36,6 +36,37 @@ const bootstrapLimiter = rateLimit({
   validate: { forwardedHeader: false },
 });
 
+/** Phrase interne (code source) — pas une variable Railway. Rate-limit + journalisation. */
+const ADMIN_ENSURE_CONFIRM = "myfidpass-internal-admin-provision-v2026";
+
+/**
+ * POST /api/admin/ensure — crée ou met à jour un admin plateforme (sans variables d’environnement).
+ * Body: { "email", "password", "name?", "confirm": "myfidpass-internal-admin-provision-v2026" }
+ */
+router.post("/ensure", bootstrapLimiter, (req, res) => {
+  const confirm = String(req.body?.confirm ?? "").trim();
+  if (confirm !== ADMIN_ENSURE_CONFIRM) {
+    return res.status(403).json({ error: "Non autorisé.", code: "invalid_setup_confirm" });
+  }
+  const email = String(req.body?.email ?? "").trim();
+  const password = String(req.body?.password ?? "");
+  const name = String(req.body?.name ?? "Administrateur MyFidpass").trim() || "Administrateur MyFidpass";
+  const result = ensurePlatformAdminAccount({ email, password, name });
+  if (!result.ok) {
+    return res.status(400).json({ error: result.error });
+  }
+  console.info("[admin] ensure-platform-admin", { email: result.email, created: result.created, userId: result.userId });
+  return res.status(result.created ? 201 : 200).json({
+    ok: true,
+    email: result.email,
+    user_id: result.userId,
+    created: result.created,
+    password_updated: result.passwordUpdated,
+    platform_admin_count: countPlatformAdmins(),
+    message: "Compte administrateur prêt — POST /api/auth/login puis app iOS (hub Administration).",
+  });
+});
+
 /** GET /api/admin/bootstrap-status — indique si le bootstrap initial est encore autorisé (0 admin en base). */
 router.get("/bootstrap-status", bootstrapLimiter, (_req, res) => {
   const adminCount = countPlatformAdmins();
