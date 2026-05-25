@@ -14,6 +14,7 @@
     "test:passkit": "bash scripts/test-passkit-get.sh",
     "seed:passkit-test": "DATA_DIR=./test-data node scripts/seed-passkit-test.js",
     "set-user-password": "node scripts/set-user-password.mjs",
+    "admin:ensure": "node scripts/ensure-platform-admin.mjs",
     "sync:wallet-strip": "node scripts/sync-default-strip-from-myfidpass.mjs"
   },
   "dependencies": {

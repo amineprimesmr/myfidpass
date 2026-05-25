@@ -1,12 +1,12 @@
 /**
  * API administration plateforme (liste comptes, commerces, journal paiements).
- * Accès : JWT + `users.is_admin` (promotion via variable `ADMIN_EMAILS` au démarrage).
+ * Accès : JWT + `users.is_admin` (promotion via bootstrap one-shot, script CLI ou `ADMIN_EMAILS` au démarrage).
  */
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePlatformAdmin } from "../middleware/admin.js";
-import { listUsersForAdmin } from "../db/users.js";
+import { countPlatformAdmins, ensurePlatformAdminAccount, listUsersForAdmin } from "../db/users.js";
 import { listAllBusinessesForAdmin } from "../db/businesses.js";
 import { listAdminEvents } from "../db/admin-events.js";
 import { getDb } from "../db/connection.js";
@@ -25,6 +25,51 @@ const adminLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   validate: { forwardedHeader: false },
+});
+
+const bootstrapLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 8,
+  message: { error: "Trop de tentatives bootstrap admin." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { forwardedHeader: false },
+});
+
+/** GET /api/admin/bootstrap-status — indique si le bootstrap initial est encore autorisé (0 admin en base). */
+router.get("/bootstrap-status", bootstrapLimiter, (_req, res) => {
+  const adminCount = countPlatformAdmins();
+  res.json({
+    bootstrap_allowed: adminCount === 0,
+    platform_admin_count: adminCount,
+  });
+});
+
+/**
+ * POST /api/admin/bootstrap — crée le **premier** compte admin plateforme (sans variables Railway).
+ * Body: { "email": "…", "password": "…", "name": "…" } — désactivé dès qu’un admin existe.
+ */
+router.post("/bootstrap", bootstrapLimiter, (req, res) => {
+  if (countPlatformAdmins() > 0) {
+    return res.status(403).json({
+      error: "Un administrateur plateforme existe déjà. Utilisez la connexion habituelle ou le script ensure-platform-admin.",
+      code: "admin_bootstrap_closed",
+    });
+  }
+  const email = String(req.body?.email ?? "").trim();
+  const password = String(req.body?.password ?? "");
+  const name = String(req.body?.name ?? "Administrateur").trim() || "Administrateur";
+  const result = ensurePlatformAdminAccount({ email, password, name });
+  if (!result.ok) {
+    return res.status(400).json({ error: result.error });
+  }
+  return res.status(201).json({
+    ok: true,
+    email: result.email,
+    user_id: result.userId,
+    created: result.created,
+    message: "Compte administrateur créé. Connectez-vous via POST /api/auth/login (app iOS ou web).",
+  });
 });
 
 router.use(requireAuth, requirePlatformAdmin, adminLimiter);

@@ -170,6 +170,53 @@ export function isUserAdmin(user) {
   return v === 1 || v === true || v === "1";
 }
 
+/** Nombre de comptes `is_admin` en base (bootstrap one-shot). */
+export function countPlatformAdmins() {
+  const row = db.prepare("SELECT COUNT(*) AS c FROM users WHERE is_admin = 1").get();
+  return Number(row?.c ?? 0) || 0;
+}
+
+/**
+ * Crée ou met à jour un compte admin plateforme (sans variables d’environnement).
+ * @returns {{ ok: true, email: string, userId: string, created: boolean, passwordUpdated: boolean } | { ok: false, error: string }}
+ */
+export function ensurePlatformAdminAccount({ email, password, name = "Administrateur" }) {
+  const norm = String(email ?? "")
+    .trim()
+    .toLowerCase();
+  const pwd = String(password ?? "");
+  if (!norm || !norm.includes("@") || norm.length > 254) {
+    return { ok: false, error: "Adresse e-mail invalide." };
+  }
+  if (pwd.length < 8 || pwd.length > 128) {
+    return { ok: false, error: "Mot de passe requis (8 à 128 caractères)." };
+  }
+
+  const passwordHash = bcrypt.hashSync(pwd, ADMIN_PASSWORD_SALT_ROUNDS);
+  let user = getUserByEmail(norm);
+  let created = false;
+  if (!user) {
+    try {
+      user = createUser({ email: norm, passwordHash, name: String(name || "Administrateur").trim() || "Administrateur" });
+      created = true;
+    } catch (err) {
+      return { ok: false, error: err?.message || "Création du compte impossible." };
+    }
+  } else {
+    const okPwd = updateUserPassword(user.id, passwordHash);
+    if (!okPwd) return { ok: false, error: "Mise à jour du mot de passe impossible." };
+  }
+
+  db.prepare("UPDATE users SET is_admin = 1 WHERE id = ?").run(user.id);
+  return {
+    ok: true,
+    email: norm,
+    userId: user.id,
+    created,
+    passwordUpdated: !created,
+  };
+}
+
 /**
  * Synchronise le flag admin depuis `ADMIN_EMAILS` (emails séparés par des virgules).
  * N’enlève jamais le statut admin (retrait manuel en base uniquement).
