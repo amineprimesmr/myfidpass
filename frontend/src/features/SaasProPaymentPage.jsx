@@ -214,14 +214,14 @@ export default function SaasProPaymentPage() {
         }
         const fetchPromiseResolved = Promise.resolve(res);
 
-        const [stripe, res] = await Promise.all([stripePromiseLocal, fetchPromiseResolved]);
+        const [stripe, response] = await Promise.all([stripePromiseLocal, fetchPromiseResolved]);
         if (!stripe) throw new Error("Impossible de charger Stripe.");
         if (cancelled) return;
         stripeRef.current = stripe;
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          if (res.status === 409 && String(data?.code || "").toLowerCase() === "already_subscribed" && isAppEmbed) {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 409 && String(data?.code || "").toLowerCase() === "already_subscribed" && isAppEmbed) {
             window.location.href = "myfidpass://subscription-paid";
             return;
           }

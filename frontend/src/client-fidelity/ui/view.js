@@ -24,6 +24,7 @@ import { balanceUnitShort, stampsStepSectionTitle } from "../lib/program-copy.js
 import { renderDeliveryReceiptFabAndModalMarkup } from "./delivery-receipt-intro-markup.js";
 import { renderRewardRedeemModalMarkup } from "./reward-redeem-modal-markup.js";
 import { renderPoweredByMyfidpassMarkup } from "./powered-by-markup.js";
+import { renderMatchPredictionsMarkup } from "./match-predictions-markup.js";
 
 function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith("@guest.invalid");
@@ -134,6 +135,7 @@ export function renderClientPage(root, state, options = {}) {
     programType,
     balanceUnit: headerBalanceUnit,
   });
+  const matchPredictionsHtml = hasMember ? renderMatchPredictionsMarkup(esc, state.matchPredictions) : "";
 
   const hasMissionsSheet = hasMember && actionsForDisplay.length > 0;
   const step2SectionHtml =
@@ -278,6 +280,8 @@ export function renderClientPage(root, state, options = {}) {
             </div>
           </div>
         </section>
+
+        ${matchPredictionsHtml}
 
         <!-- Missions / programme classique ou tickets (sans roue dans cet espace) -->
         ${step2SectionHtml}

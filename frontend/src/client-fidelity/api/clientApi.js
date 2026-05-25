@@ -71,6 +71,35 @@ export function createClientFidelityApi(apiBase) {
     }
   }
 
+  async function getMatchPredictions(slug, memberId) {
+    try {
+      const res = await fetchFidelity(
+        withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/match-predictions`),
+        { cache: "no-store" },
+        "Pronostics indisponibles pour le moment.",
+      );
+      if (!res.ok) return { enabled: false, matches: [] };
+      return safeJson(res);
+    } catch {
+      return { enabled: false, matches: [] };
+    }
+  }
+
+  async function submitMatchPrediction(slug, memberId, matchId, choice) {
+    const res = await fetchFidelity(
+      withBase(`/api/businesses/${encodeURIComponent(slug)}/games/match_predictions/matches/${encodeURIComponent(matchId)}/predictions`),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId, choice }),
+      },
+      "Impossible d’enregistrer ton pronostic. Vérifie ta connexion.",
+    );
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.error || "Pronostic impossible");
+    return data;
+  }
+
   async function getTickets(slug, memberId) {
     const res = await fetchFidelity(
       withBase(`/api/businesses/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}/tickets`),
@@ -271,6 +300,8 @@ export function createClientFidelityApi(apiBase) {
     createMember,
     getMember,
     getGames,
+    getMatchPredictions,
+    submitMatchPrediction,
     getTickets,
     convertTickets,
     spin,

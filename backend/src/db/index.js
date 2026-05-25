@@ -40,3 +40,4 @@ export * from "./social-metrics.js";
 export * from "./social-oauth.js";
 export * from "./business-team.js";
 export * from "./receipt-delivery-claims.js";
+export * from "./match-predictions.js";

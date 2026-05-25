@@ -111,11 +111,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   try {
   async function hydrateMember(memberId) {
     if (!memberId) return;
-    const [member, gamesData, tickets, actionsData] = await Promise.all([
+    const [member, gamesData, tickets, actionsData, matchPredictions] = await Promise.all([
       api.getMember(slug, memberId),
       api.getGames(slug),
       api.getTickets(slug, memberId),
       api.getEngagementActions(slug),
+      api.getMatchPredictions(slug, memberId),
     ]);
     const wallet = await api.getWalletUrls(slug, memberId);
     const memberWithPoints =
@@ -128,6 +129,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       roulette_segments: Array.isArray(gamesData?.roulette_segments) ? gamesData.roulette_segments : [],
       tickets,
       engagementActions: actionsData?.actions || [],
+      matchPredictions,
       wallet,
     });
   }
@@ -756,6 +758,39 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     rootEl.querySelector("#fidelity-v2-convert-btn")?.addEventListener("click", onConvertTickets);
     rootEl.querySelector("#fidelity-v2-spin-btn")?.addEventListener("click", onSpinRoulette);
     rootEl.querySelector("#fidelity-v2-profile-form")?.addEventListener("submit", onProfileBonusSubmit);
+    rootEl.querySelectorAll("[data-match-prediction-choice]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const state = store.get();
+        const memberId = state.member?.id;
+        const matchId = btn.getAttribute("data-match-id");
+        const choice = btn.getAttribute("data-match-prediction-choice");
+        const fb = rootEl.querySelector("#fidelity-match-predictions-feedback");
+        if (!memberId || !matchId || !choice) return;
+        btn.disabled = true;
+        if (fb) {
+          fb.textContent = "Enregistrement du pronostic...";
+          fb.classList.remove("hidden", "error", "success");
+        }
+        try {
+          await api.submitMatchPrediction(slug, memberId, matchId, choice);
+          await refreshMemberData();
+          const nextFb = rootEl.querySelector("#fidelity-match-predictions-feedback");
+          if (nextFb) {
+            nextFb.textContent = "Pronostic enregistré.";
+            nextFb.classList.remove("hidden", "error");
+            nextFb.classList.add("success");
+            window.setTimeout(() => nextFb.classList.add("hidden"), 2600);
+          }
+        } catch (err) {
+          btn.disabled = false;
+          if (fb) {
+            fb.textContent = messageUtilisateurPourErreur(err, "Pronostic impossible.");
+            fb.classList.remove("hidden", "success");
+            fb.classList.add("error");
+          }
+        }
+      });
+    });
     rootEl.querySelectorAll(".fidelity-profile-mission-open").forEach((btn) => {
       btn.addEventListener("click", () => openProfileMissionModal());
     });

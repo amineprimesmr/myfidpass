@@ -5,6 +5,7 @@ export function createClientFidelityStore(initial = {}) {
     member: null,
     games: [],
     roulette_segments: [],
+    matchPredictions: { enabled: false, matches: [] },
     tickets: null,
     engagementActions: [],
     engagementDone: [],

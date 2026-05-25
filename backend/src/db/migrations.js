@@ -1549,4 +1549,71 @@ export function runMigrations(db) {
     `));
     markMigrationApplied(db, 38, "merchant_referral_system");
   }
+
+  // ── v39 : challenge pronostics foot (matchs sélectionnés + points automatiques) ──
+  const m39 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 39").get();
+  if (!m39) {
+    const gameId = randomUUID();
+    safeRun(db, () =>
+      db.prepare(
+        "INSERT OR IGNORE INTO games (id, code, name, type, active, config_json) VALUES (?, 'match_predictions', 'Challenge pronostics foot', 'match_predictions', 1, ?)",
+      ).run(gameId, JSON.stringify({ points_per_correct_prediction: 10, cutoff_minutes: 15 })),
+    );
+    safeRun(db, () =>
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS match_prediction_matches (
+          id TEXT PRIMARY KEY,
+          code TEXT NOT NULL UNIQUE,
+          title TEXT NOT NULL,
+          team_home TEXT NOT NULL,
+          team_away TEXT NOT NULL,
+          starts_at TEXT NOT NULL,
+          cutoff_at TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'scheduled',
+          result_choice TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_match_prediction_matches_active_start
+          ON match_prediction_matches(active, starts_at);
+        CREATE TABLE IF NOT EXISTS match_prediction_entries (
+          id TEXT PRIMARY KEY,
+          business_id TEXT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+          member_id TEXT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+          match_id TEXT NOT NULL REFERENCES match_prediction_matches(id) ON DELETE CASCADE,
+          predicted_choice TEXT NOT NULL,
+          points_awarded INTEGER NOT NULL DEFAULT 0,
+          scored_at TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(business_id, member_id, match_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_match_prediction_entries_business_member
+          ON match_prediction_entries(business_id, member_id, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_match_prediction_entries_match
+          ON match_prediction_entries(match_id, business_id);
+      `),
+    );
+    const seedMatches = [
+      ["mp-2026-mex-zaf", "Match d'ouverture", "Mexique", "Afrique du Sud", "2026-06-11T19:00:00Z", 10],
+      ["mp-2026-can-bih", "Grand match du jour", "Canada", "Bosnie-Herzégovine", "2026-06-12T19:00:00Z", 20],
+      ["mp-2026-usa-par", "Grand match du soir", "États-Unis", "Paraguay", "2026-06-13T01:00:00Z", 30],
+      ["mp-2026-mex-kor", "Soirée football", "Mexique", "Corée du Sud", "2026-06-18T22:00:00Z", 40],
+      ["mp-2026-usa-aus", "Grand match du soir", "États-Unis", "Australie", "2026-06-19T22:00:00Z", 50],
+      ["mp-2026-bra-hai", "Affiche sélectionnée", "Brésil", "Haïti", "2026-06-19T19:00:00Z", 60],
+      ["mp-2026-mex-cze", "Dernier match de groupe", "Mexique", "Tchéquie", "2026-06-24T19:00:00Z", 70],
+      ["mp-2026-usa-tur", "Dernier match de groupe", "États-Unis", "Turquie", "2026-06-25T01:00:00Z", 80],
+    ];
+    const insertMatch = db.prepare(
+      `INSERT OR IGNORE INTO match_prediction_matches
+       (id, code, title, team_home, team_away, starts_at, cutoff_at, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, datetime(?, '-15 minutes'), ?)`,
+    );
+    for (const [code, title, home, away, startsAt, sortOrder] of seedMatches) {
+      safeRun(db, () => insertMatch.run(randomUUID(), code, title, home, away, startsAt, startsAt, sortOrder));
+    }
+    markMigrationApplied(db, 39, "match_predictions_game");
+  }
 }

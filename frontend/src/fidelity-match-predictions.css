@@ -1,0 +1,130 @@
+.fidelity-match-predictions {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.fidelity-match-predictions__header,
+.fidelity-match-predictions__match-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.fidelity-match-predictions__header h2,
+.fidelity-match-predictions__match h3 {
+  margin: 0;
+  color: #111827;
+}
+
+.fidelity-match-predictions__header p,
+.fidelity-match-predictions__status {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.fidelity-match-predictions__header > span {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 8px 11px;
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 800;
+}
+
+.fidelity-match-predictions__eyebrow {
+  margin: 0 0 4px;
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fidelity-match-predictions__list {
+  display: grid;
+  gap: 12px;
+}
+
+.fidelity-match-predictions__match {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 14px;
+  background: #fff;
+}
+
+.fidelity-match-predictions__match h3 span {
+  color: #94a3b8;
+  font-size: 0.86em;
+  font-weight: 700;
+}
+
+.fidelity-match-predictions__match time {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: right;
+  text-transform: capitalize;
+}
+
+.fidelity-match-predictions__choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.fidelity-match-predictions__choice {
+  min-height: 40px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 13px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.fidelity-match-predictions__choice--selected {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.fidelity-match-predictions__choice:disabled {
+  opacity: 0.72;
+}
+
+.fidelity-match-predictions__status--won {
+  color: #047857;
+  font-weight: 800;
+}
+
+.fidelity-match-predictions__status--lost {
+  color: #b91c1c;
+}
+
+.fidelity-match-predictions__feedback {
+  margin: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 700;
+}
+
+.fidelity-match-predictions__feedback.error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.fidelity-match-predictions__feedback.success {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+@media (max-width: 420px) {
+  .fidelity-match-predictions__choices {
+    grid-template-columns: 1fr;
+  }
+}
