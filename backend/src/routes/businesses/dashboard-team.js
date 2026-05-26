@@ -19,6 +19,7 @@ import {
 import { getDb } from "../../db/connection.js";
 import { deleteUserAccount } from "../../db.js";
 import { sendMail, isEmailConfigured } from "../../email.js";
+import { issueAndSendEmailOtp } from "../../lib/email-otp-send.js";
 import { validate, schemas } from "../../lib/validate.js";
 
 const db = getDb();
@@ -56,11 +57,13 @@ function serializeMember(r) {
 
 async function sendTeamAccessEmail({ to, shopName, inviterLabel, role }) {
   const roleLabel = role === "manager" ? "gérant" : "employé";
-  return sendMail({
+  const introText = `Bonjour,\n\n${inviterLabel} vous a donné l'accès ${roleLabel} pour le commerce « ${shopName} » sur MyFidpass.\n\nOuvrez l'app MyFidpass, entrez votre e-mail ${to}, puis saisissez le code ci-dessous.`;
+  const introHtml = `<p>Bonjour,</p><p><strong>${inviterLabel}</strong> vous a donné l'accès <strong>${roleLabel}</strong> pour le commerce « <strong>${shopName}</strong> » sur MyFidpass.</p><p>Ouvrez l'app MyFidpass, entrez votre e-mail <strong>${to}</strong>, puis saisissez le code ci-dessous.</p>`;
+  return issueAndSendEmailOtp({
     to,
-    subject: `Accès équipe — ${shopName} (MyFidpass)`,
-    text: `Bonjour,\n\n${inviterLabel} vous a donné l'accès ${roleLabel} pour le commerce « ${shopName} » sur MyFidpass.\n\nOuvrez l'app MyFidpass, entrez votre e-mail ${to} et saisissez le code reçu par e-mail pour vous connecter.\n\n— MyFidpass`,
-    html: `<p>Bonjour,</p><p><strong>${inviterLabel}</strong> vous a donné l'accès <strong>${roleLabel}</strong> pour le commerce « <strong>${shopName}</strong> » sur MyFidpass.</p><p>Ouvrez l'app MyFidpass, entrez votre e-mail <strong>${to}</strong> et saisissez le code reçu par e-mail pour vous connecter.</p><p>— MyFidpass</p>`,
+    subject: `Votre code MyFidpass — ${shopName}`,
+    introText,
+    introHtml,
   });
 }
 
@@ -131,26 +134,32 @@ router.post("/staff-accounts", validate(schemas.teamStaffAccount), async (req, r
     business.name || business.organization_name || business.slug || "Votre commerce",
   ).trim();
   const inviterLabel = String(req.user.name || "").trim() || req.user.email || "Le responsable";
-  const { sent: emailSent } = await sendTeamAccessEmail({
+  const emailResult = await sendTeamAccessEmail({
     to: emailNorm,
     shopName,
     inviterLabel,
     role: roleR,
   });
+  const emailSent = emailResult.sent;
   if (!emailSent && isEmailConfigured()) {
-    console.warn("[Team] staff-accounts: échec d'envoi e-mail (voir logs [Email])");
+    console.warn("[Team] staff-accounts: échec d'envoi e-mail (voir logs [Email])", emailResult.error || "");
   } else if (!emailSent) {
     console.warn("[Team] staff-accounts: aucun e-mail (définir RESEND_API_KEY ou SMTP sur le serveur)");
   }
+
+  const baseMessage = created
+    ? "Employé ajouté au commerce."
+    : "Accès employé activé.";
+  const message = emailSent
+    ? `${baseMessage} Un e-mail avec le code de connexion a été envoyé à ${emailNorm}.`
+    : `${baseMessage} L'e-mail n'a pas pu être envoyé — l'employé peut demander un code depuis l'app (Se connecter).`;
 
   return res.status(created ? 201 : 200).json({
     ok: true,
     user_id: user.id,
     email: emailNorm,
     email_sent: emailSent,
-    message: created
-      ? "Employé ajouté. Un e-mail lui indique comment se connecter avec son adresse et le code reçu."
-      : "Accès employé activé. L'utilisateur recevra un e-mail pour se connecter avec un code.",
+    message,
   });
 });
 
@@ -228,14 +237,15 @@ router.post("/invites", async (req, res) => {
     business.name || business.organization_name || business.slug || "Votre commerce",
   ).trim();
   const inviterLabel = String(req.user.name || "").trim() || req.user.email || "Le responsable";
-  const { sent: emailSent } = await sendTeamAccessEmail({
+  const emailResult = await sendTeamAccessEmail({
     to: email,
     shopName,
     inviterLabel,
     role,
   });
+  const emailSent = emailResult.sent;
   if (!emailSent && isEmailConfigured()) {
-    console.warn("[Team] invite: échec d'envoi e-mail (voir logs [Email] Resend/SMTP)");
+    console.warn("[Team] invite: échec d'envoi e-mail (voir logs [Email] Resend/SMTP)", emailResult.error || "");
   } else if (!emailSent) {
     console.warn(
       "[Team] invite: aucun e-mail (définir RESEND_API_KEY ou SMTP sur le serveur — voir docs/EMAIL-TRANSACTIONNEL.md)",
@@ -244,7 +254,9 @@ router.post("/invites", async (req, res) => {
 
   return res.json({
     ok: true,
-    message: "Accès employé activé. L'utilisateur recevra un e-mail pour se connecter avec un code.",
+    message: emailSent
+      ? `Accès employé activé. Un e-mail avec le code de connexion a été envoyé à ${email}.`
+      : "Accès employé activé. L'e-mail n'a pas pu être envoyé — l'employé peut demander un code depuis l'app.",
     email_sent: emailSent,
   });
 });
