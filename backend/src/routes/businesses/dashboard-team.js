@@ -25,7 +25,7 @@ import {
 import { getDb } from "../../db/connection.js";
 import { deleteUserAccount } from "../../db.js";
 import { isEmailConfigured } from "../../email.js";
-import { issueAndSendEmailOtp } from "../../lib/email-otp-send.js";
+import { issueAndSendEmailOtp, escapeHtml, humanizeEmailSendError } from "../../lib/email-otp-send.js";
 import { validate, schemas } from "../../lib/validate.js";
 
 const db = getDb();
@@ -129,14 +129,22 @@ function resolveMemberRow(business, rawId) {
 
 async function sendTeamAccessEmail({ to, shopName, inviterLabel, role }) {
   const roleLabel = role === "manager" ? "gérant" : "employé";
-  const introText = `Bonjour,\n\n${inviterLabel} vous a donné l'accès ${roleLabel} pour le commerce « ${shopName} » sur MyFidpass.\n\nOuvrez l'app MyFidpass, entrez votre e-mail ${to}, puis saisissez le code ci-dessous.`;
-  const introHtml = `<p>Bonjour,</p><p><strong>${inviterLabel}</strong> vous a donné l'accès <strong>${roleLabel}</strong> pour le commerce « <strong>${shopName}</strong> » sur MyFidpass.</p><p>Ouvrez l'app MyFidpass, entrez votre e-mail <strong>${to}</strong>, puis saisissez le code ci-dessous.</p>`;
+  const shop = String(shopName || "Votre commerce").trim();
+  const inviter = String(inviterLabel || "Le responsable").trim();
+  const introText = `Bonjour,\n\n${inviter} vous a donné l'accès ${roleLabel} pour le commerce « ${shop} » sur MyFidpass.\n\nOuvrez l'app MyFidpass, entrez votre e-mail ${to}, puis saisissez le code ci-dessous.`;
+  const introHtml = `<p>Bonjour,</p><p><strong>${escapeHtml(inviter)}</strong> vous a donné l'accès <strong>${escapeHtml(roleLabel)}</strong> pour le commerce « <strong>${escapeHtml(shop)}</strong> » sur MyFidpass.</p><p>Ouvrez l'app MyFidpass, entrez votre e-mail <strong>${escapeHtml(to)}</strong>, puis saisissez le code ci-dessous.</p>`;
   return issueAndSendEmailOtp({
     to,
-    subject: `Votre code MyFidpass — ${shopName}`,
+    subject: `Votre code MyFidpass - ${shop}`.slice(0, 180),
     introText,
     introHtml,
   });
+}
+
+function teamEmailResponseFields(emailResult) {
+  const emailSent = !!emailResult?.sent;
+  const emailError = emailSent ? null : humanizeEmailSendError(emailResult?.humanError || emailResult?.error);
+  return { email_sent: emailSent, email_error: emailError };
 }
 
 function memberEmailForAccess(user) {
@@ -219,9 +227,9 @@ router.post("/staff-accounts", validate(schemas.teamStaffAccount), async (req, r
     inviterLabel,
     role: roleR,
   });
-  const emailSent = emailResult.sent;
+  const { email_sent: emailSent, email_error: emailError } = teamEmailResponseFields(emailResult);
   if (!emailSent && isEmailConfigured()) {
-    console.warn("[Team] staff-accounts: échec d'envoi e-mail (voir logs [Email])", emailResult.error || "");
+    console.warn("[Team] staff-accounts: échec d'envoi e-mail →", emailNorm, emailResult.error || emailError || "");
   } else if (!emailSent) {
     console.warn("[Team] staff-accounts: aucun e-mail (définir RESEND_API_KEY ou SMTP sur le serveur)");
   }
@@ -231,13 +239,16 @@ router.post("/staff-accounts", validate(schemas.teamStaffAccount), async (req, r
     : "Accès employé activé.";
   const message = emailSent
     ? `${baseMessage} Un e-mail avec le code de connexion a été envoyé à ${emailNorm}.`
-    : `${baseMessage} L'e-mail n'a pas pu être envoyé — l'employé peut demander un code depuis l'app (Se connecter).`;
+    : emailError
+      ? `${baseMessage} E-mail non envoyé : ${emailError}`
+      : `${baseMessage} L'e-mail n'a pas pu être envoyé — l'employé peut demander un code depuis l'app (Se connecter).`;
 
   return res.status(created ? 201 : 200).json({
     ok: true,
     user_id: user.id,
     email: emailNorm,
     email_sent: emailSent,
+    email_error: emailError,
     message,
   });
 });
@@ -334,12 +345,14 @@ router.post("/members/:id/resend-access", async (req, res) => {
     inviterLabel,
     role,
   });
+  const { email_sent: emailSent, email_error: emailError } = teamEmailResponseFields(emailResult);
   return res.json({
-    ok: emailResult.sent,
-    email_sent: emailResult.sent,
-    message: emailResult.sent
+    ok: emailSent,
+    email_sent: emailSent,
+    email_error: emailError,
+    message: emailSent
       ? `Code de connexion renvoyé à ${email}.`
-      : "L'e-mail n'a pas pu être envoyé. L'employé peut demander un code depuis l'app.",
+      : emailError || "L'e-mail n'a pas pu être envoyé. L'employé peut demander un code depuis l'app.",
   });
 });
 
@@ -399,9 +412,9 @@ router.post("/invites", async (req, res) => {
     inviterLabel,
     role,
   });
-  const emailSent = emailResult.sent;
+  const { email_sent: emailSent, email_error: emailError } = teamEmailResponseFields(emailResult);
   if (!emailSent && isEmailConfigured()) {
-    console.warn("[Team] invite: échec d'envoi e-mail (voir logs [Email] Resend/SMTP)", emailResult.error || "");
+    console.warn("[Team] invite: échec d'envoi e-mail →", email, emailResult.error || emailError || "");
   } else if (!emailSent) {
     console.warn(
       "[Team] invite: aucun e-mail (définir RESEND_API_KEY ou SMTP sur le serveur — voir docs/EMAIL-TRANSACTIONNEL.md)",
@@ -412,8 +425,11 @@ router.post("/invites", async (req, res) => {
     ok: true,
     message: emailSent
       ? `Accès employé activé. Un e-mail avec le code de connexion a été envoyé à ${email}.`
-      : "Accès employé activé. L'e-mail n'a pas pu être envoyé — l'employé peut demander un code depuis l'app.",
+      : emailError
+        ? `Accès employé activé. E-mail non envoyé : ${emailError}`
+        : "Accès employé activé. L'e-mail n'a pas pu être envoyé — l'employé peut demander un code depuis l'app.",
     email_sent: emailSent,
+    email_error: emailError,
   });
 });
 
