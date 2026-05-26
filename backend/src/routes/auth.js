@@ -1347,9 +1347,19 @@ router.post("/email/send-code", validate(schemas.emailSend), async (req, res) =>
     });
     if (!mailResult.sent) {
       console.error("[email/send-code] sendMail failed for", emailNorm, mailResult.error || "");
-      const detail = mailResult.error ? String(mailResult.error).slice(0, 200) : null;
+      const detail = mailResult.error ? String(mailResult.error).slice(0, 400) : null;
+      let errorMsg = "Impossible d'envoyer l'e-mail. Réessayez.";
+      const detailLower = (detail || "").toLowerCase();
+      if (
+        detailLower.includes("verify a domain") ||
+        detailLower.includes("testing emails") ||
+        detailLower.includes("own email address")
+      ) {
+        errorMsg =
+          "Envoi e-mail bloqué : vérifiez le domaine myfidpass.fr sur Resend (resend.com/domains) et configurez RESEND_FROM sur Railway.";
+      }
       return res.status(502).json({
-        error: "Impossible d'envoyer l'e-mail. Réessayez.",
+        error: errorMsg,
         ...(detail ? { detail } : {}),
       });
     }
