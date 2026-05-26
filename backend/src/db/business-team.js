@@ -258,7 +258,7 @@ export function getRecentActivityByActor(businessId, userId, limit = 25) {
              t.points,
              t.created_at,
              t.metadata,
-             m.display_name AS member_name,
+             m.name AS member_name,
              m.id AS member_id
            FROM transactions t
            LEFT JOIN members m ON m.id = t.member_id
