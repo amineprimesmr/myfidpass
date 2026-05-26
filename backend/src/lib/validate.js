@@ -239,6 +239,16 @@ export const schemas = {
     role: z.enum(["staff", "manager"]).optional(),
   }),
 
+  /** PATCH /businesses/:slug/dashboard/team/members/:id */
+  teamMemberPatch: z
+    .object({
+      name: z.string().trim().min(1).max(100).optional().nullable(),
+      role: z.enum(["staff", "manager"]).optional(),
+    })
+    .refine((v) => v.name != null || v.role != null, {
+      message: "Au moins un champ (name ou role) requis",
+    }),
+
   // POST /businesses (création)
   createBusiness: z.object({
     name: z.string({ required_error: "Nom requis" }).trim().min(1, "Nom requis").max(100, "Nom trop long"),
