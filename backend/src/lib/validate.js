@@ -198,19 +198,43 @@ export const schemas = {
     establishments: establishmentsArraySchema,
   }),
 
-  /** POST /businesses/:slug/dashboard/team/staff-accounts — compte employé (identifiant + mot de passe, sans e-mail). */
-  teamStaffAccount: z.object({
-    staff_login: z
-      .string({ required_error: "Identifiant requis" })
+  /** POST /auth/email/send-code */
+  emailSend: z.object({
+    email: z
+      .string({ required_error: "E-mail requis" })
       .trim()
       .toLowerCase()
-      .min(3, "Au moins 3 caractères")
-      .max(32, "32 caractères max")
-      .regex(/^[a-z0-9][a-z0-9_-]{1,30}[a-z0-9]$/, "Lettres, chiffres, _ et - (3 à 32 caractères)"),
-    password: z
-      .string({ required_error: "Mot de passe requis" })
-      .min(3, "Le mot de passe doit contenir au moins 3 caractères")
-      .max(128, "Mot de passe trop long (128 caractères max)"),
+      .email("E-mail invalide")
+      .max(200),
+  }),
+
+  /** POST /auth/email/verify */
+  emailVerify: z.object({
+    email: z
+      .string({ required_error: "E-mail requis" })
+      .trim()
+      .toLowerCase()
+      .email("E-mail invalide")
+      .max(200),
+    code: z
+      .string({ required_error: "Code requis" })
+      .regex(/^\d{6}$/, "Code à 6 chiffres"),
+    name: z.string().trim().max(100).optional().nullable(),
+    google_place_id: optionalPlaceIdSchema,
+    googlePlaceId: optionalPlaceIdSchema,
+    establishment_name: optionalEstablishmentNameSchema,
+    establishmentName: optionalEstablishmentNameSchema,
+    establishments: establishmentsArraySchema,
+  }),
+
+  /** POST /businesses/:slug/dashboard/team/staff-accounts — employé invité par e-mail (connexion OTP). */
+  teamStaffAccount: z.object({
+    email: z
+      .string({ required_error: "E-mail requis" })
+      .trim()
+      .toLowerCase()
+      .email("E-mail invalide")
+      .max(200),
     name: z.string().trim().max(100).optional().nullable(),
     role: z.enum(["staff", "manager"]).optional(),
   }),

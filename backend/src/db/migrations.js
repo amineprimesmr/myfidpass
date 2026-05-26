@@ -1616,4 +1616,75 @@ export function runMigrations(db) {
     }
     markMigrationApplied(db, 39, "match_predictions_game");
   }
+
+  // ── v40 : OTP e-mail (connexion / inscription sans mot de passe) ──
+  if (!isMigrationApplied(db, 40)) {
+    safeRun(db, () =>
+      db.exec(`
+    CREATE TABLE IF NOT EXISTS email_otp_challenges (
+      email_norm TEXT PRIMARY KEY,
+      code_hash TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      last_sent_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_email_otp_expires ON email_otp_challenges(expires_at);
+    `),
+    );
+    markMigrationApplied(db, 40, "email_auth_otp");
+  }
+
+  // ── v41 : reset comptes commerçants (passage OTP e-mail — une fois) ──
+  if (!isMigrationApplied(db, 41)) {
+    safeRun(db, () => {
+      const tables = [
+        "match_prediction_entries",
+        "business_team_members",
+        "phone_otp_challenges",
+        "email_otp_challenges",
+        "notification_batches",
+        "campaign_event_jobs",
+        "notification_log",
+        "reward_grants",
+        "game_spins",
+        "game_rewards",
+        "ticket_ledger",
+        "member_ticket_wallets",
+        "business_games",
+        "engagement_proofs",
+        "engagement_completions",
+        "transactions",
+        "web_push_subscriptions",
+        "pass_registrations",
+        "merchant_push_devices",
+        "merchant_device_tokens",
+        "member_category_assignments",
+        "member_categories",
+        "members",
+        "business_assets",
+        "social_metric_snapshots",
+        "social_oauth_connections",
+        "google_business_reviews",
+        "google_business_posts",
+        "google_business_questions",
+        "google_business_insights_cache",
+        "google_business_location_cache",
+        "google_business_media",
+        "receipt_delivery_claims",
+        "businesses",
+        "password_reset_tokens",
+        "refresh_tokens",
+        "merchant_business_subscriptions",
+        "merchant_entitlements",
+        "subscriptions",
+        "merchant_referrals",
+        "users",
+      ];
+      for (const t of tables) {
+        const exists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(t);
+        if (exists) safeRun(db, () => db.exec(`DELETE FROM ${t}`));
+      }
+    });
+    markMigrationApplied(db, 41, "reset_accounts_for_email_otp");
+  }
 }

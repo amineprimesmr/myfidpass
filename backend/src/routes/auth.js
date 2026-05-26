@@ -8,6 +8,7 @@ import { getUserIdByReferralCode, recordReferral } from "../db/referrals.js";
 import {
   createUser,
   createUserWithPhone,
+  createUserWithEmailOtp,
   getUserByEmail,
   getUserByPhoneE164,
   getUserById,
@@ -53,6 +54,12 @@ import {
   deletePhoneOtpChallenge,
   incrementPhoneOtpAttempts,
 } from "../db/phone-otp.js";
+import {
+  upsertEmailOtpChallenge,
+  getEmailOtpChallenge,
+  deleteEmailOtpChallenge,
+  incrementEmailOtpAttempts,
+} from "../db/email-otp.js";
 import { normalizePhoneE164 } from "../lib/phone-e164.js";
 import { sendSmsViaTwilio, isTwilioConfigured, friendlyTwilioSendError } from "../lib/sms-twilio.js";
 import { requireAuth, getJwtSecret, invalidateAuthUserCache } from "../middleware/auth.js";
@@ -1270,6 +1277,164 @@ router.post("/phone/verify", validate(schemas.phoneVerify), async (req, res) => 
   } catch (e) {
     console.error("[phone/verify] createUserWithPhone:", e);
     return res.status(409).json({ error: "Ce numéro est déjà utilisé. Connectez-vous avec le code." });
+  }
+
+  const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
+  if (businessState.setup_error_code) {
+    return res.status(409).json({
+      error: businessState.setup_error_message || "Impossible de créer l'établissement.",
+      code: businessState.setup_error_code,
+    });
+  }
+  if (businessState.requires_business_setup) {
+    return respondMissingEstablishment(res);
+  }
+
+  const { accessToken, refreshToken } = issueTokenPair(user.id);
+  return res.status(201).json({
+    ...buildAuthSuccessPayload(user),
+    token: accessToken,
+    refreshToken,
+  });
+});
+
+// ── E-mail + OTP (app commerçant — connexion / inscription sans mot de passe) ──
+
+const EMAIL_OTP_MAX_ATTEMPTS = 5;
+const EMAIL_SEND_COOLDOWN_SEC = 60;
+
+function hashEmailOtp(emailNorm, code) {
+  const secret = process.env.EMAIL_OTP_HMAC_SECRET || process.env.JWT_SECRET || "local-dev-only";
+  return createHmac("sha256", secret).update(`${emailNorm}:${code}`).digest("hex");
+}
+
+/**
+ * POST /api/auth/email/send-code
+ */
+router.post("/email/send-code", validate(schemas.emailSend), async (req, res) => {
+  const emailNorm = req.body.email;
+
+  if (isReservedStaffEmailOnly(emailNorm)) {
+    return res.status(400).json({ error: "Adresse e-mail invalide.", code: "email_reserved" });
+  }
+
+  const existing = getEmailOtpChallenge(emailNorm);
+  if (existing?.last_sent_at) {
+    const last = Date.parse(existing.last_sent_at);
+    if (!Number.isNaN(last) && Date.now() - last < EMAIL_SEND_COOLDOWN_SEC * 1000) {
+      return res.status(429).json({ error: `Attendez ${EMAIL_SEND_COOLDOWN_SEC} secondes avant un nouvel envoi.` });
+    }
+  }
+
+  const code =
+    process.env.NODE_ENV === "test"
+      ? "123456"
+      : String(randomInt(100000, 999999));
+  const codeHash = hashEmailOtp(emailNorm, code);
+  const expires = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  const now = new Date().toISOString();
+  upsertEmailOtpChallenge(emailNorm, codeHash, expires, now);
+
+  const isProd = process.env.NODE_ENV === "production";
+  if (isProd && !isEmailConfigured()) {
+    return res.status(503).json({ error: "Envoi e-mail temporairement indisponible." });
+  }
+
+  if (isEmailConfigured()) {
+    const { sent } = await sendMail({
+      to: emailNorm,
+      subject: "Votre code MyFidpass",
+      text: `MyFidpass : votre code de connexion est ${code}. Il expire dans 5 minutes.`,
+      html: `<p>MyFidpass : votre code de connexion est <strong>${code}</strong>.</p><p>Il expire dans 5 minutes.</p>`,
+    });
+    if (!sent) {
+      console.error("[email/send-code] sendMail failed for", emailNorm);
+      return res.status(502).json({ error: "Impossible d'envoyer l'e-mail. Réessayez." });
+    }
+  } else {
+    console.warn(`[email/send-code] E-mail non configuré — code pour ${emailNorm} : ${code}`);
+  }
+
+  return res.json({ ok: true });
+});
+
+/**
+ * POST /api/auth/email/verify
+ * Compte existant : connexion. Sinon : création si établissement fourni.
+ */
+router.post("/email/verify", validate(schemas.emailVerify), async (req, res) => {
+  const emailNorm = req.body.email;
+  const code = String(req.body.code || "").trim();
+
+  if (isReservedStaffEmailOnly(emailNorm)) {
+    return res.status(400).json({ error: "Adresse e-mail invalide.", code: "email_reserved" });
+  }
+
+  const row = getEmailOtpChallenge(emailNorm);
+  if (!row) {
+    return res.status(400).json({ error: "Aucun code en attente. Demandez un nouveau code." });
+  }
+  if (Date.parse(row.expires_at) < Date.now()) {
+    deleteEmailOtpChallenge(emailNorm);
+    return res.status(400).json({ error: "Code expiré. Demandez un nouveau code." });
+  }
+  if ((row.attempts || 0) >= EMAIL_OTP_MAX_ATTEMPTS) {
+    deleteEmailOtpChallenge(emailNorm);
+    return res.status(429).json({ error: "Trop de tentatives. Demandez un nouveau code." });
+  }
+
+  const expected = row.code_hash;
+  const got = hashEmailOtp(emailNorm, code);
+  let a;
+  let b;
+  try {
+    a = Buffer.from(expected, "hex");
+    b = Buffer.from(got, "hex");
+  } catch {
+    incrementEmailOtpAttempts(emailNorm);
+    return res.status(401).json({ error: "Code incorrect." });
+  }
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    incrementEmailOtpAttempts(emailNorm);
+    return res.status(401).json({ error: "Code incorrect." });
+  }
+
+  deleteEmailOtpChallenge(emailNorm);
+
+  let user = getUserByEmail(emailNorm);
+  const establishmentSelection = normalizeEstablishmentSelection(req.body || {});
+  const nameHint = req.body?.name ? String(req.body.name).trim() : null;
+
+  if (user) {
+    const { accessToken, refreshToken } = issueTokenPair(user.id);
+    return res.json({
+      ...buildAuthSuccessPayload(user),
+      token: accessToken,
+      refreshToken,
+    });
+  }
+
+  if (!hasSelectedEstablishment(establishmentSelection)) {
+    return respondMissingEstablishment(res);
+  }
+
+  try {
+    user = createUserWithEmailOtp({ email: emailNorm, name: nameHint });
+  } catch (e) {
+    const c = e?.code;
+    if (c === "EMAIL_TAKEN") {
+      user = getUserByEmail(emailNorm);
+      if (user) {
+        const { accessToken, refreshToken } = issueTokenPair(user.id);
+        return res.json({
+          ...buildAuthSuccessPayload(user),
+          token: accessToken,
+          refreshToken,
+        });
+      }
+    }
+    console.error("[email/verify] createUserWithEmailOtp:", e);
+    return res.status(409).json({ error: "Impossible de créer le compte. Réessayez." });
   }
 
   const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
