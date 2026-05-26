@@ -26,6 +26,7 @@
     "express": "^4.21.1",
     "express-rate-limit": "^8.3.1",
     "fast-jwt": "^6.1.0",
+    "firebase-admin": "^13.10.0",
     "google-auth-library": "^10.6.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",

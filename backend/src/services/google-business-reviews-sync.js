@@ -31,7 +31,10 @@ import {
 import { tryCompletePendingGoogleBusinessLocation } from "./social-metrics-service.js";
 import { insertSocialMetricSnapshot, getLatestSnapshot } from "../db/social-metrics.js";
 import { getMerchantDeviceTokensForUser, deleteMerchantPushDeviceByToken } from "../db/passes.js";
-import { sendMerchantAppAlert, isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
+import {
+  sendMerchantAppAlert,
+  isLikelyInvalidMerchantPushTokenError,
+} from "../merchant-app-push.js";
 import { getDb } from "../db/connection.js";
 
 const db = getDb();
@@ -143,7 +146,7 @@ async function pushNewReviewToMerchant(businessId, extract) {
   for (const t of tokens) {
     try {
       const r = await sendMerchantAppAlert(t, payload);
-      if (!r.sent && r.error && isLikelyInvalidDeviceTokenApnsError(r.error)) {
+      if (!r.sent && r.error && isLikelyInvalidMerchantPushTokenError(r.error, t)) {
         deleteMerchantPushDeviceByToken(t);
       }
     } catch (err) {

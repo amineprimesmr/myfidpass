@@ -24,7 +24,10 @@ import {
 } from "../db.js";
 import { sendWebPush } from "../notifications.js";
 import { sendPassKitPushWaves } from "../passkit-push-waves.js";
-import { sendMerchantAppAlert, isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
+import {
+  sendMerchantAppAlert,
+  isLikelyInvalidMerchantPushTokenError,
+} from "../merchant-app-push.js";
 import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
 import { businessHasCustomNotificationIcon } from "../lib/notification-icon-gate.js";
@@ -437,7 +440,7 @@ export async function deliverCustomerBroadcast({
           status: "sent",
         });
       } else if (r.error) {
-        if (isLikelyInvalidDeviceTokenApnsError({ message: r.error })) {
+        if (isLikelyInvalidMerchantPushTokenError({ message: r.error }, tok)) {
           deleteMerchantPushDeviceByToken(tok);
         }
         logNotification({

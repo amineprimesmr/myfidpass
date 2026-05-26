@@ -15,8 +15,8 @@ import {
 } from "../db/passes.js";
 import {
   sendMerchantSilentDashboardSync,
-  isLikelyInvalidDeviceTokenApnsError,
-} from "../apns.js";
+  isLikelyInvalidMerchantPushTokenError,
+} from "../merchant-app-push.js";
 
 const db = getDb();
 
@@ -74,7 +74,7 @@ async function sendSilentSyncToMerchantDevices(userId, reason) {
   if (tokens.length === 0) return;
   for (const t of tokens) {
     const r = await sendMerchantSilentDashboardSync(t, { reason });
-    if (!r.sent && r.rawError != null && isLikelyInvalidDeviceTokenApnsError(r.rawError)) {
+    if (!r.sent && r.rawError != null && isLikelyInvalidMerchantPushTokenError(r.rawError, t)) {
       deleteMerchantPushDeviceByToken(t);
     }
   }
