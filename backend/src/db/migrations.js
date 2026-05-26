@@ -1618,7 +1618,8 @@ export function runMigrations(db) {
   }
 
   // ── v40 : OTP e-mail (connexion / inscription sans mot de passe) ──
-  if (!isMigrationApplied(db, 40)) {
+  const m40 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 40").get();
+  if (!m40) {
     safeRun(db, () =>
       db.exec(`
     CREATE TABLE IF NOT EXISTS email_otp_challenges (
@@ -1635,7 +1636,8 @@ export function runMigrations(db) {
   }
 
   // ── v41 : reset comptes commerçants (passage OTP e-mail — une fois) ──
-  if (!isMigrationApplied(db, 41)) {
+  const m41 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 41").get();
+  if (!m41) {
     safeRun(db, () => {
       const tables = [
         "match_prediction_entries",
