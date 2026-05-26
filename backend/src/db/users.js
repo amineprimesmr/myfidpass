@@ -163,6 +163,13 @@ export function updateUserPassword(userId, passwordHash) {
   return info.changes > 0;
 }
 
+export function updateUserName(userId, name) {
+  const n = String(name || "").trim();
+  if (n.length < 2) return false;
+  const info = db.prepare("UPDATE users SET name = ? WHERE id = ?").run(n.slice(0, 100), userId);
+  return info.changes > 0;
+}
+
 export function getUserByAppleSub(sub) {
   const s = String(sub ?? "").trim();
   if (!s) return null;

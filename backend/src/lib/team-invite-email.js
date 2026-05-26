@@ -58,7 +58,7 @@ export async function sendTeamInvitationEmail({ to, shopName, inviterLabel, role
 
   const html = [
     `<p>Bonjour,</p>`,
-    `<p><strong>${escapeHtml(inviter)}</strong> vous a invité en tant qu'<strong>${escapeHtml(roleLabel)}</strong> pour le commerce « <strong>${escapeHtml(shop)}</strong> » sur MyFidpass.</p>`,
+    `<p><strong>${escapeHtml(inviter)}</strong> vous a invité en tant ${role === "manager" ? "que <strong>gérant</strong>" : "qu'<strong>employé</strong>"} pour le commerce « <strong>${escapeHtml(shop)}</strong> » sur MyFidpass.</p>`,
     `<h3 style="margin:20px 0 8px;font-size:16px">1. Téléchargez l'app</h3>`,
     `<p style="margin:0 0 12px">`,
     `<a href="${escapeHtml(links.ios)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">iPhone — App Store</a>`,

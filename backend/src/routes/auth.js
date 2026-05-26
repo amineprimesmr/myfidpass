@@ -29,6 +29,7 @@ import {
   getPasswordResetByToken,
   deletePasswordResetToken,
   updateUserPassword,
+  updateUserName,
   deleteUserAccount,
   isUserAdmin,
   createBusiness,
@@ -1063,6 +1064,26 @@ router.get("/me", (req, res, next) => {
       code: "me_failed",
       ...(!isProd && e?.message ? { detail: String(e.message) } : {}),
     });
+  }
+});
+
+/**
+ * PATCH /api/auth/me
+ * Body: { name } — prénom commerçant après inscription OTP.
+ */
+router.patch("/me", requireAuth, validate(schemas.authMePatch), (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const ok = updateUserName(req.user.id, name);
+    if (!ok) {
+      return res.status(400).json({ error: "Prénom invalide.", code: "name_invalid" });
+    }
+    invalidateAuthUserCache(req.user.id);
+    const user = getUserById(req.user.id);
+    return res.json({ ok: true, user: authUserPayload(user) });
+  } catch (e) {
+    console.error("PATCH /api/auth/me:", e);
+    return res.status(500).json({ error: "Impossible de mettre à jour le profil." });
   }
 });
 

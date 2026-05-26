@@ -208,6 +208,15 @@ export const schemas = {
       .max(200),
   }),
 
+  /** PATCH /auth/me — prénom / nom affiché */
+  authMePatch: z.object({
+    name: z
+      .string({ required_error: "Prénom requis" })
+      .trim()
+      .min(2, "Au moins 2 caractères")
+      .max(100),
+  }),
+
   /** POST /auth/email/verify */
   emailVerify: z.object({
     email: z
