@@ -1639,6 +1639,8 @@ export function runMigrations(db) {
   const m41 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 41").get();
   if (!m41) {
     safeRun(db, () => {
+      console.log("[migration v41] reset comptes commerçants (OTP e-mail) — début");
+      db.pragma("foreign_keys = OFF");
       const tables = [
         "match_prediction_entries",
         "business_team_members",
@@ -1686,6 +1688,8 @@ export function runMigrations(db) {
         const exists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(t);
         if (exists) safeRun(db, () => db.exec(`DELETE FROM ${t}`));
       }
+      db.pragma("foreign_keys = ON");
+      console.log("[migration v41] reset comptes commerçants — terminé");
     });
     markMigrationApplied(db, 41, "reset_accounts_for_email_otp");
   }

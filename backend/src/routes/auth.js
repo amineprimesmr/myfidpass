@@ -1332,8 +1332,6 @@ router.post("/email/send-code", validate(schemas.emailSend), async (req, res) =>
       : String(randomInt(100000, 999999));
   const codeHash = hashEmailOtp(emailNorm, code);
   const expires = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-  const now = new Date().toISOString();
-  upsertEmailOtpChallenge(emailNorm, codeHash, expires, now);
 
   const isProd = process.env.NODE_ENV === "production";
   if (isProd && !isEmailConfigured()) {
@@ -1341,19 +1339,26 @@ router.post("/email/send-code", validate(schemas.emailSend), async (req, res) =>
   }
 
   if (isEmailConfigured()) {
-    const { sent } = await sendMail({
+    const mailResult = await sendMail({
       to: emailNorm,
       subject: "Votre code MyFidpass",
       text: `MyFidpass : votre code de connexion est ${code}. Il expire dans 5 minutes.`,
       html: `<p>MyFidpass : votre code de connexion est <strong>${code}</strong>.</p><p>Il expire dans 5 minutes.</p>`,
     });
-    if (!sent) {
-      console.error("[email/send-code] sendMail failed for", emailNorm);
-      return res.status(502).json({ error: "Impossible d'envoyer l'e-mail. Réessayez." });
+    if (!mailResult.sent) {
+      console.error("[email/send-code] sendMail failed for", emailNorm, mailResult.error || "");
+      const detail = mailResult.error ? String(mailResult.error).slice(0, 200) : null;
+      return res.status(502).json({
+        error: "Impossible d'envoyer l'e-mail. Réessayez.",
+        ...(detail ? { detail } : {}),
+      });
     }
   } else {
     console.warn(`[email/send-code] E-mail non configuré — code pour ${emailNorm} : ${code}`);
   }
+
+  const now = new Date().toISOString();
+  upsertEmailOtpChallenge(emailNorm, codeHash, expires, now);
 
   return res.json({ ok: true });
 });
