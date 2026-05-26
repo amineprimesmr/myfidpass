@@ -25,7 +25,8 @@ import {
 import { getDb } from "../../db/connection.js";
 import { deleteUserAccount } from "../../db.js";
 import { isEmailConfigured } from "../../email.js";
-import { issueAndSendEmailOtp, escapeHtml, humanizeEmailSendError } from "../../lib/email-otp-send.js";
+import { humanizeEmailSendError } from "../../lib/email-otp-send.js";
+import { sendTeamInvitationEmail } from "../../lib/team-invite-email.js";
 import { validate, schemas } from "../../lib/validate.js";
 
 const db = getDb();
@@ -128,17 +129,7 @@ function resolveMemberRow(business, rawId) {
 }
 
 async function sendTeamAccessEmail({ to, shopName, inviterLabel, role }) {
-  const roleLabel = role === "manager" ? "gérant" : "employé";
-  const shop = String(shopName || "Votre commerce").trim();
-  const inviter = String(inviterLabel || "Le responsable").trim();
-  const introText = `Bonjour,\n\n${inviter} vous a donné l'accès ${roleLabel} pour le commerce « ${shop} » sur MyFidpass.\n\nOuvrez l'app MyFidpass, entrez votre e-mail ${to}, puis saisissez le code ci-dessous.`;
-  const introHtml = `<p>Bonjour,</p><p><strong>${escapeHtml(inviter)}</strong> vous a donné l'accès <strong>${escapeHtml(roleLabel)}</strong> pour le commerce « <strong>${escapeHtml(shop)}</strong> » sur MyFidpass.</p><p>Ouvrez l'app MyFidpass, entrez votre e-mail <strong>${escapeHtml(to)}</strong>, puis saisissez le code ci-dessous.</p>`;
-  return issueAndSendEmailOtp({
-    to,
-    subject: `Votre code MyFidpass - ${shop}`.slice(0, 180),
-    introText,
-    introHtml,
-  });
+  return sendTeamInvitationEmail({ to, shopName, inviterLabel, role });
 }
 
 function teamEmailResponseFields(emailResult) {
@@ -238,7 +229,7 @@ router.post("/staff-accounts", validate(schemas.teamStaffAccount), async (req, r
     ? "Employé ajouté au commerce."
     : "Accès employé activé.";
   const message = emailSent
-    ? `${baseMessage} Un e-mail avec le code de connexion a été envoyé à ${emailNorm}.`
+    ? `${baseMessage} Un e-mail d'invitation avec le lien de téléchargement a été envoyé à ${emailNorm}.`
     : emailError
       ? `${baseMessage} E-mail non envoyé : ${emailError}`
       : `${baseMessage} L'e-mail n'a pas pu être envoyé — l'employé peut demander un code depuis l'app (Se connecter).`;
@@ -315,7 +306,7 @@ router.patch("/members/:id", validate(schemas.teamMemberPatch), (req, res) => {
   });
 });
 
-/** POST /dashboard/team/members/:id/resend-access — renvoyer le code OTP par e-mail */
+/** POST /dashboard/team/members/:id/resend-access — renvoyer l'e-mail d'invitation */
 router.post("/members/:id/resend-access", async (req, res) => {
   if (!ensureTeamManager(req, res)) return;
   const business = req.business;
@@ -351,12 +342,12 @@ router.post("/members/:id/resend-access", async (req, res) => {
     email_sent: emailSent,
     email_error: emailError,
     message: emailSent
-      ? `Code de connexion renvoyé à ${email}.`
-      : emailError || "L'e-mail n'a pas pu être envoyé. L'employé peut demander un code depuis l'app.",
+      ? `E-mail d'invitation renvoyé à ${email}.`
+      : emailError || "L'e-mail n'a pas pu être envoyé. L'employé peut se connecter depuis l'app avec son e-mail.",
   });
 });
 
-/** POST /dashboard/team/invites — alias historique (e-mail OTP) */
+/** POST /dashboard/team/invites — alias historique (e-mail d'invitation) */
 router.post("/invites", async (req, res) => {
   if (!ensureTeamManager(req, res)) return;
   const email = String(req.body?.email || "")
@@ -424,10 +415,10 @@ router.post("/invites", async (req, res) => {
   return res.json({
     ok: true,
     message: emailSent
-      ? `Accès employé activé. Un e-mail avec le code de connexion a été envoyé à ${email}.`
+      ? `Accès employé activé. Un e-mail d'invitation avec le lien de téléchargement a été envoyé à ${email}.`
       : emailError
         ? `Accès employé activé. E-mail non envoyé : ${emailError}`
-        : "Accès employé activé. L'e-mail n'a pas pu être envoyé — l'employé peut demander un code depuis l'app.",
+        : "Accès employé activé. L'e-mail n'a pas pu être envoyé — l'employé peut se connecter depuis l'app avec son e-mail.",
     email_sent: emailSent,
     email_error: emailError,
   });
