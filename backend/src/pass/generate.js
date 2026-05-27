@@ -275,23 +275,19 @@ export async function generatePass(member, business = null, options = {}) {
   };
 
   if (format === "tampons") {
-    /* Avec image de fond : strip = image seule (comme le mode points). Sinon : fond couleur + grille tampons dessinée sur le strip. */
-    if (cardBgStripBuf) {
-      await assignPassStripBuffers(buffers, sharp, cardBgStripBuf);
-    } else {
-      const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
-      const baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
-      const stripWithStamps = await drawStampsOnStrip(
-        baseStrip,
-        stripTemplateKey,
-        stamps,
-        stampMax,
-        stripStampEmoji,
-        stampIconBase64,
-        stripColorHex
-      );
-      await assignPassStripBuffers(buffers, sharp, stripWithStamps);
-    }
+    /* Mode tampons : grille sur le strip uniquement (l’image de fond carte est réservée au mode points). */
+    const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
+    const baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
+    const stripWithStamps = await drawStampsOnStrip(
+      baseStrip,
+      stripTemplateKey,
+      stamps,
+      stampMax,
+      stripStampEmoji,
+      stampIconBase64,
+      stripColorHex
+    );
+    await assignPassStripBuffers(buffers, sharp, stripWithStamps);
   } else {
     if (cardBgStripBuf) {
       /* Image de fond commerce (base64) : elle prime sur l’asset Xcode / default-points-strip — la modifier côté app ou SaaS. */

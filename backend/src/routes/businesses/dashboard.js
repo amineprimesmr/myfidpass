@@ -779,6 +779,10 @@ router.patch("/settings", async (req, res) => {
           const rs = Number(business.required_stamps);
           updates.required_stamps = Number.isInteger(rs) && rs > 0 ? rs : 10;
         }
+        // Fond photo = mode points uniquement ; éviter un pass tampons avec bandeau photo résiduel.
+        if (updates.card_background_base64 === undefined) {
+          updates.card_background_base64 = null;
+        }
       } else {
         updates.loyalty_mode = "points_cash";
         if (updates.points_per_euro === undefined) {
