@@ -174,7 +174,7 @@ router.get("/settings", (req, res) => {
     stamp_mid_reward_label: business.stamp_mid_reward_label ?? undefined,
     points_per_euro: business.points_per_euro != null ? Number(business.points_per_euro) : undefined,
     points_per_visit: business.points_per_visit != null ? Number(business.points_per_visit) : undefined,
-    program_type: business.program_type ?? undefined,
+    program_type: resolveBusinessProgramType(business),
     loyalty_mode: business.loyalty_mode ?? "points_cash",
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     points_min_amount_eur: business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : undefined,
@@ -760,6 +760,39 @@ router.patch("/settings", async (req, res) => {
   if (Object.keys(updates).length === 0) {
     return res.status(204).send();
   }
+
+  // Changement Points ↔ Tampons : nettoyer les champs du mode opposé si le client ne les envoie pas.
+  if (updates.program_type !== undefined) {
+    const prevType = resolveBusinessProgramType(business);
+    const nextRaw = updates.program_type;
+    const nextType =
+      nextRaw === "stamps" || nextRaw === "points"
+        ? nextRaw
+        : resolveBusinessProgramType({ ...business, program_type: nextRaw });
+    if (prevType !== nextType) {
+      if (nextType === "stamps") {
+        if (updates.points_reward_tiers === undefined) {
+          updates.points_reward_tiers = null;
+        }
+        updates.loyalty_mode = "points_cash";
+        if (updates.required_stamps === undefined) {
+          const rs = Number(business.required_stamps);
+          updates.required_stamps = Number.isInteger(rs) && rs > 0 ? rs : 10;
+        }
+      } else {
+        updates.loyalty_mode = "points_cash";
+        if (updates.points_per_euro === undefined) {
+          const pe = Number(business.points_per_euro);
+          updates.points_per_euro = Number.isFinite(pe) && pe >= 0 ? String(pe) : "1";
+        }
+        if (updates.points_per_visit === undefined) {
+          const pv = Number(business.points_per_visit);
+          updates.points_per_visit = Number.isFinite(pv) && pv >= 0 ? String(pv) : "0";
+        }
+      }
+    }
+  }
+
   const locationKeys = ["location_lat", "location_lng", "location_radius_meters", "location_relevant_text"];
   const locationUpdated = locationKeys.some((k) => updates[k] !== undefined);
   const passWalletGeometryUpdated =
