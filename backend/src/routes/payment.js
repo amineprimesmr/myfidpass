@@ -1177,7 +1177,7 @@ router.post("/apple/reconcile-subscription", requireAuth, async (req, res) => {
   if (!signed && !transactionId) {
     return res.json({
       ok: false,
-      has_active_subscription: hasPaidMerchantSubscription(req.user.id) || isUserInMerchantTrial(req.user.id),
+      has_active_subscription: hasPaidMerchantSubscription(req.user.id),
       message: "Aucune transaction Apple à synchroniser.",
     });
   }
