@@ -1616,4 +1616,22 @@ export function runMigrations(db) {
     }
     markMigrationApplied(db, 39, "match_predictions_game");
   }
+
+  // ── v40 : OTP e-mail (connexion / inscription sans mot de passe) ──
+  const m40 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 40").get();
+  if (!m40) {
+    safeRun(db, () =>
+      db.exec(`
+    CREATE TABLE IF NOT EXISTS email_otp_challenges (
+      email_norm TEXT PRIMARY KEY,
+      code_hash TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      last_sent_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_email_otp_expires ON email_otp_challenges(expires_at);
+    `),
+    );
+    markMigrationApplied(db, 40, "email_auth_otp");
+  }
 }

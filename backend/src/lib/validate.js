@@ -198,6 +198,35 @@ export const schemas = {
     establishments: establishmentsArraySchema,
   }),
 
+  /** POST /auth/email/send-code */
+  emailSend: z.object({
+    email: z
+      .string({ required_error: "E-mail requis" })
+      .trim()
+      .toLowerCase()
+      .email("E-mail invalide")
+      .max(200),
+  }),
+
+  /** POST /auth/email/verify */
+  emailVerify: z.object({
+    email: z
+      .string({ required_error: "E-mail requis" })
+      .trim()
+      .toLowerCase()
+      .email("E-mail invalide")
+      .max(200),
+    code: z
+      .string({ required_error: "Code requis" })
+      .regex(/^\d{6}$/, "Code à 6 chiffres"),
+    name: z.string().trim().max(100).optional().nullable(),
+    google_place_id: optionalPlaceIdSchema,
+    googlePlaceId: optionalPlaceIdSchema,
+    establishment_name: optionalEstablishmentNameSchema,
+    establishmentName: optionalEstablishmentNameSchema,
+    establishments: establishmentsArraySchema,
+  }),
+
   /** POST /businesses/:slug/dashboard/team/staff-accounts — compte employé (identifiant + mot de passe, sans e-mail). */
   teamStaffAccount: z.object({
     staff_login: z
