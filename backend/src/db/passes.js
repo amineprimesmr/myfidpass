@@ -138,45 +138,14 @@ export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber);
 }
 
-function parsePassUpdatedAt(str) {
-  if (!str || typeof str !== "string") return 0;
-  const s = str.trim();
-  const iso = s.replace(" ", "T").replace(/Z?$/, "Z");
-  const t = Date.parse(iso);
-  return Number.isNaN(t) ? 0 : t;
-}
+import {
+  effectivePassKitRowUpdateTs,
+  filterPassKitRegistrationRows,
+  parsePassUpdatedAt,
+  passesUpdatedSinceCutoffMs,
+} from "./passes-passkit-since-filter.js";
 
-/** Marge horloge iPhone ↔ serveur + `Last-Modified` HTTP tronqué à la seconde. */
-const PASSKIT_SINCE_SLACK_MS = 3500;
-
-/**
- * Tag `passesUpdatedSince` renvoyé par Wallet (parfois sans millisecondes).
- * Recule d’1 s (sans ms) + slack fixe pour ne pas répondre 204 après une 2ᵉ campagne.
- */
-function passesUpdatedSinceCutoffMs(tag) {
-  const ts = parsePassUpdatedAt(tag);
-  if (!ts) return 0;
-  const raw = String(tag).trim();
-  const hasSubSecond = /\.\d{1,3}/.test(raw);
-  const base = hasSubSecond ? ts : ts - 1000;
-  return Math.max(0, base - PASSKIT_SINCE_SLACK_MS);
-}
-
-/**
- * Instant « pass mis à jour » côté PassKit : visite en caisse, dernière diffusion, création du membre,
- * ou mise à jour des textes pass (sans confondre avec une nouvelle diffusion — voir notification_pass_layout_at).
- */
-export function effectivePassKitRowUpdateTs(row) {
-  const passMs = Number(row.pass_last_modified_ms);
-  const passMsOk = Number.isFinite(passMs) && passMs > 0 ? passMs : 0;
-  return Math.max(
-    parsePassUpdatedAt(row.last_visit_at),
-    parsePassUpdatedAt(row.last_broadcast_at),
-    parsePassUpdatedAt(row.created_at),
-    parsePassUpdatedAt(row.notification_pass_layout_at),
-    passMsOk
-  );
-}
+export { effectivePassKitRowUpdateTs, parsePassUpdatedAt, passesUpdatedSinceCutoffMs };
 
 export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
   const base = db.prepare(
@@ -186,26 +155,7 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
      INNER JOIN businesses b ON b.id = m.business_id
      WHERE pr.device_library_identifier = ? AND pr.pass_type_identifier = ?`
   ).all(deviceId, passTypeId);
-  let list = base;
-  if (passesUpdatedSince && String(passesUpdatedSince).trim()) {
-    const sinceMs = passesUpdatedSinceCutoffMs(String(passesUpdatedSince));
-    list = base.filter((r) => {
-      const passMs = Number(r.pass_last_modified_ms);
-      if (Number.isFinite(passMs) && passMs > sinceMs) return true;
-      const broadcastMs = parsePassUpdatedAt(r.last_broadcast_at);
-      if (broadcastMs > sinceMs) return true;
-      return effectivePassKitRowUpdateTs(r) > sinceMs;
-    });
-    // Filet : tag Wallet parfois en avance → 204 alors que `last_broadcast_at` vient de changer.
-    if (list.length === 0 && base.length > 0) {
-      const sinceMs = passesUpdatedSinceCutoffMs(String(passesUpdatedSince));
-      const recentBroadcast = base.some((r) => {
-        const b = parsePassUpdatedAt(r.last_broadcast_at);
-        return b > 0 && b >= sinceMs - PASSKIT_SINCE_SLACK_MS;
-      });
-      if (recentBroadcast) list = base;
-    }
-  }
+  const list = filterPassKitRegistrationRows(base, passesUpdatedSince);
   const serialNumbers = list.map((r) => r.serial_number);
   let lastUpdated = formatUtcSqlWithMs(new Date());
   if (list.length > 0) {
