@@ -50,6 +50,11 @@ import {
 import { memberProgramBalance } from "./lib/member-reward-celebrations.js";
 import { deliveryReceiptSuccessMessage, engagementClaimSuccessMessage } from "./lib/program-copy.js";
 import { isQrGameEntryIntent, markQrGameSession } from "./lib/client-entry-intent.js";
+import {
+  bindExternalEngagementReturnListeners,
+  markExternalEngagementPending,
+  runExternalEngagementReturnClaim,
+} from "./engagement-return-flow.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -136,7 +141,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const [member, tickets, actionsData] = await Promise.all([
       api.getMember(slug, memberId),
       api.getTickets(slug, memberId),
-      api.getEngagementActions(slug),
+      api.getEngagementActions(slug, memberId),
     ]);
     applyMemberCorePatch(member, tickets, actionsData);
   }
@@ -826,35 +831,18 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     })();
   }
 
-  const PENDING_CLAIM_KEY = "fidelity_pending_engagement_claim";
-  const PENDING_CLAIM_MIN_MS = 45000;
-  const PENDING_CLAIM_MAX_MS = 24 * 60 * 60 * 1000;
-
-  async function tryAutoClaimOnReturn() {
-    if (isSpinning) return;
-    const state = store.get();
-    if (!state.member?.id) return;
-    if (isGuestMember(state.member)) return;
-    try {
-      const raw = sessionStorage.getItem(PENDING_CLAIM_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      if (data.slug !== slug || !data.actionType || !data.ts) return;
-      const age = Date.now() - data.ts;
-      if (age < PENDING_CLAIM_MIN_MS || age > PENDING_CLAIM_MAX_MS) return;
-      sessionStorage.removeItem(PENDING_CLAIM_KEY);
-      const claimRes = await api.claimEngagement(slug, state.member.id, data.actionType);
-      await refreshMemberData();
-      const feedback = rootEl.querySelector("#fidelity-v2-action-feedback");
-      if (feedback) {
-        const pt = String(store.get().business?.program_type || "points").toLowerCase();
-        const serverMsg = claimRes?.message && typeof claimRes.message === "string" ? claimRes.message.trim() : "";
-        feedback.textContent = serverMsg || engagementClaimSuccessMessage(pt);
-        feedback.classList.remove("hidden");
-        setTimeout(() => feedback.classList.add("hidden"), 4000);
-      }
-    } catch (_) {}
+  function showEngagementClaimFeedback(message) {
+    const pt = String(store.get().business?.program_type || "points").toLowerCase();
+    const feedback = rootEl.querySelector("#fidelity-v2-action-feedback");
+    if (feedback) {
+      feedback.textContent = message || engagementClaimSuccessMessage(pt);
+      feedback.classList.remove("hidden");
+      setTimeout(() => feedback.classList.add("hidden"), 4000);
+    }
+    triggerWinCelebrationConfetti();
   }
+
+  let disposeExternalEngagementReturn = () => {};
 
   function bindEvents() {
     disposeQrUi();
@@ -906,13 +894,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     rootEl.querySelectorAll(".fidelity-engagement-open-link").forEach((link) => {
       link.addEventListener("click", () => {
         const actionType = link.getAttribute("data-action-type");
-        if (actionType) {
-          sessionStorage.setItem(PENDING_CLAIM_KEY, JSON.stringify({
-            slug,
-            actionType,
-            ts: Date.now(),
-          }));
-        }
+        markExternalEngagementPending(slug, actionType);
       });
     });
     const apple = rootEl.querySelector("#fidelity-v2-apple");
@@ -1085,6 +1067,25 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
     bindRewardCelebrationUi(celebrationCtx());
 
+    disposeExternalEngagementReturn();
+    disposeExternalEngagementReturn = bindExternalEngagementReturnListeners({
+      rootEl,
+      slug,
+      getMemberId: () => store.get().member?.id,
+      claimEngagement: api.claimEngagement.bind(api),
+      refreshMemberData,
+      onSuccess: (msg) => {
+        if (isSpinning || isQrModalOpen()) {
+          deferredRerenderAfterSpin = true;
+        } else {
+          rerender();
+        }
+        showEngagementClaimFeedback(msg);
+      },
+      isBlocked: () => isSpinning,
+      signal,
+    });
+
     disposeQrUi = bindQrGameUi({
       rootEl,
       api,
@@ -1103,14 +1104,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       signal,
     });
   }
-
-  document.addEventListener(
-    "visibilitychange",
-    () => {
-      if (document.visibilityState === "visible") tryAutoClaimOnReturn();
-    },
-    { signal }
-  );
 
   document.addEventListener(
     "keydown",
@@ -1142,7 +1135,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   );
 
   rerender();
-  tryAutoClaimOnReturn();
   } finally {
     await dismissFidelityRouteLoadingOverlay(loadingOverlay);
   }

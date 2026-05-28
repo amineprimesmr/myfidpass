@@ -1,4 +1,5 @@
 import { renderEngagementActionsMarkup } from "./mission-markup.js";
+import { renderEngagementVerifyOverlayMarkup } from "./engagement-verify-overlay-markup.js";
 import { renderProfileMissionModalMarkup } from "./profile-mission-modal-markup.js";
 import { renderRewardsStepMarkup } from "./rewards-step-markup.js";
 import {
@@ -326,6 +327,8 @@ export function renderClientPage(root, state, options = {}) {
           programType,
         })
       : ""}
+
+    ${hasMember && !isGuestPlaceholder ? renderEngagementVerifyOverlayMarkup() : ""}
 
     ${
       hasMember

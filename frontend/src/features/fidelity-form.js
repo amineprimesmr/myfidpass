@@ -9,6 +9,12 @@ import { escapeHtmlForServer } from "../utils/apiError.js";
 import { initClientFidelityPage } from "../client-fidelity/bootstrap.js";
 import { renderEngagementActionsMarkup } from "../client-fidelity/ui/mission-markup.js";
 import { engagementClaimSuccessMessage } from "../client-fidelity/lib/program-copy.js";
+import {
+  bindExternalEngagementReturnListeners,
+  markExternalEngagementPending,
+  runExternalEngagementReturnClaim,
+} from "../client-fidelity/engagement-return-flow.js";
+import { renderEngagementVerifyOverlayMarkup } from "../client-fidelity/ui/engagement-verify-overlay-markup.js";
 import { STAMP_MID_DEFAULT } from "../client-fidelity/lib/tier-progress.js";
 import { applyWalletButtonsLayout } from "../utils/walletPlatform.js";
 
@@ -286,9 +292,21 @@ function showFidelitySuccess(slug, memberId, memberName) {
     ];
     return parts.join("|");
   }
+  function ensureEngagementVerifyOverlay() {
+    const host = fidelityAppEl || document.body;
+    if (!host || host.querySelector("#fidelity-engagement-verify-root")) return;
+    host.insertAdjacentHTML("beforeend", renderEngagementVerifyOverlayMarkup());
+  }
+
   async function loadEngagementActions() {
     if (!engagementBlock || !engagementActionsEl) return;
+    ensureEngagementVerifyOverlay();
     if (engagementEmptyEl) engagementEmptyEl.classList.add("hidden");
+    let memberIdForActions = "";
+    try {
+      const raw = localStorage.getItem("fidpass_success_" + slug);
+      if (raw) memberIdForActions = JSON.parse(raw).memberId || "";
+    } catch (_) {}
     const retryDelays = [0, 1200, 3200];
     let actions = [];
     for (let i = 0; i < retryDelays.length; i += 1) {
@@ -296,7 +314,7 @@ function showFidelitySuccess(slug, memberId, memberName) {
         await new Promise((resolve) => setTimeout(resolve, retryDelays[i]));
       }
       try {
-        const current = await fetchEngagementActions(slug);
+        const current = await fetchEngagementActions(slug, memberIdForActions);
         if (Array.isArray(current) && current.length > 0) {
           actions = current.filter((a) => a.action_type !== "profile_complete");
           break;
@@ -311,47 +329,77 @@ function showFidelitySuccess(slug, memberId, memberName) {
     engagementBlock.classList.remove("hidden");
     const programType = String(_fidelityBusiness?.program_type || "points").toLowerCase();
     engagementActionsEl.innerHTML = renderEngagementActionsMarkup(actions, escapeHtmlFidelity, programType);
-    const PENDING_CLAIM_KEY_MAIN = "fidelity_pending_engagement_claim";
-    const PENDING_CLAIM_MIN_MS = 45000;
-    const PENDING_CLAIM_MAX_MS = 24 * 60 * 60 * 1000;
+    const rootForVerify = fidelityAppEl || document.body;
     async function tryAutoClaimOnReturnFidelity() {
+      const successRaw = localStorage.getItem("fidpass_success_" + slug);
+      if (!successRaw) return;
+      let storedMemberId = "";
       try {
-        const raw = sessionStorage.getItem(PENDING_CLAIM_KEY_MAIN);
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        if (data.slug !== slug || !data.actionType || !data.ts) return;
-        const age = Date.now() - data.ts;
-        if (age < PENDING_CLAIM_MIN_MS || age > PENDING_CLAIM_MAX_MS) return;
-        const successRaw = localStorage.getItem("fidpass_success_" + slug);
-        if (!successRaw) return;
-        const { memberId: storedMemberId } = JSON.parse(successRaw);
-        if (!storedMemberId) return;
-        sessionStorage.removeItem(PENDING_CLAIM_KEY_MAIN);
-        const claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/engagement/claim`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ memberId: storedMemberId, action_type: data.actionType }),
-        });
-        const claimData = await claimRes.json().catch(() => ({}));
-        if (claimRes.ok) {
+        storedMemberId = JSON.parse(successRaw).memberId || "";
+      } catch (_) {
+        return;
+      }
+      if (!storedMemberId) return;
+      await runExternalEngagementReturnClaim({
+        rootEl: rootForVerify,
+        slug,
+        getMemberId: () => storedMemberId,
+        claimEngagement: async (s, mid, actionType) => {
+          const claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(s)}/engagement/claim`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ memberId: mid, action_type: actionType }),
+          });
+          const claimData = await claimRes.json().catch(() => ({}));
+          if (!claimRes.ok) throw new Error(claimData.error || "Réclamation impossible");
+          return claimData;
+        },
+        refreshMemberData: async () => {
+          await loadEngagementActions();
+        },
+        onSuccess: (msg) => {
           setEngagementClaimFeedback(
-            claimData.message || engagementClaimSuccessMessage(String(_fidelityBusiness?.program_type || "points")),
+            msg || engagementClaimSuccessMessage(String(_fidelityBusiness?.program_type || "points")),
           );
-        }
-      } catch (_) {}
+        },
+      });
     }
     engagementActionsEl.querySelectorAll(".fidelity-engagement-open-link").forEach((openBtn) => {
       openBtn.addEventListener("click", () => {
-        const actionType = openBtn.getAttribute("data-action-type");
-        if (actionType) {
-          sessionStorage.setItem(PENDING_CLAIM_KEY_MAIN, JSON.stringify({ slug, actionType, ts: Date.now() }));
-        }
+        markExternalEngagementPending(slug, openBtn.getAttribute("data-action-type"));
       });
     });
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") tryAutoClaimOnReturnFidelity();
+    bindExternalEngagementReturnListeners({
+      rootEl: rootForVerify,
+      slug,
+      getMemberId: () => {
+        try {
+          const raw = localStorage.getItem("fidpass_success_" + slug);
+          if (!raw) return null;
+          return JSON.parse(raw).memberId || null;
+        } catch {
+          return null;
+        }
+      },
+      claimEngagement: async (s, mid, actionType) => {
+        const claimRes = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(s)}/engagement/claim`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ memberId: mid, action_type: actionType }),
+        });
+        const claimData = await claimRes.json().catch(() => ({}));
+        if (!claimRes.ok) throw new Error(claimData.error || "Réclamation impossible");
+        return claimData;
+      },
+      refreshMemberData: async () => {
+        await loadEngagementActions();
+      },
+      onSuccess: (msg) => {
+        setEngagementClaimFeedback(
+          msg || engagementClaimSuccessMessage(String(_fidelityBusiness?.program_type || "points")),
+        );
+      },
     });
-    tryAutoClaimOnReturnFidelity();
   }
   loadEngagementActions();
 
@@ -468,17 +516,19 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function fetchEngagementActions(slug) {
+async function fetchEngagementActions(slug, memberId) {
   const encodedSlug = encodeURIComponent(slug);
   const noCacheKey = Date.now().toString();
+  const mid = String(memberId || "").trim();
+  const memberQ = mid ? `&member_id=${encodeURIComponent(mid)}` : "";
   const candidates = [];
   const add = (url) => {
     if (url && !candidates.includes(url)) candidates.push(url);
   };
-  add(`${API_BASE}/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}`);
+  add(`${API_BASE}/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}${memberQ}`);
   if (typeof window !== "undefined") {
-    add(`${window.location.origin}/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}`);
-    add(`https://api.myfidpass.fr/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}`);
+    add(`${window.location.origin}/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}${memberQ}`);
+    add(`https://api.myfidpass.fr/api/businesses/${encodedSlug}/engagement-actions?_=${encodeURIComponent(noCacheKey)}${memberQ}`);
   }
   for (const url of candidates) {
     try {

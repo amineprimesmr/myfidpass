@@ -9,6 +9,7 @@ import {
   getEngagementRewards,
   businessUsesTicketBonuses,
   createEngagementCompletion,
+  hasMemberCompletedEngagementAction,
   createEngagementProof,
   getEngagementProofByTokenHash,
   markEngagementProofReturned,
@@ -29,8 +30,9 @@ import { getApiBase, checkStartRateLimit } from "./shared.js";
 
 export function engagementActionsHandler(req, res) {
   const business = req.business;
+  const memberId = String(req.query.member_id || req.query.memberId || "").trim();
   const rewards = getEngagementRewards(business.id);
-  const actions = [];
+  let actions = [];
   /** Pas de mission « avis Google » ici : l’avis est demandé au premier tour de roue (page jeu invité). */
   if (businessUsesTicketBonuses(business.id)) {
     actions.unshift({
@@ -73,6 +75,14 @@ export function engagementActionsHandler(req, res) {
       });
     }
   });
+  if (memberId) {
+    const member = getMemberForBusiness(memberId, business.id);
+    if (member) {
+      actions = actions.filter(
+        (a) => !hasMemberCompletedEngagementAction(business.id, memberId, a.action_type),
+      );
+    }
+  }
   res.json({ actions });
 }
 

@@ -181,6 +181,36 @@
   opacity: 0.65;
 }
 
+/* Overlay missions réseaux (compte membre) — réutilise le panneau verify QR */
+.fidelity-engagement-verify-root {
+  position: fixed;
+  inset: 0;
+  z-index: 12050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.fidelity-engagement-verify-root.hidden {
+  display: none !important;
+}
+
+.fidelity-engagement-verify-root__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(4px);
+}
+
+.fidelity-engagement-verify-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 22rem);
+  margin: 0;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.22);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fidelity-qr-verify-progress-bar--animate {
     animation: none;

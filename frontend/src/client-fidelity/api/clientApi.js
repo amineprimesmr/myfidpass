@@ -196,10 +196,14 @@ export function createClientFidelityApi(apiBase) {
     }
   }
 
-  async function getEngagementActions(slug) {
+  async function getEngagementActions(slug, memberId) {
     try {
+      const mid = String(memberId || "").trim();
+      const memberQ = mid ? `&member_id=${encodeURIComponent(mid)}` : "";
       const res = await fetchFidelity(
-        withBase(`/api/businesses/${encodeURIComponent(slug)}/engagement-actions?_=${Date.now()}`),
+        withBase(
+          `/api/businesses/${encodeURIComponent(slug)}/engagement-actions?_=${Date.now()}${memberQ}`,
+        ),
         { cache: "no-store" },
         "Missions indisponibles pour le moment.",
       );
