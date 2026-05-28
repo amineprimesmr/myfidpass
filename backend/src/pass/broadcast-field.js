@@ -75,17 +75,6 @@ export function buildBroadcastUniquenessSuffix(rawBroadcast, lastBroadcastAt, br
 }
 
 /**
- * Suffixe **visible** pour l’alerte écran verrouillé (à partir du 2ᵉ envoi).
- * iOS compare la valeur substituée dans `%@` : les seuls caractères invisibles (ZWSP) suffisent
- * pour le .pkpass mais pas toujours pour déclencher une nouvelle alerte — d’où le délai « aléatoire ».
- */
-export function buildVisibleBroadcastTail(broadcastSendSeq) {
-  const seq = Number(broadcastSendSeq);
-  if (!Number.isFinite(seq) || seq < 2) return "";
-  return `\u2009#${seq}`;
-}
-
-/**
  * Valeur du champ « Message » (verso / face) : texte visible + suffixe d’unicité **systématique**.
  * @param {string} rawBroadcast — message brut (déjà limité côté appelant si besoin)
  * @param {string | null | undefined} lastBroadcastAt — horodatage d’envoi
@@ -96,8 +85,7 @@ export function buildLastBroadcastFieldValue(rawBroadcast, lastBroadcastAt, broa
   const raw = String(rawBroadcast).trim();
   if (!raw) return "—";
 
-  const invisible = buildBroadcastUniquenessSuffix(raw, lastBroadcastAt, broadcastSendSeq);
-  const visible = buildVisibleBroadcastTail(broadcastSendSeq);
-  const maxRaw = Math.max(0, 200 - invisible.length - visible.length);
-  return `${raw.slice(0, maxRaw)}${visible}${invisible}`;
+  const suffix = buildBroadcastUniquenessSuffix(raw, lastBroadcastAt, broadcastSendSeq);
+  const maxRaw = Math.max(0, 200 - suffix.length);
+  return `${raw.slice(0, maxRaw)}${suffix}`;
 }

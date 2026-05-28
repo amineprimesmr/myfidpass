@@ -30,7 +30,8 @@ export function syncNotificationTextsForCampaign(businessId, title, messageBody)
   const shouldClearStaleTemplate = cur.length > 0 && !cur.includes("%@");
 
   const updates = {};
-  if (trimmedTitle) {
+  const curTitle = (business?.notification_title_override ?? "").trim();
+  if (trimmedTitle && trimmedTitle !== curTitle) {
     updates.notification_title_override = trimmedTitle.slice(0, 80);
   }
   if (shouldClearStaleTemplate) {

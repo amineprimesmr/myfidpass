@@ -245,12 +245,9 @@ export async function deliverCustomerBroadcast({
   ensurePassKitChangeMessageTemplate(business.id);
   bumpBusinessPassRefreshTimestamp(business.id);
   const businessAfterBump = getBusinessById(business.id) || businessAfterSync || business;
-
-  /** Laisser SQLite / le .pkpass servi refléter le nouveau message avant le push APNs. */
-  const prePushDelayMs = Math.min(2000, Math.max(0, Number(process.env.PASSKIT_PRE_PUSH_DELAY_MS ?? 500)));
-  if (prePushDelayMs > 0) {
-    await new Promise((r) => setTimeout(r, prePushDelayMs));
-  }
+  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
+  /** 1 collapse-id par campagne (≠ `asset-*` du PATCH icône) — évite fusion APNs entre 2 envois rapprochés. */
+  const broadcastCollapseId = `bcast-${String(batchId).replace(/-/g, "").slice(0, 24)}-${passMs}`.slice(0, 64);
 
   // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
@@ -287,8 +284,7 @@ export async function deliverCustomerBroadcast({
         }
       }
     }
-    // Sans collapse-id : APNs assigne un apns-id unique par push (évite fusion de campagnes rapprochées).
-    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: null });
+    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
     for (const { row, result } of waveResults) {
       if (result.sent) {
         sentPassKit++;

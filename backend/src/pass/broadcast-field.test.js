@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   buildBroadcastUniquenessSuffix,
   buildLastBroadcastFieldValue,
-  buildVisibleBroadcastTail,
   normalizeChangeMessage,
 } from "./broadcast-field.js";
 
@@ -61,11 +60,5 @@ describe("buildLastBroadcastFieldValue", () => {
     const a = buildLastBroadcastFieldValue("Message A", at, 5);
     const b = buildLastBroadcastFieldValue("Message B", at, 5);
     expect(a).not.toBe(b);
-  });
-  it("à partir du 2e envoi : marqueur visible pour alerte Wallet", () => {
-    expect(buildVisibleBroadcastTail(1)).toBe("");
-    expect(buildVisibleBroadcastTail(2)).toBe("\u2009#2");
-    const v = buildLastBroadcastFieldValue("Promo", "2026-03-26 21:37:21.123", 3);
-    expect(v.includes("#3")).toBe(true);
   });
 });

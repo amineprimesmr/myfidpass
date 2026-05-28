@@ -5,15 +5,12 @@
  * (plus de boucle séquentielle ni pause 2,5 s fixe). Deux salves restent optionnelles
  * pour limiter le batching APNs (apns-id unique par appel dans sendPassKitUpdate).
  *
- * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 2000). Mettre 0 pour une seule salve.
+ * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 0 = une seule salve). Ex. 400 pour l’ancien double envoi.
  */
 import { sendPassKitUpdate } from "./apns.js";
 
-/**
- * 2ᵉ salve après délai : iOS traite parfois la 1ʳᵉ push background avant de refetch le pass.
- * Défaut 2 s (campagnes manuelles) ; PASSKIT_WAVE_GAP_MS=0 pour une seule salve.
- */
-const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 2000)));
+/** Par défaut une seule salve (envoi instantané). PASSKIT_WAVE_GAP_MS=400 pour une 2ᵉ salve optionnelle. */
+const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 0)));
 
 /**
  * Parallélisme borné : évite des centaines d’APNs simultanés (saturation connexions / timeouts HTTP côté hébergeur).

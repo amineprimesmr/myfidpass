@@ -23,7 +23,6 @@ import { countPreSendNotificationTargets, deliverCustomerBroadcast } from "../..
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
 import { assertOperationalSubscription, ensureDashboardAccess, blockStaffDashboardWrites, getApiBase } from "./shared.js";
 import logger from "../../lib/logger.js";
-import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
 import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
 import {
   assertCustomNotificationIconForBroadcast,
@@ -191,9 +190,6 @@ router.post("/send", async (req, res) => {
         ? "campaign_manual_categories"
         : "campaign_manual";
 
-  // Synchronise les textes de notification AVANT de créer le job, pour que le pass
-  // refetché par les iPhones contienne déjà le bon changeMessage.
-  syncNotificationTextsForCampaign(business.id, title, body);
   const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
 
   /**
