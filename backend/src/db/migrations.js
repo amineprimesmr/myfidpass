@@ -1634,4 +1634,34 @@ export function runMigrations(db) {
     );
     markMigrationApplied(db, 40, "email_auth_otp");
   }
+
+  // v42 : rétablit le palier 10 pts (récompense inscription) retiré par la migration v26
+  const m42 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 42").get();
+  if (!m42) {
+    safeRun(db, () => {
+      const businesses = db.prepare("SELECT id, points_reward_tiers FROM businesses").all();
+      const stmt = db.prepare("UPDATE businesses SET points_reward_tiers = ? WHERE id = ?");
+      for (const biz of businesses) {
+        try {
+          let tiers = JSON.parse(biz.points_reward_tiers || "[]");
+          if (!Array.isArray(tiers)) tiers = [];
+          if (tiers.some((t) => Number(t.points) === 10)) continue;
+          let label = "Récompense de bienvenue";
+          const gift = db
+            .prepare(
+              `SELECT gr.label FROM game_rewards gr
+               INNER JOIN business_games bg ON bg.game_id = gr.game_id AND bg.business_id = gr.business_id
+               INNER JOIN games g ON g.id = gr.game_id AND g.code = 'roulette'
+               WHERE gr.business_id = ? AND gr.code = 'cadeau' AND gr.active = 1
+               LIMIT 1`,
+            )
+            .get(biz.id);
+          if (gift?.label) label = String(gift.label).trim().slice(0, 120) || label;
+          tiers = [{ points: 10, label }, ...tiers].sort((a, b) => Number(a.points) - Number(b.points));
+          stmt.run(JSON.stringify(tiers), biz.id);
+        } catch (_) {}
+      }
+    });
+    markMigrationApplied(db, 42, "restore_signup_tier_10_points");
+  }
 }
