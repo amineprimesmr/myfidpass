@@ -25,7 +25,7 @@ import {
 } from "../lib/merchant-multi-pricing.js";
 import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/stripe-webhook-events.js";
 import { convertReferralForUser } from "../db/referrals.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, invalidateAuthUserCache } from "../middleware/auth.js";
 import { notifyAdminsPlatformEvent } from "../lib/admin-notify.js";
 import {
   syncAppleSubscriptionForUser,
@@ -1140,11 +1140,13 @@ router.post("/apple/sync-transaction", requireAuth, async (req, res) => {
       signedTransactionInfo: signed,
       transactionId,
     });
+    invalidateAuthUserCache(req.user.id);
     return res.json({
       ok: true,
       source: isAppStoreServerApiConfigured() ? "app_store_server_api" : "storekit_jws",
       subscription_status: result.subscription_status,
       has_active_subscription: result.has_active_subscription,
+      has_paid_merchant_subscription: result.has_paid_merchant_subscription,
       original_transaction_id: result.original_transaction_id,
     });
   } catch (e) {
