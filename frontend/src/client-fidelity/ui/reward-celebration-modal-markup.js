@@ -23,7 +23,6 @@ export function renderRewardCelebrationModalMarkup(esc) {
     <p id="fidelity-reward-celebration-bonus" class="fidelity-reward-celebration__bonus hidden"></p>
     <div class="fidelity-reward-celebration__actions">
       <button type="button" class="fidelity-reward-celebration__cta fidelity-reward-celebration__cta--primary" id="fidelity-reward-celebration-primary" data-fid-celebration-primary></button>
-      <button type="button" class="fidelity-reward-celebration__cta fidelity-reward-celebration__cta--ghost" data-fid-celebration-close>${esc("Plus tard")}</button>
     </div>
   </div>
 </div>`;

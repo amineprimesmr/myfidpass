@@ -3,8 +3,6 @@ import {
   saveRewardCelebrationStorage,
 } from "./lib/reward-celebration-storage.js";
 import { buildCelebrationQueue } from "./lib/member-reward-celebrations.js";
-import { openRewardRedeemUnlocked } from "./bind-reward-redeem-ui.js";
-
 /** @typedef {{ kind: "welcome"|"tier_unlocked"; threshold: number; tierIndex?: number; points?: number; label: string; imageUrl?: string; costLine?: string; bonusChip?: string; unlocked?: boolean }} CelebrationItem */
 
 const pendingByRoot = new WeakMap();
@@ -84,12 +82,7 @@ function showOneCelebration(rootEl, item) {
   if (primary) {
     const unlocked =
       item.kind === "tier_unlocked" || (item.kind === "welcome" && item.unlocked === true);
-    primary.textContent = unlocked ? "Utiliser en magasin" : "Compris";
-    primary.dataset.celebrationUnlocked = unlocked ? "1" : "0";
-    primary.dataset.celebrationLabel = encodeURIComponent(item.label || "");
-    primary.dataset.celebrationCostline = encodeURIComponent(item.costLine || "");
-    primary.dataset.celebrationTierIndex = String(Math.max(0, item.tierIndex ?? 0));
-    primary.dataset.celebrationPoints = String(Math.max(0, item.points ?? item.threshold ?? 0));
+    primary.textContent = unlocked ? "Obtenir ma récompense" : "Compris";
   }
 
   modal.classList.remove("hidden");
@@ -103,23 +96,6 @@ function showOneCelebration(rootEl, item) {
     };
 
     const onPrimary = () => {
-      if (primary?.dataset.celebrationUnlocked === "1") {
-        let label = "";
-        let costLine = "";
-        try {
-          label = decodeURIComponent(String(primary.dataset.celebrationLabel || ""));
-          costLine = decodeURIComponent(String(primary.dataset.celebrationCostline || ""));
-        } catch (_) {}
-        const tierIndex = Math.max(
-          0,
-          parseInt(String(primary.dataset.celebrationTierIndex || "0"), 10) || 0,
-        );
-        const points = Math.max(
-          0,
-          parseInt(String(primary.dataset.celebrationPoints || "0"), 10) || 0,
-        );
-        openRewardRedeemUnlocked(rootEl, { label, costLine, tierIndex, points });
-      }
       cleanup();
       done();
     };
