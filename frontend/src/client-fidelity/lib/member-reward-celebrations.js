@@ -133,9 +133,15 @@ export function buildCelebrationQueue(ctx) {
 
   if (!storage.welcomeShown) {
     const bonusChip = buildWelcomeBonusChipText(business, programType, welcomeBonusJustGranted);
+    const welcomeTierIndex = Math.max(
+      0,
+      tiers.findIndex((x) => x.threshold === start.threshold),
+    );
     queue.push({
       kind: "welcome",
       threshold: start.threshold,
+      tierIndex: welcomeTierIndex >= 0 ? welcomeTierIndex : 0,
+      points: start.threshold,
       label: start.label,
       imageUrl: start.imageUrl,
       costLine: start.costLine,
@@ -165,9 +171,12 @@ export function buildCelebrationQueue(ctx) {
     const isStamps = String(programType || "").toLowerCase() === "stamps";
     const unit = isStamps ? (t.threshold === 1 ? "tampon" : "tampons") : t.threshold === 1 ? "point" : "points";
     const costLine = isStamps ? `${t.threshold} ${unit}` : `${t.threshold} points`;
+    const tierIndex = Math.max(0, tiers.findIndex((x) => x.threshold === t.threshold));
     queue.push({
       kind: "tier_unlocked",
       threshold: t.threshold,
+      tierIndex: tierIndex >= 0 ? tierIndex : i,
+      points: t.threshold,
       label: t.label,
       imageUrl: t.imageUrl || defaultTierImageUrl(i),
       costLine,

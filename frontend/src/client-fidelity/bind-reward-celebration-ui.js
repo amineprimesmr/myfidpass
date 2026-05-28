@@ -5,7 +5,7 @@ import {
 import { buildCelebrationQueue } from "./lib/member-reward-celebrations.js";
 import { openRewardRedeemUnlocked } from "./bind-reward-redeem-ui.js";
 
-/** @typedef {{ kind: "welcome"|"tier_unlocked"; threshold: number; label: string; imageUrl?: string; costLine?: string; bonusChip?: string; unlocked?: boolean }} CelebrationItem */
+/** @typedef {{ kind: "welcome"|"tier_unlocked"; threshold: number; tierIndex?: number; points?: number; label: string; imageUrl?: string; costLine?: string; bonusChip?: string; unlocked?: boolean }} CelebrationItem */
 
 const pendingByRoot = new WeakMap();
 
@@ -88,6 +88,8 @@ function showOneCelebration(rootEl, item) {
     primary.dataset.celebrationUnlocked = unlocked ? "1" : "0";
     primary.dataset.celebrationLabel = encodeURIComponent(item.label || "");
     primary.dataset.celebrationCostline = encodeURIComponent(item.costLine || "");
+    primary.dataset.celebrationTierIndex = String(Math.max(0, item.tierIndex ?? 0));
+    primary.dataset.celebrationPoints = String(Math.max(0, item.points ?? item.threshold ?? 0));
   }
 
   modal.classList.remove("hidden");
@@ -108,7 +110,15 @@ function showOneCelebration(rootEl, item) {
           label = decodeURIComponent(String(primary.dataset.celebrationLabel || ""));
           costLine = decodeURIComponent(String(primary.dataset.celebrationCostline || ""));
         } catch (_) {}
-        openRewardRedeemUnlocked(rootEl, { label, costLine });
+        const tierIndex = Math.max(
+          0,
+          parseInt(String(primary.dataset.celebrationTierIndex || "0"), 10) || 0,
+        );
+        const points = Math.max(
+          0,
+          parseInt(String(primary.dataset.celebrationPoints || "0"), 10) || 0,
+        );
+        openRewardRedeemUnlocked(rootEl, { label, costLine, tierIndex, points });
       }
       cleanup();
       done();

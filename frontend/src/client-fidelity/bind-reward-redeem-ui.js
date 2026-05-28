@@ -6,7 +6,7 @@ const openUnlockedMap = new WeakMap();
 /**
  * Ouvre la modale QR caisse (récompense débloquée) depuis une autre UI (célébration palier).
  * @param {HTMLElement} rootEl
- * @param {{ label: string; costLine: string }} p
+ * @param {{ label: string; costLine: string; tierIndex?: number; points?: number }} p
  */
 export function openRewardRedeemUnlocked(rootEl, p) {
   const fn = openUnlockedMap.get(rootEl);
