@@ -109,28 +109,56 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   const loadingOverlay = mountFidelityRouteLoadingOverlay();
 
   try {
-  async function hydrateMember(memberId) {
-    if (!memberId) return;
-    const [member, gamesData, tickets, actionsData, matchPredictions] = await Promise.all([
-      api.getMember(slug, memberId),
-      api.getGames(slug),
-      api.getTickets(slug, memberId),
-      api.getEngagementActions(slug),
-      api.getMatchPredictions(slug, memberId),
-    ]);
-    const wallet = await api.getWalletUrls(slug, memberId);
+  function applyMemberCorePatch(member, tickets, actionsData) {
     const memberWithPoints =
       member && tickets != null && Number.isFinite(Number(tickets.points))
         ? { ...member, points: Number(tickets.points) }
         : member;
     store.patch({
       member: memberWithPoints,
-      games: gamesData?.games || [],
-      roulette_segments: Array.isArray(gamesData?.roulette_segments) ? gamesData.roulette_segments : [],
       tickets,
       engagementActions: actionsData?.actions || [],
+    });
+  }
+
+  /** Données affichage principal (solde, missions) — prioritaire au first paint. */
+  async function hydrateMemberCore(memberId) {
+    if (!memberId) return;
+    const [member, tickets, actionsData] = await Promise.all([
+      api.getMember(slug, memberId),
+      api.getTickets(slug, memberId),
+      api.getEngagementActions(slug),
+    ]);
+    applyMemberCorePatch(member, tickets, actionsData);
+  }
+
+  /** Jeux, pronostics, liens Wallet — chargés après le premier rendu ou en arrière-plan. */
+  async function hydrateMemberExtras(memberId) {
+    if (!memberId) return;
+    const [gamesData, matchPredictions, wallet] = await Promise.all([
+      api.getGames(slug),
+      api.getMatchPredictions(slug, memberId),
+      api.getWalletUrls(slug, memberId),
+    ]);
+    store.patch({
+      games: gamesData?.games || [],
+      roulette_segments: Array.isArray(gamesData?.roulette_segments) ? gamesData.roulette_segments : [],
       matchPredictions,
       wallet,
+    });
+  }
+
+  async function hydrateMember(memberId) {
+    if (!memberId) return;
+    await hydrateMemberCore(memberId);
+    await hydrateMemberExtras(memberId);
+  }
+
+  /** Complète le store sans bloquer l’overlay de chargement initial. */
+  function scheduleHydrateMemberExtras(memberId) {
+    void hydrateMemberExtras(memberId).then(() => {
+      if (isSpinning || isQrModalOpen()) return;
+      rerender();
     });
   }
 
@@ -148,7 +176,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const mid = (sp.get("m") || sp.get("member") || "").trim();
     if (!mid) return false;
     try {
-      await hydrateMember(mid);
+      await hydrateMemberCore(mid);
+      scheduleHydrateMemberExtras(mid);
       localStorage.setItem(memberStorageKey(slug), JSON.stringify({ memberId: mid, createdAt: Date.now() }));
       if (typeof history !== "undefined" && history.replaceState) {
         history.replaceState(null, "", `/fidelity/${encodeURIComponent(slug)}${window.location.hash || ""}`);
@@ -166,7 +195,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       try {
         const parsed = JSON.parse(raw);
         if (parsed?.memberId && Date.now() - (parsed.createdAt || 0) < SUCCESS_MAX_AGE_MS) {
-          await hydrateMember(parsed.memberId);
+          await hydrateMemberCore(parsed.memberId);
+          scheduleHydrateMemberExtras(parsed.memberId);
           return;
         }
       } catch (_) {}
@@ -176,7 +206,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const memberId = data.memberId || data.member?.id;
     if (!memberId) throw new Error("Session invitée impossible");
     localStorage.setItem(memberStorageKey(slug), JSON.stringify({ memberId, createdAt: Date.now() }));
-    await hydrateMember(memberId);
+    await hydrateMemberCore(memberId);
+    scheduleHydrateMemberExtras(memberId);
   }
 
   try {
