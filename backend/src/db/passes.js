@@ -188,13 +188,19 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
     list = base.filter((r) => {
       const passMs = Number(r.pass_last_modified_ms);
       if (Number.isFinite(passMs) && passMs > sinceMs) return true;
+      const broadcastMs = parsePassUpdatedAt(r.last_broadcast_at);
+      if (broadcastMs > sinceMs) return true;
       return effectivePassKitRowUpdateTs(r) > sinceMs;
     });
   }
   const serialNumbers = list.map((r) => r.serial_number);
   let lastUpdated = formatUtcSqlWithMs(new Date());
   if (list.length > 0) {
-    const maxTs = list.reduce((acc, r) => Math.max(acc, effectivePassKitRowUpdateTs(r)), 0);
+    const maxTs = list.reduce((acc, r) => {
+      const passMs = Number(r.pass_last_modified_ms);
+      const passMsOk = Number.isFinite(passMs) && passMs > 0 ? passMs : 0;
+      return Math.max(acc, passMsOk, effectivePassKitRowUpdateTs(r));
+    }, 0);
     if (maxTs > 0) {
       lastUpdated = formatUtcSqlWithMs(maxTs);
     }

@@ -3,7 +3,7 @@
  * Dérogation limite 400 lignes (REFONTE-REGLES) : découpage prévu en sous-fichiers — 2025-03.
  */
 import { Router } from "express";
-import { normalizePassKitChangeMessageStored } from "../../lib/sync-notification-texts-for-campaign.js";
+import { normalizePassKitChangeMessageStored } from "../../lib/passkit-change-message-template.js";
 import {
   updateBusiness,
   getBusinessById,

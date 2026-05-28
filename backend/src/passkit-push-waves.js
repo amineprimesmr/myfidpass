@@ -5,12 +5,15 @@
  * (plus de boucle séquentielle ni pause 2,5 s fixe). Deux salves restent optionnelles
  * pour limiter le batching APNs (apns-id unique par appel dans sendPassKitUpdate).
  *
- * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 0 = une seule salve). Ex. 400 pour l’ancien double envoi.
+ * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 2000). Mettre 0 pour une seule salve.
  */
 import { sendPassKitUpdate } from "./apns.js";
 
-/** Par défaut une seule salve (évite doubles notifications Wallet). Mettre PASSKIT_WAVE_GAP_MS=400 pour l’ancien comportement. */
-const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 0)));
+/**
+ * 2ᵉ salve après délai : iOS traite parfois la 1ʳᵉ push background avant de refetch le pass.
+ * Défaut 2 s (campagnes manuelles) ; PASSKIT_WAVE_GAP_MS=0 pour une seule salve.
+ */
+const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 2000)));
 
 /**
  * Parallélisme borné : évite des centaines d’APNs simultanés (saturation connexions / timeouts HTTP côté hébergeur).
@@ -57,8 +60,9 @@ export async function sendPassKitPushWaves(passKitRows, opts = {}) {
   // Pour la 2ᵉ salve, on dérive un collapseId distinct si présent (suffixe "~w2") afin que les
   // deux salves ne soient pas coalescées entre elles côté APNs — on garantit ainsi que chaque
   // device reçoit deux invalidations même si la 1ʳᵉ a été droppée par le throttling background.
+  // 2ᵉ salve : pas de collapse-id (apns-id unique) pour maximiser une 2ᵉ chance de réveil Wallet.
   const wave2Opts = opts?.collapseId
-    ? { ...opts, collapseId: `${opts.collapseId}~w2`.slice(0, 64) }
+    ? { collapseId: null }
     : opts;
   const wave2 = await runWave(wave2Opts);
   // Garde le meilleur résultat : si wave 1 a réussi mais wave 2 a échoué, on compte quand même l'envoi.

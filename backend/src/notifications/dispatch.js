@@ -151,7 +151,8 @@ export async function deliverCustomerBroadcast({
   logTypePasskit = "passkit",
   merchantUserId = null,
   sendMerchantReceipt = true,
-  touchMemberLastVisit = true,
+  /** Inutile pour une campagne message : fausse une visite caisse et brouille les timestamps PassKit. */
+  touchMemberLastVisit = false,
 }) {
   if (!businessHasCustomNotificationIcon(business)) {
     logger.warn(
@@ -244,9 +245,12 @@ export async function deliverCustomerBroadcast({
   ensurePassKitChangeMessageTemplate(business.id);
   bumpBusinessPassRefreshTimestamp(business.id);
   const businessAfterBump = getBusinessById(business.id) || businessAfterSync || business;
-  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
-  /** UUID par campagne : évite qu’APNs fusionne le 2ᵉ push avec le 1ᵉr (`bcast-<ms>` seul pouvait se répéter). */
-  const broadcastCollapseId = `bcast-${String(batchId).replace(/-/g, "").slice(0, 24)}-${passMs}`.slice(0, 64);
+
+  /** Laisser SQLite / le .pkpass servi refléter le nouveau message avant le push APNs. */
+  const prePushDelayMs = Math.min(2000, Math.max(0, Number(process.env.PASSKIT_PRE_PUSH_DELAY_MS ?? 500)));
+  if (prePushDelayMs > 0) {
+    await new Promise((r) => setTimeout(r, prePushDelayMs));
+  }
 
   // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
@@ -283,7 +287,8 @@ export async function deliverCustomerBroadcast({
         }
       }
     }
-    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
+    // Sans collapse-id : APNs assigne un apns-id unique par push (évite fusion de campagnes rapprochées).
+    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: null });
     for (const { row, result } of waveResults) {
       if (result.sent) {
         sentPassKit++;
