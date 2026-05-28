@@ -1,23 +1,25 @@
 /** Logique paliers points / tampons (partagée bannière + section récompenses). */
 
 export const STAMP_MID_DEFAULT = 5;
+/** Palier inscription / début du jeu (aligné SaaS commerçant). */
+export const SIGNUP_REWARD_POINTS = 10;
 
 /**
- * @param {unknown} business
- * @returns {{ threshold: number; label: string }[]}
+ * @param {unknown} raw
+ * @returns {{ threshold: number; label: string; imageUrl?: string }[]}
  */
-export function parsePointTiers(business) {
-  let raw = business?.points_reward_tiers ?? business?.pointsRewardTiers;
-  if (typeof raw === "string" && raw.trim()) {
+function parsePointTiersRaw(raw) {
+  let tiers = raw;
+  if (typeof tiers === "string" && tiers.trim()) {
     try {
-      raw = JSON.parse(raw);
+      tiers = JSON.parse(tiers);
     } catch {
-      raw = [];
+      tiers = [];
     }
   }
-  if (!Array.isArray(raw)) return [];
+  if (!Array.isArray(tiers)) return [];
   const out = [];
-  for (const t of raw) {
+  for (const t of tiers) {
     if (t == null) continue;
     const threshold = parseInt(String(t.points ?? t.points_required), 10);
     const label = String(t.label ?? "").trim() || "Récompense";
@@ -29,6 +31,24 @@ export function parsePointTiers(business) {
   }
   out.sort((a, b) => a.threshold - b.threshold);
   return out;
+}
+
+/**
+ * Garantit le palier 10 pts (récompense à la création du compte) pour l’affichage client.
+ * @param {unknown} business
+ */
+export function parsePointTiers(business) {
+  const parsed = parsePointTiersRaw(business?.points_reward_tiers ?? business?.pointsRewardTiers);
+  if (!parsed.length) return [];
+  const signupLabel = String(
+    business?.signup_reward_label ?? business?.signupRewardLabel ?? "",
+  ).trim();
+  const hasSignup = parsed.some((t) => t.threshold === SIGNUP_REWARD_POINTS);
+  if (hasSignup) return parsed;
+  const label = signupLabel || "Récompense de bienvenue";
+  return [{ threshold: SIGNUP_REWARD_POINTS, label }, ...parsed].sort(
+    (a, b) => a.threshold - b.threshold,
+  );
 }
 
 /**
@@ -75,8 +95,44 @@ export function tierProgressState(tiers, balance) {
 const MAX_HERO_FULLSCALE_TICKS = 12;
 
 /**
- * Remplissage jauge hero : **même largeur visuelle** entre chaque palier ; à l’intérieur d’un
- * segment, la progression suit les seuils en points (pas une échelle 0 → dernier palier).
+ * Jauge hero : échelle linéaire 0 → dernier palier (position = points / max).
+ * @param {{ threshold: number }[]} tiers triés, longueur ≥ 1
+ * @param {number} pts
+ */
+export function heroFillPercentLinear(tiers, pts) {
+  const n = tiers.length;
+  if (n === 0) return 0;
+  const max = tiers[n - 1].threshold;
+  if (!Number.isFinite(max) || max <= 0) return 0;
+  const p = Math.max(0, pts);
+  return Math.min(100, (p / max) * 100);
+}
+
+/**
+ * Graduations 0 + chaque palier, positionnées au prorata des points.
+ * @param {{ threshold: number }[]} tiers triés
+ */
+export function buildHeroLinearTickMarks(tiers) {
+  if (!tiers.length) return [];
+  const max = tiers[tiers.length - 1].threshold;
+  if (!Number.isFinite(max) || max <= 0) return [];
+
+  /** @type {{ value: number; leftPct: number }[]} */
+  const marks = [{ value: 0, leftPct: 0 }];
+  const seen = new Set([0]);
+  for (const t of tiers) {
+    if (seen.has(t.threshold)) continue;
+    seen.add(t.threshold);
+    marks.push({
+      value: t.threshold,
+      leftPct: Math.min(100, (t.threshold / max) * 100),
+    });
+  }
+  return marks;
+}
+
+/**
+ * @deprecated Conservé pour tests — préférer heroFillPercentLinear en prod.
  * @param {{ threshold: number }[]} tiers triés, longueur ≥ 1
  * @param {number} pts
  */

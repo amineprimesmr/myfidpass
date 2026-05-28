@@ -2,8 +2,8 @@ import {
   parsePointTiers,
   buildStampTiers,
   tierProgressState,
-  buildHeroFullScaleTickMarks,
-  heroFillPercentEqualSegments,
+  buildHeroLinearTickMarks,
+  heroFillPercentLinear,
 } from "../lib/tier-progress.js";
 
 /**
@@ -39,13 +39,11 @@ export function buildHeroBalanceProgressState(p) {
     const { next } = tierProgressState(tiers, pts);
     if (next) {
       nextGoal = { threshold: next.threshold, label: next.label };
-      pct = heroFillPercentEqualSegments(tiers, pts);
     } else {
       tiersComplete = true;
-      pct = 100;
     }
-
-    tickMarks = buildHeroFullScaleTickMarks(tiers);
+    pct = heroFillPercentLinear(tiers, pts);
+    tickMarks = buildHeroLinearTickMarks(tiers);
   } else {
     maxScale = 0;
     pct = 0;

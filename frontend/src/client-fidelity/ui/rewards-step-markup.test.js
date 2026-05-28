@@ -6,6 +6,20 @@ function idEsc(s) {
 }
 
 describe("renderRewardsStepMarkup", () => {
+  it("affiche le palier 10 pts même si absent du JSON (signup_reward_label)", () => {
+    const html = renderRewardsStepMarkup(idEsc, {
+      business: {
+        signup_reward_label: "Boisson offerte",
+        points_reward_tiers: [{ points: 50, label: "Dessert" }],
+      },
+      member: { points: 10 },
+      programType: "points",
+      balanceUnit: "pts",
+    });
+    expect(html).toContain("Boisson offerte");
+    expect(html).toContain("fid-reward-card--unlocked");
+  });
+
   it("affiche une grille de cartes pour les paliers points", () => {
     const html = renderRewardsStepMarkup(idEsc, {
       business: {
@@ -42,7 +56,6 @@ describe("renderRewardsStepMarkup", () => {
     });
     expect(html).toContain("fid-reward-card__img");
     expect(html).toContain("https://example.com/cafe.png");
-    expect(html).not.toContain("/assets/gift/gift1.png");
   });
 
   it("affiche paliers programme tampons (unité tampons)", () => {

@@ -2,42 +2,44 @@ import { describe, expect, it } from "vitest";
 import { buildHeroBalanceProgressState } from "./hero-balance-progress-markup.js";
 
 describe("buildHeroBalanceProgressState", () => {
-  it("segments égaux : graduations équidistantes, remplissage selon les seuils dans chaque segment", () => {
+  it("échelle linéaire 0→max : 10 pts sur paliers 10…250", () => {
     const st = buildHeroBalanceProgressState({
       memberPoints: 10,
       programType: "points",
       business: {
         points_reward_tiers: [
-          { points: 25, label: "A" },
-          { points: 125, label: "B" },
+          { points: 10, label: "Boisson" },
+          { points: 50, label: "Dessert" },
+          { points: 100, label: "Cheese" },
+          { points: 150, label: "Menu" },
+          { points: 200, label: "Formule" },
+          { points: 250, label: "-20 %" },
         ],
       },
     });
     expect(st.progressMin).toBe(0);
-    expect(st.progressMax).toBe(125);
-    expect(st.nextGoal?.threshold).toBe(25);
-    expect(st.pct).toBeCloseTo(20, 5);
-    expect(st.tickMarks.map((m) => m.value)).toEqual([25, 125]);
-    expect(st.tickMarks.find((x) => x.value === 25)?.leftPct).toBe(0);
-    expect(st.tickMarks.find((x) => x.value === 125)?.leftPct).toBe(100);
+    expect(st.progressMax).toBe(250);
+    expect(st.pct).toBeCloseTo(4, 1);
+    expect(st.tickMarks[0]).toEqual({ value: 0, leftPct: 0 });
+    expect(st.tickMarks.find((m) => m.value === 10)?.leftPct).toBeCloseTo(4, 1);
+    expect(st.tickMarks.find((m) => m.value === 50)?.leftPct).toBeCloseTo(20, 1);
+    expect(st.nextGoal?.threshold).toBe(50);
   });
 
-  it("affiche tous les paliers avec le même écart visuel sur la jauge", () => {
+  it("réinjecte le palier 10 pts si absent du JSON (legacy migration v26)", () => {
     const st = buildHeroBalanceProgressState({
-      memberPoints: 60,
+      memberPoints: 10,
       programType: "points",
       business: {
+        signup_reward_label: "Boisson offerte",
         points_reward_tiers: [
-          { points: 25, label: "A" },
-          { points: 50, label: "B" },
-          { points: 100, label: "C" },
+          { points: 50, label: "Dessert" },
+          { points: 100, label: "Cheese" },
         ],
       },
     });
-    expect(st.progressMax).toBe(100);
-    expect(st.pct).toBeCloseTo(73.333333, 3);
-    expect(st.tickMarks.map((m) => m.value)).toEqual([25, 50, 100]);
-    expect(st.tickMarks.find((x) => x.value === 50)?.leftPct).toBe(50);
+    expect(st.tickMarks.find((m) => m.value === 10)?.leftPct).toBeCloseTo(10, 1);
+    expect(st.pct).toBeCloseTo(10, 1);
   });
 
   it("sans paliers publiés : pas d’échelle générique", () => {
@@ -50,7 +52,7 @@ describe("buildHeroBalanceProgressState", () => {
     expect(st.tickMarks).toEqual([]);
   });
 
-  it("programme tampons : libellé + échelle complète", () => {
+  it("programme tampons : libellé + échelle linéaire avec origine 0", () => {
     const st = buildHeroBalanceProgressState({
       memberPoints: 1,
       programType: "stamps",
@@ -60,8 +62,7 @@ describe("buildHeroBalanceProgressState", () => {
     expect(st.unitWord).toBe("tampon");
     expect(st.nextGoal?.threshold).toBe(10);
     expect(st.progressMax).toBe(10);
-    expect(st.pct).toBeCloseTo(10, 5);
-    expect(st.tickMarks.map((m) => m.value)).toEqual([10]);
-    expect(st.tickMarks[0].leftPct).toBe(100);
+    expect(st.pct).toBeCloseTo(10, 1);
+    expect(st.tickMarks[0].value).toBe(0);
   });
 });

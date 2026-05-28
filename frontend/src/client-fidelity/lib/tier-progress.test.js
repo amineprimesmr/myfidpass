@@ -1,23 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { buildHeroFullScaleTickMarks, heroFillPercentEqualSegments, parsePointTiers } from "./tier-progress.js";
+import {
+  buildHeroLinearTickMarks,
+  heroFillPercentLinear,
+  parsePointTiers,
+  SIGNUP_REWARD_POINTS,
+} from "./tier-progress.js";
 
-describe("buildHeroFullScaleTickMarks", () => {
-  it("affiche chaque palier avec le même écart visuel sur la barre (0 % … 100 %)", () => {
+describe("buildHeroLinearTickMarks", () => {
+  it("origine 0 + paliers au prorata des points", () => {
     const tiers = [
-      { threshold: 25, label: "a" },
+      { threshold: 10, label: "a" },
       { threshold: 50, label: "b" },
-      { threshold: 75, label: "c" },
-      { threshold: 100, label: "d" },
-      { threshold: 125, label: "e" },
+      { threshold: 100, label: "c" },
     ];
-    const m = buildHeroFullScaleTickMarks(tiers);
-    expect(m.map((x) => x.value)).toEqual([25, 50, 75, 100, 125]);
-    expect(m.map((x) => x.leftPct)).toEqual([0, 25, 50, 75, 100]);
+    const m = buildHeroLinearTickMarks(tiers);
+    expect(m[0]).toEqual({ value: 0, leftPct: 0 });
+    expect(m.find((x) => x.value === 10)?.leftPct).toBe(10);
+    expect(m.find((x) => x.value === 50)?.leftPct).toBe(50);
+    expect(m.find((x) => x.value === 100)?.leftPct).toBe(100);
   });
+});
 
-  it("un seul palier : graduation à droite (100 %)", () => {
-    const m = buildHeroFullScaleTickMarks([{ threshold: 40, label: "x" }]);
-    expect(m).toEqual([{ value: 40, leftPct: 100 }]);
+describe("parsePointTiers signup tier", () => {
+  it("réinjecte 10 pts si absent", () => {
+    const tiers = parsePointTiers({
+      signup_reward_label: "Boisson offerte",
+      points_reward_tiers: [{ points: 50, label: "Dessert" }],
+    });
+    expect(tiers[0].threshold).toBe(SIGNUP_REWARD_POINTS);
+    expect(tiers[0].label).toBe("Boisson offerte");
   });
 });
 
@@ -36,16 +47,15 @@ describe("parsePointTiers", () => {
   });
 });
 
-describe("heroFillPercentEqualSegments", () => {
-  it("remplit par segments de même largeur entre paliers successifs", () => {
+describe("heroFillPercentLinear", () => {
+  it("progression proportionnelle 0 → dernier palier", () => {
     const tiers = [
       { threshold: 10, label: "a" },
       { threshold: 100, label: "b" },
     ];
-    expect(heroFillPercentEqualSegments(tiers, 0)).toBe(0);
-    expect(heroFillPercentEqualSegments(tiers, 5)).toBeCloseTo(25, 5);
-    expect(heroFillPercentEqualSegments(tiers, 10)).toBeCloseTo(50, 5);
-    expect(heroFillPercentEqualSegments(tiers, 55)).toBeCloseTo(75, 5);
-    expect(heroFillPercentEqualSegments(tiers, 100)).toBe(100);
+    expect(heroFillPercentLinear(tiers, 0)).toBe(0);
+    expect(heroFillPercentLinear(tiers, 10)).toBe(10);
+    expect(heroFillPercentLinear(tiers, 50)).toBe(50);
+    expect(heroFillPercentLinear(tiers, 100)).toBe(100);
   });
 });

@@ -16,6 +16,8 @@ import {
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
 import { parseFlyerPrefsCustomLogoDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
+import { normalizePointsRewardTiersForClient } from "../../lib/points-reward-tiers.js";
+import { getDb } from "../../db/connection.js";
 
 /** @param {string} v */
 function isHex6(v) {
@@ -26,14 +28,25 @@ export function publicInfo(req, res) {
   const business = req.business;
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  let points_reward_tiers = business.points_reward_tiers;
-  if (typeof points_reward_tiers === "string" && points_reward_tiers?.trim()) {
-    try {
-      points_reward_tiers = JSON.parse(points_reward_tiers);
-    } catch (_) {
-      points_reward_tiers = undefined;
-    }
-  }
+  let signup_reward_label = "";
+  try {
+    const db = getDb();
+    const gift = db
+      .prepare(
+        `SELECT gr.label FROM game_rewards gr
+         INNER JOIN business_games bg ON bg.game_id = gr.game_id AND bg.business_id = gr.business_id
+         INNER JOIN games g ON g.id = gr.game_id AND g.code = 'roulette'
+         WHERE gr.business_id = ? AND gr.code = 'cadeau' AND gr.active = 1
+         LIMIT 1`,
+      )
+      .get(business.id);
+    if (gift?.label) signup_reward_label = String(gift.label).trim();
+  } catch (_) {}
+
+  const points_reward_tiers = normalizePointsRewardTiersForClient(
+    business.points_reward_tiers,
+    signup_reward_label,
+  );
   /** Logo parcours client : flyer IA si importé, sinon logo carte fidélité (`/public/logo`). */
   const hasFlyerCustomLogo = !!parseFlyerPrefsCustomLogoDataUrl(business.flyer_prefs_json);
   const logoAssetPath = hasFlyerCustomLogo ? "flyer-qr-logo" : "logo";
@@ -99,7 +112,8 @@ export function publicInfo(req, res) {
     stamp_mid_reward_label: business.stamp_mid_reward_label ?? undefined,
     label_restants: business.label_restants?.trim() || undefined,
     stamp_emoji: business.stamp_emoji?.trim() || undefined,
-    points_reward_tiers: points_reward_tiers ?? undefined,
+    points_reward_tiers: points_reward_tiers.length ? points_reward_tiers : undefined,
+    signup_reward_label: signup_reward_label || undefined,
     /** Couleurs flyer pour theming page publique fidélité (roue + boutons). Fond toujours blanc. */
     flyerColors: flyerColors ?? undefined,
     /** Texte du titre principal sur la page jeu QR ; absent ou vide = défaut applicatif. */
