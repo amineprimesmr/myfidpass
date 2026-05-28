@@ -146,16 +146,20 @@ function parsePassUpdatedAt(str) {
   return Number.isNaN(t) ? 0 : t;
 }
 
+/** Marge horloge iPhone ↔ serveur + `Last-Modified` HTTP tronqué à la seconde. */
+const PASSKIT_SINCE_SLACK_MS = 3500;
+
 /**
  * Tag `passesUpdatedSince` renvoyé par Wallet (parfois sans millisecondes).
- * Recule d’1 s pour ne pas rater une MAJ dans la même seconde UTC.
+ * Recule d’1 s (sans ms) + slack fixe pour ne pas répondre 204 après une 2ᵉ campagne.
  */
 function passesUpdatedSinceCutoffMs(tag) {
   const ts = parsePassUpdatedAt(tag);
   if (!ts) return 0;
   const raw = String(tag).trim();
   const hasSubSecond = /\.\d{1,3}/.test(raw);
-  return hasSubSecond ? ts : ts - 1000;
+  const base = hasSubSecond ? ts : ts - 1000;
+  return Math.max(0, base - PASSKIT_SINCE_SLACK_MS);
 }
 
 /**
@@ -192,6 +196,15 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
       if (broadcastMs > sinceMs) return true;
       return effectivePassKitRowUpdateTs(r) > sinceMs;
     });
+    // Filet : tag Wallet parfois en avance → 204 alors que `last_broadcast_at` vient de changer.
+    if (list.length === 0 && base.length > 0) {
+      const sinceMs = passesUpdatedSinceCutoffMs(String(passesUpdatedSince));
+      const recentBroadcast = base.some((r) => {
+        const b = parsePassUpdatedAt(r.last_broadcast_at);
+        return b > 0 && b >= sinceMs - PASSKIT_SINCE_SLACK_MS;
+      });
+      if (recentBroadcast) list = base;
+    }
   }
   const serialNumbers = list.map((r) => r.serial_number);
   let lastUpdated = formatUtcSqlWithMs(new Date());

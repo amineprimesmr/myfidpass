@@ -586,7 +586,13 @@ router.patch("/settings", async (req, res) => {
   }
   const notification_title_override = body.notification_title_override ?? body.notificationTitleOverride;
   if (notification_title_override !== undefined) {
-    updates.notification_title_override = notification_title_override == null ? null : String(notification_title_override).trim().slice(0, 80);
+    const newTitle =
+      notification_title_override == null ? null : String(notification_title_override).trim().slice(0, 80);
+    const curTitle = (business.notification_title_override ?? "").trim();
+    const newNorm = newTitle == null ? "" : newTitle;
+    if (newNorm !== curTitle) {
+      updates.notification_title_override = newTitle;
+    }
   }
   const notification_change_message = body.notification_change_message ?? body.notificationChangeMessage;
   if (notification_change_message !== undefined) {

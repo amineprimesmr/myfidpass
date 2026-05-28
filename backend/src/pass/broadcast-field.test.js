@@ -61,4 +61,8 @@ describe("buildLastBroadcastFieldValue", () => {
     const b = buildLastBroadcastFieldValue("Message B", at, 5);
     expect(a).not.toBe(b);
   });
+  it("2e envoi : suffixe visible ·2 pour alerte Wallet", () => {
+    const v = buildLastBroadcastFieldValue("Promo", "2026-03-26 21:37:21.123", 2);
+    expect(v.startsWith("Promo·2")).toBe(true);
+  });
 });
