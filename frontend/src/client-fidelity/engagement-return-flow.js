@@ -6,8 +6,8 @@
 export const PENDING_ENGAGEMENT_CLAIM_KEY = "fidelity_pending_engagement_claim";
 export const SOCIAL_ENGAGEMENT_RESUME_KEY = "fidelity_social_engagement_resume";
 
-/** Délai mini : l’utilisateur doit être parti sur le réseau puis revenir. */
-export const PENDING_CLAIM_MIN_MS = 2_000;
+/** Délai mini avant claim auto (aligné avis Google QR : retour rapide accepté). */
+export const PENDING_CLAIM_MIN_MS = 0;
 export const PENDING_CLAIM_MAX_MS = 24 * 60 * 60 * 1000;
 
 const VERIFY_MIN_MS = 1_200;
@@ -103,6 +103,9 @@ export function markExternalEngagementPending(slug, actionType) {
   } catch (_) {}
 }
 
+/**
+ * @returns {null | { slug: string, actionType: string, ts: number } | { waitMs: number, data: object }}
+ */
 function readPendingClaim(slug) {
   try {
     const raw = sessionStorage.getItem(PENDING_ENGAGEMENT_CLAIM_KEY);
@@ -111,7 +114,10 @@ function readPendingClaim(slug) {
     if (data.slug !== slug || !data.actionType || !data.ts) return null;
     if (!isExternalEngagementAction(data.actionType)) return null;
     const age = Date.now() - data.ts;
-    if (age < PENDING_CLAIM_MIN_MS || age > PENDING_CLAIM_MAX_MS) return null;
+    if (age > PENDING_CLAIM_MAX_MS) return null;
+    if (age < PENDING_CLAIM_MIN_MS) {
+      return { waitMs: PENDING_CLAIM_MIN_MS - age, data };
+    }
     return data;
   } catch {
     return null;
@@ -187,8 +193,10 @@ function startVerifyPanelUx(rootEl, durationMs, messages) {
 export async function runExternalEngagementReturnClaim(opts) {
   const { rootEl, slug, getMemberId, claimEngagement, refreshMemberData, onSuccess, isBlocked } = opts;
   if (isBlocked?.()) return false;
-  const pending = readPendingClaim(slug);
-  if (!pending) return false;
+  const pendingRaw = readPendingClaim(slug);
+  if (!pendingRaw) return false;
+  if (pendingRaw.waitMs != null) return false;
+  const pending = pendingRaw;
 
   const memberId = getMemberId();
   if (!memberId) return false;
@@ -253,6 +261,7 @@ export async function runExternalEngagementReturnClaim(opts) {
  */
 export function bindExternalEngagementReturnListeners(opts) {
   let running = false;
+  let waitTimer = null;
   const signal = opts.signal;
 
   const resume = () => {
@@ -263,6 +272,17 @@ export function bindExternalEngagementReturnListeners(opts) {
     } catch {
       return;
     }
+
+    const pendingRaw = readPendingClaim(opts.slug);
+    if (pendingRaw?.waitMs != null && pendingRaw.waitMs > 0) {
+      if (waitTimer != null) return;
+      waitTimer = globalThis.setTimeout(() => {
+        waitTimer = null;
+        resume();
+      }, pendingRaw.waitMs + 40);
+      return;
+    }
+
     running = true;
     void runExternalEngagementReturnClaim(opts).finally(() => {
       running = false;
@@ -275,6 +295,7 @@ export function bindExternalEngagementReturnListeners(opts) {
   globalThis.setTimeout(resume, 0);
 
   return () => {
+    if (waitTimer != null) globalThis.clearTimeout(waitTimer);
     document.removeEventListener("visibilitychange", resume);
     globalThis.removeEventListener("pageshow", resume);
   };

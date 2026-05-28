@@ -55,6 +55,13 @@ import {
   markExternalEngagementPending,
   runExternalEngagementReturnClaim,
 } from "./engagement-return-flow.js";
+import {
+  bindWalletReturnListeners,
+  consumeWalletHeroReveal,
+  markAppleWalletPending,
+  markGoogleWalletPending,
+  runWalletReadyHeroReveal,
+} from "./wallet-return-flow.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -843,6 +850,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   let disposeExternalEngagementReturn = () => {};
+  let disposeWalletReturn = () => {};
 
   function bindEvents() {
     disposeQrUi();
@@ -900,7 +908,16 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const apple = rootEl.querySelector("#fidelity-v2-apple");
     const google = rootEl.querySelector("#fidelity-v2-google");
     const wallet = store.get().wallet || {};
-    if (apple && wallet.apple) apple.href = wallet.apple;
+    if (apple && wallet.apple) {
+      apple.href = wallet.apple;
+      apple.addEventListener(
+        "click",
+        () => {
+          markAppleWalletPending(slug);
+        },
+        { signal },
+      );
+    }
     // Google Wallet links are signed JWTs. Always fetch a fresh one on click so design/class
     // changes are not stuck behind an old href already rendered in the page.
     if (google) google.href = "#";
@@ -911,6 +928,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           e.preventDefault();
           const mid = store.get().member?.id;
           if (!mid) return;
+          markGoogleWalletPending(slug);
           const result = await api.getGoogleWalletSaveLink(slug, mid);
           if (result.ok) {
             window.location.href = result.url;
@@ -1086,6 +1104,22 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       signal,
     });
 
+    disposeWalletReturn();
+    disposeWalletReturn = bindWalletReturnListeners({
+      rootEl,
+      slug,
+      getMemberId: () => store.get().member?.id,
+      getMember: api.getMember.bind(api),
+      getState: () => store.get(),
+      refreshMemberData,
+      isBlocked: () => isSpinning,
+      signal,
+    });
+
+    if (consumeWalletHeroReveal()) {
+      runWalletReadyHeroReveal(rootEl);
+    }
+
     disposeQrUi = bindQrGameUi({
       rootEl,
       api,
@@ -1104,6 +1138,17 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       signal,
     });
   }
+
+  function resumeMemberOnTabVisible() {
+    const memberId = store.get().member?.id;
+    if (!memberId || document.visibilityState !== "visible") return;
+    if (isSpinning || isQrModalOpen()) return;
+    void refreshMemberData();
+    scheduleHydrateMemberExtras(memberId);
+  }
+
+  document.addEventListener("visibilitychange", resumeMemberOnTabVisible, { signal });
+  globalThis.addEventListener("pageshow", resumeMemberOnTabVisible, { signal });
 
   document.addEventListener(
     "keydown",

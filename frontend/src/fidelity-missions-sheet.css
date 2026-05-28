@@ -81,6 +81,32 @@
   }
 }
 
+/* Apparition du CTA « Gagner plus de points » après validation Wallet (retour Safari). */
+.fidelity-earn-points-cta-wrap--revealed {
+  animation: fidelity-earn-points-cta-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fidelity-earn-points-cta-reveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.94);
+  }
+  55% {
+    opacity: 1;
+    transform: translate3d(0, -3px, 0) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fidelity-earn-points-cta-wrap--revealed {
+    animation: none;
+  }
+}
+
 .fidelity-earn-points-cta-wrap {
   margin: 1rem 0 0;
   width: 100%;
