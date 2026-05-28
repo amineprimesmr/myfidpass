@@ -1089,7 +1089,7 @@ router.post("/campaign-automation/parse", async (req, res) => {
   const v = parsed.value;
   const eventTypeNorm =
     normalizeEventTypeToken(v.eventType) ||
-    (String(v.eventType || "").startsWith("custom:") ? String(v.eventType) : "member_created");
+    (String(v.eventType || "").startsWith("custom:") ? String(v.eventType) : "daily_at:10:00");
   return res.json({
     mode: "event",
     title: String(v.title || "Automatisation"),

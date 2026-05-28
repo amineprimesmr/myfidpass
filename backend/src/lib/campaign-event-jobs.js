@@ -37,47 +37,11 @@ function getApiBase() {
 }
 
 /**
- * Planifie les jobs d’évènement pour un membre.
- * Appelé à la création membre (dashboard / import) et à l’enregistrement PassKit.
- * Règles : `event_*` avec `eventType` / `event_type` = `member_created`.
+ * Anciennement : jobs `member_created` (bienvenue) à l’inscription — retiré du produit.
  */
 export function scheduleCampaignEventJobsForMember({ business, memberId }) {
   if (!business?.id || !memberId) return 0;
-  if (!businessHasCustomNotificationIcon(business)) return 0;
-
-  const config = mergeCampaignAutomationJson(business.campaign_automation_json ?? "");
-  const rules = config?.rules ?? {};
-
-  const now = new Date();
-
-  let scheduled = 0;
-  for (const [ruleId, rule] of Object.entries(rules)) {
-    if (!ruleId.startsWith("event_")) continue;
-    if (!rule?.enabled) continue;
-    if (ruleEventType(rule) !== "member_created") continue;
-
-    const delayMinutes = clampDelayMinutes(rule.delayMinutes ?? rule.delay_minutes);
-    const message = safeTrim(rule.message, 200);
-    if (!message) continue;
-
-    const title = safeTrim(rule.title, 80);
-    const runAt = new Date(now.getTime() + delayMinutes * 60_000).toISOString();
-
-    const jobId = randomUUID();
-    const res = db
-      .prepare(
-        `INSERT OR IGNORE INTO campaign_event_jobs 
-          (id, business_id, member_id, event_rule_id, event_type, run_at, title, message, status, attempts)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'queued', 0)`
-      )
-      .run(jobId, business.id, memberId, ruleId, "member_created", runAt, title || null, message);
-
-    // SQLite `changes` ≠ nb insert (OR IGNORE), donc on fait simple:
-    // si le row est ignoré, l’insert ne s’applique pas et `changes` vaut 0.
-    scheduled += (res?.changes ?? 0) > 0 ? 1 : 0;
-  }
-
-  return scheduled;
+  return 0;
 }
 
 function baseRuleIdFromJobRuleId(ruleId) {
@@ -314,6 +278,12 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
 
   for (const job of dueJobs) {
     try {
+      if (job.event_type === "member_created") {
+        markJobSkipped(job.id, "Automatisation bienvenue retirée du produit");
+        skipped++;
+        continue;
+      }
+
       const business = businessMap.get(job.business_id) ?? null;
       if (!business) {
         markJobSkipped(job.id, "Business introuvable");

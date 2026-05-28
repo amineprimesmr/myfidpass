@@ -7,7 +7,7 @@ const parseSchema = z.object({
 export function normalizeEventTypeToken(raw) {
   const t = String(raw || "").trim().toLowerCase();
   if (!t) return null;
-  if (t === "member_created" || t === "first_scan" || t === "reward_unlocked") return t;
+  if (t === "first_scan" || t === "reward_unlocked") return t;
   const mInactive = /^inactive_days:(\d{1,3})$/.exec(t);
   if (mInactive) {
     const n = Math.max(1, Math.min(365, Number(mInactive[1]) || 30));
@@ -70,7 +70,11 @@ function heuristicParse(instruction) {
   if (/récompense|reward/.test(s)) {
     return { eventType: "reward_unlocked", title: "Récompense débloquée", delayMinutes: 2 };
   }
-  return { eventType: "member_created", title: "Bienvenue automatique", delayMinutes: 2 };
+  return {
+    eventType: "daily_at:10:00",
+    title: "Message quotidien 10h00",
+    delayMinutes: 1,
+  };
 }
 
 export async function parseCampaignAutomationInstructionWithAI({ apiKey, instruction }) {
@@ -103,7 +107,7 @@ export async function parseCampaignAutomationInstructionWithAI({ apiKey, instruc
     ' "mode":"event",',
     ' "title":"string <=80",',
     ' "message":"string <=200",',
-    ' "event_type":"member_created|first_scan|reward_unlocked|inactive_days:N|daily_at:HH:MM|custom:<token>",',
+    ' "event_type":"first_scan|reward_unlocked|inactive_days:N|daily_at:HH:MM|custom:<token>",',
     ' "delay_minutes": number(1..1440),',
     ' "confidence": number(0..1)',
     "}",
