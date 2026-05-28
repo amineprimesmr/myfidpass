@@ -19,10 +19,11 @@ import {
   getNotificationLogRecentForBusiness,
 } from "../../db.js";
 import { passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
-import { countPreSendNotificationTargets, deliverCustomerBroadcast } from "../../notifications/dispatch.js";
+import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
 import { assertOperationalSubscription, ensureDashboardAccess, blockStaffDashboardWrites, getApiBase } from "./shared.js";
 import logger from "../../lib/logger.js";
+import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
 import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
 import {
   assertCustomNotificationIconForBroadcast,
@@ -100,7 +101,19 @@ export async function notifyHandler(req, res) {
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
 
-  const { total: totalDevices } = countPreSendNotificationTargets(business.id, memberIds);
+  const webSubscriptions =
+    memberIds !== null
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
+      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
+  const passKitTokens =
+    memberIds !== null
+      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+      : getPassKitPushTokensForBusiness(business.id);
+  const googleWalletCandidates =
+    memberIds !== null
+      ? memberIds.length
+      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
+  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
   if (totalDevices === 0) {
     return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0, sentGoogleWallet: 0, sentMerchantApp: 0, batch_id: null });
   }
@@ -167,8 +180,19 @@ router.post("/send", async (req, res) => {
   }
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
-  const preSend = countPreSendNotificationTargets(business.id, memberIds);
-  const totalDevices = preSend.total;
+  const webSubscriptions =
+    memberIds !== null
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
+      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
+  const passKitTokens =
+    memberIds !== null
+      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+      : getPassKitPushTokensForBusiness(business.id);
+  const googleWalletCandidates =
+    memberIds !== null
+      ? memberIds.length
+      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
+  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
   if (totalDevices === 0) {
     return res.json({
       ok: true,
@@ -178,8 +202,7 @@ router.post("/send", async (req, res) => {
       sentGoogleWallet: 0,
       sentMerchantApp: 0,
       batch_id: null,
-      message:
-        "Aucun appareil joignable pour ce segment (Apple Wallet, navigateur ou Google Wallet). Demandez aux clients de ré-ajouter la carte depuis le lien « Partager », puis réessayez.",
+      message: "Aucun client ciblé. Les clients qui ajoutent la carte (Apple Wallet, Google Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
 
@@ -190,6 +213,9 @@ router.post("/send", async (req, res) => {
         ? "campaign_manual_categories"
         : "campaign_manual";
 
+  // Synchronise les textes de notification AVANT de créer le job, pour que le pass
+  // refetché par les iPhones contienne déjà le bon changeMessage.
+  syncNotificationTextsForCampaign(business.id, title, body);
   const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
 
   /**
@@ -212,7 +238,7 @@ router.post("/send", async (req, res) => {
     body,
     triggerName,
     merchantUserId: req.user?.id ?? null,
-    touchMemberLastVisit: true,
+    touchMemberLastVisit: !isBehavioralSegment,
   });
 
   res.status(202).json({
@@ -227,12 +253,7 @@ router.post("/send", async (req, res) => {
     job_id: jobId,
     batch_id: null, // sera disponible dans /notifications/batches une fois terminé
     total: totalDevices,
-    targets: {
-      web_push: preSend.webPush,
-      pass_kit: preSend.passKit,
-      google_wallet: preSend.googleWallet,
-    },
-    message: `Envoi lancé (${preSend.passKit} Wallet Apple, ${preSend.webPush} navigateur, ${preSend.googleWallet} Google Wallet). La campagne continue sur le serveur — consultez l’historique pour le résultat final (job_id: ${jobId}).`,
+    message: `Envoi lancé vers ${totalDevices} appareil(s). Vous pouvez fermer l’écran : la campagne continue sur le serveur. Consultez l’historique des campagnes pour le résultat (job_id: ${jobId}).`,
   });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[notifications] POST /send error");

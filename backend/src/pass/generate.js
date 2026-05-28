@@ -17,12 +17,6 @@ import {
 } from "./images-logo.js";
 import { getBusinessAssetData } from "../db/business-assets.js";
 import { businessAllowsWalletCustomerAlerts } from "../lib/notification-icon-gate.js";
-import {
-  highestPointsTierReachedLabel,
-  normalizePointsRewardTiersForClient,
-  WALLET_TIER_UNLOCK_CHANGE_MESSAGE,
-} from "../lib/points-reward-tiers.js";
-import { resolveSignupRewardLabelForBusiness } from "../lib/signup-reward-label.js";
 import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
@@ -281,19 +275,23 @@ export async function generatePass(member, business = null, options = {}) {
   };
 
   if (format === "tampons") {
-    /* Mode tampons : grille sur le strip uniquement (l’image de fond carte est réservée au mode points). */
-    const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
-    const baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
-    const stripWithStamps = await drawStampsOnStrip(
-      baseStrip,
-      stripTemplateKey,
-      stamps,
-      stampMax,
-      stripStampEmoji,
-      stampIconBase64,
-      stripColorHex
-    );
-    await assignPassStripBuffers(buffers, sharp, stripWithStamps);
+    /* Avec image de fond : strip = image seule (comme le mode points). Sinon : fond couleur + grille tampons dessinée sur le strip. */
+    if (cardBgStripBuf) {
+      await assignPassStripBuffers(buffers, sharp, cardBgStripBuf);
+    } else {
+      const stampIconBase64 = options.stamp_icon_base64 ?? business?.stamp_icon_base64;
+      const baseStrip = createStripBuffer(stripTemplateKey, stripColorHex);
+      const stripWithStamps = await drawStampsOnStrip(
+        baseStrip,
+        stripTemplateKey,
+        stamps,
+        stampMax,
+        stripStampEmoji,
+        stampIconBase64,
+        stripColorHex
+      );
+      await assignPassStripBuffers(buffers, sharp, stripWithStamps);
+    }
   } else {
     if (cardBgStripBuf) {
       /* Image de fond commerce (base64) : elle prime sur l’asset Xcode / default-points-strip — la modifier côté app ou SaaS. */
@@ -403,30 +401,14 @@ export async function generatePass(member, business = null, options = {}) {
   } else {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
-    const signupLabel = business?.id ? resolveSignupRewardLabelForBusiness(String(business.id)) : "";
-    const pointsTiers = normalizePointsRewardTiersForClient(business?.points_reward_tiers, signupLabel);
-    const rewardFaceLabel = highestPointsTierReachedLabel(pointsTiers, ptsInt);
-    const rewardFaceValue = rewardFaceLabel ? String(rewardFaceLabel).slice(0, 64) : "—";
-    const tierUnlockPending = Number(member?.wallet_tier_unlock_pending) === 1;
-
     pass.secondaryFields.push({
       key: "points",
       label: "Points",
       value: pointsValue,
       textAlignment: "PKTextAlignmentLeft",
-      ...(walletAlerts && !tierUnlockPending ? { changeMessage: "Tu as maintenant %@ points !" } : {}),
+      ...(walletAlerts ? { changeMessage: "Tu as maintenant %@ points !" } : {}),
     });
-    if (pointsTiers.length > 0) {
-      pass.auxiliaryFields.push({
-        key: "unlockedReward",
-        label: "Récompense",
-        value: rewardFaceValue,
-        textAlignment: "PKTextAlignmentLeft",
-        ...(walletAlerts && tierUnlockPending && rewardFaceValue !== "—"
-          ? { changeMessage: WALLET_TIER_UNLOCK_CHANGE_MESSAGE }
-          : {}),
-      });
-    }
+    /* Pas de champ « Récompense » sur la face (paliers : verso « Paliers & avantages »). */
     pass.auxiliaryFields.push({
       key: "member",
       label: labelMember,

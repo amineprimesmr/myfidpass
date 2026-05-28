@@ -19,7 +19,7 @@
  *   la partie "seconde" est strictement croissante → 100 en-têtes `Last-Modified` distincts.
  */
 import { describe, it, expect } from "vitest";
-import { computeNextPassLastModifiedMs } from "./pass-last-modified-ms.js";
+import { computeNextPassLastModifiedMs } from "./businesses.js";
 
 describe("computeNextPassLastModifiedMs", () => {
   it("accepte null / undefined / NaN comme prev → retourne now", () => {

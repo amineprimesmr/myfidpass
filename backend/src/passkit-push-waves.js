@@ -9,7 +9,7 @@
  */
 import { sendPassKitUpdate } from "./apns.js";
 
-/** Par défaut une seule salve (envoi instantané). PASSKIT_WAVE_GAP_MS=400 pour une 2ᵉ salve optionnelle. */
+/** Par défaut une seule salve (évite doubles notifications Wallet). Mettre PASSKIT_WAVE_GAP_MS=400 pour l’ancien comportement. */
 const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 0)));
 
 /**
@@ -57,9 +57,8 @@ export async function sendPassKitPushWaves(passKitRows, opts = {}) {
   // Pour la 2ᵉ salve, on dérive un collapseId distinct si présent (suffixe "~w2") afin que les
   // deux salves ne soient pas coalescées entre elles côté APNs — on garantit ainsi que chaque
   // device reçoit deux invalidations même si la 1ʳᵉ a été droppée par le throttling background.
-  // 2ᵉ salve : pas de collapse-id (apns-id unique) pour maximiser une 2ᵉ chance de réveil Wallet.
   const wave2Opts = opts?.collapseId
-    ? { collapseId: null }
+    ? { ...opts, collapseId: `${opts.collapseId}~w2`.slice(0, 64) }
     : opts;
   const wave2 = await runWave(wave2Opts);
   // Garde le meilleur résultat : si wave 1 a réussi mais wave 2 a échoué, on compte quand même l'envoi.

@@ -3,8 +3,8 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { touchPassLastModifiedMs } from "./businesses.js";
 import { nowUtcSqlWithMs } from "./datetime-sql.js";
+import { touchPassLastModifiedMs } from "./businesses.js";
 
 const db = getDb();
 
