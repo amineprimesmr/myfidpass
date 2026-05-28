@@ -184,74 +184,30 @@ export function getDashboardStats(businessId, period = "this_month") {
   const visitsN = visitsInPeriod?.n ?? 0;
   const avgVisitsPerActiveMember = activeN > 0 ? Math.round((visitsN / activeN) * 100) / 100 : null;
 
+  /** Missions avis Google validées côté client (claim `google_review`) — même logique que les follows réseaux, pas le total GBP. */
   let googleReviewsNewInPeriod = 0;
   try {
-    const hasTab = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='google_business_reviews'").get();
-    if (hasTab) {
-      if (bounds.month != null) {
-        const gr = db
-          .prepare(
-            `SELECT COUNT(*) as n FROM google_business_reviews
-             WHERE business_id = ? AND strftime('%Y-%m', COALESCE(first_seen_at, create_time, update_time)) = ?`,
-          )
-          .get(businessId, bounds.month);
-        googleReviewsNewInPeriod = gr?.n ?? 0;
-      } else {
-        const gr = db
-          .prepare(
-            `SELECT COUNT(*) as n FROM google_business_reviews
-             WHERE business_id = ? AND datetime(COALESCE(first_seen_at, create_time, update_time)) >= ${bounds.since}`,
-          )
-          .get(businessId);
-        googleReviewsNewInPeriod = gr?.n ?? 0;
-      }
+    if (bounds.month != null) {
+      const gr = db
+        .prepare(
+          `SELECT COUNT(*) as n FROM engagement_completions
+           WHERE business_id = ? AND action_type = 'google_review' AND status = 'approved'
+           AND strftime('%Y-%m', created_at) = ?`,
+        )
+        .get(businessId, bounds.month);
+      googleReviewsNewInPeriod = gr?.n ?? 0;
+    } else {
+      const gr = db
+        .prepare(
+          `SELECT COUNT(*) as n FROM engagement_completions
+           WHERE business_id = ? AND action_type = 'google_review' AND status = 'approved'
+           AND datetime(created_at) >= ${bounds.since}`,
+        )
+        .get(businessId);
+      googleReviewsNewInPeriod = gr?.n ?? 0;
     }
   } catch (_e) {
     /* */
-  }
-
-  // Fallback via social_metric_snapshots quand google_business_reviews est vide (pas de GBP OAuth ou sync en attente).
-  if (googleReviewsNewInPeriod === 0) {
-    try {
-      const latestSnap = db
-        .prepare(
-          `SELECT metrics_json FROM social_metric_snapshots
-           WHERE business_id = ? AND channel = 'google_review'
-           ORDER BY captured_at DESC LIMIT 1`,
-        )
-        .get(businessId);
-      if (latestSnap) {
-        const latestMetrics = JSON.parse(latestSnap.metrics_json || "{}");
-        const totalNow = Number(latestMetrics.reviews_count) || 0;
-        if (totalNow > 0) {
-          let periodStart;
-          if (bounds.month) {
-            periodStart = `${bounds.month}-01T00:00:00.000Z`;
-          } else {
-            const days = { "7d": 7, "30d": 30, "6m": 182, "12m": 365 }[normalizedPeriod] ?? 30;
-            periodStart = new Date(Date.now() - days * 86400000).toISOString();
-          }
-          const baselineSnap = db
-            .prepare(
-              `SELECT metrics_json FROM social_metric_snapshots
-               WHERE business_id = ? AND channel = 'google_review' AND captured_at < ?
-               ORDER BY captured_at DESC LIMIT 1`,
-            )
-            .get(businessId, periodStart);
-          if (baselineSnap) {
-            const baselineMetrics = JSON.parse(baselineSnap.metrics_json || "{}");
-            const totalBefore = Number(baselineMetrics.reviews_count) || 0;
-            const delta = Math.max(0, totalNow - totalBefore);
-            if (delta > 0) googleReviewsNewInPeriod = delta;
-          } else {
-            // Pas de baseline avant la période → premier mois de suivi : on expose le total actuel.
-            googleReviewsNewInPeriod = totalNow;
-          }
-        }
-      }
-    } catch (_e) {
-      /* */
-    }
   }
 
   let notificationCampaigns = [];
