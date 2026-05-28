@@ -14,7 +14,10 @@
  * (souvent texte périmètre ou ancien corps recopié). À l’envoi on le remet à null pour que le pass
  * utilise `%@` seul — évite « vieux préfixe + nouveau corps » (ex. « Allo » + « L’app est prête »).
  */
-import { getBusinessById, updateBusiness, bumpBusinessPassRefreshTimestamp } from "../db.js";
+import { getBusinessById, updateBusiness } from "../db.js";
+
+/** Gabarit PassKit stable pour alertes écran verrouillé (`%@` = valeur du champ « Message » verso). */
+export const DEFAULT_PASSKIT_CHANGE_MESSAGE = "Nouveau message : %@";
 
 export function syncNotificationTextsForCampaign(businessId, title, messageBody) {
   void messageBody;
@@ -33,7 +36,18 @@ export function syncNotificationTextsForCampaign(businessId, title, messageBody)
 
   if (Object.keys(updates).length > 0) {
     updateBusiness(businessId, updates);
-    bumpBusinessPassRefreshTimestamp(businessId);
   }
+  return getBusinessById(businessId);
+}
+
+/**
+ * Garantit un modèle `changeMessage` valide (doit contenir `%@`) avant push PassKit campagne.
+ * Le corps de la campagne vit dans `last_broadcast_message`, pas dans ce champ.
+ */
+export function ensurePassKitChangeMessageTemplate(businessId) {
+  const business = getBusinessById(businessId);
+  const cur = (business?.notification_change_message ?? "").trim();
+  if (cur.includes("%@")) return business;
+  updateBusiness(businessId, { notification_change_message: DEFAULT_PASSKIT_CHANGE_MESSAGE });
   return getBusinessById(businessId);
 }

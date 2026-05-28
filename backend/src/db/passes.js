@@ -147,6 +147,18 @@ function parsePassUpdatedAt(str) {
 }
 
 /**
+ * Tag `passesUpdatedSince` renvoyé par Wallet (parfois sans millisecondes).
+ * Recule d’1 s pour ne pas rater une MAJ dans la même seconde UTC.
+ */
+function passesUpdatedSinceCutoffMs(tag) {
+  const ts = parsePassUpdatedAt(tag);
+  if (!ts) return 0;
+  const raw = String(tag).trim();
+  const hasSubSecond = /\.\d{1,3}/.test(raw);
+  return hasSubSecond ? ts : ts - 1000;
+}
+
+/**
  * Instant « pass mis à jour » côté PassKit : visite en caisse, dernière diffusion, création du membre,
  * ou mise à jour des textes pass (sans confondre avec une nouvelle diffusion — voir notification_pass_layout_at).
  */
@@ -172,8 +184,12 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
   ).all(deviceId, passTypeId);
   let list = base;
   if (passesUpdatedSince && String(passesUpdatedSince).trim()) {
-    const sinceTs = parsePassUpdatedAt(String(passesUpdatedSince));
-    list = base.filter((r) => effectivePassKitRowUpdateTs(r) > sinceTs);
+    const sinceMs = passesUpdatedSinceCutoffMs(String(passesUpdatedSince));
+    list = base.filter((r) => {
+      const passMs = Number(r.pass_last_modified_ms);
+      if (Number.isFinite(passMs) && passMs > sinceMs) return true;
+      return effectivePassKitRowUpdateTs(r) > sinceMs;
+    });
   }
   const serialNumbers = list.map((r) => r.serial_number);
   let lastUpdated = formatUtcSqlWithMs(new Date());

@@ -30,7 +30,10 @@ import {
   isLikelyInvalidDeviceTokenApnsError,
 } from "../merchant-app-push.js";
 import { addGoogleWalletNotificationMessageForMember, isGoogleWalletConfigured } from "../google-wallet.js";
-import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
+import {
+  ensurePassKitChangeMessageTemplate,
+  syncNotificationTextsForCampaign,
+} from "../lib/sync-notification-texts-for-campaign.js";
 import { businessHasCustomNotificationIcon } from "../lib/notification-icon-gate.js";
 import logger from "../lib/logger.js";
 
@@ -228,9 +231,15 @@ export async function deliverCustomerBroadcast({
   // Web Push : déjà filtré en SQL (voir getWebPushSubscriptionsByBusiness*ExcludingPassKitOwners) :
   // un membre avec Apple Wallet actif ne reçoit pas aussi la PWA/Safari pour la même campagne.
 
-  // Titre d’envoi optionnel → `notification_title_override` (stable). Le corps de campagne ne doit pas
-  // écraser `notification_change_message` : voir `sync-notification-texts-for-campaign.js`.
+  // 1) Persister le message de campagne AVANT tout push (Apple : données pass à jour puis APNs).
+  setLastBroadcastMessage(business.id, bodyMessage);
+  // 2) Titre optionnel + nettoyage d’un ancien « modèle » sans %@ (ne plus bumper ici — évite un refetch vide).
   const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
+  ensurePassKitChangeMessageTemplate(business.id);
+  bumpBusinessPassRefreshTimestamp(business.id);
+  const businessAfterBump = getBusinessById(business.id) || businessAfterSync || business;
+  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
+  const broadcastCollapseId = `bcast-${passMs}`;
 
   const batchId = createNotificationBatch({
     businessId: business.id,
@@ -240,7 +249,7 @@ export async function deliverCustomerBroadcast({
 
   // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
-  const businessFresh = getBusinessById(business.id) || businessAfterSync || business;
+  const businessFresh = businessAfterBump;
   const googleWalletBusiness = mergeBusinessAssetsForPass(businessFresh);
   const iconSource = businessAfterSync || businessFresh;
   // Toujours inclure l'URL — l'endpoint retourne logonotif quand aucune icône custom n'est configurée.
@@ -261,60 +270,7 @@ export async function deliverCustomerBroadcast({
   };
   const errors = [];
 
-  const webPushResults = await Promise.all(
-    webSubscriptions.map(async (sub) => {
-      try {
-        await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
-        logNotification({
-          businessId: business.id,
-          memberId: sub.member_id,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: "web_push",
-          batchId,
-          channel: "web_push",
-          triggerName,
-          countsForMemberCooldown: 1,
-          status: "sent",
-        });
-        return { ok: true };
-      } catch (err) {
-        const status = err?.statusCode ?? err?.status;
-        if (status === 410 || status === 404) {
-          deleteWebPushSubscriptionByEndpoint(sub.endpoint);
-        } else {
-          errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
-        }
-        logNotification({
-          businessId: business.id,
-          memberId: sub.member_id,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: "web_push",
-          batchId,
-          channel: "web_push",
-          triggerName,
-          countsForMemberCooldown: 1,
-          status: "failed",
-          errorDetail: err.message || String(err),
-        });
-        return { ok: false };
-      }
-    })
-  );
-  const sentWebPush = webPushResults.filter((r) => r.ok).length;
-
-  setLastBroadcastMessage(business.id, bodyMessage);
-  // Toujours pousser `notification_pass_layout_at` au moment de l’envoi : sinon le `Last-Modified`
-  // du pass peut rester cohérent avec un ancien envoi alors que l’icône notif vient d’être changée
-  // (max(timestamp) ne bat pas le cache Wallet / refetch).
-  bumpBusinessPassRefreshTimestamp(business.id);
-  // Relire la ligne commerce APRÈS bump → on capture `pass_last_modified_ms` frais pour le collapseId
-  // unique à cette campagne (évite la coalescence APNs avec un push précédent de changement d'icône).
-  const businessAfterBump = getBusinessById(business.id) || businessFresh;
-  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
-  // collapse-id court (ASCII, ≤ 64 octets) — 1 par campagne → pas de fusion avec le push post-PATCH icône.
-  const broadcastCollapseId = `bcast-${passMs}`;
+  // PassKit en premier (avant Web Push lent) : le .pkpass servi après push contient déjà last_broadcast.
   let sentPassKit = 0;
   if (passKitTokens.length > 0) {
     if (touchMemberLastVisit) {
@@ -363,6 +319,49 @@ export async function deliverCustomerBroadcast({
       }
     }
   }
+
+  const webPushResults = await Promise.all(
+    webSubscriptions.map(async (sub) => {
+      try {
+        await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+        logNotification({
+          businessId: business.id,
+          memberId: sub.member_id,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: "web_push",
+          batchId,
+          channel: "web_push",
+          triggerName,
+          countsForMemberCooldown: 1,
+          status: "sent",
+        });
+        return { ok: true };
+      } catch (err) {
+        const status = err?.statusCode ?? err?.status;
+        if (status === 410 || status === 404) {
+          deleteWebPushSubscriptionByEndpoint(sub.endpoint);
+        } else {
+          errors.push({ type: "web_push", memberId: sub.member_id, error: err.message || String(err) });
+        }
+        logNotification({
+          businessId: business.id,
+          memberId: sub.member_id,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: "web_push",
+          batchId,
+          channel: "web_push",
+          triggerName,
+          countsForMemberCooldown: 1,
+          status: "failed",
+          errorDetail: err.message || String(err),
+        });
+        return { ok: false };
+      }
+    })
+  );
+  const sentWebPush = webPushResults.filter((r) => r.ok).length;
 
   let sentGoogleWallet = 0;
   let skippedGoogleWallet = 0;
