@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { subscriptionStatusFromApplePayload } from "./apple-iap.js";
+import {
+  subscriptionStatusFromApplePayload,
+  expiresMsFromApplePayload,
+} from "./apple-iap-status.js";
 
 describe("subscriptionStatusFromApplePayload", () => {
   const now = Date.now();
@@ -26,5 +29,16 @@ describe("subscriptionStatusFromApplePayload", () => {
         expiresDate: expires,
       }),
     ).toBe("canceled");
+  });
+
+  it("accepts expires_date snake_case and ISO-8601 strings", () => {
+    const future = new Date(now + 86400000).toISOString();
+    expect(
+      subscriptionStatusFromApplePayload({
+        originalTransactionId: "1",
+        expires_date: future,
+      }),
+    ).toBe("active");
+    expect(expiresMsFromApplePayload({ expires_date: future })).toBeGreaterThan(now);
   });
 });

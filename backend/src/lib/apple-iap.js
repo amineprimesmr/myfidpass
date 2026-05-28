@@ -9,6 +9,12 @@ import {
   getSubscriptionByUserId,
   getMerchantEntitlementByUserId,
 } from "../db/subscriptions.js";
+import {
+  subscriptionStatusFromApplePayload,
+  expiresMsFromApplePayload,
+} from "./apple-iap-status.js";
+
+export { subscriptionStatusFromApplePayload, expiresMsFromApplePayload } from "./apple-iap-status.js";
 
 export const APPLE_IAP_SUBSCRIPTION_PREFIX = "apple_iap:";
 
@@ -109,29 +115,6 @@ export function decodeStoreKitJwsPayload(signedPayload) {
   }
 }
 
-function msFromAppleTimestamp(value) {
-  if (value == null || value === "") return null;
-  const n = Number(value);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return n < 1e12 ? n * 1000 : n;
-}
-
-/**
- * Statut abonnement dérivé du JWS StoreKit / App Store Server API.
- * Ne jamais retourner `active` par défaut : sans `expiresDate` valide → pas d’accès payant.
- */
-export function subscriptionStatusFromApplePayload(payload) {
-  const now = Date.now();
-  const expiresMs = msFromAppleTimestamp(payload?.expiresDate);
-  const graceMs = msFromAppleTimestamp(payload?.gracePeriodExpiresDate);
-  const revokeMs = msFromAppleTimestamp(payload?.revocationDate);
-  if (revokeMs != null && revokeMs <= now) return "canceled";
-  if (expiresMs == null) return "canceled";
-  if (expiresMs > now) return "active";
-  if (graceMs != null && graceMs > now) return "past_due";
-  return "canceled";
-}
-
 function planIdFromProductId(productId) {
   const pid = String(productId || "").trim();
   if (appleIapAnnualProductIds().includes(pid)) return "pro";
@@ -204,7 +187,7 @@ export async function applyAppleTransactionToUser(userId, payload) {
     throw err;
   }
   const status = subscriptionStatusFromApplePayload(payload);
-  const expiresMs = msFromAppleTimestamp(payload.expiresDate);
+  const expiresMs = expiresMsFromApplePayload(payload);
   const currentPeriodEnd = expiresMs != null ? new Date(expiresMs).toISOString() : null;
   const sub = createOrUpdateSubscription({
     userId,
