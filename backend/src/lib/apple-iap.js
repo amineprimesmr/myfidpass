@@ -116,16 +116,20 @@ function msFromAppleTimestamp(value) {
   return n < 1e12 ? n * 1000 : n;
 }
 
-function subscriptionStatusFromApplePayload(payload) {
+/**
+ * Statut abonnement dérivé du JWS StoreKit / App Store Server API.
+ * Ne jamais retourner `active` par défaut : sans `expiresDate` valide → pas d’accès payant.
+ */
+export function subscriptionStatusFromApplePayload(payload) {
   const now = Date.now();
   const expiresMs = msFromAppleTimestamp(payload?.expiresDate);
   const graceMs = msFromAppleTimestamp(payload?.gracePeriodExpiresDate);
   const revokeMs = msFromAppleTimestamp(payload?.revocationDate);
   if (revokeMs != null && revokeMs <= now) return "canceled";
-  if (expiresMs != null && expiresMs > now) return "active";
+  if (expiresMs == null) return "canceled";
+  if (expiresMs > now) return "active";
   if (graceMs != null && graceMs > now) return "past_due";
-  if (expiresMs != null) return "canceled";
-  return "active";
+  return "canceled";
 }
 
 function planIdFromProductId(productId) {
@@ -224,9 +228,12 @@ export async function applyAppleTransactionToUser(userId, payload) {
       effectiveTo: currentPeriodEnd,
     });
   }
+  const paying = status === "active" || status === "trialing" || status === "past_due";
   return {
     subscription: sub,
-    has_active_subscription: status === "active" || status === "trialing" || status === "past_due",
+    /** Aligné `hasPaidMerchantSubscription` — pas l’essai gratuit application (`hasOperationalMerchantAccess`). */
+    has_active_subscription: paying,
+    has_paid_merchant_subscription: paying,
     subscription_status: status,
     original_transaction_id: originalId,
   };

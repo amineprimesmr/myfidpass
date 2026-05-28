@@ -1168,7 +1168,8 @@ router.post("/apple/reconcile-subscription", requireAuth, async (req, res) => {
   if (hasAppleBackedActiveSubscription(req.user.id)) {
     return res.json({
       ok: true,
-      has_active_subscription: hasOperationalMerchantAccess(req.user.id),
+      has_active_subscription: hasPaidMerchantSubscription(req.user.id),
+      has_paid_merchant_subscription: hasPaidMerchantSubscription(req.user.id),
       source: "local_row",
     });
   }
