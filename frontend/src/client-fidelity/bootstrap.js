@@ -843,12 +843,13 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const age = Date.now() - data.ts;
       if (age < PENDING_CLAIM_MIN_MS || age > PENDING_CLAIM_MAX_MS) return;
       sessionStorage.removeItem(PENDING_CLAIM_KEY);
-      await api.claimEngagement(slug, state.member.id, data.actionType);
+      const claimRes = await api.claimEngagement(slug, state.member.id, data.actionType);
       await refreshMemberData();
       const feedback = rootEl.querySelector("#fidelity-v2-action-feedback");
       if (feedback) {
         const pt = String(store.get().business?.program_type || "points").toLowerCase();
-        feedback.textContent = engagementClaimSuccessMessage(pt);
+        const serverMsg = claimRes?.message && typeof claimRes.message === "string" ? claimRes.message.trim() : "";
+        feedback.textContent = serverMsg || engagementClaimSuccessMessage(pt);
         feedback.classList.remove("hidden");
         setTimeout(() => feedback.classList.add("hidden"), 4000);
       }

@@ -9,9 +9,17 @@ export function balanceUnitShort(programType) {
   return isStampsProgramType(programType) ? "tampons" : "pts";
 }
 
-/** Badge mission « +1 … ». */
-export function missionRewardSnippet(programType) {
-  return isStampsProgramType(programType) ? "1 tampon" : "1 point";
+/**
+ * Badge mission « +N … » (N = points configurés par le commerçant).
+ * @param {string} programType
+ * @param {number} [amount]
+ */
+export function missionRewardSnippet(programType, amount = 1) {
+  const n = Math.max(1, Math.min(200, Math.floor(Number(amount) || 1)));
+  if (isStampsProgramType(programType)) {
+    return n === 1 ? "1 tampon" : `${n} tampons`;
+  }
+  return n === 1 ? "1 point" : `${n} points`;
 }
 
 export function missionsHeroCtaLabel(programType) {

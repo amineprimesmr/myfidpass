@@ -3,8 +3,9 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { getBusinessById, updateBusiness } from "./businesses.js";
-import { addTicketsForEngagement } from "./games-helpers.js";
+import { getBusinessById, resolveBusinessProgramType, updateBusiness } from "./businesses.js";
+import { addTicketsForEngagement, businessUsesTicketBonuses } from "./games-helpers.js";
+import { addPoints, addStampsWithCycleRollover } from "./members.js";
 
 const db = getDb();
 
@@ -91,7 +92,9 @@ export function createEngagementCompletion(businessId, memberId, actionType, opt
     return { error: "already_done", alreadyDone: true };
   }
   const status = "approved";
-  const ticketsToGrant = 1;
+  const rewardAmount = Math.max(1, Math.min(200, Math.floor(Number(config.points) || 1)));
+  const business = getBusinessById(businessId);
+  const programType = business ? resolveBusinessProgramType(business) : "points";
   const id = randomUUID();
   db.prepare(
     `INSERT INTO engagement_completions (id, business_id, member_id, action_type, points_granted, status, proof_id, proof_score, created_at)
@@ -101,14 +104,40 @@ export function createEngagementCompletion(businessId, memberId, actionType, opt
     businessId,
     memberId,
     actionType,
-    0,
+    rewardAmount,
     status,
     options.proofId || null,
     Number.isFinite(Number(options.proofScore)) ? Number(options.proofScore) : null
   );
-  addTicketsForEngagement(businessId, memberId, ticketsToGrant, actionType, id);
+
+  let ticketsGranted = 0;
+  let pointsGranted = 0;
+  let stampsGranted = 0;
+
+  if (businessUsesTicketBonuses(businessId)) {
+    ticketsGranted = rewardAmount;
+    addTicketsForEngagement(businessId, memberId, ticketsGranted, actionType, id);
+  } else if (programType === "stamps") {
+    const cycle = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
+    const stampResult = addStampsWithCycleRollover(memberId, rewardAmount, cycle);
+    stampsGranted = stampResult.rawAdded || rewardAmount;
+    pointsGranted = 0;
+  } else {
+    addPoints(memberId, rewardAmount);
+    pointsGranted = rewardAmount;
+  }
+
   const completion = db.prepare("SELECT * FROM engagement_completions WHERE id = ?").get(id);
-  return { completion, pointsGranted: 0, ticketsGranted: ticketsToGrant, status, alreadyDone: false };
+  return {
+    completion,
+    pointsGranted,
+    ticketsGranted,
+    stampsGranted,
+    rewardAmount,
+    programType,
+    status,
+    alreadyDone: false,
+  };
 }
 
 export function getEngagementCompletionsForMember(businessId, memberId) {

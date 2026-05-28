@@ -70,9 +70,9 @@ function ctaArrowSvg() {
  * @param {string} [programType]
  */
 export function renderEngagementActionsMarkup(actions, esc, programType = "points") {
-  const rewardSnippet = esc(missionRewardSnippet(programType));
   return actions
     .map((a, i) => {
+      const rewardSnippet = esc(missionRewardSnippet(programType, a.points));
       const theme = missionTheme(a.action_type);
       const uid = `m${i}`;
       const { line1, line2 } =
